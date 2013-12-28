@@ -281,11 +281,10 @@ value.")
   (or abs-maude-output-file
       (concat (file-name-sans-extension (car (abs--input-files))) ".maude")))
 
-(defun abs--absolute-maude-filename ()
-  (let ((abs-maude-output-file (abs--maude-filename)))
-    (if (file-name-absolute-p abs-maude-output-file)
-        abs-maude-output-file
-      (concat (file-name-directory (buffer-file-name)) abs-maude-output-file))))
+(defun abs--absolutify-filename (filename)
+  (if (file-name-absolute-p filename)
+      filename
+    (concat (file-name-directory (buffer-file-name)) filename)))
 
 (defun abs--calculate-compile-command ()
   (cl-flet ((quotify (string) (concat "\"" string "\"")))
@@ -308,6 +307,34 @@ value.")
                                 (number-to-string abs-default-resourcecost)))
                       " ")))))
 
+(defun abs--needs-compilation ()
+  (let* ((abs-output-file
+          (abs--absolutify-filename (pcase abs-target-language
+                                      (`maude (abs--maude-filename))
+                                      (`erlang "gen/erl/Emakefile")
+                                      (`java "gen/ABS/StdLib/Bool.java"))))
+         (abs-modtime (nth 5 (file-attributes (buffer-file-name))))
+         (output-modtime (nth 5 (file-attributes abs-output-file))))
+    (or (not output-modtime)
+        (abs--file-date-< output-modtime abs-modtime)
+        (buffer-modified-p))))
+
+(defun abs--run-model ()
+  (pcase abs-target-language
+    (`maude (save-excursion (run-maude))
+            (comint-send-string inferior-maude-buffer
+                                (concat "in "
+                                        (abs--absolutify-filename
+                                         (abs--maude-filename))
+                                        "\n"))
+            (with-current-buffer inferior-maude-buffer
+              (sit-for 1)
+              (goto-char (point-max))
+              (insert "frew start .")
+              (comint-send-input)))
+    (`erlang (save-excursion (run-erlang)))
+    (other (error "Don't know how to run with target %s" abs-target-language))))
+
 (defun abs-next-action (flag)
   "Compile the buffer or load it into Maude.
 
@@ -322,38 +349,19 @@ To execute on the Maude backend, remember to make
 either by copying or symlinking that file to the current
 directory, or via the `MAUDE_LIB' environment variable.
 
-To determine whether to compile or load, `abs-next-action'
-assumes that the result of compilation is stored in a file with
-the same name as the current buffer but with a `.maude'
-extension.  Set the variable `abs-maude-output-file' to override
-this.
-
 TODO: at the moment, this command only run models on the Maude
 backend."
   (interactive "p")
-  (let* ((abs-target-language (if (= 1 flag)
-                                  abs-target-language
-                                (intern
-                                 (completing-read "Target language: "
-                                                  '("maude" "erlang" "java")
-                                                  nil t nil nil "maude"))))
-         (abs-maude-file (abs--absolute-maude-filename))
-         (abs-modtime (nth 5 (file-attributes (buffer-file-name))))
-         (maude-modtime (nth 5 (file-attributes abs-maude-file))))
-    (if (or (not maude-modtime)
-            (abs--file-date-< maude-modtime abs-modtime)
-            (buffer-modified-p))
+  (let ((abs-target-language (if (= 1 flag)
+                                 abs-target-language
+                               (intern
+                                (completing-read "Target language: "
+                                                 '("maude" "erlang" "java")
+                                                 nil t nil nil "maude")))))
+    (if (abs--needs-compilation)
         (let ((compile-command (abs--calculate-compile-command)))
           (call-interactively 'compile))
-      (run-maude)
-      (message "Maude loading %s" abs-maude-file)
-      (comint-send-string inferior-maude-buffer
-                          (concat "in " abs-maude-file "\n"))
-      (with-current-buffer inferior-maude-buffer
-        (sit-for 1)
-        (goto-char (point-max))
-        (insert "frew start .")
-        (comint-send-input)))))
+      (abs--run-model))))
 
 ;;; Movement
 
