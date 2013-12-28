@@ -332,7 +332,16 @@ value.")
               (goto-char (point-max))
               (insert "frew start .")
               (comint-send-input)))
-    (`erlang (save-excursion (run-erlang)))
+    (`erlang (let ((erlang-buffer (or (get-buffer "*erlang*")
+                                      (progn (save-excursion (run-erlang))
+                                             (get-buffer "*erlang*"))))
+                   (erlang-dir (concat (file-name-directory (buffer-file-name))
+                                       "gen/erl")))
+               (with-current-buffer erlang-buffer
+                 (comint-send-string erlang-buffer
+                                     (concat "cd (\"" erlang-dir "\").\n"))
+                 (comint-send-string erlang-buffer "make:all().\n"))
+               (pop-to-buffer erlang-buffer)))
     (other (error "Don't know how to run with target %s" abs-target-language))))
 
 (defun abs-next-action (flag)
