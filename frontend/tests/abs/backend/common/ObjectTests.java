@@ -135,14 +135,14 @@ public class ObjectTests extends SemanticTests {
     }
 
     @Test
-    public void fieledPatternMatch() {
+    public void fieldPatternMatch() {
         assertEvalTrue(INTERFACE_I
                 + "class C(Bool f) implements I { Int a=2; Int b=4; Bool m() { return case 2 {a => True;};  } }"
                 + CALL_M);
     }
 
     @Test
-    public void fieledPatternMatch2() {
+    public void fieldPatternMatch2() {
         assertEvalTrue(INTERFACE_I
                 + "class C(Bool f) implements I { Int a=2; Int b=4; Bool m() { return case 2 {a => True;} && case 4{b=> True;};   } }"
                 + CALL_M);

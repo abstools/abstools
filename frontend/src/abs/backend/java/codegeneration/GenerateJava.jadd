@@ -282,6 +282,10 @@ aspect GenerateJava {
         stream.println(" {");
         stream.print("return ");
         getFunctionDef().generateJava(stream);
+        if (getType().isIntType() && getFunctionDef() instanceof ExpFunctionDef
+            && ((ExpFunctionDef) getFunctionDef()).getRhs().getType().isRatType()) {
+            stream.print(".truncate()");
+        }
         stream.println(";");
         stream.println("}");
         stream.println("}");
