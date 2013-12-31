@@ -22,8 +22,10 @@ toString(I) when is_integer(I) ->
 toString(F) when is_float(F)->
 	float_to_list(F).
 
+truncate({N,D})->
+	N div D;
 truncate(N)->
-	trunc(N).
+	N.
 
 
 
