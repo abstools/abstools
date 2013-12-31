@@ -470,7 +470,7 @@ aspect GenerateErlang {
   {
     ecs.print("(fun (V_"+getVar().getName()+"_0)->");
     Vars v=vars.pass();
-    v.nV(getVar().getName());
+    v.nVignoreOverload(getVar().getName());
     getExp().generateErlangCode(ecs,v);
     ecs.print(" end(");
     boolean needTrunc=getVar().getType().isIntType() && getVal().getType().isRatType();

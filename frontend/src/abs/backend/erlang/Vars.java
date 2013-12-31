@@ -55,6 +55,11 @@ public class Vars extends LinkedHashMap<String, Var> {
         return get(name);
     }
 
+    public String nVignoreOverload(String name) {
+        put(name, new Var());
+        return get(name);
+    }
+
     public static final String PREFIX = "V_";
 
     public String inc(String name) {
