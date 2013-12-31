@@ -78,7 +78,8 @@ public class ErlangBackend extends Main {
 
     private static final Set<String> RUNTIME_FILES = ImmutableSet.of("src/cog.erl", "src/init_task.erl",
             "src/main_task.erl", "src/object.erl", "src/runtime.erl", "src/task.erl", "src/async_call_task.erl",
-            "src/builtin.erl", "include/abs_types.hrl", "Emakefile", "Makefile");
+            "src/builtin.erl", "include/abs_types.hrl", "Emakefile", "Makefile", "lib/rationals.erl", "lib/intar.erl",
+            "lib/cmp.erl");
     private static final String RUNTIME_PATH = "abs/backend/erlang/runtime/";
 
     private static void copyRuntime(File destDir) throws IOException {

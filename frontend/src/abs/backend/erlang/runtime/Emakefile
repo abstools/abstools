@@ -5,7 +5,8 @@
     [
     "./runtime/src/task.erl",
     "./runtime/src/object.erl",
-        "./*",
+    "./*",
+    "./runtime/lib/*",
 	"./runtime/src/*"
     ], 
     [
