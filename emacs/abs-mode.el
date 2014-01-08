@@ -53,6 +53,14 @@
   :risky t
   :group 'abs)
 
+(defcustom abs-java-classpath "absfrontend.jar"
+  "The classpath for the Java backend.
+The contents of this variable will be passed to the java
+executable via the `-cp' argument."
+  :type 'string
+  :risky t
+  :group 'abs)
+
 (defcustom abs-indent standard-indent
   "The width of one indentation step for Abs code."
   :type 'integer
@@ -92,33 +100,33 @@ Note that you can set this variable as a file-local variable as well."
   "Face for Abs keywords"
   :group 'abs)
 (defvar abs-keyword-face 'abs-keyword-face
-  "Face for Abs keywords")
+  "Face for Abs keywords.")
 
 (defface abs-constant-face '((default (:inherit font-lock-constant-face)))
   "Face for Abs constants"
   :group 'abs)
 (defvar abs-constant-face 'abs-constant-face
-  "Face for Abs constants")
+  "Face for Abs constants.")
 
 (defface abs-function-name-face
     '((default (:inherit font-lock-function-name-face)))
   "Face for Abs function-names"
   :group 'abs)
 (defvar abs-function-name-face 'abs-function-name-face
-  "Face for Abs function-names")
+  "Face for Abs function-names.")
 
 (defface abs-type-face '((default (:inherit font-lock-type-face)))
   "Face for Abs types"
   :group 'abs)
 (defvar abs-type-face 'abs-type-face
-  "Face for Abs types")
+  "Face for Abs types.")
 
 (defface abs-variable-name-face
     '((default (:inherit font-lock-variable-name-face)))
   "Face for Abs variables"
   :group 'abs)
 (defvar abs-variable-name-face 'abs-variable-name-face
-  "Face for Abs variables")
+  "Face for Abs variables.")
 
 (defconst abs--cid-regexp "\\_<[[:upper:]]\\(?:\\sw\\|\\s_\\)*\\_>")
 (defconst abs--id-regexp
@@ -154,7 +162,7 @@ Note that you can set this variable as a file-local variable as well."
     (regexp-opt
      '("True" "False" "null" "this" "Nil" "Cons")
      'words))
-  "List of Abs special words")
+  "List of Abs special words.")
 
 (defvar abs-font-lock-keywords
     (list
@@ -166,11 +174,11 @@ Note that you can set this variable as a file-local variable as well."
            'abs-function-name-face)
      (cons (concat "\\(" abs--id-regexp "\\)") 'abs-variable-name-face)
      (list "\\<\\(# \w+\\)\\>" 1 'font-lock-warning-face t))
-    "Abs keywords")
+    "Abs keywords.")
 
 ;;; Abs syntax table
 (defvar abs-mode-syntax-table (copy-syntax-table)
-  "Syntax table for abs-mode")
+  "Syntax table for abs-mode.")
 (modify-syntax-entry ?+  "."     abs-mode-syntax-table)
 (modify-syntax-entry ?-  "."     abs-mode-syntax-table)
 (modify-syntax-entry ?=  "."     abs-mode-syntax-table)
@@ -217,7 +225,7 @@ Note that you can set this variable as a file-local variable as well."
        ,(rx bol (* whitespace) "module" (1+ whitespace)
             (group (char upper) (* (char alnum))))
        1))
-  "Imenu expression for abs-mode.  See `imenu-generic-expression'.")
+  "Imenu expression for `abs-mode'.  See `imenu-generic-expression'.")
 
 ;;; Compiling the current buffer.
 ;;;
@@ -242,8 +250,7 @@ the end of your buffer:
 
 // Local Variables:
 // abs-input-files: (\"file1.abs\" \"file2.abs\")
-// End:
-")
+// End:")
 (put 'abs-input-files 'safe-local-variable
      (lambda (list) (every #'stringp list)))
 
@@ -269,7 +276,7 @@ value.")
   (add-to-list 'compilation-error-regexp-alist (list abs-error-regexp 1 2)))
 
 (defun abs--file-date-< (d1 d2)
-  "Compare two file dates, as returned by `file-attributes'."
+  "Compare file dates D1 and D2, as returned by `file-attributes'."
   (or (and (= (first d1) (first d2))
            (< (second d1) (second d2)))
       (< (first d1) (first d2))))
@@ -285,6 +292,13 @@ value.")
   (if (file-name-absolute-p filename)
       filename
     (concat (file-name-directory (buffer-file-name)) filename)))
+
+(defun abs--guess-module ()
+  (save-excursion
+    (goto-char (point-max))
+    (re-search-backward (rx bol (* whitespace) "module" (1+ whitespace)
+                            (group (char upper) (* (or (char alnum) ".")))))
+    (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
 
 (defun abs--calculate-compile-command (backend)
   (cl-flet ((quotify (string) (concat "\"" string "\"")))
@@ -342,6 +356,16 @@ value.")
                                      (concat "cd (\"" erlang-dir "\").\n"))
                  (comint-send-string erlang-buffer "make:all().\n"))
                (pop-to-buffer erlang-buffer)))
+    (`java (let ((java-buffer (save-excursion (shell "*abs java*")))
+                 (java-dir (file-name-directory (buffer-file-name)))
+                 (module (abs--guess-module)))
+             (with-current-buffer java-buffer
+               (comint-send-string java-buffer
+                                   (concat "cd \"" java-dir "\"\n"))
+               (goto-char (point-max))
+               (insert "java -cp gen:" abs-java-classpath
+                       " " module ".Main && exit")
+               (comint-send-input))))
     (other (error "Don't know how to run with target %s" backend))))
 
 (defun abs-next-action (flag)
@@ -354,12 +378,14 @@ overridden for a specific abs file by giving a file-local value
 via `add-file-local-variable'.
 
 To execute on the Maude backend, remember to make
-`abs-interpreter.maude' accessible to Maude!  This can be done
-either by copying or symlinking that file to the current
-directory, or via the `MAUDE_LIB' environment variable.
+`abs-interpreter.maude' accessible to Maude, either by copying or
+symlinking that file to the current directory, or via the
+`MAUDE_LIB' environment variable.
 
-TODO: at the moment, this command only run models on the Maude
-backend."
+To execute on the Java backend, set `abs-java-classpath' to
+include the file absfrontend.jar.
+
+Argument FLAG will prompt for language backend to use if 1."
   (interactive "p")
   (let ((backend (if (= 1 flag)
                      abs-target-language
