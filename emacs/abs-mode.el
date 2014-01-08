@@ -286,30 +286,30 @@ value.")
       filename
     (concat (file-name-directory (buffer-file-name)) filename)))
 
-(defun abs--calculate-compile-command ()
+(defun abs--calculate-compile-command (backend)
   (cl-flet ((quotify (string) (concat "\"" string "\"")))
      (cond (abs-compile-command)
            ((file-exists-p "Makefile") compile-command)
            (t (concat abs-compiler-program
-                      " -" (symbol-name abs-target-language)
+                      " -" (symbol-name backend)
                       " "
                       ;; FIXME: make it work with filenames with spaces
                       (mapconcat #'quotify (abs--input-files) " ")
-                      (when (eql abs-target-language 'maude)
+                      (when (eql backend 'maude)
                         (concat " -o " (quotify (abs--maude-filename))))
-                      (when (and (eql abs-target-language 'maude)
+                      (when (and (eql backend 'maude)
                                  abs-use-timed-interpreter)
                         (concat " -timed -limit="
                                 (number-to-string abs-clock-limit)))
-                      (when (and (eql abs-target-language 'maude)
+                      (when (and (eql backend 'maude)
                                  (< 0 abs-default-resourcecost))
                         (concat " -defaultcost="
                                 (number-to-string abs-default-resourcecost)))
                       " ")))))
 
-(defun abs--needs-compilation ()
+(defun abs--needs-compilation (backend)
   (let* ((abs-output-file
-          (abs--absolutify-filename (pcase abs-target-language
+          (abs--absolutify-filename (pcase backend
                                       (`maude (abs--maude-filename))
                                       (`erlang "gen/erl/Emakefile")
                                       (`java "gen/ABS/StdLib/Bool.java"))))
@@ -319,8 +319,8 @@ value.")
         (abs--file-date-< output-modtime abs-modtime)
         (buffer-modified-p))))
 
-(defun abs--run-model ()
-  (pcase abs-target-language
+(defun abs--run-model (backend)
+  (pcase backend
     (`maude (save-excursion (run-maude))
             (comint-send-string inferior-maude-buffer
                                 (concat "in "
@@ -342,7 +342,7 @@ value.")
                                      (concat "cd (\"" erlang-dir "\").\n"))
                  (comint-send-string erlang-buffer "make:all().\n"))
                (pop-to-buffer erlang-buffer)))
-    (other (error "Don't know how to run with target %s" abs-target-language))))
+    (other (error "Don't know how to run with target %s" backend))))
 
 (defun abs-next-action (flag)
   "Compile the buffer or load it into Maude.
@@ -361,16 +361,15 @@ directory, or via the `MAUDE_LIB' environment variable.
 TODO: at the moment, this command only run models on the Maude
 backend."
   (interactive "p")
-  (let ((abs-target-language (if (= 1 flag)
-                                 abs-target-language
-                               (intern
-                                (completing-read "Target language: "
-                                                 '("maude" "erlang" "java")
-                                                 nil t nil nil "maude")))))
-    (if (abs--needs-compilation)
-        (let ((compile-command (abs--calculate-compile-command)))
+  (let ((backend (if (= 1 flag)
+                     abs-target-language
+                   (intern (completing-read "Target language: "
+                                            '("maude" "erlang" "java")
+                                            nil t nil nil "maude")))))
+    (if (abs--needs-compilation backend)
+        (let ((compile-command (abs--calculate-compile-command backend)))
           (call-interactively 'compile))
-      (abs--run-model))))
+      (abs--run-model backend))))
 
 ;;; Movement
 
