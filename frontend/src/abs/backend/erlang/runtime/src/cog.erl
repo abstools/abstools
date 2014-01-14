@@ -44,7 +44,7 @@ loop(S=#state{running=non_found})->
 				eventstream:event({cog,self(),active}),
                                 initTask(S,Task,Args,Sender,Notify);
 			{'EXIT',R,Reason} when Reason /= normal ->
-		       io:format("COG ~p: died ~p with ~p ~n",[self(),R,Reason]),   
+		       ?DEBUG({task_died,R,Reason}),   
                set_state(S#state{running=false},R,abort)
 		end,
     loop(New_State#state{running=false});

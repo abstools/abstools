@@ -40,9 +40,12 @@ rollback(#object{ref=O})->
 
 
 new_object_task(#object{ref=O},TaskRef)->
-	io:format("Call New_task ~p~n",[TaskRef]),
-	active=gen_fsm:sync_send_event(O, {new_task,TaskRef}).
-
+	try
+		active=gen_fsm:sync_send_event(O, {new_task,TaskRef})
+	catch
+	   _:{noproc,_} ->
+		  exit(deadObject)
+	 end.
 die(#object{ref=O},Reason)->
 	gen_fsm:sync_send_all_state_event(O,{die,Reason,self()},infinity).
 %%Internal
@@ -57,7 +60,7 @@ inactive(activate,S=#state{await=A})->
 
 inactive({new_task,TaskRef},From,S=#state{await=A,tasks=Tasks})->
 	monitor(process,TaskRef),
-	io:format("New_task ~p~n",[TaskRef]),
+	?DEBUG({new_task,TaskRef}),
  	{next_state,inactive,S#state{await=[From|A],tasks=gb_sets:add_element(TaskRef, Tasks)}}.
 
 
@@ -72,7 +75,7 @@ active({#object{class=Class},get,Field},_From,S=#state{class=C,int_status=IS,new
      ?DEBUG({get,Field,Reply}),
 	 {reply,Reply,active,S};
 active({new_task,TaskRef},_From,S=#state{tasks=Tasks})->
- io:format("New_task ~p~n",[TaskRef]),
+    ?DEBUG({new_task,TaskRef}),
 	monitor(process,TaskRef),
     {reply,active,active,S#state{tasks=gb_sets:add_element(TaskRef, Tasks)}};
 active(commit,_From,S=#state{class=C,int_status=IS,new_vals=NV}) ->
@@ -89,14 +92,14 @@ active({#object{class=Class},set,Field,Val},S=#state{class=C,new_vals=NV}) ->
         {next_state,active,S#state{new_vals=gb_trees:enter(Field,Val,NV)}}.
 
 handle_sync_event({die,Reason,By},_From,_StateName,S=#state{tasks=Tasks})->
-  io:format("~p~n",[Tasks]),
-  [begin io:format("take down ~p~n",[T]),exit(T,Reason) end ||T<-gb_sets:to_list(Tasks), T/=By],
+  ?DEBUG({dying}),
+  [begin ?DEBUG({terminate,T}),exit(T,Reason) end ||T<-gb_sets:to_list(Tasks), T/=By],
   exit(By,Reason),
   {stop,normal,S}.
 
 
 handle_info({'DOWN', _MonRef, process, TaskRef,Reason} ,StateName,S=#state{tasks=Tasks})->
-	io:format("rem_task ~p~n",[TaskRef]),
+   ?DEBUG({rem_dead_task,TaskRef}),
    {next_state,StateName,S#state{tasks=gb_sets:del_element(TaskRef, Tasks)}}.
 
                 
