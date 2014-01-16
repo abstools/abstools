@@ -30,6 +30,7 @@
 (eval-when-compile (require 'rx))
 (require 'maude-mode)
 (require 'cl-lib)
+(require 'flymake)
 
 ;;; Code:
 
@@ -76,10 +77,10 @@ file-local variable as well."
   :group 'abs)
 (put 'abs-use-timed-interpreter 'safe-local-variable 'booleanp)
 
-(defcustom abs-mode-hook (list 'imenu-add-menubar-index)
+(defcustom abs-mode-hook (list 'imenu-add-menubar-index 'flymake-mode-on)
   "Hook for customizing `abs-mode'."
   :type 'hook
-  :options (list 'imenu-add-menubar-index)
+  :options (list 'imenu-add-menubar-index 'flymake-mode-on)
   :group 'abs)
 
 (defcustom abs-clock-limit 100
@@ -275,6 +276,18 @@ value.")
 (unless (assoc abs-error-regexp compilation-error-regexp-alist)
   (add-to-list 'compilation-error-regexp-alist (list abs-error-regexp 1 2)))
 
+;;; flymake support
+(defun abs-flymake-init ()
+  (when abs-compiler-program
+    (list abs-compiler-program
+          (list (flymake-init-create-temp-buffer-copy
+                 'flymake-create-temp-inplace)))))
+
+(unless (assoc "\\.abs\\'" flymake-allowed-file-name-masks)
+  (add-to-list 'flymake-allowed-file-name-masks
+               '("\\.abs\\'" abs-flymake-init)))
+
+;;; Compilation support
 (defun abs--file-date-< (d1 d2)
   "Compare file dates D1 and D2, as returned by `file-attributes'."
   (or (and (= (first d1) (first d2))
