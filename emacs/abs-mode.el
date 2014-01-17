@@ -347,6 +347,7 @@ value.")
         (buffer-modified-p))))
 
 (defun abs--run-model (backend)
+  "Start the model running on language BACKEND."
   (pcase backend
     (`maude (save-excursion (run-maude))
             (comint-send-string inferior-maude-buffer
@@ -363,11 +364,18 @@ value.")
                                       (progn (save-excursion (run-erlang))
                                              (get-buffer "*erlang*"))))
                    (erlang-dir (concat (file-name-directory (buffer-file-name))
-                                       "gen/erl")))
+                                       "gen/erl"))
+                   (module (abs--guess-module)))
                (with-current-buffer erlang-buffer
                  (comint-send-string erlang-buffer
                                      (concat "cd (\"" erlang-dir "\").\n"))
-                 (comint-send-string erlang-buffer "make:all().\n"))
+                 (comint-send-string erlang-buffer "make:all().\n")
+                 (comint-send-string erlang-buffer
+                                     (concat "code:add_path(\"" erlang-dir
+                                             "/ebin\").\n"))
+                 (comint-send-string erlang-buffer
+                                     (concat "runtime:start(\"" module
+                                             "\").\n")))
                (pop-to-buffer erlang-buffer)))
     (`java (let ((java-buffer (save-excursion (shell "*abs java*")))
                  (java-dir (file-name-directory (buffer-file-name)))
