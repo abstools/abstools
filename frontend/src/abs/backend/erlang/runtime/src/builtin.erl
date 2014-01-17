@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(builtin).
--export([substr/3,currentms/0,lowlevelDeadline/0,random/1,getProductLine/0,strlen/1,toString/1,truncate/1,println/1]).
+-export([substr/3,currentms/0,lowlevelDeadline/0,random/1,getProductLine/0,strlen/1,toString/1,truncate/1,println/1,thisDC/1]).
 %%All builtin functions
 %%Must correspond to the set in FnApp.BUILTINS
 
@@ -33,6 +33,9 @@ truncate(N)->
 
 println(S)->
     io:format("~p~n",[S]).
+	
+thisDC(Cog)->
+	cog:this_dc(Cog).
 
 getProductLine()->
     exit("Not Implemented").

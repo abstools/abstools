@@ -4,7 +4,7 @@
 %% start or run accept commandline arguments
 
 -export([start/0,start/1,run/1]).
-
+-include_lib("abs_types.hrl").
 -define(CMDLINE_SPEC,[
                       {debug,$d,"debug",{boolean,false},"Prints debug status output"},
                       {main_module,undefined,undefined,string,"Name of Module containing MainBlock"}
@@ -46,9 +46,10 @@ start_mod(Arguments)  ->
             ok
     end,
     eventstream:add_handler(cog_monitor,[self()]),
+    DC=object:new(#cog{ref=no_cog},class_ABS_DC_DeploymentComponent,[atom_to_list(node()),dataInfCPU],false),
+    Cog=cog:start(DC),
     
     %%Start main task
-    Cog=cog:start(),
     R=cog:add_and_notify(Cog,main_task,[Module,self()]),
     %%Wait for termination of main task and idle state
     RetVal=task:join(R),

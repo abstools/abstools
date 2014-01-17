@@ -9,6 +9,7 @@
 -export([ready/1,return_token/2,wait/1,wait_poll/1,commit/1,rollback/1]).
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
+-include_lib("log.hrl").
 
 %%Task behaviours have to implemented:
 %%init(Cog,Args): Can block an will init the task.
@@ -22,10 +23,12 @@ behaviour_info(callbacks) ->
 behaviour_info(_) ->
     undefined.
 
-start(Cog,Task,Args)->
-    spawn_link(task,init,[Task,Cog,Args]).
+start(Cog=#cog{dc=DC},Task,Args)->
+	Node=list_to_atom(class_ABS_DC_DeploymentComponent:get(DC,description)),
+    spawn_link(Node,task,init,[Task,Cog,Args]).
 
 init(Task,Cog,Args)->
+	?DEBUG({started,node()}),
     InnerState=Task:init(Cog,Args),
     ready(Cog),
     Val=Task:start(InnerState),

@@ -1,10 +1,10 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
--export([start/0,add/3,add_and_notify/3,new_state/3]).
--export([init/1]).
+-export([start/1,add/3,add_and_notify/3,new_state/3,this_dc/1]).
+-export([init/2]).
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
--record(state,{tasks,running=false,polling=[],tracker}).
+-record(state,{tasks,running=false,polling=[],selfref}).
 -record(task,{ref,state=waiting}).
 
 %%The COG manages all its task in a tree task.
@@ -12,10 +12,12 @@
 %%It is implented as a kind of statemachine server, where the variable running represents the state
 
 %%API
+this_dc(#cog{dc=DC})->
+    DC.
 
-start()->
+start(DC)->
     {ok,T}=object_tracker:start(),
-    #cog{ref=spawn(cog,init, [T]),tracker=T}.
+    #cog{ref=spawn(cog,init, [T,DC]),tracker=T,dc=DC}.
 
 add(#cog{ref=Cog},Task,Args)->
     Cog!{newT,Task,Args,self(),false},
@@ -34,16 +36,23 @@ add_and_notify(#cog{ref=Cog},Task,Args)->
 new_state(#cog{ref=Cog},TaskRef,State)->
     Cog!{newState,TaskRef,State}.
 
-
 %%Internal
+init(Tracker,DC=#object{cog=#cog{ref=DC_cog}}) ->
 
-init(Tracker) ->
+
     ?DEBUG({new}),
     process_flag(trap_exit, true),
     eventstream:event({cog,self(),active}),
-    loop(#state{tasks=gb_trees:empty(),tracker=Tracker}).
+	Self=#cog{ref=self(),tracker=Tracker,dc=DC},
+	DC1=case DC_cog of
+                no_cog ->
+                    DC#object{cog=Self};
+                _->
+                    DC
+		end,	
+    loop(#state{tasks=gb_trees:empty(),selfref=Self}).
 
-%%No task was ready to execute
+%%No task was ready to execute        
 loop(S=#state{running=non_found})->
     eventstream:event({cog,self(),idle}),
     New_State=
@@ -94,8 +103,8 @@ loop(S=#state{running=R}) when is_pid(R)->
     loop(New_State).
 
 %%Start new task
-initTask(S=#state{tasks=T,tracker=Tracker},Task,Args,Sender,Notify)->
-    Ref=task:start(#cog{ref=self(),tracker=Tracker},Task,Args),
+initTask(S=#state{tasks=T,selfref=Self},Task,Args,Sender,Notify)->
+    Ref=task:start(Self,Task,Args),
     ?DEBUG({new_task,Ref,Task,Args}),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     Sender!{started,Task,Ref},
