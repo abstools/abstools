@@ -12,7 +12,7 @@
 
 -behaviour(gen_fsm).
 %%API
--export([new/4,activate/1,commit/1,rollback/1,new_object_task/2,die/2,alive/1]).
+-export([new/4,activate/1,commit/1,rollback/1,new_object_task/2,die/2,alive/1,await/1]).
 
 %%gen_fsm callbacks
 -export([init/1,active/3,active/2,uninitialized/2,uninitialized/3,code_change/4,handle_event/3,handle_info/3,handle_sync_event/4,terminate/3]).
@@ -32,7 +32,7 @@ new(Cog,Class,Args,false)->
     O=start(Cog,Class),
     object:activate(O),
     Class:init(O,Args);
-new(Cog,Class,Args,true)->
+new(Cog=#cog{dc=DC},Class,Args,true)->
     O=start(Cog,Class),
     cog:add(Cog,init_task,{O,Args}),
     O.
@@ -46,6 +46,13 @@ commit(#object{ref=O})->
 rollback(#object{ref=O})->
     gen_fsm:sync_send_event(O,rollback).
 
+await(#object{ref=O})->
+    try
+        gen_fsm:sync_send_event(O,await)
+    catch
+       _:{noproc,_} ->
+          exit(deadObject)
+    end.
 
 new_object_task(#object{ref=O},TaskRef)->
     try
@@ -74,9 +81,16 @@ die(#object{ref=O},Reason)->
 %%new_vals, is the buffer for the transaction managment 
 -record(state,{await,tasks,class,int_status,new_vals}).
 
-start(Cog,Class)->
-    {ok,O}=gen_fsm:start_link(object,[Cog,Class,Class:init_internal()],[]),
-    #object{class=Class,ref=O,cog=Cog}.
+start(Cog=#cog{dc=DC},Class)->
+	case DC of
+		undefined ->
+           {ok,O}=gen_fsm:start_link(object,[Cog,Class,Class:init_internal()],[]),
+           #object{class=Class,ref=O,cog=Cog};
+		_ ->
+	       Node=nodemanager:get_node(DC),
+           {ok,O}=rpc:call(Node,gen_fsm,start_link,[object,[Cog,Class,Class:init_internal()],[]]),
+           #object{class=Class,ref=O,cog=Cog}
+    end.
 
 init([Cog,Class,Status])->
     ?DEBUG({new,Cog, Class}),
@@ -89,8 +103,9 @@ uninitialized(activate,S=#state{await=A})->
 uninitialized({new_task,TaskRef},From,S=#state{await=A,tasks=Tasks})->
     monitor(process,TaskRef),
     ?DEBUG({new_task,TaskRef}),
-    {next_state,uninitialized,S#state{await=[From|A],tasks=gb_sets:add_element(TaskRef, Tasks)}}.
-
+    {next_state,uninitialized,S#state{await=[From|A],tasks=gb_sets:add_element(TaskRef, Tasks)}};
+uninitialized(await,From,S=#state{await=A})->
+    {next_state,uninitialized,S#state{await=[From|A]}}.
 
 
 active({#object{class=Class},get,Field},_From,S=#state{class=C,int_status=IS,new_vals=NV})->
@@ -114,6 +129,8 @@ active(rollback,_From,S) ->
     ?DEBUG({rollback}),    
     {reply,ok,active,S#state{new_vals=gb_trees:empty()}};
 active(ping,_From,S)->
+    {reply,ok,active,S};
+active(await,_From,S)->
     {reply,ok,active,S}.
 
 

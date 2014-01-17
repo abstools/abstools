@@ -24,11 +24,12 @@ behaviour_info(_) ->
     undefined.
 
 start(Cog=#cog{dc=DC},Task,Args)->
-	Node=list_to_atom(class_ABS_DC_DeploymentComponent:get(DC,description)),
+    Node=nodemanager:get_node(DC),
+    ?DEBUG({task_starton,Node}),
     spawn_link(Node,task,init,[Task,Cog,Args]).
 
 init(Task,Cog,Args)->
-	?DEBUG({started,node()}),
+    ?DEBUG({started,node()}),
     InnerState=Task:init(Cog,Args),
     ready(Cog),
     Val=Task:start(InnerState),

@@ -16,14 +16,21 @@ this_dc(#cog{dc=DC})->
     DC.
 
 start(DC)->
+    object:await(DC),
+    Node=nodemanager:get_node(DC),
     {ok,T}=object_tracker:start(),
-    #cog{ref=spawn(cog,init, [T,DC]),tracker=T,dc=DC}.
+    CogRef=spawn(Node,cog,init, [T,DC]),
+    #cog{ref=CogRef,tracker=T,dc=DC}.
 
 add(#cog{ref=Cog},Task,Args)->
+    MonRef=monitor(process,Cog),
     Cog!{newT,Task,Args,self(),false},
     receive 
         {started,Task,Ref}->
-            Ref
+            demonitor(MonRef),
+            Ref;
+        {'DOWN', _ , process, _,Reason} when Reason /= normal ->
+            exit(cog_went_down)
     end.
 
 add_and_notify(#cog{ref=Cog},Task,Args)->
@@ -43,13 +50,13 @@ init(Tracker,DC=#object{cog=#cog{ref=DC_cog}}) ->
     ?DEBUG({new}),
     process_flag(trap_exit, true),
     eventstream:event({cog,self(),active}),
-	Self=#cog{ref=self(),tracker=Tracker,dc=DC},
-	DC1=case DC_cog of
+    Self=#cog{ref=self(),tracker=Tracker,dc=DC},
+    DC1=case DC_cog of
                 no_cog ->
                     DC#object{cog=Self};
                 _->
                     DC
-		end,	
+        end,
     loop(#state{tasks=gb_trees:empty(),selfref=Self}).
 
 %%No task was ready to execute        

@@ -6,6 +6,7 @@
 -export([start/0,start/1,run/1]).
 -include_lib("abs_types.hrl").
 -define(CMDLINE_SPEC,[
+                      {distributed,undefined,"distributed",{boolean,false},""},
                       {debug,$d,"debug",{boolean,false},"Prints debug status output"},
                       {main_module,undefined,undefined,string,"Name of Module containing MainBlock"}
                      ]).
@@ -45,8 +46,14 @@ start_mod(Arguments)  ->
         false ->
             ok
     end,
+    case proplists:get_value(distributed,Arguments) of
+        true ->
+            nodemanager:start_link();
+        false ->
+            ok
+    end,
     eventstream:add_handler(cog_monitor,[self()]),
-    DC=object:new(#cog{ref=no_cog},class_ABS_DC_DeploymentComponent,[atom_to_list(node()),dataInfCPU],false),
+    DC=object:new(#cog{ref=no_cog},class_ABS_DC_DeploymentComponent,["local",dataInfCPU],false),
     Cog=cog:start(DC),
     
     %%Start main task

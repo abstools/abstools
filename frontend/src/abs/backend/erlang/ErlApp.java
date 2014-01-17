@@ -86,6 +86,7 @@ public class ErlApp {
             "src/future.erl",
             "src/active_object_task.erl",
             "src/error_transform.erl",
+            "src/nodemanager.erl",
             "include/abs_types.hrl",
             "include/log.hrl",
             "Emakefile",

@@ -37,16 +37,17 @@ safeget(Ref)->
 
   
   
-init(Callee=#object{class=C,cog=Cog=#cog{ref=CogRef}},Method,Params)->
+init(Callee=#object{class=C,cog=Cog},Method,Params)->
     %%Start task
     process_flag(trap_exit, true),
-    MonRef=monitor(process,CogRef),
-    cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
-    demonitor(MonRef),
+    try
+        cog:add(Cog,async_call_task,[self(),Callee,Method|Params])
+    catch
+       _:cog_went_down ->
+           loop({error,cog_went_down})
+    end,
     %% Either receive an error or the value
     receive
-        {'DOWN', _ , process, _,Reason} when Reason /= normal ->
-            loop({error,error_transform:transform(Reason)});
         {'EXIT',_,Reason} ->
             loop({error,error_transform:transform(Reason)});
         {completed, Value}->
