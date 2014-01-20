@@ -1,5 +1,4 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.erlang;
@@ -10,16 +9,14 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 
+/**
+ * Provides stream, which tracks intention
+ * 
+ * @author Georg Göri
+ */
 public class ErlangCodeStream extends PrintStream {
-    private static final int INDENT_LENGTH = 4;
-    private static final String INDENT1;
+    private static final String INDENT = "    ";
     private boolean newline = true;
-    static {
-        String s = "";
-        for (int i = 0; i < INDENT_LENGTH; i++)
-            s += " ";
-        INDENT1 = s;
-    }
 
     private String indent = "";
 
@@ -37,13 +34,13 @@ public class ErlangCodeStream extends PrintStream {
     }
 
     public ErlangCodeStream incIndent() {
-        indent = indent + INDENT1;
+        indent = indent + INDENT;
         return this;
     }
 
     public ErlangCodeStream decIndent() {
-        if (indent.length() >= INDENT_LENGTH)
-            indent = indent.substring(0, indent.length() - INDENT_LENGTH);
+        if (indent.length() > 0)
+            indent = indent.substring(0, indent.length() - INDENT.length());
         return this;
     }
 

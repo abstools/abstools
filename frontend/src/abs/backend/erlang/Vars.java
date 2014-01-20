@@ -105,6 +105,9 @@ public class Vars extends LinkedHashMap<String, Var> {
         return sb.append("]").toString();
     }
 
+    /**
+     * Removes all vars,which are not contained in vars
+     */
     public void retainAll(Vars vars) {
         for (String k : Sets.difference(this.keySet(), vars.keySet()).immutableCopy())
             remove(k);
@@ -150,6 +153,9 @@ public class Vars extends LinkedHashMap<String, Var> {
         return res;
     }
 
+    /**
+     * Simplified version of merge
+     */
     public void hideIntroduced(Vars child) {
         for (java.util.Map.Entry<String, Var> k : child.entrySet())
             if (!containsKey(k.getKey()) || !k.getValue().isSet())
