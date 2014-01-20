@@ -29,7 +29,6 @@
 (require 'custom)
 (eval-when-compile (require 'rx))
 (require 'maude-mode)
-(require 'cl-lib)
 (require 'flymake)
 
 ;;; Code:
@@ -314,25 +313,24 @@ value.")
     (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
 
 (defun abs--calculate-compile-command (backend)
-  (cl-flet ((quotify (string) (concat "\"" string "\"")))
-     (cond (abs-compile-command)
-           ((file-exists-p "Makefile") compile-command)
-           (t (concat abs-compiler-program
-                      " -" (symbol-name backend)
-                      " "
-                      ;; FIXME: make it work with filenames with spaces
-                      (mapconcat #'quotify (abs--input-files) " ")
-                      (when (eql backend 'maude)
-                        (concat " -o " (quotify (abs--maude-filename))))
-                      (when (and (eql backend 'maude)
-                                 abs-use-timed-interpreter)
-                        (concat " -timed -limit="
-                                (number-to-string abs-clock-limit)))
-                      (when (and (eql backend 'maude)
-                                 (< 0 abs-default-resourcecost))
-                        (concat " -defaultcost="
-                                (number-to-string abs-default-resourcecost)))
-                      " ")))))
+  (cond (abs-compile-command)
+        ((file-exists-p "Makefile") compile-command)
+        (t (concat abs-compiler-program
+                   " -" (symbol-name backend)
+                   " "
+                   ;; FIXME: make it work with filenames with spaces
+                   (mapconcat (lambda (s) (concat "\"" s "\""))
+                              (abs--input-files) " ")
+                   (when (eql backend 'maude)
+                     (concat " -o \"" (abs--maude-filename) "\""))
+                   (when (and (eql backend 'maude) abs-use-timed-interpreter)
+                     (concat " -timed -limit="
+                             (number-to-string abs-clock-limit)))
+                   (when (and (eql backend 'maude)
+                              (< 0 abs-default-resourcecost))
+                     (concat " -defaultcost="
+                             (number-to-string abs-default-resourcecost)))
+                   " "))))
 
 (defun abs--needs-compilation (backend)
   (let* ((abs-output-file
