@@ -206,4 +206,9 @@ public class FunctionalTests extends SemanticTests {
     public void assertStmtFails() throws Exception {
         assertEvalFails("{ assert False; Bool testresult = True; }");
     }
+
+    @Test
+    public void setLength() {
+        assertEvalTrue("{ Set<Int> s = set[4,4,4]; Bool testresult = (size(s) == 1);}");
+    }
 }
