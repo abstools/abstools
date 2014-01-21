@@ -99,7 +99,12 @@ public class FunctionalTests extends SemanticTests {
     public void dataTypeGtEq2() {
         assertEvalTrue("{ Bool testresult = Cons(5, Nil) >= Cons(5, Nil);  }");
     }
-    
+
+    @Test
+    public void dataTypeGtEqInner() {
+        assertEvalTrue("{ Bool testresult = Cons(5, Nil) > Cons(5,Cons(3, Nil));  }");
+    }
+
     @Test
     public void parametericDataType() {
         assertEvalTrue("data Foo<A> = Bar(A); { Bool testresult = True; Foo<Bool> f = Bar(True); }");

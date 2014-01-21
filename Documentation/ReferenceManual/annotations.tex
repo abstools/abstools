@@ -1,0 +1,24 @@
+\chapter{Annotations}
+ABS supports \emph{Annotations} to enrich an ABS model with additional information, for example, to realize pluggable type systems.
+Annotations can appear before any declaration and type usage in ABS programs (which is not given in the grammar definitions, to improve readability).
+
+\begin{abssyntax}
+\NT{Annotation} \defn \TRS{[}\ \OPTG{\NT{TypeName}\ \TRS{:}}\ \NT{PureExp}\ \TRS{]}
+\end{abssyntax}
+
+\begin{absexample}
+[LocationType:Near] Peer p;
+[Far] Network n;
+List<[Near] Peer> peers = Nil;
+\end{absexample}
+
+\section{Type Annotations}
+ABS has a predefined meta-annotation \absinline{TypeAnnotation} to declare
+annotations to be \emph{Type Annotations}.
+Data types that are annotated with that annotation are specially treated by the
+ABS compiler to support an easier implementation of pluggable type systems.
+
+\begin{absexample}
+[TypeAnnotation]
+data LocationType = Far | Near | Somewhere | Infer;
+\end{absexample}

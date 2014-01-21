@@ -113,6 +113,11 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
+    public void ratEq() {
+        assertEvalTrue("{ Bool testresult = 8/24 == 2/6 ;  }");
+    }
+
+    @Test
     public void ratGt() {
         assertEvalTrue("{ Bool testresult = 5/3 > 4/3;  }");
     }
@@ -160,6 +165,26 @@ public class PrimitiveTypes extends SemanticTests {
     @Test
     public void stringNotEq() {
         assertEvalTrue("{ Bool testresult = \"\" != \" \"; }");
+    }
+
+    @Test
+    public void intRatParameter() {
+        assertEvalTrue("def Int c(Int a)=a/2; { Int a =c(5/2); Bool testresult = a ==1; }");
+    }
+
+    @Test
+    public void intRatLet() {
+        assertEvalTrue("{  Bool testresult = let (Int x) = 5/2 in x == 2; }");
+    }
+
+    @Test
+    public void intRatGtEq() {
+        assertEvalTrue("{ Bool testresult = 101/100 > 1;  }");
+    }
+
+    @Test
+    public void intRatLtEq() {
+        assertEvalTrue("{ Bool testresult = 9999999/10000000 < 1;  }");
     }
 
 }

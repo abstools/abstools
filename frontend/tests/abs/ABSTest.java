@@ -13,7 +13,6 @@ import java.util.Set;
 
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
-import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 import static abs.ABSTest.Config.*;

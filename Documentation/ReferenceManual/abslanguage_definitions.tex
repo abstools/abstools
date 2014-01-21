@@ -1,0 +1,362 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% some commonly used commands
+
+\definecolor{darkblue}{rgb}{0,0,0.6}
+\definecolor{darkgreen}{rgb}{0,0.6,0}
+\definecolor{darkred}{rgb}{0.7,0,0}
+
+\newcommand{\mynote}[1]{
+  \ensuremath{\left\langle\right.\!\!\left\langle\right.\!}\bf #1%
+  \ensuremath{\!\left.\right\rangle\!\!\left.\right\rangle}}
+\newcommand{\DC}[1]{\textcolor{blue}{\mynote{DC: #1}}}
+\newcommand{\RM}[1]{\textcolor{darkgreen}{\mynote{RM: #1}}}
+\newcommand{\JP}[1]{\textcolor{darkred}{\mynote{JP: #1}}}
+\newcommand{\JS}[1]{\textcolor{violet}{\mynote{JS: #1}}}
+
+\newcommand{\muTVL}{\ensuremath{\mu\textrm{TVL}}\xspace}
+\newcommand{\fid}{\ensuremath{\mathsf{FID}}\xspace}
+\newcommand{\aid}{\ensuremath{\mathsf{AID}}\xspace}
+\newcommand{\name}{\ensuremath{\mathsf{Name}}\xspace}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Concrete syntax used in D1.2
+
+\newcommand{\NT}[1]{\textit{#1}}
+%\newcommand{\TR}[1]{\texttt{\underline{\raisebox{-2.2pt}{\rule{0pt}{0pt}}#1}}}
+\newcommand{\TR}[1]{\ensuremath{\mathtt{#1}}}
+\newcommand{\TRS}[1]{\texttt{#1}}
+\newcommand{\VAR}[1]{\textsc{#1}}
+%\newcommand{\MANY}[1]{\ensuremath{\bnfmany{#1}}}
+%\newcommand{\MANYG}[1]{\ensuremath{\bnfmany{(#1)}}}
+\newcommand{\MANY}[1]{#1\ensuremath{^*}}
+\newcommand{\MANYG}[1]{\ensuremath{(}#1\ensuremath{)^*}}
+\newcommand{\PLUS}[1]{\bnfplus{#1}}
+\newcommand{\PLUSG}[1]{\bnfplus{(#1)}}
+\newcommand{\OPT}[1]{\ensuremath{[}#1\ensuremath{]}}
+\newcommand{\OPTG}[1]{\ensuremath{[}#1\ensuremath{]}}
+%\raisebox{-2pt}{\rule{0pt}{0pt}
+
+%\newcommand{\defNT}[1]{\NT{#1} &::=&}
+\newcommand{\defn}{&::=&}
+\newcommand{\defc}{\\&\multicolumn{1}{r}{\ensuremath{|}}&}
+\newcommand{\concrDefn}[1]{\defn #1}
+\newcommand{\concrCont}[1]{\defc #1}
+\newcommand{\concrNewline}[1]{\\&& #1}
+
+
+\newenvironment{bnfgrammar}
+{\begin{tabular}{lrl@{\hspace{3mm}}l}}
+{\end{tabular}}
+
+\newenvironment{abssyntax}
+{~\\[1ex]\noindent\textbf{Syntax:}\\[1ex]
+\begin{bnfgrammar}}
+{\end{bnfgrammar}\\[1ex]}
+
+\newenvironment{abstractgrammar}
+{\[ \begin{array}[t]{@{}lrl@{\hspace{3mm}}l@{}}}
+{\end{array}\]}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Making grammars consistent
+
+\newcommand{\bnfoptional}[1]     {{ [} #1 { ]}\, }
+\newcommand{\bnfplus}[1]{#1\ensuremath{^+}}%one or more occurrences, separated by comma
+\newcommand{\bnfdef}               {::=}
+\newcommand{\bnfbar}               {\mathrel{|}}
+
+\newcommand{\seqof}[1]{\MANY{#1}}
+\newcommand{\bnfmany}[1]{\MANY{#1}}
+\newcommand{\many}[1]{\MANY{#1}}
+\newcommand{\manymath}[1]{\ensuremath{\overline{#1}}}
+\newcommand{\kw}[1]{\ensuremath{\mathtt{#1}}}  % same as \TR
+
+\newcommand{\seqofg}[1]{\MANYG{#1}}
+\newcommand{\bnfmanyg}[1]{\MANYG{#1}}
+\newcommand{\manyg}[1]{\MANYG{#1}}
+
+\newcommand{\grshape}{\slshape}
+%\newcommand{\grface}{\texttt}
+
+\newcommand{\gmany}[1]     {\{#1\}}                      %%% 
+%\newcommand{\gopt}[1] {\textup{[}{#1}\textup{]}}
+\newcommand{\gopt}[1] {[{#1}]}
+\newcommand{\gbar}{\ensuremath{|\ }}
+\newcommand{\posix}[1]     {\textup{[:\,}{#1}\textup{\,:]}}                      %%% 
+
+%\newcommand{\grface}{\textsl}
+%\newcommand{\grface}{\texttt}
+
+\newcommand{\sourcefont}{\ttfamily}
+\newcommand{\commentfont}{\slshape\rmfamily\color{black!70}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\colorlet{keywordcolor}{blue!50!black}
+
+\lstdefinelanguage{ABS}{
+ language=Java,
+ deletekeywords={void,long,int,byte,boolean,true,false}, 
+ morekeywords={type, data, def, cog, export, import, get, let, then, in, await, assert,suspend,module,from,now,duration,deadline,
+delta,uses,adds,modifies,removes,original,core,productline,corefeatures,optionalfeatures,after,when,product,hasAttribute,hasMethod},
+}
+
+%\def\codesize{\fontsize{9}{10}}
+
+\lstnewenvironment{abs}{%
+  \lstset{language=ABS,columns=fullflexible,mathescape=true,%
+           keywordstyle=\bf\sffamily,commentstyle=\sl\sffamily,%
+           basicstyle=\footnotesize\normalfont\sffamily,inputencoding=latin1, % i would prefer utf8
+           extendedchars,xleftmargin=2em,showstringspaces=false}%
+  \csname lst@SetFirstLabel\endcsname}
+  {\csname lst@SaveFirstLabel\endcsname}
+
+
+%%%% mTVL
+\lstdefinelanguage{MTVL}{keywords=
+{root,group,extension,oneof,allof,opt},
+  sensitive=true,
+  morecomment=[l]{//},
+  morestring=[b]"}
+
+%\def\codesize{\fontsize{9}{10}}
+\lstnewenvironment{mtvl}{%
+ \lstset{language=MTVL,columns=fullflexible,mathescape=true,%
+           keywordstyle=\bf\sffamily,commentstyle=\sl\sffamily,%
+           basicstyle=\footnotesize\normalfont\sffamily,inputencoding=latin1, % i would prefer utf8
+           extendedchars,xleftmargin=2em}%
+   \csname lst@SetFirstLabel\endcsname}
+  {\csname lst@SaveFirstLabel\endcsname}
+
+%%%% Spec lang
+
+\lstdefinelanguage{SPEC}{keywords={interface,spec,in,out,calls,returns},
+  sensitive=true,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]"}
+\lstnewenvironment{spec}{%
+\lstset{language=SPEC,columns=fullflexible,mathescape=true,%
+        keywordstyle=\bf\sffamily,commentstyle=\sl\sffamily,%
+        basicstyle=\footnotesize\normalfont\sffamily,inputencoding=latin1, % i would prefer utf8
+        extendedchars,xleftmargin=2em}%
+  \csname lst@SetFirstLabel\endcsname}
+  {\csname lst@SaveFirstLabel\endcsname}
+
+\lstdefinestyle{absgrammar}{
+  basicstyle=\ttfamily,
+%  moredelim=[is][\bfseries]{'}{'},
+%  morecomment=[s][\bfseries]{'}{'},
+%  stringstyle=\bfseries,
+  morestring=[b]',
+  columns = fullflexible,%spaceflexible,%fullflexible,
+  columns = fixed,
+  fontadjust = true,
+  keepspaces = true, % do not summarize spaces
+  mathescape={false},
+  xleftmargin=1.5em,
+ showstringspaces = false,
+}
+
+\lstdefinestyle{absnobg} {
+ language=ABS,
+ basicstyle=\sourcefont\upshape,
+ commentstyle=\commentfont,
+ keywordstyle=\bfseries\color{keywordcolor}\upshape,
+% deletekeywords={static,public,private}
+ classoffset=1,
+ % standard types:
+ morekeywords={Unit,Int, Rat, Bool, List, Set, Pair, Fut, Maybe, String, Triple, Either, Map},
+ keywordstyle=\color{violet},
+ classoffset=0,
+ mathescape={true},
+ escapechar={\#},
+ columns = fullflexible,%spaceflexible,%fullflexible,
+ fontadjust = true,
+ keepspaces = true, % do not summarize spaces
+ showstringspaces = false,
+% inputencoding=utf8,
+% numbers=left,
+ xleftmargin=1.5em,
+framexleftmargin=1em,
+framextopmargin=0.5ex,
+% breaklines=true,
+% lineskip=0pt, 
+% abovecaptionskip=-1ex,
+% belowcaptionskip=-1ex,
+% breakautoindent = true,
+% breakindent = 2em,
+% breaklines = true,
+ emptylines=10
+}
+
+\lstdefinestyle{abs} {
+style=absnobg,
+framerule=1pt,
+backgroundcolor=\color{blue!5},
+rulecolor=\color{gray!50},
+frame=tblr
+}
+
+% make abs the default style
+%\lstset{
+%style=abs
+%}
+
+\lstdefinestyle{absexample}{
+style=abs,
+%backgroundcolor=\color{green!80!black!10},
+}
+
+\newcommand{\absinline}[1]{\lstinline[style=abs]{#1}}
+\newcommand{\absinlinesmall}[1]{\lstinline[style=abs,basicstyle=\sourcefont\footnotesize\upshape,
+ commentstyle=\commentfont\footnotesize,
+ keywordstyle=\bfseries\color{keywordcolor}\footnotesize\upshape]{#1}}
+
+\lstnewenvironment{abscode}{
+\lstset{style=abs}}
+{}
+
+\lstnewenvironment{abscodesmall}{
+\lstset{style=abs, basicstyle=\sourcefont\footnotesize\upshape,
+ commentstyle=\commentfont\footnotesize,
+ keywordstyle=\bfseries\color{keywordcolor}\footnotesize\upshape
+}}
+{}
+
+\lstnewenvironment{abscodesmallnobg}{
+\lstset{style=absnobg, basicstyle=\sourcefont\footnotesize\upshape,
+ commentstyle=\commentfont\footnotesize,
+ keywordstyle=\bfseries\color{keywordcolor}\footnotesize\upshape
+}}
+{}
+
+\lstnewenvironment{absgrammar}{%
+~\\[1ex]\noindent\textbf{Syntax:}
+\lstset{style=absgrammar}}
+{}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\grsh}[1]{{\grshape #1}}
+
+\newenvironment{grprode}[2]
+{{\grshape #1}\,:
+\\\indent\indent{\grshape #2}}
+{\vspace{.75\baselineskip}}
+
+\newcommand{\gprod}[2]{\begin{grprode}{#1}{#2}\end{grprode}}   
+\newcommand{\gnewline}{\\\mbox{}\hspace{4em}}   
+
+
+\newcommand{\gexnewline}{\\\mbox{}\indent}   
+
+%\newcommand{\gnlbar}{\gnewline\mbox{}\hspace{-1em}\gbar}
+%or
+\newcommand{\gnlbar}{\gnewline\gbar}
+
+\lstnewenvironment{absexample}
+{\subsubsection*{Example:}
+\lstset{style=absexample}}
+{}
+
+\newcommand{\kwdecl}{\upshape\ttfamily}
+\newcommand{\mcode}[1]{{\texttt{#1}}} %mycode
+
+\newcommand{\kwlbrace} {\kw{\{\,}}
+\newcommand{\kwrbrace} {\kw{\}}}
+\newcommand{\kwlparen} {\kw{(\,}}
+\newcommand{\kwrparen} {\kw{)}}
+\newcommand{\kwdot} {\kw{.}}
+
+\newcommand{\kwassign} {$\,\kw{=}\,$}
+\newcommand{\kwsemi} {$\,\kw{;}\,$}
+\newcommand{\kwbar} {$\,\kw{|}\,$}
+\newcommand{\kwcomma} {$\,\kw{,}\,$}
+\newcommand{\kwlt} {$\,\kw{<}$}
+\newcommand{\kwgt} {$\kw{>}\,$}
+\newcommand{\kwclass} {\kw{class}}
+\newcommand{\kwinterface} {\kw{interface}}
+\newcommand{\kwextends} {\kw{extends}}
+\newcommand{\kwdata} {\kw{data}}
+\newcommand{\kwdef} {\kw{def}}
+\newcommand{\kwimplements} {\kw{implements}}
+\newcommand{\kwwhile} {\kw{while}}
+\newcommand{\kwassert} {\kw{assert}}
+\newcommand{\kwreturn} {\kw{return}}
+\newcommand{\kwfut} {\kw{Fut}}
+\newcommand{\kwskip} {\kw{skip}}
+\newcommand{\kwget} {\kw{get}}
+\newcommand{\kwnull} {\kw{null}}
+\newcommand{\kwawait} {\kw{await}}
+\newcommand{\kwif} {\kw{if}}
+\newcommand{\kwthen} {\kw{then}}
+\newcommand{\kwelse} {\kw{else}}
+\newcommand{\kwsuspend} {\kw{suspend}}
+\newcommand{\kwnew} {\kw{new}}
+\newcommand{\kwthis} {\kw{this}}
+\newcommand{\kwcase} {\kw{case}}
+\newcommand{\kwlet} {\kw{let}}
+\newcommand{\kwin} {\kw{in}}
+\newcommand{\kwcog} {\kw{cog}}
+\newcommand{\kwtype} {\kw{type}}
+\newcommand{\kwguardand} {\kw{\&}}
+\newcommand{\kwbang} {\kw{!}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% tikz styles
+
+\tikzstyle{box} = [draw=black,thick,bottom color=black!20,top color=white]
+\tikzstyle{bx2} = [draw=black,thick,bottom color=blue!40,top color=white]
+\tikzstyle{art} = [draw=black,rounded corners=7pt, thick,
+  fill=blue!20, text=black, inner sep=2mm,font=\sffamily]
+\tikzstyle{art2}= [art, bottom color=blue!10!gray!40, top color=white]
+
+
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{cogs}
+\pgfdeclarelayer{main}
+\pgfsetlayers{background,cogs,main}
+
+
+\newcommand{\diagramfont}{\sffamily}
+\tikzstyle{lightshadow}=[drop shadow={shadow scale=1, fill=black!20,
+%opacity=.5,
+shadow xshift=1.2pt, shadow yshift=-1.2pt}]
+
+\tikzstyle{ultralightshadow}=[
+drop shadow={shadow scale=1, fill=black!10,
+shadow xshift=2.5pt, shadow yshift=-2.5pt}]
+
+\tikzstyle{diagramnodeWithoutShadow}=[draw=black!50,fill=white,font=\diagramfont,
+line width=0.8pt, text depth=0ex]
+
+\tikzstyle{diagramnode}=[diagramnodeWithoutShadow,
+lightshadow]
+
+
+\tikzstyle{object}=[diagramnode,rectangle,rounded corners=2pt,
+inner sep=2mm,fill=black!2,fill=Lavender!80,%fill=blue!20!white,
+%shadow xshift=0.2ex, shadow yshift=-0.2ex}
+%path fading=south, shading angle=45}
+]
+\tikzstyle{mainobject}=[object,font=\diagramfont\bfseries]
+\tikzstyle{cogform}=[rectangle,line width=1.5pt,draw=black!20,
+text depth=0ex,inner sep=6pt,rounded corners]
+\tikzstyle{cog}=[cogform, ultralightshadow, fill=black!2,
+%draw=blue!50,fill=blue!10,
+] % inner sep = 0.45cm
+
+\tikzstyle{legendtext}=[right,text depth=0,font=\diagramfont\footnotesize]
+\tikzstyle{legendsymbol}=[left,text depth=0,font=\diagramfont\footnotesize]
+
+\tikzstyle{myarrow}=[single arrow,draw=gray!25,fill=gray!10,very thick]
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

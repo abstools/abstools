@@ -38,7 +38,15 @@ aspect GenerateErlang {
   public void FunctionDecl.generateErlangCode(ErlApp ea) throws IOException{
     ErlangCodeStream ecs= ea.getFunStream(moduleName());
     ErlUtil.functionHeader(ecs,"f_"+getName(),getParams());
+    boolean needTrunc=getType().isIntType() && getFunctionDef() instanceof ExpFunctionDef
+        && ((ExpFunctionDef) getFunctionDef()).getRhs().getType().isRatType();
+    if (needTrunc) {
+      ecs.print("rationals:trunc(");
+    }
     getFunctionDef().generateErlangCode(ecs,Vars.n(getParams()));
+    if (needTrunc) {
+      ecs.print(")");
+    }
     ecs.println(".");
     ecs.decIndent();
     ecs.println();
@@ -131,8 +139,16 @@ aspect GenerateErlang {
     if(getAccess() instanceof TypeParameterUse || getAccess() instanceof InterfaceTypeUse|| getAccess() instanceof DataTypeUse){
       StringWriter sw = new StringWriter();
       ErlangCodeStream buffer = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
-      if(hasInitExp())
+      if(hasInitExp()){
+        boolean needTrunc=getType().isIntType() && getInitExp().getType().isRatType();
+        if (needTrunc) {
+          buffer.print("rationals:trunc(");
+          }
         getInitExp().generateErlangCode(buffer,vars);
+        if (needTrunc) {
+          buffer.print(")");
+          }
+        }
       else 
         buffer.print("null");
       buffer.close();
@@ -145,7 +161,12 @@ aspect GenerateErlang {
   public void AssignStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars) {
     StringWriter sw = new StringWriter();
     ErlangCodeStream buffer = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
+    boolean needTrunc=getVar().getType().isIntType() && getValue().getType().isRatType();
+    if (needTrunc)
+      buffer.print("rationals:trunc(");
     getValue().generateErlangCode(buffer,vars);
+    if (needTrunc)
+      buffer.print(")");
     buffer.close();
     if(getVar() instanceof VarUse)
       ecs.format("%s = %s",vars.inc(getVar().getName()),sw.toString().substring(ecs.getIndent().length()));
@@ -181,13 +202,25 @@ aspect GenerateErlang {
   }
   @Override
   public void ReturnStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars) {
+    MethodImpl m = getContextMethod();
+    Type lht = getModel().getUnitType();
+    if (m != null) {
+        lht = m.getMethodSig().getReturnType().getType();
+    }
+    boolean needTrunc=lht.isIntType() && getRetExp().getType().isRatType();
+    if (needTrunc) {
+      ecs.print("rationals:trunc(");
+    }
     getRetExp().generateErlangCode( ecs, vars);
+    if (needTrunc) {
+      ecs.print(")");
+    }
   }
   
   @Override
   public void SyncCall.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     final List<PureExp> params = getParams();
-    ecs.print("(fun(#object{class=T})-> T end(");
+    ecs.print("(fun(#object{class=T,cog =C}) when C=:=Cog -> T end(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(")):m_%s",getMethod());
     ErlUtil.argumentList(ecs,getCallee(),params,vars);
@@ -304,78 +337,127 @@ aspect GenerateErlang {
   }
   @Override
   public void GTExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
+    ecs.print("cmp:gt(");
     getLeft().generateErlangCode(ecs,vars);
-    ecs.print(" > ");
+    ecs.print(",");
     getRight().generateErlangCode(ecs,vars);
+    ecs.print(")");
   }
   @Override
   public void LTExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
+    ecs.print("cmp:lt(");
     getLeft().generateErlangCode(ecs,vars);
-    ecs.print(" < ");
+    ecs.print(",");
     getRight().generateErlangCode(ecs,vars);
+    ecs.print(")");
   }
   
   @Override
   public void LTEQExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
+    ecs.print("cmp:le(");
     getLeft().generateErlangCode(ecs,vars);
-    ecs.print(" =< ");
+    ecs.print(",");
     getRight().generateErlangCode(ecs,vars);
+    ecs.print(")");
   }
   
   @Override
   public void GTEQExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
+    ecs.print("cmp:ge(");
     getLeft().generateErlangCode(ecs,vars);
-    ecs.print(" >= ");
+    ecs.print(",");
     getRight().generateErlangCode(ecs,vars);
+    ecs.print(")");
   }
   
   @Override
   public void EqExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
+    ecs.print("cmp:eq(");
     getLeft().generateErlangCode(ecs,vars);
-    ecs.print(" =:= ");
+    ecs.print(",");
     getRight().generateErlangCode(ecs,vars);
+    ecs.print(")");
   }
   @Override
   public void NotEqExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
+    ecs.print("(not cmp:eq(");
     getLeft().generateErlangCode(ecs,vars);
-    ecs.print(" =/= ");
+    ecs.print(",");
     getRight().generateErlangCode(ecs,vars);
+    ecs.print("))");
   }
  
   @Override
   public void MinusExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
-    ecs.print("( - ");
+    if (getOperand().getType().isIntType())   
+        ecs.print("( - ");
+    else
+        ecs.print("rationals:neg( ");
     getOperand().generateErlangCode(ecs,vars);
     ecs.print(")"); 
   }
   
   @Override
   public void AddAddExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
-    getLeft().generateErlangCode(ecs, vars);
-    if (this.getType().isStringType())
-        ecs.print(" ++ ");
-    else
+    if (this.getType().isStringType()){
+      getLeft().generateErlangCode(ecs, vars);
+      ecs.print(" ++ ");
+      getRight().generateErlangCode(ecs, vars);
+    }
+    else {
+      if (getLeft().getType().isIntType() && getRight().getType().isIntType() ){
+        getLeft().generateErlangCode(ecs, vars);
         ecs.print(" + ");
-    getRight().generateErlangCode(ecs, vars);
+        getRight().generateErlangCode(ecs, vars);
+      }
+      else {
+        ecs.print(" rationals:fast_add(rationals:to_r(");
+        getLeft().generateErlangCode(ecs,vars);
+        ecs.print("),rationals:to_r(");
+        getRight().generateErlangCode(ecs,vars);
+        ecs.print(")) ");
+      }
+    }
   }
   
   @Override
   public void SubAddExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
-    getLeft().generateErlangCode(ecs,vars);
-    ecs.print(" - ");
-    getRight().generateErlangCode(ecs,vars);
+    if (getLeft().getType().isIntType() && getRight().getType().isIntType() ){
+        getLeft().generateErlangCode(ecs,vars);
+        ecs.print(" - ");
+        getRight().generateErlangCode(ecs,vars);}
+    else{
+      ecs.print(" rationals:fast_sub(rationals:to_r(");
+      getLeft().generateErlangCode(ecs,vars);
+      ecs.print("),rationals:to_r(");
+      getRight().generateErlangCode(ecs,vars);
+      ecs.print(")) ");
+    }
   }
   @Override
   public void MultMultExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
-    getLeft().generateErlangCode(ecs,vars);
-    ecs.print(" * ");
-    getRight().generateErlangCode(ecs,vars);
+    if (getLeft().getType().isIntType() && getRight().getType().isIntType() )
+     
+    {
+      getLeft().generateErlangCode(ecs,vars);
+      ecs.print(" * ");
+      getRight().generateErlangCode(ecs,vars);
+    }
+    else{
+      ecs.print(" rationals:fast_mul(rationals:to_r(");
+      getLeft().generateErlangCode(ecs,vars);
+      ecs.print("),rationals:to_r(");
+      getRight().generateErlangCode(ecs,vars);
+      ecs.print(")) ");
+    }
   }
   @Override
   public void DivMultExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
+    ecs.print(" rationals:fast_div(rationals:to_r(");
     getLeft().generateErlangCode(ecs,vars);
-    ecs.print(" / ");
+    ecs.print("),rationals:to_r(");
     getRight().generateErlangCode(ecs,vars);
+    ecs.print(")) ");
   }
   @Override
   public void ModMultExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
@@ -389,10 +471,15 @@ aspect GenerateErlang {
   {
     ecs.print("(fun (V_"+getVar().getName()+"_0)->");
     Vars v=vars.pass();
-    v.nV(getVar().getName());
+    v.nVignoreOverload(getVar().getName());
     getExp().generateErlangCode(ecs,v);
     ecs.print(" end(");
+    boolean needTrunc=getVar().getType().isIntType() && getVal().getType().isRatType();
+    if (needTrunc)
+      ecs.print("rationals:trunc(");
     getVal().generateErlangCode(ecs,vars);
+    if (needTrunc)
+      ecs.print(")"); 
     ecs.print("))");
   }
   @Override

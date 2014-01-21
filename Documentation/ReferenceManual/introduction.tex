@@ -1,0 +1,29 @@
+\chapter{Introduction}
+This chapter describes the core ABS language as it is implemented in
+the ABS tools.  The ABS language is a class-based object-oriented
+language that features algebraic data types and side effect-free
+functions.  Syntactically, the ABS language tries to be as close as
+possible to the Java language~\cite{gosling96} so that programmers
+that are used to Java can easily use the ABS language without much
+learning effort.
+
+\section{Notation}
+In this chapter we often present the concrete syntax of the ABS language.\index{syntax}
+To do so we use BNF\footnote{Backus-Naur Form} with the following denotations.
+\begin{itemize}
+\item $\OPT{x}$ denotes zero or one occurrence of $x$. \\
+The same notation is used to represent an optional element in the formal system.
+In effect $\OPT{x}$ corresponds to either nothing or an element of $x$.
+\item $\MANY{x}$ denotes zero or more occurrences of $x$. \\
+Note that in formal semantics the notation $\manymath{x}$ is used to
+ represent an explicit sequence of elements $x_1,\ldots,x_n$; similarly $\manymath{x}:\manymath{T}$ represents
+$x_1:T_1,\ldots,x_n:T_n$, following Pierce~\cite{Pierce:TypeSystems}.
+\item $\PLUS{x}$ denotes one or more occurrences of $x$.
+\item $x \bnfbar y$ means one of either $x$ or $y$.
+\item \posix{$x$} denotes the POSIX character class $x$. %\todo{reference to POSIX}
+%\item \verb_'x'_ denotes that \verb_x_ is a terminal symbol
+%\item \bnfplus{x} denotes one or more occurrences of x. 
+\item text in \TR{monospace} denotes terminal symbols.
+\item text in \NT{italics} denotes non-terminals in the grammar.
+%\item text in \textsf{sans serif} font denotes identifiers in an abstract grammar.
+\end{itemize}

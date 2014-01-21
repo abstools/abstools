@@ -17,6 +17,26 @@
 	<property name="dist.dir" location="${basedir}/dist" />
 	<property name="frontend.dir" location="../frontend" />
 	
+        <macrodef name="git-revision">
+          <attribute name="output"/>
+          <attribute name="failonerror" default="false" />
+          <sequential>
+            <exec executable="git" outputproperty="head"
+                  failonerror="@{failonerror}" >
+              <arg value="rev-parse"/>
+              <arg value="--short"/>
+              <arg value="HEAD"/>
+            </exec>
+            <exec executable="git" outputproperty="dirty"
+                  failonerror="@{failonerror}" >
+              <arg value="diff"/>
+              <arg value="--shortstat"/>
+            </exec>
+            <condition  property="@{output}" value="${head}" else="${head}-dirty" >
+              <equals arg1="${dirty}" arg2=""/>
+            </condition>
+          </sequential>
+        </macrodef>
 
 	<taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask">
 		<classpath>
@@ -151,17 +171,15 @@
 		<javadoc destdir="${doc}" linksource="yes" packagenames="*" sourcepath="${src}">
 		</javadoc>
 	</target>
+        <target name="versionstamp">
+          <tstamp/>
+          <git-revision output="git-revision"/>
+          <condition property="plugin.version" value="${revision.prefix}.${DSTAMP}${TSTAMP}-${git-revision}" else="${revision.prefix}.${DSTAMP}${TSTAMP}">
+            <isset property="git-revision" />
+          </condition>
+        </target>
 
-    <target name="versionstamp">
-        <tstamp/>
-        <svn failonerror="false" javahl="false">
-            <wcVersion path="${basedir}" />
-        </svn>
-        <condition property="plugin.version" value="${revision.prefix}.${DSTAMP}${TSTAMP}-svn${revision.max}" else="${revision.prefix}.${DSTAMP}${TSTAMP}">
-            <isset property="revision.max" />
-        </condition>
-    </target>
-
+ 
 	<target name="clean" description="cleans everything">
 		<delete failonerror="false" includeemptydirs="true">
 			<fileset dir="${build}" />

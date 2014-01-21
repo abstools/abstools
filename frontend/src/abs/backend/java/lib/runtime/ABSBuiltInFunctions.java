@@ -27,8 +27,7 @@ import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.utils.DynamicClassUtils;
 
 public class ABSBuiltInFunctions {
-    
-    
+
     public static ABSInteger strlen(ABSString s) {
         return s.strlen();
     }
@@ -45,39 +44,42 @@ public class ABSBuiltInFunctions {
     public static ABSRational currentms() {
         return ABSRational.fromBigInt(new Aprational(new Apint(System.currentTimeMillis()), new Apint(1000)));
     }
-    
+
     public static ABSInteger lowlevelDeadline() {
         return ABSInteger.fromInt(-1);
     }
-    
+
     public static ABSInteger random(ABSInteger i) {
         if (i.ltEq(ABSInteger.ZERO).toBoolean()) {
             throw new UnmatchedCaseException("Random function called with non positive upper bound " + i);
         }
         BigInteger n = i.getBigInteger();
         Random rand = ABSRuntime.getCurrentRuntime().getRandom();
-        
+
         BigInteger result = new BigInteger(n.bitLength(), rand);
-        while( result.compareTo(n) >= 0 ) {
+        while (result.compareTo(n) >= 0) {
             result = new BigInteger(n.bitLength(), rand);
         }
         return ABSInteger.fromBigInt(result);
     }
-    
+
     public static <T> ABSString toString(T t) {
         return ABSString.fromString(t.toString());
     }
-    
-    /* 
-     * functions related to user-defined schedulers (see abslang, module ABS.Scheduler)
+
+    /*
+     * functions related to user-defined schedulers (see abslang, module
+     * ABS.Scheduler)
      */
     public static ABSString method(ABSProcess p) {
         return ABSString.fromString(p.getMethodName());
     }
+
     public static ABSDataType arrival(ABSProcess p) {
         Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Time_Time");
         return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getArrivalTime()));
     }
+
     public static ABSDataType cost(ABSProcess p) {
         if (p.getCost() == -1) {
             Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_InfDuration");
@@ -87,6 +89,7 @@ public class ABSBuiltInFunctions {
             return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getCost()));
         }
     }
+
     public static ABSDataType procDeadline(ABSProcess p) {
         if (p.getDeadline() == -1) {
             Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_InfDuration");
@@ -96,37 +99,40 @@ public class ABSBuiltInFunctions {
             return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getDeadline()));
         }
     }
+
     public static ABSDataType start(ABSProcess p) {
         Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Time_Time");
         return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getStartTime()));
     }
+
     public static ABSDataType finish(ABSProcess p) {
         Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Time_Time");
         return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getFinishTime()));
     }
+
     public static ABSBool critical(ABSProcess p) {
         return ABSBool.fromBoolean(p.isCritical());
     }
+
     public static ABSInteger value(ABSProcess p) {
         return ABSInteger.fromInt(p.getValue());
     }
-    
-    
-    
-    /* Functions to access the meta level
+
+    /*
+     * Functions to access the meta level
      * 
-     * reflect creates a "mirror object" for the given object, 
-     * which gives access to the meta API.
+     * reflect creates a "mirror object" for the given object, which gives
+     * access to the meta API.
      */
     public static <T> ABSDynamicObject reflect(T t) {
         String name = "$mirror";
         try {
-            ABSValue existingMirror = ((ABSDynamicObject)t).getFieldValue(name);
-            return (ABSDynamicObject)existingMirror;
-        } catch(NoSuchFieldException e) {
+            ABSValue existingMirror = ((ABSDynamicObject) t).getFieldValue(name);
+            return (ABSDynamicObject) existingMirror;
+        } catch (NoSuchFieldException e) {
             ABSDynamicObject mirror = new ABSDynamicObject(ObjectMirror.singleton());
-            mirror.setFieldValue("object", (ABSValue)t);
-            ((ABSDynamicObject)t).setFieldValue(name, (ABSValue)mirror);
+            mirror.setFieldValue("object", (ABSValue) t);
+            ((ABSDynamicObject) t).setFieldValue(name, mirror);
             return mirror;
         }
     }
@@ -135,10 +141,9 @@ public class ABSBuiltInFunctions {
         ABSDynamicObject pl = new ABSDynamicObject(ProductLine.singleton());
         return pl;
     }
-    
 
-    /* Convenience functions, to be removed 
-     * 
+    /*
+     * Convenience functions, to be removed
      */
     public static ABSUnit println(ABSString s) {
         try {
@@ -148,7 +153,7 @@ public class ABSBuiltInFunctions {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        //System.out.println(s.getString());
+        // System.out.println(s.getString());
         return ABSUnit.UNIT;
     }
 
@@ -157,7 +162,7 @@ public class ABSBuiltInFunctions {
         String line = scanner.nextLine();
         return ABSString.fromString(line.trim());
     }
-    
+
     /*
      * Functional break point
      * 
@@ -176,6 +181,7 @@ public class ABSBuiltInFunctions {
         }
         return val;
     }
+
     public static <A extends ABSValue> A watch(String fileName, int line, A val) {
         ABSRuntime runtime = ABSRuntime.getCurrentRuntime();
         if (runtime.debuggingEnabled()) {
@@ -187,5 +193,9 @@ public class ABSBuiltInFunctions {
         }
         return val;
     }
-    
+
+    public static ABSInteger truncate(ABSRational r) {
+        return r.truncate();
+    }
+
 }

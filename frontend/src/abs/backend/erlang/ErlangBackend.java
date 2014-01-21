@@ -7,6 +7,8 @@ package abs.backend.erlang;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
@@ -26,18 +28,32 @@ public class ErlangBackend extends Main {
             new ErlangBackend().compile(args);
         } catch (Exception e) {
             System.err.println("An error occurred during compilation: " + e.getMessage());
-
             // if (Arrays.asList(args).contains("-debug")) {
             {
                 e.printStackTrace();
             }
-
             System.exit(1);
         }
     }
 
-    private File destDir = new File("gen/erl/");
-    private boolean sourceOnly = false;
+    @Override
+    public List<String> parseArgs(String[] args) {
+        List<String> restArgs = super.parseArgs(args);
+        List<String> remainingArgs = new ArrayList<String>();
+
+        for (int i = 0; i < restArgs.size(); i++) {
+            String arg = restArgs.get(i);
+            if (arg.equals("-erlang")) {
+                // nothing to do
+            } else {
+                remainingArgs.add(arg);
+            }
+        }
+
+        return remainingArgs;
+    }
+
+    private static final File DEFAULT_DEST_DIR = new File("gen/erl/");
 
     @Override
     protected void printUsage() {
@@ -50,34 +66,27 @@ public class ErlangBackend extends Main {
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             return;
 
-        compile(model, destDir);
+        compile(model, DEFAULT_DEST_DIR);
     }
 
-    private void compile(Model m, File destDir) throws IOException, JavaCodeGenerationException {
-
+    public static void compile(Model m, File destDir) throws IOException, JavaCodeGenerationException {
         ErlApp erlApp = new ErlApp(destDir);
-        if (verbose)
-            System.out.println("Generating Erlang code...");
         m.generateErlangCode(erlApp);
         erlApp.close();
         copyRuntime(destDir);
-        if (!sourceOnly) {
-            if (verbose)
-                System.out.println("Compiling generated Java code...");
-            // javaCode.compile();
-        }
     }
 
-    private static final Set<String> files = ImmutableSet.of("src/cog.erl", "src/init_task.erl", "src/main_task.erl",
-            "src/object.erl", "src/runtime.erl", "src/task.erl", "src/async_call_task.erl", "src/builtin.erl",
-            "include/abs_types.hrl", "Emakefile", "Makefile");
+    private static final Set<String> RUNTIME_FILES = ImmutableSet.of("src/cog.erl", "src/init_task.erl",
+            "src/main_task.erl", "src/object.erl", "src/runtime.erl", "src/task.erl", "src/async_call_task.erl",
+            "src/builtin.erl", "include/abs_types.hrl", "Emakefile", "Makefile", "lib/rationals.erl", "lib/intar.erl",
+            "lib/cmp.erl");
     private static final String RUNTIME_PATH = "abs/backend/erlang/runtime/";
 
-    private void copyRuntime(File destDir) throws IOException {
+    private static void copyRuntime(File destDir) throws IOException {
         new File(destDir, "ebin").mkdir();
         InputStream is = null;
         try {
-            for (String f : files) {
+            for (String f : RUNTIME_FILES) {
                 is = ClassLoader.getSystemResourceAsStream(RUNTIME_PATH + f);
                 if (is == null)
                     throw new RuntimeException("Could not locate Runtime file:" + f);

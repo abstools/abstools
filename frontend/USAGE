@@ -10,13 +10,13 @@
 
 2. Use the ABS frontend with
 
-   bin/bash/parseABS [options] <absfiles>
+   bin/bash/absc [options] <absfiles>
 
 3. Compile to Maude or Java
 
 a) Compile to Maude with
 
-   bin/bash/generateMaude <absfile>
+   bin/bash/absc -maude <absfiles> -o <file.maude>
 
    To run the model, start Maude (download it from
    http://maude.cs.uiuc.edu/download/) and load the compiled model.
@@ -35,7 +35,7 @@ a) Compile to Maude with
 
 b) Compile to Java with
 
-      bin/bash/generateJava [options] [-d <dir>] <absfiles>
+      bin/bash/absc -java [options] [-d <dir>] <absfiles>
   
    OR
 
@@ -55,3 +55,7 @@ b) Compile to Java with
 
       java -cp dist/absfrontend.jar:<dir> MyModule.Main
    
+c) Compile to Erlang with
+
+      bin/bash/absc -erlang [options] <absfiles>
+

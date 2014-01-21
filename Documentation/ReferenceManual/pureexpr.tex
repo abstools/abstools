@@ -1,0 +1,260 @@
+\chapter{Pure Expressions}
+\emph{Pure Expressions} are side effect-free expressions. This means
+that these expressions cannot modify state variables.
+
+\begin{abssyntax}
+\NT{PureExp}     \defn \NT{Variable}
+              \defc  \NT{FieldAccess}
+              \defc  \NT{ThisExp}
+              \defc  \NT{NullLiteral}
+              \defc  \NT{LetExp}
+              \defc  \NT{DataConstrExp}
+              \defc  \NT{FnAppExp}
+              \defc  \NT{FnAppListExp}
+              \defc  \NT{IfExp}
+              \defc  \NT{CaseExp}
+              \defc  \NT{OperatorExp}
+              \defc  \TRS{(} \NT{PureExp} \TRS{)}\\
+\NT{Variable}    \defn \NT{Identifier}\\
+\NT{FieldAccess} \defn \NT{ThisExp}\ \TRS{.}\ \NT{Identifier}\\
+\NT{ThisExp}     \defn \TR{this}\\
+\NT{PureExpList} \defn \NT{PureExp}\ \MANYG{\TRS{,}\ \NT{PureExp}}
+\end{abssyntax}
+
+
+\section{Let Expressions}
+\emph{Let Expressions} bind variable names to pure expressions.
+
+\begin{abssyntax}
+\NT{LetExp} \defn \TR{let}\ \TRS{(} \NT{Param} \TRS{)}\ \TRS{=}\ \NT{PureExp}\ \TR{in}\ \NT{PureExp}
+\end{abssyntax}
+
+\begin{absexample}
+let (Bool x) = True in ~x  
+\end{absexample}
+
+\section{Data Type Constructor Expressions}
+\emph{Data Type Constructor Expressions} are expressions that create data type values by using data type constructors.
+Note that for data type constructors that have no parameters, the parentheses are optional.
+
+\begin{abssyntax}
+\NT{DataConstrExp} \defn \NT{TypeName}
+                   \defc \NT{TypeName}\ \TRS{(} \OPT{\NT{PureExpList}} \TRS{)}
+\end{abssyntax}
+
+\begin{absexample}
+True
+Cons(True, Nil)  
+ABS.StdLib.Nil
+\end{absexample}
+
+\section{Function Applications}
+\emph{Function Applications} apply functions to arguments.
+
+\begin{abssyntax}
+\NT{FnAppExp} \defn \NT{Name}\ \TRS{(} \OPT{\NT{PureExpList}} \TRS{)}   
+\end{abssyntax}
+
+\begin{absexample}
+tail(Cons(True, Nil))
+ABS.StdLib.head(list)
+\end{absexample}
+
+\section{If-Then-Else Expression}
+ABS has a standard if-then-else expression.
+
+\begin{abssyntax}
+\NT{IfExp}  \defn \TR{if}\ \NT{PureExp}\ \TR{then} \NT{PureExp}\ \TR{else} \NT{PureExp}
+\end{abssyntax}
+
+
+\begin{absexample}
+if 5 == 4 then True else False
+\end{absexample}
+
+\section{Case Expressions / Pattern Matching}
+ABS supports pattern matching by the \emph{Case Expression}.  It takes
+an expression as first argument, which is matched against a series of
+patterns.  The value of the case expression itself is the value of the
+expression on the right-hand side of the first matching pattern.
+It is an error if no pattern matches the expression.
+
+
+\begin{abssyntax}
+\NT{CaseExp}       \defn \TR{case}\ \NT{PureExp}\ \TRS{\{} \MANY{\NT{CaseBranch}}\ \TRS{\}}\\
+\NT{CaseBranch}    \defn \NT{Pattern}\ \TRS{=>}\ \NT{PureExp}\ \TRS{;}\\
+\NT{Pattern}       \defn \NT{Identifier}
+                \defc  \NT{Literal}
+                \defc  \NT{ConstrPattern}
+                \defc  \TRS{\_}\\
+\NT{ConstrPattern} \defn \NT{TypeName}\ \OPTG{\TRS{(}\ \OPT{\NT{PatternList}}\ \TRS{)}}\\
+\NT{PatternList}   \defn \NT{Pattern}\ \MANYG{\TRS{,}\ \NT{Pattern}}
+\end{abssyntax}
+
+% \begin{abscode}
+% case <expr> {
+%   <pattern> => <expr> ;
+%   <pattern> => <expr> ;
+%   ...
+% }  
+% \end{abscode}
+
+\subsection{Patterns}
+There are five different kinds of patterns available in ABS:
+\begin{itemize}
+\item Pattern Variables (e.g., \absinline{x}, where \absinline{x} is not bound yet)
+\item Bound Variables (e.g., \absinline{x}, where \absinline{x} is bound)
+\item Literal Patterns (e.g., \absinline{5})
+\item Data Constructor Patterns (e.g.,~\absinline{Cons(Nil,x)})
+\item Underscore Pattern (\absinline{_})
+\end{itemize}
+
+\subsubsection{Pattern Variables}
+Pattern variables are simply unbound variables.
+Like the underscore pattern, these variables match every value, but, in addition, bind the variable to the matched value. The bound variable can then be used in the right-hand-side expression of the corresponding branch.
+Typically, pattern variables are used inside of data constructor patterns to extract values from data constructors.
+For example:
+\begin{abscode}
+def A fromJust<A>(Maybe<A> a) = 
+  case a { 
+    Just(x) => x; 
+  };
+\end{abscode}
+
+\subsubsection{Bound Variables}
+If a bound variable is used as a pattern, the pattern matches if the value of the case expression is equal to the value of the bound variable.
+
+\begin{abscode}
+def Bool contains<A>(List<A> list, A value) =
+  case list {
+    Nil => False;
+    Cons(value, _) => True;
+    Cons(_, rest) => contains(rest, value);
+  };
+\end{abscode}
+
+\subsubsection{Literal Patterns}
+Literals can be used as patterns. This is similar to bound variables, because the pattern matches if the value of the case expression is equal to the literal value.
+
+\begin{abscode}
+def Bool isEmpty(String s) =
+  case b {
+    "" => True;
+    _  => False;
+  };
+\end{abscode}
+
+\subsubsection{Data Constructor Patterns}
+A data constructor pattern is like a standard data constructor expression, but where certain sub expressions can be patterns again.
+
+\begin{abscode}
+def Bool negate(Bool b) =
+  case b {
+    True => False;
+    False => True;
+  };
+\end{abscode}
+
+\begin{abscode}
+def List<A> remainder(List<A> list) =
+  case b {
+    Cons(_, rest) => rest;
+  };
+\end{abscode}
+
+\subsubsection{Underscore Pattern}
+The underscore pattern (\absinline{_}) simply matches every value, but
+in contrast to pattern variables the matched value is not retained in
+the right-hand-side expression of the branch.  It is generally used as
+the last pattern in a case expression to define a default case.  For
+example:
+\begin{abscode}
+def Bool isNil<A>(List<A> list) =
+  case list {
+    Nil => True;
+    _ => False;
+  };
+\end{abscode}
+
+
+% \subsubsection{Error Cases}
+% It is currently backend dependent what happens if there is a case expression which does not match any pattern.
+% The Java backend throws an \verb_UnmatchedCaseException_ exception in this case.
+
+\subsection{Type Checking}
+A case expression is type-correct if and only if all its expressions and all its branches are type-correct and the right-hand side of all branches have a common super type. This common super type is also the type of the overall case expression. 
+
+A branch (a pattern and its expression) is type-correct if its pattern and its right-hand side expression are type-correct.
+A pattern is type-correct if it can match the corresponding case expression.
+
+\section{Operator Expressions}
+ABS has a number of predefined operators which can be used to form \emph{Operator Expressions}.
+
+\begin{abssyntax}
+\NT{OperatorExp} \defn \NT{UnaryExp}
+              ~|~ \NT{BinaryExp}\\
+\NT{UnaryExp}    \defn \NT{UnaryOp}\ \NT{PureExp}\\
+\NT{UnaryOp}     \defn \verb*_~_ ~|~ \TRS{-}\\
+\NT{BinaryExp}   \defn \NT{PureExp}\ \NT{BinaryOp}\ \NT{PureExp}\\
+\NT{BinaryOp}    \defn \TRS{||} ~|~\TRS{\&\&} ~|~ \TRS{==} ~|~ \TRS{!=} ~|~ \TRS{<} ~|~ \TRS{<=} ~|~ \TRS{>} ~|~ \TRS{>=} ~|~ \TRS{+} ~|~ \TRS{-} ~|~ \TRS{*} ~|~ \TRS{/} ~|~ \TRS{\%}
+\end{abssyntax}
+
+\begin{table}[ht]
+\centering
+ \renewcommand{\arraystretch}{1.5} 
+ \begin{tabular}[h]{| l | l | l | l | l |}
+   \hline
+   Expression & Meaning & Associativity & Argument types & Result type \\
+   \hline
+\mcode{e1 || e2}  & logical or & left & Bool, Bool & Bool \\ \hline 
+\mcode{e1 \&\& e2}  & logical and & left & Bool, Bool & Bool \\ \hline
+\mcode{e1 == e2}& equality & left & compatible & Bool \\ 
+\mcode{e1 != e2}& inequality & left & compatible & Bool \\ \hline 
+\mcode{e1 < e2}& less than & left & compatible & Bool \\
+\mcode{e1 <= e2}& less than or equal to  & left & compatible & Bool \\
+\mcode{e1 > e2}& greater than & left & compatible & Bool \\
+\mcode{e1 >= e2}& greater than or equal to  & left & compatible & Bool \\ \hline
+\mcode{e1 + e2}& concatenation & left & String, String & String \\
+\mcode{e1 + e2}& addition & left & number, number & number \\
+\mcode{e1 - e2}& subtraction & left & number, number & number \\\hline
+\mcode{e1 * e2}& multiplication & left & number, number & number \\
+\mcode{e1 / e2}& division & left & number, number & Rat \\
+\mcode{e1 \% e2}& modulo & left & number, number & Int \\ \hline 
+\verb_~ e_  & logical negation  & right & Bool  & Bool \\ 
+\verb_- e_   & integer negation  & right & number  & number \\ \hline 
+ \end{tabular}
+  \caption{\label{fig:operatorExpressions} Operator expressions, grouped according to precedence from low to high. ``number'' is either Int or Rat.}
+\end{table} 
+Table~\ref{fig:operatorExpressions} describes the meaning as well as the associativity and the precedence of the different operators.
+They are grouped according to precedence, as indicated by horizontal
+rules, from low precedence to high precedence.
+
+\subsection{Semantics of comparison operators}
+
+Basic datatypes (numbers, strings) are compared by value.
+
+Pre-defined and user-defined algebraic datatypes are compared by value.
+For \absinline{<} etc., an ordering is established via recursive
+lexicographical comparison on constructor name and arguments (i.e.,
+\absinline{Cons(...) < Nil} and \absinline{Cons(1, Nil) < Cons(2,
+  Nil)}).
+
+Objects and futures are compared by identity.  The ordering comparison
+operators (\absinline{<} etc.) define an arbitrary but stable ordering,
+i.e., the order does not change when an object or future changes
+state.\footnote{This ordering might not be stable between two
+  invocations of a program.  If ABS ever develops object serialization,
+  care must be taken to uphold any datatype invariants across program
+  invocations, e.g., when reading back an ordered list of objects.}
+
+
+
+%\lstDeleteShortInline|
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "absrefmanual"
+%%% End:
+
+
+

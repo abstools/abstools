@@ -90,7 +90,16 @@ public class Main {
     
     public void mainMethod(final String... args) {
        try {
-          parse(args);
+           java.util.List<String> argslist = Arrays.asList(args);
+           if (argslist.contains("-maude")) {
+               abs.backend.maude.MaudeCompiler.main(args);
+           } else if(argslist.contains("-java")) {
+               abs.backend.java.JavaBackend.main(args);
+           } else if (argslist.contains("-erlang")) {
+               abs.backend.erlang.ErlangBackend.main(args);
+           } else {
+               parse(args);
+           }
        } catch (Exception e) {
           printErrorAndExit(e.getMessage());
        }
@@ -553,10 +562,14 @@ public class Main {
                 + "  <absfiles>     ABS files/directories/packages to parse\n\n" + "Options:\n"
                 + "  -version       print version\n" 
                 + "  -v             verbose output\n" 
-                + "  -product=<PID> build given product by applying deltas (PID is the qualified product ID)\n"
+                + "  -maude         generate Maude code\n"
+                + "  -java          generate Java code\n"
+                + "  -erlang        generate Erlang code\n"
+                + "  -product=<PID> build given product by applying deltas\n"
+                + "                 (PID is the qualified product ID)\n"
                 + "  -notypecheck   disable typechecking\n"
                 + "  -nostdlib      do not include the standard lib\n"
-                + "  -dblib         include the database library (required to use the SQL extensions)\n"
+                + "  -dblib         include the database library (required for the SQL extensions)\n"
                 + "  -loctypes      enable location type checking\n"
                 + "  -locdefault=<loctype> \n"
                 + "                 sets the default location type to <loctype>\n"
@@ -565,15 +578,19 @@ public class Main {
                 + "                 sets the location aliasing scope to <scope>\n"
                 + "                 where <scope> in " + Arrays.toString(LocationTypingPrecision.values()) + "\n"
                 + "  -dump          dump AST to standard output \n" 
-                + "  -solve         solve constraint satisfaction problem (CSP) for the feature model\n"
+                + "  -solve         solve constraint satisfaction problem (CSP) for the feature\n"
+                + "                 model\n"
                 + "  -solveall      get ALL solutions for the CSP\n"
-                + "  -solveWith=<PID> \n"
+                + "  -solveWith=<PID>\n"
                 + "                 solve CSP by finding a product that includes PID.\n"
-                + "  -min=<var>     minimise variable <var> when solving the CSP for the feature model\n"
-                + "  -max=<var>     maximise variable <var> when solving the CSP for the feature model\n"
+                + "  -min=<var>     minimise variable <var> when solving the CSP for the feature\n"
+                + "                 model\n"
+                + "  -max=<var>     maximise variable <var> when solving the CSP for the feature\n"
+                + "                 model\n"
                 + "  -maxProduct    get the solution that has the most number of features\n"
                 + "  -minWith=<PID> \n"
-                + "                 solve CSP by finding a solution that tries to include PID with minimum number of changes.\n"
+                + "                 solve CSP by finding a solution that tries to include PID\n"
+                + "                 with minimum number of changes.\n"
                 + "  -nsol          count the number of solutions\n"
                 + "  -noattr        ignore the attributes\n"
                 + "  -check=<PID>   check satisfiability of a product with qualified name PID\n"

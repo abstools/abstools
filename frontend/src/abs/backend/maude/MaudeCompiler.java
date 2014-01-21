@@ -75,7 +75,9 @@ public class MaudeCompiler extends Main {
                 defaultResources = Integer.parseInt(arg.split("=")[1]);
             } else if (arg.startsWith("-debug")) {
                 debug  = true;
-            }else {
+            } else if (arg.equals("-maude")) {
+                // nothing to do
+            } else {
                 remainingArgs.add(arg);
             }
         }

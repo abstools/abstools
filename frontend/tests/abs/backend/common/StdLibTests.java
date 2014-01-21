@@ -30,11 +30,11 @@ public class StdLibTests extends SemanticTests {
     public void setContains2() {
         assertEvalTrue("{ Set<Int> s = set[1, 2, 3]; Bool testresult = ~contains(s, 4); }");
     }
-    
+
     @Test
     public void setUnion() {
-        assertEvalTrue(" { Set<Int> s1 = set[1,2,3]; Set<Int> s2 = set[1,2,4]; Set<Int> res = union(s1,s2);" +
-        		"Bool testresult = (size(res) == 4) && contains(res,4) && contains(res,3); }");
+        assertEvalTrue(" { Set<Int> s1 = set[1,2,3]; Set<Int> s2 = set[1,2,4]; Set<Int> res = union(s1,s2);"
+                + "Bool testresult = (size(res) == 4) && contains(res,4) && contains(res,3); }");
     }
 
     @Test
@@ -84,4 +84,13 @@ public class StdLibTests extends SemanticTests {
         assertEvalTrue("{ Bool testresult = strlen(\" \") == 1; }");
     }
 
+    @Test
+    public void truncate() {
+        assertEvalTrue("{ Bool testresult = truncate(11/2) == 5; }");
+    }
+
+    @Test
+    public void truncate2() {
+        assertEvalTrue("{ Bool testresult = truncate(5) == 5; }");
+    }
 }

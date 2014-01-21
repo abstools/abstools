@@ -1,0 +1,116 @@
+
+\usepackage{etex}  % for more tex registers
+\usepackage[svgnames]{xcolor}
+\usepackage{graphics}
+\usepackage[final]{graphicx}                             % TODO: change to graphics?
+\graphicspath{{./figures/}}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc} % otherwise beramono does not work as it only provides T1 fonts
+\usepackage[final]{pdfpages}                             % Include pages from another PDF document
+\usepackage{ifdraft}                                     % Provides test for draft or final status
+                                                         % found at: http://ftp.ktug.or.kr/tex-archive/macros/latex/contrib/oberdiek/
+
+\usepackage{pgf,pgfarrows,xcolor}                       % PDF drawing package
+\usepackage{xspace}
+\usepackage{stmaryrd}                    % Exciting symbols
+
+\usepackage[inline,nomargin]{fixme}  % Notes on things yet to do.
+                             % http://www.math.utah.edu/tex-archive/macros/latex/contrib/fixme/?D=A
+\usepackage{float}           % More placement control on floats
+\usepackage{fancyhdr}     % Custom page headers
+
+%% Are all of these packages needed? (Copied from old abs.tex)
+\usepackage{latexsym}
+\usepackage{amsfonts}
+%%%\usepackage{cite}
+
+%\usepackage{alltt}
+\usepackage{booktabs}      % for fancy tables in checklist at start
+
+
+\usepackage{tikz}
+\usetikzlibrary{matrix,arrows}
+\usetikzlibrary{shapes}
+\usetikzlibrary{patterns}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc,decorations.pathreplacing,matrix,shadows,fit} % Compiler figure
+
+%\usetikzlibrary{snakes}
+\pgfdeclarelayer{background}
+\pgfsetlayers{background,main}
+
+
+
+\usepackage{fancyheadings}
+
+\usepackage[all]{xy}
+\usepackage{subfigure}[2002/07/30]
+\usepackage{comment}
+\usepackage{rotating}
+%\usepackage{latexsym}
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage{txfonts} %%don't use it   %% for the slanted ||
+\usepackage{mathptmx} %% this one is better
+%\usepackage[standard]{ntheorem}
+
+
+%\usepackage{stmaryrd}
+%\usepackage{wrapfig}
+\input{prooftree}
+\usepackage{varioref}
+%\usepackage{ifthen}
+\renewcommand{\vref}[1]   {\ref{#1}}
+
+
+\usepackage[final]{listings}
+\lstset{mathescape}
+\lstset{basicstyle=\scriptsize}
+\lstset{numberstyle=\tiny}%
+\lstset{language=}
+%\lstset{numbers=left,numberstyle=\tiny,stepnumber=5}
+%\lstset{frame=trBL} %% The evil frame
+
+\lstset{emphstyle=\color{red},emphstyle={[2]\color{blue}\underbar}}%% global
+
+%>> \usepackage{pstricks,pst-node,pst-text,pst-3d} for scalebox
+
+
+%\usepackage{lstoc}
+%\lstset{language=Oc}
+\usepackage{psfrag}
+
+
+
+%\usepackage{changebar}
+\usepackage{longtable}
+
+\usepackage[scaled=.83]{beramono} % nicer tt font
+%\usepackage{helvet}               % nicer sf font
+
+%\usepackage{beramono}
+%\usepackage{courier}
+%\usepackage{listings}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% Hyperref customization for PDF presentation
+\usepackage[unicode]{hyperref}      % Insert hyperlinks and talk unicode
+                                    % to pdflatex.  Keep this package last.
+
+\hypersetup {
+  bookmarksopen=true,     % When bookmarks shown, unfold them
+  bookmarksopenlevel=0,   % Show chapters (0) only
+  bookmarksnumbered=true, % Include section numbers
+  pdftitle =                 % Text form of title
+                 { The ABS Language Specification },
+  pdfauthor=              % Text form of author
+                { HATS Project },
+}
+
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: "absrefmanual"
+%%% End:

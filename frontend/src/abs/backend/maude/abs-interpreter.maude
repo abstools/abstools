@@ -722,8 +722,7 @@ mod ABS-CONFIGURATION is
   --- S: Flag indicating whether the call was made synchronously, i.e. whether
   ---    a $cont statement should be generated at the end.
   --- AUX: additional process variables, currently .deadline (deadline)
-  op invoc(_,_,_,_,_,_) : Oid Label Mid DataList Bool SSubst -> Msg
-    [ctor format (b d o  b so  b so  b so  b so  b so b on)] .
+  op invoc : Oid Label Mid DataList Bool SSubst -> Msg .
 
   --- Process creation in target object:
   --- M: the method.
@@ -733,7 +732,7 @@ mod ABS-CONFIGURATION is
   --- AUX: additional process variables, currently .deadline (deadline)
   --- T: arrival time
   --- S: the object state, needed for calculation of method cost
-  op makeProcess(_,_,_,_,_,_,_) : Method Label DataList Bool SSubst Nat Subst -> Process .
+  op makeProcess : Method Label DataList Bool SSubst Nat Subst -> Process .
 
 
   --- Error and warning messages are intended to stop the machine.
@@ -741,17 +740,9 @@ mod ABS-CONFIGURATION is
   --- op error(_) : String -> [Msg] [ctor format (nnr r o! or onn)] .
   op warning(_) : String -> [Msg] [ctor format (nnr! r! r! or onn)] .
 
-  --- Terms of sort Object represent objects in the run-time configuration.
-  ---
-  op <_:_ | Cog:_, Att:_, Lcnt:_> :
-    Oid Cid Cogid Subst Nat -> Object
-    [ctor format (nr d d g ++r nir o  r ni o  r ni o--  r on)] .
-
   --- Terms that represent futures.
   ---
-  op <_: Future | Name:_, Completed:_, References:_, Value:_> :
-    Label Mid Bool Nat Data -> Future
-    [ctor format (nr d d g ++r ir o  r i o  r i o  r i o--  r on)] .
+  op future : Label Mid Bool Nat Data -> Future .
 
   --- Define Classes.
   --- Class declaration.
@@ -767,14 +758,15 @@ mod ABS-CONFIGURATION is
   rl < T : Clock | Limit: LIM > => < T : Clock | Limit: LIM, Random: random(counter) > .
 
 
-  *** Cogs.  The second argument (the currently active object) is of type Data
-  *** since it can be an Oid (the currently active object) or null.  The first
-  *** argument is a unique identifier - we re-use the Oid of the primary
-  *** object of the cog (no object can be inside two cogs, and no object can
-  *** move between cogs).  The last argument is the scheduler to use.
+  *** Terms of sort Object represent objects.  They are stored inside Cogs.
+  op object : Oid Cid Subst Nat -> Object .
+
+  *** Cogs.  They store a configuration containing all objects inside that
+  *** cog.  The running process can be 'idle' and serves as the lock for the
+  *** cog.
   sort Cogid .
   subsort Oid < Cogid .
-  op <_: Cog | Object:_, DC:_, Sched:_, Pr:_, PrQ:_ > : Cogid Data Oid Expr Process MProc -> Cog
+  op <_: Cog | Objects:_, DC:_, Sched:_, Pr:_, PrQ:_ > : Cogid Configuration Oid Expr Process MProc -> Cog
     [ctor format (nc d d c d d o! d d o! d n o! d n o! d n o!++ c-- on ) ] .
 
   *** Component Model Extension: Location
@@ -845,10 +837,11 @@ mod ABS-EVAL is
   var OID : Oid .
   vars CID CID1 CID2 : Cid .
   var COGID : Cogid .
+  var OBJS : Configuration .
 
   --- Check if a message is in the queue.
   op completed : Label Configuration -> Bool .
-  eq completed(L, < L : Future | Name: M, Completed: B, References: N, Value: D > CN) = B .
+  eq completed(L, future(L, M, B, N, D) CN) = B .
   eq completed(L, CN) = false [owise] .
 
   *** evaluate `Expr' with variable bindings `Subst', configuration
@@ -881,14 +874,6 @@ mod ABS-EVAL is
     else eval(E'', S, CN, MAC) fi .
   eq eval(let AL = EL in E, S, CN, MAC) =
     eval(E, S :: createSubst(AL, evalList(EL, S, CN, MAC)), CN, MAC) .
-
-  *** Component Model Extension: Guard
-  *** Component Model Extension: Check if an object is not in critical section
-  op isntcritical : Oid Configuration -> Bool .
-  eq isntcritical(OID, < OID : CID | Cog: COGID, Att: S, Lcnt: N > CN) = ((S ['.nbcr]) asInt == 0) .
-  eq isntcritical(OID, CN) = false [owise] .
-
-  eq eval(cr( E ), S, CN, MAC) = isntcritical( eval(E, S, CN, MAC) , CN) asAbsBool .
 
 
   *** evaluate a case statement.  If the pattern matches, augment environment
@@ -1080,12 +1065,16 @@ mod ABS-EVAL is
   eq freeFutures(noSubst) = noStmt .
   eq freeFutures((A |-> D, SS)) = freeFutures(D) ; freeFutures(SS) .
 
-  op getSchedulableProcesses : MProc Configuration SSubst -> MProc .
-  eq getSchedulableProcesses(noProc, CN, MAC) = noProc .
-  ceq getSchedulableProcesses(({ S' | SL }, W), < O : C:Cid | Cog: CG, Att: S, Lcnt: N > CN, MAC) =
-    if schedulable(SL, (S :: S'), < O : C:Cid | Cog: CG, Att: S, Lcnt: N > CN, (MAC, '.deadline |-> S'['.deadline]))
-    then { S' | SL }, getSchedulableProcesses(W, < O : C:Cid | Cog: CG, Att: S, Lcnt: N > CN, MAC)
-    else getSchedulableProcesses(W, < O : C:Cid | Cog: CG, Att: S, Lcnt: N > CN, MAC)
+  *** Filter a process list and return the ones that are schedulable.  Second
+  *** argument is a list of objects referenced from the processes, third one
+  *** the configuration (for checking status of futures).  Fourth argument is
+  *** auxiliary values for eval.
+  op getSchedulableProcesses : MProc Configuration Configuration SSubst -> MProc .
+  eq getSchedulableProcesses(noProc, OBJS, CN, MAC) = noProc .
+  ceq getSchedulableProcesses(({ S' | SL }, W), object(O, C:Cid, S, N ) OBJS, CN, MAC) =
+    if schedulable(SL, (S :: S'), object(O, C:Cid, S, N) CN, (MAC, '.deadline |-> S'['.deadline]))
+    then { S' | SL }, getSchedulableProcesses(W, object(O, C:Cid, S, N) OBJS, CN, MAC)
+    else getSchedulableProcesses(W, object(O, C:Cid, S, N) OBJS, CN, MAC)
     fi
   if O := S'['this] .
 
@@ -1097,21 +1086,18 @@ mod ABS-EVAL is
   eq consumeDCResource("num"[RA:Rat], AMOUNT:Rat)
   = "num"[RA:Rat + AMOUNT:Rat] .
 
-  op findDC : Oid Configuration -> Object .
-  eq findDC(DC:Oid, < DC:Oid : 'ABS.DC.DeploymentComponent
-      | Cog: CG:Cogid, Att: S, Lcnt: F:Nat > CN)
-  = < DC:Oid : 'ABS.DC.DeploymentComponent
-      | Cog: CG:Cogid, Att: S, Lcnt: F:Nat > .
-
   op hasEnoughResources : Oid Configuration Rat -> Bool .
   eq hasEnoughResources(DC:Oid,
-      < DC:Oid : 'ABS.DC.DeploymentComponent
-      | Cog: CG:Cogid, Att: ('cpu |-> "ABS.DC.InfCPU"[emp], S), Lcnt: F:Nat >
+          < DC:Oid : Cog | Objects:
+                           object(DC:Oid, 'ABS.DC.DeploymentComponent, ('cpu |-> "ABS.DC.InfCPU"[emp], S), F:Nat),
+                           DC: ODC':Oid, Sched: SCH':Expr, Pr: P:Process, PrQ: W':MProc >
       CN, CO:Rat)
   = true .
   eq hasEnoughResources(DC:Oid,
-      < DC:Oid : 'ABS.DC.DeploymentComponent
-      | Cog: CG:Cogid, Att: ('cpu |-> "ABS.DC.CPU"["num"[RA:Rat]], 'internalState |-> "num"[STATE:Rat], S), Lcnt: F:Nat > CN, CO:Rat)
+                < DC:Oid : Cog | Objects:
+                                 object(DC:Oid, 'ABS.DC.DeploymentComponent, ('cpu |-> "ABS.DC.CPU"["num"[RA:Rat]], 'internalState |-> "num"[STATE:Rat], S), F:Nat),
+                           DC: ODC':Oid, Sched: SCH':Expr, Pr: P:Process, PrQ: W':MProc >
+      CN, CO:Rat)
   = CO:Rat + STATE:Rat <= RA:Rat  .
 
   op getFreeResources : Data Data Rat -> Rat .
@@ -1140,12 +1126,13 @@ mod ABS-MSG-TRANSPORT is
   vars LIM RAND : Nat .
   var CO : Expr .
   var AUX : SSubst .
+  var OBJS : Configuration .
 
   --- message generation
   eq
-    < CG : Cog | Object: O1, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $call(N ; O ; M ; DL ; B ; DE) ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $call(N ; O ; M ; DL ; B ; DE) ; SL }, PrQ: W >
   =
-    < CG : Cog | Object: O1, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(DL) ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(DL) ; SL }, PrQ: W >
     invoc(O, N, M, DL, B, ('.deadline |-> DE))
       [label call-internal] .
 
@@ -1157,15 +1144,16 @@ mod ABS-MSG-TRANSPORT is
   ---
   eq
     < T : Clock | Limit: LIM, Random: RAND >
-    < CG : Cog | Object: X:Data, DC: DC:Data, Sched: SCH:Expr, Pr: P, PrQ: Q:MProc >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS,
+                 DC: DC:Data, Sched: SCH:Expr, Pr: P, PrQ: Q:MProc >
+    
     < C : Class | Param: AL', Att: S1, Sched: SC,
                   Mtds: (MIS, < M : Method | Param: AL, Cost: CO, Code: SL >), Ocnt: G >
     invoc(O, N, M, DL, B, AUX)
   =
     < T : Clock | Limit: LIM, Random: RAND >
-    < CG : Cog | Object: X:Data, DC: DC:Data, Sched: SCH:Expr, Pr: P, PrQ: (Q:MProc, makeProcess(< M : Method | Param: AL, Cost: CO, Code: SL >, N, DL, B, (AUX, 'this |-> O), T, S)) >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, 
+                 DC: DC:Data, Sched: SCH:Expr, Pr: P, PrQ: (Q:MProc, makeProcess(< M : Method | Param: AL, Cost: CO, Code: SL >, N, DL, B, (AUX, 'this |-> O), T, S)) >
     < C : Class | Param: AL', Att: S1, Sched: SC,
                   Mtds: (MIS, < M : Method | Param: AL, Cost: CO, Code: SL >), Ocnt: G >
     [label transport-imsg] .
@@ -1210,79 +1198,77 @@ mod ABS-MACHINE-BASICS-COMMON is
   vars LIM RAND : Nat .
   var SC : Expr .
   var COST : Expr .
+  var OBJS : Configuration .
 
   --- Process teardown: first release all futures, then release the Cog.  (We
   --- assume correct beginscope / endscope statements).
   ceq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | noStmt }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | noStmt }, PrQ: W >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { noSubst | freeFutures(L) }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { noSubst | freeFutures(L) }, PrQ: W >
   if L =/= noSubst
     [label Process-terminate-1] .
 
   eq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { noSubst | noStmt }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { noSubst | noStmt }, PrQ: W >
   =
-    < CG : Cog | Object: null, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W >
     [label Process-terminate-2] .
 
   *** Handle synchronous self-calls
   ceq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | get(A ; A') ; SL }, PrQ: W, {L1 | SL1} >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | get(A ; A') ; SL }, PrQ: W, {L1 | SL1} >
   =
-    < CG : Cog | Object: O1, DC: DC:Data, Sched: SCH:Expr, Pr: {L1 | SL1}, PrQ: W, { L | get(A ; A') ; SL } >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-  if  (S :: L)[A] = L1['.label]
-      /\ O1 := L1['this]
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: {L1 | SL1}, PrQ: W, { L | get(A ; A') ; SL } >
+  if O := L['this] /\ (S :: L)[A] = L1['.label]
     [label schedule-self] .
 
   --- Skip the $release instruction if the variable is uninitialized.  This
   --- helps the code generator.
   ceq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $release(A) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS,
+                 DC: DC:Data, Sched: SCH:Expr, Pr: { L | $release(A) ; SL }, PrQ: W >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-  if null = (S :: L)[A]
+    < CG : Cog | Objects: object(O, C, S, F) OBJS,
+                 DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+    if O := L['this] /\ null = (S :: L)[A]
       [label free-uninitialized] .
 
   --- Completed futures without references can be removed.
   ---
-  eq < N : Future | Name: M, Completed: true, References: 0, Value: D > = none .
+  eq future(N, M, true, 0, D) = none .
 
   --- Create a new environment.  This is for supporting local declarations in
   --- blocks etc.
   eq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $beginscope ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $beginscope ; SL }, PrQ: W >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L :: noSubst | SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L :: noSubst | SL }, PrQ: W >
     [label $beginscope] .
 
   eq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L :: S2 | $endscope ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L :: S2 | $endscope ; SL }, PrQ: W >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | freeFutures(S2) ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | freeFutures(S2) ; SL }, PrQ: W >
     [label $endscope-1] .
 
   eq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { S2 | $endscope ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { S2 | $endscope ; SL }, PrQ: W >
   =
     *** Shouldn't happen, but can't harm
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { S2 | SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { S2 | SL }, PrQ: W >
     [label $endscope-2] .
 
   *** must be a rewrite rule since we use counter.
   rl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $pushrandom ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $pushrandom ; SL }, PrQ: W >
   =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign('.random ; "ABS.StdLib.Cons"["num"[random(counter)] :: '.random]) ; SL }, PrQ: W > .
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign('.random ; "ABS.StdLib.Cons"["num"[random(counter)] :: '.random]) ; SL }, PrQ: W > .
 
   eq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $poprandom ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $poprandom ; SL }, PrQ: W >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign('.random ; "ABS.StdLib.tail"('.random)) ; SL }, PrQ: W > .
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign('.random ; "ABS.StdLib.tail"('.random)) ; SL }, PrQ: W > .
 
   --- Schedule a new process for execution, if it is schedulable.
   ---
@@ -1297,20 +1283,17 @@ mod ABS-MACHINE-BASICS-COMMON is
   --- We also consume a random value, just to be on the safe side -- the
   --- scheduling function might use random().
   crl
-    { < CG : Cog | Object: null, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W >
-      < CG : C | Cog: CG, Att: S, Lcnt: F >
+    { < CG : Cog | Objects: object(CG, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W >
       < T : Clock | Limit: LIM, Random: RAND >
       CN  }
   =>
-    { < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W minus { L | SL } >
-      < CG : C | Cog: CG, Att: S, Lcnt: F >
+    { < CG : Cog | Objects: object(CG, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: P, PrQ: W minus P >
       < T : Clock | Limit: LIM >
       CN  }
-  if W1 := getSchedulableProcesses(W, < CG : C | Cog: CG, Att: S, Lcnt: F > CN, ('.time |-> "num"[T], '.comp |-> DC:Data))
+  if W1 := getSchedulableProcesses(W, object(CG, C, S, F) OBJS, CN, ('.time |-> "num"[T], '.comp |-> DC:Data))
       /\ W1 =/= noProc
       /\ "ABS.Scheduler.Process"[N :: DL] := eval(SCH:Expr, ('queue |-> liftMProc(W1), '.random |-> "ABS.StdLib.Cons"["num"[RAND] :: "ABS.StdLib.Nil"[emp]] , S), none, ('.time |-> "num"[T], '.comp |-> DC:Data, '.random |-> "ABS.StdLib.Cons"["num"[RAND] :: "ABS.StdLib.Nil"[emp]]))
-      /\ { L | SL } := findProcess(W1, N)
-      /\ O := L['this]
+      /\ P := findProcess(W1, N)
       [label PrQ-schedulable] .
 
     *** A common initial configuration.  The timed version differs in that the
@@ -1319,43 +1302,39 @@ mod ABS-MACHINE-BASICS-COMMON is
   eq initConf(CN:Configuration, CID:Cid, DL:DataList, INIT:Int, LIM:Int) =
     CN:Configuration
     < INIT:Int : Clock | Limit: LIM:Int >
-    < ob('main, 0) : Cog | Object: ob('main, 0), DC: ob('ABS.DC.DeploymentComponent, -1), Sched: "ABS.Scheduler.defaultscheduler"('queue),
+    < ob('main, 0) : Cog | Objects: object(ob('main, 0), '..., noSubst, 0), DC: ob('ABS.DC.DeploymentComponent, -1), Sched: "ABS.Scheduler.defaultscheduler"('queue),
       Pr: { '.deadline |-> "ABS.StdLib.InfDuration"[ emp ], '_ |-> null, '.random |-> "ABS.StdLib.Nil"[emp], '.staticfuture |-> null, 'x |-> null, 'this |-> ob('main, 0) | new('x ; CID:Cid ; DL:DataList) },
       PrQ: noProc >
-    < ob('ABS.DC.DeploymentComponent, -1) : 'ABS.DC.DeploymentComponent |
-      Cog: ob('main, 0),
-      Att: 'cpu |-> "ABS.DC.InfCPU"[emp], 'creationTime |-> "ABS.StdLib.Time"["num"[0]], 'description |-> "str"["Environment"], 'history |-> "ABS.StdLib.Nil"[emp], 'initialized |-> "ABS.StdLib.True"[ emp ], 'internalState |-> "num"[0], 'nextcpu |-> "ABS.DC.InfCPU"[emp], 'totalhistory |-> "ABS.StdLib.Nil"[emp],
-      Lcnt: 0 >
-    < ob('main, 0) : '... | Cog: ob('main, 0), Att: noSubst, Lcnt: 0 >
+    < ob('ABS.DC.DeploymentComponent, -1) : Cog | Objects: object(ob('ABS.DC.DeploymentComponent, -1), 'ABS.DC.DeploymentComponent, ('cpu |-> "ABS.DC.InfCPU"[emp], 'creationTime |-> "ABS.StdLib.Time"["num"[0]], 'description |-> "str"["Environment"], 'history |-> "ABS.StdLib.Nil"[emp], 'initialized |-> "ABS.StdLib.True"[ emp ], 'internalState |-> "num"[0], 'nextcpu |-> "ABS.DC.InfCPU"[emp], 'totalhistory |-> "ABS.StdLib.Nil"[emp]), 0), DC: ob('ABS.DC.DeploymentComponent, -1), Sched: "ABS.Scheduler.defaultscheduler"('queue),
+      Pr: idle,
+      PrQ: noProc >
     < LocId | 0 > . *** Component Model Extension
 
   *** evaluate cost expression only once.
   ceq < T : Clock | Limit: LIM, Random: RAND >
-    < CG : Cog | Object: O, DC: ODC, Sched: SCH:Expr, Pr: { L | [COST]ST:Stmt ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: ODC, Sched: SCH:Expr, Pr: { L | [COST]ST:Stmt ; SL }, PrQ: W >
   =
     < T : Clock | Limit: LIM, Random: RAND >
-    < CG : Cog | Object: O, DC: ODC, Sched: SCH:Expr, Pr: { L | [COSTN:Data]ST:Stmt ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-  if not COST :: Data
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: ODC, Sched: SCH:Expr, Pr: { L | [COSTN:Data]ST:Stmt ; SL }, PrQ: W >
+    if O := L['this]
+      /\ not COST :: Data
       /\ COSTN:Data := eval(COST, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> ODC, '.random |-> L['.random])) .
     
   --- Resource consumption.  Must be a rewrite rule for confluence.
   *** DC variables:
   var ODC : Oid .    var CG1 : Cogid . var STATE : Data .
   var F1 : Nat .    vars COSTNAT DCRES MINCOST : Rat .
+  
   crl < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < CG : Cog | Object: O, DC: ODC, Sched: SCH:Expr, Pr: { L | ["num"[COSTNAT]]ST:Stmt ; SL }, PrQ: W >
-    < ODC : 'ABS.DC.DeploymentComponent |
-      Cog: CG1,
-      Att: 'cpu |-> CPU:Data, 'internalState |-> STATE, 'initialized |-> "ABS.StdLib.True"[ emp ], S1, Lcnt: F1 >
+    < CG : Cog | Objects: OBJS, DC: ODC, Sched: SCH:Expr, Pr: { L | ["num"[COSTNAT]]ST:Stmt ; SL }, PrQ: W >
+    < ODC : Cog | Objects:
+                  object(ODC, 'ABS.DC.DeploymentComponent, ('cpu |-> CPU:Data, 'internalState |-> STATE, 'initialized |-> "ABS.StdLib.True"[ emp ], S1), F1),
+                  DC: ODC':Oid, Sched: SCH':Expr, Pr: P:Process, PrQ: W':MProc >
   => < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < CG : Cog | Object: O, DC: ODC, Sched: SCH:Expr, Pr: { L | ["num"[COSTNAT - MINCOST]]ST:Stmt ; SL }, PrQ: W >
-    < ODC : 'ABS.DC.DeploymentComponent |
-      Cog: CG1,
-      Att: 'cpu |-> CPU:Data, 'internalState |-> STATE':Data, 'initialized |-> "ABS.StdLib.True"[ emp ], S1, Lcnt: F1 >
+    < CG : Cog | Objects: OBJS, DC: ODC, Sched: SCH:Expr, Pr: { L | ["num"[COSTNAT - MINCOST]]ST:Stmt ; SL }, PrQ: W >
+    < ODC : Cog | Objects:
+                  object(ODC, 'ABS.DC.DeploymentComponent, ('cpu |-> CPU:Data, 'internalState |-> STATE':Data, 'initialized |-> "ABS.StdLib.True"[ emp ], S1), F1),
+                  DC: ODC':Oid, Sched: SCH':Expr, Pr: P:Process, PrQ: W':MProc >
   if COSTNAT > 0
       /\ DCRES := getFreeResources(STATE, CPU:Data, COSTNAT)
       /\ DCRES > 0
@@ -1364,8 +1343,8 @@ mod ABS-MACHINE-BASICS-COMMON is
   [label consume-resources] .
   
 
-  eq < CG : Cog | Object: O1, DC: DC:Data, Sched: SCH:Expr, Pr: { L | ["num"[0]]ST:Stmt ; SL }, PrQ: W >
-  =  < CG : Cog | Object: O1, DC: DC:Data, Sched: SCH:Expr, Pr: { L | ST:Stmt ; SL }, PrQ: W >
+  eq < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | ["num"[0]]ST:Stmt ; SL }, PrQ: W >
+  =  < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | ST:Stmt ; SL }, PrQ: W >
   [label remove-annotation] .
 
 
@@ -1386,32 +1365,31 @@ mod ABS-MACHINE-BASICS-RL is
   var MAC : SSubst .
   var SC : Expr .
   var COST : Expr .
+  var OBJS : Configuration .
 
   --- mark
   ---
   --- Mark a label in use.  We don't bother to make this a rule until we need
   --- it.
   ceq
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: CO, References: G, Value: D >
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $mark(E) ; SL }, PrQ: W >
+    future(N, M, CO, G, D)
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $mark(E) ; SL }, PrQ: W >
   =
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: CO, References: G + 1, Value: D >
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
-  if N := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    future(N, M, CO, G + 1, D)
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+  if O := L['this]
+      /\ N := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       [label mark] .
 
   --- Ignore superfluous $mark instructions -- these are generated for code
   --- fragments that are not type-checked (e.g. within deltas) since the
   --- method signature is not available there.
   ceq
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $mark(E) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $mark(E) ; SL }, PrQ: W >
   =
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
-  if not eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) :: Label
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+  if O := L['this]
+      /\ not eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) :: Label
       [label ignored-mark] .
 
   --- free
@@ -1419,43 +1397,40 @@ mod ABS-MACHINE-BASICS-RL is
   --- Free a Future.
   ---
   ceq
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $release(E) ; SL }, PrQ: W >
-    < N : Future | Name: M, Completed: CO, References: G, Value: D >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $release(E) ; SL }, PrQ: W >
+    future(N, M, CO, G, D)
   =
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
-    < N : Future | Name: M, Completed: CO,
-                   References: if G == 0 then 0 else sd(G, 1) fi,
-                   Value: D >
-    *** HACK: L can be noSubst, so we might not be able to look up the deadline
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+    future(N, M, CO, if G == 0 then 0 else sd(G, 1) fi, D)
   if N := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> "ABS.StdLib.InfDuration"[ emp ], '.comp |-> DC:Data))
+      *** HACK: L can be noSubst, so we might not be able to look up the
+      *** deadline
+      /\ (L == noSubst or-else O == L['this])
       [label free] .
 
   --- Introduce a new variable into the local scope.
   ceq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { insert(A, D, L) | markFutures(D) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-  if D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { insert(A, D, L) | markFutures(D) ; SL }, PrQ: W >
+  if O := L['this]
+      /\ D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
     [label $vardecl] .
 
   --- assert
   ---
-  eq
-    { < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assert(E) ; SL }, PrQ: W >
-      < O : C | Cog: CG, Att: S, Lcnt: F > CN  }
+  ceq
+    { < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assert(E) ; SL }, PrQ: W >
+      CN  }
   =
     { if eval(E, (S :: L), CN, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) asBool
       then
-        < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+        < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
       else
-        < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | failure(E) ; SL }, PrQ: W >
+        < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | failure(E) ; SL }, PrQ: W >
       fi
-      < O : C | Cog: CG, Att: S, Lcnt: F > 
       CN  }
+  if O := L['this]
     [label assert] .
 endm
 mod ABS-MACHINE-BASICS-TIMED is
@@ -1477,22 +1452,22 @@ mod ABS-MACHINE-BASICS-TIMED is
   var M : Mid .
   var CG : Cogid .
   var COST : Expr .
+  var OBJS : Configuration .
 
   --- mark
   ---
   --- Mark a label in use.  We don't bother to make this a rule until we need
   --- it.
   ceq
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: CO, References: G, Value: D >
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $mark(E) ; SL }, PrQ: W >
+    future(N, M, CO, G, D)
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $mark(E) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
   =
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: CO, References: G + 1, Value: D >
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+    future(N, M, CO, G + 1, D)
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-  if N := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+  if O := L['this]
+      /\ N := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       [label mark] .
 
   --- free
@@ -1500,91 +1475,90 @@ mod ABS-MACHINE-BASICS-TIMED is
   --- Free a Future.
   ---
   ceq
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: CO, References: G, Value: D >
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $release(E) ; SL }, PrQ: W >
+    future(N, M, CO, G, D)
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $release(E) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
   =
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: CO,
-                   References: if G == 0 then 0 else sd(G, 1) fi,
-                   Value: D >
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W:MProc >
+    future(N, M, CO, if G == 0 then 0 else sd(G, 1) fi, D)
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W:MProc >
     < T : Clock | Limit: LIM, Random: RAND >
-    *** HACK: L can be noSubst, so we might not be able to look up the deadline
   if N := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> "ABS.StdLib.InfDuration"[ emp ], '.comp |-> DC:Data))
+      *** HACK: L can be noSubst, so we might not be able to look up the
+      *** deadline
+      /\ (L == noSubst or-else O == L['this])
       [label free] .
 
   --- Introduce a new variable into the local scope.
   ceq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { insert(A, D, L) | markFutures(D) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { insert(A, D, L) | markFutures(D) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-  if D := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+  if O := L['this]
+      /\ D := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
     [label $vardecl] .
 
   --- assert
   ---
-  eq
-    { < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assert(E) ; SL }, PrQ: W >
-      < O : C | Cog: CG, Att: S, Lcnt: F > 
+  ceq
+    { < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assert(E) ; SL }, PrQ: W >
       < T : Clock | Limit: LIM, Random: RAND >
       CN  }
   =
     { if eval(E, (S :: L), CN, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) asBool
       then
-        < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+        < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
       else
-        < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | failure(E) ; SL }, PrQ: W >
+        < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | failure(E) ; SL }, PrQ: W >
       fi
-      < O : C | Cog: CG, Att: S, Lcnt: F > 
       < T : Clock | Limit: LIM, Random: RAND >
       CN  }
+  if O := L['this]
     [label assert] .
 
-  *** Clock advancement.
-
+  *** Clock advancement.  MTE == Maximum time elapse.
   *** 0 <= mte <= 1 since the clock has to stop at integer boundaries so
   *** deployment components refill.
-  op mte : MProc Configuration SSubst -> Rat .
-  ceq mte((W, { L | SL }), < O : C | Cog: CG, Att: S, Lcnt: F > CN, MAC) =
-    if MTE:Rat == 0 then 0
-    else min(MTE:Rat, mte(W, < O : C | Cog: CG, Att: S, Lcnt: F > CN, MAC)) fi
-  if O := L['this]
-  /\ MTE:Rat := mte(SL, (S :: L), < O : C | Cog: CG, Att: S, Lcnt: F > CN, $insert('.deadline, L['.deadline], MAC)) .
-  eq mte(noProc, CN, MAC) = 1 .
 
+  *** MTE of (the process queue of) a cog not currently executing.
+  op mte : MProc Configuration Configuration SSubst -> Rat .
+  ceq mte((W, { L | SL }), object(O, C, S, F) OBJS, CN, MAC) =
+    if MTE:Rat == 0 then 0
+    else min(MTE:Rat, mte(W, object(O, C, S, F) OBJS, CN, MAC)) fi
+  if O := L['this]
+  /\ MTE:Rat := mte(SL, (S :: L), object(O, C, S, F) CN, $insert('.deadline, L['.deadline], MAC)) .
+  eq mte(noProc, OBJS, CN, MAC) = 1 .
+
+  *** Maximum time elapse of everything in CN.
   op mte : Configuration Configuration SSubst -> Rat .
   *** Don't advance clock if a method invocation is on its way.
   eq mte (m:Msg CN, CN', MAC) = 0 .
   *** Don't advance clock if cog is idle but has processes that can run now
   ceq mte (
-      < CG : Cog | Object: X:Data, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W >
+      < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W >
       CN, CN', MAC) =
     if MTE:Rat == 0 then 0
-    else min(MTE:Rat, mte (CN,
-          < CG : Cog | Object: X:Data, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W > CN', MAC))
+    else min(MTE:Rat,
+        mte (CN, < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W > CN', MAC))
     fi
     *** pass in cog, it's needed to find the deployment component
-  if MTE:Rat := mte(W, < CG : Cog | Object: X:Data, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W > CN CN', ('.comp |-> DC:Data, MAC)) .
+  if MTE:Rat := mte(W, OBJS, < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W > CN CN', ('.comp |-> DC:Data, MAC)) .
+
+  *** 
   *** Don't advance clock if process is executing and can execute. "can execute" means
   *** "schedulable" in this case since a get-operation should not block time
   *** advance, even though it _is_ allowed to block the cog (which is the
   *** difference between executable and schedulable)
   ceq mte (
-      < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
-      < O : C | Cog: CG, Att: S, Lcnt: F >
+      < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
       CN, CN', MAC)
   =
     if MTE:Rat == 0 then 0
-    else min(MTE:Rat, mte(< O : C | Cog: CG, Att: S, Lcnt: F > CN, < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W > CN', MAC))
+    else min(MTE:Rat, mte(CN, < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W > CN', MAC))
     fi
-  if MTE:Rat := mte(SL, S :: L,
-        < O : C | Cog: CG, Att: S, Lcnt: F > < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W > CN CN',
+  if O := L['this]
+      /\ MTE:Rat := mte(SL, S :: L, < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W > CN CN',
         ('.deadline |-> L['.deadline], '.comp |-> DC:Data, MAC)) .
   *** Maximum time advance == 1.
   eq mte(CN, CN', MAC) = 1 [owise] .
@@ -1594,26 +1568,22 @@ mod ABS-MACHINE-BASICS-TIMED is
   *** waiting processes.  If third parameter = true, replenish resources in
   *** deployment component as well.
   op advance : Configuration Rat Bool -> Configuration .
-  eq advance(< O : 'ABS.DC.DeploymentComponent
-                 | Cog: CG, Att: ('cpu |-> CPU:Data, 'history |-> HI:Data, 'internalState |-> "num"[IS:Rat], 'nextcpu |-> NCPU:Data, 'totalhistory |-> THI:Data, S),
-                   Lcnt: F > CN, T, true)
+  eq advance(object(O, 'ABS.DC.DeploymentComponent, ('cpu |-> CPU:Data, 'history |-> HI:Data, 'internalState |-> "num"[IS:Rat], 'nextcpu |-> NCPU:Data, 'totalhistory |-> THI:Data, S), F) CN, T, true)
   =
-    < O : 'ABS.DC.DeploymentComponent
-        | Cog: CG, Att: (
-            'cpu |-> NCPU:Data,
-            'history |-> "ABS.StdLib.Cons"["num"[IS:Rat] :: HI:Data],
-            'internalState |-> "num"[0], 'nextcpu |-> NCPU:Data,
-            'totalhistory |-> advanceTotalsHistory(CPU:Data, THI:Data),
-            S),
-    Lcnt: F >
+    object(O, 'ABS.DC.DeploymentComponent, (
+        'cpu |-> NCPU:Data,
+        'history |-> "ABS.StdLib.Cons"["num"[IS:Rat] :: HI:Data],
+        'internalState |-> "num"[0], 'nextcpu |-> NCPU:Data,
+        'totalhistory |-> advanceTotalsHistory(CPU:Data, THI:Data),
+        S), F)
     advance(CN, T, true) .
 
-  eq advance(< CG : Cog | Object: X:Data, DC: DC:Data, Sched: SCH:Expr, Pr: P, PrQ: W >
+  eq advance(< CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: P, PrQ: W >
       CN, T, RES:Bool)
   =
-    < CG : Cog | Object: X:Data, DC: DC:Data, Sched: SCH:Expr,
+    < CG : Cog | Objects: advance(OBJS, T, RES:Bool), DC: DC:Data, Sched: SCH:Expr,
     Pr: advanceActiveProcess(P, T),
-    PrQ: advanceProcesses(W, CN, T) >
+    PrQ: advanceProcesses(W, OBJS, T) >
     advance(CN, T, RES:Bool) .
 
   eq advance(CN, T, RES:Bool) = CN [owise] .
@@ -1629,17 +1599,17 @@ mod ABS-MACHINE-BASICS-TIMED is
   eq reduceCost(L, T) = update('.c, eval("ABS.StdLib.subtractFromDuration"((L['.deadline] :: "num"[T])), noSubst, none, noSubst), L) .
 
   op advanceProcesses : MProc Configuration Rat -> MProc .
-  ceq advanceProcesses((P, W), CN, T) =
-    advanceProcess(P, CN, T), advanceProcesses(W, CN, T)
+  ceq advanceProcesses((P, W), OBJS, T) =
+    advanceProcess(P, OBJS, T), advanceProcesses(W, OBJS, T)
   if W =/= noProc .
-  eq advanceProcesses(P, CN, T) = advanceProcess(P, CN, T) .
-  eq advanceProcesses(noProc, CN, T) = noProc .
+  eq advanceProcesses(P, OBJS, T) = advanceProcess(P, OBJS, T) .
+  eq advanceProcesses(noProc, OBJS, T) = noProc .
 
   op advanceProcess : Process Configuration Rat -> Process .
-  ceq advanceProcess({ L | await E ; SL }, < O : C | Cog: CG, Att: S, Lcnt: F > CN, T) =
+  ceq advanceProcess({ L | await E ; SL }, object(O, C, S, F) OBJS, T) =
     { reduceDeadline(L, T) | await advanceDelays(E, (S :: L), ('.deadline |-> L['.deadline], '.time |-> "num"[T]), T) ; SL }
   if O := L['this] .
-  eq advanceProcess({ L | SL }, CN, T) = { reduceDeadline(L, T) | SL } [owise] .
+  eq advanceProcess({ L | SL }, OBJS, T) = { reduceDeadline(L, T) | SL } [owise] .
 
   op advanceActiveProcess : Process Rat -> Process .
   eq advanceActiveProcess(idle, T) = idle .
@@ -1683,11 +1653,12 @@ mod ABS-STMT-SKIP-RL is
   var SL : StmtList .  var W : MProc .  var F : Nat .
   var CG : Cogid .
   var COST : Expr .
+  var OBJS : Configuration .
 
   rl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | skip ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | skip ; SL }, PrQ: W >
   =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
     [label skip] .
 endm
 mod ABS-STMT-SKIP-EQ is
@@ -1699,11 +1670,12 @@ mod ABS-STMT-SKIP-EQ is
   var COST : Expr .
   var T : Rat .
   vars LIM RAND : Nat .
+  var OBJS : Configuration .
 
   eq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | skip ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | skip ; SL }, PrQ: W >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
     [label skip] .
 endm
 
@@ -1721,31 +1693,29 @@ mod ABS-STMT-ASSIGN-RL is
   var Q : Qid .
   var D' : Data .
   var COST : Expr .
+  var OBJS : Configuration .
 
   *** Variable or field assignment
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(Q ; E) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(Q ; E) ; SL }, PrQ: W >
   =>
     if hasMapping(L, Q) then
-      < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { update(Q, D, L) |  markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
-      < O : C | Cog: CG, Att: S, Lcnt: F >
+      < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { update(Q, D, L) |  markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
     else
-      < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
-      < O : C | Cog: CG, Att: insert(Q, D, S), Lcnt: F >
+      < CG : Cog | Objects: object(O, C, insert(Q, D, S), F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
     fi
-    if D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    if O := L['this]
+      /\ D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ D' := (S :: L)[Q]
     [label assignment] .
 
   *** Field assignment
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W >
   =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: insert(Q, D, S), Lcnt: F >
-  if  D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    < CG : Cog | Objects: object(O, C, insert(Q, D, S), F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
+  if O := L['this]
+      /\ D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ D' := S[Q]
     [label field-assignment] .
 endm
@@ -1758,35 +1728,33 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
   var D' : Data .
   vars LIM RAND : Nat .
   var COST : Expr .
+  var OBJS : Configuration .
 
   *** Variable or field assignment.
   ceq
     < T : Clock | Limit: LIM, Random: RAND >
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(Q ; E) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(Q ; E) ; SL }, PrQ: W >
   =
     < T : Clock | Limit: LIM, Random: RAND >
     if hasMapping(L, Q) then
-      < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { update(Q, D, L) |  markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
-      < O : C | Cog: CG, Att: S, Lcnt: F >
+      < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { update(Q, D, L) |  markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
     else
-      < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
-      < O : C | Cog: CG, Att: insert(Q, D, S), Lcnt: F >
+      < CG : Cog | Objects: object(O, C, insert(Q, D, S), F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
     fi
-    if D := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+  if O := L['this]
+      /\ D := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ D' := (S :: L)[Q]
     [label assignment] .
 
   *** Field assignment.
   ceq
     < T : Clock | Limit: LIM, Random: RAND >
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W >
   =
     < T : Clock | Limit: LIM, Random: RAND >
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: insert(Q, D, S), Lcnt: F >
-  if D := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    < CG : Cog | Objects: object(O, C, insert(Q, D, S), F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
+  if O := L['this]
+      /\ D := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ D' := S[Q]
     [label field-assignment] .
 endm
@@ -1801,16 +1769,16 @@ mod ABS-STMT-GOTO-RL is
   var CG : Cogid .
   var T : Rat .
   vars LIM RAND : Nat .
+  var OBJS : Configuration .
 
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | movecogto(E) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | movecogto(E) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
   =>
-    < CG : Cog | Object: O, DC: TARGET:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: TARGET:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-  if TARGET:Data := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+  if O := L['this]
+      /\ TARGET:Data := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
     [label goto] .
 endm
 mod ABS-STMT-GOTO-EQ is
@@ -1823,16 +1791,16 @@ mod ABS-STMT-GOTO-EQ is
   var CG : Cogid .
   var T : Rat .
   vars LIM RAND : Nat .
+  var OBJS : Configuration .
 
   ceq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | movecogto(E) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | movecogto(E) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
   =
-    < CG : Cog | Object: O, DC: TARGET:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: TARGET:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-  if TARGET:Data := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+  if O := L['this]
+      /\ TARGET:Data := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
     [label goto] .
 endm
 
@@ -1843,17 +1811,17 @@ mod ABS-STMT-COND-RL is
   var O : Oid .                 var C : Cid .      vars S L : Subst .
   vars SL SL1 SL2 : StmtList .  var W : MProc .    var F : Nat .
   var E : Expr .                var CG : Cogid .
+  var OBJS : Configuration .
 
-  rl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+  crl
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W >
   =>
     if eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) asBool then
-      < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL1 ; SL }, PrQ: W >
+      < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL1 ; SL }, PrQ: W >
     else
-      < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL2 ; SL }, PrQ: W >
+      < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL2 ; SL }, PrQ: W >
     fi
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+  if O := L['this]
     [label if-then-else] .
 endm
 mod ABS-STMT-COND-EQ-TIMED is
@@ -1863,19 +1831,19 @@ mod ABS-STMT-COND-EQ-TIMED is
   vars SL SL1 SL2 : StmtList .  var W : MProc .     var F : Nat .
   var E : Expr .                var T : Rat .       var CG : Cogid .
   vars LIM RAND : Nat .
+  var OBJS : Configuration .
 
-  eq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W >
+  ceq
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
   =
     if eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) asBool then
-      < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL1 ; SL }, PrQ: W >
+      < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL1 ; SL }, PrQ: W >
     else
-      < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL2 ; SL }, PrQ: W >
+      < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL2 ; SL }, PrQ: W >
     fi
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+  if O := L['this]
     [label if-then-else] .
 endm
 
@@ -1884,12 +1852,12 @@ mod ABS-STMT-WHILE-RL is
   protecting ABS-EVAL .
   var O : Oid .             var C : Cid .      vars S L : Subst .
   vars SL SL1 : StmtList .  var W : MProc .    var F : Nat .
-  var E : Expr .            var CG : Cogid .
+  var E : Expr .            var CG : Cogid .   var OBJS : Configuration .
 
   rl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | while E do SL1 od ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | while E do SL1 od ; SL }, PrQ: W >
   =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr,
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr,
               Pr: { L | if E th (SL1 ; while E do SL1 od) el noStmt fi ; SL },
               PrQ: W >
     [label while] .
@@ -1899,12 +1867,12 @@ mod ABS-STMT-WHILE-EQ is
 
   var O : Oid .             var C : Cid .      vars S L : Subst .
   vars SL SL1 : StmtList .  var W : MProc .    var F : Nat .
-  var E : Expr .            var CG : Cogid .
+  var E : Expr .            var CG : Cogid .   var OBJS : Configuration .
 
   eq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | while E do SL1 od ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | while E do SL1 od ; SL }, PrQ: W >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr,
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr,
               Pr: { L | if E th (SL1 ; while E do SL1 od) el noStmt fi ; SL },
               PrQ: W >
     [label while] .
@@ -1916,29 +1884,27 @@ endm
 mod ABS-STMT-SUSPEND-RL is
   protecting ABS-EVAL .
 
-  var O : Oid .        var C : Cid .    vars S L : Subst .
-  var SL : StmtList .  var W : MProc .  var F : Nat .
-  var CG : Cogid .
-  var COST : Expr .
+  var O : Oid .        var C : Cid .      vars S L : Subst .
+  var SL : StmtList .  var W : MProc .    var F : Nat .
+  var CG : Cogid .     var COST : Expr .  var OBJS : Configuration .
 
   rl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | suspend ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | suspend ; SL }, PrQ: W >
   =>
-    < CG : Cog | Object: null, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | SL } >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | SL } >
     [label suspend] .
 endm
 mod ABS-STMT-SUSPEND-EQ is
   protecting ABS-EVAL .
 
-  var O : Oid .        var C : Cid .    vars S L : Subst .
-  var SL : StmtList .  var W : MProc .  var F : Nat .
-  var CG : Cogid .
-  var COST : Expr .
+  var O : Oid .        var C : Cid .      vars S L : Subst .
+  var SL : StmtList .  var W : MProc .    var F : Nat .
+  var CG : Cogid .     var COST : Expr .  var OBJS : Configuration .
 
   eq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | suspend ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | suspend ; SL }, PrQ: W >
   =
-    < CG : Cog | Object: null, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | SL } >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | SL } >
     [label suspend] .
 endm
 
@@ -1950,16 +1916,15 @@ endm
 mod ABS-STMT-DURATION-RL is
   protecting ABS-EVAL .
 
-  var O : Oid .        var C : Cid .    vars S L : Subst .
-  var SL : StmtList .  var W : MProc .  var F : Nat .
-  var CG : Cogid .
-  vars E1 E2 : Expr .
-  var COST : Expr .
+  var O : Oid .        var C : Cid .        vars S L : Subst .
+  var SL : StmtList .  var W : MProc .      var F : Nat .
+  var CG : Cogid .     vars E1 E2 : Expr .  var COST : Expr .
+  var OBJS : Configuration .
 
   rl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | duration( E1 ; E2 ) ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | duration( E1 ; E2 ) ; SL }, PrQ: W >
   =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
     [label duration] .
 endm
 mod ABS-STMT-DURATION-EQ-TIMED is
@@ -1973,23 +1938,23 @@ mod ABS-STMT-DURATION-EQ-TIMED is
   vars LIM RAND : Nat .
   vars MIN MAX : Rat .
   var COST : Expr .
+  var OBJS : Configuration .
 
   ceq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | duration( E1 ; E2 ) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | duration( E1 ; E2 ) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $duration( MIN ; MAX ) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $duration( MIN ; MAX ) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-  if MIN := (eval(E1, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) asRat)
+  if O := L['this]
+      /\ MIN := (eval(E1, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) asRat)
       /\ MAX := (eval(E2, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) asRat)
     [label duration] .
 
   ceq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $duration( MIN ; MAX ) ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $duration( MIN ; MAX ) ; SL }, PrQ: W >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
   if MIN <= 0 [label duration-finished] .
 
 endm
@@ -2006,21 +1971,20 @@ mod ABS-STMT-AWAIT-RL is
   var SL : StmtList .       var W : MProc .  var F : Nat .
   var CN : Configuration .  var E : Expr .   var Q : String .
   var CG : Cogid .
+  var OBJS : Configuration .
 
-  rl
-    { < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | await E ; SL }, PrQ: W >
-      < O : C | Cog: CG, Att: S, Lcnt: F >
+  crl
+    { < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | await E ; SL }, PrQ: W >
       CN  }
   =>
-    if executable(await E, (S :: L), (< O : C | Cog: CG, Att: S, Lcnt: F > CN), ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data)) then
-      { < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
-        < O : C | Cog: CG, Att: S, Lcnt: F >
+    if executable(await E, (S :: L), CN, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data)) then
+      { < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
         CN  }
     else
-      { < CG : Cog | Object: null, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | await E ; SL} >
-        < O : C | Cog: CG, Att: S, Lcnt: F >
+      { < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | await E ; SL} >
         CN  }
     fi
+  if O := L['this]
       [label await] .
 endm
 mod ABS-STMT-AWAIT-EQ-TIMED is
@@ -2032,24 +1996,23 @@ mod ABS-STMT-AWAIT-EQ-TIMED is
   var T : Rat .
   vars LIM RAND : Nat .
   var CG : Cogid .
+  var OBJS : Configuration .
 
-  eq
-    { < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | await E ; SL }, PrQ: W >
-      < O : C | Cog: CG, Att: S, Lcnt: F >
+  ceq
+    { < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | await E ; SL }, PrQ: W >
       < T : Clock | Limit: LIM, Random: RAND >
       CN  }
   =
     if executable(await E, (S :: L), CN, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data)) then
-      { < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
-        < O : C | Cog: CG, Att: S, Lcnt: F >
+      { < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
         < T : Clock | Limit: LIM, Random: RAND >
         CN  }
     else
-      { < CG : Cog | Object: null, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | await E ; SL} >
-        < O : C | Cog: CG, Att: S, Lcnt: F >
+      { < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | await E ; SL} >
         < T : Clock | Limit: LIM, Random: RAND >
         CN  }
     fi
+  if O := L['this]
       [label await] .
 endm
 
@@ -2069,51 +2032,32 @@ mod ABS-CALLSTMTS-RL is
   var M : Mid .
   vars CG CG1 : Cogid .
   var COST : Expr .
+  var OBJS : Configuration .
 
   --- async-call
   ---
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | asynccall(A ; E ; M ; EL ; DE); SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | asynccall(A ; E ; M ; EL ; DE); SL }, PrQ: W >
   =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: (s F) >
-    < N : Future | Name: M, Completed: false, References: 1, Value: null >
-  if DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    < CG : Cog | Objects: object(O, C, S, (s F)) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
+    future(N, M, false, 1, null)
+  if O := L['this]
+      /\ DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ N := label(O, F)
       [label async-call] .
 
-  --- sync-call
-  ---
-  --- Create a $cont at end of called process if both objects are in the same
-  --- cog (CG == CG1)
+  *** sync-call.  Only works for objects in the same cog.
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < O1 : C1 | Cog: CG1, Att: S1, Lcnt: F1 >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W >
   =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; (CG == CG1) ; eval(DE, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: (s F) >
-    < O1 : C1 | Cog: CG1, Att: S1, Lcnt: F1 >
-    < N : Future | Name: M, Completed: false, References: 1, Value: null >
-  if DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    < CG : Cog | Objects: object(O, C, S, (s F)) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
+    future(N, M, false, 1, null)
+  if O := L['this]
+      /\ DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ N := label(O, F)
       [label sync-call] .
-
-  --- sync-selfcall
-  crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-  =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O ; M ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: (s F) >
-    < N : Future | Name: M, Completed: false, References: 1, Value: null >
-  if DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ O := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ N := label(O, F)
-      [label sync-selfcall] .
 endm
 mod ABS-CALLSTMTS-EQ-TIMED is
   protecting ABS-EVAL .
@@ -2131,19 +2075,19 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   vars CG CG1 : Cogid .
   vars LIM RAND : Nat .
   var COST : Expr .
+  var OBJS : Configuration .
 
   --- async-call
   ---
   ceq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | asynccall(A ; E ; M ; EL ; DE) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | asynccall(A ; E ; M ; EL ; DE) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, (s F)) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: (s F) >
-    < N : Future | Name: M, Completed: false, References: 1, Value: null >
-  if DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    future(N, M, false, 1, null)
+  if O := L['this]
+      /\ DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ N := label(O, F)
       [label async-call] .
@@ -2153,36 +2097,17 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   --- Create a $cont at end of called process if both objects are in the same
   --- cog (CG == CG1)
   ceq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < O1 : C1 | Cog: CG1, Att: S1, Lcnt: F1 >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; (CG == CG1) ; eval(DE, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, (s F)) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: (s F) >
-    < O1 : C1 | Cog: CG1, Att: S1, Lcnt: F1 >
-    < N : Future | Name: M, Completed: false, References: 1, Value: null >
-  if DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    future(N, M, false, 1, null)
+  if O := L['this]
+      /\ DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ N := label(O, F)
       [label sync-call] .
-
-  --- sync-selfcall
-  ceq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | synccall(A ; E ; M ; EL ; DE) ; SL }, PrQ: W >
-    < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-  =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O ; M ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
-    < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: (s F) >
-    < N : Future | Name: M, Completed: false, References: 1, Value: null >
-  if DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ O := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ N := label(O, F)
-      [label sync-selfcall] .
-
 endm
 
 
@@ -2200,47 +2125,46 @@ mod ABS-NEW-RL is
   var CG : Cogid .
   vars SC SC' : Expr .
   var COST : Expr .
+  var OBJS : Configuration .
 
-  rl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | new(A ; B ; EL); SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+  crl
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | new(A ; B ; EL); SL }, PrQ: W >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =>
     *** Here we get to write the whole synchronous invocation /
     *** synchronization protocol by hand (normally it is generated by the code
     *** generator)
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F)
+                 object(ob(B, G), B, ('.nbcr |-> "num"[0], S1,
+                                     createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))), 0)
+                 OBJS, 
+                 DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W >
+    
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
-    < ob(B, G) :  B | Cog: CG, Att: ('.nbcr |-> "num"[0], S1,
-                               createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),
-                      Lcnt: 0 >
+  if O := L['this]
     [label new-object] .
 
   eq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E); SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E); SL }, PrQ: W >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E ; SC); SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E ; SC); SL }, PrQ: W >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
     [label newcog-add-scheduler] .
 
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E ; SC); SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E ; SC); SL }, PrQ: W >
     < B : Class | Param: AL, Att: S1, Sched: SC', Mtds: MS, Ocnt: G >
   =>
     *** we synchronize with the call to .init because otherwise another call
     *** immediately afterwards might overtake the call to .init
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W >
     < B : Class | Param: AL, Att: S1, Sched: SC', Mtds: MS, Ocnt: (s G) >
-    < ob(B, G) :  B | Cog: ob(B, G),
-                             Att: ('.nbcr |-> "num"[0], S1,
-                               createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),
-                      Lcnt: 0 >
-    < ob(B, G) : Cog | Object: null, DC: NEWDC:Data, Sched: SC, Pr: idle, PrQ: noProc >
-    if NEWDC:Data := eval(E, S :: L, none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    < ob(B, G) : Cog | Objects: object(ob(B, G), B, ('.nbcr |-> "num"[0], S1,
+                                                    createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))), 0),
+                       DC: NEWDC:Data, Sched: SC, Pr: idle, PrQ: noProc >
+  if O := L['this]
+      /\ NEWDC:Data := eval(E, S :: L, none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
     [label new-object-with-cog] .
 endm
 mod ABS-NEW-EQ-TIMED is
@@ -2255,51 +2179,49 @@ mod ABS-NEW-EQ-TIMED is
   vars SC SC' : Expr .
   vars LIM RAND : Nat .
   var COST : Expr .
+  var OBJS : Configuration .
 
-  eq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | new(A ; B ; EL); SL }, PrQ: W >
+  ceq
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | new(A ; B ; EL); SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =
     *** Here we get to write the whole synchronous invocation /
     *** synchronization protocol by hand (normally it is generated by the code
     *** generator)
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F)
+                 object(ob(B, G), B, (S1,
+                     createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))), 0)
+                 OBJS, 
+                 DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
-    < ob(B, G) :  B | Cog: CG, Att: (S1,
-                               createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),
-                      Lcnt: 0 >
+  if O := L['this]
     [label new-object] .
 
   eq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E); SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E); SL }, PrQ: W >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E ; SC); SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E ; SC); SL }, PrQ: W >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
     [label newcog-add-scheduler] .
 
   ceq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E ; SC); SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E ; SC); SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC', Mtds: MS, Ocnt: G >
   =
     *** we synchronize with the call to .init because otherwise another call
     *** immediately afterwards might overtake the call to .init
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, (s F)) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: (s F) >
     < B : Class | Param: AL, Att: S1, Sched: SC', Mtds: MS, Ocnt: (s G) >
-    < ob(B, G) :  B | Cog: ob(B, G),
-                             Att: (S1,
-                               createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),
-                      Lcnt: 0 >
-    < ob(B, G) : Cog | Object: null, DC: NEWDC:Data, Sched: SC, Pr: idle, PrQ: noProc >
-    if NEWDC:Data := eval(E, S :: L, none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    < ob(B, G) : Cog | Objects: object(ob(B, G), B, (S1,
+                                                    createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))), 0),
+    DC: NEWDC:Data, Sched: SC, Pr: idle, PrQ: noProc >
+  if O := L['this]
+      /\ NEWDC:Data := eval(E, S :: L, none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
     [label new-object-with-cog] .
 endm
 
@@ -2315,21 +2237,21 @@ mod ABS-STMT-RETURN-RL is
   var M : Mid .
   var CG : Cogid .
   var COST : Expr .
+  var OBJS : Configuration .
 
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | return(E); SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: false, References: G, Value: null >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | return(E); SL }, PrQ: W >
+    future(N, M, false, G, null)
    =>
     *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
     *** the process .  We cannot return immediately since there might be
     *** `release' or `$endscope' statements after this, so we must rely on the
     *** compiler / type-checker to ascertain that there's one and only one
     *** return statement in each code branch.
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: true, References: G, Value: D >
-  if N == L['.label] /\ D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; SL }, PrQ: W >
+    future(N, M, true, G, D)
+  if O := L['this]
+      /\ N == L['.label] /\ D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       [label return] .
 endm
 mod ABS-STMT-RETURN-EQ-TIMED is
@@ -2344,23 +2266,23 @@ mod ABS-STMT-RETURN-EQ-TIMED is
   var M : Mid .
   var CG : Cogid .
   var COST : Expr .
+  var OBJS : Configuration .
 
   ceq
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | return(E); SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | return(E); SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: false, References: G, Value: null >
+    future(N, M, false, G, null)
    =
     *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
     *** the process.  We cannot return immediately since there might be
     *** `release' or `$endscope' statements after this, so we must rely on the
     *** compiler / type-checker to ascertain that there's one and only one
     *** return statement in each code branch.
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: true, References: G, Value: D >
-  if N == L['.label] /\ D := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    future(N, M, true, G, D)
+  if O := L['this]
+      /\ N == L['.label] /\ D := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       [label return] .
 endm
 
@@ -2380,6 +2302,7 @@ mod ABS-RECEIVE-RESULT is
   var M : Mid .
   var CG : Cogid .
   var COST : Expr .
+  var OBJS : Configuration .
 
   --- receive-comp
   ---
@@ -2387,25 +2310,21 @@ mod ABS-RECEIVE-RESULT is
   --- multiple completion messages with the same label but different return
   --- values in the queue.
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | get(A ; A') ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: true, References: G, Value: D >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | get(A ; A') ; SL }, PrQ: W >
+    future(N, M, true, G, D)
   =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A' ; D) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: true, References: G, Value: D >
-  if N := (S :: L)[A]
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A' ; D) ; SL }, PrQ: W >
+    future(N, M, true, G, D)
+  if O := L['this] /\ N := (S :: L)[A]
     [label receive-comp-var] .
 
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | get(@ A ; A') ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: true, References: G, Value: D >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | get(@ A ; A') ; SL }, PrQ: W >
+    future(N, M, true, G, D)
   =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A' ; D) ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < N : Future | Name: M, Completed: true, References: G, Value: D >
-  if N := S[A]
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A' ; D) ; SL }, PrQ: W >
+    future(N, M, true, G, D)
+  if O := L['this] /\ N := S[A]
     [label receive-comp-field] .
 
 
@@ -2418,13 +2337,12 @@ mod ABS-RECEIVE-RESULT is
   --- checker, because there might be two processes in PrQ which await a
   --- reply to the label.
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $cont N }, PrQ: W , { L1 | get(A ; A') ; SL1} >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $cont N }, PrQ: W , { L1 | get(A ; A') ; SL1} >
   =>
     *** HACK: the process with bindings L is unceremoniously dumped, so
     *** freeing the futures it holds is left to the target process
-    < CG : Cog | Object: O1, DC: DC:Data, Sched: SCH:Expr, Pr: { L1 | freeFutures(L) ; get(A ; A') ; SL1 }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L1 | freeFutures(L) ; get(A ; A') ; SL1 }, PrQ: W >
   if N := L1[A]
-      /\ O1 := L1['this]
     [label continue-cog] .
 
 endm
@@ -2439,33 +2357,29 @@ mod ABS-REBIND-RL is
   var SL : StmtList .  vars W : MProc .  vars F F' : Nat .
   vars E E' : Expr .   vars D D' : Data .       var CG : Cogid .
   var Q : Qid .
+  var OBJS : Configuration .
 
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | rebind(E ; Q ; E') ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | rebind(E ; Q ; E') ; SL }, PrQ: W >
   =>   
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: insert(Q, D, S), Lcnt: F >
-  if O = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-    /\ D := eval(E', (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-    /\ D' := (S :: L)[Q]
-    /\ S['.nbcr] == "num"[0]
-    [label rebind-local] .
+    < CG : Cog | Objects: object(O, C, insert(Q, D, S), F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
+  if O := L['this]
+      /\ O = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+      /\ D := eval(E', (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+      /\ D' := (S :: L)[Q]
+      /\ S['.nbcr] == "num"[0]
+      [label rebind-local] .
 
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | rebind(E ; Q ; E') ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < O' : C' | Cog: CG, Att: S', Lcnt: F' >
+    < CG : Cog | Objects: object(O, C, S, F) object(O', C', S', F') OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | rebind(E ; Q ; E') ; SL }, PrQ: W >
   =>   
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
-    < O' : C' | Cog: CG, Att: insert(Q, D, S'), Lcnt: F' >
-  if O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-    /\ D := eval(E', (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-    /\ D' := (S :: L)[Q]
-    /\ S'['.nbcr] == "num"[0]
+    < CG : Cog | Objects: object(O, C, S, F) object(O', C', insert(Q, D, S'), F') OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
+  if O := L['this]
+      /\ O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+      /\ D := eval(E', (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+      /\ D' := (S :: L)[Q]
+      /\ S'['.nbcr] == "num"[0]
     [label rebind-distant] .
-
 
 endm
 mod ABS-NEWLOC-RL is
@@ -2475,12 +2389,13 @@ mod ABS-NEWLOC-RL is
   var SL : StmtList .  var W : MProc .   vars G : Nat .
   var A : Vid .     var EL : ExprList .
   var CG : Cogid .
+  var OBJS : Configuration .
 
   rl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newloc( A ); SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newloc( A ); SL }, PrQ: W >
     < LocId | G >
   =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; loc-comp( G )); SL }, PrQ: W  >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; loc-comp( G )); SL }, PrQ: W  >
     < locRel | loc-top ; loc-comp( G ) >
     < LocId | s G >
     [label new-location] .
@@ -2492,15 +2407,23 @@ mod ABS-GETLOC-RL is
   var SL : StmtList .  var P : Process . vars W W' : MProc .   vars F F' : Nat .
   var A : Vid .     var E : Expr .
   vars CG CG' : Cogid .
+  vars OBJS OBJS' : Configuration .
 
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | getloc( A ; E ); SL }, PrQ: W >
-    < O' : C | Cog: CG', Att: S, Lcnt: F >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | getloc( A ; E ); SL }, PrQ: W >
+    < CG' : Cog | Objects: object(O', C, S, F) OBJS', DC: DC':Data, Sched: SCH':Expr, Pr: P, PrQ: W' >
   =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; loc-cog( CG' )); SL }, PrQ: W >
-    < O' : C | Cog: CG', Att: S, Lcnt: F >
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; loc-cog( CG' )); SL }, PrQ: W >
+    < CG' : Cog | Objects: object(O', C, S, F) OBJS', DC: DC':Data, Sched: SCH':Expr, Pr: P, PrQ: W' >
   if O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
     [label get-location] .
+
+  crl
+    < CG : Cog | Objects: object(O', C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | getloc( A ; E ); SL }, PrQ: W >
+  =>
+    < CG : Cog | Objects: object(O', C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; loc-cog( CG )); SL }, PrQ: W >
+  if O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
+    [label get-location-local] .
 endm
 mod ABS-GETFATHERLOC-RL is
   protecting ABS-EVAL .
@@ -2509,16 +2432,16 @@ mod ABS-GETFATHERLOC-RL is
   var SL : StmtList .  var W : MProc .   vars F G : Nat .
   var A : Vid .     var E : Expr .
   var CG : Cogid . vars L1 L2 : Location .
+  var OBJS : Configuration .
 
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | getfather( A ; E ); SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | getfather( A ; E ); SL }, PrQ: W >
     < locRel | L1 ; L2 >
   =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; L1 ); SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; L1 ); SL }, PrQ: W >
     < locRel | L1 ; L2 >
-  if L2 := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
+  if O := L['this]
+      /\ L2 := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
     [label get-father-location] .
 endm
 mod ABS-SUBLOC-RL is
@@ -2528,17 +2451,17 @@ mod ABS-SUBLOC-RL is
   var SL : StmtList .  var W : MProc .   vars F G : Nat .
   var E1 E2 : Expr .     var EL : ExprList .
   var CG : Cogid . vars Loc Lp Ln : Location .
+  var OBJS : Configuration .
 
   crl
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | subloc( E1 ; E2 ); SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | subloc( E1 ; E2 ); SL }, PrQ: W >
     < locRel | Lp ; Loc >
   =>
-    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
     < locRel | Ln ; Loc >
-  if Loc = eval(E1, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
-   /\ Ln := eval(E2, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
+  if O := L['this]
+      /\ Loc = eval(E1, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
+      /\ Ln := eval(E2, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
     [label get-move-location] .
 endm
 **********************************************
@@ -2576,8 +2499,7 @@ mod ABS-SIMULATOR-RL is
     { initConf(CN:Configuration, qid(B:String), DL:DataList, -1, LIM:Int) } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob('main, 0) : '... | Cog: ob('main, 0), Att: S:Subst, Lcnt: 2 > =
-    none .
+  eq object(ob('main, 0), '..., S:Subst, 2) = none .
 endm
 
 mod ABS-SIMULATOR-EQ-TIMED is
@@ -2614,8 +2536,7 @@ mod ABS-SIMULATOR-EQ-TIMED is
     { initConf(CN:Configuration, qid(B:String), DL:DataList, 0, LIM:Int) } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob('main, 0) : '... | Cog: ob('main, 0), Att: S:Subst, Lcnt: 2 > =
-    none .
+  eq object(ob('main, 0), '..., S:Subst, 2) = none .
 endm
 
 eof

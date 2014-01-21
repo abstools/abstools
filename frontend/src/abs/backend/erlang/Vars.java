@@ -59,6 +59,11 @@ public class Vars extends LinkedHashMap<String, Var> {
         return get(name);
     }
 
+    public String nVignoreOverload(String name) {
+        put(name, new Var());
+        return get(name);
+    }
+
     public static final String PREFIX = "V_";
 
     public String inc(String name) {
@@ -129,6 +134,8 @@ public class Vars extends LinkedHashMap<String, Var> {
                 a.setValue(new Var(max.getCount(), true));
             }
         }
+        for(Vars v : vars)
+            temp=Math.max(temp,v.temp);
         Set<String> allVars = new HashSet<String>();
         for (Vars v : vars)
             allVars.addAll(v.keySet());
@@ -147,6 +154,7 @@ public class Vars extends LinkedHashMap<String, Var> {
         for (java.util.Map.Entry<String, Var> k : child.entrySet())
             if (!containsKey(k.getKey()) || !k.getValue().isSet())
                 this.put(k.getKey(), new Var(k.getValue().getCount(), false));
+        temp = Math.max(temp, child.temp);
     }
 }
 

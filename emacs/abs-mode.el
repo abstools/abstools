@@ -29,6 +29,7 @@
 (require 'custom)
 (eval-when-compile (require 'rx))
 (require 'maude-mode)
+(require 'flymake)
 
 ;;; Code:
 
@@ -37,11 +38,27 @@
   "Major mode for editing files in the programming / modeling language Abs."
   :group 'languages)
 
-(defcustom abs-compiler-command (executable-find "generateMaude")
-  "Path to the Abs compiler.
-The given command will be called with a filename, followed by
-\"-o\" and the name of an output file."
+(defcustom abs-target-language 'maude
+  "The default target language for code generation."
+  :type '(radio (const maude)
+                (const java)
+                (const erlang))
+  :group 'abs)
+(put 'abs-target-language 'safe-local-variable
+     #'(lambda (x) (member x '(maude java erlang))))
+
+(defcustom abs-compiler-program (or (executable-find "absc") "absc")
+  "Path to the Abs compiler."
   :type 'file
+  :risky t
+  :group 'abs)
+
+(defcustom abs-java-classpath "absfrontend.jar"
+  "The classpath for the Java backend.
+The contents of this variable will be passed to the java
+executable via the `-cp' argument."
+  :type 'string
+  :risky t
   :group 'abs)
 
 (defcustom abs-indent standard-indent
@@ -51,7 +68,7 @@ The given command will be called with a filename, followed by
 (put 'abs-indent 'safe-local-variable 'integerp)
 
 (defcustom abs-use-timed-interpreter nil
-  "Controls whether to compile Abs code using the timed interpreter by default.
+  "Control whether to compile Abs code using the timed interpreter by default.
 This influences the default compilation command executed by
 \\[abs-next-action].  Note that you can set this variable as a
 file-local variable as well."
@@ -59,10 +76,10 @@ file-local variable as well."
   :group 'abs)
 (put 'abs-use-timed-interpreter 'safe-local-variable 'booleanp)
 
-(defcustom abs-mode-hook (list 'imenu-add-menubar-index)
+(defcustom abs-mode-hook (list 'imenu-add-menubar-index 'flymake-mode-on)
   "Hook for customizing `abs-mode'."
   :type 'hook
-  :options (list 'imenu-add-menubar-index)
+  :options (list 'imenu-add-menubar-index 'flymake-mode-on)
   :group 'abs)
 
 (defcustom abs-clock-limit 100
@@ -73,7 +90,7 @@ Note that you can set this variable as a file-local variable as well."
 (put 'abs-clock-limit 'safe-local-variable 'integerp)
 
 (defcustom abs-default-resourcecost 0
-  "Default resource cost of executing one ABS statement."
+  "Default resource cost of executing one ABS statement in the timed interpreter."
   :type 'integer
   :group 'abs)
 (put 'abs-default-resourcecost 'safe-local-variable 'integerp)
@@ -83,31 +100,33 @@ Note that you can set this variable as a file-local variable as well."
   "Face for Abs keywords"
   :group 'abs)
 (defvar abs-keyword-face 'abs-keyword-face
-  "Face for Abs keywords")
+  "Face for Abs keywords.")
 
 (defface abs-constant-face '((default (:inherit font-lock-constant-face)))
   "Face for Abs constants"
   :group 'abs)
 (defvar abs-constant-face 'abs-constant-face
-  "Face for Abs constants")
+  "Face for Abs constants.")
 
-(defface abs-function-name-face '((default (:inherit font-lock-function-name-face)))
+(defface abs-function-name-face
+    '((default (:inherit font-lock-function-name-face)))
   "Face for Abs function-names"
   :group 'abs)
 (defvar abs-function-name-face 'abs-function-name-face
-  "Face for Abs function-names")
+  "Face for Abs function-names.")
 
 (defface abs-type-face '((default (:inherit font-lock-type-face)))
   "Face for Abs types"
   :group 'abs)
 (defvar abs-type-face 'abs-type-face
-  "Face for Abs types")
+  "Face for Abs types.")
 
-(defface abs-variable-name-face '((default (:inherit font-lock-variable-name-face)))
+(defface abs-variable-name-face
+    '((default (:inherit font-lock-variable-name-face)))
   "Face for Abs variables"
   :group 'abs)
 (defvar abs-variable-name-face 'abs-variable-name-face
-  "Face for Abs variables")
+  "Face for Abs variables.")
 
 (defconst abs--cid-regexp "\\_<[[:upper:]]\\(?:\\sw\\|\\s_\\)*\\_>")
 (defconst abs--id-regexp
@@ -143,7 +162,7 @@ Note that you can set this variable as a file-local variable as well."
     (regexp-opt
      '("True" "False" "null" "this" "Nil" "Cons")
      'words))
-  "List of Abs special words")
+  "List of Abs special words.")
 
 (defvar abs-font-lock-keywords
     (list
@@ -151,14 +170,15 @@ Note that you can set this variable as a file-local variable as well."
      (cons abs-keywords 'abs-keyword-face)
      (cons abs-constants 'abs-constant-face)
      (cons (concat "\\(" abs--cid-regexp "\\)") 'abs-type-face)
-     (list (concat "\\(" abs--id-regexp "\\)[[:space:]]*(") 1 'abs-function-name-face)
+     (list (concat "\\(" abs--id-regexp "\\)[[:space:]]*(") 1
+           'abs-function-name-face)
      (cons (concat "\\(" abs--id-regexp "\\)") 'abs-variable-name-face)
      (list "\\<\\(# \w+\\)\\>" 1 'font-lock-warning-face t))
-    "Abs keywords")
+    "Abs keywords.")
 
 ;;; Abs syntax table
 (defvar abs-mode-syntax-table (copy-syntax-table)
-  "Syntax table for abs-mode")
+  "Syntax table for abs-mode.")
 (modify-syntax-entry ?+  "."     abs-mode-syntax-table)
 (modify-syntax-entry ?-  "."     abs-mode-syntax-table)
 (modify-syntax-entry ?=  "."     abs-mode-syntax-table)
@@ -205,22 +225,40 @@ Note that you can set this variable as a file-local variable as well."
        ,(rx bol (* whitespace) "module" (1+ whitespace)
             (group (char upper) (* (char alnum))))
        1))
-  "Imenu expression for abs-mode.  See `imenu-generic-expression'.")
+  "Imenu expression for `abs-mode'.  See `imenu-generic-expression'.")
 
 ;;; Compiling the current buffer.
 ;;;
-(defvar abs-output-file nil
-  "The Maude file that will be loaded by \\[abs-next-action].
-Defaults to the buffer filename with a \".maude\" extension.
+(defvar abs-maude-output-file nil
+  "The Maude file that will be generated or loaded by \\[abs-next-action].
+Defaults to the buffer filename with a \".maude\" extension if
+`abs-input-files' is unset, or to the name of the first element
+in `abs-input-files' with a \".maude\" extension otherwise.
 
 Add a file-local setting to override the default value.")
-(put 'abs-output-file 'safe-local-variable 'stringp)
+(put 'abs-maude-output-file 'safe-local-variable 'stringp)
+
+(defvar abs-input-files nil
+  "List of Abs files to be compiled by \\[abs-next-action].
+If nil, the file visited in the current buffer will be used.  If
+set, the first element determines the name of the generated Maude
+file if generating Maude code.
+
+Add a file-local setting (\\[add-file-local-variable]) to
+override the default value.  Put a section like the following at
+the end of your buffer:
+
+// Local Variables:
+// abs-input-files: (\"file1.abs\" \"file2.abs\")
+// End:")
+(put 'abs-input-files 'safe-local-variable
+     (lambda (list) (every #'stringp list)))
 
 (defvar abs-compile-command nil
   "The compile command called by \\[abs-next-action].
 The default behavior is to call \"make\" if a Makefile is in the
 current directory, otherwise call the program named by
-`abs-compiler-command' on the current file.  This behavior can be
+`abs-compiler-program' on the current file.  This behavior can be
 changed by giving `abs-compile-comand' a file-local or dir-local
 value.")
 (put 'abs-compile-command 'safe-local-variable
@@ -237,68 +275,146 @@ value.")
 (unless (assoc abs-error-regexp compilation-error-regexp-alist)
   (add-to-list 'compilation-error-regexp-alist (list abs-error-regexp 1 2)))
 
+;;; flymake support
+(defun abs-flymake-init ()
+  (when abs-compiler-program
+    (list abs-compiler-program
+          (list (flymake-init-create-temp-buffer-copy
+                 'flymake-create-temp-inplace)))))
+
+(unless (assoc "\\.abs\\'" flymake-allowed-file-name-masks)
+  (add-to-list 'flymake-allowed-file-name-masks
+               '("\\.abs\\'" abs-flymake-init)))
+
+;;; Compilation support
 (defun abs--file-date-< (d1 d2)
-  "Compare two file dates, as returned by `file-attributes'."
+  "Compare file dates D1 and D2, as returned by `file-attributes'."
   (or (and (= (first d1) (first d2))
            (< (second d1) (second d2)))
       (< (first d1) (first d2))))
 
+(defun abs--input-files ()
+  (or abs-input-files (list (file-name-nondirectory (buffer-file-name)))))
+
 (defun abs--maude-filename ()
-  (or abs-output-file 
-      (concat (file-name-sans-extension 
-               (file-name-nondirectory (buffer-file-name)))
-              ".maude")))
+  (or abs-maude-output-file
+      (concat (file-name-sans-extension (car (abs--input-files))) ".maude")))
 
-(defun abs--absolute-maude-filename ()
-  (let ((abs-output-file (abs--maude-filename)))
-    (if (file-name-absolute-p abs-output-file)
-        abs-output-file
-      (concat (file-name-directory (buffer-file-name)) abs-output-file))))
+(defun abs--absolutify-filename (filename)
+  (if (file-name-absolute-p filename)
+      filename
+    (concat (file-name-directory (buffer-file-name)) filename)))
 
-(defun abs--calculate-compile-command ()
-  (let ((filename (file-name-nondirectory (buffer-file-name)))
-        (makefilep (file-exists-p "Makefile"))
-        (maude-filename (abs--maude-filename)))
-    (cond (abs-compile-command)
-          (makefilep compile-command)
-          (t (concat abs-compiler-command " " filename " -o " maude-filename
-                     (if abs-use-timed-interpreter
-                         (concat " -timed -limit=" (number-to-string abs-clock-limit))
-                       "")
-                     (if (< 0 abs-default-resourcecost)
-                         (concat " -defaultcost="
-                                 (number-to-string abs-default-resourcecost)))
-                     " ")))))
+(defun abs--guess-module ()
+  (save-excursion
+    (goto-char (point-max))
+    (re-search-backward (rx bol (* whitespace) "module" (1+ whitespace)
+                            (group (char upper) (* (or (char alnum) ".")))))
+    (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
 
-(defun abs-next-action ()
+(defun abs--calculate-compile-command (backend)
+  (cond (abs-compile-command)
+        ((file-exists-p "Makefile") compile-command)
+        (t (concat abs-compiler-program
+                   " -" (symbol-name backend)
+                   " "
+                   ;; FIXME: make it work with filenames with spaces
+                   (mapconcat (lambda (s) (concat "\"" s "\""))
+                              (abs--input-files) " ")
+                   (when (eql backend 'maude)
+                     (concat " -o \"" (abs--maude-filename) "\""))
+                   (when (and (eql backend 'maude) abs-use-timed-interpreter)
+                     (concat " -timed -limit="
+                             (number-to-string abs-clock-limit)))
+                   (when (and (eql backend 'maude)
+                              (< 0 abs-default-resourcecost))
+                     (concat " -defaultcost="
+                             (number-to-string abs-default-resourcecost)))
+                   " "))))
+
+(defun abs--needs-compilation (backend)
+  (let* ((abs-output-file
+          (abs--absolutify-filename (pcase backend
+                                      (`maude (abs--maude-filename))
+                                      (`erlang "gen/erl/Emakefile")
+                                      (`java "gen/ABS/StdLib/Bool.java"))))
+         (abs-modtime (nth 5 (file-attributes (buffer-file-name))))
+         (output-modtime (nth 5 (file-attributes abs-output-file))))
+    (or (not output-modtime)
+        (abs--file-date-< output-modtime abs-modtime)
+        (buffer-modified-p))))
+
+(defun abs--run-model (backend)
+  "Start the model running on language BACKEND."
+  (pcase backend
+    (`maude (save-excursion (run-maude))
+            (comint-send-string inferior-maude-buffer
+                                (concat "in "
+                                        (abs--absolutify-filename
+                                         (abs--maude-filename))
+                                        "\n"))
+            (with-current-buffer inferior-maude-buffer
+              (sit-for 1)
+              (goto-char (point-max))
+              (insert "frew start .")
+              (comint-send-input)))
+    (`erlang (let ((erlang-buffer (or (get-buffer "*erlang*")
+                                      (progn (save-excursion (run-erlang))
+                                             (get-buffer "*erlang*"))))
+                   (erlang-dir (concat (file-name-directory (buffer-file-name))
+                                       "gen/erl"))
+                   (module (abs--guess-module)))
+               (with-current-buffer erlang-buffer
+                 (comint-send-string erlang-buffer
+                                     (concat "cd (\"" erlang-dir "\").\n"))
+                 (comint-send-string erlang-buffer "make:all().\n")
+                 (comint-send-string erlang-buffer
+                                     (concat "code:add_path(\"" erlang-dir
+                                             "/ebin\").\n"))
+                 (comint-send-string erlang-buffer
+                                     (concat "runtime:start(\"" module
+                                             "\").\n")))
+               (pop-to-buffer erlang-buffer)))
+    (`java (let ((java-buffer (save-excursion (shell "*abs java*")))
+                 (java-dir (file-name-directory (buffer-file-name)))
+                 (module (abs--guess-module)))
+             (with-current-buffer java-buffer
+               (comint-send-string java-buffer
+                                   (concat "cd \"" java-dir "\"\n"))
+               (goto-char (point-max))
+               (insert "java -cp gen:" abs-java-classpath
+                       " " module ".Main && exit")
+               (comint-send-input))))
+    (other (error "Don't know how to run with target %s" backend))))
+
+(defun abs-next-action (flag)
   "Compile the buffer or load it into Maude.
 
-Remember to make `abs-interpreter.maude' accessible to Maude!
-This can be done either by copying or symlinking that file to the
-current directory, or via the `MAUDE_LIB' environment variable.
+The language backend for compilation can be chosen by giving a
+`C-u' prefix to this command.  The default backend is set via
+customizing or setting `abs-target-language' and can be
+overridden for a specific abs file by giving a file-local value
+via `add-file-local-variable'.
 
-To determine whether to compile or load, `abs-next-action'
-assumes that the result of compilation is stored in a file with
-the same name as the current buffer but with a `.maude'
-extension.  Set the variable `abs-output-file' to override this."
-  (interactive)
-  (let* ((abs-maude-file (abs--absolute-maude-filename))
-         (abs-modtime (nth 5 (file-attributes (buffer-file-name))))
-         (maude-modtime (nth 5 (file-attributes abs-maude-file))))
-    (if (or (not maude-modtime)
-            (abs--file-date-< maude-modtime abs-modtime)
-            (buffer-modified-p))
-        (let ((compile-command (abs--calculate-compile-command)))
+To execute on the Maude backend, remember to make
+`abs-interpreter.maude' accessible to Maude, either by copying or
+symlinking that file to the current directory, or via the
+`MAUDE_LIB' environment variable.
+
+To execute on the Java backend, set `abs-java-classpath' to
+include the file absfrontend.jar.
+
+Argument FLAG will prompt for language backend to use if 1."
+  (interactive "p")
+  (let ((backend (if (= 1 flag)
+                     abs-target-language
+                   (intern (completing-read "Target language: "
+                                            '("maude" "erlang" "java")
+                                            nil t nil nil "maude")))))
+    (if (abs--needs-compilation backend)
+        (let ((compile-command (abs--calculate-compile-command backend)))
           (call-interactively 'compile))
-      (run-maude)
-      (message "Maude loading %s" abs-maude-file)
-      (comint-send-string inferior-maude-buffer
-                          (concat "in " abs-maude-file "\n"))
-      (with-current-buffer inferior-maude-buffer
-        (sit-for 1)
-        (goto-char (point-max))
-        (insert "frew start .")
-        (comint-send-input)))))
+      (abs--run-model backend))))
 
 ;;; Movement
 

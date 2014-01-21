@@ -1,0 +1,164 @@
+\chapter{Statements}
+In contrast to expressions, \emph{Statements} in ABS are not
+evaluated to a value. If one wants to assign a value to statements
+it would be the \absinline{Unit} value.
+
+\begin{abssyntax}
+\NT{Statement}    \defn \NT{CompoundStmt}
+               \defc  \NT{VarDeclStmt}
+               \defc  \NT{AssignStmt}
+               \defc  \NT{AwaitStmt}
+               \defc  \NT{SuspendStmt}
+               \defc  \NT{SkipStmt}
+               \defc  \NT{AssertStmt}
+               \defc  \NT{ReturnStmt}
+               \defc  \NT{ExpStmt}\\
+\NT{CompoundStmt} \defn \NT{Block}
+               \defc  \NT{IfStmt}
+               \defc  \NT{WhileStmt}
+\end{abssyntax}
+
+\section{Block}
+A block consists of a sequence of statements and defines a name scope for variables.
+
+% \subsubsection{Type Checking}
+% A block is type-correct if all its statements are type correct.
+
+
+\begin{abssyntax}
+\NT{Block} \defn \TRS{\{}\ \MANY{\NT{Statement}}\ \TRS{\}}
+\end{abssyntax}
+
+\section{If Statement}
+
+\begin{abssyntax}
+\NT{IfStmt} \defn \TR{if}\ \TRS{(} \NT{PureExp} \TRS{)}\ \NT{Stmt} \OPTG{\TR{else}\ \NT{Stmt}}
+\end{abssyntax}
+
+\begin{absexample}
+if (5 < x) {
+  y = 6;
+} else {
+  y = 7;
+}
+
+if (True)
+  x = 5;
+\end{absexample}
+
+\section{While Statement}
+
+\begin{abssyntax}
+\TR{while}\ \TRS{(} \NT{PureExp} \TRS{)}\ \NT{Stmt}
+\end{abssyntax}
+
+\begin{absexample}
+while (x < 5)
+   x = x + 1;
+\end{absexample}
+
+\section{Variable Declaration Statements}
+A variable declaration statement is used to declare variables.
+
+\begin{abssyntax}
+\NT{VarDeclStmt} \defn \NT{TypeName}\ \NT{Identifier}\ \OPTG{\TRS{=}\ \NT{Exp}}\ \TRS{;}
+\end{abssyntax}
+
+A variable has an optional \emph{initialization expression} for defining the initial value of the variable. The initialization expression is \emph{mandatory} for variables of data types.
+It can be left out only for variables of reference types, in which case the variable is initialized with \absinline{null}.
+
+\begin{absexample}
+Bool b = True;
+\end{absexample}
+
+\section{Assign Statement}
+The \emph{Assign Statement} assigns a value to a variable or a field.
+
+\begin{abssyntax}
+\NT{AssignStmt} \defn \NT{Variable}\ \TRS{=}\ \NT{PureExp}\ \TRS{;}
+             \defc  \NT{FieldAccess}\ \TRS{=}\ \NT{PureExp}\ \TRS{;}
+\end{abssyntax}
+
+\begin{absexample}
+this.f = True;
+x = 5;
+\end{absexample}
+
+
+\section{Await Statement}
+\emph{Await Statements} suspend the current task until the given
+\emph{guard} is true~\cite{johnsen10fmco}. The task will not be
+suspended if the guard is already initially true.  While the task is
+suspended, other tasks within the same COG can be activated.  Await
+statements are also called \emph{scheduling points}, because they are
+the only source positions where a task may become suspended and other
+tasks of the same COG can be activated.
+
+
+\begin{abssyntax}
+\NT{AwaitStmt}  \defn \TR{await}\ \NT{Guard}\ \TRS{;}\\
+\NT{Guard}      \defn \NT{ClaimGuard}
+             \defc  \NT{PureExp}
+             \defc  \NT{Guard}\ \TRS{\&}\ \NT{Guard}\\
+\NT{ClaimGuard} \defn \NT{Variable}\ \TRS{?}
+             \defc  \NT{FieldAccess}\ \TRS{?}
+\end{abssyntax}
+
+\begin{absexample}
+Fut<Bool> f = x!m();
+await f?;
+await this.x == True;
+await f? & this.y > 5;
+\end{absexample}
+
+\section{Suspend Statement}
+A \emph{Suspend Statement} causes the current task to be suspended.
+
+\begin{abssyntax}
+\NT{SuspendStmt} \defn \TR{suspend}\ \TRS{;}
+\end{abssyntax}
+
+\begin{absexample}
+suspend;
+\end{absexample}
+
+\section{Skip Statement}
+The \emph{Skip Statement} is a statement that does nothing.
+
+\begin{abssyntax}
+\NT{SkipStmt} \defn \TR{skip}\ \TRS{;}
+\end{abssyntax}
+
+\section{Assert Statement}\label{sec:abs:assert}
+An \emph{Assert Statement} is a statement for asserting certain conditions.
+
+\begin{abssyntax}
+\NT{AssertStmt} \defn \TR{assert}\ \NT{PureExp}\ \TRS{;}
+\end{abssyntax}
+
+\begin{absexample}
+assert x != null;
+\end{absexample}
+
+\section{Return Statement}
+A \emph{Return Statement} defines the return value of a method.
+A return statement can only appear as a last statement in a method body.
+
+\begin{abssyntax}
+\NT{ReturnStmt} \defn \TR{return}\ \NT{PureExp}\ \TRS{;}
+\end{abssyntax}
+
+\begin{absexample}
+return x;
+\end{absexample}
+
+\section{Expression Statement}
+An \emph{Expression Statement} is a statement that only consists of a single expression. Such statements are only executed for the effect of the expression.
+
+\begin{abssyntax}
+\NT{ExpStmt} \defn \NT{Exp}\ \TRS{;}
+\end{abssyntax}
+
+\begin{absexample}
+new C(x);
+\end{absexample}

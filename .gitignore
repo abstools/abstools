@@ -1,3 +1,11 @@
 /frontend/bin
 /frontend/gen
 /frontend/dist
+/Documentation/ReferenceManual/*.aux
+/Documentation/ReferenceManual/*.bbl
+/Documentation/ReferenceManual/*.blg
+/Documentation/ReferenceManual/*.log
+/Documentation/ReferenceManual/*.nout
+/Documentation/ReferenceManual/*.toc
+/Documentation/ReferenceManual/*.out
+/Documentation/ReferenceManual/gitRevision.tex

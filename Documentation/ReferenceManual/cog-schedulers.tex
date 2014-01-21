@@ -1,0 +1,119 @@
+ \chapter{User-defined Schedulers}\label{ch:schedulers}
+  This section describes how to specify the scheduling of processes
+  beyond the basic non-deterministic scheduler.  Processes are scheduled
+  per cog.  There are two places where schedulers can be specified:
+\begin{enumerate}
+\item At a class definition.  All cogs created via an object of the
+  class will use the specified scheduling function.
+\item As an annotation to the \absinline{new} statement.  This overrides
+  any scheduler specified at class level.
+\end{enumerate}
+  Class-specific schedulers are implemented on the Maude backend and are
+  under development on the dynamic Java backend.
+
+\section{Language Elements}
+
+  All identifiers described in the following are contained in the module
+  \absinline{ABS.Scheduler}.
+
+  A \emph{scheduler} is a user-defined ABS function that chooses one process
+  from a list of processes.  A scheduler will be called with a list of
+  processes which are eligible for execution on a specific object (and
+  possibly some part of the object's state, see below) and returns the
+  process that should execute on that object next.  The user cannot
+  currently influence which object is chosen to run by the cog.
+
+\subsection{The \absinline{Process} Datatype}
+
+\begin{absexample} 
+data Pid;
+data Process = Process(Pid pid, String method, Time arrival,
+    Duration cost, Duration procdeadline, Time start, Time finish, 
+    Bool crit, Int value);
+\end{absexample} 
+
+   \absinline{method} contains the name of the method the process is running,
+   \absinline{arrival} the time when the call arrived at the object,
+   \absinline{cost} the specified cost of the process (or \absinline{0} when no cost
+   annotation given), \absinline{procdeadline} is the deadline (or
+   \absinline{InfDuration} when no deadline given at the call site).
+   \absinline{start} and \absinline{finish} are bookkeeping values, and \absinline{crit}
+   and \absinline{value} are currently unused but will contain criticality
+   information and a user-defined priority for the process.
+
+   Note that it is not possible to create a value of type \absinline{Process}
+   from within ABS itself, since the datatype \absinline{Pid} has no
+   constructor.
+
+\subsection{Defining a Scheduler}
+
+   A scheduler takes a list of \absinline{Process} values and returns one of
+   them:
+
+\begin{absexample} 
+def Process randomscheduler(List<Process> queue) =
+  nth(queue, random(length(queue)));
+\end{absexample} 
+
+   This scheduler, defined in the \absinline{ABS.Scheduler} module, chooses a
+   random process from the list.  It can be used for
+   Monte-Carlo-simulations.
+
+\begin{absexample} 
+def Process defaultscheduler(List<Process> queue) = head(queue);
+\end{absexample} 
+
+   This is the default scheduler which is used by any class without an
+   annotation specifying a different scheduler.
+
+\subsection{The Scheduler Annotation}
+
+   The class annotation \absinline{Scheduler} specifies that objects of a given
+   class should use a non-default scheduler.
+
+\begin{absexample} 
+[Scheduler: randomscheduler(queue)]
+class Test { ... }
+\end{absexample} 
+
+The special parameter name \absinline{queue} is a ``magic'' parameter that at each invocation of
+   the scheduler function contains the process queue of an object,
+   lifted into an ABS value of type \absinline{List<Process>}.
+
+   Scheduling functions can have other parameters as well.  In this
+   case, the scheduler will be invoked with values from the current
+   object state.  The annotation specifies which fields of the object to
+   pass for which parameter of the scheduler:
+
+\begin{absexample} 
+def Process experimental_scheduler(List<Process> queue, Int state) = ...
+
+[Scheduler: experimental_scheduler(queue, attribute)]
+class Test {
+  Int attribute = 0;
+  ...
+}
+\end{absexample} 
+
+   Schedulers specified at class level can be overriden when creating a
+   new cog.  Here a cog is created with an object of class \absinline{Test}
+   but with the default scheduler:
+
+\begin{absexample} 
+  [Scheduler: defaultscheduler(queue)] new Test();
+\end{absexample} 
+
+
+
+\section{Future Work}
+\begin{itemize}
+\item Parameters to the \absinline{Scheduler} annotation are not currently
+    type-checked.
+
+\item User-defined priorities via the \absinline{value} process member are not
+    yet implemented
+
+\item A true \absinline{crit} flag should lead to process failure when the
+    deadline is exceeded.  This can be implemented once ABS has a
+    failure model.
+\end{itemize}

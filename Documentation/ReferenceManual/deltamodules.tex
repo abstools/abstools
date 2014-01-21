@@ -1,0 +1,502 @@
+\chapter{Delta Modules}
+\label{ch:deltas}
+
+ABS supports the delta-oriented programming model~\cite{SchaeferBBDT10}, an
+approach that aids the development of a set of programs simultaneously from a
+single code base, following the software product line engineering
+approach~\cite{PohlBL05}.
+In delta-oriented programming, features defined by a feature model are
+associated with code modules that describe modifications to a core program. In
+ABS, these modules are called \emph{delta modules}. Hence the implementation of
+a software product line in ABS is divided into a \emph{core} and a set of delta
+modules.
+
+The core consists of a set of ABS modules containing the classes that implement
+a complete software product of the corresponding software product line. Delta
+modules (or \emph{deltas} in short) describe how to change the core program to
+obtain new products. This includes adding new classes and interfaces, modifying
+existing ones, or even removing some classes from the core. Delta modules can
+also modify the functional entities of an ABS program, that is, they can add and
+modify data types and type synonyms, and add functions.
+
+Deltas are applied to the core program by the ABS compiler front end. The choice
+of which delta modules to apply depends on the selection of a set of features,
+that is, a particular product of the SPL.
+The role of the ABS compiler front end is to translate textual ABS models into
+an internal representation and check the models for syntax and semantic errors.
+The role of the compiler back end is to generate code for the models targeting
+some suitable execution or simulation environment.
+
+
+\section{Syntax}
+\label{delta syntax}
+\begin{figure}
+    \centering
+    \begin{tabular}{rcl}
+
+        \NT{DeltaDecl}
+        \concrDefn{ \TR{delta} \NT{TypeId} \OPT{\NT{DeltaParams}} \TRS{;} \OPT{\NT{ModuleAccess}} \MANY{\NT{ModuleModifier}} }
+        
+        \\
+        \NT{ModuleModifier}
+        \concrDefn{ \TR{adds} \NT{ClassDecl} }
+        \concrCont{ \TR{removes} \TR{class} \NT{TypeName} \TRS{;} }
+        \concrCont{ \TR{modifies} \TR{class} \NT{TypeName} }
+        \concrNewline{ \OPTG{\TR{adds}\ \NT{TypeId}\ \MANYG{\TRS{,}\ \NT{TypeId}}} \OPTG{\TR{removes}\ \NT{TypeId}\ \MANYG{\TRS{,}\ \NT{TypeId}}} }
+        \concrNewline{ \TRS{\{} \MANY{\NT{Modifier}} \TRS{\}} }
+        \concrCont{ \TR{adds} \NT{InterfaceDecl} }
+        \concrCont{ \TR{removes} \TR{interface} \NT{TypeName} \TRS{;} }
+        \concrCont{ \TR{modifies} \TR{interface} \NT{TypeName} \TRS{\{} \MANY{\NT{InterfaceModifier}} \TRS{\}}}
+        \concrCont{ \TR{adds} \NT{FunctionDecl} }
+        \concrCont{ \TR{adds} \NT{DataTypeDecl} }
+        \concrCont{ \TR{modifies} \NT{DataTypeDecl} }
+        \concrCont{ \TR{adds} \NT{TypeSynDecl} }
+        \concrCont{ \TR{modifies} \NT{TypeSynDecl} }
+        \concrCont{ \TR{adds} \NT{Import} }
+        \concrCont{ \TR{adds} \NT{Export} }
+        \medskip
+        \\
+
+        \NT{InterfaceModifier}
+        \concrDefn{ \TR{adds} \NT{MethSig} \TRS{;} }
+        \concrCont{ \TR{removes} \NT{MethSig} \TRS{;} }
+        \medskip
+        \\
+
+        \NT{Modifier}
+        \concrDefn{ \TR{adds} \NT{FieldDecl}}
+        \concrCont{ \TR{removes} \NT{FieldDecl}}
+        \concrCont{ \TR{adds} \NT{MethDecl} }
+        \concrCont{ \TR{removes} \NT{MethSig} }
+        \concrCont{ \TR{modifies} \NT{MethDecl} }
+        \medskip
+        \\
+        
+        \NT{DeltaParams}
+        \concrDefn{ \TRS{(}\NT{DeltaParam} \MANYG{\TRS{,} \NT{DeltaParams}} \TRS{)}}
+
+        \\
+        \NT{DeltaParam}
+        \concrDefn{ \NT{Identifier} \MANY{\NT{HasCondition}}}
+        \concrCont{ \NT{Type}\ \NT{Identifier} }
+        \medskip
+        
+        \\
+        \NT{ModuleAccess}
+        \concrDefn{ \TR{uses} \NT{TypeId} \TRS{;}}
+        \medskip
+        
+        \\
+        \NT{HasCondition}
+        \concrDefn{ \TR{hasField} \NT{FieldDecl} }
+        \concrCont{ \TR{hasMethod} \NT{MethSig} }
+        \concrCont{ \TR{hasInterface} \NT{TypeId} }
+        
+    \end{tabular}
+    \caption{ABS Grammar: Delta Modules.}
+    \label{fig:delta-grammar}
+\end{figure}
+
+Figure~\ref{fig:delta-grammar} specifies the ABS syntax related to delta
+modeling. The \NT{DeltaDecl} clause specifies the syntax of delta modules,
+consisting of an unique identifier, a module access directive, a list of
+parameters and a sequence of module modifiers. The \emph{module
+access} directive gives the delta access to the namespace of a particular
+module. In other words it specifies the ABS module to which the modifications
+specified by the delta apply by default. A delta can still apply changes to
+several modules by fully qualifying the \NT{TypeName} of module modifiers.
+
+The \NT{ModuleModifier} clause describes the syntax of modifications at the
+level of modules. Such a modification can, for example, add a class or interface
+declaration, modify an existing class or interface, remove a class or interface,
+and also add functions, data types and type synonyms. Class modifications
+include the ability to change the interface of a class by adding or removing
+items from the class's list of implemented interfaces.
+The \NT{InterfaceModifiers} clause describes how to modify existing interface
+declarations, either by adding new or removing existing method signatures.
+
+The \NT{Modifier} clause specifies the modifications that can occur within a
+class or interface body. These include adding and removing fields and methods,
+and modifying methods, which amounts to replacing a method implementation with a
+new one, while enabling the original method to be called using the \TR{original}
+keyword.
+The aim of \absinline{original} is to enable the method being replaced to be
+called from the delta module that replaces it. This is implemented by renaming
+the original method, and replacing the call to \absinline{original} with a call
+to the renamed method. 
+
+A method can be replaced multiple times by applying a succession of deltas. To
+call a specific version of such a method, a \emph{targeted} \absinline{original}
+call can be used. The target specifies hereby the delta or the core program.
+
+% This gives the user a tighter control over the program's behaviour. It also
+% makes the code less flexible because calling \absinline{original} on a
+% particular target delta introduces the assumption that the target delta has been
+% already applied. Such a dependency could be invalidated for instance by changes
+% to the SPL configuration, which dictates which deltas should be applied when
+% certain features are selected.
+
+\section{Object-oriented modifiers}
+To modify an object-oriented ABS program, delta modules support adding new
+classes and removing existing ones. Existing classes can be also modified by
+adding new methods and also removing or modifying existing methods.
+Deltas can also add new interface declarations, remove existing interface
+declarations, and modify interface declarations by adding or removing
+operations. Furthermore, deltas can change the interface of a class by adding or
+removing interfaces from the class's list of implemented interfaces. Lastly,
+delta modules can introduce new fields to classes and remove existing fields.
+
+\subsection{Interfaces}
+Deltas can introduce new interface declarations and remove or modify existing
+interface declarations. The syntax is illustrated by the following examples.
+\begin{abscode}
+delta D1;
+adds interface MyModule.I { Unit foo(); }
+
+delta D2; 
+uses MyModule;
+removes interface I;
+
+delta D3;
+uses MyModule;
+modifies interface I { removes Unit foo(); adds Unit bar(); }
+\end{abscode}
+
+
+\subsection{Classes}
+Deltas can introduce new classes and remove existing classes. The syntax is
+illustrated by the following examples.
+\begin{abscode}
+delta D1;
+adds class MyModule.DataBase(Map<Filename,File> db) implements DB {...}
+
+delta D2; 
+uses MyModule;
+removes class Node();
+\end{abscode}
+
+The first delta \absinline{D1} above declares a new class \absinline{DataBase} inside the
+module \absinline{MyModule}. Delta \absinline{D2} removes the class \absinline{Node} from the same
+module.
+Specifying to which module such code modifications apply can be done in two
+ways. First, as exemplified by delta \absinline{D1}, the class name can be qualified with a module name.
+An alternative way is to include a \absinline{uses <Module Name>} clause at the
+beginning of the delta module, which \emph{opens} a module so that names don't
+need to be qualified. When a delta specifies modifications to a single module,
+this method is more concise. When a delta specifies modifications across
+multiple modules, it is more convenient to qualify each class modifier with a module
+name. Using both methods together is also possible, in which case unqualified
+class names will refer to classes defined inside the \emph{used} module.
+
+Deltas can also \emph{modify} existing classes by adding new methods and
+removing or modifying methods; by adding or removing fields; and by manipulating
+the list of interfaces that the class implements. These operations are illustrated in the
+following sections.
+
+\subsection{Methods}
+\label{sec:class methods}
+Methods can be added, removed or modified from within deltas.
+The following example shows a delta module designed to modify the behaviour of
+the class \absinline{Greeter} by modifying its \absinline{sayHello} method.
+The class is assumed to have been declared in the core program inside the
+\absinline{Hello} module.
+
+\begin{abscode}
+delta Nl;
+uses Hello;
+modifies class Greeter {
+    modifies String sayHello() {
+        return "Hallo wereld";
+    }
+}
+\end{abscode}
+%
+The above \absinline{Nl} delta module applies its changes to the core ABS module
+\absinline{Hello}, as specified by the \absinline{uses} clause. It provides a new
+implementation for the method \absinline{sayHello()} in class
+\absinline{Greeter} by declaring a so-called method \emph{modifier}. The method modifier
+is introduced by the \absinline{modifies} keyword and followed by the method
+signature and a block of code providing the method's new implementation.
+ 
+Adding entirely new methods is also supported using the \absinline{adds} keyword
+followed by the method signature and its implementation.
+Similarly, it is possible to remove methods from classes using
+\absinline{removes} followed by the method signature, as shown in the following.
+\begin{abscode}
+delta D;
+modifies class M.Foo {
+    adds Int bar() { return 17; }
+    removes Unit moo();
+}
+\end{abscode}
+
+% \subsubsection{Delta parameters}
+% \label{sec:delta parameters}
+% Deltas take an optional list of parameters. These are used to pass on
+% configuration information defined in the product selection (cf.
+% Section~\ref{sec:product selection}) down to the implementation level. Product
+% declarations assign a boolean value to each feature (true if selected, false
+% otherwise), and a value to each feature attribute (of features that are
+% selected). Delta parameters must be immutable objects, such as booleans,
+% integers, or strings.
+% 
+% In the example below, any occurrence of the integer variable \absinline{times}
+% inside the delta module is replaced with the concrete value of the feature
+% attribute \absinline{Repeat.times} (from the ``Hello World'' example in
+% Section~\ref{sec:feature model}) upon delta application. The connection between
+% feature attributes and delta parameters is defined in the SPL configuration, 
+% which is described in Section~\ref{ch:spl configuration}.
+% \begin{abscode}
+% delta Rpt (Int times);
+% modifies class Hello.Greeter {
+%     modifies String sayHello() {
+%         String result = "";
+%         Int i = 0;
+%         while (i < times) {
+%             String orig = original();
+%             result = result + " " + orig;
+%             i = i + 1;
+%         }
+%         return result;
+%     }
+% }
+% \end{abscode}
+% For example, when building the product ``\absinline{P2(Dutch, Repeat\{times=3\})}'',
+% the \absinline{times} variable inside the \absinline{while} loops' predicate
+% is replaced with the integer constant ``\absinline{3}''.
+% 
+% The boolean values of features can be accessed in similar fashion, as shown in
+% the example below. Here, a delta adds three fields to class \absinline{C}, which
+% are assigned boolean constants that reflect whether the features to which they
+% are connected are selected or not. In this way, one can easily write code that
+% reflects on the feature configuration.
+% \begin{abscode}
+% delta D (Bool a, Bool b, Bool c);
+% modifies class C {
+%     adds Bool featureA = a;
+%     adds Bool featureB = b;
+%     adds Bool featureC = c;
+% }
+% \end{abscode}
+
+\subsubsection{Calling \absinline{original}}
+%A notable artifact in the above example is the statement \absinline{String orig = original()}. 
+Calling \absinline{original} from within a method modifier body makes it
+possible to access the method's previous behaviour, that is, the behaviour
+implemented in the previously applied delta or in the core. This is similar to
+calling \absinline{super} to access the superclass behaviour of a method in a language
+with class inheritance such as Java. An \absinline{original} call has to supply a list
+of arguments that conforms with the original method's list of formal parameters.
+
+\subsubsection{Targeted \absinline{original} calls}
+Original calls can be targeted towards a given delta by prefixing the call with
+the name of the delta, or towards the core ABS code by using the keyword
+\absinline{core}:
+\begin{abscode}
+core.original(params);
+Delta.original(params);
+\end{abscode}
+
+Regular (untargeted) original calls invoke the method behaviour defined by the previously applied delta.
+% current at the time before application of the delta where the call is issued. 
+For example, if a method \absinline{m} is defined in the core, and then a set of deltas
+\absinline{D1..D3}, which each modify \absinline{m}, are applied in sequence,
+then calling \absinline{original} from within \absinline{m}'s modifier in
+\absinline{D3} will run the version of \absinline{m} defined in \absinline{D2}.
+With a targeted call, one can access any version of \absinline{m}, that is, the
+versions defined in \absinline{D2}, \absinline{D1} and in the core.
+
+This allows a tighter control of which code is actually executed
+when calling \absinline{original}. As the order of delta application is often
+not uniquely defined, it is not always determinable which behaviour will be invoked upon
+calling \absinline{original}. With a targeted original call, the user can
+specify exactly which code to execute and even invoke multiple versions of a
+method. This, of course, implies that the target delta has been applied already;
+otherwise the compiler will indicate an error.
+
+\begin{abscode}
+module M;
+class C {
+    String m(String s) { return(s) };
+}
+delta D1;
+modifies M.C {
+    modifies String m(String s) { return prefix + original(s); }
+}
+delta D2;
+modifies M.C {
+    modifies String m(String s) { return original(s) + suffix; }
+}
+delta Resolve;
+modifies M.C {
+    modifies String m(String s) { return prefix + core.original(s) + suffix; }
+}
+\end{abscode}
+
+Consider the above example. \absinline{D1} and \absinline{D2} both modify method \absinline{m} in
+different, non-compatible ways. We say that these two deltas are in conflict.
+Assume that \absinline{D1} and \absinline{D2} can be applied in any order, and that delta
+\absinline{Resolve} has to be applied after \absinline{D1} and \absinline{D2}. By calling
+\absinline{original} from within \absinline{Resolve}, we cannot be sure which version of
+\absinline{m} will actually be invoked: this depends on whether \absinline{D1} or \absinline{D2}
+has been applied last. By targeting the original call towards a specific delta,
+we can control the behaviour precisely, and resolve the conflict in a meaningful
+way.
+
+Targeted original calls were required for the implementation of the delta
+modelling workflow (DMW)~\cite{Helvensteijn12,HelvensteijnMW12}, which is
+described in more detail in Deliverable 5.3~\cite{d5.3}. The DMW describes a
+process of applying delta modelling to obtain a model of a software product line
+that is globally unambiguous and complete. A focus of DMW is the systematic
+reconciliation of conflicting feature functionality.
+
+
+\subsection{Class interfaces}
+A delta module can change the list of interfaces that a class implements.
+Adding or dropping interfaces from that list is achieved using the familiar
+\absinline{removes} and \absinline{adds} keywords.
+
+The following example shows a core ABS program defining a \absinline{Logger}
+class that implements the \absinline{Output} interface. It further declares a
+delta module that modifies the \absinline{Logger} class such that it
+implements a different interface. This new  \absinline{IO} interface is 
+introduced in the same delta.
+%
+\begin{abscode}
+module M;
+interface Input { String read(); }
+interface Output { Unit write(String s); }
+class Logger implements Output {
+    Unit write(String s) {...}
+}
+
+delta IO;
+adds interface IO extends Input, Output {}
+modifies class Logger adds IO removes Output {
+    adds String read() {...}
+}
+\end{abscode}
+
+\subsection{Fields}
+In addition to modifying object behaviour, ABS allows adding or removing fields.
+New fields are introduced by the \absinline{adds} keyword followed by the
+field's type, name, and an optional value assignment. Similarly, fields can be
+removed using the \absinline{removes} keyword. The following example demonstrates this.
+\begin{abscode}
+delta D;
+modifies class M.Foo {
+    adds List<Item> items;
+    adds Int itemsCount = items.size();
+    removes String name;
+}
+\end{abscode}
+
+
+
+\section{Functional modifiers}
+Functional program elements can also be modified from within deltas.
+ABS supports the addition of functions, data types and type synonyms,
+and the modification of data types and type synonyms.  Qualifying
+functional elements with the module name is currently unsupported,
+therefore when adding functional elements, a \absinline{uses} clause has
+to be specified.
+
+\subsection{Functions}
+Example of adding a function.
+
+\begin{abscode}
+delta MyDelta;
+uses MyModule;
+adds def Int min(Int a, Int b) = case a < b { True => a; False => b; };
+\end{abscode}
+
+\subsection{Data types}
+\label{sec:data types}
+Example of adding a data type.
+\begin{abscode}
+adds data Schedule = Schedule(
+    String schedname,
+    List<Item> items,
+    Int sched,
+    Deadline dline) | NoSchedule;
+\end{abscode}
+
+\noindent
+Example of modifying a data type.
+\begin{abscode}
+modifies data Schedule = Schedule(
+    String schedname,
+    List<Item> items,
+    Int sched,
+    Deadline dline) | NoSchedule(String reason);
+\end{abscode}
+When modifying a datatype, the given constructors supersede the previous
+list of constructors.
+
+\subsection{Type synonyms}
+Example of adding a type synonym.
+\begin{abscode}
+adds type ClientId = Int;
+\end{abscode}
+
+\noindent
+Example of modifying a type synonym.
+\begin{abscode}
+modifies type ClientId = String;
+\end{abscode}
+
+
+\section{Module modifiers}
+Deltas support, to some extent, modifications to ABS's module system.
+
+\subsection{Imports and Exports}
+The addition of (qualified and unqualified) \absinline{import}s and \absinline{export}s to modules
+(cf. Chapter~\ref{sec:modules}) is supported, as shown in the following examples.
+
+\begin{abscode}
+delta D1;
+uses Drinks;
+adds export Drink, Milk;
+
+delta D2;
+uses Bar;
+adds export *;
+adds import Drinks.Milk;
+
+delta D3;
+uses MyModule;
+adds import * from Bar;
+\end{abscode}
+%
+The \absinline{adds import} and \absinline{adds export} directives apply to the
+module defined by the \absinline{uses} statement.
+
+
+\section{Unsupported modifications}
+
+While delta modelling supports a broad range of ways to modify an ABS model, not
+all ABS program entities are modifiable. These unsupported modifications are
+listed here for completeness. While these modifications could be easily
+specified and implemented, we opted not to overload the language with features
+that have not been regarded as necessary in practice.
+ 
+\begin{description}
+    \item[Class parameters and init block] Deltas currently do not support the 
+    modification of class parameter lists or class init blocks.
+
+  \item[Functional program elements] Deltas currently only support
+    adding functions, and adding and modifying data types and type
+    synonyms. Removal is not supported.
+
+    \item[Modules] Deltas currently do not support adding new modules or removing modules.
+    
+    \item[Imports and Exports]While deltas do support the addition of \absinline{import} and
+    \absinline{export} statements to modules, they do not support their modification or removal.
+    
+    \item[Main block] Deltas currently do not support the modification of the program's main block.
+
+\end{description}
+
+% Local Variables:
+% TeX-master: "absrefmanual"
+% End:

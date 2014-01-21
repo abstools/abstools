@@ -1,0 +1,880 @@
+%!TEX root=main.tex
+
+
+
+
+
+\section{Functions}
+\emph{Functions} in ABS define names for parametrized data expressions.
+A Function in ABS is always side effect-free, which means that it cannot
+manipulate the Heap.
+
+\begin{abssyntax}
+\NT{FunctionDecl} \defn \TR{def}\ \TR{Type}\ \NT{Identifier}\ \OPTG{\TRS{<}\ \NT{TypeIdList}\ \TRS{>}}\ \TRS{(} \NT{ParamList} \TRS{)}\ \TRS{=}\ 
+                 \NT{FunBody}\ \TRS{;}  \\
+\NT{FunBody}      \defn \TR{builtin} ~|~ \NT{PureExp}\\
+\NT{TypeIdList}   \defn \NT{TypeId}\ \MANYG{\TRS{,}\ \NT{TypeId}}
+\end{abssyntax}
+
+\begin{absexample}
+def Int length(IntList list) =
+  case list { 
+    Nil => 0;
+    Cons(n, ls) => 1 + length(ls);
+  };
+\end{absexample}
+
+\subsection{Parametric Functions}
+\label{sec:parametric-functions}
+
+\emph{Parametric Functions} serve to work with parametric data types in a
+general way.  For example, given a list of any type, a parametric
+function \absinline{head} can return the first element, regardless of its
+type.  Parametric functions are defined like normal functions but have
+an additional \texttt{type parameter} section inside broken brackets
+(\texttt{< >}) after the function name.
+
+\begin{absexample}
+def A head<A>(List<A> list) =
+  case list {
+    Cons(x, xs) => x;
+  };
+\end{absexample}
+
+
+
+
+\section{Pure Expressions}
+\emph{Pure Expressions} are side effect-free expressions. This means that these expressions cannot modify the Heap.
+
+\begin{abssyntax}
+\NT{PureExp}     \defn \NT{Variable}
+              \defc  \NT{FieldAccess}
+              \defc  \NT{ThisExp}
+              \defc  \NT{NullLiteral}
+              \defc  \NT{LetExp}
+              \defc  \NT{DataConstrExp}
+              \defc  \NT{FnAppExp}
+              \defc  \NT{FnAppListExp}
+              \defc  \NT{CaseExp}
+              \defc  \NT{OperatorExp}
+              \defc  \TRS{(} \NT{PureExp} \TRS{)}\\
+\NT{Variable}    \defn \NT{Identifier}\\
+\NT{FieldAccess} \defn \NT{ThisExp}\ \TRS{.}\ \NT{Identifier}\\
+\NT{ThisExp}     \defn \TR{this}\\
+\NT{PureExpList} \defn \NT{PureExp}\ \MANYG{\TRS{,}\ \NT{PureExp}}
+\end{abssyntax}
+
+
+\subsection{Let Expressions}
+\emph{Let Expressions} bind variable names to pure expressions.
+
+\begin{abssyntax}
+\NT{LetExp} \defn \TR{let}\ \TRS{(} \NT{Param} \TRS{)}\ \TRS{=}\ \NT{PureExp}\ \TR{in}\ \NT{PureExp}
+\end{abssyntax}
+
+\begin{absexample}
+let (Bool x) = True in ~x  
+\end{absexample}
+
+\subsection{Data Type Constructor Expressions}
+\emph{Data Type Constructor Expressions} are expressions that create data type values by using data type constructors.
+Note that for data type constructors that have no parameters the parentheses are optional.
+
+\begin{abssyntax}
+\NT{DataConstrExp} \defn \NT{TypeName}
+                   \defc \NT{TypeName}\ \TRS{(} \OPT{\NT{PureExpList}} \TRS{)}
+\end{abssyntax}
+
+\begin{absexample}
+True
+Cons(True, Nil)  
+ABS.StdLib.Nil
+\end{absexample}
+
+\subsection{Function Applications}
+\emph{Function Applications} apply functions to arguments.
+
+\begin{abssyntax}
+\NT{FnAppExp} \defn \NT{Name}\ \TRS{(} \OPT{\NT{PureExpList}} \TRS{)}   
+\end{abssyntax}
+
+\begin{absexample}
+tail(Cons(True, Nil))
+ABS.StdLib.head(list)
+\end{absexample}
+
+\subsection{Case Expressions / Pattern Matching}
+ABS supports pattern matching by the \emph{Case Expression}.
+It takes an expression as first argument, which a series of patterns is matched against.
+When a pattern matches, the corresponding expression on the right hand side is evaluated.
+
+\begin{abssyntax}
+\NT{CaseExp}       \defn \TR{case}\ \NT{PureExp}\ \TRS{\{} \MANY{\NT{CaseBranch}}\ \TRS{\}}\\
+\NT{CaseBranch}    \defn \NT{Pattern}\ \TRS{=>}\ \NT{PureExp}\ \TRS{;}\\
+\NT{Pattern}       \defn \NT{Identifier}
+                \defc  \NT{Literal}
+                \defc  \NT{ConstrPattern}
+                \defc  \TRS{\_}\\
+\NT{ConstrPattern} \defn \NT{TypeName}\ \OPTG{\TRS{(}\ \OPT{\NT{PatternList}}\ \TRS{)}}\\
+\NT{PatternList}   \defn \NT{Pattern}\ \MANYG{\TRS{,}\ \NT{Pattern}}
+\end{abssyntax}
+
+% \begin{abscode}
+% case <expr> {
+%   <pattern> => <expr> ;
+%   <pattern> => <expr> ;
+%   ...
+% }  
+% \end{abscode}
+
+\subsubsection{Patterns}
+There are five different kinds of patterns available in ABS:
+\begin{itemize}
+\item Pattern Variables (e.g., \absinline{x}, where \absinline{x} is not bound yet)
+\item Bound Variables (e.g., \absinline{x}, where \absinline{x} is bound)
+\item Literal Patterns (e.g., \absinline{5})
+\item Data Constructor Patterns (e.g.,~\absinline{Cons(Nil,x)})
+\item Underscore Pattern (\absinline{_})
+\end{itemize}
+
+\paragraph{Pattern Variables}
+Pattern variables are simply unbound variables.
+Like the underscore pattern, these variables match every value, but, in addition, bind the variable to the matched value. The bound variable can then be used in the right-hand-side expression of the corresponding branch.
+Typically, pattern variables are used inside of data constructor patterns to extract values from data constructors.
+For example:
+\begin{abscode}
+def A fromJust<A>(Maybe<A> a) = 
+  case a { 
+    Just(x) => x; 
+  };
+\end{abscode}
+
+\paragraph{Bound Variables}
+If a bound variable is used as a pattern, the pattern matches if the value of the case expression is equal to the value of the bound variable.
+
+\begin{abscode}
+def Bool contains<A>(List<A> list, A value) =
+  case list {
+    Nil => False;
+    Cons(value, _) => True;
+    Cons(_, rest) => contains(rest, value);
+  };
+\end{abscode}
+
+\paragraph{Literal Patterns}
+Literals can be used as patterns. This is similar to bound variables, because the pattern matches if the value of the case expression is equal to the literal value.
+
+\begin{abscode}
+def Bool isEmpty(String s) =
+  case b {
+    "" => True;
+    _  => False;
+  };
+\end{abscode}
+
+\paragraph{Data Constructor Patterns}
+A data constructor pattern is like a standard data constructor expression, but where certain sub expressions can be patterns again.
+
+\begin{abscode}
+def Bool negate(Bool b) =
+  case b {
+    True => False;
+    False => True;
+  };
+\end{abscode}
+
+\begin{abscode}
+def List<A> remainder(List<A> list) =
+  case b {
+    Cons(_, rest) => rest;
+  };
+\end{abscode}
+
+\paragraph{Underscore Pattern.}
+The underscore pattern (\verb!_!) simply matches every value. 
+It is in general used as the last pattern in a case expression to define a default case.
+For example:
+\begin{abscode}
+def Bool isNil<A>(List<A> list) =
+  case list {
+    Nil => True;
+    _ => False;
+  };
+\end{abscode}
+
+
+% \subsubsection{Error Cases}
+% It is currently backend dependent what happens if there is a case expression which does not match any pattern.
+% The Java backend throws an \verb_UnmatchedCaseException_ exception in this case.
+
+\subsubsection{Type Checking}
+A case expression is type-correct if and only if all its expressions and all its branches are type-correct and the right-hand side of all branches have a common super type. This common super type is also the type of the overall case expression. 
+
+A branch (a pattern and its expression) is type-correct if its pattern and its right-hand side expression are type-correct.
+A pattern is type-correct if it can match the corresponding case expression.
+
+\subsection{Operator Expressions}
+ABS has a number of predefined operators which can be used to form \emph{Operator Expressions}.
+
+\begin{abssyntax}
+\NT{OperatorExp} \defn \NT{UnaryExp}
+              ~|~ \NT{BinaryExp}\\
+\NT{UnaryExp}    \defn \NT{UnaryOp}\ \NT{PureExp}\\
+\NT{UnaryOp}     \defn \verb*_ _ ~|~ \TRS{-}\\
+\NT{BinaryExp}   \defn \NT{PureExp}\ \NT{BinaryOp}\ \NT{PureExp}\\
+\NT{BinaryOp}    \defn \TRS{==} ~|~ \TRS{!=} ~|~ \TRS{<} ~|~ \TRS{<=} ~|~ \TRS{>} ~|~ \TRS{>=} ~|~ \TRS{+} ~|~ \TRS{-} ~|~ \TRS{*} ~|~ \TRS{/} ~|~ \TRS{\%}
+\end{abssyntax}
+
+\begin{table}[ht]
+\centering
+ \renewcommand{\arraystretch}{1.5} 
+ \begin{tabular}[h]{| l | l | l | l | l |}
+   \hline
+   Expression & Meaning & Associativity & Argument types & Result type \\
+   \hline
+\mcode{e1 || e2}  & logical or & left & Bool, Bool & Bool \\ \hline 
+\mcode{e1 \&\& e2}  & logical and & left & Bool, Bool & Bool \\ \hline
+\mcode{e1 == e2}& equality & left & compatible & Bool \\ 
+\mcode{e1 != e2}& inequality & left & compatible & Bool \\ \hline 
+\mcode{e1 < e2}& less than & left & Int, Int & Bool \\
+\mcode{e1 <= e2}& less than or equal to  & left & Int, Int & Bool \\
+\mcode{e1 > e2}& greater than & left & Int, Int & Bool \\
+\mcode{e1 >= e2}& greater than or equal to  & left & Int, Int & Bool \\ \hline
+\mcode{e1 + e2}& concatenation & left & String, String & String \\
+\mcode{e1 + e2}& addition & left & Int, Int & Int \\
+\mcode{e1 - e2}& subtraction & left & Int, Int & Int \\\hline
+\mcode{e1 * e2}& multiplication & left & Int, Int & Int \\
+\mcode{e1 / e2}& division & left & Int, Int & Int \\
+\mcode{e1 \% e2}& modulo & left & Int, Int & Int \\ \hline 
+\verb_~ e_  & logical negation  & right & Bool  & Bool \\ 
+\verb_- e_   & integer negation  & right & Int  & Int \\ \hline 
+ \end{tabular}
+  \caption{\label{fig:operatorExpressions} Operator expressions, grouped according to precedence from low to high.}
+\end{table} 
+Table~\ref{fig:operatorExpressions} describes the meaning as well as the associativity and the precedence of the different operators.
+They are grouped according to precedence, as indicated by horizontal
+rules, from low precedence to high precedence.
+
+\section{Expression With Side Effects}
+Beside pure expressions, ABS has expressions with side effects.
+However, these expressions are defined in such a way that they can only have a single side effect. This means that subexpressions of expressions can only be pure expressions again. This restriction simplifies the reasoning about ABS expressions.
+\newpage
+
+\begin{abssyntax}
+\NT{Exp}    \defn \NT{PureExp}
+         ~|~ \NT{EffExp}\\
+\NT{EffExp} \defn \NT{NewExp}
+         \defc  \NT{SyncCall}
+         \defc  \NT{AsyncCall}
+         \defc  \NT{GetExp}
+\end{abssyntax}
+
+\subsection{New Expression}
+A \emph{New Expression} creates a new object from a class name and a list of arguments. In ABS objects can be created in two different ways.
+Either they are created in the current COG, using the \absinline{new local} expression,
+or they are created in a new COG by using the \absinline{new} expression.
+
+\begin{abssyntax}
+\NT{NewExp} \defn \TR{new}\ \OPT{\TR{local}}\ \NT{TypeName}\ \TRS{(} \NT{PureExpList} \TRS{)}  
+\end{abssyntax}
+
+\begin{absexample}
+new local Foo(5)
+new Bar()
+\end{absexample}
+
+\subsubsection{Standard Object Creation}
+When using the \absinline{new local} expression, the new object is created in the \emph{current} COG, i.e., the COG of the current receiver object.
+Figure~\ref{fig:newExpr} illustrates this by showing two different runtime states, one before the creation of an object \verb_b_ and one after its creation.
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\node[object] (a) {this:A};
+\begin{pgfonlayer}{cogs}
+  \node[cog, fit=(a)] (coga) {};
+\end{pgfonlayer}
+\node[myarrow, right=2cm] (arrow) at (coga) {\verb_new local B()_};
+
+\node[object, right=1cm] (a2) at (arrow.east) {this:A};
+\node[object, right=1cm] (b2) at (a2) {b:B};
+\begin{pgfonlayer}{cogs}
+  \node[cog, fit=(a2) (b2)] (cogb) {};
+\end{pgfonlayer}
+
+\node[fit=(coga) (arrow) (cogb)] (pic) {};
+\matrix[below=0.5cm] (legend) at (pic.south) {
+   \node[object,legendsymbol] {~}; & \node[legendtext] {objects}; 
+ & \node[cog,legendsymbol] {~}; & \node[legendtext] {COGs}; 
+\\
+};
+\draw[gray!50] (legend.north west) -- (legend.north east);
+\end{tikzpicture}
+\caption{Process of creating an object inside the current COG by using the \texttt{new local} expression.}
+\label{fig:newExpr}
+\end{figure}
+
+\subsubsection{COG Object Creation}
+The concurrency model of ABS is based on the notion of COGs~\cite{johnsen10fmco}.
+An ABS system at runtime is a set of concurrently running COGs. A COGs can be seen as an isolated subsystem, which has its own state (an object-heap) and its own internal behavior.
+COGs are created implicitly when creating a new object by using the \verb_new_ expression.
+Figure~\ref{fig:newCogExpr} illustrates this by showing two different runtime states, one before the creation of an object \verb_b_ using the \verb_new cog_ expression and one after its creation. In the second runtime state, two COGs exists. 
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\node[object] (a) {this:A};
+\begin{pgfonlayer}{cogs}
+  \node[cog, fit=(a)] (coga) {};
+\end{pgfonlayer}
+\node[myarrow, right=2cm] (arrow) at (coga) {\verb_new B()_};
+
+\node[object, right=1cm] (a2) at (arrow.east) {this:A};
+\node[object, right=1cm] (b2) at (a2.east) {b:B};
+
+\begin{pgfonlayer}{cogs}
+  \node[cog, fit=(a2)] (coga2) {};
+  \node[cog, fit=(b2)] (cogb2) {};
+\end{pgfonlayer}
+
+
+
+\node[fit=(coga) (arrow) (cogb2)] (pic) {};
+\matrix[below=0.5cm] (legend) at (pic.south) {
+   \node[object,legendsymbol] {~}; & \node[legendtext] {objects}; 
+ & \node[cog,legendsymbol] {~}; & \node[legendtext] {COGs}; 
+\\
+};
+\draw[gray!50] (legend.north west) -- (legend.north east);
+\end{tikzpicture}
+\caption{Process of creating an object in a new COG by using the \texttt{new} expression.}
+\label{fig:newCogExpr}
+\end{figure}
+
+
+\subsection{Synchronous Call Expression}
+A \emph{Synchronous Call} consists of a target expression, a method name, and a list of argument expressions.
+
+\begin{abssyntax}
+\NT{SyncCall} \defn \NT{PureExp}\ \TRS{.}\ \NT{Identifier}\ \TRS{(} \NT{PureExpList} \TRS{)}  
+\end{abssyntax}
+
+\begin{absexample}
+Bool b = x.m(5);  
+\end{absexample}
+
+\subsection{Asynchronous Call Expression}
+An \emph{Asynchronous Call} consists of a target expression, a method name, and a list of argument expressions.
+Instead of directly invoking the method, an asynchronous method call creates a new \emph{task} in the target COG, which is executed asynchronously. This means that the calling task proceeds independently after the call, without waiting for the result~\cite{johnsen10fmco}.
+The result of an asynchronous method call is a future (\verb_Fut<V>_), which can be used by the calling
+task to later obtain the result of the method call.
+That future is \emph{resolved} by the task that has been created in the target COG to execute the method.
+
+\begin{abssyntax}
+\NT{AsyncCall} \defn \NT{PureExp}\ \TRS{!}\ \NT{Identifier}\ \TRS{(} \NT{PureExpList} \TRS{)}  
+\end{abssyntax}
+
+\begin{absexample}
+Fut<Bool> f = x!m(5);  
+\end{absexample}
+
+\subsection{Get Expression}\label{sec:getexpr}
+A \emph{Get Expression} is used to obtain the value from a future.
+The current task is blocked until the value of the future is available, i.e., until
+the future has been resolved. No other task in the COG can be activated in
+the meantime~\cite{johnsen10fmco}.
+
+\begin{abssyntax}
+\NT{GetExp} \defn \NT{PureExp}\ \TRS{.}\ \TR{get}
+\end{abssyntax}
+
+\begin{absexample}
+Bool b = f.get;
+\end{absexample}
+
+
+\section{Statements}
+In contrast to expressions, \emph{Statements} in ABS are not
+evaluated to a value. If one wants to assign a value to statements
+it would be the \absinline{Unit} value.
+
+\begin{abssyntax}
+\NT{Statement}    \defn \NT{CompoundStmt}
+               \defc  \NT{VarDeclStmt}
+               \defc  \NT{AssignStmt}
+               \defc  \NT{AwaitStmt}
+               \defc  \NT{SuspendStmt}
+               \defc  \NT{SkipStmt}
+               \defc  \NT{AssertStmt}
+               \defc  \NT{ReturnStmt}
+               \defc  \NT{ExpStmt}\\
+\NT{CompoundStmt} \defn \NT{Block}
+               \defc  \NT{IfStmt}
+               \defc  \NT{WhileStmt}
+\end{abssyntax}
+
+\subsection{Block}
+A block consists of a sequence of statements and defines a name scope for variables.
+
+% \subsubsection{Type Checking}
+% A block is type-correct if all its statements are type correct.
+
+
+\begin{abssyntax}
+\NT{Block} \defn \TRS{\{}\ \MANY{\NT{Statement}}\ \TRS{\}}
+\end{abssyntax}
+
+\subsection{If Statement}
+
+\begin{abssyntax}
+\NT{IfStmt} \defn \TR{if}\ \TRS{(} \NT{PureExp} \TRS{)}\ \NT{Stmt} \OPTG{\TR{else}\ \NT{Stmt}}
+\end{abssyntax}
+
+\begin{absexample}
+if (5 < x) {
+  y = 6;
+} else {
+  y = 7;
+}
+
+if (True)
+  x = 5;
+\end{absexample}
+
+\subsection{While Statement}
+
+\begin{abssyntax}
+\TR{while}\ \TRS{(} \NT{PureExp} \TRS{)}\ \NT{Stmt}
+\end{abssyntax}
+
+\begin{absexample}
+while (x < 5)
+   x = x + 1;
+\end{absexample}
+
+\subsection{Variable Declaration Statements}
+A variable declaration statement is used to declare variables.
+
+\begin{abssyntax}
+\NT{VarDeclStmt} \defn \NT{TypeName}\ \NT{Identifier}\ \OPTG{\TRS{=}\ \NT{Exp}}\ \TRS{;}  
+\end{abssyntax}
+
+A variable has an optional \emph{initialization expression} for defining the initial value of the variable. The initialization expression is \emph{mandatory} for variables of data types.
+It can be left out only for variables of reference types, in which case the variable is initialized with \absinline{null}.
+
+\begin{absexample}
+Bool b = True;  
+\end{absexample}
+
+\subsection{Assign Statement}
+The \emph{Assign Statement} assigns a value to a variable or a field.
+
+\begin{abssyntax}
+\NT{AssignStmt} \defn \NT{Variable}\ \TRS{=}\ \NT{PureExp}\ \TRS{;}
+             \defc  \NT{FieldAccess}\ \TRS{=}\ \NT{PureExp}\ \TRS{;}
+\end{abssyntax}
+
+\begin{absexample}
+this.f = True;
+x = 5;
+\end{absexample}
+
+
+\subsection{Await Statement}
+\emph{Await Statements} suspend the current task until the given \emph{guard} is true~\cite{johnsen10fmco}. 
+While the task is suspended, other tasks within the same COG can be activated. 
+Await statements are also called \emph{scheduling points}, because they are the only source positions,
+where a task may become suspended and other tasks of the same COG can be activated.
+
+
+\begin{abssyntax}
+\NT{AwaitStmt}  \defn \TR{await}\ \NT{Guard}\ \TRS{;}\\
+\NT{Guard}      \defn \NT{ClaimGuard}
+             \defc  \NT{PureExp} 
+             \defc  \NT{Guard}\ \TRS{\&}\ \NT{Guard}\\
+\NT{ClaimGuard} \defn \NT{Variable}\ \TRS{?}
+             \defc  \NT{FieldAccess}\ \TRS{?}
+\end{abssyntax}
+
+\begin{absexample}
+Fut<Bool> f = x!m();
+await f?;
+await this.x == True;
+await f? & this.y > 5;
+\end{absexample}
+
+\subsection{Suspend Statement}
+A \emph{Suspend Statement} leads to a scheduling point, i.e. the currently active task releases the processor, allowing other tasks within the same COG to become active.
+
+\begin{abssyntax}
+\NT{SuspendStmt} \defn \TR{suspend}\ \TRS{;}
+\end{abssyntax}
+
+\begin{absexample}
+suspend;
+\end{absexample}
+
+\subsection{Skip Statement}
+The \emph{Skip Statement} is a statement that does nothing.
+
+\begin{abssyntax}
+\NT{SkipStmt} \defn \TR{skip}\ \TRS{;}
+\end{abssyntax}
+
+\subsection{Assert Statement}\label{sec:abs:assert}
+An \emph{Assert Statement} is a statement for asserting certain conditions.
+\newpage
+
+\begin{abssyntax}
+\NT{AssertStmt} \defn \TR{assert}\ \NT{PureExp}\ \TRS{;}
+\end{abssyntax}
+
+\begin{absexample}
+assert x != null;
+\end{absexample}
+
+\subsection{Return Statement}
+A \emph{Return Statement} defines the return value of a method.
+A return statement can only appear as a last statement in a method body.
+
+\begin{abssyntax}
+\NT{ReturnStmt} \defn \TR{return}\ \NT{PureExp}\ \TRS{;}
+\end{abssyntax}
+
+\begin{absexample}
+return x;
+\end{absexample}
+
+\subsection{Expression Statement}
+An \emph{Expression Statement} is a statement that only consists of a single expression. Such statements are only executed for the effect of the expression. 
+
+\begin{abssyntax}
+\NT{ExpStmt} \defn \NT{Exp}\ \TRS{;}
+\end{abssyntax}
+
+\begin{absexample}
+new local C(x);
+\end{absexample}
+
+\section{Classes and Interfaces}
+\label{sec:classandint}
+Objects in ABS are built from \emph{classes}, which implement \emph{interfaces}. Only interfaces can be used as types in ABS.
+
+\subsection{Interfaces}
+\label{sec:interfacedecl}
+Interfaces in ABS are similar to interfaces in Java.
+They have a name, which defines a nominal type, and 
+they can \emph{extend} arbitrary many other interfaces.
+The interface body consists of a list of method signature declarations. 
+Method names start with a lowercase letter.
+
+\begin{abssyntax}
+\NT{InterfaceDecl} \defn \TR{interface}\ \NT{TypeId}\ \OPTG{\TR{extends}\
+  \NT{TypeName}\ \MANYG{\TRS{,}\ \NT{TypeName}}}\
+  \TRS{\{}\ \MANY{\NT{MethSig}}\ \TRS{\}}\\
+%\NT{MethSigList}   \defn \MANY{\NT{MethSig}}\\
+\NT{MethSig}       \defn \NT{Type}\ \NT{Identifier}\ \TRS{(}\ \OPT{\NT{ParamList}}\ \TRS{)}\ \TRS{;}\\
+\NT{ParamList}     \defn \NT{Param}\ \MANYG{\TRS{,}\ \NT{Param}}\\
+\NT{Param}         \defn \NT{Type}\ \NT{Identifier}
+\end{abssyntax}
+
+%\begin{absexample}
+%interface Foo {
+%   Unit m(Bool b, Int i);
+%}
+%
+%interface Bar extends Foo {
+%   Bool n();    
+%}
+%\end{absexample}
+
+The interfaces in the example below represent a database system, providing
+functionality to store and retrieve files, and a node of a peer-to-peer file
+sharing system. Each node of a peer-to-peer system plays both the role of a
+server and a client. The data types are defined in the ABS standard library,
+included in Appendix~\ref{ch:absstdlib}, and the remainder types are type synonyms
+included in Section~\ref{sec:typesynonyms}.
+
+\begin{absexample}
+interface DB {
+  File getFile(Filename fId);
+  Int getLength(Filename fId);
+  Unit storeFile(Filename fId, File file);
+  Filenames listFiles();
+}
+
+interface Client {
+  List<Pair<Server,Filenames>> availFiles(List<Server> sList);
+  Unit reqFile(Server sId, Filename fId);
+}
+
+interface Server {
+  Filenames inquire();
+  Int getLength(Filename fId);
+  Packet getPack(Filename fId, Int pNbr);
+}
+
+interface Peer extends Client, Server {
+  List<Server> getNeighbors();
+}
+\end{absexample}
+
+\subsection{Classes}
+Like in typical class-based languages, classes in ABS 
+are used to create objects. 
+Classes can implement an arbitrary number of interfaces.
+ABS does not support inheritance, as code reuse in ABS is realized by delta modules.
+Classes do not have constructors in ABS but instead have
+\emph{class parameters} and an optional \emph{init block}.
+Class parameters actually define additional fields of the 
+class that can be used like any other declared field.
+\newpage
+
+\begin{abssyntax}
+\NT{ClassDecl}     \defn \TR{\NT{class}}\ \NT{TypeId}\ \OPTG{\TRS{(} \NT{ParamList} \TRS{)}}\ \OPTG{\TR{implements}\ \NT{TypeName}\ \MANYG{\TRS{,}\ \NT{TypeName}}} 
+\\&&
+                  \TRS{\{}\ \OPT{\NT{FieldDeclList}}\ \OPT{\NT{Block}}\ \OPT{\NT{MethDeclList}}\ \TRS{\}}\\  
+\NT{FieldDeclList} \defn \NT{FieldDecl}\ \MANYG{\TRS{,}\ \NT{FieldDecl}}\\
+\NT{FieldDecl}     \defn \NT{TypeId}\ \NT{Identifier}\ \OPTG{\TRS{=}\ \NT{PureExp}}\ \TRS{;}\\
+\NT{MethDeclList}  \defn \NT{MethDecl}\ \MANYG{\TRS{,}\ \NT{MethDecl}}\\
+\NT{MethDecl}      \defn \NT{Type}\ \NT{Identifier}\ \TRS{(} \NT{ParamList} \TRS{)}\ \NT{Block}
+\end{abssyntax}
+
+%\begin{absexample}
+%class Foo(Bool b, Int i) implements Bar, Baz {
+%   Int j = 5;
+%   Bar b;
+%
+%   {   
+%     j = i;
+%   }  
+%
+%   Bool m() { 
+%     return True;
+%   }
+%}
+%\end{absexample}
+
+We continue peer-to-peer example with an implementation of the \absinline{DB}
+interface, and the signature of a node that implements the \absinline{Peer}
+interface. The full implementation of a node is presented in Section~\ref{app:example}.
+%The remainder types, 
+%\absinline{Filename}, \absinline{Filenames}, \absinline{File}, \absinline{Packet}, and \absinline{Catalog}, are defined as type synonyms, that we will introduce 
+%
+%... sec:typesynonyms
+
+\begin{absexample}
+class DataBase(Map<Filename,File> db) implements DB {
+  File getFile(Filename fId) {
+      return lookup(db, fId);
+  }
+  
+  Int getLength(Filename fId){
+      return length(lookup(db, fId));
+  }
+  
+  Unit storeFile(Filename fId, File file) {
+      db = insert(Pair(fId,file), db);
+  }
+  
+  Filenames listFiles() {
+      return keys(db);
+  }
+}
+
+class Node(DB db, Peer admin, Filename file) implements Peer {
+  Catalog catalog;
+  List<Server> myNeighbors;
+
+  // implementation...
+}
+\end{absexample}
+
+\subsubsection{Active Classes}
+\label{sec:active-classes}
+
+A class can be \emph{active} or \emph{passive}.  Active classes start an
+activity ``on their own upon creation, passive classes only react to
+incoming method calls.
+
+A class is active if and only if it has a \emph{run method}:
+\begin{absexample}
+Unit run() {
+  // active behavior ...
+}
+\end{absexample}
+The run method is called after object initialization.  
+
+\section{Annotations}
+ABS supports \emph{Annotations} to enrich an ABS model with additional information, for example, to realize pluggable type systems.
+Annotations can appear before any declaration and type usage in ABS programs (which is not given in the grammar definitions, to improve readability).
+
+\begin{abssyntax}
+\NT{Annotation} \defn \TRS{[}\ \OPTG{\NT{TypeName}\ \TRS{:}}\ \NT{PureExp}\ \TRS{]}
+\end{abssyntax}
+
+\begin{absexample}
+[LocationType:Near] Peer p;
+[Far] Network n;
+List<[Near] Peer> peers = Nil;
+\end{absexample}
+
+\subsection{Type Annotations}
+ABS has a predefined ``meta-annotation \absinline{TypeAnnotation} to declare annotations to be \emph{Type Annotations}.
+Data types that are annotated with that annotation are specially treated by the ABS compiler to support an easier implementation of pluggable type systems.
+
+\begin{absexample}
+[TypeAnnotation]
+data LocationType = Far | Near | Somewhere | Infer;
+\end{absexample}
+
+
+\section{Modules}\label{sec:modules}
+For name spacing, code structuring, and code hiding purposes, ABS offers a module system.
+The module system of ABS is very similar to that of Haskell \cite{Haskell98}.
+It uses, however, a different syntax that is similar to that of Java \cite{gosling96} and Python.
+\newpage
+
+\begin{abssyntax}
+\NT{ModuleDecl}  \defn \TR{module}\ \NT{TypeName}\ \TRS{;}\ \OPT{\NT{ExportList}}\ \OPT{\NT{ImportList}}\ \MANY{\NT{Decl}}\ \OPT{\NT{Block}}\\
+\NT{ExportList}  \defn \NT{Export}\ \MANYG{\TRS{,}\ \NT{Export}}\\
+\NT{ImportList}  \defn \NT{Import}\ \MANYG{\TRS{,}\ \NT{Import}}\\
+\NT{Export}      \defn \TR{export}\ \NT{AnyNameList}\ \OPTG{\TR{from}\ \NT{TypeName}}\ \TRS{;}
+            \defc \TR{export}\ \TRS{*}\ \OPTG{\TR{from}\ \NT{TypeName}}\ \TRS{;}\\
+\NT{Import}      \defn \TR{import}\ \NT{AnyNameList}\ \OPTG{\TR{from}\ \NT{TypeName}}\ \TRS{;}
+            \defc \TR{import}\ \TRS{*}\ \TR{from}\ \NT{TypeName}\ \TRS{;}\\
+\NT{AnyNameList} \defn \NT{AnyName}\ \OPTG{\TRS{,}\ \NT{AnyName}}\\
+\NT{AnyName}     \defn \NT{Name} ~|~ \NT{TypeName}\\
+\NT{Decl}        \defn \NT{FunDecl} ~|~ \NT{TypeSynDecl} ~|~ \NT{DataTypeDecl}
+                 \defc
+                \NT{InterfaceDecl} ~|~ \NT{ClassDecl} ~|~ \NT{DeltaDecl}
+\end{abssyntax}
+
+
+A module with name \absinline{MyModule} is declared by writing 
+\begin{abscode}
+module MyModule;
+\end{abscode}
+This declaration introduces a new module name \absinline{MyModule} which can be
+used to qualify names.
+All declarations which follow this statement belong to the module \absinline{MyModule}.
+A module name is a type name and must always start with an upper case letter.
+
+\subsection{Exporting}
+By default, modules do not export any names.
+In order to make names of a module usable to other modules, the names have to be \emph{exported}.
+Exporting is done by writing one or several \emph{exports} after the module declaration.
+% \begin{abscode}
+% export <Name>, <Name>, ... , <Name> ;
+% export <Name>, ...
+% \end{abscode}
+%Where the exported \verb_<Name>_ refers to any name that is visible in the %scope of the module.
+For example, to export a data type and a data constructor, one can write something like this:
+\begin{abscode}
+module Drinks;
+export Drink, Milk;
+data Drink = Milk | Water;
+\end{abscode}
+
+Note that in this example, the data constructor \absinline{Water} is not exported, and can thus not be used by other modules.
+By only exporting the data type without any of its constructors one can realize \emph{abstract data types}.
+
+\subsubsection{Exporting Everything}
+Sometimes one wants to export everything from a module.
+In that case one can write:
+\begin{abscode}
+export *;
+\end{abscode}
+In this case, all names that are \emph{defined} in the module are exported, in particular, this means that imported names are \emph{not} exported.
+
+\subsection{Importing}
+In order to use exported names of a module in another module, the names have to be \emph{imported}.
+After the list of export statements follows an optional list of \emph{imports}, which are used to import names from other modules.
+For example, to write a module that imports the \absinline{Drink} data type of the module \absinline{Drinks} one can write something like this:
+\begin{abscode}
+module Bar;
+import Drinks.Drink;  
+\end{abscode}
+After a name has been imported, it can be used inside the module in a fully qualified way.
+
+\subsubsection{Unqualified Importing}
+To use a name from another module in an unqualified way one has to use \emph{unqualified imports}.
+For example, to use the \absinline{Milk} data constructor inside the \absinline{Bar} module, without having to qualify it with the \absinline{Drinks} module each time, one uses the unqualified import statement:
+\begin{abscode}
+module Bar;
+import Drinks.Drink;  
+import Milk from Drinks;
+\end{abscode}
+Note that this kind of import also imports the qualified names. 
+So in this example the names \absinline{Milk} and \absinline{Drinks.Milk} can be used inside the module \absinline{Bar}.
+
+To use all exported names from another module in an unqualified way one can write:
+\begin{abscode}
+import * from SomeModule;
+\end{abscode}
+
+\subsection{Exporting Imported Names}
+It is possible to export names that have been imported. For example,
+\begin{abscode}
+module Bar;
+export Drink;
+import * from Drinks;
+\end{abscode}
+exports data type \absinline{Drink} that has been imported from \absinline{Drinks}
+
+To export all names imported from a certain module one can write
+\begin{abscode}
+export * from SomeModule;
+\end{abscode}
+In this case, all names that have been imported from module \absinline{SomeModule} are exported. For example,
+\begin{abscode}
+module Bar;
+export * from Drinks;
+import * from Drinks;
+\end{abscode}
+exports all names that are exported by module \absinline{Drinks}.
+
+However, in this example:
+\begin{abscode}
+module Bar;
+export * from Drinks;
+import Drink from Drinks;
+\end{abscode}
+only \absinline{Drink} is exported as this is the only name imported from module \absinline{Drinks}.
+Note: only names that are visible in a module can be exported by that module.
+
+To only export some names from a certain module one can write, for example:
+\begin{abscode}
+module Bar;
+export Drink from Drinks;
+import * from Drinks;
+\end{abscode}
+only exports \absinline{Drink} from module \absinline{Drinks}
+
+\section{Model}
+\label{sec:model}
+A \emph{Model} in ABS represents a type-closed set of \emph{Modules}.
+A Module defines a set of declarations and an optional \emph{Main Block}.
+Modules reside in \emph{Compilation Units}, which are typically represented by files ending with \texttt{.abs}.
+A Model is thus set of Compilation Units.
+
+\begin{abssyntax}
+\NT{Model}           \defn \MANY{\NT{CompilationUnit}}\\
+\NT{CompilationUnit} \defn \MANY{\NT{ModuleDecl}}
+\end{abssyntax}
+
+
+
+
+
+
+%\lstDeleteShortInline|
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:
+
+
+

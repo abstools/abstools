@@ -1,0 +1,62 @@
+% change draft to final when appropriate
+%\documentclass[a4paper,11pt,final]{report}
+\documentclass[a4paper,11pt]{report}
+\title{The ABS Language Specification\\[1cm]
+\large For ABS Version 1.2.0}
+
+\date{\today \\[1em]Document Version \input{gitRevision}}
+
+\usepackage[includeheadfoot,left=3cm, right=3cm, top=2cm, bottom=3cm]{geometry}
+
+\input{preamble}
+\input{abslanguage_definitions}
+\input{def-cmdline}
+
+\def\codesize{\fontsize{8}{8}}
+\newcommand{\CT}{\env{\mathcal{C}}}
+
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\input{introduction}
+\input{lexical}
+\input{names}
+\input{adts}
+\input{functions}
+\input{pureexpr}
+\input{effexpr}
+\input{statements}
+\input{classes}
+\input{modules}
+\input{timedmodels}
+\input{cog-schedulers}
+\input{resourcemodels}
+\input{featuremodel}
+\input{deltamodules}
+\input{spl-configuration}
+\input{annotations}
+\input{models}
+
+\bibliographystyle{plain}
+\bibliography{bibli}
+
+
+
+
+
+
+
+
+\appendix
+\input{absstdlib}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: t
+%%% End:
