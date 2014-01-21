@@ -1,5 +1,5 @@
 -module(builtin).
--export([substr/3,currentms/0,lowlevelDeadline/0,random/1,getProductLine/0,strlen/1,toString/1,truncate/1]).
+-export([substr/3,currentms/0,lowlevelDeadline/0,random/1,getProductLine/0,strlen/1,toString/1,truncate/1,println/1]).
 
 
 lowlevelDeadline() ->
@@ -19,15 +19,16 @@ strlen(S)->
 
 toString(I) when is_integer(I) ->
 	integer_to_list(I);
-toString(F) when is_float(F)->
-	float_to_list(F).
+toString({N,D}) when is_integer(N),is_integer(D)->
+	float_to_list(N / D,[{decimals, 4}, compact]).
 
 truncate({N,D})->
 	N div D;
 truncate(N)->
 	N.
 
-
+println(S)->
+	io:format("~p~n",[S]).
 
 getProductLine()->
 	exit("Not Implemented").
