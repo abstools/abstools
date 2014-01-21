@@ -1,6 +1,6 @@
 -module(object).
 
--export([new/4,init/2,activate/1,await_active/1]).
+-export([new/4,init/3,activate/1,await_active/1]).
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
 -export([behaviour_info/1]).
@@ -24,7 +24,7 @@ new(Cog,Class,Args,true)->
     
 
 start(Cog,Class)->
-    O=spawn(object,init,[Class,Class:init_internal()]),
+    O=spawn(object,init,[Cog,Class,Class:init_internal()]),
     #object{class=Class,ref=O,cog=Cog}.
 
 activate(#object{ref=O})->
@@ -36,7 +36,7 @@ await_active(#object{ref=O})->
 			ok
 	end.
 
-init(Class,Status)->
+init(Cog,Class,Status)->
 	?DEBUG({new,Cog, Class}),
 	receive 
 		activate->

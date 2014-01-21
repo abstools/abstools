@@ -62,7 +62,6 @@ loop(S=#state{running=true})->
             {newT,Task,Args,Sender,Notify}->
                 initTask(S,Task,Args,Sender,Notify);
         	{token,R,Task_state}->
-                io:format("COG ~p: fin ~p with ~p~n",[self(),R,Task_state]),   
                 set_state(S#state{running=false},R,Task_state)
             end,
 	loop(New_State).
@@ -101,7 +100,12 @@ set_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
 			  S1
 	  end,  
 	?DEBUG({state_change,TaskRef,OldState,State}),
-	S#state{tasks=gb_trees:update(TaskRef,New_state,Tasks)}.
+    case State of 
+         done ->
+		   S#state{tasks=gb_trees:delete(TaskRef,Tasks)};
+         _ ->
+	       S#state{tasks=gb_trees:update(TaskRef,New_state,Tasks)}
+    end.
 
 get_runnable(Tasks)->
     get_runnable_i(gb_trees:iterator(Tasks)).
