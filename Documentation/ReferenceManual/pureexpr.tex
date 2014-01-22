@@ -73,6 +73,7 @@ if 5 == 4 then True else False
 \end{absexample}
 
 \section{Case Expressions / Pattern Matching}
+\label{sec:case-expr}
 ABS supports pattern matching by the \emph{Case Expression}.  It takes
 an expression as first argument, which is matched against a series of
 patterns.  The value of the case expression itself is the value of the
@@ -81,8 +82,8 @@ It is an error if no pattern matches the expression.
 
 
 \begin{abssyntax}
-\NT{CaseExp}       \defn \TR{case}\ \NT{PureExp}\ \TRS{\{} \MANY{\NT{CaseBranch}}\ \TRS{\}}\\
-\NT{CaseBranch}    \defn \NT{Pattern}\ \TRS{=>}\ \NT{PureExp}\ \TRS{;}\\
+\NT{CaseExp}       \defn \TR{case}\ \NT{PureExp}\ \TRS{\{} \MANY{\NT{CaseExpBranch}}\ \TRS{\}}\\
+\NT{CaseExpBranch}    \defn \NT{Pattern}\ \TRS{=>}\ \NT{PureExp}\ \TRS{;}\\
 \NT{Pattern}       \defn \NT{Identifier}
                 \defc  \NT{Literal}
                 \defc  \NT{ConstrPattern}

@@ -84,6 +84,31 @@ this.f = True;
 x = 5;
 \end{absexample}
 
+\section{Case Statement}
+
+The case statement, like the case expression, takes an expression as
+first argument, which is matched against a series of patterns.  The
+effect of executing the case statement is the execution of the statement
+(which can be a block) of the first branch whose pattern matches the
+expression.  It is an error if no pattern matches the expression.
+
+
+\begin{abssyntax}
+\NT{CaseStmt}       \defn \TR{case}\ \NT{PureExp}\ \TRS{\{} \MANY{\NT{CaseStmtBranch}}\ \TRS{\}}\\
+\NT{CaseStmtBranch}    \defn \NT{Pattern}\ \TRS{=>}\ \NT{Stmt}\ \TRS{;}\\
+\NT{Pattern}       \defn \NT{Identifier}
+                \defc  \NT{Literal}
+                \defc  \NT{ConstrPattern}
+                \defc  \TRS{\_}\\
+\NT{ConstrPattern} \defn \NT{TypeName}\ \OPTG{\TRS{(}\ \OPT{\NT{PatternList}}\ \TRS{)}}\\
+\NT{PatternList}   \defn \NT{Pattern}\ \MANYG{\TRS{,}\ \NT{Pattern}}
+\end{abssyntax}
+
+The case statement has the same pattern matching and binding semantics
+as the case expression (see Section~\ref{sec:case-expr},
+page~\pageref{sec:case-expr} for reference), except that shadowing local
+variables is not allowed.
+
 
 \section{Await Statement}
 \emph{Await Statements} suspend the current task until the given
