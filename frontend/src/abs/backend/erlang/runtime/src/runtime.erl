@@ -13,9 +13,16 @@ start(M) when is_list(M) ->
 	Module=list_to_atom("m_"++re:replace(M,"[.]","_",[{return,list},global])),
     start(Module);
 start(M) when is_atom(M) ->
+	eventstream:start(),
+	eventstream:add_handler(console_logger,[]),
+	eventstream:add_handler(cog_monitor,[self()]),
     Cog=cog:start(),
     R=cog:add_and_notify(Cog,main_task,[M]),
-    task:join(R).
+    RetVal=task:join(R),
+	cog_monitor:waitfor(),
+	timer:sleep(1),
+	eventstream:stop(),
+	RetVal.
 
 
 

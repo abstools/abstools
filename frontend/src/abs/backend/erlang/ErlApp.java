@@ -68,10 +68,26 @@ public class ErlApp {
         funMod.clear();
     }
 
-    private static final Set<String> RUNTIME_FILES = ImmutableSet.of("src/cog.erl", "src/init_task.erl",
-            "src/main_task.erl", "src/object.erl", "src/runtime.erl", "src/task.erl", "src/async_call_task.erl",
-            "src/builtin.erl", "include/abs_types.hrl", "Emakefile", "Makefile", "lib/rationals.erl", "lib/intar.erl",
-            "lib/cmp.erl");
+    private static final Set<String> RUNTIME_FILES = ImmutableSet.of(
+            "src/cog.erl",
+            "src/init_task.erl",
+            "src/main_task.erl",
+            "src/object.erl",
+            "src/runtime.erl",
+            "src/task.erl",
+            "src/async_call_task.erl",
+            "src/builtin.erl",
+            "include/abs_types.hrl",
+            "include/log.hrl",
+            "Emakefile",
+            "Makefile",
+            "lib/rationals.erl",
+            "lib/intar.erl",
+            "lib/cmp.erl",
+            "lib/console_logger.erl",
+            "lib/eventstream.erl",
+            "lib/cog_monitor.erl"
+            );
     private static final String RUNTIME_PATH = "abs/backend/erlang/runtime/";
 
     private void copyRuntime() throws IOException {

@@ -1,6 +1,7 @@
 -module(cog).
 -export([start/0,add/3,add_and_notify/3,new_state/3]).
 
+-include_lib("log.hrl").
 -record(state,{tasks,running=false,polling=[]}).
 -record(task,{ref,state=waiting}).
 
@@ -26,14 +27,18 @@ new_state(Cog,TaskRef,State)->
 	Cog!{newState,TaskRef,State}.
 
 init() ->
-    io:format("COG ~p: new~n",[self()]),
+    ?DEBUG({new}),
+	eventstream:event({cog,self(),active}),
     loop(#state{tasks=gb_trees:empty()}).
 loop(S=#state{running=non_found})->
+	eventstream:event({cog,self(),idle}),
     New_State=
         receive
 			{newState,TaskRef,State}->
+				eventstream:event({cog,self(),active}),
 				set_state(S,TaskRef,State);
             {newT,Task,Args,Sender,Notify}->
+				eventstream:event({cog,self(),active}),
                 initTask(S,Task,Args,Sender,Notify)
 		end,
     loop(New_State#state{running=false});
@@ -64,7 +69,7 @@ loop(S=#state{running=true})->
 
 initTask(S=#state{tasks=T},Task,Args,Sender,Notify)->
     Ref=task:start(Task,Args),
-    io:format("COG ~p: new task ~p ~p~n",[self(),Task,Ref]),
+    ?DEBUG({new_task,Ref,Task,Args}),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     Sender!{started,Task,Ref},
     S#state{tasks=gb_trees:insert(Ref,#task{ref=Ref},T)}.
@@ -79,7 +84,7 @@ execute(S) ->
             S2#state{running=non_found};		  
         #task{ref=R} ->
             R!token,
-            io:format("COG ~p: schedule ~p~n",[self(),T]),
+            ?DEBUG({schedule,T}),
 			S2=reset_polled(R,Polled,S1),
   			set_state(S2#state{running=true},R,running)
     end.
@@ -95,7 +100,7 @@ set_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
 		  _ ->
 			  S1
 	  end,  
-	io:format("COG ~p: set ~p state to ~p~n",[self(),TaskRef,State]),
+	?DEBUG({state_change,TaskRef,OldState,State}),
 	S#state{tasks=gb_trees:update(TaskRef,New_state,Tasks)}.
 
 get_runnable(Tasks)->
