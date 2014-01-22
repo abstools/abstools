@@ -676,8 +676,12 @@ IfExp if_exp =
     IF data_exp.e THEN data_exp.c ELSE data_exp.a {: return new IfExp(e,c,a) ; :}
     ;
 
+PureExp case_prefix =
+    CASE data_exp.caseterm LBRACE {: return caseterm; :}
+    ;
+
 CaseExp case_exp =
-	CASE data_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
+	case_prefix.caseterm case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
 ;
 
 //built_in or pure , since built_in_data -> int_exp -> mult_exp -> factor -> pure
@@ -1138,7 +1142,7 @@ IfStmt if_then_else_stmt =
 	;
 
 CaseStmt case_stmt =
-	CASE data_exp.caseterm COLON LBRACE case_branch_stmt_list.branches? RBRACE {: return new CaseStmt(new List(),caseterm, branches) ; :}
+	case_prefix.caseterm case_branch_stmt_list.branches? RBRACE {: return new CaseStmt(new List(),caseterm, branches) ; :}
 ;
 
 List case_branch_stmt_list =
