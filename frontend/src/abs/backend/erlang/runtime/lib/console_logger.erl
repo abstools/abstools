@@ -9,8 +9,7 @@ init([])->
 handle_event({log,Data},State)->
 	io:format("~p~n",[Data]),
 	{ok,State};
-handle_event(A,State)->
-	io:format("~p~n",[A]),
+handle_event(_,State)->
 	{ok,State}.
 
 handle_call(_,State)->

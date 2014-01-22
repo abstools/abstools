@@ -1,11 +1,11 @@
 -module(eventstream).
 
--export([start/0,stop/0,add_handler/2,log/1,event/1]).
+-export([start_link/0,stop/0,add_handler/2,log/1,event/1]).
 
 
 
-start()->
-	{ok,_Pid} =gen_event:start({global,?MODULE}).
+start_link()->
+	{ok,_Pid} =gen_event:start_link({global,?MODULE}).
 
 stop()->
 	gen_event:stop({global,?MODULE}).

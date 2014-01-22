@@ -1,7 +1,7 @@
 ## Generate code
 Build Project with ant
 
-    % ant
+    % ant dist
 
 Erlang code can be generate by calling 
 
@@ -15,12 +15,14 @@ Erlang code can than be build with:
 ## Run code
 The system can be started with two different commands, which reside in __gen/erl__
 
-    % ./start <main-module>
-    % ./run <main-module>
+    % ./start [--debug] <main-module>
+    % ./run [--debug] <main-module>
 
 where __start__ launches an Erlang shell an executes the given main module.
 The command __run__ launches an Erlang script, that terminates after the main block returned. 
+The flag __debug__ controls if debug output is enabled.
 
+From within the Erlang shell the runtime can be started by calling __runtime:start(Args)__, where __Args__ should conform to __[--debug] < main-module >__
 
 ## Required software
 * Java 7
