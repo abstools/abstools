@@ -788,7 +788,17 @@ aspect GenerateMaude {
     }
 
     public void CaseStmt.generateMaude(PrintStream stream) {
-        throw new RuntimeException("Method not implemented");
+        stream.print("case ");
+        getExpr().generateMaude(stream);
+        stream.print("of { ");
+        for (CaseBranchStmt b : getBranchs()) {
+            stream.print("{ ");
+            b.getLeft().generateMaude(stream);
+            stream.print("=> ");
+            b.getRight().generateMaude(stream);
+            stream.print("} ");
+        }
+        stream.print("} ");
     }
     
     public void ExpressionStmt.generateMaude(PrintStream stream) {

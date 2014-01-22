@@ -97,16 +97,16 @@ fmod ABS-EXPRESSION is
   protecting ABS-DATA-SIG .
   protecting STRING .
 
-  sorts CaseBranch CaseBranchList .
-  subsort CaseBranch < CaseBranchList .
+  sorts CaseExpBranch CaseExpBranchList .
+  subsort CaseExpBranch < CaseExpBranchList .
   *** KLUDGE (rs 2010-04-20) Only certain kinds of expressions can be used as
   *** pattern: literals and variable references.  We should introduce a sort
   *** `Pattern' and use it.  For now, we rely on the compiler to only produce
   *** valid pattern expressions.
-  op _=>_ : Expr Expr -> CaseBranch [ctor prec 39] .
-  op _;_ : CaseBranchList CaseBranchList -> CaseBranchList
+  op _=>_ : Expr Expr -> CaseExpBranch [ctor prec 39] .
+  op _;_ : CaseExpBranchList CaseExpBranchList -> CaseExpBranchList
     [ctor assoc id: noBranch format (d b os d)] .
-  op noBranch : -> CaseBranch .
+  op noBranch : -> CaseExpBranch .
 
   *** function application
   op _(_) : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
@@ -122,7 +122,7 @@ fmod ABS-EXPRESSION is
   *** conditional
   op if_th_el_fi : Expr Expr Expr -> Expr [ctor] .
   *** case expression
-  op case_of {_} : Expr CaseBranchList -> Expr [ctor] .
+  op case_of {_} : Expr CaseExpBranchList -> Expr [ctor] .
   *** let expression
   op let_=_in_ : VidList ExprList Expr -> Expr [ctor] .
   *** guard expression
@@ -592,6 +592,19 @@ mod ABS-STM-LIST is
   op if_th_el_fi : Expr StmtList StmtList -> Stmt [ctor format (b o b o b o b o)] .
   op while_do_od : Expr StmtList -> Stmt [ctor format (b o b o b o)] .
 
+  *** case expression
+  sorts CaseStmtBranch CaseStmtBranchList .
+  subsort CaseStmtBranch < CaseStmtBranchList .
+  *** KLUDGE (rs 2010-04-20) Only certain kinds of expressions can be used as
+  *** pattern: literals and variable references.  We should introduce a sort
+  *** `Pattern' and use it.  For now, we rely on the compiler to only produce
+  *** valid pattern expressions.
+  op {_=>_} : Expr StmtList -> CaseStmtBranch [ctor prec 39] .
+  op __ : CaseStmtBranchList CaseStmtBranchList -> CaseStmtBranchList
+    [ctor assoc id: noBranch] .
+  op noBranch : -> CaseStmtBranch [ctor] .
+  op case_of {_} : Expr CaseStmtBranchList -> Stmt [ctor format (b o b b o b o)] .
+
   var SL : StmtList .
   var E : Expr .
 
@@ -807,7 +820,7 @@ mod ABS-EVAL is
   vars DL DL1 DL2 CDL1 CDL2 : DataList .
   var EL : ExprList .
   var NeEL : NeExprList .
-  var CBL : CaseBranchList .
+  var CBL : CaseExpBranchList .
   vars A A' : Vid .
   var AL : VidList .
   vars Q C : String .
@@ -903,7 +916,7 @@ mod ABS-EVAL is
 
   *** internal operator $case avoids endless loop between "case D of" and
   *** "case E of" when first case branch doesn't match
-  op $case : Data CaseBranchList -> Expr .
+  op $case : Data CaseExpBranchList -> Expr .
   ceq eval($case(D, (E => E') ; CBL), S, CN, MAC) =
     if R == noMatch
     then eval($case(D, CBL), S, CN, MAC)
@@ -1878,6 +1891,48 @@ mod ABS-STMT-WHILE-EQ is
     [label while] .
 endm
 
+*** The case statement.
+mod ABS-STMT-CASE-RL is
+  protecting ABS-EVAL .
+  var O : Oid .             var C : Cid .      vars S L : Subst .
+  vars SL SL1 : StmtList .  var W : MProc .    var F : Nat .
+  vars E BE : Expr .        var CG : Cogid .   var OBJS : Configuration .
+  var R : MatchResult .     var SS : SSubst .  var V : Vid .
+  var CBL : CaseStmtBranchList .
+
+  op genLocalBindings : SSubst -> StmtList .
+  eq genLocalBindings((V |-> E, SS)) = $vardecl(V ; E) ; genLocalBindings(SS) .
+  eq genLocalBindings(noSubst) = noStmt .
+
+  crl
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | case E of { { BE => SL1 } CBL } ; SL }, PrQ: W >
+  =>
+  if R == noMatch
+    then < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | case E of { CBL } ; SL }, PrQ: W >
+    else < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $beginscope ; genLocalBindings(R) ; SL1 ; $endscope ; SL }, PrQ: W >
+    fi
+  if O := L['this]
+      *** KLUDGE: repeated matching of E is not so elegant
+      /\ R := match(eval(E, S :: L, none, noSubst), BE, S :: L)
+    [label case] .
+endm
+mod ABS-STMT-CASE-EQ is
+  protecting ABS-EVAL .
+
+  var O : Oid .             var C : Cid .      vars S L : Subst .
+  vars SL SL1 : StmtList .  var W : MProc .    var F : Nat .
+  var E : Expr .            var CG : Cogid .   var OBJS : Configuration .
+  var CBL : CaseStmtBranchList .
+
+  eq
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | case E of { CBL } ; SL }, PrQ: W >
+  =
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr,
+              Pr: { L | SL },
+              PrQ: W >
+    [label case] .
+endm
+
 *** The Suspend statement.
 ***
 *** The suspend statement is an unconditional processor release point.
@@ -2474,6 +2529,7 @@ mod ABS-SIMULATOR-RL is
   protecting ABS-STMT-GOTO-RL .
   protecting ABS-STMT-COND-RL .
   protecting ABS-STMT-WHILE-RL .
+  protecting ABS-STMT-CASE-RL .
   protecting ABS-STMT-SUSPEND-RL .
   protecting ABS-STMT-DURATION-RL .
   protecting ABS-STMT-AWAIT-RL .
@@ -2510,6 +2566,7 @@ mod ABS-SIMULATOR-EQ-TIMED is
   protecting ABS-STMT-GOTO-EQ .
   protecting ABS-STMT-COND-EQ-TIMED .
   protecting ABS-STMT-WHILE-EQ .
+  protecting ABS-STMT-CASE-EQ .
   protecting ABS-STMT-SUSPEND-EQ .
   protecting ABS-STMT-DURATION-EQ-TIMED .
   protecting ABS-STMT-AWAIT-EQ-TIMED .
