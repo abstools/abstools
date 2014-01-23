@@ -247,6 +247,8 @@ aspect Typing {
 
     inh Type CaseBranch.getPatternExpType();
     eq CaseExp.getBranch(int i).getPatternExpType() = getExpr().getType();
+    inh Type CaseBranchStmt.getPatternExpType();
+    eq CaseStmt.getBranch(int i).getPatternExpType() = getExpr().getType();
     
     syn lazy Type Pattern.getType();
     eq ConstructorPattern.getType() = getInhType();
@@ -262,6 +264,9 @@ aspect Typing {
     
     inh Type Pattern.getInhType();
     eq CaseBranch.getLeft().getInhType() {
+        return getPatternExpType();
+    }
+    eq CaseBranchStmt.getLeft().getInhType() {
         return getPatternExpType();
     }
     eq ConstructorPattern.getParam(int i).getInhType() {

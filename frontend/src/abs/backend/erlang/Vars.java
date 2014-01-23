@@ -4,8 +4,12 @@
  */
 package abs.backend.erlang;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 import abs.frontend.ast.ParamDecl;
@@ -107,30 +111,43 @@ public class Vars extends LinkedHashMap<String, Var> {
 
     }
 
-    public String[] merge(Vars var1, Vars var2) {
-        StringBuilder left = new StringBuilder(",");
-        StringBuilder right = new StringBuilder(",");
+    public List<String> merge(List<Vars> vars) {
+        List<StringBuilder> mergeLines = new ArrayList<StringBuilder>(vars.size());
+        for (int i = 0; i < vars.size(); i++)
+            mergeLines.add(new StringBuilder(","));
         Set<String> used = new HashSet<String>();
         for (java.util.Map.Entry<String, Var> a : this.entrySet()) {
             if (a.getValue().isSet()) {
                 used.add(a.getKey());
-                int leftN = var1.get((Object) a.getKey()).getCount();
-                int rightN = var2.get((Object) a.getKey()).getCount();
-                if (a.getValue().getCount() != leftN || a.getValue().getCount() != rightN) {
-                    if (leftN > rightN)
-                        right.append(String.format("%s=%s,", var1.get(a.getKey()), var2.get(a.getKey())));
-                    if (leftN < rightN)
-                        left.append(String.format("%s=%s,", var2.get(a.getKey()), var1.get(a.getKey())));
-                    a.setValue(new Var(Math.max(leftN, rightN), true));
+                Var max = Var.max(vars, a.getKey());
+                Iterator<Vars> itV = vars.iterator();
+                Iterator<StringBuilder> itM = mergeLines.iterator();
+                while (itV.hasNext()) {
+                    Var v = itV.next().get((Object) a.getKey());
+                    if (v.getCount() < max.getCount())
+                        itM.next()
+                                .append(String.format("V_%s_%s=V_%s_%s,", a.getKey(), max.getCount(), a.getKey(),
+                                        v.getCount()));
+                    else
+                        itM.next();
                 }
+                a.setValue(new Var(max.getCount(), true));
             }
         }
-        temp = Math.max(var1.temp, var2.temp);
-        for (String k : Sets.union(Sets.difference(var1.keySet(), used), Sets.difference(var2.keySet(), used)))
-            this.put(k, new Var(Var.max(var1.get((Object) k), var2.get((Object) k)), false));
-        left.deleteCharAt(left.length() - 1);
-        right.deleteCharAt(right.length() - 1);
-        return new String[] { left.toString(), right.toString() };
+        for(Vars v : vars)
+            temp=Math.max(temp,v.temp);
+        Set<String> allVars = new HashSet<String>();
+        for (Vars v : vars)
+            allVars.addAll(v.keySet());
+
+        for (String k : Sets.difference(allVars, used))
+            this.put(k, new Var(Var.max(vars, k).getCount(), false));
+        List<String> res = new ArrayList<String>(vars.size());
+        for (StringBuilder sb : mergeLines) {
+            sb.deleteCharAt(sb.length() - 1);
+            res.add(sb.toString());
+        }
+        return res;
     }
 
     public void hideIntroduced(Vars child) {
@@ -148,6 +165,14 @@ class Var {
         if (v2 == null)
             return v1.count;
         return Math.max(v1.count, v2.count);
+    }
+
+    static Var max(Collection<Vars> varsC, String name) {
+        Var max = null;
+        for (Vars vars : varsC)
+            if (vars.containsKey(name) && (max == null ? -1 : max.getCount()) < vars.get((Object) name).getCount())
+                max = vars.get((Object) name);
+        return max;
     }
 
     private final int count;
@@ -175,4 +200,5 @@ class Var {
     public boolean isSet() {
         return set;
     }
+
 }

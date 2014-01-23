@@ -54,4 +54,8 @@ public class StmtTests extends SemanticTests {
         assertEvalTrue("{ Bool testresult = False; Bool b = True; testresult = case b { _ => b; }; }");
     }
 
+    @Test
+    public void caseStatementTest() {
+        assertEvalTrue("{ Int x = 0; case Pair(2, 3) { Pair(2, y) => x = y; _ => skip; } Bool testresult = x == 3; }");
+    }
 }
