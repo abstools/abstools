@@ -1913,23 +1913,35 @@ mod ABS-STMT-CASE-RL is
     fi
   if O := L['this]
       *** KLUDGE: repeated matching of E is not so elegant
-      /\ R := match(eval(E, S :: L, none, noSubst), BE, S :: L)
+      /\ R := match(eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])), BE, S :: L)
     [label case] .
 endm
 mod ABS-STMT-CASE-EQ is
   protecting ABS-EVAL .
 
-  var O : Oid .             var C : Cid .      vars S L : Subst .
-  vars SL SL1 : StmtList .  var W : MProc .    var F : Nat .
-  var E : Expr .            var CG : Cogid .   var OBJS : Configuration .
+  var O : Oid .             var C : Cid .          vars S L : Subst .
+  vars SL SL1 : StmtList .  var W : MProc .        var F : Nat .
+  vars E BE : Expr .        var CG : Cogid .       var OBJS : Configuration .
+  var R : MatchResult .     var SS : SSubst .      var V : Vid .
+  var T : Rat .             vars LIM RAND : Nat .
   var CBL : CaseStmtBranchList .
 
-  eq
-    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | case E of { CBL } ; SL }, PrQ: W >
+  op genLocalBindings : SSubst -> StmtList .
+  eq genLocalBindings((V |-> E, SS)) = $vardecl(V ; E) ; genLocalBindings(SS) .
+  eq genLocalBindings(noSubst) = noStmt .
+
+  ceq
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | case E of { { BE => SL1 } CBL } ; SL }, PrQ: W >
+    < T : Clock | Limit: LIM, Random: RAND >
   =
-    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr,
-              Pr: { L | SL },
-              PrQ: W >
+    < T : Clock | Limit: LIM, Random: RAND >
+    if R == noMatch
+    then < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | case E of { CBL } ; SL }, PrQ: W >
+    else < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $beginscope ; genLocalBindings(R) ; SL1 ; $endscope ; SL }, PrQ: W >
+    fi
+  if O := L['this]
+      *** KLUDGE: repeated matching of E is not so elegant
+      /\ R := match(eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])), BE, S :: L)
     [label case] .
 endm
 
