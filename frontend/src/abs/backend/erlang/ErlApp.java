@@ -49,6 +49,11 @@ public class ErlApp {
         return new ErlangCodeStream(new File(destDir, moduleName + ".erl"));
     }
 
+    /**
+     * All functions for an ABS module are stored in one Erlang module.
+     * 
+     * This method creates the necessary stream.
+     */
     public ErlangCodeStream getFunStream(String moduleName) throws FileNotFoundException, UnsupportedEncodingException {
         if (!funMod.containsKey(moduleName)) {
             ErlangCodeStream ecs = new ErlangCodeStream(new File(destDir, ErlUtil.getModuleName(moduleName)
@@ -77,10 +82,10 @@ public class ErlApp {
             "src/task.erl",
             "src/async_call_task.erl",
             "src/builtin.erl",
-	    "src/object_tracker.erl",
-	    "src/future.erl",
- 	    "src/active_object_task.erl",
-	    "src/error_transform.erl",
+            "src/object_tracker.erl",
+            "src/future.erl",
+            "src/active_object_task.erl",
+            "src/error_transform.erl",
             "include/abs_types.hrl",
             "include/log.hrl",
             "Emakefile",

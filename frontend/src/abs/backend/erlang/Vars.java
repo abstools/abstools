@@ -1,5 +1,4 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.erlang;
@@ -16,11 +15,20 @@ import abs.frontend.ast.ParamDecl;
 
 import com.google.common.collect.Sets;
 
+/**
+ * Used for tracking variables through different scopes
+ * 
+ * @author Georg Göri
+ * 
+ */
 public class Vars extends LinkedHashMap<String, Var> {
-
+    public static final String PREFIX = "V_";
     private static final long serialVersionUID = 1L;
     private int temp = 1;
 
+    /**
+     * Copy Constructor
+     */
     public Vars(Vars vars) {
         super(vars);
         temp = vars.temp;
@@ -47,6 +55,9 @@ public class Vars extends LinkedHashMap<String, Var> {
         return "T_" + temp++;
     }
 
+    /**
+     * Introduce a new variable
+     */
     public String nV(String name) {
         Var v = get((Object) name);
         if (v != null)
@@ -59,13 +70,18 @@ public class Vars extends LinkedHashMap<String, Var> {
         return get(name);
     }
 
+    /**
+     * Introduces a new variable and ignores if it overloads a previous one
+     * (used for let)
+     */
     public String nVignoreOverload(String name) {
         put(name, new Var());
         return get(name);
     }
 
-    public static final String PREFIX = "V_";
-
+    /**
+     * Increase counter of variable
+     */
     public String inc(String name) {
         if (containsKey(name))
             put(name, super.get(name).inc());
@@ -80,6 +96,9 @@ public class Vars extends LinkedHashMap<String, Var> {
                 a.setValue(a.getValue().inc());
     }
 
+    /**
+     * Get Erlang name of a variable
+     */
     public String get(String name) {
         if (!super.get(name).isSet())
             throw new RuntimeException("Tried to access protected but not set var");
@@ -87,6 +106,9 @@ public class Vars extends LinkedHashMap<String, Var> {
         return PREFIX + name + "_" + c;
     }
 
+    /**
+     * Return a instance for a new branch
+     */
     public Vars pass() {
         return new Vars(this);
     }
@@ -114,6 +136,12 @@ public class Vars extends LinkedHashMap<String, Var> {
 
     }
 
+    /**
+     * Merges multiple Var instance in that one, so counters of variables are
+     * set to maximum. To have this variables also bound, in each branch, this
+     * method will return necessary code lines which set this variables
+     * 
+     */
     public List<String> merge(List<Vars> vars) {
         List<StringBuilder> mergeLines = new ArrayList<StringBuilder>(vars.size());
         for (int i = 0; i < vars.size(); i++)
@@ -137,14 +165,18 @@ public class Vars extends LinkedHashMap<String, Var> {
                 a.setValue(new Var(max.getCount(), true));
             }
         }
-        for(Vars v : vars)
-            temp=Math.max(temp,v.temp);
+        // Set temp to max
+        for (Vars v : vars)
+            temp = Math.max(temp, v.temp);
+
+        // Hide all variables, which are not used in this instance
         Set<String> allVars = new HashSet<String>();
         for (Vars v : vars)
             allVars.addAll(v.keySet());
-
         for (String k : Sets.difference(allVars, used))
             this.put(k, new Var(Var.max(vars, k).getCount(), false));
+
+        // Built return val
         List<String> res = new ArrayList<String>(vars.size());
         for (StringBuilder sb : mergeLines) {
             sb.deleteCharAt(sb.length() - 1);
@@ -168,6 +200,9 @@ public class Vars extends LinkedHashMap<String, Var> {
     }
 }
 
+/**
+ * Variable tracking information
+ */
 class Var {
 
     static Var max(Collection<Vars> varsC, String name) {
@@ -179,6 +214,8 @@ class Var {
     }
 
     private final int count;
+    // False if it was used in an previous scope, so it has to be remembered but
+    // not used
     private final boolean set;
 
     public Var(int count, boolean set) {

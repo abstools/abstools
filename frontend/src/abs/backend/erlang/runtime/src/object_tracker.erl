@@ -1,12 +1,10 @@
-%%%-------------------------------------------------------------------
-%%% @author  <jgrnt@ambria>
-%%% @copyright (C) 2013, 
-%%% @doc
-%%%
-%%% @end
-%%% Created : 31 Oct 2013 by  <jgrnt@ambria>
-%%%-------------------------------------------------------------------
+%%This file is licensed under the terms of the Modified BSD License.
 -module(object_tracker).
+
+%%Is used as a simple tracker, for changed objects in a transaction span.
+%%Everytime an object is accessed, dirty is called.
+%%It offers an cog wide scope (the pid is stored in the cog identifier)
+%%and enables asynchronous storage of this variables.
 
 -behaviour(gen_server).
 
@@ -30,104 +28,33 @@ dirty(Ref,O)->
 
 
 get_all_dirty(Ref)->
-    Dirty=gen_server:call(Ref,get_dirty),
-    Dirty.
-%%--------------------------------------------------------------------
-%% @doc
-%% Starts the server
-%%
-%% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
-%% @end
-%%--------------------------------------------------------------------
+    gen_server:call(Ref,get_dirty).
+
+
 start() ->
     gen_server:start(?MODULE, [], []).
 
-%%%===================================================================
-%%% gen_server callbacks
-%%%===================================================================
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% Initializes the server
-%%
-%% @spec init(Args) -> {ok, State} |
-%%                     {ok, State, Timeout} |
-%%                     ignore |
-%%                     {stop, Reason}
-%% @end
-%%--------------------------------------------------------------------
+%%%Internal
 init([]) ->
     {ok, #state{dirty=gb_sets:empty()}}.
 
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% Handling call messages
-%%
-%% @spec handle_call(Request, From, State) ->
-%%                                   {reply, Reply, State} |
-%%                                   {reply, Reply, State, Timeout} |
-%%                                   {noreply, State} |
-%%                                   {noreply, State, Timeout} |
-%%                                   {stop, Reason, Reply, State} |
-%%                                   {stop, Reason, State}
-%% @end
-%%--------------------------------------------------------------------
+
 handle_call(get_dirty, _From, S=#state{dirty=D}) ->
     {reply, gb_sets:to_list(D), S#state{dirty=gb_sets:empty()}}.
 
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% Handling cast messages
-%%
-%% @spec handle_cast(Msg, State) -> {noreply, State} |
-%%                                  {noreply, State, Timeout} |
-%%                                  {stop, Reason, State}
-%% @end
-%%--------------------------------------------------------------------
+
 handle_cast({dirty,O}, S=#state{dirty=D}) ->
     {noreply, S#state{dirty=gb_sets:add(O,D)}}.
 
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% Handling all non call/cast messages
-%%
-%% @spec handle_info(Info, State) -> {noreply, State} |
-%%                                   {noreply, State, Timeout} |
-%%                                   {stop, Reason, State}
-%% @end
-%%--------------------------------------------------------------------
+
 handle_info(_Info, State) ->
     {noreply, State}.
 
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% This function is called by a gen_server when it is about to
-%% terminate. It should be the opposite of Module:init/1 and do any
-%% necessary cleaning up. When it returns, the gen_server terminates
-%% with Reason. The return value is ignored.
-%%
-%% @spec terminate(Reason, State) -> void()
-%% @end
-%%--------------------------------------------------------------------
+
 terminate(_Reason, _State) ->
     ok.
 
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% Convert process state when code is changed
-%%
-%% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
-%% @end
-%%--------------------------------------------------------------------
+
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
-%%%===================================================================
-%%% Internal functions
-%%%===================================================================

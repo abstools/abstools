@@ -1,5 +1,4 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.erlang;
@@ -16,6 +15,12 @@ import abs.frontend.ast.TypedVarOrFieldDecl;
 
 import com.google.common.collect.Iterables;
 
+/**
+ * Genereates the Erlang module for one class
+ * 
+ * @author Georg Göri
+ * 
+ */
 public class ClassGenerator {
     private final ErlangCodeStream ecs;
     private final ClassDecl classDecl;
@@ -46,12 +51,7 @@ public class ClassGenerator {
     }
 
     private void generateMethods() {
-        // Group methods of same arity
-        // Multimap<String, MethodSig> map = LinkedListMultimap.create();
         for (MethodImpl m : classDecl.getMethodList()) {
-            // String n = ms.getName() + "/" + (ms.getParamList().getNumChild()
-            // + 1);
-            // map.put(n, ms);
             MethodSig ms = m.getMethodSig();
             ErlUtil.functionHeader(ecs, "m_" + ms.getName(), generatorClassMatcher(), ms.getParamList());
             m.getBlock().generateErlangCode(ecs, Vars.n(ms.getParamList()));
@@ -153,18 +153,6 @@ public class ClassGenerator {
     }
 
     private void generateExports() {
-        /*
-         * ecs.println("-export([init/2])."); if (classDecl.isActiveClass())
-         * ecs.println("-export([m_run/1])."); for (InterfaceTypeUse i :
-         * classDecl.getImplementedInterfaceUses()) { InterfaceDecl id =
-         * (InterfaceDecl) i.getDecl(); ecs.pf("%% Interface: %s",
-         * id.getName()); ecs.print("-export(["); Set<String> s = new
-         * HashSet<String>(); Boolean first = true; for (MethodSig ms :
-         * id.getBodys()) { String n = "m_" + ms.getName() + "/" +
-         * (ms.getParamList().getNumChild() + 1); if (s.add(n)) { if (!first)
-         * ecs.print(","); first = false; ecs.print(n); } } ecs.println("]).");
-         * } ecs.println();
-         */
         ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0]).");
         ecs.println("-compile(export_all).");
     }

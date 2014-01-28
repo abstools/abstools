@@ -1,6 +1,3 @@
-%%% Compile behaviours first...
-
-%%% Compile the rest of the code...
 { 
     [
     "./runtime/src/task.erl",

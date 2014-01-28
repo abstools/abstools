@@ -1,10 +1,10 @@
+%%This file is licensed under the terms of the Modified BSD License.
 -module(future).
-
 -export([init/3,start/3]).
 -export([get/1,safeget/1]).
-
 -include_lib("abs_types.hrl").
-
+%%Future starts AsyncCallTask
+%%and stores result
 
 
 start(Callee,Method,Params) ->
@@ -12,38 +12,32 @@ start(Callee,Method,Params) ->
   
   
 init(Callee=#object{class=C,cog=Cog=#cog{ref=CogRef}},Method,Params)->
-	process_flag(trap_exit, true),
-	MonRef=monitor(process,CogRef),
-	cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
-	demonitor(MonRef),
-	receive
-		{'DOWN', _ , process, _,Reason} when Reason /= normal ->
-			loopFail(error_transform:transform(Reason));
-		{'EXIT',_,Reason} ->
-			loopFail(error_transform:transform(Reason));
-		{completed, Value}->
-			loopValue(Value)
-	end.
+	%%Start task
+    process_flag(trap_exit, true),
+    MonRef=monitor(process,CogRef),
+    cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
+    demonitor(MonRef),
+    %% Either receive an error or the value
+    receive
+        {'DOWN', _ , process, _,Reason} when Reason /= normal ->
+            loop({error,error_transform:transform(Reason)});
+        {'EXIT',_,Reason} ->
+            loop({error,error_transform:transform(Reason)});
+        {completed, Value}->
+            loop({ok,Value})
+    end.
 
-loopFail(Reason)->
-	receive {get,Sender} ->
-				Sender!{reply,self(),{error,Reason}};
-			{wait,Sender}->
-				Sender!{ok};
-			_ ->
-			 noop
-	end,
-	loopFail(Reason).
-	    
-loopValue(Value)->
-	receive {get,Sender} ->
-				Sender!{reply,self(),{ok,Value}};
-			{wait,Sender}->
-				Sender!{ok};
-			_ ->
-			 noop
-	end,
-	loopValue(Value).
+%%Servermode
+loop(Value)->
+    receive {get,Sender} ->
+                Sender!{reply,self(),Value};
+            {wait,Sender}->
+                Sender!{ok};
+            _ ->
+             noop
+    end,
+    loop(Value).
+        
    
 
 
@@ -51,21 +45,21 @@ loopValue(Value)->
 
 
 get(Ref)->
-	Ref!{get,self()},
-	receive 
-		{reply,Ref,{ok,Value}}->
-			Value;
-		{reply,Ref,{error,Reason}}->
-			exit(Reason)
-	end.
+    Ref!{get,self()},
+    receive 
+        {reply,Ref,{ok,Value}}->
+            Value;
+        {reply,Ref,{error,Reason}}->
+            exit(Reason)
+    end.
 safeget(Ref)->
-	Ref!{get,self()},
-	receive 
-		{reply,Ref,{ok,Value}}->
-			{dataValue,Value};
-		{reply,Ref,{error,Reason}} when is_atom(Reason)->
-			{dataError,atom_to_list(Reason)};
-		{reply,Ref,{error,Reason}} ->
-			{dataError,Reason}
-	end.
+    Ref!{get,self()},
+    receive 
+        {reply,Ref,{ok,Value}}->
+            {dataValue,Value};
+        {reply,Ref,{error,Reason}} when is_atom(Reason)->
+            {dataError,atom_to_list(Reason)};
+        {reply,Ref,{error,Reason}} ->
+            {dataError,Reason}
+    end.
 

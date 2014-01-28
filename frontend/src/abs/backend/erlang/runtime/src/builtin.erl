@@ -1,6 +1,8 @@
+%%This file is licensed under the terms of the Modified BSD License.
 -module(builtin).
 -export([substr/3,currentms/0,lowlevelDeadline/0,random/1,getProductLine/0,strlen/1,toString/1,truncate/1,println/1]).
-
+%%All builtin functions
+%%Must correspond to the set in FnApp.BUILTINS
 
 lowlevelDeadline() ->
 	-1.

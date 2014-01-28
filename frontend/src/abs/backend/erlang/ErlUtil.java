@@ -1,5 +1,4 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.erlang;
@@ -13,6 +12,12 @@ import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PureExp;
 
+/**
+ * Utility functions to mostly generate headers or parameter lists.
+ * 
+ * @author Georg Göri
+ * 
+ */
 public class ErlUtil {
 
     public enum Mask {
@@ -23,19 +28,17 @@ public class ErlUtil {
 
     public static final void functionHeaderParamsAsList(ErlangCodeStream ecs, String funName, String firstParameter,
             abs.frontend.ast.List<ParamDecl> args, Mask mask) {
-        List<String> a = new ArrayList<String>(args.getNumChild());
-        String b = "[";
+        StringBuilder b = new StringBuilder("[");
         boolean first = true;
         for (ParamDecl p : args) {
             if (!first)
-                b = b + (',');
+                b.append(',');
             else
                 first = false;
-            b = b + "P_" + p.getName();
+            b.append("P_" + p.getName());
         }
-        b = b + "]";
-
-        functionHeader(ecs, funName, mask, firstParameter, b);
+        b.append("]");
+        functionHeader(ecs, funName, mask, firstParameter, b.toString());
     }
 
     public static final void functionHeader(ErlangCodeStream ecs, String funName, abs.frontend.ast.List<ParamDecl> args) {

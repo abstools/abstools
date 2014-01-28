@@ -1,11 +1,21 @@
+%%This file is licensed under the terms of the Modified BSD License.
 -module(task).
+%%Represents basic behaviour of all task and utillity functions
 
+
+%% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
+%%API for tasks
 -export([ready/1,return_token/2,wait/1,wait_poll/1,commit/1,rollback/1]).
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
 
-%-record(state,{is,cog,task}).
+%%Task behaviours have to implemented:
+%%init(Cog,Args): Can block an will init the task.
+%%                Return Value will then by passed to start
+%%
+%%start(InitValue):Executes the task 
+
 
 behaviour_info(callbacks) ->
     [{init, 2},{start,1}];
@@ -18,19 +28,18 @@ start(Cog,Task,Args)->
 init(Task,Cog,Args)->
     InnerState=Task:init(Cog,Args),
 	ready(Cog),
-    %loop(#state{cog=Cog,is=InnerState,task=Task}),
     Val=Task:start(InnerState),
     return_token(Cog,done),
 	send_notifications(Val).
 
 
-
+%%Register for termination notifcation
 notifyEnd(TaskRef)->
     notifyEnd(TaskRef,self()).
 notifyEnd(TaskRef,Obs)->
     TaskRef!{notify,Obs}.
 
-
+%%Wait on termination notification
 join(TaskRef)->
     receive
         {end_result,TaskRef,Val}->
