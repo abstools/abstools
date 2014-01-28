@@ -478,68 +478,68 @@ aspect GenerateErlang {
       ecs.print(")"); 
     ecs.print("))");
   }
+  
   @Override
-  public void ThisExp.generateErlangCode(ErlangCodeStream ecs,Vars vars)
-  {
+  public void ThisExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
+    //Current object reference is always mapped to O
     ecs.print("O");
   }
+  
   @Override
-  public void FieldUse.generateErlangCode(ErlangCodeStream ecs,Vars vars)
-  {
+  public void FieldUse.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     ecs.format("get(O,%s)",getName());
   }
   
-  //Case
+  @Override
   public void CaseStmt.generateErlangCode(ErlangCodeStream ecs, Vars vars) {
-    Vars safe = vars.pass();
-    java.util.List<Vars> branches_vars = new LinkedList<Vars>();
-    java.util.List<String> branches = new LinkedList<String>();
-    for (CaseBranchStmt b : getBranchs()) {
-        Vars v = vars.pass();
-        StringWriter sw = new StringWriter();
-        ErlangCodeStream buffer = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),
-                ecs.getIndent());
-        b.getLeft().generateErlangCode(ecs, buffer, v);
-        buffer.println("->");
-        buffer.incIndent();
-        buffer.incIndent();
-        buffer.incIndent();
-        b.getRight().generateErlangCode(buffer, v);
-        buffer.decIndent();
-        buffer.decIndent();
-        buffer.decIndent();
-        buffer.close();
-        branches_vars.add(v);
-        branches.add(sw.toString());
-    }
-    ecs.print("case ");
-    getExpr().generateErlangCode(ecs, safe);
-    ecs.println(" of");
-    ecs.incIndent();
-    java.util.List<String> mergeLines = vars.merge(branches_vars);
-    boolean first = true;
-    Iterator<String> ib = branches.iterator();
-    Iterator<String> im = mergeLines.iterator();
-    while (ib.hasNext()) {
-        if (!first)
-            ecs.println(";");
-        first = false;
-        ecs.print(ib.next());
-        ecs.print(im.next());
-    }
-    ecs.println();
-    ecs.decIndent();
-    ecs.print("end");
-}
+      Vars safe = vars.pass();
+      // Build var scopes and statmemnts for each branch
+      java.util.List<Vars> branches_vars = new LinkedList<Vars>();
+      java.util.List<String> branches = new LinkedList<String>();
+      for (CaseBranchStmt b : getBranchs()) {
+          Vars v = vars.pass();
+          StringWriter sw = new StringWriter();
+          ErlangCodeStream buffer = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),"");
+          b.getLeft().generateErlangCode(ecs, buffer, v);
+          buffer.setIndent(ecs.getIndent());
+          buffer.println("->");
+          buffer.incIndent();
+          b.getRight().generateErlangCode(buffer, v);
+          buffer.decIndent();
+          buffer.close();
+          branches_vars.add(v);
+          branches.add(sw.toString());
+          vars.updateTemp(v);
+      }
+      ecs.print("case ");
+      getExpr().generateErlangCode(ecs, safe);
+      ecs.incIndent().println(" of");
+      // Now print statments and mergelines for each branch.
+      java.util.List<String> mergeLines = vars.merge(branches_vars);
+      boolean first = true;
+      Iterator<String> ib = branches.iterator();
+      Iterator<String> im = mergeLines.iterator();
+      while (ib.hasNext()) {
+          if (!first)
+              ecs.println(";");
+          first = false;
+          ecs.print(ib.next());
+          ecs.print(im.next());
+      }
+      ecs.println();
+      ecs.decIndent();
+      ecs.print("end");
+  }
   
   @Override
-  public void CaseExp.generateErlangCode(ErlangCodeStream external,Vars vars)
-  {
+  public void CaseExp.generateErlangCode(ErlangCodeStream external,Vars vars){
+    //Needs this external stream 
     external.println("begin");
     external.incIndent();
     StringWriter sw = new StringWriter();
-    ErlangCodeStream ecs = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),external.getIndent());
+    ErlangCodeStream ecs = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),"");
     ecs.print("case ");
+    ecs.setIndent(external.getIndent());
     getExpr().generateErlangCode(ecs, vars);
     ecs.println(" of ");
     ecs.incIndent();

@@ -147,4 +147,19 @@ public class ObjectTests extends SemanticTests {
                 + "class C(Bool f) implements I { Int a=2; Int b=4; Bool m() { return case 2 {a => True;} && case 4{b=> True;};   } }"
                 + CALL_M);
     }
+
+    @Test
+    public void fieldPatternMatchNestedCaseStmt() {
+        assertEvalTrue(INTERFACE_I
+                + "class C(Bool f) implements I { Int a=2; Int b=4; Bool m() { Bool result= False; case 2 {a => {Int u=7; case 2 { a=> result=True;}}  b => {Int u=3; result=False;}} return result;  } }"
+                + CALL_M);
+    }
+
+    @Test
+    public void fieldPatternMatchNestedCaseExpr() {
+        assertEvalTrue(INTERFACE_I
+                + "class C(Bool f) implements I { Int a=2; Int b=4; Bool m() { return case 2 {a => case 2 { a=> True;} ; b => False ;}; } }"
+                + CALL_M);
+    }
+
 }

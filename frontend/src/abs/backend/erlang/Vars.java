@@ -162,16 +162,13 @@ public class Vars extends LinkedHashMap<String, Var> {
                 this.put(k.getKey(), new Var(k.getValue().getCount(), false));
         temp = Math.max(temp, child.temp);
     }
+
+    public void updateTemp(Vars child) {
+        temp = Math.max(temp, child.temp);
+    }
 }
 
 class Var {
-    static int max(Var v1, Var v2) {
-        if (v1 == null)
-            return v2.count;
-        if (v2 == null)
-            return v1.count;
-        return Math.max(v1.count, v2.count);
-    }
 
     static Var max(Collection<Vars> varsC, String name) {
         Var max = null;

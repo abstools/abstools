@@ -33,6 +33,10 @@ public class ErlangCodeStream extends PrintStream {
         return indent;
     }
 
+    public void setIndent(String s) {
+        this.indent = s;
+    }
+
     public ErlangCodeStream incIndent() {
         indent = indent + INDENT;
         return this;
