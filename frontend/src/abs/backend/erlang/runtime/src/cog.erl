@@ -102,8 +102,9 @@ execute(S) ->
 
 set_state(S=#state{tasks=Tasks},TaskRef,done)->
 	S#state{tasks=gb_trees:delete(TaskRef,Tasks)};
-set_state(S=#state{tasks=Tasks},TaskRef,abort)->
-	S#state{tasks=gb_trees:delete(TaskRef,Tasks)};
+set_state(S=#state{tasks=Tasks,polling=Pol},TaskRef,abort)->
+	Old=gb_trees:get(TaskRef,Tasks),
+	S#state{tasks=gb_trees:delete(TaskRef,Tasks),polling=lists:delete(Old, Pol)};
 set_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
 	Old=#task{state=OldState}=gb_trees:get(TaskRef,Tasks),
 	New_state=Old#task{state=State},
