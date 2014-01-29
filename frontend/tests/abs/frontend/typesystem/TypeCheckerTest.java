@@ -12,12 +12,11 @@ import java.util.Collection;
 
 import org.junit.Test;
 
-import abs.ABSTest.Config;
 import abs.frontend.FrontendTest;
+import abs.frontend.analyser.ErrorMessage;
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.*;
-import abs.frontend.typechecker.DataTypeType;
-import abs.frontend.typechecker.InterfaceType;
-import abs.frontend.typechecker.KindedName;
+import abs.frontend.typechecker.*;
 import abs.frontend.typechecker.KindedName.Kind;
 
 public class TypeCheckerTest extends FrontendTest {
@@ -428,5 +427,13 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void ticket296() {
         assertTypeErrors("module FunArgsTypeCheckBug; def Int f(Map<Int,Int> m) = lookupDefault(m, 42);");
+    }
+ 
+    @Test
+    public void test_Movecogto1() {
+        Model m = assertParseOk("class C { Unit do() { movecogto 1; }}", Config.WITH_STD_LIB);
+        SemanticErrorList errs = m.typeCheck();
+        assertTrue(m.hasTypeErrors());
+        assertEquals(ErrorMessage.EXPECTED_DC, errs.getFirst().msg);
     }
 }

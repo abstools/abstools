@@ -535,13 +535,16 @@ aspect TypeChecker {
     }
 
     public void MoveCogToStmt.typeCheck(SemanticErrorList e) {
-        Type t = getTarget().getType();
-
         int nerrors = e.size();
         getTarget().typeCheck(e);
         if (e.size() > nerrors) return;
-        if (!t.getDecl().getName().equals("DeploymentComponent")) {
-            e.add(new TypeError(this, ErrorMessage.EXPECTED_TYPE, t, t));
+        Type t = getTarget().getType();
+        Decl d = t.getDecl();
+        if (d == null) {
+          e.add(new TypeError(this, ErrorMessage.EXPECTED_DC, t));
+        }
+        if (!"DeploymentComponent".equals(d.getName())) {
+            e.add(new TypeError(this, ErrorMessage.EXPECTED_DC, t));
         }
     }
 
