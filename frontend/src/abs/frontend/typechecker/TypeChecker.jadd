@@ -542,6 +542,7 @@ aspect TypeChecker {
         Decl d = t.getDecl();
         if (d == null) {
           e.add(new TypeError(this, ErrorMessage.EXPECTED_DC, t));
+          return;
         }
         if (!"DeploymentComponent".equals(d.getName())) {
             e.add(new TypeError(this, ErrorMessage.EXPECTED_DC, t));
