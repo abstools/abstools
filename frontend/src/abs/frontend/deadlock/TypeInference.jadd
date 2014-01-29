@@ -90,7 +90,7 @@ aspect TypeInference {
         // 2. add these interfaces to the map
         for(InterfaceTypeUse it : set) {
           InterfaceDecl d = ((InterfaceType)it.getType()).getDecl();
-          if(res.containsKey(d)) {
+          if((res.containsKey(d)) && (out != null)) {
             out.println("WARNING: the class \"" + res.get(d).getName() + "\" and \"" + ((ClassDecl)decl).getName() + 
                                  "\" both implement the interface \"" + d.getName() + "\"." +
                                  "This will probably cause an erroneous deadlock analysis");
@@ -434,8 +434,14 @@ aspect TypeInference {
       if(ident != null) { out.println(ident + "AwaitStmt Annotation Finished"); }
       ClassDecl cl; Type t = dep.getType();
       if(t.isInterfaceType()) { cl = intertoclass.get(((InterfaceType)t).getDecl()); }
-      else { cl = clthis; } if(cl == null) { out.println("Class retrival failed!!!"); } // should NEVER occur
-      c.addEquation(new ASTNodeInformation(this), resAnn.getRepresentative(), cl.createInstance(df, aprime, out));
+      else { cl = clthis; }
+     
+      Record r = null;
+      if(cl == null) {
+        out.println(ident + "WARNING: in await, there is no class implementing the \"" + ((InterfaceType)t).getDecl().getName() + "\" interface");
+        r = new RecordVariable(new deadlock.constraints.term.Variable(),false);
+      } else { r = cl.createInstance(df, aprime, out); }
+      c.addEquation(new ASTNodeInformation(this), resAnn.getRepresentative(), r);
 
       return new ResultInferenceStmt(null, contract, c, env);
     } else {
@@ -724,49 +730,51 @@ aspect TypeInference {
     // 1. Get the method interface
     Type t = getCallee().getType();
     final ClassDecl cl;
-    if(t.isInterfaceType()) { 
-        cl = intertoclass.get(((InterfaceType)t).getDecl());
-        assert cl != null : "Couldn't find class " + t.getDecl().getName();
-    }
-    else {
-        cl = clthis; 
-    }
-    assert cl != null;
+    if(t.isInterfaceType()) { cl = intertoclass.get(((InterfaceType)t).getDecl()); }
+    else { cl = clthis; }
 
-    // 2. Collect contracts and deadlock.constraints.constraint.Constraints from the call
-    ResultInferencePureExp resCallee = getCallee().typeInferenceAsPure(nident, env, a, intertoclass, df, cl, out);
-    Contract contract = df.newContractEmpty();
-    deadlock.constraints.constraint.Constraint c = df.newConstraint(out);
-    Record callee = resCallee.getRepresentative();
+    if(cl != null) { // there is an implementation for the given interface
+      // 2. Collect contracts and deadlock.constraints.constraint.Constraints from the call
+      ResultInferencePureExp resCallee = getCallee().typeInferenceAsPure(nident, env, a, intertoclass, df, cl, out);
+      Contract contract = df.newContractEmpty();
+      deadlock.constraints.constraint.Constraint c = df.newConstraint(out);
+      Record callee = resCallee.getRepresentative();
     
-    LinkedList<Record> s = new LinkedList<Record>();
-    ResultInferencePureExp resParam;
-    for (PureExp p : getParams()){
-      resParam = p.typeInferenceAsPure(nident, env, a, intertoclass, df, cl, out);
-      s.add(resParam.getRepresentative());
+      LinkedList<Record> s = new LinkedList<Record>();
+      ResultInferencePureExp resParam;
+      for (PureExp p : getParams()){
+        resParam = p.typeInferenceAsPure(nident, env, a, intertoclass, df, cl, out);
+        s.add(resParam.getRepresentative());
+      }
+
+      // 3. Construct the record for the return value
+      Record Y = df.newRecordVariable();
+
+      // 4. pack up the result
+      MethodInterface mi = df.newMethodInterface(callee, s, Y);
+      c.addSemiEquation(new ASTNodeInformation(this), env.getMethod(cl.getName(), getMethod()), mi);
+
+      Record r;
+      if(this instanceof SyncCall) {
+        r = Y;
+        contract.add(df.newContractSyncInvk(this, cl.getName(), getMethod(), mi));
+      } else {
+        contract.add(df.newContractInvk(this, cl.getName(), getMethod(), mi));
+
+        GroupName aprime = df.newGroupName();
+        Record calleeShape = cl.createInstance(df, aprime, out);
+        c.addEquation(new ASTNodeInformation(this), callee, calleeShape);
+        r = df.newRecordFuture(aprime,Y);
+      }
+      return new ResultInferenceEffExp(null, r, contract, c, env);
+    } else { // there is no implementation for the interface -> we suppose that the contract of the method is 0
+      out.println(ident + "WARNING: in call, there is no class implementing the \"" + ((InterfaceType)t).getDecl().getName() + "\" interface");
+      boolean datatype = true;
+      if(getMethodSig().getReturnType().getType() instanceof InterfaceType) datatype = false;
+      return new ResultInferenceEffExp(null, new RecordVariable(new deadlock.constraints.term.Variable(),datatype), new Contract(), df.newConstraint(out), env);
     }
-
-    // 3. Construct the record for the return value
-    Record Y = df.newRecordVariable();
-
-    // 4. pack up the result
-    MethodInterface mi = df.newMethodInterface(callee, s, Y);
-    c.addSemiEquation(new ASTNodeInformation(this), env.getMethod(cl.getName(), getMethod()), mi);
-
-    Record r;
-    if(this instanceof SyncCall) {
-      r = Y;
-      contract.add(df.newContractSyncInvk(this, cl.getName(), getMethod(), mi));
-    } else {
-      contract.add(df.newContractInvk(this, cl.getName(), getMethod(), mi));
-
-      GroupName aprime = df.newGroupName();
-      Record calleeShape = cl.createInstance(df, aprime, out);
-      c.addEquation(new ASTNodeInformation(this), callee, calleeShape);
-      r = df.newRecordFuture(aprime,Y);
-    }
-    return new ResultInferenceEffExp(null, r, contract, c, env);
   }
+   
 
 
   public ResultInferenceEffExp GetExp.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
