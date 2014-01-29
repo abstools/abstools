@@ -4,15 +4,10 @@
  */
 package deadlock;
 
-import java.io.PrintStream;
-
-import org.junit.Assert;
+import org.junit.Assume;
 
 import deadlock.analyser.Analyser;
-
-import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
-import abs.frontend.parser.ParseSamplesTest;
 import abs.frontend.typesystem.ExamplesTypeChecking;
 
 public class DeadlockCheckerTests extends ExamplesTypeChecking {
@@ -24,6 +19,7 @@ public class DeadlockCheckerTests extends ExamplesTypeChecking {
     @Override
     protected Model parse(String input) throws Exception {
         Model m = super.parse(input);
+        Assume.assumeTrue(m.hasMainBlock());
         (new Analyser()).deadlockAnalysis(m, true, 2, System.out);
         return m;
     }

@@ -4,7 +4,9 @@
  */
 package deadlock;
 
+import org.junit.Assume;
 import org.junit.Test;
+
 import deadlock.analyser.Analyser;
 import abs.frontend.typesystem.CaseStudyTypeChecking;
 
@@ -17,6 +19,7 @@ public class DeadlockCasestudies extends CaseStudyTypeChecking {
     @Test @Override
     public void test() throws Exception {
         super.test();
+        Assume.assumeTrue("Needs main block",m.hasMainBlock());
        (new Analyser()).deadlockAnalysis(m, true, 2, System.out);
     }
 }
