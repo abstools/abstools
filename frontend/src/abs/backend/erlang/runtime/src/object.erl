@@ -94,14 +94,14 @@ uninitialized({new_task,TaskRef},From,S=#state{await=A,tasks=Tasks})->
 
 
 active({#object{class=Class},get,Field},_From,S=#state{class=C,int_status=IS,new_vals=NV})->
-     Reply= case gb_trees:lookup(Field, NV) of 
-                 {value,A} ->
-                    A;
-                none ->    
-                     Class:get_val_internal(IS,Field)
-            end,
-     ?DEBUG({get,Field,Reply}),
-     {reply,Reply,active,S};
+    Reply= case gb_trees:lookup(Field, NV) of
+               {value,A} ->
+                   A;
+               none ->
+                   Class:get_val_internal(IS,Field)
+           end,
+    ?DEBUG({get,Field,Reply}),
+    {reply,Reply,active,S};
 active({new_task,TaskRef},_From,S=#state{tasks=Tasks})->
     ?DEBUG({new_task,TaskRef}),
     monitor(process,TaskRef),
@@ -122,10 +122,15 @@ active({#object{class=Class},set,Field,Val},S=#state{class=C,new_vals=NV}) ->
     {next_state,active,S#state{new_vals=gb_trees:enter(Field,Val,NV)}}.
 
 handle_sync_event({die,Reason,By},_From,_StateName,S=#state{tasks=Tasks})->
-  ?DEBUG({dying}),
-  [begin ?DEBUG({terminate,T}),exit(T,Reason) end ||T<-gb_sets:to_list(Tasks), T/=By],
-  exit(By,Reason),
-  {stop,normal,S}.
+    ?DEBUG({dying}),
+    [begin ?DEBUG({terminate,T}),exit(T,Reason) end ||T<-gb_sets:to_list(Tasks), T/=By],
+    case gb_sets:is_element(By,Tasks) of
+		true ->
+            exit(By,Reason);
+        false ->
+            ok
+    end,
+    {stop,normal,ok,S}.
 
 
 handle_info({'DOWN', _MonRef, process, TaskRef,Reason} ,StateName,S=#state{tasks=Tasks})->
