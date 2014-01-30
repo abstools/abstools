@@ -4,6 +4,7 @@
  */
 package abs.backend.java;
 
+import org.junit.Assume;
 import org.junit.Test;
 
 import abs.frontend.typesystem.ExamplesTypeChecking;
@@ -13,6 +14,11 @@ public class JavaExamplesTests extends ExamplesTypeChecking {
 
     public JavaExamplesTests(String input, String product) {
         super(input,product);
+    }
+
+    @Override
+    protected void onError(String err) {
+        Assume.assumeTrue(err, false);
     }
 
     @Test @Override
