@@ -12,7 +12,7 @@
 
 -behaviour(gen_fsm).
 %%API
--export([new/4,activate/1,commit/1,rollback/1,new_object_task/2,die/2]).
+-export([new/4,activate/1,commit/1,rollback/1,new_object_task/2,die/2,alive/1]).
 
 %%gen_fsm callbacks
 -export([init/1,active/3,active/2,uninitialized/2,uninitialized/3,code_change/4,handle_event/3,handle_info/3,handle_sync_event/4,terminate/3]).
@@ -49,11 +49,19 @@ rollback(#object{ref=O})->
 
 new_object_task(#object{ref=O},TaskRef)->
     try
-        active=gen_fsm:sync_send_event(O, {new_task,TaskRef})
+        gen_fsm:sync_send_event(O, {new_task,TaskRef})
     catch
        _:{noproc,_} ->
           exit(deadObject)
-     end.
+    end.
+
+alive(#object{ref=O})->
+	try
+        gen_fsm:sync_send_event(O, ping)
+    catch
+       _:{noproc,_} ->
+          exit(deadObject)
+    end.
 
 die(#object{ref=O},Reason)->
     gen_fsm:sync_send_all_state_event(O,{die,Reason,self()},infinity).
@@ -104,12 +112,14 @@ active(commit,_From,S=#state{class=C,int_status=IS,new_vals=NV}) ->
     {reply,ok,active,S#state{int_status=ISS,new_vals=gb_trees:empty()}};
 active(rollback,_From,S) ->
     ?DEBUG({rollback}),    
-   {reply,ok,active,S#state{new_vals=gb_trees:empty()}}.
+    {reply,ok,active,S#state{new_vals=gb_trees:empty()}};
+active(ping,_From,S)->
+    {reply,ok,active,S}.
 
 
 active({#object{class=Class},set,Field,Val},S=#state{class=C,new_vals=NV}) -> 
     ?DEBUG({set,Field,Val}),
-        {next_state,active,S#state{new_vals=gb_trees:enter(Field,Val,NV)}}.
+    {next_state,active,S#state{new_vals=gb_trees:enter(Field,Val,NV)}}.
 
 handle_sync_event({die,Reason,By},_From,_StateName,S=#state{tasks=Tasks})->
   ?DEBUG({dying}),
@@ -119,8 +129,8 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{tasks=Tasks})->
 
 
 handle_info({'DOWN', _MonRef, process, TaskRef,Reason} ,StateName,S=#state{tasks=Tasks})->
-   ?DEBUG({rem_dead_task,TaskRef}),
-   {next_state,StateName,S#state{tasks=gb_sets:del_element(TaskRef, Tasks)}}.
+    ?DEBUG({rem_dead_task,TaskRef}),
+    {next_state,StateName,S#state{tasks=gb_sets:del_element(TaskRef, Tasks)}}.
 
                 
 
