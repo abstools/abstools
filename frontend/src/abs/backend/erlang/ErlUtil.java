@@ -66,7 +66,7 @@ public class ErlUtil {
     }
 
     public static final void functionHeader(ErlangCodeStream ecs, String funName, List<String> args, Mask mask) {
-        ecs.format("%s(", funName);
+        ecs.format("'%s'(", funName);
         boolean first = true;
         for (String a : args) {
             if (!first)

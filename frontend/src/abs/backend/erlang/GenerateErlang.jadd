@@ -230,7 +230,7 @@ aspect GenerateErlang {
     final List<PureExp> params = getParams();
     ecs.print("(fun(O=#object{class=T,cog =C}) when C=:=Cog -> object:alive(O),T end(");
     getCallee().generateErlangCode(ecs,vars);
-    ecs.format(")):m_%s",getMethod());
+    ecs.format(")):'m_%s'",getMethod());
     ErlUtil.argumentList(ecs,getCallee(),params,vars);
   }
 
@@ -238,7 +238,7 @@ aspect GenerateErlang {
   public void AsyncCall.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     ecs.print("future:start(");
     getCallee().generateErlangCode(ecs,vars);
-    ecs.format(",m_%s,",getMethod());
+    ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars);
     ecs.print(")");
   }
