@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import abs.backend.java.codegeneration.JavaCodeGenerationException;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
@@ -65,7 +64,7 @@ public class ErlangBackend extends Main {
         compile(model, DEFAULT_DEST_DIR);
     }
 
-    public static void compile(Model m, File destDir) throws IOException, JavaCodeGenerationException {
+    public static void compile(Model m, File destDir) throws IOException {
         ErlApp erlApp = new ErlApp(destDir);
         m.generateErlangCode(erlApp);
         erlApp.close();

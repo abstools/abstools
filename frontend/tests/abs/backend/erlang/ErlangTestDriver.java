@@ -13,12 +13,10 @@ import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 
 import abs.ABSTest;
 import abs.backend.BackendTestDriver;
 import abs.backend.common.SemanticTests;
-import abs.backend.java.codegeneration.JavaCodeGenerationException;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.List;
 import abs.frontend.ast.MainBlock;
@@ -35,9 +33,8 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         return "Erlang";
     }
 
-    @BeforeClass
-    public static void checkRequired() {
-        Assert.assertTrue(SemanticTests.checkErlang());
+    public static boolean checkErlang() {
+        return SemanticTests.checkProg("erl");
     }
 
     @Override
@@ -69,9 +66,26 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         try {
             f = Files.createTempDir();
             f.deleteOnExit();
-            String mainModule = genCode(absCode, f);
+            Model model = assertParseOk(absCode, Config.WITH_STD_LIB);
+            String mainModule = genCode(model, f, true);
             make(f);
             return run(f, mainModule);
+        } finally {
+            try {
+                FileUtils.deleteDirectory(f);
+            } catch (IOException e) {
+                // Ignore Ex, File should be deleted anyway
+            }
+        }
+    }
+
+    public void generateAndCompile(Model model) throws Exception {
+        File f = null;
+        try {
+            f = Files.createTempDir();
+            f.deleteOnExit();
+            genCode(model, f, false);
+            make(f);
         } finally {
             try {
                 FileUtils.deleteDirectory(f);
@@ -90,8 +104,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      * @return the Module Name, which contains the Main Block
      * 
      */
-    private String genCode(String absCode, File targetDir) throws IOException, JavaCodeGenerationException {
-        Model model = assertParseOk(absCode, Config.WITH_STD_LIB);
+    private String genCode(Model model, File targetDir, boolean appendResultprinter) throws IOException {
         if (model.hasErrors()) {
             Assert.fail(model.getErrors().getFirst().getHelpMessage());
         }
@@ -99,9 +112,14 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             Assert.fail(model.getTypeErrors().getFirst().getHelpMessage());
         }
         MainBlock mb = (MainBlock) model.getCompilationUnit(1).getMainBlock();
-        mb.setStmt(new ReturnStmt(new List<Annotation>(), new VarUse("testresult")), mb.getNumStmt());
+        if (appendResultprinter)
+            mb.setStmt(new ReturnStmt(new List<Annotation>(), new VarUse("testresult")), mb.getNumStmt());
         ErlangBackend.compile(model, targetDir);
-        return mb.getModuleDecl().getName();
+        if (mb == null)
+            return null;
+        else
+            return mb.getModuleDecl().getName();
+
     }
 
     /**
