@@ -58,6 +58,30 @@ public class ErlangErrorHandlingTests extends ErlangTestDriver {
                 + "f=c!ok(); r=f.safeget; testresult= testresult && r== Error(\"deadObject\");  }");
     }
 
+    @Test
+    public void mainSyncCallDeadObject() throws Exception {
+        assertEvalFails(CLASS_WITH_METHOD
+                + "{I c= new local C(); Fut<Bool> f=  c!d(); await f?; Bool testresult= c.ok();}");
+    }
+
+    @Test
+    public void asyncCallSyncCallDeadObject() throws Exception {
+        assertEvalTrue(CLASS_WITH_METHOD
+                + "interface Proxy { Unit c(I obj);} class P implements Proxy{Unit c (I obj) {obj.ok();}}"
+                + "{I c= new local C(); Fut<Bool> f=  c!d(); await f?;"
+                + " Proxy p= new local P(); Fut<Unit> f1=p!c(c); await f1?; Result<Unit> r=f1.safeget ;"
+                + "Bool testresult= r== Error(\"deadObject\");}");
+    }
+
+    @Test
+    public void mainCallSyncDie() throws Exception {
+        assertEvalTrue(CLASS_WITH_METHOD
+                + "interface Proxy { Unit c(I obj);} class P implements Proxy{Unit c (I obj) {obj.ok();}}"
+                + "{I c= new local C(); c.d();"
+                + "Proxy p= new local P(); Fut<Unit> f1=p!c(c); await f1?; Result<Unit> r=f1.safeget ;"
+                + "Bool testresult= r== Error(\"deadObject\");}");
+    }
+
     private final static String ACTIVE_CLASS = "module BackendTest; interface I { Bool ok(); Bool wait(); Bool d(); }"
             + " class C implements I { Bool should_die=False; Unit run() { await should_die; abort \"active\";} Bool ok() { return True; } Bool wait(){await False;return False;} Bool d(){should_die=True;return True;}}";
 
