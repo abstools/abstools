@@ -16,6 +16,14 @@ public class ExamplesTypeChecking extends ParseSamplesTest {
         super(input,product);
     }
 
+    /**
+     * May be refined to Assume.assumeTrue(err,false) when
+     * reusing this code for other test runners.
+     */
+    protected void onError(String err) {
+        Assert.fail(err);
+    }
+
     @Override
     protected Model parse(String input) throws Exception {
         Model m = assertTypeCheckFileOk(input, true);
@@ -23,10 +31,10 @@ public class ExamplesTypeChecking extends ParseSamplesTest {
             m.flattenForProduct(product);
             final SemanticErrorList errors = m.getErrors();
             if (!errors.isEmpty())
-                Assert.fail(errors.getFirst().getMessage());
+                onError(errors.getFirst().getMessage());
             m.typeCheck(errors);
             if (!errors.isEmpty())
-                Assert.fail(errors.getFirst().getMessage());
+                onError(errors.getFirst().getMessage());
         }
         return m;
     }

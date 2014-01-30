@@ -17,6 +17,11 @@ public class DeadlockCheckerTests extends ExamplesTypeChecking {
     }
 
     @Override
+    protected void onError(String err) {
+        Assume.assumeTrue(err, false);
+    }
+
+    @Override
     protected Model parse(String input) throws Exception {
         Model m = super.parse(input);
         Assume.assumeTrue(m.hasMainBlock());
