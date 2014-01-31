@@ -4,7 +4,11 @@
  */
 package abs.backend.maude;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
 import abs.backend.BackendTestDriver;
+import abs.frontend.ast.Model;
 
 public class MaudeTestDriver implements BackendTestDriver {
 
@@ -35,5 +39,13 @@ public class MaudeTestDriver implements BackendTestDriver {
     @Override
     public void assertEvalTrue(String absCode) throws Exception {
         assertEvalEquals(absCode, true);
+    }
+
+    @Override
+    public void assertEvalTrue(Model model) throws Exception {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        model.generateMaude(new PrintStream(out), maude.mode, 100, 0);
+        String code = out.toString();
+        maude.assertMaudeCodeResult(code, "ABS.StdLib.True");
     }
 }

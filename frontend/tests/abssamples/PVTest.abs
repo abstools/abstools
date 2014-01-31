@@ -1,0 +1,19 @@
+module BackendTest;
+
+interface CI { Bool test(); }
+class CC implements CI {
+  Bool test() {assert False; /* You forgot to select the product! */ return False; }
+}
+
+{ CI c = new local CC(); Bool testresult = c.test(); }
+
+delta Foo;
+uses BackendTest;
+adds data C = A | B;
+adds def Bool isA(C toCheck, C p) = case toCheck { p => False; _ => True; };
+modifies class CC {modifies Bool test() {return isA(A,B); }}
+
+productline PL;
+feature Foo;
+delta Foo when Foo;
+product Foo(Foo);

@@ -4,6 +4,8 @@
  */
 package abs.backend.common;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -18,10 +20,11 @@ import abs.backend.java.JavaTestDriver;
 import abs.backend.java.dynamic.JavaDynamicTestDriver;
 import abs.backend.maude.MaudeCompiler;
 import abs.backend.maude.MaudeTestDriver;
+import abs.frontend.ast.Model;
 
 @RunWith(Parameterized.class)
 public abstract class SemanticTests {
-    final private BackendTestDriver driver;
+    final protected BackendTestDriver driver;
 
     public SemanticTests(BackendTestDriver d) {
         driver = d;
@@ -78,6 +81,16 @@ public abstract class SemanticTests {
     public void assertEvalTrue(String absCode) {
         try {
             driver.assertEvalTrue("module BackendTest; " + absCode);
+        } catch (Exception e) {
+            throw new RuntimeException(e); // TODO: remove; too many too handle
+                                           // for now.
+        }
+    }
+    
+    public void assertEvalTrue(Model m) {
+        try {
+            assertNotNull(m.lookupModule("BackendTest"));
+            driver.assertEvalTrue(m);
         } catch (Exception e) {
             throw new RuntimeException(e); // TODO: remove; too many too handle
                                            // for now.

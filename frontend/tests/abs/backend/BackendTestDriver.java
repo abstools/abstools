@@ -4,6 +4,8 @@
  */
 package abs.backend;
 
+import abs.frontend.ast.Model;
+
 public interface BackendTestDriver {
 
     public abstract void assertEvalEquals(String absCode, boolean value) throws Exception;
@@ -11,4 +13,6 @@ public interface BackendTestDriver {
     public abstract void assertEvalFails(String absCode) throws Exception;
 
     public abstract void assertEvalTrue(String absCode) throws Exception;
+    
+    public abstract void assertEvalTrue(Model m) throws Exception;
 }

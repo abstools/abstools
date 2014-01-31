@@ -4,7 +4,10 @@
  */
 package abs.backend.java;
 
+import static org.junit.Assert.assertEquals;
 import abs.backend.BackendTestDriver;
+import abs.backend.java.codegeneration.JavaCode;
+import abs.frontend.ast.Model;
 
 public class JavaTestDriver implements BackendTestDriver {
 
@@ -39,6 +42,13 @@ public class JavaTestDriver implements BackendTestDriver {
     @Override
     public void assertEvalTrue(String absCode) throws Exception {
         assertEvalEquals(absCode, true);
+    }
+
+    @Override
+    public void assertEvalTrue(Model m) throws Exception {
+        JavaCode javaCode = javaTest.getJavaCode(m);
+        boolean res = javaTest.runJavaAndTestResult(javaCode, false);
+        assertEquals(true, res);
     }
 
 }

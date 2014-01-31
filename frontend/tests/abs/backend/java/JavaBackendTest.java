@@ -180,7 +180,7 @@ public class JavaBackendTest extends ABSTest {
         return output;
     }
 
-    boolean runJavaAndTestResult(JavaCode javaCode, boolean expectFail) throws Exception {
+    public boolean runJavaAndTestResult(JavaCode javaCode, boolean expectFail) throws Exception {
         StringBuffer output = null;
         try {
             output = runJava(javaCode, jvmArgs.toArray(new String[0]));

@@ -5,6 +5,8 @@
  */
 package abs.backend.erlang;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -17,12 +19,7 @@ import org.junit.Assert;
 import abs.ABSTest;
 import abs.backend.BackendTestDriver;
 import abs.backend.common.SemanticTests;
-import abs.frontend.ast.Annotation;
-import abs.frontend.ast.List;
-import abs.frontend.ast.MainBlock;
-import abs.frontend.ast.Model;
-import abs.frontend.ast.ReturnStmt;
-import abs.frontend.ast.VarUse;
+import abs.frontend.ast.*;
 
 import com.google.common.io.Files;
 
@@ -174,6 +171,24 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             return null;
         return val;
 
+    }
+
+    @Override
+    public void assertEvalTrue(Model model) throws Exception {
+        File f = null;
+        try {
+            f = Files.createTempDir();
+            f.deleteOnExit();
+            String mainModule = genCode(model, f, true);
+            make(f);
+            assertEquals("true",run(f, mainModule));
+        } finally {
+            try {
+                FileUtils.deleteDirectory(f);
+            } catch (IOException e) {
+                // Ignore Ex, File should be deleted anyway
+            }
+        }        
     }
 }
 

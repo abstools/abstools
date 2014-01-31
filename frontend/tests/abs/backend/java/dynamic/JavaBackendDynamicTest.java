@@ -13,11 +13,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Scanner;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-
 import abs.backend.java.JavaBackendTest;
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.codegeneration.JavaCodeGenerationException;

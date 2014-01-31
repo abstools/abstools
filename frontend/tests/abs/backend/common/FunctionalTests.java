@@ -8,7 +8,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import abs.ABSTest;
+import abs.ABSTest.Config;
 import abs.backend.BackendTestDriver;
+import abs.frontend.ast.Model;
 
 @RunWith(Parameterized.class)
 public class FunctionalTests extends SemanticTests {
@@ -210,5 +213,13 @@ public class FunctionalTests extends SemanticTests {
     @Test
     public void setLength() {
         assertEvalTrue("{ Set<Int> s = set[4,4,4]; Bool testresult = (size(s) == 1);}");
+    }
+    
+    @Test
+    public void patternVarRew() throws Exception {
+        String fileName = "tests/abssamples/PVTest.abs";
+        Model m = ABSTest.assertParseFileOk(fileName, Config.WITH_STD_LIB);
+        m.flattenForProduct("Foo");
+        assertEvalTrue(m);
     }
 }

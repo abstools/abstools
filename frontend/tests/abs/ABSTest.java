@@ -36,7 +36,7 @@ public class ABSTest {
         }
     }
 
-    protected boolean isSet(Config c, Config...configs) {
+    static protected boolean isSet(Config c, Config...configs) {
         if (configs == null)
             throw new IllegalArgumentException("Must give an array of configs");
         for (Config c2: configs) {
@@ -57,7 +57,7 @@ public class ABSTest {
      *             if neither the input file name nor
      *             {@link File#getAbsoluteFile()} points to a valid file.
      */
-    protected String resolveFileName(String fileName) {
+    static protected String resolveFileName(String fileName) {
         File f = new File(fileName);
         if (f.exists()) {
             return fileName;
@@ -122,7 +122,7 @@ public class ABSTest {
     /**
      * Note: does not handle EXPECT_*.
      */
-    protected Model assertParseFileOk(String fileName, Config... config) throws IOException {
+    static public Model assertParseFileOk(String fileName, Config... config) throws IOException {
         Main main = new Main();
         main.setWithStdLib(isSet(WITH_STD_LIB,config));
         Model m = main.parseFiles(resolveFileName(fileName));
@@ -136,7 +136,7 @@ public class ABSTest {
         return assertParseModelOk(m, config);
     }
     
-    protected Model assertParseModelOk(Model m, Config... config) throws IOException {
+    static public Model assertParseModelOk(Model m, Config... config) throws IOException {
         if (m != null) {
             int numSemErrs = m.getErrors().size();
             StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");

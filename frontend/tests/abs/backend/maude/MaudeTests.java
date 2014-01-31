@@ -68,6 +68,10 @@ public class MaudeTests extends ABSTest {
 
     void assertMaudeResult(String absCode, String expectedResult) throws Exception {
         String generatedMaudeCode = getMaudeCode(absCode, mode);
+        assertMaudeCodeResult(generatedMaudeCode, expectedResult);
+    }
+
+    public void assertMaudeCodeResult(String generatedMaudeCode, String expectedResult) throws Exception {
         String maudeOutput = getMaudeOutput(generatedMaudeCode);
         Pattern pattern = Pattern.compile(".*'testresult \\|-> \"(.*?)\"\\[emp\\].*");
         Matcher matcher = pattern.matcher(maudeOutput);
