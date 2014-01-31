@@ -159,7 +159,7 @@ aspect GenerateErlang {
       else
         buffer.print("null");
       buffer.close();
-      ecs.format("%s = %s",vars.nV(getName()),sw.toString().substring(ecs.getIndent().length()));
+      ecs.format("%s = %s",vars.nV(this),sw.toString().substring(ecs.getIndent().length()));
     }
     else
       throw new NotImplementedYetException(this);
@@ -482,7 +482,7 @@ aspect GenerateErlang {
   public void LetExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     ecs.print("(fun (V_"+getVar().getName()+"_0)->");
     Vars v=vars.pass();
-    v.nVignoreOverload(getVar().getName());
+    v.nVignoreOverload(getVar());
     getExp().generateErlangCode(ecs,v);
     ecs.print(" end(");
     boolean needTrunc=getVar().getType().isIntType() && getVal().getType().isRatType();
@@ -582,7 +582,7 @@ aspect GenerateErlang {
 
   @Override
   public void PatternVar.generateErlangCode(ErlangCodeStream prePattern,ErlangCodeStream ecs,Vars vars){
-      ecs.print(vars.nV(getVar().getName()));
+      ecs.print(vars.nV(getVar()));
   }
 
   @Override

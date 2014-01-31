@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import abs.frontend.ast.ParamDecl;
+import abs.frontend.ast.VarOrFieldDecl;
 
 import com.google.common.collect.Sets;
 
@@ -58,11 +59,12 @@ public class Vars extends LinkedHashMap<String, Var> {
     /**
      * Introduce a new variable
      */
-    public String nV(String name) {
+    public String nV(VarOrFieldDecl d) {
+        String name = d.getName();
         Var v = get((Object) name);
         if (v != null)
             if (v.isSet())
-                throw new RuntimeException("Var already exists");
+                throw new RuntimeException("Var already exists:"+name+":" +d.getFileName()+"@" + d.getStartLine()+"/"+d.getStartColumn());
             else
                 put(name, v.inc());
         else
@@ -74,7 +76,8 @@ public class Vars extends LinkedHashMap<String, Var> {
      * Introduces a new variable and ignores if it overloads a previous one
      * (used for let)
      */
-    public String nVignoreOverload(String name) {
+    public String nVignoreOverload(VarOrFieldDecl d) {
+        String name = d.getName();
         put(name, new Var());
         return get(name);
     }
@@ -83,6 +86,7 @@ public class Vars extends LinkedHashMap<String, Var> {
      * Increase counter of variable
      */
     public String inc(String name) {
+        // TODO: Review, can you get(name) directly and test for null, avoiding the duplicate lookup? [stolz]
         if (containsKey(name))
             put(name, super.get(name).inc());
         else
