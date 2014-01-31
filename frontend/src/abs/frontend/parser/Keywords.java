@@ -62,7 +62,7 @@ public class Keywords {
         "case", 
         "let", 
         "in", 
-        "cog", 
+        "local", 
         "type", 
         "assert", 
         "builtin",
