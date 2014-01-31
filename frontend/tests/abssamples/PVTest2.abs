@@ -1,0 +1,5 @@
+module BackendTest;
+
+data C = A | B;
+def Bool isA(C toCheck, C p) = case toCheck { p => False; _ => True; };
+{Bool testresult= isA(A,B); }

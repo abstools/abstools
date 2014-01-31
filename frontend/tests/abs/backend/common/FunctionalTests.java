@@ -4,6 +4,8 @@
  */
 package abs.backend.common;
 
+import static org.junit.Assert.*;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -214,12 +216,24 @@ public class FunctionalTests extends SemanticTests {
     public void setLength() {
         assertEvalTrue("{ Set<Int> s = set[4,4,4]; Bool testresult = (size(s) == 1);}");
     }
-    
+
     @Test
     public void patternVarRew() throws Exception {
         String fileName = "tests/abssamples/PVTest.abs";
         Model m = ABSTest.assertParseFileOk(fileName, Config.WITH_STD_LIB);
+        // TODO: Pull up
+        // XXX WTF?! assertFalse(m.hasParserErrors());
         m.flattenForProduct("Foo");
+        assertFalse(m.hasTypeErrors());
+        assertEvalTrue(m);
+    }
+    
+    @Test
+    public void patternVarRewOK() throws Exception {
+        String fileName = "tests/abssamples/PVTest2.abs";
+        Model m = ABSTest.assertParseFileOk(fileName, Config.WITH_STD_LIB);
+        assertFalse(m.hasParserErrors());
+        assertFalse(m.hasTypeErrors());
         assertEvalTrue(m);
     }
 }

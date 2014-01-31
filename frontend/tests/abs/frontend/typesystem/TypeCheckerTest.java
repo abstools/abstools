@@ -12,6 +12,7 @@ import java.util.Collection;
 
 import org.junit.Test;
 
+import abs.ABSTest;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
@@ -435,5 +436,13 @@ public class TypeCheckerTest extends FrontendTest {
         SemanticErrorList errs = m.typeCheck();
         assertTrue(m.hasTypeErrors());
         assertEquals(ErrorMessage.EXPECTED_DC, errs.getFirst().msg);
+    }
+
+    @Test
+    public void deltaParseBS() throws Exception {
+        String fileName = "tests/abssamples/PVTest.abs";
+        Model m = ABSTest.assertParseFileOk(fileName, Config.WITH_STD_LIB);
+        if (m.hasParserErrors())
+            fail(m.getParserErrors().get(0).toString());
     }
 }
