@@ -14,6 +14,6 @@ adds def Bool isA(C toCheck, C p) = case toCheck { p => False; _ => True; };
 modifies class CC {modifies Bool test() {return isA(A,B); }}
 
 productline PL;
-feature Foo;
+features Foo;
 delta Foo when Foo;
 product Foo(Foo);
