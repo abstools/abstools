@@ -138,22 +138,32 @@ public class ABSTest {
     
     static public Model assertParseModelOk(Model m, Config... config) throws IOException {
         if (m != null) {
-            int numSemErrs = m.getErrors().size();
-            StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
-            
+            final StringBuffer errs;
             String fileNames = m.getCompilationUnit(0).getFileName();
             for (int i = 1; i < m.getCompilationUnits().getNumChild(); i++)
                 fileNames += " & " + m.getCompilationUnit(i).getFileName();
+            
+            int parseErrs = m.getParserErrors().size();
+            if (parseErrs > 0) {
+                errs = new StringBuffer("Parse errors: " + parseErrs + ". First error:\n");
+                errs.append(m.getParserErrors().get(0));
+                fail("Failed to parse: " + fileNames + "\n" + errs.toString());
+                return m;
+            }
+            
+            int numSemErrs = m.getErrors().size();
+            
 
+            errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
             if (numSemErrs > 0) {
                 for (SemanticError error : m.getErrors())
-                    errs = errs.append(error.getHelpMessage() + "\n");
+                    errs.append(error.getHelpMessage() + "\n");
                 fail("Failed to parse: " + fileNames + "\n" + errs.toString());
             } else if (isSet(TYPE_CHECK, config)) {
                 SemanticErrorList l = m.typeCheck();
                 if (!l.isEmpty()) {
                     for (SemanticError error : l)
-                        errs = errs.append(error.getHelpMessage() + "\n");
+                        errs.append(error.getHelpMessage() + "\n");
                     fail("Failed to typecheck: " + fileNames + "\n" + errs.toString());
                 }
             }
