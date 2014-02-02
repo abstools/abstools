@@ -230,7 +230,7 @@ aspect VarResolution {
     eq ModuleDecl.getDecl(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
         = getDecl(i).locallookupVarOrFieldName(name,fieldOnly);
     
-    eq DeltaDecl.getModuleModifier(int i).lookupVarOrFieldName(String name, boolean fieldOnly) = null;
+    // eq DeltaDecl.getModuleModifier(int i).lookupVarOrFieldName(String name, boolean fieldOnly) { assert false; return null; } // XXX
     
     eq CaseExp.getBranch(int i).lookupVarOrFieldName(String name, boolean fieldOnly) {
         if (!fieldOnly) {
@@ -272,6 +272,16 @@ aspect VarResolution {
     eq ClassDecl.getInitBlock().lookupVarOrFieldName(String name, boolean fieldOnly) = locallookupVarOrFieldName(name,fieldOnly);
     inh VarOrFieldDecl PatternVarUse.lookupVarOrFieldName(String name, boolean fieldOnly);
     
+	inh VarOrFieldDecl FieldDecl.lookupVarOrFieldName(String name, boolean fieldOnly);
+    eq FieldDecl.getInitExp().lookupVarOrFieldName(String name, boolean fieldOnly) {
+        return lookupVarOrFieldName(name,fieldOnly);
+    }
+    eq ClassDecl.getField(int i).lookupVarOrFieldName(String name, boolean fieldOnly) = locallookupVarOrFieldName(name,fieldOnly);
+    eq HasField.getFieldDecl().lookupVarOrFieldName(String name, boolean fieldOnly) { assert false : "NYI - what is this?"; return null; }
+    /* Can only be typed after resolving deltas: */
+    eq AddFieldModifier.getFieldDecl().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
+    eq RemoveFieldModifier.getFieldDecl().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
+
     // replace unbound pattern variables with var decls
     rewrite PatternVarUse {
         when (lookupVarOrFieldName(getName(),false) == null)

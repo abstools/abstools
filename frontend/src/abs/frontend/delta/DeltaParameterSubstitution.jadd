@@ -181,9 +181,13 @@ aspect DeltaParameterSubstitution {
             p.updateSubstitution(subst);
     }
 
-    // the actual substitution!
+    /* The actual substitution!
+       [stolz]: the access we're looking at might already have rewrite rules applied,
+       and thus in the unit test with "C attr = attr" the rhs attr is intermittently resolved as a field,
+       but needs to be rewritten from the substitution.
+    */
     @Override
-    protected void VarUse.applySubstitution(Map<String,Value> subst) {
+    protected void VarOrFieldUse.applySubstitution(Map<String,Value> subst) {
         //System.out.println("%%% Substituting value " + getName());
         //System.out.println("%%% using subst: " + subst);
         Value v = subst.get(getName());
