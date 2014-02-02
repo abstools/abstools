@@ -269,6 +269,7 @@ aspect VarResolution {
        So it somehow matches the one above here, but doesn't trigger a warning... */
     eq ExpFunctionDef.getRhs().lookupVarOrFieldName(String name, boolean fieldOnly) { FunctionDecl fd = (FunctionDecl) getParent(); return fd.locallookupVarOrFieldName(name, fieldOnly); }
     inh VarOrFieldDecl Stmt.lookupVarOrFieldName(String name, boolean fieldOnly);
+    eq ClassDecl.getInitBlock().lookupVarOrFieldName(String name, boolean fieldOnly) = locallookupVarOrFieldName(name,fieldOnly);
     inh VarOrFieldDecl PatternVarUse.lookupVarOrFieldName(String name, boolean fieldOnly);
     
     // replace unbound pattern variables with var decls
