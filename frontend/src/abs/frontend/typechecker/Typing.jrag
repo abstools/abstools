@@ -303,7 +303,7 @@ aspect Typing {
     /**
      * These classes have formal parameters.
      */
-    interface HasParams {
+    public interface HasParams {
       List<ParamDecl> getParams();
     }
     
@@ -314,7 +314,7 @@ aspect Typing {
     /**
      * These classes have actual parameters.
      */    
-    interface HasActualParams {
+    public interface HasActualParams {
       List<PureExp> getParams();
     }
     
@@ -326,7 +326,7 @@ aspect Typing {
     /**
      * Types of classes with formal/actual parameters.
      */    
-    interface HasTypes {
+    public interface HasTypes {
       java.util.List<Type> getTypes();
     }
     
@@ -351,7 +351,7 @@ aspect Typing {
 
     public java.util.List<Type> DataConstructor.getTypes() { return TypeCheckerHelper.getTypes(getConstructorArgs()); }
 
-    interface HasTypeParameters {
+    public interface HasTypeParameters {
       List<TypeParameterDecl> getTypeParameters();
     }
     
@@ -361,7 +361,7 @@ aspect Typing {
     public java.util.List<Type> HasParams.getTypes()              { return TypeCheckerHelper.getTypes(getParams()); }
     public java.util.List<Type> HasActualParams.getTypesFromExp() { return TypeCheckerHelper.getTypes(getParams()); }
     
-    interface HasType {
+    public interface HasType {
       Type getType();
     }
     

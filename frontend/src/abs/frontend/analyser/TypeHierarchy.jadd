@@ -6,7 +6,7 @@ aspect TypeHierarchy {
 	// True if there is a cycle somewhere on the superinterface chain
 	syn boolean InterfaceDecl.hasCycleOnExtendedInterfacesChain() = getSuperTypes().contains(this);
 
-	interface HasTypeHierarchy {
+	public interface HasTypeHierarchy {
 		Collection<InterfaceDecl> getDirectSuperTypes();
 		// Collection<InterfaceDecl> getSuperTypes();
 	}
