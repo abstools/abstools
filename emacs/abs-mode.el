@@ -278,9 +278,14 @@ value.")
 ;;; flymake support
 (defun abs-flymake-init ()
   (when abs-compiler-program
-    (list abs-compiler-program
-          (list (flymake-init-create-temp-buffer-copy
-                 'flymake-create-temp-inplace)))))
+    (list
+     abs-compiler-program
+     (remove nil (list
+                  (when (string= (file-name-nondirectory (buffer-file-name))
+                                 "abslang.abs")
+                    "-nostdlib")
+                  (flymake-init-create-temp-buffer-copy
+                   'flymake-create-temp-inplace))))))
 
 (unless (assoc "\\.abs\\'" flymake-allowed-file-name-masks)
   (add-to-list 'flymake-allowed-file-name-masks
