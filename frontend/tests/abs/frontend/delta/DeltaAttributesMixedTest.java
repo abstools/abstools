@@ -84,6 +84,20 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         //TODO test the value of x
     }
 
+    @Test(expected=WrongProgramArgumentException.class)
+    public void passBooleanFeatureAttributes2b() throws Exception {
+        Model model = assertParseOk(
+                "module M;"
+                + "delta D(Bool attr);"
+                + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+                + "productline PL;"
+                + "    features F; delta D(F.b) when F;"
+                + "product P1( F{a=True} );"
+        );
+        
+        model.flattenForProduct("P1");
+    }
+
     @Test
     public void passBooleanFeatureAttributes3() throws DeltaModellingException, WrongProgramArgumentException {
         Model m = assertParse(
@@ -97,5 +111,49 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         
         // There should be a type error if the Config defines only two delta params, but the delta itself expects 3
         assertEquals(ErrorMessage.WRONG_NUMBER_OF_ARGS, m.getTypeErrors().getFirst().msg);
-    }   
+    }
+
+    @Test
+    public void passBooleanFeatureAttributes4() throws Exception {
+        Model model = assertParse(
+                "module M;"
+                + "delta D(Bool attr);"
+                + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+                + "productline PL;"
+                + "    features F; delta D(F.a) when F;"
+                + "product P1( F{a=3} );"
+                , Config.WITH_STD_LIB, Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR
+        );
+        assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirst().msg);
+    }
+
+    @Test
+    public void passBooleanFeatureAttributes4b() throws Exception {
+        Model model = assertParse(
+                "module M;"
+                + "delta D(Bool attr);"
+                + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+                + "productline PL;"
+                + "    features F; delta D(3) when F;"
+                + "product P1( F );"
+                , Config.WITH_STD_LIB, Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR
+        );
+        assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirst().msg);
+    }
+
+    @Test
+    public void passBooleanFeatureAttributes4Flat() throws Exception {
+        Model model = assertParseOk(
+                "module M;"
+                + "delta D(Bool attr);"
+                + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+                + "productline PL;"
+                + "    features F; delta D(F.a) when F;"
+                + "product P1( F{a=3} );"
+                , Config.WITH_STD_LIB
+        );
+        model.flattenForProduct("P1");
+        assertTrue(model.hasTypeErrors());
+        assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirst().msg);
+    }
 }

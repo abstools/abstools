@@ -979,12 +979,12 @@ aspect TypeCheckProductline {
 
     
     protected void Product.typeCheck(SemanticErrorList e) {
-        HashSet<String> featureNames = null;
+        Map<String,Feature> featureNames = null;
         Model m = getModel();
         if (m.hasProductLine()) {
-            featureNames = new HashSet<String>();
+            featureNames = new HashMap<String,Feature>();
             for (Feature f : m.getProductLine().getFeatures()) {
-                featureNames.add(f.getName());
+                featureNames.put(f.getName(),f);
             }            
         }
         HashSet<String> productNames = new HashSet<String>();
@@ -1053,7 +1053,23 @@ aspect TypeCheckProductline {
     protected void ObjectUpdate.typeCheck(SemanticErrorList e) {
         // TODO
     }
-    
+
+    syn Type DeltaParamDecl.getType();
+    eq DeltaClassParam.getType() = UnknownType.INSTANCE; // XXX 
+    eq DeltaFieldParam.getType() = getParamDecl().getType();
+
+	public abstract boolean DeltaParamDecl.accepts(Value val);
+	public boolean DeltaClassParam.accepts(Value val) { return true; /* XXX NYI? */ }
+	public boolean DeltaFieldParam.accepts(Value val) {
+      return val.isAssignableTo(getType());
+	}
+	
+	syn boolean DeltaClause.refersTo(Feature f) = !hasAppCond() || getAppCond().refersTo(f);
+	syn boolean AppCond.refersTo(Feature f);
+	eq AppCondFeature.refersTo(Feature f) = getName().equals(f.getName());
+	eq AppCondAnd.refersTo(Feature f) = getLeft().refersTo(f) || getRight().refersTo(f);
+	eq AppCondOr.refersTo(Feature f) = getLeft().refersTo(f) || getRight().refersTo(f);
+	eq AppCondNot.refersTo(Feature f) = getAppCond().refersTo(f);
 }
 
 /* Components */

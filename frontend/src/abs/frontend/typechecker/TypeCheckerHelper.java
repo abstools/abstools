@@ -143,14 +143,10 @@ public class TypeCheckerHelper {
                     DeltaParamDecl formal = dd.getParam(i);
                     Deltaparam actual = spec.getDeltaparam(i);
                     // TODO: W00t?!
-                    if (formal instanceof DeltaFieldParam) {
-                        DeltaFieldParam f = (DeltaFieldParam) formal;
-                        Type ft = f.getParamDecl().getType();
-                        if (actual instanceof Const) {
-                            Value a = ((Const) actual).getValue();
-                            if (! a.isAssignableTo(ft)) {
-                                e.add(new TypeError(a, ErrorMessage.CANNOT_ASSIGN, a.getName(), ft.getSimpleName()));
-                            }
+                    if (actual instanceof Const) {
+                        Value a = ((Const) actual).getValue();
+                        if (! formal.accepts(a)) {
+                            e.add(new TypeError(a, ErrorMessage.CANNOT_ASSIGN, a.getName(), formal.getType().getSimpleName()));
                         }
                     }
                 }
@@ -174,20 +170,31 @@ public class TypeCheckerHelper {
     }
 
     public static void typeCheckProduct(Product prod, 
-            Set<String> featureNames, 
+            Map<String,Feature> featureNames, 
             Set<String> prodNames, 
             Map<String,DeltaDecl> deltaNames, 
             Set<String> updateNames, 
             SemanticErrorList e) {
         if (featureNames != null) {
-            // Do the features exist in the PL declaration (TODO also check feature attributes)?
+            // Do the features exist in the PL declaration (and also check feature attributes)?
             for (Feature f : prod.getFeatures()) {
-                if (! featureNames.contains(f.getName()))
+                if (!featureNames.containsKey(f.getName()))
                     e.add(new TypeError(prod, ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
                 else {
-                    AttrAssignment aa = f.getAttrAssignment(0);
-                    Type t = null; // XXX
-                    aa.getValue().isAssignableTo(t);
+                    for (int i = 0; i<f.getNumAttrAssignment(); i++) {
+                        AttrAssignment aa = f.getAttrAssignment(i);
+                        Model m = prod.getModel();
+                        Collection<DeltaClause> dcs = findDeltasForFeature(m,f);
+                        for (DeltaClause dc : dcs) {
+                            DeltaDecl dd = m.findDelta(dc.getDeltaspec().getName());
+                            for (int j = 0; j < dd.getNumParam(); j++) {
+                                DeltaParamDecl dp = dd.getParam(j);
+                                if (!dp.accepts(aa.getValue())) {
+                                    e.add(new TypeError(aa, ErrorMessage.CANNOT_ASSIGN, aa.getValue().getName(),dp.getType().getSimpleName()));
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -208,6 +215,22 @@ public class TypeCheckerHelper {
             if (! updateNames.contains(recf.getUpdateID()))
                 e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, recf.getUpdateID()));
         }
+    }
+
+    /**
+     * Look for all deltas that have a particular feature in the application condition --
+     * up to the boolean madness that lies within AppConds (delta D(F.x) when ~F will
+     * be checked when actually trying to flatten the product, I hope.
+     */
+    private static Collection<DeltaClause> findDeltasForFeature(Model m, Feature f) {
+        Collection<DeltaClause> dcs = new ArrayList<DeltaClause>();
+        for (int i = 0; i < m.getProductLine().getNumDeltaClause(); i++) {
+            DeltaClause dc = m.getProductLine().getDeltaClause(i);
+            if (dc.refersTo(f)) {
+                dcs.add(dc);
+            }
+        }
+        return dcs;
     }
 
     public static <T extends ASTNode<?>> java.util.List<Type> getTypes(List<T> params) {
