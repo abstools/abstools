@@ -991,15 +991,11 @@ aspect TypeCheckProductline {
         for (Product prod : m.getProducts()) {
             productNames.add(prod.getName());
         }
-        HashSet<String> deltaNames = new HashSet<String>();
-        for (DeltaDecl delta : m.getDeltaDecls()) {
-            deltaNames.add(delta.getName());
-        }
         HashSet<String> updateNames = new HashSet<String>();
         for (UpdateDecl upd : m.getUpdateDecls()) {
             updateNames.add(upd.getName());
         }
-        TypeCheckerHelper.typeCheckProduct(this, featureNames, productNames, deltaNames, updateNames, e);
+        TypeCheckerHelper.typeCheckProduct(this, featureNames, productNames, m.getDeltaDeclsMap(), updateNames, e);
     }
 
     protected void ProductLine.typeCheck(SemanticErrorList e) {
@@ -1020,6 +1016,14 @@ aspect TypeCheckProductline {
                 e.add(new SemanticError(f, ErrorMessage.DUPLICATE_FEATURE, f.getName()));
         }
     }
+
+	public abstract boolean Value.isAssignableTo(Type t);
+	public boolean BoolVal.isAssignableTo(Type t) { 
+		return t.isBoolType();
+	}
+	public boolean IntVal.isAssignableTo(Type t) { 
+		return t.isNumericType();
+	}
 
     protected void DeltaClause.typeCheck(Map<String,DeltaDecl> ds, Set<String> definedFeatures, SemanticErrorList e) {
         TypeCheckerHelper.typeCheckDeltaClause(this, ds, definedFeatures, e);

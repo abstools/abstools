@@ -131,12 +131,29 @@ public class TypeCheckerHelper {
     public static void typeCheckDeltaClause(DeltaClause clause, Map<String,DeltaDecl> deltaNames, Set<String> definedFeatures, SemanticErrorList e) {
 
         /* Does the delta exist? */
-        if (! deltaNames.containsKey(clause.getDeltaspec().getName()))
-            e.add(new TypeError(clause.getDeltaspec(), ErrorMessage.NAME_NOT_RESOLVABLE, clause.getDeltaspec().getName()));
+        final Deltaspec spec = clause.getDeltaspec();
+        if (! deltaNames.containsKey(spec.getName()))
+            e.add(new TypeError(spec, ErrorMessage.NAME_NOT_RESOLVABLE, spec.getName()));
         else {
-            DeltaDecl dd = deltaNames.get(clause.getDeltaspec().getName());
-            if (dd.getNumParam() != clause.getDeltaspec().getNumDeltaparam()) {
-                e.add(new TypeError(clause.getDeltaspec(), ErrorMessage.WRONG_NUMBER_OF_ARGS,dd.getNumParam(),clause.getDeltaspec().getNumDeltaparam()));
+            DeltaDecl dd = deltaNames.get(spec.getName());
+            if (dd.getNumParam() != spec.getNumDeltaparam()) {
+                e.add(new TypeError(spec, ErrorMessage.WRONG_NUMBER_OF_ARGS,dd.getNumParam(),spec.getNumDeltaparam()));
+            } else {
+                for (int i=0; i<dd.getNumParam(); i++) {
+                    DeltaParamDecl formal = dd.getParam(i);
+                    Deltaparam actual = spec.getDeltaparam(i);
+                    // TODO: W00t?!
+                    if (formal instanceof DeltaFieldParam) {
+                        DeltaFieldParam f = (DeltaFieldParam) formal;
+                        Type ft = f.getParamDecl().getType();
+                        if (actual instanceof Const) {
+                            Value a = ((Const) actual).getValue();
+                            if (! a.isAssignableTo(ft)) {
+                                e.add(new TypeError(a, ErrorMessage.CANNOT_ASSIGN, a.getName(), ft.getSimpleName()));
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -159,7 +176,7 @@ public class TypeCheckerHelper {
     public static void typeCheckProduct(Product prod, 
             Set<String> featureNames, 
             Set<String> prodNames, 
-            Set<String> deltaNames, 
+            Map<String,DeltaDecl> deltaNames, 
             Set<String> updateNames, 
             SemanticErrorList e) {
         if (featureNames != null) {
@@ -167,6 +184,11 @@ public class TypeCheckerHelper {
             for (Feature f : prod.getFeatures()) {
                 if (! featureNames.contains(f.getName()))
                     e.add(new TypeError(prod, ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
+                else {
+                    AttrAssignment aa = f.getAttrAssignment(0);
+                    Type t = null; // XXX
+                    aa.getValue().isAssignableTo(t);
+                }
             }
         }
         Set<String> seen = new HashSet<String>();
@@ -179,7 +201,7 @@ public class TypeCheckerHelper {
                 e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, recf.getTargetProductID()));
             // Do the deltas used for reconfiguration exist?
             for (DeltaID d : recf.getDeltaIDs()) {
-                if (! deltaNames.contains(d.getName()))
+                if (! deltaNames.containsKey(d.getName()))
                     e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, d.getName()));
             }
             // Does the update used for reconfiguration exist?
