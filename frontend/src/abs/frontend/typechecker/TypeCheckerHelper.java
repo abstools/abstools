@@ -187,11 +187,9 @@ public class TypeCheckerHelper {
                         Collection<DeltaClause> dcs = findDeltasForFeature(m,f);
                         for (DeltaClause dc : dcs) {
                             DeltaDecl dd = m.findDelta(dc.getDeltaspec().getName());
-                            for (int j = 0; j < dd.getNumParam(); j++) {
-                                DeltaParamDecl dp = dd.getParam(j);
-                                if (!dp.accepts(aa.getValue())) {
-                                    e.add(new TypeError(aa, ErrorMessage.CANNOT_ASSIGN, aa.getValue().getName(),dp.getType().getSimpleName()));
-                                }
+                            DeltaParamDecl dp = dd.getParam(i);
+                            if (!dp.accepts(aa.getValue())) {
+                                e.add(new TypeError(aa, ErrorMessage.CANNOT_ASSIGN, aa.getValue().getName(),dp.getType().getSimpleName()));
                             }
                         }
                     }

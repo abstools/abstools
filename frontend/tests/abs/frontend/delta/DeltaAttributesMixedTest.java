@@ -64,7 +64,27 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         assertEquals("False()", cls.getField(1).getInitExp().value.toString());
     }
 
-   
+    @Test
+    public void passBooleanFeatureAttributes1b() throws DeltaModellingException, WrongProgramArgumentException {
+        Model model = assertParseOk(
+                "module M;"
+                + "delta D(Bool a1, Int a2);"
+                + "    adds class M.C { Bool first = a1; Int second = a2; }"
+                + "productline PL;"
+                + "    features F;"
+                + "    delta D(F.a, F.b) when F;"
+                + "product P1( F{a=True, b=3} );"
+                , Config.WITH_STD_LIB, Config.TYPE_CHECK
+        );
+        
+        model.flattenForProduct("P1");
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertEquals("first", cls.getField(0).getName());
+        assertEquals("True()", cls.getField(0).getInitExp().value.toString());
+        assertEquals("second", cls.getField(1).getName());
+        assertEquals("IntLiteral(3)", cls.getField(1).getInitExp().value.toString());
+    }
+
     @Test
     public void passBooleanFeatureAttributes2() throws DeltaModellingException, WrongProgramArgumentException {
         Model model = assertParseOk(
