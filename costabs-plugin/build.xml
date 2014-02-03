@@ -33,13 +33,6 @@
           </sequential>
         </macrodef>
 
-	<taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask">
-		<classpath>
-			<pathelement location="${frontend.dir}/lib/svnant.jar" />
-			<pathelement location="${frontend.dir}/lib/svnClientAdapter.jar" />
-		</classpath>
-	</taskdef>	
-	
 	<target name="download-costa-binary">
 	   <get src="http://costa.ls.fi.upm.es/~mzamalloa/costabs_exe" 
 		    dest="${basedir}"

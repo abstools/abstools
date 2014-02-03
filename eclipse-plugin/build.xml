@@ -19,13 +19,6 @@
   <property name="plugin.name" value="org.abs-models.abs.plugin" />
   <property name="frontend.version" value="1.0.0" />
 
-  <taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask">
-    <classpath>
-      <pathelement location="${frontend.dir}/lib/svnant.jar" />
-      <pathelement location="${frontend.dir}/lib/svnClientAdapter.jar" />
-    </classpath>
-  </taskdef>
-
   <macrodef name="git-revision">
     <attribute name="output"/>
     <attribute name="failonerror" default="false" />
