@@ -103,6 +103,21 @@ aspect TypeResolution {
         return res;
     }
 
+    syn lazy Map<String,DeltaDecl> Model.getDeltaDeclsMap() {
+        Map<String,DeltaDecl> res = new HashMap<String,DeltaDecl>();
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (DeltaDecl d : u.getDeltaDecls()) {
+                Object dupe = res.put(d.getName(),d);
+                assert dupe == null : "dupe " + d.getName();
+            }
+        }
+        return res;
+    }
+
+    syn DeltaDecl Model.findDelta(String name) {
+	   return getDeltaDeclsMap().get(name);
+    }
+
     syn lazy Collection<UpdateDecl> Model.getUpdateDecls() {
         ArrayList<UpdateDecl> res = new ArrayList<UpdateDecl>();
         for (CompilationUnit u : getCompilationUnits()) {

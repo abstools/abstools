@@ -22,13 +22,7 @@ public class DeltaTest extends FrontendTest {
     }
 
     protected DeltaDecl findDelta(Model model, String name) {
-        DeltaDecl decl = null;
-        for (DeltaDecl d : model.getDeltaDecls()) {
-            if (d.getName().equals(name)) {
-                decl = d;
-            }
-        }
-        return decl;
+        return model.findDelta(name);
     }
 
 }

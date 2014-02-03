@@ -1005,18 +1005,14 @@ aspect TypeCheckProductline {
     protected void ProductLine.typeCheck(SemanticErrorList e) {
         // TODO: JastAdd attributes?
         // cache all names of defined deltas for easy lookup
-        HashSet<String> deltaNames = new HashSet<String>();
-        for (DeltaDecl delta : getModel().getDeltaDecls()) {
-            deltaNames.add(delta.getName());
-        }
-        HashSet<String> definedFeatures = new HashSet<String>();
+        Set<String> definedFeatures = new HashSet<String>();
         for (Feature cf : getFeatures()) {
             definedFeatures.add(cf.getName());
         }
 
         // TODO: check for undeclared features?
         for (DeltaClause dc : getDeltaClauses()) {
-            dc.typeCheck(deltaNames, definedFeatures, e);
+            dc.typeCheck(getModel().getDeltaDeclsMap(), definedFeatures, e);
         }
         Set<String> fs = new HashSet<String>();
         for (Feature f : getFeatures()) {
@@ -1025,7 +1021,7 @@ aspect TypeCheckProductline {
         }
     }
 
-    protected void DeltaClause.typeCheck(Set<String> ds, Set<String> definedFeatures, SemanticErrorList e) {
+    protected void DeltaClause.typeCheck(Map<String,DeltaDecl> ds, Set<String> definedFeatures, SemanticErrorList e) {
         TypeCheckerHelper.typeCheckDeltaClause(this, ds, definedFeatures, e);
     }
 

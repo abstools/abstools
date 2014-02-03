@@ -5,8 +5,11 @@
 package abs.frontend.delta;
 
 import static org.junit.Assert.*;
+
 import org.junit.Test;
+
 import abs.common.WrongProgramArgumentException;
+import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.DeltaModellingException;
 
@@ -93,6 +96,6 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR);
         
         // There should be a type error if the Config defines only two delta params, but the delta itself expects 3
-        // XXX assert m.getTypeErrors().getFirst() instanceof ...
+        assertEquals(ErrorMessage.WRONG_NUMBER_OF_ARGS, m.getTypeErrors().getFirst().msg);
     }   
 }

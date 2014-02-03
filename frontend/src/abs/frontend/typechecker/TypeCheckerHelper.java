@@ -128,11 +128,17 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckDeltaClause(DeltaClause clause, Set<String> deltaNames, Set<String> definedFeatures, SemanticErrorList e) {
+    public static void typeCheckDeltaClause(DeltaClause clause, Map<String,DeltaDecl> deltaNames, Set<String> definedFeatures, SemanticErrorList e) {
 
         /* Does the delta exist? */
-        if (! deltaNames.contains(clause.getDeltaspec().getName()))
+        if (! deltaNames.containsKey(clause.getDeltaspec().getName()))
             e.add(new TypeError(clause.getDeltaspec(), ErrorMessage.NAME_NOT_RESOLVABLE, clause.getDeltaspec().getName()));
+        else {
+            DeltaDecl dd = deltaNames.get(clause.getDeltaspec().getName());
+            if (dd.getNumParam() != clause.getDeltaspec().getNumDeltaparam()) {
+                e.add(new TypeError(clause.getDeltaspec(), ErrorMessage.WRONG_NUMBER_OF_ARGS,dd.getNumParam(),clause.getDeltaspec().getNumDeltaparam()));
+            }
+        }
 
         /* Do the referenced features exist? */
         if (clause.hasAppCond()) {
@@ -144,7 +150,7 @@ public class TypeCheckerHelper {
 
         /* What about deltas mentioned in the 'after' clause? */
         for (DeltaID did : clause.getDeltaIDs()) {
-            if (! deltaNames.contains(did.getName())) {
+            if (! deltaNames.containsKey(did.getName())) {
                 e.add(new TypeError(did, ErrorMessage.NAME_NOT_RESOLVABLE, did.getName()));
             }
         }
