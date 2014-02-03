@@ -38,14 +38,6 @@
           </sequential>
         </macrodef>
 
-	<taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask">
-		<classpath>
-			<pathelement location="${frontend.dir}/lib/svnant.jar" />
-			<pathelement location="${frontend.dir}/lib/svnClientAdapter.jar" />
-		</classpath>
-	</taskdef>
-
-
 	<property location="lib" name="lib" />
 	<path id="libs">
 		<fileset dir="${lib}">
