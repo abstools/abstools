@@ -71,14 +71,19 @@ aspect GenerateCoreABS {
         List l = new List();
         for (AwaitAsyncCall aac : aacs) {
             Access a = (Access)aac.getCallee().getType().lookupMethod(aac.getMethod()).getReturnType();
-            final TypeUse du = a.getType().toUse();
-            final String tmp = "tmp"+Integer.toString(aac.hashCode());
-            // TODO: The typechecker will assert that/if the name is free, but in freak chances it may not.
-            l.add(new VarDeclStmt(new List(), new VarDecl(tmp,
-                 new ParametricDataTypeUse("Fut", new List(), new List().add(du)),
-                                                        new Opt(new AsyncCall(aac.getCallee(), aac.getMethod(), aac.getParamList()))
-                                                      )));
-            l.add(new AwaitStmt(new List(), new ClaimGuard( new VarUse(tmp))));                                                 
+            /* Rewriting is also triggered from the Eclipse editor, which AGAIN doesn't have the whole
+               view of the program and thus cannot resolve types. So just skip-if this is actually a
+               problem, a subsequent stage will like the type-checker will (hopefully) discover it. */
+            if (!a.getType().isUnknownType()) {
+              final TypeUse du = a.getType().toUse();
+              final String tmp = "tmp"+Integer.toString(aac.hashCode());
+              // TODO: The typechecker will assert that/if the name is free, but in freak chances it may not.
+              l.add(new VarDeclStmt(new List(), new VarDecl(tmp,
+                   new ParametricDataTypeUse("Fut", new List(), new List().add(du)),
+                                                          new Opt(new AsyncCall(aac.getCallee(), aac.getMethod(), aac.getParamList()))
+                                                        )));
+              l.add(new AwaitStmt(new List(), new ClaimGuard( new VarUse(tmp))));
+            }                                                 
         }
         aacs.clear(); // flush downstream rewrite info.
         l.add(this);
