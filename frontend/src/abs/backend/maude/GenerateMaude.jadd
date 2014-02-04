@@ -808,11 +808,11 @@ aspect GenerateMaude {
     }
 
     public void AbortStmt.generateMaude(PrintStream stream) {
-      throw new RuntimeException("Method not implemented");
+      throw new NotImplementedYetException(this);
     }
 
     public void DieStmt.generateMaude(PrintStream stream) {
-      throw new RuntimeException("Method not implemented");
+      throw new NotImplementedYetException(this);
     }
     
     public void ExpressionStmt.generateMaude(PrintStream stream) {
