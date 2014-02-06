@@ -808,7 +808,9 @@ aspect GenerateMaude {
     }
 
     public void AbortStmt.generateMaude(PrintStream stream) {
-      throw new NotImplementedYetException(this);
+        stream.print("abort (");
+        getReason().generateMaude(stream);
+        stream.print(") ");
     }
 
     public void DieStmt.generateMaude(PrintStream stream) {

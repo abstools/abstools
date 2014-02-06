@@ -548,6 +548,7 @@ mod ABS-STATEMENT is
   op movecogto(_) : Expr -> Stmt [ctor format (c d o b o)] .
 
   op return(_) : Expr -> Stmt [ctor format (c d o b o)] .
+  op abort(_) : Expr -> Stmt [ctor format (c d o b o)] .
   op $mark(_) : Expr -> Stmt [ctor format (r d o r o)] .
   op $release(_) : Expr -> Stmt [ctor format (r d o r o)] .
 
@@ -1084,6 +1085,8 @@ mod ABS-EVAL is
   op freeFutures : SSubst -> StmtList .
   eq freeFutures(noSubst) = noStmt .
   eq freeFutures((A |-> D, SS)) = freeFutures(D) ; freeFutures(SS) .
+  op freeFutures : Subst -> StmtList .
+  eq freeFutures(S :: SS) = freeFutures(SS) ; freeFutures(S) .
 
   *** Filter a process list and return the ones that are schedulable.  Second
   *** argument is a list of objects referenced from the processes, third one
@@ -1220,8 +1223,7 @@ mod ABS-MACHINE-BASICS-COMMON is
   var COST : Expr .
   var OBJS : Configuration .
 
-  --- Process teardown: first release all futures, then release the Cog.  (We
-  --- assume correct beginscope / endscope statements).
+  --- Process teardown: first release all futures, then release the Cog.
   ceq
     < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | noStmt }, PrQ: W >
   =
@@ -2362,6 +2364,57 @@ mod ABS-STMT-RETURN-EQ-TIMED is
 endm
 
 
+*** The Abort statement.
+mod ABS-STMT-ABORT-RL is
+  protecting ABS-EVAL .
+
+  vars O : Oid .        var C : Cid .    vars S L : Subst .
+  vars SL : StmtList .  var W : MProc .  vars F G : Nat .
+  var Q : String .  var N : Label .  var E : Expr .
+  var D : Data .
+  var M : Mid .
+  var CG : Cogid .
+  var COST : Expr .
+  var OBJS : Configuration .
+
+  crl
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | abort(E); SL }, PrQ: W >
+    future(N, M, Waiting, G, null)
+   =>
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: W >
+    future(N, M, Error, G, D)
+  if O := L['this]
+      /\ N == L['.label] /\ D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+      [label abort] .
+endm
+mod ABS-STMT-ABORT-EQ-TIMED is
+  protecting ABS-EVAL .
+
+  vars O : Oid .        var C : Cid .    vars S L : Subst .
+  vars SL : StmtList .  var W : MProc .  vars F G : Nat .
+  var Q : String .  var N : Label .  var E : Expr .
+  var T : Rat .
+  vars LIM RAND : Nat .
+  var D : Data .
+  var M : Mid .
+  var CG : Cogid .
+  var COST : Expr .
+  var OBJS : Configuration .
+
+  ceq
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | abort(E); SL }, PrQ: W >
+    < T : Clock | Limit: LIM, Random: RAND >
+    future(N, M, Waiting, G, null)
+   =
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: W >
+    < T : Clock | Limit: LIM, Random: RAND >
+    future(N, M, Error, G, D)
+  if O := L['this]
+      /\ N == L['.label] /\ D := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+      [label abort] .
+endm
+
+
 *** Receiving results from Futures.
 ***
 *** Major source of nondeterminism and non-confluence if carelessly made into
@@ -2556,6 +2609,7 @@ mod ABS-SIMULATOR-RL is
   protecting ABS-CALLSTMTS-RL .
   protecting ABS-NEW-RL .
   protecting ABS-STMT-RETURN-RL .
+  protecting ABS-STMT-ABORT-RL .
   protecting ABS-RECEIVE-RESULT .
   --- Component Model Extension
   protecting ABS-REBIND-RL .
@@ -2593,6 +2647,7 @@ mod ABS-SIMULATOR-EQ-TIMED is
   protecting ABS-CALLSTMTS-EQ-TIMED .
   protecting ABS-NEW-EQ-TIMED .
   protecting ABS-STMT-RETURN-EQ-TIMED .
+  protecting ABS-STMT-ABORT-EQ-TIMED .
   protecting ABS-RECEIVE-RESULT .
   --- Component Model Extension
   protecting ABS-REBIND-RL .
