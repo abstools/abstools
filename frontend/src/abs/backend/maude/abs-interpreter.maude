@@ -753,9 +753,15 @@ mod ABS-CONFIGURATION is
   --- op error(_) : String -> [Msg] [ctor format (nnr r o! or onn)] .
   op warning(_) : String -> [Msg] [ctor format (nnr! r! r! or onn)] .
 
-  --- Terms that represent futures.
-  ---
-  op future : Label Mid Bool Nat Data -> Future .
+  sort FutureStatus .
+  ops Waiting Completed Error : -> FutureStatus .
+  --- Terms that represent futures:
+  --- L: Future label (globally unique)
+  --- M: Method name (String, not used in calculations)
+  --- S: Status of the future
+  --- N: Reference count.  A future with N=0 and S/=Waiting can be removed.
+  --- D: Result
+  op future : Label Mid FutureStatus Nat Data -> Future .
 
   --- Define Classes.
   --- Class declaration.
@@ -841,7 +847,7 @@ mod ABS-EVAL is
   var CG : Cogid .
   var MS : Msg .
   vars N N1 N2 : Nat .
-  var B : Bool .
+  var FS : FutureStatus .
   vars MIN MAX : Rat .
   var MAC : SSubst .
   var W : MProc .
@@ -854,7 +860,8 @@ mod ABS-EVAL is
 
   --- Check if a message is in the queue.
   op completed : Label Configuration -> Bool .
-  eq completed(L, future(L, M, B, N, D) CN) = B .
+  eq completed(L, future(L, M, FS, N, D) CN) =
+    FS == Completed or FS == Error .
   eq completed(L, CN) = false [owise] .
 
   *** evaluate `Expr' with variable bindings `Subst', configuration
@@ -1249,7 +1256,8 @@ mod ABS-MACHINE-BASICS-COMMON is
 
   --- Completed futures without references can be removed.
   ---
-  eq future(N, M, true, 0, D) = none .
+  eq future(N, M, Completed, 0, D) = none .
+  eq future(N, M, Error, 0, D) = none .
 
   --- Create a new environment.  This is for supporting local declarations in
   --- blocks etc.
@@ -1371,7 +1379,7 @@ mod ABS-MACHINE-BASICS-RL is
   vars SL SL1 : StmtList .  vars W W1 : MProc .  vars F G X : Nat .
   var CN : Configuration .  var P : Process .    vars A A' : Vid .
   var E : Expr .            var AL : VidList .   var N : Label .
-  var Q : String .      var MS : MMtd .      var CO : Bool .
+  var Q : String .          var MS : MMtd .      var CO : FutureStatus .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
   var M : Mid .
   var CG : Cogid .
@@ -1455,7 +1463,7 @@ mod ABS-MACHINE-BASICS-TIMED is
   vars SL SL1 : StmtList .  vars W W1 : MProc .  vars F G : Nat .
   var CN : Configuration .  var P : Process .    vars A A' : Vid .
   vars E E' : Expr .        var AL : VidList .   var N : Label .
-  var Q : String .      var MS : MMtd .      var CO : Bool .
+  var Q : String .          var MS : MMtd .      var CO : FutureStatus .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
   var T : Rat .
   var CN' : Configuration .
@@ -2107,7 +2115,7 @@ mod ABS-CALLSTMTS-RL is
     < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | asynccall(A ; E ; M ; EL ; DE); SL }, PrQ: W >
   =>
     < CG : Cog | Objects: object(O, C, S, (s F)) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
-    future(N, M, false, 1, null)
+    future(N, M, Waiting, 1, null)
   if O := L['this]
       /\ DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
@@ -2119,7 +2127,7 @@ mod ABS-CALLSTMTS-RL is
     < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W >
   =>
     < CG : Cog | Objects: object(O, C, S, (s F)) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
-    future(N, M, false, 1, null)
+    future(N, M, Waiting, 1, null)
   if O := L['this]
       /\ DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
@@ -2152,7 +2160,7 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   =
     < CG : Cog | Objects: object(O, C, S, (s F)) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    future(N, M, false, 1, null)
+    future(N, M, Waiting, 1, null)
   if O := L['this]
       /\ DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
@@ -2169,7 +2177,7 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   =
     < CG : Cog | Objects: object(O, C, S, (s F)) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    future(N, M, false, 1, null)
+    future(N, M, Waiting, 1, null)
   if O := L['this]
       /\ DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
@@ -2308,7 +2316,7 @@ mod ABS-STMT-RETURN-RL is
 
   crl
     < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | return(E); SL }, PrQ: W >
-    future(N, M, false, G, null)
+    future(N, M, Waiting, G, null)
    =>
     *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
     *** the process .  We cannot return immediately since there might be
@@ -2316,7 +2324,7 @@ mod ABS-STMT-RETURN-RL is
     *** compiler / type-checker to ascertain that there's one and only one
     *** return statement in each code branch.
     < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; SL }, PrQ: W >
-    future(N, M, true, G, D)
+    future(N, M, Completed, G, D)
   if O := L['this]
       /\ N == L['.label] /\ D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       [label return] .
@@ -2338,7 +2346,7 @@ mod ABS-STMT-RETURN-EQ-TIMED is
   ceq
     < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | return(E); SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    future(N, M, false, G, null)
+    future(N, M, Waiting, G, null)
    =
     *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
     *** the process.  We cannot return immediately since there might be
@@ -2347,7 +2355,7 @@ mod ABS-STMT-RETURN-EQ-TIMED is
     *** return statement in each code branch.
     < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
-    future(N, M, true, G, D)
+    future(N, M, Completed, G, D)
   if O := L['this]
       /\ N == L['.label] /\ D := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       [label return] .
@@ -2378,19 +2386,19 @@ mod ABS-RECEIVE-RESULT is
   --- values in the queue.
   crl
     < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | get(A ; A') ; SL }, PrQ: W >
-    future(N, M, true, G, D)
+    future(N, M, Completed, G, D)
   =>
     < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A' ; D) ; SL }, PrQ: W >
-    future(N, M, true, G, D)
+    future(N, M, Completed, G, D)
   if O := L['this] /\ N := (S :: L)[A]
     [label receive-comp-var] .
 
   crl
     < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | get(@ A ; A') ; SL }, PrQ: W >
-    future(N, M, true, G, D)
+    future(N, M, Completed, G, D)
   =>
     < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A' ; D) ; SL }, PrQ: W >
-    future(N, M, true, G, D)
+    future(N, M, Completed, G, D)
   if O := L['this] /\ N := S[A]
     [label receive-comp-field] .
 
