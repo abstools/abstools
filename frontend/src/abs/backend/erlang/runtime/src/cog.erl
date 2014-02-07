@@ -11,6 +11,7 @@
 %%
 %%It is implented as a kind of statemachine server, where the variable running represents the state
 
+%%API
 
 start()->
     {ok,T}=object_tracker:start(),
@@ -32,6 +33,9 @@ add_and_notify(#cog{ref=Cog},Task,Args)->
 
 new_state(#cog{ref=Cog},TaskRef,State)->
     Cog!{newState,TaskRef,State}.
+
+
+%%Internal
 
 init(Tracker) ->
     ?DEBUG({new}),
@@ -100,7 +104,7 @@ initTask(S=#state{tasks=T,tracker=Tracker},Task,Args,Sender,Notify)->
 
 execute(S) ->
     %Search executable task
-	{S1=#state{tasks=Tasks},Polled}=poll_waiting(S),
+    {S1=#state{tasks=Tasks},Polled}=poll_waiting(S),
     T=get_runnable(Tasks),
     State=case T of
         none-> %None found

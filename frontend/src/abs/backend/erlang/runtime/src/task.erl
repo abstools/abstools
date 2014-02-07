@@ -27,10 +27,10 @@ start(Cog,Task,Args)->
 
 init(Task,Cog,Args)->
     InnerState=Task:init(Cog,Args),
-	ready(Cog),
+    ready(Cog),
     Val=Task:start(InnerState),
     return_token(Cog,done),
-	send_notifications(Val).
+    send_notifications(Val).
 
 
 %%Register for termination notifcation
@@ -59,23 +59,23 @@ send_notifications(Val)->
             
 
 ready(Cog)->
-	cog:new_state(Cog,self(),runnable),
-	receive token->
-				ok
+    cog:new_state(Cog,self(),runnable),
+    receive token->
+                ok
     end.
 wait(Cog)->
-	commit(Cog),
-	cog:new_state(Cog,self(),waiting).
+    commit(Cog),
+    cog:new_state(Cog,self(),waiting).
 wait_poll(Cog)->
-	commit(Cog),
-	cog:new_state(Cog,self(),waiting_poll).
+    commit(Cog),
+    cog:new_state(Cog,self(),waiting_poll).
 
 return_token(C=#cog{ref=Cog},State)->
-	commit(C),
-	Cog!{token,self(),State}.
+    commit(C),
+    Cog!{token,self(),State}.
 
 rollback(#cog{tracker=T})->
- rpc:pmap({object,rollback},[],object_tracker:get_all_dirty(T)).
+    rpc:pmap({object,rollback},[],object_tracker:get_all_dirty(T)).
 
 commit(#cog{tracker=T})->
- rpc:pmap({object,commit},[],object_tracker:get_all_dirty(T)).
+    rpc:pmap({object,commit},[],object_tracker:get_all_dirty(T)).

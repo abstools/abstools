@@ -8,13 +8,13 @@
 
 
 start_link()->
-	{ok,_Pid} =gen_event:start_link({global,?MODULE}).
+    {ok,_Pid} =gen_event:start_link({global,?MODULE}).
 
 stop()->
-	gen_event:stop({global,?MODULE}).
+    gen_event:stop({global,?MODULE}).
 
 add_handler(Handler,Args)->
-	gen_event:add_handler({global,?MODULE}, Handler,Args).
+    gen_event:add_handler({global,?MODULE}, Handler,Args).
 
 %%Send log
 %%

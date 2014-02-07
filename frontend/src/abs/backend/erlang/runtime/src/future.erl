@@ -9,39 +9,6 @@
 
 start(Callee,Method,Params) ->
   spawn(?MODULE,init,[Callee,Method,Params]).
-  
-  
-init(Callee=#object{class=C,cog=Cog=#cog{ref=CogRef}},Method,Params)->
-	%%Start task
-    process_flag(trap_exit, true),
-    MonRef=monitor(process,CogRef),
-    cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
-    demonitor(MonRef),
-    %% Either receive an error or the value
-    receive
-        {'DOWN', _ , process, _,Reason} when Reason /= normal ->
-            loop({error,error_transform:transform(Reason)});
-        {'EXIT',_,Reason} ->
-            loop({error,error_transform:transform(Reason)});
-        {completed, Value}->
-            loop({ok,Value})
-    end.
-
-%%Servermode
-loop(Value)->
-    receive {get,Sender} ->
-                Sender!{reply,self(),Value};
-            {wait,Sender}->
-                Sender!{ok};
-            _ ->
-             noop
-    end,
-    loop(Value).
-        
-   
-
-
-
 
 
 get(Ref)->
@@ -62,4 +29,45 @@ safeget(Ref)->
         {reply,Ref,{error,Reason}} ->
             {dataError,Reason}
     end.
+
+
+
+
+%%Internal
+
+  
+  
+init(Callee=#object{class=C,cog=Cog=#cog{ref=CogRef}},Method,Params)->
+    %%Start task
+    process_flag(trap_exit, true),
+    MonRef=monitor(process,CogRef),
+    cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
+    demonitor(MonRef),
+    %% Either receive an error or the value
+    receive
+        {'DOWN', _ , process, _,Reason} when Reason /= normal ->
+            loop({error,error_transform:transform(Reason)});
+        {'EXIT',_,Reason} ->
+            loop({error,error_transform:transform(Reason)});
+        {completed, Value}->
+            loop({ok,Value})
+    end.
+
+%%Servermode
+loop(Value)->
+    receive
+        {get,Sender} ->
+            Sender!{reply,self(),Value};
+        {wait,Sender}->
+            Sender!{ok};
+        _ ->
+            noop
+    end,
+    loop(Value).
+        
+   
+
+
+
+
 

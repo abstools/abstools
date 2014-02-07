@@ -5,34 +5,34 @@
 %%Must correspond to the set in FnApp.BUILTINS
 
 lowlevelDeadline() ->
-	-1.
+    -1.
 currentms()->
-	{MS,S,MuS}=erlang:now(),	
-	(MS*1000000 + S)*1000 + MuS div 1000.
+    {MS,S,MuS}=erlang:now(),    
+    (MS*1000000 + S)*1000 + MuS div 1000.
 
 substr(S,Start,Len) ->
-	lists:sublist(S, Start+1, Len).
+    lists:sublist(S, Start+1, Len).
 
 random(N)->
     {A1,A2,A3} = now(),
     random:seed(A1, A2, A3),
-	random:uniform(N)-1.
+    random:uniform(N)-1.
 
 strlen(S)->
-	length(S).
+    length(S).
 
 toString(I) when is_integer(I) ->
-	integer_to_list(I);
+    integer_to_list(I);
 toString({N,D}) when is_integer(N),is_integer(D)->
-	float_to_list(N / D,[{decimals, 4}, compact]).
+    float_to_list(N / D,[{decimals, 4}, compact]).
 
 truncate({N,D})->
-	N div D;
+    N div D;
 truncate(N)->
-	N.
+    N.
 
 println(S)->
-	io:format("~p~n",[S]).
+    io:format("~p~n",[S]).
 
 getProductLine()->
-	exit("Not Implemented").
+    exit("Not Implemented").

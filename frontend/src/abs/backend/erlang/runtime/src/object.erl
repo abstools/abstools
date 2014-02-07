@@ -56,7 +56,7 @@ new_object_task(#object{ref=O},TaskRef)->
     end.
 
 alive(#object{ref=O})->
-	try
+    try
         gen_fsm:sync_send_event(O, ping)
     catch
        _:{noproc,_} ->
@@ -125,7 +125,7 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{tasks=Tasks})->
     ?DEBUG({dying}),
     [begin ?DEBUG({terminate,T}),exit(T,Reason) end ||T<-gb_sets:to_list(Tasks), T/=By],
     case gb_sets:is_element(By,Tasks) of
-		true ->
+        true ->
             exit(By,Reason);
         false ->
             ok
@@ -142,7 +142,7 @@ handle_info({'DOWN', _MonRef, process, TaskRef,Reason} ,StateName,S=#state{tasks
 terminate(_Reason,_StateName,_Data)->
     ok.
 handle_event(_Event,_StateName,State)->
-  {stop,not_implemented,State}.
+    {stop,not_implemented,State}.
 
 code_change(_OldVsn,_StateName,_Data,_Extra)->
     not_implemented.
