@@ -814,7 +814,9 @@ aspect GenerateMaude {
     }
 
     public void DieStmt.generateMaude(PrintStream stream) {
-      throw new NotImplementedYetException(this);
+        stream.print("die (");
+        getReason().generateMaude(stream);
+        stream.print(") ");
     }
     
     public void ExpressionStmt.generateMaude(PrintStream stream) {

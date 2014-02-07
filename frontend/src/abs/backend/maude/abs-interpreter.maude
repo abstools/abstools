@@ -549,6 +549,7 @@ mod ABS-STATEMENT is
 
   op return(_) : Expr -> Stmt [ctor format (c d o b o)] .
   op abort(_) : Expr -> Stmt [ctor format (c d o b o)] .
+  op die(_) : Expr -> Stmt [ctor format (c d o b o)] .
   op $mark(_) : Expr -> Stmt [ctor format (r d o r o)] .
   op $release(_) : Expr -> Stmt [ctor format (r d o r o)] .
 
@@ -1087,6 +1088,16 @@ mod ABS-EVAL is
   eq freeFutures((A |-> D, SS)) = freeFutures(D) ; freeFutures(SS) .
   op freeFutures : Subst -> StmtList .
   eq freeFutures(S :: SS) = freeFutures(SS) ; freeFutures(S) .
+
+  *** When an object dies, all its processes need to be terminated.  Rewrite a
+  *** process queue accordingly.
+  op killProcesses : Oid Data MProc -> MProc .
+  eq killProcesses(O, D, noProc) = noProc .
+  ceq killProcesses(O, D, ({ S | SL }, W)) =
+    { S | abort(D) }, killProcesses(O, D, W)
+  if S['this] == O .
+  eq killProcesses(O, D, ({ S | SL }, W)) = { S | SL }, killProcesses(O, D, W)
+    [owise] .
 
   *** Filter a process list and return the ones that are schedulable.  Second
   *** argument is a list of objects referenced from the processes, third one
@@ -2414,6 +2425,60 @@ mod ABS-STMT-ABORT-EQ-TIMED is
       [label abort] .
 endm
 
+*** The Die statement.
+***
+*** FIXME: at the moment, all processes abort with the same error as the
+*** original "die" statement.  Probably they should abort with a generic
+*** "invalid object" error instead.
+mod ABS-STMT-DIE-RL is
+  protecting ABS-EVAL .
+
+  vars O : Oid .        var C : Cid .    vars S L : Subst .
+  vars SL : StmtList .  var W : MProc .  vars F G : Nat .
+  var Q : String .  var N : Label .  var E : Expr .
+  var D : Data .
+  var M : Mid .
+  var CG : Cogid .
+  var COST : Expr .
+  var OBJS : Configuration .
+
+  crl
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | die(E); SL }, PrQ: W >
+    future(N, M, Waiting, G, null)
+   =>
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: killProcesses(O, E, W) >
+    future(N, M, Error, G, D)
+  if O := L['this]
+      /\ N == L['.label] /\ D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+      [label die] .
+endm
+mod ABS-STMT-DIE-EQ-TIMED is
+  protecting ABS-EVAL .
+
+  vars O : Oid .        var C : Cid .    vars S L : Subst .
+  vars SL : StmtList .  var W : MProc .  vars F G : Nat .
+  var Q : String .  var N : Label .  var E : Expr .
+  var T : Rat .
+  vars LIM RAND : Nat .
+  var D : Data .
+  var M : Mid .
+  var CG : Cogid .
+  var COST : Expr .
+  var OBJS : Configuration .
+
+  ceq
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | die(E); SL }, PrQ: W >
+    < T : Clock | Limit: LIM, Random: RAND >
+    future(N, M, Waiting, G, null)
+   =
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: killProcesses(O, E, W) >
+    < T : Clock | Limit: LIM, Random: RAND >
+    future(N, M, Error, G, D)
+  if O := L['this]
+      /\ N == L['.label] /\ D := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+      [label die] .
+endm
+
 
 *** Receiving results from Futures.
 ***
@@ -2610,6 +2675,7 @@ mod ABS-SIMULATOR-RL is
   protecting ABS-NEW-RL .
   protecting ABS-STMT-RETURN-RL .
   protecting ABS-STMT-ABORT-RL .
+  protecting ABS-STMT-DIE-RL .
   protecting ABS-RECEIVE-RESULT .
   --- Component Model Extension
   protecting ABS-REBIND-RL .
@@ -2648,6 +2714,7 @@ mod ABS-SIMULATOR-EQ-TIMED is
   protecting ABS-NEW-EQ-TIMED .
   protecting ABS-STMT-RETURN-EQ-TIMED .
   protecting ABS-STMT-ABORT-EQ-TIMED .
+  protecting ABS-STMT-DIE-EQ-TIMED .
   protecting ABS-RECEIVE-RESULT .
   --- Component Model Extension
   protecting ABS-REBIND-RL .
