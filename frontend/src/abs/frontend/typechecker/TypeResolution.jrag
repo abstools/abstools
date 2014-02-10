@@ -291,12 +291,14 @@ aspect TypeResolution {
         return lookup(name);
     }
     // look through local declarations in parametric function, or defer
-    // to model
+    // to model. Make sure we only pick up TYPES, and not prematurely abort
+    // when data constructors and types overlap (Redmine #109)
     syn lazy Decl ParametricFunctionDecl.localLookup(KindedName name) {
+      if (name.getKind() == Kind.TYPE_DECL)
         for (TypeParameterDecl d : getTypeParameters())
             if (d.getName().equals(name.getName()))
                 return d;
-        return lookup(name);
+      return lookup(name);
     }
 
     rewrite UnresolvedTypeUse {

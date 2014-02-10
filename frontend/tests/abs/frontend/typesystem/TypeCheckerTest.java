@@ -75,6 +75,16 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    public void test_dataTypeParam2base() {
+        assertNoTypeErrorsNoLib("data AorB<A,B> = A(A) | B(B);");
+    }
+
+    @Test
+    public void test_dataTypeParam2() {
+        assertNoTypeErrorsNoLib("data AorB<A,B> = A(A getA) | B(B getB);");
+    }
+
+    @Test
     public void dataTypeSelectors() {
         assertNoTypeErrorsNoLib("data Foo = Bar(Foo foo) | Baz; { Foo b = foo(Bar(Baz)); }");
     }
