@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import abs.backend.BackendTestDriver;
+
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
@@ -187,4 +188,8 @@ public class PrimitiveTypes extends SemanticTests {
         assertEvalTrue("{ Bool testresult = 9999999/10000000 < 1;  }");
     }
 
+    @Test
+    public void divByZero() throws Exception {
+        assertEvalFails("{Bool testresult = 1/0 != 0;}");
+    }
 }
