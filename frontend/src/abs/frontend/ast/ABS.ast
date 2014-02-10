@@ -145,7 +145,6 @@ Annotation ::= Value:PureExp;
 TypedAnnotation : Annotation ::= Access;
 
 abstract Stmt ::= Annotation* ;
-abstract InitStmt: Stmt; //FIXME not all statements can be init statements, i.e. occur in an init block
 
 AssignStmt: Stmt ::= Var:VarOrFieldUse Value:Exp;
 AwaitStmt: Stmt ::= Guard;

@@ -120,7 +120,6 @@ aspect ParseTreeCopy {
     public IncompleteStmt IncompleteStmt.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public IncompleteSyncAccess IncompleteSyncAccess.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public InitBlock InitBlock.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
-    public InitStmt InitStmt.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public InterfaceDecl InterfaceDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public InterfaceTypeUse InterfaceTypeUse.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public IntLiteral IntLiteral.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
