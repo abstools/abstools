@@ -14,5 +14,10 @@
   <Match>
     <Package name="abs.frontend.ast" />
     <Bug pattern="MF_CLASS_MASKS_FIELD" />
-  </Match>   
+  </Match>
+  <Match>
+     <Class name="abs.frontend.ast.NewExp" />
+     <Method name="generateJavaDynamic" />
+     <Bug pattern="DB_DUPLICATE_BRANCHES" />
+</Match>
 </FindBugsFilter>
