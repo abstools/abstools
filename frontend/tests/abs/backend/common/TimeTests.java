@@ -20,4 +20,9 @@ public class TimeTests extends SemanticTests {
    public void ticket258() {
       assertEvalTrue("{ Bool testresult = True; await duration(1,1); }");
    }
+   
+   @Test
+   public void duration1() {
+      assertEvalTrue("{ Bool testresult = True; duration(1,1); }");
+   }
 }
