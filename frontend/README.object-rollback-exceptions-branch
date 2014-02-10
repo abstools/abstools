@@ -1,0 +1,6 @@
+
+This branch contains the work done implementing an exception model with
+object state rollback for Abs.  Since there are problems with proof theory and
+whole-system safety guarantees with that approach, it is not a candidate
+for including into the Abs language semantics.
+
