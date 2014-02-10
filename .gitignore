@@ -1,7 +1,7 @@
 /frontend/bin
 /frontend/gen
 /frontend/dist
-/Documentation/ReferenceManual/*.aux
+*.aux
 /Documentation/ReferenceManual/*.bbl
 /Documentation/ReferenceManual/*.blg
 /Documentation/ReferenceManual/*.log
