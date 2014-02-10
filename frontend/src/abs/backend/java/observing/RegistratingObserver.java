@@ -4,11 +4,6 @@
  */
 package abs.backend.java.observing;
 
-import java.util.List;
-
-import abs.backend.java.lib.types.ABSValue;
-
-
 /**
  * A convenience class to realize CompleteObservers.
  * Does all the needed registrations to get all observation events.
