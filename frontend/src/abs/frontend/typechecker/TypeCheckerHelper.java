@@ -76,7 +76,7 @@ public class TypeCheckerHelper {
     public static void typeCheckMatchingParams(SemanticErrorList l, DataConstructorExp n, DataConstructor c) {
         assert n.getDecl() == c;
         final Map<TypeParameter, Type> binding = n.getTypeParamBinding(n, c);
-        typeCheckEqual(l, n, n.getDataConstructor().applyBindings(binding));
+        typeCheckEqual(l, n, c.applyBindings(binding));
     }
 
     private static void typeCheckMatchingParamsPattern(SemanticErrorList l, ConstructorPattern n, DataConstructor decl) {
