@@ -1245,8 +1245,8 @@ Deltaparam deltaparam =
       TYPE_IDENTIFIER.fid DOT IDENTIFIER.aid {: return new FIDAID(fid, aid); :}
     | INTLITERAL.i {: return new Const(new IntVal(Integer.parseInt((String)i))); :}
     | TYPE_IDENTIFIER.c {: // hack...
-        if (c.equals("True")) return new Const(new BoolVal(true));
-        else if (c.equals("False")) return new Const(new BoolVal(false));
+        if ("True".equals(c)) return new Const(new BoolVal(true));
+        else if ("False".equals(c)) return new Const(new BoolVal(false));
 	else return new FID(c); :}
     ;
 
@@ -1482,8 +1482,8 @@ MExp mlit_exp
   = INTLITERAL.i        {: return new MValue(new IntVal(Integer.parseInt(i))); :}
   | IDENTIFIER.id       {: return new AttVar(id); :}
   | TYPE_IDENTIFIER.f DOT IDENTIFIER.a      {: return new FAVar(f,a); :}
-  | TYPE_IDENTIFIER.id  {: if      (id.equals("True"))  return new MValue(new BoolVal(true));
-                           else if (id.equals("False")) return new MValue(new BoolVal(false));
+  | TYPE_IDENTIFIER.id  {: if      ("True".equals(id))  return new MValue(new BoolVal(true));
+                           else if ("False".equals(id)) return new MValue(new BoolVal(false));
                            else                         return new FeatVar(id); :}
   ;
   
