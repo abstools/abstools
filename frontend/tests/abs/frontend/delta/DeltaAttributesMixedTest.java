@@ -7,11 +7,13 @@ package abs.frontend.delta;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.hamcrest.core.IsInstanceOf;
 
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.DeltaModellingException;
+import abs.frontend.parser.SyntaxError;
 
 public class DeltaAttributesMixedTest extends DeltaTest {
 
@@ -175,5 +177,30 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         model.flattenForProduct("P1");
         assertTrue(model.hasTypeErrors());
         assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirst().msg);
+    }
+    
+    @Test
+    public void deltaParserNPE1() throws Exception {
+        assertParseError(
+                "module M;"
+                + "delta D(Bool attr);"
+                + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+                + "productline PL;"
+                + "    features F; delta D(F.a) when F;"
+                + "product P1( F{a=} );"
+        );
+    }
+    
+    @Test
+    public void deltaParserIlltyped() throws Exception {
+        Model model = assertParseError(
+                "module M;"
+                + "delta D(Bool attr);"
+                + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+                + "productline PL;"
+                + "    features F; delta D(F.a) when F;"
+                + "product P1( F{a=Blue} );"
+        );
+        assertThat(model.getParserErrors().get(0), IsInstanceOf.instanceOf(SyntaxError.class));
     }
 }

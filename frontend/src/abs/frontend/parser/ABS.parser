@@ -1202,8 +1202,9 @@ List attr_assignment_list  = attr_assignment.a {: return new List().add(a); :}
 AttrAssignment attr_assignment = 
     IDENTIFIER.n ASSIGN INTLITERAL.i  {: return new AttrAssignment(n, new IntVal(Integer.parseInt((String)i))); :}
     | IDENTIFIER.n ASSIGN TYPE_IDENTIFIER.c {: // hack...
-        if (c.equals("True")) return new AttrAssignment(n, new BoolVal(true));
-        else return new AttrAssignment(n, new BoolVal(false)); :}
+        Symbol curr_sym = _symbols[offset + 1];
+        if ("True".equals(c)) return new AttrAssignment(n, new BoolVal(true));
+        else { AttrAssignment aa = new AttrAssignment(n, new BoolVal(false)); if (!"False".equals(c)) addSyntaxError("Expected Bool or Int", curr_sym); return aa; }:}
     ;
 
 List deltaclause_list = {: return new List(); :}
