@@ -821,7 +821,7 @@ aspect TypeChecker {
                 e.add(new SemanticError(this, ErrorMessage.WRONG_NUMBER_OF_DATA_CONSTRUCTOR_ARGUMENTS,c.getName(),""+c.getConstructorArgs().getNumChild(), ""+getParams().getNumChild()));
             } else {
                 if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
-                    TypeCheckerHelper.typeCheckMatchingParams(e,this);
+                    TypeCheckerHelper.typeCheckMatchingParams(e,this,c);
                 } else {
                     TypeCheckerHelper.typeCheckEqual(e,this,c.getTypes());
                 }
