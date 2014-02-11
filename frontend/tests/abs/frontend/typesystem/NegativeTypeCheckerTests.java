@@ -10,7 +10,6 @@ import org.junit.Test;
 
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
-import abs.frontend.analyser.SemanticError;
 import abs.frontend.ast.Model;
 
 public class NegativeTypeCheckerTests extends FrontendTest {
@@ -480,7 +479,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void wrongNumberOfParams() {
         assertTypeErrors("module Bug;"
           + "def String f (String name) = name;"
-          + "{ List<String> s = Cons(f(\"foo\", Nil)); }", ErrorMessage.WRONG_NUMBER_OF_DATA_CONSTRUCTOR_ARGUMENTS);
+          + "{ List<String> s = Cons(f(\"foo\", Nil)); }", ErrorMessage.WRONG_NUMBER_OF_ARGS);
     }
     
     @Test

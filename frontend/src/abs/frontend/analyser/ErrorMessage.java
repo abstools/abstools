@@ -35,7 +35,6 @@ public enum ErrorMessage {
     ADD_INCOMPARABLE_TYPE("Add expression with incomparable types, %s and %s."),
     WRONG_NUMBER_OF_ARGS("Wrong number of arguments. Expected %s, but found %s."),
     WRONG_NUMBER_OF_TYPE_ARGS("Wrong number of type arguments for parametric type %s. Expected %s, but found %s."),
-    WRONG_NUMBER_OF_DATA_CONSTRUCTOR_ARGUMENTS("Wrong number of arguments for data constructor %s. Expected %s, but found %s."),
     TYPE_MISMATCH("Type %s does not match declared type %s."),
     DUPLICATE_CONSTRUCTOR("Constructor %s is already defined."),
     DUPLICATE_CLASS_NAME("Class %s is already defined."),
