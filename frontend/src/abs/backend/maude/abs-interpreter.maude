@@ -781,6 +781,7 @@ mod ABS-CONFIGURATION is
 
   *** Terms of sort Object represent objects.  They are stored inside Cogs.
   op object : Oid Cid Subst Nat -> Object .
+  op deadobject : Oid Cid Subst Nat -> Object .
 
   *** Cogs.  They store a configuration containing all objects inside that
   *** cog.  The running process can be 'idle' and serves as the lock for the
@@ -1196,6 +1197,20 @@ mod ABS-MSG-TRANSPORT is
   =
     { AUX, '.c |-> eval(CO, S :: L, none, ('.time |-> "num"[T])), '.label |-> N, '.method |-> "str"[ string(M) ], '.r |-> "ABS.StdLib.Time"["num"[T]], '.random |-> "ABS.StdLib.Nil"[emp], '.staticfuture |-> null, '_ |-> null, L | SL ; if B then $cont(N) else noStmt fi }
   if L := createSubst(AL, DL) .
+
+  eq
+    < T : Clock | Limit: LIM, Random: RAND >
+    < CG : Cog | Objects: deadobject(O, C, S, F) OBJS,
+                 DC: DC:Data, Sched: SCH:Expr, Pr: P, PrQ: Q:MProc >
+    invoc(O, N, M, DL, B, AUX)
+    future(N, M, Waiting, COUNT:Nat, null)
+  =
+    < T : Clock | Limit: LIM, Random: RAND >
+    < CG : Cog | Objects: deadobject(O, C, S, F) OBJS,
+                 DC: DC:Data, Sched: SCH:Expr, Pr: P, PrQ: Q:MProc >
+    future(N, M, Error, COUNT:Nat, "str"["Dead object"])
+    [label transport-imsg-deadobject] .
+
 
   op recordStartTime : Process Rat -> Process .
   *** This will only ever be evaluated with a simple substitution SS.
@@ -2446,7 +2461,7 @@ mod ABS-STMT-DIE-RL is
     < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | die(E); SL }, PrQ: W >
     future(N, M, Waiting, G, null)
    =>
-    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: killProcesses(O, E, W) >
+    < CG : Cog | Objects: deadobject(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: killProcesses(O, E, W) >
     future(N, M, Error, G, D)
   if O := L['this]
       /\ N == L['.label] /\ D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
@@ -2471,7 +2486,7 @@ mod ABS-STMT-DIE-EQ-TIMED is
     < T : Clock | Limit: LIM, Random: RAND >
     future(N, M, Waiting, G, null)
    =
-    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: killProcesses(O, E, W) >
+    < CG : Cog | Objects: deadobject(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: killProcesses(O, E, W) >
     < T : Clock | Limit: LIM, Random: RAND >
     future(N, M, Error, G, D)
   if O := L['this]
