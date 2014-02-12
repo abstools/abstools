@@ -1,14 +1,11 @@
 package deadlock.analyser.detection;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.io.PrintStream;
-
-import abs.frontend.ast.ASTNode;
 
 import deadlock.analyser.factory.ContractElement;
 import deadlock.analyser.factory.ContractElementAwait;
@@ -168,7 +165,7 @@ public class DASolver {
             }
             else this.nOfDep = newNumberOfDep;*/
            
-            if(newNumberOfDep == this.nOfDep) return;
+            if(newNumberOfDep.equals(this.nOfDep)) return;
             else this.nOfDep = newNumberOfDep;
         }
 
