@@ -2520,6 +2520,15 @@ mod ABS-RECEIVE-RESULT is
   if O := L['this] /\ N := S[A]
     [label receive-comp-field] .
 
+  crl
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | get(A ; A') ; SL }, PrQ: W >
+    future(N, M, Error, G, D)
+  =>
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | die(D) ; SL }, PrQ: W >
+    future(N, M, Error, G, D)
+  if O := L['this] /\ N := (S :: L)[A]
+    [label receive-error] .
+
 
   --- continue
   ---
