@@ -5,7 +5,7 @@
 package abs.frontend.typechecker;
 
 public final class NullType extends ReferenceType {
-    public static NullType INSTANCE = new NullType();
+    public final static NullType INSTANCE = new NullType();
 
     private NullType() {
 
