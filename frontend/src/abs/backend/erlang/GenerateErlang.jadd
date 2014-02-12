@@ -604,13 +604,14 @@ aspect GenerateErlang {
   @Override
   public void ConstructorPattern.generateErlangCode(ErlangCodeStream prePattern,ErlangCodeStream ecs,Vars vars){
     //Handling for bool
-    if(getDataConstructor().getName().equals("True") || getDataConstructor().getName().equals("False"))
-      ecs.print(getDataConstructor().getName().toLowerCase());
+    final String c = getConstructor();
+    if("True".equals(c) || "False".equals(c))
+      ecs.print(c.toLowerCase());
     else{
       if(getParams().getNumChild() > 0)
         ecs.print("{");
       ecs.print("data");
-      ecs.print(getDataConstructor().getName());
+      ecs.print(c);
       for (Pattern p : getParams()) {
         ecs.print(",");
         p.generateErlangCode(prePattern,ecs,vars);
@@ -626,13 +627,14 @@ aspect GenerateErlang {
 
   public void DataConstructorExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     //Handling for bool
-    if(getDataConstructor().getName().equals("True") || getDataConstructor().getName().equals("False"))
-      ecs.print(getDataConstructor().getName().toLowerCase());
+    final String c = getConstructor();
+    if("True".equals(c) || "False".equals(c))
+      ecs.print(c.toLowerCase());
     else{
       if(getParams().getNumChild() > 0)
         ecs.print("{");
       ecs.print("data");
-      ecs.print(getDataConstructor().getName());
+      ecs.print(c);
       for (PureExp p : getParams()) {
         ecs.print(",");
         p.generateErlangCode(ecs,vars);

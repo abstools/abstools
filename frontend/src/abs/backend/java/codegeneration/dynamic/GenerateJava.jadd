@@ -729,6 +729,7 @@ aspect GenerateJavaDynamic_Core {
 //    }
     public void ConstructorPattern.generateJavaDynamic(PrintStream stream) {
         DataConstructor decl = getDataConstructor();
+        assert decl != null : "We typechecked it!";
         stream.println("new " + PatternConstructor.class.getName() + "(");
         stream.print(JavaBackend.getQualifiedString(decl) + ".class");
         for (Pattern p : getParams()) {
@@ -808,6 +809,7 @@ aspect GenerateJavaDynamic_Core {
 
     public void DataConstructorExp.generateJavaDynamic(PrintStream stream) {
         DataConstructor c = getDataConstructor();
+        assert c != null : "We typechecked it!";
         DataTypeDecl decl = c.getDataTypeDecl();
         Type t = decl.getType();
         if (t.isBoolType()) {
