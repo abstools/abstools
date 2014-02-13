@@ -5,7 +5,8 @@ aspect Variables {
 
   interface Entry<K,V> { K getKey(); V getValue(); Attribute getAttribute(); }  
   class RepeatMap<K,V> extends HashMap<K,V> {
-    public void add(Entry<K,V> e) {
+    // Weird explicit package name necessary for OpenJDK8 compiler! [stolz]
+    public void add(abs.frontend.ast.Entry<K,V> e) {
       if (e != null)
         e.getAttribute().isRepeated |= put(e.getKey(),e.getValue()) != null;
     }
