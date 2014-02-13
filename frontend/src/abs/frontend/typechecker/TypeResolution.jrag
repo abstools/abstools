@@ -205,10 +205,19 @@ aspect TypeResolution {
 
     inh ModuleDecl Decl.getModuleDecl();
     eq ModuleDecl.getDecl().getModuleDecl() = this;
+    // TODO: Isn't that what "broadcast attributes" should solve?
+    eq AddClassModifier.getClassDecl().getModuleDecl() = findModule();
+    eq AddInterfaceModifier.getInterfaceDecl().getModuleDecl() = findModule();
+    eq AddFunctionModifier.getFunctionDecl().getModuleDecl() = findModule();
+    eq AddTypeSynModifier.getTypeSynDecl().getModuleDecl() = findModule();
+    eq ModifyTypeSynModifier.getTypeSynDecl().getModuleDecl() = findModule();
+    eq AddDataTypeModifier.getDataTypeDecl().getModuleDecl() = findModule();
+    eq ModifyDataTypeModifier.getDataTypeDecl().getModuleDecl() = findModule();
+    eq DataTypeDecl.getDataConstructor(int i).getModuleDecl() = getModuleDecl();
 
     inh ModuleDecl Export.getModuleDecl();
     eq ModuleDecl.getExport().getModuleDecl() = this;
-    eq AddExportModifier.getExport().getModuleDecl() = this.findModule();
+    eq AddExportModifier.getExport().getModuleDecl() = findModule();
     
     inh ModuleDecl Import.lookupModule(String name);
     inh ModuleDecl Export.lookupModule(String name);
