@@ -161,6 +161,7 @@ IfStmt: Stmt ::= Condition:PureExp Then:Stmt [Else:Stmt];
 WhileStmt: Stmt ::= Condition:PureExp Body:Stmt;
 CaseStmt : Stmt ::= Expr:PureExp Branch:CaseBranchStmt* ;
 CaseBranchStmt ::= Left:Pattern Right:Stmt ;
+TryCatchFinallyStmt : Stmt ::= Body:Stmt Catch:CaseBranchStmt* [Finally:Stmt] ;
 // A Block is the body of programs and methods and is also used for initblocks
 // It contains a list of zero or more ast.VarOrFieldDecl
 // and zero or more ast.Stmt, these are named Fields and Stmts resp.
@@ -169,8 +170,8 @@ InitBlock: Block; // Initializer block in a class - can be handled specially dur
 MainBlock: Block; // Active behavior of the model
 RewriteBlock: Block; // Rewritten, only used in intermediate construction in GenerateCoreAbs.jadd.
 
-AbortStmt: Stmt ::= Reason:StringLiteral;
-DieStmt: Stmt ::= Reason:StringLiteral;
+AbortStmt: Stmt ::= Reason:PureExp;
+DieStmt: Stmt ::= Reason:PureExp;
 
 
 abstract Guard;

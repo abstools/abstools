@@ -1117,8 +1117,8 @@ Stmt stmt_without_annotations =
 	|  REBIND exp.obj COLON IDENTIFIER.field ASSIGN exp.e  {: return new RebindStmt(new List(), obj,field,e);                /* Component */ :}
 	|  REBIND IDENTIFIER.field ASSIGN exp.e                {: return new RebindStmt(new List(), new VarUse("this"),field,e); /* Component */ :}
 	|  SUBLOC pure_exp.sub IN pure_exp.father              {: return new MoveStmt(new List(), sub,father);                   /* Component */ :}
-	|  ABORT  string_literal.s  {: return new AbortStmt(new List(), s) ; :}
-	|  DIE    string_literal.s  {: return new DieStmt  (new List(), s) ; :}
+	|  ABORT  data_exp.s  {: return new AbortStmt(new List(), s) ; :}
+	|  DIE    data_exp.s  {: return new DieStmt  (new List(), s) ; :}
 	;
 
 Stmt compound_stmt =
@@ -1126,6 +1126,7 @@ Stmt compound_stmt =
     |  while_stmt
     |  block_without_annotations
     |  case_stmt
+    |  try_catch_finally_stmt
 ;
 
 Block block =
@@ -1142,6 +1143,11 @@ Block block_without_annotations =
 IfStmt if_then_else_stmt =
 	IF LPAREN data_exp.e1 RPAREN stmt.s1 ELSE stmt.s2 {: return new IfStmt(new List(),e1,s1,new Opt(s2)) ; :}
 	| IF LPAREN data_exp.e1 RPAREN stmt.s1 {: return new IfStmt(new List(),e1,s1,new Opt()); :}
+	;
+
+TryCatchFinallyStmt try_catch_finally_stmt =
+	TRY stmt.body CATCH LBRACE case_branch_stmt_list.branches? RBRACE FINALLY stmt.finaly {: return new TryCatchFinallyStmt(new List(), body, branches, new Opt(finaly)) ; :}
+	| TRY stmt.body CATCH LBRACE case_branch_stmt_list.branches? RBRACE {: return new TryCatchFinallyStmt(new List(), body, branches, new Opt()) ; :}
 	;
 
 CaseStmt case_stmt =

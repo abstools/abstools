@@ -809,6 +809,10 @@ aspect GenerateMaude {
         stream.print("} ");
     }
 
+    public void TryCatchFinallyStmt.generateMaude(PrintStream stream) {
+        throw new NotImplementedYetException(this); // TODO
+    }
+
     public void AbortStmt.generateMaude(PrintStream stream) {
         stream.print("abort (");
         getReason().generateMaude(stream);

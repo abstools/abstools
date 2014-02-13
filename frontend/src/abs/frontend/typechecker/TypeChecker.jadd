@@ -617,6 +617,19 @@ aspect TypeChecker {
         getLeft().typeCheck(e,t);
         getRight().typeCheck(e);
     }       
+
+    public void TryCatchFinallyStmt.typeCheck(SemanticErrorList e) {
+        getBody().typeCheck(e);
+        for (CaseBranchStmt b : getCatchs()) {
+            // TODO: check that each left-hand side is of type Error,
+            // once we know how that's implemented
+            b.getRight().typeCheck(e);
+        }
+        if (hasFinally()) {
+            getFinally().typeCheck(e);
+        }
+    }
+
     public void SkipStmt.typeCheck(SemanticErrorList e) { 
     /* nothing to check */ }
 
