@@ -38,7 +38,7 @@ aspect TypeInference {
 /************************************/
 /* Helper function                  */
 /************************************/
-  public RecordPresent ClassDecl.createInstance(Factory df, GroupName a, PrintStream out) {
+  RecordPresent ClassDecl.createInstance(Factory df, GroupName a, PrintStream out) {
   // TODO: deal with field assignement, with init, and run
     LinkedList<RecordField> l = new LinkedList<RecordField>();
     Environment env = new Environment();
@@ -218,7 +218,7 @@ aspect TypeInference {
     return res;
   }
 
-  public ResultInference CompilationUnit.typeInference(String ident, Environment env, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, PrintStream out) {
+  ResultInference CompilationUnit.typeInference(String ident, Environment env, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, PrintStream out) {
     ResultInference res = new ResultInference();
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the file \"" + this.getName() + "\""); nident = " " + ident; }
@@ -226,7 +226,7 @@ aspect TypeInference {
     return res;
   }
 
-  public ResultInference ModuleDecl.typeInference(String ident, Environment env, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, PrintStream out) {
+  ResultInference ModuleDecl.typeInference(String ident, Environment env, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, PrintStream out) {
     ResultInference res = new ResultInference();
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the module \"" + this.getName() + "\""); nident = " " + ident; }
@@ -236,7 +236,7 @@ aspect TypeInference {
     return res;
   }
 
-  public ResultInference ClassDecl.typeInference(String ident, Environment env, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, PrintStream out) {
+  ResultInference ClassDecl.typeInference(String ident, Environment env, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, PrintStream out) {
     ResultInference res = new ResultInference();
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the class \"" + this.getName() + "\""); nident = " " + ident; }
@@ -272,7 +272,7 @@ aspect TypeInference {
     return res;
   }
 
-  public ResultInference MethodImpl.typeInference(String ident, Environment env, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInference MethodImpl.typeInference(String ident, Environment env, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the method \"" + cl.getName() + "." + this.getMethodSig().getName() + "\""); nident = " " + ident; }
 
@@ -313,33 +313,33 @@ aspect TypeInference {
   //////////////////////////////////////////////////////////////////////////////
   // 2.1. Generic inference rules, for nodes that are not yet managed by the inference
 
-  public ResultInferenceStmt Decl.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt Decl.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     out.println("WARNING: Contract inference not implemented for Declaration \"" + this.getClass().getName() + "\"");
     return new ResultInferenceStmt(null, df.newContractEmpty(), df.newConstraint(out), env);
   }
 
-  public ResultInferenceStmt Stmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt Stmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     out.println("WARNING: Contract inference not implemented for Statment \"" + this.getClass().getName() + "\"");
     return new ResultInferenceStmt(null, df.newContractEmpty(), df.newConstraint(out), env);
   }
 
 
-  public ResultInferenceEffExp Exp.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceEffExp Exp.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     out.println("WARNING: Contract inference not implemented for Expression \"" + this.getClass().getName() + "\"");
     return new ResultInferenceEffExp(null, df.newRecordVariable(), df.newContractEmpty(), df.newConstraint(out), env);
   }
 
-  public ResultInferencePureExp PureExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferencePureExp PureExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     out.println("WARNING: Contract inference not implemented for Expression \"" + this.getClass().getName() + "\"");
     return new ResultInferencePureExp(df);
   }
 
-  public ResultInferenceEffExp PureExp.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceEffExp PureExp.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     ResultInferencePureExp resPure = this.typeInferenceAsPure(ident, env, a, intertoclass, df, cl, out);
     return new ResultInferenceEffExp(resPure.getId(), resPure.getRepresentative(), df.newContractEmpty(), df.newConstraint(out), env);
   }
 
-  public ResultInferencePureExp Guard.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferencePureExp Guard.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     out.println("WARNING: Contract inference not implemented for Guard \"" + this.getClass().getName() + "\"");
     return new ResultInferencePureExp(df);
   }
@@ -347,7 +347,7 @@ aspect TypeInference {
   //////////////////////////////////////////////////////////////////////////////
   // 2.2. Declarations
 
-  public ResultInferenceStmt VarDecl.typeInference(String ident, Environment prev, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt VarDecl.typeInference(String ident, Environment prev, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the VarDecl \"" + this.getName() + "\""); nident = " " + ident; }
 
@@ -384,7 +384,7 @@ aspect TypeInference {
   //////////////////////////////////////////////////////////////////////////////
   // 2.3. Statments
 
-  public ResultInferenceStmt AssignStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt AssignStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the AssignStmt"); nident = " " + ident; }
 
@@ -416,7 +416,7 @@ aspect TypeInference {
   }
 
 
-  public ResultInferenceStmt AwaitStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl clthis, PrintStream out) {
+  ResultInferenceStmt AwaitStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl clthis, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the AwaitStmt "); nident = " " + ident; }
 
@@ -455,20 +455,20 @@ aspect TypeInference {
 
   }
 
-  public ResultInferenceStmt SkipStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt SkipStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     return new ResultInferenceStmt(null, df.newContractEmpty(), df.newConstraint(out), env);
   }
 
-  public ResultInferenceStmt SuspendStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt SuspendStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     return new ResultInferenceStmt(null, df.newContractEmpty(), df.newConstraint(out), env);
   }
 
-  public ResultInferenceStmt DurationStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt DurationStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     return new ResultInferenceStmt(null, df.newContractEmpty(), df.newConstraint(out), env);
   }
 
 
-  public ResultInferenceStmt ReturnStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt ReturnStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the ReturnStmt "); nident = " " + ident; }
 
@@ -483,7 +483,7 @@ aspect TypeInference {
   }
 
 
-  public ResultInferenceStmt ExpressionStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt ExpressionStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the ExpressionStmt "); nident = " " + ident; }
 
@@ -494,14 +494,14 @@ aspect TypeInference {
   }
 
 
-  public ResultInferenceStmt AssertStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt AssertStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the AssertStmt "); nident = " " + ident; }
     return new ResultInferenceStmt(null, df.newContractEmpty(), df.newConstraint(out), env);
   }
 
 
-  public ResultInferenceStmt VarDeclStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt VarDeclStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the VarDeclStmt "); nident = " " + ident; }
     ResultInferenceStmt resVarDecl = this.getVarDecl().typeInference(nident, env, a, intertoclass, df, cl, out);
@@ -510,7 +510,7 @@ aspect TypeInference {
   }
 
 
-  public ResultInferenceStmt IfStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt IfStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract inference of a Conditional Expression"); nident = " " + ident; }
     // as the condition is a pure expression, it doesn't have contract or constraints
@@ -530,7 +530,7 @@ aspect TypeInference {
     return new ResultInferenceStmt(resThen.getId(), contract, c, env);
   }
 
-  public ResultInferenceStmt WhileStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt WhileStmt.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the While (Approximated with one iteration) "); nident = " " + ident; }
     ResultInferenceStmt resStmt = getBody().typeInference(nident, env, a, intertoclass, df, cl, out);
@@ -538,7 +538,7 @@ aspect TypeInference {
     return resStmt;
   }
 
-  public ResultInferenceStmt Block.typeInference(String ident, Environment envInit, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceStmt Block.typeInference(String ident, Environment envInit, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the Block "); nident = " " + ident; }
 
@@ -580,30 +580,30 @@ aspect TypeInference {
 
   // 2.4.1. Pure Expressions
   
-  public ResultInferencePureExp NullExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferencePureExp NullExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     if(ident != null) { out.println(ident + "Contract inference of 'null' PureExp "); }
     return new ResultInferencePureExp(df, null, df.newRecordVariableFanthom());
   }
 
 
-  public ResultInferencePureExp ThisExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferencePureExp ThisExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     if(ident != null) { out.println(ident + "Contract inference of 'this' PureExp "); }
     return new ResultInferencePureExp(df, "this", env.getVariable("this"));
   }
 
-  public ResultInferencePureExp VarOrFieldUse.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferencePureExp VarOrFieldUse.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     if(ident != null) { out.println(ident + "Contract Inference for the VarOrFieldUse \"" + this.getName() + "\" (considered as a"
         + ((env.getVariable(this.getName()) instanceof RecordVariable) && (((RecordVariable)env.getVariable(this.getName())).isDataType()) ? " datatype)" : "n object)")); }
     return new ResultInferencePureExp(df, this.getName(), env.getVariable(this.getName()));
   }
 
 
-  public ResultInferencePureExp LiteralExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferencePureExp LiteralExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     if(ident != null) { out.println(ident + "Contract inference of a Literal "); }
     return new ResultInferencePureExp(df, null, df.getDataType());
   }
 
-  public ResultInferencePureExp DataConstructorExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) { // DATATYPES
+  ResultInferencePureExp DataConstructorExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) { // DATATYPES
     String nident = null;
     if(ident != null) { out.println(ident + "Contract inference of the Data type Constructor \"" + this.getConstructor() + "\""); nident = " " + ident; }
     ResultInferencePureExp res = new ResultInferencePureExp(df);
@@ -611,7 +611,7 @@ aspect TypeInference {
     return res;
   }
 
-  public ResultInferencePureExp LetExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferencePureExp LetExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract inference of a Let Expression "); nident = " " + ident; }
     ResultInferencePureExp res = getVal().typeInferenceAsPure(nident, env, a, intertoclass, df, cl, out);
@@ -633,7 +633,7 @@ aspect TypeInference {
     return res;
   }
 
-  public ResultInferencePureExp FnApp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) { // DATATYPES
+  ResultInferencePureExp FnApp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) { // DATATYPES
     String nident = null;
     if(ident != null) { out.println(ident + "Contract inference of a Function Application "); nident = " " + ident; }
     ResultInferencePureExp res = new ResultInferencePureExp(df);
@@ -641,7 +641,7 @@ aspect TypeInference {
     return res;
   }
 
-  public ResultInferencePureExp IfExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferencePureExp IfExp.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract inference of an Exp Conditional Expression"); nident = " " + ident; }
     // as the condition is a pure expression, its contract and constraint are empty
@@ -650,13 +650,13 @@ aspect TypeInference {
     return res;
   }
 
-  public ResultInferencePureExp Unary.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) { // DATATYPES
+  ResultInferencePureExp Unary.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) { // DATATYPES
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for an Unary Pure Expression -> no contract and no record "); nident = " " + ident; }
     return this.getOperand().typeInferenceAsPure(nident, env, a, intertoclass, df, cl, out);
   }
 
-  public ResultInferencePureExp Binary.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) { // DATATYPES
+  ResultInferencePureExp Binary.typeInferenceAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) { // DATATYPES
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for an Unary Pure Expression -> no contract and no record "); nident = " " + ident; }
     ResultInferencePureExp res = this.getLeft().typeInferenceAsPure(nident, env, a, intertoclass, df, cl, out);
@@ -679,7 +679,7 @@ aspect TypeInference {
 
   // 2.4.2. Expressions with side effects.
 
-  public ResultInferenceEffExp NewExp.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl clthis, PrintStream out) {
+  ResultInferenceEffExp NewExp.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl clthis, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the NewExp "); nident = " " + ident; }
 
@@ -721,7 +721,7 @@ aspect TypeInference {
 
 
 
-  public ResultInferenceEffExp Call.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl clthis, PrintStream out) {
+  ResultInferenceEffExp Call.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl clthis, PrintStream out) {
     String nident = null;
     if(ident != null) {
       out.println(ident + "Contract Inference for a " + ((this instanceof SyncCall)?"Synchronous":"Asynchronous") + "  method Call");
@@ -777,7 +777,7 @@ aspect TypeInference {
    
 
 
-  public ResultInferenceEffExp GetExp.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferenceEffExp GetExp.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for a GetExp "); nident = " " + ident; }
 
@@ -803,7 +803,7 @@ aspect TypeInference {
   //////////////////////////////////////////////////////////////////////////////
   // 2.5. Guards
 
-  public ResultInferencePureExp ClaimGuard.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
+  ResultInferencePureExp ClaimGuard.typeInference(String ident, Environment env, GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl, PrintStream out) {
     String nident = null;
     if(ident != null) { out.println(ident + "Contract Inference for the ClaimGuard "); nident = " " + ident; }
     return getVar().typeInferenceAsPure(nident, env, a, intertoclass, df, cl, out);

@@ -45,13 +45,11 @@ public class AtomicityTests extends FrontendTest {
         } else {
             assertTypeOK(code);
         }
-
     }
     
     public void checkStmt(String s) {
-        assertTypeErrors("class C { [Atomic] Unit m() { "+s+"; } Unit n() { } [Atom] Unit atomN() { }}");
+        assertTypeErrors("class C { [Atomic] Unit m() { "+s+"; } Unit n() { } [Atomic] Unit atomN() { }}");
         assertTypeOK("class C { Unit m() { "+s+"; } Unit n() { } Unit atomN() { }}");
-        
     }
     
 }

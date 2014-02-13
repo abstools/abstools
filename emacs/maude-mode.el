@@ -240,6 +240,8 @@ Use \\[describe-mode] in the process buffer for a list of commands."
     (compilation-shell-minor-mode 1)
     (sit-for 0.1)                       ; eliminates multiple prompts
     (comint-simple-send inferior-maude-buffer "set show timing off .\n")
+    (set-process-query-on-exit-flag (get-buffer-process inferior-maude-buffer)
+                                    nil)
     ;; TODO: "cd <dir of buffer>"
     ))
 

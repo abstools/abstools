@@ -499,7 +499,9 @@ aspect GenerateMaude {
 
     public void ConstructorPattern.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        stream.print("\"" + getDataConstructor().getModuleDecl().getName() + "." + getDataConstructor().getName() + "\"[");
+        final DataConstructor c = getDataConstructor();
+        assert c != null : "We typechecked it!";
+        stream.print("\"" + c.getModuleDecl().getName() + "." + getConstructor() + "\"[");
         if (getNumParam() == 0) {
             stream.print("emp ");
         } else {
@@ -808,11 +810,15 @@ aspect GenerateMaude {
     }
 
     public void AbortStmt.generateMaude(PrintStream stream) {
-      throw new NotImplementedYetException(this);
+        stream.print("abort (");
+        getReason().generateMaude(stream);
+        stream.print(") ");
     }
 
     public void DieStmt.generateMaude(PrintStream stream) {
-      throw new NotImplementedYetException(this);
+        stream.print("die (");
+        getReason().generateMaude(stream);
+        stream.print(") ");
     }
     
     public void ExpressionStmt.generateMaude(PrintStream stream) {

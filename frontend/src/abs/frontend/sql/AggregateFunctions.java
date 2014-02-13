@@ -25,7 +25,7 @@ import abs.frontend.ast.SqlTupleScalarFunction;
  */
 public class AggregateFunctions {
     
-    public static String[][] UNARY_FUNCTIONS = { // Maps function identifiers in the language extension to constructor names.
+    final static String[][] UNARY_FUNCTIONS = { // Maps function identifiers in the language extension to constructor names.
         {"max", "Maximum"},
         {"min", "Minimum"},
         {"sum", "AggregateSum"},

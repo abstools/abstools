@@ -25,6 +25,7 @@ import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.scheduling.UserSchedulingStrategy;
 import abs.common.CompilerUtils;
 import abs.common.Constants;
+import abs.common.NotImplementedYetException;
 import abs.common.Position;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Annotation;
@@ -159,7 +160,7 @@ public class JavaGeneratorHelper {
         FunctionDecl d = (FunctionDecl) app.getDecl();
         String name = d.getName();
         if (!builtInFunctionExists(name)) {
-            throw new RuntimeException("The built in function '" + name + "' is not implemented in the Java backend.");
+            throw new NotImplementedYetException("The built in function '" + name + "' is not implemented in the Java backend.", app);
         }
         
         // if builtin function returns a non-builtin type, cast the returned value to that type

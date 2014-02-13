@@ -701,6 +701,7 @@ aspect GenerateJava {
 
     public void ConstructorPattern.generateJava(PrintStream stream) {
         DataConstructor decl = getDataConstructor();
+        assert decl != null : "We typechecked it!";
         stream.print("new " + PatternConstructor.class.getName() + "(" + JavaBackend.getQualifiedString(decl) + ".class");
         for (Pattern p : getParams()) {
             stream.print(",");

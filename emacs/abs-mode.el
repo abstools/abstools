@@ -152,7 +152,7 @@ Note that you can set this variable as a file-local variable as well."
        "product"                                      ; product definition
        "let" "in"
        "if" "then" "else" "return" "while"            ; the statements
-       "await" "assert" "get" "skip" "suspend"
+       "await" "assert" "abort" "die" "get" "skip" "suspend"
        "original" "movecogto"
        "duration"                       ; guard / statement
        ) 'words))
