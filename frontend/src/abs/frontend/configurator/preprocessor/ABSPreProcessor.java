@@ -9,24 +9,17 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 import abs.frontend.ast.AttrConstraints;
 import abs.frontend.ast.Attribute;
@@ -36,7 +29,6 @@ import abs.frontend.ast.FExt;
 import abs.frontend.ast.FNode;
 import abs.frontend.ast.FeatureDecl;
 import abs.frontend.ast.Group;
-import abs.frontend.ast.IfExp;
 import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
 
@@ -60,9 +52,8 @@ public class ABSPreProcessor {
     public static ArrayList<String> arlAttributes = new ArrayList<String>();
 
     //Ajit
-    public void preProcessModel(Model m)
+    public void preProcessModel(Model m) throws ParserConfigurationException, FileNotFoundException
     {
-        try
         {  
             List<CompilationUnit> lsCompilationUnits = new List<CompilationUnit>();
                         
@@ -121,10 +112,6 @@ public class ABSPreProcessor {
                 }
             }   
             System.out.print("Pre-processing has been done successfully!!");                       
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
         }
     }
     

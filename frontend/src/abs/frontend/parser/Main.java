@@ -22,10 +22,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.jar.JarEntry;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import choco.kernel.model.constraints.Constraint;
-
 import abs.frontend.mtvl.ChocoSolver;
-
 import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
@@ -190,7 +190,7 @@ public class Main {
         return remainingArgs;
     }    
     
-    public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException {
+    public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException, ParserConfigurationException {
         Model m = parseFiles(parseArgs(args).toArray(new String[0]));
         analyzeModel(m);
         return m;
@@ -236,7 +236,7 @@ public class Main {
         return m;
     }
 
-    public void analyzeModel(Model m) throws WrongProgramArgumentException, DeltaModellingException {
+    public void analyzeModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException, ParserConfigurationException {
         m.verbose = verbose;
         m.debug = dump;
         
