@@ -127,7 +127,7 @@ aspect ParseTreeCopy {
     public IntVal IntVal.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public LetExp LetExp.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public Limit Limit.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
-    public List List.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
+    public List<T> List.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public LiteralExp LiteralExp.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public LiteralPattern LiteralPattern.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public LTEQExp LTEQExp.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
@@ -183,7 +183,7 @@ aspect ParseTreeCopy {
     public NewExp NewExp.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public NotEqExp NotEqExp.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public NullExp NullExp.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
-    public Opt Opt.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
+    public Opt<T> Opt.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public OptFeat OptFeat.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public OrBoolExp OrBoolExp.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public OriginalCall OriginalCall.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
