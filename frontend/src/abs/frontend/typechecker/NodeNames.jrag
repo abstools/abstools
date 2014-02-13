@@ -1,7 +1,6 @@
 // Inform node about the name of the Module where it was declared
 aspect ModuleName {
-    inh String Decl.moduleName();
-    eq ModuleDecl.getDecl().moduleName() = this.getName();
+    syn String Decl.moduleName() = getModuleDecl().getName();
 }
 
 aspect DeltaName {
@@ -60,7 +59,7 @@ aspect TargetQualifiedClassName {
 // qualify node names with the name of the module where they were defined
 aspect QualifiedName {
     public String Decl.qualifiedName() {
-        return this.moduleName() + "." + this.getName();
+        return moduleName() + "." + getName();
     }
     
     public String DeltaDecl.qualifiedName() {
