@@ -13,11 +13,10 @@ import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.List;
 import abs.frontend.ast.*;
-import abs.frontend.typechecker.KindedName.Kind;
 
 public class TypeCheckerHelper {
     public static void typeCheck(ConstructorPattern p, SemanticErrorList e, Type t) {
-        Decl decl = p.lookup(new KindedName(Kind.DATA_CONSTRUCTOR, p.getConstructor()));
+        Decl decl = p.getDataConstructor();
         if (!(decl instanceof DataConstructor)) {
             e.add(new SemanticError(p, ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, p.getConstructor()));
             return;
