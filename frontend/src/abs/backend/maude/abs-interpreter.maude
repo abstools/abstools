@@ -545,6 +545,8 @@ mod ABS-STATEMENT is
   op $call(_;_;_;_;_;_) : Label Oid Mid DataList Bool Data -> Stmt [ctor format (r d o r o r o r o r o r o r o)] .
   op get(_;_)  : Vid Vid -> Stmt [ctor format (b d o b o b o)] .
   op get(_;_)  : Label Vid -> Stmt [ctor ditto] .
+  op safeget(_;_)  : Vid Vid -> Stmt [ctor format (b d o b o b o)] .
+  op safeget(_;_)  : Label Vid -> Stmt [ctor format (b d o b o b o)] .
   op movecogto(_) : Expr -> Stmt [ctor format (c d o b o)] .
 
   op return(_) : Expr -> Stmt [ctor format (c d o b o)] .
@@ -963,9 +965,14 @@ mod ABS-EVAL is
   = schedulable(ST:Stmt ; SL, S, CN, MAC) .
   eq schedulable(get(QID ; A') ; SL , S, CN, MAC)
   = completed(S[QID], CN) .
+  eq schedulable(safeget(QID ; A') ; SL , S, CN, MAC)
+  = completed(S[QID], CN) .
   eq schedulable(get(@ QID ; A') ; SL , (SS :: S), CN, MAC)
   = completed(SS[QID], CN) .
+  eq schedulable(safeget(@ QID ; A') ; SL , (SS :: S), CN, MAC)
+  = completed(SS[QID], CN) .
   eq schedulable(get(L ; A') ; SL , S, CN, MAC) = completed(L, CN) .
+  eq schedulable(safeget(L ; A') ; SL , S, CN, MAC) = completed(L, CN) .
   *** This is only for the untimed case -- in the timed interpreter, duration
   *** is reduced to $duration via an equation.
   eq schedulable(duration(E ; E') ; SL, S, CN, MAC) = true .
@@ -985,8 +992,11 @@ mod ABS-EVAL is
     then mte(ST:Stmt ; SL, S, CN, MAC)
     else 1 fi .
   eq mte(get(QID ; A') ; SL , S, CN, MAC) = if completed(S[QID], CN) then 0 else 1 fi .
+  eq mte(safeget(QID ; A') ; SL , S, CN, MAC) = if completed(S[QID], CN) then 0 else 1 fi .
   eq mte(get(@ QID ; A') ; SL , (SS :: S), CN, MAC) = if completed(SS[QID], CN) then 0 else 1 fi .
+  eq mte(safeget(@ QID ; A') ; SL , (SS :: S), CN, MAC) = if completed(SS[QID], CN) then 0 else 1 fi .
   eq mte(get(L ; A') ; SL , S, CN, MAC) = if completed(L, CN) then 0 else 1 fi .
+  eq mte(safeget(L ; A') ; SL , S, CN, MAC) = if completed(L, CN) then 0 else 1 fi .
   *** This is only for the untimed case -- in the timed interpreter, duration
   *** is reduced to $duration via an equation.
   eq mte(duration(E ; E') ; SL, S, CN, MAC) = 0 .
@@ -2511,6 +2521,7 @@ mod ABS-RECEIVE-RESULT is
   var CG : Cogid .
   var COST : Expr .
   var OBJS : Configuration .
+  var FS : FutureStatus .
 
   --- receive-comp
   ---
@@ -2525,6 +2536,15 @@ mod ABS-RECEIVE-RESULT is
     future(N, M, Completed, G, D)
   if O := L['this] /\ N := (S :: L)[A]
     [label receive-comp-var] .
+  crl
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | safeget(A ; A') ; SL }, PrQ: W >
+    future(N, M, FS, G, D)
+  =>
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A' ; if FS == Completed then "ABS.StdLib.Value"[D] else "ABS.StdLib.Error"[D] fi) ; SL }, PrQ: W >
+    future(N, M, FS, G, D)
+  if O := L['this] /\ N := (S :: L)[A]
+      /\ FS == Completed or FS == Error
+    [label safe-receive-comp-var] .
 
   crl
     < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | get(@ A ; A') ; SL }, PrQ: W >
@@ -2534,6 +2554,15 @@ mod ABS-RECEIVE-RESULT is
     future(N, M, Completed, G, D)
   if O := L['this] /\ N := S[A]
     [label receive-comp-field] .
+  crl
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | safeget(@ A ; A') ; SL }, PrQ: W >
+    future(N, M, FS, G, D)
+  =>
+    < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A' ; if FS == Completed then "ABS.StdLib.Value"[D] else "ABS.StdLib.Error"[D] fi) ; SL }, PrQ: W >
+    future(N, M, FS, G, D)
+  if O := L['this] /\ N := S[A]
+      /\ FS == Completed or FS == Error
+    [label safe-receive-comp-field] .
 
   crl
     < CG : Cog | Objects: object(O, C, S, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | get(A ; A') ; SL }, PrQ: W >
