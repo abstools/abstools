@@ -10,6 +10,8 @@ package abs.frontend.parser;
 import java.io.IOException;
 import java.util.Iterator;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Product;
@@ -18,7 +20,7 @@ import abs.frontend.delta.exceptions.DeltaModellingException;
 public class DumpProducts extends Main {
 
     @Override
-    public Model parse(final String[] args) throws DeltaModellingException, IOException, WrongProgramArgumentException {
+    public Model parse(final String[] args) throws DeltaModellingException, IOException, WrongProgramArgumentException, ParserConfigurationException {
         Model m = super.parse(args);
         if (m.hasParserErrors()) {
             // Main.parse() already printed a list of parse errors in this case.

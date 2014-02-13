@@ -297,7 +297,7 @@
   </target>
 
   <target name="tests-backend-semantic" depends="compile">
-    <junit fork="yes" haltonfailure="yes">
+    <junit fork="yes">
       <assertions><enable package="abs"/></assertions>
       <test name="${test.backend.semantic.suite.name}" todir="${test.data.dir}" />
       <formatter type="plain" usefile="false" />
@@ -308,7 +308,7 @@
 
 
   <target name="tests-backend" depends="compile">
-    <junit fork="yes" haltonfailure="yes">
+    <junit fork="yes">
       <assertions><enable package="abs"/></assertions>
       <test name="${test.backend.suite.name}" todir="${test.data.dir}" />
       <formatter type="plain" usefile="false" />
@@ -318,7 +318,7 @@
   </target>
 
   <target name="tests-backend-net" depends="compile">
-    <junit fork="yes" haltonfailure="yes">
+    <junit fork="yes">
       <assertions><enable package="abs"/></assertions>
       <test name="${test.backend.java.lib.net.suite.name}" todir="${test.data.dir}" />
       <formatter type="plain" usefile="false" />
@@ -350,7 +350,7 @@
   </target>
 
   <target name="tests-frontend" depends="compile">
-    <junit fork="yes" haltonfailure="yes">
+    <junit fork="yes">
       <sysproperty key="abs.junit.casestudies" value="${casestudies.dir}/" />
       <assertions><enable package="abs"/></assertions>
       <test name="${test.frontend.suite.name}" todir="${test.data.dir}" />

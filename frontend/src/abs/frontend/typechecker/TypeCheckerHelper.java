@@ -16,13 +16,12 @@ import abs.frontend.ast.*;
 
 public class TypeCheckerHelper {
     public static void typeCheck(ConstructorPattern p, SemanticErrorList e, Type t) {
-        Decl decl = p.getDataConstructor();
-        if (!(decl instanceof DataConstructor)) {
+        DataConstructor c = p.getDataConstructor();
+        if (c == null) {
             e.add(new SemanticError(p, ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, p.getConstructor()));
             return;
         }
 
-        DataConstructor c = (DataConstructor) decl;
         if (c.getNumConstructorArg() != p.getNumParam()) {
             e.add(new TypeError(p, ErrorMessage.WRONG_NUMBER_OF_ARGS, c.getNumConstructorArg(), p.getNumParam()));
             return;
@@ -33,7 +32,6 @@ public class TypeCheckerHelper {
         if (!t.getDecl().equals(c.getDataTypeDecl())) {
             e.add(new TypeError(p, ErrorMessage.WRONG_CONSTRUCTOR, t.toString(), p.getConstructor()));
         }
-
 
         Type myType = p.getType();
 
@@ -63,7 +61,7 @@ public class TypeCheckerHelper {
     }
 
     public static void typeCheckParamList(SemanticErrorList l, HasParams params) {
-        HashSet<String> names = new HashSet<String>();
+        Set<String> names = new HashSet<String>();
         for (ParamDecl d : params.getParams()) {
             if (!names.add(d.getName())) {
                 l.add(new TypeError(d, ErrorMessage.DUPLICATE_PARAM_NAME, d.getName()));
@@ -177,19 +175,19 @@ public class TypeCheckerHelper {
             SemanticErrorList e) {
         if (featureNames != null) {
             // Do the features exist in the PL declaration (and also check feature attributes)?
+            Model m = prod.getModel();
             for (Feature f : prod.getFeatures()) {
                 if (!featureNames.containsKey(f.getName()))
                     e.add(new TypeError(prod, ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
                 else {
+                    Collection<DeltaClause> dcs = findDeltasForFeature(m,f);
                     for (int i = 0; i<f.getNumAttrAssignment(); i++) {
                         AttrAssignment aa = f.getAttrAssignment(i);
-                        Model m = prod.getModel();
-                        Collection<DeltaClause> dcs = findDeltasForFeature(m,f);
                         for (DeltaClause dc : dcs) {
                             DeltaDecl dd = m.findDelta(dc.getDeltaspec().getName());
                             DeltaParamDecl dp = dd.getParam(i);
                             if (!dp.accepts(aa.getValue())) {
-                                e.add(new TypeError(aa, ErrorMessage.CANNOT_ASSIGN, aa.getValue().getName(),dp.getType().getSimpleName()));
+                                e.add(new TypeError(aa, ErrorMessage.CANNOT_ASSIGN, aa.getValue().getName(), dp.getType().getSimpleName()));
                             }
                         }
                     }
