@@ -39,8 +39,8 @@ aspect Typing {
     syn Type Model.getRatType() = getStdDataType("Rat");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
-    syn Type Model.getFutType(Type typeArg) = ((DataTypeType)getStdDataType("Fut")).withTypeArgs(typeArg);
-    syn Type Model.getResultType(Type typeArg) = ((DataTypeType)getStdDataType("Result")).withTypeArgs(typeArg);
+    syn DataTypeType Model.getFutType(Type typeArg) = ((DataTypeType)getStdDataType("Fut")).withTypeArgs(typeArg);
+    syn DataTypeType Model.getResultType(Type typeArg) = ((DataTypeType)getStdDataType("Result")).withTypeArgs(typeArg);
     
 
 //    eq ClassDecl.getMethod().getUnitType() = getUnitType();
@@ -143,6 +143,9 @@ aspect Typing {
    		 return UnknownType.INSTANCE;
    	 return dt.getTypeArg(0);
     }
+    /**
+     * Actually always returns DataTypeType.
+     */
     eq SafegetExp.getType() { 
    	 Type t = getPureExp().getType();
    	 if (! (t instanceof DataTypeType))
