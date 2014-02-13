@@ -431,6 +431,16 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void testGetNoFut() {
+        assertTypeErrors("{ Either<Unit,Bool> e = Right(True); e.get; }", ErrorMessage.EXPECTED_FUT_TYPE);
+    }
+
+    @Test
+    public void testGetNoFutSafe() {
+        assertTypeErrors("{ Either<Unit,Bool> e = Right(True); e.safeget; }", ErrorMessage.EXPECTED_FUT_TYPE);
+    }
+
+    @Test
     public void testAwaitNoBool() {
         assertTypeErrors("{ await 5; }");
     }

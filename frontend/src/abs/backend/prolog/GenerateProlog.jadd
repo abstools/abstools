@@ -862,6 +862,10 @@ aspect GenerateProlog {
         s.print(")");
     }
 
+    @Override
+    public void SafegetExp.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
+      throw new  NotImplementedYetException(this);
+    }
 
     public void Call.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
   		//generates "syncCall(Callee,CalledInterfaces,MethodName,ArgumentsList,[LocationType])"
