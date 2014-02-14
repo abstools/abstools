@@ -42,8 +42,7 @@ public class KindedName {
     public String toString() {
         return name + "[" + kind.name() + "]";
     }
-    
-    
+
     public String getModuleName() {
         String qualifiedName = getName();
         return qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
@@ -51,10 +50,11 @@ public class KindedName {
 
     public String getSimpleName() {
         String name = getName();
-        if (TypeCheckerHelper.isQualified(name)) {
-            return name.substring(name.lastIndexOf('.') + 1, name.length());
-        } else {
-            return name;
-        }
+        final int pos = name.lastIndexOf('.');
+        return (pos == -1) ? name : name.substring(pos + 1, name.length());
+    }
+    
+    public boolean isQualified() {
+        return name.indexOf('.') > -1;
     }
 }
