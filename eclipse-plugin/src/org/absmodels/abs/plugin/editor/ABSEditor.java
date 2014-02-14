@@ -38,7 +38,6 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension3;
 import org.eclipse.jface.text.ITextSelection;
-import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.text.source.DefaultCharacterPairMatcher;
 import org.eclipse.jface.text.source.IAnnotationModel;
@@ -59,7 +58,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
-import org.eclipse.ui.IPersistableEditor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.PartInitException;
@@ -73,7 +71,6 @@ import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
-
 
 /**
  * The editor for ABS file. Includes syntax highlighting and content assist for ABS files

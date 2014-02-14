@@ -32,7 +32,7 @@ public class ABSCompletionProcessor implements IContentAssistProcessor {
 	 * The Qualifier is the part of the string the user entered before hitting Ctrl-Space
 	 * @author mweber
 	 */
-	private static class Qualifier{
+	static class Qualifier{
 		private int offset;
 		private String qualifier;
 		
@@ -68,7 +68,7 @@ public class ABSCompletionProcessor implements IContentAssistProcessor {
 		Qualifier qualifier = getQualifier(doc, documentOffset);
 
 		//Compute completion proposals based on so far typed qualifier and position of cursors
-		new ProposalFactory(qualifier.getQualifier(), qualifier.getOffset(), viewer.getDocument(), editor, proposals).computeStructureProposals();
+		new ProposalFactory(qualifier, doc, editor, proposals).computeStructureProposals();
 		
 		ICompletionProposal[] p = new ICompletionProposal[proposals.size()];
 		return proposals.toArray(p);
