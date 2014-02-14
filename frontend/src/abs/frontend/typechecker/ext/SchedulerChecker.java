@@ -20,15 +20,13 @@ import abs.frontend.ast.VarDeclStmt;
 import abs.frontend.typechecker.DataTypeType;
 import abs.frontend.typechecker.Type;
 
-
-
 public class SchedulerChecker extends DefaultTypeSystemExtension {
 
     protected SchedulerChecker(Model m) {
         super(m);
     }
 
-    private void checkScheduleExp(PureExp sched, ASTNode loc) {
+    private void checkScheduleExp(PureExp sched, ASTNode<?> loc) {
         if (sched == null) return;
         if (!(sched instanceof FnApp)) {
             errors.add(new TypeError(loc, ErrorMessage.WRONG_SCHEDULER_TYPE,
