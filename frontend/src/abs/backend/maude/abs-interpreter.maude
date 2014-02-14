@@ -561,6 +561,8 @@ mod ABS-STATEMENT is
   op $vardecl(_;_) : Vid Expr -> Stmt [ctor format (r d o r o r o) ] .
   op $endscope : -> Stmt [ctor format(r o)] .
 
+  op $rollback : -> Stmt [ctor format(r o)] .
+
   op $pushrandom : -> Stmt [ctor format (r o)] .
   op $poprandom : -> Stmt [ctor format (r o)] .
 
@@ -857,7 +859,7 @@ mod ABS-EVAL is
   var O : Oid .
   var CG : Cogid .
   var MS : Msg .
-  vars N N1 N2 : Nat .
+  vars N N1 N2 F : Nat .
   var FS : FutureStatus .
   vars MIN MAX : Rat .
   var MAC : SSubst .
@@ -1116,6 +1118,23 @@ mod ABS-EVAL is
   eq killProcesses(O, D, ({ S | SL }, W)) = { S | SL }, killProcesses(O, D, W)
     [owise] .
 
+  *** Commit the state of a cog.  Used when scheduling the idle process.
+  op commitObjects : Configuration -> Configuration .
+  eq commitObjects(object(O, CID, S, PS, F) OBJS) = object(O, CID, S, S, F)
+    commitObjects(OBJS) .
+  eq commitObjects(deadobject(O, CID, S, PS, F) OBJS) = deadobject(O, CID, S, S, F)
+    commitObjects(OBJS) .
+  eq commitObjects(none) = none .
+
+  *** Rollback the state of a cog.  Used when executing an abort or die
+  *** statement.
+  op rollbackObjects : Configuration -> Configuration .
+  eq rollbackObjects(object(O, CID, S, PS, F) OBJS) = object(O, CID, PS, PS, F)
+    rollbackObjects(OBJS) .
+  eq rollbackObjects(deadobject(O, CID, S, PS, F) OBJS) = deadobject(O, CID, PS, PS, F)
+    rollbackObjects(OBJS) .
+  eq rollbackObjects(none) = none .
+
   *** Filter a process list and return the ones that are schedulable.  Second
   *** argument is a list of objects referenced from the processes, third one
   *** the configuration (for checking status of futures).  Fourth argument is
@@ -1265,7 +1284,8 @@ mod ABS-MACHINE-BASICS-COMMON is
   var COST : Expr .
   var OBJS : Configuration .
 
-  --- Process teardown: first release all futures, then release the Cog.
+  --- Process teardown: first release all futures, then release the Cog and
+  --- commit all object states.
   ceq
     < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | noStmt }, PrQ: W >
   =
@@ -1276,7 +1296,7 @@ mod ABS-MACHINE-BASICS-COMMON is
   eq
     < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { noSubst | noStmt }, PrQ: W >
   =
-    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W >
+    < CG : Cog | Objects: commitObjects(OBJS), DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W >
     [label Process-terminate-2] .
 
   *** Handle synchronous self-calls
@@ -1302,6 +1322,13 @@ mod ABS-MACHINE-BASICS-COMMON is
   ---
   eq future(N, M, Completed, 0, D) = none .
   eq future(N, M, Error, 0, D) = none .
+
+  --- Roll back a cog.  Useful when aborting a process / killing an object.
+  eq
+    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $rollback ; SL }, PrQ: W >
+  =
+    < CG : Cog | Objects: rollbackObjects(OBJS), DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+    [label $rollback] .
 
   --- Create a new environment.  This is for supporting local declarations in
   --- blocks etc.
@@ -2015,7 +2042,7 @@ mod ABS-STMT-SUSPEND-RL is
   rl
     < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | suspend ; SL }, PrQ: W >
   =>
-    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | SL } >
+    < CG : Cog | Objects: commitObjects(OBJS), DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | SL } >
     [label suspend] .
 endm
 mod ABS-STMT-SUSPEND-EQ is
@@ -2028,7 +2055,7 @@ mod ABS-STMT-SUSPEND-EQ is
   eq
     < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | suspend ; SL }, PrQ: W >
   =
-    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | SL } >
+    < CG : Cog | Objects: commitObjects(OBJS), DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | SL } >
     [label suspend] .
 endm
 
@@ -2102,10 +2129,10 @@ mod ABS-STMT-AWAIT-RL is
       CN  }
   =>
     if executable(await E, (S :: L), CN, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data)) then
-      { < CG : Cog | Objects: object(O, C, S, PS, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+      { < CG : Cog | Objects: commitObjects(object(O, C, S, PS, F) OBJS), DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
         CN  }
     else
-      { < CG : Cog | Objects: object(O, C, S, PS, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | await E ; SL} >
+      { < CG : Cog | Objects: commitObjects(object(O, C, S, PS, F) OBJS), DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | await E ; SL} >
         CN  }
     fi
   if O := L['this]
@@ -2128,11 +2155,11 @@ mod ABS-STMT-AWAIT-EQ-TIMED is
       CN  }
   =
     if executable(await E, (S :: L), CN, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data)) then
-      { < CG : Cog | Objects: object(O, C, S, PS, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+      { < CG : Cog | Objects: commitObjects(object(O, C, S, PS, F) OBJS), DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
         < T : Clock | Limit: LIM, Random: RAND >
         CN  }
     else
-      { < CG : Cog | Objects: object(O, C, S, PS, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | await E ; SL} >
+      { < CG : Cog | Objects: commitObjects(object(O, C, S, PS, F) OBJS), DC: DC:Data, Sched: SCH:Expr, Pr: idle, PrQ: W , { L | await E ; SL} >
         < T : Clock | Limit: LIM, Random: RAND >
         CN  }
     fi
@@ -2432,7 +2459,7 @@ mod ABS-STMT-ABORT-RL is
     < CG : Cog | Objects: object(O, C, S, PS, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | abort(E); SL }, PrQ: W >
     future(N, M, Waiting, G, null)
    =>
-    < CG : Cog | Objects: object(O, C, S, PS, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: W >
+    < CG : Cog | Objects: rollbackObjects(object(O, C, S, PS, F) OBJS), DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: W >
     future(N, M, Error, G, D)
   if O := L['this]
       /\ N == L['.label] /\ D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
@@ -2457,7 +2484,7 @@ mod ABS-STMT-ABORT-EQ-TIMED is
     < T : Clock | Limit: LIM, Random: RAND >
     future(N, M, Waiting, G, null)
    =
-    < CG : Cog | Objects: object(O, C, S, PS, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: W >
+    < CG : Cog | Objects: rollbackObjects(object(O, C, S, PS, F) OBJS), DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
     future(N, M, Error, G, D)
   if O := L['this]
@@ -2486,7 +2513,7 @@ mod ABS-STMT-DIE-RL is
     < CG : Cog | Objects: object(O, C, S, PS, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | die(E); SL }, PrQ: W >
     future(N, M, Waiting, G, null)
    =>
-    < CG : Cog | Objects: deadobject(O, C, S, PS, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: killProcesses(O, E, W) >
+    < CG : Cog | Objects: rollbackObjects(deadobject(O, C, S, PS, F) OBJS), DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: killProcesses(O, E, W) >
     future(N, M, Error, G, D)
   if O := L['this]
       /\ N == L['.label] /\ D := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
@@ -2511,7 +2538,7 @@ mod ABS-STMT-DIE-EQ-TIMED is
     < T : Clock | Limit: LIM, Random: RAND >
     future(N, M, Waiting, G, null)
    =
-    < CG : Cog | Objects: deadobject(O, C, S, PS, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: killProcesses(O, E, W) >
+    < CG : Cog | Objects: rollbackObjects(deadobject(O, C, S, PS, F) OBJS), DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) }, PrQ: killProcesses(O, E, W) >
     < T : Clock | Limit: LIM, Random: RAND >
     future(N, M, Error, G, D)
   if O := L['this]
@@ -2583,7 +2610,7 @@ mod ABS-RECEIVE-RESULT is
     < CG : Cog | Objects: object(O, C, S, PS, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | get(A ; A') ; SL }, PrQ: W >
     future(N, M, Error, G, D)
   =>
-    < CG : Cog | Objects: object(O, C, S, PS, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | die(D) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, PS, F) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | abort(D) ; SL }, PrQ: W >
     future(N, M, Error, G, D)
   if O := L['this] /\ N := (S :: L)[A]
     [label receive-error] .
