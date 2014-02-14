@@ -12,11 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 import abs.frontend.ast.Annotation;
-import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.MethodSig;
-import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.TypeUse;
 
 public abstract class Type {

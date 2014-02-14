@@ -7,11 +7,9 @@ package abs.frontend.typechecker;
 import java.util.Map;
 
 import abs.frontend.ast.Annotation;
-import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.List;
 import abs.frontend.ast.TypeParameterDecl;
 import abs.frontend.ast.TypeParameterUse;
-import abs.frontend.ast.TypeUse;
 
 public class TypeParameter extends Type {
     private final TypeParameterDecl decl;
