@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.absmodels.abs.plugin.builder.AbsNature;
 import org.absmodels.abs.plugin.editor.ABSEditor;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.BadLocationException;
@@ -107,15 +106,11 @@ public class ABSReconcilingStrategy implements IReconcilingStrategy {
 
     private void setParseErrorMarkers(List<ParserError> parserErrors) {
         IResource r = editor.getResource();
-        if (!(r instanceof IFile)) {
-            return;
-        }
-        IFile file = (IFile) r;
         try {
-            file.deleteMarkers(PARSE_MARKER_TYPE, true, IResource.DEPTH_ZERO);
+            r.deleteMarkers(PARSE_MARKER_TYPE, true, IResource.DEPTH_ZERO);
 
             for (ParserError err : parserErrors) {
-                AbsNature.addMarker(file, err);
+                AbsNature.addMarker(r, err);
             }
 
         } catch (CoreException e) {
