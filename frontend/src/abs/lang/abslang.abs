@@ -49,13 +49,18 @@ data Pair<A, B> = Pair(A fst, B snd);
 data Triple<A, B, C> = Triple(A fstT, B sndT, C trd); 
 
 // Sets
+
+// Sets are currently implemented as sorted lists (any implementation
+// must yield the same structure regardless of insertion order so that
+// set equality via == is preserved).  Using the Insert_ constructor
+// directly is strongly discouraged.
 data Set<A> = EmptySet | Insert(A, Set<A>);
 
 // set constructor helper
 def Set<A> set<A>(List<A> l) = 
     case l { 
        Nil => EmptySet; 
-       Cons(x,xs) => Insert(x,set(xs)); 
+       Cons(x,xs) => insertElement(set(xs), x); 
     };
 
 /**
@@ -65,7 +70,7 @@ def Bool contains<A>(Set<A> ss, A e) =
   case ss {
     EmptySet => False ;
     Insert(e, _) => True;
-    Insert(_, xs) => contains(xs, e);
+    Insert(x, xs) => if x > e then False else contains(xs, e);
   };
   
 /**
@@ -77,7 +82,7 @@ def Bool emptySet<A>(Set<A> xs) = (xs == EmptySet);
  * Returns the size of set 'xs'.
  */
 def Int size<A>(Set<A> xs) = 
-   case xs { 
+   case xs {
       EmptySet => 0 ; 
       Insert(s, ss) => 1 + size(ss); 
    };
@@ -85,7 +90,14 @@ def Int size<A>(Set<A> xs) =
 def Set<A> union<A>(Set<A> set1, Set<A> set2) =
    case set1 {
       EmptySet => set2;
-      Insert(a, s) => union(s,insertElement(set2,a));
+      Insert(e1, ss1) =>  case set2 {
+          EmptySet => set1;
+          Insert(e1, ss2) => Insert(e1, union(ss1, ss2));
+          Insert(e2, ss2) =>
+            if e1 < e2
+            then Insert(e1, Insert(e2, union(ss1, ss2)))
+            else Insert(e2, Insert(e1, union(ss1, ss2)));
+      };
    }; 
 
 /**
@@ -93,9 +105,10 @@ def Set<A> union<A>(Set<A> set1, Set<A> set2) =
  * Returns 'xs' if 'xs' already contains 'e'.
  */
 def Set<A> insertElement<A>(Set<A> xs, A e) =
-  case contains(xs, e) {
-    True => xs;
-    False => Insert(e, xs);
+  case xs {
+      EmptySet => Insert(e, EmptySet);
+      Insert(e, _) => xs;
+      Insert(x, ss) => if e < x then Insert(e, xs) else Insert(x, insertElement(ss, e));
   };
 
 /**
@@ -105,7 +118,7 @@ def Set<A> remove<A>(Set<A> xs, A e) =
   case xs {
      EmptySet => EmptySet ;
      Insert(e, ss) => ss;
-     Insert(s, ss) => Insert(s,remove(ss,e));
+     Insert(x, ss) => if e < x then xs else Insert(x, remove(ss, e));
   };
 
 /**
