@@ -810,7 +810,24 @@ aspect GenerateMaude {
     }
 
     public void TryCatchFinallyStmt.generateMaude(PrintStream stream) {
-        throw new NotImplementedYetException(this); // TODO
+        getBody().generateMaude(stream);
+        stream.print("; ");
+        if (getNumCatch() > 0) {
+            stream.print("catch { ");
+            for (CaseBranchStmt b : getCatchs()) {
+                stream.print("{ ");
+                b.getLeft().generateMaude(stream);
+                stream.print("=> ");
+                b.getRight().generateMaude(stream);
+                stream.print("} ");
+            }
+            stream.print("} ; ");
+        }
+        if (hasFinally()) {
+            stream.print("finally { ");
+            getFinally().generateMaude(stream);
+            stream.print("} ");
+        }
     }
 
     public void AbortStmt.generateMaude(PrintStream stream) {
