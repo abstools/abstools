@@ -17,7 +17,7 @@ import org.junit.runners.Parameterized.Parameters;
 import abs.backend.BackendTestDriver;
 import abs.backend.erlang.ErlangTestDriver;
 import abs.backend.java.JavaTestDriver;
-import abs.backend.java.dynamic.JavaDynamicTestDriver;
+// import abs.backend.java.dynamic.JavaDynamicTestDriver;
 import abs.backend.maude.MaudeCompiler;
 import abs.backend.maude.MaudeTestDriver;
 import abs.frontend.ast.Model;
@@ -65,7 +65,10 @@ public abstract class SemanticTests {
          */
         data.add(new Object[] { new JavaTestDriver() });
         data.add(new Object[] { new JavaTestDriver(1) });
-        data.add(new Object[] { new JavaDynamicTestDriver() });
+        /* XXX [stolz] Disabled due to non-deterministic test-runs.
+         * Switch back on when Radu comes back.
+         */
+        // data.add(new Object[] { new JavaDynamicTestDriver() });
         if (checkMaude()) {
             data.add(new Object[] { new MaudeTestDriver(MaudeCompiler.SIMULATOR.RL) });
             data.add(new Object[] { new MaudeTestDriver(MaudeCompiler.SIMULATOR.EQ_TIMED) });
