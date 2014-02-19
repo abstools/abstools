@@ -75,8 +75,8 @@ Bool b = True;
 The \emph{Assign Statement} assigns a value to a variable or a field.
 
 \begin{abssyntax}
-\NT{AssignStmt} \defn \NT{Variable}\ \TRS{=}\ \NT{PureExp}\ \TRS{;}
-             \defc  \NT{FieldAccess}\ \TRS{=}\ \NT{PureExp}\ \TRS{;}
+\NT{AssignStmt} \defn \NT{Variable}\ \TRS{=}\ \NT{Exp}\ \TRS{;}
+             \defc  \NT{FieldAccess}\ \TRS{=}\ \NT{Exp}\ \TRS{;}
 \end{abssyntax}
 
 \begin{absexample}
@@ -187,3 +187,7 @@ An \emph{Expression Statement} is a statement that only consists of a single exp
 \begin{absexample}
 new C(x);
 \end{absexample}
+
+% Local Variables:
+% TeX-master: "absrefmanual"
+% End:

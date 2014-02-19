@@ -141,3 +141,34 @@ the meantime~\cite{johnsen10fmco}.
 \begin{absexample}
 Bool b = f.get;
 \end{absexample}
+
+\section{Await Expression}
+
+A common pattern for asynchronous calls is:
+\begin{enumerate}
+\item Execute an asynchronous call expression, store the future in a variable
+\item \TRS{await} on the future
+\item Assign the result to a variable
+\end{enumerate}
+
+\begin{absexample}
+Fut<A> fx = o!m();
+await fx?;
+A x = fx.get;
+\end{absexample}
+
+The await expression is a shorthand for this pattern.
+
+\begin{abssyntax}
+\NT{AwaitExp} \defn \TRS{await} \NT{AsyncCall}
+\end{abssyntax}
+
+The preceding example can be written as follows, without the need to
+introduce a name for the future:
+\begin{absexample}
+A x = await o!m();
+\end{absexample}
+
+% Local Variables:
+% TeX-master: "absrefmanual"
+% End:
