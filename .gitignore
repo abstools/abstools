@@ -1,0 +1,25 @@
+dist/
+*.hi
+*.o
+*.aux
+*.dvi
+*.log
+*.ps
+gen/
+*.x
+*.y
+*.bak
+# the compiler program
+Transpile
+# generated files by BNFC
+AbsABS.hs
+DocABS.tex
+DocABS.txt
+ErrM.hs
+LexABS.hs
+ParABS.hs
+PrintABS.hs
+SkelABS.hs
+TestABS
+TestABS.hs
+

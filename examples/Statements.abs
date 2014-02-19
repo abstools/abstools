@@ -1,0 +1,16 @@
+module Statements;
+
+{
+	Interf2 o1 = new Class1(1,2,3);
+	o1.method1(1,3);	
+	o1.method2(True);
+	
+	 Fut<Int> f = o1 ! method1(1,4);
+	 await f?;
+     Fut<Unit> f2 = o1 ! method2(True);
+     await f2?;
+	 Int res = f.get;
+	 
+	 Bool res_ = o1.method3(res);
+
+}

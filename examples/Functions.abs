@@ -1,0 +1,11 @@
+module Functions;
+
+def A getLeft<A,B>(Either<A,B> e) = left(e);
+
+def Int f(Int y) = let (Int x) = y+ 3 in
+						let (Int x) = x + 4 in x + 1;
+
+def A either<A,A>(Either<A,A> e) = case e {
+    Left(l) => l;
+    Right(r) => r;
+    };

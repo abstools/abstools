@@ -1,0 +1,10 @@
+module Interfaces;
+
+interface Interf1 {
+	Int method1(Int n, Int m);
+}
+
+interface Interf2 extends Interf1 {
+	Unit method2(Bool b);
+	Bool method3(Int z, Interf1 k);
+}

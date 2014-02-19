@@ -1,0 +1,49 @@
+name:                  abs2haskell
+version:               0.0.1
+synopsis:              abs2haskell, a transcompiler from the ABS language to Haskell
+description:           (longer) abs2haskell, a transcompiler from the ABS language to Haskell
+author:                Nikolaos Bezirgiannis
+maintainer:            NikolaosBezirgiannis <bezirgia@cwi.nl>
+stability:             provisional
+build-type:            Simple
+cabal-version:         >= 1.4
+                      
+library
+  build-depends:      base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts
+  exposed-modules:    ABSPrelude
+  other-modules:      
+                      -- lexer -}    
+                      LexABS,
+                      -- parser             
+                      ParABS,
+                      -- ast
+                      AbsABS, 
+                      -- pretty-printer for ABS language (not actually needed)
+                      PrintABS, 
+                      -- basic data types of the API
+                      Base, 
+                      -- core functions of the framework
+                      Core, 
+                      -- primitive functions of the API reflecting the ABS language
+                      Prim, 
+                      -- extra utility functions
+                      Utils, 
+                      -- configuration for the compiler program
+                      Conf, 
+                      -- parser stuff
+                      SkelABS 
+  --ghc-options:        -rtsopts -threaded -fwarn-unused-imports
+  hs-source-dirs:     src
+
+executable abs2haskell
+  main-is:             Transpile.hs
+  build-depends:       base
+  --ghc-options:         -rtsopts -threaded -ddump-splices -F -pgmF she
+  hs-source-dirs:      src
+
+test-suite test
+  type:                exitcode-stdio-1.0
+  main-is:             Test.hs
+  build-depends:       base, test-framework, test-framework-hunit, test-framework-th, HUnit
+  ghc-options:
+  hs-source-dirs:      src, test                        
