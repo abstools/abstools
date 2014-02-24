@@ -11,94 +11,90 @@ import Control.Monad.Trans.Class (lift)
 import qualified Control.Monad.Trans.RWS as RWS (RWST, ask, get, put)
 import Control.Concurrent.MVar (newEmptyMVar, isEmptyMVar, readMVar)
 import Control.Concurrent.Chan (writeChan)
+import Control.Monad.Coroutine (mapMonad)
+import Control.Monad.Coroutine.SuspensionFunctors (yield)
 
-this :: (Object_ o) => ABS o a (ObjectRef o)
-this = do
-  t <- liftM aThis RWS.ask
-  return (R t)
+-- this :: (Object_ o) => ABS o (ObjectRef o)
+-- this = do
+--   t <- liftM aThis $ lift RWS.ask
+--   return t
 
-thisCOG :: (Object_ o) => ABS o a COG
+thisCOG :: (Object_ o) => ABS o COG
 thisCOG = do
-  t <- liftM aCOG RWS.ask
-  return (R t)
+  t <- liftM aCOG $ lift RWS.ask
+  return t
 
-skip :: (Object_ o) => ABS o a ()
-skip = return (R ())
+skip :: (Object_ o) => ABS o ()
+skip = return (())
 
-suspend cont = do
-  (AConf obj chan _ f) <- RWS.ask
-  lift $ writeChan chan (RunJob obj cont f) 
-  return (R ())
+suspend :: ABS o ()
+suspend = yield S
 
+  -- (AConf obj chan _ f) <- RWS.ask
+  -- lift $ writeChan chan (RunJob obj f cont) 
+  -- return (())
 
+sync_call :: (Object_ o, Object_ a) => ObjectRef a -> (ObjectRef a -> ABS a b) -> ABS o b
 sync_call obj@(ObjectRef ioref _) call = do
-  R hereCOG <- thisCOG
-  obj1 <- lift $ readIORef ioref
-  R otherCOG <- whereis obj1
+  hereCOG <- thisCOG
+  obj1 <- lift $ lift $ readIORef ioref
+  otherCOG <- whereis obj1
   when (hereCOG /= otherCOG) $ error "Sync Call on a different COG detected"
-  withReaderT (\ aconf -> aconf {aThis = obj}) (call obj)
+  mapMonad (withReaderT (\ aconf -> aconf {aThis = obj})) (call obj)
 
 
-await :: forall a o.
-           Object_ o =>
-           AwaitGuard o a
-           -> ABS o a a
-           -> ABS o a a
-await (FutureGuard f@(FutureRef mvar _ _)) cont  = do
-  let check f  = do
-        empty <- lift $ isEmptyMVar mvar
-        if empty
-          then do
-          AConf obj _ _ fut  <- RWS.ask
-          return (F f obj cont fut)
-          else cont
-  check f
+await ::  (Object_ o) => AwaitGuard o -> ABS o () 
+await (FutureGuard f@(FutureRef mvar _ _))  = do
+  empty <- lift $ lift $ isEmptyMVar mvar
+  when empty $ do
+    yield (F f)
 
-await (FutureGuard f@(FutureRef mvar _ _) :&: gs) cont  = do
-  empty <- lift $ isEmptyMVar mvar
-  if empty
-    then do
-    AConf obj _ _ fut <- RWS.ask
-    return (F f obj (await gs cont) fut)
-    else await gs cont
+await (FutureGuard f@(FutureRef mvar _ _) :&: gs)  = do
+  empty <- lift $ lift $ isEmptyMVar mvar
+  when empty $ do
+    yield (F f)
+  await gs
 
 
-await g@(ThisGuard is tg) cont = do
-  R check <- tg
-  if check
-     then cont
-     else do
-       AConf obj _ _ fut <- RWS.ask
-       return (T obj is (await g cont) fut)
+await g@(ThisGuard is tg) = do
+  check <- tg
+  when (not check) $ do
+       AConf obj _ _ <- lift $ RWS.ask
+       yield (T obj is)
+       await g
 
-await gs@(ThisGuard is tg :&: rest) cont = do
-  R check <- tg
-  if check
-     then await rest cont
-     else do
-       AConf obj _ _ fut <- RWS.ask
-       return (T obj is (await gs cont) fut)
+await gs@(ThisGuard is tg :&: rest) = do
+  check <- tg
+  when (not check) $ do
+       AConf obj _ _ <- lift $ RWS.ask
+       yield (T obj is)
+       await gs
+  await rest
 
 async_call obj@(ObjectRef ioref _) call = do
-  obj1 <- lift $ readIORef ioref
-  R loc <- whereis obj1
-  mvar <- lift $ newEmptyMVar -- The new future created
-  AConf {aThread = tid} <- RWS.ask
-  astate@(AState {aCounter = counter}) <- RWS.get
-  RWS.put (astate {aCounter = counter + 1})
+  obj1 <- lift $ lift $ readIORef ioref
+  loc <-  whereis obj1
+  mvar <- lift $ lift $ newEmptyMVar -- The new future created
+  AConf {aThread = tid} <- lift $ RWS.ask
+  astate@(AState {aCounter = counter}) <- lift $ RWS.get
+  lift $ RWS.put (astate {aCounter = counter + 1})
   let f = FutureRef mvar tid counter
-  lift $ writeChan loc (RunJob obj (call obj) f)
-  return (R f)
+  lift $ lift $ writeChan loc (RunJob obj f (call obj))
+  return f
 
-while :: ABS o a Bool -> ABS o a ()
-while pred = do
-  R res <- pred
+while :: ABS o Bool -> ABS o () -> ABS o ()
+while pred action = do
+  res <- pred
   if (not res) 
-    then while pred
-    else return (R ())
+    then do
+      action
+      while pred action
+    else return (())
 
-get a = (\ (FutureRef mvar _ _) -> lift $ liftM R $ readMVar mvar) =<< a
+get :: (Object_ o) => ABS o (FutureRef f) -> ABS o f
+get a = (\ (FutureRef mvar _ _) -> lift $ lift $ readMVar mvar) =<< a
 
-readObject (ObjectRef ioref _) = readIORef ioref
+readObject :: (Object_ o) => ObjectRef f -> ABS o f
+readObject (ObjectRef ioref _) = lift $ lift $ readIORef ioref
 
 

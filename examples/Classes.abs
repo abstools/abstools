@@ -25,6 +25,7 @@ class Class1(Int p1, Int p2, Int p3) implements Interf2 {
 
 	}
 	Bool method3(Int z) {
+     3;
 	 z = z + 1;
 	 z = 2 + z + 3;
 	 z = this.x + 4 + 5;
@@ -49,5 +50,6 @@ class Class1(Int p1, Int p2, Int p3) implements Interf2 {
 	 Int res = f.get;
 	 
 	 Bool res_ = o1.method3(res);
+     assert (res == 3);
 
 }

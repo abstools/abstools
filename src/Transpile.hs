@@ -14,7 +14,7 @@ import Data.List (isSuffixOf)
 import System.Directory (getDirectoryContents, doesDirectoryExist, doesFileExist)
 import System.FilePath ((</>), replaceExtension)
 import Control.Monad (when, liftM)
-import Data.List (intersperse, nub, union, (\\), findIndices)
+import Data.List (intersperse, nub, union, findIndices)
 import Data.Char (toLower)
 
 import qualified Data.Map as M
@@ -174,7 +174,7 @@ main = do
               -- TODO check if its an interface so to generate an ObjectRef type and not an ADT
               [HS.QualConDecl noLoc [] [] $ HS.RecDecl (HS.Ident clsName) (([HS.Ident $ headToLower clsName ++ "_loc"],
                                                                             -- maybe it should be banged for the fields of the class
-                                                                           HS.UnBangedTy (HS.TyForall Nothing [HS.ClassA (HS.UnQual (HS.Ident "Object_")) [HS.TyVar (HS.Ident "o")]] (HS.TyApp (HS.TyApp (HS.TyApp (HS.TyCon (HS.UnQual (HS.Ident "ABS"))) (HS.TyVar (HS.Ident "o"))) (HS.TyVar (HS.Ident "a"))) (HS.TyCon (HS.UnQual (HS.Ident "COG")))))
+                                                                           HS.UnBangedTy (HS.TyForall Nothing [HS.ClassA (HS.UnQual (HS.Ident "Object_")) [HS.TyVar (HS.Ident "o")]] (HS.TyApp (HS.TyApp (HS.TyCon (HS.UnQual (HS.Ident "ABS"))) (HS.TyVar (HS.Ident "o")))  (HS.TyCon (HS.UnQual (HS.Ident "COG")))))
                                                                            ):map (\ (t,(ABS.Ident i)) -> ([HS.Ident $ headToLower clsName ++ "_" ++ i], HS.UnBangedTy (tType t)))  allFields)]  []
         :
 
@@ -196,8 +196,8 @@ main = do
                -- the new method
                HS.InsDecl (HS.FunBind [HS.Match noLoc (HS.Ident "new") [HS.PVar $ HS.Ident "__cont"] Nothing
                                        (HS.UnGuardedRhs $ HS.Do (
-                                        -- chan <- lift $ newChan
-                                        (HS.Generator noLoc (HS.PVar $ HS.Ident "__chan") $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") (HS.Var $ HS.UnQual $ HS.Ident "newChan"))
+                                        -- chan <- lift $ lift $ newChan
+                                        (HS.Generator noLoc (HS.PVar $ HS.Ident "__chan") $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") (HS.Var $ HS.UnQual $ HS.Ident "newChan"))
                                         :
                                         -- let __field = initialized_value
                                         fieldInits
@@ -215,20 +215,21 @@ main = do
                                                                        -- class1_loc = (return (R __chan))
                                                                        [HS.FieldUpdate (HS.UnQual $ HS.Ident $ headToLower clsName ++ "_loc")
                                                                           (HS.App (HS.Var $ HS.UnQual $ HS.Ident "return")
-                                                                             (HS.App (HS.Con $ HS.UnQual $ HS.Ident "R") (HS.Var $ HS.UnQual $ HS.Ident "__chan")))]
+                                                                             (HS.Var $ HS.UnQual $ HS.Ident "__chan"))]
                                                                        fdecls)) (HS.BDecls [])]
-                                         -- __ioref <- lift $ newIORef __c
-                                        , HS.Generator noLoc (HS.PVar $ HS.Ident "__ioref") $ (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift")
-                                                                                                                      (HS.App (HS.Var $ HS.UnQual $ HS.Ident "newIORef")
-                                                                                                                             (HS.Var $ HS.UnQual $ HS.Ident "__c")))
+                                         -- __ioref <- lift $ lift $ newIORef __c
+                                        , HS.Generator noLoc (HS.PVar $ HS.Ident "__ioref") $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") $
+                                                           (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift")
+                                                                  (HS.App (HS.Var $ HS.UnQual $ HS.Ident "newIORef")
+                                                                         (HS.Var $ HS.UnQual $ HS.Ident "__c")))
                                         -- let __obj = ObjectRef __ioref 0
                                         , HS.LetStmt $ HS.BDecls [HS.PatBind noLoc (HS.PVar $ HS.Ident "__obj") Nothing 
                                                                   (HS.UnGuardedRhs (HS.App 
                                                                                           (HS.App (HS.Con $ HS.UnQual $ HS.Ident "ObjectRef")
                                                                                                  (HS.Var $ HS.UnQual $ HS.Ident "__ioref"))
                                                                                            (HS.Lit $ HS.Int 0))) (HS.BDecls [])]
-                                        -- lift $ spawnCOG __chan
-                                        , HS.Qualifier $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift")
+                                        -- lift $ lift $ spawnCOG __chan
+                                        , HS.Qualifier $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift")
                                                        (HS.App (HS.Var $ HS.UnQual $ HS.Ident "spawnCOG") (HS.Var $ HS.UnQual $ HS.Ident "__chan"))
 
                                         -- __obj `async_call` __init
@@ -240,9 +241,9 @@ main = do
                                                            (HS.QVarOp $ HS.UnQual $ HS.Ident $ "async_call")
                                                            (HS.Var $ HS.UnQual $ HS.Ident "run")
                                         
-                                        -- return $ R __obj
-                                        , HS.Qualifier $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "return")
-                                                       (HS.App (HS.Con $ HS.UnQual $ HS.Ident "R") (HS.Var $ HS.UnQual $ HS.Ident "__obj"))
+                                        -- return $ __obj
+                                        , HS.Qualifier $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") (HS.Var $ HS.UnQual $ HS.Ident "__obj")
+
                                         ])) (HS.BDecls [])])
 
                :
@@ -253,7 +254,7 @@ main = do
                                          ++
 
                                          [
-                                         -- let __c = cont { class1_field1 = __field1, ..., class1_loc = (return (R __chan)) }
+                                         -- let __c = cont { class1_field1 = __field1, ..., class1_loc = thisCOG }
                                          HS.LetStmt $ HS.BDecls [HS.PatBind noLoc (HS.PVar $ HS.Ident "__c") Nothing 
                                                                    (HS.UnGuardedRhs $ HS.RecUpdate (HS.Var $ HS.UnQual $ HS.Ident "__cont")
                                                                       (foldr (\ fdecl acc -> case fdecl of
@@ -267,15 +268,15 @@ main = do
                                                                           (HS.Var $ HS.UnQual $ HS.Ident "thisCOG")
                                                                              ]
                                                                        fdecls)) (HS.BDecls [])]                                          
-                                         -- __ioref <- lift $ newIORef __c
-                                        , HS.Generator noLoc (HS.PVar $ HS.Ident "__ioref") $ (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift")
+                                         -- __ioref <- lift $ lift $ newIORef __c
+                                        , HS.Generator noLoc (HS.PVar $ HS.Ident "__ioref") $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") $ (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift")
                                                                                                                       (HS.App (HS.Var $ HS.UnQual $ HS.Ident "newIORef")
                                                                                                                              (HS.Var $ HS.UnQual $ HS.Ident "__c")))
-                                         --       __astate@(AState {aCounter = __counter})  <- RWS.get
-                                         , HS.Generator noLoc (HS.PAsPat (HS.Ident "__astate") (HS.PParen (HS.PRec (HS.UnQual (HS.Ident "AState")) [HS.PFieldPat (HS.UnQual (HS.Ident "aCounter")) (HS.PVar (HS.Ident "__counter"))]))) (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "get")))
+                                         --       __astate@(AState {aCounter = __counter})  <- lift $ RWS.get
+                                         , HS.Generator noLoc (HS.PAsPat (HS.Ident "__astate") (HS.PParen (HS.PRec (HS.UnQual (HS.Ident "AState")) [HS.PFieldPat (HS.UnQual (HS.Ident "aCounter")) (HS.PVar (HS.Ident "__counter"))]))) (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "get"))))
 
-                                         -- RWS.put (__astate {aCounter = __counter + 1})
-                                         , HS.Qualifier (HS.App (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "put"))) (HS.Paren (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "__astate"))) [HS.FieldUpdate (HS.UnQual (HS.Ident "aCounter")) (HS.InfixApp (HS.Var (HS.UnQual (HS.Ident "__counter"))) (HS.QVarOp (HS.UnQual (HS.Symbol "+"))) (HS.Lit (HS.Int 1)))])))
+                                         -- lift $ RWS.put (__astate {aCounter = __counter + 1})
+                                         , HS.Qualifier $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") $ (HS.App (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "put"))) (HS.Paren (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "__astate"))) [HS.FieldUpdate (HS.UnQual (HS.Ident "aCounter")) (HS.InfixApp (HS.Var (HS.UnQual (HS.Ident "__counter"))) (HS.QVarOp (HS.UnQual (HS.Symbol "+"))) (HS.Lit (HS.Int 1)))])))
                                          -- let __obj = ObjectRef __ioref __counter
                                          , HS.LetStmt $ HS.BDecls [HS.PatBind noLoc (HS.PVar $ HS.Ident "__obj") Nothing 
                                                                   (HS.UnGuardedRhs (HS.App 
@@ -292,9 +293,9 @@ main = do
                                                            (HS.QVarOp $ HS.UnQual $ HS.Ident $ "async_call")
                                                            (HS.Var $ HS.UnQual $ HS.Ident "run")
                                         
-                                         -- return $ R __obj
+                                         -- return $ __obj
                                          , HS.Qualifier $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "return")
-                                                            (HS.App (HS.Con $ HS.UnQual $ HS.Ident "R") (HS.Var $ HS.UnQual $ HS.Ident "__obj"))
+                                                            (HS.Var $ HS.UnQual $ HS.Ident "__obj")
                                          ])) (HS.BDecls [])])
                                         
                :
@@ -318,32 +319,29 @@ main = do
                  [
                   -- adds an explicit type signature for setters
                   HS.TypeSig noLoc [HS.Ident $ "set_" ++ headToLower clsName ++ "_" ++ i]
-                                      (HS.TyFun (HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "Result") (tType t))
-                                         (HS.TyApp (HS.TyApp (HS.TyApp (HS.TyCon (HS.UnQual $ HS.Ident "ABS"))
+                                      (HS.TyFun (tType t)
+                                         (HS.TyApp (HS.TyApp (HS.TyCon (HS.UnQual $ HS.Ident "ABS"))
                                                         (HS.TyCon $ HS.UnQual $ HS.Ident clsName))
-                                                  (HS.TyVar $ HS.Ident "f"))
                                           (HS.TyCon $ HS.Special $ HS.UnitCon)))
 
                   ,
-                  HS.FunBind [HS.Match noLoc (HS.Ident $ "set_" ++ headToLower clsName ++ "_" ++ i) [HS.PApp (HS.UnQual $ HS.Ident "R") [HS.PVar $ HS.Ident "v" ]] Nothing
+                  HS.FunBind [HS.Match noLoc (HS.Ident $ "set_" ++ headToLower clsName ++ "_" ++ i) [HS.PVar $ HS.Ident "v" ] Nothing
                                    (HS.UnGuardedRhs $ HS.Do
                                     [
-                                     -- (AConf this@(ObjectRef ioref _) thisCOG _ _) <- RWS.ask
-                                     HS.Generator noLoc (HS.PParen (HS.PApp (HS.UnQual (HS.Ident "AConf")) [HS.PAsPat (HS.Ident "this") (HS.PParen (HS.PApp (HS.UnQual (HS.Ident "ObjectRef")) [HS.PVar (HS.Ident "ioref"),HS.PWildCard])),HS.PVar (HS.Ident "thisCOG"),HS.PWildCard,HS.PWildCard])) (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "ask")))
-                                     -- astate@(AState _ om) <- RWS.get
-                                    ,HS.Generator noLoc (HS.PAsPat (HS.Ident "astate") (HS.PParen (HS.PApp (HS.UnQual (HS.Ident "AState")) [HS.PWildCard,HS.PVar (HS.Ident "om")]))) (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "get")))
-                                     -- lift $ modifyIORef' ioref (\ c -> c {class1_p1 = v})      -- update the field value
-                                    ,HS.Qualifier (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "modifyIORef'"))) (HS.Var (HS.UnQual (HS.Ident "ioref")))) (HS.Paren (HS.Lambda noLoc [HS.PVar (HS.Ident "c")] (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "c"))) [HS.FieldUpdate (HS.UnQual (HS.Ident $ headToLower clsName ++ "_" ++ i )) (HS.Var (HS.UnQual (HS.Ident "v")))])))))
+                                     -- (AConf this@(ObjectRef ioref _) thisCOG _) <- lift $ RWS.ask
+                                     HS.Generator noLoc (HS.PParen (HS.PApp (HS.UnQual (HS.Ident "AConf")) [HS.PAsPat (HS.Ident "this") (HS.PParen (HS.PApp (HS.UnQual (HS.Ident "ObjectRef")) [HS.PVar (HS.Ident "ioref"),HS.PWildCard])),HS.PVar (HS.Ident "thisCOG"),HS.PWildCard])) (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "ask"))))
+                                     -- astate@(AState _ om) <- lift $ RWS.get
+                                    ,HS.Generator noLoc (HS.PAsPat (HS.Ident "astate") (HS.PParen (HS.PApp (HS.UnQual (HS.Ident "AState")) [HS.PWildCard,HS.PVar (HS.Ident "om")]))) (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "get"))))
+                                     -- lift $ lift $ modifyIORef' ioref (\ c -> c {class1_p1 = v})      -- update the field value
+                                    ,HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "modifyIORef'"))) (HS.Var (HS.UnQual (HS.Ident "ioref")))) (HS.Paren (HS.Lambda noLoc [HS.PVar (HS.Ident "c")] (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "c"))) [HS.FieldUpdate (HS.UnQual (HS.Ident $ headToLower clsName ++ "_" ++ i )) (HS.Var (HS.UnQual (HS.Ident "v")))]))))))
                                      -- let (maybeWoken, om') = M.updateLookupWithKey (\ k v -> Nothing) (AnyObject this, 0) om
                                      ,HS.LetStmt (HS.BDecls [HS.PatBind noLoc (HS.PTuple HS.Boxed [HS.PVar (HS.Ident "maybeWoken"),HS.PVar (HS.Ident "om'")]) Nothing (HS.UnGuardedRhs (HS.App (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "updateLookupWithKey"))) (HS.Paren (HS.Lambda noLoc [HS.PVar (HS.Ident "k"),HS.PVar (HS.Ident "v")] (HS.Con (HS.UnQual (HS.Ident "Nothing")))))) (HS.Tuple HS.Boxed [HS.App (HS.Con (HS.UnQual (HS.Ident "AnyObject"))) (HS.Var (HS.UnQual (HS.Ident "this"))),HS.Lit (HS.Int fieldNumber)])) (HS.Var (HS.UnQual (HS.Ident "om"))))) (HS.BDecls [])])
 
-                                     -- maybe (return ()) (\ woken -> lift $ writeList2Chan thisCOG woken) maybeWoken
-                                     ,HS.Qualifier (HS.App (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "maybe"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "return"))) (HS.Con (HS.Special HS.UnitCon))))) (HS.Paren (HS.Lambda noLoc [HS.PVar (HS.Ident "woken")] (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "writeList2Chan"))) (HS.Var (HS.UnQual (HS.Ident "thisCOG")))) (HS.Var (HS.UnQual (HS.Ident "woken")))))))) (HS.Var (HS.UnQual (HS.Ident "maybeWoken"))))
+                                     -- maybe (return ()) (\ woken -> lift $ lift $ writeList2Chan thisCOG woken) maybeWoken
+                                     ,HS.Qualifier (HS.App (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "maybe"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "return"))) (HS.Con (HS.Special HS.UnitCon))))) (HS.Paren (HS.Lambda noLoc [HS.PVar (HS.Ident "woken")] (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "writeList2Chan"))) (HS.Var (HS.UnQual (HS.Ident "thisCOG")))) (HS.Var (HS.UnQual (HS.Ident "woken"))))))))) (HS.Var (HS.UnQual (HS.Ident "maybeWoken"))))
 
-                                     -- RWS.put $ astate {aSleepingO = om'}
-                                     ,HS.Qualifier (HS.App (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "put"))) (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "astate"))) [HS.FieldUpdate (HS.UnQual (HS.Ident "aSleepingO")) (HS.Var (HS.UnQual (HS.Ident "om'")))]))
-                                     -- return (R ())
-                                     ,HS.Qualifier eReturnUnit
+                                     -- lift $ RWS.put $ astate {aSleepingO = om'}
+                                     ,HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") (HS.App (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "put"))) (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "astate"))) [HS.FieldUpdate (HS.UnQual (HS.Ident "aSleepingO")) (HS.Var (HS.UnQual (HS.Ident "om'")))])))
                                     ]
                                    )
                                    (HS.BDecls [])]])
@@ -487,99 +485,31 @@ main = do
                                      (HS.TyFun 
                                       (HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "ObjectRef")
                                          (HS.TyVar $ HS.Ident "a"))
-                                      (HS.TyApp ((HS.TyApp 
-                                                       (HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "ABS") 
-                                                              (HS.TyVar $ HS.Ident "a")) 
-                                                       (HS.TyVar $ HS.Ident "fut") ))
+                                      (HS.TyApp ((HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "ABS") 
+                                                              (HS.TyVar $ HS.Ident "a")) )
                                                 (tType tReturn))
                                      )
                                      (map (\ (ABS.Par typ _) -> typ) pars))
 
 
     tThisExp :: ABS.PureExp -> String -> HS.Exp
-    tThisExp (ABS.If predE thenE elseE) cls = (HS.App
-                                             (HS.App
-                                                    (HS.App (HS.Var $ HS.UnQual $ HS.Ident "ifthenelseM") (tThisExp predE cls))
-                                                    (tThisExp thenE cls))
-                                             (tThisExp elseE cls))
-
-    tThisExp (ABS.Let (ABS.Par _ (ABS.Ident pid)) eqE inE) cls = 
-                                              (HS.App -- apply the created lamdba to the equality expr
-                                                  (HS.Lambda noLoc
-                                                   -- ignore the type of the param because ABS let is monomorphic anyway, it can infer it
-                                                   [HS.PVar $ HS.Ident pid] -- bound variable
-                                                   (tThisExp inE cls))
-                                                  (tThisExp eqE cls)
-                                              )
-
-    tThisExp (ABS.Case matchE branches) cls = HS.InfixApp (tThisExp matchE cls) (HS.QVarOp $ HS.UnQual $ HS.Symbol ">>=")
-                                      (HS.Lambda noLoc
-                                         [HS.PVar $ HS.Ident "__e"] -- magic e, can be improved when haskell-src-exts supports Lambda-case
-                                         (HS.Case (HS.Var $ HS.UnQual $ HS.Ident "__e")
-                                            (map 
-                                             (\ (ABS.CBranch pat exp) -> HS.Alt noLoc (tFunPat pat) (HS.UnGuardedAlt (tThisExp exp cls)) (HS.BDecls []))
-                                             branches)))
-
-    tThisExp (ABS.ECall (ABS.Ident cid) args) cls = foldl 
-                                            (\ acc nextArg -> HS.InfixApp acc (HS.QVarOp $ HS.UnQual $ HS.Symbol "=<<") (tThisExp nextArg cls))
-                                            (HS.Var $ HS.UnQual $ HS.Ident cid)
-                                            args
-
-    tThisExp (ABS.ENaryCall (ABS.Ident cid) args) cls = HS.InfixApp 
-                                                (HS.Var $ HS.UnQual $ HS.Ident cid)
-                                                (HS.QVarOp $ HS.UnQual $ HS.Symbol "=<<")
-                                                (HS.App (HS.Var $ HS.UnQual $ HS.Ident "sequence") (HS.List (map (\ arg -> tThisExp arg cls) args)))
-
-    tThisExp (ABS.EOr left right) cls = HS.InfixApp (tThisExp left cls) (HS.QVarOp $ HS.UnQual $ HS.Symbol "||:")  (tThisExp right cls)
-
-    tThisExp (ABS.EAnd left right) cls = HS.InfixApp (tThisExp left cls) (HS.QVarOp $ HS.UnQual $ HS.Symbol "&&:")  (tThisExp right cls)
-
-    tThisExp (ABS.EEq left right) cls = HS.InfixApp (tThisExp left cls) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "==:")  (tThisExp right cls)
-
-    tThisExp (ABS.ENeq left right) cls = HS.InfixApp (tThisExp left cls) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "/=:")  (tThisExp right cls)
-
-    tThisExp (ABS.ELt left right) cls = HS.InfixApp (tThisExp left cls) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "<:")  (tThisExp right cls)
-
-    tThisExp (ABS.ELe left right) cls = HS.InfixApp (tThisExp left cls) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "<=:")  (tThisExp right cls)
-
-    tThisExp (ABS.EGt left right) cls = HS.InfixApp (tThisExp left cls) (HS.QVarOp $ HS.UnQual  $ HS.Symbol ">:")  (tThisExp right cls)
-
-    tThisExp (ABS.EGe left right) cls = HS.InfixApp (tThisExp left cls) (HS.QVarOp $ HS.UnQual  $ HS.Symbol ">=:")  (tThisExp right cls)
-
-    tThisExp (ABS.EAdd left right) cls = HS.InfixApp (tThisExp left cls) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "+:")  (tThisExp right cls)
-
-    tThisExp (ABS.ESub left right) cls = HS.InfixApp (tThisExp left cls) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "-:")  (tThisExp right cls)
-
-    tThisExp (ABS.EMul left right) cls = HS.InfixApp (tThisExp left cls) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "*:")  (tThisExp right cls)
-
-    tThisExp (ABS.EDiv left right) cls = HS.InfixApp (tThisExp left cls) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "/:")  (tThisExp right cls)
-
-    tThisExp (ABS.EMod left right) cls = HS.InfixApp (tThisExp left cls) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "%:")  (tThisExp right cls)
-
-    tThisExp (ABS.ELogNeg e) cls = HS.App (HS.Var $ HS.UnQual $ HS.Ident "notM") (tThisExp e cls)
-
-    tThisExp (ABS.EIntNeg e) cls = HS.App (HS.Var $ HS.UnQual $ HS.Ident "negateM") (tThisExp e cls) -- HS.NegApp (tThisExp e) -- cannot use NegApp
-
-    tThisExp (ABS.EUnaryConstr (ABS.QualType qids)) _ = let mids = init qids
-                                                  in HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") $ HS.Con $ (if null mids 
-                                                               then HS.UnQual 
-                                                               else HS.Qual (HS.ModuleName $ joinQualTypeIds mids)
-                                                              ) $ HS.Ident $ (\ (ABS.QualTypeIdent (ABS.TypeIdent cid)) -> cid) (last qids)
-
-    tThisExp (ABS.EMultConstr qids args) cls = HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") $ foldl
-                                       (\ acc nextArg -> HS.App acc (tThisExp nextArg cls))
-                                       (tPureExp (ABS.EUnaryConstr qids) ) -- hack to point to pure expression and can wrap it with return
-                                       args
+    tThisExp texp cls = let thisTerms = collect texp
+                    in if null thisTerms
+                       then (HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") (tPureExp texp)) --  rhs  
+                       else
+                           HS.InfixApp 
+                                 (HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") $ HS.Var $ HS.UnQual $ HS.Ident "this")
+                                 (HS.QVarOp $ HS.UnQual $ HS.Symbol ">>=")
+                                 (HS.Lambda noLoc [(HS.PRec (HS.UnQual $ HS.Ident cls) $ -- introduce bindings
+                                                    map (\ arg -> HS.PFieldPat (HS.UnQual $ HS.Ident (headToLower cls ++ '_' : arg)) 
+                                                                 (HS.PVar $ HS.Ident $ "__" ++ arg) )  (nub thisTerms))
+                                                  ] (HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") (tPureExp texp)))
 
 
-    tThisExp (ABS.EVar (ABS.Ident pid)) _ = HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") $ HS.Var $ HS.UnQual $ HS.Ident pid
 
-    tThisExp (ABS.ELit lit) _ = HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") $ HS.Lit $ tFunLit lit
-
-
-    tThisExp (ABS.EThis (ABS.Ident ident)) cls = HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") $ 
-                         HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "liftM") (HS.Var $ HS.UnQual $ HS.Ident (headToLower cls ++ "_" ++ ident))) $ 
-                           HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") (HS.Var $ HS.UnQual $ HS.Ident "this")
+    -- tThisExp (ABS.EThis (ABS.Ident ident)) cls = HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "liftM")
+    --                                                            (HS.Var $ HS.UnQual $ HS.Ident (headToLower cls ++ "_" ++ ident))) $ 
+    --                                              HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") (HS.Var $ HS.UnQual $ HS.Ident "this")
 
 
 
@@ -638,21 +568,20 @@ main = do
     tStmts :: [ABS.Stm] -> Bool -> String -> [String] -> [HS.Stmt]
     tStmts [] _canReturn _ _ = []
     tStmts (stmt:rest) canReturn cls clsFields = case stmt of
-                       ABS.SExp e -> (case e of
-                                        ABS.ExpE eexp -> HS.Qualifier (tEffExp eexp cls) -- have to force to WHNF
-                                        ABS.ExpP texp -> HS.Qualifier (tThisExp texp cls) -- have to force to WHNF
+                       ABS.SExp e -> HS.Qualifier (case e of
+                                        ABS.ExpE eexp -> tEffExp eexp cls -- have to force to WHNF
+                                        ABS.ExpP texp -> tThisExp texp cls -- have to force to WHNF
                                         -- error "Cannot run a pure expression as a standalone statement"                                   
                                       ) : tStmts rest canReturn cls clsFields
-                       ABS.SSuspend -> [HS.Qualifier $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "suspend") (tBlock rest canReturn cls clsFields)]
+                       ABS.SSuspend -> HS.Qualifier (HS.Var $ HS.UnQual $ HS.Ident "suspend") : tStmts rest canReturn cls clsFields
                        ABS.SBlock stmts -> HS.Qualifier (tBlock stmts False cls clsFields) : tStmts rest canReturn cls clsFields
                        ABS.SSkip ->  HS.Qualifier (HS.Var (HS.UnQual $ HS.Ident "skip")) : tStmts rest canReturn cls clsFields
                        ABS.SReturn e -> if canReturn
                                        then if null rest
-                                            then case e of
-                                                   ABS.ExpE eexp -> [HS.Qualifier (tEffExp eexp cls)]
-                                                   ABS.ExpP texp -> [HS.Qualifier $ (HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "liftM")
-                                                                                                  (HS.Con $ HS.UnQual $ HS.Ident "R"))
-                                                                                    (tThisExp texp cls))]
+                                            then [HS.Qualifier $ case e of
+                                                                   ABS.ExpE eexp -> tEffExp eexp cls
+                                                                   ABS.ExpP texp -> tThisExp texp cls
+                                                 ]
                                             else error "Return must be the last statement"
                                        else error "Return must be the last statement" -- maybe differentiate between these two errors
                        ABS.SIf texp stm -> HS.Qualifier (HS.App 
@@ -670,17 +599,13 @@ main = do
                                                                  (tBlock [stm] False cls clsFields)) : tStmts rest canReturn cls clsFields
                        ABS.SDec _typ _ident -> tStmts rest canReturn cls clsFields -- ignore the dec TODO: don't ignore it, remove the ident from the class attributes to check
                        ABS.SDecAss typ ident texp ->  tStmts (ABS.SDec typ ident : ABS.SAss ident texp : rest) canReturn cls clsFields -- normalize it to Dec + Ass
-                       ABS.SAss (ABS.Ident ident) (ABS.ExpP texp) -> HS.Generator noLoc 
-                                                                    (HS.PVar $ HS.Ident ident) -- lhs
-                                                                    (tThisExp texp cls) --  rhs
-                                                                    -- (HS.PApp (HS.UnQual $ HS.Ident "R") [HS.PVar $ HS.Ident ident]) -- lhs -- TODO: maybe can be optimized
-                                                                    -- (HS.App 
-                                                                    --        (HS.App (HS.Var $ HS.UnQual $ HS.Ident "liftM") (HS.Var $ HS.UnQual $ HS.Ident "R"))
-                                                                    --        (tThisExp texp cls)) -- rhs wrapped on a liftm R
-                                                                    : tStmts rest canReturn cls clsFields
+                       ABS.SAss (ABS.Ident ident) (ABS.ExpP texp) ->  (HS.Generator noLoc 
+                                                                            (HS.PVar $ HS.Ident ident) -- lhs
+                                                                            (tThisExp texp cls))
+                                                                     : tStmts rest canReturn cls clsFields
                        ABS.SAss (ABS.Ident ident) (ABS.ExpE eexp)-> 
                            HS.Generator noLoc
-                                 (HS.PApp (HS.UnQual $ HS.Ident "R") [HS.PVar $ HS.Ident ident]) -- lhs
+                                 (HS.PVar $ HS.Ident ident) -- lhs
                                  (let argsExps = case eexp of
                                                ABS.Get _ -> [] -- tEffExp eexp cls
                                                ABS.ThisGet _ -> [] -- tEffExp eexp cls
@@ -696,8 +621,7 @@ main = do
                                   then tEffExp eexp cls
                                   else -- readObject this >>= \ Class1 { record bindings   } ->
                                       HS.InfixApp 
-                                                (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") -- -rhs
-                                                 (HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") $ HS.Var $ HS.UnQual $ HS.Ident "this"))
+                                                 (HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") $ HS.Var $ HS.UnQual $ HS.Ident "this")
                                                 (HS.QVarOp $ HS.UnQual $ HS.Symbol ">>=")
                                                 (HS.Lambda noLoc [(HS.PRec (HS.UnQual $ HS.Ident cls) $ -- introduce bindings
                                                                    map (\ arg -> HS.PFieldPat (HS.UnQual $ HS.Ident (headToLower cls ++ '_' : arg)) 
@@ -706,28 +630,46 @@ main = do
                                                  (tEffExp eexp cls))
                                  )
                                  )
-                                   -- (HS.Generator noLoc 
-                                   --       (HS.PRec (HS.UnQual $ HS.Ident cls) $ -- lhs
-                                   --        map (\ arg -> HS.PFieldPat (HS.UnQual $ HS.Ident (headToLower cls ++ '_' : arg)) 
-                                   --                     (HS.PVar $ HS.Ident $ "this_" ++ arg) )  (nub $ concatMap collect args))
-                                   --       (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") -- -rhs
-                                   --         (HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") $ HS.Var $ HS.UnQual $ HS.Ident "this") )
-                                   --  :)
                                  : tStmts rest canReturn cls clsFields
                            
-                       ABS.SFieldAss (ABS.Ident ident) e -> HS.Qualifier (HS.InfixApp 
-                                                                           (HS.Var $ HS.UnQual $ HS.Ident $ "set_" ++ headToLower cls ++ "_" ++ ident)
-                                                                           (HS.QVarOp $ HS.UnQual $ HS.Symbol "=<<")
-                                                                           (case e of
-                                                                              ABS.ExpE eexp -> tEffExp eexp cls
-                                                                              ABS.ExpP texp -> (HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "liftM")
-                                                                                                             (HS.Con $ HS.UnQual $ HS.Ident "R"))
-                                                                                                             (tThisExp texp cls))
-                                                                           )
-                                                                        )
-                                                           : tStmts rest canReturn cls clsFields
-                       ABS.SAwait g -> [HS.Qualifier $ HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "await") (tAwaitGuard g cls clsFields)) 
-                                                                    (tBlock rest canReturn cls clsFields)]
+                       ABS.SFieldAss (ABS.Ident ident) (ABS.ExpP texp) ->  (HS.Qualifier (HS.InfixApp 
+                                                                                               (HS.Var $ HS.UnQual $ HS.Ident $ "set_" ++ headToLower cls ++ "_" ++ ident)
+                                                                                               (HS.QVarOp $ HS.UnQual $ HS.Symbol "=<<")
+                                                                                         (HS.Paren (tThisExp texp cls)))) -- paren are necessary here
+                                                                          : tStmts rest canReturn cls clsFields
+                       ABS.SFieldAss (ABS.Ident ident) (ABS.ExpE eexp)-> 
+                           (HS.Qualifier (HS.InfixApp 
+                                          (HS.Var $ HS.UnQual $ HS.Ident $ "set_" ++ headToLower cls ++ "_" ++ ident)
+                                          (HS.QVarOp $ HS.UnQual $ HS.Symbol "=<<")
+                                          (HS.Paren (let -- paren are necessary here
+                                                        argsExps = case eexp of
+                                                                      ABS.Get _ -> [] -- tEffExp eexp cls
+                                                                      ABS.ThisGet _ -> [] -- tEffExp eexp cls
+                                                                      ABS.New _ pexps  -> pexps
+                                                                      ABS.NewLocal _ pexps -> pexps
+                                                                      ABS.SyncCall _ _ pexps -> pexps
+                                                                      ABS.ThisSyncCall _ pexps -> pexps
+                                                                      ABS.AsyncCall _ _ pexps -> pexps
+                                                                      ABS.ThisAsyncCall _ pexps -> pexps
+                                                        thisTerms = concatMap collect argsExps
+                                                     in
+                                 (if null thisTerms
+                                  then tEffExp eexp cls
+                                  else -- readObject this >>= \ Class1 { record bindings   } ->
+                                      HS.InfixApp 
+                                                 (HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") $ HS.Var $ HS.UnQual $ HS.Ident "this")
+                                                (HS.QVarOp $ HS.UnQual $ HS.Symbol ">>=")
+                                                (HS.Lambda noLoc [(HS.PRec (HS.UnQual $ HS.Ident cls) $ -- introduce bindings
+                                                                   map (\ arg -> HS.PFieldPat (HS.UnQual $ HS.Ident (headToLower cls ++ '_' : arg)) 
+                                                                                (HS.PVar $ HS.Ident $ "__" ++ arg) )  (nub thisTerms))
+                                                                 ]
+                                                 (tEffExp eexp cls))
+                                 )
+                                 ))))
+                                 : tStmts rest canReturn cls clsFields
+                           
+                       ABS.SAwait g -> (HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "await") (tAwaitGuard g cls clsFields))) :
+                                                                    (tStmts rest canReturn cls clsFields)
 
     tAwaitGuard :: ABS.Guard -> String -> [String] -> HS.Exp
     tAwaitGuard (ABS.VarGuard (ABS.Ident ident)) cls clsFields = HS.App
@@ -737,9 +679,7 @@ main = do
                                                 in
                                                   (HS.App (HS.App (HS.Con $ HS.UnQual $ HS.Ident "ThisGuard") 
                                                                  (HS.List (map (HS.Lit . HS.Int . toInteger) (findIndices (`elem` awaitFields) clsFields))))
-                                                   (HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "liftM")
-                                                                  (HS.Con $ HS.UnQual $ HS.Ident "R"))
-                                                    (tThisExp pexp cls)))
+                                                    (tPureExp pexp))
 
     tAwaitGuard (ABS.FieldGuard (ABS.Ident ident)) cls clsFields = error "Not implemented yet, take Cosimo's consideration into account"
     tAwaitGuard (ABS.AndGuard gl gr) cls clsFields = HS.InfixApp 
@@ -763,10 +703,19 @@ main = do
                                                                         pexps))
     tEffExp (ABS.New _ _) _ = error "Not valid class name"
 
-    tEffExp (ABS.NewLocal (ABS.TypeVar (ABS.QualType qtids)) pexps) _cls = foldl
-                                              (\ acc pexp -> HS.App acc (tPureExp pexp))
-                                              (HS.Var $ HS.UnQual $ HS.Ident "new_local")
-                                              pexps
+    tEffExp (ABS.NewLocal (ABS.TypeVar (ABS.QualType qtids)) pexps) _cls = (HS.App
+                                                                       (HS.Var $ HS.UnQual $ HS.Ident "new_local")
+                                                                       (foldl
+                                                                        (\ acc pexp -> HS.App acc (tPureExp pexp))
+                                                                        (HS.Var  
+                                                                               ((let mids = init qtids
+                                                                                in
+                                                                                  if null mids
+                                                                                  then HS.UnQual
+                                                                                  else HS.Qual (HS.ModuleName $ joinQualTypeIds mids))
+                                                                               (HS.Ident $ headToLower $ (\ (ABS.QualTypeIdent (ABS.TypeIdent cid)) -> cid) (last qtids))))
+                                                                        pexps))
+
     tEffExp (ABS.NewLocal _ _) _ = error "Not valid class name"
 
 
@@ -802,8 +751,7 @@ main = do
 
     eReturnUnit :: HS.Exp
     eReturnUnit = (HS.App (HS.Var $ HS.UnQual $ HS.Ident "return")
-                               (HS.App (HS.Con $ HS.UnQual $ HS.Ident "R")
-                                      (HS.Con $ HS.Special $ HS.UnitCon))) -- return (R ())
+                         (HS.Con $ HS.Special $ HS.UnitCon)) -- return ()
 
     in mapM_ (prettyProgram . tProgram) asts
 

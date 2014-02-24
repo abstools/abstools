@@ -4,17 +4,19 @@ module ABSPrelude
     (module Base,
      module Prim,
      module Core,
-     Prelude.return,
+     Prelude.return, Exception.evaluate,
      lift, liftM,
      newIORef, modifyIORef',
      newChan, writeList2Chan,
-     updateLookupWithKey,
+     M.updateLookupWithKey,
      ifthenM, ifthenelseM, notM, negateM,
      nil, cons,
+     assert, 
      (Prelude.=<<), (Prelude.>>=), Prelude.Maybe (..), Prelude.maybe,
      Prelude.Int, Prelude.Bool (..) , List,
      (Prelude.||), (Prelude.&&), (Prelude.==), (Prelude./=), (Prelude.<), (Prelude.<=), (Prelude.>=), (Prelude.>), (Prelude.+), (Prelude.-), (Prelude.*), (/), (%),
-     (||:), (&&:), (==:), (/=:), (<:), (<=:), (>=:), (>:), (+:), (-:), (*:), (/:), (%:) 
+     (||:), (&&:), (==:), (/=:), (<:), (<=:), (>=:), (>:), (+:), (-:), (*:), (/:), (%:),
+     M.Map, M.empty, put, lookupUnsafe
     )
         where
 
@@ -25,10 +27,10 @@ import Core
 
 import Control.Monad.Trans.Class (lift)
 import Control.Monad (when, liftM, liftM2)
-import Control.Exception.Base (assert, evaluate)
+import qualified Control.Exception.Base as Exception (evaluate)
 import Data.IORef (newIORef, modifyIORef')
 import Control.Concurrent (newChan, writeList2Chan)
-import Data.Map.Strict (updateLookupWithKey)
+import qualified Data.Map.Strict as M
 
 
 class IntOrRational a where
@@ -102,3 +104,13 @@ notM = liftM (Prelude.not)
 
 negateM :: (Prelude.Num a, Prelude.Monad m) => m a -> m a
 negateM = liftM (Prelude.negate)
+
+assert :: (Object_ o) => ABS o Prelude.Bool -> ABS o ()
+assert act = act Prelude.>>= \ pred -> when (Prelude.not pred) (Prelude.error "Assertion failed")
+
+
+put :: Prelude.Ord k => M.Map k v -> k -> v -> M.Map k v
+put m k v = M.insert k v m
+
+lookupUnsafe :: Prelude.Ord k => M.Map k v -> k -> v
+lookupUnsafe m k = m M.! k
