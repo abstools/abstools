@@ -85,11 +85,9 @@ async_call obj@(ObjectRef ioref _) call = do
 while :: ABS o Bool -> ABS o () -> ABS o ()
 while pred action = do
   res <- pred
-  if (not res) 
-    then do
+  when res $ do
       action
       while pred action
-    else return (())
 
 get :: (Object_ o) => ABS o (FutureRef f) -> ABS o f
 get a = (\ (FutureRef mvar _ _ _) -> lift $ lift $ readMVar mvar) =<< a

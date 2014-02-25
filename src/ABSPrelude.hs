@@ -12,8 +12,9 @@ module ABSPrelude
      ifthenM, ifthenelseM, notM, negateM,
      nil, cons,
      assert, 
-     (Prelude.=<<), (Prelude.>>=), Prelude.Maybe (..), Prelude.maybe,
-     Prelude.Int, Prelude.Bool (..) , List,
+     Pair,
+     (Prelude.=<<), (Prelude.>>=), Prelude.Maybe (..), Prelude.Either (..), left, right, Prelude.maybe, fromJust,
+     Prelude.Int, Prelude.Bool (..) , Prelude.Eq, List,
      (Prelude.||), (Prelude.&&), (Prelude.==), (Prelude./=), (Prelude.<), (Prelude.<=), (Prelude.>=), (Prelude.>), (Prelude.+), (Prelude.-), (Prelude.*), (/), (%),
      (||:), (&&:), (==:), (/=:), (<:), (<=:), (>=:), (>:), (+:), (-:), (*:), (/:), (%:),
      M.Map, M.empty, put, lookupUnsafe
@@ -31,6 +32,7 @@ import qualified Control.Exception.Base as Exception (evaluate)
 import Data.IORef (newIORef, modifyIORef')
 import Control.Concurrent (newChan, writeList2Chan)
 import qualified Data.Map.Strict as M
+import Data.Maybe (fromJust)
 
 
 class IntOrRational a where
@@ -114,3 +116,8 @@ put m k v = M.insert k v m
 
 lookupUnsafe :: Prelude.Ord k => M.Map k v -> k -> v
 lookupUnsafe m k = m M.! k
+
+type Pair a b = (a,b)
+
+left (Prelude.Left a ) = a
+right (Prelude.Right a) = a

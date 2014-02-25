@@ -120,7 +120,7 @@ main = do
            (map (\case
                  ABS.UnaryConstr (ABS.TypeIdent cid) -> HS.QualConDecl noLoc [] [] (HS.ConDecl (HS.Ident cid) []) -- no constructor arguments
                  ABS.MultConstr (ABS.TypeIdent cid) args -> HS.QualConDecl noLoc [] [] (HS.ConDecl (HS.Ident cid) (map (HS.BangedTy . tTypeOrTyVar tyvars . typOfConstrType) args))) constrs)
-           []
+           [(HS.UnQual $ HS.Ident $ "Eq", [])]
            :
         -- create record accessors
         map (\ (ABS.Ident fname, consname, idx, len) ->  HS.FunBind [HS.Match noLoc (HS.Ident fname) ([HS.PApp (HS.UnQual (HS.Ident consname)) (replicate idx HS.PWildCard ++ [HS.PVar (HS.Ident "a")] ++ replicate (len - idx - 1) HS.PWildCard)]) Nothing (HS.UnGuardedRhs (HS.Var (HS.UnQual (HS.Ident "a")))) (HS.BDecls [])]) (
@@ -171,7 +171,6 @@ main = do
     tDecl (ABS.ClassParamImplements (ABS.TypeIdent clsName) params imps fdecls maybeBlock mdecls) = -- TODO add check for imps, if a method is not implemented
        -- the record-ADT of the ABS class
         HS.DataDecl noLoc HS.DataType [] (HS.Ident clsName) [] 
-              -- TODO check if its an interface so to generate an ObjectRef type and not an ADT
               [HS.QualConDecl noLoc [] [] $ HS.RecDecl (HS.Ident clsName) (([HS.Ident $ headToLower clsName ++ "_loc"],
                                                                             -- maybe it should be banged for the fields of the class
                                                                            HS.UnBangedTy (HS.TyForall Nothing [HS.ClassA (HS.UnQual (HS.Ident "Object_")) [HS.TyVar (HS.Ident "o")]] (HS.TyApp (HS.TyApp (HS.TyCon (HS.UnQual (HS.Ident "ABS"))) (HS.TyVar (HS.Ident "o")))  (HS.TyCon (HS.UnQual (HS.Ident "COG")))))
@@ -284,13 +283,13 @@ main = do
                                                                                                  (HS.Var $ HS.UnQual $ HS.Ident "__ioref"))
                                                                                            (HS.Var $ HS.UnQual $ HS.Ident "__counter"))) (HS.BDecls [])]
 
-                                         -- __obj `async_call` __init
+                                         -- __obj `sync_call` __init
                                          , HS.Qualifier $ HS.InfixApp (HS.Var $ HS.UnQual $ HS.Ident "__obj")
-                                                           (HS.QVarOp $ HS.UnQual $ HS.Ident $ "async_call")
+                                                           (HS.QVarOp $ HS.UnQual $ HS.Ident $ "sync_call")
                                                            (HS.Var $ HS.UnQual $ HS.Ident "__init")
-                                         -- __obj `async_call` run
+                                         -- __obj `sync_call` run
                                          , HS.Qualifier $ HS.InfixApp (HS.Var $ HS.UnQual $ HS.Ident "__obj")
-                                                           (HS.QVarOp $ HS.UnQual $ HS.Ident $ "async_call")
+                                                           (HS.QVarOp $ HS.UnQual $ HS.Ident $ "sync_call")
                                                            (HS.Var $ HS.UnQual $ HS.Ident "run")
                                         
                                          -- return $ __obj

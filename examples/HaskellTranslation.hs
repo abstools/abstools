@@ -8,11 +8,13 @@ type OptionInt = Maybe Int
  
 data Either a b = Left !a
                 | Right !b
+                deriving Eq
 left (Left a) = a
 right (Right a) = a
  
 data List a = Nil
             | Cons !a !(List a)
+            deriving Eq
  
 addEither :: Either Int Int -> Int
 addEither e
@@ -64,13 +66,14 @@ instance Object_ Class1 where
                __astate@(AState{aCounter = __counter}) <- lift RWS.get
                lift (RWS.put (__astate{aCounter = __counter + 1}))
                let __obj = ObjectRef __ioref __counter
-               __obj `async_call` __init
-               __obj `async_call` run
+               __obj `sync_call` __init
+               __obj `sync_call` run
                return __obj
         whereis = class1_loc
         __init this
-          = do set_class1_x =<< return 1
-               set_class1_x =<< liftM class1_x (readObject this) +: return 1
+          = do set_class1_x =<< (return 1)
+               set_class1_x =<<
+                 (readObject this >>= \ Class1{class1_x = __x} -> return (__x + 1))
                return ()
  
 set_class1_p1 :: Int -> ABS Class1 ()
@@ -134,18 +137,20 @@ set_class1_o2 v
        lift (RWS.put astate{aSleepingO = om'})
  
 instance Interf1_ Class1 where
-        method1 n m this = do return n +: return m
+        method1 n m this = do return (n + m)
  
 instance Interf2_ Class1 where
         method2 b this = return ()
         method3 z this
-          = do z <- return z +: return 1
-               z <- return 2 +: return z +: return 3
-               z <- liftM class1_x (readObject this) +: return 4 +: return 5
+          = do z <- return (z + 1)
+               z <- return (2 + z + 3)
+               z <- readObject this >>=
+                      \ Class1{class1_x = __x} -> return (__x + 4 + 5)
                y <- this `sync_call` method1 1 4
-               set_class1_x =<< return y +: return 1
-               set_class1_x =<< liftM class1_x (readObject this) +: return y
-               liftM class1_x (readObject this) ==: return 1
+               set_class1_x =<< (return (y + 1))
+               set_class1_x =<<
+                 (readObject this >>= \ Class1{class1_x = __x} -> return (__x + y))
+               readObject this >>= \ Class1{class1_x = __x} -> return (__x == 1)
 mainABS
   = do o1 <- new (class1 1 2 3)
        o1 `sync_call` method1 1 3

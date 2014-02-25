@@ -49,6 +49,11 @@ So then what is the point of this class? => This method can only be called local
 - Write documentation inside the source modules
 - Generate haddock
 - Retaining the ABS comments and generating Haskell comments
+- init() can run await calls
+- The pattern matching is the Erlang pattern matching, which puts a requirement on Eq intances
+and an extra guard which can be slow
+- Eq instance is derived for ADTs. It breaks though when ADTs contain interface types. Fix it
+with dynamic casting or System.Mem.StableName
 
 
 # TODO enhance ABS language

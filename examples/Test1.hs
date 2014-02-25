@@ -1,6 +1,6 @@
 {-# LANGUAGE Rank2Types, NoImplicitPrelude, ImpredicativeTypes,
   LiberalTypeSynonyms #-}
-module Classes where
+module Test1 where
 import qualified Control.Monad.Trans.RWS as RWS
 import ABSPrelude
  
@@ -10,17 +10,9 @@ class (Object_ a) => Interf1_ a where
  
 type Interf1 = forall a . (Interf1_ a) => ObjectRef a
  
-class (Interf1_ a) => Interf2_ a where
-         
-        method2 :: Bool -> ObjectRef a -> ABS a ()
-         
-        method3 :: Int -> ObjectRef a -> ABS a Bool
- 
-type Interf2 = forall a . (Interf2_ a) => ObjectRef a
- 
 data Class1 = Class1{class1_loc :: (Object_ o) => ABS o COG,
                      class1_p1 :: Int, class1_p2 :: Int, class1_p3 :: Int,
-                     class1_x :: Int, class1_o2 :: Interf2}
+                     class1_x :: Int}
 class1 p1 p2 p3
   = Class1{class1_p1 = p1, class1_p2 = p2, class1_p3 = p3}
  
@@ -100,44 +92,17 @@ set_class1_x v
          maybeWoken
        lift (RWS.put astate{aSleepingO = om'})
  
-set_class1_o2 :: Interf2 -> ABS Class1 ()
-set_class1_o2 v
-  = do (AConf this@(ObjectRef ioref _) thisCOG _) <- lift RWS.ask
-       astate@(AState _ om) <- lift RWS.get
-       lift (lift (modifyIORef' ioref (\ c -> c{class1_o2 = v})))
-       let (maybeWoken, om')
-             = updateLookupWithKey (\ k v -> Nothing) (AnyObject this, 4) om
-       maybe (return ())
-         (\ woken -> lift (lift (writeList2Chan thisCOG woken)))
-         maybeWoken
-       lift (RWS.put astate{aSleepingO = om'})
- 
 instance Interf1_ Class1 where
         method1 n m this = do return (n + m)
- 
-instance Interf2_ Class1 where
-        method2 b this = return ()
-        method3 z this
-          = do return 3
-               z <- return (z + 1)
-               z <- return (2 + z + 3)
-               z <- readObject this >>=
-                      \ Class1{class1_x = __x} -> return (__x + 4 + 5)
-               y <- readObject this >>=
-                      \ Class1{class1_x = __x} -> this `sync_call` method1 __x 4
-               set_class1_x =<< (return (y + 1))
-               set_class1_x =<<
-                 (readObject this >>= \ Class1{class1_x = __x} -> return (__x + y))
-               readObject this >>= \ Class1{class1_x = __x} -> return (__x == 1)
 mainABS
   = do o1 <- new (class1 1 2 3)
-       o1 `sync_call` method1 1 3
-       o1 `sync_call` method2 True
-       f <- o1 `async_call` method1 1 4
-       await (FutureGuard f)
-       f2 <- o1 `async_call` method2 True
+       o2 <- new (class1 3 4 5)
+       f1 <- o1 `async_call` method1 3 4
+       await (FutureGuard f1)
+       res1 <- get (return f1)
+       assert (return (res1 == 7))
+       f2 <- o2 `async_call` method1 4 5
        await (FutureGuard f2)
-       res <- get (return f)
-       res_ <- o1 `sync_call` method3 res
-       assert (return (res == 3))
+       res2 <- get (return f2)
+       assert (return (res2 == 9))
 main = main_is mainABS
