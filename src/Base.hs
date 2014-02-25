@@ -11,7 +11,7 @@ import qualified Control.Monad.Trans.RWS as RWS (RWST)
 import Control.Monad.Coroutine
 import Control.Monad.Coroutine.SuspensionFunctors (Yield)
 
-data FutureRef a = FutureRef (MVar a) ThreadId Int
+data FutureRef a = FutureRef (MVar a) ThreadId COG Int
                  | TopRef
 
 data AnyFutureRef = forall a. AnyFuture (FutureRef a)
@@ -22,10 +22,10 @@ data ObjectRef a = ObjectRef (IORef a) Int
                  deriving Eq
 
 instance Eq AnyFutureRef where
-    AnyFuture (FutureRef _ tid1 id1) == AnyFuture (FutureRef _ tid2 id2) = id1 == id2 && tid1 == tid2
+    AnyFuture (FutureRef _ tid1 _ id1) == AnyFuture (FutureRef _ tid2 _ id2) = id1 == id2 && tid1 == tid2
 
 instance Ord AnyFutureRef where
-    compare (AnyFuture (FutureRef _ tid1 id1)) (AnyFuture (FutureRef _ tid2 id2)) = compare (tid1,id1) (tid2,id2)
+    compare (AnyFuture (FutureRef _ tid1 _ id1)) (AnyFuture (FutureRef _ tid2 _ id2)) = compare (tid1,id1) (tid2,id2)
 
 instance Eq AnyObjectRef where
     AnyObject (ObjectRef _ id1) == AnyObject (ObjectRef _ id2) = id1 == id2

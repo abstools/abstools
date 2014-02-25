@@ -44,12 +44,12 @@ sync_call obj@(ObjectRef ioref _) call = do
 
 
 await ::  (Object_ o) => AwaitGuard o -> ABS o () 
-await (FutureGuard f@(FutureRef mvar _ _))  = do
+await (FutureGuard f@(FutureRef mvar _ _ _))  = do
   empty <- lift $ lift $ isEmptyMVar mvar
   when empty $ do
     yield (F f)
 
-await (FutureGuard f@(FutureRef mvar _ _) :&: gs)  = do
+await (FutureGuard f@(FutureRef mvar _ _ _) :&: gs)  = do
   empty <- lift $ lift $ isEmptyMVar mvar
   when empty $ do
     yield (F f)
@@ -75,10 +75,10 @@ async_call obj@(ObjectRef ioref _) call = do
   obj1 <- lift $ lift $ readIORef ioref
   loc <-  whereis obj1
   mvar <- lift $ lift $ newEmptyMVar -- The new future created
-  AConf {aThread = tid} <- lift $ RWS.ask
+  AConf {aThread = tid, aCOG = cog} <- lift $ RWS.ask
   astate@(AState {aCounter = counter}) <- lift $ RWS.get
   lift $ RWS.put (astate {aCounter = counter + 1})
-  let f = FutureRef mvar tid counter
+  let f = FutureRef mvar tid cog counter
   lift $ lift $ writeChan loc (RunJob obj f (call obj))
   return f
 
@@ -92,7 +92,7 @@ while pred action = do
     else return (())
 
 get :: (Object_ o) => ABS o (FutureRef f) -> ABS o f
-get a = (\ (FutureRef mvar _ _) -> lift $ lift $ readMVar mvar) =<< a
+get a = (\ (FutureRef mvar _ _ _) -> lift $ lift $ readMVar mvar) =<< a
 
 readObject :: (Object_ o) => ObjectRef f -> ABS o f
 readObject (ObjectRef ioref _) = lift $ lift $ readIORef ioref
