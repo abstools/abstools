@@ -1,25 +1,4 @@
-module HTest;
-
-// Maps
-data Map<A, B> = EmptyMap | InsertAssoc(Pair<A, B>, Map<A, B>);
- // map constructor helper (does not preserve injectivity)
-
-def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v) =
-  case ms {
-    EmptyMap => InsertAssoc(Pair(k, v),EmptyMap);
-    InsertAssoc(Pair(k, _), ts) => InsertAssoc(Pair(k, v), ts);
-    InsertAssoc(p, ts) => InsertAssoc(p, put(ts, k, v));
-  };
-
-def B lookupUnsafe<A, B>(Map<A, B> ms, A k) = // retrieve from the map
-  fromJust(lookup(ms,k));
-  
-def Maybe<B> lookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
-  case ms {
-     InsertAssoc(Pair(k, y), _) => Just(y);
-     InsertAssoc(_, tm) => lookup(tm, k);
-     EmptyMap => Nothing;
-  };
+module BenchMaps;
 
 interface IArray{
 	Int sum();

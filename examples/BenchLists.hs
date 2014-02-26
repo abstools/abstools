@@ -4,26 +4,19 @@ module Main where
 import qualified Control.Monad.Trans.RWS as RWS
 import ABSPrelude
  
-data Map a b = EmptyMap
-             | InsertAssoc !(Pair a b) !(Map a b)
-             deriving Eq
- 
-put :: Map a b -> a -> b -> Map a b
-put ms k v
+data Map_ a b = EmptyMap_
+              | InsertAssoc_ (Pair a b) (Map_ a b)
+              deriving Eq
+put_ ms k v
   = case ms of
-        EmptyMap -> InsertAssoc (Pair k v) EmptyMap
-        InsertAssoc (Pair k _) ts -> InsertAssoc (Pair k v) ts
-        InsertAssoc p ts -> InsertAssoc p (put ts k v)
- 
-lookupUnsafe :: Map a b -> a -> b
-lookupUnsafe ms k = fromJust (lookup ms k)
- 
-lookup :: Map a b -> a -> Maybe b
-lookup ms k
+        EmptyMap_ -> InsertAssoc_ (k, v) EmptyMap_
+        InsertAssoc_ (k_, v_) ts -> if k == k_ then InsertAssoc_ (k_, v) ts
+                                      else InsertAssoc_ (k_, v_) (put_ ts k v)
+lookupUnsafe_ ms k = fromJust (lookup_ ms k)
+lookup_ ms k
   = case ms of
-        InsertAssoc (Pair k y) _ -> Just y
-        InsertAssoc _ tm -> lookup tm k
-        EmptyMap -> Nothing
+        InsertAssoc_ (k_, y) tm -> if k == k_ then Just y else lookup_ tm k
+        EmptyMap_ -> Nothing
  
 class (Object_ a) => IArray_ a where
          
@@ -33,7 +26,7 @@ type IArray = forall a . (IArray_ a) => ObjectRef a
  
 data Array = Array{array_loc :: (Object_ o) => ABS o COG,
                    array_n :: Int, array_i :: Int, array_s :: Int,
-                   array_m :: Map Int Int}
+                   array_m :: Map_ Int Int}
 array n = Array{array_n = n}
  
 instance Object_ Array where
@@ -41,7 +34,7 @@ instance Object_ Array where
           = do __chan <- lift (lift newChan)
                let __i = 0
                let __s = 0
-               let __m = EmptyMap
+               let __m = EmptyMap_
                let __c
                      = __cont{array_i = __i, array_s = __s, array_m = __m,
                               array_loc = return __chan}
@@ -54,7 +47,7 @@ instance Object_ Array where
         new_local __cont
           = do let __i = 0
                let __s = 0
-               let __m = EmptyMap
+               let __m = EmptyMap_
                let __c
                      = __cont{array_i = __i, array_s = __s, array_m = __m,
                               array_loc = thisCOG}
@@ -74,7 +67,7 @@ instance Object_ Array where
                                \ Array{array_i = __i, array_n = __n} -> return (__i * __n)
                         set_array_m =<<
                           (readObject this >>=
-                             \ Array{array_m = __m, array_i = __i} -> return (put __m __i a))
+                             \ Array{array_m = __m, array_i = __i} -> return (put_ __m __i a))
                         set_array_i =<<
                           (readObject this >>= \ Array{array_i = __i} -> return (__i + 1))
                         return ())
@@ -115,7 +108,7 @@ set_array_s v
          maybeWoken
        lift (RWS.put astate{aSleepingO = om'})
  
-set_array_m :: Map Int Int -> ABS Array ()
+set_array_m :: Map_ Int Int -> ABS Array ()
 set_array_m v
   = do (AConf this@(ObjectRef ioref _) thisCOG _) <- lift RWS.ask
        astate@(AState _ om) <- lift RWS.get
@@ -136,7 +129,7 @@ instance IArray_ Array where
                  (do do set_array_s =<<
                           (readObject this >>=
                              \ Array{array_s = __s, array_m = __m, array_i = __i} ->
-                               return (__s + lookupUnsafe __m __i))
+                               return (__s + lookupUnsafe_ __m __i))
                         set_array_i =<<
                           (readObject this >>= \ Array{array_i = __i} -> return (__i + 1))
                         return ())

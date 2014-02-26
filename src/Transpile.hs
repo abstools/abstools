@@ -119,7 +119,7 @@ main = do
         HS.DataDecl noLoc HS.DataType [] (HS.Ident tid) (map (\ (ABS.TypeIdent varid) -> HS.UnkindedVar $ HS.Ident $ headToLower $  varid) tyvars)
            (map (\case
                  ABS.UnaryConstr (ABS.TypeIdent cid) -> HS.QualConDecl noLoc [] [] (HS.ConDecl (HS.Ident cid) []) -- no constructor arguments
-                 ABS.MultConstr (ABS.TypeIdent cid) args -> HS.QualConDecl noLoc [] [] (HS.ConDecl (HS.Ident cid) (map (HS.BangedTy . tTypeOrTyVar tyvars . typOfConstrType) args))) constrs)
+                 ABS.MultConstr (ABS.TypeIdent cid) args -> HS.QualConDecl noLoc [] [] (HS.ConDecl (HS.Ident cid) (map (HS.UnBangedTy . tTypeOrTyVar tyvars . typOfConstrType) args))) constrs)
            [(HS.UnQual $ HS.Ident $ "Eq", [])]
            :
         -- create record accessors
@@ -156,11 +156,12 @@ main = do
 
     tDecl (ABS.ParFun fReturnTyp (ABS.Ident fid) tyvars params body) = 
        -- adds an explicit type signature
-       [HS.TypeSig noLoc [HS.Ident fid] (foldr
-                                      (\ tpar acc -> HS.TyFun (tTypeOrTyVar tyvars tpar) acc)
-                                      (tTypeOrTyVar tyvars fReturnTyp)
-                                      (map (\ (ABS.Par typ _) -> typ) params))
-       ,
+       -- commented out, will be inferred
+       [-- HS.TypeSig noLoc [HS.Ident fid] (foldr
+       --                                (\ tpar acc -> HS.TyFun (tTypeOrTyVar tyvars tpar) acc)
+       --                                (tTypeOrTyVar tyvars fReturnTyp)
+       --                                (map (\ (ABS.Par typ _) -> typ) params))
+       -- ,
         HS.FunBind [HS.Match noLoc (HS.Ident fid) (map (\ (ABS.Par _ (ABS.Ident pid)) -> HS.PVar (HS.Ident pid)) params)  Nothing (tBody body)  (HS.BDecls [])]
        ]
 
@@ -445,12 +446,15 @@ main = do
 
     tPureExp (ABS.EIntNeg e) = HS.NegApp (tPureExp e)
 
+    tPureExp (ABS.EUnaryConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "EmptyMap")])) = HS.Var $ HS.UnQual $ HS.Ident "empty" -- for the translation to Data.Map
+
     tPureExp (ABS.EUnaryConstr (ABS.QualType qids)) = let mids = init qids
                                                   in HS.Con $ (if null mids 
                                                                then HS.UnQual 
                                                                else HS.Qual (HS.ModuleName $ joinQualTypeIds mids)
                                                               ) $ HS.Ident $ (\ (ABS.QualTypeIdent (ABS.TypeIdent cid)) -> cid) (last qids)
 
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Pair")]) pexps) = HS.Tuple HS.Boxed (map tPureExp pexps) -- for the translation to tuples
     tPureExp (ABS.EMultConstr qids args) = foldl
                                        (\ acc nextArg -> HS.App acc (tPureExp nextArg))
                                        (tPureExp (ABS.EUnaryConstr qids) )
@@ -469,6 +473,7 @@ main = do
     tFunPat :: ABS.Pattern -> HS.Pat
     tFunPat (ABS.PIdent (ABS.Ident pid)) = HS.PVar $ HS.Ident $ pid
     tFunPat (ABS.PUnaryConstr (ABS.TypeIdent tid)) = HS.PApp (HS.UnQual $ HS.Ident tid) []
+    tFunPat (ABS.PMultConstr (ABS.TypeIdent "Pair") subpats) = HS.PTuple HS.Boxed (map tFunPat subpats)
     tFunPat (ABS.PMultConstr (ABS.TypeIdent tid) subpats) = HS.PApp (HS.UnQual $ HS.Ident tid) (map tFunPat subpats)
     tFunPat ABS.PUnderscore = HS.PWildCard
     tFunPat (ABS.PLit lit) = HS.PLit $ tFunLit lit

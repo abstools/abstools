@@ -1,3 +1,6 @@
+doc/*.html
+*.ast
+README.html
 dist/
 *.hi
 *.o
