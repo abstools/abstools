@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, NoImplicitPrelude #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, NoImplicitPrelude, Rank2Types #-}
 
 module ABSPrelude 
     (module Base,
@@ -12,7 +12,7 @@ module ABSPrelude
      ifthenM, ifthenelseM, notM, negateM,
      nil, cons,
      assert, 
-     Pair,
+     Pair, Prelude.fst, Prelude.snd, Triple, fstT, sndT, trd,
      (Prelude.=<<), (Prelude.>>=), Prelude.Maybe (..), Prelude.Either (..), left, right, Prelude.maybe, fromJust,
      Prelude.Int, Prelude.Bool (..) , Prelude.Eq, List,
      (Prelude.||), (Prelude.&&), (Prelude.==), (Prelude./=), (Prelude.<), (Prelude.<=), (Prelude.>=), (Prelude.>), (Prelude.+), (Prelude.-), (Prelude.*), (/), (%),
@@ -50,8 +50,8 @@ x % y = Prelude.fromIntegral (x `Prelude.mod` y)
 
 type List a = [a]
 
--- so smart constructors for this
 nil = []
+
 cons = (:)
 
 ifthenM :: Prelude.Monad m => m (Prelude.Bool) -> m () -> m ()
@@ -119,5 +119,15 @@ lookupUnsafe m k = m M.! k
 
 type Pair a b = (a,b)
 
+type Triple a b c = (a,b,c)
+
 left (Prelude.Left a ) = a
 right (Prelude.Right a) = a
+
+
+fstT (a,_,_) = a
+sndT (_,b,_) = b
+trd (_,_,c) = c
+
+
+

@@ -86,7 +86,8 @@ main = do
                      [HS.LanguagePragma noLoc [HS.Ident "Rank2Types", 
                                                HS.Ident "NoImplicitPrelude",
                                                HS.Ident "ImpredicativeTypes",
-                                               HS.Ident "LiberalTypeSynonyms"
+                                               HS.Ident "LiberalTypeSynonyms",
+                                               HS.Ident "ExistentialQuantification"
                      ]] 
                      Nothing 
                      Nothing 
@@ -146,9 +147,10 @@ main = do
                                                               [] -- no fundeps
                                                               (map tMethodSig ms)
        : [
-        HS.TypeDecl noLoc (HS.Ident tname) [] (HS.TyForall (Just [HS.UnkindedVar $ HS.Ident "a"]) [HS.ClassA (HS.UnQual $ HS.Ident $ tname ++ "_") [HS.TyVar (HS.Ident "a")]] (HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "ObjectRef") (HS.TyVar $ HS.Ident "a")))
-                                                               -- type synonym for Objects typed by the interface
-                                                               -- type Interf1 = forall a. Interf1_ a => ObjectRef a
+        -- type synonym for Objects typed by the interface
+        -- data Interf1 = forall a. Interf1_ a => Interf1 (ObjectRef a)
+
+        HS.DataDecl noLoc HS.DataType [] (HS.Ident tname) [] [HS.QualConDecl noLoc [HS.UnkindedVar $ HS.Ident "a"] [HS.ClassA (HS.UnQual $ HS.Ident $ tname ++ "_") [HS.TyVar (HS.Ident "a")]] (HS.ConDecl (HS.Ident tname) [HS.UnBangedTy (HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "ObjectRef") (HS.TyVar $ HS.Ident "a"))])] []
                                                               
        ]
 
@@ -416,35 +418,36 @@ main = do
                                                 (HS.Var $ HS.UnQual $ HS.Ident cid)
                                                 (HS.List (map tPureExp args))
 
-    tPureExp (ABS.EOr left right) = HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual $ HS.Symbol "||")  (tPureExp right)
+    -- be careful to parenthesize infix apps
+    tPureExp (ABS.EOr left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual $ HS.Symbol "||")  (tPureExp right)
 
-    tPureExp (ABS.EAnd left right) = HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual $ HS.Symbol "&&")  (tPureExp right)
+    tPureExp (ABS.EAnd left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual $ HS.Symbol "&&")  (tPureExp right)
 
-    tPureExp (ABS.EEq left right) = HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "==")  (tPureExp right)
+    tPureExp (ABS.EEq left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "==")  (tPureExp right)
 
-    tPureExp (ABS.ENeq left right) = HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "/=")  (tPureExp right)
+    tPureExp (ABS.ENeq left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "/=")  (tPureExp right)
 
-    tPureExp (ABS.ELt left right) = HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "<")  (tPureExp right)
+    tPureExp (ABS.ELt left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "<")  (tPureExp right)
 
-    tPureExp (ABS.ELe left right) = HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "<=")  (tPureExp right)
+    tPureExp (ABS.ELe left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "<=")  (tPureExp right)
 
-    tPureExp (ABS.EGt left right) = HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol ">")  (tPureExp right)
+    tPureExp (ABS.EGt left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol ">")  (tPureExp right)
 
-    tPureExp (ABS.EGe left right) = HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol ">=")  (tPureExp right)
+    tPureExp (ABS.EGe left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol ">=")  (tPureExp right)
 
-    tPureExp (ABS.EAdd left right) = HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "+")  (tPureExp right)
+    tPureExp (ABS.EAdd left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "+")  (tPureExp right)
 
-    tPureExp (ABS.ESub left right) = HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "-")  (tPureExp right)
+    tPureExp (ABS.ESub left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "-")  (tPureExp right)
 
-    tPureExp (ABS.EMul left right) = HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "*")  (tPureExp right)
+    tPureExp (ABS.EMul left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "*")  (tPureExp right)
 
-    tPureExp (ABS.EDiv left right) = HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "/")  (tPureExp right)
+    tPureExp (ABS.EDiv left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "/")  (tPureExp right)
 
-    tPureExp (ABS.EMod left right) = HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "%")  (tPureExp right)
+    tPureExp (ABS.EMod left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "%")  (tPureExp right)
 
-    tPureExp (ABS.ELogNeg e) = HS.App (HS.Var $ HS.UnQual $ HS.Ident "not") (tPureExp e)
+    tPureExp (ABS.ELogNeg e) = HS.Paren $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "not") (tPureExp e)
 
-    tPureExp (ABS.EIntNeg e) = HS.NegApp (tPureExp e)
+    tPureExp (ABS.EIntNeg e) = HS.Paren $ HS.NegApp (tPureExp e)
 
     tPureExp (ABS.EUnaryConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "EmptyMap")])) = HS.Var $ HS.UnQual $ HS.Ident "empty" -- for the translation to Data.Map
 
@@ -454,6 +457,7 @@ main = do
                                                                else HS.Qual (HS.ModuleName $ joinQualTypeIds mids)
                                                               ) $ HS.Ident $ (\ (ABS.QualTypeIdent (ABS.TypeIdent cid)) -> cid) (last qids)
 
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Triple")]) pexps) = HS.Tuple HS.Boxed (map tPureExp pexps) -- for the translation to tuples
     tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Pair")]) pexps) = HS.Tuple HS.Boxed (map tPureExp pexps) -- for the translation to tuples
     tPureExp (ABS.EMultConstr qids args) = foldl
                                        (\ acc nextArg -> HS.App acc (tPureExp nextArg))
@@ -467,12 +471,13 @@ main = do
 
 
     -- this is a trick for sync_call and async_call TODO: error "Cannot compile object accesses in mathematically pure expressions"
-    tPureExp (ABS.EThis (ABS.Ident ident)) = HS.Var $ HS.UnQual $ HS.Ident ("__" ++ ident)
+    tPureExp' (ABS.EThis (ABS.Ident ident)) = HS.Var $ HS.UnQual $ HS.Ident ("__" ++ ident)
 
 
     tFunPat :: ABS.Pattern -> HS.Pat
     tFunPat (ABS.PIdent (ABS.Ident pid)) = HS.PVar $ HS.Ident $ pid
     tFunPat (ABS.PUnaryConstr (ABS.TypeIdent tid)) = HS.PApp (HS.UnQual $ HS.Ident tid) []
+    tFunPat (ABS.PMultConstr (ABS.TypeIdent "Triple") subpats) = HS.PTuple HS.Boxed (map tFunPat subpats)
     tFunPat (ABS.PMultConstr (ABS.TypeIdent "Pair") subpats) = HS.PTuple HS.Boxed (map tFunPat subpats)
     tFunPat (ABS.PMultConstr (ABS.TypeIdent tid) subpats) = HS.PApp (HS.UnQual $ HS.Ident tid) (map tFunPat subpats)
     tFunPat ABS.PUnderscore = HS.PWildCard
@@ -501,7 +506,7 @@ main = do
                     in if null thisTerms
                        then (HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") (tPureExp texp)) --  rhs  
                        else
-                           HS.InfixApp 
+                           HS.Paren $ HS.InfixApp 
                                  (HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") $ HS.Var $ HS.UnQual $ HS.Ident "this")
                                  (HS.QVarOp $ HS.UnQual $ HS.Symbol ">>=")
                                  (HS.Lambda noLoc [(HS.PRec (HS.UnQual $ HS.Ident cls) $ -- introduce bindings
@@ -624,7 +629,7 @@ main = do
                                  (if null thisTerms
                                   then tEffExp eexp cls
                                   else -- readObject this >>= \ Class1 { record bindings   } ->
-                                      HS.InfixApp 
+                                      HS.Paren $ HS.InfixApp 
                                                  (HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") $ HS.Var $ HS.UnQual $ HS.Ident "this")
                                                 (HS.QVarOp $ HS.UnQual $ HS.Symbol ">>=")
                                                 (HS.Lambda noLoc [(HS.PRec (HS.UnQual $ HS.Ident cls) $ -- introduce bindings
@@ -636,13 +641,13 @@ main = do
                                  )
                                  : tStmts rest canReturn cls clsFields
                            
-                       ABS.SFieldAss (ABS.Ident ident) (ABS.ExpP texp) ->  (HS.Qualifier (HS.InfixApp 
+                       ABS.SFieldAss (ABS.Ident ident) (ABS.ExpP texp) ->  (HS.Qualifier (HS.Paren $ HS.InfixApp 
                                                                                                (HS.Var $ HS.UnQual $ HS.Ident $ "set_" ++ headToLower cls ++ "_" ++ ident)
                                                                                                (HS.QVarOp $ HS.UnQual $ HS.Symbol "=<<")
                                                                                          (HS.Paren (tThisExp texp cls)))) -- paren are necessary here
                                                                           : tStmts rest canReturn cls clsFields
                        ABS.SFieldAss (ABS.Ident ident) (ABS.ExpE eexp)-> 
-                           (HS.Qualifier (HS.InfixApp 
+                           (HS.Qualifier (HS.Paren $ HS.InfixApp 
                                           (HS.Var $ HS.UnQual $ HS.Ident $ "set_" ++ headToLower cls ++ "_" ++ ident)
                                           (HS.QVarOp $ HS.UnQual $ HS.Symbol "=<<")
                                           (HS.Paren (let -- paren are necessary here
@@ -660,7 +665,7 @@ main = do
                                  (if null thisTerms
                                   then tEffExp eexp cls
                                   else -- readObject this >>= \ Class1 { record bindings   } ->
-                                      HS.InfixApp 
+                                      HS.Paren $ HS.InfixApp 
                                                  (HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") $ HS.Var $ HS.UnQual $ HS.Ident "this")
                                                 (HS.QVarOp $ HS.UnQual $ HS.Symbol ">>=")
                                                 (HS.Lambda noLoc [(HS.PRec (HS.UnQual $ HS.Ident cls) $ -- introduce bindings
@@ -686,7 +691,7 @@ main = do
                                                     (tPureExp pexp))
 
     tAwaitGuard (ABS.FieldGuard (ABS.Ident ident)) cls clsFields = error "Not implemented yet, take Cosimo's consideration into account"
-    tAwaitGuard (ABS.AndGuard gl gr) cls clsFields = HS.InfixApp 
+    tAwaitGuard (ABS.AndGuard gl gr) cls clsFields = HS.Paren $ HS.InfixApp 
                                    (tAwaitGuard gl cls clsFields)
                                    (HS.QVarOp $ HS.UnQual  $ HS.Symbol ":&:")
                                    (tAwaitGuard gr cls clsFields)
@@ -723,7 +728,7 @@ main = do
     tEffExp (ABS.NewLocal _ _) _ = error "Not valid class name"
 
 
-    tEffExp (ABS.SyncCall (ABS.Ident obj) (ABS.Ident method) args) _cls = HS.InfixApp 
+    tEffExp (ABS.SyncCall (ABS.Ident obj) (ABS.Ident method) args) _cls = HS.Paren $ HS.InfixApp 
                                                                      (HS.Var $ HS.UnQual $ HS.Ident obj)
                                                                      (HS.QVarOp $ HS.UnQual $ HS.Ident "sync_call")
                                                                      (foldl
@@ -733,7 +738,7 @@ main = do
 
     tEffExp (ABS.ThisSyncCall method args) cls = tEffExp (ABS.SyncCall (ABS.Ident "this") method args) cls
 
-    tEffExp (ABS.AsyncCall (ABS.Ident obj) (ABS.Ident method) args) _cls = HS.InfixApp 
+    tEffExp (ABS.AsyncCall (ABS.Ident obj) (ABS.Ident method) args) _cls = HS.Paren $ HS.InfixApp 
                                                                      (HS.Var $ HS.UnQual $ HS.Ident obj)
                                                                      (HS.QVarOp $ HS.UnQual $ HS.Ident "async_call")
                                                                      (foldl

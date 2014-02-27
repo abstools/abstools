@@ -154,7 +154,8 @@ EThis.   PureExp8 ::= "this" "." Ident ;
 -- EQualVar. PureExp8 ::= QualType "." Ident ;
 EUnaryConstr.   PureExp8 ::= QualType ;
 EMultConstr. PureExp8 ::= QualType "(" [PureExp] ")" ;
-coercions PureExp 8 ;
+_. PureExp9 ::= "(" PureExp ")" ;
+coercions PureExp 9 ;
 
 New. EffExp ::= "new" Type "(" [PureExp] ")" ;
 NewLocal. EffExp ::= "new" "local" Type "(" [PureExp] ")" ;
