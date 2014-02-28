@@ -16,6 +16,7 @@ import System.FilePath ((</>), replaceExtension)
 import Control.Monad (when, liftM)
 import Data.List (intersperse, nub, union, findIndices)
 import Data.Char (toLower)
+import Data.Maybe (mapMaybe)
 
 import qualified Data.Map as M
 
@@ -85,14 +86,22 @@ main = do
                                 else tModuleName moduleName) 
                      [HS.LanguagePragma noLoc [HS.Ident "Rank2Types", 
                                                HS.Ident "NoImplicitPrelude",
-                                               HS.Ident "ImpredicativeTypes",
-                                               HS.Ident "LiberalTypeSynonyms",
+                                               -- HS.Ident "ImpredicativeTypes",
+                                               -- HS.Ident "LiberalTypeSynonyms",
                                                HS.Ident "ExistentialQuantification"
                      ]] 
                      Nothing 
                      Nothing 
                      [
                       HS.ImportDecl {HS.importLoc = noLoc, HS.importModule = HS.ModuleName "Control.Monad.Trans.RWS", HS.importQualified = True, HS.importSrc = False, HS.importPkg = Nothing, HS.importAs = Just (HS.ModuleName "RWS"), HS.importSpecs = Nothing},
+                      HS.ImportDecl {HS.importLoc = noLoc, 
+                                     HS.importModule = HS.ModuleName "Prim", 
+                                     HS.importSrc = False, 
+                                     HS.importQualified = False,
+                                     HS.importPkg = Nothing,
+                                     HS.importAs = Nothing,
+                                     HS.importSpecs = Nothing
+                                    },
                       HS.ImportDecl {HS.importLoc = noLoc, 
                                      HS.importModule = HS.ModuleName "ABSPrelude", 
                                      HS.importSrc = False, 
@@ -171,7 +180,7 @@ main = do
     tDecl (ABS.ClassDecl tident fdecls maybeBlock mdecls) = tDecl (ABS.ClassParamImplements tident [] [] fdecls maybeBlock mdecls)
     tDecl (ABS.ClassParamDecl tident params fdecls maybeBlock mdecls) = tDecl (ABS.ClassParamImplements tident params [] fdecls maybeBlock mdecls)
     tDecl (ABS.ClassImplements tident imps fdecls maybeBlock mdecls) = tDecl (ABS.ClassParamImplements tident [] imps fdecls maybeBlock mdecls)
-    tDecl (ABS.ClassParamImplements (ABS.TypeIdent clsName) params imps fdecls maybeBlock mdecls) = -- TODO add check for imps, if a method is not implemented
+    tDecl (ABS.ClassParamImplements (ABS.TypeIdent clsName) params imps ldecls maybeBlock rdecls) = -- TODO add check for imps, if a method is not implemented
        -- the record-ADT of the ABS class
         HS.DataDecl noLoc HS.DataType [] (HS.Ident clsName) [] 
               [HS.QualConDecl noLoc [] [] $ HS.RecDecl (HS.Ident clsName) (([HS.Ident $ headToLower clsName ++ "_loc"],
@@ -181,7 +190,7 @@ main = do
         :
 
         -- the smart constructor
-        HS.FunBind [HS.Match noLoc (HS.Ident $ headToLower clsName)
+        HS.FunBind [HS.Match noLoc (HS.Ident $ "__" ++ headToLower clsName)
                     (map (\ (ABS.Par _ (ABS.Ident pid)) -> HS.PVar (HS.Ident pid)) params) Nothing 
                     (HS.UnGuardedRhs $ HS.RecConstr (HS.UnQual $ HS.Ident clsName) 
                            (map (\ (ABS.Par _ (ABS.Ident pid)) -> 
@@ -208,17 +217,20 @@ main = do
                                         -- let __c = cont { class1_field1 = __field1, ..., class1_loc = (return (R __chan)) }
                                         [HS.LetStmt $ HS.BDecls [HS.PatBind noLoc (HS.PVar $ HS.Ident "__c") Nothing 
                                                                    (HS.UnGuardedRhs $ HS.RecUpdate (HS.Var $ HS.UnQual $ HS.Ident "__cont")
-                                                                      (foldr (\ fdecl acc -> case fdecl of
+                                                                      (foldr (\ fdecl acc -> (case fdecl of
                                                                                               ABS.FieldDeclAss _t (ABS.Ident fid) _pexp -> 
                                                                                                   HS.FieldUpdate (HS.UnQual $ HS.Ident $ headToLower clsName ++ "_" ++ fid) (HS.Var $ HS.UnQual $ HS.Ident $ "__" ++ fid) : acc
-                                                                                              ABS.FieldDecl _ _ -> acc
-                                                                                              ABS.MethDecl _ _ _ _ -> error "Second parsing error: Syntactic error, no method declaration accepted here"
-                                                                             ) 
+                                                                                              ABS.FieldDecl _t (ABS.Ident fid) ->  
+                                                                                                  HS.FieldUpdate (HS.UnQual $ HS.Ident $ headToLower clsName ++ "_" ++ fid) (HS.Var $ HS.UnQual $ HS.Ident $ "__" ++ fid) : acc
+                                                                                              ABS.MethDecl _ _ _ _ ->  (case maybeBlock of
+                                                                                                                         ABS.NoBlock -> acc
+                                                                                                                         ABS.JustBlock _ ->  error "Second parsing error: Syntactic error, no method declaration accepted here")
+                                                                             )) 
                                                                        -- class1_loc = (return (R __chan))
                                                                        [HS.FieldUpdate (HS.UnQual $ HS.Ident $ headToLower clsName ++ "_loc")
                                                                           (HS.App (HS.Var $ HS.UnQual $ HS.Ident "return")
                                                                              (HS.Var $ HS.UnQual $ HS.Ident "__chan"))]
-                                                                       fdecls)) (HS.BDecls [])]
+                                                                       ldecls)) (HS.BDecls [])]
                                          -- __ioref <- lift $ lift $ newIORef __c
                                         , HS.Generator noLoc (HS.PVar $ HS.Ident "__ioref") $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") $
                                                            (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift")
@@ -259,17 +271,21 @@ main = do
                                          -- let __c = cont { class1_field1 = __field1, ..., class1_loc = thisCOG }
                                          HS.LetStmt $ HS.BDecls [HS.PatBind noLoc (HS.PVar $ HS.Ident "__c") Nothing 
                                                                    (HS.UnGuardedRhs $ HS.RecUpdate (HS.Var $ HS.UnQual $ HS.Ident "__cont")
-                                                                      (foldr (\ fdecl acc -> case fdecl of
+                                                                      (foldr (\ fdecl acc -> (case fdecl of
                                                                                               ABS.FieldDeclAss _t (ABS.Ident fid) _pexp -> 
                                                                                                   HS.FieldUpdate (HS.UnQual $ HS.Ident $ headToLower clsName ++ "_" ++ fid) (HS.Var $ HS.UnQual $ HS.Ident $ "__" ++ fid) : acc
-                                                                                              ABS.FieldDecl _ _ -> acc
-                                                                                              ABS.MethDecl _ _ _ _ -> error "Second parsing error: Syntactic error, no method declaration accepted here"
-                                                                             ) 
+                                                                                              ABS.FieldDecl _t (ABS.Ident fid) ->  
+                                                                                                  HS.FieldUpdate (HS.UnQual $ HS.Ident $ headToLower clsName ++ "_" ++ fid) (HS.Var $ HS.UnQual $ HS.Ident $ "__" ++ fid) : acc
+
+                                                                                              ABS.MethDecl _ _ _ _ -> (case maybeBlock of
+                                                                                                                         ABS.NoBlock -> acc
+                                                                                                                         ABS.JustBlock _ ->  error "Second parsing error: Syntactic error, no method declaration accepted here")
+                                                                             )) 
                                                                        -- class1_loc = thisCOG)
                                                                        [HS.FieldUpdate (HS.UnQual $ HS.Ident $ headToLower clsName ++ "_loc")
                                                                           (HS.Var $ HS.UnQual $ HS.Ident "thisCOG")
                                                                              ]
-                                                                       fdecls)) (HS.BDecls [])]                                          
+                                                                       ldecls)) (HS.BDecls [])]                                          
                                          -- __ioref <- lift $ lift $ newIORef __c
                                         , HS.Generator noLoc (HS.PVar $ HS.Ident "__ioref") $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") $ (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift")
                                                                                                                       (HS.App (HS.Var $ HS.UnQual $ HS.Ident "newIORef")
@@ -362,18 +378,21 @@ main = do
 
        where
          allFields :: [(ABS.Type, ABS.Ident)] -- order matters, because the fields are indexed
-         allFields = map (\ (ABS.Par t i) -> (t,i)) params ++ map (\case
-                                                                     ABS.FieldDecl t i -> (t,i)
-                                                                     ABS.FieldDeclAss t i _ -> (t,i)
-                                                                     ABS.MethDecl _ _ _ _ -> error "Second parsing error: Syntactic error, no method declaration accepted here"
-                                                                    ) fdecls
-         fieldInits = foldr (\ fdecl acc -> case fdecl of
+         allFields = map (\ (ABS.Par t i) -> (t,i)) params ++ mapMaybe (\case
+                                                                       ABS.FieldDecl t i -> Just (t,i)
+                                                                       ABS.FieldDeclAss t i _ -> Just (t,i)
+                                                                       ABS.MethDecl _ _ _ _ -> Nothing
+                                                                      ) ldecls
+         fieldInits = foldr (\ fdecl acc -> (case fdecl of
                                                 ABS.FieldDeclAss _t (ABS.Ident fid) pexp -> 
                                                     (HS.LetStmt $ HS.BDecls [HS.PatBind noLoc (HS.PVar $ HS.Ident $ "__" ++ fid) Nothing 
                                                                                    (HS.UnGuardedRhs $ tPureExp pexp) (HS.BDecls [])]) : acc
-                                                ABS.FieldDecl _ _ -> acc
-                                                ABS.MethDecl _ _ _ _ -> error "Second parsing error: Syntactic error, no method declaration accepted here"
-                               ) [] fdecls
+                                                ABS.FieldDecl _t (ABS.Ident fid) -> (HS.LetStmt $ HS.BDecls [HS.PatBind noLoc (HS.PVar $ HS.Ident $ "__" ++ fid) Nothing 
+                                                                                                   (HS.UnGuardedRhs $ tPureExp (ABS.ELit ABS.LNull)) (HS.BDecls [])]) : acc
+                                                ABS.MethDecl _ _ _ _ -> (case maybeBlock of
+                                                                          ABS.NoBlock -> acc
+                                                                          ABS.JustBlock _->  error "Second parsing error: Syntactic error, no method declaration accepted here")
+                               )) [] ldecls
 
          tMethDecl (ABS.MethDecl _ (ABS.Ident mident) mparams (ABS.Block block)) = HS.InsDecl $ 
                       HS.FunBind [HS.Match noLoc (HS.Ident mident) (map (\ (ABS.Par _ (ABS.Ident pid)) -> HS.PVar (HS.Ident pid)) mparams ++ [HS.PVar $ HS.Ident "this"])
@@ -383,8 +402,11 @@ main = do
          scanInterfs :: M.Map ABS.TypeIdent [ABS.BodyDecl] -- assoc list of interfaces to methods
          scanInterfs = M.mapMaybe (\ methodNames -> let mdecls' = filter (\case
                                                                          ABS.MethDecl _ mname _ _  -> mname `elem` methodNames
-                                                                         _ -> error "Second parsing error: Syntactic error, no field declaration accepted here"
-                                                                        )  mdecls
+                                                                         _ -> False
+                                                                        )  (case maybeBlock of
+                                                                              ABS.NoBlock ->  ldecls
+                                                                              ABS.JustBlock _ -> rdecls
+                                                                           )
                                                    in if null mdecls'
                                                       then Nothing
                                                       else Just mdecls') $ M.unions (map st symbolTable)
@@ -449,6 +471,8 @@ main = do
 
     tPureExp (ABS.EIntNeg e) = HS.Paren $ HS.NegApp (tPureExp e)
 
+    tPureExp (ABS.EUnaryConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Nil")])) = HS.Con $ HS.Special HS.ListCon -- for the translation to []
+
     tPureExp (ABS.EUnaryConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "EmptyMap")])) = HS.Var $ HS.UnQual $ HS.Ident "empty" -- for the translation to Data.Map
 
     tPureExp (ABS.EUnaryConstr (ABS.QualType qids)) = let mids = init qids
@@ -457,8 +481,19 @@ main = do
                                                                else HS.Qual (HS.ModuleName $ joinQualTypeIds mids)
                                                               ) $ HS.Ident $ (\ (ABS.QualTypeIdent (ABS.TypeIdent cid)) -> cid) (last qids)
 
-    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Triple")]) pexps) = HS.Tuple HS.Boxed (map tPureExp pexps) -- for the translation to tuples
-    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Pair")]) pexps) = HS.Tuple HS.Boxed (map tPureExp pexps) -- for the translation to tuples
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Triple")]) pexps) | length pexps == 3 = HS.Tuple HS.Boxed (map tPureExp pexps) -- for the translation to tuples
+                                                                                                 | otherwise = error "wrong number of arguments to Triple"
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Pair")]) pexps) | length pexps == 2  = HS.Tuple HS.Boxed (map tPureExp pexps) -- for the translation to tuples
+                                                                                               | otherwise = error "wrong number of arguments to Pair"
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Cons")]) [pexp1, pexp2]) =  -- for the translation to pexp1:pexp2
+                                                                                                           HS.Paren (HS.InfixApp 
+                                                                                                                         (tPureExp pexp1)
+                                                                                                                         (HS.QConOp $ HS.Special $ HS.Cons)
+                                                                                                                         (tPureExp pexp2))
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Cons")]) _) = error "wrong number of arguments to Cons"
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "InsertAssoc")]) [pexp1, pexp2]) = HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "insertAssoc") (tPureExp pexp1)) (tPureExp pexp2)
+
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "InsertAssoc")]) _) = error "wrong number of arguments to InsertAssoc"
     tPureExp (ABS.EMultConstr qids args) = foldl
                                        (\ acc nextArg -> HS.App acc (tPureExp nextArg))
                                        (tPureExp (ABS.EUnaryConstr qids) )
@@ -467,25 +502,38 @@ main = do
 
     tPureExp (ABS.EVar (ABS.Ident pid)) = HS.Var $ HS.UnQual $ HS.Ident pid
 
-    tPureExp (ABS.ELit lit) = HS.Lit $ tFunLit lit
+    tPureExp (ABS.ELit lit) = case lit of
+                                         (ABS.LStr str) ->  HS.Lit $ HS.String str
+                                         (ABS.LInt i) ->  HS.Lit $ HS.Int i
+                                         ABS.LThis -> HS.Var $ HS.UnQual $ HS.Ident "this"
+                                         ABS.LNull -> HS.Var $ HS.UnQual $ HS.Ident "null"
+                                                     -- HS.Paren $ HS.ExpTypeSig noLoc (HS.Var $ HS.UnQual $ HS.Ident "undefined") 
+                                                     -- (HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "ObjectRef") (HS.TyVar $ HS.Ident "a"))
 
 
     -- this is a trick for sync_call and async_call TODO: error "Cannot compile object accesses in mathematically pure expressions"
-    tPureExp' (ABS.EThis (ABS.Ident ident)) = HS.Var $ HS.UnQual $ HS.Ident ("__" ++ ident)
-
+    tPureExp (ABS.EThis (ABS.Ident ident)) = HS.Var $ HS.UnQual $ HS.Ident ("__" ++ ident)
 
     tFunPat :: ABS.Pattern -> HS.Pat
     tFunPat (ABS.PIdent (ABS.Ident pid)) = HS.PVar $ HS.Ident $ pid
+    tFunPat (ABS.PUnaryConstr (ABS.TypeIdent "Nil")) = HS.PList []
     tFunPat (ABS.PUnaryConstr (ABS.TypeIdent tid)) = HS.PApp (HS.UnQual $ HS.Ident tid) []
-    tFunPat (ABS.PMultConstr (ABS.TypeIdent "Triple") subpats) = HS.PTuple HS.Boxed (map tFunPat subpats)
-    tFunPat (ABS.PMultConstr (ABS.TypeIdent "Pair") subpats) = HS.PTuple HS.Boxed (map tFunPat subpats)
+    tFunPat (ABS.PMultConstr (ABS.TypeIdent "Triple") subpats) | length subpats == 3 = HS.PTuple HS.Boxed (map tFunPat subpats)
+                                                               | otherwise = error "wrong number of arguments to Triple"
+    tFunPat (ABS.PMultConstr (ABS.TypeIdent "Pair") subpats) | length subpats == 2 = HS.PTuple HS.Boxed (map tFunPat subpats)
+                                                             | otherwise = error "wrong number of arguments to Pair"
+    tFunPat (ABS.PMultConstr (ABS.TypeIdent "Cons") [subpat1, subpat2]) = HS.PParen (HS.PInfixApp 
+                                                                          (tFunPat subpat1)
+                                                                          (HS.Special $ HS.Cons)
+                                                                          (tFunPat subpat2))
+    tFunPat (ABS.PMultConstr (ABS.TypeIdent "Cons") _) = error "wrong number of arguments to Cons"
+    tFunPat (ABS.PMultConstr (ABS.TypeIdent "InsertAssoc") _) = error "InsertAssoc is unsafe, you should avoid it."
     tFunPat (ABS.PMultConstr (ABS.TypeIdent tid) subpats) = HS.PApp (HS.UnQual $ HS.Ident tid) (map tFunPat subpats)
     tFunPat ABS.PUnderscore = HS.PWildCard
-    tFunPat (ABS.PLit lit) = HS.PLit $ tFunLit lit
-
-    tFunLit (ABS.LStr str) = HS.String str
-    tFunLit (ABS.LInt i) = HS.Int i
-    tFunLit _ = error " this or null are not allowed inside the functional core of ABS"
+    tFunPat (ABS.PLit lit) = HS.PLit $ case lit of
+                                         (ABS.LStr str) ->  HS.String str
+                                         (ABS.LInt i) ->  HS.Int i
+                                         _ -> error "this or null are not allowed in pattern syntax"
 
     tMethodSig :: ABS.MethSig -> HS.ClassDecl
     tMethodSig (ABS.MethSig tReturn (ABS.Ident mname) pars)  = HS.ClsDecl $
@@ -577,11 +625,8 @@ main = do
     tStmts :: [ABS.Stm] -> Bool -> String -> [String] -> [HS.Stmt]
     tStmts [] _canReturn _ _ = []
     tStmts (stmt:rest) canReturn cls clsFields = case stmt of
-                       ABS.SExp e -> HS.Qualifier (case e of
-                                        ABS.ExpE eexp -> tEffExp eexp cls -- have to force to WHNF
-                                        ABS.ExpP texp -> tThisExp texp cls -- have to force to WHNF
-                                        -- error "Cannot run a pure expression as a standalone statement"                                   
-                                      ) : tStmts rest canReturn cls clsFields
+                       ABS.SExp eexp -> HS.Qualifier (tEffExp eexp cls) -- have to force to WHNF
+                                                           : tStmts rest canReturn cls clsFields
                        ABS.SSuspend -> HS.Qualifier (HS.Var $ HS.UnQual $ HS.Ident "suspend") : tStmts rest canReturn cls clsFields
                        ABS.SBlock stmts -> HS.Qualifier (tBlock stmts False cls clsFields) : tStmts rest canReturn cls clsFields
                        ABS.SSkip ->  HS.Qualifier (HS.Var (HS.UnQual $ HS.Ident "skip")) : tStmts rest canReturn cls clsFields
@@ -616,14 +661,13 @@ main = do
                            HS.Generator noLoc
                                  (HS.PVar $ HS.Ident ident) -- lhs
                                  (let argsExps = case eexp of
-                                               ABS.Get _ -> [] -- tEffExp eexp cls
-                                               ABS.ThisGet _ -> [] -- tEffExp eexp cls
-                                               ABS.New _ pexps  -> pexps
-                                               ABS.NewLocal _ pexps -> pexps
-                                               ABS.SyncCall _ _ pexps -> pexps
-                                               ABS.ThisSyncCall _ pexps -> pexps
-                                               ABS.AsyncCall _ _ pexps -> pexps
-                                               ABS.ThisAsyncCall _ pexps -> pexps
+                                                   ABS.Get pexp -> [pexp]
+                                                   ABS.New _ pexps  -> pexps
+                                                   ABS.NewLocal _ pexps -> pexps
+                                                   ABS.SyncCall pexp1 _ pexps2 -> pexp1:pexps2
+                                                   ABS.ThisSyncCall _ pexps -> pexps
+                                                   ABS.AsyncCall pexp1 _ pexps2 -> pexp1:pexps2
+                                                   ABS.ThisAsyncCall _ pexps -> pexps
                                       thisTerms = concatMap collect argsExps
                                   in
                                  (if null thisTerms
@@ -652,13 +696,12 @@ main = do
                                           (HS.QVarOp $ HS.UnQual $ HS.Symbol "=<<")
                                           (HS.Paren (let -- paren are necessary here
                                                         argsExps = case eexp of
-                                                                      ABS.Get _ -> [] -- tEffExp eexp cls
-                                                                      ABS.ThisGet _ -> [] -- tEffExp eexp cls
+                                                                      ABS.Get pexp -> [pexp]
                                                                       ABS.New _ pexps  -> pexps
                                                                       ABS.NewLocal _ pexps -> pexps
-                                                                      ABS.SyncCall _ _ pexps -> pexps
+                                                                      ABS.SyncCall pexp1 _ pexps2 -> pexp1:pexps2
                                                                       ABS.ThisSyncCall _ pexps -> pexps
-                                                                      ABS.AsyncCall _ _ pexps -> pexps
+                                                                      ABS.AsyncCall pexp1 _ pexps2 -> pexp1:pexps2
                                                                       ABS.ThisAsyncCall _ pexps -> pexps
                                                         thisTerms = concatMap collect argsExps
                                                      in
@@ -708,7 +751,7 @@ main = do
                                                                                   if null mids
                                                                                   then HS.UnQual
                                                                                   else HS.Qual (HS.ModuleName $ joinQualTypeIds mids))
-                                                                               (HS.Ident $ headToLower $ (\ (ABS.QualTypeIdent (ABS.TypeIdent cid)) -> cid) (last qtids))))
+                                                                               (HS.Ident $ "__" ++ headToLower ( (\ (ABS.QualTypeIdent (ABS.TypeIdent cid)) -> cid) (last qtids)))))
                                                                         pexps))
     tEffExp (ABS.New _ _) _ = error "Not valid class name"
 
@@ -722,38 +765,35 @@ main = do
                                                                                   if null mids
                                                                                   then HS.UnQual
                                                                                   else HS.Qual (HS.ModuleName $ joinQualTypeIds mids))
-                                                                               (HS.Ident $ headToLower $ (\ (ABS.QualTypeIdent (ABS.TypeIdent cid)) -> cid) (last qtids))))
+                                                                               (HS.Ident $ "__" ++ headToLower ((\ (ABS.QualTypeIdent (ABS.TypeIdent cid)) -> cid) (last qtids)))))
                                                                         pexps))
 
     tEffExp (ABS.NewLocal _ _) _ = error "Not valid class name"
 
 
-    tEffExp (ABS.SyncCall (ABS.Ident obj) (ABS.Ident method) args) _cls = HS.Paren $ HS.InfixApp 
-                                                                     (HS.Var $ HS.UnQual $ HS.Ident obj)
+    tEffExp (ABS.SyncCall texp (ABS.Ident method) args) _cls = HS.Paren $ HS.InfixApp 
+                                                                     (tPureExp texp)
                                                                      (HS.QVarOp $ HS.UnQual $ HS.Ident "sync_call")
                                                                      (foldl
                                                                       (\ acc arg -> HS.App acc (tPureExp arg))
                                                                       (HS.Var $ HS.UnQual $ HS.Ident method)
                                                                       args)
 
-    tEffExp (ABS.ThisSyncCall method args) cls = tEffExp (ABS.SyncCall (ABS.Ident "this") method args) cls
+    -- normalize
+    tEffExp (ABS.ThisSyncCall method args) cls = tEffExp (ABS.SyncCall (ABS.ELit $ ABS.LThis) method args) cls
 
-    tEffExp (ABS.AsyncCall (ABS.Ident obj) (ABS.Ident method) args) _cls = HS.Paren $ HS.InfixApp 
-                                                                     (HS.Var $ HS.UnQual $ HS.Ident obj)
+    tEffExp (ABS.AsyncCall texp (ABS.Ident method) args) _cls = HS.Paren $ HS.InfixApp 
+                                                                     (tPureExp texp)
                                                                      (HS.QVarOp $ HS.UnQual $ HS.Ident "async_call")
                                                                      (foldl
                                                                       (\ acc arg -> HS.App acc (tPureExp arg))
                                                                       (HS.Var $ HS.UnQual $ HS.Ident method)
                                                                       args)
 
-    tEffExp (ABS.ThisAsyncCall method args) cls = tEffExp (ABS.AsyncCall (ABS.Ident "this") method args) cls                                                                             
-    tEffExp (ABS.Get ident) cls = HS.App (HS.Var $ HS.UnQual $ HS.Ident "get")
-                              (tThisExp (ABS.EVar ident) cls)
+    -- normalize
+    tEffExp (ABS.ThisAsyncCall method args) cls = tEffExp (ABS.AsyncCall (ABS.ELit $ ABS.LThis) method args) cls
 
-    tEffExp (ABS.ThisGet attr) cls = HS.App (HS.Var $ HS.UnQual $ HS.Ident "get")
-                                 (tThisExp (ABS.EThis attr) cls)
-
-
+    tEffExp (ABS.Get texp) _cls = HS.App (HS.Var $ HS.UnQual $ HS.Ident "get") (tPureExp texp)
 
     tModuleName :: ABS.QualType -> HS.ModuleName
     tModuleName (ABS.QualType qtis) = HS.ModuleName $ joinQualTypeIds qtis
@@ -776,7 +816,6 @@ typOfConstrType (ABS.RecordConstrType typ _) = typ
 
 headToLower :: String -> String
 headToLower (x:xs) = toLower x : xs
-
 
 collect                              :: ABS.PureExp -> [String]
 collect (ABS.Let _ pexp1 pexp2)      = collect pexp1 ++ collect pexp2

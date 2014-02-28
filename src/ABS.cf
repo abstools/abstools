@@ -104,7 +104,7 @@ PUnderscore. Pattern ::= "_" ;
 separator Pattern "," ;
 
 
-SExp.    Stm ::= Exp ";" ;
+SExp.    Stm ::= EffExp ";" ;
 SBlock.  Stm ::= "{" [Stm] "}" ;
 SWhile.  Stm ::= "while" "(" PureExp ")" Stm ;
 SReturn. Stm ::= "return" Exp  ";" ;
@@ -147,8 +147,6 @@ LNull.   Literal ::= "null" ;
 LThis.   Literal ::= "this" ;
 LStr.    Literal ::= String ;
 LInt.    Literal ::= Integer ;
--- ENil.    PureExp8 :: = "Nil" ;
--- ECons.   PureExp8 :: = "Cons" "(" PureExp "," PureExp ")" ;
 EVar.    PureExp8 ::= Ident ;
 EThis.   PureExp8 ::= "this" "." Ident ; 
 -- EQualVar. PureExp8 ::= QualType "." Ident ;
@@ -159,12 +157,11 @@ coercions PureExp 9 ;
 
 New. EffExp ::= "new" Type "(" [PureExp] ")" ;
 NewLocal. EffExp ::= "new" "local" Type "(" [PureExp] ")" ;
-SyncCall. EffExp ::= Ident "." Ident "(" [PureExp] ")" ;
+SyncCall. EffExp ::= PureExp "." Ident "(" [PureExp] ")" ;
 ThisSyncCall. EffExp ::= "this" "." Ident "(" [PureExp] ")" ;
-AsyncCall. EffExp ::= Ident "!" Ident "(" [PureExp] ")" ;
+AsyncCall. EffExp ::= PureExp "!" Ident "(" [PureExp] ")" ;
 ThisAsyncCall. EffExp ::= "this" "!" Ident "(" [PureExp] ")" ;
-Get. EffExp ::= Ident "." "get" ;
-ThisGet. EffExp ::= "this" "." Ident "." "get" ;
+Get. EffExp ::= PureExp "." "get" ;
 
 separator PureExp "," ;
  

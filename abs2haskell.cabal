@@ -10,7 +10,11 @@ cabal-version:         >= 1.4
                       
 library
   build-depends:      base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts, monad-coroutine
-  exposed-modules:    ABSPrelude
+  exposed-modules:    
+                     -- imitating the abslang.abs
+                     ABSPrelude, 
+                     -- primitive functions of the API reflecting the ABS language
+                     Prim
   other-modules:      
                       -- lexer -}    
                       LexABS,
@@ -24,8 +28,6 @@ library
                       Base, 
                       -- core functions of the framework
                       Core, 
-                      -- primitive functions of the API reflecting the ABS language
-                      Prim, 
                       -- extra utility functions
                       Utils, 
                       -- configuration for the compiler program

@@ -2,7 +2,6 @@
 
 module ABSPrelude 
     (module Base,
-     module Prim,
      module Core,
      Prelude.return, Exception.evaluate,
      lift, liftM,
@@ -10,20 +9,18 @@ module ABSPrelude
      newChan, writeList2Chan,
      M.updateLookupWithKey,
      ifthenM, ifthenelseM, notM, negateM,
-     nil, cons,
      assert, 
      Pair, Prelude.fst, Prelude.snd, Triple, fstT, sndT, trd,
      (Prelude.=<<), (Prelude.>>=), Prelude.Maybe (..), Prelude.Either (..), left, right, Prelude.maybe, fromJust,
      Prelude.Int, Prelude.Bool (..) , Prelude.Eq, List,
      (Prelude.||), (Prelude.&&), (Prelude.==), (Prelude./=), (Prelude.<), (Prelude.<=), (Prelude.>=), (Prelude.>), (Prelude.+), (Prelude.-), (Prelude.*), (/), (%),
      (||:), (&&:), (==:), (/=:), (<:), (<=:), (>=:), (>:), (+:), (-:), (*:), (/:), (%:),
-     M.Map, M.empty, put, lookupUnsafe
+     M.Map, M.empty, put, insertAssoc, lookupUnsafe, removeKey
     )
         where
 
 import qualified Prelude as Prelude
 import Base
-import Prim
 import Core
 
 import Control.Monad.Trans.Class (lift)
@@ -49,10 +46,6 @@ x % y = Prelude.fromIntegral (x `Prelude.mod` y)
 -- data List a = Nil | Cons a (List a)  -- not this, we want to map to actual Haskell lists
 
 type List a = [a]
-
-nil = []
-
-cons = (:)
 
 ifthenM :: Prelude.Monad m => m (Prelude.Bool) -> m () -> m ()
 ifthenM texp stm_then = texp Prelude.>>= (\ e -> when e stm_then)
@@ -114,8 +107,15 @@ assert act = act Prelude.>>= \ pred -> when (Prelude.not pred) (Prelude.error "A
 put :: Prelude.Ord k => M.Map k v -> k -> v -> M.Map k v
 put m k v = M.insert k v m
 
+-- turned an unsafe to a safe operation
+insertAssoc :: Prelude.Ord k => (k,v) -> M.Map k v -> M.Map k v
+insertAssoc (k,v) m = M.insert k v m
+
 lookupUnsafe :: Prelude.Ord k => M.Map k v -> k -> v
 lookupUnsafe m k = m M.! k
+
+removeKey :: Prelude.Ord k => M.Map k v -> k -> M.Map k v
+removeKey = Prelude.flip M.delete
 
 type Pair a b = (a,b)
 
@@ -128,6 +128,4 @@ right (Prelude.Right a) = a
 fstT (a,_,_) = a
 sndT (_,b,_) = b
 trd (_,_,c) = c
-
-
 

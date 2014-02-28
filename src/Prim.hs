@@ -71,6 +71,7 @@ await gs@(ThisGuard is tg :&: rest) = do
        await gs
   await rest
 
+async_call :: (Object_ o, Object_ a) => ObjectRef a -> (ObjectRef a -> ABS a b) -> ABS o (FutureRef b)
 async_call obj@(ObjectRef ioref _) call = do
   obj1 <- lift $ lift $ readIORef ioref
   loc <-  whereis obj1
@@ -89,10 +90,11 @@ while pred action = do
       action
       while pred action
 
-get :: (Object_ o) => ABS o (FutureRef f) -> ABS o f
-get a = (\ (FutureRef mvar _ _ _) -> lift $ lift $ readMVar mvar) =<< a
+get :: (Object_ o) => FutureRef f -> ABS o f
+get a = (\ (FutureRef mvar _ _ _) -> lift $ lift $ readMVar mvar) a
 
 readObject :: (Object_ o) => ObjectRef f -> ABS o f
 readObject (ObjectRef ioref _) = lift $ lift $ readIORef ioref
 
-
+null :: ObjectRef a
+null = undefined
