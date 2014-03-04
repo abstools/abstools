@@ -159,7 +159,8 @@ main = do
         -- type synonym for Objects typed by the interface
         -- data Interf1 = forall a. Interf1_ a => Interf1 (ObjectRef a)
 
-        HS.DataDecl noLoc HS.DataType [] (HS.Ident tname) [] [HS.QualConDecl noLoc [HS.UnkindedVar $ HS.Ident "a"] [HS.ClassA (HS.UnQual $ HS.Ident $ tname ++ "_") [HS.TyVar (HS.Ident "a")]] (HS.ConDecl (HS.Ident tname) [HS.UnBangedTy (HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "ObjectRef") (HS.TyVar $ HS.Ident "a"))])] []
+        let ident = HS.Ident "a" in
+        HS.DataDecl noLoc HS.DataType [] (HS.Ident tname) [] [HS.QualConDecl noLoc [HS.UnkindedVar $ ident] [HS.ClassA (HS.UnQual $ HS.Ident $ tname ++ "_") [HS.TyVar ident]] (HS.ConDecl (HS.Ident tname) [HS.UnBangedTy (HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "ObjectRef") (HS.TyVar ident))])] []
                                                               
        ]
 

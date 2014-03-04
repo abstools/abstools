@@ -1,4 +1,4 @@
-all:
+all:	src/LexABS.hs
 	cabal --enable-tests install
 
 clean:
@@ -6,7 +6,7 @@ clean:
 	-rm -f *.log *.aux *.hi *.o *.dvi *.hi *.o *.bak
 	-rm -f DocABS.ps
 
-grammar:
+src/LexABS.hs:
 	# run when grammar changes
 	cd src; bnfc -haskell ABS.cf; happy -gca ParABS.y; alex -g LexABS.x
 	# latex DocABS.tex ; dvips DocABS.dvi -o DocABS.ps
