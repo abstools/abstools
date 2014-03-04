@@ -2,4 +2,9 @@ module Main where
 
 import Test.Framework
 
-main = return ()
+main = defaultMain tests
+
+
+tests = [
+
+ ]
