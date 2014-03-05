@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, NoImplicitPrelude, ImpredicativeTypes,
+{-# LANGUAGE NoImplicitPrelude, ImpredicativeTypes,
   LiberalTypeSynonyms #-}
 module Main where
 import qualified Control.Monad.Trans.RWS as RWS

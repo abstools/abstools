@@ -8,3 +8,13 @@ interface Interf2 extends Interf1 {
 	Unit method2(Bool b);
 	Bool method3(Int z, Interf1 k);
 }
+
+
+interface Interf3 extends Interf2, Interf1 {
+
+}
+
+interface Interf4 extends Interf1 {
+
+
+}

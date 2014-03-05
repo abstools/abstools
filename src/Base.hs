@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, Rank2Types, EmptyDataDecls #-}
+{-# LANGUAGE ExistentialQuantification, Rank2Types, EmptyDataDecls, MultiParamTypeClasses #-}
 
 module Base where
 
@@ -11,68 +11,64 @@ import qualified Control.Monad.Trans.RWS as RWS (RWST)
 import Control.Monad.Coroutine
 import Control.Monad.Coroutine.SuspensionFunctors (Yield)
 
-data FutureRef a = FutureRef (MVar a) ThreadId COG Int
-                 | TopRef
+data Fut a = FutureRef (MVar a) ThreadId COG Int
+           |  TopRef
+data AnyFuture = forall a. AnyFuture (Fut a)
 
-data AnyFutureRef = forall a. AnyFuture (FutureRef a)
-
-data AnyObjectRef = forall o. Object_ o => AnyObject (ObjectRef o)
+data AnyObject = forall o. Object__ o => AnyObject (ObjectRef o)
 
 data ObjectRef a = ObjectRef (IORef a) Int
                  deriving Eq
 
-instance Eq AnyFutureRef where
+instance Eq AnyFuture where
     AnyFuture (FutureRef _ tid1 _ id1) == AnyFuture (FutureRef _ tid2 _ id2) = id1 == id2 && tid1 == tid2
 
-instance Ord AnyFutureRef where
+instance Ord AnyFuture where
     compare (AnyFuture (FutureRef _ tid1 _ id1)) (AnyFuture (FutureRef _ tid2 _ id2)) = compare (tid1,id1) (tid2,id2)
 
-instance Eq AnyObjectRef where
+instance Eq AnyObject where
     AnyObject (ObjectRef _ id1) == AnyObject (ObjectRef _ id2) = id1 == id2
 
-instance Ord AnyObjectRef where
+instance Ord AnyObject where
     compare (AnyObject (ObjectRef _ id1)) (AnyObject (ObjectRef _ id2)) = compare id1 id2
 
-type FutureMap = M.Map AnyFutureRef [Job]
+type FutureMap = M.Map AnyFuture [Job]
 
-type ObjectMap = M.Map (AnyObjectRef, Int) [Job]
+type ObjectMap = M.Map (AnyObject, Int) [Job]
 
 type COG = Chan Job
 
-class Object_ a where
-    new :: (Object_ o) => a -> ABS o (ObjectRef a)
-    new_local :: a -> (Object_ o) => ABS o (ObjectRef a)
-    __init :: ObjectRef a -> ABS a () 
+class Object__ a where
+    new :: (Object__ o) => a -> ABS o (ObjectRef a)
+    new_local :: a -> (Object__ o) => ABS o (ObjectRef a)
+    __init :: AnyObject -> ABS a () 
     __init _ = return (())     -- default implementation of init
-    run :: ObjectRef a -> ABS a () 
-    run _ = return (())        -- default implementation of run
-    whereis :: (Object_ o) => a -> ABS o COG
+    __run :: AnyObject -> ABS a () 
+    __run _ = return (())        -- default implementation of run
+    whereis :: (Object__ o) => a -> ABS o COG
 
-type Object = forall a. (Object_ a) => ObjectRef a
-
-
-data AwaitGuard o = forall b. FutureGuard (FutureRef b)
+data AwaitGuard o = forall b. FutureGuard (Fut b)
                   | ThisGuard [Int] (ABS o Bool)
                   | AwaitGuard o :&: AwaitGuard o
 
 data Top
 
-instance Object_ Top where
+instance Object__ Top where
     new = error "cannot instantiated the top-level Top"
     new_local = error "cannot instantiated the top-level Top"
     whereis = error "top-level is not an object"
 
 data AwaitOn = S
-             | forall f. F (FutureRef f)
-             | forall o. Object_ o => T (ObjectRef o) [Int]
+             | forall f. F (Fut f)
+             | forall o. Object__ o => T (ObjectRef o) [Int]
 
-data Job = forall o a . Object_ o => RunJob (ObjectRef o) (FutureRef a) (ABS o a)
-         | forall f . WakeupJob (FutureRef f)
+data Job = forall o a . Object__ o => RunJob (ObjectRef o) (Fut a) (ABS o a)
+         | forall f . WakeupJob (Fut f)
 
 
 
 data AConf o = AConf {
-      aThis :: (Object_ o) => ObjectRef o,
+      aThis :: (Object__ o) => ObjectRef o,
       aCOG  :: COG,
       aThread :: ThreadId
     }
@@ -86,5 +82,5 @@ data AState = AState {
 type ABS o r = Coroutine (Yield AwaitOn) (RWS.RWST (AConf o) ()  AState IO) r
 
 
-
-
+class Sub sub sup where
+    up :: sub -> sup

@@ -14,16 +14,18 @@ import Data.List (isSuffixOf)
 import System.Directory (getDirectoryContents, doesDirectoryExist, doesFileExist)
 import System.FilePath ((</>), replaceExtension)
 import Control.Monad (when, liftM)
-import Data.List (intersperse, nub, union, findIndices)
+import Data.List (intersperse, nub, union, findIndices, (\\))
 import Data.Char (toLower)
 import Data.Maybe (mapMaybe)
+import Data.Tuple (swap)
 
 import qualified Data.Map as M
 
 data ModuleST = ModuleST {
       filePath :: FilePath,
       moduleName :: ABS.QualType,
-      st :: M.Map ABS.TypeIdent [ABS.Ident]
+      hierarchy :: M.Map ABS.TypeIdent [ABS.QualType], -- Interface -> Extends
+      methods :: M.Map ABS.TypeIdent [ABS.Ident]       -- Interface -> Methods
     } deriving (Show)
 
 
@@ -62,16 +64,20 @@ main = do
     collectInterfs (fp , (ABS.Prog (ABS.ModuleDecl mName _ _ decls _))) = ModuleST {
                                                                         filePath = fp,
                                                                         moduleName = mName,
-                                                                        st = foldl insertInterfs M.empty decls
+                                                                        hierarchy = foldl insertInterfs M.empty decls,
+                                                                        methods = foldl insertMethods M.empty decls
                                                                       }
                 where 
-                  insertInterfs :: M.Map ABS.TypeIdent [ABS.Ident] -> ABS.Decl -> M.Map ABS.TypeIdent [ABS.Ident]
-                  insertInterfs acc (ABS.InterfDecl tident msigs) = insertInterfs acc (ABS.ExtendsDecl tident [] msigs)  -- normalization
-                  insertInterfs acc (ABS.ExtendsDecl tident _ msigs) = 
-                      {- TODO it could generate a compilation error because of duplicate method declaration -}
-                      {- TODO it could generate a compilation error because of duplicate instance declaration, by using insertWithKey -}
-                      M.insertWith union tident (collectMethods msigs) acc
+                  insertInterfs :: M.Map ABS.TypeIdent [ABS.QualType] -> ABS.Decl -> M.Map ABS.TypeIdent [ABS.QualType]
+                  insertInterfs acc (ABS.ExtendsDecl tident extends msigs) = M.insertWith (const $ const $ error "duplicate interface declaration") tident extends acc
                   insertInterfs acc _ = acc
+
+                  insertMethods :: M.Map ABS.TypeIdent [ABS.Ident] -> ABS.Decl -> M.Map ABS.TypeIdent [ABS.Ident]
+                  insertMethods acc (ABS.InterfDecl tident msigs) = insertMethods acc (ABS.ExtendsDecl tident [] msigs)  -- normalization
+                  insertMethods acc (ABS.ExtendsDecl tident extends msigs) = 
+                      {- TODO it could generate a compilation error because of duplicate method declaration -}
+                      M.insertWith (const $ const $ error "duplicate interface declaration") tident (collectMethods msigs) acc
+                  insertMethods acc _ = acc
                   collectMethods :: [ABS.MethSig] -> [ABS.Ident]
                   collectMethods = map (\ (ABS.MethSig _ ident _) -> ident)
 
@@ -88,7 +94,9 @@ main = do
                                                HS.Ident "NoImplicitPrelude",
                                                -- HS.Ident "ImpredicativeTypes",
                                                -- HS.Ident "LiberalTypeSynonyms",
-                                               HS.Ident "ExistentialQuantification"
+                                               HS.Ident "ExistentialQuantification",
+                                               HS.Ident "MultiParamTypeClasses"
+                                                 
                      ]] 
                      Nothing 
                      Nothing 
@@ -146,7 +154,7 @@ main = do
                                                                                                                                                                                                                                                                                                                                   )
 
     -- empty interface extends automatically from Object
-    tDecl (ABS.InterfDecl tid ms) = tDecl (ABS.ExtendsDecl tid [ABS.QualType $ [ABS.QualTypeIdent $ ABS.TypeIdent "Object"]]  ms) 
+    tDecl (ABS.InterfDecl tid ms) = tDecl (ABS.ExtendsDecl tid [ABS.QualType $ [ABS.QualTypeIdent $ ABS.TypeIdent "Object_"]]  ms) 
 
     tDecl (ABS.ExtendsDecl (ABS.TypeIdent tname) extends ms) = HS.ClassDecl 
                                                               noLoc 
@@ -154,14 +162,29 @@ main = do
                                                               (HS.Ident $ tname ++ "_") 
                                                               [HS.UnkindedVar (HS.Ident "a")]
                                                               [] -- no fundeps
-                                                              (map tMethodSig ms)
-       : [
+                                                              (map (tMethodSig tname) ms)
+       : 
         -- type synonym for Objects typed by the interface
         -- data Interf1 = forall a. Interf1_ a => Interf1 (ObjectRef a)
 
         HS.DataDecl noLoc HS.DataType [] (HS.Ident tname) [] [HS.QualConDecl noLoc [HS.UnkindedVar $ HS.Ident "a"] [HS.ClassA (HS.UnQual $ HS.Ident $ tname ++ "_") [HS.TyVar (HS.Ident "a")]] (HS.ConDecl (HS.Ident tname) [HS.UnBangedTy (HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "ObjectRef") (HS.TyVar $ HS.Ident "a"))])] []
                                                               
-       ]
+       : generateSubSelf tname
+       : generateSub tname (ABS.QualType [ABS.QualTypeIdent $ ABS.TypeIdent "AnyObject"]) -- root class
+       : generateSubs tname (filter (\ (ABS.QualType qids) -> qids /= [ABS.QualTypeIdent $ ABS.TypeIdent "Object_"])  extends) 
+
+       ++ (concatMap (\ (ABS.MethSig _ (ABS.Ident mid) pars) -> let 
+                          parspvars = map (\ (ABS.Par _ (ABS.Ident pid)) -> HS.PVar $ HS.Ident pid) pars
+                          parsvars = map (\ (ABS.Par _ (ABS.Ident pid)) -> HS.Var $ HS.UnQual $ HS.Ident pid) pars
+                     in
+                                                                 [
+                -- the sync call for each method: method1_sync
+                HS.FunBind [HS.Match noLoc (HS.Ident $ mid ++ "_sync" ) (parspvars ++ [HS.PParen (HS.PAsPat (HS.Ident "__wrapped") (HS.PParen (HS.PApp (HS.UnQual (HS.Ident tname)) [HS.PAsPat (HS.Ident "__obj") (HS.PParen (HS.PApp (HS.UnQual (HS.Ident "ObjectRef")) [HS.PVar (HS.Ident "__ioref"),HS.PWildCard]))])))]) Nothing (HS.UnGuardedRhs (HS.Do [HS.Generator noLoc (HS.PVar (HS.Ident "__hereCOG")) (HS.Var (HS.UnQual (HS.Ident "thisCOG"))),HS.Generator noLoc (HS.PVar (HS.Ident "__obj1")) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "readIORef"))) (HS.Var (HS.UnQual (HS.Ident "__ioref")))))))),HS.Generator noLoc (HS.PVar (HS.Ident "otherCOG")) (HS.App (HS.Var (HS.UnQual (HS.Ident "whereis"))) (HS.Var (HS.UnQual (HS.Ident "__obj1")))),HS.Qualifier (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "when"))) (HS.Paren (HS.InfixApp (HS.Var (HS.UnQual (HS.Ident "__hereCOG"))) (HS.QVarOp (HS.UnQual (HS.Symbol "/="))) (HS.Var (HS.UnQual (HS.Ident "otherCOG")))))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "error"))) (HS.Lit (HS.String "Sync Call on a different COG detected"))))),HS.Qualifier (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "mapMonad"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "withReaderT"))) (HS.Paren (HS.Lambda noLoc [HS.PVar (HS.Ident "aconf")] (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "aconf"))) [HS.FieldUpdate (HS.UnQual (HS.Ident "aThis")) (HS.Var (HS.UnQual (HS.Ident "__obj")))])))))) (HS.Paren (HS.App (foldl HS.App (HS.Var (HS.UnQual (HS.Ident mid))) parsvars) (HS.Var (HS.UnQual (HS.Ident "__wrapped"))))))])) (HS.BDecls [])]
+                -- the async call for each method: method1_async
+              , HS.FunBind [HS.Match noLoc (HS.Ident $ headToLower mid ++ "_async") (parspvars ++ [HS.PParen (HS.PAsPat (HS.Ident "__wrapped") (HS.PParen (HS.PApp (HS.UnQual (HS.Ident tname)) [HS.PAsPat (HS.Ident "__obj") (HS.PParen (HS.PApp (HS.UnQual (HS.Ident "ObjectRef")) [HS.PVar (HS.Ident "__ioref"),HS.PWildCard]))])))]) Nothing (HS.UnGuardedRhs (HS.Do [HS.Generator noLoc (HS.PVar (HS.Ident "__obj1")) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "readIORef"))) (HS.Var (HS.UnQual (HS.Ident "__ioref")))))))),HS.Generator noLoc (HS.PVar (HS.Ident "__loc")) (HS.App (HS.Var (HS.UnQual (HS.Ident "whereis"))) (HS.Var (HS.UnQual (HS.Ident "__obj1")))),HS.Generator noLoc (HS.PVar (HS.Ident "__mvar")) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Var (HS.UnQual (HS.Ident "newEmptyMVar")))))),HS.Generator noLoc (HS.PRec (HS.UnQual (HS.Ident "AConf")) [HS.PFieldPat (HS.UnQual (HS.Ident "aThread")) (HS.PVar (HS.Ident "__tid")),HS.PFieldPat (HS.UnQual (HS.Ident "aCOG")) (HS.PVar (HS.Ident "cog"))]) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "ask")))),HS.Generator noLoc (HS.PAsPat (HS.Ident "astate") (HS.PParen (HS.PRec (HS.UnQual (HS.Ident "AState")) [HS.PFieldPat (HS.UnQual (HS.Ident "aCounter")) (HS.PVar (HS.Ident "__counter"))]))) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "get")))),HS.Qualifier (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "put"))) (HS.Paren (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "astate"))) [HS.FieldUpdate (HS.UnQual (HS.Ident "aCounter")) (HS.InfixApp (HS.Var (HS.UnQual (HS.Ident "__counter"))) (HS.QVarOp (HS.UnQual (HS.Symbol "+"))) (HS.Lit (HS.Int 1)))]))))),HS.LetStmt (HS.BDecls [HS.PatBind noLoc (HS.PVar (HS.Ident "__f")) Nothing (HS.UnGuardedRhs (HS.App (HS.App (HS.App (HS.App (HS.Con (HS.UnQual (HS.Ident "FutureRef"))) (HS.Var (HS.UnQual (HS.Ident "__mvar")))) (HS.Var (HS.UnQual (HS.Ident "__tid")))) (HS.Var (HS.UnQual (HS.Ident "cog")))) (HS.Var (HS.UnQual (HS.Ident "__counter"))))) (HS.BDecls [])]),HS.Qualifier (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "writeChan"))) (HS.Var (HS.UnQual (HS.Ident "__loc")))) (HS.Paren (HS.App (HS.App (HS.App (HS.Con (HS.UnQual (HS.Ident "RunJob"))) (HS.Var (HS.UnQual (HS.Ident "__obj")))) (HS.Var (HS.UnQual (HS.Ident "__f")))) (HS.Paren (HS.App (foldl HS.App (HS.Var (HS.UnQual (HS.Ident mid))) parsvars) (HS.Var (HS.UnQual (HS.Ident "__wrapped")))))))))))),HS.Qualifier (HS.App (HS.Var (HS.UnQual (HS.Ident "return"))) (HS.Var (HS.UnQual (HS.Ident "__f"))))])) (HS.BDecls [])]
+                      ]
+       ) ms)
+
 
     tDecl (ABS.Fun fReturnTyp fid params body) = tDecl (ABS.ParFun fReturnTyp fid [] params body) -- no type variables
 
@@ -185,7 +208,7 @@ main = do
         HS.DataDecl noLoc HS.DataType [] (HS.Ident clsName) [] 
               [HS.QualConDecl noLoc [] [] $ HS.RecDecl (HS.Ident clsName) (([HS.Ident $ headToLower clsName ++ "_loc"],
                                                                             -- maybe it should be banged for the fields of the class
-                                                                           HS.UnBangedTy (HS.TyForall Nothing [HS.ClassA (HS.UnQual (HS.Ident "Object_")) [HS.TyVar (HS.Ident "o")]] (HS.TyApp (HS.TyApp (HS.TyCon (HS.UnQual (HS.Ident "ABS"))) (HS.TyVar (HS.Ident "o")))  (HS.TyCon (HS.UnQual (HS.Ident "COG")))))
+                                                                           HS.UnBangedTy (HS.TyForall Nothing [HS.ClassA (HS.UnQual (HS.Ident "Object__")) [HS.TyVar (HS.Ident "o")]] (HS.TyApp (HS.TyApp (HS.TyCon (HS.UnQual (HS.Ident "ABS"))) (HS.TyVar (HS.Ident "o")))  (HS.TyCon (HS.UnQual (HS.Ident "COG")))))
                                                                            ):map (\ (t,(ABS.Ident i)) -> ([HS.Ident $ headToLower clsName ++ "_" ++ i], HS.UnBangedTy (tType t)))  allFields)]  []
         :
 
@@ -201,7 +224,7 @@ main = do
        :
         -- the Object instance
         HS.InstDecl noLoc [{- empty context for now, may need to fix later -}] 
-              (HS.UnQual $ HS.Ident "Object_") -- interface name
+              (HS.UnQual $ HS.Ident "Object__") -- interface name
               [HS.TyCon $ HS.UnQual $ HS.Ident $ clsName]
               (
                -- the new method
@@ -246,15 +269,12 @@ main = do
                                         , HS.Qualifier $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift")
                                                        (HS.App (HS.Var $ HS.UnQual $ HS.Ident "spawnCOG") (HS.Var $ HS.UnQual $ HS.Ident "__chan"))
 
-                                        -- __obj `async_call` __init
-                                        , HS.Qualifier $ HS.InfixApp (HS.Var $ HS.UnQual $ HS.Ident "__obj")
-                                                           (HS.QVarOp $ HS.UnQual $ HS.Ident $ "async_call")
-                                                           (HS.Var $ HS.UnQual $ HS.Ident "__init")
-                                        -- __obj `async_call` run
-                                        , HS.Qualifier $ HS.InfixApp (HS.Var $ HS.UnQual $ HS.Ident "__obj")
-                                                           (HS.QVarOp $ HS.UnQual $ HS.Ident $ "async_call")
-                                                           (HS.Var $ HS.UnQual $ HS.Ident "run")
-                                        
+                                        -- init_async __obj
+                                        , HS.Qualifier (HS.Do [HS.Generator noLoc (HS.PVar (HS.Ident "__mvar")) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Var (HS.UnQual (HS.Ident "newEmptyMVar")))))),HS.Generator noLoc (HS.PRec (HS.UnQual (HS.Ident "AConf")) [HS.PFieldPat (HS.UnQual (HS.Ident "aThread")) (HS.PVar (HS.Ident "__tid")),HS.PFieldPat (HS.UnQual (HS.Ident "aCOG")) (HS.PVar (HS.Ident "cog"))]) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "ask")))),HS.Generator noLoc (HS.PAsPat (HS.Ident "astate") (HS.PParen (HS.PRec (HS.UnQual (HS.Ident "AState")) [HS.PFieldPat (HS.UnQual (HS.Ident "aCounter")) (HS.PVar (HS.Ident "__counter"))]))) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "get")))),HS.Qualifier (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "put"))) (HS.Paren (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "astate"))) [HS.FieldUpdate (HS.UnQual (HS.Ident "aCounter")) (HS.InfixApp (HS.Var (HS.UnQual (HS.Ident "__counter"))) (HS.QVarOp (HS.UnQual (HS.Symbol "+"))) (HS.Lit (HS.Int 1)))]))))),HS.LetStmt (HS.BDecls [HS.PatBind noLoc (HS.PVar (HS.Ident "__f")) Nothing (HS.UnGuardedRhs (HS.App (HS.App (HS.App (HS.App (HS.Con (HS.UnQual (HS.Ident "FutureRef"))) (HS.Var (HS.UnQual (HS.Ident "__mvar")))) (HS.Var (HS.UnQual (HS.Ident "__tid")))) (HS.Var (HS.UnQual (HS.Ident "cog")))) (HS.Var (HS.UnQual (HS.Ident "__counter"))))) (HS.BDecls [])]),HS.Qualifier (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "writeChan"))) (HS.Var (HS.UnQual (HS.Ident "__chan")))) (HS.Paren (HS.App (HS.App (HS.App (HS.Con (HS.UnQual (HS.Ident "RunJob"))) (HS.Var (HS.UnQual (HS.Ident "__obj")))) (HS.Var (HS.UnQual (HS.Ident "__f")))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "__init"))) (HS.App (HS.Con $ HS.UnQual $ HS.Ident "AnyObject") (HS.Var (HS.UnQual (HS.Ident "__obj")))))))))))))])
+
+                                        -- run_async __obj
+                                        , HS.Qualifier (HS.Do [HS.Generator noLoc (HS.PVar (HS.Ident "__mvar")) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Var (HS.UnQual (HS.Ident "newEmptyMVar")))))),HS.Generator noLoc (HS.PRec (HS.UnQual (HS.Ident "AConf")) [HS.PFieldPat (HS.UnQual (HS.Ident "aThread")) (HS.PVar (HS.Ident "__tid")),HS.PFieldPat (HS.UnQual (HS.Ident "aCOG")) (HS.PVar (HS.Ident "cog"))]) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "ask")))),HS.Generator noLoc (HS.PAsPat (HS.Ident "astate") (HS.PParen (HS.PRec (HS.UnQual (HS.Ident "AState")) [HS.PFieldPat (HS.UnQual (HS.Ident "aCounter")) (HS.PVar (HS.Ident "__counter"))]))) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "get")))),HS.Qualifier (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "put"))) (HS.Paren (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "astate"))) [HS.FieldUpdate (HS.UnQual (HS.Ident "aCounter")) (HS.InfixApp (HS.Var (HS.UnQual (HS.Ident "__counter"))) (HS.QVarOp (HS.UnQual (HS.Symbol "+"))) (HS.Lit (HS.Int 1)))]))))),HS.LetStmt (HS.BDecls [HS.PatBind noLoc (HS.PVar (HS.Ident "__f")) Nothing (HS.UnGuardedRhs (HS.App (HS.App (HS.App (HS.App (HS.Con (HS.UnQual (HS.Ident "FutureRef"))) (HS.Var (HS.UnQual (HS.Ident "__mvar")))) (HS.Var (HS.UnQual (HS.Ident "__tid")))) (HS.Var (HS.UnQual (HS.Ident "cog")))) (HS.Var (HS.UnQual (HS.Ident "__counter"))))) (HS.BDecls [])]),HS.Qualifier (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "writeChan"))) (HS.Var (HS.UnQual (HS.Ident "__chan")))) (HS.Paren (HS.App (HS.App (HS.App (HS.Con (HS.UnQual (HS.Ident "RunJob"))) (HS.Var (HS.UnQual (HS.Ident "__obj")))) (HS.Var (HS.UnQual (HS.Ident "__f")))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "__run"))) (HS.App (HS.Con $ HS.UnQual $ HS.Ident "AnyObject") (HS.Var (HS.UnQual (HS.Ident "__obj")))))))))))))])
+
                                         -- return $ __obj
                                         , HS.Qualifier $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") (HS.Var $ HS.UnQual $ HS.Ident "__obj")
 
@@ -302,14 +322,11 @@ main = do
                                                                                                  (HS.Var $ HS.UnQual $ HS.Ident "__ioref"))
                                                                                            (HS.Var $ HS.UnQual $ HS.Ident "__counter"))) (HS.BDecls [])]
 
-                                         -- __obj `sync_call` __init
-                                         , HS.Qualifier $ HS.InfixApp (HS.Var $ HS.UnQual $ HS.Ident "__obj")
-                                                           (HS.QVarOp $ HS.UnQual $ HS.Ident $ "sync_call")
-                                                           (HS.Var $ HS.UnQual $ HS.Ident "__init")
-                                         -- __obj `sync_call` run
-                                         , HS.Qualifier $ HS.InfixApp (HS.Var $ HS.UnQual $ HS.Ident "__obj")
-                                                           (HS.QVarOp $ HS.UnQual $ HS.Ident $ "sync_call")
-                                                           (HS.Var $ HS.UnQual $ HS.Ident "run")
+                                         -- __init_sync __obj
+                                         , HS.Qualifier (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "mapMonad"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "withReaderT"))) (HS.Paren (HS.Lambda noLoc [HS.PVar (HS.Ident "aconf")] (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "aconf"))) [HS.FieldUpdate (HS.UnQual (HS.Ident "aThis")) (HS.Var (HS.UnQual (HS.Ident "__obj")))])))))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "__init"))) (HS.App (HS.Con $ HS.UnQual $ HS.Ident "AnyObject") (HS.Var (HS.UnQual (HS.Ident "__obj")))))))
+
+                                         -- __run_sync __obj
+                                         , HS.Qualifier (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "mapMonad"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "withReaderT"))) (HS.Paren (HS.Lambda noLoc [HS.PVar (HS.Ident "aconf")] (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "aconf"))) [HS.FieldUpdate (HS.UnQual (HS.Ident "aThis")) (HS.Var (HS.UnQual (HS.Ident "__obj")))])))))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "__run"))) (HS.App (HS.Con $ HS.UnQual $ HS.Ident "AnyObject") (HS.Var (HS.UnQual (HS.Ident "__obj")))))))
                                         
                                          -- return $ __obj
                                          , HS.Qualifier $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "return")
@@ -352,7 +369,7 @@ main = do
                                     ,HS.Generator noLoc (HS.PAsPat (HS.Ident "astate") (HS.PParen (HS.PApp (HS.UnQual (HS.Ident "AState")) [HS.PWildCard,HS.PVar (HS.Ident "om")]))) (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "get"))))
                                      -- lift $ lift $ modifyIORef' ioref (\ c -> c {class1_p1 = v})      -- update the field value
                                     ,HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "lift") (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "modifyIORef'"))) (HS.Var (HS.UnQual (HS.Ident "ioref")))) (HS.Paren (HS.Lambda noLoc [HS.PVar (HS.Ident "c")] (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "c"))) [HS.FieldUpdate (HS.UnQual (HS.Ident $ headToLower clsName ++ "_" ++ i )) (HS.Var (HS.UnQual (HS.Ident "v")))]))))))
-                                     -- let (maybeWoken, om') = M.updateLookupWithKey (\ k v -> Nothing) (AnyObject this, 0) om
+                                     -- let (maybeWoken, om') = M.updateLookupWithKey (\ k v -> Nothing) (Object this, 0) om
                                      ,HS.LetStmt (HS.BDecls [HS.PatBind noLoc (HS.PTuple HS.Boxed [HS.PVar (HS.Ident "maybeWoken"),HS.PVar (HS.Ident "om'")]) Nothing (HS.UnGuardedRhs (HS.App (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "updateLookupWithKey"))) (HS.Paren (HS.Lambda noLoc [HS.PVar (HS.Ident "k"),HS.PVar (HS.Ident "v")] (HS.Con (HS.UnQual (HS.Ident "Nothing")))))) (HS.Tuple HS.Boxed [HS.App (HS.Con (HS.UnQual (HS.Ident "AnyObject"))) (HS.Var (HS.UnQual (HS.Ident "this"))),HS.Lit (HS.Int fieldNumber)])) (HS.Var (HS.UnQual (HS.Ident "om"))))) (HS.BDecls [])])
 
                                      -- maybe (return ()) (\ woken -> lift $ lift $ writeList2Chan thisCOG woken) maybeWoken
@@ -386,9 +403,13 @@ main = do
          fieldInits = foldr (\ fdecl acc -> (case fdecl of
                                                 ABS.FieldDeclAss _t (ABS.Ident fid) pexp -> 
                                                     (HS.LetStmt $ HS.BDecls [HS.PatBind noLoc (HS.PVar $ HS.Ident $ "__" ++ fid) Nothing 
-                                                                                   (HS.UnGuardedRhs $ tPureExp pexp) (HS.BDecls [])]) : acc
-                                                ABS.FieldDecl _t (ABS.Ident fid) -> (HS.LetStmt $ HS.BDecls [HS.PatBind noLoc (HS.PVar $ HS.Ident $ "__" ++ fid) Nothing 
-                                                                                                   (HS.UnGuardedRhs $ tPureExp (ABS.ELit ABS.LNull)) (HS.BDecls [])]) : acc
+                                                                                   (HS.UnGuardedRhs $ tPureExp pexp (M.fromList (map swap allFields))) (HS.BDecls [])]) : acc
+                                                ABS.FieldDecl t (ABS.Ident fid) -> (if isInterface t symbolTable
+                                                                                  then  (HS.LetStmt $ HS.BDecls [HS.PatBind noLoc (HS.PVar $ HS.Ident $ "__" ++ fid) Nothing
+                                                                                                                       (HS.UnGuardedRhs $ tPureExp (ABS.ELit ABS.LNull) (M.fromList (map swap allFields))) (HS.BDecls [])])
+                                                                                  else error "A field must be initialised if it is not of a reference type"
+                                                                                  )
+                                                                                      : acc
                                                 ABS.MethDecl _ _ _ _ -> (case maybeBlock of
                                                                           ABS.NoBlock -> acc
                                                                           ABS.JustBlock _->  error "Second parsing error: Syntactic error, no method declaration accepted here")
@@ -396,123 +417,173 @@ main = do
 
          tMethDecl (ABS.MethDecl _ (ABS.Ident mident) mparams (ABS.Block block)) = HS.InsDecl $ 
                       HS.FunBind [HS.Match noLoc (HS.Ident mident) (map (\ (ABS.Par _ (ABS.Ident pid)) -> HS.PVar (HS.Ident pid)) mparams ++ [HS.PVar $ HS.Ident "this"])
-                                    Nothing (HS.UnGuardedRhs $ tBlockWithReturn block clsName (map (\ (_, ABS.Ident fname) -> fname) allFields))  (HS.BDecls [])]
+                                    Nothing (HS.UnGuardedRhs $ tBlockWithReturn block clsName (map (\ (_, ABS.Ident fname) -> fname) allFields) (M.fromList (map swap allFields)) )  (HS.BDecls [])]
          tMethDecl _ = error "Second parsing error: Syntactic error, no field declaration accepted here"
          -- TODO, can be optimized
          scanInterfs :: M.Map ABS.TypeIdent [ABS.BodyDecl] -- assoc list of interfaces to methods
-         scanInterfs = M.mapMaybe (\ methodNames -> let mdecls' = filter (\case
-                                                                         ABS.MethDecl _ mname _ _  -> mname `elem` methodNames
-                                                                         _ -> False
-                                                                        )  (case maybeBlock of
-                                                                              ABS.NoBlock ->  ldecls
-                                                                              ABS.JustBlock _ -> rdecls
-                                                                           )
-                                                   in if null mdecls'
-                                                      then Nothing
-                                                      else Just mdecls') $ M.unions (map st symbolTable)
+         scanInterfs = M.mapMaybeWithKey (\ interfName methodNames -> let mdecls' = filter (\case
+                                                                                           ABS.MethDecl _ mname _ _  -> mname `elem` methodNames
+                                                                                           _ -> False
+                                                                                          )  (case maybeBlock of
+                                                                                                ABS.NoBlock ->  ldecls
+                                                                                                ABS.JustBlock _ -> rdecls
+                                                                                             )
+                                                                     in if null mdecls'
+                                                                        then if (ABS.QualType [ABS.QualTypeIdent interfName]) `elem` imps
+                                                                             then Just [] -- implements an empty interface
+                                                                             else Nothing
+                                                                        else Just mdecls') $ M.unions (map methods symbolTable)
+
+    generateSubSelf :: String -> HS.Decl
+    generateSubSelf iname = HS.InstDecl noLoc [] 
+                            (HS.UnQual $ HS.Ident "Sub")
+                            [HS.TyCon $ HS.UnQual $ HS.Ident iname, HS.TyCon $ HS.UnQual $ HS.Ident iname] -- instance Sup Interf1 Interf1
+                            [   -- the upcasting method
+                                -- is id in this case
+                                HS.InsDecl $ HS.FunBind $ [HS.Match noLoc (HS.Ident "up") [HS.PVar $ HS.Ident "x"] Nothing 
+                                                           (HS.UnGuardedRhs $ HS.Var $ HS.UnQual $ HS.Ident "x") (HS.BDecls [])]
+                            ]
+
+                                                      
+
+    generateSubs :: String -> [ABS.QualType] -> [HS.Decl]
+    generateSubs iname extends = map (generateSub iname) (nub $ collectSubs extends)
+        where
+          collectSubs :: [ABS.QualType] -> [ABS.QualType]
+          collectSubs extends = extends ++ concat (mapMaybe (\ (ABS.QualType eqids) -> liftM collectSubs (M.lookup (case last eqids of
+                                                                                                              ABS.QualTypeIdent eid ->  eid
+                                                                                                             )
+                                                                                                  interfMap
+                                                                                                  )) extends)
+
+
+          interfMap = M.unions (map hierarchy symbolTable)
+
+    generateSub iname (ABS.QualType sup) =  HS.InstDecl noLoc [] 
+                              (HS.UnQual $ HS.Ident "Sub")
+                              [HS.TyCon $ HS.UnQual $ HS.Ident iname, HS.TyCon $ HS.UnQual $ HS.Ident $ joinQualTypeIds sup] -- instance Sup Interf1 Interf1
+                              [   -- the upcasting method
+                                  -- is id in this case
+                                  HS.InsDecl $ HS.FunBind $ [HS.Match noLoc (HS.Ident "up") [HS.PApp (HS.UnQual $ HS.Ident iname) [HS.PVar $ HS.Ident "a"]] Nothing 
+                                                                             (HS.UnGuardedRhs $ HS.App (HS.Con $ HS.UnQual $ HS.Ident $ joinQualTypeIds sup)
+                                                                                    (HS.Var $ HS.UnQual $ HS.Ident "a")) (HS.BDecls [])]
+                                        ]
+
+
+
 
     tBody :: ABS.FunBody -> HS.Rhs
     tBody ABS.Builtin = HS.UnGuardedRhs $ HS.Var $ HS.UnQual $ HS.Ident "undefined" -- builtin turned to undefined
-    tBody (ABS.PureBody exp) = HS.UnGuardedRhs $ tPureExp exp
+    tBody (ABS.PureBody exp) = HS.UnGuardedRhs $ tPureExp exp M.empty -- no scope, rely on haskell
 
-    tPureExp :: ABS.PureExp -> HS.Exp
-    tPureExp (ABS.If predE thenE elseE) = HS.If (tPureExp predE) (tPureExp thenE) (tPureExp elseE)
+    tPureExp :: ABS.PureExp -> Scope -> HS.Exp
+    tPureExp (ABS.If predE thenE elseE) fscope = HS.If (tPureExp predE fscope) (tPureExp thenE fscope) (tPureExp elseE fscope)
 
-    tPureExp (ABS.Let (ABS.Par _ (ABS.Ident pid)) eqE inE) = 
+    tPureExp (ABS.Let (ABS.Par _ (ABS.Ident pid)) eqE inE) fscope = 
                                               (HS.App -- apply the created lamdba to the equality expr
                                                   (HS.Lambda noLoc
                                                    -- ignore the type of the param because ABS let is monomorphic anyway, it can infer it
                                                    [HS.PVar $ HS.Ident pid] -- bound variable
-                                                   (tPureExp inE))
-                                                  (tPureExp eqE)
+                                                   (tPureExp inE fscope))
+                                                  (tPureExp eqE fscope)
                                               )
 
-    tPureExp (ABS.Case matchE branches) = HS.Case (tPureExp matchE) (map 
-                                                                 (\ (ABS.CBranch pat exp) -> HS.Alt noLoc (tFunPat pat) (HS.UnGuardedAlt (tPureExp exp)) (HS.BDecls []))
+    tPureExp (ABS.Case matchE branches) fscope = HS.Case (tPureExp matchE fscope) (map 
+                                                                 (\ (ABS.CBranch pat exp) -> HS.Alt noLoc (tFunPat pat) (HS.UnGuardedAlt (tPureExp exp fscope)) (HS.BDecls []))
                                                                  branches)
 
-    tPureExp (ABS.ECall (ABS.Ident cid) args) = foldl 
-                                            (\ acc nextArg -> HS.App acc (tPureExp nextArg))
+    tPureExp (ABS.ECall (ABS.Ident cid) args) fscope = foldl 
+                                            (\ acc nextArg -> HS.App acc (tPureExp nextArg fscope))
                                             (HS.Var $ HS.UnQual $ HS.Ident cid)
                                             args
 
-    tPureExp (ABS.ENaryCall (ABS.Ident cid) args) = HS.App 
+    tPureExp (ABS.ENaryCall (ABS.Ident cid) args) fscope = HS.App 
                                                 (HS.Var $ HS.UnQual $ HS.Ident cid)
-                                                (HS.List (map tPureExp args))
+                                                (HS.List (map (\ arg -> tPureExp arg fscope) args))
 
     -- be careful to parenthesize infix apps
-    tPureExp (ABS.EOr left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual $ HS.Symbol "||")  (tPureExp right)
+    tPureExp (ABS.EOr left right) fscope = HS.Paren $ HS.InfixApp (tPureExp left fscope) (HS.QVarOp $ HS.UnQual $ HS.Symbol "||")  (tPureExp right fscope)
 
-    tPureExp (ABS.EAnd left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual $ HS.Symbol "&&")  (tPureExp right)
+    tPureExp (ABS.EAnd left right) fscope = HS.Paren $ HS.InfixApp (tPureExp left fscope) (HS.QVarOp $ HS.UnQual $ HS.Symbol "&&")  (tPureExp right fscope)
 
-    tPureExp (ABS.EEq left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "==")  (tPureExp right)
+    tPureExp (ABS.EEq left right) fscope = HS.Paren $ HS.InfixApp (tPureExp left fscope) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "==")  (tPureExp right fscope)
 
-    tPureExp (ABS.ENeq left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "/=")  (tPureExp right)
+    tPureExp (ABS.ENeq left right) fscope = HS.Paren $ HS.InfixApp (tPureExp left fscope) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "/=")  (tPureExp right fscope)
 
-    tPureExp (ABS.ELt left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "<")  (tPureExp right)
+    tPureExp (ABS.ELt left right) fscope = HS.Paren $ HS.InfixApp (tPureExp left fscope) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "<")  (tPureExp right fscope)
 
-    tPureExp (ABS.ELe left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "<=")  (tPureExp right)
+    tPureExp (ABS.ELe left right) fscope = HS.Paren $ HS.InfixApp (tPureExp left fscope) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "<=")  (tPureExp right fscope)
 
-    tPureExp (ABS.EGt left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol ">")  (tPureExp right)
+    tPureExp (ABS.EGt left right) fscope = HS.Paren $ HS.InfixApp (tPureExp left fscope) (HS.QVarOp $ HS.UnQual  $ HS.Symbol ">")  (tPureExp right fscope)
 
-    tPureExp (ABS.EGe left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol ">=")  (tPureExp right)
+    tPureExp (ABS.EGe left right) fscope = HS.Paren $ HS.InfixApp (tPureExp left fscope) (HS.QVarOp $ HS.UnQual  $ HS.Symbol ">=")  (tPureExp right fscope)
 
-    tPureExp (ABS.EAdd left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "+")  (tPureExp right)
+    tPureExp (ABS.EAdd left right) fscope = HS.Paren $ HS.InfixApp (tPureExp left fscope) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "+")  (tPureExp right fscope)
 
-    tPureExp (ABS.ESub left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "-")  (tPureExp right)
+    tPureExp (ABS.ESub left right) fscope = HS.Paren $ HS.InfixApp (tPureExp left fscope) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "-")  (tPureExp right fscope)
 
-    tPureExp (ABS.EMul left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "*")  (tPureExp right)
+    tPureExp (ABS.EMul left right) fscope = HS.Paren $ HS.InfixApp (tPureExp left fscope) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "*")  (tPureExp right fscope)
 
-    tPureExp (ABS.EDiv left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "/")  (tPureExp right)
+    tPureExp (ABS.EDiv left right) fscope = HS.Paren $ HS.InfixApp (tPureExp left fscope) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "/")  (tPureExp right fscope)
 
-    tPureExp (ABS.EMod left right) = HS.Paren $ HS.InfixApp (tPureExp left) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "%")  (tPureExp right)
+    tPureExp (ABS.EMod left right) fscope = HS.Paren $ HS.InfixApp (tPureExp left fscope) (HS.QVarOp $ HS.UnQual  $ HS.Symbol "%")  (tPureExp right fscope)
 
-    tPureExp (ABS.ELogNeg e) = HS.Paren $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "not") (tPureExp e)
+    tPureExp (ABS.ELogNeg e) fscope = HS.Paren $ HS.App (HS.Var $ HS.UnQual $ HS.Ident "not") (tPureExp e fscope)
 
-    tPureExp (ABS.EIntNeg e) = HS.Paren $ HS.NegApp (tPureExp e)
+    tPureExp (ABS.EIntNeg e) fscope = HS.Paren $ HS.NegApp (tPureExp e fscope)
 
-    tPureExp (ABS.EUnaryConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Nil")])) = HS.Con $ HS.Special HS.ListCon -- for the translation to []
+    tPureExp (ABS.EUnaryConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Nil")])) _ = HS.Con $ HS.Special HS.ListCon -- for the translation to []
 
-    tPureExp (ABS.EUnaryConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "EmptyMap")])) = HS.Var $ HS.UnQual $ HS.Ident "empty" -- for the translation to Data.Map
+    tPureExp (ABS.EUnaryConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "EmptyMap")])) _ = HS.Var $ HS.UnQual $ HS.Ident "empty" -- for the translation to Data.Map
 
-    tPureExp (ABS.EUnaryConstr (ABS.QualType qids)) = let mids = init qids
+    tPureExp (ABS.EUnaryConstr (ABS.QualType qids)) _ = let mids = init qids
                                                   in HS.Con $ (if null mids 
                                                                then HS.UnQual 
                                                                else HS.Qual (HS.ModuleName $ joinQualTypeIds mids)
                                                               ) $ HS.Ident $ (\ (ABS.QualTypeIdent (ABS.TypeIdent cid)) -> cid) (last qids)
 
-    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Triple")]) pexps) | length pexps == 3 = HS.Tuple HS.Boxed (map tPureExp pexps) -- for the translation to tuples
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Triple")]) pexps) fscope | length pexps == 3 = HS.Tuple HS.Boxed (map (\ pexp -> tPureExp pexp fscope) pexps) -- for the translation to tuples
                                                                                                  | otherwise = error "wrong number of arguments to Triple"
-    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Pair")]) pexps) | length pexps == 2  = HS.Tuple HS.Boxed (map tPureExp pexps) -- for the translation to tuples
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Pair")]) pexps) fscope | length pexps == 2  = HS.Tuple HS.Boxed (map (\ pexp -> tPureExp pexp fscope) pexps) -- for the translation to tuples
                                                                                                | otherwise = error "wrong number of arguments to Pair"
-    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Cons")]) [pexp1, pexp2]) =  -- for the translation to pexp1:pexp2
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Cons")]) [pexp1, pexp2]) fscope =  -- for the translation to pexp1:pexp2
                                                                                                            HS.Paren (HS.InfixApp 
-                                                                                                                         (tPureExp pexp1)
+                                                                                                                         (tPureExp pexp1 fscope)
                                                                                                                          (HS.QConOp $ HS.Special $ HS.Cons)
-                                                                                                                         (tPureExp pexp2))
-    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Cons")]) _) = error "wrong number of arguments to Cons"
-    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "InsertAssoc")]) [pexp1, pexp2]) = HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "insertAssoc") (tPureExp pexp1)) (tPureExp pexp2)
+                                                                                                                         (tPureExp pexp2 fscope))
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "Cons")]) _) _ = error "wrong number of arguments to Cons"
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "InsertAssoc")]) [pexp1, pexp2]) fscope = HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "insertAssoc") (tPureExp pexp1 fscope)) (tPureExp pexp2 fscope)
 
-    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "InsertAssoc")]) _) = error "wrong number of arguments to InsertAssoc"
-    tPureExp (ABS.EMultConstr qids args) = foldl
-                                       (\ acc nextArg -> HS.App acc (tPureExp nextArg))
-                                       (tPureExp (ABS.EUnaryConstr qids) )
+    tPureExp (ABS.EMultConstr (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent "InsertAssoc")]) _) _ = error "wrong number of arguments to InsertAssoc"
+    tPureExp (ABS.EMultConstr qids args) fscope = foldl
+                                       (\ acc nextArg -> HS.App acc (tPureExp nextArg fscope))
+                                       (tPureExp (ABS.EUnaryConstr qids) fscope)
                                        args
 
 
-    tPureExp (ABS.EVar (ABS.Ident pid)) = HS.Var $ HS.UnQual $ HS.Ident pid
+    tPureExp (ABS.EVar var@(ABS.Ident pid)) fscope = case M.lookup var fscope of
+                                                       -- TODO: this should be turned into warning
+                                                       --  pure expressions don't have a scope, because they rely in haskell for scoping
+                                                       Nothing -> HS.Var $ HS.UnQual $ HS.Ident pid 
+                                                       Just t -> HS.Paren $ ((if isInterface t symbolTable
+                                                                            then HS.App (HS.Var $ HS.UnQual $ HS.Ident "up") -- upcasting if it is of a class type
+                                                                            else id)
+                                                                                     (HS.Var $ HS.UnQual $ HS.Ident pid))
 
-    tPureExp (ABS.ELit lit) = case lit of
+    tPureExp (ABS.ELit lit) _ = case lit of
                                          (ABS.LStr str) ->  HS.Lit $ HS.String str
                                          (ABS.LInt i) ->  HS.Lit $ HS.Int i
-                                         ABS.LThis -> HS.Var $ HS.UnQual $ HS.Ident "this"
-                                         ABS.LNull -> HS.Var $ HS.UnQual $ HS.Ident "null"
-                                                     -- HS.Paren $ HS.ExpTypeSig noLoc (HS.Var $ HS.UnQual $ HS.Ident "undefined") 
-                                                     -- (HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "ObjectRef") (HS.TyVar $ HS.Ident "a"))
+                                         ABS.LThis -> HS.App (HS.Var $ HS.UnQual $ HS.Ident "up") (HS.Var $ HS.UnQual $ HS.Ident "this")
+                                         ABS.LNull -> (HS.Var $ HS.UnQual $ HS.Ident "null")
 
 
     -- this is a trick for sync_call and async_call TODO: error "Cannot compile object accesses in mathematically pure expressions"
-    tPureExp (ABS.EThis (ABS.Ident ident)) = HS.Var $ HS.UnQual $ HS.Ident ("__" ++ ident)
+    tPureExp (ABS.EThis (ABS.Ident ident)) _ = HS.Var $ HS.UnQual $ HS.Ident ("__" ++ ident)
+
+    isInterface :: ABS.Type -> [ModuleST] -> Bool
+    isInterface (ABS.TypeVar (ABS.QualType [ABS.QualTypeIdent iid])) sts = iid `M.member` (M.unions (map methods sts))
+    isInterface _ _ = False
+
 
     tFunPat :: ABS.Pattern -> HS.Pat
     tFunPat (ABS.PIdent (ABS.Ident pid)) = HS.PVar $ HS.Ident $ pid
@@ -535,13 +606,12 @@ main = do
                                          (ABS.LInt i) ->  HS.Int i
                                          _ -> error "this or null are not allowed in pattern syntax"
 
-    tMethodSig :: ABS.MethSig -> HS.ClassDecl
-    tMethodSig (ABS.MethSig tReturn (ABS.Ident mname) pars)  = HS.ClsDecl $
+    tMethodSig :: String -> ABS.MethSig -> HS.ClassDecl
+    tMethodSig ityp (ABS.MethSig tReturn (ABS.Ident mname) pars)  = HS.ClsDecl $
        HS.TypeSig noLoc [HS.Ident mname] (foldr  -- function application is right-associative
                                      (\ tpar acc -> HS.TyFun (tType tpar) acc)
                                      (HS.TyFun 
-                                      (HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "ObjectRef")
-                                         (HS.TyVar $ HS.Ident "a"))
+                                      (HS.TyCon $ HS.UnQual $ HS.Ident ityp)
                                       (HS.TyApp ((HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "ABS") 
                                                               (HS.TyVar $ HS.Ident "a")) )
                                                 (tType tReturn))
@@ -549,27 +619,19 @@ main = do
                                      (map (\ (ABS.Par typ _) -> typ) pars))
 
 
-    tThisExp :: ABS.PureExp -> String -> HS.Exp
-    tThisExp texp cls = let thisTerms = collect texp
+    tThisExp :: ABS.PureExp -> String -> [Scope] -> HS.Exp
+    tThisExp texp cls scopes = let thisTerms = collect texp
                     in if null thisTerms
-                       then (HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") (tPureExp texp)) --  rhs  
+                       then (HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") (tPureExp texp fscope)) --  rhs  
                        else
                            HS.Paren $ HS.InfixApp 
-                                 (HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") $ HS.Var $ HS.UnQual $ HS.Ident "this")
+                                 (HS.Var $ HS.UnQual $ HS.Ident "readThis")
                                  (HS.QVarOp $ HS.UnQual $ HS.Symbol ">>=")
                                  (HS.Lambda noLoc [(HS.PRec (HS.UnQual $ HS.Ident cls) $ -- introduce bindings
                                                     map (\ arg -> HS.PFieldPat (HS.UnQual $ HS.Ident (headToLower cls ++ '_' : arg)) 
                                                                  (HS.PVar $ HS.Ident $ "__" ++ arg) )  (nub thisTerms))
-                                                  ] (HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") (tPureExp texp)))
-
-
-
-    -- tThisExp (ABS.EThis (ABS.Ident ident)) cls = HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "liftM")
-    --                                                            (HS.Var $ HS.UnQual $ HS.Ident (headToLower cls ++ "_" ++ ident))) $ 
-    --                                              HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") (HS.Var $ HS.UnQual $ HS.Ident "this")
-
-
-
+                                                  ] (HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") (tPureExp texp fscope)))
+        where fscope = M.unions scopes
 
     tType :: ABS.Type -> HS.Type
     tType t = tTypeOrTyVar [] t     -- no type variables in scope
@@ -578,7 +640,7 @@ main = do
     tTypeOrTyVar _ ABS.TyUnit  = HS.TyCon $ HS.Special $ HS.UnitCon
     tTypeOrTyVar _ ABS.TyInt  = HS.TyCon $ HS.UnQual $ HS.Ident "Int"
     tTypeOrTyVar _ ABS.TyRat  = HS.TyCon $ HS.UnQual $ HS.Ident "Rational"
-    tTypeOrTyVar _ (ABS.TyFut par) = HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "Future") (tType par)
+    tTypeOrTyVar _ (ABS.TyFut par) = HS.TyApp (HS.TyCon $ HS.UnQual $ HS.Ident "Fut") (tType par)
     tTypeOrTyVar tyvars (ABS.TypeVar (ABS.QualType qtids))  = let joinedTid = joinQualTypeIds qtids    
                                                           in if (ABS.TypeIdent joinedTid) `elem` tyvars -- type variable
                                                              then HS.TyVar $ HS.Ident $ headToLower joinedTid
@@ -595,24 +657,28 @@ main = do
     tMain (ABS.JustBlock (ABS.Block block)) = 
        -- main can only return with: return Unit;
        HS.PatBind noLoc (HS.PVar (HS.Ident "mainABS")) Nothing (HS.UnGuardedRhs $ tBlockWithReturn block
+                                                                      ("Top")
                                                                       (error "No context for this")
-                                                                      (error "No context for this")
+                                                                      M.empty
                                                                ) (HS.BDecls [])
                                       :
                                       [HS.PatBind noLoc (HS.PVar (HS.Ident "main")) Nothing 
                                              (HS.UnGuardedRhs (HS.App (HS.Var (HS.UnQual (HS.Ident "main_is")))
                                                                       (HS.Var (HS.UnQual (HS.Ident "mainABS"))))) (HS.BDecls [])]
 
-    tBlockWithReturn :: [ABS.Stm] -> String -> [String] -> HS.Exp
-    tBlockWithReturn stmts cls clsFields = tBlock stmts True cls clsFields
+    tBlockWithReturn :: [ABS.Stm] -> String -> [String] -> Scope -> HS.Exp
+    -- method block or main block
+    -- can return and also pushes a new scope
+    tBlockWithReturn stmts cls clsFields scope = tBlock stmts True cls clsFields [scope]
 
-    tBlock :: [ABS.Stm] -> Bool -> String -> [String] -> HS.Exp
-    tBlock [] _canReturn _ _ = eReturnUnit
-    tBlock stmts canReturn cls clsFields = HS.Do $ tStmts stmts canReturn cls clsFields ++
+    tBlock :: [ABS.Stm] -> Bool -> String -> [String] -> [Scope] -> HS.Exp
+    tBlock [] _canReturn _ _ _ = eReturnUnit
+    tBlock stmts canReturn cls clsFields scopes = HS.Do $ tStmts stmts canReturn cls clsFields (M.empty:scopes) ++
                                  -- if the last stmt is an assignment, then add a return (R ())
                                  -- 
                                  (case last stmts of
                                     ABS.SAss _ _ -> [HS.Qualifier eReturnUnit]
+                                    ABS.SExp _ ->  [HS.Qualifier eReturnUnit] -- although an expression has a value, we throw it away, since it must explicitly be returned
                                     ABS.SFieldAss _ _ -> [HS.Qualifier eReturnUnit]
                                     ABS.SDecAss _ _ _ ->  [HS.Qualifier eReturnUnit]
                                     _ -> []
@@ -622,45 +688,94 @@ main = do
                                           
 
     -- tail-recursive tStmts
-    tStmts :: [ABS.Stm] -> Bool -> String -> [String] -> [HS.Stmt]
-    tStmts [] _canReturn _ _ = []
-    tStmts (stmt:rest) canReturn cls clsFields = case stmt of
-                       ABS.SExp eexp -> HS.Qualifier (tEffExp eexp cls) -- have to force to WHNF
-                                                           : tStmts rest canReturn cls clsFields
-                       ABS.SSuspend -> HS.Qualifier (HS.Var $ HS.UnQual $ HS.Ident "suspend") : tStmts rest canReturn cls clsFields
-                       ABS.SBlock stmts -> HS.Qualifier (tBlock stmts False cls clsFields) : tStmts rest canReturn cls clsFields
-                       ABS.SSkip ->  HS.Qualifier (HS.Var (HS.UnQual $ HS.Ident "skip")) : tStmts rest canReturn cls clsFields
+    tStmts :: [ABS.Stm] -> Bool -> String -> [String] -> [Scope] -> [HS.Stmt]
+    tStmts [] _canReturn _ _ _ = []
+    tStmts (stmt:rest) canReturn cls clsFields scopes = case stmt of
+                       ABS.SExp eexp -> HS.Qualifier (tEffExp eexp cls scopes) -- have to force to WHNF
+                                                           : tStmts rest canReturn cls clsFields scopes
+                       ABS.SSuspend -> HS.Qualifier (HS.Var $ HS.UnQual $ HS.Ident "suspend") : tStmts rest canReturn cls clsFields scopes
+                       ABS.SBlock stmts -> HS.Qualifier (tBlock stmts False cls clsFields scopes) : tStmts rest canReturn cls clsFields scopes
+                       ABS.SSkip ->  HS.Qualifier (HS.Var (HS.UnQual $ HS.Ident "skip")) : tStmts rest canReturn cls clsFields scopes
                        ABS.SReturn e -> if canReturn
                                        then if null rest
                                             then [HS.Qualifier $ case e of
-                                                                   ABS.ExpE eexp -> tEffExp eexp cls
-                                                                   ABS.ExpP texp -> tThisExp texp cls
+                                                                   ABS.ExpE eexp -> tEffExp eexp cls scopes
+                                                                   ABS.ExpP texp -> tThisExp texp cls scopes
                                                  ]
                                             else error "Return must be the last statement"
                                        else error "Return must be the last statement" -- maybe differentiate between these two errors
                        ABS.SIf texp stm -> HS.Qualifier (HS.App 
-                                                              (HS.App (HS.Var $ HS.UnQual $ HS.Ident "ifthenM") (tThisExp texp cls))
-                                                        (tBlock [stm] False cls clsFields)) : tStmts rest canReturn cls clsFields
+                                                              (HS.App (HS.Var $ HS.UnQual $ HS.Ident "ifthenM") (tThisExp texp cls scopes))
+                                                        (tBlock [stm] False cls clsFields scopes)) : tStmts rest canReturn cls clsFields scopes
                        ABS.SIfElse texp stm_then stm_else -> HS.Qualifier (HS.App
                                                                                 (HS.App
-                                                                                       (HS.App (HS.Var $ HS.UnQual $ HS.Ident "ifthenelseM") (tThisExp texp cls))
-                                                                                       (tBlock [stm_then] False cls clsFields))
-                                                                                (tBlock [stm_else] False cls clsFields)) : tStmts rest canReturn cls clsFields
-                       ABS.SAssert texp -> HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "assert") (tThisExp texp cls)) : tStmts rest canReturn cls clsFields
+                                                                                       (HS.App (HS.Var $ HS.UnQual $ HS.Ident "ifthenelseM") (tThisExp texp cls scopes))
+                                                                                       (tBlock [stm_then] False cls clsFields scopes))
+                                                                                (tBlock [stm_else] False cls clsFields scopes)) : tStmts rest canReturn cls clsFields scopes
+                       ABS.SAssert texp -> HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "assert") (tThisExp texp cls scopes)) : tStmts rest canReturn cls clsFields scopes
                        ABS.SWhile texp stm -> HS.Qualifier (HS.App
                                                                  (HS.App (HS.Var $ HS.UnQual $ HS.Ident "while")
-                                                                  (tThisExp texp cls))
-                                                                 (tBlock [stm] False cls clsFields)) : tStmts rest canReturn cls clsFields
-                       ABS.SDec _typ _ident -> tStmts rest canReturn cls clsFields -- ignore the dec TODO: don't ignore it, remove the ident from the class attributes to check
-                       ABS.SDecAss typ ident texp ->  tStmts (ABS.SDec typ ident : ABS.SAss ident texp : rest) canReturn cls clsFields -- normalize it to Dec + Ass
-                       ABS.SAss (ABS.Ident ident) (ABS.ExpP texp) ->  (HS.Generator noLoc 
-                                                                            (HS.PVar $ HS.Ident ident) -- lhs
-                                                                            (tThisExp texp cls))
-                                                                     : tStmts rest canReturn cls clsFields
-                       ABS.SAss (ABS.Ident ident) (ABS.ExpE eexp)-> 
+                                                                  (tThisExp texp cls scopes))
+                                                                 (tBlock [stm] False cls clsFields scopes)) : tStmts rest canReturn cls clsFields scopes
+                       ABS.SDec typ ident -> tStmts rest canReturn cls clsFields (addToScope scopes ident typ)
+                       -- ignore the dec TODO: don't ignore it, remove the ident from the class attributes to check
+
+                       -- ABS.SDecAss typ ident@(ABS.Ident var) (ABS.ExpE eexp) ->  HS.Generator noLoc
+                       --                                            (HS.PVar $ HS.Ident var) -- lhs
+                       --                                            ((case (typ, eexp) of
+                       --                                                (ABS.TypeVar (ABS.QualType qids), (ABS.New _ _)) -> HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "liftM") (HS.Var $ HS.UnQual $ HS.Ident $ (\ (ABS.QualTypeIdent (ABS.TypeIdent iid)) -> iid) (last qids)))
+                       --                                                (ABS.TypeVar (ABS.QualType qids), (ABS.NewLocal _ _)) -> HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "liftM") (HS.Var $ HS.UnQual $ HS.Ident $ (\ (ABS.QualTypeIdent (ABS.TypeIdent iid)) -> iid) (last qids)))
+                       --                                                _ -> id) (tRhs eexp cls scopes)) -- rhs
+                       --                                            : tStmts rest canReturn cls clsFields (addToScope scopes ident typ) -- same as dec
+
+                       -- otherwise, normalize it to Dec + Ass
+                       ABS.SDecAss typ ident texp -> tStmts (ABS.SDec typ ident : ABS.SAss ident texp : rest) canReturn cls clsFields scopes
+
+                       ABS.SAss ident@(ABS.Ident var) (ABS.ExpP texp) ->  (HS.Generator noLoc 
+                                                                            (HS.PVar $ HS.Ident var) -- lhs
+                                                                            ((case M.lookup ident (M.unions scopes) of -- add type signature from scope
+                                                                                Just t ->  (flip $ HS.ExpTypeSig noLoc) (HS.TyApp (HS.TyApp (HS.TyCon (HS.UnQual (HS.Ident "ABS"))) (HS.TyVar (HS.Ident cls))) (tType t))
+                                                                                Nothing -> id) -- otherwise let it infer it
+                                                                             (tThisExp texp cls scopes)))
+                                                                     : tStmts rest canReturn cls clsFields scopes
+                       ABS.SAss ident@(ABS.Ident var) (ABS.ExpE eexp)-> 
                            HS.Generator noLoc
-                                 (HS.PVar $ HS.Ident ident) -- lhs
-                                 (let argsExps = case eexp of
+                                 (HS.PVar $ HS.Ident var) -- lhs
+                                 ((case M.lookup ident (M.unions scopes) of -- add type signature from scope
+                                    Just t ->  (flip $ HS.ExpTypeSig noLoc) (HS.TyApp (HS.TyApp (HS.TyCon (HS.UnQual (HS.Ident "ABS"))) (HS.TyVar (HS.Ident cls))) (tType t))
+                                    Nothing -> id) -- otherwise let it infer it
+                                 ((case eexp of
+                                    ABS.New _ _ -> liftInterf ident scopes
+                                    ABS.NewLocal _ _ -> liftInterf ident scopes
+                                    _ -> id )
+                                    (tRhs eexp cls scopes)))
+                                 : tStmts rest canReturn cls clsFields scopes
+                           
+                       ABS.SFieldAss (ABS.Ident ident) (ABS.ExpP texp) ->  (HS.Qualifier (HS.Paren $ HS.InfixApp 
+                                                                                               (HS.Var $ HS.UnQual $ HS.Ident $ "set_" ++ headToLower cls ++ "_" ++ ident)
+                                                                                               (HS.QVarOp $ HS.UnQual $ HS.Symbol "=<<")
+                                                                                         (HS.Paren (tThisExp texp cls scopes)))) -- paren are necessary here
+                                                                          : tStmts rest canReturn cls clsFields scopes
+                       ABS.SFieldAss ident@(ABS.Ident var) (ABS.ExpE eexp)-> 
+                           (HS.Qualifier (HS.Paren $ HS.InfixApp 
+                                          (HS.Var $ HS.UnQual $ HS.Ident $ "set_" ++ headToLower cls ++ "_" ++ var)
+                                          (HS.QVarOp $ HS.UnQual $ HS.Symbol "=<<")
+                                          ((case eexp of
+                                              ABS.New _ _ -> liftInterf ident scopes
+                                              ABS.NewLocal _ _ -> liftInterf ident scopes
+                                              _ -> id )
+                                          (tRhs eexp cls scopes))))
+                                 : tStmts rest canReturn cls clsFields scopes
+                           
+                       ABS.SAwait g -> (HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "await") (tAwaitGuard g cls clsFields))) :
+                                                                    (tStmts rest canReturn cls clsFields scopes)
+
+    liftInterf ident@(ABS.Ident var) scopes = case M.lookup ident (M.unions scopes) of
+                                Nothing -> error $ "Identifier " ++ var ++ " cannot be resolved from scope"
+                                Just (ABS.TypeVar (ABS.QualType qids)) -> HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "liftM") (HS.Var $ HS.UnQual $ HS.Ident $ (\ (ABS.QualTypeIdent (ABS.TypeIdent iid)) -> iid) (last qids)))
+                                Just _ -> error $ var ++ " not of interface type"
+
+    tRhs eexp cls scopes = (let argsExps = case eexp of
                                                    ABS.Get pexp -> [pexp]
                                                    ABS.New _ pexps  -> pexps
                                                    ABS.NewLocal _ pexps -> pexps
@@ -668,60 +783,19 @@ main = do
                                                    ABS.ThisSyncCall _ pexps -> pexps
                                                    ABS.AsyncCall pexp1 _ pexps2 -> pexp1:pexps2
                                                    ABS.ThisAsyncCall _ pexps -> pexps
-                                      thisTerms = concatMap collect argsExps
+                                thisTerms = concatMap collect argsExps
                                   in
                                  (if null thisTerms
-                                  then tEffExp eexp cls
+                                  then tEffExp eexp cls scopes
                                   else -- readObject this >>= \ Class1 { record bindings   } ->
                                       HS.Paren $ HS.InfixApp 
-                                                 (HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") $ HS.Var $ HS.UnQual $ HS.Ident "this")
+                                                 (HS.Var $ HS.UnQual $ HS.Ident "readThis")
                                                 (HS.QVarOp $ HS.UnQual $ HS.Symbol ">>=")
                                                 (HS.Lambda noLoc [(HS.PRec (HS.UnQual $ HS.Ident cls) $ -- introduce bindings
                                                                    map (\ arg -> HS.PFieldPat (HS.UnQual $ HS.Ident (headToLower cls ++ '_' : arg)) 
                                                                                 (HS.PVar $ HS.Ident $ "__" ++ arg) )  (nub thisTerms))
                                                                  ]
-                                                 (tEffExp eexp cls))
-                                 )
-                                 )
-                                 : tStmts rest canReturn cls clsFields
-                           
-                       ABS.SFieldAss (ABS.Ident ident) (ABS.ExpP texp) ->  (HS.Qualifier (HS.Paren $ HS.InfixApp 
-                                                                                               (HS.Var $ HS.UnQual $ HS.Ident $ "set_" ++ headToLower cls ++ "_" ++ ident)
-                                                                                               (HS.QVarOp $ HS.UnQual $ HS.Symbol "=<<")
-                                                                                         (HS.Paren (tThisExp texp cls)))) -- paren are necessary here
-                                                                          : tStmts rest canReturn cls clsFields
-                       ABS.SFieldAss (ABS.Ident ident) (ABS.ExpE eexp)-> 
-                           (HS.Qualifier (HS.Paren $ HS.InfixApp 
-                                          (HS.Var $ HS.UnQual $ HS.Ident $ "set_" ++ headToLower cls ++ "_" ++ ident)
-                                          (HS.QVarOp $ HS.UnQual $ HS.Symbol "=<<")
-                                          (HS.Paren (let -- paren are necessary here
-                                                        argsExps = case eexp of
-                                                                      ABS.Get pexp -> [pexp]
-                                                                      ABS.New _ pexps  -> pexps
-                                                                      ABS.NewLocal _ pexps -> pexps
-                                                                      ABS.SyncCall pexp1 _ pexps2 -> pexp1:pexps2
-                                                                      ABS.ThisSyncCall _ pexps -> pexps
-                                                                      ABS.AsyncCall pexp1 _ pexps2 -> pexp1:pexps2
-                                                                      ABS.ThisAsyncCall _ pexps -> pexps
-                                                        thisTerms = concatMap collect argsExps
-                                                     in
-                                 (if null thisTerms
-                                  then tEffExp eexp cls
-                                  else -- readObject this >>= \ Class1 { record bindings   } ->
-                                      HS.Paren $ HS.InfixApp 
-                                                 (HS.App (HS.Var $ HS.UnQual $ HS.Ident "readObject") $ HS.Var $ HS.UnQual $ HS.Ident "this")
-                                                (HS.QVarOp $ HS.UnQual $ HS.Symbol ">>=")
-                                                (HS.Lambda noLoc [(HS.PRec (HS.UnQual $ HS.Ident cls) $ -- introduce bindings
-                                                                   map (\ arg -> HS.PFieldPat (HS.UnQual $ HS.Ident (headToLower cls ++ '_' : arg)) 
-                                                                                (HS.PVar $ HS.Ident $ "__" ++ arg) )  (nub thisTerms))
-                                                                 ]
-                                                 (tEffExp eexp cls))
-                                 )
-                                 ))))
-                                 : tStmts rest canReturn cls clsFields
-                           
-                       ABS.SAwait g -> (HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "await") (tAwaitGuard g cls clsFields))) :
-                                                                    (tStmts rest canReturn cls clsFields)
+                                                 (tEffExp eexp cls scopes))))
 
     tAwaitGuard :: ABS.Guard -> String -> [String] -> HS.Exp
     tAwaitGuard (ABS.VarGuard (ABS.Ident ident)) cls clsFields = HS.App
@@ -731,7 +805,7 @@ main = do
                                                 in
                                                   (HS.App (HS.App (HS.Con $ HS.UnQual $ HS.Ident "ThisGuard") 
                                                                  (HS.List (map (HS.Lit . HS.Int . toInteger) (findIndices (`elem` awaitFields) clsFields))))
-                                                    (tPureExp pexp))
+                                                    (tPureExp pexp M.empty)) -- TODO: might also require fscope here
 
     tAwaitGuard (ABS.FieldGuard (ABS.Ident ident)) cls clsFields = error "Not implemented yet, take Cosimo's consideration into account"
     tAwaitGuard (ABS.AndGuard gl gr) cls clsFields = HS.Paren $ HS.InfixApp 
@@ -740,11 +814,11 @@ main = do
                                    (tAwaitGuard gr cls clsFields)
 
 
-    tEffExp :: ABS.EffExp -> String -> HS.Exp
-    tEffExp (ABS.New (ABS.TypeVar (ABS.QualType qtids)) pexps) _cls = (HS.App
+    tEffExp :: ABS.EffExp -> String -> [Scope] -> HS.Exp
+    tEffExp (ABS.New (ABS.TypeVar (ABS.QualType qtids)) pexps) _cls scopes = (HS.App
                                                                        (HS.Var $ HS.UnQual $ HS.Ident "new")
                                                                        (foldl
-                                                                        (\ acc pexp -> HS.App acc (tPureExp pexp))
+                                                                        (\ acc pexp -> HS.App acc (tPureExp pexp fscope))
                                                                         (HS.Var  
                                                                                ((let mids = init qtids
                                                                                 in
@@ -753,12 +827,13 @@ main = do
                                                                                   else HS.Qual (HS.ModuleName $ joinQualTypeIds mids))
                                                                                (HS.Ident $ "__" ++ headToLower ( (\ (ABS.QualTypeIdent (ABS.TypeIdent cid)) -> cid) (last qtids)))))
                                                                         pexps))
-    tEffExp (ABS.New _ _) _ = error "Not valid class name"
+        where fscope = M.unions scopes
+    tEffExp (ABS.New _ _) _ _ = error "Not valid class name"
 
-    tEffExp (ABS.NewLocal (ABS.TypeVar (ABS.QualType qtids)) pexps) _cls = (HS.App
+    tEffExp (ABS.NewLocal (ABS.TypeVar (ABS.QualType qtids)) pexps) _cls scopes = (HS.App
                                                                        (HS.Var $ HS.UnQual $ HS.Ident "new_local")
                                                                        (foldl
-                                                                        (\ acc pexp -> HS.App acc (tPureExp pexp))
+                                                                        (\ acc pexp -> HS.App acc (tPureExp pexp fscope))
                                                                         (HS.Var  
                                                                                ((let mids = init qtids
                                                                                 in
@@ -767,33 +842,33 @@ main = do
                                                                                   else HS.Qual (HS.ModuleName $ joinQualTypeIds mids))
                                                                                (HS.Ident $ "__" ++ headToLower ((\ (ABS.QualTypeIdent (ABS.TypeIdent cid)) -> cid) (last qtids)))))
                                                                         pexps))
+        where fscope = M.unions scopes
 
-    tEffExp (ABS.NewLocal _ _) _ = error "Not valid class name"
+    tEffExp (ABS.NewLocal _ _) _ _ = error "Not valid class name"
 
 
-    tEffExp (ABS.SyncCall texp (ABS.Ident method) args) _cls = HS.Paren $ HS.InfixApp 
-                                                                     (tPureExp texp)
-                                                                     (HS.QVarOp $ HS.UnQual $ HS.Ident "sync_call")
-                                                                     (foldl
-                                                                      (\ acc arg -> HS.App acc (tPureExp arg))
-                                                                      (HS.Var $ HS.UnQual $ HS.Ident method)
-                                                                      args)
-
+    tEffExp (ABS.SyncCall texp (ABS.Ident method) args) _cls scopes = HS.Paren $ HS.App 
+                                                               (foldl
+                                                                (\ acc arg -> HS.App acc (tPureExp arg fscope))
+                                                                (HS.Var $ HS.UnQual $ HS.Ident $ method ++ "_sync")
+                                                                args)
+       (tPureExp texp fscope)
+        where fscope = M.unions scopes
     -- normalize
-    tEffExp (ABS.ThisSyncCall method args) cls = tEffExp (ABS.SyncCall (ABS.ELit $ ABS.LThis) method args) cls
+    tEffExp (ABS.ThisSyncCall method args) cls scopes = tEffExp (ABS.SyncCall (ABS.ELit $ ABS.LThis) method args) cls scopes
 
-    tEffExp (ABS.AsyncCall texp (ABS.Ident method) args) _cls = HS.Paren $ HS.InfixApp 
-                                                                     (tPureExp texp)
-                                                                     (HS.QVarOp $ HS.UnQual $ HS.Ident "async_call")
-                                                                     (foldl
-                                                                      (\ acc arg -> HS.App acc (tPureExp arg))
-                                                                      (HS.Var $ HS.UnQual $ HS.Ident method)
-                                                                      args)
-
+    tEffExp (ABS.AsyncCall texp (ABS.Ident method) args) _cls scopes = HS.Paren $ HS.App 
+                                                               (foldl
+                                                                (\ acc arg -> HS.App acc (tPureExp arg fscope))
+                                                                (HS.Var $ HS.UnQual $ HS.Ident $ method ++ "_async")
+                                                                args)
+       (tPureExp texp fscope)
+        where fscope = M.unions scopes
     -- normalize
-    tEffExp (ABS.ThisAsyncCall method args) cls = tEffExp (ABS.AsyncCall (ABS.ELit $ ABS.LThis) method args) cls
+    tEffExp (ABS.ThisAsyncCall method args) cls scopes = tEffExp (ABS.AsyncCall (ABS.ELit $ ABS.LThis) method args) cls scopes
 
-    tEffExp (ABS.Get texp) _cls = HS.App (HS.Var $ HS.UnQual $ HS.Ident "get") (tPureExp texp)
+    tEffExp (ABS.Get texp) _cls scopes = HS.App (HS.Var $ HS.UnQual $ HS.Ident "get") (tPureExp texp fscope)
+        where fscope = M.unions scopes
 
     tModuleName :: ABS.QualType -> HS.ModuleName
     tModuleName (ABS.QualType qtis) = HS.ModuleName $ joinQualTypeIds qtis
@@ -842,3 +917,7 @@ collect (ABS.EMultConstr _ pexps)    = concatMap collect pexps
 collect (ABS.EThis (ABS.Ident attr)) = [attr]
 collect _ = []
 
+type Scope = M.Map ABS.Ident (ABS.Type)
+
+addToScope :: [Scope] -> ABS.Ident -> ABS.Type -> [Scope]
+addToScope (topscope:restscopes) var@(ABS.Ident pid) typ = M.insertWith (const $ const $ error $ pid ++ " already defined in this scope") var typ topscope  : restscopes

@@ -1,0 +1,15 @@
+module EmptyNew;
+
+interface Interf1 {
+
+}
+
+class Cls {
+  Int x = 0;
+
+}
+
+{
+ new Cls();
+ 
+}

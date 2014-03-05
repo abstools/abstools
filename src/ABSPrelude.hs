@@ -3,14 +3,16 @@
 module ABSPrelude 
     (module Base,
      module Core,
-     Prelude.return, Exception.evaluate,
+     module Utils,
+     Prelude.return, Exception.evaluate, Prelude.error,
      lift, liftM,
-     newIORef, modifyIORef',
-     newChan, writeList2Chan,
+     newIORef, modifyIORef', readIORef, when, mapMonad,
+     newChan, writeChan, writeList2Chan, newEmptyMVar,
      M.updateLookupWithKey,
      ifthenM, ifthenelseM, notM, negateM,
      assert, 
      Pair, Prelude.fst, Prelude.snd, Triple, fstT, sndT, trd,
+     null,
      (Prelude.=<<), (Prelude.>>=), Prelude.Maybe (..), Prelude.Either (..), left, right, Prelude.maybe, fromJust,
      Prelude.Int, Prelude.Bool (..) , Prelude.Eq, List,
      (Prelude.||), (Prelude.&&), (Prelude.==), (Prelude./=), (Prelude.<), (Prelude.<=), (Prelude.>=), (Prelude.>), (Prelude.+), (Prelude.-), (Prelude.*), (/), (%),
@@ -22,14 +24,17 @@ module ABSPrelude
 import qualified Prelude as Prelude
 import Base
 import Core
+import Utils
 
 import Control.Monad.Trans.Class (lift)
 import Control.Monad (when, liftM, liftM2)
 import qualified Control.Exception.Base as Exception (evaluate)
-import Data.IORef (newIORef, modifyIORef')
-import Control.Concurrent (newChan, writeList2Chan)
+import Data.IORef (newIORef, modifyIORef', readIORef)
+import Control.Concurrent (newChan, writeChan, writeList2Chan, newEmptyMVar)
 import qualified Data.Map.Strict as M
 import Data.Maybe (fromJust)
+import Control.Monad.Coroutine (mapMonad)
+
 
 
 class IntOrRational a where
@@ -100,7 +105,7 @@ notM = liftM (Prelude.not)
 negateM :: (Prelude.Num a, Prelude.Monad m) => m a -> m a
 negateM = liftM (Prelude.negate)
 
-assert :: (Object_ o) => ABS o Prelude.Bool -> ABS o ()
+assert :: (Object__ o) => ABS o Prelude.Bool -> ABS o ()
 assert act = act Prelude.>>= \ pred -> when (Prelude.not pred) (Prelude.error "Assertion failed")
 
 
@@ -129,3 +134,4 @@ fstT (a,_,_) = a
 sndT (_,b,_) = b
 trd (_,_,c) = c
 
+null = Prelude.undefined
