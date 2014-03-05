@@ -295,9 +295,8 @@ public class ABSUnitTestCaseTranslator {
 	private void printToFile(List<ASTNode<ASTNode>> nodes, File file) {
         try {
 			PrintStream stream = new PrintStream(file);
-	        ABSFormatter formatter = new DefaultABSFormatter();
-	        PrintWriter writer = new PrintWriter(stream, true);
-	        formatter.setPrintWriter(writer);
+			PrintWriter writer = new PrintWriter(stream, true);
+	        ABSFormatter formatter = new DefaultABSFormatter(writer);
 	        for (ASTNode<ASTNode> n : nodes) {
 		        n.doPrettyPrint(writer, formatter);
 	        }
