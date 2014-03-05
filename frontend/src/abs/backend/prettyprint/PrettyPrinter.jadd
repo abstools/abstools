@@ -1042,21 +1042,10 @@ aspect doPrettyPrinter {
     public void IfExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("if ");
         getCondExp().doPrettyPrint(stream, formatter);
-        formatter.beforeOpenBrace();
-        stream.println("{");
-        formatter.afterOpenBrace();
+        stream.print(" then ");
         getThenExp().doPrettyPrint(stream, formatter);
-        formatter.beforeCloseBrace();
-        stream.print("}");
-        formatter.afterCloseBrace();
         stream.print(" else ");
-        formatter.beforeOpenBrace();
-        stream.println("{");
-        formatter.afterOpenBrace();
         getElseExp().doPrettyPrint(stream, formatter);
-        formatter.beforeCloseBrace();
-        stream.print("}");
-        formatter.afterCloseBrace();
     }
 
     public void LetExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
