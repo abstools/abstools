@@ -84,6 +84,8 @@ public abstract class SemanticTests {
     public void assertEvalTrue(String absCode) {
         try {
             driver.assertEvalTrue("module BackendTest; " + absCode);
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e); // TODO: remove; too many too handle
                                            // for now.
@@ -94,6 +96,8 @@ public abstract class SemanticTests {
         try {
             assertNotNull(m.lookupModule("BackendTest"));
             driver.assertEvalTrue(m);
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e); // TODO: remove; too many too handle
                                            // for now.
