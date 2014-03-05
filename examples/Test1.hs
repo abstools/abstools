@@ -1,22 +1,48 @@
-{-# LANGUAGE Rank2Types, NoImplicitPrelude, ImpredicativeTypes,
-  LiberalTypeSynonyms #-}
-module Test1 where
+{-# LANGUAGE Rank2Types, NoImplicitPrelude,
+  ExistentialQuantification, MultiParamTypeClasses #-}
+module Main where
 import qualified Control.Monad.Trans.RWS as RWS
+import Prim
 import ABSPrelude
  
-class (Object_ a) => Interf1_ a where
+class (Object__ a) => Interf1_ a where
          
-        method1 :: Int -> Int -> ObjectRef a -> ABS a Int
+        method1 :: Int -> Int -> Interf1 -> ABS a Int
  
-type Interf1 = forall a . (Interf1_ a) => ObjectRef a
+data Interf1 = forall a . (Interf1_ a) => Interf1 (ObjectRef a)
  
-data Class1 = Class1{class1_loc :: (Object_ o) => ABS o COG,
+instance Sub Interf1 Interf1 where
+        up x = x
+ 
+instance Sub Interf1 AnyObject where
+        up (Interf1 a) = AnyObject a
+method1_sync n m (__wrapped@(Interf1 __obj@(ObjectRef __ioref _)))
+  = do __hereCOG <- thisCOG
+       __obj1 <- lift (lift (readIORef __ioref))
+       otherCOG <- whereis __obj1
+       when (__hereCOG /= otherCOG)
+         (error "Sync Call on a different COG detected")
+       mapMonad (withReaderT (\ aconf -> aconf{aThis = __obj}))
+         (method1 n m __wrapped)
+method1_async n m (__wrapped@(Interf1 __obj@(ObjectRef __ioref _)))
+  = do __obj1 <- lift (lift (readIORef __ioref))
+       __loc <- whereis __obj1
+       __mvar <- lift (lift newEmptyMVar)
+       AConf{aThread = __tid, aCOG = cog} <- lift RWS.ask
+       astate@(AState{aCounter = __counter}) <- lift RWS.get
+       lift (RWS.put (astate{aCounter = __counter + 1}))
+       let __f = FutureRef __mvar __tid cog __counter
+       lift
+         (lift (writeChan __loc (RunJob __obj __f (method1 n m __wrapped))))
+       return __f
+ 
+data Class1 = Class1{class1_loc :: (Object__ o) => ABS o COG,
                      class1_p1 :: Int, class1_p2 :: Int, class1_p3 :: Int,
                      class1_x :: Int}
-class1 p1 p2 p3
+__class1 p1 p2 p3
   = Class1{class1_p1 = p1, class1_p2 = p2, class1_p3 = p3}
  
-instance Object_ Class1 where
+instance Object__ Class1 where
         new __cont
           = do __chan <- lift (lift newChan)
                let __x = 0
@@ -24,8 +50,22 @@ instance Object_ Class1 where
                __ioref <- lift (lift (newIORef __c))
                let __obj = ObjectRef __ioref 0
                lift (lift (spawnCOG __chan))
-               __obj `async_call` __init
-               __obj `async_call` run
+               do __mvar <- lift (lift newEmptyMVar)
+                  AConf{aThread = __tid, aCOG = cog} <- lift RWS.ask
+                  astate@(AState{aCounter = __counter}) <- lift RWS.get
+                  lift (RWS.put (astate{aCounter = __counter + 1}))
+                  let __f = FutureRef __mvar __tid cog __counter
+                  lift
+                    (lift
+                       (writeChan __chan (RunJob __obj __f (__init (AnyObject __obj)))))
+               do __mvar <- lift (lift newEmptyMVar)
+                  AConf{aThread = __tid, aCOG = cog} <- lift RWS.ask
+                  astate@(AState{aCounter = __counter}) <- lift RWS.get
+                  lift (RWS.put (astate{aCounter = __counter + 1}))
+                  let __f = FutureRef __mvar __tid cog __counter
+                  lift
+                    (lift
+                       (writeChan __chan (RunJob __obj __f (__run (AnyObject __obj)))))
                return __obj
         new_local __cont
           = do let __x = 0
@@ -34,14 +74,16 @@ instance Object_ Class1 where
                __astate@(AState{aCounter = __counter}) <- lift RWS.get
                lift (RWS.put (__astate{aCounter = __counter + 1}))
                let __obj = ObjectRef __ioref __counter
-               __obj `sync_call` __init
-               __obj `sync_call` run
+               mapMonad (withReaderT (\ aconf -> aconf{aThis = __obj}))
+                 (__init (AnyObject __obj))
+               mapMonad (withReaderT (\ aconf -> aconf{aThis = __obj}))
+                 (__run (AnyObject __obj))
                return __obj
         whereis = class1_loc
         __init this
-          = do set_class1_x =<< (return 1)
-               set_class1_x =<<
-                 (readObject this >>= \ Class1{class1_x = __x} -> return (__x + 1))
+          = do (set_class1_x =<< (return 1))
+               (set_class1_x =<<
+                  ((readThis >>= \ Class1{class1_x = __x} -> return (__x + 1))))
                return ()
  
 set_class1_p1 :: Int -> ABS Class1 ()
@@ -95,14 +137,14 @@ set_class1_x v
 instance Interf1_ Class1 where
         method1 n m this = do return (n + m)
 mainABS
-  = do o1 <- new (class1 1 2 3)
-       o2 <- new (class1 3 4 5)
-       f1 <- o1 `async_call` method1 3 4
+  = do o1 <- liftM Interf1 (new (__class1 1 2 3)) :: ABS Top Interf1
+       o2 <- liftM Interf1 (new (__class1 3 4 5)) :: ABS Top Interf1
+       f1 <- (method1_async 3 4 (up o1)) :: ABS Top (Fut Int)
        await (FutureGuard f1)
-       res1 <- get (return f1)
+       res1 <- get (f1)
        assert (return (res1 == 7))
-       f2 <- o2 `async_call` method1 4 5
+       f2 <- (method1_async 4 5 (up o2)) :: ABS Top (Fut Int)
        await (FutureGuard f2)
-       res2 <- get (return f2)
+       res2 <- get (f2)
        assert (return (res2 == 9))
 main = main_is mainABS

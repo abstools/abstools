@@ -1,5 +1,5 @@
-{-# LANGUAGE Rank2Types, NoImplicitPrelude, ImpredicativeTypes,
-  LiberalTypeSynonyms, ExistentialQuantification #-}
+{-# LANGUAGE Rank2Types, NoImplicitPrelude,
+  ExistentialQuantification, MultiParamTypeClasses #-}
 module Main where
 import qualified Control.Monad.Trans.RWS as RWS
 import Prim

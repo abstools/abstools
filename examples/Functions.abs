@@ -9,3 +9,7 @@ def A either<A,A>(Either<A,A> e) = case e {
     Left(l) => l;
     Right(r) => r;
     };
+
+{
+
+}
