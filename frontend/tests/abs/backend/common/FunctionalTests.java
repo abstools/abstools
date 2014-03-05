@@ -220,6 +220,17 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void testPow1() {
+        /* TODO: Move to type-checking? */
+        assertEvalTrue("def Int pow(Int n, Int i) = if i < 0 then 1 / pow(n, -i) else case i { 0 => 1; _ => n * pow(n, i-1);  }; { Bool testresult = True; }");
+    }
+
+    @Test
+    public void testPow2() {
+        assertEvalTrue("def Rat pow(Int n, Int i) = if i < 0 then 1 / pow(n, -i) else case i { 0 => 1; _ => n * pow(n, i-1);  }; { Bool testresult = True; }");
+    }
+
+    @Test
     public void patternVarRew() throws Exception {
         String fileName = "tests/abssamples/PVTest.abs";
         Model m = ABSTest.assertParseFileOk(fileName, Config.WITH_STD_LIB);
