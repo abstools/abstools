@@ -7,8 +7,8 @@ interface Interf1 {
 class Class1(Int p1, Int p2, Int p3) implements Interf1 {
 	Int x = 0;
 	{	
-			this.x = 1;
-	        this.x = this.x +1;
+			x = 1;
+	        x = x +1;
 	}
 	Int method1(Int n, Int m) {
 		return (n+m);
@@ -20,10 +20,10 @@ class Class1(Int p1, Int p2, Int p3) implements Interf1 {
     Interf1 o2 = new Class1(3,4,5);
     Fut<Int> f1 = o1 ! method1(3,4);
     await f1?;
-    res1 = f1.get;
+    Int res1 = f1.get;
     assert (res1 == 7);
     Fut<Int> f2 = o2 ! method1(4,5);
     await f2?;
-    res2 = f2.get;
+    Int res2 = f2.get;
     assert (res2 == 9);
 }

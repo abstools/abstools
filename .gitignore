@@ -25,4 +25,5 @@ PrintABS.hs
 SkelABS.hs
 TestABS
 TestABS.hs
-
+examples/*.out
+examples/*.hs
