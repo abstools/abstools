@@ -54,10 +54,16 @@ public class ClassGenerator {
         for (MethodImpl m : classDecl.getMethodList()) {
             MethodSig ms = m.getMethodSig();
             ErlUtil.functionHeader(ecs, "m_" + ms.getName(), generatorClassMatcher(), ms.getParamList());
+            ecs.println("try");
+            ecs.incIndent();
             m.getBlock().generateErlangCode(ecs, Vars.n(ms.getParamList()));
-            ecs.println(".");
-            ecs.decIndent();
             ecs.println();
+            ecs.decIndent().println("catch");
+            ecs.incIndent();
+            ecs.println("exit:Error -> object:die(O, Error);");
+            ecs.println("throw:Error -> exit(Error)");
+            ecs.decIndent().println("end.");
+            ecs.decIndent();
         }
 
     }
