@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 import java.util.TreeSet;
 
 import abs.frontend.ast.ASTNode;
@@ -34,7 +35,7 @@ public class State {
     }
 
     //Method for add (a,b) to this State
-    public void addCouple(GroupName a, GroupName b, ASTNode n){ 	
+    public void addCouple(GroupName a, GroupName b){ 	
         for(GroupName v : depCouple.keySet()){
             if(v.toString().equals(a.toString())){
                 for(Couple c : depCouple.get(v)){
@@ -45,33 +46,33 @@ public class State {
                     }
                 } // (a,b) is not in the State but I have a list with Head a
                 List<Couple> dep = depCouple.get(v);
-                dep.add(new Couple(b, false, n));
+                dep.add(new Couple(b, false));
                 depCouple.put(a, dep);
                 return;
             }
         } // (a,b) is not in the State and there is not a list with head a
         List<Couple> dep = new LinkedList<Couple>();
-        dep.add(new Couple(b, false, n));
+        dep.add(new Couple(b, false));
         depCouple.put(a, dep);
 
         //I can add a check if I insert a cycle with if(LookForCycle(a,a) == true) ...
     }
 
     //Method for add (a,b)@ to this State
-    public void addCoupleAwait(GroupName a, GroupName b, ASTNode n){ 	
+    public void addCoupleAwait(GroupName a, GroupName b){ 	
         for(GroupName v : depCouple.keySet()){
             if(v.toString().equals(a.toString())){
                 for(Couple c : depCouple.get(v)){
                     if(c.getVar().toString().equals(b.toString())) return; // (a,b) is already in the State
                 } // (a,b) is not in the State but I have a list with Head a
                 List<Couple> dep = depCouple.get(v);
-                dep.add(new Couple(b, false, false, n));
+                dep.add(new Couple(b, false, false));
                 depCouple.put(a, dep);
                 return;
             }
         } // (a,b) is not in the State and there is not a list with head a
         List<Couple> dep = new LinkedList<Couple>();
-        dep.add(new Couple(b, false, false, n));
+        dep.add(new Couple(b, false, false));
         depCouple.put(a, dep);
 
         //I can add a check if I insert a cycle with if(LookForCycle(a,a) == true) ...
@@ -85,8 +86,8 @@ public class State {
         HashMap<GroupName, List<Couple>> depCoupleS = s.getDepCouple();
         for(GroupName a : depCoupleS.keySet()){
             for(Couple c: depCoupleS.get(a)){
-                if(c.isGet()) this.addCouple(a, c.getVar(), c.getNode());
-                else		  this.addCoupleAwait(a, c.getVar(), c.getNode());
+                if(c.isGet()) this.addCouple(a, c.getVar());
+                else		  this.addCoupleAwait(a, c.getVar());
             }
         }
     }
@@ -145,19 +146,6 @@ public class State {
         return res;
     }
 
-    //Method for Test if there is a cycle and Set the field Cycle
-    public LinkedList<ASTNode> hasCycle2(){
-        LinkedList<ASTNode> nodes = new LinkedList<ASTNode>();
-        // I try to find a generic loop (v,v1) -> (v1,v2) -> ... -> (v_n, v) 
-        for(GroupName v : depCouple.keySet()){
-            ASTNode n = LookForCycle2(v,v);
-            if((n != null) && (!nodes.contains(n)))
-                nodes.add(n);
-            ClearAllFlag();
-        }
-
-        return nodes;
-    }
 
     // I look into the structure to find a Circularity, if I find TermVariable 'look' into the list of head 'a' there is a Cycle
     public Boolean LookForCycle(GroupName a, GroupName look){
@@ -177,37 +165,7 @@ public class State {
         return res;
     }
 
-    public ASTNode LookForCycle2(GroupName a, GroupName look){
-        // check if TermVariable a is and head_TermVariable
-        if(depCouple.containsKey(a)){
-            for(Couple c : depCouple.get(a)) if(c.getVar().toString().equals(look.toString())){
-                return c.getNode(); //first I try to find 'look' TermVariable
-            }
-            for(Couple c : depCouple.get(a)){ //then I do a visit on the TermVariable that I've do not visit yet
-                if(c.getFlag() == false){
-                    c.setFlag();
-                    return LookForCycle2(c.getVar(), look);
-                }
-            }
 
-        }
-        return null;
-    }
-
-
-    //Method for Test if there is a pure cycle of get and Set the field Cycle
-    public LinkedList<ASTNode> hasCycleGet2(){
-        LinkedList<ASTNode> nodes = new LinkedList<ASTNode>();
-        // I try to find a generic loop (v,v1) -> (v1,v2) -> ... -> (v_n, v) 
-        for(GroupName v : depCouple.keySet()){
-            ASTNode n = LookForCycleGet2(v,v);
-            if((n != null) && (!nodes.contains(n)))
-                nodes.add(n);
-            ClearAllFlag();
-        }
-
-        return nodes;
-    }
 
     //Method for Test if there is a pure cycle of get and Set the field Cycle
     public Boolean hasCycleGet(){
@@ -242,22 +200,6 @@ public class State {
         return res;
     }
 
-    // I look into the structure to find a Circularity, if I find TermVariable 'look' into the list of head 'a' there is a Cycle
-    public ASTNode LookForCycleGet2(GroupName a, GroupName look){
-        // check if TermVariable a is and head_TermVariable
-        if(depCouple.containsKey(a)){
-            for(Couple c : depCouple.get(a)) if(c.getVar().toString().equals(look.toString()) && c.isGet()) return c.getNode(); //first I try to find 'look' TermVariable
-            for(Couple c : depCouple.get(a)){ //then I do a visit on the TermVariable that I've do not visit yet
-                if(c.getFlag() == false && c.isGet()){
-                    c.setFlag();
-                    return LookForCycleGet2(c.getVar(), look);
-                }
-            }
-
-        }
-        return null;
-    }
-
     //Method for Test if there is a pure cycle of get and Set the field Cycle
     public Boolean hasCycleAwait(){
         Boolean res = false;
@@ -273,19 +215,6 @@ public class State {
         return res;
     }
 
-    //Method for Test if there is a pure cycle of get and Set the field Cycle
-    public LinkedList<ASTNode> hasCycleAwait2(){
-        LinkedList<ASTNode> nodes = new LinkedList<ASTNode>();
-        // I try to find a generic loop (v,v1) -> (v1,v2) -> ... -> (v_n, v) 
-        for(GroupName v : depCouple.keySet()){
-            ASTNode n = LookForCycleAwait2(v,v);
-            if((n != null) && (!nodes.contains(n)))
-                nodes.add(n);
-            ClearAllFlag();
-        }
-
-        return nodes;
-    }
 
     // I look into the structure to find a Circularity, if I find TermVariable 'look' into the list of head 'a' there is a Cycle
     public Boolean LookForCycleAwait(GroupName a, GroupName look){
@@ -305,21 +234,6 @@ public class State {
         return res;
     }
 
-    // I look into the structure to find a Circularity, if I find TermVariable 'look' into the list of head 'a' there is a Cycle
-    public ASTNode LookForCycleAwait2(GroupName a, GroupName look){
-        // check if TermVariable a is and head_TermVariable
-        if(depCouple.containsKey(a)){
-            for(Couple c : depCouple.get(a)) if(c.getVar().toString().equals(look.toString()) && !c.isGet()) return c.getNode(); //first I try to find 'look' TermVariable
-            for(Couple c : depCouple.get(a)){ //then I do a visit on the TermVariable that I've do not visit yet
-                if(c.getFlag() == false && !c.isGet()){
-                    c.setFlag();
-                    return LookForCycleAwait2(c.getVar(), look);
-                }
-            }
-
-        }
-        return null;
-    }
 
 
     // Clear all flag
@@ -328,6 +242,13 @@ public class State {
             for(Couple c : depCouple.get(v))
                 c.clearFlag();
     }
+    
+    // Clear all flag
+    public void ClearAllNewFlag(){
+        for(GroupName v : depCouple.keySet())
+                v.visited = false;
+    }
+
 
     //toString method
     public String toString(){
@@ -387,6 +308,144 @@ public class State {
         return fv;
     }
 
+    
+    //Method for Test if there is a cycle and Set the field Cycle
+    public Boolean hasNewCycle(){
+        ClearAllNewFlag();
+
+        Stack<GroupName> S = new Stack<GroupName>();
+        
+        Boolean res = false;
+         // I try to find a generic loop (v,v1) -> (v1,v2) -> ... -> (v_n, v) 
+            for(GroupName v : depCouple.keySet()){
+                if(v.visited == false)
+                    res = NewLookForCycle(v,S);
+                if(res)
+                    break;
+            }
+        
+
+        // if I find Cycle, Cycle will be into this State forever
+        if(res == true) this.cycle = true;
+        return res;
+    }
+    
+    // I look into the structure to find a Circularity, if I find TermVariable 'look' into the list of head 'a' there is a Cycle
+    public Boolean NewLookForCycle(GroupName a, Stack<GroupName> S){
+        a.visited = true;
+        Boolean res = false;
+
+        if(depCouple.get(a) == null || depCouple.get(a).isEmpty()){
+            return false;
+        }
+        S.push(a);
+
+        for(Couple c : depCouple.get(a)){
+            GroupName b = c.getVar();
+            if(b.visited == false){
+                res = NewLookForCycle(b,S);
+                if(res) 
+                    return true;
+            }
+            else if(S.contains(b))
+                return true;
+        }
+        S.pop();
+        return false;
+    }
+
+    //Method for Test if there is a cycle and Set the field Cycle
+    public Boolean hasNewCycleGet(){
+        ClearAllNewFlag();
+        Stack<GroupName> S = new Stack<GroupName>();
+        
+        Boolean res = false;
+         // I try to find a generic loop (v,v1) -> (v1,v2) -> ... -> (v_n, v) 
+            for(GroupName v : depCouple.keySet()){
+                if(v.visited == false)
+                    res = NewLookForCycleGet(v,S);
+                if(res)
+                    break;
+            }
+        
+
+        // if I find Cycle, Cycle will be into this State forever
+        if(res == true) this.cycle = true;
+        return res;
+    }
+    
+    // I look into the structure to find a Circularity, if I find TermVariable 'look' into the list of head 'a' there is a Cycle
+    public Boolean NewLookForCycleGet(GroupName a, Stack<GroupName> S){
+        a.visited = true;
+        Boolean res = false;
+
+        if(depCouple.get(a) == null || depCouple.get(a).isEmpty())
+            return false;
+        S.push(a);
+        for(Couple c : depCouple.get(a)){
+
+            GroupName b = c.getVar();
+
+            if(!c.isGet()){
+                continue;
+            }
+            if(b.visited == false){
+                res = NewLookForCycleGet(b,S);
+                if(res) 
+                    return true;
+            }
+            else if(S.contains(b))
+                return true;
+        }
+        S.pop();
+        return false;
+    }
+    
+    //Method for Test if there is a cycle and Set the field Cycle
+    public Boolean hasNewCycleAwait(){
+        ClearAllNewFlag();
+
+        Stack<GroupName> S = new Stack<GroupName>();
+        
+        Boolean res = false;
+        // I try to find a generic loop (v,v1) -> (v1,v2) -> ... -> (v_n, v) 
+            for(GroupName v : depCouple.keySet()){
+                if(v.visited == false)
+                    res = NewLookForCycleAwait(v,S);
+                if(res)
+                    break;
+            }
+        
+
+        // if I find Cycle, Cycle will be into this State forever
+        if(res == true) this.cycle = true;
+        return res;
+    }
+    
+    // I look into the structure to find a Circularity, if I find TermVariable 'look' into the list of head 'a' there is a Cycle
+    public Boolean NewLookForCycleAwait(GroupName a, Stack<GroupName> S){
+        a.visited = true;
+        Boolean res = false;
+
+        if(depCouple.get(a) == null || depCouple.get(a).isEmpty())
+            return false;
+        S.push(a);
+
+        for(Couple c : depCouple.get(a)){
+            GroupName b = c.getVar();
+            if(c.isGet())
+                continue;
+            if(b.visited == false){
+                res = NewLookForCycleAwait(b,S);
+                if(res) 
+                    return true;
+            }
+            else if(S.contains(b))
+                return true;
+        }
+        S.pop();
+        return false;
+    }
 
 
 }

@@ -11,11 +11,12 @@ import abs.frontend.tests.ABSFormatter;
 
 public class DefaultABSFormatter implements ABSFormatter {
 
-    private final PrintWriter w;
+    private PrintWriter w;
     private static final String INDENT = "  ";
     private StringBuilder indentation = new StringBuilder();
     
-    public DefaultABSFormatter(PrintWriter w) {
+    @Override
+    public void setPrintWriter(PrintWriter w) {
         this.w = w;
     }
 

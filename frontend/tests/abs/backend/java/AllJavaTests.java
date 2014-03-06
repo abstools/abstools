@@ -7,6 +7,7 @@ package abs.backend.java;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
+import abs.backend.java.dynamic.AbsSamples;
 import abs.backend.java.lib.net.AllNetTests;
 
 @RunWith(Suite.class)
@@ -16,9 +17,8 @@ import abs.backend.java.lib.net.AllNetTests;
     JavaExamplesTests.class,
     JavaObservationTest.class,
     JavaFLITest.class
-    /* These two are dynamic: */
-//    , abs.backend.java.dynamic.AbsSamples.class
-//    , abs.backend.java.dynamic.CaseStudies.class
+    , AbsSamples.class
+    , abs.backend.java.dynamic.CaseStudies.class
     , AllNetTests.class
     , CaseStudies.class
     })

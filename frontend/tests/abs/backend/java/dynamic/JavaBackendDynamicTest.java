@@ -4,6 +4,8 @@
  */
 package abs.backend.java.dynamic;
 
+import static abs.ABSTest.Config.TYPE_CHECK;
+import static abs.ABSTest.Config.WITH_STD_LIB;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -32,12 +34,11 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
     }
 
     @Override
-    protected JavaCode getJavaCode(String absCode, Config... config) throws Exception {
+    protected JavaCode getJavaCode(String absCode, boolean withStdLib) throws Exception {
         Model model = null;
         String code = null;
         code = absCode;
-        /* TODO: why not parse the ABSTest way -- sooner or later a flag will fall over... [stolz]*/
-        model = Main.parseString(code, isSet(Config.WITH_STD_LIB, config));
+        model = Main.parseString(code, withStdLib);
         if (model.hasErrors()) {
             fail(model.getErrors().get(0).getHelpMessage());
         } else {
@@ -62,10 +63,14 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
         return code;
     }
 
+    @Override
+    protected void assertValidJavaFile(String absFile, boolean useStdLib) throws Exception {
+        Model m = assertParseFileOk(absFile, WITH_STD_LIB, TYPE_CHECK);
+        assertValidJava(getJavaCodeDynamic(m));
+    }
+
     protected String readAbsFile(String fileName) throws FileNotFoundException {
-        final Scanner s;
-        String buffer = (s = new Scanner(new File(fileName))).useDelimiter("\\Z").next();
-        s.close();
+        String buffer = new Scanner(new File(fileName)).useDelimiter("\\Z").next();
         return buffer;
     }
     

@@ -156,10 +156,8 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
-    public void ifExp1() {
+    public void ifExp() {
         assertEvalTrue("def Bool f(Bool x) = if x then True else False ; " + CALL_F_TRUE);
-    }
-    public void ifExp2() {
         assertEvalTrue("def Bool f(Bool x) = if ~x then False else True ; " + CALL_F_TRUE);
     }
 
@@ -217,17 +215,6 @@ public class FunctionalTests extends SemanticTests {
     @Test
     public void setLength() {
         assertEvalTrue("{ Set<Int> s = set[4,4,4]; Bool testresult = (size(s) == 1);}");
-    }
-
-    @Test
-    public void testPow1() {
-        /* TODO: Move to type-checking? */
-        assertEvalTrue("def Int pow(Int n, Int i) = if i < 0 then 1 / pow(n, -i) else case i { 0 => 1; _ => n * pow(n, i-1);  }; { Bool testresult = True; }");
-    }
-
-    @Test
-    public void testPow2() {
-        assertEvalTrue("def Rat pow(Int n, Int i) = if i < 0 then 1 / pow(n, -i) else case i { 0 => 1; _ => n * pow(n, i-1);  }; { Bool testresult = True; }");
     }
 
     @Test

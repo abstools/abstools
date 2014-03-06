@@ -11,7 +11,8 @@ Bundle-ClassPath: .,
  lib/sat4j-maxsat.jar,
  lib/choco-solver-2.1.1.jar,
  lib/commons-io-2.4.jar,
- lib/guava-15.0.jar
+ lib/guava-15.0.jar,
+ lib/jsr305.jar
 Eclipse-BundleShape: dir
 Export-Package: .,
  abs;uses:="abs.frontend.ast",
@@ -85,5 +86,12 @@ Export-Package: .,
  deadlock.constraints.factory,
  deadlock.constraints.substitution,
  deadlock.constraints.term
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Require-Bundle: org.eclipse.jdt.core
+Import-Package: junit.framework;version="4.11.0",
+ org.eclipse.jface.resource,
+ org.eclipse.ui.console,
+ org.junit;version="4.11.0",
+ org.junit.rules;version="4.11.0",
+ org.junit.runner;version="4.11.0",
+ org.junit.runners;version="4.11.0"

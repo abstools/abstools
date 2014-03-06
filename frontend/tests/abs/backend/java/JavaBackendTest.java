@@ -22,6 +22,7 @@ import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.scheduling.RandomSchedulingStrategy;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
+import static abs.ABSTest.Config.*;
 
 public class JavaBackendTest extends ABSTest {
 
@@ -52,11 +53,16 @@ public class JavaBackendTest extends ABSTest {
     }
     
     void assertValidStdLib(String absCode) throws Exception {
-        assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, Config.WITH_STD_LIB, Config.WITHOUT_MODULE_NAME));
+        assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, true));
     }
 
     void assertValid(String absCode) throws Exception {
-        assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, Config.WITHOUT_MODULE_NAME));
+        assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, false));
+    }
+
+    protected void assertValidJavaFile(String absFile, boolean useStdLib) throws Exception {
+        Model m = assertParseFileOk(absFile, WITH_STD_LIB, TYPE_CHECK);
+        assertValidJava(getJavaCode(m));
     }
 
     public static void assertValidJava(JavaCode javaCode) throws Exception {
@@ -92,7 +98,7 @@ public class JavaBackendTest extends ABSTest {
             absCode.append(line);
             absCode.append("\n");
         }
-        JavaCode javaCode = getJavaCode(absCode.toString(), withStdLib ? Config.WITH_STD_LIB : null);
+        JavaCode javaCode = getJavaCode(absCode.toString(), withStdLib);
         try {
             String genDir = javaCode.getSrcDir().getAbsolutePath()+"/gen/test";
             javaCode.compile("-classpath", "bin", "-d", genDir);
@@ -149,8 +155,6 @@ public class JavaBackendTest extends ABSTest {
         }
     }
 
-    final static Pattern p = Pattern.compile(".*__ABS_TESTRESULT=([^\n]*)\n.*", Pattern.MULTILINE | Pattern.DOTALL);
-
     protected StringBuffer runJava(JavaCode javaCode, String... jvmargs) throws Exception {
         StringBuffer output = new StringBuffer();
         javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
@@ -182,6 +186,7 @@ public class JavaBackendTest extends ABSTest {
             output = runJava(javaCode, jvmArgs.toArray(new String[0]));
             String s = output.toString() + "\n";
             String result = null;
+            Pattern p = Pattern.compile(".*__ABS_TESTRESULT=([^\n]*)\n.*", Pattern.MULTILINE | Pattern.DOTALL);
             Matcher m = p.matcher(s);
             if (m.matches()) {
                 result = m.group(1);
@@ -210,7 +215,7 @@ public class JavaBackendTest extends ABSTest {
         }
     }
 
-    protected JavaCode getJavaCode(String absCode, Config... config) throws Exception {
+    protected JavaCode getJavaCode(String absCode, boolean withStdLib) throws Exception {
         Model model = null;
         String code = null;
         code = absCode;
@@ -218,7 +223,7 @@ public class JavaBackendTest extends ABSTest {
         // code =
         // "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; "
         // + code;
-        model = assertParse(code, config);
+        model = assertParse(code, withStdLib ? WITH_STD_LIB : null);
         if (model.hasErrors()) {
             fail(model.getErrors().get(0).getHelpMessage());
         } else {
@@ -246,7 +251,7 @@ public class JavaBackendTest extends ABSTest {
     }
 
     public void assertEvalEquals(String absCode, boolean value) throws Exception {
-        JavaCode javaCode = getJavaCode(absCode, Config.WITH_STD_LIB);
+        JavaCode javaCode = getJavaCode(absCode, true);
         if (DEBUG)
             System.err.println(javaCode);
         boolean res = runJavaAndTestResult(javaCode, false);
@@ -257,7 +262,7 @@ public class JavaBackendTest extends ABSTest {
     }
 
     public void assertEvalFails(String absCode) throws Exception {
-        JavaCode javaCode = getJavaCode(absCode, Config.WITH_STD_LIB);
+        JavaCode javaCode = getJavaCode(absCode, true);
         try {
             runJavaAndTestResult(javaCode, true);
             System.err.println(javaCode);
