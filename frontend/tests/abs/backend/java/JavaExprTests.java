@@ -86,7 +86,7 @@ public class JavaExprTests extends JavaBackendTest {
 
     @Test
     public void test_thisDC_ticket318() throws Exception {
-        assertValidJava(getJavaCode("module M; import * from ABS.DC; { DeploymentComponent dc = thisDC(); }", true));
+        assertValidJava(getJavaCode("module M; import * from ABS.DC; { DeploymentComponent dc = thisDC(); }", Config.WITH_STD_LIB));
     }
     
     
