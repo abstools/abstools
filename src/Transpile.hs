@@ -689,6 +689,7 @@ main = do
                                     ABS.SExp _ ->  [HS.Qualifier eReturnUnit] -- although an expression has a value, we throw it away, since it must explicitly be returned
                                     ABS.SFieldAss _ _ -> [HS.Qualifier eReturnUnit]
                                     ABS.SDecAss _ _ _ ->  [HS.Qualifier eReturnUnit]
+                                    ABS.SWhile _ _ -> [HS.Qualifier eReturnUnit]
                                     _ -> []
                                  )
                                             
@@ -721,10 +722,21 @@ main = do
                                                                                        (tBlock [stm_then] False cls clsScope scopes))
                                                                                 (tBlock [stm_else] False cls clsScope scopes)) : tStmts rest canReturn cls clsScope scopes
                        ABS.SAssert texp -> HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "assert") (tThisExp texp cls clsScope scopes)) : tStmts rest canReturn cls clsScope scopes
-                       ABS.SWhile texp stm -> HS.Qualifier (HS.App
-                                                                 (HS.App (HS.Var $ HS.UnQual $ HS.Ident "while")
-                                                                  (tThisExp texp cls clsScope scopes))
-                                                                 (tBlock [stm] False cls clsScope scopes)) : tStmts rest canReturn cls clsScope scopes
+                       ABS.SWhile texp stm -> HS.Generator noLoc (HS.PTuple HS.Boxed patVars) -- lhs
+                                             (HS.App (HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "while")
+                                                                    (HS.Tuple HS.Boxed expVars)) -- initial environment, captured by the current environment
+                                                      (HS.Lambda noLoc [HS.PTuple HS.Boxed patVars] (tThisExp texp cls clsScope scopes))) -- the predicate
+                                                      (HS.Lambda noLoc [HS.PTuple HS.Boxed patVars] -- the loop block
+                                                         (HS.Do $ tStmts (case stm of
+                                                                           ABS.SBlock stmts ->  stmts 
+                                                                           stmt -> [stmt]) False cls clsScope (M.empty:scopes) ++ [HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") (HS.Tuple HS.Boxed expVars))])))
+                                             : tStmts rest canReturn cls clsScope scopes
+                                                 where
+                                                   fscope = M.unions scopes
+                                                   vars = collectVars texp fscope
+                                                   patVars = map (\ v -> HS.PVar $ HS.Ident v) vars
+                                                   expVars = map (\ v -> HS.Var $ HS.UnQual $ HS.Ident v) vars
+
                        ABS.SDec typ ident -> tStmts rest canReturn cls clsScope (addToScope scopes ident typ)
                        -- ignore the dec TODO: don't ignore it, remove the ident from the class attributes to check
 
@@ -907,6 +919,7 @@ typOfConstrType (ABS.RecordConstrType typ _) = typ
 headToLower :: String -> String
 headToLower (x:xs) = toLower x : xs
 
+-- collects pure variables and class attributes
 collect                              :: ABS.PureExp -> Scope -> [String]
 collect (ABS.Let _ pexp1 pexp2) ccs      = collect pexp1 ccs ++ collect pexp2 ccs
 collect (ABS.If pexp1 pexp2 pexp3) ccs   = collect pexp1 ccs ++ collect pexp2 ccs ++ collect pexp3 ccs
@@ -934,6 +947,41 @@ collect (ABS.EVar ident@(ABS.Ident var)) ccs = if ident `M.member` ccs -- curren
                                                then [var]
                                                else []
 collect _ _ = []
+
+
+
+-- only for non-this pure variables (not class attributes)
+collectVars                              :: ABS.PureExp -> Scope -> [String]
+collectVars (ABS.Let _ pexp1 pexp2) ccs      = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.If pexp1 pexp2 pexp3) ccs   = collectVars pexp1 ccs ++ collectVars pexp2 ccs ++ collectVars pexp3 ccs
+collectVars (ABS.Case pexp cbranches) ccs    = collectVars pexp ccs ++ concatMap (\ (ABS.CBranch _ pexp') -> collectVars pexp' ccs) cbranches
+collectVars (ABS.EOr pexp1 pexp2) ccs        = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.EAnd pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.EEq pexp1 pexp2) ccs        = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.ENeq pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.ELt pexp1 pexp2) ccs        = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.ELe pexp1 pexp2) ccs        = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.EGt pexp1 pexp2) ccs        = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.EGe pexp1 pexp2) ccs        = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.EAdd pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.ESub pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.EMul pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.EDiv pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.EMod pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
+collectVars (ABS.ELogNeg pexp) ccs           = collectVars pexp ccs
+collectVars (ABS.EIntNeg pexp) ccs           = collectVars pexp ccs
+collectVars (ABS.ECall _ pexps) ccs          = concatMap ((flip collectVars) ccs) pexps
+collectVars (ABS.ENaryCall _ pexps) ccs      = concatMap ((flip collectVars) ccs) pexps
+collectVars (ABS.EMultConstr _ pexps) ccs    = concatMap ((flip collectVars) ccs) pexps
+collectVars (ABS.EVar ident@(ABS.Ident var)) ccs = if ident `M.member` ccs
+                                                   then [var]
+                                                   else []
+collectVars _ _ = []
+
+
+
+
+
 
 type Scope = M.Map ABS.Ident (ABS.Type)
 

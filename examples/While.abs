@@ -1,0 +1,9 @@
+module While;
+
+{
+ Int j = 3;
+ Int i = 10;
+ while (j <= i) j = j+1;
+ assert (j == 11);
+
+}
