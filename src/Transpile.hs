@@ -724,7 +724,7 @@ main = do
                        ABS.SAssert texp -> HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "assert") (tThisExp texp cls clsScope scopes)) : tStmts rest canReturn cls clsScope scopes
                        ABS.SWhile texp stm -> HS.Generator noLoc (HS.PTuple HS.Boxed patVars) -- lhs
                                              (HS.App (HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "while")
-                                                                    (HS.Tuple HS.Boxed expVars)) -- initial environment, captured by the current environment
+                                                                    (HS.Tuple HS.Boxed initVars)) -- initial environment, captured by the current environment
                                                       (HS.Lambda noLoc [HS.PTuple HS.Boxed patVars] (tThisExp texp cls clsScope scopes))) -- the predicate
                                                       (HS.Lambda noLoc [HS.PTuple HS.Boxed patVars] -- the loop block
                                                          (HS.Do $ tStmts (case stm of
@@ -732,8 +732,13 @@ main = do
                                                                            stmt -> [stmt]) False cls clsScope (M.empty:scopes) ++ [HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") (HS.Tuple HS.Boxed expVars))])))
                                              : tStmts rest canReturn cls clsScope scopes
                                                  where
-                                                   vars = nub $ collectAssigns stm
+                                                   fscope = M.unions scopes
+                                                   vars = nub $ collectAssigns stm fscope
                                                    patVars = map (\ v -> HS.PVar $ HS.Ident v) vars
+                                                   initVars = map (\ v -> if ABS.Ident v `M.member` fscope
+                                                                         then HS.Var $ HS.UnQual $ HS.Ident v -- it's already in scope
+                                                                         else HS.Var $ HS.UnQual $ HS.Ident "null" -- initialize to null
+                                                                  ) vars
                                                    expVars = map (\ v -> HS.Var $ HS.UnQual $ HS.Ident v) vars
 
                        ABS.SDec typ ident -> tStmts rest canReturn cls clsScope (addToScope scopes ident typ)
@@ -949,15 +954,20 @@ collect _ _ = []
 
 
 
-collectAssigns :: ABS.Stm -> [String]
-collectAssigns (ABS.SBlock stmts) = concatMap collectAssigns stmts
-collectAssigns (ABS.SWhile _ stmt) = collectAssigns stmt
-collectAssigns (ABS.SIf _ stmt) = collectAssigns stmt
-collectAssigns (ABS.SIfElse _ stmt1 stmt2) = collectAssigns stmt1 ++ collectAssigns stmt2
-collectAssigns (ABS.SAss (ABS.Ident var) _) = [var]
-collectAssigns (ABS.SDecAss _ (ABS.Ident var) _) = [var]
+
+collectAssigns :: ABS.Stm -> Scope -> [String]
+collectAssigns (ABS.SBlock stmts) fscope = concatMap ((flip collectAssigns) fscope) stmts
+collectAssigns (ABS.SWhile _ stmt) fscope = collectAssigns stmt fscope
+collectAssigns (ABS.SIf _ stmt) fscope = collectAssigns stmt fscope
+collectAssigns (ABS.SIfElse _ stmt1 stmt2) fscope = collectAssigns stmt1 fscope ++ collectAssigns stmt2 fscope
+-- old changed variables
+collectAssigns (ABS.SAss ident@(ABS.Ident var) _) fscope = if ident `M.member` fscope
+                                                           then [var]
+                                                           else []
+-- and newly introduced variables
 -- ignore fieldass, since they are iorefs
-collectAssigns _ = []
+collectAssigns (ABS.SDec _ (ABS.Ident var)) _ = [var]
+collectAssigns _ _ = []
 
 
 
