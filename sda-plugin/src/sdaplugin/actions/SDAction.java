@@ -43,8 +43,8 @@ public class SDAction implements IWorkbenchWindowActionDelegate {
    * in the workbench UI.
    * @see IWorkbenchWindowActionDelegate#run
    */
-  public void run(IAction action) { 
-    /* 1. Get the project */  
+  public void run(IAction action) {
+    /* 1. Get the project */
     IProject project = getCurrentProject();
     if(project == null) return;
     /* 2. Get the Console */
@@ -57,7 +57,7 @@ public class SDAction implements IWorkbenchWindowActionDelegate {
     model.typeCheck();
     /* 4. Perform the analysis */
     SDARun run = new SDARun(model, true, 2, out);
-    run.schedule();;
+    run.schedule();
   }
 
   private IProject getCurrentProject() {

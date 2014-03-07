@@ -65,9 +65,8 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
         module.setImportList(generateImportsAST());
         module.setBlock(generateMainBlockAST(module.getImportList()));
         
-        ABSFormatter formatter = new DefaultABSFormatter();
         PrintWriter writer = new PrintWriter(stream, true);
-        formatter.setPrintWriter(writer);
+        ABSFormatter formatter = new DefaultABSFormatter(writer);
         module.doPrettyPrint(writer, formatter);
     }
 

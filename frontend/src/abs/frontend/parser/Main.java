@@ -10,7 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;  
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
@@ -24,32 +24,31 @@ import java.util.jar.JarEntry;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import choco.kernel.model.constraints.Constraint;
+import abs.frontend.mtvl.ChocoSolver;
 import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.DeltaDecl;
-import abs.frontend.ast.FExt;
-import abs.frontend.ast.FeatureDecl;
+import abs.frontend.ast.UpdateDecl;
+import abs.frontend.ast.Product;
+import abs.frontend.ast.ProductLine;
 import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
+import abs.frontend.ast.FeatureDecl;
+import abs.frontend.ast.FExt;
 import abs.frontend.ast.Opt;
-import abs.frontend.ast.Product;
-import abs.frontend.ast.ProductLine;
 import abs.frontend.ast.StarImport;
-import abs.frontend.ast.UpdateDecl;
-import abs.frontend.configurator.preprocessor.ABSPreProcessor;
+import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
 import abs.frontend.configurator.visualizer.FMVisualizer;
 import abs.frontend.delta.exceptions.DeltaModellingException;
-import abs.frontend.mtvl.ChocoSolver;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
 import beaver.Parser;
-import choco.kernel.model.constraints.Constraint;
-import deadlock.analyser.Analyser;
 
 public class Main {
 
@@ -291,18 +290,10 @@ public class Main {
                 }
             } else {
                 typeCheckModel(m);
-                //checkForDeadlock(m); 
                 analyzeMTVL(m);
             }
         }
     }
-
-//    private void checkForDeadlock(Model m) {
-//        /*Instantiate the analyzer and perform deadlock analysis*/
-//        Analyser a = new Analyser();
-//        a.deadlockAnalysis(m, verbose, 3, System.out);
-//    }
-
 
     /**
      * TODO: Should probably be introduced in Model through JastAdd by MTVL package.

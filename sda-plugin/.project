@@ -3,8 +3,6 @@
 	<name>sda-plugin</name>
 	<comment></comment>
 	<projects>
-		<project>org.abs-models.abs.compiler</project>
-		<project>org.abs-models.abs.plugin</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

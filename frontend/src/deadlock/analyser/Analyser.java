@@ -43,13 +43,13 @@ public class Analyser {
 
     /* 0, Create the initial data */
     Factory df = new Factory(verbose);
-    Environment g = m.environment(df, verbose/*TODO, out*/);
-    Map<InterfaceDecl, ClassDecl> mapInterfaceToClass = m.getMapInterfaceToClass(/*TODO out*/);
+    Environment g = m.environment(df, verbose, out);
+    Map<InterfaceDecl, ClassDecl> mapInterfaceToClass = m.getMapInterfaceToClass(out);
 
      /* 1. Generate contracts */
     String ident = null; if(verbose) { out.println("Analyzing dependencies  to look for deadlocks..."); ident = ""; }
     
-    ResultInference InferenceOutput = m.typeInference(ident, g, df, mapInterfaceToClass/*TODO, out*/);
+    ResultInference InferenceOutput = m.typeInference(ident, g, df, mapInterfaceToClass, out);
     Map<String, MethodContract> methodMap = InferenceOutput.getMethods();
     deadlock.constraints.constraint.Constraint c = InferenceOutput.getConstraint();
 
@@ -71,7 +71,7 @@ public class Analyser {
 
     // 1.2. Solve the constraint and check for errors
     c.solve();
-  
+
     if(verbose && (!c.getErrors().isEmpty())) {
       out.println("Generation of Contract failed: constraint not satisfiable");
       out.println("###############################################################\n");
@@ -126,7 +126,7 @@ public class Analyser {
     }
     
     out.println("\n\n\n\n\n\n\n\n\n\n\n");
-    DASolver solver = new DASolver(df, cct, nbIteration/*TODO, out*/);
+    DASolver solver = new DASolver(df, cct, nbIteration, out);
 
     solver.computeSolution();
     out.println(solver.toString());

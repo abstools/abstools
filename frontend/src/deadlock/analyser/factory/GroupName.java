@@ -27,8 +27,6 @@ import deadlock.constraints.term.TermVariable;
 import deadlock.constraints.term.Variable;
 
 public class GroupName extends TermVariable {
-    
-    public boolean visited = false;
 
   public GroupName(Variable v) { super(v); }
 

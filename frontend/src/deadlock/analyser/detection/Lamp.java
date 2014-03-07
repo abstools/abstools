@@ -93,25 +93,25 @@ public class Lamp {
     }
 
     // add couple of dependencies (get) on a Lamp, it means to add that couple to all the states in the lamp
-    public void addCouple(GroupName a, GroupName b){
+    public void addCouple(GroupName a, GroupName b, ASTNode n){
         for(State s : states){
-            s.addCouple(a, b);
+            s.addCouple(a, b, n);
         }
         if(states.isEmpty()){
             State s = new State();
-            s.addCouple(a, b);
+            s.addCouple(a, b, n);
             states.add(s);
         }
     }
 
     // add couple of dependencies (await) on a Lamp, it means to add that couple to all the states in the lamp
-    public void addCoupleAwait(GroupName a, GroupName b){
+    public void addCoupleAwait(GroupName a, GroupName b, ASTNode n){
         for(State s : states){
-            s.addCoupleAwait(a, b);
+            s.addCoupleAwait(a, b, n);
         }
         if(states.isEmpty()){
             State s = new State();
-            s.addCoupleAwait(a, b);
+            s.addCoupleAwait(a, b, n);
             states.add(s);
         }
     }
@@ -195,14 +195,20 @@ public class Lamp {
             res = res || st.hasCycle();
         return res;
     }
-    
-    public Boolean hasNewCycle(){
-        Boolean res = false;
-        for(State st : states)
-            res = res || st.hasNewCycle();
-        return res;
-    }
 
+    public LinkedList<ASTNode> hasCycle2(){
+        LinkedList<ASTNode> nodesTemp;
+        LinkedList<ASTNode> nodes = new LinkedList<ASTNode>();
+        for(State st : states){
+            nodesTemp = st.hasCycle2();
+            if(nodesTemp != null){
+                for(ASTNode n : nodesTemp)
+                    if(!nodes.contains(n))
+                        nodes.add(n);
+            }
+        }
+        return nodes;
+    }
 
     public Boolean hasCycleGet(){
         Boolean res = false;
@@ -210,14 +216,20 @@ public class Lamp {
             res = res || st.hasCycleGet();
         return res;
     }
-    
-    public Boolean hasNewCycleGet(){
-        Boolean res = false;
-        for(State st : states)
-            res = res || st.hasNewCycleGet();
-        return res;
-    }
 
+    public LinkedList<ASTNode> hasCycleGet2(){
+        LinkedList<ASTNode> nodesTemp;
+        LinkedList<ASTNode> nodes = new LinkedList<ASTNode>();
+        for(State st : states){
+            nodesTemp = st.hasCycleGet2();
+            if(nodesTemp != null){
+                for(ASTNode n : nodesTemp)
+                    if(!nodes.contains(n))
+                        nodes.add(n);
+            }
+        }
+        return nodes;
+    }
     
     public Boolean hasCycleAwait(){
         Boolean res = false;
@@ -226,13 +238,19 @@ public class Lamp {
         return res;
     }
     
-    public Boolean hasNewCycleAwait(){
-        Boolean res = false;
-        for(State st : states)
-            res = res || st.hasNewCycleAwait();
-        return res;
+    public LinkedList<ASTNode> hasCycleAwait2(){
+        LinkedList<ASTNode> nodesTemp;
+        LinkedList<ASTNode> nodes = new LinkedList<ASTNode>();
+        for(State st : states){
+            nodesTemp = st.hasCycleAwait2();
+            if(nodesTemp != null){
+                for(ASTNode n : nodesTemp)
+                    if(!nodes.contains(n))
+                        nodes.add(n);
+            }
+        }
+        return nodes;
     }
-    
 
     public String toString(){
         String res = "";

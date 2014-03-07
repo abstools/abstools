@@ -75,6 +75,7 @@ aspect DeltaModifierApplicator {
     
     public void AddInterfaceModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
+        assert module.lookup(new KindedName(Kind.TYPE_DECL, getSimpleName())).isUnknown();
         InterfaceDecl decl = getInterfaceDecl().fullCopy();
         decl.setFileName(getInterfaceDecl().getFileName());
         decl.setName(getSimpleName());

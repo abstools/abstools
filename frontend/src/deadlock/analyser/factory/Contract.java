@@ -60,40 +60,23 @@ public class Contract extends GenericStructuredTerm {
   }
 
   public void clean() { // remove extra dependences
-    LinkedList<Term>subterms_cleaned = new LinkedList<Term>();
-
-    // 1. Recursively clean
-    for(Term t : this.getSubTerms()) {
-      if(t instanceof ContractElementUnion) {
-         ContractElementUnion u = (ContractElementUnion)t;
-         u.getBranchOne().clean();
-         u.getBranchTwo().clean();
-      }
-    }
-
-    // 2. local clean
-    Iterator<Term> i = getSubTerms().iterator();
-    if(!i.hasNext()) return; // no subterms, nothing to do
+     Iterator<Term> i = getSubTerms().iterator();
+     if(!i.hasNext()) return; // nothing to do
     
-    Term first = i.next();
-    Term second;
-    while(i.hasNext()) {
-      second = i.next();
-      if((first instanceof ContractElementInvkA) && (second instanceof ContractElementGet)) {
-        GroupName afirst  = ((ContractElementInvkA)first).getAwait().whosWaiting();
-        GroupName asecond = ((ContractElementGet)second).whosWaiting();
-        GroupName bfirst = ((ContractElementInvkA)first).getAwait().whosWaited();
-        GroupName bsecond = ((ContractElementGet)second).whosWaited();
+     Term first = i.next();
+     Term second;
+     while(i.hasNext()) {
+       second = i.next();
+       if((first instanceof ContractElementInvkA) && (second instanceof ContractElementGet)) {
+         GroupName afirst  = ((ContractElementInvkA)first).getAwait().whosWaiting();
+         GroupName asecond = ((ContractElementGet)second).whosWaiting();
+         GroupName bfirst = ((ContractElementInvkA)first).getAwait().whosWaited();
+         GroupName bsecond = ((ContractElementGet)second).whosWaited();
       
-        if(!((afirst.equals(asecond)) && (bfirst.equals(bsecond)))) {
-          subterms_cleaned.addLast(first);
-          first = second;
-        }
-      } else { subterms_cleaned.addLast(first); first = second; }
-    }
-
-    subterms_cleaned.addLast(first);
-    this.subterms = subterms_cleaned;
+         if((afirst.equals(asecond)) && (bfirst.equals(bsecond))) { i.remove(); }
+         else { first = second; }
+       } else { first = second; }
+     }
   }
 
   

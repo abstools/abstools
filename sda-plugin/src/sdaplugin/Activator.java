@@ -15,12 +15,12 @@ public class Activator extends AbstractUIPlugin {
 	public static final String PLUGIN_ID = "sda-plugin"; //$NON-NLS-1$
 
 	// The shared instance
-	private static Activator plugin;  
+	private static Activator plugin;
 	
 	/**
 	 * The constructor
 	 */
-	public Activator() {   
+	public Activator() {
 	}
 
 	/*

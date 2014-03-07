@@ -13,20 +13,23 @@ public class Couple {
 	GroupName v;
 	Boolean coupleIsGet;
 	Boolean visited;
+	ASTNode node;
 	
 	//used by get couple with node information
-        public Couple(GroupName a, Boolean b){
+        public Couple(GroupName a, Boolean b, ASTNode n){
                 this.v = a;
                 this.visited = b;
                 this.coupleIsGet = true;
+                this.node = n;
         }
 	
 	
 	//used by await couple with node information
-        public Couple(GroupName a, Boolean b, Boolean await){
+        public Couple(GroupName a, Boolean b, Boolean await, ASTNode n){
                 this.v = a;
                 this.visited = b;
                 this.coupleIsGet = false;
+                this.node = n;
         }
 	
 	
@@ -38,7 +41,10 @@ public class Couple {
 	
 	//getter and setter method
 	
-
+	public ASTNode getNode(){
+	        return this.node;
+	}
+	
 	public GroupName getVar(){
 		return this.v;
 	}

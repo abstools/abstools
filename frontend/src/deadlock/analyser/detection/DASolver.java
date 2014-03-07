@@ -1,13 +1,11 @@
 package deadlock.analyser.detection;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-
-import abs.frontend.ast.ASTNode;
+import java.io.PrintStream;
 
 import deadlock.analyser.factory.ContractElement;
 import deadlock.analyser.factory.ContractElementAwait;
@@ -43,9 +41,12 @@ public class DASolver {
 
     Boolean saturation;
     Boolean deadlock;
+    Boolean possibleLock;
     Boolean cylceOfAwait;
+    
+    PrintStream out;
 
-    public DASolver(Factory f, Map<String, Term> map, Integer i){
+    public DASolver(Factory f, Map<String, Term> map, Integer i, PrintStream out){
         this.df = f;
         this.methodMap = map;
         this.nOfIetation = i;
@@ -53,7 +54,10 @@ public class DASolver {
 
         this.saturation = false;
         this.deadlock = false;
+        this.possibleLock = false;
         this.cylceOfAwait = false;
+        
+        this.out = out;
 
         this.lampMap = new HashMap<String, BigLamp>();
 
@@ -68,7 +72,7 @@ public class DASolver {
             for(String mName : methodMap.keySet()){
                 Term contr = methodMap.get(mName);
 
-                //System.out.println("Iteration: " + i + " and method: " + mName);
+                out.println("Iteration: " + i + " and method: " + mName);
 
 
                 // I want to isolate the contract (body contract), only Main.main has already the right contract
@@ -144,21 +148,14 @@ public class DASolver {
             //System.out.println("Iteration " + i + " number of dep at the end of this iteration is " + newNumberOfDep);
 
             //if I have cycle in main I stop the analysis
-            
-            
-            /*if((lampMap.get("Main.main").getFirst().hasNewCycle() && !lampMap.get("Main.main").getFirst().hasNewCycleAwait())  || (lampMap.get("Main.main").getSecond().hasNewCycle() && !lampMap.get("Main.main").getSecond().hasNewCycleAwait()) ){
-                                moreInfoMainCycle();
+            if(lampMap.get("Main.main").getFirst().hasCycle() || lampMap.get("Main.main").getSecond().hasCycle()){
+				moreInfoMainCycle();
 				return;
-	    }*/
-            
-            if(lampMap.get("Main.main").getFirst().hasNewCycleGet()  || lampMap.get("Main.main").getSecond().hasNewCycleGet() ){
-                moreInfoMainCycle();
-                return;
-            }
+	    }
 
             /*if(newNumberOfDep == this.nOfDep){
-                lampMap.get("Main.main").getFirst().hasNewCycle();
-                lampMap.get("Main.main").getSecond().hasNewCycle();
+                lampMap.get("Main.main").getFirst().hasCycle();
+                lampMap.get("Main.main").getSecond().hasCycle();
                 LinkedList<ASTNode> nodeLocked = lampMap.get("Main.main").getFirst().hasCycle2();
                 nodeLocked.addAll(lampMap.get("Main.main").getSecond().hasCycle2());
                 System.out.println("###" + nodeLocked);
@@ -168,7 +165,7 @@ public class DASolver {
             }
             else this.nOfDep = newNumberOfDep;*/
            
-            if(newNumberOfDep == this.nOfDep) return;
+            if(newNumberOfDep.equals(this.nOfDep)) return;
             else this.nOfDep = newNumberOfDep;
         }
 
@@ -181,7 +178,7 @@ public class DASolver {
 
     //this method compute a solution step without consider the await dependency
     public void computeSolutionSatured(){
-        //System.out.println("SATURATION");
+        out.println("SATURATION");
         Integer i = 0;
         while(true){
             for(String mName : methodMap.keySet()){
@@ -245,21 +242,15 @@ public class DASolver {
                 newNumberOfDep += lampMap.get(mName).getSecond().numberOfDep();
             }
 
-            //System.out.println(" of saturation " + i + " number of dep at the end of this iteration is " + newNumberOfDep);
+            out.println("Iteration of saturation " + i + " number of dep at the end of this iteration is " + newNumberOfDep);
             i++;
 
             //if I have cycle in main I stop the analysis
-           
-            /*if((lampMap.get("Main.main").getFirst().hasNewCycle() && !lampMap.get("Main.main").getFirst().hasNewCycleAwait() ) || (lampMap.get("Main.main").getSecond().hasNewCycle() && ! lampMap.get("Main.main").getSecond().hasNewCycleAwait())){
+            if(lampMap.get("Main.main").getFirst().hasCycle() || lampMap.get("Main.main").getSecond().hasCycle()){
 				moreInfoMainCycle();
 				return;
-	    }*/
+	    }
 
-            if(lampMap.get("Main.main").getFirst().hasNewCycleGet() || lampMap.get("Main.main").getSecond().hasNewCycleGet() ){
-                moreInfoMainCycle();
-                return;
-            }
-            
             /*if(newNumberOfDep.equals(this.nOfDep)){
                 LinkedList<ASTNode> nodeLocked = lampMap.get("Main.main").getFirst().hasCycle2();
                 nodeLocked.addAll(lampMap.get("Main.main").getSecond().hasCycle2());
@@ -289,7 +280,7 @@ public class DASolver {
         // here we calculate the solution of the application of the rule
         Lamp w = new Lamp();
         Lamp wPrime = new Lamp();
-        w.addCouple(a, b);
+        w.addCouple(a, b, cGet.getPosition());
         //I learn reading again the paper that only the first lamp obtain the couple
         //wPrime.addCouple(a, b);		
         // we compose and return the solution <w,wPrime>
@@ -314,7 +305,7 @@ public class DASolver {
         // here we calculate the solution of the application of the rule
         Lamp w = new Lamp();
         Lamp wPrime = new Lamp();
-        w.addCoupleAwait(a, b);
+        w.addCoupleAwait(a, b, cAwait.getPosition());
         //I learn reading again the paper that only the first lamp obtain the couple
         //wPrime.addCouple(a, b);
 
@@ -715,7 +706,7 @@ public class DASolver {
         //System.out.println("getVar after Sub = " + a.toString() + " and " + b.toString());
 
         // we add the get Pair of names at the two lamps
-        w.addCouple(a, b);
+        w.addCouple(a, b, cGInvk.getPosition());
         //same comment of the rule w-Gzero
         //wPrime.addCouple(a, b);
 
@@ -825,7 +816,7 @@ public class DASolver {
         //System.out.println("awaitVar after Sub = " + a.toString() + " and " + b.toString());
 
         // we add the get Pair of names at the two lamps
-        w.addCoupleAwait(a, b);
+        w.addCoupleAwait(a, b, cAInvk.getPosition());
         //same comment of the rule w-Gzero
         //wPrime.addCouple(a, b);
 
@@ -915,22 +906,20 @@ public class DASolver {
     }
 
     public void moreInfoMainCycle(){
-        if(lampMap.get("Main.main").getFirst().hasNewCycleGet() || lampMap.get("Main.main").getSecond().hasNewCycleGet()){
+        if(lampMap.get("Main.main").getFirst().hasCycleGet() || lampMap.get("Main.main").getSecond().hasCycleGet()){
             this.deadlock = true;
             return;
         }
-        if(lampMap.get("Main.main").getFirst().hasNewCycleAwait() || lampMap.get("Main.main").getSecond().hasNewCycleAwait()){
+        if(lampMap.get("Main.main").getFirst().hasCycleAwait() || lampMap.get("Main.main").getSecond().hasCycleAwait()){
             this.cylceOfAwait = true;
             return;
         }
+
+        this.possibleLock = true;
     }
 
-   
     public Boolean isCycleMain(){
-        if((lampMap.get("Main.main").getFirst().hasNewCycle() && !lampMap.get("Main.main").getFirst().hasNewCycleGet() && !lampMap.get("Main.main").getFirst().hasNewCycleAwait()) || (lampMap.get("Main.main").getSecond().hasNewCycle() && !lampMap.get("Main.main").getSecond().hasNewCycleGet() && !lampMap.get("Main.main").getSecond().hasNewCycleAwait()))
-            return true;
-        else
-            return false;
+        return this.possibleLock;
     }
 
     public Boolean isDeadlockMain(){
