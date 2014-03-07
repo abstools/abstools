@@ -732,8 +732,7 @@ main = do
                                                                            stmt -> [stmt]) False cls clsScope (M.empty:scopes) ++ [HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "return") (HS.Tuple HS.Boxed expVars))])))
                                              : tStmts rest canReturn cls clsScope scopes
                                                  where
-                                                   fscope = M.unions scopes
-                                                   vars = collectVars texp fscope
+                                                   vars = nub $ collectAssigns stm
                                                    patVars = map (\ v -> HS.PVar $ HS.Ident v) vars
                                                    expVars = map (\ v -> HS.Var $ HS.UnQual $ HS.Ident v) vars
 
@@ -950,36 +949,15 @@ collect _ _ = []
 
 
 
--- only for non-this pure variables (not class attributes)
-collectVars                              :: ABS.PureExp -> Scope -> [String]
-collectVars (ABS.Let _ pexp1 pexp2) ccs      = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.If pexp1 pexp2 pexp3) ccs   = collectVars pexp1 ccs ++ collectVars pexp2 ccs ++ collectVars pexp3 ccs
-collectVars (ABS.Case pexp cbranches) ccs    = collectVars pexp ccs ++ concatMap (\ (ABS.CBranch _ pexp') -> collectVars pexp' ccs) cbranches
-collectVars (ABS.EOr pexp1 pexp2) ccs        = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.EAnd pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.EEq pexp1 pexp2) ccs        = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.ENeq pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.ELt pexp1 pexp2) ccs        = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.ELe pexp1 pexp2) ccs        = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.EGt pexp1 pexp2) ccs        = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.EGe pexp1 pexp2) ccs        = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.EAdd pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.ESub pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.EMul pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.EDiv pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.EMod pexp1 pexp2) ccs       = collectVars pexp1 ccs ++ collectVars pexp2 ccs
-collectVars (ABS.ELogNeg pexp) ccs           = collectVars pexp ccs
-collectVars (ABS.EIntNeg pexp) ccs           = collectVars pexp ccs
-collectVars (ABS.ECall _ pexps) ccs          = concatMap ((flip collectVars) ccs) pexps
-collectVars (ABS.ENaryCall _ pexps) ccs      = concatMap ((flip collectVars) ccs) pexps
-collectVars (ABS.EMultConstr _ pexps) ccs    = concatMap ((flip collectVars) ccs) pexps
-collectVars (ABS.EVar ident@(ABS.Ident var)) ccs = if ident `M.member` ccs
-                                                   then [var]
-                                                   else []
-collectVars _ _ = []
-
-
-
+collectAssigns :: ABS.Stm -> [String]
+collectAssigns (ABS.SBlock stmts) = concatMap collectAssigns stmts
+collectAssigns (ABS.SWhile _ stmt) = collectAssigns stmt
+collectAssigns (ABS.SIf _ stmt) = collectAssigns stmt
+collectAssigns (ABS.SIfElse _ stmt1 stmt2) = collectAssigns stmt1 ++ collectAssigns stmt2
+collectAssigns (ABS.SAss (ABS.Ident var) _) = [var]
+collectAssigns (ABS.SDecAss _ (ABS.Ident var) _) = [var]
+-- ignore fieldass, since they are iorefs
+collectAssigns _ = []
 
 
 
