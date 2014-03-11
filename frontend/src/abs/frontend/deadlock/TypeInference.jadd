@@ -705,41 +705,47 @@ aspect TypeInference {
     if(t.isInterfaceType()) { cl = intertoclass.get(((InterfaceType)t).getDecl()); }
     else { cl = clthis; }
     
-    if(cl == null) { System.out.println("Class retrival failed!!!"); } // should NEVER occur
-
-    // 2. Collect contracts and deadlock.constraints.constraint.Constraints from the call
-    ResultInferencePureExp resCallee = getCallee().typeInferenceAsPure(nident, env, a, intertoclass, df, cl);
-    Contract contract = df.newContractEmpty();
-    deadlock.constraints.constraint.Constraint c = df.newConstraint();
-    Record callee = resCallee.getRepresentative();
-    
-    LinkedList<Record> s = new LinkedList<Record>();
-    ResultInferencePureExp resParam;
-    for (PureExp p : getParams()){
-      resParam = p.typeInferenceAsPure(nident, env, a, intertoclass, df, cl);
-      s.add(resParam.getRepresentative());
-    }
-
-    // 3. Construct the record for the return value
-    Record Y = df.newRecordVariable();
-
-    // 4. pack up the result
-    MethodInterface mi = df.newMethodInterface(callee, s, Y);
-    c.addSemiEquation(new ASTNodeInformation(this), env.getMethod(cl.getName(), getMethod()), mi);
-
-    Record r;
-    if(this instanceof SyncCall) {
-      r = Y;
-      contract.add(df.newContractSyncInvk(this, cl.getName(), getMethod(), mi));
+    if(cl == null) {
+      // we are in presence of an non implemented interface
+      // in that case, we don't know how the method would behave, and simply put a null contract.
+      System.out.println("Class retrival failed!!!");
+      return new ResultInferenceEffExp(null, df.newRecordVariable(), df.newContractEmpty(), df.newConstraint(), env);
     } else {
-      contract.add(df.newContractInvk(this, cl.getName(), getMethod(), mi));
 
-      GroupName aprime = df.newGroupName();
-      Record calleeShape = cl.createInstance(df, aprime);
-      c.addEquation(new ASTNodeInformation(this), callee, calleeShape);
-      r = df.newRecordFuture(aprime,Y);
+      // 2. Collect contracts and deadlock.constraints.constraint.Constraints from the call
+      ResultInferencePureExp resCallee = getCallee().typeInferenceAsPure(nident, env, a, intertoclass, df, cl);
+      Contract contract = df.newContractEmpty();
+      deadlock.constraints.constraint.Constraint c = df.newConstraint();
+      Record callee = resCallee.getRepresentative();
+    
+      LinkedList<Record> s = new LinkedList<Record>();
+      ResultInferencePureExp resParam;
+      for (PureExp p : getParams()){
+        resParam = p.typeInferenceAsPure(nident, env, a, intertoclass, df, cl);
+        s.add(resParam.getRepresentative());
+      }
+
+      // 3. Construct the record for the return value
+      Record Y = df.newRecordVariable();
+
+      // 4. pack up the result
+      MethodInterface mi = df.newMethodInterface(callee, s, Y);
+      c.addSemiEquation(new ASTNodeInformation(this), env.getMethod(cl.getName(), getMethod()), mi);
+
+      Record r;
+      if(this instanceof SyncCall) {
+        r = Y;
+        contract.add(df.newContractSyncInvk(this, cl.getName(), getMethod(), mi));
+      } else {
+        contract.add(df.newContractInvk(this, cl.getName(), getMethod(), mi));
+
+        GroupName aprime = df.newGroupName();
+        Record calleeShape = cl.createInstance(df, aprime);
+        c.addEquation(new ASTNodeInformation(this), callee, calleeShape);
+        r = df.newRecordFuture(aprime,Y);
+      }
+      return new ResultInferenceEffExp(null, r, contract, c, env);
     }
-    return new ResultInferenceEffExp(null, r, contract, c, env);
   }
 
 
