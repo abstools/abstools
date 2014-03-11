@@ -198,11 +198,18 @@ aspect Typing {
     eq BoolExp.getType() = getModel().getBoolType();
     eq RelationalExpr.getType() = getModel().getBoolType();
     eq IfExp.getType() {
-        Type mostGeneralType = getThenExp().getType();
-        if (mostGeneralType.isAssignable(getElseExp().getType())) {
-            mostGeneralType = getElseExp().getType();
+        if (getThenExp().getType().isRatType()
+            || getElseExp().getType().isRatType()) {
+            // special case: Rat is assignable to Int, so we would
+            // sometimes return Int instead of Rat as the type of an IfExp.
+            return getModel().getRatType();
+        } else {
+            Type mostGeneralType = getThenExp().getType();
+            if (mostGeneralType.isAssignable(getElseExp().getType())) {
+                mostGeneralType = getElseExp().getType();
+            }
+            return mostGeneralType;
         }
-        return mostGeneralType;
     }
     eq CaseExp.getType() {
    	 Type mostGeneralType = null;
