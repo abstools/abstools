@@ -219,15 +219,20 @@ public class FunctionalTests extends SemanticTests {
         assertEvalTrue("{ Set<Int> s = set[4,4,4]; Bool testresult = (size(s) == 1);}");
     }
 
+    /* Redmine #140 - Int vs. Rat */
     @Test
     public void testPow1() {
-        /* TODO: Move to type-checking? */
         assertEvalTrue("def Int pow(Int n, Int i) = if i < 0 then 1 / pow(n, -i) else case i { 0 => 1; _ => n * pow(n, i-1);  }; { Bool testresult = True; }");
     }
 
     @Test
     public void testPow2() {
         assertEvalTrue("def Rat pow(Int n, Int i) = if i < 0 then 1 / pow(n, -i) else case i { 0 => 1; _ => n * pow(n, i-1);  }; { Bool testresult = True; }");
+    }
+    
+    @Test
+    public void testIntRatCase() {
+        assertEvalTrue("def Int pow(Int n, Int i) = case i < 0 { True => 1 / pow(n, -i); False => case i { 0 => 1; _ => n * pow(n, i-1);};  }; { Bool testresult = True; }");
     }
 
     @Test
