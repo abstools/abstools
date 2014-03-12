@@ -53,15 +53,7 @@ await gs@(ThisGuard is tg :&: rest) = do
        await gs
   await rest
 
--- while :: ABS o Bool -> ABS o () -> ABS o ()
--- while pred action = do
---   res <- pred
---   when res $ do
---       action
---       while pred action
-
-
-while :: Monad m => a -> (a -> m Bool) -> (a -> m a) -> m a
+while :: (Object__ o) => a -> (a -> ABS o Bool) -> (a -> ABS o a) -> ABS o a
 while env predAction loopAction = predAction env >>= \ res -> if res
                                                              then loopAction env >>= \ env' -> while env' predAction loopAction
                                                              else return env
@@ -69,5 +61,3 @@ while env predAction loopAction = predAction env >>= \ res -> if res
 get :: (Object__ o) => Fut f -> ABS o f
 get a = (\ (FutureRef mvar _ _ _) -> lift $ lift $ readMVar mvar) a
 
--- readObject :: (Object__ o) => ObjectRef f -> ABS o f
--- readObject (ObjectRef ioref _) = lift $ lift $ readIORef ioref

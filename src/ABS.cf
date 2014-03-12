@@ -32,10 +32,12 @@ ExportStarFrom. Export ::= "export" "*" "from" QualType ;
 
 terminator Export ";" ;
 
-ImportAny. Import ::= "import" [AnyIdent] ;
-ImportAnyFrom. Import ::= "import" [AnyIdent] "from" QualType ;
-ImportStarFrom. Import ::= "import" "*" "from" QualType ;
+ImportHaskell. ImportType ::= "fimport";
+ImportABS.     ImportType ::= "import";
 
+-- ImportAny. Import ::= ImportType QualType "." Ident  ; -- ambiguous
+ImportAnyFrom. Import ::= ImportType [AnyIdent] "from" QualType ;
+ImportStarFrom. Import ::= ImportType "*" "from" QualType ;
 terminator Import ";" ;
 
 AnyIdentI. AnyIdent ::= Ident ;

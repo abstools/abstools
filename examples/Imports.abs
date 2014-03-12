@@ -1,0 +1,10 @@
+module Imports;
+
+import f,g from ABSModule;
+import * from AnotherABSModule;
+fimport * from Data.Array.Unboxed;
+
+{
+
+
+}

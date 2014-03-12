@@ -17,7 +17,8 @@ module ABSPrelude
      Prelude.Int, Prelude.Bool (..) , Prelude.Eq, List,
      (Prelude.||), (Prelude.&&), (Prelude.==), (Prelude./=), (Prelude.<), (Prelude.<=), (Prelude.>=), (Prelude.>), (Prelude.+), (Prelude.-), (Prelude.*), (/), (%),
      (||:), (&&:), (==:), (/=:), (<:), (<=:), (>=:), (>:), (+:), (-:), (*:), (/:), (%:),
-     M.Map, M.empty, put, insertAssoc, lookupUnsafe, removeKey
+     M.Map, M.empty, put, insertAssoc, lookupUnsafe, removeKey,
+     listArray, replace, elemAt, Prelude.repeat, Array
     )
         where
 
@@ -34,8 +35,8 @@ import Control.Concurrent (newChan, writeChan, writeList2Chan, newEmptyMVar)
 import qualified Data.Map.Strict as M
 import Data.Maybe (fromJust)
 import Control.Monad.Coroutine (mapMonad)
-
-
+import qualified Data.Array.Unboxed as UArray
+import Data.Array.Unboxed (listArray)
 
 class IntOrRational a where
     (/) :: a -> a -> a
@@ -52,57 +53,57 @@ x % y = Prelude.fromIntegral (x `Prelude.mod` y)
 
 type List a = [a]
 
-ifthenM :: Prelude.Monad m => m (Prelude.Bool) -> m () -> m ()
+ifthenM :: (Object__ o) => ABS o (Prelude.Bool) -> ABS o () -> ABS o ()
 ifthenM texp stm_then = texp Prelude.>>= (\ e -> when e stm_then)
 
-ifthenelseM :: Prelude.Monad m => m (Prelude.Bool) -> m a -> m a -> m a
+ifthenelseM :: (Object__ o) => ABS o (Prelude.Bool) -> ABS o a -> ABS o a -> ABS o a
 ifthenelseM texp stm_then stm_else = texp Prelude.>>= (\ e -> if e 
                                                             then stm_then
                                                             else stm_else)
 
-(||:) :: Prelude.Monad m => m Prelude.Bool -> m Prelude.Bool -> m Prelude.Bool
+(||:) :: (Object__ o) => ABS o Prelude.Bool -> ABS o Prelude.Bool -> ABS o Prelude.Bool
 (||:) = liftM2 (Prelude.||)
 
-(&&:) :: Prelude.Monad m => m Prelude.Bool -> m Prelude.Bool -> m Prelude.Bool
+(&&:) :: (Object__ o) => ABS o Prelude.Bool -> ABS o Prelude.Bool -> ABS o Prelude.Bool
 (&&:) = liftM2 (Prelude.&&)
 
-(==:) :: (Prelude.Eq a, Prelude.Monad m) => m a -> m a -> m Prelude.Bool
+(==:) :: (Prelude.Eq a, Object__ o) => ABS o a -> ABS o a -> ABS o Prelude.Bool
 (==:) = liftM2 (Prelude.==)
 
-(/=:) :: (Prelude.Eq a, Prelude.Monad m) => m a -> m a -> m Prelude.Bool
+(/=:) :: (Prelude.Eq a, Object__ o) => ABS o a -> ABS o a -> ABS o Prelude.Bool
 (/=:) = liftM2 (Prelude./=)
 
-(<:) :: (Prelude.Ord a, Prelude.Monad m) => m a -> m a -> m Prelude.Bool
+(<:) :: (Prelude.Ord a, Object__ o) => ABS o a -> ABS o a -> ABS o Prelude.Bool
 (<:) = liftM2 (Prelude.<)
 
-(<=:) :: (Prelude.Ord a, Prelude.Monad m) => m a -> m a -> m Prelude.Bool
+(<=:) :: (Prelude.Ord a, Object__ o) => ABS o a -> ABS o a -> ABS o Prelude.Bool
 (<=:) = liftM2 (Prelude.<=)
 
-(>=:) :: (Prelude.Ord a, Prelude.Monad m) => m a -> m a -> m Prelude.Bool
+(>=:) :: (Prelude.Ord a, Object__ o) => ABS o a -> ABS o a -> ABS o Prelude.Bool
 (>=:) = liftM2 (Prelude.>=)
 
-(>:) :: (Prelude.Ord a, Prelude.Monad m) => m a -> m a -> m Prelude.Bool
+(>:) :: (Prelude.Ord a, Object__ o) => ABS o a -> ABS o a -> ABS o Prelude.Bool
 (>:) = liftM2 (Prelude.>)
 
-(+:) :: (Prelude.Num a, Prelude.Monad m) => m a -> m a -> m a
+(+:) :: (Prelude.Num a, Object__ o) => ABS o a -> ABS o a -> ABS o a
 (+:) = liftM2 (Prelude.+)
 
-(-:) :: (Prelude.Num a, Prelude.Monad m) => m a -> m a -> m a
+(-:) :: (Prelude.Num a, Object__ o) => ABS o a -> ABS o a -> ABS o a
 (-:) = liftM2 (Prelude.-)
 
-(*:) :: (Prelude.Num a, Prelude.Monad m) => m a -> m a -> m a
+(*:) :: (Prelude.Num a, Object__ o) => ABS o a -> ABS o a -> ABS o a
 (*:) = liftM2 (Prelude.*)
 
-(/:) :: (IntOrRational a, Prelude.Monad m) => m a -> m a -> m a
+(/:) :: (IntOrRational a, Object__ o) => ABS o a -> ABS o a -> ABS o a
 (/:) = liftM2 (/)
 
-(%:) :: (Prelude.Integral a, Prelude.Num b, Prelude.Monad m) => m  a -> m a -> m b
+(%:) :: (Prelude.Integral a, Prelude.Num b, Object__ o) => ABS o a -> ABS o a -> ABS o b
 (%:) = liftM2 (%)
 
-notM :: Prelude.Monad m => m Prelude.Bool -> m Prelude.Bool
+notM :: Object__ o => ABS o Prelude.Bool -> ABS o Prelude.Bool
 notM = liftM (Prelude.not)
 
-negateM :: (Prelude.Num a, Prelude.Monad m) => m a -> m a
+negateM :: (Prelude.Num a, Object__ o) => ABS o a -> ABS o a
 negateM = liftM (Prelude.negate)
 
 assert :: (Object__ o) => ABS o Prelude.Bool -> ABS o ()
@@ -129,9 +130,15 @@ type Triple a b c = (a,b,c)
 left (Prelude.Left a ) = a
 right (Prelude.Right a) = a
 
-
 fstT (a,_,_) = a
 sndT (_,b,_) = b
 trd (_,_,c) = c
 
 null = Prelude.undefined
+
+-- arrays
+
+replace a cs = a UArray.// cs
+elemAt(a, i) = a UArray.! i
+
+type Array = UArray.UArray
