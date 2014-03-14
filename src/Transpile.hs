@@ -576,6 +576,8 @@ main = do
     tPureExp (ABS.EVar var@(ABS.Ident pid)) _tyvars clsScope fscope = case M.lookup var fscope of
                                                        Nothing -> case M.lookup var clsScope of
                                                                    -- lookup in the clsScope
+                                                                   -- if it of an int type, upcast it
+                                                                   Just ABS.TyInt ->HS.App (HS.Var $ HS.UnQual $ HS.Ident "fromIntegral") (HS.Var $ HS.UnQual $ HS.Ident pid)
                                                                    Just t -> HS.Paren ((if isInterface t symbolTable
                                                                                          -- upcasting if it is of a class type
                                                                                          then HS.App (HS.Var $ HS.UnQual $ HS.Ident "up")
@@ -584,6 +586,8 @@ main = do
                                                                    -- TODO: this should be turned into warning
                                                                    --  pure expressions don't have a scope, because they rely in haskell for scoping
                                                                    Nothing -> HS.Var $ HS.UnQual $ HS.Ident pid 
+                                                       -- if it of an int type, upcast it
+                                                       Just ABS.TyInt -> HS.App (HS.Var $ HS.UnQual $ HS.Ident "fromIntegral") (HS.Var $ HS.UnQual $ HS.Ident pid)
                                                        Just t -> HS.Paren $ ((if isInterface t symbolTable
                                                                             then HS.App (HS.Var $ HS.UnQual $ HS.Ident "up") -- upcasting if it is of a class type
                                                                             else id)

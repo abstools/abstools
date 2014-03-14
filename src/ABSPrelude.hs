@@ -13,7 +13,7 @@ module ABSPrelude
      assert, 
      Pair, Prelude.fst, Prelude.snd, Triple, fstT, sndT, trd,
      null,
-     (Prelude.=<<), (Prelude.>>=), Prelude.Maybe (..), Prelude.Either (..), left, right, Prelude.maybe, fromJust,
+     (Prelude.=<<), (Prelude.>>=), Prelude.Maybe (..), Prelude.Either (..), left, right, Prelude.maybe, fromJust, Prelude.fromIntegral,
      Prelude.Int, Prelude.Rational, Prelude.Bool (..) , Prelude.Eq, List, Prelude.String,
      (Prelude.||), (Prelude.&&), (Prelude.==), (Prelude./=), (Prelude.<), (Prelude.<=), (Prelude.>=), (Prelude.>), (Prelude.+), (Prelude.-), (Prelude.*), (/), (%),
      (||:), (&&:), (==:), (/=:), (<:), (<=:), (>=:), (>:), (+:), (-:), (*:), (/:), (%:),
