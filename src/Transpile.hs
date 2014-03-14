@@ -69,7 +69,8 @@ main = do
                                                                       }
                 where 
                   insertInterfs :: M.Map ABS.TypeIdent [ABS.QualType] -> ABS.Decl -> M.Map ABS.TypeIdent [ABS.QualType]
-                  insertInterfs acc (ABS.ExtendsDecl tident extends msigs) = M.insertWith (const $ const $ error "duplicate interface declaration") tident extends acc
+                  insertInterfs acc (ABS.InterfDecl tident _msigs) = M.insertWith (const $ const $ error "duplicate interface declaration") tident [] acc
+                  insertInterfs acc (ABS.ExtendsDecl tident extends _msigs) = M.insertWith (const $ const $ error "duplicate interface declaration") tident extends acc
                   insertInterfs acc _ = acc
 
                   insertMethods :: M.Map ABS.TypeIdent [ABS.Ident] -> ABS.Decl -> M.Map ABS.TypeIdent [ABS.Ident]
@@ -427,18 +428,38 @@ main = do
          tMethDecl _ = error "Second parsing error: Syntactic error, no field declaration accepted here"
          -- TODO, can be optimized
          scanInterfs :: M.Map ABS.TypeIdent [ABS.BodyDecl] -- assoc list of interfaces to methods
-         scanInterfs = M.mapMaybeWithKey (\ interfName methodNames -> let mdecls' = filter (\case
-                                                                                           ABS.MethDecl _ mname _ _  -> mname `elem` methodNames
-                                                                                           _ -> False
-                                                                                          )  (case maybeBlock of
-                                                                                                ABS.NoBlock ->  ldecls
-                                                                                                ABS.JustBlock _ -> rdecls
-                                                                                             )
-                                                                     in if null mdecls'
-                                                                        then if (ABS.QualType [ABS.QualTypeIdent interfName]) `elem` imps
-                                                                             then Just [] -- implements an empty interface
-                                                                             else Nothing
-                                                                        else Just mdecls') $ M.unions (map methods symbolTable)
+         scanInterfs = M.map (\ mnames -> filter (\case
+                                                 ABS.MethDecl _ mname _ _ -> mname `elem` mnames
+                                                 _ -> False
+                                                ) mdecls)
+                              $ M.filterWithKey (\ interfName _ -> interfName `elem` scanInterfs') (M.unions $ map methods symbolTable) -- filtered methods symboltable
+             where
+               mdecls = case maybeBlock of
+                            ABS.NoBlock ->  ldecls
+                            ABS.JustBlock _ -> rdecls
+               scanInterfs' = scan imps
+               unionedST = (M.unions $ map hierarchy symbolTable)
+               scan :: [ABS.QualType] -> [ABS.TypeIdent] -- gathers all interfaces that must be implemented
+               scan imps = M.foldlWithKey (\ acc k extends -> if null extends
+                                                             then k:acc
+                                                             else if ABS.QualType [ABS.QualTypeIdent k] `elem` imps
+                                                                  then k:(scan extends ++ acc)
+                                                                  else acc)
+                           [] unionedST
+
+
+         -- scanInterfs = M.mapMaybeWithKey (\ interfName methodNames -> let mdecls' = filter (\case
+         --                                                                                   ABS.MethDecl _ mname _ _  -> mname `elem` methodNames
+         --                                                                                   _ -> False
+         --                                                                                  )  (case maybeBlock of
+         --                                                                                        ABS.NoBlock ->  ldecls
+         --                                                                                        ABS.JustBlock _ -> rdecls
+         --                                                                                     )
+         --                                                             in if null mdecls'
+         --                                                                then if (ABS.QualType [ABS.QualTypeIdent interfName]) `elem` imps
+         --                                                                     then Just [] -- implements an empty interface
+         --                                                                     else Nothing
+         --                                                                else Just mdecls') $ M.unions (map methods symbolTable)
 
     generateSubSelf :: String -> HS.Decl
     generateSubSelf iname = HS.InstDecl noLoc [] 
