@@ -424,7 +424,10 @@ main = do
 
          tMethDecl (ABS.MethDecl _ (ABS.Ident mident) mparams (ABS.Block block)) = HS.InsDecl $ 
                       HS.FunBind [HS.Match noLoc (HS.Ident mident) (map (\ (ABS.Par _ (ABS.Ident pid)) -> HS.PVar (HS.Ident pid)) mparams ++ [HS.PVar $ HS.Ident "this"])
-                                    Nothing (HS.UnGuardedRhs $ tBlockWithReturn block clsName allFields [])  (HS.BDecls [])]
+                                    Nothing (HS.UnGuardedRhs $ tBlockWithReturn block clsName allFields 
+                                             -- method scoping of input arguments
+                                             [foldl (\ acc (ABS.Par ptyp pident) -> 
+                                                       M.insertWith (const $ const $ error $ "Parameter " ++ show pident ++ " is already defined") pident ptyp acc) M.empty  mparams])  (HS.BDecls [])]
          tMethDecl _ = error "Second parsing error: Syntactic error, no field declaration accepted here"
          -- TODO, can be optimized
          scanInterfs :: M.Map ABS.TypeIdent [ABS.BodyDecl] -- assoc list of interfaces to methods
@@ -598,7 +601,7 @@ main = do
                                                        Nothing -> case M.lookup var clsScope of
                                                                    -- lookup in the clsScope
                                                                    -- if it of an int type, upcast it
-                                                                   Just ABS.TyInt ->HS.App (HS.Var $ HS.UnQual $ HS.Ident "fromIntegral") (HS.Var $ HS.UnQual $ HS.Ident pid)
+                                                                   Just ABS.TyInt ->HS.App (HS.Var $ HS.UnQual $ HS.Ident "fromIntegral") (HS.Var $ HS.UnQual $ HS.Ident $ "__" ++ pid)
                                                                    Just t -> HS.Paren ((if isInterface t symbolTable
                                                                                          -- upcasting if it is of a class type
                                                                                          then HS.App (HS.Var $ HS.UnQual $ HS.Ident "up")
