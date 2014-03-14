@@ -10,6 +10,7 @@ data Type =
  | TyInt
  | TyRat
  | TyFut Type
+ | TyUnderscore
  | TypeVar QualType
  | ArgType QualType [Type]
   deriving (Eq,Ord,Show)

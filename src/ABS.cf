@@ -8,6 +8,7 @@ TyUnit. Type ::= "Unit" ;
 TyInt. Type ::= "Int" ;
 TyRat. Type ::= "Rat" ;
 TyFut. Type ::= "Fut" "<" Type ">";
+TyUnderscore. Type ::= "_";
 -- treat both unqualified and qualified types as qualified
 TypeVar. Type ::= QualType ;
 ArgType. Type ::= QualType "<" [Type] ">" ;

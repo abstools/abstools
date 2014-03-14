@@ -97,6 +97,7 @@ instance Print Type where
    TyInt  -> prPrec i 0 (concatD [doc (showString "Int")])
    TyRat  -> prPrec i 0 (concatD [doc (showString "Rat")])
    TyFut type' -> prPrec i 0 (concatD [doc (showString "Fut") , doc (showString "<") , prt 0 type' , doc (showString ">")])
+   TyUnderscore  -> prPrec i 0 (concatD [doc (showString "_")])
    TypeVar qualtype -> prPrec i 0 (concatD [prt 0 qualtype])
    ArgType qualtype types -> prPrec i 0 (concatD [prt 0 qualtype , doc (showString "<") , prt 0 types , doc (showString ">")])
 

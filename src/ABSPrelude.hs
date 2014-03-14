@@ -14,10 +14,11 @@ module ABSPrelude
      Pair, Prelude.fst, Prelude.snd, Triple, fstT, sndT, trd,
      null,
      (Prelude.=<<), (Prelude.>>=), Prelude.Maybe (..), Prelude.Either (..), left, right, Prelude.maybe, fromJust,
-     Prelude.Int, Prelude.Bool (..) , Prelude.Eq, List,
+     Prelude.Int, Prelude.Rational, Prelude.Bool (..) , Prelude.Eq, List, Prelude.String,
      (Prelude.||), (Prelude.&&), (Prelude.==), (Prelude./=), (Prelude.<), (Prelude.<=), (Prelude.>=), (Prelude.>), (Prelude.+), (Prelude.-), (Prelude.*), (/), (%),
      (||:), (&&:), (==:), (/=:), (<:), (<=:), (>=:), (>:), (+:), (-:), (*:), (/:), (%:),
      M.Map, M.empty, put, insertAssoc, lookupUnsafe, removeKey,
+     length,
      listArray, replace, elemAt, Prelude.repeat, Array
     )
         where
@@ -37,6 +38,7 @@ import Data.Maybe (fromJust)
 import Control.Monad.Coroutine (mapMonad)
 import qualified Data.Array.Unboxed as UArray
 import Data.Array.Unboxed (listArray)
+import Data.List (length)
 
 class IntOrRational a where
     (/) :: a -> a -> a

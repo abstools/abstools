@@ -25,6 +25,7 @@ transType x = case x of
   TyInt  -> failure x
   TyRat  -> failure x
   TyFut type'  -> failure x
+  TyUnderscore  -> failure x
   TypeVar qualtype  -> failure x
   ArgType qualtype types  -> failure x
 

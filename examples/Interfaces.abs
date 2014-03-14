@@ -18,3 +18,7 @@ interface Interf4 extends Interf1 {
 
 
 }
+
+{
+
+}
