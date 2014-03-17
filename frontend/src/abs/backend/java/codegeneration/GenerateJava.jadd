@@ -267,6 +267,10 @@ aspect GenerateJava {
         if (getFunctionDef() instanceof BuiltinFunctionDef)
             return;
 
+        boolean needsTruncate = getType().isIntType()
+            && getFunctionDef() instanceof ExpFunctionDef
+            && ((ExpFunctionDef) getFunctionDef()).getRhs().getType().isRatType() ;
+
         JavaGeneratorHelper.generateHelpLine(this,stream);
 
         String className = JavaBackend.getFunctionName(getName());
@@ -280,10 +284,10 @@ aspect GenerateJava {
         stream.print(" apply");
         JavaGeneratorHelper.generateParams(stream,getParams());
         stream.println(" {");
-        stream.print("return ");
+        stream.print("return (");
         getFunctionDef().generateJava(stream);
-        if (getType().isIntType() && getFunctionDef() instanceof ExpFunctionDef
-            && ((ExpFunctionDef) getFunctionDef()).getRhs().getType().isRatType()) {
+        stream.print(")");
+        if (needsTruncate) {
             stream.print(".truncate()");
         }
         stream.println(";");

@@ -4,12 +4,10 @@
  */
 package abs.backend.erlang;
 
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import abs.backend.common.SemanticTests;
 import abs.frontend.typesystem.ExamplesTypeChecking;
 
 public class ErlangExamplesTests extends ExamplesTypeChecking {
@@ -20,7 +18,7 @@ public class ErlangExamplesTests extends ExamplesTypeChecking {
 
     @BeforeClass
     public static void checkRequired() {
-        Assert.assertTrue(SemanticTests.checkErlang());
+        Assume.assumeTrue(ErlangTestDriver.checkErlang());
     }
 
     @Override

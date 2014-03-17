@@ -71,10 +71,11 @@ public class MaudeTests extends ABSTest {
         assertMaudeCodeResult(generatedMaudeCode, expectedResult);
     }
 
+    final static Pattern patternResult = Pattern.compile(".*'testresult \\|-> \"(.*?)\"\\[emp\\].*");
+
     public void assertMaudeCodeResult(String generatedMaudeCode, String expectedResult) throws Exception {
         String maudeOutput = getMaudeOutput(generatedMaudeCode);
-        Pattern pattern = Pattern.compile(".*'testresult \\|-> \"(.*?)\"\\[emp\\].*");
-        Matcher matcher = pattern.matcher(maudeOutput);
+        Matcher matcher = patternResult.matcher(maudeOutput);
         if (matcher.find()) {
             String boolValue = matcher.group(1);
             Assert.assertEquals(expectedResult, boolValue);
@@ -85,7 +86,7 @@ public class MaudeTests extends ABSTest {
     }
 
     protected String getMaudeCode(String absCode, MaudeCompiler.SIMULATOR module) throws Exception {
-        Model model = assertParseOk(absCode, Config.WITH_STD_LIB);
+        Model model = assertParseOk(absCode, Config.WITH_STD_LIB, Config.WITHOUT_MODULE_NAME);
 
         if (model.hasErrors()) {
             Assert.fail(model.getErrors().getFirst().getHelpMessage());
@@ -162,11 +163,11 @@ public class MaudeTests extends ABSTest {
         return result.toString();
     }
 
+    final static Pattern patternFailure = Pattern.compile("\\| failure");
     public void assertFails(String absCode) throws Exception {
         String generatedMaudeCode = getMaudeCode(absCode, mode);
         String maudeOutput = getMaudeOutput(generatedMaudeCode);
-        Pattern pattern = Pattern.compile("\\| failure");
-        Matcher matcher = pattern.matcher(maudeOutput);
+        Matcher matcher = patternFailure.matcher(maudeOutput);
         if (!matcher.find()) {
             Assert.fail("Did not find ANY indication of failure...");
         }

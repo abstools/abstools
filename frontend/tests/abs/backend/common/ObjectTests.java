@@ -162,4 +162,8 @@ public class ObjectTests extends SemanticTests {
                 + CALL_M);
     }
 
+    @Test
+    public void testFutST1() {
+        assertEvalTrue("interface A {} interface B extends A {} interface I { A mA(); B mB(); } { case False { True => { I o = null; Fut<A> f = o!mB();} False => {skip;}} Bool testresult = True; }");
+    }
 }

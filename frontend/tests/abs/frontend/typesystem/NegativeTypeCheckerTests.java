@@ -62,8 +62,8 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
-    public void parametericDataTypesIllegalAssignment() {
-        assertTypeErrors("interface I {} interface J extends I {} data Foo<A> = Bar(A); { J j; Foo<I> f = Bar(j); }");
+    public void parametericDataTypesOK() {
+        assertTypeOK("interface I {} interface J extends I {} data Foo<A> = Bar(A); { J j; Foo<I> f = Bar(j); }");
     }
 
     @Test

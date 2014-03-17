@@ -79,15 +79,17 @@ regarded as identifiers.
 
 \section{Literals}
 A \emph{literal} is a textual representation of a value.
-ABS supports three kinds of literals, \emph{integer literals}, \emph{string literals}, and the \emph{null literal}.
+ABS supports four kinds of literals, \emph{integer literals}, \emph{string literals}, the \emph{this literal}, and the \emph{null literal}.
 
 \begin{abssyntax}
 \NT{Literal}       \defn \NT{IntLiteral}
                 ~|~ \NT{StringLiteral}
+                ~|~ \NT{ThisLiteral}
                 ~|~ \NT{NullLiteral}
                 \\
 \NT{IntLiteral}    \defn 0 ~|~ [1-9]\MANY{[0-9]}\\
 \NT{StringLiteral} \defn \TR{"} \MANY{\NT{StringCharacter}} \TR{"}\\
+\NT{ThisLiteral}   \defn \TR{this}\\
 \NT{NullLiteral}   \defn \TR{null}
 \end{abssyntax}
 

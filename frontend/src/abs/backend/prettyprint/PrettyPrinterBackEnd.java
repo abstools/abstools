@@ -88,8 +88,7 @@ public class PrettyPrinterBackEnd extends Main {
         }
         
         PrintWriter writer = new PrintWriter(stream,true);
-        ABSFormatter formatter = new DefaultABSFormatter();
-        formatter.setPrintWriter(writer);
+        ABSFormatter formatter = new DefaultABSFormatter(writer);
         model.doPrettyPrint(writer, formatter);
     }
     

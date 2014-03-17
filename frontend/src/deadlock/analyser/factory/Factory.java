@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.io.PrintStream;
 
 import abs.frontend.ast.ASTNode;
 
@@ -150,9 +149,9 @@ public class Factory extends deadlock.constraints.factory.Factory {
     else {return super.newTerm(c, l); }
   }
 
-  public Constraint newConstraint(PrintStream out) {
+  public Constraint newConstraint() {
     Constraint res = super.newConstraint();
-    if(verbose) { res.setDebugFile(out); }
+    if(verbose) { res.setDebugFile(System.out); }
     return res;
   }
 
