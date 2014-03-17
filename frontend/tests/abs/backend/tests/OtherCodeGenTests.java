@@ -7,8 +7,10 @@ package abs.backend.tests;
 import static org.junit.Assert.*;
 
 import java.io.*;
+
 import org.junit.*;
 
+import abs.backend.abs2haskell.ABS2HaskellDriver;
 import abs.backend.erlang.ErlApp;
 import abs.frontend.typesystem.CaseStudyTypeChecking;
 
@@ -47,5 +49,11 @@ public class OtherCodeGenTests extends CaseStudyTypeChecking {
         ErlApp ea = new ErlApp(tmp);
         m.generateErlangCode(ea);
         ea.close();
+    }
+    
+    @Test
+    public void testABS2Haskell() throws Exception {
+        super.test();
+        new ABS2HaskellDriver().generateAndCompile(m);
     }
 }

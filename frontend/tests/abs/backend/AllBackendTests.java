@@ -7,6 +7,7 @@ package abs.backend;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
+import abs.backend.abs2haskell.ABS2HaskellExamplesTest;
 import abs.backend.common.AllSemanticTests;
 import abs.backend.erlang.AllErlangTests;
 import abs.backend.java.AllJavaTests;
@@ -17,8 +18,14 @@ import abs.backend.tests.ASTBasedABSTestRunnerGeneratorTest;
 import abs.backend.tests.OtherCodeGenTests;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ AllJavaTests.class, AllSemanticTests.class, MaudeTests.MaudeEqTests.class,
+@Suite.SuiteClasses({
+    /* Do not merge
+    AllJavaTests.class, AllSemanticTests.class, MaudeTests.MaudeEqTests.class,
         MaudeTests.MaudeRlTests.class, AnnotationsTests.class, ASTBasedABSTestRunnerGeneratorTest.class,
-        PrettyPrinterTests.class, OtherCodeGenTests.class, AllErlangTests.class })
+        PrettyPrinterTests.class, OtherCodeGenTests.class, AllErlangTests.class
+     */
+    ABS2HaskellExamplesTest.class
+        /* This line intentionally left blank */
+        })
 public class AllBackendTests {
 }
