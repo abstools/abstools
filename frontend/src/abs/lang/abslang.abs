@@ -242,7 +242,7 @@ def List<B> values<A, B>(Map<A, B> map) =
 def Set<A> keys<A, B>(Map<A, B> map) =
   case map { 
     EmptyMap => EmptySet ;
-    InsertAssoc(Pair(a, _), tail) => Insert(a, keys(tail)); 
+    InsertAssoc(Pair(a, _), tail) => insertElement(keys(tail), a); 
   };
     
 /**
