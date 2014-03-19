@@ -223,7 +223,7 @@ Note that you can set this variable as a file-local variable as well."
        1)
       ("Modules"
        ,(rx bol (* whitespace) "module" (1+ whitespace)
-            (group (char upper) (* (char alnum))))
+            (group (char upper) (* (or (char alnum) "."))))
        1))
   "Imenu expression for `abs-mode'.  See `imenu-generic-expression'.")
 
