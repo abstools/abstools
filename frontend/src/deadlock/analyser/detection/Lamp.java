@@ -182,54 +182,63 @@ public class Lamp {
         }
     }
 
-    public Integer numberOfDep(){
-        Integer i = 0;
-        for(State st : states)
-            i+=st.numberOfDep();
-        return i;
-    }
-
-    public Boolean hasCycle(){
-        Boolean res = false;
-        for(State st : states)
-            res = res || st.hasCycle();
-        return res;
-    }
+    
+  public Integer numberOfDep(){
+      Integer i = 0;
+      for(State st : states)
+          i+=st.numberOfDep();
+      return i;
+  }
+//*************TODO ABEL: ERASE ALL THIS NOT USED METHODS*************************************
+    //
+//  public Boolean hasCycle(){
+//      Boolean res = false;
+//      for(State st : states)
+//          res = res || st.hasCycle();
+//      return res;
+//  }
+//  
+//  public Boolean hasCycleGet(){
+//      Boolean res = false;
+//      for(State st : states)
+//          res = res || st.hasCycleGet();
+//      return res;
+//  }
+//  
+//  public Boolean hasCycleAwait(){
+//      Boolean res = false;
+//      for(State st : states)
+//          res = res || st.hasCycleAwait();
+//      return res;
+//  }
+    //********************************************************************************************
+    
+    
     
     public Boolean hasNewCycle(){
         Boolean res = false;
         for(State st : states)
-            res = res || st.hasNewCycle();
+            res = res || st.HasCycle();
         return res;
     }
 
 
-    public Boolean hasCycleGet(){
-        Boolean res = false;
-        for(State st : states)
-            res = res || st.hasCycleGet();
-        return res;
-    }
+   
     
     public Boolean hasNewCycleGet(){
         Boolean res = false;
         for(State st : states)
-            res = res || st.hasNewCycleGet();
+            res = res || st.HasCycleGet();
         return res;
     }
 
     
-    public Boolean hasCycleAwait(){
-        Boolean res = false;
-        for(State st : states)
-            res = res || st.hasCycleAwait();
-        return res;
-    }
+  
     
     public Boolean hasNewCycleAwait(){
         Boolean res = false;
         for(State st : states)
-            res = res || st.hasNewCycleAwait();
+            res = res || st.HasCycleAwait();
         return res;
     }
     

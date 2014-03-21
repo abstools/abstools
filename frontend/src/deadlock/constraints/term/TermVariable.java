@@ -26,7 +26,7 @@ import java.util.TreeSet;
 
 public class TermVariable implements Term, Comparable<TermVariable>{
 
-  private Variable v;
+  protected Variable v;
   
   public TermVariable(Variable v) { this.v = v; v.setKind(this); }
   
