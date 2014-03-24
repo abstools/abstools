@@ -6,7 +6,7 @@ author:                Nikolaos Bezirgiannis
 maintainer:            NikolaosBezirgiannis <bezirgia@cwi.nl>
 stability:             provisional
 build-type:            Simple
-cabal-version:         >= 1.4
+cabal-version:         >= 1.8
                       
 library
   build-depends:      base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts, monad-coroutine
@@ -39,7 +39,7 @@ library
 
 executable abs2haskell
   main-is:             Transpile.hs
-  build-depends:       base
+  build-depends:       base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts, monad-coroutine
   --ghc-options:         -rtsopts -threaded -ddump-splices -F -pgmF she
   hs-source-dirs:      src
 

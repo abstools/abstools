@@ -59,9 +59,28 @@ ghc --make -threaded examples/BenchMaps.hs # put the generated haskell file that
 ## Running the final program
 
 ~~~
-./examples/BenchMaps # means run it on 1 core
-./examples/BenchMaps +RTS -N1 # the same as the above
-./examples/BenchMaps +RTS -N2 # run it on 2 cores
-./examples/BenchMaps +RTS -N4 # run it on 4 cores
-./examples/BenchMaps +RTS -NK # run it on K cores
+./examples/BenchMaps -O # means run it on 1 core with default optimizations
+./examples/BenchMaps -O +RTS -N1 # the same as the above
+./examples/BenchMaps -O +RTS -N2 # run it on 2 cores
+./examples/BenchMaps -O +RTS -N4 # run it on 4 cores
+./examples/BenchMaps -O +RTS -NK # run it on K cores
 ~~~
+
+## (Optional) Building the Grammar
+
+You will need
+
+- The [bnf converter](http://bnfc.digitalgrammars.com/)
+- The `alex` Haskell lexer (do `cabal install alex`)
+- The `happy` Haskell parser (do `cabal install happy`)
+
+The grammar lies under `src/ABS.cf`.
+After your modifications, run:
+
+~~~
+make grammar
+~~~
+
+to generate the Haskell source files.
+Then you do `make`, so the abs2haskell compiler can pickup
+any changes of the grammar.

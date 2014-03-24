@@ -1,0 +1,24 @@
+module InferenceNum;
+
+// {
+//   Int i = 3/4;
+//   Rat x = i + 1;
+//   assert (x == 0);
+// }
+
+{
+  Int i = 3 / 4; // when a RHS contains a division, you have to explicitly provide the type
+                 // otherwise the inference becomes ambiguous
+                 // if it is an Int, it will use integer division
+                 // if it is a Rat, it will use rational division
+  _ x = i + 1;
+}
+
+// An example of an ambiguous inference
+
+// {
+//   _ i = 3/4;                // is i an Int or a Rational? no type info => so inference is ambiguous
+//  Rat x = i + 1;
+                                 // if i is an Int, integer division must be used
+                                 // if i is a Rat, rational division must be used
+// }

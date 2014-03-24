@@ -1,0 +1,28 @@
+module HetList;
+
+interface Interf1 {
+    Unit method1();
+}
+
+interface Interf2 extends Interf1 {
+
+}
+
+class Cls1 implements Interf1 {
+  Unit method1() {
+
+      }
+}
+
+class Cls2 implements Interf2 {
+    Unit method1() {
+
+        }
+}
+
+
+{
+    Interf1 o1 = new Cls1();
+    Interf2 o2 = new Cls2();
+    List<Interf1> x = Cons(o1,Cons(o2,Nil));
+}

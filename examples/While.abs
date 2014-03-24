@@ -1,0 +1,13 @@
+module While;
+
+{
+ Int j = 3;
+ Int i = 10;
+ Int k = 0;
+ while (j <= 10) {
+     j = j+1;
+     k = k + 1;
+ }
+ assert (j == 11);
+ assert (k == 8);
+}

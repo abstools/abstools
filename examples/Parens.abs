@@ -1,0 +1,7 @@
+module Parens;
+
+def Int f() = (3 + 4) * 5;
+
+{
+
+}

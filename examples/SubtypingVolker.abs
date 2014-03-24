@@ -1,0 +1,10 @@
+module SubtypingVolker;
+
+interface A { }
+interface B extends A { }
+class C implements B { }
+
+{
+    B b = new C();
+    List<A> bs = Cons(b,Nil);
+}

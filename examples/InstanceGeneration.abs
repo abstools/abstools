@@ -1,0 +1,33 @@
+module InstanceGeneration;
+
+interface Interf1 {
+    Unit method1();
+}
+
+interface Interf2 extends Interf1 {
+    Unit method2();
+}
+
+interface Interf3 extends Interf2 {
+    Unit method3();
+}
+
+
+class Cls1 implements Interf3 {
+    Unit method1() {
+        }
+    Unit method2() {
+        }
+    Unit method3() {
+        }
+}
+
+interface A { }
+interface B extends A { }
+class C implements B { }
+
+
+{
+
+
+}
