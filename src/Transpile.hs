@@ -3,21 +3,17 @@
 module Main where
 
 import Conf
-import ParABS (myLexer, pProgram)
+import Utils (parseABSFiles)
 import qualified AbsABS as ABS
 import qualified Language.Haskell.Exts.Syntax as HS
 import Language.Haskell.Exts.SrcLoc (noLoc)
 import Language.Haskell.Exts.Pretty (prettyPrint)
-import ErrM
-
-import Data.List (isSuffixOf)
-import System.Directory (getDirectoryContents, doesDirectoryExist, doesFileExist)
-import System.FilePath ((</>), replaceExtension)
-import Control.Monad (when, liftM)
-import Data.List (intersperse, nub, union, findIndices, (\\))
+import Control.Monad (liftM)
+import Data.List (intersperse, nub, findIndices)
 import Data.Char (toLower)
 import Data.Maybe (mapMaybe)
-import Data.Tuple (swap)
+
+import System.FilePath (replaceExtension)
 
 import qualified Data.Map as M
 
@@ -27,30 +23,6 @@ data ModuleST = ModuleST {
       hierarchy :: M.Map ABS.TypeIdent [ABS.QualType], -- Interface -> Extends
       methods :: M.Map ABS.TypeIdent [ABS.Ident]       -- Interface -> Methods
     } deriving (Show)
-
-
-parseABSFiles :: FilePath -> IO [(FilePath, ABS.Program)]
-parseABSFiles fileOrDir = do
-  isdir <- doesDirectoryExist fileOrDir
-  if isdir
-    then do
-      -- TODO: goes only 1 level deep in the directory, maybe FIX later
-      contents <- getDirectoryContents fileOrDir
-      let absFiles = filter (isSuffixOf ".abs") contents
-      mapM (\ relativeFile -> parseABSFile (fileOrDir </> relativeFile)) absFiles
-    else liftM return $ parseABSFile fileOrDir
-
-parseABSFile :: FilePath -> IO (FilePath, ABS.Program)
-parseABSFile absFilePath = do
-  isfile <- doesFileExist absFilePath
-  when (not isfile) $ error "ABS file does not exist"
-  absSource <- readFile absFilePath
-  let parseABS = pProgram $ myLexer absSource
-  case parseABS of
-    Ok res -> do
-      writeFile (replaceExtension absFilePath ".ast") (show  res)
-      return (absFilePath, res)
-    Bad _errorString -> error "Error in parsing" -- TODO: move to exceptions
 
 main :: IO ()
 main = do
