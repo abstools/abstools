@@ -46,6 +46,6 @@ executable abs2haskell
 test-suite test
   type:                exitcode-stdio-1.0
   main-is:             Test.hs
-  build-depends:       base, test-framework, test-framework-hunit, test-framework-th, HUnit
+  build-depends:       base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts, monad-coroutine, test-framework, test-framework-hunit, test-framework-th, HUnit
   ghc-options:
   hs-source-dirs:      src, test                        
