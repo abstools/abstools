@@ -70,8 +70,9 @@ main = do
                                                HS.Ident "ExistentialQuantification", -- for heterogenous collections
                                                HS.Ident "MultiParamTypeClasses", -- for subtyping
                                                HS.Ident "ScopedTypeVariables" -- for inlining type annotations
-                                                 
-                     ]] 
+                                              ]
+                     , HS.OptionsPragma noLoc (Just HS.GHC) "-Werror -fforce-recomp -fwarn-missing-methods -fno-warn-missing-fields"
+                     ] 
                      Nothing 
                      Nothing 
                      [
