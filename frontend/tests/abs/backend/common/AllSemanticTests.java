@@ -14,6 +14,7 @@ import org.junit.runners.Suite;
     FunctionalTests.class,
     ModuleSystemTests.class, 
     ObjectTests.class, 
+    RollbackTests.class,
     PrimitiveTypes.class, 
     StdLibTests.class, 
     StmtTests.class, 
