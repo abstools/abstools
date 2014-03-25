@@ -51,4 +51,9 @@ public class JavaTestDriver implements BackendTestDriver {
         assertEquals(true, res);
     }
 
+    @Override
+    public boolean hasRollbacks() {
+        return false;
+    }
+
 }

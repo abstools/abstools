@@ -8,11 +8,13 @@ import abs.frontend.ast.Model;
 
 public interface BackendTestDriver {
 
-    public abstract void assertEvalEquals(String absCode, boolean value) throws Exception;
+    public void assertEvalEquals(String absCode, boolean value) throws Exception;
 
-    public abstract void assertEvalFails(String absCode) throws Exception;
+    public void assertEvalFails(String absCode) throws Exception;
 
-    public abstract void assertEvalTrue(String absCode) throws Exception;
+    public void assertEvalTrue(String absCode) throws Exception;
     
-    public abstract void assertEvalTrue(Model m) throws Exception;
+    public void assertEvalTrue(Model m) throws Exception;
+    
+    public boolean hasRollbacks();
 }

@@ -43,4 +43,9 @@ public class JavaDynamicTestDriver implements BackendTestDriver {
         boolean res = javaTest.runJavaAndTestResult(javaCode, false);
         assertEquals(true, res);
     }
+
+    @Override
+    public boolean hasRollbacks() {
+        return false;
+    }
 }

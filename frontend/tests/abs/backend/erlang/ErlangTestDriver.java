@@ -190,6 +190,11 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             }
         }        
     }
+
+    @Override
+    public boolean hasRollbacks() {
+        return true;
+    }
 }
 
 class TimeoutThread implements Runnable {
