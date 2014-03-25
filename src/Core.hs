@@ -8,7 +8,7 @@ import qualified Data.Map.Strict as M (empty, insertWith, updateLookupWithKey)
 import Control.Concurrent.MVar (putMVar)
 import Control.Concurrent.Chan (newChan, readChan, writeChan, writeList2Chan)
 import Control.Monad.Trans.Class
-import qualified Control.Monad.Trans.RWS as RWS (runRWST, execRWST, modify)
+import qualified Control.Monad.Trans.RWS as RWS (runRWST, execRWST, modify, RWST, withRWST)
 import Control.Monad.Coroutine
 import Control.Monad.Coroutine.SuspensionFunctors (Yield (..))
 import System.Exit (exitSuccess)
@@ -100,5 +100,6 @@ main_is mainABS = do
   loop sleepingF sleepingO 1
 
 
-
-
+-- util function, used in code generation
+withReaderT :: (r' -> r) -> RWS.RWST r w s m a -> RWS.RWST r' w s m a
+withReaderT f r = RWS.withRWST (\ r s -> (f r, s)) r
