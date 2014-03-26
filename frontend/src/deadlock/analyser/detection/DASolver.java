@@ -126,7 +126,7 @@ public class DASolver {
                     lampMap.get(mName).setFirst(l.getW());
                     lampMap.get(mName).setSecond(l.getWPrime());
                     lampMap.get(mName).setLastBFresh(subFresh);
-                }else /*if((((TermStructured) contr).getConstructor()).equals("ContractSeq"))*/{					
+                }else /*if((((TermStructured) contr).getConstructor()).equals("ContractSeq"))*/{                                        
                     DoubleLamp l = wSeq(mName, (Contract) contr, subFresh, false);
                     lampMap.get(mName).setFirst(l.getW());
                     lampMap.get(mName).setSecond(l.getWPrime());
@@ -148,10 +148,10 @@ public class DASolver {
             
             /*if((lampMap.get("Main.main").getFirst().hasNewCycle() && !lampMap.get("Main.main").getFirst().hasNewCycleAwait())  || (lampMap.get("Main.main").getSecond().hasNewCycle() && !lampMap.get("Main.main").getSecond().hasNewCycleAwait()) ){
                                 moreInfoMainCycle();
-				return;
-	    }*/
+                                return;
+            }*/
             
-            if(lampMap.get("Main.main").getFirst().hasNewCycleGet()  || lampMap.get("Main.main").getSecond().hasNewCycleGet() ){
+            if(lampMap.get("Main.main").getFirst().hasCycleGet()  || lampMap.get("Main.main").getSecond().hasCycleGet() ){
                 moreInfoMainCycle();
                 return;
             }
@@ -251,11 +251,11 @@ public class DASolver {
             //if I have cycle in main I stop the analysis
            
             /*if((lampMap.get("Main.main").getFirst().hasNewCycle() && !lampMap.get("Main.main").getFirst().hasNewCycleAwait() ) || (lampMap.get("Main.main").getSecond().hasNewCycle() && ! lampMap.get("Main.main").getSecond().hasNewCycleAwait())){
-				moreInfoMainCycle();
-				return;
-	    }*/
+                                moreInfoMainCycle();
+                                return;
+            }*/
 
-            if(lampMap.get("Main.main").getFirst().hasNewCycleGet() || lampMap.get("Main.main").getSecond().hasNewCycleGet() ){
+            if(lampMap.get("Main.main").getFirst().hasCycleGet()  || lampMap.get("Main.main").getSecond().hasCycleGet() ){
                 moreInfoMainCycle();
                 return;
             }
@@ -271,7 +271,7 @@ public class DASolver {
 
             if(newNumberOfDep.equals(this.nOfDep)) return;
             else this.nOfDep = newNumberOfDep;
-        }		
+        }               
     }
 
 
@@ -280,22 +280,22 @@ public class DASolver {
     // The rule W-Gzero of the Analysis
     public DoubleLamp wGet(String mName, ContractElementGet cGet, VarSubstitution bFresh, Boolean sat){
         // it will contains the result of the application of the rule
-        DoubleLamp l = new DoubleLamp();		
+        DoubleLamp l = new DoubleLamp();                
         // here we extract the 2 variable from the contractGet and apply on them the fresh renaming (bTilde)
         GroupName a = cGet.whosWaiting();
         GroupName b = cGet.whosWaited();
         a = bFresh.apply(a);
-        b = bFresh.apply(b);		
+        b = bFresh.apply(b);            
         // here we calculate the solution of the application of the rule
         Lamp w = new Lamp();
         Lamp wPrime = new Lamp();
         w.addCouple(a, b);
         //I learn reading again the paper that only the first lamp obtain the couple
-        //wPrime.addCouple(a, b);		
+        //wPrime.addCouple(a, b);               
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
-        return l;	
+        return l;       
     }
 
     // The rule W-Azero of the Analysis
@@ -321,7 +321,7 @@ public class DASolver {
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
-        return l;	
+        return l;       
     }
 
     // The rule W-Invk of the Analysis
@@ -415,7 +415,7 @@ public class DASolver {
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
-        return l;	
+        return l;       
     }
     
     // The rule W-Invk of the Analysis
@@ -723,7 +723,7 @@ public class DASolver {
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
-        return l;	
+        return l;       
     }
 
     // The rule W-AInvk of the Analysis
@@ -832,7 +832,7 @@ public class DASolver {
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
-        return l;	
+        return l;       
     }
 
     // The rule W-Union of the Analysis
@@ -915,11 +915,11 @@ public class DASolver {
     }
 
     public void moreInfoMainCycle(){
-        if(lampMap.get("Main.main").getFirst().hasNewCycleGet() || lampMap.get("Main.main").getSecond().hasNewCycleGet()){
+        if(lampMap.get("Main.main").getFirst().hasCycleGet() || lampMap.get("Main.main").getSecond().hasCycleGet()){
             this.deadlock = true;
             return;
         }
-        if(lampMap.get("Main.main").getFirst().hasNewCycleAwait() || lampMap.get("Main.main").getSecond().hasNewCycleAwait()){
+        if(lampMap.get("Main.main").getFirst().hasCycleAwait() || lampMap.get("Main.main").getSecond().hasCycleAwait()){
             this.cylceOfAwait = true;
             return;
         }
@@ -927,7 +927,7 @@ public class DASolver {
 
    
     public Boolean isCycleMain(){
-        if((lampMap.get("Main.main").getFirst().hasNewCycle() && !lampMap.get("Main.main").getFirst().hasNewCycleGet() && !lampMap.get("Main.main").getFirst().hasNewCycleAwait()) || (lampMap.get("Main.main").getSecond().hasNewCycle() && !lampMap.get("Main.main").getSecond().hasNewCycleGet() && !lampMap.get("Main.main").getSecond().hasNewCycleAwait()))
+        if((lampMap.get("Main.main").getFirst().hasCycle() && !lampMap.get("Main.main").getFirst().hasCycleGet() && !lampMap.get("Main.main").getFirst().hasCycleAwait()) || (lampMap.get("Main.main").getSecond().hasCycle() && !lampMap.get("Main.main").getSecond().hasCycleGet() && !lampMap.get("Main.main").getSecond().hasCycleAwait()))
             return true;
         else
             return false;
@@ -959,7 +959,7 @@ public class DASolver {
             }
         }
 
-        return sub;	
+        return sub;     
     }
 
     public String toString(){

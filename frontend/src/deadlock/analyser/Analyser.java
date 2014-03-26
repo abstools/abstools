@@ -135,7 +135,7 @@ public class Analyser {
     out.println("Saturation:                   " + solver.isSatured());
     out.println("Deadlock in Main:             " + solver.isDeadlockMain());
     //System.out.println("Await cycle in Main? " + solver.isAwaitLoopMain());
-    out.println("Possible Livelock in Main:    " + solver.isCycleMain());
+    out.println("Possible Livelock in Main:    " + solver.isAwaitLoopMain());
     }
 }
 

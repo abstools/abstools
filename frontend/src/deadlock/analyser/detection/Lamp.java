@@ -4,10 +4,10 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.TreeSet;
 
-import abs.frontend.ast.ASTNode;
-
 import deadlock.analyser.factory.GroupName;
 //import deadlock.constraints.term.TermVariable;
+
+//TODO ABEL: DELETE COMMENTS, REVIEW DONE
 
 public class Lamp {
 
@@ -68,23 +68,25 @@ public class Lamp {
 
     //add state to lamp
     public void addState(State s){
-        Boolean b = false;
+       
         for(State sthis : this.states){
-            b = b || sthis.containState(s);
+            if(sthis.containState(s))
+                return;
         }
-        if(b) return;
+        
         this.states.add(s);
     }
 
+    //TODO ABEL: check correctness
     //minimize a lamp
     public Lamp minimize(){
         Lamp l = new Lamp();
         //LinkedList<State> s = new LinkedList<State>();
         for(int i = 0; i< this.states.size(); i++){
             boolean contained = false;
-            for(int j = 0; j < this.states.size(); j++){
+            for(int j = 0; j < l.states.size(); j++){
                 if(i==j) continue;
-                if(this.states.get(j).containState(this.states.get(i))) contained = true;
+                if(l.states.get(j).containState(this.states.get(i))) contained = true;
             }
             if(!contained)
                 l.addState(this.states.get(i));
@@ -94,38 +96,41 @@ public class Lamp {
 
     // add couple of dependencies (get) on a Lamp, it means to add that couple to all the states in the lamp
     public void addCouple(GroupName a, GroupName b){
+        if(states.isEmpty()){
+            states.add(new State());
+        }
         for(State s : states){
             s.addCouple(a, b);
         }
-        if(states.isEmpty()){
-            State s = new State();
-            s.addCouple(a, b);
-            states.add(s);
-        }
+        
     }
 
     // add couple of dependencies (await) on a Lamp, it means to add that couple to all the states in the lamp
     public void addCoupleAwait(GroupName a, GroupName b){
+        if(states.isEmpty()){
+            states.add(new State());
+        }
+        
         for(State s : states){
             s.addCoupleAwait(a, b);
         }
-        if(states.isEmpty()){
-            State s = new State();
-            s.addCoupleAwait(a, b);
-            states.add(s);
-        }
+       
     }
 
 
 
     // add a Lamp l to this lamp
     public void addLamp(Lamp l){
-        LinkedList<State> sts = l.getStates();
-        for(State s : sts){
+        //check all l states and add those that are not present in the current states
+        for(State s : l.states){
             Boolean contained = false;
             for(State s1 : this.states){
-                contained = contained || s1.containState(s);
+                //if any current state contains s there is no need to continue searching
+                if(contained = s1.containState(s))
+                    break;
             }
+            
+            //if s is not contained then add the state
             if(!contained){
                 State sNew = new State();
                 sNew.addState(s);
@@ -134,11 +139,13 @@ public class Lamp {
         }
     }
 
+    //TODO ABEL: Check correctness
     // parallel between this Lamp and Lamp l
     public void parallel(Lamp l){
-        LinkedList<State> sts = l.getStates();
+        
         // if Lamp l is empty, the result of parallel is this
-        if(sts.isEmpty()) return;
+        if(l.states.isEmpty()) return;
+        
         // if Lamp this is empty, the result of parallel is l
         if(this.states.isEmpty()){
             this.addLamp(l);
@@ -149,20 +156,22 @@ public class Lamp {
         //we need to calculate the cartesian product
         LinkedList<State> cartesianState = new LinkedList<State>();
         for(State s1 : this.states){
-            for(State s2 : sts){
+            for(State s2 : l.states){
                 State s3 = new State();
                 s3.addState(s1);
                 s3.addState(s2);
                 cartesianState.add(s3);
             }
         }
-        //in 'this' we already have the state of this, ok, we surely have to add the states of l
-        this.addLamp(l);
-        //now we have to add the cartesian product
-        for(State s : cartesianState){
-            this.addState(s);
-        }
-        //this.states.addAll(cartesianState);
+//        //in 'this' we already have the state of this, ok, we surely have to add the states of l
+//        this.addLamp(l);
+//        //now we have to add the cartesian product
+//        for(State s : cartesianState){
+//            this.addState(s);
+//        }
+//        //this.states.addAll(cartesianState);
+        
+        this.states = cartesianState;
     }
 
 
@@ -214,32 +223,32 @@ public class Lamp {
     //********************************************************************************************
     
     
-    
-    public Boolean hasNewCycle(){
-        Boolean res = false;
-        for(State st : states)
-            res = res || st.HasCycle();
-        return res;
+    //check for Cycle
+    public Boolean hasCycle(){
+        //there is a Cycle when one of the two cycle types is present
+        return hasCycleGet() || hasCycleAwait();
     }
 
 
    
-    
-    public Boolean hasNewCycleGet(){
-        Boolean res = false;
+    //check just for Get Cycle
+    public Boolean hasCycleGet(){
+        //it has cycle if there is any cyclic state
         for(State st : states)
-            res = res || st.HasCycleGet();
-        return res;
+            if(st.HasCycleGet())
+                return true;
+        return false;
     }
 
     
   
-    
-    public Boolean hasNewCycleAwait(){
-        Boolean res = false;
+    //check just for Await Cycle
+    public Boolean hasCycleAwait(){
+        //it has cycle if there is any cyclic state
         for(State st : states)
-            res = res || st.HasCycleAwait();
-        return res;
+            if(st.HasCycleAwait())
+                return true;
+        return false;
     }
     
 

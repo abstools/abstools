@@ -1,19 +1,15 @@
 package deadlock.analyser.detection;
 
-import deadlock.analyser.factory.Contract;
-import deadlock.analyser.factory.GroupName;
-import deadlock.analyser.factory.MethodInterface;
-import deadlock.analyser.factory.Record;
-import deadlock.constraints.term.Term;
-//import deadlock.constraints.term.TermStructured;
-import deadlock.analyser.factory.MethodContract;
-//import deadlock.constraints.term.TermVariable;
-//import deadlock.constraints.term.Variable;
-
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import deadlock.analyser.factory.Contract;
+import deadlock.analyser.factory.GroupName;
+import deadlock.analyser.factory.MethodContract;
+import deadlock.analyser.factory.MethodInterface;
+import deadlock.analyser.factory.Record;
+import deadlock.constraints.term.Term;
 
 
 // a BigLamp is a quadruple <methodName, methodContract, Lamp w, Lamp wPrime>
@@ -63,16 +59,13 @@ public class BigLamp {
             this.aTilde.addAll(_this.fn());
             for(Record t : args){
                 this.bTilde.removeAll(t.fn());
-                this.aTilde.addAll(t.fn());
+               
             }
         }
         else {
             this.bTilde = new TreeSet<GroupName>();
             this.aTilde = new TreeSet<GroupName>();
         }
-
-        //System.out.println("DEBUG: bTilde = " + bTilde);
-        //System.out.println("DEBUG: aTilde = " + aTilde);
 
     }
 
@@ -131,6 +124,28 @@ public class BigLamp {
         return fv;
     }
 
+    //check for Cycle
+    public Boolean hasCycle(){
+        //there is a Cycle when one of the two cycle types is present
+        return hasCycleGet() || hasCycleAwait();
+    }
+
+
+   
+    //check just for Get Cycle
+    public Boolean hasCycleGet(){
+        //it has cycle if any of the two lamps is cyclic
+        return w.hasCycleGet() || wPrime.hasCycleGet();
+    }
+
+    
+  
+    //check just for Await Cycle
+    public Boolean hasCycleAwait(){
+      //it has cycle if any of the two lamps is cyclic
+        return w.hasCycleAwait() || wPrime.hasCycleAwait();
+    }
+    
     //toString method
     public String toString(){
         return "< \n" + this.w.toString() + " , \n" + this.wPrime.toString() + ">";

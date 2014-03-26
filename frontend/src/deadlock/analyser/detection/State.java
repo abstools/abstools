@@ -1,19 +1,18 @@
 package deadlock.analyser.detection;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
-import java.util.Stack;
 import java.util.TreeSet;
 
-import abs.frontend.ast.ASTNode;
 import deadlock.analyser.factory.GroupName;
 //import deadlock.constraints.term.TermVariable;
 
 //Class State implement the structure that contains a "list of couple (a,b)", this list is implement like an HashMap, the key is a TermVariable and the value is a 
 //list of other TermVariable which appear in the right side of a couple dependency.
+
+//TODO ABEL: review DONE
 
 public class State {
 
@@ -376,7 +375,7 @@ public class State {
 
     private static HashMap<GroupName, HashSet<GroupName>> RefreshHashMap(VarSubstitution s, HashMap<GroupName, HashSet<GroupName>> toRefresh) {
         
-        HashMap<GroupName, HashSet<GroupName>> temp = new HashMap<GroupName, HashSet<GroupName>>();
+        HashMap<GroupName, HashSet<GroupName>> temp = new HashMap<GroupName, HashSet<GroupName>>(toRefresh.size());
         
         for(GroupName a: toRefresh.keySet())
         {
@@ -447,12 +446,14 @@ public class State {
            visited.add(current);
            recorded.add(current);
            
-           for(GroupName b : graph.get(current))
-           {
-               if(!visited.contains(b) && HasCycleUtil(graph, recorded, visited, b))
-                   return true;
-               if(recorded.contains(b))
-                   return true;
+           if(graph.containsKey(current)){
+               for(GroupName b : graph.get(current))
+               {
+                   if(!visited.contains(b) && HasCycleUtil(graph, recorded, visited, b))
+                       return true;
+                   if(recorded.contains(b))
+                       return true;
+               }
            }
        }
        recorded.remove(current);
