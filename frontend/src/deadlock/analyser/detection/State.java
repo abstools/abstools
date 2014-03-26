@@ -447,12 +447,14 @@ public class State {
            visited.add(current);
            recorded.add(current);
            
-           for(GroupName b : graph.get(current))
-           {
-               if(!visited.contains(b) && HasCycleUtil(graph, recorded, visited, b))
-                   return true;
-               if(recorded.contains(b))
-                   return true;
+           if(graph.containsKey(current)){
+               for(GroupName b : graph.get(current))
+               {
+                   if(!visited.contains(b) && HasCycleUtil(graph, recorded, visited, b))
+                       return true;
+                   if(recorded.contains(b))
+                       return true;
+               }
            }
        }
        recorded.remove(current);
