@@ -2,12 +2,6 @@
 
 aspect InitChecker {
 
-    refine TypeCheckerExtension public void FieldDecl.typeCheck(SemanticErrorList l) {
-      refined(l);
-      if (hasInitExp())
-        getInitExp().checkLegalInit(l);
-    }
-
     refine TypeCheckerExtension public void ClassDecl.typeCheck(SemanticErrorList l) {
       refined(l);
       if (hasInitBlock())
@@ -39,8 +33,6 @@ aspect InitChecker {
        l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Get expressions"));
     }
     
-    @Override
-    void TypedVarOrFieldDecl.checkLegalInit(SemanticErrorList l) {}
     @Override
     void FieldDecl.checkLegalInit(SemanticErrorList l) {
         if (hasInitExp()) {
