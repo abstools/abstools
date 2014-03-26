@@ -20,4 +20,17 @@ public class RollbackTests extends SemanticTests {
                 +      "class C implements I { Bool r = True; Unit test() { r = False; abort \"\"; } Bool getR() { return this.r;}}\n"
                 +       "{ I o = new C(); Fut<Unit> f = o!test(); await f?; Bool testresult = o.getR(); }");
     }
+    
+    @Test
+    public void rollbackOverCall1() {
+        assertEvalTrue("interface I { Unit test(Bool fail); Bool getR(); }\n"
+                +      "class C implements I { Bool r = True; Unit test(Bool fail) { I o2 = new C(); r = False; if (fail) abort \"\"; else o2.test(True); } Bool getR() { return this.r;}}\n"
+                +       "{ I o = new C(); Fut<Unit> f = o!test(False); await f?; Bool testresult = o.getR(); }");
+    }
+    @Test
+    public void rollbackOverCall2() {
+        assertEvalTrue("interface I { Unit test(Bool fail); Bool getR(); }\n"
+                +      "class C implements I { Bool r = True; Unit test(Bool fail) { I o2 = new C(); r = True; if (fail) abort \"\"; else o2!test(True); } Bool getR() { return this.r;}}\n"
+                +       "{ I o = new C(); Fut<Unit> f = o!test(False); await f?; Bool testresult = o.getR(); }");
+    }
 }
