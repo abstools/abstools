@@ -218,7 +218,14 @@ public class JavaBackendTest extends ABSTest {
         // code =
         // "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; "
         // + code;
-        model = assertParse(code, config);
+        final int len = config.length;
+        Config[] c2 = new Config[len+2];
+        for (int i =0; i<len; i++) {
+            c2[i] = config[i];
+        }
+        c2[len] = Config.TYPE_CHECK;
+        c2[len+1] = Config.WITH_LOC_INF;
+        model = assertParse(code, c2);
         if (model.hasErrors()) {
             fail(model.getErrors().get(0).getHelpMessage());
         } else {

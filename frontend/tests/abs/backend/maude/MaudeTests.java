@@ -86,16 +86,7 @@ public class MaudeTests extends ABSTest {
     }
 
     protected String getMaudeCode(String absCode, MaudeCompiler.SIMULATOR module) throws Exception {
-        Model model = assertParseOk(absCode, Config.WITH_STD_LIB, Config.WITHOUT_MODULE_NAME);
-
-        if (model.hasErrors()) {
-            Assert.fail(model.getErrors().getFirst().getHelpMessage());
-            return null;
-        }
-        if (model.hasTypeErrors()) {
-            Assert.fail(model.getTypeErrors().getFirst().getHelpMessage());
-            return null;
-        }
+        Model model = assertParseOk(absCode, Config.WITH_STD_LIB, Config.WITHOUT_MODULE_NAME, Config.TYPE_CHECK, Config.WITH_LOC_INF);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         // TODO: handle delta generation / testing / flattening
         model.generateMaude(new PrintStream(out), module, 100, 0);
