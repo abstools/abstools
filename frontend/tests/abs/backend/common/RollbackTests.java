@@ -42,14 +42,36 @@ public class RollbackTests extends SemanticTests {
         // Aborting while awaiting shouldn't change a thing.
         assertEvalTrue("interface I { Unit test(Bool fail); Bool getR(); }\n"
                 +      "class C implements I { Bool r = True; Unit test(Bool fail) { I o2 = new C(); r = True; if (fail) abort \"\"; else await o2!test(True); } Bool getR() { return this.r;}}\n"
-                +       "{ I o = new C(); Fut<Unit> f = o!test(False); await f?; Bool testresult = o.getR(); }");
+                +       "{ I o = new local C(); Fut<Unit> f = o!test(False); await f?; Bool testresult = o.getR(); }");
+    }
+
+    /* These two tests should create a runtime error WITHIN an Await.
+     * We expect the local state to be rolled back.
+     * - Maude doesn't generate runtime errors for that (yet)
+     * - Erlang probably should?
+     * We test:
+     * - div-by-0
+     * - unmatched pattern
+     * TODO: returns null in Erlang
+     */
+    @Test
+    public void rollbackRTE1() {
+        assertEvalTrue("interface I { Unit test(); Bool getR(); }\n"
+                +      "class C implements I { Bool r = True; Unit test() { r = False; await r && 1/0 > 0; } Bool getR() { return this.r;}}\n"
+                +       "{ I o = new local C(); Fut<Unit> f = o!test(); await f?; Bool testresult = o.getR(); }");
     }
 
     @Test
-    public void rollbackAwait() {
-        // Maude doesn't generate runtime errors for that (yet)
+    public void rollbackRTE2() {
         assertEvalTrue("interface I { Unit test(); Bool getR(); }\n"
                 +      "class C implements I { Bool r = True; Unit test() { r = False; await r && 1/0 > 0; } Bool getR() { return this.r;}}\n"
-                +       "{ I o = new C(); Fut<Unit> f = o!test(); await f?; Bool testresult = o.getR(); }");
+                +       "{ I o = new C(); Fut<Unit> f = o!test(); await f?; Bool testresult = await o!getR(); }");
+    }
+
+    @Test
+    public void rollbackRTE3() {
+        assertEvalTrue("interface I { Unit test(); Bool getR(); }\n"
+                +      "class C implements I { Bool r = True; Unit test() { r = False; await r && head(Nil); } Bool getR() { return this.r;}}\n"
+                +       "{ I o = new C(); Fut<Unit> f = o!test(); await f?; Bool testresult = await o!getR(); }");
     }
 }
