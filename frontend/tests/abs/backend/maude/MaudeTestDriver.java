@@ -51,6 +51,6 @@ public class MaudeTestDriver implements BackendTestDriver {
 
     @Override
     public boolean hasRollbacks() {
-        return false;
+        return true;
     }
 }
