@@ -111,7 +111,7 @@ public class Analyser {
 
     /* 2. Analyze the contract */
     
-    out.println("\n\n\n\n\n\n\n\n\n\n\n");
+    if(verbose) out.println("\n\n\n\n\n\n\n\n\n\n\n");
     Map<String, Term> cct = new HashMap<String, Term>();
     
     for(String k : methodMap.keySet()){
@@ -122,14 +122,14 @@ public class Analyser {
     Term contract;
     for(String k : cct.keySet()){
         contract = cct.get(k);
-        out.println("    \"" + k + "\": " + ((contract != null) ? (contract.toString()) : ("null")));
+        if(verbose) out.println("    \"" + k + "\": " + ((contract != null) ? (contract.toString()) : ("null")));
     }
     
-    out.println("\n\n\n\n\n\n\n\n\n\n\n");
+    if(verbose) out.println("\n\n\n\n\n\n\n\n\n\n\n");
     DASolver solver = new DASolver(df, cct, nbIteration/*TODO, out*/);
 
     solver.computeSolution();
-    out.println(solver.toString());
+    if(verbose) out.println(solver.toString());
             
     out.println("### LOCK INFORMATION RESULTED BY THE ANALYSIS ###\n");
     out.println("Saturation:                   " + solver.isSatured());
