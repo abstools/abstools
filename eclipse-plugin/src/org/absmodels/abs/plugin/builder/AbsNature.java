@@ -341,7 +341,7 @@ public class AbsNature implements IProjectNature {
 		return !ignore || !target.getProjectRelativePath().isPrefixOf(resource.getProjectRelativePath());
 	}
 
-	public static void addMarker(IFile file, ParserError err) throws CoreException {
+	public static void addMarker(IResource file, ParserError err) throws CoreException {
       int startline   = err.getLine()-1;
       int startcolumn = err.getColumn()-1;
       int endline;

@@ -4,11 +4,9 @@
  */
 package abs.backend.erlang;
 
-import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import abs.backend.common.SemanticTests;
 
 /**
  * Note that this class doesn't have a nullary constructor and can't be run as a
@@ -18,7 +16,7 @@ public class ErlangErrorHandlingTests extends ErlangTestDriver {
 
     @BeforeClass
     public static void checkRequired() {
-        Assert.assertTrue(SemanticTests.checkErlang());
+        Assume.assumeTrue(checkErlang());
     }
 
     private final static String CLASS_WITH_METHOD = "module BackendTest; interface I { Bool ok(); Bool a(); Bool d(); }"

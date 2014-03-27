@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.absmodels.abs.plugin.editor.ABSEditor;
+import org.absmodels.abs.plugin.editor.contentassist.ABSCompletionProcessor.Qualifier;
 import org.absmodels.abs.plugin.editor.outline.ABSContentOutlineUtils;
 import org.absmodels.abs.plugin.util.InternalASTNode;
 import org.eclipse.jface.text.BadLocationException;
@@ -45,9 +46,9 @@ public class ProposalFactory{
 
 		private String qualifier;
 		private int documentOffset;
-		private IDocument doc;
+		private final IDocument doc;
 		private List<ICompletionProposal> proposals;
-		private ABSEditor editor;
+		private final ABSEditor editor;
 
 		/**
 		 * Initializes the {@link ProposalFactory} by parsing all abs files in the current project and
@@ -58,10 +59,10 @@ public class ProposalFactory{
 		 * @param editor the currently open editor
 		 * @param proposals the list of proposals to be filled
 		 */
-		public ProposalFactory(String qualifier, int documentOffset, IDocument doc, ABSEditor editor,
+		public ProposalFactory(Qualifier qualifier, IDocument doc, ABSEditor editor,
 				List<ICompletionProposal> proposals){
-			this.qualifier = qualifier;
-			this.documentOffset = documentOffset;
+			this.qualifier = qualifier.getQualifier();
+			this.documentOffset = qualifier.getOffset();
 			this.doc = doc;
 			this.proposals = proposals;
 			this.editor = editor;
@@ -169,16 +170,17 @@ public class ProposalFactory{
 			ArrayList<ICompletionProposal> tempNonqual = new ArrayList<ICompletionProposal>();
 			ArrayList<ICompletionProposal> tempQual = new ArrayList<ICompletionProposal>();
 			ModuleDecl moddecl = node.getModuleDecl();
-			if(moddecl == null){
-				throw new IllegalArgumentException("Node is not in a Module!");
-			}
+			// Only crash when debugging:
+			assert moddecl != null : "Node is not in a Module!";
+			if (moddecl == null) return;
+
 			Map<KindedName, ResolvedName> visibleNames = moddecl.getVisibleNames();
 			
 			for(Entry<KindedName, ResolvedName> kentry : visibleNames.entrySet()){
 			        KindedName kname = kentry.getKey();
 				if(qualifierIsPrefixOf(kname.getName()) && kname.getKind()==Kind.CLASS){
 					CompletionProposal proposal = makeVisibleNameProposal(kentry.getValue(), kname);
-					if(isQualified(kname)){
+					if(kname.isQualified()){
 						tempQual.add(proposal);
 					} else {
 						tempNonqual.add(proposal);
@@ -321,7 +323,7 @@ public class ProposalFactory{
 				        KindedName kname = kentry.getKey();
 					if(qualifierIsPrefixOf(kname.getName())){
 						CompletionProposal proposal = makeVisibleNameProposal(kentry.getValue(), kname);
-						if(isQualified(kname)){
+						if(kname.isQualified()){
 							tempQual.add(proposal);
 						} else {
 							tempNonqual.add(proposal);
@@ -361,14 +363,16 @@ public class ProposalFactory{
 			             }
 			         }
 			         break;
+			     default:
+				     break;
 			}
             CompletionProposal proposal = new CompletionProposal(replacement, documentOffset, qualifier.length(),
 					cursorposition, getImageForASTNode(decl), visibleName, null, getAdditionalProposalInfo(decl));
 			return proposal;
 		}
 
-		private String getAdditionalProposalInfo(Decl decl){
-			return decl.getModuleDecl().getName()+"."+decl.getName();
+		private String getAdditionalProposalInfo(Decl decl){			
+			return decl.qualifiedName();
 		}
 
 		private String getAdditionalProposalInfo(MethodSig methodsig){
@@ -378,9 +382,4 @@ public class ProposalFactory{
 		private String getAdditionalProposalInfo(TypedVarOrFieldDecl vofdecl){
 			return ABSContentOutlineUtils.formatTypedVarOrFieldDecl(vofdecl).toString();
 		}
-
-		private boolean isQualified(KindedName kname){
-			return kname.getName().indexOf('.')>=0;
-		}	
-		
-	}
+}

@@ -1,0 +1,39 @@
+aspect ConstantFolding {
+
+    rewrite MinusExp {
+        when (getOperand().isConstant()
+              && getOperand().getType().isNumericType())
+        to IntLiteral new IntLiteral("-" + ((IntLiteral)getOperand()).getContent());
+    }
+    
+    rewrite MultMultExp {
+        when (getLeft().isConstant() && getRight().isConstant()
+              && getLeft().getType().isNumericType()
+              && getRight().getType().isNumericType())
+        to IntLiteral new IntLiteral(String.valueOf(Integer.parseInt(((IntLiteral)getLeft()).getContent()) * Integer.parseInt(((IntLiteral)getRight()).getContent())));
+    }
+
+    rewrite AddAddExp {
+        when (getLeft().isConstant() && getRight().isConstant()
+              && getLeft().getType().isNumericType()
+              && getRight().getType().isNumericType())
+        to IntLiteral new IntLiteral(String.valueOf(Integer.parseInt(((IntLiteral)getLeft()).getContent()) + Integer.parseInt(((IntLiteral)getRight()).getContent())));
+        when (getLeft().isConstant() && getRight().isConstant()
+              && getLeft().getType().isStringType()
+              && getRight().getType().isStringType())
+            to StringLiteral new StringLiteral((((StringLiteral)getLeft()).getContent()) + ((StringLiteral)getRight()).getContent());
+    }
+
+    rewrite SubAddExp {
+        when (getLeft().isConstant() && getRight().isConstant()
+              && getLeft().getType().isNumericType()
+              && getRight().getType().isNumericType())
+        to IntLiteral new IntLiteral(String.valueOf(Integer.parseInt(((IntLiteral)getLeft()).getContent()) - Integer.parseInt(((IntLiteral)getRight()).getContent())));
+    }
+
+}
+
+
+// Local Variables:
+// mode: java
+// End:

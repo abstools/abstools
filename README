@@ -24,6 +24,9 @@ tools-website  - the content of the tools.hats-project.eu website
 
 maven-support  - Maven plugin for generating Java/Maude from ABS, testing and packaging ABS codes
 
+org.abs-models.releng
+               - Files used by Jenkins for continuous integration
+
 abs-packages   - demonstration and description of how to use ABS packages (with Maven dependencies management)
 
 abs-unit       - demonstration, description and initial ideas about the ABSUnit (a unit testing framework for ABS) (with Maven dependencies management)
@@ -31,3 +34,5 @@ abs-unit       - demonstration, description and initial ideas about the ABSUnit 
 costabs-plugin - The COSTA plugin for ABS
 
 apet-plugin    - The aPET plugin for ABS
+
+sda-plugin     - Bologna Deadlock-checker plugin for ABS

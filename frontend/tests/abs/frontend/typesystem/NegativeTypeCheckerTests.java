@@ -62,8 +62,8 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
-    public void parametericDataTypesIllegalAssignment() {
-        assertTypeErrors("interface I {} interface J extends I {} data Foo<A> = Bar(A); { J j; Foo<I> f = Bar(j); }");
+    public void parametericDataTypesOK() {
+        assertTypeOK("interface I {} interface J extends I {} data Foo<A> = Bar(A); { J j; Foo<I> f = Bar(j); }");
     }
 
     @Test
@@ -363,6 +363,19 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void fnTypecheckNoCrash() {
         assertTypeErrors("def List<String> map2list<A>(Map<String,A> map) =" + "case map {" + "EmptyMap => Nil ;"
                 + "Insert(Pair(b,_), tail) => Cons(b, map2list(tail)) ;" + "};");
+    }
+
+    @Test
+    public void missingConstructorNoSO() {
+        /* Frob not visible, gave once an SO */
+        assertTypeErrors("type Tuple = Map<Int, Int>;"
+                +"def Bool tupleMatches(Tuple tuple, Tuple criterion) ="
+                +"case criterion {"
+                +"  Frob(pair, rest) =>"
+                +"    lookup(tuple, fst(pair)) == Just(snd(pair)) &&"
+                +"    tupleMatches(tuple, rest);"
+                +"  EmptyMap => True;"
+                +"};");        
     }
 
     @Test

@@ -18,7 +18,7 @@ import abs.frontend.ast.*;
  */
 public class ASTPreProcessor {
     
-    public static String FUNCTIONSELECTOR = "selector";
+    public final static String FUNCTIONSELECTOR = "selector";
     
     public CompilationUnit preprocess(CompilationUnit unit) {
         for (ModuleDecl d : unit.getModuleDecls()) {

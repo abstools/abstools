@@ -29,7 +29,7 @@ aspect TypeResolution {
     eq DataTypeDecl.isFuture() = getType().isFutureType();
     eq TypeSynDecl.isFuture() = getType().isFutureType();
 
-    syn Boolean Name.isSimple() = !TypeCheckerHelper.isQualified(getName());
+    syn Boolean Name.isSimple() = getName().indexOf('.') == -1;
 
     syn String Name.getString() = getName();
     syn String Name.getSimpleName() {

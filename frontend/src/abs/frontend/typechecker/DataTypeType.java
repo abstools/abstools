@@ -119,7 +119,7 @@ public class DataTypeType extends Type  {
             return false;
         }
         for (int i = 0; i < numTypeArgs(); i++) {
-            if (!getTypeArg(i).isAssignable(dt.getTypeArg(i), false))
+            if (!getTypeArg(i).isAssignable(dt.getTypeArg(i), true))
                 return false;
         }
         return true;

@@ -7,6 +7,7 @@ it would be the \absinline{Unit} value.
 \NT{Statement}    \defn \NT{CompoundStmt}
                \defc  \NT{VarDeclStmt}
                \defc  \NT{AssignStmt}
+               \defc  \NT{CaseStmt}
                \defc  \NT{AwaitStmt}
                \defc  \NT{SuspendStmt}
                \defc  \NT{SkipStmt}
@@ -75,8 +76,8 @@ Bool b = True;
 The \emph{Assign Statement} assigns a value to a variable or a field.
 
 \begin{abssyntax}
-\NT{AssignStmt} \defn \NT{Variable}\ \TRS{=}\ \NT{PureExp}\ \TRS{;}
-             \defc  \NT{FieldAccess}\ \TRS{=}\ \NT{PureExp}\ \TRS{;}
+\NT{AssignStmt} \defn \NT{Variable}\ \TRS{=}\ \NT{Exp}\ \TRS{;}
+             \defc  \NT{FieldAccess}\ \TRS{=}\ \NT{Exp}\ \TRS{;}
 \end{abssyntax}
 
 \begin{absexample}
@@ -178,12 +179,19 @@ return x;
 \end{absexample}
 
 \section{Expression Statement}
-An \emph{Expression Statement} is a statement that only consists of a single expression. Such statements are only executed for the effect of the expression.
+An \emph{Expression Statement} is a statement that only consists of a
+single expression. Such statements are only executed for the effect of
+the expression.  Expressions that can be used as statements are
+documented in Chapter~\ref{cha:expr-with-side}.
 
 \begin{abssyntax}
-\NT{ExpStmt} \defn \NT{Exp}\ \TRS{;}
+\NT{ExpStmt} \defn \NT{EffExp}\ \TRS{;}
 \end{abssyntax}
 
 \begin{absexample}
 new C(x);
 \end{absexample}
+
+% Local Variables:
+% TeX-master: "absrefmanual"
+% End:

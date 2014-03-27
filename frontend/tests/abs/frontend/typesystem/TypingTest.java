@@ -5,9 +5,7 @@
 package abs.frontend.typesystem;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
@@ -177,7 +175,20 @@ public class TypingTest extends FrontendTest {
         TypeParameter type = (TypeParameter) ((ExpFunctionDef) d.getFunctionDef()).getRhs().getType();
         assertEquals(typeParameter.getName(), type.getDecl().getName());
     }
-    
+
+    @Test
+    public void testFutST1() {
+        assertTypeOK("interface A {} interface B extends A {} interface I { A mA(); B mB(); } { I o = null; Fut<A> f = o!mB(); }");
+    }
+    @Test
+    public void testFutST2() {
+        assertTypeOK("interface A {} interface B extends A {} interface I { A mA(); B mB(); } { I o = null; A f = o.mB(); }");
+    }
+    @Test
+    public void testFutST3() {
+        assertTypeOK("interface A {} interface B extends A {} interface I { A mA(); B mB(); } { I o = null; Fut<B> f = o!mB(); A a = f.get;}");
+    }
+
     @Test
     public void test_DuplicateFeature() {
         assertTypeErrors("productline Bar; features A,A;", ErrorMessage.DUPLICATE_FEATURE);

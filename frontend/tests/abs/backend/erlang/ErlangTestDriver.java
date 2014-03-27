@@ -63,7 +63,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         try {
             f = Files.createTempDir();
             f.deleteOnExit();
-            Model model = assertParseOk(absCode, Config.WITH_STD_LIB);
+            Model model = assertParseOk(absCode, Config.WITH_STD_LIB, Config.TYPE_CHECK, Config.WITHOUT_MODULE_NAME);
             String mainModule = genCode(model, f, true);
             make(f);
             return run(f, mainModule);

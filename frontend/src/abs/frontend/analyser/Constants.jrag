@@ -1,0 +1,10 @@
+aspect ConstantFolding {
+    syn boolean Exp.isConstant();
+    eq Exp.isConstant() = false;
+
+    eq LiteralExp.isConstant() = true;
+}
+
+// Local Variables:
+// mode: java
+// End:

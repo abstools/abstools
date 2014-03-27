@@ -360,10 +360,6 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    public static boolean isQualified(String name) {
-        return name.contains(".");
-    }
-
     public static ResolvedMap getExportedNames(ModuleDecl mod) {
         ResolvedMap res = new ResolvedMap();
         for (Export e : mod.getExports()) {
