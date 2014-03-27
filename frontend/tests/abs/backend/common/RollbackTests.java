@@ -16,6 +16,8 @@ public class RollbackTests extends SemanticTests {
         Assume.assumeTrue(d.hasRollbacks());        
     }
 
+    // TODO: Here's sync-vs-asynch confusion!
+
     @Test
     public void rollback1() {
         assertEvalTrue("interface I { Unit test(); Bool getR(); }\n"
@@ -30,20 +32,18 @@ public class RollbackTests extends SemanticTests {
                 + "{ I o = new C(); Fut<Unit> f = o!test(False); await f?; Bool testresult = await o!getR(); }");
     }
 
-    @Test
-    public void rollbackOverCall2() {
+    void rollbackOverCall(boolean doAwait) {
         assertEvalTrue("interface I { Unit test(Bool fail); Bool getR(); }\n"
-                + "class C implements I { Bool r = True; Unit test(Bool fail) { I o2 = new C(); r = True; if (fail) abort \"\"; else o2!test(True); } Bool getR() { return this.r;}}\n"
+                + "class C implements I { Bool r = True; Unit test(Bool fail) { I o2 = new C(); r = True; if (fail) abort \"\"; else "+(doAwait ? "await" : "")+" o2!test(True); } Bool getR() { return this.r;}}\n"
                 + "{ I o = new C(); Fut<Unit> f = o!test(False); await f?; Bool testresult = await o!getR(); }");
     }
-    
+
     @Test
-    public void rollbackOverCall3() {
-        // Aborting while awaiting shouldn't change a thing.
-        assertEvalTrue("interface I { Unit test(Bool fail); Bool getR(); }\n"
-                +      "class C implements I { Bool r = True; Unit test(Bool fail) { I o2 = new C(); r = True; if (fail) abort \"\"; else await o2!test(True); } Bool getR() { return this.r;}}\n"
-                +       "{ I o = new local C(); Fut<Unit> f = o!test(False); await f?; Bool testresult = o.getR(); }");
-    }
+    public void rollbackOverCall2() { rollbackOverCall(false); }
+
+    @Test
+    // Aborting while awaiting shouldn't change a thing.
+    public void rollbackOverCall3() { rollbackOverCall(true); }
 
     /* These two tests should create a runtime error WITHIN an Await.
      * We expect the local state to be rolled back.
