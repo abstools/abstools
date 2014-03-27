@@ -54,7 +54,7 @@ public class TermVariable implements Term, Comparable<TermVariable>{
           return false;
       }
 
-     return this.v == ((TermVariable)obj).v;
+     return this.v.compareTo(((TermVariable)obj).v) == 0;
   }
  
   @Override
@@ -67,7 +67,7 @@ public class TermVariable implements Term, Comparable<TermVariable>{
     return this.equals((Object)t);
   }
 
-  public boolean equals(Variable var) { return (v == var); }
+  public boolean equals(Variable var) { return (v.compareTo(var) == 0); }
 
   @Override
   public int compareTo(TermVariable tv) { return v.compareTo(tv.v);  }

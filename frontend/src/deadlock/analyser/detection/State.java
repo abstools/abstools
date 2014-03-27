@@ -144,7 +144,7 @@ public class State {
             for(GroupName b: s.depCoupleAwait.get(a))
                 //TODO QUESTION ABEL: this methods says that if an await couple from s is contained as a get couple in this
                 //is correct to say that this contains s
-                if(!containsCouple(a, b))
+                if(!containsCoupleAwait(a, b))
                     return false;
         
         return true;
@@ -179,6 +179,11 @@ public class State {
     private boolean containsCoupleGet(GroupName a, GroupName b) {
         HashSet<GroupName> aGroup;
         return ((aGroup = depCouple.get(a)) != null && aGroup.contains(b)) ;
+    }
+    
+    private boolean containsCoupleAwait(GroupName a, GroupName b) {
+        HashSet<GroupName> aGroup;
+        return ((aGroup = depCoupleAwait.get(a)) != null && aGroup.contains(b)) ;
     }
 
 
@@ -372,7 +377,7 @@ public class State {
 
     }
 
-    private static HashMap<GroupName, HashSet<GroupName>> RefreshHashMap(VarSubstitution s, HashMap<GroupName, HashSet<GroupName>> toRefresh) {
+    private HashMap<GroupName, HashSet<GroupName>> RefreshHashMap(VarSubstitution s, HashMap<GroupName, HashSet<GroupName>> toRefresh) {
         
         HashMap<GroupName, HashSet<GroupName>> temp = new HashMap<GroupName, HashSet<GroupName>>(toRefresh.size());
         
@@ -420,10 +425,29 @@ public class State {
     
     public boolean HasCycle()
     {
-        return hasCycle = HasCycleGet() || HasCycleAwait();
+        //return hasCycle = HasCycleGet() || HasCycleAwait();
+        
+        HashMap<GroupName, HashSet<GroupName>> allTogether = new  HashMap<GroupName, HashSet<GroupName>>();
+        
+        for(GroupName a : depCouple.keySet())
+            for(GroupName b: depCouple.get(a)){
+            if(!allTogether.containsKey(a))
+                allTogether.put(a, new HashSet<GroupName>());
+            
+            allTogether.get(a).add(b);
+            }
+        for(GroupName a : depCoupleAwait.keySet())
+            for(GroupName b: depCoupleAwait.get(a)){
+            if(!allTogether.containsKey(a))
+                allTogether.put(a, new HashSet<GroupName>());
+            
+            allTogether.get(a).add(b);
+            }
+        
+        return HasCycle(allTogether);
     }
     
-    private static boolean HasCycle(HashMap<GroupName, HashSet<GroupName>> graph)
+    private boolean HasCycle(HashMap<GroupName, HashSet<GroupName>> graph)
     {
         HashSet<GroupName> visited = new HashSet<GroupName>();
         HashSet<GroupName> recorded = new HashSet<GroupName>();
@@ -438,7 +462,7 @@ public class State {
         return false;
     }
     
-    private static boolean HasCycleUtil(HashMap<GroupName, HashSet<GroupName>> graph, HashSet<GroupName> recorded, HashSet<GroupName> visited, GroupName current)
+    private boolean HasCycleUtil(HashMap<GroupName, HashSet<GroupName>> graph, HashSet<GroupName> recorded, HashSet<GroupName> visited, GroupName current)
     {
        if(!visited.contains(current))
        {

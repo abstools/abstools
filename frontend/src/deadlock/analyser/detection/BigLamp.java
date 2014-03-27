@@ -127,7 +127,7 @@ public class BigLamp {
     //check for Cycle
     public Boolean hasCycle(){
         //there is a Cycle when one of the two cycle types is present
-        return hasCycleGet() || hasCycleAwait();
+        return w.hasCycle() || wPrime.hasCycle();
     }
 
 

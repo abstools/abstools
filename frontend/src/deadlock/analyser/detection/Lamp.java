@@ -225,8 +225,11 @@ public class Lamp {
     
     //check for Cycle
     public Boolean hasCycle(){
-        //there is a Cycle when one of the two cycle types is present
-        return hasCycleGet() || hasCycleAwait();
+      //it has cycle if there is any cyclic state
+        for(State st : states)
+            if(st.HasCycle())
+                return true;
+        return false;
     }
 
 
