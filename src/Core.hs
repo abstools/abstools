@@ -53,7 +53,7 @@ spawnCOG c = forkIO $ do
              loop sleepingF sleepingO 1
 
 -- Haskell main thread
-main_is :: ABS Top () -> IO () 
+main_is :: ABS Null () -> IO () 
 main_is mainABS = do
   tid <- myThreadId
   let sleepingF = M.empty :: FutureMap

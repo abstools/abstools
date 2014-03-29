@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, NoImplicitPrelude, Rank2Types #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, NoImplicitPrelude #-}
 
 module ABSPrelude 
     (module Base,
@@ -9,14 +9,13 @@ module ABSPrelude
      newIORef, modifyIORef', readIORef, when, mapMonad,
      newChan, writeChan, writeList2Chan, newEmptyMVar,
      M.updateLookupWithKey,
-     ifthenM, ifthenelseM, notM, negateM,
+     ifthenM, ifthenelseM, 
      assert, 
      Pair, Prelude.fst, Prelude.snd, Triple, fstT, sndT, trd,
-     null,
+     null, Prelude.undefined,
      (Prelude.=<<), (Prelude.>>=), Prelude.Maybe (..), Prelude.Either (..), left, right, Prelude.maybe, fromJust, Prelude.fromIntegral,
      Prelude.Int, Prelude.Rational, Prelude.Bool (..) , Prelude.Eq, List, Prelude.String,
-     (Prelude.||), (Prelude.&&), (Prelude.==), (Prelude./=), (Prelude.<), (Prelude.<=), (Prelude.>=), (Prelude.>), (Prelude.+), (Prelude.-), (Prelude.*), (/), (%),
-     (||:), (&&:), (==:), (/=:), (<:), (<=:), (>=:), (>:), (+:), (-:), (*:), (/:), (%:),
+     (Prelude.||), (Prelude.&&), (Prelude.==), Prelude.not, (Prelude.<), (Prelude.<=), (Prelude.>=), (Prelude.>), (Prelude.+), (Prelude.-), (Prelude.*), (/), (%),
      M.Map, M.empty, put, insertAssoc, lookupUnsafe, removeKey,
      length,
      listArray, replace, elemAt, Prelude.repeat, Array
@@ -63,54 +62,8 @@ ifthenelseM texp stm_then stm_else = texp Prelude.>>= (\ e -> if e
                                                             then stm_then
                                                             else stm_else)
 
-(||:) :: (Object__ o) => ABS o Prelude.Bool -> ABS o Prelude.Bool -> ABS o Prelude.Bool
-(||:) = liftM2 (Prelude.||)
-
-(&&:) :: (Object__ o) => ABS o Prelude.Bool -> ABS o Prelude.Bool -> ABS o Prelude.Bool
-(&&:) = liftM2 (Prelude.&&)
-
-(==:) :: (Prelude.Eq a, Object__ o) => ABS o a -> ABS o a -> ABS o Prelude.Bool
-(==:) = liftM2 (Prelude.==)
-
-(/=:) :: (Prelude.Eq a, Object__ o) => ABS o a -> ABS o a -> ABS o Prelude.Bool
-(/=:) = liftM2 (Prelude./=)
-
-(<:) :: (Prelude.Ord a, Object__ o) => ABS o a -> ABS o a -> ABS o Prelude.Bool
-(<:) = liftM2 (Prelude.<)
-
-(<=:) :: (Prelude.Ord a, Object__ o) => ABS o a -> ABS o a -> ABS o Prelude.Bool
-(<=:) = liftM2 (Prelude.<=)
-
-(>=:) :: (Prelude.Ord a, Object__ o) => ABS o a -> ABS o a -> ABS o Prelude.Bool
-(>=:) = liftM2 (Prelude.>=)
-
-(>:) :: (Prelude.Ord a, Object__ o) => ABS o a -> ABS o a -> ABS o Prelude.Bool
-(>:) = liftM2 (Prelude.>)
-
-(+:) :: (Prelude.Num a, Object__ o) => ABS o a -> ABS o a -> ABS o a
-(+:) = liftM2 (Prelude.+)
-
-(-:) :: (Prelude.Num a, Object__ o) => ABS o a -> ABS o a -> ABS o a
-(-:) = liftM2 (Prelude.-)
-
-(*:) :: (Prelude.Num a, Object__ o) => ABS o a -> ABS o a -> ABS o a
-(*:) = liftM2 (Prelude.*)
-
-(/:) :: (IntOrRational a, Object__ o) => ABS o a -> ABS o a -> ABS o a
-(/:) = liftM2 (/)
-
-(%:) :: (Prelude.Integral a, Prelude.Num b, Object__ o) => ABS o a -> ABS o a -> ABS o b
-(%:) = liftM2 (%)
-
-notM :: Object__ o => ABS o Prelude.Bool -> ABS o Prelude.Bool
-notM = liftM (Prelude.not)
-
-negateM :: (Prelude.Num a, Object__ o) => ABS o a -> ABS o a
-negateM = liftM (Prelude.negate)
-
 assert :: (Object__ o) => ABS o Prelude.Bool -> ABS o ()
 assert act = act Prelude.>>= \ pred -> when (Prelude.not pred) (Prelude.error "Assertion failed")
-
 
 put :: Prelude.Ord k => M.Map k v -> k -> v -> M.Map k v
 put m k v = M.insert k v m
@@ -136,11 +89,13 @@ fstT (a,_,_) = a
 sndT (_,b,_) = b
 trd (_,_,c) = c
 
-null = Prelude.undefined
-
 -- arrays
 
 replace a cs = a UArray.// cs
 elemAt(a, i) = a UArray.! i
 
 type Array = UArray.UArray
+
+-- a reference to a null object
+null :: ObjectRef Null
+null = NullRef
