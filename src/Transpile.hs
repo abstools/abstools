@@ -173,6 +173,11 @@ main = do
        HS.Match noLoc (HS.Ident $ "__eq" ++ tname) [HS.PWildCard, HS.PWildCard] Nothing (HS.UnGuardedRhs $ HS.Con $ HS.UnQual $ HS.Ident "False") (HS.BDecls [])
              ]
 
+       -- instance Eq I where (==) = __eqI   -- this is needed for ADTs deriving Eq
+       : HS.InstDecl noLoc [] (HS.UnQual $ HS.Ident "Eq") [HS.TyCon $ HS.UnQual $ HS.Ident tname]
+         [HS.InsDecl $ HS.FunBind [HS.Match noLoc (HS.Symbol "==") [] Nothing (HS.UnGuardedRhs $ HS.Var $ HS.UnQual $ HS.Ident $ "__eq" ++ tname) (HS.BDecls [])]]
+       
+
        : generateSubs tname (filter (\ (ABS.QualType qids) -> qids /= [ABS.QualTypeIdent $ ABS.TypeIdent "Object_"])  extends) 
 
 
@@ -566,14 +571,14 @@ main = do
                                                                     (HS.App (HS.Var $ HS.UnQual $ HS.Ident "up") $ HS.Var $ HS.UnQual $ HS.Ident "null"))
 
                   -- it is a non-this object
-                  HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) hvar@(HS.Var (HS.Qual _m (HS.Ident v))) -> let vtyp@(ABS.TypeVar (ABS.QualType qtids)) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident v) (M.union fscope clsScope)
+                  HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) hvar@(HS.Var (HS.Qual _m (HS.Ident v))) -> let vtyp@(ABS.TypeVar (ABS.QualType qtids)) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident v) (M.union fscope (M.mapKeys (\ (ABS.Ident field) -> ABS.Ident $ "__" ++ field) clsScope))
                                                             in if isInterface vtyp symbolTable
                                                                then (HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident $ "__eq" ++ joinQualTypeIds qtids) 
                                                                               hvar)
                                                                     (HS.App (HS.Var $ HS.UnQual $ HS.Ident "up") $ HS.Var $ HS.UnQual $ HS.Ident "null"))
                                                                else (error "incomparable types")
                   -- same as above
-                  HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) hvar@(HS.Var (HS.UnQual (HS.Ident v))) -> let vtyp@(ABS.TypeVar (ABS.QualType qtids)) = maybe (error "incomparable types") id $ M.lookup (ABS.Ident v) (M.union fscope clsScope)
+                  HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) hvar@(HS.Var (HS.UnQual (HS.Ident v))) -> let vtyp@(ABS.TypeVar (ABS.QualType qtids)) = maybe (error "incomparable types") id $ M.lookup (ABS.Ident v) (M.union fscope (M.mapKeys (\ (ABS.Ident field) -> ABS.Ident $ "__" ++ field) clsScope))
                                                             in if isInterface vtyp symbolTable
                                                                then (HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident $ "__eq" ++ joinQualTypeIds qtids) 
                                                                               hvar)
@@ -596,14 +601,14 @@ main = do
                 check exp = case exp of
                   HS.Paren exp' -> check exp'
                   -- it is a non-this object
-                  HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) hvar@(HS.Var (HS.Qual _m (HS.Ident v))) -> let vtyp@(ABS.TypeVar qtyp) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident v) (M.union fscope clsScope)
+                  HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) hvar@(HS.Var (HS.Qual _m (HS.Ident v))) -> let vtyp@(ABS.TypeVar qtyp) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident v) (M.union fscope (M.mapKeys (\ (ABS.Ident field) -> ABS.Ident $ "__" ++ field) clsScope))
                                                             in if isInterface vtyp symbolTable
                                                                then case joinSub qtyp (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent interf)]) symbolTable of
                                                                       Just (ABS.QualType qtids) -> (HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident $ "__eq" ++ joinQualTypeIds qtids) hvar) (HS.App (HS.Var $ HS.UnQual $ HS.Ident "up") $ HS.Var $ HS.UnQual $ HS.Ident "this"))
                                                                       Nothing -> (error "incomparable types")
                                                                else (error "incomparable types")
                   -- same as above
-                  HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) hvar@(HS.Var (HS.UnQual (HS.Ident v))) -> let vtyp@(ABS.TypeVar qtyp) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident v) (M.union fscope clsScope)
+                  HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) hvar@(HS.Var (HS.UnQual (HS.Ident v))) -> let vtyp@(ABS.TypeVar qtyp) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident v) (M.union fscope (M.mapKeys (\ (ABS.Ident field) -> ABS.Ident $ "__" ++ field) clsScope))
                                                             in if isInterface vtyp symbolTable
                                                                then case joinSub qtyp (ABS.QualType [ABS.QualTypeIdent (ABS.TypeIdent interf)]) symbolTable of
                                                                       Just (ABS.QualType qtids) -> (HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident $ "__eq" ++ joinQualTypeIds qtids) hvar) (HS.App (HS.Var $ HS.UnQual $ HS.Ident "up") $ HS.Var $ HS.UnQual $ HS.Ident "this"))
@@ -624,14 +629,14 @@ main = do
            check leftapp@(HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) (HS.Var (HS.Qual _m (HS.Ident leftVarName)))) rexp = 
                case rexp of 
                  rightapp@(HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) (HS.Var (HS.Qual _m (HS.Ident rightVarName)))) -> 
-                     let (ABS.TypeVar qtypLeft) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident leftVarName) (M.union fscope clsScope)
-                         (ABS.TypeVar qtypRight) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident rightVarName) (M.union fscope clsScope)
+                     let (ABS.TypeVar qtypLeft) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident leftVarName) (M.union fscope (M.mapKeys (\ (ABS.Ident field) -> ABS.Ident $ "__" ++ field) clsScope))
+                         (ABS.TypeVar qtypRight) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident rightVarName) (M.union fscope (M.mapKeys (\ (ABS.Ident field) -> ABS.Ident $ "__" ++ field) clsScope))
                      in case joinSub qtypLeft qtypRight symbolTable of
                           Just (ABS.QualType qtids) -> (HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident $ "__eq" ++ joinQualTypeIds qtids) leftapp) rightapp)
                           Nothing -> error "incomparable types"
                  rightapp@(HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) (HS.Var (HS.UnQual (HS.Ident rightVarName)))) -> 
-                     let (ABS.TypeVar qtypLeft) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident leftVarName) (M.union fscope clsScope)
-                         (ABS.TypeVar qtypRight) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident rightVarName) (M.union fscope clsScope)
+                     let (ABS.TypeVar qtypLeft) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident leftVarName) (M.union fscope (M.mapKeys (\ (ABS.Ident field) -> ABS.Ident $ "__" ++ field) clsScope))
+                         (ABS.TypeVar qtypRight) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident rightVarName) (M.union fscope (M.mapKeys (\ (ABS.Ident field) -> ABS.Ident $ "__" ++ field) clsScope))
                      in case joinSub qtypLeft qtypRight symbolTable of
                           Just (ABS.QualType qtids) -> (HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident $ "__eq" ++ joinQualTypeIds qtids) leftapp) rightapp)
                           Nothing -> error "incomparable types"
@@ -639,21 +644,21 @@ main = do
            check leftapp@(HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) (HS.Var (HS.UnQual (HS.Ident leftVarName)))) rexp = 
                case rexp of 
                  rightapp@(HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) (HS.Var (HS.Qual _m (HS.Ident rightVarName)))) -> 
-                     let (ABS.TypeVar qtypLeft) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident leftVarName) (M.union fscope clsScope)
-                         (ABS.TypeVar qtypRight) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident rightVarName) (M.union fscope clsScope)
+                     let (ABS.TypeVar qtypLeft) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident leftVarName) (M.union fscope (M.mapKeys (\ (ABS.Ident field) -> ABS.Ident $ "__" ++ field) clsScope))
+                         (ABS.TypeVar qtypRight) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident rightVarName) (M.union fscope (M.mapKeys (\ (ABS.Ident field) -> ABS.Ident $ "__" ++ field) clsScope))
                      in case joinSub qtypLeft qtypRight symbolTable of
                           Just (ABS.QualType qtids) -> (HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident $ "__eq" ++ joinQualTypeIds qtids) leftapp) rightapp)
                           Nothing -> error "incomparable types"
                  rightapp@(HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) (HS.Var (HS.UnQual (HS.Ident rightVarName)))) -> 
-                     let (ABS.TypeVar qtypLeft) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident leftVarName) (M.union fscope clsScope)
-                         (ABS.TypeVar qtypRight) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident rightVarName) (M.union fscope clsScope)
+                     let (ABS.TypeVar qtypLeft) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident leftVarName) (M.union fscope (M.mapKeys (\ (ABS.Ident field) -> ABS.Ident $ "__" ++ field) clsScope))
+                         (ABS.TypeVar qtypRight) = maybe (error "incomparable types") id $  M.lookup (ABS.Ident rightVarName) (M.union fscope (M.mapKeys (\ (ABS.Ident field) -> ABS.Ident $ "__" ++ field) clsScope))
                      in case joinSub qtypLeft qtypRight symbolTable of
                           Just (ABS.QualType qtids) -> (HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident $ "__eq" ++ joinQualTypeIds qtids) leftapp) rightapp)
                           Nothing -> error "incomparable types"
                  HS.App _ _ -> error "equality coupled with function calls not implemented yet" -- TODO
            check (HS.App _ _) (HS.App (HS.Var (HS.UnQual (HS.Ident "up"))) _)   = error "equality coupled with function calls not implemented yet" -- TODO
            -- then it should be an equality between pure expressions
-           check _ _ = HS.Paren $ HS.InfixApp tLeft (HS.QVarOp $ HS.UnQual  $ HS.Symbol "<") tRight
+           check _ _ = HS.Paren $ HS.InfixApp tLeft (HS.QVarOp $ HS.UnQual  $ HS.Symbol "==") tRight
       in check tLeft tRight 
          
     -- normalize it to not . ==
@@ -779,7 +784,7 @@ main = do
 
 
     -- tThisExp is a pure expression in the statement world
-    -- what it basically does, is that it wraps return around tPureExp
+    -- what it basically does, is that it wraps "return" around tPureExp
     tThisExp :: ABS.PureExp -> String -> Scope -> [Scope] -> String -> HS.Exp
     tThisExp texp cls clsScope scopes interf = let thisTerms = collect texp currentClassScope
                                         in if null thisTerms
@@ -857,7 +862,7 @@ main = do
     tStmts :: [ABS.Stm] -> Bool -> String -> Scope -> [Scope] -> String -> [HS.Stmt]
     tStmts [] _canReturn _ _ _ _ = []
     tStmts (stmt:rest) canReturn cls clsScope scopes interf = case stmt of
-                       ABS.SExp eexp -> HS.Qualifier (tEffExp eexp cls clsScope scopes interf) -- have to force to WHNF
+                       ABS.SExp eexp -> HS.Qualifier (tRhs eexp cls clsScope scopes interf) -- then it's a single RHS, TODO: have to force to WHNF
                                                            : tStmts rest canReturn cls clsScope scopes interf
                        ABS.SSuspend -> HS.Qualifier (HS.Var $ HS.UnQual $ HS.Ident "suspend") : tStmts rest canReturn cls clsScope scopes interf
                        ABS.SBlock stmts -> HS.Qualifier (tBlock stmts False cls clsScope scopes interf) : tStmts rest canReturn cls clsScope scopes interf
@@ -865,7 +870,7 @@ main = do
                        ABS.SReturn e -> if canReturn
                                        then if null rest
                                             then [HS.Qualifier $ case e of
-                                                                   ABS.ExpE eexp -> tEffExp eexp cls clsScope scopes interf
+                                                                   ABS.ExpE eexp -> tRhs eexp cls clsScope scopes interf
                                                                    ABS.ExpP texp -> tThisExp texp cls clsScope scopes interf
                                                  ]
                                             else error "Return must be the last statement"
@@ -963,6 +968,8 @@ main = do
                                 Just (ABS.TypeVar (ABS.QualType qids)) -> HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "liftM") (HS.Var $ HS.UnQual $ HS.Ident $ (\ (ABS.QualTypeIdent (ABS.TypeIdent iid)) -> iid) (last qids)))
                                 Just _ -> error $ var ++ " not of interface type"
 
+    -- tRhs is a wrapper arround tEffExp that adds a single read to the object pointer to collect the necessary fields
+    -- it is supposed to be an optimization compared to reading each time the field at the place it is accessed
     tRhs eexp cls clsScope scopes interf = (let argsExps = case eexp of
                                                    ABS.Get pexp -> [pexp]
                                                    ABS.New _ pexps  -> pexps
@@ -1136,7 +1143,8 @@ collectAssigns _ _ = []
 
 
 joinSub :: ABS.QualType -> ABS.QualType -> [ModuleST] -> Maybe ABS.QualType
-joinSub interf1 interf2 symbolTable = let 
+joinSub interf1 interf2 _ | interf1 == interf2 = Just interf1 -- same interface subtyping
+joinSub interf1 interf2 symbolTable | otherwise = let 
     unionedST = (M.unions $ map hierarchy symbolTable) :: M.Map ABS.TypeIdent [ABS.QualType]
     canReach :: ABS.QualType -> ABS.QualType -> Bool
     canReach (ABS.QualType qids) principal = let ABS.QualTypeIdent sub = last qids in
