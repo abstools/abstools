@@ -6,14 +6,14 @@ import Control.Monad (when)
 import Control.Concurrent (ThreadId, myThreadId, forkIO)
 import qualified Data.Map.Strict as M (empty, insertWith, updateLookupWithKey)
 import Control.Concurrent.MVar (putMVar)
-import Control.Concurrent.Chan (newChan, readChan, writeChan, writeList2Chan)
+import Control.Concurrent.Chan (newChan, readChan, writeChan, writeList2Chan, Chan)
 import Control.Monad.Trans.Class
-import qualified Control.Monad.Trans.RWS as RWS (runRWST, execRWST, modify)
+import qualified Control.Monad.Trans.RWS as RWS (runRWST, execRWST, modify, RWST, withRWST)
 import Control.Monad.Coroutine
 import Control.Monad.Coroutine.SuspensionFunctors (Yield (..))
 import System.Exit (exitSuccess)
 
-spawnCOG :: COG -> IO ThreadId
+spawnCOG :: Chan Job -> IO ThreadId
 spawnCOG c = forkIO $ do
              tid <- myThreadId
              let sleepingF = M.empty :: FutureMap
@@ -27,7 +27,7 @@ spawnCOG c = forkIO $ do
                                        let (maybeWoken, sleepingF'') = M.updateLookupWithKey (\ _k _v -> Nothing) (AnyFuture f) sleepingF
                                        maybe (return ()) (\ woken -> writeList2Chan c woken) maybeWoken -- put the woken back to the enabled queue
                                        loop sleepingF'' sleepingO counter
-                          RunJob obj fut@(FutureRef mvar ftid fcog _) coroutine -> do
+                          RunJob obj fut@(FutureRef mvar (fcog, ftid) _) coroutine -> do
                           (sleepingF'', (AState {aCounter = counter'', aSleepingO = sleepingO''}), _) <- RWS.runRWST (do
                                        p <- resume coroutine
                                        case p of
@@ -45,8 +45,7 @@ spawnCOG c = forkIO $ do
                                                 RWS.modify $ \ astate -> astate {aSleepingO = sleepingO'}
                                                 return sleepingF
                                      ) (AConf {aThis = obj, 
-                                               aCOG = c, 
-                                               aThread = tid
+                                               aCOG = (c, tid)
                                                })
                                        (AState {aCounter = counter,
                                                 aSleepingO = sleepingO})
@@ -54,7 +53,7 @@ spawnCOG c = forkIO $ do
              loop sleepingF sleepingO 1
 
 -- Haskell main thread
-main_is :: ABS Top () -> IO () 
+main_is :: ABS Null () -> IO () 
 main_is mainABS = do
   tid <- myThreadId
   let sleepingF = M.empty :: FutureMap
@@ -75,7 +74,7 @@ main_is mainABS = do
                  p <- resume coroutine
                  case p of
                    Right fin -> case fut of
-                                 (FutureRef mvar ftid fcog _) -> do
+                                 (FutureRef mvar (fcog, ftid) _) -> do
                                           lift $ putMVar mvar fin
                                           when (ftid /= tid) (lift $ writeChan fcog (WakeupJob fut)) -- remote job finished, wakeup the remote cog
                                           return sleepingF
@@ -92,13 +91,13 @@ main_is mainABS = do
                           RWS.modify $ \ astate -> astate {aSleepingO = sleepingO'}
                           return sleepingF
                    ) (AConf {aThis = obj, 
-                             aCOG = c, 
-                             aThread = tid
+                             aCOG = (c, tid)
                             }) (AState {aCounter = counter,
                                         aSleepingO = sleepingO})
                loop sleepingF'' sleepingO'' counter''
   loop sleepingF sleepingO 1
 
 
-
-
+-- util function, used in code generation
+withReaderT :: (r' -> r) -> RWS.RWST r w s m a -> RWS.RWST r' w s m a
+withReaderT f r = RWS.withRWST (\ r s -> (f r, s)) r

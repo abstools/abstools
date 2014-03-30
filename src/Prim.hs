@@ -16,7 +16,7 @@ thisCOG = do
 
 readThis :: (Object__ o) => ABS o o
 readThis = do
-  ObjectRef ioref _ <- liftM aThis $ lift RWS.ask
+  ObjectRef ioref _ _ <- liftM aThis $ lift RWS.ask
   lift $ lift $ readIORef ioref
 
 skip :: (Object__ o) => ABS o ()
@@ -26,12 +26,12 @@ suspend :: ABS o ()
 suspend = yield S
 
 await ::  (Object__ o) => AwaitGuard o -> ABS o () 
-await (FutureGuard f@(FutureRef mvar _ _ _))  = do
+await (FutureGuard f@(FutureRef mvar _ _ ))  = do
   empty <- lift $ lift $ isEmptyMVar mvar
   when empty $ do
     yield (F f)
 
-await (FutureGuard f@(FutureRef mvar _ _ _) :&: gs)  = do
+await (FutureGuard f@(FutureRef mvar _ _) :&: gs)  = do
   empty <- lift $ lift $ isEmptyMVar mvar
   when empty $ do
     yield (F f)
@@ -41,14 +41,14 @@ await (FutureGuard f@(FutureRef mvar _ _ _) :&: gs)  = do
 await g@(ThisGuard is tg) = do
   check <- tg
   when (not check) $ do
-       AConf obj _ _ <- lift $ RWS.ask
+       AConf obj _ <- lift $ RWS.ask
        yield (T obj is)
        await g
 
 await gs@(ThisGuard is tg :&: rest) = do
   check <- tg
   when (not check) $ do
-       AConf obj _ _ <- lift $ RWS.ask
+       AConf obj _ <- lift $ RWS.ask
        yield (T obj is)
        await gs
   await rest
@@ -59,5 +59,5 @@ while env predAction loopAction = predAction env >>= \ res -> if res
                                                              else return env
 
 get :: (Object__ o) => Fut f -> ABS o f
-get a = (\ (FutureRef mvar _ _ _) -> lift $ lift $ readMVar mvar) a
+get a = (\ (FutureRef mvar _ _) -> lift $ lift $ readMVar mvar) a
 

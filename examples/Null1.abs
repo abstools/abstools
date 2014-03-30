@@ -1,0 +1,37 @@
+module Null1;
+
+def I test1() = null;
+
+def Int test2() = if (null == null) then 3 else 4;
+
+def Int test3(I i) = if (i == null) then 3 else 4;
+
+def Bool test4(I i, H h) = (i==h);
+
+def Int test5(I i, H h) = if (h == i) then if (i == null) then 3 else 4 else 5;
+
+// // abs fails
+def I test6() = if (null == null) then null else null;
+
+// // abs fails
+def I test7(H h) = if (h == null) then null else null;
+
+def Int test8(Int x, Int y) = if (x == y) then x else y; // to ensure equality behaves correctly for non-interface types
+
+interface I {
+          Unit method1(Int i);
+}
+
+interface H extends I {
+          Unit method2();
+}
+
+interface K {}
+
+{ 
+    I o1 = null;
+    H o2 = null;
+    Bool x = o1 == o2;
+    I i = null;
+    if (i == null) i = null;
+}

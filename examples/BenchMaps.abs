@@ -4,7 +4,7 @@ interface IArray{
 	Int sum();
 }
 
-class Array (Int n)implements IArray{
+class CArray (Int n)implements IArray{
 	Int i=0;
 	Int s=0;
 		
@@ -31,12 +31,12 @@ class Array (Int n)implements IArray{
 
 
 {
-IArray a1 = new Array(1000);
-IArray a2 = new Array(1000);
-IArray a3 = new Array(1000);
-IArray a4 = new Array(1000);
+IArray a1 = new CArray(1000);
+IArray a2 = new CArray(1000);
+IArray a3 = new CArray(1000);
+IArray a4 = new CArray(1000);
 
-// IArray a3 = new local Array(1000);
+// IArray a3 = new local CArray(1000);
 
 Fut<Int> f1 = a1!sum();
 Fut<Int> f2 = a2!sum();
