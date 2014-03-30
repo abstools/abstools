@@ -70,7 +70,7 @@ public class ABS2HaskellDriver extends ABSTest implements BackendTestDriver {
 
     @Override
     public void assertEvalTrue(String absCode) throws Exception {
-        Model m = assertParseOk(absCode, Config.WITH_STD_LIB, Config.TYPE_CHECK, Config.WITHOUT_MODULE_NAME);
+        Model m = assertParseOk(absCode, Config.WITH_STD_LIB, Config.TYPE_CHECK);
         assertEvalTrue(m);
     }
 

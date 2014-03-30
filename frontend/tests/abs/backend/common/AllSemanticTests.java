@@ -10,7 +10,7 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ 
     ConcurrencyTests.class, 
-    DeltaTests.class, 
+        // DeltaTests.class, // haskell backend does not plan to support deltas
     FunctionalTests.class,
     ModuleSystemTests.class, 
     ObjectTests.class, 
