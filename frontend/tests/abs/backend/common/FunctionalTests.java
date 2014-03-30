@@ -235,16 +235,16 @@ public class FunctionalTests extends SemanticTests {
         assertEvalTrue("def Int pow(Int n, Int i) = case i < 0 { True => 1 / pow(n, -i); False => case i { 0 => 1; _ => n * pow(n, i-1);};  }; { Bool testresult = True; }");
     }
 
-    @Test
-    public void patternVarRew() throws Exception {
-        String fileName = "tests/abssamples/PVTest.abs";
-        Model m = ABSTest.assertParseFileOk(fileName, Config.WITH_STD_LIB);
-        // TODO: Pull up
-        // XXX WTF?! assertFalse(m.hasParserErrors());
-        m.flattenForProduct("Foo");
-        assertFalse(m.hasTypeErrors());
-        assertEvalTrue(m);
-    }
+    // @Test
+    // public void patternVarRew() throws Exception {
+    //     String fileName = "tests/abssamples/PVTest.abs";
+    //     Model m = ABSTest.assertParseFileOk(fileName, Config.WITH_STD_LIB);
+    //     // TODO: Pull up
+    //     // XXX WTF?! assertFalse(m.hasParserErrors());
+    //     m.flattenForProduct("Foo");
+    //     assertFalse(m.hasTypeErrors());
+    //     assertEvalTrue(m);
+    // }
     
     @Test
     public void patternVarRewOK() throws Exception {
