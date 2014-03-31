@@ -25,3 +25,7 @@ class CRandomBool implements RandomBool {
       return this.value;
    }   
 }
+
+{
+
+}
