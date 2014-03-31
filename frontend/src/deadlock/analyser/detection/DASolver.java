@@ -64,7 +64,7 @@ public class DASolver {
             for(String mName : methodMap.keySet()){
                 Term contr = methodMap.get(mName);
 
-                //System.out.println("Iteration: " + i + " and method: " + mName);
+                System.out.println("Iteration: " + i + " and method: " + mName);
 
 
                 // I want to isolate the contract (body contract), only Main.main has already the right contract
@@ -305,6 +305,7 @@ public class DASolver {
         Lamp w = new Lamp();
         Lamp wPrime = new Lamp();
         w.addCouple(a, b);
+        System.out.println(mName + ": added couple: " + a.toString() + "," + b.toString());
         //I learn reading again the paper that only the first lamp obtain the couple
         //wPrime.addCouple(a, b);               
         // we compose and return the solution <w,wPrime>
@@ -330,6 +331,7 @@ public class DASolver {
         Lamp w = new Lamp();
         Lamp wPrime = new Lamp();
         w.addCoupleAwait(a, b);
+        System.out.println(mName + ": added couple: " + a.toString() + "," + b.toString() + " [w]");
         //I learn reading again the paper that only the first lamp obtain the couple
         //wPrime.addCouple(a, b);
 
@@ -731,6 +733,7 @@ public class DASolver {
 
         // we add the get Pair of names at the two lamps
         w.addCouple(a, b);
+        System.out.println(mName + ": added couple: " + a.toString() + "," + b.toString());
         //same comment of the rule w-Gzero
         //wPrime.addCouple(a, b);
 
@@ -841,6 +844,7 @@ public class DASolver {
 
         // we add the get Pair of names at the two lamps
         w.addCoupleAwait(a, b);
+        System.out.println(mName + ": added couple: " + a.toString() + "," + b.toString() + " [w]");
         //same comment of the rule w-Gzero
         //wPrime.addCouple(a, b);
 

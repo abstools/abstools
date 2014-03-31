@@ -40,6 +40,8 @@ import deadlock.constraints.substitution.*;
 public class Analyser {
 
   public void deadlockAnalysis(Model m, boolean verbose, int nbIteration, PrintStream out) {
+      
+      Variable.varCounter =0;
 
     /* 0, Create the initial data */
     Factory df = new Factory(verbose);
@@ -111,7 +113,7 @@ public class Analyser {
 
     /* 2. Analyze the contract */
     
-    if(verbose) out.println("\n\n\n\n\n\n\n\n\n\n\n");
+    if(verbose) out.println("\n\nCreating CCT\n\n");
     Map<String, Term> cct = new HashMap<String, Term>();
     
     for(String k : methodMap.keySet()){
@@ -120,6 +122,7 @@ public class Analyser {
     cct.put("Main.main", s.apply(InferenceOutput.getMainContract()));
     
     if(verbose) {
+        out.println("*****CONTRACTS*******");
         Term contract;
         for(String k : cct.keySet()){
             contract = cct.get(k);
@@ -127,7 +130,7 @@ public class Analyser {
         }
     }
     
-    if(verbose) out.println("\n\n\n\n\n\n\n\n\n\n\n");
+    if(verbose) out.println("\n\nComputing Dependencies\n\n");
     DASolver solver = new DASolver(df, cct, nbIteration/*TODO, out*/);
 
     solver.computeSolution();
@@ -139,6 +142,7 @@ public class Analyser {
     out.println("Deadlock in Main:             " + solver.isDeadlockMain());
     //System.out.println("Await cycle in Main? " + solver.isAwaitLoopMain());
     out.println("Possible Livelock in Main:    " + solver.isAwaitLoopMain());
+    out.println("Number of variables:          " + Variable.varCounter);
     }
 }
 

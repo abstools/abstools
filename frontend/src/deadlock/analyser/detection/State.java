@@ -385,8 +385,11 @@ public class State {
         {
             HashSet<GroupName> substituedNames = new HashSet<GroupName>();
             temp.put(s.apply(a), substituedNames);
-            for (GroupName b : toRefresh.get(a))
+            for (GroupName b : toRefresh.get(a)){
                 substituedNames.add(s.apply(b));
+                
+                System.out.println("\t Substitution: " + a + "," + b + " -> " + s.apply(a)+ "," + s.apply(b));
+            }
             
         }
         
@@ -398,6 +401,8 @@ public class State {
         Integer i = 0;
         for(GroupName v : depCouple.keySet())
            i+= depCouple.get(v).size();
+        for(GroupName v : depCoupleAwait.keySet())
+            i+= depCoupleAwait.get(v).size();
         return i;
     }
 
@@ -407,6 +412,11 @@ public class State {
         for(GroupName a : depCouple.keySet()){
             fv.add(a);
             for(GroupName b : depCouple.get(a))
+                fv.add(b);
+        }
+        for(GroupName a : depCoupleAwait.keySet()){
+            fv.add(a);
+            for(GroupName b : depCoupleAwait.get(a))
                 fv.add(b);
         }
         return fv;
