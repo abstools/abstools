@@ -11,8 +11,10 @@ TyFut. Type ::= "Fut" "<" Type ">";
 TyUnderscore. Type ::= "_";
 -- treat both unqualified and qualified types as qualified
 TypeVar. Type ::= QualType ;
-ArgType. Type ::= QualType "<" [Type] ">" ;
-separator Type "," ;
+ArgType. Type ::= QualType "<" [AnnType] ">" ;
+separator AnnType "," ;
+
+AnnType. AnnType ::= [Ann] Type;
 
 QualType. QualType ::= [QualTypeIdent] ;
 separator QualType "," ;
@@ -24,7 +26,7 @@ entrypoints Program ;
 -- TODO: support many modules inside the same file
 Prog. Program  ::= ModuleDecl;
 
-ModuleDecl. ModuleDecl ::= "module" QualType ";" [Export] [Import] [Decl] MaybeBlock ;
+ModuleDecl. ModuleDecl ::= "module" QualType ";" [Export] [Import] [AnnDecl] MaybeBlock ;
 
 ExportAny. Export ::= "export" [AnyIdent] ;
 ExportAnyFrom. Export ::= "export" [AnyIdent] "from" QualType ;
@@ -45,7 +47,7 @@ AnyIdentI. AnyIdent ::= Ident ;
 AnyIdentT. AnyIdent ::= TypeIdent ;
 separator AnyIdent "," ;
 
-
+AnnDecl. AnnDecl ::= [Ann] Decl;
 
 TypeDecl. Decl ::= "type" TypeIdent "=" Type ";" ;
 DataDecl. Decl ::= "data" TypeIdent "=" [ConstrIdent] ";" ;
@@ -72,10 +74,11 @@ ClassParamDecl. Decl ::= "class" TypeIdent "(" [Param] ")" "{" [BodyDecl] MaybeB
 ClassImplements. Decl ::= "class" TypeIdent "implements" [QualType] "{" [BodyDecl] MaybeBlock [BodyDecl]  "}" ;
 ClassParamImplements. Decl ::= "class" TypeIdent "(" [Param] ")" "implements" [QualType]  "{" [BodyDecl] MaybeBlock [BodyDecl]  "}" ;
 
+
 FieldDecl. BodyDecl ::= Type Ident ";" ;
 FieldDeclAss. BodyDecl ::= Type Ident "=" PureExp ";" ;
 MethDecl. BodyDecl ::= Type Ident "(" [Param] ")" Block ;
-terminator BodyDecl "" ;
+separator BodyDecl "" ;
 
 Block. Block ::= "{" [Stm] "}" ;
 
@@ -85,11 +88,11 @@ NoBlock.   MaybeBlock ::=  ;
 Builtin. FunBody ::= "builtin" ;
 PureBody. FunBody ::= PureExp ;
 
-terminator Decl "" ;
+terminator AnnDecl "" ;
 terminator Stm "" ;
 
 
-Par. Param ::= Type Ident;
+Par. Param ::= AnnType Ident;
 separator Param "," ;
 
 Let. PureExp ::= "let" "(" Param ")" "=" PureExp "in" PureExp ;
@@ -170,3 +173,8 @@ separator PureExp "," ;
  
 ExpP. Exp ::= PureExp ;
 ExpE. Exp ::= EffExp ;
+
+-- added annotations
+SimpleAnn. Ann ::= "[" PureExp "]";
+separator Ann "" ;
+-- todo: there are more elaborate annotations

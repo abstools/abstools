@@ -27,7 +27,12 @@ transType x = case x of
   TyFut type'  -> failure x
   TyUnderscore  -> failure x
   TypeVar qualtype  -> failure x
-  ArgType qualtype types  -> failure x
+  ArgType qualtype anntypes  -> failure x
+
+
+transAnnType :: AnnType -> Result
+transAnnType x = case x of
+  AnnType anns type'  -> failure x
 
 
 transQualType :: QualType -> Result
@@ -47,7 +52,7 @@ transProgram x = case x of
 
 transModuleDecl :: ModuleDecl -> Result
 transModuleDecl x = case x of
-  ModuleDecl qualtype exports imports decls maybeblock  -> failure x
+  ModuleDecl qualtype exports imports anndecls maybeblock  -> failure x
 
 
 transExport :: Export -> Result
@@ -74,6 +79,11 @@ transAnyIdent :: AnyIdent -> Result
 transAnyIdent x = case x of
   AnyIdentI id  -> failure x
   AnyIdentT typeident  -> failure x
+
+
+transAnnDecl :: AnnDecl -> Result
+transAnnDecl x = case x of
+  AnnDecl anns decl  -> failure x
 
 
 transDecl :: Decl -> Result
@@ -134,7 +144,7 @@ transFunBody x = case x of
 
 transParam :: Param -> Result
 transParam x = case x of
-  Par type' id  -> failure x
+  Par anntype id  -> failure x
 
 
 transPureExp :: PureExp -> Result
@@ -229,6 +239,11 @@ transExp :: Exp -> Result
 transExp x = case x of
   ExpP pureexp  -> failure x
   ExpE effexp  -> failure x
+
+
+transAnn :: Ann -> Result
+transAnn x = case x of
+  SimpleAnn pureexp  -> failure x
 
 
 

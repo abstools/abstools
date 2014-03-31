@@ -12,7 +12,11 @@ data Type =
  | TyFut Type
  | TyUnderscore
  | TypeVar QualType
- | ArgType QualType [Type]
+ | ArgType QualType [AnnType]
+  deriving (Eq,Ord,Show)
+
+data AnnType =
+   AnnType [Ann] Type
   deriving (Eq,Ord,Show)
 
 data QualType =
@@ -28,7 +32,7 @@ data Program =
   deriving (Eq,Ord,Show)
 
 data ModuleDecl =
-   ModuleDecl QualType [Export] [Import] [Decl] MaybeBlock
+   ModuleDecl QualType [Export] [Import] [AnnDecl] MaybeBlock
   deriving (Eq,Ord,Show)
 
 data Export =
@@ -51,6 +55,10 @@ data Import =
 data AnyIdent =
    AnyIdentI Ident
  | AnyIdentT TypeIdent
+  deriving (Eq,Ord,Show)
+
+data AnnDecl =
+   AnnDecl [Ann] Decl
   deriving (Eq,Ord,Show)
 
 data Decl =
@@ -102,7 +110,7 @@ data FunBody =
   deriving (Eq,Ord,Show)
 
 data Param =
-   Par Type Ident
+   Par AnnType Ident
   deriving (Eq,Ord,Show)
 
 data PureExp =
@@ -189,5 +197,9 @@ data EffExp =
 data Exp =
    ExpP PureExp
  | ExpE EffExp
+  deriving (Eq,Ord,Show)
+
+data Ann =
+   SimpleAnn PureExp
   deriving (Eq,Ord,Show)
 

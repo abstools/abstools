@@ -99,7 +99,12 @@ instance Print Type where
    TyFut type' -> prPrec i 0 (concatD [doc (showString "Fut") , doc (showString "<") , prt 0 type' , doc (showString ">")])
    TyUnderscore  -> prPrec i 0 (concatD [doc (showString "_")])
    TypeVar qualtype -> prPrec i 0 (concatD [prt 0 qualtype])
-   ArgType qualtype types -> prPrec i 0 (concatD [prt 0 qualtype , doc (showString "<") , prt 0 types , doc (showString ">")])
+   ArgType qualtype anntypes -> prPrec i 0 (concatD [prt 0 qualtype , doc (showString "<") , prt 0 anntypes , doc (showString ">")])
+
+
+instance Print AnnType where
+  prt i e = case e of
+   AnnType anns type' -> prPrec i 0 (concatD [prt 0 anns , prt 0 type'])
 
   prtList es = case es of
    [] -> (concatD [])
@@ -131,7 +136,7 @@ instance Print Program where
 
 instance Print ModuleDecl where
   prt i e = case e of
-   ModuleDecl qualtype exports imports decls maybeblock -> prPrec i 0 (concatD [doc (showString "module") , prt 0 qualtype , doc (showString ";") , prt 0 exports , prt 0 imports , prt 0 decls , prt 0 maybeblock])
+   ModuleDecl qualtype exports imports anndecls maybeblock -> prPrec i 0 (concatD [doc (showString "module") , prt 0 qualtype , doc (showString ";") , prt 0 exports , prt 0 imports , prt 0 anndecls , prt 0 maybeblock])
 
 
 instance Print Export where
@@ -170,6 +175,14 @@ instance Print AnyIdent where
    [x] -> (concatD [prt 0 x])
    x:xs -> (concatD [prt 0 x , doc (showString ",") , prt 0 xs])
 
+instance Print AnnDecl where
+  prt i e = case e of
+   AnnDecl anns decl -> prPrec i 0 (concatD [prt 0 anns , prt 0 decl])
+
+  prtList es = case es of
+   [] -> (concatD [])
+   x:xs -> (concatD [prt 0 x , prt 0 xs])
+
 instance Print Decl where
   prt i e = case e of
    TypeDecl typeident type' -> prPrec i 0 (concatD [doc (showString "type") , prt 0 typeident , doc (showString "=") , prt 0 type' , doc (showString ";")])
@@ -184,9 +197,6 @@ instance Print Decl where
    ClassImplements typeident qualtypes bodydecls0 maybeblock bodydecls -> prPrec i 0 (concatD [doc (showString "class") , prt 0 typeident , doc (showString "implements") , prt 0 qualtypes , doc (showString "{") , prt 0 bodydecls0 , prt 0 maybeblock , prt 0 bodydecls , doc (showString "}")])
    ClassParamImplements typeident params qualtypes bodydecls0 maybeblock bodydecls -> prPrec i 0 (concatD [doc (showString "class") , prt 0 typeident , doc (showString "(") , prt 0 params , doc (showString ")") , doc (showString "implements") , prt 0 qualtypes , doc (showString "{") , prt 0 bodydecls0 , prt 0 maybeblock , prt 0 bodydecls , doc (showString "}")])
 
-  prtList es = case es of
-   [] -> (concatD [])
-   x:xs -> (concatD [prt 0 x , prt 0 xs])
 
 instance Print ConstrIdent where
   prt i e = case e of
@@ -245,7 +255,7 @@ instance Print FunBody where
 
 instance Print Param where
   prt i e = case e of
-   Par type' id -> prPrec i 0 (concatD [prt 0 type' , prt 0 id])
+   Par anntype id -> prPrec i 0 (concatD [prt 0 anntype , prt 0 id])
 
   prtList es = case es of
    [] -> (concatD [])
@@ -359,5 +369,13 @@ instance Print Exp where
    ExpP pureexp -> prPrec i 0 (concatD [prt 0 pureexp])
    ExpE effexp -> prPrec i 0 (concatD [prt 0 effexp])
 
+
+instance Print Ann where
+  prt i e = case e of
+   SimpleAnn pureexp -> prPrec i 0 (concatD [doc (showString "[") , prt 0 pureexp , doc (showString "]")])
+
+  prtList es = case es of
+   [] -> (concatD [])
+   x:xs -> (concatD [prt 0 x , prt 0 xs])
 
 
