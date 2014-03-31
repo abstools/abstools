@@ -9,7 +9,7 @@ import qualified Language.Haskell.Exts.Syntax as HS
 import Language.Haskell.Exts.SrcLoc (noLoc)
 import Language.Haskell.Exts.Pretty (prettyPrint)
 import Control.Monad (liftM)
-import Data.List (intersperse, nub, findIndices)
+import Data.List (intersperse, nub, findIndices, (\\))
 import Data.Char (toLower)
 import Data.Maybe (mapMaybe)
 
@@ -417,8 +417,37 @@ main = do
                       (map (tMethDecl interf) imdecls)
            )
                  (M.toList scanInterfs)
-
        where
+         -- all methods declared (interface methods and non-methods)
+         mdecls = case maybeBlock of
+                    ABS.NoBlock ->  ldecls
+                    ABS.JustBlock _ -> rdecls
+
+         nonMethods = (filter (\case
+                               ABS.MethDecl _ _ _ _ -> True
+                               _ -> False) mdecls) \\ concat (M.elems scanInterfs)
+
+         -- treat it as a simple method
+         tNonMethDecl interfName (ABS.MethDecl _ (ABS.Ident mident) mparams (ABS.Block block)) = 
+             -- the underline non-method implementation
+             HS.FunBind [HS.Match noLoc (HS.Ident mident) (map (\ (ABS.Par _ (ABS.Ident pid)) -> HS.PVar (HS.Ident pid)) mparams) -- does not take this as param
+                                    Nothing (HS.UnGuardedRhs $ tBlockWithReturn block clsName allFields 
+                                             -- method scoping of input arguments
+                                             [foldl (\ acc (ABS.Par (ABS.AnnType _ ptyp) pident) -> 
+                                                       M.insertWith (const $ const $ error $ "Parameter " ++ show pident ++ " is already defined") pident ptyp acc) M.empty  mparams] interfName)  (HS.BDecls [])]
+             -- the sync wrapper
+           : HS.FunBind [HS.Match noLoc (HS.Ident $ mident ++ "_sync") (map (\ (ABS.Par _ (ABS.Ident pid)) -> HS.PVar (HS.Ident pid)) mparams 
+                                                                                ++ [HS.PatTypeSig noLoc HS.PWildCard $ HS.TyCon $ HS.UnQual $ HS.Ident "AnyObject"])
+                                    Nothing (HS.UnGuardedRhs (foldl (\ acc (ABS.Par _ (ABS.Ident pident)) -> HS.App acc (HS.Var $ HS.UnQual $ HS.Ident pident)) (HS.Var $ HS.UnQual $ HS.Ident mident) mparams))  (HS.BDecls [])]
+             -- the async wrapper
+           : [HS.FunBind [HS.Match noLoc (HS.Ident $ mident ++ "_async") (map (\ (ABS.Par _ (ABS.Ident pid)) -> HS.PVar (HS.Ident pid)) mparams 
+                                                                                ++ [HS.PatTypeSig noLoc HS.PWildCard $ HS.TyCon $ HS.UnQual $ HS.Ident "AnyObject"])
+                                    Nothing (HS.UnGuardedRhs (HS.Do [HS.Generator noLoc (HS.PRec (HS.UnQual (HS.Ident "AConf")) [HS.PFieldPat (HS.UnQual (HS.Ident "aCOG")) (HS.PAsPat (HS.Ident "__cog") (HS.PTuple HS.Boxed [HS.PVar (HS.Ident "__chan"),HS.PWildCard])),HS.PFieldPat (HS.UnQual (HS.Ident "aThis")) (HS.PVar (HS.Ident "__obj"))]) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "ask")))),HS.Generator noLoc (HS.PAsPat (HS.Ident "astate") (HS.PParen (HS.PRec (HS.UnQual (HS.Ident "AState")) [HS.PFieldPat (HS.UnQual (HS.Ident "aCounter")) (HS.PVar (HS.Ident "__counter"))]))) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "get")))),HS.Qualifier (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.Qual (HS.ModuleName "RWS") (HS.Ident "put"))) (HS.Paren (HS.RecUpdate (HS.Var (HS.UnQual (HS.Ident "astate"))) [HS.FieldUpdate (HS.UnQual (HS.Ident "aCounter")) (HS.InfixApp (HS.Var (HS.UnQual (HS.Ident "__counter"))) (HS.QVarOp (HS.UnQual (HS.Symbol "+"))) (HS.Lit (HS.Int 1)))]))))),HS.Generator noLoc (HS.PVar (HS.Ident "__mvar")) (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Var (HS.UnQual (HS.Ident "newEmptyMVar")))))),HS.LetStmt (HS.BDecls [HS.PatBind noLoc (HS.PVar (HS.Ident "__f")) Nothing (HS.UnGuardedRhs (HS.App (HS.App (HS.App (HS.Con (HS.UnQual (HS.Ident "FutureRef"))) (HS.Var (HS.UnQual (HS.Ident "__mvar")))) (HS.Var (HS.UnQual (HS.Ident "__cog")))) (HS.Var (HS.UnQual (HS.Ident "__counter"))))) (HS.BDecls [])]),HS.Qualifier (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.Var (HS.UnQual (HS.Ident "lift"))) (HS.Paren (HS.App (HS.App (HS.Var (HS.UnQual (HS.Ident "writeChan"))) (HS.Var (HS.UnQual (HS.Ident "__chan")))) (HS.Paren (HS.App (HS.App (HS.App (HS.Con (HS.UnQual (HS.Ident "RunJob"))) (HS.Var (HS.UnQual (HS.Ident "__obj")))) (HS.Var (HS.UnQual (HS.Ident "__f")))) (HS.Paren (foldl (\ acc (ABS.Par _ (ABS.Ident pident)) -> HS.App acc (HS.Var $ HS.UnQual $ HS.Ident pident)) (HS.Var $ HS.UnQual $ HS.Ident mident) mparams))))))))),HS.Qualifier (HS.App (HS.Var (HS.UnQual (HS.Ident "return"))) (HS.Var (HS.UnQual (HS.Ident "__f"))))])) (HS.BDecls [])]]
+
+         tNonMethDecl _ _ = error "non method declaration error"
+
+
+
          allFields :: Scope -- order matters, because the fields are indexed
          allFields = M.fromList $ map (\ (ABS.Par (ABS.AnnType _ t) i) -> (i,t)) params ++ mapMaybe (\case
                                                                        ABS.FieldDecl t i -> Just (i,t)
@@ -445,7 +474,7 @@ main = do
                                     Nothing (HS.UnGuardedRhs $ tBlockWithReturn block clsName allFields 
                                              -- method scoping of input arguments
                                              [foldl (\ acc (ABS.Par (ABS.AnnType _ ptyp) pident) -> 
-                                                       M.insertWith (const $ const $ error $ "Parameter " ++ show pident ++ " is already defined") pident ptyp acc) M.empty  mparams] interfName)  (HS.BDecls [])]
+                                                       M.insertWith (const $ const $ error $ "Parameter " ++ show pident ++ " is already defined") pident ptyp acc) M.empty  mparams] interfName)  (HS.BDecls (concatMap (tNonMethDecl interfName) nonMethods))]
          tMethDecl _ _ = error "Second parsing error: Syntactic error, no field declaration accepted here"
          -- TODO, can be optimized
          scanInterfs :: M.Map ABS.TypeIdent [ABS.BodyDecl] -- assoc list of interfaces to methods
@@ -455,9 +484,6 @@ main = do
                                                 ) mdecls)
                               $ M.filterWithKey (\ interfName _ -> interfName `elem` scanInterfs') (M.unions $ map methods symbolTable) -- filtered methods symboltable
              where
-               mdecls = case maybeBlock of
-                            ABS.NoBlock ->  ldecls
-                            ABS.JustBlock _ -> rdecls
                scanInterfs' = scan imps
                unionedST = (M.unions $ map hierarchy symbolTable)
                scan :: [ABS.QualType] -> [ABS.TypeIdent] -- gathers all interfaces that must be implemented
