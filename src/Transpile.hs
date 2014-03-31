@@ -40,14 +40,14 @@ main = do
                                                                         methods = foldl insertMethods M.empty decls
                                                                       }
                 where 
-                  insertInterfs :: M.Map ABS.TypeIdent [ABS.QualType] -> ABS.Decl -> M.Map ABS.TypeIdent [ABS.QualType]
-                  insertInterfs acc (ABS.InterfDecl tident _msigs) = M.insertWith (const $ const $ error "duplicate interface declaration") tident [] acc
-                  insertInterfs acc (ABS.ExtendsDecl tident extends _msigs) = M.insertWith (const $ const $ error "duplicate interface declaration") tident extends acc
+                  insertInterfs :: M.Map ABS.TypeIdent [ABS.QualType] -> ABS.AnnDecl -> M.Map ABS.TypeIdent [ABS.QualType]
+                  insertInterfs acc (ABS.AnnDecl _ (ABS.InterfDecl tident _msigs)) = M.insertWith (const $ const $ error "duplicate interface declaration") tident [] acc
+                  insertInterfs acc (ABS.AnnDecl _ (ABS.ExtendsDecl tident extends _msigs)) = M.insertWith (const $ const $ error "duplicate interface declaration") tident extends acc
                   insertInterfs acc _ = acc
 
-                  insertMethods :: M.Map ABS.TypeIdent [ABS.Ident] -> ABS.Decl -> M.Map ABS.TypeIdent [ABS.Ident]
-                  insertMethods acc (ABS.InterfDecl tident msigs) = insertMethods acc (ABS.ExtendsDecl tident [] msigs)  -- normalization
-                  insertMethods acc (ABS.ExtendsDecl tident extends msigs) = 
+                  insertMethods :: M.Map ABS.TypeIdent [ABS.Ident] -> ABS.AnnDecl -> M.Map ABS.TypeIdent [ABS.Ident]
+                  insertMethods acc (ABS.AnnDecl a (ABS.InterfDecl tident msigs)) = insertMethods acc (ABS.AnnDecl a (ABS.ExtendsDecl tident [] msigs))  -- normalization
+                  insertMethods acc (ABS.AnnDecl _ (ABS.ExtendsDecl tident extends msigs)) = 
                       {- TODO it could generate a compilation error because of duplicate method declaration -}
                       M.insertWith (const $ const $ error "duplicate interface declaration") tident (collectMethods msigs) acc
                   insertMethods acc _ = acc
@@ -96,8 +96,8 @@ main = do
                                     }] 
                      (tDecls decls ++ (tMain maybeMain))
                                                                                                      )
-    tDecls :: [ABS.Decl] -> [HS.Decl]
-    tDecls = concatMap tDecl 
+    tDecls :: [ABS.AnnDecl] -> [HS.Decl]
+    tDecls = concatMap (\ (ABS.AnnDecl _ decl) -> tDecl decl)
 
     -- can return more than 1 decl, because of creating accessors for records
     -- or putting type signatures
@@ -204,7 +204,7 @@ main = do
 
     tDecl (ABS.ParFun fReturnTyp (ABS.Ident fid) tyvars params body) = 
        [
-        HS.FunBind [HS.Match noLoc (HS.Ident fid) (map (\ (ABS.Par ptyp (ABS.Ident pid)) -> 
+        HS.FunBind [HS.Match noLoc (HS.Ident fid) (map (\ (ABS.Par (ABS.AnnType _ ptyp) (ABS.Ident pid)) -> 
                                                             (\ pat -> if ptyp == ABS.TyUnderscore
                                                                      then pat -- infer the parameter type
                                                                      else HS.PatTypeSig noLoc pat (tTypeOrTyVar tyvars ptyp) -- wrap with an explicit type annotation
@@ -262,7 +262,7 @@ main = do
                                         -- let __c = cont { class1_field1 = __field1, ..., class1_loc = (return (__chan, __new_tid)) }
                                         [HS.LetStmt $ HS.BDecls [HS.PatBind noLoc (HS.PVar $ HS.Ident "__c") Nothing 
                                                                    (HS.UnGuardedRhs $ HS.RecUpdate (HS.Var $ HS.UnQual $ HS.Ident "__cont")
-                                                                      (foldr (\ fdecl acc -> (case fdecl of
+                                                                      (foldr (\  fdecl acc -> (case fdecl of
                                                                                               ABS.FieldDeclAss _t (ABS.Ident fid) _pexp -> 
                                                                                                   HS.FieldUpdate (HS.UnQual $ HS.Ident $ headToLower clsName ++ "_" ++ fid) (HS.Var $ HS.UnQual $ HS.Ident $ "__" ++ fid) : acc
                                                                                               ABS.FieldDecl _t (ABS.Ident fid) ->  
@@ -420,7 +420,7 @@ main = do
 
        where
          allFields :: Scope -- order matters, because the fields are indexed
-         allFields = M.fromList $ map (\ (ABS.Par t i) -> (i,t)) params ++ mapMaybe (\case
+         allFields = M.fromList $ map (\ (ABS.Par (ABS.AnnType _ t) i) -> (i,t)) params ++ mapMaybe (\case
                                                                        ABS.FieldDecl t i -> Just (i,t)
                                                                        ABS.FieldDeclAss t i _ -> Just (i,t)
                                                                        ABS.MethDecl _ _ _ _ -> Nothing
@@ -444,7 +444,7 @@ main = do
                       HS.FunBind [HS.Match noLoc (HS.Ident mident) (map (\ (ABS.Par _ (ABS.Ident pid)) -> HS.PVar (HS.Ident pid)) mparams ++ [HS.PVar $ HS.Ident "this"])
                                     Nothing (HS.UnGuardedRhs $ tBlockWithReturn block clsName allFields 
                                              -- method scoping of input arguments
-                                             [foldl (\ acc (ABS.Par ptyp pident) -> 
+                                             [foldl (\ acc (ABS.Par (ABS.AnnType _ ptyp) pident) -> 
                                                        M.insertWith (const $ const $ error $ "Parameter " ++ show pident ++ " is already defined") pident ptyp acc) M.empty  mparams] interfName)  (HS.BDecls [])]
          tMethDecl _ _ = error "Second parsing error: Syntactic error, no field declaration accepted here"
          -- TODO, can be optimized
@@ -519,14 +519,14 @@ main = do
 
     tBody :: ABS.FunBody -> [ABS.TypeIdent] -> [ABS.Param] -> HS.Exp
     tBody ABS.Builtin _tyvars _params = HS.Var $ HS.UnQual $ HS.Ident "undefined" -- builtin turned to undefined
-    tBody (ABS.PureBody exp) tyvars params = tPureExp exp tyvars M.empty (M.fromList $ map (\ (ABS.Par t i) -> (i,t)) params) (error "no class context") -- no class scope and no global scope
+    tBody (ABS.PureBody exp) tyvars params = tPureExp exp tyvars M.empty (M.fromList $ map (\ (ABS.Par (ABS.AnnType _ t) i) -> (i,t)) params) (error "no class context") -- no class scope and no global scope
 
     -- tPureExp :: ABS.PureExp -> TypeVarsInScope -> CurrentClassScope -> CurrentNormalScope -> InterfaceName -> HS.Exp
     tPureExp :: ABS.PureExp -> [ABS.TypeIdent] -> Scope -> Scope -> String -> HS.Exp
     tPureExp (ABS.If predE thenE elseE) tyvars clsScope fscope interf = HS.If (tPureExp predE tyvars clsScope fscope interf) (tPureExp thenE tyvars clsScope fscope interf) (tPureExp elseE tyvars clsScope fscope interf)
 
     -- translate it into a lambda exp
-    tPureExp (ABS.Let (ABS.Par ptyp pid@(ABS.Ident var)) eqE inE) tyvars clsScope fscope interf = 
+    tPureExp (ABS.Let (ABS.Par (ABS.AnnType _ ptyp) pid@(ABS.Ident var)) eqE inE) tyvars clsScope fscope interf = 
                                               (HS.App -- apply the created lamdba to the equality expr
                                                   (HS.Lambda noLoc
                                                    [if ptyp == ABS.TyUnderscore
@@ -780,7 +780,7 @@ main = do
                                                               (HS.TyVar $ HS.Ident "a")) )
                                                 (tType tReturn))
                                      )
-                                     (map (\ (ABS.Par typ _) -> typ) pars))
+                                     (map (\ (ABS.Par (ABS.AnnType _ typ) _) -> typ) pars))
 
 
     -- tThisExp is a pure expression in the statement world
@@ -818,7 +818,7 @@ main = do
                                                                              else HS.Qual (HS.ModuleName (joinQualTypeIds (init qtids))) -- qual
                                                                                    (HS.Ident $ (\ (ABS.QualTypeIdent (ABS.TypeIdent tid)) -> tid) (last qtids))
 
-    tTypeOrTyVar tyvars (ABS.ArgType qtyp tyargs) = foldl (\ tyacc tynext -> HS.TyApp tyacc (tTypeOrTyVar tyvars tynext)) (tType (ABS.TypeVar qtyp)) tyargs
+    tTypeOrTyVar tyvars (ABS.ArgType qtyp tyargs) = foldl (\ tyacc (ABS.AnnType _ tynext) -> HS.TyApp tyacc (tTypeOrTyVar tyvars tynext)) (tType (ABS.TypeVar qtyp)) tyargs
 
 
     tMain :: ABS.MaybeBlock -> [HS.Decl]
@@ -934,8 +934,8 @@ main = do
                                           ptyp -> HS.PatTypeSig noLoc (HS.PVar $ HS.Ident var)  (tType ptyp))
                                        -- rhs
                                        ((case eexp of
-                                           ABS.New _ _ -> liftInterf ident scopes
-                                           ABS.NewLocal _ _ -> liftInterf ident scopes
+                                           ABS.New _ _ -> liftInterf ident clsScope scopes
+                                           ABS.NewLocal _ _ -> liftInterf ident clsScope scopes
                                            _ -> id ) (tRhs eexp cls clsScope scopes interf)))
                                        : tStmts rest canReturn cls clsScope scopes interf
                              Nothing -> case M.lookup ident clsScope of -- maybe it is in the class scope
@@ -953,8 +953,8 @@ main = do
                                           (HS.Var $ HS.UnQual $ HS.Ident $ "set_" ++ headToLower cls ++ "_" ++ var)
                                           (HS.QVarOp $ HS.UnQual $ HS.Symbol "=<<")
                                           ((case eexp of
-                                              ABS.New _ _ -> liftInterf ident scopes
-                                              ABS.NewLocal _ _ -> liftInterf ident scopes
+                                              ABS.New _ _ -> liftInterf ident clsScope scopes
+                                              ABS.NewLocal _ _ -> liftInterf ident clsScope scopes
                                               _ -> id )
                                           (tRhs eexp cls clsScope scopes interf))))
                                  : tStmts rest canReturn cls clsScope scopes interf
@@ -962,7 +962,7 @@ main = do
                        ABS.SAwait g -> (HS.Qualifier (HS.App (HS.Var $ HS.UnQual $ HS.Ident "await") (tAwaitGuard g cls clsScope scopes interf))) :
                                                                     (tStmts rest canReturn cls clsScope scopes interf)
 
-    liftInterf ident@(ABS.Ident var) scopes = case M.lookup ident (M.unions scopes) of
+    liftInterf ident@(ABS.Ident var) clsScope scopes = case M.lookup ident (M.union (M.unions scopes) clsScope) of
                                 Nothing -> error $ "Identifier " ++ var ++ " cannot be resolved from scope"
                                 Just (ABS.TyUnderscore) -> error $ "Cannot interface type for variable" ++ var
                                 Just (ABS.TypeVar (ABS.QualType qids)) -> HS.App (HS.App (HS.Var $ HS.UnQual $ HS.Ident "liftM") (HS.Var $ HS.UnQual $ HS.Ident $ (\ (ABS.QualTypeIdent (ABS.TypeIdent iid)) -> iid) (last qids)))

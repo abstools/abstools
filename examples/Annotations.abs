@@ -1,0 +1,13 @@
+module Annotations;
+
+[Far] [Atomic] [3] def Mplo<[Near] [Atomic] Int, [Far] Mpli<Mplo>> f() = 3;
+
+[Far] interface Client extends Node {
+	ClientDataBase getClientDataBase();
+}
+
+[Near] class Client {
+	Unit setAcceptor(ServerAcceptor acceptor) { }
+}
+
+
