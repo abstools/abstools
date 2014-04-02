@@ -383,10 +383,13 @@ public class State {
         
         for(GroupName a: toRefresh.keySet())
         {
-            HashSet<GroupName> substituedNames = new HashSet<GroupName>();
-            temp.put(s.apply(a), substituedNames);
+            GroupName key = s.apply(a);
+            if(!temp.containsKey(key)){
+              temp.put(key, new HashSet<GroupName>());
+            }
+            
             for (GroupName b : toRefresh.get(a)){
-                substituedNames.add(s.apply(b));
+                temp.get(key).add(s.apply(b));
                 
                 System.out.println("\t Substitution: " + a + "," + b + " -> " + s.apply(a)+ "," + s.apply(b));
             }
@@ -430,7 +433,7 @@ public class State {
     
     public boolean HasCycleAwait()
     {
-        return hasCycle = HasCycle(depCoupleAwait);
+        return HasCycle(depCoupleAwait);
     }
     
     public boolean HasCycle()
