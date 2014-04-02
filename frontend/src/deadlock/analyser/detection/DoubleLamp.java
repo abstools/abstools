@@ -34,7 +34,6 @@ public class DoubleLamp {
     }
 
     //union
-
     public void Union(DoubleLamp dl1, DoubleLamp dl2){
         Lamp lAus = new Lamp();
         lAus.addLamp(dl1.getW());
@@ -50,7 +49,6 @@ public class DoubleLamp {
     }
 
     //sequence composition
-
     public void seqComposition(DoubleLamp dl){
         if(dl.getW().getStates().isEmpty()){
             this.wPrime.parallel(dl.getWPrime());
@@ -64,4 +62,5 @@ public class DoubleLamp {
         this.wPrime.parallel(dl.getWPrime());
     }
 
+  
 }

@@ -2,18 +2,16 @@ package deadlock.analyser.detection;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
-import java.util.Stack;
 import java.util.TreeSet;
 
-import abs.frontend.ast.ASTNode;
 import deadlock.analyser.factory.GroupName;
 //import deadlock.constraints.term.TermVariable;
 
 //Class State implement the structure that contains a "list of couple (a,b)", this list is implement like an HashMap, the key is a TermVariable and the value is a 
 //list of other TermVariable which appear in the right side of a couple dependency.
+
+//TODO ABEL: review DONE
 
 public class State {
 
@@ -146,7 +144,7 @@ public class State {
             for(GroupName b: s.depCoupleAwait.get(a))
                 //TODO QUESTION ABEL: this methods says that if an await couple from s is contained as a get couple in this
                 //is correct to say that this contains s
-                if(!containsCouple(a, b))
+                if(!containsCoupleAwait(a, b))
                     return false;
         
         return true;
@@ -181,6 +179,11 @@ public class State {
     private boolean containsCoupleGet(GroupName a, GroupName b) {
         HashSet<GroupName> aGroup;
         return ((aGroup = depCouple.get(a)) != null && aGroup.contains(b)) ;
+    }
+    
+    private boolean containsCoupleAwait(GroupName a, GroupName b) {
+        HashSet<GroupName> aGroup;
+        return ((aGroup = depCoupleAwait.get(a)) != null && aGroup.contains(b)) ;
     }
 
 
@@ -374,16 +377,22 @@ public class State {
 
     }
 
-    private static HashMap<GroupName, HashSet<GroupName>> RefreshHashMap(VarSubstitution s, HashMap<GroupName, HashSet<GroupName>> toRefresh) {
+    private HashMap<GroupName, HashSet<GroupName>> RefreshHashMap(VarSubstitution s, HashMap<GroupName, HashSet<GroupName>> toRefresh) {
         
-        HashMap<GroupName, HashSet<GroupName>> temp = new HashMap<GroupName, HashSet<GroupName>>();
+        HashMap<GroupName, HashSet<GroupName>> temp = new HashMap<GroupName, HashSet<GroupName>>(toRefresh.size());
         
         for(GroupName a: toRefresh.keySet())
         {
-            HashSet<GroupName> substituedNames = new HashSet<GroupName>();
-            temp.put(s.apply(a), substituedNames);
-            for (GroupName b : toRefresh.get(a))
-                substituedNames.add(s.apply(b));
+            GroupName key = s.apply(a);
+            if(!temp.containsKey(key)){
+              temp.put(key, new HashSet<GroupName>());
+            }
+            
+            for (GroupName b : toRefresh.get(a)){
+                temp.get(key).add(s.apply(b));
+                
+                System.out.println("\t Substitution: " + a + "," + b + " -> " + s.apply(a)+ "," + s.apply(b));
+            }
             
         }
         
@@ -395,6 +404,8 @@ public class State {
         Integer i = 0;
         for(GroupName v : depCouple.keySet())
            i+= depCouple.get(v).size();
+        for(GroupName v : depCoupleAwait.keySet())
+            i+= depCoupleAwait.get(v).size();
         return i;
     }
 
@@ -404,6 +415,11 @@ public class State {
         for(GroupName a : depCouple.keySet()){
             fv.add(a);
             for(GroupName b : depCouple.get(a))
+                fv.add(b);
+        }
+        for(GroupName a : depCoupleAwait.keySet()){
+            fv.add(a);
+            for(GroupName b : depCoupleAwait.get(a))
                 fv.add(b);
         }
         return fv;
@@ -417,15 +433,34 @@ public class State {
     
     public boolean HasCycleAwait()
     {
-        return hasCycle = HasCycle(depCoupleAwait);
+        return HasCycle(depCoupleAwait);
     }
     
     public boolean HasCycle()
     {
-        return hasCycle = HasCycleGet() || HasCycleAwait();
+        //return hasCycle = HasCycleGet() || HasCycleAwait();
+        
+        HashMap<GroupName, HashSet<GroupName>> allTogether = new  HashMap<GroupName, HashSet<GroupName>>();
+        
+        for(GroupName a : depCouple.keySet())
+            for(GroupName b: depCouple.get(a)){
+            if(!allTogether.containsKey(a))
+                allTogether.put(a, new HashSet<GroupName>());
+            
+            allTogether.get(a).add(b);
+            }
+        for(GroupName a : depCoupleAwait.keySet())
+            for(GroupName b: depCoupleAwait.get(a)){
+            if(!allTogether.containsKey(a))
+                allTogether.put(a, new HashSet<GroupName>());
+            
+            allTogether.get(a).add(b);
+            }
+        
+        return HasCycle(allTogether);
     }
     
-    private static boolean HasCycle(HashMap<GroupName, HashSet<GroupName>> graph)
+    private boolean HasCycle(HashMap<GroupName, HashSet<GroupName>> graph)
     {
         HashSet<GroupName> visited = new HashSet<GroupName>();
         HashSet<GroupName> recorded = new HashSet<GroupName>();
@@ -440,7 +475,7 @@ public class State {
         return false;
     }
     
-    private static boolean HasCycleUtil(HashMap<GroupName, HashSet<GroupName>> graph, HashSet<GroupName> recorded, HashSet<GroupName> visited, GroupName current)
+    private boolean HasCycleUtil(HashMap<GroupName, HashSet<GroupName>> graph, HashSet<GroupName> recorded, HashSet<GroupName> visited, GroupName current)
     {
        if(!visited.contains(current))
        {

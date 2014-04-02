@@ -8,6 +8,8 @@ import abs.frontend.ast.ASTNode;
 //The Class Couple implement the structure used for a single dependency between two GroupName, it contains the TermVariable name and the flag that will
 //be use in the State visit
 
+//TODO ABEL: Review DONE (DELETE UNUSED CLASS)
+
 public class Couple {
 	
 	GroupName v;
@@ -15,19 +17,19 @@ public class Couple {
 	Boolean visited;
 	
 	//used by get couple with node information
-        public Couple(GroupName a, Boolean b){
-                this.v = a;
-                this.visited = b;
-                this.coupleIsGet = true;
-        }
-	
+//        public Couple(GroupName a, Boolean b){
+//                this.v = a;
+//                this.visited = b;
+//                this.coupleIsGet = true;
+//        }
+//	
 	
 	//used by await couple with node information
-        public Couple(GroupName a, Boolean b, Boolean await){
-                this.v = a;
-                this.visited = b;
-                this.coupleIsGet = false;
-        }
+//        public Couple(GroupName a, Boolean b, Boolean await){
+//                this.v = a;
+//                this.visited = b;
+//                this.coupleIsGet = false;
+//        }
 	
 	
 	
