@@ -1,48 +1,47 @@
 package deadlock.analyser.detection;
 
 //This Class is only create to easily pass a pair of Lamps, only getter and setter method are provided
-//N.B. do not confuse BoubleLamp with BigLamp, the second one is more important and conserve main informations
-public class DoubleLamp {
+//N.B. do not confuse BoubleLam with BigLam, the second one is more important and conserve main informations
+public class DoubleLam {
 
-    // the only field are the 2 lamps
-    Lamp w;
-    Lamp wPrime;
+    // the only field are the 2 lams
+    Lam w;
+    Lam wPrime;
 
     //constructor
-    public DoubleLamp(){
-        this.w = new Lamp();
-        this.wPrime = new Lamp();
+    public DoubleLam(){
+        this.w = new Lam();
+        this.wPrime = new Lam();
     }
 
 
     //getter and setter
 
-    public Lamp getW(){
+    public Lam getW(){
         return this.w;
     }
 
-    public Lamp getWPrime(){
+    public Lam getWPrime(){
         return this.wPrime;
     }
 
-    public void setW(Lamp newW){
+    public void setW(Lam newW){
         this.w = newW;
     }
 
-    public void setWPrime(Lamp newW){
+    public void setWPrime(Lam newW){
         this.wPrime = newW;
     }
 
     //union
-
-    public void Union(DoubleLamp dl1, DoubleLamp dl2){
-        Lamp lAus = new Lamp();
+    public void union(DoubleLam dl1, DoubleLam dl2){
+        Lam lAus = new Lam();
         lAus.addLamp(dl1.getW());
         lAus.addLamp(dl2.getW());
 
         this.w = lAus;
 
-        Lamp lAus2 = new Lamp();
+        Lam lAus2 = new Lam();
         lAus2.addLamp(dl1.getWPrime());
         lAus2.addLamp(dl2.getWPrime());
 
@@ -50,13 +49,12 @@ public class DoubleLamp {
     }
 
     //sequence composition
-
-    public void seqComposition(DoubleLamp dl){
+    public void seqComposition(DoubleLam dl){
         if(dl.getW().getStates().isEmpty()){
             this.wPrime.parallel(dl.getWPrime());
             return;
         }
-        Lamp lAus = new Lamp();
+        Lam lAus = new Lam();
         lAus.addLamp(dl.getW());
         lAus.parallel(this.wPrime);
         this.w.addLamp(lAus);
@@ -64,4 +62,5 @@ public class DoubleLamp {
         this.wPrime.parallel(dl.getWPrime());
     }
 
+  
 }

@@ -17,38 +17,21 @@
 /*  02110-1301 USA                                                        */
 /*                                                                        */
 /**************************************************************************/
-//TODO ABEL: ERASE THIS CLASS, the only reason why this class exists is the visited flag, which is not used anymore
-//it can be deleted until the contract classes stop using this (these classes dont use the flag either)
+
 package deadlock.analyser.factory;
+
+
 
 import deadlock.constraints.term.TermVariable;
 import deadlock.constraints.term.Variable;
 
 public class GroupName extends TermVariable {
     
-    public boolean visited = false;
 
-  public GroupName(Variable v) { super(v); }
 
-  //TODO ABEL: ERASE THIS
-  //public Set<GroupName> fn() { Set<GroupName> res = new HashSet<GroupName>(); res.add(this); return res; }
+public GroupName(Variable v) { super(v); }
 
-  @Override
-  public boolean equals(Object obj) {
-      if (obj == this) {
-          return true;
-      }
-      if (obj == null || ! (obj instanceof GroupName )){
-          return false;
-      }
-
-     return this.v.equals(((GroupName)obj).v);
-  }
  
-  @Override
-  public int hashCode() {
-      return this.v.hashCode();
-  }
 
 }
 
