@@ -289,12 +289,20 @@ public class Constraint {
     int id = 0;
     Map<EquivClass, Integer> m = new HashMap<EquivClass, Integer>();
     Set<EquivClass> tmp = this.getEquivClass();
-    for(EquivClass eq : tmp) { m.put(eq, new Integer(id)); id += 1; }
-    res = res + "  Equivalence Classes = "; if(tmp.isEmpty()) { res += "Empty"; } else {
-      for(EquivClass eq : tmp) {
+    for(EquivClass eq : tmp) { 
+        m.put(eq, new Integer(id)); id += 1; 
+    }
+ 
+    res = res + "  Equivalence Classes = "; 
+    if(tmp.isEmpty()) { 
+        res += "Empty"; 
+    } else {
+        for(EquivClass eq : tmp) {
         res += "\n    Class " + m.get(eq).toString() + "\n" + eq.toString(m);
-      }
-    } res += "\n";    
+        }
+    } 
+    
+    res += "\n";    
     return res;
   }
   

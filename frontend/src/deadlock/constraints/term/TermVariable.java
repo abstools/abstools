@@ -23,10 +23,9 @@ package deadlock.constraints.term;
 import java.util.Set;
 import java.util.TreeSet;
 
-
 public class TermVariable implements Term, Comparable<TermVariable>{
 
-  private Variable v;
+  protected Variable v;
   
   public TermVariable(Variable v) { this.v = v; v.setKind(this); }
   
@@ -46,15 +45,31 @@ public class TermVariable implements Term, Comparable<TermVariable>{
     return res;
   }
 
+  @Override
+  public boolean equals(Object obj) {
+      if (obj == this) {
+          return true;
+      }
+      if (obj == null || ! (obj instanceof TermVariable )){
+          return false;
+      }
 
-  public boolean equals(Term t) {
-    if (t == this)  return true;
-    else if (t instanceof TermVariable) return v == ((TermVariable)t).v;
-    else return false;
+     return this.v.compareTo(((TermVariable)obj).v) == 0;
+  }
+ 
+  @Override
+  public int hashCode() {
+      return this.v.hashCode();
   }
 
-  public boolean equals(Variable var) { return (v == var); }
-  public int hashCode() { return v.hashCode(); }
+  @Override
+  public boolean equals(Term t) {
+    return this.equals((Object)t);
+  }
+
+  public boolean equals(Variable var) { return (v.compareTo(var) == 0); }
+
+  @Override
   public int compareTo(TermVariable tv) { return v.compareTo(tv.v);  }
   
   public String toString() { return v.toString(); }

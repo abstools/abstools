@@ -20,20 +20,18 @@
 
 package deadlock.analyser.factory;
 
-import java.util.Set;
-import java.util.HashSet;
+
 
 import deadlock.constraints.term.TermVariable;
 import deadlock.constraints.term.Variable;
 
 public class GroupName extends TermVariable {
     
-    public boolean visited = false;
 
-  public GroupName(Variable v) { super(v); }
 
-  public Set<GroupName> fn() { Set<GroupName> res = new HashSet<GroupName>(); res.add(this); return res; }
+public GroupName(Variable v) { super(v); }
 
+ 
 
 }
 

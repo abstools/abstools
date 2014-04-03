@@ -1,25 +1,21 @@
 package deadlock.analyser.detection;
 
-import deadlock.analyser.factory.Contract;
-import deadlock.analyser.factory.GroupName;
-import deadlock.analyser.factory.MethodInterface;
-import deadlock.analyser.factory.Record;
-import deadlock.constraints.term.Term;
-//import deadlock.constraints.term.TermStructured;
-import deadlock.analyser.factory.MethodContract;
-//import deadlock.constraints.term.TermVariable;
-//import deadlock.constraints.term.Variable;
-
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import deadlock.analyser.factory.Contract;
+import deadlock.analyser.factory.GroupName;
+import deadlock.analyser.factory.MethodContract;
+import deadlock.analyser.factory.MethodInterface;
+import deadlock.analyser.factory.Record;
+import deadlock.constraints.term.Term;
 
-// a BigLamp is a quadruple <methodName, methodContract, Lamp w, Lamp wPrime>
-// and it contain the set of variable bTilde (new fresh name created in the method) and the set of variable aTilde (formal parameter of a method)
 
-public class BigLamp {
+// a BigLam is a quadruple <methodName, methodContract, Lam w, Lam wPrime>
+// and it contains the set of variable bTilde (new fresh name created in the method) and the set of variable aTilde (formal parameter of a method)
+
+public class BigLam {
 
     String methodName;
     Term methodContract;
@@ -29,12 +25,12 @@ public class BigLamp {
     VarSubstitution lastBFresh;
 
 
-    Lamp w;
-    Lamp wPrime;
+    Lam w;
+    Lam wPrime;
 
-    // constructor from method name and methodContract
-    public BigLamp(String method, Term methodContractInferred){
-        //initialize the lamp for the method MethodName, and use this MethodContract obtained form inference algorithm to produce
+    // constructor from methodName and methodContract
+    public BigLam(String method, Term methodContractInferred){
+        //initialize the lam for the method MethodName, and use this MethodContract obtained form inference algorithm to produce
         //bTilde
 
         this.methodName = method;
@@ -42,8 +38,8 @@ public class BigLamp {
 
         this.lastBFresh = new VarSubstitution();
 
-        this.w = new Lamp();
-        this.wPrime = new Lamp();
+        this.w = new Lam();
+        this.wPrime = new Lam();
 
 
         if(methodContractInferred instanceof MethodContract){
@@ -63,7 +59,7 @@ public class BigLamp {
             this.aTilde.addAll(_this.fn());
             for(Record t : args){
                 this.bTilde.removeAll(t.fn());
-                this.aTilde.addAll(t.fn());
+               
             }
         }
         else {
@@ -71,27 +67,24 @@ public class BigLamp {
             this.aTilde = new TreeSet<GroupName>();
         }
 
-        //System.out.println("DEBUG: bTilde = " + bTilde);
-        //System.out.println("DEBUG: aTilde = " + aTilde);
-
     }
 
-    //Getter and Setter for Lamp
-    public Lamp getFirst(){
+    //Getter and Setter for Lam
+    public Lam getFirst(){
         return this.w;
     }
 
-    public Lamp getSecond(){
+    public Lam getSecond(){
         return this.wPrime;
     }
 
-    public void setFirst(Lamp l){
-        Lamp l2 = l.minimize();
+    public void setFirst(Lam l){
+        Lam l2 = l.minimize();
         this.w = l2;
     }
 
-    public void setSecond(Lamp l){
-        Lamp l2 = l.minimize();
+    public void setSecond(Lam l){
+        Lam l2 = l.minimize();
         this.wPrime = l2;
     }
 
@@ -131,6 +124,28 @@ public class BigLamp {
         return fv;
     }
 
+    //check for Cycle
+    public Boolean hasCycle(){
+        //there is a Cycle when one of the two cycle types is present
+        return w.hasCycle() || wPrime.hasCycle();
+    }
+
+
+   
+    //check just for Get Cycle
+    public Boolean hasCycleGet(){
+        //it has cycle if any of the two lamps is cyclic
+        return w.hasCycleGet() || wPrime.hasCycleGet();
+    }
+
+    
+  
+    //check just for Await Cycle
+    public Boolean hasCycleAwait(){
+      //it has cycle if any of the two lamps is cyclic
+        return w.hasCycleAwait() || wPrime.hasCycleAwait();
+    }
+    
     //toString method
     public String toString(){
         return "< \n" + this.w.toString() + " , \n" + this.wPrime.toString() + ">";
