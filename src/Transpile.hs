@@ -72,7 +72,7 @@ main = do
                                                HS.Ident "MultiParamTypeClasses", -- for subtyping
                                                HS.Ident "ScopedTypeVariables" -- for inlining type annotations
                                               ]
-                     , HS.OptionsPragma noLoc (Just HS.GHC) "-w -Werror -fforce-recomp -fwarn-missing-methods"
+                     , HS.OptionsPragma noLoc (Just HS.GHC) "-w -Werror -fforce-recomp -fwarn-missing-methods -fno-ignore-asserts"
                      ] 
                      Nothing 
                      Nothing 
