@@ -12,10 +12,10 @@ import deadlock.analyser.factory.Record;
 import deadlock.constraints.term.Term;
 
 
-// a BigLamp is a quadruple <methodName, methodContract, Lamp w, Lamp wPrime>
-// and it contain the set of variable bTilde (new fresh name created in the method) and the set of variable aTilde (formal parameter of a method)
+// a BigLam is a quadruple <methodName, methodContract, Lam w, Lam wPrime>
+// and it contains the set of variable bTilde (new fresh name created in the method) and the set of variable aTilde (formal parameter of a method)
 
-public class BigLamp {
+public class BigLam {
 
     String methodName;
     Term methodContract;
@@ -25,12 +25,12 @@ public class BigLamp {
     VarSubstitution lastBFresh;
 
 
-    Lamp w;
-    Lamp wPrime;
+    Lam w;
+    Lam wPrime;
 
-    // constructor from method name and methodContract
-    public BigLamp(String method, Term methodContractInferred){
-        //initialize the lamp for the method MethodName, and use this MethodContract obtained form inference algorithm to produce
+    // constructor from methodName and methodContract
+    public BigLam(String method, Term methodContractInferred){
+        //initialize the lam for the method MethodName, and use this MethodContract obtained form inference algorithm to produce
         //bTilde
 
         this.methodName = method;
@@ -38,8 +38,8 @@ public class BigLamp {
 
         this.lastBFresh = new VarSubstitution();
 
-        this.w = new Lamp();
-        this.wPrime = new Lamp();
+        this.w = new Lam();
+        this.wPrime = new Lam();
 
 
         if(methodContractInferred instanceof MethodContract){
@@ -69,22 +69,22 @@ public class BigLamp {
 
     }
 
-    //Getter and Setter for Lamp
-    public Lamp getFirst(){
+    //Getter and Setter for Lam
+    public Lam getFirst(){
         return this.w;
     }
 
-    public Lamp getSecond(){
+    public Lam getSecond(){
         return this.wPrime;
     }
 
-    public void setFirst(Lamp l){
-        Lamp l2 = l.minimize();
+    public void setFirst(Lam l){
+        Lam l2 = l.minimize();
         this.w = l2;
     }
 
-    public void setSecond(Lamp l){
-        Lamp l2 = l.minimize();
+    public void setSecond(Lam l){
+        Lam l2 = l.minimize();
         this.wPrime = l2;
     }
 

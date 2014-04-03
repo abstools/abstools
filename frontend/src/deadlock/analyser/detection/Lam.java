@@ -5,55 +5,25 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import deadlock.analyser.factory.GroupName;
-//import deadlock.constraints.term.TermVariable;
 
-//TODO ABEL: DELETE COMMENTS, REVIEW DONE
 
-public class Lamp {
+public class Lam {
 
-    /*String MethodName;
-	Term MethodContract;
-	Set<Variable> bTilde;*/
-
+    //The collection of states for a Lam
     LinkedList<State> states;
 
-    /*public Lamp(String Method, Term MethodContractInferred){
-		//initialize the lamp for the method MethodName, and use this MethodContract obtained form inference algorithm to produce
-		//bTilde
-		this.MethodName = Method;
-		this.MethodContract = MethodContractInferred;
-
-		if(((TermStructured) MethodContractInferred).getConstructor().equals("MethodContract")){
-			Term MethodInterface = ((TermStructured) MethodContractInferred).getSubTerms().get(0);
-			Term Contract = ((TermStructured) MethodContractInferred).getSubTerms().get(1);
-
-			Term This = ((TermStructured) MethodInterface).getSubTerms().get(0);
-			Term Ret =  ((TermStructured) MethodInterface).getSubTerms().get(  ((TermStructured) MethodInterface).getSubTerms().size() -1 );
-			List<Term> Arg = ((TermStructured) MethodInterface).getSubTerms().subList(1, ((TermStructured) MethodInterface).getSubTerms().size() -2);
-
-			this.bTilde = Contract.fv();
-			this.bTilde.addAll(Ret.fv());
-			this.bTilde.removeAll(This.fv());
-			for(Term t : Arg){
-				this.bTilde.removeAll(t.fv());
-			}
-		}
-		else this.bTilde = new TreeSet<Variable>();
-
-	}*/
-
     // Constructor
-    public Lamp(){
+    public Lam(){
         this.states = new LinkedList<State>();
     }
 
     // Constructor copy
-    public Lamp(Lamp l){
+    public Lam(Lam l){
         this.states = new LinkedList<State>(l.getStates());
     }
 
     // Constructor copy2
-    public Lamp(LinkedList<State> s){
+    public Lam(LinkedList<State> s){
         this.states = s;
     }
 
@@ -79,9 +49,8 @@ public class Lamp {
 
     //TODO ABEL: check correctness
     //minimize a lamp
-    public Lamp minimize(){
-        Lamp l = new Lamp();
-        //LinkedList<State> s = new LinkedList<State>();
+    public Lam minimize(){
+        Lam l = new Lam();
         for(int i = 0; i< this.states.size(); i++){
             boolean contained = false;
             for(int j = 0; j < l.states.size(); j++){
@@ -119,8 +88,8 @@ public class Lamp {
 
 
 
-    // add a Lamp l to this lamp
-    public void addLamp(Lamp l){
+    // add a Lamp l to this lam, this is the + lam operator
+    public void addLamp(Lam l){
         //check all l states and add those that are not present in the current states
         for(State s : l.states){
             Boolean contained = false;
@@ -140,8 +109,8 @@ public class Lamp {
     }
 
     //TODO ABEL: Check correctness
-    // parallel between this Lamp and Lamp l
-    public void parallel(Lamp l){
+    // parallel between this Lam and Lam l, this is the || lam operator
+    public void parallel(Lam l){
         
         // if Lamp l is empty, the result of parallel is this
         if(l.states.isEmpty()) return;
@@ -163,19 +132,13 @@ public class Lamp {
                 cartesianState.add(s3);
             }
         }
-//        //in 'this' we already have the state of this, ok, we surely have to add the states of l
-//        this.addLamp(l);
-//        //now we have to add the cartesian product
-//        for(State s : cartesianState){
-//            this.addState(s);
-//        }
-//        //this.states.addAll(cartesianState);
         
         this.states = cartesianState;
     }
 
 
 
+    //TODO ABEL: Check correctness
     // get the FreeVariable of a Lamp
     public Set<GroupName> fv(){
         Set<GroupName> fv = new TreeSet<GroupName>();
@@ -185,71 +148,51 @@ public class Lamp {
         return fv;
     }
 
+    // realize the name substitution defined in s
     public void apply(VarSubstitution s){
         for(State st : states){
             st.apply(s);
         }
     }
 
-    
-  public Integer numberOfDep(){
-      Integer i = 0;
-      for(State st : states)
-          i+=st.numberOfDep();
-      return i;
-  }
-//*************TODO ABEL: ERASE ALL THIS NOT USED METHODS*************************************
-    //
-//  public Boolean hasCycle(){
-//      Boolean res = false;
-//      for(State st : states)
-//          res = res || st.hasCycle();
-//      return res;
-//  }
-//  
-//  public Boolean hasCycleGet(){
-//      Boolean res = false;
-//      for(State st : states)
-//          res = res || st.hasCycleGet();
-//      return res;
-//  }
-//  
-//  public Boolean hasCycleAwait(){
-//      Boolean res = false;
-//      for(State st : states)
-//          res = res || st.hasCycleAwait();
-//      return res;
-//  }
-    //********************************************************************************************
+    // calculates the current number of dependencies, used in the fix point iteration to determine
+    // if there are new changes
+    public Integer numberOfDep(){
+        Integer i = 0;
+        for(State st : states)
+            i+=st.numberOfDep();
+        return i;
+    }
     
     
-    //check for Cycle
+    //check for Cycle that might be composed by any kind of dependencies
+    //if there is a cycle and there is at least one get dependency then this is a deadlock
+    //otherwise this is a livelock and the result will be the same of hasAwaitCycle
     public Boolean hasCycle(){
       //it has cycle if there is any cyclic state
         for(State st : states)
-            if(st.HasCycle())
+            if(st.hasCycle())
                 return true;
         return false;
     }
 
 
    
-    //check just for Get Cycle
+    //check for a pure get dependencies cycle
     public Boolean hasCycleGet(){
         //it has cycle if there is any cyclic state
         for(State st : states)
-            if(st.HasCycleGet())
+            if(st.hasCycleGet())
                 return true;
         return false;
     }
 
     
-  
-    //check just for Await Cycle
+    //check just for Await Cycle, this check for what is called livelock
     public Boolean hasCycleAwait(){
         //it has cycle if there is any cyclic state
         for(State st : states)
-            if(st.HasCycleAwait())
+            if(st.hasCycleAwait())
                 return true;
         return false;
     }
