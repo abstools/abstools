@@ -3,8 +3,8 @@ import java.util.HashMap;
 
 aspect Variables {
 
-  interface Entry<K,V> { K getKey(); V getValue(); Attribute getAttribute(); }  
-  class RepeatMap<K,V> extends HashMap<K,V> {
+  public interface Entry<K,V> { K getKey(); V getValue(); Attribute getAttribute(); }  
+  public class RepeatMap<K,V> extends HashMap<K,V> {
     // Weird explicit package name necessary for OpenJDK8 compiler! [stolz]
     public void add(abs.frontend.ast.Entry<K,V> e) {
       if (e != null)
@@ -13,8 +13,8 @@ aspect Variables {
   }
   coll RepeatMap<String,BoundaryInt[]> Model.ints() [new RepeatMap<String,BoundaryInt[]>()] with add root Model;
 
-  interface RLEntry { String getItem(); void setRepeated(boolean rep);}
-  class RepeatList extends ArrayList<String> {
+  public interface RLEntry { String getItem(); void setRepeated(boolean rep);}
+  public class RepeatList extends ArrayList<String> {
     public void addNonNull(RLEntry e) {
       assert e != null;
       e.setRepeated(contains(e.getItem()));
