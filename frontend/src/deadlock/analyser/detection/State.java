@@ -1,11 +1,13 @@
 package deadlock.analyser.detection;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
 import deadlock.analyser.factory.GroupName;
+import deadlock.analyser.factory.GroupNameUnique;
 
 //Class State implement the structure that contains a "list of couple (a,b)", this list is implement like an HashMap, the key is a TermVariable and the value is a 
 //list of other TermVariable which appear in the right side of a couple dependency.
@@ -117,13 +119,14 @@ public class State {
         
         for(GroupName a: toRefresh.keySet())
         {
-            GroupName key = s.apply(a);
+            GroupName key = (a instanceof GroupNameUnique)? a: s.apply(a);
+                      
             if(!temp.containsKey(key)){
               temp.put(key, new HashSet<GroupName>());
             }
             
             for (GroupName b : toRefresh.get(a)){
-                temp.get(key).add(s.apply(b));
+                temp.get(key).add((b instanceof GroupNameUnique)? b: s.apply(b));
             }
             
         }
@@ -258,4 +261,110 @@ public class State {
         }
         return res;
     }
+
+    public void expandAndClean() {
+        // TODO Auto-generated method stub
+        expand();
+        //clean();
+        //depCoupleAwait = cleanHashMap(depCoupleAwait);
+    }
+    
+    //remove all dependencies involving fresh names
+    private void clean() {
+        
+        HashMap<GroupName, HashSet<GroupName>> temp = new HashMap<GroupName, HashSet<GroupName>>(depCouple.size());
+        
+        for(GroupName a: depCouple.keySet())
+        {
+            for (GroupName b : depCouple.get(a)){
+                 if((!a.isFresh && !b.isFresh) || (a.isFresh && b.isFresh && a.equals(b)))
+                 {
+                     if(!temp.containsKey(a))
+                         temp.put(a, new HashSet<GroupName>());
+                     
+                     //TODO ABEL: verify if it is worth to add a special name of it is OK like this
+                     temp.get(a).add(a);
+                 }                                   
+                
+            }
+            
+        }
+        
+        depCouple = temp;
+        
+    }
+    
+    //TODO ABEL: this method can be more efficient
+    private void expand(){
+        HashSet<GroupName> vertexes = new HashSet<GroupName>();
+        
+        //get all vertex
+        for(GroupName v : depCouple.keySet())
+        {
+            vertexes.add(v);
+            for(GroupName v2 : depCouple.get(v))
+               vertexes.add(v2);
+        }
+        
+        for(GroupName v : depCoupleAwait.keySet())
+        {                     
+            vertexes.add(v);
+            for(GroupName v2 : depCoupleAwait.get(v))
+               vertexes.add(v2);
+            
+        }
+        
+        //Floyd Warshall Algorithm
+        GroupName [] vertexMap = vertexes.toArray(new GroupName[0]);
+        
+        //initialize graph
+        boolean [][] graph = new boolean[vertexMap.length][];
+        
+        //get all edges
+        for (int i = 0; i < vertexMap.length; i++){
+            graph[i] = new boolean[vertexMap.length];
+            for (int j = 0; j < vertexMap.length; j++)
+                graph[i][j] = (depCouple.containsKey(vertexMap[i]) && depCouple.get(vertexMap[i]).contains(vertexMap[j])) || (depCoupleAwait.containsKey(vertexMap[i]) && depCoupleAwait.get(vertexMap[i]).contains(vertexMap[j]));
+        }
+        
+        //calculate transitive closure
+        for (int k = 0; k < vertexMap.length; k++)
+            for (int i = 0; i < vertexMap.length; i++)
+                for (int j = 0; j < vertexMap.length; j++)
+                    graph[i][j] = graph[i][j] || (graph[i][k] && graph[k][j]);
+        
+        //clean existing
+        depCouple = new HashMap<GroupName, HashSet<GroupName>>();
+        depCoupleAwait = new HashMap<GroupName, HashSet<GroupName>>();
+        
+        //add new couples
+        for (int i = 0; i < vertexMap.length; i++)
+            for (int j = 0; j < vertexMap.length; j++)
+                if(graph[i][j]) {
+                    if((!vertexMap[i].isFresh && !vertexMap[j].isFresh))
+                    {
+                        if(!depCouple.containsKey(vertexMap[i]))
+                            depCouple.put(vertexMap[i], new HashSet<GroupName>());
+                        
+                        depCouple.get(vertexMap[i]).add(vertexMap[j]);
+                    }                    
+                    else if  (vertexMap[i].isFresh && vertexMap[j].isFresh && vertexMap[i].equals(vertexMap[j])){
+                        depCouple.put(GroupNameUnique.GetInstance(), new HashSet<GroupName>());                        
+                        depCouple.get(GroupNameUnique.GetInstance()).add(GroupNameUnique.GetInstance());
+                    }
+                    
+                }
+        
+    }
+
+    public boolean hasReflexiveState() {
+        // TODO Auto-generated method stub
+        for(GroupName a : depCouple.keySet())
+            if(depCouple.get(a).contains(a))
+                return true;
+        
+        return false;
+    }
 }
+
+

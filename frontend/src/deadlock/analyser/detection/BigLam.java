@@ -151,5 +151,18 @@ public class BigLam {
         return "< \n" + this.w.toString() + " , \n" + this.wPrime.toString() + ">";
     }
 
+    //According to version2 of the fix point algorithm this method adds the missing dependencies from the transitive closure 
+    //of the dependencies of not new names and removes all dependencies with new names
+    public void expandAndClean() {
+        
+        w.expandAndClean();
+        wPrime.expandAndClean();
+    }
+
+    public Boolean hasReflexiveState() {
+        // TODO Auto-generated method stub
+        return w.hasReflexiveState() || wPrime.hasReflexiveState();
+    }
+
 
 }

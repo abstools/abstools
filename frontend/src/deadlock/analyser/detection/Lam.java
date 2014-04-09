@@ -206,4 +206,20 @@ public class Lam {
         return res;
     }
 
+    //According to version2 of the fix point algorithm this method adds the missing dependencies from the transitive closure 
+    //of the dependencies of not new names and removes all dependencies with new names
+    public void expandAndClean() {
+        for(State s: states)
+            s.expandAndClean();
+    }
+
+    public boolean hasReflexiveState() {
+        // TODO Auto-generated method stub
+        for(State s: states)
+            if(s.hasReflexiveState())
+                return true;
+        
+        return false;
+    }
+
 }

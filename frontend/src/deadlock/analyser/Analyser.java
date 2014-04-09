@@ -171,7 +171,7 @@ public class Analyser {
     }
     
     nanoTime = System.nanoTime();
-    DASolver solver = new DASolver(df, cct, nbIteration);
+    DASolver2 solver = new DASolver2(df, cct, nbIteration);
 
     solver.computeSolution();
     ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
@@ -185,9 +185,9 @@ public class Analyser {
     }
             
     out.println("### LOCK INFORMATION RESULTED BY THE ANALYSIS ###\n");
-    out.println("Saturation:                   " + solver.isSatured());
-    out.println("Possible Deadlock in Main:    " + solver.isDeadlockMain());
-    out.println("Possible Livelock in Main:    " + solver.isLivelockMain());
+//    out.println("Saturation:                   " + solver.isSatured());
+      out.println("Possible Deadlock in Main:    " + solver.isDeadlockMain());
+//    out.println("Possible Livelock in Main:    " + solver.isLivelockMain());
     out.println("Analysis Duration:            " + totalTimeInMs + "ms");
     }
 }

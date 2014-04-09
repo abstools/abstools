@@ -58,7 +58,7 @@ public class DASolver {
         }
     }
 
-    //this method compute a solution step without consider the await dependency
+    //this method performs the deadlock analysis using a fix point algorithm 
     public void computeSolution(){
         
         //perform an infinite cycle, since thanks to the saturation a fix point is always reached
