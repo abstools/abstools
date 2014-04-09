@@ -27,31 +27,20 @@ import deadlock.analyser.factory.Record;
 import deadlock.constraints.term.Term;
 import deadlock.constraints.term.TermStructured;
 
-public class DASolver2 {
-    Map<String, Term> methodMap;
-    Factory df;
-
-    Map<String, BigLam> lampMap;
-
-    Boolean deadlock;
-    private boolean hasStart;
+public class DASolver2 extends DASolver {
     
-    public DASolver2(Factory f, Map<String, Term> map, Integer i){
-        this.df = f;
-        this.methodMap = map;
-                
-        this.deadlock = false;
-        
-        this.hasStart = false;
-        
-        this.lampMap = new HashMap<String, BigLam>();
-
-        for(String mName : methodMap.keySet()){
-            this.lampMap.put(mName, new BigLam(mName, methodMap.get(mName)));
-        }
+    public DASolver2(Factory f, Map<String, Term> map) {
+        super(f, map);
+        // TODO Auto-generated constructor stub
     }
+
+   
+    private boolean hasStart = false;
+    
+    
     
     //this method performs the deadlock analysis
+    @Override
     public void computeSolution(){
         Integer prevNumberOfDep = 0;
         
@@ -61,8 +50,8 @@ public class DASolver2 {
             //perform one step expansion for each method
             for(String mName : methodMap.keySet()){
                 
-                //if(mName.equals("Main.main"))
-                    //continue;
+                if(mName.equals("Main.main"))
+                    continue;
                 
                 //get the method contract
                 Term contr = methodMap.get(mName);
@@ -103,7 +92,7 @@ public class DASolver2 {
         }
         
         BigLam blMain = lampMap.get("Main.main");
-        if(blMain.hasCycle()){
+        //if(blMain.hasCycle()){
             //a cyclic dependency was found
             //if there is a pure await dependencies cycle then there is livelock
             //this.livelock = blMain.hasCycleAwait();
@@ -115,7 +104,7 @@ public class DASolver2 {
             //livelocks at the same time but the algorithm stop at the first cycle so
             //only one cyclic dependency is reported
             return;
-        }
+        //}
         //fix point reached, perform analysis
     }
  // The rule W-Gzero of the Analysis
@@ -655,8 +644,5 @@ public class DASolver2 {
         return sub;     
     }
 
-    public boolean isDeadlockMain() {
-        // TODO Auto-generated method stub
-        return this.deadlock;
-    }
+  
 }

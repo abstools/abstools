@@ -40,11 +40,13 @@ import deadlock.constraints.substitution.*;
 public class Analyser {
     
  
-
-  public void deadlockAnalysis(Model m, boolean verbose, int nbIteration, PrintStream out) {
+  public void deadlockAnalysis(Model m, boolean verbose, int nbIteration, int fixPointVersion, PrintStream out) {
       
       Variable.varCounter =0;
       Long totalTimeInMs = 0L;
+      
+      
+      
 
     /* 0, Create the initial data */
     Factory df = new Factory(verbose);
@@ -171,7 +173,9 @@ public class Analyser {
     }
     
     nanoTime = System.nanoTime();
-    DASolver2 solver = new DASolver2(df, cct, nbIteration);
+    
+    DASolver solver = (fixPointVersion == 2)? new DASolver2(df, cct):new DASolver1(df, cct, nbIteration);
+    
 
     solver.computeSolution();
     ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
@@ -187,9 +191,11 @@ public class Analyser {
     out.println("### LOCK INFORMATION RESULTED BY THE ANALYSIS ###\n");
 //    out.println("Saturation:                   " + solver.isSatured());
       out.println("Possible Deadlock in Main:    " + solver.isDeadlockMain());
+      out.println("Current Version:              " + fixPointVersion );
 //    out.println("Possible Livelock in Main:    " + solver.isLivelockMain());
     out.println("Analysis Duration:            " + totalTimeInMs + "ms");
     }
+
 }
 
 
