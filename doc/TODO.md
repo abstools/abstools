@@ -10,10 +10,11 @@
 - Only support 1 module definition per file
 - The imported modules must be scanned for Interfaces and collected so as to generate the necessary types (with some 1st-phase export collection per module)
 - Right now, we use lazy IO, switch to strict IO with `evaluate`
+- fix await on fields syntax, maybe also semantics
+- fix to allow multiple tasks per same object (each object lives in a single particular COG). (Test `examples/MultipleTasksPerObject.abs`)
 
 # TODO for the translation
 
-- For now x = x + 1 different thant this.x = this.x + 1 . We should implement variable lookup in AG
 - Write documentation inside the source modules
 - Generate haddock
 - Retaining the ABS comments and generating Haskell comments
@@ -22,8 +23,12 @@
 - Pointer equality using StableNames. Then we can derive
 an Eq instance for each datatype and having proper equality between objects
 of the same interface but of a different class. This will also enable the Erlang-style part of pattern matching for ABS.
-- Translate the module system. Resolvign ambiguous occurences will be left for later, when the compiler
+- Translate the module system. Resolving ambiguous occurences will be left for later, when the compiler
 will do import chasing.
+- When the main block COG exits, the main program exits, and all the other running COGs are killed. This is in contrast
+with the Java backend, whereas the program exits only when all threads have exited. This will be fixed
+for the cloud abs (with the Cloud Haskell), since processes are long-living and any node has to
+be explicitly (with a Cloud Haskell API call) shutted down.
 
 # Comments about the ABS language for Translation
 
@@ -39,7 +44,7 @@ So then what is the point of this class? => This method can only be called local
 - Mostly (except ABS's letnonrec to Haskell's letrec) 1-to-1 translation of the functional core (datatypes + pure functions)
 - 1-to-1 correspondence of OO interface inheritance and Haskell's typeclasses
 - ABS and Haskell has the exact same module system (almost the same, except circular dependencies, ambiguous imports)
-- Type Inference becaus of Milner type system
+- Type Inference because of Milner type system
 - Add support for lambda functions and thus higher-order functions?
 
 # TODO enhance syntax
