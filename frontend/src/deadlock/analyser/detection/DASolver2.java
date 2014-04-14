@@ -50,8 +50,8 @@ public class DASolver2 extends DASolver {
             //perform one step expansion for each method
             for(String mName : methodMap.keySet()){
                 
-                if(mName.equals("Main.main"))
-                    continue;
+                //if(mName.equals("Main.main"))
+                  //  continue;
                 
                 //get the method contract
                 Term contr = methodMap.get(mName);

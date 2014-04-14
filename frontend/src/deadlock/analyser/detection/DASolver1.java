@@ -114,10 +114,10 @@ public class DASolver1 extends DASolver {
             if(blMain.hasCycle()){
                 //a cyclic dependency was found
                 //if there is a pure await dependencies cycle then there is livelock
-                this.livelock = blMain.hasCycleAwait();
+                this.deadlock = blMain.hasCycleGet();
                 
                 //if the cycle found is no a livelock then this lock is indeed a deadlock
-                this.deadlock = !livelock;
+                this.livelock = !this.deadlock;
                 
                 //is it possible for a program to have more than one potential deadlocks and 
                 //livelocks at the same time but the algorithm stop at the first cycle so

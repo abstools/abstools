@@ -184,15 +184,16 @@ public class Analyser {
     if(verbose) {
         out.println("Dependency analysis completed");
         out.println("Ellapsed time: " + ellapsedTime + "ms");
-
-        out.println(solver.toString());
     }
             
     out.println("### LOCK INFORMATION RESULTED BY THE ANALYSIS ###\n");
-//    out.println("Saturation:                   " + solver.isSatured());
+
       out.println("Possible Deadlock in Main:    " + solver.isDeadlockMain());
       out.println("Current Version:              " + fixPointVersion );
-//    out.println("Possible Livelock in Main:    " + solver.isLivelockMain());
+      if(fixPointVersion == 1){
+        out.println("Saturation:                   " + ((DASolver1)solver).isSatured());
+        out.println("Possible Livelock in Main:    " + ((DASolver1)solver).isLivelockMain());
+      }
     out.println("Analysis Duration:            " + totalTimeInMs + "ms");
     }
 
