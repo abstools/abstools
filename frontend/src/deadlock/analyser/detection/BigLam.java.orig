@@ -10,6 +10,10 @@ import deadlock.analyser.factory.MethodContract;
 import deadlock.analyser.factory.MethodInterface;
 import deadlock.analyser.factory.Record;
 import deadlock.constraints.term.Term;
+<<<<<<< HEAD:frontend/src/deadlock/analyser/detection/BigLam.java
+
+=======
+>>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239:frontend/src/deadlock/analyser/detection/BigLamp.java
 
 // a BigLam is a quadruple <methodName, methodContract, Lam w, Lam wPrime>
 // and it contains the set of variable bTilde (new fresh name created in the method) and the set of variable aTilde (formal parameter of a method)
