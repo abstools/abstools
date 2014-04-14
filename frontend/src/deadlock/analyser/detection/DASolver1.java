@@ -26,54 +26,39 @@ import deadlock.constraints.term.TermStructured;
 //import deadlock.constraints.term.TermVariable;
 
 
-public class DASolver {
+public class DASolver1 extends DASolver {
 
-    Map<String, Term> methodMap;
-    Factory df;
 
+    Boolean saturation;
+   
+    
     Integer nOfIterations;
 
-    Map<String, BigLam> lampMap;
+    
 
     Integer nOfDep;
 
-    Boolean saturation;
-    Boolean deadlock;
     Boolean livelock;
 
-    public DASolver(Factory f, Map<String, Term> map, Integer i){
-        this.df = f;
-        this.methodMap = map;
+    public DASolver1(Factory f, Map<String, Term> map, Integer i){
+        super(f, map);
+        
         this.nOfIterations = i;
         this.nOfDep = 0;
 
         this.saturation = false;
-        this.deadlock = false;
-        this.livelock = false;
-
-        this.lampMap = new HashMap<String, BigLam>();
-
-        for(String mName : methodMap.keySet()){
-            this.lampMap.put(mName, new BigLam(mName, methodMap.get(mName)));
-        }
+        this.livelock = false;        
     }
 
-    //this method compute a solution step without consider the await dependency
+    //this method performs the deadlock analysis using a fix point algorithm 
+    @Override
     public void computeSolution(){
-<<<<<<< HEAD
         
         //perform an infinite cycle, since thanks to the saturation a fix point is always reached
         for(Integer i=0; ; i++){
             
             //perform one step expansion for each method
             for(String mName : methodMap.keySet()){
-=======
-        for(Integer i=0; /*i < this.nOfIetation*/; i++){
-            for(String mName : methodMap.keySet()){
-                Term contr = methodMap.get(mName);
-
-                System.out.println("Iteration: " + i + " and method: " + mName);
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
 
                 //get the method contract
                 Term contr = methodMap.get(mName);
@@ -90,11 +75,8 @@ public class DASolver {
                     contr = ((Contract) contr).getList().get(0);
                 }
 
-<<<<<<< HEAD
                 //get the appropriate var substitution which is the last applied if there is saturation
                 //otherwise create a new one
-=======
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
                 VarSubstitution subFresh;
                 if(this.saturation){
                      subFresh = lampMap.get(mName).getLastBFresh();
@@ -104,58 +86,8 @@ public class DASolver {
                     Set<GroupName> bTilde = lampMap.get(mName).getbTilde();
                     subFresh = new VarSubstitution();
                     for(GroupName v : bTilde) subFresh.addSub( v, df.newGroupName());
-<<<<<<< HEAD
-=======
                 }
 
-                //I create the substitution list and put this one calculated above
-
-
-
-                if(contr instanceof ContractElementGet) {
-                    DoubleLamp l = wGet(mName, (ContractElementGet) contr, subFresh);
-                    lampMap.get(mName).setFirst(l.getW());
-                    lampMap.get(mName).setSecond(l.getWPrime());
-                    lampMap.get(mName).setLastBFresh(subFresh);
-                }else if(contr instanceof ContractElementAwait) {
-                    DoubleLamp l = wAwait(mName, (ContractElementAwait) contr, subFresh);
-                    lampMap.get(mName).setFirst(l.getW());
-                    lampMap.get(mName).setSecond(l.getWPrime());
-                    lampMap.get(mName).setLastBFresh(subFresh);
-                }else if(contr instanceof ContractElementInvk){
-                    DoubleLamp l = wInvk(mName, (ContractElementInvk) contr, subFresh);
-                    lampMap.get(mName).setFirst(l.getW());
-                    lampMap.get(mName).setSecond(l.getWPrime());
-                    lampMap.get(mName).setLastBFresh(subFresh);
-                }else if(contr instanceof ContractElementSyncInvk){
-                    DoubleLamp l = wSyncInvk2(mName, (ContractElementSyncInvk) contr, subFresh);
-                    lampMap.get(mName).setFirst(l.getW());
-                    lampMap.get(mName).setSecond(l.getWPrime());
-                    lampMap.get(mName).setLastBFresh(subFresh);
-                }else if(contr instanceof ContractElementInvkG){
-                    DoubleLamp l = wGInvk(mName, (ContractElementInvkG) contr, subFresh);
-                    lampMap.get(mName).setFirst(l.getW());
-                    lampMap.get(mName).setSecond(l.getWPrime());
-                    lampMap.get(mName).setLastBFresh(subFresh);
-                }else if(contr instanceof ContractElementInvkA){
-                    DoubleLamp l = wAInvk(mName, (ContractElementInvkA) contr, subFresh);
-                    lampMap.get(mName).setFirst(l.getW());
-                    lampMap.get(mName).setSecond(l.getWPrime());
-                    lampMap.get(mName).setLastBFresh(subFresh);
-                }else if(contr instanceof ContractElementUnion){ //FOR NOW I DO NOT IMPLEMENT RULE FOR ContractUnion
-                    DoubleLamp l = wUnion(mName, (ContractElementUnion) contr, subFresh);
-                    lampMap.get(mName).setFirst(l.getW());
-                    lampMap.get(mName).setSecond(l.getWPrime());
-                    lampMap.get(mName).setLastBFresh(subFresh);
-                }else /*if((((TermStructured) contr).getConstructor()).equals("ContractSeq"))*/{                                        
-                    DoubleLamp l = wSeq(mName, (Contract) contr, subFresh);
-                    lampMap.get(mName).setFirst(l.getW());
-                    lampMap.get(mName).setSecond(l.getWPrime());
-                    lampMap.get(mName).setLastBFresh(subFresh);
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
-                }
-
-<<<<<<< HEAD
                 //resulting lam after expansion
                 DoubleLam expansion;
                 
@@ -175,26 +107,6 @@ public class DASolver {
                 lam.setFirst(expansion.getW());
                 lam.setSecond(expansion.getWPrime());
                 lam.setLastBFresh(subFresh);
-=======
-            //if I have cycle in main I stop the analysis
-            
-            
-            /*if((lampMap.get("Main.main").getFirst().hasNewCycle() && !lampMap.get("Main.main").getFirst().hasNewCycleAwait())  || (lampMap.get("Main.main").getSecond().hasNewCycle() && !lampMap.get("Main.main").getSecond().hasNewCycleAwait()) ){
-                                moreInfoMainCycle();
-                                return;
-            }*/
-            
-            
-            
-            BigLamp blMain = lampMap.get("Main.main");
-            if(blMain.hasCycle()){
-                this.cylceOfAwait = blMain.hasCycleAwait();
-                this.deadlock = blMain.hasCycleGet();
-            
-                //TODO ABEL: REVIEW THIS 
-                //return just when there is a deadlock and not a livelock?
-                if(deadlock) return;
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
             }
 
             //check for cycles            
@@ -202,17 +114,16 @@ public class DASolver {
             if(blMain.hasCycle()){
                 //a cyclic dependency was found
                 //if there is a pure await dependencies cycle then there is livelock
-                this.livelock = blMain.hasCycleAwait();
+                this.deadlock = blMain.hasCycleGet();
                 
                 //if the cycle found is no a livelock then this lock is indeed a deadlock
-                this.deadlock = !livelock;
+                this.livelock = !this.deadlock;
                 
                 //is it possible for a program to have more than one potential deadlocks and 
                 //livelocks at the same time but the algorithm stop at the first cycle so
                 //only one cyclic dependency is reported
                 return;
             }
-<<<<<<< HEAD
 
             //if the number of dependencies has not change in this iteration then a fix point is found
             //check if the number of dependencies is different of previous, if not, stop the analysis
@@ -228,131 +139,11 @@ public class DASolver {
             this.saturation = i >= nOfIterations;
         }
     }
-=======
-            else this.nOfDep = newNumberOfDep;*/
-           
-            if(newNumberOfDep == this.nOfDep) return;
-            else this.nOfDep = newNumberOfDep;
-            
-            if(i == nOfIetation)
-            {
-                this.saturation = true;
-            }
-        }
-    }
-
-//TODO ABEL: DELETE THIS CODE
-    //this method compute a solution step without consider the await dependency
-//    public void computeSolutionSatured(){
-//        //System.out.println("SATURATION");
-//        Integer i = 0;
-//        while(true){
-//            for(String mName : methodMap.keySet()){
-//                Term contr = methodMap.get(mName);
-//
-//                // I want to isolate the contract (body contract), only Main.main has already the right contract
-//                if(contr instanceof MethodContract){
-//                    contr = ((MethodContract) contr).getContract();
-//                }
-//
-//                // In this first version of algorithm I want to work only with contract single (not contractSeq)
-//                // but inference return always a contractSeq, even if it is a single contract, so, I 'clear' it, if 
-//                // I have a contractSeq with only one subterm inside, it will be our contract to check
-//                if(((Contract) contr).getList().size() == 1){
-//                    contr = ((Contract) contr).getList().get(0);
-//                }
-//
-//                VarSubstitution subFresh = lampMap.get(mName).getLastBFresh();
-//
-//
-//                if(contr instanceof ContractElementGet) {
-//                    DoubleLamp l = wGet(mName, (ContractElementGet) contr, subFresh, true);
-//                    lampMap.get(mName).setFirst(l.getW());
-//                    lampMap.get(mName).setSecond(l.getWPrime());
-//                }else if(contr instanceof ContractElementAwait) {
-//                    DoubleLamp l = wAwait(mName, (ContractElementAwait) contr, subFresh, true);
-//                    lampMap.get(mName).setFirst(l.getW());
-//                    lampMap.get(mName).setSecond(l.getWPrime());
-//                }else if(contr instanceof ContractElementInvk){ //this means that contr is a ContractInvk
-//                    DoubleLamp l = wInvk(mName, (ContractElementInvk) contr, subFresh, true);
-//                    lampMap.get(mName).setFirst(l.getW());
-//                    lampMap.get(mName).setSecond(l.getWPrime());
-//                }else if(contr instanceof ContractElementSyncInvk){ //this means that contr is a ContractInvk
-//                    DoubleLamp l = wSyncInvk2(mName, (ContractElementSyncInvk) contr, subFresh, true);
-//                    lampMap.get(mName).setFirst(l.getW());
-//                    lampMap.get(mName).setSecond(l.getWPrime());
-//                }else if(contr instanceof ContractElementInvkG){
-//                    DoubleLamp l = wGInvk(mName, (ContractElementInvkG) contr, subFresh, true);
-//                    lampMap.get(mName).setFirst(l.getW());
-//                    lampMap.get(mName).setSecond(l.getWPrime());
-//                }else if(contr instanceof ContractElementInvkA){
-//                    DoubleLamp l = wAInvk(mName, (ContractElementInvkA) contr, subFresh, true);
-//                    lampMap.get(mName).setFirst(l.getW());
-//                    lampMap.get(mName).setSecond(l.getWPrime());
-//                }else if(contr instanceof ContractElementUnion){
-//                    DoubleLamp l = wUnion(mName, (ContractElementUnion) contr, subFresh, true);
-//                    lampMap.get(mName).setFirst(l.getW());
-//                    lampMap.get(mName).setSecond(l.getWPrime());
-//                }else /*if((((TermStructured) contr).getConstructor()).equals("ContractSeq"))*/{
-//                    //in a sequence the lastSub is not a single one but a new list
-//                    DoubleLamp l = wSeq(mName, (Contract) contr, subFresh, true);
-//                    lampMap.get(mName).setFirst(l.getW());
-//                    lampMap.get(mName).setSecond(l.getWPrime());
-//                }
-//            }
-//
-//            //now I check if I introduced new name/couple, if not, I stop the analysis
-//            Integer newNumberOfDep = 0;
-//            for(String mName : lampMap.keySet()){
-//                newNumberOfDep += lampMap.get(mName).getFirst().numberOfDep();
-//                newNumberOfDep += lampMap.get(mName).getSecond().numberOfDep();
-//            }
-//
-//            //System.out.println(" of saturation " + i + " number of dep at the end of this iteration is " + newNumberOfDep);
-//            i++;
-//
-//            //if I have cycle in main I stop the analysis
-//           
-//            /*if((lampMap.get("Main.main").getFirst().hasNewCycle() && !lampMap.get("Main.main").getFirst().hasNewCycleAwait() ) || (lampMap.get("Main.main").getSecond().hasNewCycle() && ! lampMap.get("Main.main").getSecond().hasNewCycleAwait())){
-//                              moreInfoMainCycle();
-//                              return;
-//          }*/
-//
-//            BigLamp blMain = lampMap.get("Main.main");
-//            if(blMain.hasCycle()){
-//                this.cylceOfAwait = blMain.hasCycleAwait();
-//                this.deadlock = blMain.hasCycleGet();
-//            
-//                //TODO ABEL: REVIEW THIS 
-//                //return just when there is a deadlock and not a livelock?
-//                if(deadlock) return;
-//            }
-//            
-//            /*if(newNumberOfDep.equals(this.nOfDep)){
-//                LinkedList<ASTNode> nodeLocked = lampMap.get("Main.main").getFirst().hasCycle2();
-//                nodeLocked.addAll(lampMap.get("Main.main").getSecond().hasCycle2());
-//                if(nodeLocked != null && nodeLocked.size() > 0)
-//                    moreInfoMainCycle();
-//                return;
-//            }
-//            else this.nOfDep = newNumberOfDep;*/
-//
-//            if(newNumberOfDep.equals(this.nOfDep)) return;
-//            else this.nOfDep = newNumberOfDep;
-//        }             
-//    }
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
 
     // The rule W-Gzero of the Analysis
-<<<<<<< HEAD
     private DoubleLam wGet(String mName, ContractElementGet cGet, VarSubstitution bFresh){
         // it will contains the result of the application of the rule
         DoubleLam l = new DoubleLam();                
-=======
-    private DoubleLamp wGet(String mName, ContractElementGet cGet, VarSubstitution bFresh){
-        // it will contains the result of the application of the rule
-        DoubleLamp l = new DoubleLamp();                
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
         // here we extract the 2 variable from the contractGet and apply on them the fresh renaming (bTilde)
         GroupName a = cGet.whosWaiting();
         GroupName b = cGet.whosWaited();
@@ -362,11 +153,7 @@ public class DASolver {
         Lam w = new Lam();
         Lam wPrime = new Lam();
         w.addCouple(a, b);
-<<<<<<< HEAD
        
-=======
-        System.out.println(mName + ": added couple: " + a.toString() + "," + b.toString());
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
         //I learn reading again the paper that only the first lamp obtain the couple
         //wPrime.addCouple(a, b);               
         // we compose and return the solution <w,wPrime>
@@ -376,11 +163,7 @@ public class DASolver {
     }
 
     // The rule W-Azero of the Analysis
-<<<<<<< HEAD
     private DoubleLam wAwait(String mName, ContractElementAwait cAwait, VarSubstitution bFresh){
-=======
-    private DoubleLamp wAwait(String mName, ContractElementAwait cAwait, VarSubstitution bFresh){
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
         // it will contains the result of the application of the rule
         DoubleLam l = new DoubleLam();
 
@@ -396,11 +179,7 @@ public class DASolver {
         Lam w = new Lam();
         Lam wPrime = new Lam();
         w.addCoupleAwait(a, b);
-<<<<<<< HEAD
         
-=======
-        System.out.println(mName + ": added couple: " + a.toString() + "," + b.toString() + " [w]");
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
         //I learn reading again the paper that only the first lamp obtain the couple
         //wPrime.addCouple(a, b);
 
@@ -411,11 +190,7 @@ public class DASolver {
     }
 
     // The rule W-Invk of the Analysis
-<<<<<<< HEAD
     private DoubleLam wInvk(String mName, ContractElementInvk cInvk, VarSubstitution bFresh){
-=======
-    private DoubleLamp wInvk(String mName, ContractElementInvk cInvk, VarSubstitution bFresh){
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
         // it will contains the result of the application of the rule
         DoubleLam l = new DoubleLam();
 
@@ -505,112 +280,11 @@ public class DASolver {
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
-<<<<<<< HEAD
-=======
         return l;       
     }
     
     // The rule W-Invk of the Analysis
-    private DoubleLamp wSyncInvk(String mName, ContractElementSyncInvk cInvk, VarSubstitution bFresh){
-        // it will contains the result of the application of the rule
-        DoubleLamp l = new DoubleLamp();
-
-        // here I recover and clear the method called, after that I have a string that identify it
-        String method = cInvk.getClassName() + "." + cInvk.getMethodName();
-        //System.out.println("method called is " + method.toString());
-
-        //here we recover the bigLamp of the method called and also is methodContract
-        BigLamp bLamp = lampMap.get(method);
-        MethodContract methodContract = (MethodContract) methodMap.get(method);
-        //if(bLamp != null) System.out.println("BigLamp of method called is: " + bLamp.toString());
-        //if(methodContract != null) System.out.println("methodContract of method called is: " + methodContract.toString());
-        //System.out.println("fresh renaming is: " + bFresh.toString());
-
-        //The two Lamp of methodInvokation rule
-        Lamp w = new Lamp();
-        Lamp wfirstPrime = new Lamp(); //this is done to avoid side effect
-        wfirstPrime.addLamp(bLamp.getFirst());
-        Lamp wsecondPrime = new Lamp();
-        wsecondPrime.addLamp(bLamp.getSecond());
-
-        Lamp wPrime = new Lamp();
-        wPrime.addLamp(wfirstPrime);
-        wPrime.addLamp(wsecondPrime);
-
-        if(!this.saturation){
-            //here we recover the formal parameter of the method invoked
-            Set<GroupName> aTilde = bLamp.getaTilde();
-            //System.out.println("aTilde of method called is: " + aTilde);
-
-            //here we create the fresh substitution for NON formal parameter
-            VarSubstitution subParam = new VarSubstitution();
-
-            //here we recover ALL the free variable of the lamp of the method invoked and remove the variable of the formal parameters
-            Set<GroupName> aPrimeTilde = bLamp.getFirst().fv();
-            aPrimeTilde.addAll(bLamp.getSecond().fv());
-            Set<GroupName> aTildeTermVar = new TreeSet<GroupName>();
-            for(GroupName v : aTilde) aTildeTermVar.add(v);
-            aPrimeTilde.removeAll(aTildeTermVar);
-            //System.out.println("aPrimeTilde to substitute is :" + aPrimeTilde.toString() );
-
-            for(GroupName v : aPrimeTilde) subParam.addSub(v, df.newGroupName());
-
-            //I apply the first substitution, the once for formal parameter
-            wPrime.apply(subParam);
-        }
-
-
-
-        //here we create and apply the second substitution, 'thisRecord' of method called got to be replaced with
-        //'thisRecord' of the call inside the contract that we are analyzing
-        VarSubstitution subThis;
-        MethodInterface interfaceCaller = cInvk.getMethodInterface();
-        Record thisCaller = interfaceCaller.getThis();
-        MethodInterface interfaceCalled = methodContract.getMethodInterface();
-        Record thisCalled = interfaceCalled.getThis();
-        //System.out.println("thisCaller = " + thisCaller.toString());
-        //System.out.println("thisCalled = " + thisCalled.toString());
-        subThis = findSub(thisCaller, thisCalled, bFresh);
-        //System.out.println("subThis = " + subThis.toString());
-        wPrime.apply(subThis);
-
-        //here we create and apply the third substitution, 'argsRecord' of method called got to be replaced with
-        //'argsRecord' of the call inside the contract that we are analyzing
-        VarSubstitution subArgs;
-
-        List<Record> argsCaller = interfaceCaller.getParameters();
-
-        List<Record> argsCalled = interfaceCalled.getParameters();
-
-        for(Integer i = 0 ; i<argsCaller.size() ; i++){
-            subArgs = findSub(argsCaller.get(i), argsCalled.get(i), bFresh);
-            wPrime.apply(subArgs);
-        }
-
-        //here we create and apply the third substitution, 'retRecord' of method called got to be replaced with
-        //'retRecord' of the call inside the contract that we are analyzing
-        VarSubstitution subRet;
-        Record retCaller =  interfaceCaller.getResult();
-        Record retCalled =  interfaceCalled.getResult();
-        //System.out.println("retCaller = " + retCaller.toString());
-        //System.out.println("retCalled = " + retCalled.toString());
-        subRet = findSub(retCaller, retCalled, bFresh);
-        //System.out.println("subRet = " + subRet.toString());
-        wPrime.apply(subRet);
-
-        // we compose and return the solution <w,wPrime>
-        l.setW(wPrime);
-        l.setWPrime(w);
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
-        return l;       
-    }
-    
-    // The rule W-Invk of the Analysis
-<<<<<<< HEAD
     private DoubleLam wSyncInvk(String mName, ContractElementSyncInvk cInvk, VarSubstitution bFresh){
-=======
-    private DoubleLamp wSyncInvk2(String mName, ContractElementSyncInvk cInvk, VarSubstitution bFresh){
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
         // it will contains the result of the application of the rule
         DoubleLam l = new DoubleLam();
 
@@ -704,11 +378,7 @@ public class DASolver {
     }
     
     // The rule W-GInvk of the Analysis
-<<<<<<< HEAD
     private DoubleLam wGInvk(String mName, ContractElementInvkG cGInvk, VarSubstitution bFresh){
-=======
-    private DoubleLamp wGInvk(String mName, ContractElementInvkG cGInvk, VarSubstitution bFresh){
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
         // it will contains the result of the application of the rule
         DoubleLam l = new DoubleLam();
 
@@ -817,11 +487,7 @@ public class DASolver {
 
         // we add the get Pair of names at the two lamps
         w.addCouple(a, b);
-<<<<<<< HEAD
         
-=======
-        System.out.println(mName + ": added couple: " + a.toString() + "," + b.toString());
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
         //same comment of the rule w-Gzero
         //wPrime.addCouple(a, b);
 
@@ -833,11 +499,7 @@ public class DASolver {
     }
 
     // The rule W-AInvk of the Analysis
-<<<<<<< HEAD
     private DoubleLam wAInvk(String mName, ContractElementInvkA cAInvk, VarSubstitution bFresh){
-=======
-    private DoubleLamp wAInvk(String mName, ContractElementInvkA cAInvk, VarSubstitution bFresh){
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
         // it will contains the result of the application of the rule
         DoubleLam l = new DoubleLam();
 
@@ -936,11 +598,7 @@ public class DASolver {
 
         // we add the get Pair of names at the two lamps
         w.addCoupleAwait(a, b);
-<<<<<<< HEAD
         
-=======
-        System.out.println(mName + ": added couple: " + a.toString() + "," + b.toString() + " [w]");
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
         //same comment of the rule w-Gzero
         //wPrime.addCouple(a, b);
 
@@ -951,22 +609,13 @@ public class DASolver {
     }
 
     // The rule W-Union of the Analysis
-<<<<<<< HEAD
     private DoubleLam wUnion(String mName, ContractElementUnion contr, VarSubstitution bFresh){
-=======
-    private DoubleLamp wUnion(String mName, ContractElementUnion contr, VarSubstitution bFresh){
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
 
         Contract c1 = contr.getBranchOne();
         Contract c2 = contr.getBranchTwo();
 
-<<<<<<< HEAD
         DoubleLam l1 = wSeq(mName, (Contract) c1, bFresh);
         DoubleLam l2 = wSeq(mName, (Contract) c2, bFresh);
-=======
-        DoubleLamp l1 = wSeq(mName, (Contract) c1, bFresh);
-        DoubleLamp l2 = wSeq(mName, (Contract) c2, bFresh);
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
 
         DoubleLam l = new DoubleLam();
         l.union(l1, l2);
@@ -976,17 +625,12 @@ public class DASolver {
 
 
     // The rule W-Seq of the Analysis
-<<<<<<< HEAD
     public DoubleLam wSeq(String mName, Contract contr, VarSubstitution bFresh){
-=======
-    public DoubleLamp wSeq(String mName, Contract contr, VarSubstitution bFresh){
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
         List<ContractElement> contracts = ((Contract) contr).getList();
         DoubleLam l = new DoubleLam();
         
         for(ContractElement c : contracts){
             if(c instanceof ContractElementGet) {
-<<<<<<< HEAD
                 DoubleLam lr = wGet(mName, (ContractElementGet) c, bFresh);
                 l.seqComposition(lr);   
             }else if(c instanceof ContractElementAwait) {
@@ -1006,27 +650,6 @@ public class DASolver {
                 l.seqComposition(lr);   
             }else if(c instanceof ContractElementUnion){
                 DoubleLam lr = wUnion(mName, (ContractElementUnion) c, bFresh);
-=======
-                DoubleLamp lr = wGet(mName, (ContractElementGet) c, bFresh);
-                l.seqComposition(lr);   
-            }else if(c instanceof ContractElementAwait) {
-                DoubleLamp lr = wAwait(mName, (ContractElementAwait) c, bFresh);
-                l.seqComposition(lr);   
-            }else if(c instanceof ContractElementSyncInvk){ //this means that contr is a ContractSyncInvk
-                DoubleLamp lr = wSyncInvk(mName, (ContractElementSyncInvk) c, bFresh);
-                l.seqComposition(lr);   
-            }else if(c instanceof ContractElementInvk){ //this means that contr is a ContractInvk
-                DoubleLamp lr = wInvk(mName, (ContractElementInvk) c, bFresh);
-                l.seqComposition(lr);   
-            }else if(c instanceof ContractElementInvkG){
-                DoubleLamp lr = wGInvk(mName, (ContractElementInvkG) c, bFresh);
-                l.seqComposition(lr);   
-            }else if(c instanceof ContractElementInvkA){
-                DoubleLamp lr = wAInvk(mName, (ContractElementInvkA) c, bFresh);
-                l.seqComposition(lr);   
-            }else if(c instanceof ContractElementUnion){
-                DoubleLamp lr = wUnion(mName, (ContractElementUnion) c, bFresh);
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
                 l.seqComposition(lr);   
             }
         }
@@ -1034,7 +657,6 @@ public class DASolver {
     }       
 
     // The rule W-SeqInUnion of the Analysis
-<<<<<<< HEAD
 //    private DoubleLam wSeqInUnion(String mName, Contract contr, VarSubstitution bFresh){
 //        List<ContractElement> contracts = ((Contract) contr).getList();
 //        DoubleLam l = new DoubleLam();
@@ -1058,31 +680,6 @@ public class DASolver {
 //        }
 //        return l;       
 //    }       
-=======
-    private DoubleLamp wSeqInUnion(String mName, Contract contr, VarSubstitution bFresh){
-        List<ContractElement> contracts = ((Contract) contr).getList();
-        DoubleLamp l = new DoubleLamp();
-        for(ContractElement c : contracts){
-            if(c instanceof ContractElementGet) {
-                DoubleLamp lr = wGet(mName, (ContractElementGet) c, bFresh);
-                l.seqComposition(lr);   
-            }else if(c instanceof ContractElementAwait) {
-                DoubleLamp lr = wAwait(mName, (ContractElementAwait) c, bFresh);
-                l.seqComposition(lr);   
-            }else if(c instanceof ContractElementInvk){ //this means that contr is a ContractInvk
-                DoubleLamp lr = wInvk(mName, (ContractElementInvk) c, bFresh);
-                l.seqComposition(lr);   
-            }else if(c instanceof ContractElementInvkG){
-                DoubleLamp lr = wGInvk(mName, (ContractElementInvkG) c, bFresh);
-                l.seqComposition(lr);   
-            }else if(c instanceof ContractElementInvkA){
-                DoubleLamp lr = wAInvk(mName, (ContractElementInvkA) c, bFresh);
-                l.seqComposition(lr);   
-            }
-        }
-        return l;       
-    }       
->>>>>>> 734da118b21dfdab48c102bf2e2c6e18fb357239
 
     //final info like saturation and various lock
 
@@ -1090,11 +687,9 @@ public class DASolver {
         return this.saturation;
     }
 
-    public Boolean isDeadlockMain(){
-        return this.deadlock;
-    }
+   
 
-    public Boolean isLivelockMain(){
+    public boolean isLivelockMain(){
         return this.livelock;
     }
 

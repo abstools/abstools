@@ -11,6 +11,7 @@ import deadlock.analyser.factory.MethodInterface;
 import deadlock.analyser.factory.Record;
 import deadlock.constraints.term.Term;
 
+
 // a BigLam is a quadruple <methodName, methodContract, Lam w, Lam wPrime>
 // and it contains the set of variable bTilde (new fresh name created in the method) and the set of variable aTilde (formal parameter of a method)
 
@@ -148,6 +149,19 @@ public class BigLam {
     //toString method
     public String toString(){
         return "< \n" + this.w.toString() + " , \n" + this.wPrime.toString() + ">";
+    }
+
+    //According to version2 of the fix point algorithm this method adds the missing dependencies from the transitive closure 
+    //of the dependencies of not new names and removes all dependencies with new names
+    public void expandAndClean() {
+        
+        w.expandAndClean();
+        wPrime.expandAndClean();
+    }
+
+    public Boolean hasReflexiveState() {
+        // TODO Auto-generated method stub
+        return w.hasReflexiveState() || wPrime.hasReflexiveState();
     }
 
 

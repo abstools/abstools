@@ -1,11 +1,13 @@
 package deadlock.analyser.detection;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
 import deadlock.analyser.factory.GroupName;
+import deadlock.analyser.factory.GroupNameUnique;
 
 //Class State implement the structure that contains a "list of couple (a,b)", this list is implement like an HashMap, the key is a TermVariable and the value is a 
 //list of other TermVariable which appear in the right side of a couple dependency.
@@ -117,13 +119,14 @@ public class State {
         
         for(GroupName a: toRefresh.keySet())
         {
-            GroupName key = s.apply(a);
+            GroupName key = (a instanceof GroupNameUnique)? a: s.apply(a);
+                      
             if(!temp.containsKey(key)){
               temp.put(key, new HashSet<GroupName>());
             }
             
             for (GroupName b : toRefresh.get(a)){
-                temp.get(key).add(s.apply(b));
+                temp.get(key).add((b instanceof GroupNameUnique)? b: s.apply(b));
             }
             
         }
@@ -161,13 +164,13 @@ public class State {
     //Determines if there is a pure get dependencies cycle (Deadlock)
     public boolean hasCycleGet()
     {
-        return hasCycle(depCouple);
+        return hasCycle(depCouple, depCouple);
     }
     
     //Determines if there is a pure await dependencies cycle (Livelock)
     public boolean hasCycleAwait()
     {
-        return hasCycle(depCoupleAwait);
+        return hasCycle(depCouple, depCoupleAwait);
     }
     
     //Determines if there is a cycle combining both kind of dependencies (Lock)
@@ -194,27 +197,44 @@ public class State {
             allTogether.get(a).add(b);
             }
         
-        return hasCycle(allTogether);
+        return hasCycle(depCouple, allTogether);
     }
     
     //Checks for a cycle in a dependency couples hashmap
-    private static boolean hasCycle(HashMap<GroupName, HashSet<GroupName>> graph)
+    private static boolean hasCycle(HashMap<GroupName, HashSet<GroupName>> depCouple, HashMap<GroupName, HashSet<GroupName>> graph)
     {
         HashSet<GroupName> visited = new HashSet<GroupName>();
-        HashSet<GroupName> recorded = new HashSet<GroupName>();
+        //HashSet<GroupName> recorded = new HashSet<GroupName>();
+        
+        ArrayList<GroupName> recorded = new ArrayList<GroupName>();
         
         for(GroupName a : graph.keySet())
         {
             if(hasCycleUtil(graph, recorded, visited, a))
-                return true;
+                if(reviewCycle(depCouple, recorded))
+                    return true;
         }
             
         
         return false;
     }
     
+    private static boolean reviewCycle(HashMap<GroupName, HashSet<GroupName>> depCouple, ArrayList<GroupName> recorded) {
+        // TODO Auto-generated method stub
+        for(int i = 0; i < recorded.size(); i++)
+        {
+            GroupName a = recorded.get(i);
+            GroupName b = recorded.get((i + 1) % recorded.size());
+            
+            if(depCouple.containsKey(a) && depCouple.get(a).contains(b))
+                return true;
+        }
+        
+        return false;
+    }
+
     //recursive method for cycling detection
-    private static boolean hasCycleUtil(HashMap<GroupName, HashSet<GroupName>> graph, HashSet<GroupName> recorded, HashSet<GroupName> visited, GroupName current)
+    private static boolean hasCycleUtil(HashMap<GroupName, HashSet<GroupName>> graph, ArrayList<GroupName> recorded, HashSet<GroupName> visited, GroupName current)
     {
        //this method performs a classic Breath First Search to check for cycles in an undirected graph and
        //keeps tracks of ancestors to determine if the closing edge is in deed a back edge
@@ -232,8 +252,10 @@ public class State {
                        return true;
                }
            }
+           
+           recorded.remove(current);
        }
-       recorded.remove(current);
+       
        return false;
         
     }
@@ -258,4 +280,89 @@ public class State {
         }
         return res;
     }
+
+//    public void expandAndClean() {
+//        // TODO Auto-generated method stub
+//        expandAndClean();
+//        
+//        //depCoupleAwait = cleanHashMap(depCoupleAwait);
+//    }
+    
+   
+    
+    //TODO ABEL: this method can be more efficient
+    public void expandAndClean(){
+        HashSet<GroupName> vertexes = new HashSet<GroupName>();
+        
+        //get all vertex
+        for(GroupName v : depCouple.keySet())
+        {
+            vertexes.add(v);
+            for(GroupName v2 : depCouple.get(v))
+               vertexes.add(v2);
+        }
+        
+        for(GroupName v : depCoupleAwait.keySet())
+        {                     
+            vertexes.add(v);
+            for(GroupName v2 : depCoupleAwait.get(v))
+               vertexes.add(v2);
+            
+        }
+        
+        //Floyd Warshall Algorithm
+        GroupName [] vertexMap = vertexes.toArray(new GroupName[0] );
+        
+        //initialize graph
+        int [][] graph = new int[vertexMap.length][];
+        
+        //get all edges
+        for (int i = 0; i < vertexMap.length; i++){
+            graph[i] = new int[vertexMap.length];
+            for (int j = 0; j < vertexMap.length; j++)
+                graph[i][j] = (depCouple.containsKey(vertexMap[i]) && depCouple.get(vertexMap[i]).contains(vertexMap[j])) ? 2: ((depCoupleAwait.containsKey(vertexMap[i]) && depCoupleAwait.get(vertexMap[i]).contains(vertexMap[j]))? 1: 0);
+        }
+        
+        //calculate transitive closure
+        for (int k = 0; k < vertexMap.length; k++)
+            for (int i = 0; i < vertexMap.length; i++)
+                for (int j = 0; j < vertexMap.length; j++){
+                    graph[i][j] = Math.max(graph[i][j],  (graph[i][k] * graph[k][j]));
+                    if(graph[i][j] > 2) graph[i][j] = 2; //normalize to avoid overflow
+                }
+        
+        //clean existing
+        depCouple = new HashMap<GroupName, HashSet<GroupName>>();
+        depCoupleAwait = new HashMap<GroupName, HashSet<GroupName>>();
+        
+        //add new couples
+        for (int i = 0; i < vertexMap.length; i++)
+            for (int j = 0; j < vertexMap.length; j++)
+                if(graph[i][j] > 0) {
+                    if((!vertexMap[i].isFresh && !vertexMap[j].isFresh)){
+                        if(graph[i][j] > 1)//is a get couple
+                            this.addCouple(vertexMap[i], vertexMap[j]); 
+                        else //is an await couple
+                            this.addCoupleAwait(vertexMap[i], vertexMap[j]);
+                    }                    
+                    else if  (vertexMap[i].isFresh && vertexMap[j].isFresh && i == j){
+                        if(graph[i][j] > 1)//is a get couple
+                            this.addCouple(GroupNameUnique.GetInstance(), GroupNameUnique.GetInstance()); 
+                        else //is an await couple
+                            this.addCoupleAwait(GroupNameUnique.GetInstance(), GroupNameUnique.GetInstance());                        
+                    }                    
+                }
+        
+    }
+
+    public boolean hasReflexiveState() {
+        // TODO Auto-generated method stub
+        for(GroupName a : depCouple.keySet())
+            if(depCouple.get(a).contains(a))
+                return true;
+        
+        return false;
+    }
 }
+
+

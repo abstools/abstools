@@ -25,7 +25,7 @@ public class DeadlockCheckerTests extends ExamplesTypeChecking {
     protected Model parse(String input) throws Exception {
         Model m = super.parse(input);
         Assume.assumeTrue(m.hasMainBlock());
-        (new Analyser()).deadlockAnalysis(m, true, 2, System.out);
+        (new Analyser()).deadlockAnalysis(m, true, 2, 2, System.out);
         return m;
     }
 }

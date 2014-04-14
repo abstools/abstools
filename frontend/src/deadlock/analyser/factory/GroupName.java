@@ -27,7 +27,12 @@ import deadlock.constraints.term.Variable;
 
 public class GroupName extends TermVariable {
     
+public boolean isFresh;
 
+public GroupName(Variable v, boolean isFresh){ 
+    super(v);
+    this.isFresh = isFresh;
+    }
 
 public GroupName(Variable v) { super(v); }
 
