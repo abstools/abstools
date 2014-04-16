@@ -28,8 +28,8 @@
 (require 'compile)
 (require 'custom)
 (eval-when-compile (require 'rx))
-(require 'maude-mode)
 (require 'flymake)
+(autoload 'run-maude "maude-mode" nil t)
 
 ;;; Code:
 
@@ -226,6 +226,9 @@ Note that you can set this variable as a file-local variable as well."
             (group (char upper) (* (or (char alnum) "."))))
        1))
   "Imenu expression for `abs-mode'.  See `imenu-generic-expression'.")
+
+;;; Minimal auto-insert mode support
+(define-auto-insert 'abs-mode '("Module name: " "module " str ";" ?\n ?\n))
 
 ;;; Compiling the current buffer.
 ;;;
