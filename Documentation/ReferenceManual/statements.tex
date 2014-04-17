@@ -116,7 +116,7 @@ variables is not allowed.
 \emph{guard} is true~\cite{johnsen10fmco}. The task will not be
 suspended if the guard is already initially true.  While the task is
 suspended, other tasks within the same COG can be activated.  Await
-statements are also called \emph{scheduling points}, because they are
+statements are also called \emph{scheduling points}, because they, together with the Suspend statement, are
 the only source positions where a task may become suspended and other
 tasks of the same COG can be activated.
 
@@ -138,7 +138,7 @@ await f? & this.y > 5;
 \end{absexample}
 
 \section{Suspend Statement}
-A \emph{Suspend Statement} causes the current task to be suspended.
+A \emph{Suspend Statement} causes the current task to be suspended unconditionally.
 
 \begin{abssyntax}
 \NT{SuspendStmt} \defn \TR{suspend}\ \TRS{;}
