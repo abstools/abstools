@@ -33,55 +33,59 @@
 
 \subsection{Resource Types}
 
-   Deployment components carry a specific capacity, which is a possibly
-   infinite number of CPU ``cycles''.  The partial function \absinline{capacity}
-   returns the number of resources, if finite.
+Deployment components carry a specific capacity of zero or more \emph{Resource
+  types}.  Currently, we model CPU and bandwidth as resources.  CPU resources
+are modeled as a possibly infinite number of CPU ``cycles'', bandwidth as a possibly infinite amount of transfer units per time slice.
 
 \begin{absexample} 
-data DCData = InfCPU | CPU(Int capacity);
+data InfRat = InfRat | Fin(Rat value);
+data Resourcetype = CPU | Bandwidth ;
 \end{absexample} 
 
 \subsection{Deployment Components}
 
-   A deployment component (``DC'') is modeled by an ABS class and
-   interface \absinline{DeploymentComponent} which is contained in the
-   standard library in the module \absinline{ABS.DC}.  DCs are initialized
-   with resource data which is used by the Maude backend to simulate cpu
-   usage and performance behavior of models.
+A deployment component (``DC'') is modeled by an ABS class and interface
+\absinline{DeploymentComponent} which is contained in the standard library in
+the module \absinline{ABS.DC}.  DCs are initialized with resource data as a
+map from resource type to amount.  Unspecified resource types are assumed to
+be infinite.  This resource information is used by the Maude backend to
+simulate cpu and bandwidth usage and performance behavior of models.
 
 \begin{absexample} 
 interface DeploymentComponent {
-    DCData available();
-    Int load(Int periods);
-    DCData total();
-    Unit transfer(DeploymentComponent target, Int amount);
-    Unit decrementResources(Int amount);
-    Unit incrementResources(Int amount);
+    [Atomic] InfRat available(Resourcetype rtype);
+    [Atomic] Rat load(Resourcetype rtype, Int periods);
+    [Atomic] InfRat total(Resourcetype rtype);
+    Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype);
+    Unit decrementResources(Rat amount, Resourcetype rtype);
+    Unit incrementResources(Rat amount, Resourcetype rtype);
 }
 
-class DeploymentComponent (String description, DCData cpu)
+class DeploymentComponent (String description,
+                           Map<Resourcetype, Rat> initconfig)
 implements DeploymentComponent {
     ...
 }
 \end{absexample} 
 
 \begin{itemize}
-\item The call \absinline{available()} returns the number of currently
- available resources.  (The value will change during execution,
-     hence code using this method should be aware of the obvious race
-     condition.)
-\item The call \absinline{load(n)} returns the \emph{average load} for the
-     last n time periods as an integer between 0 and 100.
-\item The method \absinline{total()} returns the number of resources currently
-     available per time unit.
-\item The method \absinline{transfer(target, amount)} transfers a number of
-     resources from the current DC to \absinline{target}.  If either the
-     current or the target DC have an infinite number of resources,
-     their respective values are not changed.
-   \item The methods \absinline{decrementResources} and \absinline{incrementResources}
-     are used to implement \absinline{transfer}, but can also used on their
-     own to increment or decrement the amount of resources of the
-     current deployment component.
+\item The method \absinline{available(r)} returns the number of currently
+  available resources for the specified resource type $r$.  (The value will
+  change during execution, hence code using this method should be aware of the
+  obvious race condition.)
+\item The call \absinline{load(r, n)} returns the \emph{average load} for the
+  last $n$ time periods as an integer between 0 and 100 for the specified
+  resource type $r$.  For infinite resources, \absinline{load} returns zero.
+\item The method \absinline{total(r)} returns the number of resources currently
+  available per time unit for the resource type $r$.
+\item The method \absinline{transfer(target, amount, r)} transfers the
+  specified number of resources of type $r$ from the current DC to
+  \absinline{target}.  If the current or the target DC have an infinite number
+  of resources, their respective values are not changed.
+\item The methods \absinline{decrementResources} and
+  \absinline{incrementResources} are used to implement \absinline{transfer},
+  but can also used on their own to increment or decrement the amount of
+  resources of the current deployment component.
 \end{itemize}
 
 \subsection{Using Deployment Components}
@@ -99,7 +103,7 @@ class ServerImp implements Server { ... }
 
 {
   DeploymentComponent machine = new DeploymentComponent("remote",
-      CPU(20));
+      map[Pair(CPU, 20)]);
   [DC: machine] Server x = new ServerImp();  // running in dc `machine'
   Server y = new ServerImp();                // running in current DC
 }
@@ -120,32 +124,48 @@ def DeploymentComponent thisDC() = builtin;
 
 \subsection{Expressing statement costs}
 
-   The annotation \absinline{[Cost: x] s} expresses that executing the
-   statement \absinline{s} will consume \absinline{x} CPU resources.  If the current
-   DC does not contain enough resources, the process will \emph{block} until
-   the next time unit.
+The annotation \absinline{[Cost: x] s} expresses that executing the statement
+\absinline{s} will consume $x$ CPU resources on the current deployment
+component.  If the current DC does not contain enough resources, the process
+will \emph{block}, consuming CPU resources each time unit, until the necessary
+amount of resources have been consumed.
+
+The annotation \absinline{[Size: x] o!m();} expresses that executing the
+asynchronous method call \absinline{o!m()} will consume $x$ bandwidth
+resources, both on the current and the target deployment components.
+Execution will block on the current DC until the specified amount of resources
+have been consumed.  The method call will be delivered when $x$ bandwidth
+resources have been consumed at the target DC, but never before the current DC
+has finished executing the asynchronous method call statement.
+
+When a statement has both \absinline{Cost} and \absinline{Size} annotations,
+CPU resources will be consumed first, followed by bandwidth resources.
 
 \subsection{Default statement costs}
 
-   By default, statement execution costs nothing (i.e., the machine is
-   infinitely fast), which preserves the normal semantics of timed ABS
-   where only explicit \absinline{duration} or \absinline{await duration} statements
-   advance the clock.  By compiling ABS models with the command-line
-   parameter \absinline{-defaultcost=n}, all statements without an explicit
-   \absinline{[Cost: x]} annotation will take \absinline{n} resources to execute.
-   This approximates ``normal'' CPU behavior a bit more closely, but still
-   disregards the cost of evaluating expressions (assignment of a
-   complex expression will take more time on a real machine than
-   assignment of a constant).
+By default, statement execution costs nothing (i.e., the machine is infinitely
+fast), which preserves the normal semantics of timed ABS where only explicit
+\absinline{duration} or \absinline{await duration} statements advance the
+clock.  By compiling ABS models with the command-line parameter
+\absinline{-defaultcost=n}, all statements without an explicit
+\absinline{[Cost: x]} annotation will take \absinline{n} resources to execute.
+This approximates ``normal'' CPU behavior a bit more closely, but still
+disregards the cost of evaluating expressions (assignment of a complex
+expression will take more time on a real machine than assignment of a
+constant).
 
 \subsection{Changing the deployment component}
 
-   A statement \absinline{movecogto dc;} transfers the current cog and all its
-   objects to the deployment component \absinline{dc}.  On backends without
-   resource modeling features (Java, Scala) this translates to a
-   \absinline{skip}.
+A statement \absinline{movecogto dc;} transfers the current cog and all its
+objects to the deployment component \absinline{dc}.  On backends without
+resource modeling features (Java, Scala) this translates to a
+\absinline{skip}.
 
 \section{Future Work}
 
 The \absinline{thisDC()} function is currently undefined in the Java
 backend and will lead to a compile-time error.
+
+% Local Variables:
+% TeX-master: "absrefmanual"
+% End:

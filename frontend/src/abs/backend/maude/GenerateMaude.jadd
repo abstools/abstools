@@ -157,6 +157,7 @@ aspect GenerateMaude {
         boolean inlist = false;
         String effvar = var;
         PureExp deadline = CompilerUtils.getAnnotationValue(annotations, "Deadline");
+        PureExp size = CompilerUtils.getAnnotationValue(annotations, "Size");
         
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
         stream.print("asynccall('"
@@ -167,6 +168,9 @@ aspect GenerateMaude {
         MaudeCompilerHelper.emitParameterValueList(stream, getParams(),
                                                    getMethodSig().getTypes());
         stream.print("; ");
+        if (size != null) size.generateMaude(stream);
+        else stream.print("\"num\"[0]");
+        stream.print("; ");
         if (deadline != null) deadline.generateMaude(stream);
         else stream.print("\"ABS.StdLib.InfDuration\"[ emp ]");
         stream.print(") ");
@@ -176,6 +180,7 @@ aspect GenerateMaude {
     {
         boolean inlist = false;
         PureExp deadline = CompilerUtils.getAnnotationValue(annotations, "Deadline");
+        PureExp size = CompilerUtils.getAnnotationValue(annotations, "Size");
 
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
         stream.print("asynccall('.staticfuture ; ");
@@ -183,6 +188,9 @@ aspect GenerateMaude {
         stream.print("; '" + getMethod() + " ; ");
         MaudeCompilerHelper.emitParameterValueList(stream, getParams(),
                                                    getMethodSig().getTypes());
+        stream.print("; ");
+        if (size != null) size.generateMaude(stream);
+        else stream.print("\"num\"[0]");
         stream.print("; ");
         if (deadline != null) deadline.generateMaude(stream);
         else stream.print("\"ABS.StdLib.InfDuration\"[ emp ]");
@@ -930,7 +938,7 @@ aspect GenerateMaude {
         stream.print("return(null) ");
         if (isActiveClass) {
             stream.print("; ");
-            stream.print("asynccall('.staticfuture ; 'this ; 'run ; emp ; \"ABS.StdLib.InfDuration\"[ emp ]) ");
+            stream.print("asynccall('.staticfuture ; 'this ; 'run ; emp ; \"num\"[0] ; \"ABS.StdLib.InfDuration\"[ emp ]) ");
         }
         stream.print("> ");
     }

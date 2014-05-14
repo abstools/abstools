@@ -464,11 +464,12 @@ data FLIAnnotation = Foreign;
  * Used to model aspects of hardware configurations and deployment.
  */
 module ABS.DC;
-export DC, DeploymentComponent, thisDC, Cost, DCData, InfCPU, CPU, capacity, CogLocation;
+export DC, DeploymentComponent, thisDC, Cost, Size, CPU, CogLocation, CPU, Bandwidth, InfRat, Fin;
 import * from ABS.StdLib;
 
-data DCData = InfCPU
-            | CPU(Int capacity);
+data Resourcetype = CPU | Bandwidth ;
+
+data InfRat = InfRat | Fin(Rat value);
 
 // Sums things up in percents (thus the * 100, which makes us not lose
 // precision.)
@@ -482,58 +483,105 @@ def Rat averageDivsN(List<Int> consumeds, List<Int> totals, Int length) =
   in sumDivsN(consumeds, totals, mins) / mins;
 
 interface DeploymentComponent {
-    [Atomic] DCData available();
-    [Atomic] Rat load(Int periods);
-    [Atomic] DCData total();
-    Unit transfer(DeploymentComponent target, Int amount);
-    Unit decrementResources(Int amount);
-    Unit incrementResources(Int amount);
+    [Atomic] InfRat available(Resourcetype rtype);
+    [Atomic] Rat load(Resourcetype rtype, Int periods);
+    [Atomic] InfRat total(Resourcetype rtype);
+    Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype);
+    Unit decrementResources(Rat amount, Resourcetype rtype);
+    Unit incrementResources(Rat amount, Resourcetype rtype);
 }
 
-class DeploymentComponent (String description, DCData cpu)
+class DeploymentComponent (String description, Map<Resourcetype, Rat> initconfig)
 implements DeploymentComponent {
+    // This class has fields that reflect execution state and resource
+    // consumption; they are changed by the underlying runtime system.
     Time creationTime = now();
-    List<Int> history = Nil;      // updated by Maude interpreter
-    List<Int> totalhistory = Nil; // ditto; will stay empty for InfCPU case
-    Int internalState = 0;
+    // Histories are updated by the backend.  totalhistories stay empty in
+    // case the DC has an infinite amount of resources for that type.
+    List<Int> cpuhistory = Nil;
+    List<Int> cpuhistorytotal = Nil;
+    List<Int> bwhistory = Nil;
+    List<Int> bwhistorytotal = Nil;
+    // Counters of consumed resources in current time unit.  Modified by the backend.
+    Rat cpuconsumed = 0;
+    Rat bwconsumed = 0;
+    // Initialized flag read by the backend to avoid premature execution
     Bool initialized = False;
-    DCData nextcpu = cpu;
+    // Total amount of resources in current and next time interval.
+    InfRat cpu = let (Maybe<Rat> v) = lookup(initconfig, CPU) in
+      if v == Nothing then InfRat else Fin(fromJust(v));
+    InfRat cpunext = cpu;
+    InfRat bw = let (Maybe<Rat> v) = lookup(initconfig, Bandwidth) in
+      if v == Nothing then InfRat else Fin(fromJust(v));
+    InfRat bwnext = bw;
     {
         this.initialized = True;
     }
-    [Atomic] DCData available() {
-        return if (cpu == InfCPU) then InfCPU else CPU(capacity(cpu) - internalState);
+    [Atomic] InfRat available(Resourcetype rtype) {
+        InfRat result = InfRat;
+        case (rtype) {
+            CPU => { if (cpu != InfRat) result = Fin(value(cpu) - cpuconsumed); }
+            Bandwidth => if (bw != InfRat) result = Fin(value(bw) - bwconsumed);
+        }
+        return result;
     }
-    [Atomic] Rat load(Int periods) {
-        return if (cpu == InfCPU) then 0
-        else averageDivsN(history, totalhistory, periods);
+    [Atomic] Rat load(Resourcetype rtype, Int periods) {
+        Rat result = 0;
+        case (rtype) {
+            CPU => {
+                if (cpu != InfRat) {
+                    result = averageDivsN(cpuhistory, cpuhistorytotal, periods);
+                }
+            }
+            Bandwidth => {
+                if (bw != InfRat) {
+                    result = averageDivsN(bwhistory, bwhistorytotal, periods);
+                }
+            }
+        }
+        return result;
     }
-    [Atomic] DCData total() {
-        return cpu;
+    [Atomic] InfRat total(Resourcetype rtype) {
+        InfRat result = InfRat;
+        case (rtype) {
+            CPU => result = cpu;
+            Bandwidth => result = bw;
+        }
+        return result;
     }
 
     // Transfer resources between deployment components.
     // FIXME: load calculation will be invalid if resource totals have
     // been changed in the specified interval.
-    Unit transfer(DeploymentComponent target, Int amount) {
-        this.decrementResources(amount);
-        target!incrementResources(amount);
+    Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype) {
+        this.decrementResources(amount, rtype);
+        target!incrementResources(amount, rtype);
     }
     
-    Unit decrementResources(Int amount) {
-        if (nextcpu == InfCPU)
-            skip;
-        else {
-            Int capacity = capacity(cpu);
-            assert (capacity >= amount);
-            nextcpu = CPU(capacity - amount);
+    Unit decrementResources(Rat amount, Resourcetype rtype) {
+        case (rtype) {
+            CPU => {
+                if (cpunext != InfRat) {
+                    if (value(cpunext) < amount) abort "Insufficient resources";
+                    cpunext = Fin(value(cpunext) - amount);
+                }
+            }
+            Bandwidth => if (bwnext != InfRat) {
+                if (value(bwnext) < amount) abort "Insufficient resources";
+                bwnext = Fin(value(bwnext) - amount);
+            }
         }
     }
-    Unit incrementResources(Int amount) {
-        if (nextcpu == InfCPU)
-            skip;
-        else {
-            nextcpu = CPU(capacity(cpu) + amount);
+    Unit incrementResources(Rat amount, Resourcetype rtype) {
+        case (rtype) {
+            CPU => {
+                if (cpunext != InfRat) {
+                    cpunext = Fin(value(cpunext) + amount);
+                }
+            }
+            Bandwidth => if (bwnext != InfRat) {
+                bwnext = Fin(value(bwnext) + amount);
+            }
         }
     }
 }
@@ -545,6 +593,9 @@ def DeploymentComponent thisDC() = builtin;
 
 // Annotation for method definitions: runtime cost specification
 type Cost = Duration;
+
+// Annotation for async method calls: size of sent data
+type Size = Rat;
 
 // Distributed execution (eg the Scala backend): where the cog will be created
 type CogLocation = String;
