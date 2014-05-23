@@ -15,6 +15,7 @@ import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
+import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import static abs.ABSTest.Config.*;
 
 public class ABSTest {
@@ -23,6 +24,7 @@ public class ABSTest {
         WITH_STD_LIB,
         WITH_DB_LIB,
         WITHOUT_MODULE_NAME,
+        WITH_LOC_INF,
         EXPECT_PARSE_ERROR,
         EXPECT_TYPE_ERROR,
         ALLOW_INCOMPLETE_EXPR,
@@ -96,6 +98,10 @@ public class ABSTest {
                     fail("Failed to parse: " + s + "\n" + p.getParserErrors().get(0).getMessage());
                 } else {
                     if (isSet(TYPE_CHECK, config)) {
+                        if (isSet(WITH_LOC_INF, config)) {
+                            LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(p);
+                            p.registerTypeSystemExtension(ltie);
+                        }
                         SemanticErrorList l = p.typeCheck();
                         if (isSet(EXPECT_TYPE_ERROR,config)) {
                             if (l.isEmpty()) {

@@ -182,7 +182,8 @@ public class Main {
                 ignoreattr = true;
             } else if (arg.equals("-preprocess")) { //Preprocessor
                     preprocess = true;
-            } else if (arg.equals("-h")) {
+            } else if (arg.equals("-h") || arg.equals("-help")
+                       || arg.equals("--help")) {
                 printUsageAndExit();
             } else
                 remainingArgs.add(arg);

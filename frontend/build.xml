@@ -12,9 +12,11 @@
 
   <property name="src.dir" value="${basedir}/src" />
   <property name="bash.dir" value="${src.dir}/bash" />
+  <property name="win.dir" value="${src.dir}/win" />
   <property name="tests.dir" value="${basedir}/tests" />
   <property name="build.dir" value="${basedir}/bin" />
   <property name="bash.build.dir" value="${basedir}/bin/bash" />
+  <property name="win.build.dir" value="${basedir}/bin/win" />
   <property name="dist.dir" value="${basedir}/dist" />
   <property name="gen.dir" value="${basedir}/gen" />
   <!-- temporal directory used during tests -->
@@ -207,6 +209,11 @@
       <filterset>
         <filter token="BASEDIR" value="${basedir}" />
       </filterset>
+    </copy>
+    <copy todir="${win.build.dir}">
+      <fileset id="winshellfiles" dir="${win.dir}">
+        <include name="*" />
+      </fileset>
     </copy>
     <chmod perm="ugo+x">
       <fileset dir="${bash.build.dir}" >

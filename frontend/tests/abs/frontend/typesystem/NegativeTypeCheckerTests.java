@@ -366,6 +366,19 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void missingConstructorNoSO() {
+        /* Frob not visible, gave once an SO */
+        assertTypeErrors("type Tuple = Map<Int, Int>;"
+                +"def Bool tupleMatches(Tuple tuple, Tuple criterion) ="
+                +"case criterion {"
+                +"  Frob(pair, rest) =>"
+                +"    lookup(tuple, fst(pair)) == Just(snd(pair)) &&"
+                +"    tupleMatches(tuple, rest);"
+                +"  EmptyMap => True;"
+                +"};");        
+    }
+
+    @Test
     public void methodReturnError() {
         assertTypeErrors("class C { Unit m() { return True; } }");
     }

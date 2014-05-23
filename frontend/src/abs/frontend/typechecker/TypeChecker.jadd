@@ -798,8 +798,11 @@ aspect TypeChecker {
     } 
 
     public void CaseBranch.typeCheck(SemanticErrorList e, DataTypeType t) {
+        int size = e.size();
         getLeft().typeCheck(e,t);
-        getRight().typeCheck(e);
+        /* If the LHS is botched, we can't reliably use any variables bound therein. */
+        if (e.size() == size)
+          getRight().typeCheck(e);
     }
 
     public void FnApp.typeCheck(SemanticErrorList e) {
@@ -843,8 +846,6 @@ aspect TypeChecker {
         getVal().typeCheck(e);
         getExp().typeCheck(e);
         TypeCheckerHelper.checkAssignment(e,this,getVar().getAccess().getType(),getVal());
-
-
     }
 
     public void MinusExp.typeCheck(SemanticErrorList e) {
