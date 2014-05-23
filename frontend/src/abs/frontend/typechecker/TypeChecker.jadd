@@ -252,6 +252,7 @@ aspect TypeChecker {
 
         if (hasInitBlock()) {
             getInitBlock().typeCheck(e);
+            getInitBlock().checkLegalInit(e, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE);
         }
 
         HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
@@ -627,6 +628,7 @@ aspect TypeChecker {
         }
         if (hasFinally()) {
             getFinally().typeCheck(e);
+            getFinally().checkLegalInit(e, ErrorMessage.NOT_ALLOWED_IN_FINALLY_CODE);
         }
     }
 

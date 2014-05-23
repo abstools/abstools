@@ -273,7 +273,10 @@ these statements can be blocks.)  In case an error occurs during
 execution of the statement(s) protected by \texttt{try}, the error is
 matched against the patterns in the \texttt{catch} branches, in order.
 The statements following the first matching catch branch are executed,
-followed by the statement in the \texttt{finally} branch.  If none of the catch branches match, the statements in the \texttt{finally} branch are executed and the error is re-thrown.
+followed by the statements in the \texttt{finally} branch.  If none of the catch branches match, the statements in the \texttt{finally} branch are executed and the error is re-thrown.
+
+Code in the \texttt{finally} branch has the same restrictions as init blocks:
+no suspension or blocking is allowed.
 
 \begin{abssyntax}
 \NT{TryCatchFinallyStmt} \defn \TR{try}\ \NT{Stmt}\
