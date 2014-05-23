@@ -14,13 +14,17 @@ aspect InitChecker {
         }
     }
 	
-	@Override
+    @Override
     void SuspendStmt.checkLegalInit(SemanticErrorList l) {
        l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Suspend statements"));
     }
     @Override
     void AwaitStmt.checkLegalInit(SemanticErrorList l) {
        l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Await statements"));
+    }
+    @Override
+    void AwaitAsyncCall.checkLegalInit(SemanticErrorList l) {
+        l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Await expressions"));
     }
     @Override
     void SyncCall.checkLegalInit(SemanticErrorList l) { 
@@ -45,5 +49,6 @@ aspect InitChecker {
              getInitExp().checkLegalInit(l);
         }
     }
+
 
 }
