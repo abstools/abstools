@@ -97,6 +97,8 @@ public class Main {
                abs.backend.java.JavaBackend.main(args);
            } else if (argslist.contains("-erlang")) {
                abs.backend.erlang.ErlangBackend.main(args);
+           } else if (argslist.contains("-prolog")) {
+               abs.backend.prolog.PrologBackend.main(args);
            } else {
                parse(args);
            }
@@ -566,6 +568,7 @@ public class Main {
                 + "  -maude         generate Maude code\n"
                 + "  -java          generate Java code\n"
                 + "  -erlang        generate Erlang code\n"
+                + "  -prolog        generate Prolog\n"
                 + "  -product=<PID> build given product by applying deltas\n"
                 + "                 (PID is the qualified product ID)\n"
                 + "  -notypecheck   disable typechecking\n"

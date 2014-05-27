@@ -42,10 +42,11 @@
   "The default target language for code generation."
   :type '(radio (const maude)
                 (const java)
-                (const erlang))
+                (const erlang)
+                (const prolog))
   :group 'abs)
 (put 'abs-target-language 'safe-local-variable
-     #'(lambda (x) (member x '(maude java erlang))))
+     #'(lambda (x) (member x '(maude java erlang prolog))))
 
 (defcustom abs-compiler-program (or (executable-find "absc") "absc")
   "Path to the Abs compiler."
@@ -345,7 +346,9 @@ value.")
           (abs--absolutify-filename (pcase backend
                                       (`maude (abs--maude-filename))
                                       (`erlang "gen/erl/Emakefile")
-                                      (`java "gen/ABS/StdLib/Bool.java"))))
+                                      (`java "gen/ABS/StdLib/Bool.java")
+                                      ;; FIXME Prolog backend can use -fn outfile
+                                      (`prolog "abs.pl"))))
          (abs-modtime (nth 5 (file-attributes (buffer-file-name))))
          (output-modtime (nth 5 (file-attributes abs-output-file))))
     (or (not output-modtime)
