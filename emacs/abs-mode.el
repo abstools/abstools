@@ -337,7 +337,7 @@ value.")
                    (when (eql backend 'maude)
                      (concat " -o \"" (abs--maude-filename) "\""))
                    (when abs-product-name
-                     (concat "-product=" abs-product-name))
+                     (concat " -product=" abs-product-name))
                    (when (and (eql backend 'maude) abs-use-timed-interpreter)
                      (concat " -timed -limit="
                              (number-to-string abs-clock-limit)))
