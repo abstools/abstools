@@ -96,6 +96,10 @@ Note that you can set this variable as a file-local variable as well."
   :group 'abs)
 (put 'abs-default-resourcecost 'safe-local-variable 'integerp)
 
+(defvar abs-product-name nil
+  "Product to be generated when compiling.")
+(put 'abs-product-name 'safe-local-variable 'stringp)
+
 ;;; Making faces
 (defface abs-keyword-face '((default (:inherit font-lock-keyword-face)))
   "Face for Abs keywords"
@@ -332,6 +336,8 @@ value.")
                               (abs--input-files) " ")
                    (when (eql backend 'maude)
                      (concat " -o \"" (abs--maude-filename) "\""))
+                   (when abs-product-name
+                     (concat "-product=" abs-product-name))
                    (when (and (eql backend 'maude) abs-use-timed-interpreter)
                      (concat " -timed -limit="
                              (number-to-string abs-clock-limit)))
