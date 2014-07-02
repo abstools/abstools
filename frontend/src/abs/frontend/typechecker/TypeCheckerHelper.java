@@ -186,7 +186,15 @@ public class TypeCheckerHelper {
                         for (DeltaClause dc : dcs) {
                             DeltaDecl dd = m.findDelta(dc.getDeltaspec().getName());
                             DeltaParamDecl dp = dd.getParam(i);
-                            if (!dp.accepts(aa.getValue())) {
+                            // FIXME: we assumed here that delta
+                            // parameters and feature parameters have
+                            // same order, arity.  This is clearly
+                            // wrong, and parameters for the delta are
+                            // named with the feature.  we should find a
+                            // dp with the same name as aa, and ignore
+                            // any superfluous aa (the value is simply
+                            // not used by this delta).
+                            if (dp != null && !dp.accepts(aa.getValue())) {
                                 e.add(new TypeError(aa, ErrorMessage.CANNOT_ASSIGN, aa.getValue().getName(), dp.getType().getSimpleName()));
                             }
                         }
