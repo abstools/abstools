@@ -376,7 +376,10 @@ value.")
               (insert "frew start .")
               (comint-send-input)))
     (`erlang (let ((erlang-buffer (or (get-buffer "*erlang*")
-                                      (progn (save-excursion (run-erlang))
+                                      (progn (save-excursion
+                                               ;; don't propagate
+                                               ;; interactive args, if any
+                                               (funcall erlang-shell-function))
                                              (get-buffer "*erlang*"))))
                    (erlang-dir (concat (file-name-directory (buffer-file-name))
                                        "gen/erl"))
