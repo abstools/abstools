@@ -83,6 +83,8 @@ public enum ErrorMessage {
     OPT_NOT_IN_ALLOF("The %s feature is optional but the cardinality of its parent is not 'allof'."),
     EXPECTED_BOOL("Inferred type Int for %s, expected Bool."),
     EXPECTED_INT("Inferred type Bool for %s, expected Int."),
+    UNKNOWN_ATTRIBUTE_TYPE("Unknown attribute type %s."),
+    UNEXPECTED_ATTRIBUTE_TYPE("Unexpected attribute type %s, expected %s."),
     DUPLICATE_FEATURE("Feature %s is already defined."),
     DUPLICATE_PRODUCT("Product %s is already defined."),
     DUPLICATE_DELTA("Delta Module %s is already defined."),
