@@ -26,6 +26,9 @@ aspect ProdSolution {
     }
 
     abstract public Integer Value.getIntValue();
+    public Integer UnknownVal.getIntValue() {
+            return -1;
+    }
     public Integer IntVal.getIntValue() {
             return getValue();
     }

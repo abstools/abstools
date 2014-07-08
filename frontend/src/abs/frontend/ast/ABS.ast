@@ -300,6 +300,7 @@ AppCondFeature : AppCond ::= <Name> ;
 
 AttrAssignment ::= <Name:String> Value ;
 abstract Value;
+UnknownVal: Value ::= <Value>;
 IntVal: Value ::= <Value:int>;
 BoolVal: Value ::= <Value:Boolean>;
 

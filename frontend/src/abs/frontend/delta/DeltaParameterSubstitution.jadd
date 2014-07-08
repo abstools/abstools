@@ -15,6 +15,7 @@ aspect DeltaParameterSubstitution {
     public String FID.getName()  { return getFeatName(); }
     public String Const.getName()   { return getValue().getName(); }
     public abstract String Value.getName();
+    public String UnknownVal.getName()  { return "" + getValue(); }
     public String IntVal.getName()  { return "" + getValue(); }
     public String BoolVal.getName() { return "" + getValue(); }
 
@@ -201,6 +202,10 @@ aspect DeltaParameterSubstitution {
 
     }
     abstract public PureExp Value.calcExpr();
+    public PureExp UnknownVal.calcExpr() {
+        // Should never happen since we won't pass typechecking
+        return new StringLiteral(""+getValue());
+    }
     public PureExp IntVal.calcExpr() {
         return new IntLiteral(""+getValue());
     }

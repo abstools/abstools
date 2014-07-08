@@ -1036,6 +1036,10 @@ aspect TypeCheckProductline {
 	public boolean IntVal.isAssignableTo(Type t) { 
 		return t.isNumericType();
 	}
+        public boolean UnknownVal.isAssignableTo(Type t) {
+            return false;
+	}
+
 
     protected void DeltaClause.typeCheck(Map<String,DeltaDecl> ds, Set<String> definedFeatures, SemanticErrorList e) {
         TypeCheckerHelper.typeCheckDeltaClause(this, ds, definedFeatures, e);

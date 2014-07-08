@@ -1208,9 +1208,8 @@ List attr_assignment_list  = attr_assignment.a {: return new List().add(a); :}
 AttrAssignment attr_assignment = 
     IDENTIFIER.n ASSIGN INTLITERAL.i  {: return new AttrAssignment(n, new IntVal(Integer.parseInt((String)i))); :}
     | IDENTIFIER.n ASSIGN TYPE_IDENTIFIER.c {: // hack...
-        Symbol curr_sym = _symbols[offset + 1];
-        if ("True".equals(c)) return new AttrAssignment(n, new BoolVal(true));
-        else { AttrAssignment aa = new AttrAssignment(n, new BoolVal(false)); if (!"False".equals(c)) addSyntaxError("Expected Bool or Int", curr_sym); return aa; }:}
+        // might get rewritten to BoolVal(x) in AttrValues.jadd
+        return new AttrAssignment(n, new UnknownVal(c)); :}
     ;
 
 List deltaclause_list = {: return new List(); :}
@@ -1251,9 +1250,8 @@ Deltaparam deltaparam =
       TYPE_IDENTIFIER.fid DOT IDENTIFIER.aid {: return new FIDAID(fid, aid); :}
     | INTLITERAL.i {: return new Const(new IntVal(Integer.parseInt((String)i))); :}
     | TYPE_IDENTIFIER.c {: // hack...
-        if ("True".equals(c)) return new Const(new BoolVal(true));
-        else if ("False".equals(c)) return new Const(new BoolVal(false));
-	else return new FID(c); :}
+        // might get rewritten to Const(BoolVal(x)) in AttrValues.jadd
+        return new FID(c); :}
     ;
 
 // Application conditions
@@ -1473,9 +1471,8 @@ MExp mlit_exp
   = INTLITERAL.i        {: return new MValue(new IntVal(Integer.parseInt(i))); :}
   | IDENTIFIER.id       {: return new AttVar(id); :}
   | TYPE_IDENTIFIER.f DOT IDENTIFIER.a      {: return new FAVar(f,a); :}
-  | TYPE_IDENTIFIER.id  {: if      ("True".equals(id))  return new MValue(new BoolVal(true));
-                           else if ("False".equals(id)) return new MValue(new BoolVal(false));
-                           else                         return new FeatVar(id); :}
+  // the following might get rewritten to MValue(BoolVal(x)) in AttrValues.jadd
+  | TYPE_IDENTIFIER.id  {: return new FeatVar(id); :}
   ;
   
 
