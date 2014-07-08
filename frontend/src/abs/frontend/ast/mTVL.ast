@@ -28,9 +28,9 @@ CRange:  Cardinality ::= <CFrom:int> <CTo:int>;
 Attribute ::= <Name> AType:MType;
 
 abstract  MType;
-BoolType: MType;
-IntType:  MType ::= Min:BoundaryInt Max:BoundaryInt;
-IntListType:  MType ::= BoundaryVal*;
+BoolMType: MType;
+IntMType:  MType ::= Min:BoundaryInt Max:BoundaryInt;
+IntListMType:  MType ::= BoundaryVal*;
 
 abstract BoundaryInt;
 Limit: BoundaryInt;

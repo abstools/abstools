@@ -1379,10 +1379,10 @@ AttrConstraints attribute_constraint_list
 	  if (!(t.equals("Int"))) {
 	   addSyntaxError("Unknown attribute type '"+t+"'",curr_sym); // TEST THIS
 	  }
-	  List al = acl.getAttributes().add(new Attribute(id, new IntListType(il)));
+	  List al = acl.getAttributes().add(new Attribute(id, new IntListMType(il)));
 	  List cl = acl.getConstrs();
 	  return new AttrConstraints(al,cl);
-	  //return new Attribute(id,new IntType(b1,b2));      
+	  //return new Attribute(id,new IntMType(b1,b2));
    :}
   | attribute_constraint_list.acl 
     TYPE_IDENTIFIER.t IDENTIFIER.id IN LBRACKET boundary_int.b1 UNTIL boundary_int.b2 RBRACKET SEMICOLON
@@ -1390,10 +1390,10 @@ AttrConstraints attribute_constraint_list
          if (!(t.equals("Int"))) {
            addSyntaxError("Unknown attribute type '"+t+"'",curr_sym); // TEST THIS
          }
-         List al = acl.getAttributes().add(new Attribute(id,new IntType(b1,b2)));
+         List al = acl.getAttributes().add(new Attribute(id,new IntMType(b1,b2)));
          List cl = acl.getConstrs();
          return new AttrConstraints(al,cl);
-         //return new Attribute(id,new IntType(b1,b2));      
+         //return new Attribute(id,new IntMType(b1,b2));
        :}
   | attribute_constraint_list.acl 
     TYPE_IDENTIFIER.t LBRACKET boundary_int.b1 UNTIL boundary_int.b2 RBRACKET IDENTIFIER.id SEMICOLON
@@ -1401,10 +1401,10 @@ AttrConstraints attribute_constraint_list
          if (!(t.equals("Int"))) {
            addSyntaxError("Unknown attribute type '"+t+"'",curr_sym); // TEST THIS
          }
-         List al = acl.getAttributes().add(new Attribute(id,new IntType(b1,b2)));
+         List al = acl.getAttributes().add(new Attribute(id,new IntMType(b1,b2)));
          List cl = acl.getConstrs();
          return new AttrConstraints(al,cl);
-         //return new Attribute(id,new IntType(b1,b2));
+         //return new Attribute(id,new IntMType(b1,b2));
       :}
   | attribute_constraint_list.acl 
     TYPE_IDENTIFIER.t IDENTIFIER.id SEMICOLON
@@ -1412,16 +1412,16 @@ AttrConstraints attribute_constraint_list
          List al = acl.getAttributes();
          List cl = acl.getConstrs();
          if (t.equals("Int")) {
-            al = al.add(new Attribute(id,new IntType(new Limit(), new Limit())));
-            //return new Attribute(id,new IntType(new Limit(), new Limit()));
+            al = al.add(new Attribute(id,new IntMType(new Limit(), new Limit())));
+            //return new Attribute(id,new IntMType(new Limit(), new Limit()));
          }
          else if (t.equals("Bool")) {
-            al = al.add(new Attribute(id, new BoolType()));
-            //return new Attribute(id, new BoolType());
+            al = al.add(new Attribute(id, new BoolMType()));
+            //return new Attribute(id, new BoolMType());
          }
          else {
             addSyntaxError("Unknown attribute type '"+t+"'",curr_sym); // TEST THIS
-            //return new Attribute(id,new BoolType());
+            //return new Attribute(id,new BoolMType());
          }
          return new AttrConstraints(al,cl);
        :}
