@@ -32,15 +32,15 @@ public class DASolver1 extends DASolver {
     Boolean saturation;
    
     
-    Integer nOfIterations;
+    int nOfIterations;
 
     
 
-    Integer nOfDep;
+    int nOfDep;
 
     Boolean livelock;
 
-    public DASolver1(Factory f, Map<String, Term> map, Integer i){
+    public DASolver1(Factory f, Map<String, Term> map, int i){
         super(f, map);
         
         this.nOfIterations = i;
@@ -55,7 +55,7 @@ public class DASolver1 extends DASolver {
     public void computeSolution(){
         
         //perform an infinite cycle, since thanks to the saturation a fix point is always reached
-        for(Integer i=0; ; i++){
+        for(int i=0; ; i++){
             
             //perform one step expansion for each method
             for(String mName : methodMap.keySet()){
@@ -127,7 +127,7 @@ public class DASolver1 extends DASolver {
 
             //if the number of dependencies has not change in this iteration then a fix point is found
             //check if the number of dependencies is different of previous, if not, stop the analysis
-            Integer newNumberOfDep = 0;
+            int newNumberOfDep = 0;
             for(String mName : lampMap.keySet()){
                 newNumberOfDep += lampMap.get(mName).getFirst().numberOfDep();
                 newNumberOfDep += lampMap.get(mName).getSecond().numberOfDep();
@@ -261,7 +261,7 @@ public class DASolver1 extends DASolver {
 
         List<Record> argsCalled = interfaceCalled.getParameters();
 
-        for(Integer i = 0 ; i<argsCaller.size() ; i++){
+        for(int i = 0 ; i<argsCaller.size() ; i++){
             subArgs = findSub(argsCaller.get(i), argsCalled.get(i), bFresh);
             wPrime.apply(subArgs);
         }
@@ -353,7 +353,7 @@ public class DASolver1 extends DASolver {
 
         List<Record> argsCalled = interfaceCalled.getParameters();
 
-        for(Integer i = 0 ; i<argsCaller.size() ; i++){
+        for(int i = 0 ; i<argsCaller.size() ; i++){
             subArgs = findSub(argsCaller.get(i), argsCalled.get(i), bFresh);
             w.apply(subArgs);
             wPrime.apply(subArgs);
@@ -456,7 +456,7 @@ public class DASolver1 extends DASolver {
 
         List<Record> argsCalled = interfaceCalled.getParameters();
 
-        for(Integer i = 0 ; i<argsCaller.size() ; i++){
+        for(int i = 0 ; i<argsCaller.size() ; i++){
             subArgs = findSub(argsCaller.get(i), argsCalled.get(i), bFresh);
             w.apply(subArgs);
             wPrime.apply(subArgs);
@@ -570,7 +570,7 @@ public class DASolver1 extends DASolver {
 
         List<Record> argsCalled = interfaceCalled.getParameters();
 
-        for(Integer i = 0 ; i<argsCaller.size() ; i++){
+        for(int i = 0 ; i<argsCaller.size() ; i++){
             subArgs = findSub(argsCaller.get(i), argsCalled.get(i), bFresh);
             w.apply(subArgs);
             wPrime.apply(subArgs);
@@ -705,7 +705,7 @@ public class DASolver1 extends DASolver {
             List<Term> lt1 = ((TermStructured) t1).getSubTerms();
             List<Term> lt2 = ((TermStructured) t2).getSubTerms();
             VarSubstitution subsub = new VarSubstitution();
-            for(Integer i = 0 ; i<lt1.size() ; i++){
+            for(int i = 0 ; i<lt1.size() ; i++){
                 subsub = findSub(lt1.get(i), lt2.get(i), preSub);
                 sub.addSub(subsub);
             }

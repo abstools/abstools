@@ -135,8 +135,8 @@ public class State {
     }
 
     //Calculates de number of dependencies
-    public Integer numberOfDep(){
-        Integer i = 0;
+    public int numberOfDep(){
+        int i = 0;
         for(GroupName v : depCouple.keySet())
            i+= depCouple.get(v).size();
         for(GroupName v : depCoupleAwait.keySet())

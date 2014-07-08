@@ -79,7 +79,7 @@ public class DASolver2 extends DASolver {
             
           //if the number of dependencies has not change in this iteration then a fix point is found
             //check if the number of dependencies is different of previous, if not, stop the analysis
-            Integer newNumberOfDep = 0;
+            int newNumberOfDep = 0;
             for(String mName : lampMap.keySet()){
                 newNumberOfDep += lampMap.get(mName).getFirst().numberOfDep();
                 newNumberOfDep += lampMap.get(mName).getSecond().numberOfDep();
