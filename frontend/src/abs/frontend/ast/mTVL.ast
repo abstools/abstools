@@ -3,6 +3,9 @@
 /// mTVL - root and extension ///
 /////////////////////////////////
 
+// If you add classes here, add them to
+// frontend/src/abs/frontend/treecopy/ParseTreeCopy.jadd as well
+
 FeatureModelDecl ::= FeatureDecl* FExt*;
 
 FExt ::= <Name> [Group] AttrConstraints;
