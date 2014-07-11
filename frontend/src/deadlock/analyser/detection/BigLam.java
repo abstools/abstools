@@ -59,7 +59,7 @@ public class BigLam {
             this.aTilde.addAll(_this.fn());
             for(Record t : args){
                 this.bTilde.removeAll(t.fn());
-               
+                this.aTilde.addAll(t.fn());
             }
         }
         else {
