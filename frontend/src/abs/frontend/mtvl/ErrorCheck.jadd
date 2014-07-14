@@ -69,6 +69,12 @@ aspect ErrorCheck {
                                   this.getTypename(), "Bool"));
       }
   }
+  public void StringMType.collectErrors(SemanticErrorList c) {
+      if (!(this.getTypename().equals("String"))) {
+          c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,
+                                  this.getTypename(), "String"));
+      }
+  }
   public void IntMType.collectErrors(SemanticErrorList c) {
       if (!(this.getTypename().equals("Int"))) {
           c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,

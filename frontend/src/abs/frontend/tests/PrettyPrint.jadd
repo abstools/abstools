@@ -154,6 +154,9 @@ aspect PrettyPrint {
     public void BoolVal.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
         w.print("Const(" + getValue() + ")");
     }
+    public void StringVal.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
+        w.print("Const(\"" + getValue() + "\")");
+    }
     public void IntVal.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
         w.print("Const(" + getIntValue() + ")");
     }

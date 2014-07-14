@@ -1210,6 +1210,8 @@ AttrAssignment attr_assignment =
     | IDENTIFIER.n ASSIGN TYPE_IDENTIFIER.c {: // hack...
         // might get rewritten to BoolVal(x) in AttrValues.jadd
         return new AttrAssignment(n, new UnknownVal(c)); :}
+    | IDENTIFIER.n ASSIGN STRINGLITERAL.s {:
+        return new AttrAssignment(n, new StringVal(s)); :}
     ;
 
 List deltaclause_list = {: return new List(); :}
@@ -1252,6 +1254,8 @@ Deltaparam deltaparam =
     | TYPE_IDENTIFIER.c {: // hack...
         // might get rewritten to Const(BoolVal(x)) in AttrValues.jadd
         return new FID(c); :}
+    | STRINGLITERAL.s {:
+        return new Const(new StringVal(s)); :}
     ;
 
 // Application conditions
@@ -1402,6 +1406,9 @@ AttrConstraints attribute_constraint_list
          }
          else if (t.equals("Bool")) {
             al = al.add(new Attribute(id, new BoolMType(t)));
+         }
+         else if (t.equals("String")) {
+            al = al.add(new Attribute(id, new StringMType(t)));
          }
          else {
             al = al.add(new Attribute(id, new UnresolvedMType(t)));

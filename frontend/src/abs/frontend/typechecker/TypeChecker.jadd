@@ -1033,6 +1033,9 @@ aspect TypeCheckProductline {
 	public boolean BoolVal.isAssignableTo(Type t) { 
 		return t.isBoolType();
 	}
+	public boolean StringVal.isAssignableTo(Type t) {
+            return t.isStringType();
+	}
 	public boolean IntVal.isAssignableTo(Type t) { 
 		return t.isNumericType();
 	}

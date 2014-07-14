@@ -303,6 +303,7 @@ abstract Value;
 UnknownVal: Value ::= <Value>;
 IntVal: Value ::= <Value:int>;
 BoolVal: Value ::= <Value:Boolean>;
+StringVal: Value ::= <Value:String>;
 
 Deltaspec ::= <Name> Deltaparam* ;
 abstract Deltaparam;

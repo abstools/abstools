@@ -35,4 +35,8 @@ aspect ProdSolution {
     public Integer BoolVal.getIntValue() {
             return Integer.valueOf( getValue() ? 1 : 0);
     }
+    public Integer StringVal.getIntValue() {
+        // FIXME: is this used for constraint solving?  Maybe use a hash
+            return -1;
+    }
 }  

@@ -18,6 +18,7 @@ aspect DeltaParameterSubstitution {
     public String UnknownVal.getName()  { return "" + getValue(); }
     public String IntVal.getName()  { return "" + getValue(); }
     public String BoolVal.getName() { return "" + getValue(); }
+    public String StringVal.getName() { return "" + getValue(); }
 
     // calculate the concrete value of a Deltaparam, given a feature selection.
     abstract public Value Deltaparam.calcValue(List<Feature> features) throws WrongProgramArgumentException;
@@ -208,6 +209,9 @@ aspect DeltaParameterSubstitution {
     }
     public PureExp IntVal.calcExpr() {
         return new IntLiteral(""+getValue());
+    }
+    public PureExp StringVal.calcExpr() {
+        return new StringLiteral(""+getValue());
     }
     public PureExp BoolVal.calcExpr() {
         if (getValue())
