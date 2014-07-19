@@ -387,7 +387,7 @@ value.")
                (with-current-buffer erlang-buffer
                  (comint-send-string erlang-buffer
                                      (concat "cd (\"" erlang-dir "\").\n"))
-                 (comint-send-string erlang-buffer "make:all().\n")
+                 (comint-send-string erlang-buffer "make:all([load]).\n")
                  (comint-send-string erlang-buffer
                                      (concat "code:add_path(\"" erlang-dir
                                              "/ebin\").\n"))
