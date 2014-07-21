@@ -16,15 +16,15 @@ handle_event({log,Data},State)->
 handle_event(_,State)->
     {ok,State}.
 
-handle_call(_,State)->
+handle_call(_,_State)->
     {not_supported_call}.
 
 
-handle_info(M,State)->
+handle_info(M,_State)->
     {not_supported_msg,M}.
 
-terminate(Arg, State)->
+terminate(Arg,_State)->
     {error,Arg}.
 
-code_change(OldVsn, State, Extra)->
+code_change(_OldVsn,_State,_Extra)->
     {not_supported}.

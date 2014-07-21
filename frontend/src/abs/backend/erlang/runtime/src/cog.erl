@@ -115,7 +115,8 @@ execute(S) ->
             ?DEBUG({schedule,T}),
             S2=reset_polled(R,Polled,S1),
             set_state(S2#state{running=R},R,running)
-    end.
+    end,
+    State.
 
 %%Sets state in dictionary, and updates polling list
 set_state(S=#state{tasks=Tasks},TaskRef,done)->
