@@ -15,13 +15,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.junit.BeforeClass;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import abs.backend.maude.MaudeTests;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -34,29 +33,21 @@ public class CaseStudyTypeChecking extends FrontendTest {
     // default relative path to https://repos.hats-project.eu:444/svn/hats/CaseStudies/models
     /**
      * Use a property to be able to point JUnit in the right direction and override the default:
+     * the first one is from HATS and may become outdated; the 2nd from the ENVISAGE project
+     * within our ABS repo.
      */
-    private static String CASESTUDY_DIR = System.getProperty("abs.junit.casestudies", "../../../../CaseStudies/models/"); 
-
-    /**
-     * Check if the casestudies are available (see {@link MaudeTests}). Again, BeforeClass
-     * seems better than a plain assumeTrue(), as the tests will show as ignored, not passed.
-     * @author stolz
-     */
-    @BeforeClass
-    public static void checkExists() {
-        File srcFolderF = new File(CASESTUDY_DIR);
-        assumeTrue(srcFolderF.exists());
-        if (!CASESTUDY_DIR.endsWith("/"))
-            CASESTUDY_DIR += "/";
-    }
+    private static String CASESTUDY_DIR = System.getProperty("abs.junit.casestudies", "../../../../CaseStudies/models/");
+    private static String ENVISAGE_DIR = System.getProperty("abs.junit.envisage", "../examples/T4.3/");
 
     @Parameters(name="{0}")
     public static Collection<?> data() {
-        final Object[][] data = new Object[][] { { "fredhopper/replication/abs" }
-                                               , { "fredhopper/replication/abs-single/annual-meeting-2011" }
-                                               , { "fredhopper/replication/abs-single/annual-meeting-2011-async" }
-                                               , { "tradingsystem"}
-                                               , { "vof"} };
+        final Object[][] data = new Object[][] { { CASESTUDY_DIR + "fredhopper/replication/abs" }
+                                               , { CASESTUDY_DIR + "fredhopper/replication/abs-single/annual-meeting-2011" }
+                                               , { CASESTUDY_DIR + "fredhopper/replication/abs-single/annual-meeting-2011-async" }
+                                               , { CASESTUDY_DIR + "tradingsystem"}
+                                               , { CASESTUDY_DIR + "vof"}
+                                               , { ENVISAGE_DIR + "D4.3.1" }
+                                               };
         return Arrays.asList(data);
     }
 
@@ -69,7 +60,9 @@ public class CaseStudyTypeChecking extends FrontendTest {
 
     @Test
     public void test() throws Exception {
-        m = assertParseFilesOk(CASESTUDY_DIR+input, TYPE_CHECK, WITH_STD_LIB);
+        File srcFolderF = new File(input);
+        assumeTrue(srcFolderF.exists());
+        m = assertParseFilesOk(input, TYPE_CHECK, WITH_STD_LIB);
     }
 
     protected Model assertParseFilesOk(String srcFolder, Config... config) throws IOException {
@@ -80,6 +73,8 @@ public class CaseStudyTypeChecking extends FrontendTest {
         Model m = main.parseFiles(findAbsFiles(srcFolderF).toArray(new String[0]));
 
         if (m != null) {
+            if (m.hasParserErrors())
+                Assert.fail(m.getParserErrors().get(0).getMessage());
             int numSemErrs = m.getErrors().size();
             StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
             if (numSemErrs > 0) {
