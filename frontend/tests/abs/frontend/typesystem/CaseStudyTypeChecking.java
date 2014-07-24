@@ -37,7 +37,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
      * within our ABS repo.
      */
     private static String CASESTUDY_DIR = System.getProperty("abs.junit.casestudies", "../../../../CaseStudies/models/");
-    private static String ENVISAGE_DIR = System.getProperty("abs.junit.envisage", "../examples/T4.3/");
+    private static String ENVISAGE_DIR = System.getProperty("abs.junit.envisage", "../examples/");
 
     @Parameters(name="{0}")
     public static Collection<?> data() {
@@ -46,7 +46,12 @@ public class CaseStudyTypeChecking extends FrontendTest {
                                                , { CASESTUDY_DIR + "fredhopper/replication/abs-single/annual-meeting-2011-async" }
                                                , { CASESTUDY_DIR + "tradingsystem"}
                                                , { CASESTUDY_DIR + "vof"}
-                                               , { ENVISAGE_DIR + "D4.3.1" }
+                                               , { ENVISAGE_DIR + "T4.3/D4.3.1" }
+                                               /* Individual models: */
+                                               , { ENVISAGE_DIR + "T4.2/D4.2.1/Indexing.abs" }
+                                               , { ENVISAGE_DIR + "T4.2/D4.2.1/Crawling.abs" }
+                                               , { ENVISAGE_DIR + "T4.2/D4.2.1/MapReduce.abs" }
+                                               , { ENVISAGE_DIR + "T4.2/D4.2.1/Downloading.abs" }
                                                };
         return Arrays.asList(data);
     }
@@ -95,11 +100,16 @@ public class CaseStudyTypeChecking extends FrontendTest {
 
     private List<String> findAbsFiles(File srcFolder) {
         List<String> result = new java.util.LinkedList<String>();
-        for (File f : srcFolder.listFiles()) {
-            if (f.isDirectory()) {
-                result.addAll(findAbsFiles(f));
-            } else if (f.getName().endsWith(".abs")) {
-                result.add(f.getAbsolutePath());
+        if (srcFolder.exists() && !srcFolder.isDirectory()) {
+            assertTrue(srcFolder.getName().endsWith(".abs"));
+            result.add(srcFolder.getAbsolutePath());
+        } else {
+            for (File f : srcFolder.listFiles()) {
+                if (f.isDirectory()) {
+                    result.addAll(findAbsFiles(f));
+                } else if (f.getName().endsWith(".abs")) {
+                    result.add(f.getAbsolutePath());
+                }
             }
         }
         return result;
