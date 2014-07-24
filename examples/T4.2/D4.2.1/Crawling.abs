@@ -1,0 +1,72 @@
+module Crawling;
+import * from ABS.DC;
+import println from ABS.Meta;
+
+// A crawler can ask for the head or the full document.
+data DocHead = Head(Int lastUpdated, Int size);
+
+data Document = Document(DocHead head, List<Url> references);
+
+// Highly abstract URLs: instead of storing a host part and performing
+// hostname lookup, we store the server reference directly
+data Url = Url(WebServer host, String path);
+
+interface WebServer {
+    Maybe<DocHead> getHead(String path);
+    Maybe<Document> getPage(String path);
+}
+
+class WebServer (Map<String, Document> pages) implements WebServer {
+    Maybe<DocHead> getHead(String path) {
+        Maybe<Document> doc = lookup(pages, path);
+        return if doc == Nothing then Nothing else Just(head(fromJust(doc)));
+    }
+    Maybe<Document> getPage(String path) {
+        return lookup(pages, path);
+    }
+}
+
+interface Crawler {
+    Unit addSeeds(List<Url> urls);
+}
+
+class Crawler implements Crawler {
+    List<Url> seeds = Nil;
+    Map<Url, DocHead> seen = EmptyMap;
+    Map<Url, Document> crawled = EmptyMap;
+    
+    Unit run() {
+        while (True) {
+            await seeds != Nil;
+            this.crawl(ABS.StdLib.head(seeds));
+            seeds = tail(seeds);
+        }
+    }
+
+    Unit addSeeds(List<Url> urls) {
+        seeds = concatenate(seeds, urls);
+    }
+
+    Unit crawl(Url url) {
+        if (contains(keys(seen), url)) {
+            Maybe<DocHead> head = await host(url)!getHead(path(url));
+            if (head != Nothing) {
+                DocHead ourhead = lookupUnsafe(seen, url);
+                if (lastUpdated(fromJust(head)) > lastUpdated(ourhead)) {
+                    this.getAndStoreDocument(url);
+                }
+            }
+        } else {
+            this.getAndStoreDocument(url);
+        }
+    }
+
+    Unit getAndStoreDocument(Url url) {
+        Maybe<Document> document = await host(url)!getPage(path(url));
+        if (document != Nothing) {
+            seen = put(seen, head(fromJust(document)));
+            crawled = put(crawled, fromJust(document));
+        }
+    }
+}
+

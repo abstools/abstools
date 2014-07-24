@@ -1,0 +1,246 @@
+module Indexing;
+import * from ABS.DC;
+
+// This code compiles with the 'multi-resources' branch for now.
+
+
+
+// * Prefix indexing
+
+// A generic model of a MapReduce job.  The overall input is a list of tasks,
+// each resulting in one call to map.  Each task describes how many calls to
+// reduce should result from it.
+
+// The code follows the general pattern of MapReduce and is decomposed
+// for easy modification via deltas.
+
+type InKeyType = String;           // token
+type InValueType = Pair<Int, Int>; // size of result / number of reduce calls
+type OutKeyType = String;          // token (maybe same as InKeyType with
+                                   // number attached?)
+type OutValueType = Int;           // token / size of result?
+
+// Note we use lists where the paper says "set" since the authors mean
+// multisets in many cases, especially in the reduce phase.
+interface Worker {
+  // invoked by MapReduce component
+  List<Pair<OutKeyType, OutValueType>> invokeMap(InKeyType key, InValueType value);
+  // invoked by MapReduce component
+  List<OutValueType> invokeReduce(OutKeyType key, List<OutValueType> value);
+}
+
+interface MapReduce {
+  // invoked by client
+  List<Pair<OutKeyType, List<OutValueType>>> mapReduce(List<Pair<InKeyType, InValueType>> documents);
+  // invoked by workers
+  Unit finished(Worker w);
+}
+
+class Worker(MapReduce master) implements Worker {
+  List<Pair<OutKeyType, OutValueType>> mapResults = Nil;
+  List<OutValueType> reduceResults = Nil;
+
+  // begin customizable section ------------------
+
+  // The methods in this section can be overridden via deltas.  map and
+  // reduce should not change the state of the object and should not
+  // contain any cost annotations.
+  Unit map(InKeyType key, InValueType value) {
+    Int nMapResults = fst(value);
+    Int nReduceCalls = snd(value);
+    Int i = 0;
+    while (i < nMapResults) {
+      i = i + 1;
+      this.emitMapResult(key, nReduceCalls);
+    }
+  }
+  Unit reduce(OutKeyType key, List<OutValueType> value) {
+    // Remove duplicates in occurrence list: convert into set.
+    while (value != Nil) {
+      this.emitReduceResult(head(value));
+      value = tail(value);
+    }
+  }
+
+  // end customizable section---------------------
+
+  List<Pair<OutKeyType, OutValueType>> invokeMap(InKeyType key, InValueType value) {
+    mapResults = Nil;
+    this.map(key, value);
+    [Size: 20] master!finished(this);
+    List<Pair<OutKeyType, OutValueType>> result = mapResults;
+    mapResults = Nil;
+    return result;
+  }
+
+  List<OutValueType> invokeReduce(OutKeyType key, List<OutValueType> value) {
+    reduceResults = Nil;
+    this.reduce(key, value);
+    [Size: 15] master!finished(this);
+    List<OutValueType> result = reduceResults;
+    reduceResults = Nil;
+    return result;
+  }
+
+  Unit emitMapResult(OutKeyType key, OutValueType value) {
+    mapResults = Cons(Pair(key, value), mapResults);
+  }
+  Unit emitReduceResult(OutValueType value) {
+    reduceResults = Cons(value, reduceResults);
+  }
+}
+
+// This class contains the MapReduce machinery.  Any deployment
+// decisions (number of machines, etc.) can be customized via deltas.
+class MapReduce implements MapReduce {
+  Set<Worker> workers = EmptySet;
+  Int nWorkers = 0;
+
+  // begin customizable section ------------------
+
+  // This method obtains a Worker object.  Any VM creation, load
+  // balancing, accounting etc. goes on here.  Any side effects should
+  // only modify state that is introduced in the same delta.
+  Worker getWorker() {
+    Worker w = null;
+    if (emptySet(workers)) {
+      w = new Worker(this);
+      nWorkers = nWorkers + 1;
+      } else {
+      w = take(workers);
+      workers = remove(workers, w);
+    }
+    return w;
+  }
+  // This method registers a worker as idle.  It is called by the worker
+  // itself.  Any side effects should only modify state that is
+  // introduced in the same delta.
+  Unit finished(Worker w) {
+    workers = insertElement(workers, w);
+  }
+  // end customizable section---------------------
+
+  List<Pair<OutKeyType, List<OutValueType>>> mapReduce(List<Pair<InKeyType, InValueType>> items) {
+    Set<Fut<List<Pair<OutKeyType, OutValueType>>>> fMapResults = EmptySet;
+    ABS.StdLib.Map<OutKeyType, List<OutValueType>> intermediates = EmptyMap;
+    Set<Pair<OutKeyType, Fut<List<OutValueType>>>> fReduceResults = EmptySet;
+    List<Pair<OutKeyType, List<OutValueType>>> result = Nil;
+
+    while (~isEmpty(items)) {
+      Pair<InKeyType, InValueType> item = head(items);
+      items = tail(items);
+      Worker w = this.getWorker();
+      String key = fst(item);
+      InValueType value = snd(item);
+      // "Map, written by the user, takes an input pair and produces a
+      // set of intermediate key/value pairs." [MapReduce, pg. 2]
+      Fut<List<Pair<OutKeyType, OutValueType>>> fMap = w!invokeMap(key, value);
+      fMapResults = insertElement(fMapResults, fMap);
+    }
+    while (~emptySet(fMapResults)) {
+      // "The MapReduce library groups together all intermediate values
+      // associated with the same intermediate key I ..." [ditto]
+      Fut<List<Pair<OutKeyType, OutValueType>>> fMapResult = take(fMapResults);
+      fMapResults = remove(fMapResults, fMapResult);
+      await fMapResult?;
+      List<Pair<OutKeyType, OutValueType>> mapResult = fMapResult.get;
+      while (~isEmpty(mapResult)) {
+        Pair<OutKeyType, OutValueType> keyValuePair = head(mapResult);
+        mapResult = tail(mapResult);
+        List<OutValueType> inter = lookupDefault(intermediates, fst(keyValuePair), Nil);
+        intermediates = put(intermediates, fst(keyValuePair),
+          Cons(snd(keyValuePair), inter));
+      }
+    }
+    // "... and passes them to the Reduce function.  The Reduce
+    // function, also written by the user, accepts an intermediate key I
+    // and a set of values for that key. It merges together these values
+    // to form a possibly smaller set of values.  Typically just zero or
+    // one outpout value is produced per Reduce invocation." [ditto]
+    Set<OutKeyType> keys = keys(intermediates);
+    while(~emptySet(keys)) {
+      OutKeyType key = take(keys);
+      keys = remove(keys, key);
+      List<OutValueType> values = lookupUnsafe(intermediates, key);
+      Worker w = this.getWorker();
+      Fut<List<OutValueType>> fReduce = w!invokeReduce(key, values);
+      fReduceResults = insertElement(fReduceResults, Pair(key, fReduce));
+    }
+    while (~emptySet(fReduceResults)) {
+      Pair<OutKeyType, Fut<List<OutValueType>>> reduceResult = take(fReduceResults);
+      fReduceResults = remove(fReduceResults, reduceResult);
+      OutKeyType key = fst(reduceResult);
+      Fut<List<OutValueType>> fValues = snd(reduceResult);
+      await fValues?;
+      List<OutValueType> values = fValues.get;
+      result = Cons(Pair(key, values), result);
+    }
+    return result;
+  }
+
+}
+
+
+// Environment
+class Client(MapReduce m) {
+  List<Pair<InKeyType, InValueType>> inputs =
+    list[Pair("paul_clifford.txt", Pair(5, 5)),
+      Pair("tale_of_two_cities.txt", Pair(5, 5)),
+      Pair("neuromancer.txt", Pair(5, 5))
+      ];
+  List<Pair<OutKeyType, List<OutValueType>>> result = Nil;
+  Unit run() {
+    Fut<List<Pair<OutKeyType, List<OutValueType>>>> f = m!mapReduce(inputs);
+    await f?;
+    result = f.get;
+  }
+}
+
+{
+  MapReduce m = new MapReduce();
+  new local Client(m);
+}
+// End Environment
+
+
+delta DBoundedDeployment (Int capacity, Int bandwidth, Int maxWorkers);
+uses Indexing;
+modifies class MapReduce {
+  modifies Worker getWorker() {
+    if (emptySet(workers) && nWorkers < maxWorkers) {
+      DeploymentComponent dc = new DeploymentComponent("worker " + toString(nWorkers + 1),
+        map[Pair(CPU, capacity), Pair(Bandwidth, bandwidth)]);
+      [DC: dc] Worker w = new Worker(this);
+      workers = insertElement(workers, w);
+      nWorkers = nWorkers + 1;
+    }
+    await ~(emptySet(workers));
+    Worker w = take(workers);
+    workers = remove(workers, w);
+    return w;
+  }
+}
+
+productline DeltaResourceExample;
+features NoDeploymentScenario, LimitedMachines;
+delta DBoundedDeployment(LimitedMachines.capacity, LimitedMachines.bandwidth, LimitedMachines.machinelimit) when LimitedMachines;
+
+product PrefixIndexingModel (NoDeploymentScenario);
+product PrefixIndexingDemo (LimitedMachines{capacity=13, bandwidth=20, machinelimit=5});
+
+
+root Deployments {
+  group oneof {
+    NoDeploymentScenario,
+    LimitedMachines { Int capacity in [ 0 .. 10000 ] ;
+      Int bandwidth in [ 0 .. 10000 ] ;
+      Int machinelimit in [ 0 .. 100 ] ; }
+  }    
+}
+
+// Local Variables:
+// abs-use-timed-interpreter: t
+// abs-indent: 2
+// abs-product-name: "PrefixIndexingDemo"
+// abs-clock-limit: 10
+// End:
