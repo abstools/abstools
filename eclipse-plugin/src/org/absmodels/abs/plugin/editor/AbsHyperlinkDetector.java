@@ -18,7 +18,6 @@ import org.eclipse.jface.text.hyperlink.AbstractHyperlinkDetector;
 import org.eclipse.jface.text.hyperlink.IHyperlink;
 
 import abs.frontend.ast.*;
-import abs.frontend.delta.exceptions.DeltaModellingException;
 import abs.frontend.typechecker.*;
 import abs.frontend.typechecker.KindedName.Kind;
 

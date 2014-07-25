@@ -1,7 +1,6 @@
 import java.util.Map;
 import abs.frontend.delta.*;
 import abs.common.*;
-import abs.frontend.delta.exceptions.*;
 
 aspect ProductFlattener {
 

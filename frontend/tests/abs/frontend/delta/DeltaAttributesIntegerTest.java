@@ -15,7 +15,6 @@ import org.junit.runners.Parameterized.Parameters;
 
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.*;
-import abs.frontend.delta.exceptions.DeltaModellingException;
 
 @RunWith(Parameterized.class)
 public class DeltaAttributesIntegerTest extends DeltaTest {

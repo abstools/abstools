@@ -13,7 +13,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
-import abs.frontend.delta.exceptions.DeltaModellingException;
+import abs.frontend.delta.DeltaModellingException;
 import abs.frontend.parser.Main;
 
 public class Tester extends Main {

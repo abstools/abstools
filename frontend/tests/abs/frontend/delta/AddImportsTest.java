@@ -10,11 +10,10 @@ import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
+import static org.junit.Assert.*;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.*;
-import abs.frontend.delta.exceptions.*;
 
 public class AddImportsTest extends DeltaTest {
     

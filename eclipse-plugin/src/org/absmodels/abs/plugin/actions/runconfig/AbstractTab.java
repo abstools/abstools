@@ -29,7 +29,7 @@ import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Product;
-import abs.frontend.delta.exceptions.DeltaModellingException;
+import abs.frontend.delta.DeltaModellingException;
 
 
 public abstract class AbstractTab extends AbstractLaunchConfigurationTab {

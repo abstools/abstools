@@ -2,7 +2,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.HashMap;
 import abs.frontend.delta.*;
-import abs.frontend.delta.exceptions.*;
 
 aspect OriginalCallResolver {
 

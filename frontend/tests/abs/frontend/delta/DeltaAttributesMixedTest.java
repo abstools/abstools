@@ -12,7 +12,6 @@ import org.hamcrest.core.IsInstanceOf;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.ast.*;
-import abs.frontend.delta.exceptions.DeltaModellingException;
 import abs.frontend.parser.SyntaxError;
 
 public class DeltaAttributesMixedTest extends DeltaTest {

@@ -8,10 +8,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
 
+import static org.junit.Assert.*;
 import abs.frontend.ast.*;
-import abs.frontend.delta.exceptions.*;
 
 /* test: 
  * 1. add/remove implemented interfaces of a class

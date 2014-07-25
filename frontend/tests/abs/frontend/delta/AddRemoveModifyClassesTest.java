@@ -11,8 +11,6 @@ import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
-
-import abs.frontend.delta.exceptions.*;
 import abs.frontend.ast.*;
 
 

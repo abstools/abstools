@@ -15,7 +15,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Product;
-import abs.frontend.delta.exceptions.DeltaModellingException;
+import abs.frontend.delta.DeltaModellingException;
 
 public class DumpProducts extends Main {
 
