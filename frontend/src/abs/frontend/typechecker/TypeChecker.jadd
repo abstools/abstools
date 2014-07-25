@@ -825,7 +825,7 @@ aspect TypeChecker {
     }
 
     public Map<TypeParameter, Type> FnApp.getTypeParamBindingFromParamDecl(ParametricFunctionDecl node) {
-        return getTypeParamBinding(node, node);
+        return getTypeParamBinding(this, node);
     }
 
     public void DataConstructorExp.typeCheck(SemanticErrorList e) {
