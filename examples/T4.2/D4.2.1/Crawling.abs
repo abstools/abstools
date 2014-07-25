@@ -64,8 +64,8 @@ class Crawler implements Crawler {
     Unit getAndStoreDocument(Url url) {
         Maybe<Document> document = await host(url)!getPage(path(url));
         if (document != Nothing) {
-            seen = put(seen, head(fromJust(document)));
-            crawled = put(crawled, fromJust(document));
+            seen = put(seen, url, head(fromJust(document)));
+            crawled = put(crawled, url, fromJust(document));
         }
     }
 }
