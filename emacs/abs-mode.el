@@ -51,16 +51,16 @@
 (defcustom abs-compiler-program (or (executable-find "absc") "absc")
   "Path to the Abs compiler."
   :type 'file
-  :risky t
   :group 'abs)
+(put 'abs-compiler-program 'risky-local-variable t)
 
 (defcustom abs-java-classpath "absfrontend.jar"
   "The classpath for the Java backend.
 The contents of this variable will be passed to the java
 executable via the `-cp' argument."
   :type 'string
-  :risky t
   :group 'abs)
+(put 'abs-java-classpath 'risky-local-variable t)
 
 (defcustom abs-indent standard-indent
   "The width of one indentation step for Abs code."
