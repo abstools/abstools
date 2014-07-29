@@ -100,6 +100,14 @@ Note that you can set this variable as a file-local variable as well."
   "Product to be generated when compiling.")
 (put 'abs-product-name 'safe-local-variable 'stringp)
 
+(defcustom abs-debug-output nil
+  "Control whether to tell the backend to be verbose.
+This setting might not be supported on all backends, or produce
+different results."
+  :type 'boolean
+  :group 'abs)
+(put 'abs-debug-output 'safe-local-variable 'booleanp)
+
 ;;; Making faces
 (defface abs-keyword-face '((default (:inherit font-lock-keyword-face)))
   "Face for Abs keywords"
@@ -383,7 +391,8 @@ value.")
                                              (get-buffer "*erlang*"))))
                    (erlang-dir (concat (file-name-directory (buffer-file-name))
                                        "gen/erl"))
-                   (module (abs--guess-module)))
+                   (module (abs--guess-module))
+                   (debug-output abs-debug-output))
                (with-current-buffer erlang-buffer
                  (comint-send-string erlang-buffer
                                      (concat "cd (\"" erlang-dir "\").\n"))
@@ -392,7 +401,9 @@ value.")
                                      (concat "code:add_path(\"" erlang-dir
                                              "/ebin\").\n"))
                  (comint-send-string erlang-buffer
-                                     (concat "runtime:start(\"" module
+                                     (concat "runtime:start(\""
+                                             (when debug-output "-d ")
+                                             module
                                              "\").\n")))
                (pop-to-buffer erlang-buffer)))
     (`java (let ((java-buffer (save-excursion (shell "*abs java*")))
