@@ -153,7 +153,7 @@ public class JavaLaunchConfig {
 
     @SuppressWarnings("unchecked")
     public List<String> getDebuggerObserverList() throws CoreException {
-        return rConfig.getAttribute(RUNCONFIG_DEBUGGER_OBSERVER_LIST, Collections.emptyList());
+        return rConfig.getAttribute(RUNCONFIG_DEBUGGER_OBSERVER_LIST, Collections.EMPTY_LIST);
     }
 
     public void setCompileBefore(boolean compileBefore) {
