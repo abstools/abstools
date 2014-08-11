@@ -293,7 +293,7 @@ aspect DeltaModifierApplicator {
     }
 
     public void ModifyMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException {
-        MethodSig mysig = this.getMethodImpl().getMethodSig();
+        MethodSig mysig = getMethodImpl().getMethodSig();
 
         // in given ClassDecl: find MethodDecl that matches sig
         int found = -1;
@@ -310,12 +310,12 @@ aspect DeltaModifierApplicator {
             method.setFileName(getMethodImpl().getFileName());
             cd.getMethods().setChild(method, found);
         } else
-            throw new DeltaModellingException(getDelta(), 
+            throw new DeltaModellingWithNodeException(getMethodImpl().getMethodSig(), getDelta(), 
                     " wants to modify method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
     }
 
     public void RemoveFieldModifier.applyTo(ClassDecl cd) throws DeltaModellingException {
-        FieldDecl myfield = this.getFieldDecl();
+        FieldDecl myfield = getFieldDecl();
 
         // in given ClassDecl: find FieldDecl that matches this
         int found = -1;
@@ -329,7 +329,7 @@ aspect DeltaModifierApplicator {
         if (found >= 0)
             cd.getFields().removeChild(found);
         else
-            throw new DeltaModellingException(getDelta(), 
+            throw new DeltaModellingWithNodeException(getFieldDecl(), getDelta(), 
                     " wants to remove field [" + myfield + "], which was not found in class [" + cd.qualifiedName() + "].");
     }
 
