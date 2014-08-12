@@ -508,11 +508,11 @@ implements DeploymentComponent {
     // Initialized flag read by the backend to avoid premature execution
     Bool initialized = False;
     // Total amount of resources in current and next time interval.
-    InfRat cpu = let (Maybe<Rat> v) = lookup(initconfig, CPU) in
-      if v == Nothing then InfRat else Fin(fromJust(v));
+    InfRat cpu = case lookup(initconfig, CPU) {
+      Nothing => InfRat; Just(v) => Fin(v); };
     InfRat cpunext = cpu;
-    InfRat bw = let (Maybe<Rat> v) = lookup(initconfig, Bandwidth) in
-      if v == Nothing then InfRat else Fin(fromJust(v));
+    InfRat bw = case lookup(initconfig, Bandwidth) {
+      Nothing => InfRat; Just(v) => Fin(v); };
     InfRat bwnext = bw;
     {
         this.initialized = True;
