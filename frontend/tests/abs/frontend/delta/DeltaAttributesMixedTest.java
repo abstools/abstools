@@ -105,7 +105,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         //TODO test the value of x
     }
 
-    @Test(expected=WrongProgramArgumentException.class)
+    @Test(expected=DeltaModellingException.class)
     public void passBooleanFeatureAttributes2b() throws Exception {
         Model model = assertParseOk(
                 "module M;"
@@ -192,7 +192,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
     
     @Test
     public void deltaParserIlltyped() throws Exception {
-        Model model = assertParseError(
+        Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool attr);"
                 + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
@@ -200,6 +200,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "    features F; delta D(F.a) when F;"
                 + "product P1( F{a=Blue} );"
         );
-        assertThat(model.getParserErrors().get(0), IsInstanceOf.instanceOf(SyntaxError.class));
+        model.flattenForProduct("P1");
+        assertTrue(model.hasTypeErrors());
     }
 }
