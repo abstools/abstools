@@ -2,11 +2,10 @@
 
 Similar to Java, a  statement is each of the individual instructions of a program, like the variable declarations and expressions seen in previous sections. They always end with a semicolon (;), and are executed in the same order in which they appear in a program. ABS provides flow control statements that serve to specify what has to be done by our program, when, and under which circumstances. Statements in ABS are not evaluated to a value. If one wants to assign a value to statements it would be the *Unit* value.
 
-== Block
+.Block
 
 This statement is also known as a *compund statement* and consists of a group of statement grouped together defining a name scope for variables. 
 
-.Syntax 
 
 [source,java]
 ----
@@ -16,9 +15,8 @@ n = n % 10;
 }
 ----
 
-== Selection statement
+.Selection statement
 
-.Syntax
 
 [source, java]
 ----
@@ -34,9 +32,8 @@ x = 5;
 
 ----
 
-== Iteration statement (Loop)
+.Iteration statement (Loop)
 
-.Syntax
 
 [source, java]
 ----
@@ -45,22 +42,19 @@ x = x + 1;
 
 ----
 
-== Variable Declaration Statements
+.Variable Declaration Statements
 
 A variable declaration statement is used to declare variables. A variable has an optional initialization expression for defining the initial value of the variable. The initialization expression is mandatory for variables of data types. It can be left out only for variables of reference types, in which case the variable is initialized with null. 
-
-.Syntax
 
 [source, java]
 ----
 Bool b = True;
 ----
 
-== Assign Statement 
+.Assign Statement 
 
 The *Assign Statement* assigns a value to a variable or a field.
 
-.Syntax
 
 [source, java]
 ----
@@ -69,11 +63,10 @@ x = 5;
 ----
 
 
-== Await Statement
+.Await Statement
 
 *Await Statements* suspend the current task until the given guard is true [7]. The task will not be suspended if the guard is already initially true. While the task is suspended, other tasks within the same COG can be activated. Await statements are also called scheduling points, because they are the only source positions, where a task may become suspended and other tasks of the same COG can be activated.
 
-.Syntax
 
 [source, java]
 ----
@@ -83,7 +76,7 @@ await this.x == True;
 await f? & this.y > 5;
 ----
 
-== Suspend Statement
+.Suspend Statement
 
 A Suspend Statement causes the current task to be suspended.
 
@@ -92,20 +85,16 @@ A Suspend Statement causes the current task to be suspended.
 suspend;
 ----
 
-== Skip Statement
+.Assert Statement
 
-The Skip Statement is a statement that does nothing. It is only used when analysing a program.
-
-== Assert Statement
-
-An Assert Statement is a statement for asserting certain conditions.
+An *Assert Statement* is a statement for asserting certain conditions.
 
 [source, java]
 ----
 assert x != null;
 ----
 
-== Return Statement
+.Return Statement
 
 A *Return Statement* defines the return value of a method. A return statement can only appear as a last statement in a method body.
 
@@ -114,9 +103,9 @@ A *Return Statement* defines the return value of a method. A return statement ca
 return x;
 ----
 
-== Expression Statement
+.Expression Statement
 
-An Expression Statement is a statement that only consists of a single expression. Such statements are only executed for the effect of the expression.
+An *Expression Statement* is a statement that only consists of a single expression. Such statements are only executed for the effect of the expression.
 
 [source, java]
 ----

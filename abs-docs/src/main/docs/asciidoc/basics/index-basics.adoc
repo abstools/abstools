@@ -1,8 +1,0 @@
-= Basics of ABS
-
-* link:lexical.html[Lexical Structure]
-
-* link:names.html[Names and Types]
-
-* link:algebraic.html[Algebraic Data Types]
-

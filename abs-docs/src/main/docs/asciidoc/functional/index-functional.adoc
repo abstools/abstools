@@ -1,0 +1,7 @@
+= Functional Sublanguage
+
+
+* link:functions.html[Functions]
+
+* link:pure.html[Pure Expressions]
+

@@ -1,0 +1,9 @@
+= Getting Started
+
+* link:lexical.html[Lexical Structure]
+
+* link:names.html[Types]
+** link:bin.html[Built-in Types]
+** link:algebraic.html[Algebraic Data Types]
+** link:itypes.html[Interface Types]
+
