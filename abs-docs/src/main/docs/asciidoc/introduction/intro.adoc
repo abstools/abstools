@@ -1,4 +1,4 @@
-= Abstract Behavioural Specification Language
+== Abstract Behavioural Specification Language
 
 The *ABS language* is a class-based object-oriented language that features algebraic data types and side effect-free functions. Syntactically, the ABS language tries to be as close as possible to the Java language, so that programmers that are used to Java can easily use the ABS language without much learning effort.
 

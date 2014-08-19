@@ -6,5 +6,5 @@ ABS Development Team
 include::introduction/index-introduction.adoc[]
 include::started/index-started.adoc[]
 include::functional/index-functional.adoc[]
-include::imperative/index-imperative.adoc[]
 include::oo/index-oo.adoc[]
+include::imperative/index-imperative.adoc[]

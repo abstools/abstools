@@ -2,5 +2,6 @@
 
 //
 
-link:intro.html[Abstract Behavioural Specification Language]
+include::intro.adoc[]
+//link:intro.html[Abstract Behavioural Specification Language]
 
