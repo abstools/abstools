@@ -4,5 +4,7 @@ ABS Development Team
 :experimental:
 
 include::introduction/index-introduction.adoc[]
-include::basics/index-basics.adoc[]
-include::program/index-program.adoc[]
+include::started/index-started.adoc[]
+include::functional/index-functional.adoc[]
+include::imperative/index-imperative.adoc[]
+include::oo/index-oo.adoc[]
