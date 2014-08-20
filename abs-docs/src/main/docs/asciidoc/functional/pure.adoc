@@ -1,4 +1,4 @@
-= Pure Expressions
+== Pure Expressions
 
 Pure Expressions are side effect-free expressions. This means that these expressions cannot mod-
 ify the heap.
@@ -57,7 +57,7 @@ if 5 == 4 then True else False
 
 ABS supports pattern matching by the Case Expression. It takes an expression as first argument, which a series of patterns is matched against. The value of the case expression itself is the value of the expression on the right-hand side of the first matching expression. It is an error if no pattern matches the expression.
 
-== Patterns
+=== Patterns
 
 There are five different kinds of patterns available in ABS:
 
@@ -143,7 +143,7 @@ _ => False;
 };
 ----
 
-== Type Checking
+=== Type Checking
 
 A case expression is type-correct if and only if all its expressions and all its branches are type-correct and the right-hand side of all branches have a common super type. This common super type is also the type of the overall case expression. A branch (a pattern and its expression) is type-correct if its pattern and its right-hand side expression are type-correct. A pattern is type-correct if it can match the corresponding case ex-pression.
 

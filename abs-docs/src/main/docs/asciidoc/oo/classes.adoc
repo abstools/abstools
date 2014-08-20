@@ -1,4 +1,4 @@
-= Classes
+== Classes
 
 Like in typical class-based languages, classes in ABS are used to create objects. Classes can implement an arbitrary number of interfaces. Classes do not have constructors in ABS but instead have class parameters and an optional init block. Class parameters actually define additional fields of the class that can be used like any other declared field.
 

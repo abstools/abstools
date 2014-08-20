@@ -1,4 +1,4 @@
-= Lexical Structure
+== Lexical Structure
 
 This section describes the lexical structure of the ABS language. ABS programs are written in Unicode.
 

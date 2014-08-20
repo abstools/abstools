@@ -1,4 +1,4 @@
-= Names and Types
+== Names and Types
 
 .Names
 A name in ABS can either be a simple identifier as described above, or can be qualified with a type name, which represents a module. Examples for syntactically valid names are: head, x, ABS.StdLib.tail. Examples for type names are: Unit, X, ABS.StdLib.Map.

@@ -1,4 +1,4 @@
-= Functions
+== Functions
 
 Functions in ABS define names for parametrized data expressions. A Function in ABS is always side effect-free, which means that it cannot manipulate the heap.
 

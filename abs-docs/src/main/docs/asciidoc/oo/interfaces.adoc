@@ -1,4 +1,4 @@
-= Interfaces
+== Interfaces
 
 
 Interfaces in ABS are similar to interfaces in Java. They have a name, which defines a nominal type, and they can extend arbitrary many other interfaces. The interface body consists of a list of method signature declarations. Method names start with a lowercase letter.

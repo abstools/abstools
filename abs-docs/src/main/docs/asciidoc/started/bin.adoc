@@ -1,4 +1,4 @@
-= Built-in Types
+=== Built-in Types
 
 The most basic of built-in types is the +Int+ type, which represents integers of arbitrary size.
 Values of type +Int+ can be constructed by using integer

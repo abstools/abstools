@@ -3,6 +3,6 @@
 include::classes.adoc[]
 //link:classes.html[Classes]
 
-include::interface.adoc[]
+include::interfaces.adoc[]
 //link:interfaces.html[Interfaces]
 
