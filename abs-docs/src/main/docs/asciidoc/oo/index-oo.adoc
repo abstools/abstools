@@ -1,0 +1,8 @@
+= Object Model
+
+include::classes.adoc[]
+//link:classes.html[Classes]
+
+include::interfaces.adoc[]
+//link:interfaces.html[Interfaces]
+

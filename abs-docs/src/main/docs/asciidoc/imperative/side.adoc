@@ -1,0 +1,42 @@
+== Expressions with Side Effects
+
+Beside pure expressions, ABS has expressions with side effects. However, these expressions are defined in such a way that they can only have a single side effect. This means that subexpressions of expressions can only be pure expressions again. This restriction simplifies the reasoning about ABS expressions.
+
+.New Expression
+
+A New Expression creates a new object from a class name and a list of arguments. In ABS objects can be created in two different ways. Either they are created in the current COG, using the standard new expression, or they are created in a new COG by using the new cog expression.
+
+.Syntax
+
+[source,java]
+
+----
+new Foo(5)
+new cog Bar()
+----
+
+.Synchronous Call Expression
+A Synchronous Call consists of a target expression, a method name, and a list of argument expressions.
+
+[source,java]
+
+----
+Bool b = x.m(5);
+----
+
+.Asynchronous Call Expression
+An Asynchronous Call consists of a target expression, a method name, and a list of argument expressions. Instead of directly invoking the method, an asynchronous method call creates a new task in the target COG, which is executed asynchronously. This means that the calling task proceeds independently after the call, without waiting for the result. The result of an asynchronous method call is a future (Fut<V>), which can be used by the calling task to later obtain the result of the method call. That future is resolved by the task that has been created in the target COG to execute the method.
+
+[source, java]
+----
+Fut<Bool> f = x!m(5);
+----
+
+.Get Expression
+A Get Expression is used to obtain the value from a future. The current task is blocked until the value of the future is available, i.e., until the future has been resolved. No other task in the COG can be activated in the meantime.
+
+[source,java]
+----
+Bool b = f.get;
+----
+

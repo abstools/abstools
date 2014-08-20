@@ -1,0 +1,17 @@
+= Getting Started
+
+include::lexical.adoc[]
+//* link:lexical.html[Lexical Structure]
+
+include::names.adoc[]
+//* link:names.html[Types]
+
+include::bin.adoc[]
+//** link:bin.html[Built-in Types]
+
+include::algebraic.adoc[]
+//** link:algebraic.html[Algebraic Data Types]
+
+include::itypes.adoc[]
+//** link:itypes.html[Interface Types]
+

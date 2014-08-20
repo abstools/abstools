@@ -3,6 +3,10 @@ ABS Development Team
 {docVersion}
 :experimental:
 
-include::user/index-user.adoc[]
-include::developer/index-developer.adoc[]
-include::semantics/index-semantics.adoc[]
+include::introduction/index-introduction.adoc[]
+include::started/index-started.adoc[]
+include::functional/index-functional.adoc[]
+include::oo/index-oo.adoc[]
+include::imperative/index-imperative.adoc[]
+include::backends/index-backends.adoc[]
+
