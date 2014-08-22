@@ -111,8 +111,8 @@ def Set<A> union<A>(Set<A> set1, Set<A> set2) =
           Insert(e1, ss2) => Insert(e1, union(ss1, ss2));
           Insert(e2, ss2) =>
             if e1 < e2
-            then Insert(e1, Insert(e2, union(ss1, ss2)))
-            else Insert(e2, Insert(e1, union(ss1, ss2)));
+            then Insert(e1, union(ss1, set2))
+            else Insert(e2, union(set1, ss2));
       };
    }; 
 
