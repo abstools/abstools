@@ -1,8 +1,8 @@
 @echo off
 
 set BASEDIR=%~dp0..\..\
-set CP=%BASEDIRbin;%BASEDIRlib\*
+set CP=%BASEDIR%bin;%BASEDIR%lib\*
 
-java -Xmx512m -cp gen;%CP %*
+java -Xmx512m -cp gen;%CP% %*
 
 echo on
