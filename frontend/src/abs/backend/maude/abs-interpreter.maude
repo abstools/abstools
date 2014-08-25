@@ -317,6 +317,14 @@ fmod ABS-DATA-STRING is
   eq "string_of_real" ("float"[F]) = "str"[string(F)] .
   eq "real_of_string" ("str"[S]) = "float"[float(S)] .
 
+  --- Printing
+  *** Maude seems to print strings in quote marks and appends a newline after
+  *** each, so there's no point differentiating between println and print.
+  eq fparams("ABS.Meta.println") = 'S .
+  eq fdefn("ABS.Meta.println") = $builtin("print") .
+  eq fparams("ABS.Meta.print") = 'S .
+  eq fdefn("ABS.Meta.print") = $builtin("print") .
+
 endfm
 
 
@@ -1161,6 +1169,9 @@ mod ABS-EVAL is
   eq eval($builtin("finish"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = FINISH:Data .
   eq eval($builtin("crit"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = CRIT:Data .
   eq eval($builtin("value"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = VALUE:Data .
+
+  *** Printing
+  eq eval($builtin("print"), ('S |-> "str"[Q], S), CN, MAC) = "ABS.StdLib.Unit"[ emp ] [ print Q ] .
 
   op markFutures : DataList -> StmtList .
   ceq markFutures(D) = $mark(D) if D : Label .
