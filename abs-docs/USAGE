@@ -1,0 +1,6 @@
+Issue the command
+
+  mvn clean install
+
+in this directory to locally build the documentation.  The generated HTML
+files are in the target/classes/docs/ subdirectory.
