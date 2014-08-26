@@ -512,7 +512,7 @@ implements DeploymentComponent {
       Nothing => InfRat; Just(v) => Fin(v); };
     InfRat cpunext = cpu;
     InfRat bw = case lookup(initconfig, Bandwidth) {
-      Nothing => InfRat; Just(v) => Fin(v); };
+      Nothing => InfRat; Just(w) => Fin(w); };
     InfRat bwnext = bw;
     {
         this.initialized = True;
