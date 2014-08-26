@@ -30,3 +30,21 @@ Cons(x, xs) => x;
 };
 
 ----
+
+.N-ary Constructors
+For data types of arbitrary size, like lists, maps and sets, it is undesirable having to write them down in the form of nested constructor expressions. For this purpose, ABS provides a special syntax for nary constructors, which are transformed into constructor expressions via a user-supplied function. 
+
+.Syntax
+[source,java]
+
+----
+def Set<A> set<A>(List<A> l) = case l {
+    Nil => EmptySet;
+    Cons(hd, tl) => Insert(hd, set(tl));
+    };
+
+{
+Set<Int> s = set[1, 2, 3];
+}
+----
+

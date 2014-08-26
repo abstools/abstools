@@ -1,1 +1,8 @@
 == Haskell Backend
+
+obtaining,
+installing,
+features: type inference
+
+the distributed, cloud
+which cloud providers work and tested-disclaimer
