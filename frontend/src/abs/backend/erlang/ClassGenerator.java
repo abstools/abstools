@@ -70,18 +70,19 @@ public class ClassGenerator {
 
     private void generateConstructor() {
         ErlUtil.functionHeaderParamsAsList(ecs, "init", generatorClassMatcher(), classDecl.getParamList(), Mask.none);
+        Vars vars = Vars.n();
         for (ParamDecl p : classDecl.getParamList()) {
             ecs.pf("set(O,%s,%s),", p.getName(), "P_" + p.getName());
         }
         for (FieldDecl p : classDecl.getFields()) {
             if (p.hasInitExp()) {
                 ecs.format("set(O,%s,", p.getName());
-                p.getInitExp().generateErlangCode(ecs, Vars.n());
+                p.getInitExp().generateErlangCode(ecs, vars);
                 ecs.println("),");
             }
         }
         if (classDecl.getInitBlock() != null) {
-            classDecl.getInitBlock().generateErlangCode(ecs, Vars.n());
+            classDecl.getInitBlock().generateErlangCode(ecs, vars);
             ecs.println(",");
         }
         if (classDecl.isActiveClass())
