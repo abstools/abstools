@@ -59,7 +59,7 @@ public class ApetShellCommand {
 
 		StringBuffer command2 = new StringBuffer();
 
-		if ((new File(APET_EXECUTABLE_PATH)).exists())
+		if ((new File(APET_EXECUTABLE_PATH)).exists() && System.getProperty("os.name","generic").toLowerCase().contains("linux"))
 				command2.append(APET_EXECUTABLE_PATH);
 		else
 			command2.append("apet");
@@ -123,14 +123,14 @@ public class ApetShellCommand {
 
 			errorThread.start();
 			outputThread.start();
-
+/*
 			try {
 				errorThread.join();
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			try {
+*/			try {
 				outputThread.join();
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
