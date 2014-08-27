@@ -1,1 +1,17 @@
 == Maude Backend
+
+The Maude backend is a high-level, executable semantics in rewriting logic of
+the ABS language.  Due to its relatively compact nature, it serves as a
+test-bed for new language features.
+
+Executing a model on the Maude backend results in a complete snapshot of the system state after execution has finished.
+
+The main drawback of the Maude backend is its relatively poor performance, making it not very suitable to simulate large models.
+
+Features:
+- CPU and bandwidth resources
+- Simulation of resource usage on deployment components
+- Timed semantics
+- Executable formal semantics of the ABS language
+
+
