@@ -59,10 +59,10 @@ public class ApetShellCommand {
 
 		StringBuffer command2 = new StringBuffer();
 
-		if ((new File(APET_EXECUTABLE_PATH)).exists() && System.getProperty("os.name","generic").toLowerCase().contains("linux"))
-				command2.append(APET_EXECUTABLE_PATH);
+		if (!(new File(APET_EXECUTABLE_PATH)).exists() || System.getProperty("os.name","generic").toLowerCase().contains("mac"))
+				command2.append("apet");
 		else
-			command2.append("apet");
+			command2.append(APET_EXECUTABLE_PATH);
 		
 		// Build entries
 		command2.append(" -entries ");
