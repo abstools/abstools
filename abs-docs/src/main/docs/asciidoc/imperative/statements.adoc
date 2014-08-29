@@ -4,7 +4,7 @@ Similar to Java, a  statement is each of the individual instructions of a progra
 
 .Block
 
-This statement is also known as a *compund statement* and consists of a group of statement grouped together defining a name scope for variables. 
+This statement is also known as a *compound statement* and consists of a group of statement grouped together defining a name scope for variables. 
 
 
 [source,java]
