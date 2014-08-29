@@ -11,23 +11,23 @@ The interfaces in the example below represent a database system, providing funct
 
 ----
 interface DB {
-File getFile(Filename fId);
-Int getLength(Filename fId);
-Unit storeFile(Filename fId, File file);
-Filenames listFiles();
+	File getFile(Filename fId);
+	Int getLength(Filename fId);
+	Unit storeFile(Filename fId, File file);
+	Filenames listFiles();
 }
 interface Client {
-List<Pair<Server,Filenames>> availFiles(List<Server> sList);
+	List<Pair<Server,Filenames>> availFiles(List<Server> sList);
 
-Unit reqFile(Server sId, Filename fId);
+	Unit reqFile(Server sId, Filename fId);
 }
 interface Server {
-Filenames inquire();
-Int getLength(Filename fId);
-Packet getPack(Filename fId, Int pNbr);
+	Filenames inquire();
+	Int getLength(Filename fId);
+	Packet getPack(Filename fId, Int pNbr);
 }
 interface Peer extends Client, Server {
-List<Server> getNeighbors();
+	List<Server> getNeighbors();
 }
 
 

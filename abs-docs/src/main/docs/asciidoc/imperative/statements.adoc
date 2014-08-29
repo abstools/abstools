@@ -10,8 +10,8 @@ This statement is also known as a *compund statement* and consists of a group of
 [source,java]
 ----
 {
-a = a + 1;
-n = n % 10;
+	a = a + 1;
+	n = n % 10;
 }
 ----
 
@@ -21,13 +21,13 @@ n = n % 10;
 [source, java]
 ----
 if (5 < x) {
-y = 6;
+	y = 6;
 } 
 else {
-y = 7;
+	y = 7;
 }
 if (True)
-x = 5;
+	x = 5;
 
 
 ----
@@ -38,7 +38,7 @@ x = 5;
 [source, java]
 ----
 while (x < 5)
-x = x + 1;
+	x = x + 1;
 
 ----
 

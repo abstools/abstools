@@ -9,8 +9,8 @@ Functions in ABS define names for parametrized data expressions. A Function in A
 ----
 def Int length(IntList list) =
 case list {
-Nil => 0;
-Cons(n, ls) => 1 + length(ls);
+	Nil => 0;
+	Cons(n, ls) => 1 + length(ls);
 };
 ----
 
@@ -25,8 +25,8 @@ parameter section inside angle brackets (< >) after the function name.
 
 ----
 def A head<A>(List<A> list) =
-case list {
-Cons(x, xs) => x;
+	case list {
+	Cons(x, xs) => x;
 };
 
 ----
