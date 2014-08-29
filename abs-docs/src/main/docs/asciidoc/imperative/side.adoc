@@ -40,3 +40,23 @@ A Get Expression is used to obtain the value from a future. The current task is 
 Bool b = f.get;
 ----
 
+.Await Expression
+A common pattern for asynchronous calls is:
+
+* Execute an asynchronous call expression, store the future in a variable
+* `await` on the future
+* Assign the result to a variable
+
+[source,java]
+----
+Fut<A> fx = o!m();
+await fx?;
+A x = fx.get;
+----
+
+The await expression is a shorthand for this pattern. The preceding example can be written as follows, without the need to introduce a name for the future:
+
+[source,java]
+----
+A x = await o!m();
+----
