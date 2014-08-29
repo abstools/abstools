@@ -823,7 +823,7 @@ mod ABS-CONFIGURATION is
   --- Subst: fields
   --- Nat: counter for generating unique future labels
   --- Bool: liveness of object
-  op object : Oid Cid Subst Nat Bool -> Object .
+  op object : Oid Cid Subst Nat Bool -> Object [ctor format (n d) ] .
 
   *** Cogs.  They store a configuration containing all objects inside that
   *** cog.  The running process can be 'idle' and serves as the lock for the
@@ -831,7 +831,7 @@ mod ABS-CONFIGURATION is
   sort Cogid .
   subsort Oid < Cogid .
   op <_: Cog | Objects:_, DC:_, Sched:_, Pr:_, PrQ:_ > : Cogid Configuration Oid Expr Process MProc -> Cog
-    [ctor format (nc d d c d d o! d d o! d n o! d n o! d n o!++ c-- on ) ] .
+    [ctor format (nc d d c d n o! d n o! d n o! d n o! d n o!++ c-- on ) ] .
 
   *** Component Model Extension: Location
   sort Location .
