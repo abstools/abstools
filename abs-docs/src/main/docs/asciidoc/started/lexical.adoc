@@ -9,9 +9,9 @@ Line terminators and white spaces are defined as in Java.
 .Comments
 Comments are code fragments that are completely ignored and have no semantics in the ABS language. ABS supports two styles of comments: end-of-line comments and traditional comments.
 
-..End-Of-Line Comments
+.End-Of-Line Comments
 
-An end-of-line comment is a code fragment that starts with two slashes, e.g., // text. All text that follows // until the end of the line is treated as a comment.
+An end-of-line comment is a code fragment that starts with two slashes, e.g., `//` text. All text that follows `//` until the end of the line is treated as a comment.
 
 .Syntax
 
@@ -22,8 +22,8 @@ An end-of-line comment is a code fragment that starts with two slashes, e.g., //
 module A; // this is also a comment
 ----
 
-..Traditional Comments
-A traditional comment is a code fragment that is enclosed in /* */, e.g., /* this is a comment ∗/. Nested traditional comments are not possible.
+.Traditional Comments
+A traditional comment is a code fragment that is enclosed in `/{asterisk} {asterisk}/`, e.g., `/{asterisk} this is a comment {asterisk}/`. Nested traditional comments are not possible.
 
 [source,java]
 

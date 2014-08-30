@@ -9,9 +9,9 @@ Executing a model on the Maude backend results in a complete snapshot of the sys
 The main drawback of the Maude backend is its relatively poor performance, making it not very suitable to simulate large models.
 
 Features:
-- CPU and bandwidth resources
-- Simulation of resource usage on deployment components
-- Timed semantics
-- Executable formal semantics of the ABS language
+* CPU and bandwidth resources
+* Simulation of resource usage on deployment components
+* Timed semantics
+* Executable formal semantics of the ABS language
 
 
