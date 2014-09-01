@@ -16,7 +16,7 @@ be implemented in the future.
 Running a model in Erlang involves compiling the ABS code, then compiling and
 running the resulting Erlang code.
 
-Compiling all files in the current directory into Maude is done with the following command:
+Compiling all files in the current directory into Erlang is done with the following command:
 
   $ absc -erlang *.abs
 
@@ -24,12 +24,12 @@ The model is started with the following commands, where `/Modulename/` should
 be the name of the module containing the main block:
 
   $ erl
-  3> code:add_path("gen/erl/ebin").
-  1> cd ("gen/erl").
-  2> make:all([load]).
+  1> code:add_path("gen/erl/ebin").
+  2> cd ("gen/erl").
+  3> make:all([load]).
   4> runtime:start("/Modulename/").
 
-This sequence of commands loads Erlang, then compiles the generated Erlang
+This sequence of commands starts Erlang, then compiles the generated Erlang
 code and starts it.
 
 
