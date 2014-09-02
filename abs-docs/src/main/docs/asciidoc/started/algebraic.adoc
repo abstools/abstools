@@ -1,6 +1,6 @@
 === Algebraic Data Types
 
-Algebraic Data Types make it possible to describe data in an immutable way. In contrast to objects, data types do not have an identify and cannot be mutated. This makes reasoning about data types much simpler than about objects. Data types are built by using Data Type Constructors (or constructors for short), which describe the possible values of a data type.
+Algebraic Data Types make it possible to describe data in an immutable way. In contrast to objects, data types do not have an identity and cannot be mutated. This makes reasoning about data types much simpler than about objects. Data types are built by using Data Type Constructors (or constructors for short), which describe the possible values of a data type.
 
 .Syntax
 [source,java]

@@ -12,6 +12,10 @@ include::bin.adoc[]
 include::algebraic.adoc[]
 //** link:algebraic.html[Algebraic Data Types]
 
+include::exception_type.adoc[]
+//** link:exception_type.html[Exception Type]
+
+
 include::itypes.adoc[]
 //** link:itypes.html[Interface Types]
 
