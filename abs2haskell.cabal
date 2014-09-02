@@ -9,7 +9,7 @@ build-type:            Simple
 cabal-version:         >= 1.8
                       
 library
-  build-depends:      base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts, monad-coroutine
+  build-depends:      base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts, monad-coroutine==0.8
   exposed-modules:    
                      -- imitating the abslang.abs
                      ABSPrelude, 
@@ -39,13 +39,13 @@ library
 
 executable abs2haskell
   main-is:             Transpile.hs
-  build-depends:       base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts, monad-coroutine
+  build-depends:       base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts, monad-coroutine==0.8
   --ghc-options:         -rtsopts -threaded -ddump-splices -F -pgmF she
   hs-source-dirs:      src
 
 test-suite test
   type:                exitcode-stdio-1.0
   main-is:             Test.hs
-  build-depends:       base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts, monad-coroutine, test-framework, test-framework-hunit, test-framework-th, HUnit
+  build-depends:       base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts, monad-coroutine==0.8, test-framework, test-framework-hunit, test-framework-th, HUnit
   ghc-options:
   hs-source-dirs:      src, test                        

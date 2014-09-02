@@ -2,16 +2,17 @@
 
 ## Requirements for building the compiler
 
-The compiler itself is written
-in haskell and distributed as a normal Haskell package.
+The compiler itself is written in haskell and distributed as a normal Haskell package.
 
-Therefore you need a recent version of the standard Haskell compiler, called GHC
-and the package manager of Haskell, called `Cabal`. I assume your OS distribution
-can provide you with these:
+Therefore to build abs2haskell you need either
 
-- GHC (I recommend version >=7.6)
-- Cabal (>=1.4)
-- The `cabal-install` program. The compiler depends on other community
+1) a recent release of the [Haskell platform](https://www.haskell.org/platform/) (version >= 2013.2.0.0),
+
+2) the GHC compiler accompanied by the Cabal packaging system:
+
+    - GHC compiler (version >=7.6)
+    - Cabal package (version >=1.4)
+    - `cabal-install` program. The compiler depends on other community
 packages/libraries. This program will automatically fetch
 and install any library dependencies.
 
