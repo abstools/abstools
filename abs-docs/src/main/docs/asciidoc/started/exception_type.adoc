@@ -1,12 +1,12 @@
 === The Exception Type
 
 In higher-level programming languages, exceptions are generally used to signal an _erroneous_ or _abnormal_
-program behaviour, that should be treated (handled) separately compared to normal values.
+runtime behaviour of the program, that should be treated (handled) separately compared to normal values.
 
 The Exception type is a special built-in data type that looks similar to an Algebraic Data Type (immutable, no identity) 
 but with a notable difference: the exception data type *can* be extended
 with new (user-provided) data constructors. Based on this fact,
-the user has the ability to, besides using the provided exceptions in the ABS standard library,
+the user has the ability to, besides using the predefined exceptions of the ABS standard library,
 write arbitrary exceptions specific to the user's program.
 
 To define a new exception (data constructor) the user has to write:
@@ -31,3 +31,20 @@ All these exception-values are typed by the type +Exception+ .
 However, an exception-value can only acquire the special meaning of abnormal behaviour
 when the user explicitly says so with a +throw+ keyword. We will visit the +throw+ keyword
 together with how to recover from exceptions (+catch+ keyword) in a later section.
+
+.Predefined exceptions in the Standard Library
+
+DivisionByZeroException::
+    Raised in arithmetic expressions when the divisor (denominator) is equal to 0, as in +3/0+
+AssertionFaiException::
+    The assert keyword was called with +False+ as argument
+PatternMatchFailException::
+    The pattern matching was not complete. In other words all c catch-all clause
+NullPointerException::
+    A method was called on a null object
+StackOverflowException::
+    The calling stack has reached its limit (system error)
+HeapOverflowException::
+    The memory heap is full (system error)
+KeyboardInterruptException::
+    The user pressed a key sequence to interrupt the running ABS program
