@@ -1,6 +1,4 @@
-# abs2haskell tool
-
-
+# abs2haskell tool [![Build Status](https://travis-ci.org/bezirg/abs2haskell.svg)](https://travis-ci.org/bezirg/abs2haskell)
 
 ## Requirements for building the compiler
 
