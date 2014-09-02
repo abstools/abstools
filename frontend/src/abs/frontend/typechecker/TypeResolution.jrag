@@ -213,7 +213,21 @@ aspect TypeResolution {
     eq ModifyTypeSynModifier.getTypeSynDecl().getModuleDecl() = findModule();
     eq AddDataTypeModifier.getDataTypeDecl().getModuleDecl() = findModule();
     eq ModifyDataTypeModifier.getDataTypeDecl().getModuleDecl() = findModule();
-    eq DataTypeDecl.getDataConstructor(int i).getModuleDecl() = getModuleDecl();
+    public ExceptionDecl DataConstructor.exceptionDecl = null;
+    public DataConstructor ExceptionDecl.dataConstructor = null;
+    eq DataTypeDecl.getDataConstructor(int i).getModuleDecl() {
+        if (qualifiedName().equals(Constants.STDLIB_NAME+".Exception")) {
+            // In general, Exceptions are not declared in the same module as
+            // the Exception datatype; this is different from normal
+            // constructors as long as ABS doesn't have open datatypes.
+            // DataConstructor nodes are added to the Exception DataTypeDecl
+            // in Main.java:analyzeModel.
+            return getDataConstructor(i).exceptionDecl.getModuleDecl();
+        } else {
+            return getModuleDecl();
+        }
+    }
+
 
     inh ModuleDecl Export.getModuleDecl();
     eq ModuleDecl.getExport().getModuleDecl() = this;
@@ -376,10 +390,15 @@ aspect TypeResolution {
     @CheckForNull
     public DataConstructor DataConstructorExp.getDataConstructor() {
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
-        if (decl instanceof DataConstructor)
-          return (DataConstructor) decl;
-        else
-          return null;
+        if (decl instanceof DataConstructor) {
+            return (DataConstructor) decl;
+        } else {
+            if (decl instanceof ExceptionDecl) {
+                return ((ExceptionDecl)decl).dataConstructor;
+            } else {
+                return null;
+            }
+        }
     }
 
     @CheckForNull

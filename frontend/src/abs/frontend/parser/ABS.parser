@@ -220,6 +220,7 @@ List decl_list =
 Decl decl =
 		datatype_decl
 	|	typesyn_decl
+	|   exception_decl
 	|	function_decl
 	|	interface_decl
 	|	class_decl
@@ -255,6 +256,10 @@ TypeSynDecl typesyn_decl =
 	annotation_list.al? TYPE TYPE_IDENTIFIER.lhs ASSIGN typeuse.rhs SEMICOLON  {: return new TypeSynDecl(lhs, al, rhs); :}
   ;
 
+ExceptionDecl exception_decl =
+    annotation_list.al? EXCEPTION TYPE_IDENTIFIER.name data_constructor_params.p? SEMICOLON
+    {: return new ExceptionDecl(name, al, p); :}
+    ;
 
 FunctionDecl function_decl =
     annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN BUILTIN SEMICOLON 

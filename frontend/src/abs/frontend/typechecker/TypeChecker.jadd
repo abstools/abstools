@@ -394,6 +394,12 @@ aspect TypeChecker {
         getDataTypeUse().typeCheck(e);
     }
 
+    public void ExceptionDecl.typeCheck(SemanticErrorList e) {
+        for (ConstructorArg d : getConstructorArgs()) {
+            d.typeCheck(e);
+        }
+    }
+
     public void TypeSynDecl.typeCheck(SemanticErrorList e) {
         if (getValue().getName().equals(getName()))
             e.add(new TypeCheckerException(new TypeError(getValue(), ErrorMessage.CIRCULAR_TYPESYN, getName())));
@@ -891,9 +897,15 @@ aspect TypeChecker {
         }
     }
     //ASPECT
-    public void AbortStmt.typeCheck(SemanticErrorList e) { /* nothing to check */ }
+    public void AbortStmt.typeCheck(SemanticErrorList e) {
+        getReason().typeCheck(e);
+        getReason().assertHasType(e,getModel().getExceptionType());
+    }
 
-    public void DieStmt.typeCheck(SemanticErrorList e) { /* nothing to check */ }
+    public void DieStmt.typeCheck(SemanticErrorList e) {
+        getReason().typeCheck(e);
+        getReason().assertHasType(e,getModel().getExceptionType());
+    }
 
 
 }

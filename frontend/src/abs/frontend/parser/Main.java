@@ -31,7 +31,11 @@ import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.CompilationUnit;
+import abs.frontend.ast.DataConstructor;
+import abs.frontend.ast.DataTypeDecl;
+import abs.frontend.ast.Decl;
 import abs.frontend.ast.DeltaDecl;
+import abs.frontend.ast.ExceptionDecl;
 import abs.frontend.ast.UpdateDecl;
 import abs.frontend.ast.Product;
 import abs.frontend.ast.ProductLine;
@@ -45,6 +49,8 @@ import abs.frontend.ast.StarImport;
 import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
 import abs.frontend.configurator.visualizer.FMVisualizer;
 import abs.frontend.delta.DeltaModellingException;
+import abs.frontend.typechecker.KindedName;
+import abs.frontend.typechecker.KindedName.Kind;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -268,7 +274,29 @@ public class Main {
                 System.err.flush();
             }
         } else {
-            
+            // Handle exceptions: add exceptions as constructors to the
+            // ABS.StdLib.Exception datatype.  This likely cannot be
+            // implemented as a tree rewrite rule on ExceptionDecl since tree
+            // rewrites are not allowed to modify the tree outside of their
+            // scope, and we want to add a DataConstructor elsewhere in the
+            // AST.
+            DataTypeDecl e = (DataTypeDecl)(m.getExceptionType().getDecl());
+            // TODO: if null and not -nostdlib, throw an error
+            if (e != null) {
+                for (Decl decl : m.getDecls()) {
+                    if (decl instanceof ExceptionDecl) {
+                        ExceptionDecl e1 = (ExceptionDecl)decl;
+                        // KLUDGE: what do we do about annotations to exceptions?
+                        DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().fullCopy());
+                        d.setPosition(e1.getStart(), e1.getEnd());
+                        d.setFileName(e1.getFileName());
+                        d.exceptionDecl = e1;
+                        e1.dataConstructor = d;
+                        e.addDataConstructor(d);
+                    }
+                }
+            }
+
             // flatten before checking error, to avoid calculating *wrong* attributes
             if (fullabs) {
                 if (typecheck)

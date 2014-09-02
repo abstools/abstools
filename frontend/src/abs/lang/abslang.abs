@@ -9,8 +9,21 @@ data Int;                       // builtin
 data Rat;                       // builtin
 data Bool = True | False;       // builtin
 data Fut<A>;                    // builtin
-data Result<A> = Value(A val)|Error(String s);
+data Exception;                 // builtin
+data Result<A> = Value(A val)|Error(String s); // TODO: remove this
 data Location;                  // (For Component model) //
+
+// TODO: uncomment these as soon as we fix the bug that causes name collisions
+// between ExceptionDecl and DataConstructor.  (This only affects StdLib.)
+// See TypeCheckerHelper:checkForDuplicateDecls().
+
+// exception DivisionByZeroException;
+// exception AssertionFailException;
+// exception PatternMatchFailException;
+// exception NullPointerException;
+// exception StackOverflowEcxeption;
+// exception HeapOverflowException;
+// exception KeyboardInterruptException;
 
 def Bool and(Bool a, Bool b) = a && b;
 def Bool not(Bool a) = ~a;
@@ -562,12 +575,12 @@ implements DeploymentComponent {
         case (rtype) {
             CPU => {
                 if (cpunext != InfRat) {
-                    if (finvalue(cpunext) < amount) abort "Insufficient resources";
+                    assert (finvalue(cpunext) >= amount);
                     cpunext = Fin(finvalue(cpunext) - amount);
                 }
             }
             Bandwidth => if (bwnext != InfRat) {
-                if (finvalue(bwnext) < amount) abort "Insufficient resources";
+                assert (finvalue(bwnext) >= amount);
                 bwnext = Fin(finvalue(bwnext) - amount);
             }
         }

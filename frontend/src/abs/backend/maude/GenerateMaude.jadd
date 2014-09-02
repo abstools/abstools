@@ -68,10 +68,17 @@ aspect GenerateMaude {
 
 	public void DataTypeDecl.generateMaude(PrintStream stream) {
 		stream.println("*** Datatype " + qualifiedName());
+        for (DataConstructor c : getDataConstructors()) {
+            stream.println("***   Constructor " + c.qualifiedName());
+        }
 	}
 
     public void TypeParameterDecl.generateMaude(PrintStream stream) {
         stream.println("*** Type parameter " + qualifiedName());
+    }
+
+    public void ExceptionDecl.generateMaude(PrintStream stream) {
+		stream.println("*** Exception " + getName());
     }
 
 	public void TypeSynDecl.generateMaude(PrintStream stream) {

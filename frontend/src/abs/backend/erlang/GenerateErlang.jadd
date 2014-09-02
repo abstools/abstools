@@ -41,6 +41,11 @@ aspect GenerateErlang {
   }
 
   @Override
+  public void ExceptionDecl.generateErlangCode(ErlApp ea) throws IOException {
+    //Ignore ExceptionDecl
+  }
+
+  @Override
   public void TypeSynDecl.generateErlangCode(ErlApp ea) throws IOException {
     //Ignore
   }
