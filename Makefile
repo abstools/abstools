@@ -1,4 +1,6 @@
-all:
+install:
+	cabal update
+	cabal install happy-1.19.4
 	cabal --enable-tests install
 
 clean:

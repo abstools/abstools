@@ -21,7 +21,7 @@ and install any library dependencies.
 If you have the above installed then simply run inside the `abs2haskell/` directory:
 
 ~~~
-make
+sudo make install
 ~~~
 
 ## Running the compiler to generate Haskell code
