@@ -1,8 +1,80 @@
 == Haskell Backend
 
-obtaining,
-installing,
-features: type inference
+info, features: type inference
 
 the distributed, cloud
 which cloud providers work and tested-disclaimer
+
+=== How to obtain and install
+
+The compiler itself is written in Haskell and distributed as a normal Haskell package. Therefore to build abs2haskell you need either
+
+1) a recent release of the https://www.haskell.org/platform/[Haskell platform] (version >= 2013.2.0.0),
+
+2) the GHC compiler accompanied by the Cabal packaging system:
+
+    - GHC compiler (version >=7.6)
+    - Cabal package (version >=1.4)
+    - `cabal-install` program. The compiler depends on other community
+packages/libraries. This program will automatically fetch
+and install any library dependencies.
+
+.Downloading, building and installing the compiler
+
+Clone the repository with the command:
+
+      $ git clone git://github.com/bezirg/abs2haskell
+
+To build and install the abs2haskell bakend run inside the `abs2haskell/` directory:
+
+[source]
+
+----
+sudo make install
+----
+
+=== How to run the Haskell backend
+
+After installing the compiler, you should
+have the program `abs2haskell` under your `PATH`.
+
+Examples of running:
+
+[source]
+
+----
+$ abs2haskell examples/BenchMaps.abs 
+
+# An ABS program may have multiple main blocks in different modules. 
+# So you have to specify in which module is the main block you want to build with
+
+$ abs2haskell --main-is=examples/BenchMaps.abs examples/BenchMaps.abs 
+
+$ abs2haskell examples/   # will compile all ABS files under examples directory
+----
+
+
+The compiler will generate ".hs" files for each compiled ABS module.
+No other runtime system libraries and dependencies will be generated.
+
+
+The final step before running the ABS program is to compile the generated Haskell code to machine code, as the example:
+
+[source]
+
+----
+ghc --make -threaded examples/BenchMaps.hs # put the generated haskell file that has the main block here
+----
+
+.Running the final program
+
+[source]
+
+----
+./examples/BenchMaps -O # means run it on 1 core with default optimizations
+./examples/BenchMaps -O +RTS -N1 # the same as the above
+./examples/BenchMaps -O +RTS -N2 # run it on 2 cores
+./examples/BenchMaps -O +RTS -N4 # run it on 4 cores
+./examples/BenchMaps -O +RTS -NK # run it on K cores
+----
+
