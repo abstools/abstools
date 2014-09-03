@@ -103,6 +103,24 @@ A *Return Statement* defines the return value of a method. A return statement ca
 return x;
 ----
 
+.Case Statement
+
+The case statement, like the case expression, takes an expression as first argument, which is
+matched against a series of patterns. The effect of executing the case statement is the execution of
+the statement (which can be a block) of the first branch whose pattern matches the expression. An example
+follows:
+
+[source, java]
+
+----
+Pair<Int, Int> p = Pair(2, 3);
+Int x = 0;
+case p {
+  Pair(2, y) => { x = y; skip; }
+  _ => x = -1;
+}
+----
+
 .Expression Statement
 
 An *Expression Statement* is a statement that only consists of a single expression. Such statements are only executed for the effect of the expression.
