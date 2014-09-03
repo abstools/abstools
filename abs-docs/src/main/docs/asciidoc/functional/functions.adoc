@@ -33,3 +33,43 @@ def A head<A>(List<A> list) =
 (Note that head is a partial function.)
 
 
+=== The 'throw' function
+
+The builtin function `throw` is used to signal exceptions (runtime errors).
+It takes a single argument which is the exception-value to throw. For example:
+
+[source, java]
+
+----
+def Int div(x,y) = if y == 0
+                   then throw(DivisionByZeroException)
+                   else ...
+----
+
+The type of the 'throw' function can be observed by its declaration:
+
+[source, java]
+
+----
+def A throw<A>(Exception ex) = ...
+----
+
+The function `throw` is a good example of a _parametric function_,
+discussed above. In fact, the result type of applying `throw` can be of any type:
+
+[source, java]
+
+----
+1 + throw(MyException)  // will typecheck
+"This is a string" + throw(AnotherException) // also typechecks
+----
+
+When and if the throw function is applied (called), its exception will be raised
+and the normal flow of the program will be abrupted. To resume
+the normal flow, the user has to explicitly *handle* the exception.
+Exceptions can be thrown anywhere, that is both
+in Functional and Imperative code (next chapter). However,
+exceptions can only be handled inside Imperative code,
+since they constitute a side-effect. For more information on _exception handling_ , see the section
+on `Imperative Sublanguage > Control Statements`.
+

@@ -121,6 +121,49 @@ case p {
 }
 ----
 
+.Exception-handling Statement
+
+To handle a thrown exception --- either explicitly thrown using the `throw` keyword or implicitly by a system exception ---
+the user has to surround the offending code with a `try` block.
+The statements in the try block will be executed in sequence until an exception happens.
+Upon an exception, the execution of the try block will stop and the exception will be matched against the exception-patterns
+defined in the `catch` block.
+
+The catch block behaves similar to the `case statement`, with the only difference that the patterns
+can only have the type `Exception`. When the exception-pattern is matched, the statements
+associated with its catch clause will be executed. 
+
+After defining the catch block, the user can _optionally_ supply a `finally` block
+of statements, that will be executed regardless of an exception happening or not.
+
+The syntax is the following:
+
+[source,java]
+
+----
+try {
+ stmt1;
+ stmt2;
+ ....
+}
+catch {
+  exception_pattern1  => stmt_or_block;
+  exception_pattern2  => ... ;
+  ...
+  _ => ...
+}
+finally {
+  stmt3;
+  stmt4;
+}
+----
+
+If there are no matching catch-clauses,
+the finally block will first be accordingly executed,
+before re-throwing the exception to its parent caller.
+If the parent caller does not (correctly) handle itself the re-thrown exception,
+the exception will be propagated to its own parent caller, and so forth and so on.
+
 .Expression Statement
 
 An *Expression Statement* is a statement that only consists of a single expression. Such statements are only executed for the effect of the expression.
