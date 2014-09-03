@@ -40,15 +40,16 @@ ABS distinguishes identifier and type identifier. They differ in the first chara
 .Keywords
 The following words are keywords in the ABS language and are not regarded as identifiers.
 
-[format="csv",width="60%",cols="7"]
-[frame="topbot",grid="none"]
+[options= "header, footer",format="csv", "ls="7",grid="none"]
 |=====
-adds,cog,else,hasInterface,interface,product,this
-after, core,export,hasMethod,let,productline,type
-assert,class,features,if,modifies,removes,when
-await,data,from,implements,module,return,while
-builtin,def,get,import,new,skip
-case,delta,hasField,in,null,suspend
+
+adds,core,export,hasMethod,let,product,this
+after,class,features,if,local,productline,type
+assert,data,from,implements,modifies,removes,when
+await,def,get,import,module,return,while
+builtin,delta,hasField,in,new,skip,case
+else,hasInterface,interface,null,suspend
+
 |=====
 
 .Literals
