@@ -71,8 +71,43 @@ is planned to be lifted in a later release of the backend.
 
 .Deployment Components
 
-the distributed, cloud
-which cloud providers work and tested-disclaimer
+The Haskell backend implements the ABS feature of Deployment Components, faithfully as described in Chapter 8.
+The backend follows the view that Deployment Components are _virtual machines_ running in the Cloud.
+As such, each single DC corresponds to one Cloud virtual machine (VM).
+
+Two DC classes (implementations) are provided to support the http://opennebula.org/[OpenNebula] and
+http://azure.microsoft.com[Microsoft Azure] cloud computing platforms accordingly:
+
+[source, java]
+
+----
+class NebulaDC(CPU cpu, Mem memory) implements DC {
+  ...      
+}
+----
+
+[source, java]
+
+----
+class AzureDC(CPU cpu, Mem memory) implements DC {
+  ...
+}
+----
+
+The `CPU` and `Mem` datatypes are passed as arguments when creating the DC to parameterize
+its computing resources. These datatypes are simple defined as type synonyms to
+Int, but you can expect more sophisticated resource encodings for a future backend release.
+
+[source,java]
+
+----
+type CPU = Int; // processor cores
+type Mem = Int; // RAM measured in MB
+----
+
+[WARNING]
+The backend has only been developed on and tested against the OpenNebula platform.
+This hopefully will change when more cloud providers will be supported.
 
 === How to obtain and install
 
