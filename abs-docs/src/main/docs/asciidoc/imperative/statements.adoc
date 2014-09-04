@@ -121,9 +121,50 @@ case p {
 }
 ----
 
+.Exception-signaling statement
+
+The keyword-statement `throw` is used to signal exceptions (runtime errors).
+It takes a single argument which is the exception-value to throw. For example:
+
+[source, java]
+
+----
+{
+ Int x = -1;
+ if (x<0) {
+    throw NegativeNumberException(x);
+ }
+ else {
+   if (x==0) {
+      throw ZeroNumberException;
+   }
+   else ...
+}
+----
+
+[NOTE]
+The 'throw' statement can only be used inside imperative code.
+Throwing user-exceptions inside functional code is considered bad practice:
+the user's function must be written instead to return an +Either<Exception, A>+ value,
+as in the example:
+
+----
+def Either<Exception, Int> f(x,y) = if (y < 0)
+                                    then Left(NegativeNumberException)
+                                    else Right(...)
+----
+
+Despite this, there are certain built-in system-exceptions (see Section 3.3) that can originate
+from erroneous functional code. Examples of these are
+`DivisionByZeroException` and `PatternMatchFailException`, implicitly signaled
+by the ABS system.
+
+When an exception is raised (signaled), the normal flow of the program will be abrupted. In order to resume
+the normal flow, the user has to explicitly *handle* the exception.
+
 .Exception-handling Statement
 
-To handle a thrown exception --- either explicitly thrown using the `throw` keyword or implicitly by a system exception ---
+To handle an exception --- either explicitly signaled using the `throw` keyword or implicitly by a system exception ---
 the user has to surround the offending code with a `try` block.
 The statements in the try block will be executed in sequence until an exception happens.
 Upon an exception, the execution of the try block will stop and the exception will be matched against the exception-patterns
@@ -161,7 +202,7 @@ finally {
 If there are no matching catch-clauses,
 the finally block will first be accordingly executed,
 before re-throwing the exception to its parent caller.
-If the parent caller does not (correctly) handle itself the re-thrown exception,
+Conversely, if the parent caller does not (correctly) handle the re-thrown exception,
 the exception will be propagated to its own parent caller, and so forth and so on.
 
 .Expression Statement
