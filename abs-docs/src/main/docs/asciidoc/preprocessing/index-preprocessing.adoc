@@ -4,3 +4,5 @@ include::modules.adoc[]
 
 = Feature Modelling
 include::deltas.adoc[]
+include::features.adoc[]
+
