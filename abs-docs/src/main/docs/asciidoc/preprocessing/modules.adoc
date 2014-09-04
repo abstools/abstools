@@ -1,4 +1,5 @@
-== Modules
+
+== Defining a Module
 
 For name spacing, code structuring, and code hiding purposes, ABS offers a
 module system.  The module system of ABS is very similar to that of Haskell.
@@ -33,7 +34,7 @@ upper case letter.
 The module `ABS.StdLib` contains the standard library and is automatically
 imported by every module.
 
-=== Exporting
+== Exporting Identifiers
 
 By default, modules do not export any names.
 In order to make names of a module usable to other modules, the names have to be _exported_.
@@ -58,7 +59,7 @@ the module.  In particular, this means that imported names are _not_ exported (b
 export *;
 ----
 
-=== Importing
+== Importing Identifiers
 
 In order to use exported names of a module in another module, the names have
 to be imported.  In a module definition, an optional list of import clauses

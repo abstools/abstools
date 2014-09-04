@@ -1,4 +1,6 @@
-= Modules and Deltas
+= Modules
 
 include::modules.adoc[]
+
+= Feature Modelling
 include::deltas.adoc[]
