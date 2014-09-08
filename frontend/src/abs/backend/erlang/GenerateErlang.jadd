@@ -72,7 +72,7 @@ aspect GenerateErlang {
   }
 
   private final static Set<String> FnApp.BUILTINS=ImmutableSet.of("substr","currentms","lowlevelDeadline",
-      "random","getProductLine","strlen","toString","truncate","println");
+      "random","getProductLine","strlen","toString","truncate","println","print");
   public  void FnApp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
     if(decl.getFunctionDef() instanceof BuiltinFunctionDef){

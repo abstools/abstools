@@ -1,0 +1,10 @@
+Issue the command
+
+  mvn clean install
+
+in this directory to locally build the documentation.  The generated HTML
+files are in the target/classes/docs/ subdirectory.
+
+See http://asciidoctor.org/docs/asciidoc-syntax-quick-reference/ and
+http://asciidoctor.org/docs/asciidoc-writers-guide/ for documentation on the
+AsciiDoc syntax.

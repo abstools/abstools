@@ -54,6 +54,8 @@ aspect GenerateMaude {
         stream.println("op start : -> State .");
         stream.println("eq start = main(classes, \".Start\", emp, " + Integer.toString(clocklimit) + ") .");
         stream.println("\nendm");
+        stream.println("\n\nset print color on .");
+        stream.println("set print attribute on .");
     }
 
 	abstract public void Decl.generateMaude(PrintStream stream);

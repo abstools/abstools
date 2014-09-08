@@ -95,8 +95,8 @@ def Set<A> union<A>(Set<A> set1, Set<A> set2) =
           Insert(e1, ss2) => Insert(e1, union(ss1, ss2));
           Insert(e2, ss2) =>
             if e1 < e2
-            then Insert(e1, Insert(e2, union(ss1, ss2)))
-            else Insert(e2, Insert(e1, union(ss1, ss2)));
+            then Insert(e1, union(ss1, set2))
+            else Insert(e2, union(set1, ss2));
       };
    }; 
 
@@ -464,12 +464,12 @@ data FLIAnnotation = Foreign;
  * Used to model aspects of hardware configurations and deployment.
  */
 module ABS.DC;
-export DC, DeploymentComponent, thisDC, Cost, Size, CPU, CogLocation, CPU, Bandwidth, InfRat, Fin;
+export DC, DeploymentComponent, thisDC, Cost, Size, CPU, CogLocation, CPU, Bandwidth, InfRat, Fin, finvalue;
 import * from ABS.StdLib;
 
 data Resourcetype = CPU | Bandwidth ;
 
-data InfRat = InfRat | Fin(Rat value);
+data InfRat = InfRat | Fin(Rat finvalue);
 
 // Sums things up in percents (thus the * 100, which makes us not lose
 // precision.)
@@ -520,8 +520,8 @@ implements DeploymentComponent {
     [Atomic] InfRat available(Resourcetype rtype) {
         InfRat result = InfRat;
         case (rtype) {
-            CPU => { if (cpu != InfRat) result = Fin(value(cpu) - cpuconsumed); }
-            Bandwidth => if (bw != InfRat) result = Fin(value(bw) - bwconsumed);
+            CPU => { if (cpu != InfRat) result = Fin(finvalue(cpu) - cpuconsumed); }
+            Bandwidth => if (bw != InfRat) result = Fin(finvalue(bw) - bwconsumed);
         }
         return result;
     }
@@ -562,13 +562,13 @@ implements DeploymentComponent {
         case (rtype) {
             CPU => {
                 if (cpunext != InfRat) {
-                    if (value(cpunext) < amount) abort "Insufficient resources";
-                    cpunext = Fin(value(cpunext) - amount);
+                    if (finvalue(cpunext) < amount) abort "Insufficient resources";
+                    cpunext = Fin(finvalue(cpunext) - amount);
                 }
             }
             Bandwidth => if (bwnext != InfRat) {
-                if (value(bwnext) < amount) abort "Insufficient resources";
-                bwnext = Fin(value(bwnext) - amount);
+                if (finvalue(bwnext) < amount) abort "Insufficient resources";
+                bwnext = Fin(finvalue(bwnext) - amount);
             }
         }
     }
@@ -576,11 +576,11 @@ implements DeploymentComponent {
         case (rtype) {
             CPU => {
                 if (cpunext != InfRat) {
-                    cpunext = Fin(value(cpunext) + amount);
+                    cpunext = Fin(finvalue(cpunext) + amount);
                 }
             }
             Bandwidth => if (bwnext != InfRat) {
-                bwnext = Fin(value(bwnext) + amount);
+                bwnext = Fin(finvalue(bwnext) + amount);
             }
         }
     }

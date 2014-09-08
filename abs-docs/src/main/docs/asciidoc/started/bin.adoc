@@ -59,14 +59,3 @@ holds and will return can be of any concrete type, as in the example:
 Fut<String> is the type that will return a string
 Fut<List<Rat>> is the type that will return a list of rational numbers
 ----
-
-The +Unit+ , +Bool+ and +List+ types, albeit not built-in, are bundled together with the other built-in types inside the ABS language.
-They are defined using the "Algebraic Data Type syntax" (ADT), detailed in the next link:algebraic.html[section]:
-
-[source, java]
-
-----
-data Unit = Unit;
-data Bool = True | False;
-data List<A> = Nil | Cons(A, List<A>);
-----

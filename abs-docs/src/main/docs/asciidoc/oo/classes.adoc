@@ -7,23 +7,30 @@ Like in typical class-based languages, classes in ABS are used to create objects
 [source, java]
 ----
 class DataBase(Map<Filename,File> db) implements DB {
-File getFile(Filename fId) {
-return lookup(db, fId);
-}
-Int getLength(Filename fId){
-return length(lookup(db, fId));
-}
-Unit storeFile(Filename fId, File file) {
-db = insert(Pair(fId,file), db);
-}
-Filenames listFiles() {
-return keys(db);
-}
-}
+	File getFile(Filename fId) {
+		return lookup(db, fId);
+	}
+
+	Int getLength(Filename fId){
+		return length(lookup(db, fId));
+	}
+
+	Unit storeFile(Filename fId, File file) {
+		db = insert(Pair(fId,file), db);
+	}
+
+	Filenames listFiles() {
+		return keys(db);
+	}
+
+	}
+
 class Node(DB db, Peer admin, Filename file) implements Peer {
-Catalog catalog;
-List<Server> myNeighbors;
-// implementation...
+
+	Catalog catalog;
+	List<Server> myNeighbors;
+	// implementation...
+
 }
 
 ----
@@ -36,7 +43,7 @@ A class can be active or passive. Active classes start an activity on their own 
 
 ----
 Unit run() {
-// active behavior ...
+	// active behavior ...
 }
 ----
 

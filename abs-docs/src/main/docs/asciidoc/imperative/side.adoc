@@ -4,16 +4,26 @@ Beside pure expressions, ABS has expressions with side effects. However, these e
 
 .New Expression
 
-A New Expression creates a new object from a class name and a list of arguments. In ABS objects can be created in two different ways. Either they are created in the current COG, using the standard new expression, or they are created in a new COG by using the new cog expression.
+A New Expression creates a new object from a class name and a list of arguments. In ABS objects
+can be created in two different ways. Either they are created in the current COG, using the standard
+new local expression, or they are created in a new COG by using the new expression.
 
 .Syntax
 
 [source,java]
 
 ----
-new Foo(5)
-new cog Bar()
+new local Foo(5)
+new Bar()
 ----
+
+Standard Object Creation
+
+When using the new local expression, the new object is created in the current COG, i.e., the COG of the current receiver object.
+
+.COG Object Creation
+
+The concurrency model of ABS is based on the notion of COGs [?]. An ABS system at runtime is a set of concurrently running COGs. A COGs can be seen as an isolated subsystem, which has its own state (an object-heap) and its own internal behavior. COGs are created implicitly when creating a new object by using the new expression.
 
 .Synchronous Call Expression
 A Synchronous Call consists of a target expression, a method name, and a list of argument expressions.
@@ -40,3 +50,23 @@ A Get Expression is used to obtain the value from a future. The current task is 
 Bool b = f.get;
 ----
 
+.Await Expression
+A common pattern for asynchronous calls is:
+
+* Execute an asynchronous call expression, store the future in a variable
+* `await` on the future
+* Assign the result to a variable
+
+[source,java]
+----
+Fut<A> fx = o!m();
+await fx?;
+A x = fx.get;
+----
+
+The await expression is a shorthand for this pattern. The preceding example can be written as follows, without the need to introduce a name for the future:
+
+[source,java]
+----
+A x = await o!m();
+----

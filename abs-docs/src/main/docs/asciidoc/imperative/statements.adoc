@@ -4,14 +4,14 @@ Similar to Java, a  statement is each of the individual instructions of a progra
 
 .Block
 
-This statement is also known as a *compund statement* and consists of a group of statement grouped together defining a name scope for variables. 
+This statement is also known as a *compound statement* and consists of a group of statement grouped together defining a name scope for variables. 
 
 
 [source,java]
 ----
 {
-a = a + 1;
-n = n % 10;
+	a = a + 1;
+	n = n % 10;
 }
 ----
 
@@ -21,13 +21,13 @@ n = n % 10;
 [source, java]
 ----
 if (5 < x) {
-y = 6;
+	y = 6;
 } 
 else {
-y = 7;
+	y = 7;
 }
 if (True)
-x = 5;
+	x = 5;
 
 
 ----
@@ -38,7 +38,7 @@ x = 5;
 [source, java]
 ----
 while (x < 5)
-x = x + 1;
+	x = x + 1;
 
 ----
 
@@ -102,6 +102,108 @@ A *Return Statement* defines the return value of a method. A return statement ca
 ----
 return x;
 ----
+
+.Case Statement
+
+The case statement, like the case expression, takes an expression as first argument, which is
+matched against a series of patterns. The effect of executing the case statement is the execution of
+the statement (which can be a block) of the first branch whose pattern matches the expression. An example
+follows:
+
+[source, java]
+
+----
+Pair<Int, Int> p = Pair(2, 3);
+Int x = 0;
+case p {
+  Pair(2, y) => { x = y; skip; }
+  _ => x = -1;
+}
+----
+
+.Exception-signaling statement
+
+The keyword-statement `throw` is used to signal exceptions (runtime errors).
+It takes a single argument which is the exception-value to throw. For example:
+
+[source, java]
+
+----
+{
+ Int x = -1;
+ if (x<0) {
+    throw NegativeNumberException(x);
+ }
+ else {
+   if (x==0) {
+      throw ZeroNumberException;
+   }
+   else ...
+}
+----
+
+[NOTE]
+The 'throw' statement can only be used inside imperative code.
+Throwing user-exceptions inside functional code is considered bad practice:
+the user's function must be written instead to return an +Either<Exception, A>+ value,
+as in the example:
+
+----
+def Either<Exception, Int> f(x,y) = if (y < 0)
+                                    then Left(NegativeNumberException)
+                                    else Right(...)
+----
+
+Despite this, there are certain built-in system-exceptions (see Section 3.3) that can originate
+from erroneous functional code. Examples of these are
+`DivisionByZeroException` and `PatternMatchFailException`, implicitly signaled
+by the ABS system.
+
+When an exception is raised (signaled), the normal flow of the program will be abrupted. In order to resume
+the normal flow, the user has to explicitly *handle* the exception.
+
+.Exception-handling Statement
+
+To handle an exception --- either explicitly signaled using the `throw` keyword or implicitly by a system exception ---
+the user has to surround the offending code with a `try` block.
+The statements in the try block will be executed in sequence until an exception happens.
+Upon an exception, the execution of the try block will stop and the exception will be matched against the exception-patterns
+defined in the `catch` block.
+
+The catch block behaves similar to the `case statement`, with the only difference that the patterns
+can only have the type `Exception`. When the exception-pattern is matched, the statements
+associated with its catch clause will be executed. 
+
+After defining the catch block, the user can _optionally_ supply a `finally` block
+of statements, that will be executed regardless of an exception happening or not.
+
+The syntax is the following:
+
+[source,java]
+
+----
+try {
+ stmt1;
+ stmt2;
+ ....
+}
+catch {
+  exception_pattern1  => stmt_or_block;
+  exception_pattern2  => ... ;
+  ...
+  _ => ...
+}
+finally {
+  stmt3;
+  stmt4;
+}
+----
+
+If there are no matching catch-clauses,
+the finally block will first be accordingly executed,
+before re-throwing the exception to its parent caller.
+Conversely, if the parent caller does not (correctly) handle the re-thrown exception,
+the exception will be propagated to its own parent caller, and so forth and so on.
 
 .Expression Statement
 
