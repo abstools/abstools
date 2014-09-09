@@ -183,7 +183,7 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
              */
             if (! isIgnored(clazz,method)) {
                 String objectRef = uncap(namePrefix) + instance;
-                thisBlock.addStmtNoTransform(newObj(inf, clazz, objectRef, true));
+                thisBlock.addStmtNoTransform(newObj(inf, clazz, objectRef, false));
                 generateAsyncTestCallAST(thisBlock, objectRef, method);
             }
             
