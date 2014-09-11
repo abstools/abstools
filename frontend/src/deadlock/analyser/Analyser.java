@@ -29,10 +29,10 @@ import java.io.PrintStream;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.ClassDecl;
-
 import deadlock.analyser.factory.*;
 import deadlock.constraints.term.*;
 import deadlock.analyser.generation.*;
+import deadlock.analyser.inference.ContractInference;
 import deadlock.analyser.detection.*;
 import deadlock.constraints.constraint.*;
 import deadlock.constraints.substitution.*;
@@ -49,9 +49,10 @@ public class Analyser {
       
 
     /* 0, Create the initial data */
+    ContractInference ci = new ContractInference();
     Factory df = new Factory(verbose);
-    Environment g = m.environment(df, verbose);
-    Map<InterfaceDecl, ClassDecl> mapInterfaceToClass = m.getMapInterfaceToClass();
+    Environment g = ci.environment(m, df, verbose);
+    Map<InterfaceDecl, ClassDecl> mapInterfaceToClass = ci.getMapInterfaceToClass(m);
 
      /* 1. Generate contracts */
     String ident = null; 
@@ -60,7 +61,7 @@ public class Analyser {
     Long nanoTime = System.nanoTime();
     Long ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
     totalTimeInMs += ellapsedTime;
-    ResultInference InferenceOutput = m.typeInference(ident, g, df, mapInterfaceToClass);
+    ResultInference InferenceOutput = ci.typeInference(m, ident, g, df, mapInterfaceToClass);
     Map<String, MethodContract> methodMap = InferenceOutput.getMethods();
     deadlock.constraints.constraint.Constraint c = InferenceOutput.getConstraint();
     
