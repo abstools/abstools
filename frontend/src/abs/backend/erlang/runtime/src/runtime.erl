@@ -37,6 +37,10 @@ start_mod(Arguments)  ->
     M=proplists:get_value(main_module,Arguments),
     io:format("Start ~s~n",[M]),
     Module=list_to_atom("m_"++re:replace(M,"[.]","_",[{return,list},global])),    
+
+    %% Init garbage collector
+    gc:start(),
+
     %%Init logging
     eventstream:start_link(),
     case proplists:get_value(debug,Arguments) of 

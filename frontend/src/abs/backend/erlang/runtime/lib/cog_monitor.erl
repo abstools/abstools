@@ -25,6 +25,7 @@ init([Main])->
     {ok,#state{main=Main,active=gb_sets:empty(),idle=gb_sets:empty()}}.
 
 handle_event({cog,Cog,active},State=#state{active=A,idle=I,timer=T})->
+    gc ! {cog, Cog},
     A1=gb_sets:add_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
     cancel(T),

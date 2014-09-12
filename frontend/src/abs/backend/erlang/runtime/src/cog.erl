@@ -56,7 +56,10 @@ loop(S=#state{running=non_found})->
                 initTask(S,Task,Args,Sender,Notify);
             {'EXIT',R,Reason} when Reason /= normal ->
                 ?DEBUG({task_died,R,Reason}),   
-                set_state(S#state{running=false},R,abort)
+                set_state(S#state{running=false},R,abort);
+            {gc, getTasks} ->
+                gc ! {self(), gb_trees:keys(S#state.tasks)},
+                S
         end,
     loop(New_State#state{running=false});
 
@@ -70,7 +73,10 @@ loop(S=#state{running=false})->
                 initTask(S,Task,Args,Sender,Notify);
             {'EXIT',R,Reason} when Reason /= normal ->
                ?DEBUG({task_died,R,Reason}),
-               set_state(S#state{running=false},R,abort)
+               set_state(S#state{running=false},R,abort);
+            {gc, getTasks} ->
+                gc ! {self(), gb_trees:keys(S#state.tasks)},
+                S
         after 
             0 ->
                 execute(S)
@@ -89,7 +95,10 @@ loop(S=#state{running=R}) when is_pid(R)->
                 set_state(S#state{running=false},R,Task_state);
             {'EXIT',R,Reason} when Reason /= normal ->
                ?DEBUG({task_died,R,Reason}),
-               set_state(S#state{running=false},R,abort)
+               set_state(S#state{running=false},R,abort);
+            {gc, getTasks} ->
+                gc ! {self(), gb_trees:keys(S#state.tasks)},
+                S
             end,
     loop(New_State).
 
