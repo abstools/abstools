@@ -96,6 +96,7 @@ public class ErlApp {
             "lib/console_logger.erl",
             "lib/eventstream.erl",
             "lib/cog_monitor.erl",
+            "lib/gc.erl",
             "lib/getopt.erl"
             );
     private static final String RUNTIME_PATH = "abs/backend/erlang/runtime/";
