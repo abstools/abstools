@@ -59,7 +59,6 @@ class PongSessionImpl(Ping ping, [Near] PongIntern pong) implements PongSession 
            ping!ping(Fine);
        } else {
            Fut<Unit> f = ping!ping(ByePing);
-           f.get;
            pong.sessionFinished(this);
        }
     } 
@@ -84,6 +83,9 @@ class PongImpl implements Pong, PongIntern {
 
 {
     Pong pong = new PongImpl(); 
-    new PingImpl(pong); 
-    new PingImpl(pong);
+    Int i = 10;
+    while (i > 0) {
+        new PingImpl(pong);
+        i = i - 1;
+    }
 }
