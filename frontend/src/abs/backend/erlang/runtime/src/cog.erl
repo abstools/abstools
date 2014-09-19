@@ -15,7 +15,7 @@
 
 start()->
     {ok,T}=object_tracker:start(),
-    #cog{ref=spawn(cog,init, [T]),tracker=T}.
+    gc ! #cog{ref=spawn(cog,init, [T]),tracker=T}.
 
 add(#cog{ref=Cog},Task,Args)->
     Cog!{newT,Task,Args,self(),false},
