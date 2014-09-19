@@ -76,7 +76,7 @@ die(#object{ref=O},Reason)->
 
 start(Cog,Class)->
     {ok,O}=gen_fsm:start_link(object,[Cog,Class,Class:init_internal()],[]),
-    #object{class=Class,ref=O,cog=Cog}.
+    gc ! #object{class=Class,ref=O,cog=Cog}.
 
 init([Cog,Class,Status])->
     ?DEBUG({new,Cog, Class}),
@@ -122,7 +122,7 @@ active({#object{class=Class},set,Field,Val},S=#state{class=C,new_vals=NV}) ->
     {next_state,active,S#state{new_vals=gb_trees:enter(Field,Val,NV)}}.
 
 handle_sync_event({die,Reason,By},_From,_StateName,S=#state{tasks=Tasks})->
-    ?DEBUG({dying}),
+    ?DEBUG({dying, Reason, By}),
     [begin ?DEBUG({terminate,T}),exit(T,Reason) end ||T<-gb_sets:to_list(Tasks), T/=By],
     case gb_sets:is_element(By,Tasks) of
         true ->
@@ -130,8 +130,19 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{tasks=Tasks})->
         false ->
             ok
     end,
-    {stop,normal,ok,S}.
+    {stop,normal,ok,S};
 
+handle_sync_event(has_tasks, _From, StateName, S=#state{await=Waiting, tasks=Tasks}) ->
+    ?DEBUG({checking_rootness, Tasks, Waiting}),
+    {reply, Waiting =/= [] orelse not gb_sets:is_empty(Tasks), StateName, S};
+
+handle_sync_event(references, _From, StateName, S=#state{await=Waiting, tasks=Tasks, int_status=IState, new_vals=NewVals}) ->
+    ?DEBUG(finding_refs),
+    Stacks1 = lists:map(fun (T) -> T ! references, receive {T, Stack} -> Stack end end, Waiting),
+    Stacks2 = lists:map(fun (T) -> T ! references, receive {T, Stack} -> Stack end end, Tasks),
+    Reply = lists:flatmap(fun gc:extract_references/1, [Stacks1, Stacks2, gb_sets:values(NewVals), IState]),
+    {reply, Reply, StateName, S}.
+    
 
 handle_info({'DOWN', _MonRef, process, TaskRef,Reason} ,StateName,S=#state{tasks=Tasks})->
     ?DEBUG({rem_dead_task,TaskRef}),
