@@ -72,14 +72,16 @@
        and that the necessary ssh-key is installed on the system.
        Ask Richard Bubel to get a key if you want to be deploy the update site -->
   <target name="deploy-update-site" depends="generate-update-site"
-  description="deploys the update site to the official HATS update site">
+  description="deploys the update site to the official ABS update site">
     <exec executable="rsync">
       <arg value="-rcv"/>
-      <arg value="${update-site.dir}/plugins"/>
+        <arg value="--delete"/>
+        <arg value="--chmod=Dugo+rx,o-w,Fugo+r,o-w"/>
+        <arg value="${update-site.dir}/plugins"/>
         <arg value="${update-site.dir}/features"/>
         <arg value="${update-site.dir}/artifacts.xml"/>
         <arg value="${update-site.dir}/content.xml"/>
-      <arg value="hatsbuilder@repos.hats-project.eu:public_html/tools/update-site"/>
+      <arg value="absmodels@docs.abs-models.org:update-site"/>
     </exec>
   </target>
 
@@ -99,8 +101,8 @@
     <eclipse.publish.featuresAndBundles
       artifactRepository="file:///${update-site.dir}"
             metadataRepository="file:///${update-site.dir}"
-      artifactRepositoryName="HATS Update-Site"
-            metadataRepositoryName="HATS Update-Site"
+      artifactRepositoryName="ABS Update-Site"
+            metadataRepositoryName="ABS Update-Site"
       site="file:///${update-site.dir}"
       compress="false"
       >
