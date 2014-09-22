@@ -6,7 +6,7 @@
 
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
--export([start/0, init/0, extract_references/1]).
+-export([start/0, init/0, extract_references/1, flatten/1]).
 
 start() ->
     register(gc, spawn(?MODULE, init, [])).
@@ -24,18 +24,18 @@ loop(Cogs, Objects) ->
         X ->
             ?DEBUG({unknown_message, X}),
             loop(Cogs, Objects)
-    after 5 ->
-            Sauce = lists:partition(fun is_root/1, gb_sets:to_list(Objects)),
-            ?DEBUG({sauce, Sauce}),
+%    after 5 ->
+%            Sauce = gb_sets:fold(fun (X, Acc) ->
+%            ?DEBUG({sauce, Sauce}),
 %            Black = mark(Cogs, lists:partition(fun ({Obj, Stack}) ->
 %                                                       case Stack of
 %                                                           [] -> false;
 %                                                           _ -> true
 %                                                       end end,
 %                                               rpc:pmap({gc,get_references}, [], gb_sets:to_list(Objects)))),
-            Black = gb_sets:to_list(Objects),
-            ?DEBUG({black_set, Black}),
-            loop(Cogs, gb_sets:from_list(Black))
+%            Black = gb_sets:to_list(Objects),
+%            ?DEBUG({black_set, Black}),
+%            loop(Cogs, Objects)
     end.
 
 mark(Cogs, {Gray, White}) ->
@@ -68,9 +68,11 @@ get_references(O) ->
     end.
 
 extract_references(DataStructure) ->
-    lists:filter(fun erlang:is_reference/1, flatten(DataStructure)).
+    lists:filter(fun erlang:is_pid/1, flatten(DataStructure)).
 
 flatten(DataStructure) when is_tuple(DataStructure) ->
     lists:flatmap(fun flatten/1, tuple_to_list(DataStructure));
+flatten(List) when is_list(List) ->
+    List;
 flatten(FlatData) ->
     [FlatData].
