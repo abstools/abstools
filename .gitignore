@@ -12,8 +12,6 @@ gen/
 *.x
 *.y
 *.bak
-# the compiler program
-Transpile
 # generated files by BNFC
 DocABS.tex
 DocABS.txt
@@ -21,3 +19,4 @@ TestABS.hs
 examples/*.out
 examples/*.hs
 .cabal-sandbox/
+cabal.sandbox.config

@@ -1,7 +1,7 @@
 install:
 	cabal update
-	cabal install happy-1.19.4
-	cabal --enable-tests install
+	cabal install happy-1.19.4 --bindir=/usr/local/bin
+	cabal install
 
 clean:
 	cabal clean

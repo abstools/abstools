@@ -9,12 +9,22 @@ build-type:            Simple
 cabal-version:         >= 1.8
                       
 library
-  build-depends:      base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts, monad-coroutine==0.8
+  build-depends:      base,
+                      array,
+                      transformers<0.4,
+                      -- containers-0.5.0.0 introduces strict containers, comes bundled with ghc>=7.6.3
+                      containers>=0.5.0.0,
+                      cmdargs,
+                      filepath,
+                      directory,
+                      -- hse 1.16, datatype-incompatible
+                      haskell-src-exts<1.16,
+                      monad-coroutine>=0.8
   exposed-modules:    
-                     -- imitating the abslang.abs
-                     ABSPrelude, 
-                     -- primitive functions of the API reflecting the ABS language
-                     Prim
+                      -- imitating the abslang.abs
+                      ABSPrelude, 
+                      -- primitive functions of the API reflecting the ABS language
+                      Prim
   other-modules:      
                       -- lexer -}    
                       LexABS,
@@ -38,14 +48,39 @@ library
   hs-source-dirs:     src
 
 executable abs2haskell
-  main-is:             Transpile.hs
-  build-depends:       base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts, monad-coroutine==0.8
+  main-is:            Transpile.hs
+  -- same build-depends as library
+  build-depends:      base,
+                      array,
+                      transformers<0.4,
+                      -- containers-0.5.0.0 introduces strict containers, comes bundled with ghc>=7.6.3
+                      containers>=0.5.0.0,
+                      cmdargs,
+                      filepath,
+                      directory,
+                      -- hse 1.16, datatype-incompatible
+                      haskell-src-exts<1.16,
+                      monad-coroutine>=0.8
   --ghc-options:         -rtsopts -threaded -ddump-splices -F -pgmF she
-  hs-source-dirs:      src
+  hs-source-dirs:     src
 
 test-suite test
-  type:                exitcode-stdio-1.0
-  main-is:             Test.hs
-  build-depends:       base, array, transformers, containers>=0.5.0.0, cmdargs, filepath, directory, haskell-src-exts, monad-coroutine==0.8, test-framework, test-framework-hunit, test-framework-th, HUnit
+  type:               exitcode-stdio-1.0
+  main-is:            Test.hs
+  build-depends:      base,
+                      array,
+                      transformers<0.4,
+                      -- containers-0.5.0.0 introduces strict containers, comes bundled with ghc>=7.6.3
+                      containers>=0.5.0.0,
+                      cmdargs,
+                      filepath,
+                      directory,
+                      -- hse 1.16, datatype-incompatible
+                      haskell-src-exts<1.16,
+                      monad-coroutine>=0.8,
+                      test-framework, 
+                      test-framework-hunit, 
+                      test-framework-th, 
+                      HUnit
   ghc-options:
-  hs-source-dirs:      src, test                        
+  hs-source-dirs:     src, test                        
