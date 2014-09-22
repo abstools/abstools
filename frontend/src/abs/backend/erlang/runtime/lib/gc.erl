@@ -70,9 +70,12 @@ get_references(O) ->
 extract_references(DataStructure) ->
     lists:filter(fun erlang:is_pid/1, flatten(DataStructure)).
 
-flatten(DataStructure) when is_tuple(DataStructure) ->
-    lists:flatmap(fun flatten/1, tuple_to_list(DataStructure));
-flatten(List) when is_list(List) ->
+flatten(DataStructure) ->
+    lists:flatten(to_deep_list(DataStructure)).
+
+to_deep_list(DataStructure) when is_tuple(DataStructure) ->
+    lists:map(fun to_deep_list/1, tuple_to_list(DataStructure));
+to_deep_list(List) when is_list(List) ->
     List;
-flatten(FlatData) ->
+to_deep_list(FlatData) ->
     [FlatData].
