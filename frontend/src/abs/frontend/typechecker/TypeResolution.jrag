@@ -154,10 +154,10 @@ aspect TypeResolution {
         return null;
     }
 
-    syn lazy Block Model.getMainBlock(String mainBlock) {
+    syn lazy Block Model.getMainBlock(String moduleName) {
         for (CompilationUnit u : getCompilationUnits()) {
-            if (u.hasMainBlock(mainBlock)) {
-                return u.getMainBlock(mainBlock);
+            if (u.hasMainBlock(moduleName)) {
+                return u.getMainBlock(moduleName);
             }
         }
         return null;
@@ -171,9 +171,9 @@ aspect TypeResolution {
         return null;
     }
 
-    syn lazy Block CompilationUnit.getMainBlock(String mainBlock) {
+    syn lazy Block CompilationUnit.getMainBlock(String moduleName) {
         for (ModuleDecl m : getModuleDecls()) {
-            if (m.getName().equals(mainBlock) && m.hasBlock())
+            if (m.getName().equals(moduleName) && m.hasBlock())
                 return m.getBlock();
         }
         return null;
