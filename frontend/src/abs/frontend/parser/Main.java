@@ -206,11 +206,6 @@ public class Main {
     
         java.util.List<CompilationUnit> units = new ArrayList<CompilationUnit>();
 
-        if (stdlib)
-            units.add(getStdLib());
-        if (dblib)
-            units.addAll(getDbLibs());
-
         for (String fileName : fileNames) {
             if (fileName.startsWith("-")) {
                 throw new IllegalArgumentException("Illegal option " + fileName);
@@ -229,6 +224,11 @@ public class Main {
         for (String fileName : fileNames) {
            parseFileOrDirectory(units, new File(fileName));
         }
+
+        if (stdlib)
+            units.add(getStdLib());
+        if (dblib)
+            units.addAll(getDbLibs());
 
         List<CompilationUnit> unitList = new List<CompilationUnit>();
         for (CompilationUnit u : units) {
