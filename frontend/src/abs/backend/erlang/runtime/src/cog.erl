@@ -56,10 +56,7 @@ loop(S=#state{running=non_found})->
                 initTask(S,Task,Args,Sender,Notify);
             {'EXIT',R,Reason} when Reason /= normal ->
                 ?DEBUG({task_died,R,Reason}),   
-                set_state(S#state{running=false},R,abort);
-            {gc, getTasks} ->
-                gc ! {self(), gb_trees:keys(S#state.tasks)},
-                S
+                set_state(S#state{running=false},R,abort)
         end,
     loop(New_State#state{running=false});
 
@@ -73,10 +70,7 @@ loop(S=#state{running=false})->
                 initTask(S,Task,Args,Sender,Notify);
             {'EXIT',R,Reason} when Reason /= normal ->
                ?DEBUG({task_died,R,Reason}),
-               set_state(S#state{running=false},R,abort);
-            {gc, getTasks} ->
-                gc ! {self(), gb_trees:keys(S#state.tasks)},
-                S
+               set_state(S#state{running=false},R,abort)
         after 
             0 ->
                 execute(S)
@@ -95,11 +89,26 @@ loop(S=#state{running=R}) when is_pid(R)->
                 set_state(S#state{running=false},R,Task_state);
             {'EXIT',R,Reason} when Reason /= normal ->
                ?DEBUG({task_died,R,Reason}),
-               set_state(S#state{running=false},R,abort);
-            {gc, getTasks} ->
-                gc ! {self(), gb_trees:keys(S#state.tasks)},
-                S
+               set_state(S#state{running=false},R,abort)
             end,
+    loop(New_State).
+
+%%Garbage collector is running, wait before resuming tasks
+loop(S=#state{running={gc,Old}}) ->
+    New_State=
+        receive
+            {newT, Task, Args, Sender, Notify}->
+                initTask(S,Task,Args,Sender,Notify)
+        after 0 ->
+                receive
+                    {gc, get_references} ->
+                        gc ! {self(), [lists:map(task, get_references, gb_trees:keys(Tasks)),
+                                       lists:map(task, get_references, Waiting)]},
+                        S;
+                    {gc, done} ->
+                        S#state{running=Old}
+                end
+        end,
     loop(New_State).
 
 %%Start new task
