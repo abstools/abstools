@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
 -export([init/3,start/3]).
--export([get/1,safeget/1]).
+-export([get/1,safeget/1,get_blocking/3,safeget_blocking/3]).
 -include_lib("abs_types.hrl").
 %%Future starts AsyncCallTask
 %%and stores result
@@ -30,8 +30,19 @@ safeget(Ref)->
             {dataError,Reason}
     end.
 
+get_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
+    task:block(Cog),
+    Ref ! {get, self()},
+    Result = get_blocking(Ref, Stack),
+    task:ready(Cog),
+    Result.
 
-
+getsafe_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
+    task:block(Cog),
+    Ref ! {get, self()},
+    Result = getsafe_blocking(Ref, Stack),
+    task:ready(Cog),
+    Result.
 
 %%Internal
 
@@ -51,6 +62,30 @@ init(Callee=#object{class=C,cog=Cog=#cog{ref=CogRef}},Method,Params)->
             loop({error,error_transform:transform(Reason)});
         {completed, Value}->
             loop({ok,Value})
+    end.
+
+get_blocking(Ref,Stack) ->
+    receive 
+        {Sender, get_references} ->
+            Sender ! gc:extract_references(Stack),
+            get_blocking(Ref,Stack);
+        {reply,Ref,{ok,Value}}->
+            Value;
+        {reply,Ref,{error,Reason}}->
+            exit(Reason)
+    end.
+
+getsafe_blocking(Ref,Stack) ->
+    receive 
+        {Sender, get_references} ->
+            Sender ! gc:extract_references(Stack),
+            get_blocking(Ref,Stack);
+        {reply, Ref, {ok,Value}}->
+            Value;
+        {reply, Ref, {error, Reason}} when is_atom(Reason)->
+            {dataError, atom_to_list(Reason)};
+        {reply, Ref, {error,Reason}} ->
+            {dataError, Reason}
     end.
 
 %%Servermode

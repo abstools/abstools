@@ -6,7 +6,7 @@
 %% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([ready/1,return_token/2,wait/1,wait_poll/1,commit/1,rollback/1]).
+-export([ready/1,return_token/2,block/1,wait/1,wait_poll/1,commit/1,rollback/1]).
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
 
@@ -69,6 +69,8 @@ wait(Cog)->
 wait_poll(Cog)->
     commit(Cog),
     cog:new_state(Cog,self(),waiting_poll).
+block(Cog)->
+    cog:new_state(Cog,self(),blocked).
 
 return_token(C=#cog{ref=Cog},State)->
     commit(C),
