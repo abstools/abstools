@@ -37,10 +37,10 @@ get_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
     task:ready(Cog),
     Result.
 
-getsafe_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
+safeget_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
     task:block(Cog),
     Ref ! {get, self()},
-    Result = getsafe_blocking(Ref, Stack),
+    Result = safeget_blocking(Ref, Stack),
     task:ready(Cog),
     Result.
 
@@ -75,7 +75,7 @@ get_blocking(Ref,Stack) ->
             exit(Reason)
     end.
 
-getsafe_blocking(Ref,Stack) ->
+safeget_blocking(Ref,Stack) ->
     receive 
         {Sender, get_references} ->
             Sender ! gc:extract_references(Stack),
