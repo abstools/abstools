@@ -1,10 +1,10 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
--export([start/0,add/3,add_and_notify/3,new_state/3]).
+-export([start/0,add/3,add_and_notify/3,new_state/3,inc_ref_count/1,dec_ref_count/1]).
 -export([init/1]).
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
--record(state,{tasks,running=false,polling=[],tracker}).
+-record(state,{tasks,running=false,polling=[],tracker,referencers=0}).
 -record(task,{ref,state=waiting}).
 
 %%The COG manages all its task in a tree task.
@@ -34,6 +34,11 @@ add_and_notify(#cog{ref=Cog},Task,Args)->
 new_state(#cog{ref=Cog},TaskRef,State)->
     Cog!{newState,TaskRef,State}.
 
+inc_ref_count(#cog{ref=Cog})->
+    Cog!inc_ref_count.
+
+dec_ref_count(#cog{ref=Cog})->
+    Cog!dec_ref_count.
 
 %%Internal
 
@@ -56,7 +61,11 @@ loop(S=#state{running=non_found})->
                 initTask(S,Task,Args,Sender,Notify);
             {'EXIT',R,Reason} when Reason /= normal ->
                 ?DEBUG({task_died,R,Reason}),   
-                set_state(S#state{running=false},R,abort)
+                set_state(S#state{running=false},R,abort);
+            inc_ref_count->
+                inc_referencers(S);
+            dec_ref_count->
+                dec_referencers(S)
         end,
     loop(New_State#state{running=false});
 
@@ -70,7 +79,11 @@ loop(S=#state{running=false})->
                 initTask(S,Task,Args,Sender,Notify);
             {'EXIT',R,Reason} when Reason /= normal ->
                ?DEBUG({task_died,R,Reason}),
-               set_state(S#state{running=false},R,abort)
+               set_state(S#state{running=false},R,abort);
+            inc_ref_count->
+                inc_referencers(S);
+            dec_ref_count->
+                dec_referencers(S)
         after 
             0 ->
                 execute(S)
@@ -89,24 +102,34 @@ loop(S=#state{running=R}) when is_pid(R)->
                 set_state(S#state{running=false},R,Task_state);
             {'EXIT',R,Reason} when Reason /= normal ->
                ?DEBUG({task_died,R,Reason}),
-               set_state(S#state{running=false},R,abort)
+               set_state(S#state{running=false},R,abort);
+            inc_ref_count->
+                inc_referencers(S);
+            dec_ref_count->
+                dec_referencers(S)
             end,
-    loop(New_State).
+    loop(New_State);
 
 %%Garbage collector is running, wait before resuming tasks
-loop(S=#state{running={gc,Old}}) ->
+loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}}) ->
     New_State=
         receive
             {newT, Task, Args, Sender, Notify}->
                 initTask(S,Task,Args,Sender,Notify)
         after 0 ->
                 receive
+                    {newT, Task, Args, Sender, Notify}->
+                        initTask(S,Task,Args,Sender,Notify);
                     {gc, get_references} ->
                         gc ! {self(), [lists:map(task, get_references, gb_trees:keys(Tasks)),
-                                       lists:map(task, get_references, Waiting)]},
+                                       lists:map(task, get_references, Polling)]},
                         S;
                     {gc, done} ->
-                        S#state{running=Old}
+                        S#state{running=Old};
+                    inc_ref_count->
+                        inc_referencers(S);
+                    dec_ref_count->
+                        dec_referencers(S)
                 end
         end,
     loop(New_State).
@@ -197,4 +220,9 @@ reset_polled(Choosen,Polled,S=#state{tasks=Tasks}) ->
                      gb_trees:update(R,T,Tasks) end ,
                  Tasks,Polled)}.
     
+%%Changes reference counts in state
+inc_referencers(S=#state{referencers=N}) ->
+    S#state{referencers=N+1}.
 
+dec_referencers(S=#state{referencers=N}) ->
+    S#state{referencers=N-1}.
