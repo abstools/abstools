@@ -10,6 +10,9 @@
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
 
+-behaviour(gc).
+-export([get_references/1]).
+
 %%Task behaviours have to implemented:
 %%init(Cog,Args): Can block an will init the task.
 %%                Return Value will then by passed to start
@@ -32,6 +35,9 @@ init(Task,Cog,Args)->
     return_token(Cog,done),
     send_notifications(Val).
 
+get_references(Task) ->
+    Task ! {get_references, self()},
+    receive {References, Task} -> References end.
 
 %%Register for termination notifcation
 notifyEnd(TaskRef)->
