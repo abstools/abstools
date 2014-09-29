@@ -8,6 +8,11 @@
 -include_lib("abs_types.hrl").
 -export([start/0, init/0, extract_references/1, flatten/1]).
 
+-export([behaviour_info/1]).
+
+behaviour_info(callbacks) ->
+    [{get_references, 1}].
+
 start() ->
     register(gc, spawn(?MODULE, init, [])).
 
@@ -18,9 +23,11 @@ loop(Cogs, Objects) ->
     ?DEBUG({{cogs, Cogs}, {objects, Objects}}),
     receive
         #cog{ref=Ref} ->
-            loop(gb_sets:add_element(Ref, Cogs), Objects);
+            loop(gb_sets:add_element({cog, Ref}, Cogs), Objects);
         #object{ref=Ref} ->
             loop(Cogs, gb_sets:add_element({object, Ref}, Objects));
+        Ref when is_pid(Ref) ->
+            loop(Cogs, gb_sets:add_element({future, Ref}, Objects));
         X ->
             ?DEBUG({unknown_message, X}),
             loop(Cogs, Objects)
@@ -44,38 +51,23 @@ mark(Cogs, {Gray, White}) ->
 
 mark(Cogs, Black, [], White) ->
     lists:reverse(Black);
-mark(Cogs, Black, [Ref|Gray], White) ->
-    NewGrays = lists:filter(fun (O) -> not ordsets:is_element(O, Black) end, get_references(Ref)),
+mark(Cogs, Black, [{Module,Ref}|Gray], White) ->
+    NewGrays = lists:filter(fun (O) -> not ordsets:is_element(O, Black) end, Module:get_references(Ref)),
     mark(Cogs, [Ref|Black], ordsets:union(NewGrays, Gray), White).
 
-is_root(O) ->
-    case O of
-        {object, Ref} ->
-            ?DEBUG({checking_rootness, O}),
-            is_process_alive(Ref) andalso gen_fsm:sync_send_all_state_event(Ref, has_tasks);
-        _ -> false
-    end.
-
-get_references(O) ->
-    ?DEBUG({get_references, O}),
-    case O of
-        {object, Ref} -> gen_fsm:sync_send_event(Ref, references);
-        Ref -> Ref ! references,
-               receive
-                   {Ref, Stack}=Ret ->
-                       Ret
-               end
-    end.
-
 extract_references(DataStructure) ->
-    lists:filter(fun erlang:is_pid/1, flatten(DataStructure)).
+    lists:filter(fun ({Module, Pid}) -> true; (_) -> false end, flatten(DataStructure)).
 
 flatten(DataStructure) ->
-    lists:flatten(to_deep_list(DataStructure)).
+    lists:flatten([to_deep_list(DataStructure)]).
 
+to_deep_list(#object{ref=Ref}) ->
+    {object, Ref};
+to_deep_list(Ref) when is_pid(Ref) ->
+    {future, Ref};
 to_deep_list(DataStructure) when is_tuple(DataStructure) ->
     lists:map(fun to_deep_list/1, tuple_to_list(DataStructure));
 to_deep_list(List) when is_list(List) ->
     List;
 to_deep_list(FlatData) ->
-    [FlatData].
+    FlatData.
