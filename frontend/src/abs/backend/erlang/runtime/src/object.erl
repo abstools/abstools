@@ -20,6 +20,9 @@
 -include_lib("abs_types.hrl").
 -export([behaviour_info/1]).
 
+%%Garbage collection callback
+-behaviour(gc).
+-export([get_references/1]).
 
 behaviour_info(callbacks) ->
     [{get_val_internal, 2},{set_val_internal,3},{init_internal,0}];
@@ -65,6 +68,9 @@ alive(#object{ref=O})->
 
 die(#object{ref=O},Reason)->
     gen_fsm:sync_send_all_state_event(O,{die,Reason,self()},infinity).
+
+get_references(Ref) ->
+    gen_fsm:sync_send_all_state_event(Ref, get_references).
 
 %%Internal
 
@@ -132,15 +138,9 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{tasks=Tasks})->
     end,
     {stop,normal,ok,S};
 
-handle_sync_event(has_tasks, _From, StateName, S=#state{await=Waiting, tasks=Tasks}) ->
-    ?DEBUG({checking_rootness, Tasks, Waiting}),
-    {reply, Waiting =/= [] orelse not gb_sets:is_empty(Tasks), StateName, S};
-
-handle_sync_event(references, _From, StateName, S=#state{await=Waiting, tasks=Tasks, int_status=IState, new_vals=NewVals}) ->
-    ?DEBUG(finding_refs),
-    Stacks1 = lists:map(fun (T) -> T ! references, receive {T, Stack} -> Stack end end, Waiting),
-    Stacks2 = lists:map(fun (T) -> T ! references, receive {T, Stack} -> Stack end end, Tasks),
-    Reply = lists:flatmap(fun gc:extract_references/1, [Stacks1, Stacks2, gb_sets:values(NewVals), IState]),
+handle_sync_event(get_references, _From, StateName, S=#state{int_status=IState, new_vals=NewVals}) ->
+    ?DEBUG(get_references),
+    Reply = lists:flatmap(fun gc:extract_references/1, [gb_trees:values(NewVals), IState]),
     {reply, Reply, StateName, S}.
     
 
