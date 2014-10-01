@@ -4,3 +4,7 @@ ghc:
   - 7.6
 install:
   - cabal install happy-1.19.4 && cabal install --only-dependencies --enable-tests
+notifications:
+  email:
+    on_success: always
+    on_failure: always

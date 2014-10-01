@@ -1,22 +1,38 @@
-doc/*.html
-*.ast
-README.html
-dist/
+# haskell related
 *.hi
 *.o
+TAGS
+
+# cabal sandbox related
+.cabal-sandbox/
+cabal.sandbox.config
+/cabal.config
+
+# doc related
+doc/*.html
+README.html
+dist/
 *.aux
 *.dvi
 *.log
 *.ps
-gen/
-*.x
-*.y
-*.bak
+
 # generated files by BNFC
-DocABS.tex
-DocABS.txt
+src/ParABS.y
+src/LexABS.x
+src/ParABS.y.bak
+src/LexABS.x.bak
+/src/TestABS.hs.bak
+/src/ErrM.hs.bak
+/src/AbsABS.hs.bak
 TestABS.hs
+
+# output of abs2haskell on ABS examples
+examples/*.ast
 examples/*.out
 examples/*.hs
-.cabal-sandbox/
-cabal.sandbox.config
+examples/*_flymake.abs
+
+
+
+
