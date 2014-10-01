@@ -117,7 +117,15 @@ public abstract class Type {
      */
     public abstract String getSimpleName();
 
-    
+    /**
+     * Whether a type may contain references to objects.
+     * Reference types are the simplest cases, but
+     * algebraic types may also contain references.
+     */
+    public boolean hasReferences() {
+        return isReferenceType();
+    }
+
     /**
      * A type is an annotation type if and only if it is a data type declaration
      * and it has an annotation [TypeAnnotation]

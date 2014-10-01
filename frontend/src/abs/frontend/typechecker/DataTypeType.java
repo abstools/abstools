@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 import abs.frontend.ast.*;
 
@@ -77,6 +79,53 @@ public class DataTypeType extends Type  {
 
     public boolean hasTypeArgs() {
         return !typeArgs.isEmpty();
+    }
+
+    @Override
+    public boolean hasReferences() {
+        Set<DataTypeDecl> checkedDecls = new HashSet<>();
+        return hasReferences(checkedDecls);
+    }
+
+    /**
+     * Helper method to handle recursive data types.
+     * This will also handle mutually recursive data types,
+     * which would be difficult to handle in aspects (at least declarative ones).
+     */
+    private boolean hasReferences(Set<DataTypeDecl> checkedDecls) {
+        if (isFutureType()) {
+            return true;
+        }
+
+        if (checkedDecls.contains(decl)) {
+            return false;
+        }
+        checkedDecls.add(decl);
+
+        // Check if any type arguments may contain references
+        // Expect that they will be used in constructors
+        for (Type t : typeArgs) {
+            if (t.isReferenceType()) {
+                return true;
+            } else if (t.isDataType() && ((DataTypeType) t).hasReferences(checkedDecls)) {
+                return true;
+            }
+        }
+
+        // Check if constructors use reference types
+        // Type parameters are ignored here
+        for (DataConstructor c : decl.getDataConstructors()) {
+            for (ConstructorArg arg : c.getConstructorArgs()) {
+                Type t = arg.getType();
+                if (t.isReferenceType()) {
+                    return true;
+                } else if (t.isDataType() && ((DataTypeType) t).hasReferences(checkedDecls)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     @Override
