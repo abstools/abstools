@@ -1,0 +1,10 @@
+import abs.common.*;
+import abs.frontend.ast.*;
+
+import abs.frontend.typechecker.Type;
+import abs.frontend.typechecker.DataTypeType;
+
+aspect ReferenceContainer {
+
+    syn lazy boolean VarOrFieldDecl.hasReferences() = getType().hasReferences();
+}
