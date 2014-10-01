@@ -6,7 +6,7 @@
 
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
--export([start/0, init/0, extract_references/1, flatten/1]).
+-export([start/0, init/0, extract_references/1]).
 
 -export([behaviour_info/1]).
 
@@ -56,10 +56,8 @@ mark(Cogs, Black, [{Module,Ref}|Gray], White) ->
     mark(Cogs, [Ref|Black], ordsets:union(NewGrays, Gray), White).
 
 extract_references(DataStructure) ->
-    lists:filter(fun ({Module, Pid}) -> true; (_) -> false end, flatten(DataStructure)).
-
-flatten(DataStructure) ->
-    lists:flatten([to_deep_list(DataStructure)]).
+    lists:filter(fun ({Module, Pid}) -> true; (_) -> false end,
+                 lists:flatten([to_deep_list(DataStructure)])).
 
 to_deep_list(#object{ref=Ref}) ->
     {object, Ref};
@@ -68,6 +66,6 @@ to_deep_list(Ref) when is_pid(Ref) ->
 to_deep_list(DataStructure) when is_tuple(DataStructure) ->
     lists:map(fun to_deep_list/1, tuple_to_list(DataStructure));
 to_deep_list(List) when is_list(List) ->
-    List;
+    lists:map(fun to_deep_list/1, List);
 to_deep_list(FlatData) ->
     FlatData.
