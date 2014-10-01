@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Set;
 
@@ -40,15 +42,18 @@ public class Vars extends LinkedHashMap<String, Var> {
 
     public static Vars n(abs.frontend.ast.List<ParamDecl> args) {
         Vars l = new Vars();
-        for (ParamDecl n : args)
-            l.put(n.getName(), new Var());
+        for (ParamDecl n : args) {
+            l.put(n.getName(), new Var(n.hasReferences()));
+        }
         return l;
     }
 
     public static Vars n(String... name) {
         Vars l = new Vars();
-        for (String n : name)
-            l.put(n, new Var());
+        for (String n : name) {
+            // Suspect that references may exist when we don't know the type.
+            l.put(n, new Var(true));
+        }
         return l;
     }
 
@@ -68,7 +73,7 @@ public class Vars extends LinkedHashMap<String, Var> {
             else
                 put(name, v.inc());
         else
-            put(name, new Var());
+            put(name, new Var(d.hasReferences()));
         return get(name);
     }
 
@@ -78,7 +83,7 @@ public class Vars extends LinkedHashMap<String, Var> {
      */
     public String nVignoreOverload(VarOrFieldDecl d) {
         String name = d.getName();
-        put(name, new Var());
+        put(name, new Var(d.hasReferences()));
         return get(name);
     }
 
@@ -87,10 +92,12 @@ public class Vars extends LinkedHashMap<String, Var> {
      */
     public String inc(String name) {
         // TODO: Review, can you get(name) directly and test for null, avoiding the duplicate lookup? [stolz]
-        if (containsKey(name))
+        if (containsKey(name)) {
             put(name, super.get(name).inc());
-        else
-            put(name, new Var());
+        } else {
+            // Suspect that references may exist when we don't know the type.
+            put(name, new Var(true));
+        }
         return get(name);
     }
 
@@ -166,7 +173,8 @@ public class Vars extends LinkedHashMap<String, Var> {
                     else
                         itM.next();
                 }
-                a.setValue(new Var(max.getCount(), true));
+
+                a.setValue(new Var(max.getCount(), true, a.getValue().hasReferences()));
             }
         }
         // Set temp to max
@@ -174,11 +182,17 @@ public class Vars extends LinkedHashMap<String, Var> {
             temp = Math.max(temp, v.temp);
 
         // Hide all variables, which are not used in this instance
-        Set<String> allVars = new HashSet<String>();
-        for (Vars v : vars)
-            allVars.addAll(v.keySet());
-        for (String k : Sets.difference(allVars, used))
-            this.put(k, new Var(Var.max(vars, k).getCount(), false));
+        Map<String, Boolean> allVars = new HashMap<>();
+        for (Vars vs : vars) {
+            for (Map.Entry<String, Var> v : vs.entrySet()) {
+                if (!allVars.containsKey(v.getKey()) || !allVars.get(v.getKey())) {
+                    allVars.put(v.getKey(), v.getValue().hasReferences());
+                }
+            }
+        }
+
+        for (String k : Sets.difference(allVars.keySet(), used))
+            this.put(k, new Var(Var.max(vars, k).getCount(), false, allVars.get(k)));
 
         // Built return val
         List<String> res = new ArrayList<String>(vars.size());
@@ -195,7 +209,7 @@ public class Vars extends LinkedHashMap<String, Var> {
     public void hideIntroduced(Vars child) {
         for (java.util.Map.Entry<String, Var> k : child.entrySet())
             if (!containsKey(k.getKey()) || !k.getValue().isSet())
-                this.put(k.getKey(), new Var(k.getValue().getCount(), false));
+                this.put(k.getKey(), new Var(k.getValue().getCount(), false, k.getValue().hasReferences()));
         temp = Math.max(temp, child.temp);
     }
 
@@ -222,19 +236,20 @@ class Var {
     // not used
     private final boolean set;
 
-    public Var(int count, boolean set) {
-        super();
+    private final boolean hasReferences;
+
+    public Var(int count, boolean set, boolean hasReferences) {
         this.count = count;
         this.set = set;
+        this.hasReferences = hasReferences;
     }
 
-    public Var() {
-        count = 0;
-        set = true;
+    public Var(boolean hasReferences) {
+        this(0, true, hasReferences);
     }
 
     public Var inc() {
-        return new Var(count + 1, true);
+        return new Var(count + 1, true, hasReferences);
     }
 
     public int getCount() {
@@ -245,4 +260,7 @@ class Var {
         return set;
     }
 
+    public boolean hasReferences() {
+        return hasReferences;
+    }
 }
