@@ -152,7 +152,7 @@ different results."
   (eval-when-compile
     (regexp-opt
      '("module" "import" "export" "from"              ; the top levels
-       "data" "type" "def" "interface" "class"
+       "data" "type" "def" "interface" "class" "exception"
        "case" "=>" "new" "local"                      ; the functionals
        "extends"                                      ; the interfaces
        "implements"                                   ; the class
@@ -168,6 +168,7 @@ different results."
        "if" "then" "else" "return" "while"            ; the statements
        "await" "assert" "abort" "die" "get" "skip" "suspend"
        "original" "movecogto"
+       "try" "catch" "finally"
        "duration"                       ; guard / statement
        ) 'words))
   "List of Abs keywords.")
@@ -225,6 +226,10 @@ different results."
        1)
       ("Datatypes"
        ,(rx bol (* whitespace) (or "data" "type") (1+ whitespace)
+            (group (char upper) (* (char alnum))))
+       1)
+      ("Exceptions"
+       ,(rx bol (* whitespace) "exception" (1+ whitespace)
             (group (char upper) (* (char alnum))))
        1)
       ("Classes"
