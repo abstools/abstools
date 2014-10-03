@@ -108,6 +108,14 @@ public class Vars extends LinkedHashMap<String, Var> {
     }
 
     /**
+     * Mark a variable as awaited (i.e. a get will not block).
+     */
+    public void await(String name) {
+        Var v = super.get(name);
+        put(name, v.await());
+    }
+
+    /**
      * Get Erlang name of a variable
      */
     public String get(String name) {
@@ -238,14 +246,25 @@ class Var {
 
     private final boolean hasReferences;
 
-    public Var(int count, boolean set, boolean hasReferences) {
+    private final boolean canBlock;
+
+    public Var(int count, boolean set, boolean hasReferences, boolean canBlock) {
         this.count = count;
         this.set = set;
         this.hasReferences = hasReferences;
+        this.canBlock = canBlock;
+    }
+
+    public Var(int count, boolean set, boolean hasReferences) {
+        this(count, set, hasReferences, true);
     }
 
     public Var(boolean hasReferences) {
-        this(0, true, hasReferences);
+        this(0, true, hasReferences, true);
+    }
+
+    public Var await() {
+        return new Var(count, set, hasReferences, false);
     }
 
     public Var inc() {
