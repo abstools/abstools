@@ -146,6 +146,26 @@ public class Vars extends LinkedHashMap<String, Var> {
         return sb.append("]").toString();
     }
 
+    public String toStack() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("ordsets:union(ordsets:from_list([O");
+        for (Map.Entry<String, Var> a : this.entrySet()) {
+            Var v = a.getValue();
+            if (!v.isSet() || !v.hasReferences()) {
+                continue;
+            }
+
+            sb.append(",");
+            
+            sb.append(PREFIX).append(a.getKey()).append("_").append(v.getCount());
+        }
+
+        sb.append("]), Stack)");
+
+        return sb.toString();
+    }
+
     /**
      * Removes all vars,which are not contained in vars
      */

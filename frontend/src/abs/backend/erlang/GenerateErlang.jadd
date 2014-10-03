@@ -106,6 +106,7 @@ aspect GenerateErlang {
        ecs.println("-export([main/1]).");
        ecs.println();
        ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef}");
+       ecs.println("Stack = [], O = void,");
        getBlock().generateErlangCode(ecs, Vars.n());
        ecs.println('.');
        ecs.decIndent();
@@ -200,12 +201,12 @@ aspect GenerateErlang {
       className = "ffi_" + className;
     if (!hasLocal()) {
       ecs.format("object:new(cog:start(),%s,",className);
-      ErlUtil.buildParams(ecs,getParams(),vars);
+      ErlUtil.buildParams(ecs,getParams(),vars,true);
       ecs.print(",true)");
 
     } else {
       ecs.format("object:new(Cog,%s,",className);
-      ErlUtil.buildParams(ecs,getParams(),vars);
+      ErlUtil.buildParams(ecs,getParams(),vars,false);
       ecs.print(",false)");
     }
   }
@@ -244,7 +245,7 @@ aspect GenerateErlang {
     ecs.print("future:start(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
-    ErlUtil.buildParams(ecs,getParams(),vars);
+    ErlUtil.buildParams(ecs,getParams(),vars,true);
     ecs.print(")");
   }
 

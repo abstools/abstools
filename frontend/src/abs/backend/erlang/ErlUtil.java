@@ -27,7 +27,7 @@ public class ErlUtil {
     };
 
     public static final void functionHeaderParamsAsList(ErlangCodeStream ecs, String funName, String firstParameter,
-            abs.frontend.ast.List<ParamDecl> args, Mask mask) {
+                                                        abs.frontend.ast.List<ParamDecl> args, Mask mask) {
         StringBuilder b = new StringBuilder("[");
         boolean first = true;
         for (ParamDecl p : args) {
@@ -37,7 +37,12 @@ public class ErlUtil {
                 first = false;
             b.append("P_" + p.getName());
         }
-        b.append("]");
+
+        if (args.hasChildren()) {
+            b.append(',');
+        }
+
+        b.append("Stack]");
         functionHeader(ecs, funName, mask, firstParameter, b.toString());
     }
 
@@ -79,6 +84,15 @@ public class ErlUtil {
             if (first)
                 first = false;
         }
+
+        if (funName.startsWith("m_")) {
+            // Methods have a call stack that the GC may need access to
+            if (!first) {
+                ecs.print(',');
+            }
+            ecs.print("Stack");
+        }
+
         ecs.println(")->");
         ecs.incIndent();
 
@@ -96,9 +110,20 @@ public class ErlUtil {
         return "m_" + name.replace('.', '_');
     }
 
-    public static void buildParams(ErlangCodeStream ecs, abs.frontend.ast.List<PureExp> params, Vars vars) {
+    public static void buildParams(ErlangCodeStream ecs, abs.frontend.ast.List<PureExp> params, Vars vars, boolean emptyStack) {
         ecs.print("[");
         buildParamsWithOutBrackets(ecs, params, vars);
+
+        if (params.hasChildren()) {
+            ecs.print(',');
+        }
+        
+        if (emptyStack) {
+            ecs.print("[]");
+        } else {
+            ecs.print(vars.toStack());
+        }
+
         ecs.print("]");
     }
 
@@ -113,8 +138,7 @@ public class ErlUtil {
         }
     }
 
-    public static void argumentList(ErlangCodeStream ecs, PureExp callee, abs.frontend.ast.List<PureExp> params,
-            Vars vars) {
+    public static void argumentList(ErlangCodeStream ecs, PureExp callee, abs.frontend.ast.List<PureExp> params, Vars vars) {
         ecs.print("(");
         if (callee != null) {
             callee.generateErlangCode(ecs, vars);
@@ -122,6 +146,12 @@ public class ErlUtil {
                 ecs.print(",");
         }
         buildParamsWithOutBrackets(ecs, params, vars);
+
+        if (callee != null) {
+            ecs.print(',');
+            ecs.print(vars.toStack());
+        }
+
         ecs.print(")");
 
     }
