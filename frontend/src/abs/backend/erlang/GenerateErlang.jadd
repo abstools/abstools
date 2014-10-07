@@ -760,9 +760,13 @@ aspect GenerateErlang {
 
   @Override
   public void ClaimGuard.generateErlangCode(ErlangCodeStream preAwait,ErlangCodeStream ecs,Vars vars){
-    getVar().generateErlangCode(preAwait,vars);
+    PureExp var = getVar();
+    var.generateErlangCode(preAwait,vars);
     preAwait.println("!{wait,self()},");
     preAwait.println("receive {ok} -> ok end,");
+    if (var instanceof VarUse) {
+      vars.await(((VarUse) var).getName());
+    }
   }
 
   @Override

@@ -112,7 +112,9 @@ public class Vars extends LinkedHashMap<String, Var> {
      */
     public void await(String name) {
         Var v = super.get(name);
-        put(name, v.await());
+        if (v != null) {
+            put(name, v.await());
+        }
     }
 
     /**
@@ -222,6 +224,19 @@ public class Vars extends LinkedHashMap<String, Var> {
         for (String k : Sets.difference(allVars.keySet(), used))
             this.put(k, new Var(Var.max(vars, k).getCount(), false, allVars.get(k)));
 
+        // Now that we know all vars across all branches, we know whether they may block
+        for (Map.Entry<String, Var> v : entrySet()) {
+            boolean canBlock = false;
+
+            for (Vars vs : vars) {
+                canBlock |= vs.get((Object) v.getKey()).canBlock();
+            }
+
+            if (!canBlock) {
+                v.setValue(v.getValue().await());
+            }
+        }
+
         // Built return val
         List<String> res = new ArrayList<String>(vars.size());
         for (StringBuilder sb : mergeLines) {
@@ -301,5 +316,9 @@ class Var {
 
     public boolean hasReferences() {
         return hasReferences;
+    }
+
+    public boolean canBlock() {
+        return canBlock;
     }
 }
