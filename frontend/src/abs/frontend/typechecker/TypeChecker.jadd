@@ -626,10 +626,10 @@ aspect TypeChecker {
     }       
 
     public void TryCatchFinallyStmt.typeCheck(SemanticErrorList e) {
+        Type exc = getModel().getExceptionType();
         getBody().typeCheck(e);
         for (CaseBranchStmt b : getCatchs()) {
-            // TODO: check that each left-hand side is of type Error,
-            // once we know how that's implemented
+            b.getLeft().typeCheck(e, exc);
             b.getRight().typeCheck(e);
         }
         if (hasFinally()) {

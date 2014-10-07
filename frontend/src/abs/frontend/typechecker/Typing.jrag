@@ -291,6 +291,8 @@ aspect Typing {
     eq CaseExp.getBranch(int i).getPatternExpType() = getExpr().getType();
     inh Type CaseBranchStmt.getPatternExpType();
     eq CaseStmt.getBranch(int i).getPatternExpType() = getExpr().getType();
+    eq TryCatchFinallyStmt.getCatch(int i).getPatternExpType()
+        = getModel().getExceptionType();
     
     syn lazy Type Pattern.getType();
     eq ConstructorPattern.getType() = getInhType();
