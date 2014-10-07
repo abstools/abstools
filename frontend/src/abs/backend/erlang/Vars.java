@@ -117,6 +117,16 @@ public class Vars extends LinkedHashMap<String, Var> {
         }
     }
 
+    public boolean canBlock(String name) {
+        Var v = super.get(name);
+
+        if (v != null) {
+            return v.canBlock();
+        }
+
+        return true;
+    }
+
     /**
      * Get Erlang name of a variable
      */
