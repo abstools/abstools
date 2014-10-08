@@ -703,7 +703,9 @@ aspect GenerateErlang {
 
   public void SuspendStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     ecs.println("task:return_token(Cog,runnable),");
-    ecs.print("task:ready(Cog)");
+    ecs.print("task:ready(Cog,");
+    ecs.print(vars.toStack());
+    ecs.print(")");
   }
   public void AwaitStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     StringWriter sw = new StringWriter();
@@ -723,8 +725,11 @@ aspect GenerateErlang {
       ecs.decIndent().decIndent().println("end end end))");
       ecs.format("(%s)",vars.toParamList());
     }
-    else
-      ecs.print("task:ready(Cog)");
+    else {
+      ecs.print("task:ready(Cog,");
+      ecs.print(vars.toStack());
+      ecs.print(")");
+    }
   }
 
   public void Guard.generateErlangCode(ErlangCodeStream preAwait,ErlangCodeStream ecs,Vars vars){

@@ -6,7 +6,7 @@
 %% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([ready/1,return_token/2,block/1,wait/1,wait_poll/1,commit/1,rollback/1]).
+-export([ready/2,return_token/2,block/1,wait/1,wait_poll/1,commit/1,rollback/1]).
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
 
@@ -30,7 +30,7 @@ start(Cog,Task,Args)->
 
 init(Task,Cog,Args)->
     InnerState=Task:init(Cog,Args),
-    ready(Cog),
+    ready(Cog, InnerState),
     Val=Task:start(InnerState),
     return_token(Cog,done),
     send_notifications(Val).
@@ -64,11 +64,18 @@ send_notifications(Val)->
     end.
             
 
-ready(Cog)->
+ready(Cog, Stack)->
     cog:new_state(Cog,self(),runnable),
-    receive token->
-                ok
+    ready_loop(Stack).
+
+ready_loop(Stack) ->
+    receive
+        token -> ok;
+        {get_references, Sender} ->
+            Sender ! {gc:extract_references(Stack), self()},
+            ready_loop(Stack)
     end.
+
 wait(Cog)->
     commit(Cog),
     cog:new_state(Cog,self(),waiting).
