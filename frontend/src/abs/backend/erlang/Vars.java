@@ -239,7 +239,9 @@ public class Vars extends LinkedHashMap<String, Var> {
             boolean canBlock = false;
 
             for (Vars vs : vars) {
-                canBlock |= vs.get((Object) v.getKey()).canBlock();
+                if (vs.containsKey(v.getKey())) {
+                    canBlock |= vs.get((Object) v.getKey()).canBlock();
+                }
             }
 
             if (!canBlock) {
