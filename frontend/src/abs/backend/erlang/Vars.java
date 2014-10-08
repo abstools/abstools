@@ -262,7 +262,7 @@ public class Vars extends LinkedHashMap<String, Var> {
     public void hideIntroduced(Vars child) {
         for (java.util.Map.Entry<String, Var> k : child.entrySet())
             if (!containsKey(k.getKey()) || !k.getValue().isSet())
-                this.put(k.getKey(), new Var(k.getValue().getCount(), false, k.getValue().hasReferences()));
+                this.put(k.getKey(), new Var(k.getValue().getCount(), false, k.getValue().hasReferences(), k.getValue().canBlock()));
         temp = Math.max(temp, child.temp);
     }
 
