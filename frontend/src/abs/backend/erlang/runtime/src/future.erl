@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
 -export([init/3,start/3]).
--export([get/1,safeget/1,get_blocking/3,safeget_blocking/3]).
+-export([get/1,safeget/1,get_blocking/3,safeget_blocking/3,await/3]).
 -include_lib("abs_types.hrl").
 %%Future starts AsyncCallTask
 %%and stores result
@@ -50,6 +50,11 @@ get_references(Ref) ->
     Ref ! {get_references, self()},
     receive {References, Ref} -> References end.
 
+await(Ref, Cog=#cog{ref=CogRef}, Stack) ->
+    task:return_token(Cog, waiting),
+    Ref ! {wait, self()},
+    await(Stack).
+
 %%Internal
 
   
@@ -62,6 +67,7 @@ init(Callee=#object{class=C,cog=Cog=#cog{ref=CogRef}},Method,Params)->
     demonitor(MonRef),
     await().
 
+%% Future awaiting reply from task completion
 await() ->
     %% Either receive an error or the value
     receive
@@ -98,6 +104,15 @@ safeget_blocking(Ref,Stack) ->
             {dataError, atom_to_list(Reason)};
         {reply, Ref, {error,Reason}} ->
             {dataError, Reason}
+    end.
+
+%% Task awaiting future resolution
+await(Stack) ->
+    receive
+        {ok} -> ok;
+        {get_references, Sender} ->
+            Sender ! gc:extract_references(Stack),
+            await(Stack)
     end.
 
 %%Servermode
