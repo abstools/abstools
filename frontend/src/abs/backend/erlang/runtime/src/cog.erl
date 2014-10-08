@@ -110,6 +110,23 @@ loop(S=#state{running=R}) when is_pid(R)->
             end,
     loop(New_State);
 
+loop(S=#state{running={blocked, R}}) ->
+    New_State=
+        receive
+            {newState,TaskRef,State}->
+                set_state(S,TaskRef,State);
+            {newT,Task,Args,Sender,Notify}->
+                initTask(S,Task,Args,Sender,Notify);
+            {'EXIT',R,Reason} when Reason /= normal ->
+                ?DEBUG({task_died,R,Reason}),
+                set_state(S#state{running=false},R,abort);
+            inc_ref_count->
+                inc_referencers(S);
+            dec_ref_count->
+                dec_referencers(S)
+            end,
+    loop(New_State);
+
 %%Garbage collector is running, wait before resuming tasks
 loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}}) ->
     New_State=
@@ -165,6 +182,11 @@ set_state(S=#state{tasks=Tasks},TaskRef,done)->
 set_state(S=#state{tasks=Tasks,polling=Pol},TaskRef,abort)->
     Old=gb_trees:get(TaskRef,Tasks),
     S#state{tasks=gb_trees:delete(TaskRef,Tasks),polling=lists:delete(Old, Pol)};
+set_state(S=#state{running=TaskRef},TaskRef,blocked) ->
+    S#state{running={blocked, TaskRef}};
+set_state(S=#state{running={blocked, TaskRef}}, TaskRef, runnable) ->
+    TaskRef ! token,
+    S#state{running=TaskRef};
 set_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
     Old=#task{state=OldState}=gb_trees:get(TaskRef,Tasks),
     New_state=Old#task{state=State},
