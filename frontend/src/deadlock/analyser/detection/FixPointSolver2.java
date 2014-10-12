@@ -4,12 +4,9 @@
  */
 package deadlock.analyser.detection;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
-
 import deadlock.analyser.factory.Contract;
 import deadlock.analyser.factory.ContractElement;
 import deadlock.analyser.factory.ContractElementAwait;
@@ -27,32 +24,28 @@ import deadlock.analyser.factory.Record;
 import deadlock.constraints.term.Term;
 import deadlock.constraints.term.TermStructured;
 
-public class DASolver2 extends DASolver {
+public class FixPointSolver2 extends DASolver {
     
-    public DASolver2(Factory f, Map<String, Term> map) {
+    public FixPointSolver2(Factory f, Map<String, Term> map) {
         super(f, map);
         // TODO Auto-generated constructor stub
     }
 
    
-    private boolean hasStart = false;
-    
-    
+    @Override
+    public String getName() {return "Fix Point 2.0";}
     
     //this method performs the deadlock analysis
     @Override
     public void computeSolution(){
-        Integer prevNumberOfDep = 0;
+        Integer prevNumberOfDep = -1;
         
         //perform an infinite cycle, since the lams state domain is a finite lattice a fix point will be found
         while(true){
             
             //perform one step expansion for each method
             for(String mName : methodMap.keySet()){
-                
-                //if(mName.equals("Main.main"))
-                  //  continue;
-                
+              
                 //get the method contract
                 Term contr = methodMap.get(mName);
 
@@ -77,38 +70,34 @@ public class DASolver2 extends DASolver {
                 lam.expandAndClean();
             }
             
-          //if the number of dependencies has not change in this iteration then a fix point is found
+            //if the number of dependencies has not change in this iteration then a fix point is found
             //check if the number of dependencies is different of previous, if not, stop the analysis
             int newNumberOfDep = 0;
             for(String mName : lampMap.keySet()){
                 newNumberOfDep += lampMap.get(mName).getFirst().numberOfDep();
                 newNumberOfDep += lampMap.get(mName).getSecond().numberOfDep();
             }
-            if (newNumberOfDep > 0){
-                hasStart = true;
-            }
-            if(newNumberOfDep == prevNumberOfDep && hasStart) break;
+            
+            if(newNumberOfDep == prevNumberOfDep) break;
             else prevNumberOfDep = newNumberOfDep;
         }
         
         BigLam blMain = lampMap.get("Main.main");
-        //if(blMain.hasCycle()){
-            //a cyclic dependency was found
-            //if there is a pure await dependencies cycle then there is livelock
-            //this.livelock = blMain.hasCycleAwait();
+        
             
-            //if the cycle found is no a livelock then this lock is indeed a deadlock
-            this.deadlock = blMain.hasReflexiveState();
-            
-            //is it possible for a program to have more than one potential deadlocks and 
-            //livelocks at the same time but the algorithm stop at the first cycle so
-            //only one cyclic dependency is reported
-            return;
-        //}
-        //fix point reached, perform analysis
+        //if the cycle found is no a livelock then this lock is indeed a deadlock
+        this.deadlock = blMain.hasReflexiveState();
+        
+        //is it possible for a program to have more than one potential deadlocks and 
+        //livelocks at the same time but the algorithm stop at the first cycle so
+        //only one cyclic dependency is reported
+        return;
+        
+        //fix point reached, analysis complete
     }
- // The rule W-Gzero of the Analysis
+    // The rule W-Gzero of the Analysis
     private DoubleLam wGet(String mName, ContractElementGet cGet, VarSubstitution bFresh){
+        
         // it will contains the result of the application of the rule
         DoubleLam l = new DoubleLam();                
         // here we extract the 2 variable from the contractGet and apply on them the fresh renaming (bTilde)
@@ -116,14 +105,13 @@ public class DASolver2 extends DASolver {
         GroupName b = cGet.whosWaited();
         a = bFresh.apply(a);
         b = bFresh.apply(b);            
+        
         // here we calculate the solution of the application of the rule
         Lam w = new Lam();
         Lam wPrime = new Lam();
         w.addCouple(a, b);
        
-        //I learn reading again the paper that only the first lamp obtain the couple
-        //wPrime.addCouple(a, b);               
-        // we compose and return the solution <w,wPrime>
+        // compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
         return l;       
@@ -135,8 +123,6 @@ public class DASolver2 extends DASolver {
         DoubleLam l = new DoubleLam();
 
         // here we extract the 2 variable from the contractGet and apply on them the fresh renaming (bTilde)
-
-        /* THESE TWO ERRORS WILL BE FIXED WHEN WE PASS ON THE NEW DEFINITION OF CONTRACT get and await */
         GroupName a = cAwait.whosWaiting();
         GroupName b = cAwait.whosWaited();
         a = bFresh.apply(a);
@@ -147,9 +133,6 @@ public class DASolver2 extends DASolver {
         Lam wPrime = new Lam();
         w.addCoupleAwait(a, b);
         
-        //I learn reading again the paper that only the first lamp obtain the couple
-        //wPrime.addCouple(a, b);
-
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
@@ -163,15 +146,11 @@ public class DASolver2 extends DASolver {
 
         // here I recover and clear the method called, after that I have a string that identify it
         String method = cInvk.getClassName() + "." + cInvk.getMethodName();
-        //System.out.println("method called is " + method.toString());
 
         //here we recover the bigLamp of the method called and also is methodContract
         BigLam bLamp = lampMap.get(method);
         MethodContract methodContract = (MethodContract) methodMap.get(method);
-        //if(bLamp != null) System.out.println("BigLamp of method called is: " + bLamp.toString());
-        //if(methodContract != null) System.out.println("methodContract of method called is: " + methodContract.toString());
-        //System.out.println("fresh renaming is: " + bFresh.toString());
-
+     
         //The two Lamp of methodInvokation rule
         Lam w = new Lam();
         Lam wfirstPrime = new Lam(); //this is done to avoid side effect
@@ -183,29 +162,6 @@ public class DASolver2 extends DASolver {
         wPrime.addLamp(wfirstPrime);
         wPrime.addLamp(wsecondPrime);
 
-//        {
-//            //here we recover the formal parameter of the method invoked
-//            Set<GroupName> aTilde = bLamp.getaTilde();
-//            //System.out.println("aTilde of method called is: " + aTilde);
-//
-//            //here we create the fresh substitution for NON formal parameter
-//            VarSubstitution subParam = new VarSubstitution();
-//
-//            //here we recover ALL the free variable of the lamp of the method invoked and remove the variable of the formal parameters
-//            Set<GroupName> aPrimeTilde = bLamp.getFirst().fv();
-//            aPrimeTilde.addAll(bLamp.getSecond().fv());
-//            Set<GroupName> aTildeTermVar = new TreeSet<GroupName>();
-//            for(GroupName v : aTilde) aTildeTermVar.add(v);
-//            aPrimeTilde.removeAll(aTildeTermVar);
-//            //System.out.println("aPrimeTilde to substitute is :" + aPrimeTilde.toString() );
-//
-//            for(GroupName v : aPrimeTilde) subParam.addSub(v, df.newGroupName());
-//
-//            //I apply the first substitution, the once for formal parameter
-//            wPrime.apply(subParam);
-//        }
-
-
 
         //here we create and apply the second substitution, 'thisRecord' of method called got to be replaced with
         //'thisRecord' of the call inside the contract that we are analyzing
@@ -214,10 +170,9 @@ public class DASolver2 extends DASolver {
         Record thisCaller = interfaceCaller.getThis();
         MethodInterface interfaceCalled = methodContract.getMethodInterface();
         Record thisCalled = interfaceCalled.getThis();
-        //System.out.println("thisCaller = " + thisCaller.toString());
-        //System.out.println("thisCalled = " + thisCalled.toString());
+      
         subThis = findSub(thisCaller, thisCalled, bFresh);
-        //System.out.println("subThis = " + subThis.toString());
+        
         wPrime.apply(subThis);
 
         //here we create and apply the third substitution, 'argsRecord' of method called got to be replaced with
@@ -238,10 +193,9 @@ public class DASolver2 extends DASolver {
         VarSubstitution subRet;
         Record retCaller =  interfaceCaller.getResult();
         Record retCalled =  interfaceCalled.getResult();
-        //System.out.println("retCaller = " + retCaller.toString());
-        //System.out.println("retCalled = " + retCalled.toString());
+       
         subRet = findSub(retCaller, retCalled, bFresh);
-        //System.out.println("subRet = " + subRet.toString());
+        
         wPrime.apply(subRet);
 
         // we compose and return the solution <w,wPrime>
@@ -257,46 +211,16 @@ public class DASolver2 extends DASolver {
 
         // here I recover and clear the method called, after that I have a string that identify it
         String method = cInvk.getClassName() + "." + cInvk.getMethodName();
-        //System.out.println("method called is " + method.toString());
 
         //here we recover the bigLamp of the method called and also is methodContract
         BigLam bLamp = lampMap.get(method);
         MethodContract methodContract = (MethodContract) methodMap.get(method);
-        //if(bLamp != null) System.out.println("BigLamp of method called is: " + bLamp.toString());
-        //if(methodContract != null) System.out.println("methodContract of method called is: " + methodContract.toString());
-        //System.out.println("fresh renaming is: " + bFresh.toString());
-
+     
         //The two Lamp of methodInvokation rule
         Lam w = new Lam();
         Lam wPrime = new Lam(); //this is done to avoid side effect
         w.addLamp(bLamp.getFirst());
         wPrime.addLamp(bLamp.getSecond());
-
-
-//        if(!this.saturation){
-//            //here we recover the formal parameter of the method invoked
-//            Set<GroupName> aTilde = bLamp.getaTilde();
-//            //System.out.println("aTilde of method called is: " + aTilde);
-//
-//            //here we create the fresh substitution for NON formal parameter
-//            VarSubstitution subParam = new VarSubstitution();
-//
-//            //here we recover ALL the free variable of the lamp of the method invoked and remove the variable of the formal parameters
-//            Set<GroupName> aPrimeTilde = bLamp.getFirst().fv();
-//            aPrimeTilde.addAll(bLamp.getSecond().fv());
-//            Set<GroupName> aTildeTermVar = new TreeSet<GroupName>();
-//            for(GroupName v : aTilde) aTildeTermVar.add(v);
-//            aPrimeTilde.removeAll(aTildeTermVar);
-//            //System.out.println("aPrimeTilde to substitute is :" + aPrimeTilde.toString() );
-//
-//            for(GroupName v : aPrimeTilde) subParam.addSub(v, df.newGroupName());
-//
-//            //I apply the first substitution, the once for formal parameter
-//            w.apply(subParam);
-//            wPrime.apply(subParam);
-//        }
-
-
 
         //here we create and apply the second substitution, 'thisRecord' of method called got to be replaced with
         //'thisRecord' of the call inside the contract that we are analyzing
@@ -305,10 +229,9 @@ public class DASolver2 extends DASolver {
         Record thisCaller = interfaceCaller.getThis();
         MethodInterface interfaceCalled = methodContract.getMethodInterface();
         Record thisCalled = interfaceCalled.getThis();
-        //System.out.println("thisCaller = " + thisCaller.toString());
-        //System.out.println("thisCalled = " + thisCalled.toString());
+      
         subThis = findSub(thisCaller, thisCalled, bFresh);
-        //System.out.println("subThis = " + subThis.toString());
+       
         w.apply(subThis);
         wPrime.apply(subThis);
 
@@ -331,10 +254,9 @@ public class DASolver2 extends DASolver {
         VarSubstitution subRet;
         Record retCaller =  interfaceCaller.getResult();
         Record retCalled =  interfaceCalled.getResult();
-        //System.out.println("retCaller = " + retCaller.toString());
-        //System.out.println("retCalled = " + retCalled.toString());
+      
         subRet = findSub(retCaller, retCalled, bFresh);
-        //System.out.println("subRet = " + subRet.toString());
+        
         w.apply(subRet);
         wPrime.apply(subRet);
 
@@ -355,51 +277,16 @@ public class DASolver2 extends DASolver {
 
         // here I recover and clear the method called, after that I have a string that identify it
         String method = cInvk.getClassName() +"."+ cInvk.getMethodName();
-        //System.out.println("method called is " + method.toString());
+       
 
         //here we recover the bigLamp of the method called and also is methodContract
         BigLam bLamp = lampMap.get(method);
         MethodContract methodContract = (MethodContract) methodMap.get(method);
-        //if(bLamp != null) System.out.println("BigLamp of method called is: " + bLamp.toString());
-        //if(methodContract != null) System.out.println("methodContract of method called is: " + methodContract.toString());
-        //System.out.println("fresh renaming is: " + bFresh.toString());
-
+     
         Lam w = new Lam(); //this is done to avoid side effect
         w.addLamp(bLamp.getFirst());
         Lam wPrime = new Lam();
         wPrime.addLamp(bLamp.getSecond());
-
-//        if(!this.saturation){
-//            //here we recover the formal parameter of the method invoked
-//            Set<GroupName> aTilde = bLamp.getaTilde();
-//            //System.out.println("aTilde of method called is: " + aTilde);
-//
-//
-//            //here we create the fresh substitution for NON formal parameter
-//            VarSubstitution subParam = new VarSubstitution();
-//
-//            //here we recover ALL the free variable of the lamp of the method invoked and remove the variable of the formal parameters
-//            Set<GroupName> aPrimeTilde = bLamp.getFirst().fv();
-//            aPrimeTilde.addAll(bLamp.getSecond().fv());
-//            Set<GroupName> aTildeTermVar = new TreeSet<GroupName>();
-//            for(GroupName v : aTilde) aTildeTermVar.add(v);
-//            aPrimeTilde.removeAll(aTildeTermVar);
-//
-//            //System.out.println("aPrimeTilde to substitute is :" + aPrimeTilde.toString() );
-//
-//            for(GroupName v : aPrimeTilde) subParam.addSub(v, df.newGroupName());
-//            //The two Lamp of methodInvokation rule
-//
-//            //I apply the first substitution, the once for formal parameter
-//            w.apply(subParam);
-//            wPrime.apply(subParam);
-//        }
-
-
-
-
-
-
 
         //here we create and apply the second substitution, 'thisRecord' of method called got to be replaced with
         //'thisRecord' of the call inside the contract that we are analyzing
@@ -408,13 +295,11 @@ public class DASolver2 extends DASolver {
         Record thisCaller = interfaceCaller.getThis();
         MethodInterface interfaceCalled = methodContract.getMethodInterface();
         Record thisCalled = interfaceCalled.getThis();
-        //System.out.println("thisCaller = " + thisCaller.toString());
-        //System.out.println("thisCalled = " + thisCalled.toString());
+      
         subThis = findSub(thisCaller, thisCalled, bFresh);
-        //System.out.println("subThis = " + subThis.toString());
+
         w.apply(subThis);
         wPrime.apply(subThis);
-
 
         //here we create and apply the third substitution, 'argsRecord' of method called got to be replaced with
         //'argsRecord' of the call inside the contract that we are analyzing
@@ -435,10 +320,9 @@ public class DASolver2 extends DASolver {
         VarSubstitution subRet;
         Record retCaller =  interfaceCaller.getResult();
         Record retCalled =  interfaceCalled.getResult();
-        //System.out.println("retCaller = " + retCaller.toString());
-        //System.out.println("retCalled = " + retCalled.toString());
+       
         subRet = findSub(retCaller, retCalled, bFresh);
-        //System.out.println("subRet = " + subRet.toString());
+      
         w.apply(subRet);
         wPrime.apply(subRet);
 
@@ -446,20 +330,14 @@ public class DASolver2 extends DASolver {
         // here we extract the 2 variable from the contractGet and apply on them the fresh renaming (bTilde)
         GroupName a = cGet.whosWaiting();
         GroupName b = cGet.whosWaited();
-        //System.out.println("getVar are = " + a.toString() + " and " + b.toString());
+   
         a = bFresh.apply(a);
         b = bFresh.apply(b);
-
-        //System.out.println("getVar after Sub = " + a.toString() + " and " + b.toString());
 
         // we add the get Pair of names at the two lamps
         w.addCouple(a, b);
         
-        //same comment of the rule w-Gzero
-        //wPrime.addCouple(a, b);
-
-
-        // we compose and return the solution <w,wPrime>
+       // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
         return l;       
@@ -481,40 +359,12 @@ public class DASolver2 extends DASolver {
         //here we recover the bigLamp of the method called and also is methodContract
         BigLam bLamp = lampMap.get(method);
         MethodContract methodContract = (MethodContract) methodMap.get(method);
-        //if(bLamp != null) System.out.println("BigLamp of method called is: " + bLamp.toString());
-        //if(methodContract != null) System.out.println("methodContract of method called is: " + methodContract.toString());
-        //System.out.println("fresh renaming is: " + bFresh.toString());
-
+  
         //The two Lamp of methodInvokation rule
         Lam w = new Lam(); //this is done to avoid side effect
         w.addLamp(bLamp.getFirst());
         Lam wPrime = new Lam();
         wPrime.addLamp(bLamp.getSecond());
-
-//        if(!this.saturation){
-//            //here we recover the formal parameter of the method invoked
-//            Set<GroupName> aTilde = bLamp.getaTilde();
-//            //System.out.println("aTilde of method called is: " + aTilde);
-//
-//            //here we create the fresh substitution for NON formal parameter
-//            VarSubstitution subParam = new VarSubstitution();
-//
-//            //here we recover ALL the free variable of the lamp of the method invoked and remove the variable of the formal parameters
-//            Set<GroupName> aPrimeTilde = bLamp.getFirst().fv();
-//            aPrimeTilde.addAll(bLamp.getSecond().fv());
-//            Set<GroupName> aTildeTermVar = new TreeSet<GroupName>();
-//            for(GroupName v : aTilde) aTildeTermVar.add(v);
-//            aPrimeTilde.removeAll(aTildeTermVar);
-//
-//            //System.out.println("aPrimeTilde to substitute is :" + aPrimeTilde.toString() );
-//
-//            for(GroupName v : aPrimeTilde) subParam.addSub(v, df.newGroupName());
-//            //I apply the first substitution, the once for formal parameter
-//            w.apply(subParam);
-//            wPrime.apply(subParam);
-//        }
-
-
 
         //here we create and apply the second substitution, 'thisRecord' of method called got to be replaced with
         //'thisRecord' of the call inside the contract that we are analyzing
@@ -548,27 +398,22 @@ public class DASolver2 extends DASolver {
         VarSubstitution subRet;
         Record retCaller =  interfaceCaller.getResult();
         Record retCalled =  interfaceCalled.getResult();
-        //System.out.println("retCaller = " + retCaller.toString());
-        //System.out.println("retCalled = " + retCalled.toString());
+      
         subRet = findSub(retCaller, retCalled, bFresh);
-        //System.out.println("subRet = " + subRet.toString());
+       
         w.apply(subRet);
         wPrime.apply(subRet);
 
         // here we extract the 2 variable from the contractGet and apply on them the fresh renaming (bTilde)
         GroupName a = cAwait.whosWaiting();
         GroupName b = cAwait.whosWaited();
-        //System.out.println("awaitVar are = " + a.toString() + " and " + b.toString());
+       
         a = bFresh.apply(a);
         b = bFresh.apply(b);
-        //System.out.println("awaitVar after Sub = " + a.toString() + " and " + b.toString());
-
+     
         // we add the get Pair of names at the two lamps
         w.addCoupleAwait(a, b);
         
-        //same comment of the rule w-Gzero
-        //wPrime.addCouple(a, b);
-
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);

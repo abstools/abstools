@@ -39,7 +39,9 @@ import deadlock.constraints.substitution.*;
 
 public class Analyser {
     
- 
+public static int FixPoint1_0 = 1;
+public static int FixPoint2_0 = 2;
+    
   public void deadlockAnalysis(Model m, boolean verbose, int nbIteration, int fixPointVersion, PrintStream out) {
       
       Variable.varCounter =0;
@@ -175,7 +177,7 @@ public class Analyser {
     
     nanoTime = System.nanoTime();
     
-    DASolver solver = (fixPointVersion == 2)? new DASolver2(df, cct):new DASolver1(df, cct, nbIteration);
+    DASolver solver = (fixPointVersion == FixPoint2_0)? new FixPointSolver2(df, cct):new FixPointSolver1(df, cct, nbIteration);
     
 
     solver.computeSolution();
@@ -190,10 +192,10 @@ public class Analyser {
     out.println("### LOCK INFORMATION RESULTED BY THE ANALYSIS ###\n");
 
       out.println("Possible Deadlock in Main:    " + solver.isDeadlockMain());
-      out.println("Current Version:              " + fixPointVersion );
-      if(fixPointVersion == 1){
-        out.println("Saturation:                   " + ((DASolver1)solver).isSatured());
-        out.println("Possible Livelock in Main:    " + ((DASolver1)solver).isLivelockMain());
+      out.println("Current Version:              " + solver.getName() );
+      if(fixPointVersion == FixPoint1_0){
+        out.println("Saturation:                   " + ((FixPointSolver1)solver).isSatured());
+        out.println("Possible Livelock in Main:    " + ((FixPointSolver1)solver).isLivelockMain());
       }
     out.println("Analysis Duration:            " + totalTimeInMs + "ms");
     }

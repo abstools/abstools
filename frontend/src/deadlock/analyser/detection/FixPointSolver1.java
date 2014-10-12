@@ -26,21 +26,18 @@ import deadlock.constraints.term.TermStructured;
 //import deadlock.constraints.term.TermVariable;
 
 
-public class DASolver1 extends DASolver {
+public class FixPointSolver1 extends DASolver {
 
 
-    Boolean saturation;
-   
-    
+    Boolean saturation;    
     int nOfIterations;
-
-    
-
     int nOfDep;
-
     Boolean livelock;
+    
+    @Override
+    public String getName() {return "Fix Point 1.0";}
 
-    public DASolver1(Factory f, Map<String, Term> map, int i){
+    public FixPointSolver1(Factory f, Map<String, Term> map, int i){
         super(f, map);
         
         this.nOfIterations = i;

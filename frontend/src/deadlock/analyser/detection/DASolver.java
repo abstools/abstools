@@ -36,4 +36,6 @@ public abstract class DASolver {
     }
     
     public abstract void computeSolution();
+    
+    public abstract String getName();
 }
