@@ -5,9 +5,8 @@
 package abs.frontend.delta;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
 
-import abs.frontend.delta.exceptions.*;
+import static org.junit.Assert.*;
 import abs.frontend.ast.*;
 
 

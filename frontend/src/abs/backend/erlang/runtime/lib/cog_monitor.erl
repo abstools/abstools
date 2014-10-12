@@ -29,7 +29,7 @@ handle_event({cog,Cog,active},State=#state{active=A,idle=I,timer=T})->
     I1=gb_sets:del_element(Cog,I),
     cancel(T),
     {ok,State#state{active=A1,idle=I1,timer=undefined}};
-handle_event({cog,Cog,idle},State=#state{main=M,active=A,idle=I,timer=T})->
+handle_event({cog,Cog,idle},State=#state{main=M,active=A,idle=I,timer=_T})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:add_element(Cog,I),
     case gb_sets:is_empty(A1) of
@@ -43,17 +43,17 @@ handle_event(_,State)->
     {ok,State}.
 
 %%Unused
-handle_call(_,State)->
+handle_call(_,_State)->
     {not_supported_call}.
 
 
-handle_info(M,State)->
+handle_info(M,_State)->
     {not_supported_msg,M}.
 
-terminate(Arg, State)->
+terminate(Arg,_State)->
     {error,Arg}.
 
-code_change(OldVsn, State, Extra)->
+code_change(_OldVsn,_State,_Extra)->
     {not_supported}.
 
 %%Private

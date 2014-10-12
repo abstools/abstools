@@ -220,6 +220,7 @@ List decl_list =
 Decl decl =
 		datatype_decl
 	|	typesyn_decl
+	|   exception_decl
 	|	function_decl
 	|	interface_decl
 	|	class_decl
@@ -255,6 +256,10 @@ TypeSynDecl typesyn_decl =
 	annotation_list.al? TYPE TYPE_IDENTIFIER.lhs ASSIGN typeuse.rhs SEMICOLON  {: return new TypeSynDecl(lhs, al, rhs); :}
   ;
 
+ExceptionDecl exception_decl =
+    annotation_list.al? EXCEPTION TYPE_IDENTIFIER.name data_constructor_params.p? SEMICOLON
+    {: return new ExceptionDecl(name, al, p); :}
+    ;
 
 FunctionDecl function_decl =
     annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN BUILTIN SEMICOLON 
@@ -1117,8 +1122,8 @@ Stmt stmt_without_annotations =
 	|  REBIND exp.obj COLON IDENTIFIER.field ASSIGN exp.e  {: return new RebindStmt(new List(), obj,field,e);                /* Component */ :}
 	|  REBIND IDENTIFIER.field ASSIGN exp.e                {: return new RebindStmt(new List(), new VarUse("this"),field,e); /* Component */ :}
 	|  SUBLOC pure_exp.sub IN pure_exp.father              {: return new MoveStmt(new List(), sub,father);                   /* Component */ :}
-	|  ABORT  string_literal.s  {: return new AbortStmt(new List(), s) ; :}
-	|  DIE    string_literal.s  {: return new DieStmt  (new List(), s) ; :}
+	|  ABORT  data_exp.s  {: return new AbortStmt(new List(), s) ; :}
+	|  DIE    data_exp.s  {: return new DieStmt  (new List(), s) ; :}
 	;
 
 Stmt compound_stmt =
@@ -1126,6 +1131,7 @@ Stmt compound_stmt =
     |  while_stmt
     |  block_without_annotations
     |  case_stmt
+    |  try_catch_finally_stmt
 ;
 
 Block block =
@@ -1142,6 +1148,11 @@ Block block_without_annotations =
 IfStmt if_then_else_stmt =
 	IF LPAREN data_exp.e1 RPAREN stmt.s1 ELSE stmt.s2 {: return new IfStmt(new List(),e1,s1,new Opt(s2)) ; :}
 	| IF LPAREN data_exp.e1 RPAREN stmt.s1 {: return new IfStmt(new List(),e1,s1,new Opt()); :}
+	;
+
+TryCatchFinallyStmt try_catch_finally_stmt =
+	TRY stmt.body CATCH LBRACE case_branch_stmt_list.branches? RBRACE FINALLY stmt.finaly {: return new TryCatchFinallyStmt(new List(), body, branches, new Opt(finaly)) ; :}
+	| TRY stmt.body CATCH LBRACE case_branch_stmt_list.branches? RBRACE {: return new TryCatchFinallyStmt(new List(), body, branches, new Opt()) ; :}
 	;
 
 CaseStmt case_stmt =
@@ -1202,9 +1213,10 @@ List attr_assignment_list  = attr_assignment.a {: return new List().add(a); :}
 AttrAssignment attr_assignment = 
     IDENTIFIER.n ASSIGN INTLITERAL.i  {: return new AttrAssignment(n, new IntVal(Integer.parseInt((String)i))); :}
     | IDENTIFIER.n ASSIGN TYPE_IDENTIFIER.c {: // hack...
-        Symbol curr_sym = _symbols[offset + 1];
-        if ("True".equals(c)) return new AttrAssignment(n, new BoolVal(true));
-        else { AttrAssignment aa = new AttrAssignment(n, new BoolVal(false)); if (!"False".equals(c)) addSyntaxError("Expected Bool or Int", curr_sym); return aa; }:}
+        // might get rewritten to BoolVal(x) in AttrValues.jadd
+        return new AttrAssignment(n, new UnknownVal(c)); :}
+    | IDENTIFIER.n ASSIGN STRINGLITERAL.s {:
+        return new AttrAssignment(n, new StringVal(s)); :}
     ;
 
 List deltaclause_list = {: return new List(); :}
@@ -1245,9 +1257,10 @@ Deltaparam deltaparam =
       TYPE_IDENTIFIER.fid DOT IDENTIFIER.aid {: return new FIDAID(fid, aid); :}
     | INTLITERAL.i {: return new Const(new IntVal(Integer.parseInt((String)i))); :}
     | TYPE_IDENTIFIER.c {: // hack...
-        if ("True".equals(c)) return new Const(new BoolVal(true));
-        else if ("False".equals(c)) return new Const(new BoolVal(false));
-	else return new FID(c); :}
+        // might get rewritten to Const(BoolVal(x)) in AttrValues.jadd
+        return new FID(c); :}
+    | STRINGLITERAL.s {:
+        return new Const(new StringVal(s)); :}
     ;
 
 // Application conditions
@@ -1370,35 +1383,23 @@ AttrConstraints attribute_constraint_list
   | attribute_constraint_list.acl 
     TYPE_IDENTIFIER.t IDENTIFIER.id IN LBRACE int_list.il RBRACE SEMICOLON
 	{: Symbol curr_sym = _symbols[offset + 1];
-	  if (!(t.equals("Int"))) {
-	   addSyntaxError("Unknown attribute type '"+t+"'",curr_sym); // TEST THIS
-	  }
-	  List al = acl.getAttributes().add(new Attribute(id, new IntListType(il)));
+	  List al = acl.getAttributes().add(new Attribute(id, new IntListMType(t, il)));
 	  List cl = acl.getConstrs();
 	  return new AttrConstraints(al,cl);
-	  //return new Attribute(id,new IntType(b1,b2));      
    :}
   | attribute_constraint_list.acl 
     TYPE_IDENTIFIER.t IDENTIFIER.id IN LBRACKET boundary_int.b1 UNTIL boundary_int.b2 RBRACKET SEMICOLON
       {: Symbol curr_sym = _symbols[offset + 1];
-         if (!(t.equals("Int"))) {
-           addSyntaxError("Unknown attribute type '"+t+"'",curr_sym); // TEST THIS
-         }
-         List al = acl.getAttributes().add(new Attribute(id,new IntType(b1,b2)));
+         List al = acl.getAttributes().add(new Attribute(id,new IntMType(t, b1,b2)));
          List cl = acl.getConstrs();
          return new AttrConstraints(al,cl);
-         //return new Attribute(id,new IntType(b1,b2));      
        :}
   | attribute_constraint_list.acl 
     TYPE_IDENTIFIER.t LBRACKET boundary_int.b1 UNTIL boundary_int.b2 RBRACKET IDENTIFIER.id SEMICOLON
       {: Symbol curr_sym = _symbols[offset + 1];
-         if (!(t.equals("Int"))) {
-           addSyntaxError("Unknown attribute type '"+t+"'",curr_sym); // TEST THIS
-         }
-         List al = acl.getAttributes().add(new Attribute(id,new IntType(b1,b2)));
+         List al = acl.getAttributes().add(new Attribute(id,new IntMType(t, b1,b2)));
          List cl = acl.getConstrs();
          return new AttrConstraints(al,cl);
-         //return new Attribute(id,new IntType(b1,b2));
       :}
   | attribute_constraint_list.acl 
     TYPE_IDENTIFIER.t IDENTIFIER.id SEMICOLON
@@ -1406,16 +1407,16 @@ AttrConstraints attribute_constraint_list
          List al = acl.getAttributes();
          List cl = acl.getConstrs();
          if (t.equals("Int")) {
-            al = al.add(new Attribute(id,new IntType(new Limit(), new Limit())));
-            //return new Attribute(id,new IntType(new Limit(), new Limit()));
+            al = al.add(new Attribute(id,new IntMType(t, new Limit(), new Limit())));
          }
          else if (t.equals("Bool")) {
-            al = al.add(new Attribute(id, new BoolType()));
-            //return new Attribute(id, new BoolType());
+            al = al.add(new Attribute(id, new BoolMType(t)));
+         }
+         else if (t.equals("String")) {
+            al = al.add(new Attribute(id, new StringMType(t)));
          }
          else {
-            addSyntaxError("Unknown attribute type '"+t+"'",curr_sym); // TEST THIS
-            //return new Attribute(id,new BoolType());
+            al = al.add(new Attribute(id, new UnresolvedMType(t)));
          }
          return new AttrConstraints(al,cl);
        :}
@@ -1482,9 +1483,8 @@ MExp mlit_exp
   = INTLITERAL.i        {: return new MValue(new IntVal(Integer.parseInt(i))); :}
   | IDENTIFIER.id       {: return new AttVar(id); :}
   | TYPE_IDENTIFIER.f DOT IDENTIFIER.a      {: return new FAVar(f,a); :}
-  | TYPE_IDENTIFIER.id  {: if      ("True".equals(id))  return new MValue(new BoolVal(true));
-                           else if ("False".equals(id)) return new MValue(new BoolVal(false));
-                           else                         return new FeatVar(id); :}
+  // the following might get rewritten to MValue(BoolVal(x)) in AttrValues.jadd
+  | TYPE_IDENTIFIER.id  {: return new FeatVar(id); :}
   ;
   
 

@@ -186,7 +186,15 @@ public class TypeCheckerHelper {
                         for (DeltaClause dc : dcs) {
                             DeltaDecl dd = m.findDelta(dc.getDeltaspec().getName());
                             DeltaParamDecl dp = dd.getParam(i);
-                            if (!dp.accepts(aa.getValue())) {
+                            // FIXME: we assumed here that delta
+                            // parameters and feature parameters have
+                            // same order, arity.  This is clearly
+                            // wrong, and parameters for the delta are
+                            // named with the feature.  we should find a
+                            // dp with the same name as aa, and ignore
+                            // any superfluous aa (the value is simply
+                            // not used by this delta).
+                            if (dp != null && !dp.accepts(aa.getValue())) {
                                 e.add(new TypeError(aa, ErrorMessage.CANNOT_ASSIGN, aa.getValue().getName(), dp.getType().getSimpleName()));
                             }
                         }
@@ -308,6 +316,18 @@ public class TypeCheckerHelper {
                 DataTypeDecl dataDecl = (DataTypeDecl) d;
                 for (DataConstructor c : dataDecl.getDataConstructors()) {
                     rn = new ResolvedDeclName(moduleName, c);
+                    if (res.put(rn.getSimpleName(), rn) != null)
+                        foundDuplicates.add(rn.getSimpleName());
+                    res.put(rn.getQualifiedName(), rn);
+                }
+            }
+            else if (d instanceof ExceptionDecl) {
+                ExceptionDecl ed = (ExceptionDecl)d;
+                DataConstructor ec = ed.dataConstructor;
+                if (ec.getName().equals(d.getName())) {
+                    // should always be true, see Main.java where the data
+                    // constructor gets constructed
+                    rn = new ResolvedDeclName(moduleName, ec);
                     if (res.put(rn.getSimpleName(), rn) != null)
                         foundDuplicates.add(rn.getSimpleName());
                     res.put(rn.getQualifiedName(), rn);

@@ -41,6 +41,11 @@ aspect GenerateErlang {
   }
 
   @Override
+  public void ExceptionDecl.generateErlangCode(ErlApp ea) throws IOException {
+    //Ignore ExceptionDecl
+  }
+
+  @Override
   public void TypeSynDecl.generateErlangCode(ErlApp ea) throws IOException {
     //Ignore
   }
@@ -72,7 +77,7 @@ aspect GenerateErlang {
   }
 
   private final static Set<String> FnApp.BUILTINS=ImmutableSet.of("substr","currentms","lowlevelDeadline",
-      "random","getProductLine","strlen","toString","truncate","println");
+      "random","getProductLine","strlen","toString","truncate","println","print");
   public  void FnApp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
     if(decl.getFunctionDef() instanceof BuiltinFunctionDef){
@@ -547,6 +552,57 @@ aspect GenerateErlang {
   }
 
   @Override
+  public void TryCatchFinallyStmt.generateErlangCode(ErlangCodeStream ecs, Vars vars) {
+      // Build var scopes and statmemnts for each branch
+      java.util.List<Vars> branches_vars = new LinkedList<Vars>();
+      java.util.List<String> branches = new LinkedList<String>();
+      ecs.println("try");
+      ecs.incIndent();
+      getBody().generateErlangCode(ecs, vars);
+      ecs.decIndent().println();
+      ecs.println("catch");
+      ecs.incIndent();
+      for (CaseBranchStmt b : getCatchs()) {
+          Vars v = vars.pass();
+          StringWriter sw = new StringWriter();
+          ErlangCodeStream buffer = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),"");
+          buffer.print("_:");
+          b.getLeft().generateErlangCode(ecs, buffer, v);
+          buffer.setIndent(ecs.getIndent());
+          buffer.println("->");
+          buffer.incIndent();
+          b.getRight().generateErlangCode(buffer, v);
+          buffer.decIndent();
+          buffer.close();
+          branches_vars.add(v);
+          branches.add(sw.toString());
+          vars.updateTemp(v);
+      }
+      // Now print statments and mergelines for each branch.
+      java.util.List<String> mergeLines = vars.merge(branches_vars);
+      boolean first = true;
+      Iterator<String> ib = branches.iterator();
+      Iterator<String> im = mergeLines.iterator();
+      while (ib.hasNext()) {
+          if (!first)
+              ecs.println(";");
+          first = false;
+          ecs.print(ib.next());
+          ecs.print(im.next());
+      }
+      ecs.println();
+      ecs.decIndent();
+      if (hasFinally()) {
+          ecs.println("after");
+          ecs.incIndent();
+          getFinally().generateErlangCode(ecs, vars);
+          ecs.decIndent();
+          ecs.println();
+      }
+      ecs.print("end");
+  }
+
+  @Override
   public void CaseExp.generateErlangCode(ErlangCodeStream external,Vars vars){
     //Needs this external stream
     external.println("begin");
@@ -748,16 +804,24 @@ aspect GenerateErlang {
     ecs.decIndent().format("(%s)",va);
   }
 
+  // We discriminate between throw and exit: throw terminates the
+  // process, exit kills the process.  They correspond to Abs
+  // abort-statements and die-statements and unexpected errors,
+  // respectively.  All otherwise-uncaught Erlang-level throw()s and
+  // exit()s are handled in a top-level Erlang try-catch around the
+  // method body.  During any changes in the error-handling
+  // implementation you might need to adapt the implementation of
+  // future.get as well (rudi)
   @Override
   public void AbortStmt.generateErlangCode(ErlangCodeStream ecs, Vars vars) {
-    ecs.print("exit(");
+    ecs.print("throw(");
     getReason().generateErlangCode( ecs,  vars);
     ecs.print(")");
   }
 
   @Override
   public void DieStmt.generateErlangCode(ErlangCodeStream ecs, Vars vars) {
-    ecs.print("object:die(O,");
+    ecs.print("exit(");
     getReason().generateErlangCode( ecs,  vars);
     ecs.print(")");
   }

@@ -5,13 +5,13 @@
 package abs.frontend.delta;
 
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import abs.frontend.ast.*;
-import abs.frontend.delta.exceptions.*;
 
 public class OriginalCallTest extends DeltaTest {
 

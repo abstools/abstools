@@ -125,7 +125,9 @@ public class PrologBackend extends Main {
 
         for (int i = 0; i < restArgs.size(); i++) {
             String arg = restArgs.get(i);
-            if (arg.equals("-d")) {
+            if (arg.equals("-prolog")) {
+                // nothing to do
+            } else if (arg.equals("-d")) {
                 i++;
                 if (i == restArgs.size()) {
                     System.err.println("Please provide a destination directory");

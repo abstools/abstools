@@ -13,7 +13,6 @@ import org.junit.Test;
 import abs.common.WrongProgramArgumentException;
 import static org.junit.Assert.*;
 import abs.frontend.ast.*;
-import abs.frontend.delta.exceptions.DeltaModellingException;
 
 public class ApplicationConditionsTest extends DeltaTest {
 

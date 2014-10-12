@@ -20,7 +20,6 @@ import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.Model;
-import abs.frontend.delta.exceptions.DeltaModellingException;
 
 public class DeltaSamplesTest extends FrontendTest {
 

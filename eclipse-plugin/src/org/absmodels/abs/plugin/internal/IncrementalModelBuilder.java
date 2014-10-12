@@ -16,7 +16,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubProgressMonitor;
 
-
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticError;
@@ -26,7 +25,8 @@ import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Product;
-import abs.frontend.delta.exceptions.DeltaModellingException;
+import abs.frontend.delta.DeltaModellingException;
+import abs.frontend.delta.DeltaModellingWithNodeException;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.TypeCheckerException;
 import abs.frontend.typechecker.locationtypes.LocationType;
@@ -206,10 +206,15 @@ public class IncrementalModelBuilder {
 					} catch (WrongProgramArgumentException e) {
 						semerrors.add(new SemanticError(p, ErrorMessage.ERROR_IN_PRODUCT, p.getName(), e.getMessage()));
 					} catch (DeltaModellingException e) {
+						/* We we have a better location for error reporting? */
+						final ASTNode<?> loc;
+						if (e instanceof DeltaModellingWithNodeException)
+							loc = ((DeltaModellingWithNodeException) e).getNode();
+						else loc = p;
 						if (e.getDelta() == null)
-							semerrors.add(new SemanticError(p, ErrorMessage.ERROR_IN_PRODUCT, p.getName(), e.getMessage()));
+							semerrors.add(new SemanticError(loc, ErrorMessage.ERROR_IN_PRODUCT, p.getName(), e.getMessage()));
 						else
-							semerrors.add(new SemanticError(p, ErrorMessage.ERROR_IN_PRODUCT_WITH_DELTA, p.getName(), e.getDelta().getName(), e.getMessage()));
+							semerrors.add(new SemanticError(loc, ErrorMessage.ERROR_IN_PRODUCT_WITH_DELTA, p.getName(), e.getDelta().getName(), e.getMessage()));
 					}
 				}
 				monitor.done();

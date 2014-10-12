@@ -252,6 +252,7 @@ aspect TypeChecker {
 
         if (hasInitBlock()) {
             getInitBlock().typeCheck(e);
+            getInitBlock().checkLegalInit(e, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE);
         }
 
         HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
@@ -391,6 +392,12 @@ aspect TypeChecker {
 
     public void ConstructorArg.typeCheck(SemanticErrorList e) {
         getDataTypeUse().typeCheck(e);
+    }
+
+    public void ExceptionDecl.typeCheck(SemanticErrorList e) {
+        for (ConstructorArg d : getConstructorArgs()) {
+            d.typeCheck(e);
+        }
     }
 
     public void TypeSynDecl.typeCheck(SemanticErrorList e) {
@@ -617,6 +624,20 @@ aspect TypeChecker {
         getLeft().typeCheck(e,t);
         getRight().typeCheck(e);
     }       
+
+    public void TryCatchFinallyStmt.typeCheck(SemanticErrorList e) {
+        Type exc = getModel().getExceptionType();
+        getBody().typeCheck(e);
+        for (CaseBranchStmt b : getCatchs()) {
+            b.getLeft().typeCheck(e, exc);
+            b.getRight().typeCheck(e);
+        }
+        if (hasFinally()) {
+            getFinally().typeCheck(e);
+            getFinally().checkLegalInit(e, ErrorMessage.NOT_ALLOWED_IN_FINALLY_CODE);
+        }
+    }
+
     public void SkipStmt.typeCheck(SemanticErrorList e) { 
     /* nothing to check */ }
 
@@ -810,7 +831,7 @@ aspect TypeChecker {
     }
 
     public Map<TypeParameter, Type> FnApp.getTypeParamBindingFromParamDecl(ParametricFunctionDecl node) {
-        return getTypeParamBinding(node, node);
+        return getTypeParamBinding(this, node);
     }
 
     public void DataConstructorExp.typeCheck(SemanticErrorList e) {
@@ -876,9 +897,15 @@ aspect TypeChecker {
         }
     }
     //ASPECT
-    public void AbortStmt.typeCheck(SemanticErrorList e) { /* nothing to check */ }
+    public void AbortStmt.typeCheck(SemanticErrorList e) {
+        getReason().typeCheck(e);
+        getReason().assertHasType(e,getModel().getExceptionType());
+    }
 
-    public void DieStmt.typeCheck(SemanticErrorList e) { /* nothing to check */ }
+    public void DieStmt.typeCheck(SemanticErrorList e) {
+        getReason().typeCheck(e);
+        getReason().assertHasType(e,getModel().getExceptionType());
+    }
 
 
 }
@@ -1018,9 +1045,16 @@ aspect TypeCheckProductline {
 	public boolean BoolVal.isAssignableTo(Type t) { 
 		return t.isBoolType();
 	}
+	public boolean StringVal.isAssignableTo(Type t) {
+            return t.isStringType();
+	}
 	public boolean IntVal.isAssignableTo(Type t) { 
 		return t.isNumericType();
 	}
+        public boolean UnknownVal.isAssignableTo(Type t) {
+            return false;
+	}
+
 
     protected void DeltaClause.typeCheck(Map<String,DeltaDecl> ds, Set<String> definedFeatures, SemanticErrorList e) {
         TypeCheckerHelper.typeCheckDeltaClause(this, ds, definedFeatures, e);

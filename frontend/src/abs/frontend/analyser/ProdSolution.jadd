@@ -26,10 +26,17 @@ aspect ProdSolution {
     }
 
     abstract public Integer Value.getIntValue();
+    public Integer UnknownVal.getIntValue() {
+            return -1;
+    }
     public Integer IntVal.getIntValue() {
             return getValue();
     }
     public Integer BoolVal.getIntValue() {
             return Integer.valueOf( getValue() ? 1 : 0);
+    }
+    public Integer StringVal.getIntValue() {
+        // FIXME: is this used for constraint solving?  Maybe use a hash
+            return -1;
     }
 }  

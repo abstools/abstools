@@ -1,0 +1,31 @@
+aspect AttributeValueResolution {
+
+    // avoid having True, False as parser tokens
+    rewrite UnknownVal {
+        when (getValue().equals("True"))
+            to BoolVal new BoolVal(true);
+        when (getValue().equals("False"))
+            to BoolVal new BoolVal(false);
+    }
+
+    // Fixing up after ourselves since the literals True and False occupy the
+    // same place as feature names in delta, product, productline syntax
+    rewrite FID {
+        when (getFeatName().equals("True"))
+            to Const new Const(new BoolVal(true));
+        when (getFeatName().equals("False"))
+            to Const new Const(new BoolVal(false));
+    }
+
+    rewrite FeatVar {
+        when (getFName().equals("True"))
+            to MValue new MValue(new BoolVal(true));
+        when (getFName().equals("False"))
+            to MValue new MValue(new BoolVal(false));
+    }
+}
+
+
+// Local Variables:
+// mode: java
+// End:

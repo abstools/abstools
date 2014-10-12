@@ -27,9 +27,10 @@
 
 (require 'compile)
 (require 'custom)
+(require 'easymenu)
 (eval-when-compile (require 'rx))
-(require 'maude-mode)
 (require 'flymake)
+(autoload 'run-maude "maude-mode" nil t)
 
 ;;; Code:
 
@@ -42,24 +43,25 @@
   "The default target language for code generation."
   :type '(radio (const maude)
                 (const java)
-                (const erlang))
+                (const erlang)
+                (const prolog))
   :group 'abs)
 (put 'abs-target-language 'safe-local-variable
-     #'(lambda (x) (member x '(maude java erlang))))
+     #'(lambda (x) (member x '(maude java erlang prolog))))
 
 (defcustom abs-compiler-program (or (executable-find "absc") "absc")
   "Path to the Abs compiler."
   :type 'file
-  :risky t
   :group 'abs)
+(put 'abs-compiler-program 'risky-local-variable t)
 
 (defcustom abs-java-classpath "absfrontend.jar"
   "The classpath for the Java backend.
 The contents of this variable will be passed to the java
 executable via the `-cp' argument."
   :type 'string
-  :risky t
   :group 'abs)
+(put 'abs-java-classpath 'risky-local-variable t)
 
 (defcustom abs-indent standard-indent
   "The width of one indentation step for Abs code."
@@ -94,6 +96,18 @@ Note that you can set this variable as a file-local variable as well."
   :type 'integer
   :group 'abs)
 (put 'abs-default-resourcecost 'safe-local-variable 'integerp)
+
+(defvar abs-product-name nil
+  "Product to be generated when compiling.")
+(put 'abs-product-name 'safe-local-variable 'stringp)
+
+(defcustom abs-debug-output nil
+  "Control whether to tell the backend to be verbose.
+This setting might not be supported on all backends, or produce
+different results."
+  :type 'boolean
+  :group 'abs)
+(put 'abs-debug-output 'safe-local-variable 'booleanp)
 
 ;;; Making faces
 (defface abs-keyword-face '((default (:inherit font-lock-keyword-face)))
@@ -138,7 +152,7 @@ Note that you can set this variable as a file-local variable as well."
   (eval-when-compile
     (regexp-opt
      '("module" "import" "export" "from"              ; the top levels
-       "data" "type" "def" "interface" "class"
+       "data" "type" "def" "interface" "class" "exception"
        "case" "=>" "new" "local"                      ; the functionals
        "extends"                                      ; the interfaces
        "implements"                                   ; the class
@@ -154,6 +168,7 @@ Note that you can set this variable as a file-local variable as well."
        "if" "then" "else" "return" "while"            ; the statements
        "await" "assert" "abort" "die" "get" "skip" "suspend"
        "original" "movecogto"
+       "try" "catch" "finally"
        "duration"                       ; guard / statement
        ) 'words))
   "List of Abs keywords.")
@@ -213,6 +228,10 @@ Note that you can set this variable as a file-local variable as well."
        ,(rx bol (* whitespace) (or "data" "type") (1+ whitespace)
             (group (char upper) (* (char alnum))))
        1)
+      ("Exceptions"
+       ,(rx bol (* whitespace) "exception" (1+ whitespace)
+            (group (char upper) (* (char alnum))))
+       1)
       ("Classes"
        ,(rx bol (* whitespace) "class" (1+ whitespace)
             (group (char upper) (* (char alnum))))
@@ -226,6 +245,9 @@ Note that you can set this variable as a file-local variable as well."
             (group (char upper) (* (or (char alnum) "."))))
        1))
   "Imenu expression for `abs-mode'.  See `imenu-generic-expression'.")
+
+;;; Minimal auto-insert mode support
+(define-auto-insert 'abs-mode '("Module name: " "module " str ";" ?\n ?\n))
 
 ;;; Compiling the current buffer.
 ;;;
@@ -328,6 +350,8 @@ value.")
                               (abs--input-files) " ")
                    (when (eql backend 'maude)
                      (concat " -o \"" (abs--maude-filename) "\""))
+                   (when abs-product-name
+                     (concat " -product=" abs-product-name))
                    (when (and (eql backend 'maude) abs-use-timed-interpreter)
                      (concat " -timed -limit="
                              (number-to-string abs-clock-limit)))
@@ -342,12 +366,22 @@ value.")
           (abs--absolutify-filename (pcase backend
                                       (`maude (abs--maude-filename))
                                       (`erlang "gen/erl/Emakefile")
-                                      (`java "gen/ABS/StdLib/Bool.java"))))
+                                      (`java "gen/ABS/StdLib/Bool.java")
+                                      ;; FIXME Prolog backend can use -fn outfile
+                                      (`prolog "abs.pl"))))
          (abs-modtime (nth 5 (file-attributes (buffer-file-name))))
          (output-modtime (nth 5 (file-attributes abs-output-file))))
     (or (not output-modtime)
         (abs--file-date-< output-modtime abs-modtime)
         (buffer-modified-p))))
+
+(defun abs--compile-model (backend)
+  (let ((compile-command (abs--calculate-compile-command backend)))
+   (call-interactively 'compile)))
+
+(defun abs--compile-model-no-prompt (backend)
+  (let ((compile-command (abs--calculate-compile-command backend)))
+   (compile compile-command)))
 
 (defun abs--run-model (backend)
   "Start the model running on language BACKEND."
@@ -364,20 +398,26 @@ value.")
               (insert "frew start .")
               (comint-send-input)))
     (`erlang (let ((erlang-buffer (or (get-buffer "*erlang*")
-                                      (progn (save-excursion (run-erlang))
+                                      (progn (save-excursion
+                                               ;; don't propagate
+                                               ;; interactive args, if any
+                                               (funcall erlang-shell-function))
                                              (get-buffer "*erlang*"))))
                    (erlang-dir (concat (file-name-directory (buffer-file-name))
                                        "gen/erl"))
-                   (module (abs--guess-module)))
+                   (module (abs--guess-module))
+                   (debug-output abs-debug-output))
                (with-current-buffer erlang-buffer
                  (comint-send-string erlang-buffer
                                      (concat "cd (\"" erlang-dir "\").\n"))
-                 (comint-send-string erlang-buffer "make:all().\n")
+                 (comint-send-string erlang-buffer "make:all([load]).\n")
                  (comint-send-string erlang-buffer
                                      (concat "code:add_path(\"" erlang-dir
                                              "/ebin\").\n"))
                  (comint-send-string erlang-buffer
-                                     (concat "runtime:start(\"" module
+                                     (concat "runtime:start(\""
+                                             (when debug-output "-d ")
+                                             module
                                              "\").\n")))
                (pop-to-buffer erlang-buffer)))
     (`java (let ((java-buffer (save-excursion (shell "*abs java*")))
@@ -417,8 +457,7 @@ Argument FLAG will prompt for language backend to use if 1."
                                             '("maude" "erlang" "java")
                                             nil t nil nil "maude")))))
     (if (abs--needs-compilation backend)
-        (let ((compile-command (abs--calculate-compile-command backend)))
-          (call-interactively 'compile))
+        (abs--compile-model backend)
       (abs--run-model backend))))
 
 ;;; Movement
@@ -523,10 +562,39 @@ The following keys are set:
   ;; imenu
   (setq imenu-generic-expression abs-imenu-generic-expression)
   (setq imenu-syntax-alist abs-imenu-syntax-alist)
+  ;; Menu
+  (easy-menu-add abs-mode-menu abs-mode-map)
   ;; speedbar support
   (when (fboundp 'speedbar-add-supported-extension)
     (speedbar-add-supported-extension ".abs")))
 
+;;; Set up the "Abs" pull-down menu
+(easy-menu-define abs-mode-menu abs-mode-map
+  "Abs mode menu."
+  '("Abs"
+    ["Compile" (abs--compile-model-no-prompt abs-target-language) :active t]
+    ["Run" (abs--run-model abs-target-language)
+     :active (not (abs--needs-compilation abs-target-language))]
+    "---"
+    ("Select Backend"
+     ["Maude" (setq abs-target-language 'maude)
+      :active t
+      :style radio
+      :selected (eq abs-target-language 'maude)]
+     ["Erlang" (setq abs-target-language 'erlang)
+      :active t
+      :style radio
+      :selected (eq abs-target-language 'erlang)])
+    ("Maude Backend Options"
+     ["Timed interpreter"
+      (setq abs-use-timed-interpreter (not abs-use-timed-interpreter))
+      :active t :style toggle
+      :selected abs-use-timed-interpreter])
+    ("Erlang Backend Options"
+     ["Debugging output"
+      (setq abs-debug-output (not abs-debug-output))
+      :active t :style toggle
+      :selected abs-debug-output])))
 
 (unless (assoc "\\.abs\\'" auto-mode-alist)
   (add-to-list 'auto-mode-alist '("\\.abs\\'" . abs-mode)))

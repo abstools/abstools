@@ -3,8 +3,8 @@ import java.util.HashMap;
 
 aspect Variables {
 
-  interface Entry<K,V> { K getKey(); V getValue(); Attribute getAttribute(); }  
-  class RepeatMap<K,V> extends HashMap<K,V> {
+  public interface Entry<K,V> { K getKey(); V getValue(); Attribute getAttribute(); }  
+  public class RepeatMap<K,V> extends HashMap<K,V> {
     // Weird explicit package name necessary for OpenJDK8 compiler! [stolz]
     public void add(abs.frontend.ast.Entry<K,V> e) {
       if (e != null)
@@ -13,8 +13,8 @@ aspect Variables {
   }
   coll RepeatMap<String,BoundaryInt[]> Model.ints() [new RepeatMap<String,BoundaryInt[]>()] with add root Model;
 
-  interface RLEntry { String getItem(); void setRepeated(boolean rep);}
-  class RepeatList extends ArrayList<String> {
+  public interface RLEntry { String getItem(); void setRepeated(boolean rep);}
+  public class RepeatList extends ArrayList<String> {
     public void addNonNull(RLEntry e) {
       assert e != null;
       e.setRepeated(contains(e.getItem()));
@@ -57,23 +57,23 @@ aspect Variables {
   Attribute contributes getIntFVarsHelp() to Model.ints() for calcContextNode(Model.class);
 
   Entry<String,BoundaryInt[]> Attribute.getIntFVarsHelp() {
-    if (getAType() instanceof IntType) {
+    if (getAType() instanceof IntMType) {
 //       System.out.println("searching for att "+pname()+"."+getName()+" in "+ivars);
       // check also for bools, but not check in bool for ints!
       if (((Model)calcContextNode(Model.class)).bools().contains(pname()+"."+getName()))
         isRepeated = true;
-      IntType type = (IntType) getAType();
+      IntMType type = (IntMType) getAType();
       final BoundaryInt[] boundaries = {type.getMin(),type.getMax()};
       return new Entry<String,BoundaryInt[]>(){ public String getKey(){return pname()+"."+getName();}
                           public BoundaryInt[] getValue(){return boundaries;}
                           public Attribute getAttribute(){return Attribute.this;}};
     } else
-    if (getAType() instanceof IntListType) {
+    if (getAType() instanceof IntListMType) {
 //      System.out.println("searching for att "+pname()+"."+getName()+" in "+ivars);
      // check also for bools, but not check in bool for ints!
      if (((Model)calcContextNode(Model.class)).bools().contains(pname()+"."+getName()))
        isRepeated = true;
-     IntListType type = (IntListType) getAType();
+     IntListMType type = (IntListMType) getAType();
      // note that "type" is a list with at least a value, because of the parser
      int bsize = type.getBoundaryVals().getNumChild()+1;
      final BoundaryInt[] values = new BoundaryInt[bsize];
@@ -89,7 +89,7 @@ aspect Variables {
 
   Attribute contributes (new RLEntry(){ public String getItem(){return pname()+"."+getName();}
                                         public void setRepeated(boolean rep){isRepeated |= rep;}})
-    when (getAType() instanceof BoolType)
+    when (getAType() instanceof BoolMType)
     to Model.bools()
     for calcContextNode(Model.class);
 

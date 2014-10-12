@@ -35,7 +35,7 @@ aspect ParseTreeCopy {
     public Binary Binary.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public Block Block.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public BoolExp BoolExp.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
-    public BoolType BoolType.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
+    public BoolMType BoolMType.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public BoolVal BoolVal.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public BoundaryInt BoundaryInt.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public BoundaryVal BoundaryVal.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
@@ -123,7 +123,8 @@ aspect ParseTreeCopy {
     public InterfaceDecl InterfaceDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public InterfaceTypeUse InterfaceTypeUse.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public IntLiteral IntLiteral.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
-    public IntType IntType.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
+    public IntMType IntMType.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
+    public IntListMType IntListMType.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public IntVal IntVal.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public LetExp LetExp.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public Limit Limit.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }

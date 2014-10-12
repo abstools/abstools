@@ -91,6 +91,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "from"        { return sym(Terminals.FROM); }
  "class"       { return sym(Terminals.CLASS); }
  "interface"   { return sym(Terminals.INTERFACE); }
+ "exception"   { return sym(Terminals.EXCEPTION); }
  "extends"     { return sym(Terminals.EXTENDS); }
  "data"        { return sym(Terminals.DATA); }
  "def"         { return sym(Terminals.DEF); }
@@ -121,6 +122,9 @@ IntLiteral = 0 | [1-9][0-9]*
  "if"          { return sym(Terminals.IF); }
  "then"        { return sym(Terminals.THEN); }
  "else"        { return sym(Terminals.ELSE); }
+ "try"         { return sym(Terminals.TRY); }
+ "catch"       { return sym(Terminals.CATCH); }
+ "finally"     { return sym(Terminals.FINALLY); }
  "suspend"     { return sym(Terminals.SUSPEND); }
  "duration"    { return sym(Terminals.DURATION); }
  "new"         { return sym(Terminals.NEW); }

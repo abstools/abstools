@@ -5,7 +5,6 @@
 package abs.frontend.delta;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
@@ -17,7 +16,6 @@ import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.TypeSynDecl;
-import abs.frontend.delta.exceptions.DeltaModellingException;
 
 /**
  * Testing the adding functions, data types and type synonyms using deltas.

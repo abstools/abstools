@@ -25,6 +25,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         register(new AtomicityChecker(m));
         register(new DeploymentComponentChecker(m));
         register(new DeadlineChecker(m));
+        register(new SizeAnnotationChecker(m));
         register(new SchedulerChecker(m));
     }
 

@@ -1,7 +1,6 @@
 import java.util.Map;
 import abs.frontend.delta.*;
 import abs.common.*;
-import abs.frontend.delta.exceptions.*;
 
 aspect DeltaParameterSubstitution {
 
@@ -15,11 +14,13 @@ aspect DeltaParameterSubstitution {
     public String FID.getName()  { return getFeatName(); }
     public String Const.getName()   { return getValue().getName(); }
     public abstract String Value.getName();
+    public String UnknownVal.getName()  { return "" + getValue(); }
     public String IntVal.getName()  { return "" + getValue(); }
     public String BoolVal.getName() { return "" + getValue(); }
+    public String StringVal.getName() { return "" + getValue(); }
 
     // calculate the concrete value of a Deltaparam, given a feature selection.
-    abstract public Value Deltaparam.calcValue(List<Feature> features) throws WrongProgramArgumentException;
+    abstract public Value Deltaparam.calcValue(List<Feature> features) throws DeltaModellingWithNodeException;
 
     public Value Const.calcValue(List<Feature> features)  {
         return (Value) getValue().fullCopy();
@@ -41,7 +42,7 @@ aspect DeltaParameterSubstitution {
         return new BoolVal(false);
     }
 
-    public Value FIDAID.calcValue(List<Feature> features) throws WrongProgramArgumentException {
+    public Value FIDAID.calcValue(List<Feature> features) throws DeltaModellingException {
         for (Feature f : features) {
             if (f.getName().equals(this.getFeatName()))   // found feature
                 for (AttrAssignment attr : f.getAttrAssignments()) {
@@ -49,7 +50,7 @@ aspect DeltaParameterSubstitution {
                         return (Value) attr.getValue().fullCopy();
                 }
         }
-        throw new WrongProgramArgumentException("Argument " + getFeatName() + "." + getAttrName() + " not found.");
+        throw new DeltaModellingException("Argument " + getFeatName() + "." + getAttrName() + " not found.");
     }
 
     /**************************************************************************
@@ -58,9 +59,10 @@ aspect DeltaParameterSubstitution {
      */
     public void ProductLine.substituteDeltaParams(
             ArrayList<DeltaDecl> deltas, 
-            Product prod) throws WrongProgramArgumentException {
+            Product prod) throws DeltaModellingException {
 
         for (DeltaDecl delta : deltas) {
+          try {
             for (DeltaClause clause : getDeltaClauses()) {
                 if (delta.getName().equals(clause.getDeltaspec().getName()) && clause.isApplicable(prod)) {
                     List<Deltaparam> params = clause.getDeltaspec().getDeltaparams();
@@ -70,6 +72,11 @@ aspect DeltaParameterSubstitution {
                 // We trust that there is a delta clause to match the delta, 
                 // otherwise the delta wouldn't be in the list of applicable deltas.
             }
+          } catch (DeltaModellingWithNodeException e) {
+            if (e.getDelta() == null) {
+              throw new DeltaModellingWithNodeException(e.getNode(), delta, e.getMessage());
+            }
+          }
         }
     }
 
@@ -85,7 +92,7 @@ aspect DeltaParameterSubstitution {
      */
     public void DeltaDecl.substituteParameters(
             List<Deltaparam> dparams, 
-            List<Feature> features) throws WrongProgramArgumentException {
+            List<Feature> features) throws DeltaModellingWithNodeException {
 
         // cache names and values of delta parameters as specified in the delta clause
         HashMap<String,Value> subst = new HashMap<String,Value>();
@@ -102,13 +109,13 @@ aspect DeltaParameterSubstitution {
 
 
     // apply a substitution to OOModifier
-    abstract protected void OOModifier.applySubstitution(Map<String,Value> subst);
+    abstract protected void OOModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException;
 
-    protected void AddClassModifier.applySubstitution(Map<String,Value> subst) {
+    protected void AddClassModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException  {
         getClassDecl().applySubstitution(subst);
     }
     protected void RemoveClassModifier.applySubstitution(Map<String,Value> subst) {}
-    protected void ModifyClassModifier.applySubstitution(Map<String,Value> subst) {
+    protected void ModifyClassModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         for (Modifier m : getModifiers()) 
             m.applySubstitution(subst);
     }
@@ -119,26 +126,26 @@ aspect DeltaParameterSubstitution {
     // TODO apply substitution to FunctionalModifier
 
     // apply a substitution to Modifier
-    abstract protected void Modifier.applySubstitution(Map<String,Value> subst);
+    abstract protected void Modifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException;
 
-    protected void AddFieldModifier.applySubstitution(Map<String,Value> subst) {
+    protected void AddFieldModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         getFieldDecl().applySubstitution(subst);
     }
-    protected void RemoveFieldModifier.applySubstitution(Map<String,Value> subst) {
+    protected void RemoveFieldModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         getFieldDecl().applySubstitution(subst);
     }
-    protected void AddMethodModifier.applySubstitution(Map<String,Value> subst) {
+    protected void AddMethodModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         getMethodImpl().applySubstitution(subst);
     }
     protected void RemoveMethodModifier.applySubstitution(Map<String,Value> subst) {}
-    protected void ModifyMethodModifier.applySubstitution(Map<String,Value> subst) {
+    protected void ModifyMethodModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         getMethodImpl().applySubstitution(subst);
     }
 
     protected void AddMethodSigModifier.applySubstitution(Map<String,Value> subst) {}
     protected void RemoveMethodSigModifier.applySubstitution(Map<String,Value> subst) {}
 
-    protected void ClassDecl.applySubstitution(Map<String,Value> subst) {
+    protected void ClassDecl.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         HashMap<String,Value> subst2 = new HashMap<String,Value>(subst);
         for (ParamDecl p : getParams()) 
             p.updateSubstitution(subst2);
@@ -150,7 +157,7 @@ aspect DeltaParameterSubstitution {
             m.applySubstitution(subst2);
     }
     @Override
-    protected void FieldDecl.applySubstitution(Map<String,Value> subst) {
+    protected void FieldDecl.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         if (hasInitExp()) 
             getInitExp().applySubstitution(subst);
         for (Annotation a : getAnnotations()) 
@@ -159,24 +166,24 @@ aspect DeltaParameterSubstitution {
         subst.remove(getName());
     }
     @Override
-    protected void VarDecl.applySubstitution(Map<String,Value> subst) {
+    protected void VarDecl.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         if (hasInitExp()) 
             getInitExp().applySubstitution(subst);
         // Removal should not be necessary with well-typed deltas
         subst.remove(getName());
     }
-    protected void ParamDecl.updateSubstitution(Map<String,Value> subst) {
+    protected void ParamDecl.updateSubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         subst.remove(getName());
         for (Annotation a : getAnnotations()) 
             a.applySubstitution(subst);
     }
     @Override
-    protected void MethodImpl.applySubstitution(Map<String,Value> subst) {
+    protected void MethodImpl.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         HashMap<String,Value> subst2 = new HashMap<String,Value>(subst);
         getMethodSig().updateSubstitution(subst2);
         getBlock().applySubstitution(subst2);
     }
-    protected void MethodSig.updateSubstitution(Map<String,Value> subst) {
+    protected void MethodSig.updateSubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         for (ParamDecl p : getParams()) 
             p.updateSubstitution(subst);
     }
@@ -187,7 +194,7 @@ aspect DeltaParameterSubstitution {
        but needs to be rewritten from the substitution.
     */
     @Override
-    protected void VarOrFieldUse.applySubstitution(Map<String,Value> subst) {
+    protected void VarOrFieldUse.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         //System.out.println("%%% Substituting value " + getName());
         //System.out.println("%%% using subst: " + subst);
         Value v = subst.get(getName());
@@ -195,14 +202,24 @@ aspect DeltaParameterSubstitution {
             // TODO: Maven is a bit particular about the generic type here:
             ASTNode p = getParent();
             int i = p.getIndexOfChild(this);
+            // [stolz] Seen it happen; safety net.
+            if (p instanceof AssignStmt && i == 1) 
+              throw new DeltaModellingWithNodeException(this, "You're substituting the LHS of an assignment?!");
             p.setChild(v.calcExpr(), i);
             //System.out.println("%%% assigning " + v.calcExpr());
         }
 
     }
     abstract public PureExp Value.calcExpr();
+    public PureExp UnknownVal.calcExpr() {
+        // Should never happen since we won't pass typechecking
+        return new StringLiteral(""+getValue());
+    }
     public PureExp IntVal.calcExpr() {
         return new IntLiteral(""+getValue());
+    }
+    public PureExp StringVal.calcExpr() {
+        return new StringLiteral(""+getValue());
     }
     public PureExp BoolVal.calcExpr() {
         if (getValue())
@@ -212,7 +229,7 @@ aspect DeltaParameterSubstitution {
     }
 
     // used to go down Blocks, Stmts, Exps
-    protected void ASTNode.applySubstitution(Map<String,Value> subst) {
+    protected void ASTNode.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         for(int i = 0; i < getNumChild(); i++) {
             getChild(i).applySubstitution(subst);
         }

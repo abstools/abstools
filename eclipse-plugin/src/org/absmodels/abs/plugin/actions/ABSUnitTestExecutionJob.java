@@ -29,7 +29,7 @@ import abs.backend.tests.ABSTestRunnerGenerator;
 import abs.backend.tests.ASTBasedABSTestRunnerGenerator;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
-import abs.frontend.delta.exceptions.DeltaModellingException;
+import abs.frontend.delta.DeltaModellingException;
 
 public abstract class ABSUnitTestExecutionJob extends Job {
 

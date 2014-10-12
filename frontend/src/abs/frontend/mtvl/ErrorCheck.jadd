@@ -50,12 +50,44 @@ aspect ErrorCheck {
       getChild(i).checkType(type,c);
   }
   
-  // check if variable is already defined.
+  // check if variable is already defined, and its type is well-formed.
   public void Attribute.collectErrors(SemanticErrorList c) {
     super.collectErrors(c);
-    if (isRepeated)
-      c.add(new SemanticError(this, ErrorMessage.DUPLICATE_VARIABLE, pname()+"."+getName()));
+    if (isRepeated) {
+        c.add(new SemanticError(this, ErrorMessage.DUPLICATE_VARIABLE, pname()+"."+getName()));
+    }
+    this.getAType().collectErrors(c);
   }
+
+  public void UnresolvedMType.collectErrors(SemanticErrorList c) {
+      c.add(new SemanticError(this, ErrorMessage.UNKNOWN_ATTRIBUTE_TYPE,
+                              this.getTypename()));
+  }
+  public void BoolMType.collectErrors(SemanticErrorList c) {
+      if (!(this.getTypename().equals("Bool"))) {
+          c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,
+                                  this.getTypename(), "Bool"));
+      }
+  }
+  public void StringMType.collectErrors(SemanticErrorList c) {
+      if (!(this.getTypename().equals("String"))) {
+          c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,
+                                  this.getTypename(), "String"));
+      }
+  }
+  public void IntMType.collectErrors(SemanticErrorList c) {
+      if (!(this.getTypename().equals("Int"))) {
+          c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,
+                                  this.getTypename(), "Int"));
+      }
+  }
+  public void IntListMType.collectErrors(SemanticErrorList c) {
+      if (!(this.getTypename().equals("Int"))) {
+          c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,
+                                  this.getTypename(), "Int"));
+      }
+  }
+
   
   // type of negation
   public void MNegExp.checkType(Types type,SemanticErrorList c) {
@@ -127,3 +159,6 @@ aspect ErrorCheck {
   }
 
 }
+// Local Variables:
+// mode: java
+// End:

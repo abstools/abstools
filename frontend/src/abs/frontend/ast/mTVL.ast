@@ -3,6 +3,9 @@
 /// mTVL - root and extension ///
 /////////////////////////////////
 
+// If you add classes here, add them to
+// frontend/src/abs/frontend/treecopy/ParseTreeCopy.jadd as well
+
 FeatureModelDecl ::= FeatureDecl* FExt*;
 
 FExt ::= <Name> [Group] AttrConstraints;
@@ -24,10 +27,12 @@ CRange:  Cardinality ::= <CFrom:int> <CTo:int>;
 
 Attribute ::= <Name> AType:MType;
 
-abstract  MType;
-BoolType: MType;
-IntType:  MType ::= Min:BoundaryInt Max:BoundaryInt;
-IntListType:  MType ::= BoundaryVal*;
+abstract  MType ::= <Typename>;
+UnresolvedMType: MType;
+BoolMType: MType;
+StringMType: MType;
+IntMType:  MType ::= Min:BoundaryInt Max:BoundaryInt;
+IntListMType:  MType ::= BoundaryVal*;
 
 abstract BoundaryInt;
 Limit: BoundaryInt;
@@ -84,8 +89,7 @@ MSubAddExp: MAddExp ;
 // Variables and values
 abstract Variable: SimpleExp;
 MValue : SimpleExp ::= Value;
-//BoolVal: SimpleExp ::= <Value:Boolean>;
-//IntVal:  SimpleExp ::= <Value:int>;
+// Concrete values (IntVal, BoolVal, StringVal) are in abs.ast
 
 // variables
 AttVar:  Variable ::= <AName>;

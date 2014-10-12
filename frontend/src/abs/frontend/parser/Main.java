@@ -31,7 +31,11 @@ import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.CompilationUnit;
+import abs.frontend.ast.DataConstructor;
+import abs.frontend.ast.DataTypeDecl;
+import abs.frontend.ast.Decl;
 import abs.frontend.ast.DeltaDecl;
+import abs.frontend.ast.ExceptionDecl;
 import abs.frontend.ast.UpdateDecl;
 import abs.frontend.ast.Product;
 import abs.frontend.ast.ProductLine;
@@ -44,7 +48,9 @@ import abs.frontend.ast.Opt;
 import abs.frontend.ast.StarImport;
 import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
 import abs.frontend.configurator.visualizer.FMVisualizer;
-import abs.frontend.delta.exceptions.DeltaModellingException;
+import abs.frontend.delta.DeltaModellingException;
+import abs.frontend.typechecker.KindedName;
+import abs.frontend.typechecker.KindedName.Kind;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -97,6 +103,8 @@ public class Main {
                abs.backend.java.JavaBackend.main(args);
            } else if (argslist.contains("-erlang")) {
                abs.backend.erlang.ErlangBackend.main(args);
+           } else if (argslist.contains("-prolog")) {
+               abs.backend.prolog.PrologBackend.main(args);
            } else {
                parse(args);
            }
@@ -182,7 +190,8 @@ public class Main {
                 ignoreattr = true;
             } else if (arg.equals("-preprocess")) { //Preprocessor
                     preprocess = true;
-            } else if (arg.equals("-h")) {
+            } else if (arg.equals("-h") || arg.equals("-help")
+                       || arg.equals("--help")) {
                 printUsageAndExit();
             } else
                 remainingArgs.add(arg);
@@ -203,11 +212,6 @@ public class Main {
     
         java.util.List<CompilationUnit> units = new ArrayList<CompilationUnit>();
 
-        if (stdlib)
-            units.add(getStdLib());
-        if (dblib)
-            units.addAll(getDbLibs());
-
         for (String fileName : fileNames) {
             if (fileName.startsWith("-")) {
                 throw new IllegalArgumentException("Illegal option " + fileName);
@@ -226,6 +230,11 @@ public class Main {
         for (String fileName : fileNames) {
            parseFileOrDirectory(units, new File(fileName));
         }
+
+        if (stdlib)
+            units.add(getStdLib());
+        if (dblib)
+            units.addAll(getDbLibs());
 
         List<CompilationUnit> unitList = new List<CompilationUnit>();
         for (CompilationUnit u : units) {
@@ -265,7 +274,29 @@ public class Main {
                 System.err.flush();
             }
         } else {
-            
+            // Handle exceptions: add exceptions as constructors to the
+            // ABS.StdLib.Exception datatype.  This likely cannot be
+            // implemented as a tree rewrite rule on ExceptionDecl since tree
+            // rewrites are not allowed to modify the tree outside of their
+            // scope, and we want to add a DataConstructor elsewhere in the
+            // AST.
+            DataTypeDecl e = (DataTypeDecl)(m.getExceptionType().getDecl());
+            // TODO: if null and not -nostdlib, throw an error
+            if (e != null) {
+                for (Decl decl : m.getDecls()) {
+                    if (decl instanceof ExceptionDecl) {
+                        ExceptionDecl e1 = (ExceptionDecl)decl;
+                        // KLUDGE: what do we do about annotations to exceptions?
+                        DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().fullCopy());
+                        d.setPosition(e1.getStart(), e1.getEnd());
+                        d.setFileName(e1.getFileName());
+                        d.exceptionDecl = e1;
+                        e1.dataConstructor = d;
+                        e.addDataConstructor(d);
+                    }
+                }
+            }
+
             // flatten before checking error, to avoid calculating *wrong* attributes
             if (fullabs) {
                 if (typecheck)
@@ -565,6 +596,7 @@ public class Main {
                 + "  -maude         generate Maude code\n"
                 + "  -java          generate Java code\n"
                 + "  -erlang        generate Erlang code\n"
+                + "  -prolog        generate Prolog\n"
                 + "  -product=<PID> build given product by applying deltas\n"
                 + "                 (PID is the qualified product ID)\n"
                 + "  -notypecheck   disable typechecking\n"

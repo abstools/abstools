@@ -51,7 +51,7 @@ import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Product;
-import abs.frontend.delta.exceptions.DeltaModellingException;
+import abs.frontend.delta.DeltaModellingException;
 
 public class JavaJob extends Job {
 	// debug this class -> enables printlns

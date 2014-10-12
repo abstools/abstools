@@ -1,0 +1,7 @@
+= Introduction
+
+//
+
+include::intro.adoc[]
+//link:intro.html[Abstract Behavioural Specification Language]
+

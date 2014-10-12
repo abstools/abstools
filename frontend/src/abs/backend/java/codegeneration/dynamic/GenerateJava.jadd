@@ -354,6 +354,10 @@ aspect GenerateJavaDynamic_Core {
         // generate nothing as type synonyms do not appear in the Java outout
     }
 
+    public void ExceptionDecl.generateJavaDynamic(PrintStream stream) {
+        // generate nothing as exceptions are rewritten to datatypes
+    }
+
     public void Block.generateJavaDynamic(PrintStream stream) {
         generateJavaDynamic(stream, false);
     }

@@ -1,0 +1,47 @@
+module Downloading;
+
+data Chunk = Chunk(Int chunksize);
+
+interface Handset {
+    Unit receiveChunk(Chunk chunk);
+}
+
+class Handset(Server server) implements Handset {
+    Unit receiveChunk(Chunk chunk) {
+        skip;
+    }
+
+    Unit run() {
+        server!notifyBandwidth(this, random(500));
+        Int t = random(3);
+        await duration(t, t);
+    }
+}
+
+interface Server {
+    Unit notifyBandwidth(Handset handset, Int bandwidth);
+}
+
+class Server(Set<Chunk> chunks) implements Server {
+    Map<Handset, Int> bandwidths = EmptyMap;
+    Map<Handset, Set<Chunk>> tosend = EmptyMap;
+    
+    Unit notifyBandwidth(Handset handset, Int bandwidth) {
+        bandwidths = put(bandwidths, handset, bandwidth);
+        if (~(contains(keys(tosend), handset))) {
+            tosend = put(tosend, handset, chunks);
+            this!handle(handset);
+        }
+    }
+
+    Unit handle(Handset handset) {
+        Set<Chunk> chunks = lookupDefault(tosend, handset, EmptySet);
+        while (chunks != EmptySet) {
+            // TODO: look up bandwidth, choose right chunk to send
+            Chunk chunk = take(chunks);
+            await handset!receiveChunk(chunk);
+            chunks = remove(chunks, chunk);
+        }
+    }
+}
+

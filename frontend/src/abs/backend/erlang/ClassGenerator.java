@@ -54,28 +54,35 @@ public class ClassGenerator {
         for (MethodImpl m : classDecl.getMethodList()) {
             MethodSig ms = m.getMethodSig();
             ErlUtil.functionHeader(ecs, "m_" + ms.getName(), generatorClassMatcher(), ms.getParamList());
+            ecs.println("try");
+            ecs.incIndent();
             m.getBlock().generateErlangCode(ecs, Vars.n(ms.getParamList()));
-            ecs.println(".");
-            ecs.decIndent();
             ecs.println();
+            ecs.decIndent().println("catch");
+            ecs.incIndent();
+            ecs.println("exit:Error -> object:die(O, Error);");
+            ecs.println("throw:Error -> exit(Error)");
+            ecs.decIndent().println("end.");
+            ecs.decIndent();
         }
 
     }
 
     private void generateConstructor() {
         ErlUtil.functionHeaderParamsAsList(ecs, "init", generatorClassMatcher(), classDecl.getParamList(), Mask.none);
+        Vars vars = Vars.n();
         for (ParamDecl p : classDecl.getParamList()) {
             ecs.pf("set(O,%s,%s),", p.getName(), "P_" + p.getName());
         }
         for (FieldDecl p : classDecl.getFields()) {
             if (p.hasInitExp()) {
                 ecs.format("set(O,%s,", p.getName());
-                p.getInitExp().generateErlangCode(ecs, Vars.n());
+                p.getInitExp().generateErlangCode(ecs, vars);
                 ecs.println("),");
             }
         }
         if (classDecl.getInitBlock() != null) {
-            classDecl.getInitBlock().generateErlangCode(ecs, Vars.n());
+            classDecl.getInitBlock().generateErlangCode(ecs, vars);
             ecs.println(",");
         }
         if (classDecl.isActiveClass())

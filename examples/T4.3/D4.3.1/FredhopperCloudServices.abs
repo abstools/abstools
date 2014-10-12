@@ -1,0 +1,1442 @@
+module FredhopperCloudServices;
+
+import * from ABS.DC;
+
+//abstraction for a customer
+type Customer = String;
+
+//abstraction for an identifier
+type Id = Int;
+def Id init() = 1;
+def Id incr(Id id) = id + 1;
+
+//abstraction for a request
+type Request = Int;
+def Int cost(Request request) = request;
+
+//abstraction for a response
+type Response = Bool;
+def Response success() = True;
+def Bool isSuccess(Response response) = response; 
+
+//There exists an enumerated number of service types... 
+data ServiceType = FAS | SUGGEST | DM;
+
+// A Service configuration defines 
+// * serviceType -- the type of service offered
+// * instances -- the amount of resources each instance would consume
+data Config = Config(ServiceType serviceType, List<DCData> instances); 
+
+// Process state
+data State = RUNNING | STOP;
+
+def Maybe<X> mapValue<X, A>(Map<X, A> ss, A e) =
+  case ss {
+    EmptyMap => Nothing;
+    InsertAssoc(p, y) => 
+      case p {
+      	Pair(x, e) => Just(x);
+      	_ => mapValue(y, e);  
+      };
+  };
+
+//remove the first occurence of v in list 
+def List<X> removeFirst<X>(List<X> list, X v) =
+	case list {
+		Nil => Nil;
+		Cons(v,vs) => vs;
+		Cons(x,vs) => Cons(x, removeFirst(vs, v));
+	};
+  
+//check if there is at least one occurence of v in list 
+def Bool inList<X>(List<X> list, X v) =
+	case list {
+		Nil => False;
+		Cons(v, vs) => True;
+		Cons(_, vs) => inList(vs, v);
+	};
+	
+//check if list contains only unique elements
+def Bool unique<X>(List<X> list) =
+	case list {
+		Nil => True;
+		Cons(v, vs) => if inList(vs, v) then False else unique(vs);
+	};
+
+//add v to list if v is not in list
+def List<X> add<X>(List<X> list, X v) = 
+	if inList(list, v) then list else Cons(v, list);
+
+//  Models an infrastructure service that allows one to acquire and release resources
+interface InfrastructureService {
+	DC acquire(Id id, DCData amount);
+	Unit release(DC component);
+}
+
+class InfrastructureServiceImpl implements InfrastructureService {
+	
+	Int total = 0;
+	Map<Id, DC> inUse = EmptyMap;
+	
+	Int cpu(DC dc) {
+		Fut<DCData> cf = dc!available();
+		DCData cpu = cf.get;
+		return capacity(cpu);
+	}
+		
+	DC acquire(Id id, DCData amount) {
+		assert amount != InfCPU;
+		Maybe<DC> md = lookup(inUse, id);
+		DC dc = null;
+		case md {
+			Nothing => {
+				dc = new DeploymentComponent(intToString(id), amount);
+				total = total + capacity(amount);
+				inUse = InsertAssoc(Pair(id, dc), inUse);
+			}
+			Just(d) => {
+				dc = d;
+				Int cpu = this.cpu(dc);
+				Int amt = capacity(amount);
+				if (cpu < amt) {
+					Fut<Unit> inf = dc!incrementResources(amt - cpu); inf.get;
+					total = total + amt;
+				}	
+			}
+		}
+		return dc;
+	}
+	
+	Unit release(DC component) {
+		Maybe<Int> id = mapValue(inUse, component);
+		assert id != Nothing;
+		inUse = removeKey(inUse, fromJust(id));
+		Int cpu = this.cpu(component);
+		total = total - cpu;
+	}
+}
+
+// An endpoint is where service user connects to a service
+interface EndPoint {
+	Response invoke(Request request);
+	Unit setStatus(State status);
+	State getStatus();
+}
+
+interface LoadBalancerEndPoint extends EndPoint {
+	//bring service instance off from load balancer
+	Bool remove(Service service);
+	//bring service instance on to load balancer
+	Bool add(Service service);
+}
+
+// A service instance offers a single end point 
+// A service has a service type, defining the kind of service offered
+// A service belong to a customer
+// A service exposes logging information
+interface Service extends EndPoint {
+	Id getServiceId();
+	ServiceType getServiceType();
+	Customer getCustomer();
+	Int getLatency();
+	Int getRequestCount();
+	Int getCPU();
+}
+
+// load balance over n services in round robin style
+class LoadBalancerEndPointImpl(List<Service> services) implements LoadBalancerEndPoint {
+
+	Int log = 0;
+	State state = STOP;
+	List<Service> current = services;
+	
+	{
+		assert services != Nil;
+		assert unique(services);
+	}
+
+	Bool remove(Service service) {
+		assert length(services) > 1;
+		Bool result = False;	
+		if (inList(services, service)) {
+			services = removeFirst(services, service);
+			current = removeFirst(current, service);
+			result = True;
+		}
+		return result;
+	}
+	
+	Bool add(Service service) {
+		Bool result = False;	
+		if (~inList(services, service)) {
+			services = Cons(service, services);
+			current = Cons(service, services); 
+			result = True;
+		}
+		return result;
+	}
+
+	Response invoke(Request request) {
+		log = log + 1;
+		assert state != STOP;
+		if (current == Nil) {
+			current = services;
+		}
+		EndPoint p = head(current);
+		current = tail(current);
+		return await p!invoke(request);
+	}
+	
+	Unit setStatus(State state) {
+		this.state = state;
+	}
+	
+	State getStatus() {
+		return state;
+	}
+}
+
+// An interface offered to InfrastructureService to allocate resources
+interface ResourceService extends Service {
+	Unit moveTo(DeploymentComponent dc);
+}
+
+class ServiceImpl(Id serviceId, ServiceType st, Customer c, Int cost) implements ResourceService {
+
+	Int latency = 0;
+	Int log = 0;
+	State state = STOP;
+	
+	Int getCPU() {
+		DeploymentComponent dc = thisDC();
+		Fut<DCData> fdt = dc!total();
+		DCData dt = fdt.get;
+		return capacity(dt);
+	}
+	
+	Unit moveTo(DeploymentComponent dc) {
+		movecogto dc;
+	}
+	
+	Int cost(Request request) {
+		return max(1, cost(request)) * cost;
+	}
+	
+	Int getLatency() {
+		return latency;
+	}
+	
+	Int getRequestCount() {
+		return log;
+	}
+
+	State getStatus() {
+		return state;
+	}
+	
+	Unit setStatus(State state) {
+		this.state = state;	
+	}
+
+	Id getServiceId() {
+		return serviceId;
+	}
+	
+	Response invoke(Request request) {
+		assert state == RUNNING;
+		Int cost = this.cost(request);
+		Int time = currentms();
+		[Cost: cost] log = log + 1;
+		time = currentms() - time;
+		latency = max(latency, time); 
+		return success();
+	}
+
+	ServiceType getServiceType() { 
+		return st;
+	}
+
+	Customer getCustomer() {
+		return c;
+	}
+	
+}
+
+// A deployment service helps to deploy ALL types of service instance onto required resources.
+interface DeploymentService {
+	Unit install(ResourceService service, DCData res);
+	Unit uninstall(Id serviceId);
+	Unit start(Id serviceId);
+	Unit stop(Id serviceId);
+} 
+
+class DeploymentServiceImpl(InfrastructureService rp) implements DeploymentService {
+
+	Map<Service, DC> allocations = EmptyMap;
+	Map<Id, Service> services = EmptyMap;
+
+	Unit install(ResourceService service, DCData res) {
+		Int id = await service!getServiceId();
+		assert lookup(services, id) == Nothing;
+		
+		//allocate resource
+		DC dc = await rp!acquire(id, res);
+		await service!moveTo(dc);
+		
+		allocations = InsertAssoc(Pair(service, dc), allocations);
+		services = InsertAssoc(Pair(id, service), services);
+	}
+	
+	Service lookup(Id id) {
+		Maybe<Service> s = lookup(services, id);
+		assert s != Nothing;
+		return fromJust(s);
+	}
+	
+	Unit uninstall(Id serviceId) {
+		Service service = this.lookup(serviceId);
+		State state = await service!getStatus();
+		assert state == STOP;
+
+		Maybe<DC> md = lookup(allocations, service);
+		assert md != Nothing;
+
+		await rp!release(fromJust(md));  
+		
+		allocations = removeKey(allocations, service);
+		services = removeKey(services, serviceId);
+	}
+	
+	Unit invoke(Id serviceId, State state) {
+		Service service = this.lookup(serviceId);
+		await service!setStatus(state);
+	}
+	
+	Unit start(Id serviceId) {
+		this.invoke(serviceId, RUNNING);
+	}
+	
+	Unit stop(Id serviceId) {
+		this.invoke(serviceId, STOP);
+	}
+}
+
+// A load balancer service distributes request over service instances
+// A load balancer can enable or disable a service
+interface LoadBalancerService {
+	Bool disable(Id endPointId);
+	Bool enable(Id endPointId);
+	Bool add(List<Service> services, Int endPointId);
+	Bool remove(Id endPointId);
+	Maybe<EndPoint> getServiceEndPoint(Int endPointId);
+	//take service off load balancing
+	Bool decrease(Id endPointId, List<Service> services);
+	//put service on load balancing 
+	Bool increase(Id endPointId, List<Service> services);
+}
+
+//enum to specify whether to increase/decrease load balance resource
+data LBOp = INCR | DECR;
+
+class LoadBalancerServiceImpl implements LoadBalancerService {
+
+	//from end point id to end point
+	Map<Int, LoadBalancerEndPoint> endPoints = EmptyMap;
+	
+	Bool change(Id endPointId, List<Service> services, LBOp op) {
+		Bool result = False;
+		Maybe<LoadBalancerEndPoint> ep = lookup(endPoints, endPointId);
+		if (ep != Nothing) {
+			LoadBalancerEndPoint endPoint = fromJust(ep);
+			while (services != Nil) {
+				Fut<Bool> fb;
+				if (op == INCR) {
+					fb = endPoint!add(head(services));
+				} else {
+					fb = endPoint!remove(head(services));
+				}
+				Bool b = fb.get; 
+				result = result || b; 
+				services = tail(services);
+			}
+		}
+		return result;
+	}
+	
+	Bool decrease(Id endPointId, List<Service> services) {
+		Bool result = this.change(endPointId, services, DECR);
+		return result;
+	}
+	
+	Bool increase(Id endPointId, List<Service> services) {
+		Bool result = this.change(endPointId, services, INCR);
+		return result;
+	}
+
+	Bool status(Id id, State state) {
+		Maybe<EndPoint> mep = lookup(endPoints, id);
+		Bool success = False;
+		if (mep != Nothing) {
+			EndPoint point = fromJust(mep);
+			await point!setStatus(state);
+			success = True;	
+		}
+		return success;
+	}
+
+	Bool disable(Id id) {
+		return this.status(id, STOP);
+	}
+	
+	Bool enable(Id id) {
+		return this.status(id, RUNNING);	
+	}
+	
+	Bool add(List<Service> services, Int endPointId) {
+		Bool added = False;
+		Maybe<EndPoint> mep = lookup(this.endPoints, endPointId);
+		if (mep == Nothing) {
+			LoadBalancerEndPoint ep = new LoadBalancerEndPointImpl(services);
+			endPoints = put(endPoints, endPointId, ep);
+			added = True;
+		}
+		return added;
+	}
+	
+	Bool remove(Id endPointId) {
+		Bool removed = False;
+		Maybe<EndPoint> mep = lookup(this.endPoints, endPointId);
+		if (mep != Nothing) {
+			EndPoint point = fromJust(mep);
+			State state = await point!getStatus();
+			assert state == STOP;
+			this.endPoints = removeKey(this.endPoints, endPointId);
+			removed = True;
+		}
+		return removed;
+	}
+	
+	Maybe<EndPoint> getServiceEndPoint(Id endPointId) {
+		return lookup(endPoints, endPointId);
+	}
+}
+
+//Platform service can create and remove a service
+interface PlatformService {
+	//return end point id
+	Id createService(Config config, Customer customer);
+	Unit removeService(Id endPoint);
+	
+}
+
+//Platform service used by monitor to scale up/down a service
+interface MonitorPlatformService extends PlatformService {
+	//increase the number of service instances by n
+	Unit incrService(Id endPoint, List<DCData> instances);
+	//decrease the number of service instances by n
+	Unit decrService(Id endPoint, List<Id> serviceIds);
+	//all existing endpoints 
+	List<Id> getEndPoints();
+	//service instance with the given id
+	Maybe<Service> getService(Id serviceId);
+	//service instance ids of all 'deployed' service instances referred by the given endPoint
+	List<Id> getServiceIds(Id endPoint);
+	//alter the resource of serviceId underlying resource by r
+	Unit alterResource(Id serviceId, DCData r);
+}
+
+def List<X> toList<X>(Set<X> s) =
+	case s {
+		EmptySet => Nil;
+		Insert(x, xs) => Cons(x, toList(xs));
+	};
+
+def Maybe<Pair<Config, Int>> lookupService(Map<Config, Int> cs, ServiceType s) =
+	case cs {
+		EmptyMap => Nothing;
+		InsertAssoc(Pair(Config(s, ls), e), _) => Just(Pair(Config(s, ls), e));
+		InsertAssoc(_, ms) => lookupService(ms, s);
+	};   
+
+def Maybe<Pair<Config, Int>> lookupCustomerService(Map<Customer, Map<Config, Int>> cs, Customer c, ServiceType s) =
+	case lookupDefault(cs, c, EmptyMap) {
+		EmptyMap => Nothing;
+		map => lookupService(map, s);
+	};
+	
+def Map<Config, Int> removeLocalEndPoint(Map<Config, Int> cs, Int e) = 
+	case cs {
+		EmptyMap => EmptyMap;
+		InsertAssoc(Pair(_,e), cs) => cs;
+		InsertAssoc(kv, ms) => InsertAssoc(kv, removeLocalEndPoint(ms, e));
+	};
+	
+	
+def Map<Customer, Map<Config, Int>> removeGlobalEndPoint(Map<Customer, Map<Config, Int>> cs, Int e) =
+	case cs {
+		EmptyMap => EmptyMap;
+		InsertAssoc(Pair(c, map), cs) => 
+			case removeLocalEndPoint(map, e) {
+				EmptyMap => removeGlobalEndPoint(cs, e);
+				newMap => InsertAssoc(Pair(c, newMap), removeGlobalEndPoint(cs, e)); 
+			};
+	};
+	
+def Maybe<Pair<X, Y>> keyPairs<X, Y, Z>(Map<X, Map<Y, Z>> map, Z z) =
+	case map {
+		EmptyMap => Nothing;
+		InsertAssoc(Pair(x, cm), ms) =>
+			case mapValue(cm, z) {
+				Nothing => keyPairs(ms, z);
+				Just(y) => Just(Pair(x, y));
+			};
+	};
+	
+def Map<Customer, Map<Config, Int>> updateConfig(Map<Customer, Map<Config, Int>> cs, Customer c, Config o, Config n) =
+	case lookup(cs, c) {
+		Nothing => cs;
+		Just(cm) => 
+			case lookup(cm, o) {
+				Nothing => cs;
+				Just(e) => put(cs, c, put(removeKey(cm, o), n, e)); 
+			}; 
+	};
+	
+def List<X> take<X>(List<X> ls, Int n) =
+	case ls {
+		Nil => Nil;
+		Cons(x, xs) => if n == 0 then Nil else Cons(x, take(xs, n - 1));
+	};
+	
+def Bool inListAll<X>(List<X> ls, List<X> ms) = 
+	case ms {
+		Nil => True;
+		Cons(m, mm) => inListAll((if inList(ls, m) then removeFirst(ls, m) else ls), mm);   
+	}; 
+	
+def List<X> removeAllinList<X>(List<X> ls, List<X> ms) = 
+	case ms {
+		Nil => Nil;
+		Cons(m, mm) => removeAllinList(without(ls, m), mm);   
+	}; 
+	
+def Map<X, Y> removeAll<X, Y>(Map<X, Y> map, List<X> xs) =
+	case xs {
+		Nil => map;
+		Cons(x, nx) => removeAll(removeKey(map, x), nx);
+	};
+	
+def List<X> difference<X>(List<X> xs, List<X> ys) =
+	case ys {
+		Nil => Nil;
+		Cons(y, ny) => difference(without(xs, y), ny);
+	};
+	
+def List<Y> lookupMap<X, Y>(Map<X, Y> map, List<X> xs) =
+	case xs {
+		Nil => Nil;
+		Cons(x, nx) => 
+			case lookup(map, x) {
+				Nothing => lookupMap(map, nx);
+				Just(v) => Cons(v, lookupMap(map, nx));
+			};
+	};
+	
+def List<Z> lookupTwoMaps<X, Y, Z>(Map<X, List<Y>> m1, Map<Y, Z> m2, X x) =
+	case lookup(m1, x) {
+		Nothing => Nil;
+		Just(vs) => lookupMap(m2, vs);
+	};
+	
+class PlatformServiceImpl(DeploymentService ds, LoadBalancerService ls) 
+implements MonitorPlatformService {
+
+	// service instance id to service instance
+	Map<Id, ResourceService> services = EmptyMap;
+	
+	// service instance id to end point id
+	Map<Id, Int> serviceToEndPoints = EmptyMap;
+	
+	// end point id to service instance id
+	Map<Id, List<Id>> endPoints = EmptyMap;
+	
+	//customer setting to endpoint ids
+	Map<Customer, Map<Config, Id>> customers = EmptyMap;
+	
+	Id serviceId = init();
+	
+	Id createService(Config config, Customer customer) {
+		//this customer cannot already have the same service deployed
+		ServiceType st = serviceType(config);
+		assert lookupCustomerService(customers, customer, st) == Nothing;
+	
+		List<DCData> instances = instances(config);
+		//number of instances must be positive
+		assert instances != Nil;
+		
+		//endpoint id
+		Int endPoint = serviceId + 1;
+		
+		//create service instances
+		List<Service> currentServices = Nil;
+		List<Id> ids = Nil;
+		
+		while (instances != Nil) {
+			DCData res = head(instances);
+			Service service = this.createServiceInstance(customer, st, res);
+			Fut<Id> idf = service!getServiceId();
+			Id id = idf.get;
+			ids = Cons(id, ids);
+			serviceToEndPoints = InsertAssoc(Pair(id, endPoint), serviceToEndPoints);
+			currentServices = Cons(service, currentServices);
+			instances = tail(instances);		
+		}
+		
+		//associate endpoint with service instances
+		endPoints = InsertAssoc(Pair(endPoint, ids), endPoints);
+		
+		//update customer record
+		customers = put(customers, customer, put(lookupDefault(customers, customer, EmptyMap), config, endPoint));
+		
+		//add services to load balancer 
+		await ls!add(currentServices, endPoint);
+		
+		//enable service
+		await ls!enable(endPoint);
+		
+		return endPoint;
+	}
+	
+	Unit removeService(Int endPoint) {
+	
+		//disable end point 
+		Bool b = await ls!disable(endPoint); 
+		assert b;
+		
+		//remove from load balancer
+		b = await ls!remove(serviceId);
+		assert b;
+		
+		//remove service instance
+		List<Id> sids = lookupDefault(endPoints, endPoint, Nil); 
+		while (sids != Nil) {
+			Id id = head(sids);
+		
+			//remove from map
+			services = removeKey(services, id);
+			serviceToEndPoints = removeKey(serviceToEndPoints, id);
+			
+			//stop it
+			await ds!stop(id);
+			await ds!uninstall(id);
+			
+			sids = tail(sids);	
+		}
+		
+		//remove from customer record
+		endPoints = removeKey(endPoints, endPoint);
+		customers = removeGlobalEndPoint(customers, endPoint);
+	}
+	
+	Service createServiceInstance(Customer customer, ServiceType st, DCData resource) {
+		serviceId = incr(serviceId);
+		
+		Id id = serviceId;
+		
+		//base query costs at least 2 time unit 
+		ResourceService service = new ServiceImpl(id, st, customer, 2);
+			
+		//register with deployment service with appropriate resource
+		Fut<Unit> sf = ds!install(service, resource); sf.get;
+		
+		//start instance
+		Fut<Unit> uf = ds!start(id); sf.get;
+		
+		//update record
+		services = put(services, id, service);
+		
+		return service;
+	} 
+	
+	Unit incrService(Id endPoint, List<DCData> instances) {
+		 assert instances != Nil;
+	
+		 Maybe<Pair<Customer, Config>> setting = keyPairs(customers, endPoint);
+		 assert setting != Nothing;
+		 
+		 Customer customer = fst(fromJust(setting)); 
+		 Config oldC = snd(fromJust(setting));
+		 
+		 ServiceType st = serviceType(oldC);
+		 
+		 //install and start a new service instance
+		 List<Service> es = Nil;
+		 List<Id> ids = Nil;
+		 List<DCData> remaining = instances;
+		 while (remaining != Nil) {
+		 	DCData res = head(remaining);
+		 	Service service = this.createServiceInstance(customer, st, res);
+		 	
+		 	//get the service instance id
+		 	Fut<Int> idf = service!getServiceId();
+		 	Id id = idf.get;
+		 	
+		 	//update record
+		 	serviceToEndPoints = InsertAssoc(Pair(id, endPoint), serviceToEndPoints);
+			ids = Cons(id, ids);
+		 	es = Cons(service, es);
+		 	remaining = tail(remaining);
+		 }
+		 
+  	 	 //update record
+	 	 endPoints = put(endPoints, endPoint, concatenate(ids, lookupDefault(endPoints, endPoint, Nil)));
+
+		 //add to load balancer
+		 Fut<Bool> fb = ls!increase(endPoint, es); 
+		 Bool increased = fb.get;
+		 assert increased;
+		 
+		 //update record
+		 customers = updateConfig(customers, customer, oldC, Config(st, concatenate(instances, instances(oldC))));
+	}
+	
+	Unit decrService(Id endPoint, List<Id> serviceIds) {
+		Maybe<Pair<Customer, Config>> setting = keyPairs(customers, endPoint);
+		assert setting != Nothing;
+		
+		Customer customer = fst(fromJust(setting)); 
+		Config oldC = snd(fromJust(setting));
+		
+		ServiceType st = serviceType(oldC);
+		
+		Maybe<List<Id>> msers = lookup(endPoints, endPoint);
+		assert msers != Nothing;
+		
+		//cannot scale down to 0 instance
+		//or can we?... 
+		List<Id> sers = fromJust(msers);
+		assert inListAll(sers, serviceIds);
+		
+		List<Service> deployed = Nil;
+		List<Id> remains = serviceIds;
+		while (remains != Nil) {
+			Id serviceId = head(remains); 
+			Maybe<Service> mdeployed = lookup(services, serviceId);
+			assert mdeployed != Nothing;
+			deployed = Cons(fromJust(mdeployed), deployed);
+			remains = tail(remains);
+		}
+		 
+		//remove from load balancer
+		Fut<Bool> fb = ls!decrease(endPoint, deployed); 
+		Bool decreased = fb.get;
+		assert decreased;
+			 
+		//uninstall
+		remains = serviceIds;
+		List<DCData> current = instances(oldC);
+		while (remains != Nil) {
+			Id serviceId = head(remains); 
+			Fut<Unit> sf = ds!stop(serviceId); sf.get;
+			sf = ds!uninstall(serviceId); sf.get;
+	
+			//update record
+			serviceToEndPoints = removeKey(serviceToEndPoints, serviceId);
+			services = removeKey(services, serviceId);
+			remains = tail(remains);
+			current = tail(current);
+		} 
+		
+		//update record
+		endPoints = put(endPoints, endPoint, difference(lookupDefault(endPoints, endPoint, Nil), serviceIds));
+		customers = updateConfig(customers, customer, oldC, Config(st, current));
+	}
+	
+	Unit uninstallInstance(Id endPoint, Service s, Id serviceId) {
+		//remove from load balancer
+		Fut<Bool> bf = ls!decrease(endPoint, list[s]); bf.get;
+			
+		//stop service
+		Fut<Unit> uf = ds!stop(serviceId); uf.get;
+			 
+		//uninstall service
+		uf = ds!uninstall(serviceId); uf.get;
+	}
+	
+	Unit alterResource(Id serviceId, DCData r) {
+		Maybe<ResourceService> mservice = lookup(services, serviceId);
+		assert mservice != Nothing;
+		ResourceService ser = fromJust(mservice);
+		
+		Fut<Int> fcpu = ser!getCPU();
+		Int cpu = fcpu.get;
+		
+		Maybe<Int> mendPoint = lookup(serviceToEndPoints, serviceId);
+		assert mendPoint != Nothing;
+		
+		Int endPoint = fromJust(mendPoint);
+		
+		List<Int> instances = lookupDefault(endPoints, endPoint, Nil);
+		if (length(instances) <= 1) {
+			//create a new service in place of the old one
+			Fut<Customer> fc = ser!getCustomer(); 
+			Customer customer = fc.get;
+			
+			Fut<ServiceType> fs = ser!getServiceType();
+			ServiceType st = fs.get;
+			
+			Service newSer = this.createServiceInstance(customer, st, CPU(cpu + capacity(r)));
+			Fut<Int> idf = newSer!getServiceId();
+			Int newId = idf.get;
+			
+			//add to load balancer
+		 	Fut<Bool> fb = ls!increase(endPoint, list[newSer]);
+		 	Bool increased = fb.get;
+		 	assert increased;
+		 	
+			//update record
+			serviceToEndPoints = InsertAssoc(Pair(newId, endPoint), serviceToEndPoints);
+			List<Int> allInstances = Cons(newId, lookupDefault(endPoints, endPoint, Nil));
+			
+			//remove old instance
+		 	this.uninstallInstance(endPoint, ser, serviceId);
+		 	
+		 	//update record
+		 	serviceToEndPoints = removeKey(serviceToEndPoints, serviceId);
+			services = removeKey(services, serviceId);
+		 	endPoints = put(endPoints, endPoint, without(allInstances, serviceId));
+		} else {
+			//remove old instance
+		 	this.uninstallInstance(endPoint, ser, serviceId);
+			
+			//new installation on different resources
+			Fut<Unit> uf = ds!install(ser, CPU(cpu + capacity(r))); uf.get;
+			
+			//start service
+			uf = ds!start(serviceId); uf.get;
+			
+			//add to load balancer
+			Fut<Bool> bf = ls!increase(endPoint, list[ser]); bf.get;
+		}
+	}
+	
+	List<Id> getEndPoints() {
+		return toList(keys(endPoints)); 
+	}
+	
+	List<Id> getServiceIds(Id endPoint) {
+		return lookupDefault(endPoints, endPoint, Nil);
+	}
+	
+	Maybe<Service> getService(Id serviceId) {
+		return lookup(services, serviceId);
+	}
+	
+}
+
+interface User {
+	Unit use(EndPoint endPoint, Int min, Int max);
+}
+
+//a user invokes a service endpoint repeatedly 
+class RepeatUserImpl implements User {
+
+	Int log = 0;
+	
+	Unit use(EndPoint endPoint, Int min, Int max) {
+		Int count = 0;
+		while (True) {
+			State state = this.getState(endPoint);
+			if (state == RUNNING) {
+				log = log + 1;
+				Response res = this.invoke(endPoint, min, max);
+			}
+		}
+	}
+	
+	Response invoke(EndPoint point, Int min, Int max) {
+		return this.invokeWithSize(point, min, max, 0);	
+	}
+	
+	Response invokeWithSize(EndPoint point, Int min, Int max, Request request) {
+		await duration(min, max);
+		Fut<Response> bf = point!invoke(request);
+		Response b = bf.get;
+		return b;	
+	}
+	
+	State getState(EndPoint point) {
+		Fut<State> sf = point!getStatus();
+		State state = sf.get;
+		return state;
+	}
+}
+
+data Rule = Rule(Int interval, Monitor monitor); 
+
+def Map<X, Map<X, Y>> reset<X, Y>(Map<X, Map<X, Y>> map, X x) =
+	case map {
+		EmptyMap => EmptyMap;
+		InsertAssoc(Pair(k, ns), ms) =>
+			case lookup(ns, x) {
+				Nothing => InsertAssoc(Pair(k, ns), reset(ms, x));
+				Just(y) => InsertAssoc(Pair(k, put(removeKey(ns, x), k, y)), reset(ms, x));
+			};
+	};
+
+def List<Y> lookupAllSecond<W, X, Y>(Map<W, Map<X, List<Y>>> map, X x) =
+	case map {
+		EmptyMap => Nil;
+		InsertAssoc(Pair(w, ns), ms) => concatenate(lookupDefault(ns, x, Nil), lookupAllSecond(ms, x));
+	};
+
+//return the value from the pair-key-value map of the first pair-key whose first element is w, return d otherwise.  
+def Y lookupFirstDefault<W, X, Y>(Map<Pair<W, X>, Y> map, W w, Y d) =
+	case map {
+		EmptyMap => d;
+		InsertAssoc(Pair(Pair(w, _), y), _) => y;
+		InsertAssoc(_, ms) => lookupFirstDefault(ms, w, d);
+	};
+
+def Map<Int, Y> decr1<Y>(Map<Int, Y> map) =
+	case map {
+		EmptyMap => EmptyMap;
+		InsertAssoc(Pair(w, y), ms) => InsertAssoc(Pair(w - 1, y), decr1(ms)); 
+	};
+	
+def Map<X, Map<Int, Y>> decr<X, Y>(Map<X, Map<Int, Y>> map) =
+	case map {
+		EmptyMap => EmptyMap;
+		InsertAssoc(Pair(w, ns), ms) => InsertAssoc(Pair(w, decr1(ns)), decr(ms)); 
+	};
+
+def Map<Pair<W, X>, List<Y>> putTable<W, X, Y>(Map<Pair<W, X>, List<Y>> map, W w, X x, Y y) =
+	put(map, Pair(w, x), Cons(y, (lookupFirstDefault(map, w, Nil))));
+	
+//remove the first (and should be only) occurence of key-value pair (x,y) from map 	
+def Maybe<Pair<X, Y>> lookupFirstKey<X, Y, Z>(Map<Pair<X, Y>, Z> map, X x) =
+	case map {
+		EmptyMap => Nothing;
+		InsertAssoc(Pair(Pair(x, y), _), _) => Just(Pair(x, y));
+		InsertAssoc(_, ms) => lookupFirstKey(ms, x);
+	};
+
+interface MonitoringService {
+	Unit add(Rule rule);
+	Unit remove(Rule rule);
+}
+
+class MonitoringServiceImpl implements MonitoringService {
+
+	Int log = 0;
+
+	//map a interval-elapsed time pair to the corresponding scheduled map of executable monitor/action 
+	Map<Int, Map<Int, List<Monitor>>> monitorMap = EmptyMap;
+	
+	Unit add(Rule rule) {
+		Int interval = interval(rule);
+		assert interval > 0;
+		Monitor monitor = monitor(rule);
+		Fut<Unit> fu = monitor!init(); fu.get;
+		
+		Map<Int, List<Monitor>> thisInterval = lookupDefault(monitorMap, interval, EmptyMap);
+		List<Monitor> monitors = lookupDefault(thisInterval, interval, Nil);
+		monitorMap = put(monitorMap, interval, put(thisInterval, interval, Cons(monitor, monitors)));
+	}
+	
+	Unit remove(Rule rule) {
+		Int interval = interval(rule);
+		Monitor monitor = monitor(rule);
+		Map<Int, List<Monitor>> thisInterval = lookupDefault(monitorMap, interval, EmptyMap);
+		Set<Int> keys = keys(thisInterval);
+		
+		Bool done = False;
+		while (keys != EmptySet && ~done) {
+			Pair<Set<Int>, Int> nt = next(keys);
+			List<Monitor> monitors = lookupDefault(thisInterval, snd(nt), Nil);
+			if (inList(monitors, monitor)) {
+				monitorMap = put(monitorMap, interval, put(thisInterval, snd(nt), without(monitors, monitor)));
+				done = True;
+			} else {
+				keys = fst(nt);
+			}
+		}
+	}
+	
+	Unit run() {
+		while (True) {
+		
+			// advance clock
+			await duration(1, 1);
+			
+			log = log + 1;
+			
+			//count down
+			monitorMap = decr(monitorMap);
+			
+			//find all to be run
+			List<Monitor> toBeRun = lookupAllSecond(monitorMap, 0);
+			
+			//reset
+			monitorMap = reset(monitorMap, 0);
+		
+			//execute monitors
+			List<Fut<Unit>> futs = Nil;
+			while (toBeRun != Nil) {
+				Monitor mon = head(toBeRun);
+				Fut<Unit> f = this!execute(mon);
+				futs = Cons(f, futs);
+				toBeRun = tail(toBeRun);
+			}
+			
+			while (futs != Nil) {
+				Fut<Unit> f = head(futs);
+				await f?;
+				f.get;
+				futs = tail(futs);
+			}
+		}
+	}
+	
+	Unit execute(Monitor monitor) {
+		Action action = await monitor!monitor();
+		if (action != null) {
+			Fut<Unit> u = action!action(); await u?; u.get;
+		}
+	}
+	
+}
+
+interface Monitor {
+
+	//initialise this monitor
+	Unit init();
+
+	//execute this monitor
+	//and return a nullable action 
+	Action monitor();
+}
+
+interface Action {
+	Unit action();
+}
+
+//A monitor that checks the latency of a service endpoint
+class LatencyMonitor(Int upper, MonitorPlatformService ps) implements Monitor {
+	
+	Int log = 0;
+	
+	Unit init() { }
+	
+	DCData scaling(Service logger, Int latency) {
+		Fut<Int> fcpu = logger!getCPU();
+		Int cpu = fcpu.get;
+		Rat amount = cpu * (latency - upper/latency);
+		return CPU(max(1, truncate(amount)));
+	}
+	
+	List<Pair<Id, DCData>> getLatencies(Int endPoint) {
+		List<Pair<Id, DCData>> scaling = Nil;
+		Fut<List<Id>> fservices = ps!getServiceIds(endPoint);
+		List<Id> services = fservices.get;
+		while (services != Nil) {
+			Id serviceId = head(services);
+			Fut<Maybe<Service>> lf = ps!getService(serviceId);
+			Maybe<Service> ml = lf.get;
+			assert ml != Nothing;
+			Service logger = fromJust(ml);
+			Fut<Int> lif = logger!getLatency();
+			Int latency = lif.get;
+			if (latency > upper) {
+				DCData res = this.scaling(logger, latency);
+				scaling = Cons(Pair(serviceId, res), scaling);
+			}
+			services = tail(services);
+		}
+		return scaling;
+	}
+	
+	Action monitor() {
+		log = log + 1;
+		List<Pair<Id, DCData>> scaling = Nil; 
+		Fut<List<Int>> ef = ps!getEndPoints();
+		List<Int> endPoints = ef.get;
+		while (endPoints != Nil) {
+			Int endPoint = head(endPoints);
+			List<Pair<Id, DCData>> setting = this.getLatencies(endPoint);
+			scaling = concatenate(setting, scaling);
+			endPoints = tail(endPoints);
+		}
+		
+		Action action = null;
+		if (scaling != Nil) {
+			action = new ScaleResourceAction(scaling, ps);
+		}
+	    return action;
+	}
+	
+}
+
+class ScaleResourceAction(List<Pair<Id, DCData>> scalings, MonitorPlatformService ps) implements Action {
+	
+	Unit action() {
+		while (scalings != Nil) {
+			Pair<Id, DCData> scaling = head(scalings);
+			Id instance = fst(scaling);
+			DCData resource = snd(scaling);
+			assert resource != InfCPU;
+			Fut<Unit> fu = ps!alterResource(instance, resource); fu.get;
+			scalings = tail(scalings);
+		}
+	}
+}
+
+
+data Scale = UP | DOWN;
+
+//scale up/down the number of instances according to the scaling setting
+//scaling setting is a list of pairs of endpoint id to the number of instances to add/remove  
+class ScaleInstanceAction(List<Triple<Int, Scale, Either<List<DCData>, List<Int>>>> scalings, MonitorPlatformService ps) implements Action {
+	
+	Unit action() {
+		while (scalings != Nil) {
+			Triple<Int, Scale, Either<List<DCData>, List<Int>>> scaling = head(scalings);
+			Int endPoint = fstT(scaling);
+			Scale scale = sndT(scaling);
+			Either<List<DCData>, List<Int>> instances = trd(scaling);
+			if (scale == UP) {
+				Fut<Unit> fu = ps!incrService(endPoint, left(instances)); fu.get;
+			} else {
+				Fut<Unit> fu = ps!decrService(endPoint, right(instances)); fu.get;
+			}
+			scalings = tail(scalings);
+		}
+	}
+}
+
+/**
+	Models a cloud service provider such as Fredhopper
+**/
+interface ServiceProvider {
+	EndPoint addCustomer(Config sc, Customer c);
+	Unit removeCustomer(Config sc, Customer c);
+}
+
+class ServiceProviderImpl(PlatformService ps, LoadBalancerService ls) implements ServiceProvider {
+
+	Map<Customer, Map<Config, Int>> customers = EmptyMap; 
+
+	EndPoint addCustomer(Config sc, Customer c) {
+		Int id = await ps!createService(sc, c);
+		
+		Map<Config, Int> map = lookupDefault(customers, c, EmptyMap);
+		assert lookup(map, sc) == Nothing;
+		
+		customers = put(customers, c, InsertAssoc(Pair(sc, id), map));
+		
+		Fut<Maybe<EndPoint>> ef = ls!getServiceEndPoint(id);
+		Maybe<EndPoint> eps = ef.get;
+		assert eps != Nothing;
+		return fromJust(eps);
+	}
+	
+	Unit removeCustomer(Config sc, Customer c) {
+		Map<Config, Int> map = lookupDefault(customers, c, EmptyMap);
+		Maybe<Int> mid = lookup(map, sc);
+		assert mid != Nothing;
+		
+		//update map
+		customers = put(customers, c, removeKey(map, sc));
+		
+		//remove from load balancer and platform etc.
+		await ps!removeService(fromJust(mid)); 
+	}
+
+}
+
+interface Main {
+	Unit main();
+}
+
+type CustomerConfig = Pair<Customer, List<Pair<Config, Int>>>;
+
+class Main implements Main {
+
+	CustomerConfig c1 = Pair("c1", list[Pair(Config(FAS, list[CPU(1)]), 1)]);
+	CustomerConfig c2 = Pair("c2", list[Pair(Config(FAS, list[CPU(1)]), 1)]);
+	CustomerConfig c3 = Pair("c3", list[Pair(Config(FAS, list[CPU(1)]), 1)]);
+
+	//scale on the number of customers...
+	//scale on the number of service instances...
+	//scale on the required resource per instances...
+	List<CustomerConfig> getConfigs() {
+		return list[c1, c2, c3];
+	}
+
+	Unit main() {
+		InfrastructureService rp = new InfrastructureServiceImpl();
+		DeploymentService ds = new DeploymentServiceImpl(rp);
+		LoadBalancerService ls = new LoadBalancerServiceImpl();
+		MonitorPlatformService ps = new PlatformServiceImpl(ds, ls);
+		MonitoringService ms = new MonitoringServiceImpl();
+		ServiceProvider provider = new ServiceProviderImpl(ps, ls);
+		
+		//monitor 
+		Monitor monitor = new LatencyMonitor(1, ps);
+		Fut<Unit> uf = ms!add(Rule(4, monitor)); uf.get;
+				
+		List<Fut<Unit>> futs = Nil; 
+		List<CustomerConfig> configs = this.getConfigs();
+		while (configs != Nil) {	
+			CustomerConfig config = head(configs);
+			Customer c = fst(config);
+			List<Pair<Config, Int>> cc = snd(config);
+			while (cc != Nil) {
+				Pair<Config, Int> ci = head(cc);
+				Config cg = fst(ci);
+				Fut<EndPoint> endPoint = provider!addCustomer(cg, c);
+				EndPoint ep = endPoint.get;
+				Int us = snd(ci);
+				while (us > 0) {
+					User user = new RepeatUserImpl();
+					Fut<Unit> u = user!use(ep, 0, 0);
+					futs = Cons(u, futs);
+					us = us - 1;
+				}
+				cc = tail(cc);
+			}
+			configs = tail(configs);
+		}
+			
+		while (futs != Nil) {
+			Fut<Unit> u = head(futs);
+			u.get;
+			futs = tail(futs);
+		}
+	}
+	
+}
+
+{
+	Main main = new local Main();
+	main.main();	
+}
+
+delta CustomerDelta(Int customer);
+uses FredhopperCloudServices;
+
+adds def List<A> takeList<A>(Int e, List<A> ls) =
+	if (e <= 0) then Nil else 
+	case ls {
+		Nil => Nil;
+		Cons(x,xs) => Cons(x, takeList(e - 1, xs));
+	};
+
+modifies class Main {
+	modifies List<CustomerConfig> getConfigs() {
+		List<CustomerConfig> configs = original();	
+		return takeList(customer, configs);
+	}
+}
+
+//network latency
+delta NetworkLatencyDelta(Int latency);
+uses FredhopperCloudServices;
+modifies class LoadBalancerEndPointImpl {
+	adds List<Int> latencies = Nil;
+	adds Unit wait() {
+		Int st = currentms();
+		Int lat = random(latency + 1);
+		await duration(lat, lat);
+		Int ed = currentms();
+		Int diff = ed - st;
+		latencies = Cons(diff, latencies); 
+	}
+	modifies Bool invoke(Int size) {
+		this.wait();
+		return original(size);
+	}
+}
+
+//resource monitoring
+delta ResourceLogDelta;
+uses FredhopperCloudServices;
+modifies class IntrastructureServiceImpl {
+	adds List<Int> res = Nil;
+	adds Unit run() {
+		while (True) {
+			res = Cons(total, res);
+			await duration(1, 1);
+		}
+	}
+}
+
+//Stability
+delta StabilityDeltaHack(Int percent);
+uses FredhopperCloudServices;
+modifies class RepeatUserImpl {
+	adds Int errors = 0;
+	modifies Bool invoke(EndPoint point, Int min, Int max) {
+		Bool result = original(point, min, max);
+		if (~result) {
+			errors = errors + 1;
+		}
+		return result;
+	}
+}
+
+modifies class ServiceImpl {
+	modifies Bool invoke(Int size) {
+		Int chance = random(100);
+		Bool result = False;
+		if (chance < percent) {
+			result = original(size);
+		} else {
+			Int c = this.cost(size);
+			[Cost:c] skip;
+		}
+		return result;
+	}
+}
+modifies class LoadBalancerEndPointImpl {
+	adds Int errors = 0; 
+	modifies Bool invoke(Int size) {
+		Bool result = original(size);
+		if (~result) {
+			errors = errors + 1;
+		} 
+		return result;
+	}
+}
+
+
+//Stability
+delta StabilityDelta(Int percent);
+uses FredhopperCloudServices;
+modifies class ServiceImpl {
+	modifies Bool invoke(Int size) {
+		Int chance = random(100);
+		if (chance >= percent) {
+			Int id = await service!getServiceId();
+			abort "error";
+		}
+		return original(size);
+	}
+}
+modifies class LoadBalancerEndPointImpl {
+	adds Int errors = 0; 
+
+	modifies Bool invoke(Int size) {
+		Bool result = False;
+		Bool error = False;
+		try {
+			result = original(size);
+		} catch {
+			"error" => error = True; 
+		}
+		
+		if (error) {
+			errors = errors + 1;
+			current = tail(current);
+		} 
+		return result;
+	}
+}
+
+//record the size and duration of query at user end
+delta DetailUserLogDelta;
+uses FredhopperCloudServices;
+modifies class RepeatUserImpl {
+	adds List<Pair<Int, Int>> histories = Nil;
+	modifies Bool invokeWithSize(EndPoint point, Int min, Int max, Int size) {
+		Int time = currentms();
+		Bool result = original(point, min, max, size);
+		time = currentms() - time;
+		histories = Cons(Pair(size, time), histories); 
+		return result;
+	}
+}
+
+//randomize the size of query
+delta RequestSizeDelta(Int size);
+uses FredhopperCloudServices;
+modifies class ServiceImpl {
+	adds List<Int> sizes = Nil;
+	modifies Bool invoke(Int size) {
+		sizes = Cons(size, sizes);
+		return original(size);
+	}
+}
+
+modifies class RepeatUserImpl {
+	modifies Bool invoke(EndPoint point, Int min, Int max) {
+		Int size = random(size);
+		return this.invokeWithSize(point, min, max, size); 
+	} 
+}
+
+delta StressDelta;
+uses FredhopperCloudServices;
+adds interface Collector {
+	Unit incr();
+}
+
+adds class Collector implements Collector {
+	Int log = 0;
+	Unit incr() {
+		log = log + 1;
+	}
+}
+
+
+adds class Catcher(Collector col, EndPoint point, Int size) {
+	Unit run() {
+		Fut<Bool> bf = point!invoke(size);
+		bf.get;
+		col!incr();
+	}
+}
+
+modifies class RepeatUserImpl {
+	adds Collector col;
+
+	modifies Bool invokeWithSize(EndPoint point, Int min, Int max, Int size) {
+		if (col == null) {
+			col = new Collector();
+		}
+	
+		Int dur = max(1, min);
+		if (dur < max) {
+			dur = max;
+		}
+		await duration(dur, dur);
+		new Catcher(col, point, size);
+		return True;
+	}
+}
+
+productline ProduceLine;
+features Network, Request, ResourceLog, UserLog, Customer, Stability;
+delta CustomerDelta(Customer.customer) when Customer;
+delta NetworkLatencyDelta(Network.latency) when Network;
+delta ResourceLogDelta when ResourceLog;
+delta DetailUserLogDelta when UserLog;
+delta RequestSizeDelta(Request.size) when Request;
+delta StabilityDeltaHack(Stability.percent) when Stability;
+
+product RequestLatency (Request{size=5});
+product NetworkLatency (Network{latency=5});
+product UnstableService (Stability{percent=70});
+product StableService (Stability{percent=100});
+product OneCustomer (Customer{customer=1});
+
+root Scaling {
+	group [1..*] {
+		Customer { Int customer in [1 .. 3]; }, 
+		Network { Int latency in [1 .. 100]; },
+		Request { Int size in [1 .. 100]; },
+		Stability { Int percent in [1 .. 100]; },
+		ResourceLog,
+		UserLog
+	}
+}

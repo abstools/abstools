@@ -21,7 +21,7 @@ import org.osgi.framework.Bundle;
 import abs.backend.maude.MaudeCompiler;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
-import abs.frontend.delta.exceptions.DeltaModellingException;
+import abs.frontend.delta.DeltaModellingException;
 
 public class MaudeJob extends Job{
 	private Process process;

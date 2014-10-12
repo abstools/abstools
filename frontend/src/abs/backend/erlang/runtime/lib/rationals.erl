@@ -3,7 +3,7 @@
 -export([new/2, proper/1, is_proper/1, is_greater/2, is_lesser/2, max/2, min/2, neg/1, inv/1, add/2, sub/2, mul/2, rdiv/2, fast_add/2, fast_sub/2, fast_mul/2, fast_div/2]).
 -export([heron/3]).
 
-%%% extensions by Georg Göri
+%%% extensions by Georg GÃ¶ri
 
 to_r({N,D}) ->
     {N,D};

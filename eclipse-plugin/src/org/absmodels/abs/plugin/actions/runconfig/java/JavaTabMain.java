@@ -124,6 +124,9 @@ public class JavaTabMain extends AbstractTab {
 
     private List<RunTarget> getRunTargets(IProject proj) {
         AbsNature n = UtilityFunctions.getAbsNature(proj);
+        if (n == null) {
+            return Collections.emptyList();
+        }
         Model m = n.getCompleteModel();
         if (m == null) {
             return Collections.emptyList();
