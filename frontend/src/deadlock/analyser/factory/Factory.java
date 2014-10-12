@@ -49,6 +49,11 @@ public class Factory extends deadlock.constraints.factory.Factory {
     GroupName res = new GroupName(new Variable());
     return res;
   }
+  
+  public GroupName newGroupName(boolean isFresh) {
+      GroupName res = new GroupName(new Variable(), isFresh);
+      return res;
+    }
 
   public RecordVariable newRecordVariable() {
     RecordVariable res = new RecordVariable(new Variable(), false);

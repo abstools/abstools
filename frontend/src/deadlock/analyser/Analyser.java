@@ -29,10 +29,10 @@ import java.io.PrintStream;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.ClassDecl;
-
 import deadlock.analyser.factory.*;
 import deadlock.constraints.term.*;
 import deadlock.analyser.generation.*;
+import deadlock.analyser.inference.ContractInference;
 import deadlock.analyser.detection.*;
 import deadlock.constraints.constraint.*;
 import deadlock.constraints.substitution.*;
@@ -40,16 +40,19 @@ import deadlock.constraints.substitution.*;
 public class Analyser {
     
  
-
-  public void deadlockAnalysis(Model m, boolean verbose, int nbIteration, PrintStream out) {
+  public void deadlockAnalysis(Model m, boolean verbose, int nbIteration, int fixPointVersion, PrintStream out) {
       
       Variable.varCounter =0;
       Long totalTimeInMs = 0L;
+      
+      
+      
 
     /* 0, Create the initial data */
+    ContractInference ci = new ContractInference();
     Factory df = new Factory(verbose);
-    Environment g = m.environment(df, verbose);
-    Map<InterfaceDecl, ClassDecl> mapInterfaceToClass = m.getMapInterfaceToClass();
+    Environment g = ci.environment(m, df, verbose);
+    Map<InterfaceDecl, ClassDecl> mapInterfaceToClass = ci.getMapInterfaceToClass(m);
 
      /* 1. Generate contracts */
     String ident = null; 
@@ -58,7 +61,7 @@ public class Analyser {
     Long nanoTime = System.nanoTime();
     Long ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
     totalTimeInMs += ellapsedTime;
-    ResultInference InferenceOutput = m.typeInference(ident, g, df, mapInterfaceToClass);
+    ResultInference InferenceOutput = ci.typeInference(m, ident, g, df, mapInterfaceToClass);
     Map<String, MethodContract> methodMap = InferenceOutput.getMethods();
     deadlock.constraints.constraint.Constraint c = InferenceOutput.getConstraint();
     
@@ -171,7 +174,9 @@ public class Analyser {
     }
     
     nanoTime = System.nanoTime();
-    DASolver solver = new DASolver(df, cct, nbIteration);
+    
+    DASolver solver = (fixPointVersion == 2)? new DASolver2(df, cct):new DASolver1(df, cct, nbIteration);
+    
 
     solver.computeSolution();
     ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
@@ -180,16 +185,19 @@ public class Analyser {
     if(verbose) {
         out.println("Dependency analysis completed");
         out.println("Ellapsed time: " + ellapsedTime + "ms");
-
-        out.println(solver.toString());
     }
             
     out.println("### LOCK INFORMATION RESULTED BY THE ANALYSIS ###\n");
-    out.println("Saturation:                   " + solver.isSatured());
-    out.println("Possible Deadlock in Main:    " + solver.isDeadlockMain());
-    out.println("Possible Livelock in Main:    " + solver.isLivelockMain());
+
+      out.println("Possible Deadlock in Main:    " + solver.isDeadlockMain());
+      out.println("Current Version:              " + fixPointVersion );
+      if(fixPointVersion == 1){
+        out.println("Saturation:                   " + ((DASolver1)solver).isSatured());
+        out.println("Possible Livelock in Main:    " + ((DASolver1)solver).isLivelockMain());
+      }
     out.println("Analysis Duration:            " + totalTimeInMs + "ms");
     }
+
 }
 
 

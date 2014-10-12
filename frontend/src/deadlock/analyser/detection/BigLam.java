@@ -59,7 +59,7 @@ public class BigLam {
             this.aTilde.addAll(_this.fn());
             for(Record t : args){
                 this.bTilde.removeAll(t.fn());
-               
+                this.aTilde.addAll(t.fn());
             }
         }
         else {
@@ -149,6 +149,19 @@ public class BigLam {
     //toString method
     public String toString(){
         return "< \n" + this.w.toString() + " , \n" + this.wPrime.toString() + ">";
+    }
+
+    //According to version2 of the fix point algorithm this method adds the missing dependencies from the transitive closure 
+    //of the dependencies of not new names and removes all dependencies with new names
+    public void expandAndClean() {
+        
+        w.expandAndClean();
+        wPrime.expandAndClean();
+    }
+
+    public Boolean hasReflexiveState() {
+        // TODO Auto-generated method stub
+        return w.hasReflexiveState() || wPrime.hasReflexiveState();
     }
 
 

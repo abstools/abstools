@@ -27,7 +27,11 @@ public class TermVariable implements Term, Comparable<TermVariable>{
 
   protected Variable v;
   
-  public TermVariable(Variable v) { this.v = v; v.setKind(this); }
+  public TermVariable(Variable v) { 
+      this.v = v; 
+      if(v!=null)
+          v.setKind(this); 
+  }
   
   public Variable getVariable() { return v; }
     
