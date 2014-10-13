@@ -79,3 +79,19 @@ desirable, although not currently enforced, that \grsh{type} and
 \section{Abstract Data Types}
 \label{sec:abstract data types}
 Using the module system (cf.~Sec.~\ref{sec:modules}) it is possible to define \emph{abstract data types}. For an abstract data type, only the functions that operate on them are known to the client, but not its constructors. This can be easily realized in ABS by putting such a data type in its own module and by only exporting the data type and its functions, without exporting the constructors.
+
+\section{Exceptions}
+\label{sec:exceptions}
+
+Exceptions (see also Section~\ref{sec:error-handling}) are modeled as abstract
+datatypes.  All exceptions are of type \grsh{ABS.StdLib.Exception} and are
+declared with the keyword \grsh{exception}.  Exceptions have a unique name and
+an optional list of parameters.
+
+\begin{abssyntax}
+\NT{ExceptionDecl}   \defn \TR{exception}\ \NT{TypeId}\ \OPTG{\TRS{(} \OPT{\NT{TypeList}} \TRS{)}}
+\end{abssyntax}
+
+% Local Variables:
+% TeX-master: "absrefmanual.tex"
+% End:
