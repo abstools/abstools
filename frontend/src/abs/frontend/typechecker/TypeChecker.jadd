@@ -897,7 +897,7 @@ aspect TypeChecker {
         }
     }
     //ASPECT
-    public void AbortStmt.typeCheck(SemanticErrorList e) {
+    public void ThrowStmt.typeCheck(SemanticErrorList e) {
         getReason().typeCheck(e);
         getReason().assertHasType(e,getModel().getExceptionType());
     }

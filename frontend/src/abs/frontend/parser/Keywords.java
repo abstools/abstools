@@ -112,9 +112,10 @@ public class Keywords {
         "is",
         "end",
         
-        
-        "safeget",
-        "abort",
+        "try",
+        "catch",
+        "finally",
+        "throw",
         "die"
         };
 
