@@ -166,7 +166,7 @@ different results."
        "product"                                      ; product definition
        "let" "in"
        "if" "then" "else" "return" "while"            ; the statements
-       "await" "assert" "abort" "die" "get" "skip" "suspend"
+       "await" "assert" "throw" "die" "get" "skip" "suspend"
        "original" "movecogto"
        "try" "catch" "finally"
        "duration"                       ; guard / statement

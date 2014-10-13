@@ -806,14 +806,14 @@ aspect GenerateErlang {
 
   // We discriminate between throw and exit: throw terminates the
   // process, exit kills the process.  They correspond to Abs
-  // abort-statements and die-statements and unexpected errors,
+  // throw-statements and die-statements and unexpected errors,
   // respectively.  All otherwise-uncaught Erlang-level throw()s and
   // exit()s are handled in a top-level Erlang try-catch around the
   // method body.  During any changes in the error-handling
   // implementation you might need to adapt the implementation of
   // future.get as well (rudi)
   @Override
-  public void AbortStmt.generateErlangCode(ErlangCodeStream ecs, Vars vars) {
+  public void ThrowStmt.generateErlangCode(ErlangCodeStream ecs, Vars vars) {
     ecs.print("throw(");
     getReason().generateErlangCode( ecs,  vars);
     ecs.print(")");

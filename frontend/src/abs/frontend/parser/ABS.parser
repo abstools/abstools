@@ -1122,7 +1122,7 @@ Stmt stmt_without_annotations =
 	|  REBIND exp.obj COLON IDENTIFIER.field ASSIGN exp.e  {: return new RebindStmt(new List(), obj,field,e);                /* Component */ :}
 	|  REBIND IDENTIFIER.field ASSIGN exp.e                {: return new RebindStmt(new List(), new VarUse("this"),field,e); /* Component */ :}
 	|  SUBLOC pure_exp.sub IN pure_exp.father              {: return new MoveStmt(new List(), sub,father);                   /* Component */ :}
-	|  ABORT  data_exp.s  {: return new AbortStmt(new List(), s) ; :}
+	|  THROW  data_exp.s  {: return new ThrowStmt(new List(), s) ; :}
 	|  DIE    data_exp.s  {: return new DieStmt  (new List(), s) ; :}
 	;
 

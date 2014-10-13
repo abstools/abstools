@@ -169,8 +169,8 @@ IntLiteral = 0 | [1-9][0-9]*
  "father"    { return sym(Terminals.FATHER);   }
  "sql"       { yybegin(SQL); sqlParenthesisDepth = 0; return sym(Terminals.SQL); }
  //error
-  "abort"      { return sym(Terminals.ABORT); }
-  "die"     { return sym(Terminals.DIE); }
+ "throw"      { return sym(Terminals.THROW); }
+ "die"     { return sym(Terminals.DIE); }
 }
 
 //Separators

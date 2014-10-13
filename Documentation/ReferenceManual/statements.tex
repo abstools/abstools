@@ -196,25 +196,25 @@ new C(x);
 \section{Error Handling}
 \label{sec:error-handling}
 
-\emph{The information in this section is preliminary and subject to
-  revision and redesign.  Open issues include: representation of error
-  information (ABS datatypes cannot be extended, substring matching is
-  suboptimal, etc.); recovery from uncaught errors (kill the process,
-  object, or whole cog); behavior of uncaught errors in synchronous
-  method calls (delay killing the object / cog to allow the caller to
-  handle the error vs killing the caller as well); the behavior of
-  objects dying (are all processes terminated at the same time or
-  eventually); the legality / behavior of return statements in
-  \texttt{finally} blocks; etc.}
+\emph{The information in this section is preliminary and subject to revision
+  and redesign.  Open issues include: behavior of uncaught errors in
+  synchronous method calls (delay killing the object / cog to allow the caller
+  to handle the error vs killing the caller as well); the behavior of objects
+  dying (are all processes terminated at the same time or eventually); the
+  legality / behavior of return statements in \texttt{finally} blocks; etc.}
 
-The aim of errors is to ensure a safe state as much as possible, i.e.,
-to make it difficult to inadvertently leave an object invariant violated
+Errors are modeled via the \grsh{Exception} datatype.  New exceptions are
+added to that type with an \grsh{exception} declaration (see
+Section~\ref{sec:exceptions}).
+
+The aim of modeling errors is to ensure a safe state as much as possible,
+i.e., to make it difficult to inadvertently leave an object invariant violated
 across a scheduling point.  Thus, any uncaught \emph{unexpected} errors
-(receiving an error from a future, division by zero, \dots), as well as
-errors raised via \texttt{die}, will result in the current object dying
-and all its processes being terminated.  Any uncaught \emph{expected}
-errors (i.e., errors explicitly raised via the \texttt{abort} statement)
-will result in the process being terminated.
+(receiving an error from a future, division by zero, \dots), as well as errors
+raised via \texttt{die}, will result in the current object dying and all its
+processes being terminated.  Any uncaught \emph{expected} errors (i.e., errors
+explicitly raised via the \texttt{throw} statement) will result in the process
+being terminated.
 
 Error propagation in ABS is done via futures.  A method can either
 terminate normally and return a value, or fail and return an error term.
@@ -223,45 +223,41 @@ When trying to read the value of a future that contains an error via
 and handled in a \texttt{catch} block.
 
 
-\subsection{Abort Statement}
-\label{sec:abort-statement}
+\subsection{Throw Statement}
+\label{sec:throw-statement}
 
-The \texttt{abort} statement aborts normal execution of the process,
-raising the error specified via its argument.  \emph{It is not currently
-  specified how errors are defined.}  When the abort occurs inside one
-or more \texttt{try} blocks, the \texttt{catch} branches are tested
-against the error from inner to outer \texttt{try} block, interleaved
-with execution of \texttt{finally} blocks.  \emph{It is not currently
-  specified how \texttt{abort} and \texttt{return} statements inside
-  \texttt{finally} blocks behave.}  It is the task of the catch- and
-finally-blocks to re-establish the object invariant and perform
-corrective actions that re-establish system-wide invariants.
+The \texttt{throw} statement aborts normal execution of the process, raising
+the exception specified via its argument.  When the throw occurs inside one or
+more \texttt{try} blocks, the \texttt{catch} branches are tested against the
+exception from inner to outer \texttt{try} block, interleaved with execution
+of \texttt{finally} blocks.  It is the task of the catch- and finally-blocks
+to re-establish the object invariant and perform corrective actions that
+re-establish system-wide invariants.
 
-If any \texttt{catch} branch matches the error, its statement(s) are
-executed and normal execution continues after that
-\texttt{try-catch-finally} block.  If the error reaches the outermost
-scope, the process is killed.
+If any \texttt{catch} branch matches the error, its statement(s) are executed
+and execution continues as normal.  If the error reaches the outermost scope,
+the process is killed.
 
 \begin{abssyntax}
-\NT{AbortStmt} \defn \TR{abort}\ \NT{Exp}\ \TRS{;}
+\NT{ThrowStmt} \defn \TR{throw}\ \NT{Exp}\ \TRS{;}
 \end{abssyntax}
 
 
 \subsection{Die Statement}
 \label{sec:die-statement}
 
-The \texttt{die} statement raises an error that, if uncaught, will kill
-an object and all its processes.  All processes currently running on the
-object will return an error.  All subsequent method calls to the killed
-object, be they synchronous or asynchronous, will result in an error
-being returned to the caller.
+The \texttt{die} statement raises an error that, if uncaught, will kill an
+object and all its processes.  All processes currently running on the object
+will be terminated before they execute further, and callers will receive an
+error.  All subsequent method calls to the killed object, be they synchronous
+or asynchronous, will result in an error being returned to the caller.
 
 \begin{abssyntax}
 \NT{DieStmt} \defn \TR{die}\ \NT{Exp}\ \TRS{;}
 \end{abssyntax}
 
 Unexpected errors, i.e., errors not explicitly raised via the
-\texttt{abort} statement, behave as if a \texttt{die} statement had been
+\texttt{throw} statement, behave as if a \texttt{die} statement had been
 executed in place of the statement resulting in the error.
 
 \subsection{Try-Catch-Finally Statement}
@@ -276,7 +272,7 @@ The statements following the first matching catch branch are executed,
 followed by the statements in the \texttt{finally} branch.  If none of the catch branches match, the statements in the \texttt{finally} branch are executed and the error is re-thrown.
 
 Code in the \texttt{finally} branch has the same restrictions as init blocks:
-no suspension or blocking is allowed.
+no suspension, blocking or \texttt{return} statement is allowed.
 
 \begin{abssyntax}
 \NT{TryCatchFinallyStmt} \defn \TR{try}\ \NT{Stmt}\
@@ -293,19 +289,20 @@ no suspension or blocking is allowed.
 \NT{PatternList}   \defn \NT{Pattern}\ \MANYG{\TRS{,}\ \NT{Pattern}}
 \end{abssyntax}
 
-The following example shows the usage of \texttt{abort} and
-\texttt{try-catch-finally}.  \emph{Note that the error representation in
-  the example does not represented the final form of defining and using
-  error terms in ABS.}
+The following example shows the usage of \texttt{throw} and
+\texttt{try-catch-finally}.
 
 \begin{absexample}
+exception MyException;
+exception AnotherException;
+
 interface I {
     Int doit();
 }
 
 class C implements I {
     Int doit() {
-        abort "aborted";
+        throw MyException;
         return 5;
     }
 }
@@ -320,8 +317,8 @@ class C implements I {
         step1 = "executed";
         x = await i!doit();
     } catch {
-        "something else" => step2 = "caught the wrong thing";
-        "aborted" => step2 = "caught";
+        AnotherException => step2 = "caught the wrong thing";
+        MyException => step2 = "caught";
         _ => step2 = "did not catch the right thing";
     } finally {
         step3 = "finalized";
