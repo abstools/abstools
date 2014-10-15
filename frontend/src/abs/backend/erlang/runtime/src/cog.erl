@@ -7,6 +7,11 @@
 -record(state,{tasks,running=false,polling=[],tracker,referencers=0}).
 -record(task,{ref,state=waiting}).
 
+%%Garbage collector callbacks
+%%stop_world and resume_world are COG specific
+-behaviour(gc).
+-export([get_references/1, stop_world/1, resume_world/1]).
+
 %%The COG manages all its task in a tree task.
 %%
 %%It is implented as a kind of statemachine server, where the variable running represents the state
@@ -34,11 +39,29 @@ add_and_notify(#cog{ref=Cog},Task,Args)->
 new_state(#cog{ref=Cog},TaskRef,State)->
     Cog!{newState,TaskRef,State}.
 
+%%Garbage collector callbacks
+
 inc_ref_count(#cog{ref=Cog})->
-    Cog!inc_ref_count.
+    Cog ! inc_ref_count.
 
 dec_ref_count(#cog{ref=Cog})->
-    Cog!dec_ref_count.
+    Cog ! dec_ref_count.
+
+get_references(Cog) ->
+    Cog ! {get_references, self()},
+    receive
+        {Refs, Cog} -> lists:flatten(Refs)
+    end.
+
+stop_world(Cog) ->
+    Cog ! {stop_world, self()},
+    receive
+        ok -> ok
+    end.
+
+resume_world(Cog) ->
+    Cog ! {done, gc},
+    ok.
 
 %%Internal
 
@@ -53,19 +76,28 @@ loop(S=#state{running=non_found})->
     eventstream:event({cog,self(),idle}),
     New_State=
         receive
-            {newState,TaskRef,State}->
-                eventstream:event({cog,self(),active}),
-                set_state(S,TaskRef,State);
-            {newT,Task,Args,Sender,Notify}->
-                eventstream:event({cog,self(),active}),
-                initTask(S,Task,Args,Sender,Notify);
-            {'EXIT',R,Reason} when Reason /= normal ->
-                ?DEBUG({task_died,R,Reason}),   
-                set_state(S#state{running=false},R,abort);
-            inc_ref_count->
-                inc_referencers(S);
-            dec_ref_count->
-                dec_referencers(S)
+            {stop_world, Sender} ->
+                Sender ! ok,
+                S#state{running={gc, non_found}}
+        after 0 ->
+                receive
+                    {newState,TaskRef,State}->
+                        eventstream:event({cog,self(),active}),
+                        set_state(S,TaskRef,State);
+                    {newT,Task,Args,Sender,Notify}->
+                        eventstream:event({cog,self(),active}),
+                        initTask(S,Task,Args,Sender,Notify);
+                    {'EXIT',R,Reason} when Reason /= normal ->
+                        ?DEBUG({task_died,R,Reason}),   
+                        set_state(S#state{running=false},R,abort);
+                    inc_ref_count->
+                        inc_referencers(S);
+                    dec_ref_count->
+                        dec_referencers(S);
+                    {stop_world, Sender} ->
+                        Sender ! ok,
+                        S#state{running={gc, non_found}}
+                end
         end,
     loop(New_State#state{running=false});
 
@@ -73,20 +105,29 @@ loop(S=#state{running=non_found})->
 loop(S=#state{running=false})->
     New_State=
         receive
-            {newState,TaskRef,State}->
-                set_state(S,TaskRef,State);
-            {newT,Task,Args,Sender,Notify}->
-                initTask(S,Task,Args,Sender,Notify);
-            {'EXIT',R,Reason} when Reason /= normal ->
-               ?DEBUG({task_died,R,Reason}),
-               set_state(S#state{running=false},R,abort);
-            inc_ref_count->
-                inc_referencers(S);
-            dec_ref_count->
-                dec_referencers(S)
-        after 
-            0 ->
-                execute(S)
+            {stop_world, Sender} ->
+                Sender ! ok,
+                S#state{running={gc, false}}
+        after 0 ->
+                receive
+                    {newState,TaskRef,State}->
+                        set_state(S,TaskRef,State);
+                    {newT,Task,Args,Sender,Notify}->
+                        initTask(S,Task,Args,Sender,Notify);
+                    {'EXIT',R,Reason} when Reason /= normal ->
+                        ?DEBUG({task_died,R,Reason}),
+                        set_state(S#state{running=false},R,abort);
+                    inc_ref_count->
+                        inc_referencers(S);
+                    dec_ref_count->
+                        dec_referencers(S);
+                    {stop_world, Sender} ->
+                        Sender ! ok,
+                        S#state{running={gc, false}}
+                after 
+                    0 ->
+                        execute(S)
+                end
         end,
     loop(New_State);
 
@@ -113,18 +154,27 @@ loop(S=#state{running=R}) when is_pid(R)->
 loop(S=#state{running={blocked, R}}) ->
     New_State=
         receive
-            {newState,TaskRef,State}->
-                set_state(S,TaskRef,State);
-            {newT,Task,Args,Sender,Notify}->
-                initTask(S,Task,Args,Sender,Notify);
-            {'EXIT',R,Reason} when Reason /= normal ->
-                ?DEBUG({task_died,R,Reason}),
-                set_state(S#state{running=false},R,abort);
-            inc_ref_count->
-                inc_referencers(S);
-            dec_ref_count->
-                dec_referencers(S)
-            end,
+            {stop_world, Sender} ->
+                Sender ! ok,
+                S#state{running={gc, {blocked, R}}}
+        after 0 ->
+                receive
+                    {newState,TaskRef,State}->
+                        set_state(S,TaskRef,State);
+                    {newT,Task,Args,Sender,Notify}->
+                        initTask(S,Task,Args,Sender,Notify);
+                    {'EXIT',R,Reason} when Reason /= normal ->
+                        ?DEBUG({task_died,R,Reason}),
+                        set_state(S#state{running=false},R,abort);
+                    inc_ref_count->
+                        inc_referencers(S);
+                    dec_ref_count->
+                        dec_referencers(S);
+                    {stop_world, Sender} ->
+                        Sender ! ok,
+                        S#state{running={gc, {blocked, R}}}
+                end
+        end,
     loop(New_State);
 
 %%Garbage collector is running, wait before resuming tasks
@@ -132,16 +182,17 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}}) ->
     New_State=
         receive
             {newT, Task, Args, Sender, Notify}->
-                initTask(S,Task,Args,Sender,Notify)
+                initTask(S,Task,Args,Sender,Notify);
+            {done, gc} ->
+                S#state{running=Old}
         after 0 ->
                 receive
                     {newT, Task, Args, Sender, Notify}->
                         initTask(S,Task,Args,Sender,Notify);
-                    {gc, get_references} ->
-                        gc ! {self(), [lists:map(task, get_references, gb_trees:keys(Tasks)),
-                                       lists:map(task, get_references, Polling)]},
+                    {get_references, Sender} ->
+                        Sender ! {lists:map(fun task:get_references/1, gb_trees:keys(Tasks)), self()},
                         S;
-                    {gc, done} ->
+                    {done, gc} ->
                         S#state{running=Old};
                     inc_ref_count->
                         inc_referencers(S);
