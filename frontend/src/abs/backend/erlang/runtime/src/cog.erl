@@ -50,7 +50,7 @@ dec_ref_count(#cog{ref=Cog})->
 get_references(Cog) ->
     Cog ! {get_references, self()},
     receive
-        {Refs, Cog} -> lists:flatten(Refs)
+        {Refs, Cog} -> Refs
     end.
 
 stop_world(Cog) ->
@@ -99,7 +99,10 @@ loop(S=#state{running=non_found})->
                         S#state{running={gc, non_found}}
                 end
         end,
-    loop(New_State#state{running=false});
+    case New_State#state.running of
+        {gc, _} -> loop(New_State);
+        _ -> loop(New_State#state{running=false})
+    end;
 
 %%No task is running now
 loop(S=#state{running=false})->
@@ -190,7 +193,10 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}}) ->
                     {newT, Task, Args, Sender, Notify}->
                         initTask(S,Task,Args,Sender,Notify);
                     {get_references, Sender} ->
-                        Sender ! {lists:map(fun task:get_references/1, gb_trees:keys(Tasks)), self()},
+                        Sender !
+                            {lists:foldl(fun ordsets:union/2, [],
+                                         lists:map(fun task:get_references/1, gb_trees:keys(Tasks))),
+                             self()},
                         S;
                     {done, gc} ->
                         S#state{running=Old};
