@@ -7,7 +7,7 @@
 %% Active object task -> executes run method
 
 init(_Cog,O)->
-    object:new_object_task(O,self()),
+    object:new_object_task(O,self(),O),
     O.
 
 start(O=#object{class=C,cog=Cog=#cog{tracker=Tracker}})->

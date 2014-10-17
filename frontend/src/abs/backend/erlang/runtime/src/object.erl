@@ -12,7 +12,7 @@
 
 -behaviour(gen_fsm).
 %%API
--export([new/4,activate/1,commit/1,rollback/1,new_object_task/2,die/2,alive/1]).
+-export([new/4,activate/1,commit/1,rollback/1,new_object_task/3,die/2,alive/1]).
 
 %%gen_fsm callbacks
 -export([init/1,active/3,active/2,uninitialized/2,uninitialized/3,code_change/4,handle_event/3,handle_info/3,handle_sync_event/4,terminate/3]).
@@ -50,9 +50,13 @@ rollback(#object{ref=O})->
     gen_fsm:sync_send_event(O,rollback).
 
 
-new_object_task(#object{ref=O},TaskRef)->
+new_object_task(#object{ref=O},TaskRef,Params)->
     try
-        gen_fsm:sync_send_event(O, {new_task,TaskRef})
+        Res = gen_fsm:sync_send_event(O, {new_task,TaskRef}),
+        case Res of
+            uninitialized -> await_activation(Params);
+            active -> Res
+        end
     catch
        _:{noproc,_} ->
           exit(deadObject)
@@ -74,6 +78,13 @@ get_references(Ref) ->
 
 %%Internal
 
+await_activation(Params) ->
+    receive
+        {get_references, Sender} -> Sender ! gc:extract_references(Params),
+                                    await_activation(Params);
+        active -> ok
+    end.
+
 %%await keeps track of all task, waiting till the object is active,
 %%tasks all task running on this object
 %%int_status, is the status variable of the object behaviour implementation
@@ -89,13 +100,13 @@ init([Cog,Class,Status])->
     {ok,uninitialized,#state{await=[],tasks=gb_sets:empty(),class=Class,int_status=Status,new_vals=gb_trees:empty()}}.
 
 uninitialized(activate,S=#state{await=A})->
-    lists:foreach(fun(X)-> gen_fsm:reply(X,active)end,A),
+    lists:foreach(fun(X)-> X ! active end,A),
     {next_state,active,S#state{await=[]}}.
 
 uninitialized({new_task,TaskRef},From,S=#state{await=A,tasks=Tasks})->
     monitor(process,TaskRef),
     ?DEBUG({new_task,TaskRef}),
-    {next_state,uninitialized,S#state{await=[From|A],tasks=gb_sets:add_element(TaskRef, Tasks)}}.
+    {reply,uninitialized,uninitialized,S#state{await=[From|A],tasks=gb_sets:add_element(TaskRef, Tasks)}}.
 
 
 

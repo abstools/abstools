@@ -13,7 +13,7 @@
 
 init(_Cog,[Future,O,Method|Params])->
     link(Future),
-    object:new_object_task(O,self()),
+    object:new_object_task(O,self(), [Future,O|Params]),
     #state{fut=Future,obj=O,meth=Method,params=Params}.
 
 
