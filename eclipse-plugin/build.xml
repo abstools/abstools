@@ -202,7 +202,7 @@
             jvmargs="-Xmx512m"
               quietErrors="true" >
         <sourcePath path="${basedir}/src" />
-        <class location="${build.dir}/eu" />
+        <class location="${build.dir}/org" />
       	<auxClasspath path="${frontend.dir}/bin" />
       </findbugs>
     </target>
