@@ -371,6 +371,32 @@ products.
 product P3 (English, Repeat{times=2222});
 \end{abscode}
 
+\section{Feature Model Reflection}
+\label{sec:feat-model-refl}
+
+There is support for limited reflection on the feature model and configured
+product in the module \absinline{ABS.Productline}.  The datatype
+\absinline{Feature} contains constructors for all feature names.  The function
+\absinline{product_features} returns a list of features contained in the
+current product, and \absinline{product_name} returns the name of the product,
+or the empty string if no product was specified.
+
+The following sample code shows the usage, assuming that product
+\absinline{Product} was generated:
+\begin{abscode}
+module Test;
+import * from ABS.Productline;
+
+{
+  List<Feature> foo = product_features(); // => Cons(FeatureA, Cons(FeatureC, Nil)) 
+  String name = product_name();           // => "Product"
+}
+
+productline Test;
+features FeatureA, FeatureB, FeatureC;
+
+product Product(FeatureA, FeatureC);
+\end{abscode}
 
 % Local Variables:
 % TeX-master: "absrefmanual"

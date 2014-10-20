@@ -719,3 +719,23 @@ interface Feature {
 def Unit println(String s) = builtin;
 def Unit print(String s) = builtin;
 def String readln() = builtin;
+
+
+
+/**
+ * Feature reflection for ABS.
+ *
+ * The empty definitions in this module are rewritten by the frontend according to
+ * the definitions of the productline and current product.  Note that the names of
+ * all features will be exported as constructors for the Feature datatype.
+ */
+
+module ABS.Productline;
+export *;
+import List, Nil, String from ABS.StdLib;
+
+data Feature;
+
+def String product_name() = "";
+def List<Feature> product_features() = Nil;
+

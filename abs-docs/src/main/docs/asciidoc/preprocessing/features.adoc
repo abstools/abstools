@@ -166,3 +166,31 @@ root Deployments {
   }    
 }
 ----
+
+=== Feature Model Reflection
+
+There is support for limited reflection on the feature model and configured
+product in the module `ABS.Productline`.  The datatype `Feature` contains
+constructors for all feature names.  The function `product_features` returns a
+list of features contained in the current product, and `product_name` returns
+the name of the product, or the empty string if no product was specified.
+
+The following sample code shows the usage, assuming that product `Product` was
+generated:
+
+[source]
+----
+module Test;
+import * from ABS.Productline;
+
+{
+  List<Feature> foo = product_features(); // => Cons(FeatureA, Cons(FeatureC, Nil)) 
+  String name = product_name();           // => "Product"
+}
+
+productline Test;
+features FeatureA, FeatureB, FeatureC;
+
+product Product(FeatureA, FeatureC);
+----
+

@@ -31,11 +31,19 @@ import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.CompilationUnit;
+import abs.frontend.ast.ConstructorArg;
 import abs.frontend.ast.DataConstructor;
+import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.DataTypeDecl;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.ExceptionDecl;
+import abs.frontend.ast.ExpFunctionDef;
+import abs.frontend.ast.Feature;
+import abs.frontend.ast.FnApp;
+import abs.frontend.ast.FunctionDecl;
+import abs.frontend.ast.PureExp;
+import abs.frontend.ast.StringLiteral;
 import abs.frontend.ast.UpdateDecl;
 import abs.frontend.ast.Product;
 import abs.frontend.ast.ProductLine;
@@ -56,6 +64,10 @@ import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtensio
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
 import beaver.Parser;
 
+/**
+ * @author rudi
+ *
+ */
 public class Main {
 
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
@@ -274,28 +286,7 @@ public class Main {
                 System.err.flush();
             }
         } else {
-            // Handle exceptions: add exceptions as constructors to the
-            // ABS.StdLib.Exception datatype.  This likely cannot be
-            // implemented as a tree rewrite rule on ExceptionDecl since tree
-            // rewrites are not allowed to modify the tree outside of their
-            // scope, and we want to add a DataConstructor elsewhere in the
-            // AST.
-            DataTypeDecl e = (DataTypeDecl)(m.getExceptionType().getDecl());
-            // TODO: if null and not -nostdlib, throw an error
-            if (e != null) {
-                for (Decl decl : m.getDecls()) {
-                    if (decl instanceof ExceptionDecl) {
-                        ExceptionDecl e1 = (ExceptionDecl)decl;
-                        // KLUDGE: what do we do about annotations to exceptions?
-                        DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().fullCopy());
-                        d.setPosition(e1.getStart(), e1.getEnd());
-                        d.setFileName(e1.getFileName());
-                        d.exceptionDecl = e1;
-                        e1.dataConstructor = d;
-                        e.addDataConstructor(d);
-                    }
-                }
-            }
+            rewriteModel(m, product);
 
             // flatten before checking error, to avoid calculating *wrong* attributes
             if (fullabs) {
@@ -326,6 +317,101 @@ public class Main {
         }
     }
 
+    /**
+     * Perform various rewrites that cannot be done in JastAdd
+     *
+     * JastAdd rewrite rules can only rewrite the current node using
+     * node-local information.  ("The code in the body of the rewrite may
+     * access and rearrange the nodes in the subtree rooted at A, but not any
+     * other nodes in the AST. Furthermore, the code may not have any other
+     * side effects." --
+     * http://jastadd.org/web/documentation/reference-manual.php#Rewrites)
+     *
+     * We use this method to generate Exception constructors and the
+     * information in ABS.Productline.
+     *
+     * @param m the model.
+     * @param productname The name of the product.
+     * @throws WrongProgramArgumentException
+     */
+    private static void rewriteModel(Model m, String productname)
+        throws WrongProgramArgumentException
+    {
+        // Handle exceptions: add exceptions as constructors to the
+        // ABS.StdLib.Exception datatype.
+        DataTypeDecl e = (DataTypeDecl)(m.getExceptionType().getDecl());
+        if (e != null) {
+            // TODO: if null and not -nostdlib, throw an error
+            for (Decl decl : m.getDecls()) {
+                if (decl instanceof ExceptionDecl) {
+                    ExceptionDecl e1 = (ExceptionDecl)decl;
+                    // KLUDGE: what do we do about annotations to exceptions?
+                    DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().fullCopy());
+                    d.setPosition(e1.getStart(), e1.getEnd());
+                    d.setFileName(e1.getFileName());
+                    d.exceptionDecl = e1;
+                    e1.dataConstructor = d;
+                    e.addDataConstructor(d);
+                }
+            }
+        }
+        // Generate reflective constructors for all features
+        ProductLine pl = m.getProductLine();
+        if (pl != null) {
+            // Let's assume the module and datatype names in abslang.abs did
+            // not get changed, and just crash otherwise.  If you're here
+            // because of a NPE: Hi!  Make the standard library and this code
+            // agree about what the feature reflection module is called.
+            ModuleDecl modProductline = null;
+            DataTypeDecl featureDecl = null;
+            FunctionDecl currentFeatureFun = null;
+            FunctionDecl productNameFun = null;
+            for (ModuleDecl d : m.getModuleDecls()) {
+                if (d.getName().equals("ABS.Productline")) {
+                    modProductline = d;
+                    break;
+                }
+            }
+            for (Decl d : modProductline.getDecls()) {
+                if (d instanceof DataTypeDecl && d.getName().equals("Feature")) {
+                    featureDecl = (DataTypeDecl)d;
+                } else if (d instanceof FunctionDecl && d.getName().equals("product_features")) {
+                    currentFeatureFun = (FunctionDecl)d;
+                } else if (d instanceof FunctionDecl && d.getName().equals("product_name")) {
+                    productNameFun = (FunctionDecl)d;
+                }
+            }
+            // Adjust Feature datatype
+            for (Feature f : pl.getFeatures()) {
+                // TODO: when/if we incorporate feature parameters into the
+                // productline feature declarations (as we should), we need to
+                // adjust the DataConstructor arguments here.
+                featureDecl.addDataConstructor(new DataConstructor(f.getName(), new List<ConstructorArg>()));
+            }
+            // Adjust product_name() function
+            productNameFun.setFunctionDef(new ExpFunctionDef(new StringLiteral(productname)));
+            // Adjust product_features() function
+            Product p = null;
+            if (productname != null) p = m.findProduct(productname);
+            if (p != null) {
+                DataConstructorExp feature_arglist = new DataConstructorExp("Cons", new List<PureExp>());
+                DataConstructorExp current = feature_arglist;
+                for (Feature f : p.getFeatures()) {
+                    DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
+                    // TODO: when/if we incorporate feature parameters into
+                    // the productline feature declarations (as we should), we
+                    // need to adjust the DataConstructorExp arguments here.
+                    current.addParam(new DataConstructorExp(f.getName(), new List<PureExp>()));
+                    current.addParam(next);
+                    current = next;
+                }
+                current.setConstructor("Nil");
+                currentFeatureFun.setFunctionDef(new ExpFunctionDef(feature_arglist));
+            }
+        }
+    }
+
+    
     /**
      * TODO: Should probably be introduced in Model through JastAdd by MTVL package.
      * However, the command-line argument handling will have to stay in Main. Pity.
