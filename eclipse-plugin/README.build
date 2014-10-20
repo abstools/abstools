@@ -1,11 +1,11 @@
 To build the Eclipse plugin:
 
-ant -Declipse.home=<path to eclipse> build-all-plugins
-ant -Declipse.home=<path to eclipse> generate-update-site
-
-OR
-ant -Declipse.home=<path to eclipse> build-eclipse-plugin generate-update-site
+	ant -Declipse.home=<path to eclipse> build-all-plugins generate-update-site
 
 Add local update site to Eclipse:
 
-file:<path prefix>/Tools/ABS/trunk/eclipse-plugin/update-site
+	file:<path prefix>/Tools/ABS/trunk/eclipse-plugin/update-site
+
+Deploy remote update site (needs access to the server):
+
+	ant -Declipse.home=<path to eclipse> deploy-update-site

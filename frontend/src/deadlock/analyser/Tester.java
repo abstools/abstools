@@ -19,6 +19,7 @@ import abs.frontend.parser.Main;
 public class Tester extends Main {
     
     protected int numberOfIterations = 3;
+    private int fixpointVersion = 2;
 
     public static void main(final String... args) {
         // TODO Auto-generated method stub
@@ -46,7 +47,7 @@ public class Tester extends Main {
         }
         /*Instantiate the analyzer and perform deadlock analysis*/
         Analyser a = new Analyser();
-        a.deadlockAnalysis(model, verbose, numberOfIterations, System.out);
+        a.deadlockAnalysis(model, verbose, numberOfIterations, fixpointVersion, System.out);
     }
     
     @Override
@@ -58,12 +59,24 @@ public class Tester extends Main {
             String arg = restArgs.get(i);
             if (arg.startsWith("-it=")){
                 try{
-                       numberOfIterations = Integer.parseInt(args[i].split("=")[1]);
+                       numberOfIterations = Integer.parseInt(arg.split("=")[1]);
                    } catch (Exception e) {
                        System.err.println("The number of iterations (-it) should be an integer");
                        System.exit(1);
                    }
-            } else {
+            } 
+            else if (arg.startsWith("-fixPointVersion=")){
+                try{
+                    fixpointVersion = Integer.parseInt(arg.split("=")[1]);
+                   
+                } catch (Exception e) {
+                    System.err.println(restArgs.toString());
+                    System.err.println(e.toString());
+                    System.err.println("The fix point version (-fixPointVersion) should be an integer. Default value 1 for original version, value 2 for the newest version");
+                    System.exit(1);
+                }
+            }
+            else {
                 remainingArgs.add(arg);
             }
         }
@@ -74,7 +87,8 @@ public class Tester extends Main {
     protected void printUsage() {
         super.printUsage();
         System.out.println("Deadlock analyzer:\n"
-                + "  -it=<var>     max number of iterations before saturating\n");
+                + "  -it=<var>     max number of iterations before saturating\n"
+                + "  -fixPointVersion=<var>     Default value 1 for original version, value 2 for the newest version\n");
     }
 
 }

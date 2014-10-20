@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/eu.hatsproject.absplugin_0.0.0.jar" id="eu.hatsproject.absplugin" version="0.0.0" os="linux,macosx,win32">
-      <category name="eu.hatsproject.abs"/>
+   <feature url="features/org.abs-models.absplugin_0.0.0.jar" id="org.abs-models.absplugin" version="0.0.0" os="linux,macosx,win32">
+      <category name="org.abs-models.abs"/>
    </feature>
-   <feature url="features/eu.hatsproject.abs.compiler_0.0.0.jar" id="eu.hatsproject.abs.compiler" version="0.0.0" os="linux,macosx,win32">
-      <category name="eu.hatsproject.abs"/>
+   <feature url="features/org.abs-models.abs.compiler_0.0.0.jar" id="org.abs-models.abs.compiler" version="0.0.0" os="linux,macosx,win32">
+      <category name="org.abs-models.abs"/>
    </feature>
-   <feature url="features/eu.hatsproject.sdedit_0.0.0.jar" id="eu.hatsproject.sdedit" version="0.0.0" os="linux,macosx,win32">
-      <category name="eu.hatsproject.abs"/>
+   <feature url="features/org.abs-models.sdedit_0.0.0.jar" id="org.abs-models.sdedit" version="0.0.0" os="linux,macosx,win32">
+      <category name="org.abs-models.abs"/>
    </feature>
-   <feature url="features/eu.hatsproject.costabs_0.0.0.VERSION_STRING.jar" id="eu.hatsproject.costabs" version="0.0.0" os="linux">
-      <category name="eu.hatsproject.abs"/>
+   <feature url="features/org.abs-models.costabs_0.0.0.VERSION_STRING.jar" id="org.abs-models.costabs" version="0.0.0" os="linux">
+      <category name="org.abs-models.abs"/>
    </feature>
-   <feature url="features/eu.hatsproject.apet_0.0.0.VERSION_STRING.jar" id="eu.hatsproject.apet" version="0.0.0" os="linux">
-      <category name="eu.hatsproject.abs"/>
+   <feature url="features/org.abs-models.apet_0.0.0.VERSION_STRING.jar" id="org.abs-models.apet" version="0.0.0" os="linux">
+      <category name="org.abs-models.abs"/>
    </feature>
-   <feature url="features/eu.hatsproject.sda_0.0.0.VERSION_STRING.jar" id="eu.hatsproject.sda" version="0.0.0" os="linux,macosx,win32">
-      <category name="eu.hatsproject.abs"/>
+   <feature url="features/org.abs-models.sda_0.0.0.VERSION_STRING.jar" id="org.abs-models.sda" version="0.0.0" os="linux,macosx,win32">
+      <category name="org.abs-models.abs"/>
    </feature>
-   <category-def name="eu.hatsproject.abs" label="ABS">
+   <category-def name="org.abs-models.abs" label="ABS">
       <description>
          Features for the ABS language
       </description>

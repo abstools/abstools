@@ -574,7 +574,7 @@ mod ABS-STATEMENT is
   op movecogto(_) : Expr -> AbortableStmt [ctor format (c d o b o)] .
 
   op return(_) : Expr -> AbortableStmt [ctor format (c d o b o)] .
-  op abort(_) : Expr -> AbortableStmt [ctor format (c d o b o)] .
+  op throw(_) : Expr -> AbortableStmt [ctor format (c d o b o)] .
   op $abort(_;_) : Data Bool -> AbortableStmt [ctor format (r d o b o b o)] .
   op die(_) : Expr -> AbortableStmt [ctor format (c d o b o)] .
   op $mark(_) : Expr -> AbortableStmt [ctor format (r d o r o)] .
@@ -2562,7 +2562,7 @@ endm
 
 
 *** The Abort, Catch, Finally statements.
-mod ABS-STMT-ABORT-DIE-TRY-CATCH-FINALLY-RL is
+mod ABS-STMT-THROW-DIE-TRY-CATCH-FINALLY-RL is
   protecting ABS-EVAL .
 
   vars O : Oid .            var C : Cid .          vars S L : Subst .
@@ -2577,13 +2577,13 @@ mod ABS-STMT-ABORT-DIE-TRY-CATCH-FINALLY-RL is
   var LIVE : Bool .
   var DIE : Bool .
   
-  *** Evaluate abort argument only once, in current context.
+  *** Evaluate throw argument only once, in current context.
   crl
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | abort(E) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | throw(E) ; SL }, PrQ: W >
   =>
     < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $abort(eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) ; false) ; SL }, PrQ: W >
   if O := L['this]
-  [label abort-eval] .
+  [label throw-eval] .
 
   crl
     < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | die(E); SL }, PrQ: W >
@@ -2677,7 +2677,7 @@ mod ABS-STMT-ABORT-DIE-TRY-CATCH-FINALLY-RL is
      [label finally-execute] .
 
 endm
-mod ABS-STMT-ABORT-DIE-TRY-CATCH-FINALLY-EQ-TIMED is
+mod ABS-STMT-THROW-DIE-TRY-CATCH-FINALLY-EQ-TIMED is
   protecting ABS-EVAL .
 
   vars O : Oid .            var C : Cid .          vars S L : Subst .
@@ -2694,15 +2694,15 @@ mod ABS-STMT-ABORT-DIE-TRY-CATCH-FINALLY-EQ-TIMED is
   var LIVE : Bool .
   var DIE : Bool .
   
-  *** Evaluate abort argument only once, in current context.
+  *** Evaluate throw argument only once, in current context.
   ceq
     < T : Clock | Limit: LIM, Random: RAND >
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | abort(E) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | throw(E) ; SL }, PrQ: W >
   =
     < T : Clock | Limit: LIM, Random: RAND >
     < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $abort(eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) ; false) ; SL }, PrQ: W >
   if O := L['this]
-  [label abort-eval] .
+  [label throw-eval] .
 
   ceq
     < T : Clock | Limit: LIM, Random: RAND >
@@ -3007,7 +3007,7 @@ mod ABS-SIMULATOR-RL is
   protecting ABS-CALLSTMTS-RL .
   protecting ABS-NEW-RL .
   protecting ABS-STMT-RETURN-RL .
-  protecting ABS-STMT-ABORT-DIE-TRY-CATCH-FINALLY-RL .
+  protecting ABS-STMT-THROW-DIE-TRY-CATCH-FINALLY-RL .
   protecting ABS-RECEIVE-RESULT .
   --- Component Model Extension
   protecting ABS-REBIND-RL .
@@ -3045,7 +3045,7 @@ mod ABS-SIMULATOR-EQ-TIMED is
   protecting ABS-CALLSTMTS-EQ-TIMED .
   protecting ABS-NEW-EQ-TIMED .
   protecting ABS-STMT-RETURN-EQ-TIMED .
-  protecting ABS-STMT-ABORT-DIE-TRY-CATCH-FINALLY-EQ-TIMED .
+  protecting ABS-STMT-THROW-DIE-TRY-CATCH-FINALLY-EQ-TIMED .
   protecting ABS-RECEIVE-RESULT .
   --- Component Model Extension
   protecting ABS-REBIND-RL .

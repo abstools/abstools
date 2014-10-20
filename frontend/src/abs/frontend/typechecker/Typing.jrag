@@ -10,10 +10,29 @@ aspect Typing {
     
     /**
     * May return UnknownType when running without stdlib.
+    *
+    * If we use Model.lookup() here, trying to find the Exception datatype
+    * early in analyzeModel will cause lookup() of exception constructors to
+    * fail later (the first lookup() will record the fact that there's no such
+    * constructor, which is correct because it will be constructed as soon as
+    * we have found the declaration of Exception), so we manually look for
+    * declarations in the stdlib module instead.
      */
     syn Type Model.getStdDataType(String n) {
-       Decl res = lookup(new KindedName(Kind.TYPE_DECL,Constants.STDLIB_NAME+"."+n));
-       return (res instanceof DataTypeDecl) ? (new DataTypeType((DataTypeDecl)res)) : UnknownType.INSTANCE;
+        ModuleDecl stdlibdecl = null;
+        for (ModuleDecl d : getModuleDecls()) {
+            if (d.getName().equals(Constants.STDLIB_NAME)) {
+                stdlibdecl = d;
+                break;
+            }
+        }
+        if (stdlibdecl == null) return UnknownType.INSTANCE;
+        for (Decl d : stdlibdecl.getDecls()) {
+            if (d instanceof DataTypeDecl && d.getName().equals(n)) {
+                return new DataTypeType((DataTypeDecl)d);
+            }
+        }
+        return UnknownType.INSTANCE;
     }
     
     syn Model Model.getModel() = this;
@@ -39,6 +58,7 @@ aspect Typing {
     syn Type Model.getRatType() = getStdDataType("Rat");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
+    syn Type Model.getExceptionType() = getStdDataType("Exception");
     syn DataTypeType Model.getFutType(Type typeArg) = ((DataTypeType)getStdDataType("Fut")).withTypeArgs(typeArg);
     syn DataTypeType Model.getResultType(Type typeArg) = ((DataTypeType)getStdDataType("Result")).withTypeArgs(typeArg);
     
@@ -70,6 +90,7 @@ aspect Typing {
         return getValue().getType(); 
     }
     
+    eq ExceptionDecl.getType() = getModel().getExceptionType();
     eq UnknownDecl.getType() = UnknownType.INSTANCE;
     eq AmbiguousDecl.getType() = UnknownType.INSTANCE;
     
@@ -270,6 +291,8 @@ aspect Typing {
     eq CaseExp.getBranch(int i).getPatternExpType() = getExpr().getType();
     inh Type CaseBranchStmt.getPatternExpType();
     eq CaseStmt.getBranch(int i).getPatternExpType() = getExpr().getType();
+    eq TryCatchFinallyStmt.getCatch(int i).getPatternExpType()
+        = getModel().getExceptionType();
     
     syn lazy Type Pattern.getType();
     eq ConstructorPattern.getType() = getInhType();

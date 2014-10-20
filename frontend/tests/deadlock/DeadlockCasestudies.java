@@ -20,6 +20,6 @@ public class DeadlockCasestudies extends CaseStudyTypeChecking {
     public void test() throws Exception {
         super.test();
         Assume.assumeTrue("Needs main block",m.hasMainBlock());
-       (new Analyser()).deadlockAnalysis(m, true, 2, System.out);
+       (new Analyser()).deadlockAnalysis(m, true, 2, 2, System.out);
     }
 }

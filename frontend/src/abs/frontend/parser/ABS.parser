@@ -220,6 +220,7 @@ List decl_list =
 Decl decl =
 		datatype_decl
 	|	typesyn_decl
+	|   exception_decl
 	|	function_decl
 	|	interface_decl
 	|	class_decl
@@ -255,6 +256,10 @@ TypeSynDecl typesyn_decl =
 	annotation_list.al? TYPE TYPE_IDENTIFIER.lhs ASSIGN typeuse.rhs SEMICOLON  {: return new TypeSynDecl(lhs, al, rhs); :}
   ;
 
+ExceptionDecl exception_decl =
+    annotation_list.al? EXCEPTION TYPE_IDENTIFIER.name data_constructor_params.p? SEMICOLON
+    {: return new ExceptionDecl(name, al, p); :}
+    ;
 
 FunctionDecl function_decl =
     annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN BUILTIN SEMICOLON 
@@ -1117,7 +1122,7 @@ Stmt stmt_without_annotations =
 	|  REBIND exp.obj COLON IDENTIFIER.field ASSIGN exp.e  {: return new RebindStmt(new List(), obj,field,e);                /* Component */ :}
 	|  REBIND IDENTIFIER.field ASSIGN exp.e                {: return new RebindStmt(new List(), new VarUse("this"),field,e); /* Component */ :}
 	|  SUBLOC pure_exp.sub IN pure_exp.father              {: return new MoveStmt(new List(), sub,father);                   /* Component */ :}
-	|  ABORT  data_exp.s  {: return new AbortStmt(new List(), s) ; :}
+	|  THROW  data_exp.s  {: return new ThrowStmt(new List(), s) ; :}
 	|  DIE    data_exp.s  {: return new DieStmt  (new List(), s) ; :}
 	;
 

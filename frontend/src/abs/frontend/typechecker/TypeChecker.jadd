@@ -394,6 +394,12 @@ aspect TypeChecker {
         getDataTypeUse().typeCheck(e);
     }
 
+    public void ExceptionDecl.typeCheck(SemanticErrorList e) {
+        for (ConstructorArg d : getConstructorArgs()) {
+            d.typeCheck(e);
+        }
+    }
+
     public void TypeSynDecl.typeCheck(SemanticErrorList e) {
         if (getValue().getName().equals(getName()))
             e.add(new TypeCheckerException(new TypeError(getValue(), ErrorMessage.CIRCULAR_TYPESYN, getName())));
@@ -620,10 +626,10 @@ aspect TypeChecker {
     }       
 
     public void TryCatchFinallyStmt.typeCheck(SemanticErrorList e) {
+        Type exc = getModel().getExceptionType();
         getBody().typeCheck(e);
         for (CaseBranchStmt b : getCatchs()) {
-            // TODO: check that each left-hand side is of type Error,
-            // once we know how that's implemented
+            b.getLeft().typeCheck(e, exc);
             b.getRight().typeCheck(e);
         }
         if (hasFinally()) {
@@ -891,9 +897,15 @@ aspect TypeChecker {
         }
     }
     //ASPECT
-    public void AbortStmt.typeCheck(SemanticErrorList e) { /* nothing to check */ }
+    public void ThrowStmt.typeCheck(SemanticErrorList e) {
+        getReason().typeCheck(e);
+        getReason().assertHasType(e,getModel().getExceptionType());
+    }
 
-    public void DieStmt.typeCheck(SemanticErrorList e) { /* nothing to check */ }
+    public void DieStmt.typeCheck(SemanticErrorList e) {
+        getReason().typeCheck(e);
+        getReason().assertHasType(e,getModel().getExceptionType());
+    }
 
 
 }

@@ -317,6 +317,10 @@ aspect GenerateJava {
         // generate nothing as type synonyms do not appear in the Java outout
     }
 
+    public void ExceptionDecl.generateJava(PrintStream stream) {
+        // generate nothing as exceptions are rewritten to datatypes
+    }
+
     public void Block.generateJava(PrintStream stream) {
         generateJava(stream, false);
     }

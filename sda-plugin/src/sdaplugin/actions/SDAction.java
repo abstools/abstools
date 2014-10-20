@@ -20,6 +20,7 @@ import org.absmodels.abs.plugin.actions.ActionUtils;
 import org.absmodels.abs.plugin.builder.AbsNature;
 
 import abs.frontend.ast.Model;
+import abs.frontend.typechecker.ext.DeadlineChecker;
 
 /**
  * Our sample action implements workbench action delegate.
@@ -31,6 +32,8 @@ import abs.frontend.ast.Model;
  */
 public class SDAction implements IWorkbenchWindowActionDelegate {
   private IWorkbenchWindow window;
+  
+ 
   
   /**
    * The constructor.
@@ -56,7 +59,7 @@ public class SDAction implements IWorkbenchWindowActionDelegate {
     Model model = nature.getCompleteModel();
     model.typeCheck();
     /* 4. Perform the analysis */
-    SDARun run = new SDARun(model, true, 2, out);
+    SDARun run = new SDARun(model, true, 3, deadlock.analyser.Analyser.FixPoint2_0, out);
     run.schedule();
   }
 

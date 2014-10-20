@@ -27,6 +27,7 @@
 
 (require 'compile)
 (require 'custom)
+(require 'easymenu)
 (eval-when-compile (require 'rx))
 (require 'flymake)
 (autoload 'run-maude "maude-mode" nil t)
@@ -151,7 +152,7 @@ different results."
   (eval-when-compile
     (regexp-opt
      '("module" "import" "export" "from"              ; the top levels
-       "data" "type" "def" "interface" "class"
+       "data" "type" "def" "interface" "class" "exception"
        "case" "=>" "new" "local"                      ; the functionals
        "extends"                                      ; the interfaces
        "implements"                                   ; the class
@@ -165,8 +166,9 @@ different results."
        "product"                                      ; product definition
        "let" "in"
        "if" "then" "else" "return" "while"            ; the statements
-       "await" "assert" "abort" "die" "get" "skip" "suspend"
+       "await" "assert" "throw" "die" "get" "skip" "suspend"
        "original" "movecogto"
+       "try" "catch" "finally"
        "duration"                       ; guard / statement
        ) 'words))
   "List of Abs keywords.")
@@ -224,6 +226,10 @@ different results."
        1)
       ("Datatypes"
        ,(rx bol (* whitespace) (or "data" "type") (1+ whitespace)
+            (group (char upper) (* (char alnum))))
+       1)
+      ("Exceptions"
+       ,(rx bol (* whitespace) "exception" (1+ whitespace)
             (group (char upper) (* (char alnum))))
        1)
       ("Classes"
@@ -369,6 +375,14 @@ value.")
         (abs--file-date-< output-modtime abs-modtime)
         (buffer-modified-p))))
 
+(defun abs--compile-model (backend)
+  (let ((compile-command (abs--calculate-compile-command backend)))
+   (call-interactively 'compile)))
+
+(defun abs--compile-model-no-prompt (backend)
+  (let ((compile-command (abs--calculate-compile-command backend)))
+   (compile compile-command)))
+
 (defun abs--run-model (backend)
   "Start the model running on language BACKEND."
   (pcase backend
@@ -443,8 +457,7 @@ Argument FLAG will prompt for language backend to use if 1."
                                             '("maude" "erlang" "java")
                                             nil t nil nil "maude")))))
     (if (abs--needs-compilation backend)
-        (let ((compile-command (abs--calculate-compile-command backend)))
-          (call-interactively 'compile))
+        (abs--compile-model backend)
       (abs--run-model backend))))
 
 ;;; Movement
@@ -549,10 +562,39 @@ The following keys are set:
   ;; imenu
   (setq imenu-generic-expression abs-imenu-generic-expression)
   (setq imenu-syntax-alist abs-imenu-syntax-alist)
+  ;; Menu
+  (easy-menu-add abs-mode-menu abs-mode-map)
   ;; speedbar support
   (when (fboundp 'speedbar-add-supported-extension)
     (speedbar-add-supported-extension ".abs")))
 
+;;; Set up the "Abs" pull-down menu
+(easy-menu-define abs-mode-menu abs-mode-map
+  "Abs mode menu."
+  '("Abs"
+    ["Compile" (abs--compile-model-no-prompt abs-target-language) :active t]
+    ["Run" (abs--run-model abs-target-language)
+     :active (not (abs--needs-compilation abs-target-language))]
+    "---"
+    ("Select Backend"
+     ["Maude" (setq abs-target-language 'maude)
+      :active t
+      :style radio
+      :selected (eq abs-target-language 'maude)]
+     ["Erlang" (setq abs-target-language 'erlang)
+      :active t
+      :style radio
+      :selected (eq abs-target-language 'erlang)])
+    ("Maude Backend Options"
+     ["Timed interpreter"
+      (setq abs-use-timed-interpreter (not abs-use-timed-interpreter))
+      :active t :style toggle
+      :selected abs-use-timed-interpreter])
+    ("Erlang Backend Options"
+     ["Debugging output"
+      (setq abs-debug-output (not abs-debug-output))
+      :active t :style toggle
+      :selected abs-debug-output])))
 
 (unless (assoc "\\.abs\\'" auto-mode-alist)
   (add-to-list 'auto-mode-alist '("\\.abs\\'" . abs-mode)))

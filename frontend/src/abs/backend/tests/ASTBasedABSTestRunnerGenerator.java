@@ -183,7 +183,7 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
              */
             if (! isIgnored(clazz,method)) {
                 String objectRef = uncap(namePrefix) + instance;
-                thisBlock.addStmtNoTransform(newObj(inf, clazz, objectRef, true));
+                thisBlock.addStmtNoTransform(newObj(inf, clazz, objectRef, false));
                 generateAsyncTestCallAST(thisBlock, objectRef, method);
             }
             
@@ -219,7 +219,7 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
         
         String objName = uncap(clazz.getName()) + "dataPoint";
         String dataSet = dataPointSetName(clazz);
-        block.addStmtNoTransform(newObj(key, clazz, objName, false));
+        block.addStmtNoTransform(newObj(key, clazz, objName, true));
         block.addStmtNoTransform(getVarDecl(dataSet, prt.copy(), 
              new SyncCall(new VarUse(objName), dataPoint.getName(), new List<PureExp>())));
         

@@ -29,33 +29,49 @@ import java.io.PrintStream;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.ClassDecl;
-
 import deadlock.analyser.factory.*;
 import deadlock.constraints.term.*;
 import deadlock.analyser.generation.*;
+import deadlock.analyser.inference.ContractInference;
 import deadlock.analyser.detection.*;
 import deadlock.constraints.constraint.*;
 import deadlock.constraints.substitution.*;
 
 public class Analyser {
-
-  public void deadlockAnalysis(Model m, boolean verbose, int nbIteration, PrintStream out) {
+    
+public static int FixPoint1_0 = 1;
+public static int FixPoint2_0 = 2;
+    
+  public void deadlockAnalysis(Model m, boolean verbose, int nbIteration, int fixPointVersion, PrintStream out) {
+      
+      Variable.varCounter =0;
+      Long totalTimeInMs = 0L;
+      
+      
+      
 
     /* 0, Create the initial data */
+    ContractInference ci = new ContractInference();
     Factory df = new Factory(verbose);
-    Environment g = m.environment(df, verbose/*TODO, out*/);
-    Map<InterfaceDecl, ClassDecl> mapInterfaceToClass = m.getMapInterfaceToClass(/*TODO out*/);
+    Environment g = ci.environment(m, df, verbose);
+    Map<InterfaceDecl, ClassDecl> mapInterfaceToClass = ci.getMapInterfaceToClass(m);
 
      /* 1. Generate contracts */
-    String ident = null; if(verbose) { out.println("Analyzing dependencies  to look for deadlocks..."); ident = ""; }
+    String ident = null; 
+    if(verbose) { out.println("Analyzing dependencies  to look for deadlocks..."); ident = ""; }
     
-    ResultInference InferenceOutput = m.typeInference(ident, g, df, mapInterfaceToClass/*TODO, out*/);
+    Long nanoTime = System.nanoTime();
+    Long ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
+    totalTimeInMs += ellapsedTime;
+    ResultInference InferenceOutput = ci.typeInference(m, ident, g, df, mapInterfaceToClass);
     Map<String, MethodContract> methodMap = InferenceOutput.getMethods();
     deadlock.constraints.constraint.Constraint c = InferenceOutput.getConstraint();
-
+    
+    
     if(verbose) {
       out.println("###############################################################\n");
       out.println("Contract and Constraint generation finished...");
+      out.println("Ellapsed time: " + ellapsedTime + "ms");
       out.println("  Initial constraint:\n  -------------------");
       out.println(InferenceOutput.getConstraint().toString() + "\n");
       out.println("  Initial contracts:\n  -----------------");
@@ -70,11 +86,20 @@ public class Analyser {
     }
 
     // 1.2. Solve the constraint and check for errors
+    nanoTime = System.nanoTime();
     c.solve();
-  
+    ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
+    totalTimeInMs += ellapsedTime;
+    
     if(verbose && (!c.getErrors().isEmpty())) {
       out.println("Generation of Contract failed: constraint not satisfiable");
       out.println("###############################################################\n");
+    }
+    else if(verbose)
+    {
+        out.println("Constraint solving completed");
+        out.println("Ellapsed time: " + ellapsedTime + "ms");
+        out.println("###############################################################\n");
     }
 
     ArrayList<GenerationError> errors = new ArrayList<GenerationError>(c.getErrors().size());
@@ -88,6 +113,7 @@ public class Analyser {
 
 
     // 1.3. apply it to the contracts
+    nanoTime = System.nanoTime();
     Substitution s = c.getSubstitution();
 
     for(String k : methodMap.keySet()){
@@ -95,8 +121,15 @@ public class Analyser {
       mc.clean();
       if(methodMap.get(k) != null)   methodMap.put(k, mc);
     }
-
+    ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
+    totalTimeInMs += ellapsedTime;
+    
     if(verbose) {
+      out.println("###############################################################\n");
+      out.println("Substitution completed");
+      out.println("Ellapsed time: " + ellapsedTime + "ms");
+      
+        
       out.println("###############################################################\n");
       out.println("Contract and Constraint computation finished...");
       out.println("  Constraint:\n  -----------");
@@ -107,36 +140,66 @@ public class Analyser {
       for(Map.Entry<String, MethodContract> entry : methodMap.entrySet()){
         out.println("    \"" + entry.getKey() + "\": " + entry.getValue());
       }
+      out.println("###############################################################\n");
+      out.println("Initiating contract analysis");
     }
 
     /* 2. Analyze the contract */
     
-    out.println("\n\n\n\n\n\n\n\n\n\n\n");
+    if(verbose) out.println("Creating CCT...");
+    nanoTime = System.nanoTime();
     Map<String, Term> cct = new HashMap<String, Term>();
     
     for(String k : methodMap.keySet()){
       if(methodMap.get(k) != null)   cct.put(k, methodMap.get(k));
     }
+    if(verbose) out.println("Applying substitution to Main Contract...");
     cct.put("Main.main", s.apply(InferenceOutput.getMainContract()));
+    ellapsedTime = (System.nanoTime() - nanoTime)/1000000L;
+    totalTimeInMs += ellapsedTime;
     
-    Term contract;
-    for(String k : cct.keySet()){
-        contract = cct.get(k);
-        out.println("    \"" + k + "\": " + ((contract != null) ? (contract.toString()) : ("null")));
+    if(verbose) {
+        out.println("CCT creation completed");
+        out.println("Ellapsed time: " + ellapsedTime + "ms");
+        out.println("*****CONTRACTS*******");
+        Term contract;
+        for(String k : cct.keySet()){
+            contract = cct.get(k);
+            out.println("    \"" + k + "\": " + ((contract != null) ? (contract.toString()) : ("null")));
+        }
+        out.println("*****END CONTRACTS*******");
     }
     
-    out.println("\n\n\n\n\n\n\n\n\n\n\n");
-    DASolver solver = new DASolver(df, cct, nbIteration/*TODO, out*/);
+    if(verbose){
+        out.println("###############################################################\n");
+        out.println("Computing Dependencies...");
+    }
+    
+    nanoTime = System.nanoTime();
+    
+    DASolver solver = (fixPointVersion == FixPoint2_0)? new FixPointSolver2(df, cct):new FixPointSolver1(df, cct, nbIteration);
+    
 
     solver.computeSolution();
-    out.println(solver.toString());
+    ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
+    totalTimeInMs += ellapsedTime;
+    
+    if(verbose) {
+        out.println("Dependency analysis completed");
+        out.println("Ellapsed time: " + ellapsedTime + "ms");
+    }
             
     out.println("### LOCK INFORMATION RESULTED BY THE ANALYSIS ###\n");
-    out.println("Saturation:                   " + solver.isSatured());
-    out.println("Deadlock in Main:             " + solver.isDeadlockMain());
-    //System.out.println("Await cycle in Main? " + solver.isAwaitLoopMain());
-    out.println("Possible Livelock in Main:    " + solver.isCycleMain());
+
+      out.println("Possible Deadlock in Main:    " + solver.isDeadlockMain());
+      out.println("Current Version:              " + solver.getName() );
+      if(fixPointVersion == FixPoint1_0){
+        out.println("Saturation:                   " + ((FixPointSolver1)solver).isSatured());
+        out.println("Possible Livelock in Main:    " + ((FixPointSolver1)solver).isLivelockMain());
+      }
+    out.println("Analysis Duration:            " + totalTimeInMs + "ms");
     }
+
 }
 
 

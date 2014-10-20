@@ -21,10 +21,28 @@ random(N)->
 strlen(S)->
     length(S).
 
+
+string_interleave(Items, Sep) ->
+    lists:flatten(lists:reverse(string_interleave1(Items, Sep, []))).
+
+string_interleave1([Head | []], _Sep, Acc) -> [Head | Acc];
+string_interleave1([Head | Tail], Sep, Acc) ->
+    string_interleave1(Tail, Sep, [Sep, Head | Acc]).
+
+constructorname_to_string(A) ->
+    lists:nthtail(4, atom_to_list(A)).
+
 toString(I) when is_integer(I) ->
     integer_to_list(I);
 toString({N,D}) when is_integer(N),is_integer(D)->
-    float_to_list(N / D,[{decimals, 4}, compact]).
+    float_to_list(N / D,[{decimals, 4}, compact]);
+toString(S) when is_list(S) -> S;
+toString(A) when is_atom(A) -> constructorname_to_string(A);
+toString(T) when is_tuple(T) ->
+    [C|A] = tuple_to_list(T),
+    constructorname_to_string(C)
+        ++ "(" ++ string_interleave([toString(X) || X <- A], ", ")
+        ++ ")" .
 
 truncate({N,D})->
     N div D;

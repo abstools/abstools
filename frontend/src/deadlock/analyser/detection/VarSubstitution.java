@@ -16,7 +16,7 @@ public class VarSubstitution {
 	  
 	  //substitute v1 with v2
 	  public void addSub(GroupName v1, GroupName v2){
-		  if(v1.toString().equals(v2.toString())) return;
+		  if(v1.equals(v2)) return;
 		  this.data.put(v1, v2);
 	  }
 	  

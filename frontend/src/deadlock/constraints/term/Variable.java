@@ -22,7 +22,7 @@ package deadlock.constraints.term;
 
 public class Variable implements Comparable<Variable> {
   
-  private static int varCounter = 0;
+  public static int varCounter = 0;
   private int id;
 
   private TermVariable kind;
