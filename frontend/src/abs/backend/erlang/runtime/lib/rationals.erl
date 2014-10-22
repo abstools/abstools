@@ -12,6 +12,9 @@ to_r(N) when is_integer(N) ->
 
 trunc({N,D})-> N div D.
 
+inv({ 0, _D}) -> throw(badarith);
+inv({ N, D }) -> { D, N }.
+
 %%% Rational numbers are simply tuples { int(), int() }
 
 new(N, D) -> G = intar:gcd(N, D), { N div G, D div G }.
@@ -37,8 +40,6 @@ min(A, B) ->
 is_proper({ N, D }) -> intar:gcd(N, D) =:= 1.
 
 neg({ N, D }) -> { -N, D }.
-
-inv({ N, D }) -> { D, N }.
 
 add(A, B) -> proper(fast_add(A, B)).
 
