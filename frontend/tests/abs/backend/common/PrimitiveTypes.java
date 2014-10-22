@@ -189,6 +189,16 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
+    public void intRatCmp() {
+        assertEvalTrue("{ Bool testresult = 10000000/10000000 == 1;  }");
+    }
+
+    @Test
+    public void intRatCmp2() {
+        assertEvalTrue("{ Bool testresult = 10000000/10000000 != 1; testresult= ~ testresult; }");
+    }
+
+    @Test
     public void divByZero() throws Exception {
         assertEvalFails("{Bool testresult = 1/0 != 0;}");
     }
