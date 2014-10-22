@@ -660,7 +660,7 @@ aspect GenerateErlang {
   @Override
   public void ConstructorPattern.generateErlangCode(ErlangCodeStream prePattern,ErlangCodeStream ecs,Vars vars){
     //Handling for bool
-    final String c = getConstructor();
+    final String c = getDataConstructor().getName();
     if("True".equals(c) || "False".equals(c))
       ecs.print(c.toLowerCase());
     else{
@@ -683,7 +683,7 @@ aspect GenerateErlang {
 
   public void DataConstructorExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     //Handling for bool
-    final String c = getConstructor();
+    final String c = getDataConstructor().getName();
     if("True".equals(c) || "False".equals(c))
       ecs.print(c.toLowerCase());
     else{
