@@ -26,13 +26,13 @@ import java.util.ArrayList;
 import deadlock.constraints.term.Term;
 import deadlock.constraints.term.TermStructured;
 
-public class RecordFuture extends GenericStructuredTerm implements Record {
+public class RecordFuture extends GenericStructuredTerm implements IRecord {
 
   public static String name = "RecordFuture";
 
   /* Constructors */
   public RecordFuture(List<Term> l) { super(name, l); }
-  public  RecordFuture(GroupName a, Record r) {
+  public  RecordFuture(GroupName a, IRecord r) {
     super(name, new ArrayList<Term>(2));
     subterms.add(a);
     subterms.add(r);
@@ -40,7 +40,7 @@ public class RecordFuture extends GenericStructuredTerm implements Record {
 
   /* Basic Get */
   public GroupName getDepends() { return (GroupName)this.getSubTerms().get(0); }
-  public Record getRecord() { return (Record)this.getSubTerms().get(1); }
+  public IRecord getRecord() { return (IRecord)this.getSubTerms().get(1); }
 
   /* toString */
   public String toString() {

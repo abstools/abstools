@@ -4,41 +4,31 @@ import java.util.List;
 import java.util.LinkedList;
 
 import deadlock.analyser.factory.Factory;
-import deadlock.analyser.factory.Record;
+import deadlock.analyser.factory.IRecord;
+import deadlock.analyser.factory.ITypingEnvironmentVariableType;
+import deadlock.analyser.factory.RecordDataType;
 import deadlock.analyser.factory.RecordVariable;
+import deadlock.constraints.constraint.Constraint;
 
 public class ResultInferencePureExp {
 
-  private String vname;
-  private LinkedList<Record> obj;
+  private ITypingEnvironmentVariableType r;
   private Factory factory;
+  private Constraint constraint;
   //private boolean isDataType;
 
   /* Constructor */
-  public ResultInferencePureExp(Factory df) {
-    factory = df; vname = null; obj = new LinkedList<Record>(); obj.add(df.newRecordVariableFanthom()); }
-  public ResultInferencePureExp(Factory df, String id, Record r) {
-    factory = df; vname = id; obj = new LinkedList<Record>(); obj.add(r); }
+  //public ResultInferencePureExp(Factory df) { this(df, null, df.newConstraint()); }
+  public ResultInferencePureExp(Factory df, ITypingEnvironmentVariableType r) { this(df, r, df.newConstraint()); }
+  public ResultInferencePureExp(Factory df, ITypingEnvironmentVariableType r, Constraint constraint) {
+    factory = df; this.r = r; this.constraint = constraint; }
 
   /* Basic Get */
-  public String getId() { return vname; }
-  public List<Record> getObjs() { return obj; }
-  public Record getRepresentative() { return obj.getLast(); }
-  public Record getRepresentative(Record r) {
-    if(this.isDataType()) { return r; }
-    else {
-      for(Record maybe : obj) { if(maybe.equals(r)) { return r; } }
-      return obj.getLast();
-  } }
+  public ITypingEnvironmentVariableType getVariableType() { return r; }
+  public Constraint getConstraint() {return this.constraint; }
 
-  public boolean isDataType() { return (obj.getFirst() instanceof RecordVariable) && (((RecordVariable)obj.getFirst()).isDataType()); }
+  public boolean isDataType() { return (r instanceof RecordDataType); }
 
-  /* Basic Extension */
-  public void add(ResultInferencePureExp r) {
-    if(!r.isDataType()) {
-      if(this.isDataType()) { this.vname = r.vname; this.obj = r.obj; }
-      else { obj.addAll(r.obj); vname = null; }
-  } }
 	
 }
 

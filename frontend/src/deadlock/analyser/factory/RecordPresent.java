@@ -24,10 +24,11 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
 
+import abs.frontend.typechecker.Type;
 import deadlock.constraints.term.Term;
 import deadlock.constraints.term.TermStructured;
 
-public class RecordPresent extends GenericStructuredTerm implements Record {
+public class RecordPresent extends GenericStructuredTerm implements IRecord {
 
   public static String name = "RecordPresent";
 
@@ -38,14 +39,15 @@ public class RecordPresent extends GenericStructuredTerm implements Record {
     subterms.add(a);
     subterms.addAll(fields);
   }
+  
 
   /* Basic Get */
   public GroupName getRoot() {
     return ((GroupName)(getSubTerms().get(0)));
   }
   
-  public Record getField(String name) {
-    Record res;
+  public IRecord getField(String name) {
+    IRecord res;
     for(Term sub : subterms.subList(1, subterms.size())) {
       res = ((RecordField)sub).getField(name);
       if(res != null) return res;

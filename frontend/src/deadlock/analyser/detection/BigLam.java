@@ -6,9 +6,10 @@ import java.util.TreeSet;
 
 import deadlock.analyser.factory.Contract;
 import deadlock.analyser.factory.GroupName;
+import deadlock.analyser.factory.MainMethodContract;
 import deadlock.analyser.factory.MethodContract;
 import deadlock.analyser.factory.MethodInterface;
-import deadlock.analyser.factory.Record;
+import deadlock.analyser.factory.IRecord;
 import deadlock.constraints.term.Term;
 
 
@@ -28,6 +29,20 @@ public class BigLam {
     Lam w;
     Lam wPrime;
 
+ // constructor from methodName and methodContract
+    public BigLam(String method, MainMethodContract methodContractInferred){
+        this.methodName = method;
+        this.methodContract = methodContractInferred;
+
+        this.lastBFresh = new VarSubstitution();
+
+        this.w = new Lam();
+        this.wPrime = new Lam();
+        
+        this.bTilde = new TreeSet<GroupName>();
+        this.aTilde = new TreeSet<GroupName>();
+    }
+    
     // constructor from methodName and methodContract
     public BigLam(String method, Term methodContractInferred){
         //initialize the lam for the method MethodName, and use this MethodContract obtained form inference algorithm to produce
@@ -44,20 +59,24 @@ public class BigLam {
 
         if(methodContractInferred instanceof MethodContract){
             MethodInterface methodInterface = ((MethodContract) methodContractInferred).getMethodInterface();
-            Contract contract = ((MethodContract) methodContractInferred).getContract();
+            Contract contractP = ((MethodContract) methodContractInferred).getContractPresent();
+            Contract contractF = ((MethodContract) methodContractInferred).getContractPresent();
 
-            Record _this = methodInterface.getThis();
-            Record ret =  methodInterface.getResult();
+            IRecord _this = methodInterface.getThis();
+            IRecord ret =  methodInterface.getResult();
 
 
-            List<Record> args = methodInterface.getParameters();
+            List<IRecord> args = methodInterface.getParameters();
 
-            this.bTilde = contract.fn();
+            Set<GroupName> bTildeTemp = contractP.fn();
+            bTildeTemp.addAll(contractF.fn());
+            
+            this.bTilde = bTildeTemp;
             this.bTilde.addAll(ret.fn());
             this.bTilde.removeAll(_this.fn());
             this.aTilde = new TreeSet<GroupName>();
             this.aTilde.addAll(_this.fn());
-            for(Record t : args){
+            for(IRecord t : args){
                 this.bTilde.removeAll(t.fn());
                 this.aTilde.addAll(t.fn());
             }

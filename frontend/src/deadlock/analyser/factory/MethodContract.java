@@ -20,6 +20,7 @@
 
 package deadlock.analyser.factory;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -33,22 +34,32 @@ public class MethodContract extends TermStructured {
   /* Constructors */
   public MethodContract(List<Term> l) { super(name, l); }
 
-  public MethodContract(MethodInterface mi, Contract contract){
+  public MethodContract(MethodInterface mi, Contract cp, Contract cf){
     super(name, new ArrayList<Term>(2));
     subterms.add(mi);
-    subterms.add(contract);
+    subterms.add(cp);
+    subterms.add(cf);
   }
 
   /* Basic Get */
   public MethodInterface getMethodInterface() { return (MethodInterface)subterms.get(0); }
-  public Contract getContract() { return (Contract)subterms.get(1); }
+  public Contract getContractPresent() { return (Contract)subterms.get(1); }
+  public Contract getContractFuture() { return (Contract)subterms.get(2); }
+  
+//  public Contract getContract(){
+//      List<Term> pairSeq = new LinkedList<Term>();
+//      pairSeq.add(getContractPresent());
+//      pairSeq.add(getContractFuture());
+//      return new Contract(pairSeq);
+//  }
 
   /* Basic Manipulation */
-  public void clean() { getContract().clean(); }
+  //public void clean() { getContractPresent().clean(); getContractFuture().clean(); }
 
   /* toString */
+  @Override
   public String toString() {
-    return (subterms.get(0).toString()) + " { " + (subterms.get(1).toString()) + " } ";
+    return (subterms.get(0).toString()) + " < " + (subterms.get(1).toString()) + " , " + (subterms.get(2).toString()) + " > ";
   }
 
 }
