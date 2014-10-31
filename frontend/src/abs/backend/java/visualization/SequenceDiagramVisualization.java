@@ -74,7 +74,9 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                     // special support for adding nodes later to a diagram
                     writeOut("#newobj ");
                 }
-                writeOutLn(getActorName(initialObject) + ":" + className + "[a]");
+                // use sdedit's <label> syntax to create a label that has the class name and the COG ID
+                // the "a" flag suppresses the object's name (before the colon) - which is useless in this case, as the label is used
+                writeOutLn(getActorName(initialObject) + ":" + className + "[a]" + "\"" + className + " [COG " + cog.getID() + "]\"");
             }
         }
         
