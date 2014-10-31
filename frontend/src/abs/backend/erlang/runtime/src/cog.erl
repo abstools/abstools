@@ -78,7 +78,7 @@ loop(S=#state{running=non_found})->
         receive
             {stop_world, Sender} ->
                 Sender ! ok,
-                S#state{running={gc, non_found}}
+                S#state{running={gc, false}}
         after 0 ->
                 receive
                     {newState,TaskRef,State}->
@@ -96,7 +96,7 @@ loop(S=#state{running=non_found})->
                         dec_referencers(S);
                     {stop_world, Sender} ->
                         Sender ! ok,
-                        S#state{running={gc, non_found}}
+                        S#state{running={gc, false}}
                 end
         end,
     case New_State#state.running of
