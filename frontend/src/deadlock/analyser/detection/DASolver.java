@@ -8,21 +8,26 @@ import java.util.HashMap;
 import java.util.Map;
 
 import deadlock.analyser.factory.Factory;
+import deadlock.analyser.factory.MainMethodContract;
+import deadlock.analyser.factory.MethodContract;
 import deadlock.constraints.term.Term;
 
 public abstract class DASolver {
 
     
     protected Boolean deadlock;
-    protected Map<String, Term> methodMap;
+    protected Map<String, MethodContract> methodMap;
+    protected MainMethodContract mmc;
     protected Factory df;
     protected Map<String, BigLam> lampMap;
     
-    public DASolver(Factory f, Map<String, Term> map){
+    public DASolver(Factory f, Map<String, MethodContract> map, MainMethodContract mmc){
         this.df = f;
         this.methodMap = map;
                 
         this.deadlock = false;
+        
+        this.mmc = mmc;
         
         this.lampMap = new HashMap<String, BigLam>();
 

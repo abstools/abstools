@@ -26,13 +26,13 @@ import java.util.LinkedList;
 import deadlock.constraints.term.Term;
 import deadlock.constraints.term.TermStructured;
 
-public class RecordField extends GenericStructuredTerm implements Record { // not really a record, but it helps the debug
+public class RecordField extends GenericStructuredTerm implements IRecord { // not really a record, but it helps the debug
 
   public static String prefix = "Field-";
 
   /* Constructors */
   public  RecordField(String name, List<Term> fields) { super(name, fields); }
-  public RecordField(String name, Record r) {
+  public RecordField(String name, IRecord r) {
     super(prefix + name, new LinkedList<Term>());
     subterms.add(r);
   }
@@ -43,8 +43,8 @@ public class RecordField extends GenericStructuredTerm implements Record { // no
     return getConstructor().substring(begin);
   }
 
-  public Record getField(String name) {
-    if(constructor.equals(prefix + name)) { return (Record)subterms.get(0); }
+  public IRecord getField(String name) {
+    if(constructor.equals(prefix + name)) { return (IRecord)subterms.get(0); }
     else return null;
   }
 

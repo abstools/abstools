@@ -10,23 +10,26 @@ import deadlock.analyser.factory.Contract;
 
 public class ResultInference {
 
-  HashMap<String, MethodContract> methods;
-  Constraint constraint;
+  private HashMap<String, MethodContract> methods;
+  private Constraint constraint;
 
-  Contract main;
+  private Contract mainCP;
+  private Contract mainCF;
 
   /* Constructor */
   public ResultInference(){
     this.methods = new HashMap<String, MethodContract>();
     this.constraint = null;
-    this.main = null;
-  }
+    this.mainCP = null;
+    this.mainCF = null;
+    }
 
   /* Basic Get */
 
   public Map<String, MethodContract> getMethods(){ return this.methods; }
   public Constraint getConstraint(){ return this.constraint; }
-  public Contract getMainContract() { return main; }
+  public Contract getMainContractPresent() { return mainCP; }
+  public Contract getMainContractFuture() { return mainCF; }
 
 
   /* Basic Estension */
@@ -44,7 +47,7 @@ public class ResultInference {
     this.add(r.constraint);
   }
 
-  public void setMain(Contract c) { this.main = c; }
+  public void setMain(Contract cp, Contract cf) { this.mainCP = cp; this.mainCF = cf; }
 
 }
 

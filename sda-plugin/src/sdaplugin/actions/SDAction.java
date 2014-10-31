@@ -59,7 +59,7 @@ public class SDAction implements IWorkbenchWindowActionDelegate {
     Model model = nature.getCompleteModel();
     model.typeCheck();
     /* 4. Perform the analysis */
-    SDARun run = new SDARun(model, true, 3, deadlock.analyser.Analyser.FixPoint2_0, out);
+    SDARun run = new SDARun(model, true, 3, 2, out);
     run.schedule();
   }
 

@@ -29,7 +29,7 @@ import deadlock.constraints.term.Term;
 
 public class ContractElementUnion extends ContractElement {
 
-  public static String name = "ContractUnion";
+  public static final String name = "ContractUnion";
 
   private Contract branchOne;
   private Contract branchTwo;
