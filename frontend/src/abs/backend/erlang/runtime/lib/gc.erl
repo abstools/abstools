@@ -6,7 +6,7 @@
 
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
--export([start/0, init/0, extract_references/1, stop_world/1, resume_world/1, get_references/1]).
+-export([start/0, init/0, extract_references/1, get_references/1]).
 
 -export([behaviour_info/1]).
 
@@ -19,7 +19,7 @@ start() ->
 init() ->
     loop(gb_sets:empty(), gb_sets:empty()).
 
-loop(Cogs, Objects) ->
+loop(Cogs, Objects, Futures) ->
     ?DEBUG({{cogs, Cogs}, {objects, Objects}}),
     {NewCogs, NewObjects} =
         receive
@@ -33,11 +33,30 @@ loop(Cogs, Objects) ->
                 ?DEBUG({unknown_message, X}),
                 {Cogs, Objects}
         end,
-    CogList = gb_sets:to_list(NewCogs),
-    StopList = rpc:pmap({gc, stop_world}, [], CogList),
-    Gray = lists:foldl(fun ordsets:union/2, [], rpc:pmap({gc, get_references}, [], CogList)),
-    rpc:pmap({gc, resume_world}, [], CogList),
-    loop(NewCogs, NewObjects).
+    gb_sets:fold(fun ({cog, Ref}, ok) -> cog:stop_world(Ref) end, ok, NewCogs),
+    await_stop(NewCogs, 0, NewObjects).
+
+await_stop(Cogs, Stopped, Objects) ->
+    {NewCogs, NewStopped, NewObjects} =
+        receive
+            #cog{ref=Ref} ->
+                cog:stop_world(Ref),
+                {gb_sets:add_element({cog, Ref}, Cogs), Stopped, Objects};
+            #object{ref=Ref} ->
+                {Cogs, Stopped, gb_sets:add_element({object, Ref}, Objects)};
+            Ref when is_pid(Ref) ->
+                {Cogs, Stopped, gb_sets:add_element({future, Ref}, Objects)};
+            {stopped, Ref} ->
+                {Cogs, Stopped + 1, Objects}
+        end,
+    case gb_sets:size(NewCogs) of
+        NewStopped ->
+            % Insert mark phase here
+            gb_sets:fold(fun ({cog, Ref}, ok) -> cog:resume_world(Ref) end, ok, NewCogs),
+            loop(NewCogs, NewObjects);
+        _ -> await_stop(NewCogs, NewStopped, Objects)
+    end.
+        
 
 mark(Cogs, {Gray, White}) ->
     ?DEBUG({collect, {gray, Gray}, {white, White}}),
@@ -48,12 +67,6 @@ mark(Cogs, Black, [], White) ->
 mark(Cogs, Black, [Object|Gray], White) ->
     NewGrays = lists:filter(fun (O) -> not ordsets:is_element(O, Black) end, get_references(Object)),
     mark(Cogs, [Object|Black], ordsets:union(NewGrays, Gray), White).
-
-stop_world({cog, Ref}) ->
-    cog:stop_world(Ref).
-
-resume_world({cog, Ref}) ->
-    cog:resume_world(Ref).
 
 get_references({Module, Ref}) ->
     Module:get_references(Ref).
