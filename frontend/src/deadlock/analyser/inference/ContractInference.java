@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 import choco.kernel.common.util.tools.ArrayUtils;
+import deadlock.constraints.constraint.Constraint;
 import deadlock.constraints.term.*;
 import deadlock.analyser.factory.*;
 import deadlock.analyser.generation.*;
@@ -26,6 +27,11 @@ import deadlock.analyser.generation.*;
  * 
  */
 public class ContractInference {
+    
+    private static final String _initName = "!init!";
+    private static final String _runName = "run";
+    private static final String _destinyName = "!destiny!";
+    
 
     // Code description
     /*
@@ -57,25 +63,35 @@ public class ContractInference {
     /************************************/
     /* Helper function */
     /************************************/
-    public RecordPresent createInstance(ClassDecl cd, Factory df, GroupName a) {
-        // TODO: deal with field assignement, with init, and run
+    // reviewed //
+     public RecordPresent createInstance(ClassDecl cd, Factory df, GroupName a) {
+        // TODO: deal with field assignment, with init, and run
         LinkedList<RecordField> l = new LinkedList<RecordField>();
-        Environment env = new Environment();
+        TypingEnvironment env = new TypingEnvironment();
         for (ParamDecl f : cd.getParams()) {
             RecordVariable X = df.newRecordVariable();
             env.putVariable(f.getName(), X);
             l.add(df.newRecordField(f.getName(), X));
         }
         for (FieldDecl f : cd.getFields()) {
-            if (f.hasInitExp()) {
-                l.add(df.newRecordField(f.getName(), typeInferenceAsPure(f.getInitExp(), null, env, a, null, df, cd)
-                        .getRepresentative()));
-            } else {
-                l.add(df.newRecordField(f.getName(), df.newRecordVariable()));
-            } // no need to test for datatype: they all are assign
+            l.add(df.newRecordField(f.getName(), df.newRecordVariable())); // init expressions are managed in the analysis of the init block.
         }
         return df.newRecordPresent(a, l);
     }
+     
+     private RecordPresent createInstance(Map<InterfaceDecl, ClassDecl> intertoclass,  Type t, ClassDecl clthis, Factory df, GroupName a) {
+         ClassDecl cl;
+         if (t.isInterfaceType()) {
+             cl = intertoclass.get(((InterfaceType) t).getDecl());
+         } else {
+             cl = clthis;
+         }
+         if (cl == null) {
+             System.out.println("Class retrival failed!!!");
+         } // should NEVER occur
+         return this.createInstance(cl, df, a);
+     }
+
 
     // eAsPure(String ident, Environment env, GroupName a, Map<InterfaceDecl,
     // ClassDecl> intertoclass, Factory df, ClassDecl cl)
@@ -93,6 +109,7 @@ public class ContractInference {
      * otherwise we once again don't know what is the contract of the interface.
      */
 
+    // reviewed //
     public Map<InterfaceDecl, ClassDecl> getMapInterfaceToClass(Model m) {
         Map<InterfaceDecl, ClassDecl> res = new HashMap<InterfaceDecl, ClassDecl>();
         for (Decl decl : m.getDecls()) {
@@ -156,56 +173,169 @@ public class ContractInference {
      * different from those used by the objects.
      */
 
-    public Environment environment(Model m, Factory df, boolean verbose) {
-        Environment res = new Environment();
+    // TODO: deal with function declaration. For class, it's good
+    public TypingEnvironment environment(Model m, Factory df, Map<InterfaceDecl, ClassDecl>intf, boolean verbose) {
+        TypingEnvironment res = new TypingEnvironment();
         for (CompilationUnit c : m.getCompilationUnits()) {
-            res.add(environment(c, df, verbose));
+            res.add(environment(c, df, intf, verbose));
         }
         return res;
     }
 
-    public Environment environment(CompilationUnit cu, Factory df, boolean verbose) {
-        Environment res = new Environment();
+    public TypingEnvironment environment(CompilationUnit cu, Factory df, Map<InterfaceDecl, ClassDecl>intf, boolean verbose) {
+        TypingEnvironment res = new TypingEnvironment();
         for (ModuleDecl d : cu.getModuleDecls()) {
-            res.add(environment(d, df, verbose));
+            res.add(environment(d, df, intf, verbose));
         }
         return res;
     }
 
-    public Environment environment(ModuleDecl md, Factory df, boolean verbose) {
-        Environment res = new Environment();
+    public TypingEnvironment environment(ModuleDecl md, Factory df, Map<InterfaceDecl, ClassDecl>intf, boolean verbose) {
+        TypingEnvironment res = new TypingEnvironment();
         for (Decl d : md.getDecls()) {
+            
             if (d instanceof ClassDecl) {
                 res.add(environment(((ClassDecl) d), df, verbose));
+            } 
+            //DataTypes & Constructors
+            else if (d instanceof DataTypeDecl ) {
+                res.add(environment(((DataTypeDecl) d), df, intf, verbose));
+                
+            } else if (d instanceof FunctionDecl) {
+//                if(d instanceof ParametricFunctionDecl)
+//                    res.add(environment(((ParametricFunctionDecl) d), df, intf, verbose));
+//                else
+                    res.add(environment(((FunctionDecl) d), df, intf, verbose));
             }
         }
         return res;
     }
 
-    public Environment environment(ClassDecl cd, Factory df, boolean verbose) {
-        Environment res = new Environment();
+    public TypingEnvironment environment(DataTypeDecl dataTypeDecl, Factory df, Map<InterfaceDecl, ClassDecl>intf, boolean verbose) {
+        TypingEnvironment res = new TypingEnvironment();
+        
+        Type type = dataTypeDecl.getType();
+        if(type instanceof DataTypeType){
+            //res.putDataType(type.getModuleName() + "." + type.getSimpleName(), (DataTypeType)type);
+            res.putDataType(type.getSimpleName(), (DataTypeType)type);
+            HashMap<String, RecordVariable> map = new HashMap<>();
+            for(Type args : ((DataTypeType) type).getTypeArgs()){
+                map.put(args.getSimpleName(), df.newRecordVariable());   
+            }
+            
+            java.util.List<IRecord> lr = new LinkedList<>();
+            for(Type args : ((DataTypeType) type).getTypeArgs()){
+                lr.add(map.get(args.getSimpleName()));   
+            }
+            RecordDataType r = df.newRecordDataType((DataTypeType)type, lr);
+            
+            for(DataConstructor dc :dataTypeDecl.getDataConstructorList())
+            {
+                //String name = type.getModuleName() + "." +  dc.getName();
+                String name = dc.getName();
+                java.util.List<Term> args = new LinkedList<Term>();
+                for(ConstructorArg arg : dc.getConstructorArgList()){
+                    args.add(expandArgs(arg.getDataTypeUse(), map, df, intf));
+                }
+               res.putFunction(name, new FunctionInterface(args, r));
+
+            }
+        }
+        
+        return res;
+    }
+    
+    public TypingEnvironment environment(FunctionDecl decl, Factory df, Map<InterfaceDecl, ClassDecl>intf, boolean verbose) {
+        TypingEnvironment res = new TypingEnvironment();
+        
+        String name = decl.getName();
+        
+        HashMap<String, RecordVariable> map = new HashMap<>();
+        if(decl instanceof ParametricFunctionDecl){
+            for(TypeParameterDecl args : ((ParametricFunctionDecl) decl).getTypeParameterList()){
+                map.put(args.getName(), df.newRecordVariable());   
+            }
+        }
+        
+//      decl.get
+//        
+        java.util.List<Term> l = new LinkedList();
+        for(ParamDecl pd : decl.getParamList()){
+            
+            Access a = pd.getAccess();
+            if(a instanceof TypeUse){
+                l.add(expandArgs((TypeUse)a, map, df, intf));
+            }else{return null;} // should never occur            
+        }
+//        
+        res.putFunction(name, new FunctionInterface(l, expandArgs(decl.getTypeUse(), map, df, intf)));
+        
+        return res;
+    }
+    
+//    public TypingEnvironment environment(ParametricFunctionDecl decl, Factory df, Map<InterfaceDecl, ClassDecl>intf, boolean verbose) {
+//        TypingEnvironment res = new TypingEnvironment();
+//        
+//        String name = decl.getName();
+//        
+//        java.util.List<Term> l = new LinkedList();
+//        decl.get
+//        
+//        
+//        for(ParamDecl pd : decl.getParamList()){
+//            l.add(df.newTerm(pd.getN, l))
+//        }
+//        
+//        res.putFunction(name, new FunctionInterface(l, rreturn));
+//        
+//        return res;
+//    }
+    
+
+    private Term expandArgs(TypeUse arg, HashMap<String, RecordVariable> map, Factory df, Map<InterfaceDecl, ClassDecl>intf){
+        if(arg instanceof DataTypeUse) { // datatype
+            java.util.List<Term> l = new LinkedList<>();
+            if(arg instanceof ParametricDataTypeUse) { // it is recursive
+                for(TypeUse subarg : ((ParametricDataTypeUse)arg).getParamList()) {
+                    l.add(this.expandArgs(subarg, map, df, intf));                   
+                }
+            }
+            return df.newTerm(arg.getName(), l);
+            
+        } else if(arg instanceof InterfaceTypeUse) {
+            ClassDecl c = intf.get(((InterfaceTypeUse)arg).getDecl());
+            return createInstance(c, df, df.newGroupName());
+        } else if(arg instanceof TypeParameterUse) { // we have a variable
+            return map.get(((TypeParameterUse)arg).getName());
+        }
+        
+        return null; // Should never occur...
+    }
+
+    public TypingEnvironment environment(ClassDecl cd, Factory df, boolean verbose) {
+        TypingEnvironment res = new TypingEnvironment();
         // 1. Methods
         for (MethodImpl m : cd.getMethods()) {
             res.add(environment(m, df, cd, verbose));
         }
         // 2. init
-        MethodInterface mi = df.newMethodInterface(createInstance(cd, df, df.newGroupName()), new LinkedList<Record>(),
+        MethodInterface mi = df.newMethodInterface(createInstance(cd, df, df.newGroupName()), new LinkedList<IRecord>(),
                 df.newRecordVariable());
-        res.putMethod(cd.getName(), "!init!", mi);
+        res.putMethod(cd.getName(), _initName, mi);
         return res;
     }
 
-    public Environment environment(MethodImpl mi, Factory df, ClassDecl c, boolean verbose) {
+    public TypingEnvironment environment(MethodImpl mi, Factory df, ClassDecl c, boolean verbose) {
         if (verbose) {
             System.out.println("Generating initial environment for the method \"" + c.getName() + "."
                     + mi.getMethodSig().getName() + "\"");
         }
-        Environment res = new Environment();
+        TypingEnvironment res = new TypingEnvironment();
 
         // 1. Record of "this"
-        Record rthis = createInstance(c, df, df.newGroupName());
+        IRecord rthis = createInstance(c, df, df.newGroupName());
         // 2. Simple variables for the method parameters
-        LinkedList<Record> rparam = new LinkedList<Record>();
+        LinkedList<IRecord> rparam = new LinkedList<IRecord>();
         for (ParamDecl p : mi.getMethodSig().getParams()) {
             rparam.add(df.newRecordVariable());
         }
@@ -243,7 +373,7 @@ public class ContractInference {
     // 1. Model, Compilation Units (files), Classes and methods
     // ////////////////////////////////////////////////////////////////////////////
 
-    public ResultInference typeInference(Model m, String ident, Environment env, Factory df,
+    public ResultInference typeInference(Model m, String ident, TypingEnvironment env, Factory df,
             Map<InterfaceDecl, ClassDecl> intertoclass) {
         ResultInference res = new ResultInference();
         for (CompilationUnit c : m.getCompilationUnits()) {
@@ -252,11 +382,22 @@ public class ContractInference {
         ResultInferenceStmt resMain = typeInference(m.getMainBlock(), ident, env, df.newGroupName(), intertoclass, df,
                 null);
         res.add(resMain.getConstraint());
-        res.setMain(resMain.getContract());
+        
+        
+        Contract co = df.newContractEmpty();
+        for(TypingEnvironment te : resMain.getEnvironment())
+            co = df.newContractUnion(m.getMainBlock(), co, df.newContract(te.unsync(m.getMainBlock())));
+        
+        res.setMain(resMain.getContract(), co);
+        
+        
+        //res.setMain(resMain.getContract(), df.newContract(resMain.getEnvironment().unsync(m.getMainBlock())));
+        
+        
         return res;
     }
 
-    public ResultInference typeInference(CompilationUnit cu, String ident, Environment env,
+    public ResultInference typeInference(CompilationUnit cu, String ident, TypingEnvironment env,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df) {
         ResultInference res = new ResultInference();
         String nident = null;
@@ -270,7 +411,7 @@ public class ContractInference {
         return res;
     }
 
-    public ResultInference typeInference(ModuleDecl md, String ident, Environment env,
+    public ResultInference typeInference(ModuleDecl md, String ident, TypingEnvironment env,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df) {
         ResultInference res = new ResultInference();
         String nident = null;
@@ -286,7 +427,7 @@ public class ContractInference {
         return res;
     }
 
-    public ResultInference typeInference(ClassDecl cd, String ident, Environment env,
+    public ResultInference typeInference(ClassDecl cd, String ident, TypingEnvironment env,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df) {
         ResultInference res = new ResultInference();
         String nident = null;
@@ -299,33 +440,52 @@ public class ContractInference {
             res.add(typeInference(m, nident, env, intertoclass, df, cd));
         }
         // 2. Init
-        MethodInterface mi = env.getMethod(cd.getName(), "!init!");
-        Record thisRecord = mi.getThis();
-        deadlock.constraints.constraint.Constraint c;
-        Contract contract;
-        if (cd.hasInitBlock()) {
-            Environment envInitBlock = env.clone();
-            GroupName a = ((RecordPresent) thisRecord).getRoot();
-            envInitBlock.putVariable("this", thisRecord);
-            ResultInferenceStmt resInitBlock = typeInference(cd.getInitBlock(), nident, envInitBlock, a, intertoclass,
-                    df, cd);
-            contract = resInitBlock.getContract();
-            c = resInitBlock.getConstraint();
-        } else {
-            contract = df.newContractEmpty();
-            c = df.newConstraint();
+        TypingEnvironment envInitBlock = env.clone();
+        MethodInterface mi = env.getMethod(cd.getName(), _initName);
+        IRecord thisRecord = mi.getThis();
+        GroupName a = ((RecordPresent) thisRecord).getRoot();
+        deadlock.constraints.constraint.Constraint c = df.newConstraint();
+        Contract cp, cf;
+        
+        // 2.1. Field assignments
+        envInitBlock.putVariable("this", thisRecord);
+        for (FieldDecl f : cd.getFields()) {
+            if(f.hasInitExp()) {
+                ResultInferencePureExp tmp = typeInferenceAsPure(f.getInitExp(), nident, envInitBlock, a, intertoclass, df, cd);
+                c.add(tmp.getConstraint());
+                c.addEquation(new ASTNodeInformation(f), ((RecordPresent)thisRecord).getField(f.getName()), env.getRecord(tmp.getVariableType()));
+            }
         }
-        // 2.2. add the call to run if the method exists.
-        if (env.getMethod(cd.getName(), "run") != null) {
+        
+        // 2.2. Init block
+        if (cd.hasInitBlock()) {
+            ResultInferenceStmt resInitBlock = typeInference(cd.getInitBlock(), nident, envInitBlock, a, intertoclass, df, cd);
+            cp = resInitBlock.getContract();
+            c.add(resInitBlock.getConstraint());
+            
+            cf = df.newContractEmpty();
+            for(TypingEnvironment te : resInitBlock.getEnvironment())
+                cf = df.newContractUnion(cd.getInitBlock(), cf, df.newContract(te.unsync(cd.getInitBlock())));
+                      
+        } else {
+            cp = df.newContractEmpty();
+            cf = df.newContractEmpty();
+        }
+        // 2.3. add the call to run if the method exists.
+        if (env.getMethod(cd.getName(), _runName) != null) {
             ASTNode node = (cd.hasInitBlock() ? cd.getInitBlock() : cd);
+            
+            MethodInterface mirun = df.newMethodInterface(thisRecord, new LinkedList<IRecord>(), df.newRecordVariable());
+            c.addSemiEquation(new ASTNodeInformation(node), env.getMethod(cd.getName(), _runName), mirun);
 
-            MethodInterface mirun = df.newMethodInterface(thisRecord, new LinkedList<Record>(), df.newRecordVariable());
-            c.addSemiEquation(new ASTNodeInformation(node), env.getMethod(cd.getName(), "run"), mirun);
-            contract.add(df.newContractInvk(node, cd.getName(), "run", mirun));
+            java.util.List<Contract> tmp = new LinkedList<>();
+            tmp.add(cf);
+            tmp.add(df.newContractInvk(node, cd.getName(), _runName, mirun));
+            cf = df.newContractParallel(node, tmp);
         }
 
         res.add(c);
-        res.add(cd.getName(), "!init!", df.newMethodContract(mi, contract));
+        res.add(cd.getName(), _initName, df.newMethodContract(mi, cp, cf));
 
         if (ident != null) {
             System.out.println(ident + "Inference for the class \"" + cd.getName() + "\" Finished");
@@ -333,7 +493,8 @@ public class ContractInference {
         return res;
     }
 
-    public ResultInference typeInference(MethodImpl mImp, String ident, Environment env,
+    // partially reviewed //
+    public ResultInference typeInference(MethodImpl mImp, String ident, TypingEnvironment env,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {
@@ -343,26 +504,32 @@ public class ContractInference {
         }
 
         // 1. Generate the environment for the contract inference
-        Environment envMethod = env.clone();
+        TypingEnvironment envMethod = env.clone();
 
         // add to the environment the record for [this], the parameters, and
         // [destiny]
         MethodInterface mi = env.getMethod(cl.getName(), mImp.getMethodSig().getName());
-        Record thisRecord = mi.getThis();
-        java.util.List<Record> params = mi.getParameters();
-        Record result = mi.getResult();
+        IRecord thisRecord = mi.getThis();
+        java.util.List<IRecord> params = mi.getParameters();
+        IRecord result = mi.getResult();
         GroupName a = ((RecordPresent) thisRecord).getRoot(); // by
                                                               // construction,
                                                               // we know that
                                                               // [thisRecord] is
                                                               // RecordPresent
 
-        envMethod.putVariable("this", thisRecord);
-        Iterator<Record> it = params.iterator();
+        envMethod.putVariable("this", thisRecord); // BUG: problem with inference if futures in this
+        Iterator<IRecord> it = params.iterator();
         for (ParamDecl p : mImp.getMethodSig().getParams()) {
-            envMethod.putVariable(p.getName(), it.next());
+            if(p.getType().isFutureType()) {
+             TypingEnvironmentVariableTypeFuture f = new TypingEnvironmentVariableTypeFuture ();
+             envMethod.putVariable(p.getName(), f);
+             envMethod.putFuture(f, new TypingEnvironmentFutureTypeTick(it.next()));
+            } else {
+              envMethod.putVariable(p.getName(), it.next());
+            }
         }
-        envMethod.putVariable("!destiny!", result);
+        envMethod.putVariable(_destinyName, result);
 
         // 2. perform the inference
         ResultInferenceStmt resBlock = typeInference(mImp.getBlock(), nident, envMethod, a, intertoclass, df, cl);
@@ -377,7 +544,12 @@ public class ContractInference {
 
         // 4. give back the result.
         ResultInference res = new ResultInference();
-        res.add(cl.getName(), mImp.getMethodSig().getName(), df.newMethodContract(mi, resBlock.getContract()));
+        
+        Contract co = df.newContractEmpty();
+        for(TypingEnvironment te : resBlock.getEnvironment())
+            co = df.newContractUnion(mImp, co, df.newContract(te.unsync(mImp)));
+        
+        res.add(cl.getName(), mImp.getMethodSig().getName(), df.newMethodContract(mi, resBlock.getContract(), co));
         res.add(resBlock.getConstraint());
         return res;
     }
@@ -440,9 +612,9 @@ public class ContractInference {
         return m;
     }
 
-    public ResultInferenceStmt typeInference(Decl d, String ident, Environment env, GroupName a,
+    public ResultInferenceStmt typeInference(Decl d, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
-        Method m = getInferenceMethod(d.getClass(), Decl.class, String.class, Environment.class, GroupName.class,
+        Method m = getInferenceMethod(d.getClass(), Decl.class, String.class, TypingEnvironment.class, GroupName.class,
                 Map.class, Factory.class, ClassDecl.class);
 
         if (m != null)
@@ -461,12 +633,12 @@ public class ContractInference {
 
         System.out.println("WARNING: Contract inference not implemented for Declaration \"" + d.getClass().getName()
                 + "\"");
-        return new ResultInferenceStmt(null, df.newContractEmpty(), df.newConstraint(), env);
+        return new ResultInferenceStmt( df.newContractEmpty(), df.newConstraint(), env);
     }
 
-    public ResultInferenceStmt typeInference(Stmt s, String ident, Environment env, GroupName a,
+    public ResultInferenceStmt typeInference(Stmt s, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
-        Method m = getInferenceMethod(s.getClass(), Stmt.class, String.class, Environment.class, GroupName.class,
+        Method m = getInferenceMethod(s.getClass(), Stmt.class, String.class, TypingEnvironment.class, GroupName.class,
                 Map.class, Factory.class, ClassDecl.class);
 
         if (m != null)
@@ -485,12 +657,12 @@ public class ContractInference {
 
         System.out.println("WARNING: Contract inference not implemented for Statment \"" + s.getClass().getName()
                 + "\"");
-        return new ResultInferenceStmt(null, df.newContractEmpty(), df.newConstraint(), env);
+        return new ResultInferenceStmt( df.newContractEmpty(), df.newConstraint(), env);
     }
 
-    public ResultInferenceEffExp typeInference(Exp e, String ident, Environment env, GroupName a,
+    public ResultInferenceEffExp typeInference(Exp e, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
-        Method m = getInferenceMethod(e.getClass(), Exp.class, String.class, Environment.class, GroupName.class,
+        Method m = getInferenceMethod(e.getClass(), Exp.class, String.class, TypingEnvironment.class, GroupName.class,
                 Map.class, Factory.class, ClassDecl.class);
 
         if (m != null)
@@ -509,15 +681,15 @@ public class ContractInference {
 
         System.out.println("WARNING: Contract inference not implemented for Expression \"" + e.getClass().getName()
                 + "\"");
-        return new ResultInferenceEffExp(null, df.newRecordVariable(), df.newContractEmpty(), df.newConstraint(), env);
+        return new ResultInferenceEffExp(df.newRecordVariable(), df.newContractEmpty(), df.newConstraint(), env);
     }
 
-    public ResultInferencePureExp typeInferenceAsPure(PureExp exp, String ident, Environment env, GroupName a,
+    public ResultInferencePureExp typeInferenceAsPure(PureExp exp, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
 
         
         Method m = getInferenceMethod("typeInferenceAsPure", exp.getClass(), PureExp.class, String.class,
-                Environment.class, GroupName.class, Map.class, Factory.class, ClassDecl.class);
+                TypingEnvironment.class, GroupName.class, Map.class, Factory.class, ClassDecl.class);
 
         if (m != null)
             try {
@@ -533,14 +705,14 @@ public class ContractInference {
                 e.printStackTrace();
             }
 
-        System.out.println("WARNING: Contract inference not implemented for Expression \"" + exp.getClass().getName()
-                + "\"");
-        return new ResultInferencePureExp(df);
+        System.out.println("WARNING: Contract inference not implemented for Expression \"" + exp.getClass().getName() + "\". Assumed Unit Type");
+        
+        return new ResultInferencePureExp(df, df.newRecordDataType(env.getUnitType(), new LinkedList<IRecord>()));
     }
 
-    public ResultInferenceEffExp typeInference(PureExp pexp, String ident, Environment env, GroupName a,
+    public ResultInferenceEffExp typeInference(PureExp pexp, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
-        Method m = getInferenceMethod(pexp.getClass(), PureExp.class, String.class, Environment.class, GroupName.class,
+        Method m = getInferenceMethod(pexp.getClass(), PureExp.class, String.class, TypingEnvironment.class, GroupName.class,
                 Map.class, Factory.class, ClassDecl.class);
 
         if (m != null)
@@ -558,13 +730,13 @@ public class ContractInference {
             }
 
         ResultInferencePureExp resPure = typeInferenceAsPure(pexp, ident, env, a, intertoclass, df, cl);
-        return new ResultInferenceEffExp(resPure.getId(), resPure.getRepresentative(), df.newContractEmpty(),
+        return new ResultInferenceEffExp(resPure.getVariableType(), df.newContractEmpty(),
                 df.newConstraint(), env);
     }
 
-    public ResultInferencePureExp typeInference(Guard g, String ident, Environment env, GroupName a,
+    public ResultInferencePureExp typeInference(Guard g, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
-        Method m = getInferenceMethod(g.getClass(), Guard.class, String.class, Environment.class, GroupName.class,
+        Method m = getInferenceMethod(g.getClass(), Guard.class, String.class, TypingEnvironment.class, GroupName.class,
                 Map.class, Factory.class, ClassDecl.class);
 
         if (m != null)
@@ -581,14 +753,16 @@ public class ContractInference {
                 e.printStackTrace();
             }
 
-        System.out.println("WARNING: Contract inference not implemented for Guard \"" + g.getClass().getName() + "\"");
-        return new ResultInferencePureExp(df);
+        System.out.println("WARNING: Contract inference not implemented for Guard \"" + g.getClass().getName() + "\". Assumed Boolean Type");
+        
+        return new ResultInferencePureExp(df, df.newRecordDataType(env.getBoolType(), new LinkedList<IRecord>()));
     }
 
     // /////////////////////////////////////////////////////////////////////////////
     // 2.2. Declarations
 
-    public ResultInferenceStmt typeInference(VarDecl vd, String ident, Environment prev, GroupName a,
+    // reviewed //
+    public ResultInferenceStmt typeInference(VarDecl vd, String ident, TypingEnvironment prev, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {
@@ -598,9 +772,9 @@ public class ContractInference {
 
         Contract contract;
         deadlock.constraints.constraint.Constraint c;
-        Record X;
+        ITypingEnvironmentVariableType X;
 
-        Environment env = prev.clone();
+        TypingEnvironment env = prev.clone();
 
         if (vd.hasInitExp()) {
             Exp exp = vd.getInitExp();
@@ -609,12 +783,13 @@ public class ContractInference {
                         df, cl);
                 contract = df.newContractEmpty();
                 c = df.newConstraint();
-                X = resInitExp.getRepresentative();
+                X = resInitExp.getVariableType();
             } else {
                 ResultInferenceEffExp resInitExp = typeInference(((EffExp) exp), nident, prev, a, intertoclass, df, cl);
                 contract = resInitExp.getContract();
                 c = resInitExp.getConstraint();
                 X = resInitExp.getRecord();
+                env = resInitExp.getEnvironment();
             }
         } else {
             contract = df.newContractEmpty();
@@ -623,13 +798,14 @@ public class ContractInference {
         }
         env.putVariable(vd.getName(), X);
 
-        return new ResultInferenceStmt(vd.getName(), contract, c, env);
+        return new ResultInferenceStmt(contract, c, env);
     }
 
     // ////////////////////////////////////////////////////////////////////////////
     // 2.3. Statments
 
-    public ResultInferenceStmt typeInference(AssignStmt astmt, String ident, Environment env, GroupName a,
+    // reviewed //
+    public ResultInferenceStmt typeInference(AssignStmt astmt, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {
@@ -641,19 +817,20 @@ public class ContractInference {
 
         Contract contract;
         deadlock.constraints.constraint.Constraint c;
-        Record X;
+        ITypingEnvironmentVariableType X;
 
         Exp exp = astmt.getValue();
         if (exp instanceof PureExp) {
             ResultInferencePureExp resValue = typeInferenceAsPure(((PureExp) exp), nident, env, a, intertoclass, df, cl);
             contract = df.newContractEmpty();
             c = df.newConstraint();
-            X = resValue.getRepresentative(env.getVariable(name));
+            X = resValue.getVariableType();
         } else {
             ResultInferenceEffExp resValue = typeInference(((EffExp) exp), nident, env, a, intertoclass, df, cl);
             contract = resValue.getContract();
             c = resValue.getConstraint();
             X = resValue.getRecord();
+            env = resValue.getEnvironment();
         }
 
         if (ident != null) {
@@ -661,15 +838,19 @@ public class ContractInference {
         }
 
         if (env.isField(name)) {
-            c.addEquation(new ASTNodeInformation(astmt), env.getVariable(name), X);
+            //if(X instanceof IRecord) TODO: treat possible cast exception, in practice, X shouldn't be a future since field futures are not allowed 
+                c.addEquation(new ASTNodeInformation(astmt), env.getVariableRecord(name), (IRecord)X);
+            
         } else {
             env.putVariable(name, X);
         } // implementation of the new environment update
 
-        return new ResultInferenceStmt(name, contract, c, env);
+        return new ResultInferenceStmt(contract, c, env);
     }
 
-    public ResultInferenceStmt typeInference(AwaitStmt astmt, String ident, Environment env, GroupName a,
+    
+    // reviewed //
+    public ResultInferenceStmt typeInference(AwaitStmt astmt, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl clthis) {
         String nident = null;
         if (ident != null) {
@@ -691,49 +872,65 @@ public class ContractInference {
             if (ident != null) {
                 System.out.println(ident + "AwaitStmt Annotation Finished");
             }
-            ClassDecl cl;
-            Type t = dep.getType();
-            if (t.isInterfaceType()) {
-                cl = intertoclass.get(((InterfaceType) t).getDecl());
-            } else {
-                cl = clthis;
-            }
-            if (cl == null) {
-                System.out.println("Class retrival failed!!!");
-            } // should NEVER occur
-            c.addEquation(new ASTNodeInformation(astmt), resAnn.getRepresentative(), createInstance(cl, df, aprime));
+            c.addEquation(new ASTNodeInformation(astmt), (IRecord)resAnn.getVariableType(), createInstance(intertoclass, dep.getType(), clthis, df, aprime));
 
-            return new ResultInferenceStmt(null, contract, c, env);
+            return new ResultInferenceStmt(contract, c, env);
         } else {
             ResultInferencePureExp resGuard = typeInference(astmt.getGuard(), nident, env, a, intertoclass, df, clthis);
             if (ident != null) {
                 System.out.println(ident + "AwaitStmt Sub-Expression Finished");
             }
-            contract = df.newContractAwait(astmt, a, aprime);
-            c.addEquation(new ASTNodeInformation(astmt), df.newRecordFuture(aprime, df.newRecordVariable()),
-                    resGuard.getRepresentative());
+            
+            if(resGuard.getVariableType() instanceof TypingEnvironmentVariableTypeFuture) {
+                ITypingEnvironmentFutureType z = env.getFuture((TypingEnvironmentVariableTypeFuture)resGuard.getVariableType());
+                if(z instanceof TypingEnvironmentFutureTypeUntick) {
+                    env.putFuture((TypingEnvironmentVariableTypeFuture)resGuard.getVariableType(), new TypingEnvironmentFutureTypeTick(z.getRecord()));
+                    
+                    c.addEquation(new ASTNodeInformation(astmt), z.getRecord(), df.newRecordFuture(aprime, df.newRecordVariable()));
+                    contract = df.newContract(df.newContractElementParallel(astmt, 
+                            df.newContractInvkA(astmt, 
+                                                ((TypingEnvironmentFutureTypeUntick) z).getContract(), 
+                                                new ContractElementAwait(astmt, a, aprime)), 
+                            env.unsync(astmt)));
+                    
+                } else {
+                    c.addEquation(new ASTNodeInformation(astmt), z.getRecord(), df.newRecordFuture(aprime, df.newRecordVariable()));
+                    contract = df.newContractEmpty();
+                }
+                
+            }else {
+                // the guard in the await is not a future.
+                // maybe a boolean or something else, in any case, we cannot manage it for now
+                // TODO: print a warning message
+                
+                contract = df.newContractEmpty();
+            }
 
-            return new ResultInferenceStmt(resGuard.getId(), contract, c, env);
+            return new ResultInferenceStmt(contract, c, env);
         }
 
     }
 
-    public ResultInferenceStmt typeInference(SkipStmt skip, String ident, Environment env, GroupName a,
+    //reviewed//
+    public ResultInferenceStmt typeInference(SkipStmt skip, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
-        return new ResultInferenceStmt(null, df.newContractEmpty(), df.newConstraint(), env);
+        return new ResultInferenceStmt( df.newContractEmpty(), df.newConstraint(), env);
     }
 
-    public ResultInferenceStmt typeInference(SuspendStmt susp, String ident, Environment env, GroupName a,
+    //reviewed//
+    public ResultInferenceStmt typeInference(SuspendStmt susp, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
-        return new ResultInferenceStmt(null, df.newContractEmpty(), df.newConstraint(), env);
+        return new ResultInferenceStmt( df.newContractEmpty(), df.newConstraint(), env);
+    }
+    
+    //reviewed//
+    public ResultInferenceStmt typeInference(DurationStmt dration, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
+        return new ResultInferenceStmt( df.newContractEmpty(), df.newConstraint(), env);
     }
 
-    public ResultInferenceStmt typeInference(DurationStmt dration, String ident, Environment env, GroupName a,
-            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
-        return new ResultInferenceStmt(null, df.newContractEmpty(), df.newConstraint(), env);
-    }
-
-    public ResultInferenceStmt typeInference(ReturnStmt res, String ident, Environment env, GroupName a,
+    //reviewed//
+    public ResultInferenceStmt typeInference(ReturnStmt res, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {
@@ -748,26 +945,13 @@ public class ContractInference {
 
         Contract contract = resRetExp.getContract();
         deadlock.constraints.constraint.Constraint c = resRetExp.getConstraint();
-        c.addEquation(new ASTNodeInformation(res), env.getVariable("!destiny!"), resRetExp.getRecord());
+        c.addEquation(new ASTNodeInformation(res), env.getVariableRecord(_destinyName), env.getRecord(resRetExp.getRecord()));
 
-        return new ResultInferenceStmt(resRetExp.getId(), contract, c, env); // we
-                                                                             // need
-                                                                             // to
-                                                                             // forward
-                                                                             // the
-                                                                             // id,
-                                                                             // in
-                                                                             // case
-                                                                             // there
-                                                                             // is
-                                                                             // a
-                                                                             // get
-                                                                             // in
-                                                                             // the
-                                                                             // expression
+        return new ResultInferenceStmt(contract, c, resRetExp.getEnvironment());
     }
 
-    public ResultInferenceStmt typeInference(ExpressionStmt exp, String ident, Environment env, GroupName a,
+    //reviewed//
+    public ResultInferenceStmt typeInference(ExpressionStmt exp, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {
@@ -780,20 +964,22 @@ public class ContractInference {
         if (ident != null) {
             System.out.println(ident + "ExpressionStmt Sub-Expression Finished");
         }
-        return new ResultInferenceStmt(resExp.getId(), resExp.getContract(), resExp.getConstraint(), env);
+        return new ResultInferenceStmt(resExp.getContract(), resExp.getConstraint(), resExp.getEnvironment());
     }
 
-    public ResultInferenceStmt typeInference(AssertStmt ass, String ident, Environment env, GroupName a,
+    //reviewed//
+    public ResultInferenceStmt typeInference(AssertStmt ass, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {
             System.out.println(ident + "Contract Inference for the AssertStmt ");
             nident = " " + ident;
         }
-        return new ResultInferenceStmt(null, df.newContractEmpty(), df.newConstraint(), env);
+        return new ResultInferenceStmt( df.newContractEmpty(), df.newConstraint(), env);
     }
 
-    public ResultInferenceStmt typeInference(VarDeclStmt vd, String ident, Environment env, GroupName a,
+    //reviewed//
+    public ResultInferenceStmt typeInference(VarDeclStmt vd, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {
@@ -807,44 +993,42 @@ public class ContractInference {
         return resVarDecl;
     }
 
-    public ResultInferenceStmt typeInference(IfStmt ifstmt, String ident, Environment env, GroupName a,
+    // reviewed Abel //
+    public ResultInferenceStmt typeInference(IfStmt ifstmt, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {
             System.out.println(ident + "Contract inference of a Conditional Expression");
             nident = " " + ident;
         }
-        // as the condition is a pure expression, it doesn't have contract or
-        // constraints
+        // as the condition is a pure expression, it doesn't have contract or constraint
         ResultInferenceStmt resThen = typeInference(ifstmt.getThen(), nident, env.clone(), a, intertoclass, df, cl);
 
+        java.util.List<TypingEnvironment> resultEnvs = new LinkedList<TypingEnvironment>();
+        resultEnvs.addAll(resThen.getEnvironment());
+        
         Contract contract;
         deadlock.constraints.constraint.Constraint c = resThen.getConstraint();
 
         if (ifstmt.hasElse()) {
             ResultInferenceStmt resElse = typeInference(ifstmt.getElse(), nident, env.clone(), a, intertoclass, df, cl);
             c.add(resElse.getConstraint());
-            c.add(resThen.getEnvironment().unify(df, new ASTNodeInformation(ifstmt), resElse.getEnvironment())); // ensure
-                                                                                                                 // that
-                                                                                                                 // the
-                                                                                                                 // two
-                                                                                                                 // branches
-                                                                                                                 // return
-                                                                                                                 // the
-                                                                                                                 // same
-                                                                                                                 // environment
+            resultEnvs.addAll(resElse.getEnvironment());
+            
             contract = df.newContractUnion(ifstmt, resThen.getContract(), resElse.getContract());
         } else {
+            resultEnvs.add(env);
             contract = df.newContractUnion(ifstmt, resThen.getContract(), df.newContractEmpty());
         }
         if (ident != null) {
             System.out.println(ident + "IfStmt Sub-Expression Finished");
         }
-        env.updateValues(resThen.getEnvironment());
-        return new ResultInferenceStmt(resThen.getId(), contract, c, env);
+      
+        return new ResultInferenceStmt(contract, c, resultEnvs);
     }
 
-    public ResultInferenceStmt typeInference(WhileStmt whilestmt, String ident, Environment env, GroupName a,
+    //reviewed//
+    public ResultInferenceStmt typeInference(WhileStmt whilestmt, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {
@@ -858,7 +1042,8 @@ public class ContractInference {
         return resStmt;
     }
 
-    public ResultInferenceStmt typeInference(Block b, String ident, Environment envInit, GroupName a,
+    //reviewed//
+    public ResultInferenceStmt typeInference(Block b, String ident, TypingEnvironment envInit, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {
@@ -866,42 +1051,34 @@ public class ContractInference {
             nident = " " + ident;
         }
 
-        // accumulate constracts and deadlock.constraints.constraint.Constraints
+        // accumulate contracts and deadlock.constraints.constraint.Constraints
         // in the resulting output
         ResultInferenceStmt resStmt = null;
         deadlock.constraints.constraint.Constraint c = df.newConstraint();
         Contract contract = df.newContractEmpty();
-        Environment env = envInit;
-        String prev_id = null;
+
+
+        java.util.List<TypingEnvironment> envs = new LinkedList<TypingEnvironment>();
+        envs.add(envInit);
 
         for (Stmt s : b.getStmts()) {
-            resStmt = typeInference(s, nident, env, a, intertoclass, df, cl);
-            c.add(resStmt.getConstraint());
-            env = resStmt.getEnvironment();
-
-            // if(prev_id != null) System.out.println("    previous id = " +
-            // prev_id);
-
-            if ((resStmt.getId() != null) && (prev_id != null) && (resStmt.getId().equals(prev_id))) {
-                contract.fusion(resStmt.getContract());
-            } else {
-                prev_id = resStmt.getId();
-                contract.add(resStmt.getContract());
+            java.util.List<TypingEnvironment> cumul = new LinkedList<TypingEnvironment>();
+            Contract current = df.newContractEmpty();
+            for(TypingEnvironment te: envs){
+                resStmt = typeInference(s, nident, te, a, intertoclass, df, cl);
+                c.add(resStmt.getConstraint());
+                cumul.addAll(resStmt.getEnvironment());
+                current = df.newContractUnion(b, current, resStmt.getContract());                
             }
-            // for debugging
-            // if(resStmt.getId() != null)
-            // System.out.println("    current id = " + resStmt.getId());
+            envs = cumul;
+            contract.add(current);
         }
         if (ident != null) {
             System.out.println(ident + "Block Sub-Statments Finished");
         }
 
         // finish
-        if (resStmt == null) {
-            return new ResultInferenceStmt(null, df.newContractEmpty(), df.newConstraint(), env);
-        } else {
-            return new ResultInferenceStmt(resStmt.getId(), contract, c, env);
-        }
+        return new ResultInferenceStmt(contract, c, envs);
     }
 
     // ////////////////////////////////////////////////////////////////////////////
@@ -909,45 +1086,55 @@ public class ContractInference {
 
     // 2.4.1. Pure Expressions
 
-    public ResultInferencePureExp typeInferenceAsPure(NullExp exp, String ident, Environment env, GroupName a,
+    //reviewed//
+    public ResultInferencePureExp typeInferenceAsPure(NullExp exp, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         if (ident != null) {
             System.out.println(ident + "Contract inference of 'null' PureExp ");
         }
-        return new ResultInferencePureExp(df, null, df.newRecordVariableFanthom());
+        return new ResultInferencePureExp(df, df.newRecordVariable());
     }
 
-    public ResultInferencePureExp typeInferenceAsPure(ThisExp exp, String ident, Environment env, GroupName a,
+    //reviewed//
+    public ResultInferencePureExp typeInferenceAsPure(ThisExp exp, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         if (ident != null) {
             System.out.println(ident + "Contract inference of 'this' PureExp ");
         }
-        return new ResultInferencePureExp(df, "this", env.getVariable("this"));
+        return new ResultInferencePureExp(df, env.getVariableRecord("this"));
     }
 
-    public ResultInferencePureExp typeInferenceAsPure(VarOrFieldUse var, String ident, Environment env, GroupName a,
+    // reviewed //
+    public ResultInferencePureExp typeInferenceAsPure(VarOrFieldUse var, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         if (ident != null) {
-            System.out.println(ident
-                    + "Contract Inference for the VarOrFieldUse \""
-                    + var.getName()
-                    + "\" (considered as a"
-                    + ((env.getVariable(var.getName()) instanceof RecordVariable)
-                            && (((RecordVariable) env.getVariable(var.getName())).isDataType()) ? " datatype)"
-                            : "n object)"));
+            System.out.println(ident + "Contract Inference for the VarOrFieldUse \"" +
+        var.getName() + "\" (considered as a" + ((env.getVariableRecord(var.getName()) instanceof RecordDataType) ? " datatype)" : "n object)"));
         }
-        return new ResultInferencePureExp(df, var.getName(), env.getVariable(var.getName()));
+        return new ResultInferencePureExp(df, env.getVariable(var.getName()));
     }
 
-    public ResultInferencePureExp typeInferenceAsPure(LiteralExp lit, String ident, Environment env, GroupName a,
+    //reviewed//
+    public ResultInferencePureExp typeInferenceAsPure(StringLiteral lit, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         if (ident != null) {
             System.out.println(ident + "Contract inference of a Literal ");
         }
-        return new ResultInferencePureExp(df, null, df.getDataType());
+        
+        return new ResultInferencePureExp(df, df.newRecordDataType(env.getStringType(), new LinkedList<IRecord>()));
+    }
+    
+  //reviewed//
+    public ResultInferencePureExp typeInferenceAsPure(IntLiteral lit, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
+        if (ident != null) {
+            System.out.println(ident + "Contract inference of a Literal ");
+        }
+        return new ResultInferencePureExp(df, df.newRecordDataType(env.getIntType(), new LinkedList<IRecord>()));
     }
 
-    public ResultInferencePureExp typeInferenceAsPure(DataConstructorExp exp, String ident, Environment env,
+  //reviewed//
+    public ResultInferencePureExp typeInferenceAsPure(DataConstructorExp exp, String ident, TypingEnvironment env,
             GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
         String nident = null;
         if (ident != null) {
@@ -955,14 +1142,26 @@ public class ContractInference {
                     + "\"");
             nident = " " + ident;
         }
-        ResultInferencePureExp res = new ResultInferencePureExp(df);
-        for (PureExp param : exp.getParams()) {
-            res.add(typeInferenceAsPure(param, nident, env, a, intertoclass, df, cl));
+        FunctionInterface fi = env.getFunction(exp.getConstructor());
+        Constraint c = df.newConstraint();
+        LinkedList<Term> params = new LinkedList<Term>();
+        for(PureExp e : exp.getParamList()) {
+            ResultInferencePureExp tmp = this.typeInferenceAsPure(e, ident, env, a,intertoclass, df, cl);
+            c.add(tmp.getConstraint());
+            params.add(env.getRecord(tmp.getVariableType()));
         }
-        return res;
+        
+        RecordVariable r = df.newRecordVariable();
+        FunctionInterface fiapp = new FunctionInterface(params, r);
+        c.addSemiEquation(new ASTNodeInformation(exp), fiapp, fi);
+        //for (PureExp param : exp.getParams()) {
+        //    res.add(typeInferenceAsPure(param, nident, env, a, intertoclass, df, cl));
+        //}
+        return new ResultInferencePureExp(df, r, c);
     }
 
-    public ResultInferencePureExp typeInferenceAsPure(LetExp exp, String ident, Environment env, GroupName a,
+  //reviewed//
+    public ResultInferencePureExp typeInferenceAsPure(LetExp exp, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {
@@ -970,73 +1169,119 @@ public class ContractInference {
             nident = " " + ident;
         }
         ResultInferencePureExp res = typeInferenceAsPure(exp.getVal(), nident, env, a, intertoclass, df, cl);
-        Record X = res.getRepresentative();
-        Environment envExp = env.clone();
+        ITypingEnvironmentVariableType X = res.getVariableType();
+        TypingEnvironment envExp = env.clone();
         envExp.putVariable(exp.getVar().getName(), X);
-        res.add(typeInferenceAsPure(exp.getExp(), nident, envExp, a, intertoclass, df, cl));
-        /*
-         * Record X = resVal.getRecord(); Environment envExp = env.clone();
-         * envExp.putVariable(exp.getVar().getName(), X); ResultInferenceStmt
-         * resExp = typeInference(exp.getExp(), nident, envExp, a, intertoclass,
-         * df, cl);
-         * 
-         * Contract contract = resVal.getContract();
-         * contract.add(resExp.getContract());
-         * deadlock.constraints.constraint.Constraint c =
-         * resVal.getConstraint(); c.add(resExp.getConstraint());
-         */
-
-        return res;
+        
+        ResultInferencePureExp resExp = typeInferenceAsPure(exp.getExp(), nident, envExp, a, intertoclass, df, cl);
+        return resExp;
     }
 
-    public ResultInferencePureExp typeInferenceAsPure(FnApp fn, String ident, Environment env, GroupName a,
+    // reviewed //
+    public ResultInferencePureExp typeInferenceAsPure(FnApp fn, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
         String nident = null;
         if (ident != null) {
-            System.out.println(ident + "Contract inference of a Function Application ");
+            System.out.println(ident + "Contract inference of the function application \"" + fn.getName()
+                    + "\"");
             nident = " " + ident;
         }
-        ResultInferencePureExp res = new ResultInferencePureExp(df);
-        for (PureExp param : fn.getParams()) {
-            res.add(typeInferenceAsPure(param, nident, env, a, intertoclass, df, cl));
+        FunctionInterface fi = env.getFunction(fn.getName());
+        Constraint c = df.newConstraint();
+        LinkedList<Term> params = new LinkedList<Term>();
+        for(PureExp e : fn.getParamList()) {
+            ResultInferencePureExp tmp = this.typeInferenceAsPure(e, ident, env, a,intertoclass, df, cl);
+            c.add(tmp.getConstraint());
+            params.add(env.getRecord(tmp.getVariableType()));
         }
-        return res;
+        
+        RecordVariable r = df.newRecordVariable();
+        FunctionInterface fiapp = new FunctionInterface(params, r);
+        c.addSemiEquation(new ASTNodeInformation(fn), fiapp, fi);
+        //for (PureExp param : exp.getParams()) {
+        //    res.add(typeInferenceAsPure(param, nident, env, a, intertoclass, df, cl));
+        //}
+        return new ResultInferencePureExp(df, r, c);
     }
 
-    public ResultInferencePureExp typeInferenceAsPure(IfExp ifExp, String ident, Environment env, GroupName a,
+    
+    //reviewed//
+    public ResultInferencePureExp typeInferenceAsPure(IfExp ifExp, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {
             System.out.println(ident + "Contract inference of an Exp Conditional Expression");
             nident = " " + ident;
         }
-        // as the condition is a pure expression, its contract and constraint
-        // are empty
-        ResultInferencePureExp res = typeInferenceAsPure(ifExp.getThenExp(), nident, env, a, intertoclass, df, cl);
-        res.add(typeInferenceAsPure(ifExp.getElseExp(), nident, env, a, intertoclass, df, cl));
-        return res;
+        ResultInferencePureExp resL = typeInferenceAsPure(ifExp.getThenExp(), nident, env, a, intertoclass, df, cl);
+        ResultInferencePureExp resR = typeInferenceAsPure(ifExp.getThenExp(), nident, env, a, intertoclass, df, cl);
+        Constraint c = df.newConstraint();
+        c.addEquation(new ASTNodeInformation(ifExp), env.getRecord(resL.getVariableType()), env.getRecord(resR.getVariableType()));
+        
+        return new ResultInferencePureExp(df, env.getRecord(resL.getVariableType()), c);
     }
 
-    public ResultInferencePureExp typeInferenceAsPure(Unary un, String ident, Environment env, GroupName a,
+
+    
+    
+    // reviewed //
+    public ResultInferencePureExp typeInferenceAsPure(BoolExp bin, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
         String nident = null;
         if (ident != null) {
-            System.out.println(ident + "Contract Inference for an Unary Pure Expression -> no contract and no record ");
+            System.out.println(ident + "Contract Inference for a Bool Binary Pure Expression -> no contract and no record ");
             nident = " " + ident;
         }
-        return typeInferenceAsPure(un.getOperand(), nident, env, a, intertoclass, df, cl);
+        
+        return new ResultInferencePureExp(df, new RecordDataType(env.getBoolType(), new LinkedList<IRecord>()));
     }
-
-    public ResultInferencePureExp typeInferenceAsPure(Binary bin, String ident, Environment env, GroupName a,
+    
+    // reviewed //
+    public ResultInferencePureExp typeInferenceAsPure(RelationalExpr bin, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
         String nident = null;
         if (ident != null) {
-            System.out.println(ident + "Contract Inference for an Unary Pure Expression -> no contract and no record ");
+            System.out.println(ident + "Contract Inference for a Relational Binary Pure Expression -> no contract and no record ");
             nident = " " + ident;
         }
-        ResultInferencePureExp res = typeInferenceAsPure(bin.getLeft(), nident, env, a, intertoclass, df, cl);
-        res.add(typeInferenceAsPure(bin.getRight(), nident, env, a, intertoclass, df, cl));
-        return res;
+
+        return new ResultInferencePureExp(df, new RecordDataType(env.getBoolType(), new LinkedList<IRecord>()));
+    }
+    
+    // reviewed //
+    public ResultInferencePureExp typeInferenceAsPure(ArithmeticExp bin, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
+        String nident = null;
+        if (ident != null) {
+            System.out.println(ident + "Contract Inference for an Arithmetic Binary Pure Expression -> no contract and no record ");
+            nident = " " + ident;
+        }
+        
+        return new ResultInferencePureExp(df, new RecordDataType(env.getIntType(), new LinkedList<IRecord>()));
+    }
+    
+    // reviewed //
+    public ResultInferencePureExp typeInferenceAsPure(NegExp un, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
+        String nident = null;
+        if (ident != null) {
+            System.out.println(ident + "Contract Inference for a Pure Negative Boolean Expression -> no contract and no record ");
+            nident = " " + ident;
+        }
+
+       return new ResultInferencePureExp(df, new RecordDataType(env.getBoolType(), new LinkedList<IRecord>()));
+    }
+    
+    // reviewed //
+    public ResultInferencePureExp typeInferenceAsPure(MinusExp un, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
+        String nident = null;
+        if (ident != null) {
+            System.out.println(ident + "Contract Inference for an Unary Minus Pure Expression -> no contract and no record ");
+            nident = " " + ident;
+        }
+
+        return new ResultInferencePureExp(df, new RecordDataType(env.getIntType(), new LinkedList<IRecord>()));
     }
 
     // TODO:
@@ -1051,7 +1296,9 @@ public class ContractInference {
 
     // 2.4.2. Expressions with side effects.
 
-    public ResultInferenceEffExp typeInference(NewExp newExp, String ident, Environment env, GroupName a,
+    
+    //reviewed Abel//
+    public ResultInferenceEffExp typeInference(NewExp newExp, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl clthis) {
         String nident = null;
         if (ident != null) {
@@ -1066,20 +1313,24 @@ public class ContractInference {
         int i = 0;
         Contract contract = df.newContractEmpty();
         deadlock.constraints.constraint.Constraint c = df.newConstraint();
-        Environment envFields = env.clone();
+        TypingEnvironment envFields = env.clone();
         // 1.1. Params
         ResultInferencePureExp resParam;
         for (PureExp p : newExp.getParams()) {
             resParam = typeInferenceAsPure(p, nident, env, a, intertoclass, df, cl);
-            fields.add(df.newRecordField(cl.getParam(i).getName(), resParam.getRepresentative()));
-            envFields.putVariable(cl.getParam(i).getName(), resParam.getRepresentative());
+            ITypingEnvironmentVariableType x = env.getRecord(resParam.getVariableType());
+            IRecord r = env.getRecord(x);
+            fields.add(df.newRecordField(cl.getParam(i).getName(), r));
+            envFields.putVariable(cl.getParam(i).getName(), r);
+            c.add(resParam.getConstraint());
             i++;
         }
         // 1.2. Fields
         for (FieldDecl f : cl.getFields()) {
             if (f.hasInitExp()) {
                 resParam = typeInferenceAsPure(f.getInitExp(), ident, envFields, a, intertoclass, df, cl);
-                fields.add(df.newRecordField(f.getName(), resParam.getRepresentative()));
+                fields.add(df.newRecordField(f.getName(), (IRecord)resParam.getVariableType()));
+                c.add(resParam.getConstraint());
             } else {
                 fields.add(df.newRecordField(f.getName(), df.newRecordVariable()));
             }
@@ -1091,17 +1342,18 @@ public class ContractInference {
         } else {
             aprime = a;
         }
-        Record r = df.newRecordPresent(aprime, fields);
+        IRecord r = df.newRecordPresent(aprime, fields);
 
         // 1.4. Calling the init of r
-        MethodInterface miinit = df.newMethodInterface(r, new LinkedList<Record>(), df.newRecordVariable());
-        c.addSemiEquation(new ASTNodeInformation(newExp), env.getMethod(cl.getName(), "!init!"), miinit);
-        contract.add(df.newContractInvk(newExp, cl.getName(), "!init!", miinit));
+        MethodInterface miinit = df.newMethodInterface(r, new LinkedList<IRecord>(), df.newRecordVariable());
+        c.addSemiEquation(new ASTNodeInformation(newExp), env.getMethod(cl.getName(), _initName), miinit);
+        contract.add(df.newContractInvk(newExp, cl.getName(), _initName, miinit));
 
-        return new ResultInferenceEffExp(null, r, contract, c, env);
+        return new ResultInferenceEffExp( r, contract, c, env);
     }
 
-    public ResultInferenceEffExp typeInference(Call call, String ident, Environment env, GroupName a,
+    // reviewed Abel //
+    public ResultInferenceEffExp typeInference(Call call, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl clthis) {
         String nident = null;
         if (ident != null) {
@@ -1124,7 +1376,7 @@ public class ContractInference {
             // in that case, we don't know how the method would behave, and
             // simply put a null contract.
             System.out.println("Class retrival failed!!!");
-            return new ResultInferenceEffExp(null, df.newRecordVariable(), df.newContractEmpty(), df.newConstraint(),
+            return new ResultInferenceEffExp( df.newRecordVariable(), df.newContractEmpty(), df.newConstraint(),
                     env);
         } else {
 
@@ -1134,23 +1386,25 @@ public class ContractInference {
                     cl);
             Contract contract = df.newContractEmpty();
             deadlock.constraints.constraint.Constraint c = df.newConstraint();
-            Record callee = resCallee.getRepresentative();
+            
+            // cast to IRecord as the callee cannot be a future
+            IRecord callee = (IRecord)resCallee.getVariableType();
 
-            LinkedList<Record> s = new LinkedList<Record>();
+            LinkedList<IRecord> s = new LinkedList<IRecord>();
             ResultInferencePureExp resParam;
             for (PureExp p : call.getParams()) {
                 resParam = typeInferenceAsPure(p, nident, env, a, intertoclass, df, cl);
-                s.add(resParam.getRepresentative());
+                s.add(env.getRecord(resParam.getVariableType()));
             }
 
             // 3. Construct the record for the return value
-            Record Y = df.newRecordVariable();
+            IRecord Y = df.newRecordVariable();
 
             // 4. pack up the result
             MethodInterface mi = df.newMethodInterface(callee, s, Y);
             c.addSemiEquation(new ASTNodeInformation(call), env.getMethod(cl.getName(), call.getMethod()), mi);
 
-            Record r;
+            ITypingEnvironmentVariableType r;
             if (call instanceof SyncCall) {
                 r = Y;
                 contract.add(df.newContractSyncInvk(call, cl.getName(), call.getMethod(), mi));
@@ -1158,15 +1412,21 @@ public class ContractInference {
                 contract.add(df.newContractInvk(call, cl.getName(), call.getMethod(), mi));
 
                 GroupName aprime = df.newGroupName();
-                Record calleeShape = createInstance(cl, df, aprime);
+                IRecord calleeShape = createInstance(cl, df, aprime);
                 c.addEquation(new ASTNodeInformation(call), callee, calleeShape);
-                r = df.newRecordFuture(aprime, Y);
+                r = new TypingEnvironmentVariableTypeFuture();
+                env.putFuture((TypingEnvironmentVariableTypeFuture)r, 
+                        new TypingEnvironmentFutureTypeUntick(
+                                df.newRecordFuture(aprime, Y), 
+                                new ContractElementInvk(call, cl.getName(), call.getMethod(), mi)));
             }
-            return new ResultInferenceEffExp(null, r, contract, c, env);
+            return new ResultInferenceEffExp( r, contract, c, env);
         }
     }
 
-    public ResultInferenceEffExp typeInference(GetExp exp, String ident, Environment env, GroupName a,
+    
+    // reviewed Abel //
+    public ResultInferenceEffExp typeInference(GetExp exp, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {
@@ -1185,18 +1445,18 @@ public class ContractInference {
 
         // 2. record for the result
         GroupName aprime = df.newGroupName();
-        Record X = df.newRecordVariable();
-        c.addEquation(new ASTNodeInformation(exp), df.newRecordFuture(aprime, X), resPureExp.getRepresentative());
+        IRecord X = df.newRecordVariable();
+        c.addEquation(new ASTNodeInformation(exp), df.newRecordFuture(aprime, X), env.getRecord(resPureExp.getVariableType()));
 
         // pack up the result
         contract.fusion(df.newContractGet(exp, a, aprime));
-        return new ResultInferenceEffExp(resPureExp.getId(), X, contract, c, env);
+        return new ResultInferenceEffExp( X, contract, c, env);
     }
 
     // ////////////////////////////////////////////////////////////////////////////
     // 2.5. Guards
 
-    public ResultInferencePureExp typeInference(ClaimGuard cg, String ident, Environment env, GroupName a,
+    public ResultInferencePureExp typeInference(ClaimGuard cg, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
         String nident = null;
         if (ident != null) {

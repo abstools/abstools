@@ -30,12 +30,13 @@ import deadlock.constraints.term.TermStructured;
 public class Contract extends GenericStructuredTerm {
 
 
-  public static String name = "Contract";
+  public static final String name = "Contract";
 
   /* Constructors */
   public Contract(List<Term> l) { super(name, l); }
   public Contract() { super(name, new LinkedList()); }
 
+  public Contract(ContractElement e) { this(); this.getList().add(e); }
 
   /* Basic Extension */
   public void add(Contract c) { subterms.addAll(c.subterms); }
@@ -59,7 +60,8 @@ public class Contract extends GenericStructuredTerm {
     } else { this.add(c); }
   }
 
-  public void clean() { // remove extra dependences
+  // TODO: remove because uselless now.
+/*  public void clean() { // remove extra dependences
     LinkedList<Term>subterms_cleaned = new LinkedList<Term>();
 
     // 1. Recursively clean
@@ -94,14 +96,16 @@ public class Contract extends GenericStructuredTerm {
 
     subterms_cleaned.addLast(first);
     this.subterms = subterms_cleaned;
-  }
+  }*/
 
   
   
   /* Basic Get */
   public List<ContractElement> getList() {
     List<ContractElement> res = new LinkedList<ContractElement>();
-    for(Term t : getSubTerms()) { res.add((ContractElement)t); }
+    for(Term t : getSubTerms()) { 
+        res.add((ContractElement)t); 
+    }
     return res;
   }
 

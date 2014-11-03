@@ -25,7 +25,7 @@ import java.util.Set;
 
 import deadlock.constraints.term.Term;
 
-public interface Record extends Term { 
+public interface IRecord extends Term, ITypingEnvironmentVariableType { 
 
   public Set<GroupName> fn();
 

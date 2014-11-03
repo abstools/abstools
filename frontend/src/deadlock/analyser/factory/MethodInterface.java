@@ -33,17 +33,19 @@ public class MethodInterface extends TermStructured {
 
   /* Constructors */
   public MethodInterface(List<Term> l) { super(name, l); }
-  public MethodInterface(Record r, List<Record> s, Record res){
+  public MethodInterface(IRecord r, List<IRecord> s, IRecord res){
     super(name, new LinkedList<Term>());
     subterms.add(r); subterms.addAll(s); subterms.add(res);
   }
 
   /* Basic Get */
-  public Record getThis() { return (Record)(subterms.get(0)); }
-  public Record getResult() { return (Record)(subterms.get(subterms.size() -1)); }
-  public List<Record> getParameters() {
-    List<Record> res = new LinkedList<Record>();
-    for(Term t : subterms.subList(1, subterms.size() -1)) { res.add((Record)t); }
+  public IRecord getThis() { return (IRecord)(subterms.get(0)); }
+  public IRecord getResult() { 
+      return (IRecord)(subterms.get(subterms.size() -1)); 
+  }
+  public List<IRecord> getParameters() {
+    List<IRecord> res = new LinkedList<IRecord>();
+    for(Term t : subterms.subList(1, subterms.size() -1)) { res.add((IRecord)t); }
     return res;
   }
 

@@ -1,4 +1,4 @@
-wrewrewr#!/bin/bash
+#!/bin/bash
 
 PROGNAME="$(readlink $0)"
 if [[ -z $PROGNAME ]] ; then
