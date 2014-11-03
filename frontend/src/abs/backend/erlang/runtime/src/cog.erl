@@ -24,17 +24,11 @@ start()->
 
 add(#cog{ref=Cog},Task,Args)->
     Cog!{newT,Task,Args,self(),false},
-    receive 
-        {started,Task,Ref}->
-            Ref
-    end.
+    await_start(Task, Args).
 
 add_and_notify(#cog{ref=Cog},Task,Args)->
     Cog!{newT,Task,Args,self(),true},
-    receive 
-        {started,Task,Ref}->
-            Ref
-    end.
+    await_start(Task, Args).
 
 new_state(#cog{ref=Cog},TaskRef,State)->
     Cog!{newState,TaskRef,State}.
@@ -55,9 +49,7 @@ get_references(Cog) ->
 
 stop_world(Cog) ->
     Cog ! {stop_world, self()},
-    receive
-        ok -> ok
-    end.
+    ok.
 
 resume_world(Cog) ->
     Cog ! {done, gc},
@@ -77,7 +69,7 @@ loop(S=#state{running=non_found})->
     New_State=
         receive
             {stop_world, Sender} ->
-                Sender ! ok,
+                Sender ! {stopped, self()},
                 S#state{running={gc, false}}
         after 0 ->
                 receive
@@ -95,7 +87,7 @@ loop(S=#state{running=non_found})->
                     dec_ref_count->
                         dec_referencers(S);
                     {stop_world, Sender} ->
-                        Sender ! ok,
+                        Sender ! {stopped, self()},
                         S#state{running={gc, false}}
                 end
         end,
@@ -109,7 +101,7 @@ loop(S=#state{running=false})->
     New_State=
         receive
             {stop_world, Sender} ->
-                Sender ! ok,
+                Sender ! {stopped, self()},
                 S#state{running={gc, false}}
         after 0 ->
                 receive
@@ -125,7 +117,7 @@ loop(S=#state{running=false})->
                     dec_ref_count->
                         dec_referencers(S);
                     {stop_world, Sender} ->
-                        Sender ! ok,
+                        Sender ! {stopped, self()},
                         S#state{running={gc, false}}
                 after 
                     0 ->
@@ -158,7 +150,7 @@ loop(S=#state{running={blocked, R}}) ->
     New_State=
         receive
             {stop_world, Sender} ->
-                Sender ! ok,
+                Sender ! {stopped, self()},
                 S#state{running={gc, {blocked, R}}}
         after 0 ->
                 receive
@@ -174,7 +166,7 @@ loop(S=#state{running={blocked, R}}) ->
                     dec_ref_count->
                         dec_referencers(S);
                     {stop_world, Sender} ->
-                        Sender ! ok,
+                        Sender ! {stopped, self()},
                         S#state{running={gc, {blocked, R}}}
                 end
         end,
@@ -305,3 +297,13 @@ inc_referencers(S=#state{referencers=N}) ->
 
 dec_referencers(S=#state{referencers=N}) ->
     S#state{referencers=N-1}.
+
+%%Awaits task being started
+await_start(Task, Args) ->
+    receive
+        {get_references, Sender} ->
+            Sender ! gc:extract_references(Args),
+            await_start(Task, Args)
+        {started,Task,Ref}->
+            Ref
+    end.
