@@ -20,7 +20,6 @@ import org.absmodels.abs.plugin.actions.ActionUtils;
 import org.absmodels.abs.plugin.builder.AbsNature;
 
 import abs.frontend.ast.Model;
-import abs.frontend.typechecker.ext.DeadlineChecker;
 
 /**
  * Our sample action implements workbench action delegate.
