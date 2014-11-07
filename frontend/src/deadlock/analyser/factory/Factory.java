@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import abs.frontend.ast.ASTNode;
-
+import abs.frontend.ast.AwaitStmt;
+import abs.frontend.typechecker.DataTypeType;
 import deadlock.constraints.substitution.Substitution;
 import deadlock.constraints.term.Variable;
 import deadlock.constraints.term.Term;
@@ -19,18 +20,15 @@ import deadlock.constraints.constraint.Constraint;
 
 public class Factory extends deadlock.constraints.factory.Factory {
 
-    private Record datatype;
     private boolean verbose;
 
     /* Constructor */
-    public Factory(boolean v) { verbose = v; datatype = this.newRecordVariableFanthom(); }
-    public boolean isDataType(Term t) { return (t.equals(datatype)); }
-    public Record getDataType() { return datatype; }
+    public Factory(boolean v) { verbose = v; }
 
   
   /* 1. RECORDS */
 
-  public RecordField newRecordField(String name, Record r) {
+  public RecordField newRecordField(String name, IRecord r) {
     RecordField res = new RecordField(name, r);
     return res;
   }
@@ -40,11 +38,16 @@ public class Factory extends deadlock.constraints.factory.Factory {
     return res;
   }
 
-  public RecordFuture newRecordFuture(GroupName a, Record r) {
+  public RecordFuture newRecordFuture(GroupName a, IRecord r) {
     RecordFuture res = new RecordFuture(a, r);
     return res;
   }
 
+  public RecordDataType newRecordDataType(DataTypeType data, List<IRecord> r) {
+    RecordDataType res = new RecordDataType(data,r);
+    return res;
+  }
+  
   public GroupName newGroupName() {
     GroupName res = new GroupName(new Variable());
     return res;
@@ -56,15 +59,12 @@ public class Factory extends deadlock.constraints.factory.Factory {
     }
 
   public RecordVariable newRecordVariable() {
-    RecordVariable res = new RecordVariable(new Variable(), false);
+    RecordVariable res = new RecordVariable(new Variable());
     return res;
   }
 
-  public RecordVariable newRecordVariableFanthom() {
-    RecordVariable res = new RecordVariable(new Variable(), true);
-    return res;
-  }
-
+  
+  
   /* 2. CONTRACTS */
 
   public Contract newContractEmpty() { return new Contract(); }
@@ -117,14 +117,20 @@ public class Factory extends deadlock.constraints.factory.Factory {
     return new Contract(l);
   }
 
+  public Contract newContractParallel(ASTNode n,  List<Contract> l) {
+      List<Term> l1 = new LinkedList<Term>();
+      l1.add(new ContractElementParallel(n, l));
+      return new Contract(l1);
+    }
+
   /* 4. Methods */
 
-  public MethodInterface newMethodInterface(Record r, List<Record> s, Record res){
+  public MethodInterface newMethodInterface(IRecord r, List<IRecord> s, IRecord res){
     return new MethodInterface(r, s, res);
   }
 	
-  public MethodContract newMethodContract(MethodInterface mi, Contract contract){
-    return new MethodContract(mi, contract);
+  public MethodContract newMethodContract(MethodInterface mi, Contract cp,Contract cf){
+    return new MethodContract(mi, cp, cf);
   }
 
 
@@ -133,25 +139,28 @@ public class Factory extends deadlock.constraints.factory.Factory {
 
   public TermVariable freshTermVariableFromTerm(Term t) {
     if(t instanceof GroupName) { return newGroupName(); }
-    else if(t instanceof Record) { return newRecordVariable(); }   
+    else if(t instanceof IRecord) { return newRecordVariable(); }   
     else{ System.out.println("WHAT THE HELL !!!???"); return super.freshTermVariableFromTerm(t); }
   }
 
   public Term newTerm(String c, List<Term> l) {
-    if(c.equals(RecordPresent.name)) { return new RecordPresent(l); }
-    else if(c.equals(RecordFuture.name)) { return new RecordFuture(l); }
-    else if(c.startsWith(RecordField.prefix)) { return new RecordField(c, l); }
-    else if(c.equals(Contract.name)) { return new Contract(l); }
-    else if(c.equals(ContractElementAwait.name)) { return new ContractElementAwait(l); }
-    else if(c.equals(ContractElementGet.name)) { return new ContractElementGet(l); }
-    else if(c.startsWith(ContractElementSyncInvk.prefix)) { return new ContractElementSyncInvk(c, l); }
-    else if(c.startsWith(ContractElementInvk.prefix)) { return new ContractElementInvk(c, l); }
-    else if(c.equals(ContractElementInvkA.name)) { return new ContractElementInvkA(l); }
-    else if(c.equals(ContractElementInvkG.name)) { return new ContractElementInvkG(l); }
-    else if(c.equals(ContractElementUnion.name)) {  return new ContractElementUnion(l); }
-    else if(c.equals(MethodContract.name)) {  return new MethodContract(l); }
-    else if(c.equals(MethodInterface.name)) {  return new MethodInterface(l); }
-    else {return super.newTerm(c, l); }
+      if(c.equals(Contract.name)) { return new Contract(l); }
+      else if(c.equals(ContractElementAwait.name)) { return new ContractElementAwait(l); }
+      else if(c.equals(ContractElementGet.name)) { return new ContractElementGet(l); }
+      else if(c.startsWith(ContractElementInvk.prefix)) { return new ContractElementInvk(c, l); }
+      else if(c.equals(ContractElementInvkA.name)) { return new ContractElementInvkA(l); }
+      else if(c.equals(ContractElementInvkG.name)) { return new ContractElementInvkG(l); }
+      else if(c.equals(ContractElementParallel.name)) { return new ContractElementParallel(l); }
+      else if(c.startsWith(ContractElementSyncInvk.prefix)) { return new ContractElementSyncInvk(c, l); }
+      else if(c.equals(ContractElementUnion.name)) {  return new ContractElementUnion(l); }
+      else if(c.equals(FunctionInterface.name)) { return new FunctionInterface(l); }
+      else if(c.equals(MethodContract.name)) {  return new MethodContract(l); }
+      else if(c.equals(MethodInterface.name)) {  return new MethodInterface(l); }
+      else if(c.startsWith(RecordDataType._prefix)) { return new RecordDataType(c, l); }
+      else if(c.startsWith(RecordField.prefix)) { return new RecordField(c, l); }
+      else if(c.equals(RecordFuture.name)) { return new RecordFuture(l); }
+      else if(c.equals(RecordPresent.name)) { return new RecordPresent(l); }
+      else {return super.newTerm(c, l); } // should never occur
   }
 
   public Constraint newConstraint() {
@@ -335,6 +344,21 @@ public class Factory extends deadlock.constraints.factory.Factory {
 		}else return cm;
 
 	}
+
+
+	
+
+    public ContractElementParallel newContractElementParallel(AwaitStmt astmt, Contract c1, ContractElementParallel c2) {
+        
+        c2.getContracts().add(c1);
+        return c2;
+        
+    }
+
+
+    public Contract newContract(ContractElement e) {
+        return new Contract(e);
+    }
 	
 
 } // end class DeadlockFactory

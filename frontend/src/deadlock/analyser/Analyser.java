@@ -21,6 +21,8 @@
 package deadlock.analyser;
 
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -39,8 +41,8 @@ import deadlock.constraints.substitution.*;
 
 public class Analyser {
     
-public static int FixPoint1_0 = 1;
-public static int FixPoint2_0 = 2;
+private static int FixPoint1_0 = 1;
+private static int FixPoint2_0 = 2;
     
   public void deadlockAnalysis(Model m, boolean verbose, int nbIteration, int fixPointVersion, PrintStream out) {
       
@@ -48,13 +50,12 @@ public static int FixPoint2_0 = 2;
       Long totalTimeInMs = 0L;
       
       
-      
-
+    
     /* 0, Create the initial data */
     ContractInference ci = new ContractInference();
     Factory df = new Factory(verbose);
-    Environment g = ci.environment(m, df, verbose);
     Map<InterfaceDecl, ClassDecl> mapInterfaceToClass = ci.getMapInterfaceToClass(m);
+    TypingEnvironment g = ci.environment(m, df, mapInterfaceToClass, verbose);
 
      /* 1. Generate contracts */
     String ident = null; 
@@ -118,7 +119,7 @@ public static int FixPoint2_0 = 2;
 
     for(String k : methodMap.keySet()){
       MethodContract mc = (MethodContract)s.apply(methodMap.get(k));
-      mc.clean();
+      //mc.clean();
       if(methodMap.get(k) != null)   methodMap.put(k, mc);
     }
     ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
@@ -146,30 +147,40 @@ public static int FixPoint2_0 = 2;
 
     /* 2. Analyze the contract */
     
-    if(verbose) out.println("Creating CCT...");
-    nanoTime = System.nanoTime();
-    Map<String, Term> cct = new HashMap<String, Term>();
+    //if(verbose) out.println("Creating CCT...");
+    //nanoTime = System.nanoTime();
+//    Map<String, Term> cct = new HashMap<String, Term>();
     
-    for(String k : methodMap.keySet()){
-      if(methodMap.get(k) != null)   cct.put(k, methodMap.get(k));
-    }
+//    for(String k : methodMap.keySet()){
+//      if(methodMap.get(k) != null){   
+//          cct.put(k, methodMap.get(k));
+//      }
+//    }
     if(verbose) out.println("Applying substitution to Main Contract...");
-    cct.put("Main.main", s.apply(InferenceOutput.getMainContract()));
+    
+    //cct.put("Main.main", s.apply(InferenceOutput.getMainContractPresent()));
+    MainMethodContract mmc = new MainMethodContract((Contract)s.apply(InferenceOutput.getMainContractPresent()), (Contract)s.apply(InferenceOutput.getMainContractFuture()));
+//    List<Contract> mainContracts = new LinkedList<Contract>();
+//    mainContracts.add(InferenceOutput.getMainContractPresent());
+//    mainContracts.add(InferenceOutput.getMainContractFuture());
+//    cct.put("Main.main", s.apply(df.newContractSequence(mainContracts)));
+    
     ellapsedTime = (System.nanoTime() - nanoTime)/1000000L;
     totalTimeInMs += ellapsedTime;
-    
+//    
     if(verbose) {
         out.println("CCT creation completed");
         out.println("Ellapsed time: " + ellapsedTime + "ms");
         out.println("*****CONTRACTS*******");
         Term contract;
-        for(String k : cct.keySet()){
-            contract = cct.get(k);
+        for(String k : methodMap.keySet()){
+            contract = methodMap.get(k);
             out.println("    \"" + k + "\": " + ((contract != null) ? (contract.toString()) : ("null")));
         }
+        out.println("    \"MAIN.main\": " + mmc.toString());
         out.println("*****END CONTRACTS*******");
     }
-    
+//    
     if(verbose){
         out.println("###############################################################\n");
         out.println("Computing Dependencies...");
@@ -177,7 +188,7 @@ public static int FixPoint2_0 = 2;
     
     nanoTime = System.nanoTime();
     
-    DASolver solver = (fixPointVersion == FixPoint2_0)? new FixPointSolver2(df, cct):new FixPointSolver1(df, cct, nbIteration);
+    DASolver solver = (fixPointVersion == FixPoint2_0)? new FixPointSolver2(df, methodMap, mmc):new FixPointSolver1(df, methodMap, mmc, nbIteration);
     
 
     solver.computeSolution();

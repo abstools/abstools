@@ -17,9 +17,10 @@ import deadlock.analyser.factory.ContractElementSyncInvk;
 import deadlock.analyser.factory.ContractElementUnion;
 import deadlock.analyser.factory.Factory;
 import deadlock.analyser.factory.GroupName;
+import deadlock.analyser.factory.MainMethodContract;
 import deadlock.analyser.factory.MethodContract;
 import deadlock.analyser.factory.MethodInterface;
-import deadlock.analyser.factory.Record;
+import deadlock.analyser.factory.IRecord;
 import deadlock.constraints.term.Term;
 import deadlock.constraints.term.TermStructured;
 //import deadlock.constraints.term.Variable;
@@ -37,8 +38,8 @@ public class FixPointSolver1 extends DASolver {
     @Override
     public String getName() {return "Fix Point 1.0";}
 
-    public FixPointSolver1(Factory f, Map<String, Term> map, int i){
-        super(f, map);
+    public FixPointSolver1(Factory f, Map<String, MethodContract> map, MainMethodContract mmc, int i){
+        super(f, map, mmc);
         
         this.nOfIterations = i;
         this.nOfDep = 0;
@@ -58,18 +59,24 @@ public class FixPointSolver1 extends DASolver {
             for(String mName : methodMap.keySet()){
 
                 //get the method contract
-                Term contr = methodMap.get(mName);
-
+                Term contrP = methodMap.get(mName).getContractPresent();
+                Term contrF = methodMap.get(mName).getContractPresent();
+                
+                
                 // I want to isolate the contract (body contract), only Main.main has already the right contract
-                if(contr instanceof MethodContract){
-                    contr = ((MethodContract) contr).getContract();
-                }
+                //if(contr instanceof MethodContract){
+                
+                //}
 
                 // In this first version of algorithm I want to work only with contract single (not contractSeq)
                 // but inference return always a contractSeq, even if it is a single contract, so, I 'clear' it, if 
                 // I have a contractSeq with only one subterm inside, it will be our contract to check
-                if(((Contract) contr).getList().size() == 1){
-                    contr = ((Contract) contr).getList().get(0);
+                if(((Contract) contrP).getList().size() == 1){
+                    contrP = ((Contract) contrP).getList().get(0);
+                }
+                
+                if(((Contract) contrF).getList().size() == 1){
+                    contrF = ((Contract) contrF).getList().get(0);
                 }
 
                 //get the appropriate var substitution which is the last applied if there is saturation
@@ -86,17 +93,30 @@ public class FixPointSolver1 extends DASolver {
                 }
 
                 //resulting lam after expansion
-                DoubleLam expansion;
+                DoubleLam expansion, expansionF;
                 
                 //apply the corresponding rule
-                if(contr instanceof ContractElementGet)             { expansion = wGet(mName, (ContractElementGet) contr, subFresh);}
-                else if(contr instanceof ContractElementAwait)      { expansion = wAwait(mName, (ContractElementAwait) contr, subFresh);}
-                else if(contr instanceof ContractElementInvk)       { expansion = wInvk(mName, (ContractElementInvk) contr, subFresh);}
-                else if(contr instanceof ContractElementSyncInvk)   { expansion = wSyncInvk(mName, (ContractElementSyncInvk) contr, subFresh);}
-                else if(contr instanceof ContractElementInvkG)      { expansion = wGInvk(mName, (ContractElementInvkG) contr, subFresh);}
-                else if(contr instanceof ContractElementInvkA)      { expansion = wAInvk(mName, (ContractElementInvkA) contr, subFresh);}
-                else if(contr instanceof ContractElementUnion)      { expansion = wUnion(mName, (ContractElementUnion) contr, subFresh);}
-                else                                                { expansion = wSeq(mName, (Contract) contr, subFresh);}
+                if(contrP instanceof ContractElementGet)             { expansion = wGet(mName, (ContractElementGet) contrP, subFresh);}
+                else if(contrP instanceof ContractElementAwait)      { expansion = wAwait(mName, (ContractElementAwait) contrP, subFresh);}
+                else if(contrP instanceof ContractElementInvk)       { expansion = wInvk(mName, (ContractElementInvk) contrP, subFresh);}
+                else if(contrP instanceof ContractElementSyncInvk)   { expansion = wSyncInvk(mName, (ContractElementSyncInvk) contrP, subFresh);}
+                else if(contrP instanceof ContractElementInvkG)      { expansion = wGInvk(mName, (ContractElementInvkG) contrP, subFresh);}
+                else if(contrP instanceof ContractElementInvkA)      { expansion = wAInvk(mName, (ContractElementInvkA) contrP, subFresh);}
+                else if(contrP instanceof ContractElementUnion)      { expansion = wUnion(mName, (ContractElementUnion) contrP, subFresh);}
+                else                                                { expansion = wSeq(mName, (Contract) contrP, subFresh);}
+                
+              //apply the corresponding rule
+                if(contrF instanceof ContractElementGet)             { expansionF = wGet(mName, (ContractElementGet) contrF, subFresh);}
+                else if(contrF instanceof ContractElementAwait)      { expansionF = wAwait(mName, (ContractElementAwait) contrF, subFresh);}
+                else if(contrF instanceof ContractElementInvk)       { expansionF = wInvk(mName, (ContractElementInvk) contrF, subFresh);}
+                else if(contrF instanceof ContractElementSyncInvk)   { expansionF = wSyncInvk(mName, (ContractElementSyncInvk) contrF, subFresh);}
+                else if(contrF instanceof ContractElementInvkG)      { expansionF = wGInvk(mName, (ContractElementInvkG) contrF, subFresh);}
+                else if(contrF instanceof ContractElementInvkA)      { expansionF = wAInvk(mName, (ContractElementInvkA) contrF, subFresh);}
+                else if(contrF instanceof ContractElementUnion)      { expansionF = wUnion(mName, (ContractElementUnion) contrF, subFresh);}
+                else                                                { expansionF = wSeq(mName, (Contract) contrF, subFresh);}
+                
+                //put lams in sequence
+                expansion.seqComposition(expansionF);
                 
                 //Update the lam with the expansion result
                 BigLam lam = lampMap.get(mName);
@@ -107,7 +127,19 @@ public class FixPointSolver1 extends DASolver {
             }
 
             //check for cycles            
-            BigLam blMain = lampMap.get("Main.main");
+            //BigLam blMain = lampMap.get("Main.main");
+            BigLam blMain = new BigLam("Main.main", mmc);
+            
+            DoubleLam expansionPresent = wSeq(null, mmc.getContractPresent(), new VarSubstitution());
+            DoubleLam expansionFuture = wSeq(null, mmc.getContractFuture(), new VarSubstitution());
+            
+            expansionPresent.seqComposition(expansionFuture);
+            
+            blMain.setFirst(expansionPresent.getW());
+            blMain.setSecond(expansionPresent.getWPrime());
+            
+            blMain.expandAndClean();
+            
             if(blMain.hasCycle()){
                 //a cyclic dependency was found
                 //if there is a pure await dependencies cycle then there is livelock
@@ -241,9 +273,9 @@ public class FixPointSolver1 extends DASolver {
         //'thisRecord' of the call inside the contract that we are analyzing
         VarSubstitution subThis;
         MethodInterface interfaceCaller = cInvk.getMethodInterface();
-        Record thisCaller = interfaceCaller.getThis();
+        IRecord thisCaller = interfaceCaller.getThis();
         MethodInterface interfaceCalled = methodContract.getMethodInterface();
-        Record thisCalled = interfaceCalled.getThis();
+        IRecord thisCalled = interfaceCalled.getThis();
         //System.out.println("thisCaller = " + thisCaller.toString());
         //System.out.println("thisCalled = " + thisCalled.toString());
         subThis = findSub(thisCaller, thisCalled, bFresh);
@@ -254,9 +286,9 @@ public class FixPointSolver1 extends DASolver {
         //'argsRecord' of the call inside the contract that we are analyzing
         VarSubstitution subArgs;
 
-        List<Record> argsCaller = interfaceCaller.getParameters();
+        List<IRecord> argsCaller = interfaceCaller.getParameters();
 
-        List<Record> argsCalled = interfaceCalled.getParameters();
+        List<IRecord> argsCalled = interfaceCalled.getParameters();
 
         for(int i = 0 ; i<argsCaller.size() ; i++){
             subArgs = findSub(argsCaller.get(i), argsCalled.get(i), bFresh);
@@ -266,8 +298,8 @@ public class FixPointSolver1 extends DASolver {
         //here we create and apply the third substitution, 'retRecord' of method called got to be replaced with
         //'retRecord' of the call inside the contract that we are analyzing
         VarSubstitution subRet;
-        Record retCaller =  interfaceCaller.getResult();
-        Record retCalled =  interfaceCalled.getResult();
+        IRecord retCaller =  interfaceCaller.getResult();
+        IRecord retCalled =  interfaceCalled.getResult();
         //System.out.println("retCaller = " + retCaller.toString());
         //System.out.println("retCalled = " + retCalled.toString());
         subRet = findSub(retCaller, retCalled, bFresh);
@@ -332,9 +364,9 @@ public class FixPointSolver1 extends DASolver {
         //'thisRecord' of the call inside the contract that we are analyzing
         VarSubstitution subThis;
         MethodInterface interfaceCaller = cInvk.getMethodInterface();
-        Record thisCaller = interfaceCaller.getThis();
+        IRecord thisCaller = interfaceCaller.getThis();
         MethodInterface interfaceCalled = methodContract.getMethodInterface();
-        Record thisCalled = interfaceCalled.getThis();
+        IRecord thisCalled = interfaceCalled.getThis();
         //System.out.println("thisCaller = " + thisCaller.toString());
         //System.out.println("thisCalled = " + thisCalled.toString());
         subThis = findSub(thisCaller, thisCalled, bFresh);
@@ -346,9 +378,9 @@ public class FixPointSolver1 extends DASolver {
         //'argsRecord' of the call inside the contract that we are analyzing
         VarSubstitution subArgs;
 
-        List<Record> argsCaller = interfaceCaller.getParameters();
+        List<IRecord> argsCaller = interfaceCaller.getParameters();
 
-        List<Record> argsCalled = interfaceCalled.getParameters();
+        List<IRecord> argsCalled = interfaceCalled.getParameters();
 
         for(int i = 0 ; i<argsCaller.size() ; i++){
             subArgs = findSub(argsCaller.get(i), argsCalled.get(i), bFresh);
@@ -359,8 +391,8 @@ public class FixPointSolver1 extends DASolver {
         //here we create and apply the third substitution, 'retRecord' of method called got to be replaced with
         //'retRecord' of the call inside the contract that we are analyzing
         VarSubstitution subRet;
-        Record retCaller =  interfaceCaller.getResult();
-        Record retCalled =  interfaceCalled.getResult();
+        IRecord retCaller =  interfaceCaller.getResult();
+        IRecord retCalled =  interfaceCalled.getResult();
         //System.out.println("retCaller = " + retCaller.toString());
         //System.out.println("retCalled = " + retCalled.toString());
         subRet = findSub(retCaller, retCalled, bFresh);
@@ -435,9 +467,9 @@ public class FixPointSolver1 extends DASolver {
         //'thisRecord' of the call inside the contract that we are analyzing
         VarSubstitution subThis;
         MethodInterface interfaceCaller = cInvk.getMethodInterface();
-        Record thisCaller = interfaceCaller.getThis();
+        IRecord thisCaller = interfaceCaller.getThis();
         MethodInterface interfaceCalled = methodContract.getMethodInterface();
-        Record thisCalled = interfaceCalled.getThis();
+        IRecord thisCalled = interfaceCalled.getThis();
         //System.out.println("thisCaller = " + thisCaller.toString());
         //System.out.println("thisCalled = " + thisCalled.toString());
         subThis = findSub(thisCaller, thisCalled, bFresh);
@@ -449,9 +481,9 @@ public class FixPointSolver1 extends DASolver {
         //here we create and apply the third substitution, 'argsRecord' of method called got to be replaced with
         //'argsRecord' of the call inside the contract that we are analyzing
         VarSubstitution subArgs;
-        List<Record> argsCaller = interfaceCaller.getParameters();
+        List<IRecord> argsCaller = interfaceCaller.getParameters();
 
-        List<Record> argsCalled = interfaceCalled.getParameters();
+        List<IRecord> argsCalled = interfaceCalled.getParameters();
 
         for(int i = 0 ; i<argsCaller.size() ; i++){
             subArgs = findSub(argsCaller.get(i), argsCalled.get(i), bFresh);
@@ -463,8 +495,8 @@ public class FixPointSolver1 extends DASolver {
         //here we create and apply the third substitution, 'retRecord' of method called got to be replaced with
         //'retRecord' of the call inside the contract that we are analyzing
         VarSubstitution subRet;
-        Record retCaller =  interfaceCaller.getResult();
-        Record retCalled =  interfaceCalled.getResult();
+        IRecord retCaller =  interfaceCaller.getResult();
+        IRecord retCalled =  interfaceCalled.getResult();
         //System.out.println("retCaller = " + retCaller.toString());
         //System.out.println("retCalled = " + retCalled.toString());
         subRet = findSub(retCaller, retCalled, bFresh);
@@ -550,9 +582,9 @@ public class FixPointSolver1 extends DASolver {
         //'thisRecord' of the call inside the contract that we are analyzing
         VarSubstitution subThis;
         MethodInterface interfaceCaller = cInvk.getMethodInterface();
-        Record thisCaller = interfaceCaller.getThis();
+        IRecord thisCaller = interfaceCaller.getThis();
         MethodInterface interfaceCalled = methodContract.getMethodInterface();
-        Record thisCalled = interfaceCalled.getThis();
+        IRecord thisCalled = interfaceCalled.getThis();
         //System.out.println("thisCaller = " + thisCaller.toString());
         //System.out.println("thisCalled = " + thisCalled.toString());
         subThis = findSub(thisCaller, thisCalled, bFresh);
@@ -563,9 +595,9 @@ public class FixPointSolver1 extends DASolver {
         //here we create and apply the third substitution, 'argsRecord' of method called got to be replaced with
         //'argsRecord' of the call inside the contract that we are analyzing
         VarSubstitution subArgs;
-        List<Record> argsCaller = interfaceCaller.getParameters();
+        List<IRecord> argsCaller = interfaceCaller.getParameters();
 
-        List<Record> argsCalled = interfaceCalled.getParameters();
+        List<IRecord> argsCalled = interfaceCalled.getParameters();
 
         for(int i = 0 ; i<argsCaller.size() ; i++){
             subArgs = findSub(argsCaller.get(i), argsCalled.get(i), bFresh);
@@ -576,8 +608,8 @@ public class FixPointSolver1 extends DASolver {
         //here we create and apply the third substitution, 'retRecord' of method called got to be replaced with
         //'retRecord' of the call inside the contract that we are analyzing
         VarSubstitution subRet;
-        Record retCaller =  interfaceCaller.getResult();
-        Record retCalled =  interfaceCalled.getResult();
+        IRecord retCaller =  interfaceCaller.getResult();
+        IRecord retCalled =  interfaceCalled.getResult();
         //System.out.println("retCaller = " + retCaller.toString());
         //System.out.println("retCalled = " + retCalled.toString());
         subRet = findSub(retCaller, retCalled, bFresh);

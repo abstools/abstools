@@ -26,12 +26,9 @@ import java.util.HashSet;
 import deadlock.constraints.term.TermVariable;
 import deadlock.constraints.term.Variable;
 
-public class RecordVariable extends TermVariable implements Record {
+public class RecordVariable extends TermVariable implements IRecord {
 
-  private boolean isDataType;
-
-  public RecordVariable(Variable v, boolean data) { super(v); isDataType = data; }
-  public boolean isDataType() { return isDataType; }
+  public RecordVariable(Variable v) { super(v); }
 
   public Set<GroupName> fn() { return new HashSet<GroupName>(); }
 
