@@ -17,44 +17,41 @@ start() ->
     register(gc, spawn(?MODULE, init, [])).
 
 init() ->
-    loop(gb_sets:empty(), gb_sets:empty()).
+    loop(gb_sets:empty(), gb_sets:empty(), gb_sets:empty()).
 
-loop(Cogs, Objects, Futures) ->
+loop(Cogs, Objects, RootFutures) ->
     ?DEBUG({{cogs, Cogs}, {objects, Objects}}),
-    {NewCogs, NewObjects} =
+    {NewCogs, NewObjects, NewRootFutures} =
         receive
             #cog{ref=Ref} ->
-                {gb_sets:add_element({cog, Ref}, Cogs), Objects};
+                {gb_sets:add_element({cog, Ref}, Cogs), Objects, RootFutures};
             #object{ref=Ref} ->
-                {Cogs, gb_sets:add_element({object, Ref}, Objects)};
+                {Cogs, gb_sets:add_element({object, Ref}, Objects), RootFutures};
             Ref when is_pid(Ref) ->
-                {Cogs, gb_sets:add_element({future, Ref}, Objects)};
-            X ->
-                ?DEBUG({unknown_message, X}),
-                {Cogs, Objects}
+                {Cogs, Objects, gb_sets:add_element({future, Ref}, RootFutures)}
         end,
     gb_sets:fold(fun ({cog, Ref}, ok) -> cog:stop_world(Ref) end, ok, NewCogs),
-    await_stop(NewCogs, 0, NewObjects).
+    await_stop(NewCogs, 0, NewObjects, NewRootFutures).
 
-await_stop(Cogs, Stopped, Objects) ->
-    {NewCogs, NewStopped, NewObjects} =
+await_stop(Cogs, Stopped, Objects, RootFutures) ->
+    {NewCogs, NewStopped, NewObjects, NewRootFutures} =
         receive
             #cog{ref=Ref} ->
                 cog:stop_world(Ref),
-                {gb_sets:add_element({cog, Ref}, Cogs), Stopped, Objects};
+                {gb_sets:add_element({cog, Ref}, Cogs), Stopped, Objects, RootFutures};
             #object{ref=Ref} ->
-                {Cogs, Stopped, gb_sets:add_element({object, Ref}, Objects)};
+                {Cogs, Stopped, gb_sets:add_element({object, Ref}, Objects), RootFutures};
             Ref when is_pid(Ref) ->
-                {Cogs, Stopped, gb_sets:add_element({future, Ref}, Objects)};
+                {Cogs, Stopped, Objects, gb_sets:add_element({future, Ref}, RootFutures)};
             {stopped, Ref} ->
-                {Cogs, Stopped + 1, Objects}
+                {Cogs, Stopped + 1, Objects, RootFutures}
         end,
     case gb_sets:size(NewCogs) of
         NewStopped ->
             % Insert mark phase here
             gb_sets:fold(fun ({cog, Ref}, ok) -> cog:resume_world(Ref) end, ok, NewCogs),
-            loop(NewCogs, NewObjects);
-        _ -> await_stop(NewCogs, NewStopped, Objects)
+            loop(NewCogs, NewObjects, NewRootFutures);
+        _ -> await_stop(NewCogs, NewStopped, Objects, NewRootFutures)
     end.
         
 
