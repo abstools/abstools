@@ -33,6 +33,7 @@ behaviour_info(_) ->
 %%4.th parameter controls if it is on a new cog or immediatly initalized on the same.
 new(Cog,Class,Args,false)->
     O=start(Cog,Class),
+    cog:inc_ref_count(Cog),
     object:activate(O),
     Class:init(O,Args);
 new(Cog,Class,Args,true)->
@@ -85,11 +86,12 @@ await_activation(Params) ->
         active -> ok
     end.
 
+%%cog is a reference to the COG the object belongs to
 %%await keeps track of all task, waiting till the object is active,
 %%tasks all task running on this object
 %%int_status, is the status variable of the object behaviour implementation
 %%new_vals, is the buffer for the transaction managment 
--record(state,{await,tasks,class,int_status,new_vals}).
+-record(state,{cog,await,tasks,class,int_status,new_vals}).
 
 start(Cog,Class)->
     {ok,O}=gen_fsm:start_link(object,[Cog,Class,Class:init_internal()],[]),
@@ -97,7 +99,7 @@ start(Cog,Class)->
 
 init([Cog,Class,Status])->
     ?DEBUG({new,Cog, Class}),
-    {ok,uninitialized,#state{await=[],tasks=gb_sets:empty(),class=Class,int_status=Status,new_vals=gb_trees:empty()}}.
+    {ok,uninitialized,#state{cog=Cog,await=[],tasks=gb_sets:empty(),class=Class,int_status=Status,new_vals=gb_trees:empty()}}.
 
 uninitialized(activate,S=#state{await=A})->
     lists:foreach(fun(X)-> X ! active end,A),
@@ -106,7 +108,7 @@ uninitialized(activate,S=#state{await=A})->
 uninitialized({new_task,TaskRef},From,S=#state{await=A,tasks=Tasks})->
     monitor(process,TaskRef),
     ?DEBUG({new_task,TaskRef}),
-    {reply,uninitialized,uninitialized,S#state{await=[From|A],tasks=gb_sets:add_element(TaskRef, Tasks)}}.
+    {reply,uninitialized,uninitialized,S#state{await=[TaskRef|A],tasks=gb_sets:add_element(TaskRef, Tasks)}}.
 
 
 
@@ -138,9 +140,10 @@ active({#object{class=Class},set,Field,Val},S=#state{class=C,new_vals=NV}) ->
     ?DEBUG({set,Field,Val}),
     {next_state,active,S#state{new_vals=gb_trees:enter(Field,Val,NV)}}.
 
-handle_sync_event({die,Reason,By},_From,_StateName,S=#state{tasks=Tasks})->
+handle_sync_event({die,Reason,By},_From,_StateName,S=#state{cog=Cog, tasks=Tasks})->
     ?DEBUG({dying, Reason, By}),
     [begin ?DEBUG({terminate,T}),exit(T,Reason) end ||T<-gb_sets:to_list(Tasks), T/=By],
+    cog:dec_ref_count(Cog),
     case gb_sets:is_element(By,Tasks) of
         true ->
             exit(By,Reason);
