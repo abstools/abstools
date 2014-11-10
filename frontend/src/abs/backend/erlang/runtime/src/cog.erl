@@ -4,7 +4,7 @@
 -export([init/1]).
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
--record(state,{tasks,running=false,polling=[],tracker,referencers=0}).
+-record(state,{tasks,running=false,polling=[],tracker,referencers=1}).
 -record(task,{ref,state=waiting}).
 
 %%Garbage collector callbacks
@@ -173,7 +173,7 @@ loop(S=#state{running={blocked, R}}) ->
     loop(New_State);
 
 %%Garbage collector is running, wait before resuming tasks
-loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}}) ->
+loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs}) ->
     New_State=
         receive
             {newT, Task, Args, Sender, Notify}->
@@ -191,14 +191,20 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}}) ->
                              self()},
                         S;
                     {done, gc} ->
-                        S#state{running=Old};
+                        case Refs of
+                            0 -> stop;
+                            _ -> S#state{running=Old}
+                        end;
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S)
                 end
         end,
-    loop(New_State).
+    case New_State of
+        stop -> io:format("COG ~p was garbage collected.~n", [self()]);
+        _ -> loop(New_State)
+    end.
 
 %%Start new task
 initTask(S=#state{tasks=T,tracker=Tracker},Task,Args,Sender,Notify)->
@@ -303,7 +309,7 @@ await_start(Task, Args) ->
     receive
         {get_references, Sender} ->
             Sender ! gc:extract_references(Args),
-            await_start(Task, Args)
+            await_start(Task, Args);
         {started,Task,Ref}->
             Ref
     end.
