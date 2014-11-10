@@ -15,6 +15,7 @@ import deadlock.analyser.factory.ContractElementGet;
 import deadlock.analyser.factory.ContractElementInvk;
 import deadlock.analyser.factory.ContractElementInvkA;
 import deadlock.analyser.factory.ContractElementInvkG;
+import deadlock.analyser.factory.ContractElementParallel;
 import deadlock.analyser.factory.ContractElementSyncInvk;
 import deadlock.analyser.factory.ContractElementUnion;
 import deadlock.analyser.factory.Factory;
@@ -53,14 +54,6 @@ public class FixPointSolver2 extends DASolver {
                 VarSubstitution subFresh = new VarSubstitution();
                 for(GroupName v : bTilde) subFresh.addSub( v, df.newGroupName(true));
                 
-//                //get the method contract
-//                Term contr = methodMap.get(mName);
-//
-//                // I want to isolate the contract (body contract), only Main.main has already the right contract
-//                if(contr instanceof MethodContract){
-//                    contr = ((MethodContract) contr).getContract();
-//                }
-//                
                 DoubleLam expansionPresent = wSeq(mName, methodMap.get(mName).getContractPresent(), subFresh);
                 DoubleLam expansionFuture = wSeq(mName, methodMap.get(mName).getContractFuture(), subFresh);
                 
@@ -449,6 +442,23 @@ public class FixPointSolver2 extends DASolver {
 
         return l;       
     }       
+    
+    // The rule W-Par of the Analysis
+    private DoubleLam wParallel(String mName, ContractElementParallel contr, VarSubstitution bFresh){
+        
+        List<Contract> contracts = contr.getContracts();
+                
+        DoubleLam l = new DoubleLam();
+        for(Contract c : contracts){
+            DoubleLam l1 = wSeq(mName, c, bFresh);
+            DoubleLam res = new DoubleLam();
+            res.parallel(l, l1);
+            
+            l = res;
+        }
+        
+        return l;       
+    }       
 
 
     // The rule W-Seq of the Analysis
@@ -477,6 +487,9 @@ public class FixPointSolver2 extends DASolver {
                 l.seqComposition(lr);   
             }else if(c instanceof ContractElementUnion){
                 DoubleLam lr = wUnion(mName, (ContractElementUnion) c, bFresh);
+                l.seqComposition(lr);   
+            }else if(c instanceof ContractElementParallel){
+                DoubleLam lr = wParallel(mName, (ContractElementParallel) c, bFresh);
                 l.seqComposition(lr);   
             }
         }

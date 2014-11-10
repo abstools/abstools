@@ -13,6 +13,7 @@ import deadlock.analyser.factory.ContractElementGet;
 import deadlock.analyser.factory.ContractElementInvk;
 import deadlock.analyser.factory.ContractElementInvkA;
 import deadlock.analyser.factory.ContractElementInvkG;
+import deadlock.analyser.factory.ContractElementParallel;
 import deadlock.analyser.factory.ContractElementSyncInvk;
 import deadlock.analyser.factory.ContractElementUnion;
 import deadlock.analyser.factory.Factory;
@@ -60,7 +61,7 @@ public class FixPointSolver1 extends DASolver {
 
                 //get the method contract
                 Term contrP = methodMap.get(mName).getContractPresent();
-                Term contrF = methodMap.get(mName).getContractPresent();
+                Term contrF = methodMap.get(mName).getContractFuture();
                 
                 
                 // I want to isolate the contract (body contract), only Main.main has already the right contract
@@ -652,6 +653,23 @@ public class FixPointSolver1 extends DASolver {
         return l;       
     }       
 
+    
+    // The rule W-Par of the Analysis
+    private DoubleLam wParallel(String mName, ContractElementParallel contr, VarSubstitution bFresh){
+        
+        List<Contract> contracts = contr.getContracts();
+                
+        DoubleLam l = new DoubleLam();
+        for(Contract c : contracts){
+            DoubleLam l1 = wSeq(mName, c, bFresh);
+            DoubleLam res = new DoubleLam();
+            res.parallel(l, l1);
+            
+            l = res;
+        }
+        
+        return l;       
+    }      
 
     // The rule W-Seq of the Analysis
     public DoubleLam wSeq(String mName, Contract contr, VarSubstitution bFresh){
@@ -679,6 +697,9 @@ public class FixPointSolver1 extends DASolver {
                 l.seqComposition(lr);   
             }else if(c instanceof ContractElementUnion){
                 DoubleLam lr = wUnion(mName, (ContractElementUnion) c, bFresh);
+                l.seqComposition(lr);   
+            }else if(c instanceof ContractElementParallel){
+                DoubleLam lr = wParallel(mName, (ContractElementParallel) c, bFresh);
                 l.seqComposition(lr);   
             }
         }

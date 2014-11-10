@@ -126,7 +126,7 @@ public ContractElementParallel unsync(ASTNode pos) {
  for(ITypingEnvironmentFutureType t: this.futures.values()) {
      if(t instanceof TypingEnvironmentFutureTypeUntick) {
          c = new Contract();
-         c.getList().add(((TypingEnvironmentFutureTypeUntick)t).getContract());
+         c.getSubTerms().add(((TypingEnvironmentFutureTypeUntick)t).getContract());
          contracts.add(c);
      }
  }

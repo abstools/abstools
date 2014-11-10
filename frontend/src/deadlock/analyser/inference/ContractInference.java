@@ -887,7 +887,7 @@ public class ContractInference {
                     env.putFuture((TypingEnvironmentVariableTypeFuture)resGuard.getVariableType(), new TypingEnvironmentFutureTypeTick(z.getRecord()));
                     
                     c.addEquation(new ASTNodeInformation(astmt), z.getRecord(), df.newRecordFuture(aprime, df.newRecordVariable()));
-                    contract = df.newContract(df.newContractElementParallel(astmt, 
+                    contract = df.newContract(df.newContractElementParallel( 
                             df.newContractInvkA(astmt, 
                                                 ((TypingEnvironmentFutureTypeUntick) z).getContract(), 
                                                 new ContractElementAwait(astmt, a, aprime)), 
@@ -1063,12 +1063,12 @@ public class ContractInference {
 
         for (Stmt s : b.getStmts()) {
             java.util.List<TypingEnvironment> cumul = new LinkedList<TypingEnvironment>();
-            Contract current = df.newContractEmpty();
+            Contract current = null;
             for(TypingEnvironment te: envs){
                 resStmt = typeInference(s, nident, te, a, intertoclass, df, cl);
                 c.add(resStmt.getConstraint());
                 cumul.addAll(resStmt.getEnvironment());
-                current = df.newContractUnion(b, current, resStmt.getContract());                
+                current = (current == null)? resStmt.getContract() : df.newContractUnion(b, current, resStmt.getContract());                
             }
             envs = cumul;
             contract.add(current);
@@ -1409,7 +1409,7 @@ public class ContractInference {
                 r = Y;
                 contract.add(df.newContractSyncInvk(call, cl.getName(), call.getMethod(), mi));
             } else {
-                contract.add(df.newContractInvk(call, cl.getName(), call.getMethod(), mi));
+                //contract.add(df.newContractInvk(call, cl.getName(), call.getMethod(), mi));
 
                 GroupName aprime = df.newGroupName();
                 IRecord calleeShape = createInstance(cl, df, aprime);
@@ -1440,16 +1440,36 @@ public class ContractInference {
             System.out.println(ident + "GetExp Sub-Expression Finished");
         }
 
-        Contract contract = df.newContractEmpty();
+        
+        Contract contract;
         deadlock.constraints.constraint.Constraint c = df.newConstraint();
 
         // 2. record for the result
         GroupName aprime = df.newGroupName();
         IRecord X = df.newRecordVariable();
-        c.addEquation(new ASTNodeInformation(exp), df.newRecordFuture(aprime, X), env.getRecord(resPureExp.getVariableType()));
 
+        // 3. check if future is tick
+        ITypingEnvironmentFutureType fType = env.getFuture((TypingEnvironmentVariableTypeFuture)resPureExp.getVariableType());
+        if(fType instanceof TypingEnvironmentFutureTypeUntick){
+            env.putFuture((TypingEnvironmentVariableTypeFuture)resPureExp.getVariableType(), new TypingEnvironmentFutureTypeTick(fType.getRecord()));
+            
+            contract = df.newContract(
+                    df.newContractElementParallel( 
+                            df.newContractInvkG(exp,
+                                    ((TypingEnvironmentFutureTypeUntick) fType).getContract(),
+                                    new ContractElementGet(exp, a, aprime)), 
+                            env.unsync(exp)
+                    )
+            );
+        }
+        else {
+            contract = df.newContractEmpty();
+        }
+        
+        c.addEquation(new ASTNodeInformation(exp), df.newRecordFuture(aprime, X), fType.getRecord());
+        
         // pack up the result
-        contract.fusion(df.newContractGet(exp, a, aprime));
+        //contract.fusion(df.newContractGet(exp, a, aprime));
         return new ResultInferenceEffExp( X, contract, c, env);
     }
 

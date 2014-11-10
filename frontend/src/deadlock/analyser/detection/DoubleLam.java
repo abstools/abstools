@@ -62,5 +62,23 @@ public class DoubleLam {
         this.wPrime.parallel(dl.getWPrime());
     }
 
+
+    public void parallel(DoubleLam dl1, DoubleLam dl2) {
+        
+        Lam lAus = new Lam();
+        lAus.addLamp(dl1.getW());
+        lAus.addLamp(dl1.getWPrime());
+
+        
+        Lam lAus2 = new Lam();
+        lAus2.addLamp(dl2.getW());
+        lAus2.addLamp(dl2.getWPrime());
+
+        lAus.parallel(lAus2);
+        
+        this.w = lAus; 
+        this.wPrime = new Lam();
+    }
+
   
 }

@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<?artifactRepository version='1.1.0'?>
+<repository name='file:/c:/workspace/abstools/eclipse-plugin/update-site/ - artifacts' type='org.eclipse.equinox.p2.artifact.repository.simpleRepository' version='1.0.0'>
+  <properties size='2'>
+    <property name='p2.timestamp' value='1415098014610'/>
+    <property name='p2.compressed' value='false'/>
+  </properties>
+  <mappings size='3'>
+    <rule filter='(&amp; (classifier=osgi.bundle))' output='${repoUrl}/plugins/${id}_${version}.jar'/>
+    <rule filter='(&amp; (classifier=binary))' output='${repoUrl}/binary/${id}_${version}'/>
+    <rule filter='(&amp; (classifier=org.eclipse.update.feature))' output='${repoUrl}/features/${id}_${version}.jar'/>
+  </mappings>
+  <artifacts size='12'>
+    <artifact classifier='org.eclipse.update.feature' id='org.abs-models.abs.plugin' version='1.0.8.201411041103-6b55fad'>
+      <properties size='4'>
+        <property name='artifact.size' value='640'/>
+        <property name='download.size' value='640'/>
+        <property name='download.md5' value='d17471a14e9e657d89dfa88d4fb9b744'/>
+        <property name='download.contentType' value='application/zip'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='org.abs-models.sdedit' version='0.2.8.201411041103-6b55fad'>
+      <properties size='4'>
+        <property name='artifact.size' value='464'/>
+        <property name='download.size' value='464'/>
+        <property name='download.md5' value='afd8063019ab64e4f71aaa87247cd3f4'/>
+        <property name='download.contentType' value='application/zip'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='org.abs-models.abs.plugin' version='1.0.8.201411041103-6b55fad'>
+      <properties size='3'>
+        <property name='artifact.size' value='579162'/>
+        <property name='download.size' value='579162'/>
+        <property name='download.md5' value='2083a183ffce78bd53f66523d2d5c17c'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='org.abs-models.apet' version='1.0.6.201411041103-6b55fad'>
+      <properties size='3'>
+        <property name='artifact.size' value='1572526'/>
+        <property name='download.size' value='1572526'/>
+        <property name='download.md5' value='638d38eac909c087883c79cb70d74a58'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='org.abs-models.abs.compiler' version='1.2.3.201411041103-6b55fad'>
+      <properties size='3'>
+        <property name='artifact.size' value='7919726'/>
+        <property name='download.size' value='7919726'/>
+        <property name='download.md5' value='df463c529837e37ec704e518d3d1a59a'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='org.abs-models.costabs' version='1.0.6.201411041103-6b55fad'>
+      <properties size='3'>
+        <property name='artifact.size' value='2964811'/>
+        <property name='download.size' value='2964811'/>
+        <property name='download.md5' value='e38822a0ebc99b3ea89ca2462d785bb4'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='org.abs-models.sda' version='1.0.0.201411041103-6b55fad'>
+      <properties size='4'>
+        <property name='artifact.size' value='566'/>
+        <property name='download.size' value='566'/>
+        <property name='download.md5' value='d5850f0d59dea90f84f3ec45ca55275c'/>
+        <property name='download.contentType' value='application/zip'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='org.abs-models.abs.compiler' version='1.2.3.201411041103-6b55fad'>
+      <properties size='4'>
+        <property name='artifact.size' value='452'/>
+        <property name='download.size' value='452'/>
+        <property name='download.md5' value='abb529cfff711c507ecceb9f8ee6eefe'/>
+        <property name='download.contentType' value='application/zip'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='org.abs-models.costabs' version='1.0.6.201411041103-6b55fad'>
+      <properties size='4'>
+        <property name='artifact.size' value='578'/>
+        <property name='download.size' value='578'/>
+        <property name='download.md5' value='b06e47f57f47dc38705efdc0b5cb6340'/>
+        <property name='download.contentType' value='application/zip'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='org.abs-models.sda' version='1.0.0.201411041103-6b55fad'>
+      <properties size='3'>
+        <property name='artifact.size' value='5855'/>
+        <property name='download.size' value='5855'/>
+        <property name='download.md5' value='8bdb51506ba635bd208a9e0bae9efc01'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='org.abs-models.apet' version='1.0.6.201411041103-6b55fad'>
+      <properties size='4'>
+        <property name='artifact.size' value='600'/>
+        <property name='download.size' value='600'/>
+        <property name='download.md5' value='12bcd941ff1dc893932f4220e20ddcea'/>
+        <property name='download.contentType' value='application/zip'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='org.abs-models.sdedit' version='0.2.8.201411041103-6b55fad'>
+      <properties size='3'>
+        <property name='artifact.size' value='2135850'/>
+        <property name='download.size' value='2135850'/>
+        <property name='download.md5' value='c14da19d022b818c8d8c8b06c049d944'/>
+      </properties>
+    </artifact>
+  </artifacts>
+</repository>

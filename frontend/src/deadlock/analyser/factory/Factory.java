@@ -9,6 +9,7 @@ import java.util.Map;
 
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AwaitStmt;
+import abs.frontend.ast.Stmt;
 import abs.frontend.typechecker.DataTypeType;
 import deadlock.constraints.substitution.Substitution;
 import deadlock.constraints.term.Variable;
@@ -348,9 +349,9 @@ public class Factory extends deadlock.constraints.factory.Factory {
 
 	
 
-    public ContractElementParallel newContractElementParallel(AwaitStmt astmt, Contract c1, ContractElementParallel c2) {
+    public ContractElementParallel newContractElementParallel(Contract c1, ContractElementParallel c2) {
         
-        c2.getContracts().add(c1);
+        c2.getSubTerms().add(c1);
         return c2;
         
     }

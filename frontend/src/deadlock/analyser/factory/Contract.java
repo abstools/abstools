@@ -36,7 +36,7 @@ public class Contract extends GenericStructuredTerm {
   public Contract(List<Term> l) { super(name, l); }
   public Contract() { super(name, new LinkedList()); }
 
-  public Contract(ContractElement e) { this(); this.getList().add(e); }
+  public Contract(ContractElement e) { this(); this.getSubTerms().add(e); }
 
   /* Basic Extension */
   public void add(Contract c) { subterms.addAll(c.subterms); }
