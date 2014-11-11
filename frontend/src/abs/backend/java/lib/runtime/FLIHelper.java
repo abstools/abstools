@@ -4,15 +4,12 @@
  */
 package abs.backend.java.lib.runtime;
 
-import java.lang.reflect.Method;
-
 import abs.backend.java.lib.types.ABSString;
 
 /**
  * useful helper methods which can be used by FLI clients  
  */
 public class FLIHelper {
-
     
     public static void print(String msg) {
         ABSRuntime.getCurrentRuntime().getOutStream().print(msg);
@@ -29,6 +26,4 @@ public class FLIHelper {
     public static void println(ABSString msg) {
         println(msg.getString());
     }
-    
-    
 }
