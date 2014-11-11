@@ -4,6 +4,8 @@
  */
 package org.absmodels.abs.plugin.console;
 
+import java.io.PrintStream;
+
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -79,7 +81,7 @@ public class ConsoleManager {
 	 */
 	public static MsgConsole newConsole(String title){
 		MsgConsole mc = new MsgConsole(title,null);
-		addConsole(mc);
+		addConsole((IConsole)mc);
 		return mc;
 	}
 	
@@ -89,7 +91,12 @@ public class ConsoleManager {
 	 * @throws PartInitException if the ConsoleView cannot be displayed
 	 */
 	public static void displayConsoleView() throws PartInitException{
+		
 		IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		
+		System.setOut(new PrintStream(getDefault().getOutputStream(MessageType.MESSAGE_INFO)));
+		System.setIn(getDefault().getInputStream());
+		
 		if (activeWorkbenchWindow != null){
 			IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
 			if (activePage != null){

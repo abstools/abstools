@@ -4,6 +4,7 @@
  */
 package org.absmodels.abs.plugin.console;
 
+import java.io.IOException;
 import java.io.PrintStream;
 
 import org.absmodels.abs.plugin.console.ConsoleManager.MessageType;
@@ -13,11 +14,13 @@ import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.console.IOConsole;
+import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 
 
-public class MsgConsole extends MessageConsole {
+public class MsgConsole extends IOConsole {
 
 	/**
 	 * Creates a new Message Console with the given name and an (optional)
@@ -74,8 +77,8 @@ public class MsgConsole extends MessageConsole {
 		}
 	}
 	
-	private MessageConsoleStream getNewMessageConsoleStream(final MessageType type){
-		final MessageConsoleStream newMessageStream = this.newMessageStream();
+	private IOConsoleOutputStream getNewMessageConsoleStream(final MessageType type){
+		final IOConsoleOutputStream newMessageStream = this.newOutputStream();
 		newMessageStream.setActivateOnWrite(true);
 		Display.getDefault().asyncExec(new Runnable() {
 			
@@ -90,16 +93,26 @@ public class MsgConsole extends MessageConsole {
 	}
 	
 	public void print(String message, MessageType type){
-		MessageConsoleStream newMessageStream = getNewMessageConsoleStream(type);
-		newMessageStream.print(message);
+		IOConsoleOutputStream newMessageStream = getNewMessageConsoleStream(type);
+		try {
+			newMessageStream.write(message);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public void println(String message, MessageType type){
-		MessageConsoleStream newMessageStream = getNewMessageConsoleStream(type);
-		newMessageStream.println(message);
+		IOConsoleOutputStream newMessageStream = getNewMessageConsoleStream(type);
+		try {
+			newMessageStream.write(message + "\n");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
-	public MessageConsoleStream getOutputStream(MessageType type){
+	public IOConsoleOutputStream getOutputStream(MessageType type){
 		return getNewMessageConsoleStream(type);	
 	}
 	
