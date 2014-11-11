@@ -22,9 +22,10 @@ import deadlock.constraints.constraint.Constraint;
 public class Factory extends deadlock.constraints.factory.Factory {
 
     private boolean verbose;
+    private IRecord dummyDataType;
 
     /* Constructor */
-    public Factory(boolean v) { verbose = v; }
+    public Factory(boolean v) { verbose = v; dummyDataType = new RecordDataType(RecordDataType._prefix + "DUMMY", new LinkedList<Term>()); }
 
   
   /* 1. RECORDS */
@@ -359,6 +360,11 @@ public class Factory extends deadlock.constraints.factory.Factory {
 
     public Contract newContract(ContractElement e) {
         return new Contract(e);
+    }
+
+
+    public ITypingEnvironmentVariableType dummyDataType() {
+        return dummyDataType;
     }
 	
 

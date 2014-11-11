@@ -198,7 +198,7 @@ public class ContractInference {
                 res.add(environment(((ClassDecl) d), df, verbose));
             } 
             //DataTypes & Constructors
-            else if (d instanceof DataTypeDecl ) {
+            /*else if (d instanceof DataTypeDecl ) { // TODO commented due to pending changes
                 res.add(environment(((DataTypeDecl) d), df, intf, verbose));
                 
             } else if (d instanceof FunctionDecl) {
@@ -206,7 +206,7 @@ public class ContractInference {
 //                    res.add(environment(((ParametricFunctionDecl) d), df, intf, verbose));
 //                else
                     res.add(environment(((FunctionDecl) d), df, intf, verbose));
-            }
+            }*/
         }
         return res;
     }
@@ -631,8 +631,8 @@ public class ContractInference {
                 e.printStackTrace();
             }
 
-        System.out.println("WARNING: Contract inference not implemented for Declaration \"" + d.getClass().getName()
-                + "\"");
+//        System.out.println("WARNING: Contract inference not implemented for Declaration \"" + d.getClass().getName()
+//                + "\"");
         return new ResultInferenceStmt( df.newContractEmpty(), df.newConstraint(), env);
     }
 
@@ -654,9 +654,9 @@ public class ContractInference {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-
-        System.out.println("WARNING: Contract inference not implemented for Statment \"" + s.getClass().getName()
-                + "\"");
+//
+//        System.out.println("WARNING: Contract inference not implemented for Statment \"" + s.getClass().getName()
+//                + "\"");
         return new ResultInferenceStmt( df.newContractEmpty(), df.newConstraint(), env);
     }
 
@@ -679,8 +679,8 @@ public class ContractInference {
                 e1.printStackTrace();
             }
 
-        System.out.println("WARNING: Contract inference not implemented for Expression \"" + e.getClass().getName()
-                + "\"");
+//        System.out.println("WARNING: Contract inference not implemented for Expression \"" + e.getClass().getName()
+//                + "\"");
         return new ResultInferenceEffExp(df.newRecordVariable(), df.newContractEmpty(), df.newConstraint(), env);
     }
 
@@ -705,9 +705,10 @@ public class ContractInference {
                 e.printStackTrace();
             }
 
-        System.out.println("WARNING: Contract inference not implemented for Expression \"" + exp.getClass().getName() + "\". Assumed Unit Type");
+//        System.out.println("WARNING: Contract inference not implemented for Expression \"" + exp.getClass().getName() + "\". Assumed Unit Type");
         
-        return new ResultInferencePureExp(df, df.newRecordDataType(env.getUnitType(), new LinkedList<IRecord>()));
+        //return new ResultInferencePureExp(df, df.newRecordDataType(env.getUnitType(), new LinkedList<IRecord>()));
+        return new ResultInferencePureExp(df, df.dummyDataType());
     }
 
     public ResultInferenceEffExp typeInference(PureExp pexp, String ident, TypingEnvironment env, GroupName a,
@@ -753,9 +754,11 @@ public class ContractInference {
                 e.printStackTrace();
             }
 
-        System.out.println("WARNING: Contract inference not implemented for Guard \"" + g.getClass().getName() + "\". Assumed Boolean Type");
+//        System.out.println("WARNING: Contract inference not implemented for Guard \"" + g.getClass().getName() + "\". Assumed Boolean Type");
         
-        return new ResultInferencePureExp(df, df.newRecordDataType(env.getBoolType(), new LinkedList<IRecord>()));
+        //return new ResultInferencePureExp(df, df.newRecordDataType(env.getBoolType(), new LinkedList<IRecord>()));
+        return new ResultInferencePureExp(df, df.dummyDataType());
+        
     }
 
     // /////////////////////////////////////////////////////////////////////////////
@@ -1114,6 +1117,9 @@ public class ContractInference {
         return new ResultInferencePureExp(df, env.getVariable(var.getName()));
     }
 
+    
+    // DATATYPES YEAH
+    /*
     //reviewed//
     public ResultInferencePureExp typeInferenceAsPure(StringLiteral lit, String ident, TypingEnvironment env, GroupName a,
             Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
@@ -1283,6 +1289,126 @@ public class ContractInference {
 
         return new ResultInferencePureExp(df, new RecordDataType(env.getIntType(), new LinkedList<IRecord>()));
     }
+    
+    */
+    
+    /***********************************************************/
+    //INIT TEMPORARY VERSION OF DATATYPE MANAGEMENT
+    public ResultInferencePureExp typeInferenceAsPure(StringLiteral lit, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
+        if (ident != null) {
+            System.out.println(ident + "Contract inference of a Literal ");
+        }
+        
+        return new ResultInferencePureExp(df, df.dummyDataType());
+    }
+    
+  //reviewed//
+    public ResultInferencePureExp typeInferenceAsPure(IntLiteral lit, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
+        if (ident != null) {
+            System.out.println(ident + "Contract inference of a Literal ");
+        }
+        
+        return new ResultInferencePureExp(df, df.dummyDataType());
+    }
+
+  //reviewed//
+    public ResultInferencePureExp typeInferenceAsPure(DataConstructorExp exp, String ident, TypingEnvironment env,
+            GroupName a, Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
+        if (ident != null) {
+            System.out.println(ident + "Contract inference of a Literal ");
+        }
+        
+        return new ResultInferencePureExp(df, df.dummyDataType());
+    }
+
+  //reviewed//
+    public ResultInferencePureExp typeInferenceAsPure(LetExp exp, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
+        if (ident != null) {
+            System.out.println(ident + "Contract inference of a Literal ");
+        }
+        
+        return new ResultInferencePureExp(df, df.dummyDataType());
+    }
+
+    // reviewed //
+    public ResultInferencePureExp typeInferenceAsPure(FnApp fn, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
+        if (ident != null) {
+            System.out.println(ident + "Contract inference of a Literal ");
+        }
+        
+        return new ResultInferencePureExp(df, df.dummyDataType());
+    }
+
+    
+    //reviewed//
+    public ResultInferencePureExp typeInferenceAsPure(IfExp ifExp, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) {
+        if (ident != null) {
+            System.out.println(ident + "Contract inference of a Literal ");
+        }
+        
+        return new ResultInferencePureExp(df, df.dummyDataType());
+    }
+
+
+    
+    
+    // reviewed //
+    public ResultInferencePureExp typeInferenceAsPure(BoolExp bin, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
+        String nident = null;
+        if (ident != null) {
+            System.out.println(ident + "Contract inference of a Literal ");
+        }
+        
+        return new ResultInferencePureExp(df, df.dummyDataType());
+    }
+    
+    // reviewed //
+    public ResultInferencePureExp typeInferenceAsPure(RelationalExpr bin, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
+        if (ident != null) {
+            System.out.println(ident + "Contract inference of a Literal ");
+        }
+        
+        return new ResultInferencePureExp(df, df.dummyDataType());
+    }
+    
+    // reviewed //
+    public ResultInferencePureExp typeInferenceAsPure(ArithmeticExp bin, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
+        if (ident != null) {
+            System.out.println(ident + "Contract inference of a Literal ");
+        }
+        
+        return new ResultInferencePureExp(df, df.dummyDataType());
+    }
+    
+    // reviewed //
+    public ResultInferencePureExp typeInferenceAsPure(NegExp un, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
+        if (ident != null) {
+            System.out.println(ident + "Contract inference of a Literal ");
+        }
+        
+        return new ResultInferencePureExp(df, df.dummyDataType());
+    }
+    
+    // reviewed //
+    public ResultInferencePureExp typeInferenceAsPure(MinusExp un, String ident, TypingEnvironment env, GroupName a,
+            Map<InterfaceDecl, ClassDecl> intertoclass, Factory df, ClassDecl cl) { // DATATYPES
+        if (ident != null) {
+            System.out.println(ident + "Contract inference of a Literal ");
+        }
+        
+        return new ResultInferencePureExp(df, df.dummyDataType());
+    }
+    /*********************************************************/
+
 
     // TODO:
     // CaseExp : PureExp ::= Expr:PureExp Branch:CaseBranch* ;
