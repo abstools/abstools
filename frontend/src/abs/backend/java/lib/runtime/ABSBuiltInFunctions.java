@@ -160,7 +160,7 @@ public class ABSBuiltInFunctions {
     public static ABSString readln() {
         Scanner scanner = new Scanner(System.in);
         String line = scanner.nextLine();
-        scanner.close();
+        //scanner.close();
         return ABSString.fromString(line.trim());
     }
 

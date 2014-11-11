@@ -104,7 +104,8 @@ public class FixPointSolver1 extends DASolver {
                 else if(contrP instanceof ContractElementInvkG)      { expansion = wGInvk(mName, (ContractElementInvkG) contrP, subFresh);}
                 else if(contrP instanceof ContractElementInvkA)      { expansion = wAInvk(mName, (ContractElementInvkA) contrP, subFresh);}
                 else if(contrP instanceof ContractElementUnion)      { expansion = wUnion(mName, (ContractElementUnion) contrP, subFresh);}
-                else                                                { expansion = wSeq(mName, (Contract) contrP, subFresh);}
+                else if(contrP instanceof ContractElementParallel)   { expansion = wParallel(mName, (ContractElementParallel) contrP, subFresh);}
+                else                                                 { expansion = wSeq(mName, (Contract) contrP, subFresh);}
                 
               //apply the corresponding rule
                 if(contrF instanceof ContractElementGet)             { expansionF = wGet(mName, (ContractElementGet) contrF, subFresh);}
@@ -114,6 +115,7 @@ public class FixPointSolver1 extends DASolver {
                 else if(contrF instanceof ContractElementInvkG)      { expansionF = wGInvk(mName, (ContractElementInvkG) contrF, subFresh);}
                 else if(contrF instanceof ContractElementInvkA)      { expansionF = wAInvk(mName, (ContractElementInvkA) contrF, subFresh);}
                 else if(contrF instanceof ContractElementUnion)      { expansionF = wUnion(mName, (ContractElementUnion) contrF, subFresh);}
+                else if(contrF instanceof ContractElementParallel)   { expansionF = wParallel(mName, (ContractElementParallel) contrF, subFresh);}
                 else                                                { expansionF = wSeq(mName, (Contract) contrF, subFresh);}
                 
                 //put lams in sequence

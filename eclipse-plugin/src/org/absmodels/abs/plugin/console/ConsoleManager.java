@@ -4,6 +4,7 @@
  */
 package org.absmodels.abs.plugin.console;
 
+import java.io.IOException;
 import java.io.PrintStream;
 
 import org.eclipse.ui.IWorkbenchPage;
@@ -13,6 +14,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleConstants;
+import org.eclipse.ui.console.IOConsoleInputStream;
 
 /**
  * Class for handling the Console conveniently
@@ -44,8 +46,8 @@ public class ConsoleManager {
 	 */
 	public static MsgConsole getDefault() {
 		if (defaultConsole == null){
-			defaultConsole = new MsgConsole("Default",null);
-			addConsole(defaultConsole);
+			defaultConsole = newConsole("Default");
+			//addConsole(defaultConsole);
 		}
 		return defaultConsole;
 	}
@@ -81,7 +83,19 @@ public class ConsoleManager {
 	 */
 	public static MsgConsole newConsole(String title){
 		MsgConsole mc = new MsgConsole(title,null);
-		addConsole((IConsole)mc);
+		addConsole((IConsole)mc); 
+		
+		System.setOut(new PrintStream(mc.getOutputStream(MessageType.MESSAGE_INFO)));
+//		try {
+			IOConsoleInputStream str = mc.getInputStream();
+			//str.reset();
+			System.setIn(str);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+		//defaultConsole = mc;
 		return mc;
 	}
 	
@@ -94,8 +108,7 @@ public class ConsoleManager {
 		
 		IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		
-		System.setOut(new PrintStream(getDefault().getOutputStream(MessageType.MESSAGE_INFO)));
-		System.setIn(getDefault().getInputStream());
+		
 		
 		if (activeWorkbenchWindow != null){
 			IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
