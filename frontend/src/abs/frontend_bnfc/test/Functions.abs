@@ -1,0 +1,23 @@
+module Functions;
+
+def _ getLeft(_ e) = left(e);
+
+def Int f(Int y) = let (Int x) = y+ 3 in
+						let (Int x) = x + 4 in x + 1;
+
+def A either<A,A>(Either<A,A> e) = case e {
+    Left(l) => l;
+    Right(r) => r;
+    };
+
+def List<Pair<Int, Bool>> changeToFalse(Int j, Int n, Int last, Int offset) = changeToFalse_(j, n, last, offset, Nil);
+
+def List<Pair<Int, Bool>> changeToFalse_(Int j, Int n, Int last, Int offset, List<Pair<Int,Bool>> acc) = 
+    if (j <= last) 
+    then changeToFalse_(j+2*n, n, last, offset, Cons(Pair((j - offset) / 2, False), acc))
+    else acc;
+
+
+{
+
+}

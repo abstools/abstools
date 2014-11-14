@@ -1,0 +1,84 @@
+module Inference;
+
+// The non-inference functions are followed by N
+// Functions that contain some inference are followed by I
+
+def A getLeftN<A,B>(Either<A,B> e) = left(e);
+
+
+def _ getLeft1I<A,B>(Either<A,B> e) = left(e);
+
+// leaving out all the type parameters
+
+def _ getLeft3I(_ e) = left(e);
+
+def Bool equal1N<A>(Either<A,A> e) = left(e) == right(e);
+
+def Bool equal2N<A,A>(Either<A,A> e) = left(e) == right(e); // redundant type parameter
+
+def Bool equal1I(_ e) = left(e) == right(e);
+
+def _ equal2I(_ e) = left(e) == right(e);
+
+def Int fN(Int y) = let (String z) = "mplo" in
+                      let (Int x) = y+ 3 in
+						let (Int x) = x + 4 in x + 1;
+
+def _ f1I(_ y) = let (String z) = "mplo" in
+                    let (Int x) = y+ 3 in
+						let (Int x) = x + 4 in x + 1;
+
+// also let-inference
+def _ f2I(_ y) = let (_ z) = "mplo" in
+                    let (_ x) = y+ 3 in
+						let (_ x) = x + 4 in x + 1;
+
+def Int gN<B>(Int y) = let (Either<Int,B> z) = Left(3) in y;
+
+def Int gI<B>(Int y) = let (_ z) = Left(3) in y;
+
+
+interface Interf1 {
+    Int plus(Int x, Int y);
+}
+
+class Cls1(List<Int> k) implements Interf1 {
+    // cannot infer class parameters and class attributes
+    Int y = 4;
+    String z = "mplo";
+
+    // inference in monadic code
+    {
+    _ x = 3;
+    Int y = 4; // type inference is optional
+    x = x+y;
+    _ l = Cons(x, Cons(y, Nil));
+    _ s = length(l) + 4;
+    _ b = m > 3;
+    }
+
+    Int plus(Int left, Int right) {
+        return (left+right);
+        }
+}
+
+// main block
+{
+    Interf1 o1 = new Cls1(Nil); 
+    // _ o2 = new Cls1(Nil); // cannot infer because the result o2 is of of an interface type, should generate an error
+    _ res = o1.plus(3,4); // can infer it since the result is of a non-interface type
+    res = res + 1;
+}
+
+
+// DISABLED
+
+// the consensus is that you can infer ground types, but not infer the type parameters of the types themselves (as in the following examples)
+
+// leaving out a type parameter in an ADT that is not needed 
+// (disabled, although this will work in all cases, but contradicts with respect to syntax with the following example)
+// def A getLeft2I<A>(Either<A,_> e) = left(e);
+
+// leaving out a type parameter that has to be inferred (disabled, may lead to issues)
+// def _ addToLeftI_<B>(Either<_,B> e) = left(e) + 1;
+

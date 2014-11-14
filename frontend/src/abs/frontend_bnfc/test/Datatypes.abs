@@ -1,0 +1,19 @@
+module Datatypes;
+
+type Simp = Int;
+
+type Simp2 = Simp;
+
+type OptionInt = Maybe<Int>;
+
+type Qual4 = Test.Deep.Qual3<Bool>;
+
+data Either_<A,B> = Left_(A left, Int) 
+                  | Right_(Int, B right);
+
+data List<A> = Nil | Cons(A,List<A>);
+
+data ListExtra<A,B> = NilE | ConsE(A,ListExtra<A,B>);
+
+data Qual<A,B> = Con1(Test.Qual1<A>)
+               | Con2(Test.Deep.Qual2<B>);

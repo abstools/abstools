@@ -1,0 +1,26 @@
+module Exceptions;
+
+exception MyException;
+exception AnotherException(Int, Rat, List<Int>, Either<Bool,Int>);
+
+{
+ throw MyException;
+ Exception x = AnotherException(3,4,Nil,Left(False));
+ throw x;
+ throw (if 1>0 then x else MyException);
+ throw 1/0; // this is syntactically correct, but will not typecheck
+ try throw x;
+ catch {
+     MyException => {skip; assert True;}
+     AnotherException(3,4,y,Left(z)) => throw x;
+ }
+ try throw x;
+ catch {
+     MyException => {skip; assert True;}
+     AnotherException(3,4,y,Left(z)) => throw x; // rethrow
+ }
+ finally {
+     skip;
+     assert False;
+ }
+}

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.github.crisposs</groupId>
+	<name>ABS API</name>
+	<artifactId>abs-api</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+	<url>https://github.com/CrispOSS/abs-api</url>
+
+	<parent>
+		<groupId>com.github.crisposs</groupId>
+		<artifactId>abs-api-parent</artifactId>
+		<version>1.0-SNAPSHOT</version>
+		<relativePath>../abs-api-parent</relativePath>
+	</parent>
+
+	<licenses>
+		<license>
+			<name>Apache License 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+		</license>
+	</licenses>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.docs.directory>${project.build.directory}/docs</project.docs.directory>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+	</dependencies>
+
+	<scm>
+		<url>https://github.com/CrispOSS/abs-api.git</url>
+		<connection>scm:git:https://github.com/CrispOSS/abs-api.git</connection>
+		<developerConnection>scm:git:git@github.com:CrispOSS/abs-api.git</developerConnection>
+	</scm>
+
+</project>
+
