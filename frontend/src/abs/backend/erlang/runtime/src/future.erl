@@ -10,7 +10,11 @@
 -export([get_references/1]).
 
 start(Callee,Method,Params) ->
-  gc ! spawn(?MODULE,init,[Callee,Method,Params]).
+    Ref = spawn(?MODULE,init,[Callee,Method,Params]),
+    gc ! {Ref, self()},
+    receive
+        ok -> Ref
+    end.
 
 
 get(Ref)->
