@@ -7,6 +7,7 @@
 
 -define(CMDLINE_SPEC,[
                       {debug,$d,"debug",{boolean,false},"Prints debug status output"},
+                      {gcstats,$g, "gcstats",{boolean,false},"Prints garbage collection statistics."},
                       {main_module,undefined,undefined,string,"Name of Module containing MainBlock"}
                      ]).
 
@@ -43,10 +44,14 @@ start_mod(Arguments)  ->
 
     %%Init logging
     eventstream:start_link(),
-    case proplists:get_value(debug,Arguments) of 
-        true ->    
-            eventstream:add_handler(console_logger,[]);
-        false ->
+    case {proplists:get_value(debug,Arguments, false), proplists:get_value(gcstats,Arguments, false)} of 
+        {true, true} ->    
+            eventstream:add_handler(console_logger,[true, true]);
+        {true, false} ->
+            eventstream:add_handler(console_logger,[true, false]);
+        {false, true} ->
+            eventstream:add_handler(console_logger,[false, true]);
+        {false, false} ->
             ok
     end,
     eventstream:add_handler(cog_monitor,[self()]),

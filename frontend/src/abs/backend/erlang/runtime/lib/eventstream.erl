@@ -22,6 +22,10 @@ add_handler(Handler,Args)->
 log(Data)->
    gen_event:notify({global,?MODULE}, {log,Data}).
 
+%%Send statistics from garbage collector
+gcstats(Data) ->
+    gen_event:notify({global,?MODULE}, {gcstats,Data}).
+
 %%Send general event
 event(E)->
    gen_event:sync_notify({global,?MODULE},E).
