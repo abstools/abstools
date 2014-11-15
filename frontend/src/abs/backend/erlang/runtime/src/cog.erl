@@ -20,7 +20,11 @@
 
 start()->
     {ok,T}=object_tracker:start(),
-    gc ! #cog{ref=spawn(cog,init, [T]),tracker=T}.
+    Cog = #cog{ref=spawn(cog,init, [T]),tracker=T},
+    gc ! {Cog, self()},
+    receive
+        ok -> Cog
+    end.
 
 add(#cog{ref=Cog},Task,Args)->
     Cog!{newT,Task,Args,self(),false},
@@ -48,7 +52,7 @@ get_references(Cog) ->
     end.
 
 stop_world(Cog) ->
-    Cog ! {stop_world, self()},
+    Cog ! {stop_world, gc},
     ok.
 
 resume_world(Cog) ->
@@ -61,7 +65,14 @@ init(Tracker) ->
     ?DEBUG({new}),
     process_flag(trap_exit, true),
     eventstream:event({cog,self(),active}),
-    loop(#state{tasks=gb_trees:empty(),tracker=Tracker}).
+    Running = receive
+                  {stop_world, Sender} ->
+                      Sender ! {stopped, self()},
+                      {gc, false};
+                  ok ->
+                      false
+              end,
+    loop(#state{tasks=gb_trees:empty(),tracker=Tracker,running=Running}).
 
 %%No task was ready to execute
 loop(S=#state{running=non_found})->
