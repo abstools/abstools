@@ -3,7 +3,7 @@
 %%A gen_event server to monitor events while executing a model
 -module(eventstream).
 
--export([start_link/0,stop/0,add_handler/2,log/1,event/1]).
+-export([start_link/0,stop/0,add_handler/2,log/1,gcstats/1,event/1]).
 
 
 

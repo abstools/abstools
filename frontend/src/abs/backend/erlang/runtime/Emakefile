@@ -11,6 +11,7 @@
     { i, "./ebin" },
     {source,"./ebin"},
     { outdir, "./ebin" },
+    {d, 'WITH_STATS'},
     debug_info,
 	nowarn_unused_vars,
 	nowarn_unused_function,
