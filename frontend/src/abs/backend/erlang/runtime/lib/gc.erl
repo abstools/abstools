@@ -10,6 +10,15 @@
 
 -export([behaviour_info/1]).
 
+-ifdef(WITH_STATS).
+-define(GCSTATS(Statistics), eventstream:gcstats({gcstats, microseconds(), Statistics})).
+-else.
+-define(GCSTATS(Statistics), ok).
+-endif.
+
+-record(state, {cogs=gb_sets:empty(),objects=gb_sets:empty(),
+                futures=gb_sets:empty(),root_futures=gb_sets:empty()}).
+
 behaviour_info(callbacks) ->
     [{get_references, 1}].
 
@@ -17,41 +26,53 @@ start() ->
     register(gc, spawn(?MODULE, init, [])).
 
 init() ->
-    loop(gb_sets:empty(), gb_sets:empty(), gb_sets:empty()).
+    loop(#state{}).
 
-loop(Cogs, Objects, RootFutures) ->
-    ?DEBUG({{cogs, Cogs}, {objects, Objects}}),
-    {NewCogs, NewObjects, NewRootFutures} =
+loop(State=#state{cogs=Cogs, objects=Objects, futures=Futures, root_futures=RootFutures}) ->
+    ?GCSTATS(erlang:memory()),
+    NewState =
         receive
-            #cog{ref=Ref} ->
-                {gb_sets:add_element({cog, Ref}, Cogs), Objects, RootFutures};
+            {#cog{ref=Ref}, Sender} ->
+                Ref ! Sender ! ok,
+                State#state{cogs=gb_sets:insert({cog, Ref}, Cogs)};
             #object{ref=Ref} ->
-                {Cogs, gb_sets:add_element({object, Ref}, Objects), RootFutures};
-            Ref when is_pid(Ref) ->
-                {Cogs, Objects, gb_sets:add_element({future, Ref}, RootFutures)}
+                State#state{objects=gb_sets:insert({object, Ref}, Objects)};
+            {Ref, Sender} when is_pid(Ref) ->
+                Sender ! ok,
+                State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)};
+            {unroot, Sender} ->
+                State#state{futures=gb_sets:insert({future, Sender}, Futures),
+                            root_futures=gb_sets:delete({future, Sender}, RootFutures)}
         end,
-    gb_sets:fold(fun ({cog, Ref}, ok) -> cog:stop_world(Ref) end, ok, NewCogs),
-    await_stop(NewCogs, 0, NewObjects, NewRootFutures).
+    gb_sets:fold(fun ({cog, Ref}, ok) -> cog:stop_world(Ref) end, ok, NewState#state.cogs),
+    await_stop(NewState, 0).
 
-await_stop(Cogs, Stopped, Objects, RootFutures) ->
-    {NewCogs, NewStopped, NewObjects, NewRootFutures} =
+await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFutures},Stopped) ->
+    {NewState, NewStopped} =
         receive
-            #cog{ref=Ref} ->
+            {#cog{ref=Ref}, Sender} ->
                 cog:stop_world(Ref),
-                {gb_sets:add_element({cog, Ref}, Cogs), Stopped, Objects, RootFutures};
+                Sender ! ok,
+                {State#state{cogs=gb_sets:insert({cog, Ref}, Cogs)}, Stopped};
             #object{ref=Ref} ->
-                {Cogs, Stopped, gb_sets:add_element({object, Ref}, Objects), RootFutures};
-            Ref when is_pid(Ref) ->
-                {Cogs, Stopped, Objects, gb_sets:add_element({future, Ref}, RootFutures)};
+                {State#state{objects=gb_sets:insert({object, Ref}, Objects)}, Stopped};
+            {Ref, Sender} when is_pid(Ref) ->
+                Sender ! ok,
+                {State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)}, Stopped};
+            {unroot, Sender} ->
+                {State#state{futures=gb_sets:insert({future, Sender}, Futures),
+                             root_futures=gb_sets:delete({future, Sender}, RootFutures)}, Stopped};
             {stopped, Ref} ->
-                {Cogs, Stopped + 1, Objects, RootFutures}
+                ?DEBUG({stopped, Ref}),
+                {State, Stopped + 1}
         end,
+    NewCogs=NewState#state.cogs,
     case gb_sets:size(NewCogs) of
         NewStopped ->
             % Insert mark phase here
             gb_sets:fold(fun ({cog, Ref}, ok) -> cog:resume_world(Ref) end, ok, NewCogs),
-            loop(NewCogs, NewObjects, NewRootFutures);
-        _ -> await_stop(NewCogs, NewStopped, Objects, NewRootFutures)
+            loop(NewState);
+        _ -> await_stop(NewState,NewStopped)
     end.
         
 
@@ -84,3 +105,7 @@ to_deep_list(List) when is_list(List) ->
     lists:map(fun to_deep_list/1, List);
 to_deep_list(FlatData) ->
     FlatData.
+
+microseconds() ->
+    {MegaSecs, Secs, MicroSecs} = now(),
+    ((MegaSecs * 1000000) + Secs) * 1000000 + MicroSecs.
