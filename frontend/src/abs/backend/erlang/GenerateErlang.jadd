@@ -202,12 +202,14 @@ aspect GenerateErlang {
     if (!hasLocal()) {
       ecs.format("object:new(cog:start(),%s,",className);
       ErlUtil.buildParams(ecs,getParams(),vars,true);
-      ecs.print(",true)");
+      ecs.print(",Cog,");
+      ecs.print(vars.toStack());
+      ecs.print(")");
 
     } else {
       ecs.format("object:new(Cog,%s,",className);
       ErlUtil.buildParams(ecs,getParams(),vars,false);
-      ecs.print(",false)");
+      ecs.print(")");
     }
   }
 

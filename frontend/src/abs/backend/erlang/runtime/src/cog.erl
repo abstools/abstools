@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
--export([start/0,add/3,add_and_notify/3,new_state/3,inc_ref_count/1,dec_ref_count/1]).
+-export([start/0,add/3,add_and_notify/3,add_blocking/5,new_state/3,inc_ref_count/1,dec_ref_count/1]).
 -export([init/1]).
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
@@ -12,9 +12,9 @@
 -behaviour(gc).
 -export([get_references/1, stop_world/1, resume_world/1]).
 
-%%The COG manages all its task in a tree task.
+%%The COG manages all its tasks in a tree task.
 %%
-%%It is implented as a kind of statemachine server, where the variable running represents the state
+%%It is implented as a kind of state machine server, where the variable running represents the state
 
 %%API
 
@@ -33,6 +33,12 @@ add(#cog{ref=Cog},Task,Args)->
 add_and_notify(#cog{ref=Cog},Task,Args)->
     Cog!{newT,Task,Args,self(),true},
     await_start(Task, Args).
+
+add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
+    task:block(Cog),
+    Ref!{newT,Task,Args,self(),false},
+    await_start(Task,[Stack|Args]),
+    task:ready(Cog,Stack).
 
 new_state(#cog{ref=Cog},TaskRef,State)->
     Cog!{newState,TaskRef,State}.
@@ -187,30 +193,21 @@ loop(S=#state{running={blocked, R}}) ->
 loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs}) ->
     New_State=
         receive
-            {newT, Task, Args, Sender, Notify}->
-                initTask(S,Task,Args,Sender,Notify);
+            {get_references, Sender} ->
+                Sender !
+                    {lists:foldl(fun ordsets:union/2, [],
+                                 lists:map(fun task:get_references/1, gb_trees:keys(Tasks))),
+                     self()},
+                S;
             {done, gc} ->
-                S#state{running=Old}
-        after 0 ->
-                receive
-                    {newT, Task, Args, Sender, Notify}->
-                        initTask(S,Task,Args,Sender,Notify);
-                    {get_references, Sender} ->
-                        Sender !
-                            {lists:foldl(fun ordsets:union/2, [],
-                                         lists:map(fun task:get_references/1, gb_trees:keys(Tasks))),
-                             self()},
-                        S;
-                    {done, gc} ->
-                        case Refs of
-                            0 -> stop;
-                            _ -> S#state{running=Old}
-                        end;
-                    inc_ref_count->
-                        inc_referencers(S);
-                    dec_ref_count->
-                        dec_referencers(S)
-                end
+                case Refs of
+                    0 -> stop;
+                    _ -> S#state{running=Old}
+                end;
+            inc_ref_count->
+                inc_referencers(S);
+            dec_ref_count->
+                dec_referencers(S)
         end,
     case New_State of
         stop -> io:format("COG ~p was garbage collected.~n", [self()]);

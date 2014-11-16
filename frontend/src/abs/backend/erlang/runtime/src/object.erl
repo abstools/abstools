@@ -12,7 +12,7 @@
 
 -behaviour(gen_fsm).
 %%API
--export([new/4,activate/1,commit/1,rollback/1,new_object_task/3,die/2,alive/1]).
+-export([new/3,new/5,activate/1,commit/1,rollback/1,new_object_task/3,die/2,alive/1]).
 
 %%gen_fsm callbacks
 -export([init/1,active/3,active/2,uninitialized/2,uninitialized/3,code_change/4,handle_event/3,handle_info/3,handle_sync_event/4,terminate/3]).
@@ -30,15 +30,15 @@ behaviour_info(_) ->
     undefined.
 
 %%Creates new object
-%%4.th parameter controls if it is on a new cog or immediatly initalized on the same.
-new(Cog,Class,Args,false)->
-    O=start(Cog,Class),
+%%Local creation takes three parameters, on new cogs takes five
+new(Cog,Class,Args)->
     cog:inc_ref_count(Cog),
-    object:activate(O),
-    Class:init(O,Args);
-new(Cog,Class,Args,true)->
     O=start(Cog,Class),
-    cog:add(Cog,init_task,{O,Args}),
+    object:activate(O),
+    Class:init(O,Args).
+new(Cog,Class,Args,CreatorCog,Stack)->
+    O=start(Cog,Class),
+    cog:add_blocking(Cog,init_task,{O,Args},CreatorCog,Stack),
     O.
 
 activate(#object{ref=O})->
