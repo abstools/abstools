@@ -40,6 +40,8 @@ loop(State=#state{cogs=Cogs, objects=Objects, futures=Futures, root_futures=Root
             {Ref, Sender} when is_pid(Ref) ->
                 Sender ! ok,
                 State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)};
+            {die, Cog} ->
+                State#state{cogs=gb_sets:delete({cog, Cog}, Cogs)};
             {unroot, Sender} ->
                 State#state{futures=gb_sets:insert({future, Sender}, Futures),
                             root_futures=gb_sets:delete({future, Sender}, RootFutures)}
@@ -59,34 +61,43 @@ await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=R
             {Ref, Sender} when is_pid(Ref) ->
                 Sender ! ok,
                 {State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)}, Stopped};
+            {die, Cog} ->
+                {State#state{cogs=gb_sets:delete({cog, Cog}, Cogs)}, Stopped};
             {unroot, Sender} ->
                 {State#state{futures=gb_sets:insert({future, Sender}, Futures),
                              root_futures=gb_sets:delete({future, Sender}, RootFutures)}, Stopped};
             {stopped, Ref} ->
-                ?DEBUG({stopped, Ref}),
                 {State, Stopped + 1}
         end,
-    NewCogs=NewState#state.cogs,
-    case gb_sets:size(NewCogs) of
-        NewStopped ->
+    NewCogs = NewState#state.cogs,
+    case NewStopped >= gb_sets:size(NewCogs) of
+        true ->
             % Insert mark phase here
-            gb_sets:fold(fun ({cog, Ref}, ok) -> cog:resume_world(Ref) end, ok, NewCogs),
-            loop(NewState);
-        _ -> await_stop(NewState,NewStopped)
+            ?DEBUG(mark),
+            mark(NewState, [], ordsets:union(rpc:pmap({gc, get_references}, [], gb_sets:to_list(gb_sets:union(NewCogs, NewState#state.root_futures)))));
+        false -> await_stop(NewState,NewStopped)
     end.
         
+mark(State, Black, []) ->
+    sweep(State, gb_sets:from_ordset(Black));
+mark(State, Black, Gray) ->
+    NewBlack = ordsets:union(Black, Gray),
+    NewGray = ordsets:subtract(ordsets:union(rpc:pmap({gc, get_references}, [], Gray)), Black),
+    mark(State, NewBlack, NewGray).
 
-mark(Cogs, {Gray, White}) ->
-    ?DEBUG({collect, {gray, Gray}, {white, White}}),
-    mark(Cogs, [], Gray, White).
-
-mark(Cogs, Black, [], White) ->
-    lists:reverse(Black);
-mark(Cogs, Black, [Object|Gray], White) ->
-    NewGrays = lists:filter(fun (O) -> not ordsets:is_element(O, Black) end, get_references(Object)),
-    mark(Cogs, [Object|Black], ordsets:union(NewGrays, Gray), White).
+sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFutures},Black) ->
+    WhiteObjects = gb_sets:subtract(Objects, Black),
+    WhiteFutures = gb_sets:subtract(Futures, Black),
+    BlackObjects = gb_sets:intersection(Objects, Black),
+    BlackFutures = gb_sets:intersection(Futures, Black),
+    ?DEBUG({sweep, {objects, WhiteObjects}, {futures, WhiteFutures}}),
+    gb_sets:fold(fun ({object, Ref}, ok) -> object:die(Ref, gc), ok end, ok, WhiteObjects),
+    gb_sets:fold(fun ({future, Ref}, ok) -> future:die(Ref, gc), ok end, ok, WhiteFutures),
+    gb_sets:fold(fun ({cog, Ref}, ok) -> cog:resume_world(Ref) end, ok, Cogs),
+    loop(State#state{objects=BlackObjects, futures=BlackFutures}).
 
 get_references({Module, Ref}) ->
+    ?DEBUG({get_references, Module, Ref}),
     Module:get_references(Ref).
 
 extract_references(DataStructure) ->
