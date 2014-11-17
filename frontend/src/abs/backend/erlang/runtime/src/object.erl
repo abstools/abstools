@@ -72,6 +72,8 @@ alive(#object{ref=O})->
     end.
 
 die(#object{ref=O},Reason)->
+    gen_fsm:sync_send_all_state_event(O,{die,Reason,self()},infinity);
+die(O,Reason) when is_pid(O) ->
     gen_fsm:sync_send_all_state_event(O,{die,Reason,self()},infinity).
 
 get_references(Ref) ->
