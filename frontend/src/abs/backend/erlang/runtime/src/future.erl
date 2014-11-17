@@ -1,8 +1,9 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
 -export([init/3,start/3]).
--export([get/1,safeget/1,get_blocking/3,safeget_blocking/3,await/3]).
+-export([get/1,safeget/1,get_blocking/3,safeget_blocking/3,await/3,poll/1,die/2]).
 -include_lib("abs_types.hrl").
+-include_lib("log.hrl").
 %%Future starts AsyncCallTask
 %%and stores result
 
@@ -59,6 +60,16 @@ await(Ref, Cog=#cog{ref=CogRef}, Stack) ->
     Ref ! {wait, self()},
     await(Stack).
 
+poll(Ref) ->
+    Ref ! {poll, self()},
+    receive
+        completed -> true;
+        unresolved -> false
+    end.
+
+die(Ref, Reason) ->
+    Ref ! {die, Reason, self()}.
+
 %%Internal
 
   
@@ -76,14 +87,19 @@ await() ->
     %% Either receive an error or the value
     receive
         {'DOWN', _ , process, _,Reason} when Reason /= normal ->
+            gc ! {unroot, self()},
             loop({error,error_transform:transform(Reason)});
         {'EXIT',_,Reason} ->
+            gc ! {unroot, self()},
             loop({error,error_transform:transform(Reason)});
         {completed, Value}->
+            gc ! {unroot, self()},
             loop({ok,Value});
         {get_references, Sender} ->
             Sender ! {[], self()},
-            await()
+            await();
+        {poll, Sender} ->
+            Sender ! unresolved
     end.
 
 get_blocking(Ref,Stack) ->
@@ -123,15 +139,23 @@ await(Stack) ->
 loop(Value)->
     receive
         {get,Sender} ->
-            Sender!{reply,self(),Value};
+            Sender!{reply,self(),Value},
+            loop(Value);
         {wait,Sender}->
-            Sender!{ok};
+            Sender!{ok},
+            loop(Value);
         {get_references, Sender} ->
-            Sender ! {gc:extract_references(Value), self()};
+            Sender ! {gc:extract_references(Value), self()},
+            loop(Value);
+        {poll, Sender} ->
+            Sender ! completed,
+            loop(Value);
+        {die, Reason, By} ->
+            ?DEBUG({dying, Reason, By}),
+            ok;
         _ ->
-            noop
-    end,
-    loop(Value).
+            loop(Value)
+    end.
         
    
 
