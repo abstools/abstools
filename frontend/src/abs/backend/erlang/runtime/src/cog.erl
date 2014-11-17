@@ -37,7 +37,7 @@ add_and_notify(#cog{ref=Cog},Task,Args)->
 add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
     task:block(Cog),
     Ref!{newT,Task,Args,self(),false},
-    await_start(Task,[Stack|Args]),
+    await_start(Task,[Args|Stack]),
     task:ready(Cog,Stack).
 
 new_state(#cog{ref=Cog},TaskRef,State)->
@@ -201,7 +201,8 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs})
                 S;
             {done, gc} ->
                 case Refs of
-                    0 -> stop;
+                    0 -> gc ! {die, self()},
+                         stop;
                     _ -> S#state{running=Old}
                 end;
             inc_ref_count->
@@ -210,7 +211,7 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs})
                 dec_referencers(S)
         end,
     case New_State of
-        stop -> io:format("COG ~p was garbage collected.~n", [self()]);
+        stop -> ?DEBUG(dying);
         _ -> loop(New_State)
     end.
 
@@ -316,7 +317,7 @@ dec_referencers(S=#state{referencers=N}) ->
 await_start(Task, Args) ->
     receive
         {get_references, Sender} ->
-            Sender ! gc:extract_references(Args),
+            Sender ! {gc:extract_references(Args), self()},
             await_start(Task, Args);
         {started,Task,Ref}->
             Ref
