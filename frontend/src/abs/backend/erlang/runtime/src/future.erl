@@ -56,7 +56,6 @@ get_references(Ref) ->
     receive {References, Ref} -> References end.
 
 await(Ref, Cog=#cog{ref=CogRef}, Stack) ->
-    task:return_token(Cog, waiting),
     Ref ! {wait, self()},
     await(Stack).
 
