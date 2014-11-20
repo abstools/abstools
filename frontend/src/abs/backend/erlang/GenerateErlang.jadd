@@ -754,7 +754,7 @@ aspect GenerateErlang {
 
   @Override
   public boolean ClaimGuard.hasPoll(){
-    return false;
+      return getVar() instanceof FieldUse;
   }
 
   @Override
@@ -768,13 +768,19 @@ aspect GenerateErlang {
   @Override
   public void ClaimGuard.generateErlangCode(ErlangCodeStream preAwait,ErlangCodeStream ecs,Vars vars){
     PureExp var = getVar();
-    preAwait.print("future:await(");
-    var.generateErlangCode(preAwait,vars);
-    preAwait.print(", Cog, ");
-    preAwait.print(vars.toStack());
-    preAwait.println("),");
-    if (var instanceof VarUse) {
-      vars.await(((VarUse) var).getName());
+    if (var instanceof FieldUse) {
+        ecs.print("future:poll(");
+        var.generateErlangCode(ecs,vars);
+        ecs.print(")");
+    } else {
+        preAwait.print("future:await(");
+        var.generateErlangCode(preAwait,vars);
+        preAwait.print(", Cog, ");
+        preAwait.print(vars.toStack(true));
+        preAwait.println("),");
+        if (var instanceof VarUse) {
+            vars.await(((VarUse) var).getName());
+        }
     }
   }
 
