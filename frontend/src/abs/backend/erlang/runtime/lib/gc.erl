@@ -11,7 +11,7 @@
 -export([behaviour_info/1]).
 
 -ifdef(WITH_STATS).
--define(GCSTATS(Statistics), eventstream:gcstats({gcstats, microseconds(), Statistics})).
+-define(GCSTATS(Statistics), eventstream:gcstats({gcstats, now(), Statistics})).
 -else.
 -define(GCSTATS(Statistics), ok).
 -endif.
@@ -48,9 +48,14 @@ loop(State=#state{cogs=Cogs, objects=Objects, futures=Futures, root_futures=Root
                 State#state{futures=gb_sets:insert({future, Sender}, Futures),
                             root_futures=gb_sets:delete({future, Sender}, RootFutures)}
         end,
-    ?GCSTATS(stop_world),
-    gb_sets:fold(fun ({cog, Ref}, ok) -> cog:stop_world(Ref) end, ok, NewState#state.cogs),
-    await_stop(NewState, 0).
+    case is_collection_needed(NewState) of
+        true ->
+            ?GCSTATS(stop_world),
+            gb_sets:fold(fun ({cog, Ref}, ok) -> cog:stop_world(Ref) end, ok, NewState#state.cogs),
+            await_stop(NewState, 0);
+        false ->
+            loop(NewState)
+    end.
 
 await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFutures},Stopped) ->
     {NewState, NewStopped} =
@@ -105,9 +110,11 @@ get_references({Module, Ref}) ->
     ?DEBUG({get_references, Module, Ref}),
     Module:get_references(Ref).
 
+is_collection_needed(State=#state{objects=Objects,futures=Futures}) ->
+    true.
+
 extract_references(DataStructure) ->
-    ordsets:from_list(lists:filter(fun ({Module, Pid}) -> true; (_) -> false end,
-                                   lists:flatten([to_deep_list(DataStructure)]))).
+    ordsets:from_list(lists:flatten([to_deep_list(DataStructure)])).
 
 to_deep_list(#object{ref=Ref}) ->
     {object, Ref};
@@ -120,8 +127,4 @@ to_deep_list(DataStructure) when is_tuple(DataStructure) ->
 to_deep_list(List) when is_list(List) ->
     lists:map(fun to_deep_list/1, List);
 to_deep_list(FlatData) ->
-    FlatData.
-
-microseconds() ->
-    {MegaSecs, Secs, MicroSecs} = now(),
-    ((MegaSecs * 1000000) + Secs) * 1000000 + MicroSecs.
+    [].
