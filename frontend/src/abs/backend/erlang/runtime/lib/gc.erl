@@ -29,7 +29,9 @@ init() ->
     loop(#state{}).
 
 loop(State=#state{cogs=Cogs, objects=Objects, futures=Futures, root_futures=RootFutures}) ->
-    ?GCSTATS(erlang:memory()),
+    ?GCSTATS({{memory, erlang:memory()}, {cogs, gb_sets:size(Cogs)}, {objects, gb_sets:size(Objects)},
+              {futures, gb_sets:size(Futures), gb_sets:size(RootFutures)},
+              {processes, erlang:system_info(process_count), erlang:system_info(process_limit)}}),
     NewState =
         receive
             {#cog{ref=Ref}, Sender} ->
@@ -46,6 +48,7 @@ loop(State=#state{cogs=Cogs, objects=Objects, futures=Futures, root_futures=Root
                 State#state{futures=gb_sets:insert({future, Sender}, Futures),
                             root_futures=gb_sets:delete({future, Sender}, RootFutures)}
         end,
+    ?GCSTATS(stop_world),
     gb_sets:fold(fun ({cog, Ref}, ok) -> cog:stop_world(Ref) end, ok, NewState#state.cogs),
     await_stop(NewState, 0).
 
@@ -73,7 +76,7 @@ await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=R
     case NewStopped >= gb_sets:size(NewCogs) of
         true ->
             % Insert mark phase here
-            ?DEBUG(mark),
+            ?GCSTATS(mark),
             mark(NewState, [], ordsets:union(rpc:pmap({gc, get_references}, [], gb_sets:to_list(gb_sets:union(NewCogs, NewState#state.root_futures)))));
         false -> await_stop(NewState,NewStopped)
     end.
@@ -91,6 +94,8 @@ sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFu
     BlackObjects = gb_sets:intersection(Objects, Black),
     BlackFutures = gb_sets:intersection(Futures, Black),
     ?DEBUG({sweep, {objects, WhiteObjects}, {futures, WhiteFutures}}),
+    ?GCSTATS({sweep, {objects, gb_sets:size(WhiteObjects), gb_sets:size(BlackObjects)},
+             {futures, gb_sets:size(WhiteFutures), gb_sets:size(BlackFutures)}}),
     gb_sets:fold(fun ({object, Ref}, ok) -> object:die(Ref, gc), ok end, ok, WhiteObjects),
     gb_sets:fold(fun ({future, Ref}, ok) -> future:die(Ref, gc), ok end, ok, WhiteFutures),
     gb_sets:fold(fun ({cog, Ref}, ok) -> cog:resume_world(Ref) end, ok, Cogs),
