@@ -1,0 +1,41 @@
+/**
+ * Analysis of function application to determine if it is being called
+ * from an imperative or functional context.
+ *
+ * This is used by the Erlang garbage collector to determine
+ * whether to add local variables to the data structure representing
+ * the execution stack when applying a function. In a functional context,
+ * all objects and futures are already present in the data structure passed
+ * to the function, and there's no need to extend it.
+ */
+aspect FnAppContext {
+    inh lazy boolean FnApp.isContextImperative();
+    syn boolean FnApp.isContextFunctional();
+
+    eq FnApp.isContextFunctional() = !isContextImperative();
+
+    // Statements (Imperative)
+    eq FieldDecl.getInitExp().isContextImperative() = true;
+    eq VarDecl.getInitExp().isContextImperative() = true;
+    eq AssignStmt.getValue().isContextImperative() = true;
+    eq DurationStmt.getMin().isContextImperative() = true;
+    eq DurationStmt.getMax().isContextImperative() = true;
+    eq MoveCogToStmt.getTarget().isContextImperative() = true;
+    eq ExpressionStmt.getExp().isContextImperative() = true;
+    eq AssertStmt.getCondition().isContextImperative() = true;
+    eq IfStmt.getCondition().isContextImperative() = true;
+    eq WhileStmt.getCondition().isContextImperative() = true;
+    eq CaseStmt.getExpr().isContextImperative() = true;
+    eq ReturnStmt.getRetExp().isContextImperative() = true;
+    eq ThrowStmt.getReason().isContextImperative() = true;
+    eq DieStmt.getReason().isContextImperative() = true;
+    eq AwaitStmt.getGuard().isContextImperative() = true;
+    eq RebindStmt.getObj().isContextImperative() = true;
+    eq RebindStmt.getVal().isContextImperative() = true;
+    eq MoveStmt.getLoc().isContextImperative() = true;
+    eq MoveStmt.getTo().isContextImperative() = true;
+
+    // Function
+    eq ExpFunctionDef.getRhs().isContextImperative() = false;
+    eq Annotation.getValue().isContextImperative() = false; // Are annotations compiled?
+}
