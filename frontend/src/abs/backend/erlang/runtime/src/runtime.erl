@@ -45,14 +45,10 @@ start_mod(Arguments)  ->
     %%Init logging
     eventstream:start_link(),
     case {proplists:get_value(debug,Arguments, false), proplists:get_value(gcstats,Arguments, false)} of 
-        {true, true} ->    
-            eventstream:add_handler(console_logger,[true, true]);
-        {true, false} ->
-            eventstream:add_handler(console_logger,[true, false]);
-        {false, true} ->
-            eventstream:add_handler(console_logger,[false, true]);
         {false, false} ->
-            ok
+            ok;
+        {Debug, Statistics} ->
+            eventstream:add_handler(console_logger,[Debug, Statistics])
     end,
     eventstream:add_handler(cog_monitor,[self()]),
     
