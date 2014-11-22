@@ -776,7 +776,7 @@ aspect GenerateErlang {
         preAwait.print("future:await(");
         var.generateErlangCode(preAwait,vars);
         preAwait.print(", Cog, ");
-        preAwait.print(vars.toStack(true));
+        preAwait.print(vars.toStack());
         preAwait.println("),");
         if (var instanceof VarUse) {
             vars.await(((VarUse) var).getName());
