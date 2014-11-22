@@ -201,7 +201,8 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs})
                 S;
             {done, gc} ->
                 case Refs of
-                    0 -> gc ! {die, self()},
+                    0 -> eventstream:event({cog,self(),die}),
+                         gc ! {die, self()},
                          stop;
                     _ -> S#state{running=Old}
                 end;

@@ -39,6 +39,16 @@ handle_event({cog,Cog,idle},State=#state{main=M,active=A,idle=I,timer=_T})->
         false->
             {ok,State#state{active=A1,idle=I1,timer=undefined}}
     end;
+handle_event({cog,Cog,die},State=#state{main=M,active=A,idle=I,timer=_T})->
+    A1=gb_sets:del_element(Cog,A),
+    I1=gb_sets:del_element(Cog,I),
+    case gb_sets:is_empty(A1) of
+        true->
+            {ok,T1}=timer:send_after(1000,M,wait_done),
+            {ok,State#state{active=A1,idle=I1,timer=T1}};
+        false->
+            {ok,State#state{active=A1,idle=I1,timer=undefined}}
+    end;
 handle_event(_,State)->
     {ok,State}.
 
