@@ -1,5 +1,6 @@
 { 
     [
+    "./runtime/lib/gc.erl",
     "./runtime/src/task.erl",
     "./runtime/src/object.erl",
     "./*",
@@ -7,7 +8,7 @@
 	"./runtime/src/*"
     ], 
     [
-	{ i, "./runtime/include" },
+    { i, "./runtime/include" },
     { i, "./ebin" },
     {source,"./ebin"},
     { outdir, "./ebin" },
