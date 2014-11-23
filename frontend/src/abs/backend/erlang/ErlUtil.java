@@ -46,6 +46,8 @@ public class ErlUtil {
         functionHeader(ecs, funName, mask, firstParameter, b.toString());
     }
 
+    // Not used when garbage collector pause points are added to functions
+    // Consider removing
     public static final void functionHeader(ErlangCodeStream ecs, String funName, abs.frontend.ast.List<ParamDecl> args) {
         List<String> a = new ArrayList<String>(args.getNumChild());
         for (ParamDecl p : args)
@@ -85,8 +87,10 @@ public class ErlUtil {
                 first = false;
         }
 
-        if (funName.startsWith("m_")) {
-            // Methods have a call stack that the GC may need access to
+        // Consider using a parameter for this
+        // Any function/method callable in ABS, should take a representation of the execution stack
+        // except the built-in functions.
+        if (funName.startsWith("m_") || funName.startsWith("f_")) {
             if (!first) {
                 ecs.print(',');
             }
@@ -138,21 +142,51 @@ public class ErlUtil {
         }
     }
 
-    public static void argumentList(ErlangCodeStream ecs, PureExp callee, abs.frontend.ast.List<PureExp> params, Vars vars) {
+    public static void argumentList(ErlangCodeStream ecs, PureExp callee, boolean builtin, boolean imperativeContext, abs.frontend.ast.List<PureExp> params, Vars vars) {
         ecs.print("(");
         if (callee != null) {
             callee.generateErlangCode(ecs, vars);
-            if (params.hasChildren())
+            if (params.hasChildren()) {
                 ecs.print(",");
+            }
+
+        } else if (!builtin) {
+            ecs.print("Cog");
+            if (params.hasChildren()) {
+                ecs.print(",");
+            }
         }
+
         buildParamsWithOutBrackets(ecs, params, vars);
 
-        if (callee != null) {
+        if (!builtin) {
             ecs.print(',');
-            ecs.print(vars.toStack());
+
+            if (imperativeContext) {
+                ecs.print(vars.toStack());
+            } else {
+                ecs.print("Stack");
+            }
         }
 
         ecs.print(")");
+    }
 
+    public static void stopWorldPrelude(ErlangCodeStream ecs, Vars vars, boolean functional) {
+        ecs.println("receive");
+        ecs.incIndent();
+        ecs.println("{stop_world, CogRef} ->");
+        ecs.incIndent();
+        ecs.println("task:block(Cog),");
+        ecs.print("task:ready(Cog, ");
+        if (functional) {
+            ecs.print("Stack");
+        } else {
+            ecs.print(vars.toStack());
+        }
+        ecs.println(")");
+        ecs.decIndent();
+        ecs.decIndent();
+        ecs.println("after 0 -> ok end,");
     }
 }

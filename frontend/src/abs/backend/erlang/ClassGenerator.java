@@ -56,7 +56,9 @@ public class ClassGenerator {
             ErlUtil.functionHeader(ecs, "m_" + ms.getName(), generatorClassMatcher(), ms.getParamList());
             ecs.println("try");
             ecs.incIndent();
-            m.getBlock().generateErlangCode(ecs, Vars.n(ms.getParamList()));
+            Vars vars = Vars.n(ms.getParamList());
+            ErlUtil.stopWorldPrelude(ecs, vars, false);
+            m.getBlock().generateErlangCode(ecs, vars);
             ecs.println();
             ecs.decIndent().println("catch");
             ecs.incIndent();

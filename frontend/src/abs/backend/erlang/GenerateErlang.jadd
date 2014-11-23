@@ -53,13 +53,15 @@ aspect GenerateErlang {
   @Override
   public void FunctionDecl.generateErlangCode(ErlApp ea) throws IOException{
     ErlangCodeStream ecs= ea.getFunStream(moduleName());
-    ErlUtil.functionHeader(ecs,"f_"+getName(),getParams());
+    ErlUtil.functionHeader(ecs,"f_"+getName(),"Cog=#cog{ref=CogRef}",getParams());
     boolean needTrunc=getType().isIntType() && getFunctionDef() instanceof ExpFunctionDef
         && ((ExpFunctionDef) getFunctionDef()).getRhs().getType().isRatType();
     if (needTrunc) {
       ecs.print("rationals:trunc(");
     }
-    getFunctionDef().generateErlangCode(ecs,Vars.n(getParams()));
+    Vars vars = Vars.n(getParams());
+    ErlUtil.stopWorldPrelude(ecs, vars, true);
+    getFunctionDef().generateErlangCode(ecs,vars);
     if (needTrunc) {
       ecs.print(")");
     }
@@ -80,15 +82,17 @@ aspect GenerateErlang {
       "random","getProductLine","strlen","toString","truncate","println","print");
   public  void FnApp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
-    if(decl.getFunctionDef() instanceof BuiltinFunctionDef){
+    boolean builtin = decl.getFunctionDef() instanceof BuiltinFunctionDef;
+    if(builtin){
       if(!BUILTINS.contains(decl.getName()))
         throw new NotImplementedYetException("builtin: "+decl.getName(), this);
       ecs.print("builtin:");
       ecs.print(decl.getName());
     }
-    else
-    ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
-    ErlUtil.argumentList(ecs,null, getParams(), vars);
+    else {
+      ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
+    }
+    ErlUtil.argumentList(ecs,null, builtin, isContextImperative(), getParams(), vars);
   }
 
   @Override
@@ -239,7 +243,7 @@ aspect GenerateErlang {
     ecs.print("(fun(O=#object{class=T,cog =C}) when C=:=Cog -> object:alive(O),T end(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(")):'m_%s'",getMethod());
-    ErlUtil.argumentList(ecs,getCallee(),params,vars);
+    ErlUtil.argumentList(ecs,getCallee(),false,true,params,vars);
   }
 
   @Override

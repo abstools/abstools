@@ -61,6 +61,7 @@ public class ErlApp {
             funMod.put(moduleName, ecs);
             ecs.pf("-module(%s).", ErlUtil.getModuleName(moduleName) + "_funs");
             ecs.println("-compile(export_all).");
+            ecs.println("-include_lib(\"abs_types.hrl\").");
             ecs.println();
         }
 
