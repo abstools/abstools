@@ -12,5 +12,7 @@ init(Cog,[Main,Starter])->
 
 
 start({Main,Cog})->
-     Main:main(Cog).
+    Res=Main:main(Cog),
+    cog:dec_ref_count(Cog),
+    Res.
 
