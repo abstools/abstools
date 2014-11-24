@@ -87,6 +87,7 @@ await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=R
     end.
         
 mark(State, Black, []) ->
+    ?GCSTATS(sweep),
     sweep(State, gb_sets:from_ordset(Black));
 mark(State, Black, Gray) ->
     NewBlack = ordsets:union(Black, Gray),
@@ -103,6 +104,7 @@ sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFu
              {futures, gb_sets:size(WhiteFutures), gb_sets:size(BlackFutures)}}),
     gb_sets:fold(fun ({object, Ref}, ok) -> object:die(Ref, gc), ok end, ok, WhiteObjects),
     gb_sets:fold(fun ({future, Ref}, ok) -> future:die(Ref, gc), ok end, ok, WhiteFutures),
+    ?GCSTATS(resume_world),
     gb_sets:fold(fun ({cog, Ref}, ok) -> cog:resume_world(Ref) end, ok, Cogs),
     loop(State#state{objects=BlackObjects, futures=BlackFutures}).
 
