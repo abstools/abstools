@@ -159,7 +159,12 @@ loop(S=#state{running=R}) when is_pid(R)->
             inc_ref_count->
                 inc_referencers(S);
             dec_ref_count->
-                dec_referencers(S)
+                dec_referencers(S);
+            {stop_world, Sender} ->
+                R ! {stop_world, self()},
+                S1 = await_stop(S),
+                Sender ! {stopped, self()},
+                S1#state{running={gc, S1#state.running}}
             end,
     loop(New_State);
 
@@ -313,6 +318,21 @@ inc_referencers(S=#state{referencers=N}) ->
 
 dec_referencers(S=#state{referencers=N}) ->
     S#state{referencers=N-1}.
+
+%%Awaits task reaching synchronization point, or stop the world prelude
+await_stop(S=#state{running=R}) ->
+    New_State = receive
+                    {newState,TaskRef,State} ->
+                        set_state(S,TaskRef,State);
+                    {token,R,Task_state}->
+                        set_state(S#state{running=false},R,Task_state)
+                end,
+    case New_State#state.running =/= R of
+        true ->
+            New_State;
+        false ->
+            await_stop(New_State)
+    end.
 
 %%Awaits task being started
 await_start(Task, Args) ->
