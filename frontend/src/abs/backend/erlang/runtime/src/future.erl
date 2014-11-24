@@ -79,7 +79,6 @@ init(Callee=#object{class=C,cog=Cog=#cog{ref=CogRef}},Method,Params)->
     MonRef=monitor(process,CogRef),
     cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
     demonitor(MonRef),
-    gc ! {unroot, self()},    
     await().
 
 %% Future awaiting reply from task completion
@@ -87,10 +86,13 @@ await() ->
     %% Either receive an error or the value
     receive
         {'DOWN', _ , process, _,Reason} when Reason /= normal ->
+            gc ! {unroot, self()},
             loop({error,error_transform:transform(Reason)});
         {'EXIT',_,Reason} ->
+            gc ! {unroot, self()},
             loop({error,error_transform:transform(Reason)});
         {completed, Value}->
+            gc ! {unroot, self()},
             loop({ok,Value});
         {get_references, Sender} ->
             Sender ! {[], self()},
