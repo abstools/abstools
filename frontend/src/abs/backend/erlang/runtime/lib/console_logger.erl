@@ -11,10 +11,10 @@ init([Debug,Statistics])->
     {ok,{Debug,Statistics}}.
 
 handle_event({log,Data},State={true,_})->
-    io:format("~p~n",[Data]),
+    io:format("~p.~n",[Data]),
     {ok,State};
 handle_event({gcstats,Data},State={_,true})->
-    io:format("~p~n",[Data]),
+    io:format("~p.~n",[Data]),
     {ok,State};
 handle_event(_,State)->
     {ok,State}.
