@@ -71,6 +71,8 @@ ready(Cog, Stack)->
 ready_loop(Stack) ->
     receive
         token -> ok;
+        {stop_world, Sender} ->
+            ready_loop(Stack);
         {get_references, Sender} ->
             Sender ! {gc:extract_references(Stack), self()},
             ready_loop(Stack)
