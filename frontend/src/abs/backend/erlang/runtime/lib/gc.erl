@@ -109,7 +109,6 @@ sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFu
     loop(State#state{objects=BlackObjects, futures=BlackFutures}).
 
 get_references({Module, Ref}) ->
-    ?DEBUG({get_references, Module, Ref}),
     Module:get_references(Ref).
 
 is_collection_needed(State=#state{objects=Objects,futures=Futures}) ->
