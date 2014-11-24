@@ -833,6 +833,7 @@ aspect GenerateErlang {
     ecs.print(";");
     ecs.decIndent().print("true ->");
     ecs.incIndent();
+    ErlUtil.stopWorldPrelude(ecs, save, false);
     getBody().generateErlangCode(ecs, save);
     ecs.println(",");
     save.retainAll(vars);
