@@ -85,8 +85,11 @@ public class ClassGenerator {
             classDecl.getInitBlock().generateErlangCode(ecs, vars);
             ecs.println(",");
         }
-        if (classDecl.isActiveClass())
-            ecs.println("cog:add(Cog,active_object_task,O),");
+        if (classDecl.isActiveClass()) {
+            ecs.print("cog:add_blocking(Cog,active_object_task,O,Cog,");
+            ecs.print(vars.toStack());
+            ecs.println("),");
+        }
         ecs.println("O.");
         ecs.decIndent();
     }
