@@ -11,7 +11,7 @@
    </description>
 
    <url>
-      <update label="ABS Update Site" url="http://tools.hats-project.eu/update-site/"/>
+      <update label="ABS Update Site" url="http://docs.abs-models.org/update-site/"/>
    </url>
 
    <requires>
