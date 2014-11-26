@@ -83,6 +83,9 @@ class PongImpl implements Pong, PongIntern {
 
 {
     Pong pong = new PongImpl();
-    new PingImpl(pong);
-    new PingImpl(pong);
+    Int i = 0;
+    while (i < 100) {
+        new PingImpl(pong);
+        i = i + 1;
+    }
 }
