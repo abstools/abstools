@@ -6,7 +6,7 @@
 
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
--export([start/0, init/0, extract_references/1, get_references/1]).
+-export([start/0, stop/0, init/0, extract_references/1, get_references/1]).
 
 -export([behaviour_info/1]).
 
@@ -24,6 +24,9 @@ behaviour_info(callbacks) ->
 
 start() ->
     register(gc, spawn(?MODULE, init, [])).
+
+stop() ->
+    gc ! stop.
 
 init() ->
     loop(#state{}).
@@ -46,9 +49,13 @@ loop(State=#state{cogs=Cogs, objects=Objects, futures=Futures, root_futures=Root
                 State#state{cogs=gb_sets:delete({cog, Cog}, Cogs)};
             {unroot, Sender} ->
                 State#state{futures=gb_sets:insert({future, Sender}, Futures),
-                            root_futures=gb_sets:delete({future, Sender}, RootFutures)}
+                            root_futures=gb_sets:delete({future, Sender}, RootFutures)};
+            stop ->
+                unregister(gc),
+                stop
         end,
     case is_collection_needed(NewState) of
+        stop -> ok;
         true ->
             ?GCSTATS(stop_world),
             gb_sets:fold(fun ({cog, Ref}, ok) -> cog:stop_world(Ref) end, ok, NewState#state.cogs),
@@ -111,6 +118,8 @@ sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFu
 get_references({Module, Ref}) ->
     Module:get_references(Ref).
 
+is_collection_needed(stop) ->
+    stop;
 is_collection_needed(State=#state{objects=Objects,futures=Futures}) ->
     true.
 
