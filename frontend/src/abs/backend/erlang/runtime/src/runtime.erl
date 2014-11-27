@@ -38,10 +38,6 @@ start_mod(Arguments)  ->
     M=proplists:get_value(main_module,Arguments),
     io:format("Start ~s~n",[M]),
     Module=list_to_atom("m_"++re:replace(M,"[.]","_",[{return,list},global])),    
-
-    %% Init garbage collector
-    gc:start(),
-
     %%Init logging
     eventstream:start_link(),
     case {proplists:get_value(debug,Arguments, false), proplists:get_value(gcstats,Arguments, false)} of 
@@ -51,7 +47,9 @@ start_mod(Arguments)  ->
             eventstream:add_handler(console_logger,[Debug, Statistics])
     end,
     eventstream:add_handler(cog_monitor,[self()]),
-    
+    %% Init garbage collector
+    gc:start(),
+
     %%Start main task
     Cog=cog:start(),
     R=cog:add_and_notify(Cog,main_task,[Module,self()]),
@@ -59,6 +57,7 @@ start_mod(Arguments)  ->
     RetVal=task:join(R),
     cog_monitor:waitfor(),
     timer:sleep(1),
+    gc:stop(),
     eventstream:stop(),
     RetVal.
 
