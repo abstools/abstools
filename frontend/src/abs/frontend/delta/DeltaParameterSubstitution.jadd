@@ -58,7 +58,7 @@ aspect DeltaParameterSubstitution {
      * with the values given in the productline's delta clause
      */
     public void ProductLine.substituteDeltaParams(
-            ArrayList<DeltaDecl> deltas, 
+            java.util.List<DeltaDecl> deltas, 
             Product prod) throws DeltaModellingException {
 
         for (DeltaDecl delta : deltas) {
