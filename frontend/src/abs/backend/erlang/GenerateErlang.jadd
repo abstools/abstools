@@ -255,7 +255,7 @@ aspect GenerateErlang {
 
   @Override
   public void StringLiteral.generateErlangCode(ErlangCodeStream ecs,Vars vars) {
-    ecs.print( '"'+getContent()+'"');
+    ecs.print( '"'+getContent().replace("\\", "\\\\").replace("\"", "\\\"")+'"');
   }
 
   @Override

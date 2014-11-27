@@ -304,7 +304,23 @@ aspect GenerateMaude {
     }
 
     public void StringLiteral.generateMaude(PrintStream stream) {
-        stream.print("\"str\"[\"" + getContent().replaceAll("\"", "\\\\\"") + "\"] ");
+        // FIXME: it's time to loop through the string and switch on
+        // character here.
+        String content = getContent();
+        StringBuilder result = new StringBuilder();
+        for (char c : content.toCharArray()) {
+            switch (c) {
+            case '\\' : result.append("\\\\"); break;
+            case '\t' : result.append("\\t"); break;
+            case '\r' : result.append("\\r"); break;
+            case '\n' : result.append("\\n"); break;
+            case '"' : result.append("\\\""); break;
+            default: result.append(c);
+            }
+        }
+        stream.print("\"str\"[\"");
+        stream.print(result.toString());
+        stream.print("\"] ");
     }
 
     public void IntLiteral.generateMaude(PrintStream stream) {
