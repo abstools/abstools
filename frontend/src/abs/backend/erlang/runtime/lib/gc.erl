@@ -16,8 +16,14 @@
 -define(GCSTATS(Statistics), ok).
 -endif.
 
+-undef(PROC_FACTOR).
+-undef(TIME_LIMIT).
+-define(PROC_FACTOR, 0.5).
+-define(TIME_LIMIT, 100000).
+
 -record(state, {cogs=gb_sets:empty(),objects=gb_sets:empty(),
-                futures=gb_sets:empty(),root_futures=gb_sets:empty()}).
+                futures=gb_sets:empty(),root_futures=gb_sets:empty(),
+                previous=now(), limit=16}).
 
 behaviour_info(callbacks) ->
     [{get_references, 1}].
@@ -101,7 +107,7 @@ mark(State, Black, Gray) ->
     NewGray = ordsets:subtract(ordsets:union(rpc:pmap({gc, get_references}, [], Gray)), Black),
     mark(State, NewBlack, NewGray).
 
-sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFutures},Black) ->
+sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFutures,limit=Lim},Black) ->
     WhiteObjects = gb_sets:subtract(Objects, Black),
     WhiteFutures = gb_sets:subtract(Futures, Black),
     BlackObjects = gb_sets:intersection(Objects, Black),
@@ -113,15 +119,22 @@ sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFu
     gb_sets:fold(fun ({future, Ref}, ok) -> future:die(Ref, gc), ok end, ok, WhiteFutures),
     ?GCSTATS(resume_world),
     gb_sets:fold(fun ({cog, Ref}, ok) -> cog:resume_world(Ref) end, ok, Cogs),
-    loop(State#state{objects=BlackObjects, futures=BlackFutures}).
+    Count = gb_sets:size(BlackObjects) + gb_sets:size(BlackFutures),
+    NewLim = if Count > Lim * 0.75 -> Lim * 2;
+                Count < Lim * 0.25 -> Lim div 2;
+                true -> Lim
+             end,
+    loop(State#state{objects=BlackObjects, futures=BlackFutures, previous=now(),limit=NewLim}).
 
 get_references({Module, Ref}) ->
     Module:get_references(Ref).
 
 is_collection_needed(stop) ->
     stop;
-is_collection_needed(State=#state{objects=Objects,futures=Futures}) ->
-    true.
+is_collection_needed(State=#state{objects=Objects,futures=Futures,previous=PTime,limit=Lim}) ->
+    gb_sets:size(Objects) + gb_sets:size(Futures) > Lim
+        orelse timer:now_diff(now(), PTime) > ?TIME_LIMIT
+        orelse erlang:system_info(process_count) / erlang:system_info(process_limit) > ?PROC_FACTOR.
 
 extract_references(DataStructure) ->
     ordsets:from_list(lists:flatten([to_deep_list(DataStructure)])).
