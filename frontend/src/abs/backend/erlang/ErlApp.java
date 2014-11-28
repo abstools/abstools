@@ -90,6 +90,7 @@ public class ErlApp {
             "include/log.hrl",
             "Emakefile",
             "Makefile",
+            "gcstats_as_csv.erl",
             "lib/rationals.erl",
             "lib/intar.erl",
             "lib/cmp.erl",
@@ -108,7 +109,7 @@ public class ErlApp {
                 is = ClassLoader.getSystemResourceAsStream(RUNTIME_PATH + f);
                 if (is == null)
                     throw new RuntimeException("Could not locate Runtime file:" + f);
-                String outputFile = ("Emakefile".equals(f) || "Makefile".equals(f) ? f : "runtime/" + f).replace('/',
+                String outputFile = ("Emakefile".equals(f) || "Makefile".equals(f) || "gcstats_as_csv.erl".equals(f) ? f : "runtime/" + f).replace('/',
                         File.separatorChar);
                 File file = new File(destDir, outputFile);
                 file.getParentFile().mkdirs();
