@@ -93,7 +93,6 @@ await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=R
     NewCogs = NewState#state.cogs,
     case NewStopped >= gb_sets:size(NewCogs) of
         true ->
-            % Insert mark phase here
             ?GCSTATS(mark),
             mark(NewState, [], ordsets:union(rpc:pmap({gc, get_references}, [], gb_sets:to_list(gb_sets:union(NewCogs, NewState#state.root_futures)))));
         false -> await_stop(NewState,NewStopped)
@@ -132,9 +131,14 @@ get_references({Module, Ref}) ->
 is_collection_needed(stop) ->
     stop;
 is_collection_needed(State=#state{objects=Objects,futures=Futures,previous=PTime,limit=Lim}) ->
+%true.
+%false.
     gb_sets:size(Objects) + gb_sets:size(Futures) > Lim
-        orelse timer:now_diff(now(), PTime) > ?TIME_LIMIT
-        orelse erlang:system_info(process_count) / erlang:system_info(process_limit) > ?PROC_FACTOR.
+        orelse
+        timer:now_diff(now(), PTime) > ?TIME_LIMIT
+        orelse
+        erlang:system_info(process_count) / erlang:system_info(process_limit) > ?PROC_FACTOR
+        .
 
 extract_references(DataStructure) ->
     ordsets:from_list(lists:flatten([to_deep_list(DataStructure)])).
