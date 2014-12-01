@@ -1,0 +1,63 @@
+
+*** A simple pretty-printer.  The "pp" equation takes a state, as produced by
+*** simulating an Abs model, and extracts information about deployment
+*** components and their resource usages.  Further information can be added as
+*** needed.
+***
+*** (This cannot be easily integrated into the simulation itself since it will
+*** pretty-print the initial state.)
+
+
+in abs-interpreter
+
+mod ABS-VISUALIZER is
+  protecting ABS-SIMULATOR-EQ-TIMED .
+  protecting LIST{Int} .
+
+  sorts Pp-Configuration Pp-Dc Pp-Object .
+  subsort Pp-Dc Pp-Object < Pp-Configuration .
+
+  op dc_creationtime_cpu_cputotal_bandwidth_bandwidthtotal_ :
+    String Int List{Int} List{Int} List{Int} List{Int} -> Pp-Dc .
+
+  var C : Configuration .
+  vars DL D2 CPUHISTORY CPUHISTORYTOTAL BWHISTORY BWHISTORYTOTAL CREATIONTIME
+    : Data .
+  vars I TIME : Int .
+  var NAME : String .
+  var S : Subst .
+
+  op pp-reverse-intlist : Data -> List{Int} .
+  eq pp-reverse-intlist("ABS.StdLib.Nil"[emp]) = nil .
+  eq pp-reverse-intlist("ABS.StdLib.Cons"["num"[I] :: DL])
+  = pp-reverse-intlist(DL) I .
+
+  op noConf : -> Pp-Configuration .
+  op __ : Pp-Configuration Pp-Configuration -> Pp-Configuration
+    [assoc id: noConf] .
+
+  op pp : Configuration -> Pp-Configuration .
+
+  op pp : State -> Pp-Configuration .
+  eq pp({C}) = pp(C) .
+
+  eq pp(
+      < ob('ABS.DC.DeploymentComponent, I) : Cog | Objects: object(ob(
+      'ABS.DC.DeploymentComponent, I), 'ABS.DC.DeploymentComponent,
+      ('bwhistory |-> BWHISTORY, 'bwhistorytotal |-> BWHISTORYTOTAL, 
+      'cpuhistory |-> CPUHISTORY, 'cpuhistorytotal |-> CPUHISTORYTOTAL,
+      'creationTime |-> "ABS.StdLib.Time"["num"[TIME]],
+      'description |-> "str"[NAME], S), C:Int, B:Bool),
+      DC: ob('ABS.DC.DeploymentComponent, X:Int),
+      Sched: E:Expr,
+      Pr: P:Process,
+      PrQ: MP:MProc >
+    C)
+=
+  (dc NAME creationtime TIME
+  cpu pp-reverse-intlist(CPUHISTORY) cputotal pp-reverse-intlist(CPUHISTORYTOTAL)
+  bandwidth pp-reverse-intlist(BWHISTORY) bandwidthtotal pp-reverse-intlist(BWHISTORYTOTAL)) pp(C) .
+
+  eq pp(C) = noConf [owise] .
+
+endm
