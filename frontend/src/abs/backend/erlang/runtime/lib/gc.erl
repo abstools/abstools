@@ -18,8 +18,12 @@
 
 -undef(PROC_FACTOR).
 -undef(TIME_LIMIT).
+-undef(RED_THRESH).
+-undef(INC_THRESH).
 -define(PROC_FACTOR, 0.5).
 -define(TIME_LIMIT, 100000).
+-define(RED_THRESH, 0.25).
+-define(INC_THRESH, 0.75).
 
 -record(state, {cogs=gb_sets:empty(),objects=gb_sets:empty(),
                 futures=gb_sets:empty(),root_futures=gb_sets:empty(),
@@ -71,6 +75,9 @@ loop(State=#state{cogs=Cogs, objects=Objects, futures=Futures, root_futures=Root
     end.
 
 await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFutures},Stopped) ->
+    ?GCSTATS({{memory, erlang:memory()}, {cogs, gb_sets:size(Cogs)}, {objects, gb_sets:size(Objects)},
+              {futures, gb_sets:size(Futures), gb_sets:size(RootFutures)},
+              {processes, erlang:system_info(process_count), erlang:system_info(process_limit)}}),
     {NewState, NewStopped} =
         receive
             {#cog{ref=Ref}, Sender} ->
@@ -119,8 +126,8 @@ sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFu
     ?GCSTATS(resume_world),
     gb_sets:fold(fun ({cog, Ref}, ok) -> cog:resume_world(Ref) end, ok, Cogs),
     Count = gb_sets:size(BlackObjects) + gb_sets:size(BlackFutures),
-    NewLim = if Count > Lim * 0.75 -> Lim * 2;
-                Count < Lim * 0.25 -> Lim div 2;
+    NewLim = if Count > Lim * ?INC_THRESH -> Lim * 2;
+                Count < Lim * ?RED_THRESH -> Lim div 2;
                 true -> Lim
              end,
     loop(State#state{objects=BlackObjects, futures=BlackFutures, previous=now(),limit=NewLim}).
@@ -131,8 +138,8 @@ get_references({Module, Ref}) ->
 is_collection_needed(stop) ->
     stop;
 is_collection_needed(State=#state{objects=Objects,futures=Futures,previous=PTime,limit=Lim}) ->
-%true.
-%false.
+%true
+%false
     gb_sets:size(Objects) + gb_sets:size(Futures) > Lim
         orelse
         timer:now_diff(now(), PTime) > ?TIME_LIMIT
