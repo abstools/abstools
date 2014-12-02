@@ -41,21 +41,25 @@ import deadlock.constraints.substitution.*;
 
 public class Analyser {
     
-private static int FixPoint1_0 = 1;
-private static int FixPoint2_0 = 2;
+  private static int FixPoint1_0 = 1;
+  private static int FixPoint2_0 = 2;
     
   public void deadlockAnalysis(Model m, boolean verbose, int nbIteration, int fixPointVersion, PrintStream out) {
       
-      Variable.varCounter =0;
-      Long totalTimeInMs = 0L;
+    Variable.varCounter =0;
+    Long totalTimeInMs = 0L;
       
       
     
     /* 0, Create the initial data */
-    ContractInference ci = new ContractInference();
     Factory df = new Factory(verbose);
-    Map<InterfaceDecl, ClassDecl> mapInterfaceToClass = ci.getMapInterfaceToClass(m);
-    TypingEnvironment g = ci.environment(m, df, mapInterfaceToClass, verbose);
+    AnalyserLog log = new AnalyserLog();
+    log.verbose();
+    ContractInference ci = new ContractInference(log, df, m);
+
+
+    ci.computeMapInterfaceToClass();
+    ci.computeEnvironment();
 
      /* 1. Generate contracts */
     String ident = null; 
@@ -64,7 +68,7 @@ private static int FixPoint2_0 = 2;
     Long nanoTime = System.nanoTime();
     Long ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
     totalTimeInMs += ellapsedTime;
-    ResultInference InferenceOutput = ci.typeInference(m, ident, g, df, mapInterfaceToClass);
+    ResultInference InferenceOutput = ci.typeInference();
     Map<String, MethodContract> methodMap = InferenceOutput.getMethods();
     deadlock.constraints.constraint.Constraint c = InferenceOutput.getConstraint();
     
