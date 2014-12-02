@@ -22,7 +22,7 @@ package deadlock.analyser.generation;
 
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.ErrorMessage;
-import deadlock.constraints.constraint.Information;
+import com.gzoumix.semisolver.constraint.Information;
 
 
 public class ErrorEdge extends SemanticError { 

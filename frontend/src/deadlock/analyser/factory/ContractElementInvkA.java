@@ -27,7 +27,7 @@ import java.util.ArrayList;
 
 import abs.frontend.ast.ASTNode;
 
-import deadlock.constraints.term.Term;
+import com.gzoumix.semisolver.term.Term;
 
 public class ContractElementInvkA extends ContractElement {
 

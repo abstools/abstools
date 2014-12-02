@@ -32,12 +32,12 @@ import abs.frontend.ast.Model;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.ClassDecl;
 import deadlock.analyser.factory.*;
-import deadlock.constraints.term.*;
+import com.gzoumix.semisolver.term.*;
 import deadlock.analyser.generation.*;
 import deadlock.analyser.inference.ContractInference;
 import deadlock.analyser.detection.*;
-import deadlock.constraints.constraint.*;
-import deadlock.constraints.substitution.*;
+import com.gzoumix.semisolver.constraint.*;
+import com.gzoumix.semisolver.substitution.*;
 
 public class Analyser {
     
@@ -54,7 +54,7 @@ public class Analyser {
     /* 0, Create the initial data */
     Factory df = new Factory(verbose);
     AnalyserLog log = new AnalyserLog();
-    log.verbose();
+    if(verbose) { log.verbose(); }
     ContractInference ci = new ContractInference(log, df, m);
 
 
@@ -62,33 +62,27 @@ public class Analyser {
     ci.computeEnvironment();
 
      /* 1. Generate contracts */
-    String ident = null; 
-    if(verbose) { out.println("Analyzing dependencies  to look for deadlocks..."); ident = ""; }
+    log.logDebug("Analyzing dependencies  to look for deadlocks...");
     
     Long nanoTime = System.nanoTime();
     Long ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
     totalTimeInMs += ellapsedTime;
     ResultInference InferenceOutput = ci.typeInference();
     Map<String, MethodContract> methodMap = InferenceOutput.getMethods();
-    deadlock.constraints.constraint.Constraint c = InferenceOutput.getConstraint();
-    
-    
-    if(verbose) {
-      out.println("###############################################################\n");
-      out.println("Contract and Constraint generation finished...");
-      out.println("Ellapsed time: " + ellapsedTime + "ms");
-      out.println("  Initial constraint:\n  -------------------");
-      out.println(InferenceOutput.getConstraint().toString() + "\n");
-      out.println("  Initial contracts:\n  -----------------");
-      Term contract;
-      for(String k : methodMap.keySet()){
-        contract = methodMap.get(k);
-        out.println("    \"" + k + "\": " + ((contract != null) ? (contract.toString()) : ("null")));
-      }
-      out.println("###############################################################\n");
-      out.println("Solving constraint...");
-      //c.setDebugFile(System.out);
+    Constraint c = InferenceOutput.getConstraint();
+   
+    log.logDebug("###############################################################\n");
+    log.logDebug("Contract and Constraint generation finished...");
+    log.logDebug("Ellapsed time: " + ellapsedTime + "ms");
+    log.logDebug("  Initial constraint:\n  -------------------");
+    log.logDebug(InferenceOutput.getConstraint().toString() + "\n");
+    log.logDebug("  Initial contracts:\n  -----------------");
+    for(Map.Entry<String, MethodContract> entry : methodMap.entrySet()){
+      log.logDebug("    \"" + entry.getKey() + "\": " + ((entry.getValue() != null) ? (entry.getValue().toString()) : ("null")));
     }
+    log.logDebug("    \"main\": " + ((InferenceOutput.getMainContractPresent() != null) ? ("< " + InferenceOutput.getMainContractPresent() + ", " + InferenceOutput.getMainContractFuture() + ">") : ("null")));
+    log.logDebug("###############################################################\n");
+    log.logDebug("Solving constraint...");
 
     // 1.2. Solve the constraint and check for errors
     nanoTime = System.nanoTime();
@@ -96,15 +90,13 @@ public class Analyser {
     ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
     totalTimeInMs += ellapsedTime;
     
-    if(verbose && (!c.getErrors().isEmpty())) {
-      out.println("Generation of Contract failed: constraint not satisfiable");
-      out.println("###############################################################\n");
-    }
-    else if(verbose)
-    {
-        out.println("Constraint solving completed");
-        out.println("Ellapsed time: " + ellapsedTime + "ms");
-        out.println("###############################################################\n");
+    if(!c.getErrors().isEmpty()) {
+      log.logDebug("Generation of Contract failed: constraint not satisfiable");
+      log.logDebug("###############################################################\n");
+    } else {
+      log.logDebug("Constraint solving completed");
+      log.logDebug("Ellapsed time: " + ellapsedTime + "ms");
+      log.logDebug("###############################################################\n");
     }
 
     ArrayList<GenerationError> errors = new ArrayList<GenerationError>(c.getErrors().size());

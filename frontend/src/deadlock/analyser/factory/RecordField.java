@@ -23,8 +23,8 @@ package deadlock.analyser.factory;
 import java.util.List;
 import java.util.LinkedList;
 
-import deadlock.constraints.term.Term;
-import deadlock.constraints.term.TermStructured;
+import com.gzoumix.semisolver.term.Term;
+import com.gzoumix.semisolver.term.TermStructured;
 
 public class RecordField extends GenericStructuredTerm implements IRecord { // not really a record, but it helps the debug
 

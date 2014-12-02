@@ -23,8 +23,8 @@ package deadlock.analyser.factory;
 import java.util.List;
 import java.util.ArrayList;
 
-import deadlock.constraints.term.Term;
-import deadlock.constraints.term.TermStructured;
+import com.gzoumix.semisolver.term.Term;
+import com.gzoumix.semisolver.term.TermStructured;
 
 public class RecordFuture extends GenericStructuredTerm implements IRecord {
 

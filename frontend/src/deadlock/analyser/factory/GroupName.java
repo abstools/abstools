@@ -22,8 +22,8 @@ package deadlock.analyser.factory;
 
 
 
-import deadlock.constraints.term.TermVariable;
-import deadlock.constraints.term.Variable;
+import com.gzoumix.semisolver.term.TermVariable;
+import com.gzoumix.semisolver.term.Variable;
 
 public class GroupName extends TermVariable {
     

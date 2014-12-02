@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import deadlock.analyser.factory.GroupName;
-//import deadlock.constraints.term.TermVariable;
+//import com.gzoumix.semisolver.term.TermVariable;
 
 public class VarSubstitution {
 	

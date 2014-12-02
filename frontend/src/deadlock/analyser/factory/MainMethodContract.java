@@ -6,7 +6,7 @@ package deadlock.analyser.factory;
 
 import java.util.List;
 
-import deadlock.constraints.term.Term;
+import com.gzoumix.semisolver.term.Term;
 
 public class MainMethodContract extends MethodContract {
 

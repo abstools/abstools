@@ -9,8 +9,8 @@ import java.util.HashSet;
 
 import abs.frontend.ast.ASTNode;
 import deadlock.analyser.factory.DataTypeInterface;
-import deadlock.constraints.term.Term;
-import deadlock.constraints.constraint.Constraint;
+import com.gzoumix.semisolver.term.Term;
+import com.gzoumix.semisolver.constraint.Constraint;
 import deadlock.analyser.factory.Contract;
 import deadlock.analyser.factory.ContractElementParallel;
 import deadlock.analyser.factory.Factory;

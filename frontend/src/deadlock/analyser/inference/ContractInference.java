@@ -18,8 +18,8 @@ import java.util.Map;
 import java.util.Set;
 
 import choco.kernel.common.util.tools.ArrayUtils;
-import deadlock.constraints.constraint.Constraint;
-import deadlock.constraints.term.*;
+import com.gzoumix.semisolver.constraint.Constraint;
+import com.gzoumix.semisolver.term.*;
 import deadlock.analyser.AnalyserLog;
 import deadlock.analyser.factory.*;
 import deadlock.analyser.generation.*;
@@ -273,6 +273,7 @@ public class ContractInference {
     for (ModuleDecl md : cu.getModuleDecls()) { searchPath.add(md.getName()); res.add(typeInference(md)); }
 
     if(cu.hasMainBlock()) {
+      searchPath.add("ABS.StdLib");
       _env.setSearchPath(searchPath);
       _a = _df.newGroupName();
       ResultInferenceStmt resMain = typeInference(cu.getMainBlock());
@@ -326,7 +327,7 @@ public class ContractInference {
     MethodInterface mi = _env.getMethod(cd.getName(), _initName);
     IRecord thisRecord = mi.getThis();
     _a = ((RecordPresent) thisRecord).getRoot();
-    deadlock.constraints.constraint.Constraint c = _df.newConstraint();
+    Constraint c = _df.newConstraint();
     Contract cp, cf;
         
     // 2.1. Field assignments
@@ -563,7 +564,7 @@ public class ContractInference {
     _log.beginIndent();
 
     Contract contract;
-    deadlock.constraints.constraint.Constraint c;
+    Constraint c;
     ITypingEnvironmentVariableType X;
 
 
@@ -600,7 +601,7 @@ public class ContractInference {
     String name = astmt.getVar().getName();
 
     Contract contract;
-    deadlock.constraints.constraint.Constraint c;
+    Constraint c;
     ITypingEnvironmentVariableType X;
 
     Exp exp = astmt.getValue();
@@ -628,7 +629,7 @@ public class ContractInference {
     _log.beginIndent();
 
     Contract contract;
-    deadlock.constraints.constraint.Constraint c = _df.newConstraint();
+    Constraint c = _df.newConstraint();
     GroupName aprime = _df.newGroupName();
 
     // 1. First look if there is some annotation defined
@@ -757,7 +758,7 @@ public class ContractInference {
     _log.beginIndent();
     _env.newScope();
 
-    // accumulate contracts and deadlock.constraints.constraint.Constraints
+    // accumulate contracts and constraint.Constraints
     // in the resulting output
     ResultInferenceStmt resStmt = null;
     Constraint c = _df.newConstraint();
