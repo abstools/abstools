@@ -83,7 +83,8 @@ init(Callee=#object{class=C,cog=Cog=#cog{ref=CogRef}},Method,Params)->
 
 %% Future awaiting reply from task completion
 await() ->
-    %% Either receive an error or the value
+    %% Receive an error or the value and move into server mode,
+    %% or receive requests for references or polling
     receive
         {'DOWN', _ , process, _,Reason} when Reason /= normal ->
             gc ! {unroot, self()},
@@ -98,7 +99,8 @@ await() ->
             Sender ! {[], self()},
             await();
         {poll, Sender} ->
-            Sender ! unresolved
+            Sender ! unresolved,
+            await()
     end.
 
 get_blocking(Ref,Stack) ->
