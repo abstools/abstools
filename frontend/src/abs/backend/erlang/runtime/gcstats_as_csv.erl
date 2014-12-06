@@ -6,14 +6,11 @@ main(Args) ->
 
 start([InputFile]) ->
     F = open_input(InputFile),
-    write_csv(F,standard_io,standard_io,standard_io);
-start([InputFile,OutputMemory,OutputEvents,OutputSweep]) ->
-    F = open_input(InputFile),
-    {ok, OM} = file:open(OutputMemory,write),
+    {ok, OM} = file:open(re:replace(InputFile, ".txt$", "-mem.csv", [{return, list}]),write),
     io:format(OM,"time,total,processes,processes_used,system,atom,atom_used,binary,code,ets,cogs,objects,futures,root_futures,process_count,process_limit~n",[]),
-    {ok, OE} = file:open(OutputEvents,write),
+    {ok, OE} = file:open(re:replace(InputFile, ".txt$", "-events.csv", [{return, list}]),write),
     io:format(OE,"time,event~n", []),
-    {ok, OS} = file:open(OutputSweep,write),
+    {ok, OS} = file:open(re:replace(InputFile, ".txt$", "-sweeps.csv", [{return, list}]),write),
     io:format(OS,"time,objects_swept,objects_kept,futures_swept,futures_kept~n", []),
     write_csv(F,OM,OE,OS).
 
