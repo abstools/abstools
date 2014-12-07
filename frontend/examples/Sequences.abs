@@ -1,0 +1,81 @@
+module Sequences;
+export *;
+
+interface Sequence {
+    Int next();
+}
+
+class NaturalNumbers implements Sequence {
+    Int i = 0;
+
+    Int next() {
+        i = i + 1;
+        return i;
+    }
+}
+
+class Factorials implements Sequence {
+    Int seq = 1;
+    Int fact = 1;
+
+    Int next() {
+        fact = seq * fact;
+        seq = seq + 1;
+        return fact;
+    }
+}
+
+class Fibonacci implements Sequence {
+    Int prev = 0;
+    Int prevPrev = 1;
+
+    Int next() {
+        Int n = prev + prevPrev;
+        prevPrev = prev;
+        prev = n;
+        return n;
+    }
+}
+
+class Squares implements Sequence {
+    Int seq = 0;
+
+    Int next() {
+        seq = seq + 1;
+        return seq * seq;
+    }
+}
+
+class Cubes implements Sequence {
+    Int seq = 0;
+
+    Int next() {
+        seq = seq + 1;
+        return seq * seq * seq;
+    }
+}
+
+{
+    List<Sequence> sequences = Nil;
+    Sequence s = new NaturalNumbers();
+    sequences = Cons(s,sequences);
+    s = new Fibonacci();
+    sequences = Cons(s,sequences);
+    s = new Factorials();
+    sequences = Cons(s,sequences);
+    s = new Squares();
+    sequences = Cons(s,sequences);
+    s = new Cubes();
+    sequences = Cons(s,sequences);
+
+    while (sequences != Nil) {
+        Int i = 0;
+        s = head(sequences);
+        while (i < 1000) {
+            s ! next();
+            i = i + 1;
+        }
+
+        sequences = tail(sequences);
+    }
+}
