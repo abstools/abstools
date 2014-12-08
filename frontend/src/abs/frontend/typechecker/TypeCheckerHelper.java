@@ -160,7 +160,7 @@ public class TypeCheckerHelper {
         }
 
         /* What about deltas mentioned in the 'after' clause? */
-        for (DeltaID did : clause.getDeltaIDs()) {
+        for (DeltaID did : clause.getAfterDeltaIDs()) {
             if (! deltaNames.containsKey(did.getName())) {
                 e.add(new TypeError(did, ErrorMessage.NAME_NOT_RESOLVABLE, did.getName()));
             }

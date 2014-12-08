@@ -295,7 +295,7 @@ GetFatherExp: PureExp    ::= PureExp;
 ProductLine ::= <Name> Feature* DeltaClause* ;
 Feature ::= <Name> AttrAssignment*;
 
-DeltaClause ::= Deltaspec DeltaID* [FromAppCond:AppCond] [AppCond] ;
+DeltaClause ::= Deltaspec AfterDeltaID:DeltaID* [FromAppCond:AppCond] [AppCond] ;
 
 abstract AppCond;
 AppCondAnd : AppCond ::= Left:AppCond Right:AppCond ;

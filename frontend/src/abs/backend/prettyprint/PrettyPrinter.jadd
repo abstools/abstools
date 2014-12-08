@@ -144,9 +144,9 @@ aspect doPrettyPrinter {
         stream.print("delta ");
         getDeltaspec().doPrettyPrint(stream, formatter);
 
-        if (getNumDeltaID() > 0) {
+        if (getNumAfterDeltaID() > 0) {
             stream.print(" after ");
-            getDeltaIDList().doPrettyPrint(stream, formatter, ",");
+            getAfterDeltaIDList().doPrettyPrint(stream, formatter, ",");
         }
 
         if (hasAppCond()) {
