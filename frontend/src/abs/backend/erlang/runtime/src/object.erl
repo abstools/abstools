@@ -83,7 +83,7 @@ get_references(Ref) ->
 
 await_activation(Params) ->
     receive
-        {get_references, Sender} -> Sender ! gc:extract_references(Params),
+        {get_references, Sender} -> Sender ! {gc:extract_references(Params), self()},
                                     await_activation(Params);
         active -> ok
     end.
@@ -156,8 +156,7 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{cog=Cog, tasks=Tasks
 
 handle_sync_event(get_references, _From, StateName, S=#state{int_status=IState, new_vals=NewVals}) ->
     ?DEBUG(get_references),
-    Reply = lists:flatmap(fun gc:extract_references/1, [gb_trees:values(NewVals), IState]),
-    {reply, Reply, StateName, S}.
+    {reply, gc:extract_references([gb_trees:values(NewVals),IState]), StateName, S}.
     
 
 handle_info({'DOWN', _MonRef, process, TaskRef,Reason} ,StateName,S=#state{tasks=Tasks})->
