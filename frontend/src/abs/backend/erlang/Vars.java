@@ -161,7 +161,7 @@ public class Vars extends LinkedHashMap<String, Var> {
     public String toStack() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("ordsets:union(ordsets:from_list([O");
+        sb.append("[O");
         for (Map.Entry<String, Var> a : this.entrySet()) {
             Var v = a.getValue();
             if (!v.isSet() || !v.hasReferences()) {
@@ -173,7 +173,7 @@ public class Vars extends LinkedHashMap<String, Var> {
             sb.append(PREFIX).append(a.getKey()).append("_").append(v.getCount());
         }
 
-        sb.append("]), Stack)");
+        sb.append("|Stack]");
 
         return sb.toString();
     }
