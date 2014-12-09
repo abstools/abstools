@@ -8,6 +8,22 @@ This project is organised via "redmine" which provides a bug tracker, wiki and m
 	https://envisage.ifi.uio.no:8080/redmine/projects/abstools
 Further information can als be found on http://abs-models.org/
 
+Working with the repository
+---------------------------
+
+Consider rebasing instead of merging your changes:
+
+    git pull --rebase
+
+This avoids the various "merge branch master" commits we currently
+have.
+
+`git pull --rebase` will, in case both you and the remote repository
+have new commits, replay your local commits on top of upstream changes
+instead of adding a new local commit that merges the `master` and
+`origin/master` branches.  Conflicts have to be resolved per patch
+(via `git add` + `git rebase --continue`) instead of in one go, but we
+get a cleaner history.
 
 Folders
 -------
@@ -36,3 +52,7 @@ costabs-plugin - The COSTA plugin for ABS
 apet-plugin    - The aPET plugin for ABS
 
 sda-plugin     - Bologna Deadlock-checker plugin for ABS
+
+<!-- Local Variables: -->
+<!-- mode: markdown -->
+<!-- End: -->
