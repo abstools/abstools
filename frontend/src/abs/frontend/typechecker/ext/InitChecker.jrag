@@ -21,6 +21,15 @@ aspect InitChecker {
         l.add(new TypeError(this, msg, "Await expressions"));
     }
     @Override
+    void ThrowStmt.checkLegalInit(SemanticErrorList l, ErrorMessage msg) {
+       l.add(new TypeError(this, msg, "Throw statements"));
+    }
+    @Override
+    void DieStmt.checkLegalInit(SemanticErrorList l, ErrorMessage msg) {
+       l.add(new TypeError(this, msg, "Die statements"));
+    }
+
+    @Override
     void SyncCall.checkLegalInit(SemanticErrorList l, ErrorMessage msg) { 
         if (!getMethodSig().isAtomic()) {
             l.add(new TypeError(this, msg, "Synchronous calls of non-atomic methods"));
@@ -46,3 +55,7 @@ aspect InitChecker {
 
 
 }
+
+// Local Variables:
+// mode: java
+// End:
