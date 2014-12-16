@@ -53,6 +53,19 @@ apet-plugin    - The aPET plugin for ABS
 
 sda-plugin     - Bologna Deadlock-checker plugin for ABS
 
+
+Using Vagrant
+-------------
+
+To develop the ABS tools without installing additional software, you
+can use [Vagrant](https://www.vagrantup.com).  Vagrant will start a
+Linux virtual machine and install the needed dependencies.  In the
+`abstools/` directory, run the command `vagrant up` to provision and
+start a VM, then `vagrant ssh` to connect.  (If you want to run GUI
+programs in the VM, use `vagrant ssh -- -X`.)
+
+Within the VM, the sources are accessible in the directory `/vagrant`.
+
 <!-- Local Variables: -->
 <!-- mode: markdown -->
 <!-- End: -->
