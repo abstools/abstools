@@ -59,7 +59,7 @@ aspect TargetQualifiedClassName {
 // qualify node names with the name of the module where they were defined
 aspect QualifiedName {
     public String Decl.qualifiedName() {
-        return moduleName() + "." + getName();
+        return StringUtils.joinNames(moduleName(), getName());
     }
     
     public String DeltaDecl.qualifiedName() {

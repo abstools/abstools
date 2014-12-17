@@ -94,7 +94,30 @@ public class TopologicalSortingTest extends DeltaTest {
         assertEquals(orders.size(), 362880 /*9!*/);
     }
     
+    @Test(expected=DeltaModellingException.class)
+    public void testCycle() {
+        numNodes = 4;
+        deltas = new DeltaID[numNodes];
+        for (int i=0; i<numNodes; i++)
+            deltas[i] = new DeltaID("D" + i);
+        TopologicalSorting<DeltaID> sorter = new TopologicalSorting<DeltaID>(new HashSet<DeltaID>(Arrays.asList(deltas)));
+        sorter.addEdge(deltas[0], deltas[1]); // cycle
+        sorter.addEdge(deltas[1], deltas[0]); // cycle
+        sorter.addEdge(deltas[2], deltas[0]);
+        sorter.addEdge(deltas[1], deltas[3]);
+        sorter.sort();
+    }
 
+    @Test(expected=DeltaModellingException.class)
+    public void testCycle2() {
+        numNodes = 1;
+        deltas = new DeltaID[numNodes];
+        deltas[0] = new DeltaID("D0");
+        TopologicalSorting<DeltaID> sorter = new TopologicalSorting<DeltaID>(new HashSet<DeltaID>(Arrays.asList(deltas)));
+        sorter.addEdge(deltas[0], deltas[0]); // cycle
+        sorter.sort();
+    }
+    
     /**************************************************************************/
 
     private TopologicalSorting<DeltaID> init0_0() {

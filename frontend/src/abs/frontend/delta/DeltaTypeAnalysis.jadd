@@ -1,0 +1,11 @@
+aspect DeltaTypeAnalysis {
+
+    /**************************************************************************
+     *
+     */
+    public java.util.List<java.util.Set<String>> ProductLine.getDeltaPartitions(SemanticErrorList errors) {
+        return DeltaTypeAnalysisHelper.getDeltaPartitions(this, errors);
+    }
+
+
+}

@@ -230,7 +230,7 @@ aspect ProductFlattener {
       for (DeltaClause clause : getDeltaClauses()) {
           String deltaid = clause.getDeltaspec().getName();
           if (deltaIDs.contains(deltaid)) {
-              for (DeltaID did : clause.getDeltaIDs()) { // 'after' deltas
+              for (DeltaID did : clause.getAfterDeltaIDs()) { // 'after' deltas
                   String otherid = did.getName();
                   if (deltaIDs.contains(otherid)) {
                       try {
