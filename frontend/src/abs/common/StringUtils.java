@@ -4,6 +4,8 @@
  */
 package abs.common;
 
+import com.google.common.base.Joiner;
+
 public class StringUtils {
     
     /** 
@@ -21,5 +23,13 @@ public class StringUtils {
             return s;
         
         return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
+    
+    /**
+     * Joins the given array of names using a dot "."
+     */
+    public static final String joinNames(String... names) {
+        Joiner joiner = Joiner.on(".").skipNulls();
+        return joiner.join(names);
     }
 }

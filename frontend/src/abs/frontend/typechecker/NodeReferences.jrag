@@ -78,6 +78,21 @@ aspect AsyncCallAnnotations {
     syn boolean AwaitAsyncCall.hasAnnotations() = getAnnotations().getNumChild() > 0;
 }
 
+// inform ProductLine about the deltas it references
+aspect Deltas {
+    
+    syn lazy Set<String> ProductLine.getAllDeltas();
+    eq ProductLine.getAllDeltas() {
+        if (! hasDeltaClause())
+            return Collections.<String>emptySet();
+
+        Set<String> deltas = new HashSet<String>(getNumDeltaClause());
+        for (DeltaClause clause : getDeltaClauses())
+            deltas.add(clause.getDeltaspec().getName());
+        return deltas;
+    }
+}
+
 // Local Variables:
 // mode: java
 // End:
