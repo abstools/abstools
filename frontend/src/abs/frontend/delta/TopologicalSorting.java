@@ -21,7 +21,7 @@ public class TopologicalSorting<T> {
     private final Set<T> nodes;
     private final Table<T, T, Boolean> incidence;
 
-    List<Set<T>> groups;
+    List<Set<T>> partitions;
     
     private List<T> anOrder;
     private Set<List<T>> allOrders;
@@ -41,8 +41,12 @@ public class TopologicalSorting<T> {
             for (T rn : nodes)
                 incidence.put(cn, rn, false);
         
-        groups = new ArrayList<Set<T>>();
+        partitions = new ArrayList<Set<T>>();
 
+    }
+    
+    public List<Set<T>> getPartitions() {
+        return partitions;
     }
     
     public void addEdge(T high, T low) throws DeltaModellingException {
@@ -55,13 +59,13 @@ public class TopologicalSorting<T> {
         incidence.put(high, low, true);
     }
 
-    public void sort() {
+    public void sort() throws DeltaModellingException {
         boolean rootNode;
         Set<T> nodes = new HashSet<T>(this.nodes);
 
-        int currentGroup = 0;
+        int currentPartition = 0;
         while (nodes.size() > 0) {
-            groups.add(new HashSet<T>());
+            partitions.add(new HashSet<T>());
 
             for (T node : nodes) {
                 rootNode = true;
@@ -72,13 +76,17 @@ public class TopologicalSorting<T> {
                     }
                 }
                 if (rootNode)
-                    groups.get(currentGroup).add(node);
+                    partitions.get(currentPartition).add(node);
             }
-            // for all nodes in group: remove these nodes from node set
-            for (T node : groups.get(currentGroup))
+            // no nodes in partition means there is a cycle among the remaining nodes
+            if (partitions.get(currentPartition).isEmpty())
+                throw new DeltaModellingException("Cycle detected among the following nodes: " + nodes.toString());
+            
+            // for all nodes in partition: remove these nodes from node set
+            for (T node : partitions.get(currentPartition))
                 nodes.remove(node);
             
-            currentGroup++;
+            currentPartition++;
         }
     }
     
@@ -90,13 +98,13 @@ public class TopologicalSorting<T> {
             return anOrder;
         
         anOrder = new ArrayList<T>(nodes.size());
-        for (Set<T> g : groups)
+        for (Set<T> g : partitions)
             anOrder.addAll(g);
         return anOrder;
     }
     
     /*
-     * Returns all valid delta orders for type checking purposes
+     * Returns all valid delta orders (Product family generation strings - PFGS)
      * The number of orders can get very large very fast: with n independent deltas there are n! possible orders
      * 
      */
@@ -105,14 +113,14 @@ public class TopologicalSorting<T> {
             return allOrders;
         
         allOrders = new HashSet<List<T>>();
-        List<Collection<List<T>>> grouplist = new ArrayList<Collection<List<T>>>(groups.size());
+        List<Collection<List<T>>> grouplist = new ArrayList<Collection<List<T>>>(partitions.size());
 
-        for (Set<T> group : groups) {
+        for (Set<T> part : partitions) {
             // Add all permutations in this group
             // There are n! permutations in a group of size n
             // TODO Issue a warning when group larger than, say, 8? Here or when type checking.
             //System.out.println("Group (size " + BigIntegerMath.factorial(group.size()) + ")");
-            grouplist.add(Collections2.permutations(group));
+            grouplist.add(Collections2.permutations(part));
         }
         
         generateCombinations(grouplist, allOrders, 0, new ArrayList<T>());
