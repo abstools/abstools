@@ -4,6 +4,7 @@
  */
 package abs.frontend.delta;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -34,7 +35,8 @@ public class DeltaTypeAnalysisHelper {
                     sorter.addEdge(afterid, deltaid);
                 } catch (DeltaModellingException e) {
                     // a node is not part of the graph, meaning that the corresponding delta has no delta clause
-                    l.add(new TypeError(pl, ErrorMessage.ERROR_IN_PRODUCT_LINE_UNUSED_DELTA, pl.getName())); 
+                    l.add(new TypeError(pl, ErrorMessage.ERROR_IN_PRODUCT_LINE_UNUSED_DELTA, pl.getName(), did.getName())); 
+                    return Collections.<Set<String>>emptyList();
                 }
             }
         }
@@ -43,6 +45,7 @@ public class DeltaTypeAnalysisHelper {
         } catch (DeltaModellingException e) {
             // cycle in graph -> no order exists
             l.add(new TypeError(pl, ErrorMessage.ERROR_IN_PRODUCT_LINE_DELTA_ORDER, pl.getName())); 
+            return Collections.<Set<String>>emptyList();
         }
 
         return sorter.getPartitions();
@@ -88,20 +91,19 @@ public class DeltaTypeAnalysisHelper {
         
         for (Set<String> part : deltaPartitions) {
             String methodID;
+            // Cache the qualified names of all methods modified in this partition
+            Map<String, String> cache = new HashMap<String, String>();
             for (String deltaID : part) {
-                // Cache the qualified names of all methods modified in this partition
-                Map<String, String> cache = new HashMap<String, String>();
-
                 DeltaDecl delta = model.getDeltaDeclsMap().get(deltaID);
                 
+                /* TODO We currently only care about class methods - 
+                 * but the same reasoning applies to other elements: fields, functions, ADTs, etc
+                 */ 
                 for (ModuleModifier moduleModifier : delta.getModuleModifiers()) {
                     if (moduleModifier instanceof ModifyClassModifier) {
                         String prefix = ((ModifyClassModifier) moduleModifier).findClass().qualifiedName();
                         
                         for (Modifier mod : ((ModifyClassModifier) moduleModifier).getModifiers() ) {
-                            /* TODO We currently only care about methods - 
-                             * but the same reasoning applies to other elements: fields, functions, ADTs, etc
-                             */ 
                             if (mod instanceof AddMethodModifier)
                                 methodID = ((AddMethodModifier) mod).getMethodImpl().getMethodSig().getName();
                             else if (mod instanceof RemoveMethodModifier)
@@ -114,31 +116,16 @@ public class DeltaTypeAnalysisHelper {
                             // Fully qualify methodID (Module.Class.method)
                             methodID = StringUtils.joinNames(prefix, methodID);
                             if (cache.containsKey(methodID)) {
-                                l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, deltaID, cache.get(methodID), methodID));
+                                l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, deltaID, cache.get(methodID), methodID, pl.getName()));
                                 result = false;
                             } else {
                                 cache.put(methodID, deltaID);
                             }
                         }
-                    
                     }
-                        
                 }
             }
         }
-
-        for (String deltaID : model.getDeltaDeclsMap().keySet()) {
-            
-        }
-        
-        for (String deltaID : model.getDeltaDeclsMap().keySet()) {
-            //DeltaDecl delta = 
-        }
-        
-        for (DeltaDecl delta : model.getDeltaDeclsMap().values()) {
-            
-        }
-        
         return result;
     }
 }
