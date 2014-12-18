@@ -10,15 +10,24 @@ apt-get install -q -y eclipse graphviz
 echo "The following diagnostic messages are harmless"
 eclipse -application org.eclipse.equinox.p2.director -noSplash \
         -repository \
+http://docs.abs-models.org/update-site,\
+http://download.eclipse.org/releases/indigo/ \
+        -installIUs \
+org.abs-models.abs.compiler.feature.group,\
+org.abs-models.abs.plugin,\
+org.abs-models.sda.feature.group,\
+org.abs-models.sdedit.feature.group,\
+org.abs-models.apet.feature.group
+
+eclipse -application org.eclipse.equinox.p2.director -noSplash \
+        -repository \
 http://costa.ls.fi.upm.es/saco/sw/update-site,\
 http://download.eclipse.org/releases/indigo/ \
         -installIUs \
-eu.hatsproject.abs.compiler.feature.group,\
-eu.hatsproject.absplugin.feature.group,\
-eu.hatsproject.apet.feature.group,\
-eu.hatsproject.sda.feature.group,\
-eu.hatsproject.costabs.feature.group,\
-eu.hatsproject.sdedit.feature.group
+eu.hatsproject.costabs.feature.group
+
+
+# org.abs-models.absplugin.feature.group
 
 COSTABSBINDIR=$(dirname $(find /usr/lib/eclipse/plugins -name costabs_static))
 chmod a+x $COSTABSBINDIR/costabs_static $COSTABSBINDIR/deadlock_static \
