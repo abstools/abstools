@@ -7,6 +7,10 @@ aspect DeltaTypeAnalysis {
     syn lazy boolean ProductLine.isStronglyUnambiguous(java.util.List<Set<String>> deltaPartitions, SemanticErrorList errors) {
         return DeltaTypeAnalysisHelper.isStronglyUnambiguous(this, deltaPartitions, errors);
     }
+    
+    public boolean ProductLine.isStronglyUnambiguous(java.util.List<Set<String>> deltaPartitions, SemanticErrorList errors) {
+        return DeltaTypeAnalysisHelper.isStronglyUnambiguous(this, deltaPartitions, errors);
+    }
 
     /* 
      * Return all valid feature configurations of the feature model.
