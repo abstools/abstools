@@ -24,5 +24,5 @@ public class DeltaTest extends FrontendTest {
     protected DeltaDecl findDelta(Model model, String name) {
         return model.findDelta(name);
     }
-
+    
 }
