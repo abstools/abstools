@@ -108,6 +108,7 @@ public class DeltaTypeAnalysisTest extends DeltaTest {
         
     }
 
+    
     @Test
     public void stronglyUnambiguousProductLinePerformance() {
         Model model = assertParseOk("module M; class C {}");
