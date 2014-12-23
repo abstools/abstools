@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.List;
 
-import abs.common.StringUtils;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
@@ -23,7 +22,7 @@ public class DeltaTypeAnalysisHelper {
      * Ordered partition of the set of delta modules 
      * 
      */
-    public static List<Set<String>> getDeltaPartitions(ProductLine pl, SemanticErrorList l) {
+    public static List<Set<String>> getDeltaPartition(ProductLine pl, SemanticErrorList l) {
 
         TopologicalSorting<String> sorter = new TopologicalSorting<String>(getAllDeltas(pl));
 
@@ -48,7 +47,7 @@ public class DeltaTypeAnalysisHelper {
             return Collections.<Set<String>>emptyList();
         }
 
-        return sorter.getPartitions();
+        return sorter.getPartition();
     }
     
     public static void getMinimalTrie() {
@@ -71,37 +70,37 @@ public class DeltaTypeAnalysisHelper {
      * and (iii) all its products are well-typed IFJ programs.
      * 
      */
-    public static boolean isTypeSafe(ProductLine pl, List<Set<String>> deltaPartitions, SemanticErrorList l) {
-        return isStronglyUnambiguous(pl, deltaPartitions, l);
+    public static boolean isTypeSafe(ProductLine pl, List<Set<String>> deltaPartition, SemanticErrorList l) {
+        return isStronglyUnambiguous(pl, deltaPartition, l);
     }
 
     /*
-     * For strong unambiguity, two delta modules that modify/add/remove the same method cannot be 
-     * placed in the same partition even if they are never applied together. 
+     * A product line is strongly unambiguous if each set in the partition of the delta 
+     * modules specified in the product-line declaration is consistent, that is, if one 
+     * delta module in a set adds or removes a class, no other delta module in the same 
+     * set may add, remove or modify the same class, and the modifications of the same 
+     * class in different delta modules in the same set have to be disjoint. 
      * 
-     * We iterate over each delta partition and check whether any two deltas in the same partition
-     * modify/add/remove the same method.
      */
-    public static boolean isStronglyUnambiguous(ProductLine pl, List<Set<String>> deltaPartitions, SemanticErrorList l) {
+    public static boolean isStronglyUnambiguous(ProductLine pl, List<Set<String>> deltaPartition, SemanticErrorList l) {
         
         // TODO make sure all deltas mentioned in DeltaClauses have a corresponding DeltaDecl
         
         boolean result = true;
         Model model = pl.getModel();
         
-        for (Set<String> part : deltaPartitions) {
-            String methodID;
-            // Cache the qualified names of all methods modified in this partition
-            Map<String, String> cache = new HashMap<String, String>();
-            for (String deltaID : part) {
+        for (Set<String> set : deltaPartition) {
+            
+            // Remember the names of classes and methods modified by deltas in current set
+            Map<String, Map<String, String>> cache = new HashMap<String, Map<String, String>>();
+            
+            for (String deltaID : set) {
                 DeltaDecl delta = model.getDeltaDeclsMap().get(deltaID);
                 
-                /* TODO We currently only care about class methods - 
-                 * but the same reasoning applies to other elements: fields, functions, ADTs, etc
-                 */ 
                 for (ModuleModifier moduleModifier : delta.getModuleModifiers()) {
                     if (moduleModifier instanceof ModifyClassModifier) {
-                        String prefix = ((ModifyClassModifier) moduleModifier).findClass().qualifiedName();
+                        String methodID;
+                        String prefix = ((ClassModifier) moduleModifier).qualifiedName();
                         
                         for (Modifier mod : ((ModifyClassModifier) moduleModifier).getModifiers() ) {
                             if (mod instanceof AddMethodModifier)
@@ -113,17 +112,35 @@ public class DeltaTypeAnalysisHelper {
                             else
                                 continue;
 
-                            // Fully qualify methodID (Module.Class.method)
-                            methodID = StringUtils.joinNames(prefix, methodID);
-                            if (cache.containsKey(methodID)) {
-                                l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, deltaID, cache.get(methodID), methodID, pl.getName()));
-                                result = false;
+                            if (cache.containsKey(prefix)) {
+                                if (cache.get(prefix).containsKey(methodID)) {
+                                    result = false;
+                                    l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, deltaID, cache.get(prefix).get(methodID), prefix + ", method " + methodID, pl.getName()));
+                                } else if (cache.get(prefix).containsKey("CLASS")) {
+                                    result = false;
+                                    l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, deltaID, cache.get(prefix).get("CLASS"), prefix, pl.getName()));
+                                } else {
+                                    cache.get(prefix).put(methodID, deltaID);
+                                }
                             } else {
-                                cache.put(methodID, deltaID);
+                                cache.put(prefix, new HashMap<String, String>());
+                                cache.get(prefix).put(methodID, deltaID);
                             }
+                        }
+                    } else if (moduleModifier instanceof AddClassModifier 
+                            || moduleModifier instanceof RemoveClassModifier) {
+                        
+                        String prefix = ((ClassModifier) moduleModifier).qualifiedName();
+                        if (cache.containsKey(prefix)) {
+                            result = false;
+                            l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, deltaID, cache.get(prefix).get("CLASS"), prefix, pl.getName()));
+                        } else {
+                            cache.put(prefix, new HashMap<String, String>());
+                            cache.get(prefix).put("CLASS", deltaID);
                         }
                     }
                 }
+                // TODO apply same reasoning to other elements: fields, functions, ADTs, etc
             }
         }
         return result;
