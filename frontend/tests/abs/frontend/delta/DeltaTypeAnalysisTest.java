@@ -61,7 +61,6 @@ public class DeltaTypeAnalysisTest extends DeltaTest {
         errors = new SemanticErrorList();
         assertFalse(pl.isStronglyUnambiguous(pl.getDeltaPartition(errors), errors));
         assertTrue(errors.size() == 1);
-        System.out.println(errors);
         
         model = assertParseOk(
                 "module M;"
@@ -116,23 +115,22 @@ public class DeltaTypeAnalysisTest extends DeltaTest {
         model.addCompilationUnit(cu);
         
         ProductLine pl = new ProductLine();
+        pl.setName("PL");
         cu.setProductLine(pl);
         
-        int n = 10;
+        int n = 2000;
         for (int i=0; i<n; i++) {
             
             String id = Integer.toHexString(UUID.randomUUID().hashCode());
             
-            AddClassModifier cmod = new AddClassModifier();
-            ClassDecl cls = new ClassDecl();
-            cls.setName("C");
-            cmod.setClassDecl(cls);
+            ModifyClassModifier cmod = new ModifyClassModifier();
+            cmod.setName("C");
             MethodSig msig = new MethodSig();
-//            msig.setName("m" + id);
-            msig.setName("m");
+            msig.setName("m" + id);
             MethodImpl mimpl = new MethodImpl();
             mimpl.setMethodSig(msig);
-            cls.addMethod(mimpl);
+            ModifyMethodModifier mmod = new ModifyMethodModifier();
+            mmod.setMethodImpl(mimpl);
                                 
             cu.addDeltaDecl(new DeltaDecl("D" + id,
                     new abs.frontend.ast.List<DeltaParamDecl>(),
@@ -146,17 +144,18 @@ public class DeltaTypeAnalysisTest extends DeltaTest {
             pl.addDeltaClause(dc);
         }
         
-        System.out.println("Deltas: " + model.getDeltaDecls().size());
         pl = model.getProductLine();
         SemanticErrorList errors = new SemanticErrorList();
-        System.out.println(pl.getDeltaPartition(errors).get(0).size());
+        
+        long startTime = System.currentTimeMillis();
         assertTrue(pl.isStronglyUnambiguous(pl.getDeltaPartition(errors), errors));
-
+        long stopTime = System.currentTimeMillis();
+        System.out.println(n + " deltas. time (ms): " + (stopTime - startTime));
     }
 
     
     @Test
-    public void deltaPartitions() {
+    public void deltaPartition() {
         Model model = assertParseOk(
                 "module M;"
                         + "class C {}"
@@ -164,13 +163,14 @@ public class DeltaTypeAnalysisTest extends DeltaTest {
                         + "delta D2; modifies class M.C { adds Unit foo() {} }"
                         + "productline PL;"
                         + "features A;"
-                        + "delta D1;"
+                        + "delta D1 after D2;"
                         + "/* D2 clause mising */"
                 );
         ProductLine pl = model.getProductLine();
         SemanticErrorList errors = new SemanticErrorList();
-        List<Set<String>> partitions = pl.getDeltaPartition(errors);
-        assertTrue(partitions == Collections.<Set<String>>emptyList());
+        List<Set<String>> partition = pl.getDeltaPartition(errors);
+        System.out.println(partition);
+        assertTrue(partition == Collections.<Set<String>>emptyList());
 
         model = assertParseOk(
                 "module M;"
@@ -184,8 +184,9 @@ public class DeltaTypeAnalysisTest extends DeltaTest {
                 );
         pl = model.getProductLine();
         errors = new SemanticErrorList();
-        partitions = pl.getDeltaPartition(errors);
-        assertTrue(partitions == Collections.<Set<String>>emptyList());
+        partition = pl.getDeltaPartition(errors);
+        System.out.println(partition);
+        assertTrue(partition == Collections.<Set<String>>emptyList());
         
     }
 
