@@ -25,13 +25,30 @@ which may take some time. Subsequent invocations use cached files from within Bu
 
 Prerequisites:
 ==============
-  - Install Buckminster plus PDE- & Emma-support.
+Install Buckminster plus PDE- & Emma-support [3]. In short:
 
-[1]: http://www.eclipse.org/buckminster/
-[2]: http://emma.sf.net
+1. Download headless p2 installer "director" [4]
+2. Run the director to install Headless Buckminster (Note that <buckminster install folder> has to be an absolute path):
+	director
+		-r <url to headless repo>
+		-d <buckminster install folder>
+		-p Buckminster
+		-i org.eclipse.buckminster.cmdline.product		
+
+3. Install required features
+	buckminster install http://download.eclipse.org/tools/buckminster/headless-4.4 org.eclipse.buckminster.core.headless.feature
+	buckminster install http://download.eclipse.org/tools/buckminster/headless-4.4 org.eclipse.buckminster.pde.headless.feature
+	buckminster install http://download.cloudsmith.com/buckminster/external-4.4 org.eclipse.buckminster.emma.headless.feature
+
 
 TODO:
 =====
 - Automate 'ant gen'
 - Make Bucky use the .psf instead of a local checkout-what about username/password then?
 - Deprecation warnings eclipse.import <-> p2
+
+
+[1] http://www.eclipse.org/buckminster/
+[2] http://emma.sf.net
+[3] http://wiki.eclipse.org/Installing_Headless_Buckminster
+[4] http://www.eclipse.org/buckminster/downloads.html
