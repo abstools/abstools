@@ -25,7 +25,7 @@ public class DeltaTypeAnalysisHelper {
     public static List<Set<String>> getDeltaPartition(ProductLine pl, SemanticErrorList l) {
 
         TopologicalSorting<String> sorter = new TopologicalSorting<String>(getAllDeltas(pl));
-
+        
         for (DeltaClause clause : pl.getDeltaClauses()) {
             String deltaid = clause.getDeltaspec().getName();
             for (DeltaID did : clause.getAfterDeltaIDs()) {
@@ -84,14 +84,14 @@ public class DeltaTypeAnalysisHelper {
      */
     public static boolean isStronglyUnambiguous(ProductLine pl, List<Set<String>> deltaPartition, SemanticErrorList l) {
         
-        // TODO make sure all deltas mentioned in DeltaClauses have a corresponding DeltaDecl
-        
         boolean result = true;
         Model model = pl.getModel();
         
         for (Set<String> set : deltaPartition) {
             
             // Remember the names of classes and methods modified by deltas in current set
+            // { Module.Class -> { Method -> Delta } }
+            // { Module.Class -> { "CLASS" -> Delta } }
             Map<String, Map<String, String>> cache = new HashMap<String, Map<String, String>>();
             
             for (String deltaID : set) {
