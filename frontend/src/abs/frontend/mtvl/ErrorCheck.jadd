@@ -5,158 +5,158 @@ import abs.frontend.mtvl.Types;
 
 /**
 Checks type errors, and if all variables are properly declared.
-**/
+ **/
 
 
 aspect ErrorCheck {
-  // need to update "repeated" info of variables and features and compile lazy attributes
-  // ints(); bools(); features();
+    // need to update "repeated" info of variables and features and compile lazy attributes
+    // ints(); bools(); features();
 
 
-  // checks:
-  //  - if the feature name is repeated 
-  //  - for type errors of the constraints.
-  public void FeatureDecl.collectErrors(SemanticErrorList c) {  
-    super.collectErrors(c);
-    // check if repeated feature
-    if (isRepeated)
-      c.add(new SemanticError(this,ErrorMessage.DUPLICATE_FEATURE,getName()));
-    AttrConstraints acl = getAttrConstraints();
-    // check if it typechecks
-    for(int i = 0; i < acl.getNumConstr(); i++)
-      acl.getConstr(i).checkType(Types.BOOL,c);
-    // mark as a (non-)leaf
-    if (hasGroup())
-        getNonLeafs().add(getName());
-  }
-  public void FExt.collectErrors(SemanticErrorList c) {
-    super.collectErrors(c);
-    if (!((Model)calcContextNode(Model.class)).features().contains(getName()))
-      c.add(new SemanticError(this,ErrorMessage.UNDECLARED_VARIABLE,getName()));
-    AttrConstraints acl = getAttrConstraints();
-    for(int i = 0; i < acl.getNumConstr(); i++)
-      acl.getConstr(i).checkType(Types.BOOL,c);
-    // check leafs
-    if (hasGroup()) {
-        Set<String> nonLeafs = getNonLeafs();
-        if (nonLeafs.contains(getName())) {
-            c.add(new SemanticError(this,ErrorMessage.NOT_A_LEAF,getName()));
+    // checks:
+    //  - if the feature name is repeated 
+    //  - for type errors of the constraints.
+    public void FeatureDecl.collectErrors(SemanticErrorList c) {  
+        super.collectErrors(c);
+        // check if repeated feature
+        if (isRepeated)
+            c.add(new SemanticError(this,ErrorMessage.DUPLICATE_FEATURE,getName()));
+        AttrConstraints acl = getAttrConstraints();
+        // check if it typechecks
+        for(int i = 0; i < acl.getNumConstr(); i++)
+            acl.getConstr(i).checkType(Types.BOOL,c);
+        // mark as a (non-)leaf
+        if (hasGroup())
+            getNonLeafs().add(getName());
+    }
+    public void FExt.collectErrors(SemanticErrorList c) {
+        super.collectErrors(c);
+        if (!((Model)calcContextNode(Model.class)).features().contains(getName()))
+            c.add(new SemanticError(this,ErrorMessage.UNDECLARED_VARIABLE,getName()));
+        AttrConstraints acl = getAttrConstraints();
+        for(int i = 0; i < acl.getNumConstr(); i++)
+            acl.getConstr(i).checkType(Types.BOOL,c);
+        // check leafs
+        if (hasGroup()) {
+            Set<String> nonLeafs = getNonLeafs();
+            if (nonLeafs.contains(getName())) {
+                c.add(new SemanticError(this,ErrorMessage.NOT_A_LEAF,getName()));
+            }
+        }
+    }   
+    public void ASTNode.checkType(Types type, SemanticErrorList c) {
+        //    System.out.println("spreading check in constraint from...");
+        for(int i = 0; i < getNumChild(); i++)
+            getChild(i).checkType(type,c);
+    }
+
+    // check if variable is already defined, and its type is well-formed.
+    public void Attribute.collectErrors(SemanticErrorList c) {
+        super.collectErrors(c);
+        if (isRepeated) {
+            c.add(new SemanticError(this, ErrorMessage.DUPLICATE_VARIABLE, pname()+"."+getName()));
+        }
+        this.getAType().collectErrors(c);
+    }
+
+    public void UnresolvedMType.collectErrors(SemanticErrorList c) {
+        c.add(new SemanticError(this, ErrorMessage.UNKNOWN_ATTRIBUTE_TYPE,
+                this.getTypename()));
+    }
+    public void BoolMType.collectErrors(SemanticErrorList c) {
+        if (!(this.getTypename().equals("Bool"))) {
+            c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,
+                    this.getTypename(), "Bool"));
         }
     }
-  }   
-  public void ASTNode.checkType(Types type, SemanticErrorList c) {
-//    System.out.println("spreading check in constraint from...");
-    for(int i = 0; i < getNumChild(); i++)
-      getChild(i).checkType(type,c);
-  }
-  
-  // check if variable is already defined, and its type is well-formed.
-  public void Attribute.collectErrors(SemanticErrorList c) {
-    super.collectErrors(c);
-    if (isRepeated) {
-        c.add(new SemanticError(this, ErrorMessage.DUPLICATE_VARIABLE, pname()+"."+getName()));
+    public void StringMType.collectErrors(SemanticErrorList c) {
+        if (!(this.getTypename().equals("String"))) {
+            c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,
+                    this.getTypename(), "String"));
+        }
     }
-    this.getAType().collectErrors(c);
-  }
+    public void IntMType.collectErrors(SemanticErrorList c) {
+        if (!(this.getTypename().equals("Int"))) {
+            c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,
+                    this.getTypename(), "Int"));
+        }
+    }
+    public void IntListMType.collectErrors(SemanticErrorList c) {
+        if (!(this.getTypename().equals("Int"))) {
+            c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,
+                    this.getTypename(), "Int"));
+        }
+    }
 
-  public void UnresolvedMType.collectErrors(SemanticErrorList c) {
-      c.add(new SemanticError(this, ErrorMessage.UNKNOWN_ATTRIBUTE_TYPE,
-                              this.getTypename()));
-  }
-  public void BoolMType.collectErrors(SemanticErrorList c) {
-      if (!(this.getTypename().equals("Bool"))) {
-          c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,
-                                  this.getTypename(), "Bool"));
-      }
-  }
-  public void StringMType.collectErrors(SemanticErrorList c) {
-      if (!(this.getTypename().equals("String"))) {
-          c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,
-                                  this.getTypename(), "String"));
-      }
-  }
-  public void IntMType.collectErrors(SemanticErrorList c) {
-      if (!(this.getTypename().equals("Int"))) {
-          c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,
-                                  this.getTypename(), "Int"));
-      }
-  }
-  public void IntListMType.collectErrors(SemanticErrorList c) {
-      if (!(this.getTypename().equals("Int"))) {
-          c.add(new SemanticError(this, ErrorMessage.UNEXPECTED_ATTRIBUTE_TYPE,
-                                  this.getTypename(), "Int"));
-      }
-  }
 
-  
-  // type of negation
-  public void MNegExp.checkType(Types type,SemanticErrorList c) {
-    super.checkType(Types.BOOL,c);
-    //getOperand().checkType(Types.BOOL,c);
-    if (type != Types.BOOL)
-      c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,"NEGATION"));
-  }
-  // type of negative sign
-  public void MMinusExp.checkType(Types type,SemanticErrorList c) {
-    super.checkType(Types.INT,c);
-    if (type != Types.INT)
-      c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,"NEGATIVE"));
-  }
-  // check type of values
-  public void IntVal.checkType(Types type,SemanticErrorList c) {
-    if (type != Types.INT)
-      c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,""+getValue()));
-  }
-  public void BoolVal.checkType(Types type,SemanticErrorList c) {
-    if (type != Types.BOOL)
-      c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,""+getValue()));
-  }
-  // check type of boolean operators
-  public void MBoolExp.checkType(Types type, SemanticErrorList c) {
-    super.checkType(Types.BOOL,c);
-    if (type != Types.BOOL)
-      c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,toString()));
-  }
-  // check type of int relations
-  public void MRelationalExpr.checkType(Types type, SemanticErrorList c) {
-    super.checkType(Types.INT,c);
-    if (type != Types.BOOL)
-      c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,toString()));
-  }
-  // check type of equality operators (assuming boolean or int)
-  public boolean MEqualityExpr.isInt  = false;
-  public boolean MEqualityExpr.isBool = false;
-  public void MEqualityExpr.checkType(Types type, SemanticErrorList c) {
-    SemanticErrorList lint  = new SemanticErrorList();
-    SemanticErrorList lbool = new SemanticErrorList();
-    getLeft().checkType(Types.INT,lint);
-    if (lint.size() == 0) {
-      isInt = true;
-      getRight().checkType(Types.INT,c);
+    // type of negation
+    public void MNegExp.checkType(Types type,SemanticErrorList c) {
+        super.checkType(Types.BOOL,c);
+        //getOperand().checkType(Types.BOOL,c);
+        if (type != Types.BOOL)
+            c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,"NEGATION"));
     }
-    else {
-      isBool = true;
-      getLeft().checkType(Types.BOOL,c);
-      getRight().checkType(Types.BOOL,c);
+    // type of negative sign
+    public void MMinusExp.checkType(Types type,SemanticErrorList c) {
+        super.checkType(Types.INT,c);
+        if (type != Types.INT)
+            c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,"NEGATIVE"));
     }
-  }
-  //check type of arithmetic expressions
-  public void MArithmeticExpr.checkType(Types type, SemanticErrorList c) {
-    super.checkType(Types.INT,c);
-    if (type != Types.INT)
-      c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,toString()));
-  }
+    // check type of values
+    public void IntVal.checkType(Types type,SemanticErrorList c) {
+        if (type != Types.INT)
+            c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,""+getValue()));
+    }
+    public void BoolVal.checkType(Types type,SemanticErrorList c) {
+        if (type != Types.BOOL)
+            c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,""+getValue()));
+    }
+    // check type of boolean operators
+    public void MBoolExp.checkType(Types type, SemanticErrorList c) {
+        super.checkType(Types.BOOL,c);
+        if (type != Types.BOOL)
+            c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,toString()));
+    }
+    // check type of int relations
+    public void MRelationalExpr.checkType(Types type, SemanticErrorList c) {
+        super.checkType(Types.INT,c);
+        if (type != Types.BOOL)
+            c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,toString()));
+    }
+    // check type of equality operators (assuming boolean or int)
+    public boolean MEqualityExpr.isInt  = false;
+    public boolean MEqualityExpr.isBool = false;
+    public void MEqualityExpr.checkType(Types type, SemanticErrorList c) {
+        SemanticErrorList lint  = new SemanticErrorList();
+        SemanticErrorList lbool = new SemanticErrorList();
+        getLeft().checkType(Types.INT,lint);
+        if (lint.size() == 0) {
+            isInt = true;
+            getRight().checkType(Types.INT,c);
+        }
+        else {
+            isBool = true;
+            getLeft().checkType(Types.BOOL,c);
+            getRight().checkType(Types.BOOL,c);
+        }
+    }
+    //check type of arithmetic expressions
+    public void MArithmeticExpr.checkType(Types type, SemanticErrorList c) {
+        super.checkType(Types.INT,c);
+        if (type != Types.INT)
+            c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,toString()));
+    }
 
-  // type of variables
-  public void Variable.checkType(Types type, SemanticErrorList c) {
-    if (!isBool() && !isInt()) {
-      c.add(new SemanticError(this,ErrorMessage.UNDECLARED_VARIABLE,getFullName()));
+    // type of variables
+    public void Variable.checkType(Types type, SemanticErrorList c) {
+        if (!isBool() && !isInt()) {
+            c.add(new SemanticError(this,ErrorMessage.UNDECLARED_VARIABLE,getFullName()));
+        }
+        else if(isBool() && type!=Types.BOOL) 
+            c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,getFullName()));
+        else if(isInt() && type!=Types.INT) 
+            c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,getFullName()));
     }
-    else if(isBool() && type!=Types.BOOL) 
-      c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,getFullName()));
-    else if(isInt() && type!=Types.INT) 
-      c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,getFullName()));
-  }
 
 }
 // Local Variables:
