@@ -24,27 +24,34 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.ui.model.WorkbenchContentProvider;
 
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 
-public class NavigatorContentProvider implements ITreeContentProvider {
+public class NavigatorContentProvider extends WorkbenchContentProvider implements ITreeContentProvider {
 	
 	final ABSContentOutlineProvider outlineProvider = new ABSContentOutlineProvider();
 	
 	@Override
 	public Object[] getChildren(Object parentElement) {
 
+	    System.out.println(parentElement);
+	    
 		if (parentElement instanceof InternalASTNode) {
+		    System.out.println(" ...InternalASTNode");
 			return outlineProvider.getChildren(parentElement);
-		} else if (parentElement instanceof IProject) {
+		} else
+		    if (parentElement instanceof IProject) {
+		    System.out.println(" ...IProject");
 			if (((IProject) parentElement).isOpen()) {
 				AbsNature nature = UtilityFunctions.getAbsNature((IProject)parentElement);
 				assert nature != null;
 				return ModulePath.getRootHierarchy(nature).toArray();
 			}
 		} else if (parentElement instanceof ModulePath) {
+		    System.out.println(" ...ModulePath");
 			ModulePath mPath = (ModulePath) parentElement;
 			ArrayList<Object> children = new ArrayList<Object>();
 
@@ -65,39 +72,38 @@ public class NavigatorContentProvider implements ITreeContentProvider {
 			}
 			return children.toArray();
 		}
-
-		return EMPTY_OBJECT_ARRAY;
+//
+//		return new String[]{"1", " 2", "  3"};
+	
+		return super.getChildren(parentElement);
 	}
 
 	@Override
 	public Object[] getElements(Object inputElement) {
-				if (inputElement instanceof InternalASTNode ||  inputElement instanceof IProject) {
-						return getChildren(inputElement);
-				} else if (inputElement instanceof Object[]) {
-					return (Object[]) inputElement;
-				} else if (inputElement instanceof IWorkspaceRoot){
-					return ((IWorkspaceRoot)inputElement).getProjects();
-				}
-		return EMPTY_OBJECT_ARRAY;
+		return getChildren(inputElement);
 	}
 
 	@Override
 	public boolean hasChildren(java.lang.Object element) {
-		AbsNature nature = ABSContentOutlineUtils.getNatureForObject(element);
-
-		if (nature != null) {
-			
-			if (element instanceof InternalASTNode || element instanceof IFile){
-				return outlineProvider.hasChildren(element);
-			} else if (element instanceof IProject){
-				return hasChildren((IProject) element);
-			} else if (element instanceof IWorkspaceRoot){
-				return ((IWorkspaceRoot)element).getProjects().length > 0;
-			} else if (element instanceof ModulePath){
-				return ((ModulePath) element).getChildModulePathsAndModuleDecls().size() > 0;
-			}	
-		}
-		return false;
+	    return (getChildren(element).length >= 1);
+	    
+//	    System.out.println(element);
+//	    
+//		AbsNature nature = ABSContentOutlineUtils.getNatureForObject(element);
+//
+//		if (nature != null) {
+//			
+//			if (element instanceof InternalASTNode || element instanceof IFile){
+//				return outlineProvider.hasChildren(element);
+//			} else if (element instanceof IProject){
+//				return hasChildren((IProject) element);
+//			} else if (element instanceof IWorkspaceRoot){
+//				return ((IWorkspaceRoot)element).getProjects().length > 0;
+//			} else if (element instanceof ModulePath){
+//				return ((ModulePath) element).getChildModulePathsAndModuleDecls().size() > 0;
+//			}	
+//		}
+//		return false;
 
 	}
 	
@@ -125,20 +131,21 @@ public class NavigatorContentProvider implements ITreeContentProvider {
 
 	@Override
 	public void dispose() {
+	    super.dispose();
 		//no-op
 	}
 
-	@Override
-	public Object getParent(Object element) {
-		if (element instanceof ASTNode) {
-			return ((ASTNode<?>) element).getParent();
-		}
-		return null;
-	}
-
-	@Override
-	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-		
-	}
+//	@Override
+//	public Object getParent(Object element) {
+//		if (element instanceof ASTNode) {
+//			return ((ASTNode<?>) element).getParent();
+//		}
+//		return null;
+//	}
+//
+//	@Override
+//	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+//		
+//	}
 
 }
