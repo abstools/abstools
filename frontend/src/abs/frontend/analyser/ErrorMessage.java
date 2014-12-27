@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.analyser;
@@ -61,8 +61,8 @@ public enum ErrorMessage {
     NAME_NOT_EXPORTED_BY_MODULE("Imported name %s is not exported by module %s."),
     ONLY_UNQUALIFIED_NAMES_ALLOWED("Only unqualfied names are allowed when import names from modules, but name %s is qualified."),
     ONLY_QUALIFIED_NAMES_ALLOWED("Only qualfied names are allowed when directly importing names, but name %s is unqualified."),
-    CIRCULAR_MODULE_DEPENDENCY_IMPORT("The imported module %s has a circular dependency to the importing module"), 
-    CIRCULAR_MODULE_DEPENDENCY_EXPORT("Circular module dependency in module %s"), 
+    CIRCULAR_MODULE_DEPENDENCY_IMPORT("The imported module %s has a circular dependency to the importing module"),
+    CIRCULAR_MODULE_DEPENDENCY_EXPORT("Circular module dependency in module %s"),
     CIRCULAR_TYPESYN("Circular type synonym %s"),
     LOCATION_TYPE_MULTIPLE("Multiple location type annotations defined"),
     LOCATION_TYPE_CANNOT_ASSIGN("Cannot assign location type %s to location type %s"),
@@ -72,9 +72,9 @@ public enum ErrorMessage {
     CLASSKIND_PLAIN("Cannot instantiate class %s with cog as it is annotated with class kind Plain"),
     CLASSKIND_COG("Cannot instantiate class %s without cog as it is annotated with class kind COG"),
     ASSIGN_TO_FINAL("Assignment to %s %s, which is annotated with [Final]"),
-    NOT_ALLOWED_IN_INIT_CODE("%s are not allowed in class initialization code"), 
-    NOT_ALLOWED_IN_FINALLY_CODE("%s are not allowed in 'finally' block"), 
-    ATOMIC_METHOD_CONTAINS_ILLEGAL_CODE("Cannot use %s in atomic method %s"), 
+    NOT_ALLOWED_IN_INIT_CODE("%s are not allowed in class initialization code"),
+    NOT_ALLOWED_IN_FINALLY_CODE("%s are not allowed in 'finally' block"),
+    ATOMIC_METHOD_CONTAINS_ILLEGAL_CODE("Cannot use %s in atomic method %s"),
     ATOMIC_METHOD_WRONG_OVERRIDE("Method %s has not the same atomicity annotation from the method %s defined in interface %s"),
     WRONG_CONSTRUCTOR("Data type %s has no constructor with name %s"),
     WRONG_DEPLOYMENT_COMPONENT("Wrong type %s in deployment component annotation"),
@@ -115,9 +115,8 @@ public enum ErrorMessage {
     ERROR_IN_PRODUCT_WITH_DELTA("Error within product %s while processing delta %s: %s"),
     ERROR_IN_PRODUCT_LINE_DELTA_ORDER("Error in product line %s. No total order exists for the given partial order of deltas."),
     ERROR_IN_PRODUCT_LINE_UNUSED_DELTA("Error in product line %s. Delta %s is never used."),
-    AMBIGUOUS_PRODUCTLINE("Deltas %s and %s both target class %s, but their application order is undefined. Hence the product line %s might be ambiguous."),
-    DEADLOCK_GENERATION_ERROR("Generated Edge: %s")
-    ;
+    AMBIGUOUS_PRODUCTLINE("The the product line %s is potentially ambiguous: Deltas %s and %s both target class %s, but their application order is undefined."),
+    DEADLOCK_GENERATION_ERROR("Generated Edge: %s");
 
     private String pattern;
 
