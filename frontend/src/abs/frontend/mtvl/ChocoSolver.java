@@ -29,20 +29,20 @@ import choco.kernel.solver.ContradictionException;
 
 public class ChocoSolver {
 
-    public final CPModel m;
-    public final CPSolver s;
+    public final CPModel cpmodel;
+    public final CPSolver solver;
     public boolean solved = false;
     public boolean newsol = false;
     public final Map<String, IntegerVariable> vars;
     public final Map<String, Integer> defaultvals;
     // private boolean debug = false;
     private List<Constraint> constraints = new ArrayList<Constraint>();
-    private Model ast = new Model();
+    private Model absmodel = new Model();
 
     public ChocoSolver() {
         // Build the model
-        m = new CPModel();
-        s = new CPSolver();
+        cpmodel = new CPModel();
+        solver = new CPSolver();
         ChocoLogging.setVerbosity(Verbosity.SILENT);
         vars = new HashMap<String, IntegerVariable>();
         defaultvals = new HashMap<String, Integer>();
@@ -53,7 +53,7 @@ public class ChocoSolver {
         this();
         if (m.debug)
             ChocoLogging.setVerbosity(Verbosity.DEFAULT);
-        ast = m;
+        absmodel = m;
     }
 
     // public ChocoSolver(boolean v) {
@@ -73,7 +73,7 @@ public class ChocoSolver {
 
     /**
      * add int variable
-     * 
+     *
      * @param name
      *            - name of the variable to be added
      * @param from
@@ -87,10 +87,10 @@ public class ChocoSolver {
         // in the constraints to be solved.
         vars.put(name, v);
         defaultvals.put(name, from);
-        if (ast.debug)
-            ast.println("  adding var '" + name + "' (default -> " + from + ")");
-        m.addVariable(v); // needed to include the variable in the constraints
-                          // to be solved.
+        if (absmodel.debug)
+            absmodel.println("  adding Int var '" + name + "' (default -> " + from + ")");
+        cpmodel.addVariable(v); // needed to include the variable in the constraints
+        // to be solved.
     }
 
     public void addIntVar(String name, int fromto, boolean from) {
@@ -101,8 +101,8 @@ public class ChocoSolver {
             addConstraint(Choco.leq(v, fromto));
         vars.put(name, v);
         defaultvals.put(name, fromto);
-        if (ast.debug)
-            ast.println("  adding var '" + name + "' (default -> " + fromto + ")");
+        if (absmodel.debug)
+            absmodel.println("  adding Int var '" + name + "' (default -> " + fromto + ")");
         // m.addVariable(v); // not needed, since v is used in the constraints
     }
 
@@ -110,19 +110,19 @@ public class ChocoSolver {
         IntegerVariable v = Choco.makeIntVar(name, vals);
         vars.put(name, v);
         defaultvals.put(name, vals[0]); // vals has at least 1 element! (by the
-                                        // parser constraints)
-        if (ast.debug)
-            ast.println("  adding var '" + name + "' (default -> " + vals[0] + ")");
-        m.addVariable(v); // needed to include the variable in the constraints
-                          // to be solved.
+        // parser constraints)
+        if (absmodel.debug)
+            absmodel.println("  adding Int var '" + name + "' (default -> " + vals[0] + ")");
+        cpmodel.addVariable(v); // needed to include the variable in the constraints
+        // to be solved.
     }
 
     public void addIntVar(String name) {
         IntegerVariable v = Choco.makeIntVar(name);
         vars.put(name, v);
         defaultvals.put(name, 0);
-        if (ast.debug)
-            ast.println("  adding var '" + name + "' (default -> 0)");
+        if (absmodel.debug)
+            absmodel.println("  adding Int var '" + name + "' (default -> 0)");
         // m.addVariable(v); // not needed - if variable is not constrained in
         // any way, it should not be considered when solving.
     }
@@ -132,6 +132,8 @@ public class ChocoSolver {
         IntegerVariable v = Choco.makeBooleanVar(name);
         vars.put(name, v);
         defaultvals.put(name, 0);
+        if (absmodel.debug)
+            absmodel.println("  adding Bool var '" + name + "' (default -> False)");
         // m.addVariable(v); // not needed - if variable is not constrained in
         // any way, it should not be considered when solving.
     }
@@ -141,7 +143,7 @@ public class ChocoSolver {
         IntegerVariable v = Choco.makeIntVar(name, 1, 1);
         vars.put(name, v);
         defaultvals.put(name, 1);
-        m.addVariable(v);
+        cpmodel.addVariable(v);
     }
 
     /** add choco constraint **/
@@ -158,24 +160,24 @@ public class ChocoSolver {
         // add the constraints
         if (!solved) {
             for (Constraint c : constraints)
-                m.addConstraint(c);
+                cpmodel.addConstraint(c);
         }
 
         // show the problem
-        if (ast.debug) {
-            ast.println("## The constraints:");
+        if (absmodel.debug) {
+            absmodel.println("## The constraints:");
             // ast.println(m.pretty());
             for (Constraint c : constraints) {
                 if (!c.pretty().startsWith("true"))
-                    ast.println(prettyConst(c));
+                    absmodel.println(prettyConst(c));
             }
-            ast.println("-----");
+            absmodel.println("-----");
         }
 
         // Read the model
-        s.read(m);
+        solver.read(cpmodel);
         // Solve the model
-        newsol = s.solve();
+        newsol = solver.solve();
         solved = true;
         return newsol;
     }
@@ -184,19 +186,19 @@ public class ChocoSolver {
         // add the constraints
         if (!solved) {
             for (Constraint c : constraints)
-                m.addConstraint(c);
+                cpmodel.addConstraint(c);
         }
 
         // Impose the feature name to be present
         if (var.contains(".")) {
             String feat = var.split("\\.")[0];
-            if (ast.debug)
-                ast.println("## including feature '" + feat + "'"); // and its
-                                                                    // parents.");
+            if (absmodel.debug)
+                absmodel.println("## including feature '" + feat + "'"); // and its
+            // parents.");
             if (vars.containsKey(feat)) {
-                if (ast.debug)
-                    ast.println("  " + feat + " (selected) -> 1");
-                m.addConstraint(Choco.eq(vars.get(feat), 1));
+                if (absmodel.debug)
+                    absmodel.println("  " + feat + " (selected) -> 1");
+                cpmodel.addConstraint(Choco.eq(vars.get(feat), 1));
 
                 // // collect parents of 'newFeatures'
                 // Set<String> newFeatures = new HashSet<String>();
@@ -223,54 +225,54 @@ public class ChocoSolver {
         }
 
         // show the problem
-        if (ast.debug) {
-            ast.println("## The constraints:");
+        if (absmodel.debug) {
+            absmodel.println("## The constraints:");
             // ast.println(m.pretty());
             for (Constraint c : constraints) {
                 if (!c.pretty().startsWith("true"))
-                    ast.println(prettyConst(c));
+                    absmodel.println(prettyConst(c));
             }
-            ast.println("-----");
+            absmodel.println("-----");
         }
 
         // Read the model
-        s.read(m);
+        solver.read(cpmodel);
         // Minmise the model, if possible
         if (vars.containsKey(var))
-            if (s.contains(vars.get(var))) {
+            if (solver.contains(vars.get(var))) {
                 solved = true;
                 if (minimise)
-                    newsol = s.minimize(s.getVar(vars.get(var)), true);
+                    newsol = solver.minimize(solver.getVar(vars.get(var)), true);
                 else
-                    newsol = s.maximize(s.getVar(vars.get(var)), true);
+                    newsol = solver.maximize(solver.getVar(vars.get(var)), true);
                 return newsol;
             }
         return false;
     }
 
     public int countSolutions() {
-        if (ast.debug) {
-            ast.print("## The constraints:");
-            ast.println(m.pretty());
+        if (absmodel.debug) {
+            absmodel.print("## The constraints:");
+            absmodel.println(cpmodel.pretty());
         }
 
         // add the constraints
         for (Constraint c : constraints)
-            m.addConstraint(c);
+            cpmodel.addConstraint(c);
 
         // Read the model
-        s.read(m);
+        solver.read(cpmodel);
         // Solve the model
-        s.solveAll();
+        solver.solveAll();
 
-        return s.getNbSolutions();
+        return solver.getNbSolutions();
     }
 
     public boolean solveAgain() {
         if (!solved)
             newsol = solve();
         else
-            newsol = s.nextSolution();
+            newsol = solver.nextSolution();
         return newsol;
     }
 
@@ -280,10 +282,10 @@ public class ChocoSolver {
 
         HashMap<String, Integer> result = new HashMap<String, Integer>();
 
-        Iterator<IntegerVariable> it = m.getIntVarIterator();
+        Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
         while (it.hasNext()) {
             IntegerVariable var = it.next();
-            result.put(var.getName(), s.getVar(var).getVal());
+            result.put(var.getName(), solver.getVar(var).getVal());
         }
         return result;
     }
@@ -296,15 +298,25 @@ public class ChocoSolver {
         if (!newsol)
             return "-- No (more) solutions --\n";
 
-        String result = "";
+        StringBuilder result = new StringBuilder();
 
-        Iterator<IntegerVariable> it = m.getIntVarIterator();
+        Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
         while (it.hasNext()) {
             IntegerVariable var = it.next();
-            if (ast.debug || !var.getName().startsWith("$"))
-                result = result + var.getName() + " -> " + s.getVar(var).getVal() + "\n";
+            if (absmodel.debug || !var.getName().startsWith("$"))
+                result.append(var.getName() + " -> " + solver.getVar(var).getVal() + "\n");
         }
-        return result;
+        return result.toString();
+    }
+
+    public String getAllSolutions() {
+        if (!solved)
+            solve();
+
+        if (!newsol)
+            return "-- No (more) solutions --\n";
+
+        return "";
     }
 
     public int maxValue(String optVar) {
@@ -314,11 +326,11 @@ public class ChocoSolver {
         if (!newsol)
             return 0;
 
-        Iterator<IntegerVariable> it = m.getIntVarIterator();
+        Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
         while (it.hasNext()) {
             IntegerVariable var = it.next();
             if (var.getName().equalsIgnoreCase(optVar)) {
-                return s.getVar(var).getVal();
+                return solver.getVar(var).getVal();
             }
         }
         return 0;
@@ -330,15 +342,15 @@ public class ChocoSolver {
     }
 
     public String maximiseToString(String var) {
-        if (ast.debug)
-            ast.println("optimising " + var);
+        if (absmodel.debug)
+            absmodel.println("optimising " + var);
         optimise(var, false);
         return resultToString();
     }
 
     public int maximiseToInt(String var) {
-        if (ast.debug)
-            ast.println("optimising " + var);
+        if (absmodel.debug)
+            absmodel.println("optimising " + var);
         optimise(var, false);
         return maxValue(var);
     }
@@ -386,7 +398,7 @@ public class ChocoSolver {
     public boolean checkSolution(Map<String, Integer> solution, Model model) {
         List<String> errors = checkSolutionWithErrors(solution, model);
         for (String s : errors)
-            ast.println("Constraint failed: " + s);
+            absmodel.println("Constraint failed: " + s);
         return errors.isEmpty();
     }
 
@@ -404,13 +416,13 @@ public class ChocoSolver {
             MetaConstraint<?> mc = (MetaConstraint<?>) c;
             if (mc.getConstraintType() == ConstraintType.IMPLIES)
                 return mbParenthesis(prettyConst(mc.getConstraint(0))) + " -> "
-                        + mbParenthesis(prettyConst(mc.getConstraint(1)));
+                + mbParenthesis(prettyConst(mc.getConstraint(1)));
             if (mc.getConstraintType() == ConstraintType.AND)
                 return mbParenthesis(prettyConst(mc.getConstraint(0))) + " /\\ "
-                        + mbParenthesis(prettyConst(mc.getConstraint(1)));
+                + mbParenthesis(prettyConst(mc.getConstraint(1)));
             if (mc.getConstraintType() == ConstraintType.OR)
                 return mbParenthesis(prettyConst(mc.getConstraint(0))) + " \\/ "
-                        + mbParenthesis(prettyConst(mc.getConstraint(1)));
+                + mbParenthesis(prettyConst(mc.getConstraint(1)));
             // output.println("I'm a imply!\nleft: "+mc.getConstraint(0).pretty());
         }
         if (c instanceof ComponentConstraint) {
@@ -438,7 +450,7 @@ public class ChocoSolver {
                 return prettyVar(cc.getVariable(0)) + " < " + prettyVar(cc.getVariable(1));
         }
         return // "["+c.getClass()+"] "+c.pretty();
-        c.pretty();
+                c.pretty();
     }
 
     private static String prettyVar(choco.kernel.model.variables.Variable v) {
@@ -470,8 +482,8 @@ public class ChocoSolver {
         CPSolver s = new CPSolver();
         s.read(m);
 
-        if (ast.debug)
-            ast.println("solution to check:\n" + solution);
+        if (absmodel.debug)
+            absmodel.println("solution to check:\n" + solution);
 
         // HashMap<String,Integer> selection = new HashMap<String,Integer>();
 
@@ -482,16 +494,16 @@ public class ChocoSolver {
             Set<String> newFeatures = new HashSet<String>();
             Set<String> newParents = new HashSet<String>();
 
-            if (ast.debug)
-                ast.println("Adding new values:");
+            if (absmodel.debug)
+                absmodel.println("Adding new values:");
             while (it.hasNext()) { // for all variables in the constraints
-                                   // (model): round 1
+                // (model): round 1
                 IntegerVariable var = it.next();
                 // IF used variable is present in the solution, update it!
                 if (solution.containsKey(var.getName())) {
                     val = solution.get(var.getName());
-                    if (ast.debug)
-                        ast.println("  " + var + " -> " + val);
+                    if (absmodel.debug)
+                        absmodel.println("  " + var + " -> " + val);
                     s.getVar(var).setVal(val);
                     // Possible feature name -- include later the parents.
                     if (val == 1)
@@ -512,43 +524,43 @@ public class ChocoSolver {
             // add newParents and default values to the solution
             it = m.getIntVarIterator();
             while (it.hasNext()) { // for all variables in the constraints
-                                   // (model): round 2
+                // (model): round 2
                 IntegerVariable var = it.next();
 
                 // If it is a parent to include, set
                 if (newParents.contains(var.getName())) {
-                    if (ast.debug)
-                        ast.println("  " + var + " (parent) -> 1");
+                    if (absmodel.debug)
+                        absmodel.println("  " + var + " (parent) -> 1");
                     s.getVar(var).setVal(1);
                 }
                 // ELSE use default value
                 else if (!solution.containsKey(var.getName())) {
                     // By default, the optional wrapper "$..." is ALWAYS true
                     if (var.getName().startsWith("$")) {
-                        if (ast.debug)
-                            ast.println("  " + var + " (default) -> 1");
+                        if (absmodel.debug)
+                            absmodel.println("  " + var + " (default) -> 1");
                         s.getVar(var).setVal(1);
                         // By default, unrefered features & attributes are false
                     } else if (defaultvals.containsKey(var.getName())) {
                         int defval = defaultvals.get(var.getName());
-                        if (ast.debug)
-                            ast.println("  " + var.getName() + " (default) -> " + defval);
+                        if (absmodel.debug)
+                            absmodel.println("  " + var.getName() + " (default) -> " + defval);
                         s.getVar(var).setVal(defval);
                     } else {
-                        if (ast.debug)
-                            ast.println("  " + var.getName() + " (default) -> 0");
+                        if (absmodel.debug)
+                            absmodel.println("  " + var.getName() + " (default) -> 0");
                         s.getVar(var).setVal(0);
                     }
                 }
             }
         } catch (ContradictionException e1) {
-            if (ast.debug)
+            if (absmodel.debug)
                 System.err.println("$$$ Contradiction found... $$$");
         }
         // Catch-all
         catch (Exception e1) {
             // Catch-all
-            if (ast.debug) {
+            if (absmodel.debug) {
                 System.err.println("$$$ Failed to check solution... $$$");
                 e1.printStackTrace();
             }
@@ -585,6 +597,6 @@ public class ChocoSolver {
     }
 
     public CPSolver getCPSolver() {
-        return s;
+        return solver;
     }
 }
