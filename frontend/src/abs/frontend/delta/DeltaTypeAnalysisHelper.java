@@ -25,7 +25,7 @@ public class DeltaTypeAnalysisHelper {
     public static List<Set<String>> getDeltaPartition(ProductLine pl, SemanticErrorList l) {
 
         TopologicalSorting<String> sorter = new TopologicalSorting<String>(getAllDeltas(pl));
-        
+
         for (DeltaClause clause : pl.getDeltaClauses()) {
             String deltaid = clause.getDeltaspec().getName();
             for (DeltaID did : clause.getAfterDeltaIDs()) {
