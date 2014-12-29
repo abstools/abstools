@@ -40,6 +40,6 @@ aspect Visualization {
         }
     }
     public void FNode.printFM(String indentation) {
-        getFeat().printFM(indentation);
+        getFeatureDecl().printFM(indentation);
     }
 }
