@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import abs.frontend.ast.BoundaryInt;
+import abs.frontend.ast.BoundaryVal;
+import abs.frontend.ast.Limit;
 import abs.frontend.ast.Model;
 import choco.Choco;
 import choco.cp.model.CPModel;
@@ -137,6 +140,30 @@ public class ChocoSolver {
         // m.addVariable(v); // not needed - if variable is not constrained in
         // any way, it should not be considered when solving.
     }
+
+
+    public void addBoundedVar(String name, BoundaryInt b1, BoundaryInt b2) {
+        if (b1 instanceof Limit)
+            if (b2 instanceof Limit)
+                addIntVar(name);
+            else
+                addIntVar(name,((BoundaryVal) b2).getValue(),false);
+        else if (b2 instanceof Limit)
+            addIntVar(name,((BoundaryVal) b1).getValue(),true);
+        else
+            addIntVar(name,((BoundaryVal) b1).getValue(),((BoundaryVal) b2).getValue());
+    }
+
+    public void addSetVar(String name, BoundaryInt[] bs) {
+        int bsize = bs.length - 1;
+        int[] vals = new int[bsize];
+        // addSetVar only called if bs has only BoundaryVals
+        for (int i=0; i < bsize; i++) {
+            vals[i] = ((BoundaryVal) bs[i+1]).getValue(); // drop first value - repeated
+        }
+        addIntVar(name,vals);
+    }
+
 
     /** set a bool variable to true **/
     public void forceTrue(String name) {

@@ -3,7 +3,12 @@ import java.util.HashMap;
 
 aspect Variables {
 
-    public interface Entry<K,V> { K getKey(); V getValue(); Attribute getAttribute(); }  
+    public interface Entry<K,V> { 
+        K getKey(); 
+        V getValue(); 
+        Attribute getAttribute(); 
+    }  
+    
     public class RepeatMap<K,V> extends HashMap<K,V> {
         // Weird explicit package name necessary for OpenJDK8 compiler! [stolz]
         public void add(abs.frontend.ast.Entry<K,V> e) {
@@ -13,7 +18,10 @@ aspect Variables {
     }
     coll RepeatMap<String,BoundaryInt[]> Model.ints() [new RepeatMap<String,BoundaryInt[]>()] with add root Model;
 
-    public interface RLEntry { String getItem(); void setRepeated(boolean rep);}
+    public interface RLEntry { 
+        String getItem(); 
+        void setRepeated(boolean rep);
+    }
     public class RepeatList extends ArrayList<String> {
         public void addNonNull(RLEntry e) {
             assert e != null;
@@ -35,9 +43,9 @@ aspect Variables {
 
     // get the full name of a variable
     syn String Variable.getFullName();
-    eq   FAVar.getFullName() = getFName()+"."+getAName();
+    eq   FAVar.getFullName() = getFName() + "." + getAName();
     eq FeatVar.getFullName() = getFName();
-    eq  AttVar.getFullName() = pname()+"."+getAName();
+    eq  AttVar.getFullName() = pname() + "." + getAName();
 
     // Checks type of variables and features.
 

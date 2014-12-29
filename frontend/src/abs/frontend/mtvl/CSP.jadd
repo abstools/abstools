@@ -32,48 +32,40 @@ aspect CSP {
     }
 
     public ChocoSolver Model.getCSModel() {
-        ChocoSolver s = new ChocoSolver(this);
+        ChocoSolver solver = new ChocoSolver(this);
 
         // new int variable for all int variables
-        for (java.util.Map.Entry<String, BoundaryInt[]> e : ints().entrySet()) {
-            String st = e.getKey();
-            if (e.getValue().length == 2) {
-                BoundaryInt b1 = e.getValue()[0];
-                BoundaryInt b2 = e.getValue()[1];
-                addBoundedVar(s,st,b1,b2);
+        for (java.util.Map.Entry<String, BoundaryInt[]> entry : ints().entrySet()) {
+            String st = entry.getKey();
+            if (entry.getValue().length == 2) {
+                BoundaryInt b1 = entry.getValue()[0];
+                BoundaryInt b2 = entry.getValue()[1];
+                solver.addBoundedVar(st,b1,b2);
             }
             else {
-                addSetVar(s,st,e.getValue());
+                solver.addSetVar(st,entry.getValue());
             }
-
-            //s.addIntVar(st,getBoundary(b1,false),getBoundary(b2,true));
         }
         for (String st : bools())
-            s.addBoolVar(st);
+            solver.addBoolVar(st);
         for (String st : features())
-            s.addBoolVar(st);
+            solver.addBoolVar(st);
 
-        //     Constraint c = collectConstraints(s);
-        //     s.addConstraint(c);
-        collectConstraints(s); // is adding intvars to the model!
-        return s;
+        collectConstraints(solver); // is adding intvars to the model!
+        return solver;
     }
-
-    //  public void ASTNode.dropAttributes() {
-    //    for(int i = 0; i < getNumChild(); i++)
-    //        getChildNoTransform(i).dropAttributes();
-    //  }
 
     public void Model.dropAttributes() {
         // ints and bools store integer and boolean (feature) attributes. Need to be ran twice to be the same collection. 
-        ints() ; ints().clear();
-        bools(); bools().clear();
+        ints();
+        ints().clear();
+        bools();
+        bools().clear();
         for (CompilationUnit c: getCompilationUnits())
             c.dropAttributes();
     }
 
     public void CompilationUnit.dropAttributes() {
-        //    setFExtList(new List<FExt>());
         for (FeatureDecl f: getFeatureDecls())
             f.dropAttributes();
         for (FExt f: getFExts())
@@ -86,10 +78,9 @@ aspect CSP {
             if (constrs.getChild(i).hasAttributes())
                 constrs.removeChild(i);
         }
-        //    setAttrConstraints(new AttrConstraints(new List<Attribute>(),new List<Constr>()));
         if (hasGroup())
             for (FNode f: getGroup().getFNodes())
-                f.getFeat().dropAttributes();
+                f.getFeatureDecl().dropAttributes();
     }
 
     public void FExt.dropAttributes() {
@@ -98,22 +89,14 @@ aspect CSP {
             if (constrs.getChild(i).hasAttributes())
                 constrs.removeChild(i);
         }
-        //    setAttrConstraints(new AttrConstraints(new List<Attribute>(),new List<Constr>()));
         if (hasGroup())
             for (FNode f: getGroup().getFNodes())
-                f.getFeat().dropAttributes();
+                f.getFeatureDecl().dropAttributes();
     }
 
     public boolean Constr.hasAttributes() { return true; }
     public boolean Exclude.hasAttributes() { return false; }
     public boolean Require.hasAttributes() { return false; }
-
-    //  private int Model.getBoundary(BoundaryInt b, Boolean positive) {
-    //    if (b instanceof Limit) {
-    //      if (positive) return Choco.MAX_UPPER_BOUND;
-    //      else          return Choco.MIN_LOWER_BOUND;
-    //    } else          return ((BoundaryVal) b).getValue();
-    //  }
 
     private void Model.addBoundedVar(ChocoSolver s, String name, BoundaryInt b1, BoundaryInt b2) {
         if (b1 instanceof Limit && b2 instanceof Limit)
@@ -144,11 +127,6 @@ aspect CSP {
     }
 
     // ROOT: has to be present
-    //	public Constraint CompilationUnit.collectConstraints(ChocoSolver s) {
-    //	  if (hasFeature()) s.forceTrue(getFeature().getName());
-    //	  super.collectConstraints(s);
-    //	  return Choco.TRUE;
-    //	}
     public Constraint CompilationUnit.collectConstraints(ChocoSolver s) {
         for (int i = 0; i < getNumFeatureDecl(); i++) {
             s.forceTrue(getFeatureDecl(i).getName());
@@ -164,7 +142,7 @@ aspect CSP {
         String fname = "";
         IntegerVariable[] feats = new IntegerVariable[nfeats];
         for (int i = 0; i < nfeats; i++) {
-            fname = getFNode(i).getFeat().getName();
+            fname = getFNode(i).getFeatureDecl().getName();
             IntegerVariable v = null;
             // add intermediate variable $f if f is optional.
             if (getFNode(i) instanceof OptFeat) {
@@ -213,64 +191,12 @@ aspect CSP {
             getGroup().includeGroupConstraints(s,getName());
 
         return Choco.TRUE;
-
-        //    IntegerVariable fvar = s.getVar(getName());
-        //    Group g = getGroup();
-        //    int nfeats = g.getNumFNode();
-        //    String fname = "";
-        //    IntegerVariable[] feats = new IntegerVariable[nfeats];
-        //    for (int i = 0; i < nfeats; i++) {
-        //      fname = g.getFNode(i).getFeat().getName();
-        //      IntegerVariable v = null;
-        //      // add intermediate variable $f if f is optional.
-        //      if (g.getFNode(i) instanceof OptFeat) {
-        //        v = Choco.makeBooleanVar("$"+fname);
-        //        // f -> $f
-        //        s.addConstraint(
-        //          Choco.implies(ChocoSolver.isTrue(s.getVar(fname)),ChocoSolver.isTrue(v)));
-        //      } else {
-        //        v = s.getVar(fname);
-        //      }
-        //      // f -> fparent
-        //      s.addConstraint(Choco.implies(ChocoSolver.isTrue(v),ChocoSolver.isTrue(fvar)));
-        //      // rec - FNode
-        //      s.addConstraint(g.getFNode(i).collectConstraints(s));
-        //      feats[i] = v;
-        //      // f -> $f /\ f -> fparent /\ [f]
-        //    }
-        //    // n1 <= $f1 + ... + $fn <= n2
-        //    if      (g.getCard() instanceof AllOf)
-        //      // f ->  #feats = nfeats
-        //      s.addConstraint(Choco.implies(ChocoSolver.isTrue(fvar),
-        //                                    ChocoSolver.eqeq(Choco.sum(feats),nfeats)));
-        //    else if (g.getCard() instanceof Minim)
-        //      // f ->  #feats >= from
-        //      s.addConstraint(Choco.implies(
-        //        ChocoSolver.isTrue(fvar),
-        //        Choco.geq(Choco.sum(feats),((Minim) g.getCard()).getCFrom())));
-        //    else {
-        //      // f ->  to >= #feats >= from
-        //      s.addConstraint(Choco.implies(
-        //        ChocoSolver.isTrue(fvar),
-        //        Choco.geq(Choco.sum(feats),((CRange) g.getCard()).getCFrom())));
-        //      s.addConstraint(Choco.implies(
-        //        ChocoSolver.isTrue(fvar),
-        //        Choco.leq(Choco.sum(feats),((CRange) g.getCard()).getCTo())));
-        //    }
-        //    return Choco.TRUE;
     }
 
     // FNODE
     public Constraint FNode.collectConstraints(ChocoSolver s) {
-        return getFeat().collectConstraints(s);
+        return getFeatureDecl().collectConstraints(s);
     }
-    //   public Constraint OptFeat.collectConstraints(ChocoSolver s) {
-    //     return getFeat().collectConstraints(s);
-    //   }
-    //   public Constraint MandFeat.collectConstraints(ChocoSolver s) {
-    //     return Choco.and(ChocoSolver.isTrue(s.getVar(getFeat().getName()))
-    //                     ,getFeat().collectConstraints(s));
-    //   }
 
     // FExt
     public Constraint FExt.collectConstraints(ChocoSolver s) {
@@ -286,27 +212,23 @@ aspect CSP {
 
     // IFIN/IFOUT
     public Constraint IfIn.collectConstraints(ChocoSolver s) {
-        Constraint c =
-                Choco.implies(ChocoSolver.isTrue(s.getVar(pname())), getExpr().collectConstraints(s));
+        Constraint c = Choco.implies(ChocoSolver.isTrue(s.getVar(pname())), getExpr().collectConstraints(s));
         //s.addConstraint(c);
         //return Choco.TRUE;
         return c;
     } 
     public Constraint IfOut.collectConstraints(ChocoSolver s) {
-        Constraint c =
-                Choco.implies(Choco.not(ChocoSolver.isTrue(s.getVar(pname()))), getExpr().collectConstraints(s));
+        Constraint c = Choco.implies(Choco.not(ChocoSolver.isTrue(s.getVar(pname()))), getExpr().collectConstraints(s));
         return c;
     } 
 
     // REQUIRE/EXCLUDE
     public Constraint Require.collectConstraints(ChocoSolver s) {
-        Constraint c = 
-                Choco.implies(ChocoSolver.isTrue(s.getVar(pname())), ChocoSolver.isTrue(s.getVar(getFeatVar().getFName())));
+        Constraint c = Choco.implies(ChocoSolver.isTrue(s.getVar(pname())), ChocoSolver.isTrue(s.getVar(getFeatVar().getFName())));
         return c;
     } 
     public Constraint Exclude.collectConstraints(ChocoSolver s) {
-        Constraint c = 
-                Choco.nand(s.getVar(pname()), s.getVar(getFeatVar().getFName()));
+        Constraint c = Choco.nand(s.getVar(pname()), s.getVar(getFeatVar().getFName()));
         return c;
     } 
 
@@ -341,8 +263,10 @@ aspect CSP {
     // < ?????
 
     public Constraint BoolVal.collectConstraints(ChocoSolver s) {
-        if (getValue()) return Choco.TRUE;
-        else            return Choco.FALSE;
+        if (getValue()) 
+            return Choco.TRUE;
+        else            
+            return Choco.FALSE;
     }
     public IntegerExpressionVariable IntVal.collectIntExpr(ChocoSolver s) {
         return Choco.constant(getValue());
@@ -380,12 +304,10 @@ aspect CSP {
         // Need to type check JUST the equality of expressions, to know if the constraints should produce  '==' or '<->'.
         // All other type checking should be done after flattening. 
         checkType(Types.BOOL, new SemanticErrorList());
-        if (isInt) {
+        if (isInt)
             return ChocoSolver.eqeq(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));
-        }
-        else {
+        else
             return Choco.ifOnlyIf(getLeft().collectConstraints(s),getRight().collectConstraints(s));
-        }
     }
 
     // EXP: RelationalExpr
