@@ -6,6 +6,7 @@
 package abs.frontend.mtvl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -59,20 +60,6 @@ public class ChocoSolver {
         absmodel = m;
     }
 
-    // public ChocoSolver(boolean v) {
-    // this();
-    // debug = v;
-    // if (!debug) ChocoLogging.setVerbosity(Verbosity.OFF);
-    // }
-    // public ChocoSolver(boolean v,PrintStream o) {
-    // this(v);
-    // output = o;
-    // }
-    // public void setDebug(boolean v) {
-    // debug = v;
-    // if (!debug) ChocoLogging.setVerbosity(Verbosity.OFF);
-    // else ChocoLogging.setVerbosity(Verbosity.DEFAULT);
-    // }
 
     /**
      * add int variable
@@ -317,6 +304,37 @@ public class ChocoSolver {
         return result;
     }
 
+    public Set<Map<String,Integer>> getSolutions() {
+        Set<Map<String, Integer>> solutions = new HashSet<Map<String,Integer>>();
+
+        while(solveAgain()) {
+            Map<String,Integer> sol = new HashMap<String,Integer>();
+            Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
+            while (it.hasNext()) {
+                IntegerVariable var = it.next();
+                sol.put(var.getName(), solver.getVar(var).getVal());
+            }
+            solutions.add(sol);
+        }
+        return solutions;
+    }
+
+    public Set<Set<String>> getSolutionsFeaturesOnly() {
+        Set<Set<String>> solutions = new HashSet<Set<String>>();
+
+        while(solveAgain()) {
+            HashSet<String> sol = new HashSet<String>();
+            Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
+            while (it.hasNext()) {
+                IntegerVariable var = it.next();
+                if (solver.getVar(var).getVal() == 1) // We are dealing with features only, where 1 means TRUE
+                    sol.add(var.getName());
+            }
+            solutions.add(sol);
+        }
+        return solutions;
+    }
+
     public String resultToString() {
 
         if (!solved)
@@ -334,16 +352,6 @@ public class ChocoSolver {
                 result.append(var.getName() + " -> " + solver.getVar(var).getVal() + "\n");
         }
         return result.toString();
-    }
-
-    public String getAllSolutions() {
-        if (!solved)
-            solve();
-
-        if (!newsol)
-            return "-- No (more) solutions --\n";
-
-        return "";
     }
 
     public int maxValue(String optVar) {

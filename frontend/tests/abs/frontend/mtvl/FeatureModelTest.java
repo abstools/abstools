@@ -4,6 +4,11 @@
  */
 package abs.frontend.mtvl;
 
+import static org.junit.Assert.*;
+
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
@@ -26,42 +31,50 @@ public class FeatureModelTest extends FrontendTest {
     }
 
     @Test
-    public void allValidProducts() {
+    public void allValidConfigurations() {
         Model model = assertParseOk(
-                "root Root {"
-                        + " group allof {"
-                        + "A,"
-                        + "B,"
-                        + "C { Int attrib1 in [0..4]; }"
+                "root FM {"
+                        + " group [1..*] {"
+                        + "A, B,"
+                        + "C { Int attrib in [0..9]; }"
                         + "}"
                         + "}"
+                        + "extension A { require: B; }"
                 );
 
-        model.debug = true;
+        ChocoSolver solver = model.instantiateCSModelFeaturesOnly(); // disregard attributes
+        Set<Set<String>> solutions = solver.getSolutionsFeaturesOnly();
 
-        //        model.dropAttributes();
+        assertTrue(solutions.size() == 5);
 
-        System.out.println("=================================");
-        ChocoSolver solver = model.getCSModel();
+        Set<Set<String>> expected = new HashSet<Set<String>>();
 
-        for (String key : model.ints().keySet()) {
-            System.out.println("*** Int " + model.ints().get(key));
+        HashSet<String> exp1 = new HashSet<String>();
+        exp1.add("FM"); exp1.add("A"); exp1.add("B"); exp1.add("C");
+        HashSet<String> exp2 = new HashSet<String>();
+        exp2.add("FM"); exp2.add("B"); exp2.add("C");
+        HashSet<String> exp3 = new HashSet<String>();
+        exp3.add("FM"); exp3.add("A"); exp3.add("B");
+        HashSet<String> exp4 = new HashSet<String>();
+        exp4.add("FM"); exp4.add("B");
+        HashSet<String> exp5 = new HashSet<String>();
+        exp5.add("FM"); exp5.add("C");
+
+        expected.add(exp1);
+        expected.add(exp2);
+        expected.add(exp3);
+        expected.add(exp4);
+        expected.add(exp5);
+
+        int pass = 0;
+        for (Set<String> sol : solutions) {
+            for (Set<String> exp : expected) {
+                if (sol.containsAll(exp) && exp.containsAll(sol))
+                    pass++;
+            }
         }
-        for (String el : model.bools()) {
-            System.out.println("*** Bool " + el);
-        }
-        for (String el : model.features()) {
-            System.out.println("*** Feature " + el);
-        }
-        System.out.println("=================================");
-
-        int i=1;
-        while(solver.solveAgain()) {
-            System.out.println("------ "+(i++)+"------");
-            System.out.print(solver.resultToString());
-        }
-
-
+        assertTrue(pass == 5);
     }
+
 
 }
