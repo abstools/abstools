@@ -427,24 +427,24 @@ public class Main {
             if (solve) {
                 if (verbose)
                     System.out.println("Searching for solutions for the feature model...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 System.out.print(s.resultToString());
             }
             if (minimise) {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for minimum solutions of "+product+" for the feature model...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 System.out.print(s.minimiseToString(product));
             }
             if (maximise) {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for maximum solutions of "+product+" for the feature model...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 //System.out.print(s.maximiseToInt(product));
                 s.addConstraint(ChocoSolver.eqeq(s.vars.get(product), s.maximiseToInt(product)));
-                ChocoSolver s1 = m.getCSModel();
+                ChocoSolver s1 = m.instantiateCSModel();
                 int i=1;
                 while(s1.solveAgain()) {
                     System.out.println("------ "+(i++)+"------");
@@ -454,7 +454,7 @@ public class Main {
             if (solveall) {
                 if (verbose)
                     System.out.println("Searching for all solutions for the feature model...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 int i=1;
                 while(s.solveAgain()) {
                     System.out.println("------ "+(i++)+"------");
@@ -466,7 +466,7 @@ public class Main {
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
                 if (p_product != null) {
-                    ChocoSolver s = m.getCSModel();
+                    ChocoSolver s = m.instantiateCSModel();
                     HashSet<Constraint> newcs = new HashSet<Constraint>();
                     p_product.getProdConstraints(s.vars,newcs);
                     for (Constraint c: newcs) s.addConstraint(c);
@@ -481,7 +481,7 @@ public class Main {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 HashSet<Constraint> newcs = new HashSet<Constraint>();
                 s.addIntVar("difference", 0, 50);
                 if (p_product != null) {
@@ -499,7 +499,7 @@ public class Main {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 HashSet<Constraint> newcs = new HashSet<Constraint>();
                 s.addIntVar("noOfFeatures", 0, 50);
                 if (m.getMaxConstraints(s.vars,newcs, "noOfFeatures")) {
@@ -513,7 +513,7 @@ public class Main {
             }
             if (check) {
                 assert product != null;
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 if (p_product == null ){
                     System.out.println("Product '"+product+"' not found.");
                     if (!product.contains("."))
@@ -524,11 +524,11 @@ public class Main {
                 }
             }
             if (numbersol && !ignoreattr) {
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 System.out.println("Number of solutions found: "+s.countSolutions());
             }
             else if (numbersol && ignoreattr) {
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 System.out.println("Number of solutions found (without attributes): "+s.countSolutions());
             }
         }

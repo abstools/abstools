@@ -1,12 +1,20 @@
 aspect DeltaTypeAnalysis {
 
-    public java.util.List<java.util.Set<String>> ProductLine.getDeltaPartition(SemanticErrorList errors) {
+    syn lazy java.util.List<java.util.Set<String>> ProductLine.getDeltaPartition(SemanticErrorList errors) {
         return DeltaTypeAnalysisHelper.getDeltaPartition(this, errors);
     }
     
-    public boolean ProductLine.isStronglyUnambiguous(java.util.List<Set<String>> deltaPartitions, SemanticErrorList errors) {
+    syn lazy boolean ProductLine.isStronglyUnambiguous(java.util.List<Set<String>> deltaPartitions, SemanticErrorList errors) {
         return DeltaTypeAnalysisHelper.isStronglyUnambiguous(this, deltaPartitions, errors);
     }
 
+    /* 
+     * Return all valid feature configurations of the feature model.
+     * This is done by solving the CSP and only considering features (no attributes, as that could result in an infinite number of configurations)
+     */
+    syn lazy Set<Set<String>> Model.getFeatureModelConfigurations() {
+        ChocoSolver solver = instantiateCSModelFeaturesOnly();
+        return solver.getSolutionsFeaturesOnly();
+    }
 
 }
