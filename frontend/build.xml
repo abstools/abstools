@@ -81,16 +81,17 @@
   <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask" classpath="${ext.dir}/findbugs-ant-1.3.9.jar"/>
 
   <path id="common.classpath">
-      <pathelement location="${ext.dir}/ecj-3.6.2.jar" />
-      <pathelement location="${ext.dir}/org.sat4j.core.jar" />
-      <pathelement location="${ext.dir}/org.sat4j.maxsat.jar" />
-      <pathelement location="${ext.dir}/org.sat4j.pb.jar" />
-      <pathelement location="${ext.dir}/sat4j-maxsat.jar" />
-      <pathelement location="${ext.dir}/sat4j-pb.jar" />
+    <pathelement location="${ext.dir}/ecj-3.6.2.jar" />
+    <pathelement location="${ext.dir}/org.sat4j.core.jar" />
+    <pathelement location="${ext.dir}/org.sat4j.maxsat.jar" />
+    <pathelement location="${ext.dir}/org.sat4j.pb.jar" />
+    <pathelement location="${ext.dir}/sat4j-maxsat.jar" />
+    <pathelement location="${ext.dir}/sat4j-pb.jar" />
     <pathelement location="${ext.dir}/choco-solver-2.1.1.jar" />
     <pathelement location="${ext.dir}/apfloat.jar" />
-  	<pathelement location="${ext.dir}/guava-15.0.jar" />
+    <pathelement location="${ext.dir}/guava-15.0.jar" />
     <pathelement location="${ext.dir}/commons-io-2.4.jar" />
+    <pathelement location="${ext.dir}/semisolver.jar" />
   </path>
 
   <path id="run.classpath">

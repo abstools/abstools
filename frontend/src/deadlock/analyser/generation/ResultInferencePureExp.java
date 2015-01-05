@@ -8,7 +8,7 @@ import deadlock.analyser.factory.IRecord;
 import deadlock.analyser.factory.ITypingEnvironmentVariableType;
 import deadlock.analyser.factory.RecordDataType;
 import deadlock.analyser.factory.RecordVariable;
-import deadlock.constraints.constraint.Constraint;
+import com.gzoumix.semisolver.constraint.Constraint;
 
 public class ResultInferencePureExp {
 

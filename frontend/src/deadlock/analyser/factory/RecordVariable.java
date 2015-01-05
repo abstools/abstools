@@ -23,8 +23,8 @@ package deadlock.analyser.factory;
 import java.util.Set;
 import java.util.HashSet;
 
-import deadlock.constraints.term.TermVariable;
-import deadlock.constraints.term.Variable;
+import com.gzoumix.semisolver.term.TermVariable;
+import com.gzoumix.semisolver.term.Variable;
 
 public class RecordVariable extends TermVariable implements IRecord {
 

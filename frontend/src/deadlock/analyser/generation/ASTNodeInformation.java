@@ -22,7 +22,7 @@ package deadlock.analyser.generation;
 
 import abs.frontend.ast.ASTNode;
 
-import deadlock.constraints.constraint.Information;
+import com.gzoumix.semisolver.constraint.Information;
 
 public class ASTNodeInformation extends Information { 
 

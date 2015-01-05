@@ -10,7 +10,7 @@ import java.util.Map;
 import deadlock.analyser.factory.Factory;
 import deadlock.analyser.factory.MainMethodContract;
 import deadlock.analyser.factory.MethodContract;
-import deadlock.constraints.term.Term;
+import com.gzoumix.semisolver.term.Term;
 
 public abstract class DASolver {
 

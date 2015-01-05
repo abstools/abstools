@@ -23,7 +23,7 @@ package deadlock.analyser.factory;
 import java.util.List;
 import java.util.Set;
 
-import deadlock.constraints.term.Term;
+import com.gzoumix.semisolver.term.Term;
 
 public interface IRecord extends Term, ITypingEnvironmentVariableType { 
 

@@ -24,10 +24,10 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import deadlock.constraints.constraint.SolvingErrorUnif;
-import deadlock.constraints.constraint.Edge;
-import deadlock.constraints.constraint.History;
-import deadlock.constraints.constraint.Information;
+import com.gzoumix.semisolver.constraint.SolvingErrorUnif;
+import com.gzoumix.semisolver.constraint.Edge;
+import com.gzoumix.semisolver.constraint.History;
+import com.gzoumix.semisolver.constraint.Information;
 
 public class ErrorUnif implements GenerationError { 
 

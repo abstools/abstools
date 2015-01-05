@@ -4,6 +4,20 @@
 # This is a Vagrant file (https://docs.vagrantup.com/v2/).  Use this
 # to get a standard development environment for the ABS tools.
 
+# To get started, install vagrant
+# (https://www.vagrantup.com/downloads.html) and VirtualBox
+# (https://www.virtualbox.org/wiki/Downloads).  Then, from this
+# directory, run "vagrant up".  When run the first time, this command
+# will download and install an ABS environment; subsequent invocations
+# will be much faster.
+
+# To use the tools, execute "vagrant up" then "vagrant ssh".
+
+# If you want to run graphical programs from inside the VM, execute
+# "vagrant ssh -- -X".  You will need an X server installed: XQuartz
+# (http://xquartz.macosforge.org) for OS X or Xming
+# (http://sourceforge.net/projects/xming/) for Windows.
+
 # If you need any additional software present, edit the file
 # "vagrant-bootstrap.sh".
 

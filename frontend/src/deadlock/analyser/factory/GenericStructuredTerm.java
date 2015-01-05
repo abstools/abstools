@@ -25,9 +25,9 @@ import java.util.Set;
 import java.util.HashSet;
 
 
-import deadlock.constraints.term.Term;
-import deadlock.constraints.term.TermStructured;
-import deadlock.constraints.term.TermVariable;
+import com.gzoumix.semisolver.term.Term;
+import com.gzoumix.semisolver.term.TermStructured;
+import com.gzoumix.semisolver.term.TermVariable;
 
 public class GenericStructuredTerm extends TermStructured {
 

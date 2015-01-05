@@ -24,7 +24,7 @@ import java.util.List;
 
 import abs.frontend.ast.ASTNode;
 
-import deadlock.constraints.term.Term;
+import com.gzoumix.semisolver.term.Term;
 
 public class ContractElement extends GenericStructuredTerm {
 

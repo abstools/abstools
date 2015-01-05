@@ -11,6 +11,7 @@ Bundle-ClassPath: .,
  lib/sat4j-maxsat.jar,
  lib/choco-solver-2.1.1.jar,
  lib/commons-io-2.4.jar,
+ lib/semisolver.jar,
  lib/guava-15.0.jar
 Eclipse-BundleShape: dir
 Export-Package: .,
@@ -80,10 +81,6 @@ Export-Package: .,
  deadlock.analyser,
  deadlock.analyser.detection,
  deadlock.analyser.factory,
- deadlock.analyser.generation,
- deadlock.constraints.constraint,
- deadlock.constraints.factory,
- deadlock.constraints.substitution,
- deadlock.constraints.term
+ deadlock.analyser.generation
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Require-Bundle: org.eclipse.jdt.core

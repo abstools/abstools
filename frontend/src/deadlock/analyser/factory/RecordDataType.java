@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Set;
 
 import abs.frontend.typechecker.DataTypeType;
-import deadlock.constraints.term.Term;
-import deadlock.constraints.term.TermVariable;
-import deadlock.constraints.term.Variable;
+import com.gzoumix.semisolver.term.Term;
+import com.gzoumix.semisolver.term.TermVariable;
+import com.gzoumix.semisolver.term.Variable;
 
 public class RecordDataType extends GenericStructuredTerm implements IRecord{
 

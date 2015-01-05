@@ -9,7 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import abs.frontend.ast.ASTNode;
-import deadlock.constraints.term.Term;
+import com.gzoumix.semisolver.term.Term;
 
 public class ContractElementParallel extends ContractElement {
 

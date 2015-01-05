@@ -304,8 +304,6 @@ aspect GenerateMaude {
     }
 
     public void StringLiteral.generateMaude(PrintStream stream) {
-        // FIXME: it's time to loop through the string and switch on
-        // character here.
         String content = getContent();
         StringBuilder result = new StringBuilder();
         for (char c : content.toCharArray()) {
@@ -318,9 +316,7 @@ aspect GenerateMaude {
             default: result.append(c);
             }
         }
-        stream.print("\"str\"[\"");
-        stream.print(result.toString());
-        stream.print("\"] ");
+        stream.print("\"str\"[\"" + result.toString() + "\"] ");
     }
 
     public void IntLiteral.generateMaude(PrintStream stream) {

@@ -25,8 +25,8 @@ import java.util.LinkedList;
 import java.util.Iterator;
 
 import abs.frontend.typechecker.Type;
-import deadlock.constraints.term.Term;
-import deadlock.constraints.term.TermStructured;
+import com.gzoumix.semisolver.term.Term;
+import com.gzoumix.semisolver.term.TermStructured;
 
 public class RecordPresent extends GenericStructuredTerm implements IRecord {
 

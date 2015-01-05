@@ -11,15 +11,15 @@ import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AwaitStmt;
 import abs.frontend.ast.Stmt;
 import abs.frontend.typechecker.DataTypeType;
-import deadlock.constraints.substitution.Substitution;
-import deadlock.constraints.term.Variable;
-import deadlock.constraints.term.Term;
-import deadlock.constraints.term.TermStructured;
-import deadlock.constraints.term.TermVariable;
-import deadlock.constraints.constraint.Constraint;
+import com.gzoumix.semisolver.substitution.Substitution;
+import com.gzoumix.semisolver.term.Variable;
+import com.gzoumix.semisolver.term.Term;
+import com.gzoumix.semisolver.term.TermStructured;
+import com.gzoumix.semisolver.term.TermVariable;
+import com.gzoumix.semisolver.constraint.Constraint;
 
 
-public class Factory extends deadlock.constraints.factory.Factory {
+public class Factory extends com.gzoumix.semisolver.factory.Factory {
 
     private boolean verbose;
     private IRecord dummyDataType;

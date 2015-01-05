@@ -3,8 +3,8 @@ package deadlock.analyser.generation;
 import java.util.Map;
 import java.util.HashMap;
 
-import deadlock.constraints.constraint.Constraint;
-import deadlock.constraints.term.Term;
+import com.gzoumix.semisolver.constraint.Constraint;
+import com.gzoumix.semisolver.term.Term;
 import deadlock.analyser.factory.MethodContract;
 import deadlock.analyser.factory.Contract;
 
@@ -45,6 +45,9 @@ public class ResultInference {
   public void add(ResultInference r) {
     this.methods.putAll(r.methods);
     this.add(r.constraint);
+    if(r.getMainContractPresent() != null) {
+      setMain(r.getMainContractPresent(), r.getMainContractFuture());
+    }
   }
 
   public void setMain(Contract cp, Contract cf) { this.mainCP = cp; this.mainCF = cf; }

@@ -1,7 +1,7 @@
 package deadlock.analyser.generation;
 
-import deadlock.constraints.constraint.Constraint;
-import deadlock.constraints.term.Term;
+import com.gzoumix.semisolver.constraint.Constraint;
+import com.gzoumix.semisolver.term.Term;
 import deadlock.analyser.factory.IRecord;
 import deadlock.analyser.factory.Contract;
 import deadlock.analyser.factory.ITypingEnvironmentVariableType;

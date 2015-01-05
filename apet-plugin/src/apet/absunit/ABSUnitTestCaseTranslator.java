@@ -199,7 +199,7 @@ public class ABSUnitTestCaseTranslator {
 
 		if (lastClause != null) {
 			for (String n : applicationConditions) {
-				lastClause.addDeltaID(new DeltaID(n));
+				lastClause.addAfterDeltaID(new DeltaID(n));
 			}
 		}
 

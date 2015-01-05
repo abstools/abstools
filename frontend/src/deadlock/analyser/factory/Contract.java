@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
 
-import deadlock.constraints.term.Term;
-import deadlock.constraints.term.TermStructured;
+import com.gzoumix.semisolver.term.Term;
+import com.gzoumix.semisolver.term.TermStructured;
 
 public class Contract extends GenericStructuredTerm {
 

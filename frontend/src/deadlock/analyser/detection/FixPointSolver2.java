@@ -24,8 +24,8 @@ import deadlock.analyser.factory.MainMethodContract;
 import deadlock.analyser.factory.MethodContract;
 import deadlock.analyser.factory.MethodInterface;
 import deadlock.analyser.factory.IRecord;
-import deadlock.constraints.term.Term;
-import deadlock.constraints.term.TermStructured;
+import com.gzoumix.semisolver.term.Term;
+import com.gzoumix.semisolver.term.TermStructured;
 
 public class FixPointSolver2 extends DASolver {
     
