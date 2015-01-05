@@ -146,8 +146,8 @@ removes class AudioStream;
 // *********************************************************************************
 // state update definitions
 
-update L2R;
-update R2L;
-update R2H;
-update H2R;
+stateupdate L2R;
+stateupdate R2L;
+stateupdate R2H;
+stateupdate H2R;
 
