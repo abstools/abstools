@@ -5,16 +5,16 @@
  */
 
 product LowEnd (Text) {
-    Regular with DVoice by Upd_Low2Reg;
+    Regular delta DVoice stateupdate L2R;
 }
 
 product Regular (Text, Voice) {
-    HighEnd with DVideo,DFiles by Upd_Reg2High;
-    LowEnd with DNoVoice by Upd_Reg2Low;
+    HighEnd delta DVideo,DFiles stateupdate R2H;
+    LowEnd delta DNoVoice stateupdate R2L;
 }
 
 product HighEnd (Text, Voice, Video, Files) {
-    Regular with DNoFiles,DNoVideo by Upd_High2Reg;
+    Regular delta DNoFiles,DNoVideo stateupdate H2R;
 }
 
 product HighStatic(Text, Voice, Video, Files);

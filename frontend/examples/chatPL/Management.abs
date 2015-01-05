@@ -23,31 +23,34 @@ class ConnectionImpl implements Connection {
 }
 
 class Reconfigurator(Connection conn) {
+
     Unit run() {
         Runtime rt = new local Runtime();
         ProductLine pl = rt.getProductLine();
 
         while(True) {
-            Product p = pl.getCurrentProduct();
+            Product currentP = pl.getCurrentProduct();
+            Product targetP;
             Bandwidth bw = conn.checkBandwidth();
-            String name = p.getName();
+
+            String name = currentP.getName();
             if (name == "RegularChat") {
                 if (bw == Low) {
-                    Product p2 = pl.getConfigurableProduct("LowEndChat");
-                    pl.configureProduct(p2);
+                	targetP = pl.getProduct("LowEndChat");
+                	currentP.reconfigure(targetP);
                 } else if (bw == High) {
-                    Product p2 = pl.getConfigurableProduct("HighEndChat");
-                    pl.configureProduct(p2);
+                	targetP = pl.getProduct("HighEndChat");
+                	currentP.reconfigure(targetP);
                 }
             } else if (name == "HighEndChat") {
                 if (bw == Low || bw == Mid) {
-                    Product p2 = pl.getConfigurableProduct("RegularChat");
-                    pl.configureProduct(p2);
+                	targetP = pl.getProduct("RegularChat");
+                	currentP.reconfigure(targetP);
                 }
             } else if (name == "LowEndChat") {
                 if (bw == Mid || bw == High) {
-                    Product p2 = pl.getConfigurableProduct("RegularChat");
-                    pl.configureProduct(p2);
+                	targetP = pl.getProduct("RegularChat");
+                	currentP.reconfigure(targetP);
                 }
             }
         }

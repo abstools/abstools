@@ -674,7 +674,7 @@ interface Method {
 
 interface ProductLine {
     Product getCurrentProduct();
-    String getProduct(String s);
+    Product getProduct(String s);
     Unit reconfigure(Product p);
     Unit addProduct(Product p);
     Unit removeProduct(Product p);
@@ -687,11 +687,13 @@ interface Product {
     Set<String> getFeatures();
     Set<Product> getConfigurableProducts();
     Reconfiguration getReconfiguration(Product p);
+    Unit reconfigure(Product p);
 }
 
 interface Reconfiguration {
     String getName();
     Product getCurrentProduct();
+    Product getProduct(String s);
     Unit setCurrentProduct(Product p);
     Product getTargetProduct();
     Unit setTargetProduct(Product p);

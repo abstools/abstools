@@ -1,7 +1,9 @@
+/*
 productline PL;
 features Text, Voice, Video, EvMode;
 
 product Ev1(Text, Voice, Video, EvMode);
+*/
 
 root Chat {
     group allof {
@@ -23,6 +25,7 @@ extension Video {
 //*****************************************
 // Meta-model
 
+/*
 
 root Evolve {
     group [1..*] {
@@ -37,3 +40,4 @@ root Evolve {
     require: Chat;
 }
 
+*/
