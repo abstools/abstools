@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.delta;
@@ -22,7 +22,7 @@ public class TopologicalSorting<T> {
     private final Table<T, T, Boolean> incidence;
 
     List<Set<T>> partition;
-    
+
     private List<T> anOrder;
     private Set<List<T>> allOrders;
 
@@ -35,20 +35,20 @@ public class TopologicalSorting<T> {
             incidence = null;
             return;
         }
-        
+
         incidence = ArrayTable.create(nodes, nodes);
         for (T cn : nodes)
             for (T rn : nodes)
                 incidence.put(cn, rn, false);
-        
+
         partition = new ArrayList<Set<T>>();
 
     }
-    
+
     public List<Set<T>> getPartition() {
         return partition;
     }
-    
+
     public void addEdge(T high, T low) throws DeltaModellingException {
         if (incidence == null)
             throw new DeltaModellingException("Nodes not found [" + high.toString() + "; " + low.toString() + "] -- graph is empty");
@@ -81,37 +81,43 @@ public class TopologicalSorting<T> {
             // no nodes in set means there is a cycle among the remaining nodes
             if (partition.get(currentSet).isEmpty())
                 throw new DeltaModellingException("Cycle detected among the following nodes: " + nodes.toString());
-            
+
             // for all nodes in set: remove these nodes from node set
             for (T node : partition.get(currentSet))
                 nodes.remove(node);
-            
+
             currentSet++;
         }
     }
-    
+
     /*
      * Returns a single, valid delta order
      */
     public List<T> getAnOrder() {
         if (anOrder != null) // only compute once
             return anOrder;
-        
+
         anOrder = new ArrayList<T>(nodes.size());
         for (Set<T> set : partition)
             anOrder.addAll(set);
         return anOrder;
     }
-    
+
+    public List<T> getAMinimalOrder() {
+        // TODO compute minimal order
+        // any implication-determined application order minimizes the number of nodes of the PFGT
+        return getAnOrder();
+    }
+
     /*
      * Returns all valid delta orders (Product family generation strings - PFGS)
      * The number of orders can get very large very fast: with n independent deltas there are n! possible orders
-     * 
+     *
      */
     public Set<List<T>> getAllOrders() {
         if (allOrders != null)  // only compute once
             return allOrders;
-        
+
         allOrders = new HashSet<List<T>>();
         List<Collection<List<T>>> grouplist = new ArrayList<Collection<List<T>>>(partition.size());
 
@@ -122,11 +128,11 @@ public class TopologicalSorting<T> {
             //System.out.println("Group (size " + BigIntegerMath.factorial(set.size()) + ")");
             grouplist.add(Collections2.permutations(set));
         }
-        
+
         generateCombinations(grouplist, allOrders, 0, new ArrayList<T>());
         return allOrders;
     }
-    
+
     private void generateCombinations(List<Collection<List<T>>> grouplist, Set<List<T>> results, int depth, List<T> current) {
         if(depth == grouplist.size()) {
             results.add(new ArrayList<T>(current));

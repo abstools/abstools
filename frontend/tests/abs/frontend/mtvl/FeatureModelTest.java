@@ -42,9 +42,7 @@ public class FeatureModelTest extends FrontendTest {
                         + "extension A { require: B; }"
                 );
 
-        ChocoSolver solver = model.instantiateCSModelFeaturesOnly(); // disregard attributes
-        Set<Set<String>> solutions = solver.getSolutionsFeaturesOnly();
-
+        Set<Set<String>> solutions = model.getFeatureModelConfigurations(); // disregards feature attributes
         assertTrue(solutions.size() == 5);
 
         Set<Set<String>> expected = new HashSet<Set<String>>();
