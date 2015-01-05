@@ -149,11 +149,4 @@ public class DeltaTypeAnalysisHelper {
         return result;
     }
 
-    public static Set<Set<String>> getProducts(Model model) {
-        if (! model.hasMTVL())
-            return Collections.emptySet();
-
-        ChocoSolver solver = model.instantiateCSModelFeaturesOnly();
-        return solver.getSolutionsFeaturesOnly();
-    }
 }
