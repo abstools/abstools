@@ -169,7 +169,7 @@ public class Vars extends LinkedHashMap<String, Var> {
             }
 
             sb.append(",");
-            
+
             sb.append(PREFIX).append(a.getKey()).append("_").append(v.getCount());
         }
 

@@ -110,7 +110,7 @@ await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=R
             mark(NewState, [], ordsets:union(rpc:pmap({gc, get_references}, [], gb_sets:to_list(gb_sets:union(NewCogs, NewState#state.root_futures)))));
         false -> await_stop(NewState,NewStopped)
     end.
-        
+
 mark(State, Black, []) ->
     ?GCSTATS(sweep),
     sweep(State, gb_sets:from_ordset(Black));
@@ -154,8 +154,6 @@ is_collection_needed(State=#state{objects=Objects,futures=Futures,
                                   previous=PTime,limit=Lim,proc_factor=PFactor}) ->
 %true
 %false
-    gb_sets:size(Objects) + gb_sets:size(Futures) > Lim
-        orelse
         timer:now_diff(now(), PTime) > ?TIME_LIMIT
         orelse
         erlang:system_info(process_count) / erlang:system_info(process_limit) > PFactor

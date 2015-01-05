@@ -104,7 +104,7 @@ await() ->
     end.
 
 get_blocking(Ref,Stack) ->
-    receive 
+    receive
         {get_references, Sender} ->
             Sender ! {gc:extract_references(Stack), self()},
             get_blocking(Ref,Stack);
@@ -115,7 +115,7 @@ get_blocking(Ref,Stack) ->
     end.
 
 safeget_blocking(Ref,Stack) ->
-    receive 
+    receive
         {get_references, Sender} ->
             Sender ! {gc:extract_references(Stack), self()},
             get_blocking(Ref,Stack);

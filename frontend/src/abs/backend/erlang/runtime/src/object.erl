@@ -157,7 +157,7 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{cog=Cog, tasks=Tasks
 handle_sync_event(get_references, _From, StateName, S=#state{int_status=IState, new_vals=NewVals}) ->
     ?DEBUG(get_references),
     {reply, gc:extract_references([gb_trees:values(NewVals),IState]), StateName, S}.
-    
+
 
 handle_info({'DOWN', _MonRef, process, TaskRef,Reason} ,StateName,S=#state{tasks=Tasks})->
     ?DEBUG({rem_dead_task,TaskRef}),
