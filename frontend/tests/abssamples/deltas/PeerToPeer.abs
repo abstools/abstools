@@ -208,7 +208,7 @@ uses PeerToPeer;
 
 modifies class Node {
     modifies Bool isValid(Filename fId) {
-        return (~isSubstring("xxx",fId));
+        return ("xxx" != fId);
     }
 }
 
