@@ -106,7 +106,7 @@ aspect GenerateErlang {
      if (hasBlock()) {
        ecs = ea.createFile(ErlUtil.getName(this));
        ecs.pf("-module(%s).", ErlUtil.getModuleName(getName()));
-       ecs.println("-include_lib(\"abs_types.hrl\").");
+       ecs.println("-include_lib(\"runtime/include/abs_types.hrl\").");
        ecs.println("-export([main/1]).");
        ecs.println();
        ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef}");
