@@ -11,9 +11,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import abs.backend.maude.MaudeCompiler;
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
@@ -47,10 +50,14 @@ public class DeltaSamplesTest extends FrontendTest {
         assertTrue(m.typeCheck().isEmpty());
     }
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     @Test
     public void test_P2P_P3() throws Exception {
         Model m = assertTypeCheckFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
         m.setNullPrintStream();
+        thrown.expect(WrongProgramArgumentException.class);
         m.flattenForProduct("P3");
     }
 
