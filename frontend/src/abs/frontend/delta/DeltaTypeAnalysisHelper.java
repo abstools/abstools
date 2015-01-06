@@ -71,8 +71,13 @@ public class DeltaTypeAnalysisHelper {
      * it is strongly unambiguous, (ii) its product generation mapping is total,
      * and (iii) all its products are well-typed IFJ programs.
      */
-    public static boolean isTypeSafe(ProductLine pl, List<Set<String>> deltaPartition, SemanticErrorList l) {
-        return isStronglyUnambiguous(pl, deltaPartition, l);
+    public static void typeCheckPL(ProductLine pl, SemanticErrorList errors) {
+        List<Set<String>> deltaPartition = pl.getDeltaPartition(errors);
+        boolean res = isStronglyUnambiguous(pl, deltaPartition, errors);
+
+        //TODO check the other conditions:
+        // - product generation mapping is total
+        // - all products are well-typed programs
     }
 
     /*
