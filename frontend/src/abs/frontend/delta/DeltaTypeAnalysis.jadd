@@ -1,5 +1,19 @@
 aspect DeltaTypeAnalysis {
 
+    
+    syn lazy SemanticErrorList Model.typeCheckPL() {
+        SemanticErrorList res = new SemanticErrorList();
+        typeCheckPL(res);
+        return res;
+    }
+
+    private void Model.typeCheckPL(SemanticErrorList errors) {
+        if (hasProductLine()) {
+            ProductLine pl = getProductLine();
+            DeltaTypeAnalysisHelper.typeCheckPL(pl, errors);
+        }
+    }
+    
     syn lazy java.util.List<java.util.Set<String>> ProductLine.getDeltaPartition(SemanticErrorList errors) {
         return DeltaTypeAnalysisHelper.getDeltaPartition(this, errors);
     }
@@ -13,11 +27,13 @@ aspect DeltaTypeAnalysis {
      * This is done by solving the CSP and only considering features (no attributes, as that could result in an infinite number of configurations)
      */
     syn lazy Set<Set<String>> Model.getFeatureModelConfigurations() {
-        if (! model.hasMTVL())
+        if (! hasMTVL())
             return Collections.emptySet();
 
         ChocoSolver solver = instantiateCSModelFeaturesOnly();
         return solver.getSolutionsFeaturesOnly();
     }
 
+    
+    
 }
