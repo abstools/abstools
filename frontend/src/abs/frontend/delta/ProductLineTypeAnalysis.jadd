@@ -1,4 +1,4 @@
-aspect DeltaTypeAnalysis {
+aspect ProductLineTypeAnalysis {
 
     
     syn lazy SemanticErrorList Model.typeCheckPL() {
@@ -10,16 +10,20 @@ aspect DeltaTypeAnalysis {
     private void Model.typeCheckPL(SemanticErrorList errors) {
         if (hasProductLine()) {
             ProductLine pl = getProductLine();
-            DeltaTypeAnalysisHelper.typeCheckPL(pl, errors);
+            ProductLineTypeAnalysisHelper.typeCheckPL(pl, errors);
+            
+            // TODO build PFGS/PFGT
+            List<ImplicitProduct> allProducts = getImplicitProductList();
+            // for each product: obtain sequence of deltas
         }
     }
     
     syn lazy java.util.List<java.util.Set<String>> ProductLine.getDeltaPartition(SemanticErrorList errors) {
-        return DeltaTypeAnalysisHelper.getDeltaPartition(this, errors);
+        return ProductLineTypeAnalysisHelper.getDeltaPartition(this, errors);
     }
     
     syn lazy boolean ProductLine.isStronglyUnambiguous(java.util.List<Set<String>> deltaPartitions, SemanticErrorList errors) {
-        return DeltaTypeAnalysisHelper.isStronglyUnambiguous(this, deltaPartitions, errors);
+        return ProductLineTypeAnalysisHelper.isStronglyUnambiguous(this, deltaPartitions, errors);
     }
     
     public boolean ProductLine.isStronglyUnambiguous(java.util.List<Set<String>> deltaPartitions, SemanticErrorList errors) {
@@ -40,20 +44,24 @@ aspect DeltaTypeAnalysis {
 
     
     /*
-     * Add all possible products (i.e. valid feature configurations = feature model solutions) 
-     * as non-terminal attributes to the AST (as List of ImplicitProducts to the Model node)
+     * Add all possible products (i.e. all valid feature configurations = feature model solutions) 
+     * as non-terminal attributes (NTAs) to the AST (as List of ImplicitProducts to the Model node)
      */
-    syn List<ImplicitProduct> Model.getImplicitProductList() {
-        List<ImplicitProduct> ASTlist = new List<ImplicitProduct>();
+    syn lazy List<ImplicitProduct> Model.getImplicitProductList() {
+        List<ImplicitProduct> plist = new List<ImplicitProduct>();
+        
         Set<Set<String>> featureConfs = getFeatureModelConfigurations();
-        for (Set<String> set : featureConfs) {
+        for (Set<String> features : featureConfs) {
             ImplicitProduct product = new ImplicitProduct();
-            // set name
             // set Features
-            // set Reconfigurations (empty list)
-            ASTlist.add(product);
+            List<Feature> flist = new List<Feature>();
+            for (String fname : features) {
+                Feature feature = new Feature(fname, new List()); // disregard any attribute assignments
+                flist.add(feature);
+            }
+            plist.add(product);
         }
-        return ASTlist;
+        return plist;
     }
     
 }
