@@ -17,7 +17,7 @@ import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.*;
 import abs.frontend.mtvl.ChocoSolver;
 
-public class DeltaTypeAnalysisHelper {
+public class ProductLineTypeAnalysisHelper {
 
     /*
      * Ordered partition of the set of delta modules
@@ -74,6 +74,7 @@ public class DeltaTypeAnalysisHelper {
     public static void typeCheckPL(ProductLine pl, SemanticErrorList errors) {
         List<Set<String>> deltaPartition = pl.getDeltaPartition(errors);
         boolean res = isStronglyUnambiguous(pl, deltaPartition, errors);
+
 
         //TODO check the other conditions:
         // - product generation mapping is total

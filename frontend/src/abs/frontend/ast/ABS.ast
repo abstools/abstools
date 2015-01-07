@@ -319,6 +319,6 @@ FID: Deltaparam ::= <FeatName>;
 FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
-Product ::= <Name> Feature* Reconfiguration* ;
-ImplicitProduct : Product ;
+ImplicitProduct ::= Feature* ;
+Product : ImplicitProduct ::= <Name> Feature* Reconfiguration* ;
 Reconfiguration ::= <TargetProductID> DeltaID* <UpdateID> ;
