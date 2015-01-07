@@ -7,8 +7,11 @@ package abs.frontend.delta;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ArrayTable;
@@ -23,14 +26,15 @@ public class TopologicalSorting<T> {
 
     List<Set<T>> partition;
 
-    private List<T> anOrder;
+    private List<T> preferredOrder;
+    private ListComparator preferredOrderComparator;
     private Set<List<T>> allOrders;
 
     public TopologicalSorting(Set<T> nodes) {
         this.nodes = nodes;
 
         if (nodes.size() == 0) {
-            anOrder = Collections.emptyList();
+            preferredOrder = Collections.emptyList();
             allOrders = Collections.emptySet();
             incidence = null;
             return;
@@ -44,6 +48,26 @@ public class TopologicalSorting<T> {
         partition = new ArrayList<Set<T>>();
 
     }
+
+    /*
+     * A Comparator backed by the preferredOrder
+     * - Makes it more efficient to sort a given list of Ts based on the preferredOrder
+     */
+    private class ListComparator implements Comparator<T> {
+        private Map<T, Integer> map;
+
+        public ListComparator(final List<T> list) {
+            map = new HashMap<T, Integer>(list.size());
+            for (int i=0; i < list.size(); i++)
+                map.put(list.get(i), i);
+        }
+
+        @Override
+        public int compare(T o1, T o2) {
+            return map.get(o1) - map.get(o2);
+        }
+    }
+
 
     public List<Set<T>> getPartition() {
         return partition;
@@ -92,21 +116,40 @@ public class TopologicalSorting<T> {
 
     /*
      * Returns a single, valid delta order
+     *
+     * TODO: eventually this should compute an implication-determined order, which yields a PFGT with a minimal number of nodes
      */
-    public List<T> getAnOrder() {
-        if (anOrder != null) // only compute once
-            return anOrder;
+    public List<T> getPreferredOrder() {
+        if (preferredOrder != null) // only compute once
+            return preferredOrder;
 
-        anOrder = new ArrayList<T>(nodes.size());
+        preferredOrder = new ArrayList<T>(nodes.size());
         for (Set<T> set : partition)
-            anOrder.addAll(set);
-        return anOrder;
+            preferredOrder.addAll(set);
+
+        preferredOrderComparator = new ListComparator(preferredOrder);
+
+        return preferredOrder;
     }
 
-    public List<T> getAMinimalOrder() {
-        // TODO compute minimal order
-        // any implication-determined application order minimizes the number of nodes of the PFGT
-        return getAnOrder();
+    public List<T> getAnOrder() {
+        return getPreferredOrder();
+    }
+
+    /*
+     * Sort given list of Ts according to the preferredOrder
+     */
+    public List<T> sortList(List<T> list) {
+        Collections.sort(list, preferredOrderComparator);
+        return list;
+    }
+
+    /*
+     * Sort given set of Ts according to the preferredOrder
+     */
+    public List<T> sortSet(Set<T> set) {
+        List<T> list = new ArrayList<T>(set);
+        return sortList(list);
     }
 
     /*
