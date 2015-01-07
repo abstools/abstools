@@ -8,7 +8,7 @@
 Name ::= <Name>;
 DeltaID ::= <Name>;
 
-Model ::= CompilationUnit* ;
+Model ::= CompilationUnit* /ImplicitProduct*/ ;
 
 CompilationUnit ::= <Name> ModuleDecl* DeltaDecl* UpdateDecl* [ProductLine] Product* FeatureDecl* FExt*;
 ModuleDecl ::= <Name> Export* Import* Decl* [Block:MainBlock];
@@ -320,4 +320,5 @@ FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
 Product ::= <Name> Feature* Reconfiguration* ;
+ImplicitProduct : Product ;
 Reconfiguration ::= <TargetProductID> DeltaID* <UpdateID> ;

@@ -39,5 +39,21 @@ aspect DeltaTypeAnalysis {
     }
 
     
+    /*
+     * Add all possible products (i.e. valid feature configurations = feature model solutions) 
+     * as non-terminal attributes to the AST (as List of ImplicitProducts to the Model node)
+     */
+    syn List<ImplicitProduct> Model.getImplicitProductList() {
+        List<ImplicitProduct> ASTlist = new List<ImplicitProduct>();
+        Set<Set<String>> featureConfs = getFeatureModelConfigurations();
+        for (Set<String> set : featureConfs) {
+            ImplicitProduct product = new ImplicitProduct();
+            // set name
+            // set Features
+            // set Reconfigurations (empty list)
+            ASTlist.add(product);
+        }
+        return ASTlist;
+    }
     
 }

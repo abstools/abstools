@@ -24,7 +24,7 @@ public class TopologicalSortingTest extends DeltaTest {
     public void test0_0() {
         TopologicalSorting<DeltaID> sorter = init0_0();
         sorter.sort();
-        List<DeltaID> order = sorter.getAnOrder();
+        List<DeltaID> order = sorter.getPreferredOrder();
         assertEquals(order, Collections.emptyList());
         Set<List<DeltaID>> orders = sorter.getAllOrders();
         assertEquals(orders, Collections.emptySet());
@@ -65,11 +65,11 @@ public class TopologicalSortingTest extends DeltaTest {
         TopologicalSorting<DeltaID> sorter = init8_5();
         sorter.sort();
         
-        assertTrue(precedenceCheck(sorter.getAnOrder(), deltas[0], deltas[1]));
-        assertTrue(precedenceCheck(sorter.getAnOrder(), deltas[0], deltas[2]));
-        assertTrue(precedenceCheck(sorter.getAnOrder(), deltas[3], deltas[4]));
-        assertTrue(precedenceCheck(sorter.getAnOrder(), deltas[4], deltas[5]));
-        assertTrue(precedenceCheck(sorter.getAnOrder(), deltas[6], deltas[7]));
+        assertTrue(precedenceCheck(sorter.getPreferredOrder(), deltas[0], deltas[1]));
+        assertTrue(precedenceCheck(sorter.getPreferredOrder(), deltas[0], deltas[2]));
+        assertTrue(precedenceCheck(sorter.getPreferredOrder(), deltas[3], deltas[4]));
+        assertTrue(precedenceCheck(sorter.getPreferredOrder(), deltas[4], deltas[5]));
+        assertTrue(precedenceCheck(sorter.getPreferredOrder(), deltas[6], deltas[7]));
 
         Set<List<DeltaID>> orders = sorter.getAllOrders();
         assertEquals(orders.size(), 6*6*2);
