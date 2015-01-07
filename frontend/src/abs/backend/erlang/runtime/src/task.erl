@@ -6,7 +6,7 @@
 %% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([ready/2,return_token/2,block/1,wait/1,wait_poll/1,commit/1,rollback/1]).
+-export([ready/2,return_token/2,block/1,await_duration/4,wait/1,wait_poll/1,commit/1,rollback/1]).
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
 
@@ -71,7 +71,7 @@ ready(Cog, Stack)->
 ready_loop(Stack) ->
     receive
         token -> ok;
-        {stop_world, Sender} ->
+        {stop_world, _Sender} ->
             ready_loop(Stack);
         {get_references, Sender} ->
             Sender ! {gc:extract_references(Stack), self()},
@@ -86,6 +86,20 @@ wait_poll(Cog)->
     cog:new_state(Cog,self(),waiting_poll).
 block(Cog)->
     cog:new_state(Cog,self(),blocked).
+
+await_duration(Cog,Min,Max,Stack) ->
+    eventstream:event({task,self(),Cog,clock_waiting,Min,Max}),
+    duration_loop(Stack).
+
+duration_loop(Stack) ->
+    receive
+        clock_finished -> ok;
+        {stop_world, _Sender} ->
+            duration_loop(Stack);
+        {get_references, Sender} ->
+            Sender ! {gc:extract_references(Stack), self()},
+            duration_loop(Stack)
+    end.
 
 return_token(C=#cog{ref=Cog},State)->
     commit(C),

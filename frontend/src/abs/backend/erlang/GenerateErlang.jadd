@@ -771,6 +771,11 @@ aspect GenerateErlang {
   }
 
   @Override
+  public boolean DurationGuard.hasPoll(){
+      return false;
+  }
+
+  @Override
   public void AndGuard.generateErlangCode(ErlangCodeStream preAwait,ErlangCodeStream ecs,Vars vars){
     getLeft().generateErlangCode( preAwait, ecs, vars);
     if(getLeft().hasPoll()&&getRight().hasPoll())
@@ -800,6 +805,17 @@ aspect GenerateErlang {
   @Override
   public void ExpGuard.generateErlangCode(ErlangCodeStream preAwait,ErlangCodeStream ecs,Vars vars){
     getPureExp().generateErlangCode(ecs,vars);
+  }
+
+  @Override
+  public void DurationGuard.generateErlangCode(ErlangCodeStream preAwait, ErlangCodeStream ecs, Vars vars) {
+      preAwait.print("task:await_duration(Cog,");
+      getMin().generateErlangCode(preAwait, vars);
+      preAwait.print(",");
+      getMax().generateErlangCode(preAwait, vars);
+      preAwait.print(",");
+      preAwait.print(vars.toStack());
+      preAwait.println("),");
   }
 
   @Override
