@@ -6,6 +6,7 @@ package abs.backend.erlang;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import abs.frontend.ast.Model;
@@ -26,8 +27,7 @@ public class ErlangBackend extends Main {
             new ErlangBackend().compile(args);
         } catch (Exception e) {
             System.err.println("An error occurred during compilation: " + e.getMessage());
-            // if (Arrays.asList(args).contains("-debug")) {
-            {
+            if (Arrays.asList(args).contains("-debug")) {
                 e.printStackTrace();
             }
             System.exit(1);
