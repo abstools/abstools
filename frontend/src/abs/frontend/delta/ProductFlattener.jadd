@@ -116,7 +116,7 @@ aspect ProductFlattener {
      * Evaluate each delta clause to find the applicable delta names
      * i.e. test each application condition in the context of the features which are ON in the given product
      */
-    public Set<String> ProductLine.findApplicableDeltas(Product prod) {
+    public Set<String> ProductLine.findApplicableDeltas(ImplicitProduct prod) {
 
         HashSet<String> deltaids = new HashSet<String>();
 
