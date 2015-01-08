@@ -2,25 +2,17 @@ aspect ProductLineTypeAnalysis {
 
     
     syn lazy SemanticErrorList Model.typeCheckPL() {
-        SemanticErrorList res = new SemanticErrorList();
-        typeCheckPL(res);
-        return res;
+        SemanticErrorList errors = new SemanticErrorList();
+        if (! hasProductLine())
+            return errors;
+            
+        ProductLineTypeAnalysisHelper.typeCheckPL(getProductLine(), errors);
+        return errors;
     }
 
-    private void Model.typeCheckPL(SemanticErrorList errors) {
-        if (hasProductLine()) {
-            ProductLine pl = getProductLine();
-            ProductLineTypeAnalysisHelper.typeCheckPL(pl, errors);
-            
-            // TODO build PFGS/PFGT
-            List<ImplicitProduct> allProducts = getImplicitProductList();
-            // for each product: obtain sequence of deltas
-        }
-    }
-    
-    syn lazy java.util.List<java.util.Set<String>> ProductLine.getDeltaPartition(SemanticErrorList errors) {
-        return ProductLineTypeAnalysisHelper.getDeltaPartition(this, errors);
-    }
+//    syn lazy java.util.List<java.util.Set<String>> ProductLine.getDeltaPartition(SemanticErrorList errors) {
+//        return ProductLineTypeAnalysisHelper.getDeltaPartition(this, errors);
+//    }
     
     syn lazy boolean ProductLine.isStronglyUnambiguous(java.util.List<Set<String>> deltaPartitions, SemanticErrorList errors) {
         return ProductLineTypeAnalysisHelper.isStronglyUnambiguous(this, deltaPartitions, errors);
@@ -30,6 +22,7 @@ aspect ProductLineTypeAnalysis {
         return DeltaTypeAnalysisHelper.isStronglyUnambiguous(this, deltaPartitions, errors);
     }
 
+    
     /* 
      * Return all valid feature configurations of the feature model.
      * This is done by solving the CSP and only considering features (no attributes, as that could result in an infinite number of configurations)
@@ -52,13 +45,13 @@ aspect ProductLineTypeAnalysis {
         
         Set<Set<String>> featureConfs = getFeatureModelConfigurations();
         for (Set<String> features : featureConfs) {
-            ImplicitProduct product = new ImplicitProduct();
             // set Features
             List<Feature> flist = new List<Feature>();
             for (String fname : features) {
-                Feature feature = new Feature(fname, new List()); // disregard any attribute assignments
+                Feature feature = new Feature(fname, new List<AttrAssignment>()); // disregard any attribute assignments
                 flist.add(feature);
             }
+            ImplicitProduct product = new ImplicitProduct(flist);
             plist.add(product);
         }
         return plist;

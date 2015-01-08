@@ -20,11 +20,43 @@ import abs.frontend.mtvl.ChocoSolver;
 public class ProductLineTypeAnalysisHelper {
 
     /*
+     * An IFΔJ product line is type-safe if the following conditions hold: (i)
+     * it is strongly unambiguous, (ii) its product generation mapping is total,
+     * and (iii) all its products are well-typed IFJ programs.
+     */
+    public static void typeCheckPL(ProductLine pl, SemanticErrorList errors) {
+        TopologicalSorting<String> sorter = new TopologicalSorting<String>(getAllDeltas(pl));
+
+        // Check strong unambiguity
+        List<Set<String>> deltaPartition = getDeltaPartition(pl, sorter, errors);
+        checkStrongUnambiguity(pl, deltaPartition, errors);
+
+        //TODO check the other conditions:
+        // - product generation mapping is total
+        // - all products are well-typed programs
+
+        Model model = pl.getModel();
+
+        // build PFG Trie
+        DeltaTrie trie = new DeltaTrie();
+
+        for (ImplicitProduct product : model.getImplicitProductList()) {
+            // for each product: obtain sequence of deltas
+            Set<String> deltas = pl.findApplicableDeltas(product);
+            // sort deltas
+            List<String> productGenerationString = sorter.sortSet(deltas);
+            trie.addWord(productGenerationString);
+            System.out.println("string: " + productGenerationString);
+        }
+
+    }
+
+
+    /*
      * Ordered partition of the set of delta modules
      */
-    public static List<Set<String>> getDeltaPartition(ProductLine pl, SemanticErrorList l) {
+    public static List<Set<String>> getDeltaPartition(ProductLine pl, TopologicalSorting<String> sorter, SemanticErrorList l) {
 
-        TopologicalSorting<String> sorter = new TopologicalSorting<String>(getAllDeltas(pl));
 
         for (DeltaClause clause : pl.getDeltaClauses()) {
             String deltaid = clause.getDeltaspec().getName();
@@ -51,10 +83,6 @@ public class ProductLineTypeAnalysisHelper {
         return sorter.getPartition();
     }
 
-    public static void getMinimalTrie() {
-
-    }
-
     /*
      * Return set of all deltas for which a delta clause exists in the
      * productline declaration
@@ -64,21 +92,6 @@ public class ProductLineTypeAnalysisHelper {
         for (DeltaClause clause : pl.getDeltaClauses())
             allDeltas.add(clause.getDeltaspec().getName());
         return allDeltas;
-    }
-
-    /*
-     * An IFΔJ product line is type-safe if the following conditions hold: (i)
-     * it is strongly unambiguous, (ii) its product generation mapping is total,
-     * and (iii) all its products are well-typed IFJ programs.
-     */
-    public static void typeCheckPL(ProductLine pl, SemanticErrorList errors) {
-        List<Set<String>> deltaPartition = pl.getDeltaPartition(errors);
-        boolean res = isStronglyUnambiguous(pl, deltaPartition, errors);
-
-
-        //TODO check the other conditions:
-        // - product generation mapping is total
-        // - all products are well-typed programs
     }
 
     /*
@@ -153,6 +166,10 @@ public class ProductLineTypeAnalysisHelper {
             }
         }
         return result;
+    }
+
+    public static void checkStrongUnambiguity(ProductLine pl, List<Set<String>> deltaPartition, SemanticErrorList l) {
+        isStronglyUnambiguous(pl, deltaPartition, l);
     }
 
 }
