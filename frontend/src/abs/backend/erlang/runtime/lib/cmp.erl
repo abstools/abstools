@@ -9,7 +9,7 @@
 eq({N,D},I) when is_integer(N),is_integer(D),is_integer(I) ->
     eq({N,D},{I,1});
 eq(I,{N,D}) when is_integer(N),is_integer(D),is_integer(I) ->
-    eq({N,D},{I,1});
+    eq({I,1},{N,D});
 eq({N,D},{N1,D1}) when is_integer(N),is_integer(D),is_integer(N1),is_integer(D1)->
     rationals:proper({N,D})==rationals:proper({N1,D1});
 eq(A,B)->
@@ -21,7 +21,7 @@ eq(A,B)->
 gt({N,D},I) when is_integer(N),is_integer(D),is_integer(I) ->
     gt({N,D},{I,1});
 gt(I,{N,D}) when is_integer(N),is_integer(D),is_integer(I) ->
-    gt({N,D},{I,1});
+    gt({I,1},{N,D});
 gt({N,D},{N1,D1}) when is_integer(N),is_integer(D),is_integer(N1),is_integer(D1)->
     rationals:is_greater({N,D},{N1,D1});
 %%As we loop through rest of tuple elements, in case we only compare one remaining element we go into the tuple
@@ -42,7 +42,7 @@ gt(A,B)->
 lt({N,D},I) when is_integer(N),is_integer(D),is_integer(I) ->
   lt({N,D},{I,1});
 lt(I,{N,D}) when is_integer(N),is_integer(D),is_integer(I) ->
-  lt({N,D},{I,1});
+  lt({I,1},{N,D});
 lt({N,D},{N1,D1}) when is_integer(N),is_integer(D),is_integer(N1),is_integer(D1)->
     rationals:is_lesser({N,D},{N1,D1});
 lt({A},{B}) when is_tuple(A),is_tuple(B)->
