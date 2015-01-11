@@ -81,6 +81,7 @@ public class Main {
     protected boolean stdlib = true;
     protected boolean dblib = Constants.USE_DBLIB_BY_DEFAULT;
     protected boolean dump = false;
+    protected boolean debug = false;
     protected boolean allowIncompleteExpr = false;
     protected LocationType defaultLocationType = null;
     protected boolean locationTypeInferenceEnabled = false;
@@ -147,6 +148,8 @@ public class Main {
         for (String arg : args) {
             if (arg.equals("-dump"))
                 dump = true;
+            if (arg.equals("-debug"))
+                debug = true;
             else if (arg.equals("-v"))
                 verbose = true;
             else if (arg.equals("-version"))
