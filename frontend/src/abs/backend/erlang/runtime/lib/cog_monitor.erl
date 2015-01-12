@@ -57,9 +57,18 @@ handle_event({cog,Cog,die},State=#state{active=A,idle=I})->
         false->
             {ok,State#state{active=A1,idle=I1}}
     end;
-handle_event({task,P,Cog,clock_waiting,Min,Max}, State=#state{clock_waiting=C}) ->
-    C1=lists:keymerge(2,C,[{Min,Max,P,Cog}]),
+handle_event({task,Task,Cog,clock_waiting,Min,Max}, State=#state{clock_waiting=C}) ->
+    C1=lists:keymerge(3,C,[{task,Min,Max,Task,Cog}]),
     {ok,State#state{clock_waiting=C1}};
+handle_event({cog,Task,Cog,clock_waiting,Min,Max}, State=#state{active=A,clock_waiting=C}) ->
+    C1=lists:keymerge(3,C,[{cog,Min,Max,Task,Cog}]),
+    A1=gb_sets:del_element(Cog,A),
+    case gb_sets:is_empty(A1) of
+        true->
+            {ok, handle_no_active(State#state{active=A1,clock_waiting=C1})};
+        false->
+            {ok,State#state{active=A1,clock_waiting=C1}}
+    end;
 handle_event(_,State)->
     {ok,State}.
 
@@ -83,7 +92,7 @@ cancel(undefined)->
 cancel(TRef)->
     {ok,cancel}=timer:cancel(TRef).
 
-handle_no_active(State=#state{main=M,clock_waiting=C,timer=T}) ->
+handle_no_active(State=#state{main=M,active=A,clock_waiting=C,timer=T}) ->
     case C of
         [] ->
             {ok,T1} = case T of
@@ -91,19 +100,29 @@ handle_no_active(State=#state{main=M,clock_waiting=C,timer=T}) ->
                           _ -> {ok,T}
                       end,
             State#state{timer=T1};
-        [{_, MTE, _, _} | _] ->
-            C2=lists:filtermap(
-                 fun({Min, Max, Task, Cog}) ->
-                         case cmp:le(Min, MTE) of
-                             true ->
-                                 Task ! clock_finished,
-                                 false;
-                             false -> 
-                                 {true, {rationals:fast_sub(rationals:to_r(Min),
-                                                            rationals:to_r(MTE)), 
-                                         rationals:fast_sub(rationals:to_r(Max),
-                                                            rationals:to_r(MTE)),
-                                         Task, Cog}} end end,
-                 C),
-            State#state{clock_waiting=C2}
+        [{_, _, MTE, _, _} | _] ->
+            {NewA,C1}=lists:unzip(
+                        lists:map(
+                          fun(I) -> decrease_or_wakeup(MTE, I) end,
+                          C)),
+            A1=gb_sets:union(A, gb_sets:from_list(lists:flatten(NewA))),
+            State#state{active=A1,clock_waiting=lists:flatten(C1)}
     end .
+
+decrease_or_wakeup(MTE, {What, Min, Max, Task, Cog}) ->
+    %% Compute, for one entry in the clock_waiting queue, either a new
+    %% entry with decreased deadline, or wake up the task and note the
+    %% cog that should be re-added to the active set (if any; only
+    %% when the cog was blocked).
+    case cmp:le(Min, MTE) of
+        true ->
+            Task ! clock_finished,
+            {case What of cog -> Cog; task -> [] end,
+             []};
+        false ->
+            {[],
+             {What,
+              rationals:fast_sub(rationals:to_r(Min), rationals:to_r(MTE)),
+              rationals:fast_sub(rationals:to_r(Max), rationals:to_r(MTE)),
+              Task, Cog}}
+    end.

@@ -888,5 +888,16 @@ aspect GenerateErlang {
     ecs.print(")");
   }
 
+  @Override
+  public void DurationStmt.generateErlangCode(ErlangCodeStream ecs, Vars vars) {
+      ecs.print("task:block_for_duration(Cog,");
+      getMin().generateErlangCode(ecs, vars);
+      ecs.print(",");
+      getMax().generateErlangCode(ecs, vars);
+      ecs.print(",");
+      ecs.print(vars.toStack());
+      ecs.print(")");
+  }
+
 }
 

@@ -6,7 +6,7 @@
 %% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([ready/2,return_token/2,block/1,await_duration/4,wait/1,wait_poll/1,commit/1,rollback/1]).
+-export([ready/2,return_token/2,block/1,await_duration/4,block_for_duration/4,wait/1,wait_poll/1,commit/1,rollback/1]).
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
 
@@ -87,9 +87,18 @@ wait_poll(Cog)->
 block(Cog)->
     cog:new_state(Cog,self(),blocked).
 
-await_duration(Cog,Min,Max,Stack) ->
-    eventstream:event({task,self(),Cog,clock_waiting,Min,Max}),
+%% await_duration and block_for_duration are called in different scenarios
+%% (guard vs statement), hence the different amount of work they do.
+await_duration(#cog{ref=CogRef},Min,Max,Stack) ->
+    eventstream:event({task,self(),CogRef,clock_waiting,Min,Max}),
     duration_loop(Stack).
+
+block_for_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
+    task:block(Cog),
+    eventstream:event({cog,self(),CogRef,clock_waiting,Min,Max}),
+    duration_loop(Stack),
+    task:ready(Cog, Stack).
+
 
 duration_loop(Stack) ->
     receive
