@@ -101,12 +101,13 @@ handle_no_active(State=#state{main=M,active=A,clock_waiting=C,timer=T}) ->
                       end,
             State#state{timer=T1};
         [{_, _, MTE, _, _} | _] ->
+            %% advance clock before waking up processes waiting for it
+            clock:advance(MTE),
             {NewA,C1}=lists:unzip(
                         lists:map(
                           fun(I) -> decrease_or_wakeup(MTE, I) end,
                           C)),
             A1=gb_sets:union(A, gb_sets:from_list(lists:flatten(NewA))),
-            clock:advance(MTE),
             State#state{active=A1,clock_waiting=lists:flatten(C1)}
     end .
 

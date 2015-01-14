@@ -4,10 +4,6 @@
 %%semantics work without it but having now() in ABS is useful.
 
 -module(clock).
-
-%% -include_lib("log.hrl").
-%% -include_lib("abs_types.hrl").
-
 -export([start/0,advance/1,now/0,init/0]).
 
 %% Interface
@@ -17,7 +13,9 @@ start() ->
 init() ->
     loop(rationals:to_r(0)).
 
-advance(Interval) -> clock ! {advance, Interval} .
+advance(Amount) ->
+    clock ! {advance, Amount, self()},
+    receive ok -> ok end.
 
 now() ->
     clock ! {now, self()},
@@ -29,7 +27,8 @@ now() ->
 %% Internal functions
 loop(Time) ->
     receive
-        {advance, Amount} ->
+        {advance, Amount, Sender} ->
+            Sender ! ok,
             loop(rationals:fast_add(rationals:to_r(Time), 
                                     rationals:to_r(Amount)));
         {now, Sender} -> 

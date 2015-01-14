@@ -7,8 +7,11 @@
 lowlevelDeadline() ->
     -1.
 currentms()->
-    {MS,S,MuS}=erlang:now(),    
-    (MS*1000000 + S)*1000 + MuS div 1000.
+    %% %% FIXME: There should be a compile-time option whether to use
+    %% %% simulated or wall-clock time
+    %% {MS,S,MuS}=erlang:now(),
+    %% (MS*1000000 + S)*1000 + MuS div 1000.
+    clock:now().
 
 substr(S,Start,Len) ->
     lists:sublist(S, Start+1, Len).

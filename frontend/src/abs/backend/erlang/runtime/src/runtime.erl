@@ -49,6 +49,8 @@ start_mod(Arguments)  ->
     eventstream:add_handler(cog_monitor,[self()]),
     %% Init garbage collector
     gc:start(),
+    %% Init simulation clock
+    clock:start(),
 
     %%Start main task
     Cog=cog:start(),
