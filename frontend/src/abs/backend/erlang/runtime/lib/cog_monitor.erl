@@ -106,6 +106,7 @@ handle_no_active(State=#state{main=M,active=A,clock_waiting=C,timer=T}) ->
                           fun(I) -> decrease_or_wakeup(MTE, I) end,
                           C)),
             A1=gb_sets:union(A, gb_sets:from_list(lists:flatten(NewA))),
+            clock:advance(MTE),
             State#state{active=A1,clock_waiting=lists:flatten(C1)}
     end .
 
