@@ -41,6 +41,8 @@ toString({N,D}) when is_integer(N),is_integer(D)->
     float_to_list(N / D,[{decimals, 4}, compact]);
 toString(S) when is_list(S) -> S;
 toString(A) when is_atom(A) -> constructorname_to_string(A);
+toString(P) when is_pid(P) -> pid_to_list(P);
+toString({object,Cid,Oid,_Cog}) -> atom_to_list(Cid) ++ ":" ++ pid_to_list(Oid);
 toString(T) when is_tuple(T) ->
     [C|A] = tuple_to_list(T),
     constructorname_to_string(C)
