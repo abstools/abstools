@@ -60,6 +60,7 @@ start_mod(Arguments)  ->
     cog_monitor:waitfor(),
     timer:sleep(1),
     gc:stop(),
+    clock:stop(),
     eventstream:stop(),
     RetVal.
 

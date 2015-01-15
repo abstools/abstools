@@ -4,11 +4,14 @@
 %%semantics work without it but having now() in ABS is useful.
 
 -module(clock).
--export([start/0,advance/1,now/0,init/0]).
+-export([start/0,stop/0,advance/1,now/0,init/0]).
 
 %% Interface
 start() ->
     register(clock, spawn(?MODULE, init, [])).
+
+stop() ->
+    clock ! stop .
 
 init() ->
     loop(rationals:to_r(0)).
@@ -33,5 +36,8 @@ loop(Time) ->
                                     rationals:to_r(Amount)));
         {now, Sender} -> 
             Sender ! {now, Time},
-            loop(Time)
+            loop(Time);
+        stop ->
+            unregister(clock),
+            ok
     end.
