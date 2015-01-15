@@ -1,10 +1,10 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
--export([start/0,add/3,add_and_notify/3,add_blocking/5,new_state/3,inc_ref_count/1,dec_ref_count/1]).
--export([init/1]).
+-export([start/0,start/1,add/3,add_and_notify/3,add_blocking/5,new_state/3,inc_ref_count/1,dec_ref_count/1]).
+-export([init/2]).
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
--record(state,{tasks,running=false,polling=[],tracker,referencers=1}).
+-record(state,{tasks,running=false,polling=[],tracker,referencers=1,dc=null}).
 -record(task,{ref,state=waiting}).
 
 %%Garbage collector callbacks
@@ -18,9 +18,15 @@
 
 %%API
 
-start()->
+start() ->
+    start(null).
+
+start(DC)->
     {ok,T}=object_tracker:start(),
-    Cog = #cog{ref=spawn(cog,init, [T]),tracker=T},
+    %% There are two DC refs: the one in state is to handle GC and to
+    %% create a copy of the current cog (see initTask), the one in
+    %% the cog structure itself is for evaluating thisDC()
+    Cog = #cog{ref=spawn(cog,init, [T,DC]),tracker=T,dc=DC},
     gc ! {Cog, self()},
     receive
         ok -> Cog
@@ -67,7 +73,7 @@ resume_world(Cog) ->
 
 %%Internal
 
-init(Tracker) ->
+init(Tracker,DC) ->
     ?DEBUG({new}),
     process_flag(trap_exit, true),
     eventstream:event({cog,self(),active}),
@@ -78,7 +84,7 @@ init(Tracker) ->
                   ok ->
                       false
               end,
-    loop(#state{tasks=gb_trees:empty(),tracker=Tracker,running=Running}).
+    loop(#state{tasks=gb_trees:empty(),tracker=Tracker,running=Running,dc=DC}).
 
 %%No task was ready to execute
 loop(S=#state{running=non_found})->
@@ -195,13 +201,14 @@ loop(S=#state{running={blocked, R}}) ->
     loop(New_State);
 
 %%Garbage collector is running, wait before resuming tasks
-loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs}) ->
+loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, dc=DC}) ->
     New_State=
         receive
             {get_references, Sender} ->
                 Sender !
                     {lists:foldl(fun ordsets:union/2, [],
-                                 lists:map(fun task:get_references/1, gb_trees:keys(Tasks))),
+                                 lists:map(fun task:get_references/1, gb_trees:keys(Tasks)))
+                     ++ case DC of null -> []; _ -> DC end,
                      self()},
                 S;
             {done, gc} ->
@@ -222,8 +229,8 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs})
     end.
 
 %%Start new task
-initTask(S=#state{tasks=T,tracker=Tracker},Task,Args,Sender,Notify)->
-    Ref=task:start(#cog{ref=self(),tracker=Tracker},Task,Args),
+initTask(S=#state{tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify)->
+    Ref=task:start(#cog{ref=self(),tracker=Tracker,dc=DC},Task,Args),
     ?DEBUG({new_task,Ref,Task,Args}),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     Sender!{started,Task,Ref},

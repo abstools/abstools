@@ -150,7 +150,7 @@ public class ErlUtil {
                 ecs.print(",");
             }
 
-        } else if (!builtin) {
+        } else {
             ecs.print("Cog");
             if (params.hasChildren()) {
                 ecs.print(",");

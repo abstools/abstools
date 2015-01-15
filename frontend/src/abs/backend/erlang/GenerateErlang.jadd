@@ -78,13 +78,14 @@ aspect GenerateErlang {
     ecs.print("builtin");
   }
 
-  private final static Set<String> FnApp.BUILTINS=ImmutableSet.of("substr","currentms","lowlevelDeadline",
-      "random","getProductLine","strlen","toString","truncate","println","print");
+  private final static Set<String> FnApp.ERLANG_BUILTINS=ImmutableSet.of(
+      "currentms", "getProductLine", "lowlevelDeadline", "print", "println",
+      "random", "strlen", "substr", "thisDC", "toString", "truncate");
   public  void FnApp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
     boolean builtin = decl.getFunctionDef() instanceof BuiltinFunctionDef;
     if(builtin){
-      if(!BUILTINS.contains(decl.getName()))
+      if(!ERLANG_BUILTINS.contains(decl.getName()))
         throw new NotImplementedYetException("builtin: "+decl.getName(), this);
       ecs.print("builtin:");
       ecs.print(decl.getName());
@@ -109,7 +110,7 @@ aspect GenerateErlang {
        ecs.println("-include_lib(\"runtime/include/abs_types.hrl\").");
        ecs.println("-export([main/1]).");
        ecs.println();
-       ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef}");
+       ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef,dc=DC}");
        ecs.println("Stack = [], O = void,");
        getBlock().generateErlangCode(ecs, Vars.n());
        ecs.println('.');
@@ -200,16 +201,26 @@ aspect GenerateErlang {
 
   @Override
   public void NewExp.generateErlangCode(ErlangCodeStream ecs,Vars vars) {
+    ASTNode parent = getParent();
+    while (!(parent instanceof Stmt) && parent != null ) {
+      parent = parent.getParent();
+    }
+    PureExp dc = CompilerUtils.getAnnotationValue(((Stmt)parent).getAnnotations(), "DC");
     String className = ErlUtil.getName(((UnionType)getType()).getOriginatingClass());
     if (((UnionType) getType()).getOriginatingClass().isForeign())
       className = "ffi_" + className;
     if (!hasLocal()) {
-      ecs.format("object:new(cog:start(),%s,",className);
+      ecs.format("object:new(cog:start(");
+      if (dc == null) {
+        ecs.format("DC");
+      } else {
+        dc.generateErlangCode(ecs, vars);
+      }
+      ecs.format("),%s,",className);
       ErlUtil.buildParams(ecs,getParams(),vars,true);
       ecs.print(",Cog,");
       ecs.print(vars.toStack());
       ecs.print(")");
-
     } else {
       ecs.format("object:new(Cog,%s,",className);
       ErlUtil.buildParams(ecs,getParams(),vars,false);
