@@ -52,7 +52,7 @@ class Object__ a where
     __init _ = return (())     -- default implementation of init
     __run :: AnyObject -> ABS a () 
     __run _ = return (())        -- default implementation of run
-    whereis :: (Object__ o) => a -> ABS o COG
+    __cog :: (Object__ o) => a -> ABS o COG -- helper function for the generated code, to easily read from any object its COG location
 
 data AwaitGuard o = forall b. FutureGuard (Fut b)
                   | ThisGuard [Int] (ABS o Bool)
@@ -66,7 +66,7 @@ data Null -- no constructor, possible needs a constructor
 instance Object__ Null where
     new = error "cannot instantiated null"
     new_local = error "cannot instantiated null"
-    whereis = error "null is not related to a COG"
+    __cog = error "null is not related to a COG"
 
 data AwaitOn = S
              | forall f. F (Fut f)

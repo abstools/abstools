@@ -2,7 +2,7 @@ module Annotations;
 
 [Far] [Atomic] [3] def Mplo<[Near] [Atomic] Int, [Far] Mpli<Mplo>> f() = 3;
 
-[Far] interface Client extends Node {
+[Far] interface IClient extends Node {
 	ClientDataBase getClientDataBase();
 }
 
