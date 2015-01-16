@@ -51,6 +51,10 @@ start_mod(Arguments)  ->
     gc:start(),
     %% Init simulation clock
     clock:start(),
+    %% init RNG.
+    %% TODO: if we want reproducible runs, make seed a command-line parameter
+    {A1,A2,A3} = now(),
+    random:seed(A1, A2, A3),
 
     %%Start main task
     Cog=cog:start(),

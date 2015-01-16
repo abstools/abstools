@@ -17,8 +17,6 @@ substr(S,Start,Len) ->
     lists:sublist(S, Start+1, Len).
 
 random(N)->
-    {A1,A2,A3} = now(),
-    random:seed(A1, A2, A3),
     random:uniform(N)-1.
 
 strlen(S)->
