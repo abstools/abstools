@@ -76,7 +76,7 @@
   <taskdef name="beaver" classname="beaver.comp.run.AntTask" classpath="${ext.dir}/beaver.jar" />
 
   <!-- "jastadd" is an ant task class in jastadd2.jar -->
-  <taskdef name="jastadd" classname="jastadd.JastAddTask" classpath="${ext.dir}/jastadd2.jar" />
+  <taskdef name="jastadd" classname="org.jastadd.JastAddTask" classpath="${ext.dir}/jastadd2.jar" />
 
   <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask" classpath="${ext.dir}/findbugs-ant-1.3.9.jar"/>
 
@@ -180,7 +180,7 @@
   </target>
 
   <target name="genast">
-    <jastadd package="${ast.package}" rewrite="true" beaver="true" novisitcheck="true" outdir="${gen.dir}" debug="true">
+    <jastadd package="${ast.package}" rewrite="" beaver="true" visitCheck="false" outdir="${gen.dir}" debug="true">
       <fileset dir=".">
         <include name="src/abs/**/*.ast" />
         <include name="src/abs/**/*.jrag" />
