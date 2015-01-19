@@ -110,8 +110,12 @@ aspect GenerateErlang {
        ecs.println("-include_lib(\"runtime/include/abs_types.hrl\").");
        ecs.println("-export([main/1]).");
        ecs.println();
-       ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef,dc=DC}");
-       ecs.println("Stack = [], O = void,");
+       ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef}");
+       ecs.println("O = void,");
+       // Create a default deployment component.
+       ecs.println("%% FIXME: thisDC() won't work in main block (DC should be in Cog state)");
+       ecs.println("DC = object:new(cog:start(),class_ABS_DC_DeploymentComponent, [\"\",dataEmptyMap,[]],Cog,[O]),");
+       ecs.println("Stack = [DC],");
        getBlock().generateErlangCode(ecs, Vars.n());
        ecs.println('.');
        ecs.decIndent();
