@@ -34,6 +34,15 @@ string_interleave1([Head | Tail], Sep, Acc) ->
 constructorname_to_string(A) ->
     lists:nthtail(4, atom_to_list(A)).
 
+
+abslistish_to_string(Cog, Cons, Emp, {Cons, H, Emp}) ->
+    toString(Cog, H);
+abslistish_to_string(Cog, Cons, Emp, {Cons, H, T={Cons, _, _}}) ->
+    toString(Cog, H) ++ ", " ++ abslistish_to_string(Cog, Cons, Emp, T);
+abslistish_to_string(Cog, Cons, _Emp, {Cons, H, T}) ->
+    toString(Cog, H) ++ ", " ++ toString(Cog, T).
+
+
 toString(_Cog,I) when is_integer(I) ->
     integer_to_list(I);
 toString(_Cog,{N,D}) when is_integer(N),is_integer(D)->
@@ -44,9 +53,14 @@ toString(_Cog,P) when is_pid(P) -> pid_to_list(P);
 toString(_Cog,{object,Cid,Oid,_Cog}) -> atom_to_list(Cid) ++ ":" ++ pid_to_list(Oid);
 toString(_Cog,T) when is_tuple(T) ->
     [C|A] = tuple_to_list(T),
-    constructorname_to_string(C)
-        ++ "(" ++ string_interleave([toString(_Cog,X) || X <- A], ", ")
-        ++ ")" .
+    case C of
+        dataCons -> "list[" ++ abslistish_to_string(_Cog, dataCons, dataNil, T) ++ "]";
+        dataInsert -> "set[" ++ abslistish_to_string(_Cog, dataInsert, dataEmptySet, T) ++ "]";
+        dataInsertAssoc -> "map[" ++ abslistish_to_string(_Cog, dataInsertAssoc, dataEmptyMap, T) ++ "]";
+        _ -> constructorname_to_string(C)
+                 ++ "(" ++ string_interleave([toString(_Cog,X) || X <- A], ", ")
+                 ++ ")"
+    end.
 
 truncate(_Cog,{N,D})->
     N div D;
