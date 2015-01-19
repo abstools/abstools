@@ -4,6 +4,7 @@
 
 -module(cog_monitor).
 -behaviour(gen_event).
+-include_lib("abs_types.hrl").
 
 -export([waitfor/0]).
 -export([init/1,handle_event/2,handle_call/2,terminate/2,handle_info/2,code_change/3]).
@@ -15,10 +16,12 @@
 %%   for simulated time to advance, with minimum and maximum waiting
 %%   time.  Ordered by ascending maximum waiting time (head of list =
 %%   MTE [Maximum Time Elapse]).
+%% - dcs=list of deployment components
 %% - timer=timeout callback before terminating program
 %%
-%% Simulation ends when no cog is active or waiting for the clock.
--record(state,{main,active,idle,clock_waiting,timer}).
+%% Simulation ends when no cog is active or waiting for the clock /
+%% some resources.
+-record(state,{main,active,idle,clock_waiting,dcs,timer}).
 %%External function
 
 %% Waits until all cogs are idle
@@ -32,7 +35,7 @@ waitfor()->
 
 %%The callback gets as parameter the pid of the runtime process, which waits for all cogs to be idle
 init([Main])->
-    {ok,#state{main=Main,active=gb_sets:empty(),idle=gb_sets:empty(),clock_waiting=[]}}.
+    {ok,#state{main=Main,active=gb_sets:empty(),idle=gb_sets:empty(),clock_waiting=[],dcs=[],timer=undefined}}.
 
 handle_event({cog,Cog,active},State=#state{active=A,idle=I,timer=T})->
     A1=gb_sets:add_element(Cog,A),
@@ -60,10 +63,10 @@ handle_event({cog,Cog,die},State=#state{active=A,idle=I})->
             {ok, S1}
     end;
 handle_event({task,Task,Cog,clock_waiting,Min,Max}, State=#state{clock_waiting=C}) ->
-    C1=lists:keymerge(3,C,[{task,Min,Max,Task,Cog}]),
+    C1=add_to_clock_waiting(C,{task,Min,Max,Task,Cog}),
     {ok,State#state{clock_waiting=C1}};
 handle_event({cog,Task,Cog,clock_waiting,Min,Max}, State=#state{active=A,clock_waiting=C}) ->
-    C1=lists:keymerge(3,C,[{cog,Min,Max,Task,Cog}]),
+    C1=add_to_clock_waiting(C,{cog,Min,Max,Task,Cog}),
     A1=gb_sets:del_element(Cog,A),
     S1=State#state{active=A1,clock_waiting=C1},
     case gb_sets:is_empty(A1) of
@@ -72,6 +75,20 @@ handle_event({cog,Task,Cog,clock_waiting,Min,Max}, State=#state{active=A,clock_w
         false->
             {ok, S1}
     end;
+handle_event({cog,Task,Cog,resource_waiting}, State=#state{active=A,clock_waiting=C}) ->
+    MTE=clock:distance_to_next_boundary(),
+    C1=add_to_clock_waiting(C,{cog,MTE,MTE,Task,Cog}),
+    A1=gb_sets:del_element(Cog,A),
+    S1=State#state{active=A1,clock_waiting=C1},
+    case gb_sets:is_empty(A1) of
+        true->
+            {ok, handle_no_active(S1)};
+        false->
+            {ok, S1}
+    end;
+handle_event({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent}},
+             State=#state{dcs=DCs}) ->
+    {ok, State#state{dcs=[DC | DCs]}};
 handle_event(_,State)->
     {ok,State}.
 
@@ -95,7 +112,7 @@ cancel(undefined)->
 cancel(TRef)->
     {ok,cancel}=timer:cancel(TRef).
 
-handle_no_active(State=#state{main=M,active=A,clock_waiting=C,timer=T}) ->
+handle_no_active(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,timer=T}) ->
     case C of
         [] ->
             {ok,T1} = case T of
@@ -106,6 +123,8 @@ handle_no_active(State=#state{main=M,active=A,clock_waiting=C,timer=T}) ->
         [{_, _, MTE, _, _} | _] ->
             %% advance clock before waking up processes waiting for it
             clock:advance(MTE),
+            lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
+            lists:foreach(fun dc:print_info/1, DCs),
             {NewA,C1}=lists:unzip(
                         lists:map(
                           fun(I) -> decrease_or_wakeup(MTE, I) end,
@@ -131,3 +150,11 @@ decrease_or_wakeup(MTE, {What, Min, Max, Task, Cog}) ->
               rationals:fast_sub(rationals:to_r(Max), rationals:to_r(MTE)),
               Task, Cog}}
     end.
+
+add_to_clock_waiting([H={_,_,Head,_,_} | T], I={_,_,Max,_,_}) ->
+    case rationals:is_lesser(rationals:to_r(Head), rationals:to_r(Max)) of
+        false -> [H, I | T];
+        true -> [H | add_to_clock_waiting(T, I)]
+    end;
+add_to_clock_waiting([], I) ->
+    [I].

@@ -118,7 +118,8 @@ aspect GenerateErlang {
        ecs.println("O = void,");
        // Create a default deployment component.
        ecs.println("%% FIXME: thisDC() won't work in main block (DC should be in Cog state)");
-       ecs.println("DC = object:new(cog:start(),class_ABS_DC_DeploymentComponent, [\"\",dataEmptyMap,[]],Cog,[O]),");
+       ecs.println("DC = object:new(cog:start(),class_ABS_DC_DeploymentComponent, [\"Initial DC\",dataEmptyMap,[]],Cog,[O]),");
+       ecs.println("eventstream:event({newdc, DC}),");
        ecs.println("Stack = [DC],");
        getBlock().generateErlangCode(ecs, Vars.n());
        ecs.println('.');
@@ -161,6 +162,12 @@ aspect GenerateErlang {
       if(!first)
         ecs.println(",");
       first=false;
+      PureExp cost = MaudeCompilerHelper.getAnnotationValue(stmt.getAnnotationList(), "Cost");
+      if (cost != null) {
+          ecs.print("task:block_for_resource(Cog,cpu,");
+          cost.generateErlangCode(ecs, vars);
+          ecs.println(",Stack),");
+      }
       stmt.generateErlangCode(ecs,vars);
     }
     if(first)
@@ -192,7 +199,12 @@ aspect GenerateErlang {
       else
         buffer.print("null");
       buffer.close();
-      ecs.format("%s = %s",vars.nV(this),sw.toString().substring(ecs.getIndent().length()));
+      String varName = vars.nV(this);
+      ecs.format("%s = %s", varName, sw.toString().substring(ecs.getIndent().length()));
+      if (getType().isDeploymentComponentType() && getInitExp() instanceof NewExp) {
+          ecs.println(",");
+          ecs.format("eventstream:event({newdc, %s})", varName);
+      }
     }
     else
       throw new NotImplementedYetException(this);
@@ -203,18 +215,30 @@ aspect GenerateErlang {
     StringWriter sw = new StringWriter();
     ErlangCodeStream buffer = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
     boolean needTrunc=getVar().getType().isIntType() && getValue().getType().isRatType();
+    boolean isNewDC = getVar().getType().isDeploymentComponentType()
+        && getValue() instanceof NewExp;
     if (needTrunc)
       buffer.print("rationals:trunc(");
     getValue().generateErlangCode(buffer,vars);
     if (needTrunc)
       buffer.print(")");
     buffer.close();
-    if(getVar() instanceof VarUse)
-      ecs.format("%s = %s",vars.inc(getVar().getName()),sw.toString().substring(ecs.getIndent().length()));
-    else if(getVar() instanceof FieldUse)
+    if(getVar() instanceof VarUse) {
+      String varName = vars.inc(getVar().getName());
+      ecs.format("%s = %s", varName,sw.toString().substring(ecs.getIndent().length()));
+      if (isNewDC) {
+        ecs.println(",");
+        ecs.format("eventstream:event({newdc, %s})", varName);
+      }
+    } else if(getVar() instanceof FieldUse) {
       ecs.format("set(O,%s,%s)", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
-    else
+      if (isNewDC) {
+        ecs.println(",");
+        ecs.format("eventstream:event({newdc, get(O,%s)})", getVar().getName());
+      }
+    } else {
       throw new NotImplementedYetException(this);
+    }
   }
 
   public void Exp.generateErlangCode(ErlangCodeStream ecs,Vars vars) {
@@ -252,7 +276,23 @@ aspect GenerateErlang {
 
   @Override
   public void ExpressionStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars) {
-    getExp().generateErlangCode( ecs, vars);
+    boolean isNewDC = getExp().getType().isDeploymentComponentType()
+        && getExp() instanceof NewExp;
+    if (isNewDC) {
+      StringWriter sw = new StringWriter();
+      ErlangCodeStream buffer = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
+      getExp().generateErlangCode(buffer,vars);
+      buffer.close();
+      // won't class with any variable because UPPERCASE
+      String varName = vars.inc("TEMP");
+      ecs.format("%s = %s", varName,sw.toString().substring(ecs.getIndent().length()));
+      ecs.println(",");
+      ecs.format("eventstream:event({newdc, %s})", varName);
+      ecs.println(",");
+      ecs.print(varName);
+    } else {
+        getExp().generateErlangCode( ecs, vars);
+    }
   }
 
   @Override
@@ -260,14 +300,27 @@ aspect GenerateErlang {
     //Return needs possible truncation
     MethodImpl m = getContextMethod();
     Type lht = getModel().getUnitType();
-    if (m != null)
-        lht = m.getMethodSig().getReturnType().getType();
-    boolean needTrunc=lht.isIntType() && getRetExp().getType().isRatType();
-    if (needTrunc)
-      ecs.print("rationals:trunc(");
-    getRetExp().generateErlangCode(ecs, vars);
-    if (needTrunc)
-      ecs.print(")");
+    if (m != null) { lht = m.getMethodSig().getReturnType().getType(); }
+    boolean isNewDC = lht.isDeploymentComponentType()
+        && getRetExp() instanceof NewExp;
+    if (isNewDC) {
+      StringWriter sw = new StringWriter();
+      ErlangCodeStream buffer = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
+      getRetExp().generateErlangCode(buffer,vars);
+      buffer.close();
+      // won't class with any variable because UPPERCASE
+      String varName = vars.inc("TEMP");
+      ecs.format("%s = %s", varName,sw.toString().substring(ecs.getIndent().length()));
+      ecs.println(",");
+      ecs.format("eventstream:event({newdc, %s})", varName);
+      ecs.println(",");
+      ecs.print(varName);
+    } else {
+      boolean needTrunc=lht.isIntType() && getRetExp().getType().isRatType();
+      if (needTrunc) { ecs.print("rationals:trunc("); }
+      getRetExp().generateErlangCode(ecs, vars);
+      if (needTrunc) { ecs.print(")"); }
+    }
   }
 
   @Override

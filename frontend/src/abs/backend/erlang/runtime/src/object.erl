@@ -13,7 +13,6 @@
 -behaviour(gen_fsm).
 %%API
 -export([new/3,new/5,activate/1,commit/1,rollback/1,new_object_task/3,die/2,alive/1]).
-
 %%gen_fsm callbacks
 -export([init/1,active/3,active/2,uninitialized/2,uninitialized/3,code_change/4,handle_event/3,handle_info/3,handle_sync_event/4,terminate/3]).
 -include_lib("log.hrl").
@@ -135,7 +134,39 @@ active(rollback,_From,S) ->
     ?DEBUG({rollback}),    
     {reply,ok,active,S#state{new_vals=gb_trees:empty()}};
 active(ping,_From,S)->
-    {reply,ok,active,S}.
+    {reply,ok,active,S};
+%% Deployment component behavior
+%%
+%% Deployment components are objects, so we handle their events using
+%% the general object FSM machinery for now.
+active({consume_resource, {CurrentVar, MaxVar}, Count}, _From, OS=#state{class=class_ABS_DC_DeploymentComponent=C,int_status=S}) ->
+    Total=C:get_val_internal(S,MaxVar),
+    Consumed=rationals:to_r(C:get_val_internal(S,CurrentVar)),
+    ToConsume=case Total of
+                  dataInfRat -> rationals:to_r(Count);
+                  {dataFin, Total1} ->
+                      rationals:min(rationals:to_r(Count),
+                                    rationals:sub(rationals:to_r(Total1), Consumed))
+              end,
+    case ToConsume of
+        {0,_} -> {reply, {wait, ToConsume}, active, OS};
+        _ -> S1=C:set_val_internal(S,CurrentVar,
+                                   rationals:add(Consumed, ToConsume)),
+             %% We reply with "ok" not "wait" here so we are ready for
+             %% small-step consumption schemes where multiple
+             %% consumers race for resources.
+             {reply, {ok, ToConsume}, active, OS#state{int_status=S1}}
+    end;
+active({clock_advance_for_dc, Amount},_From,
+       OS=#state{class=class_ABS_DC_DeploymentComponent,int_status=S}) ->
+    S1=dc:update_state_and_history(S, Amount),
+    {reply, ok, active, OS#state{int_status=S1}};
+active(print_dc_info,_From,
+       OS=#state{class=class_ABS_DC_DeploymentComponent=C,int_status=S}) ->
+    io:format("Description: ~s, ", [C:get_val_internal(S,description)]),
+    io:format("creation time: ~s, ", [builtin:toString(undefined, C:get_val_internal(S,creationTime))]),
+    io:format("CPU history (reversed): ~s~n", [builtin:toString(undefined, C:get_val_internal(S,cpuhistory))]),
+    {reply, ok, active, OS}.
 
 
 active({#object{class=Class},set,Field,Val},S=#state{class=C,new_vals=NV}) -> 
