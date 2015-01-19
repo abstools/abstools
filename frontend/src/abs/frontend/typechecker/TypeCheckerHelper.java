@@ -70,6 +70,16 @@ public class TypeCheckerHelper {
         }
     }
 
+    public static void typeCheckRunMethodSig(SemanticErrorList l, MethodSig m) {
+        if (m.getNumParam() > 0) {
+            l.add(new TypeError(m, ErrorMessage.RUN_METHOD_WRONG_NUM_PARAMS, m.getNumParam()));
+        }
+        if (!m.getReturnType().getType().isUnitType()) {
+            l.add(new TypeError(m, ErrorMessage.RUN_METHOD_WRONG_RETURN_TYPE,
+                                m.getReturnType().getType().toString()));
+        }
+    }
+
     public static void typeCheckMatchingParams(SemanticErrorList l, DataConstructorExp n, DataConstructor c) {
         assert n.getDecl() == c;
         final Map<TypeParameter, Type> binding = n.getTypeParamBinding(n, c);

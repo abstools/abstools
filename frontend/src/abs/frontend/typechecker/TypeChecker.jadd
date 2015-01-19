@@ -341,6 +341,9 @@ aspect TypeChecker {
         for (MethodSig s : getBodys()) {
             if (names.put(s.getName(),s) != null)
                 e.add(new TypeError(s, ErrorMessage.DUPLICATE_METHOD_NAME, s.getName()));
+            if (s.getName().equals("run")) {
+                TypeCheckerHelper.typeCheckRunMethodSig(e, s);
+            }
             s.typeCheck(e);
         }
 
@@ -432,6 +435,10 @@ aspect TypeChecker {
         int nerrors = e.size();
         sig.typeCheck(e);
         b.typeCheck(e);
+
+        if (sig.getName().equals("run")) {
+            TypeCheckerHelper.typeCheckRunMethodSig(e, sig);
+        }
 
         Type lastType = getModel().getUnitType();
         ASTNode<?> errorNode = this;
