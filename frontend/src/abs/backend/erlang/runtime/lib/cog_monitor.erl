@@ -42,20 +42,22 @@ handle_event({cog,Cog,active},State=#state{active=A,idle=I,timer=T})->
 handle_event({cog,Cog,idle},State=#state{active=A,idle=I})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:add_element(Cog,I),
+    S1=State#state{active=A1,idle=I1},
     case gb_sets:is_empty(A1) of
         true->
-            {ok, handle_no_active(State#state{active=A1,idle=I1})};
+            {ok, handle_no_active(S1)};
         false->
-            {ok,State#state{active=A1,idle=I1}}
+            {ok, S1}
     end;
 handle_event({cog,Cog,die},State=#state{active=A,idle=I})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
+    S1=State#state{active=A1,idle=I1},
     case gb_sets:is_empty(A1) of
         true->
-            {ok, handle_no_active(State#state{active=A1,idle=I1})};
+            {ok, handle_no_active(S1)};
         false->
-            {ok,State#state{active=A1,idle=I1}}
+            {ok, S1}
     end;
 handle_event({task,Task,Cog,clock_waiting,Min,Max}, State=#state{clock_waiting=C}) ->
     C1=lists:keymerge(3,C,[{task,Min,Max,Task,Cog}]),
@@ -63,11 +65,12 @@ handle_event({task,Task,Cog,clock_waiting,Min,Max}, State=#state{clock_waiting=C
 handle_event({cog,Task,Cog,clock_waiting,Min,Max}, State=#state{active=A,clock_waiting=C}) ->
     C1=lists:keymerge(3,C,[{cog,Min,Max,Task,Cog}]),
     A1=gb_sets:del_element(Cog,A),
+    S1=State#state{active=A1,clock_waiting=C1},
     case gb_sets:is_empty(A1) of
         true->
-            {ok, handle_no_active(State#state{active=A1,clock_waiting=C1})};
+            {ok, handle_no_active(S1)};
         false->
-            {ok,State#state{active=A1,clock_waiting=C1}}
+            {ok, S1}
     end;
 handle_event(_,State)->
     {ok,State}.
