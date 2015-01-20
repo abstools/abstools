@@ -24,10 +24,6 @@ import abs.frontend.typechecker.Type;
  */
 public class DeploymentComponentChecker extends DefaultTypeSystemExtension {
 
-    private static boolean isDeploymentComponent(Type t) {
-        return t.getQualifiedName().equals("ABS.DC.DeploymentComponent") || t.getQualifiedName().equals("ABS.DC.DC");
-    }
-    
     protected DeploymentComponentChecker(Model m) {
         super(m);
     }
@@ -49,14 +45,14 @@ public class DeploymentComponentChecker extends DefaultTypeSystemExtension {
 
     private void checkDCCorrect(ASTNode<?> n, PureExp dc) {
         if (dc == null) return;
-        if (!isDeploymentComponent(dc.getType())) {
+        if (!dc.getType().isDeploymentComponentType()) {
             errors.add(new TypeError(n, ErrorMessage.WRONG_DEPLOYMENT_COMPONENT, dc.getType().getQualifiedName()));
         }
     }
     
     @Override
     public void checkNewExp(NewExp e) {
-        if (isDeploymentComponent(e.getType()) && e.hasLocal()) {
+        if (e.getType().isDeploymentComponentType() && e.hasLocal()) {
             errors.add(new SemanticError(e, ErrorMessage.DEPLOYMENT_COMPONENT_NOT_COG, "dummy string to keep constructor happy"));
         }
     }

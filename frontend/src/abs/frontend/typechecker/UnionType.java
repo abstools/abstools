@@ -104,6 +104,14 @@ public class UnionType extends ReferenceType {
         return true;
     }
 
+    @Override
+    public boolean isDeploymentComponentType() {
+        for (InterfaceType i : getTypes()) {
+            if (i.isDeploymentComponentType()) return true;
+        }
+        return false;
+    }
+
     public ClassDecl getOriginatingClass() {
         return originatingClass;
     }

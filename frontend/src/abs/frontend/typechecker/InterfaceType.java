@@ -31,6 +31,13 @@ public class InterfaceType extends ReferenceType {
     }
 
     @Override
+    public boolean isDeploymentComponentType() {
+        return getQualifiedName().equals("ABS.DC.DeploymentComponent")
+            || getQualifiedName().equals("ABS.DC.DC");
+    }
+
+
+    @Override
     public boolean equals(Object o) {
         if (!(o instanceof InterfaceType))
             return false;

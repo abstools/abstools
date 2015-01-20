@@ -191,6 +191,10 @@ public abstract class Type {
         return false;
     }
 
+    public boolean isDeploymentComponentType() {
+        return false;
+    }
+
     public MethodSig lookupMethod(String name) {
         return null;
     }
