@@ -37,12 +37,14 @@ import com.google.common.io.Files;
 public class ErlApp {
 
     public File destDir;
+    public File destCodeDir;
 
     public Map<String, ErlangCodeStream> funMod = new HashMap<String, ErlangCodeStream>();
 
     public ErlApp(File destDir) throws IOException {
         super();
         this.destDir = destDir;
+        this.destCodeDir = new File(destDir, "src/");
         destDir.mkdirs();
         FileUtils.cleanDirectory(destDir);
         destDir.mkdirs();
@@ -51,7 +53,7 @@ public class ErlApp {
     }
 
     public ErlangCodeStream createFile(String moduleName) throws FileNotFoundException, UnsupportedEncodingException {
-        return new ErlangCodeStream(new File(destDir, moduleName + ".erl"));
+        return new ErlangCodeStream(new File(destCodeDir, moduleName + ".erl"));
     }
 
     /**
@@ -61,12 +63,12 @@ public class ErlApp {
      */
     public ErlangCodeStream getFunStream(String moduleName) throws FileNotFoundException, UnsupportedEncodingException {
         if (!funMod.containsKey(moduleName)) {
-            ErlangCodeStream ecs = new ErlangCodeStream(new File(destDir, ErlUtil.getModuleName(moduleName)
+            ErlangCodeStream ecs = new ErlangCodeStream(new File(destCodeDir, ErlUtil.getModuleName(moduleName)
                     + "_funs.erl"));
             funMod.put(moduleName, ecs);
             ecs.pf("-module(%s).", ErlUtil.getModuleName(moduleName) + "_funs");
             ecs.println("-compile(export_all).");
-            ecs.println("-include_lib(\"runtime/include/abs_types.hrl\").");
+            ecs.println("-include_lib(\"include/abs_types.hrl\").");
             ecs.println();
         }
 
@@ -84,8 +86,7 @@ public class ErlApp {
             "include/*",
             "Emakefile",
             "Makefile",
-            "gcstats_as_csv.erl",
-            "lib/*"
+            "gcstats_as_csv.erl"
             );
     private static final String RUNTIME_PATH = "abs/backend/erlang/runtime/";
 
@@ -100,8 +101,7 @@ public class ErlApp {
                 if (f.endsWith("/*")) {
                     String dirname = f.substring(0, f.length() - 2);
                     String inname = RUNTIME_PATH + dirname;
-                    // all directories are copied below runtime/
-                    String outname = destDir + "/runtime/" + dirname;
+                    String outname = destDir + "/" + dirname;
                     new File(outname).mkdirs();
                     if (resource instanceof JarURLConnection) {
                         copyJarDirectory(((JarURLConnection) resource).getJarFile(),
@@ -115,9 +115,7 @@ public class ErlApp {
                     is = ClassLoader.getSystemResourceAsStream(RUNTIME_PATH + f);
                     if (is == null)
                         throw new RuntimeException("Could not locate Runtime file:" + f);
-                    String outputFile = ("Emakefile".equals(f) || "Makefile".equals(f) || "gcstats_as_csv.erl".equals(f)
-                                         ? f
-                                         : "runtime/" + f).replace('/', File.separatorChar);
+                    String outputFile = f.replace('/', File.separatorChar);
                     File file = new File(destDir, outputFile);
                     file.getParentFile().mkdirs();
                     ByteStreams.copy(is, Files.newOutputStreamSupplier(file));

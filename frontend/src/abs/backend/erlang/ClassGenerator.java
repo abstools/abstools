@@ -45,7 +45,7 @@ public class ClassGenerator {
 
     private void generateHeader() {
         ecs.pf("-module(%s).", modName);
-        ecs.println("-include_lib(\"runtime/include/abs_types.hrl\").");
+        ecs.println("-include_lib(\"include/abs_types.hrl\").");
         if (hasFields) {
             ecs.println("-behaviour(object).");
         }
