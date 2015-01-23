@@ -10,7 +10,7 @@
 
 -export([behaviour_info/1]).
 
--ifdef(WITH_STATS).
+-ifdef(WITH_GCSTATS).
 -define(GCSTATS(Statistics), eventstream:gcstats({gcstats, now(), Statistics})).
 -else.
 -define(GCSTATS(Statistics), ok).
