@@ -38,6 +38,7 @@ public class ErlApp {
 
     public File destDir;
     public File destCodeDir;
+    public File destIncludeDir;
 
     public Map<String, ErlangCodeStream> funMod = new HashMap<String, ErlangCodeStream>();
 
@@ -45,6 +46,7 @@ public class ErlApp {
         super();
         this.destDir = destDir;
         this.destCodeDir = new File(destDir, "src/");
+        this.destIncludeDir = new File(destDir, "include/");
         destDir.mkdirs();
         FileUtils.cleanDirectory(destDir);
         destDir.mkdirs();
@@ -52,9 +54,14 @@ public class ErlApp {
         copyRuntime();
     }
 
-    public ErlangCodeStream createFile(String moduleName) throws FileNotFoundException, UnsupportedEncodingException {
+    public ErlangCodeStream createSourceFile(String moduleName) throws FileNotFoundException, UnsupportedEncodingException {
         return new ErlangCodeStream(new File(destCodeDir, moduleName + ".erl"));
     }
+
+    public ErlangCodeStream createIncludeFile(String filename) throws FileNotFoundException, UnsupportedEncodingException {
+        return new ErlangCodeStream(new File(destIncludeDir, filename + ".hrl"));
+    }
+
 
     /**
      * All functions for an ABS module are stored in one Erlang module.

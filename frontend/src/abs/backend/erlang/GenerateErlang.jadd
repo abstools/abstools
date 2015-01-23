@@ -105,7 +105,7 @@ aspect GenerateErlang {
    ErlangCodeStream ecs=null;
    try{
      if (hasBlock()) {
-       ecs = ea.createFile(ErlUtil.getName(this));
+       ecs = ea.createSourceFile(ErlUtil.getName(this));
        ecs.pf("-module(%s).", ErlUtil.getModuleName(getName()));
        ecs.println("-include_lib(\"include/abs_types.hrl\").");
        ecs.println("-export([main/1]).");
@@ -119,6 +119,14 @@ aspect GenerateErlang {
        getBlock().generateErlangCode(ecs, Vars.n());
        ecs.println('.');
        ecs.decIndent();
+
+       // Let's start the last seen module by default, hope there's
+       // only one init block in the model.
+       ErlangCodeStream hcs = ea.createIncludeFile("absmodulename");
+       hcs.println("%%This file is licensed under the terms of the Modified BSD License.");
+       hcs.println("-undef(ABSMAINMODULE).");
+       hcs.println("-define(ABSMAINMODULE," + ErlUtil.getModuleName(getName()) + ").");
+       hcs.close();
      }
    }
    finally{

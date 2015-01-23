@@ -30,7 +30,7 @@ public class ClassGenerator {
     public ClassGenerator(ErlApp ea, ClassDecl classDecl) throws IOException {
         this.classDecl = classDecl;
         modName = ErlUtil.getName(classDecl);
-        ecs = ea.createFile(modName);
+        ecs = ea.createSourceFile(modName);
         hasFields = classDecl.getParams().hasChildren() || classDecl.getFields().hasChildren();
         try {
             generateHeader();
