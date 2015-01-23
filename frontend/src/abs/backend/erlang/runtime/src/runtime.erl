@@ -38,17 +38,19 @@ start_mod(Arguments)  ->
     M=proplists:get_value(main_module,Arguments),
     io:format("Start ~s~n",[M]),
     Module=list_to_atom("m_"++re:replace(M,"[.]","_",[{return,list},global])),    
+    Debug=proplists:get_value(debug,Arguments, false),
+    GCStatistics=proplists:get_value(gcstats,Arguments, false),
     %%Init logging
     eventstream:start_link(),
-    case {proplists:get_value(debug,Arguments, false), proplists:get_value(gcstats,Arguments, false)} of 
+    case {Debug, GCStatistics} of 
         {false, false} ->
             ok;
-        {Debug, Statistics} ->
-            eventstream:add_handler(console_logger,[Debug, Statistics])
+        _ ->
+            eventstream:add_handler(console_logger,[Debug, GCStatistics])
     end,
     eventstream:add_handler(cog_monitor,[self()]),
     %% Init garbage collector
-    gc:start(),
+    gc:start(GCStatistics),
     %% Init simulation clock
     clock:start(),
     %% init RNG.

@@ -6,15 +6,9 @@
 
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
--export([start/0, stop/0, init/0, extract_references/1, get_references/1]).
+-export([start/1, stop/0, init/1, extract_references/1, get_references/1]).
 
 -export([behaviour_info/1]).
-
--ifdef(WITH_GCSTATS).
--define(GCSTATS(Statistics), eventstream:gcstats({gcstats, now(), Statistics})).
--else.
--define(GCSTATS(Statistics), ok).
--endif.
 
 -undef(MIN_PROC_FACTOR).
 -undef(MAX_PROC_FACTOR).
@@ -33,22 +27,30 @@
 
 -record(state, {cogs=gb_sets:empty(),objects=gb_sets:empty(),
                 futures=gb_sets:empty(),root_futures=gb_sets:empty(),
-                previous=now(), limit=?MIN_THRESH, proc_factor=?MIN_PROC_FACTOR}).
+                previous=now(), 
+                limit=?MIN_THRESH, proc_factor=?MIN_PROC_FACTOR, log=false}).
 
 behaviour_info(callbacks) ->
     [{get_references, 1}].
 
-start() ->
-    register(gc, spawn(?MODULE, init, [])).
+start(Log) ->
+    register(gc, spawn(?MODULE, init, [Log])).
 
 stop() ->
     gc ! stop.
 
-init() ->
-    loop(#state{}).
+init(Log) ->
+    loop(#state{log=Log}).
 
-loop(State=#state{cogs=Cogs, objects=Objects, futures=Futures, root_futures=RootFutures}) ->
-    ?GCSTATS({{memory, erlang:memory()}, {cogs, gb_sets:size(Cogs)}, {objects, gb_sets:size(Objects)},
+gcstats(Log, Statistics) -> 
+    case Log of
+        true ->eventstream:gcstats({gcstats, now(), Statistics});
+        false -> ok
+    end.
+
+
+loop(State=#state{cogs=Cogs, objects=Objects, futures=Futures, root_futures=RootFutures, log=Log}) ->
+    gcstats(Log, {{memory, erlang:memory()}, {cogs, gb_sets:size(Cogs)}, {objects, gb_sets:size(Objects)},
               {futures, gb_sets:size(Futures), gb_sets:size(RootFutures)},
               {processes, erlang:system_info(process_count), erlang:system_info(process_limit)}}),
     NewState =
@@ -73,15 +75,15 @@ loop(State=#state{cogs=Cogs, objects=Objects, futures=Futures, root_futures=Root
     case is_collection_needed(NewState) of
         stop -> ok;
         true ->
-            ?GCSTATS(stop_world),
+            gcstats(Log, stop_world),
             gb_sets:fold(fun ({cog, Ref}, ok) -> cog:stop_world(Ref) end, ok, NewState#state.cogs),
             await_stop(NewState, 0);
         false ->
             loop(NewState)
     end.
 
-await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFutures},Stopped) ->
-    ?GCSTATS({{memory, erlang:memory()}, {cogs, gb_sets:size(Cogs)}, {objects, gb_sets:size(Objects)},
+await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFutures, log=Log},Stopped) ->
+    gcstats(Log, {{memory, erlang:memory()}, {cogs, gb_sets:size(Cogs)}, {objects, gb_sets:size(Objects)},
               {futures, gb_sets:size(Futures), gb_sets:size(RootFutures)},
               {processes, erlang:system_info(process_count), erlang:system_info(process_limit)}}),
     {NewState, NewStopped} =
@@ -106,31 +108,32 @@ await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=R
     NewCogs = NewState#state.cogs,
     case NewStopped >= gb_sets:size(NewCogs) of
         true ->
-            ?GCSTATS(mark),
+            gcstats(Log, mark),
             mark(NewState, [], ordsets:union(rpc:pmap({gc, get_references}, [], gb_sets:to_list(gb_sets:union(NewCogs, NewState#state.root_futures)))));
         false -> await_stop(NewState,NewStopped)
     end.
 
-mark(State, Black, []) ->
-    ?GCSTATS(sweep),
+mark(State=#state{log=Log}, Black, []) ->
+    gcstats(Log, sweep),
     sweep(State, gb_sets:from_ordset(Black));
 mark(State, Black, Gray) ->
     NewBlack = ordsets:union(Black, Gray),
     NewGray = ordsets:subtract(ordsets:union(rpc:pmap({gc, get_references}, [], Gray)), Black),
     mark(State, NewBlack, NewGray).
 
-sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=RootFutures,
-                   limit=Lim, proc_factor=PFactor},Black) ->
+sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,
+                   root_futures=RootFutures,
+                   limit=Lim, proc_factor=PFactor, log=Log},Black) ->
     WhiteObjects = gb_sets:subtract(Objects, Black),
     WhiteFutures = gb_sets:subtract(Futures, Black),
     BlackObjects = gb_sets:intersection(Objects, Black),
     BlackFutures = gb_sets:intersection(Futures, Black),
     ?DEBUG({sweep, {objects, WhiteObjects}, {futures, WhiteFutures}}),
-    ?GCSTATS({sweep, {objects, gb_sets:size(WhiteObjects), gb_sets:size(BlackObjects)},
+    gcstats(Log,{sweep, {objects, gb_sets:size(WhiteObjects), gb_sets:size(BlackObjects)},
              {futures, gb_sets:size(WhiteFutures), gb_sets:size(BlackFutures)}}),
     gb_sets:fold(fun ({object, Ref}, ok) -> object:die(Ref, gc), ok end, ok, WhiteObjects),
     gb_sets:fold(fun ({future, Ref}, ok) -> future:die(Ref, gc), ok end, ok, WhiteFutures),
-    ?GCSTATS(resume_world),
+    gcstats(Log,resume_world),
     gb_sets:fold(fun ({cog, Ref}, ok) -> cog:resume_world(Ref) end, ok, Cogs),
     Count = gb_sets:size(BlackObjects) + gb_sets:size(BlackFutures),
     NewLim = if Count > Lim * ?INC_THRESH -> Lim * 2;
