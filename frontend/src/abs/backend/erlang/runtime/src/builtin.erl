@@ -68,10 +68,10 @@ truncate(_Cog,N)->
     N.
 
 println(_Cog,S)->
-    io:format("~p~n",[S]).
+    io:format("~s~n",[S]).
 
 print(_Cog,S)->
-    io:format("~p",[S]).
+    io:format("~s",[S]).
 
 getProductLine(_Cog)->
     exit("Not Implemented").
