@@ -2,6 +2,7 @@
 -module(runtime).
 %% Starts execution of a module
 %% start or run accept commandline arguments
+-behaviour(supervisor).
 
 -include_lib("absmodulename.hrl").
 %% pacify the editor: the above file is generated hence not always available
@@ -9,7 +10,10 @@
 -define(ABSMAINMODULE,undefined).
 -endif.
 
--export([start/0,start/1,run/1]).
+-export([start/0,start/1,run/1,start_link/1]).
+
+%% Supervisor callbacks
+-export([init/1]).
 
 -define(CMDLINE_SPEC,
         [{debug,$d,"debug",{boolean,false},"Prints debug status output"},
@@ -17,10 +21,20 @@
          {main_module,undefined,undefined,{string, ""},"Name of Module containing MainBlock"}]).
 
 
+%% ===================================================================
+%% Supervisor callbacks
+%% ===================================================================
+
+init([]) ->
+    %% TODO: start gen_server, gen_event etc. here, add them to
+    %% supervision tree information
+    {ok, { {one_for_one, 5, 10}, []} }.
+
+
 start()->
     case init:get_plain_arguments() of
         []->
-            start_mod(?ABSMAINMODULE, false, false);
+            run_mod(?ABSMAINMODULE, false, false);
         Args->
             start(Args)
    end.    
@@ -40,12 +54,25 @@ parse(Args,Exec)->
                      end,
             Debug=proplists:get_value(debug,Parsed, false),
             GCStatistics=proplists:get_value(gcstats,Parsed, false),
-            start_mod(Module, Debug, GCStatistics);
+            run_mod(Module, Debug, GCStatistics);
         _ ->
           getopt:usage(?CMDLINE_SPEC,Exec)
     end.
 
-start_mod(Module, Debug, GCStatistics)  ->
+%% This is called from an application generated via rebar.
+%% TODO: make this OTP-conformant, set up a supervision tree, keep
+%% cog_monitor alive and responsive after model has finished, etc.
+%% For now we just punt.
+start_link(Args) ->
+    case Args of
+        [Module] ->
+            R={ok, T} = start_mod(Module, false, false),
+            io:format("~w~n", [end_mod(T)]),
+            R;
+        _ -> {error, false}
+    end.
+
+start_mod(Module, Debug, GCStatistics) ->
     io:format("Start ~w~n",[Module]),
     %%Init logging
     eventstream:start_link(),
@@ -67,9 +94,11 @@ start_mod(Module, Debug, GCStatistics)  ->
 
     %%Start main task
     Cog=cog:start(),
-    R=cog:add_and_notify(Cog,main_task,[Module,self()]),
+    {ok, cog:add_and_notify(Cog,main_task,[Module,self()])}.
+
+end_mod(TaskRef) ->
     %%Wait for termination of main task and idle state
-    RetVal=task:join(R),
+    RetVal=task:join(TaskRef),
     cog_monitor:waitfor(),
     timer:sleep(1),
     gc:stop(),
@@ -77,5 +106,9 @@ start_mod(Module, Debug, GCStatistics)  ->
     eventstream:stop(),
     RetVal.
 
+
+run_mod(Module, Debug, GCStatistics)  ->
+    {ok, R}=start_mod(Module, Debug, GCStatistics),
+    end_mod(R).
 
 

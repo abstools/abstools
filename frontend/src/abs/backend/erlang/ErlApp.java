@@ -151,4 +151,27 @@ public class ErlApp {
         }
         is.close();
     }
+
+    public void generateModuleDefinitions(String absModulename, String erlModulename) throws FileNotFoundException, UnsupportedEncodingException {
+        ErlangCodeStream hcs = createIncludeFile("absmodulename");
+        hcs.println("%%This file is licensed under the terms of the Modified BSD License.");
+        hcs.println("-undef(ABSMAINMODULE).");
+        hcs.println("-define(ABSMAINMODULE," + erlModulename + ").");
+        hcs.close();
+
+        ErlangCodeStream acs = new ErlangCodeStream(new File(destCodeDir, erlModulename + ".app.src"));
+        acs.println("{application, " + erlModulename + ",");
+        acs.println(" [");
+        acs.println("  {description, \"Generated code for ABS module '" + absModulename + "'\"},");
+        acs.println("  {vsn, \"1\"},");
+        acs.println("  {registered, []},");
+        acs.println("  {applications, [");
+        acs.println("                  kernel,");
+        acs.println("                  stdlib");
+        acs.println("                 ]},");
+        acs.println("  {mod, { " + erlModulename + ", []}},");
+        acs.println("  {env, []}");
+        acs.println("]}.");
+        acs.close();
+    }
 }

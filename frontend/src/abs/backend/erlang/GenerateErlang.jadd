@@ -105,10 +105,14 @@ aspect GenerateErlang {
    ErlangCodeStream ecs=null;
    try{
      if (hasBlock()) {
+       String erlModulename = ErlUtil.getModuleName(getName());
        ecs = ea.createSourceFile(ErlUtil.getName(this));
-       ecs.pf("-module(%s).", ErlUtil.getModuleName(getName()));
+       ecs.pf("-module(%s).", erlModulename);
+       ecs.println("-behaviour(application).");
        ecs.println("-include_lib(\"include/abs_types.hrl\").");
        ecs.println("-export([main/1]).");
+       ecs.println("%% Application callbacks");
+       ecs.println("-export([start/2, stop/1]).");
        ecs.println();
        ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef}");
        ecs.println("O = void,");
@@ -119,14 +123,20 @@ aspect GenerateErlang {
        getBlock().generateErlangCode(ecs, Vars.n());
        ecs.println('.');
        ecs.decIndent();
+       ecs.println();
+       ecs.println("%% ===================================================================");
+       ecs.println("%% Application callbacks");
+       ecs.println("%% ===================================================================");
+       ecs.println();
+       ecs.println("start(_StartType, _StartArgs) ->");
+       ecs.println("    runtime:start_link([" + erlModulename + "]).");
+       ecs.println();
+       ecs.println("stop(_State) ->");
+       ecs.println("    ok.");
 
        // Let's start the last seen module by default, hope there's
        // only one init block in the model.
-       ErlangCodeStream hcs = ea.createIncludeFile("absmodulename");
-       hcs.println("%%This file is licensed under the terms of the Modified BSD License.");
-       hcs.println("-undef(ABSMAINMODULE).");
-       hcs.println("-define(ABSMAINMODULE," + ErlUtil.getModuleName(getName()) + ").");
-       hcs.close();
+       ea.generateModuleDefinitions(getName(), erlModulename);
      }
    }
    finally{
