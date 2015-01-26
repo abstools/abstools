@@ -86,7 +86,7 @@ start_mod(Module, Debug, GCStatistics) ->
     %% Init garbage collector
     gc:start(GCStatistics),
     %% Init simulation clock
-    clock:start(),
+    clock:start_link(),
     %% init RNG.
     %% TODO: if we want reproducible runs, make seed a command-line parameter
     {A1,A2,A3} = now(),
