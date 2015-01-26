@@ -101,7 +101,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      * @return the Module Name, which contains the Main Block
      * 
      */
-    private String genCode(Model model, File targetDir, boolean appendResultprinter) throws IOException {
+    private String genCode(Model model, File targetDir, boolean appendResultprinter) throws IOException, InterruptedException {
         if (model.hasErrors()) {
             Assert.fail(model.getErrors().getFirst().getHelpMessage());
         }

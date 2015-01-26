@@ -64,10 +64,13 @@ public class ErlangBackend extends Main {
         compile(model, DEFAULT_DEST_DIR);
     }
 
-    public static void compile(Model m, File destDir) throws IOException {
+    public static void compile(Model m, File destDir) throws IOException, InterruptedException {
         ErlApp erlApp = new ErlApp(destDir);
         m.generateErlangCode(erlApp);
         erlApp.close();
+        Process p = Runtime.getRuntime().exec(new String[] {"bin/rebar", "compile"},
+                                              null, destDir);
+        p.waitFor();
     }
 
 }

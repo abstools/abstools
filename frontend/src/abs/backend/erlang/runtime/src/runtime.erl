@@ -50,6 +50,7 @@ parse(Args,Exec)->
         {ok,{Parsed,[]}} ->
             Module = case proplists:get_value(main_module,Parsed,none) of
                          none -> ?ABSMAINMODULE;
+                         [] -> ?ABSMAINMODULE;
                          M -> list_to_atom("m_" ++ re:replace(M,"[.]","_",[{return,list},global]))
                      end,
             Debug=proplists:get_value(debug,Parsed, false),

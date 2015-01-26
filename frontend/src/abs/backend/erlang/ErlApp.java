@@ -91,9 +91,12 @@ public class ErlApp {
     private static final Set<String> RUNTIME_FILES = ImmutableSet.of(
             "src/*",
             "include/*",
+            "deps/*",
             "Emakefile",
             "Makefile",
-            "gcstats_as_csv.erl"
+            "rebar.config",
+            "gcstats_as_csv.erl",
+            "bin/*"
             );
     private static final String RUNTIME_PATH = "abs/backend/erlang/runtime/";
 
@@ -132,6 +135,7 @@ public class ErlApp {
             if (is != null)
                 is.close();
         }
+        new File(destDir, "bin/rebar").setExecutable(true, false);
     }
 
     private void copyJarDirectory(JarFile jarFile, String inname, String outname)
