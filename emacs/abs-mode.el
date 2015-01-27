@@ -30,7 +30,9 @@
 (require 'easymenu)
 (eval-when-compile (require 'rx))
 (require 'flymake)
+(require 'cl-lib)
 (autoload 'run-maude "maude-mode" nil t)
+(with-demoted-errors (require 'erlang))	; for erlang-shell-function
 
 ;;; Code:
 
@@ -316,9 +318,9 @@ value.")
 ;;; Compilation support
 (defun abs--file-date-< (d1 d2)
   "Compare file dates D1 and D2, as returned by `file-attributes'."
-  (or (and (= (first d1) (first d2))
-           (< (second d1) (second d2)))
-      (< (first d1) (first d2))))
+  (or (and (= (cl-first d1) (cl-first d2))
+           (< (cl-second d1) (cl-second d2)))
+      (< (cl-first d1) (cl-first d2))))
 
 (defun abs--input-files ()
   (or abs-input-files (list (file-name-nondirectory (buffer-file-name)))))
