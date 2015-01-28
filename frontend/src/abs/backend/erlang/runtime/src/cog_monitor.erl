@@ -4,6 +4,7 @@
 
 -module(cog_monitor).
 -behaviour(gen_event).
+-include_lib("log.hrl").
 -include_lib("abs_types.hrl").
 
 -export([waitfor/0]).
@@ -122,6 +123,7 @@ handle_no_active(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,timer=T}) 
             State#state{timer=T1};
         [{_, _, MTE, _, _} | _] ->
             %% advance clock before waking up processes waiting for it
+            ?DEBUG({clock_advance, MTE}),
             clock:advance(MTE),
             lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
             lists:foreach(fun dc:print_info/1, DCs),
