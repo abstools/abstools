@@ -44,7 +44,7 @@ add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
     task:block(Cog),
     Ref!{newT,Task,Args,self(),false},
     await_start(Task,[Args|Stack]),
-    task:ready(Cog,[Args|Stack]).
+    task:acquire_token(Cog,[Args|Stack]).
 
 new_state(#cog{ref=Cog},TaskRef,State)->
     Cog!{newState,TaskRef,State}.
