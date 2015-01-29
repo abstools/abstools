@@ -75,11 +75,11 @@ public class ClassGenerator {
         ErlUtil.functionHeaderParamsAsList(ecs, "init", generatorClassMatcher(), classDecl.getParamList(), Mask.none);
         Vars vars = Vars.n();
         for (ParamDecl p : classDecl.getParamList()) {
-            ecs.pf("set(O,%s,%s),", p.getName(), "P_" + p.getName());
+            ecs.pf("set(O,'%s',%s),", p.getName(), "P_" + p.getName());
         }
         for (FieldDecl p : classDecl.getFields()) {
             if (p.hasInitExp()) {
-                ecs.format("set(O,%s,", p.getName());
+                ecs.format("set(O,'%s',", p.getName());
                 p.getInitExp().generateErlangCode(ecs, vars);
                 ecs.println("),");
             }
@@ -118,7 +118,7 @@ public class ClassGenerator {
             if (!first)
                 ecs.print(",");
             first = false;
-            ecs.format("%s=null", f.getName());
+            ecs.format("'%s'=null", f.getName());
         }
         ecs.println("}).");
         ErlUtil.functionHeader(ecs, "init_internal");
@@ -133,8 +133,8 @@ public class ClassGenerator {
                     ecs.decIndent();
                 }
                 first = false;
-                ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, String.format("#state{%s=G}", f.getName()),
-                        f.getName());
+                ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, String.format("#state{'%s'=G}", f.getName()),
+                        "'" + f.getName() + "'");
                 ecs.print("G");
             }
             ecs.println(".");
@@ -147,8 +147,8 @@ public class ClassGenerator {
                     ecs.decIndent();
                 }
                 first = false;
-                ErlUtil.functionHeader(ecs, "set_val_internal", Mask.none, "S", f.getName(), "V");
-                ecs.format("S#state{%s=V}", f.getName());
+                ErlUtil.functionHeader(ecs, "set_val_internal", Mask.none, "S", "'" + f.getName() + "'", "V");
+                ecs.format("S#state{'%s'=V}", f.getName());
             }
             ecs.println(".");
             ecs.decIndent();

@@ -6,7 +6,7 @@
 %% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([ready/2,return_token/2,block/1,wait/1,wait_poll/1,commit/1,rollback/1]).
+-export([acquire_token/2,release_token/2,block/1,wait/1,wait_poll/1,commit/1,rollback/1]).
 -export([await_duration/4,block_for_duration/4,block_for_resource/4]).
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
@@ -31,9 +31,9 @@ start(Cog,Task,Args)->
 
 init(Task,Cog,Args)->
     InnerState=Task:init(Cog,Args),
-    ready(Cog, InnerState),
+    acquire_token(Cog, InnerState),
     Val=Task:start(InnerState),
-    return_token(Cog,done),
+    release_token(Cog,done),
     send_notifications(Val).
 
 get_references(Task) ->
@@ -65,7 +65,7 @@ send_notifications(Val)->
     end.
             
 
-ready(Cog, Stack)->
+acquire_token(Cog, Stack)->
     cog:new_state(Cog,self(),runnable),
     loop_for_unblock_signal(token, Stack).
 
@@ -101,12 +101,12 @@ block_for_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
     task:block(Cog),
     eventstream:event({cog,self(),CogRef,clock_waiting,Min,Max}),
     loop_for_unblock_signal(clock_finished, Stack),
-    task:ready(Cog, Stack).
+    task:acquire_token(Cog, Stack).
 
 block_for_resource(Cog, Resourcetype, Amount, Stack) ->
     task:block(Cog),
     loop_for_resource(Cog, Resourcetype, Amount, Stack),
-    task:ready(Cog,Stack).
+    task:acquire_token(Cog,Stack).
 
 loop_for_resource(Cog=#cog{ref=CogRef,dc=DC},Resourcetype,Amount,Stack) ->
     {Result, Consumed}= dc:consume(DC,Resourcetype,Amount),
@@ -124,7 +124,7 @@ loop_for_resource(Cog=#cog{ref=CogRef,dc=DC},Resourcetype,Amount,Stack) ->
             end
     end.
 
-return_token(C=#cog{ref=Cog},State)->
+release_token(C=#cog{ref=Cog},State)->
     commit(C),
     Cog!{token,self(),State}.
 

@@ -41,14 +41,14 @@ get_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
     task:block(Cog),
     Ref ! {get, self()},
     Result = get_blocking(Ref, Stack),
-    task:ready(Cog, Stack),
+    task:acquire_token(Cog, Stack),
     Result.
 
 safeget_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
     task:block(Cog),
     Ref ! {get, self()},
     Result = safeget_blocking(Ref, Stack),
-    task:ready(Cog, Stack),
+    task:acquire_token(Cog, Stack),
     Result.
 
 get_references(Ref) ->

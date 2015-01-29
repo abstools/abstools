@@ -231,7 +231,7 @@ aspect GenerateErlang {
         ecs.format("eventstream:event({newdc, %s})", varName);
       }
     } else if(getVar() instanceof FieldUse) {
-      ecs.format("set(O,%s,%s)", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
+      ecs.format("set(O,'%s',%s)", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
       if (isNewDC) {
         ecs.println(",");
         ecs.format("eventstream:event({newdc, get(O,%s)})", getVar().getName());
@@ -803,15 +803,15 @@ aspect GenerateErlang {
   }
 
   public void SuspendStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars){
-    ecs.println("task:return_token(Cog,runnable),");
-    ecs.print("task:ready(Cog,");
+    ecs.println("task:release_token(Cog,runnable),");
+    ecs.print("task:acquire_token(Cog,");
     ecs.print(vars.toStack());
     ecs.print(")");
   }
   public void AwaitStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     StringWriter sw = new StringWriter();
     ErlangCodeStream after = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
-    ecs.println("task:return_token(Cog,waiting),");
+    ecs.println("task:release_token(Cog,waiting),");
     getGuard().generateErlangCode(ecs,after,vars);
     after.close();
     if(getGuard().hasPoll()){
@@ -827,7 +827,7 @@ aspect GenerateErlang {
       ecs.format("(%s)",vars.toParamList());
     }
     else {
-      ecs.print("task:ready(Cog,");
+      ecs.print("task:acquire_token(Cog,");
       ecs.print(vars.toStack());
       ecs.print(")");
     }
