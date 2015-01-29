@@ -1,0 +1,82 @@
+/*
+ * PingPong.abs -- PingPong example
+ *
+ */
+module PingPong;
+
+// Tests for Deployment
+data RequirementElement = P | A | L(Int) ;
+data Aeolus = Cost(String, Int) | Spec(Int, List<RequirementElement>);
+// Tests End
+
+
+data PingMsg = Fine
+             | HelloPing 
+             | ByePing 
+             ;
+
+data PongMsg = NoMsg 
+         | Hello(Ping)
+         | HowAreYou
+         | ByePong
+         ;
+
+
+
+interface Ping {
+    Unit ping(PingMsg m);
+}
+
+interface Pong {
+    Unit hello(Ping ping);
+    Unit pong(PongMsg m);
+}
+
+[Aeolus: Cost("CPU", 1)]
+[Aeolus: Cost("Memory", 1)]
+[Aeolus: Spec(1, list[L(3)]) ]
+[Aeolus: Spec(1, list[L(4)]) ]
+class PingImpl(List<Pong> lpong) implements Ping {
+    Pong pong = nth(lpong, 0);
+    Unit run(){
+      pong!hello(this); 
+    }
+
+    Unit ping(PingMsg msg){
+      PongMsg reply = case msg {
+         HelloPing => HowAreYou;
+         Fine => ByePong; 
+         ByePing => NoMsg;
+      };
+      
+      if (reply != NoMsg) {
+         Fut<Unit> fu = pong!pong(reply);
+      	 fu.get;
+      }
+     }
+}
+
+[Aeolus: Cost("CPU", 1)]
+[Aeolus: Cost("Memory", 1)]
+[Aeolus: Spec(1, list[]) ]
+class PongImpl implements Pong {
+    Ping ping;
+
+    Unit hello(Ping ping) {
+       this.ping = ping;
+       ping!ping(HelloPing);
+    }
+
+    Unit pong(PongMsg msg){
+       if (msg == HowAreYou)
+           ping!ping(Fine);
+       else
+           ping!ping(ByePing);
+    } 
+
+}
+
+{
+    Pong pong = new PongImpl(); 
+    new PingImpl(Cons(pong,Nil)); 
+}
