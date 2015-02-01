@@ -94,10 +94,18 @@ public class ErlApp {
             "deps/*",
             "Emakefile",
             "Makefile",
+            "start_console",
+            "run",
             "rebar.config",
             "gcstats_as_csv.erl",
             "bin/*"
             );
+    private static final Set<String> EXEC_FILES = ImmutableSet.of(
+            "bin/rebar",
+            "run",
+            "start_console"
+            );
+        
     private static final String RUNTIME_PATH = "abs/backend/erlang/runtime/";
 
     private void copyRuntime() throws IOException {
@@ -135,7 +143,9 @@ public class ErlApp {
             if (is != null)
                 is.close();
         }
-        new File(destDir, "bin/rebar").setExecutable(true, false);
+        for (String f : EXEC_FILES) {
+            new File(destDir, f).setExecutable(true, false);
+        }
     }
 
     private void copyJarDirectory(JarFile jarFile, String inname, String outname)

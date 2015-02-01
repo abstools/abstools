@@ -1,0 +1,3 @@
+#!/usr/bin/env escript
+%%! -pa ebin
+main(Arg)->runtime:run(Arg).
