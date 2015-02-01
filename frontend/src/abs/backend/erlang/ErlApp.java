@@ -94,6 +94,7 @@ public class ErlApp {
             "deps/*",
             "Emakefile",
             "Makefile",
+            "Dockerfile",
             "start_console",
             "run",
             "rebar.config",
