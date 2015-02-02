@@ -98,8 +98,8 @@ start(Cog,Class)->
     {ok,O}=gen_fsm:start_link(object,[Cog,Class,Class:init_internal()],[]),
     gc ! #object{class=Class,ref=O,cog=Cog}.
 
-init([Cog,Class,Status])->
-    ?DEBUG({new,Cog, Class}),
+init([Cog=#cog{ref=CogRef},Class,Status])->
+    ?DEBUG({new,CogRef, self(), Class}),
     {ok,uninitialized,#state{cog=Cog,await=[],tasks=gb_sets:empty(),class=Class,int_status=Status,new_vals=gb_trees:empty()}}.
 
 uninitialized(activate,S=#state{await=A})->

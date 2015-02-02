@@ -24,7 +24,7 @@ start() ->
 start(DC)->
     {ok,T}=object_tracker:start(),
     %% There are two DC refs: the one in state is to handle GC and to
-    %% create a copy of the current cog (see initTask), the one in
+    %% create a copy of the current cog (see start_new_task), the one in
     %% the cog structure itself is for evaluating thisDC()
     Cog = #cog{ref=spawn(cog,init, [T,DC]),tracker=T,dc=DC},
     gc ! {Cog, self()},
@@ -33,21 +33,21 @@ start(DC)->
     end.
 
 add(#cog{ref=Cog},Task,Args)->
-    Cog!{newT,Task,Args,self(),false},
+    Cog!{new_task,Task,Args,self(),false},
     await_start(Task, Args).
 
 add_and_notify(#cog{ref=Cog},Task,Args)->
-    Cog!{newT,Task,Args,self(),true},
+    Cog!{new_task,Task,Args,self(),true},
     await_start(Task, Args).
 
-add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
+add_blocking(#cog{ref=Ref},Task=init_task,Args,Cog,Stack)->
     task:block(Cog),
-    Ref!{newT,Task,Args,self(),false},
+    Ref!{new_task,Task,Args,self(),false},
     await_start(Task,[Args|Stack]),
     task:acquire_token(Cog,[Args|Stack]).
 
 new_state(#cog{ref=Cog},TaskRef,State)->
-    Cog!{newState,TaskRef,State}.
+    Cog!{new_state,TaskRef,State}.
 
 %%Garbage collector callbacks
 
@@ -87,7 +87,7 @@ init(Tracker,DC) ->
     loop(#state{tasks=gb_trees:empty(),tracker=Tracker,running=Running,dc=DC}).
 
 %%No task was ready to execute
-loop(S=#state{running=non_found})->
+loop(S=#state{running=no_task_schedulable})->
     eventstream:event({cog,self(),idle}),
     New_State=
         receive
@@ -96,15 +96,15 @@ loop(S=#state{running=non_found})->
                 S#state{running={gc, false}}
         after 0 ->
                 receive
-                    {newState,TaskRef,State}->
+                    {new_state,TaskRef,State}->
                         eventstream:event({cog,self(),active}),
-                        set_state(S,TaskRef,State);
-                    {newT,Task,Args,Sender,Notify}->
+                        set_task_state(S,TaskRef,State);
+                    {new_task,Task,Args,Sender,Notify}->
                         eventstream:event({cog,self(),active}),
-                        initTask(S,Task,Args,Sender,Notify);
+                        start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         ?DEBUG({task_died,R,Reason}),
-                        set_state(S#state{running=false},R,abort);
+                        set_task_state(S#state{running=false},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
@@ -128,13 +128,13 @@ loop(S=#state{running=false})->
                 S#state{running={gc, false}}
         after 0 ->
                 receive
-                    {newState,TaskRef,State}->
-                        set_state(S,TaskRef,State);
-                    {newT,Task,Args,Sender,Notify}->
-                        initTask(S,Task,Args,Sender,Notify);
+                    {new_state,TaskRef,State}->
+                        set_task_state(S,TaskRef,State);
+                    {new_task,Task,Args,Sender,Notify}->
+                        start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         ?DEBUG({task_died,R,Reason}),
-                        set_state(S#state{running=false},R,abort);
+                        set_task_state(S#state{running=false},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
@@ -144,7 +144,7 @@ loop(S=#state{running=false})->
                         S#state{running={gc, false}}
                 after
                     0 ->
-                        execute(S)
+                        schedule_and_execute(S)
                 end
         end,
     loop(New_State);
@@ -153,15 +153,15 @@ loop(S=#state{running=false})->
 loop(S=#state{running=R}) when is_pid(R)->
     New_State=
         receive
-            {newState,TaskRef,State}->
-                set_state(S,TaskRef,State);
-            {newT,Task,Args,Sender,Notify}->
-                initTask(S,Task,Args,Sender,Notify);
+            {new_state,TaskRef,State}->
+                set_task_state(S,TaskRef,State);
+            {new_task,Task,Args,Sender,Notify}->
+                start_new_task(S,Task,Args,Sender,Notify);
             {token,R,Task_state}->
-                set_state(S#state{running=false},R,Task_state);
+                set_task_state(S#state{running=false},R,Task_state);
             {'EXIT',R,Reason} when Reason /= normal ->
                ?DEBUG({task_died,R,Reason}),
-               set_state(S#state{running=false},R,abort);
+               set_task_state(S#state{running=false},R,abort);
             inc_ref_count->
                 inc_referencers(S);
             dec_ref_count->
@@ -182,13 +182,13 @@ loop(S=#state{running={blocked, R}}) ->
                 S#state{running={gc, {blocked, R}}}
         after 0 ->
                 receive
-                    {newState,TaskRef,State}->
-                        set_state(S,TaskRef,State);
-                    {newT,Task,Args,Sender,Notify}->
-                        initTask(S,Task,Args,Sender,Notify);
+                    {new_state,TaskRef,State}->
+                        set_task_state(S,TaskRef,State);
+                    {new_task,Task,Args,Sender,Notify}->
+                        start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         ?DEBUG({task_died,R,Reason}),
-                        set_state(S#state{running=false},R,abort);
+                        set_task_state(S#state{running=false},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
@@ -228,8 +228,7 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
         _ -> loop(New_State)
     end.
 
-%%Start new task
-initTask(S=#state{tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify)->
+start_new_task(S=#state{tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify)->
     Ref=task:start(#cog{ref=self(),tracker=Tracker,dc=DC},Task,Args),
     ?DEBUG({new_task,Ref,Task,Args}),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
@@ -237,34 +236,34 @@ initTask(S=#state{tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify)->
     S#state{tasks=gb_trees:insert(Ref,#task{ref=Ref},T)}.
 
 
-execute(S) ->
+schedule_and_execute(S) ->
     %Search executable task
     {S1=#state{tasks=Tasks},Polled}=poll_waiting(S),
     T=get_runnable(Tasks),
     State=case T of
         none-> %None found
             S2=reset_polled(none,Polled,S1),
-            S2#state{running=non_found};          
+            S2#state{running=no_task_schedulable};
         #task{ref=R} -> %Execute T
             R!token,
             ?DEBUG({schedule,T}),
             S2=reset_polled(R,Polled,S1),
-            set_state(S2#state{running=R},R,running)
+            set_task_state(S2#state{running=R},R,running)
     end,
     State.
 
 %%Sets state in dictionary, and updates polling list
-set_state(S=#state{tasks=Tasks},TaskRef,done)->
+set_task_state(S=#state{tasks=Tasks},TaskRef,done)->
     S#state{tasks=gb_trees:delete(TaskRef,Tasks)};
-set_state(S=#state{tasks=Tasks,polling=Pol},TaskRef,abort)->
+set_task_state(S=#state{tasks=Tasks,polling=Pol},TaskRef,abort)->
     Old=gb_trees:get(TaskRef,Tasks),
     S#state{tasks=gb_trees:delete(TaskRef,Tasks),polling=lists:delete(Old, Pol)};
-set_state(S=#state{running=TaskRef},TaskRef,blocked) ->
+set_task_state(S=#state{running=TaskRef},TaskRef,blocked) ->
     S#state{running={blocked, TaskRef}};
-set_state(S=#state{running={blocked, TaskRef}}, TaskRef, runnable) ->
+set_task_state(S=#state{running={blocked, TaskRef}}, TaskRef, runnable) ->
     TaskRef ! token,
     S#state{running=TaskRef};
-set_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
+set_task_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
     Old=#task{state=OldState}=gb_trees:get(TaskRef,Tasks),
     New_state=Old#task{state=State},
     S=case State of 
@@ -275,7 +274,7 @@ set_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
           _ ->
               S1
       end,  
-    ?DEBUG({state_change,TaskRef,OldState,State}),
+    ?DEBUG({task_state_change,TaskRef,OldState,State}),
     case State of 
          done ->
            S#state{tasks=gb_trees:delete(TaskRef,Tasks)};
@@ -329,10 +328,10 @@ dec_referencers(S=#state{referencers=N}) ->
 %%Awaits task reaching synchronization point, or stop the world prelude
 await_stop(S=#state{running=R}) ->
     New_State = receive
-                    {newState,TaskRef,State} ->
-                        set_state(S,TaskRef,State);
+                    {new_state,TaskRef,State} ->
+                        set_task_state(S,TaskRef,State);
                     {token,R,Task_state}->
-                        set_state(S#state{running=false},R,Task_state)
+                        set_task_state(S#state{running=false},R,Task_state)
                 end,
     case New_State#state.running =/= R of
         true ->
