@@ -267,9 +267,9 @@
   <!-- create distribution files for ABS -->
   <target name="dist" depends="clean,compile,versionstamp" description="create distribution files">
     <jar jarfile="${target.jar}">
-      <fileset dir="${build.dir}" includes="abs/**,deadlock/**" />
+      <fileset dir="${build.dir}" includes="abs/**,deadlock/**,autodeploy/**" />
       <!-- abslang has already been copied into build.dir -->
-      <fileset dir="${src.dir}" includes="abs/**,deadlock/**" excludes="abs/lang/abslang.abs" />
+      <fileset dir="${src.dir}" includes="abs/**,deadlock/**,autodeploy/**" excludes="abs/lang/abslang.abs" />
       <zipfileset src="${ext.dir}/apfloat.jar" />
             <zipfileset src="${ext.dir}/beaver-rt.jar" />
       <zipfileset src="${ext.dir}/ecj-3.6.2.jar" />

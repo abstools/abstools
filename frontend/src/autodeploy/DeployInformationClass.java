@@ -11,7 +11,7 @@ public class DeployInformationClass {
 
   private Map<String, Integer> _cost;
   private List<DeployInformationClassSpecification> _spec;
-  private int _provide;
+  //private int _provide;
 
   private abs.frontend.ast.List<ParamDecl> _params;
 
@@ -24,7 +24,7 @@ public class DeployInformationClass {
 
   private void addCost(String name, int cost) { _cost.put(name, new Integer(cost)); }
   private void addRequirement(DeployInformationClassSpecification l) { _spec.add(l); }
-  private void setProvide(int p) { _provide = p; }
+  //private void setProvide(int p) { _provide = p; }
 
 
   public void addAnn(PureExp exp) {
@@ -48,7 +48,7 @@ public class DeployInformationClass {
         if(((DataConstructorExp)el).getDataConstructor().getName().equals("P")) {
           System.out.print("P");
             int arity = 1;
-            String port = i.next().getType().toString();
+            String port = i.next().getType().getQualifiedName();
             System.out.print("(\"" + port + "\", " + arity + ")");
             spec.addRequirement(port, arity);
         } else if(((DataConstructorExp)el).getDataConstructor().getName().equals("A")){
@@ -56,7 +56,7 @@ public class DeployInformationClass {
         } else if(((DataConstructorExp)el).getDataConstructor().getName().equals("L")) {
           System.out.print("L");
           int arity = Integer.parseInt(((IntLiteral) ((DataConstructorExp) el).getParam(0)).getContent());
-          String port = ((DataTypeType) (i.next().getType())).getTypeArgs().get(0).toString();
+          String port = ((DataTypeType) (i.next().getType())).getTypeArgs().get(0).getQualifiedName();
           if(port != null) System.out.print("(\"" + port + "\", " + arity + ")");
           spec.addRequirement(port, arity);
         }

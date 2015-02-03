@@ -12,11 +12,11 @@ import java.util.List;
 public class DeployInformation {
 
   private Map<String, DeployInformationClass> _map;
-  private Map<String, List<String>> _hierarchy;
+  private Map<String, Set<String>> _hierarchy;
 
   public DeployInformation() {
     _map = new HashMap<String, DeployInformationClass>();
-    _hierarchy = new HashMap<String, List<String>>();
+    _hierarchy = new HashMap<String, Set<String>>();
   }
 
   public void extractInformation(Model model) {
@@ -26,9 +26,12 @@ public class DeployInformation {
 
   private void extractHierarchy(Model model) {
     for (Decl decl : model.getDecls()) {
-      if (decl instanceof InterfaceDecl) {
-        List<String> extended = new LinkedList<String>();
-        for (InterfaceTypeUse use : ((InterfaceDecl) decl).getExtendedInterfaceUseList()) {
+      abs.frontend.ast.List<InterfaceTypeUse> list = null;
+      if (decl instanceof InterfaceDecl) { list =  ((InterfaceDecl) decl).getExtendedInterfaceUseList(); }
+      if (decl instanceof ClassDecl) { list =  ((ClassDecl) decl).getImplementedInterfaceUseList(); }
+      if(list != null) {
+        Set<String> extended = new HashSet<String>();
+        for (InterfaceTypeUse use : list) {
           extended.add(use.getType().getQualifiedName());
         }
         _hierarchy.put(decl.getType().getQualifiedName(), extended);
@@ -38,14 +41,16 @@ public class DeployInformation {
 
   private void extractDeployInformationClasses(Model model) {
     int i = 0;
+    boolean toAdd;
     for (Decl decl : model.getDecls()) {
       if (decl instanceof ClassDecl) {
+        toAdd = false;
         DeployInformationClass dic = new DeployInformationClass(((ClassDecl) decl).getParamList());
         for(Annotation ann: ((ClassDecl) decl).getAnnotationList()) {
           System.out.println(i++);
-          if(ann.getType().getSimpleName().equals("Aeolus")) { dic.addAnn(ann.getValue()); }
+          if(ann.getType().getSimpleName().equals("Aeolus")) { toAdd = true; dic.addAnn(ann.getValue()); }
         }
-        _map.put(decl.getType().getQualifiedName(), dic);
+        if(toAdd) _map.put(decl.getType().getQualifiedName(), dic);
       }
     }
   }
@@ -61,7 +66,31 @@ public class DeployInformation {
       if(iClass.hasNext()) f.write(",\n");
     }
     f.write("  ],\n");
-    f.write("  \"hierarchy\": []\n");
+    f.write("  \"hierarchy\": {\n");
+    Iterator<String> iClassName = _map.keySet().iterator();
+    while(iClassName.hasNext()) {
+      String className = iClassName.next();
+      f.write("    \"" + className + "\": [");
+      Set<String> implemented =  _hierarchy.get(className);
+      if ((implemented != null) && (!implemented.isEmpty())) { generateImplemented(implemented, f); }
+      f.write("]");
+      if (iClassName.hasNext()) { f.write(",\n"); }
+      else { f.write("\n  }\n"); }
+    }
     f.write("}");
+  }
+
+  private void generateImplemented(Set<String> names, PrintWriter f) {
+    Iterator<String> iName = names.iterator();
+    while(iName.hasNext()) {
+      String name = iName.next();
+      f.write("\"" + name + "\"");
+      Set<String> extended = _hierarchy.get(name);
+      if ((extended != null) && (!extended.isEmpty())) {
+        f.write(", ");
+        generateImplemented(extended, f);
+      }
+      if (iName.hasNext()) { f.write(", "); }
+    }
   }
 }
