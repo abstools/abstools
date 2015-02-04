@@ -178,6 +178,13 @@ public class ModuleSystemTests extends FrontendTest {
     }
     
     @Test
+    public void ambigiousUseData2() {
+        assertTypeErrors("module A; export I; data I = I;" +
+                        "module B; export I; data I = I;" +
+                        "module C; import I from A; import I from B; data I = I; ");
+    }
+    
+    @Test
     public void ambigiousUseClass() {
         assertTypeErrors("module A; export *; interface I {} class K implements I {}" +
                      "module B; export *; interface J {} class K implements J {}" +
