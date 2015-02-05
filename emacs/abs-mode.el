@@ -32,7 +32,7 @@
 (require 'flymake)
 (require 'cl-lib)
 (autoload 'run-maude "maude-mode" nil t)
-(with-demoted-errors (require 'erlang))	; for erlang-shell-function
+(autoload 'inferior-erlang "erlang" nil t)
 
 ;;; Code:
 
@@ -403,7 +403,7 @@ value.")
                                       (progn (save-excursion
                                                ;; don't propagate
                                                ;; interactive args, if any
-                                               (funcall erlang-shell-function))
+                                               (inferior-erlang nil))
                                              (get-buffer "*erlang*"))))
                    (erlang-dir (concat (file-name-directory (buffer-file-name))
                                        "gen/erl"))
