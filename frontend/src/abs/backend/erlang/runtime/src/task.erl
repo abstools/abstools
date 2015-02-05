@@ -65,9 +65,10 @@ send_notifications(Val)->
     end.
             
 
-acquire_token(Cog, Stack)->
+acquire_token(Cog=#cog{ref=CogRef}, Stack)->
     cog:new_state(Cog,self(),runnable),
-    loop_for_unblock_signal(token, Stack).
+    loop_for_unblock_signal(token, Stack),
+    eventstream:event({cog, CogRef, unblocked}).
 
 loop_for_unblock_signal(Msg,Stack) ->
     %% Handle GC messages while task is waiting for signal to continue
@@ -88,7 +89,8 @@ wait(Cog)->
 wait_poll(Cog)->
     commit(Cog),
     cog:new_state(Cog,self(),waiting_poll).
-block(Cog)->
+block(Cog=#cog{ref=CogRef})->
+    eventstream:event({cog, CogRef, blocked}),
     cog:new_state(Cog,self(),blocked).
 
 %% await_duration and block_for_duration are called in different scenarios

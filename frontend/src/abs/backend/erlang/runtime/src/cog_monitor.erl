@@ -11,7 +11,8 @@
 -export([init/1,handle_event/2,handle_call/2,terminate/2,handle_info/2,code_change/3]).
 
 %% - main=this
-%% - active=cogs with running process
+%% - active=non-idle cogs
+%% - blocked=cogs with process blocked on future/resource
 %% - idle=idle cogs
 %% - clock_waiting={P,Cog,Min,Max}: processes with their cog waiting
 %%   for simulated time to advance, with minimum and maximum waiting
@@ -22,9 +23,10 @@
 %%   flight"
 %% - timer=timeout callback before terminating program
 %%
-%% Simulation ends when no cog is active or waiting for the clock /
-%% some resources.
--record(state,{main,active,idle,clock_waiting,dcs,with_incoming,timer}).
+%% Simulation ends when no cog is active or waiting for the clock / some
+%% resources.  Note that a cog can be in "active" and "blocked" at the same
+%% time.
+-record(state,{main,active,blocked,idle,clock_waiting,dcs,with_incoming,timer}).
 %%External function
 
 %% Waits until all cogs are idle
@@ -38,7 +40,7 @@ waitfor()->
 
 %%The callback gets as parameter the pid of the runtime process, which waits for all cogs to be idle
 init([Main])->
-    {ok,#state{main=Main,active=gb_sets:empty(),idle=gb_sets:empty(),clock_waiting=[],dcs=[],with_incoming=gb_sets:empty(),timer=undefined}}.
+    {ok,#state{main=Main,active=gb_sets:empty(),blocked=gb_sets:empty(),idle=gb_sets:empty(),clock_waiting=[],dcs=[],with_incoming=gb_sets:empty(),timer=undefined}}.
 
 handle_event({cog,Cog,active},State=#state{active=A,idle=I,with_incoming=C,timer=T})->
     ?DEBUG({cog, Cog, active}),
@@ -58,6 +60,14 @@ handle_event({cog,Cog,idle},State=#state{active=A,idle=I})->
         false->
             {ok, S1}
     end;
+handle_event({cog,Cog,blocked},State=#state{blocked=B})->
+    ?DEBUG({cog, Cog, blocked}),
+    B1=gb_sets:add_element(Cog,B),
+    {ok,State#state{blocked=B1}};
+handle_event({cog,Cog,unblocked},State=#state{blocked=B})->
+    ?DEBUG({cog, Cog, unblocked}),
+    B1=gb_sets:del_element(Cog,B),
+    {ok,State#state{blocked=B1}};
 handle_event({cog,Cog,die},State=#state{active=A,idle=I,with_incoming=C})->
     ?DEBUG({cog, Cog, die}),
     A1=gb_sets:del_element(Cog,A),
@@ -130,8 +140,8 @@ cancel(undefined)->
 cancel(TRef)->
     {ok,cancel}=timer:cancel(TRef).
 
-can_clock_advance(#state{active=A, with_incoming=I}) ->
-    gb_sets:is_empty(A) andalso gb_sets:is_empty(I).
+can_clock_advance(#state{active=A, blocked=B, with_incoming=I}) ->
+    gb_sets:is_empty(gb_sets:subtract(A, B)) andalso gb_sets:is_empty(I).
 
 advance_clock_or_terminate(State=#state{main=M,clock_waiting=C,dcs=DCs,timer=T}) ->
     case C of
