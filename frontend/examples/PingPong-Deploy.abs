@@ -3,9 +3,10 @@
  *
  */
 module PingPong;
+import * from ABS.DC;
 
 // Tests for Deployment
-data RequirementElement = P | A | L(Int) ;
+data RequirementElement = Req | List(Int) | Default(String) | Fill ;
 data Aeolus = Cost(String, Int) | Spec(Int, List<RequirementElement>);
 // Tests End
 
@@ -34,8 +35,8 @@ interface Pong {
 
 [Aeolus: Cost("CPU", 1)]
 [Aeolus: Cost("Memory", 1)]
-[Aeolus: Spec(1, list[L(3)]) ]
-[Aeolus: Spec(1, list[L(4)]) ]
+[Aeolus: Spec(1, list[List(3)]) ]
+[Aeolus: Spec(1, list[List(4)]) ]
 class PingImpl(List<Pong> lpong) implements Ping {
     Pong pong = nth(lpong, 0);
     Unit run(){
@@ -77,6 +78,7 @@ class PongImpl implements Pong {
 }
 
 {
-    Pong pong = new PongImpl(); 
+    DeploymentComponent dc;
+    [DC: dc] Pong pong = new PongImpl(); 
     new PingImpl(Cons(pong,Nil)); 
 }

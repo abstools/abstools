@@ -11,7 +11,6 @@ public class DeployInformationClass {
 
   private Map<String, Integer> _cost;
   private List<DeployInformationClassSpecification> _spec;
-  //private int _provide;
 
   private abs.frontend.ast.List<ParamDecl> _params;
 
@@ -37,28 +36,42 @@ public class DeployInformationClass {
     } else if(((DataConstructorExp)exp).getDataConstructor().getName().equals("Spec")) {
       System.out.print("Spec = (");
       DeployInformationClassSpecification spec = new DeployInformationClassSpecification();
-      int p = Integer.parseInt(((IntLiteral) ((DataConstructorExp) exp).getParam(0)).getContent());
-      System.out.print(p + ", [");
-      spec.setProvide(p);
-      PureExp l = ((FnApp)(((DataConstructorExp) exp).getParam(1))).getParam(0);
-      Iterator<ParamDecl> i = _params.iterator();
+      int provide = Integer.parseInt(((IntLiteral) ((DataConstructorExp) exp).getParam(0)).getContent());
+      System.out.print(provide + ", [");
+      spec.setProvide(provide);
+      PureExp l = ((FnApp)(((DataConstructorExp) exp).getParam(1))).getParam(0); // list of declaration
+      Iterator<ParamDecl> iParam = _params.iterator();
       while(((DataConstructorExp)l).hasParam() && (((DataConstructorExp)l).getParam(0) != null)) { // means we have a cons
         PureExp el = ((DataConstructorExp)l).getParam(0);
         l = ((DataConstructorExp)l).getParam(1);
-        if(((DataConstructorExp)el).getDataConstructor().getName().equals("P")) {
-          System.out.print("P");
-            int arity = 1;
-            String port = i.next().getType().getQualifiedName();
-            System.out.print("(\"" + port + "\", " + arity + ")");
-            spec.addRequirement(port, arity);
-        } else if(((DataConstructorExp)el).getDataConstructor().getName().equals("A")){
-          System.out.println("A(" + i.next().getType().toString() + ")");// i.next();
-        } else if(((DataConstructorExp)el).getDataConstructor().getName().equals("L")) {
-          System.out.print("L");
+        if(((DataConstructorExp)el).getDataConstructor().getName().equals("Req")) {
+          System.out.print("Req");
+            String port = iParam.next().getType().getQualifiedName();
+            System.out.print("(\"" + port + "\")");
+            spec.addRequirement(port);
+
+        } else if(((DataConstructorExp)el).getDataConstructor().getName().equals("List")) {
+          System.out.print("List");
           int arity = Integer.parseInt(((IntLiteral) ((DataConstructorExp) el).getParam(0)).getContent());
-          String port = ((DataTypeType) (i.next().getType())).getTypeArgs().get(0).getQualifiedName();
+          String port = ((DataTypeType) (iParam.next().getType())).getTypeArgs().get(0).getQualifiedName();
           if(port != null) System.out.print("(\"" + port + "\", " + arity + ")");
-          spec.addRequirement(port, arity);
+          spec.addList(port, arity);
+
+        } else if(((DataConstructorExp)el).getDataConstructor().getName().equals("Default")) {
+          System.out.print("Default");
+          String value = ((StringLiteral) ((DataConstructorExp) el).getParam(0)).getContent();
+          String port = iParam.next().getType().getQualifiedName();
+          if(port != null) System.out.print("(\"" + port + "\", " + value + ")");
+          spec.addDefault(port, value);
+
+        } else if(((DataConstructorExp)el).getDataConstructor().getName().equals("Fill")){
+          System.out.print("Fill");
+          ParamDecl p = iParam.next();
+          String port = p.getType().getQualifiedName();
+          String field = p.getName();
+          if(port != null) System.out.print("(\"" + port + "\")");
+          spec.addFill(port, field);
+
         }
       }
       System.out.println("])");
@@ -85,20 +98,14 @@ public class DeployInformationClass {
       DeployInformationClassSpecification spec = iSpec.next();
       f.write("        {\n");
       f.write("          \"provide\": " + spec.getProvide() + ",\n");
-      f.write("          \"require\": {");
-      Iterator<Map.Entry<String, Integer>> iReq = spec.reqEntrySet().iterator();
-      while(iReq.hasNext()) {
-        Map.Entry<String, Integer> req = iReq.next();
-        f.write("\"" + req.getKey() + "\": " + req.getValue());
-        if(iReq.hasNext()) f.write(", ");
-      }
-      f.write("}\n"); // end of the require
+      f.write("          \"sig\": [\n");
+      spec.generateJSON(f);
+      f.write("          ]\n"); // end of the require
       f.write("        }");
       if(iSpec.hasNext()) f.write(",\n");
     }
     f.write("\n      ]\n");
     f.write("    }");
   }
-
 
 }

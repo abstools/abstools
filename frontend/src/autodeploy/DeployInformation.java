@@ -2,21 +2,19 @@ package autodeploy;
 
 import abs.frontend.ast.*;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.List;
 
 public class DeployInformation {
 
   private Map<String, DeployInformationClass> _map;
-  private Map<String, Set<String>> _hierarchy;
+  private Map<String, Set<String>> _extends;
+  private Map<String, Set<String>> _implements;
 
   public DeployInformation() {
     _map = new HashMap<String, DeployInformationClass>();
-    _hierarchy = new HashMap<String, Set<String>>();
+    _extends = new HashMap<String, Set<String>>();
+    _implements = new HashMap<String, Set<String>>();
   }
 
   public void extractInformation(Model model) {
@@ -27,14 +25,25 @@ public class DeployInformation {
   private void extractHierarchy(Model model) {
     for (Decl decl : model.getDecls()) {
       abs.frontend.ast.List<InterfaceTypeUse> list = null;
-      if (decl instanceof InterfaceDecl) { list =  ((InterfaceDecl) decl).getExtendedInterfaceUseList(); }
-      if (decl instanceof ClassDecl) { list =  ((ClassDecl) decl).getImplementedInterfaceUseList(); }
-      if(list != null) {
-        Set<String> extended = new HashSet<String>();
-        for (InterfaceTypeUse use : list) {
-          extended.add(use.getType().getQualifiedName());
+      if (decl instanceof InterfaceDecl) {
+        list = ((InterfaceDecl) decl).getExtendedInterfaceUseList();
+        if(list != null) {
+          Set<String> extended = new HashSet<String>();
+          for (InterfaceTypeUse use : list) {
+            extended.add(use.getType().getQualifiedName());
+          }
+          _implements.put(decl.getType().getQualifiedName(), extended);
         }
-        _hierarchy.put(decl.getType().getQualifiedName(), extended);
+      }
+      if (decl instanceof ClassDecl) {
+        list =  ((ClassDecl) decl).getImplementedInterfaceUseList();
+        if(list != null) {
+          Set<String> extended = new HashSet<String>();
+          for (InterfaceTypeUse use : list) {
+            extended.add(use.getType().getQualifiedName());
+          }
+          _extends.put(decl.getType().getQualifiedName(), extended);
+        }
       }
     }
   }
@@ -71,7 +80,7 @@ public class DeployInformation {
     while(iClassName.hasNext()) {
       String className = iClassName.next();
       f.write("    \"" + className + "\": [");
-      Set<String> implemented =  _hierarchy.get(className);
+      Set<String> implemented =  _extends.get(className);
       if ((implemented != null) && (!implemented.isEmpty())) { generateImplemented(implemented, f); }
       f.write("]");
       if (iClassName.hasNext()) { f.write(",\n"); }
@@ -84,8 +93,9 @@ public class DeployInformation {
     Iterator<String> iName = names.iterator();
     while(iName.hasNext()) {
       String name = iName.next();
+      // BUG: when an interface has the same name as the class
       f.write("\"" + name + "\"");
-      Set<String> extended = _hierarchy.get(name);
+      Set<String> extended = _extends.get(name);
       if ((extended != null) && (!extended.isEmpty())) {
         f.write(", ");
         generateImplemented(extended, f);
