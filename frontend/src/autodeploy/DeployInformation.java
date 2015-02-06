@@ -32,7 +32,7 @@ public class DeployInformation {
           for (InterfaceTypeUse use : list) {
             extended.add(use.getType().getQualifiedName());
           }
-          _implements.put(decl.getType().getQualifiedName(), extended);
+          _extends.put(decl.getType().getQualifiedName(), extended);
         }
       }
       if (decl instanceof ClassDecl) {
@@ -42,7 +42,7 @@ public class DeployInformation {
           for (InterfaceTypeUse use : list) {
             extended.add(use.getType().getQualifiedName());
           }
-          _extends.put(decl.getType().getQualifiedName(), extended);
+          _implements.put(decl.getType().getQualifiedName(), extended);
         }
       }
     }
@@ -80,7 +80,7 @@ public class DeployInformation {
     while(iClassName.hasNext()) {
       String className = iClassName.next();
       f.write("    \"" + className + "\": [");
-      Set<String> implemented =  _extends.get(className);
+      Set<String> implemented =  _implements.get(className);
       if ((implemented != null) && (!implemented.isEmpty())) { generateImplemented(implemented, f); }
       f.write("]");
       if (iClassName.hasNext()) { f.write(",\n"); }
