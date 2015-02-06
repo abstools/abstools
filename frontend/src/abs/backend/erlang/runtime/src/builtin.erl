@@ -43,6 +43,8 @@ abslistish_to_string(Cog, Cons, _Emp, {Cons, H, T}) ->
     toString(Cog, H) ++ ", " ++ toString(Cog, T).
 
 
+toString(_Cog, true) -> "True";
+toString(_Cog, false) -> "False";
 toString(_Cog,I) when is_integer(I) ->
     integer_to_list(I);
 toString(_Cog,{N,D}) when is_integer(N),is_integer(D)->
