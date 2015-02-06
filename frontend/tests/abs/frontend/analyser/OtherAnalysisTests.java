@@ -7,21 +7,18 @@ package abs.frontend.analyser;
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 
 import org.junit.Test;
 
-import abs.ABSTest.Config;
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AwaitAsyncCall;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.Model;
-import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.VarDeclStmt;
@@ -177,6 +174,11 @@ public class OtherAnalysisTests extends FrontendTest {
         VarDeclStmt b = (VarDeclStmt) s;
         Type t = ((DataTypeType) b.getVarDecl().getType()).getTypeArg(0);
         assertEquals("A.X",t.getQualifiedName());
+    }
+
+    @Test
+    public void awaitRewriteTwice() {
+        assertTypeOK("module Test; interface I { I m(); } class C implements I { I m() { I x = await this!m(); await x!m(); return this; }}");        
     }
 
     @Test

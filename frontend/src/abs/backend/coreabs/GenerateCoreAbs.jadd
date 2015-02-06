@@ -37,10 +37,15 @@ aspect GenerateCoreABS {
 
 	/* EXPERIMENTAL unfolding of AwaitAsyncCalls into temporary variables.
 	 * MAY and in fact WILL EAT YOUR DOG!
+	 * Note that both use of print()-statements and the debugger (implicitly through its calls to toString())
+	 * in here will change the evaluation order and may lead to Heisenbugs!
 	 *             [stolz]
 	 */
 
-	/** Global switch whether this rewriting is enabled. */
+	/** Global switch whether this rewriting is enabled.
+	 *  If you ever have to turn this off, make sure all the missing operations in the
+	 *  AwaitAsyncCall-class have been filled in.
+	 */
 	public static boolean Model.doAACrewrite = true;
 
 	coll Set<AwaitAsyncCall> Stmt.getAACs() [new HashSet()] with add root Stmt;
@@ -68,7 +73,8 @@ aspect GenerateCoreABS {
           && getAACs().isEmpty() && !aacs.isEmpty()
        )
       to RewriteBlock {
-        List l = new List();
+        RewriteBlock b = new RewriteBlock(new List(), new List());
+        // System.err.print("frob " + this);
         for (AwaitAsyncCall aac : aacs) {
             Access a = (Access)aac.getCallee().getType().lookupMethod(aac.getMethod()).getReturnType();
             /* Rewriting is also triggered from the Eclipse editor, which AGAIN doesn't have the whole
@@ -78,23 +84,22 @@ aspect GenerateCoreABS {
               final TypeUse du = a.getType().toUse();
               final String tmp = "tmp"+Integer.toString(aac.hashCode());
               // TODO: The typechecker will assert that/if the name is free, but in freak chances it may not.
-              l.add(new VarDeclStmt(new List(), new VarDecl(tmp,
+              b.addStmt(new VarDeclStmt(new List(), new VarDecl(tmp,
                    new ParametricDataTypeUse("Fut", new List(), new List().add(du)),
                                                           new Opt(new AsyncCall(aac.getCallee(), aac.getMethod(), aac.getParamList()))
                                                         )));
-              l.add(new AwaitStmt(new List(), new ClaimGuard( new VarUse(tmp))));
+              b.addStmt(new AwaitStmt(new List(), new ClaimGuard( new VarUse(tmp))));
             }                                                 
         }
         aacs.clear(); // flush downstream rewrite info.
-        l.add(this);
-        RewriteBlock b = new RewriteBlock(new List(), l);
+        b.addStmt(this);
         return b;
       }
     }
 
     public int Block.hasRewriteBlockAt() {
-      for(int i=0;i<getNumStmt();i++) {
-        if (getStmt(i) instanceof RewriteBlock)
+      for(int i=0;i<getNumStmtNoTransform();i++) {
+        if (getStmtsNoTransform().getChild(i) instanceof RewriteBlock)
           return i;
       }
       return -1;
@@ -110,20 +115,22 @@ aspect GenerateCoreABS {
 	rewrite Block {
 	  when (hasRewriteBlockAt() > -1)
 	  to Block {
-	    for(int i=0;i<getNumStmt(); i++) {
-	      ASTNode<?> n = getStmt(i);
+	    int i =0;
+	    do {
+	      ASTNode<?> n = getStmtListNoTransform().getChild(i);
 	      if (n != null && n instanceof RewriteBlock) {
 	        RewriteBlock b = (RewriteBlock) n;
 	        // Be careful not to confuse children with statements here!
-	        List<Stmt> list = getStmtList();
-	        int idx = list.getIndexOfChild(b);
-	        for(int j=0;j<b.getNumStmt();j++) {
-	          list.insertChild(b.getStmt(j),idx+j);
+	        List<Stmt> list = getStmtListNoTransform();
+	        list.removeChild(i);
+	        for(int j=0;j<b.getNumStmtNoTransform();j++) {
+	          Stmt s = (Stmt) b.getStmtListNoTransform().getChild(j);
+	          list.insertChild(s,i+j);
 	        }
-	        // Better lookup idx again, I couldn't calculate the index correctly with the info above:
-	        list.removeChild(list.getIndexOfChild(b));
+	        return this;
 	      }
-	    }
+	      i++;   
+	    } while (i<getNumStmt());
 	    return this;
 	}}
 
@@ -131,10 +138,11 @@ aspect GenerateCoreABS {
     /* Preempt typechecking: if there's anything wrong, don't touch it.
      * Precondition must cover logic in Stmt-rewrite above (*)! 
      */
-    when (Model.doAACrewrite && closestParent(Model.class) != null && getCalleeNoTransform().getType().lookupMethod(getMethod()) != null)
+    when (Model.doAACrewrite && closestParent(Model.class) != null && getCallee().getType().lookupMethod(getMethod()) != null)
     to GetExp {
       GetExp g = new GetExp(new VarUse("tmp"+Integer.toString(hashCode())));
       Stmt s = (Stmt) closestParent(Stmt.class);
+      assert !(s instanceof Block);
       assert s != null;
       s.aacs.add(this);
       return g;
