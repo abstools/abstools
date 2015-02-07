@@ -228,13 +228,15 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
         _ -> loop(New_State)
     end.
 
-start_new_task(S=#state{tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify)->
+start_new_task(S=#state{running=R,tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify)->
     Ref=task:start(#cog{ref=self(),tracker=Tracker,dc=DC},Task,Args),
     ?DEBUG({new_task,Ref,Task,Args}),
-    eventstream:event({method_call_on_the_way, self()}),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     Sender!{started,Task,Ref},
-    S#state{tasks=gb_trees:insert(Ref,#task{ref=Ref},T)}.
+    %% Don't generate "cog idle" event when we create new task - this
+    %% causes spurious clock advance
+    R1=case R of no_task_schedulable -> false; _ -> R end,
+    S#state{running=R1,tasks=gb_trees:insert(Ref,#task{ref=Ref},T)}.
 
 
 schedule_and_execute(S) ->
