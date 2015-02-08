@@ -162,7 +162,7 @@ advance_clock_or_terminate(State=#state{main=M,clock_waiting=C,dcs=DCs,timer=T})
             ?DEBUG({clock_advance, MTE}),
             clock:advance(MTE),
             lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
-            lists:foreach(fun dc:print_info/1, DCs),
+            %% lists:foreach(fun dc:print_info/1, DCs),
             {A,C1}=lists:unzip(
                      lists:map(
                        fun(I) -> decrease_or_wakeup(MTE, I) end,
