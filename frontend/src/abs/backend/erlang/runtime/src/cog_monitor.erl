@@ -153,7 +153,7 @@ advance_clock_or_terminate(State=#state{main=M,clock_waiting=C,dcs=DCs,timer=T})
             lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
             lists:foreach(fun dc:print_info/1, DCs),
             {ok,T1} = case T of
-                          undefined -> timer:send_after(0,M,wait_done);
+                          undefined -> timer:send_after(1000,M,wait_done);
                           _ -> {ok,T}
                       end,
             State#state{timer=T1};
