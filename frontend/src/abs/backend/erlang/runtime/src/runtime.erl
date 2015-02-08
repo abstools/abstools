@@ -85,7 +85,7 @@ start_mod(Module, Debug, GCStatistics) ->
     end,
     eventstream:add_handler(cog_monitor,[self()]),
     %% Init garbage collector
-    gc:start(GCStatistics),
+    gc:start(GCStatistics, Debug),
     %% Init simulation clock
     clock:start_link(),
     %% init RNG.
