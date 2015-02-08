@@ -40,7 +40,7 @@ add_and_notify(#cog{ref=Cog},Task,Args)->
     Cog!{new_task,Task,Args,self(),true},
     await_start(Task, Args).
 
-add_blocking(#cog{ref=Ref},Task=init_task,Args,Cog,Stack)->
+add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
     task:block(Cog),
     Ref!{new_task,Task,Args,self(),false},
     await_start(Task,[Args|Stack]),
