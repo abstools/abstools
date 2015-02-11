@@ -1,0 +1,25 @@
+module Config;
+
+export ResourceConfigImpl;
+
+import * from Interfaces;
+
+class ResourceConfigImpl(
+	String cpu,
+	Rat cpu_speed,
+	Int cores,
+	Int memory,
+	Int capacity,
+	String os,
+	List<String> software
+) implements ResourceConfig{
+
+	String cpu(){ return cpu; }
+	Rat cpu_speed(){ return cpu_speed; }
+	Int cores(){ return cores; }
+	Int memory(){ return memory; }
+	Int capacity(){ return capacity; }
+	String os(){ return os; }
+	List<String> software(){ return software; }
+	
+}

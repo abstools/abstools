@@ -1,0 +1,46 @@
+module Simulator;
+
+import * from Interfaces;
+import UserDBImpl from UserDB;
+import ResourcePool from Pool;
+import ResourceFactoryImpl from Factory;
+import ExecutionEngineImpl from Engine;
+import RPMImpl from RPM;
+import * from Generator;
+
+// *** SIMULATOR ***
+
+class Simulator{
+
+	RequestGenerator generator = Nil;
+
+	Unit run(){
+		UserDB user_db = new UserDBImpl();
+		ResourcePool pool = new ResourcePool();
+		ResourceFactory factory = new ResourceFactoryImpl(pool);
+		ExecutionEngine engine = new ExecutionEngineImpl(pool);
+		RPM rpm = new RPMImpl(user_db, factory, engine, pool);
+		generator = new local RequestGeneratorImpl(user_db);
+		// simulate ...
+		Int iterations = 10000;
+		while (iterations > 0){
+			Unit u = this.fireNextRequest();
+			iterations = iterations - 1;
+		}
+	}
+	
+	Unit fireNextRequest(){
+		RequestData x = generator.nextRequest(); // local call
+		Int delay = x.delay();
+		Time t = now(); 
+		await timeDifference(now(), t) > delay;
+		Request request = x.request();
+		Unit u = RPM!addRequest(request);
+	}
+
+}
+
+// MAIN
+{
+	new Simulator();
+}
