@@ -100,6 +100,9 @@ def Int size<A>(Set<A> xs) =
       Insert(s, ss) => 1 + size(ss); 
    };
 
+/**
+ * Returns the union of sets 'set1' and 'set2'.
+ */
 def Set<A> union<A>(Set<A> set1, Set<A> set2) =
    case set1 {
       EmptySet => set2;
@@ -112,6 +115,39 @@ def Set<A> union<A>(Set<A> set1, Set<A> set2) =
             else Insert(e2, union(set1, ss2));
       };
    }; 
+
+/**
+ * Returns the intersection of sets 'set1' and 'set2'.
+ */
+def Set<A> intersection<A>(Set<A> set1, Set<A> set2) =
+   case set1 {
+      EmptySet => EmptySet;
+      Insert(e1, ss1) =>  case set2 {
+          EmptySet => EmptySet;
+          Insert(e1, ss2) => Insert(e1, intersection(ss1, ss2));
+          Insert(e2, ss2) =>
+            if e1 < e2
+            then intersection(ss1, set2)
+            else intersection(set1, ss2);
+      };
+   };
+
+/**
+ * Returns the difference of sets 'set1' and 'set2', i.e., all
+ * elements of 'set1' that are not in 'set2'.
+ */
+def Set<A> difference<A>(Set<A> set1, Set<A> set2) =
+   case set1 {
+      EmptySet => EmptySet;
+      Insert(e1, ss1) =>  case set2 {
+          EmptySet => set1;
+          Insert(e1, ss2) => difference(ss1, ss2);
+          Insert(e2, ss2) =>
+            if e1 < e2
+            then Insert(e1, difference(ss1, set2))
+            else difference(set1, ss2);
+      };
+   };
 
 /**
  * Returns a set with all elements of set 'xs' plus element 'e'.
