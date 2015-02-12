@@ -57,3 +57,5 @@ COSTABSBINDIR=\$(dirname \$(find /usr/lib/eclipse/plugins -name costabs_static))
 PATH=\$PATH:/vagrant/frontend/bin/bash:\$COSTABSBINDIR
 EOF
 
+(cd /vagrant/frontend ; ant dist)
+

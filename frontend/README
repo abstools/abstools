@@ -60,7 +60,7 @@ The output will be put in `gen/erl`.
 A model can be started with two different commands, both of which are
 generated inside `gen/erl`:
 
-    % gen/erl/start [--debug|-d] [<main-module>]
+    % gen/erl/start_console [--debug|-d] [<main-module>]
     % gen/erl/run [--debug|-d] [<main-module>]
 
 where `start` launches an Erlang shell an executes the given main
