@@ -513,7 +513,7 @@ data FLIAnnotation = Foreign;
  * Used to model aspects of hardware configurations and deployment.
  */
 module ABS.DC;
-export DC, DeploymentComponent, thisDC, Cost, Size, CPU, CogLocation, CPU, Bandwidth, InfRat, Fin, finvalue;
+export DC, DeploymentComponent, thisDC, Cost, Size, CogLocation, Resourcetype, CPU, Bandwidth, InfRat, Fin, finvalue;
 import * from ABS.StdLib;
 
 data Resourcetype = CPU | Bandwidth ;
@@ -532,11 +532,26 @@ def Rat averageDivsN(List<Int> consumeds, List<Int> totals, Int length) =
   in sumDivsN(consumeds, totals, mins) / mins;
 
 interface DeploymentComponent {
+    // Deprecated.  This has inherent race conditions.  Consider using 'load'
+    // instead.
     [Atomic] InfRat available(Resourcetype rtype);
+    // Return the load (0-100) for given resourcetype over the last n periods.
+    // If resource is infinite, return 0.
     [Atomic] Rat load(Resourcetype rtype, Int periods);
+    // Return the total available amount for given resourcetype.
     [Atomic] InfRat total(Resourcetype rtype);
+    // Return a description of the available resources valid in the next time
+    // interval (i.e., pending resource adjustments are reflected in the
+    // return value of 'getConfiguration').
+    [Atomic] Map<Resourcetype, InfRat> getConfiguration();
+    // Utility method, implemented in terms of 'decrementResources' /
+    // 'incrementResources'.
     Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype);
+    // Decrement available resourcetype by given amount from the next
+    // time interval onwards.
     Unit decrementResources(Rat amount, Resourcetype rtype);
+    // Increment available resourcetype by given amount from the next
+    // time interval onwards.
     Unit incrementResources(Rat amount, Resourcetype rtype);
 }
 
@@ -597,6 +612,9 @@ implements DeploymentComponent {
             Bandwidth => result = bw;
         }
         return result;
+    }
+    [Atomic] Map<Resourcetype, InfRat> getConfiguration() {
+        return map[Pair(CPU, cpunext), Pair(Bandwidth, bwnext)];
     }
 
     // Transfer resources between deployment components.
