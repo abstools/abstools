@@ -1,0 +1,42 @@
+module Factory;
+
+export ResourceFactoryImpl;
+
+import * from Interfaces;
+import ResourceImpl from Resource;
+
+class ResourceFactoryImpl(
+	Mutable_RP pool
+) implements ResourceFactory {
+
+	Int resource_count = 0;
+
+	List<ResourceInfo> resources(ResourceConfig config, Rat max_cost){
+		// TODO - create the resource info IN THIS COG !
+		return Nil;
+	}
+	
+	String commission(ResourceInfo ri){
+		// create the resource ..	
+		resource_count = resource_count + 1;
+		String s = intToString(resource_count);
+		String resource_id = "RESOURCE_" + s;
+		Rat cost = ri.cost();
+		Rat time_unit = ri.timeUnit();
+		ResourceConfig config = ri.config();
+		Resource resource = new ResourceImpl(resource_id, cost, timeUnit, config); // in a new COG
+		//simulate the deployment time ..
+		Rat delay = ri.maxDT();
+		Time t = now();
+		await timeDifference(now(), t) > delay;
+		//add to resource-pool..
+		Unit u = await pool!addResource(resource);
+		// return the id
+		return resource_id;
+	}
+	
+	Unit decommission(Resource resource){
+		Unit u = await pool!removeResource(resource);
+	}
+	
+}

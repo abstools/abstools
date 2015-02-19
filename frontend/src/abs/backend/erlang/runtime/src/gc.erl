@@ -6,7 +6,7 @@
 
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
--export([start/1, stop/0, init/1, extract_references/1, get_references/1]).
+-export([start/2, stop/0, init/2, extract_references/1, get_references/1]).
 
 -export([behaviour_info/1]).
 
@@ -28,19 +28,20 @@
 -record(state, {cogs=gb_sets:empty(),objects=gb_sets:empty(),
                 futures=gb_sets:empty(),root_futures=gb_sets:empty(),
                 previous=now(), 
-                limit=?MIN_THRESH, proc_factor=?MIN_PROC_FACTOR, log=false}).
+                limit=?MIN_THRESH, proc_factor=?MIN_PROC_FACTOR, log=false,
+                debug=false}).
 
 behaviour_info(callbacks) ->
     [{get_references, 1}].
 
-start(Log) ->
-    register(gc, spawn(?MODULE, init, [Log])).
+start(Log, Debug) ->
+    register(gc, spawn(?MODULE, init, [Log, Debug])).
 
 stop() ->
     gc ! stop.
 
-init(Log) ->
-    loop(#state{log=Log}).
+init(Log, Debug) ->
+    loop(#state{log=Log, debug=Debug}).
 
 gcstats(Log, Statistics) -> 
     case Log of
@@ -154,13 +155,12 @@ get_references({Module, Ref}) ->
 is_collection_needed(stop) ->
     stop;
 is_collection_needed(State=#state{objects=Objects,futures=Futures,
-                                  previous=PTime,limit=Lim,proc_factor=PFactor}) ->
-%true
-%false
-        timer:now_diff(now(), PTime) > ?TIME_LIMIT
-        orelse
-        erlang:system_info(process_count) / erlang:system_info(process_limit) > PFactor
-        .
+                                  previous=PTime,limit=Lim,proc_factor=PFactor,
+                                  debug=Debug}) ->
+    Debug
+    orelse timer:now_diff(now(), PTime) > ?TIME_LIMIT
+    orelse erlang:system_info(process_count) / erlang:system_info(process_limit) > PFactor.
+
 
 extract_references(DataStructure) ->
     ordsets:from_list(lists:flatten([to_deep_list(DataStructure)])).

@@ -68,10 +68,7 @@ public class ErlangBackend extends Main {
         ErlApp erlApp = new ErlApp(destDir);
         m.generateErlangCode(erlApp);
         erlApp.close();
-	String[] rebarProgram = new String[] {"bin/rebar", "compile"};
-	if (System.getProperty("os.name").startsWith("Windows")) {
-	    rebarProgram = new String[] {"escript.exe", "bin/rebar", "compile"};
-	}
+	String[] rebarProgram = new String[] {"escript", "bin/rebar", "compile"};
         Process p = Runtime.getRuntime().exec(rebarProgram, null, destDir);
         p.waitFor();
     }

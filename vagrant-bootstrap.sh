@@ -1,4 +1,10 @@
 # Support file for Vagrant.  Add any software you need installed here.
+
+# We need Erlang R17.  Add it to the list of repositories.  See
+# https://www.erlang-solutions.com/downloads/download-erlang-otp#tabs-ubuntu
+wget http://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
+sudo dpkg -i erlang-solutions_1.0_all.deb
+rm erlang-solutions_1.0_all.deb
 apt-get update -q -y
 apt-get upgrade -y
 # Developing the compiler infrastructure
@@ -50,4 +56,6 @@ cat >>.bashrc <<EOF
 COSTABSBINDIR=\$(dirname \$(find /usr/lib/eclipse/plugins -name costabs_static))
 PATH=\$PATH:/vagrant/frontend/bin/bash:\$COSTABSBINDIR
 EOF
+
+(cd /vagrant/frontend ; ant dist)
 

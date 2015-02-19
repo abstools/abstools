@@ -1,0 +1,134 @@
+module Interfaces;
+
+export *; 
+
+//********************************************************************
+//  RESOURCE CONFIG
+//********************************************************************
+
+interface ResourceConfig{
+	String cpu();
+	Rat cpu_speed();
+	Int cores();
+	Int memory();
+	Int capacity();
+	String os();
+	List<String> software();
+}
+
+//********************************************************************
+//  RESOURCE 
+//********************************************************************
+
+interface ResourceListener{
+	Unit requestChanged(Resource r);
+}
+
+interface Resource{
+	String id();
+	Rat cost();
+	Rat timeUnit();
+	ResourceConfig config();
+	Request request();
+	Unit setRequest(Request r);
+	Unit addResourceListener(ResourceListener l);
+	Unit removeResourceListener(ResourceListener l);
+}
+
+//********************************************************************
+//  RESOURCE POOL 
+//********************************************************************
+
+interface Monitored_RP{
+	List<Resource> resources();
+}
+
+interface Mutable_RP{
+	Unit addResource(Resource r);
+	Unit removeResource(Resource r);
+}
+
+interface Queriable_RP{
+	Resource resource(String id);
+}
+
+//********************************************************************
+//  RESOURCE FACTORY 
+//********************************************************************
+
+interface ResourceInfo{
+	Rat cost();
+	Rat timeUnit();
+	ResourceConfig config();
+	Rat maxDT();
+	Rat penaltyDT();
+}
+
+interface ResourceFactory{
+	List<ResourceInfo> resources(ResourceConfig config, Rat max_cost);
+	String commission(ResourceInfo ri);
+	Unit decommission(Resource r);
+}
+
+//********************************************************************
+//  REQUEST 
+//********************************************************************
+
+interface RequestListener{
+	Unit progressChanged(Request r);
+}
+
+interface Request{
+	String user();
+	Time time();
+	Int size();
+	Bool priority();
+	ResourceConfig config();
+	String resourceId();
+	Unit setResourceId(String id);
+	Int progress();
+	Unit setProgress(Int p);
+	Unit addRequestListener(RequestListener l);
+}
+
+//********************************************************************
+//  REQUEST QUEUE 
+//********************************************************************
+
+interface RequestQueue{
+	Unit addRequest(Request r);
+}
+
+//********************************************************************
+//  EXECUTION ENGINE 
+//********************************************************************
+
+interface ExecutionEngine extends RequestQueue, ResourceListener { }
+
+//********************************************************************
+//  QOS 
+//********************************************************************
+
+interface QoS{
+	Rat maxFR();
+	Rat penaltyCT();
+	Rat penaltyFR();
+	Int successCount();
+	Int failureCount();
+	Rat cost(Int size);
+	Rat maxCT(Int size, Bool priority);
+}
+
+//********************************************************************
+//  USER DATABASE 
+//********************************************************************
+
+interface UserDB{
+	QoS qos(String user);
+}
+
+//********************************************************************
+//  RPM 
+//********************************************************************
+
+interface RPM extends RequestQueue, RequestListener{}

@@ -19,14 +19,12 @@
 %%   time.  Ordered by ascending maximum waiting time (head of list =
 %%   MTE [Maximum Time Elapse]).
 %% - dcs=list of deployment components
-%% - with_incoming=set of cogs with incoming method invocations "in
-%%   flight"
 %% - timer=timeout callback before terminating program
 %%
 %% Simulation ends when no cog is active or waiting for the clock / some
 %% resources.  Note that a cog can be in "active" and "blocked" at the same
 %% time.
--record(state,{main,active,blocked,idle,clock_waiting,dcs,with_incoming,timer}).
+-record(state,{main,active,blocked,idle,clock_waiting,dcs,timer}).
 %%External function
 
 %% Waits until all cogs are idle
@@ -40,15 +38,14 @@ waitfor()->
 
 %%The callback gets as parameter the pid of the runtime process, which waits for all cogs to be idle
 init([Main])->
-    {ok,#state{main=Main,active=gb_sets:empty(),blocked=gb_sets:empty(),idle=gb_sets:empty(),clock_waiting=[],dcs=[],with_incoming=gb_sets:empty(),timer=undefined}}.
+    {ok,#state{main=Main,active=gb_sets:empty(),blocked=gb_sets:empty(),idle=gb_sets:empty(),clock_waiting=[],dcs=[],timer=undefined}}.
 
-handle_event({cog,Cog,active},State=#state{active=A,idle=I,with_incoming=C,timer=T})->
+handle_event({cog,Cog,active},State=#state{active=A,idle=I,timer=T})->
     ?DEBUG({cog, Cog, active}),
     A1=gb_sets:add_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
-    C1=gb_sets:del_element(Cog, C),
     cancel(T),
-    {ok,State#state{active=A1,idle=I1,with_incoming=C1,timer=undefined}};
+    {ok,State#state{active=A1,idle=I1,timer=undefined}};
 handle_event({cog,Cog,idle},State=#state{active=A,idle=I})->
     ?DEBUG({cog, Cog, idle}),
     A1=gb_sets:del_element(Cog,A),
@@ -60,20 +57,23 @@ handle_event({cog,Cog,idle},State=#state{active=A,idle=I})->
         false->
             {ok, S1}
     end;
-handle_event({cog,Cog,blocked},State=#state{blocked=B})->
+handle_event({cog,Cog,blocked},State=#state{active=A,blocked=B})->
     ?DEBUG({cog, Cog, blocked}),
+    A1=gb_sets:del_element(Cog,A),
     B1=gb_sets:add_element(Cog,B),
-    {ok,State#state{blocked=B1}};
-handle_event({cog,Cog,unblocked},State=#state{blocked=B})->
+    {ok,State#state{active=A1,blocked=B1}};
+handle_event({cog,Cog,unblocked},State=#state{active=A,blocked=B})->
     ?DEBUG({cog, Cog, unblocked}),
+    A1=gb_sets:add_element(Cog,A),
     B1=gb_sets:del_element(Cog,B),
-    {ok,State#state{blocked=B1}};
-handle_event({cog,Cog,die},State=#state{active=A,idle=I,with_incoming=C})->
+    {ok, State#state{active=A1,blocked=B1}};
+handle_event({cog,Cog,die},State=#state{active=A,idle=I,blocked=B,clock_waiting=W})->
     ?DEBUG({cog, Cog, die}),
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
-    C1=gb_sets:del_element(Cog, C),
-    S1=State#state{active=A1,idle=I1, with_incoming=C1},
+    B1=gb_sets:del_element(Cog,B),
+    W1=lists:filter(fun ({_, _, _, _, Cog1}) ->  Cog1 =:= Cog end, W),
+    S1=State#state{active=A1,idle=I1,blocked=B1,clock_waiting=W1},
     case can_clock_advance(S1) of
         true->
             {ok, advance_clock_or_terminate(S1)};
@@ -88,6 +88,7 @@ handle_event({task,Task,Cog,clock_waiting,Min,Max},
 handle_event({cog,Task,Cog,clock_waiting,Min,Max},
              State=#state{active=A,clock_waiting=C}) ->
     ?DEBUG({cog, Task, Cog, clock_waiting}),
+    %% {cog, blocked} event comes separately
     C1=add_to_clock_waiting(C,{cog,Min,Max,Task,Cog}),
     A1=gb_sets:del_element(Cog,A),
     S1=State#state{active=A1,clock_waiting=C1},
@@ -100,6 +101,7 @@ handle_event({cog,Task,Cog,clock_waiting,Min,Max},
 handle_event({cog,Task,Cog,resource_waiting},
              State=#state{active=A,clock_waiting=C}) ->
     ?DEBUG({cog, Task, Cog, resource_waiting}),
+    %% {cog, blocked} event comes separately
     MTE=clock:distance_to_next_boundary(),
     C1=add_to_clock_waiting(C,{cog,MTE,MTE,Task,Cog}),
     A1=gb_sets:del_element(Cog,A),
@@ -110,13 +112,10 @@ handle_event({cog,Task,Cog,resource_waiting},
         false->
             {ok, S1}
     end;
-handle_event({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent}},
+handle_event({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent,ref=O}},
              State=#state{dcs=DCs}) ->
+    ?DEBUG({newdc, O}),
     {ok, State#state{dcs=[DC | DCs]}};
-handle_event({method_call_on_the_way, Cog},
-             State=#state{with_incoming=Invocations}) ->
-    ?DEBUG({waiting_for_cog_to_be_active, Cog}),
-    {ok, State#state{with_incoming=gb_sets:add_element(Cog, Invocations)}};
 handle_event(_,State)->
     {ok,State}.
 
@@ -140,14 +139,21 @@ cancel(undefined)->
 cancel(TRef)->
     {ok,cancel}=timer:cancel(TRef).
 
-can_clock_advance(#state{active=A, blocked=B, with_incoming=I}) ->
-    gb_sets:is_empty(gb_sets:subtract(A, B)) andalso gb_sets:is_empty(I).
+can_clock_advance(#state{active=A, blocked=B}) ->
+    All_idle = gb_sets:is_empty(gb_sets:subtract(A, B)),
+    ?DEBUG({can_clock_advance, All_idle}),
+    All_idle.
 
 advance_clock_or_terminate(State=#state{main=M,clock_waiting=C,dcs=DCs,timer=T}) ->
     case C of
         [] ->
+            %% One last clock advance to finish the last resource period
+            MTE=clock:distance_to_next_boundary(),
+            clock:advance(MTE),
+            lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
+            lists:foreach(fun dc:print_info/1, DCs),
             {ok,T1} = case T of
-                          undefined -> timer:send_after(0,M,wait_done);
+                          undefined -> timer:send_after(1000,M,wait_done);
                           _ -> {ok,T}
                       end,
             State#state{timer=T1};
@@ -156,7 +162,7 @@ advance_clock_or_terminate(State=#state{main=M,clock_waiting=C,dcs=DCs,timer=T})
             ?DEBUG({clock_advance, MTE}),
             clock:advance(MTE),
             lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
-            lists:foreach(fun dc:print_info/1, DCs),
+            %% lists:foreach(fun dc:print_info/1, DCs),
             {A,C1}=lists:unzip(
                      lists:map(
                        fun(I) -> decrease_or_wakeup(MTE, I) end,

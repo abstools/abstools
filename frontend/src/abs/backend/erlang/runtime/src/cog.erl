@@ -40,7 +40,7 @@ add_and_notify(#cog{ref=Cog},Task,Args)->
     Cog!{new_task,Task,Args,self(),true},
     await_start(Task, Args).
 
-add_blocking(#cog{ref=Ref},Task=init_task,Args,Cog,Stack)->
+add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
     task:block(Cog),
     Ref!{new_task,Task,Args,self(),false},
     await_start(Task,[Args|Stack]),
@@ -205,10 +205,16 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
     New_State=
         receive
             {get_references, Sender} ->
+                DC_for_gc = case DC of
+                                null -> [];
+                                #object{class=class_ABS_DC_DeploymentComponent,
+                                        ref=DCref} -> [[{object, DCref}]]
+                            end,
                 Sender !
                     {lists:foldl(fun ordsets:union/2, [],
-                                 lists:map(fun task:get_references/1, gb_trees:keys(Tasks)))
-                     ++ case DC of null -> []; _ -> DC end,
+                                 lists:map(fun task:get_references/1,
+                                           gb_trees:keys(Tasks))
+                                 ++ DC_for_gc),
                      self()},
                 S;
             {done, gc} ->
@@ -228,13 +234,15 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
         _ -> loop(New_State)
     end.
 
-start_new_task(S=#state{tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify)->
+start_new_task(S=#state{running=R,tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify)->
     Ref=task:start(#cog{ref=self(),tracker=Tracker,dc=DC},Task,Args),
     ?DEBUG({new_task,Ref,Task,Args}),
-    eventstream:event({method_call_on_the_way, self()}),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     Sender!{started,Task,Ref},
-    S#state{tasks=gb_trees:insert(Ref,#task{ref=Ref},T)}.
+    %% Don't generate "cog idle" event when we create new task - this
+    %% causes spurious clock advance
+    R1=case R of no_task_schedulable -> false; _ -> R end,
+    S#state{running=R1,tasks=gb_trees:insert(Ref,#task{ref=Ref},T)}.
 
 
 schedule_and_execute(S) ->
