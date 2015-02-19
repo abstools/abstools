@@ -6,8 +6,9 @@ module PingPong;
 import * from ABS.DC;
 
 // Tests for Deployment
-data RequirementElement = Req | List(Int) | Default(String) | Fill ;
-data Aeolus = Cost(String, Int) | Spec(Int, List<RequirementElement>);
+data DeployParamSpecification = Req | List(Int) | Default(String) | User ;
+data DeployScenarioElement = MaxUse(Int) | Cost(String, Int) | Param(String, DeployParamSpecification) | Name(String);
+type Deploy = List<DeployScenarioElement>;
 // Tests End
 
 
@@ -33,10 +34,8 @@ interface Pong {
     Unit pong(PongMsg m);
 }
 
-[Aeolus: Cost("CPU", 1)]
-[Aeolus: Cost("Memory", 1)]
-[Aeolus: Spec(1, list[List(3)]) ]
-[Aeolus: Spec(1, list[List(4)]) ]
+[Deploy: scenario[MaxUse(1), Cost("CPU", 1), Cost("Memory", 1), Param("lpong", List(1)), Name("toto")] ]
+[Deploy: scenario[MaxUse(4), Cost("CPU", 4), Cost("Memory", 4), Param("lpong", List(4))] ]
 class PingImpl(List<Pong> lpong) implements Ping {
     Pong pong = nth(lpong, 0);
     Unit run(){
@@ -56,10 +55,8 @@ class PingImpl(List<Pong> lpong) implements Ping {
       }
      }
 }
-
-[Aeolus: Cost("CPU", 1)]
-[Aeolus: Cost("Memory", 1)]
-[Aeolus: Spec(1, list[]) ]
+[DeployScenarioElement: MaxUse(3) ]
+[Deploy: scenario[MaxUse(1), Cost("CPU", 1), Cost("Memory", 1)] ]
 class PongImpl implements Pong {
     Ping ping;
 
