@@ -20,7 +20,10 @@ aspect GenerateMaude {
         assert module != null;
         this.defaultResources = defaultResources;
         boolean hasClasses = false;
-        stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting "
+        stream.println("\n*******************************************");
+        stream.println("***       Start of generated code       ***");
+        stream.println("*******************************************");
+        stream.println("\n\nmod MODEL is\nprotecting "
                        + module.getModule() + " .\n");
         for (Decl decl : getDecls()) {
             if (decl instanceof FunctionDecl)

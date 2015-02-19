@@ -3069,8 +3069,6 @@ mod ABS-SIMULATOR-EQ-TIMED is
   eq object(ob('main, 0), '..., S:Subst, 2, LIVE:Bool) = none .
 endm
 
-eof
-
 *** Local Variables:
 *** maude-indent: 2
 *** fill-column: 78

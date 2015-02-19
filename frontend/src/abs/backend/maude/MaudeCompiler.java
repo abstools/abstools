@@ -5,27 +5,36 @@
 package abs.backend.maude;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.PrintStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.common.io.ByteStreams;
 
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
 public class MaudeCompiler extends Main {
 
-    public enum SIMULATOR { RL(SIMULATOR_RL), EQ_TIMED(SIMULATOR_EQ_TIMED);
-    private final String module;
-    SIMULATOR(String arg) {
-        this.module = arg;
-    }
-    public String getModule() {
-        return module;
-    }
+    public enum SIMULATOR {
+        RL(SIMULATOR_RL), EQ_TIMED(SIMULATOR_EQ_TIMED);
+        private final String module;
+        SIMULATOR(String arg) {
+            this.module = arg;
+        }
+        public String getModule() {
+            return module;
+        }
     };
 
-    private static String SIMULATOR_RL = "ABS-SIMULATOR-RL";
-    private static String SIMULATOR_EQ_TIMED = "ABS-SIMULATOR-EQ-TIMED";
+    private static final String SIMULATOR_RL = "ABS-SIMULATOR-RL";
+    private static final String SIMULATOR_EQ_TIMED = "ABS-SIMULATOR-EQ-TIMED";
+    private static final String RUNTIME_INTERPRETER_PATH
+        = "abs/backend/maude/abs-interpreter.maude";
 
     SIMULATOR module = SIMULATOR.RL;
     private File outputfile;
@@ -92,14 +101,22 @@ public class MaudeCompiler extends Main {
      */
     public void compile(String[] args) throws Exception {
         final Model model = parse(args);
-        if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
+        if (model.hasParserErrors()
+            || model.hasErrors()
+            || model.hasTypeErrors())
             return;
 
         PrintStream stream = System.out;
         if (outputfile != null) {
             stream = new PrintStream(outputfile);
         }
+        InputStream is = ClassLoader.getSystemResourceAsStream(RUNTIME_INTERPRETER_PATH);
+        if (is == null)
+            throw new RuntimeException("Could not locate abs-interpreter.maude");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         
+        stream.println("*** Generated " + dateFormat.format(new Date()));
+        ByteStreams.copy(is, stream);
         model.generateMaude(stream, module, mainBlock, clocklimit, defaultResources);
     }
 
