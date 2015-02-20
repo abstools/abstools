@@ -32,9 +32,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = "ubuntu/trusty64"
 
-  # Call script that installs necessary software
-  config.vm.provision :shell, path: "vagrant-bootstrap.sh"
-
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.
@@ -142,4 +139,75 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # chef-validator, unless you changed the configuration.
   #
   #   chef.validation_client_name = "ORGNAME-validator"
+
+  # Call script that installs necessary software
+  config.vm.provision "shell", inline: <<-SHELL
+
+# We need Erlang R17.  Add it to the list of repositories.  See
+# https://www.erlang-solutions.com/downloads/download-erlang-otp#tabs-ubuntu
+wget http://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
+sudo dpkg -i erlang-solutions_1.0_all.deb
+rm erlang-solutions_1.0_all.deb
+
+# Now run initial update
+apt-get update -q -y
+apt-get upgrade -y
+
+# Add tools for developing the compiler infrastructure
+apt-get install -q -y default-jdk ant antlr junit git
+
+# Add tools for simulating ABS programs
+apt-get install -q -y erlang emacs maude
+
+# Add SACO, the eclipse dev environment etc.
+apt-get install -q -y eclipse graphviz
+echo "The following diagnostic messages are harmless"
+eclipse -application org.eclipse.equinox.p2.director -noSplash \
+        -repository \
+http://docs.abs-models.org/update-site,\
+http://download.eclipse.org/releases/indigo/ \
+        -installIUs \
+org.abs-models.abs.compiler.feature.group,\
+org.abs-models.abs.plugin,\
+org.abs-models.sda.feature.group,\
+org.abs-models.sdedit.feature.group,\
+org.abs-models.apet.feature.group
+
+eclipse -application org.eclipse.equinox.p2.director -noSplash \
+        -repository \
+http://costa.ls.fi.upm.es/saco/sw/update-site,\
+http://download.eclipse.org/releases/indigo/ \
+        -installIUs \
+eu.hatsproject.costabs.feature.group
+# org.abs-models.absplugin.feature.group
+
+# Find the SACO executable.
+COSTABSBINDIR=$(dirname $(find /usr/lib/eclipse/plugins -name costabs_static))
+chmod a+x $COSTABSBINDIR/costabs_static $COSTABSBINDIR/deadlock_static \
+      $COSTABSBINDIR/mhp_static
+
+# Set up Emacs
+cat >>.emacs <<EOF
+;; In case of re-provisioning, the following will be duplicated.
+;; Duplicate lines can be safely ignored or removed.
+(add-to-list 'load-path "/vagrant/emacs")
+(autoload 'abs-mode "abs-mode" "Major mode for editing Abs files." t)
+(add-to-list 'auto-mode-alist (cons "\\\\.abs\\\\'" 'abs-mode))
+(autoload 'maude-mode "maude-mode" nil t)
+(autoload 'run-maude "maude-mode" nil t)
+(add-to-list 'auto-mode-alist '("\\\\.maude\\\\'" maude-mode))
+EOF
+chown vagrant.vagrant .emacs
+
+# Set up paths
+cat >>.bashrc <<EOF
+# added by vagrant deployment; will be duplicated in case of re-provisioning
+COSTABSBINDIR=\$(dirname \$(find /usr/lib/eclipse/plugins -name costabs_static))
+PATH=\$PATH:/vagrant/frontend/bin/bash:\$COSTABSBINDIR
+EOF
+
+# Rebuild the tools
+(cd /vagrant/frontend ; ant dist)
+
+  SHELL
 end
