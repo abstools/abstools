@@ -123,6 +123,8 @@ EOF
 sudo mv key-abs /usr/local/bin
 sudo chown root.root /usr/local/bin/key-abs
 sudo chmod a+x /usr/local/bin/key-abs
+# work around bug in key-abs: it doesn't create the directory it requires
+mkdir -p /home/vagrant/.key
 
 echo
 echo Setting up the user environment: .bashrc, .emacs
