@@ -118,7 +118,7 @@ wget -q http://www.key-project.org/key-abs/key-abs.zip
 rm key-abs.zip
 cat >key-abs <<EOF
 #!/bin/sh
-java -jar /usr/local/lib/key-abs/key.jar "$@"
+java -jar /usr/local/lib/key-abs/key.jar "\\$@"
 EOF
 sudo mv key-abs /usr/local/bin
 sudo chown root.root /usr/local/bin/key-abs
