@@ -135,9 +135,9 @@ chmod a+x $COSTABSBINDIR/costabs_static $COSTABSBINDIR/deadlock_static \
       $COSTABSBINDIR/mhp_static
 
 # Set up Emacs
-cat >>/home/vagrant/.emacs <<EOF
-;; In case of re-provisioning, the following will be duplicated.
-;; Duplicate lines can be safely ignored or removed.
+if [ ! -e /home/vagrant/.emacs ] ; then
+cat >/home/vagrant/.emacs <<EOF
+;; Set up ABS, Maude.  Added by Vagrant provisioning
 (add-to-list 'load-path "/vagrant/emacs")
 (autoload 'abs-mode "abs-mode" "Major mode for editing Abs files." t)
 (add-to-list 'auto-mode-alist (cons "\\\\.abs\\\\'" 'abs-mode))
@@ -145,13 +145,19 @@ cat >>/home/vagrant/.emacs <<EOF
 (autoload 'run-maude "maude-mode" nil t)
 (add-to-list 'auto-mode-alist '("\\\\.maude\\\\'" maude-mode))
 EOF
+fi
 
 # Set up paths
-cat >>/home/vagrant/.bashrc <<EOF
-# added by vagrant deployment; will be duplicated in case of re-provisioning
+cat >/home/vagrant/.abstoolsrc <<EOF
 COSTABSBINDIR=\$(dirname \$(find /home/vagrant/.eclipse -name costabs_static))
 PATH=\$PATH:/vagrant/frontend/bin/bash:\$COSTABSBINDIR
 EOF
+
+if [ -z "$(grep abstoolsrc /home/vagrant/.bashrc)" ] ; then
+cat >>/home/vagrant/.bashrc <<EOF
+. .abstoolsrc
+EOF
+fi
 
 echo
 echo Rebuilding the ABS compiler
