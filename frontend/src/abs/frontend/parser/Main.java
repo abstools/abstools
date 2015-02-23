@@ -731,10 +731,11 @@ public class Main {
         
         String[] header = new String[] {
            "The ABS Compiler" + " v" + getVersion(),
-           "Copyright (c) 2009-2011,    The HATS Consortium", 
-           "All rights reserved. http://www.hats-project.eu" };
+           "Copyright (c) 2009-2013,    The HATS Consortium", 
+           "Copyright (c) 2013-2015,    The Envisage Project", 
+           "http://www.abs-models.org/" };
         
-        int maxlength = header[1].length();
+        int maxlength = header[0].length();
         StringBuilder starline = new StringBuilder();
         for (int i = 0; i < maxlength + 4; i++) {
             starline.append("*");
