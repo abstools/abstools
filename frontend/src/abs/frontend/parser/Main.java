@@ -118,6 +118,10 @@ public class Main {
                abs.backend.erlang.ErlangBackend.main(args);
            } else if (argslist.contains("-prolog")) {
                abs.backend.prolog.PrologBackend.main(args);
+           } else if (argslist.contains("-coreabs")) {
+               abs.backend.coreabs.CoreAbsBackend.main(args);
+           } else if (argslist.contains("-prettyprint")) {
+               abs.backend.prettyprint.PrettyPrinterBackEnd.main(args);
            } else {
                parse(args);
            }
@@ -678,14 +682,18 @@ public class Main {
         printHeader();
         System.out.println(""
                 + "Usage: java " + this.getClass().getName()
-                + " [options] <absfiles>\n\n" 
-                + "  <absfiles>     ABS files/directories/packages to parse\n\n" + "Options:\n"
-                + "  -version       print version\n" 
-                + "  -v             verbose output\n" 
+                + " [backend] [options] <absfiles>\n\n"
+                + "  <absfiles>     ABS files/directories/packages to parse\n\n"
+                + "Available backends:\n"
                 + "  -maude         generate Maude code\n"
                 + "  -java          generate Java code\n"
                 + "  -erlang        generate Erlang code\n"
                 + "  -prolog        generate Prolog\n"
+                + "  -prettyprint   pretty-print ABS code\n\n"
+                + "type 'absc -<backend> -help' to see backend-specific options\n\n"
+                + "Common options:\n"
+                + "  -version       print version\n"
+                + "  -v             verbose output\n"
                 + "  -product=<PID> build given product by applying deltas\n"
                 + "                 (PID is the qualified product ID)\n"
                 + "  -notypecheck   disable typechecking\n"

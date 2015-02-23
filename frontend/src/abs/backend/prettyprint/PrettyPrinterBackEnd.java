@@ -55,6 +55,8 @@ public class PrettyPrinterBackEnd extends Main {
                 force = true;
             } else if (arg.equals("-debug")) {
                 debug = true;
+            } else if (arg.equals("-prettyprint")) {
+                // nothing to do
             } else {
                 remainingArgs.add(arg);
             }
