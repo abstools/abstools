@@ -688,6 +688,7 @@ public class Main {
                 + "  -maude         generate Maude code\n"
                 + "  -java          generate Java code\n"
                 + "  -erlang        generate Erlang code\n"
+                + "  -haskell       generate Haskell code\n" // this is just for help printing; the execution of the compiler is done by the bash scipt absc
                 + "  -prolog        generate Prolog\n"
                 + "  -prettyprint   pretty-print ABS code\n\n"
                 + "type 'absc -<backend> -help' to see backend-specific options\n\n"
