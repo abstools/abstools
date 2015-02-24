@@ -60,7 +60,7 @@ public class ErlangBackend extends Main {
     private void compile(String[] args) throws Exception {
         final Model model = parse(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
-            return;
+            printParserErrorAndExit();
         compile(model, DEFAULT_DEST_DIR);
     }
 

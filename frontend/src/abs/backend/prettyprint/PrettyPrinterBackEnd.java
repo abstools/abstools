@@ -72,7 +72,7 @@ public class PrettyPrinterBackEnd extends Main {
     public void compile(String[] args) throws Exception {
         final Model model = parse(args);
         if (! force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
-            return;
+            printParserErrorAndExit();
         }
 
         final PrintStream stream;

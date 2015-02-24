@@ -104,7 +104,7 @@ public class MaudeCompiler extends Main {
         if (model.hasParserErrors()
             || model.hasErrors()
             || model.hasTypeErrors())
-            return;
+            printParserErrorAndExit();
 
         PrintStream stream = System.out;
         if (outputfile != null) {

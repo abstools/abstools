@@ -123,7 +123,10 @@ public class Main {
            } else if (argslist.contains("-prettyprint")) {
                abs.backend.prettyprint.PrettyPrinterBackEnd.main(args);
            } else {
-               parse(args);
+               Model m = parse(args);
+               if (m.hasParserErrors()) {
+                   printParserErrorAndExit();
+               }
            }
        } catch (Exception e) {
           printErrorAndExit(e.getMessage());
@@ -638,6 +641,11 @@ public class Main {
         if (verbose)
             System.out.println("Parsing file "+file.getPath());//getAbsolutePath());
         units.add(parseUnit(file, null, reader));
+    }
+
+    protected void printParserErrorAndExit() {
+        System.err.println("\nCompilation failed with syntax errors.");
+        System.exit(1);
     }
 
     protected void printErrorAndExit(String error) {
