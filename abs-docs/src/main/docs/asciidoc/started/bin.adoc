@@ -31,7 +31,7 @@ whenever a +Rat+ type is expected. Some examples of +Rat+ expressions:
 ----
 
 [NOTE]
-The adverse does not work. The user that wants to convert from
+The adverse does not work. Users that want to convert from
 +Rat+ to +Int+ types have to explicitly use the +truncate(number)+ function.
 
 
@@ -46,7 +46,7 @@ of Strings:
 
 [NOTE]
 According to other functional languages, Strings in ABS are immutable data.
-Desimilar to other function languages, ABS Strings are not represented as list of
+Dissimilar to other function languages, ABS Strings are not represented as list of
 characters; instead they have a hidden-to-the-user, efficient, internal representation.
 
 
