@@ -13,22 +13,32 @@
 
 %% Attribute names for resource types.  Must be the same as in class
 %% abslang.abs:ABS.DC.DeploymentComponent
+var_current_for_resourcetype(memory) ->
+    memoryconsumed;
 var_current_for_resourcetype(cpu) ->
     cpuconsumed;
 var_current_for_resourcetype(bw) ->
     bwconsumed.
+var_max_for_resourcetype(memory) ->
+    memory;
 var_max_for_resourcetype(cpu) ->
     cpu;
 var_max_for_resourcetype(bw) ->
     bw.
+var_nextmax_for_resourcetype(memory) ->
+    memorynext;
 var_nextmax_for_resourcetype(cpu) ->
     cpunext;
 var_nextmax_for_resourcetype(bw) ->
     bwnext.
+var_history_for_resourcetype(memory) ->
+    memoryhistory;
 var_history_for_resourcetype(cpu) ->
     cpuhistory;
 var_history_for_resourcetype(bw) ->
     bwhistory.
+var_totalhistory_for_resourcetype(memory) ->
+    memoryhistorytotal;
 var_totalhistory_for_resourcetype(cpu) ->
     cpuhistorytotal;
 var_totalhistory_for_resourcetype(bw) ->
@@ -54,7 +64,8 @@ update_state_and_history(S, Amount) ->
     case rationals:is_lesser(Amount1, rationals:to_r(0)) of
         false -> S1=update_state_and_history_for_resouce(S, cpu),
                  S2=update_state_and_history_for_resouce(S1, bw),
-                 update_state_and_history(S2, Amount1);
+                 S3=update_state_and_history_for_resouce(S2, memory),
+                 update_state_and_history(S3, Amount1);
         true -> S
     end.
 
@@ -76,7 +87,11 @@ update_state_and_history_for_resouce(S, Resourcetype) ->
     S2=C:set_val_internal(S1,Totalshistory,
                           {dataCons, C:get_val_internal(S1,Max),
                            C:get_val_internal(S1,Totalshistory)}),
-    S3=C:set_val_internal(S2,Consumed,0),
+    S3=case Resourcetype of
+           %% Memory does not refresh as time advances
+           memory -> S2;
+           _ -> C:set_val_internal(S2,Consumed,0)
+       end,
     C:set_val_internal(S3,Max,C:get_val_internal(S3,Next)).
 
 

@@ -1769,6 +1769,11 @@ mod ABS-MACHINE-BASICS-TIMED is
           'cpuhistory |-> CPUHI:Data,
           'cpuhistorytotal |-> CPUTHI:Data,
           'cpunext |-> CPUN:Data,
+          'memory |-> MEMORY:Data,
+          'memoryconsumed |-> "num"[MEMORYC:Rat],
+          'memoryhistory |-> MEMORYHI:Data,
+          'memoryhistorytotal |-> MEMORYTHI:Data,
+          'memorynext |-> MEMORYN:Data,
           S), F, LIVE) CN, T, true)
   =
     object(O, 'ABS.DC.DeploymentComponent, (
@@ -1782,6 +1787,11 @@ mod ABS-MACHINE-BASICS-TIMED is
         'cpuhistory |-> "ABS.StdLib.Cons"["num"[CPUC:Rat] :: CPUHI:Data],
         'cpuhistorytotal |-> advanceTotalsHistory(CPU:Data, CPUTHI:Data),
         'cpunext |-> CPUN:Data,
+        'memory |-> MEMORYN:Data,
+        'memoryconsumed |-> "num"[MEMORYC:Rat],
+        'memoryhistory |-> "ABS.StdLib.Cons"["num"[MEMORYC:Rat] :: MEMORYHI:Data],
+        'memoryhistorytotal |-> advanceTotalsHistory(MEMORY:Data, MEMORYTHI:Data),
+        'memorynext |-> MEMORYN:Data,
         S), F, LIVE)
     advance(CN, T, true) .
 

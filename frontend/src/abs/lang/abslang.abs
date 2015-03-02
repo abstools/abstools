@@ -516,7 +516,7 @@ module ABS.DC;
 export DC, DeploymentComponent, thisDC, Cost, Size, CogLocation, Resourcetype, CPU, Bandwidth, InfRat, Fin, finvalue;
 import * from ABS.StdLib;
 
-data Resourcetype = CPU | Bandwidth ;
+data Resourcetype = CPU | Bandwidth | Memory ;
 
 data InfRat = InfRat | Fin(Rat finvalue);
 
@@ -562,13 +562,17 @@ implements DeploymentComponent {
     Time creationTime = now();
     // Histories are updated by the backend.  totalhistories stay empty in
     // case the DC has an infinite amount of resources for that type.
-    List<Int> cpuhistory = Nil;
-    List<Int> cpuhistorytotal = Nil;
-    List<Int> bwhistory = Nil;
-    List<Int> bwhistorytotal = Nil;
-    // Counters of consumed resources in current time unit.  Modified by the backend.
+    List<Rat> cpuhistory = Nil;
+    List<Rat> cpuhistorytotal = Nil;
+    List<Rat> bwhistory = Nil;
+    List<Rat> bwhistorytotal = Nil;
+    List<Rat> memoryhistory = Nil;
+    List<Rat> memoryhistorytotal = Nil;
+    // Counters of consumed resources in current time unit.  Modified by the
+    // backend where appropriate (CPU, bandwidth self-refresh; memory doesn't.)
     Rat cpuconsumed = 0;
     Rat bwconsumed = 0;
+    Rat memoryconsumed = 0;
     // Initialized flag read by the backend to avoid premature execution
     Bool initialized = False;
     // Total amount of resources in current and next time interval.
@@ -578,6 +582,9 @@ implements DeploymentComponent {
     InfRat bw = case lookup(initconfig, Bandwidth) {
       Nothing => InfRat; Just(v) => Fin(v); };
     InfRat bwnext = bw;
+    InfRat memory = case lookup(initconfig, Memory) {
+      Nothing => InfRat; Just(m) => Fin(m); };
+    InfRat memorynext = memory;
     {
         this.initialized = True;
     }
@@ -586,6 +593,10 @@ implements DeploymentComponent {
         case (rtype) {
             CPU => { if (cpu != InfRat) result = Fin(finvalue(cpu) - cpuconsumed); }
             Bandwidth => if (bw != InfRat) result = Fin(finvalue(bw) - bwconsumed);
+            // Memory semantics are not quite defined yet.  For now, assume
+            // the amount of memory is manually increased and decreased by the
+            // cloud API as cogs are deployed.
+            Memory => result = memorynext;
         }
         return result;
     }
@@ -602,6 +613,11 @@ implements DeploymentComponent {
                     result = averageDivsN(bwhistory, bwhistorytotal, periods);
                 }
             }
+            Memory => {
+                if (memory != InfRat) {
+                    result = averageDivsN(memoryhistory, memoryhistorytotal, periods);
+                }
+            }
         }
         return result;
     }
@@ -610,11 +626,12 @@ implements DeploymentComponent {
         case (rtype) {
             CPU => result = cpu;
             Bandwidth => result = bw;
+            Memory => result = memory;
         }
         return result;
     }
     [Atomic] Map<Resourcetype, InfRat> getConfiguration() {
-        return map[Pair(CPU, cpunext), Pair(Bandwidth, bwnext)];
+        return map[Pair(CPU, cpunext), Pair(Bandwidth, bwnext), Pair(Memory, memorynext)];
     }
 
     // Transfer resources between deployment components.
@@ -637,6 +654,10 @@ implements DeploymentComponent {
                 assert (finvalue(bwnext) >= amount);
                 bwnext = Fin(finvalue(bwnext) - amount);
             }
+            Memory => if (memorynext != InfRat) {
+                assert (finvalue(memorynext) >= amount);
+                memorynext = Fin(finvalue(memorynext) - amount);
+            }
         }
     }
     Unit incrementResources(Rat amount, Resourcetype rtype) {
@@ -648,6 +669,9 @@ implements DeploymentComponent {
             }
             Bandwidth => if (bwnext != InfRat) {
                 bwnext = Fin(finvalue(bwnext) + amount);
+            }
+            Memory => if (memorynext != InfRat) {
+                memorynext = Fin(finvalue(memorynext) + amount);
             }
         }
     }
