@@ -40,7 +40,7 @@ aspect ProductLineTypeAnalysis {
      * Add all possible products (i.e. all valid feature configurations = feature model solutions)
      * as non-terminal attributes (NTAs) to the AST (as List of ImplicitProducts to the Model node)
      */
-    syn lazy List<ImplicitProduct> Model.getImplicitProductList() {
+    syn nta lazy List<ImplicitProduct> Model.getImplicitProductList() {
         List<ImplicitProduct> plist = new List<ImplicitProduct>();
 
         Set<Set<String>> featureConfs = getFeatureModelConfigurations();
@@ -56,5 +56,4 @@ aspect ProductLineTypeAnalysis {
         }
         return plist;
     }
-
 }

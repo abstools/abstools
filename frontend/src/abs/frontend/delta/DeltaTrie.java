@@ -7,6 +7,7 @@ package abs.frontend.delta;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DeltaTrie {
     private Node root;
@@ -32,7 +33,8 @@ public class DeltaTrie {
      */
     private class Node {
         private Map<String, Node> children;
-        private String value;
+        private String value = null;
+        private boolean isValidProduct = false;
 
          // Constructor for top level root node
         public Node() {
@@ -57,7 +59,17 @@ public class DeltaTrie {
 
             if (word.size() > d+1)
                 nextNode.addWord(word, d+1);
+            else
+                isValidProduct = true;
         }
 
+        /*
+        protected Set<List<String>> traverse() {
+            if (value == null) // core
+                ;
+            else
+
+        }
+         */
     }
 }
