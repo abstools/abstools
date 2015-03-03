@@ -14,7 +14,7 @@
 		<project.docs.source>${basedir}/src/main/docs/asciidoc</project.docs.source>
 		<project.docs.target>${project.build.directory}/classes/docs</project.docs.target>
 
-		<version.asciidoctor>1.5.0</version.asciidoctor>
+		<version.asciidoctor>1.5.2</version.asciidoctor>
 	</properties>
 
 	<build>
