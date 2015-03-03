@@ -66,7 +66,7 @@ scheduled at that point.  This means that more time might pass than expressed in
   Time t2 = now(); <2>
 ----
 <1> Here the *process* suspends for 1/2-5 time units
-<2> `t2` will be between 1/2 and 5 time units larger than `t`
+<2> `t2` will be at least 1/2 time units larger than `t`
 
 ----
   Time t = now();
