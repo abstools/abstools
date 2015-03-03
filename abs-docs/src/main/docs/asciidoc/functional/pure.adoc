@@ -1,7 +1,6 @@
 == Pure Expressions
 
-Pure Expressions are side effect-free expressions. This means that these expressions cannot mod-
-ify the heap.
+Pure Expressions are side effect-free expressions. This means that these expressions cannot modify the heap.
 
 .Let Expressions
 
