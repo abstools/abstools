@@ -390,7 +390,7 @@ def String toString<T>(T t) = builtin;
 // Durations can be added and subtracted from Times, and compared to
 // each other.  Times can be compared to each other.
 data Time = Time(Rat timeValue);
-def Int currentms() = builtin;
+def Rat currentms() = builtin;
 def Time now() = Time(currentms());
 
 // use this like so:
