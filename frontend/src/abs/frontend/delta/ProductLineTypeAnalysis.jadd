@@ -1,11 +1,11 @@
 aspect ProductLineTypeAnalysis {
 
-    
+
     syn lazy SemanticErrorList Model.typeCheckPL() {
         SemanticErrorList errors = new SemanticErrorList();
         if (! hasProductLine())
             return errors;
-            
+
         ProductLineTypeAnalysisHelper.typeCheckPL(getProductLine(), errors);
         return errors;
     }
@@ -13,17 +13,17 @@ aspect ProductLineTypeAnalysis {
 //    syn lazy java.util.List<java.util.Set<String>> ProductLine.getDeltaPartition(SemanticErrorList errors) {
 //        return ProductLineTypeAnalysisHelper.getDeltaPartition(this, errors);
 //    }
-    
-    syn lazy boolean ProductLine.isStronglyUnambiguous(java.util.List<Set<String>> deltaPartitions, SemanticErrorList errors) {
-        return ProductLineTypeAnalysisHelper.isStronglyUnambiguous(this, deltaPartitions, errors);
-    }
-    
-    public boolean ProductLine.isStronglyUnambiguous(java.util.List<Set<String>> deltaPartitions, SemanticErrorList errors) {
-        return DeltaTypeAnalysisHelper.isStronglyUnambiguous(this, deltaPartitions, errors);
-    }
 
-    
-    /* 
+//    syn lazy boolean ProductLine.isStronglyUnambiguous(java.util.List<Set<String>> deltaPartitions, SemanticErrorList errors) {
+//        return ProductLineTypeAnalysisHelper.isStronglyUnambiguous(this, deltaPartitions, errors);
+//    }
+//
+//    public boolean ProductLine.isStronglyUnambiguous(java.util.List<Set<String>> deltaPartitions, SemanticErrorList errors) {
+//        return DeltaTypeAnalysisHelper.isStronglyUnambiguous(this, deltaPartitions, errors);
+//    }
+
+
+    /*
      * Return all valid feature configurations of the feature model.
      * This is done by solving the CSP and only considering features (no attributes, as that could result in an infinite number of configurations)
      */
@@ -35,14 +35,14 @@ aspect ProductLineTypeAnalysis {
         return solver.getSolutionsFeaturesOnly();
     }
 
-    
+
     /*
-     * Add all possible products (i.e. all valid feature configurations = feature model solutions) 
+     * Add all possible products (i.e. all valid feature configurations = feature model solutions)
      * as non-terminal attributes (NTAs) to the AST (as List of ImplicitProducts to the Model node)
      */
     syn lazy List<ImplicitProduct> Model.getImplicitProductList() {
         List<ImplicitProduct> plist = new List<ImplicitProduct>();
-        
+
         Set<Set<String>> featureConfs = getFeatureModelConfigurations();
         for (Set<String> features : featureConfs) {
             // set Features
@@ -56,5 +56,5 @@ aspect ProductLineTypeAnalysis {
         }
         return plist;
     }
-    
+
 }
