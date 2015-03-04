@@ -83,7 +83,7 @@ public class DataTypeType extends Type  {
 
     @Override
     public boolean hasReferences() {
-        Set<DataTypeDecl> checkedDecls = new HashSet<>();
+        Set<DataTypeDecl> checkedDecls = new HashSet<DataTypeDecl>();
         return hasReferences(checkedDecls);
     }
 
