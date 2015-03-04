@@ -7,7 +7,6 @@ package abs.frontend;
 import abs.frontend.analyser.*;
 import abs.frontend.mtvl.SearchSolutionsTest;
 import abs.frontend.parser.*;
-import abs.frontend.sql.SqlTransformationTests;
 import abs.frontend.typesystem.*;
 
 import org.junit.runner.RunWith;
@@ -28,5 +27,5 @@ import deadlock.DeadlockCheckerTests;
         SearchSolutionsTest.class,
         TestABSPackages.class, CaseStudyTypeChecking.class
         , DeadlockCheckerTests.class, DeadlockCasestudies.class
-        , SqlTransformationTests.class})
+        })
 public class AllFrontendTests {}
