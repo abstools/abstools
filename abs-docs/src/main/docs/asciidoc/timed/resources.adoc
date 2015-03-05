@@ -67,4 +67,31 @@ local DeploymentComponent(...)`) or new local objects on another cog (via
 
 === Modeling Resource Usage
 
+Resource models are added to an ABS model using annotations.  Adding annotations to specific statements and declarations causes side-effects on the status of an applicable deployment component, as described in this section.
+
+.Example
+----
+module Test;
+import * from ABS.DC; <1>
+interface I {
+  Unit process();
+}
+[Size: 3] <2>
+class C implements I {
+  Unit process() {
+    [Cost: 10] skip; <3>
+}
+
+{
+  DeploymentComponent dc = new DeploymentComponent("Server",
+    map[Pair(CPU, 5), Pair(Bandwidth, 10), Pair(Memory, 5)]);
+  [DC: dc] I i = new C(); <4>
+  [Size: 5] i!process(); <5>
+}
+----
+<1> Make all necessary identifiers accessible in the current module
+<2> Declare the memory needed to instantiate a cog of class `C`
+<3> Executing this statement costs 10 CPU units; the time needed depends on the CPU capacity of the deployment component, and on other cogs executing in parallel on the same deployment component.
+<4> Creating a new cog succeeds since the available memory (5) is more than the necessary memory (3).  Trying to create a second cog will fail.
+<5> Executing this method call consumes 5 Bandwidth resources.
 
