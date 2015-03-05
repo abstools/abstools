@@ -59,11 +59,6 @@ aspect Variables {
     eq  AttVar.isInt() = ((Model)calcContextNode(Model.class)).ints().containsKey(getFullName());
     eq FeatVar.isInt() = false;
 
-    syn boolean Variable.isBool();
-    eq   FAVar.isBool() = ((Model)calcContextNode(Model.class)).bools().contains(getFullName());
-    eq  AttVar.isBool() = ((Model)calcContextNode(Model.class)).bools().contains(getFullName());
-    eq FeatVar.isBool() = ((Model)calcContextNode(Model.class)).features().contains(getFName());
-
     // get variables in an attribute declaration, and checks if it is repeated.
     public boolean Attribute.isRepeated = false;
     Attribute contributes getIntFVarsHelp() to Model.ints() for calcContextNode(Model.class);
