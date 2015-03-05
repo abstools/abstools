@@ -1,4 +1,5 @@
 = Timed Semantics for ABS Simulation
 
 include::rtabs.adoc[]
+include::resources.adoc[]
 

@@ -1,0 +1,70 @@
+== Resource Modeling in ABS
+
+Resource Modeling deals with simulating and analyzing the non-functional
+properties of models: code deployment on varying numbers and kinds of
+machines, and the effects of different CPU speeds, interconnection bandwidth,
+code locality, etc. on the performance of a system.  This section describes
+the constructs ABS offers to the modeler.
+
+All language identifiers described in this section reside in the `ABS.DC` package.  To use them, define a module as follows:
+
+----
+module Name;
+import * from ABS.DC;
+----
+
+=== Resources
+
+The term _Resource_ can be used in different ways.  In ABS, we understand a
+Resource to be a countable, measurable property that is influenced by program
+execution and the passage of time.  The resources that are supported by the ABS language and its simulation and analysis tools are the following:
+
+CPU :: A measure of execution speed, applies to any ABS statement
+Bandwidth :: A measure of transmission speed, applies to method invocation and
+`return` statements
+Memory :: A measure of cog size, applies to class definitions
+
+These types of resource are defined in the `ABS.DC` module as follows:
+
+----
+data Resourcetype = CPU | Bandwidth | Memory ;
+----
+
+=== Deployment Components
+
+Modeling code deployment and code execution under resource constraints
+requires a notion of _locality_.  For this purpose, ABS offers a language
+construct called Deployment Component.
+
+Deployment Components are first-class language constructs in that they can be
+created, referenced and interacted with from within the model.  A reference to
+a deployment component is treated the same way as a reference to an object.
+Deployment Components are created using the `new` expression.  Any other cog
+can be created "on" a deployment component by using a `DC` annotation to the
+`new` statement.
+
+.Resources and Deployment Components
+
+Each deployment component "carries" some possibly infinite amount of resources
+for each resource type.  This is expressed as a map from resource type to a
+number, for example `map[Pair(CPU, 10), Pair(Bandwidth, 20)]`.  Resource types
+not included, such as `Memory` in the above example, are treated as being
+infinite.
+
+
+.Example
+----
+DeploymentComponent dc = new DeploymentComponent("Server 1", map[Pair(CPU, 10)]); <1>
+[DC: dc] Worker w = new CWorker(); <2>
+----
+<1> A new deployment component `dc` is created with 10 `CPU` resources
+<2> `w` will run inside `dc`
+
+NOTE: It is an error to try to locally create deployment components (via `new
+local DeploymentComponent(...)`) or new local objects on another cog (via
+`[DC: x] new local C()`).
+
+
+=== Modeling Resource Usage
+
+
