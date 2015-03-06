@@ -13,23 +13,6 @@ module Name;
 import * from ABS.DC;
 ----
 
-=== Resources
-
-The term _Resource_ can be used in different ways.  In ABS, we understand a
-Resource to be a countable, measurable property that is influenced by program
-execution and the passage of time.  The resources that are supported by the ABS language and its simulation and analysis tools are the following:
-
-CPU :: A measure of execution speed, applies to any ABS statement
-Bandwidth :: A measure of transmission speed, applies to method invocation and
-`return` statements
-Memory :: A measure of cog size, applies to class definitions
-
-These types of resource are defined in the `ABS.DC` module as follows:
-
-----
-data Resourcetype = CPU | Bandwidth | Memory ;
-----
-
 === Deployment Components
 
 Modeling code deployment and code execution under resource constraints
@@ -64,10 +47,73 @@ NOTE: It is an error to try to locally create deployment components (via `new
 local DeploymentComponent(...)`) or new local objects on another cog (via
 `[DC: x] new local C()`).
 
+=== Resources
+
+The term _Resource_ can be used in different ways.  In ABS, we understand a
+Resource to be a countable, measurable property that is influenced by program
+execution and the passage of time.  The resources currently supported by the
+ABS language are defined in the `ABS.DC` module as follows:
+
+----
+data Resourcetype = CPU | Bandwidth | Memory ;
+----
+
+==== CPU
+
+CPU models execution speed.  Intuitively, a deployment component with twice
+the number of CPU resources will execute twice as fast.  Not all statements
+consume CPU resources while executing -- CPU resources are consumed when
+execution in the current process reaches a statement that is annotated with a
+`Cost` annotation.
+
+.Example
+----
+[Cost: 5] skip;
+----
+
+Executing the above `skip` statement will consume 5 CPU resources from the
+deployment component where the cog was deployed.  If the deployment component
+does not have infinite CPU resources, executing the `skip` statement might take an observable amount of time.
+
+
+==== Bandwidth
+
+Bandwidth is a measure of transmission speed.  Bandwidth resources are
+consumed during method invocation and `return` statements.  Bandwidth
+resources are consumed on both the sending and the receiving deployment
+component.
+
+Bandwidth consumption is expressed via a `Size` annotation:
+
+.Example
+----
+[Size: 2 * length(x)] o!m(x);
+----
+
+Executing the above method invocation statement will consume bandwidth
+resources proportional to the length of list `x`.  The resources will be
+consumed both from the deployment component where the cog was deployed, and
+from the one where `o` was deployed.
+
+
+==== Memory
+
+The memory resource type abstracts from the size of main memory, as a measure
+of how many and which cogs can be created on a deployment component.  In
+contrast to bandwidth and cpu, memory does not influence the timed behavior of
+the simulation of an ABS model.
+
+.Example
+----
+[Size: 5] class C { }
+----
+
+A new cog of the above class definition can only be instantiated on a cog with
+at least 5 available memory resources.
 
 === Modeling Resource Usage
 
-Resource models are added to an ABS model using annotations.  Adding annotations to specific statements and declarations causes side-effects on the status of an applicable deployment component, as described in this section.
+As described above, resource models are added to an ABS model using annotations.  Adding annotations to specific statements and declarations causes side-effects on the status of an applicable deployment component.
 
 .Example
 ----
@@ -90,8 +136,18 @@ class C implements I {
 }
 ----
 <1> Make all necessary identifiers accessible in the current module
+
 <2> Declare the memory needed to instantiate a cog of class `C`
-<3> Executing this statement costs 10 CPU units; the time needed depends on the CPU capacity of the deployment component, and on other cogs executing in parallel on the same deployment component.
-<4> Creating a new cog succeeds since the available memory (5) is more than the necessary memory (3).  Trying to create a second cog will fail.
-<5> Executing this method call consumes 5 Bandwidth resources.
+
+<3> Executing this statement costs 10 CPU units; the time needed depends on
+the CPU capacity of the deployment component, and on other cogs executing in
+parallel on the same deployment component.  In this example, executing the
+`skip` statement will take two time units.
+
+<4> Creating a new cog succeeds since the available memory (5) is more than
+the necessary memory (3).  Trying to create a second cog of the same class
+will fail.
+
+<5> Executing this method call consumes 5 Bandwidth resources.  Since `dc` has
+10 bandwidth per time unit, the message will be transported instantly.
 
