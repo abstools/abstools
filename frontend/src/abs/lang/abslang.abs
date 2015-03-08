@@ -513,7 +513,14 @@ data FLIAnnotation = Foreign;
  * Used to model aspects of hardware configurations and deployment.
  */
 module ABS.DC;
-export DC, DeploymentComponent, thisDC, Cost, Size, CogLocation, Resourcetype, CPU, Bandwidth, InfRat, Fin, finvalue;
+// Interfaces
+export DeploymentComponent, CloudProvider;
+// Annotations
+export DC, Cost, Size, CogLocation;
+// Datatypes, Constructors
+export Resourcetype, CPU, Bandwidth, InfRat, Fin;
+// Functions
+export thisDC, finvalue;
 import * from ABS.StdLib;
 
 data Resourcetype = CPU | Bandwidth | Memory ;
@@ -540,10 +547,6 @@ interface DeploymentComponent {
     [Atomic] Rat load(Resourcetype rtype, Int periods);
     // Return the total available amount for given resourcetype.
     [Atomic] InfRat total(Resourcetype rtype);
-    // Return a description of the available resources valid in the next time
-    // interval (i.e., pending resource adjustments are reflected in the
-    // return value of 'getConfiguration').
-    [Atomic] Map<Resourcetype, InfRat> getConfiguration();
     // Utility method, implemented in terms of 'decrementResources' /
     // 'incrementResources'.
     Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype);
@@ -553,6 +556,30 @@ interface DeploymentComponent {
     // Increment available resourcetype by given amount from the next
     // time interval onwards.
     Unit incrementResources(Rat amount, Resourcetype rtype);
+
+    Unit setProvider(CloudProvider provider);
+    CloudProvider getProvider();
+    // Convenience methods for calling CloudProvider acquireInstance,
+    // releaseInstance.  If no cloud provider is set, return True.
+    Bool acquire();
+    Bool release();
+    // Return True if we match needed resources according to description.  For
+    // different resource types this might mean different things (e.g.,
+    // available not total memory must match vs. total CPU speed must match).
+    Bool matchesDescription(Map<Resourcetype, Rat> description);
+}
+
+interface CloudProvider {
+    // launchInstance has a delay, the others are instantaneous
+    // launchInstance might hand out an already-running instance.
+    DeploymentComponent launchInstance(Map<Resourcetype, Rat> description);
+    DeploymentComponent launchInstanceNonexclusively(Map<Resourcetype, Rat> description);
+    // acquireInstance, releaseInstance are called from deployment components 
+    Bool acquireInstance(DeploymentComponent instance);
+    Bool releaseInstance(DeploymentComponent instance);
+    Bool killInstance(DeploymentComponent instance);
+
+    Rat getAccumulatedCost();
 }
 
 class DeploymentComponent (String description, Map<Resourcetype, Rat> initconfig)
@@ -585,6 +612,9 @@ implements DeploymentComponent {
     InfRat memory = case lookup(initconfig, Memory) {
       Nothing => InfRat; Just(m) => Fin(m); };
     InfRat memorynext = memory;
+    Rat memoryconsumed = 0;
+
+    CloudProvider cloudprovider = null;
     {
         this.initialized = True;
     }
@@ -630,17 +660,6 @@ implements DeploymentComponent {
         }
         return result;
     }
-    [Atomic] Map<Resourcetype, InfRat> getConfiguration() {
-        return map[Pair(CPU, cpunext), Pair(Bandwidth, bwnext), Pair(Memory, memorynext)];
-    }
-
-    // Transfer resources between deployment components.
-    // FIXME: load calculation will be invalid if resource totals have
-    // been changed in the specified interval.
-    Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype) {
-        this.decrementResources(amount, rtype);
-        target!incrementResources(amount, rtype);
-    }
     
     Unit decrementResources(Rat amount, Resourcetype rtype) {
         case (rtype) {
@@ -672,6 +691,47 @@ implements DeploymentComponent {
             }
             Memory => if (memorynext != InfRat) {
                 memorynext = Fin(finvalue(memorynext) + amount);
+            }
+        }
+    }
+    Unit setProvider(CloudProvider provider) {
+        this.cloudprovider = provider;
+    }
+    CloudProvider getProvider() { return cloudprovider; }
+    Bool acquire() {
+        Bool result = True;
+        if (cloudprovider != null) {
+            result = await cloudprovider!acquireInstance(this);
+        }
+        return result;
+    }
+    Bool release() {
+        Bool result = True;
+        if (cloudprovider != null) {
+            result = await cloudprovider!releaseInstance(this);
+        }
+        return result;
+    }
+    [Atomic]
+    Bool matchesDescription(Map<Resourcetype, Rat> description) {
+        Bool result = True;
+        List<Resourcetype> keys = keys(description);
+        while (result == True && ~emptySet(keys)) {
+            Resourcetype key = take(keys);
+            Rat value = lookupUnsafe(description, key);
+            keys = remove(keys, key);
+            case key {
+                CPU => if (cpu != InfRat && finvalue(cpu) < value) {
+                    result = False;
+                }
+                Bandwidth => if (bandwidth != InfRat && finvalue(bandwidth) < value) {
+                    result = False;
+                }
+                Memory => if (memory != InfRat && finvalue(memory) - memoryconsumed < value) {
+                    // Memory has different semantics - we ask for _free_
+                    // memory, not total memory
+                    result = False;
+                }
             }
         }
     }
