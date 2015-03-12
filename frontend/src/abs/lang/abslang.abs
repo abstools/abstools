@@ -539,9 +539,6 @@ def Rat averageDivsN(List<Int> consumeds, List<Int> totals, Int length) =
   in sumDivsN(consumeds, totals, mins) / mins;
 
 interface DeploymentComponent {
-    // Deprecated.  This has inherent race conditions.  Consider using 'load'
-    // instead.
-    [Atomic] InfRat available(Resourcetype rtype);
     // Return the load (0-100) for given resourcetype over the last n periods.
     // If resource is infinite, return 0.
     [Atomic] Rat load(Resourcetype rtype, Int periods);
@@ -617,18 +614,6 @@ implements DeploymentComponent {
     CloudProvider cloudprovider = null;
     {
         this.initialized = True;
-    }
-    [Atomic] InfRat available(Resourcetype rtype) {
-        InfRat result = InfRat;
-        case (rtype) {
-            CPU => { if (cpu != InfRat) result = Fin(finvalue(cpu) - cpuconsumed); }
-            Bandwidth => if (bw != InfRat) result = Fin(finvalue(bw) - bwconsumed);
-            // Memory semantics are not quite defined yet.  For now, assume
-            // the amount of memory is manually increased and decreased by the
-            // cloud API as cogs are deployed.
-            Memory => result = memorynext;
-        }
-        return result;
     }
     [Atomic] Rat load(Resourcetype rtype, Int periods) {
         Rat result = 0;
