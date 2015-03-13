@@ -563,7 +563,7 @@ interface DeploymentComponent {
     // Return True if we match needed resources according to description.  For
     // different resource types this might mean different things (e.g.,
     // available not total memory must match vs. total CPU speed must match).
-    Bool matchesDescription(Map<Resourcetype, Rat> description);
+    [Atomic] Bool matchesDescription(Map<Resourcetype, Rat> description);
 }
 
 interface CloudProvider {
@@ -609,7 +609,6 @@ implements DeploymentComponent {
     InfRat memory = case lookup(initconfig, Memory) {
       Nothing => InfRat; Just(m) => Fin(m); };
     InfRat memorynext = memory;
-    Rat memoryconsumed = 0;
 
     CloudProvider cloudprovider = null;
     {
@@ -646,6 +645,14 @@ implements DeploymentComponent {
         return result;
     }
     
+    // Transfer resources between deployment components.
+    // FIXME: load calculation will be invalid if resource totals have
+    // been changed in the specified interval.
+    Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype) {
+        this.decrementResources(amount, rtype);
+        target!incrementResources(amount, rtype);
+    }
+
     Unit decrementResources(Rat amount, Resourcetype rtype) {
         case (rtype) {
             CPU => {
@@ -700,25 +707,27 @@ implements DeploymentComponent {
     [Atomic]
     Bool matchesDescription(Map<Resourcetype, Rat> description) {
         Bool result = True;
-        List<Resourcetype> keys = keys(description);
-        while (result == True && ~emptySet(keys)) {
+        Set<Resourcetype> keys = keys(description);
+        while (result == True && ~(emptySet(keys))) {
             Resourcetype key = take(keys);
-            Rat value = lookupUnsafe(description, key);
             keys = remove(keys, key);
-            case key {
-                CPU => if (cpu != InfRat && finvalue(cpu) < value) {
-                    result = False;
-                }
-                Bandwidth => if (bandwidth != InfRat && finvalue(bandwidth) < value) {
-                    result = False;
-                }
-                Memory => if (memory != InfRat && finvalue(memory) - memoryconsumed < value) {
+            Rat value = lookupUnsafe(description, key);
+            case (key) {
+            CPU => {
+                if (cpu != InfRat && finvalue(cpu) < value) result = False;
+            }
+            Bandwidth => {
+                if (bw != InfRat && finvalue(bw) < value) result = False;
+            }
+            Memory => {
+                if (memory != InfRat && finvalue(memory) - memoryconsumed < value)
                     // Memory has different semantics - we ask for _free_
                     // memory, not total memory
                     result = False;
                 }
             }
         }
+        return result;
     }
 }
 
