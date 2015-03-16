@@ -88,7 +88,7 @@ aspect Deltas {
 
         Set<String> deltas = new HashSet<String>(getNumDeltaClause());
         for (DeltaClause clause : getDeltaClauses())
-            deltas.add(clause.getDeltaspec().getName());
+            deltas.add(clause.getDeltaspec().getDeltaID());
         return deltas;
     }
 }

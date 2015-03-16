@@ -122,7 +122,7 @@ aspect ProductFlattener {
 
         for (DeltaClause clause : getDeltaClauses()) {
             if (clause.evaluateApplicationCondition(prod.getFeatures()))
-                deltaids.add(clause.getDeltaspec().getName());
+                deltaids.add(clause.getDeltaspec().getDeltaID());
         }
         return deltaids;
     }
@@ -138,7 +138,7 @@ aspect ProductFlattener {
         for (DeltaClause clause : getDeltaClauses()) {
             if (clause.evaluateFromApplicationCondition(fromProd.getFeatures()))
                 if (clause.evaluateApplicationCondition(toProd.getFeatures()))
-                    deltaids.add(clause.getDeltaspec().getName());
+                    deltaids.add(clause.getDeltaspec().getDeltaID());
         }
         return deltaids;
     }
@@ -228,7 +228,7 @@ aspect ProductFlattener {
       TopologicalSorting<String> sorter = new TopologicalSorting<String>(deltaIDs);
 
       for (DeltaClause clause : getDeltaClauses()) {
-          String deltaid = clause.getDeltaspec().getName();
+          String deltaid = clause.getDeltaspec().getDeltaID();
           if (deltaIDs.contains(deltaid)) {
               for (DeltaID did : clause.getAfterDeltaIDs()) { // 'after' deltas
                   String otherid = did.getName();

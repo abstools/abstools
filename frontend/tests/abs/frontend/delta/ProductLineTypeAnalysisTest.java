@@ -151,7 +151,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
             DeltaClause dc = new DeltaClause();
             Deltaspec dspec = new Deltaspec();
-            dspec.setName("D" + id);
+            dspec.setDeltaID("D" + id);
             dc.setDeltaspec(dspec);
             pl.addDeltaClause(dc);
         }

@@ -312,7 +312,7 @@ IntVal: Value ::= <Value:int>;
 BoolVal: Value ::= <Value:Boolean>;
 StringVal: Value ::= <Value:String>;
 
-Deltaspec ::= <Name> Deltaparam* ;
+Deltaspec ::= <DeltaID> Deltaparam* ;
 abstract Deltaparam;
 CID: Deltaparam ::= <Name>;
 FID: Deltaparam ::= <FeatName>;

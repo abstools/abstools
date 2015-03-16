@@ -64,7 +64,7 @@ aspect DeltaParameterSubstitution {
         for (DeltaDecl delta : deltas) {
           try {
             for (DeltaClause clause : getDeltaClauses()) {
-                if (delta.getName().equals(clause.getDeltaspec().getName()) && clause.isApplicable(prod)) {
+                if (delta.getName().equals(clause.getDeltaspec().getDeltaID()) && clause.isApplicable(prod)) {
                     List<Deltaparam> params = clause.getDeltaspec().getDeltaparams();
                     delta.substituteParameters(params, prod.getFeatures());
                     break;

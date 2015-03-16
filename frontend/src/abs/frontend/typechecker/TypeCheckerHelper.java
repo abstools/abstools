@@ -140,10 +140,10 @@ public class TypeCheckerHelper {
 
         /* Does the delta exist? */
         final Deltaspec spec = clause.getDeltaspec();
-        if (! deltaNames.containsKey(spec.getName()))
-            e.add(new TypeError(spec, ErrorMessage.NAME_NOT_RESOLVABLE, spec.getName()));
+        if (! deltaNames.containsKey(spec.getDeltaID()))
+            e.add(new TypeError(spec, ErrorMessage.NAME_NOT_RESOLVABLE, spec.getDeltaID()));
         else {
-            DeltaDecl dd = deltaNames.get(spec.getName());
+            DeltaDecl dd = deltaNames.get(spec.getDeltaID());
             if (dd.getNumParam() != spec.getNumDeltaparam()) {
                 e.add(new TypeError(spec, ErrorMessage.WRONG_NUMBER_OF_ARGS,dd.getNumParam(),spec.getNumDeltaparam()));
             } else {
@@ -194,7 +194,7 @@ public class TypeCheckerHelper {
                     for (int i = 0; i<f.getNumAttrAssignment(); i++) {
                         AttrAssignment aa = f.getAttrAssignment(i);
                         for (DeltaClause dc : dcs) {
-                            DeltaDecl dd = m.findDelta(dc.getDeltaspec().getName());
+                            DeltaDecl dd = m.findDelta(dc.getDeltaspec().getDeltaID());
                             DeltaParamDecl dp = dd.getParam(i);
                             // FIXME: we assumed here that delta
                             // parameters and feature parameters have
