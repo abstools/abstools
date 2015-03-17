@@ -49,7 +49,9 @@ aspect ProductFlattener {
         java.util.List<String> sorted_deltaids = pl.sortDeltas(deltaids);
 
         // find corresponding DeltaDecls
-        java.util.List<DeltaDecl> deltas = findDeltas(sorted_deltaids);
+        ArrayList<DeltaDecl> deltas = new ArrayList<DeltaDecl>();
+        for (String deltaid : sorted_deltaids)
+            deltas.add(getDeltaDeclsMap().get(deltaid));
 
         // substitute delta parameters
         pl.substituteDeltaParams(deltas, prod);
@@ -199,25 +201,6 @@ aspect ProductFlattener {
     }
     public boolean AppCondFeature.evaluate(Set<String> features) {
     	return (features.contains(getName()));
-    }
-
-
-    /**************************************************************************
-     * Find DeltaDecls, given a list of delta names; keep order
-     */
-    public java.util.List<DeltaDecl> Model.findDeltas(java.util.List<String> deltaids) {
-        ArrayList<DeltaDecl> deltas = new ArrayList<DeltaDecl>();
-        for (String deltaid : deltaids) {
-            for (CompilationUnit u : this.getCompilationUnits()) {
-                for (DeltaDecl delta : u.getDeltaDecls()) {
-                    if (deltaid.equals(delta.getName())) {
-                        //System.out.println("$$$ found applicable DeltaDecl : " + deltaid);
-                        deltas.add(delta);
-                    }
-                }
-            }
-        }
-        return deltas;
     }
 
 

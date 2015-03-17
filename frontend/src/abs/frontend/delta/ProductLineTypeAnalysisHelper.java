@@ -6,7 +6,6 @@ package abs.frontend.delta;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +14,6 @@ import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.*;
-import abs.frontend.mtvl.ChocoSolver;
 
 public class ProductLineTypeAnalysisHelper {
 
@@ -25,7 +23,8 @@ public class ProductLineTypeAnalysisHelper {
      * and (iii) all its products are well-typed IFJ programs.
      */
     public static void typeCheckPL(ProductLine pl, SemanticErrorList errors) {
-        TopologicalSorting<String> sorter = new TopologicalSorting<String>(getAllDeltas(pl));
+
+        TopologicalSorting<String> sorter = new TopologicalSorting<String>(pl.getAllDeltaIDs());
 
         // Check strong unambiguity
         List<Set<String>> deltaPartition = getDeltaPartition(pl, sorter, errors);
@@ -35,10 +34,22 @@ public class ProductLineTypeAnalysisHelper {
         // - product generation mapping is total
         // - all products are well-typed programs
 
+        // Build the product family generation trie, including:
+        // - a ProgramTypeAbstraction for each node
+        // - check well-typedness of ProgramTypeAbstraction for each node that corresponds to a valid product
+        DeltaTrie pfgt = buildPFGT(pl, sorter, errors);
+
+        System.out.println(pfgt);
+
+    }
+
+
+    public static DeltaTrie buildPFGT(ProductLine pl, TopologicalSorting<String> sorter, SemanticErrorList errors) {
         Model model = pl.getModel();
 
         // build PFG Trie
-        DeltaTrie trie = new DeltaTrie();
+        DeltaTrie trie = new DeltaTrie(errors);
+        trie.setPl(pl);
 
         for (ImplicitProduct product : model.getImplicitProductList()) {
             // for each product: obtain sequence of deltas
@@ -46,11 +57,9 @@ public class ProductLineTypeAnalysisHelper {
             // sort deltas
             List<String> productGenerationString = sorter.sortSet(deltas);
             trie.addWord(productGenerationString);
-            System.out.println("string: " + productGenerationString);
         }
-
+        return trie;
     }
-
 
     /*
      * Ordered partition of the set of delta modules
@@ -59,7 +68,7 @@ public class ProductLineTypeAnalysisHelper {
 
 
         for (DeltaClause clause : pl.getDeltaClauses()) {
-            String deltaid = clause.getDeltaspec().getName();
+            String deltaid = clause.getDeltaspec().getDeltaID();
             for (DeltaID did : clause.getAfterDeltaIDs()) {
                 String afterid = did.getName();
                 try {
@@ -83,16 +92,6 @@ public class ProductLineTypeAnalysisHelper {
         return sorter.getPartition();
     }
 
-    /*
-     * Return set of all deltas for which a delta clause exists in the
-     * productline declaration
-     */
-    public static Set<String> getAllDeltas(ProductLine pl) {
-        Set<String> allDeltas = new HashSet<String>(pl.getDeltaClauses().getNumChild());
-        for (DeltaClause clause : pl.getDeltaClauses())
-            allDeltas.add(clause.getDeltaspec().getName());
-        return allDeltas;
-    }
 
     /*
      * A product line is strongly unambiguous if each set in the partition of

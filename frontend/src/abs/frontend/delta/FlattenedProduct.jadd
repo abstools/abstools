@@ -30,5 +30,4 @@ aspect FlattenedProduct {
     syn /*fresh*/ InstModuleDecl ModuleDecl.newInstModuleDecl(ModuleDecl decl) {
         return new InstModuleDecl(decl);
     }
-
 }

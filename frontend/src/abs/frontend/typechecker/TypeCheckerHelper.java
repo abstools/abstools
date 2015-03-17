@@ -177,11 +177,11 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckProduct(Product prod, 
-            Map<String,Feature> featureNames, 
-            Set<String> prodNames, 
-            Map<String,DeltaDecl> deltaNames, 
-            Set<String> updateNames, 
+    public static void typeCheckProduct(Product prod,
+            Map<String,Feature> featureNames,
+            Set<String> prodNames,
+            Map<String,DeltaDecl> deltaNames,
+            Set<String> updateNames,
             SemanticErrorList e) {
         if (featureNames != null) {
             // Do the features exist in the PL declaration (and also check feature attributes)?

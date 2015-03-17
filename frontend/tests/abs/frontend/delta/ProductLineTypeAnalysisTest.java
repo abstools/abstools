@@ -31,7 +31,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
                 );
         ProductLine pl = model.getProductLine();
         SemanticErrorList errors = new SemanticErrorList();
-        TopologicalSorting<String> sorter = new TopologicalSorting<String>(ProductLineTypeAnalysisHelper.getAllDeltas(pl));
+        TopologicalSorting<String> sorter = new TopologicalSorting<String>(pl.getAllDeltaIDs());
 
         assertTrue(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, ProductLineTypeAnalysisHelper.getDeltaPartition(pl, sorter, errors), errors));
         assertEquals(0, errors.size());
@@ -47,7 +47,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
                 );
         pl = model.getProductLine();
         errors = new SemanticErrorList();
-        sorter = new TopologicalSorting<String>(ProductLineTypeAnalysisHelper.getAllDeltas(pl));
+        sorter = new TopologicalSorting<String>(pl.getAllDeltaIDs());
 
         assertTrue(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, ProductLineTypeAnalysisHelper.getDeltaPartition(pl, sorter, errors), errors));
         assertEquals(0, errors.size());
@@ -63,7 +63,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
                 );
         pl = model.getProductLine();
         errors = new SemanticErrorList();
-        sorter = new TopologicalSorting<String>(ProductLineTypeAnalysisHelper.getAllDeltas(pl));
+        sorter = new TopologicalSorting<String>(pl.getAllDeltaIDs());
 
         assertFalse(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, ProductLineTypeAnalysisHelper.getDeltaPartition(pl, sorter, errors), errors));
         assertEquals(1, errors.size());
@@ -79,7 +79,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
                 );
         pl = model.getProductLine();
         errors = new SemanticErrorList();
-        sorter = new TopologicalSorting<String>(ProductLineTypeAnalysisHelper.getAllDeltas(pl));
+        sorter = new TopologicalSorting<String>(pl.getAllDeltaIDs());
 
         assertFalse(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, ProductLineTypeAnalysisHelper.getDeltaPartition(pl, sorter, errors), errors));
         assertTrue(errors.size() == 1);
@@ -95,7 +95,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
                 );
         pl = model.getProductLine();
         errors = new SemanticErrorList();
-        sorter = new TopologicalSorting<String>(ProductLineTypeAnalysisHelper.getAllDeltas(pl));
+        sorter = new TopologicalSorting<String>(pl.getAllDeltaIDs());
 
         assertFalse(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, ProductLineTypeAnalysisHelper.getDeltaPartition(pl, sorter, errors), errors));
         assertEquals(1, errors.size());
@@ -113,7 +113,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
                 );
         pl = model.getProductLine();
         errors = new SemanticErrorList();
-        sorter = new TopologicalSorting<String>(ProductLineTypeAnalysisHelper.getAllDeltas(pl));
+        sorter = new TopologicalSorting<String>(pl.getAllDeltaIDs());
 
         assertFalse(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, ProductLineTypeAnalysisHelper.getDeltaPartition(pl, sorter, errors), errors));
         assertEquals(2, errors.size());
@@ -158,7 +158,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
         pl = model.getProductLine();
         SemanticErrorList errors = new SemanticErrorList();
-        TopologicalSorting<String> sorter = new TopologicalSorting<String>(ProductLineTypeAnalysisHelper.getAllDeltas(pl));
+        TopologicalSorting<String> sorter = new TopologicalSorting<String>(pl.getAllDeltaIDs());
 
         long startTime = System.currentTimeMillis();
         assertTrue(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, ProductLineTypeAnalysisHelper.getDeltaPartition(pl, sorter, errors), errors));
@@ -181,7 +181,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
                 );
         ProductLine pl = model.getProductLine();
         SemanticErrorList errors = new SemanticErrorList();
-        TopologicalSorting<String> sorter = new TopologicalSorting<String>(ProductLineTypeAnalysisHelper.getAllDeltas(pl));
+        TopologicalSorting<String> sorter = new TopologicalSorting<String>(pl.getAllDeltaIDs());
         List<Set<String>> partition = ProductLineTypeAnalysisHelper.getDeltaPartition(pl, sorter, errors);
         assertTrue(partition == Collections.<Set<String>>emptyList());
 
@@ -202,8 +202,25 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
     }
 
+//    @Test
+//    public void ntaTest() {
+//        Model model = new Model();
+//        assertEquals(1, model.getTestList().getNumChild());
+//    }
+
     @Test
-    public void implicitProducts() {
+    public void implicitProducts1() {
+        Model model = assertParseOk(
+                "root FM {"
+                        + " group allof { A }"
+                        + "}"
+                );
+        //one single product
+        assertEquals(1, model.getImplicitProductList().getNumChild());
+    }
+
+    @Test
+    public void implicitProductsMany() {
         Model model = assertParseOk(
                 "root FM {"
                         + " group [0..*] {"

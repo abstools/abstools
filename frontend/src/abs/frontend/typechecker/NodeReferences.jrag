@@ -5,6 +5,7 @@ aspect Model {
 
     inh Model ProductLine.getModel();
     inh Model Product.getModel();
+//    eq Model.getImplicitProduct().getModel() = this;
     
     inh Model Modifier.getModel();
     eq ModifyClassModifier.getModifier().getModel() = this.getDelta().getModel();
@@ -78,11 +79,10 @@ aspect AsyncCallAnnotations {
     syn boolean AwaitAsyncCall.hasAnnotations() = getAnnotations().getNumChild() > 0;
 }
 
-// inform ProductLine about the deltas it references
 aspect Deltas {
     
-    syn lazy Set<String> ProductLine.getAllDeltas();
-    eq ProductLine.getAllDeltas() {
+    // inform ProductLine about the deltas it references
+    syn lazy Set<String> ProductLine.getAllDeltaIDs() {
         if (! hasDeltaClause())
             return Collections.<String>emptySet();
 
@@ -91,8 +91,6 @@ aspect Deltas {
             deltas.add(clause.getDeltaspec().getDeltaID());
         return deltas;
     }
+
 }
 
-// Local Variables:
-// mode: java
-// End:

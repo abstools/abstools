@@ -56,4 +56,19 @@ aspect ProductLineTypeAnalysis {
         }
         return plist;
     }
+
+    /* TEST */
+//    syn List<Test> Model.getTestList() {
+//        List<Test> l = new List<Test>();
+//        l.add(new Test(new List<Token>()));
+//        return l;
+//    }
+    
+
+    
+    // inform DeltaClause about the DeltaDecl that it references
+    syn lazy DeltaDecl DeltaClause.getDeltaDecl() {
+        return getProductLine().getModel().getDeltaDeclsMap().get(getDeltaspec().getDeltaID());
+    }
+    
 }

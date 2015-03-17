@@ -1,0 +1,65 @@
+aspect DeltaModifierApplicatorToTypeAbstraction {
+
+    abstract public void ModuleModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta);
+
+    /*
+     * Class Modifiers
+     */
+    public void AddClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        ta.addClass(qualifiedName(), this);
+        // TODO: apply modifiers
+    }
+
+    public void ModifyClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+
+    public void RemoveClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        ta.removeClass(qualifiedName(), this);
+    }
+
+
+    /*
+     * Interface Modifiers
+     */
+    public void AddInterfaceModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void ModifyInterfaceModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void RemoveInterfaceModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+
+    /*
+     * Export/Import Modifiers
+     */
+    public void AddExportModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void AddImportModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+
+    /*
+     * Functional Modifiers
+     */
+    public void AddDataTypeModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void ModifyDataTypeModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void AddFunctionModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void AddTypeSynModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void ModifyTypeSynModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+
+
+}
