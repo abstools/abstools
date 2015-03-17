@@ -283,7 +283,11 @@ aspect TypeResolution {
      * the inherited attribute mechanism! DeltaDecls are an additional entry point
      * into the parser sinve r.15258, and thus may not have a parent.
      * Instead of tripping up JastAdd, we pretend that nothing happened. [stolz]
+     *
+     * I have no idea what this hack does but it doesn't work with the latest version
+     * of JastAdd (2.1.11). Removing this code does not seem to have any negative consequences. [ramus]
      */
+    /*
     @Override
 	public Decl DeltaDecl.Define_Decl_lookup(ASTNode a, ASTNode b, KindedName n) {
 	  if (getParent() == null)
@@ -291,6 +295,7 @@ aspect TypeResolution {
 	  else
 	    return super.Define_Decl_lookup(a,b,n);
 	}
+    */
 
     /**
      * @throws TypeCheckerException
