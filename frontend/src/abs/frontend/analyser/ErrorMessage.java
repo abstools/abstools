@@ -57,6 +57,7 @@ public enum ErrorMessage {
     TARGET_NO_INTERFACE_TYPE("Target expression is not typable to an interface."),
     METHOD_NOT_FOUND("Method %s could not be found"),
     NO_CLASS_DECL("Class %s could not be found"),
+    NO_FIELD_DECL("Field %s could not be found"),
     RETURN_STMT_MUST_BE_LAST("Return statements can only appear as last statement of a method."),
     NAME_NOT_EXPORTED_BY_MODULE("Imported name %s is not exported by module %s."),
     ONLY_UNQUALIFIED_NAMES_ALLOWED("Only unqualfied names are allowed when import names from modules, but name %s is qualified."),
@@ -115,7 +116,7 @@ public enum ErrorMessage {
     ERROR_IN_PRODUCT_WITH_DELTA("Error within product %s while processing delta %s: %s"),
     ERROR_IN_PRODUCT_LINE_DELTA_ORDER("Error in product line %s. No total order exists for the given partial order of deltas."),
     ERROR_IN_PRODUCT_LINE_UNUSED_DELTA("Error in product line %s. Delta %s is never used."),
-    AMBIGUOUS_PRODUCTLINE("The the product line %s is potentially ambiguous: Deltas %s and %s both target class %s, but their application order is undefined."),
+    AMBIGUOUS_PRODUCTLINE("The product line %s is potentially ambiguous: Deltas %s and %s both target class %s, but their application order is undefined."),
     DEADLOCK_GENERATION_ERROR("Generated Edge: %s");
 
     private String pattern;

@@ -1,21 +1,26 @@
 aspect DeltaModifierApplicatorToTypeAbstraction {
 
     abstract public void ModuleModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta);
+    abstract public void Modifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className);
 
-    /*
+    /*******************************************************************************************************
+     *
      * Class Modifiers
      */
     public void AddClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
-        ta.addClass(qualifiedName(), this);
+        ta.addClass(this);
         // TODO: apply modifiers
     }
 
     public void ModifyClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
-        // TODO
+        String className = qualifiedName();
+        if (ta.existsClass(this))
+            for (Modifier mod : getModifiers())
+                mod.applyToTypeAbstraction(ta, className);
     }
 
     public void RemoveClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
-        ta.removeClass(qualifiedName(), this);
+        ta.removeClass(this);
     }
 
 
@@ -61,5 +66,25 @@ aspect DeltaModifierApplicatorToTypeAbstraction {
         // TODO
     }
 
+
+    /*******************************************************************************************************
+     *
+     * Modifiers are applied to classes
+     */ 
+    public void AddFieldModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+        ta.addField(className, this);
+    }
+    public void RemoveFieldModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+        ta.removeField(className, this);
+    }
+    public void AddMethodModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+        ta.addMethod(className, this);
+    }
+    public void ModifyMethodModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+        // TODO
+    }
+    public void RemoveMethodModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+        ta.removeMethod(className, this);
+    }
 
 }

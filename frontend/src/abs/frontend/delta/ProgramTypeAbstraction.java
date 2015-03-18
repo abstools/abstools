@@ -37,13 +37,17 @@ public class ProgramTypeAbstraction {
         }
     }
 
-    // TODO record type errors:
-    // - element is added but already exists
-    // - element is removed/modified but does not exist
 
-    public void addClass(String className, AddClassModifier node) {
+    public void applyDelta(DeltaDecl delta) {
+        for (ModuleModifier mod : delta.getModuleModifiers()) {
+            mod.applyToTypeAbstraction(this);
+        }
+    }
+
+    public void addClass(AddClassModifier node) {
+        String className = node.qualifiedName();
         if (classes.containsKey(className))
-            errors.add(new TypeError(node, ErrorMessage.DUPLICATE_CLASS_NAME, node.getName()));
+            errors.add(new TypeError(node, ErrorMessage.DUPLICATE_CLASS_NAME, className));
         else
             addClass(className);
     }
@@ -51,36 +55,63 @@ public class ProgramTypeAbstraction {
         classes.put(className, new HashMap<String, Set<String>>());
         classes.get(className).put("fields", new HashSet<String>());
         classes.get(className).put("methods", new HashSet<String>());
-
-        System.out.print("[add " + className + "]");
     }
 
-    public void removeClass(String className, RemoveClassModifier node) {
+    public void removeClass(RemoveClassModifier node) {
+        String className = node.qualifiedName();
         if (classes.containsKey(className))
             classes.remove(className);
         else
-            errors.add(new TypeError(node, ErrorMessage.NO_CLASS_DECL, node.getName()));
-
-        System.out.print("[remove " + className + "]");
+            errors.add(new TypeError(node, ErrorMessage.NO_CLASS_DECL, className));
     }
 
-    public void addField(String className, String name) {
-        if (classes.get(className) == null)
-            addClass(className);
-        classes.get(className).get("fields").add(name);
+    public void addField(String className, AddFieldModifier node) {
+        String name = node.getFieldDecl().getName();
+        if (! classes.get(className).get("fields").contains(name))
+            classes.get(className).get("fields").add(name);
+        else
+            errors.add(new TypeError(node, ErrorMessage.DUPLICATE_FIELD_NAME, name));
     }
 
-    public void addMethod(String className, String name) {
-        if (classes.get(className) == null)
-            addClass(className);
-        classes.get(className).get("methods").add(name);
+    public void removeField(String className, RemoveFieldModifier node) {
+        String name = node.getFieldDecl().getName();
+        if (classes.get(className).get("fields").contains(name))
+            classes.get(className).get("fields").remove(name);
+        else
+            errors.add(new TypeError(node, ErrorMessage.NO_FIELD_DECL, name));
+    }
+
+    public void addMethod(String className, AddMethodModifier node) {
+        String name = node.getMethodImpl().getMethodSig().getName();
+        if (! classes.get(className).get("methods").contains(name))
+            classes.get(className).get("methods").add(name);
+        else
+            errors.add(new TypeError(node, ErrorMessage.DUPLICATE_METHOD_NAME, name));
+    }
+
+    public void modifyMethod(String className, AddMethodModifier node) {
+        String name = node.getMethodImpl().getMethodSig().getName();
+        if (! classes.get(className).get("methods").contains(name))
+            errors.add(new TypeError(node, ErrorMessage.NO_METHOD_IMPL, name));  // FIXME Error message probably not suitable
+    }
+
+    public void removeMethod(String className, RemoveMethodModifier node) {
+        String name = node.getMethodSig().getName();
+        if (classes.get(className).get("methods").contains(name))
+            classes.get(className).get("methods").remove(name);
+        else
+            errors.add(new TypeError(node, ErrorMessage.NO_METHOD_IMPL, name));  // FIXME Error message probably not suitable
     }
 
 
-    public void applyDelta(DeltaDecl delta) {
-        for (ModuleModifier mod : delta.getModuleModifiers()) {
-            //System.out.println("*** applying ModuleModifier " + mod + " to TypeAbstraction");
-            mod.applyToTypeAbstraction(this);
+    // helper method
+    public boolean existsClass(ModifyClassModifier node) {
+        String className = node.qualifiedName();
+        if (classes.containsKey(className)) {
+            return true;
+        } else {
+            errors.add(new TypeError(node, ErrorMessage.NO_CLASS_DECL, className));
+            return false;
         }
     }
 
