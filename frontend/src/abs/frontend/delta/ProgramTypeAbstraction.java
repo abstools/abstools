@@ -51,7 +51,7 @@ public class ProgramTypeAbstraction {
         else
             addClass(className);
     }
-    private void addClass(String className) {
+    public void addClass(String className) {
         classes.put(className, new HashMap<String, Set<String>>());
         classes.get(className).put("fields", new HashSet<String>());
         classes.get(className).put("methods", new HashSet<String>());
@@ -68,9 +68,12 @@ public class ProgramTypeAbstraction {
     public void addField(String className, AddFieldModifier node) {
         String name = node.getFieldDecl().getName();
         if (! classes.get(className).get("fields").contains(name))
-            classes.get(className).get("fields").add(name);
+            addField(className, name);
         else
             errors.add(new TypeError(node, ErrorMessage.DUPLICATE_FIELD_NAME, name));
+    }
+    public void addField(String className, String fieldName) {
+        classes.get(className).get("fields").add(fieldName);
     }
 
     public void removeField(String className, RemoveFieldModifier node) {
@@ -84,9 +87,12 @@ public class ProgramTypeAbstraction {
     public void addMethod(String className, AddMethodModifier node) {
         String name = node.getMethodImpl().getMethodSig().getName();
         if (! classes.get(className).get("methods").contains(name))
-            classes.get(className).get("methods").add(name);
+            addMethod(className, name);
         else
             errors.add(new TypeError(node, ErrorMessage.DUPLICATE_METHOD_NAME, name));
+    }
+    public void addMethod(String className, String methodName) {
+        classes.get(className).get("methods").add(methodName);
     }
 
     public void modifyMethod(String className, AddMethodModifier node) {

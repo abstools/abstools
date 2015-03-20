@@ -48,8 +48,7 @@ public class ProductLineTypeAnalysisHelper {
         Model model = pl.getModel();
 
         // build PFG Trie
-        DeltaTrie trie = new DeltaTrie(errors);
-        trie.setPl(pl);
+        DeltaTrie trie = new DeltaTrie(pl, errors);
 
         for (ImplicitProduct product : model.getImplicitProductList()) {
             // for each product: obtain sequence of deltas

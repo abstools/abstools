@@ -20,13 +20,9 @@ public class DeltaTrie {
     /**
      * Constructor
      */
-    public DeltaTrie(SemanticErrorList errors) {
-        root = new Node(errors);
-        // build & store CORE type abstraction
-    }
-
-    public void setPl(ProductLine pl) {
+    public DeltaTrie(ProductLine pl, SemanticErrorList errors) {
         this.pl = pl;
+        root = new Node(errors);
     }
 
     // Adds a word to the Trie
@@ -49,7 +45,8 @@ public class DeltaTrie {
          // Constructor for top level root node
         public Node(SemanticErrorList errors) {
             this.children = new HashMap<String, Node>();
-            this.ta = new ProgramTypeAbstraction(errors); // FIXME this should contain the core's TA, and main type error list
+            this.ta = new ProgramTypeAbstraction(errors);
+            pl.getModel().buildCoreTypeAbstraction(ta);
         }
 
         // Constructor for child node

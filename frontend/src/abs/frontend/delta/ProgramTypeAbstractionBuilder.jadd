@@ -1,4 +1,24 @@
-aspect DeltaModifierApplicatorToTypeAbstraction {
+aspect ProgramTypeAbstractionBuilder {
+
+    /*******************************************************************************************************
+     *
+     * Build type abstraction of the core program
+     */
+    public void Model.buildCoreTypeAbstraction(ProgramTypeAbstraction ta) {
+        for (Decl decl : getDecls()) {
+            if (decl.isClass()) {
+            String className = decl.qualifiedName();
+                ta.addClass(className);
+                for (FieldDecl field : ((ClassDecl) decl).getFields())
+                    ta.addField(className, field.getName());
+                for (MethodImpl method : ((ClassDecl) decl).getMethods())
+                    ta.addMethod(className, method.getMethodSig().getName());
+            }
+            
+            // TODO: record other elements (interfaces, functions etc.)
+        }
+    }
+
 
     abstract public void ModuleModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta);
     abstract public void Modifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className);
