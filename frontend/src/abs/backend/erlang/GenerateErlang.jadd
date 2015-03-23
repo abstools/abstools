@@ -935,20 +935,20 @@ aspect GenerateErlang {
     String va = vars.toParamList();
     Vars save=vars.pass();
     vars.incAll();
-    ecs.pf("%s=((fun(Inner)->fun(Param)->Inner(Inner,Param) end end)(fun (Self,%s)->",vars.toParamList(), va);
+    ecs.pf("%s=(fun Loop (%s)->",vars.toParamList(), va);
     ecs.incIndent().print("case ");
     getCondition().generateErlangCode(ecs, save);
-    ecs.println(" of ");
-    ecs.print("false ->");
+    ecs.println(" of");
+    ecs.print("false -> ");
     ecs.incIndent().print(va);
-    ecs.print(";");
-    ecs.decIndent().print("true ->");
+    ecs.println(";");
+    ecs.decIndent().print("true -> ");
     ecs.incIndent();
     ErlUtil.stopWorldPrelude(ecs, save, false);
     getBody().generateErlangCode(ecs, save);
     ecs.println(",");
     save.retainAll(vars);
-    ecs.decIndent().pf("Self(Self,%s)  end end))", save.toParamList());
+    ecs.decIndent().pf("Loop(%s)  end end)", save.toParamList());
     ecs.decIndent().format("(%s)",va);
   }
 
