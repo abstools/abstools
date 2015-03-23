@@ -30,6 +30,8 @@ import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.antlr.parser.CreateJastAddASTListener;
+import abs.frontend.antlr.parser.ABSParserWrapper;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.ConstructorArg;
 import abs.frontend.ast.DataConstructor;
@@ -63,6 +65,8 @@ import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
 import beaver.Parser;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.tree.*;
 
 /**
  * @author rudi
@@ -79,6 +83,7 @@ public class Main {
     protected boolean verbose = false;
     protected boolean typecheck = true;
     protected boolean stdlib = true;
+    protected boolean useJFlexAndBeaver = false;
     protected boolean dblib = Constants.USE_DBLIB_BY_DEFAULT;
     protected boolean dump = false;
     protected boolean debug = false;
@@ -169,6 +174,8 @@ public class Main {
                 typecheck = false;
             else if (arg.equals("-nostdlib"))
                 stdlib = false;
+            else if (arg.equals("-with-old-parser"))
+                useJFlexAndBeaver = true;
             else if (arg.equals("-dblib"))
                 dblib = true;
             else if (arg.equals("-nodblib"))
@@ -707,6 +714,8 @@ public class Main {
                 + "                 (PID is the qualified product ID)\n"
                 + "  -notypecheck   disable typechecking\n"
                 + "  -nostdlib      do not include the standard lib\n"
+                + "  --with-old-parser\n"
+                + "                 use old (deprecated) parser implementation\n"
                 + "  -dblib         include the database library (required for the SQL extensions)\n"
                 + "  -loctypes      enable location type checking\n"
                 + "  -locdefault=<loctype> \n"
@@ -823,29 +832,11 @@ public class Main {
     }
 
     public CompilationUnit parseUnit(File file, String sourceCode, Reader reader)
-            throws IOException {
+            throws IOException
+    {
         try {
-            ABSParser parser = new ABSParser();
-            ABSScanner scanner = new ABSScanner(reader);
-            parser.setSourceCode(sourceCode);
-            parser.setFile(file);
-            parser.allowIncompleteExpr(allowIncompleteExpr);
-
-            CompilationUnit u = null;
-            try {
-                u = (CompilationUnit) parser.parse(scanner);
-            } catch (Parser.Exception e) {
-                u = new CompilationUnit(parser.getFileName(), new List<ModuleDecl>(), new List<DeltaDecl>(), new List<UpdateDecl>(), new Opt<ProductLine>(), new List<Product>(), new List<FeatureDecl>(), new List<FExt>());
-                u.setParserErrors(parser.getErrors());
-            }
-            if (stdlib) {
-                for (ModuleDecl d : u.getModuleDecls()) {
-                    if (!Constants.STDLIB_NAME.equals(d.getName()))
-                        d.getImports().add(new StarImport(Constants.STDLIB_NAME));
-                }
-            }
-
-            return u;
+            return new ABSParserWrapper(file, false, stdlib, useJFlexAndBeaver)
+                .parse(reader);
         } finally {
             reader.close();
         }

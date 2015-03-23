@@ -26,9 +26,10 @@ aspect VerifyLeafs {
           = getNonLeafs();
   eq CompilationUnit.getFExt(int i).getNonLeafs()
           = getNonLeafs();
-  
+
   // FeatureModelDecl is a temporary structure, never present in the final AST,
   // so result is not relevant. But the compiler needs these definitions anyway.
+  // TODO: remove when removing beaver parser, antlr doesn't need it
   eq FeatureModelDecl.getFeatureDecl(int i).getNonLeafs()
           = new HashSet<String>();
   eq FeatureModelDecl.getFExt(int i).getNonLeafs()

@@ -14,16 +14,16 @@ import java.io.StringWriter;
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
+import abs.frontend.antlr.parser.ABSParserWrapper;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AwaitAsyncCall;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.VarDeclStmt;
-import abs.frontend.parser.ABSParser;
-import abs.frontend.parser.ABSScanner;
 import abs.frontend.tests.ABSFormatter;
 import abs.frontend.tests.EmptyFormatter;
 import abs.frontend.typechecker.DataTypeType;
@@ -192,9 +192,9 @@ public class OtherAnalysisTests extends FrontendTest {
     @Test
     public void awaitRewriteDecl2() throws Exception {
         String deltaDecl = "delta D; modifies class C { adds Unit m() { return await this!m();}}";
-        ABSScanner scanner = new ABSScanner(new StringReader(deltaDecl));
-        ABSParser parser = new ABSParser() {{ setRaiseExceptions(true);}};
-        DeltaDecl d = (DeltaDecl) parser.parse(scanner,ABSParser.AltGoals.delta_decl);
+        CompilationUnit u = new ABSParserWrapper(null, true, false, false)
+            .parse(new StringReader(deltaDecl));
+        DeltaDecl d = (DeltaDecl) u.getDeltaDecl(0);
         AwaitAsyncCall a = (AwaitAsyncCall) down(d);
         assertNotNull(a); // pity, would like this to work.
     }

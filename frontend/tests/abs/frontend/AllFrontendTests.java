@@ -17,7 +17,7 @@ import deadlock.DeadlockCheckerTests;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        ScannerTest.class, ModuleSystemTests.class, FreeVarTest.class,
+        ModuleSystemTests.class, FreeVarTest.class,
         ParserTest.class, RecoverTest.class, DuplicateCheckTest.class, InterfaceDeclarationTest.class,
         ParseSamplesTest.class, VarResolutionTest.class, TypingTest.class, TypeCheckerTest.class,
         NegativeTypeCheckerTests.class, LocationTypeTests.class,

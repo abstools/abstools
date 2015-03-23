@@ -36,5 +36,6 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/org.sat4j.pb.jar"/>
 	<classpathentry kind="lib" path="lib/org.sat4j.core.jar"/>
+	<classpathentry kind="lib" path="lib/antlr-4.2.2-complete.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

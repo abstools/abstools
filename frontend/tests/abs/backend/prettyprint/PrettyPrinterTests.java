@@ -6,36 +6,32 @@ package abs.backend.prettyprint;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 
 import org.junit.Test;
 
+import abs.frontend.antlr.parser.ABSParserWrapper;
 import abs.frontend.ast.DeltaDecl;
-import abs.frontend.parser.ABSParser;
-import abs.frontend.parser.ABSScanner;
 import abs.frontend.tests.ABSFormatter;
 import abs.frontend.tests.EmptyFormatter;
 
 public class PrettyPrinterTests {
 
-    private ABSParser parser = new ABSParser() {{ setRaiseExceptions(true);}};
-
     @Test
     public void prettyPrinterAddDataTypeModifierTest() throws Exception{
         String deltaDecl = "delta Foo;adds data States=F|B|I|M;";
-        ABSScanner scanner = new ABSScanner(new StringReader(deltaDecl));
-        DeltaDecl d = (DeltaDecl) parser.parse(scanner,ABSParser.AltGoals.delta_decl);
+        DeltaDecl d = (DeltaDecl) new ABSParserWrapper(null, true, false, false)
+            .parse(new StringReader(deltaDecl)).getDeltaDecl(0); 
         assertEquals("deltaFoo;addsdataStates=F|B|I|M;", replaceWhitespaceChars(prettyPrint(d)));
     }
 
     @Test
     public void prettyPrinterModifyInterfaceModifierTest() throws Exception{
         String deltaDecl = "delta Foo;modifies interface X{removes Int fooMethod();adds Int fooMethod();}";
-        ABSScanner scanner = new ABSScanner(new StringReader(deltaDecl));
-        DeltaDecl d = (DeltaDecl) parser.parse(scanner,ABSParser.AltGoals.delta_decl);
+        DeltaDecl d = (DeltaDecl) new ABSParserWrapper(null, true, false, false)
+            .parse(new StringReader(deltaDecl)).getDeltaDecl(0);
         assertEquals("deltaFoo;modifiesinterfaceX{removesIntfooMethod();addsIntfooMethod();}", replaceWhitespaceChars(prettyPrint(d)));
     }
 

@@ -11,6 +11,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
+import abs.frontend.antlr.parser.ABSParserWrapper;
+import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.DeltaDecl;
 
 public class ParserTest extends FrontendTest {
@@ -19,8 +21,6 @@ public class ParserTest extends FrontendTest {
     private String bbclass;
     // private String ms1, ms2, meth1, meth2 , fields, comment, comment2 ;
 
-    private ABSParser parser;
-    
     private String[] pureExp = { " x ", " this.x ",
             "null",
             // function expressions
@@ -54,7 +54,6 @@ public class ParserTest extends FrontendTest {
         bbclass = "class BoundedBuffer implements Buffer { \n" + "  ListofInt buffer ;     Int max ;      Int n ;	\n"
                 + "  Unit init(Foo x){ Int x ;  Int y ;  return null ; }\n"
                 + "  Unit append(Int i){ skip; return null ; }}";
-        parser = new ABSParser();
     }
 
     @Test
@@ -358,17 +357,16 @@ public class ParserTest extends FrontendTest {
     
     @Test
     public void entry_deltadecl() throws Exception {
-        ABSScanner scanner = new ABSScanner(new StringReader("delta Mon;"));
-        DeltaDecl d = (DeltaDecl) parser.parse(scanner,ABSParser.AltGoals.delta_decl);
+        CompilationUnit u = new ABSParserWrapper().parse(new StringReader("delta Mon;"));
+        DeltaDecl d = (DeltaDecl) u.getDeltaDecl(0);
         Assert.assertNotNull(d);
     }
     
     @Test (expected = ParseException.class)
     public void deltaNameLowerCaseTest() throws Exception{
         String deltaDecl = "delta foo;";
-        ABSScanner scanner = new ABSScanner(new StringReader(deltaDecl));
-        parser.setRaiseExceptions(true);
-        parser.parse(scanner,ABSParser.AltGoals.delta_decl);
+        new ABSParserWrapper(null, true, false, false)
+            .parse(new StringReader(deltaDecl));
     }
     
 }
