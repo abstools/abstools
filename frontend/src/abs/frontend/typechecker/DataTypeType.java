@@ -230,6 +230,10 @@ public class DataTypeType extends Type  {
         return decl.getName().equals("String");
     }
 
+    public boolean isExceptionType() {
+        return decl.getName().equals("Exception");
+    }
+
     public String toString() {
         StringBuffer buf = new StringBuffer(super.toString());
         if (hasTypeArgs()) {
