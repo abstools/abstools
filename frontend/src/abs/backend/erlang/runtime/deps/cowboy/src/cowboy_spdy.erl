@@ -54,15 +54,15 @@
 
 -record(state, {
 	parent = undefined :: pid(),
-	socket,
-	transport,
+	socket :: inet:socket(),
+	transport :: module(),
 	buffer = <<>> :: binary(),
-	middlewares,
-	env,
-	onresponse,
-	peer,
-	zdef,
-	zinf,
+	middlewares :: [module()],
+	env :: cowboy_middleware:env(),
+	onresponse :: cowboy:onresponse_fun(),
+	peer :: {inet:ip_address(), inet:port_number()},
+	zdef :: zlib:zstream(),
+	zinf :: zlib:zstream(),
 	last_streamid = 0 :: streamid(),
 	children = [] :: [#child{}]
 }).
@@ -387,7 +387,7 @@ delete_child(Pid, State=#state{children=Children}) ->
 	-> ok.
 request_init(FakeSocket, Peer, OnResponse,
 		Env, Middlewares, Method, Host, Path, Version, Headers) ->
-	{Host2, Port} = cow_http:parse_fullhost(Host),
+	{Host2, Port} = cow_http_hd:parse_host(Host),
 	{Path2, Qs} = cow_http:parse_fullpath(Path),
 	Version2 = cow_http:parse_version(Version),
 	Req = cowboy_req:new(FakeSocket, ?MODULE, Peer,

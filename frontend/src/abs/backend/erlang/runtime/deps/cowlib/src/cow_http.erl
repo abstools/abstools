@@ -18,7 +18,6 @@
 -export([parse_status_line/1]).
 -export([parse_headers/1]).
 
--export([parse_fullhost/1]).
 -export([parse_fullpath/1]).
 -export([parse_version/1]).
 
@@ -123,7 +122,7 @@ parse_hd_name(<< C, Rest/bits >>, Acc, SoFar) ->
 		$: -> parse_hd_before_value(Rest, Acc, SoFar);
 		$\s -> parse_hd_name_ws(Rest, Acc, SoFar);
 		$\t -> parse_hd_name_ws(Rest, Acc, SoFar);
-		?INLINE_LOWERCASE(parse_hd_name, Rest, Acc, SoFar)
+		_ -> ?LOWER(parse_hd_name, Rest, Acc, SoFar)
 	end.
 
 parse_hd_name_ws(<< C, Rest/bits >>, Acc, Name) ->
@@ -198,44 +197,6 @@ horse_parse_headers() ->
 			"Content-Type: text/plain\r\n"
 			"\r\nRest">>)
 	).
--endif.
-
-%% @doc Extract host and port from a binary.
-%%
-%% Because the hostname is case insensitive it is converted
-%% to lowercase.
-
--spec parse_fullhost(binary()) -> {binary(), undefined | non_neg_integer()}.
-parse_fullhost(Fullhost) ->
-	parse_fullhost(Fullhost, false, <<>>).
-
-parse_fullhost(<< $[, Rest/bits >>, false, <<>>) ->
-	parse_fullhost(Rest, true, << $[ >>);
-parse_fullhost(<<>>, false, Acc) ->
-	{Acc, undefined};
-%% @todo Optimize.
-parse_fullhost(<< $:, Rest/bits >>, false, Acc) ->
-	{Acc, list_to_integer(binary_to_list(Rest))};
-parse_fullhost(<< $], Rest/bits >>, true, Acc) ->
-	parse_fullhost(Rest, false, << Acc/binary, $] >>);
-parse_fullhost(<< C, Rest/bits >>, E, Acc) ->
-	case C of
-		?INLINE_LOWERCASE(parse_fullhost, Rest, E, Acc)
-	end.
-
--ifdef(TEST).
-parse_fullhost_test() ->
-	{<<"example.org">>, 8080} = parse_fullhost(<<"example.org:8080">>),
-	{<<"example.org">>, undefined} = parse_fullhost(<<"example.org">>),
-	{<<"192.0.2.1">>, 8080} = parse_fullhost(<<"192.0.2.1:8080">>),
-	{<<"192.0.2.1">>, undefined} = parse_fullhost(<<"192.0.2.1">>),
-	{<<"[2001:db8::1]">>, 8080} = parse_fullhost(<<"[2001:db8::1]:8080">>),
-	{<<"[2001:db8::1]">>, undefined} = parse_fullhost(<<"[2001:db8::1]">>),
-	{<<"[::ffff:192.0.2.1]">>, 8080}
-		= parse_fullhost(<<"[::ffff:192.0.2.1]:8080">>),
-	{<<"[::ffff:192.0.2.1]">>, undefined}
-		= parse_fullhost(<<"[::ffff:192.0.2.1]">>),
-	ok.
 -endif.
 
 %% @doc Extract path and query string from a binary.

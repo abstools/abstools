@@ -242,6 +242,10 @@ start_new_task(S=#state{running=R,tasks=T,tracker=Tracker,dc=DC},Task,Args,Sende
     %% Don't generate "cog idle" event when we create new task - this
     %% causes spurious clock advance
     R1=case R of no_task_schedulable -> false; _ -> R end,
+    %% we used to start with state=waiting but that led to spurious clock
+    %% advancement (cog sent out idle event before task became runnable).  I
+    %% did not see where the task state is actually set to runnable either, so
+    %% don't treat state=runnable in the next line as gospel.
     S#state{running=R1,tasks=gb_trees:insert(Ref,#task{ref=Ref,state=runnable},T)}.
 
 
