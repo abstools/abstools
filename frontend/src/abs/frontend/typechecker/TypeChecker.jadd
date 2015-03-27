@@ -1030,17 +1030,18 @@ aspect TypeCheckProductline {
     }
 
     protected void ProductLine.typeCheck(SemanticErrorList e) {
-        // TODO: JastAdd attributes?
-        // cache all names of defined deltas for easy lookup
-        Set<String> definedFeatures = new HashSet<String>();
-        for (Feature cf : getFeatures()) {
-            definedFeatures.add(cf.getName());
-        }
-
+        Set<String> definedFeatures = getDeclaredFeatures();
         // TODO: check for undeclared features?
+        
+        HashSet<String> deadDeltas = new HashSet<String>(getModel().getDeltaDeclsMap().keySet());
         for (DeltaClause dc : getDeltaClauses()) {
             dc.typeCheck(getModel().getDeltaDeclsMap(), definedFeatures, e);
+            deadDeltas.remove(dc.getDeltaspec().getDeltaID());
         }
+        // check for DeltaDecls missing a DeltaClause in the ProductLine declaration
+        if (! deadDeltas.isEmpty())
+            e.add(new TypeError(this, ErrorMessage.ERROR_IN_PRODUCT_LINE_MISSING_DELTACLAUSE, getName(), StringUtils.join(",", deadDeltas)));
+            
         Set<String> fs = new HashSet<String>();
         for (Feature f : getFeatures()) {
             if (!fs.add(f.getName()))

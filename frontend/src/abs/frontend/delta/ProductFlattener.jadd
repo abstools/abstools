@@ -205,28 +205,38 @@ aspect ProductFlattener {
 
 
     /**************************************************************************
-     * Sort Delta names according to a valid order of application defined by the product line
+     * Return sorted List of applicable Delta names 
+     * (according to a valid order of application defined by the product line)
      */
-    public java.util.List<String> ProductLine.sortDeltas(Set<String> deltaIDs) {
-      TopologicalSorting<String> sorter = new TopologicalSorting<String>(deltaIDs);
+    public java.util.List<String> ProductLine.sortDeltas(Set<String> applicableDeltaIDs) {
+	    LinkedList<String> list = new LinkedList<String>(getValidOrderOfAllDeltas());
+	    list.retainAll(applicableDeltaIDs);
+	    return list;
+    }
 
-      for (DeltaClause clause : getDeltaClauses()) {
-          String deltaid = clause.getDeltaspec().getDeltaID();
-          if (deltaIDs.contains(deltaid)) {
-              for (DeltaID did : clause.getAfterDeltaIDs()) { // 'after' deltas
-                  String otherid = did.getName();
-                  if (deltaIDs.contains(otherid)) {
-                      try {
-                          sorter.addEdge(otherid, deltaid);
-                      } catch (DeltaModellingException e) {
-                          assert false; // should never reach this point
-                      }
-                  }
-              }
-          }
-      }
-      sorter.sort();
-      return sorter.getAnOrder();
-  }
+    /**************************************************************************
+     * Obtain a valid delta application order that contains ALL deltas 
+     * (disregarding application conditions). This order is used to determine an 
+     * application order for individual products by removing the non-applicable deltas 
+     */
+    syn lazy java.util.List<String> ProductLine.getValidOrderOfAllDeltas() {
+        TopologicalSorting<String> sorter = new TopologicalSorting<String>(getAllDeltaIDs());
+        for (DeltaClause clause : getDeltaClauses()) {
+            String deltaID = clause.getDeltaspec().getDeltaID();
+            for (DeltaID id : clause.getAfterDeltaIDs()) {
+                String afterID = id.getName();
+                try {
+                    sorter.addEdge(afterID, deltaID);
+                } catch (DeltaModellingException e) {
+                    // Should never reach this point as long as sorter is instantiated with all available deltaIDs,
+                    // and type checker made sure that 'after' clauses do not contain any undeclared deltaIDs.
+                    assert false;
+                }
+            }
+        }    
+        sorter.sort();
+        return sorter.getPreferredOrder();
+    }
+
 
 }

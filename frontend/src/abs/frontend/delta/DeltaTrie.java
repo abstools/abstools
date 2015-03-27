@@ -7,28 +7,30 @@ package abs.frontend.delta;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.DeltaDecl;
-import abs.frontend.ast.ProductLine;
+import abs.frontend.ast.Model;
 
 public class DeltaTrie {
-    private Node root;
-    private ProductLine pl;
+    private final Node root;
+    private final Model model;
 
     /**
      * Constructor
      */
-    public DeltaTrie(ProductLine pl, SemanticErrorList errors) {
-        this.pl = pl;
+    public DeltaTrie(Model model, SemanticErrorList errors) {
+        this.model = model;
         root = new Node(errors);
     }
 
     // Adds a word to the Trie
     public void addWord(List<String> word) {
         System.out.print("DeltaSequence");
-        root.addWord(word, 0);
+        if (word.size() == 0) // no deltas
+            root.isValidProduct = true;
+        else
+            root.addWord(word, 0);
         System.out.println();
     }
 
@@ -36,17 +38,18 @@ public class DeltaTrie {
     /*
      * Trie Node
      */
-    private class Node {
-        private Map<String, Node> children;
+    class Node {
+        private final Map<String, Node> children;
         private String deltaID = null;
         private boolean isValidProduct = false;
-        private ProgramTypeAbstraction ta;
+        private final ProgramTypeAbstraction ta;
 
          // Constructor for top level root node
         public Node(SemanticErrorList errors) {
+            this.deltaID = "core";
             this.children = new HashMap<String, Node>();
             this.ta = new ProgramTypeAbstraction(errors);
-            pl.getModel().buildCoreTypeAbstraction(ta);
+            model.buildCoreTypeAbstraction(ta);
         }
 
         // Constructor for child node
@@ -56,8 +59,14 @@ public class DeltaTrie {
            this.ta = ta;
         }
 
+        /** Add a word to the trie
+         *
+         * @param word: Non-empty List of delta names
+         * @param d:    Index of List element to start with (for recursive invocation)
+         */
         protected void addWord(List<String> word, int d) {
             Node nextNode;
+
             System.out.print(">>>" + word.get(d));
 
             if (children.containsKey(word.get(d))) {
@@ -67,7 +76,7 @@ public class DeltaTrie {
                 nextNode = new Node(word.get(d), nextTA);
 
                 // Apply delta to nextNode's program type abstraction
-                DeltaDecl delta = pl.getModel().getDeltaDeclsMap().get(nextNode.deltaID);
+                DeltaDecl delta = model.getDeltaDeclsMap().get(nextNode.deltaID);
                 nextTA.applyDelta(delta);
 
                 children.put(word.get(d), nextNode);
@@ -77,42 +86,53 @@ public class DeltaTrie {
             if (word.size() > d+1)
                 nextNode.addWord(word, d+1);
             else {
-                isValidProduct = true;
-                // type check this product
+                nextNode.isValidProduct = true;
+                // TODO type check this product
                 System.out.print(".");
             }
         }
 
 
+        // Getters
+        public Map<String, Node> getChildren() {
+            return children;
+        }
+
+        public String getDeltaID() {
+            return deltaID;
+        }
+
+        public boolean isValidProduct() {
+            return isValidProduct;
+        }
+
+        public ProgramTypeAbstraction getProgramTypeAbstraction() {
+            return ta;
+        }
+
         @Override
         public String toString() {
-            return "[" + deltaID + ":" + ta.toString() + "]";
+            return toString(new StringBuilder());
         }
 
         public String toString(StringBuilder s) {
-            s.append(toString());
+            s.append("Delta: " + deltaID + ".  " + "Valid Product: " + isValidProduct + "\n");
+            s.append(ta.toString());
             for (Node child : children.values())
-                s.append(child.toString(s));
+                child.toString(s);
             return s.toString();
         }
 
-        protected void traverse() {
-            for (Node child : children.values())
-                child.traverse();
-        }
     }
     /**********************************************************************************************/
 
+    public Node getRoot() {
+        return root;
+    }
+
     @Override
     public String toString() {
-        StringBuilder s = new StringBuilder();
-        return root.toString(s);
+        return root.toString();
     }
-
-    public void traverse() {
-        root.traverse();
-        System.out.println();
-    }
-
 
 }

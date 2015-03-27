@@ -92,5 +92,14 @@ aspect Deltas {
         return deltas;
     }
 
+    // inform ProductLine about the features it references
+    syn lazy Set<String> ProductLine.getDeclaredFeatures() {
+        Set<String> definedFeatures = new HashSet<String>();
+        for (Feature cf : getFeatures()) {
+            definedFeatures.add(cf.getName());
+        }
+        return definedFeatures;
+    }
+
 }
 

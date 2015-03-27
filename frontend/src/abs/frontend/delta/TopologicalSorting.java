@@ -19,6 +19,15 @@ import com.google.common.collect.Table;
 import com.google.common.collect.Collections2;
 import com.google.common.math.BigIntegerMath;
 
+
+/* Sorting object that computes a list of elements sorted according to a given partial order
+ * Usage:
+ *     1. instantiate giving all elements to be sorted
+ *     2. define partial order by repeatedly calling addEdge(e1, e2), where e1 > e2
+ *     3. call sort()
+ *     4a. obtain a valid order with getAnOrder()
+ *     4b. OR obtain the set of all valid orders with getAllOrders()
+ */
 public class TopologicalSorting<T> {
 
     private final Set<T> nodes;
@@ -75,11 +84,11 @@ public class TopologicalSorting<T> {
 
     public void addEdge(T high, T low) throws DeltaModellingException {
         if (incidence == null)
-            throw new DeltaModellingException("Nodes not found [" + high.toString() + "; " + low.toString() + "] -- graph is empty");
+            throw new DeltaModellingException("Delta order: nodes not found [" + high.toString() + "; " + low.toString() + "] -- graph is empty");
         if (! incidence.containsColumn(high))
-            throw new DeltaModellingException("Node not found [" + high.toString() + "]");
+            throw new DeltaModellingException("Delta order: node not found [" + high.toString() + "]");
         if (! incidence.containsRow(low))
-            throw new DeltaModellingException("Node not found [" + low.toString() + "]");
+            throw new DeltaModellingException("Delta order: node not found [" + low.toString() + "]");
         incidence.put(high, low, true);
     }
 
@@ -104,7 +113,7 @@ public class TopologicalSorting<T> {
             }
             // no nodes in set means there is a cycle among the remaining nodes
             if (partition.get(currentSet).isEmpty())
-                throw new DeltaModellingException("Cycle detected among the following nodes: " + nodes.toString());
+                throw new DeltaModellingException("Delta order: cycle detected among the following nodes: " + nodes.toString());
 
             // for all nodes in set: remove these nodes from node set
             for (T node : partition.get(currentSet))
@@ -117,7 +126,8 @@ public class TopologicalSorting<T> {
     /*
      * Returns a single, valid delta order
      *
-     * TODO: eventually this should compute an implication-determined order, which yields a PFGT with a minimal number of nodes
+     * TODO: eventually this should compute an implication-determined order (cf. Damiani and Schaefer 2012),
+     * which yields a PFGT with a minimal number of nodes
      */
     public List<T> getPreferredOrder() {
         if (preferredOrder != null) // only compute once
@@ -136,21 +146,22 @@ public class TopologicalSorting<T> {
         return getPreferredOrder();
     }
 
-    /*
-     * Sort given list of Ts according to the preferredOrder
-     */
-    public List<T> sortList(List<T> list) {
-        Collections.sort(list, preferredOrderComparator);
-        return list;
-    }
-
-    /*
-     * Sort given set of Ts according to the preferredOrder
-     */
-    public List<T> sortSet(Set<T> set) {
-        List<T> list = new ArrayList<T>(set);
-        return sortList(list);
-    }
+//    /*
+//     * Sort given list of Ts according to the preferredOrder
+//     */
+//    public List<T> sortList(List<T> list) {
+//        Collections.sort(list, preferredOrderComparator);
+//        System.out.println("*** Sorted: " + list);
+//        return list;
+//    }
+//
+//    /*
+//     * Sort given set of Ts according to the preferredOrder
+//     */
+//    public List<T> sortSet(Set<T> set) {
+//        List<T> list = new ArrayList<T>(set);
+//        return sortList(list);
+//    }
 
     /*
      * Returns all valid delta orders (Product family generation strings - PFGS)
@@ -167,7 +178,7 @@ public class TopologicalSorting<T> {
         for (Set<T> set : partition) {
             // Add all permutations in this group
             // There are n! permutations in a group of size n
-            // TODO Issue a warning when group larger than, say, 8? Here or when type checking.
+            // TODO Issue a warning when group larger than, say, 8 (8! = 40320; 9! = 362880; 10! = 3628800)
             //System.out.println("Group (size " + BigIntegerMath.factorial(set.size()) + ")");
             grouplist.add(Collections2.permutations(set));
         }

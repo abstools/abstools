@@ -29,7 +29,11 @@ aspect ProgramTypeAbstractionBuilder {
      */
     public void AddClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
         ta.addClass(this);
-        // TODO: apply modifiers
+        String className = getClassDecl().qualifiedName();
+        for (FieldDecl field : getClassDecl().getFields())
+            ta.addField(className, field.getName());
+        for (MethodImpl method : getClassDecl().getMethods())
+            ta.addMethod(className, method.getMethodSig().getName());
     }
 
     public void ModifyClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {

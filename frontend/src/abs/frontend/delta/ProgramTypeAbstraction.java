@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
@@ -124,10 +125,16 @@ public class ProgramTypeAbstraction {
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
+        final Map<String,Object> sortedClasses = new TreeMap<String, Object>(classes);
 
-        for (String cls : classes.keySet()) {
-            s.append(cls + ";");
+        for (String cls : sortedClasses.keySet()) {
+            s.append("  Class: " + cls + "\n" + "    Fields:\n");
+            for (String field : classes.get(cls).get("fields"))
+                s.append("      " + field + "\n");
+            s.append("    Methods:\n");
+            for (String method : classes.get(cls).get("methods"))
+                s.append("      " + method + "\n");
         }
-        return "<<" + s.toString() + ">>";
+        return s.toString();
     }
 }

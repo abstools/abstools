@@ -37,24 +37,21 @@ public class ProductLineTypeAnalysisHelper {
         // Build the product family generation trie, including:
         // - a ProgramTypeAbstraction for each node
         // - check well-typedness of ProgramTypeAbstraction for each node that corresponds to a valid product
-        DeltaTrie pfgt = buildPFGT(pl, sorter, errors);
+        DeltaTrie pfgt = buildPFGT(pl, errors);
 
         System.out.println(pfgt);
 
     }
 
 
-    public static DeltaTrie buildPFGT(ProductLine pl, TopologicalSorting<String> sorter, SemanticErrorList errors) {
+    public static DeltaTrie buildPFGT(ProductLine pl, SemanticErrorList errors) {
         Model model = pl.getModel();
-
-        // build PFG Trie
-        DeltaTrie trie = new DeltaTrie(pl, errors);
+        DeltaTrie trie = new DeltaTrie(model, errors);
 
         for (ImplicitProduct product : model.getImplicitProductList()) {
-            // for each product: obtain sequence of deltas
-            Set<String> deltas = pl.findApplicableDeltas(product);
-            // sort deltas
-            List<String> productGenerationString = sorter.sortSet(deltas);
+            // for each product: obtain sequence of deltas & add it to the trie
+            Set<String> applicableDeltas = pl.findApplicableDeltas(product);
+            List<String> productGenerationString = pl.sortDeltas(applicableDeltas);
             trie.addWord(productGenerationString);
         }
         return trie;
