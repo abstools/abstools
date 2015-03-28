@@ -5,19 +5,13 @@
 package abs.frontend.delta;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ArrayTable;
 import com.google.common.collect.Table;
-import com.google.common.collect.Collections2;
-import com.google.common.math.BigIntegerMath;
 
 
 /* Sorting object that computes a list of elements sorted according to a given partial order
@@ -25,26 +19,20 @@ import com.google.common.math.BigIntegerMath;
  *     1. instantiate giving all elements to be sorted
  *     2. define partial order by repeatedly calling addEdge(e1, e2), where e1 > e2
  *     3. call sort()
- *     4a. obtain a valid order with getAnOrder()
- *     4b. OR obtain the set of all valid orders with getAllOrders()
+ *     4. obtain a valid order with getPreferredOrder() or getAnOrder()
  */
 public class TopologicalSorting<T> {
 
     private final Set<T> nodes;
     private final Table<T, T, Boolean> incidence;
-
     List<Set<T>> partition;
-
     private List<T> preferredOrder;
-    private ListComparator preferredOrderComparator;
-    private Set<List<T>> allOrders;
 
     public TopologicalSorting(Set<T> nodes) {
         this.nodes = nodes;
 
         if (nodes.size() == 0) {
             preferredOrder = Collections.emptyList();
-            allOrders = Collections.emptySet();
             incidence = null;
             return;
         }
@@ -58,26 +46,10 @@ public class TopologicalSorting<T> {
 
     }
 
-    /*
-     * A Comparator backed by the preferredOrder
-     * - Makes it more efficient to sort a given list of Ts based on the preferredOrder
+    /* The delta partition is an ordered list of sets of deltas. All deltas in a
+     * certain set have the same precedence, that is, they can be applied in any order.
+     * The partition is initially an empty list and is computed by calling sort().
      */
-    private class ListComparator implements Comparator<T> {
-        private Map<T, Integer> map;
-
-        public ListComparator(final List<T> list) {
-            map = new HashMap<T, Integer>(list.size());
-            for (int i=0; i < list.size(); i++)
-                map.put(list.get(i), i);
-        }
-
-        @Override
-        public int compare(T o1, T o2) {
-            return map.get(o1) - map.get(o2);
-        }
-    }
-
-
     public List<Set<T>> getPartition() {
         return partition;
     }
@@ -137,65 +109,14 @@ public class TopologicalSorting<T> {
         for (Set<T> set : partition)
             preferredOrder.addAll(set);
 
-        preferredOrderComparator = new ListComparator(preferredOrder);
-
         return preferredOrder;
     }
 
+    /*
+     * Returns a single, valid delta order
+     */
     public List<T> getAnOrder() {
         return getPreferredOrder();
     }
 
-//    /*
-//     * Sort given list of Ts according to the preferredOrder
-//     */
-//    public List<T> sortList(List<T> list) {
-//        Collections.sort(list, preferredOrderComparator);
-//        System.out.println("*** Sorted: " + list);
-//        return list;
-//    }
-//
-//    /*
-//     * Sort given set of Ts according to the preferredOrder
-//     */
-//    public List<T> sortSet(Set<T> set) {
-//        List<T> list = new ArrayList<T>(set);
-//        return sortList(list);
-//    }
-
-    /*
-     * Returns all valid delta orders (Product family generation strings - PFGS)
-     * The number of orders can get very large very fast: with n independent deltas there are n! possible orders
-     *
-     */
-    public Set<List<T>> getAllOrders() {
-        if (allOrders != null)  // only compute once
-            return allOrders;
-
-        allOrders = new HashSet<List<T>>();
-        List<Collection<List<T>>> grouplist = new ArrayList<Collection<List<T>>>(partition.size());
-
-        for (Set<T> set : partition) {
-            // Add all permutations in this group
-            // There are n! permutations in a group of size n
-            // TODO Issue a warning when group larger than, say, 8 (8! = 40320; 9! = 362880; 10! = 3628800)
-            //System.out.println("Group (size " + BigIntegerMath.factorial(set.size()) + ")");
-            grouplist.add(Collections2.permutations(set));
-        }
-
-        generateCombinations(grouplist, allOrders, 0, new ArrayList<T>());
-        return allOrders;
-    }
-
-    private void generateCombinations(List<Collection<List<T>>> grouplist, Set<List<T>> results, int depth, List<T> current) {
-        if(depth == grouplist.size()) {
-            results.add(new ArrayList<T>(current));
-            return;
-        }
-        for (List<T> permutation : grouplist.get(depth)) {
-            List<T> current2 = new ArrayList<T>(current);
-            current2.addAll(permutation);
-            generateCombinations(grouplist, results, depth + 1, current2);
-        }
-    }
 }
