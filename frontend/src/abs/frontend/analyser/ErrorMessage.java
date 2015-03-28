@@ -115,8 +115,7 @@ public enum ErrorMessage {
     ERROR_IN_PRODUCT("Error within product %s: %s"),
     ERROR_IN_PRODUCT_WITH_DELTA("Error within product %s while processing delta %s: %s"),
     ERROR_IN_PRODUCT_LINE_DELTA_ORDER("Error in product line %s. No total order exists for the given partial order of deltas."),
-    ERROR_IN_PRODUCT_LINE_UNUSED_DELTA("Error in product line %s. Delta %s is never used."),
-    ERROR_IN_PRODUCT_LINE_MISSING_DELTACLAUSE("Error in product line %s. No delta clause for delta(s): %s."),
+    ERROR_IN_PRODUCT_LINE_MISSING_DELTACLAUSE("Error in product line %s. No delta clause for delta(s): %s (Dead deltas)."),
     AMBIGUOUS_PRODUCTLINE("The product line %s is potentially ambiguous: Deltas %s and %s both target class %s, but their application order is undefined."),
     DEADLOCK_GENERATION_ERROR("Generated Edge: %s");
 

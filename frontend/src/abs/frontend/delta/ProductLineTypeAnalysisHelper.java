@@ -4,7 +4,6 @@
  */
 package abs.frontend.delta;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,25 +17,19 @@ import abs.frontend.ast.*;
 public class ProductLineTypeAnalysisHelper {
 
     /*
-     * An IFΔJ product line is type-safe if the following conditions hold: (i)
-     * it is strongly unambiguous, (ii) its product generation mapping is total,
-     * and (iii) all its products are well-typed IFJ programs.
+     * An IFΔJ product line is type-safe if the following conditions hold:
+     * (i) it is strongly unambiguous,
+     * (ii) its product generation mapping is total, and
+     * (iii) all its products are well-typed IFJ programs.
      */
     public static void typeCheckPL(ProductLine pl, SemanticErrorList errors) {
 
-        TopologicalSorting<String> sorter = new TopologicalSorting<String>(pl.getAllDeltaIDs());
-
         // Check strong unambiguity
-        List<Set<String>> deltaPartition = getDeltaPartition(pl, sorter, errors);
-        checkStrongUnambiguity(pl, deltaPartition, errors);
+        checkStrongUnambiguity(pl, errors);
 
-        //TODO check the other conditions:
+        // Build the product family generation trie. Hereby check that
         // - product generation mapping is total
-        // - all products are well-typed programs
-
-        // Build the product family generation trie, including:
-        // - a ProgramTypeAbstraction for each node
-        // - check well-typedness of ProgramTypeAbstraction for each node that corresponds to a valid product
+        // - TODO all products are well-typed programs
         DeltaTrie pfgt = buildPFGT(pl, errors);
 
         System.out.println(pfgt);
@@ -57,37 +50,6 @@ public class ProductLineTypeAnalysisHelper {
         return trie;
     }
 
-    /*
-     * Ordered partition of the set of delta modules
-     */
-    public static List<Set<String>> getDeltaPartition(ProductLine pl, TopologicalSorting<String> sorter, SemanticErrorList l) {
-
-
-        for (DeltaClause clause : pl.getDeltaClauses()) {
-            String deltaid = clause.getDeltaspec().getDeltaID();
-            for (DeltaID did : clause.getAfterDeltaIDs()) {
-                String afterid = did.getName();
-                try {
-                    sorter.addEdge(afterid, deltaid);
-                } catch (DeltaModellingException e) {
-                    // a node is not part of the graph, meaning that the
-                    // corresponding delta has no delta clause
-                    l.add(new TypeError(pl, ErrorMessage.ERROR_IN_PRODUCT_LINE_UNUSED_DELTA, pl.getName(), did.getName()));
-                    return Collections.<Set<String>> emptyList();
-                }
-            }
-        }
-        try {
-            sorter.sort();
-        } catch (DeltaModellingException e) {
-            // cycle in graph -> no order exists
-            l.add(new TypeError(pl, ErrorMessage.ERROR_IN_PRODUCT_LINE_DELTA_ORDER, pl.getName()));
-            return Collections.<Set<String>> emptyList();
-        }
-
-        return sorter.getPartition();
-    }
-
 
     /*
      * A product line is strongly unambiguous if each set in the partition of
@@ -97,12 +59,12 @@ public class ProductLineTypeAnalysisHelper {
      * the same class, and the modifications of the same class in different
      * delta modules in the same set have to be disjoint.
      */
-    public static boolean isStronglyUnambiguous(ProductLine pl, List<Set<String>> deltaPartition, SemanticErrorList l) {
+    public static boolean isStronglyUnambiguous(ProductLine pl, SemanticErrorList l) {
 
         boolean result = true;
         Model model = pl.getModel();
 
-        for (Set<String> set : deltaPartition) {
+        for (Set<String> set : pl.getDeltaPartition()) {
 
             // Remember the names of classes and methods modified by deltas in
             // current set
@@ -163,8 +125,8 @@ public class ProductLineTypeAnalysisHelper {
         return result;
     }
 
-    public static void checkStrongUnambiguity(ProductLine pl, List<Set<String>> deltaPartition, SemanticErrorList l) {
-        isStronglyUnambiguous(pl, deltaPartition, l);
+    public static void checkStrongUnambiguity(ProductLine pl, SemanticErrorList l) {
+        isStronglyUnambiguous(pl, l);
     }
 
 }

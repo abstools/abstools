@@ -25,8 +25,9 @@ public class TopologicalSorting<T> {
 
     private final Set<T> nodes;
     private final Table<T, T, Boolean> incidence;
-    List<Set<T>> partition;
+    private List<Set<T>> partition;
     private List<T> preferredOrder;
+    private boolean isSorted = false;
 
     public TopologicalSorting(Set<T> nodes) {
         this.nodes = nodes;
@@ -46,14 +47,6 @@ public class TopologicalSorting<T> {
 
     }
 
-    /* The delta partition is an ordered list of sets of deltas. All deltas in a
-     * certain set have the same precedence, that is, they can be applied in any order.
-     * The partition is initially an empty list and is computed by calling sort().
-     */
-    public List<Set<T>> getPartition() {
-        return partition;
-    }
-
     public void addEdge(T high, T low) throws DeltaModellingException {
         if (incidence == null)
             throw new DeltaModellingException("Delta order: nodes not found [" + high.toString() + "; " + low.toString() + "] -- graph is empty");
@@ -62,6 +55,7 @@ public class TopologicalSorting<T> {
         if (! incidence.containsRow(low))
             throw new DeltaModellingException("Delta order: node not found [" + low.toString() + "]");
         incidence.put(high, low, true);
+        isSorted = false;
     }
 
     public void sort() throws DeltaModellingException {
@@ -93,6 +87,7 @@ public class TopologicalSorting<T> {
 
             currentSet++;
         }
+        isSorted = true;
     }
 
     /*
@@ -105,6 +100,7 @@ public class TopologicalSorting<T> {
         if (preferredOrder != null) // only compute once
             return preferredOrder;
 
+        checkSorted();
         preferredOrder = new ArrayList<T>(nodes.size());
         for (Set<T> set : partition)
             preferredOrder.addAll(set);
@@ -119,4 +115,21 @@ public class TopologicalSorting<T> {
         return getPreferredOrder();
     }
 
+    /* The delta partition is an ordered list of sets of deltas. All deltas in a
+     * certain set have the same precedence, that is, they can be applied in any order.
+     * The partition is initially an empty list and is computed by calling sort().
+     */
+    public List<Set<T>> getPartition() {
+        checkSorted();
+        return partition;
+    }
+
+
+    /*
+     * Make sure we called sort() before we access the results
+     */
+    private void checkSorted() {
+        if (! isSorted)
+            throw new DeltaModellingException("The set of deltas has not been sorted");
+    }
 }

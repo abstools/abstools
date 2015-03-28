@@ -220,23 +220,54 @@ aspect ProductFlattener {
      * application order for individual products by removing the non-applicable deltas 
      */
     syn lazy java.util.List<String> ProductLine.getValidOrderOfAllDeltas() {
-        TopologicalSorting<String> sorter = new TopologicalSorting<String>(getAllDeltaIDs());
+        sortDeltas();
+        return deltaSorter.getPreferredOrder();
+    }
+
+    /**************************************************************************
+     *
+     *
+     */
+    syn lazy java.util.List<Set<String>> ProductLine.getDeltaPartition() {
+        sortDeltas();
+        return deltaSorter.getPartition();
+    }
+    
+    /**************************************************************************
+     * The sorter object that computes a valid delta order
+     * It is instantiated by sortDeltas().
+     */
+    private TopologicalSorting<String> ProductLine.deltaSorter = null;
+
+    /**************************************************************************
+     * Sort all deltas of the product line. This only has to be done once.
+     * The result is used in multiple places:
+     * - Type checking the product line
+     * - Flattening for a certain product 
+     */
+    private void ProductLine.sortDeltas() {
+        if (deltaSorter == null)
+            deltaSorter = new TopologicalSorting<String>(getAllDeltaIDs());
+        else
+            return; // assume already sorted
+
+        // sort            
         for (DeltaClause clause : getDeltaClauses()) {
             String deltaID = clause.getDeltaspec().getDeltaID();
             for (DeltaID id : clause.getAfterDeltaIDs()) {
                 String afterID = id.getName();
                 try {
-                    sorter.addEdge(afterID, deltaID);
+                    deltaSorter.addEdge(afterID, deltaID);
                 } catch (DeltaModellingException e) {
-                    // Should never reach this point as long as sorter is instantiated with all available deltaIDs,
-                    // and type checker made sure that 'after' clauses do not contain any undeclared deltaIDs.
+                    /* Should never reach this point as long as 
+                     *   1. sorter is instantiated with all available deltaIDs and
+                     *   2. the type checker made sure that 'after' clauses do not contain any deltaIDs that do not have their own delta clause -- FIXME!!
+                     */
                     assert false;
                 }
             }
         }    
-        sorter.sort();
-        return sorter.getPreferredOrder();
+        deltaSorter.sort();
     }
-
 
 }
