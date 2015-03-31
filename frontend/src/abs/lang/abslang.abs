@@ -516,7 +516,7 @@ module ABS.DC;
 // Interfaces
 export DeploymentComponent, CloudProvider;
 // Annotations
-export DC, Cost, Size, CogLocation;
+export DC, Cost, Size, MaxSize, CogLocation;
 // Datatypes, Constructors
 export Resourcetype, CPU, Bandwidth, InfRat, Fin;
 // Functions
@@ -741,6 +741,9 @@ type Cost = Duration;
 
 // Annotation for async method calls: size of sent data
 type Size = Rat;
+
+// Annotation for classes: memory size of resulting cog
+type MaxSize = Rat;
 
 // Distributed execution (eg the Scala backend): where the cog will be created
 type CogLocation = String;
