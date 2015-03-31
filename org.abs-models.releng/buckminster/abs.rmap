@@ -1,86 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rm:rmap xmlns:bc="http://www.eclipse.org/buckminster/Common-1.0" xmlns:rm="http://www.eclipse.org/buckminster/RMap-1.0">
+<rm:rmap xmlns:bc="http://www.eclipse.org/buckminster/Common-1.0" xmlns:xi="http://www.w3.org/2001/XMLSchema-instance"  xmlns:rm="http://www.eclipse.org/buckminster/RMap-1.0" xmlns:psf="http://www.eclipse.org/buckminster/PSFProvider-1.0">
   <rm:locator pattern="org.abs-models.abs.compiler" searchPathRef="frontend"/>
   <rm:locator pattern="org.abs-models.sdedit" searchPathRef="sdedit"/>
-  <!-- <rm:locator pattern="org.abs-models.abs.plugin" searchPathRef="eclipse-plugin"/> -->
-  <!--  <rm:locator pattern="org.abs-models.abs.plugin.tests" searchPathRef="by-component"/> -->
+  <rm:locator pattern="org.abs-models.abs.plugin" searchPathRef="eclipse-plugin"/>
+  <rm:locator pattern="org.abs-models.abs.plugin.tests" searchPathRef="by-component"/>
   <rm:locator pattern="org.abs-models.costabs" searchPathRef="costabs"/>
   <rm:locator pattern="org.abs-models.apet" searchPathRef="apet"/>
+  <rm:locator pattern="org.abs-models.releng" searchPathRef="by-component"/>
   <rm:locator pattern="org.abs-models.sda" searchPathRef="sda"/>
-  <rm:locator pattern="^org\.abs-models.+" searchPathRef="by-component"/>
   <rm:locator pattern="org.eclipse.swtbot.*" searchPathRef="SWTBot"/>
   <rm:locator pattern="org.hamcrest" searchPathRef="SWTBot"/>
-  <rm:locator searchPathRef="org.eclipse.platform"/>
   <rm:searchPath name="frontend">
-    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local">
-      <rm:uri format="file:///{0}/abstools/frontend/">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
+      <rm:uri format="file:///{0}/../frontend/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
   </rm:searchPath>
   <rm:searchPath name="eclipse-plugin">
-    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
       <rm:uri format="file:///{0}/../eclipse-plugin/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
   </rm:searchPath>
   <rm:searchPath name="costabs">
-    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
       <rm:uri format="file:///{0}/../costabs-plugin/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
   </rm:searchPath>
   <rm:searchPath name="apet">
-    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
       <rm:uri format="file:///{0}/../apet-plugin/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
   </rm:searchPath>
   <rm:searchPath name="sda">
-    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
       <rm:uri format="file:///{0}/../sda-plugin/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
   </rm:searchPath>
   <rm:searchPath name="sdedit">
-    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
       <rm:uri format="file:///{0}/../sdedit-for-abs/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
   </rm:searchPath>
   <rm:searchPath name="by-component">
-      <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="git">
-          <rm:uri format="{0}/abstools,{1}">
-              <bc:propertyRef key="workspace.root"/>
-              <bc:propertyRef key="buckminster.component"/>
-          </rm:uri>
-          <rm:property key="git.remote.uri" value="https://envisage.ifi.uio.no:8080/git/abstools"/>
-          <rm:property key="git.auto.fetch" value="true"/>
-      </rm:provider>
-    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local">
-      <rm:uri format="file:///{0}/abstools/{1}/">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
+      <rm:uri format="file:///{0}/../{1}/">
         <bc:propertyRef key="workspace.root"/>
         <bc:propertyRef key="buckminster.component"/>
       </rm:uri>
     </rm:provider>
   </rm:searchPath>
   <rm:searchPath name="org.eclipse.platform">
-    <rm:provider componentTypes="osgi.bundle,eclipse.feature" readerType="p2" source="false" mutable="false">
-      <rm:property key="buckminster.source" value="false"/>
-      <rm:property key="buckminster.mutable" value="false"/>
-      <rm:uri format="http://download.eclipse.org/releases/indigo/?importType=binary"/>
-    </rm:provider>
+		<rm:provider readerType="eclipse.import" componentTypes="osgi.bundle,eclipse.feature" mutable="false" source="false">
+			<rm:uri format="http://download.eclipse.org/releases/indigo/?importType=binary"/>
+		</rm:provider>
   </rm:searchPath>
   <rm:searchPath name="SWTBot">
-    <rm:provider componentTypes="osgi.bundle,eclipse.feature" readerType="p2" source="false" mutable="false">
-      <rm:property key="buckminster.source" value="false"/>
-      <rm:property key="buckminster.mutable" value="false"/>
-      <rm:uri format="http://download.eclipse.org/technology/swtbot/helios/dev-build/update-site/?importType=binary"/>
-    </rm:provider>
+		<rm:provider readerType="eclipse.import" componentTypes="osgi.bundle,eclipse.feature" mutable="false" source="false">
+			<rm:uri format="http://download.eclipse.org/technology/swtbot/helios/dev-build/update-site/?importType=binary"/>
+		</rm:provider>
   </rm:searchPath>
+  <!-- Default -->
+  <rm:locator searchPathRef="org.eclipse.platform"/>
 </rm:rmap>

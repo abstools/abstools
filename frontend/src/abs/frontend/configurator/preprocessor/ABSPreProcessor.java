@@ -66,8 +66,8 @@ public class ABSPreProcessor {
             {
                 if(!compilationUnit.getName().contains(".abs"))
                 {
-                    lFE = compilationUnit.getFExtList();
-                    lFD = compilationUnit.getFeatureDeclList();
+                lFE = compilationUnit.getFExtList();
+                lFD = compilationUnit.getFeatureDeclList();
                 }
 
                 for(FExt oFeatureExt : lFE)
@@ -154,37 +154,37 @@ public class ABSPreProcessor {
             WriteToMvtlFile("extension " + oFE.getName() + "{");
 
             if(oFD.hasGroup())
-            {
-                System.out.print("\n" + oFD.getName() + " has a group");
-                System.out.print("\n" + "Cardinality getstart : " + oFD.getGroup().getCard());
-                Group oGroup = oFD.getGroup();
-                lFnode = oGroup.getFNodeList();
+                {
+                    System.out.print("\n" + oFD.getName() + " has a group");
+                    System.out.print("\n" + "Cardinality getstart : " + oFD.getGroup().getCard());
+                    Group oGroup = oFD.getGroup();
+                    lFnode = oGroup.getFNodeList();
 
-                String sExpression = "";
-                for (Attribute att : lAtt) {
-                    if(arlAttributes.contains(att.getName().trim()))
-                    {
-                        sExpression = "";
-                        for (FNode fnode : lFnode) {
-                            //System.out.print("\n Fnode: " + fnode.getFeat().getName() + "\n");
-                            sExpression = fnode.getFeatureDecl().getName() + "." + att.getName() + " + " + sExpression;
-                        }
+                    String sExpression = "";
+                    for (Attribute att : lAtt) {
+                        if(arlAttributes.contains(att.getName().trim()))
+                        {
+                            sExpression = "";
+                            for (FNode fnode : lFnode) {
+                                //System.out.print("\n Fnode: " + fnode.getFeat().getName() + "\n");
+                                sExpression = fnode.getFeatureDecl().getName() + "." + att.getName() + " + " + sExpression;
+                            }
 
                         WriteToMvtlFile("\nifout: " + att.getName() + " == 0");
                         sExpression = sExpression.substring(0, sExpression.length() - 2);
                         WriteToMvtlFile("\n" + att.getName() + " = " + sExpression.trim());
+                        }
                     }
                 }
-            }
             else
-            {
-                for (Attribute att : lAtt) {
-                    if(arlAttributes.contains(att.getName().trim()))
-                    {
-                        WriteToMvtlFile("\nifout: " + att.getName() + " == 0");
+                {
+                    for (Attribute att : lAtt) {
+                        if(arlAttributes.contains(att.getName().trim()))
+                        {
+                            WriteToMvtlFile("\nifout: " + att.getName() + " == 0");
+                        }
                     }
                 }
-            }
 
             List<Constr> oConstr = new List<Constr>();
             oConstr = oFE.getAttrConstraints().getConstrs();

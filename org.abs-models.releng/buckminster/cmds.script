@@ -1,5 +1,5 @@
-#import "${WORKSPACE}/org.abs-models.releng/buckminster/eclipse.cquery"
-#importtargetdefinition -A "${WORKSPACE}/org.abs-models.releng/ABS.target"
+import "${WORKSPACE}/org.abs-models.releng/buckminster/eclipse.cquery"
+importtargetdefinition -A "${WORKSPACE}/org.abs-models.releng/ABS.target"
 import "${WORKSPACE}/org.abs-models.releng/buckminster/abs.cquery"
 import "${WORKSPACE}/org.abs-models.releng/buckminster/costabs.cquery"
 import "${WORKSPACE}/org.abs-models.releng/buckminster/apet.cquery"
