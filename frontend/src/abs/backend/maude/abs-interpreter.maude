@@ -451,6 +451,8 @@ mod ABS-DATATYPES is
   = "< REF " + string(C:Cid) + " " + string(N:Int, 10) + " >" .
   eq toAbsString(label(O:Oid, N:Int))
   = "< FUT " + toAbsString(O:Oid) + string(N:Int, 10) + " >" .
+  eq toAbsString("ABS.StdLib.True"[ emp ]) = "True" .
+  eq toAbsString("ABS.StdLib.False"[ emp ]) = "False" .
   eq toAbsString(N:String[ emp ]) = N:String .
   eq toAbsString(N:String[ A:NeDataList ])
   = N:String + "(" + toAbsString(A:NeDataList) + ")" .
