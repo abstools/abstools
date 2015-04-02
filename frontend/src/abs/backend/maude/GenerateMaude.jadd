@@ -147,7 +147,14 @@ aspect GenerateMaude {
     
     public void PureExp.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
-        stream.print("noStmt ");
+        int randomcount = this.numberOfRandom(new TreeSet<String>());
+        MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
+        MaudeCompilerHelper.emitCostAnnotation(stream, annotations,
+                                               getModel().defaultResources);
+        stream.print("assign( '_ ; ");
+        this.generateMaude(stream);
+        stream.print(") ");
+        MaudeCompilerHelper.emitPopRandomInst(stream, randomcount);
     }
 
     public void EffExp.generateMaude(PrintStream stream) {
