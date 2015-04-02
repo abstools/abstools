@@ -471,6 +471,12 @@ data AtomicityAnnotation = Atomic;
 def A watch<A>(A val) = builtin;
 def A watchEx<A, B>(A val, B info) = builtin;
 
+// input/output, first version
+def Unit println(String s) = builtin;
+def Unit print(String s) = builtin;
+def String readln() = builtin;
+
+
 /**
  * Custom schedulers
  */
@@ -753,6 +759,8 @@ type CogLocation = String;
  */
 module ABS.Meta;
 export *;
+// these three used to reside in ABS.Meta; re-export for backward compatibility
+export print, println, readln from ABS.StdLib;
 import * from ABS.StdLib;
 import * from ABS.Scheduler;
 
@@ -851,12 +859,6 @@ interface StateUpdate {
 interface Feature {
     String getName();
 }
-
-// convenience functions (to be removed)
-def Unit println(String s) = builtin;
-def Unit print(String s) = builtin;
-def String readln() = builtin;
-
 
 
 /**
