@@ -10,6 +10,7 @@ import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.TypedVarOrFieldDecl;
+import abs.frontend.ast.VarOrFieldDecl;
 
 public class FinalAnnotationTypeExtension extends DefaultTypeSystemExtension {
     
@@ -19,14 +20,18 @@ public class FinalAnnotationTypeExtension extends DefaultTypeSystemExtension {
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
-        // There'll never be PatternVars in an assignment.
-        TypedVarOrFieldDecl d = (TypedVarOrFieldDecl) s.getVar().getDecl();
-        // Not sure if this code will encounter delta bodies:
-        if (d != null && d.isFinal()) {
-            String name = d.getName();
-            boolean isField = (d instanceof FieldDecl); 
-            String kind = isField ? "field" : "variable";
-            add(new TypeError(s,ErrorMessage.ASSIGN_TO_FINAL,kind,name));
+        VarOrFieldDecl decl = s.getVar().getDecl();
+        if (decl instanceof TypedVarOrFieldDecl) {
+            TypedVarOrFieldDecl d = (TypedVarOrFieldDecl)decl;
+            // Not sure if this code will encounter delta bodies:
+            if (d != null && d.isFinal()) {
+                String name = d.getName();
+                boolean isField = (d instanceof FieldDecl);
+                String kind = isField ? "field" : "variable";
+                add(new TypeError(s,ErrorMessage.ASSIGN_TO_FINAL,kind,name));
+            }
+        } else {
+            // It's a PatternVarDecl.  Assume these are never final.
         }
     }
 
