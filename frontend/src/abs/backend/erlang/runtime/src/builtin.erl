@@ -49,7 +49,11 @@ toString(_Cog,I) when is_integer(I) ->
     integer_to_list(I);
 toString(_Cog,{N,D}) when is_integer(N),is_integer(D)->
     float_to_list(N / D,[{decimals, 4}, compact]);
-toString(_Cog,S) when is_list(S) -> S;
+toString(_Cog,S) when is_list(S) ->
+    "\"" ++ lists:flatten(lists:map(fun($\\) -> "\\\\";
+                                       ($") -> "\\\"";
+                                       (X) -> X end, S))
+        ++ "\"";
 toString(_Cog,A) when is_atom(A) -> constructorname_to_string(A);
 toString(_Cog,P) when is_pid(P) -> pid_to_list(P);
 toString(_Cog,{object,Cid,Oid,_Cog}) -> atom_to_list(Cid) ++ ":" ++ pid_to_list(Oid);
