@@ -197,7 +197,7 @@ methodsig : annotation* type_use IDENTIFIER paramlist ';' ;
 // Classes
 
 class_decl : annotation*
-        'class' TYPE_IDENTIFIER paramlist?
+        'class' qualified_type_identifier paramlist?
         ('implements' interface_name (',' interface_name)*)?
         '{'
         field_decl*
