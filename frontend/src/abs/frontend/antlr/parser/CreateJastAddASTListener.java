@@ -339,6 +339,18 @@ new List<ModuleDecl>(),
     @Override public void exitSyncCallExp(ABSParser.SyncCallExpContext ctx) {
         setV(ctx, new SyncCall((PureExp)v(ctx.o), ctx.m.getText(), (List<PureExp>)v(ctx.pure_exp_list())));
     }
+    @Override public void exitOriginalCallExp(ABSParser.OriginalCallExpContext ctx) {
+        List<PureExp> l = ctx.pure_exp_list() == null
+            ? new List<PureExp>()
+            : (List<PureExp>)v(ctx.pure_exp_list());
+        if (ctx.c != null) {
+            setV(ctx, new TargetedOriginalCall(new DeltaID("core"), l));
+        } else if (ctx.d != null) {
+            setV(ctx, new TargetedOriginalCall((DeltaID)v(ctx.d), l));
+        } else {
+            setV(ctx, new OriginalCall(l));
+        }
+    }
 
     // Pure expressions
     @Override public void exitFunctionExp(ABSParser.FunctionExpContext ctx) {

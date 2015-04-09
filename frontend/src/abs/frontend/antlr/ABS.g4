@@ -80,10 +80,12 @@ eff_exp : pure_exp '.' 'get'                               # GetExp
         '(' pure_exp_list ')'                             # AsyncCallExp
     | o=pure_exp '.' m=IDENTIFIER
         '(' pure_exp_list ')'                             # SyncCallExp
+    | ((d=delta_id | c='core') '.')? 'original'
+        '(' pure_exp_list ')'                             # OriginalCallExp
     ;
 
-pure_exp : qualified_identifier '(' pure_exp_list ')'     # FunctionExp
-    | qualified_identifier '[' pure_exp_list ']'          # VariadicFunctionExp
+pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
+    | qualified_identifier '[' pure_exp_list ']'           # VariadicFunctionExp
     | qualified_type_identifier ('(' pure_exp_list ')')?   # ConstructorExp
     | op=(NEGATION | MINUS) pure_exp                       # UnaryExp
     | l=pure_exp op=(MULT | DIV | MOD) r=pure_exp          # MultExp
