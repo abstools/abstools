@@ -57,7 +57,7 @@ public class DeltaSamplesTest extends FrontendTest {
     public void test_P2P_P3() throws Exception {
         Model m = assertTypeCheckFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
         m.setNullPrintStream();
-        thrown.expect(WrongProgramArgumentException.class);
+        thrown.expect(DeltaModellingWithNodeException.class);
         m.flattenForProduct("P3");
     }
 
