@@ -158,10 +158,10 @@ The following table describes the meaning as well as the associativity and the p
 |e1 && e2 |logical and |left |Bool, Bool |Bool
 |e1 == e2 |equality |left |compatible |Bool
 |e1 != e2 |inequality |left |compatible |Bool
-|e1 < e2 |less than |left |number, number |Bool
-|e1 <= e2 |less than or equal to |left |number, number |Bool
-|e1 > e2 |greater than |left |number, number |Bool
-|e1 >= e2 |greater than or equal to |left |number, number |Bool
+|e1 < e2 |less than |left |compatible |Bool
+|e1 <= e2 |less than or equal to |left |compatible |Bool
+|e1 > e2 |greater than |left |compatible |Bool
+|e1 >= e2 |greater than or equal to |left |compatible |Bool
 |e1 + e2 |concatenation |left |String, String |String
 |e1 + e2 |addition |left |number, number |number
 |e1 - e2 |subtraction |left |number, number |number
