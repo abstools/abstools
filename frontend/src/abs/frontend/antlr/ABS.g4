@@ -113,7 +113,7 @@ pattern : '_'                                              # UnderscorePattern
     | STRINGLITERAL                                        # StringPattern
     | IDENTIFIER                                           # VarPattern
     | qualified_type_identifier
-        ('(' pattern (',' pattern)* ')')?                  # ConstructorPattern
+        ('(' (pattern (',' pattern)*)? ')')?               # ConstructorPattern
     ;
 
 var_or_field_ref : ('this' '.')? IDENTIFIER ;
