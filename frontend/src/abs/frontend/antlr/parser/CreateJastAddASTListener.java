@@ -194,7 +194,7 @@ new List<ModuleDecl>(),
 
     // Interfaces
     @Override public void exitInterface_decl(ABSParser.Interface_declContext ctx) {
-        setV(ctx, new InterfaceDecl(ctx.TYPE_IDENTIFIER().getText(), l(ctx.annotation()), l(ctx.e), l(ctx.methodsig())));
+        setV(ctx, new InterfaceDecl(ctx.qualified_type_identifier().getText(), l(ctx.annotation()), l(ctx.e), l(ctx.methodsig())));
     }
 
     @Override public void exitMethodsig(ABSParser.MethodsigContext ctx) {
@@ -233,7 +233,7 @@ new List<ModuleDecl>(),
 
     // Statements
     @Override public void exitVardeclStmt(ABSParser.VardeclStmtContext ctx) {
-        VarDecl v = new VarDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_use()), new Opt<Exp>());
+        VarDecl v = new VarDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), new Opt<Exp>());
         if (ctx.exp() != null) {
             v.setInitExp((Exp)v(ctx.exp()));
         }
@@ -508,7 +508,7 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitParam_decl(ABSParser.Param_declContext ctx) {
-        setV(ctx, new ParamDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_use()), l(ctx.annotation())));
+        setV(ctx, new ParamDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), l(ctx.annotation())));
     }
 
     @Override public void exitInterface_name(ABSParser.Interface_nameContext ctx) {
@@ -527,7 +527,21 @@ new List<ModuleDecl>(),
         // FIXME: could be an interface type!
         if (ctx.p.isEmpty()) {
             // normal type use
-            setV(ctx, new DataTypeUse(ctx.n.getText(), new List<Annotation>()));
+            setV(ctx, new DataTypeUse(ctx.n.getText(), l(ctx.annotation())));
+        } else {
+            // parametric type use
+            ParametricDataTypeUse p
+                = (ParametricDataTypeUse)setV(ctx, new ParametricDataTypeUse(ctx.n.getText(), l(ctx.annotation()), new List<TypeUse>()));
+            for (ABSParser.Type_useContext c : ctx.type_use()) {
+                p.addParam((TypeUse)v(c));
+            }
+        }
+    }
+
+    @Override public void exitType_exp(ABSParser.Type_expContext ctx) {
+        if (ctx.p.isEmpty()) {
+            // normal type use
+            setV(ctx, new UnresolvedTypeUse(ctx.n.getText(), new List<Annotation>()));
         } else {
             // parametric type use
             ParametricDataTypeUse p

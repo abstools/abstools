@@ -52,10 +52,16 @@ qualified_identifier : (TYPE_IDENTIFIER '.')* IDENTIFIER ;
 // CreateJastAddASTListener as well -- at the moment, we rely on there
 // being exactly one token
 any_identifier : qualified_type_identifier | qualified_identifier ;
-type_use : n=qualified_type_identifier
+// type_use has annotations
+type_use : annotation* n=qualified_type_identifier
+        ('<' p+=type_use (',' p+=type_use)*  '>')? ;
+// type_exp does not have annotations (on the base type)
+// This is how we (seem to) disambiguate between annotations on
+// methods/fields and their types.  Inherited from beaver grammar.
+type_exp : n=qualified_type_identifier
         ('<' p+=type_use (',' p+=type_use)*  '>')? ;
 paramlist : '(' (param_decl (',' param_decl)*)? ')' ;
-param_decl : annotation* type_use IDENTIFIER ;
+param_decl : annotation* type_exp IDENTIFIER ;
 
 interface_name : qualified_type_identifier ;
 delta_id : TYPE_IDENTIFIER ;
@@ -119,7 +125,7 @@ annotation : '[' (l=type_use ':')? r=pure_exp ']' ;
 
 // Statements
 
-stmt : annotation* type_use IDENTIFIER ('=' exp)? ';'              # VardeclStmt
+stmt : annotation* type_exp IDENTIFIER ('=' exp)? ';'              # VardeclStmt
     | annotation* var_or_field_ref '=' exp ';'                     # AssignStmt
     | annotation* 'skip' ';'                                       # SkipStmt
     | annotation* 'return' exp ';'                                 # ReturnStmt
@@ -187,7 +193,7 @@ function_decl : annotation*
 // Interfaces
 
 interface_decl : annotation*
-        'interface' TYPE_IDENTIFIER
+        'interface' qualified_type_identifier
         ('extends' e+=interface_name (',' e+=interface_name)*)?
         '{' methodsig* '}'
     ;
