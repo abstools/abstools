@@ -5,6 +5,8 @@ import * from ABS.DC;
 //abstraction for a customer
 type Customer = String;
 
+exception Crash;
+
 //abstraction for an identifier
 type Id = Int;
 def Id init() = 1;
@@ -25,7 +27,7 @@ data ServiceType = FAS | SUGGEST | DM;
 // A Service configuration defines 
 // * serviceType -- the type of service offered
 // * instances -- the amount of resources each instance would consume
-data Config = Config(ServiceType serviceType, List<DCData> instances); 
+data Config = Config(ServiceType serviceType, List<Int> instances); 
 
 // Process state
 data State = RUNNING | STOP;
@@ -67,9 +69,9 @@ def Bool unique<X>(List<X> list) =
 def List<X> add<X>(List<X> list, X v) = 
 	if inList(list, v) then list else Cons(v, list);
 
-//  Models an infrastructure service that allows one to acquire and release resources
+//  Models an infrastructure service that allows one to acquire and release cpu resources
 interface InfrastructureService {
-	DC acquire(Id id, DCData amount);
+	DC acquire(Id id, Int cpuamount);
 	Unit release(DC component);
 }
 
@@ -79,28 +81,26 @@ class InfrastructureServiceImpl implements InfrastructureService {
 	Map<Id, DC> inUse = EmptyMap;
 	
 	Int cpu(DC dc) {
-		Fut<DCData> cf = dc!available();
-		DCData cpu = cf.get;
-		return capacity(cpu);
+		Fut<InfRat> cf = dc!total(CPU);
+		InfRat cpu = cf.get;
+		return truncate(finvalue(cpu));
 	}
 		
-	DC acquire(Id id, DCData amount) {
-		assert amount != InfCPU;
+	DC acquire(Id id, Int cpuamount) {
 		Maybe<DC> md = lookup(inUse, id);
 		DC dc = null;
 		case md {
 			Nothing => {
-				dc = new DeploymentComponent(intToString(id), amount);
-				total = total + capacity(amount);
+				dc = new DeploymentComponent(intToString(id), map[Pair(CPU, cpuamount)]);
+				total = total + cpuamount;
 				inUse = InsertAssoc(Pair(id, dc), inUse);
 			}
 			Just(d) => {
 				dc = d;
 				Int cpu = this.cpu(dc);
-				Int amt = capacity(amount);
-				if (cpu < amt) {
-					Fut<Unit> inf = dc!incrementResources(amt - cpu); inf.get;
-					total = total + amt;
+				if (cpu < cpuamount) {
+					Fut<Unit> inf = dc!incrementResources(cpuamount - cpu, CPU); inf.get;
+					total = total + (cpuamount - cpu);
 				}	
 			}
 		}
@@ -209,9 +209,9 @@ class ServiceImpl(Id serviceId, ServiceType st, Customer c, Int cost) implements
 	
 	Int getCPU() {
 		DeploymentComponent dc = thisDC();
-		Fut<DCData> fdt = dc!total();
-		DCData dt = fdt.get;
-		return capacity(dt);
+		Fut<InfRat> fdt = dc!total(CPU);
+		InfRat dt = fdt.get;
+		return truncate(finvalue(dt));
 	}
 	
 	Unit moveTo(DeploymentComponent dc) {
@@ -262,9 +262,9 @@ class ServiceImpl(Id serviceId, ServiceType st, Customer c, Int cost) implements
 	
 }
 
-// A deployment service helps to deploy ALL types of service instance onto required resources.
+// A deployment service helps to deploy ALL types of service instance onto required cpu resources.
 interface DeploymentService {
-	Unit install(ResourceService service, DCData res);
+	Unit install(ResourceService service, Int cpures);
 	Unit uninstall(Id serviceId);
 	Unit start(Id serviceId);
 	Unit stop(Id serviceId);
@@ -275,12 +275,12 @@ class DeploymentServiceImpl(InfrastructureService rp) implements DeploymentServi
 	Map<Service, DC> allocations = EmptyMap;
 	Map<Id, Service> services = EmptyMap;
 
-	Unit install(ResourceService service, DCData res) {
+	Unit install(ResourceService service, Int cpures) {
 		Int id = await service!getServiceId();
 		assert lookup(services, id) == Nothing;
 		
 		//allocate resource
-		DC dc = await rp!acquire(id, res);
+		DC dc = await rp!acquire(id, cpures);
 		await service!moveTo(dc);
 		
 		allocations = InsertAssoc(Pair(service, dc), allocations);
@@ -432,7 +432,7 @@ interface PlatformService {
 //Platform service used by monitor to scale up/down a service
 interface MonitorPlatformService extends PlatformService {
 	//increase the number of service instances by n
-	Unit incrService(Id endPoint, List<DCData> instances);
+	Unit incrService(Id endPoint, List<Int> instances);
 	//decrease the number of service instances by n
 	Unit decrService(Id endPoint, List<Id> serviceIds);
 	//all existing endpoints 
@@ -441,8 +441,8 @@ interface MonitorPlatformService extends PlatformService {
 	Maybe<Service> getService(Id serviceId);
 	//service instance ids of all 'deployed' service instances referred by the given endPoint
 	List<Id> getServiceIds(Id endPoint);
-	//alter the resource of serviceId underlying resource by r
-	Unit alterResource(Id serviceId, DCData r);
+	//alter the cpu resource of serviceId underlying resource by r
+	Unit alterResource(Id serviceId, Int r);
 }
 
 def List<X> toList<X>(Set<X> s) =
@@ -570,7 +570,7 @@ implements MonitorPlatformService {
 		ServiceType st = serviceType(config);
 		assert lookupCustomerService(customers, customer, st) == Nothing;
 	
-		List<DCData> instances = instances(config);
+		List<Int> instances = instances(config);
 		//number of instances must be positive
 		assert instances != Nil;
 		
@@ -582,7 +582,7 @@ implements MonitorPlatformService {
 		List<Id> ids = Nil;
 		
 		while (instances != Nil) {
-			DCData res = head(instances);
+			Int res = head(instances);
 			Service service = this.createServiceInstance(customer, st, res);
 			Fut<Id> idf = service!getServiceId();
 			Id id = idf.get;
@@ -638,7 +638,7 @@ implements MonitorPlatformService {
 		customers = removeGlobalEndPoint(customers, endPoint);
 	}
 	
-	Service createServiceInstance(Customer customer, ServiceType st, DCData resource) {
+	Service createServiceInstance(Customer customer, ServiceType st, Int resource) {
 		serviceId = incr(serviceId);
 		
 		Id id = serviceId;
@@ -658,7 +658,7 @@ implements MonitorPlatformService {
 		return service;
 	} 
 	
-	Unit incrService(Id endPoint, List<DCData> instances) {
+	Unit incrService(Id endPoint, List<Int> instances) {
 		 assert instances != Nil;
 	
 		 Maybe<Pair<Customer, Config>> setting = keyPairs(customers, endPoint);
@@ -672,9 +672,9 @@ implements MonitorPlatformService {
 		 //install and start a new service instance
 		 List<Service> es = Nil;
 		 List<Id> ids = Nil;
-		 List<DCData> remaining = instances;
+		 List<Int> remaining = instances;
 		 while (remaining != Nil) {
-		 	DCData res = head(remaining);
+		 	Int res = head(remaining);
 		 	Service service = this.createServiceInstance(customer, st, res);
 		 	
 		 	//get the service instance id
@@ -734,7 +734,7 @@ implements MonitorPlatformService {
 			 
 		//uninstall
 		remains = serviceIds;
-		List<DCData> current = instances(oldC);
+		List<Int> current = instances(oldC);
 		while (remains != Nil) {
 			Id serviceId = head(remains); 
 			Fut<Unit> sf = ds!stop(serviceId); sf.get;
@@ -763,7 +763,7 @@ implements MonitorPlatformService {
 		uf = ds!uninstall(serviceId); uf.get;
 	}
 	
-	Unit alterResource(Id serviceId, DCData r) {
+	Unit alterResource(Id serviceId, Int r) {
 		Maybe<ResourceService> mservice = lookup(services, serviceId);
 		assert mservice != Nothing;
 		ResourceService ser = fromJust(mservice);
@@ -785,7 +785,7 @@ implements MonitorPlatformService {
 			Fut<ServiceType> fs = ser!getServiceType();
 			ServiceType st = fs.get;
 			
-			Service newSer = this.createServiceInstance(customer, st, CPU(cpu + capacity(r)));
+			Service newSer = this.createServiceInstance(customer, st, cpu + r);
 			Fut<Int> idf = newSer!getServiceId();
 			Int newId = idf.get;
 			
@@ -810,7 +810,7 @@ implements MonitorPlatformService {
 		 	this.uninstallInstance(endPoint, ser, serviceId);
 			
 			//new installation on different resources
-			Fut<Unit> uf = ds!install(ser, CPU(cpu + capacity(r))); uf.get;
+			Fut<Unit> uf = ds!install(ser, cpu + r); uf.get;
 			
 			//start service
 			uf = ds!start(serviceId); uf.get;
@@ -1028,15 +1028,15 @@ class LatencyMonitor(Int upper, MonitorPlatformService ps) implements Monitor {
 	
 	Unit init() { }
 	
-	DCData scaling(Service logger, Int latency) {
+	Int scaling(Service logger, Int latency) {
 		Fut<Int> fcpu = logger!getCPU();
 		Int cpu = fcpu.get;
 		Rat amount = cpu * (latency - upper/latency);
-		return CPU(max(1, truncate(amount)));
+		return max(1, truncate(amount));
 	}
 	
-	List<Pair<Id, DCData>> getLatencies(Int endPoint) {
-		List<Pair<Id, DCData>> scaling = Nil;
+	List<Pair<Id, Int>> getLatencies(Int endPoint) {
+		List<Pair<Id, Int>> scaling = Nil;
 		Fut<List<Id>> fservices = ps!getServiceIds(endPoint);
 		List<Id> services = fservices.get;
 		while (services != Nil) {
@@ -1048,7 +1048,7 @@ class LatencyMonitor(Int upper, MonitorPlatformService ps) implements Monitor {
 			Fut<Int> lif = logger!getLatency();
 			Int latency = lif.get;
 			if (latency > upper) {
-				DCData res = this.scaling(logger, latency);
+				Int res = this.scaling(logger, latency);
 				scaling = Cons(Pair(serviceId, res), scaling);
 			}
 			services = tail(services);
@@ -1058,12 +1058,12 @@ class LatencyMonitor(Int upper, MonitorPlatformService ps) implements Monitor {
 	
 	Action monitor() {
 		log = log + 1;
-		List<Pair<Id, DCData>> scaling = Nil; 
+		List<Pair<Id, Int>> scaling = Nil;
 		Fut<List<Int>> ef = ps!getEndPoints();
 		List<Int> endPoints = ef.get;
 		while (endPoints != Nil) {
 			Int endPoint = head(endPoints);
-			List<Pair<Id, DCData>> setting = this.getLatencies(endPoint);
+			List<Pair<Id, Int>> setting = this.getLatencies(endPoint);
 			scaling = concatenate(setting, scaling);
 			endPoints = tail(endPoints);
 		}
@@ -1077,14 +1077,13 @@ class LatencyMonitor(Int upper, MonitorPlatformService ps) implements Monitor {
 	
 }
 
-class ScaleResourceAction(List<Pair<Id, DCData>> scalings, MonitorPlatformService ps) implements Action {
+class ScaleResourceAction(List<Pair<Id, Int>> scalings, MonitorPlatformService ps) implements Action {
 	
 	Unit action() {
 		while (scalings != Nil) {
-			Pair<Id, DCData> scaling = head(scalings);
+			Pair<Id, Int> scaling = head(scalings);
 			Id instance = fst(scaling);
-			DCData resource = snd(scaling);
-			assert resource != InfCPU;
+			Int resource = snd(scaling);
 			Fut<Unit> fu = ps!alterResource(instance, resource); fu.get;
 			scalings = tail(scalings);
 		}
@@ -1096,18 +1095,18 @@ data Scale = UP | DOWN;
 
 //scale up/down the number of instances according to the scaling setting
 //scaling setting is a list of pairs of endpoint id to the number of instances to add/remove  
-class ScaleInstanceAction(List<Triple<Int, Scale, Either<List<DCData>, List<Int>>>> scalings, MonitorPlatformService ps) implements Action {
+class ScaleInstanceAction(List<Triple<Int, Scale, List<Int>>> scalings, MonitorPlatformService ps) implements Action {
 	
 	Unit action() {
 		while (scalings != Nil) {
-			Triple<Int, Scale, Either<List<DCData>, List<Int>>> scaling = head(scalings);
+			Triple<Int, Scale, List<Int>> scaling = head(scalings);
 			Int endPoint = fstT(scaling);
 			Scale scale = sndT(scaling);
-			Either<List<DCData>, List<Int>> instances = trd(scaling);
+			List<Int> instances = trd(scaling);
 			if (scale == UP) {
-				Fut<Unit> fu = ps!incrService(endPoint, left(instances)); fu.get;
+				Fut<Unit> fu = ps!incrService(endPoint, instances); fu.get;
 			} else {
-				Fut<Unit> fu = ps!decrService(endPoint, right(instances)); fu.get;
+				Fut<Unit> fu = ps!decrService(endPoint, instances); fu.get;
 			}
 			scalings = tail(scalings);
 		}
@@ -1162,9 +1161,9 @@ type CustomerConfig = Pair<Customer, List<Pair<Config, Int>>>;
 
 class Main implements Main {
 
-	CustomerConfig c1 = Pair("c1", list[Pair(Config(FAS, list[CPU(1)]), 1)]);
-	CustomerConfig c2 = Pair("c2", list[Pair(Config(FAS, list[CPU(1)]), 1)]);
-	CustomerConfig c3 = Pair("c3", list[Pair(Config(FAS, list[CPU(1)]), 1)]);
+	CustomerConfig c1 = Pair("c1", list[Pair(Config(FAS, list[1]), 1)]);
+	CustomerConfig c2 = Pair("c2", list[Pair(Config(FAS, list[1]), 1)]);
+	CustomerConfig c3 = Pair("c3", list[Pair(Config(FAS, list[1]), 1)]);
 
 	//scale on the number of customers...
 	//scale on the number of service instances...
@@ -1318,7 +1317,7 @@ modifies class ServiceImpl {
 		Int chance = random(100);
 		if (chance >= percent) {
 			Int id = await service!getServiceId();
-			abort "error";
+			throw Crash;
 		}
 		return original(size);
 	}
