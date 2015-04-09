@@ -70,6 +70,7 @@ public class ParserTest extends FrontendTest {
     public void ifExp() {
         assertParseOk("{ (if True then x else x).get; }" ); 
         assertParseOk("{ Int x = 5; if(if 4 == 5 then True else False) { x = 4; } else { x = 3; } }" ); 
+        assertParseOk("{ if True then x else x.get; }" );
     }
     
 
