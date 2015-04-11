@@ -40,9 +40,7 @@ The following tools are available from the command line:
                    deadlock analysis pre-installed
 - key-abs          Deductive verification tool
 - emacs            Emacs, configured to edit and compile ABS
-- costabs_static,
-  deadlock_static,
-  mhp_static       Command-line interface to SACO
+- costabs_exe      Command-line interface to SACO
 
 On Windows / Mac OS X, start an X server (Xming / XQuartz)
 MSG
@@ -89,26 +87,22 @@ echo
 sudo apt-get install -q -y eclipse graphviz
 
 echo
-echo Installing eclipse plugins: ABS, SACO, deadlock analysis
+echo Building the ABS compiler and eclipse plugins
 echo
-eclipse -application org.eclipse.equinox.p2.director -noSplash \
-        -repository \
-http://docs.abs-models.org/update-site,\
-http://download.eclipse.org/releases/indigo/ \
-        -installIUs \
-org.abs-models.abs.compiler.feature.group,\
-org.abs-models.abs.plugin,\
-org.abs-models.sda.feature.group,\
-org.abs-models.sdedit.feature.group,\
-org.abs-models.apet.feature.group
+(cd /vagrant/eclipse-plugin ; ant -Declipse.home=/usr build-all-plugins generate-update-site)
 
 eclipse -application org.eclipse.equinox.p2.director -noSplash \
         -repository \
-http://costa.ls.fi.upm.es/saco/sw/update-site,\
+file:/vagrant/eclipse-plugin/update-site,\
 http://download.eclipse.org/releases/indigo/ \
-        -installIUs \
-eu.hatsproject.costabs.feature.group
-# org.abs-models.absplugin.feature.group
+-installIUs \
+org.abs-models.costabs.feature.group,\
+org.abs-models.apet.feature.group,\
+org.abs-models.abs.compiler.feature.group,\
+org.abs-models.sda.feature.group,\
+org.abs-models.abs.plugin,\
+org.abs-models.sdedit.feature.group
+
 
 echo
 echo Installing KeY-ABS
@@ -129,10 +123,6 @@ mkdir -p /home/vagrant/.key
 echo
 echo Setting up the user environment: .bashrc, .emacs
 echo
-# Find the SACO executable.
-COSTABSBINDIR=$(dirname $(find /home/vagrant/.eclipse -name costabs_static))
-chmod a+x $COSTABSBINDIR/costabs_static $COSTABSBINDIR/deadlock_static \
-      $COSTABSBINDIR/mhp_static
 
 # Set up Emacs
 if [ ! -e /home/vagrant/.emacs ] ; then
@@ -149,8 +139,7 @@ fi
 
 # Set up paths
 cat >/home/vagrant/.abstoolsrc <<EOF
-COSTABSBINDIR=\$(dirname \$(find /home/vagrant/.eclipse -name costabs_static))
-PATH=\$PATH:/vagrant/frontend/bin/bash:\$COSTABSBINDIR
+PATH=\$PATH:/vagrant/frontend/bin/bash:/vagrant/costabs-plugin
 EOF
 
 if [ -z "$(grep abstoolsrc /home/vagrant/.bashrc)" ] ; then
@@ -158,11 +147,6 @@ cat >>/home/vagrant/.bashrc <<EOF
 . .abstoolsrc
 EOF
 fi
-
-echo
-echo Rebuilding the ABS compiler
-echo
-(cd /vagrant/frontend ; ant dist)
 
   SHELL
 end
