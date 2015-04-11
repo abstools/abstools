@@ -55,8 +55,8 @@
 		</condition>
 	    <antcall target="exitIfEclipseHomeNotSet"></antcall>
 		
-        <fileset id="eclipse-plugin-jars" dir="${eclipse.home}/plugins">
-            <include name="**/org.eclipse.*" />
+        <fileset id="eclipse-plugin-jars" dir="${eclipse.home}">
+            <include name="**/plugins/**/org.eclipse.*" />
         </fileset>
 		
         <path id="build.classpath">

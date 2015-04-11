@@ -50,8 +50,8 @@
 
     <fail unless="eclipse.home">Please set 'eclipse.home'!</fail>
 
-        <fileset id="eclipse-plugin-jars" dir="${eclipse.home}/plugins">
-            <include name="**/org.eclipse.*" />
+        <fileset id="eclipse-plugin-jars" dir="${eclipse.home}">
+            <include name="**/plugins/**/org.eclipse.*" />
         </fileset>
 
         <path id="build.classpath">
@@ -112,10 +112,10 @@
   </target>
 
   <target name="generate-update-site" depends="init">
-    <java classname="org.eclipse.core.launcher.Main" fork="true">
+    <java classname="org.eclipse.equinox.launcher.Main" fork="true">
       <classpath>
-        <fileset dir="${eclipse.home}/plugins"
-                      includes="org.eclipse.equinox.launcher_*.jar" />
+        <fileset dir="${eclipse.home}"
+                      includes="**/plugins/org.eclipse.equinox.launcher_*.jar" />
       </classpath>
       <arg value="-application" />
       <arg value="org.eclipse.ant.core.antRunner" />
