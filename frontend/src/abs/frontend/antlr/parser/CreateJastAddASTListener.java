@@ -697,6 +697,27 @@ new List<ModuleDecl>(),
         setV(ctx, new AddExportModifier((Export)v(ctx.module_export())));
     }
 
+    // Updates (?)
+    @Override public void exitUpdateDecl(ABSParser.UpdateDeclContext ctx) {
+        setV(ctx, new UpdateDecl(ctx.TYPE_IDENTIFIER().getText(), l(ctx.object_update())));
+    }
+    
+    @Override public void exitObjectUpdateDecl(ABSParser.ObjectUpdateDeclContext ctx) {
+        setV(ctx, new ObjectUpdate(ctx.qualified_type_identifier().getText(),
+                                   new AwaitStmt(new List(), (Guard)v(ctx.guard())),
+                                   new UpdatePreamble(l(ctx.update_preamble_decl())),
+                                   l(ctx.pre), l(ctx.post)));
+    }
+    
+    @Override public void exitObjectUpdateAssignStmt(ABSParser.ObjectUpdateAssignStmtContext ctx) {
+        setV(ctx, new AssignStmt(new List(), (VarOrFieldUse)v(ctx.var_or_field_ref()), (Exp)v(ctx.exp())));
+    }
+
+    @Override public void exitUpdatePreambleDecl(ABSParser.UpdatePreambleDeclContext ctx) {
+        setV(ctx, new VarDeclStmt(new List(), new VarDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), new Opt())));
+    }
+
+
     // Productline
     @Override public void exitProductline_decl(ABSParser.Productline_declContext ctx) {
         setV(ctx, new ProductLine(ctx.TYPE_IDENTIFIER().getText(),
