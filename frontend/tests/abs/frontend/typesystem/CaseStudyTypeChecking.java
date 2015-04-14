@@ -30,24 +30,14 @@ import abs.frontend.parser.Main;
 @RunWith(Parameterized.class)
 public class CaseStudyTypeChecking extends FrontendTest {
 
-    // default relative path to https://repos.hats-project.eu:444/svn/hats/CaseStudies/models
     /**
-     * Use a property to be able to point JUnit in the right direction and override the default:
-     * the first one is from HATS and may become outdated; the 2nd from the ENVISAGE project
-     * within our ABS repo.
+     * Use a property to be able to point JUnit in the right direction and override the default
      */
-    private static String CASESTUDY_DIR = System.getProperty("abs.junit.casestudies", "../../../../CaseStudies/models/");
     private static String ENVISAGE_DIR = System.getProperty("abs.junit.envisage", "../examples/");
 
     @Parameters(name="{0}")
     public static Collection<?> data() {
-        final Object[][] data = new Object[][] { { CASESTUDY_DIR + "fredhopper/replication/abs" }
-                                               , { CASESTUDY_DIR + "fredhopper/replication/abs-single/annual-meeting-2011" }
-                                               , { CASESTUDY_DIR + "fredhopper/replication/abs-single/annual-meeting-2011-async" }
-                                               , { CASESTUDY_DIR + "tradingsystem"}
-                                               , { CASESTUDY_DIR + "vof"}
-                                               , { ENVISAGE_DIR + "T4.3/D4.3.1" }
-                                               /* Individual models: */
+        final Object[][] data = new Object[][] { { ENVISAGE_DIR + "T4.3/D4.3.1/FredhopperCloudServices.abs" }
                                                , { ENVISAGE_DIR + "T4.2/D4.2.1/Indexing.abs" }
                                                , { ENVISAGE_DIR + "T4.2/D4.2.1/Crawling.abs" }
                                                , { ENVISAGE_DIR + "T4.2/D4.2.1/MapReduce.abs" }

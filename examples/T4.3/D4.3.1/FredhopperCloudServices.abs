@@ -5,7 +5,7 @@ import * from ABS.DC;
 //abstraction for a customer
 type Customer = String;
 
-exception Crash;
+// exception Crash;
 
 //abstraction for an identifier
 type Id = Int;
