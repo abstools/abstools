@@ -22,7 +22,6 @@ public class ABSTest {
     public static enum Config {
         NONE,
         WITH_STD_LIB,
-        WITH_DB_LIB,
         WITHOUT_MODULE_NAME,
         WITH_LOC_INF,
         EXPECT_PARSE_ERROR,
@@ -80,14 +79,10 @@ public class ABSTest {
         String preamble = "module UnitTest; export *; ";
         if (isSet(WITH_STD_LIB, config))
             preamble = preamble + " import * from ABS.StdLib;";
-        if (isSet(WITH_DB_LIB, config))
-            for (String module : new String[] { "ABS.StdLib", "ABS.DB", "ABS.DB.Structure",
-                    "ABS.DB.Operators.Structure", "ABS.DB.Transactions", "ABS.DB.Helpers" })
-                preamble = preamble + " import * from " + module + ";";
         if (!isSet(WITHOUT_MODULE_NAME, config))
             s = preamble + s;
         try {
-            Model p = Main.parseString(s, isSet(WITH_STD_LIB, config), isSet(WITH_DB_LIB, config),
+            Model p = Main.parseString(s, isSet(WITH_STD_LIB, config),
                     isSet(ALLOW_INCOMPLETE_EXPR, config));
 
             if (isSet(EXPECT_PARSE_ERROR,config)) {

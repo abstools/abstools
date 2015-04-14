@@ -76,15 +76,10 @@ public class Main {
 
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
     protected boolean preprocess = false; //Preprocessor
-    public static final String ABS_DB_LIB_PATH = "abs/lang/db/";
-    public static final String[] ABS_DB_LIBS =
-            {"DbHelpers.abs", "DbMain.abs", "DbOperators.abs", "DbOperatorsStructure.abs",
-             "DbStructure.abs", "DbTransactions.abs", "DbExecutionListener.abs", "DbCosts.abs"};
     protected boolean verbose = false;
     protected boolean typecheck = true;
     protected boolean stdlib = true;
     protected boolean useJFlexAndBeaver = false;
-    protected boolean dblib = Constants.USE_DBLIB_BY_DEFAULT;
     protected boolean dump = false;
     protected boolean debug = false;
     protected boolean allowIncompleteExpr = false;
@@ -142,10 +137,6 @@ public class Main {
         this.stdlib = withStdLib;
     }
     
-    public void setWithDbLib(boolean withDbLib) {
-        this.dblib = withDbLib;
-    }
-    
     public void setAllowIncompleteExpr(boolean b) {
         allowIncompleteExpr = b;
     }
@@ -176,10 +167,6 @@ public class Main {
                 stdlib = false;
             else if (arg.equals("-with-old-parser"))
                 useJFlexAndBeaver = true;
-            else if (arg.equals("-dblib"))
-                dblib = true;
-            else if (arg.equals("-nodblib"))
-                dblib = false;
             else if (arg.equals("-loctypestats"))
                 locationTypeStats = true;
             else if (arg.equals("-loctypes")) {
@@ -262,8 +249,6 @@ public class Main {
 
         if (stdlib)
             units.add(getStdLib());
-        if (dblib)
-            units.addAll(getDbLibs());
 
         List<CompilationUnit> unitList = new List<CompilationUnit>();
         for (CompilationUnit u : units) {
@@ -681,18 +666,6 @@ public class Main {
         return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream));
     }
     
-    public Collection<CompilationUnit> getDbLibs() throws IOException {
-        Collection<CompilationUnit> units = new ArrayList<CompilationUnit>();
-        for (String absDbLib : ABS_DB_LIBS) {
-            absDbLib = ABS_DB_LIB_PATH + absDbLib;
-            final InputStream stream = Main.class.getClassLoader().getResourceAsStream(absDbLib);
-            if (stream == null)
-                printErrorAndExit(String.format("Could not find DB Standard Library %s", absDbLib));
-            units.add(parseUnit(new File(absDbLib), null, new InputStreamReader(stream)));
-        }
-        return units;
-    }
-
     protected void printUsage() {
         printHeader();
         System.out.println(""
@@ -716,7 +689,6 @@ public class Main {
                 + "  -nostdlib      do not include the standard lib\n"
                 + "  --with-old-parser\n"
                 + "                 use old (deprecated) parser implementation\n"
-                + "  -dblib         include the database library (required for the SQL extensions)\n"
                 + "  -loctypes      enable location type checking\n"
                 + "  -locdefault=<loctype> \n"
                 + "                 sets the default location type to <loctype>\n"
@@ -824,9 +796,6 @@ public class Main {
         List<CompilationUnit> units = new List<CompilationUnit>();
         if (stdlib)
             units.add(getStdLib());
-        if (dblib)
-            for (final CompilationUnit unit : getDbLibs())
-                units.add(unit);
         units.add(parseUnit(file, sourceCode, reader));
         return new Model(units);
     }
@@ -847,7 +816,7 @@ public class Main {
     }
 
     /**
-     * Calls {@link #parseString(String, boolean, boolean, boolean)} with withDbLib set to false.
+     * Parses String s and returns Model.
      * 
      * @param s
      * @param withStdLib
@@ -856,13 +825,8 @@ public class Main {
      * @throws Exception
      */
     public static Model parseString(String s, boolean withStdLib, boolean allowIncompleteExpr) throws Exception {
-        return parseString(s, withStdLib, false, allowIncompleteExpr);
-    }
-    
-    public static Model parseString(String s, boolean withStdLib, boolean withDbLib, boolean allowIncompleteExpr) throws IOException {
         Main m = new Main();
         m.setWithStdLib(withStdLib);
-        m.setWithDbLib(withDbLib);
         m.setAllowIncompleteExpr(allowIncompleteExpr);
         return m.parse(null, s, new StringReader(s));
     }
