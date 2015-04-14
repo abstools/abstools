@@ -373,10 +373,13 @@ attr_assignment : IDENTIFIER '=' (i=INTLITERAL | b=TYPE_IDENTIFIER | s=STRINGLIT
 // Products
 product_decl : 'product' TYPE_IDENTIFIER
         '(' (feature (',' feature)*)? ')'
-        // TODO: module reconfiguration
-        // ('{' reconfiguration '}'
-        // | ';')
-        ';'
+        ('{' product_reconfiguration* '}'
+        | ';')
+    ;
+
+product_reconfiguration : product=TYPE_IDENTIFIER
+        'delta' delta_id (',' delta_id)*
+        'stateupdate' update=TYPE_IDENTIFIER ';'
     ;
 
 // mTVL Feature model

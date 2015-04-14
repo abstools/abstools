@@ -802,9 +802,13 @@ new List<ModuleDecl>(),
     // Products
 
     @Override public void exitProduct_decl(ABSParser.Product_declContext ctx) {
-        // TODO: module reconfiguration
         setV(ctx, new Product(ctx.TYPE_IDENTIFIER().getText(),
-                              l(ctx.feature()), new List()));
+                              l(ctx.feature()), l(ctx.product_reconfiguration())));
+    }
+
+    @Override public void exitProduct_reconfiguration(ABSParser.Product_reconfigurationContext ctx) {
+        setV(ctx, new Reconfiguration(ctx.product.getText(),
+                                      l(ctx.delta_id()), ctx.update.getText()));
     }
 
     // mTVL
