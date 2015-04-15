@@ -573,17 +573,110 @@ interface DeploymentComponent {
 }
 
 interface CloudProvider {
-    // launchInstance has a delay, the others are instantaneous
-    // launchInstance might hand out an already-running instance.
+    // (pre)launchInstance might have a delay, the others are instantaneous.
+    // launchInstance might hand out an already-running instance if it has
+    // been released; in this case there will be no delay.
+    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d);
     DeploymentComponent launchInstance(Map<Resourcetype, Rat> description);
-    DeploymentComponent launchInstanceNonexclusively(Map<Resourcetype, Rat> description);
-    // acquireInstance, releaseInstance are called from deployment components 
+    // acquireInstance, releaseInstance are called from deployment components.
+    // launchInstance does the equivalent of acquireInstance.
     Bool acquireInstance(DeploymentComponent instance);
     Bool releaseInstance(DeploymentComponent instance);
     Bool killInstance(DeploymentComponent instance);
 
     Rat getAccumulatedCost();
 }
+
+class CloudProvider(String name) implements CloudProvider {
+    // Preliminary version - mind the FIXMEs!
+    Set<DeploymentComponent> launchedInstances = set[];
+    Set<DeploymentComponent> acquiredInstances = set[];
+    Set<DeploymentComponent> killedInstances = set[];
+    Int instanceCounter = 0;
+
+    Unit run() {
+        // TODO: loop with "await duration(1, 1)", sum up costs of deployment
+        // components in launchedInstances, launchedInstancesNonEx,
+        // acquiredInstances that have crossed their accounting period
+        skip;
+    }
+
+    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
+        // Until we have a way of actually removing DCs, might as well re-use
+        // them
+        DeploymentComponent result = this.findMatchingInstance(killedInstances, d);
+        if (result != null) {
+            killedInstances = remove(killedInstances, result);
+            launchedInstances = insertElement(launchedInstances, result);
+        } else {
+            result = new DeploymentComponent(name + "-"
+                + toString(instanceCounter), d);
+            launchedInstances = insertElement(launchedInstances, result);
+            // TODO: await for startup time here (and only here)
+            result!setProvider(this);
+        }
+        return result;
+    }
+
+    DeploymentComponent launchInstance(Map<Resourcetype, Rat> d) {
+        DeploymentComponent result = this.prelaunchInstance(d);
+        acquiredInstances = insertElement(acquiredInstances, result);
+        return result;
+    }
+
+    Bool acquireInstance(DeploymentComponent instance) {
+        Bool result = True;
+        if (contains(acquiredInstances, instance)) {
+            result = False;
+        } else {
+            acquiredInstances = insertElement(acquiredInstances, instance);
+        }
+        return result;
+    }
+    Bool releaseInstance(DeploymentComponent instance) {
+        // FIXME: Currently we do not protect against double-release and always
+        // return True.  Once we have means of testing whether there is still
+        // activity on a deployment component, we could refuse to release it in
+        // that case and return False.
+        if (contains(acquiredInstances, instance)) {
+            acquiredInstances = remove(acquiredInstances, instance);
+        }
+        return True;
+    }
+
+    Bool killInstance(DeploymentComponent instance) {
+        // Refuse to kill an acquired instance.
+        // FIXME: is this the right thing?
+        Bool result = ~(contains(acquiredInstances, instance));
+        if (result) {
+            launchedInstances = remove(launchedInstances, instance);
+            killedInstances = insertElement(killedInstances, instance);
+        }
+        return result;
+    }
+
+    Rat getAccumulatedCost() {
+        // TODO: implement
+        return -1;
+    }
+
+    DeploymentComponent findMatchingInstance(Set<DeploymentComponent> instances,
+        Map<Resourcetype, Rat> description)
+        {
+            DeploymentComponent result = null;
+            while (~emptySet(instances) && result == null) {
+                DeploymentComponent instance = take(instances);
+                instances = remove(instances, instance);
+                Bool matches = await instance!matchesDescription(description);
+                if (matches) {
+                    result = instance;
+                }
+            }
+            return result;
+        }
+    }
+
+
 
 class DeploymentComponent (String description, Map<Resourcetype, Rat> initconfig)
 implements DeploymentComponent {
