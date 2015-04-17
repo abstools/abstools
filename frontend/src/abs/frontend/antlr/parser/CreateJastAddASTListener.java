@@ -9,8 +9,6 @@ import abs.frontend.ast.*;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
-import choco.cp.solver.constraints.integer.bool.BoolTimesXYZ;
-
 /**
  * This class creates the JastAdd AST from an Antlr parse tree.
  *
@@ -35,6 +33,8 @@ public class CreateJastAddASTListener extends ABSBaseListener {
      * value.  Returns the passed-in JastAdd value.
      */
     private ASTNode<?> setV(ParserRuleContext node, ASTNode<?> value) {
+        assert node != null;
+        assert node.stop != null;
         value.setPosition(beaver.Symbol.makePosition(node.start.getLine(), node.start.getCharPositionInLine()),
                           beaver.Symbol.makePosition(node.stop.getLine(), node.stop.getCharPositionInLine()));
         value.setFileName(this.filename);
