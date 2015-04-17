@@ -532,7 +532,7 @@ export DeploymentComponent, CloudProvider;
 // Annotations
 export DC, Cost, Size, MaxSize, CogLocation;
 // Datatypes, Constructors
-export Resourcetype, CPU, Bandwidth, InfRat, Fin;
+export Resourcetype, CPU, Bandwidth, Memory, InfRat, Fin;
 // Functions
 export thisDC, finvalue;
 import * from ABS.StdLib;
@@ -619,6 +619,7 @@ class CloudProvider(String name) implements CloudProvider {
         } else {
             result = new DeploymentComponent(name + "-"
                 + toString(instanceCounter), d);
+            instanceCounter = instanceCounter + 1;
             launchedInstances = insertElement(launchedInstances, result);
             // TODO: await for startup time here (and only here)
             result!setProvider(this);
