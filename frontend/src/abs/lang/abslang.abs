@@ -441,6 +441,11 @@ def Duration subtractFromDuration(Duration d, Rat v) =
       Duration(x) => Duration(max(x - v, 0));
   };
 
+// Annotation data types for KeyABS invariants, preconditions, postconditions
+data Inv;
+data Pre;
+data Post;
+
 // Annotation data type to express deadlines:
 // [Deadline: Duration(5)] o!m();
 type Deadline = Duration;

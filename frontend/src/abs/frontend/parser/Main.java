@@ -91,6 +91,8 @@ public class Main {
                abs.backend.coreabs.CoreAbsBackend.main(args);
            } else if (argslist.contains("-prettyprint")) {
                abs.backend.prettyprint.PrettyPrinterBackEnd.main(args);
+           } else if (argslist.contains("-keyabs")) {
+               abs.backend.keyabs.KeyAbsBackend.main(args);
            } else {
                Model m = parse(args);
                if (m.hasParserErrors()) {
