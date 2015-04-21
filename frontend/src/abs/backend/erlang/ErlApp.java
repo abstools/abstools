@@ -21,6 +21,8 @@ import java.util.jar.JarFile;
 
 import org.apache.commons.io.FileUtils;
 
+import abs.backend.common.CodeStream;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
@@ -40,7 +42,7 @@ public class ErlApp {
     public File destCodeDir;
     public File destIncludeDir;
 
-    public Map<String, ErlangCodeStream> funMod = new HashMap<String, ErlangCodeStream>();
+    public Map<String, CodeStream> funMod = new HashMap<String, CodeStream>();
 
     public ErlApp(File destDir) throws IOException {
         super();
@@ -54,12 +56,12 @@ public class ErlApp {
         copyRuntime();
     }
 
-    public ErlangCodeStream createSourceFile(String moduleName) throws FileNotFoundException, UnsupportedEncodingException {
-        return new ErlangCodeStream(new File(destCodeDir, moduleName + ".erl"));
+    public CodeStream createSourceFile(String moduleName) throws FileNotFoundException, UnsupportedEncodingException {
+        return new CodeStream(new File(destCodeDir, moduleName + ".erl"));
     }
 
-    public ErlangCodeStream createIncludeFile(String filename) throws FileNotFoundException, UnsupportedEncodingException {
-        return new ErlangCodeStream(new File(destIncludeDir, filename + ".hrl"));
+    public CodeStream createIncludeFile(String filename) throws FileNotFoundException, UnsupportedEncodingException {
+        return new CodeStream(new File(destIncludeDir, filename + ".hrl"));
     }
 
 
@@ -68,9 +70,9 @@ public class ErlApp {
      * 
      * This method creates the necessary stream.
      */
-    public ErlangCodeStream getFunStream(String moduleName) throws FileNotFoundException, UnsupportedEncodingException {
+    public CodeStream getFunStream(String moduleName) throws FileNotFoundException, UnsupportedEncodingException {
         if (!funMod.containsKey(moduleName)) {
-            ErlangCodeStream ecs = new ErlangCodeStream(new File(destCodeDir, ErlUtil.getModuleName(moduleName)
+            CodeStream ecs = new CodeStream(new File(destCodeDir, ErlUtil.getModuleName(moduleName)
                     + "_funs.erl"));
             funMod.put(moduleName, ecs);
             ecs.pf("-module(%s).", ErlUtil.getModuleName(moduleName) + "_funs");
@@ -83,7 +85,7 @@ public class ErlApp {
     }
 
     public void close() {
-        for (Entry<String, ErlangCodeStream> e : funMod.entrySet())
+        for (Entry<String, CodeStream> e : funMod.entrySet())
             e.getValue().close();
         funMod.clear();
     }
@@ -168,13 +170,13 @@ public class ErlApp {
     }
 
     public void generateModuleDefinitions(String absModulename, String erlModulename) throws FileNotFoundException, UnsupportedEncodingException {
-        ErlangCodeStream hcs = createIncludeFile("absmodulename");
+        CodeStream hcs = createIncludeFile("absmodulename");
         hcs.println("%%This file is licensed under the terms of the Modified BSD License.");
         hcs.println("-undef(ABSMAINMODULE).");
         hcs.println("-define(ABSMAINMODULE," + erlModulename + ").");
         hcs.close();
 
-        ErlangCodeStream acs = new ErlangCodeStream(new File(destCodeDir, erlModulename + ".app.src"));
+        CodeStream acs = new CodeStream(new File(destCodeDir, erlModulename + ".app.src"));
         acs.println("{application, " + erlModulename + ",");
         acs.println(" [");
         acs.println("  {description, \"Generated code for ABS module '" + absModulename + "'\"},");

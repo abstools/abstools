@@ -5,6 +5,7 @@ package abs.backend.erlang;
 
 import java.io.IOException;
 
+import abs.backend.common.CodeStream;
 import abs.backend.erlang.ErlUtil.Mask;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FieldDecl;
@@ -22,7 +23,7 @@ import com.google.common.collect.Iterables;
  * 
  */
 public class ClassGenerator {
-    private final ErlangCodeStream ecs;
+    private final CodeStream ecs;
     private final ClassDecl classDecl;
     private final String modName;
     private final boolean hasFields;
