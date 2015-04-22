@@ -11,7 +11,7 @@
 grammar ABS;
 
 TraditionalComment : '/*' .*? '*/' -> skip ;
-EndOfLineComment : '//' .*? '\n' -> skip ;
+EndOfLineComment : '//' .*? ('\n' | EOF) -> skip ;
 WhiteSpace : [ \t\f\r\n]+ -> skip ;
 
 // Common lexical elements
