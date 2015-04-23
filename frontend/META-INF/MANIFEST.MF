@@ -12,8 +12,8 @@ Bundle-ClassPath: .,
  lib/choco-solver-2.1.1.jar,
  lib/commons-io-2.4.jar,
  lib/semisolver.jar,
+ lib/antlr-4.2.2-complete.jar,
  lib/guava-15.0.jar
- lib/antlr-4.2.2-complete.jar
 Eclipse-BundleShape: dir
 Export-Package: .,
  abs;uses:="abs.frontend.ast",
