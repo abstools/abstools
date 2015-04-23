@@ -24,7 +24,7 @@ public class FinalAnnotationTypeExtension extends DefaultTypeSystemExtension {
         if (decl instanceof TypedVarOrFieldDecl) {
             TypedVarOrFieldDecl d = (TypedVarOrFieldDecl)decl;
             // Not sure if this code will encounter delta bodies:
-            if (d != null && d.isFinal()) {
+            if (d.isFinal()) {
                 String name = d.getName();
                 boolean isField = (d instanceof FieldDecl);
                 String kind = isField ? "field" : "variable";
