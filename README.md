@@ -1,12 +1,63 @@
 ABS Tools
 =========
 
-Inside this repository we develop the core tools of the ABS modelling language. 
-The layout follows the usual svn convention with trunk, branches and tags.
+Inside this repository we develop the core tools of the ABS modelling
+language.  Further information can be found on http://abs-models.org/
 
-This project is organised via "redmine" which provides a bug tracker, wiki and more:
-	https://envisage.ifi.uio.no:8080/redmine/projects/abstools
-Further information can als be found on http://abs-models.org/
+This project is currently organised via "redmine" which provides a bug
+tracker, wiki and more:
+https://envisage.ifi.uio.no:8080/redmine/projects/abstools
+
+Folders
+-------
+
+* `eclipse-plugin` - the Eclipse plugin of the ABS IDE
+
+* `frontend` - the ABS frontend as well as several backends like the
+  Java backend and the Maude backend
+
+* `abs-docs` - a markdown-flavored ABS manual, currently being written
+
+* `Documentation` - a complete LaTeX ABS reference manual, still
+  mostly up-to-date
+
+* `sdedit-for-abs` - a modified version of sdedit
+  (http://sdedit.sourceforge.net) for the visualization of UML sequence
+  charts
+
+* `tools-website`  - the content of the tools.hats-project.eu website
+
+* `maven-support` - Maven plugin for generating Java/Maude from ABS,
+  testing and packaging ABS codes
+
+* `org.abs-models.releng` - Files used by Jenkins for continuous integration
+
+* `abs-packages` - demonstration and description of how to use ABS
+  packages (with Maven dependencies management)
+
+* `abs-unit` - demonstration, description and initial ideas about the
+  ABSUnit (a unit testing framework for ABS) (with Maven dependencies
+  management)
+
+* `costabs-plugin` - The COSTA plugin for ABS
+
+* `apet-plugin` - The aPET plugin for ABS
+
+* `sda-plugin` - Bologna Deadlock-checker plugin for ABS
+
+* various leftovers from previous projects, to be evaluated and
+  reactivated or pruned
+
+Using Vagrant
+-------------
+
+To develop the ABS tools without installing additional software, you
+can use [Vagrant](https://www.vagrantup.com).  Vagrant will start a
+Linux virtual machine and install the needed dependencies.  In the
+`abstools/` directory, run the command `vagrant up` to provision and
+start a VM, then `vagrant ssh` to connect.
+
+Within the VM, this directory is accessible in the directory `/vagrant`.
 
 Working with the repository
 ---------------------------
@@ -24,48 +75,3 @@ instead of adding a new local commit that merges the `master` and
 `origin/master` branches.  Conflicts have to be resolved per patch
 (via `git add` + `git rebase --continue`) instead of in one go, but we
 get a cleaner history.
-
-Folders
--------
-
-eclipse-plugin - the Eclipse plugin of the ABS IDE
-
-frontend       - the ABS frontend as well as several backends like the Java
-                  backend and the Maude backend
-
-sdedit-for-abs - a modified version of sdedit (sdedit.sourceforge.net) for
-                  the visualization of UML sequence charts
-
-tools-website  - the content of the tools.hats-project.eu website
-
-maven-support  - Maven plugin for generating Java/Maude from ABS, testing and packaging ABS codes
-
-org.abs-models.releng
-               - Files used by Jenkins for continuous integration
-
-abs-packages   - demonstration and description of how to use ABS packages (with Maven dependencies management)
-
-abs-unit       - demonstration, description and initial ideas about the ABSUnit (a unit testing framework for ABS) (with Maven dependencies management)
-
-costabs-plugin - The COSTA plugin for ABS
-
-apet-plugin    - The aPET plugin for ABS
-
-sda-plugin     - Bologna Deadlock-checker plugin for ABS
-
-
-Using Vagrant
--------------
-
-To develop the ABS tools without installing additional software, you
-can use [Vagrant](https://www.vagrantup.com).  Vagrant will start a
-Linux virtual machine and install the needed dependencies.  In the
-`abstools/` directory, run the command `vagrant up` to provision and
-start a VM, then `vagrant ssh` to connect.  (If you want to run GUI
-programs in the VM, use `vagrant ssh -- -X`.)
-
-Within the VM, the sources are accessible in the directory `/vagrant`.
-
-<!-- Local Variables: -->
-<!-- mode: markdown -->
-<!-- End: -->
