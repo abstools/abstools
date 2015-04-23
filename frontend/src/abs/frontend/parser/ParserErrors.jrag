@@ -11,6 +11,7 @@ aspect ParserErrors {
     }
     
 	public boolean CompilationUnit.hasParserErrors() {
+		assert getParserErrors() != null : this;
 		return !getParserErrors().isEmpty();
 	}
 
@@ -19,6 +20,7 @@ aspect ParserErrors {
 	}
 
 	public boolean Model.hasParserErrors() {
+	    assert getParserErrors() != null : this;
 		return !getParserErrors().isEmpty();
 	}
 
