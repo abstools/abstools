@@ -1,0 +1,17 @@
+The abstools repository is now located at github:
+
+https://github.com/abstools/abstools
+
+If you have an existing checkout (with local changes and branches,
+etc.), you can execute the following commands:
+
+$ git remote rm origin
+
+$ git remote add origin git@github.com:abstools/abstools.git
+
+$ git branch --set-upstream-to=origin/master master
+
+Repeat the last command for all of your local branches that track upstream
+(e.g., if you checked out the typecheckpl branch locally).
+
+
