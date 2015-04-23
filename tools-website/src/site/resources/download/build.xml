@@ -91,7 +91,8 @@
   <target name="abs.compile.java" depends="abs.generate.java">
     <javac classpathref="build.abs.classpath" 
        srcdir="${target.java.src}" 
-       destdir="${target.java.bin}">
+       destdir="${target.java.bin}"
+       target="1.7" source="1.7">
     </javac>
   </target>
 <!-- END SNIPPET: abs.compile.java -->

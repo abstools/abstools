@@ -144,7 +144,7 @@
   </target>
 
   <target name="compile" depends="prepare, gen" description="Compiles all java files in the source directory.">
-    <javac srcdir="${src.dir}:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off" encoding="utf-8">
+    <javac srcdir="${src.dir}:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off" encoding="utf-8" target="1.7" source="1.7">
       <classpath refid="compile.classpath" />
     </javac>
   </target>
