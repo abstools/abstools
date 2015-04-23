@@ -21,6 +21,7 @@ import java.util.jar.JarFile;
 
 import org.apache.commons.io.FileUtils;
 
+import sun.net.www.protocol.file.FileURLConnection;
 import abs.backend.common.CodeStream;
 
 import com.google.common.collect.ImmutableSet;
@@ -127,9 +128,13 @@ public class ErlApp {
                     if (resource instanceof JarURLConnection) {
                         copyJarDirectory(((JarURLConnection) resource).getJarFile(),
                                 inname, outname);
+                    } else if (resource instanceof FileURLConnection) {
+                        /* stolz: This at least works for the unit tests from within Eclipse */
+                        File file = new File("src");
+                        assert file.exists();
+                        FileUtils.copyDirectory(new File("src/"+RUNTIME_PATH), destDir);
                     } else {
-                        // TODO: untested; might only copy directory itself.  Check out Files.walkFileTree().
-                        Files.copy(new File(inname), new File(outname));
+                        throw new UnsupportedOperationException("File type: "+resource);
                     }
                     
                 } else {
