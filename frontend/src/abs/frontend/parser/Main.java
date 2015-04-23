@@ -16,7 +16,6 @@ import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Map;
@@ -26,47 +25,17 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import choco.kernel.model.constraints.Constraint;
 import abs.frontend.mtvl.ChocoSolver;
-import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
-import abs.frontend.antlr.parser.CreateJastAddASTListener;
 import abs.frontend.antlr.parser.ABSParserWrapper;
-import abs.frontend.ast.CompilationUnit;
-import abs.frontend.ast.ConstructorArg;
-import abs.frontend.ast.DataConstructor;
-import abs.frontend.ast.DataConstructorExp;
-import abs.frontend.ast.DataTypeDecl;
-import abs.frontend.ast.Decl;
-import abs.frontend.ast.DeltaDecl;
-import abs.frontend.ast.ExceptionDecl;
-import abs.frontend.ast.ExpFunctionDef;
-import abs.frontend.ast.Feature;
-import abs.frontend.ast.FnApp;
-import abs.frontend.ast.FunctionDecl;
-import abs.frontend.ast.PureExp;
-import abs.frontend.ast.StringLiteral;
-import abs.frontend.ast.UpdateDecl;
-import abs.frontend.ast.Product;
-import abs.frontend.ast.ProductLine;
-import abs.frontend.ast.List;
-import abs.frontend.ast.Model;
-import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.FeatureDecl;
-import abs.frontend.ast.FExt;
-import abs.frontend.ast.Opt;
-import abs.frontend.ast.StarImport;
+import abs.frontend.ast.*;
 import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
 import abs.frontend.configurator.visualizer.FMVisualizer;
 import abs.frontend.delta.DeltaModellingException;
-import abs.frontend.typechecker.KindedName;
-import abs.frontend.typechecker.KindedName.Kind;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
-import beaver.Parser;
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.*;
 
 /**
  * @author rudi
@@ -590,16 +559,20 @@ public class Main {
     
     private void parseABSPackageFile(java.util.List<CompilationUnit> units, File file) throws IOException {
         ABSPackageFile jarFile = new ABSPackageFile(file);
-        if (!jarFile.isABSPackage())
-           return;
-        Enumeration<JarEntry> e = jarFile.entries();
-        while (e.hasMoreElements()) {
-            JarEntry jarEntry = e.nextElement();
-            if (!jarEntry.isDirectory()) {
-                if (jarEntry.getName().endsWith(".abs")) {
-                    parseABSSourceFile(units, "jar:"+file.toURI()+"!/"+jarEntry.getName(), jarFile.getInputStream(jarEntry));
+        try {
+            if (!jarFile.isABSPackage())
+                return;
+            Enumeration<JarEntry> e = jarFile.entries();
+            while (e.hasMoreElements()) {
+                JarEntry jarEntry = e.nextElement();
+                if (!jarEntry.isDirectory()) {
+                    if (jarEntry.getName().endsWith(".abs")) {
+                        parseABSSourceFile(units, "jar:"+file.toURI()+"!/"+jarEntry.getName(), jarFile.getInputStream(jarEntry));
+                    }
                 }
             }
+        } finally {
+            jarFile.close();
         }
     }
 
@@ -614,7 +587,10 @@ public class Main {
     }
 
     public static boolean isABSPackageFile(File f) throws IOException {
-       return f.getName().endsWith(".jar") && new ABSPackageFile(f).isABSPackage();
+       final ABSPackageFile absPackageFile = new ABSPackageFile(f);
+       final boolean isPackage = absPackageFile.isABSPackage();
+       absPackageFile.close();
+       return f.getName().endsWith(".jar") && isPackage;
     }
 
     public static boolean isABSSourceFile(File f) {
