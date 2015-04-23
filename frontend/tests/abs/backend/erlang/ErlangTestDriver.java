@@ -126,6 +126,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         ProcessBuilder pb = new ProcessBuilder("erl", "-pa", "ebin", "-noshell", "-noinput", "-eval",
                 "case make:all() of up_to_date -> halt(0); _ -> halt(1) end.");
         pb.directory(workDir);
+        pb.inheritIO();
         Process p = pb.start();
         Assert.assertEquals("Compile failed", 0, p.waitFor());
     }
