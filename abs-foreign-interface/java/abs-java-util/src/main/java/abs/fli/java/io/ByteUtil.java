@@ -21,7 +21,7 @@ public class ByteUtil {
     private final Fun<Byte, java.lang.Byte> bTB = new Fun<Byte, java.lang.Byte>() {
         @Override
         public java.lang.Byte evaluate(Byte a) {
-            return new java.lang.Integer(a.toByte().getArg0().toInt()).byteValue();
+            return java.lang.Integer.valueOf(a.toByte().getArg0().toInt()).byteValue();
         }
     };
     
@@ -37,7 +37,7 @@ public class ByteUtil {
     }
     
     public Byte convert(byte b) {
-        return BTb.evaluate(new java.lang.Byte(b));
+        return BTb.evaluate(java.lang.Byte.valueOf(b));
     }
     
     public byte[] convert(List<Byte> bytes) {
@@ -52,7 +52,7 @@ public class ByteUtil {
     public List<Byte> convert(byte[] bytes) {
         java.util.List<java.lang.Byte> java = new ArrayList<java.lang.Byte>();
         for (byte b : bytes) {
-            java.add(new java.lang.Byte(b));
+            java.add(java.lang.Byte.valueOf(b));
         }
         return cutil.convert(BTb,java);
     }
