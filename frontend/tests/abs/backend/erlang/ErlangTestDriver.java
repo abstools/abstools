@@ -12,9 +12,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.util.regex.Matcher;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
+import org.junit.Assume;
 
 import abs.ABSTest;
 import abs.backend.BackendTestDriver;
@@ -31,7 +33,27 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     }
 
     public static boolean checkErlang() {
-        return SemanticTests.checkProg("erl");
+        if (SemanticTests.checkProg("erl")) {
+            // http://stackoverflow.com/a/9561398/60462
+            ProcessBuilder pb = new ProcessBuilder("erl", "-eval", "erlang:display(erlang:system_info(otp_release)), halt().",  "-noshell");
+            try {
+                Process p = pb.start();
+                InputStreamReader r = new InputStreamReader(p.getInputStream());
+                BufferedReader b = new BufferedReader(r);
+                Assert.assertEquals(0, p.waitFor());
+                String version = b.readLine();
+                java.util.regex.Pattern pat = java.util.regex.Pattern.compile("\"(\\d*).*");
+                Matcher m = pat.matcher(version);
+                Assert.assertTrue("Could not identify Erlang version: "+version, m.matches());
+                String v = m.group(1);
+                Assume.assumeTrue("Need Erlang R17 or better.",Integer.parseInt(v) >= 17);
+            } catch (IOException e) {
+                return false;
+            } catch (InterruptedException e) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
