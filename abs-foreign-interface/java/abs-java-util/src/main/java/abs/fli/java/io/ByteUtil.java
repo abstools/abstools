@@ -50,7 +50,7 @@ public class ByteUtil {
     }
     
     public List<Byte> convert(byte[] bytes) {
-        java.util.List<java.lang.Byte> java = new ArrayList<java.lang.Byte>();
+        java.util.List<java.lang.Byte> java = new ArrayList<java.lang.Byte>(bytes.length);
         for (byte b : bytes) {
             java.add(java.lang.Byte.valueOf(b));
         }
