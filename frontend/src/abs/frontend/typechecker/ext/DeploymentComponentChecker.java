@@ -15,7 +15,6 @@ import abs.frontend.ast.Model;
 import abs.frontend.ast.NewExp;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.VarDeclStmt;
-import abs.frontend.typechecker.Type;
 
 /**
  * @author rudi
