@@ -6,7 +6,6 @@ package abs.frontend.typechecker;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.TypeError;
