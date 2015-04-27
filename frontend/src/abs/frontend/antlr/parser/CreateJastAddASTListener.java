@@ -118,8 +118,8 @@ new List<ModuleDecl>(),
         result.setDeltaDeclList(l(ctx.delta_decl()));
         result.setProductLineOpt(o(ctx.productline_decl()));
         result.setProductList(l(ctx.product_decl()));
-        // result.setFeatureDeclList(l(ctx.featuremodel_decl()));
-        // FIXME: FExt ?
+        result.setFeatureDeclList(l(ctx.feature_decl()));
+        result.setFExtList(l(ctx.fextension()));
     }
 
     // Declarations
