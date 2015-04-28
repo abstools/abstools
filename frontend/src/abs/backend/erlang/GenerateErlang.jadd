@@ -110,7 +110,7 @@ aspect GenerateErlang {
        ecs = ea.createSourceFile(ErlUtil.getName(this));
        ecs.pf("-module(%s).", erlModulename);
        ecs.println("-behaviour(application).");
-       ecs.println("-include_lib(\"include/abs_types.hrl\").");
+       ecs.println("-include_lib(\"../include/abs_types.hrl\").");
        ecs.println("-export([main/1]).");
        ecs.println("%% Application callbacks");
        ecs.println("-export([start/2, stop/1]).");
