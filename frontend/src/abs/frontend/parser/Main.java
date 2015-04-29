@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.parser;
@@ -54,7 +54,7 @@ public class Main {
     protected boolean allowIncompleteExpr = false;
     protected LocationType defaultLocationType = null;
     protected boolean locationTypeInferenceEnabled = false;
-    // Must be public for AspectJ instrumentation 
+    // Must be public for AspectJ instrumentation
     public boolean fullabs = false;
     public String product;
     protected boolean locationTypeStats = false;
@@ -75,7 +75,7 @@ public class Main {
     public static void main(final String... args)  {
        new Main().mainMethod(args);
     }
-    
+
     public void mainMethod(final String... args) {
        try {
            java.util.List<String> argslist = Arrays.asList(args);
@@ -105,22 +105,22 @@ public class Main {
     public void setWithStdLib(boolean withStdLib) {
         this.stdlib = withStdLib;
     }
-    
+
     public void setAllowIncompleteExpr(boolean b) {
         allowIncompleteExpr = b;
     }
-    
+
     public void setTypeChecking(boolean b) {
         typecheck = b;
     }
-    
+
     public java.util.List<String> parseArgs(String[] args) {
         ArrayList<String> remainingArgs = new ArrayList<String>();
 
         for (String arg : args) {
             if (arg.equals("-dump"))
                 dump = true;
-            if (arg.equals("-debug"))
+            else if (arg.equals("-debug"))
                 debug = true;
             else if (arg.equals("-v"))
                 verbose = true;
@@ -182,8 +182,8 @@ public class Main {
                 remainingArgs.add(arg);
         }
         return remainingArgs;
-    }    
-    
+    }
+
     public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException, ParserConfigurationException {
         Model m = parseFiles(parseArgs(args).toArray(new String[0]));
         analyzeModel(m);
@@ -194,7 +194,7 @@ public class Main {
         if (fileNames.length == 0) {
             printErrorAndExit("Please provide at least one input file");
         }
-    
+
         java.util.List<CompilationUnit> units = new ArrayList<CompilationUnit>();
 
         for (String fileName : fileNames) {
@@ -206,12 +206,12 @@ public class Main {
             if (!f.canRead()) {
                throw new IllegalArgumentException("File "+fileName+" cannot be read");
             }
-            
+
             if (!f.isDirectory() && !isABSSourceFile(f) && !isABSPackageFile(f)) {
                throw new IllegalArgumentException("File "+fileName+" is not a legal ABS file");
             }
         }
-        
+
         for (String fileName : fileNames) {
            parseFileOrDirectory(units, new File(fileName));
         }
@@ -223,7 +223,7 @@ public class Main {
         for (CompilationUnit u : units) {
             unitList.add(u);
         }
-        
+
         Model m = new Model(unitList);
         return m;
     }
@@ -231,7 +231,7 @@ public class Main {
     public void analyzeModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException, ParserConfigurationException {
         m.verbose = verbose;
         m.debug = dump;
-        
+
         // drop attributes before calculating any attribute
         if (ignoreattr)
             m.dropAttributes();
@@ -243,11 +243,11 @@ public class Main {
             System.out.println("Preprocessing Model...");
             ABSPreProcessor oABSPreProcessor = new ABSPreProcessor();
             oABSPreProcessor.preProcessModel(m); //For Pre-processing...
-            
+
             // Transformation of microTVL to Future Model Editor compatible XML
             FMVisualizer oFMVisualizer = new FMVisualizer();
-            
-            oFMVisualizer.ParseMicroTVLFile(m);            
+
+            oFMVisualizer.ParseMicroTVLFile(m);
         }
 
         if (m.hasParserErrors()) {
@@ -382,7 +382,7 @@ public class Main {
         }
     }
 
-    
+
     /**
      * TODO: Should probably be introduced in Model through JastAdd by MTVL package.
      * However, the command-line argument handling will have to stay in Main. Pity.
@@ -509,7 +509,7 @@ public class Main {
         if (typecheck) {
             if (verbose)
                 System.out.println("Typechecking Model...");
-            
+
             registerLocationTypeChecking(m);
             SemanticErrorList typeerrors = m.typeCheck();
             for (SemanticError se : typeerrors) {
@@ -540,7 +540,7 @@ public class Main {
         if (!file.canRead()) {
             System.err.println("WARNING: Could not read file "+file+", file skipped.");
         }
-        
+
         if (file.isDirectory()) {
             parseDirectory(units, file);
         } else {
@@ -556,7 +556,7 @@ public class Main {
         parseABSPackageFile(res, file);
         return res;
     }
-    
+
     private void parseABSPackageFile(java.util.List<CompilationUnit> units, File file) throws IOException {
         ABSPackageFile jarFile = new ABSPackageFile(file);
         try {
@@ -604,7 +604,7 @@ public class Main {
     private void parseABSSourceFile(java.util.List<CompilationUnit> units, File file) throws IOException {
         parseABSSourceFile(units, file, getUTF8FileReader(file));
     }
-    
+
     private void parseABSSourceFile(java.util.List<CompilationUnit> units, File file, Reader reader) throws IOException {
         if (verbose)
             System.out.println("Parsing file "+file.getPath());//getAbsolutePath());
@@ -627,12 +627,12 @@ public class Main {
         printUsage();
         System.exit(1);
     }
-    
+
     protected void printVersionAndExit() {
         System.out.println("ABS Tool Suite v"+getVersion());
         System.exit(1);
     }
-    
+
 
     public CompilationUnit getStdLib() throws IOException {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
@@ -641,7 +641,7 @@ public class Main {
         }
         return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream));
     }
-    
+
     protected void printUsage() {
         printHeader();
         System.out.println(""
@@ -672,7 +672,7 @@ public class Main {
                 + "  -locscope=<scope> \n"
                 + "                 sets the location aliasing scope to <scope>\n"
                 + "                 where <scope> in " + Arrays.toString(LocationTypingPrecision.values()) + "\n"
-                + "  -dump          dump AST to standard output \n" 
+                + "  -dump          dump AST to standard output \n"
                 + "  -solve         solve constraint satisfaction problem (CSP) for the feature\n"
                 + "                 model\n"
                 + "  -solveall      get ALL solutions for the CSP\n"
@@ -694,13 +694,13 @@ public class Main {
     }
 
     protected void printHeader() {
-        
+
         String[] header = new String[] {
            "The ABS Compiler" + " v" + getVersion(),
-           "Copyright (c) 2009-2013,    The HATS Consortium", 
-           "Copyright (c) 2013-2015,    The Envisage Project", 
+           "Copyright (c) 2009-2013,    The HATS Consortium",
+           "Copyright (c) 2013-2015,    The Envisage Project",
            "http://www.abs-models.org/" };
-        
+
         int maxlength = header[0].length();
         StringBuilder starline = new StringBuilder();
         for (int i = 0; i < maxlength + 4; i++) {
@@ -714,7 +714,7 @@ public class Main {
             }
             System.out.println(" *");
         }
-        
+
         System.out.println(starline);
     }
 
@@ -793,7 +793,7 @@ public class Main {
 
     /**
      * Parses String s and returns Model.
-     * 
+     *
      * @param s
      * @param withStdLib
      * @param allowIncompleteExpr
