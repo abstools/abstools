@@ -201,7 +201,7 @@ aspect GenerateErlang {
       ecs.format("put('%s', %s)", getName(), sw.toString().substring(ecs.getIndent().length()));
       if (getType().isDeploymentComponentType() && getInitExp() instanceof NewExp) {
           ecs.println(",");
-          ecs.format("eventstream:event({newdc, '%s'})", getName());
+          ecs.format("eventstream:event({newdc, get('%s')})", getName());
       }
     }
     else
