@@ -129,7 +129,7 @@ public class OtherAnalysisTests extends FrontendTest {
     @Test
     public void testContext1() {
         Model m = assertParseOk("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
-        ClassDecl cd = (ClassDecl) m.getCompilationUnit(0).getModuleDecl(0).getDecl(2);
+        ClassDecl cd = (ClassDecl) m.lookupModule("UnitTest").getDecl(2);
         AwaitAsyncCall n = (AwaitAsyncCall) down(cd);
         assertNull("Rewrite failed!", n);
     }
@@ -137,7 +137,7 @@ public class OtherAnalysisTests extends FrontendTest {
     @Test
     public void testContext2() {
         Model m = assertParseOk("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
-        ClassDecl cd = (ClassDecl) m.getCompilationUnit(0).getModuleDecl(0).getDecl(2);
+        ClassDecl cd = (ClassDecl) m.lookupModule("UnitTest").getDecl(2);
         AwaitAsyncCall n = (AwaitAsyncCall) down(cd);
         assertNull("Rewriting failed!",n);
     }

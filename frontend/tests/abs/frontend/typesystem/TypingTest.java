@@ -41,16 +41,16 @@ public class TypingTest extends FrontendTest {
     @Test
     public void testThisTyping() {
         Model m = assertParseOk("class C implements I { I m() { return this; } } interface I { }");
-        ClassDecl d = (ClassDecl) m.getCompilationUnit(0).getModuleDecl(0).getDecl(0);
+        ClassDecl d = (ClassDecl) m.lookupModule("UnitTest").getDecl(0);
         ReturnStmt s = (ReturnStmt) d.getMethod(0).getBlock().getStmt(0);
-        assertEquals(m.getCompilationUnit(0).getModuleDecl(0).getDecl(1), ((UnionType) s.getRetExp().getType())
-                .getType(0).getDecl());
+        assertEquals(m.lookupModule("UnitTest").getDecl(1),
+                     ((UnionType) s.getRetExp().getType()).getType(0).getDecl());
     }
 
     @Test
     public void testInterfaceType() {
         Model m = assertParseOk("interface I { } class C {} { I i = new local C(); I i2 = i; }");
-        assertEquals(m.getCompilationUnit(0).getModuleDecl(0).getDecl(0).getType(), getTypeOfNthAssignment(m, 2));
+        assertEquals(m.lookupModule("UnitTest").getDecl(0).getType(), getTypeOfNthAssignment(m, 2));
     }
 
     @Test

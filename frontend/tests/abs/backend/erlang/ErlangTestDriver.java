@@ -130,9 +130,12 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         if (model.hasTypeErrors()) {
             Assert.fail(model.getTypeErrors().getFirst().getHelpMessage());
         }
-        MainBlock mb = (MainBlock) model.getCompilationUnit(1).getMainBlock();
-        if (appendResultprinter)
-            mb.setStmt(new ReturnStmt(new List<Annotation>(), new VarUse("testresult")), mb.getNumStmt());
+        MainBlock mb = model.getMainBlock();
+        if (mb != null && appendResultprinter) {
+            mb.setStmt(new ReturnStmt(new List<Annotation>(),
+                                      new VarUse("testresult")),
+                       mb.getNumStmt());
+        }
         ErlangBackend.compile(model, targetDir);
         if (mb == null)
             return null;
