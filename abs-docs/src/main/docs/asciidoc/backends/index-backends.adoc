@@ -7,5 +7,6 @@ visualization).  Their respective section describes their features and usage.
 include::maude.adoc[]
 include::erlang.adoc[]
 include::haskell.adoc[]
+include::keyabs.adoc[]
 
 
