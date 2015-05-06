@@ -7,7 +7,7 @@
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
 
--export([waitfor/0]).
+-export([waitfor/0, get_dcs/0]).
 -export([init/1,handle_event/2,handle_call/2,terminate/2,handle_info/2,code_change/3]).
 
 %% - main=this
@@ -33,6 +33,9 @@ waitfor()->
         wait_done ->
             ok
     end.    
+
+get_dcs() ->
+    eventstream:call(cog_monitor, get_dcs).
 
 %% Behaviour callbacks
 
@@ -120,8 +123,10 @@ handle_event(_,State)->
     {ok,State}.
 
 %%Unused
-handle_call(_,_State)->
-    {not_supported_call}.
+handle_call(get_dcs, State=#state{dcs=DCs}) ->
+    {ok, DCs, State};
+handle_call(_,State)->
+    {ok, undefined, State}.
 
 
 handle_info(M,_State)->
@@ -152,7 +157,6 @@ advance_clock_or_terminate(State=#state{main=M,clock_waiting=C,dcs=DCs,timer=T})
             ?DEBUG({last_clock_advance, MTE}),
             clock:advance(MTE),
             lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
-            lists:foreach(fun dc:print_info/1, DCs),
             {ok,T1} = case T of
                           undefined -> timer:send_after(1000,M,wait_done);
                           _ -> {ok,T}
