@@ -6,9 +6,9 @@ package abs.backend.prolog;
 
 import java.io.*;
 import java.util.*;
-import java.util.Arrays;
 import java.util.List;
 
+import abs.common.NotImplementedYetException;
 import abs.frontend.ast.*;
 import abs.frontend.parser.Main;
 
@@ -37,9 +37,11 @@ public class PrologBackend extends Main {
             prologBE.generateProlog();
             if (Arrays.asList(args).contains("-v"))
                 System.out.println("ABS file parsed to Prolog terms in " + prologBE.outFile.getAbsolutePath());
+        } catch (NotImplementedYetException e) {
+            System.err.println(e.getMessage());
         } catch (Exception e) {
             if (Arrays.asList(args).contains("-v")) {
-                System.err.println("An error occurred during compilation: " + e.getMessage());
+                System.err.println("An error occurred during compilation:\n" + e.getMessage());
                 e.printStackTrace();
             }
             //System.exit(1);

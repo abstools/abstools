@@ -99,7 +99,7 @@ aspect GenerateKeyAbs {
                          + prefix + "::" + this.getName() + ")");
         } else {
             // TODO: this should throw a friendlier error, with filename + line number
-            throw new NotImplementedYetException("Fields of type " + getType() + " are not supported for generating invariants yet");
+            throw new NotImplementedYetException(this, "Fields of type " + getType() + " are not supported for generating invariants yet");
         }
 	}
 

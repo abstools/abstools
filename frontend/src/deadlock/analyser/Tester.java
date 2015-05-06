@@ -11,6 +11,7 @@ import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import abs.common.NotImplementedYetException;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 import abs.frontend.delta.DeltaModellingException;
@@ -25,8 +26,11 @@ public class Tester extends Main {
         // TODO Auto-generated method stub
         try {
             new Tester().compile(args);
+        } catch (NotImplementedYetException e) {
+            System.err.println(e.getMessage());
+            System.exit(0);
         } catch (Exception e) {
-            System.err.println("An error occurred during compilation: " + e.getMessage());
+            System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
             if (Arrays.asList(args).contains("-debug")) {
                 e.printStackTrace();

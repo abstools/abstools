@@ -4,6 +4,7 @@
  */
 package abs.backend.keyabs;
 import abs.backend.common.CodeStream;
+import abs.common.NotImplementedYetException;
 
 import java.io.File;
 import java.io.InputStream;
@@ -28,8 +29,11 @@ public class KeyAbsBackend extends Main {
         Model.doAACrewrite = false;
         try {
             new KeyAbsBackend().compile(args);
+        } catch (NotImplementedYetException e) {
+            System.err.println(e.getMessage());
+            System.exit(0);
         } catch (Exception e) {
-            System.err.println("An error occurred during compilation: " + e.getMessage());
+            System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
             if (debug) {
                 e.printStackTrace();

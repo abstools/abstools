@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import abs.common.NotImplementedYetException;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 import abs.frontend.tests.ABSFormatter;
@@ -22,8 +23,11 @@ public class PrettyPrinterBackEnd extends Main {
     public static void main(final String... args) {
         try {
             new PrettyPrinterBackEnd().compile(args);
+        } catch (NotImplementedYetException e) {
+            System.err.println(e.getMessage());
+            System.exit(0);
         } catch (Exception e) {
-            System.err.println("An error occurred during compilation: " + e.getMessage());
+            System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
             if (debug) {
                 e.printStackTrace();
