@@ -39,8 +39,7 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
 
 A class can be active or passive. Active classes start an activity on their own upon creation. Passive classes only react to incoming method calls. A class is active if and only if it has a run method:
 
-[source,java]
-
+[source]
 ----
 Unit run() {
 	// active behavior ...

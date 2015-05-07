@@ -10,8 +10,7 @@ Based on the fact that a DC is a single *unit* that (pro)*actively* behaves (run
 it is modelled as an _active object_, discussed in the previous section.
 All DC objects are typed by the `DC` interface, defined in ABS as:
 
-[source,java]
-
+[source]
 ----
 interface IDC {
   Unit shutdown();
@@ -54,12 +53,13 @@ The `spawns` keyword creates a new object in the given DC. It behaves
 similar to the `new` keyword, in the sense that the created object will be also placed in a new COG.
 The returned object reference (`o1` in the example) is treated as normal (can be passed to arguments, called for its methods, etc.).
 
-The keyword `thisDC` is provided that can be put anywhere inside an ABS program to return
+The function `thisDC()` is provided that can be put anywhere inside an ABS program to return
 the computational unit where the calling code executes in.
 
-[source,java]
+[source]
+----
 {
   DC whereami = thisDC;
 }
-
+----
 
