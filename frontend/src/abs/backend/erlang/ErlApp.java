@@ -189,7 +189,8 @@ public class ErlApp {
         acs.println("  {registered, []},");
         acs.println("  {applications, [");
         acs.println("                  kernel,");
-        acs.println("                  stdlib");
+        acs.println("                  stdlib,");
+        acs.println("                  cowboy");
         acs.println("                 ]},");
         acs.println("  {mod, { " + erlModulename + ", []}},");
         acs.println("  {env, []}");
