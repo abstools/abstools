@@ -938,7 +938,7 @@ new List<ModuleDecl>(),
             setV(ctx, new Attribute(ctx.IDENTIFIER().getText(),
                                     new IntMType(t, (BoundaryInt)v(ctx.l),
                                                  (BoundaryInt)v(ctx.u))));
-        } else if (ctx.is != null) {
+        } else if (ctx.is != null && !ctx.is.isEmpty()) {
             setV(ctx, new Attribute(ctx.IDENTIFIER().getText(),
                                     new IntListMType(t, l(ctx.is))));
         } else if (t.equals("Int")) {
