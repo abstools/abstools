@@ -58,7 +58,25 @@ aspect Typing {
     syn Type Model.getRatType() = getStdDataType("Rat");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
-    syn Type Model.getExceptionType() = getStdDataType("Exception");
+
+	/* Plan for exceptions: use a collection for all `exception Foo`, then construct the datatype. */
+	coll Collection<ExceptionDecl> Model.excdecls() [new HashSet<ExceptionDecl>()] with add root Model;
+	// TODO: ClassCastException waiting to happen, or safe via parser?
+	// TODO: Duplicates?
+	ExceptionDecl contributes this to Model.excdecls() for getModel();
+    syn Type Model.getExceptionType() = new DataTypeType(new DataTypeDecl("Exception", new List(), makeExcCons()));
+
+	List<DataConstructor> Model.makeExcCons() {
+	   List<DataConstructor> cds = new List();
+	   for (ExceptionDecl e : excdecls()) {
+	                DataConstructor d = new DataConstructor(e.getName(), e.getConstructorArgs().fullCopy());
+                    d.setPosition(e.getStart(), e.getEnd());
+                    d.setFileName(e.getFileName());
+                    d.exceptionDecl = e;
+	   }
+	   return cds;
+	}
+
     syn DataTypeType Model.getFutType(Type typeArg) = ((DataTypeType)getStdDataType("Fut")).withTypeArgs(typeArg);
     syn DataTypeType Model.getResultType(Type typeArg) = ((DataTypeType)getStdDataType("Result")).withTypeArgs(typeArg);
     

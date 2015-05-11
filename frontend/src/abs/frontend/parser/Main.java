@@ -310,24 +310,6 @@ public class Main {
     private static void rewriteModel(Model m, String productname)
         throws WrongProgramArgumentException
     {
-        // Handle exceptions: add exceptions as constructors to the
-        // ABS.StdLib.Exception datatype.
-        DataTypeDecl e = (DataTypeDecl)(m.getExceptionType().getDecl());
-        if (e != null) {
-            // TODO: if null and not -nostdlib, throw an error
-            for (Decl decl : m.getDecls()) {
-                if (decl instanceof ExceptionDecl) {
-                    ExceptionDecl e1 = (ExceptionDecl)decl;
-                    // KLUDGE: what do we do about annotations to exceptions?
-                    DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().fullCopy());
-                    d.setPosition(e1.getStart(), e1.getEnd());
-                    d.setFileName(e1.getFileName());
-                    d.exceptionDecl = e1;
-                    e1.dataConstructor = d;
-                    e.addDataConstructor(d);
-                }
-            }
-        }
         // Generate reflective constructors for all features
         ProductLine pl = m.getProductLine();
         if (pl != null) {

@@ -17,13 +17,13 @@ data Location;                  // (For Component model) //
 // between ExceptionDecl and DataConstructor.  (This only affects StdLib.)
 // See TypeCheckerHelper:checkForDuplicateDecls().
 
-// exception DivisionByZeroException;
-// exception AssertionFailException;
-// exception PatternMatchFailException;
-// exception NullPointerException;
-// exception StackOverflowEcxeption;
-// exception HeapOverflowException;
-// exception KeyboardInterruptException;
+exception DivisionByZeroException;
+exception AssertionFailException;
+exception PatternMatchFailException;
+exception NullPointerException;
+exception StackOverflowEcxeption;
+exception HeapOverflowException;
+exception KeyboardInterruptException;
 
 def Bool and(Bool a, Bool b) = a && b;
 def Bool not(Bool a) = ~a;
