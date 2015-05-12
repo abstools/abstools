@@ -180,21 +180,5 @@ public class ErlApp {
         hcs.println("-undef(ABSMAINMODULE).");
         hcs.println("-define(ABSMAINMODULE," + erlModulename + ").");
         hcs.close();
-
-        CodeStream acs = new CodeStream(new File(destCodeDir, erlModulename + ".app.src"));
-        acs.println("{application, " + erlModulename + ",");
-        acs.println(" [");
-        acs.println("  {description, \"Generated code for ABS module '" + absModulename + "'\"},");
-        acs.println("  {vsn, \"1\"},");
-        acs.println("  {registered, []},");
-        acs.println("  {applications, [");
-        acs.println("                  kernel,");
-        acs.println("                  stdlib,");
-        acs.println("                  cowboy");
-        acs.println("                 ]},");
-        acs.println("  {mod, { " + erlModulename + ", []}},");
-        acs.println("  {env, []}");
-        acs.println("]}.");
-        acs.close();
     }
 }

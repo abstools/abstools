@@ -5,10 +5,6 @@
 -behaviour(supervisor).
 
 -include_lib("absmodulename.hrl").
-%% pacify the editor: the above file is generated hence not always available
--ifndef(ABSMAINMODULE).
--define(ABSMAINMODULE,undefined).
--endif.
 
 -export([start/0,start/1,run/1,start_link/1]).
 
