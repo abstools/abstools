@@ -2,7 +2,7 @@
   {description, "Generated code for ABS"},
   {vsn, "1"},
   {registered, []},
-  {applications, [kernel, stdlib, cowboy]},
-  {mod, { runtime, []}},
+  {applications, [kernel, stdlib, cowboy, crypto]},
+  {mod, { main_app, []}},
   {env, []}
 ]}.

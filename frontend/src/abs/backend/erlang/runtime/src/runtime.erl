@@ -63,9 +63,9 @@ parse(Args,Exec)->
 start_link(Args) ->
     case Args of
         [Module] ->
-            R={ok, T} = start_mod(Module, false, false),
-            io:format("~w~n", [end_mod(T)]),
-            R;
+            {ok, _T} = start_mod(Module, false, false),
+            %% io:format("~w~n", [end_mod(T)]),
+            supervisor:start_link({local, ?MODULE}, ?MODULE, []);
         _ -> {error, false}
     end.
 
