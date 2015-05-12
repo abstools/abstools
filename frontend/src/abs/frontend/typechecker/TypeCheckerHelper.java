@@ -27,7 +27,7 @@ public class TypeCheckerHelper {
             return;
         }
 
-        assert t.isDataType();
+        assert t.isDataType() || t.isExceptionType() : t; // TODO: more instances of this? Maybe exception should imply datatype?
 
         if (!t.getDecl().equals(c.getDataTypeDecl())) {
             e.add(new TypeError(p, ErrorMessage.WRONG_CONSTRUCTOR, t.toString(), p.getConstructor()));
@@ -329,6 +329,30 @@ public class TypeCheckerHelper {
                     if (res.put(rn.getSimpleName(), rn) != null)
                         foundDuplicates.add(rn.getSimpleName());
                     res.put(rn.getQualifiedName(), rn);
+                }
+            } else if (d instanceof ExceptionDecl) {
+                DataConstructor ec = null;
+                final Type exceptionType = mod.getModel().getExceptionType();
+                DataTypeDecl excTypeDecl = (DataTypeDecl) exceptionType.getDecl();
+                assert excTypeDecl.getNumDataConstructor() > 0 : "No exceptions, changed stdlib?";
+                // we know that the constructors are now there because we called getExceptionType().
+                for (DataConstructor dc : excTypeDecl.getDataConstructors()) {
+                    if (dc.getName().equals(d.getName())) {
+                        ec = dc; break;
+                    }
+                }
+                assert ec != null;
+                if (ec.getName().equals(d.getName())) {
+                    // should always be true, see Main.java where the data
+                    // constructor gets constructed
+                    rn = new ResolvedDeclName(moduleName, ec);
+                    // If it's already in there, is it from the same location -- from stdlib? 
+                    ResolvedName tryIt = res.get(rn);
+                    if (tryIt != null && tryIt.getDecl() != excTypeDecl)
+                        foundDuplicates.add(rn.getSimpleName());
+                    else {
+                        res.put(rn.getQualifiedName(), rn);
+                    }
                 }
             }
         }

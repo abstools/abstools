@@ -64,23 +64,29 @@ aspect Typing {
 	// TODO: ClassCastException waiting to happen, or safe via parser?
 	// TODO: Duplicates?
 	ExceptionDecl contributes this to Model.excdecls() for getModel();
-        syn Type Model.getExceptionType() {
+        syn lazy Type Model.getExceptionType() {
             Type exceptiontype = getStdDataType("Exception");
+            assert exceptiontype != null : "no stdlib?";
             DataTypeDecl exceptiondecl = (DataTypeDecl)exceptiontype.getDecl();
-            if (!exceptiondecl.hasDataConstructor()) {
-                for (DataConstructor d : makeExcCons()) {
+            assert exceptiondecl != null;
+                for (DataConstructor d : makeExcCons(exceptiondecl)) {
                     exceptiondecl.addDataConstructor(d);
                 }
-            }
             return exceptiontype;            
         }
-	List<DataConstructor> Model.makeExcCons() {
+	private List<DataConstructor> Model.makeExcCons(DataTypeDecl exceptiondecl) {
 	   List<DataConstructor> cds = new List();
-	   for (ExceptionDecl e : excdecls()) {
+	   outer: for (ExceptionDecl e : excdecls()) {
+	     for (DataConstructor dc : exceptiondecl.getDataConstructors()) {
+	       if (dc.getName().equals(e.getName())) {
+	         continue outer;
+	       }
+	     }
 	                DataConstructor d = new DataConstructor(e.getName(), e.getConstructorArgs().fullCopy());
                     d.setPosition(e.getStart(), e.getEnd());
                     d.setFileName(e.getFileName());
                     d.exceptionDecl = e;
+                    cds.add(d);
 	   }
 	   return cds;
 	}
