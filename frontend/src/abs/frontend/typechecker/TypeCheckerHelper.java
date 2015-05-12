@@ -331,16 +331,8 @@ public class TypeCheckerHelper {
                     res.put(rn.getQualifiedName(), rn);
                 }
             } else if (d instanceof ExceptionDecl) {
-                DataConstructor ec = null;
-                final Type exceptionType = mod.getModel().getExceptionType();
-                DataTypeDecl excTypeDecl = (DataTypeDecl) exceptionType.getDecl();
-                assert excTypeDecl.getNumDataConstructor() > 0 : "No exceptions, changed stdlib?";
-                // we know that the constructors are now there because we called getExceptionType().
-                for (DataConstructor dc : excTypeDecl.getDataConstructors()) {
-                    if (dc.getName().equals(d.getName())) {
-                        ec = dc; break;
-                    }
-                }
+                ExceptionDecl ed = (ExceptionDecl) d;
+                DataConstructor ec = ed.dataConstructor;
                 assert ec != null;
                 if (ec.getName().equals(d.getName())) {
                     // should always be true, see Main.java where the data
@@ -348,11 +340,23 @@ public class TypeCheckerHelper {
                     rn = new ResolvedDeclName(moduleName, ec);
                     // If it's already in there, is it from the same location -- from stdlib? 
                     ResolvedName tryIt = res.get(rn);
-                    if (tryIt != null && tryIt.getDecl() != excTypeDecl)
+                    if (tryIt != null && tryIt.getDecl() != ed)
                         foundDuplicates.add(rn.getSimpleName());
                     else {
                         res.put(rn.getQualifiedName(), rn);
                     }
+                }
+            }
+            else if (d instanceof ExceptionDecl) {
+                ExceptionDecl ed = (ExceptionDecl)d;
+                DataConstructor ec = ed.dataConstructor;
+                if (ec.getName().equals(d.getName())) {
+                    // should always be true, see Main.java where the data
+                    // constructor gets constructed
+                    rn = new ResolvedDeclName(moduleName, ec);
+                    if (res.put(rn.getSimpleName(), rn) != null)
+                        foundDuplicates.add(rn.getSimpleName());
+                    res.put(rn.getQualifiedName(), rn);
                 }
             }
         }

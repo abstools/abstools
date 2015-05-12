@@ -214,6 +214,7 @@ aspect TypeResolution {
     eq AddDataTypeModifier.getDataTypeDecl().getModuleDecl() = findModule();
     eq ModifyDataTypeModifier.getDataTypeDecl().getModuleDecl() = findModule();
     public ExceptionDecl DataConstructor.exceptionDecl = null;
+    public DataConstructor ExceptionDecl.dataConstructor = null;
     eq DataTypeDecl.getDataConstructor(int i).getModuleDecl() {
         if (qualifiedName().equals(Constants.STDLIB_NAME+".Exception")) {
             // In general, Exceptions are not declared in the same module as
@@ -392,7 +393,11 @@ aspect TypeResolution {
         if (decl instanceof DataConstructor) {
             return (DataConstructor) decl;
         } else {
-            return null;
+            if (decl instanceof ExceptionDecl) {
+                return ((ExceptionDecl)decl).dataConstructor;
+            } else {
+                return null;
+            }
         }
     }
 
