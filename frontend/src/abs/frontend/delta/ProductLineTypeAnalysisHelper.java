@@ -32,7 +32,7 @@ public class ProductLineTypeAnalysisHelper {
         // - TODO all products are well-typed programs
         DeltaTrie pfgt = buildPFGT(pl, errors);
 
-        System.out.println(pfgt);
+//        System.out.println(pfgt);
 
     }
 

@@ -26,12 +26,12 @@ public class DeltaTrie {
 
     // Adds a word to the Trie
     public void addWord(List<String> word) {
-        System.out.print("DeltaSequence");
+//        System.out.print("DeltaSequence");
         if (word.size() == 0) // no deltas
             root.isValidProduct = true;
         else
             root.addWord(word, 0);
-        System.out.println();
+//        System.out.println();
     }
 
     /**********************************************************************************************/
@@ -67,7 +67,7 @@ public class DeltaTrie {
         protected void addWord(List<String> word, int d) {
             Node nextNode;
 
-            System.out.print(">>>" + word.get(d));
+//            System.out.print(">>>" + word.get(d));
 
             if (children.containsKey(word.get(d))) {
                 nextNode = children.get(word.get(d));
@@ -80,7 +80,7 @@ public class DeltaTrie {
                 nextTA.applyDelta(delta);
 
                 children.put(word.get(d), nextNode);
-                System.out.print("*");
+//                System.out.print("*");
             }
 
             if (word.size() > d+1)
@@ -88,7 +88,7 @@ public class DeltaTrie {
             else {
                 nextNode.isValidProduct = true;
                 // TODO type check this product
-                System.out.print(".");
+//                System.out.print(".");
             }
         }
 

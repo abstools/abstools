@@ -117,7 +117,6 @@ public class ChocoSolver {
         // any way, it should not be considered when solving.
     }
 
-    /** add bool variable **/
     public void addBoolVar(String name) {
         IntegerVariable v = Choco.makeBooleanVar(name);
         vars.put(name, v);
@@ -128,19 +127,20 @@ public class ChocoSolver {
         // any way, it should not be considered when solving.
     }
 
-
     public void addBoundedVar(String name, BoundaryInt b1, BoundaryInt b2) {
         if (b1 instanceof Limit)
             if (b2 instanceof Limit)
                 addIntVar(name);
             else
-                addIntVar(name,((BoundaryVal) b2).getValue(),false);
+                addIntVar(name,((BoundaryVal) b2).getValue(), false);
         else if (b2 instanceof Limit)
-            addIntVar(name,((BoundaryVal) b1).getValue(),true);
+            addIntVar(name,((BoundaryVal) b1).getValue(), true);
         else
-            addIntVar(name,((BoundaryVal) b1).getValue(),((BoundaryVal) b2).getValue());
+            addIntVar(name, ((BoundaryVal) b1).getValue(), ((BoundaryVal) b2).getValue());
     }
 
+    // Is this method ever called??
+    // The mTVL syntax does not seem to allow constraining an attribute to a given set.
     public void addSetVar(String name, BoundaryInt[] bs) {
         int bsize = bs.length - 1;
         int[] vals = new int[bsize];
