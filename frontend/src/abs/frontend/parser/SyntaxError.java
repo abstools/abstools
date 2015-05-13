@@ -8,19 +8,11 @@ import beaver.Symbol;
 
 public class SyntaxError extends ParserError {
 
-    private final Symbol token;
-
     public SyntaxError(final String message) {
-        this(message, 0, 0, null);
+        this(message, 0, 0);
     }
 
-    public SyntaxError(final String message, int lineNumber, int columnNumber, Symbol token) {
+    public SyntaxError(final String message, int lineNumber, int columnNumber) {
         super(message, lineNumber, columnNumber);
-        // Editor requires this info also for invalid input:
-        assert token != null : message;
-        this.token = token;
     }
-
-    public int getEndLine() { return Symbol.getLine(token.getEnd()); };
-    public int getEndColumn() { return Symbol.getColumn(token.getEnd()); };
 }

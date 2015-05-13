@@ -35,7 +35,7 @@ import java.io.IOException;
 	}
 
 	protected void addSyntaxError(String msg, Symbol token) {
-            SyntaxError e = new SyntaxError(msg, Symbol.getLine(token.getStart()), Symbol.getColumn(token.getStart()), token);
+            SyntaxError e = new SyntaxError(msg, Symbol.getLine(token.getStart()), Symbol.getColumn(token.getStart()));
             e.setFile(file);
             e.setSourceCode(sourceCode);
             errors.add(e);

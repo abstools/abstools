@@ -347,14 +347,8 @@ public class AbsNature implements IProjectNature {
       int endline;
       int endcolumn;
 
-      if(err instanceof SyntaxError){
-      	SyntaxError serr = (SyntaxError)err;
-      	endline   = serr.getEndLine()-1;
-      	endcolumn = serr.getEndColumn();
-      } else {
-      	endcolumn = -1;
-      	endline   = startline;
-      }
+      endcolumn = -1;
+      endline   = startline;
 
       String message = err.getMessage();
       int severity   = IMarker.SEVERITY_ERROR;
