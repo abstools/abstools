@@ -83,7 +83,7 @@ public class DataTypeType extends Type  {
 
     @Override
     public boolean hasReferences() {
-        Set<DataTypeDecl> checkedDecls = new HashSet<>();
+        Set<DataTypeDecl> checkedDecls = new HashSet<DataTypeDecl>();
         return hasReferences(checkedDecls);
     }
 
@@ -228,6 +228,10 @@ public class DataTypeType extends Type  {
 
     public boolean isStringType() {
         return decl.getName().equals("String");
+    }
+
+    public boolean isExceptionType() {
+        return decl.getName().equals("Exception");
     }
 
     public String toString() {

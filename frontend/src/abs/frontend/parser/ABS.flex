@@ -27,8 +27,6 @@ import abs.frontend.parser.ABSParser.Terminals;
 %{
   private StringBuffer string = new StringBuffer();
   
-  private int sqlParenthesisDepth = 0;
-  
   private int previousState = 0;
 
   private ABSSymbol sym(short id) {
@@ -40,10 +38,6 @@ import abs.frontend.parser.ABSParser.Terminals;
 
   private ABSSymbol symString(String text) {
       return new ABSSymbol(Terminals.STRINGLITERAL, yyline + 1, yycolumn + 1 - text.length(), text.length(), yychar-text.length(), text);
-  }
-  
-  private ABSSymbol symSqlString(String text) {
-      return new ABSSymbol(Terminals.SQLSTRINGLITERAL, yyline + 1, yycolumn + 1 - text.length(), text.length(), yychar-text.length(), text);
   }
 %}
 
@@ -167,7 +161,6 @@ IntLiteral = 0 | [1-9][0-9]*
  "location"  { return sym(Terminals.LOC);      }
  "move"      { return sym(Terminals.SUBLOC);   }
  "father"    { return sym(Terminals.FATHER);   }
- "sql"       { yybegin(SQL); sqlParenthesisDepth = 0; return sym(Terminals.SQL); }
  //error
  "throw"      { return sym(Terminals.THROW); }
  "die"     { return sym(Terminals.DIE); }
@@ -177,12 +170,6 @@ IntLiteral = 0 | [1-9][0-9]*
 <YYINITIAL> {
  "("           { return sym(Terminals.LPAREN); }
  ")"           { return sym(Terminals.RPAREN); }
-}
-<SQL> {
- "("           { sqlParenthesisDepth++; return sym(Terminals.LPAREN); }
- ")"           { if (--sqlParenthesisDepth <= 0) yybegin(YYINITIAL); return sym(Terminals.RPAREN); }
-}
-<YYINITIAL, SQL> {
  "{"           { return sym(Terminals.LBRACE); }
  "}"           { return sym(Terminals.RBRACE); }
  "["           { return sym(Terminals.LBRACKET); }
@@ -222,63 +209,15 @@ IntLiteral = 0 | [1-9][0-9]*
  "'"           { return sym(Terminals.PRIME); }
 }
 
-//SQL
-<SQL> {
- "select"    { return sym(Terminals.SELECT); }
- "distinct"  { return sym(Terminals.DISTINCT); }
- "count"     { return sym(Terminals.COUNT); }
- "as"        { return sym(Terminals.AS); }
- "from"      { return sym(Terminals.FROM); }
- "left"      { return sym(Terminals.LEFT); }
- "right"     { return sym(Terminals.RIGHT); }
- "join"      { return sym(Terminals.JOIN); }
- "where"     { return sym(Terminals.WHERE); }
- "group"     { return sym(Terminals.GROUP); }
- "by"        { return sym(Terminals.BY); }
- "order"     { return sym(Terminals.ORDER); }
- "asc"       { return sym(Terminals.ASC); }
- "desc"      { return sym(Terminals.DESC); }
- "insert"    { return sym(Terminals.INSERT); }
- "into"      { return sym(Terminals.INTO); }
- "values"    { return sym(Terminals.VALUES); }
- "update"    { return sym(Terminals.UPDATE); }
- "set"       { return sym(Terminals.SET); }
- "not"       { return sym(Terminals.NOT); }
- "and"       { return sym(Terminals.AND); }
- "or"        { return sym(Terminals.OR); }
- "true"      { return sym(Terminals.TRUE); }
- "false"     { return sym(Terminals.FALSE); }
- "is"        { return sym(Terminals.IS); }
- "null"      { return sym(Terminals.NULL); }
- "case"      { return sym(Terminals.CASE); }
- "when"      { return sym(Terminals.WHEN); }
- "then"      { return sym(Terminals.THEN); }
- "else"      { return sym(Terminals.ELSE); }
- "end"       { return sym(Terminals.END); }
- "."         { return sym(Terminals.DOT); }
- "="         { return sym(Terminals.EQ); }
-  "+"	     { return sym(Terminals.PLUS); }
-  "-"        { return sym(Terminals.MINUS); }
-  "*"        { return sym(Terminals.MULT); }
-  "/"        { return sym(Terminals.DIV); }
-  "||"       { return sym(Terminals.CONCAT); }
- "<"         { return sym(Terminals.LT); }
- ">"         { return sym(Terminals.GT); }
- "<="        { return sym(Terminals.LTEQ); }
- ">="        { return sym(Terminals.GTEQ); }
- "<>"        { return sym(Terminals.NOTEQ); }
- "'"         { yybegin(SQLSTRING); string.setLength(0);  }
-}
-
 //Literals
-<YYINITIAL, SQL> {
+<YYINITIAL> {
     \"            { previousState = yystate(); yybegin(STRING); string.setLength(0);  }
     {IntLiteral}  { return sym(Terminals.INTLITERAL); }
 //    {BoolLiteral} { return sym(Terminals.BOOLLITERAL); }
 }
 
 <YYINITIAL> {TypeIdentifier}  { return sym(Terminals.TYPE_IDENTIFIER); }
-<YYINITIAL, SQL> {
+<YYINITIAL> {
     {Identifier}  { return sym(Terminals.IDENTIFIER); }
 	{Comment}     { /* discard token */ }
 	{WhiteSpace}  { /* discard token */ }
@@ -296,18 +235,6 @@ IntLiteral = 0 | [1-9][0-9]*
  \\r           { string.append('\r'); }
  [^\n\r\"\\]+  { string.append( yytext() ); }
  \\\\          { string.append('\\'); }
-}
-
-
-<SQLSTRING> {
- "'"           { yybegin(SQL);
-                 return symSqlString(string.toString()); }
- [^\n\r\'\\]+  { string.append( yytext() ); }
- \\t           { string.append('\t'); }
- \\n           { string.append('\n'); }
- \\r           { string.append('\r'); }
- \"            { string.append('\"'); }
- \\            { string.append('\\'); }
 }
 
 

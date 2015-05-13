@@ -233,9 +233,9 @@ aspect OriginalCallResolver {
     private MethodImpl ModifyMethodModifier.findOriginalInCore(
             MethodSig method,
             String classid) throws DeltaModellingException {
-        ClassDecl coreClass = (ClassDecl) getDelta().getModel().lookup(new KindedName(Kind.CLASS, classid));
+        Decl coreClass = getDelta().getModel().lookup(new KindedName(Kind.CLASS, classid));
         if (!coreClass.isUnknown()) {
-            MethodImpl coreMethod = coreClass.lookupMethod(method.getName());
+            MethodImpl coreMethod = ((ClassDecl) coreClass).lookupMethod(method.getName());
             if (coreMethod != null)
                 return copyMethod(coreMethod, "core");
         }

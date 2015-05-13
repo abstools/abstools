@@ -47,7 +47,7 @@
 	"\r\n"
 	"PGh0bWw+CiAgPGhlYWQ+CiAgPC9oZWFkPgogIDxib2R5PgogICAgPHA+VGhpcyBpcyB0aGUg\r\n"
 	"Ym9keSBvZiB0aGUgbWVzc2FnZS48L3A+CiAgPC9ib2R5Pgo8L2h0bWw+Cg==\r\n"
-	"--frontier--\r\n"
+	"--frontier--"
 >>).
 -define(TEST1_BOUNDARY, <<"frontier">>).
 
@@ -72,9 +72,31 @@
 	"\r\n"
 	"...contents of file2.gif...\r\n"
 	"--BbC04y--\r\n"
-	"--AaB03x--\r\n"
+	"--AaB03x--"
 >>).
 -define(TEST2_BOUNDARY, <<"AaB03x">>).
+
+-define(TEST3_MIME, <<
+	"This is the preamble.\r\n"
+	"--boundary\r\n"
+	"Content-Type: text/plain\r\n"
+	"\r\n"
+	"This is the body of the message.\r\n"
+	"--boundary--"
+	"\r\nThis is the epilogue. Here it includes leading CRLF"
+>>).
+-define(TEST3_BOUNDARY, <<"boundary">>).
+
+-define(TEST4_MIME, <<
+	"This is the preamble.\r\n"
+	"--boundary\r\n"
+	"Content-Type: text/plain\r\n"
+	"\r\n"
+	"This is the body of the message.\r\n"
+	"--boundary--"
+	"\r\n"
+>>).
+-define(TEST4_BOUNDARY, <<"boundary">>).
 
 %% Parsing.
 %%
@@ -98,7 +120,7 @@ parse_headers(<< "--", Stream/bits >>, Boundary) ->
 	BoundarySize = byte_size(Boundary),
 	case Stream of
 		%% Last boundary. Return the epilogue.
-		<< Boundary:BoundarySize/binary, "--\r\n", Stream2/bits >> ->
+		<< Boundary:BoundarySize/binary, "--", Stream2/bits >> ->
 			{done, Stream2};
 		<< Boundary:BoundarySize/binary, Stream2/bits >> ->
 			%% We have all the headers only if there is a \r\n\r\n
@@ -144,7 +166,7 @@ skip_preamble(Stream, Boundary) ->
 			<< _:Start2/binary, Stream2/bits >> = Stream,
 			case Stream2 of
 				%% Last boundary. Return the epilogue.
-				<< "--\r\n", Stream3/bits >> ->
+				<< "--", Stream3/bits >> ->
 					{done, Stream3};
 				_ ->
 					case binary:match(Stream, <<"\r\n\r\n">>) of
@@ -170,7 +192,7 @@ parse_hd_name(<< C, Rest/bits >>, H, SoFar) ->
 		$: -> parse_hd_before_value(Rest, H, SoFar);
 		$\s -> parse_hd_name_ws(Rest, H, SoFar);
 		$\t -> parse_hd_name_ws(Rest, H, SoFar);
-		?INLINE_LOWERCASE(parse_hd_name, Rest, H, SoFar)
+		_ -> ?LOWER(parse_hd_name, Rest, H, SoFar)
 	end.
 
 parse_hd_name_ws(<< C, Rest/bits >>, H, Name) ->
@@ -298,6 +320,26 @@ parse_interleaved_test() ->
 	{done, <<>>} = parse_headers(Rest4, ?TEST2_BOUNDARY),
 	ok.
 
+parse_epilogue_test() ->
+	H1 = [{<<"content-type">>, <<"text/plain">>}],
+	Body1 = <<"This is the body of the message.">>,
+	Epilogue = <<"\r\nThis is the epilogue. Here it includes leading CRLF">>,
+	{ok, H1, Rest} = parse_headers(?TEST3_MIME, ?TEST3_BOUNDARY),
+	{done, Body1, Rest2} = parse_body(Rest, ?TEST3_BOUNDARY),
+	done = parse_body(Rest2, ?TEST3_BOUNDARY),
+	{done, Epilogue} = parse_headers(Rest2, ?TEST3_BOUNDARY),
+	ok.
+
+parse_epilogue_crlf_test() ->
+	H1 = [{<<"content-type">>, <<"text/plain">>}],
+	Body1 = <<"This is the body of the message.">>,
+	Epilogue = <<"\r\n">>,
+	{ok, H1, Rest} = parse_headers(?TEST4_MIME, ?TEST4_BOUNDARY),
+	{done, Body1, Rest2} = parse_body(Rest, ?TEST4_BOUNDARY),
+	done = parse_body(Rest2, ?TEST4_BOUNDARY),
+	{done, Epilogue} = parse_headers(Rest2, ?TEST4_BOUNDARY),
+	ok.
+
 parse_partial_test() ->
 	{ok, <<0:8000, "abcdef">>, <<"\rghij">>}
 		= parse_body(<<0:8000, "abcdef\rghij">>, <<"boundary">>),
@@ -376,7 +418,7 @@ headers_to_iolist([{N, V}|Tail], Acc) ->
 
 -spec close(binary()) -> iodata().
 close(Boundary) ->
-	[<<"\r\n--">>, Boundary, <<"--\r\n">>].
+	[<<"\r\n--">>, Boundary, <<"--">>].
 
 -ifdef(TEST).
 build_test() ->
@@ -504,7 +546,7 @@ parse_cd_type(<< C, Rest/bits >>, Acc) ->
 		$; -> {Acc, parse_before_param(Rest, [])};
 		$\s -> {Acc, parse_before_param(Rest, [])};
 		$\t -> {Acc, parse_before_param(Rest, [])};
-		?INLINE_LOWERCASE(parse_cd_type, Rest, Acc)
+		_ -> ?LOWER(parse_cd_type, Rest, Acc)
 	end.
 
 -ifdef(TEST).
@@ -558,7 +600,7 @@ horse_parse_content_disposition_inline() ->
 
 -spec parse_content_transfer_encoding(binary()) -> binary().
 parse_content_transfer_encoding(Bin) ->
-	?INLINE_LOWERCASE_BC(Bin).
+	?LOWER(Bin).
 
 -ifdef(TEST).
 parse_content_transfer_encoding_test_() ->
@@ -594,7 +636,7 @@ parse_content_type(Bin) ->
 parse_ct_type(<< C, Rest/bits >>, Acc) ->
 	case C of
 		$/ -> parse_ct_subtype(Rest, Acc, <<>>);
-		?INLINE_LOWERCASE(parse_ct_type, Rest, Acc)
+		_ -> ?LOWER(parse_ct_type, Rest, Acc)
 	end.
 
 parse_ct_subtype(<<>>, Type, Subtype) when Subtype =/= <<>> ->
@@ -604,7 +646,7 @@ parse_ct_subtype(<< C, Rest/bits >>, Type, Acc) ->
 		$; -> {Type, Acc, parse_before_param(Rest, [])};
 		$\s -> {Type, Acc, parse_before_param(Rest, [])};
 		$\t -> {Type, Acc, parse_before_param(Rest, [])};
-		?INLINE_LOWERCASE(parse_ct_subtype, Rest, Type, Acc)
+		_ -> ?LOWER(parse_ct_subtype, Rest, Type, Acc)
 	end.
 
 -ifdef(TEST).
@@ -668,7 +710,7 @@ parse_before_param(<< C, Rest/bits >>, Params) ->
 		$; -> parse_before_param(Rest, Params);
 		$\s -> parse_before_param(Rest, Params);
 		$\t -> parse_before_param(Rest, Params);
-		?INLINE_LOWERCASE(parse_param_name, Rest, Params, <<>>)
+		_ -> ?LOWER(parse_param_name, Rest, Params, <<>>)
 	end.
 
 parse_param_name(<<>>, Params, Acc) ->
@@ -676,7 +718,7 @@ parse_param_name(<<>>, Params, Acc) ->
 parse_param_name(<< C, Rest/bits >>, Params, Acc) ->
 	case C of
 		$= -> parse_param_value(Rest, Params, Acc);
-		?INLINE_LOWERCASE(parse_param_name, Rest, Params, Acc)
+		_ -> ?LOWER(parse_param_name, Rest, Params, Acc)
 	end.
 
 parse_param_value(<<>>, Params, Name) ->

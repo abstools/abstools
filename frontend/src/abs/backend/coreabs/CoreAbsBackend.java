@@ -5,6 +5,8 @@
 package abs.backend.coreabs;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
@@ -35,4 +37,25 @@ public class CoreAbsBackend extends Main {
         new CoreAbsBackend().mainMethod(args);
     }
 
+    @Override
+    public List<String> parseArgs(String[] args) {
+        List<String> restArgs = super.parseArgs(args);
+        List<String> remainingArgs = new ArrayList<String>();
+
+        for (int i = 0; i < restArgs.size(); i++) {
+            String arg = restArgs.get(i);
+            if (arg.equals("-coreabs")) {
+                // nothing to do
+            } else {
+                remainingArgs.add(arg);
+            }
+        }
+        return remainingArgs;
+    }
+
+    protected void printUsage() {
+        super.printUsage();
+        System.out.println("Core ABS Backend: (no additional options)\n"
+        );
+    }
 }

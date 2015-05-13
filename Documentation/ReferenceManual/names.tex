@@ -31,7 +31,7 @@ Examples for syntactically valid types are: \absinline{Bool}, \absinline{ABS.Std
 Type synonyms start with an uppercase letter.
 
 \begin{abssyntax}
-\NT{TypeSynDecl} \defn \NT{TypeId}\ \TRS{=}\ \NT{TypeName}\ \TRS{;}  
+\NT{TypeSynDecl} \defn \TRS{type} \NT{TypeId}\ \TRS{=}\ \NT{TypeName}\ \TRS{;}  
 \end{abssyntax}
 
 %\begin{absexample}
@@ -46,3 +46,8 @@ type Packet = String
 type File =  List<Packet>
 type Catalog = List<Pair<Servername,Filenames>>
 \end{absexample}
+
+
+% Local Variables:
+% TeX-master: "absrefmanual"
+% End:

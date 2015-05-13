@@ -1,0 +1,97 @@
+module Resource;
+
+export ResourceImpl;
+
+import * from Common;
+import * from Interfaces;
+
+class ResourceImpl(
+	String id,
+	Rat cost,
+	Rat time_unit,
+	ResourceConfig config
+) implements Resource {
+
+	Request current_request = Nil;
+	List<ResourceListener> listeners = Nil;
+
+	String id(){ return id; }
+	
+	Rat cost(){ return cost; }
+	
+	Rat timeUnit(){ return time_unit; }
+	
+	ResourceConfig config(){ return config; }
+	
+	Request request(){ return current_request; }
+	
+	Unit setRequest(Request new_request){
+		if (new_request != Nil && new_request != current_request){
+			if (current_request == Nil){
+				// start executing the new request
+				current_request = new_request;
+				Unit u = this.notifyListeners();
+				u = this!execute(); // asynchronous
+			}else{
+				// the resource is already processing another request
+				throw IllegalStateException;
+			}
+		}else if (current_request != Nil){
+			// try to cancel the current request
+			Int progress = await current_request!progress();
+			if (progress < 100){
+				// the current_request is not complete & hence fails
+				Unit u = await current_request!setProgress(-1);
+			}else{
+				// it’s safe to delete the current_request
+				current_request = Nil;
+				Unit u = this.notifyListeners();
+			}
+		}
+	}
+	
+	Unit execute(){
+		if (current_request != Nil){
+			Int size = await current_request!size();
+			Int load_delay = size * 50; 
+			Unit u = this.doDelay(load_delay);
+			while (current_request != Nil){
+				u = this.doDelay(size);
+				Int progress = await current_request!progress();
+				progress = progress + 1;
+				u = await current_request!setProgress(progress);
+				if (progress == 100){
+					u = this.setRequest(Nil); // request has finished processing
+				}
+			}
+		}
+	}
+	
+	Unit doDelay(Int request_size){
+		Int delay = (request_size * 100) + 5 - random(10);
+		Time t = now();
+		await timeDifference(now(), t) > delay;
+	}
+	
+	Unit addResourceListener(ResourceListener l){
+		if ( not(list_contains(listeners, l)) ){
+			listeners = Cons(l, listeners);
+		}
+	}
+	
+	Unit removeResourceListener(ResourceListener l){
+		if ( list_contains(listeners, l) ){
+			listeners = without(listeners, l);
+		}
+	}
+	
+	Unit notifyListeners(){
+		List<ResourceListener> list = listeners;
+		while (list != Nil){
+			ResourceListener l = head(list);
+			Unit u = l!requestChanged(this); // ASYNC
+			list = tail(list);
+		}
+	}
+
+}

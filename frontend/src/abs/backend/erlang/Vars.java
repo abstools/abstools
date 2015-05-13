@@ -222,7 +222,7 @@ public class Vars extends LinkedHashMap<String, Var> {
             temp = Math.max(temp, v.temp);
 
         // Hide all variables, which are not used in this instance
-        Map<String, Boolean> allVars = new HashMap<>();
+        Map<String, Boolean> allVars = new HashMap<String, Boolean>();
         for (Vars vs : vars) {
             for (Map.Entry<String, Var> v : vs.entrySet()) {
                 if (!allVars.containsKey(v.getKey()) || !allVars.get(v.getKey())) {

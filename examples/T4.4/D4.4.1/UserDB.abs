@@ -1,0 +1,74 @@
+module UserDB;
+
+export UserDBImpl;
+
+import * from Interfaces;
+
+interface MutableQoS extends QoS{
+	Unit reset();
+	Unit notifyRequestOutcome(Bool success);
+}
+
+class MutableQoSImpl(
+	Rat max_fr,
+	Rat penalty_ct,
+	Rat penalty_fr
+) implements MutableQoS {
+
+	Int success_count = 0;
+	Int failure_count = 0;
+	
+	// QoS implementation
+
+	Rat maxFR(){ return max_fr; }
+	
+	Rat penaltyCT(){ return penalty_ct; }
+	
+	Rat penaltyFR(){ return penalty_fr; }
+	
+	Int successCount(){ return success_count; }
+
+	Int failureCount(){ return failure_count; }
+	
+	Rat cost(Int size){
+		// TODO - calculate cost
+		return size;
+	}
+	
+	Rat maxCT(Int size, Bool priority){
+		// TODO - calculate maximum completion time
+		return size;
+	}
+	
+	// Mutable QoS implementation
+
+	Unit reset(){
+		success_count = 0;
+		failure_count = 0;
+	}
+	
+	Unit notifyRequestOutcome(Bool success){
+		if (success){
+			success_count = success_count + 1;
+		}else{
+			failure_count = failure_count + 1;
+		}
+	}
+	
+}
+
+class UserDBImpl(
+	List<String> users
+) implements UserDB {
+
+	Map<String, MutableQoS> entries = EmptyMap;
+
+	Unit init(){
+		// TODO - populate the database
+	}
+	
+	QoS qos(String user){
+		return lookupUnsafe(entries, user);
+	}
+
+}

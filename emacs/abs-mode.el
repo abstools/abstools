@@ -172,7 +172,7 @@ different results."
        "original" "movecogto"
        "try" "catch" "finally"
        "duration"                       ; guard / statement
-       ) 'words))
+       ) 'symbols))
   "List of Abs keywords.")
 (defconst abs-constants
   (eval-when-compile

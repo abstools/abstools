@@ -1,0 +1,26 @@
+module Generator;
+
+export *;
+
+import * from Interfaces;
+
+interface RequestData{
+	Request request();
+	Int delay();
+}
+
+interface RequestGenerator{
+	RequestData nextRequest();
+}
+
+class RequestGeneratorImpl(
+	UserDB user_db
+) implements RequestGenerator {
+	
+	RequestData nextRequest(){
+		// TODO
+		return Nil;
+	}
+	
+}
+

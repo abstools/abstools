@@ -1,5 +1,6 @@
 package autodeploy;
 
+import abs.common.CompilerUtils;
 import abs.frontend.ast.*;
 
 import java.io.PrintWriter;
@@ -50,16 +51,20 @@ public class DeployInformation {
 
   private void extractDeployInformationClasses(Model model) {
     int i = 0;
-    boolean toAdd;
     for (Decl decl : model.getDecls()) {
       if (decl instanceof ClassDecl) {
-        toAdd = false;
         DeployInformationClass dic = new DeployInformationClass(((ClassDecl) decl).getParamList());
-        for(Annotation ann: ((ClassDecl) decl).getAnnotationList()) {
-          System.out.println(i++);
-          if(ann.getType().getSimpleName().equals("Aeolus")) { toAdd = true; dic.addAnn(ann.getValue()); }
+        for(Annotation ann: ((ClassDecl) decl).getAnnotationListNoTransform()) {
+          if(ann instanceof TypedAnnotation) {
+            System.out.println(i++ + ": \"" + ann.getType().getSimpleName()
+                    + "\" vs \"" + ((TypedAnnotation)ann).getAccess().getType().getSimpleName()
+                    + "\" vs \"" + ((TypeUse)((TypedAnnotation)ann).getAccess()).getName() + "\"");
+            if(((TypeUse)((TypedAnnotation)ann).getAccess()).getName().equals("Deploy")) {
+              dic.addAnn(ann.getValue());
+            }
+          }
         }
-        if(toAdd) _map.put(decl.getType().getQualifiedName(), dic);
+        if(!dic.isEmpty()) { _map.put(decl.getType().getQualifiedName(), dic); }
       }
     }
   }

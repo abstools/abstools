@@ -187,6 +187,10 @@ public abstract class Type {
         return isIntType() || isRatType();
     }
 
+    public boolean isExceptionType() {
+        return false;
+    }
+
     public boolean isAnyType() {
         return false;
     }

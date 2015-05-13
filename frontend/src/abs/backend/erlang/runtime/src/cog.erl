@@ -236,13 +236,17 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
 
 start_new_task(S=#state{running=R,tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify)->
     Ref=task:start(#cog{ref=self(),tracker=Tracker,dc=DC},Task,Args),
-    ?DEBUG({new_task,Ref,Task,Args}),
+    ?DEBUG({new_task,R,Ref,Task,Args}),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     Sender!{started,Task,Ref},
     %% Don't generate "cog idle" event when we create new task - this
     %% causes spurious clock advance
     R1=case R of no_task_schedulable -> false; _ -> R end,
-    S#state{running=R1,tasks=gb_trees:insert(Ref,#task{ref=Ref},T)}.
+    %% we used to start with state=waiting but that led to spurious clock
+    %% advancement (cog sent out idle event before task became runnable).  I
+    %% did not see where the task state is actually set to runnable either, so
+    %% don't treat state=runnable in the next line as gospel.
+    S#state{running=R1,tasks=gb_trees:insert(Ref,#task{ref=Ref,state=runnable},T)}.
 
 
 schedule_and_execute(S) ->
@@ -251,6 +255,7 @@ schedule_and_execute(S) ->
     T=get_runnable(Tasks),
     State=case T of
         none-> %None found
+            ?DEBUG({schedule, no_task_schedulable}),
             S2=reset_polled(none,Polled,S1),
             S2#state{running=no_task_schedulable};
         #task{ref=R} -> %Execute T

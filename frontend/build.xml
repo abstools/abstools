@@ -34,6 +34,8 @@
   <property name="apidoc.dir" value="${gen.dir}/docs/api" />
   <property name="ast.gen.dir" value="${gen.dir}/abs/frontend" />
   <property name="parser.src.dir" value="${src.dir}/abs/frontend/parser" />
+  <property name="parser.antlr.src.dir" value="${src.dir}/abs/frontend/antlr" />
+  <property name="antlr.jar" value="antlr-4.2.2-complete.jar"/>
   <property name="parser.gen.dir" value="${gen.dir}/abs/frontend/parser" />
   <property name="junit.jar" value="junit-4.11.jar" />
   <property name="hamcrest.jar" value="hamcrest-core-1.3.jar" />
@@ -91,6 +93,7 @@
     <pathelement location="${ext.dir}/apfloat.jar" />
     <pathelement location="${ext.dir}/guava-15.0.jar" />
     <pathelement location="${ext.dir}/commons-io-2.4.jar" />
+    <pathelement location="${ext.dir}/${antlr.jar}" />
     <pathelement location="${ext.dir}/semisolver.jar" />
   </path>
 
@@ -176,7 +179,7 @@
 
   <!-- generate ABS -->
 
-  <target name="gen" depends="genshell, genparser, genast, genlang, genruntime">
+  <target name="gen" depends="genshell, genparser, genast, genlang, genruntime, genantlr">
   </target>
 
   <target name="genast">
@@ -206,6 +209,9 @@
       <arg value="bin/rebar" />
       <arg value="compile" />
     </exec>
+    <copy todir="${build.dir}/abs/backend/maude" >
+      <fileset dir="${src.dir}/abs/backend/maude/" file="abs-interpreter.maude" />
+    </copy>
   </target>	
 
   <target name="genshell">
@@ -257,9 +263,19 @@
       terminalNames="yes"
       compress="no"
       useSwitch="yes"
-       reportActions="yes"/>
+      reportActions="yes"/>
   </target>
 
+
+  <target name="genantlr" depends="genast">
+    <echo message="Running antlr" />
+    <java fork="true" failonerror="yes"
+          dir="${parser.antlr.src.dir}"
+          classpath="${ext.dir}/${antlr.jar}"
+          classname="org.antlr.v4.Tool">
+      <arg line="ABS.g4 -package abs.frontend.antlr.parser -o '${gen.dir}/abs/frontend/antlr/parser'" />
+    </java>
+  </target>
 
   <target name="versionstamp">
     <tstamp/>
@@ -283,9 +299,10 @@
       <zipfileset src="${ext.dir}/org.sat4j.pb.jar" />
       <zipfileset src="${ext.dir}/sat4j-maxsat.jar" />
             <zipfileset src="${ext.dir}/choco-solver-2.1.1.jar" />
-
+    	<zipfileset src="${ext.dir}/semisolver.jar" />
       	<zipfileset src="${ext.dir}/guava-15.0.jar" />
         <zipfileset src="${ext.dir}/commons-io-2.4.jar" />
+        <zipfileset src="${ext.dir}/${antlr.jar}" />
       <manifest>
         <attribute name="Main-Class" value="abs.frontend.parser.Main"/>
         <attribute name="Implementation-Version" value="${frontend.version}"/>
@@ -385,6 +402,7 @@
         <include name="lib/beaver-rt.jar"/>
         <include name="lib/choco-solver-2.1.1.jar"/>
         <include name="lib/sat4j-maxsat.jar" />
+      	<include name="lib/semisolver.jar" />
       	<include name="lib/guava-15.0.jar" />
         <include name="lib/commons-io-2.4.jar" />
         <include name="feature.xml"/>

@@ -33,11 +33,8 @@ Compile to Maude with
     bin/bash/absc -maude <absfiles> -o <file.maude>
 
 To run the model, start Maude (download it from
-<http://maude.cs.uiuc.edu/download/>) and load the compiled model.
-Maude must be able to find
-`src/abs/backend/maude/abs-interpreter.maude` - either set the
-`MAUDE_LIB` environment variable or copy/symlink that file into the
-directory where the compiled model resides.
+<http://maude.cs.uiuc.edu/download/>) and load the compiled model with
+`in <file.maude>`.
 
 After loading the model into Maude, start it with the command
 
@@ -45,7 +42,7 @@ After loading the model into Maude, start it with the command
 
 (This assumes that the model terminates - if it does not, you can
 restrict the number of rewrite steps via the usual options to the
-`rew` command.)
+`rew` or `frew` command.)
 
 Using the Erlang backend
 ------------------------
@@ -60,7 +57,7 @@ The output will be put in `gen/erl`.
 A model can be started with two different commands, both of which are
 generated inside `gen/erl`:
 
-    % gen/erl/start [--debug|-d] [<main-module>]
+    % gen/erl/start_console [--debug|-d] [<main-module>]
     % gen/erl/run [--debug|-d] [<main-module>]
 
 where `start` launches an Erlang shell an executes the given main

@@ -100,6 +100,9 @@ def Int size<A>(Set<A> xs) =
       Insert(s, ss) => 1 + size(ss); 
    };
 
+/**
+ * Returns the union of sets 'set1' and 'set2'.
+ */
 def Set<A> union<A>(Set<A> set1, Set<A> set2) =
    case set1 {
       EmptySet => set2;
@@ -112,6 +115,39 @@ def Set<A> union<A>(Set<A> set1, Set<A> set2) =
             else Insert(e2, union(set1, ss2));
       };
    }; 
+
+/**
+ * Returns the intersection of sets 'set1' and 'set2'.
+ */
+def Set<A> intersection<A>(Set<A> set1, Set<A> set2) =
+   case set1 {
+      EmptySet => EmptySet;
+      Insert(e1, ss1) =>  case set2 {
+          EmptySet => EmptySet;
+          Insert(e1, ss2) => Insert(e1, intersection(ss1, ss2));
+          Insert(e2, ss2) =>
+            if e1 < e2
+            then intersection(ss1, set2)
+            else intersection(set1, ss2);
+      };
+   };
+
+/**
+ * Returns the difference of sets 'set1' and 'set2', i.e., all
+ * elements of 'set1' that are not in 'set2'.
+ */
+def Set<A> difference<A>(Set<A> set1, Set<A> set2) =
+   case set1 {
+      EmptySet => EmptySet;
+      Insert(e1, ss1) =>  case set2 {
+          EmptySet => set1;
+          Insert(e1, ss2) => difference(ss1, ss2);
+          Insert(e2, ss2) =>
+            if e1 < e2
+            then Insert(e1, difference(ss1, set2))
+            else difference(set1, ss2);
+      };
+   };
 
 /**
  * Returns a set with all elements of set 'xs' plus element 'e'.
@@ -354,7 +390,7 @@ def String toString<T>(T t) = builtin;
 // Durations can be added and subtracted from Times, and compared to
 // each other.  Times can be compared to each other.
 data Time = Time(Rat timeValue);
-def Int currentms() = builtin;
+def Rat currentms() = builtin;
 def Time now() = Time(currentms());
 
 // use this like so:
@@ -477,10 +513,17 @@ data FLIAnnotation = Foreign;
  * Used to model aspects of hardware configurations and deployment.
  */
 module ABS.DC;
-export DC, DeploymentComponent, thisDC, Cost, Size, CPU, CogLocation, CPU, Bandwidth, InfRat, Fin, finvalue;
+// Interfaces
+export DeploymentComponent, CloudProvider;
+// Annotations
+export DC, Cost, Size, MaxSize, CogLocation;
+// Datatypes, Constructors
+export Resourcetype, CPU, Bandwidth, InfRat, Fin;
+// Functions
+export thisDC, finvalue;
 import * from ABS.StdLib;
 
-data Resourcetype = CPU | Bandwidth ;
+data Resourcetype = CPU | Bandwidth | Memory ;
 
 data InfRat = InfRat | Fin(Rat finvalue);
 
@@ -496,12 +539,44 @@ def Rat averageDivsN(List<Int> consumeds, List<Int> totals, Int length) =
   in sumDivsN(consumeds, totals, mins) / mins;
 
 interface DeploymentComponent {
-    [Atomic] InfRat available(Resourcetype rtype);
+    // Return the load (0-100) for given resourcetype over the last n periods.
+    // If resource is infinite, return 0.
     [Atomic] Rat load(Resourcetype rtype, Int periods);
+    // Return the total available amount for given resourcetype.
     [Atomic] InfRat total(Resourcetype rtype);
+    // Utility method, implemented in terms of 'decrementResources' /
+    // 'incrementResources'.
     Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype);
+    // Decrement available resourcetype by given amount from the next
+    // time interval onwards.
     Unit decrementResources(Rat amount, Resourcetype rtype);
+    // Increment available resourcetype by given amount from the next
+    // time interval onwards.
     Unit incrementResources(Rat amount, Resourcetype rtype);
+
+    Unit setProvider(CloudProvider provider);
+    CloudProvider getProvider();
+    // Convenience methods for calling CloudProvider acquireInstance,
+    // releaseInstance.  If no cloud provider is set, return True.
+    Bool acquire();
+    Bool release();
+    // Return True if we match needed resources according to description.  For
+    // different resource types this might mean different things (e.g.,
+    // available not total memory must match vs. total CPU speed must match).
+    [Atomic] Bool matchesDescription(Map<Resourcetype, Rat> description);
+}
+
+interface CloudProvider {
+    // launchInstance has a delay, the others are instantaneous
+    // launchInstance might hand out an already-running instance.
+    DeploymentComponent launchInstance(Map<Resourcetype, Rat> description);
+    DeploymentComponent launchInstanceNonexclusively(Map<Resourcetype, Rat> description);
+    // acquireInstance, releaseInstance are called from deployment components 
+    Bool acquireInstance(DeploymentComponent instance);
+    Bool releaseInstance(DeploymentComponent instance);
+    Bool killInstance(DeploymentComponent instance);
+
+    Rat getAccumulatedCost();
 }
 
 class DeploymentComponent (String description, Map<Resourcetype, Rat> initconfig)
@@ -511,13 +586,17 @@ implements DeploymentComponent {
     Time creationTime = now();
     // Histories are updated by the backend.  totalhistories stay empty in
     // case the DC has an infinite amount of resources for that type.
-    List<Int> cpuhistory = Nil;
-    List<Int> cpuhistorytotal = Nil;
-    List<Int> bwhistory = Nil;
-    List<Int> bwhistorytotal = Nil;
-    // Counters of consumed resources in current time unit.  Modified by the backend.
+    List<Rat> cpuhistory = Nil;
+    List<Rat> cpuhistorytotal = Nil;
+    List<Rat> bwhistory = Nil;
+    List<Rat> bwhistorytotal = Nil;
+    List<Rat> memoryhistory = Nil;
+    List<Rat> memoryhistorytotal = Nil;
+    // Counters of consumed resources in current time unit.  Modified by the
+    // backend where appropriate (CPU, bandwidth self-refresh; memory doesn't.)
     Rat cpuconsumed = 0;
     Rat bwconsumed = 0;
+    Rat memoryconsumed = 0;
     // Initialized flag read by the backend to avoid premature execution
     Bool initialized = False;
     // Total amount of resources in current and next time interval.
@@ -527,16 +606,13 @@ implements DeploymentComponent {
     InfRat bw = case lookup(initconfig, Bandwidth) {
       Nothing => InfRat; Just(v) => Fin(v); };
     InfRat bwnext = bw;
+    InfRat memory = case lookup(initconfig, Memory) {
+      Nothing => InfRat; Just(m) => Fin(m); };
+    InfRat memorynext = memory;
+
+    CloudProvider cloudprovider = null;
     {
         this.initialized = True;
-    }
-    [Atomic] InfRat available(Resourcetype rtype) {
-        InfRat result = InfRat;
-        case (rtype) {
-            CPU => { if (cpu != InfRat) result = Fin(finvalue(cpu) - cpuconsumed); }
-            Bandwidth => if (bw != InfRat) result = Fin(finvalue(bw) - bwconsumed);
-        }
-        return result;
     }
     [Atomic] Rat load(Resourcetype rtype, Int periods) {
         Rat result = 0;
@@ -551,6 +627,11 @@ implements DeploymentComponent {
                     result = averageDivsN(bwhistory, bwhistorytotal, periods);
                 }
             }
+            Memory => {
+                if (memory != InfRat) {
+                    result = averageDivsN(memoryhistory, memoryhistorytotal, periods);
+                }
+            }
         }
         return result;
     }
@@ -559,10 +640,11 @@ implements DeploymentComponent {
         case (rtype) {
             CPU => result = cpu;
             Bandwidth => result = bw;
+            Memory => result = memory;
         }
         return result;
     }
-
+    
     // Transfer resources between deployment components.
     // FIXME: load calculation will be invalid if resource totals have
     // been changed in the specified interval.
@@ -570,7 +652,7 @@ implements DeploymentComponent {
         this.decrementResources(amount, rtype);
         target!incrementResources(amount, rtype);
     }
-    
+
     Unit decrementResources(Rat amount, Resourcetype rtype) {
         case (rtype) {
             CPU => {
@@ -582,6 +664,10 @@ implements DeploymentComponent {
             Bandwidth => if (bwnext != InfRat) {
                 assert (finvalue(bwnext) >= amount);
                 bwnext = Fin(finvalue(bwnext) - amount);
+            }
+            Memory => if (memorynext != InfRat) {
+                assert (finvalue(memorynext) >= amount);
+                memorynext = Fin(finvalue(memorynext) - amount);
             }
         }
     }
@@ -595,7 +681,53 @@ implements DeploymentComponent {
             Bandwidth => if (bwnext != InfRat) {
                 bwnext = Fin(finvalue(bwnext) + amount);
             }
+            Memory => if (memorynext != InfRat) {
+                memorynext = Fin(finvalue(memorynext) + amount);
+            }
         }
+    }
+    Unit setProvider(CloudProvider provider) {
+        this.cloudprovider = provider;
+    }
+    CloudProvider getProvider() { return cloudprovider; }
+    Bool acquire() {
+        Bool result = True;
+        if (cloudprovider != null) {
+            result = await cloudprovider!acquireInstance(this);
+        }
+        return result;
+    }
+    Bool release() {
+        Bool result = True;
+        if (cloudprovider != null) {
+            result = await cloudprovider!releaseInstance(this);
+        }
+        return result;
+    }
+    [Atomic]
+    Bool matchesDescription(Map<Resourcetype, Rat> description) {
+        Bool result = True;
+        Set<Resourcetype> keys = keys(description);
+        while (result == True && ~(emptySet(keys))) {
+            Resourcetype key = take(keys);
+            keys = remove(keys, key);
+            Rat value = lookupUnsafe(description, key);
+            case (key) {
+            CPU => {
+                if (cpu != InfRat && finvalue(cpu) < value) result = False;
+            }
+            Bandwidth => {
+                if (bw != InfRat && finvalue(bw) < value) result = False;
+            }
+            Memory => {
+                if (memory != InfRat && finvalue(memory) - memoryconsumed < value)
+                    // Memory has different semantics - we ask for _free_
+                    // memory, not total memory
+                    result = False;
+                }
+            }
+        }
+        return result;
     }
 }
 
@@ -609,6 +741,9 @@ type Cost = Duration;
 
 // Annotation for async method calls: size of sent data
 type Size = Rat;
+
+// Annotation for classes: memory size of resulting cog
+type MaxSize = Rat;
 
 // Distributed execution (eg the Scala backend): where the cog will be created
 type CogLocation = String;

@@ -4,8 +4,6 @@ PROJECT = cowboy
 
 # Options.
 
-ERLC_OPTS ?= -Werror +debug_info +warn_export_all +warn_export_vars \
-	+warn_shadow_vars +warn_obsolete_guard +warn_missing_spec
 COMPILE_FIRST = cowboy_middleware cowboy_sub_protocol
 CT_OPTS += -pa test -ct_hooks cowboy_ct_hook []
 PLT_APPS = crypto public_key ssl
@@ -13,12 +11,16 @@ PLT_APPS = crypto public_key ssl
 # Dependencies.
 
 DEPS = cowlib ranch
+dep_cowlib = git https://github.com/ninenines/cowlib 1.2.0
+
 TEST_DEPS = ct_helper gun
 dep_ct_helper = git https://github.com/extend/ct_helper.git master
 
 # Standard targets.
 
 include erlang.mk
+
+ERLC_OPTS += +warn_export_all +warn_missing_spec +warn_untyped_record
 
 # Also dialyze the tests.
 
