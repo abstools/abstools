@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import abs.backend.common.CodeStream;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.ParamDecl;
@@ -26,7 +27,7 @@ public class ErlUtil {
         not_first
     };
 
-    public static final void functionHeaderParamsAsList(ErlangCodeStream ecs, String funName, String firstParameter,
+    public static final void functionHeaderParamsAsList(CodeStream ecs, String funName, String firstParameter,
                                                         abs.frontend.ast.List<ParamDecl> args, Mask mask) {
         StringBuilder b = new StringBuilder("[");
         boolean first = true;
@@ -48,14 +49,14 @@ public class ErlUtil {
 
     // Not used when garbage collector pause points are added to functions
     // Consider removing
-    public static final void functionHeader(ErlangCodeStream ecs, String funName, abs.frontend.ast.List<ParamDecl> args) {
+    public static final void functionHeader(CodeStream ecs, String funName, abs.frontend.ast.List<ParamDecl> args) {
         List<String> a = new ArrayList<String>(args.getNumChild());
         for (ParamDecl p : args)
             a.add(p.getName());
         functionHeader(ecs, funName, a, Mask.all);
     }
 
-    public static final void functionHeader(ErlangCodeStream ecs, String funName, String firstParameter,
+    public static final void functionHeader(CodeStream ecs, String funName, String firstParameter,
             abs.frontend.ast.List<ParamDecl> args) {
         List<String> a = new ArrayList<String>(args.getNumChild());
         a.add(firstParameter);
@@ -64,15 +65,15 @@ public class ErlUtil {
         functionHeader(ecs, funName, a, Mask.not_first);
     }
 
-    public static final void functionHeader(ErlangCodeStream ecs, String funName, String... args) {
+    public static final void functionHeader(CodeStream ecs, String funName, String... args) {
         functionHeader(ecs, funName, Mask.all, args);
     }
 
-    public static final void functionHeader(ErlangCodeStream ecs, String funName, Mask mask, String... args) {
+    public static final void functionHeader(CodeStream ecs, String funName, Mask mask, String... args) {
         functionHeader(ecs, funName, Arrays.asList(args), mask);
     }
 
-    public static final void functionHeader(ErlangCodeStream ecs, String funName, List<String> args, Mask mask) {
+    public static final void functionHeader(CodeStream ecs, String funName, List<String> args, Mask mask) {
         ecs.format("'%s'(", funName);
         boolean first = true;
         for (String a : args) {
@@ -114,7 +115,7 @@ public class ErlUtil {
         return "m_" + name.replace('.', '_');
     }
 
-    public static void buildParams(ErlangCodeStream ecs, abs.frontend.ast.List<PureExp> params, Vars vars, boolean emptyStack) {
+    public static void buildParams(CodeStream ecs, abs.frontend.ast.List<PureExp> params, Vars vars, boolean emptyStack) {
         ecs.print("[");
         buildParamsWithOutBrackets(ecs, params, vars);
 
@@ -131,7 +132,7 @@ public class ErlUtil {
         ecs.print("]");
     }
 
-    public static void buildParamsWithOutBrackets(ErlangCodeStream ecs, abs.frontend.ast.List<PureExp> params, Vars vars) {
+    public static void buildParamsWithOutBrackets(CodeStream ecs, abs.frontend.ast.List<PureExp> params, Vars vars) {
         boolean first = true;
         for (PureExp a : params) {
             if (!first)
@@ -142,7 +143,7 @@ public class ErlUtil {
         }
     }
 
-    public static void argumentList(ErlangCodeStream ecs, PureExp callee, boolean builtin, boolean imperativeContext, abs.frontend.ast.List<PureExp> params, Vars vars) {
+    public static void argumentList(CodeStream ecs, PureExp callee, boolean builtin, boolean imperativeContext, abs.frontend.ast.List<PureExp> params, Vars vars) {
         ecs.print("(");
         if (callee != null) {
             callee.generateErlangCode(ecs, vars);
@@ -172,7 +173,7 @@ public class ErlUtil {
         ecs.print(")");
     }
 
-    public static void stopWorldPrelude(ErlangCodeStream ecs, Vars vars, boolean functional) {
+    public static void stopWorldPrelude(CodeStream ecs, Vars vars, boolean functional) {
         ecs.println("receive");
         ecs.incIndent();
         ecs.println("{stop_world, CogRef} ->");

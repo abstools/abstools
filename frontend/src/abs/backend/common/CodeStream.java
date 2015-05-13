@@ -1,7 +1,7 @@
 /**
  * This file is licensed under the terms of the Modified BSD License.
  */
-package abs.backend.erlang;
+package abs.backend.common;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -10,21 +10,21 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 
 /**
- * Provides stream, which tracks intention
+ * Provides stream, which tracks indentation
  * 
  * @author Georg Göri
  */
-public class ErlangCodeStream extends PrintStream {
+public class CodeStream extends PrintStream {
     private static final String INDENT = "    ";
     private boolean newline = true;
 
     private String indent = "";
 
-    public ErlangCodeStream(File file) throws FileNotFoundException, UnsupportedEncodingException {
+    public CodeStream(File file) throws FileNotFoundException, UnsupportedEncodingException {
         super(file, "UTF-8");
     }
 
-    public ErlangCodeStream(OutputStream out, String initIndent) {
+    public CodeStream(OutputStream out, String initIndent) {
         super(out);
         indent = initIndent;
     }
@@ -37,12 +37,12 @@ public class ErlangCodeStream extends PrintStream {
         this.indent = s;
     }
 
-    public ErlangCodeStream incIndent() {
+    public CodeStream incIndent() {
         indent = indent + INDENT;
         return this;
     }
 
-    public ErlangCodeStream decIndent() {
+    public CodeStream decIndent() {
         if (indent.length() > 0)
             indent = indent.substring(0, indent.length() - INDENT.length());
         return this;

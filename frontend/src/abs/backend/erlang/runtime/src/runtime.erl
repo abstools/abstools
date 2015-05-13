@@ -5,10 +5,6 @@
 -behaviour(supervisor).
 
 -include_lib("absmodulename.hrl").
-%% pacify the editor: the above file is generated hence not always available
--ifndef(ABSMAINMODULE).
--define(ABSMAINMODULE,undefined).
--endif.
 
 -export([start/0,start/1,run/1,start_link/1]).
 
@@ -67,9 +63,9 @@ parse(Args,Exec)->
 start_link(Args) ->
     case Args of
         [Module] ->
-            R={ok, T} = start_mod(Module, false, false),
-            io:format("~w~n", [end_mod(T)]),
-            R;
+            {ok, _T} = start_mod(Module, false, false),
+            %% io:format("~w~n", [end_mod(T)]),
+            supervisor:start_link({local, ?MODULE}, ?MODULE, []);
         _ -> {error, false}
     end.
 
@@ -100,6 +96,7 @@ start_mod(Module, Debug, GCStatistics) ->
 end_mod(TaskRef) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
+    modelapi:print_statistics(),
     cog_monitor:waitfor(),
     timer:sleep(1),
     gc:stop(),

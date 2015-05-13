@@ -12,9 +12,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.util.regex.Matcher;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
+import org.junit.Assume;
 
 import abs.ABSTest;
 import abs.backend.BackendTestDriver;
@@ -31,7 +33,27 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     }
 
     public static boolean checkErlang() {
-        return SemanticTests.checkProg("erl");
+        if (SemanticTests.checkProg("erl")) {
+            // http://stackoverflow.com/a/9561398/60462
+            ProcessBuilder pb = new ProcessBuilder("erl", "-eval", "erlang:display(erlang:system_info(otp_release)), halt().",  "-noshell");
+            try {
+                Process p = pb.start();
+                InputStreamReader r = new InputStreamReader(p.getInputStream());
+                BufferedReader b = new BufferedReader(r);
+                Assert.assertEquals(0, p.waitFor());
+                String version = b.readLine();
+                java.util.regex.Pattern pat = java.util.regex.Pattern.compile("\"(\\d*).*");
+                Matcher m = pat.matcher(version);
+                Assert.assertTrue("Could not identify Erlang version: "+version, m.matches());
+                String v = m.group(1);
+                Assume.assumeTrue("Need Erlang R17 or better.",Integer.parseInt(v) >= 17);
+            } catch (IOException e) {
+                return false;
+            } catch (InterruptedException e) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -63,7 +85,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         try {
             f = Files.createTempDir();
             f.deleteOnExit();
-            Model model = assertParseOk(absCode, Config.WITH_STD_LIB, Config.TYPE_CHECK, Config.WITH_LOC_INF, Config.WITHOUT_MODULE_NAME);
+            Model model = assertParseOk(absCode, Config.WITH_STD_LIB, Config.TYPE_CHECK, /* XXX:CI Config.WITH_LOC_INF, */ Config.WITHOUT_MODULE_NAME);
             String mainModule = genCode(model, f, true);
             make(f);
             return run(f, mainModule);
@@ -108,9 +130,11 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         if (model.hasTypeErrors()) {
             Assert.fail(model.getTypeErrors().getFirst().getHelpMessage());
         }
-        MainBlock mb = (MainBlock) model.getCompilationUnit(1).getMainBlock();
-        if (appendResultprinter)
-            mb.setStmt(new ReturnStmt(new List<Annotation>(), new VarUse("testresult")), mb.getNumStmt());
+        MainBlock mb = model.getMainBlock();
+        if (mb != null && appendResultprinter) {
+            mb.addStmt(new ReturnStmt(new List<Annotation>(),
+                                      new VarUse("testresult")));
+        }
         ErlangBackend.compile(model, targetDir);
         if (mb == null)
             return null;
@@ -126,6 +150,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         ProcessBuilder pb = new ProcessBuilder("erl", "-pa", "ebin", "-noshell", "-noinput", "-eval",
                 "case make:all() of up_to_date -> halt(0); _ -> halt(1) end.");
         pb.directory(workDir);
+        pb.inheritIO();
         Process p = pb.start();
         Assert.assertEquals("Compile failed", 0, p.waitFor());
     }

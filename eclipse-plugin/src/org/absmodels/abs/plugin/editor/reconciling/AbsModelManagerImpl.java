@@ -22,6 +22,7 @@ import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
+import abs.frontend.parser.Main;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -56,7 +57,7 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
             model.addCompilationUnit(cu);
         }
 
-
+        Main.exceptionHack(model);
         if (!model.hasParserErrors()) {
             if (withTypechecks) {
                 extendedTypechecking();
@@ -88,6 +89,7 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
                 model.registerTypeSystemExtension(ltie);
             }
         }
+        Main.exceptionHack(model);
         SemanticErrorList typeErrors = model.typeCheck();
 
         updateMarkers(typeErrors);
@@ -145,6 +147,8 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
         Model build = absNature.getCompleteModel();
         if (build != null && model != build) {
             model = build.parseTreeCopy();
+            // XXX Check if parseTreeCopy does the right thing.
+            Main.exceptionHack(model);
             notifyChangeListeners();
         }
     }

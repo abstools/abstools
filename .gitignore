@@ -1,6 +1,5 @@
 /.vagrant
 /frontend/bin/
-/frontend/**/gen/
 /frontend/dist/
 /frontend/**/*.beam
 /Documentation/**/*.aux
@@ -14,3 +13,5 @@
 /abs-configurator/*/bin/
 /abs-docs/target/
 /eclipse-plugin/update-site/
+/**/gen/
+

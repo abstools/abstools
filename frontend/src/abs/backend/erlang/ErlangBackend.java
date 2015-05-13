@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import abs.common.NotImplementedYetException;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
@@ -25,8 +26,11 @@ public class ErlangBackend extends Main {
     public static void main(final String... args) {
         try {
             new ErlangBackend().compile(args);
+        } catch (NotImplementedYetException e) {
+            System.err.println(e.getMessage());
+            System.exit(0);
         } catch (Exception e) {
-            System.err.println("An error occurred during compilation: " + e.getMessage());
+            System.err.println("An error occurred during compilation:\n" + e.getMessage());
             if (Arrays.asList(args).contains("-debug")) {
                 e.printStackTrace();
             }

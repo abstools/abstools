@@ -222,6 +222,8 @@ CaseBranch ::= Left:Pattern Right:PureExp ;
 //Patterns
 abstract Pattern ;
 
+// PatternVar are fresh variables, PatternVarUse match variables from
+// the outer scope.  See VarResolution.jrag rule "rewrite PatternVarUse"
 PatternVarUse: Pattern ::= <Name>;
 PatternVar: Pattern ::= Var:PatternVarDecl;
 ConstructorPattern: Pattern ::= <Constructor> Param:Pattern*;

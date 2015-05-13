@@ -116,8 +116,8 @@ public class VarResolutionTest extends FrontendTest {
     }
 
     static private ModuleDecl getTestModule(Model m) {
-        ModuleDecl md = m.getCompilationUnit(1).getModuleDecl(0);
-        assertEquals("UnitTest",md.getName());
+        ModuleDecl md = m.lookupModule("UnitTest");
+        assertNotNull("Module UnitTest not found", md);
         return md;
     }
 }

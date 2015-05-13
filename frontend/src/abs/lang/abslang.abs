@@ -33,6 +33,14 @@ def A min<A>(A a, A b) = if a < b then a else b;
     
 def Rat abs(Rat x) = if x > 0 then x else -x;
 
+def Int pow(Int b, Int n) =
+    if n < 0 then
+        0
+    else case n {
+        0 => 1;
+        _ => b * pow(b, n-1);
+    };
+
 /**
  * Returns a random number between 0 (inclusive) and below (exclusive).
  */
@@ -433,6 +441,11 @@ def Duration subtractFromDuration(Duration d, Rat v) =
       Duration(x) => Duration(max(x - v, 0));
   };
 
+// Annotation data types for KeyABS invariants, preconditions, postconditions
+data Inv;
+data Pre;
+data Post;
+
 // Annotation data type to express deadlines:
 // [Deadline: Duration(5)] o!m();
 type Deadline = Duration;
@@ -470,6 +483,12 @@ data AtomicityAnnotation = Atomic;
 // functional break point
 def A watch<A>(A val) = builtin;
 def A watchEx<A, B>(A val, B info) = builtin;
+
+// input/output, first version
+def Unit println(String s) = builtin;
+def Unit print(String s) = builtin;
+def String readln() = builtin;
+
 
 /**
  * Custom schedulers
@@ -518,7 +537,7 @@ export DeploymentComponent, CloudProvider;
 // Annotations
 export DC, Cost, Size, MaxSize, CogLocation;
 // Datatypes, Constructors
-export Resourcetype, CPU, Bandwidth, InfRat, Fin;
+export Resourcetype, CPU, Bandwidth, Memory, InfRat, Fin;
 // Functions
 export thisDC, finvalue;
 import * from ABS.StdLib;
@@ -567,17 +586,111 @@ interface DeploymentComponent {
 }
 
 interface CloudProvider {
-    // launchInstance has a delay, the others are instantaneous
-    // launchInstance might hand out an already-running instance.
+    // (pre)launchInstance might have a delay, the others are instantaneous.
+    // launchInstance might hand out an already-running instance if it has
+    // been released; in this case there will be no delay.
+    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d);
     DeploymentComponent launchInstance(Map<Resourcetype, Rat> description);
-    DeploymentComponent launchInstanceNonexclusively(Map<Resourcetype, Rat> description);
-    // acquireInstance, releaseInstance are called from deployment components 
+    // acquireInstance, releaseInstance are called from deployment components.
+    // launchInstance does the equivalent of acquireInstance.
     Bool acquireInstance(DeploymentComponent instance);
     Bool releaseInstance(DeploymentComponent instance);
     Bool killInstance(DeploymentComponent instance);
 
     Rat getAccumulatedCost();
 }
+
+class CloudProvider(String name) implements CloudProvider {
+    // Preliminary version - mind the FIXMEs!
+    Set<DeploymentComponent> launchedInstances = set[];
+    Set<DeploymentComponent> acquiredInstances = set[];
+    Set<DeploymentComponent> killedInstances = set[];
+    Int instanceCounter = 0;
+
+    Unit run() {
+        // TODO: loop with "await duration(1, 1)", sum up costs of deployment
+        // components in launchedInstances, launchedInstancesNonEx,
+        // acquiredInstances that have crossed their accounting period
+        skip;
+    }
+
+    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
+        // Until we have a way of actually removing DCs, might as well re-use
+        // them
+        DeploymentComponent result = this.findMatchingInstance(killedInstances, d);
+        if (result != null) {
+            killedInstances = remove(killedInstances, result);
+            launchedInstances = insertElement(launchedInstances, result);
+        } else {
+            result = new DeploymentComponent(name + "-"
+                + toString(instanceCounter), d);
+            instanceCounter = instanceCounter + 1;
+            launchedInstances = insertElement(launchedInstances, result);
+            // TODO: await for startup time here (and only here)
+            result!setProvider(this);
+        }
+        return result;
+    }
+
+    DeploymentComponent launchInstance(Map<Resourcetype, Rat> d) {
+        DeploymentComponent result = this.prelaunchInstance(d);
+        acquiredInstances = insertElement(acquiredInstances, result);
+        return result;
+    }
+
+    Bool acquireInstance(DeploymentComponent instance) {
+        Bool result = True;
+        if (contains(acquiredInstances, instance)) {
+            result = False;
+        } else {
+            acquiredInstances = insertElement(acquiredInstances, instance);
+        }
+        return result;
+    }
+    Bool releaseInstance(DeploymentComponent instance) {
+        // FIXME: Currently we do not protect against double-release and always
+        // return True.  Once we have means of testing whether there is still
+        // activity on a deployment component, we could refuse to release it in
+        // that case and return False.
+        if (contains(acquiredInstances, instance)) {
+            acquiredInstances = remove(acquiredInstances, instance);
+        }
+        return True;
+    }
+
+    Bool killInstance(DeploymentComponent instance) {
+        // Refuse to kill an acquired instance.
+        // FIXME: is this the right thing?
+        Bool result = ~(contains(acquiredInstances, instance));
+        if (result) {
+            launchedInstances = remove(launchedInstances, instance);
+            killedInstances = insertElement(killedInstances, instance);
+        }
+        return result;
+    }
+
+    Rat getAccumulatedCost() {
+        // TODO: implement
+        return -1;
+    }
+
+    DeploymentComponent findMatchingInstance(Set<DeploymentComponent> instances,
+        Map<Resourcetype, Rat> description)
+        {
+            DeploymentComponent result = null;
+            while (~emptySet(instances) && result == null) {
+                DeploymentComponent instance = take(instances);
+                instances = remove(instances, instance);
+                Bool matches = await instance!matchesDescription(description);
+                if (matches) {
+                    result = instance;
+                }
+            }
+            return result;
+        }
+    }
+
+
 
 class DeploymentComponent (String description, Map<Resourcetype, Rat> initconfig)
 implements DeploymentComponent {
@@ -753,6 +866,8 @@ type CogLocation = String;
  */
 module ABS.Meta;
 export *;
+// these three used to reside in ABS.Meta; re-export for backward compatibility
+export print, println, readln from ABS.StdLib;
 import * from ABS.StdLib;
 import * from ABS.Scheduler;
 
@@ -851,12 +966,6 @@ interface StateUpdate {
 interface Feature {
     String getName();
 }
-
-// convenience functions (to be removed)
-def Unit println(String s) = builtin;
-def Unit print(String s) = builtin;
-def String readln() = builtin;
-
 
 
 /**

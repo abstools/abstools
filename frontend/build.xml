@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="ABS Frontend" default="compile" basedir=".">
+<project name="ABS Frontend" default="dist" basedir=".">
   <!-- $Id$ -->
 
   <!-- this is needed to be able to call targets from maven -->
@@ -144,7 +144,7 @@
   </target>
 
   <target name="compile" depends="prepare, gen" description="Compiles all java files in the source directory.">
-    <javac srcdir="${src.dir}:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off" encoding="utf-8">
+    <javac srcdir="${src.dir}:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off" encoding="utf-8" target="1.7" source="1.7">
       <classpath refid="compile.classpath" />
     </javac>
   </target>
@@ -393,7 +393,7 @@
   <!-- From command line: -->
   <!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt-src.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
 
-  <target name="build-eclipse-plugin" depends="clean,compile,versionstamp">
+  <target name="build-eclipse-plugin" depends="dist">
     <mkdir dir="${basedir}/${plugin.name}_${frontend.version}"/>
     <copy todir="${basedir}/${plugin.name}_${frontend.version}" failonerror="true" overwrite="true">
       <fileset dir="${basedir}">
@@ -405,6 +405,7 @@
       	<include name="lib/semisolver.jar" />
       	<include name="lib/guava-15.0.jar" />
         <include name="lib/commons-io-2.4.jar" />
+        <include name="lib/${antlr.jar}" />
         <include name="feature.xml"/>
       </fileset>
       <fileset dir="${build.dir}">

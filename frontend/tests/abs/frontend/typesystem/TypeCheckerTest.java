@@ -133,7 +133,7 @@ public class TypeCheckerTest extends FrontendTest {
     public void ticket414_futNeedsDataType1() {
         Model m = assertParseOk("module M; interface I {} { Fut<I> fi; }", Config.WITH_STD_LIB);
         assertFalse(m.hasErrors());
-        Block b = m.getCompilationUnit(1).getMainBlock();
+        Block b = m.getMainBlock();
         assertNotNull(b);
         VarDeclStmt s = (VarDeclStmt) b.getStmt(0);
         ParametricDataTypeUse u = (ParametricDataTypeUse) s.getVarDecl().getAccess();
@@ -142,20 +142,6 @@ public class TypeCheckerTest extends FrontendTest {
         assertEquals("I",tu.getName());
         assertThat(tu, instanceOf(InterfaceTypeUse.class));
         assertThat(tu.getType(), instanceOf(InterfaceType.class));
-    }
-
-    @Test
-    public void ticket414_futNeedsDataType2() {
-        Model m = assertParseOk("module M; interface I {} { Fut<I> fi; }", Config.WITH_STD_LIB);
-        assertFalse(m.hasErrors());
-        Block b = m.getCompilationUnit(1).getMainBlock();
-        assertNotNull(b);
-        VarDeclStmt s = (VarDeclStmt) b.getStmt(0);
-        ParametricDataTypeUse u = (ParametricDataTypeUse) s.getVarDecl().getAccess();
-        // Have:
-        TypeUse tu = u.getParam(0);
-        assertEquals("I",tu.getName());
-        assertThat(tu, instanceOf(InterfaceTypeUse.class));
         assertThat(tu.getDecl(), instanceOf(InterfaceDecl.class));
     }
 
@@ -416,7 +402,7 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void methodSigs() {
         Model m = assertParseOk("interface I { Unit m(); } interface J { Unit n(); } interface K extends I, J { Unit foo(); } { K k; } ", Config.WITH_STD_LIB); 
-        ModuleDecl module = m.getCompilationUnit(1).getModuleDecl(0);
+        ModuleDecl module = m.lookupModule("UnitTest");
         InterfaceDecl d = (InterfaceDecl) module.getDecl(2);
         ArrayList<MethodSig> list = new ArrayList<MethodSig>(d.getAllMethodSigs());
         assertEquals(list.toString(),3,list.size());

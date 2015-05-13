@@ -4,8 +4,7 @@ Functions in ABS define names for parametrized data expressions. A Function in A
 
 .Syntax
 
-[source,java]
-
+[source]
 ----
 def Int length(IntList list) =
 case list {

@@ -1,9 +1,6 @@
 An Abs model is executed on the Maude backend by first compiling it via
 generateMaude (found in frontend/src/bash/) and then loading the
-resulting .maude file inside Maude.  The file abs-interpreter.maude
-(contained in the same directory as this file) must be visible to Maude,
-either by linking or copying it to the same directory as the compiled
-Abs file, or via the MAUDE_LIB environment variable.
+resulting .maude file inside Maude.
 
 After loading the compiled file into Maude, the model is started by
 entering "rew start ." (without the quotes) at the Maude prompt.

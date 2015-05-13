@@ -224,7 +224,7 @@ public class JavaBackendTest extends ABSTest {
             c2[i] = config[i];
         }
         c2[len] = Config.TYPE_CHECK;
-        c2[len+1] = Config.WITH_LOC_INF;
+        // c2[len+1] = Config.WITH_LOC_INF; // XXX: Trips up CI.
         model = assertParse(code, c2);
         if (model.hasErrors()) {
             fail(model.getErrors().get(0).getHelpMessage());

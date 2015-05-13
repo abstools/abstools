@@ -87,6 +87,10 @@ public class Vars extends LinkedHashMap<String, Var> {
         return get(name);
     }
 
+    public boolean exists(String name) {
+        return containsKey(name);
+    }
+
     /**
      * Increase counter of variable
      */

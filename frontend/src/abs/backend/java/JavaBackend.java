@@ -15,6 +15,7 @@ import abs.backend.java.codegeneration.JavaCodeGenerationException;
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.runtime.ABSObject;
 import abs.backend.java.lib.types.*;
+import abs.common.NotImplementedYetException;
 import abs.frontend.ast.*;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.*;
@@ -26,8 +27,11 @@ public class JavaBackend extends Main {
     public static void main(final String... args) {
         try {
             new JavaBackend().compile(args);
+        } catch (NotImplementedYetException e) {
+            System.err.println(e.getMessage());
+            System.exit(0);
         } catch (Exception e) {
-            System.err.println("An error occurred during compilation: " + e.getMessage());
+            System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
             if (Arrays.asList(args).contains("-debug")) {
                 e.printStackTrace();

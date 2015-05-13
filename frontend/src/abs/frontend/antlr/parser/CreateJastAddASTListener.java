@@ -9,8 +9,6 @@ import abs.frontend.ast.*;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
-import choco.cp.solver.constraints.integer.bool.BoolTimesXYZ;
-
 /**
  * This class creates the JastAdd AST from an Antlr parse tree.
  *
@@ -35,8 +33,14 @@ public class CreateJastAddASTListener extends ABSBaseListener {
      * value.  Returns the passed-in JastAdd value.
      */
     private ASTNode<?> setV(ParserRuleContext node, ASTNode<?> value) {
-        value.setPosition(beaver.Symbol.makePosition(node.start.getLine(), node.start.getCharPositionInLine()),
-                          beaver.Symbol.makePosition(node.stop.getLine(), node.stop.getCharPositionInLine()));
+        assert node != null;
+        int startline = node.start.getLine();
+        int startcol = node.start.getCharPositionInLine();
+        // for a completely empty file, CompilationUnit.stop will be null
+        int endline = (node.stop == null ? node.start : node.stop).getLine();
+        int endcol = (node.stop == null ? node.start : node.stop).getCharPositionInLine();
+        value.setPosition(beaver.Symbol.makePosition(startline, startcol),
+                          beaver.Symbol.makePosition(endline, endcol));
         value.setFileName(this.filename);
         values.put(node, value);
         return value;
@@ -114,8 +118,8 @@ new List<ModuleDecl>(),
         result.setDeltaDeclList(l(ctx.delta_decl()));
         result.setProductLineOpt(o(ctx.productline_decl()));
         result.setProductList(l(ctx.product_decl()));
-        // result.setFeatureDeclList(l(ctx.featuremodel_decl()));
-        // FIXME: FExt ?
+        result.setFeatureDeclList(l(ctx.feature_decl()));
+        result.setFExtList(l(ctx.fextension()));
     }
 
     // Declarations
@@ -194,7 +198,7 @@ new List<ModuleDecl>(),
 
     // Interfaces
     @Override public void exitInterface_decl(ABSParser.Interface_declContext ctx) {
-        setV(ctx, new InterfaceDecl(ctx.TYPE_IDENTIFIER().getText(), l(ctx.annotation()), l(ctx.e), l(ctx.methodsig())));
+        setV(ctx, new InterfaceDecl(ctx.qualified_type_identifier().getText(), l(ctx.annotation()), l(ctx.e), l(ctx.methodsig())));
     }
 
     @Override public void exitMethodsig(ABSParser.MethodsigContext ctx) {
@@ -203,7 +207,7 @@ new List<ModuleDecl>(),
 
     // Classes
     @Override public void exitClass_decl(ABSParser.Class_declContext ctx) {
-        ClassDecl c = (ClassDecl)setV(ctx, new ClassDecl(ctx.TYPE_IDENTIFIER().getText(), l(ctx.annotation()), new List<ParamDecl>(), l(ctx.interface_name()), new Opt<InitBlock>(), l(ctx.field_decl()), l(ctx.method())));
+        ClassDecl c = (ClassDecl)setV(ctx, new ClassDecl(ctx.qualified_type_identifier().getText(), l(ctx.annotation()), new List<ParamDecl>(), l(ctx.interface_name()), new Opt<InitBlock>(), l(ctx.field_decl()), l(ctx.method())));
         if (ctx.paramlist() != null) {
             c.setParamList((List<ParamDecl>)v(ctx.paramlist()));
         }
@@ -233,7 +237,7 @@ new List<ModuleDecl>(),
 
     // Statements
     @Override public void exitVardeclStmt(ABSParser.VardeclStmtContext ctx) {
-        VarDecl v = new VarDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_use()), new Opt<Exp>());
+        VarDecl v = new VarDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), new Opt<Exp>());
         if (ctx.exp() != null) {
             v.setInitExp((Exp)v(ctx.exp()));
         }
@@ -338,6 +342,18 @@ new List<ModuleDecl>(),
     }
     @Override public void exitSyncCallExp(ABSParser.SyncCallExpContext ctx) {
         setV(ctx, new SyncCall((PureExp)v(ctx.o), ctx.m.getText(), (List<PureExp>)v(ctx.pure_exp_list())));
+    }
+    @Override public void exitOriginalCallExp(ABSParser.OriginalCallExpContext ctx) {
+        List<PureExp> l = ctx.pure_exp_list() == null
+            ? new List<PureExp>()
+            : (List<PureExp>)v(ctx.pure_exp_list());
+        if (ctx.c != null) {
+            setV(ctx, new TargetedOriginalCall(new DeltaID("core"), l));
+        } else if (ctx.d != null) {
+            setV(ctx, new TargetedOriginalCall((DeltaID)v(ctx.d), l));
+        } else {
+            setV(ctx, new OriginalCall(l));
+        }
     }
 
     // Pure expressions
@@ -508,7 +524,7 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitParam_decl(ABSParser.Param_declContext ctx) {
-        setV(ctx, new ParamDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_use()), l(ctx.annotation())));
+        setV(ctx, new ParamDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), l(ctx.annotation())));
     }
 
     @Override public void exitInterface_name(ABSParser.Interface_nameContext ctx) {
@@ -527,7 +543,21 @@ new List<ModuleDecl>(),
         // FIXME: could be an interface type!
         if (ctx.p.isEmpty()) {
             // normal type use
-            setV(ctx, new DataTypeUse(ctx.n.getText(), new List<Annotation>()));
+            setV(ctx, new DataTypeUse(ctx.n.getText(), l(ctx.annotation())));
+        } else {
+            // parametric type use
+            ParametricDataTypeUse p
+                = (ParametricDataTypeUse)setV(ctx, new ParametricDataTypeUse(ctx.n.getText(), l(ctx.annotation()), new List<TypeUse>()));
+            for (ABSParser.Type_useContext c : ctx.type_use()) {
+                p.addParam((TypeUse)v(c));
+            }
+        }
+    }
+
+    @Override public void exitType_exp(ABSParser.Type_expContext ctx) {
+        if (ctx.p.isEmpty()) {
+            // normal type use
+            setV(ctx, new UnresolvedTypeUse(ctx.n.getText(), new List<Annotation>()));
         } else {
             // parametric type use
             ParametricDataTypeUse p
@@ -671,6 +701,27 @@ new List<ModuleDecl>(),
         setV(ctx, new AddExportModifier((Export)v(ctx.module_export())));
     }
 
+    // Updates (?)
+    @Override public void exitUpdateDecl(ABSParser.UpdateDeclContext ctx) {
+        setV(ctx, new UpdateDecl(ctx.TYPE_IDENTIFIER().getText(), l(ctx.object_update())));
+    }
+    
+    @Override public void exitObjectUpdateDecl(ABSParser.ObjectUpdateDeclContext ctx) {
+        setV(ctx, new ObjectUpdate(ctx.qualified_type_identifier().getText(),
+                                   new AwaitStmt(new List(), (Guard)v(ctx.guard())),
+                                   new UpdatePreamble(l(ctx.update_preamble_decl())),
+                                   l(ctx.pre), l(ctx.post)));
+    }
+    
+    @Override public void exitObjectUpdateAssignStmt(ABSParser.ObjectUpdateAssignStmtContext ctx) {
+        setV(ctx, new AssignStmt(new List(), (VarOrFieldUse)v(ctx.var_or_field_ref()), (Exp)v(ctx.exp())));
+    }
+
+    @Override public void exitUpdatePreambleDecl(ABSParser.UpdatePreambleDeclContext ctx) {
+        setV(ctx, new VarDeclStmt(new List(), new VarDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), new Opt())));
+    }
+
+
     // Productline
     @Override public void exitProductline_decl(ABSParser.Productline_declContext ctx) {
         setV(ctx, new ProductLine(ctx.TYPE_IDENTIFIER().getText(),
@@ -755,9 +806,13 @@ new List<ModuleDecl>(),
     // Products
 
     @Override public void exitProduct_decl(ABSParser.Product_declContext ctx) {
-        // TODO: module reconfiguration
         setV(ctx, new Product(ctx.TYPE_IDENTIFIER().getText(),
-                              l(ctx.feature()), new List()));
+                              l(ctx.feature()), l(ctx.product_reconfiguration())));
+    }
+
+    @Override public void exitProduct_reconfiguration(ABSParser.Product_reconfigurationContext ctx) {
+        setV(ctx, new Reconfiguration(ctx.product.getText(),
+                                      l(ctx.delta_id()), ctx.update.getText()));
     }
 
     // mTVL
@@ -883,7 +938,7 @@ new List<ModuleDecl>(),
             setV(ctx, new Attribute(ctx.IDENTIFIER().getText(),
                                     new IntMType(t, (BoundaryInt)v(ctx.l),
                                                  (BoundaryInt)v(ctx.u))));
-        } else if (ctx.is != null) {
+        } else if (ctx.is != null && !ctx.is.isEmpty()) {
             setV(ctx, new Attribute(ctx.IDENTIFIER().getText(),
                                     new IntListMType(t, l(ctx.is))));
         } else if (t.equals("Int")) {

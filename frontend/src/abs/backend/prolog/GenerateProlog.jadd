@@ -181,7 +181,7 @@ aspect GenerateProlog {
     public void PureExp.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         // This method will be overwritten by all PureExp concrete subclasses
         // Therefore this is run only when a PureExp is not supported
-        throw new PrologBackendException("PureExp not supported by PrologBackend (" + this + ")");
+        throw new NotImplementedYetException(this);
     }
 
 	public abstract void VarOrFieldUse.generateProlog(PrintStream s,ReachabilityInformation reachInfo);
@@ -996,7 +996,7 @@ aspect GenerateProlog {
 
     }
     public void Export.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
-        throw new PrologBackendException("Export should never be called but its subclasses");
+        throw new NotImplementedYetException(this);
     }
     public void FromExport.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         //generates "fromExport(moduleName,ExportedDeclarationsList)."
@@ -1030,7 +1030,7 @@ aspect GenerateProlog {
     }
 
     public void Import.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
-        throw new PrologBackendException("Import should never be called but its subclasses");
+        throw new NotImplementedYetException(this);
     }
     public void FromImport.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         //generates "fromImport(moduleName,ImportedDeclarationsList)."

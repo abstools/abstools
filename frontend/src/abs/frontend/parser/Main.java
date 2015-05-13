@@ -16,7 +16,6 @@ import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Map;
@@ -26,47 +25,17 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import choco.kernel.model.constraints.Constraint;
 import abs.frontend.mtvl.ChocoSolver;
-import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
-import abs.frontend.antlr.parser.CreateJastAddASTListener;
 import abs.frontend.antlr.parser.ABSParserWrapper;
-import abs.frontend.ast.CompilationUnit;
-import abs.frontend.ast.ConstructorArg;
-import abs.frontend.ast.DataConstructor;
-import abs.frontend.ast.DataConstructorExp;
-import abs.frontend.ast.DataTypeDecl;
-import abs.frontend.ast.Decl;
-import abs.frontend.ast.DeltaDecl;
-import abs.frontend.ast.ExceptionDecl;
-import abs.frontend.ast.ExpFunctionDef;
-import abs.frontend.ast.Feature;
-import abs.frontend.ast.FnApp;
-import abs.frontend.ast.FunctionDecl;
-import abs.frontend.ast.PureExp;
-import abs.frontend.ast.StringLiteral;
-import abs.frontend.ast.UpdateDecl;
-import abs.frontend.ast.Product;
-import abs.frontend.ast.ProductLine;
-import abs.frontend.ast.List;
-import abs.frontend.ast.Model;
-import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.FeatureDecl;
-import abs.frontend.ast.FExt;
-import abs.frontend.ast.Opt;
-import abs.frontend.ast.StarImport;
+import abs.frontend.ast.*;
 import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
 import abs.frontend.configurator.visualizer.FMVisualizer;
 import abs.frontend.delta.DeltaModellingException;
-import abs.frontend.typechecker.KindedName;
-import abs.frontend.typechecker.KindedName.Kind;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
-import beaver.Parser;
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.*;
 
 /**
  * @author rudi
@@ -76,15 +45,10 @@ public class Main {
 
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
     protected boolean preprocess = false; //Preprocessor
-    public static final String ABS_DB_LIB_PATH = "abs/lang/db/";
-    public static final String[] ABS_DB_LIBS =
-            {"DbHelpers.abs", "DbMain.abs", "DbOperators.abs", "DbOperatorsStructure.abs",
-             "DbStructure.abs", "DbTransactions.abs", "DbExecutionListener.abs", "DbCosts.abs"};
     protected boolean verbose = false;
     protected boolean typecheck = true;
     protected boolean stdlib = true;
     protected boolean useJFlexAndBeaver = false;
-    protected boolean dblib = Constants.USE_DBLIB_BY_DEFAULT;
     protected boolean dump = false;
     protected boolean debug = false;
     protected boolean allowIncompleteExpr = false;
@@ -127,6 +91,8 @@ public class Main {
                abs.backend.coreabs.CoreAbsBackend.main(args);
            } else if (argslist.contains("-prettyprint")) {
                abs.backend.prettyprint.PrettyPrinterBackEnd.main(args);
+           } else if (argslist.contains("-keyabs")) {
+               abs.backend.keyabs.KeyAbsBackend.main(args);
            } else {
                Model m = parse(args);
                if (m.hasParserErrors()) {
@@ -140,10 +106,6 @@ public class Main {
 
     public void setWithStdLib(boolean withStdLib) {
         this.stdlib = withStdLib;
-    }
-
-    public void setWithDbLib(boolean withDbLib) {
-        this.dblib = withDbLib;
     }
 
     public void setAllowIncompleteExpr(boolean b) {
@@ -160,7 +122,7 @@ public class Main {
         for (String arg : args) {
             if (arg.equals("-dump"))
                 dump = true;
-            if (arg.equals("-debug"))
+            else if (arg.equals("-debug"))
                 debug = true;
             else if (arg.equals("-v"))
                 verbose = true;
@@ -176,10 +138,6 @@ public class Main {
                 stdlib = false;
             else if (arg.equals("-with-old-parser"))
                 useJFlexAndBeaver = true;
-            else if (arg.equals("-dblib"))
-                dblib = true;
-            else if (arg.equals("-nodblib"))
-                dblib = false;
             else if (arg.equals("-loctypestats"))
                 locationTypeStats = true;
             else if (arg.equals("-loctypes")) {
@@ -262,8 +220,6 @@ public class Main {
 
         if (stdlib)
             units.add(getStdLib());
-        if (dblib)
-            units.addAll(getDbLibs());
 
         List<CompilationUnit> unitList = new List<CompilationUnit>();
         for (CompilationUnit u : units) {
@@ -357,24 +313,7 @@ public class Main {
     private static void rewriteModel(Model m, String productname)
         throws WrongProgramArgumentException
     {
-        // Handle exceptions: add exceptions as constructors to the
-        // ABS.StdLib.Exception datatype.
-        DataTypeDecl e = (DataTypeDecl)(m.getExceptionType().getDecl());
-        if (e != null) {
-            // TODO: if null and not -nostdlib, throw an error
-            for (Decl decl : m.getDecls()) {
-                if (decl instanceof ExceptionDecl) {
-                    ExceptionDecl e1 = (ExceptionDecl)decl;
-                    // KLUDGE: what do we do about annotations to exceptions?
-                    DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().fullCopy());
-                    d.setPosition(e1.getStart(), e1.getEnd());
-                    d.setFileName(e1.getFileName());
-                    d.exceptionDecl = e1;
-                    e1.dataConstructor = d;
-                    e.addDataConstructor(d);
-                }
-            }
-        }
+        exceptionHack(m);
         // Generate reflective constructors for all features
         ProductLine pl = m.getProductLine();
         if (pl != null) {
@@ -427,6 +366,28 @@ public class Main {
                 }
                 current.setConstructor("Nil");
                 currentFeatureFun.setFunctionDef(new ExpFunctionDef(feature_arglist));
+            }
+        }
+    }
+
+    /** Handle exceptions: add exceptions as constructors to the
+     ABS.StdLib.Exception datatype.
+     */
+    public static void exceptionHack(Model m) {
+        DataTypeDecl e = (DataTypeDecl)(m.getExceptionType().getDecl());
+        if (e != null) {
+            // TODO: if null and not -nostdlib, throw an error
+            for (Decl decl : m.getDecls()) {
+                if (decl instanceof ExceptionDecl) {
+                    ExceptionDecl e1 = (ExceptionDecl)decl;
+                    // KLUDGE: what do we do about annotations to exceptions?
+                    DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().fullCopy());
+                    d.setPosition(e1.getStart(), e1.getEnd());
+                    d.setFileName(e1.getFileName());
+                    d.exceptionDecl = e1;
+                    e1.dataConstructor = d;
+                    e.addDataConstructor(d);
+                }
             }
         }
     }
@@ -619,16 +580,20 @@ public class Main {
 
     private void parseABSPackageFile(java.util.List<CompilationUnit> units, File file) throws IOException {
         ABSPackageFile jarFile = new ABSPackageFile(file);
-        if (!jarFile.isABSPackage())
-           return;
-        Enumeration<JarEntry> e = jarFile.entries();
-        while (e.hasMoreElements()) {
-            JarEntry jarEntry = e.nextElement();
-            if (!jarEntry.isDirectory()) {
-                if (jarEntry.getName().endsWith(".abs")) {
-                    parseABSSourceFile(units, "jar:"+file.toURI()+"!/"+jarEntry.getName(), jarFile.getInputStream(jarEntry));
+        try {
+            if (!jarFile.isABSPackage())
+                return;
+            Enumeration<JarEntry> e = jarFile.entries();
+            while (e.hasMoreElements()) {
+                JarEntry jarEntry = e.nextElement();
+                if (!jarEntry.isDirectory()) {
+                    if (jarEntry.getName().endsWith(".abs")) {
+                        parseABSSourceFile(units, "jar:"+file.toURI()+"!/"+jarEntry.getName(), jarFile.getInputStream(jarEntry));
+                    }
                 }
             }
+        } finally {
+            jarFile.close();
         }
     }
 
@@ -643,7 +608,10 @@ public class Main {
     }
 
     public static boolean isABSPackageFile(File f) throws IOException {
-       return f.getName().endsWith(".jar") && new ABSPackageFile(f).isABSPackage();
+       final ABSPackageFile absPackageFile = new ABSPackageFile(f);
+       final boolean isPackage = absPackageFile.isABSPackage();
+       absPackageFile.close();
+       return f.getName().endsWith(".jar") && isPackage;
     }
 
     public static boolean isABSSourceFile(File f) {
@@ -695,18 +663,6 @@ public class Main {
         return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream));
     }
 
-    public Collection<CompilationUnit> getDbLibs() throws IOException {
-        Collection<CompilationUnit> units = new ArrayList<CompilationUnit>();
-        for (String absDbLib : ABS_DB_LIBS) {
-            absDbLib = ABS_DB_LIB_PATH + absDbLib;
-            final InputStream stream = Main.class.getClassLoader().getResourceAsStream(absDbLib);
-            if (stream == null)
-                printErrorAndExit(String.format("Could not find DB Standard Library %s", absDbLib));
-            units.add(parseUnit(new File(absDbLib), null, new InputStreamReader(stream)));
-        }
-        return units;
-    }
-
     protected void printUsage() {
         printHeader();
         System.out.println(""
@@ -730,7 +686,6 @@ public class Main {
                 + "  -nostdlib      do not include the standard lib\n"
                 + "  --with-old-parser\n"
                 + "                 use old (deprecated) parser implementation\n"
-                + "  -dblib         include the database library (required for the SQL extensions)\n"
                 + "  -loctypes      enable location type checking\n"
                 + "  -locdefault=<loctype> \n"
                 + "                 sets the default location type to <loctype>\n"
@@ -838,9 +793,6 @@ public class Main {
         List<CompilationUnit> units = new List<CompilationUnit>();
         if (stdlib)
             units.add(getStdLib());
-        if (dblib)
-            for (final CompilationUnit unit : getDbLibs())
-                units.add(unit);
         units.add(parseUnit(file, sourceCode, reader));
         return new Model(units);
     }
@@ -861,7 +813,11 @@ public class Main {
     }
 
     /**
+<<<<<<< HEAD
      * Calls {@link #parseString(String, boolean, boolean, boolean)} with withDbLib set to false.
+=======
+     * Parses String s and returns Model.
+>>>>>>> master
      *
      * @param s
      * @param withStdLib
@@ -870,13 +826,8 @@ public class Main {
      * @throws Exception
      */
     public static Model parseString(String s, boolean withStdLib, boolean allowIncompleteExpr) throws Exception {
-        return parseString(s, withStdLib, false, allowIncompleteExpr);
-    }
-
-    public static Model parseString(String s, boolean withStdLib, boolean withDbLib, boolean allowIncompleteExpr) throws IOException {
         Main m = new Main();
         m.setWithStdLib(withStdLib);
-        m.setWithDbLib(withDbLib);
         m.setAllowIncompleteExpr(allowIncompleteExpr);
         return m.parse(null, s, new StringReader(s));
     }

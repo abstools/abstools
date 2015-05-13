@@ -11,7 +11,7 @@
 grammar ABS;
 
 TraditionalComment : '/*' .*? '*/' -> skip ;
-EndOfLineComment : '//' .*? '\n' -> skip ;
+EndOfLineComment : '//' .*? ('\n' | EOF) -> skip ;
 WhiteSpace : [ \t\f\r\n]+ -> skip ;
 
 // Common lexical elements
@@ -52,10 +52,16 @@ qualified_identifier : (TYPE_IDENTIFIER '.')* IDENTIFIER ;
 // CreateJastAddASTListener as well -- at the moment, we rely on there
 // being exactly one token
 any_identifier : qualified_type_identifier | qualified_identifier ;
-type_use : n=qualified_type_identifier
+// type_use has annotations
+type_use : annotation* n=qualified_type_identifier
+        ('<' p+=type_use (',' p+=type_use)*  '>')? ;
+// type_exp does not have annotations (on the base type)
+// This is how we (seem to) disambiguate between annotations on
+// methods/fields and their types.  Inherited from beaver grammar.
+type_exp : n=qualified_type_identifier
         ('<' p+=type_use (',' p+=type_use)*  '>')? ;
 paramlist : '(' (param_decl (',' param_decl)*)? ')' ;
-param_decl : annotation* type_use IDENTIFIER ;
+param_decl : annotation* type_exp IDENTIFIER ;
 
 interface_name : qualified_type_identifier ;
 delta_id : TYPE_IDENTIFIER ;
@@ -74,10 +80,12 @@ eff_exp : pure_exp '.' 'get'                               # GetExp
         '(' pure_exp_list ')'                             # AsyncCallExp
     | o=pure_exp '.' m=IDENTIFIER
         '(' pure_exp_list ')'                             # SyncCallExp
+    | ((d=delta_id | c='core') '.')? 'original'
+        '(' pure_exp_list ')'                             # OriginalCallExp
     ;
 
-pure_exp : qualified_identifier '(' pure_exp_list ')'     # FunctionExp
-    | qualified_identifier '[' pure_exp_list ']'          # VariadicFunctionExp
+pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
+    | qualified_identifier '[' pure_exp_list ']'           # VariadicFunctionExp
     | qualified_type_identifier ('(' pure_exp_list ')')?   # ConstructorExp
     | op=(NEGATION | MINUS) pure_exp                       # UnaryExp
     | l=pure_exp op=(MULT | DIV | MOD) r=pure_exp          # MultExp
@@ -105,7 +113,7 @@ pattern : '_'                                              # UnderscorePattern
     | STRINGLITERAL                                        # StringPattern
     | IDENTIFIER                                           # VarPattern
     | qualified_type_identifier
-        ('(' pattern (',' pattern)* ')')?                  # ConstructorPattern
+        ('(' (pattern (',' pattern)*)? ')')?               # ConstructorPattern
     ;
 
 var_or_field_ref : ('this' '.')? IDENTIFIER ;
@@ -119,7 +127,7 @@ annotation : '[' (l=type_use ':')? r=pure_exp ']' ;
 
 // Statements
 
-stmt : annotation* type_use IDENTIFIER ('=' exp)? ';'              # VardeclStmt
+stmt : annotation* type_exp IDENTIFIER ('=' exp)? ';'              # VardeclStmt
     | annotation* var_or_field_ref '=' exp ';'                     # AssignStmt
     | annotation* 'skip' ';'                                       # SkipStmt
     | annotation* 'return' exp ';'                                 # ReturnStmt
@@ -187,7 +195,7 @@ function_decl : annotation*
 // Interfaces
 
 interface_decl : annotation*
-        'interface' TYPE_IDENTIFIER
+        'interface' qualified_type_identifier
         ('extends' e+=interface_name (',' e+=interface_name)*)?
         '{' methodsig* '}'
     ;
@@ -197,7 +205,7 @@ methodsig : annotation* type_use IDENTIFIER paramlist ';' ;
 // Classes
 
 class_decl : annotation*
-        'class' TYPE_IDENTIFIER paramlist?
+        'class' qualified_type_identifier paramlist?
         ('implements' interface_name (',' interface_name)*)?
         '{'
         field_decl*
@@ -299,6 +307,26 @@ namespace_modifier : 'adds' module_import    # DeltaAddModuleImportFragment
     | 'adds' module_export                   # DeltaAddModuleExportFragment
     ;
 
+// Updates (?)
+update_decl : 'stateupdate' TYPE_IDENTIFIER ';' object_update* # UpdateDecl
+    ;
+
+object_update : 'objectupdate' qualified_type_identifier '{'
+        'await' guard ';'
+        update_preamble_decl*
+        pre+=object_update_assign_stmt*
+        'classupdate' ';'
+        post+=object_update_assign_stmt*
+        '}'                                    # ObjectUpdateDecl
+    ;
+
+object_update_assign_stmt :
+        var_or_field_ref '=' exp ';'           # ObjectUpdateAssignStmt
+    ;
+
+update_preamble_decl : type_exp IDENTIFIER ';' # UpdatePreambleDecl
+    ;
+
 // Product line
 productline_decl : 'productline' TYPE_IDENTIFIER ';'
         'features' feature (',' feature)* ';'
@@ -345,10 +373,13 @@ attr_assignment : IDENTIFIER '=' (i=INTLITERAL | b=TYPE_IDENTIFIER | s=STRINGLIT
 // Products
 product_decl : 'product' TYPE_IDENTIFIER
         '(' (feature (',' feature)*)? ')'
-        // TODO: module reconfiguration
-        // ('{' reconfiguration '}'
-        // | ';')
-        ';'
+        ('{' product_reconfiguration* '}'
+        | ';')
+    ;
+
+product_reconfiguration : product=TYPE_IDENTIFIER
+        'delta' delta_id (',' delta_id)*
+        'stateupdate' update=TYPE_IDENTIFIER ';'
     ;
 
 // mTVL Feature model
@@ -404,7 +435,7 @@ boundary_val : m='-'? i=INTLITERAL ;
 main_block : annotation* '{' stmt* '}' ;
 
 compilation_unit : module_decl* delta_decl*
-        // update_decl?
+        update_decl*
         productline_decl? product_decl*
         ('root' feature_decl | 'extension' fextension)*
     ;

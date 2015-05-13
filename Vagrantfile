@@ -40,9 +40,7 @@ The following tools are available from the command line:
                    deadlock analysis pre-installed
 - key-abs          Deductive verification tool
 - emacs            Emacs, configured to edit and compile ABS
-- costabs_static,
-  deadlock_static,
-  mhp_static       Command-line interface to SACO
+- costabs_exe      Command-line interface to SACO
 
 On Windows / Mac OS X, start an X server (Xming / XQuartz)
 MSG
@@ -60,58 +58,71 @@ MSG
                       privileged: false,
                       inline: <<-SHELL
 
-echo Preparing system for Erlang R17.  See
-echo https://www.erlang-solutions.com/downloads/download-erlang-otp#tabs-ubuntu
+echo
+echo "Installing system updates"
+echo
+sudo apt-get update -y -q
+sudo apt-get dist-upgrade -y
+
+echo
+echo "Preparing system for Erlang R17.  See"
+echo "https://www.erlang-solutions.com/downloads/download-erlang-otp#tabs-ubuntu"
 echo
 wget -q http://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
 sudo dpkg -i erlang-solutions_1.0_all.deb
 rm erlang-solutions_1.0_all.deb
 
 echo
-echo Installing system updates
+echo "Preparing system for Java 8 (needed by key-abs).  See"
+echo "https://gist.github.com/tinkerware/cf0c47bb69bf42c2d740"
 echo
-sudo apt-get update -q -y
-sudo apt-get dist-upgrade -y
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get -y -q update
+echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true \
+   | sudo /usr/bin/debconf-set-selections
 
 echo
-echo Installing necessary tools for the ABS compiler
+echo "Installing necessary tools for the ABS compiler"
 echo
-sudo apt-get install -q -y default-jdk ant antlr junit git unzip
+sudo apt-get -y -q install software-properties-common htop
+sudo apt-get -y -q install oracle-java8-installer
+sudo apt-get install -y -q ant antlr junit git unzip
+sudo apt-get install -y -q erlang
+sudo update-java-alternatives -s java-8-oracle
 
 echo
-echo Installing necessary tools for simulating ABS programs
+echo "Installing necessary tools for simulating ABS programs"
 echo
-sudo apt-get install -q -y erlang emacs maude
+sudo apt-get install -y -q emacs maude
 
 echo
-echo Installing eclipse
+echo "Installing eclipse"
 echo
-sudo apt-get install -q -y eclipse graphviz
+sudo apt-get install -y -q eclipse graphviz
 
 echo
-echo Installing eclipse plugins: ABS, SACO, deadlock analysis
+echo "Building the ABS compiler and eclipse plugins"
+echo
+(cd /vagrant/eclipse-plugin ; ant -Declipse.home=/usr build-all-plugins generate-update-site)
+
+echo
+echo "Deploying to eclipse"
 echo
 eclipse -application org.eclipse.equinox.p2.director -noSplash \
         -repository \
-http://docs.abs-models.org/update-site,\
+file:/vagrant/eclipse-plugin/update-site,\
 http://download.eclipse.org/releases/indigo/ \
-        -installIUs \
+-installIUs \
+org.abs-models.costabs.feature.group,\
+org.abs-models.apet.feature.group,\
 org.abs-models.abs.compiler.feature.group,\
-org.abs-models.abs.plugin,\
 org.abs-models.sda.feature.group,\
-org.abs-models.sdedit.feature.group,\
-org.abs-models.apet.feature.group
+org.abs-models.abs.plugin,\
+org.abs-models.sdedit.feature.group
 
-eclipse -application org.eclipse.equinox.p2.director -noSplash \
-        -repository \
-http://costa.ls.fi.upm.es/saco/sw/update-site,\
-http://download.eclipse.org/releases/indigo/ \
-        -installIUs \
-eu.hatsproject.costabs.feature.group
-# org.abs-models.absplugin.feature.group
 
 echo
-echo Installing KeY-ABS
+echo "Installing KeY-ABS"
 echo
 wget -q http://www.key-project.org/key-abs/key-abs.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/key-abs.zip)
@@ -127,12 +138,8 @@ sudo chmod a+x /usr/local/bin/key-abs
 mkdir -p /home/vagrant/.key
 
 echo
-echo Setting up the user environment: .bashrc, .emacs
+echo "Setting up the user environment: .bashrc, .emacs"
 echo
-# Find the SACO executable.
-COSTABSBINDIR=$(dirname $(find /home/vagrant/.eclipse -name costabs_static))
-chmod a+x $COSTABSBINDIR/costabs_static $COSTABSBINDIR/deadlock_static \
-      $COSTABSBINDIR/mhp_static
 
 # Set up Emacs
 if [ ! -e /home/vagrant/.emacs ] ; then
@@ -149,8 +156,7 @@ fi
 
 # Set up paths
 cat >/home/vagrant/.abstoolsrc <<EOF
-COSTABSBINDIR=\$(dirname \$(find /home/vagrant/.eclipse -name costabs_static))
-PATH=\$PATH:/vagrant/frontend/bin/bash:\$COSTABSBINDIR
+PATH=\$PATH:/vagrant/frontend/bin/bash:/vagrant/costabs-plugin
 EOF
 
 if [ -z "$(grep abstoolsrc /home/vagrant/.bashrc)" ] ; then
@@ -158,11 +164,6 @@ cat >>/home/vagrant/.bashrc <<EOF
 . .abstoolsrc
 EOF
 fi
-
-echo
-echo Rebuilding the ABS compiler
-echo
-(cd /vagrant/frontend ; ant dist)
 
   SHELL
 end

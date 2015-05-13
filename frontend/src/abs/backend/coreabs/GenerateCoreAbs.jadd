@@ -83,12 +83,19 @@ aspect GenerateCoreABS {
             if (!a.getType().isUnknownType()) {
               final TypeUse du = a.getType().toUse();
               final String tmp = "tmp"+Integer.toString(aac.hashCode());
+              final int start = aac.getStart();
+              final int end = aac.getEnd();
               // TODO: The typechecker will assert that/if the name is free, but in freak chances it may not.
-              b.addStmt(new VarDeclStmt(new List(), new VarDecl(tmp,
-                   new ParametricDataTypeUse("Fut", new List(), new List().add(du)),
-                                                          new Opt(new AsyncCall(aac.getCallee(), aac.getMethod(), aac.getParamList()))
-                                                        )));
-              b.addStmt(new AwaitStmt(new List(), new ClaimGuard( new VarUse(tmp))));
+              AsyncCall nac = new AsyncCall(aac.getCallee(), aac.getMethod(), aac.getParamList());
+              nac.setPosition(start, end);
+              ParametricDataTypeUse pdtu = new ParametricDataTypeUse("Fut", new List(), new List().add(du));
+              pdtu.setPosition(start, end);
+              VarDeclStmt vds = new VarDeclStmt(new List(), new VarDecl(tmp, pdtu, new Opt(nac)));
+              vds.setPosition(start, end);
+              b.addStmt(vds);
+              AwaitStmt as = new AwaitStmt(new List(), new ClaimGuard( new VarUse(tmp)));
+              as.setPosition(start, end);
+              b.addStmt(as);
             }                                                 
         }
         aacs.clear(); // flush downstream rewrite info.

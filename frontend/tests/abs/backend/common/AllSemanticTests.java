@@ -17,7 +17,9 @@ import org.junit.runners.Suite;
     PrimitiveTypes.class, 
     StdLibTests.class, 
     StmtTests.class, 
-    TimeTests.class })
+    TimeTests.class,
+    ExceptionTests.class
+    })
 public class AllSemanticTests {
 
 }

@@ -10,8 +10,7 @@ new local expression, or they are created in a new COG by using the new expressi
 
 .Syntax
 
-[source,java]
-
+[source]
 ----
 new local Foo(5)
 new Bar()
@@ -28,8 +27,7 @@ The concurrency model of ABS is based on the notion of COGs [?]. An ABS system a
 .Synchronous Call Expression
 A Synchronous Call consists of a target expression, a method name, and a list of argument expressions.
 
-[source,java]
-
+[source]
 ----
 Bool b = x.m(5);
 ----
@@ -45,7 +43,7 @@ Fut<Bool> f = x!m(5);
 .Get Expression
 A Get Expression is used to obtain the value from a future. The current task is blocked until the value of the future is available, i.e., until the future has been resolved. No other task in the COG can be activated in the meantime.
 
-[source,java]
+[source]
 ----
 Bool b = f.get;
 ----
@@ -57,7 +55,7 @@ A common pattern for asynchronous calls is:
 * `await` on the future
 * Assign the result to a variable
 
-[source,java]
+[source]
 ----
 Fut<A> fx = o!m();
 await fx?;
@@ -66,7 +64,7 @@ A x = fx.get;
 
 The await expression is a shorthand for this pattern. The preceding example can be written as follows, without the need to introduce a name for the future:
 
-[source,java]
+[source]
 ----
 A x = await o!m();
 ----

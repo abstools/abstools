@@ -1,0 +1,119 @@
+// -*- mode: java; tab-width: 4; -*-
+import abs.backend.common.CodeStream;
+
+aspect GenerateKeyAbs {
+
+    public void Model.generateKeyAbs(CodeStream stream) {
+        stream.println("\\invariants(Seq historySV, Heap heapSV, ABSAnyInterface self) {");
+        stream.incIndent();
+        for (Decl decl : getDecls()) {
+            if (decl instanceof ClassDecl) {
+                decl.generateKeyAbs(stream);
+            }
+        }
+        stream.decIndent();
+        stream.println("}");
+    }
+
+    public void Decl.generateKeyAbs(CodeStream stream) {}
+    public void ClassDecl.generateKeyAbs(CodeStream stream) {
+        PureExp inv = CompilerUtils.getAnnotationValue(this.getAnnotationList(),
+                                                       "Inv");
+        if (inv != null) {
+            String classname = this.getName();
+            String interfacename = this.getImplementedInterfaceUse(0).getName();
+            String namePrefix = interfacename + "." + classname;
+            stream.println("GeneratedInv" + classname + " : "
+                           + namePrefix + " {");
+            stream.incIndent();
+            inv.generateKeyAbs(stream, namePrefix);
+            stream.decIndent();
+            stream.println("};");
+        }
+	}
+
+
+
+    public void PureExp.generateKeyAbs(CodeStream stream, String prefix) {
+        throw new NotImplementedYetException(this);
+    }
+
+    public void IntLiteral.generateKeyAbs(CodeStream stream, String prefix) {
+        stream.print(getContent());
+    }
+
+    syn String Unary.keyPrefixOperator();
+    eq MinusExp.keyPrefixOperator() = "-";
+    eq NegExp.keyPrefixOperator() = "!";
+    public void Unary.generateKeyAbs(CodeStream stream, String prefix) {
+        stream.print(keyPrefixOperator() + "(");
+        getOperand().generateKeyAbs(stream, prefix);
+        stream.print(")");
+    }
+
+    syn String Binary.keyInfixOperator();
+    eq EqExp.keyInfixOperator() = "==";
+    eq NotEqExp.keyInfixOperator() = "/=";
+    eq AndBoolExp.keyInfixOperator() = "&";
+    eq OrBoolExp.keyInfixOperator() = "|";
+    eq LTExp.keyInfixOperator() = "<";
+    eq GTExp.keyInfixOperator() = ">";
+    eq LTEQExp.keyInfixOperator() = "<=";
+    eq GTEQExp.keyInfixOperator() = ">=";
+    eq AddAddExp.keyInfixOperator() = "+";
+    eq SubAddExp.keyInfixOperator() = "-";
+    eq MultMultExp.keyInfixOperator() = "*";
+    eq DivMultExp.keyInfixOperator() = "/";
+    eq ModMultExp.keyInfixOperator() = "%";
+    public void Binary.generateKeyAbs(CodeStream stream, String prefix) {
+        stream.print("(");
+        getLeft().generateKeyAbs(stream, prefix);
+        stream.print(")" + keyInfixOperator() + "(");
+        getRight().generateKeyAbs(stream, prefix);
+        stream.print(")");
+    }
+
+    public void ThisExp.generateKeyAbs(CodeStream stream, String prefix) {
+        stream.print("self");
+    }
+
+    public void NullExp.generateKeyAbs(CodeStream stream, String prefix) {
+        stream.print("null");
+    }
+
+    public void DataConstructorExp.generateKeyAbs(CodeStream stream, String prefix) {
+        throw new NotImplementedYetException(this);
+    }
+
+	public abstract void VarOrFieldUse.generateKeyAbs(CodeStream stream, String prefix);
+
+	@Override
+        public void VarUse.generateKeyAbs(CodeStream stream, String prefix) {
+        stream.print(prefix + "::" + this.getName());
+	}
+
+	@Override
+    public void FieldUse.generateKeyAbs(CodeStream stream, String prefix) {
+        if (getType().isIntType()) {
+            stream.print("int::select(heapSV, self, "
+                         + prefix + "::" + this.getName() + ")");
+        } else {
+            // TODO: this should throw a friendlier error, with filename + line number
+            throw new NotImplementedYetException(this, "Fields of type " + getType() + " are not supported for generating invariants yet");
+        }
+	}
+
+    public void FnApp.generateKeyAbs(CodeStream stream, String prefix) {
+        throw new NotImplementedYetException(this);
+    }
+
+    public void LetExp.generateKeyAbs(CodeStream stream, String prefix) {
+        throw new NotImplementedYetException(this);
+    }
+
+    public void IfExp.generateKeyAbs(CodeStream stream, String prefix) {
+        throw new NotImplementedYetException(this);
+    }
+
+
+}

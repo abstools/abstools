@@ -19,5 +19,9 @@
      <Class name="abs.frontend.ast.NewExp" />
      <Method name="generateJavaDynamic" />
      <Bug pattern="DB_DUPLICATE_BRANCHES" />
-</Match>
+  </Match>
+  <Match>
+    <Class name="abs.frontend.analyser.OtherAnalysisTests" />
+    <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" />
+  </Match>  
 </FindBugsFilter>

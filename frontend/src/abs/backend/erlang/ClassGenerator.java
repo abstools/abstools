@@ -5,6 +5,7 @@ package abs.backend.erlang;
 
 import java.io.IOException;
 
+import abs.backend.common.CodeStream;
 import abs.backend.erlang.ErlUtil.Mask;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FieldDecl;
@@ -22,7 +23,7 @@ import com.google.common.collect.Iterables;
  * 
  */
 public class ClassGenerator {
-    private final ErlangCodeStream ecs;
+    private final CodeStream ecs;
     private final ClassDecl classDecl;
     private final String modName;
     private final boolean hasFields;
@@ -45,7 +46,7 @@ public class ClassGenerator {
 
     private void generateHeader() {
         ecs.pf("-module(%s).", modName);
-        ecs.println("-include_lib(\"include/abs_types.hrl\").");
+        ecs.println("-include_lib(\"../include/abs_types.hrl\").");
         if (hasFields) {
             ecs.println("-behaviour(object).");
         }
