@@ -333,7 +333,7 @@ public class TypeCheckerHelper {
             } else if (d instanceof ExceptionDecl) {
                 ExceptionDecl ed = (ExceptionDecl) d;
                 DataConstructor ec = ed.dataConstructor;
-                assert ec != null;
+                assert ec != null : ed.getName();
                 if (ec.getName().equals(d.getName())) {
                     // should always be true, see Main.java where the data
                     // constructor gets constructed
