@@ -16,6 +16,8 @@ public class SyntaxError extends ParserError {
 
     public SyntaxError(final String message, int lineNumber, int columnNumber, Symbol token) {
         super(message, lineNumber, columnNumber);
+        // Editor requires this info also for invalid input:
+        assert token != null : message;
         this.token = token;
     }
 
