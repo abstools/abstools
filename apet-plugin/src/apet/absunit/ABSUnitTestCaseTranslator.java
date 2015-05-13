@@ -184,7 +184,7 @@ public class ABSUnitTestCaseTranslator {
 			DeltaClause clause = new DeltaClause();
 			Deltaspec spec = new Deltaspec();
 			String name = d.getDelta().getName();
-			spec.setName(name);
+			spec.setDeltaID(name);
 			clause.setDeltaspec(spec);
 			clause.setAppCond(ac);
 
