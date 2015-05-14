@@ -56,7 +56,7 @@ public class ApplicationConditionsTest extends DeltaTest {
         Model model = assertParseOk(
                 "productline PL;"
                         + "features A,B,C,D;"
-                        + "delta D when ~A;"
+                        + "delta D when !A;"
                 );
         AppCond a = model.getProductLine().getDeltaClause(0).getAppCond();
         assertEquals(((AppCondFeature)((AppCondNot)a).getAppCond()).getName(), "A");
@@ -78,7 +78,7 @@ public class ApplicationConditionsTest extends DeltaTest {
         Model model = assertParseOk(
                 "productline PL;"
                         + "features A,B,C,D;"
-                        + "delta D when (A || B) && ~(C || D);"
+                        + "delta D when (A || B) && !(C || D);"
                 );
         AppCond a = model.getProductLine().getDeltaClause(0).getAppCond();
         assertEquals(((AppCondFeature)((AppCondOr)(((AppCondAnd)a).getLeft())).getLeft()).getName(), "A");
@@ -102,12 +102,12 @@ public class ApplicationConditionsTest extends DeltaTest {
         ArrayList<String> acs = new ArrayList<String>(Arrays.asList(
                 "A",
                 "A || B",
-                "~(B && B)",
+                "!(B && B)",
                 "A || (B && B)",
-                "A && ~B",
-                "A || ~A",
+                "A && !B",
+                "A || !A",
                 "C || A",
-                "(C || A) && ~B"
+                "(C || A) && !B"
                 ));
         
         for (String ac : acs) {
@@ -131,12 +131,12 @@ public class ApplicationConditionsTest extends DeltaTest {
     public void evaluateFalse() throws DeltaModellingException, WrongProgramArgumentException {
         ArrayList<String> acs = new ArrayList<String>(Arrays.asList(
                 "C",
-                "~A",
-                "~B && B",
+                "!A",
+                "!B && B",
                 "(A || B) && B",
                 "A && B",
-                "~A && B",
-                "A && ~A",
+                "!A && B",
+                "A && !A",
                 "B || C"
                 ));
 

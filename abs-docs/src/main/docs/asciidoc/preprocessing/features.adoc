@@ -31,7 +31,7 @@ AfterClause   ::= 'after' DeltaName (',' DeltaName)*
 WhenClause    ::= 'when' AppCond 
 AppCond       ::= AppCond '&&' AppCond 
                 | AppCond '||' AppCond  
-                | '~' AppCond  
+                | '!' AppCond  
                 | '(' AppCond ')' 
                 | FName
 ----
@@ -120,7 +120,7 @@ Expr ::= 'True'
        | UnOp Expr
        | Expr BinOp Expr
        | '(' Expr ')'
-UnOp ::= '~' | '-'
+UnOp ::= '!' | '-'
 BinOp ::= '||' | '&&' | '->' | '<->' | '=='
         | '!=' | '>'  | '<'  | '>='  | '<='
         | '+'  | '-'  | '*'  | '/'   | '%'

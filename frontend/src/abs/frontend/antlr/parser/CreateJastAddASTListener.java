@@ -397,6 +397,7 @@ new List<ModuleDecl>(),
     @Override public void exitUnaryExp(ABSParser.UnaryExpContext ctx) {
         switch (ctx.op.getType()) {
         case ABSParser.NEGATION :
+        case ABSParser.NEGATION_CREOL :
             setV(ctx, new NegExp((PureExp)v(ctx.pure_exp())));
             break;
         case ABSParser.MINUS :

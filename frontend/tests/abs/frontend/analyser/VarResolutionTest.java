@@ -25,7 +25,7 @@ public class VarResolutionTest extends FrontendTest {
 
     @Test
     public void testPatternVar() {
-        Model m = assertParseOkStdLib(" def Bool f(Bool b) = case b { True => False; x => ~x; };");
+        Model m = assertParseOkStdLib(" def Bool f(Bool b) = case b { True => False; x => !x; };");
         NegExp ne = (NegExp) getSecondCaseExpr(m);
         VarUse v = (VarUse) ne.getOperand();
         PatternVarDecl decl = (PatternVarDecl) v.getDecl();

@@ -11,7 +11,7 @@ These expressions bind variable names to pure expressions.
 [source]
 
 ----
-let (Bool x) = True in ~x
+let (Bool x) = True in !x
 ----
 .Data Type Constructor Expressions
 
@@ -168,6 +168,6 @@ The following table describes the meaning as well as the associativity and the p
 |e1 * e2 |multiplication |left |number, number |number
 |e1 / e2 |division |left |number, number |Rat
 |e1 % e2 |modulo |left |number, number |Int
-|~ e |logical negation |right |Bool |Bool
+|! e |logical negation |right |Bool |Bool
 |- e |integer negation |right |number |number
 |=======================

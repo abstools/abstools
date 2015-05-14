@@ -111,7 +111,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void negTestOk() {
-        assertTypeOK("{ Bool b = ~True; }");
+        assertTypeOK("{ Bool b = !True; }");
     }
 
     @Test

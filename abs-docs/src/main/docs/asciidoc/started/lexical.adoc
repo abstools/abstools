@@ -78,7 +78,7 @@ The following tokens are operators:
 [format="csv",width="60%",cols="15"]
 [frame="topbot",grid="none"]
 |=====
-||,&&,==,!=,<,>,<=,>=,+,-,*,/,%,~,&
+||,&&,==,!=,<,>,<=,>=,+,-,*,/,%,!,&
 |=====
 
 .Annotations

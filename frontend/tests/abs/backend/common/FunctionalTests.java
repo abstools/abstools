@@ -160,7 +160,7 @@ public class FunctionalTests extends SemanticTests {
         assertEvalTrue("def Bool f(Bool x) = if x then True else False ; " + CALL_F_TRUE);
     }
     public void ifExp2() {
-        assertEvalTrue("def Bool f(Bool x) = if ~x then False else True ; " + CALL_F_TRUE);
+        assertEvalTrue("def Bool f(Bool x) = if !x then False else True ; " + CALL_F_TRUE);
     }
 
     @Test

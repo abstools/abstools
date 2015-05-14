@@ -26,7 +26,7 @@ data Location;                  // (For Component model) //
 // exception KeyboardInterruptException;
 
 def Bool and(Bool a, Bool b) = a && b;
-def Bool not(Bool a) = ~a;
+def Bool not(Bool a) = !a;
 
 def A max<A>(A a, A b) = if a > b then a else b;
 def A min<A>(A a, A b) = if a < b then a else b;
@@ -62,7 +62,7 @@ data Either<A, B> = Left(A left) | Right(B right);
 def Bool isLeft<A,B>(Either<A, B> val) = 
     case val { Left(x) => True; _ => False; };
     
-def Bool isRight<A,B>(Either<A, B> val) = ~isLeft(val);
+def Bool isRight<A,B>(Either<A, B> val) = !isLeft(val);
 
 
 data Pair<A, B> = Pair(A fst, B snd); 
@@ -189,7 +189,7 @@ def A take<A>(Set<A> ss) =
   };
 
 // checks whether the input set has more elements to be iterated.
-def Bool hasNext<A>(Set<A> s) = ~ emptySet(s); 
+def Bool hasNext<A>(Set<A> s) = ! emptySet(s); 
 
 // Partial function to iterate over a set.
 def Pair<Set<A>,A> next<A>(Set<A> s) = 
@@ -661,7 +661,7 @@ class CloudProvider(String name) implements CloudProvider {
     Bool killInstance(DeploymentComponent instance) {
         // Refuse to kill an acquired instance.
         // FIXME: is this the right thing?
-        Bool result = ~(contains(acquiredInstances, instance));
+        Bool result = !(contains(acquiredInstances, instance));
         if (result) {
             launchedInstances = remove(launchedInstances, instance);
             killedInstances = insertElement(killedInstances, instance);
@@ -678,7 +678,7 @@ class CloudProvider(String name) implements CloudProvider {
         Map<Resourcetype, Rat> description)
         {
             DeploymentComponent result = null;
-            while (~emptySet(instances) && result == null) {
+            while (!emptySet(instances) && result == null) {
                 DeploymentComponent instance = take(instances);
                 instances = remove(instances, instance);
                 Bool matches = await instance!matchesDescription(description);
@@ -821,7 +821,7 @@ implements DeploymentComponent {
     Bool matchesDescription(Map<Resourcetype, Rat> description) {
         Bool result = True;
         Set<Resourcetype> keys = keys(description);
-        while (result == True && ~(emptySet(keys))) {
+        while (result == True && !(emptySet(keys))) {
             Resourcetype key = take(keys);
             keys = remove(keys, key);
             Rat value = lookupUnsafe(description, key);
