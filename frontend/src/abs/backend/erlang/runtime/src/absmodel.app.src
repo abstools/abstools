@@ -4,5 +4,5 @@
   {registered, []},
   {applications, [kernel, stdlib, cowboy, crypto]},
   {mod, { main_app, []}},
-  {env, []}
+  {env, [{port, 8080}]}
 ]}.

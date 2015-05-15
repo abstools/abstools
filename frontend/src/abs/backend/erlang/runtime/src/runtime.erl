@@ -6,7 +6,7 @@
 
 -include_lib("absmodulename.hrl").
 
--export([start/0,start/1,run/1,start_link/1]).
+-export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/1]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -40,6 +40,15 @@ start(Args) ->
 
 run(Args) ->
     parse(Args,"run").    
+
+start_http() ->
+    {ok, _} = application:ensure_all_started(absmodel).
+
+start_http(Port) ->
+    ok = application:load(absmodel),
+    ok = application:set_env(absmodel, port, Port),
+    start_http().
+
 
 parse(Args,Exec)->
     case getopt:parse_and_check(?CMDLINE_SPEC,Args) of

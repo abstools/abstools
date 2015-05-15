@@ -8,7 +8,8 @@
 
 start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([{'_', [{"/", modelapi, []}]}]),
-    {ok, _} = cowboy:start_http(http, 100, [{port, 8080}],
+    {ok, Port} = application:get_env(absmodel, port),
+    {ok, _} = cowboy:start_http(http, 100, [{port, Port}],
                                 [{env, [{dispatch, Dispatch}]}]),
     runtime:start_link([?ABSMAINMODULE]).
 
