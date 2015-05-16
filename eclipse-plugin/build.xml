@@ -52,6 +52,7 @@
 
         <fileset id="eclipse-plugin-jars" dir="${eclipse.home}">
             <include name="**/plugins/**/org.eclipse.*" />
+            <include name="**/plugins/**/javax.inject*" />
         </fileset>
 
         <path id="build.classpath">
