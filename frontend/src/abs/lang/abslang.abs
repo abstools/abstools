@@ -538,11 +538,13 @@ export DeploymentComponent, CloudProvider;
 export DC, Cost, Size, MaxSize, CogLocation;
 // Datatypes, Constructors
 export Resourcetype, CPU, Bandwidth, Memory, InfRat, Fin;
+export Startupduration, PaymentInterval, CostPerInterval;
 // Functions
 export thisDC, finvalue;
 import * from ABS.StdLib;
 
-data Resourcetype = CPU | Bandwidth | Memory ;
+data Resourcetype = CPU | Bandwidth | Memory
+                  | Startupduration | PaymentInterval | CostPerInterval;
 
 data InfRat = InfRat | Fin(Rat finvalue);
 
@@ -573,8 +575,12 @@ interface DeploymentComponent {
     // time interval onwards.
     Unit incrementResources(Rat amount, Resourcetype rtype);
 
-    Unit setProvider(CloudProvider provider);
-    CloudProvider getProvider();
+    [Atomic] Unit setProvider(CloudProvider provider);
+    [Atomic] CloudProvider getProvider();
+    [Atomic] Time getCreationTime();
+    [Atomic] Rat getStartupDuration();
+    [Atomic] Int getPaymentInterval();
+    [Atomic] Rat getCostPerInterval();
     // Convenience methods for calling CloudProvider acquireInstance,
     // releaseInstance.  If no cloud provider is set, return True.
     Bool acquire();
@@ -606,17 +612,40 @@ class CloudProvider(String name) implements CloudProvider {
     Set<DeploymentComponent> acquiredInstances = set[];
     Set<DeploymentComponent> killedInstances = set[];
     Int instanceCounter = 0;
+    Rat accumulatedCost = 0;
 
     Unit run() {
-        // TODO: loop with "await duration(1, 1)", sum up costs of deployment
-        // components in launchedInstances, launchedInstancesNonEx,
-        // acquiredInstances that have crossed their accounting period
-        skip;
+        while(True) {
+            await duration(1, 1);
+            Rat cost = this.sumOfCosts(launchedInstances);
+            accumulatedCost = accumulatedCost + cost;
+            cost = this.sumOfCosts(acquiredInstances);
+            accumulatedCost = accumulatedCost + cost;
+        }
+    }
+    Rat sumOfCosts(Set<DeploymentComponent> dcs) {
+        Rat result = 0;
+        Time t = now();
+        while (!emptySet(dcs)) {
+            DeploymentComponent dc = take(dcs);
+            dcs = remove(dcs, dc);
+            Time creationtime = await dc!getCreationTime();
+            Int interval = await dc!getPaymentInterval();
+            Rat time_elapse = timeDifference(t, creationtime);
+            if (time_elapse % interval == 0) {
+                Rat cost = await dc!getCostPerInterval();
+                result = result + cost;
+            }
+        }
+        return result;
     }
 
     DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
         // Until we have a way of actually removing DCs, might as well re-use
         // them
+
+        // TODO: Is this what we want?  We might resurrect an instance
+        // that is larger than what we were asked for
         DeploymentComponent result = this.findMatchingInstance(killedInstances, d);
         if (result != null) {
             killedInstances = remove(killedInstances, result);
@@ -625,8 +654,9 @@ class CloudProvider(String name) implements CloudProvider {
             result = new DeploymentComponent(name + "-"
                 + toString(instanceCounter), d);
             instanceCounter = instanceCounter + 1;
+            Rat startup_duration = await result!getStartupDuration();
+            await duration(startup_duration, startup_duration);
             launchedInstances = insertElement(launchedInstances, result);
-            // TODO: await for startup time here (and only here)
             result!setProvider(this);
         }
         return result;
@@ -670,8 +700,7 @@ class CloudProvider(String name) implements CloudProvider {
     }
 
     Rat getAccumulatedCost() {
-        // TODO: implement
-        return -1;
+        return accumulatedCost;
     }
 
     DeploymentComponent findMatchingInstance(Set<DeploymentComponent> instances,
@@ -722,6 +751,13 @@ implements DeploymentComponent {
     InfRat memory = case lookup(initconfig, Memory) {
       Nothing => InfRat; Just(m) => Fin(m); };
     InfRat memorynext = memory;
+    Int paymentInterval = 
+        case lookup(initconfig, PaymentInterval) {
+            Nothing => 1; Just(n) => truncate(n); };
+    Rat costPerInterval = case lookup(initconfig, CostPerInterval) {
+        Nothing => 0; Just(o) => o; };
+    Rat startupDuration = case lookup(initconfig, Startupduration) {
+        Nothing => 0; Just(p) => p; };
 
     CloudProvider cloudprovider = null;
     {
@@ -799,10 +835,10 @@ implements DeploymentComponent {
             }
         }
     }
-    Unit setProvider(CloudProvider provider) {
+    [Atomic] Unit setProvider(CloudProvider provider) {
         this.cloudprovider = provider;
     }
-    CloudProvider getProvider() { return cloudprovider; }
+    [Atomic] CloudProvider getProvider() { return cloudprovider; }
     Bool acquire() {
         Bool result = True;
         if (cloudprovider != null) {
@@ -817,6 +853,13 @@ implements DeploymentComponent {
         }
         return result;
     }
+
+    [Atomic] Time getCreationTime() { return creationTime; }
+    [Atomic] Rat getStartupDuration() { return startupDuration; }
+    [Atomic] Int getPaymentInterval() { return paymentInterval; }
+    [Atomic] Rat getCostPerInterval() { return costPerInterval; }
+
+
     [Atomic]
     Bool matchesDescription(Map<Resourcetype, Rat> description) {
         Bool result = True;
