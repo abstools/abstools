@@ -8,13 +8,25 @@
 -export([print_statistics/0]).
 
 
-init(Req, Opts) ->
-    Req2 = cowboy_req:reply(200,
-                            [{<<"content-type">>, <<"text/plain">>}],
-                            <<"Hello Erlang!">>,
-                            Req),
-    {ok, Req2, Opts}.
+init(Req, _Opts) ->
+    Body =
+        case cowboy_req:binding(request, Req, <<"default">>) of
+            <<"default">> -> <<"Hello Erlang!\n">>;
+            <<"clock">> ->
+                handle_clock(Req);
+            _ -> <<"Hello Erlang!\n">>
+        end,
+    Req2 = cowboy_req:reply(200, [{<<"content-type">>, <<"text/plain">>}],
+                            Body, Req),
+    {ok, Req2, #state{}}.
 
+handle_clock(_Req) ->
+    Now = clock:now(),
+    NowStr = case Now of
+                 { A, 1 } -> integer_to_list(A);
+                 { A, B } -> integer_to_list(A) ++ "/" ++ integer_to_list(B)
+             end,
+    list_to_binary("Now: " ++ NowStr ++ "\n").
 
 terminate(_Reason, _Req, _State) ->
     ok.

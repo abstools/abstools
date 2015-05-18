@@ -7,7 +7,7 @@
 -include_lib("absmodulename.hrl").
 
 start(_StartType, _StartArgs) ->
-    Dispatch = cowboy_router:compile([{'_', [{"/", modelapi, []}]}]),
+    Dispatch = cowboy_router:compile([{'_', [{"/[:request]", modelapi, []}]}]),
     {ok, Port} = application:get_env(absmodel, port),
     {ok, _} = cowboy:start_http(http, 100, [{port, Port}],
                                 [{env, [{dispatch, Dispatch}]}]),
