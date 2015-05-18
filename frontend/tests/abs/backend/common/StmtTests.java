@@ -33,6 +33,11 @@ public class StmtTests extends SemanticTests {
     }
 
     @Test
+    public void whileStmt() {
+        assertEvalTrue("{ Bool testresult = False; List<Bool> l = list[False, True]; while (!isEmpty(l)) { l = tail(l); } testresult = True;  }");
+    }
+
+    @Test
     public void assignStmt() {
         assertEvalTrue("{ Bool testresult = False; Bool x = True; testresult = x; }");
     }
