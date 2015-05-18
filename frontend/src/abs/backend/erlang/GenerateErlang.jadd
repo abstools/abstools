@@ -225,7 +225,7 @@ aspect GenerateErlang {
       ecs.format("put('%s', %s)", getVar().getName(), sw.toString().substring(ecs.getIndent().length()));
       if (isNewDC) {
         ecs.println(",");
-        ecs.format("eventstream:event({newdc, '%s'})", getVar().getName());
+        ecs.format("eventstream:event({newdc, get('%s')})", getVar().getName());
       }
     } else if (getVar() instanceof FieldUse) {
       ecs.format("set(O,'%s',%s)", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
