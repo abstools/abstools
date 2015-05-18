@@ -57,7 +57,7 @@ toString(_Cog,S) when is_list(S) ->
 toString(_Cog, null) -> "null";
 toString(_Cog,A) when is_atom(A) -> constructorname_to_string(A);
 toString(_Cog,P) when is_pid(P) -> pid_to_list(P);
-toString(_Cog,{object,Cid,Oid,_Cog}) -> atom_to_list(Cid) ++ ":" ++ pid_to_list(Oid);
+toString(_Cog,{object,Cid,Oid,_Cog}) -> pid_to_list(Oid) ++ ":" ++ atom_to_list(Cid);
 toString(_Cog,T) when is_tuple(T) ->
     [C|A] = tuple_to_list(T),
     case C of
@@ -67,9 +67,7 @@ toString(_Cog,T) when is_tuple(T) ->
         _ -> constructorname_to_string(C)
                  ++ "(" ++ string_interleave([toString(_Cog,X) || X <- A], ", ")
                  ++ ")"
-    end;
-toString(_Cog, T) -> io:format("Catch-all format~n"),
-                     io_lib:format("~p", [T]).
+    end.
 
 
 truncate(_Cog,{N,D})->
