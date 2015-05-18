@@ -248,7 +248,6 @@ public class Main {
 
             // Transformation of microTVL to Future Model Editor compatible XML
             FMVisualizer oFMVisualizer = new FMVisualizer();
-
             oFMVisualizer.ParseMicroTVLFile(m);
         }
 
@@ -262,7 +261,8 @@ public class Main {
             rewriteModel(m, product);
 
             // type check PL before flattening
-            typeCheckProductLine(m);
+            if (typecheck)
+                typeCheckProductLine(m);
 
             // flatten before checking error, to avoid calculating *wrong* attributes
             if (fullabs) {
@@ -813,11 +813,7 @@ public class Main {
     }
 
     /**
-<<<<<<< HEAD
      * Calls {@link #parseString(String, boolean, boolean, boolean)} with withDbLib set to false.
-=======
-     * Parses String s and returns Model.
->>>>>>> master
      *
      * @param s
      * @param withStdLib
