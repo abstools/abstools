@@ -608,7 +608,10 @@ interface CloudProvider {
 
 class CloudProvider(String name) implements CloudProvider {
     // Preliminary version - mind the FIXMEs!
+
+    // All launched instances
     Set<DeploymentComponent> launchedInstances = set[];
+    // Launched instances that are currently acquired
     Set<DeploymentComponent> acquiredInstances = set[];
     Set<DeploymentComponent> killedInstances = set[];
     Int instanceCounter = 0;
@@ -618,8 +621,6 @@ class CloudProvider(String name) implements CloudProvider {
         while(True) {
             await duration(1, 1);
             Rat cost = this.sumOfCosts(launchedInstances);
-            accumulatedCost = accumulatedCost + cost;
-            cost = this.sumOfCosts(acquiredInstances);
             accumulatedCost = accumulatedCost + cost;
         }
     }
