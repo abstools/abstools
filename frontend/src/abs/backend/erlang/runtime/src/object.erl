@@ -58,16 +58,18 @@ new_object_task(#object{ref=O},TaskRef,Params)->
             active -> Res
         end
     catch
-       _:{noproc,_} ->
-          exit(deadObject)
+        _:{noproc,_} ->
+            ?DEBUG({deadObject, O}),
+            exit({deadObject, O})
     end.
 
 alive(#object{ref=O})->
     try
         gen_fsm:sync_send_event(O, ping)
     catch
-       _:{noproc,_} ->
-          exit(deadObject)
+        _:{noproc,_} ->
+            ?DEBUG({deadObject, O}),
+            exit({deadObject, O})
     end.
 
 die(#object{ref=O},Reason)->
