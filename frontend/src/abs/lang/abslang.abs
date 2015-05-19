@@ -603,7 +603,8 @@ interface CloudProvider {
     Bool releaseInstance(DeploymentComponent instance);
     Bool killInstance(DeploymentComponent instance);
 
-    Rat getAccumulatedCost();
+    [Atomic] Rat getAccumulatedCost();
+    [Atomic] Unit shutdown();
 }
 
 class CloudProvider(String name) implements CloudProvider {
@@ -616,14 +617,17 @@ class CloudProvider(String name) implements CloudProvider {
     Set<DeploymentComponent> killedInstances = set[];
     Int instanceCounter = 0;
     Rat accumulatedCost = 0;
+    Bool keeprunning = True;
 
     Unit run() {
-        while(True) {
+        while(keeprunning) {
             await duration(1, 1);
             Rat cost = this.sumOfCosts(launchedInstances);
             accumulatedCost = accumulatedCost + cost;
         }
     }
+    [Atomic] Unit shutdown() { keeprunning = False; }
+
     Rat sumOfCosts(Set<DeploymentComponent> dcs) {
         Rat result = 0;
         Time t = now();
@@ -700,7 +704,7 @@ class CloudProvider(String name) implements CloudProvider {
         return result;
     }
 
-    Rat getAccumulatedCost() {
+    [Atomic] Rat getAccumulatedCost() {
         return accumulatedCost;
     }
 
