@@ -358,7 +358,7 @@ await_stop(S=#state{running=R}) ->
 await_start(Task, Args) ->
     receive
         {get_references, Sender} ->
-            Sender ! {gc:extract_references(Args), self()},
+            Sender ! {gc:extract_references([Args, get()]), self()},
             await_start(Task, Args);
         {started,Task,Ref}->
             Ref

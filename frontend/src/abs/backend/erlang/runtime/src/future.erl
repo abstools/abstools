@@ -106,7 +106,7 @@ await() ->
 get_blocking(Ref,Stack) ->
     receive
         {get_references, Sender} ->
-            Sender ! {gc:extract_references(Stack), self()},
+            Sender ! {gc:extract_references([Stack, get()]), self()},
             get_blocking(Ref,Stack);
         {reply,Ref,{ok,Value}}->
             Value;
@@ -117,7 +117,7 @@ get_blocking(Ref,Stack) ->
 safeget_blocking(Ref,Stack) ->
     receive
         {get_references, Sender} ->
-            Sender ! {gc:extract_references(Stack), self()},
+            Sender ! {gc:extract_references([Stack, get()]), self()},
             get_blocking(Ref,Stack);
         {reply, Ref, {ok,Value}}->
             Value;
@@ -132,7 +132,7 @@ await(Stack) ->
     receive
         {ok} -> ok;
         {get_references, Sender} ->
-            Sender ! {gc:extract_references(Stack), self()},
+            Sender ! {gc:extract_references([Stack, get()]), self()},
             await(Stack)
     end.
 
@@ -146,7 +146,7 @@ loop(Value)->
             Sender!{ok},
             loop(Value);
         {get_references, Sender} ->
-            Sender ! {gc:extract_references(Value), self()},
+            Sender ! {gc:extract_references([Value, get()]), self()},
             loop(Value);
         {poll, Sender} ->
             Sender ! completed,

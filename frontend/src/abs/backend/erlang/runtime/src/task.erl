@@ -80,7 +80,7 @@ loop_for_unblock_signal(Msg,Stack) ->
         {stop_world, _Sender} ->
             loop_for_unblock_signal(Msg, Stack);
         {get_references, Sender} ->
-            Sender ! {gc:extract_references(Stack), self()},
+            Sender ! {gc:extract_references([Stack, get()]), self()},
             loop_for_unblock_signal(Msg, Stack)
     end.
 
