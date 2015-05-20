@@ -2,6 +2,6 @@
 
 set BASEDIR=%~dp0..\..\
 
-java -Xmx512m -cp %BASEDIR%dist\absfrontend.jar abs.frontend.parser.Main %*
+java -Xmx512m -jar %BASEDIR%dist\absfrontend.jar %*
 
 echo on

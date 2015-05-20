@@ -18,5 +18,5 @@ if [[ $1 == "-haskell" ]]; then
        exit 1
     fi
 else
-    java -Xmx512m -cp $BASEDIR/dist/absfrontend.jar abs.frontend.parser.Main "$@"
+    java -Xmx512m -jar $BASEDIR/dist/absfrontend.jar "$@"
 fi
