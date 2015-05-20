@@ -25,6 +25,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import choco.kernel.model.constraints.Constraint;
 import abs.frontend.mtvl.ChocoSolver;
+import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -326,7 +327,7 @@ public class Main {
             FunctionDecl currentFeatureFun = null;
             FunctionDecl productNameFun = null;
             for (ModuleDecl d : m.getModuleDecls()) {
-                if (d.getName().equals("ABS.Productline")) {
+                if (d.getName().equals(Constants.PL_NAME)) {
                     modProductline = d;
                     break;
                 }
