@@ -62,7 +62,7 @@
   </rm:searchPath>
   <rm:searchPath name="org.eclipse.platform">
 		<rm:provider readerType="eclipse.import" componentTypes="osgi.bundle,eclipse.feature" mutable="false" source="false">
-			<rm:uri format="http://download.eclipse.org/releases/indigo/?importType=binary"/>
+			<rm:uri format="http://download.eclipse.org/releases/luna/?importType=binary"/>
 		</rm:provider>
   </rm:searchPath>
   <rm:searchPath name="SWTBot">
