@@ -146,6 +146,20 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    public void ticket414_futNeedsDataType2() {
+        Model m = assertParseOk("module M; data I = I; { Fut<I> fi; }", Config.WITH_STD_LIB);
+        assertFalse(m.hasErrors());
+        Block b = m.getMainBlock();
+        assertNotNull(b);
+        VarDeclStmt s = (VarDeclStmt) b.getStmt(0);
+        ParametricDataTypeUse u = (ParametricDataTypeUse) s.getVarDecl().getAccess();
+        // Have:
+        TypeUse tu = u.getParam(0);
+        assertEquals("I",tu.getName());
+        assertThat(tu, instanceOf(DataTypeUse.class));
+    }
+
+    @Test
     public void letOk() {
         assertTypeOK("{ Bool b = let (Bool x) = True in x; }");
     }
