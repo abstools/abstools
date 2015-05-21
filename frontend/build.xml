@@ -83,7 +83,7 @@
   <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask" classpath="${ext.dir}/findbugs-ant-1.3.9.jar"/>
 
   <path id="common.classpath">
-    <pathelement location="${ext.dir}/ecj-3.6.2.jar" />
+    <pathelement location="${ext.dir}/ecj-4.4.2.jar" />
     <pathelement location="${ext.dir}/org.sat4j.core.jar" />
     <pathelement location="${ext.dir}/org.sat4j.maxsat.jar" />
     <pathelement location="${ext.dir}/org.sat4j.pb.jar" />
@@ -294,7 +294,7 @@
       <fileset dir="${src.dir}" includes="abs/**,deadlock/**,autodeploy/**" excludes="abs/lang/abslang.abs" />
       <zipfileset src="${ext.dir}/apfloat.jar" />
             <zipfileset src="${ext.dir}/beaver-rt.jar" />
-      <zipfileset src="${ext.dir}/ecj-3.6.2.jar" />
+      <zipfileset src="${ext.dir}/ecj-4.4.2.jar" />
       <zipfileset src="${ext.dir}/org.sat4j.core.jar" />
       <zipfileset src="${ext.dir}/org.sat4j.pb.jar" />
       <zipfileset src="${ext.dir}/sat4j-maxsat.jar" />
