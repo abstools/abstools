@@ -1,0 +1,36 @@
+module False_await_chain;
+
+interface A {
+  Int mut_recursive();
+  Unit set_mutual(A a);
+}
+
+
+class A1(Int recA,A other) implements A {
+Unit set_mutual(A a){
+ other=a;
+}
+Int mut_recursive() {
+    Fut<Int> out;
+    	if(recA>0){
+	recA=recA-1;
+	out= other!mut_recursive();
+        await out?;
+	}   
+return out.get;
+}
+
+}
+
+
+
+{
+  A x;
+  A y;
+  x = new A1(100,y);
+  y = new A1(100,x); 
+  x.set_mutual(y);
+  x!mut_recursive();
+
+
+}

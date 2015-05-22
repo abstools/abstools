@@ -1,0 +1,24 @@
+module Test_Inference_b;
+
+interface Object {
+}
+
+class Object implements Object {
+}
+
+interface A {
+   A m();
+}
+
+class A implements A {
+   A m(){
+	Fut<A> x = this!m();
+	return x.get;
+   }
+}
+
+{
+A y = new cog A();
+Fut<A> z = y!m();
+z.get;
+}

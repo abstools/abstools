@@ -1,0 +1,1401 @@
+module TradingSystem;
+import * from ABS.StdLib;
+
+def List<A> addelem<A>(List<A> list, A p) = Cons(p, list); 
+
+  
+  def List<A> reverse<A>(List<A> list) =
+  case list { 
+     Cons(hd, tl) => appendright(reverse(tl), hd); 
+     Nil => Nil; 
+  };
+
+def B mylookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
+  case ms {
+     InsertAssoc(Pair(k, y), _) => y;
+     // InsertAssoc(_, tm) => lookup(tm, k);
+     // Rewritten for aPET (to avoid having fresh vars in the nomatch not present in the match)
+     InsertAssoc(Pair(_, _), tm) => mylookup(tm, k);
+  };
+
+
+[COG]
+class BankImpl implements Bank {
+
+    CreditCardInfoMap creditCardInfoMap = EmptyMap;
+
+    {
+	// Pair<CreditInfo,TransactionInfo> p1 = Pair("ABC57", Pair(3245, "100")); // DEBIT_OK;
+	// Pair<CreditInfo,TransactionInfo> p2 = Pair("DEF80", Pair(8510, "200")); // DEBIT_NOT_ENOUGH_MONEY;
+	// Pair<CreditInfo,TransactionInfo> p3 = Pair("GHI34", Pair(1000, "300")); // TRANSACTION_ID_NOT_VALID;
+	// creditCardInfoMap = map[p1, p2, p3];
+	}
+
+	[creditCardInfoMap <= max(creditCardInfoMap)]
+	Maybe<TransactionID> validateCard(CreditInfo creditInfo, Int pin) {
+	    String res = "";
+	    Maybe<TransactionID> result = Nothing;
+	    TransactionInfo transactionInfo = Pair(0, ""); // NilPair
+	    transactionInfo = mylookup(creditCardInfoMap, creditInfo);
+	    if (pin == getPin(transactionInfo)) {
+			res = getId(transactionInfo);
+			result = Just(res);
+	    }
+	    else
+	    	result = Nothing;
+	    return result;
+	}
+
+	DebitResult debitCard(TransactionID transactionID, Money money) {
+	    DebitResult debitResult = DEBIT_TRANSACTION_ID_NOT_VALID;
+	    if (transactionID == "100")
+	    debitResult = DEBIT_OK;
+	    else if (transactionID == "200")
+	    debitResult = DEBIT_NOT_ENOUGH_MONEY;
+	    else
+	    debitResult = DEBIT_TRANSACTION_ID_NOT_VALID;
+	    return debitResult;
+	}
+    }
+
+class BarCodeScannerImpl implements BarCodeScanner {
+    BarCodeEventReceiver cashDeskPC;
+    BarCodeScannerEnv barCodeScannerEnv;
+    
+    Unit setDependencies(BarCodeEventReceiver cashDeskPC,
+	BarCodeScannerEnv barCodeScannerEnv) {
+		this.cashDeskPC = cashDeskPC;
+		this.barCodeScannerEnv = barCodeScannerEnv;
+    }
+    
+    Unit scanBarCodeButtonPressed() {
+		Fut<Int> fuint;
+		Int barCode = 0;
+		fuint = barCodeScannerEnv!scanBarCode();
+		barCode = fuint.get;
+		cashDeskPC!barCodeSend(barCode);
+    }
+}
+
+class BarCodeScannerEnvImpl implements BarCodeScannerEnvExt {
+    BarCodeScanner barCodeScanner;
+    Int barCode = 0;
+
+    Unit setDependencies(BarCodeScanner barCodeScanner) {
+	this.barCodeScanner = barCodeScanner;
+    }
+    
+    Unit barCodeEnterPressed(Int barCode) { // rename to barCodeScanned
+		this.barCode = barCode;
+		barCodeScanner!scanBarCodeButtonPressed();
+    }
+
+    Int scanBarCode() {
+    	Int ret = this.barCode;
+		return ret;
+    }
+}
+
+[COG]
+class CardReaderImpl implements CardReader {
+    CardEventReceiver cashDeskPC;
+    CardReaderEnv cardReaderEnv;
+    
+    Unit setDependencies(CardEventReceiver cashDeskPC,
+		CardReaderEnv cardReaderEnv) {
+		this.cashDeskPC = cashDeskPC;
+		this.cardReaderEnv = cardReaderEnv;
+    }
+    
+    Unit enterPin(Int pin) {
+		Fut<CreditInfo> fucredit;
+		CreditInfo creditInfo = "";
+		fucredit = cardReaderEnv!getCreditInfo();
+		creditInfo = fucredit.get;
+		cashDeskPC!sendCreditInfoAndPin(creditInfo, pin);
+    }
+}
+
+[COG]
+class CardReaderEnvImpl implements CardReaderEnvExt {
+    CardReader cardReader;
+    
+    CreditInfo creditInfo = "";
+    
+    Unit setDependencies(CardReader cardReader) {
+		this.cardReader = cardReader;
+    }
+    
+    Unit pullCardThrough(CreditInfo creditInfo) { // if (enabled)
+		this.creditInfo = creditInfo;
+    }
+    
+    Unit enterPinFromCustomer(Int pin) {
+		cardReader!enterPin(pin);
+    }
+    
+    CreditInfo getCreditInfo() {
+    	CreditInfo ci = this.creditInfo;
+		return ci;
+    }
+}
+
+data Key = NEW_SALE_KEY | FINISH_SALE_KEY | CASH_PAYMENT_KEY |
+CARD_PAYMENT_KEY | NUM_KEY(Int) | ENTER_KEY | DISABLE_EXPRESS_KEY ;
+
+data PaymentMode = CASH | CARD;
+
+class CashBoxImpl implements CashBox {
+    CashDeskPC cashDeskPC;
+    CashBoxEnv cashBoxEnv;
+    Screen screen;
+    
+    List<Int> intBuffer = Nil;
+    
+    Unit setDependencies(CashDeskPC cashDeskPC, CashBoxEnv cashBoxEnv,
+	Screen screen) {
+		this.cashDeskPC = cashDeskPC;
+		this.cashBoxEnv = cashBoxEnv;
+		this.screen = screen;
+    }
+    
+    [cashDeskPC == max(cashDeskPC)][cashBoxEnv == max(cashBoxEnv)][screen == max(screen)]
+    Unit open()  {
+		cashBoxEnv!open();
+    }
+    
+    [cashDeskPC == max(cashDeskPC)][cashBoxEnv == max(cashBoxEnv)][screen == max(screen)]
+    Unit onCloseEvent() {
+		cashDeskPC!moneyReceived();
+    }
+    
+    [cashDeskPC == max(cashDeskPC)][cashBoxEnv == max(cashBoxEnv)][screen == max(screen)][intBuffer <= max(intBuffer)]
+    Unit keyPressed(Key key) {
+		if (key == NEW_SALE_KEY) cashDeskPC!newSaleStarted();
+		if (key == FINISH_SALE_KEY) cashDeskPC!saleFinished();
+		if (key == CASH_PAYMENT_KEY) cashDeskPC!paymentModeSelected(CASH);
+		if (key == CARD_PAYMENT_KEY) cashDeskPC!paymentModeSelected(CARD);
+		if (key == DISABLE_EXPRESS_KEY) cashDeskPC!changeToMode(NORMAL);
+		if (key == ENTER_KEY) {
+		    Int numCode = numberFromList(intBuffer);
+		    intBuffer = Nil;
+		    cashDeskPC!keypadSend(numCode);
+		    screen!display("Digits confirmed");
+		}
+		if (isNumKey(key)) {
+		    intBuffer = appendright(intBuffer, fromNumKey(key));
+		    screen!display("Digit entered");
+		}
+    }
+
+	[cashDeskPC == max(cashDeskPC)][cashBoxEnv == max(cashBoxEnv)][screen == max(screen)]
+    Unit show(String s) {
+		screen!display(s);
+    }
+}
+
+class CashBoxEnvImpl implements CashBoxEnvExt {
+    CashBox cashBox;
+
+    Bool isOpen = False;
+
+    Unit setDependencies(CashBox cashBox) {
+		this.cashBox = cashBox;
+    }
+
+   	Unit open() {
+		isOpen = True;
+    }
+
+    Unit close() {
+		Fut<Unit> fu;
+		isOpen = False;
+		fu = cashBox!onCloseEvent(); 
+		await fu?;
+    }
+
+    Unit keyPressed(Key key) {
+		cashBox!keyPressed(key);
+    }
+}
+
+class CashDeskEnvironmentInstallation(Bank bank,
+    Inventory inventory
+    ) implements CashDeskEnvironmentExt {
+
+    Cashier cashier;
+
+    PrinterEnvExt printerEnv;
+    ScreenExt screen;
+    BarCodeScannerEnvExt barCodeScannerEnv;
+    CashBoxEnvExt cashBoxEnv;
+    CardReaderEnvExt cardReaderEnv;
+    LightDisplayEnv lightDisplayEnv;
+
+    CashDeskPC cashDeskPC;
+    BarCodeScanner barCodeScanner;
+    CashBox cashBox;
+    CardReader cardReader;
+    LightDisplay lightDisplay;
+
+    {
+		printerEnv = new cog PrinterEnvImpl();
+		screen = new cog ScreenImpl();
+		barCodeScannerEnv = new cog BarCodeScannerEnvImpl();
+		cashBoxEnv = new cog CashBoxEnvImpl();
+		cardReaderEnv = new cog CardReaderEnvImpl();
+		lightDisplayEnv = new cog LightDisplayEnvImpl();
+	
+		cashier = new cog CashierImpl( barCodeScannerEnv,
+            cashBoxEnv,
+            cardReaderEnv,
+            lightDisplayEnv,
+            printerEnv,
+            screen
+        );
+    }
+
+
+    Unit kk (Customer customer) {
+		printerEnv = new cog PrinterEnvImpl();
+		screen = new cog ScreenImpl();
+		barCodeScannerEnv = new cog BarCodeScannerEnvImpl();
+		cashBoxEnv = new cog CashBoxEnvImpl();
+		cardReaderEnv = new cog CardReaderEnvImpl();
+		lightDisplayEnv = new cog LightDisplayEnvImpl();
+	
+		cashier = new cog CashierImpl( barCodeScannerEnv,
+            cashBoxEnv,
+            cardReaderEnv,
+            lightDisplayEnv,
+            printerEnv,
+            screen
+        );
+        
+        cashier!serveCustomer(customer);
+    }
+
+    Unit init2(CashDeskInstallation install) {
+		Fut<Unit> fu;
+		barCodeScanner = install.getBarCodeScanner();
+		cashBox = install.getCashBox();
+		cardReader = install.getCardReader();
+		fu = barCodeScannerEnv!setDependencies(barCodeScanner); fu.get;
+		fu = cashBoxEnv!setDependencies(cashBox); fu.get;
+		fu = cardReaderEnv!setDependencies(cardReader); fu.get;
+    }
+
+    Cashier getCashier() { Cashier c= cashier; return c;}
+
+    PrinterEnv getPrinterEnv() { PrinterEnvExt pe = printerEnv; return pe;}
+    Screen getScreen() { ScreenExt s = screen; return s;}
+    CashBoxEnv getCashBoxEnv() { CashBoxEnvExt cb = cashBoxEnv; return cb;}
+    LightDisplayEnv getLightDisplayEnv() { LightDisplayEnv ld = lightDisplayEnv; return ld;}
+    BarCodeScannerEnv getBarCodeScannerEnv() { BarCodeScannerEnvExt bc = barCodeScannerEnv; return bc; }
+    CardReaderEnv getCardReaderEnv() { CardReaderEnvExt cr = cardReaderEnv; return cr;}
+    Inventory getInventory() { Inventory i = inventory; return i;}
+    Bank getBank() { Bank b = bank; return b;}
+}
+
+class CashDeskInstallationImpl( ExpressCoordinator expressCoordinator,
+    CashDeskEnvironment env
+    ) implements CashDeskInstallation {
+
+    CashDeskPC cashDeskPC;
+    CashBox cashBox;
+    BarCodeScanner barCodeScanner;
+    Printer printer;
+    CardReader cardReader;
+    LightDisplay lightDisplay;
+
+    Unit init2() {
+		Fut<Unit> fu;
+		PrinterEnv printerEnv;
+		Screen screen;
+		CashBoxEnv cashBoxEnv;
+		LightDisplayEnv lightDisplayEnv;
+		BarCodeScannerEnv barCodeScannerEnv;
+		CardReaderEnv cardReaderEnv;
+		Inventory inventory;
+		Bank bank;
+	
+		printerEnv = env.getPrinterEnv();
+		screen = env.getScreen();
+		cashBoxEnv = env.getCashBoxEnv();
+		lightDisplayEnv = env.getLightDisplayEnv();
+		barCodeScannerEnv = env.getBarCodeScannerEnv();
+		cardReaderEnv = env.getCardReaderEnv();
+		inventory = env.getInventory();
+		bank = env.getBank();
+	
+		cashBox = new cog CashBoxImpl();
+		cardReader = new cog CardReaderImpl();
+		printer = new cog PrinterImpl();
+		cashDeskPC = new cog CashDeskPCImpl();
+		barCodeScanner = new cog BarCodeScannerImpl();
+		lightDisplay = new cog LightDisplayImpl();
+	
+		fu = barCodeScanner!setDependencies(cashDeskPC, barCodeScannerEnv); fu.get;
+		fu = cashBox!setDependencies(cashDeskPC, cashBoxEnv, screen); fu.get;
+		fu = cardReader!setDependencies(cashDeskPC, cardReaderEnv); fu.get;
+		fu = printer!setDependencies(printerEnv); fu.get;
+		fu = lightDisplay!setDependencies(lightDisplayEnv); fu.get;
+		fu = cashDeskPC!setDependencies(cashBox, printer, inventory, bank,
+	    expressCoordinator, lightDisplay); fu.get; 
+	}
+
+	BarCodeScanner getBarCodeScanner() { BarCodeScanner bce = barCodeScanner; return bce;}
+	CashBox getCashBox() { CashBox cb = cashBox; return cb;}
+	CardReader getCardReader() { CardReader cr = cardReader; return cr;}
+    }
+
+    [Plain]
+class CashDeskLineEnvironmentInstallation( Int numberOfCashDesks,
+    Bank bank,
+    Inventory inventory
+    ) implements CashDeskLineEnvironment {
+    List<CashDeskEnvironment> envs = Nil;
+    List<CashDeskEnvironmentExt> envsExt = Nil;
+
+    List<Cashier> cashiers = Nil;
+
+	[envsExt <= max(envsExt)][envs <= max(envs)]
+    Unit run2() {
+		this.init2();
+
+		Int i = 0;
+		while (i < 5) {
+			CashDeskEnvironment nnn = nth(envs, i);
+			Fut<Screen> screen;
+			screen = nnn!getScreen();
+			i = i + 1;
+		}
+
+		
+    }
+   
+    [numberOfCashDesks <= max(numberOfCashDesks)][envs <= max(envs)][envsExt <= max(envsExt)]
+    Unit init2() {
+		Int n = 0;
+		Int k = 0;
+		k = numberOfCashDesks;
+		while(n < k) {
+		    CashDeskEnvironmentExt env = new CashDeskEnvironmentInstallation(bank, inventory);
+	    	CashDeskEnvironment e;
+	    	e = env;
+	    	envs = addelem(envs, e);
+	    	envsExt = addelem(envsExt, env);
+	    	n = n + 1;
+		}
+	
+		this.initLineInstall();	
+    }
+    
+    
+     [numberOfCashDesks <= max(numberOfCashDesks)][envs <= max(envs)][envsExt <= max(envsExt)][cashiers == max(cashiers)]
+    Unit initLineInstall() {
+    	CashDeskLineInstallation lineInstall = new CashDeskLineInstallationImpl(envs);
+		lineInstall.init2();
+    
+    	Int n = 0;
+		List<CashDeskInstallation> installs = lineInstall.getCashDeskInstallations();
+	
+		Int k = numberOfCashDesks;
+		while(n < k) {
+		    CashDeskInstallation install = nth(installs, n);
+	    	CashDeskEnvironmentExt env = nth(envsExt, n);
+	    	env.init2(install);
+	    	Cashier cashier = env.getCashier();
+	    	cashiers = addelem(cashiers, cashier);
+	    	n = n + 1;
+		}
+    
+    }
+
+    List<Cashier> getCashiers() {
+    	[old(numberOfCashDesks) == numberOfCashDesks][old(bank) == bank][old(inventory) == inventory][old(env) == env][old(envsExt) == envsExt]
+		await cashiers != Nil;
+		List<Cashier> c =cashiers;
+		return c;
+    }
+}
+
+class CashDeskLineInstallationImpl( List<CashDeskEnvironment> envs
+    ) implements CashDeskLineInstallation {
+
+    List<CashDeskInstallation> cashDeskInstallations = Nil;
+    ExpressCoordinator expressCoordinator;
+
+	[envs <= max(envs)][cashDeskInstallations <= max(cashDeskInstallations)]
+    Unit init2() {
+		Int i = 0;
+		Fut<Unit> fu;
+		CashDeskPC cashDeskPC;
+		CashDeskInstallation ci;
+		expressCoordinator = new cog ExpressCoordinatorImpl();
+		Int l = length(envs);
+		while(i < l) {
+			CashDeskEnvironment e = nth(envs, i);
+		    ci = new CashDeskInstallationImpl(expressCoordinator, e);
+		    ci.init2();
+			// GRD cashDeskInstallations = appendright(cashDeskInstallations, ci);
+		    cashDeskInstallations = addelem(cashDeskInstallations, ci);
+		    i = i + 1;
+		}
+		
+    }
+
+	[cashDeskInstallations == max(cashDeskInstallations)]
+    List<CashDeskInstallation> getCashDeskInstallations() {
+		List<CashDeskInstallation> tmp = cashDeskInstallations;
+		return tmp;
+    }
+}
+
+// CashDeskPC States
+data CashDeskPCState = INIT | SCANNING | PAYING;
+
+
+
+// Only for DEBIT_OK is CARD-Payment valid.
+data DebitResult = DEBIT_OK | DEBIT_TRANSACTION_ID_NOT_VALID |
+DEBIT_NOT_ENOUGH_MONEY | NOT_PROCESSED_YET; // Enumeration
+
+// Sale(CashDeskPC, Product List, Total Amount, CASH or CARD)
+data Sale = Sale(CashDeskPC, List<Product>, Money, PaymentMode);
+
+
+
+def Bool isNumKey(Key key) = case key { NUM_KEY(n) => True; _ => False; };
+def Int fromNumKey(Key key) = case key { NUM_KEY(n) => n; };
+
+// type synonyms
+type Product = Pair<ProductName, ProductPrice>;
+def ProductName productName(Product p) = fst(p);
+def ProductPrice productPrice(Product p) = snd(p);
+
+type ProductID = Int;
+// Simplification : Currently amount of every product is 1, it isn't stored.
+type ProductDatabase = Map<ProductID, Product>;
+type ProductName = String;
+type ProductPrice = Money;
+
+type Euro = Int;
+type Cent = Int;
+type Money = Pair<Euro, Cent>;
+
+
+
+
+
+class CashDeskPCImpl implements CashDeskPC {
+
+    CashBox cashBox;
+    Printer printer;
+    Inventory inventory;
+    Bank bank;
+    ExpressCoordinator expressCoordinator;
+    LightDisplay lightDisplay;
+
+    Bool isExpressMode = False;
+
+    CashDeskPCState state = INIT;
+    List<Product> productList = Nil;
+    Money amount = money(0, 0);
+    CreditInfo creditInfo = "";
+    PaymentMode paymentMode = CASH;
+
+	Int test = 0;
+
+    Unit setDependencies(CashBox cashBox, Printer printer, Inventory inventory,
+		Bank bank, ExpressCoordinator expressCoordinator,		LightDisplay lightDisplay) {
+		this.cashBox = cashBox;
+		this.printer = printer;
+		this.inventory = inventory;
+		this.bank = bank;
+		this.expressCoordinator = expressCoordinator;
+		this.lightDisplay = lightDisplay;
+    }
+
+    Unit newSaleStarted() {
+	if (state == INIT) {
+	    state = SCANNING;
+	    this.amount = money(0, 0);
+	    this.productList = Nil;
+	    cashBox!show("New Sale started");
+	}
+    }
+
+    Unit saleFinished() {
+	if (state == SCANNING) {
+	    state = PAYING;
+	    cashBox!show("Total Amount : " + moneyToString(amount));
+	}
+    }
+
+	[productList <= max(productList)]
+    Unit barCodeSend(Int barCode) {
+		Product pproduct = Pair("", Pair(0, 0)); // NilProduct
+		Fut<Product> productF;
+		if (state == SCANNING) {
+		    productF = inventory!getProductWithStockItem(barCode);
+		    pproduct = productF.get;
+		    productList = appendright(productList, pproduct);
+		    this.calculateRunningTotal(pproduct);
+		}
+    }
+
+    // private
+    Unit calculateRunningTotal(Product pproduct) {
+    	ProductPrice pp = productPrice(pproduct);
+		this.amount = addMoney(productPrice(pproduct), this.amount);
+		String s = formatProductAndRunningTotal(pproduct, amount);
+		cashBox!show(s);
+    }
+
+    Unit paymentModeSelected(PaymentMode paymentMode) {
+	if (state == PAYING) {
+	    this.paymentMode = paymentMode;
+	    if (paymentMode == CASH)
+            cashBox!show("Cash Payment Selected");
+	    else {
+		if (isExpressMode)
+		cashBox!show("Card Payment not possible");
+		else
+		cashBox!show("Card Payment Selected");
+	    }
+	}
+    }
+
+    Unit keypadSend(Int numCode) {
+	if (state == SCANNING) {
+	    this.barCodeSend(numCode);
+	    } else if (state == PAYING) {
+	    this.cashAmountEntered(intToMoney(numCode));
+	}
+    }
+
+    Unit cashAmountEntered(Money enteredAmount) {
+	if (state == PAYING) {
+	    Money changeAmount = subtractMoney(enteredAmount, amount);
+	    //cashBox!amountCalculated(amount, changeAmount);
+	    cashBox!show("Total amount : " + moneyToString(amount)
+		+ " Changed amount : " + moneyToString(changeAmount));
+		cashBox!open();
+	    }
+	}
+
+	Unit moneyReceived() {
+	    if (state == PAYING) {
+		this.saleSuccess();
+	    }
+	}
+
+	Unit changeToMode(OperationMode mode) {
+	    isExpressMode = isExpressMode(mode);
+	    lightDisplay!changeToMode(mode);
+	}
+
+	DebitResult mmm (Int i) {
+		DebitResult info = DEBIT_TRANSACTION_ID_NOT_VALID;
+		if (i > 0) {
+			info = DEBIT_OK;
+		}
+		return info;
+	}
+
+	Unit kkkk (Int pin) {
+	    DebitResult info = DEBIT_OK;
+		//info = this.mmm(pin);
+	    if (info == DEBIT_OK) {
+		    this.saleSuccess();
+		}
+	}
+
+	Unit sendCreditInfoAndPin(String creditInfo, Int pin) {
+	    DebitResult info = DEBIT_TRANSACTION_ID_NOT_VALID;
+	    if (state == PAYING) {
+			Fut<Maybe<TransactionID>> tid = bank!validateCard(creditInfo, pin);
+			[old(cashBox) == cashBox][old(printer) == printer][old(inventory) == inventory][old(bank) == bank][old(expressCoordinator) == expressCoordinator][old(lightDisplay) == lightDisplay][old(state) == state]
+			await tid?;
+			Maybe<TransactionID> transactionID = tid.get;
+			if (transactionID == Nothing) {
+			    cashBox!show(debitResultToString(info));
+		    } 
+			else {
+			    Fut<DebitResult> futDebitResultinfo = bank!debitCard(fromJust(transactionID), amount);
+				[old(cashBox) == cashBox][old(printer) == printer][old(inventory) == inventory][old(bank) == bank][old(expressCoordinator) == expressCoordinator][old(lightDisplay) == lightDisplay][old(state) == state]
+			    await futDebitResultinfo?;
+			    info = futDebitResultinfo.get;
+			    cashBox!show(debitResultToString(info));
+			    if (info == DEBIT_OK) {
+				    this.saleSuccess();
+				}
+			}
+	    }
+	}
+	
+
+	// private
+	[productList <= max(productList)]
+	Unit saleSuccess() {
+	    inventory!accountSale(Sale(this, this.productList, this.amount, this.paymentMode));
+	    printer!print(productList, this.amount);
+	    cashBox!show("Sale succeeded..");
+	    Fut<Unit> futunit = expressCoordinator!saleRegistered(this, productList,this.paymentMode);
+		[old(cashBox) == cashBox][old(printer) == printer][old(inventory) == inventory][old(bank) == bank][old(expressCoordinator) == expressCoordinator][old(lightDisplay) == lightDisplay]
+		await futunit?;
+		this.state = INIT;
+		
+	    }
+	}
+
+class CashierImpl( BarCodeScannerEnvExt barCodeScannerEnv,
+    CashBoxEnvExt cashBoxEnv,
+    CardReaderEnvExt cardReaderEnv,
+    LightDisplayEnv lightDisplayEnv,
+    PrinterEnvExt printerEnv,
+    ScreenExt screen
+    ) implements Cashier {
+
+	Int nAttemps = 10;
+	Int nValidAttemps = 10;
+	Int flagChange = 10;
+
+    Int countNormalModeChanges = 0; // DEBUGGING
+
+    Unit runCashier(List<Customer> customers) {
+		Int n = 0;
+		Int l = length(customers);
+		while (n < l) {		
+			Customer cc = nth(customers, n);
+		    this.serveCustomer(cc);
+		    n = n + 1;
+		}
+    }
+	
+	
+	[nAttemps <= max(nAttemps)][nValidAttemps <= max(nValidAttemps)][items <= max(items)][flagChange <= max(flagChange)]
+	Unit serveCustomer(Customer customer) {
+		Bool validated = False;
+		Fut<String> receipt;
+		Fut<Unit> fu;
+		Fut<Bool> boolfu;
+		Fut<Bool> futbool;
+		Bool isExpressModeOn = False;
+		Bool useBarCodeScanner = False;
+		PaymentMode paymentMode = getPaymentMode(customer);
+		List<ProductID> items = getProducts(customer);
+		ProductID nextBarCode = 0;
+		Money amountToGive = getAmount(customer);
+		CreditInfo creditInfo = getCreditInfo(customer);
+		Pin pin = getPinInfo(customer);
+		Int nItems = 0;
+		String screenContent = "";
+
+		cashBoxEnv!keyPressed(NEW_SALE_KEY);
+		screenContent = this.waitScreenChanged();
+	
+		//GRD while (screenContent != "New Sale started") {
+		while (nAttemps > 0) {
+		    cashBoxEnv!keyPressed(NEW_SALE_KEY);
+		    screenContent = this.waitScreenChanged();
+		    nAttemps = nAttemps - 1;
+		}
+
+		Int lItems = length(items);
+		while (nItems < lItems) {
+		    nextBarCode = nth(items, nItems);
+		    useBarCodeScanner = True;
+		    if (useBarCodeScanner)
+	            barCodeScannerEnv!barCodeEnterPressed(nextBarCode);
+		    else
+	            skip; //fu = cashBoxEnv!codeManuallyEntered(nextBarCode);
+		    this.waitScreenChanged();
+		    nItems = nItems + 1;
+		}
+
+
+
+		// await list
+		cashBoxEnv!keyPressed(FINISH_SALE_KEY);
+		this.waitScreenChanged();
+
+
+//		if ((paymentMode == CARD) && (isExpressModeOn == False))
+//			fu = cashBoxEnv!keyPressed(CARD_PAYMENT_KEY);
+//		else
+//			fu = cashBoxEnv!keyPressed(CASH_PAYMENT_KEY);
+
+			
+		screenContent = this.waitScreenChanged(); // if express mode...
+		if (screenContent == "Card Payment not possible") {
+		    paymentMode = CASH;
+		    fu = cashBoxEnv!keyPressed(CASH_PAYMENT_KEY);
+		    this.waitScreenChanged();
+		} 
+		
+		
+		
+		//GRD while (~validated) {
+  		while (nValidAttemps > 0) {
+			if ((paymentMode == CASH)) { //|| (isExpressModeOn == True)) {
+				this.pressKeys(moneyToInt(amountToGive));
+				cashBoxEnv!close();
+				this.waitScreenChanged();
+				validated = True;
+			} 
+			else { // CARD
+				fu = cardReaderEnv!pullCardThrough(creditInfo); 
+				[old(nValidAttemps) == nValidAttemps][old(flagChange) == flagChange][old(nAttemps) == nAttemps]
+				await fu?;
+				cardReaderEnv!enterPinFromCustomer(pin);
+				Bool flag = True;
+		
+				Int n = 0;
+				while(flagChange > 0) {
+				// GRD while(flag) {
+				    screenContent = this.waitScreenChanged();
+				    if (screenContent == "DEBIT_OK") {// || screenContent == "Sale succeeded..") {
+						validated = True;
+						flag = False;
+				    }
+				    if (screenContent == debitResultToString(DEBIT_TRANSACTION_ID_NOT_VALID)) { // || screenContent == debitResultToString(DEBIT_NOT_ENOUGH_MONEY)) {
+						paymentMode = CASH;
+						cashBoxEnv!keyPressed(CASH_PAYMENT_KEY);
+						//this.waitScreenChanged();
+						flag = False;
+				    }
+				    flagChange = flagChange - 1;
+				}
+		    }
+		    nValidAttemps = nValidAttemps - 1; 
+		} 
+		receipt = printerEnv!getReceipt();
+		[old(nValidAttemps) == nValidAttemps][old(flagChange) == flagChange] 
+		await receipt?;
+    }
+
+    String waitScreenChanged() {
+		Fut<String> fu;
+		fu = screen!changed();
+		[old(barCodeScannerEnv) == barCodeScannerEnv][old(cashBoxEnv) == cashBoxEnv][old(cardReaderEnv) == cardReaderEnv][old(lightDisplayEnv) == lightDisplayEnv][old(printerEnv) == printerEnv][old(screen) == screen][old(nValidAttemps) == nValidAttemps][old(nAttemps) == nAttemps][old(flagChange) == flagChange][old(items) == items]  
+		await fu?;
+		return fu.get;
+    }
+
+	[digits == max(digits)]
+    Unit pressKeys(Int numbers) {
+		List<Int> digits = digits(numbers);
+		Int i = 0;
+		Int l = length(digits);
+		while(i < l) {
+		    cashBoxEnv!keyPressed(NUM_KEY(nth(digits, i)));
+		    this.waitScreenChanged();
+		    i = i + 1;
+		}
+		cashBoxEnv!keyPressed(ENTER_KEY);
+		this.waitScreenChanged();
+    }
+}
+
+type CreditCardInfoMap = Map<CreditInfo, TransactionInfo>;
+
+def Pin getPin(TransactionInfo t) = fst(t) ;
+def TransactionID getId(TransactionInfo t) = snd(t) ;
+
+data Customer = Customer(PaymentMode, List<ProductID>, Money, CreditInfo, Pin);
+
+def PaymentMode getPaymentMode(Customer c) =
+case c { Customer(p, l, m, ci, i) => p; };
+def List<ProductID> getProducts(Customer c) =
+case c { Customer(p, l, m, ci, i) => l; };
+def Money getAmount(Customer c) =
+case c { Customer(p, l, m, ci, i) => m; };
+def CreditInfo getCreditInfo(Customer c) =
+case c { Customer(p, l, m, ci, i) => ci; };
+def Pin getPinInfo(Customer c) =
+case c { Customer(p, l, m, ci, i) => i; };
+
+
+
+//def String buildSaleString(Sale sale) = // LOGGING
+//  case sale { Sale(cid, sid, lngth, total, payment) =>
+//    intToString(cid) + ".Cashier, " + intToString(sid) + ".Sale, "
+//   + intToString(lngth) + " Products, " + "Total : "
+//    + moneyToString(total) + " Payment : " + paystr(payment); };
+
+
+def String paystr(PaymentMode payment) =
+case payment { CASH => "CASH"; CARD => "CARD"; };
+
+def List<Int> digits(Int num) = list[1,2];
+
+/*GRD def List<Int> digits(Int num) =
+case num >= 10 {
+    True => let (Int div) = num / 10 in
+    let (Int rst) = num - (div * 10) in
+    appendright(digits(div), rst);
+    False => Cons(num, Nil);
+};*/
+
+def Int moneyToInt(Money money) =
+case money { Pair(euro, cent) => euro * 100 + cent; };
+
+// String Functions
+
+def String charAt(String s, Int pos) = substr(s, pos, 1);
+
+def Bool startsWith(String fst, String snd) =
+let (Int len) = strlen(snd) in
+let (String str) = substr(fst, 0, len) in
+(str == snd);
+
+def Bool endsWith(String fst, String snd) =
+let (Int lenfst) = strlen(fst) in
+let (Int lensnd) = strlen(snd) in
+let (String str) = substr(fst, lenfst-lensnd, lensnd) in
+(str == snd);
+
+def Bool strcontains(String fst, String snd) =
+let (Int lenfst) = strlen(fst) in
+let (Int lensnd) = strlen(snd) in
+case (substr(fst, 0, lensnd)) {
+    snd => True;
+    _ => case(lenfst) { 0 => False; _ => strcontains(substr(fst, 1, lenfst-1), snd); };
+};
+
+def List<String> explode(String str) =
+let (Int len) = strlen(str) in
+case (len) {
+    0 => Nil;
+    _ => appendright(explode(substr(str, 0, len-1)), charAt(str, len-1));
+};
+
+def Maybe<Int> stringToInt(String str) =
+let (Int len) = strlen(str) in
+let (Maybe<String> sign) = getSign(charAt(str, 0)) in
+case (len > 0) {
+    False => Nothing;
+    True => case (sign) {
+	Nothing => stringToUnsignedInt(str);
+	Just("-") => Just(-1 * fromJust(stringToUnsignedInt(substr(str, 1, len-1))));
+	Just("+") => stringToUnsignedInt(substr(str, 1, len-1));
+    };
+};
+
+def Int powerOf(Int x, Int y) = case (y) { 0 => 1; 1 => x; _ => x * powerOf(x, y-1); };
+
+def Maybe<String> getSign(String s) = case (s) { "-" => Just("-"); "+" => Just("+"); _ => Nothing; };
+
+def Maybe<Int> stringToUnsignedInt(String str) =
+let (Int len) = strlen(str) in
+case (len) {
+    0 => Nothing;
+    1 => charToInt(charAt(str, 0));
+    _ => Just((powerOf(10, len-1) * fromJust(charToInt(charAt(str, 0)))) + fromJust(stringToUnsignedInt(substr(str, 1, len-1))));
+};
+
+def Maybe<Int> charToInt(String str) =
+case (str) {
+    "1" => Just(1); "2" => Just(2); "3" => Just(3); "4" => Just(4); "5" => Just(5);
+    "6" => Just(6); "7" => Just(7); "8" => Just(8); "9" => Just(9); "0" => Just(0); _ => Nothing;
+};
+
+
+
+
+
+
+
+
+data OperationMode = EXPRESS | NORMAL;
+
+def Bool isExpressMode(OperationMode mode) =
+case mode {
+    EXPRESS => True;
+    NORMAL => False;
+};
+
+
+
+
+
+def Money money(Int euro, Int cent) = Pair(euro, cent);
+
+def Money addMoney(Money m1, Money m2) =
+let (Money result) = Pair(fst(m1) + fst(m2), snd(m1) + snd(m2)) in
+case snd(result) >= 100 {
+    True => let (Int div) = snd(result) / 100 in
+    let (Int rst) = snd(result) - (div * 100) in
+    Pair(fst(result) + div, rst);
+    False => result;
+};
+
+def Money subtractMoney(Money m1, Money m2) =
+let (Money result) = Pair(fst(m1) - fst(m2), snd(m1) - snd(m2)) in
+case snd(result) < 0 {
+    True => Pair(fst(result) - 1, snd(result) + 100);
+    False => result;
+};
+
+//def String moneyToString(Money m) = "(" + intToString(fst(m)) + " Euro "
+//+ intToString(snd(m)) + " Cent),";
+
+def String moneyToString(Money m) = "";
+
+
+def Int numberFromList(List<Int> l) = numberFromListHelper(reverse(l));
+
+def Int numberFromListHelper(List<Int> l) =
+case l {
+    Cons(hd, Nil) => hd;
+    Cons(hd1, Cons(hd2, tl)) => hd1 + 10 * numberFromListHelper(Cons(hd2,tl));
+};
+
+def Money intToMoney(Int num) =
+let (Int div) = num / 100 in
+let (Int rst) = num - (div * 100) in
+Pair(div, rst);
+
+def String formatProductAndRunningTotal(Product pproduct, Money amount) =
+productToString(pproduct) + "Current Total Amount : " + moneyToString(amount);
+
+def String productToString(Product pproduct) =
+"Product : " + fst(pproduct) + ", Price : " +
+moneyToString(snd(pproduct)) + " ";
+
+def String debitResultToString(DebitResult info) =
+case info {
+    DEBIT_OK => "DEBIT_OK";
+    DEBIT_TRANSACTION_ID_NOT_VALID => "DEBIT_TRANSACTION_ID_NOT_VALID";
+    DEBIT_NOT_ENOUGH_MONEY => "DEBIT_NOT_ENOUGH_MONEY";
+};
+
+type Exception = String;
+type CreditInfo = String;
+
+type Pin = Int;
+type TransactionID = String;
+
+type TransactionInfo = Pair<Pin, TransactionID>;
+
+
+
+
+
+
+class ExpressCoordinatorImpl implements ExpressCoordinator {
+    Bool expressModeNeeded = False;
+    Int countSales = 0; // All sales
+    Int countExpressSales = 0; // All sales, which satisfy the condition for express mode.
+    Int threshold = 2;
+
+    Unit saleRegistered(ExpressModeReceiver cashDeskPC, List<Product> productList, PaymentMode paymentMode) {
+		Fut<Unit> fu;
+		countSales = countSales + 1;
+//		if ((paymentMode == CASH) && (length(productList) < 8)) 
+//			countExpressSales = countExpressSales + 1;
+
+		if (countSales >= threshold) { // GRD && countExpressSales > (countSales / 2)) {
+		    fu = cashDeskPC!changeToMode(EXPRESS);
+		    fu.get;
+		    countSales = 0;
+		    countExpressSales = 0;
+		}
+    }
+}
+
+interface PrinterEnvExt extends PrinterEnv {
+    String getReceipt();
+}
+
+interface ScreenExt extends Screen {
+    String changed();
+}
+
+interface BarCodeScannerEnvExt extends BarCodeScannerEnv {
+    Unit barCodeEnterPressed(Int barCode);
+}
+
+interface CardReaderEnvExt extends CardReaderEnv {
+    Unit setDependencies(CardReader cardReader);
+    Unit pullCardThrough(CreditInfo creditInfo);
+    Unit enterPinFromCustomer(Int pin);
+}
+
+interface Test {
+    Unit start();
+    Unit start2();
+}
+
+
+//interface Customer {
+// PaymentMode getPaymentMode();
+//  List<ProductID> getItems();
+//  Money getAmountToGive();
+//  CreditInfo getCreditInfo();
+//  Pin getPin();
+//}
+
+interface Cashier {
+    Unit runCashier(List<Customer> customers);
+    Unit serveCustomer(Customer customer);
+}
+
+interface CashBoxEnvExt extends CashBoxEnv {
+    Unit keyPressed(Key key);
+    Unit close();
+}
+
+interface CashDeskLineEnvironment {
+    List<Cashier> getCashiers();
+    Unit run2();
+}
+
+interface CashDeskEnvironmentExt extends CashDeskEnvironment {
+    Unit init2(CashDeskInstallation install);
+    Cashier getCashier();
+}
+
+
+
+interface CashDeskLineInstallation {
+    List<CashDeskInstallation> getCashDeskInstallations();
+    Unit init2();
+}
+
+interface CashDeskInstallation {
+    BarCodeScanner getBarCodeScanner();
+    CashBox getCashBox();
+    CardReader getCardReader();
+    Unit init2();
+}
+
+interface CashDeskEnvironment {
+    PrinterEnv getPrinterEnv();
+    Screen getScreen();
+    CashBoxEnv getCashBoxEnv();
+    LightDisplayEnv getLightDisplayEnv();
+    BarCodeScannerEnv getBarCodeScannerEnv();
+    CardReaderEnv getCardReaderEnv();
+    Inventory getInventory();
+    Bank getBank();
+}
+
+
+interface BarCodeScanner {
+    Unit setDependencies(BarCodeEventReceiver cashDeskPC,
+	BarCodeScannerEnv barCodeScannerEnv);
+	Unit scanBarCodeButtonPressed();
+    }
+
+interface CardReader {
+    Unit setDependencies(CardEventReceiver cashDeskPC,
+	CardReaderEnv cardReaderEnv);
+	Unit enterPin(Int pin); // called from environment
+    }
+
+interface CashBox {
+    Unit setDependencies(CashDeskPC cashDeskPC, CashBoxEnv cashBoxEnv,
+	Screen screen);
+	Unit keyPressed(Key key); // called from environment
+	Unit onCloseEvent(); // called from environment
+	Unit open();
+	Unit show(String s);
+    }
+
+interface BarCodeEventReceiver {
+    Unit barCodeSend(Int barCode);
+}
+
+interface CardEventReceiver {
+    Unit sendCreditInfoAndPin(CreditInfo creditInfo, Int pin);
+}
+
+interface CashBoxEventReceiver {
+    Unit newSaleStarted();
+    Unit saleFinished();
+    Unit keypadSend(Int numCode);
+    Unit paymentModeSelected(PaymentMode paymentMode);
+    Unit moneyReceived();
+}
+
+interface ExpressModeReceiver {
+    Unit changeToMode(OperationMode mode);
+}
+
+interface CashDeskPC extends BarCodeEventReceiver, CardEventReceiver,
+CashBoxEventReceiver, ExpressModeReceiver {
+    Unit setDependencies(CashBox cashBox, Printer printer, Inventory inventory,
+	Bank bank, ExpressCoordinator expressCoordinator,
+    LightDisplay lightDisplay);
+}
+
+interface Printer {
+    Unit setDependencies(PrinterEnv printerEnv);
+    Unit print(List<Product> productList, Money totalAmount);
+}
+
+interface LightDisplay {
+    Unit setDependencies(LightDisplayEnv lightDisplayEnv);
+    Unit changeToMode(OperationMode mode);
+}
+
+interface ExpressCoordinator {
+    Unit saleRegistered(ExpressModeReceiver cashDeskPC,
+	List<Product> productList, PaymentMode paymentMode);
+    }
+
+    //Environment - used interfaces
+interface Bank {
+    Maybe<TransactionID> validateCard(CreditInfo creditInfo, Int pin);
+    DebitResult debitCard(TransactionID transactionID, Money money);
+}
+
+interface Inventory {
+    Product getProductWithStockItem(Int barcode);
+    Unit accountSale(Sale sale);
+}
+
+interface PrinterEnv {
+    Unit print(String output);
+}
+
+interface Screen {
+    Unit display(String output);
+}
+
+interface LightDisplayEnv {
+    Unit turn(Bool on);
+}
+
+interface BarCodeScannerEnv {
+    Unit setDependencies(BarCodeScanner barCodeScanner);
+    Int scanBarCode();
+}
+
+interface CashBoxEnv {
+    Unit setDependencies(CashBox cashBox);
+    Unit open();
+}
+
+interface CardReaderEnv {
+    CreditInfo getCreditInfo();
+}
+
+class InventoryImpl implements Inventory {
+
+    ProductDatabase productDatabase = EmptyMap;
+
+    List<Sale> saleList = Nil;
+    List<String> saleStrings = Nil; // LOGGING
+
+    {
+	// Product p1 = Pair("MILK", money(0, 90));
+	// Product p2 = Pair("APPLES", money(1, 50));
+	// Product p3 = Pair("POTATOES", money(1, 80));
+	// Product p4 = Pair("PENCIL", money(0, 75));
+	// Product p5 = Pair("BREAD", money(0, 50));
+	// Product p6 = Pair("SUGAR", money(1, 20));
+	// Product p7 = Pair("NEWSPAPER", money(1, 0));
+	//this.productDatabase = map[Pair(1, p1), Pair(2, p2), Pair(3, p3), Pair(4, p4), Pair(5, p5), Pair(6, p6), Pair(7, p7)];
+	}
+
+	[productDatabase <= max(productDatabase)]
+	Product getProductWithStockItem(Int barcode) {
+	    return mylookup(this.productDatabase, barcode);
+	}
+
+	[saleList <= max(saleList)]
+	Unit accountSale(Sale sale) {
+	    this.saleList = appendright(this.saleList, sale);
+	    //this.saleStrings = appendright(this.saleStrings, buildSaleString(sale));
+	}
+    }
+
+class LightDisplayImpl implements LightDisplay {
+
+    LightDisplayEnv lightDisplayEnv;
+
+    Unit setDependencies(LightDisplayEnv lightDisplayEnv) {
+		this.lightDisplayEnv = lightDisplayEnv;
+    }
+
+    Unit changeToMode(OperationMode mode) {
+		Bool expressOn = isExpressMode(mode);
+		lightDisplayEnv!turn(expressOn);
+    }
+
+}
+
+
+class LightDisplayEnvImpl implements LightDisplayEnv {
+
+    Bool isOn = False;
+
+    Unit turn(Bool on) {
+		this.isOn = on;
+    }
+
+    Bool isOn() {
+		return this.isOn;
+    }  
+}
+
+
+
+
+
+class PrinterImpl implements Printer {
+    PrinterEnv printerEnv;
+
+    Unit setDependencies(PrinterEnv printerEnv) {
+		this.printerEnv = printerEnv;
+    }
+
+	[productList <= max(productList)]
+    Unit print(List<Product> productList, Money totalAmount) {
+		Int n = 0;
+		Fut<Unit> futunit; String ps = "";
+		String receipt = "Printing Receipt : ";
+		receipt = "Receipt : ";
+		while(n < length(productList)) {
+		    Product pproduct = nth(productList, n);
+		    ps = productToString(pproduct);
+		    receipt = receipt + ps;
+		    n = n + 1;
+		}
+		//    receipt = receipt;
+		printerEnv!print(receipt);
+    }
+}
+
+class PrinterEnvImpl implements PrinterEnvExt {
+
+    String currentReceipt = "";
+
+    Unit print(String receipt) {
+		this.currentReceipt = receipt;
+    }
+
+    String getReceipt() {
+		await (currentReceipt != "");
+		String res = currentReceipt;
+		currentReceipt = "";
+		return res;
+    }
+}
+
+class ScreenImpl implements ScreenExt {
+    String s = "";
+    String validated = "Not_Yet"; // TODO - Use Data Type Either (Nil|True|False)
+    // At the Screen, this info can be seen..
+    InternalLogger logger; Int n = 0; // Only Logging
+    Bool changed = False;
+
+    {
+		logger = new cog InternalLoggerImpl(True);
+    }
+
+    Unit display(String s) {
+		this.s = s;
+//		if (s == "DEBIT_OK" || s == "DEBIT_TRANSACTION_ID_NOT_VALID" || s == "DEBIT_NOT_ENOUGH_MONEY") {
+//		    validated = s;
+//		}
+		changed = True;
+		logger!log(s);
+    }
+    
+   String changed() {
+		await changed;
+		changed = False;
+		return s;
+    }
+
+    
+}
+
+interface InternalLogger { Unit log(String s); }
+
+class InternalLoggerImpl(Bool debug) implements InternalLogger {
+    String logstr = "";
+
+    Unit log(String s) {
+		if (debug)
+		logstr = logstr + s + " ";
+    }
+}
+
+////[Plain]
+class TestImpl(List<List<Customer>> customers) implements Test {
+
+	List<Int> is = Nil;
+
+	[customers == max(customers)][is == max(is)]
+	Unit ppp () {
+		Int n = 0;
+		Int p = length(customers);
+		while (p > 0) {
+			is = appendright(is,n);
+			p = p - 1;
+		}
+	
+	}
+
+    Unit start2() {
+    }
+
+    [customers <= max(customers)][max(customers) >= 1]
+    List<Cashier> getCachiers() {
+		Bank bank = new cog BankImpl();
+		Inventory inventory = new cog InventoryImpl();
+		Int l = length(customers);
+		CashDeskLineEnvironment env = new CashDeskLineEnvironmentInstallation(length(customers), bank, inventory);
+		env!run2();
+		return env.getCashiers();
+    }
+    
+    [customers <= max(customers)][max(customers) >= 1][cashiers <= max(cashiers)][futs <= max(futs)]
+    Unit start() {
+		List<Cashier> cashiers = this.getCachiers();
+		List<Fut<Unit>> futs = Nil;
+		Fut<Unit> fu;
+		Int n = 0;
+		Cashier cashier;
+		Int l =  length(cashiers);
+		while (n < length(cashiers)) {
+		    cashier = nth(cashiers, n);
+	    	fu = cashier!runCashier(nth(customers, n));
+	    	//futs = appendright(futs, fu);
+	    	n = n + 1;
+		}
+		n = 0;
+//		Int k = length(cashiers);
+//		while(n < k) {
+//		    fu = nth(futs, n);		   
+//		    await fu?;
+//		   n = n + 1;
+//		}	
+    }
+}
+
+
+{
+    Customer c1 = Customer(CASH, list[1,2], money(8,0), "ABC57", 3245);
+    Customer c2 = Customer(CARD, list[3,2,4,1,5], money(20,0), "ABC57", 3245);
+    Customer c3 = Customer(CASH, list[3,2,7,1,5,6,4], money(75,0), "ABC57", 3245);
+    Customer c4 = Customer(CARD, list[3,4,5,6], money(127,50), "ABC57", 3245);
+    List<List<Customer>> customerQueue =
+    list[list[c1,c2]];
+    //, list[c2,c1]];
+    //list[list[c1,c2,c3], list[c2,c1,c3], list[c3,c2,c1]];
+    //list[list[c1,c2,c3,c4], list[c2,c1,c3,c3]];
+    //list[list[c1,c3,c3,c4,c1], list[c1,c2,c3,c2,c1], list[c1,c1,c3,c4,c1]];
+    //UC 2 Test
+    Test t;
+    t = new TestImpl(customerQueue);
+    t.start();
+}
+
+ 

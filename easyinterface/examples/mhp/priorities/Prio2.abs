@@ -1,0 +1,73 @@
+module Prio2;
+
+interface A{
+  Int f();
+  Unit f1();
+  Unit f2();
+  Unit f3();
+  Unit g();
+  Unit m();
+}
+
+class AImpl(Int field) implements A {
+
+  [priority(6)] Int f(){
+    this ! f1();
+    this ! f2();
+    this ! f3();
+    suspend;
+    
+    Int ret = 0;
+    // Do some interesting stuff to compute "ret"
+    // ...
+    return ret;
+  }
+  
+  [priority(10)] Unit f1(){
+    while( field > 0  ){
+      field = field - 1;
+      suspend;
+    }
+  }
+  
+  [priority(9)] Unit f2(){
+    while( field < 100  ){
+      field = field + 1;
+      suspend;
+    }
+  }
+  
+  [priority(7)] Unit f3(){
+    while( field > 0  ){
+      field = field - 1;
+      suspend;
+    }
+  }
+  
+  [priority(0)] Unit m()
+  {
+    Fut<Int> x = this ! f();
+    await x?;
+    Int important_value = x.get;
+    this ! g(important_value);
+  }
+  
+  [priority(6)] Unit g()
+  {
+    while( field > 0  ){
+      field = field - 1;
+      suspend;
+    }
+  }
+  
+ 
+}
+
+// f1(), f2() and f3() do no escape from f(), so they will not happen in
+// parallel with g(). 
+// Moreover, f1, f2 and f3 cannot happen in parallel because of their priority
+
+{
+  A q = new AImpl(68);
+  q ! m();
+}

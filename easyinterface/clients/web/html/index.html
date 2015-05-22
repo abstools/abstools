@@ -1,0 +1,76 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+
+  <!-- jquery stuff -->
+  <title>Easy Interface</title>
+  <link rel="stylesheet" href="ei/ext/jquery-ui/css/redmond/jquery-ui.css" />
+  <script src="ei/ext/jquery-ui/js/jquery.js"></script>
+  <script src="ei/ext/jquery-ui/js/jquery-ui.js"></script>
+
+
+  <!-- codemirror stuff -->
+  <script src="ei/lib/codemirror/lib/codemirror.js"></script>
+  <!-- <script src="ei/lib/codemirror/mode/javascript/javascript.js"></script> -->
+  <link rel="stylesheet" href="ei/lib/codemirror/lib/codemirror.css">
+  <link rel="stylesheet" href="ei/lib/codemirror/doc/docs.css">
+
+  <!-- jsTree stuff -->
+  <script type="text/javascript" src="ei/lib/jstree/jquery.jstree.js"></script>
+  <link type="text/css" rel="stylesheet" href="ei/lib/jstree/_docs/syntax/!style.css"/>
+  <script type="text/javascript" src="ei/lib/jstree/_docs/syntax/!script.js"></script>
+  <script type="text/javascript" src="ei/lib/jstree/_lib/jquery.hotkeys.js"></script>
+
+  <!-- jquery.sng -->
+  <script type="text/javascript" src="ei/lib/jquery.svg/jquery.svg.js"></script>
+  <link type="text/css" rel="stylesheet" src="ei/lib/jquery.svg/jquery.svg.css" />
+
+  <!-- the codearea stuff -->
+  <script src="ei/js/constants.js"></script>
+  <script src="ei/js/set.js"></script>
+  <script src="ei/js/easyinterface.js"></script>
+  <script src="ei/js/codearea.js"></script>
+  <script src="ei/js/filemanager.js"></script>
+  <script src="ei/js/console.js"></script>
+  <script src="ei/js/checkboxwidget.js"></script>
+  <script src="ei/js/combowidget.js"></script>
+  <script src="ei/js/parameters.js"></script>
+  <script src="ei/js/tools.js"></script>
+  <script src="ei/js/toolselectorwidget.js"></script>
+  <script src="ei/js/outline.js"></script>
+  <script src="ei/js/cmdengine.js"></script>
+  <script src="ei/js/outputmanager.js"></script>
+
+  <script src="ei/js/consolecommand.js"></script>
+  <script src="ei/js/markerwidget.js"></script>
+  <script src="ei/js/inlinedmarkerwidget.js"></script>
+  <script src="ei/js/addmarkercommand.js"></script>
+  <script src="ei/js/highlightlinewidget.js"></script>
+  <script src="ei/js/highlightlinecommand.js"></script>
+  <script src="ei/js/changecsscommand.js"></script>
+  <script src="ei/js/onclickaction.js"></script>
+
+  <script src="ei/js/codelineaction.js"></script>
+
+  <link type="text/css" rel="stylesheet" href="ei/css/ei.default.css"/>
+
+<script>
+    $( function() {
+	var x = new EasyInterface({ 
+	    holder: $("#ei_1"),
+	    theme: "ei/html/eitheme.resizable.html",
+	    cfgFile: "../config/settings.cfg"
+	});
+    });
+</script>
+</head>
+<body>
+
+<div class="easyinterface ui-widget ui-corner-all" id="ei_1"></div>
+
+</body>
+</html>
+
+

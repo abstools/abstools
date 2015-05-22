@@ -1,0 +1,28 @@
+module Await_Chain;
+
+
+class A {
+Fut<Unit> f;
+Bool ready=False;
+
+Unit run(){
+Fut<Unit> ff;
+   ff=this!waiter();
+   f=this!waiterwaiter(ff);
+   }
+Unit waiter(){
+ await ready==True;
+ await f?;
+}
+Unit waiterwaiter(Fut<Unit> ff){
+ await ff?;
+}
+
+}
+
+
+
+{
+new A();
+
+}

@@ -1,0 +1,40 @@
+module Paper_dead2;
+
+
+
+interface Di{
+
+    Di m();
+    Unit rrun();
+}
+
+
+
+class D implements Di{
+
+
+Di m(){
+  Fut<Di> f;
+  Di c=new cog D();
+  f=c!m();
+  return f.get;
+}
+
+Unit rrun(){
+   Di o1=new cog D();
+   Fut<Di> f;
+   f=o1!m();
+   f.get;
+}
+
+
+}
+
+
+
+
+{
+Di mm=new D();
+mm.rrun();
+
+}

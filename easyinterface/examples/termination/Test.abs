@@ -1,0 +1,100 @@
+// Test program for the rely-guarantee termination analysis
+// There are loops with and without interleavings, and different clases
+
+module Test;
+
+type ListInt = List<Int> ;
+
+interface A {
+  Int f_myfield();
+  Int f2_myfield();
+  Int simple(Int a, ListInt b);
+  Int f_myfield_myotherfield();
+  Int no_interleave();
+}
+
+
+class A1(Int my_field, Int my_other_field, Int unico) implements A {
+
+// Termination cannot be proved because of circularity: f_myfield() may happen in 
+// parallel with f2_myfield, which modifies my_field. To prove termination of 
+// f2_myfield we need to prove termination of f_myfield(), since it MHP and modifies 
+// my_field
+Int f_myfield() {
+  while( my_field > 0 ) {
+		my_field = my_field - 1;
+		suspend;
+	}
+	return 45;
+}
+
+// Non-terminating because its proof depends on the termiination of f_myfield()
+Int f2_myfield() {
+  while( my_field > 0 ) {
+		my_field = my_field - 1;
+		while ( my_field < 5 ){
+		  my_field = my_field + 1;
+		}
+		suspend;
+	}
+	return my_field;
+}
+
+// Trivially terminating
+Int simple(Int a, ListInt b){
+	Fut<Int> retorno;
+	retorno = this ! f_myfield();
+	await retorno?;
+	return my_field;
+}
+
+// Terminating, because now it cannot happen in parallel with f2_myfield() or
+// f_myfield(), which modify my_field.
+Int f_myfield_myotherfield(){
+  while ( my_field > my_other_field ){
+    my_field = my_field - 1;
+    suspend;
+  }
+  return my_field;
+}
+
+// Terminating, since only this funcion modifies the field 'unico'
+Int no_interleave() {
+  while( unico > 0 ) {
+		unico = unico - 1;
+		suspend;
+	}
+	return my_field;
+}
+
+}
+
+interface B{
+  Unit loop_local();
+}
+
+class B1 implements B{
+  Unit loop_local(){
+    Int k = 10;
+    while ( k > 0 ){
+      k = k - 1;
+    }
+  }
+}
+
+{
+  A x;
+  B y;
+
+  x = new A1(100,50,7);
+  y = new B1();
+  
+  Fut<Int> f1 = x!f_myfield();
+  Fut<Int> f2 = x!f2_myfield();
+  Fut<Int> f3 = x!simple(200, Nil);
+  await f1? & f2? & f3?;
+  x!f_myfield_myotherfield();
+  x!no_interleave();
+  
+  y!loop_local();
+}

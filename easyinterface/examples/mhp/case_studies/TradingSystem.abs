@@ -1,0 +1,1466 @@
+module Model.Interfaces;
+
+export *;
+
+import * from Model.Definitions;
+import * from ABS.StdLib;
+
+interface BarCodeScanner {
+  Unit setDependencies(BarCodeEventReceiver cashDeskPC, BarCodeScannerEnv barCodeScannerEnv);
+  Unit scanBarCodeButtonPressed();}
+
+interface CardReader {
+  Unit setDependencies(CardEventReceiver cashDeskPC, CardReaderEnv cardReaderEnv);
+  Unit enterPin(Int pin);}
+
+interface CashBox {
+  Unit setDependencies(CashDeskPC cashDeskPC, CashBoxEnv cashBoxEnv, Screen screen);
+  Unit keyPressed(Key key);
+  Unit onCloseEvent();
+  Unit open();
+  Unit show(String s);}
+
+interface BarCodeEventReceiver {
+  Unit barCodeSend(Int barCode);}
+
+interface CardEventReceiver {
+  Unit sendCreditInfoAndPin(CreditInfo creditInfo, Int pin);}
+
+interface CashBoxEventReceiver {
+  Unit newSaleStarted();
+  Unit saleFinished();
+  Unit keypadSend(Int numCode);
+  Unit paymentModeSelected(PaymentMode paymentMode);
+  Unit moneyReceived();}
+
+interface ExpressModeReceiver {
+  Unit changeToMode(OperationMode mode);}
+
+interface CashDeskPC extends BarCodeEventReceiver, CardEventReceiver, CashBoxEventReceiver, ExpressModeReceiver {
+  Unit setDependencies(CashBox cashBox, Printer printer, Inventory inventory, Bank bank, ExpressCoordinator expressCoordinator, LightDisplay lightDisplay);}
+
+interface Printer {
+  Unit setDependencies(PrinterEnv printerEnv);
+  Unit print(List<Product> productList, Money totalAmount);}
+
+interface LightDisplay {
+  Unit setDependencies(LightDisplayEnv lightDisplayEnv);
+  Unit changeToMode(OperationMode mode);}
+
+interface ExpressCoordinator {
+  Unit saleRegistered(ExpressModeReceiver cashDeskPC, List<Product> productList, PaymentMode paymentMode);}
+
+interface Bank {
+  Maybe<TransactionID> validateCard(CreditInfo creditInfo, Int pin);
+  DebitResult debitCard(TransactionID transactionID, Money money);}
+
+interface Inventory {
+  Product getProductWithStockItem(Int barcode);
+  Unit accountSale(Sale sale);}
+
+interface PrinterEnv {
+  Unit print(String output);}
+
+interface Screen {
+  Unit display(String output);}
+
+interface LightDisplayEnv {
+  Unit turn(Bool on);}
+
+interface BarCodeScannerEnv {
+  Unit setDependencies(BarCodeScanner barCodeScanner);
+  Int scanBarCode();}
+
+interface CashBoxEnv {
+  Unit setDependencies(CashBox cashBox);
+  Unit open();}
+
+interface CardReaderEnv {
+  CreditInfo getCreditInfo();}
+
+
+module Model.ExpressCoordinator;
+
+export *;
+
+import * from Model.Definitions;
+import * from Model.Interfaces;
+import * from ABS.StdLib;
+
+data CashDeskPCState = INIT| SCANNING| PAYING;
+
+data DebitResult = DEBIT_OK| DEBIT_TRANSACTION_ID_NOT_VALID| DEBIT_NOT_ENOUGH_MONEY| NOT_PROCESSED_YET;
+
+data Sale = Sale(CashDeskPC, List<Product>, Money, PaymentMode);
+
+data Key = NEW_SALE_KEY| FINISH_SALE_KEY| CASH_PAYMENT_KEY| CARD_PAYMENT_KEY| NUM_KEY(Int)| ENTER_KEY| DISABLE_EXPRESS_KEY;
+
+def Bool isNumKey(Key key) = 
+  case key {
+    NUM_KEY( n ) => True;
+    _ => False;
+  };
+
+def Int fromNumKey(Key key) = 
+  case key {
+    NUM_KEY( n ) => n;
+  };
+
+type Product = Pair<ProductName, ProductPrice>;
+
+def ProductName productName(Product p) = 
+  fst(p);
+
+def ProductPrice productPrice(Product p) = 
+  snd(p);
+
+type ProductID = Int;
+
+type ProductDatabase = Map<ProductID, Product>;
+
+type ProductName = String;
+
+type ProductPrice = Money;
+
+type Euro = Int;
+
+type Cent = Int;
+
+type Money = Pair<Euro, Cent>;
+
+class ExpressCoordinatorImpl implements ExpressCoordinator {
+  Bool expressModeNeeded = False;
+  Int countSales = 0;
+  Int countExpressSales = 0;
+  Int threshold = 2;
+  
+  Unit saleRegistered(ExpressModeReceiver cashDeskPC, List<Product> productList, PaymentMode paymentMode){
+    Fut<Unit> fu;
+    countSales = ( countSales + 1 );
+    if ( ( ( paymentMode == CASH ) && ( length(productList) < 8 ) ) )countExpressSales = ( countExpressSales + 1 );
+    if ( ( ( countSales >= threshold ) && ( countExpressSales > ( countSales / 2 ) ) ) ){
+      fu = cashDeskPC!changeToMode(EXPRESS);
+      fu.get;
+      countSales = 0;
+      countExpressSales = 0;
+    }
+  }
+  }
+
+
+module Model.CardReader;
+
+export *;
+
+import * from Model.Definitions;
+import * from Model.Interfaces;
+import * from ABS.StdLib;
+
+[COG]
+class CardReaderImpl implements CardReader {
+  CardEventReceiver cashDeskPC;
+  CardReaderEnv cardReaderEnv;
+  
+  Unit setDependencies(CardEventReceiver cashDeskPC, CardReaderEnv cardReaderEnv){
+    this.cashDeskPC = cashDeskPC;
+    this.cardReaderEnv = cardReaderEnv;
+  }
+  Unit enterPin(Int pin){
+    Fut<CreditInfo> fucredit;
+    CreditInfo creditInfo = "";
+    fucredit = cardReaderEnv!getCreditInfo();
+    creditInfo = fucredit.get;
+    cashDeskPC!sendCreditInfoAndPin(creditInfo, pin);
+  }
+  }
+
+
+module Model.CashBox;
+
+export *;
+
+import * from Model.Definitions;
+import * from Model.Interfaces;
+import * from ABS.StdLib;
+
+class CashBoxImpl implements CashBox {
+  CashDeskPC cashDeskPC;
+  CashBoxEnv cashBoxEnv;
+  Screen screen;
+  List<Int> intBuffer = Nil;
+  
+  Unit setDependencies(CashDeskPC cashDeskPC, CashBoxEnv cashBoxEnv, Screen screen){
+    this.cashDeskPC = cashDeskPC;
+    this.cashBoxEnv = cashBoxEnv;
+    this.screen = screen;
+  }
+  Unit open(){
+    cashBoxEnv!open();
+  }
+  Unit onCloseEvent(){
+    cashDeskPC!moneyReceived();
+  }
+  Unit keyPressed(Key key){
+    if ( ( key == NEW_SALE_KEY ) )cashDeskPC!newSaleStarted();
+    if ( ( key == FINISH_SALE_KEY ) )cashDeskPC!saleFinished();
+    if ( ( key == CASH_PAYMENT_KEY ) )cashDeskPC!paymentModeSelected(CASH);
+    if ( ( key == CARD_PAYMENT_KEY ) )cashDeskPC!paymentModeSelected(CARD);
+    if ( ( key == DISABLE_EXPRESS_KEY ) )cashDeskPC!changeToMode(NORMAL);
+    if ( ( key == ENTER_KEY ) ){
+      Int numCode = numberFromList(intBuffer);
+      intBuffer = Nil;
+      cashDeskPC!keypadSend(numCode);
+      screen!display("Digits confirmed");
+    }
+    if ( isNumKey(key) ){
+      intBuffer = appendright(intBuffer, fromNumKey(key));
+      screen!display("Digit entered");
+    }
+  }
+  Unit show(String s){
+    screen!display(s);
+  }
+  }
+
+
+module Model.CashDeskPC;
+
+export *;
+
+import * from Model.Definitions;
+import * from Model.Interfaces;
+import * from ABS.StdLib;
+
+data CashDeskPCState = INIT| SCANNING| PAYING;
+
+def Bool isNumKey(Key key) = 
+  case key {
+    NUM_KEY( n ) => True;
+    _ => False;
+  };
+
+def Int fromNumKey(Key key) = 
+  case key {
+    NUM_KEY( n ) => n;
+  };
+
+type Product = Pair<ProductName, ProductPrice>;
+
+def ProductName productName(Product p) = 
+  fst(p);
+
+def ProductPrice productPrice(Product p) = 
+  snd(p);
+
+type ProductID = Int;
+
+type ProductDatabase = Map<ProductID, Product>;
+
+type ProductName = String;
+
+type ProductPrice = Money;
+
+type Euro = Int;
+
+type Cent = Int;
+
+type Money = Pair<Euro, Cent>;
+
+class CashDeskPCImpl implements CashDeskPC {
+  CashBox cashBox;
+  Printer printer;
+  Inventory inventory;
+  Bank bank;
+  ExpressCoordinator expressCoordinator;
+  LightDisplay lightDisplay;
+  Bool isExpressMode = False;
+  CashDeskPCState state = INIT;
+  List<Product> productList = Nil;
+  Money amount = money(0, 0);
+  CreditInfo creditInfo = "";
+  PaymentMode paymentMode = CASH;
+  
+  Unit setDependencies(CashBox cashBox, Printer printer, Inventory inventory, Bank bank, ExpressCoordinator expressCoordinator, LightDisplay lightDisplay){
+    this.cashBox = cashBox;
+    this.printer = printer;
+    this.inventory = inventory;
+    this.bank = bank;
+    this.expressCoordinator = expressCoordinator;
+    this.lightDisplay = lightDisplay;
+  }
+  Unit newSaleStarted(){
+    if ( ( state == INIT ) ){
+      state = SCANNING;
+      amount = money(0, 0);
+      productList = Nil;
+      cashBox!show("New Sale started");
+    }
+  }
+  Unit saleFinished(){
+    if ( ( state == SCANNING ) ){
+      state = PAYING;
+      cashBox!show(( "Total Amount : " + moneyToString(amount) ));
+    }
+  }
+  Unit barCodeSend(Int barCode){
+    Product pproduct = Pair( "", Pair( 0, 0 ) );
+    Fut<Product> productF;
+    if ( ( state == SCANNING ) ){
+      productF = inventory!getProductWithStockItem(barCode);
+      pproduct = productF.get;
+      productList = appendright(productList, pproduct);
+      this.calculateRunningTotal(pproduct);
+    }
+  }
+  Unit calculateRunningTotal(Product pproduct){
+    amount = addMoney(productPrice(pproduct), amount);
+    cashBox!show(formatProductAndRunningTotal(pproduct, amount));
+  }
+  Unit paymentModeSelected(PaymentMode paymentMode){
+    if ( ( state == PAYING ) ){
+      this.paymentMode = paymentMode;
+      if ( ( paymentMode == CASH ) )cashBox!show("Cash Payment Selected"); else {
+        if ( isExpressMode )cashBox!show("Card Payment not possible"); else cashBox!show("Card Payment Selected");
+      }
+    }
+  }
+  Unit keypadSend(Int numCode){
+    if ( ( state == SCANNING ) ){
+      this.barCodeSend(numCode);
+    } else if ( ( state == PAYING ) ){
+      this.cashAmountEntered(intToMoney(numCode));
+    }
+  }
+  Unit cashAmountEntered(Money enteredAmount){
+    if ( ( state == PAYING ) ){
+      Money changeAmount = subtractMoney(enteredAmount, amount);
+      cashBox!show(( ( ( "Total amount : " + moneyToString(amount) ) + " Changed amount : " ) + moneyToString(changeAmount) ));
+      cashBox!open();
+    }
+  }
+  Unit moneyReceived(){
+    if ( ( state == PAYING ) ){
+      this.saleSuccess();
+    }
+  }
+  Unit changeToMode(OperationMode mode){
+    isExpressMode = isExpressMode(mode);
+    lightDisplay!changeToMode(mode);
+  }
+  Unit sendCreditInfoAndPin(String creditInfo, Int pin){
+    DebitResult info = DEBIT_TRANSACTION_ID_NOT_VALID;
+    if ( ( state == PAYING ) ){
+      Fut<Maybe<TransactionID>> tid = bank!validateCard(creditInfo, pin);
+      await tid?;
+      Maybe<TransactionID> transactionID = tid.get;
+      if ( ( transactionID == Nothing ) ){
+        cashBox!show(debitResultToString(info));
+      } else {
+        Fut<DebitResult> futDebitResultinfo = bank!debitCard(fromJust(transactionID), amount);
+        await futDebitResultinfo?;
+        info = futDebitResultinfo.get;
+        cashBox!show(debitResultToString(info));
+        if ( ( info == DEBIT_OK ) )this.saleSuccess();
+      }
+    }
+  }
+  Unit saleSuccess(){
+    inventory!accountSale(Sale( this, productList, amount, paymentMode ));
+    printer!print(productList, amount);
+    cashBox!show("Sale succeeded..");
+    Fut<Unit> futunit = expressCoordinator!saleRegistered(this, productList, paymentMode);
+    await futunit?;
+    state = INIT;
+  }
+  }
+
+
+module Model;
+
+export * from Model.BarCodeScanner;
+export * from Model.CardReader;
+export * from Model.CashBox;
+export * from Model.CashDeskPC;
+export * from Model.CashDeskPC;
+export * from Model.ExpressCoordinator;
+export * from Model.Interfaces;
+export * from Model.LightDisplay;
+export * from Model.Printer;
+export * from Model.Definitions;
+
+import * from Model.BarCodeScanner;
+import * from Model.CardReader;
+import * from Model.CashBox;
+import * from Model.CashDeskPC;
+import * from Model.Definitions;
+import * from Model.CashDeskPC;
+import * from Model.ExpressCoordinator;
+import * from Model.Interfaces;
+import * from Model.LightDisplay;
+import * from Model.Printer;
+import * from ABS.StdLib;
+
+
+module Model.LightDisplay;
+
+export *;
+
+import * from Model.Definitions;
+import * from Model.Interfaces;
+import * from ABS.StdLib;
+
+class LightDisplayImpl implements LightDisplay {
+  LightDisplayEnv lightDisplayEnv;
+  
+  Unit setDependencies(LightDisplayEnv lightDisplayEnv){
+    this.lightDisplayEnv = lightDisplayEnv;
+  }
+  Unit changeToMode(OperationMode mode){
+    Bool expressOn = isExpressMode(mode);
+    lightDisplayEnv!turn(expressOn);
+  }
+  }
+
+
+module Model.Printer;
+
+export *;
+
+import * from Model.Definitions;
+import * from Model.Interfaces;
+import * from ABS.StdLib;
+
+class PrinterImpl implements Printer {
+  PrinterEnv printerEnv;
+  
+  Unit setDependencies(PrinterEnv printerEnv){
+    this.printerEnv = printerEnv;
+  }
+  Unit print(List<Product> productList, Money totalAmount){
+    Int n = 0;
+    Fut<Unit> futunit;
+    String ps = "";
+    String receipt = "Printing Receipt : ";
+    receipt = "Receipt : ";
+    while (( n < length(productList) )) {
+      Product pproduct = nth(productList, n);
+      ps = productToString(pproduct);
+      receipt = ( receipt + ps );
+      n = ( n + 1 );
+    }
+    printerEnv!print(receipt);
+  }
+  }
+
+
+module Model.Definitions;
+
+export *;
+
+import * from Model.Interfaces;
+import * from ABS.StdLib;
+
+data CashDeskPCState = INIT| SCANNING| PAYING;
+
+data PaymentMode = CASH| CARD;
+
+data OperationMode = EXPRESS| NORMAL;
+
+def Bool isExpressMode(OperationMode mode) = 
+  case mode {
+    EXPRESS => True;
+    NORMAL => False;
+  };
+
+data DebitResult = DEBIT_OK| DEBIT_TRANSACTION_ID_NOT_VALID| DEBIT_NOT_ENOUGH_MONEY| NOT_PROCESSED_YET;
+
+data Sale = Sale(CashDeskPC, List<Product>, Money, PaymentMode);
+
+data Key = NEW_SALE_KEY| FINISH_SALE_KEY| CASH_PAYMENT_KEY| CARD_PAYMENT_KEY| NUM_KEY(Int)| ENTER_KEY| DISABLE_EXPRESS_KEY;
+
+def Bool isNumKey(Key key) = 
+  case key {
+    NUM_KEY( n ) => True;
+    _ => False;
+  };
+
+def Int fromNumKey(Key key) = 
+  case key {
+    NUM_KEY( n ) => n;
+  };
+
+type Product = Pair<ProductName, ProductPrice>;
+
+def ProductName productName(Product p) = 
+  fst(p);
+
+def ProductPrice productPrice(Product p) = 
+  snd(p);
+
+type ProductID = Int;
+
+type ProductDatabase = Map<ProductID, Product>;
+
+type ProductName = String;
+
+type ProductPrice = Money;
+
+type Euro = Int;
+
+type Cent = Int;
+
+type Money = Pair<Euro, Cent>;
+
+def Money money(Int euro, Int cent) = 
+  Pair( euro, cent );
+
+def Money addMoney(Money m1, Money m2) = 
+  let ( Money result ) = Pair( ( fst(m1) + fst(m2) ), ( snd(m1) + snd(m2) ) ) in case ( snd(result) >= 100 ) {
+    True => let ( Int div ) = ( snd(result) / 100 ) in let ( Int rst ) = ( snd(result) - ( div * 100 ) ) in Pair( ( fst(result) + div ), rst );
+    False => result;
+  };
+
+def Money subtractMoney(Money m1, Money m2) = 
+  let ( Money result ) = Pair( ( fst(m1) - fst(m2) ), ( snd(m1) - snd(m2) ) ) in case ( snd(result) < 0 ) {
+    True => Pair( ( fst(result) - 1 ), ( snd(result) + 100 ) );
+    False => result;
+  };
+
+def String moneyToString(Money m) = 
+  ( ( ( ( "(" + intToString(fst(m)) ) + " Euro " ) + intToString(snd(m)) ) + " Cent)," );
+
+def Int numberFromList(List<Int> l) = 
+  numberFromListHelper(reverse(l));
+
+def Int numberFromListHelper(List<Int> l) = 
+  case l {
+    Cons( hd, Nil ) => hd;
+    Cons( hd1, Cons( hd2, tl ) ) => ( hd1 + ( 10 * numberFromListHelper(Cons( hd2, tl )) ) );
+  };
+
+def Money intToMoney(Int num) = 
+  let ( Int div ) = ( num / 100 ) in let ( Int rst ) = ( num - ( div * 100 ) ) in Pair( div, rst );
+
+def String formatProductAndRunningTotal(Product pproduct, Money amount) = 
+  ( ( productToString(pproduct) + "Current Total Amount : " ) + moneyToString(amount) );
+
+def String productToString(Product pproduct) = 
+  ( ( ( ( "Product : " + fst(pproduct) ) + ", Price : " ) + moneyToString(snd(pproduct)) ) + " " );
+
+def String debitResultToString(DebitResult info) = 
+  case info {
+    DEBIT_OK => "DEBIT_OK";
+    DEBIT_TRANSACTION_ID_NOT_VALID => "DEBIT_TRANSACTION_ID_NOT_VALID";
+    DEBIT_NOT_ENOUGH_MONEY => "DEBIT_NOT_ENOUGH_MONEY";
+  };
+
+type Exception = String;
+
+type CreditInfo = String;
+
+type Pin = Int;
+
+type TransactionID = String;
+
+type TransactionInfo = Pair<Pin, TransactionID>;
+
+
+module Model.BarCodeScanner;
+
+export *;
+
+import * from Model.Definitions;
+import * from Model.Interfaces;
+import * from ABS.StdLib;
+
+class BarCodeScannerImpl implements BarCodeScanner {
+  BarCodeEventReceiver cashDeskPC;
+  BarCodeScannerEnv barCodeScannerEnv;
+  
+  Unit setDependencies(BarCodeEventReceiver cashDeskPC, BarCodeScannerEnv barCodeScannerEnv){
+    this.cashDeskPC = cashDeskPC;
+    this.barCodeScannerEnv = barCodeScannerEnv;
+  }
+  Unit scanBarCodeButtonPressed(){
+    Fut<Int> fuint;
+    Int barCode = 0;
+    fuint = barCodeScannerEnv!scanBarCode();
+    barCode = fuint.get;
+    cashDeskPC!barCodeSend(barCode);
+  }
+  }
+
+
+module Environment.Interfaces;
+
+export *;
+
+import * from Environment.Definitions;
+import * from Install;
+import * from ABS.StdLib;
+
+interface PrinterEnvExt extends PrinterEnv {
+  String getReceipt();}
+
+interface ScreenExt extends Screen {
+  String changed();}
+
+interface BarCodeScannerEnvExt extends BarCodeScannerEnv {
+  Unit barCodeEnterPressed(Int barCode);}
+
+interface CardReaderEnvExt extends CardReaderEnv {
+  Unit setDependencies(CardReader cardReader);
+  Unit pullCardThrough(CreditInfo creditInfo);
+  Unit enterPinFromCustomer(Int pin);}
+
+interface Test {
+  Unit start();}
+
+interface Cashier {
+  Unit runCashier(List<Customer> customers);}
+
+interface CashBoxEnvExt extends CashBoxEnv {
+  Unit keyPressed(Key key);
+  Unit close();}
+
+interface CashDeskLineEnvironment {
+  List<Cashier> getCashiers();}
+
+interface CashDeskEnvironmentExt extends CashDeskEnvironment {
+  Unit init2(CashDeskInstallation install);
+  Cashier getCashier();}
+
+
+module Environment.Bank;
+
+export BankImpl;
+
+import * from Environment.Definitions;
+import * from Environment.Interfaces;
+import * from Model;
+import * from ABS.StdLib;
+
+def TransactionInfo removeMaybe(Maybe<TransactionInfo> tr) = 
+  case tr {
+    Just( a ) => a;
+    _ => Pair( 0, "" );
+  };
+
+[COG]
+class BankImpl implements Bank {
+  CreditCardInfoMap creditCardInfoMap = EmptyMap;
+  {
+    Pair<CreditInfo, TransactionInfo> p1 = Pair( "ABC57", Pair( 3245, "100" ) );
+    Pair<CreditInfo, TransactionInfo> p2 = Pair( "DEF80", Pair( 8510, "200" ) );
+    Pair<CreditInfo, TransactionInfo> p3 = Pair( "GHI34", Pair( 1000, "300" ) );
+    creditCardInfoMap = map(Cons( p1, Cons( p2, Cons( p3, Nil ) ) ));
+  }
+  
+  Maybe<TransactionID> validateCard(CreditInfo creditInfo, Int pin){
+    String res = "";
+    Maybe<TransactionID> result = Nothing;
+    TransactionInfo transactionInfo = Pair( 0, "" );
+    transactionInfo = removeMaybe(lookup(creditCardInfoMap, creditInfo));
+    if ( ( pin == getPin(transactionInfo) ) ){
+      res = getId(transactionInfo);
+      result = Just( res );
+    } else result = Nothing;
+    return result;
+  }
+  DebitResult debitCard(TransactionID transactionID, Money money){
+    DebitResult debitResult = DEBIT_TRANSACTION_ID_NOT_VALID;
+    if ( ( transactionID == "100" ) )debitResult = DEBIT_OK; else if ( ( transactionID == "200" ) )debitResult = DEBIT_NOT_ENOUGH_MONEY; else debitResult = DEBIT_TRANSACTION_ID_NOT_VALID;
+    return debitResult;
+  }
+  }
+
+
+module Environment.CashBox;
+
+export CashBoxEnvImpl;
+
+import * from Environment.Definitions;
+import * from Environment.Interfaces;
+import * from Install;
+import * from ABS.StdLib;
+
+class CashBoxEnvImpl implements CashBoxEnvExt {
+  CashBox cashBox;
+  Bool isOpen = False;
+  
+  Unit setDependencies(CashBox cashBox){
+    this.cashBox = cashBox;
+  }
+  Unit open(){
+    isOpen = True;
+  }
+  Unit close(){
+    Fut<Unit> fu;
+    isOpen = False;
+    fu = cashBox!onCloseEvent();
+    await fu?;
+  }
+  Unit keyPressed(Key key){
+    cashBox!keyPressed(key);
+  }
+  }
+
+
+module Environment.CardReader;
+
+export CardReaderEnvImpl;
+
+import * from Environment.Definitions;
+import * from Environment.Interfaces;
+import * from Install;
+import * from ABS.StdLib;
+
+[COG]
+class CardReaderEnvImpl implements CardReaderEnvExt {
+  CardReader cardReader;
+  CreditInfo creditInfo = "";
+  
+  Unit setDependencies(CardReader cardReader){
+    this.cardReader = cardReader;
+  }
+  Unit pullCardThrough(CreditInfo creditInfo){
+    this.creditInfo = creditInfo;
+  }
+  Unit enterPinFromCustomer(Int pin){
+    cardReader!enterPin(pin);
+  }
+  CreditInfo getCreditInfo(){
+    return creditInfo;
+  }
+  }
+
+
+module Environment.BarCodeScanner;
+
+export BarCodeScannerEnvImpl;
+
+import * from Environment.Definitions;
+import * from Environment.Interfaces;
+import * from Install;
+import * from ABS.StdLib;
+
+class BarCodeScannerEnvImpl implements BarCodeScannerEnvExt {
+  BarCodeScanner barCodeScanner;
+  Int barCode = 0;
+  
+  Unit setDependencies(BarCodeScanner barCodeScanner){
+    this.barCodeScanner = barCodeScanner;
+  }
+  Unit barCodeEnterPressed(Int barCode){
+    barCode = barCode;
+    barCodeScanner!scanBarCodeButtonPressed();
+  }
+  Int scanBarCode(){
+    return barCode;
+  }
+  }
+
+
+module Environment.Test;
+
+export TestImpl;
+
+import * from Environment.Definitions;
+import * from Environment.Interfaces;
+import * from Environment.Bank;
+import * from Environment.Inventory;
+import * from Install;
+import * from Environment.CashDeskLine;
+import * from Environment.CashDesk;
+import * from ABS.StdLib;
+
+[Plain]
+class TestImpl(List<List<Customer>> customers) implements Test {
+  
+  
+  List<Cashier> getCachiers(){
+    Bank bank = new cog BankImpl();
+    Inventory inventory = new cog InventoryImpl();
+    CashDeskLineEnvironment env = new CashDeskLineEnvironmentInstallation(length(customers), bank, inventory);
+    return env.getCashiers();
+  }
+  Unit start(){
+    List<Cashier> cashiers = this.getCachiers();
+    List<Fut<Unit>> futs = Nil;
+    Fut<Unit> fu;
+    Int n = 0;
+    Cashier cashier;
+    while (( n < length(cashiers) )) {
+      cashier = nth(cashiers, n);
+      fu = cashier!runCashier(nth(customers, n));
+      futs = appendright(futs, fu);
+      n = ( n + 1 );
+    }
+    n = 0;
+    while (( n < length(cashiers) )) {
+      fu = nth(futs, n);
+      await fu?;
+      n = ( n + 1 );
+    }
+  }
+  }
+
+
+module Environment.Printer;
+
+export PrinterEnvImpl;
+
+import * from Environment.Definitions;
+import * from Environment.Interfaces;
+import * from Install;
+import * from ABS.StdLib;
+
+class PrinterEnvImpl implements PrinterEnvExt {
+  String currentReceipt = "";
+  
+  Unit print(String receipt){
+    currentReceipt = receipt;
+  }
+  String getReceipt(){
+    await ( currentReceipt != "" );
+    String res = currentReceipt;
+    currentReceipt = "";
+    return res;
+  }
+  }
+
+
+module Environment.CashDeskLine;
+
+export CashDeskLineEnvironmentInstallation;
+
+import * from Environment.Definitions;
+import * from Environment.Interfaces;
+import * from Install;
+import * from Environment.CashDesk;
+import * from ABS.StdLib;
+
+[Plain]
+class CashDeskLineEnvironmentInstallation(Int numberOfCashDesks, Bank bank, Inventory inventory) implements CashDeskLineEnvironment {
+  List<CashDeskEnvironment> envs = Nil;
+  List<CashDeskEnvironmentExt> envsExt = Nil;
+  List<Cashier> cashiers = Nil;
+  
+  Unit run(){
+    this.init2();
+  }
+  Unit init2(){
+    Int n = 0;
+    while (( n < numberOfCashDesks )) {
+      CashDeskEnvironmentExt env = new CashDeskEnvironmentInstallation(bank, inventory);
+      CashDeskEnvironment e;
+      e = env;
+      envs = appendright(envs, e);
+      envsExt = appendright(envsExt, env);
+      n = ( n + 1 );
+    }
+    CashDeskLineInstallation lineInstall = new CashDeskLineInstallationImpl(envs);
+    lineInstall.init2();
+    n = 0;
+    List<CashDeskInstallation> installs = lineInstall.getCashDeskInstallations();
+    while (( n < numberOfCashDesks )) {
+      CashDeskInstallation install = nth(installs, n);
+      CashDeskEnvironmentExt env = nth(envsExt, n);
+      env.init2(install);
+      Cashier cashier = env.getCashier();
+      cashiers = appendright(cashiers, cashier);
+      n = ( n + 1 );
+    }
+  }
+  List<Cashier> getCashiers(){
+    await ( cashiers != Nil );
+    return cashiers;
+  }
+  }
+
+
+module Environment.Cashier;
+
+export CashierImpl;
+
+import * from Environment.Definitions;
+import * from Environment.Interfaces;
+import * from Install;
+import * from ABS.StdLib;
+
+class CashierImpl(BarCodeScannerEnvExt barCodeScannerEnv, CashBoxEnvExt cashBoxEnv, CardReaderEnvExt cardReaderEnv, LightDisplayEnv lightDisplayEnv, PrinterEnvExt printerEnv, ScreenExt screen) implements Cashier {
+  Int countNormalModeChanges = 0;
+  
+  Unit runCashier(List<Customer> customers){
+    Int n = 0;
+    while (( n < length(customers) )) {
+      this.serveCustomer(nth(customers, n));
+      n = ( n + 1 );
+    }
+  }
+  Unit serveCustomer(Customer customer){
+    Bool validated = False;
+    Fut<String> receipt;
+    Fut<Unit> fu;
+    Fut<Bool> boolfu;
+    Fut<Bool> futbool;
+    Bool isExpressModeOn = False;
+    Bool useBarCodeScanner = False;
+    PaymentMode paymentMode = getPaymentMode(customer);
+    List<ProductID> items = getProducts(customer);
+    ProductID nextBarCode = 0;
+    Money amountToGive = getAmount(customer);
+    CreditInfo creditInfo = getCreditInfo(customer);
+    Pin pin = getPinInfo(customer);
+    Int nItems = 0;
+    String screenContent = "";
+    cashBoxEnv!keyPressed(NEW_SALE_KEY);
+    screenContent = this.waitScreenChanged();
+    while (( screenContent != "New Sale started" )) {
+      cashBoxEnv!keyPressed(NEW_SALE_KEY);
+      screenContent = this.waitScreenChanged();
+    }
+    while (( nItems < length(items) )) {
+      nextBarCode = nth(items, nItems);
+      useBarCodeScanner = True;
+      if ( useBarCodeScanner )barCodeScannerEnv!barCodeEnterPressed(nextBarCode); else skip;
+      this.waitScreenChanged();
+      nItems = ( nItems + 1 );
+    }
+    cashBoxEnv!keyPressed(FINISH_SALE_KEY);
+    this.waitScreenChanged();
+    if ( ( ( paymentMode == CARD ) && ( isExpressModeOn == False ) ) )fu = cashBoxEnv!keyPressed(CARD_PAYMENT_KEY); else fu = cashBoxEnv!keyPressed(CASH_PAYMENT_KEY);
+    screenContent = this.waitScreenChanged();
+    if ( ( screenContent == "Card Payment not possible" ) ){
+      paymentMode = CASH;
+      fu = cashBoxEnv!keyPressed(CASH_PAYMENT_KEY);
+      this.waitScreenChanged();
+    }
+    while (~ validated) {
+      if ( ( ( paymentMode == CASH ) || ( isExpressModeOn == True ) ) ){
+        this.pressKeys(moneyToInt(amountToGive));
+        cashBoxEnv!close();
+        this.waitScreenChanged();
+        validated = True;
+      } else {
+        fu = cardReaderEnv!pullCardThrough(creditInfo);
+        await fu?;
+        cardReaderEnv!enterPinFromCustomer(pin);
+        Bool flag = True;
+        while (flag) {
+          screenContent = this.waitScreenChanged();
+          if ( ( ( screenContent == "DEBIT_OK" ) || ( screenContent == "Sale succeeded.." ) ) ){
+            validated = True;
+            flag = False;
+          }
+          if ( ( ( screenContent == debitResultToString(DEBIT_TRANSACTION_ID_NOT_VALID) ) || ( screenContent == debitResultToString(DEBIT_NOT_ENOUGH_MONEY) ) ) ){
+            paymentMode = CASH;
+            cashBoxEnv!keyPressed(CASH_PAYMENT_KEY);
+            flag = False;
+          }
+        }
+      }
+    }
+    receipt = printerEnv!getReceipt();
+    await receipt?;
+  }
+  String waitScreenChanged(){
+    Fut<String> fu;
+    fu = screen!changed();
+    await fu?;
+    return fu.get;
+  }
+  Unit pressKeys(Int numbers){
+    List<Int> digits = digits(numbers);
+    Int i = 0;
+    while (( i < length(digits) )) {
+      cashBoxEnv!keyPressed(NUM_KEY( nth(digits, i) ));
+      this.waitScreenChanged();
+      i = ( i + 1 );
+    }
+    cashBoxEnv!keyPressed(ENTER_KEY);
+    this.waitScreenChanged();
+  }
+  }
+
+
+module Environment.MainBlock;
+
+
+import * from Environment.Definitions;
+import * from Environment.Interfaces;
+import * from Environment.Test;
+import * from Model;
+import * from ABS.StdLib;
+
+
+{
+  Customer c1 = Customer( CASH, list(Cons( 1, Cons( 2, Nil ) )), money(8, 0), "ABC57", 3245 );
+  Customer c2 = Customer( CARD, list(Cons( 3, Cons( 2, Cons( 4, Cons( 1, Cons( 5, Nil ) ) ) ) )), money(20, 0), "ABC57", 3245 );
+  Customer c3 = Customer( CASH, list(Cons( 3, Cons( 2, Cons( 7, Cons( 1, Cons( 5, Cons( 6, Cons( 4, Nil ) ) ) ) ) ) )), money(75, 0), "ABC57", 3245 );
+  Customer c4 = Customer( CARD, list(Cons( 3, Cons( 4, Cons( 5, Cons( 6, Nil ) ) ) )), money(127, 50), "ABC57", 3245 );
+  List<List<Customer>> customerQueue = list(Cons( list(Cons( c1, Cons( c2, Nil ) )), Nil ));
+  Test t;
+  t = new TestImpl(customerQueue);
+  t.start();
+}module Environment.Inventory;
+
+export InventoryImpl;
+
+import * from Environment.Definitions;
+import * from Environment.Interfaces;
+import * from Install;
+import * from ABS.StdLib;
+
+def Product removeMaybe2(Maybe<Product> tr) = 
+  case tr {
+    Just( a ) => a;
+    _ => Pair( "MILK", money(0, 90) );
+  };
+
+class InventoryImpl implements Inventory {
+  ProductDatabase productDatabase = EmptyMap;
+  List<Sale> saleList = Nil;
+  List<String> saleStrings = Nil;
+  {
+    Product p1 = Pair( "MILK", money(0, 90) );
+    Product p2 = Pair( "APPLES", money(1, 50) );
+    Product p3 = Pair( "POTATOES", money(1, 80) );
+    Product p4 = Pair( "PENCIL", money(0, 75) );
+    Product p5 = Pair( "BREAD", money(0, 50) );
+    Product p6 = Pair( "SUGAR", money(1, 20) );
+    Product p7 = Pair( "NEWSPAPER", money(1, 0) );
+    productDatabase = map(Cons( Pair( 1, p1 ), Cons( Pair( 2, p2 ), Cons( Pair( 3, p3 ), Cons( Pair( 4, p4 ), Cons( Pair( 5, p5 ), Cons( Pair( 6, p6 ), Cons( Pair( 7, p7 ), Nil ) ) ) ) ) ) ));
+  }
+  
+  Product getProductWithStockItem(Int barcode){
+    return removeMaybe2(lookup(productDatabase, barcode));
+  }
+  Unit accountSale(Sale sale){
+    saleList = appendright(saleList, sale);
+  }
+  }
+
+
+module Environment.Definitions;
+
+export *;
+
+import * from Install;
+import * from ABS.StdLib;
+
+type CreditCardInfoMap = Map<CreditInfo, TransactionInfo>;
+
+def Pin getPin(TransactionInfo t) = 
+  fst(t);
+
+def TransactionID getId(TransactionInfo t) = 
+  snd(t);
+
+data Customer = Customer(PaymentMode, List<ProductID>, Money, CreditInfo, Pin);
+
+def PaymentMode getPaymentMode(Customer c) = 
+  case c {
+    Customer( p, l, m, ci, i ) => p;
+  };
+
+def List<ProductID> getProducts(Customer c) = 
+  case c {
+    Customer( p, l, m, ci, i ) => l;
+  };
+
+def Money getAmount(Customer c) = 
+  case c {
+    Customer( p, l, m, ci, i ) => m;
+  };
+
+def CreditInfo getCreditInfo(Customer c) = 
+  case c {
+    Customer( p, l, m, ci, i ) => ci;
+  };
+
+def Pin getPinInfo(Customer c) = 
+  case c {
+    Customer( p, l, m, ci, i ) => i;
+  };
+
+def String paystr(PaymentMode payment) = 
+  case payment {
+    CASH => "CASH";
+    CARD => "CARD";
+  };
+
+def List<Int> digits(Int num) = 
+  case ( num >= 10 ) {
+    True => let ( Int div ) = ( num / 10 ) in let ( Int rst ) = ( num - ( div * 10 ) ) in appendright(digits(div), rst);
+    False => Cons( num, Nil );
+  };
+
+def Int moneyToInt(Money money) = 
+  case money {
+    Pair( euro, cent ) => ( ( euro * 100 ) + cent );
+  };
+
+def String charAt(String s, Int pos) = 
+  substr(s, pos, 1);
+
+def Bool startsWith(String fst, String snd) = 
+  let ( Int len ) = strlen(snd) in let ( String str ) = substr(fst, 0, len) in ( str == snd );
+
+def Bool endsWith(String fst, String snd) = 
+  let ( Int lenfst ) = strlen(fst) in let ( Int lensnd ) = strlen(snd) in let ( String str ) = substr(fst, ( lenfst - lensnd ), lensnd) in ( str == snd );
+
+def Bool strcontains(String fst, String snd) = 
+  let ( Int lenfst ) = strlen(fst) in let ( Int lensnd ) = strlen(snd) in case substr(fst, 0, lensnd) {
+    snd => True;
+    _ => case lenfst {
+      0 => False;
+      _ => strcontains(substr(fst, 1, ( lenfst - 1 )), snd);
+    };
+  };
+
+def List<String> explode(String str) = 
+  let ( Int len ) = strlen(str) in case len {
+    0 => Nil;
+    _ => appendright(explode(substr(str, 0, ( len - 1 ))), charAt(str, ( len - 1 )));
+  };
+
+def Maybe<Int> stringToInt(String str) = 
+  let ( Int len ) = strlen(str) in let ( Maybe<String> sign ) = getSign(charAt(str, 0)) in case ( len > 0 ) {
+    False => Nothing;
+    True => case sign {
+      Nothing => stringToUnsignedInt(str);
+      Just( "-" ) => Just( ( - 1 * fromJust(stringToUnsignedInt(substr(str, 1, ( len - 1 )))) ) );
+      Just( "+" ) => stringToUnsignedInt(substr(str, 1, ( len - 1 )));
+    };
+  };
+
+def Int powerOf(Int x, Int y) = 
+  case y {
+    0 => 1;
+    1 => x;
+    _ => ( x * powerOf(x, ( y - 1 )) );
+  };
+
+def Maybe<String> getSign(String s) = 
+  case s {
+    "-" => Just( "-" );
+    "+" => Just( "+" );
+    _ => Nothing;
+  };
+
+def Maybe<Int> stringToUnsignedInt(String str) = 
+  let ( Int len ) = strlen(str) in case len {
+    0 => Nothing;
+    1 => charToInt(charAt(str, 0));
+    _ => Just( ( ( powerOf(10, ( len - 1 )) * fromJust(charToInt(charAt(str, 0))) ) + fromJust(stringToUnsignedInt(substr(str, 1, ( len - 1 )))) ) );
+  };
+
+def Maybe<Int> charToInt(String str) = 
+  case str {
+    "1" => Just( 1 );
+    "2" => Just( 2 );
+    "3" => Just( 3 );
+    "4" => Just( 4 );
+    "5" => Just( 5 );
+    "6" => Just( 6 );
+    "7" => Just( 7 );
+    "8" => Just( 8 );
+    "9" => Just( 9 );
+    "0" => Just( 0 );
+    _ => Nothing;
+  };
+
+
+module Environment.CashDesk;
+
+export CashDeskEnvironmentInstallation;
+
+import * from Environment.Definitions;
+import * from Environment.Interfaces;
+import * from Install;
+import * from Environment.Printer;
+import * from Environment.Screen;
+import * from Environment.BarCodeScanner;
+import * from Environment.CashBox;
+import * from Environment.CardReader;
+import * from Environment.LightDisplay;
+import * from Environment.Cashier;
+import * from ABS.StdLib;
+
+class CashDeskEnvironmentInstallation(Bank bank, Inventory inventory) implements CashDeskEnvironmentExt {
+  Cashier cashier;
+  PrinterEnvExt printerEnv;
+  ScreenExt screen;
+  BarCodeScannerEnvExt barCodeScannerEnv;
+  CashBoxEnvExt cashBoxEnv;
+  CardReaderEnvExt cardReaderEnv;
+  LightDisplayEnv lightDisplayEnv;
+  CashDeskPC cashDeskPC;
+  BarCodeScanner barCodeScanner;
+  CashBox cashBox;
+  CardReader cardReader;
+  LightDisplay lightDisplay;
+  {
+    printerEnv = new cog PrinterEnvImpl();
+    screen = new cog ScreenImpl();
+    barCodeScannerEnv = new cog BarCodeScannerEnvImpl();
+    cashBoxEnv = new cog CashBoxEnvImpl();
+    cardReaderEnv = new cog CardReaderEnvImpl();
+    lightDisplayEnv = new cog LightDisplayEnvImpl();
+    cashier = new cog CashierImpl(barCodeScannerEnv, cashBoxEnv, cardReaderEnv, lightDisplayEnv, printerEnv, screen);
+  }
+  
+  Unit init2(CashDeskInstallation install){
+    Fut<Unit> fu;
+    barCodeScanner = install.getBarCodeScanner();
+    cashBox = install.getCashBox();
+    cardReader = install.getCardReader();
+    fu = barCodeScannerEnv!setDependencies(barCodeScanner);
+    fu.get;
+    fu = cashBoxEnv!setDependencies(cashBox);
+    fu.get;
+    fu = cardReaderEnv!setDependencies(cardReader);
+    fu.get;
+  }
+  Cashier getCashier(){
+    return cashier;
+  }
+  PrinterEnv getPrinterEnv(){
+    return printerEnv;
+  }
+  Screen getScreen(){
+    return screen;
+  }
+  CashBoxEnv getCashBoxEnv(){
+    return cashBoxEnv;
+  }
+  LightDisplayEnv getLightDisplayEnv(){
+    return lightDisplayEnv;
+  }
+  BarCodeScannerEnv getBarCodeScannerEnv(){
+    return barCodeScannerEnv;
+  }
+  CardReaderEnv getCardReaderEnv(){
+    return cardReaderEnv;
+  }
+  Inventory getInventory(){
+    return inventory;
+  }
+  Bank getBank(){
+    return bank;
+  }
+  }
+
+
+module Environment.Screen;
+
+export ScreenImpl;
+
+import * from Environment.Definitions;
+import * from Environment.Interfaces;
+import * from Install;
+import * from ABS.StdLib;
+
+class ScreenImpl implements ScreenExt {
+  String s = "";
+  String validated = "Not_Yet";
+  InternalLogger logger;
+  Int n = 0;
+  Bool changed = False;
+  {
+    Int n = 0;
+    logger = new cog InternalLoggerImpl(True);
+  }
+  
+  Unit display(String s){
+    s = s;
+    if ( ( ( ( s == "DEBIT_OK" ) || ( s == "DEBIT_TRANSACTION_ID_NOT_VALID" ) ) || ( s == "DEBIT_NOT_ENOUGH_MONEY" ) ) ){
+      validated = s;
+    }
+    changed = True;
+    logger!log(s);
+  }
+  String changed(){
+    await changed;
+    changed = False;
+    return s;
+  }
+  }
+
+interface InternalLogger {
+  Unit log(String s);}
+
+class InternalLoggerImpl(Bool debug) implements InternalLogger {
+  String logstr = "";
+  
+  Unit log(String s){
+    if ( debug )logstr = ( ( logstr + s ) + " " );
+  }
+  }
+
+
+module Environment.LightDisplay;
+
+export LightDisplayEnvImpl;
+
+import LightDisplayEnv from Model.Interfaces;
+import * from ABS.StdLib;
+
+class LightDisplayEnvImpl implements LightDisplayEnv {
+  Bool isOn = False;
+  
+  Unit turn(Bool on){
+    isOn = on;
+  }
+  Bool isOn(){
+    return isOn;
+  }
+  }
+
+
+module Installation.Interfaces;
+
+export *;
+
+import * from Model;
+import * from ABS.StdLib;
+
+interface CashDeskLineInstallation {
+  List<CashDeskInstallation> getCashDeskInstallations();
+  Unit init2();}
+
+interface CashDeskInstallation {
+  BarCodeScanner getBarCodeScanner();
+  CashBox getCashBox();
+  CardReader getCardReader();
+  Unit init2();}
+
+interface CashDeskEnvironment {
+  PrinterEnv getPrinterEnv();
+  Screen getScreen();
+  CashBoxEnv getCashBoxEnv();
+  LightDisplayEnv getLightDisplayEnv();
+  BarCodeScannerEnv getBarCodeScannerEnv();
+  CardReaderEnv getCardReaderEnv();
+  Inventory getInventory();
+  Bank getBank();}
+
+
+module Installation.CashDeskLine;
+
+export *;
+
+import * from Installation.Interfaces;
+import * from Model;
+import * from Installation.CashDesk;
+import * from ABS.StdLib;
+
+class CashDeskLineInstallationImpl(List<CashDeskEnvironment> envs) implements CashDeskLineInstallation {
+  List<CashDeskInstallation> cashDeskInstallations = Nil;
+  ExpressCoordinator expressCoordinator;
+  
+  Unit init2(){
+    Int i = 0;
+    Fut<Unit> fu;
+    CashDeskPC cashDeskPC;
+    CashDeskInstallation ci;
+    expressCoordinator = new cog ExpressCoordinatorImpl();
+    while (( i < length(envs) )) {
+      ci = new CashDeskInstallationImpl(expressCoordinator, nth(envs, i));
+      ci.init2();
+      cashDeskInstallations = appendright(cashDeskInstallations, ci);
+      i = ( i + 1 );
+    }
+  }
+  List<CashDeskInstallation> getCashDeskInstallations(){
+    return cashDeskInstallations;
+  }
+  }
+
+
+module Install;
+
+export * from Installation.CashDesk;
+export * from Installation.CashDeskLine;
+export * from Installation.Interfaces;
+export * from Model;
+
+import * from Installation.CashDesk;
+import * from Installation.CashDeskLine;
+import * from Installation.Interfaces;
+import * from Model;
+import * from ABS.StdLib;
+
+
+module Installation.CashDesk;
+
+export *;
+
+import * from Installation.Interfaces;
+import * from Model;
+import Model.BarCodeScanner.BarCodeScannerImpl;
+import Model.CashBox.CashBoxImpl;
+import Model.CashDeskPC.CashDeskPCImpl;
+import Model.CardReader.CardReaderImpl;
+import Model.LightDisplay.LightDisplayImpl;
+import Model.Printer.PrinterImpl;
+import * from ABS.StdLib;
+
+class CashDeskInstallationImpl(ExpressCoordinator expressCoordinator, CashDeskEnvironment env) implements CashDeskInstallation {
+  CashDeskPC cashDeskPC;
+  CashBox cashBox;
+  BarCodeScanner barCodeScanner;
+  Printer printer;
+  CardReader cardReader;
+  LightDisplay lightDisplay;
+  
+  Unit init2(){
+    Fut<Unit> fu;
+    PrinterEnv printerEnv;
+    Screen screen;
+    CashBoxEnv cashBoxEnv;
+    LightDisplayEnv lightDisplayEnv;
+    BarCodeScannerEnv barCodeScannerEnv;
+    CardReaderEnv cardReaderEnv;
+    Inventory inventory;
+    Bank bank;
+    printerEnv = env.getPrinterEnv();
+    screen = env.getScreen();
+    cashBoxEnv = env.getCashBoxEnv();
+    lightDisplayEnv = env.getLightDisplayEnv();
+    barCodeScannerEnv = env.getBarCodeScannerEnv();
+    cardReaderEnv = env.getCardReaderEnv();
+    inventory = env.getInventory();
+    bank = env.getBank();
+    cashBox = new cog CashBoxImpl();
+    cardReader = new cog CardReaderImpl();
+    printer = new cog PrinterImpl();
+    cashDeskPC = new cog CashDeskPCImpl();
+    barCodeScanner = new cog BarCodeScannerImpl();
+    lightDisplay = new cog LightDisplayImpl();
+    fu = barCodeScanner!setDependencies(cashDeskPC, barCodeScannerEnv);
+    fu.get;
+    fu = cashBox!setDependencies(cashDeskPC, cashBoxEnv, screen);
+    fu.get;
+    fu = cardReader!setDependencies(cashDeskPC, cardReaderEnv);
+    fu.get;
+    fu = printer!setDependencies(printerEnv);
+    fu.get;
+    fu = lightDisplay!setDependencies(lightDisplayEnv);
+    fu.get;
+    fu = cashDeskPC!setDependencies(cashBox, printer, inventory, bank, expressCoordinator, lightDisplay);
+    fu.get;
+  }
+  BarCodeScanner getBarCodeScanner(){
+    return barCodeScanner;
+  }
+  CashBox getCashBox(){
+    return cashBox;
+  }
+  CardReader getCardReader(){
+    return cardReader;
+  }
+  }
+
+

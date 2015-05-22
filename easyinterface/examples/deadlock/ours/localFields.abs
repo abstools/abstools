@@ -1,0 +1,46 @@
+module LocalFields;
+
+
+
+interface Bi{
+    Unit a();
+    Unit b();
+}
+
+
+
+class A {
+Fut<Unit> f;
+
+Unit run(){
+   Int a=0;
+   Bi o=new B();
+   if (a>0){
+      f=o!a();
+   }else{
+      f=o!b();
+   }
+   f.get;
+//the value is consumed
+   this!use_f();
+}
+Unit use_f(){
+//here we never wait
+ f.get;
+}
+
+}
+class B implements Bi{
+Unit a(){
+ 
+}
+Unit b(){
+
+}
+
+}
+
+
+{
+new A();
+}

@@ -1,0 +1,18 @@
+module Test_Inference_first_new_deadlock;
+
+interface A {
+   A m();
+}
+
+class A implements A {
+   A m(){
+	A x = new cog A();
+	Fut<A> y = x!m();
+	return y.get;
+   }
+}
+
+{
+A i = new cog A();
+Fut<A> j = i!m(); 
+}

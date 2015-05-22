@@ -1,0 +1,73 @@
+module DeadLock;
+
+interface A { 
+    Unit initialize(B b);
+    Unit p();
+    C getX();
+}
+
+interface B { 
+    Unit q();
+    Unit go(A a);
+}
+
+interface C { 
+    Unit r();
+}
+
+class Cimp implements C {
+    Unit r() { 
+	// ...
+    }
+}
+
+class Bimp implements B {
+
+    Unit go(A a) {
+	Fut<C> f = a!getX();
+	await f?;
+	Fut<Unit> g = a!p();
+	g.get;
+	C x = f.get;
+	x!r();
+    }
+
+    Unit q() {
+	// ...
+    }
+}
+
+class Aimp implements A {
+
+    C x = null;
+
+    Unit initialize(B b) {
+      Int i=2;
+
+
+   while ( i>0 ) {
+        Fut<Unit> f = b!q();
+        f.get;
+	x = new cog Cimp();
+	suspend;
+	i=i-1;
+     }	
+    }
+
+    C getX() {
+	await x != null;
+	return x;
+    }
+
+    Unit p() {
+      // ...
+    }
+
+}
+
+{
+    A a=new cog Aimp();
+    B b=new cog Bimp();
+    a!initialize(b);
+    b!go(a);
+}

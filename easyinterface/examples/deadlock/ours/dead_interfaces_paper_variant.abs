@@ -1,0 +1,50 @@
+module Paper_dead2;
+
+
+
+interface ServI{
+  Unit initialize(ClientI client);
+  Unit recv(String message);
+}
+interface ProtocolI{
+
+}
+interface ClientI{
+    Unit syncSend(String m);
+    Unit setProt(ProtocolI p);
+}
+class Protocol implements ProtocolI{
+
+}
+
+class Server implements ServI{
+ProtocolI protocol;
+Unit initialize(ClientI client){
+  Fut<Unit> f;
+  protocol=new Protocol();
+  f=client!setProt(protocol);
+  f.get;
+}
+Unit recv(String message){}
+}
+
+class Client(ServI server) implements ClientI{
+ProtocolI protocol=null;
+Unit setProt(ProtocolI p){
+  protocol=p;
+}
+Unit syncSend(String m){
+ Fut<Unit> f;
+  await protocol!=null;
+  f=server!recv(m);
+  f.get;
+}
+}
+
+
+{
+ServI s=new cog Server();
+ClientI c=new cog Client(s);
+s!initialize(c);
+c!syncSend("hello");
+}

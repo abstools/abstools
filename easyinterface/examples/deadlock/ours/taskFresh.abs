@@ -1,0 +1,45 @@
+module TaskFreshness;
+interface Factory{
+Unit createWorker(Int work);
+}
+
+interface Worker{
+Unit assignWork(Int work);
+Unit makeWork();
+}
+
+class Factory(Int work) implements Factory {
+Unit run(){
+ this.createWorker(work);
+}
+
+Unit createWorker(Int work){
+  Worker w=new cog Worker(this);
+  Fut<Unit> f=w!assignWork(work);
+  await f?;
+}
+}
+
+class Worker(Factory fact) implements Worker{
+Int max=1;
+
+  Unit assignWork(Int work){
+   Fut<Unit> f;
+    if(work >max){
+     work=work-max;
+     f=fact!createWorker(work);
+     f.get;
+     }
+  this!makeWork();
+  }
+
+Unit makeWork(){}
+
+}
+
+//the workers don't start until all the work has been assigned
+//there should be deadlock risks without the freshness analysis
+{
+new Factory(10);
+
+}

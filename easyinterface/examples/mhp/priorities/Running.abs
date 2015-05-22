@@ -1,0 +1,59 @@
+/*
+Running example of the paper "May-Happen-in-Parallel Analysis for Priority-based Scheduling"
+*/
+
+module Running;
+
+interface Paper{
+  Unit task();
+  Unit  f();
+  Unit m();
+  Unit h();
+  Unit main();
+}
+
+
+class PaperImpl( Int g1, Int g2 ) implements Paper {
+
+  [priority(0)] Unit task(){
+    g2 = g2 + 1;
+  }
+
+  [priority(10)] Unit f(){
+    while( g1 > 0 ){
+      g1 = g1 - 1;
+      g2 = g2 + 1;
+      suspend;
+    }
+  }
+  
+  [priority(5)] Unit m()
+  {
+    while( g1 < 0 ){
+      g1 = g1 + 1;
+      suspend;
+    }
+  }
+  
+  [priority(10)] Unit h(){
+    while( g1 < 0 ){
+      g1 = g1 + 2;
+      suspend;
+    }
+  }
+  
+  [priority(0)] Unit main(){
+    this ! f();
+    Fut<Unit> x = this ! m();
+    await x?;
+    this ! h();
+    Paper o = new PaperImpl(1,2);
+    o ! task();
+  }
+  
+}
+
+{
+  Paper p = new PaperImpl(1,2);
+  p ! main();
+}

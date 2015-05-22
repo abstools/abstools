@@ -1,0 +1,57 @@
+module Paper_dead2;
+
+
+
+interface Obj{
+    Unit a(MainObj parent);
+}
+interface MainObj{
+    Int getField();
+}
+
+
+class RemoteObj implements Obj{
+
+Unit a(MainObj parent){
+Fut<Int> f=parent!getField();
+f.get;
+}
+
+}
+class LocalObj implements Obj{
+
+Unit a(MainObj parent){
+Fut<Int> f=parent!getField();
+await f?;
+}
+
+}
+
+
+class MainObj(List<Obj> list) implements MainObj{
+Unit run(){
+Int n=0;
+while(n < length(list)) {
+        Obj o = nth(list, n);
+  	o!a(this);
+	n=n+1;
+	}
+}
+Int getField(){
+ return 0;
+}
+
+}
+
+
+
+
+{
+ Obj node0 = new cog RemoteObj();
+ Obj node1 = new cog RemoteObj();
+ Obj node2 = new  LocalObj();
+ Obj node3 = new  LocalObj();
+ List<Obj> l=list[node0,node1,node2,node3];
+ new MainObj(l);
+ 
+}

@@ -1,0 +1,56 @@
+module Paper_dead2;
+
+
+
+interface Ai{
+    Unit a1(Bi b1,Bi b2);
+    Unit a2();
+}
+interface Bi{
+    Unit c1(Ai a);
+    Unit c2();
+}
+
+
+class A implements Ai{
+
+
+Unit a1(Bi b1,Bi b2){
+  Fut<Unit> f1;
+  f1=b1!c1(this);
+  await f1?;
+
+}
+Unit a2(){}
+}
+
+
+class B implements Bi{
+
+
+Unit c1(Ai a){
+
+  Fut<Unit> f;
+ 
+  f=a!a2();
+  f.get;
+}
+
+Unit c2(){}
+
+}
+
+
+
+{
+Bi b1=new cog B();
+Bi b2=new cog B();
+Ai a=new A();
+  Fut<Unit> f;
+ 
+
+a.a1(b1,b2);
+
+
+
+}

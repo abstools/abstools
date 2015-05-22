@@ -1,0 +1,68 @@
+module VendingMachine;
+
+interface VendingMachine {
+  Unit insertCoin();
+  Unit insertCoins( Int nCoins );
+  Int retrieveCoins();
+}
+
+interface PrettyPrinter {
+  Unit showIncome( Int nCoins );
+  Unit showCoin();
+}
+
+interface Main{
+  Unit main( Int n );
+}
+
+
+class IVendingMachine( Int coins, PrettyPrinter out ) implements VendingMachine{
+  Unit insertCoin(){
+    coins = coins + 1;
+  }
+ 
+  Unit insertCoins( Int nCoins ){
+    while( nCoins > 0 ){
+      nCoins = nCoins - 1;
+      Fut<Unit> f = this ! insertCoin();
+      await f?;
+    }
+  }
+ 
+  Int retrieveCoins(){
+    Int total = 0;
+    while( coins > 0 ){
+      coins = coins - 1;
+      Fut<Unit> f = out ! showCoin();
+      await f?;
+      total = total + 1;
+    }
+    return total;
+  }
+}
+
+
+class IPrettyPrinter implements PrettyPrinter{
+  Unit showIncome( Int nCoins ){ /*Show something*/ }
+  Unit showCoin(){ /*Show something*/ }
+}
+
+class IMain implements Main{
+  Unit main( Int n ){
+    PrettyPrinter o = new IPrettyPrinter();
+    VendingMachine v = new IVendingMachine( 0, o );
+
+    v ! insertCoins(n);
+    Fut<Int> f = v ! retrieveCoins();
+    await f?;
+    Int total = f.get;
+    o ! showIncome( total );
+  }
+}
+
+{
+  Main m = new IMain();
+  m ! main(17);  
+}
+
+

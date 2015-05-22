@@ -1,0 +1,158 @@
+/*****
+****** Entry method: main
+****** Number of UB Input Arguments: 5 (example: 5,5,5,5,5 )
+******/
+
+module DistHT;
+import * from ABS.StdLib;
+
+type Key = Int;
+type Data = Int; 
+
+def Int hash(Key k,Int n) = k%n;
+
+[ms < max(ms)][result > 0]
+def B mylookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
+  case ms {
+     InsertAssoc(Pair(k, y), _) => y;
+     // InsertAssoc(_, tm) => lookup(tm, k);
+     // Rewritten for aPET (to avoid having fresh vars in the nomatch not present in the match)
+     InsertAssoc(Pair(_, _), tm) => mylookup(tm, k);
+  };
+
+def Map<A, B> myput<A, B>(Map<A, B> ms, A k, B v) =
+  case ms {
+    EmptyMap => InsertAssoc(Pair(k, v),EmptyMap);
+    InsertAssoc(Pair(k, _), ts) => InsertAssoc(Pair(k, v), ts);
+    // InsertAssoc(p, ts) => InsertAssoc(p, myput(ts, k, v));
+    // Rewritten for aPET (to avoid having fresh vars in the nomatch not present in the match)
+    InsertAssoc(Pair(kp,vp), ts) => InsertAssoc(Pair(kp,vp), myput(ts, k, v));
+  };
+
+
+interface DistHTInt{
+    Data getData(Key key);
+    List<Data> getAllData(List<Key> keys);
+    Unit putData(Key key,Data d);
+    NodeInt lookupNode(Key key);
+    Set<Key> getAllKeys();
+}
+
+interface NodeInt{
+    Data getData(Key key);
+    Unit putData(Key key,Data d);
+    Set<Key> getKeys();
+}
+
+
+class DistHT(List<NodeInt> nodes,Int nNodes) implements DistHTInt{
+
+    [nodes <= max(nodes)][nNodes <= max(nNodes)]
+    NodeInt lookupNode(Key key){
+    	Int n = hash(key,nNodes);
+		NodeInt node = nth(nodes,n);
+		return node;
+    }
+
+    Data getData(Key key){
+		NodeInt node;
+		node = this.lookupNode(key);
+		Fut<Data> f;
+		Data d = 0;
+		f = node!getData(key);
+		d = f.get;
+		return d;
+    }
+
+    List<Data> getAllData(List<Key> keys){
+		List<Data> r = Nil;
+		if (keys != Nil){
+		    Key firstK = head(keys);
+		    List<Key> tailKs = tail(keys);
+		    NodeInt node;
+		    node = this.lookupNode(firstK);
+		    Fut<Data> fd; 
+		    Data d = 0;
+		    Fut<List<Data>> fds; 
+		    List<Data> ds = Nil;
+		    fd = node!getData(firstK);
+		    fds = this!getAllData(tailKs);
+		    await fd? & fds?;
+		    d = fd.get;
+	
+		    ds = fds.get;
+		    r = Cons(d,ds);
+		}
+		return r;
+    }
+
+    [nodes <= max(nodes)]
+    Set<Key> getAllKeys(){
+		return this.getAllKeysAux(nodes);
+    }
+
+	[nodes <= max(nodes)]
+    Set<Key> getAllKeysAux(List<NodeInt> ns){
+		Set<Key> r = EmptySet;
+		if (ns != Nil){
+		    NodeInt firstNode = head(ns);
+		    List<NodeInt> tailNs = tail(ns);
+		    Fut<Set<Key>> fFirstKs; 
+		    Fut<Set<Key>> fRKs; 
+		    fFirstKs = firstNode!getKeys();
+		    fRKs = this!getAllKeysAux(tailNs);
+		    [old(nodes) == nodes]
+		    await fFirstKs? & fRKs?;
+		    Set<Key> firstKs = fFirstKs.get;
+		    Set<Key> rKs = fRKs.get;
+		    r = union(firstKs,rKs);
+		}
+		return r;
+    }
+
+    Unit putData(Key key,Data d){
+		NodeInt node;
+		node = this.lookupNode(key);
+		Fut<Unit> f1 = node!putData(key,d);
+		await f1?;
+    }
+}
+
+
+class Node(Map<Key,Data> map) implements NodeInt{
+
+    [map <= max(map)]
+    Data getData(Key key){
+		return mylookup(map,key);
+    }
+
+    [map <= max(map)]
+    Unit putData(Key key,Data d){
+		map = myput(map,key,d);
+    }
+
+    [map <= max(map)]
+    Set<Key> getKeys(){
+		return keys(map);
+    }
+}
+   
+{
+    Map<Key,Data> m1 = EmptyMap;
+    Map<Key,Data> m2 = EmptyMap;
+    NodeInt n1 = new cog Node(m1);
+    NodeInt n2 = new cog Node(m2);
+    DistHTInt dht = new cog DistHT(Cons(n1,Cons(n2,Nil)),2);
+
+	Fut<Unit> f1 = dht!putData(1,2);	
+	Fut<Unit> f2 = dht!putData(5,2);
+	Fut<Unit> f3 = dht!putData(7,3);
+	Fut<Unit> f4 = dht!putData(4,4);
+	await f1?;
+	await f2?;
+	await f3?;
+	await f4?;
+
+    dht!getAllData(Cons(2,Nil));
+	dht!getAllData(Cons(2,Cons(5,Cons(4,Nil))));
+}

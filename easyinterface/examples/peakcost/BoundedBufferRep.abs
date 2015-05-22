@@ -1,0 +1,148 @@
+
+/*****
+****** Entry method: main
+****** Number of UB Input Arguments: 4 (example: 5,5,5,5 )
+****** Methods whose cost can be divided: BoundedBuffer.append,BoundedBuffer.append2
+******/
+
+module BoundedBuffer;
+import * from ABS.StdLib;
+
+type Data = Int ;
+//type Buffer = DataList
+data DataList = DataNil | ConsData(Data, DataList) ;
+
+def Data dataHead(DataList dl) = case dl { ConsData(d,l) => d ; };  
+def DataList dataTail(DataList dl) = case dl { ConsData(d,l) => l ; }; 
+
+def DataList appendData(Data d, DataList list)
+  = concat(list, ConsData(d,DataNil));
+
+def DataList concat(DataList l1 , DataList l2) = 
+case l1 { 
+    DataNil => l2 ; 
+    ConsData(hd,tl) => ConsData(hd, concat(tl,l2)) ; 
+};
+    
+interface Buffer {
+
+    //Unit init();
+    Unit append(Data d);
+    Unit append2(Data d);
+    Data remove();
+}
+
+interface Consumer {
+    Unit consume();
+    Unit consume2();
+} 
+
+interface Producer {
+    Unit produce();
+    Unit produce2();
+}
+
+
+class BoundedBuffer (Int size) implements Buffer {
+    
+    //A bounded buffer
+    DataList buffer = DataNil; 
+    Int n = 0;
+
+	[buffer <= max(size)]
+    Unit append(Data d){
+    	[old(size) == size]
+        await (n < size) ; 
+		buffer = concat(buffer,ConsData(d,DataNil));
+        n = n + 1 ; 
+    }
+	[buffer <= max(size)]
+    Unit append2(Data d){
+    	[old(size) == size]
+        await (n < size) ; 
+		buffer = concat(buffer,ConsData(d,DataNil));
+        n = n + 1 ; 
+    }
+    
+    Data remove() {
+        Data d = 10;
+        DataList buffer2 = DataNil; 
+        await n > 0 ; 
+        d = dataHead(buffer);
+        buffer2 = dataTail(buffer);
+        buffer = buffer2;
+        n = n - 1 ; 
+        return d ; 
+    }
+}
+
+class ProducerImpl (Buffer b,Data d) implements Producer {
+
+	[d <= max(d)]    
+    Unit produce() {
+       while(d > 0) {
+       	Fut<Unit> f1 = b!append(d);
+       	[old(d) == d]
+       	await f1?;
+       	d = d - 1;
+       }
+    }
+    
+    [d <= max(d)]    
+    Unit produce2() {
+       while(d > 0) {
+       	Fut<Unit> f1 = b!append2(d);
+       	[old(d) == d]
+       	await f1?;
+       	d = d - 1;
+       }
+    }
+}
+
+class ConsumerImpl (Buffer b,Data d) implements Consumer {
+    
+	[d <= max(d)]    
+    Unit consume() {
+       while(d > 0) {
+        b!remove();
+       	d = d - 1;
+       }
+    }
+    
+    [d <= max(d)]    
+    Unit consume2() {
+       while(d > 0) {
+        b!remove();
+       	d = d - 1;
+       }
+    }
+}
+
+
+
+{
+    Buffer buff;
+    Producer p1;
+    Producer p2;
+    Consumer c1;
+    Consumer c2;  
+    buff = new cog BoundedBuffer(10); 
+    p1 = new cog ProducerImpl(buff,10);   
+    p2 = new cog ProducerImpl(buff,10); 
+    c1 = new cog ConsumerImpl(buff,10);
+    c2 = new cog ConsumerImpl(buff,10);
+    Fut<Unit> f1 = p1!produce();
+    await f1?;
+    Fut<Unit> f2 = p1!produce2();
+    await f2?;
+
+    Fut<Unit> f3 = p2!produce();
+    await f3?;
+    Fut<Unit> f4 = p2!produce2();
+    await f4?;
+
+    Fut<Unit> f5 = c1!consume();
+    await f5?;
+    c2!consume2();
+}
+

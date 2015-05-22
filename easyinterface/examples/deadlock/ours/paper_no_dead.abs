@@ -1,0 +1,54 @@
+module Paper_no_dead;
+
+
+interface  Ci{
+    Ci m();
+
+}
+
+interface Di{
+    Ci n(Di c);
+    Ci m();
+    Unit rrun();
+}
+
+
+
+class C implements Ci{
+
+Ci m(){
+	return new cog C();
+}
+}
+
+class D implements Di{
+
+Ci n(Di c){
+   Fut<Ci> f;
+   f=c!m();
+   Ci a=f.get;
+   return a;
+}
+Ci m(){
+	return new cog C();
+}
+
+Unit rrun(){
+   Di o1=new cog D();
+   Fut<Ci> f;
+   Di o2=new cog D();
+   f=o1!n(o2);
+   f.get;
+}
+
+
+}
+
+
+
+
+{
+Di mm=new D();
+mm.rrun();
+
+}

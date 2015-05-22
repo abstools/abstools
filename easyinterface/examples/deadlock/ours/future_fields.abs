@@ -1,0 +1,42 @@
+module Future_fields;
+
+interface Bi{
+    Int call();
+    
+}
+
+
+
+class A{
+Fut<Int> f;
+
+Unit run(){
+   Bi b=new cog B();
+   f=this.make_call(b);
+   Fut<Unit> ff;
+   ff=this!receive_answer();
+   await ff?;
+   }
+Fut<Int> make_call(Bi b){
+ return b!call();
+}
+Unit receive_answer(){
+ await f?;
+ f.get;
+ f.get;
+}
+
+}
+class B implements Bi{
+Int call(){
+  return 0;
+}
+
+
+}
+
+
+{
+new A();
+
+}

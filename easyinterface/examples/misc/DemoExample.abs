@@ -1,0 +1,78 @@
+module DemoExample;
+import * from ABS.StdLib;
+
+type UserName = String ;
+type Message = String;
+
+
+interface AddrBook{
+      User getUserAddr(UserName u);
+}
+
+class AddrBookImp(Map<UserName,User> users) implements AddrBook {
+  
+
+      User getUserAddr(UserName u){
+      	      return lookup(users,u);
+      }
+}
+
+interface User{
+     Unit receive(Message msg);
+}
+
+class UserImp implements User {
+      List<Message> msgs = Nil;
+
+      Unit receive(Message msg) {
+         msgs = Cons(msg,msgs);
+      }
+}
+
+
+interface MailServer {
+      Unit addUser(UserName u);
+      Unit addUsers(List<UserName> l);
+      Unit notify(Message m);
+}
+
+class MailServerImp(AddrBook ab) implements MailServer{
+    List<UserName> listUsers = Nil;  
+    Int a=0;
+    Unit notify(Message m) {
+      while ( listUsers != Nil ) {
+        Fut<User> u;
+        u = ab!getUserAddr(head(listUsers));
+        await u?;
+        User us = u.get;
+        us!receive(m);
+        listUsers = tail(listUsers);
+      }
+    }
+    Unit addUser(UserName u) {
+       listUsers = Cons(u, listUsers);
+    }
+  Unit addUsers(List<UserName> l) {
+      while ( l != Nil ) {
+        this!addUser(head(l));
+        l=tail(l);
+      } 
+    }
+  } 
+  
+{   
+  User u1=new UserImp();
+  Pair<UserName,User> p1 = Pair("John",u1); 
+  User u2=new UserImp();
+  Pair<UserName,User> p2 = Pair("Bob", u2); 
+  User u3=new UserImp();
+  Pair<UserName,User> p3 = Pair("Alice", u3); 
+
+  AddrBook ab= new AddrBookImp(map[p1, p2, p3]);
+
+  MailServer ms = new MailServerImp(ab);
+  Fut<Unit> x = ms!addUsers(list["Alice","Bob"]);
+  await x?;
+  ms!notify("Hello Alice and Bob");
+  }
+

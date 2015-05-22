@@ -1,0 +1,25 @@
+module Test_Inference_sat;
+
+interface Object {
+}
+
+class Object implements Object {
+}
+
+interface A {
+   A m();
+}
+
+class A implements A {
+   A m(){
+	A x = new cog A();
+	Fut<A> y = x!m();
+	y.get;
+	return this;
+   }
+}
+
+{
+A i = new cog A();
+Fut<A> j = i!m();
+}

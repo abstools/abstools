@@ -1,0 +1,313 @@
+/*****
+****** Number of UB Input Arguments: 3 (example: 5,5,5 )
+******/
+
+
+module ABSChat.Main;
+
+data ServerMsg = Welcome
+   	           | GoodBye
+          	   | NewMessage(String);
+
+data ClientMsg = ChatMessage(String,String);
+
+interface Server {
+   Unit start();
+    Session connect(Client c);
+}
+
+interface Session {
+   Unit receive(ClientMsg m);
+   Unit close();
+}
+
+interface Client {
+	Unit setServer(Server s);
+	Unit start();
+	Unit receive(ServerMsg m);
+	ClientGUI getGUI();
+}
+
+interface ClientGUI {
+   Unit init2();
+   Button getSendButton();
+   TextField getTextField();
+}
+
+interface ClientIntern extends Client {
+	 Unit sendText(String text);
+}
+ 
+interface ClientGUIIntern extends ClientGUI {
+    ClientIntern getClientIntern();
+   String getTextFieldText();
+} 
+
+class ClientGUIImpl( ClientIntern client) implements ClientGUIIntern {
+   Window gui;
+   Button sendButton;   
+   TextField textField; 
+   Bool initialized = False;
+   
+   {   
+   	  gui = new cog WindowImpl();
+   } 
+   
+   Unit init3() {
+   	  ButtonListener l = new cog SendButtonListener(this);
+   	  sendButton!registerListener(l);
+	  sendButton!press();
+   }
+
+   Unit init2() { 
+   	  Fut<Button> f = gui!newButton("Send");
+   	  sendButton = f.get;
+   	  ButtonListener l = new cog SendButtonListener(this);
+   	  sendButton!registerListener(l);
+
+      Fut<TextField> tf;
+      tf = gui!newTextField();
+      textField = tf.get;
+
+   	  initialized = True;
+   }
+   
+   Button getSendButton() {
+      await initialized;
+      Button b = sendButton;
+      return b;
+   }
+   
+   TextField getTextField() {
+      await initialized;
+      TextField t = textField;
+      return t;
+   }
+   
+   String getTextFieldText() {
+      Fut<String> f = textField!getText();
+      return f.get;
+   }
+   
+   ClientIntern getClientIntern() {
+   		ClientIntern c = client;
+      	return c;
+   }
+}
+
+
+class SendButtonListener([Final]  ClientGUIIntern client) implements ButtonListener {
+   Unit pressed() {
+   
+       ClientIntern ci = client.getClientIntern();
+       String s = client.getTextFieldText();
+   	   ci.sendText(s);   	   
+   }
+}
+
+
+[COG]
+class ClientImpl implements ClientIntern { 
+   String name = "Alice";
+   Server server;
+   Session session;
+    ClientGUI gui;
+
+   ClientGUI getGUI() {
+	  if (gui == null) {
+	     gui = new cog ClientGUIImpl(this); /// 3
+	     gui.init2();
+	  }
+	  ClientGUI cg = gui;
+   	  return cg;
+   }
+
+   Unit setServer(Server s) { 
+   	   this.server = s;
+   }
+   
+   Unit start() {
+      await server != null;
+      Fut<Session> f = server!connect(this);
+      await f?;
+      session = f.get; 
+   }
+   
+   Unit receive(ServerMsg msg) {
+   	  await session != null;
+	  ClientMsg ans = ChatMessage("","");
+	  //if(msg==Welcome){
+   	      ans = ChatMessage(name,"Welt"); 
+      	  //}
+   	  
+   	  Fut<Unit> u = session ! receive(ans);
+   	  await u?;
+   	  session ! close();
+   }  
+   
+   Unit sendText(String text) {
+      await session != null;
+      session ! receive(ChatMessage(name,text));
+   }
+}
+interface ButtonListener {
+   Unit pressed();
+}
+
+interface Window {
+    Button newButton(String label);
+    TextField newTextField();
+}
+
+interface TextField {
+   String getText();
+   Unit setText(String newText);
+}
+
+interface Button {
+   Unit press();
+   String getLabel();
+   Unit registerListener(ButtonListener l);
+}
+
+class TextFieldImpl implements TextField {
+  String text = "";
+  String getText() {
+     return text;
+  }
+
+  Unit setText(String s) {
+  	 text = s;
+  }
+}
+
+[COG]
+class WindowImpl implements Window {
+    Button newButton(String label) {
+      Button b = new cog ButtonImpl(this, label);
+      return b;
+   }
+   
+   TextField newTextField() {
+      TextField t = new cog TextFieldImpl();
+   	  return t;
+   }
+}
+
+class ButtonImpl( Window gui, String label) implements Button {
+    List<ButtonListener> listener = Nil;
+   
+    [listener <= max(listener)]
+	Unit press() {
+	
+		List<ButtonListener> r = listener;
+		ButtonListener lllll = head(listener);
+		lllll ! pressed();
+
+		List<ButtonListener> r2 = Nil;
+		while (r != Nil) {
+			r2 = tail(r);
+			r = r2;
+		}		
+	}
+	
+	String getLabel() {
+		String l = label;
+		return l;
+	}
+	
+	[listener <= max(listener)]
+	Unit registerListener(ButtonListener l) {
+		//listener = Cons(l,listener);
+		listener = appendright(listener,l);
+	}
+}
+
+
+interface ServerIntern extends Server {
+	Unit sessionClosed(SessionIntern i);
+}
+
+interface SessionIntern extends Session {
+   Unit init2();
+}
+
+[COG]
+class ServerImpl implements ServerIntern { 
+   Bool running = False;
+   List<SessionIntern> sessions = Nil;
+   
+   Unit start() {
+      running = True;
+   }
+   
+   Session connect(Client c) {
+       await running;
+       SessionIntern s;
+       s = new cog SessionImpl(this, c);
+       sessions = Cons(s,sessions);
+       s!init2();
+       return s;
+   }
+
+	[sessions <= max(sessions)]
+	Unit sessionClosed(SessionIntern i) {
+	
+	   sessions = without(sessions,i);
+	}
+
+}
+
+
+class SessionImpl(ServerIntern server, Client c) implements SessionIntern {
+	Unit init2() {
+		c!receive(Welcome);
+	}
+	
+	Unit close() {
+	   server.sessionClosed(this);
+	}
+	
+	Unit receive(ClientMsg m) {
+	}
+
+}
+
+interface User {
+   Unit use(ClientGUI client);
+}
+
+[COG] 
+class UserImpl implements User {
+   ClientGUI gui;
+   Button sendBtn;
+   TextField textField;
+	
+   Unit use(ClientGUI client) { 
+	  gui = client;
+	  Fut<Button> f = gui!getSendButton();
+	  sendBtn = f.get;
+	  
+	  Fut<TextField> f2 = gui!getTextField();
+	  textField = f2.get;
+	  
+	  textField!setText("Hello");
+	  sendBtn!press();
+   }
+}
+
+{
+    Server server = new cog ServerImpl();  
+    server ! start();
+    
+    Client client = new cog ClientImpl();
+    client ! setServer(server);
+    client ! start();
+    
+    
+    Fut<ClientGUI> fgui = client ! getGUI();	
+    ClientGUI gui = fgui.get;
+    
+    User user = new cog UserImpl();
+    user ! use(gui);
+}

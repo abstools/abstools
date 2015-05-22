@@ -1,0 +1,45 @@
+module Prio1;
+
+interface A{
+  Unit f();
+  Unit g();
+  Unit f1();
+  Unit g1();
+  Unit m();
+}
+
+class AImpl(Int field) implements A {
+
+  [priority(10)] Unit f1(){
+    while( field > 0 ){
+      field = field - 1;
+      suspend;
+    }
+  }
+  
+  [priority(1)] Unit g1(){
+    this ! f1();
+  }
+  
+  [priority(2)] Unit f(){
+    this ! f1();
+  }
+  
+  [priority(2)] Unit g(){
+    this ! g1();
+  }
+  
+  [priority(0)]
+  Unit m()
+  {
+    this ! f();
+    this ! g();
+  }
+}
+
+// f1() cannot happen in parallel with itself
+
+{
+  A q = new AImpl(34);
+  q ! m();
+}

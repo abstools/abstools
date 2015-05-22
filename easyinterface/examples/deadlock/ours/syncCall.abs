@@ -1,0 +1,44 @@
+module LocalFields;
+interface Ai{
+    Unit c();
+
+}
+
+
+interface Bi{
+    Unit a(Ai o);
+    Unit b(Ai o);
+}
+
+
+
+class A implements Ai{
+
+
+Unit run(){
+Fut<Unit> f;
+   Int a=0;
+   Bi o=new cog B();
+   f= o!a(this);
+   f.get;
+}
+Unit c(){}
+
+}
+
+class B implements Bi{
+Unit a(Ai o){
+ this.b(o);
+}
+Unit b(Ai o){
+ Fut<Unit> f;
+ f=o!c();
+ await f?;
+}
+
+}
+
+
+{
+new A();
+}

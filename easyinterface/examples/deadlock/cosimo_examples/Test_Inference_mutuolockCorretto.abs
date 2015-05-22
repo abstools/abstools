@@ -1,0 +1,33 @@
+module Test_Inference_d;
+
+interface Object {
+}
+
+class Object implements Object {
+}
+
+interface C {
+   C m(C x);
+   C n(C b, C c);
+}
+
+class C implements C {
+   C m(C x){
+	return x;
+   }
+   C n(C b, C c){
+	Fut<C> fut = b!m(c);
+	fut.get;
+	Fut<C> fut2 = c!m(b);
+	return fut2.get;
+   }
+}
+
+
+{
+C a = new cog C();
+C b = new cog C();
+C c = new cog C();
+Fut<C> fut = a!n(b,c);
+Fut<C> fut = a!n(c,b);
+}
