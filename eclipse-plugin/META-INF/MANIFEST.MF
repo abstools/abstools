@@ -21,7 +21,10 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.expressions,
  org.abs-models.sdedit;bundle-version="0.0.0",
  org.abs-models.abs.compiler;bundle-version="0.0.0",
- org.eclipse.ui.views
+ org.eclipse.ui.views,
+ org.eclipse.jdt.debug.ui,
+ org.eclipse.jdt.ui;bundle-version="3.9.2",
+ org.eclipse.jdt.launching;bundle-version="3.7.1"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
@@ -73,5 +76,3 @@ Export-Package: org.absmodels.abs.plugin.actions;
    org.eclipse.swt.widgets,
    org.eclipse.ui.editors.text",
  org.absmodels.abs.plugin.util;uses:="abs.frontend.ast"
-Import-Package: org.eclipse.jdt.debug.ui.launchConfigurations,
- org.eclipse.jdt.launching
