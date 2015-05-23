@@ -1,3 +1,4 @@
+# coding: utf-8
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
@@ -30,6 +31,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # https://docs.vagrantup.com/v2/
 
   config.vm.box = "ubuntu/trusty64"
+  config.vm.network "forwarded_port", guest: 80, host: 8888
 
   config.vm.post_up_message = <<-MSG
 Welcome to the ABS toolchain VM.
@@ -41,6 +43,8 @@ The following tools are available from the command line:
 - key-abs          Deductive verification tool
 - emacs            Emacs, configured to edit and compile ABS
 - costabs_exe      Command-line interface to SACO
+
+Connect to http://localhost:8888/ei/clients/web to use easyinterface.
 
 On Windows / Mac OS X, start an X server (Xming / XQuartz)
 MSG
@@ -136,6 +140,32 @@ sudo chown root.root /usr/local/bin/key-abs
 sudo chmod a+x /usr/local/bin/key-abs
 # work around bug in key-abs: it doesn't create the directory it requires
 mkdir -p /home/vagrant/.key
+
+echo
+echo "Setting up apache and easyinterface"
+echo
+sudo apt-get -y -q install apache2 apache2-utils openssl-blacklist
+sudo apt-get -y -q install php5 libapache2-mod-php5 php5-mcrypt
+rm -rf /var/www/easyinterface
+(cd /var/www && sudo git clone https://github.com/abstools/easyinterface.git)
+sudo chmod -R 755 /var/www/easyinterface
+
+# Set up apache2
+cat >/home/vagrant/easyinterface-site.conf <<EOF
+Alias /ei "/var/www/easyinterface"
+
+<Directory "/var/www/easyinterface">
+   Options FollowSymlinks MultiViews Indexes IncludesNoExec
+   AllowOverride All
+   Require all granted
+</Directory>
+EOF
+sudo mv /home/vagrant/easyinterface-site.conf /etc/apache2/sites-available/
+sudo chown root.root /etc/apache2/sites-available/easyinterface-site.conf
+sudo a2ensite easyinterface-site
+sudo a2enmod headers
+sudo service apache2 restart
+
 
 echo
 echo "Setting up the user environment: .bashrc, .emacs"
