@@ -146,7 +146,7 @@ echo "Setting up apache and easyinterface"
 echo
 sudo apt-get -y -q install apache2 apache2-utils openssl-blacklist
 sudo apt-get -y -q install php5 libapache2-mod-php5 php5-mcrypt
-rm -rf /var/www/easyinterface
+sudo rm -rf /var/www/easyinterface
 (cd /var/www && sudo git clone https://github.com/abstools/easyinterface.git)
 sudo chmod -R 755 /var/www/easyinterface
 
