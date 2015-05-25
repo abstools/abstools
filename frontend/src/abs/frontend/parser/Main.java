@@ -94,6 +94,8 @@ public class Main {
                abs.backend.prettyprint.PrettyPrinterBackEnd.main(args);
            } else if (argslist.contains("-keyabs")) {
                abs.backend.keyabs.KeyAbsBackend.main(args);
+           } else if (argslist.contains("-outline")) {
+               abs.backend.outline.OutlinePrinterBackEnd.main(args);
            } else {
                Model m = parse(args);
                if (m.hasParserErrors()) {
