@@ -7,6 +7,7 @@
   <rm:locator pattern="org.abs-models.costabs" searchPathRef="costabs"/>
   <rm:locator pattern="org.abs-models.apet" searchPathRef="apet"/>
   <rm:locator pattern="org.abs-models.releng" searchPathRef="by-component"/>
+  <rm:locator pattern="org.absmodels.site" searchPathRef="by-component"/>
   <rm:locator pattern="org.abs-models.sda" searchPathRef="sda"/>
   <rm:locator pattern="org.eclipse.swtbot.*" searchPathRef="SWTBot"/>
   <rm:locator pattern="org.hamcrest" searchPathRef="SWTBot"/>
