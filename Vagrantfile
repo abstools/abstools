@@ -44,7 +44,7 @@ The following tools are available from the command line:
 - emacs            Emacs, configured to edit and compile ABS
 - costabs_exe      Command-line interface to SACO
 
-Connect to http://localhost:8888/ei/clients/web to use easyinterface.
+Go to http://localhost:8888/ei/clients/web to use easyinterface.
 
 On Windows / Mac OS X, start an X server (Xming / XQuartz)
 MSG
@@ -97,17 +97,21 @@ sudo update-java-alternatives -s java-8-oracle
 echo
 echo "Installing necessary tools for simulating ABS programs"
 echo
-sudo apt-get install -y -q emacs maude
+sudo apt-get install -y -q emacs maude graphviz
 
 echo
 echo "Installing eclipse"
-echo
-sudo apt-get install -y -q eclipse graphviz
+echo 
+echo "Downloading eclipse from ftp://ftp.uninett.no ..."
+wget -q ftp://ftp.uninett.no/pub/eclipse/technology/epp/downloads/release/luna/SR2/eclipse-dsl-luna-SR2-linux-gtk-x86_64.tar.gz
+echo "Installing eclipse in /opt/eclipse and setting up paths ..."
+(cd /opt && sudo tar xzf /home/vagrant/eclipse-dsl-luna-SR2-linux-gtk-x86_64.tar.gz)
+sudo ln -s /opt/eclipse/eclipse /usr/local/bin/eclipse
 
 echo
 echo "Building the ABS compiler and eclipse plugins"
 echo
-(cd /vagrant/eclipse-plugin ; ant -Declipse.home=/usr build-all-plugins generate-update-site)
+(cd /vagrant/eclipse-plugin ; ant -Declipse.home=/opt/eclipse build-all-plugins generate-update-site)
 
 echo
 echo "Deploying to eclipse"
