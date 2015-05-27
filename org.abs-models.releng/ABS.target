@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.8"?><target includeMode="feature" name="ABS" sequenceNumber="1">
+<?pde version="3.8"?><target includeMode="feature" name="ABS" sequenceNumber="3">
 <locations>
 <location includeAllPlatforms="true" includeConfigurePhase="false" includeMode="slicer" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.equinox.executable.feature.group" version="3.6.102.v20150204-1316"/>
@@ -8,6 +8,9 @@
 <unit id="epp.package.java" version="4.4.2.20150219-0708"/>
 <repository location="http://download.eclipse.org/releases/luna"/>
 </location>
-<location id="org.aspectj" path="${eclipse_home}" type="Feature"/>
+<location includeAllPlatforms="true" includeConfigurePhase="false" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.ajdt.feature.group" version="2.2.3.e43x-RELEASE-20130627-0800"/>
+<repository location="http://download.eclipse.org/tools/ajdt/43/update"/>
+</location>
 </locations>
 </target>
