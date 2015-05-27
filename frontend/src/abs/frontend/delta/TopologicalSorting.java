@@ -33,6 +33,7 @@ public class TopologicalSorting<T> {
         this.nodes = nodes;
 
         if (nodes.size() == 0) {
+            partition = Collections.emptyList();
             preferredOrder = Collections.emptyList();
             incidence = null;
             return;
@@ -44,7 +45,6 @@ public class TopologicalSorting<T> {
                 incidence.put(cn, rn, false);
 
         partition = new ArrayList<Set<T>>();
-
     }
 
     public void addEdge(T high, T low) throws DeltaModellingException {
@@ -90,11 +90,13 @@ public class TopologicalSorting<T> {
         isSorted = true;
     }
 
-    /*
-     * Returns a single, valid delta order
+    /**
+     * Get a single, valid delta order
      *
      * TODO: eventually this should compute an implication-determined order (cf. Damiani and Schaefer 2012),
      * which yields a PFGT with a minimal number of nodes
+     *
+     * @return A (possibly empty) list of deltas
      */
     public List<T> getPreferredOrder() {
         if (preferredOrder != null) // only compute once
@@ -108,16 +110,21 @@ public class TopologicalSorting<T> {
         return preferredOrder;
     }
 
-    /*
+    /**
      * Returns a single, valid delta order
+     *
+     * @return A (possibly empty) list of deltas
      */
     public List<T> getAnOrder() {
         return getPreferredOrder();
     }
 
-    /* The delta partition is an ordered list of sets of deltas. All deltas in a
+    /**
+     * The delta partition is an ordered list of sets of deltas. All deltas in a
      * certain set have the same precedence, that is, they can be applied in any order.
      * The partition is initially an empty list and is computed by calling sort().
+     *
+     * @return A (possibly empty) list of sets. A set cannot be empty.
      */
     public List<Set<T>> getPartition() {
         checkSorted();

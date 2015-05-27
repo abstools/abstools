@@ -1,0 +1,5 @@
+The code in here is documented under:
+        
+        abs-docs/src/main/docs/asciidoc/developer
+
+To keep the documentation current, please update it whenever you refactor or extend this code.
