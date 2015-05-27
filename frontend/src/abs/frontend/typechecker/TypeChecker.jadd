@@ -1033,8 +1033,11 @@ aspect TypeCheckProductline {
         Set<String> definedFeatures = getDeclaredFeatures();
         // TODO: check for undeclared features?
         
+        Set<String> seenDeltas = new HashSet<String>();
         HashSet<String> deadDeltas = new HashSet<String>(getModel().getDeltaDeclsMap().keySet());
         for (DeltaClause dc : getDeltaClauses()) {
+            if (! seenDeltas.add(dc.getDeltaspec().getDeltaID()))
+                e.add(new SemanticError(dc, ErrorMessage.DUPLICATE_DELTA_CLAUSE, dc.getDeltaspec().getDeltaID(), this.getName()));
             dc.typeCheck(getModel().getDeltaDeclsMap(), definedFeatures, e);
             deadDeltas.remove(dc.getDeltaspec().getDeltaID());
         }

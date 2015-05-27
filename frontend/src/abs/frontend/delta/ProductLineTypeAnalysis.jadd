@@ -10,10 +10,6 @@ aspect ProductLineTypeAnalysis {
         return errors;
     }
 
-//    syn lazy java.util.List<java.util.Set<String>> ProductLine.getDeltaPartition(SemanticErrorList errors) {
-//        return ProductLineTypeAnalysisHelper.getDeltaPartition(this, errors);
-//    }
-
 //    syn lazy boolean ProductLine.isStronglyUnambiguous(java.util.List<Set<String>> deltaPartitions, SemanticErrorList errors) {
 //        return ProductLineTypeAnalysisHelper.isStronglyUnambiguous(this, deltaPartitions, errors);
 //    }

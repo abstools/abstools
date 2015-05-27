@@ -225,8 +225,7 @@ aspect ProductFlattener {
     }
 
     /**************************************************************************
-     *
-     *
+     * The Delta partition contains all possible orders in which the deltas can be applied
      */
     syn lazy java.util.List<Set<String>> ProductLine.getDeltaPartition() {
         sortDeltas();
@@ -266,7 +265,7 @@ aspect ProductFlattener {
                     assert false;
                 }
             }
-        }    
+        }
         deltaSorter.sort();
     }
 

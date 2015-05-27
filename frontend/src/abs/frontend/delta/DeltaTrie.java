@@ -10,6 +10,7 @@ import java.util.Map;
 
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.DeltaDecl;
+import abs.frontend.ast.ImplicitProduct;
 import abs.frontend.ast.Model;
 
 public class DeltaTrie {
@@ -25,12 +26,12 @@ public class DeltaTrie {
     }
 
     // Adds a word to the Trie
-    public void addWord(List<String> word) {
+    public void addWord(List<String> word, ImplicitProduct product) {
 //        System.out.print("DeltaSequence");
         if (word.size() == 0) // no deltas
             root.isValidProduct = true;
         else
-            root.addWord(word, 0);
+            root.addWord(word, product, 0);
 //        System.out.println();
     }
 
@@ -61,15 +62,17 @@ public class DeltaTrie {
 
         /** Add a word to the trie
          *
-         * @param word: Non-empty List of delta names
-         * @param d:    Index of List element to start with (for recursive invocation)
+         * @param word     Non-empty List of delta names
+         * @param product  The SPL product that this word represents (or null if none)
+         * @param d        Index of List element to start with (for recursive invocation)
          */
-        protected void addWord(List<String> word, int d) {
+        protected void addWord(List<String> word, ImplicitProduct product, int d) {
             Node nextNode;
 
 //            System.out.print(">>>" + word.get(d));
 
             if (children.containsKey(word.get(d))) {
+                // node already exists
                 nextNode = children.get(word.get(d));
             } else {
                 ProgramTypeAbstraction nextTA = new ProgramTypeAbstraction(ta);
@@ -77,18 +80,18 @@ public class DeltaTrie {
 
                 // Apply delta to nextNode's program type abstraction
                 DeltaDecl delta = model.getDeltaDeclsMap().get(nextNode.deltaID);
-                nextTA.applyDelta(delta);
+                nextTA.applyDelta(delta, product);
 
                 children.put(word.get(d), nextNode);
 //                System.out.print("*");
             }
 
             if (word.size() > d+1)
-                nextNode.addWord(word, d+1);
+                nextNode.addWord(word, product, d+1);
             else {
                 nextNode.isValidProduct = true;
-                // TODO type check this product
-//                System.out.print(".");
+                // TODO type check this product (?)
+//                System.out.println(".");
             }
         }
 

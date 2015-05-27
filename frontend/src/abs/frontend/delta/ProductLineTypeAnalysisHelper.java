@@ -45,7 +45,7 @@ public class ProductLineTypeAnalysisHelper {
             // for each product: obtain sequence of deltas & add it to the trie
             Set<String> applicableDeltas = pl.findApplicableDeltas(product);
             List<String> productGenerationString = pl.sortDeltas(applicableDeltas);
-            trie.addWord(productGenerationString);
+            trie.addWord(productGenerationString, product);
         }
         return trie;
     }
@@ -64,6 +64,14 @@ public class ProductLineTypeAnalysisHelper {
         boolean result = true;
         Model model = pl.getModel();
 
+//        for (Set<String> set : pl.getDeltaPartition()) {
+//            System.out.print("Delta partition: {");
+//            for (String el : set)
+//                System.err.print(" " + el + " ");
+//            System.out.print("}   ");
+//        }
+//        System.out.println();
+
         for (Set<String> set : pl.getDeltaPartition()) {
 
             // Remember the names of classes and methods modified by deltas in
@@ -73,7 +81,7 @@ public class ProductLineTypeAnalysisHelper {
             Map<String, Map<String, String>> cache = new HashMap<String, Map<String, String>>();
 
             for (String deltaID : set) {
-                DeltaDecl delta = model.getDeltaDeclsMap().get(deltaID);
+                DeltaDecl delta = model.getDeltaDeclsMap().get(deltaID); // assumes the DeltaDecl exists!
 
                 for (ModuleModifier moduleModifier : delta.getModuleModifiers()) {
                     if (moduleModifier instanceof ModifyClassModifier) {

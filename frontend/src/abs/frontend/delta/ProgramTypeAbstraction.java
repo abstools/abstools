@@ -4,6 +4,7 @@
  */
 package abs.frontend.delta;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,22 +13,30 @@ import java.util.TreeMap;
 
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
-import abs.frontend.analyser.TypeError;
+import abs.frontend.analyser.SPLTypeError;
 import abs.frontend.ast.*;
 
 public class ProgramTypeAbstraction {
     private final Map<String, Map<String, Set<String>>> classes;
     private final SemanticErrorList errors;
 
+    // Keep track of sequence of deltas already applied to this TA, for better error reporting
+    private final java.util.List<DeltaDecl> deltas;
+
+    // Keep track of the product we are currently trying to build, for better error reporting
+    private ImplicitProduct product;
+
     // Constructor
     public ProgramTypeAbstraction(SemanticErrorList errors) {
         this.errors = errors;
+        deltas = new ArrayList<DeltaDecl>();
         classes = new HashMap<String, Map<String, Set<String>>>();
     }
 
     // Copy constructor
     public ProgramTypeAbstraction(ProgramTypeAbstraction sourceTA) {
         this.errors = sourceTA.errors;
+        this.deltas = new ArrayList<DeltaDecl>(sourceTA.deltas);
         classes = new HashMap<String, Map<String, Set<String>>>();
         for (String className : sourceTA.classes.keySet()) {
             addClass(className);
@@ -38,8 +47,9 @@ public class ProgramTypeAbstraction {
         }
     }
 
-
-    public void applyDelta(DeltaDecl delta) {
+    public void applyDelta(DeltaDecl delta, ImplicitProduct product) {
+        deltas.add(delta);
+        this.product = product;
         for (ModuleModifier mod : delta.getModuleModifiers()) {
             mod.applyToTypeAbstraction(this);
         }
@@ -48,7 +58,7 @@ public class ProgramTypeAbstraction {
     public void addClass(AddClassModifier node) {
         String className = node.qualifiedName();
         if (classes.containsKey(className))
-            errors.add(new TypeError(node, ErrorMessage.DUPLICATE_CLASS_NAME, className));
+            errors.add(new SPLTypeError(node, ErrorMessage.DUPLICATE_CLASS_NAME, deltas, product, className));
         else
             addClass(className);
     }
@@ -63,7 +73,7 @@ public class ProgramTypeAbstraction {
         if (classes.containsKey(className))
             classes.remove(className);
         else
-            errors.add(new TypeError(node, ErrorMessage.NO_CLASS_DECL, className));
+            errors.add(new SPLTypeError(node, ErrorMessage.NO_CLASS_DECL, deltas, product, className));
     }
 
     public void addField(String className, AddFieldModifier node) {
@@ -71,7 +81,7 @@ public class ProgramTypeAbstraction {
         if (! classes.get(className).get("fields").contains(name))
             addField(className, name);
         else
-            errors.add(new TypeError(node, ErrorMessage.DUPLICATE_FIELD_NAME, name));
+            errors.add(new SPLTypeError(node, ErrorMessage.DUPLICATE_FIELD_NAME, deltas, product, name));
     }
     public void addField(String className, String fieldName) {
         classes.get(className).get("fields").add(fieldName);
@@ -82,7 +92,7 @@ public class ProgramTypeAbstraction {
         if (classes.get(className).get("fields").contains(name))
             classes.get(className).get("fields").remove(name);
         else
-            errors.add(new TypeError(node, ErrorMessage.NO_FIELD_DECL, name));
+            errors.add(new SPLTypeError(node, ErrorMessage.NO_FIELD_DECL, deltas, product, name));
     }
 
     public void addMethod(String className, AddMethodModifier node) {
@@ -90,7 +100,7 @@ public class ProgramTypeAbstraction {
         if (! classes.get(className).get("methods").contains(name))
             addMethod(className, name);
         else
-            errors.add(new TypeError(node, ErrorMessage.DUPLICATE_METHOD_NAME, name));
+            errors.add(new SPLTypeError(node, ErrorMessage.DUPLICATE_METHOD_NAME, deltas, product, name));
     }
     public void addMethod(String className, String methodName) {
         classes.get(className).get("methods").add(methodName);
@@ -99,7 +109,7 @@ public class ProgramTypeAbstraction {
     public void modifyMethod(String className, AddMethodModifier node) {
         String name = node.getMethodImpl().getMethodSig().getName();
         if (! classes.get(className).get("methods").contains(name))
-            errors.add(new TypeError(node, ErrorMessage.NO_METHOD_IMPL, name));  // FIXME Error message probably not suitable
+            errors.add(new SPLTypeError(node, ErrorMessage.NO_METHOD_IMPL, deltas, product, name));  // FIXME Error message probably not suitable
     }
 
     public void removeMethod(String className, RemoveMethodModifier node) {
@@ -107,7 +117,7 @@ public class ProgramTypeAbstraction {
         if (classes.get(className).get("methods").contains(name))
             classes.get(className).get("methods").remove(name);
         else
-            errors.add(new TypeError(node, ErrorMessage.NO_METHOD_IMPL, name));  // FIXME Error message probably not suitable
+            errors.add(new SPLTypeError(node, ErrorMessage.NO_METHOD_IMPL, deltas, product, name));  // FIXME Error message probably not suitable
     }
 
 
@@ -117,7 +127,7 @@ public class ProgramTypeAbstraction {
         if (classes.containsKey(className)) {
             return true;
         } else {
-            errors.add(new TypeError(node, ErrorMessage.NO_CLASS_DECL, className));
+            errors.add(new SPLTypeError(node, ErrorMessage.NO_CLASS_DECL, deltas, product, className));
             return false;
         }
     }
