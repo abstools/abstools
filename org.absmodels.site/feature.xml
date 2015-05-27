@@ -574,14 +574,6 @@
          unpack="false"/>
 
    <plugin
-         id="org.eclipse.equinox.security.macosx"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         fragment="true"
-         unpack="false"/>
-
-   <plugin
          id="org.eclipse.e4.core.di.source"
          download-size="0"
          install-size="0"
@@ -1198,12 +1190,6 @@
          unpack="false"/>
 
    <plugin
-         id="org.eclipse.team.svn.resource.ignore.rules.jdt.source"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
          id="org.eclipse.pde.ui.source"
          download-size="0"
          install-size="0"
@@ -1582,12 +1568,6 @@
          unpack="false"/>
 
    <plugin
-         id="org.eclipse.team.svn.mylyn.source"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
          id="org.eclipse.ltk.core.refactoring"
          download-size="0"
          install-size="0"
@@ -1663,12 +1643,6 @@
          install-size="0"
          version="0.0.0"
          unpack="false"/>
-
-   <plugin
-         id="org.eclipse.team.svn.revision.graph.source"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
 
    <plugin
          id="org.eclipse.ant.core.source"
@@ -2471,13 +2445,6 @@
 
    <plugin
          id="org.eclipse.mylyn.team.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.update.core"
          download-size="0"
          install-size="0"
          version="0.0.0"
@@ -3326,13 +3293,6 @@
          install-size="0"
          version="0.0.0"
          unpack="false"/>
-
-   <plugin
-         id="org.eclipse.equinox.launcher.cocoa.macosx.x86_64"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         fragment="true"/>
 
    <plugin
          id="org.polarion.eclipse.team.svn.connector.svnkit17"
