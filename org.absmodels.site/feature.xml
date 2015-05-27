@@ -18,14 +18,6 @@
    </license>
 
    <includes
-         id="org.eclipse.rcp"
-         version="0.0.0"/>
-
-   <includes
-         id="org.eclipse.jdt"
-         version="0.0.0"/>
-
-   <includes
          id="org.abs-models.abs.compiler"
          version="0.0.0"/>
 
@@ -40,6 +32,11 @@
    <includes
          id="org.abs-models.sdedit"
          version="0.0.0"/>
+
+   <requires>
+      <import feature="org.eclipse.jdt" version="3.9.2.v20140221-1700"/>
+      <import feature="org.eclipse.rcp" version="4.3.1.v20130911-1000"/>
+   </requires>
 
    <plugin
          id="org.eclipse.jdt.debug.source"
