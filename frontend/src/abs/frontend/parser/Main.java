@@ -375,6 +375,10 @@ public class Main {
      ABS.StdLib.Exception datatype.
      */
     public static void exceptionHack(Model m) {
+        assert m != null;
+        if (m.getExceptionType() == null) {
+            return; // Eclipse?
+        }
         DataTypeDecl e = (DataTypeDecl)(m.getExceptionType().getDecl());
         if (e != null) {
             // TODO: if null and not -nostdlib, throw an error
