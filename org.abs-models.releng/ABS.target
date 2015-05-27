@@ -9,8 +9,8 @@
 <repository location="http://download.eclipse.org/releases/luna"/>
 </location>
 <location includeAllPlatforms="true" includeConfigurePhase="false" includeMode="slicer" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.ajdt.feature.group" version="2.2.3.e43x-RELEASE-20130627-0800"/>
-<repository location="http://download.eclipse.org/tools/ajdt/43/update"/>
+<unit id="org.eclipse.ajdt.feature.group" version="2.2.4.e45x-20150206-1600"/>
+<repository location="http://download.eclipse.org/tools/ajdt/45/dev/update/"/>
 </location>
 </locations>
 </target>
