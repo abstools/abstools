@@ -37,6 +37,16 @@
          id="org.abs-models.sdedit"
          version="0.0.0"/>
 
+   <includes
+         id="org.abs-models.apet"
+         version="0.0.0"
+         os="linux"/>
+
+   <includes
+         id="org.abs-models.costabs"
+         version="0.0.0"
+         os="linux"/>
+
    <requires>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
