@@ -4,7 +4,6 @@
  */
 package abs.frontend.delta;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -49,6 +48,20 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
         assertTrue(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
         assertEquals(0, errors.size());
+
+        model = assertParseOk(
+                "module M;"
+                        + "productline PL;"
+                        + "features A;"
+                );
+        pl = model.getProductLine();
+        errors = new SemanticErrorList();
+
+        assertTrue(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
+        assertEquals(0, errors.size());
+
+        List<Set<String>> partition = pl.getDeltaPartition();
+        assertEquals(partition.size(), 0);
 
         model = assertParseOk(
                 "module M;"
@@ -160,38 +173,6 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
     }
 
 
-    @Test
-    public void deltaPartition() {
-        Model model = assertParseOk(
-                "module M;"
-                        + "class C {}"
-                        + "delta D1; modifies class M.C { adds Unit foo() {} }"
-                        + "delta D2; modifies class M.C { adds Unit foo() {} }"
-                        + "productline PL;"
-                        + "features A;"
-                        + "delta D1 after D2;"
-                        + "/* D2 clause mising */"
-                );
-        ProductLine pl = model.getProductLine();
-        List<Set<String>> partition = pl.getDeltaPartition();
-        assertTrue(partition == Collections.<Set<String>>emptyList());
-
-        model = assertParseOk(
-                "module M;"
-                        + "class C {}"
-                        + "delta D1; modifies class M.C { adds Unit foo() {} }"
-                        + "delta D2; modifies class M.C { adds Unit foo() {} }"
-                        + "productline PL;"
-                        + "features A;"
-                        + "delta D1 after D2;"
-                        + "delta D2 after D1; // cycle!"
-                );
-        pl = model.getProductLine();
-        partition = pl.getDeltaPartition();
-        assertTrue(partition == Collections.<Set<String>>emptyList());
-
-    }
-
 //    @Test
 //    public void ntaTest() {
 //        Model model = new Model();
@@ -213,9 +194,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
     public void implicitProductsMany() {
         Model model = assertParseOk(
                 "root FM {"
-                        + " group [0..*] {"
-                        + "A, B, C, D, E, F, G, H, I, J"
-                        + "}"
+                        + " group [0..*] { A, B, C, D, E, F, G, H, I, J }"
                         + "}"
                 );
         //with 10 features there should be 2^10 valid products
