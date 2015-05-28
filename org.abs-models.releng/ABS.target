@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.8"?><target includeMode="feature" name="ABS" sequenceNumber="3">
+<?pde version="3.8"?><target includeMode="feature" name="ABS" sequenceNumber="5">
 <locations>
 <location includeAllPlatforms="true" includeConfigurePhase="false" includeMode="slicer" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.ajdt.feature.group" version="2.2.4.e45x-20150206-1600"/>
@@ -23,6 +23,11 @@
 <unit id="org.polarion.eclipse.team.svn.connector.svnkit17.feature.group" version="4.1.3.I20150214-1700"/>
 <unit id="org.polarion.eclipse.team.svn.connector.svnkit18.feature.group" version="4.1.3.I20150214-1700"/>
 <repository location="http://community.polarion.com/projects/subversive/download/eclipse/4.0/luna-site/"/>
+</location>
+<location includeAllPlatforms="true" includeConfigurePhase="false" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.swtbot.eclipse.test.junit.feature.group" version="2.2.1.201402241301"/>
+<unit id="org.eclipse.swtbot.eclipse.feature.group" version="2.2.1.201402241301"/>
+<repository location="http://download.eclipse.org/technology/swtbot/releases/2.2.1/"/>
 </location>
 </locations>
 </target>

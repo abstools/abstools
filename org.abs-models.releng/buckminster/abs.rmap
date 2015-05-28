@@ -68,7 +68,7 @@
   </rm:searchPath>
   <rm:searchPath name="SWTBot">
 		<rm:provider readerType="eclipse.import" componentTypes="osgi.bundle,eclipse.feature" mutable="false" source="false">
-			<rm:uri format="http://download.eclipse.org/technology/swtbot/helios/dev-build/update-site/?importType=binary"/>
+			<rm:uri format="http://download.eclipse.org/technology/swtbot/releases/2.2.1/"/>
 		</rm:provider>
   </rm:searchPath>
   <!-- Default -->
