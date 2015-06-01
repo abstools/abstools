@@ -32,6 +32,7 @@ Folders
   testing and packaging ABS codes
 
 * `org.abs-models.releng` - Files used by Jenkins and Buckminster for continuous integration
+  at https://envisage.ifi.uio.no:8080/jenkins/.
 
 * `abs-packages` - demonstration and description of how to use ABS
   packages (with Maven dependencies management)
