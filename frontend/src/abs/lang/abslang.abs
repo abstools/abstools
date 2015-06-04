@@ -634,12 +634,14 @@ class CloudProvider(String name) implements CloudProvider {
         while (!emptySet(dcs)) {
             DeploymentComponent dc = take(dcs);
             dcs = remove(dcs, dc);
-            Time creationtime = await dc!getCreationTime();
-            Int interval = await dc!getPaymentInterval();
-            Rat time_elapse = timeDifference(t, creationtime);
-            if (time_elapse % interval == 0) {
-                Rat cost = await dc!getCostPerInterval();
-                result = result + cost;
+            Rat cost = await dc!getCostPerInterval();
+            if (cost > 0) {
+                Time creationtime = await dc!getCreationTime();
+                Rat time_elapse = timeDifference(t, creationtime);
+                Int interval = await dc!getPaymentInterval();
+                if (time_elapse % interval == 0) {
+                    result = result + cost;
+                }
             }
         }
         return result;
