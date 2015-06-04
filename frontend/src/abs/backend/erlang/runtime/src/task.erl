@@ -10,7 +10,6 @@
 -export([await_duration/4,block_for_duration/4,block_for_resource/4]).
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
--include_lib("log.hrl").
 
 -behaviour(gc).
 -export([get_references/1]).
@@ -80,7 +79,7 @@ loop_for_unblock_signal(Msg,Stack) ->
         {stop_world, _Sender} ->
             loop_for_unblock_signal(Msg, Stack);
         {get_references, Sender} ->
-            Sender ! {gc:extract_references([Stack, get()]), self()},
+            Sender ! {gc:extract_references(Stack), self()},
             loop_for_unblock_signal(Msg, Stack)
     end.
 
@@ -114,7 +113,6 @@ block_for_resource(Cog, Resourcetype, Amount, Stack) ->
 loop_for_resource(Cog=#cog{ref=CogRef,dc=DC},Resourcetype,Amount,Stack) ->
     {Result, Consumed}= dc:consume(DC,Resourcetype,Amount),
     Remaining=rationals:sub(rationals:to_r(Amount), rationals:to_r(Consumed)),
-    ?DEBUG({resource_consumed, Resourcetype, Consumed, remaining, Remaining}),
     case Result of
         wait -> eventstream:event({cog,self(),CogRef,resource_waiting}),
                 loop_for_unblock_signal(clock_finished, Stack),

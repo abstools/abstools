@@ -56,12 +56,9 @@ public class ClassGenerator {
         for (MethodImpl m : classDecl.getMethodList()) {
             MethodSig ms = m.getMethodSig();
             ErlUtil.functionHeader(ecs, "m_" + ms.getName(), generatorClassMatcher(), ms.getParamList());
-            Vars vars = new Vars();
-            for (ParamDecl arg : ms.getParamList()) {
-                ecs.pf("put('%s', V_%s_0),", arg.getName(), arg.getName());
-            }
             ecs.println("try");
             ecs.incIndent();
+            Vars vars = Vars.n(ms.getParamList());
             ErlUtil.stopWorldPrelude(ecs, vars, false);
             m.getBlock().generateErlangCode(ecs, vars);
             ecs.println();
