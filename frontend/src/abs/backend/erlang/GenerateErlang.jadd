@@ -57,11 +57,11 @@ aspect GenerateErlang {
     ErlUtil.functionHeader(ecs,"f_"+getName(),"Cog=#cog{ref=CogRef}",getParams());
     boolean needTrunc=getType().isIntType() && getFunctionDef() instanceof ExpFunctionDef
         && ((ExpFunctionDef) getFunctionDef()).getRhs().getType().isRatType();
+    Vars vars = Vars.n(getParams());
+    ErlUtil.stopWorldPrelude(ecs, vars, true);
     if (needTrunc) {
       ecs.print("rationals:trunc(");
     }
-    Vars vars = Vars.n(getParams());
-    ErlUtil.stopWorldPrelude(ecs, vars, true);
     getFunctionDef().generateErlangCode(ecs,vars);
     if (needTrunc) {
       ecs.print(")");
