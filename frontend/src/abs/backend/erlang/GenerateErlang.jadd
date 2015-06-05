@@ -581,11 +581,19 @@ aspect GenerateErlang {
 
   @Override
   public void ModMultExp.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.print(" rationals:rrem(rationals:to_r(");
-    getLeft().generateErlangCode(ecs,vars);
-    ecs.print("),rationals:to_r(");
-    getRight().generateErlangCode(ecs,vars);
-    ecs.print(")) ");
+    if (getLeft().getType().isIntType() && getRight().getType().isIntType() ) {
+        ecs.print("(");
+        getLeft().generateErlangCode(ecs,vars);
+        ecs.print(" rem ");
+        getRight().generateErlangCode(ecs,vars);
+        ecs.print(") ");
+    } else {
+        ecs.print(" rationals:rrem(rationals:to_r(");
+        getLeft().generateErlangCode(ecs,vars);
+        ecs.print("),rationals:to_r(");
+        getRight().generateErlangCode(ecs,vars);
+        ecs.print(")) ");
+    }
   }
 
   @Override
