@@ -110,7 +110,7 @@ public class PrimitiveTypes extends SemanticTests {
 
     @Test
     public void ratMod() {
-        assertEvalTrue("{ Rat x = 10 % 3; Bool testresult = x == 1;  }");
+        assertEvalTrue("{ Rat x = 5/3 % 1/2; Bool testresult = x == 1/3;  }");
     }
 
     @Test
