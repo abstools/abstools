@@ -80,6 +80,7 @@ public enum ErrorMessage {
     WRONG_CONSTRUCTOR("Data type %s has no constructor with name %s."),
     WRONG_DEPLOYMENT_COMPONENT("Wrong type %s in deployment component annotation."),
     DEPLOYMENT_COMPONENT_NOT_COG("Deployment component cannot be created inside a cog."),
+    DEPLOYMENT_COMPONENT_IGNORED("Deployment component annotations are not allowed for local objects."),
     EXPECTED_DC("Expected a Deployment component, but received %s."),
     UNDECLARED_VARIABLE("Unknown variable: %s."),
     NOT_A_LEAF("Feature cannot have more than one group of sub-features: %s."),
