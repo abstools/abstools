@@ -12,10 +12,8 @@
 
 start(Callee,Method,Params) ->
     Ref = spawn(?MODULE,init,[Callee,Method,Params]),
-    gc ! {Ref, self()},
-    receive
-        ok -> Ref
-    end.
+    gc:register_future(Ref),
+    Ref.
 
 
 get(Ref)->
@@ -87,13 +85,13 @@ await() ->
     %% or receive requests for references or polling
     receive
         {'DOWN', _ , process, _,Reason} when Reason /= normal ->
-            gc ! {unroot, self()},
+            gc:unroot_future(self()),
             loop({error,error_transform:transform(Reason)});
         {'EXIT',_,Reason} ->
-            gc ! {unroot, self()},
+            gc:unroot_future(self()),
             loop({error,error_transform:transform(Reason)});
         {completed, Value}->
-            gc ! {unroot, self()},
+            gc:unroot_future(self()),
             loop({ok,Value});
         {get_references, Sender} ->
             Sender ! {[], self()},
@@ -132,6 +130,7 @@ await(Stack) ->
     receive
         {ok} -> ok;
         {get_references, Sender} ->
+            ?DEBUG(get_references),
             Sender ! {gc:extract_references(Stack), self()},
             await(Stack)
     end.
@@ -146,6 +145,7 @@ loop(Value)->
             Sender!{ok},
             loop(Value);
         {get_references, Sender} ->
+            ?DEBUG(get_references),
             Sender ! {gc:extract_references(Value), self()},
             loop(Value);
         {poll, Sender} ->

@@ -27,10 +27,8 @@ start(DC)->
     %% create a copy of the current cog (see start_new_task), the one in
     %% the cog structure itself is for evaluating thisDC()
     Cog = #cog{ref=spawn(cog,init, [T,DC]),tracker=T,dc=DC},
-    gc ! {Cog, self()},
-    receive
-        ok -> Cog
-    end.
+    gc:register_cog(Cog),
+    Cog.
 
 add(#cog{ref=Cog},Task,Args)->
     Cog!{new_task,Task,Args,self(),false},
@@ -81,7 +79,7 @@ init(Tracker,DC) ->
                   {stop_world, Sender} ->
                       Sender ! {stopped, self()},
                       {gc, false};
-                  ok ->
+                  {gc, ok} ->
                       false
               end,
     loop(#state{tasks=gb_trees:empty(),tracker=Tracker,running=Running,dc=DC}).
@@ -220,7 +218,7 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
             {done, gc} ->
                 case Refs of
                     0 -> eventstream:event({cog,self(),die}),
-                         gc ! {die, self()},
+                         gc:unregister_cog(self()),
                          stop;
                     _ -> S#state{running=Old}
                 end;
