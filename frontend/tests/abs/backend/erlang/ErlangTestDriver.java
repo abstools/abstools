@@ -135,7 +135,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             mb.addStmt(new ReturnStmt(new List<Annotation>(),
                                       new VarUse("testresult")));
         }
-        ErlangBackend.compile(model, targetDir);
+        ErlangBackend.compile(model, targetDir, false);
         if (mb == null)
             return null;
         else

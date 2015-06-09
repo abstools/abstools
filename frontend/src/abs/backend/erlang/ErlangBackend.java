@@ -5,9 +5,12 @@ package abs.backend.erlang;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.apache.commons.io.IOUtils;
 
 import abs.common.NotImplementedYetException;
 import abs.frontend.ast.Model;
@@ -65,16 +68,18 @@ public class ErlangBackend extends Main {
         final Model model = parse(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             printParserErrorAndExit();
-        compile(model, DEFAULT_DEST_DIR);
+        compile(model, DEFAULT_DEST_DIR, verbose);
     }
 
-    public static void compile(Model m, File destDir) throws IOException, InterruptedException {
+    public static void compile(Model m, File destDir, boolean verbose) throws IOException, InterruptedException {
+        if (verbose) System.out.println("Generating Erlang code...");
         ErlApp erlApp = new ErlApp(destDir);
         m.generateErlangCode(erlApp);
         erlApp.close();
 	String[] rebarProgram = new String[] {"escript", "bin/rebar", "compile"};
         Process p = Runtime.getRuntime().exec(rebarProgram, null, destDir);
         p.waitFor();
+        if (verbose) IOUtils.copy(p.getInputStream(), System.out);
     }
 
 }
