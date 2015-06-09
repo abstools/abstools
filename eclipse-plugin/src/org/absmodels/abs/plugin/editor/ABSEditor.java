@@ -217,7 +217,14 @@ public class ABSEditor extends TextEditor implements CompilationUnitChangeListen
 				 */
 				int startOff = doc.getLineOffset(pos.getLinestart()) + pos.getColstart();
 				int endOff = doc.getLineOffset(pos.getLineend()) + pos.getColend();
-	
+
+				if (startOff < 0) {
+					// TODO: This happens sometimes - new parser?
+					Activator.logException(new IllegalArgumentException("FIXME"));
+					return;
+				}
+				assert startOff > -1;
+				assert endOff >= startOff;
 				setHighlightRange(startOff, endOff - startOff, moveCursor);
 			} catch (BadLocationException e) {
 				/*
