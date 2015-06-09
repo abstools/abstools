@@ -8,22 +8,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.absmodels.abs.plugin.editor.outline.ABSContentOutlineUtils.getChildrenOf;
-import static org.absmodels.abs.plugin.util.Constants.EMPTY_OBJECT_ARRAY;
 import static org.absmodels.abs.plugin.util.UtilityFunctions.getAbsNature;
 
 import org.absmodels.abs.plugin.Activator;
 import org.absmodels.abs.plugin.builder.AbsNature;
 import org.absmodels.abs.plugin.editor.outline.ABSContentOutlineProvider;
-import org.absmodels.abs.plugin.editor.outline.ABSContentOutlineUtils;
 import org.absmodels.abs.plugin.util.Constants;
 import org.absmodels.abs.plugin.util.InternalASTNode;
 import org.absmodels.abs.plugin.util.UtilityFunctions;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.model.WorkbenchContentProvider;
 
 import abs.frontend.ast.ASTNode;
@@ -37,21 +32,16 @@ public class NavigatorContentProvider extends WorkbenchContentProvider implement
 	@Override
 	public Object[] getChildren(Object parentElement) {
 
-	    System.out.println(parentElement);
-	    
 		if (parentElement instanceof InternalASTNode) {
-		    System.out.println(" ...InternalASTNode");
 			return outlineProvider.getChildren(parentElement);
 		} else
 		    if (parentElement instanceof IProject) {
-		    System.out.println(" ...IProject");
 			if (((IProject) parentElement).isOpen()) {
 				AbsNature nature = UtilityFunctions.getAbsNature((IProject)parentElement);
 				assert nature != null;
 				return ModulePath.getRootHierarchy(nature).toArray();
 			}
 		} else if (parentElement instanceof ModulePath) {
-		    System.out.println(" ...ModulePath");
 			ModulePath mPath = (ModulePath) parentElement;
 			ArrayList<Object> children = new ArrayList<Object>();
 
