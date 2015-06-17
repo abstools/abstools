@@ -1,6 +1,5 @@
 /.vagrant
 /frontend/bin/
-/frontend/dist/
 /frontend/**/*.beam
 /Documentation/**/*.aux
 /Documentation/**/*.bbl
@@ -14,4 +13,9 @@
 /abs-docs/target/
 /eclipse-plugin/update-site/
 /**/gen/
-
+/frontend/dist/
+/apet-plugin/dist/
+/costabs-plugin/dist/
+/eclipse-plugin/dist/
+/sda-plugin/dist/
+/sdedit-for-abs/dist/
