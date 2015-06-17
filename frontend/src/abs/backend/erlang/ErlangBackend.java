@@ -24,7 +24,7 @@ import abs.frontend.parser.Main;
  */
 public class ErlangBackend extends Main {
 
-    private static final File DEFAULT_DEST_DIR = new File("gen/erl/");
+    private File destDir = new File("gen/erl/");
 
     public static void main(final String... args) {
         try {
@@ -50,6 +50,14 @@ public class ErlangBackend extends Main {
             String arg = restArgs.get(i);
             if (arg.equals("-erlang")) {
                 // nothing to do
+            } else if (arg.equals("-d")) {
+                i++;
+                if (i == restArgs.size()) {
+                    System.err.println("Please provide an output directory");
+                    System.exit(1);
+                } else {
+                    destDir = new File(restArgs.get(i));
+                }
             } else {
                 remainingArgs.add(arg);
             }
@@ -61,14 +69,15 @@ public class ErlangBackend extends Main {
     @Override
     protected void printUsage() {
         super.printUsage();
-        System.out.println("Erlang Backend:\n");
+        System.out.println("Erlang Backend:\n"
+                           + "  -d <dir>       Create code below <dir> (default gen/erl/)\n");
     }
 
     private void compile(String[] args) throws Exception {
         final Model model = parse(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             printParserErrorAndExit();
-        compile(model, DEFAULT_DEST_DIR, verbose);
+        compile(model, destDir, verbose);
     }
 
     public static void compile(Model m, File destDir, boolean verbose) throws IOException, InterruptedException {
