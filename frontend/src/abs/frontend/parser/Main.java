@@ -264,8 +264,9 @@ public class Main {
             rewriteModel(m, product);
 
             // type check PL before flattening
-            if (typecheck)
-                typeCheckProductLine(m);
+            // [ramus] disabled temporarily due to a bug
+            //if (typecheck)
+            //    typeCheckProductLine(m);
 
             // flatten before checking error, to avoid calculating *wrong* attributes
             if (fullabs) {
