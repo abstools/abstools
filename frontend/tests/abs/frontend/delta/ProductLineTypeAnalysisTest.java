@@ -191,10 +191,22 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
     }
 
     @Test
+    public void implicitProductsIgnoreAttributes() {
+        Model model = assertParseOk(
+                "root FM {"
+                        + "group allof { opt A { ifin: FM.attr == 99; ifout: FM.attr == 14; } }"
+                        + "Int attr;"
+                        + "}"
+                );
+        //two products: {FM}, {FM, A}
+        assertEquals(2, model.getImplicitProductList().getNumChild());
+    }
+
+    @Test
     public void implicitProductsMany() {
         Model model = assertParseOk(
                 "root FM {"
-                        + " group [0..*] { A, B, C, D, E, F, G, H, I, J }"
+                        + "group [0..*] { A, B, C, D, E, F, G, H, I, J }"
                         + "}"
                 );
         //with 10 features there should be 2^10 valid products
