@@ -615,12 +615,12 @@ class CloudProvider(String name) implements CloudProvider {
     // Launched instances that are currently acquired
     Set<DeploymentComponent> acquiredInstances = set[];
     Set<DeploymentComponent> killedInstances = set[];
-    Int instanceCounter = 0;
+    Int nextInstanceId = 0;
     Rat accumulatedCost = 0;
-    Bool keeprunning = True;
+    Bool keeprunning = True;    // Flag for forced shutdown
 
-    Unit run() {
-        while(keeprunning) {
+    Unit startAccounting() {
+        while(keeprunning && !emptySet(launchedInstances)) {
             await duration(1, 1);
             Rat cost = this.sumOfCosts(launchedInstances);
             accumulatedCost = accumulatedCost + cost;
@@ -650,7 +650,7 @@ class CloudProvider(String name) implements CloudProvider {
     DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
         // Until we have a way of actually removing DCs, might as well re-use
         // them
-
+        Bool needToStartAccounting = emptySet(launchedInstances);
         // TODO: Is this what we want?  We might resurrect an instance
         // that is larger than what we were asked for
         DeploymentComponent result = this.findMatchingInstance(killedInstances, d);
@@ -659,17 +659,20 @@ class CloudProvider(String name) implements CloudProvider {
             launchedInstances = insertElement(launchedInstances, result);
         } else {
             result = new DeploymentComponent(name + "-"
-                + toString(instanceCounter), d);
-            instanceCounter = instanceCounter + 1;
+                + toString(nextInstanceId), d);
+            nextInstanceId = nextInstanceId + 1;
             Rat startup_duration = await result!getStartupDuration();
             await duration(startup_duration, startup_duration);
             launchedInstances = insertElement(launchedInstances, result);
             result!setProvider(this);
         }
+        if (needToStartAccounting) this!startAccounting();
         return result;
     }
 
     DeploymentComponent launchInstance(Map<Resourcetype, Rat> d) {
+        // if we don't call prelaunchInstance here, remember to start
+        // accounting as well
         DeploymentComponent result = this.prelaunchInstance(d);
         acquiredInstances = insertElement(acquiredInstances, result);
         return result;
@@ -696,14 +699,12 @@ class CloudProvider(String name) implements CloudProvider {
     }
 
     Bool killInstance(DeploymentComponent instance) {
-        // Refuse to kill an acquired instance.
+        // Also kill an instance that is acquired.
         // FIXME: is this the right thing?
-        Bool result = !(contains(acquiredInstances, instance));
-        if (result) {
-            launchedInstances = remove(launchedInstances, instance);
-            killedInstances = insertElement(killedInstances, instance);
-        }
-        return result;
+        acquiredInstances = remove(acquiredInstances, instance);
+        launchedInstances = remove(launchedInstances, instance);
+        killedInstances = insertElement(killedInstances, instance);
+        return True;
     }
 
     [Atomic] Rat getAccumulatedCost() {
