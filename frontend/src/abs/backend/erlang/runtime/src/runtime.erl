@@ -105,7 +105,7 @@ start_mod(Module, Debug, GCStatistics) ->
 end_mod(TaskRef) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
-    modelapi:print_statistics(),
+    %% modelapi:print_statistics(),
     cog_monitor:waitfor(),
     timer:sleep(1),
     gc:stop(),
