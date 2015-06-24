@@ -55,6 +55,7 @@ MSG
     vb.memory = 4096
     vb.cpus = 2
     vb.name = "ABS tools VM (Vagrant)"
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"] # fix for ubuntu DNS problems
   end
 
   # Install necessary software
