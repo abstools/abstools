@@ -181,10 +181,9 @@ if [ ! -e /home/vagrant/.emacs ] ; then
 cat >/home/vagrant/.emacs <<EOF
 ;; Set up ABS, Maude.  Added by Vagrant provisioning
 (add-to-list 'load-path "/vagrant/emacs")
-(autoload 'abs-mode "abs-mode" "Major mode for editing Abs files." t)
+(require 'abs-mode)
 (add-to-list 'auto-mode-alist (cons "\\\\.abs\\\\'" 'abs-mode))
-(autoload 'maude-mode "maude-mode" nil t)
-(autoload 'run-maude "maude-mode" nil t)
+(require 'maude-mode)
 (add-to-list 'auto-mode-alist '("\\\\.maude\\\\'" maude-mode))
 EOF
 fi
