@@ -103,10 +103,10 @@ sudo apt-get install -y -q emacs maude graphviz
 echo
 echo "Installing eclipse"
 echo 
-echo "Downloading eclipse from ftp://ftp.uninett.no ..."
-wget -q ftp://ftp.uninett.no/pub/eclipse/technology/epp/downloads/release/luna/SR2/eclipse-dsl-luna-SR2-linux-gtk-x86_64.tar.gz
+echo "Downloading eclipse from triple-it.nl ..."
+wget -q http://eclipse.mirror.triple-it.nl/technology/epp/downloads/release/mars/R/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz
 echo "Installing eclipse in /opt/eclipse and setting up paths ..."
-(cd /opt && sudo tar xzf /home/vagrant/eclipse-dsl-luna-SR2-linux-gtk-x86_64.tar.gz)
+(cd /opt && sudo tar xzf /home/vagrant/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz)
 sudo ln -s /opt/eclipse/eclipse /usr/local/bin/eclipse
 
 echo
