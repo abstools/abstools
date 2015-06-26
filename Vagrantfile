@@ -104,7 +104,7 @@ echo
 echo "Installing eclipse"
 echo 
 echo "Downloading eclipse from triple-it.nl ..."
-wget -q http://eclipse.mirror.triple-it.nl/technology/epp/downloads/release/mars/R/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz
+wget http://eclipse.mirror.triple-it.nl/technology/epp/downloads/release/mars/R/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz
 echo "Installing eclipse in /opt/eclipse and setting up paths ..."
 (cd /opt && sudo tar xzf /home/vagrant/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz)
 sudo ln -s /opt/eclipse/eclipse /usr/local/bin/eclipse
@@ -190,7 +190,8 @@ fi
 
 # Set up paths
 cat >/home/vagrant/.abstoolsrc <<EOF
-PATH=\$PATH:/vagrant/frontend/bin/bash:/vagrant/costabs-plugin
+PATH=\$PATH:/opt/ghc/7.8.4/bin:/opt/cabal/1.20/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin:/vagrant/abs2haskell/.cabal-sandbox/bin:/vagrant/frontend/bin/bash:/vagrant/costabs-plugin
+export GHC_PACKAGE_PATH=/vagrant/abs2haskell/.cabal-sandbox/x86_64-linux-ghc-7.8.4-packages.conf.d:/opt/ghc/7.8.4/lib/ghc-7.8.4/package.conf.d:/home/vagrant/.ghc/x86_64-linux-7.8.4/package.conf.d
 EOF
 
 if [ -z "$(grep abstoolsrc /home/vagrant/.bashrc)" ] ; then
@@ -198,6 +199,34 @@ cat >>/home/vagrant/.bashrc <<EOF
 . .abstoolsrc
 EOF
 fi
+
+echo
+echo "Installing Haskell"
+echo
+
+sudo add-apt-repository ppa:hvr/ghc
+sudo apt-get update -y -q
+sudo apt-get install -y -q ghc-7.8.4 cabal-install-1.20 happy-1.19.4 alex-3.1.3
+
+echo
+echo "Building the ABS-Haskell compiler"
+echo
+
+cd /vagrant
+git clone http://github.com/bezirg/abs2haskell
+cd /vagrant/abs2haskell
+git checkout cloud
+git submodule init
+git submodule update
+
+export PATH=$PATH:/opt/cabal/1.20/bin:/opt/ghc/7.8.4/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin # necessary for building
+ghc-pkg init /home/vagrant/.ghc/x86_64-linux-7.8.4/package.conf.d || true  # initialize the user ghc-db if missing
+cabal sandbox init
+cabal update
+cabal sandbox add-source haxr-browser
+cabal sandbox add-source opennebula
+cabal install --only-dependencies
+cabal install
 
   SHELL
 end
