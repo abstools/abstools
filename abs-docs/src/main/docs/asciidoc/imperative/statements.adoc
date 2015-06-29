@@ -39,7 +39,6 @@ if (True)
 ----
 while (x < 5)
 	x = x + 1;
-
 ----
 
 .Variable Declaration Statements

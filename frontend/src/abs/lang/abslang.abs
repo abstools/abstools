@@ -41,6 +41,12 @@ def Int pow(Int b, Int n) =
         _ => b * pow(b, n-1);
     };
 
+def Rat sqrt_newton(Rat x, Rat estimate, Rat epsilon) =
+  let (Rat next) = (estimate + x / estimate)/2
+  in if abs(estimate - next) < epsilon
+    then estimate
+    else sqrt_newton(x, next, epsilon);
+
 /**
  * Returns a random number between 0 (inclusive) and below (exclusive).
  */
