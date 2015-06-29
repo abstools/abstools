@@ -1,5 +1,59 @@
 module ABS.StdLib;
-export *;
+
+// Scalar datatypes
+export Unit, String, Int, Rat, Bool, Fut, Exception, Location;
+
+// Booleans
+export True, False, and, not;
+
+// Numerics
+export max, min, abs, pow, sqrt_newton, random, truncate;
+
+// Basic utility datatypes
+export Maybe, Nothing, Just, isJust, fromJust;
+export Either, Left, Right, left, right, isLeft, isRight;
+export Pair, fst, snd;
+export Triple, fstT, sndT, trd;
+
+// Sets
+export Set, EmptySet, Insert, set; //TODO: don't export EmptySet, Insert
+
+export contains, emptySet, size, union, intersection, difference,
+  insertElement, remove, take, hasNext, next;
+
+// Lists
+export List, Nil, Cons, head, tail, list;
+export length, isEmpty, nth, without, concatenate, appendright, reverse, copy;
+
+// Maps
+export Map, EmptyMap, InsertAssoc, map; // TODO: don't export EmptyMap, InsertAssoc
+
+export removeKey, values, keys, lookup, lookupMaybe, lookupUnsafe,
+  lookupDefault, insert, put;
+  
+// String functions
+export toString, intToString, substr, strlen;
+
+// Real-Time ABS datatypes
+export Time, timeValue, currentms, now, timeDifference, timeLessThan;
+export Duration, durationValue, isDurationInfinite, addDuration, subtractDuration, durationLessThan, subtractFromDuration;
+export lowlevelDeadline, deadline;
+export Deadline, Critical;
+
+// KeY-ABS annotations
+export Inv, Pre, Post;
+
+// Various annotations
+export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer;
+export COG, Plain, Final, Atomic;
+
+// Functional breakpoints
+// TODO: find out where they are defined / used
+export watch, watchEx;
+
+// Input/Output
+export println, print, readln;
+
 export Cost;
 import Cost from ABS.DC;
 
@@ -10,7 +64,6 @@ data Rat;                       // builtin
 data Bool = True | False;       // builtin
 data Fut<A>;                    // builtin
 data Exception;                 // builtin
-data Result<A> = Value(A val)|Error(String s); // TODO: remove this
 data Location;                  // (For Component model) //
 
 // TODO: uncomment these as soon as we fix the bug that causes name collisions
@@ -411,7 +464,7 @@ def Time now() = Time(currentms());
 //   Time t = now(); await timeDifference(now(), t) > 5;
 def Rat timeDifference(Time t1, Time t2) =
   abs(timeValue(t2) - timeValue(t1));
-def Bool timeLessThan(Time t1, Time t2) =
+def Bool timeLessThan(Time t1, Time t2) = // TODO: remove this, use <
   timeValue(t1) < timeValue(t2);
 
 data Duration = Duration(Rat durationValue) | InfDuration;
