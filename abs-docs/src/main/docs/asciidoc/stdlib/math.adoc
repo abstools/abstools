@@ -37,7 +37,7 @@ This function calculates b to the power of n.
 
 [source]
 ----
-Int pow(Int b, Int n)
+Rat pow(Rat b, Int n)
 ----
 
 .sqrt_newton

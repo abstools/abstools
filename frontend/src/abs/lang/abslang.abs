@@ -86,9 +86,9 @@ def A min<A>(A a, A b) = if a < b then a else b;
     
 def Rat abs(Rat x) = if x > 0 then x else -x;
 
-def Int pow(Int b, Int n) =
-    if n < 0 then
-        0
+def Rat pow(Rat b, Int n) =
+    if n < 0
+    then 1 / pow(b, -n)
     else case n {
         0 => 1;
         _ => b * pow(b, n-1);
