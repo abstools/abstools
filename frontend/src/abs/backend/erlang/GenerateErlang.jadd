@@ -339,6 +339,7 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
+    ecs.print(", " + vars.toStack());
     ecs.print(")");
   }
 

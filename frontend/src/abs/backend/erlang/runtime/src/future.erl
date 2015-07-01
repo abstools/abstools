@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
--export([init/3,start/3]).
+-export([init/4,start/4]).
 -export([get/1,get_blocking/3,await/3,poll/1,die/2]).
 -include_lib("abs_types.hrl").
 -include_lib("log.hrl").
@@ -10,9 +10,21 @@
 -behaviour(gc).
 -export([get_references/1]).
 
-start(Callee,Method,Params) ->
-    Ref = spawn(?MODULE,init,[Callee,Method,Params]),
+start(Callee,Method,Params,Stack) ->
+    Ref = spawn(?MODULE,init,[Callee,Method,Params, self()]),
     gc:register_future(Ref),
+    (fun Loop() ->
+             %% Wait for message to be received, but handle GC request
+             %% in the meantime
+             receive
+                 {stop_world, _Sender} ->
+                     Loop();
+                {get_references, Sender} ->
+                    Sender ! {Stack, self()},
+                    Loop();
+                { ok, Ref} -> ok
+            end
+    end)(),
     Ref.
 
 
@@ -54,12 +66,13 @@ die(Ref, Reason) ->
 
   
   
-init(Callee=#object{class=C,cog=Cog=#cog{ref=CogRef}},Method,Params)->
+init(Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params, Caller)->
     %%Start task
     process_flag(trap_exit, true),
     MonRef=monitor(process,CogRef),
     cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
     demonitor(MonRef),
+    Caller ! {ok, self()},
     await().
 
 %% Future awaiting reply from task completion
