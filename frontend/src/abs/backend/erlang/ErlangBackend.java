@@ -89,6 +89,13 @@ public class ErlangBackend extends Main {
         Process p = Runtime.getRuntime().exec(rebarProgram, null, destDir);
         if (verbose) IOUtils.copy(p.getInputStream(), System.out);
         p.waitFor();
+        if (p.exitValue() != 0) {
+            String message = "Erlang compiler returned " + p.exitValue();
+            if (!verbose) message = message + " (use -v for detailed compiler output)";
+            printErrorAndExit(message);
+            // TODO: consider removing the generated code here.  For now,
+            // let's leave it in place for diagnosis.
+        }
     }
 
 }

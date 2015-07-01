@@ -640,16 +640,16 @@ public class Main {
         units.add(parseUnit(file, null, reader));
     }
 
-    protected void printParserErrorAndExit() {
+    protected static void printParserErrorAndExit() {
         System.err.println("\nCompilation failed with syntax errors.");
         System.exit(1);
     }
 
-    protected void printErrorAndExit(String error) {
+    protected static void printErrorAndExit(String error) {
         System.err.println("\nCompilation failed:\n");
         System.err.println("  " + error);
         System.err.println();
-        printUsageAndExit();
+        System.exit(1);
     }
 
     protected void printUsageAndExit() {
@@ -657,7 +657,7 @@ public class Main {
         System.exit(1);
     }
 
-    protected void printVersionAndExit() {
+    protected static void printVersionAndExit() {
         System.out.println("ABS Tool Suite v"+getVersion());
         System.exit(1);
     }
@@ -722,7 +722,7 @@ public class Main {
                 + "  -h             print this message\n");
     }
 
-    protected void printHeader() {
+    protected static void printHeader() {
 
         String[] header = new String[] {
            "The ABS Compiler" + " v" + getVersion(),
@@ -747,7 +747,7 @@ public class Main {
         System.out.println(starline);
     }
 
-    private String getVersion() {
+    private static String getVersion() {
         String version = Main.class.getPackage().getImplementationVersion();
         if (version == null)
             return "HEAD";
