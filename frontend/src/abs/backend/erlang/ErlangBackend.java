@@ -87,8 +87,8 @@ public class ErlangBackend extends Main {
         erlApp.close();
 	String[] rebarProgram = new String[] {"escript", "bin/rebar", "compile"};
         Process p = Runtime.getRuntime().exec(rebarProgram, null, destDir);
-        p.waitFor();
         if (verbose) IOUtils.copy(p.getInputStream(), System.out);
+        p.waitFor();
     }
 
 }
