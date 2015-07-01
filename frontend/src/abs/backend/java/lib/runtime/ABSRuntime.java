@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.runtime;
@@ -47,6 +47,7 @@ public class ABSRuntime {
     private static final String ABSFLI_PROPERTIES = "absfli.properties";
 
     private static final Logger logger = Logging.getLogger(ABSRuntime.class.getName());
+
     private static final boolean DEBUG_FLI = Boolean.parseBoolean(System.getProperty("abs.fli.debug", "false"));
 
     private final ABSThreadManager threadManager = new ABSThreadManager(this);
@@ -62,13 +63,13 @@ public class ABSRuntime {
 
     private PrintStream outStream = System.out;
     private PrintStream errStream = System.err;
-    
+
     /** whether to output an error message when no
      * Java class is found for a class annotated with [Foreign] */
     private boolean ignoreMissingFLIClasses = false;
 
     private ScheduableTasksFilter scheduableTasksFilter = new ScheduableTasksFilterDefault();
-    
+
     /**
      * Starts a new ABS program by giving a generated Main class
      * @param mainClass the Main class to be used
@@ -94,16 +95,16 @@ public class ABSRuntime {
             e.printStackTrace();
         }
     }
-    
+
     int freshTaskID() {
         return taskCounter.incrementAndGet();
     }
-    
+
     int freshCOGID() {
         return cogCounter.incrementAndGet();
     }
 
-    
+
     /**
      * Starts this runtime by using the Main class with name mainClassName (full qualified).
      * It uses the directory targetDir to search for that class.
@@ -111,9 +112,9 @@ public class ABSRuntime {
 
      * @param targetDir the directory that holds the generated class files
      * @param mainClassName the full qualified name of the class name.
-     * @throws ClassNotFoundException 
-     * @throws IllegalAccessException 
-     * @throws InstantiationException 
+     * @throws ClassNotFoundException
+     * @throws IllegalAccessException
+     * @throws InstantiationException
      */
     public void start(File targetDir, String mainClassName) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         if (!targetDir.canRead()) {
@@ -129,7 +130,7 @@ public class ABSRuntime {
             e.printStackTrace();
         }
     }
-    
+
     private final List<SystemObserver> systemObserver = new ArrayList<SystemObserver>();
 
     private GlobalSchedulingStrategy globalSchedulingStrategy;
@@ -142,31 +143,31 @@ public class ABSRuntime {
     private Random random;
 
     private volatile boolean isShutdown;
-    
+
 
     public ABSRuntime() {
         setRandomSeed(System.nanoTime());
     }
-    
+
     public void addSystemObserver(SystemObserver t) {
         this.systemObserver.add(t);
     }
-    
+
     public synchronized long getRandomSeed() {
         return randomSeed;
     }
-    
+
     public void enableDebugging(boolean debug) {
         debugging = debug;
     }
-    
+
     public boolean debuggingEnabled() {
         return debugging;
     }
-    
-    /** 
+
+    /**
      * Terminate the whole ABS runtime when an exception occurs
-     * when executing a task. 
+     * when executing a task.
      * Default is false
      * @param b whether to terminate or not
      */
@@ -178,7 +179,7 @@ public class ABSRuntime {
         randomSeed = seed;
         random = new Random(seed);
         logger.config("New Random Seed: " + randomSeed);
-        
+
         if (globalSchedulingStrategy instanceof UsesRandomSeed) {
             ((UsesRandomSeed)globalSchedulingStrategy).setRandom(random);
         }
@@ -186,13 +187,13 @@ public class ABSRuntime {
         if (taskSchedulingStrategy instanceof UsesRandomSeed) {
             ((UsesRandomSeed)taskSchedulingStrategy).setRandom(random);
         }
-        
+
     }
-    
+
     public synchronized Random getRandom() {
         return random;
     }
-    
+
     public synchronized void setTotalSchedulingStrategy(TotalSchedulingStrategy strat) {
         setGlobalSchedulingStrategy(strat);
         setTaskSchedulingStrategy(strat);
@@ -206,7 +207,7 @@ public class ABSRuntime {
             taskSchedulerFactory = DefaultTaskScheduler.getFactory();
         }
     }
-    
+
     public synchronized void setGlobalSchedulingStrategy(GlobalSchedulingStrategy strat) {
         globalSchedulingStrategy = strat;
         if (strat != null) {
@@ -216,7 +217,7 @@ public class ABSRuntime {
         } else {
             globalScheduler = null;
         }
-        
+
     }
 
     public synchronized void setTaskSchedulerFactory(TaskSchedulerFactory taskSchedulerFactory) {
@@ -227,8 +228,8 @@ public class ABSRuntime {
         return globalScheduler != null;
     }
 
-    
-    
+
+
 
     public void scheduleTaskDone() {
         if (hasGlobalScheduler()) {
@@ -239,7 +240,7 @@ public class ABSRuntime {
     public void nextStep(String fileName, int line) {
         if (isShutdown)
             return;
-            
+
         if (debugging) {
             getCurrentTask().nextStep(fileName, line);
         }
@@ -291,7 +292,7 @@ public class ABSRuntime {
     public GlobalScheduler getGlobalScheduler() {
         return globalScheduler;
     }
-    
+
     public void shutdown() {
         if (isShutdown)
             return;
@@ -318,7 +319,7 @@ public class ABSRuntime {
         return taskSchedulingStrategy;
     }
 
-    
+
     public static ABSRuntime getCurrentRuntime() {
         if (getCurrentCOG() != null) {
             return getCurrentCOG().getRuntime();
@@ -326,7 +327,7 @@ public class ABSRuntime {
             return null;
         }
     }
-    
+
     public static Task<?> getCurrentTask() {
         if (getCurrentCOG() != null) {
             return getCurrentCOG().getScheduler().getActiveTask();
@@ -392,11 +393,11 @@ public class ABSRuntime {
             obs.systemFinished();
         }
     }
-    
+
     public void setForeignClass(String absClassName, Class<?> javaClass) {
         foreignClasses.put(absClassName, javaClass);
     }
-    
+
     /**
      * Defines the properties to be used for the foreign class mapping
      * @param the properties to be used
@@ -404,20 +405,20 @@ public class ABSRuntime {
     public void setFLIProperties(Properties p) {
         fliProperties = p;
     }
-    
+
     /**
      * Maps ABS class names of foreign classes to Java class implementations
      */
     private final Map<String, Class<?>> foreignClasses = new HashMap<String, Class<?>>();
-    
+
     private Properties fliProperties;
     private synchronized Class<?> getForeignClass(String name) {
         Class<?> clazz = foreignClasses.get(name);
-        
+
         // this is a dummy entry to prevent reloading of classes each time
         if (clazz == ABSRuntime.class)
             return null;
-        
+
         if (clazz == null) {
             clazz = loadForeignClass(name);
             if (clazz != null) {
@@ -425,28 +426,28 @@ public class ABSRuntime {
             } else {
                 foreignClasses.put(name, ABSRuntime.class);
             }
-            
+
             if (DEBUG_FLI)
                 errStream.println("FLI: "+name+" = "+clazz);
-            
+
         }
         return clazz;
     }
-    
+
     private synchronized Class<?> loadForeignClass(String name) {
         String className = System.getProperty("abs.fli.class."+name);
         if (className == null) {
             if (fliProperties == null) {
                 loadFLIProperties();
             }
-            className = fliProperties.getProperty(name); 
+            className = fliProperties.getProperty(name);
         }
 
         if (className == null) {
             // use conventions:
             className = name+FLI_CLASS_SUFFIX;
         }
-            
+
         try {
             Class<?> result = classLoader.loadClass(className);
             return result;
@@ -475,7 +476,7 @@ public class ABSRuntime {
                     errStream.println("FLI: Loaded properties from URL "+url);
                     errStream.println("FLI: Loaded properties: "+fliProperties.toString());
                 }
-                
+
             } catch (IOException e) {
                 if (!propertiesFileName.equals(ABSFLI_PROPERTIES)) {
                     errStream.println("ABS Error while trying to read the FLI properties file "+propertiesFileName);
@@ -488,7 +489,7 @@ public class ABSRuntime {
     public Object getForeignObject(String absClassName, Object... args) {
         return loadForeignObject(getForeignClass(absClassName), args);
     }
-    
+
     private Object loadForeignObject(Class<?> foreignClass, Object... args) {
         if (foreignClass != null) {
            try {
@@ -505,7 +506,7 @@ public class ABSRuntime {
               e.printStackTrace();
            }
         }
-        
+
         return null;
      }
 
@@ -535,15 +536,15 @@ public class ABSRuntime {
     public static void setRunsInOwnProcess(boolean b) {
         System.setProperty(ABS_RUNSINOWNPROCESS_PROPERTY, Boolean.toString(b));
     }
-    
+
     public void addFLIClassPath(Collection<URL> fliClassPath) {
         classPath.addAll(fliClassPath);
     }
-    
+
     public void setOutStream(PrintStream stream) {
         outStream = stream;
     }
-     
+
     public PrintStream getOutStream() {
         return  outStream;
     }
@@ -555,7 +556,7 @@ public class ABSRuntime {
     public void setErrStream(PrintStream stream) {
         this.errStream = stream;
     }
-    
+
     public void setIgnoreMissingFLIClasses(boolean ignoreMissingFLIClasses) {
         this.ignoreMissingFLIClasses = ignoreMissingFLIClasses;
     }

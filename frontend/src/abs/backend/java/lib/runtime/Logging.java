@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.runtime;
@@ -12,9 +12,9 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 public class Logging {
+    // Default log level is WARNING
     public static Level LOGLEVEL = Level.parse(System.getProperty("abs.loglevel", "warning").toUpperCase());
-    public static final boolean DEBUG = !LOGLEVEL.equals(Level.WARNING);
-    
+
     public static void setLogLevel(String levelName) {
         LOGLEVEL = Level.parse(levelName.toUpperCase());
     }
@@ -22,9 +22,6 @@ public class Logging {
     public static Logger getLogger(String name) {
         Logger logger = Logger.getLogger(name);
         Level level = LOGLEVEL;
-        if (DEBUG) {
-            level = Level.ALL;
-        }
 
         Handler h = new ConsoleHandler();
         h.setLevel(level);
