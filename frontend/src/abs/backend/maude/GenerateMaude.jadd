@@ -246,13 +246,6 @@ aspect GenerateMaude {
         return 0;
     }
 
-    public void SafegetExp.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
-    {
-      throw new NotImplementedYetException(this);
-    }
-    public int SafegetExp.numberOfRandom(Set<String> visitedFunctions) {
-      return 0;
-    }
     public void GetExp.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);

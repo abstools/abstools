@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
 -export([init/3,start/3]).
--export([get/1,safeget/1,get_blocking/3,safeget_blocking/3,await/3,poll/1,die/2]).
+-export([get/1,get_blocking/3,await/3,poll/1,die/2]).
 -include_lib("abs_types.hrl").
 -include_lib("log.hrl").
 %%Future starts AsyncCallTask
@@ -24,28 +24,11 @@ get(Ref)->
         {reply,Ref,{error,Reason}}->
             exit(Reason)
     end.
-safeget(Ref)->
-    Ref!{get,self()},
-    receive 
-        {reply,Ref,{ok,Value}}->
-            {dataValue,Value};
-        {reply,Ref,{error,Reason}} when is_atom(Reason)->
-            {dataError,atom_to_list(Reason)};
-        {reply,Ref,{error,Reason}} ->
-            {dataError,Reason}
-    end.
 
 get_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
     task:block(Cog),
     Ref ! {get, self()},
     Result = get_blocking(Ref, Stack),
-    task:acquire_token(Cog, Stack),
-    Result.
-
-safeget_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
-    task:block(Cog),
-    Ref ! {get, self()},
-    Result = safeget_blocking(Ref, Stack),
     task:acquire_token(Cog, Stack),
     Result.
 
@@ -110,19 +93,6 @@ get_blocking(Ref,Stack) ->
             Value;
         {reply,Ref,{error,Reason}}->
             exit(Reason)
-    end.
-
-safeget_blocking(Ref,Stack) ->
-    receive
-        {get_references, Sender} ->
-            Sender ! {gc:extract_references(Stack), self()},
-            get_blocking(Ref,Stack);
-        {reply, Ref, {ok,Value}}->
-            Value;
-        {reply, Ref, {error, Reason}} when is_atom(Reason)->
-            {dataError, atom_to_list(Reason)};
-        {reply, Ref, {error,Reason}} ->
-            {dataError, Reason}
     end.
 
 %% Task awaiting future resolution

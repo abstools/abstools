@@ -832,7 +832,6 @@ PureExp pure_exp_prefix =
 
 Exp eff_exp =
     pure_exp_prefix.p DOT GET    {: return new GetExp(p) ; :}
-    | pure_exp_prefix.p DOT SAFEGET {: return new SafegetExp(p) ; :}
     | new_exp
     | async_call
     | await_async_call

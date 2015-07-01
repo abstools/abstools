@@ -935,13 +935,6 @@ aspect GenerateErlang {
   }
 
   @Override
-  public void SafegetExp.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.print("future:safeget(");
-    getPureExp().generateErlangCode(ecs,vars);
-    ecs.print(")");
-  }
-
-  @Override
   public void WhileStmt.generateErlangCode(CodeStream ecs, Vars vars) {
     String va = vars.toParamList();
     Vars save=vars.pass();
