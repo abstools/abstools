@@ -194,9 +194,9 @@ decrease_or_wakeup(MTE, {What, Min, Max, Task, Cog}) ->
     end.
 
 add_to_clock_waiting([H={_,_,Head,_,_} | T], I={_,_,Max,_,_}) ->
-    case rationals:is_lesser(rationals:to_r(Head), rationals:to_r(Max)) of
-        false -> [H, I | T];
-        true -> [H | add_to_clock_waiting(T, I)]
+    case rationals:is_greater(rationals:to_r(Head), rationals:to_r(Max)) of
+        true -> [I, H | T];
+        false -> [H | add_to_clock_waiting(T, I)]
     end;
 add_to_clock_waiting([], I) ->
     [I].
