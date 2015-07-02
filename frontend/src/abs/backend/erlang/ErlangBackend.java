@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
+import abs.backend.common.InternalBackendException;
 import abs.common.NotImplementedYetException;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
@@ -29,6 +30,9 @@ public class ErlangBackend extends Main {
     public static void main(final String... args) {
         try {
             new ErlangBackend().compile(args);
+        } catch (InternalBackendException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
             System.exit(0);
@@ -80,7 +84,7 @@ public class ErlangBackend extends Main {
         compile(model, destDir, verbose);
     }
 
-    public static void compile(Model m, File destDir, boolean verbose) throws IOException, InterruptedException {
+    public static void compile(Model m, File destDir, boolean verbose) throws IOException, InterruptedException, InternalBackendException {
         if (verbose) System.out.println("Generating Erlang code...");
         ErlApp erlApp = new ErlApp(destDir);
         m.generateErlangCode(erlApp);
@@ -90,9 +94,9 @@ public class ErlangBackend extends Main {
         if (verbose) IOUtils.copy(p.getInputStream(), System.out);
         p.waitFor();
         if (p.exitValue() != 0) {
-            String message = "Erlang compiler returned " + p.exitValue();
-            if (!verbose) message = message + " (use -v for detailed compiler output)";
-            printErrorAndExit(message);
+            String message = "Compilation of generated erlang code failed with exit value " + p.exitValue();
+            if (!verbose) message = message + "\n  (use -v for detailed compiler output)";
+            throw new InternalBackendException(message);
             // TODO: consider removing the generated code here.  For now,
             // let's leave it in place for diagnosis.
         }
