@@ -30,7 +30,8 @@ start(Callee,Method,Params,Stack) ->
 
 get(Ref)->
     Ref!{get,self()},
-    receive 
+    receive
+        %% FIXME: do we need to handle get_references here?
         {reply,Ref,{ok,Value}}->
             Value;
         {reply,Ref,{error,Reason}}->

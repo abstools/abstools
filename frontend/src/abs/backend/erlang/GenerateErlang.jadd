@@ -828,15 +828,16 @@ aspect GenerateErlang {
     after.close();
     if(getGuard().hasPoll()){
       ecs.println("task:wait_poll(Cog),");
-      ecs.pf("((fun(Inner)->fun(Param)->Inner(Inner,Param) end end)(fun (Self,%s)->",vars.toParamList());
-      ecs.println("receive check -> ");
+      ecs.pf("(fun Poll (%s)->",vars.toParamList());
+      ecs.incIndent().println("receive check -> ");
       ecs.incIndent().pf("case %s of",sw);
       ecs.incIndent().println("true -> CogRef!{self(),true},");
-      ecs.incIndent().pf("receive wait -> Self(Self,%s);",vars.toParamList());
-      ecs.println("token -> ok end;");
-      ecs.decIndent().pf("false -> CogRef!{self(),false},  Self(Self,%s)",vars.toParamList());
-      ecs.decIndent().decIndent().println("end end end))");
-      ecs.format("(%s)",vars.toParamList());
+      ecs.incIndent().pf("receive wait -> Poll(%s);",vars.toParamList());
+      ecs.incIndent().println("token -> ok");
+      ecs.decIndent().println("end;");
+      ecs.decIndent().pf("false -> CogRef!{self(),false},  Poll(%s)",vars.toParamList());
+      ecs.decIndent().decIndent().println("end end end)");
+      ecs.decIndent().format("(%s)",vars.toParamList());
     }
     else {
       ecs.print("task:acquire_token(Cog,");
