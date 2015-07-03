@@ -4,7 +4,7 @@
 -export([init/2]).
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
--record(state,{tasks,running=false,polling=[],tracker,referencers=1,dc=null}).
+-record(state,{tasks,running=idle,polling=[],tracker,referencers=1,dc=null}).
 -record(task,{ref,state=waiting}).
 
 %%Garbage collector callbacks
@@ -78,9 +78,9 @@ init(Tracker,DC) ->
     Running = receive
                   {stop_world, Sender} ->
                       Sender ! {stopped, self()},
-                      {gc, false};
+                      {gc, idle};
                   {gc, ok} ->
-                      false
+                      idle
               end,
     loop(#state{tasks=gb_trees:empty(),tracker=Tracker,running=Running,dc=DC}).
 
@@ -91,7 +91,7 @@ loop(S=#state{running=no_task_schedulable})->
         receive
             {stop_world, Sender} ->
                 Sender ! {stopped, self()},
-                S#state{running={gc, false}}
+                S#state{running={gc, idle}}
         after 0 ->
                 receive
                     {new_state,TaskRef,State}->
@@ -102,28 +102,28 @@ loop(S=#state{running=no_task_schedulable})->
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         ?DEBUG({task_died,R,Reason}),
-                        set_task_state(S#state{running=false},R,abort);
+                        set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
                     {stop_world, Sender} ->
                         Sender ! {stopped, self()},
-                        S#state{running={gc, false}}
+                        S#state{running={gc, idle}}
                 end
         end,
     case New_State#state.running of
         {gc, _} -> loop(New_State);
-        _ -> loop(New_State#state{running=false})
+        _ -> loop(New_State#state{running=idle})
     end;
 
 %%No task is running now
-loop(S=#state{running=false})->
+loop(S=#state{running=idle})->
     New_State=
         receive
             {stop_world, Sender} ->
                 Sender ! {stopped, self()},
-                S#state{running={gc, false}}
+                S#state{running={gc, idle}}
         after 0 ->
                 receive
                     {new_state,TaskRef,State}->
@@ -132,14 +132,14 @@ loop(S=#state{running=false})->
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         ?DEBUG({task_died,R,Reason}),
-                        set_task_state(S#state{running=false},R,abort);
+                        set_task_state(S,R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
                     {stop_world, Sender} ->
                         Sender ! {stopped, self()},
-                        S#state{running={gc, false}}
+                        S#state{running={gc, idle}}
                 after
                     0 ->
                         schedule_and_execute(S)
@@ -156,10 +156,10 @@ loop(S=#state{running=R}) when is_pid(R)->
             {new_task,Task,Args,Sender,Notify}->
                 start_new_task(S,Task,Args,Sender,Notify);
             {token,R,Task_state}->
-                set_task_state(S#state{running=false},R,Task_state);
+                set_task_state(S#state{running=idle},R,Task_state);
             {'EXIT',R,Reason} when Reason /= normal ->
                ?DEBUG({task_died,R,Reason}),
-               set_task_state(S#state{running=false},R,abort);
+               set_task_state(S#state{running=idle},R,abort);
             inc_ref_count->
                 inc_referencers(S);
             dec_ref_count->
@@ -186,7 +186,7 @@ loop(S=#state{running={blocked, R}}) ->
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         ?DEBUG({task_died,R,Reason}),
-                        set_task_state(S#state{running=false},R,abort);
+                        set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
@@ -239,7 +239,7 @@ start_new_task(S=#state{running=R,tasks=T,tracker=Tracker,dc=DC},Task,Args,Sende
     Sender!{started,Task,Ref},
     %% Don't generate "cog idle" event when we create new task - this
     %% causes spurious clock advance
-    R1=case R of no_task_schedulable -> false; _ -> R end,
+    R1=case R of no_task_schedulable -> idle; _ -> R end,
     %% we used to start with state=waiting but that led to spurious clock
     %% advancement (cog sent out idle event before task became runnable).  I
     %% did not see where the task state is actually set to runnable either, so
@@ -343,7 +343,7 @@ await_stop(S=#state{running=R}) ->
                     {new_state,TaskRef,State} ->
                         set_task_state(S,TaskRef,State);
                     {token,R,Task_state}->
-                        set_task_state(S#state{running=false},R,Task_state)
+                        set_task_state(S#state{running=idle},R,Task_state)
                 end,
     case New_State#state.running =/= R of
         true ->
