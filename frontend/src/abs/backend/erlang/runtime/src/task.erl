@@ -95,9 +95,16 @@ block(Cog=#cog{ref=CogRef})->
 
 %% await_duration and block_for_duration are called in different scenarios
 %% (guard vs statement), hence the different amount of work they do.
-await_duration(#cog{ref=CogRef},Min,Max,Stack) ->
-    eventstream:event({task,self(),CogRef,clock_waiting,Min,Max}),
-    loop_for_unblock_signal(clock_finished, Stack).
+await_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
+    case rationals:is_greater(rationals:to_r(Min), {0, 1}) of
+        true ->
+            task:release_token(Cog,waiting), %FIXME: switch to clock_waiting atomically
+            eventstream:event({task,self(),CogRef,clock_waiting,Min,Max}),
+            loop_for_unblock_signal(clock_finished, Stack),
+            task:acquire_token(Cog, Stack);
+        false ->
+            ok
+    end.
 
 block_for_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
     task:block(Cog),

@@ -831,11 +831,10 @@ aspect GenerateErlang {
   public void AwaitStmt.generateErlangCode(CodeStream ecs,Vars vars){
     StringWriter sw = new StringWriter();
     CodeStream after = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
-    ecs.println("task:release_token(Cog,waiting),");
-    getGuard().generateErlangCode(ecs,after,vars);
-    after.close();
     if(getGuard().hasPoll()){
-      ecs.println("task:wait_poll(Cog),");
+      getGuard().generateErlangCode(ecs,after,vars);
+      after.close();
+      ecs.println("task:release_token(Cog,waiting_poll),");
       ecs.pf("(fun Poll (%s)->",vars.toParamList());
       ecs.incIndent().println("receive check -> ");
       ecs.incIndent().pf("case %s of",sw);
@@ -848,9 +847,9 @@ aspect GenerateErlang {
       ecs.decIndent().format("(%s)",vars.toParamList());
     }
     else {
-      ecs.print("task:acquire_token(Cog,");
-      ecs.print(vars.toStack());
-      ecs.print(")");
+        getGuard().generateErlangCode(ecs,after,vars);
+        after.close();
+        ecs.print("ok");      // FIXME: hotfix to handle extraneous comma
     }
   }
 

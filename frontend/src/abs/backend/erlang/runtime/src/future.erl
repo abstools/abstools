@@ -52,9 +52,15 @@ get_references(Ref) ->
     Ref ! {get_references, self()},
     receive {References, Ref} -> References end.
 
-await(Ref, Cog=#cog{ref=CogRef}, Stack) ->
-    Ref ! {wait, self()},
-    await(Stack).
+await(Ref, Cog, Stack) ->
+    case poll(Ref) of
+        true -> ok;
+        false ->
+            Ref ! {wait, self()},
+            task:release_token(Cog, waiting),
+            await(Stack),
+            task:acquire_token(Cog, Stack)
+    end.
 
 poll(Ref) ->
     Ref ! {poll, self()},
