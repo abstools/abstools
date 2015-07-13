@@ -33,6 +33,16 @@ public class TypeCheckerTest extends FrontendTest {
     public void lizeth() throws Exception {
         assertTypeCheckFileOk("tests/abssamples/lizeth.abs", false);
     }
+    
+    @Test
+    public void rosetreeTicket187() throws Exception {
+        assertTypeCheckFileOk("tests/abssamples/RoseTree.abs", true);
+    }
+
+    @Test
+    public void subtypingTicket188() throws Exception {
+        assertTypeCheckFileOk("tests/abssamples/Subtyping.abs", true);
+    }
 
     @Test
     public void tch_npe() throws Exception {
