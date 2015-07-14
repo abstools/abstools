@@ -6,6 +6,7 @@
 <repository location="http://download.eclipse.org/tools/ajdt/45/dev/update/"/>
 </location>
 <location includeAllPlatforms="true" includeConfigurePhase="false" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.platform.feature.group" version="4.4.2.v20150204-1700"/>
 <unit id="org.eclipse.rcp.sdk.id" version="4.4.2.M20150204-1700"/>
 <unit id="epp.package.java" version="4.4.2.20150219-0708"/>
 <unit id="org.eclipse.equinox.executable.feature.group" version="3.6.102.v20150204-1316"/>
@@ -28,6 +29,10 @@
 <unit id="org.eclipse.swtbot.eclipse.test.junit.feature.group" version="2.2.1.201402241301"/>
 <unit id="org.eclipse.swtbot.eclipse.feature.group" version="2.2.1.201402241301"/>
 <repository location="http://download.eclipse.org/technology/swtbot/releases/2.2.1/"/>
+</location>
+<location includeAllPlatforms="true" includeConfigurePhase="false" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.apache.log4j" version="1.2.15.v201012070815"/>
+<repository location="http://download.eclipse.org/tools/orbit/downloads/drops/R20150124073747/repository/"/>
 </location>
 </locations>
 </target>
