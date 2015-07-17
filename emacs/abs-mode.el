@@ -397,10 +397,10 @@ value.")
   (pcase backend
     (`maude (save-excursion (run-maude))
             (comint-send-string inferior-maude-buffer
-                                (concat "in "
+                                (concat "in \""
                                         (abs--absolutify-filename
                                          (abs--maude-filename))
-                                        "\n"))
+                                        "\"\n"))
             (with-current-buffer inferior-maude-buffer
               (sit-for 1)
               (goto-char (point-max))
