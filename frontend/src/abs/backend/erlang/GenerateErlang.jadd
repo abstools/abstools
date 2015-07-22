@@ -254,11 +254,16 @@ aspect GenerateErlang {
     }
     PureExp dc = CompilerUtils.getAnnotationValue(((Stmt)parent).getAnnotations(), "DC");
     String className = ErlUtil.getName(((UnionType)getType()).getOriginatingClass());
+    boolean isNewDC = getType().isDeploymentComponentType();
     if (((UnionType) getType()).getOriginatingClass().isForeign())
       className = "ffi_" + className;
     if (!hasLocal()) {
       ecs.format("object:new(cog:start(");
-      if (dc == null) {
+      if (isNewDC) {
+          // do nothing, call cog:start/0.  thisDC() within a DC will fail
+          // (but the implementation of deployment components is entirely
+          // within the standard library).
+      } else if (dc == null) {
         ecs.format("DC");
       } else {
         dc.generateErlangCode(ecs, vars);
@@ -327,6 +332,8 @@ aspect GenerateErlang {
   @Override
   public void SyncCall.generateErlangCode(CodeStream ecs,Vars vars){
     final List<PureExp> params = getParams();
+    // FIXME: raise a proper error here instead of the implicit "no function
+    // found" exception
     ecs.print("(fun(O=#object{class=T,cog =C}) when C=:=Cog -> object:alive(O),T end(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(")):'m_%s'",getMethod());

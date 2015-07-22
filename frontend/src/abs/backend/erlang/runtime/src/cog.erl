@@ -23,9 +23,13 @@ start() ->
 
 start(DC)->
     {ok,T}=object_tracker:start(),
-    %% There are two DC refs: the one in state is to handle GC and to
-    %% create a copy of the current cog (see start_new_task), the one in
-    %% the cog structure itself is for evaluating thisDC()
+    %% There are two DC refs: the one in state is to handle GC and to create a
+    %% copy of the current cog (see start_new_task), the one in the cog
+    %% structure itself is for evaluating thisDC().  The main block cog and
+    %% DCs themselves currently do not have a DC associated.  In the case of
+    %% the main block this is arguably a bug; the implementation of deployment
+    %% components is contained in the standard library and does not use
+    %% thisDC().
     Cog = #cog{ref=spawn(cog,init, [T,DC]),tracker=T,dc=DC},
     gc:register_cog(Cog),
     Cog.
