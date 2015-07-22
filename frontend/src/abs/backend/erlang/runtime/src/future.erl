@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
--export([init/4,start/4]).
+-export([init/4,start/5]).
 -export([get/1,get_blocking/3,await/3,poll/1,die/2]).
 -include_lib("abs_types.hrl").
 -include_lib("log.hrl").
@@ -10,7 +10,7 @@
 -behaviour(gc).
 -export([get_references/1]).
 
-start(Callee,Method,Params,Stack) ->
+start(Callee,Method,Params,CurrentCog,Stack) ->
     Ref = spawn(?MODULE,init,[Callee,Method,Params, self()]),
     gc:register_future(Ref),
     (fun Loop() ->
@@ -18,6 +18,8 @@ start(Callee,Method,Params,Stack) ->
              %% in the meantime
              receive
                  {stop_world, _Sender} ->
+                     task:block(CurrentCog),
+                     task:acquire_token(CurrentCog, [Stack]),
                      Loop();
                 {get_references, Sender} ->
                     Sender ! {Stack, self()},
@@ -31,7 +33,8 @@ start(Callee,Method,Params,Stack) ->
 get(Ref)->
     Ref!{get,self()},
     receive
-        %% FIXME: do we need to handle get_references here?
+        %% get() is only called after an await - no need to handle gc messages
+        %% here
         {reply,Ref,{ok,Value}}->
             Value;
         {reply,Ref,{error,Reason}}->

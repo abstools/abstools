@@ -155,24 +155,32 @@ loop(S=#state{running=idle})->
 loop(S=#state{running=R}) when is_pid(R)->
     New_State=
         receive
-            {new_state,TaskRef,State}->
-                set_task_state(S,TaskRef,State);
-            {new_task,Task,Args,Sender,Notify}->
-                start_new_task(S,Task,Args,Sender,Notify);
-            {token,R,Task_state}->
-                set_task_state(S#state{running=idle},R,Task_state);
-            {'EXIT',R,Reason} when Reason /= normal ->
-               ?DEBUG({task_died,R,Reason}),
-               set_task_state(S#state{running=idle},R,abort);
-            inc_ref_count->
-                inc_referencers(S);
-            dec_ref_count->
-                dec_referencers(S);
             {stop_world, Sender} ->
                 R ! {stop_world, self()},
                 S1 = await_stop(S),
                 Sender ! {stopped, self()},
                 S1#state{running={gc, S1#state.running}}
+        after 0 ->
+                receive
+                    {new_state,TaskRef,State}->
+                        set_task_state(S,TaskRef,State);
+                    {new_task,Task,Args,Sender,Notify}->
+                        start_new_task(S,Task,Args,Sender,Notify);
+                    {token,R,Task_state}->
+                        set_task_state(S#state{running=idle},R,Task_state);
+                    {'EXIT',R,Reason} when Reason /= normal ->
+                        ?DEBUG({task_died,R,Reason}),
+                        set_task_state(S#state{running=idle},R,abort);
+                    inc_ref_count->
+                        inc_referencers(S);
+                    dec_ref_count->
+                        dec_referencers(S);
+                    {stop_world, Sender} ->
+                        R ! {stop_world, self()},
+                        S1 = await_stop(S),
+                        Sender ! {stopped, self()},
+                        S1#state{running={gc, S1#state.running}}
+                end
             end,
     loop(New_State);
 
