@@ -830,7 +830,7 @@ aspect GenerateErlang {
   }
   public void AwaitStmt.generateErlangCode(CodeStream ecs,Vars vars){
     StringWriter sw = new StringWriter();
-    CodeStream after = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
+    CodeStream after = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")), "");
     if(getGuard().hasPoll()){
       getGuard().generateErlangCode(ecs,after,vars);
       after.close();
@@ -843,7 +843,11 @@ aspect GenerateErlang {
       ecs.incIndent().println("token -> ok");
       ecs.decIndent().println("end;");
       ecs.decIndent().pf("false -> CogRef!{self(),false},  Poll(%s)",vars.toParamList());
-      ecs.decIndent().decIndent().println("end end end)");
+      ecs.decIndent().println("end;");
+      ecs.println("{get_references, Sender} ->");
+      ecs.incIndent().pf("Sender ! {gc:extract_references(%s), self()},", vars.toStack());
+      ecs.pf("Poll(%s)", vars.toParamList());
+      ecs.decIndent().decIndent().println("end end)");
       ecs.decIndent().format("(%s)",vars.toParamList());
     }
     else {
