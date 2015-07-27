@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
 -export([init/4,start/5]).
--export([get/1,get_blocking/3,await/3,poll/1,die/2]).
+-export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2]).
 -include_lib("abs_types.hrl").
 -include_lib("log.hrl").
 %%Future starts AsyncCallTask
@@ -30,11 +30,9 @@ start(Callee,Method,Params,CurrentCog,Stack) ->
     Ref.
 
 
-get(Ref)->
+get_after_await(Ref)->
     Ref!{get,self()},
     receive
-        %% get() is only called after an await - no need to handle gc messages
-        %% here
         {reply,Ref,{ok,Value}}->
             Value;
         {reply,Ref,{error,Reason}}->

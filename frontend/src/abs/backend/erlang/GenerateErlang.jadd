@@ -933,7 +933,7 @@ aspect GenerateErlang {
     PureExp future = getPureExp();
 
     if (future instanceof VarUse && !vars.canBlock(((VarUse) future).getName())) {
-      ecs.print("future:get(");
+      ecs.print("future:get_after_await(");
     } else {
       ecs.print("future:get_blocking(");
     }
