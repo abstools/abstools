@@ -3,98 +3,105 @@ import java.util.HashMap;
 
 aspect Variables {
 
-  public interface Entry<K,V> { K getKey(); V getValue(); Attribute getAttribute(); }  
-  public class RepeatMap<K,V> extends HashMap<K,V> {
-    // Weird explicit package name necessary for OpenJDK8 compiler! [stolz]
-    public void add(abs.frontend.ast.Entry<K,V> e) {
-      if (e != null)
-        e.getAttribute().isRepeated |= put(e.getKey(),e.getValue()) != null;
+    public interface Entry<K,V> { 
+        K getKey(); 
+        V getValue(); 
+        Attribute getAttribute(); 
+    }  
+    
+    public class RepeatMap<K,V> extends HashMap<K,V> {
+        // Weird explicit package name necessary for OpenJDK8 compiler! [stolz]
+        public void add(abs.frontend.ast.Entry<K,V> e) {
+            if (e != null)
+                e.getAttribute().isRepeated |= put(e.getKey(),e.getValue()) != null;
+        }
     }
-  }
-  coll RepeatMap<String,BoundaryInt[]> Model.ints() [new RepeatMap<String,BoundaryInt[]>()] with add root Model;
+    coll RepeatMap<String,BoundaryInt[]> Model.ints() [new RepeatMap<String,BoundaryInt[]>()] with add root Model;
 
-  public interface RLEntry { String getItem(); void setRepeated(boolean rep);}
-  public class RepeatList extends ArrayList<String> {
-    public void addNonNull(RLEntry e) {
-      assert e != null;
-      e.setRepeated(contains(e.getItem()));
-      add(e.getItem());
+    public interface RLEntry { 
+        String getItem(); 
+        void setRepeated(boolean rep);
     }
-  }
-  coll RepeatList Model.bools() [new RepeatList()] with addNonNull root Model;
-  coll RepeatList Model.features() [new RepeatList()] with addNonNull root Model;
+    public class RepeatList extends ArrayList<String> {
+        public void addNonNull(RLEntry e) {
+            assert e != null;
+            e.setRepeated(contains(e.getItem()));
+            add(e.getItem());
+        }
+    }
+    coll RepeatList Model.bools() [new RepeatList()] with addNonNull root Model;
+    coll RepeatList Model.features() [new RepeatList()] with addNonNull root Model;
 
-  // get Feature names in attributes (scope of attributes).
-  inh String Attribute.pname();
-  inh String AttrConstraints.pname();
-  eq FeatureDecl.getAttrConstraints().pname() = this.getName();
-  eq        FExt.getAttrConstraints().pname() = this.getName();
-  inh String Constr.pname();
-  //eq FeatureDecl.getConstr(int index).pname() = this.getName();
-  //eq    FExt.getConstr(int index).pname() = this.getName();  
+    // get Feature names in attributes (scope of attributes).
+    inh String Attribute.pname();
+    inh String AttrConstraints.pname();
+    eq FeatureDecl.getAttrConstraints().pname() = this.getName();
+    eq        FExt.getAttrConstraints().pname() = this.getName();
+    inh String Constr.pname();
+    //eq FeatureDecl.getConstr(int index).pname() = this.getName();
+    //eq    FExt.getConstr(int index).pname() = this.getName();  
 
-  // get the full name of a variable
-  syn String Variable.getFullName();
-  eq   FAVar.getFullName() = getFName()+"."+getAName();
-  eq FeatVar.getFullName() = getFName();
-  eq  AttVar.getFullName() = pname()+"."+getAName();
-  
-  // Checks type of variables and features.
-  
-  syn boolean Variable.isBool();
-  eq   FAVar.isBool() = ((Model)calcContextNode(Model.class)).bools().contains(getFullName());
-  eq  AttVar.isBool() = ((Model)calcContextNode(Model.class)).bools().contains(getFullName());
-  eq FeatVar.isBool() = ((Model)calcContextNode(Model.class)).features().contains(getFName());
+    // get the full name of a variable
+    syn String Variable.getFullName();
+    eq   FAVar.getFullName() = getFName() + "." + getAName();
+    eq FeatVar.getFullName() = getFName();
+    eq  AttVar.getFullName() = pname() + "." + getAName();
 
-  syn boolean Variable.isInt();
-  eq   FAVar.isInt() = ((Model)calcContextNode(Model.class)).ints().containsKey(getFullName());
-  eq  AttVar.isInt() = ((Model)calcContextNode(Model.class)).ints().containsKey(getFullName());
-  eq FeatVar.isInt() = false;
+    // Checks type of variables and features.
 
+    syn boolean Variable.isBool();
+    eq   FAVar.isBool() = ((Model)calcContextNode(Model.class)).bools().contains(getFullName());
+    eq  AttVar.isBool() = ((Model)calcContextNode(Model.class)).bools().contains(getFullName());
+    eq FeatVar.isBool() = ((Model)calcContextNode(Model.class)).features().contains(getFName());
 
-  // get variables in an attribute declaration, and checks if it is repeated.
-  public boolean Attribute.isRepeated = false;
-  Attribute contributes getIntFVarsHelp() to Model.ints() for calcContextNode(Model.class);
+    syn boolean Variable.isInt();
+    eq   FAVar.isInt() = ((Model)calcContextNode(Model.class)).ints().containsKey(getFullName());
+    eq  AttVar.isInt() = ((Model)calcContextNode(Model.class)).ints().containsKey(getFullName());
+    eq FeatVar.isInt() = false;
 
-  Entry<String,BoundaryInt[]> Attribute.getIntFVarsHelp() {
-    if (getAType() instanceof IntMType) {
-//       System.out.println("searching for att "+pname()+"."+getName()+" in "+ivars);
-      // check also for bools, but not check in bool for ints!
-      if (((Model)calcContextNode(Model.class)).bools().contains(pname()+"."+getName()))
-        isRepeated = true;
-      IntMType type = (IntMType) getAType();
-      final BoundaryInt[] boundaries = {type.getMin(),type.getMax()};
-      return new Entry<String,BoundaryInt[]>(){ public String getKey(){return pname()+"."+getName();}
-                          public BoundaryInt[] getValue(){return boundaries;}
-                          public Attribute getAttribute(){return Attribute.this;}};
-    } else
-    if (getAType() instanceof IntListMType) {
-//      System.out.println("searching for att "+pname()+"."+getName()+" in "+ivars);
-     // check also for bools, but not check in bool for ints!
-     if (((Model)calcContextNode(Model.class)).bools().contains(pname()+"."+getName()))
-       isRepeated = true;
-     IntListMType type = (IntListMType) getAType();
-     // note that "type" is a list with at least a value, because of the parser
-     int bsize = type.getBoundaryVals().getNumChild()+1;
-     final BoundaryInt[] values = new BoundaryInt[bsize];
-     values[0] = type.getBoundaryVal(0); // duplicate first value;
-     for (int i=1; i<bsize; i++) {
-    	 values[i] = type.getBoundaryVal(i-1);
-     }
-     return new Entry<String,BoundaryInt[]>(){ public String getKey(){return pname()+"."+getName();}
-                         public BoundaryInt[] getValue(){return values;}
-                         public Attribute getAttribute(){return Attribute.this;}};
-    } else return null;
-  }
+    // get variables in an attribute declaration, and checks if it is repeated.
+    public boolean Attribute.isRepeated = false;
+    Attribute contributes getIntFVarsHelp() to Model.ints() for calcContextNode(Model.class);
 
-  Attribute contributes (new RLEntry(){ public String getItem(){return pname()+"."+getName();}
-                                        public void setRepeated(boolean rep){isRepeated |= rep;}})
-    when (getAType() instanceof BoolMType)
-    to Model.bools()
-    for calcContextNode(Model.class);
+            Entry<String,BoundaryInt[]> Attribute.getIntFVarsHelp() {
+                if (getAType() instanceof IntMType) {
+                    //       System.out.println("searching for att "+pname()+"."+getName()+" in "+ivars);
+                    // check also for bools, but not check in bool for ints!
+                    if (((Model)calcContextNode(Model.class)).bools().contains(pname()+"."+getName()))
+                        isRepeated = true;
+                    IntMType type = (IntMType) getAType();
+                    final BoundaryInt[] boundaries = {type.getMin(),type.getMax()};
+                    return new Entry<String,BoundaryInt[]>(){ public String getKey(){return pname()+"."+getName();}
+                    public BoundaryInt[] getValue(){return boundaries;}
+                    public Attribute getAttribute(){return Attribute.this;}};
+                } else
+                    if (getAType() instanceof IntListMType) {
+                        //      System.out.println("searching for att "+pname()+"."+getName()+" in "+ivars);
+                        // check also for bools, but not check in bool for ints!
+                        if (((Model)calcContextNode(Model.class)).bools().contains(pname()+"."+getName()))
+                            isRepeated = true;
+                        IntListMType type = (IntListMType) getAType();
+                        // note that "type" is a list with at least a value, because of the parser
+                        int bsize = type.getBoundaryVals().getNumChild()+1;
+                        final BoundaryInt[] values = new BoundaryInt[bsize];
+                        values[0] = type.getBoundaryVal(0); // duplicate first value;
+                        for (int i=1; i<bsize; i++) {
+                            values[i] = type.getBoundaryVal(i-1);
+                        }
+                        return new Entry<String,BoundaryInt[]>(){ public String getKey(){return pname()+"."+getName();}
+                        public BoundaryInt[] getValue(){return values;}
+                        public Attribute getAttribute(){return Attribute.this;}};
+                    } else return null;
+            }
 
-  public boolean FeatureDecl.isRepeated = false;
-  FeatureDecl contributes (new RLEntry(){ public String getItem(){return getName();}
-                                          public void setRepeated(boolean rep){isRepeated |= rep;}})
-    to Model.features() for calcContextNode(Model.class);
+            Attribute contributes (new RLEntry(){ public String getItem(){return pname()+"."+getName();}
+            public void setRepeated(boolean rep){isRepeated |= rep;}})
+            when (getAType() instanceof BoolMType)
+            to Model.bools()
+            for calcContextNode(Model.class);
+
+                    public boolean FeatureDecl.isRepeated = false;
+                    FeatureDecl contributes (new RLEntry(){ public String getItem(){return getName();}
+                    public void setRepeated(boolean rep){isRepeated |= rep;}})
+                    to Model.features() for calcContextNode(Model.class);
 }

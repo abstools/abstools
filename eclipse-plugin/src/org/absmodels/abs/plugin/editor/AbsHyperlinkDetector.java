@@ -24,10 +24,10 @@ import abs.frontend.typechecker.KindedName.Kind;
 /**
  * a hyperlink detector
  * detects links in abs documents
- * (ctrl + left mouse can be used to jump to declaration) 
+ * (ctrl + left mouse can be used to jump to declaration)
  */
 public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
-    
+
     private abstract static class AbsHyperlink implements IHyperlink {
         private final int endOffset;
         private final int startOffset;
@@ -49,11 +49,11 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
             return new Region(startOffset, endOffset+1-startOffset);
         }
     }
-    
+
     private static final class JumpToDeclaration extends AbsHyperlink {
         private final EditorPosition targetPos;
         private final String name;
-        
+
         private JumpToDeclaration(ABSEditor editor, int startOffset, int endOffset, EditorPosition targetPos) {
             this(editor, startOffset, endOffset, targetPos, "");
         }
@@ -76,7 +76,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
         }
 
     }
-    
+
     private static final class JumpToImplementation extends AbsHyperlink {
         private final String methodName;
         private final Type calleeType;
@@ -157,7 +157,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
             final int startOffset = getOffset(doc, node.getStartLine(), node.getStartColumn());
             final int endOffset = getOffset(doc, node.getEndLine(), node.getEndColumn());
 
-            if (decl instanceof MethodSig) { 
+            if (decl instanceof MethodSig) {
                 MethodSig methodSig = (MethodSig) decl;
                 if (methodSig.getContextDecl() instanceof InterfaceDecl) {
                     // decl is an interface method
@@ -167,7 +167,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
                         Call call = (Call) node;
                         typ = call.getCallee().getType();
                     }
-                    
+
                     return new IHyperlink[]{
                             new JumpToDeclaration(editor, startOffset, endOffset, targetPos),
                             new JumpToImplementation(editor, startOffset, endOffset, methodSig.getName(), typ)
@@ -193,7 +193,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
                     }
                 }
             }
-            
+
             return new IHyperlink[]{
                     new JumpToDeclaration(editor, startOffset, endOffset, targetPos)
             };
@@ -216,7 +216,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
 
     /**
      * jumps to a given position
-     * 
+     *
      * @param currentEditor the current editor
      * @param pos position to jump to. Must be in same project as current editor.
      */
@@ -243,7 +243,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
     }
 
     /**
-     * get the declaration associated with a given node 
+     * get the declaration associated with a given node
      */
     private static ASTNode<?> getDecl(CompilationUnit cu, ASTNode<?> node) {
         ASTNode<?> decl = null;
@@ -334,14 +334,16 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
     private static DeltaDecl getDeltaDecl(CompilationUnit cu, String dName) {
         Model m = cu.getModel();
         assert m != null : dName;
-        java.util.List<DeltaDecl> res = m.findDeltas(Collections.singletonList(dName));
+
+        return m.getDeltaDeclsMap().get(dName);
         /* There may be more than one! Think of delta D(True) when ... delta(False) when.
          * We pick the first one.
+
+           [ramus] I don't see how there could be more than one DeltaDecl with the same name.
          */
-        return res.isEmpty() ? null : res.iterator().next();
     }
 
 	private static DeltaDecl getDeltaDecl(CompilationUnit cu, Deltaspec deltaspec) {
-		return getDeltaDecl(cu,deltaspec.getName());
+		return getDeltaDecl(cu,deltaspec.getDeltaID());
     }
 }

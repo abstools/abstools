@@ -74,7 +74,7 @@ def A head<A>(List<A> list) =
 \end{abssyntax}
 
 \begin{absexample}
-let (Bool x) = True in ~x  
+let (Bool x) = True in !x  
 \end{absexample}
 
 \subsection{Data Type Constructor Expressions}
@@ -247,7 +247,7 @@ ABS has a number of predefined operators which can be used to form \emph{Operato
 \mcode{e1 * e2}& multiplication & left & Int, Int & Int \\
 \mcode{e1 / e2}& division & left & Int, Int & Int \\
 \mcode{e1 \% e2}& modulo & left & Int, Int & Int \\ \hline 
-\verb_~ e_  & logical negation  & right & Bool  & Bool \\ 
+\verb_! e_  & logical negation  & right & Bool  & Bool \\ 
 \verb_- e_   & integer negation  & right & Int  & Int \\ \hline 
  \end{tabular}
   \caption{\label{fig:operatorExpressions} Operator expressions, grouped according to precedence from low to high.}
@@ -873,7 +873,7 @@ A Model is thus set of Compilation Units.
 
 %%% Local Variables:
 %%% mode: latex
-%%% TeX-master: "main"
+%%% TeX-master: "absrefmanual"
 %%% End:
 
 

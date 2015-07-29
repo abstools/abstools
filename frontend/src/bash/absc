@@ -7,16 +7,23 @@ fi
 BASEDIR="$(dirname $PROGNAME)/../.."
 
 if [[ $1 == "-haskell" ]]; then
-    if command -v abs2haskell > /dev/null; then # is in the PATH
+    if command -v a2h > /dev/null; then # is in the PATH
        args=${@#-haskell} # remove -haskell from the rest of params
-       mkdir gen/haskell 2> /dev/null || true # will continue if it is already there
-       absc -prettyprint $args > /dev/null && abs2haskell --outputdir=gen/haskell $args # typecheck all ABS files and if succeed then continue to abs2haskell translation
-       echo -e '#!/usr/bin/env bash\nif [[ $# -eq 0 ]]; then echo "USAGE: You have to provide the name of the main module"; exit 1; else ghc -w --make -O -threaded ${1}.hs ${@:2} -main-is $1 -o run && echo "Compiled. Run the program with ./run"; fi' > gen/haskell/compile_main_module
-       chmod +x gen/haskell/compile_main_module
+       absfiles=""
+       for i in $args; do
+          if [[ $i == *.abs ]]; then
+            absfiles="$absfiles $i"
+          fi
+       done
+       if [ -z $absfiles ];
+       then a2h $args # let a2h do the error
+       else
+       absc -prettyprint $absfiles > /dev/null && a2h -c -d gen/haskell $args # typecheck all ABS files and if succeed then continue to abs2haskell translation
+       fi
     else
        echo "Error: The abs2haskell compiler is not installed or not in the $PATH."
        exit 1
     fi
 else
-    java -Xmx512m -cp $BASEDIR/dist/absfrontend.jar abs.frontend.parser.Main "$@"
+    java -Xmx512m -jar $BASEDIR/dist/absfrontend.jar "$@"
 fi

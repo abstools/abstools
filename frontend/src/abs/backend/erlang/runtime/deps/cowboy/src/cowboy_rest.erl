@@ -621,7 +621,7 @@ not_modified(Req, State) ->
 				{Req4, State3} ->
 					respond(Req4, State3, 304)
 			catch Class:Reason ->
-				error_terminate(Req, State, Class, Reason, expires)
+				error_terminate(Req, State2, Class, Reason, expires)
 			end
 	catch Class:Reason ->
 		error_terminate(Req, State, Class, Reason, generate_etag)
@@ -977,13 +977,14 @@ error_terminate(Req, #state{handler=Handler, handler_state=HandlerState},
 	Stacktrace = erlang:get_stacktrace(),
 	cowboy_req:maybe_reply(Stacktrace, Req),
 	cowboy_handler:terminate({crash, Class, Reason}, Req, HandlerState, Handler),
-	erlang:Class([
+	exit({cowboy_handler, [
+		{class, Class},
 		{reason, Reason},
 		{mfa, {Handler, Callback, 2}},
 		{stacktrace, Stacktrace},
 		{req, cowboy_req:to_list(Req)},
 		{state, HandlerState}
-	]).
+	]}).
 
 terminate(Req, #state{env=Env, handler=Handler, handler_state=HandlerState}) ->
 	Result = cowboy_handler:terminate(normal, Req, HandlerState, Handler),

@@ -2,36 +2,36 @@ import java.util.Set;
 
 /**
 Given a set of features, collect in "newParents" all of its parents.
-**/
+ **/
 
 
 aspect CollectParents {
 
-  //propagate request for getting parents: 
-  public void ASTNode.collectParents(Set<String> features, Set<String> newParents) {
-    for(int i = 0; i < getNumChild(); i++)
-      getChild(i).collectParents(features, newParents);
-  }
-
-  public void FeatureDecl.collectParents(Set<String> features, Set<String> newParents) {
-    if (newParents.contains(getName())) return;
-    if (features.contains(getName())) getParent().collectParents(newParents);
-    super.collectParents(features, newParents);
-  }
-
-  public void ASTNode.collectParents(Set<String> newParents) {
-    if (getParent() != null) getParent().collectParents(newParents); // go up!
-  }
-
-  public void FeatureDecl.collectParents(Set<String> newParents) {
-    if (newParents.add(getName())) {
-      getParent().collectParents(newParents); // go up!
+    //propagate request for getting parents: 
+    public void ASTNode.collectParents(Set<String> features, Set<String> newParents) {
+        for(int i = 0; i < getNumChild(); i++)
+            getChild(i).collectParents(features, newParents);
     }
-  }
 
-  public void CompilationUnit.collectParents(Set<String> newParents) {
-    // and stop going up
-  } 
+    public void FeatureDecl.collectParents(Set<String> features, Set<String> newParents) {
+        if (newParents.contains(getName())) return;
+        if (features.contains(getName())) getParent().collectParents(newParents);
+        super.collectParents(features, newParents);
+    }
+
+    public void ASTNode.collectParents(Set<String> newParents) {
+        if (getParent() != null) getParent().collectParents(newParents); // go up!
+    }
+
+    public void FeatureDecl.collectParents(Set<String> newParents) {
+        if (newParents.add(getName())) {
+            getParent().collectParents(newParents); // go up!
+        }
+    }
+
+    public void CompilationUnit.collectParents(Set<String> newParents) {
+        // and stop going up
+    } 
 }
 
 

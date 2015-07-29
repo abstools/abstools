@@ -110,7 +110,6 @@ IntLiteral = 0 | [1-9][0-9]*
  "return"      { return sym(Terminals.RETURN); }
  "skip"        { return sym(Terminals.SKIP); }
  "get"         { return sym(Terminals.GET); }
- "safeget"     { return sym(Terminals.SAFEGET); }
  "null"        { return sym(Terminals.NULL); }
  "await"       { return sym(Terminals.AWAIT); }
  "if"          { return sym(Terminals.IF); }

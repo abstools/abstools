@@ -1,0 +1,462 @@
+// -*- mode: java; tab-width: 4; -*-
+import java.io.PrintWriter;
+import abs.backend.prettyprint.*;
+
+aspect doOutlinePrinter {
+
+    public void List.doOutlinePrint(PrintWriter stream, String prefix) {
+		if (getNumChild() > 0) {
+            getChild(0).doOutlinePrint(stream, prefix);
+            for (int i = 1; i < getNumChild(); i++) {
+                stream.println();
+                getChild(i).doOutlinePrint(stream, prefix);
+            }
+        }
+    }
+
+    public void ASTNode.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void Model.doOutlinePrint(PrintWriter stream, String prefix) {
+        for (ModuleDecl d : getModuleDecls()) {
+            if (! Constants.BUILT_IN_LIBS.contains(d.getName())) {
+                d.doOutlinePrint(stream, prefix);
+            }
+        }
+
+        for (DeltaDecl d : getDeltaDecls()) {
+            d.doOutlinePrint(stream, prefix);
+        }
+        if (hasProductLine()) {
+            getProductLine().doOutlinePrint(stream, prefix);
+        }
+    }
+
+    public void ModuleDecl.doOutlinePrint(PrintWriter stream, String prefix) {
+        stream.println("<category text='Module "+getName()+"' selectable='false'>");
+
+        for (Decl decl : getDecls()) {
+            decl.doOutlinePrint(stream, prefix);
+        }
+
+        if (hasBlock()) {
+			stream.println("<category text='main' value='main' selectable='true' />");
+        }
+        stream.println("</category>");
+        stream.flush();
+
+    }
+
+    public void Product.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void Feature.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void AttrAssignment.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void ProductLine.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void DeltaClause.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public abstract void AppCond.doOutlinePrint(PrintWriter stream, String prefix);
+    
+    public void AppCondAnd.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+    
+    public void AppCondOr.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void AppCondNot.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+    
+    public void AppCondFeature.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+    
+    public void Deltaspec.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void Deltaparam.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void DeltaID.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void Block.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void AssertStmt.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void AssignStmt.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void Call.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    abstract public void Call.doOutlinePrintCallType(PrintWriter stream, String prefix);
+
+    abstract public void Call.doOutlinePrintCallPrefix(PrintWriter stream, String prefix);
+
+    public void AsyncCall.doOutlinePrintCallType(PrintWriter stream, String prefix) {
+    }
+
+    public void AwaitAsyncCall.doOutlinePrintCallType(PrintWriter stream, String prefix) {
+    }
+
+    public void SyncCall.doOutlinePrintCallType(PrintWriter stream, String prefix) {
+    }
+
+    public void AsyncCall.doOutlinePrintCallPrefix(PrintWriter stream, String prefix) {
+    }
+
+    public void AwaitAsyncCall.doOutlinePrintCallPrefix(PrintWriter stream, String prefix) {
+    }
+
+    public void SyncCall.doOutlinePrintCallPrefix(PrintWriter stream, String prefix) {
+    }
+
+    public void GetExp.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void NewExp.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void OriginalCall.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void AwaitStmt.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void AndGuard.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void ClaimGuard.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void DurationGuard.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void ExpGuard.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void DurationStmt.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void ExpressionStmt.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void IfStmt.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void ReturnStmt.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void SkipStmt.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void SuspendStmt.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void VarDeclStmt.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void VarDecl.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void WhileStmt.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    abstract public void Export.doOutlinePrint(PrintWriter stream, String prefix);
+
+    public void NamedExport.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void Name.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void StarExport.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void FromExport.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void NamedImport.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void StarImport.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void FromImport.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+    /*
+    private boolean FunctionDecl.isSelector() {
+    	for (Annotation a : getAnnotationList()) {
+            if (! (a.getValue() instanceof StringLiteral)) {
+                continue;
+            }
+              
+            StringLiteral sl = (StringLiteral) a.getValue();
+            if (abs.frontend.parser.ASTPreProcessor.FUNCTIONSELECTOR.equals(sl.getContent())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    */
+    public void FunctionDecl.doOutlinePrint(PrintWriter stream, String prefix) {
+        if (isSelector()) {
+        	//skip selector
+        	return;
+        }
+    
+        stream.println("<category text='"+getName()+"' value='"+getName()+"' selectable='true' />");
+    }
+
+    public void FunctionDecl.doOutlinePrintTypeParam(PrintWriter stream, String prefix) { }
+
+    public void ParametricFunctionDecl.doOutlinePrintTypeParam(PrintWriter stream, String prefix) { 
+    }
+
+    public void BuiltinFunctionDef.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void ExpFunctionDef.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void DeltaDecl.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void DeltaAccess.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void RemoveClassModifier.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void ModifyClassModifier.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void AddFieldModifier.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void AddMethodModifier.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void ModifyMethodModifier.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void RemoveFieldModifier.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void RemoveMethodModifier.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void AddInterfaceModifier.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void AddClassModifier.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void DeltaFieldParam.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void DeltaClassParam.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void HasField.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void HasInterface.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void HasMethod.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void TypeSynDecl.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void InterfaceDecl.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void MethodSig.doOutlinePrint(PrintWriter stream, String prefix) {
+        stream.println("<category text='"+getName()+"' value='"+prefix+"."+getName()+"' selectable='true' />");
+	}
+
+    public void ClassDecl.doOutlinePrint(PrintWriter stream, String prefix) {
+        stream.println("<category text='Class "+getName()+"' selectable='false'>");
+
+        List<MethodImpl> methods = getMethodList();
+        if (methods.getNumChild() > 0) {
+            methods.doOutlinePrint(stream, getName());        
+        }
+        stream.println("</category>");
+
+    }
+
+    public void FieldDecl.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void MethodImpl.doOutlinePrint(PrintWriter stream, String prefix) {
+        getMethodSig().doOutlinePrint(stream, prefix);
+    }
+
+    public void TypeParameterDecl.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void DataTypeDecl.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void AddDataTypeModifier.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void ModifyInterfaceModifier.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void AddMethodSigModifier.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void RemoveMethodSigModifier.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void DataTypeDecl.doOutlinePrintTypeParam(PrintWriter stream, String prefix) { }
+
+    public void ParametricDataTypeDecl.doOutlinePrintTypeParam(PrintWriter stream, String prefix) { 
+    }
+
+    public void DataConstructor.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void ConstructorArg.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void UnresolvedTypeUse.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void DataTypeUse.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void DataTypeUse.doOutlinePrintTypeParam(PrintWriter stream, String prefix) { }
+
+    public void ParametricDataTypeUse.doOutlinePrintTypeParam(PrintWriter stream, String prefix) { 
+    }
+
+    public void TypedAnnotation.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void Annotation.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void TypeParameterUse.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void InterfaceTypeUse.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void FieldUse.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void VarUse.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void Binary.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    abstract public void Binary.doOutlinePrintOperator(PrintWriter stream, String prefix);
+
+    public void AddAddExp.doOutlinePrintOperator(PrintWriter stream, String prefix) {
+    }
+
+    public void SubAddExp.doOutlinePrintOperator(PrintWriter stream, String prefix) {
+    }
+
+    public void DivMultExp.doOutlinePrintOperator(PrintWriter stream, String prefix) {
+    }
+
+    public void ModMultExp.doOutlinePrintOperator(PrintWriter stream, String prefix) {
+    }
+
+    public void MultMultExp.doOutlinePrintOperator(PrintWriter stream, String prefix) {
+    }
+
+    public void AndBoolExp.doOutlinePrintOperator(PrintWriter stream, String prefix) {
+    }
+
+    public void OrBoolExp.doOutlinePrintOperator(PrintWriter stream, String prefix) {
+    }
+
+    public void EqExp.doOutlinePrintOperator(PrintWriter stream, String prefix) {
+    }
+
+    public void NotEqExp.doOutlinePrintOperator(PrintWriter stream, String prefix) {
+    }
+
+    public void GTEQExp.doOutlinePrintOperator(PrintWriter stream, String prefix) {
+    }
+
+    public void GTExp.doOutlinePrintOperator(PrintWriter stream, String prefix) {
+    }
+
+    public void LTEQExp.doOutlinePrintOperator(PrintWriter stream, String prefix) {
+    }
+
+    public void LTExp.doOutlinePrintOperator(PrintWriter stream, String prefix) {
+    }
+
+    public void CaseExp.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void ConstructorPattern.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void LiteralPattern.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void PatternVar.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void PatternVarDecl.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void PatternVarUse.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void UnderscorePattern.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void DataConstructorExp.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void FnApp.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void IfExp.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void LetExp.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void ParamDecl.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void IntLiteral.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void StringLiteral.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void NullExp.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void ThisExp.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void MinusExp.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void NegExp.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+}

@@ -113,19 +113,6 @@ public class MaudeJob extends Job{
 		} 
 		monitor.worked(5);
 		
-		//Copy standard ABS-interpreter into gen folder
-		monitor.subTask("Copying Maude Interpreter");
-		try{	
-			if(!abort) copyMaudeInterpreter(monitor,nature);
-		} catch(CoreException e1){
-			/* ERROR will also log the exception, so no need to print the stack trace */
-			return new Status(IStatus.ERROR, PLUGIN_ID, "Fatal error while copying Maude Interpreter", e1);
-		} catch (IOException e2) {
-			/* This usually indicates a mistake in packaging the plugins/JARs correctly */ 
-			return new Status(IStatus.ERROR, PLUGIN_ID, "Couldn't find ABS Maude interpreter in plugin!", e2);
-		}
-		monitor.worked(1);
-		
 		//Execute generated Maude code
 		monitor.subTask("Executing generated Maude code");
 		if(exec){
@@ -238,39 +225,6 @@ public class MaudeJob extends Job{
 		}
 	}
 	
-	/**
-	 * Copies the default abs-interpreter.maude, which is necessary for all Maude executions, from the plugin to the Maude folder
-	 * of this project.
-	 * @param monitor 
-	 */
-	private void copyMaudeInterpreter(IProgressMonitor monitor, AbsNature nature) throws CoreException, IOException{
-		IFolder folder = project.getFolder(nature.getProjectPreferenceStore().getString(MAUDE_PATH));
-		prepareFolder(monitor,folder);
-		IFile absint = folder.getFile("abs-interpreter.maude");
-		if (!absint.exists()) {
-			Bundle bundle = Platform.getBundle(ABSFRONTEND_PLUGIN_ID);
-			InputStream str;
-			/* Why do we look in two places? */
-			try {
-				Path srcPath = new Path(BACKEND_MAUDE_INTERPRETER);
-				str = FileLocator.openStream(bundle, srcPath, false);
-			} catch (IOException e) {
-				Path srcPath = new Path("src/"+BACKEND_MAUDE_INTERPRETER);
-				try {
-					str = FileLocator.openStream(bundle, srcPath, false);
-				} catch (IOException e2) {
-					throw new IOException("Couldn't find ABS Maude interpreter in plugin!");
-				}
-			}
-			assert str != null;
-			try {
-				absint.create(str, false, monitor);
-			} finally {
-				str.close();
-			}
-		}
-	}
-
 	/**
 	 * Eclipsism for recursively creating folder hierarchy.
 	 * @author stolz

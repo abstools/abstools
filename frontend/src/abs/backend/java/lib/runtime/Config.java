@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.runtime;
@@ -15,16 +15,15 @@ import abs.backend.java.scheduling.*;
 
 /**
  * Evaluates system properties
- * 
+ *
  * @author Jan Schäfer
- * 
+ *
  */
 public class Config {
 
     private static final Logger logger = Logging.getLogger(Config.class.getName());
 
     private final ABSRuntime runtime;
-
     private final RuntimeOptions options;
 
     public Config(ABSRuntime runtime, RuntimeOptions options) {
@@ -34,10 +33,9 @@ public class Config {
             printHelp();
             System.exit(1);
         }
-        
         configureRuntime();
     }
-    
+
     public void configureRuntime() {
         setSimpleOptions();
         loadSystemObserver();
@@ -47,7 +45,7 @@ public class Config {
         loadSchedulerFactory();
         loadScheduableTasksFilter();
     }
-    
+
     private void loadScheduableTasksFilter() {
         if (options.scheduableTasksFilter.wasSet) {
             ScheduableTasksFilter filter = loadClassByName(ScheduableTasksFilter.class, options.scheduableTasksFilter.stringValue());;
@@ -67,7 +65,7 @@ public class Config {
     public void setSimpleOptions() {
         runtime.enableDebugging(options.debug.isTrue());
         runtime.terminateOnException(options.terminateOnException.isTrue());
-        
+
         if (options.graphicalDebug.isTrue()) {
             runtime.enableDebugging(true);
             options.totalScheduler.setValue(InteractiveScheduler.class.getName());
@@ -79,7 +77,7 @@ public class Config {
 
     private void loadRandomSeed() {
         runtime.setRandomSeed(options.randomSeed.longValue());
-        
+
         if (options.printRandomSeed.isTrue()) {
             System.out.println("random seed="+options.randomSeed.longValue());
         }
@@ -117,14 +115,14 @@ public class Config {
             throw new IllegalArgumentException("Couldn't find a constructor in class "+s+" with "+args.length+" arguments");
         } catch (Exception e) {
             e.printStackTrace();
-        } 
+        }
         return null;
     }
-    
+
     public void loadTotalSchedulingStrategy() {
         if (options.totalScheduler.wasSet()) {
             TotalSchedulingStrategy strat = loadClassByName(TotalSchedulingStrategy.class, options.totalScheduler.stringValue(), runtime.getRandom());
-            
+
             if (strat != null) {
                 logger.config("Using total scheduling strategy defined by class " + strat.getClass().getName());
                 runtime.setTotalSchedulingStrategy(strat);
@@ -159,10 +157,10 @@ public class Config {
 
     public void loadGlobalSchedulingStrategy() {
         if (options.globalScheduler.wasSet()) {
-            GlobalSchedulingStrategy strat = (GlobalSchedulingStrategy) loadClassByName(GlobalSchedulingStrategy.class, options.globalScheduler.stringValue());
+            GlobalSchedulingStrategy strat = loadClassByName(GlobalSchedulingStrategy.class, options.globalScheduler.stringValue());
             if (strat != null)
                 runtime.setGlobalSchedulingStrategy(strat);
-            else    
+            else
                 logger.warning("Could not load task global strategy class "+options.globalScheduler.stringValue());
         }
     }

@@ -1,4 +1,4 @@
-ABS Tools
+ABS Tools [![Build Status](https://envisage.ifi.uio.no:8080/jenkins/buildStatus/icon?job=ABS-All-Bucky)](https://envisage.ifi.uio.no:8080/jenkins/job/ABS-All-Bucky)
 =========
 
 Inside this repository we develop the core tools of the ABS modelling
@@ -16,7 +16,8 @@ Folders
 * `frontend` - the ABS frontend as well as several backends like the
   Java backend and the Maude backend
 
-* `abs-docs` - a markdown-flavored ABS manual, currently being written
+* `abs-docs` - a markdown-flavored ABS manual, currently being written.
+  It is available online at http://docs.abs-models.org.
 
 * `Documentation` - a complete LaTeX ABS reference manual, still
   mostly up-to-date
@@ -30,7 +31,8 @@ Folders
 * `maven-support` - Maven plugin for generating Java/Maude from ABS,
   testing and packaging ABS codes
 
-* `org.abs-models.releng` - Files used by Jenkins for continuous integration
+* `org.abs-models.releng` - Files used by Jenkins and Buckminster for continuous integration
+  at https://envisage.ifi.uio.no:8080/jenkins/.
 
 * `abs-packages` - demonstration and description of how to use ABS
   packages (with Maven dependencies management)

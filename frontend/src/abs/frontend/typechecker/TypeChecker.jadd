@@ -717,12 +717,12 @@ aspect TypeChecker {
     }
 
     public void Call.typeCheck(SemanticErrorList e) {
-        Type t = getType();
         if (getCallee().getType().isNullType()) {
             e.add(new TypeError(this, ErrorMessage.NULL_NOT_HERE, ""));
             return;
         }
         getCallee().typeCheck(e);
+        Type t = getType();
         if (t.isUnknownType() || getMethodSig() == null) {
             e.add(new TypeError(this, ErrorMessage.METHOD_NOT_FOUND, getMethod()));
         } else {
@@ -1030,17 +1030,21 @@ aspect TypeCheckProductline {
     }
 
     protected void ProductLine.typeCheck(SemanticErrorList e) {
-        // TODO: JastAdd attributes?
-        // cache all names of defined deltas for easy lookup
-        Set<String> definedFeatures = new HashSet<String>();
-        for (Feature cf : getFeatures()) {
-            definedFeatures.add(cf.getName());
-        }
-
+        Set<String> definedFeatures = getDeclaredFeatures();
         // TODO: check for undeclared features?
+        
+        Set<String> seenDeltas = new HashSet<String>();
+        HashSet<String> deadDeltas = new HashSet<String>(getModel().getDeltaDeclsMap().keySet());
         for (DeltaClause dc : getDeltaClauses()) {
+            if (! seenDeltas.add(dc.getDeltaspec().getDeltaID()))
+                e.add(new SemanticError(dc, ErrorMessage.DUPLICATE_DELTA_CLAUSE, dc.getDeltaspec().getDeltaID(), this.getName()));
             dc.typeCheck(getModel().getDeltaDeclsMap(), definedFeatures, e);
+            deadDeltas.remove(dc.getDeltaspec().getDeltaID());
         }
+        // check for DeltaDecls missing a DeltaClause in the ProductLine declaration - this should be a warning, not error
+        //if (! deadDeltas.isEmpty())
+        //    e.add(new TypeError(this, ErrorMessage.ERROR_IN_PRODUCT_LINE_MISSING_DELTACLAUSE, getName(), StringUtils.join(",", deadDeltas)));
+            
         Set<String> fs = new HashSet<String>();
         for (Feature f : getFeatures()) {
             if (!fs.add(f.getName()))

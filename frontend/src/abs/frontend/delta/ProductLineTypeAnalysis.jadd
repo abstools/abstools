@@ -1,0 +1,62 @@
+aspect ProductLineTypeAnalysis {
+
+
+    syn lazy SemanticErrorList Model.typeCheckPL() {
+        SemanticErrorList errors = new SemanticErrorList();
+        if (! hasProductLine())
+            return errors;
+
+        ProductLineTypeAnalysisHelper.typeCheckPL(getProductLine(), errors);
+        return errors;
+    }
+
+
+    /*
+     * Return all valid feature configurations of the feature model.
+     * This is done by solving the CSP and only considering features (no attributes, as that could result in an infinite number of configurations)
+     */
+    syn lazy Set<Set<String>> Model.getFeatureModelConfigurations() {
+        if (! hasMTVL())
+            return Collections.emptySet();
+
+        ChocoSolver solver = instantiateCSModelFeaturesOnly();
+        return solver.getSolutionsFeaturesOnly();
+    }
+
+
+    /*
+     * Add all possible products (i.e. all valid feature configurations = feature model solutions)
+     * as non-terminal attributes (NTAs) to the AST (as List of ImplicitProducts to the Model node)
+     */
+    syn nta lazy List<ImplicitProduct> Model.getImplicitProductList() {
+        List<ImplicitProduct> plist = new List<ImplicitProduct>();
+
+        Set<Set<String>> featureConfs = getFeatureModelConfigurations();
+        for (Set<String> features : featureConfs) {
+            // set Features
+            List<Feature> flist = new List<Feature>();
+            for (String fname : features) {
+                Feature feature = new Feature(fname, new List<AttrAssignment>()); // disregard any attribute assignments
+                flist.add(feature);
+            }
+            ImplicitProduct product = new ImplicitProduct(flist);
+            plist.add(product);
+        }
+        return plist;
+    }
+
+    /* TEST */
+//    syn List<Test> Model.getTestList() {
+//        List<Test> l = new List<Test>();
+//        l.add(new Test(new List<Token>()));
+//        return l;
+//    }
+    
+
+    
+    // inform DeltaClause about the DeltaDecl that it references
+    syn lazy DeltaDecl DeltaClause.getDeltaDecl() {
+        return getProductLine().getModel().getDeltaDeclsMap().get(getDeltaspec().getDeltaID());
+    }
+    
+}

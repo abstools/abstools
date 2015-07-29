@@ -1,0 +1,12 @@
+module Subtyping;
+
+interface A { }
+interface B extends A { }
+class C implements B { }
+
+{
+    B b = new C();
+    A a = new C();
+    List<A> as1 = Cons(a,Cons(b,Nil)); // This type checks
+    List<A> as2 = Cons(b,Cons(a,Nil)); //  THIS DOES NOT TYPECHECK
+}

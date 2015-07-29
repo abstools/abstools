@@ -57,11 +57,11 @@ aspect GenerateErlang {
     ErlUtil.functionHeader(ecs,"f_"+getName(),"Cog=#cog{ref=CogRef}",getParams());
     boolean needTrunc=getType().isIntType() && getFunctionDef() instanceof ExpFunctionDef
         && ((ExpFunctionDef) getFunctionDef()).getRhs().getType().isRatType();
+    Vars vars = Vars.n(getParams());
+    ErlUtil.stopWorldPrelude(ecs, vars, true);
     if (needTrunc) {
       ecs.print("rationals:trunc(");
     }
-    Vars vars = Vars.n(getParams());
-    ErlUtil.stopWorldPrelude(ecs, vars, true);
     getFunctionDef().generateErlangCode(ecs,vars);
     if (needTrunc) {
       ecs.print(")");
@@ -191,17 +191,20 @@ aspect GenerateErlang {
       CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
       if(hasInitExp()){
         boolean needTrunc=getType().isIntType() && getInitExp().getType().isRatType();
-        if (needTrunc) buffer.print("rationals:trunc(");
+        if (needTrunc)
+          buffer.print("rationals:trunc(");
         getInitExp().generateErlangCode(buffer,vars);
-        if (needTrunc) buffer.print(")");
-      } else {
+        if (needTrunc)
+          buffer.print(")");
+        }
+      else
         buffer.print("null");
-      }
       buffer.close();
-      ecs.format("put('%s', %s)", getName(), sw.toString().substring(ecs.getIndent().length()));
+      String varName = vars.nV(this);
+      ecs.format("%s = %s", varName, sw.toString().substring(ecs.getIndent().length()));
       if (getType().isDeploymentComponentType() && getInitExp() instanceof NewExp) {
           ecs.println(",");
-          ecs.format("eventstream:event({newdc, get('%s')})", getName());
+          ecs.format("eventstream:event({newdc, %s})", varName);
       }
     }
     else
@@ -222,12 +225,13 @@ aspect GenerateErlang {
       buffer.print(")");
     buffer.close();
     if(getVar() instanceof VarUse) {
-      ecs.format("put('%s', %s)", getVar().getName(), sw.toString().substring(ecs.getIndent().length()));
+      String varName = vars.inc(getVar().getName());
+      ecs.format("%s = %s", varName,sw.toString().substring(ecs.getIndent().length()));
       if (isNewDC) {
         ecs.println(",");
-        ecs.format("eventstream:event({newdc, '%s'})", getVar().getName());
+        ecs.format("eventstream:event({newdc, %s})", varName);
       }
-    } else if (getVar() instanceof FieldUse) {
+    } else if(getVar() instanceof FieldUse) {
       ecs.format("set(O,'%s',%s)", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
       if (isNewDC) {
         ecs.println(",");
@@ -250,11 +254,16 @@ aspect GenerateErlang {
     }
     PureExp dc = CompilerUtils.getAnnotationValue(((Stmt)parent).getAnnotations(), "DC");
     String className = ErlUtil.getName(((UnionType)getType()).getOriginatingClass());
+    boolean isNewDC = getType().isDeploymentComponentType();
     if (((UnionType) getType()).getOriginatingClass().isForeign())
       className = "ffi_" + className;
     if (!hasLocal()) {
       ecs.format("object:new(cog:start(");
-      if (dc == null) {
+      if (isNewDC) {
+          // do nothing, call cog:start/0.  thisDC() within a DC will fail
+          // (but the implementation of deployment components is entirely
+          // within the standard library).
+      } else if (dc == null) {
         ecs.format("DC");
       } else {
         dc.generateErlangCode(ecs, vars);
@@ -323,6 +332,8 @@ aspect GenerateErlang {
   @Override
   public void SyncCall.generateErlangCode(CodeStream ecs,Vars vars){
     final List<PureExp> params = getParams();
+    // FIXME: raise a proper error here instead of the implicit "no function
+    // found" exception
     ecs.print("(fun(O=#object{class=T,cog =C}) when C=:=Cog -> object:alive(O),T end(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(")):'m_%s'",getMethod());
@@ -335,19 +346,14 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
+    ecs.print(", Cog, ");
+    ecs.print(vars.toStack());
     ecs.print(")");
   }
 
   @Override
   public void VarUse.generateErlangCode(CodeStream ecs,Vars vars) {
-      String name = getName();
-      if (vars.exists(name)) {
-          // we're in a functional context: use Erlang variable
-          ecs.print(vars.get(getName()));
-      } else {
-          // we're in a method context: use process dictionary
-          ecs.print("get('" + name + "')");
-      }
+     ecs.print(vars.get(getName()));
   }
 
   @Override
@@ -584,9 +590,19 @@ aspect GenerateErlang {
 
   @Override
   public void ModMultExp.generateErlangCode(CodeStream ecs,Vars vars){
-    getLeft().generateErlangCode(ecs,vars);
-    ecs.print(" rem ");
-    getRight().generateErlangCode(ecs,vars);
+    if (getLeft().getType().isIntType() && getRight().getType().isIntType() ) {
+        ecs.print("(");
+        getLeft().generateErlangCode(ecs,vars);
+        ecs.print(" rem ");
+        getRight().generateErlangCode(ecs,vars);
+        ecs.print(") ");
+    } else {
+        ecs.print(" rationals:rrem(rationals:to_r(");
+        getLeft().generateErlangCode(ecs,vars);
+        ecs.print("),rationals:to_r(");
+        getRight().generateErlangCode(ecs,vars);
+        ecs.print(")) ");
+    }
   }
 
   @Override
@@ -624,23 +640,17 @@ aspect GenerateErlang {
       java.util.List<String> branches = new LinkedList<String>();
       for (CaseBranchStmt b : getBranchs()) {
           Vars v = vars.pass();
-          StringWriter pattern = new StringWriter();
-          CodeStream patternbuf = new CodeStream(new WriterOutputStream(pattern, Charset.forName("UTF-8")),"");
-          StringWriter postpattern = new StringWriter();
-          CodeStream postpatternbuf = new CodeStream(new WriterOutputStream(postpattern, Charset.forName("UTF-8")),"");
-          b.getLeft().generateErlangCode(ecs, patternbuf, postpatternbuf, v);
-          patternbuf.setIndent(ecs.getIndent());
-          patternbuf.println(" ->");
-          patternbuf.incIndent();
-          // establish fresh bindings for pattern vars:
-          postpatternbuf.close();
-          patternbuf.print(postpattern.toString()); // already has final newline
-          // now generate rest of code for case branch
-          b.getRight().generateErlangCode(patternbuf, v);
-          patternbuf.decIndent();
-          patternbuf.close();
+          StringWriter sw = new StringWriter();
+          CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),"");
+          b.getLeft().generateErlangCode(ecs, buffer, v);
+          buffer.setIndent(ecs.getIndent());
+          buffer.println("->");
+          buffer.incIndent();
+          b.getRight().generateErlangCode(buffer, v);
+          buffer.decIndent();
+          buffer.close();
           branches_vars.add(v);
-          branches.add(pattern.toString());
+          branches.add(sw.toString());
           vars.updateTemp(v);
       }
       ecs.print("case ");
@@ -679,7 +689,7 @@ aspect GenerateErlang {
           StringWriter sw = new StringWriter();
           CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),"");
           buffer.print("_:");
-          b.getLeft().generateErlangCode(ecs, buffer, null, v);
+          b.getLeft().generateErlangCode(ecs, buffer, v);
           buffer.setIndent(ecs.getIndent());
           buffer.println("->");
           buffer.incIndent();
@@ -732,7 +742,7 @@ aspect GenerateErlang {
         if (!first)
             ecs.println(";");
         first = false;
-        b.getLeft().generateErlangCode(external, ecs, null, v);
+        b.getLeft().generateErlangCode(external, ecs, v);
         ecs.print("->");
         b.getRight().generateErlangCode(ecs, v);
         vars.hideIntroduced(v);
@@ -746,35 +756,18 @@ aspect GenerateErlang {
     external.print("end");
   }
 
-  // prePattern: things to print before the Erlang case stmt
-  // ecs: code for matching our part of the case branch
-  // stmtStream: things to print before the right-hand side of the case branch
-  public abstract void Pattern.generateErlangCode(CodeStream prePattern,CodeStream ecs, CodeStream stmtStream, Vars vars);
+  public abstract void Pattern.generateErlangCode(CodeStream prePattern,CodeStream ecs,Vars vars);
 
   @Override
-  public void PatternVar.generateErlangCode(CodeStream prePattern,CodeStream ecs, CodeStream stmtStream,Vars vars){
-      // it's a fresh variable in the pattern: create a new binding
-      if (stmtStream != null) {
-          // we're generating ABS statements: establish new binding in
-          // process-local storage
-          String erlvarname = vars.getTemp();
-          String absvarname = getVar().getName();
-          ecs.print(erlvarname);
-          stmtStream.pf("put('%s',%s),", absvarname, erlvarname);
-      } else {
-          // we're generating ABS expressions: establish new Erlang variable
-          ecs.print(vars.nV(getVar()));
-      }
+  public void PatternVar.generateErlangCode(CodeStream prePattern,CodeStream ecs,Vars vars){
+      ecs.print(vars.nV(getVar()));
   }
 
   @Override
-  public void PatternVarUse.generateErlangCode(CodeStream prePattern,CodeStream ecs, CodeStream stmtStream,Vars vars){
-      // it's not a fresh variable in the pattern: match against what's there
+  public void PatternVarUse.generateErlangCode(CodeStream prePattern,CodeStream ecs,Vars vars){
      if(vars.containsKey(getName()))
-         // it's a local variable
        ecs.print(vars.get(getName()));
      else{
-         // it's a field
        String tmp=vars.getTemp();
        prePattern.pf("%s=get(O,%s),",tmp,getName());
        ecs.print(tmp);
@@ -782,12 +775,12 @@ aspect GenerateErlang {
   }
 
   @Override
-  public void LiteralPattern.generateErlangCode(CodeStream prePattern,CodeStream ecs, CodeStream stmtStream,Vars vars){
+  public void LiteralPattern.generateErlangCode(CodeStream prePattern,CodeStream ecs,Vars vars){
     getLiteral().generateErlangCode(ecs,vars);
   }
 
   @Override
-  public void ConstructorPattern.generateErlangCode(CodeStream prePattern,CodeStream ecs, CodeStream stmtStream,Vars vars){
+  public void ConstructorPattern.generateErlangCode(CodeStream prePattern,CodeStream ecs,Vars vars){
     //Handling for bool
     final String c = getDataConstructor().getName();
     if("True".equals(c) || "False".equals(c))
@@ -799,14 +792,14 @@ aspect GenerateErlang {
       ecs.print(c);
       for (Pattern p : getParams()) {
         ecs.print(",");
-        p.generateErlangCode(prePattern,ecs, stmtStream, vars);
+        p.generateErlangCode(prePattern,ecs,vars);
       }
       if(getParams().getNumChild() > 0)
         ecs.print("}");
     }
   }
 
-  public void UnderscorePattern.generateErlangCode(CodeStream prePattern,CodeStream ecs, CodeStream stmtStream,Vars vars){
+  public void UnderscorePattern.generateErlangCode(CodeStream prePattern,CodeStream ecs,Vars vars){
     ecs.print("_");
   }
 
@@ -837,26 +830,30 @@ aspect GenerateErlang {
   }
   public void AwaitStmt.generateErlangCode(CodeStream ecs,Vars vars){
     StringWriter sw = new StringWriter();
-    CodeStream after = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
-    ecs.println("task:release_token(Cog,waiting),");
-    getGuard().generateErlangCode(ecs,after,vars);
-    after.close();
+    CodeStream after = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")), "");
     if(getGuard().hasPoll()){
-      ecs.println("task:wait_poll(Cog),");
-      ecs.pf("((fun(Inner)->fun(Param)->Inner(Inner,Param) end end)(fun (Self,%s)->",vars.toParamList());
-      ecs.println("receive check -> ");
+      getGuard().generateErlangCode(ecs,after,vars);
+      after.close();
+      ecs.println("task:release_token(Cog,waiting_poll),");
+      ecs.pf("(fun Poll (%s)->",vars.toParamList());
+      ecs.incIndent().println("receive check -> ");
       ecs.incIndent().pf("case %s of",sw);
       ecs.incIndent().println("true -> CogRef!{self(),true},");
-      ecs.incIndent().pf("receive wait -> Self(Self,%s);",vars.toParamList());
-      ecs.println("token -> ok end;");
-      ecs.decIndent().pf("false -> CogRef!{self(),false},  Self(Self,%s)",vars.toParamList());
-      ecs.decIndent().decIndent().println("end end end))");
-      ecs.format("(%s)",vars.toParamList());
+      ecs.incIndent().pf("receive wait -> Poll(%s);",vars.toParamList());
+      ecs.incIndent().println("token -> ok");
+      ecs.decIndent().println("end;");
+      ecs.decIndent().pf("false -> CogRef!{self(),false},  Poll(%s)",vars.toParamList());
+      ecs.decIndent().println("end;");
+      ecs.println("{get_references, Sender} ->");
+      ecs.incIndent().pf("Sender ! {gc:extract_references(%s), self()},", vars.toStack());
+      ecs.pf("Poll(%s)", vars.toParamList());
+      ecs.decIndent().decIndent().println("end end)");
+      ecs.decIndent().format("(%s)",vars.toParamList());
     }
     else {
-      ecs.print("task:acquire_token(Cog,");
-      ecs.print(vars.toStack());
-      ecs.print(")");
+        getGuard().generateErlangCode(ecs,after,vars);
+        after.close();
+        ecs.print("ok");      // FIXME: hotfix to handle extraneous comma
     }
   }
 
@@ -936,7 +933,7 @@ aspect GenerateErlang {
     PureExp future = getPureExp();
 
     if (future instanceof VarUse && !vars.canBlock(((VarUse) future).getName())) {
-      ecs.print("future:get(");
+      ecs.print("future:get_after_await(");
     } else {
       ecs.print("future:get_blocking(");
     }
@@ -947,13 +944,6 @@ aspect GenerateErlang {
         ecs.print(", Cog, ");
         ecs.print(vars.toStack());
     }
-    ecs.print(")");
-  }
-
-  @Override
-  public void SafegetExp.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.print("future:safeget(");
-    getPureExp().generateErlangCode(ecs,vars);
     ecs.print(")");
   }
 

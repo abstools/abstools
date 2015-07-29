@@ -1,4 +1,4 @@
-%% Copyright (c) 2014, Loïc Hoguin <essen@ninenines.eu>
+%% Copyright (c) 2014-2015, Loïc Hoguin <essen@ninenines.eu>
 %%
 %% Permission to use, copy, modify, and/or distribute this software for any
 %% purpose with or without fee is hereby granted, provided that the above
@@ -98,6 +98,29 @@
 >>).
 -define(TEST4_BOUNDARY, <<"boundary">>).
 
+%% RFC 2046, Section 5.1.1
+-define(TEST5_MIME, <<
+        "This is the preamble.  It is to be ignored, though it\r\n"
+        "is a handy place for composition agents to include an\r\n"
+        "explanatory note to non-MIME conformant readers.\r\n"
+        "\r\n"
+        "--simple boundary\r\n",
+        "\r\n"
+        "This is implicitly typed plain US-ASCII text.\r\n"
+        "It does NOT end with a linebreak."
+        "\r\n"
+        "--simple boundary\r\n",
+        "Content-type: text/plain; charset=us-ascii\r\n"
+        "\r\n"
+        "This is explicitly typed plain US-ASCII text.\r\n"
+        "It DOES end with a linebreak.\r\n"
+        "\r\n"
+        "--simple boundary--\r\n"
+        "\r\n"
+        "This is the epilogue.  It is also to be ignored."
+>>).
+-define(TEST5_BOUNDARY, <<"simple boundary">>).
+
 %% Parsing.
 %%
 %% The multipart format is defined in RFC 2045.
@@ -179,12 +202,11 @@ skip_preamble(Stream, Boundary) ->
 			end
 	end.
 
-%% There is a line break right after the boundary, skip it.
-%%
-%% We only skip it now because there might be no headers at all,
-%% which means the \r\n\r\n indicating the end of headers also
-%% includes this line break.
+before_parse_headers(<< "\r\n\r\n", Stream/bits >>) ->
+	%% This indicates that there are no headers, so we can abort immediately.
+	{ok, [], Stream};
 before_parse_headers(<< "\r\n", Stream/bits >>) ->
+	%% There is a line break right after the boundary, skip it.
 	parse_hd_name(Stream, [], <<>>).
 
 parse_hd_name(<< C, Rest/bits >>, H, SoFar) ->
@@ -340,6 +362,21 @@ parse_epilogue_crlf_test() ->
 	{done, Epilogue} = parse_headers(Rest2, ?TEST4_BOUNDARY),
 	ok.
 
+parse_rfc2046_test() ->
+	%% The following is an example included in RFC 2046, Section 5.1.1.
+	Body1 = <<"This is implicitly typed plain US-ASCII text.\r\n"
+		"It does NOT end with a linebreak.">>,
+	Body2 = <<"This is explicitly typed plain US-ASCII text.\r\n"
+		"It DOES end with a linebreak.\r\n">>,
+	H2 = [{<<"content-type">>, <<"text/plain; charset=us-ascii">>}],
+	Epilogue = <<"\r\n\r\nThis is the epilogue.  It is also to be ignored.">>,
+	{ok, [], Rest} = parse_headers(?TEST5_MIME, ?TEST5_BOUNDARY),
+	{done, Body1, Rest2} = parse_body(Rest, ?TEST5_BOUNDARY),
+	{ok, H2, Rest3} = parse_headers(Rest2, ?TEST5_BOUNDARY),
+	{done, Body2, Rest4} = parse_body(Rest3, ?TEST5_BOUNDARY),
+	{done, Epilogue} = parse_headers(Rest4, ?TEST5_BOUNDARY),
+	ok.
+
 parse_partial_test() ->
 	{ok, <<0:8000, "abcdef">>, <<"\rghij">>}
 		= parse_body(<<0:8000, "abcdef\rghij">>, <<"boundary">>),
@@ -362,9 +399,7 @@ parse_partial_test() ->
 	{ok, <<"boundary">>, <<"\r\n--">>}
 		= parse_body(<<"boundary\r\n--">>, <<"boundary">>),
 	ok.
--endif.
 
--ifdef(PERF).
 perf_parse_multipart(Stream, Boundary) ->
 	case parse_headers(Stream, Boundary) of
 		{ok, _, Rest} ->
@@ -461,9 +496,7 @@ identity_test() ->
 	{done, Body2, M6} = parse_body(M5, B),
 	{done, Epilogue} = parse_headers(M6, B),
 	ok.
--endif.
 
--ifdef(PERF).
 perf_build_multipart() ->
 	B = boundary(),
 	[
@@ -575,9 +608,7 @@ parse_content_disposition_test_() ->
 			{<<"file">>, [{<<"filename">>, <<"file2.gif">>}]}}
 	],
 	[{V, fun() -> R = parse_content_disposition(V) end} || {V, R} <- Tests].
--endif.
 
--ifdef(PERF).
 horse_parse_content_disposition_attachment() ->
 	horse:repeat(100000,
 		parse_content_disposition(<<"attachment; filename=genome.jpeg;"
@@ -617,9 +648,7 @@ parse_content_transfer_encoding_test_() ->
 	],
 	[{V, fun() -> R = parse_content_transfer_encoding(V) end}
 		|| {V, R} <- Tests].
--endif.
 
--ifdef(PERF).
 horse_parse_content_transfer_encoding() ->
 	horse:repeat(100000,
 		parse_content_transfer_encoding(<<"QUOTED-PRINTABLE">>)
@@ -680,9 +709,7 @@ parse_content_type_test_() ->
 	],
 	[{V, fun() -> R = parse_content_type(V) end}
 		|| {V, R} <- Tests].
--endif.
 
--ifdef(PERF).
 horse_parse_content_type_zero() ->
 	horse:repeat(100000,
 		parse_content_type(<<"text/plain">>)

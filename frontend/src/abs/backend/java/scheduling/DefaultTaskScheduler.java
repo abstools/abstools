@@ -1,10 +1,9 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.scheduling;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -17,7 +16,6 @@ import abs.backend.java.lib.runtime.COG;
 import abs.backend.java.lib.runtime.Logging;
 import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.observing.TaskSchedulerView;
-import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
 
 public class DefaultTaskScheduler implements TaskScheduler {
@@ -35,6 +33,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
         this.threadManager = m;
     }
 
+    @Override
     public synchronized void addTask(Task<?> task) {
         newTasks.add(task);
         if (view != null)
@@ -78,17 +77,14 @@ public class DefaultTaskScheduler implements TaskScheduler {
 
                 View v = view;
 
-                if (Logging.DEBUG)
-                    log.finest("Executing " + runningTask);
+                log.finest("Executing " + runningTask);
                 try {
                     runningTask.run();
                     v = view;
+                    log.finest("Task " + runningTask + " FINISHED");
 
-                    if (Logging.DEBUG)
-                        log.finest("Task " + runningTask + " FINISHED");
                 } catch (Exception e) {
-                    if (Logging.DEBUG)
-                        log.finest("EXCEPTION in Task " + runningTask);
+                    log.finest("EXCEPTION in Task " + runningTask);
                     e.printStackTrace();
                 }
             }
@@ -99,8 +95,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
 
         // assume called in synchronized block
         public void suspendTask(ABSGuard g) {
-            if (Logging.DEBUG)
-                log.finest(runningTask + " on " + g + " SUSPENDING");
+            log.finest(runningTask + " on " + g + " SUSPENDING");
             synchronized (DefaultTaskScheduler.this) {
                 activeTask = null;
                 thread = null;
@@ -112,8 +107,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
                 } else {
                     DefaultTaskScheduler.this.notifyAll();
                 }
-                if (Logging.DEBUG)
-                    log.finest(runningTask + " on " + g + " SUSPENDING");
+                log.finest(runningTask + " on " + g + " SUSPENDING");
                 suspendedTasks.add(this);
             }
 
@@ -122,16 +116,14 @@ public class DefaultTaskScheduler implements TaskScheduler {
                 v.taskSuspended(runningTask.getView(), g);
             }
 
-            if (Logging.DEBUG)
-                log.finest(runningTask + " AWAITING " + g);
+            log.finest(runningTask + " AWAITING " + g);
             boolean couldBecomeFalse = g.await();
             if (Thread.interrupted()) {
                 return;
             }
 
             if (!couldBecomeFalse) {
-                if (Logging.DEBUG)
-                    log.finest(runningTask + " " + g + " READY");
+                log.finest(runningTask + " " + g + " READY");
                 if (v != null)
                     v.taskReady(runningTask.getView());
             }
@@ -141,8 +133,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
                     try {
                         log.finest(runningTask + " " + g + " WAITING FOR WAKE UP");
                         DefaultTaskScheduler.this.wait();
-                        if (Logging.DEBUG)
-                            log.finest(runningTask + " WOKE UP...");
+                        log.finest(runningTask + " WOKE UP...");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                         break;
@@ -156,21 +147,23 @@ public class DefaultTaskScheduler implements TaskScheduler {
             if (v != null)
                 v.taskResumed(runningTask.getView(), g);
 
-            if (Logging.DEBUG)
-                log.finest(runningTask + " " + g + " ACTIVE");
+            log.finest(runningTask + " " + g + " ACTIVE");
         }
     }
 
+    @Override
     public void await(ABSGuard g) {
         thread.suspendTask(g);
     }
 
+    @Override
     public synchronized Task<?> getActiveTask() {
         return activeTask;
     }
 
     private volatile View view;
 
+    @Override
     public synchronized TaskSchedulerView getView() {
         if (view == null) {
             view = new View();
@@ -188,7 +181,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
         public List<TaskView> getSuspendedTasks() {
             return null;
         }
-        
+
         @Override
         public List<TaskView> getSchedulableTasks() {
             return null;

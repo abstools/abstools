@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.absmodels.abs.plugin.Activator;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
@@ -44,7 +45,8 @@ public class IncrementalModelBuilder {
 
 	/**
 	 * This code was introduced for SQL. Iterating over the
-	 * transformed nodes will cause errors in Eclipse. #85 
+	 * transformed nodes will cause errors in Eclipse. #85
+	 * TODO: No longer needed since SQL-sunset?
 	 */
 	public static void flushAll(ASTNode<?> node){
 //		for(int i=0; i<node.getNumChildNoTransform(); i++){
@@ -54,11 +56,18 @@ public class IncrementalModelBuilder {
 		return;
 	}
 
-    public synchronized void addCompilationUnits(Iterable<CompilationUnit> units) throws IOException, NoModelException {
-       for (CompilationUnit u : units) {
-          addCompilationUnit(u);
-       }
-    }
+	public synchronized void addCompilationUnits(Iterable<CompilationUnit> units) throws IOException, NoModelException {
+		// Initialize the model.
+		if(model == null){
+			model = new Model();
+			model.addCompilationUnit(getStdLibCompilationUnit());
+		}
+		for (CompilationUnit u : units) {
+			addCompilationUnit(u);
+		}
+		Assert.isNotNull(model);
+		Main.exceptionHack(model);
+	}
     
 	/**
 	 * Creates an empty model with only the stdlib when you pass null.
@@ -164,6 +173,8 @@ public class IncrementalModelBuilder {
 		if(model == null)
 			throw new NoModelException();
 		
+		Main.exceptionHack(model);
+
 		if(model.hasParserErrors())
 			return new SemanticErrorList(); // don't typecheck if the model has parsererrors
 //			throw new TypecheckInternalException(new Exception("Model has parser errors!"));
@@ -196,6 +207,7 @@ public class IncrementalModelBuilder {
 				for (Product p : model.getProducts()) {
 					monitor.subTask("Checking "+p.getName());
 					Model m2 = model.parseTreeCopy();
+					Main.exceptionHack(m2);
 					try {
 						m2.flattenForProduct(p);
 						SemanticErrorList p_errs = m2.typeCheck();
@@ -228,6 +240,8 @@ public class IncrementalModelBuilder {
 	}
 	
 	public synchronized Model getCompleteModel(){
+		if (model != null)
+			Main.exceptionHack(model);
 		return model;
 	}
 	

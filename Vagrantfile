@@ -1,3 +1,4 @@
+# coding: utf-8
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
@@ -30,6 +31,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # https://docs.vagrantup.com/v2/
 
   config.vm.box = "ubuntu/trusty64"
+  config.vm.network "forwarded_port", guest: 80, host: 8888
 
   config.vm.post_up_message = <<-MSG
 Welcome to the ABS toolchain VM.
@@ -42,6 +44,8 @@ The following tools are available from the command line:
 - emacs            Emacs, configured to edit and compile ABS
 - costabs_exe      Command-line interface to SACO
 
+Go to http://localhost:8888/ei/clients/web to use easyinterface.
+
 On Windows / Mac OS X, start an X server (Xming / XQuartz)
 MSG
 
@@ -51,6 +55,7 @@ MSG
     vb.memory = 4096
     vb.cpus = 2
     vb.name = "ABS tools VM (Vagrant)"
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"] # fix for ubuntu DNS problems
   end
 
   # Install necessary software
@@ -93,17 +98,21 @@ sudo update-java-alternatives -s java-8-oracle
 echo
 echo "Installing necessary tools for simulating ABS programs"
 echo
-sudo apt-get install -y -q emacs maude
+sudo apt-get install -y -q emacs maude graphviz
 
 echo
 echo "Installing eclipse"
-echo
-sudo apt-get install -y -q eclipse graphviz
+echo 
+echo "Downloading eclipse from triple-it.nl ..."
+wget http://eclipse.mirror.triple-it.nl/technology/epp/downloads/release/mars/R/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz
+echo "Installing eclipse in /opt/eclipse and setting up paths ..."
+(cd /opt && sudo tar xzf /home/vagrant/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz)
+sudo ln -s /opt/eclipse/eclipse /usr/local/bin/eclipse
 
 echo
 echo "Building the ABS compiler and eclipse plugins"
 echo
-(cd /vagrant/eclipse-plugin ; ant -Declipse.home=/usr build-all-plugins generate-update-site)
+(cd /vagrant/eclipse-plugin ; ant -Declipse.home=/opt/eclipse build-all-plugins generate-update-site)
 
 echo
 echo "Deploying to eclipse"
@@ -138,6 +147,32 @@ sudo chmod a+x /usr/local/bin/key-abs
 mkdir -p /home/vagrant/.key
 
 echo
+echo "Setting up apache and easyinterface"
+echo
+sudo apt-get -y -q install apache2 apache2-utils openssl-blacklist
+sudo apt-get -y -q install php5 libapache2-mod-php5 php5-mcrypt
+sudo rm -rf /var/www/easyinterface
+(cd /var/www && sudo git clone https://github.com/abstools/easyinterface.git)
+sudo chmod -R 755 /var/www/easyinterface
+
+# Set up apache2
+cat >/home/vagrant/easyinterface-site.conf <<EOF
+Alias /ei "/var/www/easyinterface"
+
+<Directory "/var/www/easyinterface">
+   Options FollowSymlinks MultiViews Indexes IncludesNoExec
+   AllowOverride All
+   Require all granted
+</Directory>
+EOF
+sudo mv /home/vagrant/easyinterface-site.conf /etc/apache2/sites-available/
+sudo chown root.root /etc/apache2/sites-available/easyinterface-site.conf
+sudo a2ensite easyinterface-site
+sudo a2enmod headers
+sudo service apache2 restart
+
+
+echo
 echo "Setting up the user environment: .bashrc, .emacs"
 echo
 
@@ -146,17 +181,17 @@ if [ ! -e /home/vagrant/.emacs ] ; then
 cat >/home/vagrant/.emacs <<EOF
 ;; Set up ABS, Maude.  Added by Vagrant provisioning
 (add-to-list 'load-path "/vagrant/emacs")
-(autoload 'abs-mode "abs-mode" "Major mode for editing Abs files." t)
+(require 'abs-mode)
 (add-to-list 'auto-mode-alist (cons "\\\\.abs\\\\'" 'abs-mode))
-(autoload 'maude-mode "maude-mode" nil t)
-(autoload 'run-maude "maude-mode" nil t)
+(require 'maude-mode)
 (add-to-list 'auto-mode-alist '("\\\\.maude\\\\'" maude-mode))
 EOF
 fi
 
 # Set up paths
 cat >/home/vagrant/.abstoolsrc <<EOF
-PATH=\$PATH:/vagrant/frontend/bin/bash:/vagrant/costabs-plugin
+PATH=\$PATH:/opt/ghc/7.8.4/bin:/opt/cabal/1.20/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin:/vagrant/abs2haskell/.cabal-sandbox/bin:/vagrant/frontend/bin/bash:/vagrant/costabs-plugin
+export GHC_PACKAGE_PATH=/vagrant/abs2haskell/.cabal-sandbox/x86_64-linux-ghc-7.8.4-packages.conf.d:/opt/ghc/7.8.4/lib/ghc-7.8.4/package.conf.d:/home/vagrant/.ghc/x86_64-linux-7.8.4/package.conf.d
 EOF
 
 if [ -z "$(grep abstoolsrc /home/vagrant/.bashrc)" ] ; then
@@ -164,6 +199,34 @@ cat >>/home/vagrant/.bashrc <<EOF
 . .abstoolsrc
 EOF
 fi
+
+echo
+echo "Installing Haskell"
+echo
+
+sudo add-apt-repository ppa:hvr/ghc
+sudo apt-get update -y -q
+sudo apt-get install -y -q ghc-7.8.4 cabal-install-1.20 happy-1.19.4 alex-3.1.3
+
+echo
+echo "Building the ABS-Haskell compiler"
+echo
+
+cd /vagrant
+git clone http://github.com/bezirg/abs2haskell
+cd /vagrant/abs2haskell
+git checkout cloud
+git submodule init
+git submodule update
+
+export PATH=$PATH:/opt/cabal/1.20/bin:/opt/ghc/7.8.4/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin # necessary for building
+ghc-pkg init /home/vagrant/.ghc/x86_64-linux-7.8.4/package.conf.d || true  # initialize the user ghc-db if missing
+cabal sandbox init
+cabal update
+cabal sandbox add-source haxr-browser
+cabal sandbox add-source opennebula
+cabal install --only-dependencies
+cabal install
 
   SHELL
 end

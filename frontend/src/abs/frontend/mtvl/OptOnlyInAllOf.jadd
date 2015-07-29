@@ -1,16 +1,16 @@
 aspect OptOnlyInAllOf {
-  // checks if the feature name is repeated and for type errors of the constraints.
-  public void Group.collectErrors(SemanticErrorList c) {  
-    super.collectErrors(c);
-      if (!getCard().isAllOf())
-        for (FNode fn: getFNodes())
-          if (fn.isOpt())
-        	  c.add(new SemanticError(fn,ErrorMessage.OPT_NOT_IN_ALLOF,fn.getFeat().getName()));         
-  }
+    // checks if the feature name is repeated and for type errors of the constraints.
+    public void Group.collectErrors(SemanticErrorList c) {  
+        super.collectErrors(c);
+        if (!getCard().isAllOf())
+            for (FNode fn: getFNodes())
+                if (fn.isOpt())
+                    c.add(new SemanticError(fn,ErrorMessage.OPT_NOT_IN_ALLOF,fn.getFeatureDecl().getName()));         
+    }
 
-  public boolean Cardinality.isAllOf() { return false; }
-  public boolean AllOf.isAllOf() { return true; }
+    public boolean Cardinality.isAllOf() { return false; }
+    public boolean AllOf.isAllOf() { return true; }
 
-  public boolean FNode.isOpt() { return false; }
-  public boolean OptFeat.isOpt() { return true; }
+    public boolean FNode.isOpt() { return false; }
+    public boolean OptFeat.isOpt() { return true; }
 }

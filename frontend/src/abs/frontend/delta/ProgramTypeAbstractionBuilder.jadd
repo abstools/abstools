@@ -1,0 +1,114 @@
+aspect ProgramTypeAbstractionBuilder {
+
+    /*******************************************************************************************************
+     *
+     * Build type abstraction of the core program
+     */
+    public void Model.buildCoreTypeAbstraction(ProgramTypeAbstraction ta) {
+        for (Decl decl : getDecls()) {
+            if (decl.isClass()) {
+            String className = decl.qualifiedName();
+                ta.addClass(className);
+                for (FieldDecl field : ((ClassDecl) decl).getFields())
+                    ta.addField(className, field.getName());
+                for (MethodImpl method : ((ClassDecl) decl).getMethods())
+                    ta.addMethod(className, method.getMethodSig().getName());
+            }
+            
+            // TODO: record other elements (interfaces, functions etc.)
+        }
+    }
+
+
+    abstract public void ModuleModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta);
+    abstract public void Modifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className);
+
+    /*******************************************************************************************************
+     *
+     * Class Modifiers
+     */
+    public void AddClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        ta.addClass(this);
+        String className = getClassDecl().qualifiedName();
+        for (FieldDecl field : getClassDecl().getFields())
+            ta.addField(className, field.getName());
+        for (MethodImpl method : getClassDecl().getMethods())
+            ta.addMethod(className, method.getMethodSig().getName());
+    }
+
+    public void ModifyClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        String className = qualifiedName();
+        if (ta.existsClass(this))
+            for (Modifier mod : getModifiers())
+                mod.applyToTypeAbstraction(ta, className);
+    }
+
+    public void RemoveClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        ta.removeClass(this);
+    }
+
+
+    /*
+     * Interface Modifiers
+     */
+    public void AddInterfaceModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void ModifyInterfaceModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void RemoveInterfaceModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+
+    /*
+     * Export/Import Modifiers
+     */
+    public void AddExportModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void AddImportModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+
+    /*
+     * Functional Modifiers
+     */
+    public void AddDataTypeModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void ModifyDataTypeModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void AddFunctionModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void AddTypeSynModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+    public void ModifyTypeSynModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+        // TODO
+    }
+
+
+    /*******************************************************************************************************
+     *
+     * Modifiers are applied to classes
+     */ 
+    public void AddFieldModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+        ta.addField(className, this);
+    }
+    public void RemoveFieldModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+        ta.removeField(className, this);
+    }
+    public void AddMethodModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+        ta.addMethod(className, this);
+    }
+    public void ModifyMethodModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+        // TODO
+    }
+    public void RemoveMethodModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+        ta.removeMethod(className, this);
+    }
+
+}

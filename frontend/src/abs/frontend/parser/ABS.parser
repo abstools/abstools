@@ -35,7 +35,7 @@ import java.io.IOException;
 	}
 
 	protected void addSyntaxError(String msg, Symbol token) {
-            SyntaxError e = new SyntaxError(msg, Symbol.getLine(token.getStart()), Symbol.getColumn(token.getStart()), token);
+            SyntaxError e = new SyntaxError(msg, Symbol.getLine(token.getStart()), Symbol.getColumn(token.getStart()));
             e.setFile(file);
             e.setSourceCode(sourceCode);
             errors.add(e);
@@ -832,7 +832,6 @@ PureExp pure_exp_prefix =
 
 Exp eff_exp =
     pure_exp_prefix.p DOT GET    {: return new GetExp(p) ; :}
-    | pure_exp_prefix.p DOT SAFEGET {: return new SafegetExp(p) ; :}
     | new_exp
     | async_call
     | await_async_call

@@ -181,7 +181,7 @@ aspect doPrettyPrinter {
     }
     
     public void Deltaspec.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print(getName());
+        stream.print(getDeltaID());
         if (getNumDeltaparam() > 0) {
             stream.print("(");
             getDeltaparamList().doPrettyPrint(stream, formatter, ",");

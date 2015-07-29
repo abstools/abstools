@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.runtime;
@@ -33,9 +33,9 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
         return id;
     }
 
-    
+
     public abstract V get();
-    
+
     public synchronized V getValue() {
         return value;
     }
@@ -45,8 +45,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
     }
 
     public synchronized void await() {
-        if (Logging.DEBUG)
-            log.finest("awaiting future");
+        log.finest("awaiting future");
 
         while (!isResolved) {
             try {
@@ -57,27 +56,25 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
                 break;
             }
         }
-        
-        
+
+
         if (exception != null)
             throw exception;
-        
-        if (Logging.DEBUG)
-            log.finest("future ready");
+
+        log.finest("future ready");
     }
-    
+
     private List<GuardWaiter> waitingThreads;
     public void resolve(final V o) {
         resolve(o,null);
     }
-    
+
     protected void resolve(final V o, final ABSException e) {
         synchronized (this) {
             if (isResolved)
                 throw new IllegalStateException("Future is already resolved");
 
-            if (Logging.DEBUG)
-                log.finest(this + " is resolved to " + o);
+            log.finest(this + " is resolved to " + o);
 
             value = o;
             exception = e;
@@ -90,18 +87,17 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
         View v = view;
         if (v != null)
             v.onResolved(o);
-        
+
     }
-    
+
     public void smash(ABSException e) {
         resolve(null,e);
     }
 
-    
-    
+
+
     private void informWaitingThreads() {
-        if (Logging.DEBUG)
-            log.finest(this + " inform awaiting threads...");
+        log.finest(this + " inform awaiting threads...");
 
         ArrayList<GuardWaiter> copy = null;
         synchronized (this) {
@@ -115,7 +111,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
             s.checkGuard();
         }
     }
-    
+
 
     @Override
     public ABSBool eq(ABSValue other) {
@@ -123,6 +119,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
     }
 
 
+    @Override
     public ABSBool gt(ABSValue o) {
         if (o == null)
             return ABSBool.FALSE;
@@ -131,14 +128,16 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
         return ABSBool.fromBoolean(getID() > ((ABSFut)o).getID());
     }
 
+    @Override
     public ABSBool lt(ABSValue o) {
         if (o == null)
             return ABSBool.FALSE;
         if (!(o instanceof ABSFut))
             return ABSBool.FALSE;
-        return ABSBool.fromBoolean(getID() < ((ABSFut)o).getID());        
+        return ABSBool.fromBoolean(getID() < ((ABSFut)o).getID());
     }
 
+    @Override
     public ABSBool gtEq(ABSValue o) {
         if (this.eq(o).toBoolean())
             return ABSBool.TRUE;
@@ -146,6 +145,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
             return this.gt(o);
     }
 
+    @Override
     public ABSBool ltEq(ABSValue o) {
         if (this.eq(o).toBoolean())
             return ABSBool.TRUE;
@@ -154,6 +154,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
     }
 
 
+    @Override
     public synchronized String toString() {
         return "Future (" + (isResolved ? value : "unresolved") + ")";
     }
@@ -168,8 +169,8 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
         waitingThreads.add(thread);
         return true;
     }
-    
-    
+
+
     protected volatile View view;
 
     public synchronized FutView getView() {
@@ -182,7 +183,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
     protected View createView() {
         return new View();
     }
-    
+
     protected class View implements FutView {
 
         private List<FutObserver> futObserver;
@@ -198,7 +199,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
                 f.onResolved(this, v);
             }
         }
-        
+
 
         @Override
         public TaskView getResolvingTask() {
@@ -226,5 +227,5 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
         }
 
     }
-    
+
 }

@@ -20,6 +20,7 @@ import org.junit.Assume;
 
 import abs.ABSTest;
 import abs.backend.BackendTestDriver;
+import abs.backend.common.InternalBackendException;
 import abs.backend.common.SemanticTests;
 import abs.frontend.ast.*;
 
@@ -121,9 +122,10 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      * statement, which will then be the result of the execution
      * 
      * @return the Module Name, which contains the Main Block
+     * @throws InternalBackendException 
      * 
      */
-    private String genCode(Model model, File targetDir, boolean appendResultprinter) throws IOException, InterruptedException {
+    private String genCode(Model model, File targetDir, boolean appendResultprinter) throws IOException, InterruptedException, InternalBackendException {
         if (model.hasErrors()) {
             Assert.fail(model.getErrors().getFirst().getHelpMessage());
         }
@@ -135,7 +137,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             mb.addStmt(new ReturnStmt(new List<Annotation>(),
                                       new VarUse("testresult")));
         }
-        ErlangBackend.compile(model, targetDir);
+        ErlangBackend.compile(model, targetDir, false);
         if (mb == null)
             return null;
         else

@@ -1,0 +1,8 @@
+{application, absmodel, [
+  {description, "Generated code for ABS"},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [kernel, stdlib, cowboy, crypto]},
+  {mod, { main_app, []}},
+  {env, [{port, 8080}]}
+]}.

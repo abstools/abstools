@@ -25,6 +25,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import choco.kernel.model.constraints.Constraint;
 import abs.frontend.mtvl.ChocoSolver;
+import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -93,6 +94,8 @@ public class Main {
                abs.backend.prettyprint.PrettyPrinterBackEnd.main(args);
            } else if (argslist.contains("-keyabs")) {
                abs.backend.keyabs.KeyAbsBackend.main(args);
+           } else if (argslist.contains("-outline")) {
+               abs.backend.outline.OutlinePrinterBackEnd.main(args);
            } else {
                Model m = parse(args);
                if (m.hasParserErrors()) {
@@ -248,7 +251,6 @@ public class Main {
 
             // Transformation of microTVL to Future Model Editor compatible XML
             FMVisualizer oFMVisualizer = new FMVisualizer();
-
             oFMVisualizer.ParseMicroTVLFile(m);
         }
 
@@ -260,6 +262,11 @@ public class Main {
             }
         } else {
             rewriteModel(m, product);
+
+            // type check PL before flattening
+            // [ramus] disabled temporarily due to a bug
+            //if (typecheck)
+            //    typeCheckProductLine(m);
 
             // flatten before checking error, to avoid calculating *wrong* attributes
             if (fullabs) {
@@ -310,24 +317,7 @@ public class Main {
     private static void rewriteModel(Model m, String productname)
         throws WrongProgramArgumentException
     {
-        // Handle exceptions: add exceptions as constructors to the
-        // ABS.StdLib.Exception datatype.
-        DataTypeDecl e = (DataTypeDecl)(m.getExceptionType().getDecl());
-        if (e != null) {
-            // TODO: if null and not -nostdlib, throw an error
-            for (Decl decl : m.getDecls()) {
-                if (decl instanceof ExceptionDecl) {
-                    ExceptionDecl e1 = (ExceptionDecl)decl;
-                    // KLUDGE: what do we do about annotations to exceptions?
-                    DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().fullCopy());
-                    d.setPosition(e1.getStart(), e1.getEnd());
-                    d.setFileName(e1.getFileName());
-                    d.exceptionDecl = e1;
-                    e1.dataConstructor = d;
-                    e.addDataConstructor(d);
-                }
-            }
-        }
+        exceptionHack(m);
         // Generate reflective constructors for all features
         ProductLine pl = m.getProductLine();
         if (pl != null) {
@@ -340,7 +330,7 @@ public class Main {
             FunctionDecl currentFeatureFun = null;
             FunctionDecl productNameFun = null;
             for (ModuleDecl d : m.getModuleDecls()) {
-                if (d.getName().equals("ABS.Productline")) {
+                if (d.getName().equals(Constants.PL_NAME)) {
                     modProductline = d;
                     break;
                 }
@@ -384,6 +374,32 @@ public class Main {
         }
     }
 
+    /** Handle exceptions: add exceptions as constructors to the
+     ABS.StdLib.Exception datatype.
+     */
+    public static void exceptionHack(Model m) {
+        assert m != null;
+        if (m.getExceptionType() == null) {
+            return; // Eclipse?
+        }
+        DataTypeDecl e = (DataTypeDecl)(m.getExceptionType().getDecl());
+        if (e != null) {
+            // TODO: if null and not -nostdlib, throw an error
+            for (Decl decl : m.getDecls()) {
+                if (decl instanceof ExceptionDecl) {
+                    ExceptionDecl e1 = (ExceptionDecl)decl;
+                    // KLUDGE: what do we do about annotations to exceptions?
+                    DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().fullCopy());
+                    d.setPosition(e1.getStart(), e1.getEnd());
+                    d.setFileName(e1.getFileName());
+                    d.exceptionDecl = e1;
+                    e1.dataConstructor = d;
+                    e.addDataConstructor(d);
+                }
+            }
+        }
+    }
+
 
     /**
      * TODO: Should probably be introduced in Model through JastAdd by MTVL package.
@@ -400,24 +416,24 @@ public class Main {
             if (solve) {
                 if (verbose)
                     System.out.println("Searching for solutions for the feature model...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 System.out.print(s.resultToString());
             }
             if (minimise) {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for minimum solutions of "+product+" for the feature model...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 System.out.print(s.minimiseToString(product));
             }
             if (maximise) {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for maximum solutions of "+product+" for the feature model...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 //System.out.print(s.maximiseToInt(product));
                 s.addConstraint(ChocoSolver.eqeq(s.vars.get(product), s.maximiseToInt(product)));
-                ChocoSolver s1 = m.getCSModel();
+                ChocoSolver s1 = m.instantiateCSModel();
                 int i=1;
                 while(s1.solveAgain()) {
                     System.out.println("------ "+(i++)+"------");
@@ -427,7 +443,7 @@ public class Main {
             if (solveall) {
                 if (verbose)
                     System.out.println("Searching for all solutions for the feature model...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 int i=1;
                 while(s.solveAgain()) {
                     System.out.println("------ "+(i++)+"------");
@@ -439,7 +455,7 @@ public class Main {
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
                 if (p_product != null) {
-                    ChocoSolver s = m.getCSModel();
+                    ChocoSolver s = m.instantiateCSModel();
                     HashSet<Constraint> newcs = new HashSet<Constraint>();
                     p_product.getProdConstraints(s.vars,newcs);
                     for (Constraint c: newcs) s.addConstraint(c);
@@ -454,7 +470,7 @@ public class Main {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 HashSet<Constraint> newcs = new HashSet<Constraint>();
                 s.addIntVar("difference", 0, 50);
                 if (p_product != null) {
@@ -472,7 +488,7 @@ public class Main {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 HashSet<Constraint> newcs = new HashSet<Constraint>();
                 s.addIntVar("noOfFeatures", 0, 50);
                 if (m.getMaxConstraints(s.vars,newcs, "noOfFeatures")) {
@@ -486,7 +502,7 @@ public class Main {
             }
             if (check) {
                 assert product != null;
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 if (p_product == null ){
                     System.out.println("Product '"+product+"' not found.");
                     if (!product.contains("."))
@@ -497,11 +513,11 @@ public class Main {
                 }
             }
             if (numbersol && !ignoreattr) {
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 System.out.println("Number of solutions found: "+s.countSolutions());
             }
             else if (numbersol && ignoreattr) {
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 System.out.println("Number of solutions found (without attributes): "+s.countSolutions());
             }
         }
@@ -535,6 +551,17 @@ public class Main {
                 ltie.setLocationTypingPrecision(locationTypeScope);
             }
             m.registerTypeSystemExtension(ltie);
+        }
+    }
+
+    private void typeCheckProductLine(Model m) {
+
+        if (verbose)
+            System.out.println("Typechecking Software Product Line...");
+
+        SemanticErrorList typeerrors = m.typeCheckPL();
+        for (SemanticError se : typeerrors) {
+            System.err.println(se.getHelpMessage());
         }
     }
 
@@ -613,16 +640,16 @@ public class Main {
         units.add(parseUnit(file, null, reader));
     }
 
-    protected void printParserErrorAndExit() {
+    protected static void printParserErrorAndExit() {
         System.err.println("\nCompilation failed with syntax errors.");
         System.exit(1);
     }
 
-    protected void printErrorAndExit(String error) {
+    protected static void printErrorAndExit(String error) {
         System.err.println("\nCompilation failed:\n");
         System.err.println("  " + error);
         System.err.println();
-        printUsageAndExit();
+        System.exit(1);
     }
 
     protected void printUsageAndExit() {
@@ -630,7 +657,7 @@ public class Main {
         System.exit(1);
     }
 
-    protected void printVersionAndExit() {
+    protected static void printVersionAndExit() {
         System.out.println("ABS Tool Suite v"+getVersion());
         System.exit(1);
     }
@@ -695,7 +722,7 @@ public class Main {
                 + "  -h             print this message\n");
     }
 
-    protected void printHeader() {
+    protected static void printHeader() {
 
         String[] header = new String[] {
            "The ABS Compiler" + " v" + getVersion(),
@@ -720,7 +747,7 @@ public class Main {
         System.out.println(starline);
     }
 
-    private String getVersion() {
+    private static String getVersion() {
         String version = Main.class.getPackage().getImplementationVersion();
         if (version == null)
             return "HEAD";
@@ -794,7 +821,7 @@ public class Main {
     }
 
     /**
-     * Parses String s and returns Model.
+     * Calls {@link #parseString(String, boolean, boolean, boolean)} with withDbLib set to false.
      *
      * @param s
      * @param withStdLib

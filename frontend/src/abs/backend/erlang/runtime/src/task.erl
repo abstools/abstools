@@ -10,7 +10,6 @@
 -export([await_duration/4,block_for_duration/4,block_for_resource/4]).
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
--include_lib("log.hrl").
 
 -behaviour(gc).
 -export([get_references/1]).
@@ -96,9 +95,16 @@ block(Cog=#cog{ref=CogRef})->
 
 %% await_duration and block_for_duration are called in different scenarios
 %% (guard vs statement), hence the different amount of work they do.
-await_duration(#cog{ref=CogRef},Min,Max,Stack) ->
-    eventstream:event({task,self(),CogRef,clock_waiting,Min,Max}),
-    loop_for_unblock_signal(clock_finished, Stack).
+await_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
+    case rationals:is_greater(rationals:to_r(Min), {0, 1}) of
+        true ->
+            task:release_token(Cog,waiting), %FIXME: switch to clock_waiting atomically
+            eventstream:event({task,self(),CogRef,clock_waiting,Min,Max}),
+            loop_for_unblock_signal(clock_finished, Stack),
+            task:acquire_token(Cog, Stack);
+        false ->
+            ok
+    end.
 
 block_for_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
     task:block(Cog),
@@ -114,7 +120,6 @@ block_for_resource(Cog, Resourcetype, Amount, Stack) ->
 loop_for_resource(Cog=#cog{ref=CogRef,dc=DC},Resourcetype,Amount,Stack) ->
     {Result, Consumed}= dc:consume(DC,Resourcetype,Amount),
     Remaining=rationals:sub(rationals:to_r(Amount), rationals:to_r(Consumed)),
-    ?DEBUG({resource_consumed, Resourcetype, Consumed, remaining, Remaining}),
     case Result of
         wait -> eventstream:event({cog,self(),CogRef,resource_waiting}),
                 loop_for_unblock_signal(clock_finished, Stack),

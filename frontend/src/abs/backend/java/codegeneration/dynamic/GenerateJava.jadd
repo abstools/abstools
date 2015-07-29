@@ -576,9 +576,6 @@ aspect GenerateJavaDynamic_Core {
         // should not appear; by flattening, original calls are replaced with regular calls
     }
 
-    public void SafegetExp.generateJavaDynamic(PrintStream s) {
-      throw new  NotImplementedYetException(this); 
-    }
     public void GetExp.generateJavaDynamic(PrintStream stream) {
         DataTypeType t = (DataTypeType) getPureExp().getType();
         // assume to be of type Fut<V>

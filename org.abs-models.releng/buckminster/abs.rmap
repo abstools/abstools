@@ -7,6 +7,7 @@
   <rm:locator pattern="org.abs-models.costabs" searchPathRef="costabs"/>
   <rm:locator pattern="org.abs-models.apet" searchPathRef="apet"/>
   <rm:locator pattern="org.abs-models.releng" searchPathRef="by-component"/>
+  <rm:locator pattern="org.absmodels.site" searchPathRef="by-component"/>
   <rm:locator pattern="org.abs-models.sda" searchPathRef="sda"/>
   <rm:locator pattern="org.eclipse.swtbot.*" searchPathRef="SWTBot"/>
   <rm:locator pattern="org.hamcrest" searchPathRef="SWTBot"/>
@@ -62,12 +63,12 @@
   </rm:searchPath>
   <rm:searchPath name="org.eclipse.platform">
 		<rm:provider readerType="eclipse.import" componentTypes="osgi.bundle,eclipse.feature" mutable="false" source="false">
-			<rm:uri format="http://download.eclipse.org/releases/indigo/?importType=binary"/>
+			<rm:uri format="http://download.eclipse.org/releases/luna/?importType=binary"/>
 		</rm:provider>
   </rm:searchPath>
   <rm:searchPath name="SWTBot">
 		<rm:provider readerType="eclipse.import" componentTypes="osgi.bundle,eclipse.feature" mutable="false" source="false">
-			<rm:uri format="http://download.eclipse.org/technology/swtbot/helios/dev-build/update-site/?importType=binary"/>
+			<rm:uri format="http://download.eclipse.org/technology/swtbot/releases/2.2.1/"/>
 		</rm:provider>
   </rm:searchPath>
   <!-- Default -->

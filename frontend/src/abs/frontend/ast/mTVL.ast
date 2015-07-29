@@ -17,7 +17,7 @@ AttrConstraints ::= Attribute* Constr*;
 
 Group ::=  Card:Cardinality FNode*;
 
-abstract  FNode ::= Feat:FeatureDecl;
+abstract  FNode ::= FeatureDecl;
 OptFeat:  FNode;
 MandFeat: FNode;
 

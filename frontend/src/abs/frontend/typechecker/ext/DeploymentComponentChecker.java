@@ -14,8 +14,8 @@ import abs.frontend.ast.ExpressionStmt;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.NewExp;
 import abs.frontend.ast.PureExp;
+import abs.frontend.ast.Stmt;
 import abs.frontend.ast.VarDeclStmt;
-import abs.frontend.typechecker.Type;
 
 /**
  * @author rudi
@@ -52,8 +52,18 @@ public class DeploymentComponentChecker extends DefaultTypeSystemExtension {
     
     @Override
     public void checkNewExp(NewExp e) {
-        if (e.getType().isDeploymentComponentType() && e.hasLocal()) {
-            errors.add(new SemanticError(e, ErrorMessage.DEPLOYMENT_COMPONENT_NOT_COG, "dummy string to keep constructor happy"));
+        if (e.hasLocal()) {
+            if (e.getType().isDeploymentComponentType()) {
+                // Don't create a deployment component with "new local"
+                errors.add(new SemanticError(e, ErrorMessage.DEPLOYMENT_COMPONENT_NOT_COG, "dummy string to keep constructor happy"));
+            }
+            ASTNode parent = e.getParent();
+            if (parent instanceof Stmt) { // should always be true
+                Stmt stmt = (Stmt) parent;
+                if (CompilerUtils.getAnnotationValue(stmt.getAnnotations(), "DC") != null) {
+                    errors.add(new SemanticError(e, ErrorMessage.DEPLOYMENT_COMPONENT_IGNORED, "dummy string to keep constructor happy"));
+                }
+            }
         }
     }
       

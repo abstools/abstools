@@ -351,7 +351,7 @@ public class ParserTest extends FrontendTest {
     
     @Test
     public void ticket238() throws Exception{
-        assertParseOk("module T238; delta D; productline P; features F,G; delta D when F && (~ G);");
+        assertParseOk("module T238; delta D; productline P; features F,G; delta D when F && (! G);");
         // fails because logical connectives apart from && are not implemented yet...
     }
     

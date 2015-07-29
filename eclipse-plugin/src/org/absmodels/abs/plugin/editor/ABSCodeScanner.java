@@ -208,8 +208,10 @@ public class ABSCodeScanner implements ITokenScanner {
 					new File(fEditor.getEditorInput().getName()),
 					doccontent,
 					new StringReader(doccontent));
+			Model m;
 			// Redmine #86: inh eq CompilationUnit...lookupModule() requires a parent.
-			new Model().addCompilationUnit(compilationUnit);
+			(m = new Model()).addCompilationUnit(compilationUnit);
+			Main.exceptionHack(m);
 		} catch (ParseException e) {
 			if (doDebug)
 				e.printStackTrace();

@@ -8,7 +8,9 @@
 Name ::= <Name>;
 DeltaID ::= <Name>;
 
-Model ::= CompilationUnit* ;
+Model ::= CompilationUnit* /ImplicitProduct*/ ;
+//Model ::= CompilationUnit* ;
+
 
 CompilationUnit ::= <Name> ModuleDecl* DeltaDecl* UpdateDecl* [ProductLine] Product* FeatureDecl* FExt*;
 ModuleDecl ::= <Name> Export* Import* Decl* [Block:MainBlock];
@@ -239,7 +241,6 @@ SyncCall: Call;
 AsyncCall: Call;
 AwaitAsyncCall: Call;
 GetExp: EffExp ::= PureExp;
-SafegetExp: GetExp ::= PureExp;
 OriginalCall: EffExp ::= Param:PureExp*;
 TargetedOriginalCall: OriginalCall ::= Target:DeltaID Param:PureExp*;
 
@@ -314,12 +315,13 @@ IntVal: Value ::= <Value:int>;
 BoolVal: Value ::= <Value:Boolean>;
 StringVal: Value ::= <Value:String>;
 
-Deltaspec ::= <Name> Deltaparam* ;
+Deltaspec ::= <DeltaID> Deltaparam* ;
 abstract Deltaparam;
 CID: Deltaparam ::= <Name>;
 FID: Deltaparam ::= <FeatName>;
 FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
-Product ::= <Name> Feature* Reconfiguration* ;
+ImplicitProduct ::= Feature* ;
+Product : ImplicitProduct ::= <Name> Feature* Reconfiguration* ;
 Reconfiguration ::= <TargetProductID> DeltaID* <UpdateID> ;

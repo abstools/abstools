@@ -33,6 +33,16 @@ public class TypeCheckerTest extends FrontendTest {
     public void lizeth() throws Exception {
         assertTypeCheckFileOk("tests/abssamples/lizeth.abs", false);
     }
+    
+    @Test
+    public void rosetreeTicket187() throws Exception {
+        assertTypeCheckFileOk("tests/abssamples/RoseTree.abs", true);
+    }
+
+    @Test
+    public void subtypingTicket188() throws Exception {
+        assertTypeCheckFileOk("tests/abssamples/Subtyping.abs", true);
+    }
 
     @Test
     public void tch_npe() throws Exception {
@@ -111,7 +121,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void negTestOk() {
-        assertTypeOK("{ Bool b = ~True; }");
+        assertTypeOK("{ Bool b = !True; }");
     }
 
     @Test
@@ -143,6 +153,20 @@ public class TypeCheckerTest extends FrontendTest {
         assertThat(tu, instanceOf(InterfaceTypeUse.class));
         assertThat(tu.getType(), instanceOf(InterfaceType.class));
         assertThat(tu.getDecl(), instanceOf(InterfaceDecl.class));
+    }
+
+    @Test
+    public void ticket414_futNeedsDataType2() {
+        Model m = assertParseOk("module M; data I = I; { Fut<I> fi; }", Config.WITH_STD_LIB);
+        assertFalse(m.hasErrors());
+        Block b = m.getMainBlock();
+        assertNotNull(b);
+        VarDeclStmt s = (VarDeclStmt) b.getStmt(0);
+        ParametricDataTypeUse u = (ParametricDataTypeUse) s.getVarDecl().getAccess();
+        // Have:
+        TypeUse tu = u.getParam(0);
+        assertEquals("I",tu.getName());
+        assertThat(tu, instanceOf(DataTypeUse.class));
     }
 
     @Test

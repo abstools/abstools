@@ -1,5 +1,59 @@
 module ABS.StdLib;
-export *;
+
+// Scalar datatypes
+export Unit, String, Int, Rat, Bool, Fut, Exception, Location;
+
+// Booleans
+export True, False, and, not;
+
+// Numerics
+export max, min, abs, pow, sqrt_newton, random, truncate;
+
+// Basic utility datatypes
+export Maybe, Nothing, Just, isJust, fromJust;
+export Either, Left, Right, left, right, isLeft, isRight;
+export Pair, fst, snd;
+export Triple, fstT, sndT, trd;
+
+// Sets
+export Set, EmptySet, Insert, set; //TODO: don't export EmptySet, Insert
+
+export contains, emptySet, size, union, intersection, difference,
+  insertElement, remove, take, hasNext, next;
+
+// Lists
+export List, Nil, Cons, head, tail, list;
+export length, isEmpty, nth, without, concatenate, appendright, reverse, copy;
+
+// Maps
+export Map, EmptyMap, InsertAssoc, map; // TODO: don't export EmptyMap, InsertAssoc
+
+export removeKey, values, keys, lookup, lookupMaybe, lookupUnsafe,
+  lookupDefault, insert, put;
+  
+// String functions
+export toString, intToString, substr, strlen;
+
+// Real-Time ABS datatypes
+export Time, timeValue, currentms, now, timeDifference, timeLessThan;
+export Duration, durationValue, isDurationInfinite, addDuration, subtractDuration, durationLessThan, subtractFromDuration;
+export lowlevelDeadline, deadline;
+export Deadline, Critical;
+
+// KeY-ABS annotations
+export Inv, Pre, Post;
+
+// Various annotations
+export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer;
+export COG, Plain, Final, Atomic;
+
+// Functional breakpoints
+// TODO: find out where they are defined / used
+export watch, watchEx;
+
+// Input/Output
+export println, print, readln;
+
 export Cost;
 import Cost from ABS.DC;
 
@@ -10,7 +64,6 @@ data Rat;                       // builtin
 data Bool = True | False;       // builtin
 data Fut<A>;                    // builtin
 data Exception;                 // builtin
-data Result<A> = Value(A val)|Error(String s); // TODO: remove this
 data Location;                  // (For Component model) //
 
 // TODO: uncomment these as soon as we fix the bug that causes name collisions
@@ -26,20 +79,26 @@ data Location;                  // (For Component model) //
 // exception KeyboardInterruptException;
 
 def Bool and(Bool a, Bool b) = a && b;
-def Bool not(Bool a) = ~a;
+def Bool not(Bool a) = !a;
 
 def A max<A>(A a, A b) = if a > b then a else b;
 def A min<A>(A a, A b) = if a < b then a else b;
     
 def Rat abs(Rat x) = if x > 0 then x else -x;
 
-def Int pow(Int b, Int n) =
-    if n < 0 then
-        0
+def Rat pow(Rat b, Int n) =
+    if n < 0
+    then 1 / pow(b, -n)
     else case n {
         0 => 1;
         _ => b * pow(b, n-1);
     };
+
+def Rat sqrt_newton(Rat x, Rat estimate, Rat epsilon) =
+  let (Rat next) = (estimate + x / estimate)/2
+  in if abs(estimate - next) < epsilon
+    then estimate
+    else sqrt_newton(x, next, epsilon);
 
 /**
  * Returns a random number between 0 (inclusive) and below (exclusive).
@@ -62,7 +121,7 @@ data Either<A, B> = Left(A left) | Right(B right);
 def Bool isLeft<A,B>(Either<A, B> val) = 
     case val { Left(x) => True; _ => False; };
     
-def Bool isRight<A,B>(Either<A, B> val) = ~isLeft(val);
+def Bool isRight<A,B>(Either<A, B> val) = !isLeft(val);
 
 
 data Pair<A, B> = Pair(A fst, B snd); 
@@ -189,7 +248,7 @@ def A take<A>(Set<A> ss) =
   };
 
 // checks whether the input set has more elements to be iterated.
-def Bool hasNext<A>(Set<A> s) = ~ emptySet(s); 
+def Bool hasNext<A>(Set<A> s) = ! emptySet(s); 
 
 // Partial function to iterate over a set.
 def Pair<Set<A>,A> next<A>(Set<A> s) = 
@@ -405,7 +464,7 @@ def Time now() = Time(currentms());
 //   Time t = now(); await timeDifference(now(), t) > 5;
 def Rat timeDifference(Time t1, Time t2) =
   abs(timeValue(t2) - timeValue(t1));
-def Bool timeLessThan(Time t1, Time t2) =
+def Bool timeLessThan(Time t1, Time t2) = // TODO: remove this, use <
   timeValue(t1) < timeValue(t2);
 
 data Duration = Duration(Rat durationValue) | InfDuration;
@@ -538,11 +597,13 @@ export DeploymentComponent, CloudProvider;
 export DC, Cost, Size, MaxSize, CogLocation;
 // Datatypes, Constructors
 export Resourcetype, CPU, Bandwidth, Memory, InfRat, Fin;
+export Startupduration, PaymentInterval, CostPerInterval;
 // Functions
 export thisDC, finvalue;
 import * from ABS.StdLib;
 
-data Resourcetype = CPU | Bandwidth | Memory ;
+data Resourcetype = CPU | Bandwidth | Memory
+                  | Startupduration | PaymentInterval | CostPerInterval;
 
 data InfRat = InfRat | Fin(Rat finvalue);
 
@@ -573,8 +634,12 @@ interface DeploymentComponent {
     // time interval onwards.
     Unit incrementResources(Rat amount, Resourcetype rtype);
 
-    Unit setProvider(CloudProvider provider);
-    CloudProvider getProvider();
+    [Atomic] Unit setProvider(CloudProvider provider);
+    [Atomic] CloudProvider getProvider();
+    [Atomic] Time getCreationTime();
+    [Atomic] Rat getStartupDuration();
+    [Atomic] Int getPaymentInterval();
+    [Atomic] Rat getCostPerInterval();
     // Convenience methods for calling CloudProvider acquireInstance,
     // releaseInstance.  If no cloud provider is set, return True.
     Bool acquire();
@@ -597,42 +662,76 @@ interface CloudProvider {
     Bool releaseInstance(DeploymentComponent instance);
     Bool killInstance(DeploymentComponent instance);
 
-    Rat getAccumulatedCost();
+    [Atomic] Rat getAccumulatedCost();
+    [Atomic] Unit shutdown();
 }
 
 class CloudProvider(String name) implements CloudProvider {
     // Preliminary version - mind the FIXMEs!
+
+    // All launched instances
     Set<DeploymentComponent> launchedInstances = set[];
+    // Launched instances that are currently acquired
     Set<DeploymentComponent> acquiredInstances = set[];
     Set<DeploymentComponent> killedInstances = set[];
-    Int instanceCounter = 0;
+    Int nextInstanceId = 0;
+    Rat accumulatedCost = 0;
+    Bool keeprunning = True;    // Flag for forced shutdown
 
-    Unit run() {
-        // TODO: loop with "await duration(1, 1)", sum up costs of deployment
-        // components in launchedInstances, launchedInstancesNonEx,
-        // acquiredInstances that have crossed their accounting period
-        skip;
+    Unit startAccounting() {
+        while(keeprunning && !emptySet(launchedInstances)) {
+            await duration(1, 1);
+            Rat cost = this.sumOfCosts(launchedInstances);
+            accumulatedCost = accumulatedCost + cost;
+        }
+    }
+    [Atomic] Unit shutdown() { keeprunning = False; }
+
+    Rat sumOfCosts(Set<DeploymentComponent> dcs) {
+        Rat result = 0;
+        Time t = now();
+        while (!emptySet(dcs)) {
+            DeploymentComponent dc = take(dcs);
+            dcs = remove(dcs, dc);
+            Rat cost = await dc!getCostPerInterval();
+            if (cost > 0) {
+                Time creationtime = await dc!getCreationTime();
+                Rat time_elapse = timeDifference(t, creationtime);
+                Int interval = await dc!getPaymentInterval();
+                if (time_elapse % interval == 0) {
+                    result = result + cost;
+                }
+            }
+        }
+        return result;
     }
 
     DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
         // Until we have a way of actually removing DCs, might as well re-use
         // them
+        Bool needToStartAccounting = emptySet(launchedInstances);
+        // TODO: Is this what we want?  We might resurrect an instance
+        // that is larger than what we were asked for
         DeploymentComponent result = this.findMatchingInstance(killedInstances, d);
         if (result != null) {
             killedInstances = remove(killedInstances, result);
             launchedInstances = insertElement(launchedInstances, result);
         } else {
             result = new DeploymentComponent(name + "-"
-                + toString(instanceCounter), d);
-            instanceCounter = instanceCounter + 1;
+                + toString(nextInstanceId), d);
+            nextInstanceId = nextInstanceId + 1;
+            Rat startup_duration = await result!getStartupDuration();
+            await duration(startup_duration, startup_duration);
             launchedInstances = insertElement(launchedInstances, result);
-            // TODO: await for startup time here (and only here)
             result!setProvider(this);
         }
+        if (needToStartAccounting) this!startAccounting();
         return result;
     }
 
     DeploymentComponent launchInstance(Map<Resourcetype, Rat> d) {
+        // if we don't call prelaunchInstance here, remember to start
+        // accounting as well
         DeploymentComponent result = this.prelaunchInstance(d);
         acquiredInstances = insertElement(acquiredInstances, result);
         return result;
@@ -659,26 +758,23 @@ class CloudProvider(String name) implements CloudProvider {
     }
 
     Bool killInstance(DeploymentComponent instance) {
-        // Refuse to kill an acquired instance.
+        // Also kill an instance that is acquired.
         // FIXME: is this the right thing?
-        Bool result = ~(contains(acquiredInstances, instance));
-        if (result) {
-            launchedInstances = remove(launchedInstances, instance);
-            killedInstances = insertElement(killedInstances, instance);
-        }
-        return result;
+        acquiredInstances = remove(acquiredInstances, instance);
+        launchedInstances = remove(launchedInstances, instance);
+        killedInstances = insertElement(killedInstances, instance);
+        return True;
     }
 
-    Rat getAccumulatedCost() {
-        // TODO: implement
-        return -1;
+    [Atomic] Rat getAccumulatedCost() {
+        return accumulatedCost;
     }
 
     DeploymentComponent findMatchingInstance(Set<DeploymentComponent> instances,
         Map<Resourcetype, Rat> description)
         {
             DeploymentComponent result = null;
-            while (~emptySet(instances) && result == null) {
+            while (!emptySet(instances) && result == null) {
                 DeploymentComponent instance = take(instances);
                 instances = remove(instances, instance);
                 Bool matches = await instance!matchesDescription(description);
@@ -722,6 +818,13 @@ implements DeploymentComponent {
     InfRat memory = case lookup(initconfig, Memory) {
       Nothing => InfRat; Just(m) => Fin(m); };
     InfRat memorynext = memory;
+    Int paymentInterval = 
+        case lookup(initconfig, PaymentInterval) {
+            Nothing => 1; Just(n) => truncate(n); };
+    Rat costPerInterval = case lookup(initconfig, CostPerInterval) {
+        Nothing => 0; Just(o) => o; };
+    Rat startupDuration = case lookup(initconfig, Startupduration) {
+        Nothing => 0; Just(p) => p; };
 
     CloudProvider cloudprovider = null;
     {
@@ -799,10 +902,10 @@ implements DeploymentComponent {
             }
         }
     }
-    Unit setProvider(CloudProvider provider) {
+    [Atomic] Unit setProvider(CloudProvider provider) {
         this.cloudprovider = provider;
     }
-    CloudProvider getProvider() { return cloudprovider; }
+    [Atomic] CloudProvider getProvider() { return cloudprovider; }
     Bool acquire() {
         Bool result = True;
         if (cloudprovider != null) {
@@ -817,11 +920,18 @@ implements DeploymentComponent {
         }
         return result;
     }
+
+    [Atomic] Time getCreationTime() { return creationTime; }
+    [Atomic] Rat getStartupDuration() { return startupDuration; }
+    [Atomic] Int getPaymentInterval() { return paymentInterval; }
+    [Atomic] Rat getCostPerInterval() { return costPerInterval; }
+
+
     [Atomic]
     Bool matchesDescription(Map<Resourcetype, Rat> description) {
         Bool result = True;
         Set<Resourcetype> keys = keys(description);
-        while (result == True && ~(emptySet(keys))) {
+        while (result == True && !(emptySet(keys))) {
             Resourcetype key = take(keys);
             keys = remove(keys, key);
             Rat value = lookupUnsafe(description, key);

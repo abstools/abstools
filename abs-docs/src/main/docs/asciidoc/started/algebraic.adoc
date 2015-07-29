@@ -3,8 +3,7 @@
 Algebraic Data Types make it possible to describe data in an immutable way. In contrast to objects, data types do not have an identity and cannot be mutated. This makes reasoning about data types much simpler than about objects. Data types are built by using Data Type Constructors (or constructors for short), which describe the possible values of a data type.
 
 .Syntax
-[source,java]
-
+[source]
 ----
 data IntList = NoInt | Cons(Int, IntList);
 data Bool = True | False;
@@ -33,8 +32,7 @@ The following Algebraic Data Types are predefined and come bundled with the ABS 
 For data types of arbitrary size, like lists, maps and sets, it is undesirable having to write them down in the form of nested constructor expressions. For this purpose, ABS provides a special syntax for nary constructors, which are transformed into constructor expressions via a user-supplied function.·
 
 .Syntax
-[source,java]
-
+[source]
 ----
 def Set<A> set<A>(List<A> l) = case l {
     Nil => EmptySet;

@@ -6,80 +6,60 @@
  */
 module BoundedBuffer;
 
-type Data = Int ;
-//type Buffer = DataList
-data DataList = DataNil | ConsData(Data, DataList) ;
-
-def Data dataHead(DataList dl) = case dl { ConsData(d,l) => d ; };  
-def DataList dataTail(DataList dl) = case dl { ConsData(d,l) => l ; }; 
-
-def DataList appendData(Data d, DataList list)
-  = concat(list, ConsData(d,DataNil));
-
-def DataList concat(DataList l1 , DataList l2) = 
-  case l1 {
-    DataNil => l2 ; 
-    ConsData(hd,tl) => ConsData(hd, concat(tl,l2)) ; 
-};        
+type Data = Int;
 
 interface Buffer {
-
-//    Unit init();
     Unit append(Data d);
     Data remove();
-
 }
 
 interface Consumer {
-   Unit loop(Data d);
+   Unit consume(Data amount);
 } 
 
 interface Producer {
-   Unit loop(Data d);
+   Unit produce(Data amount);
 }
 
 
-class BoundedBuffer implements Buffer {
+class BoundedBuffer(Int maxElements) implements Buffer {
     
     //A bounded buffer
-    DataList buffer = DataNil; 
-    Int max = 5;
-    Int n = 0;
-
-//   Unit init() { }
+    List<Data> buffer = Nil; 
+    Int numElements = 0;
 
     Unit append(Data d){
-        await (n < max) ; 
-        buffer = appendData(d,buffer);
-        n = n + 1 ; 
+        await (numElements < maxElements) ; 
+        buffer = appendright(buffer,d);
+        numElements = numElements + 1 ; 
     }
     
     Data remove() {
         Data d = 0;
-        await n > 0 ; 
-        d = dataHead(buffer);
-        buffer = dataTail(buffer);
-        n = n - 1 ; 
+        await numElements > 0 ; 
+        d = head(buffer);
+        buffer = tail(buffer);
+        numElements = numElements - 1 ; 
         return d ; 
     }
 }
 
 class ProducerImpl (Buffer b) implements Producer {
     
-    Unit loop(Data d) {
-        if (d > 0) {
-            b!append(d);
-            this!loop(d - 1);
+    Unit produce(Data amount) {
+        if (amount > 0) {
+            b!append(amount);
+            this!produce(amount - 1);
         }
     }
 }
 
 class ConsumerImpl (Buffer b) implements Consumer {
     
-    Unit loop(Data d) {
-        if (d > 0) {
+    Unit consume(Data amount) {
+        if (amount > 0) {
             b!remove();
-            this!loop(d - 1);
+            this!consume(amount - 1);
         }
     }
 }
@@ -91,13 +71,13 @@ class ConsumerImpl (Buffer b) implements Consumer {
     Producer p2;
     Consumer c1;
     Consumer c2;
-    buff = new BoundedBuffer(); 
+    buff = new BoundedBuffer(5); 
     p1 = new ProducerImpl(buff);    
     c1 = new ConsumerImpl(buff);
     p2 = new ProducerImpl(buff);    
     c2 = new ConsumerImpl(buff);
-    p1!loop(10);
-    c1!loop(10);
-    p2!loop(10);
-    c2!loop(10);
+    p1!produce(10);
+    c1!consume(10);
+    p2!produce(10);
+    c2!consume(10);
 }

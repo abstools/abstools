@@ -77,7 +77,6 @@
       <string>return</string>
       <string>skip</string>
       <string>get</string>
-      <string>safeget</string>
       <string>null</string>
       <string>await</string>
       <string>if</string>

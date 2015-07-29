@@ -34,8 +34,7 @@ public class SyntaxErrorCollector extends BaseErrorListener {
                             int line, int charPositionInLine, String msg,
                             RecognitionException e)
     {
-        // FIXME: change type of last argument (`token`) once we've removed beaver
-        SyntaxError err = new SyntaxError(msg, line, charPositionInLine + 1, null);
+        SyntaxError err = new SyntaxError(msg, line, charPositionInLine + 1);
         err.setFile(filename);
         parserErrors.add(err);
         // super.syntaxError(recognizer, offendingSymbol, line, charPositionInLine, msg, e);

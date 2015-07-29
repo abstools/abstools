@@ -15,8 +15,7 @@ An end-of-line comment is a code fragment that starts with two slashes, e.g., `/
 
 .Syntax
 
-[source,java]
-
+[source]
 ----
 // this is a comment
 module A; // this is also a comment
@@ -25,8 +24,7 @@ module A; // this is also a comment
 .Traditional Comments
 A traditional comment is a code fragment that is enclosed in `/{asterisk} {asterisk}/`, e.g., `/{asterisk} this is a comment {asterisk}/`. Nested traditional comments are not possible.
 
-[source,java]
-
+[source]
 ----
 /* this
 is a multiline
@@ -35,7 +33,15 @@ comment */
 ----
 
 .Identifiers
-ABS distinguishes identifier and type identifier. They differ in the first character, which must be a lower-case character for identifiers and an upper-case character for type identifiers.
+
+Identifiers consist of a letter followed by a sequence of letters,
+numbers and underscores (`_`).
+
+ABS distinguishes identifiers and type identifiers.  Identifiers start
+with a lower-case character, type identifiers start with an upper-case
+character.  Identifiers name local variables, fields and functions.
+Type identifiers name interfaces, classes, types and type
+constructors.
 
 .Keywords
 The following words are keywords in the ABS language and are not regarded as identifiers.
@@ -72,7 +78,26 @@ The following tokens are operators:
 [format="csv",width="60%",cols="15"]
 [frame="topbot",grid="none"]
 |=====
-||,&&,==,!=,<,>,<=,>=,+,-,*,/,%,~,&
+||,&&,==,!=,<,>,<=,>=,+,-,*,/,%,!,&
 |=====
 
+.Annotations
+
+Annotations consist of a type identifier, optionally followed by a
+colon (`:`) and a syntactically valid pure expression.  They can be
+put in front of statements and definitions.
+
+Unknown annotations are ignored by the toolchain.
+
+[source]
+----
+[Near] class Example { ... }
+----
+
+This is an example of an annotation with an expression:
+
+[source]
+----
+[Cost: 15] skip;
+----
 

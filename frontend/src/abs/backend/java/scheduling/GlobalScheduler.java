@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.scheduling;
@@ -53,7 +53,7 @@ public class GlobalScheduler {
                 l.unlock();
                 return;
             }
-            if (options.isEmpty()) { 
+            if (options.isEmpty()) {
                 List<SimpleSchedulerThread> activeThreads = runtime.getThreadManager().getAllCopyOf(SimpleSchedulerThread.class);
                 if (!activeThreads.isEmpty()) {
                     Set<Task<?>> suspendedTasks = new HashSet<Task<?>>();
@@ -78,7 +78,7 @@ public class GlobalScheduler {
                         return;
                     }
                 }
-                
+
                 logger.info("No steps left. Program finished");
                 logger.info("Total number of global choices: " + totalNumChoices);
                 if (totalNumChoices == 0) {
@@ -107,7 +107,7 @@ public class GlobalScheduler {
 
     public void stepTask(Task<?> task) throws InterruptedException {
         if (isShutdown) return;
-        
+
         ScheduleAction a = new StepTask(task);
 
         synchronized (this) {
@@ -132,7 +132,7 @@ public class GlobalScheduler {
             locked = false;
             notifyAll();
         }
-        
+
         synchronized void awaitUnlocked() {
             while (locked) {
                 try {
@@ -145,37 +145,37 @@ public class GlobalScheduler {
                 }
             }
         }
-        
+
     }
-    
+
     /**
      * Handling a get in the global scheduler is pretty tricky.
      * The following is going on here:
      * the current task does a .get on the given future.
      * 2 Cases:
-     * 
+     *
      * 1. Future is ready, that is easy, we just continue
-     * 
+     *
      * 2. Future is not ready
-     * 
-     * this case is difficult, because we have to 
+     *
+     * this case is difficult, because we have to
      *  1. block the current thread
      *  2. schedule some other task that is ready by choosing one by the
-     *     global scheduler 
+     *     global scheduler
      *  3. when the future is resolved the blocked thread must be awaked,
      *     BUT we must ensure that only one thread is calling the
-     *     doNextScheduleStep method. 
+     *     doNextScheduleStep method.
      *     For this reason there is an ignoreNextStep field that
      *     can be set to ignore the next call to doNextScheduleStep
-     *     
-     *     
+     *
+     *
      *  what we do now is to create a Waker object
-     *  this waker object is added to the future we are waiting for, so 
+     *  this waker object is added to the future we are waiting for, so
      *  that this future can inform us when it is resolved.
      *  we then schedule the next task by calling runtime.doNextStep()
      *  and after that we suspend the thread to be awaked later by the
      *  future, see Waker class for further docu
-     * 
+     *
      * @param fut
      */
     public void handleGet(ABSFut<?> fut) {
@@ -195,46 +195,42 @@ public class GlobalScheduler {
     }
 
     private static class Waker implements GuardWaiter {
-        boolean awaked;
+        boolean awaken;
         final GlobalScheduler globalScheduler;
         public Waker(GlobalScheduler scheduler) {
             globalScheduler = scheduler;
         }
-        
-        
+
+
         public synchronized void awake() {
-            awaked = true;
+            awaken = true;
             notify();
         }
 
         public synchronized void await() {
-            while (!awaked) {
+            while (!awaken) {
                 try {
                     wait();
                 } catch (InterruptedException e) {
-                    if (Logging.DEBUG)
-                        logger.fine("receveid interrupt exception");
+                    logger.fine("received interrupt exception");
                     Thread.currentThread().interrupt();
                     break;
                 }
 
             }
-            if (Logging.DEBUG)
-                logger.finest("task awaked");
+            logger.finest("task awaked");
         }
 
         @Override
         public void checkGuard() {
-            if (Logging.DEBUG)
-                logger.finest("checking guard...");
+            logger.finest("checking guard...");
 
             SimpleLock l = new SimpleLock();
             globalScheduler.ignoreNextStep(l);
-            
+
             awake();
-            
-            if (Logging.DEBUG)
-                logger.finest("await next step");
+
+            logger.finest("await next step");
 
             // we are now waiting for the awaked thread to do the
             // call to doNextScheduleStep, so that there are no

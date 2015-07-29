@@ -29,7 +29,7 @@ public class ObjectTests extends SemanticTests {
 
     @Test
     public void refEq2() {
-        assertEvalTrue("interface I {} class C implements I {} { I i1 = new local C(); I i2 = new local C(); Bool testresult = ~(i1 == i2); }");
+        assertEvalTrue("interface I {} class C implements I {} { I i1 = new local C(); I i2 = new local C(); Bool testresult = !(i1 == i2); }");
     }
 
     @Test

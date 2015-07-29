@@ -577,9 +577,6 @@ aspect GenerateJava {
         getPureExp().generateJava(stream);
         stream.print(".get()");
     }
-    public void SafegetExp.generateJava(PrintStream s) {
-      throw new  NotImplementedYetException(this); 
-  }
 
     public void NewExp.generateJava(PrintStream stream) {
         ClassDecl decl = ((UnionType)getType()).getOriginatingClass();

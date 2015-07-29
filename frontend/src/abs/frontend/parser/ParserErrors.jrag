@@ -3,8 +3,8 @@ import abs.frontend.parser.ParserError;
 
 aspect ParserErrors {
 
-    private java.util.List<ParserError> CompilationUnit.parserErrors;
-    private java.util.List<ParserError> Model.parserErrors;
+    private java.util.List<ParserError> CompilationUnit.parserErrors = new ArrayList<ParserError>();
+    private java.util.List<ParserError> Model.parserErrors = new ArrayList<ParserError>();
     
     public void CompilationUnit.setParserErrors(java.util.List<ParserError> errors) {
     	parserErrors = errors;
@@ -25,18 +25,17 @@ aspect ParserErrors {
 	}
 
 	public java.util.List<ParserError> Model.getParserErrors() {
-		if (parserErrors != null)
-			return parserErrors;
-			
-		parserErrors = new ArrayList<ParserError>();
-	
+            if (parserErrors.isEmpty()) {
 		for (CompilationUnit u : getCompilationUnits()) {
 			if (u.getParserErrors() != null) {
 				parserErrors.addAll(u.getParserErrors());
 			}
 		}
-		
-		return parserErrors;
+            }
+            return parserErrors;
 	}
 	
 }
+// Local Variables:
+// mode: java
+// End:

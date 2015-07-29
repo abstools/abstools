@@ -85,6 +85,8 @@ public class ABSTest {
             Model p = Main.parseString(s, isSet(WITH_STD_LIB, config),
                     isSet(ALLOW_INCOMPLETE_EXPR, config));
 
+            Main.exceptionHack(p);
+
             if (isSet(EXPECT_PARSE_ERROR,config)) {
                 if (!p.hasParserErrors())
                     fail("Expected to find parse error");

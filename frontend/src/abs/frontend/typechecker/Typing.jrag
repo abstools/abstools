@@ -164,18 +164,7 @@ aspect Typing {
    		 return UnknownType.INSTANCE;
    	 return dt.getTypeArg(0);
     }
-    /**
-     * Actually always returns DataTypeType.
-     */
-    eq SafegetExp.getType() { 
-   	 Type t = getPureExp().getType();
-   	 if (! (t instanceof DataTypeType))
-   		 return UnknownType.INSTANCE;
-   	 DataTypeType dt = (DataTypeType) t;
-   	 if (!dt.hasTypeArgs())
-   		 return UnknownType.INSTANCE;
-   	 return getModel().getResultType(dt.getTypeArg(0));
-    }
+
     eq NewExp.getType() {
         Decl d = lookup(new KindedName(Kind.CLASS,getClassName()));
         return d.getType();

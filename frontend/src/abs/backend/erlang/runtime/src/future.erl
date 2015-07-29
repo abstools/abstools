@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
--export([init/3,start/3]).
--export([get/1,safeget/1,get_blocking/3,safeget_blocking/3,await/3,poll/1,die/2]).
+-export([init/4,start/5]).
+-export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2]).
 -include_lib("abs_types.hrl").
 -include_lib("log.hrl").
 %%Future starts AsyncCallTask
@@ -10,31 +10,33 @@
 -behaviour(gc).
 -export([get_references/1]).
 
-start(Callee,Method,Params) ->
-    Ref = spawn(?MODULE,init,[Callee,Method,Params]),
-    gc ! {Ref, self()},
-    receive
-        ok -> Ref
-    end.
+start(Callee,Method,Params,CurrentCog,Stack) ->
+    Ref = spawn(?MODULE,init,[Callee,Method,Params, self()]),
+    gc:register_future(Ref),
+    (fun Loop() ->
+             %% Wait for message to be received, but handle GC request
+             %% in the meantime
+             receive
+                 {stop_world, _Sender} ->
+                     task:block(CurrentCog),
+                     task:acquire_token(CurrentCog, [Stack]),
+                     Loop();
+                {get_references, Sender} ->
+                    Sender ! {Stack, self()},
+                    Loop();
+                { ok, Ref} -> ok
+            end
+    end)(),
+    Ref.
 
 
-get(Ref)->
+get_after_await(Ref)->
     Ref!{get,self()},
-    receive 
+    receive
         {reply,Ref,{ok,Value}}->
             Value;
         {reply,Ref,{error,Reason}}->
             exit(Reason)
-    end.
-safeget(Ref)->
-    Ref!{get,self()},
-    receive 
-        {reply,Ref,{ok,Value}}->
-            {dataValue,Value};
-        {reply,Ref,{error,Reason}} when is_atom(Reason)->
-            {dataError,atom_to_list(Reason)};
-        {reply,Ref,{error,Reason}} ->
-            {dataError,Reason}
     end.
 
 get_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
@@ -44,20 +46,19 @@ get_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
     task:acquire_token(Cog, Stack),
     Result.
 
-safeget_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
-    task:block(Cog),
-    Ref ! {get, self()},
-    Result = safeget_blocking(Ref, Stack),
-    task:acquire_token(Cog, Stack),
-    Result.
-
 get_references(Ref) ->
     Ref ! {get_references, self()},
     receive {References, Ref} -> References end.
 
-await(Ref, Cog=#cog{ref=CogRef}, Stack) ->
-    Ref ! {wait, self()},
-    await(Stack).
+await(Ref, Cog, Stack) ->
+    case poll(Ref) of
+        true -> ok;
+        false ->
+            Ref ! {wait, self()},
+            task:release_token(Cog, waiting),
+            await(Stack),
+            task:acquire_token(Cog, Stack)
+    end.
 
 poll(Ref) ->
     Ref ! {poll, self()},
@@ -73,12 +74,13 @@ die(Ref, Reason) ->
 
   
   
-init(Callee=#object{class=C,cog=Cog=#cog{ref=CogRef}},Method,Params)->
+init(Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params, Caller)->
     %%Start task
     process_flag(trap_exit, true),
     MonRef=monitor(process,CogRef),
     cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
     demonitor(MonRef),
+    Caller ! {ok, self()},
     await().
 
 %% Future awaiting reply from task completion
@@ -87,13 +89,13 @@ await() ->
     %% or receive requests for references or polling
     receive
         {'DOWN', _ , process, _,Reason} when Reason /= normal ->
-            gc ! {unroot, self()},
+            gc:unroot_future(self()),
             loop({error,error_transform:transform(Reason)});
         {'EXIT',_,Reason} ->
-            gc ! {unroot, self()},
+            gc:unroot_future(self()),
             loop({error,error_transform:transform(Reason)});
         {completed, Value}->
-            gc ! {unroot, self()},
+            gc:unroot_future(self()),
             loop({ok,Value});
         {get_references, Sender} ->
             Sender ! {[], self()},
@@ -114,24 +116,12 @@ get_blocking(Ref,Stack) ->
             exit(Reason)
     end.
 
-safeget_blocking(Ref,Stack) ->
-    receive
-        {get_references, Sender} ->
-            Sender ! {gc:extract_references(Stack), self()},
-            get_blocking(Ref,Stack);
-        {reply, Ref, {ok,Value}}->
-            Value;
-        {reply, Ref, {error, Reason}} when is_atom(Reason)->
-            {dataError, atom_to_list(Reason)};
-        {reply, Ref, {error,Reason}} ->
-            {dataError, Reason}
-    end.
-
 %% Task awaiting future resolution
 await(Stack) ->
     receive
         {ok} -> ok;
         {get_references, Sender} ->
+            ?DEBUG(get_references),
             Sender ! {gc:extract_references(Stack), self()},
             await(Stack)
     end.
@@ -146,6 +136,7 @@ loop(Value)->
             Sender!{ok},
             loop(Value);
         {get_references, Sender} ->
+            ?DEBUG(get_references),
             Sender ! {gc:extract_references(Value), self()},
             loop(Value);
         {poll, Sender} ->

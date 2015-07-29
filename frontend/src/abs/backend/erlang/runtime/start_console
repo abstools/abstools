@@ -1,2 +1,3 @@
 #!/bin/bash
-erl -pa ebin -s runtime start -extra "$@" 
+erl -pa ebin -pa deps/cowboy/ebin -pa deps/cowlib/ebin -pa deps/ranch/ebin \
+    -s runtime start -extra "$@"

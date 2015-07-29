@@ -4,7 +4,7 @@
 -export([init/2]).
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
--record(state,{tasks,running=false,polling=[],tracker,referencers=1,dc=null}).
+-record(state,{tasks,running=idle,polling=[],tracker,referencers=1,dc=null}).
 -record(task,{ref,state=waiting}).
 
 %%Garbage collector callbacks
@@ -23,14 +23,16 @@ start() ->
 
 start(DC)->
     {ok,T}=object_tracker:start(),
-    %% There are two DC refs: the one in state is to handle GC and to
-    %% create a copy of the current cog (see start_new_task), the one in
-    %% the cog structure itself is for evaluating thisDC()
+    %% There are two DC refs: the one in state is to handle GC and to create a
+    %% copy of the current cog (see start_new_task), the one in the cog
+    %% structure itself is for evaluating thisDC().  The main block cog and
+    %% DCs themselves currently do not have a DC associated.  In the case of
+    %% the main block this is arguably a bug; the implementation of deployment
+    %% components is contained in the standard library and does not use
+    %% thisDC().
     Cog = #cog{ref=spawn(cog,init, [T,DC]),tracker=T,dc=DC},
-    gc ! {Cog, self()},
-    receive
-        ok -> Cog
-    end.
+    gc:register_cog(Cog),
+    Cog.
 
 add(#cog{ref=Cog},Task,Args)->
     Cog!{new_task,Task,Args,self(),false},
@@ -80,9 +82,9 @@ init(Tracker,DC) ->
     Running = receive
                   {stop_world, Sender} ->
                       Sender ! {stopped, self()},
-                      {gc, false};
-                  ok ->
-                      false
+                      {gc, idle};
+                  {gc, ok} ->
+                      idle
               end,
     loop(#state{tasks=gb_trees:empty(),tracker=Tracker,running=Running,dc=DC}).
 
@@ -93,7 +95,7 @@ loop(S=#state{running=no_task_schedulable})->
         receive
             {stop_world, Sender} ->
                 Sender ! {stopped, self()},
-                S#state{running={gc, false}}
+                S#state{running={gc, idle}}
         after 0 ->
                 receive
                     {new_state,TaskRef,State}->
@@ -104,28 +106,28 @@ loop(S=#state{running=no_task_schedulable})->
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         ?DEBUG({task_died,R,Reason}),
-                        set_task_state(S#state{running=false},R,abort);
+                        set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
                     {stop_world, Sender} ->
                         Sender ! {stopped, self()},
-                        S#state{running={gc, false}}
+                        S#state{running={gc, idle}}
                 end
         end,
     case New_State#state.running of
         {gc, _} -> loop(New_State);
-        _ -> loop(New_State#state{running=false})
+        _ -> loop(New_State#state{running=idle})
     end;
 
 %%No task is running now
-loop(S=#state{running=false})->
+loop(S=#state{running=idle})->
     New_State=
         receive
             {stop_world, Sender} ->
                 Sender ! {stopped, self()},
-                S#state{running={gc, false}}
+                S#state{running={gc, idle}}
         after 0 ->
                 receive
                     {new_state,TaskRef,State}->
@@ -134,14 +136,14 @@ loop(S=#state{running=false})->
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         ?DEBUG({task_died,R,Reason}),
-                        set_task_state(S#state{running=false},R,abort);
+                        set_task_state(S,R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
                     {stop_world, Sender} ->
                         Sender ! {stopped, self()},
-                        S#state{running={gc, false}}
+                        S#state{running={gc, idle}}
                 after
                     0 ->
                         schedule_and_execute(S)
@@ -153,24 +155,32 @@ loop(S=#state{running=false})->
 loop(S=#state{running=R}) when is_pid(R)->
     New_State=
         receive
-            {new_state,TaskRef,State}->
-                set_task_state(S,TaskRef,State);
-            {new_task,Task,Args,Sender,Notify}->
-                start_new_task(S,Task,Args,Sender,Notify);
-            {token,R,Task_state}->
-                set_task_state(S#state{running=false},R,Task_state);
-            {'EXIT',R,Reason} when Reason /= normal ->
-               ?DEBUG({task_died,R,Reason}),
-               set_task_state(S#state{running=false},R,abort);
-            inc_ref_count->
-                inc_referencers(S);
-            dec_ref_count->
-                dec_referencers(S);
             {stop_world, Sender} ->
                 R ! {stop_world, self()},
                 S1 = await_stop(S),
                 Sender ! {stopped, self()},
                 S1#state{running={gc, S1#state.running}}
+        after 0 ->
+                receive
+                    {new_state,TaskRef,State}->
+                        set_task_state(S,TaskRef,State);
+                    {new_task,Task,Args,Sender,Notify}->
+                        start_new_task(S,Task,Args,Sender,Notify);
+                    {token,R,Task_state}->
+                        set_task_state(S#state{running=idle},R,Task_state);
+                    {'EXIT',R,Reason} when Reason /= normal ->
+                        ?DEBUG({task_died,R,Reason}),
+                        set_task_state(S#state{running=idle},R,abort);
+                    inc_ref_count->
+                        inc_referencers(S);
+                    dec_ref_count->
+                        dec_referencers(S);
+                    {stop_world, Sender} ->
+                        R ! {stop_world, self()},
+                        S1 = await_stop(S),
+                        Sender ! {stopped, self()},
+                        S1#state{running={gc, S1#state.running}}
+                end
             end,
     loop(New_State);
 
@@ -188,7 +198,7 @@ loop(S=#state{running={blocked, R}}) ->
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         ?DEBUG({task_died,R,Reason}),
-                        set_task_state(S#state{running=false},R,abort);
+                        set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
@@ -220,7 +230,7 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
             {done, gc} ->
                 case Refs of
                     0 -> eventstream:event({cog,self(),die}),
-                         gc ! {die, self()},
+                         gc:unregister_cog(self()),
                          stop;
                     _ -> S#state{running=Old}
                 end;
@@ -241,7 +251,7 @@ start_new_task(S=#state{running=R,tasks=T,tracker=Tracker,dc=DC},Task,Args,Sende
     Sender!{started,Task,Ref},
     %% Don't generate "cog idle" event when we create new task - this
     %% causes spurious clock advance
-    R1=case R of no_task_schedulable -> false; _ -> R end,
+    R1=case R of no_task_schedulable -> idle; _ -> R end,
     %% we used to start with state=waiting but that led to spurious clock
     %% advancement (cog sent out idle event before task became runnable).  I
     %% did not see where the task state is actually set to runnable either, so
@@ -345,7 +355,7 @@ await_stop(S=#state{running=R}) ->
                     {new_state,TaskRef,State} ->
                         set_task_state(S,TaskRef,State);
                     {token,R,Task_state}->
-                        set_task_state(S#state{running=false},R,Task_state)
+                        set_task_state(S#state{running=idle},R,Task_state)
                 end,
     case New_State#state.running =/= R of
         true ->

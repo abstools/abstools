@@ -12,34 +12,34 @@ import choco.kernel.model.variables.integer.IntegerExpressionVariable;
 /**
 Builds constraints and solve them.
 Checks type errors, and if all variables are properly declared.
-**/
+ **/
 
 
 aspect Visualization {
 
-  public void CompilationUnit.printFM(String indentation) {
+    public void CompilationUnit.printFM(String indentation) {
         System.out.println(indentation + getName());
-    	for (FeatureDecl fdecl : getFeatureDeclList()) {
-        	fdecl.printFM(indentation + "\t");
-    	}
-  }
-  public void FeatureDecl.printFM(String indentation) {
+        for (FeatureDecl fdecl : getFeatureDeclList()) {
+            fdecl.printFM(indentation + "\t");
+        }
+    }
+    public void FeatureDecl.printFM(String indentation) {
         if(hasGroup()){
-    	    System.out.print(indentation + getName() + "(");
-    	    //getGroup().getCard().printFM();
-    	    System.out.println(")");
-    	    getGroup().printFM(indentation + "\t");    
-    	}
-    	else{
-    		System.out.println(indentation + getName());
-    	}
-  }
-  public void Group.printFM(String indentation) {
+            System.out.print(indentation + getName() + "(");
+            //getGroup().getCard().printFM();
+            System.out.println(")");
+            getGroup().printFM(indentation + "\t");    
+        }
+        else{
+            System.out.println(indentation + getName());
+        }
+    }
+    public void Group.printFM(String indentation) {
         for (FNode fnode : getFNodeList()){
-    	    	fnode.printFM(indentation + "\t");
-    	}
-  }
-  public void FNode.printFM(String indentation) {
-        getFeat().printFM(indentation);
-  }
+            fnode.printFM(indentation + "\t");
+        }
+    }
+    public void FNode.printFM(String indentation) {
+        getFeatureDecl().printFM(indentation);
+    }
 }

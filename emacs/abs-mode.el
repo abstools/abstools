@@ -397,10 +397,10 @@ value.")
   (pcase backend
     (`maude (save-excursion (run-maude))
             (comint-send-string inferior-maude-buffer
-                                (concat "in "
+                                (concat "in \""
                                         (abs--absolutify-filename
                                          (abs--maude-filename))
-                                        "\n"))
+                                        "\"\n"))
             (with-current-buffer inferior-maude-buffer
               (sit-for 1)
               (goto-char (point-max))
@@ -421,8 +421,11 @@ value.")
                                      (concat "cd (\"" erlang-dir "\").\n"))
                  (comint-send-string erlang-buffer "make:all([load]).\n")
                  (comint-send-string erlang-buffer
-                                     (concat "code:add_path(\"" erlang-dir
-                                             "/ebin\").\n"))
+                                     (concat "code:add_paths([\""
+                                             erlang-dir "/ebin\", \""
+                                             erlang-dir "/deps/cowboy/ebin\", \""
+                                             erlang-dir "/deps/cowlib/ebin\", \""
+                                             erlang-dir "/deps/ranch/ebin\"]).\n"))
                  (comint-send-string erlang-buffer
                                      (concat "runtime:start(\""
                                              (when debug-output "-d ")
