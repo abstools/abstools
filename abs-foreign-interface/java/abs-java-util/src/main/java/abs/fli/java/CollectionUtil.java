@@ -23,13 +23,13 @@ import abs.backend.java.lib.types.ABSValue;
  *
  */
 public class CollectionUtil {
-    
+	
     public <A extends ABSValue,B> java.util.List<B> convert(Fun<A,B> f, List<A> absList) {
         java.util.List<B> list = new ArrayList<B>();
-        if (absList.isCons()) {
+        while (absList.isCons()) {
             List_Cons<A> cons = absList.toCons();
             list.add(f.evaluate(cons.getArg0()));
-            list.addAll(convert(f,cons.getArg1()));
+            absList = cons.getArg1();
         }
         return list;
     }
@@ -44,10 +44,10 @@ public class CollectionUtil {
     
     public <A extends ABSValue,B> java.util.Set<B> convert(Fun<A,B> f, Set<A> absSet) {
         java.util.Set<B> set = new HashSet<B>();
-        if (absSet.isInsert()) {
+        while (absSet.isInsert()) {
             Set_Insert<A> insert = absSet.toInsert();
             set.add(f.evaluate(insert.getArg0()));
-            set.addAll(convert(f,insert.getArg1()));
+            absSet = insert.getArg1();
         }
         return set;
     }
@@ -62,11 +62,11 @@ public class CollectionUtil {
 
     public <A extends ABSValue,B,C extends ABSValue,D> java.util.Map<B, D> convert(Fun<A,B> f, Fun<C,D> g, Map<A, C> absMap) {
         java.util.Map<B, D> map = new HashMap<B, D>();
-        if (absMap.isInsertAssoc()) {
+        while (absMap.isInsertAssoc()) {
             Map_InsertAssoc<A, C> insert = absMap.toInsertAssoc();
             Pair_Pair<A, C> pair = insert.getArg0().toPair();
             map.put(f.evaluate(pair.getArg0()), g.evaluate(pair.getArg1()));
-            map.putAll(convert(f,g,insert.getArg1()));
+            absMap = insert.getArg1();
         }
         return map;
     }
@@ -86,7 +86,7 @@ public class CollectionUtil {
         if (absList.isCons()) {
             List_Cons<A> cons = absList.toCons();
             list.add(cons.getArg0());
-            list.addAll(convert(cons.getArg1()));
+            absList = cons.getArg1();
         }
         return list;
     }
