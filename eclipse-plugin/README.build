@@ -26,6 +26,7 @@ Import the source code of the plug-in into Eclipse:
 1c. Select only the following two projects (de-select the others), and click Finish:
    org.abs-models.abs.compiler
    org.abs-models.abs.plugin
+   org.abs-models.sdedit
 
 Build and run the plug-in
 2a. In the Package Eclorer: left click the org.abs-models.abs.plugin project
