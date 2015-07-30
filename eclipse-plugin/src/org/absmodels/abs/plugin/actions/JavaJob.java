@@ -4,11 +4,22 @@
  */
 package org.absmodels.abs.plugin.actions;
 
-import static org.absmodels.abs.plugin.util.Constants.*;
+import static org.absmodels.abs.plugin.util.Constants.ABSFRONTEND_PLUGIN_ID;
+import static org.absmodels.abs.plugin.util.Constants.DEBUGGER_ARGS_OTHER_DEFAULT;
+import static org.absmodels.abs.plugin.util.Constants.DEFAULT_SCHEDULER;
+import static org.absmodels.abs.plugin.util.Constants.SDEDIT_PLUGIN_ID;
 import static org.absmodels.abs.plugin.util.UtilityFunctions.getAbsNature;
 import static org.absmodels.abs.plugin.util.UtilityFunctions.standardExceptionHandling;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Socket;
@@ -22,19 +33,23 @@ import org.absmodels.abs.plugin.actions.runconfig.RunConfigEnums.DebuggerSchedul
 import org.absmodels.abs.plugin.actions.runconfig.java.EclipseScheduler;
 import org.absmodels.abs.plugin.builder.AbsNature;
 import org.absmodels.abs.plugin.console.ConsoleManager;
-import org.absmodels.abs.plugin.console.MsgConsole;
 import org.absmodels.abs.plugin.console.ConsoleManager.MessageType;
+import org.absmodels.abs.plugin.console.MsgConsole;
 import org.absmodels.abs.plugin.debug.DebugUtils;
 import org.absmodels.abs.plugin.debug.model.Debugger;
 import org.absmodels.abs.plugin.debug.model.Debugger.InvalidRandomSeedException;
 import org.absmodels.abs.plugin.exceptions.AbsJobException;
 import org.absmodels.abs.plugin.internal.NoModelException;
-import org.absmodels.abs.plugin.util.UtilityFunctions;
 import org.absmodels.abs.plugin.util.Constants.Scheduler;
+import org.absmodels.abs.plugin.util.UtilityFunctions;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.*;
-import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 import org.eclipse.jface.action.IAction;
@@ -53,37 +68,14 @@ import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Product;
 import abs.frontend.delta.DeltaModellingException;
 
-public class JavaJob extends Job {
-    // debug this class -> enables printlns
-    private static boolean debugMode = DO_DEBUG;
-
-    private MsgConsole javaConsole;
-    private IProject project;
-    private IFile currentFile;
+/**
+ * Legacy ABS Java Backend Integration.
+ * 
+ * @author unattributed
+ * @author nobeh
+ */
+public class JavaJob extends AbstractJavaJob {
     private Product product = null;
-
-    // job
-    private IAction action;
-    private Path javaPath;
-    private boolean compileCode;
-    private boolean debugCode;
-    private boolean sourceOnly;
-    private boolean noWarnings;
-    private boolean startSDE;
-
-    // canceling job
-    private Process debugProcess = null;
-    private boolean isCanceled = false;
-
-    // used by run config
-    private String debuggerArgsOther;
-    private String debuggerArgsSystemObserver;
-    private String debuggerArgsTotalScheduler;
-    private String debuggerCompileFirst;
-    private String debuggerArgsRandomSeed;
-    private boolean terminateOnException = true;
-    private boolean useInternalDebugger;
-    private boolean debuggerIsInDebugMode;
 
     private SDEditProcess sdeditProcess;
 
@@ -124,10 +116,7 @@ public class JavaJob extends Job {
      * @param file - current opened file
      */
     public JavaJob(String name, IAction action, IProject project, IFile file, boolean absUnit) {
-        super(name);
-        this.action = action;
-        this.project = project;
-        this.currentFile = file;
+        super(name, action, project, file);
         this.setUser(true);
         useInternalDebugger = true;
         debuggerIsInDebugMode = true;
@@ -144,17 +133,10 @@ public class JavaJob extends Job {
     }
 
     public IStatus runJob(IProgressMonitor monitor) {
-        try{
-            //must be an ABS project
-            if (project == null || !project.exists() || !project.isOpen()){
-                return showErrorMessage("The project does not exist/is not open.");
-            } else if (!project.hasNature(NATURE_ID)){
-                return showErrorMessage("Chosen project '"+project.getName()+"' is not an ABS project.");
-            }			
-        } catch (CoreException e) {
-            return showErrorMessage("Project does not exist or project is not open", e);
+        IStatus invalid = validateProject();
+        if (invalid != null) {
+          return invalid;
         }
-
         monitor.worked(2);
 
         try {
@@ -165,28 +147,6 @@ public class JavaJob extends Job {
         }
 
         return executeJob(monitor); 
-    }
-
-    private void setUpConsole() {
-        javaConsole = getAbsNature(project).getJavaConsole();
-        javaConsole.clear();
-    }
-
-    /**
-     * Init property options
-     * 
-     * @see org.absmodels.abs.plugin.properties.JavaPropertyPage
-     * 
-     * @throws AbsJobException, if project is not an ABS project
-     */
-    private void loadPropertyOptions() throws AbsJobException {
-        javaPath    = getPathToGeneratedJavaFiles(project);
-        sourceOnly  = getAbsNature(project).getProjectPreferenceStore().getBoolean(SOURCE_ONLY);
-        noWarnings  = getAbsNature(project).getProjectPreferenceStore().getBoolean(NO_WARNINGS);
-        compileCode = getAbsNature(project).getProjectPreferenceStore().getBoolean(ALWAYS_COMPILE);
-        if (debuggerCompileFirst != null && debuggerCompileFirst.length() > 0){
-            compileCode = Boolean.valueOf(debuggerCompileFirst);
-        }
     }
 
     private IStatus executeJob(IProgressMonitor monitor){
@@ -226,37 +186,6 @@ public class JavaJob extends Job {
         } catch (Exception e) {
             //do not kill the plug-in, if something goes wrong
             return showErrorMessage("Fatal error!", e);
-        }
-    }
-
-    /**
-     * The action id decides which options are used.
-     * Options:
-     * only compile | start debugger | start debugger with SDEdit  
-     */
-    private void setJobOptions() {
-        if(action.getId().equals(ACTION_DEBUG_ID)){
-            debugCode = true;
-            startSDE = false;
-        } else if (action.getId().equals(ACTION_START_SDE)){
-            startSDE = true;
-            debugCode = true;
-        }else {
-            debugCode = false;
-            compileCode = true;
-            startSDE = false;
-        }
-    }
-
-    private IStatus createStatus() {
-        if (isCanceled) {
-            if (debugMode)
-                System.out.println("canceled");
-            return new Status(Status.CANCEL, PLUGIN_ID, "Job canceled");
-        } else {
-            if (debugMode)
-                System.out.println("end");
-            return new Status(Status.OK, PLUGIN_ID, "done");
         }
     }
 
@@ -421,8 +350,8 @@ public class JavaJob extends Job {
                 } else {
                     module = modules.get(0);
                 }
-                if(currentFile != null){
-                    info = "No main file found for \""+currentFile.getName()+"\".\nBut there is a main file in the project:";
+                if(file != null){
+                    info = "No main file found for \""+file.getName()+"\".\nBut there is a main file in the project:";
                 }
             }
 
@@ -445,7 +374,7 @@ public class JavaJob extends Job {
     private ModuleDecl getModuleByName(String moduleName) throws AbsJobException {
         AbsNature nature = UtilityFunctions.getAbsNature(project);
         if(nature == null){
-            throw new AbsJobException("Could not start the debugger, because selected file (" + currentFile.getName() +  ") is not in an ABS project!");
+            throw new AbsJobException("Could not start the debugger, because selected file (" + file.getName() +  ") is not in an ABS project!");
         }
         synchronized (nature.modelLock) {
             Model model = nature.getCompleteModel();
@@ -460,7 +389,7 @@ public class JavaJob extends Job {
     private List<ModuleDecl> getAllModulesWithMainInCurrentProject() throws AbsJobException {
         AbsNature nature = UtilityFunctions.getAbsNature(project);
         if(nature == null){
-            throw new AbsJobException("Could not start the debugger, because selected file (" + currentFile.getName() +  ") is not in an ABS project!");
+            throw new AbsJobException("Could not start the debugger, because selected file (" + file.getName() +  ") is not in an ABS project!");
         }
         synchronized (nature.modelLock) {
             Model model = nature.getCompleteModel();
@@ -488,15 +417,15 @@ public class JavaJob extends Job {
      * @throws AbsJobException
      */
     private ModuleDecl searchForMainBlockInCurrentFile() throws AbsJobException{
-        if (currentFile == null) {
+        if (file == null) {
             return null;
         }
         AbsNature nature = UtilityFunctions.getAbsNature(project);
         if(nature == null){
-            throw new AbsJobException("Could not start the debugger, because selected file (" + currentFile.getName() +  ") is not in an ABS project!");
+            throw new AbsJobException("Could not start the debugger, because selected file (" + file.getName() +  ") is not in an ABS project!");
         }
         synchronized (nature.modelLock) {
-            CompilationUnit unit = nature.getCompilationUnit(currentFile);
+            CompilationUnit unit = nature.getCompilationUnit(file);
             List<ModuleDecl> modules = findModulesWithMain(unit);
             // TODO: is the module still valid once you have returned the lock?
             return modules.size() == 0 ? null : modules.get(0);
@@ -719,34 +648,6 @@ public class JavaJob extends Job {
     }
 
 
-    /**
-     * Returns path of generated Java files. 
-     * Throws an IllegalArumentException, if path can not be found for the given project.
-     * 
-     * @param project
-     * @return
-     * @throws CoreException
-     * @throws AbsJobException
-     */
-    private Path getPathToGeneratedJavaFiles(IProject project) throws AbsJobException {
-        Path path;
-        String tempPath;
-        try{
-            tempPath = getAbsNature(project).getProjectPreferenceStore().getString(JAVA_SOURCE_PATH);
-            Assert.isLegal(tempPath != null);
-        } catch (NullPointerException e) {
-            standardExceptionHandling(e);
-            throw new AbsJobException("No ABS project selected.");
-        } 
-
-        path =  new Path(tempPath);
-        if (!path.isAbsolute()){
-            path = new Path(project.getLocation().append(path).toOSString());
-        } 
-
-        return path;
-    }
-
     class SDEditProcess {
 
         private Process process;
@@ -850,20 +751,6 @@ public class JavaJob extends Job {
         if(debugProcess != null) debugProcess.destroy();
         if(sdeditProcess != null) sdeditProcess.cancel();
         super.canceling();
-    }
-
-    private IStatus showInfoMessage(String errorMessage){
-        return new Status(Status.INFO, PLUGIN_ID, errorMessage);
-    }
-
-    private IStatus showErrorMessage(String errorMessage){
-        if (debugMode) System.err.println(errorMessage);
-        return new Status(Status.ERROR, PLUGIN_ID, errorMessage);
-    }
-
-    private IStatus showErrorMessage(String errorMessage, Exception e){
-        // Errors are automatically logged by Eclipse
-        return new Status(Status.ERROR, PLUGIN_ID, errorMessage+"\n"+e.getLocalizedMessage(), e);
     }
 
     public void setDebuggerArgsOther(String debuggerArgsOther) {

@@ -10,6 +10,7 @@ import static org.absmodels.abs.plugin.util.UtilityFunctions.standardExceptionHa
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IEditorPart;
@@ -49,7 +50,8 @@ public class JavaAction implements IWorkbenchWindowActionDelegate {
 			
 			saveEditors(project, true);
 			// starts a new job
-			JavaJob job = new JavaJob(JavaJob.COMPILE_JOB, action, project, file);
+			// JavaJob job = new JavaJob(JavaJob.COMPILE_JOB, action, project, file);
+			Job job = new JabsCompileJob("jabsc", action, project, file);
 			job.schedule();
 		} catch (Exception e) {
 			//do not kill the plug-in, if something goes wrong
