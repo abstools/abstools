@@ -1125,6 +1125,8 @@ mod ABS-EVAL is
     or-else (CID1 == CID2 and I1 < I2)
     or-else (CID1 == CID2 and I1 == I2 and N1 < N2)
     or-else (CID1 == CID2 and I1 == I2 and N1 == N2 and dataLessThan(DL1, DL2)) .
+  eq dataLessThan(null :: DL1, D :: DL2) = D =/= null .
+  eq dataLessThan(D :: DL1, null :: DL2) = false .
 
   eq eval($builtin("<"), S, CN, MAC) = dataLessThan(S['I1], S['I2]) asAbsBool .
   eq eval($builtin("<="), S, CN, MAC) = ((S['I1] == S['I2]) or-else dataLessThan(S['I1], S['I2])) asAbsBool .
