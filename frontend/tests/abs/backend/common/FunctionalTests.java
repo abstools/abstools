@@ -71,6 +71,11 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void dataTypeGtNull() {
+        assertEvalTrue("interface I {} class C implements I {} { I i = new C(); Bool testresult = !(null > i);  }");
+    }
+
+    @Test
     public void dataTypeGt2() {
         assertEvalTrue("{ Bool testresult = Cons(10, Nil) > Cons(5, Nil);  }");
     }
@@ -86,8 +91,18 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void dataTypeLtNull() {
+        assertEvalTrue("interface I {} class C implements I {} { I i = new C(); Bool testresult = null < i;  }");
+    }
+
+    @Test
     public void dataTypeLtEq() {
         assertEvalTrue("{ Bool testresult = Cons(5, Nil) <= Cons(10, Nil);  }");
+    }
+
+    @Test
+    public void dataTypeLtEqNull() {
+        assertEvalTrue("interface I {} class C implements I {} { I i = new C(); Bool testresult = null <= i;  }");
     }
 
     @Test
@@ -98,6 +113,11 @@ public class FunctionalTests extends SemanticTests {
     @Test
     public void dataTypeGtEq() {
         assertEvalTrue("{ Bool testresult = Cons(10, Nil) >= Cons(5, Nil);  }");
+    }
+
+    @Test
+    public void dataTypeGtEqNull() {
+        assertEvalTrue("interface I {} class C implements I {} { I i = new C(); Bool testresult = !(null >= i);  }");
     }
 
     @Test
