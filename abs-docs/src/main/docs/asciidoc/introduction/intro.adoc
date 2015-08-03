@@ -1,6 +1,53 @@
-== Abstract Behavioural Specification Language
+== The ABS Language
 
-The *ABS language* is a class-based object-oriented language that features algebraic data types and side effect-free functions. Syntactically, the ABS language tries to be as close as possible to the Java language, so that programmers that are used to Java can easily use the ABS language without much learning effort.
+The *ABS language* is an actor-based, object-oriented, executable modeling
+language.  Its prime features are:
 
-ABS offers programmers several features such as asynchronous method calls, futures to control these calls, interfaces for encapsulation and cooperative scheduling of method invocations inside concurrent (active) objects. Specifically any objectcreated in ABS represents an actor with encapsulated data. Similar to JAVA, their behaviour and state is defined by implementing interfaces with their corresponding methods. Thus they interact by making asynchronous calls to these methods which generate messages that are pushed into a queue specific to each actor. An actor progresses by taking a message out of its queue and processing it by executing its corresponding method. This feature combination results in a concurrent object-oriented model which is inherently compositional. The simplicity of ABS results from the fact that each actor is viewed as a separate processor making it very suitable for modeling distributed applications similar to MPI, with the added benefit of specifying a distinct behaviour for each actor without the connectivity issue.
+Algebraic user-defined data types and side effect-free functions :: All data
+(except the state of objects and future variables) is immutable, and functions
+are free of side effects.  This makes understanding and reasoning about models
+easier.
++
+User-defined data types are used for data modeling instead of objects, so ABS
+models are typically smaller than their Java counterparts.
+
+A syntax that is close to Java :: Programmers that are used to Java can easily
+learn the ABS language.
+
+Distributed, actor-based semantics :: Method calls are asynchronous and create
+a new process in the target.  Processes are scheduled cooperatively and run
+within the scope of one object.  Futures are used to synchronize with and get
+the result of another process.
+
+Interfaces for specifying object behavior :: Similar to Java, the behavior of
+a class is defined by implementing zero or more interfaces with their
+corresponding methods.
+
+Safe concurrency :: Processes run cooperatively within one object and do not
+have access to other objects' state, and data structures are immutable.  The
+most common error causes of concurrent systems (aliasing, insufficient
+locking) are avoided by the language semantics.
+
+Distributed computing :: The combination of asynchronous method calls,
+immutability and strong encapsulation makes it very easy to model distributed
+systems.
+
+A formal semantics and compositional proof theory :: ABS is designed to be
+amenable to program analysis and verification.  A variety of tools (deadlock
+checker, resource analysis, formal verification) have been developed.
+
+.Non-goals
+****
+Languages are eco-systems, and a language containing all possible features
+will be easy to use for no one.  The following areas are currently
+under-served by ABS:
+
+Parallel computing :: Algorithms relying on multiple processes operating on
+mutable state, e.g., from the domain of scientific computing, can only be
+expressed in roundabout ways.
+
+Close-to-the-metal programming :: ABS is not designed to be a systems
+programming language.
+****
+
 
