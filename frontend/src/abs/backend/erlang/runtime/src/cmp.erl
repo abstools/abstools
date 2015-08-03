@@ -40,9 +40,9 @@ gt(A,B)->
   A>B.
 
 lt({N,D},I) when is_integer(N),is_integer(D),is_integer(I) ->
-  lt({N,D},{I,1});
+  rationals:is_lesser({N,D},{I,1});
 lt(I,{N,D}) when is_integer(N),is_integer(D),is_integer(I) ->
-  lt({I,1},{N,D});
+  rationals:is_lesser({I,1},{N,D});
 lt({N,D},{N1,D1}) when is_integer(N),is_integer(D),is_integer(N1),is_integer(D1)->
     rationals:is_lesser({N,D},{N1,D1});
 lt({A},{B}) when is_tuple(A),is_tuple(B)->
@@ -56,6 +56,7 @@ lt(A,T) when is_atom(A),is_tuple(T)->
     A<element(1,T);
 lt(T,A) when is_atom(A),is_tuple(T)->
     element(1,T)<A;
+%% no need to handle null < pid separately; atom < tuple < pid in Erlang
 lt(A,B)->
     A<B.
 
