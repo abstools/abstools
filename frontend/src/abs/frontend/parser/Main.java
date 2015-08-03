@@ -49,7 +49,6 @@ public class Main {
     protected boolean verbose = false;
     protected boolean typecheck = true;
     protected boolean stdlib = true;
-    protected boolean useJFlexAndBeaver = false;
     protected boolean dump = false;
     protected boolean debug = false;
     protected boolean allowIncompleteExpr = false;
@@ -139,8 +138,6 @@ public class Main {
                 typecheck = false;
             else if (arg.equals("-nostdlib"))
                 stdlib = false;
-            else if (arg.equals("-with-old-parser"))
-                useJFlexAndBeaver = true;
             else if (arg.equals("-loctypestats"))
                 locationTypeStats = true;
             else if (arg.equals("-loctypes")) {
@@ -692,8 +689,6 @@ public class Main {
                 + "                 (PID is the qualified product ID)\n"
                 + "  -notypecheck   disable typechecking\n"
                 + "  -nostdlib      do not include the standard lib\n"
-                + "  --with-old-parser\n"
-                + "                 use old (deprecated) parser implementation\n"
                 + "  -loctypes      enable location type checking\n"
                 + "  -locdefault=<loctype> \n"
                 + "                 sets the default location type to <loctype>\n"
@@ -809,8 +804,7 @@ public class Main {
             throws IOException
     {
         try {
-            return new ABSParserWrapper(file, false, stdlib, useJFlexAndBeaver)
-                .parse(reader);
+            return new ABSParserWrapper(file, false, stdlib).parse(reader);
         } finally {
             reader.close();
         }

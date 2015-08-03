@@ -22,7 +22,7 @@ public class PrettyPrinterTests {
     @Test
     public void prettyPrinterAddDataTypeModifierTest() throws Exception{
         String deltaDecl = "delta Foo;adds data States=F|B|I|M;";
-        DeltaDecl d = (DeltaDecl) new ABSParserWrapper(null, true, false, false)
+        DeltaDecl d = (DeltaDecl) new ABSParserWrapper(null, true, false)
             .parse(new StringReader(deltaDecl)).getDeltaDecl(0); 
         assertEquals("deltaFoo;addsdataStates=F|B|I|M;", replaceWhitespaceChars(prettyPrint(d)));
     }
@@ -30,7 +30,7 @@ public class PrettyPrinterTests {
     @Test
     public void prettyPrinterModifyInterfaceModifierTest() throws Exception{
         String deltaDecl = "delta Foo;modifies interface X{removes Int fooMethod();adds Int fooMethod();}";
-        DeltaDecl d = (DeltaDecl) new ABSParserWrapper(null, true, false, false)
+        DeltaDecl d = (DeltaDecl) new ABSParserWrapper(null, true, false)
             .parse(new StringReader(deltaDecl)).getDeltaDecl(0);
         assertEquals("deltaFoo;modifiesinterfaceX{removesIntfooMethod();addsIntfooMethod();}", replaceWhitespaceChars(prettyPrint(d)));
     }

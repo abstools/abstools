@@ -33,10 +33,8 @@
   <!-- TODO: about ast.gen.dir and JastAdd idiosyncrasies -->
   <property name="apidoc.dir" value="${gen.dir}/docs/api" />
   <property name="ast.gen.dir" value="${gen.dir}/abs/frontend" />
-  <property name="parser.src.dir" value="${src.dir}/abs/frontend/parser" />
   <property name="parser.antlr.src.dir" value="${src.dir}/abs/frontend/antlr" />
   <property name="antlr.jar" value="antlr-4.2.2-complete.jar"/>
-  <property name="parser.gen.dir" value="${gen.dir}/abs/frontend/parser" />
   <property name="junit.jar" value="junit-4.11.jar" />
   <property name="hamcrest.jar" value="hamcrest-core-1.3.jar" />
   <property name="easymock.jar" value="easymock-3.0.jar" />
@@ -70,12 +68,6 @@
       </condition>
     </sequential>
   </macrodef>
-
-  <!-- "jflex" is an ant task class for the scanner generator in JFlex.jar -->
-  <taskdef name="jflex" classname="JFlex.anttask.JFlexTask" classpath="${ext.dir}/JFlex.jar" />
-
-  <!-- "beaver" is an ant task class for the parser generator in beaver.jar -->
-  <taskdef name="beaver" classname="beaver.comp.run.AntTask" classpath="${ext.dir}/beaver.jar" />
 
   <!-- "jastadd" is an ant task class in jastadd2.jar -->
   <taskdef name="jastadd" classname="org.jastadd.JastAddTask" classpath="${ext.dir}/jastadd2.jar" />
@@ -137,8 +129,8 @@
     <mkdir dir="${dist.dir}/plugins" />
     <mkdir dir="${dist.dir}/features" />
     <mkdir dir="${ast.gen.dir}" />
-    <mkdir dir="${parser.gen.dir}" />
     <mkdir dir="${build.dir}" />
+    <mkdir dir="${parser.antlr.src.dir}" />
     <!-- <mkdir dir = "${dist.dir}"/> -->
     <mkdir dir="${apidoc.dir}" />
   </target>
@@ -179,7 +171,7 @@
 
   <!-- generate ABS -->
 
-  <target name="gen" depends="genshell, genparser, genast, genlang, genruntime, genantlr">
+  <target name="gen" depends="genshell, genast, genlang, genruntime, genantlr">
   </target>
 
   <target name="genast">
@@ -235,37 +227,6 @@
 
     </chmod>
   </target>
-
-
-
-  <target name="genparser" depends="genflex,genp1,genp2">
-  </target>
-
-
-  <target name="genflex">
-    <!-- generate the scanner -->
-    <echo message="Running jflex" />
-    <jflex file="${parser.src.dir}/ABS.flex" outdir="${parser.gen.dir}" nobak="yes" />
-  </target>
-
-  <target name="genp1" depends="genflex, genast">
-    <echo message="Parser phase1" />
-    <!-- generate the parser phase 1, translating .parser to .beaver -->
-    <java fork="true" dir="${parser.src.dir}" classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt-src.jar" classname="Main">
-      <arg line="ABS.parser '${parser.gen.dir}/ABSParser.beaver'" />
-    </java>
-  </target>
-
-  <target name="genp2" depends="genp1">
-    <!-- generate the parser phase 2, translating .beaver to .java -->
-    <echo message="Parser phase" />
-    <beaver file="${parser.gen.dir}/ABSParser.beaver"
-      terminalNames="yes"
-      compress="no"
-      useSwitch="yes"
-      reportActions="yes"/>
-  </target>
-
 
   <target name="genantlr" depends="genast">
     <echo message="Running antlr" />

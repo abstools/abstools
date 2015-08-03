@@ -192,7 +192,7 @@ public class OtherAnalysisTests extends FrontendTest {
     @Test
     public void awaitRewriteDecl2() throws Exception {
         String deltaDecl = "delta D; modifies class C { adds Unit m() { return await this!m();}}";
-        CompilationUnit u = new ABSParserWrapper(null, true, false, false)
+        CompilationUnit u = new ABSParserWrapper(null, true, false)
             .parse(new StringReader(deltaDecl));
         DeltaDecl d = (DeltaDecl) u.getDeltaDecl(0);
         AwaitAsyncCall a = (AwaitAsyncCall) down(d);
