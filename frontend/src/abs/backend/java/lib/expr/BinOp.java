@@ -17,4 +17,27 @@ public class BinOp {
     public static ABSBool notEq(ABSValue v, ABSValue v2) {
         return eq(v, v2).negate();
     }
+
+
+    public static ABSBool gtEq(ABSValue v, ABSValue v2) {
+        if (v == null)
+            return ABSBool.fromBoolean(v2 == null);
+        return v.gtEq(v2);
+    }
+
+    public static ABSBool gt(ABSValue v, ABSValue v2) {
+        if (v == null) return ABSBool.FALSE;
+        return v.gt(v2);
+    }
+
+    public static ABSBool ltEq(ABSValue v, ABSValue v2) {
+        if (v == null) return ABSBool.TRUE;
+        return v.ltEq(v2);
+    }
+
+    public static ABSBool lt(ABSValue v, ABSValue v2) {
+        if (v == null) return ABSBool.fromBoolean(v2 != null);
+        return v.lt(v2);
+    }
+
 }

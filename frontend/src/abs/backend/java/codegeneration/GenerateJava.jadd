@@ -949,29 +949,33 @@ aspect GenerateJava {
     }
 
     public void GTEQExp.generateJava(PrintStream stream) {
+        stream.print(BinOp.class.getName() + ".gtEq(");
         getLeft().generateJava(stream);
-        stream.print(".gtEq(");
+        stream.print(",");
         getRight().generateJava(stream);
         stream.print(")");
     }
 
     public void GTExp.generateJava(PrintStream stream) {
+        stream.print(BinOp.class.getName() + ".gt(");
         getLeft().generateJava(stream);
-        stream.print(".gt(");
+        stream.print(",");
         getRight().generateJava(stream);
         stream.print(")");
     }
 
     public void LTEQExp.generateJava(PrintStream stream) {
+        stream.print(BinOp.class.getName() + ".ltEq(");
         getLeft().generateJava(stream);
-        stream.print(".ltEq(");
+        stream.print(",");
         getRight().generateJava(stream);
         stream.print(")");
     }
 
     public void LTExp.generateJava(PrintStream stream) {
+        stream.print(BinOp.class.getName() + ".lt(");
         getLeft().generateJava(stream);
-        stream.print(".lt(");
+        stream.print(",");
         getRight().generateJava(stream);
         stream.print(")");
     }
