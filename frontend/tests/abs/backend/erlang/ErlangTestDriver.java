@@ -104,7 +104,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         try {
             f = Files.createTempDir();
             f.deleteOnExit();
-            genCode(model, f, false);
+            genCode(model, f, true);
             make(f);
         } finally {
             try {
@@ -137,7 +137,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             mb.addStmt(new ReturnStmt(new List<Annotation>(),
                                       new VarUse("testresult")));
         }
-        ErlangBackend.compile(model, targetDir, false);
+        ErlangBackend.compile(model, targetDir, true);
         if (mb == null)
             return null;
         else
