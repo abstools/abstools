@@ -22,7 +22,7 @@ start(Callee,Method,Params,CurrentCog,Stack) ->
                      task:acquire_token(CurrentCog, [Stack]),
                      Loop();
                 {get_references, Sender} ->
-                    Sender ! {Stack, self()},
+                    Sender ! {gc:extract_references(Stack), self()},
                     Loop();
                 { ok, Ref} -> ok
             end
@@ -81,10 +81,10 @@ init(Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params, Caller)->
     cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
     demonitor(MonRef),
     Caller ! {ok, self()},
-    await().
+    wait_for_completion(gc:extract_references(Params)).
 
 %% Future awaiting reply from task completion
-await() ->
+wait_for_completion(References) ->
     %% Receive an error or the value and move into server mode,
     %% or receive requests for references or polling
     receive
@@ -98,11 +98,11 @@ await() ->
             gc:unroot_future(self()),
             loop({ok,Value});
         {get_references, Sender} ->
-            Sender ! {[], self()},
-            await();
+            Sender ! {References, self()},
+            wait_for_completion(References);
         {poll, Sender} ->
             Sender ! unresolved,
-            await()
+            wait_for_completion(References)
     end.
 
 get_blocking(Ref,Stack) ->

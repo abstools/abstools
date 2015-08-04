@@ -133,7 +133,7 @@ await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=R
             {unroot, Sender} ->
                 {State#state{futures=gb_sets:insert({future, Sender}, Futures),
                              root_futures=gb_sets:delete({future, Sender}, RootFutures)}, Stopped};
-            {stopped, Ref} ->
+            {stopped, _Ref} ->
                 {State, Stopped + 1}
         end,
     NewCogs = NewState#state.cogs,
@@ -153,7 +153,6 @@ mark(State, Black, Gray) ->
     mark(State, NewBlack, NewGray).
 
 sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,
-                   root_futures=RootFutures,
                    limit=Lim, proc_factor=PFactor, log=Log},Black) ->
     WhiteObjects = gb_sets:subtract(Objects, Black),
     WhiteFutures = gb_sets:subtract(Futures, Black),
