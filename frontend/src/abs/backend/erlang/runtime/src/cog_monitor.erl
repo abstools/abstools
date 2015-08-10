@@ -54,7 +54,7 @@ handle_event({cog,Cog,idle},State=#state{active=A,idle=I})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:add_element(Cog,I),
     S1=State#state{active=A1,idle=I1},
-    case can_clock_advance(S1) of
+    case can_clock_advance(State, S1) of
         true->
             {ok, advance_clock_or_terminate(S1)};
         false->
@@ -77,7 +77,7 @@ handle_event({cog,Cog,die},State=#state{active=A,idle=I,blocked=B,clock_waiting=
     B1=gb_sets:del_element(Cog,B),
     W1=lists:filter(fun ({_, _, _, _, Cog1}) ->  Cog1 =:= Cog end, W),
     S1=State#state{active=A1,idle=I1,blocked=B1,clock_waiting=W1},
-    case can_clock_advance(S1) of
+    case can_clock_advance(State, S1) of
         true->
             {ok, advance_clock_or_terminate(S1)};
         false->
@@ -95,7 +95,7 @@ handle_event({cog,Task,Cog,clock_waiting,Min,Max},
     C1=add_to_clock_waiting(C,{cog,Min,Max,Task,Cog}),
     A1=gb_sets:del_element(Cog,A),
     S1=State#state{active=A1,clock_waiting=C1},
-    case can_clock_advance(S1) of
+    case can_clock_advance(State, S1) of
         true->
             {ok, advance_clock_or_terminate(S1)};
         false->
@@ -109,7 +109,7 @@ handle_event({cog,Task,Cog,resource_waiting},
     C1=add_to_clock_waiting(C,{cog,MTE,MTE,Task,Cog}),
     A1=gb_sets:del_element(Cog,A),
     S1=State#state{active=A1,clock_waiting=C1},
-    case can_clock_advance(S1) of
+    case can_clock_advance(State, S1) of
         true->
             {ok, advance_clock_or_terminate(S1)};
         false->
@@ -144,10 +144,11 @@ cancel(undefined)->
 cancel(TRef)->
     {ok,cancel}=timer:cancel(TRef).
 
-can_clock_advance(#state{active=A, blocked=B}) ->
-    All_idle = gb_sets:is_empty(gb_sets:subtract(A, B)),
-    ?DEBUG({can_clock_advance, All_idle}),
-    All_idle.
+can_clock_advance(_OldState=#state{active=A, blocked=B},
+                  _NewState=#state{active=A1, blocked=B1}) ->
+    Old_idle = gb_sets:is_empty(gb_sets:subtract(A, B)),
+    All_idle = gb_sets:is_empty(gb_sets:subtract(A1, B1)),
+    not Old_idle and All_idle.
 
 advance_clock_or_terminate(State=#state{main=M,clock_waiting=C,dcs=DCs,timer=T}) ->
     case C of
