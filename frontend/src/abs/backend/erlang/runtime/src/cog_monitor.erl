@@ -150,7 +150,7 @@ can_clock_advance(_OldState=#state{active=A, blocked=B},
     All_idle = gb_sets:is_empty(gb_sets:subtract(A1, B1)),
     not Old_idle and All_idle.
 
-advance_clock_or_terminate(State=#state{main=M,clock_waiting=C,dcs=DCs,timer=T}) ->
+advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,timer=T}) ->
     case C of
         [] ->
             %% One last clock advance to finish the last resource period
@@ -168,24 +168,26 @@ advance_clock_or_terminate(State=#state{main=M,clock_waiting=C,dcs=DCs,timer=T})
             ?DEBUG({clock_advance, MTE}),
             clock:advance(MTE),
             lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
-            {A,C1}=lists:unzip(
+            {A1,C1}=lists:unzip(
                      lists:map(
                        fun(I) -> decrease_or_wakeup(MTE, I) end,
                        C)),
-            State#state{active=gb_sets:from_list(lists:flatten(A)),
+            State#state{active=gb_sets:union(A, gb_sets:from_list(lists:flatten(A1))),
                         clock_waiting=lists:flatten(C1)}
     end .
 
 decrease_or_wakeup(MTE, {What, Min, Max, Task, Cog}) ->
-    %% Compute, for one entry in the clock_waiting queue, either a new
-    %% entry with decreased deadline, or wake up the task and note the
-    %% cog that should be re-added to the active set (if any; only
-    %% when the cog was blocked).
+    %% Compute, for one entry in the clock_waiting queue, either a new entry
+    %% with decreased deadline, or wake up the task and note the cog that
+    %% should be re-added to the active set.  Note that we optimistically mark
+    %% the cog as active: since it was idle before and we just unblocked a
+    %% task, the cog will signal itself as active anyway as soon as the
+    %% freshly-unblocked tasks gets around to telling it (and in the meantime,
+    %% we might erroneously advance the clock a second time otherwise).
     case cmp:le(Min, MTE) of
         true ->
             Task ! clock_finished,
-            {case What of cog -> Cog; task -> [] end,
-             []};
+            {Cog, []};
         false ->
             {[],
              {What,
