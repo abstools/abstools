@@ -186,7 +186,10 @@ decrease_or_wakeup(MTE, {What, Min, Max, Task, Cog}) ->
     %% we might erroneously advance the clock a second time otherwise).
     case cmp:le(Min, MTE) of
         true ->
-            Task ! clock_finished,
+            Task ! {clock_finished, self()},
+            receive
+                {ok, Task} -> ok
+            end,
             {Cog, []};
         false ->
             {[],

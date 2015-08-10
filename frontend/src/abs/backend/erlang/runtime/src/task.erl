@@ -67,20 +67,30 @@ send_notifications(Val)->
 
 acquire_token(Cog=#cog{ref=CogRef}, Stack)->
     cog:new_state(Cog,self(),runnable),
-    loop_for_unblock_signal(token, Stack),
+    loop_for_token(Stack),
     eventstream:event({cog, CogRef, unblocked}).
 
-loop_for_unblock_signal(Msg,Stack) ->
+loop_for_clock_advance(Stack) ->
+    receive
+        {clock_finished, Sender} -> Sender ! { ok, self()};
+        {stop_world, _Sender} ->
+            loop_for_clock_advance(Stack);
+        {get_references, Sender} ->
+            Sender ! {gc:extract_references(Stack), self()},
+            loop_for_clock_advance(Stack)
+    end.
+
+loop_for_token(Stack) ->
     %% Handle GC messages while task is waiting for signal to continue
     %% (being activated by scheduler, time advance for duration
     %% statement, resources available).
     receive
-        Msg -> ok;
+        token -> ok;
         {stop_world, _Sender} ->
-            loop_for_unblock_signal(Msg, Stack);
+            loop_for_token(Stack);
         {get_references, Sender} ->
             Sender ! {gc:extract_references(Stack), self()},
-            loop_for_unblock_signal(Msg, Stack)
+            loop_for_token(Stack)
     end.
 
 wait(Cog)->
@@ -99,18 +109,18 @@ block_for_gc(Cog)->
 await_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
     case rationals:is_greater(rationals:to_r(Min), {0, 1}) of
         true ->
-            task:release_token(Cog,waiting), %FIXME: switch to clock_waiting atomically
             eventstream:event({task,self(),CogRef,clock_waiting,Min,Max}),
-            loop_for_unblock_signal(clock_finished, Stack),
+            task:release_token(Cog,waiting), %FIXME: switch to clock_waiting atomically
+            loop_for_clock_advance(Stack),
             task:acquire_token(Cog, Stack);
         false ->
             ok
     end.
 
 block_for_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
-    task:block(Cog),
     eventstream:event({cog,self(),CogRef,clock_waiting,Min,Max}),
-    loop_for_unblock_signal(clock_finished, Stack),
+    task:block(Cog),
+    loop_for_clock_advance(Stack),
     task:acquire_token(Cog, Stack).
 
 block_for_resource(Cog, Resourcetype, Amount, Stack) ->
@@ -123,7 +133,7 @@ loop_for_resource(Cog=#cog{ref=CogRef,dc=DC},Resourcetype,Amount,Stack) ->
     Remaining=rationals:sub(rationals:to_r(Amount), rationals:to_r(Consumed)),
     case Result of
         wait -> eventstream:event({cog,self(),CogRef,resource_waiting}),
-                loop_for_unblock_signal(clock_finished, Stack),
+                loop_for_clock_advance(Stack),
                 loop_for_resource(Cog, Resourcetype, Remaining,Stack);
         ok ->
             case rationals:is_greater(Remaining, {0, 1}) of
