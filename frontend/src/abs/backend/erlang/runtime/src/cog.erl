@@ -259,7 +259,7 @@ start_new_task(S=#state{running=R,tasks=T,tracker=Tracker,dc=DC},Task,Args,Sende
     S#state{running=R1,tasks=gb_trees:insert(Ref,#task{ref=Ref,state=runnable},T)}.
 
 
-schedule_and_execute(S) ->
+schedule_and_execute(S=#state{running=idle}) ->
     %Search executable task
     {S1=#state{tasks=Tasks},Polled}=poll_waiting(S),
     T=get_runnable(Tasks),
@@ -274,7 +274,9 @@ schedule_and_execute(S) ->
             S2=reset_polled(R,Polled,S1),
             set_task_state(S2#state{running=R},R,running)
     end,
-    State.
+    State;
+schedule_and_execute(S) -> S.
+
 
 %%Sets state in dictionary, and updates polling list
 set_task_state(S=#state{tasks=Tasks},TaskRef,done)->
