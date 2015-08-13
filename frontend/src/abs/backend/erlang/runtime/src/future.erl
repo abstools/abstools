@@ -39,10 +39,19 @@ get_after_await(Ref)->
             exit(Reason)
     end.
 
-get_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
+get_blocking(Ref, Cog, Stack) ->
     task:block(Cog),
     Ref ! {get, self()},
-    Result = get_blocking(Ref, Stack),
+    Result = (fun Loop() ->
+                      receive
+                          {get_references, Sender} ->
+                              Sender ! {gc:extract_references(Stack), self()},
+                              Loop();
+                          {reply,Ref,{ok,Value}}->
+                              Value;
+                          {reply,Ref,{error,Reason}}->
+                              exit(Reason)
+                      end end)(),
     task:acquire_token(Cog, Stack),
     Result.
 
@@ -56,7 +65,14 @@ await(Ref, Cog, Stack) ->
         false ->
             Ref ! {wait, self()},
             task:release_token(Cog, waiting),
-            await(Stack),
+            (fun Loop() ->
+                     receive
+                         {ok} -> ok;
+                         {get_references, Sender} ->
+                             ?DEBUG(get_references),
+                             Sender ! {gc:extract_references(Stack), self()},
+                             Loop()
+                     end end)(),
             task:acquire_token(Cog, Stack)
     end.
 
@@ -103,27 +119,6 @@ wait_for_completion(References) ->
         {poll, Sender} ->
             Sender ! unresolved,
             wait_for_completion(References)
-    end.
-
-get_blocking(Ref,Stack) ->
-    receive
-        {get_references, Sender} ->
-            Sender ! {gc:extract_references(Stack), self()},
-            get_blocking(Ref,Stack);
-        {reply,Ref,{ok,Value}}->
-            Value;
-        {reply,Ref,{error,Reason}}->
-            exit(Reason)
-    end.
-
-%% Task awaiting future resolution
-await(Stack) ->
-    receive
-        {ok} -> ok;
-        {get_references, Sender} ->
-            ?DEBUG(get_references),
-            Sender ! {gc:extract_references(Stack), self()},
-            await(Stack)
     end.
 
 %%Servermode
