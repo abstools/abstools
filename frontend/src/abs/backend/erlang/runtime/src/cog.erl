@@ -78,7 +78,7 @@ resume_world(Cog) ->
 init(Tracker,DC) ->
     ?DEBUG({new}),
     process_flag(trap_exit, true),
-    eventstream:event({cog,self(),active}),
+    eventstream:event({cog,self(),idle}),
     Running = receive
                   {stop_world, Sender} ->
                       Sender ! {stopped, self()},
