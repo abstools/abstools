@@ -844,7 +844,9 @@ aspect GenerateErlang {
       ecs.decIndent().println("end;");
       ecs.decIndent().pf("false -> CogRef!{self(),false},  Poll(%s)",vars.toParamList());
       ecs.decIndent().println("end;");
-      ecs.println("{get_references, Sender} ->");
+      ecs.println("{stop_world, Sender} ->");
+      ecs.incIndent().pf("Poll(%s);", vars.toParamList());
+      ecs.decIndent().println("{get_references, Sender} ->");
       ecs.incIndent().pf("Sender ! {gc:extract_references(%s), self()},", vars.toStack());
       ecs.pf("Poll(%s)", vars.toParamList());
       ecs.decIndent().decIndent().println("end end)");
