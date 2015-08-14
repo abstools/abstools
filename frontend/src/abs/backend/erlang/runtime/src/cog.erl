@@ -82,20 +82,19 @@ init(Tracker,DC) ->
     Running = receive
                   {stop_world, Sender} ->
                       Sender ! {stopped, self()},
-                      {gc, idle};
+                      {gc, no_task_schedulable};
                   {gc, ok} ->
-                      idle
+                      no_task_schedulable
               end,
     loop(#state{tasks=gb_trees:empty(),tracker=Tracker,running=Running,dc=DC}).
 
 %%No task was ready to execute
 loop(S=#state{running=no_task_schedulable})->
-    eventstream:event({cog,self(),idle}),
     New_State=
         receive
             {stop_world, Sender} ->
                 Sender ! {stopped, self()},
-                S#state{running={gc, idle}}
+                S#state{running={gc, no_task_schedulable}}
         after 0 ->
                 receive
                     {new_state,TaskRef,State}->
@@ -113,7 +112,7 @@ loop(S=#state{running=no_task_schedulable})->
                         dec_referencers(S);
                     {stop_world, Sender} ->
                         Sender ! {stopped, self()},
-                        S#state{running={gc, idle}}
+                        S#state{running={gc, no_task_schedulable}}
                 end
         end,
     case New_State#state.running of
@@ -293,6 +292,7 @@ schedule_and_execute(S=#state{running=idle}) ->
         none-> %None found
             ?DEBUG({schedule, no_task_schedulable}),
             S2=reset_polled(none,Polled,S1),
+            eventstream:event({cog,self(),idle}),
             S2#state{running=no_task_schedulable};
         #task{ref=R} -> %Execute T
             R!token,
