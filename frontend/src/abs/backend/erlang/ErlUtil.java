@@ -178,7 +178,7 @@ public class ErlUtil {
         ecs.incIndent();
         ecs.println("{stop_world, CogRef} ->");
         ecs.incIndent();
-        ecs.println("task:block(Cog),");
+        ecs.println("task:block_for_gc(Cog),");
         ecs.print("task:acquire_token(Cog, ");
         if (functional) {
             ecs.print("Stack");

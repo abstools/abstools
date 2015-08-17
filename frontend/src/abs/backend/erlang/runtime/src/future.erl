@@ -18,7 +18,7 @@ start(Callee,Method,Params,CurrentCog,Stack) ->
              %% in the meantime
              receive
                  {stop_world, _Sender} ->
-                     task:block(CurrentCog),
+                     task:block_for_gc(CurrentCog),
                      task:acquire_token(CurrentCog, [Stack]),
                      Loop();
                 {get_references, Sender} ->

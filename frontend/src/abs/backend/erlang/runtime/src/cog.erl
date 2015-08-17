@@ -157,7 +157,7 @@ loop(S=#state{running=R}) when is_pid(R)->
         receive
             {stop_world, Sender} ->
                 R ! {stop_world, self()},
-                S1 = await_stop(S),
+                S1 = await_task_stop_for_gc(S),
                 Sender ! {stopped, self()},
                 S1#state{running={gc, S1#state.running}}
         after 0 ->
@@ -177,7 +177,7 @@ loop(S=#state{running=R}) when is_pid(R)->
                         dec_referencers(S);
                     {stop_world, Sender} ->
                         R ! {stop_world, self()},
-                        S1 = await_stop(S),
+                        S1 = await_task_stop_for_gc(S),
                         Sender ! {stopped, self()},
                         S1#state{running={gc, S1#state.running}}
                 end
@@ -206,6 +206,32 @@ loop(S=#state{running={blocked, R}}) ->
                     {stop_world, Sender} ->
                         Sender ! {stopped, self()},
                         S#state{running={gc, {blocked, R}}}
+                end
+        end,
+    loop(New_State);
+
+loop(S=#state{running={blocked_for_gc, R}}) ->
+    New_State=
+        receive
+            {stop_world, Sender} ->
+                Sender ! {stopped, self()},
+                S#state{running={gc, {blocked_for_gc, R}}}
+        after 0 ->
+                receive
+                    {new_state,TaskRef,State}->
+                        set_task_state(S,TaskRef,State);
+                    {new_task,Task,Args,Sender,Notify}->
+                        start_new_task(S,Task,Args,Sender,Notify);
+                    {'EXIT',R,Reason} when Reason /= normal ->
+                        ?DEBUG({task_died,R,Reason}),
+                        set_task_state(S#state{running=idle},R,abort);
+                    inc_ref_count->
+                        inc_referencers(S);
+                    dec_ref_count->
+                        dec_referencers(S);
+                    {stop_world, Sender} ->
+                        Sender ! {stopped, self()},
+                        S#state{running={gc, {blocked_for_gc, R}}}
                 end
         end,
     loop(New_State);
@@ -286,7 +312,12 @@ set_task_state(S=#state{tasks=Tasks,polling=Pol},TaskRef,abort)->
     S#state{tasks=gb_trees:delete(TaskRef,Tasks),polling=lists:delete(Old, Pol)};
 set_task_state(S=#state{running=TaskRef},TaskRef,blocked) ->
     S#state{running={blocked, TaskRef}};
+set_task_state(S=#state{running=TaskRef},TaskRef,blocked_for_gc) ->
+    S#state{running={blocked_for_gc, TaskRef}};
 set_task_state(S=#state{running={blocked, TaskRef}}, TaskRef, runnable) ->
+    TaskRef ! token,
+    S#state{running=TaskRef};
+set_task_state(S=#state{running={blocked_for_gc, TaskRef}}, TaskRef, runnable) ->
     TaskRef ! token,
     S#state{running=TaskRef};
 set_task_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
@@ -352,7 +383,7 @@ dec_referencers(S=#state{referencers=N}) ->
     S#state{referencers=N-1}.
 
 %%Awaits task reaching synchronization point, or stop the world prelude
-await_stop(S=#state{running=R}) ->
+await_task_stop_for_gc(S=#state{running=R}) ->
     New_State = receive
                     {new_state,TaskRef,State} ->
                         set_task_state(S,TaskRef,State);
@@ -363,7 +394,7 @@ await_stop(S=#state{running=R}) ->
         true ->
             New_State;
         false ->
-            await_stop(New_State)
+            await_task_stop_for_gc(New_State)
     end.
 
 %%Awaits task being started

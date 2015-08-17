@@ -6,7 +6,7 @@
 %% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([acquire_token/2,release_token/2,block/1,wait/1,wait_poll/1,commit/1,rollback/1]).
+-export([acquire_token/2,release_token/2,block/1,block_for_gc/1,wait/1,wait_poll/1,commit/1,rollback/1]).
 -export([await_duration/4,block_for_duration/4,block_for_resource/4]).
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
@@ -92,6 +92,8 @@ wait_poll(Cog)->
 block(Cog=#cog{ref=CogRef})->
     eventstream:event({cog, CogRef, blocked}),
     cog:new_state(Cog,self(),blocked).
+block_for_gc(Cog)->
+    cog:new_state(Cog,self(),blocked_for_gc).
 
 %% await_duration and block_for_duration are called in different scenarios
 %% (guard vs statement), hence the different amount of work they do.
