@@ -311,6 +311,7 @@ set_task_state(S=#state{tasks=Tasks,polling=Pol},TaskRef,abort)->
     Old=gb_trees:get(TaskRef,Tasks),
     S#state{tasks=gb_trees:delete(TaskRef,Tasks),polling=lists:delete(Old, Pol)};
 set_task_state(S=#state{running=TaskRef},TaskRef,blocked) ->
+    eventstream:event({cog, self(), blocked}),
     S#state{running={blocked, TaskRef}};
 set_task_state(S=#state{running=TaskRef},TaskRef,blocked_for_gc) ->
     S#state{running={blocked_for_gc, TaskRef}};

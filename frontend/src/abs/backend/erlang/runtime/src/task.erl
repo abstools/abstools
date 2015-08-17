@@ -89,8 +89,7 @@ wait(Cog)->
 wait_poll(Cog)->
     commit(Cog),
     cog:new_state(Cog,self(),waiting_poll).
-block(Cog=#cog{ref=CogRef})->
-    eventstream:event({cog, CogRef, blocked}),
+block(Cog)->
     cog:new_state(Cog,self(),blocked).
 block_for_gc(Cog)->
     cog:new_state(Cog,self(),blocked_for_gc).
