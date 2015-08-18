@@ -342,7 +342,7 @@ value.")
   (save-excursion
     (goto-char (point-max))
     (re-search-backward (rx bol (* whitespace) "module" (1+ whitespace)
-                            (group (char upper) (* (or (char alnum) ".")))))
+                            (group (char upper) (* (or (char alnum) "." "_")))))
     (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
 
 (defun abs--calculate-compile-command (backend)
