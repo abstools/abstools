@@ -7,7 +7,7 @@ export Unit, String, Int, Rat, Bool, Fut, Exception, Location;
 export True, False, and, not;
 
 // Numerics
-export max, min, abs, pow, sqrt_newton, random, truncate;
+export max, min, abs, pow, sqrt_newton, exp_newton, random, truncate;
 
 // Basic utility datatypes
 export Maybe, Nothing, Just, isJust, fromJust;
@@ -99,6 +99,17 @@ def Rat sqrt_newton(Rat x, Rat estimate, Rat epsilon) =
   in if abs(estimate - next) < epsilon
     then estimate
     else sqrt_newton(x, next, epsilon);
+
+def Rat exp_newton_helper(Rat acc, Rat x, Int next_round, Rat numerator, Int denominator, Rat epsilon) =
+  let (Rat next) = (numerator * x) / (denominator * next_round)
+  in if abs(next) < epsilon
+    then acc + next
+    else exp_newton_helper(acc + next, x, next_round + 1, numerator * x, denominator * next_round, epsilon);
+
+def Rat exp_newton(Rat x, Rat epsilon) =
+  if (x < 0) then 1/exp_newton_helper((1 - x + (x * x) / 2), -x, 3, x*x, 2, epsilon)
+  else exp_newton_helper((1 + x + (x * x) / 2), x, 3, x * x, 2, epsilon);
+
 
 /**
  * Returns a random number between 0 (inclusive) and below (exclusive).

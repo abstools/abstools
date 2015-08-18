@@ -33,7 +33,7 @@ Int truncate(Rat a)
 
 .pow
 
-This function calculates b to the power of n.
+This function calculates `b` to the power of `n`.
 
 [source]
 ----
@@ -42,13 +42,23 @@ Rat pow(Rat b, Int n)
 
 .sqrt_newton
 
-This function approximates the square root of x; it stops when two subsequent
-estimates differ by less than epsilon.  estimate is an initial estimate of the
+This function approximates the square root of `x`; it stops when two subsequent
+estimates (as per Newton's algorithm) differ by less than `epsilon`.  `estimate` is an initial estimate of the
 square root.
 
 [source]
 ----
 Rat sqrt_newton(Rat x, Rat estimate, Rat epsilon)
+----
+
+.exp_newton
+
+This function approximates _e_ to the power of `x`; it stops when two subsequent
+estimates (as per Newton's algorithm) differ by less than `epsilon`.
+
+[source]
+----
+Rat exp_newton(Rat x, Rat epsilon)
 ----
 
 .random
