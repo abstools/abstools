@@ -48,7 +48,11 @@ toString(_Cog, false) -> "False";
 toString(_Cog,I) when is_integer(I) ->
     integer_to_list(I);
 toString(_Cog,{N,D}) when is_integer(N),is_integer(D)->
-    float_to_list(N / D,[{decimals, 4}, compact]);
+    {N1, D1} = rationals:proper({N, D}),
+    case D1 of
+        1 -> integer_to_list(N1);
+        _ -> integer_to_list(N1) ++ "/" ++ integer_to_list(D1)
+    end;
 toString(_Cog,S) when is_list(S) ->
     "\"" ++ lists:flatten(lists:map(fun($\\) -> "\\\\";
                                        ($") -> "\\\"";
