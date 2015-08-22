@@ -146,6 +146,10 @@ loop_for_resource(Cog=#cog{ref=CogRef,dc=DC},Resourcetype,Amount,Stack) ->
 
 release_token(C=#cog{ref=Cog},State)->
     commit(C),
+    receive
+        {stop_world, _Sender} -> ok
+    after 0 -> ok
+    end,
     Cog!{token,self(),State}.
 
 rollback(#cog{tracker=T})->
