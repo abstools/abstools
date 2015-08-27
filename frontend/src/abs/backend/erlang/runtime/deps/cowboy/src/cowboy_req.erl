@@ -388,7 +388,7 @@ body(Req=#http_req{body_state=waiting}, Opts) ->
 		_ ->
 			ExpectHeader = parse_header(<<"expect">>, Req),
 			ok = case ExpectHeader of
-				[<<"100-continue">>] -> continue(Req);
+				continue -> continue(Req);
 				_ -> ok
 			end
 	end,
@@ -686,7 +686,9 @@ reply(Status, Headers, Body, Req=#http_req{
 		resp_state=RespState, resp_headers=RespHeaders})
 		when RespState =:= waiting; RespState =:= waiting_stream ->
 	HTTP11Headers = if
-		Transport =/= cowboy_spdy, Version =:= 'HTTP/1.1' ->
+		Transport =/= cowboy_spdy, Version =:= 'HTTP/1.0', Connection =:= keepalive ->
+			[{<<"connection">>, atom_to_connection(Connection)}];
+		Transport =/= cowboy_spdy, Version =:= 'HTTP/1.1', Connection =:= close ->
 			[{<<"connection">>, atom_to_connection(Connection)}];
 		true ->
 			[]
@@ -988,13 +990,20 @@ chunked_response(Status, Headers, Req=#http_req{
 		when RespState =:= waiting; RespState =:= waiting_stream ->
 	RespConn = response_connection(Headers, Connection),
 	HTTP11Headers = if
+		Version =:= 'HTTP/1.0', Connection =:= keepalive ->
+			[{<<"connection">>, atom_to_connection(Connection)}];
 		Version =:= 'HTTP/1.0' -> [];
 		true ->
 			MaybeTE = if
 				RespState =:= waiting_stream -> [];
 				true -> [{<<"transfer-encoding">>, <<"chunked">>}]
 			end,
-			[{<<"connection">>, atom_to_connection(Connection)}|MaybeTE]
+			if
+				Connection =:= close ->
+					[{<<"connection">>, atom_to_connection(Connection)}|MaybeTE];
+				true ->
+					MaybeTE
+			end
 	end,
 	RespState2 = if
 		Version =:= 'HTTP/1.1', RespState =:= 'waiting' -> chunks;
@@ -1194,13 +1203,13 @@ kvlist_to_map(Keys, [{Key, Value}|Tail], Map) ->
 					case maps:find(Atom, Map) of
 						{ok, MapValue} when is_list(MapValue) ->
 							kvlist_to_map(Keys, Tail,
-								maps:put(Atom, [Value|MapValue], Map));
+								Map#{Atom => [Value|MapValue]});
 						{ok, MapValue} ->
 							kvlist_to_map(Keys, Tail,
-								maps:put(Atom, [Value, MapValue], Map));
+								Map#{Atom => [Value, MapValue]});
 						error ->
 							kvlist_to_map(Keys, Tail,
-								maps:put(Atom, Value, Map))
+								Map#{Atom => Value})
 					end;
 				false ->
 					kvlist_to_map(Keys, Tail, Map)
@@ -1221,7 +1230,7 @@ filter([{Key, Constraints, Default}|Tail], Map) ->
 		{ok, Value} ->
 			filter_constraints(Tail, Map, Key, Value, Constraints);
 		error ->
-			filter(Tail, maps:put(Key, Default, Map))
+			filter(Tail, Map#{Key => Default})
 	end;
 filter([Key|Tail], Map) ->
 	true = maps:is_key(Key, Map),
@@ -1232,7 +1241,7 @@ filter_constraints(Tail, Map, Key, Value, Constraints) ->
 		true ->
 			filter(Tail, Map);
 		{true, Value2} ->
-			filter(Tail, maps:put(Key, Value2, Map))
+			filter(Tail, Map#{Key => Value2})
 	end.
 
 %% Tests.
