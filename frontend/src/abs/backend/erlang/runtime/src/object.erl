@@ -164,12 +164,13 @@ active({clock_advance_for_dc, Amount},_From,
        OS=#state{class=class_ABS_DC_DeploymentComponent,int_status=S}) ->
     S1=dc:update_state_and_history(S, Amount),
     {reply, ok, active, OS#state{int_status=S1}};
-active(print_dc_info,_From,
+active(get_dc_info_string,_From,
        OS=#state{class=class_ABS_DC_DeploymentComponent=C,int_status=S}) ->
-    io:format("~s: ", [C:get_val_internal(S,description)]),
-    io:format("creation time: ~s, ", [builtin:toString(undefined, C:get_val_internal(S,creationTime))]),
-    io:format("CPU history (reversed): ~s~n", [builtin:toString(undefined, C:get_val_internal(S,cpuhistory))]),
-    {reply, ok, active, OS}.
+    Result=io_lib:format("~s:~ncreation time: ~s~nCPU history (reversed): ~s~n", 
+                         [C:get_val_internal(S,description),
+                          builtin:toString(undefined, C:get_val_internal(S,creationTime)),
+                          builtin:toString(undefined, C:get_val_internal(S,cpuhistory))]),
+    {reply, {ok, Result}, active, OS}.
 
 
 active({#object{class=Class},set,Field,Val},S=#state{class=C,new_vals=NV}) -> 
