@@ -7,7 +7,7 @@ Similar to Java, a  statement is each of the individual instructions of a progra
 This statement is also known as a *compound statement* and consists of a group of statement grouped together defining a name scope for variables. 
 
 
-[source,java]
+[source]
 ----
 {
 	a = a + 1;
@@ -39,7 +39,6 @@ if (True)
 ----
 while (x < 5)
 	x = x + 1;
-
 ----
 
 .Variable Declaration Statements
@@ -179,8 +178,7 @@ of statements, that will be executed regardless of an exception happening or not
 
 The syntax is the following:
 
-[source,java]
-
+[source]
 ----
 try {
  stmt1;

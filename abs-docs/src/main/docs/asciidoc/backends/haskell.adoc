@@ -54,8 +54,7 @@ named `Bar`. Any imported Haskell term will be treated as its ABS
 counterpart. In the example case, the programmer may re-export the foreign terms
 or use them as normal ABS terms:
 
-[source,java]
-
+[source]
 ----
 {
   Graph g = empty_graph();
@@ -98,8 +97,7 @@ The `CPU` and `Mem` datatypes are passed as arguments when creating the DC to pa
 its computing resources. These datatypes are simple defined as type synonyms to
 Int, but you can expect more sophisticated resource encodings for a future backend release.
 
-[source,java]
-
+[source]
 ----
 type CPU = Int; // processor cores
 type Mem = Int; // RAM measured in MB

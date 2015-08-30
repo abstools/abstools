@@ -25,7 +25,7 @@ public class VarResolutionTest extends FrontendTest {
 
     @Test
     public void testPatternVar() {
-        Model m = assertParseOkStdLib(" def Bool f(Bool b) = case b { True => False; x => ~x; };");
+        Model m = assertParseOkStdLib(" def Bool f(Bool b) = case b { True => False; x => !x; };");
         NegExp ne = (NegExp) getSecondCaseExpr(m);
         VarUse v = (VarUse) ne.getOperand();
         PatternVarDecl decl = (PatternVarDecl) v.getDecl();
@@ -116,8 +116,8 @@ public class VarResolutionTest extends FrontendTest {
     }
 
     static private ModuleDecl getTestModule(Model m) {
-        ModuleDecl md = m.getCompilationUnit(1).getModuleDecl(0);
-        assertEquals("UnitTest",md.getName());
+        ModuleDecl md = m.lookupModule("UnitTest");
+        assertNotNull("Module UnitTest not found", md);
         return md;
     }
 }

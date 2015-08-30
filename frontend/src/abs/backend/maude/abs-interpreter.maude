@@ -1125,6 +1125,8 @@ mod ABS-EVAL is
     or-else (CID1 == CID2 and I1 < I2)
     or-else (CID1 == CID2 and I1 == I2 and N1 < N2)
     or-else (CID1 == CID2 and I1 == I2 and N1 == N2 and dataLessThan(DL1, DL2)) .
+  eq dataLessThan(null :: DL1, D :: DL2) = D =/= null .
+  eq dataLessThan(D :: DL1, null :: DL2) = false .
 
   eq eval($builtin("<"), S, CN, MAC) = dataLessThan(S['I1], S['I2]) asAbsBool .
   eq eval($builtin("<="), S, CN, MAC) = ((S['I1] == S['I2]) or-else dataLessThan(S['I1], S['I2])) asAbsBool .
@@ -1439,7 +1441,31 @@ mod ABS-MACHINE-BASICS-COMMON is
       Pr: { '.c |-> "ABS.StdLib.Duration"["num"[0]], '.deadline |-> "ABS.StdLib.InfDuration"[ emp ], '_ |-> null, '.random |-> "ABS.StdLib.Nil"[emp], '.staticfuture |-> null, 'x |-> null, 'this |-> ob('main, 0) | new('x ; CID:Cid ; DL:DataList) },
       PrQ: noProc >
     < ob('ABS.DC.DeploymentComponent, -1) : Cog |
-      Objects: object(ob('ABS.DC.DeploymentComponent, -1), 'ABS.DC.DeploymentComponent, ('.nbcr |-> "num"[0], 'bw |-> "ABS.DC.InfRat"[emp], 'bwhistory |-> "ABS.StdLib.Nil"[emp], 'bwconsumed |-> "num"[0], 'cpuconsumed |-> "num"[0], 'cpu |-> "ABS.DC.InfRat"[emp], 'cpuhistory |-> "ABS.StdLib.Nil"[emp], 'creationTime |-> "ABS.StdLib.Time"["num"[0]], 'description |-> "str"["<Environment>"], 'initconfig |-> "ABS.StdLib.EmptyMap"[emp], 'initialized |-> "ABS.StdLib.True"[emp], 'bwnext |-> "ABS.DC.InfRat"[emp], 'cpunext |-> "ABS.DC.InfRat"[emp], 'bwhistorytotal |-> "ABS.StdLib.Nil"[emp], 'cpuhistorytotal |-> "ABS.StdLib.Nil"[emp]), 0, true),
+      Objects: object(ob('ABS.DC.DeploymentComponent, -1), 'ABS.DC.DeploymentComponent, ('.nbcr |-> "num"[0], 
+'bw |-> "ABS.DC.InfRat"[emp],
+'bwconsumed |-> "num"[0],
+'bwhistory |-> "ABS.StdLib.Nil"[emp],
+'bwhistorytotal |-> "ABS.StdLib.Nil"[emp],
+'bwnext |-> "ABS.DC.InfRat"[emp],
+'cloudprovider |-> null,
+'costPerInterval |-> "num"[0],
+'cpu |-> "ABS.DC.InfRat"[emp],
+'cpuconsumed |-> "num"[0],
+'cpuhistory |-> "ABS.StdLib.Nil"[emp],
+'cpuhistorytotal |-> "ABS.StdLib.Nil"[emp],
+'cpunext |-> "ABS.DC.InfRat"[emp],
+'creationTime |-> "ABS.StdLib.Time"["num"[0]],
+'description |-> "str"["<Environment>"],
+'initconfig |-> "ABS.StdLib.EmptyMap"[emp],
+'initialized |-> "ABS.StdLib.True"[emp],
+'memory |-> "ABS.DC.InfRat"[emp],
+'memoryconsumed |-> "num"[0],
+'memoryhistory |-> "ABS.StdLib.Nil"[emp],
+'memoryhistorytotal |-> "ABS.StdLib.Nil"[emp],
+'memorynext |-> "ABS.DC.InfRat"[emp],
+'paymentInterval |-> "num"[1],
+'startupDuration |-> "num"[0]
+), 0, true),
       DC: ob('ABS.DC.DeploymentComponent, -1),
       Sched: "ABS.Scheduler.defaultscheduler"('queue),
       Pr: idle,

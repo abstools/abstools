@@ -250,7 +250,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void negTestError() {
-        Model m = assertParseOkStdLib(" { Bool b = ~5; }");
+        Model m = assertParseOkStdLib(" { Bool b = !5; }");
         assertEquals(ErrorMessage.EXPECTED_TYPE, m.typeCheck().getFirst().msg);
     }
 
@@ -446,11 +446,6 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     @Test
     public void testGetNoFut() {
         assertTypeErrors("{ Either<Unit,Bool> e = Right(True); e.get; }", ErrorMessage.EXPECTED_FUT_TYPE);
-    }
-
-    @Test
-    public void testGetNoFutSafe() {
-        assertTypeErrors("{ Either<Unit,Bool> e = Right(True); e.safeget; }", ErrorMessage.EXPECTED_FUT_TYPE);
     }
 
     @Test

@@ -4,7 +4,7 @@ import java.util.HashSet;
 /**
 Adds a single set for names of features with children, accessible from any feature declaration.
 This set is initialised here, and extended when collecting semantic errors (ErrorCheck.jadd). 
-**/
+ **/
 
 
 aspect VerifyLeafs {

@@ -46,10 +46,11 @@
   :type '(radio (const maude)
                 (const java)
                 (const erlang)
-                (const prolog))
+                (const prolog)
+                (const keyabs))
   :group 'abs)
 (put 'abs-target-language 'safe-local-variable
-     #'(lambda (x) (member x '(maude java erlang prolog))))
+     #'(lambda (x) (member x '(maude java erlang prolog keyabs))))
 
 (defcustom abs-compiler-program (or (executable-find "absc") "absc")
   "Path to the Abs compiler."
@@ -329,6 +330,9 @@ value.")
   (or abs-maude-output-file
       (concat (file-name-sans-extension (car (abs--input-files))) ".maude")))
 
+(defun abs--keyabs-filename ()
+  (concat (file-name-sans-extension (car (abs--input-files))) ".inv"))
+
 (defun abs--absolutify-filename (filename)
   (if (file-name-absolute-p filename)
       filename
@@ -338,7 +342,7 @@ value.")
   (save-excursion
     (goto-char (point-max))
     (re-search-backward (rx bol (* whitespace) "module" (1+ whitespace)
-                            (group (char upper) (* (or (char alnum) ".")))))
+                            (group (char upper) (* (or (char alnum) "." "_")))))
     (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
 
 (defun abs--calculate-compile-command (backend)
@@ -352,6 +356,8 @@ value.")
                               (abs--input-files) " ")
                    (when (eql backend 'maude)
                      (concat " -o \"" (abs--maude-filename) "\""))
+                   (when (eql backend 'keyabs)
+                     (concat " -o \"" (abs--keyabs-filename) "\""))
                    (when abs-product-name
                      (concat " -product=" abs-product-name))
                    (when (and (eql backend 'maude) abs-use-timed-interpreter)
@@ -370,7 +376,8 @@ value.")
                                       (`erlang "gen/erl/Emakefile")
                                       (`java "gen/ABS/StdLib/Bool.java")
                                       ;; FIXME Prolog backend can use -fn outfile
-                                      (`prolog "abs.pl"))))
+                                      (`prolog "abs.pl")
+                                      (`keyabs (abs--keyabs-filename)))))
          (abs-modtime (nth 5 (file-attributes (buffer-file-name))))
          (output-modtime (nth 5 (file-attributes abs-output-file))))
     (or (not output-modtime)
@@ -390,10 +397,10 @@ value.")
   (pcase backend
     (`maude (save-excursion (run-maude))
             (comint-send-string inferior-maude-buffer
-                                (concat "in "
+                                (concat "in \""
                                         (abs--absolutify-filename
                                          (abs--maude-filename))
-                                        "\n"))
+                                        "\"\n"))
             (with-current-buffer inferior-maude-buffer
               (sit-for 1)
               (goto-char (point-max))
@@ -414,8 +421,11 @@ value.")
                                      (concat "cd (\"" erlang-dir "\").\n"))
                  (comint-send-string erlang-buffer "make:all([load]).\n")
                  (comint-send-string erlang-buffer
-                                     (concat "code:add_path(\"" erlang-dir
-                                             "/ebin\").\n"))
+                                     (concat "code:add_paths([\""
+                                             erlang-dir "/ebin\", \""
+                                             erlang-dir "/deps/cowboy/ebin\", \""
+                                             erlang-dir "/deps/cowlib/ebin\", \""
+                                             erlang-dir "/deps/ranch/ebin\"]).\n"))
                  (comint-send-string erlang-buffer
                                      (concat "runtime:start(\""
                                              (when debug-output "-d ")
@@ -456,7 +466,7 @@ Argument FLAG will prompt for language backend to use if 1."
   (let ((backend (if (= 1 flag)
                      abs-target-language
                    (intern (completing-read "Target language: "
-                                            '("maude" "erlang" "java")
+                                            '("maude" "erlang" "java" "keyabs")
                                             nil t nil nil "maude")))))
     (if (abs--needs-compilation backend)
         (abs--compile-model backend)
@@ -586,7 +596,11 @@ The following keys are set:
      ["Erlang" (setq abs-target-language 'erlang)
       :active t
       :style radio
-      :selected (eq abs-target-language 'erlang)])
+      :selected (eq abs-target-language 'erlang)]
+     ["Key-abs" (setq abs-target-language 'keyabs)
+      :active t
+      :style radio
+      :selected (eq abs-target-language 'keyabs)])
     ("Maude Backend Options"
      ["Timed interpreter"
       (setq abs-use-timed-interpreter (not abs-use-timed-interpreter))

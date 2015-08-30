@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
--export([init/3,start/3]).
--export([get/1,safeget/1,get_blocking/3,safeget_blocking/3,await/3,poll/1,die/2]).
+-export([init/4,start/5]).
+-export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,complete/4]).
 -include_lib("abs_types.hrl").
 -include_lib("log.hrl").
 %%Future starts AsyncCallTask
@@ -10,44 +10,70 @@
 -behaviour(gc).
 -export([get_references/1]).
 
-start(Callee,Method,Params) ->
-    Ref = spawn(?MODULE,init,[Callee,Method,Params]),
-    gc ! {Ref, self()},
-    receive
-        ok -> Ref
-    end.
+start(Callee,Method,Params,CurrentCog,Stack) ->
+    Ref = spawn(?MODULE,init,[Callee,Method,Params, self()]),
+    gc:register_future(Ref),
+    (fun Loop() ->
+             %% Wait for message to be received, but handle GC request
+             %% in the meantime
+             receive
+                 {stop_world, _Sender} ->
+                     task:block_for_gc(CurrentCog),
+                     task:acquire_token(CurrentCog, [Stack]),
+                     Loop();
+                {get_references, Sender} ->
+                    Sender ! {gc:extract_references(Stack), self()},
+                    Loop();
+                { ok, Ref} -> ok
+            end
+    end)(),
+    Ref.
 
+complete(Ref, Value, Sender, Cog) ->
+    Ref!{completed, Value, Sender, Cog},
+    (fun Loop() ->
+             %% Wait for message to be received, but handle GC request in the
+             %% meantime.
+             receive
+                 {stop_world, _Sender} ->
+                     task:block_for_gc(Cog),
+                     %% this runs in the context of the just-completed task,
+                     %% so we only need to hold on to the return value.
+                     task:acquire_token(Cog, [Value]),
+                     Loop();
+                {get_references, Sender} ->
+                    Sender ! {gc:extract_references([Value]), self()},
+                    Loop();
+                {ok, Ref} -> ok
+            end
+    end)().
 
-get(Ref)->
+get_after_await(Ref)->
     Ref!{get,self()},
-    receive 
+    receive
         {reply,Ref,{ok,Value}}->
             Value;
         {reply,Ref,{error,Reason}}->
             exit(Reason)
     end.
-safeget(Ref)->
-    Ref!{get,self()},
-    receive 
-        {reply,Ref,{ok,Value}}->
-            {dataValue,Value};
-        {reply,Ref,{error,Reason}} when is_atom(Reason)->
-            {dataError,atom_to_list(Reason)};
-        {reply,Ref,{error,Reason}} ->
-            {dataError,Reason}
-    end.
 
-get_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
+get_blocking(Ref, Cog, Stack) ->
     task:block(Cog),
     Ref ! {get, self()},
-    Result = get_blocking(Ref, Stack),
-    task:acquire_token(Cog, Stack),
-    Result.
-
-safeget_blocking(Ref, Cog=#cog{ref=CogRef}, Stack) ->
-    task:block(Cog),
-    Ref ! {get, self()},
-    Result = safeget_blocking(Ref, Stack),
+    Result = (fun Loop() ->
+                      receive
+                         {stop_world, _Sender} ->
+                             %% we already blocked above.  Eat the message or
+                             %% we'll block at inopportune moments later.
+                             Loop();
+                          {get_references, Sender} ->
+                              Sender ! {gc:extract_references(Stack), self()},
+                              Loop();
+                          {reply,Ref,{ok,Value}}->
+                              Value;
+                          {reply,Ref,{error,Reason}}->
+                              exit(Reason)
+                      end end)(),
     task:acquire_token(Cog, Stack),
     Result.
 
@@ -55,9 +81,41 @@ get_references(Ref) ->
     Ref ! {get_references, self()},
     receive {References, Ref} -> References end.
 
-await(Ref, Cog=#cog{ref=CogRef}, Stack) ->
-    Ref ! {wait, self()},
-    await(Stack).
+await(Ref, Cog, Stack) ->
+    case poll(Ref) of
+        true -> ok;
+        false ->
+            Ref ! {wait, self()},
+            task:release_token(Cog, waiting),
+            (fun Loop() ->
+                     receive
+                         {ok, Ref, Cog} ->
+                             %% It's an async self-call; unblock the callee
+                             %% before we try to acquire the token ourselves.
+                             Ref ! {okthx, self()},
+                             task:acquire_token(Cog, Stack);
+                         {ok, Ref, _CalleeCog} ->
+                             %% It's a call to another cog: get our cog to
+                             %% running status before allowing the other cog
+                             %% to idle
+
+                             %% TODO: this blocks the other cog until we are
+                             %% scheduled.  Investigate whether something like
+                             %% "cog:new_state(Cog,self(),runnable)" (but
+                             %% synchronous) is sufficient
+                             task:acquire_token(Cog, Stack),
+                             Ref ! {okthx, self()};
+                         {stop_world, _Sender} ->
+                             %% we already released the token above.  Eat the
+                             %% message or we'll block at inopportune moments
+                             %% later.
+                             Loop();
+                         {get_references, Sender} ->
+                             ?DEBUG(get_references),
+                             Sender ! {gc:extract_references(Stack), self()},
+                             Loop()
+                     end end)()
+    end.
 
 poll(Ref) ->
     Ref ! {poll, self()},
@@ -73,68 +131,62 @@ die(Ref, Reason) ->
 
   
   
-init(Callee=#object{class=C,cog=Cog=#cog{ref=CogRef}},Method,Params)->
+init(Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params, Caller)->
     %%Start task
     process_flag(trap_exit, true),
     MonRef=monitor(process,CogRef),
     cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
     demonitor(MonRef),
-    await().
+    Caller ! {ok, self()},
+    wait_for_completion(gc:extract_references(Params)).
 
 %% Future awaiting reply from task completion
-await() ->
+wait_for_completion(References) ->
     %% Receive an error or the value and move into server mode,
     %% or receive requests for references or polling
     receive
         {'DOWN', _ , process, _,Reason} when Reason /= normal ->
-            gc ! {unroot, self()},
+            gc:unroot_future(self()),
             loop({error,error_transform:transform(Reason)});
         {'EXIT',_,Reason} ->
-            gc ! {unroot, self()},
+            gc:unroot_future(self()),
             loop({error,error_transform:transform(Reason)});
-        {completed, Value}->
-            gc ! {unroot, self()},
-            loop({ok,Value});
+        {completed, Result, Sender, SenderCog}->
+            gc:unroot_future(self()),
+            convert_to_freestanding_future({ok,Result}, Sender, SenderCog);
         {get_references, Sender} ->
-            Sender ! {[], self()},
-            await();
+            Sender ! {References, self()},
+            wait_for_completion(References);
         {poll, Sender} ->
             Sender ! unresolved,
-            await()
+            wait_for_completion(References)
     end.
 
-get_blocking(Ref,Stack) ->
+%% send out notifications to all awaiting processes before allowing
+%% process to terminate.  This avoids spurious "all idle" states which
+%% cause premature clock advances.
+convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog) ->
     receive
-        {get_references, Sender} ->
-            Sender ! {gc:extract_references(Stack), self()},
-            get_blocking(Ref,Stack);
-        {reply,Ref,{ok,Value}}->
-            Value;
-        {reply,Ref,{error,Reason}}->
-            exit(Reason)
+        {wait,Sender}->
+            %% KLUDGE: we serialize notifications, waiting for one
+            %% okthx before sending out the next ok.  If a large
+            %% number of processes wait on a single future, this will
+            %% make things slower than necessary.
+            Sender ! {ok, self(), CalleeCog},
+            (fun Loop() ->
+                     receive
+                         {okthx,Sender} -> ok;
+                         {get_references, GC} ->
+                             GC ! {gc:extract_references(Value), self()},
+                             Loop()
+                     end
+             end)(),
+            convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog)
+    after 0 ->
+            TerminatingProcess ! {ok, self()},
+            loop(Value)
     end.
 
-safeget_blocking(Ref,Stack) ->
-    receive
-        {get_references, Sender} ->
-            Sender ! {gc:extract_references(Stack), self()},
-            get_blocking(Ref,Stack);
-        {reply, Ref, {ok,Value}}->
-            Value;
-        {reply, Ref, {error, Reason}} when is_atom(Reason)->
-            {dataError, atom_to_list(Reason)};
-        {reply, Ref, {error,Reason}} ->
-            {dataError, Reason}
-    end.
-
-%% Task awaiting future resolution
-await(Stack) ->
-    receive
-        {ok} -> ok;
-        {get_references, Sender} ->
-            Sender ! {gc:extract_references(Stack), self()},
-            await(Stack)
-    end.
 
 %%Servermode
 loop(Value)->
@@ -142,10 +194,16 @@ loop(Value)->
         {get,Sender} ->
             Sender!{reply,self(),Value},
             loop(Value);
-        {wait,Sender}->
-            Sender!{ok},
+        {wait,Sender} ->
+            Sender!{ok, self()},
+            loop(Value);
+        {okthx, _Sender} ->
+            %% No need to synchronize with "wait" here like in
+            %% convert_to_freestanding_future -- the callee process is already
+            %% gone so we just consume this message.
             loop(Value);
         {get_references, Sender} ->
+            ?DEBUG(get_references),
             Sender ! {gc:extract_references(Value), self()},
             loop(Value);
         {poll, Sender} ->

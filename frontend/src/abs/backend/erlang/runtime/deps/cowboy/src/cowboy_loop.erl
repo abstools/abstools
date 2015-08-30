@@ -38,7 +38,9 @@
 	| {ok, Req, State, hibernate}
 	| {stop, Req, State}
 	when Req::cowboy_req:req(), State::any().
-%% @todo optional -callback terminate(terminate_reason(), cowboy_req:req(), state()) -> ok.
+
+-callback terminate(any(), cowboy_req:req(), any()) -> ok.
+-optional_callbacks([terminate/3]).
 
 -record(state, {
 	env :: cowboy_middleware:env(),
@@ -161,13 +163,14 @@ call(Req, State=#state{resp_sent=RespSent},
 			cowboy_req:maybe_reply(Stacktrace, Req)
 		end,
 		cowboy_handler:terminate({crash, Class, Reason}, Req, HandlerState, Handler),
-		erlang:Class([
+		exit({cowboy_handler, [
+			{class, Class},
 			{reason, Reason},
 			{mfa, {Handler, info, 3}},
 			{stacktrace, Stacktrace},
 			{req, cowboy_req:to_list(Req)},
 			{state, HandlerState}
-		])
+		]})
 	end.
 
 %% It is sometimes important to make a socket passive as it was initially

@@ -28,7 +28,7 @@ public class StdLibTests extends SemanticTests {
 
     @Test
     public void setContains2() {
-        assertEvalTrue("{ Set<Int> s = set[1, 2, 3]; Bool testresult = ~contains(s, 4); }");
+        assertEvalTrue("{ Set<Int> s = set[1, 2, 3]; Bool testresult = !contains(s, 4); }");
     }
 
     @Test
@@ -39,7 +39,7 @@ public class StdLibTests extends SemanticTests {
 
     @Test
     public void setRemove() {
-        assertEvalTrue("{ Set<Int> set = set[1, 2, 3]; Bool testresult = ~contains(remove(set, 3), 3); }");
+        assertEvalTrue("{ Set<Int> set = set[1, 2, 3]; Bool testresult = !contains(remove(set, 3), 3); }");
     }
 
     @Test

@@ -9,11 +9,8 @@ import java.util.HashSet;
 
 import abs.frontend.ast.ASTNode;
 import deadlock.analyser.factory.DataTypeInterface;
-import com.gzoumix.semisolver.term.Term;
-import com.gzoumix.semisolver.constraint.Constraint;
 import deadlock.analyser.factory.Contract;
 import deadlock.analyser.factory.ContractElementParallel;
-import deadlock.analyser.factory.Factory;
 import deadlock.analyser.factory.FunctionInterface;
 import deadlock.analyser.factory.IRecord;
 import deadlock.analyser.factory.ITypingEnvironmentFutureType;
@@ -104,6 +101,7 @@ public class TypingEnvironment {
     }
     if((res == null) && (name != "this")) {
       RecordPresent t = (RecordPresent)(getVariable("this"));
+      assert t != null : name;
       res = t.getField(name); // possible nullPointerException
     }
     return res; 
@@ -130,7 +128,7 @@ public class TypingEnvironment {
       return futures.get(fut);
   }
 
-  public ContractElementParallel unsync(ASTNode pos) {
+  public ContractElementParallel unsync(ASTNode<?> pos) {
     LinkedList<Contract> contracts = new LinkedList<Contract>();
     Contract c;
   
@@ -145,8 +143,13 @@ public class TypingEnvironment {
   }
 
   public IRecord getRecord(ITypingEnvironmentVariableType x) {
-      return (x instanceof IRecord)? (IRecord)x:
-          this.getFuture(((TypingEnvironmentVariableTypeFuture)x)).getRecord();
+      if (x instanceof IRecord)
+          return (IRecord)x;
+      else {
+          final ITypingEnvironmentFutureType f = getFuture(((TypingEnvironmentVariableTypeFuture)x));
+          assert f != null : "I want the future now: "+x;
+          return f.getRecord();
+      }
   }
 
 

@@ -7,7 +7,7 @@ aspect ProductFlattener {
     /**************************************************************************
      * Configure a product
      * This is the top level method, which does the following:
-     * - find the features of a given product, 
+     * - find the features of a given product,
      * - find a valid sequence of associated deltas,
      * - resolve original() calls,
      * - apply deltas in sequence.
@@ -46,11 +46,13 @@ aspect ProductFlattener {
 
         // find/sort applicable delta IDs
         Set<String> deltaids = pl.findApplicableDeltas(prod);
-        ArrayList<String> sorted_deltaids = pl.sortDeltas(deltaids);
+        java.util.List<String> sorted_deltaids = pl.sortDeltas(deltaids);
 
         // find corresponding DeltaDecls
-        ArrayList<DeltaDecl> deltas = findDeltas(sorted_deltaids);
-        
+        ArrayList<DeltaDecl> deltas = new ArrayList<DeltaDecl>();
+        for (String deltaid : sorted_deltaids)
+            deltas.add(getDeltaDeclsMap().get(deltaid));
+
         // substitute delta parameters
         pl.substituteDeltaParams(deltas, prod);
 
@@ -67,7 +69,7 @@ aspect ProductFlattener {
 
         // apply the applicable deltas in the given order
         applyDeltas(deltas);
-        
+
         // remember which product was generated
         productName = prod.getName();
     }
@@ -75,7 +77,7 @@ aspect ProductFlattener {
     /**************************************************************************
      * Apply deltas to model
      */
-    public void Model.applyDeltas(ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
+    public void Model.applyDeltas(java.util.List<DeltaDecl> deltas) throws DeltaModellingException {
         // TODO/FIXME: The following code is sort of hack-ish and slow. Find a better way
         //             to flush the correct cache at the same time (or avoid flushing at all?)
         for (DeltaDecl delta : deltas) {
@@ -87,9 +89,9 @@ aspect ProductFlattener {
     }
 
     /**************************************************************************
-    * apply each FunctionalModifier and ModuleModifier 
+    * apply each FunctionalModifier and ModuleModifier
     * to its corresponding class or interface
-    * 
+    *
     * These "apply" methods are defined in "DeltaModifierApplicator.jadd"
     */
     public void Model.applyDelta(DeltaDecl delta) throws DeltaModellingException {
@@ -110,19 +112,19 @@ aspect ProductFlattener {
             }
         }
         throw new WrongProgramArgumentException("Product [" + id + "] is not declared");
-    }   
+    }
 
     /**************************************************************************
      * Evaluate each delta clause to find the applicable delta names
      * i.e. test each application condition in the context of the features which are ON in the given product
      */
-    public Set<String> ProductLine.findApplicableDeltas(Product prod) {
+    public Set<String> ProductLine.findApplicableDeltas(ImplicitProduct prod) {
 
         HashSet<String> deltaids = new HashSet<String>();
 
         for (DeltaClause clause : getDeltaClauses()) {
             if (clause.evaluateApplicationCondition(prod.getFeatures()))
-                deltaids.add(clause.getDeltaspec().getName());
+                deltaids.add(clause.getDeltaspec().getDeltaID());
         }
         return deltaids;
     }
@@ -132,13 +134,13 @@ aspect ProductFlattener {
      * relevant for dynamic product reconfiguration
      */
     public Set<String> ProductLine.findApplicableDeltas(Product fromProd, Product toProd) {
-        
+
         HashSet<String> deltaids = new HashSet<String>();
-        
+
         for (DeltaClause clause : getDeltaClauses()) {
             if (clause.evaluateFromApplicationCondition(fromProd.getFeatures()))
                 if (clause.evaluateApplicationCondition(toProd.getFeatures()))
-                    deltaids.add(clause.getDeltaspec().getName());
+                    deltaids.add(clause.getDeltaspec().getDeltaID());
         }
         return deltaids;
     }
@@ -154,20 +156,20 @@ aspect ProductFlattener {
         HashSet<String> onFeatureIDs = new HashSet<String>();
         for (Feature f : onFeatures)
             onFeatureIDs.add(f.getName());
-        
+
         if (hasAppCond())
             return getAppCond().evaluate(onFeatureIDs);
         else
             return true;
     }
-    
+
     /**************************************************************************
-     * Evaluate the "from" application condition assciated with this DeltaClause 
+     * Evaluate the "from" application condition assciated with this DeltaClause
      * in the context of the given list of features and attribute values
-     * 
+     *
      * "from" app conditions are only for dynamic product reconfiguration,
      * where a running product is re-configured into another product.
-     * 
+     *
      * TODO Support feature attributes
      */
     public boolean DeltaClause.evaluateFromApplicationCondition(List<Feature> onFeatures) {
@@ -175,7 +177,7 @@ aspect ProductFlattener {
         HashSet<String> onFeatureIDs = new HashSet<String>();
         for (Feature f : onFeatures)
             onFeatureIDs.add(f.getName());
-        
+
         if (hasFromAppCond())
             return getFromAppCond().evaluate(onFeatureIDs);
         else
@@ -187,7 +189,7 @@ aspect ProductFlattener {
      * selected feature names.
      */
     public abstract boolean AppCond.evaluate(Set<String> features);
-    
+
     public boolean AppCondAnd.evaluate(Set<String> features) {
     	return getLeft().evaluate(features) && getRight().evaluate(features);
     }
@@ -203,47 +205,68 @@ aspect ProductFlattener {
 
 
     /**************************************************************************
-     * Find DeltaDecls, given a list of delta names; keep order
+     * Return sorted List of applicable Delta names 
+     * (according to a valid order of application defined by the product line)
      */
-    public ArrayList<DeltaDecl> Model.findDeltas(java.util.List<String> deltaids) {
-        ArrayList<DeltaDecl> deltas = new ArrayList<DeltaDecl>();
-        for (String deltaid : deltaids) {
-            for (CompilationUnit u : this.getCompilationUnits()) {
-                for (DeltaDecl delta : u.getDeltaDecls()) {
-                    if (deltaid.equals(delta.getName())) {
-                        //System.out.println("$$$ found applicable DeltaDecl : " + deltaid);
-                        deltas.add(delta);
-                    }
-                }
-            }
-        }
-        return deltas;
+    public java.util.List<String> ProductLine.sortDeltas(Set<String> applicableDeltaIDs) {
+	    LinkedList<String> list = new LinkedList<String>(getValidOrderOfAllDeltas());
+	    list.retainAll(applicableDeltaIDs);
+	    return list;
     }
-        
 
     /**************************************************************************
-     * Sort Delta names according to a valid order of application defined by the product line
+     * Obtain a valid delta application order that contains ALL deltas 
+     * (disregarding application conditions). This order is used to determine an 
+     * application order for individual products by removing the non-applicable deltas 
      */
-    public ArrayList<String> ProductLine.sortDeltas(Set<String> deltaIDs) {
-        GraphTS g = new GraphTS(deltaIDs.toArray());
-        
+    syn lazy java.util.List<String> ProductLine.getValidOrderOfAllDeltas() {
+        sortDeltas();
+        return deltaSorter.getPreferredOrder();
+    }
+
+    /**************************************************************************
+     * The Delta partition contains all possible orders in which the deltas can be applied
+     */
+    syn lazy java.util.List<Set<String>> ProductLine.getDeltaPartition() {
+        sortDeltas();
+        return deltaSorter.getPartition();
+    }
+    
+    /**************************************************************************
+     * The sorter object that computes a valid delta order
+     * It is instantiated by sortDeltas().
+     */
+    private TopologicalSorting<String> ProductLine.deltaSorter = null;
+
+    /**************************************************************************
+     * Sort all deltas of the product line. This only has to be done once.
+     * The result is used in multiple places:
+     * - Type checking the product line
+     * - Flattening for a certain product 
+     */
+    private void ProductLine.sortDeltas() {
+        if (deltaSorter == null)
+            deltaSorter = new TopologicalSorting<String>(getAllDeltaIDs());
+        else
+            return; // assume already sorted
+
+        // sort            
         for (DeltaClause clause : getDeltaClauses()) {
-            String deltaid = clause.getDeltaspec().getName();
-            if (deltaIDs.contains(deltaid)) {
-                for (DeltaID did : clause.getAfterDeltaIDs()) { // 'after' deltas
-                    String otherid = did.getName();
-                    if (deltaIDs.contains(otherid)) {
-                        try {
-                            g.addEdge(otherid, deltaid);
-                        } catch (VertexNotFoundException e) {
-                            assert false; // should never reach this point
-                        }
-                    }
+            String deltaID = clause.getDeltaspec().getDeltaID();
+            for (DeltaID id : clause.getAfterDeltaIDs()) {
+                String afterID = id.getName();
+                try {
+                    deltaSorter.addEdge(afterID, deltaID);
+                } catch (DeltaModellingException e) {
+                    /* Should never reach this point as long as 
+                     *   1. sorter is instantiated with all available deltaIDs and
+                     *   2. the type checker made sure that 'after' clauses do not contain any deltaIDs that do not have their own delta clause -- FIXME!!
+                     */
+                    assert false;
                 }
             }
         }
-        g.sort(); // FIXME catch the case when sort fails -- use assert?
-        return g.getSortedElements();
+        deltaSorter.sort();
     }
-    
+
 }

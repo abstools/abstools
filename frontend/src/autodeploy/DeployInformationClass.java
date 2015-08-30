@@ -27,7 +27,7 @@ public class DeployInformationClass {
       String param = decl.getName();
       _paramList.add(param);
       String port = decl.getType().getQualifiedName();
-      if(port == null) { System.out.println("Error: a port is null"); }
+      assert port != null : "Error: port for " + decl.getType() + " is null";
       if(port.equals("ABS.StdLib.List"))
         port = ((DataTypeType) (decl.getType())).getTypeArgs().get(0).getQualifiedName();
       _paramType.put(param, port);

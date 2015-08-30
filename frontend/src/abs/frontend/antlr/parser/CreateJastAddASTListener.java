@@ -34,9 +34,13 @@ public class CreateJastAddASTListener extends ABSBaseListener {
      */
     private ASTNode<?> setV(ParserRuleContext node, ASTNode<?> value) {
         assert node != null;
-        assert node.stop != null;
-        value.setPosition(beaver.Symbol.makePosition(node.start.getLine(), node.start.getCharPositionInLine()),
-                          beaver.Symbol.makePosition(node.stop.getLine(), node.stop.getCharPositionInLine()));
+        int startline = node.start.getLine();
+        int startcol = node.start.getCharPositionInLine();
+        // for a completely empty file, CompilationUnit.stop will be null
+        int endline = (node.stop == null ? node.start : node.stop).getLine();
+        int endcol = (node.stop == null ? node.start : node.stop).getCharPositionInLine();
+        value.setPosition(beaver.Symbol.makePosition(startline, startcol),
+                          beaver.Symbol.makePosition(endline, endcol));
         value.setFileName(this.filename);
         values.put(node, value);
         return value;
@@ -114,8 +118,8 @@ new List<ModuleDecl>(),
         result.setDeltaDeclList(l(ctx.delta_decl()));
         result.setProductLineOpt(o(ctx.productline_decl()));
         result.setProductList(l(ctx.product_decl()));
-        // result.setFeatureDeclList(l(ctx.featuremodel_decl()));
-        // FIXME: FExt ?
+        result.setFeatureDeclList(l(ctx.feature_decl()));
+        result.setFExtList(l(ctx.fextension()));
     }
 
     // Declarations
@@ -154,7 +158,16 @@ new List<ModuleDecl>(),
         DataConstructor d
             = (DataConstructor)setV(ctx, new DataConstructor(ctx.n.getText(), new List<ConstructorArg>()));
         for (ABSParser.Data_constructor_argContext a : ctx.a) {
-            d.addConstructorArg(new ConstructorArg((DataTypeUse)v(a.type_use()), a.IDENTIFIER() != null ? new Opt(new Name(a.IDENTIFIER().getText())) : new Opt()));
+            final TypeUse vt = (TypeUse) v(a.type_use());
+            final DataTypeUse vtresolved;
+            if (vt instanceof DataTypeUse) {
+                vtresolved = (DataTypeUse) vt;
+            } else {
+                // See below, we may be facing an UnresolvedTypeUse.
+                assert vt instanceof UnresolvedTypeUse : vt.getClass().getName();
+                vtresolved = new DataTypeUse(vt.getName(), vt.getAnnotations());
+            }
+            d.addConstructorArg(new ConstructorArg(vtresolved, a.IDENTIFIER() != null ? new Opt(new Name(a.IDENTIFIER().getText())) : new Opt()));
         }
     }
 
@@ -393,6 +406,7 @@ new List<ModuleDecl>(),
     @Override public void exitUnaryExp(ABSParser.UnaryExpContext ctx) {
         switch (ctx.op.getType()) {
         case ABSParser.NEGATION :
+        case ABSParser.NEGATION_CREOL :
             setV(ctx, new NegExp((PureExp)v(ctx.pure_exp())));
             break;
         case ABSParser.MINUS :
@@ -536,10 +550,14 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitType_use(ABSParser.Type_useContext ctx) {
-        // FIXME: could be an interface type!
+        /* As we could be looking at an interface type, first keep symbol
+         * unresolved and have rewrite-rules patch it up.
+         * However, this means that in the parser the DataConstructor could
+         * be seeing. But there we know what it must be and "rewrite" it ourselves. 
+         */
         if (ctx.p.isEmpty()) {
             // normal type use
-            setV(ctx, new DataTypeUse(ctx.n.getText(), l(ctx.annotation())));
+            setV(ctx, new UnresolvedTypeUse(ctx.n.getText(), l(ctx.annotation())));
         } else {
             // parametric type use
             ParametricDataTypeUse p
@@ -934,7 +952,7 @@ new List<ModuleDecl>(),
             setV(ctx, new Attribute(ctx.IDENTIFIER().getText(),
                                     new IntMType(t, (BoundaryInt)v(ctx.l),
                                                  (BoundaryInt)v(ctx.u))));
-        } else if (ctx.is != null) {
+        } else if (ctx.is != null && !ctx.is.isEmpty()) {
             setV(ctx, new Attribute(ctx.IDENTIFIER().getText(),
                                     new IntListMType(t, l(ctx.is))));
         } else if (t.equals("Int")) {

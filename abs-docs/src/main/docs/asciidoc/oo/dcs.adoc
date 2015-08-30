@@ -10,8 +10,7 @@ Based on the fact that a DC is a single *unit* that (pro)*actively* behaves (run
 it is modelled as an _active object_, discussed in the previous section.
 All DC objects are typed by the `DC` interface, defined in ABS as:
 
-[source,java]
-
+[source]
 ----
 interface IDC {
   Unit shutdown();
@@ -40,26 +39,26 @@ It is in the discretion of the ABS backends to provide with suitable DC classes 
 After a new DC object is created, its associated computational unit is started and
 sits waiting to execute ABS computations. To start ABS computations, the user
 must create (active) objects inside the remote computational unit. This is
-called `object spawning`, illustrated by the example:
+called `object spawning', illustrated by the example:
 
 [source, java]
 
 ----
-Interf1 o1 = dc1 spawns Class1(params..);
+[DC: dc1] Interf1 o1 = new Class1(params..);
 o1 ! method1( params ..);
 this.method2( o1 );
 ----
 
-The `spawns` keyword creates a new object in the given DC. It behaves
-similar to the `new` keyword, in the sense that the created object will be also placed in a new COG.
+The `DC` annotation on a `new` creates a new object in the given DC. The created object can only be placed in a new COG.
 The returned object reference (`o1` in the example) is treated as normal (can be passed to arguments, called for its methods, etc.).
 
-The keyword `thisDC` is provided that can be put anywhere inside an ABS program to return
+The function `thisDC()` is provided that can be put anywhere inside an ABS program to return
 the computational unit where the calling code executes in.
 
-[source,java]
+[source]
+----
 {
-  DC whereami = thisDC;
+  DC whereami = thisDC();
 }
-
+----
 

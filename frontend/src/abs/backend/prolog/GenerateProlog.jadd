@@ -766,6 +766,7 @@ aspect GenerateProlog {
         this.printContextInformation(s);
         s.print(")");
     }
+    
     public void VarDeclStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         s.print("varDeclStmt(");//we ignore them as they have already been included in the block definition
         this.getVarDecl().generateProlog(s,reachInfo);
@@ -781,6 +782,7 @@ aspect GenerateProlog {
         this.printContextInformation(s);
         s.print(")");
     }
+    
     public void ExpressionStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         s.print("expressionStmt(");
         getExp().generateProlog(s,reachInfo);
@@ -788,6 +790,7 @@ aspect GenerateProlog {
         this.printContextInformation(s);
         s.print(")");
     }
+    
     public void AssignStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
 
         s.print("assignStmt(");
@@ -806,6 +809,7 @@ aspect GenerateProlog {
         this.printContextInformation(s);
         s.print(")");
     }
+    
     public void AssertStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         s.print("assertStmt(");
         getCondition().generateProlog(s,reachInfo);
@@ -813,6 +817,7 @@ aspect GenerateProlog {
         this.printContextInformation(s);
         s.print(")");
     }
+    
     public void ReturnStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
 
         s.print("returnStmt(");
@@ -826,14 +831,15 @@ aspect GenerateProlog {
         this.printContextInformation(s);
          s.print(")");
     }
+    
     public void SuspendStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         s.print("suspendStmt(" + PrologBackend.awaitId++ + ",");
         
         this.printContextInformation(s);
         s.print(")");
     }   
+    
     public void IfStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
-
         s.print("ifStmt(");
         this.getCondition().generateProlog(s,reachInfo);
         s.print(",");
@@ -844,6 +850,26 @@ aspect GenerateProlog {
         this.printContextInformation(s);
         s.print(")");
     }
+    
+    public void CaseStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
+      s.print("caseStmt(");
+      this.getExpr().generateProlog(s,reachInfo);
+      s.print(",[");
+              
+      List<CaseBranchStmt> branches = (List<CaseBranchStmt>) getBranchs();
+      int n = getNumBranch();
+      for (int i = 0; i < n; i++){
+          s.print("branch(");
+          branches.getChild(i).getLeft().generateProlog(s,reachInfo);
+          s.print(",");
+          branches.getChild(i).getRight().generateProlog(s,reachInfo);
+          if (i != n-1) s.print("),");
+      }
+      s.print(")],");
+      this.printContextInformation(s);
+      s.print(")");
+    }
+    
     public void WhileStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         s.print("whileStmt(");
         getCondition().generateProlog(s,reachInfo);
@@ -860,11 +886,6 @@ aspect GenerateProlog {
         s.print("getExp(");
         this.getPureExp().generateProlog(s,reachInfo);
         s.print(")");
-    }
-
-    @Override
-    public void SafegetExp.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
-      throw new  NotImplementedYetException(this);
     }
 
     public void Call.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
@@ -897,6 +918,7 @@ aspect GenerateProlog {
         s.print("])");
 
     }
+    
     //this function prints the interfaces to whom the called method may belong
     //it is a recursive method over the union predicates where the base case are the interface types
     private void Call.generateInterfacesList(PrintStream s,Type type) {
@@ -934,6 +956,7 @@ aspect GenerateProlog {
             
         s.print("')");
     }
+    
     //guards
     public void AndGuard.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         s.print("andGuard(");
@@ -942,11 +965,13 @@ aspect GenerateProlog {
         getRight().generateProlog(s,reachInfo);
         s.print(")");
     }
+    
     public void ClaimGuard.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         s.print("claimGuard(");
         getVar().generateProlog(s,reachInfo);
         s.print(")");
     }
+    
     public void ExpGuard.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         s.print("expGuard(");
         getPureExp().generateProlog(s,reachInfo);
@@ -995,9 +1020,11 @@ aspect GenerateProlog {
             mainBlock.getChild(0).generateProlog(s,reachInfo);
 
     }
+    
     public void Export.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         throw new PrologBackendException("Export should never be called but its subclasses");
     }
+    
     public void FromExport.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         //generates "fromExport(moduleName,ExportedDeclarationsList)."
         s.print("fromExport("+quote(this.getModuleName())+",");
@@ -1009,6 +1036,7 @@ aspect GenerateProlog {
         }
         s.println(").");
     }
+    
     public void NamedExport.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         //generates "namedExport(ExportedDeclarationsList)."
         s.print("namedExport(");
@@ -1020,6 +1048,7 @@ aspect GenerateProlog {
         }
         s.println(").");
     }
+    
     public void StarExport.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         //generates "starExport(moduleName)." if there is a module name
         if(this.getModuleNameOpt().hasChildren()){
@@ -1032,6 +1061,7 @@ aspect GenerateProlog {
     public void Import.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         throw new PrologBackendException("Import should never be called but its subclasses");
     }
+    
     public void FromImport.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         //generates "fromImport(moduleName,ImportedDeclarationsList)."
         s.print("fromImport("+quote(this.getModuleName())+",");
@@ -1043,6 +1073,7 @@ aspect GenerateProlog {
         }
         s.println(").");
     }
+    
     public void NamedImport.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         //generates "namedImport(ImportedDeclarationsList)."
         s.print("namedImport(");
@@ -1054,11 +1085,13 @@ aspect GenerateProlog {
         }
         s.println(").");
     }
+    
     public void StarImport.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         //generates "starImport(moduleName)."
         s.println("starImport("+quote(this.getModuleName())+").");
 
     }
+    
 	public void DeltaDecl.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
        //we ignore deltas by now!
     }
@@ -1072,6 +1105,7 @@ aspect GenerateProlog {
         getMax().generateProlog(s,reachInfo);
         s.print(")");
     }
+    
     public void DurationStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
     	s.print("durationStmt(duration( ");
         getMin().generateProlog(s,reachInfo);
@@ -1081,6 +1115,7 @@ aspect GenerateProlog {
         this.printContextInformation(s);
         s.print(")");
     }   
+    
     public void TypedAnnotation.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
     	s.print("typedAnnotation( ");
     	getAccess().generateProlog(s,reachInfo);

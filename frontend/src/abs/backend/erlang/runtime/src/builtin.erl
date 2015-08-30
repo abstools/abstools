@@ -48,15 +48,20 @@ toString(_Cog, false) -> "False";
 toString(_Cog,I) when is_integer(I) ->
     integer_to_list(I);
 toString(_Cog,{N,D}) when is_integer(N),is_integer(D)->
-    float_to_list(N / D,[{decimals, 4}, compact]);
+    {N1, D1} = rationals:proper({N, D}),
+    case D1 of
+        1 -> integer_to_list(N1);
+        _ -> integer_to_list(N1) ++ "/" ++ integer_to_list(D1)
+    end;
 toString(_Cog,S) when is_list(S) ->
     "\"" ++ lists:flatten(lists:map(fun($\\) -> "\\\\";
                                        ($") -> "\\\"";
                                        (X) -> X end, S))
         ++ "\"";
+toString(_Cog, null) -> "null";
 toString(_Cog,A) when is_atom(A) -> constructorname_to_string(A);
 toString(_Cog,P) when is_pid(P) -> pid_to_list(P);
-toString(_Cog,{object,Cid,Oid,_Cog}) -> atom_to_list(Cid) ++ ":" ++ pid_to_list(Oid);
+toString(_Cog,{object,Cid,Oid,_Cog}) -> pid_to_list(Oid) ++ ":" ++ atom_to_list(Cid);
 toString(_Cog,T) when is_tuple(T) ->
     [C|A] = tuple_to_list(T),
     case C of
@@ -67,6 +72,7 @@ toString(_Cog,T) when is_tuple(T) ->
                  ++ "(" ++ string_interleave([toString(_Cog,X) || X <- A], ", ")
                  ++ ")"
     end.
+
 
 truncate(_Cog,{N,D})->
     N div D;

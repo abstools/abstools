@@ -1,7 +1,3 @@
 Third-party library dependencies.  We don't want to do the "git
 submodule" dance so we check out elsewhere and then copy over to this
-repository.  The following versions were used:
-
-cowlib git://github.com/ninenines/cowlib.git d544a494af4dbc810fc9c15eaf5cc050cced1501
-cowboy git://github.com/extend/cowboy.git 02b1b281785a815ff5b4c7bfc45053f0c786a18c
-ranch git://github.com/ninenines/ranch.git adf1822defc2b7cfdc7aca112adabfa1d614043c
+repository.

@@ -17,10 +17,10 @@ init(_Cog,[Future,O,Method|Params])->
     #state{fut=Future,obj=O,meth=Method,params=Params}.
 
 
-start(#state{fut=Future,obj=O=#object{class=C,cog=Cog=#cog{tracker=Tracker}},meth=M,params=P})->
+start(#state{fut=Future,obj=O=#object{class=C,cog=Cog},meth=M,params=P})->
     try 
        Res=apply(C, M,[O|P]),
-       Future!{completed, Res}
+       future:complete(Future, Res, self(), Cog)
     catch
       _:Reason ->
          task:rollback(Cog),

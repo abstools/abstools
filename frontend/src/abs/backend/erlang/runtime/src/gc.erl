@@ -7,6 +7,9 @@
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
 -export([start/2, stop/0, init/2, extract_references/1, get_references/1]).
+-export([register_future/1, unroot_future/1]).
+-export([register_cog/1, unregister_cog/1]).
+-export([register_object/1]).
 
 -export([behaviour_info/1]).
 
@@ -38,7 +41,7 @@ start(Log, Debug) ->
     register(gc, spawn(?MODULE, init, [Log, Debug])).
 
 stop() ->
-    gc ! stop.
+    gc!stop.
 
 init(Log, Debug) ->
     loop(#state{log=Log, debug=Debug}).
@@ -50,6 +53,33 @@ gcstats(Log, Statistics) ->
     end.
 
 
+register_future(Fut) ->
+    %% Fut is the plain pid of the Future process
+    gc!{Fut, self()},
+    receive
+        {gc, ok} -> Fut
+    end.
+
+unroot_future(Fut) ->
+    %% Fut is the plain pid of the Future process
+    gc!{unroot, Fut}.
+
+register_cog(Cog) ->
+    %% Cog is a #cog record
+    gc!{Cog, self()},
+    receive
+        {gc, ok} -> Cog
+    end.
+
+unregister_cog(Cog) ->
+    %% Cog is the plain pid of the Cog process
+    gc!{die, Cog}.
+
+register_object(Obj) ->
+    %% Obj is an #object record
+    gc!Obj.
+
+
 loop(State=#state{cogs=Cogs, objects=Objects, futures=Futures, root_futures=RootFutures, log=Log}) ->
     gcstats(Log, {{memory, erlang:memory()}, {cogs, gb_sets:size(Cogs)}, {objects, gb_sets:size(Objects)},
               {futures, gb_sets:size(Futures), gb_sets:size(RootFutures)},
@@ -57,12 +87,12 @@ loop(State=#state{cogs=Cogs, objects=Objects, futures=Futures, root_futures=Root
     NewState =
         receive
             {#cog{ref=Ref}, Sender} ->
-                Ref ! Sender ! ok,
+                Ref ! Sender ! {gc, ok},
                 State#state{cogs=gb_sets:insert({cog, Ref}, Cogs)};
             #object{ref=Ref} ->
                 State#state{objects=gb_sets:insert({object, Ref}, Objects)};
             {Ref, Sender} when is_pid(Ref) ->
-                Sender ! ok,
+                Sender ! {gc, ok},
                 State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)};
             {die, Cog} ->
                 State#state{cogs=gb_sets:delete({cog, Cog}, Cogs)};
@@ -91,19 +121,19 @@ await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=R
         receive
             {#cog{ref=Ref}, Sender} ->
                 cog:stop_world(Ref),
-                Sender ! ok,
+                Sender ! {gc, ok},
                 {State#state{cogs=gb_sets:insert({cog, Ref}, Cogs)}, Stopped};
             #object{ref=Ref} ->
                 {State#state{objects=gb_sets:insert({object, Ref}, Objects)}, Stopped};
             {Ref, Sender} when is_pid(Ref) ->
-                Sender ! ok,
+                Sender ! {gc, ok},
                 {State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)}, Stopped};
             {die, Cog} ->
                 {State#state{cogs=gb_sets:delete({cog, Cog}, Cogs)}, Stopped};
             {unroot, Sender} ->
                 {State#state{futures=gb_sets:insert({future, Sender}, Futures),
                              root_futures=gb_sets:delete({future, Sender}, RootFutures)}, Stopped};
-            {stopped, Ref} ->
+            {stopped, _Ref} ->
                 {State, Stopped + 1}
         end,
     NewCogs = NewState#state.cogs,
@@ -123,13 +153,12 @@ mark(State, Black, Gray) ->
     mark(State, NewBlack, NewGray).
 
 sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,
-                   root_futures=RootFutures,
                    limit=Lim, proc_factor=PFactor, log=Log},Black) ->
     WhiteObjects = gb_sets:subtract(Objects, Black),
     WhiteFutures = gb_sets:subtract(Futures, Black),
     BlackObjects = gb_sets:intersection(Objects, Black),
     BlackFutures = gb_sets:intersection(Futures, Black),
-    ?DEBUG({sweep, {objects, WhiteObjects}, {futures, WhiteFutures}}),
+    ?DEBUG({sweep, {objects, gb_sets:size(WhiteObjects)}, {futures, gb_sets:size(WhiteFutures)}}),
     gcstats(Log,{sweep, {objects, gb_sets:size(WhiteObjects), gb_sets:size(BlackObjects)},
              {futures, gb_sets:size(WhiteFutures), gb_sets:size(BlackFutures)}}),
     gb_sets:fold(fun ({object, Ref}, ok) -> object:die(Ref, gc), ok end, ok, WhiteObjects),
@@ -146,6 +175,7 @@ sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,
                     PFactor > ?MIN_PROC_FACTOR -> PFactor - 0.05;
                     true -> PFactor
                  end,
+    ?DEBUG({sweep_finished, {objects, gb_sets:size(BlackObjects)}, {futures, gb_sets:size(BlackFutures)}}),
     loop(State#state{objects=BlackObjects, futures=BlackFutures, previous=now(),
                      limit=NewLim, proc_factor=PFactor}).
 

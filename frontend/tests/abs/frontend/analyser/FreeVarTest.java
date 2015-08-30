@@ -60,7 +60,7 @@ public class FreeVarTest extends FrontendTest {
 
     @Test
     public void unaryExp() {
-        Exp e = getSecondExp("{ Bool b = True; Bool c = ~b; }");
+        Exp e = getSecondExp("{ Bool b = True; Bool c = !b; }");
         assertEquals(e.getFreeVars(), "b");
     }
 

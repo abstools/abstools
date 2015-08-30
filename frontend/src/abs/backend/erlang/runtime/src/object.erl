@@ -58,16 +58,18 @@ new_object_task(#object{ref=O},TaskRef,Params)->
             active -> Res
         end
     catch
-       _:{noproc,_} ->
-          exit(deadObject)
+        _:{noproc,_} ->
+            ?DEBUG({deadObject, O}),
+            exit({deadObject, O})
     end.
 
 alive(#object{ref=O})->
     try
         gen_fsm:sync_send_event(O, ping)
     catch
-       _:{noproc,_} ->
-          exit(deadObject)
+        _:{noproc,_} ->
+            ?DEBUG({deadObject, O}),
+            exit({deadObject, O})
     end.
 
 die(#object{ref=O},Reason)->
@@ -96,7 +98,7 @@ await_activation(Params) ->
 
 start(Cog,Class)->
     {ok,O}=gen_fsm:start_link(object,[Cog,Class,Class:init_internal()],[]),
-    gc ! #object{class=Class,ref=O,cog=Cog}.
+    gc:register_object(#object{class=Class,ref=O,cog=Cog}).
 
 init([Cog=#cog{ref=CogRef},Class,Status])->
     ?DEBUG({new,CogRef, self(), Class}),
@@ -150,7 +152,8 @@ active({consume_resource, {CurrentVar, MaxVar}, Count}, _From, OS=#state{class=c
               end,
     case ToConsume of
         {0,_} -> {reply, {wait, ToConsume}, active, OS};
-        _ -> S1=C:set_val_internal(S,CurrentVar,
+        _ -> ?DEBUG({consume, C, ToConsume}),
+             S1=C:set_val_internal(S,CurrentVar,
                                    rationals:add(Consumed, ToConsume)),
              %% We reply with "ok" not "wait" here so we are ready for
              %% small-step consumption schemes where multiple
@@ -161,12 +164,13 @@ active({clock_advance_for_dc, Amount},_From,
        OS=#state{class=class_ABS_DC_DeploymentComponent,int_status=S}) ->
     S1=dc:update_state_and_history(S, Amount),
     {reply, ok, active, OS#state{int_status=S1}};
-active(print_dc_info,_From,
+active(get_dc_info_string,_From,
        OS=#state{class=class_ABS_DC_DeploymentComponent=C,int_status=S}) ->
-    %% io:format("Description: ~s, ", [C:get_val_internal(S,description)]),
-    %% io:format("creation time: ~s, ", [builtin:toString(undefined, C:get_val_internal(S,creationTime))]),
-    %% io:format("CPU history (reversed): ~s~n", [builtin:toString(undefined, C:get_val_internal(S,cpuhistory))]),
-    {reply, ok, active, OS}.
+    Result=io_lib:format("~s:~ncreation time: ~s~nCPU history (reversed): ~s~n", 
+                         [C:get_val_internal(S,description),
+                          builtin:toString(undefined, C:get_val_internal(S,creationTime)),
+                          builtin:toString(undefined, C:get_val_internal(S,cpuhistory))]),
+    {reply, {ok, Result}, active, OS}.
 
 
 active({#object{class=Class},set,Field,Val},S=#state{class=C,new_vals=NV}) -> 

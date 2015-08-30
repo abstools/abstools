@@ -4,14 +4,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.eclipse.jface.dialogs.PopupDialog;
 import org.eclipse.jface.text.AbstractInformationControl;
-import org.eclipse.jface.text.information.InformationPresenter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 
 import abs.frontend.ast.MethodImpl;
 

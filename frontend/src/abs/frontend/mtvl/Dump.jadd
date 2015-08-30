@@ -1,17 +1,17 @@
 aspect MyDumpMTVL {
-  /* print variables used by mTVL */
-  public void Model.dumpMVars() {
-    if (hasMTVL()) {
-        println("free vars - int:  "+ints().keySet());
-        println("free vars - bool: "+bools());
-        println("free vars - feat: "+features());
+    /* print variables used by mTVL */
+    public void Model.dumpMVars() {
+        if (hasMTVL()) {
+            println("free vars - int:  "+ints().keySet());
+            println("free vars - bool: "+bools());
+            println("free vars - feat: "+features());
+        }
     }
-  }
-  
-  public boolean Model.hasMTVL() {
-    for (CompilationUnit u: getCompilationUnits())
-        if (u.getNumFeatureDecl() != 0)
-            return true;
-    return false;
-  }
+
+    public boolean Model.hasMTVL() {
+        for (CompilationUnit u: getCompilationUnits())
+            if (u.getNumFeatureDecl() != 0)
+                return true;
+        return false;
+    }
 }

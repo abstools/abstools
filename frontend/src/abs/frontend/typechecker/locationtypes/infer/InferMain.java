@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import abs.common.FileUtils;
+import abs.common.NotImplementedYetException;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.ClassDecl;
@@ -42,8 +43,11 @@ public class InferMain extends Main {
         } catch (WrongProgramArgumentException pe) {
             System.err.println(pe.getMessage());
             m.printUsageAndExit();
-        }  catch (Exception e) {
-            System.err.println("An error occurred during compilation: " + e.getMessage());
+        } catch (NotImplementedYetException e) {
+            System.err.println(e.getMessage());
+            System.exit(0);
+        } catch (Exception e) {
+            System.err.println("An error occurred during compilation:\n" + e.getMessage());
             e.printStackTrace();
 
             System.exit(1);

@@ -125,7 +125,7 @@ public class SatGenerator {
             }
             sb.append("0\n");
         }
-        } catch (Error e) {
+        } catch (Exception e) {
             System.out.println(sb.length());
             throw e;
         }

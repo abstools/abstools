@@ -208,8 +208,14 @@ public abstract class Type {
             return false;
         if (!(o instanceof Type))
             return false;
+        System.err.println(this+":"+o);
         return true;
     }
+
+    public int hashCode() {
+        assert false : "hashCode not designed:"+this;
+        return 42; // any arbitrary constant will do
+        }
 
     public boolean isBoundedType() {
         return false;

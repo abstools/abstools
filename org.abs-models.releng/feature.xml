@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="org.abs-models.releng"
+      label="ABS-Models"
+      version="1.0.0.qualifier"
+      provider-name="abs-models.org">
+
+   <description url="http://www.example.com/description">
+      [Enter Feature Description here.]
+   </description>
+
+   <copyright url="http://www.example.com/copyright">
+      [Enter Copyright Description here.]
+   </copyright>
+
+   <license url="http://www.example.com/license">
+      [Enter License Description here.]
+   </license>
+
+   <url>
+      <update label="ABS-Models Update Site" url="http://envisage-project.eu/site.p2/"/>
+   </url>
+
+   <includes
+         id="org.abs-models.abs.compiler"
+         version="0.0.0"/>
+
+   <includes
+         id="org.abs-models.abs.plugin"
+         version="0.0.0"/>
+
+   <includes
+         id="org.abs-models.sda"
+         version="0.0.0"/>
+
+   <includes
+         id="org.abs-models.sdedit"
+         version="0.0.0"/>
+
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.core.resources" version="3.6.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.editors" version="3.6.1" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.ide" version="3.6.1" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.navigator"/>
+      <import plugin="org.eclipse.ui.console" version="3.5.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.debug.core"/>
+      <import plugin="org.eclipse.debug.ui"/>
+      <import plugin="org.junit"/>
+      <import plugin="org.eclipse.ui.navigator.resources"/>
+      <import plugin="org.eclipse.core.filesystem"/>
+      <import plugin="org.eclipse.core.expressions"/>
+      <import plugin="org.eclipse.ui.views"/>
+      <import plugin="org.eclipse.ui.views" version="3.5.0" match="greaterOrEqual"/>
+      <import feature="org.eclipse.jdt" version="3.9.2.v20140221-1700"/>
+      <import feature="org.eclipse.rcp" version="4.3.1.v20130911-1000"/>
+      <import plugin="org.eclipse.jface.text" version="3.6.1" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.core" version="3.6.1" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.debug.ui"/>
+      <import plugin="org.eclipse.jdt.launching"/>
+   </requires>
+
+   <plugin
+         id="org.abs-models.abs.plugin"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.abs-models.sdedit"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
+   <plugin
+         id="org.abs-models.abs.compiler"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
+   <plugin
+         id="org.abs-models.sda"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
+</feature>

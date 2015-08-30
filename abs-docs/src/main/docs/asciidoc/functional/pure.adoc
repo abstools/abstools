@@ -8,10 +8,10 @@ These expressions bind variable names to pure expressions.
 
 .Syntax
 
-[source,java]
+[source]
 
 ----
-let (Bool x) = True in ~x
+let (Bool x) = True in !x
 ----
 .Data Type Constructor Expressions
 
@@ -19,7 +19,7 @@ They are expressions that create data type values by using data type constructor
 
 .Syntax
 
-[source,java]
+[source]
 
 ----
 True
@@ -33,7 +33,7 @@ Function Applications apply functions to arguments.
 
 .Syntax
 
-[source,java]
+[source]
 
 ----
 tail(Cons(True, Nil))
@@ -46,7 +46,7 @@ ABS has a standard if-then-else expression.
 
 .Syntax
 
-[source,java]
+[source]
 
 ----
 if 5 == 4 then True else False
@@ -70,7 +70,7 @@ There are five different kinds of patterns available in ABS:
 
 Pattern variables are simply unbound variables. Like the underscore pattern, these variables match every value, but, in addition, bind the variable to the matched value. The bound variable can then be used in the right-hand-side expression of the corresponding branch. Typically, pattern variables are used inside of data constructor patterns to extract values from data constructors. For example 
 
-[source,java]
+[source]
 ----
 def A fromJust<A>(Maybe<A> a) =
 case a {
@@ -83,7 +83,7 @@ case a {
 
 If a bound variable is used as a pattern, the pattern matches if the value of the case expression is equal to the value of the bound variable.
 
-[source,java]
+[source]
 ----
 def Bool contains<A>(List<A> list, A value) =
 case list {
@@ -97,7 +97,7 @@ case list {
 .Literal Patterns
 Literals can be used as patterns. This is similar to bound variables, because the pattern matches if the value of the case expression is equal to the literal value.
 
-[source,java]
+[source]
 ----
 def Bool isEmpty(String s) =
 case b {
@@ -111,7 +111,7 @@ case b {
 A data constructor pattern is like a standard data constructor expression, but where certain sub expressions can be patterns again.
 
 
-[source,java]
+[source]
 ----
 def Bool negate(Bool b) =
 case b {
@@ -121,7 +121,7 @@ case b {
 
 ----
 
-[source,java]
+[source]
 ----
 def List<A> remainder(List<A> list) =
 case b {
@@ -133,7 +133,7 @@ case b {
 .Underscore Pattern
 The underscore pattern (_) simply matches every value. It is generally used as the last pattern in a case expression to define a default case. For example:
 
-[source,java]
+[source]
 ----
 def Bool isNil<A>(List<A> list) =
 case list {
@@ -168,6 +168,6 @@ The following table describes the meaning as well as the associativity and the p
 |e1 * e2 |multiplication |left |number, number |number
 |e1 / e2 |division |left |number, number |Rat
 |e1 % e2 |modulo |left |number, number |Int
-|~ e |logical negation |right |Bool |Bool
+|! e |logical negation |right |Bool |Bool
 |- e |integer negation |right |number |number
 |=======================

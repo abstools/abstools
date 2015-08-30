@@ -27,7 +27,7 @@ public class TypeCheckerHelper {
             return;
         }
 
-        assert t.isDataType();
+        assert t.isDataType() || t.isExceptionType() : t; // TODO: more instances of this? Maybe exception should imply datatype?
 
         if (!t.getDecl().equals(c.getDataTypeDecl())) {
             e.add(new TypeError(p, ErrorMessage.WRONG_CONSTRUCTOR, t.toString(), p.getConstructor()));
@@ -140,10 +140,10 @@ public class TypeCheckerHelper {
 
         /* Does the delta exist? */
         final Deltaspec spec = clause.getDeltaspec();
-        if (! deltaNames.containsKey(spec.getName()))
-            e.add(new TypeError(spec, ErrorMessage.NAME_NOT_RESOLVABLE, spec.getName()));
+        if (! deltaNames.containsKey(spec.getDeltaID()))
+            e.add(new TypeError(spec, ErrorMessage.NAME_NOT_RESOLVABLE, spec.getDeltaID()));
         else {
-            DeltaDecl dd = deltaNames.get(spec.getName());
+            DeltaDecl dd = deltaNames.get(spec.getDeltaID());
             if (dd.getNumParam() != spec.getNumDeltaparam()) {
                 e.add(new TypeError(spec, ErrorMessage.WRONG_NUMBER_OF_ARGS,dd.getNumParam(),spec.getNumDeltaparam()));
             } else {
@@ -177,11 +177,11 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckProduct(Product prod, 
-            Map<String,Feature> featureNames, 
-            Set<String> prodNames, 
-            Map<String,DeltaDecl> deltaNames, 
-            Set<String> updateNames, 
+    public static void typeCheckProduct(Product prod,
+            Map<String,Feature> featureNames,
+            Set<String> prodNames,
+            Map<String,DeltaDecl> deltaNames,
+            Set<String> updateNames,
             SemanticErrorList e) {
         if (featureNames != null) {
             // Do the features exist in the PL declaration (and also check feature attributes)?
@@ -194,7 +194,7 @@ public class TypeCheckerHelper {
                     for (int i = 0; i<f.getNumAttrAssignment(); i++) {
                         AttrAssignment aa = f.getAttrAssignment(i);
                         for (DeltaClause dc : dcs) {
-                            DeltaDecl dd = m.findDelta(dc.getDeltaspec().getName());
+                            DeltaDecl dd = m.findDelta(dc.getDeltaspec().getDeltaID());
                             DeltaParamDecl dp = dd.getParam(i);
                             // FIXME: we assumed here that delta
                             // parameters and feature parameters have
@@ -329,6 +329,22 @@ public class TypeCheckerHelper {
                     if (res.put(rn.getSimpleName(), rn) != null)
                         foundDuplicates.add(rn.getSimpleName());
                     res.put(rn.getQualifiedName(), rn);
+                }
+            } else if (d instanceof ExceptionDecl) {
+                ExceptionDecl ed = (ExceptionDecl) d;
+                DataConstructor ec = ed.dataConstructor;
+                assert ec != null : ed.getName();
+                if (ec.getName().equals(d.getName())) {
+                    // should always be true, see Main.java where the data
+                    // constructor gets constructed
+                    rn = new ResolvedDeclName(moduleName, ec);
+                    // If it's already in there, is it from the same location -- from stdlib? 
+                    ResolvedName tryIt = res.get(rn);
+                    if (tryIt != null && tryIt.getDecl() != ed)
+                        foundDuplicates.add(rn.getSimpleName());
+                    else {
+                        res.put(rn.getQualifiedName(), rn);
+                    }
                 }
             }
             else if (d instanceof ExceptionDecl) {

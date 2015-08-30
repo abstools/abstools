@@ -1,0 +1,27 @@
+module RoseTree;
+
+data RoseTree<Int> = RoseTree(Int,List<RoseTree<Int>>);
+
+def Bool dfs_fun(RoseTree<Int> t, Int v) = case t {
+    RoseTree(v_,Nil) => v == v_;
+    RoseTree(v_, ts) => if v == v_ 
+                        then True
+                        else dfs_fun_(ts, v);
+};
+
+def Bool dfs_fun_(List<RoseTree<Int>> ts, Int v) = case ts {
+    Nil => False;
+    Cons(t,ts_) => dfs_fun(t,v) || dfs_fun_(ts_,v);
+};
+
+
+{
+  RoseTree<Int> t = RoseTree(1, list[RoseTree(2,Nil)]);
+  Bool res1 = dfs_fun(t,2);
+  Bool res2 = dfs_fun(t,3);
+  println(toString(res1));
+  println(toString(res2));
+}    
+
+
+

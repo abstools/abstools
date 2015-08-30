@@ -11,8 +11,7 @@ Type Synonyms define synonyms for otherwise defined types. Type synonyms start w
 
 .Syntax
 
-[source,java]
-
+[source]
 ----
 type Filename = String
 type Filenames = Set<Filename>

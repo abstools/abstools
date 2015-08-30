@@ -2,25 +2,25 @@ import java.util.Map;
 import java.util.Set;
 
 aspect ProductConstraints {
-    
+
     public void Product.getProdConstraints(Map<String,IntegerVariable> vars, Set<Constraint> newcs) {
-                    for (Feature f: getFeatures()) {
-                        newcs.add(ChocoSolver.isTrue(vars.get(f.getName())));
-                        for (AttrAssignment aa: f.getAttrAssignments()) {
-                            String fname = f.getName()+"."+aa.getName();
-                            if (vars.containsKey(fname))
-                                newcs.add(ChocoSolver.eqeq(vars.get(fname), aa.getValue().getIntValue().intValue()));
-                        }
-                    }
+        for (Feature f: getFeatures()) {
+            newcs.add(ChocoSolver.isTrue(vars.get(f.getName())));
+            for (AttrAssignment aa: f.getAttrAssignments()) {
+                String fname = f.getName()+"."+aa.getName();
+                if (vars.containsKey(fname))
+                    newcs.add(ChocoSolver.eqeq(vars.get(fname), aa.getValue().getIntValue().intValue()));
+            }
+        }
     }
-    
+
     public void Model.getDiffConstraints(Product p, Map<String,IntegerVariable> vars, Set<Constraint> newcs, String diffVar) {
         //calculating deselected featrues, initially initialized by all features
         ArrayList<String> deselectedFeatures = new ArrayList();
         for (String fname: features()){
             deselectedFeatures.add(fname);
         }
-        
+
         //removing the selected features to get deselected features
         //
         IntegerExpressionVariable v = Choco.ZERO;
@@ -33,7 +33,7 @@ aspect ProductConstraints {
                 }
             }
         }
-       
+
         for(String fname: deselectedFeatures){
             v = Choco.plus(v, vars.get(fname));
         }
@@ -46,7 +46,7 @@ aspect ProductConstraints {
             if (vars.containsKey(fname))
                 v = Choco.plus(v, vars.get(fname));
         }
-        
+
         newcs.add(ChocoSolver.eqeq(vars.get(maxVar),v));
         return true;
     }

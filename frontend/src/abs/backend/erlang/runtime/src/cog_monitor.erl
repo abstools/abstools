@@ -7,7 +7,7 @@
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
 
--export([waitfor/0]).
+-export([waitfor/0, get_dcs/0]).
 -export([init/1,handle_event/2,handle_call/2,terminate/2,handle_info/2,code_change/3]).
 
 %% - main=this
@@ -34,6 +34,9 @@ waitfor()->
             ok
     end.    
 
+get_dcs() ->
+    eventstream:call(cog_monitor, get_dcs).
+
 %% Behaviour callbacks
 
 %%The callback gets as parameter the pid of the runtime process, which waits for all cogs to be idle
@@ -51,7 +54,7 @@ handle_event({cog,Cog,idle},State=#state{active=A,idle=I})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:add_element(Cog,I),
     S1=State#state{active=A1,idle=I1},
-    case can_clock_advance(S1) of
+    case can_clock_advance(State, S1) of
         true->
             {ok, advance_clock_or_terminate(S1)};
         false->
@@ -74,7 +77,7 @@ handle_event({cog,Cog,die},State=#state{active=A,idle=I,blocked=B,clock_waiting=
     B1=gb_sets:del_element(Cog,B),
     W1=lists:filter(fun ({_, _, _, _, Cog1}) ->  Cog1 =:= Cog end, W),
     S1=State#state{active=A1,idle=I1,blocked=B1,clock_waiting=W1},
-    case can_clock_advance(S1) of
+    case can_clock_advance(State, S1) of
         true->
             {ok, advance_clock_or_terminate(S1)};
         false->
@@ -92,7 +95,7 @@ handle_event({cog,Task,Cog,clock_waiting,Min,Max},
     C1=add_to_clock_waiting(C,{cog,Min,Max,Task,Cog}),
     A1=gb_sets:del_element(Cog,A),
     S1=State#state{active=A1,clock_waiting=C1},
-    case can_clock_advance(S1) of
+    case can_clock_advance(State, S1) of
         true->
             {ok, advance_clock_or_terminate(S1)};
         false->
@@ -106,7 +109,7 @@ handle_event({cog,Task,Cog,resource_waiting},
     C1=add_to_clock_waiting(C,{cog,MTE,MTE,Task,Cog}),
     A1=gb_sets:del_element(Cog,A),
     S1=State#state{active=A1,clock_waiting=C1},
-    case can_clock_advance(S1) of
+    case can_clock_advance(State, S1) of
         true->
             {ok, advance_clock_or_terminate(S1)};
         false->
@@ -120,8 +123,10 @@ handle_event(_,State)->
     {ok,State}.
 
 %%Unused
-handle_call(_,_State)->
-    {not_supported_call}.
+handle_call(get_dcs, State=#state{dcs=DCs}) ->
+    {ok, DCs, State};
+handle_call(_,State)->
+    {ok, undefined, State}.
 
 
 handle_info(M,_State)->
@@ -139,12 +144,13 @@ cancel(undefined)->
 cancel(TRef)->
     {ok,cancel}=timer:cancel(TRef).
 
-can_clock_advance(#state{active=A, blocked=B}) ->
-    All_idle = gb_sets:is_empty(gb_sets:subtract(A, B)),
-    ?DEBUG({can_clock_advance, All_idle}),
-    All_idle.
+can_clock_advance(_OldState=#state{active=A, blocked=B},
+                  _NewState=#state{active=A1, blocked=B1}) ->
+    Old_idle = gb_sets:is_empty(gb_sets:subtract(A, B)),
+    All_idle = gb_sets:is_empty(gb_sets:subtract(A1, B1)),
+    not Old_idle and All_idle.
 
-advance_clock_or_terminate(State=#state{main=M,clock_waiting=C,dcs=DCs,timer=T}) ->
+advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,timer=T}) ->
     case C of
         [] ->
             %% One last clock advance to finish the last resource period
@@ -152,7 +158,6 @@ advance_clock_or_terminate(State=#state{main=M,clock_waiting=C,dcs=DCs,timer=T})
             ?DEBUG({last_clock_advance, MTE}),
             clock:advance(MTE),
             lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
-            lists:foreach(fun dc:print_info/1, DCs),
             {ok,T1} = case T of
                           undefined -> timer:send_after(1000,M,wait_done);
                           _ -> {ok,T}
@@ -163,25 +168,29 @@ advance_clock_or_terminate(State=#state{main=M,clock_waiting=C,dcs=DCs,timer=T})
             ?DEBUG({clock_advance, MTE}),
             clock:advance(MTE),
             lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
-            %% lists:foreach(fun dc:print_info/1, DCs),
-            {A,C1}=lists:unzip(
+            {A1,C1}=lists:unzip(
                      lists:map(
                        fun(I) -> decrease_or_wakeup(MTE, I) end,
                        C)),
-            State#state{active=gb_sets:from_list(lists:flatten(A)),
+            State#state{active=gb_sets:union(A, gb_sets:from_list(lists:flatten(A1))),
                         clock_waiting=lists:flatten(C1)}
     end .
 
 decrease_or_wakeup(MTE, {What, Min, Max, Task, Cog}) ->
-    %% Compute, for one entry in the clock_waiting queue, either a new
-    %% entry with decreased deadline, or wake up the task and note the
-    %% cog that should be re-added to the active set (if any; only
-    %% when the cog was blocked).
+    %% Compute, for one entry in the clock_waiting queue, either a new entry
+    %% with decreased deadline, or wake up the task and note the cog that
+    %% should be re-added to the active set.  Note that we optimistically mark
+    %% the cog as active: since it was idle before and we just unblocked a
+    %% task, the cog will signal itself as active anyway as soon as the
+    %% freshly-unblocked tasks gets around to telling it (and in the meantime,
+    %% we might erroneously advance the clock a second time otherwise).
     case cmp:le(Min, MTE) of
         true ->
-            Task ! clock_finished,
-            {case What of cog -> Cog; task -> [] end,
-             []};
+            Task ! {clock_finished, self()},
+            receive
+                {ok, Task} -> ok
+            end,
+            {Cog, []};
         false ->
             {[],
              {What,
@@ -191,9 +200,9 @@ decrease_or_wakeup(MTE, {What, Min, Max, Task, Cog}) ->
     end.
 
 add_to_clock_waiting([H={_,_,Head,_,_} | T], I={_,_,Max,_,_}) ->
-    case rationals:is_lesser(rationals:to_r(Head), rationals:to_r(Max)) of
-        false -> [H, I | T];
-        true -> [H | add_to_clock_waiting(T, I)]
+    case rationals:is_greater(rationals:to_r(Head), rationals:to_r(Max)) of
+        true -> [I, H | T];
+        false -> [H | add_to_clock_waiting(T, I)]
     end;
 add_to_clock_waiting([], I) ->
     [I].

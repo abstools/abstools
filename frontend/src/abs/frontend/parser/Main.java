@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.parser;
@@ -16,7 +16,6 @@ import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Map;
@@ -30,43 +29,14 @@ import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
-import abs.frontend.antlr.parser.CreateJastAddASTListener;
 import abs.frontend.antlr.parser.ABSParserWrapper;
-import abs.frontend.ast.CompilationUnit;
-import abs.frontend.ast.ConstructorArg;
-import abs.frontend.ast.DataConstructor;
-import abs.frontend.ast.DataConstructorExp;
-import abs.frontend.ast.DataTypeDecl;
-import abs.frontend.ast.Decl;
-import abs.frontend.ast.DeltaDecl;
-import abs.frontend.ast.ExceptionDecl;
-import abs.frontend.ast.ExpFunctionDef;
-import abs.frontend.ast.Feature;
-import abs.frontend.ast.FnApp;
-import abs.frontend.ast.FunctionDecl;
-import abs.frontend.ast.PureExp;
-import abs.frontend.ast.StringLiteral;
-import abs.frontend.ast.UpdateDecl;
-import abs.frontend.ast.Product;
-import abs.frontend.ast.ProductLine;
-import abs.frontend.ast.List;
-import abs.frontend.ast.Model;
-import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.FeatureDecl;
-import abs.frontend.ast.FExt;
-import abs.frontend.ast.Opt;
-import abs.frontend.ast.StarImport;
+import abs.frontend.ast.*;
 import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
 import abs.frontend.configurator.visualizer.FMVisualizer;
 import abs.frontend.delta.DeltaModellingException;
-import abs.frontend.typechecker.KindedName;
-import abs.frontend.typechecker.KindedName.Kind;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
-import beaver.Parser;
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.*;
 
 /**
  * @author rudi
@@ -85,7 +55,7 @@ public class Main {
     protected boolean allowIncompleteExpr = false;
     protected LocationType defaultLocationType = null;
     protected boolean locationTypeInferenceEnabled = false;
-    // Must be public for AspectJ instrumentation 
+    // Must be public for AspectJ instrumentation
     public boolean fullabs = false;
     public String product;
     protected boolean locationTypeStats = false;
@@ -106,7 +76,7 @@ public class Main {
     public static void main(final String... args)  {
        new Main().mainMethod(args);
     }
-    
+
     public void mainMethod(final String... args) {
        try {
            java.util.List<String> argslist = Arrays.asList(args);
@@ -122,6 +92,10 @@ public class Main {
                abs.backend.coreabs.CoreAbsBackend.main(args);
            } else if (argslist.contains("-prettyprint")) {
                abs.backend.prettyprint.PrettyPrinterBackEnd.main(args);
+           } else if (argslist.contains("-keyabs")) {
+               abs.backend.keyabs.KeyAbsBackend.main(args);
+           } else if (argslist.contains("-outline")) {
+               abs.backend.outline.OutlinePrinterBackEnd.main(args);
            } else {
                Model m = parse(args);
                if (m.hasParserErrors()) {
@@ -136,22 +110,22 @@ public class Main {
     public void setWithStdLib(boolean withStdLib) {
         this.stdlib = withStdLib;
     }
-    
+
     public void setAllowIncompleteExpr(boolean b) {
         allowIncompleteExpr = b;
     }
-    
+
     public void setTypeChecking(boolean b) {
         typecheck = b;
     }
-    
+
     public java.util.List<String> parseArgs(String[] args) {
         ArrayList<String> remainingArgs = new ArrayList<String>();
 
         for (String arg : args) {
             if (arg.equals("-dump"))
                 dump = true;
-            if (arg.equals("-debug"))
+            else if (arg.equals("-debug"))
                 debug = true;
             else if (arg.equals("-v"))
                 verbose = true;
@@ -213,8 +187,8 @@ public class Main {
                 remainingArgs.add(arg);
         }
         return remainingArgs;
-    }    
-    
+    }
+
     public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException, ParserConfigurationException {
         Model m = parseFiles(parseArgs(args).toArray(new String[0]));
         analyzeModel(m);
@@ -225,7 +199,7 @@ public class Main {
         if (fileNames.length == 0) {
             printErrorAndExit("Please provide at least one input file");
         }
-    
+
         java.util.List<CompilationUnit> units = new ArrayList<CompilationUnit>();
 
         for (String fileName : fileNames) {
@@ -237,12 +211,12 @@ public class Main {
             if (!f.canRead()) {
                throw new IllegalArgumentException("File "+fileName+" cannot be read");
             }
-            
+
             if (!f.isDirectory() && !isABSSourceFile(f) && !isABSPackageFile(f)) {
                throw new IllegalArgumentException("File "+fileName+" is not a legal ABS file");
             }
         }
-        
+
         for (String fileName : fileNames) {
            parseFileOrDirectory(units, new File(fileName));
         }
@@ -254,7 +228,7 @@ public class Main {
         for (CompilationUnit u : units) {
             unitList.add(u);
         }
-        
+
         Model m = new Model(unitList);
         return m;
     }
@@ -262,7 +236,7 @@ public class Main {
     public void analyzeModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException, ParserConfigurationException {
         m.verbose = verbose;
         m.debug = dump;
-        
+
         // drop attributes before calculating any attribute
         if (ignoreattr)
             m.dropAttributes();
@@ -274,11 +248,10 @@ public class Main {
             System.out.println("Preprocessing Model...");
             ABSPreProcessor oABSPreProcessor = new ABSPreProcessor();
             oABSPreProcessor.preProcessModel(m); //For Pre-processing...
-            
+
             // Transformation of microTVL to Future Model Editor compatible XML
             FMVisualizer oFMVisualizer = new FMVisualizer();
-            
-            oFMVisualizer.ParseMicroTVLFile(m);            
+            oFMVisualizer.ParseMicroTVLFile(m);
         }
 
         if (m.hasParserErrors()) {
@@ -289,6 +262,11 @@ public class Main {
             }
         } else {
             rewriteModel(m, product);
+
+            // type check PL before flattening
+            // [ramus] disabled temporarily due to a bug
+            //if (typecheck)
+            //    typeCheckProductLine(m);
 
             // flatten before checking error, to avoid calculating *wrong* attributes
             if (fullabs) {
@@ -339,24 +317,7 @@ public class Main {
     private static void rewriteModel(Model m, String productname)
         throws WrongProgramArgumentException
     {
-        // Handle exceptions: add exceptions as constructors to the
-        // ABS.StdLib.Exception datatype.
-        DataTypeDecl e = (DataTypeDecl)(m.getExceptionType().getDecl());
-        if (e != null) {
-            // TODO: if null and not -nostdlib, throw an error
-            for (Decl decl : m.getDecls()) {
-                if (decl instanceof ExceptionDecl) {
-                    ExceptionDecl e1 = (ExceptionDecl)decl;
-                    // KLUDGE: what do we do about annotations to exceptions?
-                    DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().fullCopy());
-                    d.setPosition(e1.getStart(), e1.getEnd());
-                    d.setFileName(e1.getFileName());
-                    d.exceptionDecl = e1;
-                    e1.dataConstructor = d;
-                    e.addDataConstructor(d);
-                }
-            }
-        }
+        exceptionHack(m);
         // Generate reflective constructors for all features
         ProductLine pl = m.getProductLine();
         if (pl != null) {
@@ -369,7 +330,7 @@ public class Main {
             FunctionDecl currentFeatureFun = null;
             FunctionDecl productNameFun = null;
             for (ModuleDecl d : m.getModuleDecls()) {
-                if (d.getName().equals("ABS.Productline")) {
+                if (d.getName().equals(Constants.PL_NAME)) {
                     modProductline = d;
                     break;
                 }
@@ -413,7 +374,33 @@ public class Main {
         }
     }
 
-    
+    /** Handle exceptions: add exceptions as constructors to the
+     ABS.StdLib.Exception datatype.
+     */
+    public static void exceptionHack(Model m) {
+        assert m != null;
+        if (m.getExceptionType() == null) {
+            return; // Eclipse?
+        }
+        DataTypeDecl e = (DataTypeDecl)(m.getExceptionType().getDecl());
+        if (e != null) {
+            // TODO: if null and not -nostdlib, throw an error
+            for (Decl decl : m.getDecls()) {
+                if (decl instanceof ExceptionDecl) {
+                    ExceptionDecl e1 = (ExceptionDecl)decl;
+                    // KLUDGE: what do we do about annotations to exceptions?
+                    DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().fullCopy());
+                    d.setPosition(e1.getStart(), e1.getEnd());
+                    d.setFileName(e1.getFileName());
+                    d.exceptionDecl = e1;
+                    e1.dataConstructor = d;
+                    e.addDataConstructor(d);
+                }
+            }
+        }
+    }
+
+
     /**
      * TODO: Should probably be introduced in Model through JastAdd by MTVL package.
      * However, the command-line argument handling will have to stay in Main. Pity.
@@ -429,24 +416,24 @@ public class Main {
             if (solve) {
                 if (verbose)
                     System.out.println("Searching for solutions for the feature model...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 System.out.print(s.resultToString());
             }
             if (minimise) {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for minimum solutions of "+product+" for the feature model...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 System.out.print(s.minimiseToString(product));
             }
             if (maximise) {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for maximum solutions of "+product+" for the feature model...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 //System.out.print(s.maximiseToInt(product));
                 s.addConstraint(ChocoSolver.eqeq(s.vars.get(product), s.maximiseToInt(product)));
-                ChocoSolver s1 = m.getCSModel();
+                ChocoSolver s1 = m.instantiateCSModel();
                 int i=1;
                 while(s1.solveAgain()) {
                     System.out.println("------ "+(i++)+"------");
@@ -456,7 +443,7 @@ public class Main {
             if (solveall) {
                 if (verbose)
                     System.out.println("Searching for all solutions for the feature model...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 int i=1;
                 while(s.solveAgain()) {
                     System.out.println("------ "+(i++)+"------");
@@ -468,7 +455,7 @@ public class Main {
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
                 if (p_product != null) {
-                    ChocoSolver s = m.getCSModel();
+                    ChocoSolver s = m.instantiateCSModel();
                     HashSet<Constraint> newcs = new HashSet<Constraint>();
                     p_product.getProdConstraints(s.vars,newcs);
                     for (Constraint c: newcs) s.addConstraint(c);
@@ -483,7 +470,7 @@ public class Main {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 HashSet<Constraint> newcs = new HashSet<Constraint>();
                 s.addIntVar("difference", 0, 50);
                 if (p_product != null) {
@@ -501,7 +488,7 @@ public class Main {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 HashSet<Constraint> newcs = new HashSet<Constraint>();
                 s.addIntVar("noOfFeatures", 0, 50);
                 if (m.getMaxConstraints(s.vars,newcs, "noOfFeatures")) {
@@ -515,7 +502,7 @@ public class Main {
             }
             if (check) {
                 assert product != null;
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 if (p_product == null ){
                     System.out.println("Product '"+product+"' not found.");
                     if (!product.contains("."))
@@ -526,11 +513,11 @@ public class Main {
                 }
             }
             if (numbersol && !ignoreattr) {
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 System.out.println("Number of solutions found: "+s.countSolutions());
             }
             else if (numbersol && ignoreattr) {
-                ChocoSolver s = m.getCSModel();
+                ChocoSolver s = m.instantiateCSModel();
                 System.out.println("Number of solutions found (without attributes): "+s.countSolutions());
             }
         }
@@ -540,7 +527,7 @@ public class Main {
         if (typecheck) {
             if (verbose)
                 System.out.println("Typechecking Model...");
-            
+
             registerLocationTypeChecking(m);
             SemanticErrorList typeerrors = m.typeCheck();
             for (SemanticError se : typeerrors) {
@@ -567,11 +554,22 @@ public class Main {
         }
     }
 
+    private void typeCheckProductLine(Model m) {
+
+        if (verbose)
+            System.out.println("Typechecking Software Product Line...");
+
+        SemanticErrorList typeerrors = m.typeCheckPL();
+        for (SemanticError se : typeerrors) {
+            System.err.println(se.getHelpMessage());
+        }
+    }
+
     private void parseFileOrDirectory(java.util.List<CompilationUnit> units, File file) throws IOException {
         if (!file.canRead()) {
             System.err.println("WARNING: Could not read file "+file+", file skipped.");
         }
-        
+
         if (file.isDirectory()) {
             parseDirectory(units, file);
         } else {
@@ -587,19 +585,23 @@ public class Main {
         parseABSPackageFile(res, file);
         return res;
     }
-    
+
     private void parseABSPackageFile(java.util.List<CompilationUnit> units, File file) throws IOException {
         ABSPackageFile jarFile = new ABSPackageFile(file);
-        if (!jarFile.isABSPackage())
-           return;
-        Enumeration<JarEntry> e = jarFile.entries();
-        while (e.hasMoreElements()) {
-            JarEntry jarEntry = e.nextElement();
-            if (!jarEntry.isDirectory()) {
-                if (jarEntry.getName().endsWith(".abs")) {
-                    parseABSSourceFile(units, "jar:"+file.toURI()+"!/"+jarEntry.getName(), jarFile.getInputStream(jarEntry));
+        try {
+            if (!jarFile.isABSPackage())
+                return;
+            Enumeration<JarEntry> e = jarFile.entries();
+            while (e.hasMoreElements()) {
+                JarEntry jarEntry = e.nextElement();
+                if (!jarEntry.isDirectory()) {
+                    if (jarEntry.getName().endsWith(".abs")) {
+                        parseABSSourceFile(units, "jar:"+file.toURI()+"!/"+jarEntry.getName(), jarFile.getInputStream(jarEntry));
+                    }
                 }
             }
+        } finally {
+            jarFile.close();
         }
     }
 
@@ -614,7 +616,10 @@ public class Main {
     }
 
     public static boolean isABSPackageFile(File f) throws IOException {
-       return f.getName().endsWith(".jar") && new ABSPackageFile(f).isABSPackage();
+       final ABSPackageFile absPackageFile = new ABSPackageFile(f);
+       final boolean isPackage = absPackageFile.isABSPackage();
+       absPackageFile.close();
+       return f.getName().endsWith(".jar") && isPackage;
     }
 
     public static boolean isABSSourceFile(File f) {
@@ -628,35 +633,35 @@ public class Main {
     private void parseABSSourceFile(java.util.List<CompilationUnit> units, File file) throws IOException {
         parseABSSourceFile(units, file, getUTF8FileReader(file));
     }
-    
+
     private void parseABSSourceFile(java.util.List<CompilationUnit> units, File file, Reader reader) throws IOException {
         if (verbose)
             System.out.println("Parsing file "+file.getPath());//getAbsolutePath());
         units.add(parseUnit(file, null, reader));
     }
 
-    protected void printParserErrorAndExit() {
+    protected static void printParserErrorAndExit() {
         System.err.println("\nCompilation failed with syntax errors.");
         System.exit(1);
     }
 
-    protected void printErrorAndExit(String error) {
+    protected static void printErrorAndExit(String error) {
         System.err.println("\nCompilation failed:\n");
         System.err.println("  " + error);
         System.err.println();
-        printUsageAndExit();
+        System.exit(1);
     }
 
     protected void printUsageAndExit() {
         printUsage();
         System.exit(1);
     }
-    
-    protected void printVersionAndExit() {
+
+    protected static void printVersionAndExit() {
         System.out.println("ABS Tool Suite v"+getVersion());
         System.exit(1);
     }
-    
+
 
     public CompilationUnit getStdLib() throws IOException {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
@@ -665,7 +670,7 @@ public class Main {
         }
         return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream));
     }
-    
+
     protected void printUsage() {
         printHeader();
         System.out.println(""
@@ -696,7 +701,7 @@ public class Main {
                 + "  -locscope=<scope> \n"
                 + "                 sets the location aliasing scope to <scope>\n"
                 + "                 where <scope> in " + Arrays.toString(LocationTypingPrecision.values()) + "\n"
-                + "  -dump          dump AST to standard output \n" 
+                + "  -dump          dump AST to standard output \n"
                 + "  -solve         solve constraint satisfaction problem (CSP) for the feature\n"
                 + "                 model\n"
                 + "  -solveall      get ALL solutions for the CSP\n"
@@ -717,14 +722,14 @@ public class Main {
                 + "  -h             print this message\n");
     }
 
-    protected void printHeader() {
-        
+    protected static void printHeader() {
+
         String[] header = new String[] {
            "The ABS Compiler" + " v" + getVersion(),
-           "Copyright (c) 2009-2013,    The HATS Consortium", 
-           "Copyright (c) 2013-2015,    The Envisage Project", 
+           "Copyright (c) 2009-2013,    The HATS Consortium",
+           "Copyright (c) 2013-2015,    The Envisage Project",
            "http://www.abs-models.org/" };
-        
+
         int maxlength = header[0].length();
         StringBuilder starline = new StringBuilder();
         for (int i = 0; i < maxlength + 4; i++) {
@@ -738,11 +743,11 @@ public class Main {
             }
             System.out.println(" *");
         }
-        
+
         System.out.println(starline);
     }
 
-    private String getVersion() {
+    private static String getVersion() {
         String version = Main.class.getPackage().getImplementationVersion();
         if (version == null)
             return "HEAD";
@@ -816,8 +821,8 @@ public class Main {
     }
 
     /**
-     * Parses String s and returns Model.
-     * 
+     * Calls {@link #parseString(String, boolean, boolean, boolean)} with withDbLib set to false.
+     *
      * @param s
      * @param withStdLib
      * @param allowIncompleteExpr

@@ -8,12 +8,19 @@ import abs.frontend.ast.ASTNode;
 
 public class NotImplementedYetException extends RuntimeException {
 
-    public NotImplementedYetException(ASTNode node) {
-        super("The AST element " + node.getClass() + " is not implemented yet.");
+    // note: could be unified with CompilerError.getHelpMessage()
+    private static String messagePrefix(ASTNode node) {
+        String filename = node.getFileName();
+        if (filename == null) filename = "<unknown>";
+        return filename + ":" + node.getStartLine() + ":" + node.getStartColumn() + ":";
     }
 
-    public NotImplementedYetException(String comp, ASTNode node) {
-        super("The AST element " + node.getClass() + " is not implemented in the " + comp + ", yet");
+    public NotImplementedYetException(ASTNode node) {
+        super(messagePrefix(node) + "The AST element " + node.getClass() + " is not implemented yet");
+    }
+
+    public NotImplementedYetException(ASTNode node, String message) {
+        super(messagePrefix(node) + message);
     }
 
 }

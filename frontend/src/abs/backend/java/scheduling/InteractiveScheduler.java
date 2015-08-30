@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.scheduling;
@@ -7,26 +7,21 @@ package abs.backend.java.scheduling;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -34,18 +29,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -58,12 +52,13 @@ import javax.swing.event.DocumentListener;
 
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.COG;
-import abs.backend.java.lib.runtime.Config;
+import abs.backend.java.lib.runtime.Logging;
 import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 import abs.backend.java.utils.ColorUtils;
 
 public class InteractiveScheduler implements TotalSchedulingStrategy {
-    private final boolean DEBUG = false;
+    private static final Logger log = Logging.getLogger(ABSRuntime.class.getName());
+
     private final SchedulerGUI gui;
     private final SchedulerGUISwing guiSwingWrapper;
     private final SchedulingObserver obs;
@@ -89,7 +84,7 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
 
     @Override
     public ScheduleAction choose(ScheduleOptions options) {
-        debug("showing options...");
+        log.finest("showing options...");
         ScheduleAction a = null;
         lastOptions = options;
         TotalSchedulingStrategy ds = getDirectScheduler();
@@ -97,7 +92,7 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
             a = ds.choose(options);
         } else {
             guiSwingWrapper.showOptions(options);
-            debug("awaiting GUI action...");
+            log.finest("awaiting GUI action...");
             a = awaitGUIAction();
         }
 
@@ -107,11 +102,6 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
 
     public ScheduleOptions getLastOptions() {
         return lastOptions;
-    }
-
-    private void debug(String string) {
-        if (DEBUG)
-            System.out.println("InteractiveScheduler: " + string);
     }
 
     private ScheduleAction nextAction;
@@ -278,6 +268,7 @@ class InteractiveOptionPnl extends JPanel implements SchedulerGUISwing {
 
     final Map<COG, BtnLine> btnLines = new HashMap<COG, BtnLine>();
 
+    @Override
     public synchronized void showOptions(ScheduleOptions options) {
         // System.out.println("SchedulerGUI: showing options...");
         int i = 0;
@@ -348,6 +339,7 @@ class InteractiveOptionPnl extends JPanel implements SchedulerGUISwing {
         }
     }
 
+    @Override
     public void chooseTask(TaskScheduler scheduler, List<TaskInfo> scheduableTasks) {
         if (scheduableTasks.size() == 1) {
             this.scheduler.setNextTask(scheduableTasks.get(0));
@@ -429,6 +421,7 @@ class HistoryPnl extends JPanel {
         btnBox.add(Box.createHorizontalGlue());
         saveHistory = new JButton("Save History");
         saveHistory.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 saveHistoryBtnPressed();
             }
@@ -498,6 +491,7 @@ class ReplayOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
         this.setLayout(new BorderLayout());
         loadHistoryBtn = new JButton("Replay History");
         loadHistoryBtn.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 loadHistoryBtnPressed();
             }
@@ -627,14 +621,17 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
         seedField = new JTextField();
         add(seedField);
         seedField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void insertUpdate(DocumentEvent e) {
                 seedChanged();
             }
 
+            @Override
             public void removeUpdate(DocumentEvent e) {
                 seedChanged();
             }
 
+            @Override
             public void changedUpdate(DocumentEvent e) {
                 seedChanged();
             }
@@ -649,6 +646,7 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
 
         nextStepBtn = new JButton("Single Random Step");
         nextStepBtn.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 nextStepClicked();
             }
@@ -660,6 +658,7 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
 
         nextNStepBtn = new JButton("N Random Steps");
         nextNStepBtn.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 nextNStepClicked();
             }
@@ -670,6 +669,7 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
 
         runBtn = new JButton("Run");
         runBtn.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 runClicked();
             }

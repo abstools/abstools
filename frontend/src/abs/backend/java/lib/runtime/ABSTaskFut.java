@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.runtime;
@@ -8,7 +8,7 @@ import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.TaskView;
 
 /**
- * Future implementation that depends on a task 
+ * Future implementation that depends on a task
 
  * @author Jan Schäfer
  *
@@ -24,6 +24,7 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
 
 
 
+    @Override
     public V get() {
         synchronized (this) {
             if (!isResolved() && resolvingTask.getCOG() == ABSRuntime.getCurrentCOG())
@@ -40,25 +41,23 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
         }
 
         await();
-        if (Logging.DEBUG)
-            log.finest("future awaited");
+        log.finest("future awaited");
 
         if (t != null) {
             t.futureReady(this);
         }
 
-        if (Logging.DEBUG)
-            log.finest("continue after get");
+        log.finest("continue after get");
 
         if (exception != null)
             throw exception;
         return value;
     }
 
+    @Override
     public synchronized String toString() {
         return "Future of " + resolvingTask + " (" + (isResolved ? value : "unresolved") + ")";
     }
-
 
     public Task<?> getResolvingTask() {
         return resolvingTask;
@@ -68,7 +67,7 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
     protected abs.backend.java.lib.runtime.ABSFut.View createView() {
         return new TaskFutView();
     }
-    
+
     private class TaskFutView extends abs.backend.java.lib.runtime.ABSFut.View {
         @Override
         public TaskView getResolvingTask() {

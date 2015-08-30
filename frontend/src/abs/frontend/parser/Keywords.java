@@ -24,6 +24,7 @@ public class Keywords {
         "interface", 
         "extends", 
         "data",
+        "exception",
 
         "def", 
         "implements", 

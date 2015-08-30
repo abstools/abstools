@@ -21,6 +21,7 @@ import java.util.jar.JarFile;
 
 import org.apache.commons.io.FileUtils;
 
+import sun.net.www.protocol.file.FileURLConnection;
 import abs.backend.common.CodeStream;
 
 import com.google.common.collect.ImmutableSet;
@@ -77,7 +78,7 @@ public class ErlApp {
             funMod.put(moduleName, ecs);
             ecs.pf("-module(%s).", ErlUtil.getModuleName(moduleName) + "_funs");
             ecs.println("-compile(export_all).");
-            ecs.println("-include_lib(\"include/abs_types.hrl\").");
+            ecs.println("-include_lib(\"../include/abs_types.hrl\").");
             ecs.println();
         }
 
@@ -127,9 +128,13 @@ public class ErlApp {
                     if (resource instanceof JarURLConnection) {
                         copyJarDirectory(((JarURLConnection) resource).getJarFile(),
                                 inname, outname);
+                    } else if (resource instanceof FileURLConnection) {
+                        /* stolz: This at least works for the unit tests from within Eclipse */
+                        File file = new File("src");
+                        assert file.exists();
+                        FileUtils.copyDirectory(new File("src/"+RUNTIME_PATH), destDir);
                     } else {
-                        // TODO: untested; might only copy directory itself.  Check out Files.walkFileTree().
-                        Files.copy(new File(inname), new File(outname));
+                        throw new UnsupportedOperationException("File type: "+resource);
                     }
                     
                 } else {
@@ -175,20 +180,5 @@ public class ErlApp {
         hcs.println("-undef(ABSMAINMODULE).");
         hcs.println("-define(ABSMAINMODULE," + erlModulename + ").");
         hcs.close();
-
-        CodeStream acs = new CodeStream(new File(destCodeDir, erlModulename + ".app.src"));
-        acs.println("{application, " + erlModulename + ",");
-        acs.println(" [");
-        acs.println("  {description, \"Generated code for ABS module '" + absModulename + "'\"},");
-        acs.println("  {vsn, \"1\"},");
-        acs.println("  {registered, []},");
-        acs.println("  {applications, [");
-        acs.println("                  kernel,");
-        acs.println("                  stdlib");
-        acs.println("                 ]},");
-        acs.println("  {mod, { " + erlModulename + ", []}},");
-        acs.println("  {env, []}");
-        acs.println("]}.");
-        acs.close();
     }
 }

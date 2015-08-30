@@ -1,0 +1,33 @@
+aspect FlattenedProduct {
+
+    syn nta List InstNode.getInstNodeList() {
+        List l = new List();
+        System.out.println("***************************");
+        // TODO populate list
+        return l;
+    }
+        
+    syn nta InstModel Model.getInstModel() = new InstModel(this);
+
+    syn nta List<InstNode> InstModel.getInstNodeList() {
+        Model model = getModel();
+        
+        List l = new List<InstNode>();
+        for (CompilationUnit u : model.getCompilationUnits()) {
+            for (ModuleDecl decl : u.getModuleDecls()) {
+                l.add(decl.newInstModuleDecl(decl));
+            }
+        }
+        System.out.println("nta list " + l);
+        return l;
+    }
+
+
+
+    /*
+     * Fresh attributes of the source AST create new InstNodes based on the corresponding class in the source AST
+     */
+    syn /*fresh*/ InstModuleDecl ModuleDecl.newInstModuleDecl(ModuleDecl decl) {
+        return new InstModuleDecl(decl);
+    }
+}

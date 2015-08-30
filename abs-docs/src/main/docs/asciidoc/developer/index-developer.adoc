@@ -1,5 +1,7 @@
 = Developer Guide
+Under development.
 
-== A subsection
+== Frontend
 
-To be developed.
+=== Type Checking
+include::typechecking.adoc[]

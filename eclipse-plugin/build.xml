@@ -52,6 +52,7 @@
 
         <fileset id="eclipse-plugin-jars" dir="${eclipse.home}">
             <include name="**/plugins/**/org.eclipse.*" />
+            <include name="**/plugins/**/javax.inject*" />
         </fileset>
 
         <path id="build.classpath">
@@ -142,7 +143,7 @@
 
   <target name="compile" depends="init" description="Compiles all java files in the source directory.">
     <mkdir dir="${build.dir}"/>
-    <javac srcdir="${src.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" failonerror="true" optimize="off" encoding="utf-8">
+    <javac srcdir="${src.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" failonerror="true" optimize="off" encoding="utf-8" target="1.7" source="1.7">
       <classpath refid="build.classpath" />
     </javac>
   </target>

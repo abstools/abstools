@@ -21,7 +21,7 @@ public class JavaPrimitiveTests extends JavaBackendTest {
 
     @Test
     public void testBoolNeg() throws Exception {
-        assertValidStdLib(" { Bool b = ~True; }");
+        assertValidStdLib(" { Bool b = !True; }");
     }
 
     @Test

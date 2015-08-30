@@ -711,7 +711,7 @@ class TesterImpl(ServerNode expected, Node actual) implements Tester {
 	
 	Unit run() {
 		Bool shutdown = False;
-		while (~ shutdown) {
+		while (! shutdown) {
 			Fut<Bool> sd = this.actual!isShutdownRequested(); await sd?; 
 			shutdown = sd.get;
 		}
@@ -805,7 +805,7 @@ implements SyncServerAcceptor {
 		
 		// Shutdown flag	
 		Bool shutdown = this.server.isShutdownRequested();
-		if (~ shutdown) {
+		if (! shutdown) {
 			await accept;
 			thread = new ConnectionThreadImpl(job,server,threads);
 			threads = threads + 1; // for debugging
@@ -1012,7 +1012,7 @@ implements SyncServerAcceptor {
 		this.acceptor = fs.get;
 		
 		Bool shutdown = this.isServerShutdownRequested();
-		while (~shutdown) {
+		while (!shutdown) {
 			//try polling on the return boolean value
 			Fut<Bool> fd = acceptor!isAcceptingConnection(); await fd?;
 			Bool accept = fd.get;
@@ -1022,7 +1022,7 @@ implements SyncServerAcceptor {
 			// This is abstracted in this model and 
 			// so we use a flag to model this.
 			if (accept) {
-				if (~ emptySet(threads) && internal) {
+				if (! emptySet(threads) && internal) {
 					unit = this.acceptor!suspendConnection(); await unit?;
 					this.internal = False;
 				} else {
@@ -1083,7 +1083,7 @@ implements SyncServerAcceptor {
 		// check point to see if an update has happened
 		Fut<Bool> rf = this.snapshot!hasUpdated();
 		Bool up = rf.get;
-		this.shutDown = ~up;
+		this.shutDown = !up;
 		
 		//reset the current client lists 
 		//if refresh is successful and is not waiting
@@ -1097,7 +1097,7 @@ implements SyncServerAcceptor {
 				this.traces = appendright(this.traces,Nil);
 			}
 			
-			if (~this.shutDown) {
+			if (!this.shutDown) {
 				this.currentClients = this.clients;
 			} else {
 				unit = this.server!requestShutDown(); unit.get;
@@ -1118,7 +1118,7 @@ implements SyncServerAcceptor {
 	
 	Unit addClient(ConnectionThread thread) {
 		ClientId id = this.getClientId(thread);
-		assert ~contains(this.currentClients,id);
+		assert !contains(this.currentClients,id);
 		this.currentClients= Insert(id,this.currentClients);
 	}
 	
@@ -1385,7 +1385,7 @@ implements ServerDataBase, ClientDataBase {
 	// ClientDataBase
 	[Atomic] Bool prepareReplicationItem(CheckPoint p) {
 		Bool result = False;
-		if (~ contains(checkPoints,p)) {
+		if (! contains(checkPoints,p)) {
 			checkPoints = Insert(p,checkPoints);
 			ccp = p;
 			result = True;
@@ -1417,12 +1417,12 @@ implements ServerDataBase, ClientDataBase {
 		// if update is not required 
 		// then update the filestore of the current checkpoint
 		// else update the filestore of the next checkpoint
-		if (~update || more) {
+		if (!update || more) {
 			Map<FileId,FileContent> updates = lookupUnsafe(db,ccp);
 			this.rootPath = updateDirWithContents(this.rootPath,updates);
 		}
 		
-		return (~update || more);
+		return (!update || more);
 	}
 	
 	// Returns 0 if file not found.
@@ -1695,7 +1695,7 @@ def Directory dir(FileId i, FileEntry e) = Pair(i,Entries(e));
 def String fileSep() = "/";
 def FileId rootPath() = "root";
 def Bool isFile(FileContent c) = case c { Content(_) => True; _ => False; };
-def Bool isDirectory(FileContent c) = ~isFile(c);
+def Bool isDirectory(FileContent c) = !isFile(c);
 
 // partial
 def FileSize content(FileContent c) = case c { Content(s) => s; };

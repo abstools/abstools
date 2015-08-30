@@ -1,0 +1,72 @@
+== Mathematical definitions
+
+.max
+.min
+
+These functions calculate the maximum and minimum of their two arguments.
+Since ABS datatypes are ordered, they can be applied to arguments of all
+types.
+
+[source]
+----
+A max<A>(A a, A b)
+A min<A>(A a, A b)
+----
+
+.abs
+
+This function calculates the absolute (positive) value of its argument.
+
+[source]
+----
+Rat abs(Rat x)
+----
+
+.truncate
+
+Converts a rational number to an integer by truncating towards zero.
+
+[source]
+----
+Int truncate(Rat a)
+----
+
+.pow
+
+This function calculates `b` to the power of `n`.
+
+[source]
+----
+Rat pow(Rat b, Int n)
+----
+
+.sqrt_newton
+
+This function approximates the square root of `x`; it stops when two subsequent
+estimates (as per Newton's algorithm) differ by less than `epsilon`.  `estimate` is an initial estimate of the
+square root.
+
+[source]
+----
+Rat sqrt_newton(Rat x, Rat estimate, Rat epsilon)
+----
+
+.exp_newton
+
+This function approximates _e_ to the power of `x`; it stops when two subsequent
+estimates (as per Newton's algorithm) differ by less than `epsilon`.
+
+[source]
+----
+Rat exp_newton(Rat x, Rat epsilon)
+----
+
+.random
+
+Returns an integer between 0 and its argument.
+
+[source]
+----
+Int random(Int below)
+----
+

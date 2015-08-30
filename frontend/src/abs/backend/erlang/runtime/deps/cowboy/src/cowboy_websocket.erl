@@ -45,7 +45,9 @@
 	| {reply, cow_ws:frame() | [cow_ws:frame()], Req, State, hibernate}
 	| {stop, Req, State}
 	when Req::cowboy_req:req(), State::any().
-%% @todo optional -callback terminate(terminate_reason(), cowboy_req:req(), state()) -> ok.
+
+-callback terminate(any(), cowboy_req:req(), any()) -> ok.
+-optional_callbacks([terminate/3]).
 
 -record(state, {
 	env :: cowboy_middleware:env(),
@@ -350,14 +352,15 @@ handler_call(State=#state{handler=Handler}, Req, HandlerState,
 			websocket_close(State, Req2, HandlerState2, stop)
 	catch Class:Reason ->
 		_ = websocket_close(State, Req, HandlerState, {crash, Class, Reason}),
-		erlang:Class([
+		exit({cowboy_handler, [
+			{class, Class},
 			{reason, Reason},
 			{mfa, {Handler, Callback, 3}},
 			{stacktrace, erlang:get_stacktrace()},
 			{msg, Message},
 			{req, cowboy_req:to_list(Req)},
 			{state, HandlerState}
-		])
+		]})
 	end.
 
 -spec websocket_send(cow_ws:frame(), #state{}) -> ok | stop | {error, atom()}.

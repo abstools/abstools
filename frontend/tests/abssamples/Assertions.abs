@@ -8,7 +8,7 @@ def Bool result() = True;
 
 interface I {
    [Pre(x == True)] 
-   [Post(result() == ~x)]
+   [Post(result() == !x)]
    Bool m(Bool x);
 }
 
@@ -23,7 +23,7 @@ class D implements I {
    
    Bool m(Bool x) {
        assert x == True;
-       Bool result__ = ~x;
+       Bool result__ = !x;
        assert result__ == x;
        return result__;
    }

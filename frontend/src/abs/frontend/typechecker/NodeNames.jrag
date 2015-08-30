@@ -1,6 +1,43 @@
 // Inform node about the name of the Module where it was declared
 aspect ModuleName {
     syn String Decl.moduleName() = getModuleDecl().getName();
+    
+    syn lazy String ModuleModifier.getModuleName();
+    
+    // By default look it up in the delta's 'uses' clause
+    eq ModuleModifier.getModuleName() = (getDelta().getDeltaAccessList().getNumChild() == 0) ? null : getDelta().getDeltaAccess(0).getModuleName();
+    
+    eq AddClassModifier.getModuleName() {
+        // search in class name
+        String prefix = (new Name(getClassDecl().getName())).getModuleName();
+        if (prefix != null)
+            return prefix;
+        else
+            return super.getModuleName();
+    }
+
+    eq ModifyClassModifier.getModuleName() {
+        // search in class name
+        String prefix = (new Name(getName())).getModuleName();
+        if (prefix != null)
+            return prefix;
+        else
+            return super.getModuleName();
+    }
+    
+    eq RemoveClassModifier.getModuleName() {
+        // search in class name
+        String prefix = (new Name(getName())).getModuleName();
+        if (prefix != null)
+            return prefix;
+        else
+            return super.getModuleName();
+    }
+    
+    /* TODO: define equations for other ModuleModifiers: 
+     * AddTypeSynModifier ModifyTypeSynModifier AddDataTypeModifier ModifyDataTypeModifier AddFunctionModifier AddInterfaceModifier RemoveInterfaceModifier ModifyInterfaceModifier
+     * Note: superclass behaviour adequate for: AddImportModifier AddExportModifier
+     */
 }
 
 aspect DeltaName {
@@ -22,12 +59,6 @@ aspect Name {
     syn String ModifyTypeSynModifier.getName() = this.getTypeSynDecl().getName();
     syn String ModifyDataTypeModifier.getName() = this.getDataTypeDecl().getName();
     syn String NamespaceModifier.getName() = "NamespaceModifier"; // not used anywhere
-    
-    // strip off any module name prefix
-    syn String ModuleModifier.getSimpleName() {
-        Name name = new Name(this.getName());
-        return name.getSimpleName();
-    }
 }
 
 //Inform modifier node about the module to which it applies
@@ -56,10 +87,18 @@ aspect TargetQualifiedClassName {
     eq ModifyClassModifier.getModifier().targetQualifiedClassName() = this.qualifiedName();
 }
 
+// strip off any module name prefix
+aspect SimpleName {
+    syn String ModuleModifier.getSimpleName() {
+        Name name = new Name(this.getName());
+        return name.getSimpleName();
+    }
+}
+
 // qualify node names with the name of the module where they were defined
 aspect QualifiedName {
     public String Decl.qualifiedName() {
-        return moduleName() + "." + getName();
+        return StringUtils.joinNames(moduleName(), getName());
     }
     
     public String DeltaDecl.qualifiedName() {
@@ -70,8 +109,8 @@ aspect QualifiedName {
         return this.getName();
     }
 
-    public String OOModifier.qualifiedName() {
-        return this.getName();
+    public String ModuleModifier.qualifiedName() {
+        return StringUtils.joinNames(getModuleName(), getSimpleName());
     }
 }
 

@@ -12,7 +12,9 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.docs.source>${basedir}/src/main/docs/asciidoc</project.docs.source>
-		<project.docs.target>${project.build.directory}/classes/docs</project.docs.target>
+		<project.docs.target.root>${project.build.directory}/classes/docs</project.docs.target.root>
+<project.docs.target.html>${project.docs.target.root}/html</project.docs.target.html>
+<project.docs.target.docbook>${project.docs.target.root}/docbook</project.docs.target.docbook>
 
 		<version.asciidoctor>1.5.2</version.asciidoctor>
 	</properties>
@@ -46,9 +48,22 @@
 						</goals>
 						<configuration>
 							<sourceDirectory>${project.docs.source}</sourceDirectory>
-							<outputDirectory>${project.docs.target}</outputDirectory>
+							<outputDirectory>${project.docs.target.html}</outputDirectory>
 							<doctype>book</doctype>
 							<backend>html5</backend>
+						</configuration>
+					</execution>
+					<execution>
+						<id>output-docbook</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>process-asciidoc</goal>
+						</goals>
+						<configuration>
+							<sourceDirectory>${project.docs.source}</sourceDirectory>
+							<outputDirectory>${project.docs.target.docbook}</outputDirectory>
+							<doctype>book</doctype>
+							<backend>docbook</backend>
 						</configuration>
 					</execution>
 				</executions>

@@ -21,15 +21,19 @@
       <import plugin="org.eclipse.ui.ide" version="3.6.1" match="greaterOrEqual"/>
       <import plugin="org.eclipse.jface.text" version="3.6.1" match="greaterOrEqual"/>
       <import plugin="org.eclipse.jdt.core" version="3.6.1" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ui.views"/>
       <import plugin="org.eclipse.ui.navigator"/>
       <import plugin="org.eclipse.ui.console" version="3.5.0" match="greaterOrEqual"/>
-      <import plugin="org.abs-models.sdedit" version="0.2.6" match="greaterOrEqual"/>
       <import plugin="org.eclipse.debug.core"/>
       <import plugin="org.eclipse.debug.ui"/>
       <import plugin="org.junit"/>
       <import plugin="org.eclipse.ui.navigator.resources"/>
+      <import plugin="org.abs-models.sdedit" version="0.0.0.VERSION_STRING" match="greaterOrEqual"/>
       <import plugin="org.abs-models.abs.compiler" version="0.0.0.FRONTEND_VERSION" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.views"/>
+      <import plugin="org.eclipse.core.filesystem"/>
+      <import plugin="org.eclipse.core.expressions"/>
+      <import plugin="org.eclipse.jdt.debug.ui"/>
+      <import plugin="org.eclipse.jdt.launching"/>
    </requires>
 
    <plugin
