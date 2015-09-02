@@ -104,7 +104,7 @@ echo
 echo "Installing eclipse"
 echo 
 echo "Downloading eclipse from triple-it.nl ..."
-wget http://eclipse.mirror.triple-it.nl/technology/epp/downloads/release/mars/R/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz
+wget -q http://eclipse.mirror.triple-it.nl/technology/epp/downloads/release/mars/R/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz
 echo "Installing eclipse in /opt/eclipse and setting up paths ..."
 (cd /opt && sudo tar xzf /home/vagrant/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz)
 sudo ln -s /opt/eclipse/eclipse /usr/local/bin/eclipse
@@ -120,7 +120,7 @@ echo
 eclipse -application org.eclipse.equinox.p2.director -noSplash \
         -repository \
 file:/vagrant/eclipse-plugin/update-site,\
-http://download.eclipse.org/releases/indigo/ \
+http://download.eclipse.org/releases/mars/ \
 -installIUs \
 org.abs-models.costabs.feature.group,\
 org.abs-models.apet.feature.group,\
