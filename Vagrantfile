@@ -171,6 +171,17 @@ sudo a2ensite easyinterface-site
 sudo a2enmod headers
 sudo service apache2 restart
 
+cat >ENVISAGE_CONFIG <<EOF
+# path to saco
+# EC_SACOHOME="/Users/genaim/Systems/costa/costabs/"
+# path to abs tools
+EC_ABSTOOLSHOME="/vagrant/"
+# path to absfrontend.jar
+EC_ABSFRONTEND="/vagrant/frontend/dist"
+EOF
+sudo mv ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
+sudo chown root.root /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
+(cd /var/www/easyinterface/server/config ; sudo cp envisage.cfg eiserver.cfg)
 
 echo
 echo "Setting up the user environment: .bashrc, .emacs"
