@@ -47,7 +47,7 @@ The following tools are available from the command line:
 
 Graphical programs need an X server (Xming / XQuartz for Windows/Mac)
 
-http://localhost:8888/ei/clients/web has a web interface to many tools.
+http://localhost:8888 has a web interface to many tools.
 
 MSG
 
@@ -174,6 +174,15 @@ Alias /ei "/var/www/easyinterface"
    Require all granted
 </Directory>
 EOF
+cat >/home/vagrant/index.html <<EOF
+<html><head>
+<META HTTP-EQUIV="Refresh" Content="0; URL=/ei/clients/web">
+</head><body>
+EasyInterface is at http://localhost:8888/ei/clients/web.
+</body></html>
+EOF
+sudo mv index.html /var/www/html
+sudo chown root.root /var/www/html/index.html
 sudo mv /home/vagrant/easyinterface-site.conf /etc/apache2/sites-available/
 sudo chown root.root /etc/apache2/sites-available/easyinterface-site.conf
 sudo a2ensite easyinterface-site
