@@ -155,6 +155,12 @@ wget -q http://costa.ls.fi.upm.es/download/saco.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/saco.colab.zip)
 rm saco.colab.zip
 
+# workaround for re-used temporary directory: need to be writable
+# by users www-data (for easyinterface) and vagrant (for commandline)
+mkdir -p /tmp/costabs/absPL
+sudo chown -R www-data.www-data /tmp/costabs
+sudo chmod -R 777 /tmp/costabs
+
 echo
 echo "Setting up apache and easyinterface"
 echo
@@ -220,6 +226,10 @@ fi
 # Set up paths
 cat >/home/vagrant/.abstoolsrc <<EOF
 PATH=\$PATH:/opt/ghc/7.8.4/bin:/opt/cabal/1.20/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin:/vagrant/abs2haskell/.cabal-sandbox/bin:/vagrant/frontend/bin/bash:/vagrant/costabs-plugin:/usr/local/lib/saco/bin
+# used by the costabs executable
+export COSTABSHOME=/usr/local/lib/saco/
+# used by the costabs executable
+export ABSFRONTEND=/vagrant/frontend/dist/absfrontend.jar
 export GHC_PACKAGE_PATH=/vagrant/abs2haskell/.cabal-sandbox/x86_64-linux-ghc-7.8.4-packages.conf.d:/opt/ghc/7.8.4/lib/ghc-7.8.4/package.conf.d:/home/vagrant/.ghc/x86_64-linux-7.8.4/package.conf.d
 EOF
 
