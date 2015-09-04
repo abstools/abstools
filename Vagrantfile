@@ -38,15 +38,17 @@ Welcome to the ABS toolchain VM.
 The following tools are available from the command line:
 
 - absc             command-line ABS compiler
-- eclipse          Eclipse Luna with plugins for ABS, SACO,
+- eclipse          Eclipse Mars with plugins for ABS, SACO,
                    deadlock analysis pre-installed
 - key-abs          Deductive verification tool
 - emacs            Emacs, configured to edit and compile ABS
-- costabs_exe      Command-line interface to SACO
+- costabs, deco, maypar
+                   Command-line interface to SACO
 
-Go to http://localhost:8888/ei/clients/web to use easyinterface.
+Graphical programs need an X server (Xming / XQuartz for Windows/Mac)
 
-On Windows / Mac OS X, start an X server (Xming / XQuartz)
+http://localhost:8888/ei/clients/web has a web interface to many tools.
+
 MSG
 
   config.ssh.forward_x11 = true
@@ -147,6 +149,13 @@ sudo chmod a+x /usr/local/bin/key-abs
 mkdir -p /home/vagrant/.key
 
 echo
+echo "Installing SACO command-line tool"
+echo
+wget -q http://costa.ls.fi.upm.es/download/saco.colab.zip
+(cd /usr/local/lib && sudo unzip -o /home/vagrant/saco.colab.zip)
+rm saco.colab.zip
+
+echo
 echo "Setting up apache and easyinterface"
 echo
 sudo apt-get -y -q install apache2 apache2-utils openssl-blacklist
@@ -173,7 +182,7 @@ sudo service apache2 restart
 
 cat >ENVISAGE_CONFIG <<EOF
 # path to saco
-# EC_SACOHOME="/Users/genaim/Systems/costa/costabs/"
+EC_SACOHOME="/usr/local/lib/saco/"
 # path to abs tools
 EC_ABSTOOLSHOME="/vagrant/"
 # path to absfrontend.jar
@@ -201,7 +210,7 @@ fi
 
 # Set up paths
 cat >/home/vagrant/.abstoolsrc <<EOF
-PATH=\$PATH:/opt/ghc/7.8.4/bin:/opt/cabal/1.20/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin:/vagrant/abs2haskell/.cabal-sandbox/bin:/vagrant/frontend/bin/bash:/vagrant/costabs-plugin
+PATH=\$PATH:/opt/ghc/7.8.4/bin:/opt/cabal/1.20/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin:/vagrant/abs2haskell/.cabal-sandbox/bin:/vagrant/frontend/bin/bash:/vagrant/costabs-plugin:/usr/local/lib/saco/bin
 export GHC_PACKAGE_PATH=/vagrant/abs2haskell/.cabal-sandbox/x86_64-linux-ghc-7.8.4-packages.conf.d:/opt/ghc/7.8.4/lib/ghc-7.8.4/package.conf.d:/home/vagrant/.ghc/x86_64-linux-7.8.4/package.conf.d
 EOF
 
