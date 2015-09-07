@@ -4,13 +4,11 @@
  */
 package abs.backend.common;
 
-import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import abs.backend.BackendTestDriver;
-import abs.frontend.ast.Model;
 
 @RunWith(Parameterized.class)
 public class StmtTests extends SemanticTests {
@@ -64,11 +62,5 @@ public class StmtTests extends SemanticTests {
     @Test
     public void caseStatementTest() {
         assertEvalTrue("{ Int x = 0; case Pair(2, 3) { Pair(2, y) => x = y; _ => skip; } Bool testresult = x == 3; }");
-    }
-    
-    @Test
-    public void rewriteAwaitAsync1() {
-        Assume.assumeTrue(Model.doAACrewrite);
-        assertEvalTrue("interface I { Bool m(); } class C implements I { Bool m() { return True; }} { Bool testresult = False; I o = new C(); testresult = await o!m(); assert testresult;}");
     }
 }
