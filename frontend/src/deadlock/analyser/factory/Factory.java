@@ -364,7 +364,8 @@ public class Factory extends com.gzoumix.semisolver.factory.Factory {
 
 
     public ITypingEnvironmentVariableType dummyDataType() {
-        return dummyDataType;
+        //return dummyDataType;
+        return this.newRecordVariable();
     }
 	
 

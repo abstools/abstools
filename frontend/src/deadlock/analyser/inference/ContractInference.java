@@ -18,8 +18,10 @@ import java.util.Map;
 import java.util.Set;
 
 import choco.kernel.common.util.tools.ArrayUtils;
+
 import com.gzoumix.semisolver.constraint.Constraint;
 import com.gzoumix.semisolver.term.*;
+
 import deadlock.analyser.AnalyserLog;
 import deadlock.analyser.factory.*;
 import deadlock.analyser.generation.*;
@@ -34,6 +36,13 @@ public class ContractInference {
   private static final String _runName = "run";
   private static final String _destinyName = "!destiny!";
   private static final String _this = "this";
+  
+  private static final String _dummyMethod = "!dummy";
+  private static final String _dummyClass = "!Dummy";
+  private static final String _dummyModule = "!Dummy";
+  
+  
+  private static ClassDecl _emptyDecl;
 
 
   private AnalyserLog _log;
@@ -53,6 +62,13 @@ public class ContractInference {
     _env = new TypingEnvironment();
     _a = null;
     _cd = null;
+    
+    _emptyDecl = new ClassDecl();
+    _emptyDecl.setName(_dummyClass);
+    MethodSig methodSig = new MethodSig(_dummyMethod, new abs.frontend.ast.List<Annotation>(), new DataTypeUse(), new abs.frontend.ast.List<ParamDecl>());
+    MethodImpl node = new MethodImpl(methodSig, new Block(), false);
+    
+    _emptyDecl.addMethod(node);
   }
 
 
@@ -97,6 +113,9 @@ public class ContractInference {
   // reviewed //
   public void computeMapInterfaceToClass() {
     Map<InterfaceDecl, ClassDecl> res = new HashMap<InterfaceDecl, ClassDecl>();
+    
+    List<InterfaceDecl> allInterfaces = new LinkedList<InterfaceDecl>();
+    
     for (Decl decl : _model.getDecls()) {
       if (decl instanceof ClassDecl) {
         // 1. Computes recursively the set of all interfaces the class extends
@@ -127,7 +146,18 @@ public class ContractInference {
           }
         }
       }
+      else if(decl instanceof InterfaceDecl)
+          allInterfaces.add((InterfaceDecl) decl);
     }
+    
+    allInterfaces.removeAll(res.keySet());
+    
+   
+    
+    for(InterfaceDecl notImplInterface: allInterfaces){
+        res.put(notImplInterface, _emptyDecl);
+    }
+    
     _intertoclass = res;
   }
 
@@ -145,10 +175,19 @@ public class ContractInference {
         }
       }
     }
+    
+  
+    
+    
+    
+    computeEnvironment(_emptyDecl, _dummyModule);
   }
 
   // method declaration
   public void computeEnvironment(ClassDecl cd, String moduleName) {
+    
+    if (cd == _emptyDecl)
+        return;
     // Methods
     for (MethodImpl m : cd.getMethods()) {
       _log.logNormal("Generating initial environment for the method \"" + cd.getName() + "." + m.getMethodSig().getName() + "\"");
@@ -311,27 +350,32 @@ public class ContractInference {
     return res;
   }
 
-  public ResultInference typeInference(ClassDecl cd) {
+  public ResultInference typeInference(ClassDecl cd) {      
     ResultInference res = new ResultInference();
+    if(cd == _emptyDecl)
+        return res;
     _log.logDebug("Contract Inference for the class \"" + cd.getName() + "\"");
     _log.beginIndent();
 
     _cd = cd;
+    
+    
 
     // 1. Methods
     for (MethodImpl m : cd.getMethods()) { res.add(typeInference(m)); }
 
     // 2. Init
-    _env.newScope();
-
     MethodInterface mi = _env.getMethod(cd.getName(), _initName);
     IRecord thisRecord = mi.getThis();
     _a = ((RecordPresent) thisRecord).getRoot();
     Constraint c = _df.newConstraint();
     Contract cp, cf;
         
-    // 2.1. Field assignments
+    
+    _env.newScope();
     _env.putVariable(_this, thisRecord);
+
+    // 2.1. Field assignments
     for (FieldDecl f : cd.getFields()) {
       if(f.hasInitExp()) {
         ResultInferencePureExp tmp = typeInferenceAsPure(f.getInitExp());
@@ -735,7 +779,7 @@ public class ContractInference {
       resultEnvs.addAll(resElse.getEnvironment());
       contract = _df.newContractUnion(ifstmt, resThen.getContract(), resElse.getContract());
     } else {
-      resultEnvs.add(_env);
+      resultEnvs.add(tmp);
       contract = _df.newContractUnion(ifstmt, resThen.getContract(), _df.newContractEmpty());
     }
     _log.endIndent();
@@ -1082,8 +1126,11 @@ public class ContractInference {
     for (FieldDecl f : cl.getFields()) {
       if (f.hasInitExp()) {
         resParam = typeInferenceAsPure(f.getInitExp());
-        fields.add(_df.newRecordField(f.getName(), (IRecord)resParam.getVariableType()));
+        RecordField newRecordField = _df.newRecordField(f.getName(), (IRecord)resParam.getVariableType());
+        fields.add(newRecordField);
+        _env.putVariable(f.getName(), (IRecord)resParam.getVariableType());
         c.add(resParam.getConstraint());
+        
       } else {
         fields.add(_df.newRecordField(f.getName(), _df.newRecordVariable()));
       }
@@ -1097,7 +1144,7 @@ public class ContractInference {
     // 1.4. Calling the init of r
     MethodInterface miinit = _df.newMethodInterface(r, new LinkedList<IRecord>(), _df.newRecordVariable());
     c.addSemiEquation(new ASTNodeInformation(newExp), _env.getMethod(cl.getName(), _initName), miinit);
-    contract.add(_df.newContractInvk(newExp, _cd.getName(), _initName, miinit));
+    contract.add(_df.newContractInvk(newExp, cl.getName(), _initName, miinit));
     _env.popScope();
     _log.endIndent();
     _log.logDebug("End Contract Inference for the NewExp");
@@ -1107,21 +1154,42 @@ public class ContractInference {
   public ResultInferenceEffExp typeInference(Call call) {
     _log.logDebug("Contract Inference for a " + ((call instanceof SyncCall) ? "Synchronous" : "Asynchronous") + "  method Call");
     _log.beginIndent();
-
+    ITypingEnvironmentVariableType r;
+    GroupName aprime = _df.newGroupName();
     // 1. Get the method interface
     Type t = call.getCallee().getType();
     ClassDecl cl;
     if (t.isInterfaceType()) { cl = _intertoclass.get(((InterfaceType) t).getDecl()); }
     else { cl = _cd; }
 
-    if (cl == null) {
+    String nameOfClass;
+    String nameOfMethod;
+    
+    LinkedList<IRecord> s = new LinkedList<IRecord>();
+   
+    
+    if (cl == _emptyDecl) {
       // we are in presence of an non implemented interface
       // in that case, we don't know how the method would behave, and
       // simply put a null contract.
       _log.endIndent();
       _log.logError("Class retrival failed!!!");
-      return new ResultInferenceEffExp( _df.newRecordVariable(), _df.newContractEmpty(), _df.newConstraint(), _env);
+      
+      nameOfClass = _dummyClass;
+      nameOfMethod = _dummyMethod; 
+      //return new ResultInferenceEffExp( _df.newRecordVariable(), _df.newContractEmpty(), _df.newConstraint(), _env);
     } else {
+        nameOfClass = cl.getName();
+        nameOfMethod = call.getMethod();
+        
+        ResultInferencePureExp resParam;
+        for (PureExp p : call.getParams()) {
+          resParam = typeInferenceAsPure(p);
+          s.add(_env.getRecord(resParam.getVariableType()));
+        }
+    }
+    //else 
+    {
       // 2. Collect contracts and
       // deadlock.constraints.constraint.Constraints from the call
       ResultInferencePureExp resCallee = typeInferenceAsPure(call.getCallee());
@@ -1131,30 +1199,39 @@ public class ContractInference {
       // cast to IRecord as the callee cannot be a future
       IRecord callee = (IRecord)resCallee.getVariableType();
 
-      LinkedList<IRecord> s = new LinkedList<IRecord>();
-      ResultInferencePureExp resParam;
-      for (PureExp p : call.getParams()) {
-        resParam = typeInferenceAsPure(p);
-        s.add(_env.getRecord(resParam.getVariableType()));
-      }
+     
 
       // 3. Construct the record for the return value
       IRecord Y = _df.newRecordVariable();
 
       // 4. pack up the result
       MethodInterface mi = _df.newMethodInterface(callee, s, Y);
-      c.addSemiEquation(new ASTNodeInformation(call), _env.getMethod(cl.getName(), call.getMethod()), mi);
+      
+    c.addSemiEquation(new ASTNodeInformation(call), _env.getMethod(nameOfClass, nameOfMethod), mi);
 
-      ITypingEnvironmentVariableType r;
+      
       if (call instanceof SyncCall) {
         r = Y;
-        contract.add(_df.newContractSyncInvk(call, cl.getName(), call.getMethod(), mi));
-      } else {
-        GroupName aprime = _df.newGroupName();
-        IRecord calleeShape = createInstance(_cd, aprime);
+        contract.add(_df.newContractSyncInvk(call, nameOfClass, nameOfMethod, mi));
+      } else if(call instanceof AsyncCall){
+        
+        IRecord calleeShape = createInstance(cl, aprime);
         c.addEquation(new ASTNodeInformation(call), callee, calleeShape);
         r = new TypingEnvironmentVariableTypeFuture();
-        _env.putFuture((TypingEnvironmentVariableTypeFuture)r, new TypingEnvironmentFutureTypeUntick(_df.newRecordFuture(aprime, Y), new ContractElementInvk(call, cl.getName(), call.getMethod(), mi)));
+        _env.putFuture((TypingEnvironmentVariableTypeFuture)r, new TypingEnvironmentFutureTypeUntick(_df.newRecordFuture(aprime, Y), new ContractElementInvk(call, nameOfClass, nameOfMethod, mi)));
+      }
+      else if(call instanceof AwaitAsyncCall){
+          //same stuff that for sync calls
+          //AwaitAsyncCall are actually rewritten in the AST if the flag
+          //public static boolean Model.doAACrewrite is set to true;
+          //objects of this kind are rewritten at the ast level as AsyncCall + await
+          //you can switch this switch in file frontend/src/abs/backend/coreabs/GenerateCoreAbs.jadd line 38
+          r = Y;
+          contract.add(_df.newContractSyncInvk(call, nameOfClass, nameOfMethod, mi));
+      }else{
+          //should not happen
+          r=null;
+          _log.logError("Unexpected call type");
       }
       _log.endIndent();
       _log.logDebug("End Contract Inference for the Call");
