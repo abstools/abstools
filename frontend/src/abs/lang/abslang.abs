@@ -55,7 +55,11 @@ export watch, watchEx;
 export println, print, readln;
 
 export Cost;
+export * from ABS.StdLib.Exceptions;
+
 import Cost from ABS.DC;
+
+import * from ABS.StdLib.Exceptions;
 
 data Unit = Unit;               // builtin  
 data String;                    // builtin  
@@ -65,18 +69,6 @@ data Bool = True | False;       // builtin
 data Fut<A>;                    // builtin
 data Exception;                 // builtin
 data Location;                  // (For Component model) //
-
-// TODO: uncomment these as soon as we fix the bug that causes name collisions
-// between ExceptionDecl and DataConstructor.  (This only affects StdLib.)
-// See TypeCheckerHelper:checkForDuplicateDecls().
-
-// exception DivisionByZeroException;
-// exception AssertionFailException;
-// exception PatternMatchFailException;
-// exception NullPointerException;
-// exception StackOverflowEcxeption;
-// exception HeapOverflowException;
-// exception KeyboardInterruptException;
 
 def Bool and(Bool a, Bool b) = a && b;
 def Bool not(Bool a) = !a;
@@ -558,6 +550,20 @@ def A watchEx<A, B>(A val, B info) = builtin;
 def Unit println(String s) = builtin;
 def Unit print(String s) = builtin;
 def String readln() = builtin;
+
+module ABS.StdLib.Exceptions;
+export *;
+// These are in their own module (and re-exported from ABS.StdLib) to
+// work around a bug when defining exceptions in the ABS.StdLib
+// module.  On the other hand, we might want to divide ABS.StdLib into
+// submodules anyway once we have a documentation generator etc.
+exception DivisionByZeroException;
+exception AssertionFailException;
+exception PatternMatchFailException;
+exception NullPointerException;
+exception StackOverflowEcxeption;
+exception HeapOverflowException;
+exception KeyboardInterruptException;
 
 
 /**

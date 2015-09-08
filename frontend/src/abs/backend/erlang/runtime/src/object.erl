@@ -177,8 +177,12 @@ active({#object{class=Class},set,Field,Val},S=#state{class=C,new_vals=NV}) ->
     ?DEBUG({set,Field,Val}),
     {next_state,active,S#state{new_vals=gb_trees:enter(Field,Val,NV)}}.
 
-handle_sync_event({die,Reason,By},_From,_StateName,S=#state{cog=Cog, tasks=Tasks})->
+handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, tasks=Tasks})->
     ?DEBUG({dying, Reason, By}),
+    case C of
+        class_ABS_DC_DeploymentComponent -> eventstream:event({dc_died, self()});
+        _ -> ok
+    end,
     [begin ?DEBUG({terminate,T}),exit(T,Reason) end ||T<-gb_sets:to_list(Tasks), T/=By],
     cog:dec_ref_count(Cog),
     case gb_sets:is_element(By,Tasks) of

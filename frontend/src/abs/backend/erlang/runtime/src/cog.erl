@@ -243,13 +243,13 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
                 DC_for_gc = case DC of
                                 null -> [];
                                 #object{class=class_ABS_DC_DeploymentComponent,
-                                        ref=DCref} -> [[{object, DCref}]]
+                                        ref=DCref} -> [{object, DCref}]
                             end,
                 Sender !
                     {lists:foldl(fun ordsets:union/2, [],
-                                 lists:map(fun task:get_references/1,
-                                           gb_trees:keys(Tasks))
-                                 ++ DC_for_gc),
+                                 [DC_for_gc | 
+                                  lists:map(fun task:get_references/1,
+                                            gb_trees:keys(Tasks))]),
                      self()},
                 S;
             {done, gc} ->

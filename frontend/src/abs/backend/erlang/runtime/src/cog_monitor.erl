@@ -119,6 +119,10 @@ handle_event({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent,ref=O}},
              State=#state{dcs=DCs}) ->
     ?DEBUG({newdc, O}),
     {ok, State#state{dcs=[DC | DCs]}};
+handle_event({dc_died, O}, State=#state{dcs=DCs}) ->
+    ?DEBUG({dc_died, O}),
+    {ok, State#state{dcs=lists:filter(fun (#object{ref=DC}) -> DC =:= O end,
+                                      DCs)}};
 handle_event(_,State)->
     {ok,State}.
 

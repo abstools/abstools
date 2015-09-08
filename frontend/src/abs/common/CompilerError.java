@@ -63,7 +63,7 @@ public abstract class CompilerError {
 
     public String getFileName() {
         if (file != null)
-            return file.getName();
+            return file.toString();
         return null;
     }
 

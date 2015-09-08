@@ -38,15 +38,17 @@ Welcome to the ABS toolchain VM.
 The following tools are available from the command line:
 
 - absc             command-line ABS compiler
-- eclipse          Eclipse Luna with plugins for ABS, SACO,
+- eclipse          Eclipse Mars with plugins for ABS, SACO,
                    deadlock analysis pre-installed
 - key-abs          Deductive verification tool
 - emacs            Emacs, configured to edit and compile ABS
-- costabs_exe      Command-line interface to SACO
+- costabs, deco, maypar
+                   Command-line interface to SACO
 
-Go to http://localhost:8888/ei/clients/web to use easyinterface.
+Graphical programs need an X server (Xming / XQuartz for Windows/Mac)
 
-On Windows / Mac OS X, start an X server (Xming / XQuartz)
+http://localhost:8888 has a web interface to many tools.
+
 MSG
 
   config.ssh.forward_x11 = true
@@ -104,7 +106,7 @@ echo
 echo "Installing eclipse"
 echo 
 echo "Downloading eclipse from triple-it.nl ..."
-wget http://eclipse.mirror.triple-it.nl/technology/epp/downloads/release/mars/R/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz
+wget -q http://eclipse.mirror.triple-it.nl/technology/epp/downloads/release/mars/R/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz
 echo "Installing eclipse in /opt/eclipse and setting up paths ..."
 (cd /opt && sudo tar xzf /home/vagrant/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz)
 sudo ln -s /opt/eclipse/eclipse /usr/local/bin/eclipse
@@ -120,7 +122,7 @@ echo
 eclipse -application org.eclipse.equinox.p2.director -noSplash \
         -repository \
 file:/vagrant/eclipse-plugin/update-site,\
-http://download.eclipse.org/releases/indigo/ \
+http://download.eclipse.org/releases/mars/ \
 -installIUs \
 org.abs-models.costabs.feature.group,\
 org.abs-models.apet.feature.group,\
@@ -147,6 +149,19 @@ sudo chmod a+x /usr/local/bin/key-abs
 mkdir -p /home/vagrant/.key
 
 echo
+echo "Installing SACO command-line tool"
+echo
+wget -q http://costa.ls.fi.upm.es/download/saco.colab.zip
+(cd /usr/local/lib && sudo unzip -o /home/vagrant/saco.colab.zip)
+rm saco.colab.zip
+
+# workaround for re-used temporary directory: need to be writable
+# by users www-data (for easyinterface) and vagrant (for commandline)
+mkdir -p /tmp/costabs/absPL
+sudo chown -R www-data.www-data /tmp/costabs
+sudo chmod -R 777 /tmp/costabs
+
+echo
 echo "Setting up apache and easyinterface"
 echo
 sudo apt-get -y -q install apache2 apache2-utils openssl-blacklist
@@ -165,12 +180,32 @@ Alias /ei "/var/www/easyinterface"
    Require all granted
 </Directory>
 EOF
+cat >/home/vagrant/index.html <<EOF
+<html><head>
+<META HTTP-EQUIV="Refresh" Content="0; URL=/ei/clients/web">
+</head><body>
+EasyInterface is at http://localhost:8888/ei/clients/web.
+</body></html>
+EOF
+sudo mv index.html /var/www/html
+sudo chown root.root /var/www/html/index.html
 sudo mv /home/vagrant/easyinterface-site.conf /etc/apache2/sites-available/
 sudo chown root.root /etc/apache2/sites-available/easyinterface-site.conf
 sudo a2ensite easyinterface-site
 sudo a2enmod headers
 sudo service apache2 restart
 
+cat >ENVISAGE_CONFIG <<EOF
+# path to saco
+EC_SACOHOME="/usr/local/lib/saco/"
+# path to abs tools
+EC_ABSTOOLSHOME="/vagrant/"
+# path to absfrontend.jar
+EC_ABSFRONTEND="/vagrant/frontend/dist"
+EOF
+sudo mv ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
+sudo chown root.root /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
+(cd /var/www/easyinterface/server/config ; sudo cp envisage.cfg eiserver.cfg)
 
 echo
 echo "Setting up the user environment: .bashrc, .emacs"
@@ -190,7 +225,11 @@ fi
 
 # Set up paths
 cat >/home/vagrant/.abstoolsrc <<EOF
-PATH=\$PATH:/opt/ghc/7.8.4/bin:/opt/cabal/1.20/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin:/vagrant/abs2haskell/.cabal-sandbox/bin:/vagrant/frontend/bin/bash:/vagrant/costabs-plugin
+PATH=\$PATH:/opt/ghc/7.8.4/bin:/opt/cabal/1.20/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin:/vagrant/abs2haskell/.cabal-sandbox/bin:/vagrant/frontend/bin/bash:/vagrant/costabs-plugin:/usr/local/lib/saco/bin
+# used by the costabs executable
+export COSTABSHOME=/usr/local/lib/saco/
+# used by the costabs executable
+export ABSFRONTEND=/vagrant/frontend/dist/absfrontend.jar
 export GHC_PACKAGE_PATH=/vagrant/abs2haskell/.cabal-sandbox/x86_64-linux-ghc-7.8.4-packages.conf.d:/opt/ghc/7.8.4/lib/ghc-7.8.4/package.conf.d:/home/vagrant/.ghc/x86_64-linux-7.8.4/package.conf.d
 EOF
 
