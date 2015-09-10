@@ -61,7 +61,7 @@ toString(_Cog,S) when is_list(S) ->
 toString(_Cog, null) -> "null";
 toString(_Cog,A) when is_atom(A) -> constructorname_to_string(A);
 toString(_Cog,P) when is_pid(P) -> pid_to_list(P);
-toString(_Cog,{object,Cid,Oid,_Cog}) -> pid_to_list(Oid) ++ ":" ++ atom_to_list(Cid);
+toString(_Cog,#object{class=Cid,ref=Oid}) -> pid_to_list(Oid) ++ ":" ++ atom_to_list(Cid);
 toString(_Cog,T) when is_tuple(T) ->
     [C|A] = tuple_to_list(T),
     case C of
