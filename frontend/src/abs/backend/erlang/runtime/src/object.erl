@@ -144,10 +144,11 @@ active(ping,_From,S)->
 active({consume_resource, {CurrentVar, MaxVar}, Count}, _From, OS=#state{class=class_ABS_DC_DeploymentComponent=C,int_status=S}) ->
     Total=C:get_val_internal(S,MaxVar),
     Consumed=rationals:to_r(C:get_val_internal(S,CurrentVar)),
+    Requested=rationals:to_r(Count),
     ToConsume=case Total of
-                  dataInfRat -> rationals:to_r(Count);
+                  dataInfRat -> Requested;
                   {dataFin, Total1} ->
-                      rationals:min(rationals:to_r(Count),
+                      rationals:min(Requested,
                                     rationals:sub(rationals:to_r(Total1), Consumed))
               end,
     case ToConsume of
@@ -155,9 +156,10 @@ active({consume_resource, {CurrentVar, MaxVar}, Count}, _From, OS=#state{class=c
         _ -> ?DEBUG({consume, C, ToConsume}),
              S1=C:set_val_internal(S,CurrentVar,
                                    rationals:add(Consumed, ToConsume)),
-             %% We reply with "ok" not "wait" here so we are ready for
-             %% small-step consumption schemes where multiple
-             %% consumers race for resources.
+             %% We reply with "ok" not "wait" here, even when we did not
+             %% fulfill the whole request, so we are ready for small-step
+             %% consumption schemes where multiple consumers race for
+             %% resources.
              {reply, {ok, ToConsume}, active, OS#state{int_status=S1}}
     end;
 active({clock_advance_for_dc, Amount},_From,

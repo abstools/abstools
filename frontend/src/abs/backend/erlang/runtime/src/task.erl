@@ -110,7 +110,7 @@ await_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
     case rationals:is_greater(rationals:to_r(Min), {0, 1}) of
         true ->
             eventstream:event({task,self(),CogRef,clock_waiting,Min,Max}),
-            task:release_token(Cog,waiting), %FIXME: switch to clock_waiting atomically
+            task:release_token(Cog,waiting),
             loop_for_clock_advance(Stack),
             task:acquire_token(Cog, Stack);
         false ->
@@ -123,23 +123,21 @@ block_for_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
     loop_for_clock_advance(Stack),
     task:acquire_token(Cog, Stack).
 
-block_for_resource(Cog, Resourcetype, Amount, Stack) ->
-    task:block(Cog),
-    loop_for_resource(Cog, Resourcetype, Amount, Stack),
-    task:acquire_token(Cog,Stack).
-
-loop_for_resource(Cog=#cog{ref=CogRef,dc=DC},Resourcetype,Amount,Stack) ->
+block_for_resource(Cog=#cog{ref=CogRef,dc=DC}, Resourcetype, Amount, Stack) ->
     {Result, Consumed}= dc:consume(DC,Resourcetype,Amount),
     Remaining=rationals:sub(rationals:to_r(Amount), rationals:to_r(Consumed)),
     case Result of
-        wait -> eventstream:event({cog,self(),CogRef,resource_waiting}),
-                loop_for_clock_advance(Stack),
-                loop_for_resource(Cog, Resourcetype, Remaining,Stack);
+        wait ->
+            eventstream:event({task,self(),CogRef,resource_waiting}),
+            task:block(Cog),           % cause clock advance
+            loop_for_clock_advance(Stack),
+            task:acquire_token(Cog,Stack),
+            block_for_resource(Cog, Resourcetype, Remaining, Stack);
         ok ->
             case rationals:is_greater(Remaining, {0, 1}) of
                 %% We loop since the DC might decide to hand out less
                 %% than we ask for and less than it has available.
-                true -> loop_for_resource(Cog, Resourcetype, Remaining, Stack);
+                true -> block_for_resource(Cog, Resourcetype, Remaining, Stack);
                 false -> ok
             end
     end.

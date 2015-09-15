@@ -64,11 +64,18 @@ handle_event({cog,Cog,blocked},State=#state{active=A,blocked=B})->
     ?DEBUG({cog, Cog, blocked}),
     A1=gb_sets:del_element(Cog,A),
     B1=gb_sets:add_element(Cog,B),
-    {ok,State#state{active=A1,blocked=B1}};
-handle_event({cog,Cog,unblocked},State=#state{active=A,blocked=B})->
+    S1=State#state{active=A1,blocked=B1},
+    case can_clock_advance(State, S1) of
+        true->
+            {ok, advance_clock_or_terminate(S1)};
+        false->
+            {ok, S1}
+    end;
+handle_event({cog,Cog,unblocked},State=#state{active=A,blocked=B, timer=T})->
     ?DEBUG({cog, Cog, unblocked}),
     A1=gb_sets:add_element(Cog,A),
     B1=gb_sets:del_element(Cog,B),
+    cancel(T),
     {ok, State#state{active=A1,blocked=B1}};
 handle_event({cog,Cog,die},State=#state{active=A,idle=I,blocked=B,clock_waiting=W})->
     ?DEBUG({cog, Cog, die}),
@@ -89,32 +96,16 @@ handle_event({task,Task,Cog,clock_waiting,Min,Max},
     C1=add_to_clock_waiting(C,{task,Min,Max,Task,Cog}),
     {ok,State#state{clock_waiting=C1}};
 handle_event({cog,Task,Cog,clock_waiting,Min,Max},
-             State=#state{active=A,clock_waiting=C}) ->
+             State=#state{clock_waiting=C}) ->
     ?DEBUG({cog, Task, Cog, clock_waiting}),
     %% {cog, blocked} event comes separately
     C1=add_to_clock_waiting(C,{cog,Min,Max,Task,Cog}),
-    A1=gb_sets:del_element(Cog,A),
-    S1=State#state{active=A1,clock_waiting=C1},
-    case can_clock_advance(State, S1) of
-        true->
-            {ok, advance_clock_or_terminate(S1)};
-        false->
-            {ok, S1}
-    end;
-handle_event({cog,Task,Cog,resource_waiting},
-             State=#state{active=A,clock_waiting=C}) ->
-    ?DEBUG({cog, Task, Cog, resource_waiting}),
-    %% {cog, blocked} event comes separately
+    {ok, State#state{clock_waiting=C1}};
+handle_event({task,Task,Cog,resource_waiting}, State=#state{clock_waiting=C}) ->
+    ?DEBUG({task, Task, Cog, resource_waiting}),
     MTE=clock:distance_to_next_boundary(),
-    C1=add_to_clock_waiting(C,{cog,MTE,MTE,Task,Cog}),
-    A1=gb_sets:del_element(Cog,A),
-    S1=State#state{active=A1,clock_waiting=C1},
-    case can_clock_advance(State, S1) of
-        true->
-            {ok, advance_clock_or_terminate(S1)};
-        false->
-            {ok, S1}
-    end;
+    C1=add_to_clock_waiting(C,{task,MTE,MTE,Task,Cog}),
+    {ok, State#state{clock_waiting=C1}};
 handle_event({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent,ref=O}},
              State=#state{dcs=DCs}) ->
     ?DEBUG({newdc, O}),
