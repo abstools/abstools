@@ -206,6 +206,7 @@ EOF
 sudo mv ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
 sudo chown root.root /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
 (cd /var/www/easyinterface/server/config ; sudo cp envisage.cfg eiserver.cfg)
+(cd /var/www/easyinterface/clients/web ; sudo cp envisage.cfg webclient.cfg)
 
 echo
 echo "Setting up the user environment: .bashrc, .emacs"
