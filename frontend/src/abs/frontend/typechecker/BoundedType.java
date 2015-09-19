@@ -40,7 +40,9 @@ public class BoundedType extends Type {
     public boolean isAssignable(Type t) {
         if (hasBoundType())
             return boundType.isAssignable(t);
-        boundType = t;
+        // minimally invasive change wrt original code: arguably we should not
+        // have side effects in this method.
+        if (t != this) boundType = t;
         return true;
     }
 
@@ -69,7 +71,7 @@ public class BoundedType extends Type {
 
     @Override
     public String toString() {
-        if (hasBoundType() && boundType != this) {
+        if (hasBoundType()) {
             return boundType.toString();
         }
         return "Unbound Type";
@@ -86,7 +88,9 @@ public class BoundedType extends Type {
     @Override
     public boolean canBeBoundTo(Type t) {
         if (!hasBoundType()) {
-            boundType = t;
+            // minimally invasive change wrt original code: arguably we should
+            // not have side effects in this method.
+            if (t != this) boundType = t;
             return true;
         }
         return false;
