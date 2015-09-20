@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# run like this: "link_sources ~/Source/abstools"
+if [ -z "$1" ]
+then
+    echo "Symlink runtime library to source tree files.
+
+This enables editing of erlang runtime files in the source tree without
+needing to recompile the tool chain.  Note that link_sources needs to be
+re-run after each recompilation of the .abs model.
+
+Run with source dir argument, e.g., \"./link_sources ~/Source/abstools"
+    exit 1
+fi
+
+SOURCE_DIR="$1/frontend/src/abs/backend/erlang/runtime"
+
+for i in src/*.erl include/*.hrl
+do
+    if [ -f "$SOURCE_DIR/$i" ]
+    then
+        echo "Linking $SOURCE_DIR/$i to $i"
+        rm "$i"
+        ln -s "$SOURCE_DIR/$i" "$i"
+    fi
+done

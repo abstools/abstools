@@ -102,12 +102,14 @@ public class ErlApp {
             "run",
             "rebar.config",
             "gcstats_as_csv.erl",
-            "bin/*"
+            "bin/*",
+            "link_sources"
             );
     private static final Set<String> EXEC_FILES = ImmutableSet.of(
             "bin/rebar",
             "run",
-            "start_console"
+            "start_console",
+            "link_sources"
             );
         
     private static final String RUNTIME_PATH = "abs/backend/erlang/runtime/";
