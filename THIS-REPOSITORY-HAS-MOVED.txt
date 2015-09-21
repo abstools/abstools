@@ -1,9 +1,0 @@
-The abstools repository is now located at github:
-
-https://github.com/abstools/abstools
-
-If you have an existing checkout (with local changes and branches,
-etc.), you can execute the following commands:
-
-$ git remote set-url origin git@github.com:abstools/abstools.git
-
