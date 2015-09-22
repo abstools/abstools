@@ -10,7 +10,8 @@ to_r({N,D}) ->
 to_r(N) when is_integer(N) ->
   {N,1}.
 
-trunc({N,D})-> N div D.
+trunc({N,D})-> N div D;
+trunc(N) -> N.
 
 inv({ 0, _D}) -> throw(badarith);
 inv({ N, D }) -> { D, N }.
