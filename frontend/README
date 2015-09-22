@@ -60,7 +60,7 @@ generated inside `gen/erl`:
     % gen/erl/start_console [--debug|-d] [<main-module>]
     % gen/erl/run [--debug|-d] [<main-module>]
 
-where `start` launches an Erlang shell an executes the given main
+where `start` launches an Erlang shell and executes the given main
 module.  The command `run` launches an Erlang script, that terminates
 after the main block returned.  If no module name is given, the system
 will try to start the main block of the last module defined in the
