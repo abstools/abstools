@@ -66,7 +66,6 @@ public class CaseStudyTypeChecking extends FrontendTest {
         Main main = new Main();
         main.setWithStdLib(isSet(WITH_STD_LIB,config));
         Model m = main.parseFiles(findAbsFiles(srcFolderF).toArray(new String[0]));
-        Main.exceptionHack(m);
 
         if (m != null) {
             if (m.hasParserErrors())

@@ -230,6 +230,7 @@ public class Main {
         }
 
         Model m = new Model(unitList);
+        Main.exceptionHack(m);
         return m;
     }
 
@@ -317,7 +318,6 @@ public class Main {
     private static void rewriteModel(Model m, String productname)
         throws WrongProgramArgumentException
     {
-        exceptionHack(m);
         // Generate reflective constructors for all features
         ProductLine pl = m.getProductLine();
         if (pl != null) {
