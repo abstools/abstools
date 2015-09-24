@@ -452,9 +452,12 @@ aspect GenerateErlang {
 
   @Override
   public void AssertStmt.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.print("(true=");
-    getCondition().generateErlangCode(ecs,vars);
-    ecs.print(")");
+      ecs.print("case ");
+      getCondition().generateErlangCode(ecs,vars);
+      ecs.println(" of");
+      ecs.incIndent().println("true -> ok;");
+      ecs.println("false -> throw(dataAssertionFailException)");
+      ecs.decIndent().print("end");
   }
 
   @Override
