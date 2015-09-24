@@ -169,6 +169,7 @@ aspect GenerateErlang {
           cost.generateErlangCode(ecs, vars);
           ecs.println(",Stack),");
       }
+      ecs.pf(" %%%% %s:%s", stmt.getFileName(), stmt.getLine(stmt.getStart()));
       stmt.generateErlangCode(ecs,vars);
     }
     if(first)
