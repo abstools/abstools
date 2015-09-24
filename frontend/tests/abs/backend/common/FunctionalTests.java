@@ -81,6 +81,11 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void dataTypeGt3() {
+        assertEvalTrue("{ Bool testresult = Cons(10, Nil) > Cons(10, Nil) == False;  }");
+    }
+
+    @Test
     public void dataTypeLt() {
         assertEvalTrue("{ Bool testresult = Cons(10, Nil) < Nil;  }");
     }
@@ -88,6 +93,11 @@ public class FunctionalTests extends SemanticTests {
     @Test
     public void dataTypeLt2() {
         assertEvalTrue("{ Bool testresult = Cons(5, Nil) < Cons(10, Nil);  }");
+    }
+
+    @Test
+    public void dataTypeLt3() {
+        assertEvalTrue("{ Bool testresult = Cons(10, Nil) < Cons(10, Nil) == False;  }");
     }
 
     @Test
