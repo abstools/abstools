@@ -18,7 +18,7 @@ inv({ N, D }) -> { D, N }.
 
 %%% Rational numbers are simply tuples { int(), int() }
 
-new(N, D) -> G = intar:gcd(N, D), { N div G, D div G }.
+new(N, D) -> G = abs(intar:gcd(N, D)), { N div G, D div G }.
 
 proper({ N, D }) -> new(N, D).
 
