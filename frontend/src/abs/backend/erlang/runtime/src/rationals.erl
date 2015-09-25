@@ -20,6 +20,7 @@ inv({ N, D }) -> { D, N }.
 
 new(N, D) -> G = abs(intar:gcd(N, D)), { N div G, D div G }.
 
+proper({ N, 1 }) -> { N, 1};
 proper({ N, D }) -> new(N, D).
 
 is_greater({ N1, D1 }, { N2, D2 }) -> N1 * D2 - N2 * D1 > 0.
