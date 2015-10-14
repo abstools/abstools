@@ -406,12 +406,14 @@ value.")
               (goto-char (point-max))
               (insert "frew start .")
               (comint-send-input)))
-    (`erlang (let ((erlang-buffer (or (get-buffer "*erlang*")
-                                      (progn (save-excursion
-                                               ;; don't propagate
-                                               ;; interactive args, if any
-                                               (inferior-erlang nil))
-                                             (get-buffer "*erlang*"))))
+    (`erlang (let ((erlang-buffer (progn
+                                    (when (get-buffer "*erlang*")
+                                      (kill-buffer (get-buffer "*erlang*")))
+                                    (save-excursion
+                                      ;; don't propagate
+                                      ;; interactive args, if any
+                                      (inferior-erlang nil))
+                                    (get-buffer "*erlang*")))
                    (erlang-dir (concat (file-name-directory (buffer-file-name))
                                        "gen/erl"))
                    (module (abs--guess-module))
@@ -419,13 +421,13 @@ value.")
                (with-current-buffer erlang-buffer
                  (comint-send-string erlang-buffer
                                      (concat "cd (\"" erlang-dir "\").\n"))
-                 (comint-send-string erlang-buffer "make:all([load]).\n")
                  (comint-send-string erlang-buffer
                                      (concat "code:add_paths([\""
                                              erlang-dir "/ebin\", \""
                                              erlang-dir "/deps/cowboy/ebin\", \""
                                              erlang-dir "/deps/cowlib/ebin\", \""
                                              erlang-dir "/deps/ranch/ebin\"]).\n"))
+                 (comint-send-string erlang-buffer "make:all([load]).\n")
                  (comint-send-string erlang-buffer
                                      (concat "runtime:start(\""
                                              (when debug-output "-d ")
