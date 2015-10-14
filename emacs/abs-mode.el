@@ -445,7 +445,7 @@ value.")
     (other (error "Don't know how to run with target %s" backend))))
 
 (defun abs-next-action (flag)
-  "Compile the buffer or load it into Maude.
+  "Compile or execute the buffer.
 
 The language backend for compilation can be chosen by giving a
 `C-u' prefix to this command.  The default backend is set via
@@ -453,13 +453,17 @@ customizing or setting `abs-target-language' and can be
 overridden for a specific abs file by giving a file-local value
 via `add-file-local-variable'.
 
-To execute on the Maude backend, remember to make
-`abs-interpreter.maude' accessible to Maude, either by copying or
-symlinking that file to the current directory, or via the
-`MAUDE_LIB' environment variable.
+To compile or run a model that consists of more than one file,
+set `abs-input-files' to a list of filenames.
+
+To execute on the Maude backend, make sure that Maude and the
+Maude Emacs mode are installed.
 
 To execute on the Java backend, set `abs-java-classpath' to
 include the file absfrontend.jar.
+
+To execute on the Erlang backend, make sure that Erlang and the
+Erlang Emacs mode are installed.
 
 Argument FLAG will prompt for language backend to use if 1."
   (interactive "p")
