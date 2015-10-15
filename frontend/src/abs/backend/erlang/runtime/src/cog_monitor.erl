@@ -43,6 +43,10 @@ get_dcs() ->
 init([Main])->
     {ok,#state{main=Main,active=gb_sets:empty(),blocked=gb_sets:empty(),idle=gb_sets:empty(),clock_waiting=[],dcs=[],timer=undefined}}.
 
+handle_event({cog,Cog,new},State=#state{idle=I})->
+    ?DEBUG({cog, Cog, new}),
+    I1=gb_sets:add_element(Cog,I),
+    {ok, State#state{idle=I1}};
 handle_event({cog,Cog,active},State=#state{active=A,idle=I,timer=T})->
     ?DEBUG({cog, Cog, active}),
     A1=gb_sets:add_element(Cog,A),
