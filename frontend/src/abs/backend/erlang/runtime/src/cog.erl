@@ -43,7 +43,9 @@ add_and_notify(#cog{ref=Cog},Task,Args)->
     await_start(Task, Args).
 
 add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
-    task:block(Cog),
+    %% we don't want task:block since this allowed time advance while creating
+    %% an object
+    task:block_for_gc(Cog),
     Ref!{new_task,Task,Args,self(),false},
     await_start(Task,[Args|Stack]),
     task:acquire_token(Cog,[Args|Stack]).
