@@ -1,0 +1,876 @@
+/**************************************************************************/
+/*  Implementation to generate relational database schema                 */
+/*  Niken Fitria Apriani. 2015.                                           */
+/*                                                                        */
+/**************************************************************************/
+
+// -*- mode: java; tab-width: 4; -*-
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.PriorityQueue;
+import abs.backend.dbschema.*;
+
+aspect generateDBSchema {
+
+	public String ASTNode.generateDBSchema(String str) {
+		return str;
+    }
+    
+    public String ASTNode.generateDBSchema() {
+    	return "";
+    }
+    
+    public String ASTNode.getDataType() {
+    	return "";
+    }
+	
+	public void ASTNode.generateDBSchema(PrintWriter stream) {
+    }
+
+    public void List.generateDBSchema(PrintWriter stream) {
+        if (getNumChild() > 0) {
+            getChild(0).generateDBSchema(stream);
+            for (int i = 1; i < getNumChild(); i++) {
+                //stream.println();
+                getChild(i).generateDBSchema(stream);
+            }
+        }
+    }
+    
+    public void List.generateDBSchema(PrintWriter stream, String separator) {
+        if (getNumChild() > 0) {
+            getChild(0).generateDBSchema(stream);
+            for (int i = 1; i < getNumChild(); i++) {
+                //stream.print(separator+" ");
+                getChild(i).generateDBSchema(stream);
+            }
+        }
+    }
+    
+    public void Model.generateDBSchema(PrintWriter stream) {
+    	// HashMap for defining interface hierarchy and type of class
+    	// List of all interfaces in this model
+    	ArrayList<InterfaceDecl> allInterfaces = new ArrayList<InterfaceDecl>();
+    	// List of all interfaces with its extended interfaces
+    	HashMap<String, ArrayList<String>> extPair = new HashMap<String, ArrayList<String>>();
+    	// Possible type of object based on its implemented interfaces
+    	HashMap<String, ArrayList<String>> intType = new HashMap<String, ArrayList<String>>();
+    	// List of all class with its implemented interfaces
+    	HashMap<String, ArrayList<String>> class_Interface = new HashMap<String, ArrayList<String>>();
+    	// Possible type of class based on its implemented interfaces
+    	HashMap<String, ArrayList<String>> clsType = new HashMap<String, ArrayList<String>>();
+    	
+    	// List of all type with all classes
+    	HashMap<String, ArrayList<String>> typeClass = new HashMap<String, ArrayList<String>>();
+    	
+    	// HashMap containing all class in this model (@String,@String,@String,@String: className,attributeName,attributeType,attributeConst)
+    	HashMap<String,HashMap<String, ArrayList<String>>> allClass = new HashMap<String,HashMap<String, ArrayList<String>>>();
+    	
+    	// HashMap containing all class with corresponding primary keys
+    	HashMap<String, ArrayList<String>> table_PrimaryKey = new HashMap<String, ArrayList<String>>();
+    	
+    	// HashMap containing all multivalues of each class(@String,@String,@String,@String(0),@String(1): className,type,attributeName,(0)attributeType,(1)attributeConst)
+    	HashMap<String,HashMap<String,HashMap<String, ArrayList<String>>>> classMultivalue = new HashMap<String,HashMap<String,HashMap<String, ArrayList<String>>>>();
+    	
+    	
+    	
+    	
+    	// HashMap containing all data type declaration 
+    	ArrayList<String> newDataType = new ArrayList<String>();
+    	
+    	// HashMap containing all type synonyms
+    	HashMap<String,String> allTypeSynonyms = new HashMap<String,String>();
+    	
+        for (ModuleDecl d : getModuleDecls()) {
+            if (! Constants.BUILT_IN_LIBS.contains(d.getName()) && ! d.getName().contains(".Productline")) {
+                d.generateDBSchema(stream, allInterfaces, class_Interface, allClass, table_PrimaryKey, 
+                classMultivalue, newDataType, allTypeSynonyms);
+            }
+        }  
+        
+        if (allInterfaces.size() > 0) {
+        	for(int i = 0; i < allInterfaces.size(); i++){
+        		allInterfaces.get(i).getInterfaceHierarchy(extPair);
+        	}
+        }
+        
+        if (extPair.size() > 0) {
+        	
+        	for(String key : extPair.keySet()){
+        		ArrayList<String> posType = new ArrayList<String>();
+        		posType.add(key);
+        		if((extPair.get(key)).size() != 0){
+        			for(String str : extPair.get(key)) {
+        				if(!posType.contains(str)){
+        					if(intType.containsKey(str)){
+        						for(String st : intType.get(str)){
+        							if(!posType.contains(st)){
+        								posType.add(st);
+        							}
+        						}
+        					} else {
+        						if(!posType.contains(str)){
+        								posType.add(str);
+        							}
+        					}
+        				}
+        			}
+        		}
+        		intType.put(key,posType);
+        	}
+        }
+        
+        if (class_Interface.size() > 0) {
+        	for(String cls : class_Interface.keySet()){
+        		ArrayList<String> posType = new ArrayList<String>();
+        		if((class_Interface.get(cls)).size() != 0) {
+        			for(String intrfc : class_Interface.get(cls)){
+        				if(intType.containsKey(intrfc)){
+        					for(String typ : intType.get(intrfc)){
+        						if(!posType.contains(typ)){
+        							posType.add(typ);
+        						}
+        					}
+        				}
+        			}
+        		}
+        		clsType.put(cls, posType);
+        	}
+        }
+        
+        if(intType.size() > 0 && clsType.size() > 0){
+        	for(String intrfc : intType.keySet()){
+        		ArrayList<String> posClass = new ArrayList<String>();
+        		for(String cls : clsType.keySet()){
+        			if(clsType.get(cls).contains(intrfc) && !posClass.contains(cls)){
+        				posClass.add(cls);
+        			}
+        		}
+        		typeClass.put(intrfc,posClass);
+        	}
+        }
+        //stream.println(""+intType);
+        //stream.println(""+class_Interface);
+        //stream.println(""+clsType);
+        //stream.println(""+typeClass);
+        //stream.println(""+newDataType);
+        //stream.println(""+allClass);
+        //stream.println(""+table_PrimaryKey);
+        //stream.println(""+classMultivalue);
+        
+        PriorityQueue<String> queueInterTable = new PriorityQueue<String>(); // @type
+        HashMap<String, ArrayList<String>> queueInterFK = new HashMap<String, ArrayList<String>>(); // @Class, @attNam, @ClassIntermediate
+        ArrayList<String> allInterTable = new ArrayList<String>();
+        
+        stream.println("CREATE SCHEMA NEWSCHEMA;");
+        stream.println();
+        
+        // print allClass 
+        // HashMap containing all class in this model (@String,@String,@String,@String: className,attributeName,attributeType,attributeConst)
+        if (allClass.size() > 0) {
+	        for(String tableName : allClass.keySet()){
+	        	stream.println("CREATE TABLE " + tableName + " (");
+	        	HashMap<String,ArrayList<String>> attribute = allClass.get(tableName);
+	        	ArrayList<String> fkTemp = new ArrayList<String>();
+	        	if (attribute.size() > 0) {
+		       		for(String name : attribute.keySet()){
+		       			String column = "";
+		       			column = column + name;
+		       			if ((attribute.get(name)).size() > 0){
+		       				ArrayList<String> attrcons = attribute.get(name); 
+		       				if (name.length() < 16) {
+		       					column = column + ("	");
+		       					if (name.length() < 8) {
+		       						column = column + ("	");
+		       					}		
+		       				}
+		       				column = column + ("	");
+		       				String attributeType = attrcons.get(0);
+		       				if(typeClass.containsKey(attributeType)){
+		       					if(!allInterTable.contains(attributeType)){
+		       						allInterTable.add(attributeType);
+		       						queueInterTable.add(attributeType);
+		       					}
+		       					String objType = attributeType;
+		       					name = "genId_" + name;
+		       					fkTemp.add(name);
+		       					fkTemp.add(objType+"_TYPE");
+		       					column = name;
+		       					if (name.length() < 16) {
+		       						column = column + ("	");
+		       						if (name.length() < 8) {
+		       							column = column + ("	");
+		       						}		
+		       					}
+		       					column = column + ("	");
+		       					attributeType = "INT";
+		       				} else if(newDataType.contains(attributeType)){
+		       					attributeType = "VARCHAR(30)";
+		       				} 
+		       				column = column + attributeType;
+		       				if ((attrcons.get(1)).length() > 0) {
+		       					String attributeCons = attrcons.get(1);  
+		       					if (attributeType.length() < 8) {
+		       						column = column + ("	");
+		       					}
+		       					column = column + ("	");
+		       					column = column + (attributeCons);
+		       				}
+		       			}
+		       			stream.print(column);
+	        			stream.println(",");
+	        		}
+	       		}
+	       		queueInterFK.put(tableName,fkTemp);
+	       		
+	       		ArrayList<String> pk = table_PrimaryKey.get(tableName);
+	       		if(pk.size() > 0){
+		       		stream.print("PRIMARY KEY (");
+		       		for(int i = 0; i < pk.size(); i++){
+		       			if (i == 0) {
+		       				stream.print(pk.get(i));
+		       			} else {
+		       				stream.print(", ");
+		       				stream.print(pk.get(i));
+		       			}
+		       		}
+		       		stream.print(")");
+	       		}
+	        	stream.print(");");
+	        	stream.println();
+	        	stream.println();
+	        }
+        }
+        
+              
+        // print all intermediate table
+        if(queueInterTable.size() > 0){
+        	while(queueInterTable.size() > 0){
+        		String type = queueInterTable.poll();
+        		String tableName = type + "_TYPE";
+        		stream.println("CREATE TABLE " + tableName + " (");
+        		ArrayList<String> thisPK = new ArrayList<String>();
+        		HashMap<String,String> thisFK = new HashMap<String,String>();
+        		
+        		String pk = "genId";
+        		String attributeType = "INT";
+        		String attributeCons = "NOT NULL";
+        		thisPK.add(pk);
+        		table_PrimaryKey.put(tableName,thisPK);
+        		
+        		String column = pk;
+        		if (pk.length() < 24) {
+		       		column = column + ("	");
+		       		if (pk.length() < 16) {
+		       			column = column + ("	");
+		       			if (pk.length() < 8) {
+		       				column = column + ("	");
+		       			}
+		       		}		
+		       	}
+		       	column = column + ("	");
+		       	column = column + attributeType;
+		       	column = column + ("	");
+		       	column = column + ("	");
+		       	column = column + (attributeCons);
+		       	stream.print(column);
+	        	stream.println(",");
+	        	
+	        	if(typeClass.size() > 0) {
+		        	for(String classofType : typeClass.get(type)){
+		        		if((table_PrimaryKey.get(classofType)).size() > 0){		        		
+			        		for(String primkey : table_PrimaryKey.get(classofType)){
+			        			String attributeName = primkey + "_" + classofType;
+			        			String col = attributeName;
+			        			
+			        			String ref = classofType + "(" + primkey + ")";
+			        			thisFK.put(attributeName, ref);
+			        			
+			        			HashMap<String,ArrayList<String>> attrib = allClass.get(classofType);
+			        			ArrayList<String> attDetail = attrib.get(primkey);
+			        			if(attDetail.size() > 0){
+			        				if (attributeName.length() < 24) {
+							       		col = col + ("	");
+							       		if (attributeName.length() < 16) {
+							       			col = col + ("	");
+							       			if (attributeName.length() < 8) {
+							       				col = col + ("	");
+							       			}
+							       		}		
+							       	}
+		       						col = col + ("	");
+			        				String attrType = attDetail.get(0);
+			        				col = col + attrType;
+			        			}
+			        			stream.print(col);
+	        					stream.println(",");
+			        		}
+		        		}
+		        	}
+        		}
+        		
+        		if(thisPK.size() > 0){
+		       		stream.print("PRIMARY KEY (");
+		       		for(int a = 0; a < thisPK.size(); a++){
+		       			if (a == 0) {
+		       				stream.print(thisPK.get(a));
+		       			} else {
+		       				stream.print(", ");
+		       				stream.print(thisPK.get(a));
+		       			}
+		       		}
+		       		stream.println("),");
+	       		}
+		        		
+		        if (thisFK.size() > 0){
+		        	int b = 0;
+		        	for(String f : thisFK.keySet()){
+		        		if(b != 0){
+		        			stream.println(",");
+		        		}
+		        		stream.print("FOREIGN KEY (" + f + ") REFERENCES " + thisFK.get(f));
+		        		b++;
+		        	}
+		        }
+		        stream.println(");");
+		        stream.println();
+        	}
+        } 
+        
+        // connecting intermediate table into class table
+        // @Class, @attNam, @ClassIntermediate
+        if(queueInterFK.size() > 0){
+        	for(String className : queueInterFK.keySet()){
+        		if(queueInterFK.get(className).size() > 0){
+        			ArrayList<String> fkType = queueInterFK.get(className);
+        			String fk = "";
+        			String ref = "";
+        			for(int n = 0; n < fkType.size(); n++){
+        				if(n % 2 == 0){
+        					fk = fkType.get(n);
+        				} else {
+        					ref = fkType.get(n);
+        					ArrayList<String> pkTemp = table_PrimaryKey.get(ref);
+        					if(pkTemp.size() > 0){
+        						ref = ref + "(" + pkTemp.get(0) + ")";
+        					}
+        					stream.println("ALTER TABLE " + className);
+        					stream.println("FOREIGN KEY " + fk + " REFERENCES " + ref + ";");
+        					stream.println();
+        				}
+        			} 
+        		}
+        	}
+        }
+        
+        
+        // print all multivalues
+        //(@String,@String,@String,@String(0),@String(1): className,type,attributeName,(0)attributeType,(1)attributeConst)        
+        if (classMultivalue.size() > 0){
+        	for (String className : classMultivalue.keySet()){
+        		HashMap<String,String> foreignKey = new HashMap<String,String>();
+        		HashMap<String,HashMap<String, ArrayList<String>>> mulVal = classMultivalue.get(className);
+        		if (mulVal.size() > 0){
+        			for(String typeMulVal : mulVal.keySet()){
+        				stream.println("CREATE TABLE " + typeMulVal + className + " (");
+        				ArrayList<String> thisPK = new ArrayList<String>();
+        				HashMap<String, ArrayList<String>> attribt = mulVal.get(typeMulVal);
+        				if(attribt.size() > 0){
+        					for(String name : attribt.keySet()){
+        						String column = "";
+        						column = column + name;
+        						thisPK.add(name);
+        						if ((attribt.get(name)).size() > 0){
+				       				ArrayList<String> attrcons = attribt.get(name); 
+				       				if (name.length() < 16) {
+		       							column = column + ("	");
+		       							if (name.length() < 8) {
+		       								column = column + ("	");
+		       							}		
+		       						}
+				       				column = column + ("	");
+				       				String attributeType = attrcons.get(0); 
+				       				column = column + attributeType;
+				       				if ((attrcons.get(1)).length() > 0) { 
+				       					if ((attrcons.get(0)).length() < 8) {
+				       						column = column + ("	");
+				       					}
+				       					column = column + ("	");
+				       					String attributeCons = attrcons.get(1); 
+				       					column = column + attributeCons;
+				       				}
+				       			}
+				       			stream.print(column);
+			        			stream.println(",");
+        					}
+        				}
+        				ArrayList<String> forKey = table_PrimaryKey.get(className);
+		        		if(forKey.size() > 0){
+		        			for(int i = 0; i < forKey.size(); i++){
+		        				String fk = forKey.get(i);
+		        				HashMap<String,ArrayList<String>> attrib = allClass.get(className);
+		        				String name = fk + "_" + className;
+		        				thisPK.add(name);
+		        				String ref = className + "(" + fk + ")";
+		        				String column = name;
+		        				
+		        				foreignKey.put(name,ref);
+		        				
+					        	if (attrib.size() > 0) {
+						       		if ((attrib.get(fk)).size() > 0){
+						       			ArrayList<String> attrcons = attrib.get(fk); 
+						       			if (name.length() < 16) {
+		       								column = column + ("	");
+		       								if (name.length() < 8) {
+		       									column = column + ("	");
+		       								}		
+		       							}
+						       			column = column + ("	");
+						       			String attributeType = attrcons.get(0) ;
+						       			column = column + attributeType;
+						       			if ((attrcons.get(1)).length() > 0) { 
+						       				if ((attrcons.get(0)).length() < 8) {
+						       					column = column + ("	");
+						       				}
+						       				column = column + ("	");
+						       				String attributeCons = attrcons.get(1); 
+						       				column = column + attributeCons;
+						       			}
+						       		}
+						       		stream.print(column);
+					        		stream.println(",");
+					       		}
+		        			}
+		        		}
+		        		if(thisPK.size() > 0){
+		       				stream.print("PRIMARY KEY (");
+		       				for(int i = 0; i < thisPK.size(); i++){
+		       					if (i == 0) {
+		       						stream.print(thisPK.get(i));
+		       					} else {
+		       						stream.print(", ");
+		       						stream.print(thisPK.get(i));
+		       					}
+		       				}
+		       				stream.println("),");
+	       				}
+		        		
+		        		if (foreignKey.size() > 0){
+		        			int i = 0;
+		        			for(String f : foreignKey.keySet()){
+		        				if(i != 0){
+		        					stream.println(",");
+		        				}
+		        				stream.print("FOREIGN KEY (" + f + ") REFERENCES " + foreignKey.get(f));
+		        				i++;
+		        			}
+		        		}
+		        		stream.println(");");
+		        		stream.println();
+		        	}
+		        }
+        		stream.println(); 
+        	}
+        }
+        
+        stream.flush();
+    }
+
+    public void ModuleDecl.generateDBSchema(PrintWriter stream, ArrayList<InterfaceDecl> allInterfaces, HashMap<String, ArrayList<String>> class_Interface,
+    HashMap<String,HashMap<String, ArrayList<String>>> allClass, HashMap<String, ArrayList<String>> table_PrimaryKey,
+    HashMap<String,HashMap<String,HashMap<String, ArrayList<String>>>> classMultivalue, ArrayList<String> newDataType,
+    HashMap<String,String> allTypeSynonyms) {
+    	
+        for (Decl decl : getDecls()) {
+        	if(decl.toString().contains("ClassDecl")){
+        		((ClassDecl)decl).getTypeInterface(class_Interface);
+        	}
+        	if(decl.toString().contains("TypeSynDecl")){
+        		((TypeSynDecl)decl).generateDBSchema(allTypeSynonyms);
+        	} else if(decl.toString().contains("InterfaceDecl")){
+        		allInterfaces.add((InterfaceDecl)decl);
+        	} else if(decl.toString().contains("ClassDecl")){
+        		((ClassDecl)decl).generateDBSchema(stream, allClass,table_PrimaryKey, classMultivalue);
+        	} else if(decl.toString().contains("DataTypeDecl")){
+        		((DataTypeDecl)decl).generateDBSchema(newDataType);
+        	} else {
+            	decl.generateDBSchema(stream);
+            }
+        }
+        
+        
+    }
+
+	// class declaration as relation (table) in DB
+    public void ClassDecl.generateDBSchema(PrintWriter stream, HashMap<String,HashMap<String, ArrayList<String>>> allClass, HashMap<String, ArrayList<String>> table_PrimaryKey,
+    	HashMap<String,HashMap<String,HashMap<String, ArrayList<String>>>> classMultivalue) {
+    	
+    	// HashMap containing all attributes of class (@String,@String,@String: attributeName,(0)attributeType,(1)attributeConst)
+    	HashMap<String,ArrayList<String>> allAttributes = new HashMap<String,ArrayList<String>>();
+    	// ArrayList containing all of Primary Keys of this class 
+    	ArrayList<String> primaryKey = new ArrayList<String>();
+    	// HashMap containing all of multiValue (@String,@String,@String(0),@String(1): type,attributeName,(0)attributeType,(1)attributeConst)
+    	HashMap<String,HashMap<String, ArrayList<String>>> multiValue = new HashMap<String,HashMap<String, ArrayList<String>>>();
+    	
+    	String className = getName();
+
+        if (getNumParam() > 0) {
+            getParams().getAllParams(stream, allAttributes,primaryKey,multiValue);
+        }
+        
+        getFieldList().getAllFields(stream, allAttributes,primaryKey,multiValue);
+        
+        allClass.put(className,allAttributes);
+        table_PrimaryKey.put(className, primaryKey);
+        classMultivalue.put(className,multiValue);
+        
+        
+        
+    }
+    
+    // getting type interface of a class
+    public void ClassDecl.getTypeInterface(HashMap<String, ArrayList<String>> class_Interface){
+    	ArrayList<String> interfaceImplemented = new ArrayList<String>();
+    	if (getNumImplementedInterfaceUse() > 0) {
+    		getImplementedInterfaceUseList().getInterfaceHierarchy(interfaceImplemented);
+    	}
+    	class_Interface.put(getName(),interfaceImplemented);
+    }
+    
+    
+    public void InterfaceDecl.getInterfaceHierarchy(HashMap<String, ArrayList<String>> extPair) {
+    	ArrayList<String> extList = new ArrayList<String>();
+    	if (!extPair.containsKey(getName())){
+    		if (getNumExtendedInterfaceUse() > 0) {
+            	getExtendedInterfaceUseList().getInterfaceHierarchy(extList);
+        	}
+    		extPair.put(getName(),extList);
+    	}
+    }
+    
+    public void List.getInterfaceHierarchy(ArrayList<String> extList) {
+        if (getNumChild() > 0) {
+            for (int i = 0; i < getNumChild(); i++) {
+                extList.add(((InterfaceTypeUse)getChild(i)).getName());
+            }
+        }
+    }
+    
+    public void List.getAllParams(PrintWriter stream, HashMap<String,ArrayList<String>> allAttributes, ArrayList<String> primaryKey, 
+    HashMap<String,HashMap<String, ArrayList<String>>> multiValue){
+    	if (getNumChild() > 0) {
+    		for (int i = 0; i < getNumChild(); i++) {
+    			((ParamDecl)getChild(i)).getParam(stream, allAttributes,primaryKey,multiValue);
+    		}
+    	}
+    }
+    
+	// class parameter as attribute with not null constraint
+    public void ParamDecl.getParam(PrintWriter stream, HashMap<String,ArrayList<String>> allAttributes, ArrayList<String> primaryKey, 
+    HashMap<String,HashMap<String, ArrayList<String>>> multiValue) {
+        String paramName = getName();
+        String attributeType = "";
+        String attributeCons = "";
+        ArrayList<String> nameTemp = new ArrayList<String>();
+        ArrayList<String> typeTemp = new ArrayList<String>();
+        String constemp = "NOT NULL";
+        
+        if((getAccess().toString()).contains("Pair") || (getAccess().toString()).contains("Triple") ){
+        	((ParametricDataTypeUse)getAccess()).createMoreColumns(paramName,nameTemp,typeTemp);
+        	if(nameTemp.size() > 0 && typeTemp.size() > 0){
+	        	for(int i = 0; i < nameTemp.size(); i++){
+	        		ArrayList<String> typeCons = new ArrayList<String>();
+	        		typeCons.add("");
+        			typeCons.add("");
+	        		typeCons.set(0,typeTemp.get(i));
+	        		typeCons.set(1,constemp);
+	        		allAttributes.put(nameTemp.get(i), typeCons);
+	        	}
+	        }
+        } else if((getAccess().toString()).contains("List") || (getAccess().toString()).contains("Set") || (getAccess().toString()).contains("Map")){
+        	((ParametricDataTypeUse)getAccess()).getMultiValue(paramName,nameTemp,typeTemp);
+        	if((getAccess().toString()).contains("List")){
+        		String temp = "List";
+        		HashMap<String,ArrayList<String>> attTemp = new HashMap<String,ArrayList<String>>();
+        		if(nameTemp.size() > 0 && typeTemp.size() > 0){
+	        		for(int i = 0; i < nameTemp.size(); i++){
+	        			ArrayList<String> typeCons = new ArrayList<String>();
+	        			typeCons.add("");
+        				typeCons.add("");
+	        			typeCons.set(0,typeTemp.get(i));
+	        			typeCons.set(1,constemp);
+	        			attTemp.put(nameTemp.get(i),typeCons);
+	        		}	
+	        	}
+        		multiValue.put(temp, attTemp);
+        	} else if((getAccess().toString()).contains("Set")){
+        		String temp = "Set";
+        		HashMap<String,ArrayList<String>> attTemp = new HashMap<String,ArrayList<String>>();
+        		if(nameTemp.size() > 0 && typeTemp.size() > 0){
+	        		for(int i = 0; i < nameTemp.size(); i++){
+	        			ArrayList<String> typeCons = new ArrayList<String>();
+	        			typeCons.add("");
+        				typeCons.add("");
+	        			typeCons.set(0,typeTemp.get(i));
+	        			typeCons.set(1,constemp);
+	        			attTemp.put(nameTemp.get(i),typeCons);	
+	        		}
+	        	}
+        		multiValue.put(temp, attTemp);
+        	} else if((getAccess().toString()).contains("Map")){
+        		String temp = "Map";
+        		HashMap<String,ArrayList<String>> attTemp = new HashMap<String,ArrayList<String>>();
+        		if(nameTemp.size() > 0 && typeTemp.size() > 0){
+	        		for(int i = 0; i < nameTemp.size(); i++){
+	        			ArrayList<String> typeCons = new ArrayList<String>();
+	        			typeCons.add("");
+        				typeCons.add("");
+	        			typeCons.set(0,typeTemp.get(i));
+	        			typeCons.set(1,constemp);
+	        			attTemp.put(nameTemp.get(i),typeCons);	
+	        		}
+	        	}
+        		multiValue.put(temp, attTemp);
+        	} 
+        } else {
+        	attributeType = (getAccess()).getDataType();
+        	attributeCons = "NOT NULL";
+        	ArrayList<String> typeCons = new ArrayList<String>();
+        	typeCons.add("");
+        	typeCons.add("");
+        	typeCons.set(0,attributeType);
+        	typeCons.set(1,attributeCons);
+        	allAttributes.put(paramName,typeCons);
+        }
+        
+        if ((getAnnotationList().toString()).contains("PK")){
+        	primaryKey.add(paramName);
+        }
+    } 
+    
+    public void List.getAllFields(PrintWriter stream, HashMap<String,ArrayList<String>> allAttributes, ArrayList<String> primaryKey, 
+	HashMap<String,HashMap<String, ArrayList<String>>> multiValue){
+    	if (getNumChild() > 0) {
+    		for (int i = 0; i < getNumChild(); i++) {
+    			((FieldDecl)getChild(i)).getField(stream, allAttributes,primaryKey,multiValue);
+    		}
+    	}
+    }
+    
+    // Field Declaration
+    public void FieldDecl.getField(PrintWriter stream, HashMap<String,ArrayList<String>> allAttributes, ArrayList<String> primaryKey, 
+    HashMap<String,HashMap<String, ArrayList<String>>> multiValue) {
+        String fieldName = getName();
+        String attributeType = "";
+        String attributeCons = "";
+        ArrayList<String> nameTemp = new ArrayList<String>();
+        ArrayList<String> typeTemp = new ArrayList<String>();
+        ArrayList<String> consTemp = new ArrayList<String>();
+        
+        if((getAccess().toString()).contains("Pair") || (getAccess().toString()).contains("Triple") ){
+        	((ParametricDataTypeUse)getAccess()).createMoreColumns(fieldName,nameTemp,typeTemp);
+        	if (hasInitExp()) {
+	            ((DataConstructorExp)getInitExp()).getInitValue(consTemp);
+	        }
+	        if(nameTemp.size() > 0 && typeTemp.size() > 0){
+	        	for(int i = 0; i < nameTemp.size(); i++){
+	        		ArrayList<String> typeCons = new ArrayList<String>();
+	        		typeCons.add("");
+        			typeCons.add("");
+	        		typeCons.set(0,typeTemp.get(i));
+	        		if(consTemp.size() > 0){
+	        			typeCons.set(1,consTemp.get(i));
+	        		}
+	        		allAttributes.put(nameTemp.get(i), typeCons);
+	        	}
+        	}
+        } else if((getAccess().toString()).contains("List") || (getAccess().toString()).contains("Set") || (getAccess().toString()).contains("Map")){
+        	((ParametricDataTypeUse)getAccess()).getMultiValue(fieldName,nameTemp,typeTemp);
+        	if (hasInitExp()) {
+	            ((DataConstructorExp)getInitExp()).getInitValue(consTemp);
+	        }
+        	if((getAccess().toString()).contains("List")){
+        		String temp = "List";
+        		HashMap<String,ArrayList<String>> attTemp = new HashMap<String,ArrayList<String>>();
+        		if(nameTemp.size() > 0 && typeTemp.size() > 0){
+	        		for(int i = 0; i < nameTemp.size(); i++){
+	        			ArrayList<String> typeCons = new ArrayList<String>();
+	        			typeCons.add("");
+        				typeCons.add("");
+	        			typeCons.set(0,typeTemp.get(i));
+	        			if(consTemp.size() > 0){
+	        				typeCons.set(1,consTemp.get(i));
+	        			}
+	        			attTemp.put(nameTemp.get(i),typeCons);	
+	        		}
+        		}
+        		multiValue.put(temp, attTemp);
+        	} else if((getAccess().toString()).contains("Set")){
+        		String temp = "Set";
+        		HashMap<String,ArrayList<String>> attTemp = new HashMap<String,ArrayList<String>>();
+        		if(nameTemp.size() > 0 && typeTemp.size() > 0){
+	        		for(int i = 0; i < nameTemp.size(); i++){
+	        			ArrayList<String> typeCons = new ArrayList<String>();
+	        			typeCons.add("");
+        				typeCons.add("");
+	        			typeCons.set(0,typeTemp.get(i));
+	        			if(consTemp.size() > 0){
+	        				typeCons.set(1,consTemp.get(i));
+	        			}
+	        			attTemp.put(nameTemp.get(i),typeCons);	
+	        		}
+	        	}
+        		multiValue.put(temp, attTemp);
+        	} else if((getAccess().toString()).contains("Map")){
+        		String temp = "Map";
+        		HashMap<String,ArrayList<String>> attTemp = new HashMap<String,ArrayList<String>>();
+        		if(nameTemp.size() > 0 && typeTemp.size() > 0){
+	        		for(int i = 0; i < nameTemp.size(); i++){
+	        			ArrayList<String> typeCons = new ArrayList<String>();
+	        			typeCons.add("");
+        				typeCons.add("");
+	        			typeCons.set(0,typeTemp.get(i));
+	        			if(consTemp.size() > 0){
+	        				typeCons.set(1,consTemp.get(i));
+	        			}
+	        			attTemp.put(nameTemp.get(i),typeCons);	
+	        		}
+	        	}
+        		multiValue.put(temp, attTemp);
+        	} 
+        } else {
+        	attributeType = (getAccess()).getDataType();
+        	if (hasInitExp()) {
+	            attributeCons = getInitExp().generateDBSchema("");
+	        } 
+	        ArrayList<String> typeCons = new ArrayList<String>();
+	        typeCons.add("");
+        	typeCons.add("");
+	        typeCons.set(0,attributeType);
+	        typeCons.set(1,attributeCons);
+        	allAttributes.put(fieldName,typeCons);
+        }
+        
+        if ((getAnnotationList().toString()).contains("PK")){
+        	primaryKey.add(fieldName);
+        }
+    } 
+    
+    public void ParametricDataTypeUse.createMoreColumns(String name, ArrayList<String> nameTemp, ArrayList<String> typeTemp) {
+        if (getNumParam() > 0) {
+            getParamList().createMoreColumns(name, nameTemp, typeTemp); 
+        }
+    }
+    
+    public void List.createMoreColumns(String name, ArrayList<String> nameTemp, ArrayList<String> typeTemp){
+    	if (getNumChild() == 2) {
+    		name = name+"Pair";
+            for (int i = 0; i < getNumChild(); i++) {
+            	String temp = name+i;
+            	nameTemp.add(temp); 
+                typeTemp.add((getChild(i)).getDataType());
+            }
+        }
+        if (getNumChild() == 3) {
+    		name = name+"Triple";
+            for (int i = 0; i < getNumChild(); i++) {
+            	String temp = name+i;
+            	nameTemp.add(temp); 
+                typeTemp.add((getChild(i)).getDataType());
+            }
+        }
+    }
+    
+    public String DataTypeUse.getDataType() {
+    	String name = "";
+        if(getName().contains("Bool")){
+        	name = "BOOLEAN";
+        } else if(getName().contains("Int")){
+        	name = "INT";
+        } else if(getName().contains("Rat")){
+        	name = "FLOAT";
+        } else if(getName().contains("String")){
+        	name = "VARCHAR(30)";
+        } else {
+        	name = getName();
+        }
+        return name;
+    }
+    
+    public String InterfaceTypeUse.getDataType() {
+        return getName();
+    }
+    
+    public void DataConstructorExp.getInitValue(ArrayList<String> consTemp) {
+    	if(getConstructor().contains("Pair") || getConstructor().contains("Triple")){
+    		if (getNumParam() > 0) {
+	            getParamList().getInitValue(consTemp);	            
+        	}
+    	}  
+    }
+    
+    public void List.getInitValue(ArrayList<String> consTemp){
+    	if (consTemp.size() > 0 && getNumChild() > 0){
+	    	for (int i = 0; i < getNumChild(); i++){
+	    		String temp = consTemp.get(i) + getChild(i).generateDBSchema("");
+	    		consTemp.add("");
+	    		consTemp.set(i,temp);
+	    	}
+	    }
+    }
+    
+    public void ParametricDataTypeUse.getMultiValue(String name, ArrayList<String> nameTemp, ArrayList<String> typeTemp) {
+        if (getNumParam() > 0) {
+            getParamList().getMultiValue(name, nameTemp, typeTemp); 
+        }
+    }
+    
+    public void List.getMultiValue(String name, ArrayList<String> nameTemp, ArrayList<String> typeTemp){
+    	if (getNumChild() > 0) {
+            for (int i = 0; i < getNumChild(); i++) {
+            	String temp = name+i;
+            	nameTemp.add("");
+            	nameTemp.set(i,temp);
+            	temp = (getChild(i)).getDataType();
+            	typeTemp.add("");
+            	typeTemp.set(i,temp); 
+            }
+        }
+    }
+    
+    // Integer value of Declared Field
+    public String IntLiteral.generateDBSchema(String str) {
+    	String temp = "DEFAULT " + getContent();
+    	return temp;
+    }
+
+	// String value of Declared Field
+    public String StringLiteral.generateDBSchema(String str) {
+    	String temp = "DEFAULT \'" + getContent() +"\'";
+    	return temp;
+    }
+    
+    public String DataConstructorExp.generateDBSchema(String str) {
+    	String attributeCons = "DEFAULT ";
+        if(getConstructor().contains("Unit") || getConstructor().contains("Nil") || getConstructor().contains("EmptyMap") || getConstructor().contains("EmptySet")){
+        	attributeCons = attributeCons + "NULL";
+        } else {
+        	attributeCons = attributeCons + getConstructor();
+        }
+        return attributeCons;
+    }
+    
+     // data type declaration (it could be as new column in DB, with param as possible value)
+    public void DataTypeDecl.generateDBSchema(ArrayList<String> newDataType) {
+        newDataType.add(getName());
+    }
+    
+    public void TypeSynDecl.generateDBSchema(HashMap<String,String> allTypeSynonyms) {
+    	String name = getName();
+    	String val = getValue().toString();
+		allTypeSynonyms.put(name,val);        
+    }
+  
+ }
+    

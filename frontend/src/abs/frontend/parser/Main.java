@@ -96,6 +96,8 @@ public class Main {
                abs.backend.keyabs.KeyAbsBackend.main(args);
            } else if (argslist.contains("-outline")) {
                abs.backend.outline.OutlinePrinterBackEnd.main(args);
+           } else if (argslist.contains("-dbschema")) {
+               abs.backend.dbschema.GenerateDBSchema.main(args);
            } else {
                Model m = parse(args);
                if (m.hasParserErrors()) {
