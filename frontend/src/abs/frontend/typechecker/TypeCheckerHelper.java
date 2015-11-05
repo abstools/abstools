@@ -471,9 +471,9 @@ public class TypeCheckerHelper {
     public static void checkForDuplicateProducts(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
         Set<String> seen = new HashSet<String>();
         for (CompilationUnit u : compilationUnits) {
-            for (Product p : u.getProducts()) {
-                if (!seen.add(p.getName()))
-                    errors.add(new TypeError(p, ErrorMessage.DUPLICATE_PRODUCT, p.getName()));
+            for (ProductDecl p : u.getProductDecls()) {
+                if (p instanceof Product && !seen.add(((Product) p).getName()))
+                    errors.add(new TypeError(p, ErrorMessage.DUPLICATE_PRODUCT, ((Product) p).getName()));
             }
         }
     }

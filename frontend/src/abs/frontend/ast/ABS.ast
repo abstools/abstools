@@ -12,7 +12,7 @@ Model ::= CompilationUnit* /ImplicitProduct*/ ;
 //Model ::= CompilationUnit* ;
 
 
-CompilationUnit ::= <Name> ModuleDecl* DeltaDecl* UpdateDecl* [ProductLine] Product* FeatureDecl* FExt*;
+CompilationUnit ::= <Name> ModuleDecl* DeltaDecl* UpdateDecl* [ProductLine] ProductDecl* FeatureDecl* FExt*;
 ModuleDecl ::= <Name> Export* Import* Decl* [Block:MainBlock];
 DeltaDecl ::= <Name> Param:DeltaParamDecl* DeltaAccess* ModuleModifier* ;
 UpdateDecl ::= <Name> ObjectUpdate* ;
@@ -322,6 +322,15 @@ FID: Deltaparam ::= <FeatName>;
 FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
-ImplicitProduct ::= Feature* ;
+// Extended Product Selection Language
+abstract ProductDecl;
+
+abstract ProductExpr : ProductDecl ;
+ProductFeatureSet : ProductExpr ::= Feature* ;
+ProductIntersect : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
+ProductUnion : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
+ProductName : ProductExpr ::= <Name> ;
+
+ImplicitProduct : ProductDecl ::= Feature* ;
 Product : ImplicitProduct ::= <Name> Feature* Reconfiguration* ;
 Reconfiguration ::= <TargetProductID> DeltaID* <UpdateID> ;
