@@ -109,7 +109,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         this.result = (CompilationUnit)setV(ctx, new CompilationUnit(this.filename,
 new List<ModuleDecl>(),
                               new List<DeltaDecl>(),new List<UpdateDecl>(),
-                              new Opt<ProductLine>(),new List<Product>(),
+                              new Opt<ProductLine>(),new List<ProductDecl>(),
                               new List<FeatureDecl>(),new List<FExt>()));
     }
 
@@ -117,7 +117,7 @@ new List<ModuleDecl>(),
         result.setModuleDeclList(l(ctx.module_decl()));
         result.setDeltaDeclList(l(ctx.delta_decl()));
         result.setProductLineOpt(o(ctx.productline_decl()));
-        result.setProductList(l(ctx.product_decl()));
+        result.setProductDeclList(l(ctx.product_decl()));
         result.setFeatureDeclList(l(ctx.feature_decl()));
         result.setFExtList(l(ctx.fextension()));
     }
@@ -818,18 +818,40 @@ new List<ModuleDecl>(),
     }
 
     // Products
-
     @Override public void exitProduct_decl(ABSParser.Product_declContext ctx) {
-        setV(ctx, new Product(ctx.TYPE_IDENTIFIER().getText(),
-                              l(ctx.feature()), l(ctx.product_reconfiguration())));
+        if(ctx.product_expr() == null){
+            setV(ctx, new Product(ctx.TYPE_IDENTIFIER().getText(),
+                                  l(ctx.feature()), l(ctx.product_reconfiguration())));
+        }
+        else if(ctx.product_expr() != null){
+            // Todo : how to set product name with current AST
+            setV(ctx, (ProductExpr)v(ctx.product_expr()));
+        }
     }
 
     @Override public void exitProduct_reconfiguration(ABSParser.Product_reconfigurationContext ctx) {
         setV(ctx, new Reconfiguration(ctx.product.getText(),
                                       l(ctx.delta_id()), ctx.update.getText()));
     }
-
-    // mTVL
+    
+    // Product Expression
+    @Override public void exitProductFeatureSet(ABSParser.ProductFeatureSetContext ctx) {
+        setV(ctx, new ProductFeatureSet(l(ctx.feature())));
+    }
+    
+    @Override public void exitProductIntersect(ABSParser.ProductIntersectContext ctx) {
+        setV(ctx, new ProductIntersect((ProductExpr)v(ctx.l), (ProductExpr)v(ctx.r)));
+    }
+    
+    @Override public void exitProductUnion(ABSParser.ProductUnionContext ctx) {
+        setV(ctx, new ProductUnion((ProductExpr)v(ctx.l), (ProductExpr)v(ctx.r)));
+    }
+    
+    @Override public void exitProductName(ABSParser.ProductNameContext ctx) {
+        setV(ctx, new ProductName(ctx.TYPE_IDENTIFIER().getText()));
+    }
+    
+    //  mTVL
 	@Override public void exitFextension(ABSParser.FextensionContext ctx) {
         setV(ctx, new FExt(ctx.TYPE_IDENTIFIER().getText(),
                            o(ctx.feature_decl_group()),

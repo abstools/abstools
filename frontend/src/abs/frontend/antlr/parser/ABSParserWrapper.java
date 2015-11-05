@@ -49,7 +49,7 @@ public class ABSParserWrapper {
             try {
                 u = (CompilationUnit) parser.parse(scanner);
             } catch (Parser.Exception e) {
-                u = new CompilationUnit(path, new List<ModuleDecl>(), new List<DeltaDecl>(), new List<UpdateDecl>(), new Opt<ProductLine>(), new List<Product>(), new List<FeatureDecl>(), new List<FExt>());
+                u = new CompilationUnit(path, new List<ModuleDecl>(), new List<DeltaDecl>(), new List<UpdateDecl>(), new Opt<ProductLine>(), new List<ProductDecl>(), new List<FeatureDecl>(), new List<FExt>());
                 u.setParserErrors(parser.getErrors());
             }
             if (stdlib) {

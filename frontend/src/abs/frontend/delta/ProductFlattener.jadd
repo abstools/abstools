@@ -106,9 +106,9 @@ aspect ProductFlattener {
      */
     public Product Model.findProduct(String id) throws WrongProgramArgumentException {
         for (CompilationUnit u : this.getCompilationUnits()) {
-            for (Product p : u.getProducts()) {
-                if (id.equals(p.getName()))
-                    return p;
+            for (ProductDecl p : u.getProductDecls()) {                
+                if (p instanceof Product && id.equals(((Product) p).getName()))
+                    return (Product) p;
             }
         }
         throw new WrongProgramArgumentException("Product [" + id + "] is not declared");

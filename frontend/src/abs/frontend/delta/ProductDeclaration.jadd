@@ -1,0 +1,35 @@
+aspect ProductDeclaration {	
+	
+    public abstract Set<String> ProductExpr.evaluate() throws WrongProgramArgumentException;
+	
+	public Set<String> ProductFeatureSet.evaluate() throws WrongProgramArgumentException{
+		List<Feature> features = getFeatures();
+		Set<String> setFeatures = new HashSet<String>();
+        for (Feature f : features)
+        	setFeatures.add(f.getName());
+        
+        return setFeatures;
+	}
+	
+	public Set<String> ProductIntersect.evaluate() throws WrongProgramArgumentException{
+		Set<String> left = getLeft().evaluate();
+		Set<String> right = getRight().evaluate();
+		left.retainAll(right);
+		
+		return left;
+	}
+	
+	public Set<String> ProductUnion.evaluate() throws WrongProgramArgumentException{
+		Set<String> left = getLeft().evaluate();
+		Set<String> right = getRight().evaluate();
+		left.addAll(right);
+		
+		return left;
+	}
+	
+	public Set<String> ProductName.evaluate() throws WrongProgramArgumentException{
+		getModel().findProduct(getName());
+        return null;
+	}
+	
+}
