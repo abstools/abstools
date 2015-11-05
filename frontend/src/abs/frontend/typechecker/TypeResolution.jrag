@@ -135,13 +135,18 @@ aspect TypeResolution {
                 if(p instanceof Product)
                 	res.add((Product) p);
                 else if(p instanceof ProductExpr){
-                	try{
-                    	Set<String> features = ((ProductExpr) p).evaluate();
-                    	System.out.println(p.toString() + " " + features.toString());
-                	}
-                	catch(WrongProgramArgumentException e){
-                		e.printStackTrace();
-                	}
+                  	Set<String> features = ((ProductExpr) p).evaluate();
+                  	
+                  	Product product = new Product();
+                  	product.setName("P5");
+                  	for(String featureName : features){
+                  	    Feature f = new Feature();
+                  	    f.setName(featureName);
+                        product.addFeature(f);
+                  	}
+                  	res.add(product);
+                  	
+                  	System.out.println(product.getName() + ". " + product.getFeatures().toString());
                 }
             }
         }
