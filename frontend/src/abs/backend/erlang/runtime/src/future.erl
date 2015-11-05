@@ -18,7 +18,7 @@ start(Callee,Method,Params,CurrentCog,Stack) ->
              %% in the meantime
              receive
                  {stop_world, _Sender} ->
-                     task:block_for_gc(CurrentCog),
+                     task:block_without_time_advance(CurrentCog),
                      task:acquire_token(CurrentCog, [Stack]),
                      Loop();
                 {get_references, Sender} ->
@@ -36,7 +36,7 @@ complete(Ref, Value, Sender, Cog) ->
              %% meantime.
              receive
                  {stop_world, _Sender} ->
-                     task:block_for_gc(Cog),
+                     task:block_without_time_advance(Cog),
                      %% this runs in the context of the just-completed task,
                      %% so we only need to hold on to the return value.
                      task:acquire_token(Cog, [Value]),
@@ -58,7 +58,7 @@ get_after_await(Ref)->
     end.
 
 get_blocking(Ref, Cog, Stack) ->
-    task:block(Cog),
+    task:block_with_time_advance(Cog),
     Ref ! {get, self()},
     Result = (fun Loop() ->
                       receive

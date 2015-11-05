@@ -6,7 +6,7 @@
 %% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([acquire_token/2,release_token/2,block/1,block_for_gc/1,wait/1,wait_poll/1,commit/1,rollback/1]).
+-export([acquire_token/2,release_token/2,block_with_time_advance/1,block_without_time_advance/1,wait/1,wait_poll/1,commit/1,rollback/1]).
 -export([await_duration/4,block_for_duration/4,block_for_resource/4]).
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
@@ -99,9 +99,9 @@ wait(Cog)->
 wait_poll(Cog)->
     commit(Cog),
     cog:new_state(Cog,self(),waiting_poll).
-block(Cog)->
+block_with_time_advance(Cog)->
     cog:new_state(Cog,self(),blocked).
-block_for_gc(Cog)->
+block_without_time_advance(Cog)->
     cog:new_state(Cog,self(),blocked_for_gc).
 
 %% await_duration and block_for_duration are called in different scenarios
@@ -119,7 +119,7 @@ await_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
 
 block_for_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
     eventstream:event({cog,self(),CogRef,clock_waiting,Min,Max}),
-    task:block(Cog),
+    task:block_with_time_advance(Cog),
     loop_for_clock_advance(Stack),
     task:acquire_token(Cog, Stack).
 
@@ -129,7 +129,7 @@ block_for_resource(Cog=#cog{ref=CogRef,dc=DC}, Resourcetype, Amount, Stack) ->
     case Result of
         wait ->
             eventstream:event({task,self(),CogRef,resource_waiting}),
-            task:block(Cog),           % cause clock advance
+            task:block_with_time_advance(Cog),           % cause clock advance
             loop_for_clock_advance(Stack),
             task:acquire_token(Cog,Stack),
             block_for_resource(Cog, Resourcetype, Remaining, Stack);
