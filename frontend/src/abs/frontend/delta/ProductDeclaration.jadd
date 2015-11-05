@@ -1,8 +1,8 @@
-aspect ProductDeclaration {	
+aspect ProductDeclaration {
 	
-    public abstract Set<String> ProductExpr.evaluate() throws WrongProgramArgumentException;
+    public abstract Set<String> ProductExpr.evaluate();
 	
-	public Set<String> ProductFeatureSet.evaluate() throws WrongProgramArgumentException{
+	public Set<String> ProductFeatureSet.evaluate() {
 		List<Feature> features = getFeatures();
 		Set<String> setFeatures = new HashSet<String>();
         for (Feature f : features)
@@ -11,7 +11,7 @@ aspect ProductDeclaration {
         return setFeatures;
 	}
 	
-	public Set<String> ProductIntersect.evaluate() throws WrongProgramArgumentException{
+	public Set<String> ProductIntersect.evaluate(){
 		Set<String> left = getLeft().evaluate();
 		Set<String> right = getRight().evaluate();
 		left.retainAll(right);
@@ -19,7 +19,7 @@ aspect ProductDeclaration {
 		return left;
 	}
 	
-	public Set<String> ProductUnion.evaluate() throws WrongProgramArgumentException{
+	public Set<String> ProductUnion.evaluate(){
 		Set<String> left = getLeft().evaluate();
 		Set<String> right = getRight().evaluate();
 		left.addAll(right);
@@ -27,9 +27,22 @@ aspect ProductDeclaration {
 		return left;
 	}
 	
-	public Set<String> ProductName.evaluate() throws WrongProgramArgumentException{
-		getModel().findProduct(getName());
-        return null;
+	public Set<String> ProductName.evaluate() {
+		try{
+			Product p = getModel().findProduct(getName());
+
+			List<Feature> features = p.getFeatures();
+			Set<String> setFeatures = new HashSet<String>();
+	        for (Feature f : features)
+	        	setFeatures.add(f.getName());
+
+	        return setFeatures;
+		}
+		catch(WrongProgramArgumentException e){
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 }

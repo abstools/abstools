@@ -824,7 +824,7 @@ new List<ModuleDecl>(),
                                   l(ctx.feature()), l(ctx.product_reconfiguration())));
         }
         else if(ctx.product_expr() != null){
-            // Todo : how to set product name with current AST
+            // To do : how to set product name with current AST
             setV(ctx, (ProductExpr)v(ctx.product_expr()));
         }
     }
