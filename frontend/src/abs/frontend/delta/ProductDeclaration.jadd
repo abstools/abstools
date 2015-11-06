@@ -1,48 +1,75 @@
 aspect ProductDeclaration {
-	
-    public abstract Set<String> ProductExpr.evaluate();
-	
-	public Set<String> ProductFeatureSet.evaluate() {
-		List<Feature> features = getFeatures();
-		Set<String> setFeatures = new HashSet<String>();
-        for (Feature f : features)
-        	setFeatures.add(f.getName());
+
+    
+    
+    public void Model.evaluateAllProductDeclarations() {
+
+        /*
+        List<Product> productsToEvaluate = new List...;
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (ProductDecl d : u.getProductDecls()) {    
+                Product prod = new Product(d.getName(), new List<Feature>());
+                productsToEvaluate.add(prod);
+            }
+        }
+        */
         
+        // create TopologicalSorting object using above list
+        // add edges to topo object
+        // topo.sort
+        // sortedList = topo.getAnOrder
+        // for each Product in the sortedList 
+        //     evaluate
+    }
+    
+    public abstract Set<String> ProductExpr.evaluate();
+
+    
+    public Set<String> ProductFeatureSet.evaluate() {
+        List<Feature> features = getFeatures();
+        Set<String> setFeatures = new HashSet<String>();
+        for (Feature f : features)
+            setFeatures.add(f.getName());
+
         return setFeatures;
-	}
-	
-	public Set<String> ProductIntersect.evaluate(){
-		Set<String> left = getLeft().evaluate();
-		Set<String> right = getRight().evaluate();
-		left.retainAll(right);
-		
-		return left;
-	}
-	
-	public Set<String> ProductUnion.evaluate(){
-		Set<String> left = getLeft().evaluate();
-		Set<String> right = getRight().evaluate();
-		left.addAll(right);
-		
-		return left;
-	}
-	
-	public Set<String> ProductName.evaluate() {
-		try{
-			Product p = getModel().findProduct(getName());
+    }
 
-			List<Feature> features = p.getFeatures();
-			Set<String> setFeatures = new HashSet<String>();
-	        for (Feature f : features)
-	        	setFeatures.add(f.getName());
+    public Set<String> ProductIntersect.evaluate(){
+        Set<String> left = getLeft().evaluate();
+        Set<String> right = getRight().evaluate();
+        left.retainAll(right);
 
-	        return setFeatures;
-		}
-		catch(WrongProgramArgumentException e){
-			e.printStackTrace();
-		}
-		
-		return null;
-	}
-	
+        return left;
+    }
+
+    public Set<String> ProductUnion.evaluate(){
+        Set<String> left = getLeft().evaluate();
+        Set<String> right = getRight().evaluate();
+        left.addAll(right);
+
+        return left;
+    }
+
+    public Set<String> ProductName.evaluate() {
+        try{
+            Product p = getModel().findProduct(getName());
+
+            List<Feature> features = p.getFeatures();
+            Set<String> setFeatures = new HashSet<String>();
+            for (Feature f : features)
+                setFeatures.add(f.getName());
+
+            return setFeatures;
+        }
+        catch(WrongProgramArgumentException e){
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+
+
+
+
 }
