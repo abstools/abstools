@@ -86,7 +86,7 @@ handle_event({cog,Cog,die},State=#state{active=A,idle=I,blocked=B,clock_waiting=
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
     B1=gb_sets:del_element(Cog,B),
-    W1=lists:filter(fun ({_, _, _, _, Cog1}) ->  Cog1 =:= Cog end, W),
+    W1=lists:filter(fun ({_, _, _, _, Cog1}) ->  Cog1 =/= Cog end, W),
     S1=State#state{active=A1,idle=I1,blocked=B1,clock_waiting=W1},
     case can_clock_advance(State, S1) of
         true->
@@ -116,7 +116,7 @@ handle_event({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent,ref=O}},
     {ok, State#state{dcs=[DC | DCs]}};
 handle_event({dc_died, O}, State=#state{dcs=DCs}) ->
     ?DEBUG({dc_died, O}),
-    {ok, State#state{dcs=lists:filter(fun (#object{ref=DC}) -> DC =:= O end,
+    {ok, State#state{dcs=lists:filter(fun (#object{ref=DC}) -> DC =/= O end,
                                       DCs)}};
 handle_event(_,State)->
     {ok,State}.
