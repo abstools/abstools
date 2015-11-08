@@ -1,29 +1,83 @@
 aspect ProductDeclaration {
 
     public void Model.evaluateAllProductDeclarations() {
-        /*
-        List<Product> productsToEvaluate = new List...;
+        List<Product> productsToEvaluate = new List<Product>();
         for (CompilationUnit u : getCompilationUnits()) {
-            for (ProductDecl d : u.getProductDecls()) {    
-                Product prod = new Product(d.getName(), new List<Feature>());
+            for (ProductDecl p : u.getProductDecls()) {
+                Product prod = new Product(p.getName(), new List<Feature>(), new List<Reconfiguration>());
                 productsToEvaluate.add(prod);
             }
         }
-         */
 
-        // create TopologicalSorting object using above list
-        // add edges to topo object
-        // topo.sort
-        // sortedList = topo.getAnOrder
-        // for each Product in the sortedList 
-        //     evaluate
+        TopologicalSorting productSorter = new TopologicalSorting<Product>(productsToEvaluate);
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (ProductDecl p : u.getProductDecls()) {
+                if(p instanceof ProductExpr){
+                    ProductExpr productExpr = (ProductExpr) p;
+                    Product high = new Product(productExpr.getName(), new List<Feature>(), new List<Reconfiguration>());
+                    
+                    Set<String> allProductName = HashSet<String>();
+                    productExpr.setAllProductName(allProductName);
+                    for(String productName : allProductName){
+                        Product low = new Product(productName, new List<Feature>(), new List<Reconfiguration>());                        
+                        productSorter.addEdge(high, low);
+                    }                    
+                }
+            }
+        }        
+        productSorter.sort();
+        List<Product> sortedList = productSorter.getAnOrder();
+        
+        List<Product> evaluatedProduct = new List<Product>();
+        for (Product p : sortedList){
+            String name = p.getName();
+            
+            for (CompilationUnit u : getCompilationUnits()) {
+                for (ProductDecl p : u.getProductDecls()) {
+                    if(p.getName().equals(name)){
+                       if(p instanceof Product){
+                           evaluatedProduct.add(p);
+                       }
+                       else if(p instanceof ProductExpr){
+                           Set<String> features = ((ProductExpr) p).evaluate();
+
+                           Product product = new Product(p.getName(), new List<Feature>(), new List<Reconfiguration>());
+                           for(String featureName : features){
+                               product.addFeature(new Feature(featureName, new List<AttrAssignment>()));
+                           }
+                           evaluatedProduct.add(product);
+                       }
+                    }
+                }
+            }
+        }
     }
 
+    public abstract void ProductExpr.setAllProductName(Set<String> allProductName);
+    
+    public void ProductFeatureSet.setAllProductName(Set<String> allProductName){
+        return;
+    }
+    
+    public void ProductIntersect.setAllProductName(Set<String> allProductName){
+        allProductName.add(getLeft().getName());
+        allProductName.add(getRight().getName());
+    }
+    
+    public void ProductUnion.setAllProductName(Set<String> allProductName){
+        allProductName.add(getLeft().getName());
+        allProductName.add(getRight().getName());
+    }
+    
+    public void ProductName.setAllProductName(Set<String> allProductName){
+        allProductName.add(getName());
+    }    
+    
     public abstract Set<String> ProductExpr.evaluate();
 
     public Set<String> ProductFeatureSet.evaluate() {
         List<Feature> features = getFeatures();
-        
+
         Set<String> setFeatures = new HashSet<String>();
         for (Feature f : features)
             setFeatures.add(f.getName());
@@ -52,7 +106,7 @@ aspect ProductDeclaration {
             Product p = getModel().findProduct(getName());
 
             List<Feature> features = p.getFeatures();
-            
+
             Set<String> setFeatures = new HashSet<String>();
             for (Feature f : features)
                 setFeatures.add(f.getName());
@@ -65,5 +119,5 @@ aspect ProductDeclaration {
 
         return null;
     }
-    
+
 }
