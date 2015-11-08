@@ -924,8 +924,7 @@ aspect TypeCheckProductline {
             d.typeCheck(e);
         }
         for (ProductDecl p : getProductDecls()) {
-            if(p instanceof Product)
-                ((Product) p).typeCheck(e);
+            p.typeCheck(e);
         }
         if (hasProductLine())
             getProductLine().typeCheck(e);

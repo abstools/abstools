@@ -1,7 +1,7 @@
 aspect ProductDeclaration {
 
     public void Model.evaluateAllProductDeclarations() {
-        List<Product> productsToEvaluate = new List<Product>();
+        Set<Product> productsToEvaluate = new HashSet<Product>();
         for (CompilationUnit u : getCompilationUnits()) {
             for (ProductDecl p : u.getProductDecls()) {
                 Product prod = new Product(p.getName(), new List<Feature>(), new List<Reconfiguration>());
@@ -12,41 +12,39 @@ aspect ProductDeclaration {
         TopologicalSorting productSorter = new TopologicalSorting<Product>(productsToEvaluate);
         for (CompilationUnit u : getCompilationUnits()) {
             for (ProductDecl p : u.getProductDecls()) {
-                if(p instanceof ProductExpr){
-                    ProductExpr productExpr = (ProductExpr) p;
-                    Product high = new Product(productExpr.getName(), new List<Feature>(), new List<Reconfiguration>());
-                    
-                    Set<String> allProductName = HashSet<String>();
-                    productExpr.setAllProductName(allProductName);
-                    for(String productName : allProductName){
-                        Product low = new Product(productName, new List<Feature>(), new List<Reconfiguration>());                        
-                        productSorter.addEdge(high, low);
-                    }                    
-                }
+                ProductExpr productExpr = p.getProductExpr();
+                Product high = new Product(p.getName(), new List<Feature>(), new List<Reconfiguration>());
+
+                Set<String> allProductName = new HashSet<String>();
+                productExpr.setAllProductName(allProductName);
+                for(String productName : allProductName){
+                    Product low = new Product(productName, new List<Feature>(), new List<Reconfiguration>());                        
+                    productSorter.addEdge(high, low);
+                }                    
             }
         }        
         productSorter.sort();
-        List<Product> sortedList = productSorter.getAnOrder();
+        java.util.List<Product> sortedList = productSorter.getAnOrder();
         
-        List<Product> evaluatedProduct = new List<Product>();
-        for (Product p : sortedList){
+        java.util.List<Product> evaluatedProduct = new ArrayList<Product>();
+        for (Product p : sortedList) {
             String name = p.getName();
             
             for (CompilationUnit u : getCompilationUnits()) {
                 for (ProductDecl p : u.getProductDecls()) {
-                    if(p.getName().equals(name)){
-                       if(p instanceof Product){
-                           evaluatedProduct.add(p);
-                       }
-                       else if(p instanceof ProductExpr){
-                           Set<String> features = ((ProductExpr) p).evaluate();
+                    if(p.getName().equals(name)) {
+                        if(p instanceof Product) {
+                            evaluatedProduct.add(p);
+                        }
+                        else if(p instanceof ProductExpr){
+                            Set<String> features = ((ProductExpr) p).evaluate();
 
-                           Product product = new Product(p.getName(), new List<Feature>(), new List<Reconfiguration>());
-                           for(String featureName : features){
-                               product.addFeature(new Feature(featureName, new List<AttrAssignment>()));
-                           }
-                           evaluatedProduct.add(product);
-                       }
+                            Product product = new Product(p.getName(), new List<Feature>());
+                            for(String featureName : features){
+                                product.addFeature(new Feature(featureName, new List<AttrAssignment>()));
+                            }
+                            evaluatedProduct.add(product);
+                        }
                     }
                 }
             }

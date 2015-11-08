@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014, Rudolf Schlatte. All rights reserved. 
+ * Copyright (c) 2014, Rudolf Schlatte. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.antlr.parser;
@@ -325,7 +325,7 @@ new List<ModuleDecl>(),
         if (ctx.l == null) setV(ctx, new Annotation((PureExp)v(ctx.r)));
         else setV(ctx, new TypedAnnotation((PureExp)v(ctx.r), (Access)v(ctx.l)));
     }
-    
+
     // Expressions
     @Override public void exitPureExp(ABSParser.PureExpContext ctx) {
         setV(ctx, v(ctx.pure_exp()));
@@ -380,12 +380,12 @@ new List<ModuleDecl>(),
         DataConstructorExp current = arglist;
         /* DO NOT use the iterator here -- it interferes with rewriting [stolz] */
         if (l.getNumChildNoTransform() > 0) {
-            PureExp last = (PureExp)l.getChildNoTransform(l.getNumChildNoTransform()-1);
+            PureExp last = l.getChildNoTransform(l.getNumChildNoTransform()-1);
             for (int i = 0; i < l.getNumChildNoTransform(); i++) {
-                PureExp e = (PureExp) l.getChildNoTransform(i);
+                PureExp e = l.getChildNoTransform(i);
                 DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
                 next.setPosition(e.getStartPos(), last.getEndPos());
-                current.addParamNoTransform(e);            
+                current.addParamNoTransform(e);
                 current.addParamNoTransform(next);
                 current = next;
             }
@@ -471,7 +471,7 @@ new List<ModuleDecl>(),
         setV(ctx, new OrBoolExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
     }
     @Override public void exitVarOrFieldExp(ABSParser.VarOrFieldExpContext ctx) {
-        setV(ctx, (VarOrFieldUse)v(ctx.var_or_field_ref()));
+        setV(ctx, v(ctx.var_or_field_ref()));
     }
     @Override public void exitIntExp(ABSParser.IntExpContext ctx) {
         setV(ctx, new IntLiteral(ctx.INTLITERAL().getText()));
@@ -505,14 +505,14 @@ new List<ModuleDecl>(),
                              (PureExp)v(ctx.b)));
     }
     @Override public void exitParenExp(ABSParser.ParenExpContext ctx) {
-        setV(ctx, (PureExp)v(ctx.pure_exp()));
+        setV(ctx, v(ctx.pure_exp()));
     }
 
     @Override public void exitCasebranch(ABSParser.CasebranchContext ctx) {
         setV(ctx, new CaseBranch((Pattern)v(ctx.pattern()),
                                      (PureExp)v(ctx.pure_exp())));
     }
-    
+
     @Override public void exitUnderscorePattern(ABSParser.UnderscorePatternContext ctx) {
         setV(ctx, new UnderscorePattern());
     }
@@ -553,7 +553,7 @@ new List<ModuleDecl>(),
         /* As we could be looking at an interface type, first keep symbol
          * unresolved and have rewrite-rules patch it up.
          * However, this means that in the parser the DataConstructor could
-         * be seeing. But there we know what it must be and "rewrite" it ourselves. 
+         * be seeing. But there we know what it must be and "rewrite" it ourselves.
          */
         if (ctx.p.isEmpty()) {
             // normal type use
@@ -646,7 +646,7 @@ new List<ModuleDecl>(),
     @Override public void exitDeltaAddDataTypeModifier(ABSParser.DeltaAddDataTypeModifierContext ctx) {
         setV(ctx, new AddDataTypeModifier((DataTypeDecl)v(ctx.datatype_decl())));
     }
-    
+
     @Override public void exitDeltaAddTypeSynModifier(ABSParser.DeltaAddTypeSynModifierContext ctx) {
         setV(ctx, new AddTypeSynModifier((TypeSynDecl)v(ctx.typesyn_decl())));
     }
@@ -679,7 +679,7 @@ new List<ModuleDecl>(),
     @Override public void exitDeltaRemoveInterfaceModifier(ABSParser.DeltaRemoveInterfaceModifierContext ctx) {
         setV(ctx, new RemoveInterfaceModifier(ctx.qualified_type_identifier().getText()));
     }
-    
+
     @Override public void exitDeltaModifyInterfaceModifier(ABSParser.DeltaModifyInterfaceModifierContext ctx) {
         setV(ctx, new ModifyInterfaceModifier(ctx.qualified_type_identifier().getText(),
                                               l(ctx.interface_modifier_fragment())));
@@ -700,7 +700,7 @@ new List<ModuleDecl>(),
     @Override public void exitDeltaRemoveMethodFragment(ABSParser.DeltaRemoveMethodFragmentContext ctx) {
         setV(ctx, new RemoveMethodModifier((MethodSig)v(ctx.methodsig())));
     }
-    
+
     @Override public void exitDeltaAddMethodsigFragment(ABSParser.DeltaAddMethodsigFragmentContext ctx) {
         setV(ctx, new AddMethodSigModifier((MethodSig)v(ctx.methodsig())));
     }
@@ -719,14 +719,14 @@ new List<ModuleDecl>(),
     @Override public void exitUpdateDecl(ABSParser.UpdateDeclContext ctx) {
         setV(ctx, new UpdateDecl(ctx.TYPE_IDENTIFIER().getText(), l(ctx.object_update())));
     }
-    
+
     @Override public void exitObjectUpdateDecl(ABSParser.ObjectUpdateDeclContext ctx) {
         setV(ctx, new ObjectUpdate(ctx.qualified_type_identifier().getText(),
                                    new AwaitStmt(new List(), (Guard)v(ctx.guard())),
                                    new UpdatePreamble(l(ctx.update_preamble_decl())),
                                    l(ctx.pre), l(ctx.post)));
     }
-    
+
     @Override public void exitObjectUpdateAssignStmt(ABSParser.ObjectUpdateAssignStmtContext ctx) {
         setV(ctx, new AssignStmt(new List(), (VarOrFieldUse)v(ctx.var_or_field_ref()), (Exp)v(ctx.exp())));
     }
@@ -790,11 +790,11 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitFrom_condition(ABSParser.From_conditionContext ctx) {
-        setV(ctx, (AppCond)v(ctx.application_condition()));
+        setV(ctx, v(ctx.application_condition()));
     }
 
     @Override public void exitWhen_condition(ABSParser.When_conditionContext ctx) {
-        setV(ctx, (AppCond)v(ctx.application_condition()));
+        setV(ctx, v(ctx.application_condition()));
     }
 
     @Override public void exitNotApplicationCondition(ABSParser.NotApplicationConditionContext ctx) {
@@ -810,7 +810,7 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitParenApplicationCondition(ABSParser.ParenApplicationConditionContext ctx) {
-        setV(ctx, (AppCond)v(ctx.application_condition()));
+        setV(ctx, v(ctx.application_condition()));
     }
 
     @Override public void exitFeatureApplicationCondition(ABSParser.FeatureApplicationConditionContext ctx) {
@@ -819,13 +819,12 @@ new List<ModuleDecl>(),
 
     // Products
     @Override public void exitProduct_decl(ABSParser.Product_declContext ctx) {
-        if(ctx.product_expr() == null){
-            setV(ctx, new Product(ctx.TYPE_IDENTIFIER().getText(),
-                                  l(ctx.feature()), l(ctx.product_reconfiguration())));
-        }
-        else if(ctx.product_expr() != null){
-            // To do : how to set product name with current AST
-            setV(ctx, (ProductExpr)v(ctx.product_expr()));
+        if(ctx.product_expr() == null) {
+            // old syntax: a product is declared as a set of features
+            setV(ctx, new ProductDecl(ctx.TYPE_IDENTIFIER().getText(), new ProductFeatureSet(l(ctx.feature()))));
+        } else {
+            // new syntax: using product expressions
+            setV(ctx, new ProductDecl(ctx.TYPE_IDENTIFIER().getText(), (ProductExpr)v(ctx.product_expr())));
         }
     }
 
@@ -833,24 +832,24 @@ new List<ModuleDecl>(),
         setV(ctx, new Reconfiguration(ctx.product.getText(),
                                       l(ctx.delta_id()), ctx.update.getText()));
     }
-    
+
     // Product Expression
     @Override public void exitProductFeatureSet(ABSParser.ProductFeatureSetContext ctx) {
         setV(ctx, new ProductFeatureSet(l(ctx.feature())));
     }
-    
+
     @Override public void exitProductIntersect(ABSParser.ProductIntersectContext ctx) {
         setV(ctx, new ProductIntersect((ProductExpr)v(ctx.l), (ProductExpr)v(ctx.r)));
     }
-    
+
     @Override public void exitProductUnion(ABSParser.ProductUnionContext ctx) {
         setV(ctx, new ProductUnion((ProductExpr)v(ctx.l), (ProductExpr)v(ctx.r)));
     }
-    
+
     @Override public void exitProductName(ABSParser.ProductNameContext ctx) {
         setV(ctx, new ProductName(ctx.TYPE_IDENTIFIER().getText()));
     }
-    
+
     //  mTVL
 	@Override public void exitFextension(ABSParser.FextensionContext ctx) {
         setV(ctx, new FExt(ctx.TYPE_IDENTIFIER().getText(),
@@ -994,13 +993,13 @@ new List<ModuleDecl>(),
 
 	@Override public void exitBoundary_int(ABSParser.Boundary_intContext ctx) {
         if (ctx.star != null) setV(ctx, new Limit());
-        else setV(ctx, (BoundaryVal)v(ctx.boundary_val()));
+        else setV(ctx, v(ctx.boundary_val()));
     }
 	@Override public void exitBoundary_val(ABSParser.Boundary_valContext ctx) {
         setV(ctx, new BoundaryVal((ctx.m == null
                                    ? +1 : -1)
                                   * Integer.parseInt(ctx.INTLITERAL().getText())));
     }
-    
+
 }
 
