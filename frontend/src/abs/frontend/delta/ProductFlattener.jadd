@@ -84,16 +84,16 @@ aspect ProductFlattener {
             this.applyDelta(delta);
             for (CompilationUnit unit: this.getCompilationUnits())
                 for (ModuleDecl module: unit.getModuleDecls())
-                        module.flushCache();
+                    module.flushCache();
         }
     }
 
     /**************************************************************************
-    * apply each FunctionalModifier and ModuleModifier
-    * to its corresponding class or interface
-    *
-    * These "apply" methods are defined in "DeltaModifierApplicator.jadd"
-    */
+     * apply each FunctionalModifier and ModuleModifier
+     * to its corresponding class or interface
+     *
+     * These "apply" methods are defined in "DeltaModifierApplicator.jadd"
+     */
     public void Model.applyDelta(DeltaDecl delta) throws DeltaModellingException {
         for (ModuleModifier mod : delta.getModuleModifiers()) {
             //System.out.println("*** applying ModuleModifier " + mod);
@@ -191,16 +191,16 @@ aspect ProductFlattener {
     public abstract boolean AppCond.evaluate(Set<String> features);
 
     public boolean AppCondAnd.evaluate(Set<String> features) {
-    	return getLeft().evaluate(features) && getRight().evaluate(features);
+        return getLeft().evaluate(features) && getRight().evaluate(features);
     }
     public boolean AppCondOr.evaluate(Set<String> features) {
-    	return getLeft().evaluate(features) || getRight().evaluate(features);
+        return getLeft().evaluate(features) || getRight().evaluate(features);
     }
     public boolean AppCondNot.evaluate(Set<String> features) {
-    	return !getAppCond().evaluate(features);
+        return !getAppCond().evaluate(features);
     }
     public boolean AppCondFeature.evaluate(Set<String> features) {
-    	return (features.contains(getName()));
+        return (features.contains(getName()));
     }
 
 
@@ -209,9 +209,9 @@ aspect ProductFlattener {
      * (according to a valid order of application defined by the product line)
      */
     public java.util.List<String> ProductLine.sortDeltas(Set<String> applicableDeltaIDs) {
-	    LinkedList<String> list = new LinkedList<String>(getValidOrderOfAllDeltas());
-	    list.retainAll(applicableDeltaIDs);
-	    return list;
+        LinkedList<String> list = new LinkedList<String>(getValidOrderOfAllDeltas());
+        list.retainAll(applicableDeltaIDs);
+        return list;
     }
 
     /**************************************************************************
@@ -231,7 +231,7 @@ aspect ProductFlattener {
         sortDeltas();
         return deltaSorter.getPartition();
     }
-    
+
     /**************************************************************************
      * The sorter object that computes a valid delta order
      * It is instantiated by sortDeltas().

@@ -374,12 +374,12 @@ attr_assignment : IDENTIFIER '=' (i=INTLITERAL | b=TYPE_IDENTIFIER | s=STRINGLIT
 
 // Products
 product_decl : 'product' TYPE_IDENTIFIER
-        (
-	        '(' (feature (',' feature)*)? ')'
-	        ('{' product_reconfiguration* '}' | ';')
-	    |
-	    	'=' product_expr ';'
-        )        
+    (
+      '(' (feature (',' feature)*)? ')'
+      ('{' product_reconfiguration* '}' | ';')
+    |
+      '=' product_expr ';'
+    )        
     ;
 
 product_reconfiguration : product=TYPE_IDENTIFIER
@@ -389,11 +389,11 @@ product_reconfiguration : product=TYPE_IDENTIFIER
     
 // Product Expression
 product_expr
-	: '{' feature (',' feature)* '}'						# ProductFeatureSet
-	| l=product_expr ANDAND r=product_expr					# ProductIntersect
-	| l=product_expr OROR r=product_expr					# ProductUnion
-	| TYPE_IDENTIFIER										# ProductName
-	;
+    : '{' feature (',' feature)* '}'                          # ProductFeatureSet
+    | l=product_expr ANDAND r=product_expr                    # ProductIntersect
+    | l=product_expr OROR r=product_expr                      # ProductUnion
+    | TYPE_IDENTIFIER                                         # ProductName
+    ;
 
 // mTVL Feature model
 fextension : TYPE_IDENTIFIER '{'
