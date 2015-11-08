@@ -1,9 +1,6 @@
 aspect ProductDeclaration {
 
-    
-    
     public void Model.evaluateAllProductDeclarations() {
-
         /*
         List<Product> productsToEvaluate = new List...;
         for (CompilationUnit u : getCompilationUnits()) {
@@ -12,8 +9,8 @@ aspect ProductDeclaration {
                 productsToEvaluate.add(prod);
             }
         }
-        */
-        
+         */
+
         // create TopologicalSorting object using above list
         // add edges to topo object
         // topo.sort
@@ -21,12 +18,12 @@ aspect ProductDeclaration {
         // for each Product in the sortedList 
         //     evaluate
     }
-    
+
     public abstract Set<String> ProductExpr.evaluate();
 
-    
     public Set<String> ProductFeatureSet.evaluate() {
         List<Feature> features = getFeatures();
+        
         Set<String> setFeatures = new HashSet<String>();
         for (Feature f : features)
             setFeatures.add(f.getName());
@@ -55,6 +52,7 @@ aspect ProductDeclaration {
             Product p = getModel().findProduct(getName());
 
             List<Feature> features = p.getFeatures();
+            
             Set<String> setFeatures = new HashSet<String>();
             for (Feature f : features)
                 setFeatures.add(f.getName());
@@ -67,9 +65,5 @@ aspect ProductDeclaration {
 
         return null;
     }
-
-
-
-
-
+    
 }
