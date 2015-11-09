@@ -12,13 +12,12 @@ aspect ProductDeclaration {
         TopologicalSorting productSorter = new TopologicalSorting<Product>(productsToEvaluate);
         for (CompilationUnit u : getCompilationUnits()) {
             for (ProductDecl p : u.getProductDecls()) {
-                ProductExpr productExpr = p.getProductExpr();
-                Product high = new Product(p.getName(), new List<Feature>(), new List<Reconfiguration>());
+                Product low = new Product(p.getName(), new List<Feature>(), new List<Reconfiguration>());
 
                 Set<String> allProductName = new HashSet<String>();
-                productExpr.setAllProductName(allProductName);
+                p.getProductExpr().setAllProductName(allProductName);
                 for(String productName : allProductName){
-                    Product low = new Product(productName, new List<Feature>(), new List<Reconfiguration>());                        
+                    Product high = new Product(productName, new List<Feature>(), new List<Reconfiguration>());                        
                     productSorter.addEdge(high, low);
                 }                    
             }
@@ -27,24 +26,17 @@ aspect ProductDeclaration {
         java.util.List<Product> sortedList = productSorter.getAnOrder();
         
         java.util.List<Product> evaluatedProduct = new ArrayList<Product>();
-        for (Product p : sortedList) {
-            String name = p.getName();
-            
+        for (Product prod : sortedList) {            
             for (CompilationUnit u : getCompilationUnits()) {
                 for (ProductDecl p : u.getProductDecls()) {
-                    if(p.getName().equals(name)) {
-                        if(p instanceof Product) {
-                            evaluatedProduct.add(p);
-                        }
-                        else if(p instanceof ProductExpr){
-                            Set<String> features = ((ProductExpr) p).evaluate();
+                    if(prod.getName().equals(p.getName())) {
+                        Set<String> features = p.getProductExpr().evaluate();
 
-                            Product product = new Product(p.getName(), new List<Feature>());
-                            for(String featureName : features){
-                                product.addFeature(new Feature(featureName, new List<AttrAssignment>()));
-                            }
-                            evaluatedProduct.add(product);
+                        Product product = new Product(p.getName(), new List<Feature>(), new List<Reconfiguration>());
+                        for(String featureName : features){
+                            product.addFeature(new Feature(featureName, new List<AttrAssignment>()));
                         }
+                        evaluatedProduct.add(product);
                     }
                 }
             }
@@ -58,13 +50,13 @@ aspect ProductDeclaration {
     }
     
     public void ProductIntersect.setAllProductName(Set<String> allProductName){
-        allProductName.add(getLeft().getName());
-        allProductName.add(getRight().getName());
+        getLeft().setAllProductName(allProductName);
+        getRight().setAllProductName(allProductName);
     }
     
     public void ProductUnion.setAllProductName(Set<String> allProductName){
-        allProductName.add(getLeft().getName());
-        allProductName.add(getRight().getName());
+        getLeft().setAllProductName(allProductName);
+        getRight().setAllProductName(allProductName);
     }
     
     public void ProductName.setAllProductName(Set<String> allProductName){
