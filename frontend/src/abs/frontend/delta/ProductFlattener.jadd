@@ -13,7 +13,7 @@ aspect ProductFlattener {
      * - apply deltas in sequence.
      */
     public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,DeltaModellingException {
-        Product prod = this.findProduct(id);
+        ProductDecl prod = this.findProduct(id);
         flattenForProduct(prod);
     }
     /**************************************************************************
@@ -21,21 +21,21 @@ aspect ProductFlattener {
      * i.e. apply each ModuleModifier to its corresponding class or interface
      */
     public void Model.flattenForProductUnsafe(String id) throws WrongProgramArgumentException,DeltaModellingException {
-        Product prod = this.findProduct(id);
+        ProductDecl prod = this.findProduct(id);
         flattenForProduct(prod, false);
     }
-    public void Model.flattenForProduct(Product prod) throws WrongProgramArgumentException,DeltaModellingException {
+    public void Model.flattenForProduct(ProductDecl prod) throws WrongProgramArgumentException,DeltaModellingException {
         flattenForProduct(prod, true);
     }
     public void Model.flattenForProduct(String id, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
-        Product prod = this.findProduct(id);
+        ProductDecl prod = this.findProduct(id);
         flattenForProduct(prod, check);
     }
 
     /**
      * Refined with MTVL-check in CSP.jadd.
      */
-    public void Model.flattenForProduct(Product prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
+    public void Model.flattenForProduct(ProductDecl prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
         if (verbose)
             System.out.println("--- configuring product: " + prod.getName());
 
@@ -45,7 +45,7 @@ aspect ProductFlattener {
             throw new DeltaModellingException("Model is missing a 'productline' definition");
 
         // find/sort applicable delta IDs
-        Set<String> deltaids = pl.findApplicableDeltas(prod);
+        Set<String> deltaids = pl.findApplicableDeltas(prod.getImplicitProduct());
         java.util.List<String> sorted_deltaids = pl.sortDeltas(deltaids);
 
         // find corresponding DeltaDecls
@@ -54,7 +54,7 @@ aspect ProductFlattener {
             deltas.add(getDeltaDeclsMap().get(deltaid));
 
         // substitute delta parameters
-        pl.substituteDeltaParams(deltas, prod);
+        pl.substituteDeltaParams(deltas, prod.getImplicitProduct());
 
         // resolve original() calls
         resolveOriginalCalls(deltas);
@@ -104,7 +104,7 @@ aspect ProductFlattener {
     /**************************************************************************
      * find a particular product given by its name
      */
-    public Product Model.findProduct(String id) throws WrongProgramArgumentException {
+    public ProductDecl Model.findProduct(String id) throws WrongProgramArgumentException {
         // TODO/FIXME
         for (CompilationUnit u : this.getCompilationUnits()) {
             for (ProductDecl p : u.getProductDecls()) {

@@ -4,7 +4,7 @@ aspect Model {
     eq DeltaDecl.getModuleModifier().getModel() = this.getModel();
 
     inh Model ProductLine.getModel();
-    inh Model Product.getModel();
+    inh Model ProductDecl.getModel();
     inh Model ProductName.getModel();
     //    eq Model.getImplicitProduct().getModel() = this;
 

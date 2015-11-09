@@ -43,6 +43,15 @@ aspect ProductDeclaration {
         }
     }
 
+    /* 
+     * Return the corresponding ImplicitProduct obtained through evaluating the product expression
+     */
+    syn lazy ImplicitProduct ProductDecl.getImplicitProduct() {
+        
+        // TODO: implement
+        return new ImplicitProduct();
+    }
+    
     public abstract void ProductExpr.setAllProductName(Set<String> allProductName);
     
     public void ProductFeatureSet.setAllProductName(Set<String> allProductName){
@@ -93,9 +102,9 @@ aspect ProductDeclaration {
 
     public Set<String> ProductName.evaluate() {
         try{
-            Product p = getModel().findProduct(getName());
+            ProductDecl p = getModel().findProduct(getName());
 
-            List<Feature> features = p.getFeatures();
+            List<Feature> features = p.getImplicitProduct().getFeatures();
 
             Set<String> setFeatures = new HashSet<String>();
             for (Feature f : features)

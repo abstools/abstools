@@ -1010,7 +1010,7 @@ aspect TypeCheckProductline {
     }
 
     
-    protected void Product.typeCheck(SemanticErrorList e) {
+    protected void ProductDecl.typeCheck(SemanticErrorList e) {
         Map<String,Feature> featureNames = null;
         Model m = getModel();
         if (m.hasProductLine()) {
