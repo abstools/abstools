@@ -472,8 +472,8 @@ public class TypeCheckerHelper {
         Set<String> seen = new HashSet<String>();
         for (CompilationUnit u : compilationUnits) {
             for (ProductDecl p : u.getProductDecls()) {
-                if (p instanceof Product && !seen.add(((Product) p).getName()))
-                    errors.add(new TypeError(p, ErrorMessage.DUPLICATE_PRODUCT, ((Product) p).getName()));
+                if (!seen.add(p.getName()))
+                    errors.add(new TypeError(p, ErrorMessage.DUPLICATE_PRODUCT, p.getName()));
             }
         }
     }

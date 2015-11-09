@@ -131,7 +131,9 @@ aspect TypeResolution {
     syn lazy Collection<Product> Model.getProducts() {
         ArrayList<Product> res = new ArrayList<Product>();
         for (CompilationUnit u : getCompilationUnits()) {
-            for (ProductDecl p : u.getProductDecls()) {  	
+            for (ProductDecl p : u.getProductDecls()) {
+                // TODO/FIXME                
+                /*
                 if(p instanceof Product)
                     res.add((Product) p);
                 else if(p instanceof ProductExpr){
@@ -144,7 +146,8 @@ aspect TypeResolution {
                     res.add(product);
 
                     System.out.println(product.getName() + ". " + product.getFeatures().toString());
-                }
+                }                
+                */
             }
         }
         return res;
