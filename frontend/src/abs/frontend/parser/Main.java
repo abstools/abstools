@@ -352,12 +352,12 @@ public class Main {
             // Adjust product_name() function
             productNameFun.setFunctionDef(new ExpFunctionDef(new StringLiteral(productname)));
             // Adjust product_features() function
-            Product p = null;
+            ProductDecl p = null;
             if (productname != null) p = m.findProduct(productname);
             if (p != null) {
                 DataConstructorExp feature_arglist = new DataConstructorExp("Cons", new List<PureExp>());
                 DataConstructorExp current = feature_arglist;
-                for (Feature f : p.getFeatures()) {
+                for (Feature f : p.getImplicitProduct().getFeatures()) {
                     DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
                     // TODO: when/if we incorporate feature parameters into
                     // the productline feature declarations (as we should), we
@@ -404,7 +404,7 @@ public class Main {
      * However, the command-line argument handling will have to stay in Main. Pity.
      */
     private void analyzeMTVL(Model m) {
-        Product p_product = null;
+        ProductDecl p_product = null;
         try {
             p_product = product == null ? null : m.findProduct(product);
         } catch (WrongProgramArgumentException e) {
@@ -451,15 +451,15 @@ public class Main {
             if (solveWith) {
                 assert product != null;
                 if (verbose)
-                    System.out.println("Searching for solution that includes "+product+"...");
+                    System.out.println("Searching for solution that includes " + product + "...");
                 if (p_product != null) {
                     ChocoSolver s = m.instantiateCSModel();
                     HashSet<Constraint> newcs = new HashSet<Constraint>();
-                    p_product.getProdConstraints(s.vars,newcs);
+                    p_product.getImplicitProduct().getProdConstraints(s.vars, newcs);
                     for (Constraint c: newcs) s.addConstraint(c);
                     System.out.println("checking solution: "+s.resultToString());
                 } else {
-                    System.out.println("Product '"+product+"' not found.");
+                    System.out.println("Product '" + product + "' not found.");
                     if (!product.contains("."))
                         System.out.println("Maybe you forgot the module name?");
                 }
@@ -467,16 +467,16 @@ public class Main {
             if (minWith) {
                 assert product != null;
                 if (verbose)
-                    System.out.println("Searching for solution that includes "+product+"...");
+                    System.out.println("Searching for solution that includes " + product + "...");
                 ChocoSolver s = m.instantiateCSModel();
                 HashSet<Constraint> newcs = new HashSet<Constraint>();
                 s.addIntVar("difference", 0, 50);
                 if (p_product != null) {
-                    m.getDiffConstraints(p_product,s.vars,newcs, "difference");
+                    m.getDiffConstraints(p_product.getImplicitProduct(), s.vars, newcs, "difference");
                     for (Constraint c: newcs) s.addConstraint(c);
-                    System.out.println("checking solution: "+s.minimiseToString("difference"));
+                    System.out.println("checking solution: " + s.minimiseToString("difference"));
                 } else {
-                    System.out.println("Product '"+product+"' not found.");
+                    System.out.println("Product '" + product + "' not found.");
                     if (!product.contains("."))
                         System.out.println("Maybe you forgot the module name?");
                 }
@@ -506,7 +506,7 @@ public class Main {
                     if (!product.contains("."))
                         System.out.println("Maybe you forgot the module name?");
                 } else {
-                    Map<String,Integer> guess = p_product.getSolution();
+                    Map<String,Integer> guess = p_product.getImplicitProduct().getSolution();
                     System.out.println("checking solution: "+s.checkSolution(guess,m));
                 }
             }

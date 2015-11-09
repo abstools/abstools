@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
-import abs.frontend.ast.Product;
+import abs.frontend.ast.ProductDecl;
 import abs.frontend.ast.ProductLine;
 
 public class DeltaOrderingTest extends DeltaTest {
@@ -68,14 +68,14 @@ public class DeltaOrderingTest extends DeltaTest {
                         + "product P2(A, B);"
                 );
 
-        Product prod = model.findProduct("P1");
+        ProductDecl prod = model.findProduct("P1");
         ProductLine pl = model.getProductLine();
-        Set<String> deltaids = pl.findApplicableDeltas(prod);
+        Set<String> deltaids = pl.findApplicableDeltas(prod.getImplicitProduct());
         List<String> sorted_deltaids = pl.sortDeltas(deltaids);
         assertArrayEquals(new String[]{ "D1" }, sorted_deltaids.toArray());
 
         prod = model.findProduct("P2");
-        deltaids = pl.findApplicableDeltas(prod);
+        deltaids = pl.findApplicableDeltas(prod.getImplicitProduct());
         sorted_deltaids = pl.sortDeltas(deltaids);
         assertArrayEquals(new String[]{ "D1", "D2" }, sorted_deltaids.toArray());
     }
@@ -108,14 +108,14 @@ public class DeltaOrderingTest extends DeltaTest {
                         + "product P2(A,C,E,G,I);"
                 );
 
-        Product prod = model.findProduct("P1");
+        ProductDecl prod = model.findProduct("P1");
         ProductLine pl = model.getProductLine();
-        Set<String> deltaids = pl.findApplicableDeltas(prod);
+        Set<String> deltaids = pl.findApplicableDeltas(prod.getImplicitProduct());
         List<String> sorted_deltaids = pl.sortDeltas(deltaids);
         assertArrayEquals(new String[]{"D9", "D8", "D7", "D6", "D5", "D4", "D3", "D2", "D1" }, sorted_deltaids.toArray());
 
         prod = model.findProduct("P2");
-        deltaids = pl.findApplicableDeltas(prod);
+        deltaids = pl.findApplicableDeltas(prod.getImplicitProduct());
         sorted_deltaids = pl.sortDeltas(deltaids);
         assertArrayEquals(new String[]{ "D9", "D7", "D5", "D3", "D1" }, sorted_deltaids.toArray());
 

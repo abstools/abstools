@@ -59,7 +59,7 @@ aspect DeltaParameterSubstitution {
      */
     public void ProductLine.substituteDeltaParams(
             java.util.List<DeltaDecl> deltas, 
-            Product prod) throws DeltaModellingException {
+            ImplicitProduct prod) throws DeltaModellingException {
 
         for (DeltaDecl delta : deltas) {
           try {
@@ -83,7 +83,7 @@ aspect DeltaParameterSubstitution {
     /* Check whether delta clause is applicable for given product
      * 
      */
-    public boolean DeltaClause.isApplicable(Product prod) {
+    public boolean DeltaClause.isApplicable(ImplicitProduct prod) {
         return evaluateApplicationCondition(prod.getFeatures());
     }
 

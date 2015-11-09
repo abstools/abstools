@@ -177,7 +177,7 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckProduct(Product prod,
+    public static void typeCheckProduct(ProductDecl prod,
             Map<String,Feature> featureNames,
             Set<String> prodNames,
             Map<String,DeltaDecl> deltaNames,
@@ -186,7 +186,7 @@ public class TypeCheckerHelper {
         if (featureNames != null) {
             // Do the features exist in the PL declaration (and also check feature attributes)?
             Model m = prod.getModel();
-            for (Feature f : prod.getFeatures()) {
+            for (Feature f : prod.getImplicitProduct().getFeatures()) {
                 if (!featureNames.containsKey(f.getName()))
                     e.add(new TypeError(prod, ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
                 else {
@@ -213,22 +213,23 @@ public class TypeCheckerHelper {
             }
         }
         Set<String> seen = new HashSet<String>();
-        for (Reconfiguration recf : prod.getReconfigurations()) {
-            if (!seen.add(recf.getTargetProductID()))
-                e.add(new TypeError(recf, ErrorMessage.DUPLICATE_RECONFIGURATION, recf.getTargetProductID()));
-
-            // Does the reconfiguration target product exist?
-            if (! prodNames.contains(recf.getTargetProductID()))
-                e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, recf.getTargetProductID()));
-            // Do the deltas used for reconfiguration exist?
-            for (DeltaID d : recf.getDeltaIDs()) {
-                if (! deltaNames.containsKey(d.getName()))
-                    e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, d.getName()));
-            }
-            // Does the update used for reconfiguration exist?
-            if (! updateNames.contains(recf.getUpdateID()))
-                e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, recf.getUpdateID()));
-        }
+        // FIXME: deal with reconfigurations
+//        for (Reconfiguration recf : prod.getReconfigurations()) {
+//            if (!seen.add(recf.getTargetProductID()))
+//                e.add(new TypeError(recf, ErrorMessage.DUPLICATE_RECONFIGURATION, recf.getTargetProductID()));
+//
+//            // Does the reconfiguration target product exist?
+//            if (! prodNames.contains(recf.getTargetProductID()))
+//                e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, recf.getTargetProductID()));
+//            // Do the deltas used for reconfiguration exist?
+//            for (DeltaID d : recf.getDeltaIDs()) {
+//                if (! deltaNames.containsKey(d.getName()))
+//                    e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, d.getName()));
+//            }
+//            // Does the update used for reconfiguration exist?
+//            if (! updateNames.contains(recf.getUpdateID()))
+//                e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, recf.getUpdateID()));
+//        }
     }
 
     /**
@@ -338,7 +339,7 @@ public class TypeCheckerHelper {
                     // should always be true, see Main.java where the data
                     // constructor gets constructed
                     rn = new ResolvedDeclName(moduleName, ec);
-                    // If it's already in there, is it from the same location -- from stdlib? 
+                    // If it's already in there, is it from the same location -- from stdlib?
                     ResolvedName tryIt = res.get(rn);
                     if (tryIt != null && tryIt.getDecl() != ed)
                         foundDuplicates.add(rn.getSimpleName());
