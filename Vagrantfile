@@ -30,7 +30,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # please see the online documentation at
   # https://docs.vagrantup.com/v2/
 
-  config.vm.box = "ubuntu/trusty64"
+  config.vm.box = "ubuntu/wily64"
   config.vm.network "forwarded_port", guest: 80, host: 8888
 
   config.vm.post_up_message = <<-MSG
@@ -69,33 +69,15 @@ echo
 echo "Installing system updates"
 echo
 sudo apt-get update -y -q
-sudo apt-get dist-upgrade -y
-
-echo
-echo "Preparing system for Erlang R17.  See"
-echo "https://www.erlang-solutions.com/downloads/download-erlang-otp#tabs-ubuntu"
-echo
-wget -q http://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
-sudo dpkg -i erlang-solutions_1.0_all.deb
-rm erlang-solutions_1.0_all.deb
-
-echo
-echo "Preparing system for Java 8 (needed by key-abs).  See"
-echo "https://gist.github.com/tinkerware/cf0c47bb69bf42c2d740"
-echo
-sudo add-apt-repository ppa:webupd8team/java
-sudo apt-get -y -q update
-echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true \
-   | sudo /usr/bin/debconf-set-selections
+sudo apt-get dist-upgrade -y -q
 
 echo
 echo "Installing necessary tools for the ABS compiler"
 echo
 sudo apt-get -y -q install software-properties-common htop
-sudo apt-get -y -q install oracle-java8-installer
+sudo apt-get -y -q install openjdk-8-jdk openjdk-8-jre
 sudo apt-get install -y -q ant antlr junit git unzip
 sudo apt-get install -y -q erlang
-sudo update-java-alternatives -s java-8-oracle
 
 echo
 echo "Installing necessary tools for simulating ABS programs"
@@ -103,12 +85,11 @@ echo
 sudo apt-get install -y -q emacs maude graphviz
 
 echo
-echo "Installing eclipse"
-echo 
-echo "Downloading eclipse from triple-it.nl ..."
-wget -q http://eclipse.mirror.triple-it.nl/technology/epp/downloads/release/mars/R/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz
+echo "Downloading eclipse, this might take a while ..."
+echo
+wget -nv "http://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/mars/1/eclipse-rcp-mars-1-linux-gtk-x86_64.tar.gz&r=1" -O eclipse-rcp-mars-1-linux-gtk-x86_64.tar.gz
 echo "Installing eclipse in /opt/eclipse and setting up paths ..."
-(cd /opt && sudo tar xzf /home/vagrant/eclipse-dsl-mars-R-linux-gtk-x86_64.tar.gz)
+(cd /opt && sudo tar xzf /home/vagrant/eclipse-rcp-mars-1-linux-gtk-x86_64.tar.gz)
 sudo ln -s /opt/eclipse/eclipse /usr/local/bin/eclipse
 
 echo
