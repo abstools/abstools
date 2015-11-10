@@ -64,7 +64,11 @@ public class ABSBuiltInFunctions {
     }
 
     public static <T> ABSString toString(T t) {
-        return ABSString.fromString(t.toString());
+        if (t == null) {
+            return ABSString.fromString("null");
+        } else {
+            return ABSString.fromString(t.toString());
+        }
     }
 
     /*
