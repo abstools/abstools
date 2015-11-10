@@ -63,6 +63,10 @@ public class ABSBuiltInFunctions {
         return ABSInteger.fromBigInt(result);
     }
 
+    public static abs.backend.java.lib.types.ABSInterface thisDC() {
+        return ABSRuntime.getCurrentCOG().getDC();
+    }
+
     public static <T> ABSString toString(T t) {
         if (t == null) {
             return ABSString.fromString("null");

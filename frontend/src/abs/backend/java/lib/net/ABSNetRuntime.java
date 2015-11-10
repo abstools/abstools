@@ -33,7 +33,8 @@ public class ABSNetRuntime extends ABSRuntime {
     }
     
     @Override
-    public COG createCOG(Class<?> clazz) {
+    public COG createCOG(Class<?> clazz, abs.backend.java.lib.types.ABSInterface dc) {
+        // KLUDGE: we ignore "dc" here (needed to implement "thisDC()")
         return createCOGAtNode(clazz, getCurrentNode());
     }
     

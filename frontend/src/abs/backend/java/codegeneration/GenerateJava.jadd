@@ -585,15 +585,23 @@ aspect GenerateJava {
         if (!hasLocal()) {
             String strategy = null;
             PureExp scheduler = getInheritedAnnotationValue("Scheduler");
+            PureExp dc = getInheritedAnnotationValue("DC");
+            String dc_exp = "(ABS.DC.DeploymentComponent_i)(__ABS_getRuntime().getCurrentCOG().getDC())";
+            if (dc != null) {
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                PrintStream s = new PrintStream(output);
+                dc.generateJava(s);
+                dc_exp = output.toString();
+            }
             if (scheduler != null) {
                 strategy = JavaGeneratorHelper.generateUserSchedulingStrategy(this, scheduler);
             }
             stream.print(className + ".__ABS_createNewCOG");
 
             if (strategy != null)
-                JavaGeneratorHelper.generateArgs(stream, "this, new " + strategy + "()", getParams(), decl.getTypes());
+                JavaGeneratorHelper.generateArgs(stream, "this, new " + strategy + "(), " + dc_exp, getParams(), decl.getTypes());
             else
-                JavaGeneratorHelper.generateArgs(stream, "this, null", getParams(), decl.getTypes());
+                JavaGeneratorHelper.generateArgs(stream, "this, null, " + dc_exp, getParams(), decl.getTypes());
             
         } else {
             stream.print(className + ".__ABS_createNewObject");

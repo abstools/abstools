@@ -78,7 +78,7 @@ public class ABSRuntime {
      */
     public void start(Class<?> mainClass) throws InstantiationException, IllegalAccessException {
         systemStarted();
-        COG cog = createCOG(mainClass);
+        COG cog = createCOG(mainClass, null);
         try {
             Constructor<?> constr = mainClass.getConstructor(COG.class);
             ABSObject mainObject = (ABSObject) constr.newInstance(cog);
@@ -345,12 +345,12 @@ public class ABSRuntime {
         getCurrentCOG().getScheduler().await(g);
     }
 
-    public COG createCOG(Class<?> clazz) {
-        return new COG(this, clazz);
+    public COG createCOG(Class<?> clazz, abs.backend.java.lib.types.ABSInterface dc) {
+        return new COG(this, clazz, dc);
     }
 
-    public COG createCOG(Class<?> clazz, TaskSchedulingStrategy strategy) {
-        return new COG(this, clazz, strategy);
+    public COG createCOG(Class<?> clazz, abs.backend.java.lib.types.ABSInterface dc, TaskSchedulingStrategy strategy) {
+        return new COG(this, clazz, dc, strategy);
     }
 
     public static COG getCurrentCOG() {

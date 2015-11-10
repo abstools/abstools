@@ -30,7 +30,7 @@ public class NetCOG extends COG {
         = new HashMap<Promise, ABSFut<? super ABSValue>>();
 
     public NetCOG(NetNode node, ABSNetRuntime runtime, Class<?> clazz) {
-        super(runtime, clazz);
+        super(runtime, clazz, null);
         this.node = node;
     }
     
