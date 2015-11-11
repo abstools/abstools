@@ -105,7 +105,6 @@ aspect ProductFlattener {
      * find a particular product given by its name
      */
     public ProductDecl Model.findProduct(String id) throws WrongProgramArgumentException {
-        // TODO/FIXME
         for (CompilationUnit u : this.getCompilationUnits()) {
             for (ProductDecl p : u.getProductDecls()) {
                 if (id.equals(p.getName()))
