@@ -270,6 +270,7 @@ public class Main {
             //    typeCheckProductLine(m);
 
             // flatten before checking error, to avoid calculating *wrong* attributes
+            m.evaluateAllProductDeclarations();
             if (fullabs) {
                 if (typecheck)
                     // apply deltas that correspond to given product

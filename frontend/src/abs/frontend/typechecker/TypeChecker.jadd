@@ -925,7 +925,6 @@ aspect TypeCheckProductline {
             d.typeCheck(e);
         }
         for (ProductDecl p : getProductDecls()) {
-            // TODO/FIXME
             p.typeCheck(e);
         }
         if (hasProductLine())

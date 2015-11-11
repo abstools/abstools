@@ -1,116 +1,98 @@
 aspect ProductDeclaration {
 
+    /*
+     * Evaluate all of the ProductDecl with a sorted order
+     */
     public void Model.evaluateAllProductDeclarations() {
-        Set<Product> productsToEvaluate = new HashSet<Product>();
+        // Set the initial ProductDecls
+        Set<ProductDecl> productDecls = new HashSet<ProductDecl>();
         for (CompilationUnit u : getCompilationUnits()) {
             for (ProductDecl p : u.getProductDecls()) {
-                Product prod = new Product(p.getName(), new List<Feature>(), new List<Reconfiguration>());
-                productsToEvaluate.add(prod);
+                productDecls.add(p);
             }
         }
 
-        TopologicalSorting productSorter = new TopologicalSorting<Product>(productsToEvaluate);
-        for (CompilationUnit u : getCompilationUnits()) {
-            for (ProductDecl p : u.getProductDecls()) {
-                Product low = new Product(p.getName(), new List<Feature>(), new List<Reconfiguration>());
-
-                Set<String> allProductName = new HashSet<String>();
-                p.getProductExpr().setAllProductName(allProductName);
-                for(String productName : allProductName){
-                    Product high = new Product(productName, new List<Feature>(), new List<Reconfiguration>());                        
-                    productSorter.addEdge(high, low);
-                }                    
-            }
-        }        
-        productSorter.sort();
-        java.util.List<Product> sortedList = productSorter.getAnOrder();
-        
-        java.util.List<Product> evaluatedProduct = new ArrayList<Product>();
-        for (Product prod : sortedList) {            
-            for (CompilationUnit u : getCompilationUnits()) {
-                for (ProductDecl p : u.getProductDecls()) {
-                    if(prod.getName().equals(p.getName())) {
-                        Set<String> features = p.getProductExpr().evaluate();
-
-                        Product product = new Product(p.getName(), new List<Feature>(), new List<Reconfiguration>());
-                        for(String featureName : features){
-                            product.addFeature(new Feature(featureName, new List<AttrAssignment>()));
-                        }
-                        evaluatedProduct.add(product);
-                    }
+        // Do the sorting
+        TopologicalSorting productSorter = new TopologicalSorting<ProductDecl>(productDecls);
+        for (ProductDecl low : productDecls){
+            Set<String> allProductName = new HashSet<String>();
+            low.getProductExpr().setAllProductName(allProductName);
+            for(String productName : allProductName){
+                ProductDecl high = null;
+                try{
+                    high = findProduct(productName);                    
                 }
+                catch(WrongProgramArgumentException e){
+                    e.printStackTrace();
+                }
+                productSorter.addEdge(high, low);
             }
+        }
+        productSorter.sort();
+        java.util.List<ProductDecl> sortedList = productSorter.getAnOrder();
+
+        // Evaluated the list of sorted ProductDecl and save to the HashMap
+        HashMap evaluatedProduct = new HashMap();
+        for (ProductDecl p : sortedList) {
+            evaluatedProduct.put(p.getName(), p.getProductExpr().evaluate());
+            // TODO: add the evaluation to lazy attribute that correspond to a valid of ImplicitProduct
         }
     }
 
     /* 
      * Return the corresponding ImplicitProduct obtained through evaluating the product expression
      */
+    // TODO: add an attribute to save the evaluation
+    
     syn lazy ImplicitProduct ProductDecl.getImplicitProduct() {
-        
         // TODO: implement
         return new ImplicitProduct();
     }
-    
+
+    /*
+     * Set all of product name recursively by given object of ProductExpr
+     */
     public abstract void ProductExpr.setAllProductName(Set<String> allProductName);
-    
+
     public void ProductFeatureSet.setAllProductName(Set<String> allProductName){
         return;
     }
-    
     public void ProductIntersect.setAllProductName(Set<String> allProductName){
         getLeft().setAllProductName(allProductName);
         getRight().setAllProductName(allProductName);
     }
-    
     public void ProductUnion.setAllProductName(Set<String> allProductName){
         getLeft().setAllProductName(allProductName);
         getRight().setAllProductName(allProductName);
     }
-    
     public void ProductName.setAllProductName(Set<String> allProductName){
         allProductName.add(getName());
-    }    
-    
-    public abstract Set<String> ProductExpr.evaluate();
-
-    public Set<String> ProductFeatureSet.evaluate() {
-        List<Feature> features = getFeatures();
-
-        Set<String> setFeatures = new HashSet<String>();
-        for (Feature f : features)
-            setFeatures.add(f.getName());
-
-        return setFeatures;
     }
 
-    public Set<String> ProductIntersect.evaluate(){
-        Set<String> left = getLeft().evaluate();
-        Set<String> right = getRight().evaluate();
-        left.retainAll(right);
+    /*
+     * Evaluate recursively the ProductExpr to get set of features
+     */
+    public abstract Set<Feature> ProductExpr.evaluate();
 
-        return left;
+    public Set<Feature> ProductFeatureSet.evaluate() {
+        return listToSet(getFeatures());
     }
+    public Set<Feature> ProductIntersect.evaluate(){
+        Set<Feature> left = getLeft().evaluate();
+        Set<Feature> right = getRight().evaluate();
 
-    public Set<String> ProductUnion.evaluate(){
-        Set<String> left = getLeft().evaluate();
-        Set<String> right = getRight().evaluate();
-        left.addAll(right);
-
-        return left;
+        return intersection(left, right);
     }
+    public Set<Feature> ProductUnion.evaluate(){
+        Set<Feature> left = getLeft().evaluate();
+        Set<Feature> right = getRight().evaluate();
 
-    public Set<String> ProductName.evaluate() {
+        return union(left, right);
+    }
+    public Set<Feature> ProductName.evaluate() {
         try{
             ProductDecl p = getModel().findProduct(getName());
-
-            List<Feature> features = p.getImplicitProduct().getFeatures();
-
-            Set<String> setFeatures = new HashSet<String>();
-            for (Feature f : features)
-                setFeatures.add(f.getName());
-
-            return setFeatures;
+            return listToSet(p.getImplicitProduct().getFeatures());
         }
         catch(WrongProgramArgumentException e){
             e.printStackTrace();
@@ -119,4 +101,57 @@ aspect ProductDeclaration {
         return null;
     }
 
+    /*
+     * Convert list of features to set of features
+     */
+    public Set<Feature> ProductExpr.listToSet(List<Feature> features){
+        Set<Feature> setFeatures = new HashSet<Feature>();
+        for(Feature f : features){
+            setFeatures.add(f);
+        }
+
+        return setFeatures;
+    }
+
+    /*
+     * Do the operation union by comparing name of the features
+     */
+    public Set<Feature> ProductUnion.union(Set<Feature> left, Set<Feature> right){
+        for(Feature r : right){
+            boolean exist = false;
+            for(Feature l : left){
+                if(r.getName().equals(l.getName())){
+                    exist = true;
+                    break;
+                }
+            }
+
+            if(!exist)
+                left.add(r);
+        }
+
+        return left;
+    }
+
+    /*
+     * Do the operation intersect by comparing name of the features
+     */
+    public Set<Feature> ProductIntersect.intersection(Set<Feature> left, Set<Feature> right){
+        Set<Feature> result = new HashSet<Feature>();
+
+        for(Feature r : right){
+            boolean exist = false;
+            for(Feature l : left){
+                if(r.getName().equals(l.getName())){
+                    exist = true;
+                    break;
+                }
+            }
+
+            if(exist)
+                result.add(r);
+        }
+
+        return result;
+    }
 }
