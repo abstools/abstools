@@ -1,7 +1,8 @@
 aspect ProductDeclaration {
 
     /*
-     * Evaluate all of the ProductDecl with a sorted order
+     * Evaluate all of the ProductDecl with a sorted order,
+     * and set implicitProduct correspond to a valid set of features from feature model
      */
     public void Model.evaluateAllProductDeclarations() {
         // Set the initial ProductDecls
@@ -12,7 +13,7 @@ aspect ProductDeclaration {
             }
         }
 
-        // Do the sorting
+        // Sort ProductDecls
         TopologicalSorting productSorter = new TopologicalSorting<ProductDecl>(productDecls);
         for (ProductDecl low : productDecls){
             Set<String> allProductName = new HashSet<String>();
@@ -31,22 +32,35 @@ aspect ProductDeclaration {
         productSorter.sort();
         java.util.List<ProductDecl> sortedList = productSorter.getAnOrder();
 
-        // Evaluated the list of sorted ProductDecl and save to the HashMap
-        HashMap evaluatedProduct = new HashMap();
+        // Evaluated the list of sorted ProductDecl
         for (ProductDecl p : sortedList) {
-            evaluatedProduct.put(p.getName(), p.getProductExpr().evaluate());
-            // TODO: add the evaluation to lazy attribute that correspond to a valid of ImplicitProduct
+            // Print the result of evaluation
+            System.out.print(p.getName() + " : ");
+            for(Feature f : p.getProductExpr().evaluate()){
+                System.out.print(f.getName() + " ");
+            }
+            System.out.println();
+
+            List<Feature> features = new List<Feature>();
+            for (Feature f : p.getProductExpr().evaluate()) {
+                Feature feature = new Feature(f.getName(), new List<AttrAssignment>()); // disregard any attribute assignments
+                features.add(feature);
+            }
+            p.setImplicitProduct(new ImplicitProduct(features));
+
+            // TODO: Check the validity of product
         }
     }
 
     /* 
      * Return the corresponding ImplicitProduct obtained through evaluating the product expression
      */
-    // TODO: add an attribute to save the evaluation
-    
+    private ImplicitProduct ProductDecl.implicitProduct;
+    public void ProductDecl.setImplicitProduct(ImplicitProduct implicitProduct){
+        this.implicitProduct = implicitProduct;
+    }
     syn lazy ImplicitProduct ProductDecl.getImplicitProduct() {
-        // TODO: implement
-        return new ImplicitProduct();
+        return implicitProduct;
     }
 
     /*

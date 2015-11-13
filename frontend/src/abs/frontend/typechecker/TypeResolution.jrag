@@ -132,22 +132,7 @@ aspect TypeResolution {
         ArrayList<Product> res = new ArrayList<Product>();
         for (CompilationUnit u : getCompilationUnits()) {
             for (ProductDecl p : u.getProductDecls()) {
-                // TODO/FIXME                
-                /*
-                if(p instanceof Product)
-                    res.add((Product) p);
-                else if(p instanceof ProductExpr){
-                    Set<String> features = ((ProductExpr) p).evaluate();
-
-                    Product product = new Product("ProductName", new List<Feature>(), new List<Reconfiguration>());
-                    for(String featureName : features){
-                        product.addFeature(new Feature(featureName, new List<AttrAssignment>()));
-                    }
-                    res.add(product);
-
-                    System.out.println(product.getName() + ". " + product.getFeatures().toString());
-                }                
-                */
+                // FIXME: grammar has been changed with ProductExpr
             }
         }
         return res;
