@@ -393,6 +393,7 @@ product_expr
     | l=product_expr ANDAND r=product_expr                    # ProductIntersect
     | l=product_expr OROR r=product_expr                      # ProductUnion
     | TYPE_IDENTIFIER                                         # ProductName
+    | '(' product_expr ')'                                    # ProductParen
     ;
 
 // mTVL Feature model

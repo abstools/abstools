@@ -850,6 +850,10 @@ new List<ModuleDecl>(),
         setV(ctx, new ProductName(ctx.TYPE_IDENTIFIER().getText()));
     }
 
+    @Override public void exitProductParen(ABSParser.ProductParenContext ctx) {
+        setV(ctx, v(ctx.product_expr()));
+    }
+
     //  mTVL
 	@Override public void exitFextension(ABSParser.FextensionContext ctx) {
         setV(ctx, new FExt(ctx.TYPE_IDENTIFIER().getText(),
