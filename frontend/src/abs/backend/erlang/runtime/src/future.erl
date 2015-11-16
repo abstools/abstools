@@ -58,8 +58,8 @@ get_after_await(Ref)->
     end.
 
 get_blocking(Ref, Cog, Stack) ->
-    task:block_with_time_advance(Cog),
     Ref ! {get, self()},
+    task:block_with_time_advance(Cog),
     Result = (fun Loop() ->
                       receive
                          {stop_world, _Sender} ->
