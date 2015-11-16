@@ -35,11 +35,13 @@ aspect ProductDeclaration {
         // Evaluated the list of sorted ProductDecl
         for (ProductDecl p : sortedList) {
             // Print the result of evaluation
+            /*
             System.out.print(p.getName() + " : ");
             for(Feature f : p.getProductExpr().evaluate()){
                 System.out.print(f.getName() + " ");
             }
             System.out.println();
+             */
 
             List<Feature> features = new List<Feature>();
             for (Feature f : p.getProductExpr().evaluate()) {
