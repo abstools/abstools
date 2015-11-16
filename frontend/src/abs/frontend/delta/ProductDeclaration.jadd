@@ -43,14 +43,28 @@ aspect ProductDeclaration {
             System.out.println();
              */
 
+            Set<String> featuresProd = new HashSet<String>(); // Initialized set of featuresImpl to simplify comparing
             List<Feature> features = new List<Feature>();
             for (Feature f : p.getProductExpr().evaluate()) {
-                Feature feature = new Feature(f.getName(), new List<AttrAssignment>()); // disregard any attribute assignments
-                features.add(feature);
+                features.add(new Feature(f.getName(), new List<AttrAssignment>())); // disregard any attribute assignments
+                featuresProd.add(f.getName());
             }
             p.setImplicitProduct(new ImplicitProduct(features));
 
-            // TODO: Check the validity of product
+            // TODO: Check validity of product
+            boolean valid = false;
+            List<ImplicitProduct> implicitProducts = getImplicitProducts();
+            for(ImplicitProduct impl : implicitProducts){
+                Set<String> featuresImpl = new HashSet<String>(); // Initialized set of featuresImpl to simplify comparing
+                for(Feature f : impl.getFeatures()){
+                    featuresImpl.add(f.getName());
+                }
+
+                if(featuresProd.equals(featuresImpl)){
+                    valid = true;
+                    break;
+                }
+            }
         }
     }
 
