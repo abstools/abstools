@@ -89,12 +89,12 @@ await(Ref, Cog, Stack) ->
             task:release_token(Cog, waiting),
             (fun Loop() ->
                      receive
-                         {ok, Ref, Cog} ->
+                         {value_present, Ref, Cog} ->
                              %% It's an async self-call; unblock the callee
                              %% before we try to acquire the token ourselves.
                              Ref ! {okthx, self()},
                              task:acquire_token(Cog, Stack);
-                         {ok, Ref, _CalleeCog} ->
+                         {value_present, Ref, _CalleeCog} ->
                              %% It's a call to another cog: get our cog to
                              %% running status before allowing the other cog
                              %% to idle
@@ -147,10 +147,12 @@ wait_for_completion(References) ->
     receive
         {'DOWN', _ , process, _,Reason} when Reason /= normal ->
             gc:unroot_future(self()),
-            loop({error,error_transform:transform(Reason)});
+            %% use dummy value for callee cog
+            loop({error,error_transform:transform(Reason)}, self());
         {'EXIT',_,Reason} ->
             gc:unroot_future(self()),
-            loop({error,error_transform:transform(Reason)});
+            %% use dummy value for callee cog
+            loop({error,error_transform:transform(Reason)}, self());
         {completed, Result, Sender, SenderCog}->
             gc:unroot_future(self()),
             convert_to_freestanding_future({ok,Result}, Sender, SenderCog);
@@ -172,7 +174,7 @@ convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog) ->
             %% okthx before sending out the next ok.  If a large
             %% number of processes wait on a single future, this will
             %% make things slower than necessary.
-            Sender ! {ok, self(), CalleeCog},
+            Sender ! {value_present, self(), CalleeCog},
             (fun Loop() ->
                      receive
                          {okthx,Sender} -> ok;
@@ -184,36 +186,36 @@ convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog) ->
             convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog)
     after 0 ->
             TerminatingProcess ! {ok, self()},
-            loop(Value)
+            loop(Value, CalleeCog)
     end.
 
 
 %%Servermode
-loop(Value)->
+loop(Value, CalleeCog)->
     receive
         {get,Sender} ->
             Sender!{reply,self(),Value},
-            loop(Value);
+            loop(Value, CalleeCog);
         {wait,Sender} ->
-            Sender!{ok, self()},
-            loop(Value);
+            Sender!{value_present, self(), CalleeCog},
+            loop(Value, CalleeCog);
         {okthx, _Sender} ->
             %% No need to synchronize with "wait" here like in
             %% convert_to_freestanding_future -- the callee process is already
             %% gone so we just consume this message.
-            loop(Value);
+            loop(Value, CalleeCog);
         {get_references, Sender} ->
             ?DEBUG(get_references),
             Sender ! {gc:extract_references(Value), self()},
-            loop(Value);
+            loop(Value, CalleeCog);
         {poll, Sender} ->
             Sender ! completed,
-            loop(Value);
+            loop(Value, CalleeCog);
         {die, Reason, By} ->
             ?DEBUG({dying, Reason, By}),
             ok;
         _ ->
-            loop(Value)
+            loop(Value, CalleeCog)
     end.
         
    
