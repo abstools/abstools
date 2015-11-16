@@ -18,6 +18,7 @@ import abs.frontend.ast.*;
 
 public class ProductDeclarationTest extends FrontendTest{
 
+    /*
     @Test
     public void productExprResult() {
         Model model = assertParseOk(
@@ -62,4 +63,5 @@ public class ProductDeclarationTest extends FrontendTest{
     public void productDeclNotFound() {
         Model model = assertParseOk("product P1 = P2;");
     }
+    */
 }
