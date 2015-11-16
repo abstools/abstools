@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.delta;
@@ -24,5 +24,13 @@ public class DeltaTest extends FrontendTest {
     protected DeltaDecl findDelta(Model model, String name) {
         return model.findDelta(name);
     }
-    
+
+    protected ProductDecl findProductDecl(Model model, String name) {
+        for (ProductDecl d : model.getProductDecls()) {
+            if (d.getName().equals(name))
+                return d;
+        }
+        return null;
+    }
+
 }

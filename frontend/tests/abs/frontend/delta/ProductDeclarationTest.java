@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.delta;
@@ -8,7 +8,9 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -16,7 +18,27 @@ import abs.common.WrongProgramArgumentException;
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.*;
 
-public class ProductDeclarationTest extends FrontendTest{
+public class ProductDeclarationTest extends DeltaTest {
+
+    @Test
+    public void featureSet1() {
+
+        Model model = assertParseOk(
+                "product P1(F1, F2, F3);"
+                );
+        model.evaluateAllProductDeclarations();
+
+        ProductDecl p1 = findProductDecl(model, "P1");
+        ImplicitProduct ip1 = p1.getImplicitProduct();
+        assertEquals(3, ip1.getFeatures().getNumChild());
+
+        Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3"));
+        Set<String> actual = new HashSet<String>();
+        for (Feature f : ip1.getFeatures())
+            actual.add(f.getName());
+        assertEquals(expected, actual);
+    }
+
 
     /*
     @Test
