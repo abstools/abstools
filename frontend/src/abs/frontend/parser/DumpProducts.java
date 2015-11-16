@@ -15,6 +15,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Product;
+import abs.frontend.ast.ProductDecl;
 import abs.frontend.delta.DeltaModellingException;
 
 public class DumpProducts extends Main {
@@ -26,7 +27,7 @@ public class DumpProducts extends Main {
             // Main.parse() already printed a list of parse errors in this case.
             throw new ParseException("Can't parse input.");
         }
-        Iterator<Product> pi = m.getProducts().iterator();
+        Iterator<ProductDecl> pi = m.getProductDecls().iterator();
         while (pi.hasNext()) {
             System.out.print(pi.next().getName());
             if (pi.hasNext())

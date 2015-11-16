@@ -1019,7 +1019,7 @@ aspect TypeCheckProductline {
             }            
         }
         HashSet<String> productNames = new HashSet<String>();
-        for (Product prod : m.getProducts()) {
+        for (ProductDecl prod : m.getProductDecls()) {
             productNames.add(prod.getName());
         }
         HashSet<String> updateNames = new HashSet<String>();
