@@ -147,16 +147,6 @@ aspect TypeResolution {
         }
         return res;
     }
-    
-    syn lazy Collection<ProductDecl> Model.getProductDecls() {
-        ArrayList<ProductDecl> res = new ArrayList<ProductDecl>();
-        for (CompilationUnit u : getCompilationUnits()) {
-            for (ProductDecl p : u.getProductDecls()) {
-                res.add(p);
-            }
-        }
-        return res;
-    }
 
     syn lazy ProductLine Model.getProductLine() {
         for (CompilationUnit u : getCompilationUnits()) {
