@@ -58,24 +58,56 @@ get_after_await(Ref)->
     end.
 
 get_blocking(Ref, Cog, Stack) ->
-    Ref ! {get, self()},
-    task:block_with_time_advance(Cog),
-    Result = (fun Loop() ->
-                      receive
+    case poll(Ref) of
+        true ->
+            %% Result is already there: don't block, don't allow time advance
+            Ref ! {get, self()},
+            Result = (fun Loop() ->
+                              receive
+                                  {stop_world, _Sender} ->
+                                      task:block_without_time_advance(Cog),
+                                      task:acquire_token(Cog, [Stack]),
+                                      Loop();
+                                  {get_references, Sender} ->
+                                      Sender ! {gc:extract_references(Stack), self()},
+                                      Loop();
+                                  {reply,Ref,{ok,Value}}->
+                                      Value;
+                                  {reply,Ref,{error,Reason}}->
+                                      exit(Reason)
+                              end end)(),
+            Result;
+        false ->
+            %% Tell future not to advance time until we picked up ourselves
+            Ref ! {wait, self()},
+            task:block_with_time_advance(Cog),
+            CalleeCog = (fun Loop() ->
+                     receive
+                         {value_present, Ref, CalleeCog1} ->
+                             CalleeCog1;
                          {stop_world, _Sender} ->
-                             %% we already blocked above.  Eat the message or
-                             %% we'll block at inopportune moments later.
+                             %% we already passed back the token above.  Eat
+                             %% the stop_world or we'll deadlock later.
                              Loop();
-                          {get_references, Sender} ->
-                              Sender ! {gc:extract_references(Stack), self()},
-                              Loop();
-                          {reply,Ref,{ok,Value}}->
-                              Value;
-                          {reply,Ref,{error,Reason}}->
-                              exit(Reason)
-                      end end)(),
-    task:acquire_token(Cog, Stack),
-    Result.
+                         {get_references, Sender} ->
+                             Sender ! {gc:extract_references(Stack), self()},
+                             Loop()
+                     end end)(),
+            case (Cog == CalleeCog) of
+                %% Try to avoid deadlock here.  Not sure if asynchronous
+                %% self-call + get without await will even reach this point,
+                %% but doesn't hurt to try in case we fix other locations
+                %% later.  (See function `await' below for the same pattern.)
+                true ->
+                    Ref ! {okthx, self()},
+                    task:acquire_token(Cog, Stack);
+                false ->
+                    task:acquire_token(Cog, Stack),
+                    Ref ! {okthx, self()}
+            end,
+            %% Only one recursion here since poll will return true now.
+            get_blocking(Ref, Cog, Stack)
+    end.
 
 get_references(Ref) ->
     Ref ! {get_references, self()},
