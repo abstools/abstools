@@ -1,17 +1,12 @@
 aspect ProductDeclaration {
 
     /*
-     * Evaluate all of the ProductDecl with a sorted order,
+     * Evaluate all sorted ProductDecl,
      * and set implicitProduct correspond to a valid set of features from feature model
      */
     public void Model.evaluateAllProductDeclarations() {
-        // Set the initial ProductDecls
-        Set<ProductDecl> productDecls = new HashSet<ProductDecl>();
-        for (CompilationUnit u : getCompilationUnits()) {
-            for (ProductDecl p : u.getProductDecls()) {
-                productDecls.add(p);
-            }
-        }
+        // Initialize set of ProductDecl
+        Set<ProductDecl> productDecls = new HashSet<ProductDecl>(getProductDecls());
 
         // Sort ProductDecls
         TopologicalSorting productSorter = new TopologicalSorting<ProductDecl>(productDecls);
@@ -19,35 +14,30 @@ aspect ProductDeclaration {
             Set<String> allProductName = new HashSet<String>();
             low.getProductExpr().setAllProductName(allProductName);
             for(String productName : allProductName){
-                ProductDecl high = null;
                 try{
-                    high = findProduct(productName);                    
+                    ProductDecl high = findProduct(productName);      
+                    productSorter.addEdge(high, low);              
                 }
                 catch(WrongProgramArgumentException e){
                     e.printStackTrace();
                 }
-                productSorter.addEdge(high, low);
             }
         }
         productSorter.sort();
         java.util.List<ProductDecl> sortedList = productSorter.getAnOrder();
 
-        // Evaluated the list of sorted ProductDecl
-        for (ProductDecl p : sortedList) {
-            // Print the result of evaluation
-            /*
-            System.out.print(p.getName() + " : ");
-            for(Feature f : p.getProductExpr().evaluate()){
-                System.out.print(f.getName() + " ");
-            }
-            System.out.println();
-             */
-
-            Set<String> featuresProd = new HashSet<String>(); // Initialized set of featuresImpl to simplify comparing
+        // Evaluate the sorted list of ProductDecl
+        for (ProductDecl p : sortedList) {            
+            Set<String> featuresProd = new HashSet<String>(); // Initialize set of featuresProd to simplify comparing
             List<Feature> features = new List<Feature>();
             for (Feature f : p.getProductExpr().evaluate()) {
-                features.add(new Feature(f.getName(), new List<AttrAssignment>())); // disregard any attribute assignments
-                featuresProd.add(f.getName());
+                try {
+                    Feature feature = f.clone();
+                    features.add(feature);
+                    featuresProd.add(feature.getName());
+                } catch (CloneNotSupportedException e) {
+                    e.printStackTrace();
+                }
             }
             p.setImplicitProduct(new ImplicitProduct(features));
 
@@ -55,7 +45,7 @@ aspect ProductDeclaration {
             boolean valid = false;
             List<ImplicitProduct> implicitProducts = getImplicitProducts();
             for(ImplicitProduct impl : implicitProducts){
-                Set<String> featuresImpl = new HashSet<String>(); // Initialized set of featuresImpl to simplify comparing
+                Set<String> featuresImpl = new HashSet<String>(); // Initialize set of featuresImpl to simplify comparing
                 for(Feature f : impl.getFeatures()){
                     featuresImpl.add(f.getName());
                 }
@@ -65,6 +55,13 @@ aspect ProductDeclaration {
                     break;
                 }
             }
+            
+            // Print the result
+            System.out.print(p.getName() + " : ");
+            for(Feature f : features){
+                System.out.print(f.getName() + " ");
+            }
+            System.out.println();
         }
     }
 
@@ -144,7 +141,7 @@ aspect ProductDeclaration {
     }
 
     /*
-     * Do the operation union by comparing name of the features
+     * Perform the operation union by comparing name of the features
      */
     public Set<Feature> ProductUnion.union(Set<Feature> left, Set<Feature> right){
         for(Feature r : right){
@@ -164,7 +161,7 @@ aspect ProductDeclaration {
     }
 
     /*
-     * Do the operation intersect by comparing name of the features
+     * Perform the operation intersection by comparing name of the features
      */
     public Set<Feature> ProductIntersect.intersection(Set<Feature> left, Set<Feature> right){
         Set<Feature> result = new HashSet<Feature>();

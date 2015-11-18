@@ -212,6 +212,16 @@ public class TypeCheckerHelper {
                 }
             }
         }
+
+        // Check the right side of product expression that contains in prodNames
+        Set<String> allProductName = new HashSet<String>();
+        prod.getProductExpr().setAllProductName(allProductName);
+        for(String productName : allProductName){
+            if(!prodNames.contains(productName)){
+                e.add(new TypeError(prod, ErrorMessage.UNDECLARED_PRODUCT, productName));
+            }
+        }
+
         Set<String> seen = new HashSet<String>();
         // FIXME: deal with reconfigurations
 //        for (Reconfiguration recf : prod.getReconfigurations()) {

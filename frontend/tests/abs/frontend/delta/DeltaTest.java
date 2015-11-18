@@ -4,8 +4,14 @@
  */
 package abs.frontend.delta;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
 import abs.frontend.FrontendTest;
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.*;
+import abs.frontend.typechecker.TypeCheckerHelper;
 
 public class DeltaTest extends FrontendTest {
 
@@ -25,12 +31,22 @@ public class DeltaTest extends FrontendTest {
         return model.findDelta(name);
     }
 
-    protected ProductDecl findProductDecl(Model model, String name) {
-        for (ProductDecl d : model.getProductDecls()) {
-            if (d.getName().equals(name))
-                return d;
+    protected void typeCheck(Model m, ProductDecl p, SemanticErrorList e) {
+        Map<String,Feature> featureNames = null;
+        if (m.hasProductLine()) {
+            featureNames = new HashMap<String,Feature>();
+            for (Feature f : m.getProductLine().getFeatures()) {
+                featureNames.put(f.getName(),f);
+            }            
         }
-        return null;
+        HashSet<String> productNames = new HashSet<String>();
+        for (ProductDecl prod : m.getProductDecls()) {
+            productNames.add(prod.getName());
+        }
+        HashSet<String> updateNames = new HashSet<String>();
+        for (UpdateDecl upd : m.getUpdateDecls()) {
+            updateNames.add(upd.getName());
+        }
+        TypeCheckerHelper.typeCheckProduct(p, featureNames, productNames, m.getDeltaDeclsMap(), updateNames, e);
     }
-
 }

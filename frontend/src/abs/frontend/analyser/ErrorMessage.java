@@ -108,7 +108,8 @@ public enum ErrorMessage {
     ERROR_IN_PRODUCT_LINE_DELTA_ORDER("Error in product line %s. No total order exists for the given partial order of deltas."),
     ERROR_IN_PRODUCT_LINE_MISSING_DELTACLAUSE("Error in product line %s. No delta clause for delta(s): %s (dead deltas)."),
     AMBIGUOUS_PRODUCTLINE("The product line %s is potentially ambiguous: Deltas %s and %s both target class %s, but their application order is undefined."),
-    DEADLOCK_GENERATION_ERROR("Generated edge: %s.")
+    DEADLOCK_GENERATION_ERROR("Generated edge: %s."),
+    UNDECLARED_PRODUCT("Product [%s] is not declared");
     ;
 
     private String pattern;

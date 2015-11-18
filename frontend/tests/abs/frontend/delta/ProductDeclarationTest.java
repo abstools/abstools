@@ -10,80 +10,269 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
 
+import abs.ABSTest.Config;
 import abs.common.WrongProgramArgumentException;
-import abs.frontend.FrontendTest;
+import abs.frontend.analyser.ErrorMessage;
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.*;
+import abs.frontend.typechecker.TypeCheckerHelper;
 
 public class ProductDeclarationTest extends DeltaTest {
 
     @Test
     public void featureSet1() {
-
         Model model = assertParseOk(
                 "product P1(F1, F2, F3);"
                 );
         model.evaluateAllProductDeclarations();
 
-        ProductDecl p1 = findProductDecl(model, "P1");
-        ImplicitProduct ip1 = p1.getImplicitProduct();
-        assertEquals(3, ip1.getFeatures().getNumChild());
+        ProductDecl p = null;
+        try {
+            p = model.findProduct("P1");
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
+        ImplicitProduct impl = p.getImplicitProduct();
+        assertEquals(3, impl.getNumFeature());
 
         Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3"));
         Set<String> actual = new HashSet<String>();
-        for (Feature f : ip1.getFeatures())
+        for (Feature f : impl.getFeatures())
             actual.add(f.getName());
         assertEquals(expected, actual);
     }
 
-
-    /*
     @Test
-    public void productExprResult() {
+    public void featureSet2() {
         Model model = assertParseOk(
-                "product P1(F1, F2, F3);"
-                        + "product P2(F3, F4);"
-                        + "product P3(F5);"
-                        + "product P4 = P1 && P2; // union"
-                        + "product P5 = P1 || P2; // intersection"
-                        + "product P6 = P1 && P2 || P3 || {F7, F8} || P5; // complex expression"
-                        + "product P7 = P1 && (P2 || P3) || {F7, F8} || P5; // complex expression with parenthesis"
+                "product P1 = {F1, F2, F3};"
                 );
+        model.evaluateAllProductDeclarations();
 
-        HashMap<String, List<String>> products = new HashMap<String, List<String>>();
-        products.put("P1", Arrays.asList("F1", "F2", "F3"));
-        products.put("P2", Arrays.asList("F3", "F4"));
-        products.put("P3", Arrays.asList("F5"));
-        products.put("P4", Arrays.asList("F3"));
-        products.put("P5", Arrays.asList("F1", "F2", "F3", "F4"));
-        products.put("P6", Arrays.asList("F1", "F2", "F3", "F4", "F5", "F7", "F8"));
-        products.put("P7", Arrays.asList("F1", "F2", "F3", "F4", "F7", "F8"));
-
-        for (CompilationUnit u : model.getCompilationUnits()) {
-            for (ProductDecl p : u.getProductDecls()) {
-                List<String> features = products.get(p.getName());
-
-                for(Feature f : p.getImplicitProduct().getFeatures()){
-                    assertTrue(features.contains(f.getName()));
-                }
-            }
+        ProductDecl p = null;
+        try {
+            p = model.findProduct("P1");
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
         }
+        ImplicitProduct impl = p.getImplicitProduct();
+        assertEquals(3, impl.getNumFeature());
+
+        Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3"));
+        Set<String> actual = new HashSet<String>();
+        for (Feature f : impl.getFeatures())
+            actual.add(f.getName());
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void union1() {
+        Model model = assertParseOk(
+                "product P1 = {F1, F2, F3} || {F4};"
+                );
+        model.evaluateAllProductDeclarations();
+
+        ProductDecl p = null;
+        try {
+            p = model.findProduct("P1");
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
+        ImplicitProduct impl = p.getImplicitProduct();
+        assertEquals(4, impl.getNumFeature());
+
+        Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3", "F4"));
+        Set<String> actual = new HashSet<String>();
+        for (Feature f : impl.getFeatures())
+            actual.add(f.getName());
+        assertEquals(expected, actual);
+    }    
+
+    @Test
+    public void union2() {
+        Model model = assertParseOk(
+                "product P1 = {F1, F2, F3};"
+                        + "product P2 = {F4};"
+                        + "product P3 = P1 || P2;"
+                );
+        model.evaluateAllProductDeclarations();
+
+        ProductDecl p = null;
+        try {
+            p = model.findProduct("P3");
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
+        ImplicitProduct impl = p.getImplicitProduct();
+        assertEquals(4, impl.getNumFeature());
+
+        Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3", "F4"));
+        Set<String> actual = new HashSet<String>();
+        for (Feature f : impl.getFeatures())
+            actual.add(f.getName());
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void intersect1() {
+        Model model = assertParseOk(
+                "product P1 = {F1, F2, F3} && {F2, F3};"
+                );
+        model.evaluateAllProductDeclarations();
+
+        ProductDecl p = null;
+        try {
+            p = model.findProduct("P1");
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
+        ImplicitProduct impl = p.getImplicitProduct();
+        assertEquals(2, impl.getNumFeature());
+
+        Set<String> expected = new HashSet<String>(Arrays.asList("F2", "F3"));
+        Set<String> actual = new HashSet<String>();
+        for (Feature f : impl.getFeatures())
+            actual.add(f.getName());
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void intersect2() {
+        Model model = assertParseOk(
+                "product P1 = {F1, F2, F3};"
+                        + "product P2 = {F2, F3};"
+                        + "product P3 = P1 && P2;"
+                );
+        model.evaluateAllProductDeclarations();
+
+        ProductDecl p = null;
+        try {
+            p = model.findProduct("P3");
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
+        ImplicitProduct impl = p.getImplicitProduct();
+        assertEquals(2, impl.getNumFeature());
+
+        Set<String> expected = new HashSet<String>(Arrays.asList("F2", "F3"));
+        Set<String> actual = new HashSet<String>();
+        for (Feature f : impl.getFeatures())
+            actual.add(f.getName());
+        assertEquals(expected, actual);
     }
 
     @Test(expected=DeltaModellingException.class)
-    public void productDeclCyclic() {
+    public void cylic() {
         Model model = assertParseOk(
                 "product P4 = P5;"
                         + "product P5 = P4;"
                 );
+        model.evaluateAllProductDeclarations();
     }
 
-    @Test(expected=WrongProgramArgumentException.class)
-    public void productDeclNotFound() {
-        Model model = assertParseOk("product P1 = P2;");
+    @Test
+    public void undeclaredProduct() {
+        Model model = assertParseOk("product P1 = P2 && P3 || P4;");
+
+        ProductDecl p = null;
+        try {
+            p = model.findProduct("P1");
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
+
+        SemanticErrorList e = new SemanticErrorList();        
+        typeCheck(model, p, e);
+
+        assertEquals(3, e.size());
+        assertEquals(ErrorMessage.UNDECLARED_PRODUCT, e.getFirst().msg);
     }
-    */
+
+    @Test
+    public void parenthesis1(){
+        Model model = assertParseOk(
+                "product P1 = {F1, F2, F3} && ({F3, F4} || {F5});"
+                );
+        model.evaluateAllProductDeclarations();
+
+        ProductDecl p = null;
+        try {
+            p = model.findProduct("P1");
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
+        ImplicitProduct impl = p.getImplicitProduct();
+        assertEquals(1, impl.getNumFeature());
+
+        Set<String> expected = new HashSet<String>(Arrays.asList("F3"));
+        Set<String> actual = new HashSet<String>();
+        for (Feature f : impl.getFeatures())
+            actual.add(f.getName());
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void parenthesis2(){
+        Model model = assertParseOk(
+                "product P1(F1, F2, F3);"
+                        + "product P2(F3, F4);"
+                        + "product P3(F5);"
+                        + "product P4 = P1 && (P2 || P3);"
+                );
+        model.evaluateAllProductDeclarations();
+
+        ProductDecl p = null;
+        try {
+            p = model.findProduct("P4");
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
+        ImplicitProduct impl = p.getImplicitProduct();
+        assertEquals(1, impl.getNumFeature());
+
+        Set<String> expected = new HashSet<String>(Arrays.asList("F3"));
+        Set<String> actual = new HashSet<String>();
+        for (Feature f : impl.getFeatures())
+            actual.add(f.getName());
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void complexExpression() {
+        Model model = assertParseOk(
+                "product P1(F1, F2, F3);"
+                        + "product P2(F3, F4);"
+                        + "product P3(F5);"
+                        + "product P4 = P1 && P2;"
+                        + "product P5 = P1 || P2;"
+                        + "product P6 = P1 && P2 || P3 || {F7, F8} || P5;"
+                        + "product P7 = P1 && (P2 || P3) || {F7, F8} || P5;"
+                );
+
+        HashMap<String, Set<String>> products = new HashMap<String, Set<String>>();
+        products.put("P1", new HashSet<String>(Arrays.asList("F1", "F2", "F3")));
+        products.put("P2", new HashSet<String>(Arrays.asList("F3", "F4")));
+        products.put("P3", new HashSet<String>(Arrays.asList("F5")));
+        products.put("P4", new HashSet<String>(Arrays.asList("F3")));
+        products.put("P5", new HashSet<String>(Arrays.asList("F1", "F2", "F3", "F4")));
+        products.put("P6", new HashSet<String>(Arrays.asList("F1", "F2", "F3", "F4", "F5", "F7", "F8")));
+        products.put("P7", new HashSet<String>(Arrays.asList("F1", "F2", "F3", "F4", "F7", "F8")));
+
+        model.evaluateAllProductDeclarations();
+        for (ProductDecl p : model.getProductDecls()) {
+            Set<String> actual = new HashSet<String>();
+            for(Feature f : p.getImplicitProduct().getFeatures()){
+                actual.add(f.getName());
+            }
+            Set<String> expected = products.get(p.getName());
+
+            assertEquals(expected, actual);
+        }
+    }
+
 }
