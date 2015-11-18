@@ -1,3 +1,4 @@
+.DS_Store
 /.vagrant
 /frontend/bin/
 /frontend/**/*.beam
