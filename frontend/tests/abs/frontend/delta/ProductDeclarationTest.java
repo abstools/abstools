@@ -151,7 +151,9 @@ public class ProductDeclarationTest extends DeltaTest {
 
     @Test
     public void undeclaredProduct() {
-        Model model = assertParseOk("product P1 = P2 && P3 || P4 || {F1, F2};");
+        Model model = assertParseOk(
+                "product P1 = P2 && P3 || P4 || {F1, F2};"
+                );
 
         ProductDecl p = null;
         try {
@@ -163,8 +165,35 @@ public class ProductDeclarationTest extends DeltaTest {
         SemanticErrorList e = new SemanticErrorList();        
         typeCheck(model, p, e);
 
-        assertEquals(3, e.size());
+        // Four errors here:
+        // three undeclared products (P2, P3, P4)
+        // and P1 is invalid because there is no feature model declared
+        assertEquals(4, e.size());
         assertEquals(ErrorMessage.UNDECLARED_PRODUCT, e.getFirst().msg);
+    }
+
+    @Test
+    public void invalidProduct() {
+        Model model = assertParseOk(
+                "product P1 = {F1, F2};"
+                        + "root FM {"
+                        + "group allof { F1, F2, F3 }"
+                        + "}"                
+                );
+        model.evaluateAllProductDeclarations();
+
+        ProductDecl p = null;
+        try {
+            p = model.findProduct("P1");
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
+
+        SemanticErrorList e = new SemanticErrorList();        
+        typeCheck(model, p, e);
+        
+        assertEquals(1, e.size());
+        assertEquals(ErrorMessage.INVALID_PRODUCT, e.getFirst().msg);
     }
 
     @Test

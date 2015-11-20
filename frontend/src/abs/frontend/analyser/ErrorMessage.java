@@ -109,7 +109,8 @@ public enum ErrorMessage {
     ERROR_IN_PRODUCT_LINE_MISSING_DELTACLAUSE("Error in product line %s. No delta clause for delta(s): %s (dead deltas)."),
     AMBIGUOUS_PRODUCTLINE("The product line %s is potentially ambiguous: Deltas %s and %s both target class %s, but their application order is undefined."),
     DEADLOCK_GENERATION_ERROR("Generated edge: %s."),
-    UNDECLARED_PRODUCT("Product [%s] is not declared");
+    UNDECLARED_PRODUCT("Product [%s] is not declared"),
+    INVALID_PRODUCT("Product [%s] is not valid according to feature model")
     ;
 
     private String pattern;
