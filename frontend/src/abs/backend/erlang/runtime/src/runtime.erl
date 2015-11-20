@@ -12,9 +12,10 @@
 -export([init/1]).
 
 -define(CMDLINE_SPEC,
-        [{debug,$d,"debug",{boolean,false},"Prints debug status output"},
-         {gcstats,$g, "gcstats",{boolean,false},"Prints garbage collection statistics."},
-         {main_module,undefined,undefined,{string, ""},"Name of Module containing MainBlock"}]).
+        [{debug,$d,"debug",{boolean,false},"Print debug status output"},
+         {gcstats,$g, "gcstats",{boolean,false},"Print garbage collection statistics"},
+         {port,$p,"port",{integer,none},"Start http on port and keep model running"},
+         {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
 
 
 %% ===================================================================
@@ -30,7 +31,7 @@ init([]) ->
 start()->
     case init:get_plain_arguments() of
         []->
-            run_mod(?ABSMAINMODULE, false, false);
+            run_mod(?ABSMAINMODULE, false, false, none);
         Args->
             start(Args)
    end.    
@@ -56,13 +57,16 @@ parse(Args,Exec)->
             Module = case proplists:get_value(main_module,Parsed,none) of
                          none -> ?ABSMAINMODULE;
                          [] -> ?ABSMAINMODULE;
-                         M -> list_to_atom("m_" ++ re:replace(M,"[.]","_",[{return,list},global]))
+                         M when is_atom(M) -> M;
+                         M when is_list(M) -> list_to_atom("m_" ++ re:replace(M,"[.]","_",[{return,list},global]));
+                         _ -> ?ABSMAINMODULE
                      end,
             Debug=proplists:get_value(debug,Parsed, false),
             GCStatistics=proplists:get_value(gcstats,Parsed, false),
-            run_mod(Module, Debug, GCStatistics);
+            Port=proplists:get_value(port,Parsed,none),
+            run_mod(Module, Debug, GCStatistics, Port);
         _ ->
-          getopt:usage(?CMDLINE_SPEC,Exec)
+            getopt:usage(?CMDLINE_SPEC,Exec)
     end.
 
 %% This is called from an application generated via rebar.
@@ -114,8 +118,14 @@ end_mod(TaskRef) ->
     RetVal.
 
 
-run_mod(Module, Debug, GCStatistics)  ->
-    {ok, R}=start_mod(Module, Debug, GCStatistics),
-    end_mod(R).
-
+run_mod(Module, Debug, GCStatistics, Port)  ->
+    case Port of
+        _ when is_integer(Port) ->
+            io:format("Starting server on port ~w, abort with Ctrl-C~n", [Port]),
+            start_http(Port),
+            receive ok -> ok end;
+        _ ->
+            {ok, R}=start_mod(Module, Debug, GCStatistics),
+            end_mod(R)
+    end.
 
