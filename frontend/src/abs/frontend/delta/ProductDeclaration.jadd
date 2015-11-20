@@ -27,42 +27,41 @@ aspect ProductDeclaration {
         java.util.List<ProductDecl> sortedList = productSorter.getAnOrder();
 
         // Evaluate the sorted list of ProductDecl
-        for (ProductDecl p : sortedList) {            
-            Set<String> featuresProd = new HashSet<String>(); // Initialize set of featuresProd to simplify comparing
+        for (ProductDecl p : sortedList) {
             List<Feature> features = new List<Feature>();
             for (Feature f : p.getProductExpr().evaluate()) {
                 try {
                     Feature feature = f.clone();
                     features.add(feature);
-                    featuresProd.add(feature.getName());
                 } catch (CloneNotSupportedException e) {
                     e.printStackTrace();
                 }
             }
             p.setImplicitProduct(new ImplicitProduct(features));
 
-            // TODO: Check validity of product
-            boolean valid = false;
-            List<ImplicitProduct> implicitProducts = getImplicitProducts();
-            for(ImplicitProduct impl : implicitProducts){
-                Set<String> featuresImpl = new HashSet<String>(); // Initialize set of featuresImpl to simplify comparing
-                for(Feature f : impl.getFeatures()){
-                    featuresImpl.add(f.getName());
-                }
-
-                if(featuresProd.equals(featuresImpl)){
-                    valid = true;
-                    break;
-                }
-            }
-            
             // Print the result
+            /*
             System.out.print(p.getName() + " : ");
             for(Feature f : features){
                 System.out.print(f.getName() + " ");
             }
             System.out.println();
+             */
         }
+    }
+    
+    public boolean ImplicitProduct.equals(ImplicitProduct impl){
+        Set<String> features1 = new HashSet<String>();
+        for(Feature f : getFeatures()){
+            features1.add(f.getName());
+        }
+        
+        Set<String> features2 = new HashSet<String>();
+        for(Feature f : impl.getFeatures()){
+            features2.add(f.getName());
+        }
+        
+        return features1.equals(features2);
     }
 
     /* 

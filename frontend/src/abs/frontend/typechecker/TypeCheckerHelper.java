@@ -222,6 +222,19 @@ public class TypeCheckerHelper {
             }
         }
 
+        // Check validity of product between productDeclarations and implicitProducts
+        Model m = prod.getModel();
+        boolean valid = false;
+        for(ImplicitProduct impl : m.getImplicitProducts()){
+            if(impl.equals(prod.getImplicitProduct())){
+                valid = true;
+                break;
+            }
+        }
+        if(!valid){
+            e.add(new TypeError(prod, ErrorMessage.INVALID_PRODUCT, prod.getName()));                
+        }
+
         Set<String> seen = new HashSet<String>();
         // FIXME: deal with reconfigurations
 //        for (Reconfiguration recf : prod.getReconfigurations()) {
