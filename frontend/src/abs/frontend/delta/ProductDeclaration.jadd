@@ -49,18 +49,22 @@ aspect ProductDeclaration {
              */
         }
     }
-    
+
+    /*
+     * Comparing between two sets of features
+     * and return boolean of the result
+     */    
     public boolean ImplicitProduct.equals(ImplicitProduct impl){
         Set<String> features1 = new HashSet<String>();
         for(Feature f : getFeatures()){
             features1.add(f.getName());
         }
-        
+
         Set<String> features2 = new HashSet<String>();
         for(Feature f : impl.getFeatures()){
             features2.add(f.getName());
         }
-        
+
         return features1.equals(features2);
     }
 
