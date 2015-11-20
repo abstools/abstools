@@ -173,6 +173,29 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
+    public void validProduct() {
+        Model model = assertParseOk(
+                "product P1 = {F1, F2, F3};"
+                        + "root FM {"
+                        + "group allof { F1, F2, F3 }"
+                        + "}"                
+                );
+        model.evaluateAllProductDeclarations();
+
+        ProductDecl p = null;
+        try {
+            p = model.findProduct("P1");
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
+
+        SemanticErrorList e = new SemanticErrorList();        
+        typeCheck(model, p, e);
+        
+        assertEquals(0, e.size());
+    }
+    
+    @Test
     public void invalidProduct() {
         Model model = assertParseOk(
                 "product P1 = {F1, F2};"

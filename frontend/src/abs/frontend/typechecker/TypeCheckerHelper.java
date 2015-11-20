@@ -224,11 +224,20 @@ public class TypeCheckerHelper {
 
         // Check validity of product between productDeclarations and implicitProducts
         Model m = prod.getModel();
+        String rootFM = m.features().size()>0 ? m.features().get(0) : null;
         boolean valid = false;
         for(ImplicitProduct impl : m.getImplicitProducts()){
-            if(impl.equals(prod.getImplicitProduct())){
-                valid = true;
-                break;
+            try {
+                ImplicitProduct temp = prod.getImplicitProduct().clone();
+                if(rootFM != null)
+                    temp.addFeature(new Feature(rootFM, new List<AttrAssignment>()));
+
+                if(impl.equals(temp)){
+                    valid = true;
+                    break;
+                }
+            } catch (CloneNotSupportedException e1) {
+                e1.printStackTrace();
             }
         }
         if(!valid){
