@@ -15,7 +15,7 @@ fi
 
 SOURCE_DIR="$1/frontend/src/abs/backend/erlang/runtime"
 
-for i in src/*.erl include/*.hrl
+for i in src/*.erl
 do
     if [ -f "$SOURCE_DIR/$i" ]
     then
