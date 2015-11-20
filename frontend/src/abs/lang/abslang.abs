@@ -681,10 +681,23 @@ interface CloudProvider {
 
     [Atomic] Rat getAccumulatedCost();
     [Atomic] Unit shutdown();
+
+    // Instance descriptions.  Call setInstanceDescriptions with a map of
+    // (name -> resources) information.  Then, launchInstanceNamed() returns a
+    // deployment component with the specified resources, or null if the given
+    // name could not be found.  The resulting deployment components are then
+    // handled as normal (acquire/release/kill).
+    [Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions);
+    [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions();
+    DeploymentComponent prelaunchInstanceNamed(String instancename);
+    DeploymentComponent launchInstanceNamed(String instancename);
 }
 
 class CloudProvider(String name) implements CloudProvider {
     // Preliminary version - mind the FIXMEs!
+
+    // Instance type descriptions for launchInstanceNamed()
+    Map<String, Map<Resourcetype, Rat>> instanceDescriptions = map[];
 
     // All launched instances
     Set<DeploymentComponent> launchedInstances = set[];
@@ -789,19 +802,49 @@ class CloudProvider(String name) implements CloudProvider {
 
     DeploymentComponent findMatchingInstance(Set<DeploymentComponent> instances,
         Map<Resourcetype, Rat> description)
-        {
-            DeploymentComponent result = null;
-            while (!emptySet(instances) && result == null) {
-                DeploymentComponent instance = take(instances);
-                instances = remove(instances, instance);
-                Bool matches = await instance!matchesDescription(description);
-                if (matches) {
-                    result = instance;
-                }
+    {
+        DeploymentComponent result = null;
+        while (!emptySet(instances) && result == null) {
+            DeploymentComponent instance = take(instances);
+            instances = remove(instances, instance);
+            Bool matches = await instance!matchesDescription(description);
+            if (matches) {
+                result = instance;
             }
-            return result;
         }
+        return result;
     }
+
+    // Sets up information for [pre]launchInstanceNamed()
+    [Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions) {
+        this.instanceDescriptions = instanceDescriptions;
+    }
+
+    [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions() {
+        return this.instanceDescriptions;
+    }
+
+    DeploymentComponent prelaunchInstanceNamed(String instancename) {
+        Maybe<Map<Resourcetype, Rat>> mconfig = lookup(instanceDescriptions, instancename);
+        DeploymentComponent dc = null;
+        if (isJust(mconfig)) {
+            Map<Resourcetype, Rat> config = fromJust(mconfig);
+            dc = this.prelaunchInstance(config);
+        }
+        return dc;
+    }
+
+    DeploymentComponent launchInstanceNamed(String instancename) {
+        // if we don't call prelaunchInstance here, remember to start
+        // accounting as well
+        DeploymentComponent result = this.prelaunchInstanceNamed(instancename);
+        if (result != null) {
+            acquiredInstances = insertElement(acquiredInstances, result);
+        }
+        return result;
+    }
+    
+}
 
 
 

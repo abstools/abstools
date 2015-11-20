@@ -151,3 +151,37 @@ will fail.
 <5> Executing this method call consumes 5 Bandwidth resources.  Since `dc` has
 10 bandwidth per time unit, the message will be transported instantly.
 
+=== The CloudProvider API
+
+`(pre)launchInstance` might have a delay, the others are instantaneous.
+`launchInstance` might hand out an already-running instance if it has been
+released; in this case there will be no delay.
+
+`acquireInstance`, `releaseInstance` are called from deployment components.
+`launchInstance` does the equivalent of `acquireInstance`.
+
+
+Instance descriptions.  Call `setInstanceDescriptions` with a map of (name ->
+resources) information.  Then, `(pre)launchInstanceNamed` returns a deployment
+component with the specified resources, or `null` if the given name could not
+be found.  The resulting deployment components are then handled as normal
+(`acquireInstance`/`releaseInstance`/`killInstance`).
+
+
+----
+interface CloudProvider {
+    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d);
+    DeploymentComponent launchInstance(Map<Resourcetype, Rat> description);
+    Bool acquireInstance(DeploymentComponent instance);
+    Bool releaseInstance(DeploymentComponent instance);
+    Bool killInstance(DeploymentComponent instance);
+
+    [Atomic] Rat getAccumulatedCost();
+    [Atomic] Unit shutdown();
+
+    [Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions);
+    [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions();
+    DeploymentComponent prelaunchInstanceNamed(String instancename);
+    DeploymentComponent launchInstanceNamed(String instancename);
+}
+----
