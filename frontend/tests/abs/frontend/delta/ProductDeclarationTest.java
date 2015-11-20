@@ -232,4 +232,28 @@ public class ProductDeclarationTest extends DeltaTest {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void unorderedProduct() {
+        Model model = assertParseOk(
+                "product P2 = P1;"
+                        + "product P3 = P2;"
+                        + "product P1 = {F1, F2, F3};"
+                );
+        model.evaluateAllProductDeclarations();
+
+        ProductDecl p = null;
+        try {
+            p = model.findProduct("P3");
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
+        ImplicitProduct impl = p.getImplicitProduct();
+        assertEquals(3, impl.getNumFeature());
+
+        Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3"));
+        Set<String> actual = new HashSet<String>();
+        for (Feature f : impl.getFeatures())
+            actual.add(f.getName());
+        assertEquals(expected, actual);
+    }
 }
