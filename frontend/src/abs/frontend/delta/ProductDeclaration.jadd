@@ -105,7 +105,7 @@ aspect ProductDeclaration {
     public abstract Set<Feature> ProductExpr.evaluate();
 
     public Set<Feature> ProductFeatureSet.evaluate() {
-        return listToSet(getFeatures());
+        return ListUtils.ASTListToSet(getFeatures());
     }
     public Set<Feature> ProductIntersect.evaluate(){
         Set<Feature> left = getLeft().evaluate();
@@ -122,25 +122,13 @@ aspect ProductDeclaration {
     public Set<Feature> ProductName.evaluate() {
         try{
             ProductDecl p = getModel().findProduct(getName());
-            return listToSet(p.getImplicitProduct().getFeatures());
+            return ListUtils.ASTListToSet(p.getImplicitProduct().getFeatures());
         }
         catch(WrongProgramArgumentException e){
             e.printStackTrace();
         }
 
         return null;
-    }
-
-    /*
-     * Convert list of features to set of features
-     */
-    public Set<Feature> ProductExpr.listToSet(List<Feature> features){
-        Set<Feature> setFeatures = new HashSet<Feature>();
-        for(Feature f : features){
-            setFeatures.add(f);
-        }
-
-        return setFeatures;
     }
 
     /*
