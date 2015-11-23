@@ -10,11 +10,11 @@ PROJECT_REGISTERED = cowboy_clock
 COMPILE_FIRST = cowboy_middleware cowboy_stream cowboy_sub_protocol
 PLT_APPS = public_key ssl
 CT_OPTS += -ct_hooks cowboy_ct_hook [] # -boot start_sasl
-CI_OTP = OTP-18.0.2
+CI_OTP = OTP-18.0.3 OTP-18.1
 
 # Dependencies.
 
-OTP_DEPS = crypto
+LOCAL_DEPS = crypto
 
 DEPS = cowlib ranch
 dep_cowlib = git https://github.com/ninenines/cowlib master
@@ -28,8 +28,14 @@ dep_gun = git https://github.com/ninenines/gun master
 
 include erlang.mk
 
+# Compile options.
+
 ERLC_OPTS += +warn_export_all +warn_missing_spec +warn_untyped_record
 TEST_ERLC_OPTS += +'{parse_transform, eunit_autoexport}'
+
+# Generate rebar.config on build.
+
+app:: rebar.config
 
 # Also dialyze the tests.
 

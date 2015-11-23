@@ -1,11 +1,17 @@
 # See LICENSE for licensing information.
 
 PROJECT = cowlib
-#ERLC_OPTS += +bin_opt_info
-TEST_ERLC_OPTS += +'{parse_transform, eunit_autoexport}' +'{parse_transform, horse_autoexport}'
-PLT_APPS = crypto
+PROJECT_DESCRIPTION = Support library for manipulating Web protocols.
+PROJECT_VERSION = 1.3.0
 
-TEST_DEPS = triq
+#ERLC_OPTS += +bin_opt_info
+OTP_DEPS = crypto
+DIALYZER_OPTS = -Werror_handling -Wunmatched_returns
+CI_OTP = OTP-18.0.3
+
+TEST_ERLC_OPTS += +'{parse_transform, eunit_autoexport}' +'{parse_transform, horse_autoexport}'
+TEST_DEPS = horse triq
+dep_horse = git https://github.com/extend/horse master
 dep_triq = git https://github.com/krestenkrab/triq master
 
 include erlang.mk
@@ -40,11 +46,6 @@ gen:
 ifeq ($(MAKECMDGOALS),perfs)
 .NOTPARALLEL:
 endif
-
-deps/horse:
-	git clone -n -- https://github.com/extend/horse $(DEPS_DIR)/horse
-	cd $(DEPS_DIR)/horse ; git checkout -q master
-	$(MAKE) -C $(DEPS_DIR)/horse
 
 perfs: test-build
 	$(gen_verbose) erl -noshell -pa ebin deps/horse/ebin \

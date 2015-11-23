@@ -315,7 +315,7 @@ frag_state(_, 1, _, FragState) -> FragState.
 %% Empty last frame of compressed message.
 parse_payload(Data, _, Utf8State, _, _, 0, {fin, _, << 1:1, 0:2 >>},
 		#{inflate := Inflate, inflate_takeover := TakeOver}, _) ->
-	zlib:inflate(Inflate, << 0, 0, 255, 255 >>),
+	_ = zlib:inflate(Inflate, << 0, 0, 255, 255 >>),
 	case TakeOver of
 		no_takeover -> zlib:inflateReset(Inflate);
 		takeover -> ok
@@ -580,7 +580,7 @@ masked_frame({binary, Payload}, _) ->
 	[<< 1:1, 0:3, 2:4, 1:1, Len/bits >>, MaskKeyBin, mask(iolist_to_binary(Payload), MaskKey, <<>>)].
 
 payload_length(Payload) ->
-	case byte_size(Payload) of
+	case iolist_size(Payload) of
 		N when N =< 125 -> << N:7 >>;
 		N when N =< 16#ffff -> << 126:7, N:16 >>;
 		N when N =< 16#7fffffffffffffff -> << 127:7, N:64 >>
