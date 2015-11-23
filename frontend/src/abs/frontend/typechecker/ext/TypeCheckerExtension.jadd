@@ -37,7 +37,7 @@ aspect TypeCheckerExtension {
 */    
     
 //    refine Typing eq ParametricDataTypeUse.getType() {
-//        Type t = Typing.ParametricDataTypeUse.getType().fullCopy();        
+//        Type t = Typing.ParametricDataTypeUse.getType().treeCopyNoTransform();        
 //        getModel().getTypeExt().annotateType(t, this, this);
 //        return t;
 //    }
@@ -79,7 +79,7 @@ aspect TypeCheckerExtension {
     refine Typing eq DataConstructorExp.getType() {
         Type t = Typing.DataConstructorExp.getType();
         if (t != null) {
-            t = t.fullCopy();
+            t = t.treeCopyNoTransform();
         }
         return t;
     }

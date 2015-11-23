@@ -177,7 +177,7 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckProduct(ProductDecl prod,
+    public static void typeCheckProductDecl(ProductDecl prod,
             Map<String,Feature> featureNames,
             Set<String> prodNames,
             Map<String,DeltaDecl> deltaNames,
@@ -241,7 +241,7 @@ public class TypeCheckerHelper {
             }
         }
         if(!valid){
-            e.add(new TypeError(prod, ErrorMessage.INVALID_PRODUCT, prod.getName()));                
+            e.add(new TypeError(prod, ErrorMessage.INVALID_PRODUCT, prod.getName()));
         }
 
         Set<String> seen = new HashSet<String>();

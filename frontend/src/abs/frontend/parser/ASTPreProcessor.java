@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.parser;
@@ -10,16 +10,16 @@ import abs.frontend.ast.*;
  * Preprocesses the AST directly after it has been parsed, before any name and type analysis.
  * Typically, syntactic sugar is eliminated in this phase
  * Currently the following things are done:
- * 
+ *
  *  - selector names of constructors are transformed to functions
- * 
+ *
  * @author Jan Schäfer
  *
  */
 public class ASTPreProcessor {
-    
+
     public final static String FUNCTIONSELECTOR = "selector";
-    
+
     public CompilationUnit preprocess(CompilationUnit unit) {
         for (ModuleDecl d : unit.getModuleDecls()) {
             preprocess(d);
@@ -43,18 +43,18 @@ public class ASTPreProcessor {
             }
         }
     }
-    
+
     public FunctionDecl createSelectorFunctionForDeltaApplication(DataTypeDecl dtd, DataConstructor c, ConstructorArg ca, int numArg) {
         return createSelectorFunction(dtd, c, ca, numArg, true);
     }
-    
+
     /**
      * Creates for a selector a corresponding function, e.g.
-     * 
+     *
      * <pre>
-     * data Foo = Bar(String baz, Bool isTrue, String name); 
+     * data Foo = Bar(String baz, Bool isTrue, String name);
      * </pre>
-     * 
+     *
      * creates:
      * <pre>
      * def Bool isTrue(Foo data) =
@@ -65,7 +65,7 @@ public class ASTPreProcessor {
      */
     private FunctionDecl createSelectorFunction(DataTypeDecl dtd, DataConstructor c, ConstructorArg ca, int numArg, boolean delta) {
         String selName = ca.getSelectorName().getName();
-        
+
         // the list of patterns, e.g. _,res,_
         List<Pattern> patternList = new List<Pattern>();
         for (int i = 0; i < c.getNumConstructorArg(); i++) {
@@ -74,9 +74,9 @@ public class ASTPreProcessor {
             else
                 patternList.add(new UnderscorePattern());
         }
-        
+
         // the case expression
-        FunctionDef funDef = 
+        FunctionDef funDef =
             new ExpFunctionDef(
                 new CaseExp(
                     new VarUse("data"),
@@ -84,7 +84,7 @@ public class ASTPreProcessor {
                         new CaseBranch(
                             new ConstructorPattern(c.getName(), patternList),
                             new VarUse("res")))));
-        
+
         // the type parameters of the function
         List<TypeParameterDecl> typeParams;
         // the type of the parameter of the function
@@ -101,13 +101,13 @@ public class ASTPreProcessor {
             typeParams = new List<TypeParameterDecl>();
             paramType = dtd.getType().toUse();
         }
-        
-        
-        
+
+
+
         List<ParamDecl> parameters = new List<ParamDecl>()
                 .add(new ParamDecl("data",paramType,new List<Annotation>()));
         // the complete function definition
-        FunctionDecl fd = 
+        FunctionDecl fd =
             new ParametricFunctionDecl(
                     selName,    // function name
                     ca.getDataTypeUse().copy(), // type
@@ -116,17 +116,17 @@ public class ASTPreProcessor {
                     new List<Annotation>(), // annotations
                     typeParams
                     );
-        
+
         // annotate that this function is a selector function
         // such that backends will know about it
         fd.addAnnotation(new Annotation(new StringLiteral(FUNCTIONSELECTOR)));
-        
+
         setPosition(fd, ca.getStartPos(), ca.getEndPos());
         return fd;
     }
 
     /**
-     * recursively set the position of this ast node and its childs 
+     * recursively set the position of this ast node and its childs
      */
     private void setPosition(ASTNode<?> node, int startPos, int endPos) {
         node.setPosition(startPos, endPos);

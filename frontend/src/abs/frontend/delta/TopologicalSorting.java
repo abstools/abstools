@@ -49,11 +49,11 @@ public class TopologicalSorting<T> {
 
     public void addEdge(T high, T low) throws DeltaModellingException {
         if (incidence == null)
-            throw new DeltaModellingException("Delta order: nodes not found [" + high.toString() + "; " + low.toString() + "] -- graph is empty");
+            throw new DeltaModellingException("Sorting: nodes not found [" + high.toString() + "; " + low.toString() + "] -- graph is empty");
         if (! incidence.containsColumn(high))
-            throw new DeltaModellingException("Delta order: node not found [" + high.toString() + "]");
+            throw new DeltaModellingException("Sorting: node not found [" + high.toString() + "]");
         if (! incidence.containsRow(low))
-            throw new DeltaModellingException("Delta order: node not found [" + low.toString() + "]");
+            throw new DeltaModellingException("Sorting: node not found [" + low.toString() + "]");
         incidence.put(high, low, true);
         isSorted = false;
     }
@@ -79,7 +79,7 @@ public class TopologicalSorting<T> {
             }
             // no nodes in set means there is a cycle among the remaining nodes
             if (partition.get(currentSet).isEmpty())
-                throw new DeltaModellingException("Delta order: cycle detected among the following nodes: " + nodes.toString());
+                throw new DeltaModellingException("Sorting: cycle detected among the following nodes: " + nodes.toString());
 
             // for all nodes in set: remove these nodes from node set
             for (T node : partition.get(currentSet))

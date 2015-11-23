@@ -1025,7 +1025,7 @@ aspect TypeCheckProductline {
         for (UpdateDecl upd : m.getUpdateDecls()) {
             updateNames.add(upd.getName());
         }
-        TypeCheckerHelper.typeCheckProduct(this, featureNames, productNames, m.getDeltaDeclsMap(), updateNames, e);
+        TypeCheckerHelper.typeCheckProductDecl(this, featureNames, productNames, m.getDeltaDeclsMap(), updateNames, e);
     }
 
     protected void ProductLine.typeCheck(SemanticConditionList e) {

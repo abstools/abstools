@@ -37,7 +37,7 @@ public class DeltaTest extends FrontendTest {
             featureNames = new HashMap<String,Feature>();
             for (Feature f : m.getProductLine().getFeatures()) {
                 featureNames.put(f.getName(),f);
-            }            
+            }
         }
         HashSet<String> productNames = new HashSet<String>();
         for (ProductDecl prod : m.getProductDecls()) {
@@ -47,6 +47,6 @@ public class DeltaTest extends FrontendTest {
         for (UpdateDecl upd : m.getUpdateDecls()) {
             updateNames.add(upd.getName());
         }
-        TypeCheckerHelper.typeCheckProduct(p, featureNames, productNames, m.getDeltaDeclsMap(), updateNames, e);
+        TypeCheckerHelper.typeCheckProductDecl(p, featureNames, productNames, m.getDeltaDeclsMap(), updateNames, e);
     }
 }
