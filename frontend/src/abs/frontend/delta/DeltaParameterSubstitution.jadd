@@ -23,7 +23,7 @@ aspect DeltaParameterSubstitution {
     abstract public Value Deltaparam.calcValue(List<Feature> features) throws DeltaModellingWithNodeException;
 
     public Value Const.calcValue(List<Feature> features)  {
-        return (Value) getValue().fullCopy();
+        return (Value) getValue().treeCopyNoTransform();
     }
 
     public Value CID.calcValue(List<Feature> features) {
@@ -47,7 +47,7 @@ aspect DeltaParameterSubstitution {
             if (f.getName().equals(this.getFeatName()))   // found feature
                 for (AttrAssignment attr : f.getAttrAssignments()) {
                     if (attr.getName().equals(getAttrName()))   // found attribute
-                        return (Value) attr.getValue().fullCopy();
+                        return (Value) attr.getValue().treeCopyNoTransform();
                 }
         }
         throw new DeltaModellingException("Argument " + getFeatName() + "." + getAttrName() + " not found.");
