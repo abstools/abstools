@@ -89,8 +89,8 @@ public class ErlangBackend extends Main {
         ErlApp erlApp = new ErlApp(destDir);
         m.generateErlangCode(erlApp);
         erlApp.close();
-	String[] rebarProgram = new String[] {"escript", "bin/rebar", "compile"};
-        Process p = Runtime.getRuntime().exec(rebarProgram, null, destDir);
+	String[] rebarProgram = new String[] {"escript", "../bin/rebar", "compile"};
+        Process p = Runtime.getRuntime().exec(rebarProgram, null, new File(destDir, "absmodel"));
         if (verbose) IOUtils.copy(p.getInputStream(), System.out);
         p.waitFor();
         if (p.exitValue() != 0) {

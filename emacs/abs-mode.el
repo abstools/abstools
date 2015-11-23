@@ -373,7 +373,7 @@ value.")
   (let* ((abs-output-file
           (abs--absolutify-filename (pcase backend
                                       (`maude (abs--maude-filename))
-                                      (`erlang "gen/erl/Emakefile")
+                                      (`erlang "gen/erl/absmodel/Emakefile")
                                       (`java "gen/ABS/StdLib/Bool.java")
                                       ;; FIXME Prolog backend can use -fn outfile
                                       (`prolog "abs.pl")
@@ -415,7 +415,7 @@ value.")
                                       (inferior-erlang nil))
                                     (get-buffer "*erlang*")))
                    (erlang-dir (concat (file-name-directory (buffer-file-name))
-                                       "gen/erl"))
+                                       "gen/erl/absmodel"))
                    (module (abs--guess-module))
                    (debug-output abs-debug-output))
                (with-current-buffer erlang-buffer
