@@ -214,24 +214,28 @@ public class TypeCheckerHelper {
         }
 
         // Check the right side of product expression that contains in prodNames
-        Set<String> allProductName = new HashSet<String>();
-        prod.getProductExpr().setAllProductName(allProductName);
-        for(String productName : allProductName){
-            if(!prodNames.contains(productName)){
+        Set<String> productNames = new HashSet<String>();
+        prod.getProductExpr().setRightSideProductNames(productNames);
+        for (String productName : productNames) {
+            if (!prodNames.contains(productName)) {
                 e.add(new TypeError(prod, ErrorMessage.UNDECLARED_PRODUCT, productName));
             }
         }
 
-        java.util.List<String> errors = prod.getModel().instantiateCSModel().checkSolutionWithErrors(
-                prod.getImplicitProduct().getSolution(),
-                prod.getModel());
+        // Check solution from getImplicitProduct()
+        if (prod.getImplicitProduct() != null) {
+            java.util.List<String> errors = prod.getModel().instantiateCSModel().checkSolutionWithErrors(
+                    prod.getImplicitProduct().getSolution(),
+                    prod.getModel());
 
-        String failedConstraints = "";
-        for (String s: errors)
-            failedConstraints += "\n- " + s;
+            if (!errors.isEmpty()) {
+                String failedConstraints = "";
+                for (String s: errors)
+                    failedConstraints += "\n- " + s;
 
-        if (! errors.isEmpty())
-            e.add(new TypeError(prod, ErrorMessage.INVALID_PRODUCT, prod.getName(), failedConstraints));
+                e.add(new TypeError(prod, ErrorMessage.INVALID_PRODUCT, prod.getName(), failedConstraints));
+            }
+        }
 
         Set<String> seen = new HashSet<String>();
         // FIXME: deal with reconfigurations

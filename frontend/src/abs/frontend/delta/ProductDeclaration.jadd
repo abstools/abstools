@@ -1,46 +1,34 @@
 aspect ProductDeclaration {
 
     /*
-     * Evaluate all sorted ProductDecl,
-     * and set implicitProduct correspond to a valid set of features from feature model
+     * Evaluate all sorted ProductDecl and set implicitProduct
      */
-    public void Model.evaluateAllProductDeclarations() {
+    public void Model.evaluateAllProductDeclarations() throws WrongProgramArgumentException {
         // Initialize set of ProductDecl
         Set<ProductDecl> productDecls = new HashSet<ProductDecl>(getProductDecls());
 
-        // Sort ProductDecls
+        // Sort all ProductDecl
         TopologicalSorting productSorter = new TopologicalSorting<ProductDecl>(productDecls);
-        for (ProductDecl low : productDecls){
-            Set<String> allProductName = new HashSet<String>();
-            low.getProductExpr().setAllProductName(allProductName);
-            for(String productName : allProductName){
-                try{
-                    ProductDecl high = findProduct(productName);      
-                    productSorter.addEdge(high, low);              
-                }
-                catch(WrongProgramArgumentException e){
-                    e.printStackTrace();
-                }
+        for (ProductDecl low : productDecls) {
+            Set<String> productNames = new HashSet<String>();
+            low.getProductExpr().setRightSideProductNames(productNames);
+            for (String productName : productNames) {
+                ProductDecl high = findProduct(productName);
+                productSorter.addEdge(high, low);
             }
         }
         productSorter.sort();
         java.util.List<ProductDecl> sortedList = productSorter.getAnOrder();
 
-
-        // Evaluate the sorted list of ProductDecl
+        // Evaluate sorted list of ProductDecl
         for (ProductDecl p : sortedList) {
             List<Feature> features = new List<Feature>();
             for (Feature f : p.getProductExpr().evaluate()) {
-                try {
-                    Feature feature = f.clone();
-                    features.add(feature);
-                } catch (CloneNotSupportedException e) {
-                    e.printStackTrace();
-                }
+                features.add(f.treeCopyNoTransform());
             }
             p.setImplicitProduct(new ImplicitProduct(features));
 
-            // Print the result
+            // Debug: Print evaluation result
             /*
             System.out.print(p.getName() + " : ");
             for(Feature f : features){
@@ -52,32 +40,24 @@ aspect ProductDeclaration {
     }
 
     /*
-     * Comparing between two sets of features
-     * and return boolean of the result
-     * 
-     * TODO: use ListUtils.ASTListToSet() 
-     *       and overload Features.equals() to compare feature names
+     * Return true if this ImplicitProduct is the same as the ImplicitProduct argument; false otherwise.
      */    
-    public boolean ImplicitProduct.equals(ImplicitProduct impl){
-        Set<String> features1 = new HashSet<String>();
-        for(Feature f : getFeatures()){
-            features1.add(f.getName());
-        }
-
-        Set<String> features2 = new HashSet<String>();
-        for(Feature f : impl.getFeatures()){
-            features2.add(f.getName());
-        }
-
-        return features1.equals(features2);
+    public boolean ImplicitProduct.equals(ImplicitProduct impl) {
+        Set<Feature> features = new HashSet<Feature>(ListUtils.ASTListToSet(getFeatures()));
+        Set<Feature> implFeatures = new HashSet<Feature>(ListUtils.ASTListToSet(impl.getFeatures())); 
+        
+        return features.equals(implFeatures);
+    }
+    public boolean Feature.equals(Feature f) {
+        return getName().equals(f.getName());
     }
 
     /* 
      * Return the corresponding ImplicitProduct obtained through evaluating the product expression
      */
     private ImplicitProduct ProductDecl.implicitProduct;
-    public void ProductDecl.setImplicitProduct(ImplicitProduct implicitProduct){
-        this.implicitProduct = implicitProduct;
+    public void ProductDecl.setImplicitProduct(ImplicitProduct impl) {
+        this.implicitProduct = impl;
     }
     syn lazy ImplicitProduct ProductDecl.getImplicitProduct() {
         return implicitProduct;
@@ -86,71 +66,57 @@ aspect ProductDeclaration {
     /*
      * Set all of product name recursively by given object of ProductExpr
      */
-    public abstract void ProductExpr.setAllProductName(Set<String> allProductName);
+    public abstract void ProductExpr.setRightSideProductNames(Set<String> productNames);
 
-    public void ProductFeatureSet.setAllProductName(Set<String> allProductName){
+    public void ProductFeatureSet.setRightSideProductNames(Set<String> productNames) {
         return;
     }
-    public void ProductIntersect.setAllProductName(Set<String> allProductName){
-        getLeft().setAllProductName(allProductName);
-        getRight().setAllProductName(allProductName);
+    public void ProductIntersect.setRightSideProductNames(Set<String> productNames) {
+        getLeft().setRightSideProductNames(productNames);
+        getRight().setRightSideProductNames(productNames);
     }
-    public void ProductUnion.setAllProductName(Set<String> allProductName){
-        getLeft().setAllProductName(allProductName);
-        getRight().setAllProductName(allProductName);
+    public void ProductUnion.setRightSideProductNames(Set<String> productNames) {
+        getLeft().setRightSideProductNames(productNames);
+        getRight().setRightSideProductNames(productNames);
     }
-    public void ProductName.setAllProductName(Set<String> allProductName){
-        allProductName.add(getName());
+    public void ProductName.setRightSideProductNames(Set<String> productNames) {
+        productNames.add(getName());
     }
 
     /*
      * Evaluate recursively the ProductExpr to get set of features
      */
-    public abstract Set<Feature> ProductExpr.evaluate();
+    public abstract Set<Feature> ProductExpr.evaluate() throws WrongProgramArgumentException;
 
-    public Set<Feature> ProductFeatureSet.evaluate() {
+    public Set<Feature> ProductFeatureSet.evaluate() throws WrongProgramArgumentException {
         return ListUtils.ASTListToSet(getFeatures());
     }
-    public Set<Feature> ProductIntersect.evaluate(){
-        Set<Feature> left = getLeft().evaluate();
-        Set<Feature> right = getRight().evaluate();
-
-        return intersection(left, right);
+    public Set<Feature> ProductIntersect.evaluate() throws WrongProgramArgumentException {
+        return intersection(getLeft().evaluate(), getRight().evaluate());
     }
-    public Set<Feature> ProductUnion.evaluate(){
-        Set<Feature> left = getLeft().evaluate();
-        Set<Feature> right = getRight().evaluate();
-
-        return union(left, right);
+    public Set<Feature> ProductUnion.evaluate() throws WrongProgramArgumentException {
+        return union(getLeft().evaluate(), getRight().evaluate());
     }
-    public Set<Feature> ProductName.evaluate() {
-        try{
-            ProductDecl p = getModel().findProduct(getName());
-            return ListUtils.ASTListToSet(p.getImplicitProduct().getFeatures());
-        }
-        catch(WrongProgramArgumentException e){
-            e.printStackTrace();
-        }
-
-        return null;
+    public Set<Feature> ProductName.evaluate() throws WrongProgramArgumentException {
+        ProductDecl p = getModel().findProduct(getName());
+        
+        return ListUtils.ASTListToSet(p.getImplicitProduct().getFeatures());
     }
 
     /*
      * Perform the operation union by comparing name of the features
-     * 
-     * TODO use standard set comparison, overload Feature.equals() to compare names
      */
-    public Set<Feature> ProductUnion.union(Set<Feature> left, Set<Feature> right){
-        for(Feature r : right){
+    public Set<Feature> ProductUnion.union(Set<Feature> left, Set<Feature> right) {
+        for (Feature r : right) {
             boolean exist = false;
-            for(Feature l : left){
-                if(r.getName().equals(l.getName())){
+            for (Feature l : left) {
+                if (r.equals(l)) {
                     exist = true;
                     break;
                 }
             }
 
-            if(!exist)
+            if (!exist)
                 left.add(r);
         }
 
@@ -160,19 +126,19 @@ aspect ProductDeclaration {
     /*
      * Perform the operation intersection by comparing name of the features
      */
-    public Set<Feature> ProductIntersect.intersection(Set<Feature> left, Set<Feature> right){
+    public Set<Feature> ProductIntersect.intersection(Set<Feature> left, Set<Feature> right) {
         Set<Feature> result = new HashSet<Feature>();
 
-        for(Feature r : right){
+        for (Feature r : right) {
             boolean exist = false;
-            for(Feature l : left){
-                if(r.getName().equals(l.getName())){
+            for (Feature l : left) {
+                if (r.equals(l)) {
                     exist = true;
                     break;
                 }
             }
 
-            if(exist)
+            if (exist)
                 result.add(r);
         }
 
