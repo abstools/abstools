@@ -112,7 +112,7 @@ public enum ErrorMessage {
     MAIN_BLOCK_NOT_FOUND("Warning: no main block found."),
     MAIN_BLOCK_AMBIGUOUS("Warning: this main block is shadowed by the main block from module %s."),
     UNDECLARED_PRODUCT("Product [%s] is not declared"),
-    INVALID_PRODUCT("Product [%s] is not valid according to feature model")
+    INVALID_PRODUCT("Product [%s] does not satisfy the feature model. Constraints failed: %s.")
     ;
 
     private String pattern;
