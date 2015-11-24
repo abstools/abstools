@@ -53,6 +53,9 @@ aspect ProductDeclaration {
     /*
      * Comparing between two sets of features
      * and return boolean of the result
+     * 
+     * TODO: use ListUtils.ASTListToSet() 
+     *       and overload Features.equals() to compare feature names
      */    
     public boolean ImplicitProduct.equals(ImplicitProduct impl){
         Set<String> features1 = new HashSet<String>();
@@ -133,6 +136,8 @@ aspect ProductDeclaration {
 
     /*
      * Perform the operation union by comparing name of the features
+     * 
+     * TODO use standard set comparison, overload Feature.equals() to compare names
      */
     public Set<Feature> ProductUnion.union(Set<Feature> left, Set<Feature> right){
         for(Feature r : right){
