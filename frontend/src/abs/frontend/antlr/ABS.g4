@@ -392,6 +392,7 @@ product_expr
     : '{' feature (',' feature)* '}'                          # ProductFeatureSet
     | l=product_expr ANDAND r=product_expr                    # ProductIntersect
     | l=product_expr OROR r=product_expr                      # ProductUnion
+    | l=product_expr MINUS r=product_expr                     # ProductDifference
     | TYPE_IDENTIFIER                                         # ProductName
     | '(' product_expr ')'                                    # ProductParen
     ;
