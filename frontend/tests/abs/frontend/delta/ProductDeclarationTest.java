@@ -29,7 +29,11 @@ public class ProductDeclarationTest extends DeltaTest {
         Model model = assertParseOk(
                 "product P1(F1, F2, F3);"
                 );
-        model.evaluateAllProductDeclarations();
+        try {
+            model.evaluateAllProductDeclarations();
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
 
         ProductDecl p = null;
         try {
@@ -52,7 +56,11 @@ public class ProductDeclarationTest extends DeltaTest {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3};"
                 );
-        model.evaluateAllProductDeclarations();
+        try {
+            model.evaluateAllProductDeclarations();
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
 
         ProductDecl p = null;
         try {
@@ -75,7 +83,11 @@ public class ProductDeclarationTest extends DeltaTest {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3} || {F4};"
                 );
-        model.evaluateAllProductDeclarations();
+        try {
+            model.evaluateAllProductDeclarations();
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
 
         ProductDecl p = null;
         try {
@@ -98,7 +110,11 @@ public class ProductDeclarationTest extends DeltaTest {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3} && {F2, F3};"
                 );
-        model.evaluateAllProductDeclarations();
+        try {
+            model.evaluateAllProductDeclarations();
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
 
         ProductDecl p = null;
         try {
@@ -122,7 +138,11 @@ public class ProductDeclarationTest extends DeltaTest {
                 "product P1 = {F1, F2, F3};"
                         + "product P2 = P1;"
                 );
-        model.evaluateAllProductDeclarations();
+        try {
+            model.evaluateAllProductDeclarations();
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
 
         ProductDecl p = null;
         try {
@@ -146,7 +166,11 @@ public class ProductDeclarationTest extends DeltaTest {
                 "product P4 = P5;"
                         + "product P5 = P4;"
                 );
-        model.evaluateAllProductDeclarations();
+        try {
+            model.evaluateAllProductDeclarations();
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
@@ -162,13 +186,10 @@ public class ProductDeclarationTest extends DeltaTest {
             e.printStackTrace();
         }
 
-        SemanticErrorList e = new SemanticErrorList();        
+        SemanticErrorList e = new SemanticErrorList();
         typeCheck(model, p, e);
 
-        // Four errors here:
-        // three undeclared products (P2, P3, P4)
-        // and P1 is invalid because there is no feature model declared
-        assertEquals(4, e.size());
+        assertEquals(3, e.size());
         assertEquals(ErrorMessage.UNDECLARED_PRODUCT, e.getFirst().msg);
     }
 
@@ -180,7 +201,11 @@ public class ProductDeclarationTest extends DeltaTest {
                         + "group allof { F1, F2, F3 }"
                         + "}"                
                 );
-        model.evaluateAllProductDeclarations();
+        try {
+            model.evaluateAllProductDeclarations();
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
 
         ProductDecl p = null;
         try {
@@ -191,10 +216,10 @@ public class ProductDeclarationTest extends DeltaTest {
 
         SemanticErrorList e = new SemanticErrorList();        
         typeCheck(model, p, e);
-        
+
         assertEquals(0, e.size());
     }
-    
+
     @Test
     public void invalidProduct() {
         Model model = assertParseOk(
@@ -203,7 +228,11 @@ public class ProductDeclarationTest extends DeltaTest {
                         + "group allof { F1, F2, F3 }"
                         + "}"                
                 );
-        model.evaluateAllProductDeclarations();
+        try {
+            model.evaluateAllProductDeclarations();
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
 
         ProductDecl p = null;
         try {
@@ -214,7 +243,7 @@ public class ProductDeclarationTest extends DeltaTest {
 
         SemanticErrorList e = new SemanticErrorList();        
         typeCheck(model, p, e);
-        
+
         assertEquals(1, e.size());
         assertEquals(ErrorMessage.INVALID_PRODUCT, e.getFirst().msg);
     }
@@ -224,7 +253,11 @@ public class ProductDeclarationTest extends DeltaTest {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3} && {F3, F4} || {F5};"
                 );
-        model.evaluateAllProductDeclarations();
+        try {
+            model.evaluateAllProductDeclarations();
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
 
         ProductDecl p = null;
         try {
@@ -247,7 +280,11 @@ public class ProductDeclarationTest extends DeltaTest {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3} && ({F3, F4} || {F5});"
                 );
-        model.evaluateAllProductDeclarations();
+        try {
+            model.evaluateAllProductDeclarations();
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
 
         ProductDecl p = null;
         try {
@@ -277,7 +314,7 @@ public class ProductDeclarationTest extends DeltaTest {
         }
 
         Set<String> actual = new HashSet<String>();
-        p.getProductExpr().setAllProductName(actual);
+        p.getProductExpr().setRightSideProductNames(actual);
         assertEquals(3, actual.size());
 
         Set<String> expected = new HashSet<String>(Arrays.asList("P2", "P3", "P4"));
@@ -291,7 +328,11 @@ public class ProductDeclarationTest extends DeltaTest {
                         + "product P3 = P2;"
                         + "product P1 = {F1, F2, F3};"
                 );
-        model.evaluateAllProductDeclarations();
+        try {
+            model.evaluateAllProductDeclarations();
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
 
         ProductDecl p = null;
         try {
