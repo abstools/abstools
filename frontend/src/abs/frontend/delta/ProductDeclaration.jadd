@@ -26,6 +26,7 @@ aspect ProductDeclaration {
         productSorter.sort();
         java.util.List<ProductDecl> sortedList = productSorter.getAnOrder();
 
+
         // Evaluate the sorted list of ProductDecl
         for (ProductDecl p : sortedList) {
             List<Feature> features = new List<Feature>();

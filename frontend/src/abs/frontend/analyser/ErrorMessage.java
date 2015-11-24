@@ -110,7 +110,7 @@ public enum ErrorMessage {
     AMBIGUOUS_PRODUCTLINE("The product line %s is potentially ambiguous: Deltas %s and %s both target class %s, but their application order is undefined."),
     DEADLOCK_GENERATION_ERROR("Generated edge: %s."),
     UNDECLARED_PRODUCT("Product [%s] is not declared"),
-    INVALID_PRODUCT("Product [%s] is not valid according to feature model")
+    INVALID_PRODUCT("Product [%s] does not satisfy the feature model. Constraints failed: %s.")
     ;
 
     private String pattern;

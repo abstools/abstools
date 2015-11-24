@@ -183,6 +183,7 @@ public class TypeCheckerHelper {
             Map<String,DeltaDecl> deltaNames,
             Set<String> updateNames,
             SemanticErrorList e) {
+
         if (featureNames != null) {
             // Do the features exist in the PL declaration (and also check feature attributes)?
             Model m = prod.getModel();
@@ -222,27 +223,16 @@ public class TypeCheckerHelper {
             }
         }
 
-        // Check validity of product between productDeclarations and implicitProducts
-        Model m = prod.getModel();
-        String rootFM = m.features().size()>0 ? m.features().get(0) : null;
-        boolean valid = false;
-        for(ImplicitProduct impl : m.getImplicitProducts()){
-            try {
-                ImplicitProduct temp = prod.getImplicitProduct().clone();
-                if(rootFM != null)
-                    temp.addFeature(new Feature(rootFM, new List<AttrAssignment>()));
+        java.util.List<String> errors = prod.getModel().instantiateCSModel().checkSolutionWithErrors(
+                prod.getImplicitProduct().getSolution(),
+                prod.getModel());
 
-                if(impl.equals(temp)){
-                    valid = true;
-                    break;
-                }
-            } catch (CloneNotSupportedException e1) {
-                e1.printStackTrace();
-            }
-        }
-        if(!valid){
-            e.add(new TypeError(prod, ErrorMessage.INVALID_PRODUCT, prod.getName()));
-        }
+        String failedConstraints = "";
+        for (String s: errors)
+            failedConstraints += "\n- " + s;
+
+        if (! errors.isEmpty())
+            e.add(new TypeError(prod, ErrorMessage.INVALID_PRODUCT, prod.getName(), failedConstraints));
 
         Set<String> seen = new HashSet<String>();
         // FIXME: deal with reconfigurations
