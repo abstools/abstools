@@ -91,6 +91,7 @@ wget -nv "http://www.eclipse.org/downloads/download.php?file=/technology/epp/dow
 echo "Installing eclipse in /opt/eclipse and setting up paths ..."
 (cd /opt && sudo tar xzf /home/vagrant/eclipse-rcp-mars-1-linux-gtk-x86_64.tar.gz)
 sudo ln -s /opt/eclipse/eclipse /usr/local/bin/eclipse
+rm /home/vagrant/eclipse-rcp-mars-1-linux-gtk-x86_64.tar.gz
 
 echo
 echo "Building the ABS compiler and eclipse plugins"
@@ -143,12 +144,28 @@ sudo chown -R www-data.www-data /tmp/costabs
 sudo chmod -R 777 /tmp/costabs
 
 echo
+echo "Installing COFLOCO and SRA"
+echo
+wget -q http://costa.ls.fi.upm.es/download/cofloco.colab.zip
+(cd /usr/local/lib && sudo unzip -o /home/vagrant/cofloco.colab.zip)
+rm cofloco.colab.zip
+wget -q http://costa.ls.fi.upm.es/download/sra.colab.zip
+(cd /usr/local/lib && sudo unzip -o /home/vagrant/sra.colab.zip)
+rm sra.colab.zip
+
+echo
 echo "Setting up apache and easyinterface"
 echo
 sudo apt-get -y -q install apache2 apache2-utils openssl-blacklist
 sudo apt-get -y -q install php5 libapache2-mod-php5 php5-mcrypt
+sudo rm -rf /var/www/absexamples
+(cd /var/www && sudo git clone https://github.com/abstools/absexamples.git)
+sudo chmod -R 755 /var/www/absexamples
 sudo rm -rf /var/www/easyinterface
 (cd /var/www && sudo git clone https://github.com/abstools/easyinterface.git)
+(cd /var/www/easyinterface/server/config/envisage && ./offlineabsexamples.sh /var/www/absexamples > /home/vagrant/examples.cfg)
+sudo mv /home/vagrant/examples.cfg /var/www/easyinterface/server/config/envisage
+sudo chown root.root /var/www/easyinterface/server/config/envisage/examples.cfg
 sudo chmod -R 755 /var/www/easyinterface
 
 # Set up apache2
@@ -156,6 +173,14 @@ cat >/home/vagrant/easyinterface-site.conf <<EOF
 Alias /ei "/var/www/easyinterface"
 
 <Directory "/var/www/easyinterface">
+   Options FollowSymlinks MultiViews Indexes IncludesNoExec
+   AllowOverride All
+   Require all granted
+</Directory>
+
+Alias /absexamples "/var/www/absexamples"
+
+<Directory "/path-to/absexamples">
    Options FollowSymlinks MultiViews Indexes IncludesNoExec
    AllowOverride All
    Require all granted
@@ -181,8 +206,10 @@ cat >ENVISAGE_CONFIG <<EOF
 EC_SACOHOME="/usr/local/lib/saco/"
 # path to abs tools
 EC_ABSTOOLSHOME="/vagrant/"
-# path to absfrontend.jar
-EC_ABSFRONTEND="/vagrant/frontend/dist"
+# path to COFLOCO
+EC_COFLOCOHOME="/usr/local/lib/cofloco/"
+# path to SRA jar
+EC_SRAHOME="/usr/local/lib/sra/"
 EOF
 sudo mv ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
 sudo chown root.root /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
