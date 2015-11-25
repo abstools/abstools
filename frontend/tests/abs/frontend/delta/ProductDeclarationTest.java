@@ -79,6 +79,33 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
+    public void productIntersect() {
+        Model model = assertParseOk(
+                "product P1 = {F1, F2, F3} && {F2, F3};"
+                );
+        try {
+            model.evaluateAllProductDeclarations();
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
+
+        ProductDecl p = null;
+        try {
+            p = model.findProduct("P1");
+        } catch (WrongProgramArgumentException e) {
+            e.printStackTrace();
+        }
+        ImplicitProduct impl = p.getImplicitProduct();
+        assertEquals(2, impl.getNumFeature());
+
+        Set<String> expected = new HashSet<String>(Arrays.asList("F2", "F3"));
+        Set<String> actual = new HashSet<String>();
+        for (Feature f : impl.getFeatures())
+            actual.add(f.getName());
+        assertEquals(expected, actual);
+    }
+
+    @Test
     public void productUnion() {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3} || {F4};"
@@ -106,9 +133,9 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
-    public void productIntersect() {
+    public void productDifference() {
         Model model = assertParseOk(
-                "product P1 = {F1, F2, F3} && {F2, F3};"
+                "product P1 = {F1, F2, F3, F4} - {F2, F3};"
                 );
         try {
             model.evaluateAllProductDeclarations();
@@ -125,7 +152,7 @@ public class ProductDeclarationTest extends DeltaTest {
         ImplicitProduct impl = p.getImplicitProduct();
         assertEquals(2, impl.getNumFeature());
 
-        Set<String> expected = new HashSet<String>(Arrays.asList("F2", "F3"));
+        Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F4"));
         Set<String> actual = new HashSet<String>();
         for (Feature f : impl.getFeatures())
             actual.add(f.getName());

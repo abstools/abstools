@@ -329,7 +329,7 @@ abstract ProductExpr ;
 ProductFeatureSet : ProductExpr ::= Feature* ;
 ProductIntersect : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
 ProductUnion : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
-// ProductDifference : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
+ProductDifference : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
 ProductName : ProductExpr ::= <Name> ;
 
 ImplicitProduct ::= Feature* ;

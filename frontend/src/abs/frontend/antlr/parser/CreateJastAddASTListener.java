@@ -845,6 +845,10 @@ new List<ModuleDecl>(),
     @Override public void exitProductUnion(ABSParser.ProductUnionContext ctx) {
         setV(ctx, new ProductUnion((ProductExpr)v(ctx.l), (ProductExpr)v(ctx.r)));
     }
+    
+    @Override public void exitProductDifference(ABSParser.ProductDifferenceContext ctx) {
+        setV(ctx, new ProductDifference((ProductExpr)v(ctx.l), (ProductExpr)v(ctx.r)));
+    }
 
     @Override public void exitProductName(ABSParser.ProductNameContext ctx) {
         setV(ctx, new ProductName(ctx.TYPE_IDENTIFIER().getText()));
