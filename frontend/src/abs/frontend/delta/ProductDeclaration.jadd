@@ -115,40 +115,41 @@ aspect ProductDeclaration {
      * FIXME: use standard sets union operation
      */
     public Set<Feature> ProductUnion.union(Set<Feature> left, Set<Feature> right) {
-        for (Feature r : right) {
+        Set<Feature> result = new HashSet<Feature>(right);
+        
+        for (Feature l : left) {
             boolean exist = false;
-            for (Feature l : left) {
-                if (r.equals(l)) {
+            for (Feature r : right) {
+                if (l.equals(r)) {
                     exist = true;
                     break;
                 }
             }
 
             if (!exist)
-                left.add(r);
+                result.add(l);
         }
 
-        return left;
+        return result;
     }
 
     /*
      * Perform the operation intersection by comparing two sets of the features
-     * FIXME: use standard sets intersection operation
      */
     public Set<Feature> ProductIntersect.intersection(Set<Feature> left, Set<Feature> right) {
         Set<Feature> result = new HashSet<Feature>();
 
-        for (Feature r : right) {
+        for (Feature l : left) {
             boolean exist = false;
-            for (Feature l : left) {
-                if (r.equals(l)) {
+            for (Feature r : right) {
+                if (l.equals(r)) {
                     exist = true;
                     break;
                 }
             }
 
             if (exist)
-                result.add(r);
+                result.add(l);
         }
 
         return result;
@@ -156,7 +157,6 @@ aspect ProductDeclaration {
 
     /*
      * Perform the operation difference by comparing two sets of the features
-     * FIXME: use standard sets difference operation
      */
     public Set<Feature> ProductDifference.difference(Set<Feature> left, Set<Feature> right) {
         Set<Feature> result = new HashSet<Feature>();
@@ -164,7 +164,7 @@ aspect ProductDeclaration {
         for (Feature l : left) {
             boolean exist = false;
             for (Feature r : right){
-                if(r.equals(l)){
+                if(l.equals(r)){
                     exist = true;
                     break;
                 }
