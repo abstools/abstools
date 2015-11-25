@@ -45,7 +45,7 @@ aspect ProductDeclaration {
     public boolean ImplicitProduct.equals(ImplicitProduct impl) {
         Set<Feature> features = new HashSet<Feature>(ListUtils.ASTListToSet(getFeatures()));
         Set<Feature> implFeatures = new HashSet<Feature>(ListUtils.ASTListToSet(impl.getFeatures())); 
-        
+
         return features.equals(implFeatures);
     }
     public boolean Feature.equals(Feature f) {
@@ -79,6 +79,10 @@ aspect ProductDeclaration {
         getLeft().setRightSideProductNames(productNames);
         getRight().setRightSideProductNames(productNames);
     }
+    public void ProductDifference.setRightSideProductNames(Set<String> productNames) {
+        getLeft().setRightSideProductNames(productNames);
+        getRight().setRightSideProductNames(productNames);
+    }
     public void ProductName.setRightSideProductNames(Set<String> productNames) {
         productNames.add(getName());
     }
@@ -97,14 +101,18 @@ aspect ProductDeclaration {
     public Set<Feature> ProductUnion.evaluate() throws WrongProgramArgumentException {
         return union(getLeft().evaluate(), getRight().evaluate());
     }
+    public Set<Feature> ProductDifference.evaluate() throws WrongProgramArgumentException {
+        return difference(getLeft().evaluate(), getRight().evaluate());
+    }
     public Set<Feature> ProductName.evaluate() throws WrongProgramArgumentException {
         ProductDecl p = getModel().findProduct(getName());
-        
+
         return ListUtils.ASTListToSet(p.getImplicitProduct().getFeatures());
     }
 
     /*
-     * Perform the operation union by comparing name of the features
+     * Perform the operation union by comparing two sets of the features
+     * FIXME: use standard sets union operation
      */
     public Set<Feature> ProductUnion.union(Set<Feature> left, Set<Feature> right) {
         for (Feature r : right) {
@@ -124,7 +132,8 @@ aspect ProductDeclaration {
     }
 
     /*
-     * Perform the operation intersection by comparing name of the features
+     * Perform the operation intersection by comparing two sets of the features
+     * FIXME: use standard sets intersection operation
      */
     public Set<Feature> ProductIntersect.intersection(Set<Feature> left, Set<Feature> right) {
         Set<Feature> result = new HashSet<Feature>();
@@ -142,6 +151,28 @@ aspect ProductDeclaration {
                 result.add(r);
         }
 
+        return result;
+    }
+
+    /*
+     * Perform the operation difference by comparing two sets of the features
+     * FIXME: use standard sets difference operation
+     */
+    public Set<Feature> ProductDifference.difference(Set<Feature> left, Set<Feature> right) {
+        Set<Feature> result = new HashSet<Feature>();
+
+        for (Feature l : left) {
+            boolean exist = false;
+            for (Feature r : right){
+                if(r.equals(l)){
+                    exist = true;
+                    break;
+                }
+            }
+
+            if (!exist)
+                result.add(l);
+        }
         return result;
     }
 }
