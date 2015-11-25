@@ -278,7 +278,7 @@ public class ProductDeclarationTest extends DeltaTest {
     @Test
     public void complexExpression() {
         Model model = assertParseOk(
-                "product P1 = {F1, F2, F3} && {F3, F4} || {F5};"
+                "product P1 = {F1, F2, F3} && {F3, F4} || {F5, F6} - {F6};"
                 );
         try {
             model.evaluateAllProductDeclarations();
@@ -305,7 +305,7 @@ public class ProductDeclarationTest extends DeltaTest {
     @Test
     public void complexExpressionWithParenthesis() {
         Model model = assertParseOk(
-                "product P1 = {F1, F2, F3} && ({F3, F4} || {F5});"
+                "product P1 = {F1, F2, F3} && ({F3, F4} || {F5}) || {F6} - {F6};"
                 );
         try {
             model.evaluateAllProductDeclarations();
