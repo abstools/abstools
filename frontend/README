@@ -57,14 +57,15 @@ The output will be put in `gen/erl`.
 A model can be started with two different commands, both of which are
 generated inside `gen/erl`:
 
-    % gen/erl/start_console [--debug|-d] [<main-module>]
     % gen/erl/run [--debug|-d] [<main-module>]
+    % gen/erl/start_console [--debug|-d] [<main-module>]
 
-where `start` launches an Erlang shell and executes the given main
-module.  The command `run` launches an Erlang script, that terminates
-after the main block returned.  If no module name is given, the system
-will try to start the main block of the last module defined in the
-model.
+The command `run` launches an Erlang script, that terminates
+after the model terminates.
+
+`start` launches an Erlang shell and executes the given main module, offering
+an Erlang prompt afterwards.  If no module name is given, the system will try
+to start the main block of the last module defined in the model.
 
 The flag `--debug` controls if debug output is enabled.
 
@@ -74,7 +75,8 @@ corresponding to `[--debug|-d] [<main-module>]`.  Again, if no module
 name is given, the system will try to start the main block of the last
 module defined in the model.
 
-The backend has been tested with Erlang R17.
+The backend has been tested with Erlang R18; it will not compile with Erlang
+R16 and earlier.
 
 
 Using the Java backend
