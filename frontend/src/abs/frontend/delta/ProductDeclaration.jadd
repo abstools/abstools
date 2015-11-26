@@ -28,8 +28,8 @@ aspect ProductDeclaration {
             }
             p.setImplicitProduct(new ImplicitProduct(features));
 
-            // Debug: Print evaluation result
             /*
+            // Debug: Print evaluation result
             System.out.print(p.getName() + " : ");
             for(Feature f : features){
                 System.out.print(f.getName() + " ");
@@ -116,7 +116,7 @@ aspect ProductDeclaration {
      */
     public Set<Feature> ProductUnion.union(Set<Feature> left, Set<Feature> right) {
         Set<Feature> result = new HashSet<Feature>(right);
-        
+
         for (Feature l : left) {
             boolean exist = false;
             for (Feature r : right) {

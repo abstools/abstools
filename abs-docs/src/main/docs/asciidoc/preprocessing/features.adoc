@@ -65,12 +65,24 @@ delta DBoundedDeployment(LimitedMachines.capacity, LimitedMachines.machinelimit)
 
 ABS allows the developer to name products that are of particular interest, in
 order to easily refer to them later when the actual code needs to be
-generated.  A product definition states which features are to be included in
+generated.  A product definition states with product expression from operator intersection,
+operator union, operator difference, product name, parenthesis, or features are to be included in
 the product and sets attributes of those features to concrete values.
 
 [source]
 ----
-Selection ::= 'product' TypeId '(' FeatureSpecs ')' ';'
+Selection ::= 'product' TypeId
+			 (
+			  '(' FeatureSpecs ')' ';'
+			 |
+			  '=' ProductExpr ';'
+			 )
+ProductExpr: '{' FeatureSpecs '}'
+			| leftOperand=ProductExpr '&&' rightOperand=ProductExpr
+			| leftOperand=ProductExpr '||' rightOperand=ProductExpr
+			| leftOperand=ProductExpr '-' rightOperand=ProductExpr
+			| TypeId
+			| '(' ProductExpr ')'
 FeatureSpecs ::= FeatureSpec (',' FeatureSpec)*
 FeatureSpec ::= FName [AttributeAssignments]
 AttributeAssignments ::= '{' AttributeAssignment (',' AttributeAssignment '}'
@@ -85,6 +97,24 @@ product WordcountModel (Wordcount, NoCost, NoDeploymentScenario);
 product WordcountFull (Wordcount, Cost{cost=10}, UnlimitedMachines{capacity=20});
 product WordsearchFull (Wordsearch, Cost{cost=10}, UnlimitedMachines{capacity=20});
 product WordsearchDemo (Wordsearch, Cost{cost=10}, LimitedMachines{capacity=20, machinelimit=2});
+----
+
+Here are some product definitions for the `CharityOrganizationExample` with ProductExpr:
+
+[source]
+----
+product Org1 = SekolahBermainMatahari || {Continuous};
+product Org2 = SekolahBermainMatahari || {Continuous, Automatic_Report};
+product Org3 = SekolahBermainMatahari || PKPU;
+product Org4 = SekolahBermainMatahari || PKPU || RamadhanForKids;
+product Org5 = SekolahBermainMatahari || PKPU || RamadhanForKids || BeriBuku;
+product Org6 = SekolahBermainMatahari && RamadhanForKids;
+product Org7 = SekolahBermainMatahari && BeriBuku;
+product Org8 = SekolahBermainMatahari - {Eventual};
+product Org9 = SekolahBermainMatahari - {Eventual, Income};
+product Org10 = SekolahBermainMatahari && RamadhanForKids || {Money, Item};
+product Org11 = SekolahBermainMatahari && (RamadhanForKids || {Money, Item});
+
 ----
 
 === The Feature Model
