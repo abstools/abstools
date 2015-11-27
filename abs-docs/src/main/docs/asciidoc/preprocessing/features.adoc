@@ -65,22 +65,17 @@ delta DBoundedDeployment(LimitedMachines.capacity, LimitedMachines.machinelimit)
 
 ABS allows the developer to name products that are of particular interest, in
 order to easily refer to them later when the actual code needs to be
-generated.  A product definition states with product expression from operator intersection,
+generated. A product definition states with product expression from operator intersection,
 operator union, operator difference, product name, parenthesis, or features are to be included in
 the product and sets attributes of those features to concrete values.
 
 [source]
 ----
-Selection ::= 'product' TypeId
-			 (
-			  '(' FeatureSpecs ')' ';'
-			 |
-			  '=' ProductExpr ';'
-			 )
+Selection ::= 'product' TypeId ( '(' FeatureSpecs ')' ';' | '=' ProductExpr ';' )
 ProductExpr: '{' FeatureSpecs '}'
-			| leftOperand=ProductExpr '&&' rightOperand=ProductExpr
-			| leftOperand=ProductExpr '||' rightOperand=ProductExpr
-			| leftOperand=ProductExpr '-' rightOperand=ProductExpr
+			| ProductExpr '&&' ProductExpr
+			| ProductExpr '||' ProductExpr
+			| ProductExpr '-' ProductExpr
 			| TypeId
 			| '(' ProductExpr ')'
 FeatureSpecs ::= FeatureSpec (',' FeatureSpec)*
