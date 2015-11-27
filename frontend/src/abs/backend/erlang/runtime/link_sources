@@ -15,7 +15,7 @@ fi
 
 SOURCE_DIR="$1/frontend/src/abs/backend/erlang/runtime"
 
-for i in absmodel/src/*.erl
+for i in absmodel/src/*.erl absmodel/priv/*
 do
     if [ -f "$SOURCE_DIR/$i" ]
     then

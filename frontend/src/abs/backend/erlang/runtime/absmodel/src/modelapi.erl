@@ -9,16 +9,15 @@
 
 
 init(Req, _Opts) ->
-    Body =
+    {Status, Body} =
+        %% routing for static files is handled elsewhere; see main_app.erl
         case cowboy_req:binding(request, Req, <<"default">>) of
-            <<"default">> -> <<"Hello Erlang!\n">>;
-            <<"clock">> ->
-                handle_clock();
-            <<"dcs">> ->
-                get_statistics();
-            _ -> <<"Hello Erlang!\n">>
+            <<"default">> -> {200, <<"Hello Erlang!\n">>};
+            <<"clock">> -> {200, handle_clock()};
+            <<"dcs">> -> {200, get_statistics()};
+            _ -> {404, <<"Not found">>}
         end,
-    Req2 = cowboy_req:reply(200, [{<<"content-type">>, <<"text/plain">>}],
+    Req2 = cowboy_req:reply(Status, [{<<"content-type">>, <<"text/plain">>}],
                             Body, Req),
     {ok, Req2, #state{}}.
 
