@@ -426,6 +426,7 @@ value.")
                                              erlang-dir "/ebin\", \""
                                              erlang-dir "/deps/cowboy/ebin\", \""
                                              erlang-dir "/deps/cowlib/ebin\", \""
+                                             erlang-dir "/deps/jsx/ebin\", \""
                                              erlang-dir "/deps/ranch/ebin\"]).\n"))
                  (comint-send-string erlang-buffer "make:all([load]).\n")
                  (comint-send-string erlang-buffer
