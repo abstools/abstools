@@ -27,9 +27,8 @@ handle_clock() ->
 get_statistics() ->
     DCs = cog_monitor:get_dcs(),
     DC_infos=lists:flatten(lists:map(fun dc:get_description/1, DCs)),
-    io_lib:format("Clock: ~w~nDeployment components:~n~s~n",
-                  [builtin:toString(undefined, clock:now()),
-                  DC_infos]).
+    io_lib:format("Deployment components:~n~s~n",
+                  [DC_infos]).
 
 terminate(_Reason, _Req, _State) ->
     ok.

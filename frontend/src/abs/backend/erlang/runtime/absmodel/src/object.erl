@@ -168,7 +168,7 @@ active({clock_advance_for_dc, Amount},_From,
     {reply, ok, active, OS#state{int_status=S1}};
 active(get_dc_info_string,_From,
        OS=#state{class=class_ABS_DC_DeploymentComponent=C,int_status=S}) ->
-    Result=io_lib:format("~s:~ncreation time: ~s~nCPU history (reversed): ~s~n", 
+    Result=io_lib:format("Name: ~s~nCreation time: ~s~nCPU history (reversed): ~s~n~n", 
                          [C:get_val_internal(S,description),
                           builtin:toString(undefined, C:get_val_internal(S,creationTime)),
                           builtin:toString(undefined, C:get_val_internal(S,cpuhistory))]),
