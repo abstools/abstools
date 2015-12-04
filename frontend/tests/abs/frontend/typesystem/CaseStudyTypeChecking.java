@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -60,7 +61,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
         m = assertParseFilesOk(input, TYPE_CHECK, WITH_STD_LIB);
     }
 
-    protected Model assertParseFilesOk(String srcFolder, Config... config) throws IOException {
+    protected Model assertParseFilesOk(String srcFolder, Config... config) throws IOException, WrongProgramArgumentException {
         File srcFolderF = new File(srcFolder);
         assertTrue(srcFolder,srcFolderF.exists());
         Main main = new Main();
@@ -68,6 +69,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
         Model m = main.parseFiles(findAbsFiles(srcFolderF).toArray(new String[0]));
 
         if (m != null) {
+            m.evaluateAllProductDeclarations();
             if (m.hasParserErrors())
                 Assert.fail(m.getParserErrors().get(0).getMessage());
             int numSemErrs = m.getErrors().size();

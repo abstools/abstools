@@ -11,6 +11,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Set;
 
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
@@ -125,10 +126,11 @@ public class ABSTest {
     /**
      * Note: does not handle EXPECT_*.
      */
-    static public Model assertParseFileOk(String fileName, Config... config) throws IOException {
+    static public Model assertParseFileOk(String fileName, Config... config) throws IOException, WrongProgramArgumentException {
         Main main = new Main();
         main.setWithStdLib(isSet(WITH_STD_LIB,config));
         Model m = main.parseFiles(resolveFileName(fileName));
+        m.evaluateAllProductDeclarations();
         return assertParseModelOk(m, config);
     }
 

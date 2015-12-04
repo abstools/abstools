@@ -54,6 +54,7 @@ public class SearchSolutionsTest extends FrontendTest {
         model.setNullPrintStream();
 
         ChocoSolver s = model.instantiateCSModel();
+        model.evaluateAllProductDeclarations();
 
         assertEquals(78,s.countSolutions());
         assertTrue(checkSol(s,model,"P1"));
@@ -80,11 +81,10 @@ public class SearchSolutionsTest extends FrontendTest {
         Model model = assertParseOk(withoutProducLine);
 
         ChocoSolver s = model.instantiateCSModel();
+        model.evaluateAllProductDeclarations();
+
         ProductDecl product = model.findProduct("P");
         Map<String,Integer> guess = product.getImplicitProduct().getSolution();
         assertEquals(true, s.checkSolution(guess,model));
     }
-
-
-
 }
