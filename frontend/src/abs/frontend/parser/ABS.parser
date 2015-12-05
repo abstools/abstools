@@ -1092,8 +1092,8 @@ List product_list = product.p {: return new List().add(p); :}
     | product_list.l product.p {: return l.add(p); :}
     ;
 
-Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN SEMICOLON {: return new Product(id, l, new List()); :} 
-    | PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN LBRACE reconfiguration_list.rl RBRACE {: return new Product(id, l, rl); :}
+ProductDecl product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN SEMICOLON {: return new ProductDecl(id, new ProductFeatureSet(l), new List()); :} 
+    | PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN LBRACE reconfiguration_list.rl RBRACE {: return new ProductDecl(id, new ProductFeatureSet(l), rl); :}
     ;
 
 List reconfiguration_list = reconfiguration.r {: return new List().add(r); :}

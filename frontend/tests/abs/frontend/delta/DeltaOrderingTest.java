@@ -71,12 +71,12 @@ public class DeltaOrderingTest extends DeltaTest {
 
         ProductDecl prod = model.findProduct("P1");
         ProductLine pl = model.getProductLine();
-        Set<String> deltaids = pl.findApplicableDeltas(prod.getImplicitProduct());
+        Set<String> deltaids = pl.findApplicableDeltas(prod.getProduct());
         List<String> sorted_deltaids = pl.sortDeltas(deltaids);
         assertArrayEquals(new String[]{ "D1" }, sorted_deltaids.toArray());
 
         prod = model.findProduct("P2");
-        deltaids = pl.findApplicableDeltas(prod.getImplicitProduct());
+        deltaids = pl.findApplicableDeltas(prod.getProduct());
         sorted_deltaids = pl.sortDeltas(deltaids);
         assertArrayEquals(new String[]{ "D1", "D2" }, sorted_deltaids.toArray());
     }
@@ -111,12 +111,12 @@ public class DeltaOrderingTest extends DeltaTest {
 
         ProductDecl prod = model.findProduct("P1");
         ProductLine pl = model.getProductLine();
-        Set<String> deltaids = pl.findApplicableDeltas(prod.getImplicitProduct());
+        Set<String> deltaids = pl.findApplicableDeltas(prod.getProduct());
         List<String> sorted_deltaids = pl.sortDeltas(deltaids);
         assertArrayEquals(new String[]{"D9", "D8", "D7", "D6", "D5", "D4", "D3", "D2", "D1" }, sorted_deltaids.toArray());
 
         prod = model.findProduct("P2");
-        deltaids = pl.findApplicableDeltas(prod.getImplicitProduct());
+        deltaids = pl.findApplicableDeltas(prod.getProduct());
         sorted_deltaids = pl.sortDeltas(deltaids);
         assertArrayEquals(new String[]{ "D9", "D7", "D5", "D3", "D1" }, sorted_deltaids.toArray());
 

@@ -103,16 +103,6 @@ aspect TypeResolution {
         return res;
     }
 
-    syn lazy Collection<ProductDecl> Model.getProductDecls() {
-        ArrayList<ProductDecl> res = new ArrayList<ProductDecl>();
-        for (CompilationUnit u : getCompilationUnits()) {
-            for (ProductDecl d : u.getProductDecls()) {
-                res.add(d);
-            }
-        }
-        return res;
-    }
-
     syn lazy Map<String,DeltaDecl> Model.getDeltaDeclsMap() {
         Map<String,DeltaDecl> res = new HashMap<String,DeltaDecl>();
         for (CompilationUnit u : getCompilationUnits()) {
@@ -138,11 +128,11 @@ aspect TypeResolution {
         return res;
     }
 
-    syn lazy Collection<Product> Model.getProducts() {
-        ArrayList<Product> res = new ArrayList<Product>();
+    syn lazy Collection<ProductDecl> Model.getProductDecls() {
+        ArrayList<ProductDecl> res = new ArrayList<ProductDecl>();
         for (CompilationUnit u : getCompilationUnits()) {
             for (ProductDecl p : u.getProductDecls()) {
-                // FIXME: grammar has been changed with ProductExpr
+                res.add(p);
             }
         }
         return res;

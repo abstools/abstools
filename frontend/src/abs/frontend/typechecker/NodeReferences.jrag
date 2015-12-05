@@ -6,7 +6,6 @@ aspect Model {
     inh Model ProductLine.getModel();
     inh Model ProductDecl.getModel();
     inh Model ProductName.getModel();
-    //    eq Model.getImplicitProduct().getModel() = this;
 
     inh Model Modifier.getModel();
     eq ModifyClassModifier.getModifier().getModel() = this.getDelta().getModel();

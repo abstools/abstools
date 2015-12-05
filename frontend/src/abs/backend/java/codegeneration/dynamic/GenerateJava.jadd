@@ -47,12 +47,12 @@ aspect GenerateJavaDynamic_Core {
         }
         {   /* The Reconfiguration Decision Model (RDM) */
             // first remember all products by name
-            HashMap<String, Product> allProducts = new HashMap<String, Product>();
-            for (Product prod : getProducts()) {
+            HashMap<String, ProductDecl> allProducts = new HashMap<String, ProductDecl>();
+            for (ProductDecl prod : getProductDecls()) {
                 allProducts.put(prod.getName(), prod);
             }
             JavaCode.Package pkg = code.createPackage(JavaBackendConstants.LIB_RDM_PACKAGE);
-            for (Product prod : getProducts()) {
+            for (ProductDecl prod : getProductDecls()) {
                 try {
                     prod.generateJavaCodeDynamic(pkg, allProducts);
                 } catch (NotImplementedYetException e) { 
@@ -1136,7 +1136,7 @@ aspect GenerateJavaDynamic_DeltaModelling {
         stream.println("clsNew.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
     }
     
-    public void Product.generateJavaCodeDynamic(JavaCode.Package pkg, HashMap<String, Product> allProducts) 
+    public void ProductDecl.generateJavaCodeDynamic(JavaCode.Package pkg, HashMap<String, ProductDecl> allProducts) 
             throws IOException, JavaCodeGenerationException {
         PrintStream stream = null;
         String generatedJavaClassName = JavaBackend.getProductName(getName());
@@ -1159,7 +1159,7 @@ aspect GenerateJavaDynamic_DeltaModelling {
         }
     }
     
-    public void Reconfiguration.generateJavaCodeDynamic(JavaCode.Package pkg, Product currentP, HashMap<String, Product> allProducts)
+    public void Reconfiguration.generateJavaCodeDynamic(JavaCode.Package pkg, ProductDecl currentP, HashMap<String, ProductDecl> allProducts)
             throws IOException, JavaCodeGenerationException {
         PrintStream stream = null;
         String generatedJavaClassName = JavaBackend.getReconfigurationName(currentP.getName(), getTargetProductID());

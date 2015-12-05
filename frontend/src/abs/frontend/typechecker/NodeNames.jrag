@@ -101,14 +101,6 @@ aspect QualifiedName {
         return StringUtils.joinNames(moduleName(), getName());
     }
     
-    public String DeltaDecl.qualifiedName() {
-        return this.getName();
-    }
-
-    public String Product.qualifiedName() {
-        return this.getName();
-    }
-
     public String ModuleModifier.qualifiedName() {
         return StringUtils.joinNames(getModuleName(), getSimpleName());
     }

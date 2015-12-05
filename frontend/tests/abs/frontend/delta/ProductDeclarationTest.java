@@ -41,7 +41,7 @@ public class ProductDeclarationTest extends DeltaTest {
         } catch (WrongProgramArgumentException e) {
             e.printStackTrace();
         }
-        ImplicitProduct impl = p.getImplicitProduct();
+        Product impl = p.getProduct();
         assertEquals(3, impl.getNumFeature());
 
         Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3"));
@@ -68,7 +68,7 @@ public class ProductDeclarationTest extends DeltaTest {
         } catch (WrongProgramArgumentException e) {
             e.printStackTrace();
         }
-        ImplicitProduct impl = p.getImplicitProduct();
+        Product impl = p.getProduct();
         assertEquals(3, impl.getNumFeature());
 
         Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3"));
@@ -95,7 +95,7 @@ public class ProductDeclarationTest extends DeltaTest {
         } catch (WrongProgramArgumentException e) {
             e.printStackTrace();
         }
-        ImplicitProduct impl = p.getImplicitProduct();
+        Product impl = p.getProduct();
         assertEquals(2, impl.getNumFeature());
 
         Set<String> expected = new HashSet<String>(Arrays.asList("F2", "F3"));
@@ -122,7 +122,7 @@ public class ProductDeclarationTest extends DeltaTest {
         } catch (WrongProgramArgumentException e) {
             e.printStackTrace();
         }
-        ImplicitProduct impl = p.getImplicitProduct();
+        Product impl = p.getProduct();
         assertEquals(4, impl.getNumFeature());
 
         Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3", "F4"));
@@ -149,7 +149,7 @@ public class ProductDeclarationTest extends DeltaTest {
         } catch (WrongProgramArgumentException e) {
             e.printStackTrace();
         }
-        ImplicitProduct impl = p.getImplicitProduct();
+        Product impl = p.getProduct();
         assertEquals(2, impl.getNumFeature());
 
         Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F4"));
@@ -177,7 +177,7 @@ public class ProductDeclarationTest extends DeltaTest {
         } catch (WrongProgramArgumentException e) {
             e.printStackTrace();
         }
-        ImplicitProduct impl = p.getImplicitProduct();
+        Product impl = p.getProduct();
         assertEquals(3, impl.getNumFeature());
 
         Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3"));
@@ -292,7 +292,7 @@ public class ProductDeclarationTest extends DeltaTest {
         } catch (WrongProgramArgumentException e) {
             e.printStackTrace();
         }
-        ImplicitProduct impl = p.getImplicitProduct();
+        Product impl = p.getProduct();
         assertEquals(2, impl.getNumFeature());
 
         Set<String> expected = new HashSet<String>(Arrays.asList("F3", "F5"));
@@ -319,7 +319,7 @@ public class ProductDeclarationTest extends DeltaTest {
         } catch (WrongProgramArgumentException e) {
             e.printStackTrace();
         }
-        ImplicitProduct impl = p.getImplicitProduct();
+        Product impl = p.getProduct();
         assertEquals(1, impl.getNumFeature());
 
         Set<String> expected = new HashSet<String>(Arrays.asList("F3"));
@@ -367,7 +367,7 @@ public class ProductDeclarationTest extends DeltaTest {
         } catch (WrongProgramArgumentException e) {
             e.printStackTrace();
         }
-        ImplicitProduct impl = p.getImplicitProduct();
+        Product impl = p.getProduct();
         assertEquals(3, impl.getNumFeature());
 
         Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3"));

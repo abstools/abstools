@@ -10,7 +10,7 @@ import java.util.Map;
 
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.DeltaDecl;
-import abs.frontend.ast.ImplicitProduct;
+import abs.frontend.ast.Product;
 import abs.frontend.ast.Model;
 
 public class DeltaTrie {
@@ -26,7 +26,7 @@ public class DeltaTrie {
     }
 
     // Adds a word to the Trie
-    public void addWord(List<String> word, ImplicitProduct product) {
+    public void addWord(List<String> word, Product product) {
 //        System.out.print("DeltaSequence");
         if (word.size() == 0) // no deltas
             root.isValidProduct = true;
@@ -66,7 +66,7 @@ public class DeltaTrie {
          * @param product  The SPL product that this word represents (or null if none)
          * @param d        Index of List element to start with (for recursive invocation)
          */
-        protected void addWord(List<String> word, ImplicitProduct product, int d) {
+        protected void addWord(List<String> word, Product product, int d) {
             Node nextNode;
 
 //            System.out.print(">>>" + word.get(d));

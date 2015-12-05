@@ -13,13 +13,13 @@ import org.junit.Test;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.Model;
-import abs.frontend.ast.ImplicitProduct;
+import abs.frontend.ast.Product;
 import abs.frontend.ast.ProductDecl;
 
 public class SearchSolutionsTest extends FrontendTest {
 
     static private boolean checkSol(ChocoSolver s, Model m, String prod) throws Exception {
-        ImplicitProduct p = m.findProduct(prod).getImplicitProduct();
+        Product p = m.findProduct(prod).getProduct();
         assertNotNull(p);
         Map<String,Integer> guess = p.getSolution();
         return s.checkSolution(guess,m);
@@ -84,7 +84,7 @@ public class SearchSolutionsTest extends FrontendTest {
         model.evaluateAllProductDeclarations();
 
         ProductDecl product = model.findProduct("P");
-        Map<String,Integer> guess = product.getImplicitProduct().getSolution();
+        Map<String,Integer> guess = product.getProduct().getSolution();
         assertEquals(true, s.checkSolution(guess,model));
     }
 }
