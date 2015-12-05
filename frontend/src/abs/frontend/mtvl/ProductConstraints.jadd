@@ -3,7 +3,7 @@ import java.util.Set;
 
 aspect ProductConstraints {
 
-    public void ImplicitProduct.getProdConstraints(Map<String,IntegerVariable> vars, Set<Constraint> newcs) {
+    public void Product.getProdConstraints(Map<String,IntegerVariable> vars, Set<Constraint> newcs) {
         for (Feature f: getFeatures()) {
             newcs.add(ChocoSolver.isTrue(vars.get(f.getName())));
             for (AttrAssignment aa: f.getAttrAssignments()) {
@@ -14,7 +14,7 @@ aspect ProductConstraints {
         }
     }
 
-    public void Model.getDiffConstraints(ImplicitProduct p, Map<String,IntegerVariable> vars, Set<Constraint> newcs, String diffVar) {
+    public void Model.getDiffConstraints(Product p, Map<String,IntegerVariable> vars, Set<Constraint> newcs, String diffVar) {
         //calculating deselected features, initially initialized by all features
         ArrayList<String> deselectedFeatures = new ArrayList();
         for (String fname: features()) {

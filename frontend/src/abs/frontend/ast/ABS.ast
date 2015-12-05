@@ -8,7 +8,7 @@
 Name ::= <Name>;
 DeltaID ::= <Name>;
 
-Model ::= CompilationUnit* /ImplicitProduct*/ ;
+Model ::= CompilationUnit* /Product*/ ;
 //Model ::= CompilationUnit* ;
 
 
@@ -323,7 +323,7 @@ FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
 // Extended Product Selection Language
-ProductDecl ::= <Name> ProductExpr ;
+ProductDecl ::= <Name> ProductExpr Reconfiguration* ;
 
 abstract ProductExpr ;
 ProductFeatureSet : ProductExpr ::= Feature* ;
@@ -332,6 +332,5 @@ ProductUnion : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
 ProductDifference : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
 ProductName : ProductExpr ::= <Name> ;
 
-ImplicitProduct ::= Feature* ;
-Product : ImplicitProduct ::= <Name> Feature* Reconfiguration* ;
+Product ::= Feature* ;
 Reconfiguration ::= <TargetProductID> DeltaID* <UpdateID> ;

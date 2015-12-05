@@ -196,7 +196,7 @@ aspect ParseTreeCopy {
     public PatternVar PatternVar.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public PatternVarDecl PatternVarDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public PatternVarUse PatternVarUse.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
-    public Product Product.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
+    public ProductDecl ProductDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public ProductLine ProductLine.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public PureExp PureExp.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public RelationalExpr RelationalExpr.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }

@@ -1,7 +1,7 @@
 aspect ProductDeclaration {
 
     /*
-     * Evaluate all sorted ProductDecl and set implicitProduct
+     * Evaluate all sorted ProductDecl and set the Product (i.e. the set of features)
      */
     public void Model.evaluateAllProductDeclarations() throws WrongProgramArgumentException {
         // Initialize set of ProductDecl
@@ -26,7 +26,7 @@ aspect ProductDeclaration {
             for (Feature f : p.getProductExpr().evaluate()) {
                 features.add(f.treeCopyNoTransform());
             }
-            p.setImplicitProduct(new ImplicitProduct(features));
+            p.setProduct(new Product(features));
 
             /*
             // Debug: Print evaluation result
@@ -40,13 +40,13 @@ aspect ProductDeclaration {
     }
 
     /*
-     * Return true if this ImplicitProduct is the same as the ImplicitProduct argument; false otherwise.
+     * Return true if this Product is the same as that Product; false otherwise.
      */    
-    public boolean ImplicitProduct.equals(ImplicitProduct impl) {
-        Set<Feature> features = new HashSet<Feature>(ListUtils.ASTListToSet(getFeatures()));
-        Set<Feature> implFeatures = new HashSet<Feature>(ListUtils.ASTListToSet(impl.getFeatures())); 
+    public boolean Product.equals(Product that) {
+        Set<Feature> thisFeatures = new HashSet<Feature>(ListUtils.ASTListToSet(getFeatures()));
+        Set<Feature> thatFeatures = new HashSet<Feature>(ListUtils.ASTListToSet(that.getFeatures())); 
 
-        return features.equals(implFeatures);
+        return thisFeatures.equals(thatFeatures);
     }
 
     /*
@@ -60,14 +60,15 @@ aspect ProductDeclaration {
     }
 
     /* 
-     * Return the corresponding ImplicitProduct obtained through evaluating the product expression
+     * Return the corresponding Product obtained through evaluating the product expression
+     * A Product is a set of features.
      */
-    private ImplicitProduct ProductDecl.implicitProduct;
-    public void ProductDecl.setImplicitProduct(ImplicitProduct impl) {
-        this.implicitProduct = impl;
+    private Product ProductDecl.product;
+    public void ProductDecl.setProduct(Product prod) {
+        this.product = prod;
     }
-    syn lazy ImplicitProduct ProductDecl.getImplicitProduct() {
-        return implicitProduct;
+    syn lazy Product ProductDecl.getProduct() {
+        return product;
     }
 
     /*
@@ -114,7 +115,7 @@ aspect ProductDeclaration {
     public Set<Feature> ProductName.evaluate() throws WrongProgramArgumentException {
         ProductDecl p = getModel().findProduct(getName());
 
-        return ListUtils.ASTListToSet(p.getImplicitProduct().getFeatures());
+        return ListUtils.ASTListToSet(p.getProduct().getFeatures());
     }
 
     /*

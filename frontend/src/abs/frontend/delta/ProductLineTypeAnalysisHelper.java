@@ -41,7 +41,7 @@ public class ProductLineTypeAnalysisHelper {
         Model model = pl.getModel();
         DeltaTrie trie = new DeltaTrie(model, errors);
 
-        for (ImplicitProduct product : model.getImplicitProductList()) {
+        for (Product product : model.getProductList()) {
             // for each product: obtain sequence of deltas & add it to the trie
             Set<String> applicableDeltas = pl.findApplicableDeltas(product);
             List<String> productGenerationString = pl.sortDeltas(applicableDeltas);

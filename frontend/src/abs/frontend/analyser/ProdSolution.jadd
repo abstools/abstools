@@ -10,7 +10,7 @@ aspect ProdSolution {
 //        return res;
 //    }
     
-    public Map<String,Integer> ImplicitProduct.getSolution() {
+    public Map<String,Integer> Product.getSolution() {
         Map<String,Integer> sol= new HashMap<String,Integer>();
         for(Feature f : getFeatures())
     		f.getSolution(true,sol);

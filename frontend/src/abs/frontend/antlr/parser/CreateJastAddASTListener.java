@@ -821,10 +821,10 @@ new List<ModuleDecl>(),
     @Override public void exitProduct_decl(ABSParser.Product_declContext ctx) {
         if(ctx.product_expr() == null) {
             // old syntax: a product is declared as a set of features
-            setV(ctx, new ProductDecl(ctx.TYPE_IDENTIFIER().getText(), new ProductFeatureSet(l(ctx.feature()))));
+            setV(ctx, new ProductDecl(ctx.TYPE_IDENTIFIER().getText(), new ProductFeatureSet(l(ctx.feature())), l(ctx.product_reconfiguration())));
         } else {
             // new syntax: using product expressions
-            setV(ctx, new ProductDecl(ctx.TYPE_IDENTIFIER().getText(), (ProductExpr)v(ctx.product_expr())));
+            setV(ctx, new ProductDecl(ctx.TYPE_IDENTIFIER().getText(), (ProductExpr)v(ctx.product_expr()), l(ctx.product_reconfiguration())));
         }
     }
 
@@ -845,7 +845,7 @@ new List<ModuleDecl>(),
     @Override public void exitProductUnion(ABSParser.ProductUnionContext ctx) {
         setV(ctx, new ProductUnion((ProductExpr)v(ctx.l), (ProductExpr)v(ctx.r)));
     }
-    
+
     @Override public void exitProductDifference(ABSParser.ProductDifferenceContext ctx) {
         setV(ctx, new ProductDifference((ProductExpr)v(ctx.l), (ProductExpr)v(ctx.r)));
     }

@@ -45,7 +45,7 @@ aspect ProductFlattener {
             throw new DeltaModellingException("Model is missing a 'productline' definition");
 
         // find/sort applicable delta IDs
-        Set<String> deltaids = pl.findApplicableDeltas(prod.getImplicitProduct());
+        Set<String> deltaids = pl.findApplicableDeltas(prod.getProduct());
         java.util.List<String> sorted_deltaids = pl.sortDeltas(deltaids);
 
         // find corresponding DeltaDecls
@@ -54,7 +54,7 @@ aspect ProductFlattener {
             deltas.add(getDeltaDeclsMap().get(deltaid));
 
         // substitute delta parameters
-        pl.substituteDeltaParams(deltas, prod.getImplicitProduct());
+        pl.substituteDeltaParams(deltas, prod.getProduct());
 
         // resolve original() calls
         resolveOriginalCalls(deltas);
@@ -116,7 +116,7 @@ aspect ProductFlattener {
      * Evaluate each delta clause to find the applicable delta names
      * i.e. test each application condition in the context of the features which are ON in the given product
      */
-    public Set<String> ProductLine.findApplicableDeltas(ImplicitProduct prod) {
+    public Set<String> ProductLine.findApplicableDeltas(Product prod) {
 
         HashSet<String> deltaids = new HashSet<String>();
 
@@ -131,13 +131,13 @@ aspect ProductFlattener {
      * Evaluate both FROM and TO(WHEN) delta clauses to find the applicable delta names
      * relevant for dynamic product reconfiguration
      */
-    public Set<String> ProductLine.findApplicableDeltas(Product fromProd, Product toProd) {
+    public Set<String> ProductLine.findApplicableDeltas(ProductDecl fromProd, ProductDecl toProd) {
 
         HashSet<String> deltaids = new HashSet<String>();
 
         for (DeltaClause clause : getDeltaClauses()) {
-            if (clause.evaluateFromApplicationCondition(fromProd.getFeatures()))
-                if (clause.evaluateApplicationCondition(toProd.getFeatures()))
+            if (clause.evaluateFromApplicationCondition(fromProd.getProduct().getFeatures()))
+                if (clause.evaluateApplicationCondition(toProd.getProduct().getFeatures()))
                     deltaids.add(clause.getDeltaspec().getDeltaID());
         }
         return deltaids;

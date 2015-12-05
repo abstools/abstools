@@ -24,7 +24,7 @@ public class ProgramTypeAbstraction {
     private final java.util.List<DeltaDecl> deltas;
 
     // Keep track of the product we are currently trying to build, for better error reporting
-    private ImplicitProduct product;
+    private Product product;
 
     // Constructor
     public ProgramTypeAbstraction(SemanticConditionList errors) {
@@ -47,7 +47,7 @@ public class ProgramTypeAbstraction {
         }
     }
 
-    public void applyDelta(DeltaDecl delta, ImplicitProduct product) {
+    public void applyDelta(DeltaDecl delta, Product product) {
         deltas.add(delta);
         this.product = product;
         for (ModuleModifier mod : delta.getModuleModifiers()) {

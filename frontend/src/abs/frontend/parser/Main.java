@@ -259,7 +259,9 @@ public class Main {
                 System.err.flush();
             }
         } else {
+            System.out.println("***************");
             rewriteModel(m, product);
+            System.out.println("***************");
 
             // type check PL before flattening
             // [ramus] disabled temporarily due to a bug
@@ -358,7 +360,7 @@ public class Main {
             if (p != null) {
                 DataConstructorExp feature_arglist = new DataConstructorExp("Cons", new List<PureExp>());
                 DataConstructorExp current = feature_arglist;
-                for (Feature f : p.getImplicitProduct().getFeatures()) {
+                for (Feature f : p.getProduct().getFeatures()) {
                     DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
                     // TODO: when/if we incorporate feature parameters into
                     // the productline feature declarations (as we should), we
@@ -456,7 +458,7 @@ public class Main {
                 if (p_product != null) {
                     ChocoSolver s = m.instantiateCSModel();
                     HashSet<Constraint> newcs = new HashSet<Constraint>();
-                    p_product.getImplicitProduct().getProdConstraints(s.vars, newcs);
+                    p_product.getProduct().getProdConstraints(s.vars, newcs);
                     for (Constraint c: newcs) s.addConstraint(c);
                     System.out.println("checking solution: "+s.resultToString());
                 } else {
@@ -473,7 +475,7 @@ public class Main {
                 HashSet<Constraint> newcs = new HashSet<Constraint>();
                 s.addIntVar("difference", 0, 50);
                 if (p_product != null) {
-                    m.getDiffConstraints(p_product.getImplicitProduct(), s.vars, newcs, "difference");
+                    m.getDiffConstraints(p_product.getProduct(), s.vars, newcs, "difference");
                     for (Constraint c: newcs) s.addConstraint(c);
                     System.out.println("checking solution: " + s.minimiseToString("difference"));
                 } else {
@@ -507,7 +509,7 @@ public class Main {
                     if (!product.contains("."))
                         System.out.println("Maybe you forgot the module name?");
                 } else {
-                    Map<String,Integer> guess = p_product.getImplicitProduct().getSolution();
+                    Map<String,Integer> guess = p_product.getProduct().getSolution();
                     System.out.println("checking solution: "+s.checkSolution(guess,m));
                 }
             }

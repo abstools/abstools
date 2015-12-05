@@ -186,7 +186,7 @@ public class TypeCheckerHelper {
         if (featureNames != null) {
             // Do the features exist in the PL declaration (and also check feature attributes)?
             Model m = prod.getModel();
-            for (Feature f : prod.getImplicitProduct().getFeatures()) {
+            for (Feature f : prod.getProduct().getFeatures()) {
                 if (!featureNames.containsKey(f.getName()))
                     e.add(new TypeError(prod, ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
                 else {
@@ -222,10 +222,10 @@ public class TypeCheckerHelper {
             }
         }
 
-        // Check solution from getImplicitProduct()
-        if (prod.getImplicitProduct() != null) {
+        // Check solution from getProduct()
+        if (prod.getProduct() != null) {
             java.util.List<String> errors = prod.getModel().instantiateCSModel().checkSolutionWithErrors(
-                    prod.getImplicitProduct().getSolution(),
+                    prod.getProduct().getSolution(),
                     prod.getModel());
 
             if (!errors.isEmpty()) {

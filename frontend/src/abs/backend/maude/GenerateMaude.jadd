@@ -89,7 +89,7 @@ aspect GenerateMaude {
 	}
 
     public void DeltaDecl.generateMaude(PrintStream stream) {
-		stream.println("*** Delta: " + qualifiedName());
+		stream.println("*** Delta: " + getName());
     }
 	
 	public void FunctionDecl.generateMaude(PrintStream stream) {
@@ -649,7 +649,7 @@ aspect GenerateMaude {
     public void VarDeclStmt.generateMaude(PrintStream stream) {
         // HACK FIXME: this should be an attribute
         boolean inMainBlock = getParent().getParent() instanceof MainBlock
-            || getParent().getParent().getParent() instanceof Product;
+            || getParent().getParent().getParent() instanceof ProductDecl;
 
         VarDecl var = getVarDecl();
         if (inMainBlock) {
