@@ -35,20 +35,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.post_up_message = <<-MSG
 Welcome to the ABS toolchain VM.
-The following tools are available from the command line:
 
-- absc             command-line ABS compiler
-- eclipse          Eclipse Mars with plugins for ABS, SACO,
-                   deadlock analysis pre-installed
+Connect to the collaboratory at http://localhost:8888/
+
+Access the following additional tools with 'vagrant ssh'
+(install Xming / XQuartz X server on Windows/Mac to use):
+
+- eclipse          Eclipse Mars with ABS plugins
 - key-abs          Deductive verification tool
-- emacs            Emacs, configured to edit and compile ABS
-- costabs, deco, maypar
-                   Command-line interface to SACO
-
-Graphical programs need an X server (Xming / XQuartz for Windows/Mac)
-
-http://localhost:8888 has a web interface to many tools.
-
+- emacs            Emacs with ABS mode
 MSG
 
   config.ssh.forward_x11 = true
