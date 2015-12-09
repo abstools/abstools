@@ -616,11 +616,17 @@ public class Main {
         }
     }
 
-    public static boolean isABSPackageFile(File f) throws IOException {
-       final ABSPackageFile absPackageFile = new ABSPackageFile(f);
-       final boolean isPackage = absPackageFile.isABSPackage();
-       absPackageFile.close();
-       return f.getName().endsWith(".jar") && isPackage;
+    public static boolean isABSPackageFile(File f) {
+        ABSPackageFile absPackageFile;
+        final boolean isPackage;
+        try {
+            absPackageFile = new ABSPackageFile(f);
+            isPackage = absPackageFile.isABSPackage();
+            absPackageFile.close();
+        } catch (IOException e) {
+            return false;
+        }
+        return f.getName().endsWith(".jar") && isPackage;
     }
 
     public static boolean isABSSourceFile(File f) {
