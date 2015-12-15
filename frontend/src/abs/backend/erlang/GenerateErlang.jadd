@@ -94,7 +94,7 @@ aspect GenerateErlang {
     else {
       ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
     }
-    ErlUtil.argumentList(ecs,null, builtin, isContextImperative(), getParams(), vars);
+    ErlUtil.argumentList(ecs,null, builtin, isContextImperative(), getParams(), decl.getTypes(), vars);
   }
 
   @Override
@@ -254,7 +254,8 @@ aspect GenerateErlang {
       parent = parent.getParent();
     }
     PureExp dc = CompilerUtils.getAnnotationValue(((Stmt)parent).getAnnotations(), "DC");
-    String className = ErlUtil.getName(((UnionType)getType()).getOriginatingClass());
+    ClassDecl classDecl = ((UnionType)getType()).getOriginatingClass();
+    String className = ErlUtil.getName(classDecl);
     boolean isNewDC = getType().isDeploymentComponentType();
     if (((UnionType) getType()).getOriginatingClass().isForeign())
       className = "ffi_" + className;
@@ -270,13 +271,13 @@ aspect GenerateErlang {
         dc.generateErlangCode(ecs, vars);
       }
       ecs.format("),%s,",className);
-      ErlUtil.buildParams(ecs,getParams(),vars,true);
+      ErlUtil.buildParams(ecs,getParams(),classDecl.getTypes(),vars,true);
       ecs.print(",Cog,");
       ecs.print(vars.toStack());
       ecs.print(")");
     } else {
       ecs.format("object:new(Cog,%s,",className);
-      ErlUtil.buildParams(ecs,getParams(),vars,false);
+      ErlUtil.buildParams(ecs,getParams(),classDecl.getTypes(),vars,false);
       ecs.print(")");
     }
   }
@@ -338,7 +339,7 @@ aspect GenerateErlang {
     ecs.print("(fun(O=#object{class=T,cog =C}) when C=:=Cog -> object:alive(O),T end(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(")):'m_%s'",getMethod());
-    ErlUtil.argumentList(ecs,getCallee(),false,true,params,vars);
+    ErlUtil.argumentList(ecs,getCallee(),false,true,params,getMethodSig().getTypes(),vars);
   }
 
   @Override
@@ -346,7 +347,7 @@ aspect GenerateErlang {
     ecs.print("future:start(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
-    ErlUtil.buildParams(ecs,getParams(),vars,true);
+    ErlUtil.buildParams(ecs,getParams(),getMethodSig().getTypes(),vars,true);
     ecs.print(", Cog, ");
     ecs.print(vars.toStack());
     ecs.print(")");
