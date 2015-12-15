@@ -626,12 +626,12 @@ data InfRat = InfRat | Fin(Rat finvalue);
 
 // Sums things up in percents (thus the * 100, which makes us not lose
 // precision.)
-def Rat sumDivsN(List<Int> consumeds, List<Int> totals, Int n) =
+def Rat sumDivsN(List<Rat> consumeds, List<Rat> totals, Int n) =
   if (n==0 || isEmpty(consumeds) || isEmpty(totals))
   then 0
   else (head(consumeds) * 100 / head(totals)) + sumDivsN(tail(consumeds), tail(totals), n-1);
 
-def Rat averageDivsN(List<Int> consumeds, List<Int> totals, Int length) =
+def Rat averageDivsN(List<Rat> consumeds, List<Rat> totals, Int length) =
   let (Int mins) = min(length, min(length(consumeds), length(totals)))
   in sumDivsN(consumeds, totals, mins) / mins;
 
