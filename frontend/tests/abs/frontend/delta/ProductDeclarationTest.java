@@ -25,22 +25,14 @@ import abs.frontend.typechecker.TypeCheckerHelper;
 public class ProductDeclarationTest extends DeltaTest {
 
     @Test
-    public void oldProductSyntax() {
+    public void oldProductSyntax() throws WrongProgramArgumentException {
         Model model = assertParseOk(
                 "product P1(F1, F2, F3);"
                 );
-        try {
-            model.evaluateAllProductDeclarations();
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
 
-        ProductDecl p = null;
-        try {
-            p = model.findProduct("P1");
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+        model.evaluateAllProductDeclarations();
+        ProductDecl p = model.findProduct("P1");
+
         Product impl = p.getProduct();
         assertEquals(3, impl.getNumFeature());
 
@@ -52,22 +44,14 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
-    public void productFeatureSet() {
+    public void productFeatureSet() throws WrongProgramArgumentException {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3};"
                 );
-        try {
-            model.evaluateAllProductDeclarations();
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
 
-        ProductDecl p = null;
-        try {
-            p = model.findProduct("P1");
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+        model.evaluateAllProductDeclarations();
+        ProductDecl p = model.findProduct("P1");
+
         Product impl = p.getProduct();
         assertEquals(3, impl.getNumFeature());
 
@@ -79,22 +63,14 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
-    public void productIntersect() {
+    public void productIntersect() throws WrongProgramArgumentException {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3} && {F2, F3};"
                 );
-        try {
-            model.evaluateAllProductDeclarations();
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
 
-        ProductDecl p = null;
-        try {
-            p = model.findProduct("P1");
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+        model.evaluateAllProductDeclarations();
+        ProductDecl p = model.findProduct("P1");
+
         Product impl = p.getProduct();
         assertEquals(2, impl.getNumFeature());
 
@@ -106,22 +82,14 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
-    public void productUnion() {
+    public void productUnion() throws WrongProgramArgumentException {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3} || {F4};"
                 );
-        try {
-            model.evaluateAllProductDeclarations();
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
 
-        ProductDecl p = null;
-        try {
-            p = model.findProduct("P1");
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+        model.evaluateAllProductDeclarations();
+        ProductDecl p = model.findProduct("P1");
+
         Product impl = p.getProduct();
         assertEquals(4, impl.getNumFeature());
 
@@ -133,22 +101,14 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
-    public void productDifference() {
+    public void productDifference() throws WrongProgramArgumentException {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3, F4} - {F2, F3};"
                 );
-        try {
-            model.evaluateAllProductDeclarations();
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
 
-        ProductDecl p = null;
-        try {
-            p = model.findProduct("P1");
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+        model.evaluateAllProductDeclarations();
+        ProductDecl p = model.findProduct("P1");
+
         Product impl = p.getProduct();
         assertEquals(2, impl.getNumFeature());
 
@@ -160,23 +120,15 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
-    public void productName() {
+    public void productName() throws WrongProgramArgumentException {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3};"
                         + "product P2 = P1;"
                 );
-        try {
-            model.evaluateAllProductDeclarations();
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
 
-        ProductDecl p = null;
-        try {
-            p = model.findProduct("P2");
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+        model.evaluateAllProductDeclarations();
+        ProductDecl p = model.findProduct("P2");
+
         Product impl = p.getProduct();
         assertEquals(3, impl.getNumFeature());
 
@@ -188,30 +140,22 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test(expected=DeltaModellingException.class)
-    public void cylicProduct() {
+    public void cylicProduct() throws WrongProgramArgumentException {
         Model model = assertParseOk(
                 "product P4 = P5;"
                         + "product P5 = P4;"
                 );
-        try {
-            model.evaluateAllProductDeclarations();
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+
+        model.evaluateAllProductDeclarations();
     }
 
     @Test
-    public void undeclaredProduct() {
+    public void undeclaredProduct() throws WrongProgramArgumentException {
         Model model = assertParseOk(
                 "product P1 = P2 && P3 || P4 || {F1, F2};"
                 );
 
-        ProductDecl p = null;
-        try {
-            p = model.findProduct("P1");
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+        ProductDecl p = model.findProduct("P1");
 
         SemanticErrorList e = new SemanticErrorList();
         typeCheck(model, p, e);
@@ -221,25 +165,16 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
-    public void validProduct() {
+    public void validProduct() throws WrongProgramArgumentException {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3};"
                         + "root FM {"
                         + "group allof { F1, F2, F3 }"
                         + "}"                
                 );
-        try {
-            model.evaluateAllProductDeclarations();
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
 
-        ProductDecl p = null;
-        try {
-            p = model.findProduct("P1");
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+        model.evaluateAllProductDeclarations();
+        ProductDecl p = model.findProduct("P1");
 
         SemanticErrorList e = new SemanticErrorList();        
         typeCheck(model, p, e);
@@ -248,25 +183,16 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
-    public void invalidProduct() {
+    public void invalidProduct() throws WrongProgramArgumentException {
         Model model = assertParseOk(
                 "product P1 = {F1, F2};"
                         + "root FM {"
                         + "group allof { F1, F2, F3 }"
                         + "}"                
                 );
-        try {
-            model.evaluateAllProductDeclarations();
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
 
-        ProductDecl p = null;
-        try {
-            p = model.findProduct("P1");
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+        model.evaluateAllProductDeclarations();
+        ProductDecl p = model.findProduct("P1");
 
         SemanticErrorList e = new SemanticErrorList();        
         typeCheck(model, p, e);
@@ -276,22 +202,14 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
-    public void complexExpression() {
+    public void complexExpression() throws WrongProgramArgumentException {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3} && {F3, F4} || {F5, F6} - {F6};"
                 );
-        try {
-            model.evaluateAllProductDeclarations();
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
 
-        ProductDecl p = null;
-        try {
-            p = model.findProduct("P1");
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+        model.evaluateAllProductDeclarations();
+        ProductDecl p = model.findProduct("P1");
+
         Product impl = p.getProduct();
         assertEquals(2, impl.getNumFeature());
 
@@ -303,22 +221,14 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
-    public void complexExpressionWithParenthesis() {
+    public void complexExpressionWithParenthesis() throws WrongProgramArgumentException {
         Model model = assertParseOk(
                 "product P1 = {F1, F2, F3} && ({F3, F4} || {F5}) || {F6} - {F6};"
                 );
-        try {
-            model.evaluateAllProductDeclarations();
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
 
-        ProductDecl p = null;
-        try {
-            p = model.findProduct("P1");
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+        model.evaluateAllProductDeclarations();
+        ProductDecl p = model.findProduct("P1");
+
         Product impl = p.getProduct();
         assertEquals(1, impl.getNumFeature());
 
@@ -330,15 +240,10 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
-    public void rightSideProductName() {
+    public void rightSideProductName() throws WrongProgramArgumentException {
         Model model = assertParseOk("product P1 = P2 && P3 || P4 || {F1, F2};");
 
-        ProductDecl p = null;
-        try {
-            p = model.findProduct("P1");
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+        ProductDecl p = model.findProduct("P1");
 
         Set<String> actual = new HashSet<String>();
         p.getProductExpr().setRightSideProductNames(actual);
@@ -349,24 +254,16 @@ public class ProductDeclarationTest extends DeltaTest {
     }
 
     @Test
-    public void unorderedProduct() {
+    public void unorderedProduct() throws WrongProgramArgumentException {
         Model model = assertParseOk(
                 "product P2 = P1;"
                         + "product P3 = P2;"
                         + "product P1 = {F1, F2, F3};"
                 );
-        try {
-            model.evaluateAllProductDeclarations();
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
 
-        ProductDecl p = null;
-        try {
-            p = model.findProduct("P3");
-        } catch (WrongProgramArgumentException e) {
-            e.printStackTrace();
-        }
+        model.evaluateAllProductDeclarations();
+        ProductDecl p = model.findProduct("P3");
+
         Product impl = p.getProduct();
         assertEquals(3, impl.getNumFeature());
 
