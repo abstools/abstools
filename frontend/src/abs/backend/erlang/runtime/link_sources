@@ -17,10 +17,7 @@ SOURCE_DIR="$1/frontend/src/abs/backend/erlang/runtime"
 
 for i in absmodel/src/*.erl absmodel/priv/*
 do
-    if [ -f "$SOURCE_DIR/$i" ]
-    then
-        echo "Linking $SOURCE_DIR/$i to $i"
-        rm "$i"
-        ln -s "$SOURCE_DIR/$i" "$i"
-    fi
+    echo "Linking $SOURCE_DIR/$i to $i"
+    rm -rf "$i"
+    ln -s "$SOURCE_DIR/$i" "$i"
 done

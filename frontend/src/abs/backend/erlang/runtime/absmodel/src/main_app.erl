@@ -7,8 +7,10 @@
 -include_lib("absmodulename.hrl").
 
 start(_StartType, _StartArgs) ->
-    Dispatch = cowboy_router:compile([{'_', [{"/", cowboy_static, {priv_file, absmodel, "index.html"}},
-                                             {"/[:request]", modelapi, []}]}]),
+    Dispatch = cowboy_router:compile([{'_',
+                                       [{"/", cowboy_static, {priv_file, absmodel, "index.html"}},
+                                        {"/static/[...]", cowboy_static, {priv_dir, absmodel, "static"}},
+                                        {"/[:request]", modelapi, []}]}]),
     {ok, Port} = application:get_env(absmodel, port),
     {ok, _} = cowboy:start_http(http, 100, [{port, Port}],
                                 [{env, [{dispatch, Dispatch}]}]),
