@@ -622,6 +622,8 @@ import * from ABS.StdLib;
 data Resourcetype = CPU | Bandwidth | Memory
                   | Startupduration | PaymentInterval | CostPerInterval;
 
+// If these constructors are renamed, adjust abs-interpreter.maude
+// (advanceTotalsHistory etc.) and dc.erl (advanceTotalsHistory)
 data InfRat = InfRat | Fin(Rat finvalue);
 
 // Sums things up in percents (thus the * 100, which makes us not lose
@@ -854,7 +856,10 @@ implements DeploymentComponent {
     // consumption; they are changed by the underlying runtime system.
     Time creationTime = now();
     // Histories are updated by the backend.  totalhistories stay empty in
-    // case the DC has an infinite amount of resources for that type.
+    // case the DC has an infinite amount of resources for that type.  If
+    // these field names are changed, adjust dc.erl
+    // (var_current_for_resourcetype et al.) and abs-interpreter.maude (op
+    // advance et al.)
     List<Rat> cpuhistory = Nil;
     List<Rat> cpuhistorytotal = Nil;
     List<Rat> bwhistory = Nil;
