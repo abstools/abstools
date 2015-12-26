@@ -69,6 +69,14 @@ update_state_and_history(S, Amount) ->
         true -> S
     end.
 
+%% Use same behavior as Maude model (op advanceTotalsHistory on
+%% abs-interpreter.maude:1837): if DC has infinite resources, don't track
+%% totalshistory
+advanceTotalsHistory(History, {dataFin,Amount}) ->
+    {dataCons, Amount, History};
+advanceTotalsHistory(History, dataInfRat) -> History.
+
+
 update_state_and_history_for_resouce(S, Resourcetype) ->
     C=class_ABS_DC_DeploymentComponent,
     History=var_history_for_resourcetype(Resourcetype),
@@ -85,8 +93,7 @@ update_state_and_history_for_resouce(S, Resourcetype) ->
                           {dataCons, C:get_val_internal(S,Consumed),
                            C:get_val_internal(S,History)}),
     S2=C:set_val_internal(S1,Totalshistory,
-                          {dataCons, C:get_val_internal(S1,Max),
-                           C:get_val_internal(S1,Totalshistory)}),
+                          advanceTotalsHistory(C:get_val_internal(S1,Totalshistory), C:get_val_internal(S1,Max))),
     S3=case Resourcetype of
            %% Memory does not refresh as time advances
            memory -> S2;
