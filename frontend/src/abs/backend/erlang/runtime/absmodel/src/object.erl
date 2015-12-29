@@ -166,14 +166,28 @@ active({clock_advance_for_dc, Amount},_From,
        OS=#state{class=class_ABS_DC_DeploymentComponent,int_status=S}) ->
     S1=dc:update_state_and_history(S, Amount),
     {reply, ok, active, OS#state{int_status=S1}};
+active({get_resource_history, Curvar, Maxvar}, _From,
+       OS=#state{class=class_ABS_DC_DeploymentComponent=C,int_status=S}) ->
+    Result = {dc_info,
+              C:get_val_internal(S,description),
+              C:get_val_internal(S,creationTime),
+              C:get_val_internal(S,Curvar),
+              C:get_val_internal(S,Maxvar)},
+    {reply, {ok, Result}, active, OS} ;
 active(get_dc_info_string,_From,
        OS=#state{class=class_ABS_DC_DeploymentComponent=C,int_status=S}) ->
     Result=io_lib:format("Name: ~s~nCreation time: ~s~nCPU history (reversed): ~s~n~n", 
                          [C:get_val_internal(S,description),
                           builtin:toString(undefined, C:get_val_internal(S,creationTime)),
                           builtin:toString(undefined, C:get_val_internal(S,cpuhistory))]),
+    {reply, {ok, Result}, active, OS};
+active(get_resource_json,_From,
+      OS=#state{class=class_ABS_DC_DeploymentComponent=C,int_status=S}) ->
+    Name=C:get_val_internal(S,description),
+    History=C:get_val_internal(S,cpuhistory),
+    Result=[{list_to_binary("name"), list_to_binary(Name)},
+           {list_to_binary("values"), History}],
     {reply, {ok, Result}, active, OS}.
-
 
 active({#object{class=Class},set,Field,Val},S=#state{class=C,new_vals=NV}) -> 
     ?DEBUG({set,Field,Val}),

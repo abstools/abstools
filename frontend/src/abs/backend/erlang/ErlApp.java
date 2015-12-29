@@ -96,6 +96,7 @@ public class ErlApp {
             "absmodel/include/*",
             "absmodel/deps/*",
             "absmodel/priv/*",
+            "absmodel/priv/static/*",
             // do not copy this since absmodulename.hrl is generated later --
             // runtime.erl and main_app.erl use the wrong constant
             // "absmodel/ebin/*",

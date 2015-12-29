@@ -9,6 +9,7 @@
 %% This module exports functions specific to deployment components.
 
 -export([consume/3,update/2,get_description/1,update_state_and_history/2]).
+-export([get_resource_history/2]).
 -include_lib("abs_types.hrl").
 
 %% Attribute names for resource types.  Must be the same as in class
@@ -106,3 +107,9 @@ get_description(#object{class=class_ABS_DC_DeploymentComponent,ref=O}) ->
     {ok, Reply} = gen_fsm:sync_send_event(O, get_dc_info_string),
     Reply.
 
+get_resource_history(#object{class=class_ABS_DC_DeploymentComponent,ref=O}, Type) ->
+    {ok, {dc_info, Description, CreationTime, History, Totalhistory}} =
+        gen_fsm:sync_send_event(O, {get_resource_history,
+                                    var_history_for_resourcetype(Type),
+                                    var_totalhistory_for_resourcetype(Type)}),
+    [Description, CreationTime, History, Totalhistory].

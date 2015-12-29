@@ -1,9 +1,141 @@
+<!DOCTYPE html>
 <html>
-  <body>
-    <h1>erlang backend running</h1>
 
-    <p><a href="clock">Current Clock</a></p>
-    <p><a href="dcs">Deployment Components</a></p>
-  </body>
+    <head>
+        <title>Another graph library :-)</title>
+        <script type="text/javascript" src="static/js/dygraph-combined.js"></script>
+        <script type="text/javascript" src="static/js/synchronizer.js"></script>
+        <script type="text/javascript" src="static/js/jquery-1.11.3.js"></script>
+        <link rel="stylesheet" type="text/css" href="static/css/main.css" /> 
+    </head>
+
+    <body>
+
+        <div id="menuPane">
+            <table id="toggleViewer">
+                <tr>
+                    <td><button id="gridToggle">Toggle grid</button></td>
+                </tr>
+                <tr>
+                    <th><button id="graphToggle">Toggle check</button></th>
+                </tr>
+            </table>
+        </div>
+
+        <div id="graphPane">
+        </div>
+
+    </body>
+
+
+    <script type='text/javascript'>
+
+    // See http://dygraphs.com/options.html
+    var options = {
+            legend: 'always',
+            animatedZooms: true,
+            title: 'Deployment component 1',
+            labels: ["","network","cpu"],
+            height: 342,
+            width: 900,
+            ylabel: '%',
+            xlabel: 'Time',
+            titleHeight: 25, // Not pixels, not sure what this is
+            // Freeze y-axis on vertical zoom, and give room for labels (107)
+            valueRange: [0,107],
+            drawGrid: false
+     };
+    
+
+    $(document).ready(function(){
+
+        // Toggle the background grid
+        $("#gridToggle").on('click', function(ev){
+            ev.preventDefault();
+            var gs = $(document).data('graphs');
+            for(var i = 0; i < gs.length; i++){
+                gs[i].updateOptions(
+                    { drawGrid: !gs[i].user_attrs_.drawGrid }
+                );
+            }
+        });
+
+        // Toggle visibility of a graph / deployment component
+        $(document).on('change', ":checkbox", function(ev){
+            var grpId = '#graph'+ this.name.substring(10);
+            $(grpId).toggle();
+        });
+
+        // Toggle all / nothing for the checkboxes
+        $("#graphToggle").on('click', function(ev){
+            // Look for at least one checked box
+            var hasChecked = false;
+            var checkboxes = $(":checkbox").each(function(i, e){
+                if( this.checked ){
+                    hasChecked = true;
+                    return false;
+                }
+            });
+            // Set all boxes in checked/unchecked state
+            checkboxes.each(function(i, e){
+                if( e.checked !== !hasChecked ) {
+                    $(e).trigger('change');
+                }
+                e.checked = !hasChecked;
+            });
+
+        });
+
+
+        // Append divs to draw graphs on, and some rows + checkboxes
+        function appendTableRowsAndDivs(num){
+            var firstRow = $("table tr:eq(0)");
+            var secondRow = $("table tr:eq(1)");
+            var wrapperDiv = $("#graphPane");
+            for(var i = 0; i < num; i++){
+                firstRow.append("<th> DC "+ (1+i) + "</th>");
+                secondRow.append(
+                        "<td><input type='checkbox' name='toggleview_" +
+                        (1+i)+ "' checked /></td>");
+                wrapperDiv.append("<div id='graph_" + (1+i)
+                        +"' class='paddedGraph'></div>");
+            }
+        }
+
+
+        // Draw graphs from JSON and return all Dygraph's
+        function buildGraphs(graphData){
+            var graphs = new Array();
+            for(var i = 0; i < graphData.length; i++){
+                options['title'] = graphData[i].name;
+                graphs.push(new Dygraph(
+                            document.getElementById("graph_"+(1+i)),
+                            graphData[i].values,
+                            options));
+            }
+            return graphs;
+        }
+
+
+        // Fetch JSON and populate graphs
+        function loadJSON(){
+            $.ajax({
+                type: 'GET',
+                url:  'dcs/cpu/data.json',
+                success:function(data){
+                   appendTableRowsAndDivs(data.length);
+                   var gs = buildGraphs(data);
+                   $(document).data('graphs', gs);
+                   Dygraph.synchronize(gs);
+                },
+            });
+        }
+
+        loadJSON();
+
+    });
+
+    </script>
+
 </html>
 

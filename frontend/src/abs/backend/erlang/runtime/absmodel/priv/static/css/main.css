@@ -1,0 +1,30 @@
+.paddedGraph {
+    margin: 15px 0 23px 0;
+}
+
+#toggleViewer {
+    margin: 10px 0 15px 5px;
+}
+
+#toggleViewer td {
+    text-align: center;
+}
+
+#toggleViewer button {
+    min-width: 109px;
+    margin-right: 10px;
+}
+
+#menuPane {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: #f2f2ff;
+    z-index: 200;
+    border-bottom: 1px solid #404040;
+}
+
+#graphPane {
+    margin-top: 100px;
+}
