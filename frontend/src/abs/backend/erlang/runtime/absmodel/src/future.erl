@@ -113,7 +113,7 @@ get_references(Ref) ->
     Ref ! {get_references, self()},
     receive {References, Ref} -> References end.
 
-await(Ref, Cog, Stack) ->
+await(Ref, Cog=#cog{ref=CogRef}, Stack) ->
     case poll(Ref) of
         true -> ok;
         false ->
@@ -129,14 +129,16 @@ await(Ref, Cog, Stack) ->
                          {value_present, Ref, _CalleeCog} ->
                              %% It's a call to another cog: get our cog to
                              %% running status before allowing the other cog
-                             %% to idle
-
-                             %% TODO: this blocks the other cog until we are
-                             %% scheduled.  Investigate whether something like
-                             %% "cog:new_state(Cog,self(),runnable)" (but
-                             %% synchronous) is sufficient
-                             task:acquire_token(Cog, Stack),
-                             Ref ! {okthx, self()};
+                             %% to idle.  We can't call `acquire_token' before
+                             %% sending `okthx' though since two pairwise
+                             %% waiting cogs will deadlock.  Instead, we
+                             %% open-code `task:acquire_token' and add the
+                             %% proper callee unlocking and synchronous cog
+                             %% state change.
+                             cog:new_state_sync(Cog,self(),runnable,Stack),
+                             Ref ! {okthx, self()},
+                             task:loop_for_token(Stack, token),
+                             eventstream:event({cog, CogRef, unblocked});
                          {stop_world, _Sender} ->
                              %% we already released the token above.  Eat the
                              %% message or we'll block at inopportune moments

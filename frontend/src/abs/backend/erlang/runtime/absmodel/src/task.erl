@@ -8,6 +8,7 @@
 %%API for tasks
 -export([acquire_token/2,release_token/2,block_with_time_advance/1,block_without_time_advance/1,wait/1,wait_poll/1,commit/1,rollback/1]).
 -export([await_duration/4,block_for_duration/4,block_for_resource/4]).
+-export([loop_for_token/2]).            % low-level; use acquire_token instead
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
 
@@ -67,7 +68,7 @@ send_notifications(Val)->
 
 acquire_token(Cog=#cog{ref=CogRef}, Stack)->
     cog:new_state(Cog,self(),runnable),
-    loop_for_token(Stack),
+    loop_for_token(Stack, token),
     eventstream:event({cog, CogRef, unblocked}).
 
 loop_for_clock_advance(Stack) ->
@@ -80,17 +81,17 @@ loop_for_clock_advance(Stack) ->
             loop_for_clock_advance(Stack)
     end.
 
-loop_for_token(Stack) ->
+loop_for_token(Stack, Token) ->
     %% Handle GC messages while task is waiting for signal to continue
     %% (being activated by scheduler, time advance for duration
     %% statement, resources available).
     receive
-        token -> ok;
+        Token -> ok;
         {stop_world, _Sender} ->
-            loop_for_token(Stack);
+            loop_for_token(Stack, Token);
         {get_references, Sender} ->
             Sender ! {gc:extract_references(Stack), self()},
-            loop_for_token(Stack)
+            loop_for_token(Stack, Token)
     end.
 
 wait(Cog)->

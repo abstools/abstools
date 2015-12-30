@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
--export([start/0,start/1,add/3,add_and_notify/3,add_blocking/5,new_state/3,inc_ref_count/1,dec_ref_count/1]).
+-export([start/0,start/1,add/3,add_and_notify/3,add_blocking/5,new_state/3,new_state_sync/4,inc_ref_count/1,dec_ref_count/1]).
 -export([init/2]).
 -include_lib("log.hrl").
 -include_lib("abs_types.hrl").
@@ -51,7 +51,11 @@ add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
     task:acquire_token(Cog,[Args|Stack]).
 
 new_state(#cog{ref=Cog},TaskRef,State)->
-    Cog!{new_state,TaskRef,State}.
+    Cog!{new_state,TaskRef,State,undef}.
+
+new_state_sync(#cog{ref=Cog},TaskRef,State,Stack) ->
+    Cog!{new_state,TaskRef,State,self()},
+    task:loop_for_token(Stack, new_state_finished).
 
 %%Garbage collector callbacks
 
@@ -99,9 +103,14 @@ loop(S=#state{running=no_task_schedulable})->
                 S#state{running={gc, no_task_schedulable}}
         after 0 ->
                 receive
-                    {new_state,TaskRef,State}->
+                    {new_state,TaskRef,State,Sender}->
                         eventstream:event({cog,self(),active}),
-                        set_task_state(S,TaskRef,State);
+                        NewState=set_task_state(S,TaskRef,State),
+                        case Sender of
+                            undef -> ok;
+                            _ -> Sender!new_state_finished
+                        end,
+                        NewState;
                     {new_task,Task,Args,Sender,Notify}->
                         eventstream:event({cog,self(),active}),
                         start_new_task(S,Task,Args,Sender,Notify);
@@ -131,8 +140,13 @@ loop(S=#state{running=idle})->
                 S#state{running={gc, idle}}
         after 0 ->
                 receive
-                    {new_state,TaskRef,State}->
-                        set_task_state(S,TaskRef,State);
+                    {new_state,TaskRef,State,Sender}->
+                        NewState=set_task_state(S,TaskRef,State),
+                        case Sender of
+                            undef -> ok;
+                            _ -> Sender!new_state_finished
+                        end,
+                        NewState;
                     {new_task,Task,Args,Sender,Notify}->
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
@@ -163,8 +177,13 @@ loop(S=#state{running=R}) when is_pid(R)->
                 S1#state{running={gc, S1#state.running}}
         after 0 ->
                 receive
-                    {new_state,TaskRef,State}->
-                        set_task_state(S,TaskRef,State);
+                    {new_state,TaskRef,State,Sender}->
+                        NewState=set_task_state(S,TaskRef,State),
+                        case Sender of
+                            undef -> ok;
+                            _ -> Sender!new_state_finished
+                        end,
+                        NewState;
                     {new_task,Task,Args,Sender,Notify}->
                         start_new_task(S,Task,Args,Sender,Notify);
                     {token,R,Task_state}->
@@ -193,8 +212,13 @@ loop(S=#state{running={blocked, R}}) ->
                 S#state{running={gc, {blocked, R}}}
         after 0 ->
                 receive
-                    {new_state,TaskRef,State}->
-                        set_task_state(S,TaskRef,State);
+                    {new_state,TaskRef,State,Sender}->
+                        NewState=set_task_state(S,TaskRef,State),
+                        case Sender of
+                            undef -> ok;
+                            _ -> Sender!new_state_finished
+                        end,
+                        NewState;
                     {new_task,Task,Args,Sender,Notify}->
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
@@ -219,8 +243,13 @@ loop(S=#state{running={blocked_for_gc, R}}) ->
                 S#state{running={gc, {blocked_for_gc, R}}}
         after 0 ->
                 receive
-                    {new_state,TaskRef,State}->
-                        set_task_state(S,TaskRef,State);
+                    {new_state,TaskRef,State,Sender}->
+                        NewState=set_task_state(S,TaskRef,State),
+                        case Sender of
+                            undef -> ok;
+                            _ -> Sender!new_state_finished
+                        end,
+                        NewState;
                     {new_task,Task,Args,Sender,Notify}->
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
@@ -388,8 +417,13 @@ dec_referencers(S=#state{referencers=N}) ->
 %%Awaits task reaching synchronization point, or stop the world prelude
 await_task_stop_for_gc(S=#state{running=R}) ->
     New_State = receive
-                    {new_state,TaskRef,State} ->
-                        set_task_state(S,TaskRef,State);
+                    {new_state,TaskRef,State,Sender} ->
+                        NewState=set_task_state(S,TaskRef,State),
+                        case Sender of
+                            undef -> ok;
+                            _ -> Sender!new_state_finished
+                        end,
+                        NewState;
                     {token,R,Task_state}->
                         set_task_state(S#state{running=idle},R,Task_state)
                 end,
