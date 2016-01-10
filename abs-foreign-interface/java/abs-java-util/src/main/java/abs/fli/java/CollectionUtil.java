@@ -83,7 +83,7 @@ public class CollectionUtil {
 
     public <A extends ABSValue> java.util.List<A> convert(List<A> absList) {
         java.util.List<A> list = new ArrayList<A>();
-        if (absList.isCons()) {
+        while (absList.isCons()) {
             List_Cons<A> cons = absList.toCons();
             list.add(cons.getArg0());
             absList = cons.getArg1();
@@ -101,10 +101,10 @@ public class CollectionUtil {
 
     public <A extends ABSValue> java.util.Set<A> convert(Set<A> absSet) {
         java.util.Set<A> set = new HashSet<A>();
-        if (absSet.isInsert()) {
+        while (absSet.isInsert()) {
             Set_Insert<A> insert = absSet.toInsert();
             set.add(insert.getArg0());
-            set.addAll(convert(insert.getArg1()));
+            absSet = insert.getArg1();
         }
         return set;
     }
