@@ -165,14 +165,26 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
         [{_, _, MTE, _, _} | _] ->
             %% advance clock before waking up processes waiting for it
             ?DEBUG({clock_advance, MTE}),
-            clock:advance(MTE),
+            Clockresult=clock:advance(MTE),
             lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
             {A1,C1}=lists:unzip(
                      lists:map(
                        fun(I) -> decrease_or_wakeup(MTE, I) end,
                        C)),
-            State#state{active=gb_sets:union(A, gb_sets:from_list(lists:flatten(A1))),
-                        clock_waiting=lists:flatten(C1)}
+            NewState=State#state{active=gb_sets:union(A, gb_sets:from_list(lists:flatten(A1))),
+                                  clock_waiting=lists:flatten(C1)},
+            case Clockresult of
+                ok -> NewState;
+                stop ->
+                    Cogs=gb_sets:union([NewState#state.active, NewState#state.blocked, NewState#state.idle]),
+                    gb_sets:fold(fun (Ref, ok) -> cog:stop_world(Ref) end, ok, Cogs),
+                    gb_sets:fold(fun (Ref, ok) -> cog:kill_recklessly(Ref) end, ok, Cogs),
+                    {ok,T1} = case T of
+                                  undefined -> timer:send_after(1000,M,wait_done);
+                                  _ -> {ok,T}
+                              end,
+                    NewState#state{timer=T1}
+            end
     end .
 
 decrease_or_wakeup(MTE, {What, Min, Max, Task, Cog}) ->

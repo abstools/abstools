@@ -194,7 +194,9 @@ public class ErlUtil {
         } else {
             ecs.print(vars.toStack());
         }
-        ecs.println(")");
+        ecs.println(");");
+        ecs.decIndent().println("die_prematurely ->");
+        ecs.incIndent().println("exit(killed_by_the_clock)");
         ecs.decIndent();
         ecs.decIndent();
         ecs.println("after 0 -> ok end,");

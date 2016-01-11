@@ -853,7 +853,9 @@ aspect GenerateErlang {
       ecs.incIndent().pf("Poll(%s);", vars.toParamList());
       ecs.decIndent().println("{get_references, Sender} ->");
       ecs.incIndent().pf("Sender ! {gc:extract_references(%s), self()},", vars.toStack());
-      ecs.pf("Poll(%s)", vars.toParamList());
+      ecs.pf("Poll(%s);", vars.toParamList());
+      ecs.decIndent().println("die_prematurely ->");
+      ecs.incIndent().println("exit(killed_by_the_clock)");
       ecs.decIndent().decIndent().println("end end)");
       ecs.decIndent().format("(%s)",vars.toParamList());
     }

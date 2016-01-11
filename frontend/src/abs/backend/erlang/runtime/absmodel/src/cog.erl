@@ -12,6 +12,11 @@
 -behaviour(gc).
 -export([get_references/1, stop_world/1, resume_world/1]).
 
+%% Terminate recklessly.  Used to shutdown system when clock limit reached (if
+%% applicable).  Must be called when cog is stopped for GC.  (See
+%% `cog_monitor:advance_clock_or_terminate'.)
+-export([kill_recklessly/1]).
+
 %%The COG manages all its tasks in a tree task.
 %%
 %%It is implented as a kind of state machine server, where the variable running represents the state
@@ -77,6 +82,10 @@ stop_world(Cog) ->
 
 resume_world(Cog) ->
     Cog ! {done, gc},
+    ok.
+
+kill_recklessly(Cog) ->
+    Cog ! die_prematurely,
     ok.
 
 %%Internal
@@ -290,6 +299,9 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
                          stop;
                     _ -> S#state{running=Old}
                 end;
+            die_prematurely ->
+                lists:map(fun task:kill_recklessly/1, gb_trees:keys(Tasks)),
+                stop;
             inc_ref_count->
                 inc_referencers(S);
             dec_ref_count->

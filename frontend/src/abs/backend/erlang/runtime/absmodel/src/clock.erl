@@ -7,13 +7,13 @@
 
 -module(clock).
 -behaviour(gen_server).
--export([start_link/0,stop/0,advance/1,now/0,distance_to_next_boundary/0]).
+-export([start_link/1,stop/0,advance/1,now/0,distance_to_next_boundary/0]).
 -export([code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2]).
--record(state,{now}).
+-record(state,{now, limit}).
 
 %% Interface
-start_link() ->
-    gen_server:start_link({local, clock}, ?MODULE, [], []).
+start_link(Clocklimit) ->
+    gen_server:start_link({local, clock}, ?MODULE, [Clocklimit], []).
 
 stop() ->
     gen_server:call(?MODULE, stop).
@@ -29,12 +29,15 @@ distance_to_next_boundary() ->
 
 %% gen_server functions
 
-init([]) ->
-    {ok, #state{now=rationals:to_r(0)}}.
+init([Clocklimit]) ->
+    {ok, #state{now=rationals:to_r(0), limit=Clocklimit}}.
 
-handle_call({advance, Amount},_From,State=#state{now=Time}) ->
-    {reply, ok,
-     State#state{now=rationals:add(rationals:to_r(Time), rationals:to_r(Amount))}};
+handle_call({advance, Amount},_From,State=#state{now=Time,limit=Limit}) ->
+    Newtime=rationals:add(rationals:to_r(Time), rationals:to_r(Amount)),
+    Reply=case Limit of none -> ok;
+              _ -> case rationals:is_lesser(Time, rationals:to_r(Limit)) of true -> ok; false -> stop end
+          end,
+    {reply, Reply, State#state{now=Newtime}};
 handle_call(now, _From, State=#state{now=Time}) ->
     {reply, Time, State};
 handle_call(next_int, _From, State=#state{now=Time}) ->

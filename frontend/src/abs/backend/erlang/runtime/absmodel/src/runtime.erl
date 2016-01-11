@@ -6,7 +6,7 @@
 
 -include_lib("absmodulename.hrl").
 
--export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/1]).
+-export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/2]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -15,6 +15,7 @@
         [{debug,$d,"debug",{boolean,false},"Print debug status output"},
          {gcstats,$g, "gcstats",{boolean,false},"Print garbage collection statistics"},
          {port,$p,"port",{integer,none},"Start http on port and keep model running"},
+         {clocklimit,$l,"clock-limit",{integer,none},"Terminate simulation after given clock value"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
 
 
@@ -31,7 +32,7 @@ init([]) ->
 start()->
     case init:get_plain_arguments() of
         []->
-            run_mod(?ABSMAINMODULE, false, false, none);
+            run_mod(?ABSMAINMODULE, false, false, none, none);
         Args->
             start(Args)
    end.    
@@ -45,9 +46,10 @@ run(Args) ->
 start_http() ->
     {ok, _} = application:ensure_all_started(absmodel).
 
-start_http(Port) ->
+start_http(Port, Clocklimit) ->
     ok = application:load(absmodel),
     ok = application:set_env(absmodel, port, Port),
+    ok = application:set_env(absmodel, clocklimit, Clocklimit),
     start_http().
 
 
@@ -64,7 +66,8 @@ parse(Args,Exec)->
             Debug=proplists:get_value(debug,Parsed, false),
             GCStatistics=proplists:get_value(gcstats,Parsed, false),
             Port=proplists:get_value(port,Parsed,none),
-            run_mod(Module, Debug, GCStatistics, Port);
+            Clocklimit=proplists:get_value(clocklimit,Parsed,none),
+            run_mod(Module, Debug, GCStatistics, Port,Clocklimit);
         _ ->
             getopt:usage(?CMDLINE_SPEC,Exec)
     end.
@@ -75,14 +78,14 @@ parse(Args,Exec)->
 %% For now we just punt.
 start_link(Args) ->
     case Args of
-        [Module] ->
-            {ok, _T} = start_mod(Module, false, false),
+        [Module, Clocklimit] ->
+            {ok, _T} = start_mod(Module, false, false, Clocklimit),
             %% io:format("~w~n", [end_mod(T)]),
             supervisor:start_link({local, ?MODULE}, ?MODULE, []);
         _ -> {error, false}
     end.
 
-start_mod(Module, Debug, GCStatistics) ->
+start_mod(Module, Debug, GCStatistics, Clocklimit) ->
     io:format("Start ~w~n",[Module]),
     %%Init logging
     eventstream:start_link(),
@@ -96,7 +99,7 @@ start_mod(Module, Debug, GCStatistics) ->
     %% Init garbage collector
     gc:start(GCStatistics, Debug),
     %% Init simulation clock
-    clock:start_link(),
+    clock:start_link(Clocklimit),
     %% init RNG.
     %% TODO: if we want reproducible runs, make seed a command-line parameter
     {A1,A2,A3} = now(),
@@ -118,14 +121,14 @@ end_mod(TaskRef) ->
     RetVal.
 
 
-run_mod(Module, Debug, GCStatistics, Port)  ->
+run_mod(Module, Debug, GCStatistics, Port,Clocklimit)  ->
     case Port of
         _ when is_integer(Port) ->
             io:format("Starting server on port ~w, abort with Ctrl-C~n", [Port]),
-            start_http(Port),
+            start_http(Port, Clocklimit),
             receive ok -> ok end;
         _ ->
-            {ok, R}=start_mod(Module, Debug, GCStatistics),
+            {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit),
             end_mod(R)
     end.
 

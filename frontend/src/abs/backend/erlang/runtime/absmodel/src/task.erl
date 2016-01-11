@@ -15,6 +15,12 @@
 -behaviour(gc).
 -export([get_references/1]).
 
+%% Terminate recklessly.  Used to shutdown system when clock limit reached (if
+%% applicable).  Must be called when cog is stopped for GC.  (See
+%% `cog_monitor:advance_clock_or_terminate'.)
+-export([kill_recklessly/1]).
+
+
 %%Task behaviours have to implemented:
 %%init(Cog,Args): Can block an will init the task.
 %%                Return Value will then by passed to start
@@ -40,6 +46,10 @@ init(Task,Cog,Args)->
 get_references(Task) ->
     Task ! {get_references, self()},
     receive {References, Task} -> References end.
+
+kill_recklessly(Task) ->
+    Task ! die_prematurely,
+    ok.
 
 %%Register for termination notifcation
 notifyEnd(TaskRef)->
@@ -78,7 +88,8 @@ loop_for_clock_advance(Stack) ->
             loop_for_clock_advance(Stack);
         {get_references, Sender} ->
             Sender ! {gc:extract_references(Stack), self()},
-            loop_for_clock_advance(Stack)
+            loop_for_clock_advance(Stack);
+        die_prematurely -> exit(killed_by_the_clock)
     end.
 
 loop_for_token(Stack, Token) ->
@@ -91,7 +102,8 @@ loop_for_token(Stack, Token) ->
             loop_for_token(Stack, Token);
         {get_references, Sender} ->
             Sender ! {gc:extract_references(Stack), self()},
-            loop_for_token(Stack, Token)
+            loop_for_token(Stack, Token);
+        die_prematurely -> exit(killed_by_the_clock)
     end.
 
 wait(Cog)->
