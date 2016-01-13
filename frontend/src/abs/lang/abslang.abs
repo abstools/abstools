@@ -613,14 +613,23 @@ export DeploymentComponent, CloudProvider;
 // Annotations
 export DC, Cost, Size, MaxSize, CogLocation;
 // Datatypes, Constructors
-export Resourcetype, CPU, Bandwidth, Memory, InfRat, Fin;
-export Startupduration, PaymentInterval, CostPerInterval;
+export Resourcetype;
+export Speed, Cores, Bandwidth, Memory, InfRat, Fin;
+export Startupduration, Shutdownduration, PaymentInterval, CostPerInterval;
 // Functions
 export thisDC, finvalue;
 import * from ABS.StdLib;
 
-data Resourcetype = CPU | Bandwidth | Memory
-                  | Startupduration | PaymentInterval | CostPerInterval;
+data Resourcetype
+= Speed     // Execution speed in "cpu units" - used by [Cost: x] annotation
+| Cores     // Number of cores (static declaration for deployment planning)
+| Bandwidth // Transmit speed in "data units" - used by [Size: x] annotation
+| Memory    // Memory size (static declaration for deployment planning)
+| Startupduration            // Time to start, used by CloudProvider
+| Shutdownduration           // Time to shut down, used by CloudProvider
+| PaymentInterval            // Billing period, used by CloudProvider
+| CostPerInterval            // Cost per billing period, used by CloudProvider
+;
 
 // If these constructors are renamed, adjust abs-interpreter.maude
 // (advanceTotalsHistory etc.) and dc.erl (advanceTotalsHistory)
@@ -657,8 +666,10 @@ interface DeploymentComponent {
     [Atomic] CloudProvider getProvider();
     [Atomic] Time getCreationTime();
     [Atomic] Rat getStartupDuration();
+    [Atomic] Rat getShutdownDuration();
     [Atomic] Int getPaymentInterval();
     [Atomic] Rat getCostPerInterval();
+    [Atomic] Rat getNumberOfCores();
     // Convenience methods for calling CloudProvider acquireInstance,
     // releaseInstance.  If no cloud provider is set, return True.
     Bool acquire();
@@ -867,14 +878,14 @@ implements DeploymentComponent {
     List<Rat> memoryhistory = Nil;
     List<Rat> memoryhistorytotal = Nil;
     // Counters of consumed resources in current time unit.  Modified by the
-    // backend where appropriate (CPU, bandwidth self-refresh; memory doesn't.)
+    // backend where appropriate (Speed, bandwidth self-refresh; memory doesn't.)
     Rat cpuconsumed = 0;
     Rat bwconsumed = 0;
     Rat memoryconsumed = 0;
     // Initialized flag read by the backend to avoid premature execution
     Bool initialized = False;
     // Total amount of resources in current and next time interval.
-    InfRat cpu = case lookup(initconfig, CPU) {
+    InfRat cpu = case lookup(initconfig, Speed) {
       Nothing => InfRat; Just(v) => Fin(v); };
     InfRat cpunext = cpu;
     InfRat bw = case lookup(initconfig, Bandwidth) {
@@ -886,10 +897,10 @@ implements DeploymentComponent {
     Int paymentInterval = 
         case lookup(initconfig, PaymentInterval) {
             Nothing => 1; Just(n) => truncate(n); };
-    Rat costPerInterval = case lookup(initconfig, CostPerInterval) {
-        Nothing => 0; Just(o) => o; };
-    Rat startupDuration = case lookup(initconfig, Startupduration) {
-        Nothing => 0; Just(p) => p; };
+    Rat costPerInterval = lookupDefault(initconfig, CostPerInterval, 0);
+    Rat startupDuration = lookupDefault(initconfig, Startupduration, 0);
+    Rat shutdownDuration = lookupDefault(initconfig, Shutdownduration, 0);
+    Rat numberOfCores = lookupDefault(initconfig, Cores, 1);
 
     CloudProvider cloudprovider = null;
     {
@@ -898,7 +909,7 @@ implements DeploymentComponent {
     [Atomic] Rat load(Resourcetype rtype, Int periods) {
         Rat result = 0;
         case (rtype) {
-            CPU => {
+            Speed => {
                 if (cpu != InfRat) {
                     result = averageDivsN(cpuhistory, cpuhistorytotal, periods);
                 }
@@ -919,7 +930,7 @@ implements DeploymentComponent {
     [Atomic] InfRat total(Resourcetype rtype) {
         InfRat result = InfRat;
         case (rtype) {
-            CPU => result = cpu;
+            Speed => result = cpu;
             Bandwidth => result = bw;
             Memory => result = memory;
         }
@@ -936,7 +947,7 @@ implements DeploymentComponent {
 
     Unit decrementResources(Rat amount, Resourcetype rtype) {
         case (rtype) {
-            CPU => {
+            Speed => {
                 if (cpunext != InfRat) {
                     assert (finvalue(cpunext) >= amount);
                     cpunext = Fin(finvalue(cpunext) - amount);
@@ -954,7 +965,7 @@ implements DeploymentComponent {
     }
     Unit incrementResources(Rat amount, Resourcetype rtype) {
         case (rtype) {
-            CPU => {
+            Speed => {
                 if (cpunext != InfRat) {
                     cpunext = Fin(finvalue(cpunext) + amount);
                 }
@@ -988,9 +999,10 @@ implements DeploymentComponent {
 
     [Atomic] Time getCreationTime() { return creationTime; }
     [Atomic] Rat getStartupDuration() { return startupDuration; }
+    [Atomic] Rat getShutdownDuration() { return shutdownDuration; }
     [Atomic] Int getPaymentInterval() { return paymentInterval; }
     [Atomic] Rat getCostPerInterval() { return costPerInterval; }
-
+    [Atomic] Rat getNumberOfCores() { return numberOfCores; }
 
     [Atomic]
     Bool matchesDescription(Map<Resourcetype, Rat> description) {
@@ -1001,17 +1013,20 @@ implements DeploymentComponent {
             keys = remove(keys, key);
             Rat value = lookupUnsafe(description, key);
             case (key) {
-            CPU => {
-                if (cpu != InfRat && finvalue(cpu) < value) result = False;
-            }
-            Bandwidth => {
-                if (bw != InfRat && finvalue(bw) < value) result = False;
-            }
-            Memory => {
-                if (memory != InfRat && finvalue(memory) - memoryconsumed < value)
+                Speed => {
+                    if (cpu != InfRat && finvalue(cpu) < value) result = False;
+                }
+                Bandwidth => {
+                    if (bw != InfRat && finvalue(bw) < value) result = False;
+                }
+                Memory => {
+                    if (memory != InfRat && finvalue(memory) - memoryconsumed < value)
                     // Memory has different semantics - we ask for _free_
                     // memory, not total memory
                     result = False;
+                }
+                Cores => {
+                    if (numberOfCores < value) result = False;
                 }
             }
         }

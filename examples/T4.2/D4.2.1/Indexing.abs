@@ -264,7 +264,7 @@ modifies class MapReduce {
     Worker w = null;
     if (emptySet(workers)) {
       DeploymentComponent dc = new DeploymentComponent("worker "
-        + toString(nWorkers + 1), map[Pair(CPU, capacity)]);
+        + toString(nWorkers + 1), map[Pair(Speed, capacity)]);
       [DC: dc] w = new Worker(this);
       nWorkers = nWorkers + 1;
     } else {
@@ -281,7 +281,7 @@ modifies class MapReduce {
   modifies Worker getWorker() {
     if (emptySet(workers) && nWorkers < maxWorkers) {
       DeploymentComponent dc = new DeploymentComponent("worker "
-        + toString(nWorkers + 1), map[Pair(CPU, capacity)]);
+        + toString(nWorkers + 1), map[Pair(Speed, capacity)]);
       [DC: dc] Worker w = new Worker(this);
       workers = insertElement(workers, w);
       nWorkers = nWorkers + 1;

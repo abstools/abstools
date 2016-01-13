@@ -81,7 +81,7 @@ class InfrastructureServiceImpl implements InfrastructureService {
 	Map<Id, DC> inUse = EmptyMap;
 	
 	Int cpu(DC dc) {
-		Fut<InfRat> cf = dc!total(CPU);
+		Fut<InfRat> cf = dc!total(Speed);
 		InfRat cpu = cf.get;
 		return truncate(finvalue(cpu));
 	}
@@ -91,7 +91,7 @@ class InfrastructureServiceImpl implements InfrastructureService {
 		DC dc = null;
 		case md {
 			Nothing => {
-				dc = new DeploymentComponent(intToString(id), map[Pair(CPU, cpuamount)]);
+				dc = new DeploymentComponent(intToString(id), map[Pair(Speed, cpuamount)]);
 				total = total + cpuamount;
 				inUse = InsertAssoc(Pair(id, dc), inUse);
 			}
@@ -99,7 +99,7 @@ class InfrastructureServiceImpl implements InfrastructureService {
 				dc = d;
 				Int cpu = this.cpu(dc);
 				if (cpu < cpuamount) {
-					Fut<Unit> inf = dc!incrementResources(cpuamount - cpu, CPU); inf.get;
+					Fut<Unit> inf = dc!incrementResources(cpuamount - cpu, Speed); inf.get;
 					total = total + (cpuamount - cpu);
 				}	
 			}
@@ -209,7 +209,7 @@ class ServiceImpl(Id serviceId, ServiceType st, Customer c, Int cost) implements
 	
 	Int getCPU() {
 		DeploymentComponent dc = thisDC();
-		Fut<InfRat> fdt = dc!total(CPU);
+		Fut<InfRat> fdt = dc!total(Speed);
 		InfRat dt = fdt.get;
 		return truncate(finvalue(dt));
 	}

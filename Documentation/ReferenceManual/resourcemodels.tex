@@ -39,7 +39,7 @@ are modeled as a possibly infinite number of CPU ``cycles'', bandwidth as a poss
 
 \begin{absexample} 
 data InfRat = InfRat | Fin(Rat value);
-data Resourcetype = CPU | Bandwidth ;
+data Resourcetype = Speed | Bandwidth ;
 \end{absexample} 
 
 \subsection{Deployment Components}
@@ -103,7 +103,7 @@ class ServerImp implements Server { ... }
 
 {
   DeploymentComponent machine = new DeploymentComponent("remote",
-      map[Pair(CPU, 20)]);
+      map[Pair(Speed, 20)]);
   [DC: machine] Server x = new ServerImp();  // running in dc `machine'
   Server y = new ServerImp();                // running in current DC
 }
@@ -125,9 +125,9 @@ def DeploymentComponent thisDC() = builtin;
 \subsection{Expressing statement costs}
 
 The annotation \absinline{[Cost: x] s} expresses that executing the statement
-\absinline{s} will consume $x$ CPU resources on the current deployment
+\absinline{s} will consume $x$ Speed resources on the current deployment
 component.  If the current DC does not contain enough resources, the process
-will \emph{block}, consuming CPU resources each time unit, until the necessary
+will \emph{block}, consuming Speed resources each time unit, until the necessary
 amount of resources have been consumed.
 
 The annotation \absinline{[Size: x] o!m();} expresses that executing the
@@ -139,7 +139,7 @@ resources have been consumed at the target DC, but never before the current DC
 has finished executing the asynchronous method call statement.
 
 When a statement has both \absinline{Cost} and \absinline{Size} annotations,
-CPU resources will be consumed first, followed by bandwidth resources.
+Speed resources will be consumed first, followed by bandwidth resources.
 
 \subsection{Default statement costs}
 
