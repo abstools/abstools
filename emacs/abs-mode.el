@@ -417,7 +417,8 @@ value.")
                    (erlang-dir (concat (file-name-directory (buffer-file-name))
                                        "gen/erl/absmodel"))
                    (module (abs--guess-module))
-                   (debug-output abs-debug-output))
+                   (debug-output abs-debug-output)
+                   (clock-limit abs-clock-limit))
                (with-current-buffer erlang-buffer
                  (comint-send-string erlang-buffer
                                      (concat "cd (\"" erlang-dir "\").\n"))
@@ -431,7 +432,8 @@ value.")
                  (comint-send-string erlang-buffer "make:all([load]).\n")
                  (comint-send-string erlang-buffer
                                      (concat "runtime:start(\""
-                                             (when debug-output "-d ")
+                                             (when debug-output " -d ")
+                                             (when clock-limit (format " -l %d " clock-limit))
                                              module
                                              "\").\n")))
                (pop-to-buffer erlang-buffer)))
