@@ -526,12 +526,21 @@ Returns point.  Purely whitespace and comment lines are skipped."
   (back-to-indentation)
   (point))
 
+(defun abs--up-until-line-changes ()
+  (let* ((start-line (line-number-at-pos))
+         (point (point)))
+    (while (and (ignore-errors (up-list) t)
+                (= start-line (line-number-at-pos)))
+      (setq point (point)))
+    point))
+
 (defun abs--calculate-indentation ()
   (let* ((this-parse-status (save-excursion 
                               (syntax-ppss (line-beginning-position))))
-         (prev-parse-status (save-excursion 
-                              (syntax-ppss (abs--prev-code-line))))
-         (end-parse-status (save-excursion (syntax-ppss (line-end-position))))
+         (prev-parse-status (save-excursion
+                              (abs--prev-code-line)
+                              (syntax-ppss (abs--up-until-line-changes))))
+         (end-parse-status (save-excursion (syntax-ppss (abs--up-until-line-changes))))
          (prev-line-indent (save-excursion (abs--prev-code-line)
                                            (current-indentation)))
          (depth-difference-prev-line (- (nth 0 this-parse-status)
@@ -548,7 +557,7 @@ Returns point.  Purely whitespace and comment lines are skipped."
      ((> depth-difference-this-line 0)   ; closing paren here
       (- prev-line-indent (* abs-indent depth-difference-this-line)))
      (t                        ; Default: indent like the previous line.
-      (save-excursion (abs--prev-code-line) (current-indentation))))))
+      prev-line-indent))))
 
 (defun abs-indent-line ()
   "Indent the current line as Abs code.
