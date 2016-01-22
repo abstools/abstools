@@ -35,14 +35,15 @@
             legend: 'always',
             animatedZooms: true,
             title: 'Deployment component 1',
-            labels: ["","network","cpu"],
+            labels: ["","used","total"],
             height: 342,
             width: 900,
             ylabel: '%',
             xlabel: 'Time',
             titleHeight: 25, // Not pixels, not sure what this is
             // Freeze y-axis on vertical zoom, and give room for labels (107)
-            valueRange: [0,107],
+            // valueRange: [0,107],
+            includeZero: true,
             drawGrid: false
      };
     
