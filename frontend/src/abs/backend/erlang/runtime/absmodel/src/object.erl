@@ -196,18 +196,21 @@ active({#object{class=Class},set,Field,Val},S=#state{class=C,new_vals=NV}) ->
 handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, tasks=Tasks})->
     ?DEBUG({dying, Reason, By}),
     case C of
-        class_ABS_DC_DeploymentComponent -> eventstream:event({dc_died, self()});
-        _ -> ok
-    end,
-    [begin ?DEBUG({terminate,T}),exit(T,Reason) end ||T<-gb_sets:to_list(Tasks), T/=By],
-    cog:dec_ref_count(Cog),
-    case gb_sets:is_element(By,Tasks) of
-        true ->
-            exit(By,Reason);
-        false ->
-            ok
-    end,
-    {stop,normal,ok,S};
+        class_ABS_DC_DeploymentComponent ->
+            %% Keep DCs alive for visualization.  If we decide to
+            %% garbage-collect them again, remember to send
+            %% `eventstream:event({dc_died, self()})' so that cog_monitor
+            %% updates its list of DCs.
+            {reply, ok, active, S};
+        _ ->
+            [begin ?DEBUG({terminate,T}),exit(T,Reason) end ||T<-gb_sets:to_list(Tasks), T/=By],
+            cog:dec_ref_count(Cog),
+            case gb_sets:is_element(By,Tasks) of
+                true -> exit(By,Reason);
+                false -> ok
+            end,
+            {stop,normal,ok,S}
+    end;
 
 handle_sync_event(get_references, _From, StateName, S=#state{int_status=IState, new_vals=NewVals}) ->
     ?DEBUG(get_references),

@@ -115,6 +115,8 @@ handle_event({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent,ref=O}},
     ?DEBUG({newdc, O}),
     {ok, State#state{dcs=[DC | DCs]}};
 handle_event({dc_died, O}, State=#state{dcs=DCs}) ->
+    %% This event is not currently in use; we want DCs to stay alive for
+    %% visualization.
     ?DEBUG({dc_died, O}),
     {ok, State#state{dcs=lists:filter(fun (#object{ref=DC}) -> DC =/= O end,
                                       DCs)}};
