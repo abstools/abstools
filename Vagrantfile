@@ -110,8 +110,6 @@ org.abs-models.sdedit.feature.group
 
 
 echo
-echo "Installing KeY-ABS"
-echo
 echo "Downloading KeY-ABS, this might take a while..."
 wget -q http://www.key-project.org/key-abs/key-abs.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/key-abs.zip)
@@ -250,7 +248,7 @@ echo
 
 sudo add-apt-repository ppa:hvr/ghc
 sudo apt-get update -y -q
-sudo apt-get install -y -q ghc-7.8.4 cabal-install-1.20 happy-1.19.4 alex-3.1.3
+sudo apt-get install -y -q ghc-7.8.4 cabal-install-1.20 happy-1.19.4 alex-3.1.3 zlib1g-dev
 
 echo
 echo "Building the ABS-Haskell compiler"
