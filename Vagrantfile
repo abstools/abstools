@@ -112,6 +112,7 @@ org.abs-models.sdedit.feature.group
 echo
 echo "Installing KeY-ABS"
 echo
+echo "Downloading KeY-ABS, this might take a while..."
 wget -q http://www.key-project.org/key-abs/key-abs.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/key-abs.zip)
 rm key-abs.zip
