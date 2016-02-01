@@ -320,10 +320,10 @@ fmod ABS-DATA-STRING is
   --- Printing
   *** Maude seems to print strings in quote marks and appends a newline after
   *** each, so there's no point differentiating between println and print.
-  eq fparams("ABS.Meta.println") = 'S .
-  eq fdefn("ABS.Meta.println") = $builtin("print") .
-  eq fparams("ABS.Meta.print") = 'S .
-  eq fdefn("ABS.Meta.print") = $builtin("print") .
+  eq fparams("ABS.StdLib.println") = 'S .
+  eq fdefn("ABS.StdLib.println") = $builtin("print") .
+  eq fparams("ABS.StdLib.print") = 'S .
+  eq fdefn("ABS.StdLib.print") = $builtin("print") .
 
 endfm
 
