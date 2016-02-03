@@ -254,9 +254,8 @@ echo
 echo "Building the ABS-Haskell compiler"
 echo
 
-cd /vagrant
 git clone http://github.com/bezirg/abs2haskell
-cd /vagrant/abs2haskell
+cd abs2haskell
 git checkout cloud
 git submodule init
 git submodule update
