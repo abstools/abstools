@@ -36,28 +36,27 @@
 	<target name="init">
 	   <mkdir dir="${dist.dir}" />
 	   <mkdir dir="${build.dir}" />
-	    <propertyfile file="eclipsehome.properties">
-	    	<entry key="eclipse.home" default="PLEASE SPECIFY"/>
-	    </propertyfile>
 		
-        <property file="eclipsehome.properties" />
-
-        <condition property="eclipse.home.notset">
-		  <equals arg1="${eclipse.home}" arg2="PLEASE SPECIFY"/>
-		</condition>
-	    <antcall target="exitIfEclipseHomeNotSet"></antcall>
-		
+		<fail unless="eclipse.home">Please set 'eclipse.home'!</fail>
+		<echo message="current eclipse home:${eclipse.home}"/>
         <fileset id="eclipse-plugin-jars" dir="${eclipse.home}">
             <include name="**/plugins/**/org.eclipse.*" />
         </fileset>
+		
+	   
 		
         <path id="build.classpath">
            <pathelement location="${frontend.dir}/bin" />
            <path location="${frontend.dir}/lib/beaver.jar"/>
            <fileset dir="${frontend.dir}/lib" includes="**/*.jar" />
-           <fileset refid="eclipse-plugin-jars" />
-	   <pathelement location="${absplugin.dir}/bin" />
+        	<pathelement location="${absplugin.dir}/bin" />
+        	<fileset refid="eclipse-plugin-jars" />
+	   
         </path>
+		
+		<pathconvert property="classpathProp" refid="build.classpath"/>
+
+		<echo>Classpath is ${classpathProp}</echo>
 	</target>
     
 	<target name="exitIfEclipseHomeNotSet" if="eclipse.home.notset">

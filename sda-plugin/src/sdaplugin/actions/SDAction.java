@@ -32,7 +32,7 @@ import abs.frontend.ast.Model;
 public class SDAction implements IWorkbenchWindowActionDelegate {
   private IWorkbenchWindow window;
   
- 
+ private int unuse;
   
   /**
    * The constructor.
@@ -58,7 +58,7 @@ public class SDAction implements IWorkbenchWindowActionDelegate {
     Model model = nature.getCompleteModel();
     model.typeCheck();
     /* 4. Perform the analysis */
-    SDARun run = new SDARun(model, true, 3, 2, out);
+    SDARun run = new SDARun(model, false, 3, 2, out);
     run.schedule();
   }
 
