@@ -55,11 +55,16 @@ Using Vagrant
 
 To develop the ABS tools without installing additional software, you
 can use [Vagrant](https://www.vagrantup.com).  Vagrant will start a
-Linux virtual machine and install the needed dependencies.  In the
-`abstools/` directory, run the command `vagrant up` to provision and
-start a VM, then `vagrant ssh` to connect.
+Linux virtual machine and install the needed dependencies.
 
-Within the VM, this directory is accessible in the directory `/vagrant`.
+First, install Vagrant from https://www.vagrantup.com/downloads.html and
+VirtualBox from https://www.virtualbox.org
+
+To create the ABS virtual machine, run the command `vagrant up` in this
+directory.  Run `vagrant ssh` to login to that machine, or open
+http://localhost:8080/ to connect to an off-line version of the collaboratory.
+
+Within the VM, this directory is accessible as `/vagrant`.
 
 Working with the repository
 ---------------------------
