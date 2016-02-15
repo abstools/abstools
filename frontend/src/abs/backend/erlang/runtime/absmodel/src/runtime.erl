@@ -78,14 +78,13 @@ parse(Args,Exec)->
 %% For now we just punt.
 start_link(Args) ->
     case Args of
-        [Module, Clocklimit] ->
-            {ok, _T} = start_mod(Module, false, false, Clocklimit),
-            %% io:format("~w~n", [end_mod(T)]),
+        [Module, Clocklimit, Keepalive] ->
+            {ok, _T} = start_mod(Module, false, false, Clocklimit, Keepalive),
             supervisor:start_link({local, ?MODULE}, ?MODULE, []);
         _ -> {error, false}
     end.
 
-start_mod(Module, Debug, GCStatistics, Clocklimit) ->
+start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
     io:format("Start ~w~n",[Module]),
     %%Init logging
     eventstream:start_link(),
@@ -95,7 +94,7 @@ start_mod(Module, Debug, GCStatistics, Clocklimit) ->
         _ ->
             eventstream:add_handler(console_logger,[Debug, GCStatistics])
     end,
-    eventstream:add_handler(cog_monitor,[self()]),
+    eventstream:add_handler(cog_monitor,[self(),Keepalive]),
     %% Init garbage collector
     gc:start(GCStatistics, Debug),
     %% Init simulation clock
@@ -128,7 +127,7 @@ run_mod(Module, Debug, GCStatistics, Port,Clocklimit)  ->
             start_http(Port, Clocklimit),
             receive ok -> ok end;
         _ ->
-            {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit),
+            {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, false),
             end_mod(R)
     end.
 

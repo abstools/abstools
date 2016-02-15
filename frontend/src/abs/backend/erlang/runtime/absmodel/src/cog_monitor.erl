@@ -20,11 +20,13 @@
 %%   MTE [Maximum Time Elapse]).
 %% - dcs=list of deployment components
 %% - timer=timeout callback before terminating program
+%% - keepalive_after_clock_limit=should we kill all objects after clock limit
+%%   has been reached y/n (used to keep state around when web server is active)
 %%
 %% Simulation ends when no cog is active or waiting for the clock / some
 %% resources.  Note that a cog can be in "active" and "blocked" at the same
 %% time.
--record(state,{main,active,blocked,idle,clock_waiting,dcs,timer}).
+-record(state,{main,active,blocked,idle,clock_waiting,dcs,timer,keepalive_after_clock_limit}).
 %%External function
 
 %% Waits until all cogs are idle
@@ -40,8 +42,15 @@ get_dcs() ->
 %% Behaviour callbacks
 
 %%The callback gets as parameter the pid of the runtime process, which waits for all cogs to be idle
-init([Main])->
-    {ok,#state{main=Main,active=gb_sets:empty(),blocked=gb_sets:empty(),idle=gb_sets:empty(),clock_waiting=[],dcs=[],timer=undefined}}.
+init([Main,Keepalive])->
+    {ok,#state{main=Main,
+               active=gb_sets:empty(),
+               blocked=gb_sets:empty(),
+               idle=gb_sets:empty(),
+               clock_waiting=[],
+               dcs=[],
+               timer=undefined,
+               keepalive_after_clock_limit=Keepalive}}.
 
 handle_event({cog,Cog,new},State=#state{idle=I})->
     ?DEBUG({cog, Cog, new}),
@@ -151,7 +160,7 @@ can_clock_advance(_OldState=#state{active=A, blocked=B},
     All_idle = gb_sets:is_empty(gb_sets:subtract(A1, B1)),
     not Old_idle and All_idle.
 
-advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,timer=T}) ->
+advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,timer=T,keepalive_after_clock_limit=Keepalive}) ->
     case C of
         [] ->
             %% One last clock advance to finish the last resource period
@@ -168,24 +177,31 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
             %% advance clock before waking up processes waiting for it
             ?DEBUG({clock_advance, MTE}),
             Clockresult=clock:advance(MTE),
-            lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
-            {A1,C1}=lists:unzip(
-                     lists:map(
-                       fun(I) -> decrease_or_wakeup(MTE, I) end,
-                       C)),
-            NewState=State#state{active=gb_sets:union(A, gb_sets:from_list(lists:flatten(A1))),
-                                  clock_waiting=lists:flatten(C1)},
             case Clockresult of
-                ok -> NewState;
-                stop ->
-                    Cogs=gb_sets:union([NewState#state.active, NewState#state.blocked, NewState#state.idle]),
-                    gb_sets:fold(fun (Ref, ok) -> cog:stop_world(Ref) end, ok, Cogs),
-                    gb_sets:fold(fun (Ref, ok) -> cog:kill_recklessly(Ref) end, ok, Cogs),
-                    {ok,T1} = case T of
-                                  undefined -> timer:send_after(1000,M,wait_done);
-                                  _ -> {ok,T}
-                              end,
-                    NewState#state{timer=T1}
+                ok ->
+                    lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
+                    {A1,C1}=lists:unzip(
+                              lists:map(
+                                fun(I) -> decrease_or_wakeup(MTE, I) end,
+                                C)),
+                    State#state{active=gb_sets:union(A, gb_sets:from_list(lists:flatten(A1))),
+                                clock_waiting=lists:flatten(C1)};
+                limit_reached ->
+                    case Keepalive of
+                        false ->
+                            io:format("Simulation time limit reached; terminating~n", []),
+                            Cogs=gb_sets:union([State#state.active, State#state.blocked, State#state.idle]),
+                            gb_sets:fold(fun (Ref, ok) -> cog:stop_world(Ref) end, ok, Cogs),
+                            gb_sets:fold(fun (Ref, ok) -> cog:kill_recklessly(Ref) end, ok, Cogs),
+                            {ok,T1} = case T of
+                                          undefined -> timer:send_after(1000,M,wait_done);
+                                          _ -> {ok,T}
+                                      end,
+                            State#state{timer=T1};
+                        true ->
+                            io:format("Simulation time limit reached; terminate with Ctrl-C~n", []),
+                            State
+                    end
             end
     end .
 

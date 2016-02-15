@@ -34,10 +34,13 @@ init([Clocklimit]) ->
 
 handle_call({advance, Amount},_From,State=#state{now=Time,limit=Limit}) ->
     Newtime=rationals:add(rationals:to_r(Time), rationals:to_r(Amount)),
-    Reply=case Limit of none -> ok;
-              _ -> case rationals:is_lesser(Time, rationals:to_r(Limit)) of true -> ok; false -> stop end
+    Reply=case Limit of none -> {reply, ok, State#state{now=Newtime}};
+              _ -> case rationals:is_lesser(Time, rationals:to_r(Limit)) of
+                       true -> {reply, ok, State#state{now=Newtime}};
+                       false -> {reply, limit_reached, State#state{now=Time}}
+                   end
           end,
-    {reply, Reply, State#state{now=Newtime}};
+    Reply;
 handle_call(now, _From, State=#state{now=Time}) ->
     {reply, Time, State};
 handle_call(next_int, _From, State=#state{now=Time}) ->
