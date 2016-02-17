@@ -171,7 +171,7 @@
 
   <!-- generate ABS -->
 
-  <target name="gen" depends="genshell, genast, genlang, genruntime, genantlr">
+  <target name="gen" depends="prepare, genshell, genast, genlang, genruntime, genantlr">
   </target>
 
   <target name="genast">
