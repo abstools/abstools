@@ -3,7 +3,7 @@
 aspect InitChecker {
 
     void ASTNode.checkLegalInit(SemanticErrorList l, ErrorMessage msg) {
-        for (ASTNode<?> n : this) {
+        for (ASTNode<?> n : astChildren()) {
             n.checkLegalInit(l, msg);
         }
     }
