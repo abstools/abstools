@@ -289,7 +289,7 @@ public class UtilityFunctionsTest {
 		when(dConst.getConstructor()).thenReturn(type.getAnnotationString());
 		
 		final Annotation a = mock(Annotation.class);
-		when(a.iterator()).thenReturn(new Iterator<ASTNode>() {
+		when(a.astChildren().iterator()).thenReturn(new Iterator<ASTNode>() {
 			public boolean first = true;
 			
 			@Override
