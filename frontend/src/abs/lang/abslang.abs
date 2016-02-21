@@ -786,7 +786,11 @@ class CloudProvider(String name) implements CloudProvider {
 
     Bool acquireInstance(DeploymentComponent instance) {
         Bool result = True;
-        if (contains(acquiredInstances, instance)
+        CloudProvider cp = await instance!getProvider();
+        if (cp != this) {
+            // it's not one of "our" deployment components
+            result = False;
+        } else if (contains(acquiredInstances, instance)
             || contains(killedInstances, instance)) {
             result = False;
         } else {
