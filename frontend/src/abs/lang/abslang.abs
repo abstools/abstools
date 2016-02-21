@@ -723,9 +723,9 @@ class CloudProvider(String name) implements CloudProvider {
 
     Unit startAccounting() {
         while(keeprunning && !emptySet(launchedInstances)) {
-            await duration(1, 1);
             Rat cost = this.sumOfCosts(launchedInstances);
             accumulatedCost = accumulatedCost + cost;
+            await duration(1, 1);
         }
     }
     [Atomic] Unit shutdown() { keeprunning = False; }
@@ -752,23 +752,27 @@ class CloudProvider(String name) implements CloudProvider {
     DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
         // Until we have a way of actually removing DCs, might as well re-use
         // them
-        Bool needToStartAccounting = emptySet(launchedInstances);
+        Bool mightNeedToStartAccounting = emptySet(launchedInstances);
+
         // TODO: Is this what we want?  We might resurrect an instance
         // that is larger than what we were asked for
         DeploymentComponent result = this.findMatchingInstance(killedInstances, d);
         if (result != null) {
             killedInstances = remove(killedInstances, result);
             launchedInstances = insertElement(launchedInstances, result);
+            if (mightNeedToStartAccounting) this!startAccounting();
         } else {
             result = new DeploymentComponent(name + "-"
                 + toString(nextInstanceId), d);
             nextInstanceId = nextInstanceId + 1;
             Rat startup_duration = await result!getStartupDuration();
-            await duration(startup_duration, startup_duration);
             launchedInstances = insertElement(launchedInstances, result);
             result!setProvider(this);
+            // Start accounting after adding new machine, before waiting for
+            // it to start up
+            if (mightNeedToStartAccounting) this!startAccounting();
+            await duration(startup_duration, startup_duration);
         }
-        if (needToStartAccounting) this!startAccounting();
         return result;
     }
 
@@ -782,7 +786,8 @@ class CloudProvider(String name) implements CloudProvider {
 
     Bool acquireInstance(DeploymentComponent instance) {
         Bool result = True;
-        if (contains(acquiredInstances, instance)) {
+        if (contains(acquiredInstances, instance)
+            || contains(killedInstances, instance)) {
             result = False;
         } else {
             acquiredInstances = insertElement(acquiredInstances, instance);
@@ -801,11 +806,22 @@ class CloudProvider(String name) implements CloudProvider {
     }
 
     Bool killInstance(DeploymentComponent instance) {
-        // Also kill an instance that is acquired.
-        // FIXME: is this the right thing?
+        // Also kill an instance that is acquired.  FIXME: is this the right
+        // thing, or should we refuse to shutdown?
         acquiredInstances = remove(acquiredInstances, instance);
-        launchedInstances = remove(launchedInstances, instance);
+        // Insert `instance' into killedInstances so it doesn't get
+        // re-acquired.
         killedInstances = insertElement(killedInstances, instance);
+        Rat shutdown_duration = await instance!getShutdownDuration();
+        await duration(shutdown_duration, shutdown_duration);
+
+        // Now remove from launchedInstances (after waiting for shutdown) so
+        // shutdown duration gets billed
+        launchedInstances = remove(launchedInstances, instance);
+
+        // Shut down accounting thread if necessary
+        if (emptySet(launchedInstances)) keeprunning = False;
+
         return True;
     }
 
