@@ -674,10 +674,6 @@ interface DeploymentComponent {
     // releaseInstance.  If no cloud provider is set, return True.
     Bool acquire();
     Bool release();
-    // Return True if we match needed resources according to description.  For
-    // different resource types this might mean different things (e.g.,
-    // available not total memory must match vs. total CPU speed must match).
-    [Atomic] Bool matchesDescription(Map<Resourcetype, Rat> description);
 }
 
 interface CloudProvider {
@@ -750,29 +746,18 @@ class CloudProvider(String name) implements CloudProvider {
     }
 
     DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
-        // Until we have a way of actually removing DCs, might as well re-use
-        // them
         Bool mightNeedToStartAccounting = emptySet(launchedInstances);
 
-        // TODO: Is this what we want?  We might resurrect an instance
-        // that is larger than what we were asked for
-        DeploymentComponent result = this.findMatchingInstance(killedInstances, d);
-        if (result != null) {
-            killedInstances = remove(killedInstances, result);
-            launchedInstances = insertElement(launchedInstances, result);
-            if (mightNeedToStartAccounting) this!startAccounting();
-        } else {
-            result = new DeploymentComponent(name + "-"
-                + toString(nextInstanceId), d);
-            nextInstanceId = nextInstanceId + 1;
-            Rat startup_duration = await result!getStartupDuration();
-            launchedInstances = insertElement(launchedInstances, result);
-            result!setProvider(this);
-            // Start accounting after adding new machine, before waiting for
-            // it to start up
-            if (mightNeedToStartAccounting) this!startAccounting();
-            await duration(startup_duration, startup_duration);
-        }
+        DeploymentComponent result = new DeploymentComponent(name + "-"
+            + toString(nextInstanceId), d);
+        nextInstanceId = nextInstanceId + 1;
+        Rat startup_duration = await result!getStartupDuration();
+        launchedInstances = insertElement(launchedInstances, result);
+        result!setProvider(this);
+        // Start accounting after adding new machine, before waiting for
+        // it to start up
+        if (mightNeedToStartAccounting) this!startAccounting();
+        await duration(startup_duration, startup_duration);
         return result;
     }
 
@@ -831,21 +816,6 @@ class CloudProvider(String name) implements CloudProvider {
 
     [Atomic] Rat getAccumulatedCost() {
         return accumulatedCost;
-    }
-
-    DeploymentComponent findMatchingInstance(Set<DeploymentComponent> instances,
-        Map<Resourcetype, Rat> description)
-    {
-        DeploymentComponent result = null;
-        while (!emptySet(instances) && result == null) {
-            DeploymentComponent instance = take(instances);
-            instances = remove(instances, instance);
-            Bool matches = await instance!matchesDescription(description);
-            if (matches) {
-                result = instance;
-            }
-        }
-        return result;
     }
 
     // Sets up information for [pre]launchInstanceNamed()
@@ -1023,35 +993,6 @@ implements DeploymentComponent {
     [Atomic] Int getPaymentInterval() { return paymentInterval; }
     [Atomic] Rat getCostPerInterval() { return costPerInterval; }
     [Atomic] Rat getNumberOfCores() { return numberOfCores; }
-
-    [Atomic]
-    Bool matchesDescription(Map<Resourcetype, Rat> description) {
-        Bool result = True;
-        Set<Resourcetype> keys = keys(description);
-        while (result == True && !(emptySet(keys))) {
-            Resourcetype key = take(keys);
-            keys = remove(keys, key);
-            Rat value = lookupUnsafe(description, key);
-            case (key) {
-                Speed => {
-                    if (cpu != InfRat && finvalue(cpu) < value) result = False;
-                }
-                Bandwidth => {
-                    if (bw != InfRat && finvalue(bw) < value) result = False;
-                }
-                Memory => {
-                    if (memory != InfRat && finvalue(memory) - memoryconsumed < value)
-                    // Memory has different semantics - we ask for _free_
-                    // memory, not total memory
-                    result = False;
-                }
-                Cores => {
-                    if (numberOfCores < value) result = False;
-                }
-            }
-        }
-        return result;
-    }
 }
 
 // abbreviation for [DC: foo] annotations
