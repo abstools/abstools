@@ -40,8 +40,11 @@ public class Tester extends Main {
   private void compile(String[] args)
       throws DeltaModellingException, IOException, WrongProgramArgumentException, ParserConfigurationException,FileNotFoundException {
     final Model model = this.parse(args);
-    // go on even if there are some type errors
-		//if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) return;
+    // the extraction of the cost annotations can proceed even if the code
+    // is not type safe.
+    // This is exploited in the SmartDeploy code generator since this tool takes
+    // in input a program using some classes that are not defined (they will be
+    // added later with a delta).
 		if (model.hasParserErrors() || model.hasErrors() ) return;
     if (verbose) { System.out.println("Starting Dependency information extraction..."); }
     DeployInformation di = new DeployInformation();
