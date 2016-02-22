@@ -40,7 +40,9 @@ public class Tester extends Main {
   private void compile(String[] args)
       throws DeltaModellingException, IOException, WrongProgramArgumentException, ParserConfigurationException,FileNotFoundException {
     final Model model = this.parse(args);
-    if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) return;
+    // go on even if there are some type errors
+		//if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) return;
+		if (model.hasParserErrors() || model.hasErrors() ) return;
     if (verbose) { System.out.println("Starting Dependency information extraction..."); }
     DeployInformation di = new DeployInformation();
     di.extractInformation(model);
