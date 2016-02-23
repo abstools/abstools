@@ -697,6 +697,8 @@ interface CloudProvider {
     // name could not be found.  The resulting deployment components are then
     // handled as normal (acquire/release/kill).
     [Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions);
+		[Atomic] Unit addInstanceDescription(Pair<String, Map<Resourcetype, Rat>> instanceDescription);
+		[Atomic] Unit removeInstanceDescription(String instanceDescriptionName);
     [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions();
     DeploymentComponent prelaunchInstanceNamed(String instancename);
     DeploymentComponent launchInstanceNamed(String instancename);
@@ -822,6 +824,16 @@ class CloudProvider(String name) implements CloudProvider {
     [Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions) {
         this.instanceDescriptions = instanceDescriptions;
     }
+
+		// Adds an instance for [pre]launchInstanceNamed()
+		[Atomic] Unit addInstanceDescription(Pair<String, Map<Resourcetype, Rat>> instanceDescription) {
+				this.instanceDescriptions = insert(this.instanceDescriptions, instanceDescription);
+		}
+
+		// Removes an instance for [pre]launchInstanceNamed() based on its name
+		[Atomic] Unit removeInstanceDescription(String instanceDescriptionName) {
+				this.instanceDescriptions = removeKey(this.instanceDescriptions, instanceDescriptionName);
+		}
 
     [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions() {
         return this.instanceDescriptions;
@@ -1011,6 +1023,29 @@ type MaxSize = Rat;
 
 // Distributed execution (eg the Scala backend): where the cog will be created
 type CogLocation = String;
+
+/**
+ * The ABS.SmartDeploy Module contains the data definitions for the annotations
+   and interfaces used by the tool that generates automatically the Main block 
+ */
+module ABS.SmartDeploy;
+export *;
+
+// definitions for the cost annotations associated to classes
+data DeployParamSpecification = Req | List(Int) | Default(String) | User ;
+data DeployScenarioElement = MaxUse(Int) |
+	Cost(String, Int) |
+	Param(String, DeployParamSpecification) |
+	Name(String);
+type Deploy = List<DeployScenarioElement>;
+
+// definition for the annotation used to define a SmartDeploy task. The string
+// is intended to be a json object
+type SmartDeploy = String;
+
+// interface of the smart deployment objects. This interface is empy and it will
+// be later modified by a delta automatically generated
+interface SmartDeployInterface {}
 
 /**
  * Reflective, mirror-based interface for ABS
