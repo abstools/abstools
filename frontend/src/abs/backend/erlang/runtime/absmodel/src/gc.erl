@@ -15,14 +15,14 @@
 
 -undef(MIN_PROC_FACTOR).
 -undef(MAX_PROC_FACTOR).
--undef(TIME_LIMIT).
+-undef(MAX_COLLECTION_INTERVAL).
 -undef(MIN_THRESH).
 -undef(RED_THRESH).
 -undef(INC_THRESH).
 
 -define(MIN_PROC_FACTOR, 0.5).
 -define(MAX_PROC_FACTOR, 0.9).
--define(TIME_LIMIT, 100000).
+-define(MAX_COLLECTION_INTERVAL, 100).          % collect every 0.1 seconds
 
 -define(MIN_THRESH, 16).
 -define(RED_THRESH, 0.25).
@@ -30,7 +30,7 @@
 
 -record(state, {cogs=gb_sets:empty(),objects=gb_sets:empty(),
                 futures=gb_sets:empty(),root_futures=gb_sets:empty(),
-                previous=now(), 
+                previous=erlang:monotonic_time(milli_seconds),
                 limit=?MIN_THRESH, proc_factor=?MIN_PROC_FACTOR, log=false,
                 debug=false}).
 
@@ -48,7 +48,7 @@ init(Log, Debug) ->
 
 gcstats(Log, Statistics) -> 
     case Log of
-        true ->eventstream:gcstats({gcstats, now(), Statistics});
+        true ->eventstream:gcstats({gcstats, erlang:monotonic_time(milli_seconds), Statistics});
         false -> ok
     end.
 
@@ -176,7 +176,7 @@ sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,
                     true -> PFactor
                  end,
     ?DEBUG({sweep_finished, {objects, gb_sets:size(BlackObjects)}, {futures, gb_sets:size(BlackFutures)}}),
-    loop(State#state{objects=BlackObjects, futures=BlackFutures, previous=now(),
+    loop(State#state{objects=BlackObjects, futures=BlackFutures, previous=erlang:monotonic_time(milli_seconds),
                      limit=NewLim, proc_factor=PFactor}).
 
 get_references({Module, Ref}) ->
@@ -188,7 +188,7 @@ is_collection_needed(State=#state{objects=Objects,futures=Futures,
                                   previous=PTime,limit=Lim,proc_factor=PFactor,
                                   debug=Debug}) ->
     Debug
-    orelse timer:now_diff(now(), PTime) > ?TIME_LIMIT
+    orelse (erlang:monotonic_time(milli_seconds) - PTime) > ?MAX_COLLECTION_INTERVAL
     orelse erlang:system_info(process_count) / erlang:system_info(process_limit) > PFactor.
 
 
