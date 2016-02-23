@@ -674,6 +674,9 @@ interface DeploymentComponent {
     // releaseInstance.  If no cloud provider is set, return True.
     Bool acquire();
     Bool release();
+    // Shut down deployment component.  Semantics of job termination / object
+    // invalidation upon shutdown are currently under discussion.
+    Bool shutdown();
 }
 
 interface CloudProvider {
@@ -686,7 +689,7 @@ interface CloudProvider {
     // launchInstance does the equivalent of acquireInstance.
     Bool acquireInstance(DeploymentComponent instance);
     Bool releaseInstance(DeploymentComponent instance);
-    Bool killInstance(DeploymentComponent instance);
+    Bool shutdownInstance(DeploymentComponent instance);
 
     [Atomic] Rat getAccumulatedCost();
     [Atomic] Unit shutdown();
@@ -796,7 +799,7 @@ class CloudProvider(String name) implements CloudProvider {
         return True;
     }
 
-    Bool killInstance(DeploymentComponent instance) {
+    Bool shutdownInstance(DeploymentComponent instance) {
         // Also kill an instance that is acquired.  FIXME: is this the right
         // thing, or should we refuse to shutdown?
         acquiredInstances = remove(acquiredInstances, instance);
@@ -812,6 +815,13 @@ class CloudProvider(String name) implements CloudProvider {
 
         // Shut down accounting thread if necessary
         if (emptySet(launchedInstances)) keeprunning = False;
+
+        // Make sure the deployment component knows it is being shut down.
+        // shutdownInstance() can be called by the user directly or by the
+        // deployment component when the user invokes
+        // DeploymentComponent.shutdown(); in both cases the right thing will
+        // happen.
+        instance!shutdown();
 
         return True;
     }
@@ -866,8 +876,9 @@ class CloudProvider(String name) implements CloudProvider {
 class DeploymentComponent (String description, Map<Resourcetype, Rat> initconfig)
 implements DeploymentComponent {
     // This class has fields that reflect execution state and resource
-    // consumption; they are changed by the underlying runtime system.
-    Time creationTime = now();
+    // consumption; they are read / changed by the underlying runtime
+    // system(s).  Be careful when renaming fields!
+
     // Histories are updated by the backend.  totalhistories stay empty in
     // case the DC has an infinite amount of resources for that type.  If
     // these field names are changed, adjust dc.erl
@@ -880,12 +891,23 @@ implements DeploymentComponent {
     List<Rat> memoryhistory = Nil;
     List<Rat> memoryhistorytotal = Nil;
     // Counters of consumed resources in current time unit.  Modified by the
-    // backend where appropriate (Speed, bandwidth self-refresh; memory doesn't.)
+    // backend where appropriate (Speed, bandwidth self-refresh; memory
+    // doesn't.)  Do not rename.
     Rat cpuconsumed = 0;
     Rat bwconsumed = 0;
     Rat memoryconsumed = 0;
-    // Initialized flag read by the backend to avoid premature execution
+
+    // Creation time and shutdown time are used by (at least) the
+    // visualization backend.  Do not rename.
+    Time creationTime = now();
+    Maybe<Time> shutdownTime = Nothing;
+
+    // Initialized flag read by the backend to avoid premature execution.  Do
+    // not rename.
     Bool initialized = False;
+    // shutdown flag read by the backend to refuse object creation.  Do not
+    // rename.
+    Bool is_shutdown = False;
     // Total amount of resources in current and next time interval.
     InfRat cpu = case lookup(initconfig, Speed) {
       Nothing => InfRat; Just(v) => Fin(v); };
@@ -997,6 +1019,21 @@ implements DeploymentComponent {
             result = await cloudprovider!releaseInstance(this);
         }
         return result;
+    }
+
+    Bool shutdown() {
+        if (!is_shutdown) {
+            is_shutdown = True;
+            shutdownTime = Just(now());
+            if (cloudprovider != null) {
+                // The user can call either DeploymentComponent!shutdown() or
+                // CloudProvider!shutdownInstance(), for the same effect.  In
+                // the latter case, the cloud provider will call shutdown() a
+                // second time, but we will not enter this if block again.
+                cloudprovider!shutdownInstance(this);
+            }
+        }
+        return True;
     }
 
     [Atomic] Time getCreationTime() { return creationTime; }
