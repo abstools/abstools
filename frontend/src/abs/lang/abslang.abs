@@ -697,6 +697,8 @@ interface CloudProvider {
     // name could not be found.  The resulting deployment components are then
     // handled as normal (acquire/release/kill).
     [Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions);
+		[Atomic] Unit addInstanceDescription(Pair<String, Map<Resourcetype, Rat>> instanceDescription);
+		[Atomic] Unit removeInstanceDescription(String instanceDescriptionName);
     [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions();
     DeploymentComponent prelaunchInstanceNamed(String instancename);
     DeploymentComponent launchInstanceNamed(String instancename);
@@ -822,6 +824,16 @@ class CloudProvider(String name) implements CloudProvider {
     [Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions) {
         this.instanceDescriptions = instanceDescriptions;
     }
+
+		// Adds an instance for [pre]launchInstanceNamed()
+		[Atomic] Unit addInstanceDescription(Pair<String, Map<Resourcetype, Rat>> instanceDescription) {
+				this.instanceDescriptions = insert(this.instanceDescriptions, instanceDescription);
+		}
+
+		// Removes an instance for [pre]launchInstanceNamed() based on its name
+		[Atomic] Unit removeInstanceDescription(String instanceDescriptionName) {
+				this.instanceDescriptions = removeKey(this.instanceDescriptions, instanceDescriptionName);
+		}
 
     [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions() {
         return this.instanceDescriptions;
