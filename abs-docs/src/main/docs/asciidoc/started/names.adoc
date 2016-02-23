@@ -13,11 +13,11 @@ Type Synonyms define synonyms for otherwise defined types. Type synonyms start w
 
 [source]
 ----
-type Filename = String
-type Filenames = Set<Filename>
-type Servername = String
-type Packet = String
-type File = List<Packet>
-type Catalog = List<Pair<Servername,Filenames>>
+type Filename = String;
+type Filenames = Set<Filename>;
+type Servername = String;
+type Packet = String;
+type File = List<Packet>;
+type Catalog = List<Pair<Servername,Filenames>>;
 
 ----
