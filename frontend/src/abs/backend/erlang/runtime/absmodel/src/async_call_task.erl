@@ -20,7 +20,7 @@ init(_Cog,[Future,O,Method|Params])->
 start(#state{fut=Future,obj=O=#object{class=C,cog=Cog},meth=M,params=P})->
     try 
        Res=apply(C, M,[O|P]),
-       future:complete(Future, Res, self(), Cog)
+       future:complete(Future, Res, self(), Cog, [O|P])
     catch
       _:Reason ->
          task:rollback(Cog),

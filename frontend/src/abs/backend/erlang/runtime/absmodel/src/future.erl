@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
 -export([init/4,start/5]).
--export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,complete/4]).
+-export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,complete/5]).
 -include_lib("abs_types.hrl").
 -include_lib("log.hrl").
 %%Future starts AsyncCallTask
@@ -29,7 +29,7 @@ start(Callee,Method,Params,CurrentCog,Stack) ->
     end)(),
     Ref.
 
-complete(Ref, Value, Sender, Cog) ->
+complete(Ref, Value, Sender, Cog, Stack) ->
     Ref!{completed, Value, Sender, Cog},
     (fun Loop() ->
              %% Wait for message to be received, but handle GC request in the
@@ -42,7 +42,7 @@ complete(Ref, Value, Sender, Cog) ->
                      task:acquire_token(Cog, [Value]),
                      Loop();
                 {get_references, Sender} ->
-                    Sender ! {gc:extract_references([Value]), self()},
+                    Sender ! {gc:extract_references([Value | Stack]), self()},
                     Loop();
                 {ok, Ref} -> ok
             end
