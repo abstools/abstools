@@ -1,7 +1,0 @@
-= Functional Sublanguage
-
-include::pure.adoc[]
-// link:pure.html[Pure Expressions]
-include::functions.adoc[]
-//* link:functions.html[Functions]
-

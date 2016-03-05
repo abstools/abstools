@@ -3,13 +3,13 @@ ABS Development Team
 {docVersion}
 :experimental:
 
-include::introduction/index-introduction.adoc[]
-include::started/index-started.adoc[]
-include::functional/index-functional.adoc[]
-include::oo/index-oo.adoc[]
-include::imperative/index-imperative.adoc[]
-include::stdlib/index-stdlib.adoc[]
-include::preprocessing/index-preprocessing.adoc[]
-include::timed/index-timed.adoc[]
-include::backends/index-backends.adoc[]
+include::introduction.adoc[]
+include::started.adoc[]
+include::functional.adoc[]
+include::oo.adoc[]
+include::imperative.adoc[]
+include::stdlib.adoc[]
+include::preprocessing.adoc[]
+include::timed.adoc[]
+include::backends.adoc[]
 

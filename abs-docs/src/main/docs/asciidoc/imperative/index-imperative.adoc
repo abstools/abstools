@@ -1,8 +1,0 @@
-= Imperative Sublanguage
-
-include::statements.adoc[]
-//link:statements.html[Control Statements]
-
-include::side.adoc[]
-//* link:side.html[Expressions with Side Effects]
-

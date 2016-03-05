@@ -1,3 +1,9 @@
+= The Standard Library
+
+This chapter contains incomplete documentation of the ABS standard library.
+Most definitions in the standard library are contained in the module
+`ABS.StdLib` which is included by default in every module.
+
 == Mathematical definitions
 
 .max
@@ -69,4 +75,6 @@ Returns an integer between 0 and its argument.
 ----
 Int random(Int below)
 ----
+
+
 

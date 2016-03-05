@@ -1,4 +1,9 @@
-====Type Checking the SPL
+= Developer Guide
+Under development.
+
+== Type Checking
+
+=== Type Checking the SPL
 * All source code files referenced here are under `/org.abs-models.abs.compiler/src/abs/frontend/delta`, unless otherwise noted.
 
 The SPL type checker is invoked by calling `typecheckPL()` on the `Model` AST node. 
@@ -11,10 +16,11 @@ The SPL type checker should be called before flattening a product, but after run
 
 The helper method does the following:
 
-# Check the SPL for strong unambiguity. This enables us to use any one valid delta order to assemble the SPL products.
-# Build a trie data structure whose nodes represent all program variations by applying deltas to the core program _type bstraction_.
+* Check the SPL for strong unambiguity. This enables us to use any one valid delta order to assemble the SPL products.
 
-=====The Program Type Abstraction
+* Build a trie data structure whose nodes represent all program variations by applying deltas to the core program _type abstraction_.
+
+==== The Program Type Abstraction
 Implemented in `ProgramTypeAbstraction.java`.
 
 A program type abstraction (TA) records the program elements of core ABS as simple names (strings):
@@ -29,6 +35,7 @@ A delta can be applied to a TA `ta` by calling `ta.applyDelta(DeltaDecl d)`. Thi
 
 In addition, a TA keeps track of the SPL products that it represents. A TA will typically represent either no product or one particular product of the SPL. However, there can be several identical products in an SPL, which are thus represented by the same TA. The products are stored in `Set<ImplicitProduct> products`.
 
-=====The Delta Trie
+==== The Delta Trie
 The _Product Family Generation Trie (PFGT)_ is built by `ProductLineTypeAnalysisHelper.buildPFGT(..)`. Essentially, for each valid feature combination defined by the feature model (i.e. the products of the SPL -- represented as `ImplicitProduct` AST nodes), a type abstraction is built and stored in a trie data structure. 
+
 

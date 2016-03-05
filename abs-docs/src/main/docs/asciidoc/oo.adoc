@@ -1,3 +1,90 @@
+= Object Model
+
+== Interfaces
+
+
+Interfaces in ABS are similar to interfaces in Java. They have a name, which defines a nominal type, and they can extend arbitrary many other interfaces. The interface body consists of a list of method signature declarations. Method names start with a lowercase letter.
+
+The interfaces in the example below represent a database system, providing functionality to store and retrieve files, and a node of a peer-to-peer file sharing system. Each node of a peer-to-peer system plays both the role of a server and a client. 
+
+.Syntax
+
+[source]
+----
+interface DB {
+	File getFile(Filename fId);
+	Int getLength(Filename fId);
+	Unit storeFile(Filename fId, File file);
+	Filenames listFiles();
+}
+interface Client {
+	List<Pair<Server,Filenames>> availFiles(List<Server> sList);
+
+	Unit reqFile(Server sId, Filename fId);
+}
+interface Server {
+	Filenames inquire();
+	Int getLength(Filename fId);
+	Packet getPack(Filename fId, Int pNbr);
+}
+interface Peer extends Client, Server {
+	List<Server> getNeighbors();
+}
+
+
+----
+
+== Classes
+
+Like in typical class-based languages, classes in ABS are used to create objects. Classes can implement an arbitrary number of interfaces. Classes do not have constructors in ABS but instead have class parameters and an optional init block. Class parameters actually define additional fields of the class that can be used like any other declared field.
+
+.Syntax
+
+[source, java]
+----
+class DataBase(Map<Filename,File> db) implements DB {
+	File getFile(Filename fId) {
+		return lookup(db, fId);
+	}
+
+	Int getLength(Filename fId){
+		return length(lookup(db, fId));
+	}
+
+	Unit storeFile(Filename fId, File file) {
+		db = insert(Pair(fId,file), db);
+	}
+
+	Filenames listFiles() {
+		return keys(db);
+	}
+
+	}
+
+class Node(DB db, Peer admin, Filename file) implements Peer {
+
+	Catalog catalog;
+	List<Server> myNeighbors;
+	// implementation...
+
+}
+
+----
+
+.Active Classes
+
+A class can be active or passive. Active classes start an activity on their own upon creation. Passive classes only react to incoming method calls. A class is active if and only if it has a run method:
+
+[source]
+----
+Unit run() {
+	// active behavior ...
+}
+----
+
+The run method is called after object initialization.
+
+
 == Deployment Components
 
 A Deployment Component (abbreviated as `DC`) is 
@@ -61,4 +148,5 @@ the computational unit where the calling code executes in.
   DC whereami = thisDC();
 }
 ----
+
 
