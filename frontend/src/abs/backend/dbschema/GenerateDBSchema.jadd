@@ -163,7 +163,7 @@ aspect generateDBSchema {
         HashMap<String, ArrayList<String>> queueInterFK = new HashMap<String, ArrayList<String>>(); // @Class, @attNam, @ClassIntermediate
         ArrayList<String> allInterTable = new ArrayList<String>();
         
-        stream.println("CREATE SCHEMA NEWSCHEMA;");
+        //stream.println("CREATE SCHEMA NEWSCHEMA;");
         stream.println();
         
         // print allClass 
@@ -356,7 +356,7 @@ aspect generateDBSchema {
         						ref = ref + "(" + pkTemp.get(0) + ")";
         					}
         					stream.println("ALTER TABLE " + className);
-        					stream.println("FOREIGN KEY " + fk + " REFERENCES " + ref + ";");
+        					stream.println("ADD FOREIGN KEY " + "("+ fk + ")" + " REFERENCES " + ref + ";");
         					stream.println();
         				}
         			} 
