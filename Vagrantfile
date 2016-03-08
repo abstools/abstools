@@ -269,5 +269,73 @@ cabal sandbox add-source opennebula
 cabal install --only-dependencies
 cabal install
 
+
+echo
+echo "Installing ABS Main Generator & Smart Deployer"
+echo
+
+# install needed tools
+sudo apt-get update -y -q
+sudo apt-get install -y -q cmake bison flex python-dev python-pip
+pip install antlr4-python2-runtime toposort psutil
+
+# install gecode into /home/vagrant/gecode-4.4.0
+cd /home/vagrant
+wget http://www.gecode.org/download/gecode-4.4.0.tar.gz 
+tar -zxvf gecode-4.4.0.tar.gz 
+cd gecode-4.4.0
+./configure --disable-examples --prefix=/home/vagrant/gecode-4.4.0
+make && make install
+rm -rf /home/vagrant/gecode-4.4.0.tar.gz
+cat >>/home/vagrant/.bashrc <<EOF
+export PATH=/home/vagrant/gecode-4.4.0/bin:\$PATH
+EOF
+# update LD_LIBRARY_PATH
+if [ -z "$(grep 'export LD_LIBRARY_PATH=*' /home/vagrant/.bashrc)" ] ; then
+cat >>/home/vagrant/.bashrc <<EOF
+export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/home/vagrant/gecode-4.4.0/lib
+EOF
+fi
+
+# install minisearch in /home/vagrant/minisearch-0.1.0b1-Linux
+cd /home/vagrant
+wget http://www.minizinc.org/minisearch/minisearch-0.1.0b1-Linux64.tar.gz 
+tar -zxvf minisearch-0.1.0b1-Linux64.tar.gz 
+rm -rf minisearch-0.1.0b1-Linux64.tar.gz
+cat >>/home/vagrant/.bashrc <<EOF
+export PATH=/home/vagrant/minisearch-0.1.0b1-Linux/bin:\$PATH
+EOF
+
+# install minizinc suite 1.6 in /home/vagrant/minizinc-1.6
+cd /home/vagrant
+wget http://www.minizinc.org/downloads/release-1.6/minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
+tar -zxvf minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
+rm -rf minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
+cd /home/vagrant/minizinc-1.6
+./SETUP
+cat >>/home/vagrant/.bashrc <<EOF
+export PATH=/home/vagrant/minizinc-1.6/bin:\$PATH
+EOF
+
+# install smart_deployer in /home/vagrant/smart_deployer/abs_deployer
+cd /home/vagrant
+mkdir smart_deployer
+cd smart_deployer
+git clone --depth=1 -b smart_deployer https://github.com/jacopoMauro/abs_deployer.git
+
+# install main_generator in /home/vagrant/main_generator/abs_deployer
+cd /home/vagrant
+mkdir main_generator
+cd main_generator
+git clone --depth=1 https://github.com/jacopoMauro/abs_deployer.git
+cat >>/home/vagrant/.bashrc <<EOF
+export PATH=/home/vagrant/main_generator/abs_deployer/docker:\$PATH
+EOF
+
+# install zephyrus2 in /home/vagrant/zephyrus2
+cd /home/vagrant/
+git clone --depth=1 https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git 
+pip install -e /home/vagrant/zephyrus2
+
   SHELL
 end
