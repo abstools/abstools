@@ -277,7 +277,7 @@ echo
 # install needed tools
 sudo apt-get update -y -q
 sudo apt-get install -y -q cmake bison flex python-dev python-pip
-pip install antlr4-python2-runtime toposort psutil
+sudo pip install antlr4-python2-runtime toposort psutil
 
 # install gecode into /home/vagrant/gecode-4.4.0
 cd /home/vagrant
@@ -335,7 +335,7 @@ EOF
 # install zephyrus2 in /home/vagrant/zephyrus2
 cd /home/vagrant/
 git clone --depth=1 https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git 
-pip install -e /home/vagrant/zephyrus2
+sudo pip install -e /home/vagrant/zephyrus2
 
   SHELL
 end
