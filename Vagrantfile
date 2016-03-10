@@ -346,7 +346,7 @@ chmod -R 755 /home/vagrant/zephyrus2
 
 # set corresponding paths in easyinterface
 #
-cat >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG <<EOF
+sudo cat >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG <<EOF
 # path to SMART DEPLOYER
 EC_SMARTDEPLOYERHOME="/home/vagrant/smart_deployer"
 # path to MAIN GENERATOR
