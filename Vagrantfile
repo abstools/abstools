@@ -342,11 +342,13 @@ chmod -R 755 /home/vagrant/main_generator
 cd /home/vagrant/
 git clone --depth=1 https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git 
 sudo pip install -e /home/vagrant/zephyrus2
-chmod -R 755 /home/vagrant/zephyrus2
+sudo chown -R vagrant.vagrant /home/vagrant/zephyrus2
+chmod -R 775 /home/vagrant/zephyrus2
 
 # set corresponding paths in easyinterface
 #
-sudo cat >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG <<EOF
+cp /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG /tmp
+cat >> /tmp/ENVISAGE_CONFIG <<EOF
 # path to SMART DEPLOYER
 EC_SMARTDEPLOYERHOME="/home/vagrant/smart_deployer"
 # path to MAIN GENERATOR
@@ -356,6 +358,7 @@ EC_PATH="\$EC_PATH:/home/vagrant/main_generator/abs_deployer/docker:/home/vagran
 # 
 EC_LD_LIBRARY_PATH="\$EC_LD_LIBRARY_PATH:/home/vagrant/gecode-4.4.0/lib"
 EOF
+sudo mv -f /tmp/ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage
 
 
 
