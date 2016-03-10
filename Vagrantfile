@@ -337,13 +337,14 @@ cat >>/home/vagrant/.bashrc <<EOF
 export PATH=/home/vagrant/main_generator/abs_deployer/docker:\\\$PATH
 EOF
 chmod -R 755 /home/vagrant/main_generator 
+chmod 775 /home/vagrant/main_generator/abs_deployer
 
 # install zephyrus2 in /home/vagrant/zephyrus2
 cd /home/vagrant/
 git clone --depth=1 https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git 
 sudo pip install -e /home/vagrant/zephyrus2
 sudo chown -R vagrant.vagrant /home/vagrant/zephyrus2
-chmod -R 775 /home/vagrant/zephyrus2
+chmod -R 755 /home/vagrant/zephyrus2
 
 # set corresponding paths in easyinterface
 #
