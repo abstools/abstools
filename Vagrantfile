@@ -296,6 +296,7 @@ cat >>/home/vagrant/.bashrc <<EOF
 export LD_LIBRARY_PATH=\\\$LD_LIBRARY_PATH:/home/vagrant/gecode-4.4.0/lib
 EOF
 fi
+chmod -R 755 /home/vagrant/gecode-4.4.0
 
 # install minisearch in /home/vagrant/minisearch-0.1.0b1-Linux
 cd /home/vagrant
@@ -305,6 +306,8 @@ rm -rf minisearch-0.1.0b1-Linux64.tar.gz
 cat >>/home/vagrant/.bashrc <<EOF
 export PATH=/home/vagrant/minisearch-0.1.0b1-Linux/bin:\\\$PATH
 EOF
+chmod -R 755 /home/vagrant/minisearch-0.1.0b1-Linux
+
 
 # install minizinc suite 1.6 in /home/vagrant/minizinc-1.6
 cd /home/vagrant
@@ -316,12 +319,14 @@ cd /home/vagrant/minizinc-1.6
 cat >>/home/vagrant/.bashrc <<EOF
 export PATH=/home/vagrant/minizinc-1.6/bin:\\\$PATH
 EOF
+chmod -R 755 /home/vagrant/minizinc-1.6
 
 # install smart_deployer in /home/vagrant/smart_deployer/abs_deployer
 cd /home/vagrant
 mkdir smart_deployer
 cd smart_deployer
 git clone --depth=1 -b smart_deployer https://github.com/jacopoMauro/abs_deployer.git
+chmod -R 755 /home/vagrant/smart_deployer
 
 # install main_generator in /home/vagrant/main_generator/abs_deployer
 cd /home/vagrant
@@ -331,11 +336,30 @@ git clone --depth=1 https://github.com/jacopoMauro/abs_deployer.git
 cat >>/home/vagrant/.bashrc <<EOF
 export PATH=/home/vagrant/main_generator/abs_deployer/docker:\\\$PATH
 EOF
+chmod -R 755 /home/vagrant/main_generator 
 
 # install zephyrus2 in /home/vagrant/zephyrus2
 cd /home/vagrant/
 git clone --depth=1 https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git 
 sudo pip install -e /home/vagrant/zephyrus2
+chmod -R 755 /home/vagrant/zephyrus2
+
+# set corresponding paths in easyinterface
+#
+cat >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG <<EOF
+# path to SMART DEPLOYER
+EC_SMARTDEPLOYERHOME="/home/vagrant/smart_deployer"
+# path to MAIN GENERATOR
+EC_MAINGENHOME="/home/vagrant/main_generator"
+# 
+EC_PATH="\$EC_PATH:/home/vagrant/main_generator/abs_deployer/docker:/home/vagrant/minizinc-1.6/bin:/home/vagrant/minisearch-0.1.0b1-Linux/bin:/home/vagrant/gecode-4.4.0/bin"
+# 
+EC_LD_LIBRARY_PATH="\$EC_LD_LIBRARY_PATH:/home/vagrant/gecode-4.4.0/lib"
+EOF
+
+
 
   SHELL
 end
+
+
