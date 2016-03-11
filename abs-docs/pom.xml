@@ -68,6 +68,7 @@
 							<goal>process-asciidoc</goal>
 						</goals>
 						<configuration>
+              <sourceDocumentName>${project.docs.source.mainfile}</sourceDocumentName>
 							<sourceDirectory>${project.docs.source}</sourceDirectory>
 							<outputDirectory>${project.docs.target.html}</outputDirectory>
 							<backend>html5</backend>
@@ -80,6 +81,7 @@
 							<goal>process-asciidoc</goal>
 						</goals>
 						<configuration>
+              <sourceDocumentName>${project.docs.source.mainfile}</sourceDocumentName>
 							<sourceDirectory>${project.docs.source}</sourceDirectory>
 							<outputDirectory>${project.docs.target.docbook}</outputDirectory>
 							<backend>docbook</backend>
