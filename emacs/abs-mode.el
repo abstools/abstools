@@ -73,10 +73,11 @@ executable via the `-cp' argument."
 (put 'abs-indent 'safe-local-variable 'integerp)
 
 (defcustom abs-use-timed-interpreter nil
-  "Control whether to compile Abs code using the timed interpreter by default.
-This influences the default compilation command executed by
-\\[abs-next-action].  Note that you can set this variable as a
-file-local variable as well."
+  "Control whether Abs code uses the timed Maude interpreter by default.
+This option influences the Maude backend only.  Note that if
+`abs-clock-limit' is set as a buffer-local variable, for example
+via \\[add-file-local-variable], the timed interpreter will be
+used regardless of the value of `abs-use-timed-interpreter'."
   :type 'boolean
   :group 'abs)
 (put 'abs-use-timed-interpreter 'safe-local-variable 'booleanp)
@@ -360,7 +361,9 @@ value.")
                      (concat " -o \"" (abs--keyabs-filename) "\""))
                    (when abs-product-name
                      (concat " -product=" abs-product-name))
-                   (when (and (eql backend 'maude) abs-use-timed-interpreter)
+                   (when (and (eql backend 'maude)
+                              (or abs-use-timed-interpreter
+                                  (local-variable-p 'abs-clock-limit)))
                      (concat " -timed -limit="
                              (number-to-string abs-clock-limit)))
                    (when (and (eql backend 'maude)
