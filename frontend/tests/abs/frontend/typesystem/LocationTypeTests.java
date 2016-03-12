@@ -370,7 +370,7 @@ public class LocationTypeTests extends FrontendTest {
         LocationTypeExtension te = new LocationTypeExtension(m);
         m.registerTypeSystemExtension(te);
         SemanticErrorList e = m.typeCheck();
-        assertFalse("No type error occurred", e.isEmpty());
+        assertFalse("No type error occurred", !e.containsErrors());
         assertInferFails(code);
     }
     
@@ -384,7 +384,7 @@ public class LocationTypeTests extends FrontendTest {
         m.registerTypeSystemExtension(te);
         m.getErrors();
         SemanticErrorList e = m.typeCheck();
-        assertTrue(e.isEmpty() ? "" : "Found error "+e.get(0).getMessage(),e.isEmpty());
+        assertTrue(!e.containsErrors() ? "" : "Found error "+e.get(0).getMessage(),e.isEmpty());
         assertInferOk(code);
     }
     
@@ -395,7 +395,7 @@ public class LocationTypeTests extends FrontendTest {
         m.registerTypeSystemExtension(ltie);
         SemanticErrorList e = m.typeCheck();
         //System.out.println(ltie.getConstraints());
-        assertEquals(e.isEmpty() ? "" : "Found error: "+e.get(0).getMessage(), fails, !e.isEmpty()); 
+        assertEquals(!e.containsErrors() ? "" : "Found error: "+e.get(0).getMessage(), fails, e.containsErrors()); 
         
         //assertTrue("Inference failed", generated != null);
         //assertEquals(fails, generated == null);
@@ -417,7 +417,7 @@ public class LocationTypeTests extends FrontendTest {
         LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
         m.registerTypeSystemExtension(ltie);
         SemanticErrorList e = m.typeCheck();
-        assertEquals(e.isEmpty() ? "" : "Found error: "+e.get(0).getMessage(), false, !e.isEmpty());
+        assertEquals(!e.containsErrors() ? "" : "Found error: "+e.get(0).getMessage(), false, e.containsErrors());
         new InferMain().writeInferenceResultsBack(ltie.getResults());
         String res = FileUtils.fileToStringBuilder(f).toString();
         f.delete();

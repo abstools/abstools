@@ -263,7 +263,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         SatGenerator satGen = new SatGenerator(constraints);
         satGen.enableStats = enablesStats;
         results = satGen.generate(errors);
-        if (errors.isEmpty()) {
+        if (!errors.containsErrors()) {
             SemanticErrorList sel = new SemanticErrorList();
             List<TypeSystemExtension> curr = model.getTypeExt().getTypeSystemExtensionList();
             model.getTypeExt().clearTypeSystemExtensions();

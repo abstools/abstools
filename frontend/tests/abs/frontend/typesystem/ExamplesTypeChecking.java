@@ -30,10 +30,10 @@ public class ExamplesTypeChecking extends ParseSamplesTest {
         if (product != null) {
             m.flattenForProduct(product);
             final SemanticErrorList errors = m.getErrors();
-            if (!errors.isEmpty())
+            if (errors.containsErrors())
                 onError(errors.getFirst().getMessage());
             m.typeCheck(errors);
-            if (!errors.isEmpty())
+            if (errors.containsErrors())
                 onError(errors.getFirst().getMessage());
         }
         return m;

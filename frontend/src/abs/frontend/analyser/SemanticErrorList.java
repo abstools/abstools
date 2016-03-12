@@ -13,6 +13,12 @@ public class SemanticErrorList extends ArrayList<SemanticError> {
 
     public SemanticErrorList() {}
     
+    public boolean containsErrors() {
+        // Prepare for this list to contain warnings as well, which should not
+        // abort the compilation
+        return !isEmpty();
+    }
+
     public SemanticErrorList(TypeCheckerException e) {
         add(e);
     }

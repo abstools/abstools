@@ -191,11 +191,11 @@ public class FrontendTest extends ABSTest {
         Model m = assertParse(absCode, config);
         String msg = "";
         SemanticErrorList l = m.typeCheck();
-        if (!l.isEmpty()) {
+        if (l.containsErrors()) {
             msg = l.getFirst().getMsgWithHint(absCode);
         }
-        assertEquals(msg, isSet(EXPECT_TYPE_ERROR, config), !l.isEmpty());
-        return l.isEmpty() ? null : l.getFirst();
+        assertEquals(msg, isSet(EXPECT_TYPE_ERROR, config), l.containsErrors());
+        return l.containsErrors() ? l.getFirst() : null;
     }
 
 }

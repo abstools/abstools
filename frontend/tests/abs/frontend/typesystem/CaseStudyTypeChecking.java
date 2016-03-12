@@ -78,7 +78,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
                 fail("Failed to parse: " + srcFolder + "\n" + errs.toString());
             } else if (isSet(TYPE_CHECK, config)) {
                 SemanticErrorList l = m.typeCheck();
-                if (!l.isEmpty()) {
+                if (l.containsErrors()) {
                     for (SemanticError error : l)
                         errs = errs.append(error.getHelpMessage() + "\n");
                     fail("Failed to typecheck: " + srcFolder + "\n" + errs.toString());

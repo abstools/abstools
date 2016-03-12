@@ -101,11 +101,11 @@ public class ABSTest {
                         }
                         SemanticErrorList l = p.typeCheck();
                         if (isSet(EXPECT_TYPE_ERROR,config)) {
-                            if (l.isEmpty()) {
+                            if (!l.containsErrors()) {
                                 fail("Expected type errors, but none appeared");
                             }
                         } else {
-                            if (!l.isEmpty()) {
+                            if (l.containsErrors()) {
                                 fail("Failed to typecheck: " + s + "\n" + l.get(0).getMessage());
                             }
                         }
@@ -164,7 +164,7 @@ public class ABSTest {
                 fail("Failed to parse: " + fileNames + "\n" + errs.toString());
             } else if (isSet(TYPE_CHECK, config)) {
                 SemanticErrorList l = m.typeCheck();
-                if (!l.isEmpty()) {
+                if (l.containsErrors()) {
                     for (SemanticError error : l)
                         errs.append(error.getHelpMessage() + "\n");
                     fail("Failed to typecheck: " + fileNames + "\n" + errs.toString());

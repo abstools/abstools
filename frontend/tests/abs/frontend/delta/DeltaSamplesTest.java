@@ -38,7 +38,7 @@ public class DeltaSamplesTest extends FrontendTest {
         m.setNullPrintStream();
         m.flattenForProduct("P1");
         m.flushCache();
-        assertTrue(m.typeCheck().isEmpty());
+        assertTrue(!m.typeCheck().containsErrors());
     }
 
     @Test
@@ -47,7 +47,7 @@ public class DeltaSamplesTest extends FrontendTest {
         m.setNullPrintStream();
         m.flattenForProduct("P2");
         m.flushCache();
-        assertTrue(m.typeCheck().isEmpty());
+        assertTrue(!m.typeCheck().containsErrors());
     }
 
     @Rule
@@ -68,7 +68,7 @@ public class DeltaSamplesTest extends FrontendTest {
         m.flattenForProduct("P4");
         m.flushCache();
         SemanticErrorList res = m.typeCheck();
-        if (!res.isEmpty())
+        if (res.containsErrors())
             fail(res.getFirst().getMessage());
     }
 
@@ -158,7 +158,7 @@ public class DeltaSamplesTest extends FrontendTest {
         m.flushCache();
         m.flattenForProduct("C");
         m.flushCache();
-        assertTrue(m.typeCheck().isEmpty());
+        assertTrue(!m.typeCheck().containsErrors());
     }
 
     @Test
@@ -167,6 +167,6 @@ public class DeltaSamplesTest extends FrontendTest {
         m.flushCache();
         m.flattenForProduct("C");
         m.flushCache();
-        assertTrue(m.typeCheck().isEmpty());
+        assertTrue(!m.typeCheck().containsErrors());
     }
 }

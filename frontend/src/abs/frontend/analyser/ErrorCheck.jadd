@@ -9,7 +9,7 @@ aspect ErrorCheck {
      * TODO: doesn't cache intermediate results, use with care.
      */
     public boolean Model.hasErrors() {
-        return !getErrors().isEmpty();
+        return getErrors().containsErrors();
     }
     
   public SemanticErrorList Model.getErrors() {

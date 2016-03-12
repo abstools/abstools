@@ -20,19 +20,19 @@ public class InterfaceDeclarationTest extends FrontendTest {
     @Test
     public void trivial() {
         Model p = assertParseOk("interface I {} {}");
-        assertTrue(p.getErrors().isEmpty());
+        assertTrue(!p.getErrors().containsErrors());
     }
 
     @Test
     public void extending() {
         Model p = assertParseOk("interface I {} interface J extends I {} {}");
-        assertTrue(p.getErrors().isEmpty());
+        assertTrue(!p.getErrors().containsErrors());
     }
 
     @Test
     public void extendingReversed() {
         Model p = assertParseOk("interface J extends I {} interface I {} {}");
-        assertTrue(p.getErrors().isEmpty());
+        assertTrue(!p.getErrors().containsErrors());
     }
 
     @Test

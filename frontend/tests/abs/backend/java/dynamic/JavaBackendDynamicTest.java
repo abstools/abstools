@@ -44,7 +44,7 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
             // Omit type checking for now as it can hinder dynamic program evolution
             // TODO infer types...
 //          SemanticErrorList el = model.typeCheck();
-//            if (!el.isEmpty()) {
+//            if (el.containsErrors()) {
 //                fail(el.get(0).getMsg());
 //            }
         }

@@ -56,18 +56,18 @@ public class OtherAnalysisTests extends FrontendTest {
         Model m2 = m.fullCopy();
         assertFalse(m.hasErrors());
         assertFalse(m2.hasErrors());
-        assertTrue(m.typeCheck().isEmpty());
-        assertTrue(m2.typeCheck().isEmpty());
+        assertTrue(!m.typeCheck().containsErrors());
+        assertTrue(!m2.typeCheck().containsErrors());
     }
 
     @Test
     public void fullcopyTest2() {
         Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
         assertFalse(m.hasErrors());
-        assertTrue(m.typeCheck().toString(),m.typeCheck().isEmpty());
+        assertTrue(m.typeCheck().toString(),!m.typeCheck().containsErrors());
         Model m2 = m.fullCopy();
         assertFalse(m2.hasErrors());
-        assertTrue(m2.typeCheck().toString(),m2.typeCheck().isEmpty());
+        assertTrue(m2.typeCheck().toString(),!m2.typeCheck().containsErrors());
     }
     
     @Test

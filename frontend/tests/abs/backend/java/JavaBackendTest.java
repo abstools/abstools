@@ -230,7 +230,7 @@ public class JavaBackendTest extends ABSTest {
             fail(model.getErrors().get(0).getHelpMessage());
         } else {
             SemanticErrorList el = model.typeCheck();
-            if (!el.isEmpty()) {
+            if (el.containsErrors()) {
                 fail(el.get(0).getMsg());
             }
         }
