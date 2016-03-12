@@ -20,7 +20,7 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.List;
@@ -169,14 +169,14 @@ public class IncrementalModelBuilder {
 		return fileName;
 	}
 	
-	public synchronized SemanticErrorList typeCheckModel(IProgressMonitor monitor, boolean locationTypeChecking, String defaultloctype, String locationTypePrecision, boolean checkProducts) throws NoModelException, TypecheckInternalException{
+	public synchronized SemanticConditionList typeCheckModel(IProgressMonitor monitor, boolean locationTypeChecking, String defaultloctype, String locationTypePrecision, boolean checkProducts) throws NoModelException, TypecheckInternalException{
 		if(model == null)
 			throw new NoModelException();
 		
 		Main.exceptionHack(model);
 
 		if(model.hasParserErrors())
-			return new SemanticErrorList(); // don't typecheck if the model has parsererrors
+			return new SemanticConditionList(); // don't typecheck if the model has parsererrors
 //			throw new TypecheckInternalException(new Exception("Model has parser errors!"));
 //		model.flushCache();
 		flushAll(model);
@@ -190,9 +190,9 @@ public class IncrementalModelBuilder {
 	        model.registerTypeSystemExtension(ltie);
 		} 
 		try {
-			SemanticErrorList semerrors = model.getErrors();
+			SemanticConditionList semerrors = model.getErrors();
 			/* Don't typecheck with semerrors, it might trip up. */
-			if (semerrors.isEmpty())
+			if (!semerrors.containsErrors())
 				semerrors = model.typeCheck();
 			/* Check products for errors.
 			 * Only the first error is reported (if any), on the product AST-node.  
@@ -201,7 +201,7 @@ public class IncrementalModelBuilder {
 			 * TODO: Use Eclipse's nested markers to show ALL contained errors?
 			 * TODO: The outline could indicate the broken product as well.
 			 */
-			if (semerrors.isEmpty() && checkProducts) {
+			if (!semerrors.containsErrors() && checkProducts) {
 				monitor = new SubProgressMonitor(monitor, 10); // arbitrary value
 				monitor.beginTask("Checking products", model.getProducts().size());
 				for (Product p : model.getProducts()) {
@@ -210,10 +210,10 @@ public class IncrementalModelBuilder {
 					Main.exceptionHack(m2);
 					try {
 						m2.flattenForProduct(p);
-						SemanticErrorList p_errs = m2.typeCheck();
-						if (!p_errs.isEmpty()) {
+						SemanticConditionList p_errs = m2.typeCheck();
+						if (p_errs.containsErrors()) {
 							// Only show first error, on product
-							semerrors.add(new SemanticError(p, ErrorMessage.ERROR_IN_PRODUCT, p.getName(), p_errs.getFirst().getMessage()));
+							semerrors.add(new SemanticError(p, ErrorMessage.ERROR_IN_PRODUCT, p.getName(), p_errs.getFirstError().getMessage()));
 						}
 					} catch (WrongProgramArgumentException e) {
 						semerrors.add(new SemanticError(p, ErrorMessage.ERROR_IN_PRODUCT, p.getName(), e.getMessage()));
@@ -233,7 +233,7 @@ public class IncrementalModelBuilder {
 			}
 			return semerrors;
 	    } catch (TypeCheckerException e) {
-	        return new SemanticErrorList(e);
+	        return new SemanticConditionList(e);
 		} catch (RuntimeException e) {
 			throw new TypecheckInternalException(e);
 		}

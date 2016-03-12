@@ -7,6 +7,7 @@ package org.absmodels.abs.plugin.exceptions;
 import java.util.List;
 
 import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticConditionList;
 
 public class TypeCheckerException extends Exception{
 	private static final long serialVersionUID = -6951753769373256177L;
@@ -14,11 +15,11 @@ public class TypeCheckerException extends Exception{
 	public TypeCheckerException(){
 	}
 	
-	public TypeCheckerException(List<SemanticError> typeErrors){
+	public TypeCheckerException(SemanticConditionList typeErrors){
 		super(getMessage(typeErrors));
 	}
 	
-	private static String getMessage(List<SemanticError> typeErrors){
+	private static String getMessage(SemanticConditionList typeErrors){
 		StringBuffer result = new StringBuffer("Project contains parse errors: ");
 		for(SemanticError error : typeErrors){
 			//TODO: newline doesn't work ):

@@ -19,7 +19,7 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
@@ -90,12 +90,12 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
             }
         }
         Main.exceptionHack(model);
-        SemanticErrorList typeErrors = model.typeCheck();
+        SemanticConditionList typeErrors = model.typeCheck();
 
         updateMarkers(typeErrors);
     }
 
-    private void updateMarkers(SemanticErrorList typeErrors) {
+    private void updateMarkers(SemanticConditionList typeErrors) {
         // update markers
         try {
             if (absNature.getProject() == null) { 

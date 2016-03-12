@@ -38,7 +38,7 @@ import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
@@ -219,13 +219,14 @@ public class AbsNature implements IProjectNature {
         createMarkers(model.getTypeErrors());
     }
 
-    public void createMarkers(SemanticErrorList errors) throws CoreException {
+    public void createMarkers(SemanticConditionList errors) throws CoreException {
         for (SemanticError e : errors) {
             createMarker(e);
         }
     }
 	
 	public void createMarker(SemanticError error) throws CoreException {
+            // TODO: create Warning, Error markers
 		createMarker(error.getNode(), error.getMsg(), IMarker.SEVERITY_ERROR, TYPECHECK_MARKER_TYPE);
 	}
 
@@ -379,7 +380,7 @@ public class AbsNature implements IProjectNature {
 	   boolean checkProducts = getProjectPreferenceStore().getBoolean(PRODUCT_TYPECHECK);
 	   try {
 		   addPackagesForTypeChecking();
-		   final SemanticErrorList typeerrors = modelbuilder.typeCheckModel(monitor,dolocationtypecheck, defaultlocationtype, defaultlocationtypeprecision, checkProducts);
+		   final SemanticConditionList typeerrors = modelbuilder.typeCheckModel(monitor,dolocationtypecheck, defaultlocationtype, defaultlocationtypeprecision, checkProducts);
 		   createMarkers(typeerrors);
 
 		   if (dolocationtypecheck) {

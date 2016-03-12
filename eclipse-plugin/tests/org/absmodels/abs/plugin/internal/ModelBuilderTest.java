@@ -14,7 +14,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.junit.Before;
 import org.junit.Test;
 
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -234,18 +234,18 @@ public class ModelBuilderTest {
 		CompilationUnit testcu = absParser.parseUnit(new File("PeerToPeer.abs"), moduleText, new StringReader(moduleText));
 		assertEquals(testcu.getParserErrors().toString(), 0, testcu.getParserErrors().size());
 		modelbuilder.addCompilationUnit(testcu);
-		SemanticErrorList testel = modelbuilder.typeCheckModel(new NullProgressMonitor(), true, "Somewhere", LocationTypingPrecision.BASIC.toString(),false);
-		assertEquals(testel.toString(),1, testel.size());
+		SemanticConditionList testel = modelbuilder.typeCheckModel(new NullProgressMonitor(), true, "Somewhere", LocationTypingPrecision.BASIC.toString(),false);
+		assertEquals(testel.toString(),1, testel.getErrorCount());
 		System.err.println("Test 1 finished");
 
 		String importTestText = "module ImportTest;";
 		CompilationUnit importTestCU = absParser.parseUnit(new File("importtest.abs"), importTestText, new StringReader(importTestText));
 		modelbuilder.addCompilationUnit(importTestCU);
-		SemanticErrorList testel1 = modelbuilder.typeCheckModel(new NullProgressMonitor(), true, "Somewhere", LocationTypingPrecision.BASIC.toString(),false);
-		assertEquals(testel1.toString(), 0, testel1.size());
+		SemanticConditionList testel1 = modelbuilder.typeCheckModel(new NullProgressMonitor(), true, "Somewhere", LocationTypingPrecision.BASIC.toString(),false);
+		assertEquals(testel1.toString(), 0, testel1.getErrorCount());
 		System.err.println("Test 2 finished");
 		modelbuilder.removeCompilationUnit(importTestCU);
-		SemanticErrorList testel2 = modelbuilder.typeCheckModel(new NullProgressMonitor(), true, "Somewhere", LocationTypingPrecision.BASIC.toString(),false);
-		assertEquals(1, testel2.size());
+		SemanticConditionList testel2 = modelbuilder.typeCheckModel(new NullProgressMonitor(), true, "Somewhere", LocationTypingPrecision.BASIC.toString(),false);
+		assertEquals(1, testel2.getErrorCount());
 	}
 }

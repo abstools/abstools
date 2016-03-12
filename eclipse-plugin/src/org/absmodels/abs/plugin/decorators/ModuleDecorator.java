@@ -29,7 +29,7 @@ import org.eclipse.jface.viewers.LabelProviderChangedEvent;
 import org.eclipse.ui.PlatformUI;
 
 import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
@@ -136,7 +136,7 @@ public class ModuleDecorator extends LabelProvider implements ILightweightLabelD
 				int endLine = pos.getLineend();
 
 				List<ParserError> parserErrors = cu.getParserErrors();
-				SemanticErrorList list = cu.getModel().getTypeErrors();
+				SemanticConditionList list = cu.getModel().getTypeErrors();
 				
 				if (checkParserErrorRange(startLine, endLine, parserErrors)){
 					return true;
@@ -160,10 +160,10 @@ public class ModuleDecorator extends LabelProvider implements ILightweightLabelD
 		}
 	}
 	
-	private boolean checkSemanticErrorRange(SemanticErrorList list, CompilationUnit c, int startLine, int endLine, AbsNature nature) {
+	private boolean checkSemanticErrorRange(SemanticConditionList list, CompilationUnit c, int startLine, int endLine, AbsNature nature) {
 		synchronized (nature.modelLock) {
 			if (list != null) {
-				if (list.size() > 0) {
+                              if (list.containsErrors()) {
 					for (SemanticError err : list) {
 						ASTNode<?> node = err.getNode();
 						int line = err.getLine();

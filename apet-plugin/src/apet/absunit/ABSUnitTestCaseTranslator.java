@@ -25,7 +25,7 @@ import abs.backend.tests.AbsASTBuilderUtil.MethodSigNamePredicate;
 import abs.backend.tests.AbsASTBuilderUtil.Predicate;
 import abs.common.StringUtils;
 import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Access;
 import abs.frontend.ast.AppCond;
@@ -270,7 +270,7 @@ public class ABSUnitTestCaseTranslator {
 			}
 		}
 
-        SemanticErrorList typeerrors = copy.typeCheck();
+        SemanticConditionList typeerrors = copy.typeCheck();
         for (SemanticError se : typeerrors) {
             System.err.println(se.getHelpMessage());
         }

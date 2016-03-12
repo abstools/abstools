@@ -31,7 +31,7 @@ A program type abstraction (TA) records the program elements of core ABS as simp
 * ADTs (TODO)
 * etc. (TODO)
 
-A delta can be applied to a TA `ta` by calling `ta.applyDelta(DeltaDecl d)`. This modifies the TA as described by the delta (by adding/removing/modifying elements). In case the delta cannot be applied (due to unfullfilled requirements -- e.g. adding a method to a class that does not exists), a type error is added to the TA's `SemanticErrorList`.
+A delta can be applied to a TA `ta` by calling `ta.applyDelta(DeltaDecl d)`. This modifies the TA as described by the delta (by adding/removing/modifying elements). In case the delta cannot be applied (due to unfullfilled requirements -- e.g. adding a method to a class that does not exists), a type error is added to the TA's `SemanticConditionList`.
 
 In addition, a TA keeps track of the SPL products that it represents. A TA will typically represent either no product or one particular product of the SPL. However, there can be several identical products in an SPL, which are thus represented by the same TA. The products are stored in `Set<ImplicitProduct> products`.
 

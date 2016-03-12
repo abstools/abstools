@@ -26,7 +26,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
 import abs.common.WrongProgramArgumentException;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Product;
 import abs.frontend.delta.DeltaModellingException;
@@ -116,13 +116,15 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 						/* Type check again */
 						model.flushCache(); // #335, see IncrementalModelBuilder#flushAll()
 					}
-					SemanticErrorList errs = model.getErrors();
-					if (errs != null && !errs.isEmpty()) {
+					SemanticConditionList errs = model.getErrors();
+                                        // TODO: check for warnings also
+					if (errs != null && errs.containsErrors()) {
 					    createMarkers(nat, errs);
 						throw new AbsJobException(new TypeCheckerException(errs));
 					}
 					errs = model.typeCheck();
-					if (errs != null && !errs.isEmpty()) {
+                                        // TODO: check for warnings also
+					if (errs != null && errs.containsErrors()) {
 					    createMarkers(nat, errs);
 						throw new AbsJobException(new TypeCheckerException(errs));
 					}
@@ -149,7 +151,7 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 
 
 
-    private void createMarkers(AbsNature nat, SemanticErrorList errs) {
+    private void createMarkers(AbsNature nat, SemanticConditionList errs) {
         try {
             nat.createMarkers(errs);
         } catch (CoreException e) { 
