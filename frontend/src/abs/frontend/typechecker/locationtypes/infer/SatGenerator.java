@@ -25,7 +25,7 @@ import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.IProblem;
 import org.sat4j.specs.TimeoutException;
 
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.typechecker.locationtypes.LocationType;
 
 public class SatGenerator {
@@ -57,7 +57,7 @@ public class SatGenerator {
         }
     }
 
-    public Map<LocationTypeVariable, LocationType> generate(SemanticErrorList s) {
+    public Map<LocationTypeVariable, LocationType> generate(SemanticConditionList s) {
         Map<LocationTypeVariable, LocationType> res = generate();
         
         if (res == null) {

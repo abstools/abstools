@@ -5,21 +5,21 @@
 package abs.frontend.typechecker.ext;
 
 import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.ext.AdaptDirection;
 
 public class DefaultTypeSystemExtension implements TypeSystemExtension {
     
-    protected SemanticErrorList errors;
+    protected SemanticConditionList errors;
     protected final Model model;
     
     protected DefaultTypeSystemExtension(Model m) {
         model = m;
     }
     
-    public void setSemanticErrorList(SemanticErrorList s) {
+    public void setSemanticConditionList(SemanticConditionList s) {
         errors = s;
     }
 

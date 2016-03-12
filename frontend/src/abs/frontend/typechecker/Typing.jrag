@@ -396,7 +396,7 @@ aspect Typing {
 
     // Unfortunately must be in same file as the interface. TypeChecker would be a better place:
 
-    public void HasActualParams.typeCheckEqualParams(SemanticErrorList l, HasParams params) {
+    public void HasActualParams.typeCheckEqualParams(SemanticConditionList l, HasParams params) {
         TypeCheckerHelper.typeCheckEqual(l, this, params.getTypes());
     }
     public Map<TypeParameter, Type> HasActualParams.getTypeParamBinding(ASTNode<?> node, HasTypes params) {

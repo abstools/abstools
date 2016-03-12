@@ -12,7 +12,6 @@ import java.util.Set;
 import org.junit.Test;
 
 import abs.common.WrongProgramArgumentException;
-import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Product;
 import abs.frontend.ast.ProductLine;

@@ -19,7 +19,7 @@ import abs.backend.maude.MaudeCompiler;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.Model;
@@ -67,7 +67,7 @@ public class DeltaSamplesTest extends FrontendTest {
         m.setNullPrintStream();
         m.flattenForProduct("P4");
         m.flushCache();
-        SemanticErrorList res = m.typeCheck();
+        SemanticConditionList res = m.typeCheck();
         if (res.containsErrors())
             fail(res.getFirst().getMessage());
     }
@@ -85,7 +85,7 @@ public class DeltaSamplesTest extends FrontendTest {
     @Test
     public void test_ticket329() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug329.abs", true);
-        SemanticErrorList errs = m.typeCheck();
+        SemanticConditionList errs = m.typeCheck();
         /* We are expecting a missing delta in product M.PL: */
         assertThat(errs.getFirst(), instanceOf(TypeError.class));
         TypeError te = (TypeError) errs.getFirst();
@@ -95,7 +95,7 @@ public class DeltaSamplesTest extends FrontendTest {
     @Test
     public void test_ticket329_missingLineNo() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug329.abs", true);
-        SemanticErrorList errs = m.typeCheck();
+        SemanticConditionList errs = m.typeCheck();
         /* We are expecting a missing delta in product M.PL: */
         assertThat(errs.getFirst(), instanceOf(TypeError.class));
         TypeError te = (TypeError) errs.getFirst();

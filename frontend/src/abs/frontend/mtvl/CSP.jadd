@@ -292,7 +292,7 @@ aspect CSP {
     public Constraint MEqExp.collectConstraints(ChocoSolver s) {
         // Need to type check JUST the equality of expressions, to know if the constraints should produce  '==' or '<->'.
         // All other type checking should be done after flattening. 
-        checkType(Types.BOOL, new SemanticErrorList());
+        checkType(Types.BOOL, new SemanticConditionList());
         if (isInt)
             return ChocoSolver.eqeq(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));
         else

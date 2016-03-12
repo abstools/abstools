@@ -1,8 +1,8 @@
 aspect ProductLineTypeAnalysis {
 
 
-    syn lazy SemanticErrorList Model.typeCheckPL() {
-        SemanticErrorList errors = new SemanticErrorList();
+    syn lazy SemanticConditionList Model.typeCheckPL() {
+        SemanticConditionList errors = new SemanticConditionList();
         if (! hasProductLine())
             return errors;
 

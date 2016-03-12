@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.Set;
 
 import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
@@ -99,7 +99,7 @@ public class ABSTest {
                             LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(p);
                             p.registerTypeSystemExtension(ltie);
                         }
-                        SemanticErrorList l = p.typeCheck();
+                        SemanticConditionList l = p.typeCheck();
                         if (isSet(EXPECT_TYPE_ERROR,config)) {
                             if (!l.containsErrors()) {
                                 fail("Expected type errors, but none appeared");
@@ -163,7 +163,7 @@ public class ABSTest {
                     errs.append(error.getHelpMessage() + "\n");
                 fail("Failed to parse: " + fileNames + "\n" + errs.toString());
             } else if (isSet(TYPE_CHECK, config)) {
-                SemanticErrorList l = m.typeCheck();
+                SemanticConditionList l = m.typeCheck();
                 if (l.containsErrors()) {
                     for (SemanticError error : l)
                         errs.append(error.getHelpMessage() + "\n");

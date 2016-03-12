@@ -9,18 +9,18 @@ import java.util.ArrayList;
 import abs.frontend.typechecker.TypeCheckerException;
 
 @SuppressWarnings("serial")
-public class SemanticErrorList extends ArrayList<SemanticError> {
+public class SemanticConditionList extends ArrayList<SemanticError> {
 
-    public SemanticErrorList() {}
+    public SemanticConditionList() {}
     
+    public SemanticConditionList(TypeCheckerException e) {
+        add(e);
+    }
+
     public boolean containsErrors() {
         // Prepare for this list to contain warnings as well, which should not
         // abort the compilation
         return !isEmpty();
-    }
-
-    public SemanticErrorList(TypeCheckerException e) {
-        add(e);
     }
 
     public SemanticError getFirst() {

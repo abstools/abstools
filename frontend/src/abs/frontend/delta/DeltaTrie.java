@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.ImplicitProduct;
 import abs.frontend.ast.Model;
@@ -20,7 +20,7 @@ public class DeltaTrie {
     /**
      * Constructor
      */
-    public DeltaTrie(Model model, SemanticErrorList errors) {
+    public DeltaTrie(Model model, SemanticConditionList errors) {
         this.model = model;
         root = new Node(errors);
     }
@@ -46,7 +46,7 @@ public class DeltaTrie {
         private final ProgramTypeAbstraction ta;
 
          // Constructor for top level root node
-        public Node(SemanticErrorList errors) {
+        public Node(SemanticConditionList errors) {
             this.deltaID = "core";
             this.children = new HashMap<String, Node>();
             this.ta = new ProgramTypeAbstraction(errors);

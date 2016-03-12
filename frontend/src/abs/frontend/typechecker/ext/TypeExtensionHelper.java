@@ -7,7 +7,7 @@ package abs.frontend.typechecker.ext;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.BoundedType;
 import abs.frontend.typechecker.DataTypeType;
@@ -38,15 +38,15 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         return null;
     }
 
-    public void setSemanticErrorList(SemanticErrorList s) {
+    public void setSemanticConditionList(SemanticConditionList s) {
         for (TypeSystemExtension tse : obs) {
-            tse.setSemanticErrorList(s);
+            tse.setSemanticConditionList(s);
         }
     }
 
-    public void typeCheckStarted(Model m, SemanticErrorList e) {
+    public void typeCheckStarted(Model m, SemanticConditionList e) {
         registerDefaultExtensions(m);
-        setSemanticErrorList(e);
+        setSemanticConditionList(e);
     }
 
     public void register(TypeSystemExtension tse) {

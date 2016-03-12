@@ -12,7 +12,7 @@ import java.util.Set;
 import abs.ABSTest;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.CaseBranch;
 import abs.frontend.ast.CaseExp;
@@ -190,7 +190,7 @@ public class FrontendTest extends ABSTest {
     protected SemanticError assertTypeErrors(String absCode, Config... config) {
         Model m = assertParse(absCode, config);
         String msg = "";
-        SemanticErrorList l = m.typeCheck();
+        SemanticConditionList l = m.typeCheck();
         if (l.containsErrors()) {
             msg = l.getFirst().getMsgWithHint(absCode);
         }

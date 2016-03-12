@@ -28,7 +28,7 @@ import abs.frontend.mtvl.ChocoSolver;
 import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.antlr.parser.ABSParserWrapper;
 import abs.frontend.ast.*;
 import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
@@ -279,7 +279,7 @@ public class Main {
                 m.dump();
             }
 
-            final SemanticErrorList semErrs = m.getErrors();
+            final SemanticConditionList semErrs = m.getErrors();
             int numSemErrs = semErrs.size();
 
             if (numSemErrs > 0) {
@@ -526,7 +526,7 @@ public class Main {
                 System.out.println("Typechecking Model...");
 
             registerLocationTypeChecking(m);
-            SemanticErrorList typeerrors = m.typeCheck();
+            SemanticConditionList typeerrors = m.typeCheck();
             for (SemanticError se : typeerrors) {
                 System.err.println(se.getHelpMessage());
             }
@@ -556,7 +556,7 @@ public class Main {
         if (verbose)
             System.out.println("Typechecking Software Product Line...");
 
-        SemanticErrorList typeerrors = m.typeCheckPL();
+        SemanticConditionList typeerrors = m.typeCheckPL();
         for (SemanticError se : typeerrors) {
             System.err.println(se.getHelpMessage());
         }

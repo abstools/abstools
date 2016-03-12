@@ -9,13 +9,13 @@ import java.util.*;
 import abs.common.Constants;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.List;
 import abs.frontend.ast.*;
 
 public class TypeCheckerHelper {
-    public static void typeCheck(ConstructorPattern p, SemanticErrorList e, Type t) {
+    public static void typeCheck(ConstructorPattern p, SemanticConditionList e, Type t) {
         DataConstructor c = p.getDataConstructor();
         if (c == null) {
             e.add(new SemanticError(p, ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, p.getConstructor()));
@@ -53,14 +53,14 @@ public class TypeCheckerHelper {
         typeCheckMatchingParamsPattern(e, p, c);
     }
 
-    public static void checkAssignment(SemanticErrorList l, ASTNode<?> n, Type lht, Exp rhte) {
+    public static void checkAssignment(SemanticConditionList l, ASTNode<?> n, Type lht, Exp rhte) {
         Type te = rhte.getType();
         if (!te.isAssignable(lht)) {
             l.add(new TypeError(n, ErrorMessage.CANNOT_ASSIGN, te, lht));
         }
     }
 
-    public static void typeCheckParamList(SemanticErrorList l, HasParams params) {
+    public static void typeCheckParamList(SemanticConditionList l, HasParams params) {
         Set<String> names = new HashSet<String>();
         for (ParamDecl d : params.getParams()) {
             if (!names.add(d.getName())) {
@@ -70,7 +70,7 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckRunMethodSig(SemanticErrorList l, MethodSig m) {
+    public static void typeCheckRunMethodSig(SemanticConditionList l, MethodSig m) {
         if (m.getNumParam() > 0) {
             l.add(new TypeError(m, ErrorMessage.RUN_METHOD_WRONG_NUM_PARAMS, m.getNumParam()));
         }
@@ -80,13 +80,13 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckMatchingParams(SemanticErrorList l, DataConstructorExp n, DataConstructor c) {
+    public static void typeCheckMatchingParams(SemanticConditionList l, DataConstructorExp n, DataConstructor c) {
         assert n.getDecl() == c;
         final Map<TypeParameter, Type> binding = n.getTypeParamBinding(n, c);
         typeCheckEqual(l, n, c.applyBindings(binding));
     }
 
-    private static void typeCheckMatchingParamsPattern(SemanticErrorList l, ConstructorPattern n, DataConstructor decl) {
+    private static void typeCheckMatchingParamsPattern(SemanticConditionList l, ConstructorPattern n, DataConstructor decl) {
         Map<TypeParameter, Type> binding = decl.getTypeParamBinding(n, n.getTypes());
         java.util.List<Type> types = decl.applyBindings(binding);
         typeCheckEqualPattern(l, n, types);
@@ -100,13 +100,13 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    public static void typeCheckMatchingParams(SemanticErrorList l, FnApp n, ParametricFunctionDecl decl) {
+    public static void typeCheckMatchingParams(SemanticConditionList l, FnApp n, ParametricFunctionDecl decl) {
         Map<TypeParameter, Type> binding = n.getTypeParamBindingFromParamDecl(decl);
         java.util.List<Type> types = decl.applyBindings(binding);
         typeCheckEqual(l, n, types);
     }
 
-    public static void typeCheckEqual(SemanticErrorList l, ASTNode<?> n, java.util.List<Type> params) {
+    public static void typeCheckEqual(SemanticConditionList l, ASTNode<?> n, java.util.List<Type> params) {
         List<PureExp> args = ((HasActualParams)n).getParams();
         if (params.size() != args.getNumChild()) {
             l.add(new TypeError(n, ErrorMessage.WRONG_NUMBER_OF_ARGS, params.size(), args.getNumChild()));
@@ -123,7 +123,7 @@ public class TypeCheckerHelper {
         }
     }
 
-    private static void typeCheckEqualPattern(SemanticErrorList l, ConstructorPattern n, java.util.List<Type> params) {
+    private static void typeCheckEqualPattern(SemanticConditionList l, ConstructorPattern n, java.util.List<Type> params) {
         List<Pattern> args = n.getParams();
         if (params.size() != args .getNumChild()) {
             l.add(new TypeError(n, ErrorMessage.WRONG_NUMBER_OF_ARGS, params.size(), args.getNumChild()));
@@ -136,7 +136,7 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckDeltaClause(DeltaClause clause, Map<String,DeltaDecl> deltaNames, Set<String> definedFeatures, SemanticErrorList e) {
+    public static void typeCheckDeltaClause(DeltaClause clause, Map<String,DeltaDecl> deltaNames, Set<String> definedFeatures, SemanticConditionList e) {
 
         /* Does the delta exist? */
         final Deltaspec spec = clause.getDeltaspec();
@@ -182,7 +182,7 @@ public class TypeCheckerHelper {
             Set<String> prodNames,
             Map<String,DeltaDecl> deltaNames,
             Set<String> updateNames,
-            SemanticErrorList e) {
+            SemanticConditionList e) {
         if (featureNames != null) {
             // Do the features exist in the PL declaration (and also check feature attributes)?
             Model m = prod.getModel();
@@ -284,7 +284,7 @@ public class TypeCheckerHelper {
 
     static final StarImport STDLIB_IMPORT = new StarImport(Constants.STDLIB_NAME);
 
-    public static void checkForDuplicateDecls(ModuleDecl mod, SemanticErrorList errors) {
+    public static void checkForDuplicateDecls(ModuleDecl mod, SemanticConditionList errors) {
         ArrayList<KindedName> duplicateNames = new ArrayList<KindedName>();
         Map<KindedName, ResolvedName> names = getDefinedNames(mod, duplicateNames);
         for (KindedName n : duplicateNames) {
@@ -437,7 +437,7 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    public static void typeCheckBinary(SemanticErrorList e, Binary b, Type t) {
+    public static void typeCheckBinary(SemanticConditionList e, Binary b, Type t) {
         b.getLeft().assertHasType(e, t);
         b.getRight().assertHasType(e, t);
         b.getLeft().typeCheck(e);
@@ -447,7 +447,7 @@ public class TypeCheckerHelper {
     /**
      * checks whether the local variable v was already defined in the current function
      */
-    public static void checkForDuplicatesOfVarDecl(SemanticErrorList e, VarDeclStmt v) {
+    public static void checkForDuplicatesOfVarDecl(SemanticConditionList e, VarDeclStmt v) {
         String varName = v.getVarDecl().getName();
         VarOrFieldDecl otherVar = v.lookupVarOrFieldName(varName , false);
         if (otherVar != null && v.inSameMethodOrBlock(otherVar)) {
@@ -458,7 +458,7 @@ public class TypeCheckerHelper {
     /**
      * check a list of compilation units for duplicate module names, product names, delta names
      */
-    public static void checkForDuplicateModules(SemanticErrorList errors, Iterable<CompilationUnit> compilationUnits) {
+    public static void checkForDuplicateModules(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
         Set<String> seenModules = new HashSet<String>();
         for (CompilationUnit u : compilationUnits) {
             for (ModuleDecl module : u.getModuleDecls()) {
@@ -468,7 +468,7 @@ public class TypeCheckerHelper {
             }
         }
     }
-    public static void checkForDuplicateProducts(SemanticErrorList errors, Iterable<CompilationUnit> compilationUnits) {
+    public static void checkForDuplicateProducts(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
         Set<String> seen = new HashSet<String>();
         for (CompilationUnit u : compilationUnits) {
             for (Product p : u.getProducts()) {
@@ -477,7 +477,7 @@ public class TypeCheckerHelper {
             }
         }
     }
-    public static void checkForDuplicateDeltas(SemanticErrorList errors, Iterable<CompilationUnit> compilationUnits) {
+    public static void checkForDuplicateDeltas(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
         Set<String> seen = new HashSet<String>();
         for (CompilationUnit u : compilationUnits) {
             for (DeltaDecl d : u.getDeltaDecls()) {
@@ -486,7 +486,7 @@ public class TypeCheckerHelper {
             }
         }
     }
-    public static void checkForDuplicateUpdates(SemanticErrorList errors, Iterable<CompilationUnit> compilationUnits) {
+    public static void checkForDuplicateUpdates(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
         Set<String> seen = new HashSet<String>();
         for (CompilationUnit u : compilationUnits) {
             for (UpdateDecl d : u.getUpdateDecls()) {
@@ -511,7 +511,7 @@ public class TypeCheckerHelper {
         return result;
     }
 
-    public static void checkDataTypeUse(SemanticErrorList e, DataTypeUse use) {
+    public static void checkDataTypeUse(SemanticConditionList e, DataTypeUse use) {
         Type type = use.getType();
         if (type.getDecl() instanceof ParametricDataTypeDecl) {
             DataTypeType t = (DataTypeType) type;
@@ -532,7 +532,7 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void checkDefBeforeUse(SemanticErrorList e, VarOrFieldUse use) {
+    public static void checkDefBeforeUse(SemanticConditionList e, VarOrFieldUse use) {
         if (use.getType().isUnknownType()) {
             e.add(new TypeError(use,ErrorMessage.NAME_NOT_RESOLVABLE, use.getName()));
         } else {

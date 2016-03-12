@@ -20,7 +20,7 @@ import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.scheduling.RandomSchedulingStrategy;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.Model;
 
 public class JavaBackendTest extends ABSTest {
@@ -229,7 +229,7 @@ public class JavaBackendTest extends ABSTest {
         if (model.hasErrors()) {
             fail(model.getErrors().get(0).getHelpMessage());
         } else {
-            SemanticErrorList el = model.typeCheck();
+            SemanticConditionList el = model.typeCheck();
             if (el.containsErrors()) {
                 fail(el.get(0).getMsg());
             }
