@@ -251,7 +251,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     @Test
     public void negTestError() {
         Model m = assertParseOkStdLib(" { Bool b = !5; }");
-        assertEquals(ErrorMessage.EXPECTED_TYPE, m.typeCheck().getFirst().msg);
+        assertEquals(ErrorMessage.EXPECTED_TYPE, m.typeCheck().getFirstError().msg);
     }
 
     @Test

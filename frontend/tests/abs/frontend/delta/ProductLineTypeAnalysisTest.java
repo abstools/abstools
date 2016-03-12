@@ -32,7 +32,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         SemanticConditionList errors = new SemanticConditionList();
 
         assertTrue(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
-        assertEquals(0, errors.size());
+        assertEquals(0, errors.getErrorCount());
 
         model = assertParseOk(
                 "module M;"
@@ -47,7 +47,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         errors = new SemanticConditionList();
 
         assertTrue(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
-        assertEquals(0, errors.size());
+        assertEquals(0, errors.getErrorCount());
 
         model = assertParseOk(
                 "module M;"
@@ -58,7 +58,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         errors = new SemanticConditionList();
 
         assertTrue(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
-        assertEquals(0, errors.size());
+        assertEquals(0, errors.getErrorCount());
 
         List<Set<String>> partition = pl.getDeltaPartition();
         assertEquals(partition.size(), 0);
@@ -76,7 +76,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         errors = new SemanticConditionList();
 
         assertFalse(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
-        assertEquals(1, errors.size());
+        assertEquals(1, errors.getErrorCount());
 
         model = assertParseOk(
                 "module M;"
@@ -91,7 +91,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         errors = new SemanticConditionList();
 
         assertFalse(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
-        assertTrue(errors.size() == 1);
+        assertTrue(errors.getErrorCount() == 1);
 
         model = assertParseOk(
                 "module M;"
@@ -106,7 +106,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         errors = new SemanticConditionList();
 
         assertFalse(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
-        assertEquals(1, errors.size());
+        assertEquals(1, errors.getErrorCount());
 
         model = assertParseOk(
                 "module M;"
@@ -123,7 +123,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         errors = new SemanticConditionList();
 
         assertFalse(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
-        assertEquals(2, errors.size());
+        assertEquals(2, errors.getErrorCount());
 
     }
 

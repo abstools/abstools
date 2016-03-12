@@ -5,11 +5,14 @@
 package abs.frontend.analyser;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import abs.frontend.typechecker.TypeCheckerException;
 
 @SuppressWarnings("serial")
-public class SemanticConditionList extends ArrayList<SemanticError> {
+public class SemanticConditionList implements Iterable<SemanticError> {
+
+    ArrayList<SemanticError> contents = new ArrayList<SemanticError>();
 
     public SemanticConditionList() {}
     
@@ -17,25 +20,42 @@ public class SemanticConditionList extends ArrayList<SemanticError> {
         add(e);
     }
 
+    // Iterable protocol
+    public Iterator<SemanticError> iterator() {
+        return contents.iterator();
+    }
+
     public boolean containsErrors() {
         // Prepare for this list to contain warnings as well, which should not
         // abort the compilation
-        return !isEmpty();
+        return !contents.isEmpty();
     }
 
-    public SemanticError getFirst() {
-        return get(0);
+    public int getErrorCount() {
+        return contents.size();
     }
 
-    public void add(TypeCheckerException e) {
-        add(e.getTypeError());
+    public SemanticError getFirstError() {
+        return contents.get(0);
+    }
+
+    public boolean add(TypeCheckerException e) {
+        return contents.add(e.getTypeError());
     }
     
+    public boolean add(SemanticError e) {
+        return contents.add(e);
+    }
+
+    public boolean addAll(SemanticConditionList l) {
+        return contents.addAll(l.contents);
+    }
+
     @Override
     public String toString() {
         StringBuffer buf = new StringBuffer();
         boolean first = true;
-        for(SemanticError e : this) {
+        for(SemanticError e : contents) {
             if (!first)
                 buf.append(',');
             buf.append(e.toString());

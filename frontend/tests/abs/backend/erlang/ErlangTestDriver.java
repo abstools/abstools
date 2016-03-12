@@ -127,10 +127,10 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      */
     private String genCode(Model model, File targetDir, boolean appendResultprinter) throws IOException, InterruptedException, InternalBackendException {
         if (model.hasErrors()) {
-            Assert.fail(model.getErrors().getFirst().getHelpMessage());
+            Assert.fail(model.getErrors().getFirstError().getHelpMessage());
         }
         if (model.hasTypeErrors()) {
-            Assert.fail(model.getTypeErrors().getFirst().getHelpMessage());
+            Assert.fail(model.getTypeErrors().getFirstError().getHelpMessage());
         }
         MainBlock mb = model.getMainBlock();
         if (mb != null && appendResultprinter) {

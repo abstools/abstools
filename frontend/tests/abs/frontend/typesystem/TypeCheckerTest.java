@@ -455,7 +455,7 @@ public class TypeCheckerTest extends FrontendTest {
         Model m = assertParseOk("class C { Unit do() { movecogto 1; }}", Config.WITH_STD_LIB);
         SemanticConditionList errs = m.typeCheck();
         assertTrue(m.hasTypeErrors());
-        assertEquals(ErrorMessage.EXPECTED_DC, errs.getFirst().msg);
+        assertEquals(ErrorMessage.EXPECTED_DC, errs.getFirstError().msg);
     }
 
     @Test

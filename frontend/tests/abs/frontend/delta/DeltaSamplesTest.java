@@ -69,7 +69,7 @@ public class DeltaSamplesTest extends FrontendTest {
         m.flushCache();
         SemanticConditionList res = m.typeCheck();
         if (res.containsErrors())
-            fail(res.getFirst().getMessage());
+            fail(res.getFirstError().getMessage());
     }
 
     @Test
@@ -87,8 +87,8 @@ public class DeltaSamplesTest extends FrontendTest {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug329.abs", true);
         SemanticConditionList errs = m.typeCheck();
         /* We are expecting a missing delta in product M.PL: */
-        assertThat(errs.getFirst(), instanceOf(TypeError.class));
-        TypeError te = (TypeError) errs.getFirst();
+        assertThat(errs.getFirstError(), instanceOf(TypeError.class));
+        TypeError te = (TypeError) errs.getFirstError();
         Assert.assertEquals(ErrorMessage.NAME_NOT_RESOLVABLE, te.msg);
     }
 
@@ -97,8 +97,8 @@ public class DeltaSamplesTest extends FrontendTest {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug329.abs", true);
         SemanticConditionList errs = m.typeCheck();
         /* We are expecting a missing delta in product M.PL: */
-        assertThat(errs.getFirst(), instanceOf(TypeError.class));
-        TypeError te = (TypeError) errs.getFirst();
+        assertThat(errs.getFirstError(), instanceOf(TypeError.class));
+        TypeError te = (TypeError) errs.getFirstError();
         Assert.assertEquals(ErrorMessage.NAME_NOT_RESOLVABLE, te.msg);
         Assert.assertEquals(10, te.getLine());
     }
@@ -148,7 +148,7 @@ public class DeltaSamplesTest extends FrontendTest {
         m.flattenForProduct("P");
         m.flushCache();
         if (m.hasErrors())
-            fail(m.getErrors().getFirst().getMessage());
+            fail(m.getErrors().getFirstError().getMessage());
         assertFalse(m.hasTypeErrors());
     }
 

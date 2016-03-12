@@ -129,8 +129,9 @@ aspect ErrorCheck {
     public void MEqualityExpr.checkType(Types type, SemanticConditionList c) {
         SemanticConditionList lint  = new SemanticConditionList();
         SemanticConditionList lbool = new SemanticConditionList();
+        // TODO: use getLeft().isIntType() instead if possible
         getLeft().checkType(Types.INT,lint);
-        if (lint.size() == 0) {
+        if (!lint.containsErrors()) {
             isInt = true;
             getRight().checkType(Types.INT,c);
         }

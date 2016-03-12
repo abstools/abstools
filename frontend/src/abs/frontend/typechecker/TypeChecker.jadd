@@ -432,7 +432,6 @@ aspect TypeChecker {
     public void MethodImpl.typeCheck(SemanticConditionList e) {
         Block b = getBlock();
         MethodSig sig = getMethodSig();
-        int nerrors = e.size();
         sig.typeCheck(e);
         b.typeCheck(e);
 
@@ -459,14 +458,14 @@ aspect TypeChecker {
     }
 
     public void VarDecl.typeCheck(SemanticConditionList e) { 
-        int nerrors = e.size();            
+        int nerrors = e.getErrorCount();
         getAccess().typeCheck(e);
-        if (e.size() > nerrors) return;
+        if (e.getErrorCount() > nerrors) return;
 
         Type t = getAccess().getType();
         if (hasInitExp()) {
             getInitExp().typeCheck(e);
-            if (e.size() > nerrors) return;
+            if (e.getErrorCount() > nerrors) return;
             TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
         } else {
             if (!t.isReferenceType() && !t.isFutureType()) {
@@ -476,14 +475,14 @@ aspect TypeChecker {
     }
 
     public void FieldDecl.typeCheck(SemanticConditionList e) {
-        int nerrors = e.size();            
+        int nerrors = e.getErrorCount();            
         getAccess().typeCheck(e);
-        if (e.size() > nerrors) return;
+        if (e.getErrorCount() > nerrors) return;
 
         Type t = getAccess().getType();
         if (hasInitExp()) {
             getInitExp().typeCheck(e);
-            if (e.size() > nerrors) return;
+            if (e.getErrorCount() > nerrors) return;
             TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
         } else {
             if (!t.isReferenceType() && !t.isFutureType()) {
@@ -539,19 +538,19 @@ aspect TypeChecker {
         Type rht = getValue().getType();
         Type lht = getVar().getType();
 
-        int nerrors = e.size();   	 	
+        int nerrors = e.getErrorCount();   	 	
         getValue().typeCheck(e);
         getVar().typeCheck(e);
 
-        if (e.size() > nerrors)
+        if (e.getErrorCount() > nerrors)
             return;
         TypeCheckerHelper.checkAssignment(e,this,lht,getValue());
     }
 
     public void MoveCogToStmt.typeCheck(SemanticConditionList e) {
-        int nerrors = e.size();
+        int nerrors = e.getErrorCount();
         getTarget().typeCheck(e);
-        if (e.size() > nerrors) return;
+        if (e.getErrorCount() > nerrors) return;
         Type t = getTarget().getType();
         Decl d = t.getDecl();
         if (d == null) {
@@ -670,10 +669,10 @@ aspect TypeChecker {
     public void ExpGuard.typeCheck(SemanticConditionList e) { 
         PureExp exp = getPureExp();
         // We'll only run "deeper" checks if the types check out. 
-        int size = e.size();
+        int size = e.getErrorCount();
         exp.typeCheck(e);
         getPureExp().assertHasType(e,getModel().getBoolType());
-        if (e.size() == size)
+        if (e.getErrorCount() == size)
             hasFieldAccess(e); // check for visible change/builtin
     }
     public void DurationGuard.typeCheck(SemanticConditionList e) {
@@ -813,10 +812,10 @@ aspect TypeChecker {
     } 
 
     public void CaseBranch.typeCheck(SemanticConditionList e, DataTypeType t) {
-        int size = e.size();
+        int size = e.getErrorCount();
         getLeft().typeCheck(e,t);
         /* If the LHS is botched, we can't reliably use any variables bound therein. */
-        if (e.size() == size)
+        if (e.getErrorCount() == size)
           getRight().typeCheck(e);
     }
 
@@ -864,16 +863,16 @@ aspect TypeChecker {
     }
 
     public void MinusExp.typeCheck(SemanticConditionList e) {
-         int size = e.size();
+         int size = e.getErrorCount();
          getOperand().typeCheck(e);
-         if (e.size() == size)
+         if (e.getErrorCount() == size)
              getOperand().assertHasType(e,getModel().getIntType());
     }
 
     public void NegExp.typeCheck(SemanticConditionList e) {
-         int size = e.size();
+         int size = e.getErrorCount();
          getOperand().typeCheck(e);
-         if (e.size() == size)
+         if (e.getErrorCount() == size)
              getOperand().assertHasType(e,getModel().getBoolType());
     }
 

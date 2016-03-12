@@ -384,7 +384,7 @@ public class LocationTypeTests extends FrontendTest {
         m.registerTypeSystemExtension(te);
         m.getErrors();
         SemanticConditionList e = m.typeCheck();
-        assertTrue(!e.containsErrors() ? "" : "Found error "+e.get(0).getMessage(),e.isEmpty());
+        assertTrue(!e.containsErrors() ? "" : "Found error "+e.getFirstError().getMessage(),!e.containsErrors());
         assertInferOk(code);
     }
     
@@ -395,7 +395,7 @@ public class LocationTypeTests extends FrontendTest {
         m.registerTypeSystemExtension(ltie);
         SemanticConditionList e = m.typeCheck();
         //System.out.println(ltie.getConstraints());
-        assertEquals(!e.containsErrors() ? "" : "Found error: "+e.get(0).getMessage(), fails, e.containsErrors()); 
+        assertEquals(!e.containsErrors() ? "" : "Found error: "+e.getFirstError().getMessage(), fails, e.containsErrors()); 
         
         //assertTrue("Inference failed", generated != null);
         //assertEquals(fails, generated == null);
@@ -417,7 +417,7 @@ public class LocationTypeTests extends FrontendTest {
         LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
         m.registerTypeSystemExtension(ltie);
         SemanticConditionList e = m.typeCheck();
-        assertEquals(!e.containsErrors() ? "" : "Found error: "+e.get(0).getMessage(), false, e.containsErrors());
+        assertEquals(!e.containsErrors() ? "" : "Found error: "+e.getFirstError().getMessage(), false, e.containsErrors());
         new InferMain().writeInferenceResultsBack(ltie.getResults());
         String res = FileUtils.fileToStringBuilder(f).toString();
         f.delete();

@@ -280,15 +280,16 @@ public class Main {
             }
 
             final SemanticConditionList semErrs = m.getErrors();
-            int numSemErrs = semErrs.size();
 
-            if (numSemErrs > 0) {
-                System.err.println("Semantic errors: " + numSemErrs);
-                for (SemanticError error : semErrs) {
-                    System.err.println(error.getHelpMessage());
-                    System.err.flush();
-                }
-            } else {
+            if (semErrs.containsErrors()) {
+                System.err.println("Semantic errors: " + semErrs.getErrorCount());
+            }
+            for (SemanticError error : semErrs) {
+                // Print both errors and warnings
+                System.err.println(error.getHelpMessage());
+                System.err.flush();
+            }
+            if (!semErrs.containsErrors()) {
                 typeCheckModel(m);
                 analyzeMTVL(m);
             }

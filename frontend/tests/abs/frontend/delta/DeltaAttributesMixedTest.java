@@ -131,7 +131,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR);
         
         // There should be a type error if the Config defines only two delta params, but the delta itself expects 3
-        assertEquals(ErrorMessage.WRONG_NUMBER_OF_ARGS, m.getTypeErrors().getFirst().msg);
+        assertEquals(ErrorMessage.WRONG_NUMBER_OF_ARGS, m.getTypeErrors().getFirstError().msg);
     }
 
     @Test
@@ -145,7 +145,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "product P1( F{a=3} );"
                 , Config.WITH_STD_LIB, Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR
         );
-        assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirst().msg);
+        assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirstError().msg);
     }
 
     @Test
@@ -159,7 +159,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "product P1( F );"
                 , Config.WITH_STD_LIB, Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR
         );
-        assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirst().msg);
+        assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirstError().msg);
     }
 
     @Test
@@ -175,7 +175,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         );
         model.flattenForProduct("P1");
         assertTrue(model.hasTypeErrors());
-        assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirst().msg);
+        assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirstError().msg);
     }
     
     @Test

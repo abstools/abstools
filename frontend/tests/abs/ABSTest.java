@@ -106,7 +106,7 @@ public class ABSTest {
                             }
                         } else {
                             if (l.containsErrors()) {
-                                fail("Failed to typecheck: " + s + "\n" + l.get(0).getMessage());
+                                fail("Failed to typecheck: " + s + "\n" + l.getFirstError().getMessage());
                             }
                         }
                     }                    
@@ -154,7 +154,7 @@ public class ABSTest {
                 return m;
             }
             
-            int numSemErrs = m.getErrors().size();
+            int numSemErrs = m.getErrors().getErrorCount();
             
 
             errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");

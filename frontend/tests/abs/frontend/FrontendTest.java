@@ -192,10 +192,10 @@ public class FrontendTest extends ABSTest {
         String msg = "";
         SemanticConditionList l = m.typeCheck();
         if (l.containsErrors()) {
-            msg = l.getFirst().getMsgWithHint(absCode);
+            msg = l.getFirstError().getMsgWithHint(absCode);
         }
         assertEquals(msg, isSet(EXPECT_TYPE_ERROR, config), l.containsErrors());
-        return l.containsErrors() ? l.getFirst() : null;
+        return l.containsErrors() ? l.getFirstError() : null;
     }
 
 }

@@ -227,16 +227,16 @@ public class JavaBackendTest extends ABSTest {
         // c2[len+1] = Config.WITH_LOC_INF; // XXX: Trips up CI.
         model = assertParse(code, c2);
         if (model.hasErrors()) {
-            fail(model.getErrors().get(0).getHelpMessage());
+            fail(model.getErrors().getFirstError().getHelpMessage());
         } else {
             SemanticConditionList el = model.typeCheck();
             if (el.containsErrors()) {
-                fail(el.get(0).getMsg());
+                fail(el.getFirstError().getMsg());
             }
         }
 
         if (model.hasErrors()) {
-            fail(model.getErrors().getFirst().getHelpMessage());
+            fail(model.getErrors().getFirstError().getHelpMessage());
             return null;
         }
         return getJavaCode(model);

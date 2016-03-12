@@ -31,10 +31,10 @@ public class ExamplesTypeChecking extends ParseSamplesTest {
             m.flattenForProduct(product);
             final SemanticConditionList errors = m.getErrors();
             if (errors.containsErrors())
-                onError(errors.getFirst().getMessage());
+                onError(errors.getFirstError().getMessage());
             m.typeCheck(errors);
             if (errors.containsErrors())
-                onError(errors.getFirst().getMessage());
+                onError(errors.getFirstError().getMessage());
         }
         return m;
     }

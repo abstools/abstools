@@ -39,7 +39,7 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
         /* TODO: why not parse the ABSTest way -- sooner or later a flag will fall over... [stolz]*/
         model = Main.parseString(code, isSet(Config.WITH_STD_LIB, config));
         if (model.hasErrors()) {
-            fail(model.getErrors().get(0).getHelpMessage());
+            fail(model.getErrors().getFirstError().getHelpMessage());
         } else {
             // Omit type checking for now as it can hinder dynamic program evolution
             // TODO infer types...
@@ -50,7 +50,7 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
         }
 
         if (model.hasErrors()) {
-            fail(model.getErrors().getFirst().getHelpMessage());
+            fail(model.getErrors().getFirstError().getHelpMessage());
             return null;
         }
         return getJavaCodeDynamic(model);

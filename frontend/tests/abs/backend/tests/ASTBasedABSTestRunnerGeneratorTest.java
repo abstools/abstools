@@ -278,7 +278,7 @@ public class ASTBasedABSTestRunnerGeneratorTest {
             if (result.hasErrors()) {
                 SemanticConditionList el = result.getErrors();
                 errors.append("Semantic errors: ");
-                errors.append(el.size());
+                errors.append(el.getErrorCount());
                 errors.append("\n");
                 for (SemanticError error : el) {
                     errors.append(error.getHelpMessage());

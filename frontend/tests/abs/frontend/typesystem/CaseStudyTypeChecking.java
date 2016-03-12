@@ -70,7 +70,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
         if (m != null) {
             if (m.hasParserErrors())
                 Assert.fail(m.getParserErrors().get(0).getMessage());
-            int numSemErrs = m.getErrors().size();
+            int numSemErrs = m.getErrors().getErrorCount();
             StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
             if (numSemErrs > 0) {
                 for (SemanticError error : m.getErrors())
