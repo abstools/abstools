@@ -31,6 +31,9 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
         checkAssignable(null, null, lt, t, origin);
         checkAssignable(null, null, t, lt, origin);
     }
+
+    @Override
+    public void checkModel(Model model) {}
     
     @Override
     public void checkNewExp(NewExp e) {}

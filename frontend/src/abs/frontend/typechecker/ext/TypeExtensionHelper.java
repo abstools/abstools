@@ -27,6 +27,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         register(new DeadlineChecker(m));
         register(new SizeAnnotationChecker(m));
         register(new SchedulerChecker(m));
+        register(new MainBlockChecker(m));
     }
 
     public TypeSystemExtension getFirstRegisteredTypeExtension(Class<?> clazz) {
@@ -364,6 +365,13 @@ public class TypeExtensionHelper implements TypeSystemExtension {
             tse.checkWhileStmt(whileStmt);
         }
     }
+
+    @Override
+    public void checkModel(Model model) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkModel(model);
+        }
+    }        
 
     public void registerAll(java.util.List<TypeSystemExtension> curr) {
         obs = new ArrayList<TypeSystemExtension>(obs);

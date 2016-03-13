@@ -11,6 +11,8 @@ import abs.frontend.typechecker.ext.AdaptDirection;
 
 public interface TypeSystemExtension {
 
+    void checkModel(Model model);
+
     void checkClassDecl(ClassDecl decl);
 
     void checkMethodImpl(MethodImpl method);

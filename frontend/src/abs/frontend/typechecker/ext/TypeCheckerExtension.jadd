@@ -318,6 +318,7 @@ aspect TypeCheckerExtension {
      refine TypeChecker public void Model.typeCheck(SemanticConditionList s) {
          getTypeExt().typeCheckStarted(this,s);
          TypeChecker.Model.typeCheck(s);
+         getTypeExt().checkModel(this);
          getTypeExt().finished();
      }
 }
