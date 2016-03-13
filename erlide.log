@@ -1,0 +1,26 @@
+03:39:13,445 I: (ErlangCore.java:64) : Starting CORE Thread[Worker-1,5,main]
+03:39:13,456 I: (ErlangCore.java:79) : *** starting Erlide v0.29.13.201509181435 (core=0.24.13.201509181435) (model api=0.24.12.201509181435) *** (UTF-8) ui
+03:39:13,463 I: (ErlangCore.java:86) : Started CORE
+03:39:13,464 F: (ErlangPlugin.java:88) : Core started
+03:39:15,838 F: (ErlangHostnameRetriever.java:40) : Test long hostname: null
+03:39:15,839 W: (ErlangHostnameRetriever.java:46) : Can't use null as long name
+03:39:17,266 F: (ErlangHostnameRetriever.java:40) : Test long hostname: afifun-SH560
+03:39:18,416 W: (ErlangHostnameRetriever.java:46) : Can't use afifun-SH560 as long name
+03:39:19,133 F: (ErlangHostnameRetriever.java:40) : Test short hostname: afifun-SH560
+03:39:19,171 F: (HostnameUtils.java:74) : Detected:: afifun-SH560 && null
+03:39:19,222 F: (BackendActivator.java:25) : Backend plugin started
+03:39:19,241 I: (ErlideUIPlugin.java:132) : Starting UI Thread[Worker-1,5,main]
+03:39:19,247 F: (ModelActivator.java:19) : Starting Erlang model api
+03:39:19,296 F: (BackendFactory.java:42) : Create ide backend 18.2.1
+03:39:19,297 F: (BackendFactory.java:56) : Create backend b5473_afifun_4149f0_erlide
+03:39:19,549 F: (OtpNodeProxy.java:301) : Runtime b5473_afifun_4149f0_erlide@afifun-SH560 starting
+03:39:19,551 F: (OtpNodeProxy.java:419) : START node :> [/home/afifun/otp_src_18.2.1/bin/erl, -sname, b5473_afifun_4149f0_erlide@afifun-SH560, -setcookie, erlide] *** /home/afifun/abs/abstools-niken/abstools
+03:39:19,585 F: (OtpNodeProxy.java:212) : b5473_afifun_4149f0_erlide@afifun-SH560: waiting connection to peer... 
+03:39:19,994 F: (OtpNodeProxy.java:219) : connected!
+03:39:20,106 F: (OtpNodeProxy.java:306) : Runtime b5473_afifun_4149f0_erlide@afifun-SH560 running
+03:39:20,228 F: (LogEventHandler.java:27) : info: {"Monitoring java node",'jerlide_2414b15@afifun-SH560'}
+03:39:20,230 F: (LogEventHandler.java:27) : info: {"Start monitor process: ",10000000,50000000}
+03:39:20,628 F: (ModelActivator.java:30) : Started model api
+03:39:20,647 I: (ErlideUIPlugin.java:154) : Started UI
+03:45:33,455 F: (OtpNodeProxy.java:311) : Runtime b5473_afifun_4149f0_erlide@afifun-SH560 stopping
+03:45:33,540 F: (OtpNodeProxy.java:271) : Runtime b5473_afifun_4149f0_erlide@afifun-SH560 terminated
