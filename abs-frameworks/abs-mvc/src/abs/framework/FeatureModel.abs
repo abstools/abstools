@@ -1,0 +1,12 @@
+// Write uTVL feature model here
+root SistemKeuangan {
+    group allof {
+        Program {
+            group allof {
+                opt Source,
+                Type
+            }
+        },
+        opt Guide
+    }
+}

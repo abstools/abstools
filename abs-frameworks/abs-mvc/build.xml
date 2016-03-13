@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ABSMVC" default="abs.compile.java" basedir="."
+	xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+
+	<property name="lib" location="lib" />
+	<property name="src" location="src" />
+	<property name="target" location="target" />
+	<property name="web" location="web" />
+	<property name="dist" location="dist" />
+	<property name="external" location="external" />
+
+	<property name="src.abs" location="${src}/abs" />
+	<property name="src.java" location="${src}/java" />
+	
+	<property name="target.java.src" location="${target}/java/src" />
+	<property name="target.java.bin" location="${target}/java/bin" />
+
+	<property name="lib.abs" location="${lib}/absfrontend.jar" />
+	<property name="lib.orm" location="${lib}/absdborm.jar" />
+
+	<path id="build.abs.classpath">
+		<pathelement location="${lib.abs}" />
+		<pathelement location="${lib.orm}" />
+	</path>
+
+	<!-- Check if absproduct property is set -->
+    <condition property="absproduct.set">
+        <isset property="absproduct"/>
+    </condition>
+	
+	<!-- Check if absproduct property is set -->
+    <condition property="warname.set">
+        <isset property="warname"/>
+    </condition>
+
+	<fileset dir="${src.abs}" id="src.abs.files">
+		<include name="**/*.abs" />
+	</fileset>
+	
+	<pathconvert property="src.abs.fileargs" refid="src.abs.files"
+		pathsep=" " />
+	
+	<target name="clean" description="Removes all generated files">
+		<delete failonerror="false" includeemptydirs="true">
+			<fileset dir="${target}" />
+		</delete>
+	</target>
+
+	<target name="prepare" depends="clean">
+		<mkdir dir="${target.java.src}" />
+		<mkdir dir="${target.java.bin}" />
+	</target>
+
+	<target name="abs.typecheck" depends="prepare">
+		<java classname="abs.frontend.parser.Main" fork="true"
+			failonerror="true" classpathref="build.abs.classpath">
+			<arg line="${src.abs.fileargs}" />
+		</java>
+	</target>
+
+	
+	<target name="abs.generate.java" description="Generates Java code"
+		depends="clean,prepare" if="absproduct.set">
+
+		<echo>FILE: ${src.abs.fileargs}</echo>
+		<java classname="abs.backend.java.JavaBackend" fork="true"
+			failonerror="true" classpathref="build.abs.classpath">
+			<arg line="${src.abs.fileargs}" />
+			<arg value="-sourceonly" />
+			<arg value="-d" />
+			<arg value="${target.java.src}" />
+			<arg value="-product=${absproduct}" />
+		</java>
+		
+		<copy todir="${target.java.src}" verbose="false">
+			<fileset dir="${src.java}"/>
+		</copy>
+	</target>
+
+	<target name="abs.compile.java" depends="abs.generate.java">
+		<javac classpathref="build.abs.classpath" srcdir="${target.java.src}"
+			destdir="${target.java.bin}" />
+			
+		<copy todir="${target.java.bin}/View">
+			<fileset dir="${src.abs}/view" />
+		</copy>
+	</target>
+	
+	<target name="abs.deploy" depends="abs.compile.java">
+		<jar 
+			destfile="${lib}/app.jar" basedir="${target.java.bin}" />
+	</target>
+	
+	<target name="abs.dist" if="warname.set">
+		<war destfile="${dist}/${warname}.war" needxmlfile="false">
+		
+			<fileset dir="${external}">
+				<include name="**/*.*"/>
+			</fileset>
+			
+			<classes dir="${web}/classes"/>
+			
+			<lib dir="${lib}">
+				<include name="**/*.*"/>
+				<exclude name="absservlet.jar"/>
+				<exclude name="jasper-6.0.44.jar"/>
+				<exclude name="jsp-api-2.2.1-b03.jar"/>
+				<exclude name="tomcat-embed-core-8.0.23.jar"/>
+				<exclude name="tomcat-juli-8.0.23.jar"/>
+			</lib>
+			
+		</war>
+	</target>
+</project>

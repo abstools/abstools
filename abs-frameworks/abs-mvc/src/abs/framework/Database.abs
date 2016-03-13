@@ -1,0 +1,12 @@
+module ABS.Framework.Database;
+
+export *;
+
+import * from ABS.FLI;
+
+interface Database { String connect(String msg); }
+
+[Foreign]
+class DatabaseImpl implements Database {
+	String connect(String msg) { return "default implementation"; }
+}

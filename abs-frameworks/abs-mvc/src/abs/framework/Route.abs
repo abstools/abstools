@@ -1,0 +1,28 @@
+module ABS.Framework.Route;
+
+interface RouteConfig
+{
+	String route(String url);
+}
+
+class RouteConfigImpl implements RouteConfig
+{
+	String route(String url)
+	{
+		String result = case url
+		{
+		    // Program pages
+			"/" => "MProgramController.ProgramControllerImpl@list";
+            "/program/list.abs" => "MProgramController.ProgramControllerImpl@list";
+            "/program/add.abs" => "MProgramController.ProgramControllerImpl@add";
+            "/program/save.abs" => "MProgramController.ProgramControllerImpl@save";
+            "/program/edit.abs" => "MProgramController.ProgramControllerImpl@edit";
+            "/program/update.abs" => "MProgramController.ProgramControllerImpl@update";
+            "/program/delete.abs" => "MProgramController.ProgramControllerImpl@delete";
+			"/program/detail.abs" => "MProgramController.ProgramControllerImpl@detail";
+			_ => "";
+		};
+		
+		return result;
+	}
+}

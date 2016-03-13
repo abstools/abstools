@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Daftar Program</title>
+	<style>
+		form {
+			float: left;
+			margin-left: 5px;
+		}
+	</style>
+</head>
+<body>
+	<div th:replace="fragments :: menu"></div>
+	<table>
+	<thead>
+		<tr>
+			<th>ID</th><th>Nama Program</th><th>Departemen</th><th></th>
+		</tr>
+	</thead>
+	<tbody>
+	<tr th:each="program : ${dataList}">
+		<td th:text="${program.idProgram}">1</td>
+		<td th:text="${program.namaProgram.getString()}"> Title ...</td>
+		<td th:text="${program.departemen.getString()}">Text ...</td>
+		<td>
+			<form method="post" th:action="${requestContextPath + '/program/delete.abs'}" action="/ABS/program/delete.abs">
+			<input type="hidden" name="id" th:value="${program.idProgram}" />
+			<input type="submit" value="Delete" onclick="return confirm('Anda yakin ingin menghapusnya?')" />
+			</form>
+			
+			<form method="post" th:action="${requestContextPath + '/program/edit.abs'}" action="/ABS/program/edit.abs">
+			<input type="hidden" name="id" th:value="${program.idProgram}" />
+			<input type="submit" value="Edit" />
+			</form>
+			
+			<form method="post" th:action="${requestContextPath + '/program/detail.abs'}" action="/ABS/program/detail.abs">
+			<input type="hidden" name="id" th:value="${program.idProgram}" />
+			<input type="submit" value="Detail" />
+			</form>
+		</td>
+	</tr>
+	</tbody>
+	</table>
+	<div th:replace="fragments :: footer"></div>
+</body>
+</html>

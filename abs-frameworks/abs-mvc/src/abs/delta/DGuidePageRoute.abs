@@ -1,0 +1,19 @@
+delta DGuidePageRoute;
+uses ABS.Framework.Route;
+modifies class RouteConfigImpl 
+{
+    modifies String route(String url)
+    {
+        String result = original(url);
+
+        if(result == "")
+        {
+            result = case url {
+                "/guide.abs" => "MProgramController.ProgramControllerImpl@guide";
+                _ => "";
+            };
+        }
+
+        return result;
+    }
+}

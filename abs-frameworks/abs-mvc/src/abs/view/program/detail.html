@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Input Program</title>
+</head>
+<body>
+	<div th:replace="fragments :: menu"></div>
+	<h3>Input Program</h3>
+		<style>
+			span {
+				font-weight: bold;
+			}
+		</style>
+	
+		<label>Nama Program</label><br />
+		<span name="namaProgram" th:text="${data.namaProgram.getString()}"></span><br /><br />
+		
+		<label>Departemen</label><br />
+		<span name="departemen" th:text="${data.departemen.getString()}" ></span><br /><br />
+		
+		<label>Tempat</label><br />
+		<span name="tempat" th:text="${data.tempat.getString()}" ></span><br /><br />
+		
+		<label>Tanggal</label><br />
+		<span name="tanggal" th:text="${data.tanggal.getString()}" ></span><br /><br />
+		
+		<label>Peserta</label><br />
+		<span name="peserta" th:text="${data.peserta}" ></span><br /><br />
+		
+		<label>Penanggung Jawab</label><br />
+		<span name="penanggungJawab" th:text="${data.penanggungJawab.getString()}" ></span><br /><br />
+		
+		<label>Biaya</label><br />
+		<span name="biaya" th:text="${data.biaya}" ></span><br /><br />
+	
+	<div th:replace="fragments :: footer"></div>
+</body>
+</html>

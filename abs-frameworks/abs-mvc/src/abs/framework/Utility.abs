@@ -1,0 +1,202 @@
+module ABS.Framework.Utility;
+
+export Utility, UtilityImpl;
+
+interface Utility
+{
+    Int stringToInteger(String s);
+	Rat stringToRational(String s);
+}
+
+class UtilityImpl implements Utility
+{
+    Int stringToInteger(String s)
+    {
+		String inputString = s;
+        Int length = strlen(inputString);
+        Int output = 0;
+
+        if(length < 1)
+        {
+            output = -1; // TODO: Should raise an exception
+        }
+        else
+        {
+            Bool negative = this.isNegativeNumber(inputString);
+
+            if(negative)
+            {
+                inputString = substr(inputString, 1, length - 1);
+            }
+
+            length = strlen(inputString);
+            Int idx = 0;
+            Int tens = this.power(1, length);
+
+            while(idx < length)
+            {
+                // Parse the first digit
+                String ch = substr(inputString, 0, 1);
+                Int digit = this.parseDigit(ch);
+
+                // Multiply the digit to its "tens" values
+                Int temp = digit * tens;
+
+                // And add it to the output
+                output = output + temp;
+
+                // Move to the next digit
+                idx = idx + 1;
+                tens = tens / 10;
+
+                // Reduce string to exclude parsed first digit
+                Int remainingLength = strlen(inputString);
+                inputString = substr(inputString, 1, remainingLength - 1);
+            }
+
+            if(negative)
+            {
+                output = output * -1;
+            }
+        }
+
+        return output;
+    }
+	
+	Rat stringToRational(String s)
+    {
+		String inputString = s;
+        Int length = strlen(inputString);
+        Rat output = 0;
+
+        if(length < 1)
+        {
+            output = -1; // TODO: Should raise an exception
+        }
+        else
+        {
+            Bool negative = this.isNegativeNumber(inputString);
+
+            if(negative)
+            {
+                inputString = substr(inputString, 1, length - 1);
+            }
+
+            length = strlen(inputString);
+            Int idx = 0;
+            Int tens = this.power(1, length);
+
+            while(idx < length)
+            {
+                // Parse the first digit
+                String ch = substr(inputString, 0, 1);
+                Int digit = this.parseDigit(ch);
+
+                // Multiply the digit to its "tens" values
+                Int temp = digit * tens;
+
+                // And add it to the output
+                output = output + temp;
+
+                // Move to the next digit
+                idx = idx + 1;
+                tens = tens / 10;
+
+                // Reduce string to exclude parsed first digit
+                Int remainingLength = strlen(inputString);
+                inputString = substr(inputString, 1, remainingLength - 1);
+            }
+
+            if(negative)
+            {
+                output = output * -1;
+            }
+        }
+
+        return output;
+    }
+
+    Int power(Int a, Int b)
+    {
+        Int result = a;
+        Int n = b;
+
+        while(n > 1)
+        {
+            result = result * 10;
+            n = n - 1;
+        }
+
+        return result;
+    }
+
+    Int parseDigit(String ch)
+    {
+    	Int output = -1;
+
+        if(ch == "0")
+        {
+            output = 0;
+        }
+        else if(ch == "1")
+        {
+            output = 1;
+        }
+        else if(ch == "2")
+        {
+            output = 2;
+        }
+        else if(ch == "3")
+        {
+            output = 3;
+        }
+        else if(ch == "4")
+        {
+            output = 4;
+        }
+        else if(ch == "5")
+        {
+            output = 5;
+        }
+        else if(ch == "6")
+        {
+            output = 6;
+        }
+        else if(ch == "7")
+        {
+            output = 7;
+        }
+        else if(ch == "8")
+        {
+            output = 8;
+        }
+        else if(ch == "9")
+        {
+            output = 9;
+        }
+        else
+        {
+            output = -1; // TODO: Should raise an exception
+        }
+        
+        return output;
+    }
+
+    Bool isNegativeNumber(String s)
+    {
+        Int length = strlen(s);
+        String firstDigit = substr(s, 0, 1);
+        Bool result = False;
+
+        if(firstDigit == "-")
+        {
+            result = True;
+        }
+        else
+        {
+            result = False;
+        }
+        
+        return result;
+    }
+}

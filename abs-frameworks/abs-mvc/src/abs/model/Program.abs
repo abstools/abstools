@@ -1,0 +1,93 @@
+module MProgramModel;
+
+export Program, ProgramImpl, ProgramDb, ProgramDbImpl;
+import * from ABS.FLI;
+
+interface Program
+{
+	Unit setIdProgram(Int idProgram);
+	Int getIdProgram();
+	Unit setNamaProgram(String namaProgram);
+	String getNamaProgram();
+	Unit setDepartemen(String departemen);
+	String getDepartemen();	
+	Unit setTempat(String tempat);
+	String getTempat();	
+	Unit setTanggal(String tanggal);
+	String getTanggal();
+	Unit setPeserta(Int peserta);
+	Int getPeserta();
+	Unit setPenanggungJawab(String penanggungJawab);
+	String getPenanggungJawab();
+	Unit setBiaya(Rat biaya);
+	Rat getBiaya();		
+}
+
+class ProgramImpl implements Program
+{
+	[PK]Int idProgram = 0;
+	String namaProgram = "";
+	String departemen = "";
+	String tempat = "";
+	String tanggal = "";
+	Int peserta = 0;
+	String penanggungJawab = "";
+	Rat biaya = 0;
+	
+	Unit setIdProgram(Int idProgram) {this.idProgram = idProgram;}
+	Int getIdProgram() {return this.idProgram;}
+	Unit setNamaProgram(String namaProgram) {this.namaProgram = namaProgram;}
+	String getNamaProgram() {return this.namaProgram;}
+	Unit setDepartemen(String departemen) {this.departemen = departemen;}
+	String getDepartemen() {return this.departemen;}
+	Unit setTempat(String tempat) {this.tempat = tempat;}
+	String getTempat() {return this.tempat;}
+	Unit setTanggal(String tanggal) {this.tanggal = tanggal;}
+	String getTanggal() {return this.tanggal;}
+	Unit setPeserta(Int peserta) {this.peserta = peserta;}
+	Int getPeserta() {return this.peserta;}
+	Unit setPenanggungJawab(String penanggungJawab) {this.penanggungJawab = penanggungJawab;}
+	String getPenanggungJawab() {return this.penanggungJawab;}
+	Unit setBiaya(Rat biaya) {this.biaya = biaya;}
+	Rat getBiaya() {return this.biaya;}
+}
+
+
+interface ProgramDb {
+	List<Program> findAll(String className);
+	List<Program> findAllByAttributes(String className, String query);
+	Program find(String className);
+	Program findByAttributes(String className, String query);
+	Unit save(Program object);
+	Unit delete(Program object);
+	Program update(Program object);
+	String log(String log);
+}
+	
+[Foreign]
+class ProgramDbImpl implements ProgramDb {
+	List<Program> findAllByAttributes(String className, String query) {
+		return Nil;
+	}
+	List<Program> findAll(String className) {
+		return Nil;
+	}
+	Program findByAttributes(String className, String query) {
+		return new local ProgramImpl();
+	}
+	Program find(String className) {
+		return new local ProgramImpl();
+	}
+	Unit save(Program object) {
+		
+	}
+	Unit delete(Program object) {
+	
+	}
+	Program update(Program object) {
+		return new local ProgramImpl();
+	}
+	String log(String log) {
+		return "return log";
+	}
+}

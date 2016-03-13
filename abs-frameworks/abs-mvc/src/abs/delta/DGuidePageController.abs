@@ -1,0 +1,15 @@
+delta DGuidePageController;
+uses MProgramController;
+
+modifies interface ProgramController 
+{
+    adds Pair<String, List<String>> guide(ABSHttpRequest request);
+}
+
+modifies class ProgramControllerImpl 
+{
+    adds Pair<String, List<String>> guide(ABSHttpRequest request) 
+    {
+        return Pair("guide", Nil);
+    }
+}

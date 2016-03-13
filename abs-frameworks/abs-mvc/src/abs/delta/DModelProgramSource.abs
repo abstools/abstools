@@ -1,0 +1,23 @@
+delta DProgramSource;
+uses MProgramModel;
+
+modifies interface Program 
+{
+	adds Unit setSumberDana(String sumberDana);
+	adds String getSumberDana();
+}
+
+modifies class ProgramImpl
+{
+	adds String sumberDana = "";
+	
+	adds Unit setSumberDana(String sumberDana)
+    {
+        this.sumberDana = sumberDana;
+    }
+
+    adds String getSumberDana()
+    {
+        return this.sumberDana;
+    } 
+}

@@ -1,0 +1,169 @@
+module MProgramController;
+import Program, ProgramImpl, ProgramDb, ProgramDbImpl from MProgramModel;
+import ABSHttpRequest from ABS.Framework.Http;
+import Utility, UtilityImpl from ABS.Framework.Utility;
+
+interface ProgramController
+{
+	Pair<String, List<Program>> list(ABSHttpRequest request);
+	Pair<String, List<Program>> add(ABSHttpRequest request);
+	Pair<String, List<Program>> save(ABSHttpRequest request);
+	Pair<String, List<Program>> edit(ABSHttpRequest request);
+	Pair<String, List<Program>> update(ABSHttpRequest request);
+	Pair<String, List<Program>> delete(ABSHttpRequest request);
+	Pair<String, List<Program>> detail(ABSHttpRequest request);
+}
+
+class ProgramControllerImpl implements ProgramController
+{
+    Pair<String, List<Program>> list(ABSHttpRequest request)
+	{
+		ProgramDb orm = new local ProgramDbImpl();
+
+		List<Program> programs = orm.findAll("MProgramModel.ProgramImpl_c");
+		
+		List<Program> dataModel = Nil;
+
+		Int index = 0;
+		while(index < length(programs)) {
+			Program p = nth(programs, index);
+			dataModel = appendright(dataModel, p);
+			index = index + 1;
+		}
+
+		return Pair("program/list", dataModel);
+	}
+	
+	Pair<String, List<Program>> add(ABSHttpRequest request){ 
+		return Pair("program/add", Nil);
+	}
+	
+	Pair<String, List<Program>> save(ABSHttpRequest request){ 
+		Utility utility = new local UtilityImpl();
+
+		ProgramDb orm = new local ProgramDbImpl();
+		Program program = new local ProgramImpl();
+		
+		
+		String namaProgram = request.getInput("namaProgram");
+		String departemen = request.getInput("departemen");
+		String tempat = request.getInput("tempat");
+		String tanggal = request.getInput("tanggal");
+		
+		String pesertaString = request.getInput("peserta");
+		Int peserta = utility.stringToInteger(pesertaString);
+		
+		String penanggungJawab = request.getInput("penanggungJawab");
+		
+		String biayaString = request.getInput("biaya");
+		Rat biaya = utility.stringToRational(biayaString);
+		
+		program.setNamaProgram(namaProgram);
+		program.setDepartemen(departemen);
+		program.setTempat(tempat);
+		program.setTanggal(tanggal);
+		program.setPeserta(peserta);
+		program.setPenanggungJawab(penanggungJawab);
+		program.setBiaya(biaya);
+		orm.save(program);
+		orm.log(namaProgram);
+		
+		return Pair("program/add", Nil);
+	}
+	
+	Pair<String, List<Program>> edit(ABSHttpRequest request){ 
+		ProgramDb orm = new local ProgramDbImpl();
+
+		String id= request.getInput("id");
+		
+		String condition = "idProgram=" + id;
+
+		List<Program> dataModel = Nil;
+		Program p = orm.findByAttributes("MProgramModel.ProgramImpl_c",condition);
+		dataModel = appendright(dataModel, p);
+
+		return Pair("program/edit", dataModel);	
+	}
+	
+	
+	Pair<String, List<Program>> update(ABSHttpRequest request){ 
+		Utility utility = new local UtilityImpl();
+
+		String id= request.getInput("idProgram");
+		
+		String condition = "idProgram=" + id;
+		
+		ProgramDb orm = new local ProgramDbImpl();
+		Program program = orm.findByAttributes("MProgramModel.ProgramImpl_c",condition);
+		
+		
+		String namaProgram = request.getInput("namaProgram");
+		String departemen = request.getInput("departemen");
+		String tempat = request.getInput("tempat");
+		String tanggal = request.getInput("tanggal");
+		
+		String pesertaString = request.getInput("peserta");
+		Int peserta = utility.stringToInteger(pesertaString);
+		
+		String penanggungJawab = request.getInput("penanggungJawab");
+		
+		String biayaString = request.getInput("biaya");
+		Rat biaya = utility.stringToRational(biayaString);
+		
+		program.setNamaProgram(namaProgram);
+		program.setDepartemen(departemen);
+		program.setTempat(tempat);
+		program.setTanggal(tanggal);
+		program.setPeserta(peserta);
+		program.setPenanggungJawab(penanggungJawab);
+		program.setBiaya(biaya);
+		orm.update(program);
+		orm.log(namaProgram);
+		
+		
+		List<Program> dataModel = Nil;
+		dataModel = appendright(dataModel, program);
+		
+		return Pair("program/edit", dataModel);
+	}
+	
+	
+	
+	Pair<String, List<Program>> delete(ABSHttpRequest request){ 
+		String id= request.getInput("id");
+		
+		String condition = "idProgram=" + id;
+		ProgramDb orm = new local ProgramDbImpl();
+		Program program = orm.findByAttributes("MProgramModel.ProgramImpl_c",condition);
+		orm.delete(program);
+		
+		List<Program> programs = orm.findAll("MProgramModel.ProgramImpl_c");
+		
+		List<Program> dataModel = Nil;
+
+		Int index = 0;
+		while(index < length(programs)) {
+			Program p = nth(programs, index);
+			dataModel = appendright(dataModel, p);
+			index = index + 1;
+		}
+
+		return Pair("program/list", dataModel);
+	}
+	
+	
+	Pair<String, List<Program>> detail(ABSHttpRequest request){ 
+		ProgramDb orm = new local ProgramDbImpl();
+
+		String id= request.getInput("id");
+		
+		String condition = "idProgram=" + id;
+
+		List<Program> dataModel = Nil;
+		Program p = orm.findByAttributes("MProgramModel.ProgramImpl_c",condition);
+		dataModel = appendright(dataModel, p);
+
+		return Pair("program/detail", dataModel);
+	}
+}
+

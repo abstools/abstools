@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Input Program</title>
+</head>
+<body>
+	<div th:replace="fragments :: menu"></div>
+	<h3>Input Program</h3>
+	
+	<form method="POST" th:action="${requestContextPath + '/program/save.abs'}" action="/ABS/program/update.abs">
+		<input type="hidden" name="idProgram" th:value="${data.idProgram}" />
+	
+		<label>Nama Program</label><br />
+		<input type="text" name="namaProgram" th:value="${data.namaProgram.getString()}" /><br /><br />
+		
+		<label>Departemen</label><br />
+		<input type="text" name="departemen" th:value="${data.departemen.getString()}" /><br /><br />
+		
+		<label>Tempat</label><br />
+		<input type="text" name="tempat" th:value="${data.tempat.getString()}" /><br /><br />
+		
+		<label>Tanggal</label><br />
+		<input type="text" name="tanggal" th:value="${data.tanggal.getString()}" /><br /><br />
+		
+		<label>Peserta</label><br />
+		<input type="text" name="peserta" th:value="${data.peserta}" /><br /><br />
+		
+		<label>Penanggung Jawab</label><br />
+		<input type="text" name="penanggungJawab" th:value="${data.penanggungJawab.getString()}" /><br /><br />
+		
+		<label>Biaya</label><br />
+		<input type="text" name="biaya" th:value="${data.biaya}" /><br /><br />
+		
+		<label>Sumber Dana</label><br />
+		<input type="text" name="sumberDana" th:value="${data.sumberDana.getString()}" /><br /><br />
+		
+		<input type="submit" value="ubah" />
+	</form>
+	
+	<div th:replace="fragments :: footer"></div>
+</body>
+</html>

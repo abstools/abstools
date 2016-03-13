@@ -1,0 +1,30 @@
+/**
+ * CSS styles for ECom Base Product.
+ * 
+ * Based on: https://github.com/IronSummitMedia/startbootstrap-shop-homepage/
+ * blob/gh-pages/css/shop-homepage.css
+ */
+
+body {
+    padding-top: 70px;
+}
+
+.caption {
+    height: 130px;
+    overflow: hidden;
+}
+
+.caption h4 {
+    white-space: nowrap;
+}
+
+footer {
+    margin: 50 px 0;
+}
+
+table caption {
+	font-size: 16px;
+	font-weight: bold;
+	text-align: center;
+	display: table-caption;
+}

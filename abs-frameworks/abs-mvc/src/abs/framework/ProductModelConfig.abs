@@ -1,0 +1,23 @@
+// Product line and features
+productline SistemKeuangan;
+features
+    Program,
+        Source,
+        Type,
+    GuidePage;
+
+// Delta modules
+/* BEGIN deltas for Sumber Dana */
+delta DProgramSource when Source;
+/* END */
+
+/* BEGIN deltas for GuidePage */
+//delta DGuidePageController when GuidePage;
+//delta DGuidePageRoute after DGuidePageController when GuidePage;
+/* END */
+
+
+/* BEGIN deltas for Form Source */
+//delta DFormSourceController after DProgramSource when Source;
+/* END */
+

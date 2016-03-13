@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Input Program</title>
+</head>
+<body>
+	<div th:replace="fragments :: menu"></div>
+	<h3>Input Program</h3>
+	
+	<form method="POST" th:action="${requestContextPath + '/program/update.abs'}" action="/ABS/program/update.abs">
+		<input type="hidden" name="idProgram" th:value="${data.idProgram}" />
+	
+		<label>Nama Program</label><br />
+		<input type="text" name="namaProgram" th:value="${data.namaProgram.getString()}" required="required" /><br /><br />
+		
+		<label>Departemen</label><br />
+		<input type="text" name="departemen" th:value="${data.departemen.getString()}" required="required" /><br /><br />
+		
+		<label>Tempat</label><br />
+		<input type="text" name="tempat" th:value="${data.tempat.getString()}" required="required" /><br /><br />
+		
+		<label>Tanggal</label><br />
+		<input type="text" name="tanggal" th:value="${data.tanggal.getString()}" placeholder="yyyy-mm-dd" pattern="[0-9]{4}(-)[0-9]{2}(-)[0-9]{2}" required="required" /><br /><br />
+		
+		<label>Peserta</label><br />
+		<input type="text" name="peserta" th:value="${data.peserta}" required="required" /><br /><br />
+		
+		<label>Penanggung Jawab</label><br />
+		<input type="text" name="penanggungJawab" th:value="${data.penanggungJawab.getString()}" required="required" /><br /><br />
+		
+		<label>Biaya</label><br />
+		<input type="text" name="biaya" th:value="${data.biaya}" required="required" /><br /><br />
+		
+		<input type="submit" value="ubah" />
+	</form>
+	
+	<div th:replace="fragments :: footer"></div>
+</body>
+</html>

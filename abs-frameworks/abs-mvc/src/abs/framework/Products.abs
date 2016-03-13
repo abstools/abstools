@@ -1,0 +1,18 @@
+// Define your product(s) here.
+product Default(
+    Program,
+		Type
+);
+
+product SistemKeuanganBO(
+    Program,
+		Type,
+	GuidePage
+);
+
+product SistemKeuanganBSO(
+    Program,
+		Type,
+		Source,
+	GuidePage
+);
