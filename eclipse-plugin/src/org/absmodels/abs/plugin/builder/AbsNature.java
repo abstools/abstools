@@ -37,7 +37,7 @@ import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
-import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticCondition;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
@@ -220,14 +220,15 @@ public class AbsNature implements IProjectNature {
     }
 
     public void createMarkers(SemanticConditionList errors) throws CoreException {
-        for (SemanticError e : errors) {
+        for (SemanticCondition e : errors) {
             createMarker(e);
         }
     }
 	
-	public void createMarker(SemanticError error) throws CoreException {
-            // TODO: create Warning, Error markers
-		createMarker(error.getNode(), error.getMsg(), IMarker.SEVERITY_ERROR, TYPECHECK_MARKER_TYPE);
+	public void createMarker(SemanticCondition error) throws CoreException {
+            createMarker(error.getNode(), error.getMsg(),
+                         error.isError() ? IMarker.SEVERITY_ERROR : IMarker.SEVERITY_WARNING,
+                         TYPECHECK_MARKER_TYPE);
 	}
 
 	/**

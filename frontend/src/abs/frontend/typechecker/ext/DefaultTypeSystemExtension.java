@@ -4,7 +4,7 @@
  */
 package abs.frontend.typechecker.ext;
 
-import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticCondition;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.Type;
@@ -23,7 +23,7 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
         errors = s;
     }
 
-    protected boolean add(SemanticError e) {
+    protected boolean add(SemanticCondition e) {
         return errors.add(e);
     }
     

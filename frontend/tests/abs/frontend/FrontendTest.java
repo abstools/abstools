@@ -11,7 +11,7 @@ import java.util.Set;
 
 import abs.ABSTest;
 import abs.frontend.analyser.ErrorMessage;
-import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticCondition;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.CaseBranch;
@@ -178,16 +178,16 @@ public class FrontendTest extends ABSTest {
         assertTypeErrors(absCode, WITH_STD_LIB);
     }
 
-    protected SemanticError assertTypeErrors(String absCode) {
+    protected SemanticCondition assertTypeErrors(String absCode) {
         return assertTypeErrors(absCode, EXPECT_TYPE_ERROR, WITH_STD_LIB);
     }
 
     protected void assertTypeErrors(String absCode, ErrorMessage expected) {
-        SemanticError e = assertTypeErrors(absCode, EXPECT_TYPE_ERROR, WITH_STD_LIB);
+        SemanticCondition e = assertTypeErrors(absCode, EXPECT_TYPE_ERROR, WITH_STD_LIB);
         assertEquals(expected,e.msg);
     }
 
-    protected SemanticError assertTypeErrors(String absCode, Config... config) {
+    protected SemanticCondition assertTypeErrors(String absCode, Config... config) {
         Model m = assertParse(absCode, config);
         String msg = "";
         SemanticConditionList l = m.typeCheck();

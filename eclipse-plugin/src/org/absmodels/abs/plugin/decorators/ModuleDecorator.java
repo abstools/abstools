@@ -28,7 +28,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.LabelProviderChangedEvent;
 import org.eclipse.ui.PlatformUI;
 
-import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticCondition;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
@@ -164,7 +164,7 @@ public class ModuleDecorator extends LabelProvider implements ILightweightLabelD
 		synchronized (nature.modelLock) {
 			if (list != null) {
                               if (list.containsErrors()) {
-					for (SemanticError err : list) {
+					for (SemanticCondition err : list) {
 						ASTNode<?> node = err.getNode();
 						int line = err.getLine();
 						CompilationUnit cu = node.getCompilationUnit();

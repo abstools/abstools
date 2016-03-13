@@ -22,7 +22,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import abs.frontend.FrontendTest;
-import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticCondition;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
@@ -73,13 +73,13 @@ public class CaseStudyTypeChecking extends FrontendTest {
             int numSemErrs = m.getErrors().getErrorCount();
             StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
             if (numSemErrs > 0) {
-                for (SemanticError error : m.getErrors())
+                for (SemanticCondition error : m.getErrors())
                     errs = errs.append(error.getHelpMessage() + "\n");
                 fail("Failed to parse: " + srcFolder + "\n" + errs.toString());
             } else if (isSet(TYPE_CHECK, config)) {
                 SemanticConditionList l = m.typeCheck();
                 if (l.containsErrors()) {
-                    for (SemanticError error : l)
+                    for (SemanticCondition error : l)
                         errs = errs.append(error.getHelpMessage() + "\n");
                     fail("Failed to typecheck: " + srcFolder + "\n" + errs.toString());
                 }

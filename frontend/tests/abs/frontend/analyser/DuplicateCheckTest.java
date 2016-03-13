@@ -50,7 +50,7 @@ public class DuplicateCheckTest extends FrontendTest {
         assertEndsWith(p.typeCheck().getFirstError(), DUPLICATE_FUN_NAME.withArgs("zero"));
     }
 
-    private void assertEndsWith(SemanticError expected, String actual) {
+    private void assertEndsWith(SemanticCondition expected, String actual) {
         assertTrue("Expected that " + expected.getHelpMessage() + " ends with " + actual, expected.getHelpMessage()
                 .endsWith(actual));
     }

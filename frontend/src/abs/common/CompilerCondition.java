@@ -11,7 +11,7 @@ import java.io.FileReader;
 import java.io.Reader;
 import java.io.StringReader;
 
-public abstract class CompilerError {
+public abstract class CompilerCondition {
 
     protected File file;
     private String sourceCode;
@@ -135,6 +135,8 @@ public abstract class CompilerError {
 
     public abstract int getLine();
     
+    public abstract boolean isError();
+
     @Override
     public String toString() {
         StringBuffer buf = new StringBuffer();

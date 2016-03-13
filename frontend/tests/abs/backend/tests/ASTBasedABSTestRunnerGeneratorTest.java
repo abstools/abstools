@@ -33,7 +33,7 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.Test;
 
-import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticCondition;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.InterfaceDecl;
@@ -280,7 +280,7 @@ public class ASTBasedABSTestRunnerGeneratorTest {
                 errors.append("Semantic errors: ");
                 errors.append(el.getErrorCount());
                 errors.append("\n");
-                for (SemanticError error : el) {
+                for (SemanticCondition error : el) {
                     errors.append(error.getHelpMessage());
                     errors.append("\n");
                 }

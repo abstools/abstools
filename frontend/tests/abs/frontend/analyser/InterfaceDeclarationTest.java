@@ -53,7 +53,7 @@ public class InterfaceDeclarationTest extends FrontendTest {
     public void mutuallyCircular() {
         Model p = assertParseOk("interface I extends J {} interface J extends I {} {}");
         assertEquals(2,p.getErrors().getErrorCount());
-        Iterator<SemanticError> i = p.getErrors().iterator();
+        Iterator<SemanticCondition> i = p.getErrors().iterator();
         assertEndsWith(i.next(), CYCLIC_INHERITANCE.withArgs("I"));
         assertEndsWith(i.next(), CYCLIC_INHERITANCE.withArgs("J"));
     }
@@ -62,13 +62,13 @@ public class InterfaceDeclarationTest extends FrontendTest {
     public void mutuallyCircularIndirect() {
         Model p = assertParseOk("interface I extends J {}  interface J extends K {}  interface K extends I {}");
         assertEquals(3,p.getErrors().getErrorCount());
-        Iterator<SemanticError> i = p.getErrors().iterator();
+        Iterator<SemanticCondition> i = p.getErrors().iterator();
         assertEndsWith(i.next(), CYCLIC_INHERITANCE.withArgs("I"));
         assertEndsWith(i.next(), CYCLIC_INHERITANCE.withArgs("J"));
         assertEndsWith(i.next(), CYCLIC_INHERITANCE.withArgs("K"));
     }
 
-    private void assertEndsWith(SemanticError expected, String actual) {
+    private void assertEndsWith(SemanticCondition expected, String actual) {
         assertTrue("Expected that " + expected.getHelpMessage() + " ends with " + actual, expected.getHelpMessage()
                 .endsWith(actual));
     }

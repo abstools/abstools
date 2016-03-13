@@ -6,7 +6,7 @@ package org.absmodels.abs.plugin.exceptions;
 
 import java.util.List;
 
-import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticCondition;
 import abs.frontend.analyser.SemanticConditionList;
 
 public class TypeCheckerException extends Exception{
@@ -21,7 +21,7 @@ public class TypeCheckerException extends Exception{
 	
 	private static String getMessage(SemanticConditionList typeErrors){
 		StringBuffer result = new StringBuffer("Project contains parse errors: ");
-		for(SemanticError error : typeErrors){
+		for(SemanticCondition error : typeErrors){
 			//TODO: newline doesn't work ):
 			result.append('\n');
 			result.append(error.getFileName());

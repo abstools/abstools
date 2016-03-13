@@ -10,9 +10,10 @@ import java.util.Iterator;
 import abs.frontend.typechecker.TypeCheckerException;
 
 @SuppressWarnings("serial")
-public class SemanticConditionList implements Iterable<SemanticError> {
+public class SemanticConditionList implements Iterable<SemanticCondition> {
 
-    ArrayList<SemanticError> contents = new ArrayList<SemanticError>();
+    ArrayList<SemanticCondition> contents = new ArrayList<SemanticCondition>();
+    boolean containsErrors = false;
 
     public SemanticConditionList() {}
     
@@ -21,33 +22,41 @@ public class SemanticConditionList implements Iterable<SemanticError> {
     }
 
     // Iterable protocol
-    public Iterator<SemanticError> iterator() {
+    public Iterator<SemanticCondition> iterator() {
         return contents.iterator();
     }
 
     public boolean containsErrors() {
-        // Prepare for this list to contain warnings as well, which should not
-        // abort the compilation
-        return !contents.isEmpty();
+        return containsErrors;
     }
 
     public int getErrorCount() {
-        return contents.size();
+        int count = 0;
+        for (SemanticCondition c : contents) {
+            if (c.isError()) count = count + 1;
+        }
+        return count;
     }
 
-    public SemanticError getFirstError() {
-        return contents.get(0);
+    public SemanticCondition getFirstError() {
+        for (SemanticCondition c : contents) {
+            if (c.isError()) return c;
+        }
+        return null;
     }
 
     public boolean add(TypeCheckerException e) {
+        containsErrors = true;
         return contents.add(e.getTypeError());
     }
     
-    public boolean add(SemanticError e) {
+    public boolean add(SemanticCondition e) {
+        if (e.isError()) containsErrors = true;
         return contents.add(e);
     }
 
     public boolean addAll(SemanticConditionList l) {
+        if (!containsErrors) containsErrors = l.containsErrors();
         return contents.addAll(l.contents);
     }
 
@@ -55,7 +64,7 @@ public class SemanticConditionList implements Iterable<SemanticError> {
     public String toString() {
         StringBuffer buf = new StringBuffer();
         boolean first = true;
-        for(SemanticError e : contents) {
+        for(SemanticCondition e : contents) {
             if (!first)
                 buf.append(',');
             buf.append(e.toString());

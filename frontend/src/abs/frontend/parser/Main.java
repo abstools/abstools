@@ -27,7 +27,7 @@ import choco.kernel.model.constraints.Constraint;
 import abs.frontend.mtvl.ChocoSolver;
 import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
-import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticCondition;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.antlr.parser.ABSParserWrapper;
 import abs.frontend.ast.*;
@@ -284,7 +284,7 @@ public class Main {
             if (semErrs.containsErrors()) {
                 System.err.println("Semantic errors: " + semErrs.getErrorCount());
             }
-            for (SemanticError error : semErrs) {
+            for (SemanticCondition error : semErrs) {
                 // Print both errors and warnings
                 System.err.println(error.getHelpMessage());
                 System.err.flush();
@@ -528,7 +528,7 @@ public class Main {
 
             registerLocationTypeChecking(m);
             SemanticConditionList typeerrors = m.typeCheck();
-            for (SemanticError se : typeerrors) {
+            for (SemanticCondition se : typeerrors) {
                 System.err.println(se.getHelpMessage());
             }
         }
@@ -558,7 +558,7 @@ public class Main {
             System.out.println("Typechecking Software Product Line...");
 
         SemanticConditionList typeerrors = m.typeCheckPL();
-        for (SemanticError se : typeerrors) {
+        for (SemanticCondition se : typeerrors) {
             System.err.println(se.getHelpMessage());
         }
     }
