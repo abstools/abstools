@@ -303,7 +303,7 @@ value.")
 
 (unless (assoc 'abs compilation-error-regexp-alist-alist)
   (add-to-list 'compilation-error-regexp-alist-alist
-               (list 'abs abs-error-regexp 1 2 3 (4))))
+               (list 'abs abs-error-regexp 1 2 3 '(4))))
 
 ;;; flymake support
 (defun abs-flymake-init ()
