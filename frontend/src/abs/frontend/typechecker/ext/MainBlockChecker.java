@@ -17,7 +17,6 @@ public class MainBlockChecker extends DefaultTypeSystemExtension {
     @Override
     public void checkModel(Model model) {
         int nMainBlocks = 0;
-        String moduleName = null;
         for (CompilationUnit u : model.getCompilationUnits()) {
             for (ModuleDecl m : u.getModuleDecls()) {
                 if (m.hasBlock()) {
@@ -30,7 +29,14 @@ public class MainBlockChecker extends DefaultTypeSystemExtension {
             errors.add(new SemanticWarning(c, ErrorMessage.MAIN_BLOCK_NOT_FOUND, "dummy string to keep constructor happy"));
         } else if (nMainBlocks > 1) {
             Block b = model.getMainBlock();
-            errors.add(new SemanticWarning(b, ErrorMessage.MAIN_BLOCK_AMBIGUOUS, ((ModuleDecl)(b.getParent().getParent())).getName()));
+            String moduleName = ((ModuleDecl)(b.getParent().getParent())).getName();
+            for (CompilationUnit u : model.getCompilationUnits()) {
+                for (ModuleDecl m : u.getModuleDecls()) {
+                    if (m.hasBlock() && m.getBlock() != b) {
+                        errors.add(new SemanticWarning(m.getBlock(), ErrorMessage.MAIN_BLOCK_AMBIGUOUS, moduleName));
+                    }
+                }
+            }
         }
     }
 }
