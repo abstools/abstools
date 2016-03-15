@@ -441,7 +441,11 @@ value.")
                                      (concat "runtime:start(\""
                                              (when debug-output " -d ")
                                              (when clock-limit (format " -l %d " clock-limit))
-                                             module
+                                             ;; FIXME: reinstate `module' arg
+                                             ;; once abs--guess-module doesn't
+                                             ;; pick a module w/o main block
+
+                                             ;; module
                                              "\").\n")))
                (pop-to-buffer erlang-buffer)))
     (`java (let ((java-buffer (save-excursion (shell "*abs java*")))
