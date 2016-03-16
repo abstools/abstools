@@ -45,7 +45,7 @@ public class OtherAnalysisTests extends FrontendTest {
     @Test
     public void fullcopyTest() {
         Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
-        Model m2 = m.fullCopy();
+        Model m2 = m.treeCopyNoTransform();
         assertFalse(m.hasErrors());
         assertFalse(m2.hasErrors());
     }
@@ -53,7 +53,7 @@ public class OtherAnalysisTests extends FrontendTest {
     @Test
     public void fullcopyTest1() {
         Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
-        Model m2 = m.fullCopy();
+        Model m2 = m.treeCopyNoTransform();
         assertFalse(m.hasErrors());
         assertFalse(m2.hasErrors());
         assertTrue(!m.typeCheck().containsErrors());
@@ -65,7 +65,7 @@ public class OtherAnalysisTests extends FrontendTest {
         Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
         assertFalse(m.hasErrors());
         assertTrue(m.typeCheck().toString(),!m.typeCheck().containsErrors());
-        Model m2 = m.fullCopy();
+        Model m2 = m.treeCopyNoTransform();
         assertFalse(m2.hasErrors());
         assertTrue(m2.typeCheck().toString(),!m2.typeCheck().containsErrors());
     }

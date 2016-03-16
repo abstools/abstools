@@ -91,7 +91,7 @@ public class ASTPreProcessor {
         TypeUse paramType;
         if (dtd instanceof ParametricDataTypeDecl) {
             ParametricDataTypeDecl pdtd = (ParametricDataTypeDecl) dtd;
-            typeParams = (delta) ? pdtd.getTypeParameterList().fullCopy() : pdtd.getTypeParameterList();
+            typeParams = (delta) ? pdtd.getTypeParameterList().treeCopyNoTransform() : pdtd.getTypeParameterList();
             List<TypeUse> typeParams2 = new List<TypeUse>();
             for (TypeParameterDecl p : typeParams) {
                 typeParams2.add(p.getType().toUse());

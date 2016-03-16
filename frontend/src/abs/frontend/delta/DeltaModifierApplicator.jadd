@@ -24,7 +24,7 @@ aspect DeltaModifierApplicator {
     
     public void AddClassModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
-        ClassDecl cls = getClassDecl().fullCopy();
+        ClassDecl cls = getClassDecl().treeCopyNoTransform();
         cls.setFileName(getClassDecl().getFileName());
         cls.setName(getSimpleName());
         module.getDecls().addChild(cls);
@@ -45,7 +45,7 @@ aspect DeltaModifierApplicator {
         
         // add any interfaces added by the ClassModifier
         for (InterfaceTypeUse iface : this.getAddedInterfaces()) {
-            InterfaceTypeUse iface2 = iface.fullCopy();
+            InterfaceTypeUse iface2 = iface.treeCopyNoTransform();
             iface2.setFileName(iface.getFileName());
             cls.addImplementedInterfaceUse(iface2);
         }
@@ -75,7 +75,7 @@ aspect DeltaModifierApplicator {
     public void AddInterfaceModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
         assert module.lookup(new KindedName(Kind.TYPE_DECL, getSimpleName())).isUnknown();
-        InterfaceDecl decl = getInterfaceDecl().fullCopy();
+        InterfaceDecl decl = getInterfaceDecl().treeCopyNoTransform();
         decl.setFileName(getInterfaceDecl().getFileName());
         decl.setName(getSimpleName());
         module.getDecls().addChild(decl);
@@ -104,7 +104,7 @@ aspect DeltaModifierApplicator {
     
     public void AddFunctionModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
-        FunctionDecl func = getFunctionDecl().fullCopy();
+        FunctionDecl func = getFunctionDecl().treeCopyNoTransform();
         func.setFileName(getFunctionDecl().getFileName());
         module.getDecls().addChild(func);
     }
@@ -116,7 +116,7 @@ aspect DeltaModifierApplicator {
     public void AddDataTypeModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
         
-        DataTypeDecl dtd = this.getDataTypeDecl().fullCopy();
+        DataTypeDecl dtd = this.getDataTypeDecl().treeCopyNoTransform();
         dtd.setFileName(getDataTypeDecl().getFileName());
         module.getDecls().addChild(dtd);
         for (DataConstructor c : dtd.getDataConstructors()) {
@@ -136,7 +136,7 @@ aspect DeltaModifierApplicator {
     
     public void AddTypeSynModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
-        TypeSynDecl type = getTypeSynDecl().fullCopy();
+        TypeSynDecl type = getTypeSynDecl().treeCopyNoTransform();
         type.setFileName(getTypeSynDecl().getFileName());
         module.getDecls().addChild(type);
     }
@@ -152,7 +152,7 @@ aspect DeltaModifierApplicator {
             throw new DeltaModellingException(getDelta(), 
                 " wants to modify type synonym [" + this.getSimpleName() + "], which was not found in module [" + module.getName() + "].");
         } else {
-            syndecl.setValue((TypeUse) getTypeSynDecl().getValue().fullCopy());
+            syndecl.setValue((TypeUse) getTypeSynDecl().getValue().treeCopyNoTransform());
         }
     }
 
@@ -167,10 +167,10 @@ aspect DeltaModifierApplicator {
             throw new DeltaModellingException(getDelta(), 
                 " wants to modify datatype [" + this.getSimpleName() + "], which was not found in module [" + module.getName() + "].");
         } else {
-            datatypedecl.setDataConstructorList(this.getDataTypeDecl().getDataConstructorList().fullCopy());
+            datatypedecl.setDataConstructorList(this.getDataTypeDecl().getDataConstructorList().treeCopyNoTransform());
             if (datatypedecl instanceof ParametricDataTypeDecl
                 && this.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
-                ((ParametricDataTypeDecl)datatypedecl).setTypeParameterList(((ParametricDataTypeDecl)this.getDataTypeDecl()).getTypeParameterList().fullCopy());
+                ((ParametricDataTypeDecl)datatypedecl).setTypeParameterList(((ParametricDataTypeDecl)this.getDataTypeDecl()).getTypeParameterList().treeCopyNoTransform());
             } else {
                 throw new DeltaModellingException(getDelta(), 
                     " wants to convert datatype [" + this.getSimpleName() + "] from or to a parametric datatype, which is not supported yet.");
@@ -184,12 +184,12 @@ aspect DeltaModifierApplicator {
      */
     public void AddImportModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
-        module.addImport((Import)getImport().fullCopy());
+        module.addImport((Import)getImport().treeCopyNoTransform());
         
     }
     public void AddExportModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
-        module.addExport((Export)getExport().fullCopy());
+        module.addExport((Export)getExport().treeCopyNoTransform());
     }
     
     /**************************************************************************
@@ -287,7 +287,7 @@ aspect DeltaModifierApplicator {
     public void AddMethodModifier.applyTo(ClassDecl cd) {
         assert cd != null;
         assert getMethodImpl() != null;
-        MethodImpl method = getMethodImpl().fullCopy();
+        MethodImpl method = getMethodImpl().treeCopyNoTransform();
         method.setFileName(getMethodImpl().getFileName());
         cd.addMethod(method);
     }
@@ -306,7 +306,7 @@ aspect DeltaModifierApplicator {
         }
         if (found >= 0) {
             // replace MethodImpl
-            MethodImpl method = getMethodImpl().fullCopy();
+            MethodImpl method = getMethodImpl().treeCopyNoTransform();
             method.setFileName(getMethodImpl().getFileName());
             cd.getMethods().setChild(method, found);
         } else
@@ -334,7 +334,7 @@ aspect DeltaModifierApplicator {
     }
 
     public void AddFieldModifier.applyTo(ClassDecl cd) {
-        FieldDecl field = getFieldDecl().fullCopy();
+        FieldDecl field = getFieldDecl().treeCopyNoTransform();
         field.setFileName(getFieldDecl().getFileName());
         cd.addField(field);
     }
@@ -346,7 +346,7 @@ aspect DeltaModifierApplicator {
     public abstract void MethodSigModifier.applyTo(InterfaceDecl iface) throws DeltaModellingException;
 
     public void AddMethodSigModifier.applyTo(InterfaceDecl iface) throws DeltaModellingException {
-        MethodSig sig = getMethodSig().fullCopy();
+        MethodSig sig = getMethodSig().treeCopyNoTransform();
         sig.setFileName(getMethodSig().getFileName());
         iface.addBody(sig);
     }
