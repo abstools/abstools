@@ -20,6 +20,12 @@ aspect GenerateErlang {
   public void Model.generateErlangCode(ErlApp ea) throws IOException{
     for (ModuleDecl decl : getModuleDecls()) {
       decl.generateErlangCode(ea);
+      MainBlock mb = getMainBlock();
+      if (mb != null) {
+            String moduleName = ((ModuleDecl)(mb.getParent().getParent())).getName();
+            String erlModulename = ErlUtil.getModuleName(moduleName);
+            ea.generateModuleDefinitions(moduleName, erlModulename);
+      }
     }
    }
 
@@ -135,10 +141,6 @@ aspect GenerateErlang {
        ecs.println();
        ecs.println("stop(_State) ->");
        ecs.println("    ok.");
-
-       // Let's start the last seen module by default, hope there's
-       // only one init block in the model.
-       ea.generateModuleDefinitions(getName(), erlModulename);
      }
    }
    finally{
