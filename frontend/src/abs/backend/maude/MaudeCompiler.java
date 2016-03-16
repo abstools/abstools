@@ -104,6 +104,7 @@ public class MaudeCompiler extends Main {
      * @throws Exception
      */
     public void compile(String[] args) throws Exception {
+        if (verbose) System.out.println("Generating Erlang code...");
         final Model model = parse(args);
         if (model.hasParserErrors()
             || model.hasErrors()
@@ -122,6 +123,7 @@ public class MaudeCompiler extends Main {
         stream.println("*** Generated " + dateFormat.format(new Date()));
         ByteStreams.copy(is, stream);
         model.generateMaude(stream, module, mainBlock, clocklimit, defaultResources);
+        if (verbose) System.out.println("Finished.  Start `maude " + outputfile.toString() + "' to run the model.");
     }
 
     protected void printUsage() {

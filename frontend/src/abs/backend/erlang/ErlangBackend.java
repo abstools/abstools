@@ -99,6 +99,12 @@ public class ErlangBackend extends Main {
             throw new InternalBackendException(message);
             // TODO: consider removing the generated code here.  For now,
             // let's leave it in place for diagnosis.
+        } else {
+            if (verbose) {
+                System.out.println();
+                System.out.println("Finished.  \"gen/erl/run\" to start the model.");
+                System.out.println("          (\"gen/erl/run --help\" for more options)");
+            }
         }
     }
 
