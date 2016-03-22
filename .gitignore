@@ -20,3 +20,5 @@
 /eclipse-plugin/dist/
 /sda-plugin/dist/
 /sdedit-for-abs/dist/
+.rebar/
+ebin/
