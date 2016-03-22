@@ -86,14 +86,14 @@ rm /home/vagrant/eclipse-rcp-mars-1-linux-gtk-x86_64.tar.gz
 echo
 echo "Building the ABS compiler and eclipse plugins"
 echo
-(cd /vagrant/eclipse-plugin ; ant -Declipse.home=/opt/eclipse build-all-plugins generate-update-site)
+(cd /vagrant/eclipse/eclipse-plugin ; ant -Declipse.home=/opt/eclipse build-all-plugins generate-update-site)
 
 echo
 echo "Deploying to eclipse"
 echo
 eclipse -application org.eclipse.equinox.p2.director -noSplash \
         -repository \
-file:/vagrant/eclipse-plugin/update-site,\
+file:/vagrant/eclipse/eclipse-plugin/update-site,\
 http://download.eclipse.org/releases/mars/ \
 -installIUs \
 org.abs-models.costabs.feature.group,\

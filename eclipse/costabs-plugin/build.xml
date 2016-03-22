@@ -1,16 +1,17 @@
 <?xml version="1.0"?>
-<project name="Apet Plugin" default="compile" basedir=".">
+<project name="COSTABS Plugin" default="compile" basedir=".">
     <property name="revision.prefix" value="1.0.6" />
 
-	<property name="frontend.dir" location="../frontend" />
+	<property name="frontend.dir" location="../../frontend" />
 	<property name="absplugin.dir" location="../eclipse-plugin" />
 	<property name="src.dir" location="${basedir}/src" />
 	<property name="build.dir" location="${basedir}/bin" />
 	<property name="dist.dir" location="${basedir}/dist" />
 	<property name="ext.dir" location="${basedir}/lib" />
 	
-	<property name="plugin.name" value="eu.hatsproject.apet" />
+	<property name="plugin.name" value="eu.hatsproject.costabs" />
 	<property name="frontend.version" value="1.0.0" />
+
         <macrodef name="git-revision">
           <attribute name="output"/>
           <attribute name="failonerror" default="false" />
@@ -32,15 +33,15 @@
           </sequential>
         </macrodef>
 
-	<target name="download-apet-binary">
-	   <get src="http://costa.ls.fi.upm.es/~mzamalloa/apet_exe" 
+	<target name="download-costa-binary">
+	   <get src="http://costa.ls.fi.upm.es/~mzamalloa/costabs_exe" 
 		    dest="${basedir}"
 		    usetimestamp="true"/>
-	   <chmod perm="a+x" file="${basedir}/apet_exe" />
+	   <chmod perm="a+x" file="${basedir}/costabs_exe" />
 
 	</target>
 	
-	<target name="init" depends="download-apet-binary">
+	<target name="init" depends="download-costa-binary">
 	   <mkdir dir="${dist.dir}" />
 	   <mkdir dir="${build.dir}" />
 	    <propertyfile file="eclipsehome.properties">
@@ -102,7 +103,7 @@
 				<include name="icons/"/>
 				<include name="plugin.xml"/>
 				<include name="feature.xml"/>
-				<include name="apet_exe"/>
+				<include name="costabs_exe"/>
 			</fileset>
 			<fileset dir="${build.dir}" />
 			<!-- <fileset dir="icons/" /> -->

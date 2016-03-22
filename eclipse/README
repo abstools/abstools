@@ -1,13 +1,17 @@
-To build the Eclipse plugin, install the Eclipse Plug-in Development
-Environment (PDE), then execute:
+To build and install the Eclipse plugin, install the Eclipse Plug-in
+Development Environment (PDE), then go into the eclipse-plugin/ subdirectory
+and execute:
 
 	ant -Declipse.home=<path to eclipse> build-all-plugins generate-update-site
 
-Add local update site to Eclipse:
+Add the resulting local update site to Eclipse (Preferences -> Install/Update
+-> Available Software Sites -> Add ...):
 
-	file:<path prefix>/Tools/ABS/trunk/eclipse-plugin/update-site
+	file:<path prefix>/abstools/eclipse/eclipse-plugin/update-site
 
-Note that the Apet and Costabs (SACO) plugins only run on Linux.
+Note that the Apet and Costabs (SACO) plugins only run on Linux and will not
+be installed on Mac or Windows machines.  They do, however, run on the Eclipse
+installed in the Vagrant virtual machine.
 
 Deploy remote update site (needs access to the server):
 

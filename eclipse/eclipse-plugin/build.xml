@@ -4,7 +4,7 @@
 
   <property file="eclipsehome.properties"/>
   <property name="update-site.dir" location="${basedir}/update-site" />
-  <property name="frontend.dir" location="../frontend" />
+  <property name="frontend.dir" location="../../frontend" />
   <property name="costabs.dir" location="../costabs-plugin" />
   <property name="apet.dir" location="../apet-plugin" />
   <property name="sda.dir" location="../sda-plugin" />

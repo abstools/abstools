@@ -15,7 +15,7 @@
 	<property name="mainclass" value="net.sf.sdedit.Main"/>
 	<property name="plugin.name" value="eu.hatsproject.sdedit" />
 	<property name="dist.dir" location="${basedir}/dist" />
-	<property name="frontend.dir" location="../frontend" />
+	<property name="frontend.dir" location="../../frontend" />
 	
         <macrodef name="git-revision">
           <attribute name="output"/>
