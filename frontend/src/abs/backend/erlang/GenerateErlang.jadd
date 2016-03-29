@@ -2,6 +2,7 @@
 
 import java.io.*;
 
+import abs.common.CompilerUtils;
 import abs.frontend.ast.*;
 import abs.backend.common.CodeStream;
 import abs.backend.erlang.*;
@@ -165,7 +166,7 @@ aspect GenerateErlang {
       if(!first)
         ecs.println(",");
       first=false;
-      PureExp cost = MaudeCompilerHelper.getAnnotationValue(stmt.getAnnotationList(), "Cost");
+      PureExp cost = CompilerUtils.getAnnotationValue(stmt.getAnnotationList(), "Cost");
       if (cost != null) {
           ecs.print("task:block_for_resource(Cog,cpu,");
           cost.generateErlangCode(ecs, vars);
