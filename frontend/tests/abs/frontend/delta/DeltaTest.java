@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import abs.frontend.FrontendTest;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.TypeCheckerHelper;
 
@@ -31,7 +31,7 @@ public class DeltaTest extends FrontendTest {
         return model.findDelta(name);
     }
 
-    protected void typeCheck(Model m, ProductDecl p, SemanticErrorList e) {
+    protected void typeCheck(Model m, ProductDecl p, SemanticConditionList e) {
         Map<String,Feature> featureNames = null;
         if (m.hasProductLine()) {
             featureNames = new HashMap<String,Feature>();

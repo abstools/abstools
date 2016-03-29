@@ -18,7 +18,7 @@ import org.junit.Test;
 import abs.ABSTest.Config;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.ErrorMessage;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.TypeCheckerHelper;
 
@@ -157,11 +157,11 @@ public class ProductDeclarationTest extends DeltaTest {
 
         ProductDecl p = model.findProduct("P1");
 
-        SemanticErrorList e = new SemanticErrorList();
+        SemanticConditionList e = new SemanticConditionList();
         typeCheck(model, p, e);
 
-        assertEquals(3, e.size());
-        assertEquals(ErrorMessage.UNDECLARED_PRODUCT, e.getFirst().msg);
+        assertEquals(3, e.getErrorCount());
+        assertEquals(ErrorMessage.UNDECLARED_PRODUCT, e.getFirstError().msg);
     }
 
     @Test
@@ -170,16 +170,16 @@ public class ProductDeclarationTest extends DeltaTest {
                 "product P1 = {F1, F2, F3};"
                         + "root FM {"
                         + "group allof { F1, F2, F3 }"
-                        + "}"                
+                        + "}"
                 );
 
         model.evaluateAllProductDeclarations();
         ProductDecl p = model.findProduct("P1");
 
-        SemanticErrorList e = new SemanticErrorList();        
+        SemanticConditionList e = new SemanticConditionList();
         typeCheck(model, p, e);
 
-        assertEquals(0, e.size());
+        assertEquals(0, e.getErrorCount());
     }
 
     @Test
@@ -188,17 +188,17 @@ public class ProductDeclarationTest extends DeltaTest {
                 "product P1 = {F1, F2};"
                         + "root FM {"
                         + "group allof { F1, F2, F3 }"
-                        + "}"                
+                        + "}"
                 );
 
         model.evaluateAllProductDeclarations();
         ProductDecl p = model.findProduct("P1");
 
-        SemanticErrorList e = new SemanticErrorList();        
+        SemanticConditionList e = new SemanticConditionList();
         typeCheck(model, p, e);
 
-        assertEquals(1, e.size());
-        assertEquals(ErrorMessage.INVALID_PRODUCT, e.getFirst().msg);
+        assertEquals(1, e.getErrorCount());
+        assertEquals(ErrorMessage.INVALID_PRODUCT, e.getFirstError().msg);
     }
 
     @Test
