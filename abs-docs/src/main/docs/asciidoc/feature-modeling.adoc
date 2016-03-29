@@ -163,9 +163,13 @@ delta DBoundedDeployment(LimitedMachines.capacity, LimitedMachines.machinelimit)
 
 ABS allows the developer to name products that are of particular interest, in
 order to easily refer to them later when the actual code needs to be
-generated. A product definition states with product expression from operator intersection,
-operator union, operator difference, product name, parenthesis, or features are to be included in
-the product and sets attributes of those features to concrete values.
+generated. A product definition states which features are to be included in
+the product and sets attributes of those features to concrete values. In the simplest
+case products are declared directly, by listing the features that they include.
+It is also possible to declare products based on other products using 
+`product expressions`. Product expressions use set-theoretic operations (union, 
+intersection, complement) over products and sets of features.
+
 
 [source]
 ----
