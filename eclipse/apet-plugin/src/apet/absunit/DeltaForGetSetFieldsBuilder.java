@@ -33,24 +33,24 @@ final class DeltaForGetSetFieldsBuilder {
 
 	private final TestCaseNamesBuilder testCaseNameBuilder = new TestCaseNamesBuilder();
 	private final Set<DeltaWrapper> deltas;
-	
+
 	static class DeltaWrapper {
 		private final DeltaDecl delta;
 		private final boolean last;
-		
+
 		DeltaWrapper(DeltaDecl delta, boolean last) {
 			this.delta = delta;
 			this.last = last;
 		}
-		
+
 		boolean isLast() { return last; }
 		DeltaDecl getDelta() { return delta; }
 	}
-	
+
 	DeltaForGetSetFieldsBuilder(Set<DeltaWrapper> deltas) {
 		this.deltas = deltas;
 	}
-	
+
 	DeltaDecl getDelta(String deltaName) {
 		for (DeltaWrapper d : deltas) {
 			DeltaDecl dd = d.getDelta();
@@ -60,12 +60,12 @@ final class DeltaForGetSetFieldsBuilder {
 		}
 		return null;
 	}
-	
+
 	DeltaDecl getDeltaFor(String testClassName) {
 		String deltaName = testCaseNameBuilder.deltaOnClass(testClassName);
 		return getDelta(deltaName);
 	}
-	
+
 	DeltaDecl createDeltaFor(ClassDecl testClass) {
 		String deltaName = testCaseNameBuilder.deltaOnClass(testClass.getName());
 		DeltaDecl delta = new DeltaDecl();
@@ -74,13 +74,13 @@ final class DeltaForGetSetFieldsBuilder {
 		deltas.add(new DeltaWrapper(delta, true));
 		return delta;
 	}
-	
+
 	RemoveMethodModifier removeRun() {
-		RemoveMethodModifier modifier = 
+		RemoveMethodModifier modifier =
 			new RemoveMethodModifier(createMethodSig(RUN_METHOD, getUnit()));
 		return modifier;
 	}
-	
+
 	/**
 	 * Add an add method modifier
 	 * @param fieldName
@@ -90,11 +90,11 @@ final class DeltaForGetSetFieldsBuilder {
 	 */
 	AddMethodModifier addSetter(
 			String fieldName, Access type) {
-		MethodSig sig = new MethodSig(testCaseNameBuilder.setterMethodName(fieldName), 
+		MethodSig sig = new MethodSig(testCaseNameBuilder.setterMethodName(fieldName),
 				new abs.frontend.ast.List<Annotation>(),
-				getUnit(),  
+				getUnit(),
 				new abs.frontend.ast.List<ParamDecl>());
-		
+
 		sig.addParam(new ParamDecl("v", type, new abs.frontend.ast.List<Annotation>()));
 		Block block = new Block();
 		block.addStmtNoTransform(getVAssign(new FieldUse(fieldName), new VarUse("v")));
@@ -102,18 +102,18 @@ final class DeltaForGetSetFieldsBuilder {
 		AddMethodModifier modifier = new AddMethodModifier(method);
 		return modifier;
 	}
-	
+
 	AddMethodModifier addGetter(String fieldName, Access returnType) {
 		Exp returnExp = new FieldUse(fieldName);
 		return addGetter(returnExp, fieldName, returnType);
 	}
-	
+
 	AddMethodModifier addGetter(Exp returnValue, String fieldName, Access returnType) {
-		MethodSig sig = new MethodSig(testCaseNameBuilder.getterMethodName(fieldName), 
+		MethodSig sig = new MethodSig(testCaseNameBuilder.getterMethodName(fieldName),
 				new abs.frontend.ast.List<Annotation>(),
-				returnType,  
+				returnType,
 				new abs.frontend.ast.List<ParamDecl>());
-		
+
 		Block block = new Block();
 		ReturnStmt rs = new ReturnStmt();
 		rs.setRetExp(new FieldUse(fieldName));
@@ -122,32 +122,32 @@ final class DeltaForGetSetFieldsBuilder {
 		AddMethodModifier modifier = new AddMethodModifier(method);
 		return modifier;
 	}
-	
+
 	/**
 	 * Add a delta that adds Getters and Setters for clazz.
-	 * 
+	 *
 	 * @param extensions
-	 * @param interf 
+	 * @param interf
 	 * @param clazz
-	 * 
+	 *
 	 */
-	void updateDelta(Map<String, String> typeHierarchy, 
+	void updateDelta(Map<String, String> typeHierarchy,
 			InterfaceTypeUse interf, ClassDecl clazz) {
-		
+
 		String className = clazz.getName();
-		
-		String deltaOnClassName = 
+
+		String deltaOnClassName =
 				testCaseNameBuilder.deltaOnClass(className);
-		String interfaceForModifyingClassFieldName = 
+		String interfaceForModifyingClassFieldName =
 				testCaseNameBuilder.interfaceForModifyingFieldOfClass(className);
-		
+
 		DeltaDecl dd = getDelta(deltaOnClassName);
-		
+
 		if (dd != null) {
 			typeHierarchy.put(interf.getName(), interfaceForModifyingClassFieldName);
 			return;
 		}
-		
+
 		dd = new DeltaDecl();
 		dd.setName(deltaOnClassName);
 		dd.addDeltaAccess(new DeltaAccess(clazz.getModuleDecl().getName()));
@@ -158,10 +158,10 @@ final class DeltaForGetSetFieldsBuilder {
 
 		InterfaceDecl ai = new InterfaceDecl();
 		ai.setName(interfaceForModifyingClassFieldName);
-		
+
 		//extends the existing interface
-		InterfaceTypeUse inf = interf.fullCopy();
-		ai.addExtendedInterfaceUse(inf.fullCopy());
+		InterfaceTypeUse inf = interf.treeCopyNoTransform();
+		ai.addExtendedInterfaceUse(inf.treeCopyNoTransform());
 		mcm.addAddedInterface(new InterfaceTypeUse(ai.getName(), new abs.frontend.ast.List<abs.frontend.ast.Annotation>()));
 		typeHierarchy.put(inf.getName(), interfaceForModifyingClassFieldName);
 
@@ -173,18 +173,18 @@ final class DeltaForGetSetFieldsBuilder {
 		}
 
 		for (FieldDecl fd : clazz.getFieldList()) {
-			AddMethodModifier smm = addSetter(fd.getName(), (Access) fd.getAccess().fullCopy());
-			AddMethodModifier gmm = addGetter(fd.getName(), (Access) fd.getAccess().fullCopy());
+			AddMethodModifier smm = addSetter(fd.getName(), fd.getAccess().treeCopyNoTransform());
+			AddMethodModifier gmm = addGetter(fd.getName(), fd.getAccess().treeCopyNoTransform());
 			mcm.addModifier(smm);
 			mcm.addModifier(gmm);
 			ai.addBody(smm.getMethodImpl().getMethodSig());
 			ai.addBody(gmm.getMethodImpl().getMethodSig());
 		}
-		
+
 		dd.addModuleModifier(new AddInterfaceModifier(ai));
 		dd.addModuleModifier(mcm);
 
 		deltas.add(new DeltaWrapper(dd, false));
 	}
-	
+
 }

@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package org.absmodels.abs.plugin.actions.runconfig;
@@ -29,11 +29,12 @@ import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Product;
+import abs.frontend.ast.ProductDecl;
 import abs.frontend.delta.DeltaModellingException;
 
 
 public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
-	protected Label projectLabel;	
+	protected Label projectLabel;
 	protected Combo projectDropDown;
 	protected Combo productDropDown;
     private String lastProjectName = "";
@@ -50,13 +51,13 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		public TabListener(AbstractTab tab){
 			this.tab=tab;
 		}
-		
+
 		@Override
 		public void handleEvent(Event event) {
 			tab.updateLaunchConfigurationDialog();
 		}
 	}
-	
+
 	//---create methods------------------------
 
 	protected void createProjectDropDownMenu(TabListener myListener,
@@ -79,8 +80,8 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		});
 	}
 
-	
-	
+
+
 	/**
 	 * Don't recommend to start projects which have errors.
 	 * TODO: manipulating the error message here does not cooperate well with isValid().
@@ -95,7 +96,7 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		    // every time something changes in the run configuration dialog
 		    return lastResult;
 		}
-		
+
 		if (projectName != null) {
 			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
 			try {
@@ -107,10 +108,10 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 					if (model == null)
 						return false;
 					/* Check product if any */
-					
+
 					// work on a copy:
 					model = model.parseTreeCopy();
-					
+
 					if (prod != null) {
 						model.flattenForProduct(prod);
 						/* Type check again */
@@ -154,7 +155,7 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
     private void createMarkers(AbsNature nat, SemanticConditionList errs) {
         try {
             nat.createMarkers(errs);
-        } catch (CoreException e) { 
+        } catch (CoreException e) {
             // ignore
         }
     }
@@ -234,13 +235,13 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		Model m = n.getCompleteModel();
 		if (m == null)
 			return;
-		Collection<Product> prods = m.getProducts();
+		Collection<ProductDecl> prods = m.getProductDecls();
 		if (prods == null)
 			return;
 		int i = 1; /* base comes first */
 		int selected = 0;
-		for (Product p : prods) {
-			final String name = p.qualifiedName();
+		for (ProductDecl p : prods) {
+			final String name = p.getName();
 			productDropDown.add(name);
 			if (name.equals(preSelected)) {
 				selected = i;
@@ -266,7 +267,7 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		if (names!=null && !names.isEmpty()){
 			return names.get(0);
 		} else {
-			return (String)null;
+			return null;
 		}
 	}
 
@@ -287,7 +288,7 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 
 	protected String getSelectedProjectName() {
 		return projectDropDown.getItem(projectDropDown.getSelectionIndex());
-	}	
+	}
 
 	/**
 	 * @return the product name, or null if the base product is selected.
@@ -297,6 +298,6 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		if (index <= 0) /* base is at index 0 */
 			return null;
 		return productDropDown.getItem(index);
-	}	
+	}
 
 }

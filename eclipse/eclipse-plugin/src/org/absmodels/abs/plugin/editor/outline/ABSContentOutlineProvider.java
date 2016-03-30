@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package org.absmodels.abs.plugin.editor.outline;
@@ -46,14 +46,14 @@ import abs.frontend.parser.ABSPackageFile;
  * <br/><br/>
  * The ABS content provider is set using the TreeViewer's method
  * setContentProvider(ITreeContentProvider) during the setup of the TreeViewer.
- * 
+ *
  * @author cseise
- * 
+ *
  */
 public class ABSContentOutlineProvider implements ITreeContentProvider, IResourceChangeListener, IResourceDeltaVisitor {
 
 	private static final ASTNode<?>[] EMPTY_NODES = new ASTNode<?>[0];
-	
+
 	private final BaseWorkbenchContentProvider baseProvider = new BaseWorkbenchContentProvider();
 
 	private StructuredViewer viewer;
@@ -73,7 +73,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 			return getChildrenOf((IFile) parentElement);
 		} else if (parentElement instanceof InternalASTNode<?>) {
 			InternalASTNode<?> node = (InternalASTNode<?>) parentElement;
-			
+
 			synchronized (node.getNature().modelLock) {
 				ASTNode<?>[] children = getChildrenOfASTNode(node.getASTNode());
 				return InternalASTNode.wrapASTNodes(children, node.getNature()).toArray();
@@ -87,15 +87,15 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 		} else if (parentElement instanceof PackageAbsFile) {
 			return getChildrenOf((PackageAbsFile) parentElement);
 		}
-		
+
 		return EMPTY_OBJECT_ARRAY;
 	}
-	
+
 	private Object[] getChildrenOf(PackageEntry element) {
 		try {
 			ABSPackageFile pf = new ABSPackageFile(new File(element.getPath()));
 			if (pf.isABSPackage()) {
-				java.util.ArrayList<PackageAbsFile> results = new ArrayList<PackageAbsFile>(); 
+				java.util.ArrayList<PackageAbsFile> results = new ArrayList<PackageAbsFile>();
 				for (Enumeration<JarEntry> e = pf.entries(); e.hasMoreElements();) {
 					JarEntry jarEntry = e.nextElement();
 					if (!jarEntry.isDirectory() && jarEntry.getName().endsWith(".abs")) {
@@ -120,7 +120,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 		}
 		return EMPTY_OBJECT_ARRAY;
 	}
-	
+
 	private ASTNode<?>[] getChildrenOfASTNode(ASTNode<?> parentElement){
 		if (parentElement instanceof ModuleDecl) {
 			//no use of static imports here due to name clash with local methods...
@@ -149,7 +149,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 		}
 		return getChildrenOf(new AbsFileImpl(file));
 	}
-	
+
 	private Object[] getChildrenOf(AbsFile file) {
 		if(!ABS_FILE_EXTENSION.equalsIgnoreCase(file.getFileExtension()))
 			return null;
@@ -164,29 +164,29 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 
 	@SuppressWarnings("unchecked")
 	private ASTNode<?>[] getChildrenOf(List<?> parentElement) {
-	    List<?> nodeList = ((List<?>) parentElement);
+	    List<?> nodeList = (parentElement);
 	    ArrayList<ASTNode<?>> impExp = new ArrayList<ASTNode<?>>();
-	    
+
 	    //Check whether we have an import or an export list
 	    if (isImportList(nodeList)){
 	    	for (Import i : (List<Import>)nodeList){
 	    		if (isStandardLibImport(i)){
 	    			continue;
 	    		}
-	    		impExp.add(i);					
-	    	}						
+	    		impExp.add(i);
+	    	}
 
-	    	return impExp.toArray(EMPTY_NODES);				
+	    	return impExp.toArray(EMPTY_NODES);
 	    }else if (isExportList(nodeList)){
 	    	for (Export e : (List<Export>)nodeList) {
 	    		impExp.add(e);
 	    	}
 	    	return impExp.toArray(EMPTY_NODES);
 	    }
-	    
+
 	    return EMPTY_NODES;
 	}
-	
+
 	/**
 	 * Retrieve the Children of a CompilationUnit
 	 * @param d The target CompilationUnit
@@ -195,7 +195,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 	private InternalASTNode<?>[] getChildrenOf (CompilationUnit cu,AbsNature nature){
 	    if (cu != null){
 	        ArrayList<InternalASTNode<ModuleDecl>> modules = new ArrayList<InternalASTNode<ModuleDecl>>();
-	        
+
 	        for (ModuleDecl d : cu.getModuleDecls()) {
 	    	modules.add(new InternalASTNode<ModuleDecl>(d,nature));
 	        }
@@ -203,8 +203,8 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 	    } else{
 	        return new InternalASTNode<?>[0];
 	    }
-	}	
-	
+	}
+
 	/**
 	 * Retrieve the Children of a CompilationUnit
 	 * @param d The target CompilationUnit
@@ -214,25 +214,25 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 	    if (cu != null){
 	        ArrayList<ASTNode<?>> children = new ArrayList<ASTNode<?>>();
 
-	        for (ModuleDecl d : cu.getModuleDecls()) 
+	        for (ModuleDecl d : cu.getModuleDecls())
 	            children.add(d);
 	        for (DeltaDecl d : cu.getDeltaDecls())
 	            children.add(d);
 	        if (cu.hasProductLine())
 	            children.add(cu.getProductLine());
-	        for (Product d : cu.getProducts())
+	        for (ProductDecl d : cu.getProductDecls())
 	            children.add(d);
 	        for (FeatureDecl d : cu.getFeatureDecls())
 	            children.add(d);
 	        for (FExt d : cu.getFExts())
 	            children.add(d);
-	        
+
 	        return children.toArray(EMPTY_NODES);
 	    } else{
 	        return EMPTY_NODES;
 	    }
-	}	
-	
+	}
+
 	/**
 	 * Retrieve the Children of a ClassDecl
 	 * @param d The target ClassDecl
@@ -247,7 +247,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 			pDecl.add(mD);
 		}
 		return pDecl.toArray(EMPTY_NODES);
-	}		
+	}
 
 	/**
 	 * Retrieve the Children of a DeltaDecl
@@ -261,7 +261,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 	    for (ModuleModifier m : d.getModuleModifiers())
 	        children.add(m);
 	    return children.toArray(EMPTY_NODES);
-	}               
+	}
 
 	/**
 	 * Retrieve the Children of an InterfaceDecl
@@ -275,25 +275,25 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 		}
 		return pDecl.toArray(EMPTY_NODES);
 	}
-	
+
 	/**
 	 * Retrieve the Children of a MainBlock
 	 * @param d The target MainBlock
 	 * @return The children of a MainBlock, which are relevant for the Content Outline
-	 */		
+	 */
 	private ASTNode<?>[] getChildrenOf(MainBlock mb){
 		ArrayList<ASTNode<?>> pDecl = new ArrayList<ASTNode<?>>();
 		for (VarDecl mD : mb.getVars()) {
 			pDecl.add(mD);
 		}
-		return pDecl.toArray(EMPTY_NODES);			
+		return pDecl.toArray(EMPTY_NODES);
 	}
 
 	/**
-	 * Retrieve the Children of a DataTypeDecl 
+	 * Retrieve the Children of a DataTypeDecl
 	 * @param d The target DataTypeDecl
 	 * @return The children of a DataTypeDecl, which are relevant for the Content Outline
-	 */		
+	 */
 	private ASTNode<?>[] getChildrenOf(DataTypeDecl d){
 		ArrayList<ASTNode<?>> pDecl = new ArrayList<ASTNode<?>>();
 		for (DataConstructor dc : d.getDataConstructors()){
@@ -301,17 +301,17 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 		}
 		return pDecl.toArray(EMPTY_NODES);
 	}
-	
+
 	private boolean hasChildren(ModuleDecl m){
-		return (m.getNumDecl() > 0) || (m.getNumImport() > 0) || (m.getNumExport() > 0); 
+		return (m.getNumDecl() > 0) || (m.getNumImport() > 0) || (m.getNumExport() > 0);
 	}
-	
+
 	private boolean hasChildren(ClassDecl c){
-		return (((ClassDecl) c).getNumField() > 0) || (((ClassDecl) c).getNumMethod() > 0);
+		return (c.getNumField() > 0) || (c.getNumMethod() > 0);
 	}
 
 	private boolean hasChildren(DeltaDecl c){
-	    return ((DeltaDecl) c).getNumModuleModifier() > 0;
+	    return c.getNumModuleModifier() > 0;
 	}
 
 	@Override
@@ -356,7 +356,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 		return false;
 
 	}
-	
+
 	public boolean hasChildren(ASTNode<?> element) {
 	    if (element instanceof ModuleDecl) {
 	        return hasChildren((ModuleDecl) element);
@@ -375,11 +375,11 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 	    }
 	    return false;
 	}
-	
+
 	/**
 	 * Create a {@link PackageEntry} that represents an {@link PackageAbsFile}
 	 * from an ABS package (as {@link IFile}) in the project.
-	 *  
+	 *
 	 * @param file
 	 * @return
 	 */
@@ -388,15 +388,15 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 		container.setProject(file.getProject());
 		return new PackageEntry(container,file.getName(),file.getLocation().toString(),false);
 	}
-	
+
 	private boolean hasChildren(IFile file){
 		if(!UtilityFunctions.isABSFile(file))
 			return false;
-		
+
 		if(UtilityFunctions.isABSPackage(file)) {
 			return hasChildren(makeABSPackage(file));
 		}
-		
+
 		AbsNature nature = UtilityFunctions.getAbsNature(file);
 		if(nature != null){
 			CompilationUnit cu = nature.getCompilationUnit(file);
@@ -407,7 +407,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 	}
 
 	private boolean hasChilden(List<?> element) {
-	    List<?> nodeList = ((List<?>) element);
+	    List<?> nodeList = (element);
 	    if (ABSContentOutlineUtils.isImportList(nodeList) || ABSContentOutlineUtils.isExportList(nodeList)){
 	    	return true;
 	    } else{
@@ -418,14 +418,14 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 	@Override
 	public void dispose() {
 		baseProvider.dispose();
-		ResourcesPlugin.getWorkspace().removeResourceChangeListener(this); 
+		ResourcesPlugin.getWorkspace().removeResourceChangeListener(this);
 	}
 
 	@Override
 	public Object getParent(Object element) {
 		if (element instanceof InternalASTNode<?>) {
 			InternalASTNode<?> node = (InternalASTNode<?>) element;
-			
+
 			AbsNature nature = node.getNature();
 			ASTNode<?> parent = node.getASTNode().getParent();
 			assert nature != null;
@@ -458,10 +458,11 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 		case IResource.FILE:
 			final IFile file = (IFile) source;
 			new UIJob("Update CommonViewer") {
-				public IStatus runInUIThread(IProgressMonitor monitor) {
+				@Override
+                public IStatus runInUIThread(IProgressMonitor monitor) {
 					if (viewer != null && !viewer.getControl().isDisposed())
 						viewer.refresh(file);
-					return Status.OK_STATUS;						
+					return Status.OK_STATUS;
 				}
 			}.schedule();
 		}
@@ -473,8 +474,8 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 		IResourceDelta delta = event.getDelta();
 		try {
 			delta.accept(this);
-		} catch (CoreException e) { 
+		} catch (CoreException e) {
 			Activator.logException(e);
-		} 	
+		}
 	}
 }

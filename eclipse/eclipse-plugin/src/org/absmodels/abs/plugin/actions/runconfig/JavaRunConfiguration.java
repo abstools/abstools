@@ -1,14 +1,12 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package org.absmodels.abs.plugin.actions.runconfig;
 
-import static org.absmodels.abs.plugin.actions.ActionUtils.getProject;
 import static org.absmodels.abs.plugin.actions.runconfig.RunConfigEnums.*;
 import static org.absmodels.abs.plugin.util.Constants.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.absmodels.abs.plugin.actions.ABSUnitTestJavaExecutionJob;
@@ -40,13 +38,13 @@ public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 	@Override
 	public void launch(ILaunchConfiguration config, String mode,
 			ILaunch launch, IProgressMonitor monitor) throws CoreException {
-		
+
 	    JavaLaunchConfig launchConfig = new JavaLaunchConfig(config);
-	    
+
 		IAction action = createNewAction(launchConfig);
 		IProject project = ActionUtils.getProject(config);
 		IFile file = null;
-	
+
 		ActionUtils.saveDirtyEditors(project);
 
 		JavaJob job = new JavaJob(JavaJob.RUN_JOB,action, project, file);
@@ -64,13 +62,13 @@ public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 
 		if (launchConfig.getTestExecution()) {
 			List<String> obs = launchConfig.getDebuggerObserverList();
-			obs.add(ABSTestObserver.class.getName());			
+			obs.add(ABSTestObserver.class.getName());
 		}
 
 		modifyDebuggerArguments(launchConfig, job);
-				
+
 		if (launchConfig.getTestExecution()) {
-		    // execution of unit tests		
+		    // execution of unit tests
 			Job testJob = new ABSUnitTestJavaExecutionJob(project, product, job);
 			testJob.schedule();
 		} else {
@@ -78,17 +76,17 @@ public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 		    job.schedule();
 		}
 	}
-	
+
 
 	private void modifyDebuggerArguments(JavaLaunchConfig launchConfig,
 			JavaJob job) throws CoreException {
-		
+
 		job.setDebuggerArgsOther(launchConfig.getOtherArgs());
 		job.setArgsDebuggerRandomSeed(launchConfig.getRandomSeedString());
-		
+
 		boolean compile = launchConfig.getCompileBefore();
 		job.setDebuggerCompileFirst(compile);
-		
+
 		String observerArgs = "";
 		List<String> observerStrings = launchConfig.getDebuggerObserverList();
 			for (String observerClassName : observerStrings) {
@@ -101,16 +99,16 @@ public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 				}
 			}
 		job.setDebuggerArgsSystemObserver(observerArgs);
-		
+
 		job.setExtraClassPaths(launchConfig.getDebuggerClassPathList());
-		
+
 		String schedulerString = launchConfig.getDebuggerScheduler();
 		job.setDebuggerArgsTotalScheduler(DebuggerScheduler.valueOf(schedulerString).getCommand());
-		
+
 		job.setInternalDebugger(!launchConfig.getUseExternal());
-		
+
 		job.setDebuggerDebugMode(launchConfig.getDebugMode());
-		
+
 		job.setRunTarget(launchConfig.getRunTarget());
         job.setScheduler(launchConfig.getScheduler());
         job.setRunAutomatically(launchConfig.getRunAutomatically());
@@ -124,8 +122,8 @@ public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 			throws CoreException {
 		IAction action = new Action() {
 			//nothing
-		}; 
-		
+		};
+
 		boolean startSDE = false;
 		List<String> observerStrings = launchConfig .getDebuggerObserverList();
 		for (String observerClassName : observerStrings) {
@@ -139,7 +137,7 @@ public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 		} else {
 			action.setId(ACTION_DEBUG_ID);
 		}
-		
+
 		return action;
 	}
 

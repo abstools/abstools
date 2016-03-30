@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package org.absmodels.abs.plugin.internal;
@@ -25,7 +25,7 @@ import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
-import abs.frontend.ast.Product;
+import abs.frontend.ast.ProductDecl;
 import abs.frontend.delta.DeltaModellingException;
 import abs.frontend.delta.DeltaModellingWithNodeException;
 import abs.frontend.parser.Main;
@@ -38,7 +38,7 @@ public class IncrementalModelBuilder {
 
 	private Model model  = null;
     private LocationTypeInferrerExtension ltie;
-	
+
 	public LocationTypeInferrerExtension getLocationTypeInferrerExtension() {
         return ltie;
     }
@@ -68,14 +68,14 @@ public class IncrementalModelBuilder {
 		Assert.isNotNull(model);
 		Main.exceptionHack(model);
 	}
-    
+
 	/**
 	 * Creates an empty model with only the stdlib when you pass null.
 	 */
 	public synchronized void addCompilationUnit(CompilationUnit cu) {
 		if(model == null){
 			model = new Model();
-			
+
 			model.addCompilationUnit(getStdLibCompilationUnit());
 			if (cu != null) // just give us the stdlib
 				model.addCompilationUnit(cu);
@@ -85,7 +85,7 @@ public class IncrementalModelBuilder {
 			return;
 		String filename  = cu.getFileName();
 		assert filename != null;
-		
+
 		CompilationUnit cuold = null;
 		try {
 			cuold = getCompilationUnit(filename);
@@ -124,13 +124,13 @@ public class IncrementalModelBuilder {
 		stdLib.setName(src.getAbsolutePath());
 		return stdLib;
 	}
-	
+
 	public synchronized void removeCompilationUnit(CompilationUnit cu) throws NoModelException{
 		if(model == null)
 			throw new NoModelException();
 		String filename  = cu.getFileName();
 		assert filename != null;
-		
+
 		CompilationUnit cuold = getCompilationUnit(filename);
 		List<CompilationUnit>  culist = model.getCompilationUnitList();
 		int cindex = culist.getIndexOfChild(cuold);
@@ -140,7 +140,7 @@ public class IncrementalModelBuilder {
 //		model.flushCache();
 		flushAll(model);
 	}
-	
+
 	public synchronized CompilationUnit getCompilationUnit(String fileName) throws NoModelException{
 		if(model == null)
 			throw new NoModelException();
@@ -168,11 +168,11 @@ public class IncrementalModelBuilder {
 		}
 		return fileName;
 	}
-	
+
 	public synchronized SemanticConditionList typeCheckModel(IProgressMonitor monitor, boolean locationTypeChecking, String defaultloctype, String locationTypePrecision, boolean checkProducts) throws NoModelException, TypecheckInternalException{
 		if(model == null)
 			throw new NoModelException();
-		
+
 		Main.exceptionHack(model);
 
 		if(model.hasParserErrors())
@@ -188,14 +188,14 @@ public class IncrementalModelBuilder {
 			ltie.setDefaultType(defaultLocType);
 			ltie.setLocationTypingPrecision(LocationTypingPrecision.valueOf(locationTypePrecision));
 	        model.registerTypeSystemExtension(ltie);
-		} 
+		}
 		try {
 			SemanticConditionList semerrors = model.getErrors();
 			/* Don't typecheck with semerrors, it might trip up. */
 			if (!semerrors.containsErrors())
 				semerrors = model.typeCheck();
 			/* Check products for errors.
-			 * Only the first error is reported (if any), on the product AST-node.  
+			 * Only the first error is reported (if any), on the product AST-node.
 			 * TODO: May be time-consuming for large projects, hence the checkProducts-switch.
 			 *       Also could use a timer to switch off if it becomes excessive.
 			 * TODO: Use Eclipse's nested markers to show ALL contained errors?
@@ -203,8 +203,8 @@ public class IncrementalModelBuilder {
 			 */
 			if (!semerrors.containsErrors() && checkProducts) {
 				monitor = new SubProgressMonitor(monitor, 10); // arbitrary value
-				monitor.beginTask("Checking products", model.getProducts().size());
-				for (Product p : model.getProducts()) {
+				monitor.beginTask("Checking products", model.getProductDecls().size());
+				for (ProductDecl p : model.getProductDecls()) {
 					monitor.subTask("Checking "+p.getName());
 					Model m2 = model.parseTreeCopy();
 					Main.exceptionHack(m2);
@@ -238,13 +238,13 @@ public class IncrementalModelBuilder {
 			throw new TypecheckInternalException(e);
 		}
 	}
-	
+
 	public synchronized Model getCompleteModel(){
 		if (model != null)
 			Main.exceptionHack(model);
 		return model;
 	}
-	
+
 	public synchronized void cleanModel(){
 		model = null;
 	}

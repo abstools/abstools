@@ -45,7 +45,8 @@ import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.Product;
+import abs.frontend.ast.ProductDecl;
+import abs.frontend.ast.ProductFeatureSet;
 import abs.frontend.ast.ProductLine;
 import abs.frontend.ast.StarExport;
 import abs.frontend.ast.StarImport;
@@ -67,7 +68,7 @@ public class ABSUnitTestCaseTranslator {
 	private final Set<DeltaWrapper> deltas;
 	private final Set<String> importModules;
 	private ProductLine productline;
-	private Product product;
+	private ProductDecl product;
 
 	private File outputFile;
 
@@ -203,10 +204,12 @@ public class ABSUnitTestCaseTranslator {
 			}
 		}
 
-		product = new Product();
+		product = new ProductDecl();
 		product.setName(PRODUCT_NAME);
-		product.addFeature(feature);
 
+		ProductFeatureSet featureSet = new ProductFeatureSet();
+		featureSet.addFeature(feature);
+		product.setProductExpr(featureSet);
 	}
 
 	void generateABSUnitTest(List<TestCase> cs, String mn) {
@@ -245,23 +248,23 @@ public class ABSUnitTestCaseTranslator {
 
 	private void validateOutput() {
 		CompilationUnit unit = new CompilationUnit();
-		ModuleDecl cm = module.fullCopy();
+		ModuleDecl cm = module.treeCopyNoTransform();
 		unit.addModuleDecl(cm);
 		for (DeltaWrapper d : deltas) {
-			unit.addDeltaDecl(d.getDelta().fullCopy());
+			unit.addDeltaDecl(d.getDelta().treeCopyNoTransform());
 		}
-		unit.setProductLine(productline.fullCopy());
-		unit.addProduct(product.fullCopy());
+		unit.setProductLine(productline.treeCopyNoTransform());
+		unit.addProductDecl(product.treeCopyNoTransform());
 
-		Model copy = model.fullCopy();
+		Model copy = model.treeCopyNoTransform();
 		copy.addCompilationUnit(unit);
 
-		validateOutput(copy.fullCopy(), null);
-		validateOutput(copy.fullCopy(), module.getName().concat(".").concat(PRODUCT_NAME));
+		validateOutput(copy.treeCopyNoTransform(), null);
+		validateOutput(copy.treeCopyNoTransform(), module.getName().concat(".").concat(PRODUCT_NAME));
 	}
 
 	private void validateOutput(Model model, String product) {
-		Model copy = model.fullCopy();
+		Model copy = model.treeCopyNoTransform();
 		if (product != null) {
             try {
 				copy.flattenForProduct(product);

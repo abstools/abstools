@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package org.absmodels.abs.plugin.editor.outline;
@@ -32,7 +32,7 @@ import abs.frontend.ast.*;
  *
  */
 public class ABSContentOutlineUtils {
-	
+
 	private static final ArrayList<ASTNode<?>> EMPTY_ASTNODE_LIST = new ArrayList<ASTNode<?>>(0);
 	private static final StyledString STYLED_EMPTY = new StyledString("", STYLER_BLACK);
 	private static final ILabelProvider WORKBENCH_LABEL_PROVIDER = new WorkbenchLabelProvider();
@@ -40,7 +40,7 @@ public class ABSContentOutlineUtils {
 	/**
 	 * Returns the String Representation of a <code>List&lt;ParamDecl&gt;</code>
 	 * in the form (Type1 Name1, Type2 Name2, ...)
-	 * 
+	 *
 	 * @param list
 	 *            The target List of type <code>List&lt;ParamDecl&gt;</code>
 	 * @return Returns the String Representation of a
@@ -48,16 +48,16 @@ public class ABSContentOutlineUtils {
 	 */
 	private static StyledString formatParams(
 			abs.frontend.ast.List<ParamDecl> list) {
-		
+
 		StringBuilder sb = new StringBuilder();
 		sb.append(OUTLINE_PARAM_OPEN_PARENTHESIS);
-		
+
 		if (list.hasChildren()){
 			for (ParamDecl p : list) {
 				formatParam(sb, p);
 				sb.append(OUTLINE_DELIMITER + " ");
 			}
-			deleteLastCharacters(sb, 2);			
+			deleteLastCharacters(sb, 2);
 		}
 
 		sb.append(OUTLINE_PARAM_CLOSE_PARENTHESIS);
@@ -69,8 +69,8 @@ public class ABSContentOutlineUtils {
 	 * Evaluates a ParamDecl and adds its String representation to a
 	 * StringBuilder. If the ParamDecl is null, nothing will be added to the
 	 * StringBuilder
-	 * 
-	 * 
+	 *
+	 *
 	 * @param sb
 	 *            The StringBuilderto which the String representation will be
 	 *            added
@@ -88,12 +88,12 @@ public class ABSContentOutlineUtils {
 			}
 		}
 	}
-	
+
 
 	/**
 	 * Returns the String Representation of an <code>List&lt;Name&gt;</code> in
 	 * the form name1, name2, ...
-	 * 
+	 *
 	 * @param list
 	 *            The target List of type <code>List&lt;Name&gt;</code>
 	 * @return The string representation or an empty String, if the list is
@@ -112,11 +112,11 @@ public class ABSContentOutlineUtils {
 		}
 		return sb.toString();
 	}
-	
+
 	/**
 	 * Returns the String Representation of an
 	 * <code>List&lt;TypeParameterDecl&gt;</code>
-	 * 
+	 *
 	 * @param list
 	 *            The target List of type
 	 *            <code>List&lt;TypeParameterDecl&gt;</code>
@@ -138,10 +138,10 @@ public class ABSContentOutlineUtils {
 			return "";
 		}
 	}
-	
+
 	/**
 	 * Returns the String Representation of an <code>Import</code>
-	 * 
+	 *
 	 * @param imp
 	 *            The target List of type <code>Import</code>
 	 * @return The String representation or an empty String, if the Import is
@@ -166,7 +166,7 @@ public class ABSContentOutlineUtils {
 
 	/**
 	 * Returns the String Representation of an <code>Export</code>
-	 * 
+	 *
 	 * @param exp
 	 *            The target List of type <code>Export</code>
 	 * @return The String representation or an empty String, if the Export is
@@ -191,10 +191,10 @@ public class ABSContentOutlineUtils {
 			return new StyledString(string,STYLER_BLACK);
 		}
 	}
-	
+
 	/**
 	 * Returns the String representation of a <code>DataConstructor</code>
-	 * 
+	 *
 	 * @param dc
 	 *            The target <code>DataConstructor</code>.
 	 * @return The String representation or an empty String, if the
@@ -225,11 +225,11 @@ public class ABSContentOutlineUtils {
 			return STYLED_EMPTY;
 		}
 	}
-	
+
 	/**
 	 * Returns the String representation of a <code>TypeUse</code>. For
 	 * subclasses, see {@link TypeUse}
-	 * 
+	 *
 	 * @param tu
 	 *            The target <code>TypeUse</code>.
 	 * @return The String representation or an empty String, if the TypeUse is
@@ -258,8 +258,8 @@ public class ABSContentOutlineUtils {
 	 * Evaluates a {@link ParametricDataTypeUse} and adds a String representation of its
 	 * type parameters to a StringBuilder. If the ParamDecl is null, nothing
 	 * will be added to the StringBuilder
-	 * 
-	 * 
+	 *
+	 *
 	 * @param sb
 	 *            The StringBuilder to which the String representation will be
 	 *            added
@@ -272,11 +272,11 @@ public class ABSContentOutlineUtils {
 				sb.append(ptu.toString()); // #314
 		}
 	}
-	
+
 	/* The following block could be used in the future for tracking editor cursor changes in the outline
 	* These methods define what is an outline element and perform a lookup for the next outline element in the
-	* parent hierarchy. This could be used together with ASTNode.getContextDecl to track selection changes in the 
-	* editor and to update the selection of the outline for relevant ASTNodes 
+	* parent hierarchy. This could be used together with ASTNode.getContextDecl to track selection changes in the
+	* editor and to update the selection of the outline for relevant ASTNodes
 	*/
 	/*public static boolean isOutlineElement(ASTNode<?> node){
 		boolean ret = (node instanceof Import
@@ -293,7 +293,7 @@ public class ABSContentOutlineUtils {
 		|| node instanceof DataConstructor);
 		return ret;
 	}
-	
+
 	public static ASTNode<?> getNextOutlineParent(ASTNode<?> node){
 		if (node == null){
 			return null;
@@ -302,20 +302,20 @@ public class ABSContentOutlineUtils {
 		}else{
 			ASTNode<?> tempNode = node;
 			while (tempNode!= null && !isOutlineElement(tempNode)){
-				tempNode = tempNode.getParent();			
-			}	
+				tempNode = tempNode.getParent();
+			}
 			return tempNode;
 		}
 	}*/
-	
+
 	/**
 	 * Determines whether T is an instance of {@link Import} in a
 	 * {@link abs.frontend.ast.List}&lt;T&gt; by checking if the list is not
 	 * empty and its first child is an Import instance.
-	 * 
+	 *
 	 * The call of this operation should be synchronized to
 	 * {@link AbsNature#modelLock}.
-	 * 
+	 *
 	 * @param list
 	 *            The non-empty list to be checked
 	 * @return True if T is an instance of {@link Import}, False if T is not an
@@ -324,37 +324,37 @@ public class ABSContentOutlineUtils {
 	public static boolean isImportList(List<?> list) {
 		return list != null && list.getNumChild() > 0 && list.getChild(0) instanceof Import;
 	}
-	
+
 	/**
 	 * Retrieve the Children of a ModuleDecl.
-	 * 
-	 * The call of this operation should be synchronized to 
+	 *
+	 * The call of this operation should be synchronized to
 	 * {@link AbsNature#modelLock}.
-	 * 
+	 *
 	 * @param element The target ModuleDecl
 	 * @return The children of a ModuleDecl, which are relevant for the Content Outline
 	 */
 	public static ArrayList<ASTNode<?>> getChildrenOf(ModuleDecl element){
 	    if (element != null){
 			ArrayList<ASTNode<?>> decls = new ArrayList<ASTNode<?>>();
-			ModuleDecl modDecl = ((ModuleDecl) element);
-		
+			ModuleDecl modDecl = (element);
+
 			if (modDecl.getExportList().getNumChild() > 0){
 				decls.add(modDecl.getExportList());
 			}
-	
-			//Don't show the Imports node if there are no imports... 
+
+			//Don't show the Imports node if there are no imports...
 			if (modDecl.getImportList().getNumChild() > 0){
 				 // ...or if there's only the standard STDLib import
 				if (!(modDecl.getImportList().getNumChild() == 1 && isStandardLibImport(modDecl.getImportList().getChild(0)))){
 					decls.add(modDecl.getImportList());
 				}
 			}
-			
+
 			for (Decl d : modDecl.getDeclList()) {
 				decls.add(d);
 			}
-			
+
 			//If there is a main block, add it.
 			if (modDecl.hasBlock()){
 				decls.add(modDecl.getBlock());
@@ -364,7 +364,7 @@ public class ABSContentOutlineUtils {
 	    	return EMPTY_ASTNODE_LIST;
 	    }
 	}
-	
+
 	/**
 	 * Determines if the given Import is a standard lib import
 	 * @param imp Import to be checked
@@ -373,16 +373,16 @@ public class ABSContentOutlineUtils {
 	static boolean isStandardLibImport(Import imp){
 		return ((imp instanceof StarImport)
 				&& STDLIB_NAME.equals(((StarImport) imp).getModuleName()));
-	}	
-	
+	}
+
 	/**
 	 * Determines whether T is an instance of {@link Export} in a
 	 * {@link abs.frontend.ast.List}&lt;T&gt; by checking if the list is not
 	 * empty and its first child is an Export instance
-	 * 
+	 *
 	 * The call of this operation should be synchronized to
 	 * {@link AbsNature#modelLock}.
-	 * 
+	 *
 	 * @param list
 	 *            The non-empty list to be checked
 	 * @return True if T is an instance of {@link Export}, False if T is not an
@@ -390,15 +390,15 @@ public class ABSContentOutlineUtils {
 	 */
 	public static boolean isExportList(List<?> list) {
 		return list != null && list.getNumChild() > 0 && list.getChild(0) instanceof Export;
-	}	
-	
+	}
+
 	/**
 	 * Converts ASTNodes that are relevant for the Content Outline:<br/>(ModuleDecl,
 	 * DataConstructor, TypeDecl, InterfaceDecl, MainBlock, Import, Export,
 	 * FunctionDecl, ProductLine, Product, ClassDecl, TypedVarOrFieldDecl,
 	 * MethodImpl and MethodSig )<br/>to its String representation. Used in
 	 * {@link ABSContentOutlineStyledLabelProvider}.
-	 * 
+	 *
 	 * @param element
 	 *            The element which should be converted into it String
 	 *            representation
@@ -434,9 +434,9 @@ public class ABSContentOutlineUtils {
 	    } else if (element instanceof ProductLine) {
 	        // FIXME Unfold ProductLine Definition
 	        return new StyledString(((ProductLine) element).getName(), STYLER_BLACK);
-	    } else if (element instanceof Product) {
+	    } else if (element instanceof ProductDecl) {
 	        // FIXME Unfold Product Definition
-	        return new StyledString(((Product) element).getName(), STYLER_BLACK);
+	        return new StyledString(((ProductDecl) element).getName(), STYLER_BLACK);
 	    } else if (element instanceof DeltaDecl) {
 	        return new StyledString(((DeltaDecl) element).getName(), STYLER_BLACK);
 	    } else if (element instanceof AddTypeSynModifier) {
@@ -472,17 +472,17 @@ public class ABSContentOutlineUtils {
 
 	    return new StyledString(WORKBENCH_LABEL_PROVIDER.getText(element), STYLER_BLACK);
 	}
-	
+
 	/**
 	 * Converts ASTNodes, that are wrapped in InternalASTNodes, relevant for the Content Outline
 	 * <ul>
 	 *  <li>ModuleDecl,
 	 *  <li>DataConstructor, TypeDecl, InterfaceDecl, MainBlock, Import, Export,
 	 *  <li>FunctionDecl, ProductLine, Product, ClassDecl, TypedVarOrFieldDecl,
-	 *  <li>MethodImpl and MethodSig 
+	 *  <li>MethodImpl and MethodSig
 	 * </ul>
 	 * to its String representation. Used in {@link ABSContentOutlineStyledLabelProvider}.
-	 * 
+	 *
 	 * @param node internal ASTnode to be converted
 	 * @return A String representation of the internal AST node or null if node is null
 	 */
@@ -492,10 +492,10 @@ public class ABSContentOutlineUtils {
 				return getLabel(node.getASTNode());
 			}
 		}
-		
+
 		return STYLED_EMPTY;
 	}
-	
+
 	/**
 	 * Returns a String representations of the given Object using {@link WorkbenchLabelProvider}.
 	 * @param o Object to be converted
@@ -504,28 +504,28 @@ public class ABSContentOutlineUtils {
 	public static StyledString getLabel(Object o){
 		return new StyledString(WORKBENCH_LABEL_PROVIDER.getText(o), STYLER_BLACK);
 	}
-	
+
 	/**
 	 * Returns a String representation of the given {@link PackageAbsFile}.
-	 * @param element 
+	 * @param element
 	 * @return A String representation of the PackageAbsFile
 	 */
 	public static StyledString getLabel(PackageAbsFile element){
 		return new StyledString(element.getName(), STYLER_BLACK);
 	}
-	
+
 	/**
 	 * Returns a String representation of the given {@link PackageContainer}.
-	 * @param element 
+	 * @param element
 	 * @return A String representation of the PackageContainer
 	 */
 	public static StyledString getLabel(PackageContainer element){
 		return new StyledString("ABS Package Dependencies");
 	}
-	
+
 	/**
 	 * Returns a String representation of the given {@link PackageEntry}.
-	 * @param element 
+	 * @param element
 	 * @return A String representation of the PackageEntry
 	 */
 	public static StyledString getLabel(PackageEntry element){
@@ -533,12 +533,12 @@ public class ABSContentOutlineUtils {
 		StyledString string = new StyledString(element.getName(), STYLER_BLACK);
 		StringBuffer displayPath = new StringBuffer();
 		displayPath.append(" - ");
-		for (int i = 0; i < segments.length - 1; i++) { 
+		for (int i = 0; i < segments.length - 1; i++) {
 			displayPath.append(segments[i]).append(File.separator);
 		}
 		return string.append(displayPath.toString(), STYLER_GREY);
 	}
-	
+
 	/**
 	 * Returns a String representation of the given ModulePath using {@link #getLastOfModulePath(ModulePath)}
 	 * @see #getLastOfModulePath(ModulePath)
@@ -546,13 +546,13 @@ public class ABSContentOutlineUtils {
 	 * @return A String representation of the ModulePath
 	 */
 	public static StyledString getLabel(ModulePath element){
-			return new StyledString((getLastOfModulePath((ModulePath) element)));
+			return new StyledString((getLastOfModulePath(element)));
 	}
 
 	private static StyledString handleImportsExportsBlock(List<?> element) {
-	    if (ABSContentOutlineUtils.isImportList((List<?>)element)){
+	    if (ABSContentOutlineUtils.isImportList(element)){
 	    	return IMPORTS_BLOCK_STYLED_STRING;
-	    } else if (ABSContentOutlineUtils.isExportList((List<?>)element)){
+	    } else if (ABSContentOutlineUtils.isExportList(element)){
 	    	return EXPORTS_BLOCK_STYLED_STRING;
 	    } else {
 		return new StyledString(element.toString(), STYLER_BLACK);
@@ -568,11 +568,11 @@ public class ABSContentOutlineUtils {
 		return STYLED_EMPTY;
 	    }
 	}
-	
+
 	/**
 	 * Returns a StyledString representation of a TypedVarOrFieldDecl instance
 	 * with the following scheme: <code>name : type</code>
-	 * 
+	 *
 	 * @param element
 	 * @return colored name or null if element is null
 	 */
@@ -586,10 +586,10 @@ public class ABSContentOutlineUtils {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Utility method for formatting a ABS method signature
-	 * 
+	 *
 	 * @param element
 	 * @return String representation of a ABS method signature or null if
 	 *         element is null
@@ -614,50 +614,50 @@ public class ABSContentOutlineUtils {
 	private static StyledString formatClassDecl(ClassDecl element) {
 	    if (element != null){
 	    	StyledString sb = new StyledString();
-	    
+
 	    	sb.append(element.getName());
 	    	sb.append(formatParams(element.getParamList()));
 	    	return sb;
 	    }
-	    
+
 	    return null;
 	}
 
 	static StyledString formatFunctionDecl(FunctionDecl element) {
 	    StyledString sb = new StyledString();
-	    FunctionDecl fDecl = (FunctionDecl) element;
-	    
+	    FunctionDecl fDecl = element;
+
 	    addWithNormalStyler(sb, fDecl.getName());
-	    
+
 	    if (element instanceof ParametricFunctionDecl) {
 	    	ParametricFunctionDecl pfDecl = ((ParametricFunctionDecl) fDecl);
-	    	addWithNormalStyler(sb, formatParametricTypes(pfDecl.getTypeParameterList()));		
-	    } 
-	    	
+	    	addWithNormalStyler(sb, formatParametricTypes(pfDecl.getTypeParameterList()));
+	    }
+
 	    sb.append(formatParams(fDecl.getParams()));
 	    sb.append(TYPE_DELIMITER_STYLED_STRING);
 	    sb.append(formatAccess(fDecl.getTypeUse()), STYLER_TYPES);
-	    
+
 	    return sb;
 	}
-	
+
 	private static final void deleteLastCharacter(StringBuilder sb){
 		sb.deleteCharAt(sb.length()-1);
 	}
-	
+
 	private static final void deleteLastCharacters(StringBuilder sb, int len){
 		for(int i=1; i<=len; i++){
 			deleteLastCharacter(sb);
 		}
 	}
-	
+
 	private static final void addWithNormalStyler(StyledString sb, String s){
 		sb.append(s, STYLER_BLACK);
 	}
 
-	
+
 	/**
-	 * Returns an AbsNature for an Object, if this element is a 
+	 * Returns an AbsNature for an Object, if this element is a
 	 * <ul>
 	 * <li>InternalASTNode&lt;?&gt;</li>
 	 * <li>IFile</li>
@@ -689,7 +689,7 @@ public class ABSContentOutlineUtils {
 
 	/**
 	 * Returns the last part of a ModulePath
-	 * 
+	 *
 	 * @param p
 	 *            The target ModulePath
 	 * @return The last module prefix of the ModulePath instance. <br/>
@@ -716,8 +716,8 @@ public class ABSContentOutlineUtils {
 		} else {
 			return null;
 		}
-	}	
-	
+	}
+
 	static void insertCostabsItems(ISelection sel) {
 		Object[] selectedItems = ((IStructuredSelection) sel).toArray();
 		CostabsLink.ENTRIES_STRINGS = new ArrayList<String>();
@@ -725,20 +725,20 @@ public class ABSContentOutlineUtils {
 		CostabsLink.LINE_ITEMS = new ArrayList<Integer>();
 		if (selectedItems.length > 0)
 			CostabsLink.ABS_NATURE = ((InternalASTNode<?>) selectedItems[0]).getNature();
-		
+
 		for (int i = 0; i < selectedItems.length; i++) {
 			ASTNode<?> node = ((InternalASTNode<?>) selectedItems[i]).getASTNode();
 			CostabsLink.ENTRIES_NODES.add(node);
 			String callerName;
 			int line;
-			
+
 			if (node instanceof FunctionDecl) {
 				FunctionDecl del = (FunctionDecl) node;
 				callerName = del.getName();
 				line = del.getStartLine();
 				CostabsLink.ENTRIES_STRINGS.add(callerName);
 				CostabsLink.LINE_ITEMS.add(line);
-			} else if (node instanceof MethodImpl) { 
+			} else if (node instanceof MethodImpl) {
 				MethodImpl del = (MethodImpl) node;
 				ASTNode<?> par = del.getContextDecl();
 				if (par instanceof ClassDecl) {
@@ -758,7 +758,7 @@ public class ABSContentOutlineUtils {
 					CostabsLink.ENTRIES_STRINGS.add(callerName);
 					CostabsLink.LINE_ITEMS.add(line);
 				}
-			}	
+			}
 		}
 	}
 }

@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package org.absmodels.abs.plugin.actions;
@@ -50,7 +50,7 @@ import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.Product;
+import abs.frontend.ast.ProductDecl;
 import abs.frontend.delta.DeltaModellingException;
 
 public class JavaJob extends Job {
@@ -60,7 +60,7 @@ public class JavaJob extends Job {
     private MsgConsole javaConsole;
     private IProject project;
     private IFile currentFile;
-    private Product product = null;
+    private ProductDecl product = null;
 
     // job
     private IAction action;
@@ -116,8 +116,8 @@ public class JavaJob extends Job {
     }
 
     /**
-     * creates a new job for an action. 
-     * 
+     * creates a new job for an action.
+     *
      * @param name - job name
      * @param action - compile, debug or SDedit action
      * @param project - ABS file
@@ -150,7 +150,7 @@ public class JavaJob extends Job {
                 return showErrorMessage("The project does not exist/is not open.");
             } else if (!project.hasNature(NATURE_ID)){
                 return showErrorMessage("Chosen project '"+project.getName()+"' is not an ABS project.");
-            }			
+            }
         } catch (CoreException e) {
             return showErrorMessage("Project does not exist or project is not open", e);
         }
@@ -164,7 +164,7 @@ public class JavaJob extends Job {
             return showErrorMessage("ABS Java Job failed",e);
         }
 
-        return executeJob(monitor); 
+        return executeJob(monitor);
     }
 
     private void setUpConsole() {
@@ -174,9 +174,9 @@ public class JavaJob extends Job {
 
     /**
      * Init property options
-     * 
+     *
      * @see org.absmodels.abs.plugin.properties.JavaPropertyPage
-     * 
+     *
      * @throws AbsJobException, if project is not an ABS project
      */
     private void loadPropertyOptions() throws AbsJobException {
@@ -232,7 +232,7 @@ public class JavaJob extends Job {
     /**
      * The action id decides which options are used.
      * Options:
-     * only compile | start debugger | start debugger with SDEdit  
+     * only compile | start debugger | start debugger with SDEdit
      */
     private void setJobOptions() {
         if(action.getId().equals(ACTION_DEBUG_ID)){
@@ -278,11 +278,11 @@ public class JavaJob extends Job {
      * @param monitor - must not be null
      * @param path - where to add the modules / java-files
      * @param project - the ABS project
-     * @throws IOException, if unable to create java files 
-     * @throws AbsJobException, if unable to generate java files 
-     * @throws JavaCodeGenerationException, if unable to generate java files  
-     * @throws CoreException 
-     * @throws NoModelException 
+     * @throws IOException, if unable to create java files
+     * @throws AbsJobException, if unable to generate java files
+     * @throws JavaCodeGenerationException, if unable to generate java files
+     * @throws CoreException
+     * @throws NoModelException
      */
     private void generateJavaCode(IProgressMonitor monitor, Path path, IProject project) throws AbsJobException, IOException, JavaCodeGenerationException, CoreException, NoModelException {
         assert monitor != null;
@@ -322,12 +322,12 @@ public class JavaJob extends Job {
 
     /**
      * generates .class files (needs .java files)
-     * @param monitor 
-     * 
+     * @param monitor
+     *
      * @param absFrontendLocation -where to find the absfrontend
      * @param path - directory with java files
      * @param noWarnings - do not show any compile warnings
-     * @throws AbsJobException 
+     * @throws AbsJobException
      */
     private void generateJavaClassFiles(IProgressMonitor monitor, String absFrontendLocation, File path, boolean noWarnings) throws AbsJobException {
         monitor.subTask("Creating class files");
@@ -393,14 +393,14 @@ public class JavaJob extends Job {
     }
 
     /**
-     * Tries to find the main block in the chosen ABS file or in the 
+     * Tries to find the main block in the chosen ABS file or in the
      * ABS project, if file is null.
-     * 
+     *
      * Finally: executes Modulename.Main
-     * 
+     *
      * @param absFrontendLocation - where to find the absfrontend
      * @throws AbsJobException - if no main block found
-     * @throws IOException - If an I/O error occurs 
+     * @throws IOException - If an I/O error occurs
      */
     private void findAndExecuteMain(String absFrontendLocation) throws AbsJobException, IOException {
         String info = null;
@@ -483,7 +483,7 @@ public class JavaJob extends Job {
 
 
     /**
-     * 
+     *
      * @return a module with a main block from the current file or null if no such module was found
      * @throws AbsJobException
      */
@@ -536,7 +536,7 @@ public class JavaJob extends Job {
         DebugUtils.setCurrentProject(project);
 
         if(useInternalDebugger){
-            executeABSSystem(javaPath, moduleName);	
+            executeABSSystem(javaPath, moduleName);
         } else {
             executeABSSystemInExternalProcess(absFrontendLocation, javaPath, moduleName, info);
         }
@@ -576,7 +576,7 @@ public class JavaJob extends Job {
 
     /**
      * The following arguments may be null, if the user selected one of the tool bar icons.
-     * Otherwise these arguments should be set, before using JavaJob.schedule(). 
+     * Otherwise these arguments should be set, before using JavaJob.schedule().
      */
     private void setDebuggerArgumentsIfNull(boolean startSDE) {
         if (debuggerArgsSystemObserver == null){
@@ -616,7 +616,7 @@ public class JavaJob extends Job {
         PrintStream errStream = javaConsole.getPrintStream(MessageType.MESSAGE_ERROR);
         Debugger.startABSRuntime(project.getName(), moduleName, javaPath,
                 debuggerArgsSystemObserver, debuggerArgsTotalScheduler,
-                debuggerIsInDebugMode, debuggerArgsRandomSeed, 
+                debuggerIsInDebugMode, debuggerArgsRandomSeed,
                 terminateOnException,
                 fliClassPath,
                 outStream, errStream, ignoreMissingFLIClasses, useFifoSemantics);
@@ -624,7 +624,7 @@ public class JavaJob extends Job {
 
     /**
      * prints the output on users console using a new thread
-     * 
+     *
      * @param moduleName
      * @param info, String nam
      * @param p
@@ -679,7 +679,7 @@ public class JavaJob extends Job {
                     }});
             }};
 
-            new Thread(r).start();	
+            new Thread(r).start();
     }
 
     /**
@@ -720,9 +720,9 @@ public class JavaJob extends Job {
 
 
     /**
-     * Returns path of generated Java files. 
+     * Returns path of generated Java files.
      * Throws an IllegalArumentException, if path can not be found for the given project.
-     * 
+     *
      * @param project
      * @return
      * @throws CoreException
@@ -737,12 +737,12 @@ public class JavaJob extends Job {
         } catch (NullPointerException e) {
             standardExceptionHandling(e);
             throw new AbsJobException("No ABS project selected.");
-        } 
+        }
 
         path =  new Path(tempPath);
         if (!path.isAbsolute()){
             path = new Path(project.getLocation().append(path).toOSString());
-        } 
+        }
 
         return path;
     }
@@ -755,8 +755,8 @@ public class JavaJob extends Job {
         private MsgConsole console;
 
         /**
-         * starts a new SDedit process 
-         * 
+         * starts a new SDedit process
+         *
          * @param PORT
          * @throws IOException
          */
@@ -773,7 +773,7 @@ public class JavaJob extends Job {
                 sdeWatchdogJob.cancel();
             }
 
-            sdeWatchdogJob = 
+            sdeWatchdogJob =
                     new SDEditWatchdog(this);
 
             sdeWatchdogJob.schedule();
@@ -914,11 +914,11 @@ public class JavaJob extends Job {
         this.extraClassPaths = extraClassPaths;
     }
 
-    public Product getProduct() {
+    public ProductDecl getProduct() {
         return product;
     }
 
-    public void setProduct(Product product) {
+    public void setProduct(ProductDecl product) {
         this.product = product;
     }
 
@@ -970,6 +970,6 @@ public class JavaJob extends Job {
     }
 
     public void setUseFifoSemantics(boolean useFifoSemantics) {
-        this.useFifoSemantics = useFifoSemantics;        
+        this.useFifoSemantics = useFifoSemantics;
     }
 }

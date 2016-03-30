@@ -27,7 +27,7 @@ import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.PureExp;
 
 /**
- * 
+ *
  * @author woner
  *
  */
@@ -39,7 +39,7 @@ class ABSUnitTestCaseTranslatorHelper {
 
 	private static final String suite = "AbsUnit.Suite";
 	private static final String fixture = "AbsUnit.Fixture";
-	
+
 	private final TestCaseNamesBuilder testCaseNameBuilder = new TestCaseNamesBuilder();
 
 	private DataConstructor ignoreType;
@@ -48,64 +48,64 @@ class ABSUnitTestCaseTranslatorHelper {
 
 	private DataConstructor suiteType;
 	private DataConstructor fixtureType;
-	
+
 	private boolean hasABSUnit = false;
 	private ClassDecl absAssertImpl;
-	
+
 	private Annotation getTestAnnotation(DataConstructor c) {
 		return new Annotation(new DataConstructorExp(
-				c.getName(), 
+				c.getName(),
 				new abs.frontend.ast.List<PureExp>()));
 	}
-	
+
 	/**
 	 * Create a method signature for testing method with the given method name.
-	 * 
+	 *
 	 * @param methodName
 	 * @param decls
 	 * @return
 	 */
-	MethodSig createTestMethodSig(String methodName, 
+	MethodSig createTestMethodSig(String methodName,
 			ParamDecl... decls) {
 		MethodSig methodSig = createMethodSig(methodName, getUnit(), decls);
 		methodSig.addAnnotation(getTestAnnotation(testType));
 		return methodSig;
 	}
-	
+
 	InterfaceDecl createTestInterface(String interfaceName) {
 		InterfaceDecl ti = createInterface(interfaceName);
-		ti.addAnnotation(getTestAnnotation(fixtureType)); 
+		ti.addAnnotation(getTestAnnotation(fixtureType));
 		return ti;
 	}
-	
+
 	ClassDecl createTestClass(InterfaceDecl inf) {
-		ClassDecl ct = new ClassDecl(testCaseNameBuilder.className(inf.getName()), 
-				new abs.frontend.ast.List<Annotation>(), 
+		ClassDecl ct = new ClassDecl(testCaseNameBuilder.className(inf.getName()),
+				new abs.frontend.ast.List<Annotation>(),
 				new abs.frontend.ast.List<ParamDecl>(),
-				new abs.frontend.ast.List<InterfaceTypeUse>(), 
+				new abs.frontend.ast.List<InterfaceTypeUse>(),
 				new Opt<InitBlock>(),
 				new abs.frontend.ast.List<FieldDecl>(),
 				new abs.frontend.ast.List<MethodImpl>());
-		
-		ct.addAnnotation(getTestAnnotation(suiteType)); 
+
+		ct.addAnnotation(getTestAnnotation(suiteType));
 		ct.addImplementedInterfaceUse(new InterfaceTypeUse(inf.getName(), new abs.frontend.ast.List<abs.frontend.ast.Annotation>()));
-		
+
 		for (MethodSig m : inf.getAllMethodSigs()) {
 			ct.addMethod(createMethodImpl(m));
 		}
 
 		FieldDecl assertImpl = new FieldDecl();
 		assertImpl.setName(ASSERT_HELPER);
-		assertImpl.setAccess(absAssertImpl.getImplementedInterfaceUse(0).fullCopy());
+		assertImpl.setAccess(absAssertImpl.getImplementedInterfaceUse(0).treeCopyNoTransform());
 		ct.addField(assertImpl);
-		
+
 		InitBlock block = new InitBlock();
 		block.addStmtNoTransform(getVAssign(ASSERT_HELPER, newObj(absAssertImpl, false)));
 		ct.setInitBlock(block);
-		
+
 		return ct;
 	}
-	
+
 	boolean gatherABSUnitAnnotations(Model model) {
 		for (Decl decl : model.getDecls()) {
 			if (decl instanceof ParametricDataTypeDecl) {
@@ -127,23 +127,23 @@ class ABSUnitTestCaseTranslatorHelper {
 				}
 			}
 		}
-		
+
 		hasABSUnit =
 			! (ignoreType == null || testType == null || dataPointType == null ||
 			   suiteType == null || fixtureType == null);
-		
+
 		return hasABSUnit;
 	}
-	
+
 	void setABSAssertImpl(Model model) {
-		this.absAssertImpl = 
-				getDecl(model, ClassDecl.class, 
+		this.absAssertImpl =
+				getDecl(model, ClassDecl.class,
 					new DeclNamePredicate<ClassDecl>("ABSAssertImpl"));
-			
-		if (this.absAssertImpl == null) 
+
+		if (this.absAssertImpl == null)
 			throw new IllegalArgumentException("Cannot find ABSAssertImpl");
 	}
-	
+
 	boolean hasABSUnit() {
 		return hasABSUnit;
 	}
