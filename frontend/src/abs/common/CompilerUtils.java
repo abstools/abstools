@@ -34,6 +34,25 @@ public class CompilerUtils {
     }
 
     /**
+     * Get the value of an annotation.  Returns the value of the first
+     * annotation with the given qualified (module-prefixed) name.
+     *
+     * @param annotationName The simple name (without module prefix) of the
+     * annotation
+     * @return a <code>PureExp</code> value or null
+     */
+    public static PureExp getAnnotationValueFromName(List<Annotation> annotations, String qualifiedAnnotationName) {
+        for (Annotation a : annotations) {
+            if (a instanceof TypedAnnotation) {
+                TypedAnnotation ta = (TypedAnnotation)a;
+                if (((TypeUse)ta.getAccess()).getDecl().qualifiedName().equals(qualifiedAnnotationName))
+                    return ta.getValue();
+            }
+        }
+        return null;
+    }
+
+    /**
      * Copies the position of fromNode to toNode.
      *
      * @param fromNode
