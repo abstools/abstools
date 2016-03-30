@@ -33,15 +33,6 @@ public class CompilerUtils {
         return null;
     }
 
-    public static boolean hasAnnotation(List<Annotation> annotations, String dataConstructorName) {
-        for (Annotation a : annotations) {
-            if (a.getValue() instanceof DataConstructorExp &&
-                    ((DataConstructorExp) a.getValue()).getConstructor().equals(dataConstructorName))
-                return true;
-        }
-        return false;
-    }
-
     /**
      * Copies the position of fromNode to toNode.
      *
