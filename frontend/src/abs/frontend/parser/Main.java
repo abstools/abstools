@@ -259,16 +259,14 @@ public class Main {
                 System.err.flush();
             }
         } else {
-            System.out.println("***************");
+            m.evaluateAllProductDeclarations();
             rewriteModel(m, product);
-            System.out.println("***************");
 
             // type check PL before flattening
             // [ramus] disabled temporarily due to a bug
             //if (typecheck)
             //    typeCheckProductLine(m);
 
-            m.evaluateAllProductDeclarations();
             // flatten before checking error, to avoid calculating *wrong* attributes
             if (fullabs) {
                 if (typecheck)
