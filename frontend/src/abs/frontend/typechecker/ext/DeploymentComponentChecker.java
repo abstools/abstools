@@ -30,17 +30,17 @@ public class DeploymentComponentChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkExpressionStmt(ExpressionStmt expressionStmt) {
-        checkDCCorrect(expressionStmt, CompilerUtils.getAnnotationValue(expressionStmt.getAnnotations(), "DC"));
+        checkDCCorrect(expressionStmt, CompilerUtils.getAnnotationValueFromSimpleName(expressionStmt.getAnnotations(), "DC"));
     }
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
-        checkDCCorrect(s, CompilerUtils.getAnnotationValue(s.getAnnotations(), "DC"));
+        checkDCCorrect(s, CompilerUtils.getAnnotationValueFromSimpleName(s.getAnnotations(), "DC"));
     }
 
     @Override
     public void checkVarDeclStmt(VarDeclStmt varDeclStmt) {
-        checkDCCorrect(varDeclStmt, CompilerUtils.getAnnotationValue(varDeclStmt.getAnnotations(), "DC"));
+        checkDCCorrect(varDeclStmt, CompilerUtils.getAnnotationValueFromSimpleName(varDeclStmt.getAnnotations(), "DC"));
     }
 
     private void checkDCCorrect(ASTNode<?> n, PureExp dc) {
@@ -60,7 +60,7 @@ public class DeploymentComponentChecker extends DefaultTypeSystemExtension {
             ASTNode parent = e.getParent();
             if (parent instanceof Stmt) { // should always be true
                 Stmt stmt = (Stmt) parent;
-                if (CompilerUtils.getAnnotationValue(stmt.getAnnotations(), "DC") != null) {
+                if (CompilerUtils.getAnnotationValueFromSimpleName(stmt.getAnnotations(), "DC") != null) {
                     errors.add(new SemanticError(e, ErrorMessage.DEPLOYMENT_COMPONENT_IGNORED, "dummy string to keep constructor happy"));
                 }
             }

@@ -22,17 +22,17 @@ public class SizeAnnotationChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkExpressionStmt(ExpressionStmt e) {
-        checkSizeAnnotationCorrect(e, CompilerUtils.getAnnotationValue(e.getAnnotations(), "Size"));
+        checkSizeAnnotationCorrect(e, CompilerUtils.getAnnotationValueFromSimpleName(e.getAnnotations(), "Size"));
     }
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
-        checkSizeAnnotationCorrect(s, CompilerUtils.getAnnotationValue(s.getAnnotations(), "Size"));
+        checkSizeAnnotationCorrect(s, CompilerUtils.getAnnotationValueFromSimpleName(s.getAnnotations(), "Size"));
     }
 
     @Override
     public void checkVarDeclStmt(VarDeclStmt v) {
-        checkSizeAnnotationCorrect(v, CompilerUtils.getAnnotationValue(v.getAnnotations(), "Size"));
+        checkSizeAnnotationCorrect(v, CompilerUtils.getAnnotationValueFromSimpleName(v.getAnnotations(), "Size"));
     }
 
     private void checkSizeAnnotationCorrect(ASTNode<?> n, PureExp size) {

@@ -269,13 +269,13 @@ public class JavaGeneratorHelper {
         }
         stream.println(",");
         PureExp rtAttr;
-        rtAttr = CompilerUtils.getAnnotationValue(annotations, "Deadline");
+        rtAttr = CompilerUtils.getAnnotationValueFromSimpleName(annotations, "Deadline");
         if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream); 
         stream.println(",");
-        rtAttr = CompilerUtils.getAnnotationValue(annotations, "Cost");
+        rtAttr = CompilerUtils.getAnnotationValueFromSimpleName(annotations, "Cost");
         if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream); 
         stream.println(",");
-        rtAttr = CompilerUtils.getAnnotationValue(annotations, "Critical");
+        rtAttr = CompilerUtils.getAnnotationValueFromSimpleName(annotations, "Critical");
         if (rtAttr == null) stream.print(ABSBool.class.getName() + ".FALSE"); else rtAttr.generateJava(stream); 
         
         stream.println(") {");

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.common;
@@ -14,7 +14,15 @@ import abs.frontend.ast.TypedAnnotation;
 
 public class CompilerUtils {
 
-    public static PureExp getAnnotationValue(List<Annotation> annotations, String annotationName) {
+    /**
+     * Get the value of an annotation.  Will return the value of the first
+     * annotation with the given simple name.
+     *
+     * @param annotationName The simple name (without module prefix) of the
+     * annotation
+     * @return a <code>PureExp</code> value or null
+     */
+    public static PureExp getAnnotationValueFromSimpleName(List<Annotation> annotations, String annotationName) {
         for (Annotation a : annotations) {
             if (a instanceof TypedAnnotation) {
                 TypedAnnotation ta = (TypedAnnotation)a;
@@ -24,7 +32,7 @@ public class CompilerUtils {
         }
         return null;
     }
-    
+
     public static boolean hasAnnotation(List<Annotation> annotations, String dataConstructorName) {
         for (Annotation a : annotations) {
             if (a.getValue() instanceof DataConstructorExp &&
@@ -33,10 +41,10 @@ public class CompilerUtils {
         }
         return false;
     }
-    
+
     /**
      * Copies the position of fromNode to toNode.
-     * 
+     *
      * @param fromNode
      * @param toNode
      * @return toNode

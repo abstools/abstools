@@ -42,7 +42,7 @@ public class MaudeCompilerHelper {
                                           List<Annotation> annotations,
                                           int defaultValue)
     {
-        PureExp cost = CompilerUtils.getAnnotationValue(annotations, "Cost");
+        PureExp cost = CompilerUtils.getAnnotationValueFromSimpleName(annotations, "Cost");
         if (cost != null || defaultValue > 0) {
             stream.print("[");
             if (cost == null) {

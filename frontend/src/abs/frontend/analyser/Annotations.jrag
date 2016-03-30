@@ -13,7 +13,7 @@ aspect Annotations {
     
     // Annotation inheritance   
     syn PureExp ASTNode.getInheritedAnnotationValue(String name) {
-        final PureExp exp = CompilerUtils.getAnnotationValue(getNodeAnnotations(), name);
+        final PureExp exp = CompilerUtils.getAnnotationValueFromSimpleName(getNodeAnnotations(), name);
         if (exp != null)
             return exp;
         if (getParent() == null)

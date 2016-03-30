@@ -166,7 +166,7 @@ aspect GenerateErlang {
       if(!first)
         ecs.println(",");
       first=false;
-      PureExp cost = CompilerUtils.getAnnotationValue(stmt.getAnnotationList(), "Cost");
+      PureExp cost = CompilerUtils.getAnnotationValueFromSimpleName(stmt.getAnnotationList(), "Cost");
       if (cost != null) {
           ecs.print("task:block_for_resource(Cog,cpu,");
           cost.generateErlangCode(ecs, vars);
@@ -258,7 +258,7 @@ aspect GenerateErlang {
     while (!(parent instanceof Stmt) && parent != null ) {
       parent = parent.getParent();
     }
-    PureExp dc = CompilerUtils.getAnnotationValue(((Stmt)parent).getAnnotations(), "DC");
+    PureExp dc = CompilerUtils.getAnnotationValueFromSimpleName(((Stmt)parent).getAnnotations(), "DC");
     ClassDecl classDecl = ((UnionType)getType()).getOriginatingClass();
     String className = ErlUtil.getName(classDecl);
     boolean isNewDC = getType().isDeploymentComponentType();
