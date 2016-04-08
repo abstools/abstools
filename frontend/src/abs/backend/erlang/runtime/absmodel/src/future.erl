@@ -198,11 +198,21 @@ wait_for_completion(References) ->
             wait_for_completion(References)
     end.
 
-%% send out notifications to all awaiting processes before allowing
-%% process to terminate.  This avoids spurious "all idle" states which
-%% cause premature clock advances.
+%% send out notifications to all awaiting processes before allowing process to
+%% terminate.  This avoids spurious "all idle" states which cause premature
+%% clock advances.  Also process other messages (poll, get) during that time.
 convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog) ->
     receive
+        {get,Sender} ->
+            Sender!{reply,self(),Value},
+            convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog);
+        {get_references, Sender} ->
+            ?DEBUG(get_references),
+            Sender ! {gc:extract_references(Value), self()},
+            convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog);
+        {poll, Sender} ->
+            Sender ! completed,
+            convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog);
         {wait,Sender}->
             %% KLUDGE: we serialize notifications, waiting for one
             %% okthx before sending out the next ok.  If a large
@@ -212,8 +222,14 @@ convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog) ->
             (fun Loop() ->
                      receive
                          {okthx,Sender} -> ok;
+                         {get,Sender1} ->
+                             Sender1!{reply,self(),Value},
+                             Loop();
                          {get_references, GC} ->
                              GC ! {gc:extract_references(Value), self()},
+                             Loop();
+                         {poll, Sender1} ->
+                             Sender1!completed,
                              Loop()
                      end
              end)(),
