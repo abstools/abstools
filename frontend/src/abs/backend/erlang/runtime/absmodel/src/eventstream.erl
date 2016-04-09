@@ -3,7 +3,7 @@
 %%A gen_event server to monitor events while executing a model
 -module(eventstream).
 
--export([start_link/0,stop/0,add_handler/2,call/2,gcstats/1,event/1]).
+-export([start_link/0,stop/0,add_handler/2,call/2,event/1]).
 
 
 
@@ -18,10 +18,6 @@ add_handler(Handler,Args)->
 
 call(Handler,Args) ->
     gen_event:call({global,?MODULE}, Handler, Args).
-
-%%Send statistics from garbage collector
-gcstats(Data) ->
-    gen_event:notify({global,?MODULE}, {gcstats,Data}).
 
 %%Send general event
 event(E)->

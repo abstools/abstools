@@ -47,7 +47,7 @@ init(Log, Debug) ->
 
 gcstats(Log, Statistics) -> 
     case Log of
-        true ->eventstream:gcstats({gcstats, erlang:monotonic_time(milli_seconds), Statistics});
+        true -> io:format("~p.~n",[{gcstats, erlang:monotonic_time(milli_seconds), Statistics}]);
         false -> ok
     end.
 
