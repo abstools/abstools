@@ -105,14 +105,6 @@ Note that you can set this variable as a file-local variable as well."
   "Product to be generated when compiling.")
 (put 'abs-product-name 'safe-local-variable 'stringp)
 
-(defcustom abs-debug-output nil
-  "Control whether to tell the backend to be verbose.
-This setting might not be supported on all backends, or produce
-different results."
-  :type 'boolean
-  :group 'abs)
-(put 'abs-debug-output 'safe-local-variable 'booleanp)
-
 ;;; Making faces
 (defface abs-keyword-face '((default (:inherit font-lock-keyword-face)))
   "Face for Abs keywords"
@@ -424,7 +416,6 @@ value.")
                    (erlang-dir (concat (file-name-directory (buffer-file-name))
                                        "gen/erl/absmodel"))
                    (module (abs--guess-module))
-                   (debug-output abs-debug-output)
                    (clock-limit abs-clock-limit))
                (with-current-buffer erlang-buffer
                  (comint-send-string erlang-buffer
@@ -439,7 +430,6 @@ value.")
                  (comint-send-string erlang-buffer "make:all([load]).\n")
                  (comint-send-string erlang-buffer
                                      (concat "runtime:start(\""
-                                             (when debug-output " -d ")
                                              (when clock-limit (format " -l %d " clock-limit))
                                              ;; FIXME: reinstate `module' arg
                                              ;; once abs--guess-module doesn't
@@ -634,12 +624,7 @@ The following keys are set:
      ["Timed interpreter"
       (setq abs-use-timed-interpreter (not abs-use-timed-interpreter))
       :active t :style toggle
-      :selected abs-use-timed-interpreter])
-    ("Erlang Backend Options"
-     ["Debugging output"
-      (setq abs-debug-output (not abs-debug-output))
-      :active t :style toggle
-      :selected abs-debug-output])))
+      :selected abs-use-timed-interpreter])))
 
 (unless (assoc "\\.abs\\'" auto-mode-alist)
   (add-to-list 'auto-mode-alist '("\\.abs\\'" . abs-mode)))

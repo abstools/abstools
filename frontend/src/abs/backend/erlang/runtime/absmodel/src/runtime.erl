@@ -12,9 +12,7 @@
 -export([init/1]).
 
 -define(CMDLINE_SPEC,
-        [{debug,$d,"debug",{boolean,false},"Print debug status output"},
-         {gcstats,$g, "gcstats",{boolean,false},"Print garbage collection statistics"},
-         {port,$p,"port",{integer,none},"Start http on port and keep model running"},
+        [{port,$p,"port",{integer,none},"Start http on port and keep model running"},
          {clocklimit,$l,"clock-limit",{integer,none},"Terminate simulation after given clock value"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
 
@@ -88,12 +86,6 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
     io:format("Start ~w~n",[Module]),
     %%Init logging
     eventstream:start_link(),
-    case {Debug, GCStatistics} of 
-        {false, false} ->
-            ok;
-        _ ->
-            eventstream:add_handler(console_logger,[Debug, GCStatistics])
-    end,
     eventstream:add_handler(cog_monitor,[self(),Keepalive]),
     %% Init garbage collector
     gc:start(GCStatistics, Debug),

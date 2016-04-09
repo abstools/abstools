@@ -3,7 +3,6 @@
 -export([init/4,start/5]).
 -export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,complete/5]).
 -include_lib("abs_types.hrl").
--include_lib("log.hrl").
 %%Future starts AsyncCallTask
 %%and stores result
 
@@ -145,7 +144,6 @@ await(Ref, Cog=#cog{ref=CogRef}, Stack) ->
                              %% later.
                              Loop();
                          {get_references, Sender} ->
-                             ?DEBUG(get_references),
                              Sender ! {gc:extract_references(Stack), self()},
                              Loop()
                      end end)()
@@ -207,7 +205,6 @@ convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog) ->
             Sender!{reply,self(),Value},
             convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog);
         {get_references, Sender} ->
-            ?DEBUG(get_references),
             Sender ! {gc:extract_references(Value), self()},
             convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog);
         {poll, Sender} ->
@@ -255,14 +252,12 @@ loop(Value, CalleeCog)->
             %% gone so we just consume this message.
             loop(Value, CalleeCog);
         {get_references, Sender} ->
-            ?DEBUG(get_references),
             Sender ! {gc:extract_references(Value), self()},
             loop(Value, CalleeCog);
         {poll, Sender} ->
             Sender ! completed,
             loop(Value, CalleeCog);
         {die, Reason, By} ->
-            ?DEBUG({dying, Reason, By}),
             ok;
         _ ->
             loop(Value, CalleeCog)

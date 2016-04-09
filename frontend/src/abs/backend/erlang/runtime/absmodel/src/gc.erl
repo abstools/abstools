@@ -4,7 +4,6 @@
 %% For now implemented as a registered process running globally
 %% This should probably be changed if we want one process per COG
 
--include_lib("log.hrl").
 -include_lib("abs_types.hrl").
 -export([start/2, stop/0, init/2, extract_references/1, get_references/1]).
 -export([register_future/1, unroot_future/1]).
@@ -158,7 +157,6 @@ sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,
     WhiteFutures = gb_sets:subtract(Futures, Black),
     BlackObjects = gb_sets:intersection(Objects, Black),
     BlackFutures = gb_sets:intersection(Futures, Black),
-    ?DEBUG({sweep, {objects, gb_sets:size(WhiteObjects)}, {futures, gb_sets:size(WhiteFutures)}}),
     gcstats(Log,{sweep, {objects, gb_sets:size(WhiteObjects), gb_sets:size(BlackObjects)},
              {futures, gb_sets:size(WhiteFutures), gb_sets:size(BlackFutures)}}),
     gb_sets:fold(fun ({object, Ref}, ok) -> object:die(Ref, gc), ok end, ok, WhiteObjects),
@@ -175,7 +173,6 @@ sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,
                     PFactor > ?MIN_PROC_FACTOR -> PFactor - 0.05;
                     true -> PFactor
                  end,
-    ?DEBUG({sweep_finished, {objects, gb_sets:size(BlackObjects)}, {futures, gb_sets:size(BlackFutures)}}),
     loop(State#state{objects=BlackObjects, futures=BlackFutures, previous=erlang:monotonic_time(milli_seconds),
                      limit=NewLim, proc_factor=PFactor}).
 

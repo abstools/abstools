@@ -2,7 +2,6 @@
 -module(cog).
 -export([start/0,start/1,add/3,add_and_notify/3,add_blocking/5,new_state/3,new_state_sync/4,inc_ref_count/1,dec_ref_count/1]).
 -export([init/2]).
--include_lib("log.hrl").
 -include_lib("abs_types.hrl").
 -record(state,{tasks,running=idle,polling=[],tracker,referencers=1,dc=null}).
 -record(task,{ref,state=waiting}).
@@ -91,7 +90,6 @@ kill_recklessly(Cog) ->
 %%Internal
 
 init(Tracker,DC) ->
-    ?DEBUG({new}),
     process_flag(trap_exit, true),
     eventstream:event({cog,self(),new}),
     Running = receive
@@ -124,7 +122,6 @@ loop(S=#state{running=no_task_schedulable})->
                         eventstream:event({cog,self(),active}),
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
-                        ?DEBUG({task_died,R,Reason}),
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
@@ -159,7 +156,6 @@ loop(S=#state{running=idle})->
                     {new_task,Task,Args,Sender,Notify}->
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
-                        ?DEBUG({task_died,R,Reason}),
                         set_task_state(S,R,abort);
                     inc_ref_count->
                         inc_referencers(S);
@@ -198,7 +194,6 @@ loop(S=#state{running=R}) when is_pid(R)->
                     {token,R,Task_state}->
                         set_task_state(S#state{running=idle},R,Task_state);
                     {'EXIT',R,Reason} when Reason /= normal ->
-                        ?DEBUG({task_died,R,Reason}),
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
@@ -231,7 +226,6 @@ loop(S=#state{running={blocked, R}}) ->
                     {new_task,Task,Args,Sender,Notify}->
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
-                        ?DEBUG({task_died,R,Reason}),
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
@@ -262,7 +256,6 @@ loop(S=#state{running={blocked_for_gc, R}}) ->
                     {new_task,Task,Args,Sender,Notify}->
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
-                        ?DEBUG({task_died,R,Reason}),
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
@@ -308,13 +301,12 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
                 dec_referencers(S)
         end,
     case New_State of
-        stop -> ?DEBUG(dying);
+        stop -> ok;
         _ -> loop(New_State)
     end.
 
 start_new_task(S=#state{running=R,tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify)->
     Ref=task:start(#cog{ref=self(),tracker=Tracker,dc=DC},Task,Args),
-    ?DEBUG({new_task,R,Ref,Task,Args}),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     Sender!{started,Task,Ref},
     %% Don't generate "cog idle" event when we create new task - this
@@ -333,13 +325,11 @@ schedule_and_execute(S=#state{running=idle}) ->
     T=get_runnable(Tasks),
     State=case T of
         none-> %None found
-            ?DEBUG({schedule, no_task_schedulable}),
             S2=reset_polled(none,Polled,S1),
             eventstream:event({cog,self(),idle}),
             S2#state{running=no_task_schedulable};
         #task{ref=R} -> %Execute T
             R!token,
-            ?DEBUG({schedule,T}),
             S2=reset_polled(R,Polled,S1),
             set_task_state(S2#state{running=R},R,running)
     end,
@@ -375,7 +365,6 @@ set_task_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
           _ ->
               S1
       end,  
-    ?DEBUG({task_state_change,TaskRef,OldState,State}),
     case State of 
          done ->
            S#state{tasks=gb_trees:delete(TaskRef,Tasks)};
