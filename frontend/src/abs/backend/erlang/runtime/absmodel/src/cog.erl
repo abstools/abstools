@@ -269,7 +269,7 @@ loop(S=#state{running={blocked_for_gc, R}}) ->
     loop(New_State);
 
 %%Garbage collector is running, wait before resuming tasks
-loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, dc=DC}) ->
+loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, dc=DC, tracker=T}) ->
     New_State=
         receive
             {get_references, Sender} ->
@@ -289,11 +289,14 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
                 case Refs of
                     0 -> cog_monitor:cog_died(self()),
                          gc:unregister_cog(self()),
+                         gen_server:stop(T),
                          stop;
                     _ -> S#state{running=Old}
                 end;
             die_prematurely ->
+                %% FIXME: should we just call exit() on the processes?
                 lists:map(fun task:kill_recklessly/1, gb_trees:keys(Tasks)),
+                gen_server:stop(T),
                 stop;
             inc_ref_count->
                 inc_referencers(S);
