@@ -85,12 +85,11 @@ start_link(Args) ->
 start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
     io:format("Start ~w~n",[Module]),
     %%Init logging
-    eventstream:start_link(),
-    eventstream:add_handler(cog_monitor,[self(),Keepalive]),
+    {ok, _CogMonitor} = cog_monitor:start_link(self(), Keepalive),
     %% Init garbage collector
     gc:start(GCStatistics, Debug),
     %% Init simulation clock
-    clock:start_link(Clocklimit),
+    {ok, _Clock} = clock:start_link(Clocklimit),
     %% init RNG, recipe recommended by the Erlang documentation.
     %% TODO: if we want reproducible runs, make seed a command-line parameter
     random:seed(erlang:phash2([node()]), erlang:monotonic_time(), erlang:unique_integer()),
@@ -107,7 +106,7 @@ end_mod(TaskRef) ->
     timer:sleep(1),
     gc:stop(),
     clock:stop(),
-    eventstream:stop(),
+    cog_monitor:stop(),
     RetVal.
 
 

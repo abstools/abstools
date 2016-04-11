@@ -1,12 +1,11 @@
 %%This file is licensed under the terms of the Modified BSD License.
 
-%%This is a callback for the eventstream and manages sets of active and idle cogs, and reports back if all cogs are idle
 
 -module(cog_monitor).
--behaviour(gen_event).
+-behaviour(gen_server).
 -include_lib("abs_types.hrl").
 
--export([waitfor/0]).
+-export([start_link/2, stop/0, waitfor/0]).
 
 %% communication about cogs
 -export([new_cog/1, cog_active/1, cog_blocked/1, cog_unblocked/1, cog_blocked_for_clock/4, cog_idle/1, cog_died/1]).
@@ -17,8 +16,8 @@
 %% communication about dcs
 -export([new_dc/1, dc_died/1, get_dcs/0]).
 
-%% gen_event interface
--export([init/1,handle_event/2,handle_call/2,terminate/2,handle_info/2,code_change/3]).
+%% gen_server interface
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 %% - main=this
 %% - active=non-idle cogs
@@ -39,6 +38,12 @@
 -record(state,{main,active,blocked,idle,clock_waiting,dcs,timer,keepalive_after_clock_limit}).
 %%External function
 
+start_link(Main, Keepalive) ->
+    gen_server:start_link({global, cog_monitor}, ?MODULE, [Main, Keepalive], []).
+
+stop() ->
+    gen_server:stop({global, cog_monitor}).
+
 %% Waits until all cogs are idle
 waitfor()->
     receive
@@ -48,44 +53,46 @@ waitfor()->
 
 %% Cogs interface
 new_cog(Cog) ->
-    eventstream:event({cog,Cog,new}).
+    gen_server:call({global, cog_monitor}, {cog,Cog,new}).
 
 cog_active(Cog) ->
-    eventstream:event({cog,Cog,active}).
+    gen_server:call({global, cog_monitor}, {cog,Cog,active}).
 
 cog_blocked(Cog) ->
-    eventstream:event({cog, Cog, blocked}).
+    gen_server:call({global, cog_monitor}, {cog, Cog, blocked}).
 
 cog_unblocked(Cog) ->
-    eventstream:event({cog, Cog, unblocked}).
+    gen_server:call({global, cog_monitor}, {cog, Cog, unblocked}).
 
 cog_idle(Cog) ->
-    eventstream:event({cog,Cog,idle}).
+    gen_server:call({global, cog_monitor}, {cog,Cog,idle}).
 
 cog_died(Cog) ->
-    eventstream:event({cog,Cog,die}).
+    gen_server:call({global, cog_monitor}, {cog,Cog,die}).
 
 cog_blocked_for_clock(Task, Cog, Min, Max) ->
-    eventstream:event({cog,Task,Cog,clock_waiting,Min,Max}).
+    gen_server:call({global, cog_monitor}, {cog,Task,Cog,clock_waiting,Min,Max}).
 
 %% Tasks interface
 task_waiting_for_clock(Task, Cog, Min, Max) ->
-    eventstream:event({task,Task,Cog,clock_waiting,Min,Max}).
+    gen_server:call({global, cog_monitor}, {task,Task,Cog,clock_waiting,Min,Max}).
 
 task_blocked_for_resource(Task, Cog) ->
-    eventstream:event({task,Task,Cog,resource_waiting}).
+    gen_server:call({global, cog_monitor}, {task,Task,Cog,resource_waiting}).
 
 %% Deployment Components interface
 new_dc(DC) ->
-    eventstream:event({newdc, DC}).
+    gen_server:call({global, cog_monitor}, {newdc, DC}).
 
 dc_died(DC) ->
-    eventstream:event({dc_died, DC}).
+    gen_server:call({global, cog_monitor}, {dc_died, DC}).
 
 get_dcs() ->
-    eventstream:call(cog_monitor, get_dcs).
+    gen_server:call({global, cog_monitor}, get_dcs).
 
-%% Behaviour callbacks
+
+
+%% gen_server callbacks
 
 %%The callback gets as parameter the pid of the runtime process, which waits for all cogs to be idle
 init([Main,Keepalive])->
@@ -98,40 +105,41 @@ init([Main,Keepalive])->
                timer=undefined,
                keepalive_after_clock_limit=Keepalive}}.
 
-handle_event({cog,Cog,new},State=#state{idle=I})->
+
+handle_call({cog,Cog,new}, _From, State=#state{idle=I})->
     I1=gb_sets:add_element(Cog,I),
-    {ok, State#state{idle=I1}};
-handle_event({cog,Cog,active},State=#state{active=A,idle=I,timer=T})->
+    {reply, ok, State#state{idle=I1}};
+handle_call({cog,Cog,active}, _From, State=#state{active=A,idle=I,timer=T})->
     A1=gb_sets:add_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
     cancel(T),
-    {ok,State#state{active=A1,idle=I1,timer=undefined}};
-handle_event({cog,Cog,idle},State=#state{active=A,idle=I})->
+    {reply, ok, State#state{active=A1,idle=I1,timer=undefined}};
+handle_call({cog,Cog,idle}, _From, State=#state{active=A,idle=I})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:add_element(Cog,I),
     S1=State#state{active=A1,idle=I1},
     case can_clock_advance(State, S1) of
         true->
-            {ok, advance_clock_or_terminate(S1)};
+            {reply, ok, advance_clock_or_terminate(S1)};
         false->
-            {ok, S1}
+            {reply, ok, S1}
     end;
-handle_event({cog,Cog,blocked},State=#state{active=A,blocked=B})->
+handle_call({cog,Cog,blocked}, _From, State=#state{active=A,blocked=B})->
     A1=gb_sets:del_element(Cog,A),
     B1=gb_sets:add_element(Cog,B),
     S1=State#state{active=A1,blocked=B1},
     case can_clock_advance(State, S1) of
         true->
-            {ok, advance_clock_or_terminate(S1)};
+            {reply, ok, advance_clock_or_terminate(S1)};
         false->
-            {ok, S1}
+            {reply, ok, S1}
     end;
-handle_event({cog,Cog,unblocked},State=#state{active=A,blocked=B, timer=T})->
+handle_call({cog,Cog,unblocked}, _From, State=#state{active=A,blocked=B, timer=T})->
     A1=gb_sets:add_element(Cog,A),
     B1=gb_sets:del_element(Cog,B),
     cancel(T),
-    {ok, State#state{active=A1,blocked=B1}};
-handle_event({cog,Cog,die},State=#state{active=A,idle=I,blocked=B,clock_waiting=W})->
+    {reply, ok, State#state{active=A1,blocked=B1}};
+handle_call({cog,Cog,die}, _From,State=#state{active=A,idle=I,blocked=B,clock_waiting=W})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
     B1=gb_sets:del_element(Cog,B),
@@ -139,49 +147,55 @@ handle_event({cog,Cog,die},State=#state{active=A,idle=I,blocked=B,clock_waiting=
     S1=State#state{active=A1,idle=I1,blocked=B1,clock_waiting=W1},
     case can_clock_advance(State, S1) of
         true->
-            {ok, advance_clock_or_terminate(S1)};
+            {reply, ok, advance_clock_or_terminate(S1)};
         false->
-            {ok, S1}
+            {reply, ok, S1}
     end;
-handle_event({task,Task,Cog,clock_waiting,Min,Max},
+handle_call({task,Task,Cog,clock_waiting,Min,Max}, _From,
              State=#state{clock_waiting=C}) ->
     C1=add_to_clock_waiting(C,{task,Min,Max,Task,Cog}),
-    {ok,State#state{clock_waiting=C1}};
-handle_event({cog,Task,Cog,clock_waiting,Min,Max},
+    {reply, ok,State#state{clock_waiting=C1}};
+handle_call({cog,Task,Cog,clock_waiting,Min,Max}, _From,
              State=#state{clock_waiting=C}) ->
     %% {cog, blocked} event comes separately
     C1=add_to_clock_waiting(C,{cog,Min,Max,Task,Cog}),
-    {ok, State#state{clock_waiting=C1}};
-handle_event({task,Task,Cog,resource_waiting}, State=#state{clock_waiting=C}) ->
+    {reply, ok, State#state{clock_waiting=C1}};
+handle_call({task,Task,Cog,resource_waiting}, _From, State=#state{clock_waiting=C}) ->
     MTE=clock:distance_to_next_boundary(),
     C1=add_to_clock_waiting(C,{task,MTE,MTE,Task,Cog}),
-    {ok, State#state{clock_waiting=C1}};
-handle_event({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent,ref=O}},
-             State=#state{dcs=DCs}) ->
-    {ok, State#state{dcs=[DC | DCs]}};
-handle_event({dc_died, O}, State=#state{dcs=DCs}) ->
+    {reply, ok, State#state{clock_waiting=C1}};
+handle_call({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent,ref=O}},
+            _From, State=#state{dcs=DCs}) ->
+    {reply, ok, State#state{dcs=[DC | DCs]}};
+handle_call({dc_died, O}, _From, State=#state{dcs=DCs}) ->
     %% This event is not currently in use; we want DCs to stay alive for
     %% visualization.
-    {ok, State#state{dcs=lists:filter(fun (#object{ref=DC}) -> DC =/= O end,
-                                      DCs)}};
-handle_event(_,State)->
-    {ok,State}.
-
-%%Unused
-handle_call(get_dcs, State=#state{dcs=DCs}) ->
-    {ok, DCs, State};
-handle_call(_,State)->
-    {ok, undefined, State}.
+    {reply, ok, State#state{dcs=lists:filter(fun (#object{ref=DC}) -> DC =/= O end, DCs)}};
+handle_call(get_dcs, _From, State=#state{dcs=DCs}) ->
+    {reply, DCs, State};
+handle_call(Request, _From, State)->
+    io:format("Unknown request: ~w~n", [Request]),
+    {reply, error, State}.
 
 
-handle_info(M,_State)->
-    {not_supported_msg,M}.
+handle_cast(_Request, State) ->
+    %% unused
+    {noreply, State}.
 
-terminate(Arg,_State)->
-    {error,Arg}.
 
-code_change(_OldVsn,_State,_Extra)->
-    {not_supported}.
+handle_info(_Info, State)->
+    %% unused
+    {noreply, State}.
+
+
+terminate(_Reason,#state{timer=T})->
+    cancel(T),
+    ok.
+
+
+code_change(_OldVsn, State, _Extra)->
+    %% not supported
+    {error, State}.
 
 %%Private
 cancel(undefined)->
