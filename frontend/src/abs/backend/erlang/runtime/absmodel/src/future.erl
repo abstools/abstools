@@ -137,7 +137,7 @@ await(Ref, Cog=#cog{ref=CogRef}, Stack) ->
                              cog:new_state_sync(Cog,self(),runnable,Stack),
                              Ref ! {okthx, self()},
                              task:loop_for_token(Stack, token),
-                             eventstream:event({cog, CogRef, unblocked});
+                             cog_monitor:cog_unblocked(CogRef);
                          {stop_world, _Sender} ->
                              %% we already released the token above.  Eat the
                              %% message or we'll block at inopportune moments

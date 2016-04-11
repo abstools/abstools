@@ -127,7 +127,7 @@ aspect GenerateErlang {
        // Create a default deployment component.
        ecs.println("%% FIXME: thisDC() won't work in main block (DC should be in Cog state)");
        ecs.println("DC = object:new(cog:start(),class_ABS_DC_DeploymentComponent, [\"Initial DC\",dataEmptyMap,[]],Cog,[O]),");
-       ecs.println("eventstream:event({newdc, DC}),");
+       ecs.println("cog_monitor:new_dc(DC),");
        ecs.println("Stack = [DC],");
        getBlock().generateErlangCode(ecs, Vars.n());
        ecs.println('.');
@@ -210,7 +210,7 @@ aspect GenerateErlang {
       ecs.format("%s = %s", varName, sw.toString().substring(ecs.getIndent().length()));
       if (getType().isDeploymentComponentType() && getInitExp() instanceof NewExp) {
           ecs.println(",");
-          ecs.format("eventstream:event({newdc, %s})", varName);
+          ecs.format("cog_monitor:new_dc(%s)", varName);
       }
     }
     else
@@ -235,13 +235,13 @@ aspect GenerateErlang {
       ecs.format("%s = %s", varName,sw.toString().substring(ecs.getIndent().length()));
       if (isNewDC) {
         ecs.println(",");
-        ecs.format("eventstream:event({newdc, %s})", varName);
+        ecs.format("cog_monitor:new_dc(%s)", varName);
       }
     } else if(getVar() instanceof FieldUse) {
       ecs.format("set(O,'%s',%s)", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
       if (isNewDC) {
         ecs.println(",");
-        ecs.format("eventstream:event({newdc, get(O,%s)})", getVar().getName());
+        ecs.format("cog_monitor:new_dc(get(O,%s))", getVar().getName());
       }
     } else {
       throw new NotImplementedYetException(this);
@@ -300,7 +300,7 @@ aspect GenerateErlang {
       String varName = vars.inc("TEMP");
       ecs.format("%s = %s", varName,sw.toString().substring(ecs.getIndent().length()));
       ecs.println(",");
-      ecs.format("eventstream:event({newdc, %s})", varName);
+      ecs.format("cog_monitor:new_dc(%s)", varName);
       ecs.println(",");
       ecs.print(varName);
     } else {
@@ -325,7 +325,7 @@ aspect GenerateErlang {
       String varName = vars.inc("TEMP");
       ecs.format("%s = %s", varName,sw.toString().substring(ecs.getIndent().length()));
       ecs.println(",");
-      ecs.format("eventstream:event({newdc, %s})", varName);
+      ecs.format("cog_monitor:new_dc(%s)", varName);
       ecs.println(",");
       ecs.print(varName);
     } else {

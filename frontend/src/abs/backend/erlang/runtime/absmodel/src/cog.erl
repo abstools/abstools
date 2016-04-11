@@ -91,7 +91,7 @@ kill_recklessly(Cog) ->
 
 init(Tracker,DC) ->
     process_flag(trap_exit, true),
-    eventstream:event({cog,self(),new}),
+    cog_monitor:new_cog(self()),
     Running = receive
                   {stop_world, Sender} ->
                       Sender ! {stopped, self()},
@@ -111,7 +111,7 @@ loop(S=#state{running=no_task_schedulable})->
         after 0 ->
                 receive
                     {new_state,TaskRef,State,Sender}->
-                        eventstream:event({cog,self(),active}),
+                        cog_monitor:cog_active(self()),
                         NewState=set_task_state(S,TaskRef,State),
                         case Sender of
                             undef -> ok;
@@ -119,7 +119,7 @@ loop(S=#state{running=no_task_schedulable})->
                         end,
                         NewState;
                     {new_task,Task,Args,Sender,Notify}->
-                        eventstream:event({cog,self(),active}),
+                        cog_monitor:cog_active(self()),
                         start_new_task(S,Task,Args,Sender,Notify);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         set_task_state(S#state{running=idle},R,abort);
@@ -287,7 +287,7 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
                 S;
             {done, gc} ->
                 case Refs of
-                    0 -> eventstream:event({cog,self(),die}),
+                    0 -> cog_monitor:cog_died(self()),
                          gc:unregister_cog(self()),
                          stop;
                     _ -> S#state{running=Old}
@@ -326,7 +326,7 @@ schedule_and_execute(S=#state{running=idle}) ->
     State=case T of
         none-> %None found
             S2=reset_polled(none,Polled,S1),
-            eventstream:event({cog,self(),idle}),
+            cog_monitor:cog_idle(self()),
             S2#state{running=no_task_schedulable};
         #task{ref=R} -> %Execute T
             R!token,
@@ -344,7 +344,7 @@ set_task_state(S=#state{tasks=Tasks,polling=Pol},TaskRef,abort)->
     Old=gb_trees:get(TaskRef,Tasks),
     S#state{tasks=gb_trees:delete(TaskRef,Tasks),polling=lists:delete(Old, Pol)};
 set_task_state(S=#state{running=TaskRef},TaskRef,blocked) ->
-    eventstream:event({cog, self(), blocked}),
+    cog_monitor:cog_blocked(self()),
     S#state{running={blocked, TaskRef}};
 set_task_state(S=#state{running=TaskRef},TaskRef,blocked_for_gc) ->
     S#state{running={blocked_for_gc, TaskRef}};

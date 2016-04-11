@@ -6,7 +6,18 @@
 -behaviour(gen_event).
 -include_lib("abs_types.hrl").
 
--export([waitfor/0, get_dcs/0]).
+-export([waitfor/0]).
+
+%% communication about cogs
+-export([new_cog/1, cog_active/1, cog_blocked/1, cog_unblocked/1, cog_blocked_for_clock/4, cog_idle/1, cog_died/1]).
+
+%% communication about tasks
+-export([task_waiting_for_clock/4, task_blocked_for_resource/2]).
+
+%% communication about dcs
+-export([new_dc/1, dc_died/1, get_dcs/0]).
+
+%% gen_event interface
 -export([init/1,handle_event/2,handle_call/2,terminate/2,handle_info/2,code_change/3]).
 
 %% - main=this
@@ -33,7 +44,43 @@ waitfor()->
     receive
         wait_done ->
             ok
-    end.    
+    end.
+
+%% Cogs interface
+new_cog(Cog) ->
+    eventstream:event({cog,Cog,new}).
+
+cog_active(Cog) ->
+    eventstream:event({cog,Cog,active}).
+
+cog_blocked(Cog) ->
+    eventstream:event({cog, Cog, blocked}).
+
+cog_unblocked(Cog) ->
+    eventstream:event({cog, Cog, unblocked}).
+
+cog_idle(Cog) ->
+    eventstream:event({cog,Cog,idle}).
+
+cog_died(Cog) ->
+    eventstream:event({cog,Cog,die}).
+
+cog_blocked_for_clock(Task, Cog, Min, Max) ->
+    eventstream:event({cog,Task,Cog,clock_waiting,Min,Max}).
+
+%% Tasks interface
+task_waiting_for_clock(Task, Cog, Min, Max) ->
+    eventstream:event({task,Task,Cog,clock_waiting,Min,Max}).
+
+task_blocked_for_resource(Task, Cog) ->
+    eventstream:event({task,Task,Cog,resource_waiting}).
+
+%% Deployment Components interface
+new_dc(DC) ->
+    eventstream:event({newdc, DC}).
+
+dc_died(DC) ->
+    eventstream:event({dc_died, DC}).
 
 get_dcs() ->
     eventstream:call(cog_monitor, get_dcs).
