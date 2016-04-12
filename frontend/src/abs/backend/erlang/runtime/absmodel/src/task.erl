@@ -163,8 +163,8 @@ release_token(C=#cog{ref=Cog},State)->
     end,
     Cog!{token,self(),State}.
 
-rollback(#cog{tracker=T})->
-    rpc:pmap({object,rollback},[],object_tracker:get_all_dirty(T)).
+rollback(Cog)->
+    rpc:pmap({object,rollback},[],cog:get_and_clear_dirty(Cog)).
 
-commit(#cog{tracker=T})->
-    rpc:pmap({object,commit},[],object_tracker:get_all_dirty(T)).
+commit(Cog)->
+    rpc:pmap({object,commit},[],cog:get_and_clear_dirty(Cog)).

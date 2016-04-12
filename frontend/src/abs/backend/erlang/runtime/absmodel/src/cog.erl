@@ -1,6 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
--export([start/0,start/1,add/3,add_and_notify/3,add_blocking/5,new_state/3,new_state_sync/4,inc_ref_count/1,dec_ref_count/1]).
+-export([start/0,start/1,add/3,add_and_notify/3,add_blocking/5,new_state/3,new_state_sync/4]).
+-export([add_dirty_object/2,get_and_clear_dirty/1,inc_ref_count/1,dec_ref_count/1]).
 -export([init/2]).
 -include_lib("abs_types.hrl").
 -record(state,{tasks,running=idle,polling=[],tracker,referencers=1,dc=null}).
@@ -31,9 +32,9 @@ start(DC)->
     %% copy of the current cog (see start_new_task), the one in the cog
     %% structure itself is for evaluating thisDC().  The main block cog and
     %% DCs themselves currently do not have a DC associated.  In the case of
-    %% the main block this is arguably a bug; the implementation of deployment
-    %% components is contained in the standard library and does not use
-    %% thisDC().
+    %% the main block this is arguably a bug and means we cannot use cost
+    %% annotations; the implementation of deployment components is contained
+    %% in the standard library, so we can be sure they do not use thisDC().
     Cog = #cog{ref=spawn(cog,init, [T,DC]),tracker=T,dc=DC},
     gc:register_cog(Cog),
     Cog.
@@ -60,6 +61,14 @@ new_state(#cog{ref=Cog},TaskRef,State)->
 new_state_sync(#cog{ref=Cog},TaskRef,State,Stack) ->
     Cog!{new_state,TaskRef,State,self()},
     task:loop_for_token(Stack, new_state_finished).
+
+%% object reset / transaction interface
+
+add_dirty_object(#cog{tracker=Tracker}, Object) ->
+    object_tracker:dirty(Tracker, Object).
+
+get_and_clear_dirty(#cog{tracker=Tracker}) ->
+    object_tracker:get_all_dirty(Tracker).
 
 %%Garbage collector callbacks
 
