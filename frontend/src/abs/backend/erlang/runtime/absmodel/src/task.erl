@@ -120,7 +120,7 @@ block_without_time_advance(Cog)->
 %% await_duration and block_for_duration are called in different scenarios
 %% (guard vs statement), hence the different amount of work they do.
 await_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
-    case rationals:is_greater(rationals:to_r(Min), {0, 1}) of
+    case rationals:is_positive(rationals:to_r(Min)) of
         true ->
             cog_monitor:task_waiting_for_clock(self(), CogRef, Min, Max),
             task:release_token(Cog,waiting),
@@ -147,7 +147,7 @@ block_for_resource(Cog=#cog{ref=CogRef,dc=DC}, Resourcetype, Amount, Stack) ->
             task:acquire_token(Cog,Stack),
             block_for_resource(Cog, Resourcetype, Remaining, Stack);
         ok ->
-            case rationals:is_greater(Remaining, {0, 1}) of
+            case rationals:is_positive(Remaining) of
                 %% We loop since the DC might decide to hand out less
                 %% than we ask for and less than it has available.
                 true -> block_for_resource(Cog, Resourcetype, Remaining, Stack);

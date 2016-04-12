@@ -45,9 +45,9 @@ handle_call(now, _From, State=#state{now=Time}) ->
     {reply, Time, State};
 handle_call(next_int, _From, State=#state{now=Time}) ->
     Distance = rationals:sub(Time, rationals:to_r(rationals:trunc(Time))),
-    case Distance of
-        {0, _} -> {reply, {1,1}, State};
-        _ -> {reply, Distance, State}
+    case rationals:is_zero(Distance) of
+        true -> {reply, {1,1}, State};
+        false -> {reply, Distance, State}
     end.
 
 handle_cast(_Msg,State) ->
