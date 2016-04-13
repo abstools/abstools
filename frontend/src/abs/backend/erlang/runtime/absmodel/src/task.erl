@@ -141,7 +141,8 @@ block_for_resource(Cog=#cog{ref=CogRef,dc=DC}, Resourcetype, Amount, Stack) ->
     Remaining=rationals:sub(rationals:to_r(Amount), rationals:to_r(Consumed)),
     case Result of
         wait ->
-            cog_monitor:task_blocked_for_resource(self(), CogRef),
+            Time=clock:distance_to_next_boundary(),
+            cog_monitor:task_waiting_for_clock(self(), CogRef, Time, Time),
             task:block_with_time_advance(Cog),           % cause clock advance
             loop_for_clock_advance(Stack),
             task:acquire_token(Cog,Stack),

@@ -11,7 +11,7 @@
 -export([new_cog/1, cog_active/1, cog_blocked/1, cog_unblocked/1, cog_blocked_for_clock/4, cog_idle/1, cog_died/1]).
 
 %% communication about tasks
--export([task_waiting_for_clock/4, task_blocked_for_resource/2]).
+-export([task_waiting_for_clock/4]).
 
 %% communication about dcs
 -export([new_dc/1, dc_died/1, get_dcs/0]).
@@ -76,9 +76,6 @@ cog_blocked_for_clock(Task, Cog, Min, Max) ->
 %% Tasks interface
 task_waiting_for_clock(Task, Cog, Min, Max) ->
     gen_server:call({global, cog_monitor}, {task,Task,Cog,clock_waiting,Min,Max}).
-
-task_blocked_for_resource(Task, Cog) ->
-    gen_server:call({global, cog_monitor}, {task,Task,Cog,resource_waiting}).
 
 %% Deployment Components interface
 new_dc(DC) ->
@@ -160,11 +157,7 @@ handle_call({cog,Task,Cog,clock_waiting,Min,Max}, _From,
     %% {cog, blocked} event comes separately
     C1=add_to_clock_waiting(C,{cog,Min,Max,Task,Cog}),
     {reply, ok, State#state{clock_waiting=C1}};
-handle_call({task,Task,Cog,resource_waiting}, _From, State=#state{clock_waiting=C}) ->
-    MTE=clock:distance_to_next_boundary(),
-    C1=add_to_clock_waiting(C,{task,MTE,MTE,Task,Cog}),
-    {reply, ok, State#state{clock_waiting=C1}};
-handle_call({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent,ref=O}},
+handle_call({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent}},
             _From, State=#state{dcs=DCs}) ->
     {reply, ok, State#state{dcs=[DC | DCs]}};
 handle_call({dc_died, O}, _From, State=#state{dcs=DCs}) ->
