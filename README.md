@@ -53,6 +53,18 @@ Folders
 * various leftovers from previous projects, to be evaluated and
   reactivated or pruned
 
+Using Docker
+------------
+
+To run the collaboratory locally using Docker, execute the following commands:
+
+    docker build -t easyinterface .
+    docker run -p 8080:80 --rm easyinterface
+
+Then connect your browser to http://localhost:8080/.  See the docker
+documentation for additional information on how to start the container in the
+background and other options.
+
 Using Vagrant
 -------------
 
