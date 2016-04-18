@@ -253,7 +253,7 @@ decrease_or_wakeup(MTE, {Min, Max, Task, Cog}) ->
     %% task, the cog will signal itself as active anyway as soon as the
     %% freshly-unblocked tasks gets around to telling it (and in the meantime,
     %% we might erroneously advance the clock a second time otherwise).
-    case rationals:is_lesser(MTE, Min) of
+    case cmp:lt(MTE, Min) of
         true ->
             {[],
              {rationals:fast_sub(rationals:to_r(Min), rationals:to_r(MTE)),
