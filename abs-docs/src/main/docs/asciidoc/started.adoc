@@ -2,20 +2,18 @@
 
 == Lexical Structure
 
-This section describes the lexical structure of the ABS language. ABS programs are written in Unicode.
+This section describes the lexical structure of the ABS language.
 
 .Line Terminators and White Spaces
 
 Line terminators and white spaces are defined as in Java.
 
 .Comments
-Comments are code fragments that are completely ignored and have no semantics in the ABS language. ABS supports two styles of comments: end-of-line comments and traditional comments.
+ABS supports the two common Java-style styles of comments: end-of-line comments and block comments.
 
 .End-Of-Line Comments
 
-An end-of-line comment is a code fragment that starts with two slashes, e.g., `//` text. All text that follows `//` until the end of the line is treated as a comment.
-
-.Syntax
+An end-of-line comment starts with two slashes, e.g., `// text`. All text that follows `//` until the end of the line is treated as a comment.
 
 [source]
 ----
@@ -23,8 +21,10 @@ An end-of-line comment is a code fragment that starts with two slashes, e.g., `/
 module A; // this is also a comment
 ----
 
-.Traditional Comments
-A traditional comment is a code fragment that is enclosed in `/{asterisk} {asterisk}/`, e.g., `/{asterisk} this is a comment {asterisk}/`. Nested traditional comments are not possible.
+.Block Comments
+A block comment is enclosed in `/{asterisk} {asterisk}/`,
+e.g., `/{asterisk} this is a comment {asterisk}/`.  Block comments can span
+multiple lines and do not nest.
 
 [source]
 ----
@@ -41,16 +41,17 @@ numbers and underscores (`_`).
 
 ABS distinguishes identifiers and type identifiers.  Identifiers start
 with a lower-case character, type identifiers start with an upper-case
-character.  Identifiers name local variables, fields and functions.
-Type identifiers name interfaces, classes, types and type
-constructors.
+character.  Identifiers name local variables, fields, methods and functions.
+Type identifiers name interfaces, classes, types, type
+constructors, deltas and products.
 
 .Keywords
-The following words are keywords in the ABS language and are not regarded as identifiers.
+The following words are keywords in the ABS language and are invalid as identifiers.
 
-[options= "header, footer",format="csv", "ls="7",grid="none"]
+// TODO check and update this list
+
+[format="csv", "ls="7",grid="none"]
 |=====
-
 adds,core,export,hasMethod,let,product,this
 after,class,features,if,local,productline,type
 assert,data,from,implements,modifies,removes,when
@@ -61,48 +62,70 @@ else,hasInterface,interface,null,suspend
 |=====
 
 .Literals
-A literal is a textual representation of a value. ABS supports three kinds of literals, integer literals, string literals, and the null literal.
 
-.Separators
-The following characters are separators:
+A literal is a textual representation of a value. ABS supports three kinds of
+literals, integer literals, string literals, and the null literal.
 
-[format="csv",width="60%",cols="9"]
-[frame="topbot",grid="none"]
-|=====
-(,),{,},[,],\,,\;,:
-|=====
+Strings are enclosed in double quotes (`"`).  Line feed in a string is written
+as `\n`, carriage return as `\r`.
 
-.Operators
+ABS does not support floating point numbers currently.  Rational numbers are
+written using the division operator `/`, e.g., `1/4` for one quarter.
+
+The null literal is written as `null`.
+
+// .Separators
+// The following characters are separators:
+
+// [width="60%",cols="9"]
+// [frame="topbot",grid="none"]
+// |=====
+// | ( | ) | { | } | [ | ] | ; | : | , |
+// |=====
+
+// .Operators
 
 
-The following tokens are operators:
+// The following tokens are operators:
 
-[format="csv",width="60%",cols="15"]
-[frame="topbot",grid="none"]
-|=====
-||,&&,==,!=,<,>,<=,>=,+,-,*,/,%,!,&
-|=====
+// [format="csv",width="60%",cols="15"]
+// [frame="topbot",grid="none"]
+// |=====
+// ||,&&,==,!=,<,>,<=,>=,+,-,*,/,%,!,&
+// |=====
 
 .Annotations
 
-Annotations consist of a type identifier, optionally followed by a
-colon (`:`) and a syntactically valid pure expression.  They can be
-put in front of statements and definitions.
+Annotations consist of a syntactically valid pure expression, optionally
+preceded by a type identifier (the “tag”) and a colon (`:`).  They can be put in front of
+statements and definitions.
 
-Unknown annotations are ignored by the toolchain.
+Annotations are used to write auxiliary information that can be used by
+various tools.  Unknown (user-defined) annotations are ignored by the
+toolchain.  Pre-defined annotations are usually type-checked.
 
 [source]
 ----
 [Near] class Example { ... }
 ----
 
-This is an example of an annotation with an expression:
+This is an example of an annotation with a tag:
 
 [source]
 ----
 [Cost: 15] skip;
 ----
 
+  Annotations are
+associated with the following language construct.  In the examples above, the
+first annotation pertains to the class definition of `Example`, the second
+annotation pertains to the `skip` statement.
+
+There can be more than one annotation in one place.
+
+In general, it is not an error to have more than one annotation with the same
+tag in the same place.  However, some pre-defined annotations might forbid
+this.
 
 == Names and Types
 
