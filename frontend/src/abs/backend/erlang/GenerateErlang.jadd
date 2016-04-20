@@ -339,12 +339,25 @@ aspect GenerateErlang {
   @Override
   public void SyncCall.generateErlangCode(CodeStream ecs,Vars vars){
     final List<PureExp> params = getParams();
-    // FIXME: raise a proper error here instead of the implicit "no function
-    // found" exception
-    ecs.print("(fun(O=#object{class=T,cog =C}) when C=:=Cog -> object:alive(O),T end(");
+    ecs.print("case ");
     getCallee().generateErlangCode(ecs,vars);
-    ecs.format(")):'m_%s'",getMethod());
+    ecs.println(" of");
+    ecs.incIndent().println("#object{class=T,cog=Cog} ->");
+    ecs.incIndent().format("T:'m_%s'", getMethod());
     ErlUtil.argumentList(ecs,getCallee(),false,true,params,getMethodSig().getTypes(),vars);
+    ecs.println(";");
+    ecs.decIndent().println("_ ->");
+    ecs.incIndent().print("TempFuture = future:start(");
+    getCallee().generateErlangCode(ecs,vars);
+    ecs.format(",'m_%s',",getMethod());
+    ErlUtil.buildParams(ecs,getParams(),getMethodSig().getTypes(),vars,true);
+    ecs.print(", Cog, ");
+    ecs.print(vars.toStack());
+    ecs.println("),");
+    ecs.print("future:get_blocking(TempFuture, Cog, ");
+    ecs.print(vars.toStack());
+    ecs.println(")");
+    ecs.decIndent().decIndent().print("end");
   }
 
   @Override

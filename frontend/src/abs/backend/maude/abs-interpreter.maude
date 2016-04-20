@@ -2319,51 +2319,6 @@ mod ABS-STMT-AWAIT-EQ-TIMED is
 endm
 
 *** METHOD CALLS
-mod ABS-CALLSTMTS-RL is
-  protecting ABS-EVAL .
-  protecting ABS-MSG-TRANSPORT .
-
-  vars O O1 : Oid .            vars C C1 : Cid .    vars S S1 L : Subst .
-  var SL : StmtList .          vars W W1 : MProc .  vars F F1 G : Nat .
-  var CN : Configuration .     var E : Expr .       var Q : String .
-  var A : Vid .                var EL : ExprList .  var AL : VidList .
-  var N : Label .              var DL : DataList .  var MS : MMtd .
-  var SS : SSubst .
-  var MIS : MMtd .             var P1 : Process .
-  var DE : Expr .
-  var M : Mid .
-  vars CG CG1 : Cogid .
-  var COST : Expr .
-  var OBJS : Configuration .
-  var LIVE : Bool .
-  var OUTCOST : Rat .
-
-  --- async-call
-  ---
-  crl
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | asynccall(A ; E ; M ; EL ; COST ; DE); SL }, PrQ: W >
-  =>
-    < CG : Cog | Objects: object(O, C, S, (s F), LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; false ; OUTCOST ; eval(DE, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
-    future(N, M, Waiting, 1, null)
-  if O := L['this]
-      /\ DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ O1 := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ N := label(O, F)
-      /\ "num"[OUTCOST] := eval(COST, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      [label async-call] .
-
-  *** sync-call.  Only works for objects in the same cog.
-  crl
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W >
-  =>
-    < CG : Cog | Objects: object(O, C, S, (s F), LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; true ; 0 ; eval(DE, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
-    future(N, M, Waiting, 1, null)
-  if O := L['this]
-      /\ DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ O1 := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ N := label(O, F)
-      [label sync-call] .
-endm
 mod ABS-CALLSTMTS-EQ-TIMED is
   protecting ABS-EVAL .
   protecting ABS-MSG-TRANSPORT .
@@ -2408,14 +2363,40 @@ mod ABS-CALLSTMTS-EQ-TIMED is
     < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
   =
-    < CG : Cog | Objects: object(O, C, S, (s F), LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; true ; 0 ; eval(DE, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, (s F), LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O ; M ; DL ; true ; 0 ; eval(DE, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
+    < T : Clock | Limit: LIM, Random: RAND >
+    future(N, M, Waiting, 1, null)
+  if O := L['this]
+      /\ DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+      /\ O := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+      /\ N := label(O, F)
+      [label sync-call-self] .
+
+  ceq
+    < CG : Cog | Objects: object(O, C, S, F, LIVE) object(O1, C1, S1, F1, LIVE1:Bool) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W >
+    < T : Clock | Limit: LIM, Random: RAND >
+  =
+    < CG : Cog | Objects: object(O, C, S, (s F), LIVE) object(O1, C1, S1, F1, LIVE1:Bool) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; true ; 0 ; eval(DE, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
     future(N, M, Waiting, 1, null)
   if O := L['this]
       /\ DL :=  evalList(EL, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
       /\ N := label(O, F)
-      [label sync-call] .
+      [label sync-call-owncog] .
+
+  ceq
+    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W >
+    < T : Clock | Limit: LIM, Random: RAND >
+    < CG1 : Cog | Objects: object(O1, C1, S1, F1, LIVE1:Bool) OBJS1:Configuration, DC: DC1:Data, Sched: SCH1:Expr, Pr: P1, PrQ: W1 >
+  =
+    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | asynccall('.staticfuture ; E  ; M ; EL ; "num"[0] ; DE) ; get('.staticfuture ; '_) ; SL }, PrQ: W >
+    < T : Clock | Limit: LIM, Random: RAND >
+    < CG1 : Cog | Objects: object(O1, C1, S1, F1, LIVE1:Bool) OBJS1:Configuration, DC: DC1:Data, Sched: SCH1:Expr, Pr: P1, PrQ: W1 >
+  if O := L['this]
+      /\ O1 := eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+      [label sync-call-remotecog] .
+
 endm
 
 
@@ -3042,7 +3023,7 @@ mod ABS-SIMULATOR-RL is
   protecting ABS-STMT-SUSPEND-RL .
   protecting ABS-STMT-DURATION-RL .
   protecting ABS-STMT-AWAIT-RL .
-  protecting ABS-CALLSTMTS-RL .
+  protecting ABS-CALLSTMTS-EQ-TIMED .
   protecting ABS-NEW-RL .
   protecting ABS-STMT-RETURN-RL .
   protecting ABS-STMT-THROW-DIE-TRY-CATCH-FINALLY-RL .
