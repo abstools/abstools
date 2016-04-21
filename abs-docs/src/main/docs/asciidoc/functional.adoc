@@ -153,7 +153,7 @@ ABS has a number of predefined operators which can be used to form Operator Expr
 
 The following table describes the meaning as well as the associativity and the precedence of the different operators. They are grouped according to precedence, as indicated by horizontal rules, from low precedence to high precedence.
 
-[options="header,footer"]
+[options="header"]
 |=======================
 |Expression|Meaning      |Associativity |Argument types |Result type
 |e1 \|\| e2 |logical or |left |Bool, Bool |Bool

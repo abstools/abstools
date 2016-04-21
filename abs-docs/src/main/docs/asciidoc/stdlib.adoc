@@ -1,13 +1,70 @@
 = The Standard Library
 
-This chapter contains incomplete documentation of the ABS standard library.
-Most definitions in the standard library are contained in the module
-`ABS.StdLib` which is included by default in every module.
+This chapter documents the ABS standard library.  All definitions, except
+where noted otherwise, are contained in the module `ABS.StdLib` which is
+included by default in every module.  Therefore, no `import` statement is
+necessary to use these definitions.
 
-== Mathematical definitions
+== Boolean values
 
-.max
-.min
+=== Datatypes and Constructors
+
+The literals for Boolean values are `True` and `False`.  The name of the
+datatype is `Bool`.
+
+[source]
+----
+Bool value = True;
+----
+
+=== Operators
+
+The following operators apply to Boolean values:
+
+[options="header"]
+|=======================
+|Expression |Meaning                       |Associativity |Argument types |Result type
+|e1 \|\| e2 |logical or                    |left  |Bool, Bool |Bool
+|e1 && e2   |logical and                   |left  |Bool, Bool |Bool
+|e1 == e2   |equality                      |left  |compatible |Bool
+|e1 != e2   |inequality                    |left  |compatible |Bool
+|e1 < e2    |less than                     |left  |compatible |Bool
+|e1 < = e2  |less than or equal to         |left  |compatible |Bool
+|e1 > e2    |greater than                  |left  |compatible |Bool
+|e1 >= e2   |greater than or equal to      |left  |compatible |Bool
+|! e        |logical negation              |right |Bool |Bool
+|~ e        |logical negation (deprecated) |right |Bool |Bool
+|=======================
+
+
+== Numbers
+
+=== Datatypes and constructors
+
+The two numeric datatypes are `Int` and `Rat`.  See <<Built-in Types>> for their syntax.
+
+=== Operators
+
+[options="header"]
+|=======================
+|Expression|Meaning      |Associativity |Argument types |Result type
+|e1 == e2 |equality |left |compatible |Bool
+|e1 != e2 |inequality |left |compatible |Bool
+|e1 < e2 |less than |left |compatible |Bool
+|e1 < = e2 |less than or equal to |left |compatible |Bool
+|e1 > e2 |greater than |left |compatible |Bool
+|e1 >= e2 |greater than or equal to |left |compatible |Bool
+|e1 + e2 |addition |left |number, number |number
+|e1 - e2 |subtraction |left |number, number |number
+|e1 * e2 |multiplication |left |number, number |number
+|e1 / e2 |division |left |number, number |Rat
+|e1 % e2 |modulo |left |number, number |Int
+|=======================
+
+
+=== Functions
+
+.min, max
 
 These functions calculate the maximum and minimum of their two arguments.
 Since ABS datatypes are ordered, they can be applied to arguments of all
@@ -76,5 +133,90 @@ Returns an integer between 0 and its argument.
 Int random(Int below)
 ----
 
+== Strings
 
+=== Datatypes and Constructors
 
+The datatype for strings is `String`.
+
+String literals are enclosed in double quotes (`"`).  Line feed in a string
+literal is written as `\n`, carriage return as `\r`.
+
+=== Operators
+
+[options="header"]
+|=======================
+|Expression|Meaning      |Associativity |Argument types |Result type
+|e1 == e2 |equality |left |compatible |Bool
+|e1 != e2 |inequality |left |compatible |Bool
+|e1 < e2 |less than |left |compatible |Bool
+|e1 < = e2 |less than or equal to |left |compatible |Bool
+|e1 > e2 |greater than |left |compatible |Bool
+|e1 >= e2 |greater than or equal to |left |compatible |Bool
+|e1 + e2 |concatenation |left |String, String |String
+|=======================
+
+=== Functions
+
+.toString
+
+This function converts any data into a printable string representation.
+
+[source]
+----
+def String toString<T>(T t)
+----
+
+.substr
+
+Returns a substring of a given string `str` with length `length` starting from
+position `start` (inclusive).  The first character in a string has position 0.
+
+[source]
+----
+def String substr(String str, Int start, Int length)
+----
+
+.strlen
+
+Returns the length of the given string `str`.  The empty string (`""`) has
+length 0.
+
+[source]
+----
+def Int strlen(String str)
+----
+
+.println
+
+Prints the given string `s` to standard output, followed by a newline, meaning
+that the next output will not continue on the same line.
+
+[source]
+----
+def Unit println(String s)
+----
+
+.print
+
+Prints the given string `s` to standard output.  Does not cause the next
+output to begin on a new line.
+
+[source]
+----
+def Unit print(String s)
+----
+
+// == Unit
+
+// == Futures
+
+// == Lists
+
+// == Sets
+
+// == Maps
+
+// == Pairs, Triples
+
+// == Optionals
