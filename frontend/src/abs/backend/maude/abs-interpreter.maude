@@ -551,11 +551,11 @@ mod ABS-STATEMENT is
   sorts Stmt AbortableStmt .
   subsort AbortableStmt < Stmt .
 
-  *** Cost expression wrapper for statements.  Nothing that needs to be
+  *** Cost expression (for CPU resource type).  Nothing that needs to be
   *** checked specially during exception handling has a cost, so we do not
   *** need to consider cost handling during exception propagation and stack
   *** unwinding.
-  op [_]_ : Expr AbortableStmt -> AbortableStmt [ctor prec 40 format (b o b o o)] .
+  op $cost(_) : Expr -> AbortableStmt [ctor format (r d o r o)] .
 
   op skip : -> AbortableStmt [ctor format (b o)] .
   op suspend : -> AbortableStmt [ctor format (b o)] .
@@ -1051,7 +1051,7 @@ mod ABS-EVAL is
 
   --- Executableness
   *** Do we have enough resources?
-  eq executable([COST]ST:Stmt ; SL, S, CN, MAC)
+  eq executable($cost(COST) ; ST:Stmt ;  SL, S, CN, MAC)
   = hasEnoughCPU(MAC['.comp], CN, eval(COST, S, CN, MAC) asRat)
   and executable(ST:Stmt ; SL, S, CN, MAC) .
   eq executable(await E ; SL, S, CN, MAC) = eval(E, S, CN, MAC) asBool .
@@ -1063,7 +1063,7 @@ mod ABS-EVAL is
   --- The schedulable predicate holds, if a statement is schedulable for
   --- execution, i.e., the corresponding process may be waken up.
   *** We schedule at all costs; ST may take more than one time unit to execute
-  eq schedulable([COST]ST:Stmt ; SL, S, CN, MAC)
+  eq schedulable($cost(COST) ; ST:Stmt ; SL, S, CN, MAC)
   = schedulable(ST:Stmt ; SL, S, CN, MAC) .
   eq schedulable(get(QID ; A') ; SL , S, CN, MAC)
   = completed(S[QID], CN) .
@@ -1084,7 +1084,7 @@ mod ABS-EVAL is
   eq mte(E, S, CN, MAC) = if eval(E, S, CN, MAC) asBool then 0 else 1 fi [owise] .
 
   op mte : StmtList Subst Configuration SSubst -> Rat .
-  eq mte([COST]ST:Stmt ; SL, S, CN, MAC)
+  eq mte($cost(COST) ; ST:Stmt ; SL, S, CN, MAC)
   = if hasEnoughCPU(MAC['.comp], CN, eval(COST, S, CN, MAC) asRat)
     then mte(ST:Stmt ; SL, S, CN, MAC)
     else 1 fi .
@@ -1474,22 +1474,22 @@ mod ABS-MACHINE-BASICS-COMMON is
 
   *** evaluate cost expression only once.
   ceq < T : Clock | Limit: LIM, Random: RAND >
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: ODC, Sched: SCH:Expr, Pr: { L | [COST]ST:Stmt ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: ODC, Sched: SCH:Expr, Pr: { L | $cost(COST) ; SL }, PrQ: W >
   =
     < T : Clock | Limit: LIM, Random: RAND >
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: ODC, Sched: SCH:Expr, Pr: { L | [COSTN:Data]ST:Stmt ; SL }, PrQ: W >
+    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: ODC, Sched: SCH:Expr, Pr: { L | $cost(COSTN:Data) ; SL }, PrQ: W >
     if O := L['this]
       /\ not COST :: Data
       /\ COSTN:Data := eval(COST, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> ODC, '.random |-> L['.random])) .
     
   --- CPU resource consumption.  Must be a rewrite rule for confluence.
   crl < T : Clock | Limit: LIM, Random: RAND >
-    < CG : Cog | Objects: OBJS, DC: ODC, Sched: SCH:Expr, Pr: { L | ["num"[COSTNAT]]ST:Stmt ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: ODC, Sched: SCH:Expr, Pr: { L | $cost("num"[COSTNAT]) ; SL }, PrQ: W >
     < ODC : Cog | Objects:
                   object(ODC, 'ABS.DC.DeploymentComponent, ('cpu |-> CPU:Data, 'cpuconsumed |-> STATE, 'initialized |-> "ABS.StdLib.True"[ emp ], S1), F1, true),
                   DC: ODC':Oid, Sched: SCH':Expr, Pr: P:Process, PrQ: W':MProc >
   => < T : Clock | Limit: LIM, Random: RAND >
-    < CG : Cog | Objects: OBJS, DC: ODC, Sched: SCH:Expr, Pr: { L | ["num"[COSTNAT - MINCOST]]ST:Stmt ; SL }, PrQ: W >
+    < CG : Cog | Objects: OBJS, DC: ODC, Sched: SCH:Expr, Pr: { L | $cost("num"[COSTNAT - MINCOST]) ; SL }, PrQ: W >
     < ODC : Cog | Objects:
                   object(ODC, 'ABS.DC.DeploymentComponent, ('cpu |-> CPU:Data, 'cpuconsumed |-> STATE':Data, 'initialized |-> "ABS.StdLib.True"[ emp ], S1), F1, true),
                   DC: ODC':Oid, Sched: SCH':Expr, Pr: P:Process, PrQ: W':MProc >
@@ -1500,8 +1500,8 @@ mod ABS-MACHINE-BASICS-COMMON is
       /\ STATE':Data := consumeDCResource(STATE, MINCOST)
   [label consume-cpu] .
 
-  eq < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | ["num"[0]]ST:Stmt ; SL }, PrQ: W >
-  =  < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | ST:Stmt ; SL }, PrQ: W >
+  eq < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | $cost("num"[0]) ; SL }, PrQ: W >
+  =  < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
   [label remove-annotation] .
 
   *** Bandwidth resource consumption (outgoing).  Must be a rewrite rule for

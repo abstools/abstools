@@ -44,13 +44,13 @@ public class MaudeCompilerHelper {
     {
         PureExp cost = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.DC.Cost");
         if (cost != null || defaultValue > 0) {
-            stream.print("[");
+            stream.print("$cost(");
             if (cost == null) {
-                stream.print("\"int\"[" + Integer.toString(defaultValue) + "]");
+                stream.print("\"num\"[" + Integer.toString(defaultValue) + "]");
             } else {
                 cost.generateMaude(stream);
             }
-            stream.print("]");
+            stream.print(") ; ");
         }
     }
 
