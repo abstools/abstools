@@ -207,13 +207,253 @@ output to begin on a new line.
 def Unit print(String s)
 ----
 
-// == Unit
+== Unit
+
+Unit is the empty (void) datatype.
+
+=== Datatypes and Constructors
+
+Both the datatype and the single constructor are named `Unit`.
+
 
 // == Futures
 
-// == Lists
+== Lists
 
-// == Sets
+A list is a sequence of values of the same type.  Lists are expressed as
+recursive datastructures.  The time to access a value is proportional to the
+length of the list.  The first value of a list can be accessed in constant
+time.
+
+=== Datatypes and Constructors
+
+A list is defined either as the empty list (`Nil`) or as a value `a` followed
+by another list `l` (`Cons(a, l)`).
+
+[source]
+----
+data List<A> = Nil | Cons(A head, List<A> tail);
+----
+
+Literal lists of arbitrary length can be written using a special function
+`list`.  In the following example, `l1` and `l2` contain the same elements.
+
+[source]
+----
+List<Int> l1 = list[1, 2, 3];
+List<Int> l2 = Cons(1, Cons(2, Cons(3, Nil)));
+----
+
+=== Functions
+
+.head
+
+Returns the head of a list.
+
+[source]
+----
+def A head(List<A> l);
+----
+
+.tail
+
+Returns the tail (rest) of a list.
+
+[source]
+----
+def List<A> tail(List<A> l);
+----
+
+.length
+
+Returns the length of a list.  The length of `Nil` is 0.
+
+[source]
+----
+def Int length(List<A> l);
+----
+
+
+.isEmpty
+
+Checks if a list is empty.  Returns `True` for `Nil`, `False` otherwise.
+
+[source]
+----
+def Bool isEmpty(List<A> l);
+----
+
+.nth
+
+Returns the `n`-th element of a list.  Returns the head of `l` for `n`=0,
+returns the last element of `l` for `n`=`lenght(l)-1`.
+
+It is an error if `n` is equal to or larger than `length(l)`.
+
+[source]
+----
+def A nth(List<A> l, Int n);
+----
+
+
+.without
+
+Returns a fresh list where all occurrences of `a` have been removed.
+
+[source]
+----
+def List<A> without<A>(List<A> list, A a);
+----
+
+.concatenate
+
+Returns a list containing all elements of list `list1` followed by all
+elements of list `list2`.
+
+[source]
+----
+def List<A> concatenate<A>(List<A> list1, List<A> list2);
+----
+
+
+.appendright
+
+Returns a list containing all elements of list `l` followed by the element `p`
+in the last position.
+
+[source]
+----
+def List<A> appendright<A>(List<A> l, A p);
+----
+
+.reverse
+
+Returns a list containing all elements of `l` in reverse order.
+
+[source]
+----
+def List<A> reverse<A>(List<A> l);
+----
+
+.copy
+
+Returns a list of length `n` containing `p` n times.
+
+[source]
+----
+def List<A> copy<A>(A p, Int n);
+----
+
+== Sets
+
+=== Datatypes and Constructors
+
+The datatype for sets with elements of type `A` is `Set<A>`.  Sets are
+constructed with a special function `set`.  The expresssion `set[]` produces
+the empty set.
+
+The following example produces a set with the three elements `1`, `2`, `3`.
+
+[source]
+----
+Set<Int> s = set[1, 2, 3, 3];
+----
+
+=== Functions
+
+.contains
+
+Returns `True` if set `ss` contains element `e`, `False` otherwise.
+
+[source]
+----
+def Bool contains<A>(Set<A> ss, A e);
+----
+
+.emptySet
+
+Returns `True` if set `xs` is empty, `False`  otherwise.
+
+[source]
+----
+def Bool contains<A>(Set<A> ss, A e);
+----
+
+.size
+
+Returns the number of elemewnts in set `xs`.
+
+[source]
+----
+def Int size<A>(Set<A> xs);
+----
+
+.union
+
+Returns a set containing all elements of sets `set1` and `set2`.
+
+[source]
+----
+def Set<A> union<A>(Set<A> set1, Set<A> set2);
+----
+
+.intersection
+
+Returns a set containing all elements that are present in both sets `set1` and
+`set2`.
+
+[source]
+----
+def Set<A> intersection<A>(Set<A> set1, Set<A> set2);
+----
+
+.difference
+
+Returns a set containing all elements of set `set1` not present in set `set2`.
+
+[]
+----
+def Set<A> intersection<A>(Set<A> set1, Set<A> set2);
+----
+
+.insertElement
+
+Returns a set with all elements of set `xs` plus element `e`.  Returns a set
+with the same elements as `xs` if `xs` already contains `e`.
+
+[source]
+----
+def Set<A> insertElement<A>(Set<A> xs, A e);
+----
+
+.remove
+
+Returns a set with all elements of set `xs` except element `e`.  Returns a set
+with the same elements as `xs` if `xs` did not contain `e`.
+
+[source]
+----
+def Set<A> remove<A>(Set<A> xs, A e);
+----
+
+.take
+
+Returns one element from a set.
+
+[source]
+----
+def A take<A>(Set<A> ss);
+----
+
+[NOTE]
+
+To iterate over a set, use `take` to extract one value and `remove` to remove
+it from the set.  Repeat until the set is empty.
+
+// .hasNext
+
+// .next
+
 
 // == Maps
 
