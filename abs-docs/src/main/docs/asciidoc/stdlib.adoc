@@ -455,7 +455,115 @@ it from the set.  Repeat until the set is empty.
 // .next
 
 
-// == Maps
+== Maps
+
+=== Datatypes and Constructors
+
+
+The datatype for a map from type `A` to type `B` is is `Map<A, B>`.  Maps are
+constructed using pairs of type `Pair<A, B>` and the special function `map`.
+The expresssion `map[]` produces an empty map.
+
+The following example produces a set with two entries `1 -> "ABS"` and `3 ->
+"SACO"`.
+
+[source]
+----
+Map<Int, String> m = map[Pair(1, "ABS"), Pair(3, "SACO")];
+----
+
+[NOTE]
+In case the arguments contain duplicate keys, the resulting map will contain all the given entries, with the first entry shadowing the following ones.
+
+=== Functions
+
+.removeKey
+
+Returns a map with the first occurrence of `key` removed.
+
+[source]
+----
+def Map<A, B> removeKey<A, B>(Map<A, B> map, A key);
+----
+
+.values
+
+Returns a list of all values within the map.
+
+[source]
+----
+def List<B> values<A, B>(Map<A, B> map);
+----
+
+.keys
+
+Returns a set of all keys of the map.
+
+[source]
+----
+def Set<A> keys<A, B>(Map<A, B> map);
+----
+
+.lookup
+
+If value `v` is associated with a given key `k`, return `Just(v)`.  Otherwise,
+return `Nothing`.
+
+[source]
+----
+def Maybe<B> lookup<A, B>(Map<A, B> ms, A k);
+----
+
+.lookupDefault
+
+Returns the value associated with key `k`.  If the map does not contain an
+entry with key `k`, return the value `d`.
+
+[source]
+----
+def B lookupDefault<A, B>(Map<A, B> ms, A k, B d);
+----
+
+[NOTE]
+If you need to know whether the map contains an entry for key `k`, use the
+function `lookup` instead.
+
+
+.lookupUnsafe
+
+Returns the value associated with key `k`.  It is an error if the map does not
+contain an entry with key `k`.
+
+[source]
+----
+def B lookupUnsafe<A, B>(Map<A, B> ms, A k);
+----
+
+
+.insert
+
+Returns a map with all entries of `map` plus an entry `p`, which is given as a
+pair (`Pair(key, value)`) and maps `key` to `value`.  If `map` already
+contains an entry with the same key `key`, it is not removed from the map but
+`lookup` will return the new value `value`.  (The function `removeKey` removes
+the first entry for a given key and thus “undoes” the effect of calling
+`insert`.)
+
+[source]
+----
+def Map<A, B> insert<A, B>(Map<A, B> map, Pair<A, B> p);
+----
+
+
+.put
+
+Returns a map with all entries of `ms` plus an entry mapping `k` to `v`, minus
+the first entry already mapping `k` to a value.
+
+[source]
+----
+def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v);
+----
 
 // == Pairs, Triples
 
