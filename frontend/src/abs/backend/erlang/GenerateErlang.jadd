@@ -339,7 +339,7 @@ aspect GenerateErlang {
   @Override
   public void SyncCall.generateErlangCode(CodeStream ecs,Vars vars){
     final List<PureExp> params = getParams();
-    ecs.print("case ");
+    ecs.print("(fun() -> case ");
     getCallee().generateErlangCode(ecs,vars);
     ecs.println(" of");
     ecs.incIndent().println("#object{class=T,cog=Cog} ->");
@@ -357,7 +357,7 @@ aspect GenerateErlang {
     ecs.print("future:get_blocking(TempFuture, Cog, ");
     ecs.print(vars.toStack());
     ecs.println(")");
-    ecs.decIndent().decIndent().print("end");
+    ecs.decIndent().decIndent().print("end end)()");
   }
 
   @Override
