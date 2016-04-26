@@ -13,7 +13,7 @@ export max, min, abs, pow, sqrt_newton, exp_newton, random, truncate;
 export Maybe, Nothing, Just, isJust, fromJust;
 export Either, Left, Right, left, right, isLeft, isRight;
 export Pair, fst, snd;
-export Triple, fstT, sndT, trd;
+export Triple, fstT, sndT, trdT, trd;
 
 // Sets
 export Set, EmptySet, Insert, set; //TODO: don't export EmptySet, Insert
@@ -129,7 +129,11 @@ def Bool isRight<A,B>(Either<A, B> val) = !isLeft(val);
 
 data Pair<A, B> = Pair(A fst, B snd); 
 
-data Triple<A, B, C> = Triple(A fstT, B sndT, C trd); 
+data Triple<A, B, C> = Triple(A fstT, B sndT, C trdT);
+
+// legacy, deprecated
+def C trd<A, B, C>(Triple<A, B, C> t) = case t {
+    Triple(_, _, val) => val; };
 
 // Sets
 
