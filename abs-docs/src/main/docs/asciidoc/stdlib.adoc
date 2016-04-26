@@ -565,6 +565,85 @@ the first entry already mapping `k` to a value.
 def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v);
 ----
 
-// == Pairs, Triples
+== Pairs
 
-// == Optionals
+=== Datatypes and Constructors
+
+The `Pair<A, B>` datatype holds a pair of values of types `A` and `B`,
+respectively.  The constructor is called `Pair` as well.
+
+[source]
+----
+Pair<Int, String> pair = Pair(15, "Hello World");
+----
+
+
+=== Functions
+
+.fst
+
+The function `fst` returns the first value in a pair.
+
+.snd
+
+The function `snd` returns the second value in a pair.
+
+== Triples
+
+=== Datatypes and Constructors
+
+The `Triple<A, B, C>` datatype holds a triple of values of types `A`, `B` and
+`C`, respectively.  The constructor is called `Triple` as well.
+
+[source]
+----
+Triple<Int, String, Bool> triple = Pair(15, "Hello World", False);
+----
+
+=== Functions
+
+.fstT
+
+The function `fstT` returns the first value in a triple.
+
+.sndT
+
+The function `sndT` returns the second value in a triple.
+
+.trdT
+
+The function `trdT` returns the third value in a triple.
+
+== Optionals
+
+=== Datatypes and Constructors
+
+The datatype `Maybe<A>` wraps a concrete value of type A.  The value `Nothing`
+denotes the absence of such a value.
+
+[source]
+----
+Maybe<Int> answer = Just(42);
+Maybe<String> question = Nothing;
+----
+
+=== Functions
+
+.isJust
+
+The function `isJust` returns `False` if the `Maybe` value is `Nothing`,
+`True` otherwise.
+
+[source]
+----
+def Bool isJust<A>(Maybe<A> a);
+----
+
+.fromJust
+
+The function `fromJust` returns the wrapped value of a `Maybe`.  It is an error to call `fromJust` on `Nothing`.
+
+[source]
+----
+def A fromJust<A>(Maybe<A> m);
+----
