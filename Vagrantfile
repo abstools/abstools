@@ -39,11 +39,14 @@ Welcome to the ABS toolchain VM.
 Connect to the collaboratory at http://localhost:8888/
 
 Access the following additional tools with 'vagrant ssh'
-(install Xming / XQuartz X server on Windows/Mac to use):
 
 - eclipse          Eclipse Mars with ABS plugins
 - key-abs          Deductive verification tool
 - emacs            Emacs with ABS mode
+
+To use graphical programs, install an X server like
+Xming (Windows) or XQuartz (Mac), or access the VM
+via VNC.
 MSG
 
   config.ssh.forward_x11 = true
@@ -72,7 +75,7 @@ sudo apt-get install -y -q erlang
 echo
 echo "Installing necessary tools for simulating ABS programs"
 echo
-sudo apt-get install -y -q emacs maude graphviz
+sudo apt-get install -y -q emacs maude graphviz tightvncserver
 
 echo
 echo "Downloading eclipse, this might take a while ..."
@@ -106,7 +109,7 @@ org.abs-models.sdedit.feature.group
 
 echo
 echo "Downloading KeY-ABS, this might take a while..."
-wget -q http://www.key-project.org/key-abs/key-abs.zip
+wget -nv http://www.key-project.org/key-abs/key-abs.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/key-abs.zip)
 rm key-abs.zip
 cat >key-abs <<EOF
@@ -122,7 +125,7 @@ mkdir -p /home/vagrant/.key
 echo
 echo "Installing SACO command-line tool"
 echo
-wget -q http://costa.ls.fi.upm.es/download/saco.colab.zip
+wget -nv http://costa.ls.fi.upm.es/download/saco.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/saco.colab.zip)
 rm saco.colab.zip
 
@@ -135,10 +138,10 @@ sudo chmod -R 777 /tmp/costabs
 echo
 echo "Installing COFLOCO and SRA"
 echo
-wget -q http://costa.ls.fi.upm.es/download/cofloco.colab.zip
+wget -nv http://costa.ls.fi.upm.es/download/cofloco.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/cofloco.colab.zip)
 rm cofloco.colab.zip
-wget -q http://costa.ls.fi.upm.es/download/sra.colab.zip
+wget -nv http://costa.ls.fi.upm.es/download/sra.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/sra.colab.zip)
 rm sra.colab.zip
 
@@ -194,7 +197,7 @@ cat >ENVISAGE_CONFIG <<EOF
 # path to saco
 EC_SACOHOME="/usr/local/lib/saco/"
 # path to abs tools
-EC_ABSTOOLSHOME="/vagrant/"
+EC_ABSTOOLSHOME="/vagrant"
 # path to COFLOCO
 EC_COFLOCOHOME="/usr/local/lib/cofloco/"
 # path to SRA jar
@@ -276,8 +279,8 @@ sudo pip install antlr4-python2-runtime toposort psutil
 
 # install gecode into /home/vagrant/gecode-4.4.0
 cd /home/vagrant
-wget http://www.gecode.org/download/gecode-4.4.0.tar.gz 
-tar -zxvf gecode-4.4.0.tar.gz 
+wget -nv http://www.gecode.org/download/gecode-4.4.0.tar.gz
+tar xzf gecode-4.4.0.tar.gz
 cd gecode-4.4.0
 ./configure --disable-examples --prefix=/home/vagrant/gecode-4.4.0
 make && make install
@@ -295,8 +298,8 @@ chmod -R 755 /home/vagrant/gecode-4.4.0
 
 # install minisearch in /home/vagrant/minisearch-0.1.0b1-Linux
 cd /home/vagrant
-wget http://www.minizinc.org/minisearch/minisearch-0.1.0b1-Linux64.tar.gz 
-tar -zxvf minisearch-0.1.0b1-Linux64.tar.gz 
+wget -nv http://www.minizinc.org/minisearch/minisearch-0.1.0b1-Linux64.tar.gz
+tar xzf minisearch-0.1.0b1-Linux64.tar.gz
 rm -rf minisearch-0.1.0b1-Linux64.tar.gz
 cat >>/home/vagrant/.bashrc <<EOF
 export PATH=/home/vagrant/minisearch-0.1.0b1-Linux/bin:\\\$PATH
@@ -306,8 +309,8 @@ chmod -R 755 /home/vagrant/minisearch-0.1.0b1-Linux
 
 # install minizinc suite 1.6 in /home/vagrant/minizinc-1.6
 cd /home/vagrant
-wget http://www.minizinc.org/downloads/release-1.6/minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
-tar -zxvf minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
+wget -nv http://www.minizinc.org/downloads/release-1.6/minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
+tar xzf minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
 rm -rf minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
 cd /home/vagrant/minizinc-1.6
 ./SETUP
@@ -331,12 +334,12 @@ git clone --depth=1 https://github.com/jacopoMauro/abs_deployer.git
 cat >>/home/vagrant/.bashrc <<EOF
 export PATH=/home/vagrant/main_generator/abs_deployer/docker:\\\$PATH
 EOF
-chmod -R 755 /home/vagrant/main_generator 
+chmod -R 755 /home/vagrant/main_generator
 chmod 775 /home/vagrant/main_generator/abs_deployer
 
 # install zephyrus2 in /home/vagrant/zephyrus2
 cd /home/vagrant/
-git clone --depth=1 https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git 
+git clone --depth=1 https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git
 sudo pip install -e /home/vagrant/zephyrus2
 sudo chown -R vagrant.vagrant /home/vagrant/zephyrus2
 chmod -R 755 /home/vagrant/zephyrus2
@@ -349,9 +352,9 @@ cat >> /tmp/ENVISAGE_CONFIG <<EOF
 EC_SMARTDEPLOYERHOME="/home/vagrant/smart_deployer"
 # path to MAIN GENERATOR
 EC_MAINGENHOME="/home/vagrant/main_generator"
-# 
+#
 EC_PATH="\$EC_PATH:/home/vagrant/main_generator/abs_deployer/docker:/home/vagrant/minizinc-1.6/bin:/home/vagrant/minisearch-0.1.0b1-Linux/bin:/home/vagrant/gecode-4.4.0/bin"
-# 
+#
 EC_LD_LIBRARY_PATH="\$EC_LD_LIBRARY_PATH:/home/vagrant/gecode-4.4.0/lib"
 EOF
 sudo mv -f /tmp/ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage
@@ -360,5 +363,3 @@ sudo mv -f /tmp/ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage
 
   SHELL
 end
-
-
