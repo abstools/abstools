@@ -127,91 +127,65 @@ In general, it is not an error to have more than one annotation with the same
 tag in the same place.  However, some pre-defined annotations might forbid
 this.
 
-== Names and Types
+== Types
 
-.Names
-A name in ABS can either be a simple identifier as described above, or can be qualified with a type name, which represents a module. Examples for syntactically valid names are: head, x, ABS.StdLib.tail. Examples for type names are: Unit, X, ABS.StdLib.Map.
+Types in ABS are either plain types or parametric types.  A type name can
+refer to a algebraic data type, an interface, a type synonym, and a type
+parameter.  Note that classes are not types in ABS.  Parametric data types
+have type arguments.  Currently only algebraic data types can be
+parameterized, i.e., ABS does not currently offer class templates.
 
-.Types
-Types in ABS are either plain type names or can have type arguments. A type name can refer to a data type, an interface, a type synonym, and a type parameter. Note that classes cannot be used as types in ABS. In addition, only parametric data types can have type arguments. Examples for syntactically valid types are: Bool, ABS.StdLib.Int, List<Bool>, ABS.StdLib.Map<Int,Bool>.
+The standard library offers a number of predefined data types which are
+explained in Chapter <<The Standard Library>>.
 
-.Type Synonyms
-Type Synonyms define synonyms for otherwise defined types. Type synonyms start with an uppercase letter.
-
-.Syntax
+A _type name_ is a sequence of letters, digits and  underscores (`_`) starting
+with an uppercase letter.  In case of a parametric data type, the type name
+continues with a left angle (`<`), a list of type names separated by commas
+and ends with a right angle (`>`).
 
 [source]
 ----
-type Filename = String;
-type Filenames = Set<Filename>;
-type Servername = String;
-type Packet = String;
-type File = List<Packet>;
-type Catalog = List<Pair<Servername,Filenames>>;
-
+String <1>
+A_s1mple_type <2>
+Map<Int, List<String>> <3>
 ----
+<1> The type name is `String`.  The string type is defined in the standard library.
+<2> This is a type name containing underscores and digits.
+<3> This type name denotes a map from integers to lists of strings.
+
 
 === Built-in Types
 
-The most basic of built-in types is the +Int+ type, which represents integers of arbitrary size.
-Values of type +Int+ can be constructed by using integer
-literals or arithmetic expressions: 
+ABS offers the following built-in datatypes:
 
+.ABS built-in types
+[options="header"]
+|=====
+| Name | Descrition | Example
+| `Unit` | The empty (void) type | `Unit`
+| `Bool` | Boolean values | `True`, `False`
+| `Int` | Integers of arbitrary size | `0`, `-15`
+| `Rat` | Rational numbers | `1/5`, `22/58775`
+| `String` | Strings | `"Hello world\n"`
+| `Fut<A>` | Futures | --
+|=====
+
+`Int` type is a subtype of `Rat`; this means that `Int` values are assignable
+to places of type `Rat`.  Rational values can be converted to integers via the
+`truncate` function.
+
+The future type `Fut<A>` is a special built-in type that denotes that an ABS
+value of type `A` will become available in the future.  The value that a
+future holds and will return can be of any concrete type.
+
+[source]
 ----
-0  has type Int
-1  has type Int
-3  has type Int
-3+1  has type Int
+Fut<String> <1>
+Fut<List<Rat>> <2>
 ----
+<1> This future will contain a value of type `String`
+<2> This future will contain a list of rational numbers
 
-A related type is the +Rat+ for representing rational numbers.
-Rational values are obtained via the division (/) operator and have arbitrary precision.
-An example of such values:
-
-----
-1/4   has type Rat
-5/2/4 has type Rat
-----
-
-The +Int+ type is a subtype of +Rat+; this means that
-+Int+ expressions are automatically converted to +Rat+ expressions,
-whenever a +Rat+ type is expected. Some examples of +Rat+ expressions:
-
-----
-0 can also have type Rat
-1 can also have type Rat
-4+3 can also have the Rat
-----
-
-[NOTE]
-The adverse does not work. Users that want to convert from
-+Rat+ to +Int+ types have to explicitly use the +truncate(number)+ function.
-
-
-The +String+ built-in type represents String values, constructed either by string literals
-or by string-specific operators coming from the ABS standard library. Examples
-of Strings:
-
-----
-"hello world\n"  is a string literal
-"standard" + "library" is a string expression (concatenation)
-----
-
-[NOTE]
-According to other functional languages, Strings in ABS are immutable data.
-Dissimilar to other function languages, ABS Strings are not represented as list of
-characters; instead they have a hidden-to-the-user, efficient, internal representation.
-
-
-The +Fut+ type is a special built-in type to signal an ABS value that will become
-available (evaluated) in the future. +Fut+ is a so-called parameterized type, 
-written as +Fut<T>+, where T is its type parameter. The value that a future
-holds and will return can be of any concrete type, as in the example: 
-
-----
-Fut<String> is the type that will return a string
-Fut<List<Rat>> is the type that will return a list of rational numbers
-----
 
 === Algebraic Data Types
 
@@ -355,4 +329,18 @@ list[seagull, bee]          can be typed by: Animal or Flying
 set[seagull, bee, boeing]   can be typed by: Flying
 ----
 
+=== Type Synonyms
 
+A _Type Synonym_ is an alternative type name for a type.  Type synonyms are
+introduced with the keyword `type`.  Parametric type synonyms are not
+currently supported.
+
+[source]
+----
+type Filename = String;
+type Filenames = Set<Filename>;
+type Servername = String;
+type Packet = String;
+type File = List<Packet>;
+type Catalog = List<Pair<Servername,Filenames>>;
+----
