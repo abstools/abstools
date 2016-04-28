@@ -129,6 +129,16 @@ wget -nv http://costa.ls.fi.upm.es/download/saco.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/saco.colab.zip)
 rm saco.colab.zip
 
+echo
+echo "Moving ABS compiler into /usr/local/lib/absc"
+echo
+sudo mkdir -p /usr/local/lib/absc/frontend/bin/bash
+sudo mkdir -p /usr/local/lib/absc/frontend/dist
+sudo cp /vagrant/frontend/dist/absfrontend.jar /usr/local/lib/absc/frontend/dist
+sudo chmod a+r /usr/local/lib/absc/frontend/dist/absfrontend.jar
+sudo cp /vagrant/frontend/bin/bash/absc /usr/local/lib/absc/frontend/bin/bash
+sudo chmod a+rx /usr/local/lib/absc/frontend/bin/bash/absc
+
 # workaround for re-used temporary directory: need to be writable
 # by users www-data (for easyinterface) and vagrant (for commandline)
 mkdir -p /tmp/costabs/absPL
@@ -197,7 +207,7 @@ cat >ENVISAGE_CONFIG <<EOF
 # path to saco
 EC_SACOHOME="/usr/local/lib/saco/"
 # path to abs tools
-EC_ABSTOOLSHOME="/vagrant"
+EC_ABSTOOLSHOME="/usr/local/lib/absc"
 # path to COFLOCO
 EC_COFLOCOHOME="/usr/local/lib/cofloco/"
 # path to SRA jar
@@ -226,7 +236,7 @@ fi
 
 # Set up paths
 cat >/home/vagrant/.abstoolsrc <<EOF
-PATH=\$PATH:/opt/ghc/7.8.4/bin:/opt/cabal/1.20/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin:/vagrant/abs2haskell/.cabal-sandbox/bin:/vagrant/frontend/bin/bash:/vagrant/costabs-plugin:/usr/local/lib/saco/bin
+PATH=\$PATH:/opt/ghc/7.8.4/bin:/opt/cabal/1.20/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin:/vagrant/abs2haskell/.cabal-sandbox/bin:/usr/local/lib/absc/frontend/bin/bash:/vagrant/costabs-plugin:/usr/local/lib/saco/bin
 # used by the costabs executable
 export COSTABSHOME=/usr/local/lib/saco/
 # used by the costabs executable
