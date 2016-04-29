@@ -13,7 +13,7 @@ Line terminators and white spaces are defined as in Java.
 ----
 pass:quotes[
 _LineTerminator_ ::= \n | \r | \r\n
-_WhiteSpace_ ::= _LineTerminator_ | ⍽ | \t
+_WhiteSpace_ ::= _LineTerminator_ | ⍽ | \t | _Comment_
 ]
 ----
 
@@ -38,6 +38,18 @@ multiple lines and do not nest.
 is a multiline
 comment */
 ----
+
+.Syntax
+[subs="verbatim,macros"]
+----
+pass:quotes[
+_Comment_ ::= _LineComment_ | _BlockComment_
+_LineComment_ ::= // (^ _LineTerminator_ )* _LineTerminator_
+_BlockComment_ ::= /* (^ \*/ )* */
+]
+----
+(The negation operator `^` in the above has the informal meaning “input not
+satisfying the following production rule.”)
 
 === Identifiers
 
