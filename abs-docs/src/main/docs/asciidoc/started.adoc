@@ -9,9 +9,12 @@ This section describes the lexical structure of the ABS language.
 Line terminators and white spaces are defined as in Java.
 
 .Syntax
+[subs="verbatim,macros"]
 ----
-LineTerminator ::= \n | \r | \r\n
-WhiteSpace ::= LineTerminator | | \t
+pass:quotes[
+_LineTerminator_ ::= \n | \r | \r\n
+_WhiteSpace_ ::= _LineTerminator_ | ⍽ | \t
+]
 ----
 
 === Comments
@@ -47,6 +50,13 @@ character.  Identifiers name local variables, fields, methods and functions.
 Type identifiers name interfaces, classes, types, type
 constructors, deltas and products.
 
+.Syntax
+[subs="verbatim,macros"]
+----
+pass:quotes[_Identifier_ ::= [:lower:] ([:alpha:] | [:digit:] | _)∗]
+pass:quotes[_TypeIdentifier_ ::= [:upper:] ([:alpha:] | [:digit:] | _)∗]
+----
+
 === Keywords
 The following words are keywords in the ABS language and are invalid as identifiers.
 
@@ -54,12 +64,12 @@ The following words are keywords in the ABS language and are invalid as identifi
 
 [format="csv", "ls="7",grid="none"]
 |=====
-adds,core,export,hasMethod,let,product,this
-after,class,features,if,local,productline,type
-assert,data,from,implements,modifies,removes,when
-await,def,get,import,module,return,while
-builtin,delta,hasField,in,new,skip,case
-else,hasInterface,interface,null,suspend
+`adds`,`core`,`export`,`hasMethod`,`let`,`product`,`this`
+`after`,`class`,`features`,`if`,`local`,`productline`,`type`
+`assert`,`data`,`from`,`implements`,`modifies`,`removes`,`when`
+`await`,`def`,`get`,`import`,`module`,`return`,`while`
+`builtin`,`delta`,`hasField`,`in`,`new`,`skip`,`case`
+`else`,`hasInterface`,`interface`,`null`,`suspend`
 |=====
 
 === Literals

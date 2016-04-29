@@ -1,154 +1,9 @@
 = Functional Sublanguage
 
-== Pure Expressions
+// Give an introduction of and rationale for the different parts of the functional sub-language
 
-Pure Expressions are side effect-free expressions. This means that these expressions cannot modify the heap.
+== Operators
 
-.Let Expressions
-
-These expressions bind variable names to pure expressions.
-
-.Syntax
-
-[source]
-
-----
-let (Bool x) = True in !x
-----
-.Data Type Constructor Expressions
-
-They are expressions that create data type values by using data type constructors. Note that for data type constructors that have no parameters, the parentheses are optional.
-
-.Syntax
-
-[source]
-
-----
-True
-Cons(True, Nil)
-ABS.StdLib.Nil
-----
-
-.Function Applications
-
-Function Applications apply functions to arguments.
-
-.Syntax
-
-[source]
-
-----
-tail(Cons(True, Nil))
-ABS.StdLib.head(list)
-----
-
-.If-Then-Else Expression
-
-ABS has a standard if-then-else expression.
-
-.Syntax
-
-[source]
-
-----
-if 5 == 4 then True else False
-----
-
-.Case Expressions / Pattern Matching
-
-ABS supports pattern matching by the Case Expression. It takes an expression as first argument, which a series of patterns is matched against. The value of the case expression itself is the value of the expression on the right-hand side of the first matching expression. It is an error if no pattern matches the expression.
-
-=== Patterns
-
-There are five different kinds of patterns available in ABS:
-
-* Pattern Variables (e.g., x, where x is not bound yet)
-* Bound Variables (e.g., x, where x is bound)
-* Literal Patterns (e.g., 5)
-* Data Constructor Patterns (e.g., Cons(Nil,x))
-* Underscore Pattern (_)
-
-.Pattern Variables
-
-Pattern variables are simply unbound variables. Like the underscore pattern, these variables match every value, but, in addition, bind the variable to the matched value. The bound variable can then be used in the right-hand-side expression of the corresponding branch. Typically, pattern variables are used inside of data constructor patterns to extract values from data constructors. For example 
-
-[source]
-----
-def A fromJust<A>(Maybe<A> a) =
-case a {
-	Just(x) => x;
-};
-
-----
-
-.Bound Variables
-
-If a bound variable is used as a pattern, the pattern matches if the value of the case expression is equal to the value of the bound variable.
-
-[source]
-----
-def Bool contains<A>(List<A> list, A value) =
-case list {
-	Nil => False;
-	Cons(value, _) => True;
-	Cons(_, rest) => contains(rest, value);
-};
-
-----
-
-.Literal Patterns
-Literals can be used as patterns. This is similar to bound variables, because the pattern matches if the value of the case expression is equal to the literal value.
-
-[source]
-----
-def Bool isEmpty(String s) =
-case b {
-	"" => True;
-	_ => False;
-};
-
-----
-
-.Data Constructor Patterns
-A data constructor pattern is like a standard data constructor expression, but where certain sub expressions can be patterns again.
-
-
-[source]
-----
-def Bool negate(Bool b) =
-case b {
-	True => False;
-	False => True;
-};
-
-----
-
-[source]
-----
-def List<A> remainder(List<A> list) =
-case b {
-	Cons(_, rest) => rest;
-};
-
-----
-
-.Underscore Pattern
-The underscore pattern (_) simply matches every value. It is generally used as the last pattern in a case expression to define a default case. For example:
-
-[source]
-----
-def Bool isNil<A>(List<A> list) =
-case list {
-	Nil => True;
-	_ => False;
-};
-----
-
-=== Type Checking
-
-A case expression is type-correct if and only if all its expressions and all its branches are type-correct and the right-hand side of all branches have a common super type. This common super type is also the type of the overall case expression. A branch (a pattern and its expression) is type-correct if its pattern and its right-hand side expression are type-correct. A pattern is type-correct if it can match the corresponding case ex-pression.
-
-.Operator Expressions
 ABS has a number of predefined operators which can be used to form Operator Expressions.
 
 The following table describes the meaning as well as the associativity and the precedence of the different operators. They are grouped according to precedence, as indicated by horizontal rules, from low precedence to high precedence.
@@ -174,7 +29,229 @@ The following table describes the meaning as well as the associativity and the p
 |- e |integer negation |right |number |number
 |=======================
 
-== Functions
+== Pure Expressions
+
+Pure Expressions are side effect-free expressions. This means that these expressions cannot modify the heap.
+
+=== Let Expressions
+
+These expressions bind variable names to pure expressions.
+
+.Syntax
+
+[source]
+
+----
+let (Bool x) = True in !x
+----
+
+=== Data Type Constructor Expressions
+
+They are expressions that create data type values by using data type constructors. Note that for data type constructors that have no parameters, the parentheses are optional.
+
+.Syntax
+
+[source]
+
+----
+True
+Cons(True, Nil)
+ABS.StdLib.Nil
+----
+
+=== Function Applications
+
+Function Applications apply functions to arguments.
+
+.Syntax
+
+[source]
+
+----
+tail(Cons(True, Nil))
+ABS.StdLib.head(list)
+----
+
+=== If-Then-Else Expression
+
+ABS has a standard if-then-else expression.
+
+.Syntax
+
+[source]
+
+----
+if 5 == 4 then True else False
+----
+
+=== Case Expressions / Pattern Matching
+
+ABS supports pattern matching by the Case Expression. It takes an expression as first argument, which a series of patterns is matched against. The value of the case expression itself is the value of the expression on the right-hand side of the first matching expression. It is an error if no pattern matches the expression.
+
+There are five different kinds of patterns available in ABS:
+
+* Pattern Variables (e.g., x, where x is not bound yet)
+* Bound Variables (e.g., x, where x is bound)
+* Literal Patterns (e.g., 5)
+* Data Constructor Patterns (e.g., Cons(Nil,x))
+* Underscore Pattern (_)
+
+==== Pattern Variables
+
+Pattern variables are simply unbound variables. Like the underscore pattern, these variables match every value, but, in addition, bind the variable to the matched value. The bound variable can then be used in the right-hand-side expression of the corresponding branch. Typically, pattern variables are used inside of data constructor patterns to extract values from data constructors. For example 
+
+[source]
+----
+def A fromJust<A>(Maybe<A> a) =
+case a {
+	Just(x) => x;
+};
+
+----
+
+==== Bound Variables
+
+If a bound variable is used as a pattern, the pattern matches if the value of the case expression is equal to the value of the bound variable.
+
+[source]
+----
+def Bool contains<A>(List<A> list, A value) =
+case list {
+	Nil => False;
+	Cons(value, _) => True;
+	Cons(_, rest) => contains(rest, value);
+};
+
+----
+
+==== Literal Patterns
+Literals can be used as patterns. This is similar to bound variables, because the pattern matches if the value of the case expression is equal to the literal value.
+
+[source]
+----
+def Bool isEmpty(String s) =
+case b {
+	"" => True;
+	_ => False;
+};
+
+----
+
+==== Data Constructor Patterns
+A data constructor pattern is like a standard data constructor expression, but where certain sub expressions can be patterns again.
+
+
+[source]
+----
+def Bool negate(Bool b) =
+case b {
+	True => False;
+	False => True;
+};
+
+----
+
+[source]
+----
+def List<A> remainder(List<A> list) =
+case b {
+	Cons(_, rest) => rest;
+};
+
+----
+
+==== Underscore Pattern
+The underscore pattern (_) simply matches every value. It is generally used as the last pattern in a case expression to define a default case. For example:
+
+[source]
+----
+def Bool isNil<A>(List<A> list) =
+case list {
+	Nil => True;
+	_ => False;
+};
+----
+
+.Typing of Case Expressions
+
+A case expression is type-correct if and only if all its expressions and all its branches are type-correct and the right-hand side of all branches have a common super type. This common super type is also the type of the overall case expression. A branch (a pattern and its expression) is type-correct if its pattern and its right-hand side expression are type-correct. A pattern is type-correct if it can match the corresponding case ex-pression.
+
+== Expressions with Side Effects
+
+Beside pure expressions, ABS has expressions with side effects. However, these expressions are defined in such a way that they can only have a single side effect. This means that subexpressions of expressions can only be pure expressions again. This restriction simplifies the reasoning about ABS expressions.
+
+=== New Expression
+
+A New Expression creates a new object from a class name and a list of arguments. In ABS objects
+can be created in two different ways. Either they are created in the current COG, using the standard
+new local expression, or they are created in a new COG by using the new expression.
+
+.Syntax
+
+[source]
+----
+new local Foo(5)
+new Bar()
+----
+
+Standard Object Creation
+
+When using the new local expression, the new object is created in the current COG, i.e., the COG of the current receiver object.
+
+.COG Object Creation
+
+The concurrency model of ABS is based on the notion of COGs [?]. An ABS system at runtime is a set of concurrently running COGs. A COGs can be seen as an isolated subsystem, which has its own state (an object-heap) and its own internal behavior. COGs are created implicitly when creating a new object by using the new expression.
+
+=== Synchronous Call Expression
+
+A Synchronous Call consists of a target expression, a method name, and a list of argument expressions.
+
+[source]
+----
+Bool b = x.m(5);
+----
+
+=== Asynchronous Call Expression
+
+An Asynchronous Call consists of a target expression, a method name, and a list of argument expressions. Instead of directly invoking the method, an asynchronous method call creates a new task in the target COG, which is executed asynchronously. This means that the calling task proceeds independently after the call, without waiting for the result. The result of an asynchronous method call is a future (Fut<V>), which can be used by the calling task to later obtain the result of the method call. That future is resolved by the task that has been created in the target COG to execute the method.
+
+[source, java]
+----
+Fut<Bool> f = x!m(5);
+----
+
+=== Get Expression
+
+A Get Expression is used to obtain the value from a future. The current task is blocked until the value of the future is available, i.e., until the future has been resolved. No other task in the COG can be activated in the meantime.
+
+[source]
+----
+Bool b = f.get;
+----
+
+=== Await Expression
+A common pattern for asynchronous calls is:
+
+* Execute an asynchronous call expression, store the future in a variable
+* `await` on the future
+* Assign the result to a variable
+
+[source]
+----
+Fut<A> fx = o!m();
+await fx?;
+A x = fx.get;
+----
+
+The await expression is a shorthand for this pattern. The preceding example can be written as follows, without the need to introduce a name for the future:
+
+[source]
+----
+A x = await o!m();
+----
+
+
+== Function Definitions
 
 Functions in ABS define names for parametrized data expressions. A Function in ABS is always side effect-free, which means that it cannot manipulate the heap.
 
@@ -184,12 +261,12 @@ Functions in ABS define names for parametrized data expressions. A Function in A
 ----
 def Int length(IntList list) =
 case list {
-	Nil => 0;
-	Cons(n, ls) => 1 + length(ls);
+  Nil => 0;
+  Cons(n, ls) => 1 + length(ls);
 };
 ----
 
-.Parametric Functions
+=== Parametric Functions
 
 Parametric Functions allow to work with parametric data types in a general way. For exam-
 ple, given a list of any type, a parametric function head can return the first element, regardless
@@ -200,11 +277,9 @@ parameter section inside angle brackets (< >) after the function name.
 
 ----
 def A head<A>(List<A> list) =
-	case list {
-	Cons(x, xs) => x;
+  case list {
+  Cons(x, xs) \=> x;
 };
 
 ----
 (Note that head is a partial function.)
-
-
