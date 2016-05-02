@@ -5,15 +5,19 @@
 This section describes the lexical structure of the ABS language.  We use the
 following EBNF conventions for specifying the syntax of ABS elements.
 
-`typewriter text`:: Terminal symbols (occurring in program source code)
-_CursiveText_:: Non-terminals (production rule names)
-::=:: Separator between left hand side and right hand side of a rule
-|:: Variant; one or the other of the elements separated by |
-[ ]:: Optionals; the enclosed elements can be omitted
-{ }:: Repetition; zero or more occurrences of the enclosed elements
-? ?:: Special group (elements in the group are specified informally)
-[: :]:: A character class, as in extended regular expression syntax
-( ):: Grouping
+.EBNF syntax for this manual
+[cols="1,5"]
+|=====
+| `typewriter text` | Terminal symbols (occurring in program source code)
+| _CursiveText_ | Non-terminals (production rule names)
+| ::= | Separator between left hand side and right hand side of a rule
+| {vbar} | Variant; either of the element(s) separated by {vbar}
+| [ ] | Optionals; the enclosed elements can be omitted
+| { } | Repetition; zero or more occurrences of the enclosed elements
+| ? ? | Special group (elements in the group are specified informally)
+| [: :] | A character class, as in extended regular expression syntax
+| ( ) | Grouping
+|=====
 
 === Line Terminators and White Spaces
 
@@ -147,7 +151,7 @@ in front of statements and definitions.
 [caption=]
 .Syntax
 ====
-_Annotation_ ::= `[` [_TypeIdentifier_ `:`] _PureExp_ `]`
+_Annotation_ ::= `[` [ _TypeIdentifier_ `:` ] _PureExp_ `]`
 ====
 
 Annotations are used to write auxiliary information that can be used by
