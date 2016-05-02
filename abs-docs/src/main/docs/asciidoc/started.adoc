@@ -22,6 +22,7 @@ ABS supports the two common Java-style styles of comments: end-of-line comments 
 
 An end-of-line comment starts with two slashes, e.g., `// text`. All text that follows `//` until the end of the line is treated as a comment.
 
+.Example
 [source]
 ----
 // this is a comment
@@ -32,6 +33,7 @@ A block comment is enclosed in `/{asterisk} {asterisk}/`,
 e.g., `/{asterisk} this is a comment {asterisk}/`.  Block comments can span
 multiple lines and do not nest.
 
+.Example
 [source]
 ----
 /* this
@@ -97,6 +99,17 @@ written using the division operator `/`, e.g., `1/4` for one quarter.
 
 The null literal is written as `null`.
 
+.Syntax
+[subs="verbatim,macros"]
+----
+pass:quotes[_Literal_ ::= _IntLiteral_ | _StringLiteral_ | _ThisLiteral_ | _NullLiteral_]
+pass:quotes[_IntLiteral_] ::= 0 | [1-9][0-9]∗
+pass:quotes[_StringLiteral_ ::= " _StringCharacter_∗ "
+_ThisLiteral_ ::= this
+_NullLiteral_ ::= null]
+----
+Where _StringCharacter_ is defined as in the Java language.
+
 // .Separators
 // The following characters are separators:
 
@@ -120,13 +133,20 @@ The null literal is written as `null`.
 === Annotations
 
 Annotations consist of a syntactically valid pure expression, optionally
-preceded by a type identifier (the “tag”) and a colon (`:`).  They can be put in front of
-statements and definitions.
+preceded by a type identifier (the “tag”) and a colon (`:`).  They can be put
+in front of statements and definitions.
+
+.Syntax
+[subs="verbatim,macros"]
+----
+pass:quotes[_Annotation_] ::= [ [pass:quotes[_TypeIdentifier_] :] pass:quotes[PureExp] ]
+----
 
 Annotations are used to write auxiliary information that can be used by
 various tools.  Unknown (user-defined) annotations are ignored by the
 toolchain.  Pre-defined annotations are usually type-checked.
 
+.Example
 [source]
 ----
 [Near] class Example { ... }
@@ -134,15 +154,15 @@ toolchain.  Pre-defined annotations are usually type-checked.
 
 This is an example of an annotation with a tag:
 
+.Example
 [source]
 ----
 [Cost: 15] skip;
 ----
 
-  Annotations are
-associated with the following language construct.  In the examples above, the
-first annotation pertains to the class definition of `Example`, the second
-annotation pertains to the `skip` statement.
+Annotations are associated with the following language construct.  In the
+examples above, the first annotation pertains to the class definition of
+`Example`, the second annotation pertains to the `skip` statement.
 
 There can be more than one annotation in one place.
 
@@ -170,6 +190,7 @@ parameterized, i.e., ABS does not currently offer class templates.
 
 Note that classes are not types in ABS.
 
+.Example
 [source]
 ----
 String <1>
@@ -205,6 +226,7 @@ The future type `Fut<A>` is a special built-in type that denotes that an ABS
 value of type `A` will become available in the future.  The value that a
 future holds and will return can be of any concrete type.
 
+.Example
 [source]
 ----
 Fut<String> <1>
@@ -221,10 +243,19 @@ values.  Because values of algebraic data types are immutable, they can be
 safely passed on to other objects and cogs and make it easy to reason about
 program correctness.
 
+.Syntax
+[subs="verbatim,macros"]
+----
+pass:quotes[_DataTypeDecl_] ::= data pass:quotes[_TypeId_] [pass:quotes[_TypeParams_]] [= pass:quotes[_DataConstrList_]] ;
+pass:quotes[_TypeParams_] ::= < pass:quotes[_TypeId_] (, pass:quotes[_TypeId_])∗ >
+pass:quotes[_DataConstrList_] ::= pass:quotes[_DataConstr_] (| pass:quotes[_DataConstr_])∗
+pass:quotes[_DataConstr_] ::= pass:quotes[_TypeId_] [( [pass:quotes[_TypeList_]] )]
+----
+
 Data Type _Constructors_ enumerate the possible values of a data type.
 Constructors can have zero or more arguments.
 
-.Syntax
+.Example
 [source]
 ----
 data IntList = NoInt | ConsInt(Int, IntList); <1>
@@ -244,6 +275,7 @@ defined in.  It is an error to have multiple accessor functions with the same
 name, or to have a function definition with the same name as an accessor
 function.
 
+.Example
 [source]
 ----
 data Person = Person(String name, Int age);
@@ -265,6 +297,7 @@ lists, sets or maps. Parametric data types are declared like normal data types
 but have an additional type parameter section inside broken brackets (`<` `>`)
 after the data type name.
 
+.Example
 [source]
 ----
 data List<A> = Nil | Cons(A, List<A>);
@@ -272,6 +305,7 @@ data List<A> = Nil | Cons(A, List<A>);
 
 When using a parametric data type, concrete types are given for the type parameters.
 
+.Example
 [source]
 ----
 List<Int> l = Cons(1, Cons(2, Nil));
@@ -285,7 +319,7 @@ long, and nested constructor expressions can become unwieldy.  ABS provides a
 special syntax for n-ary constructors, which are transformed into constructor
 expressions via a user-supplied function.
 
-.Syntax
+.Example
 [source]
 ----
 def Set<A> set<A>(List<A> l) = <1>
@@ -330,16 +364,16 @@ write arbitrary exceptions specific to the user's program.
 
 To define a new exception (data constructor) the user has to write:
 
+.Example
 [source, java]
-
 ----
 exception MyException;
 ----
 
 An exception can also take any number of arguments as:
 
+.Example
 [source, java]
-
 ----
 exception AnotherException(Int, String, Bool);
 ----
@@ -383,6 +417,14 @@ A _Type Synonym_ is an alternative type name for a type.  Type synonyms are
 introduced with the keyword `type`.  Parametric type synonyms are not
 currently supported.
 
+.Syntax
+[subs="verbatim,macros"]
+----
+pass:quotes[
+_TypeSynDecl_ ::= type _TypeIdentifier_ = _TypeName_ ;]
+----
+
+.Example
 [source]
 ----
 type Filename = String;
