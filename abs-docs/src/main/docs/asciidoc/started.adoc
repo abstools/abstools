@@ -2,25 +2,44 @@
 
 == Lexical Structure
 
-This section describes the lexical structure of the ABS language.
+This section describes the lexical structure of the ABS language.  We use the
+following EBNF conventions for specifying the syntax of ABS elements.
+
+`typewriter text`:: Terminal symbols (occurring in program source code)
+_CursiveText_:: Non-terminals (production rule names)
+::=:: Separator between left hand side and right hand side of a rule
+|:: Variant; one or the other of the elements separated by |
+[ ]:: Optionals; the enclosed elements can be omitted
+{ }:: Repetition; zero or more occurrences of the enclosed elements
+? ?:: Special group (elements in the group are specified informally)
+[: :]:: A character class, as in extended regular expression syntax
+( ):: Grouping
 
 === Line Terminators and White Spaces
 
 Line terminators and white spaces are defined as in Java.
 
+[caption=]
 .Syntax
-[subs="verbatim,macros"]
-----
-pass:quotes[
-_LineTerminator_ ::= \n | \r | \r\n
-_WhiteSpace_ ::= _LineTerminator_ | ⍽ | \t | _Comment_
-]
-----
+====
+_LineTerminator_ ::= `\n` | `\r` | `\r\n` +
+_WhiteSpace_ ::= _LineTerminator_ | `␠` | `\t` | _Comment_
+====
+// use U+2423 or U+2420 for the space symbol
 
 === Comments
 ABS supports the two common Java-style styles of comments: end-of-line comments and block comments.
 
 An end-of-line comment starts with two slashes, e.g., `// text`. All text that follows `//` until the end of the line is treated as a comment.
+
+[caption=]
+.Syntax
+====
+_Comment_ ::= _LineComment_ | _BlockComment_ +
+_LineComment_ ::= `//` { ? characters except _LineTerminator_ ? } _LineTerminator_ +
+_BlockComment_ ::= `/\*` { ? characters except `*/` ? } `*/`
+====
+
 
 .Example
 [source]
@@ -41,17 +60,6 @@ is a multiline
 comment */
 ----
 
-.Syntax
-[subs="verbatim,macros"]
-----
-pass:quotes[
-_Comment_ ::= _LineComment_ | _BlockComment_
-_LineComment_ ::= // (^ _LineTerminator_ )* _LineTerminator_
-_BlockComment_ ::= /* (^ \*/ )* */
-]
-----
-(The negation operator `^` in the above has the informal meaning “input not
-satisfying the following production rule.”)
 
 === Identifiers
 
@@ -64,12 +72,12 @@ character.  Identifiers name local variables, fields, methods and functions.
 Type identifiers name interfaces, classes, types, type
 constructors, deltas and products.
 
+[caption=]
 .Syntax
-[subs="verbatim,macros"]
-----
-pass:quotes[_Identifier_ ::= [:lower:] ([:alpha:] | [:digit:] | _)∗]
-pass:quotes[_TypeIdentifier_ ::= [:upper:] ([:alpha:] | [:digit:] | _)∗]
-----
+====
+_Identifier_ ::= [:lower:] { [:alpha:] | [:digit:] | `\_` } +
+_TypeIdentifier_ ::= [:upper:] { [:alpha:] | [:digit:] | `_` }
+====
 
 === Keywords
 The following words are keywords in the ABS language and are invalid as identifiers.
@@ -99,16 +107,16 @@ written using the division operator `/`, e.g., `1/4` for one quarter.
 
 The null literal is written as `null`.
 
+[caption=]
 .Syntax
-[subs="verbatim,macros"]
-----
-pass:quotes[_Literal_ ::= _IntLiteral_ | _StringLiteral_ | _ThisLiteral_ | _NullLiteral_]
-pass:quotes[_IntLiteral_] ::= 0 | [1-9][0-9]∗
-pass:quotes[_StringLiteral_ ::= " _StringCharacter_∗ "
-_ThisLiteral_ ::= this
-_NullLiteral_ ::= null]
-----
-Where _StringCharacter_ is defined as in the Java language.
+====
+_Literal_ ::= _IntLiteral_ | _StringLiteral_ | _ThisLiteral_ | _NullLiteral_ +
+_IntLiteral_ ::= `0` | ( ( `1` | ... | `9`] ) { [: digit :] } ) +
+_StringLiteral_ ::= `"` { ? _Valid String Character_ ? } `"` +
+_ThisLiteral_ ::= `this` +
+_NullLiteral_ ::= `null`
+====
+Valid string characters are defined as in the Java language.
 
 // .Separators
 // The following characters are separators:
@@ -136,11 +144,11 @@ Annotations consist of a syntactically valid pure expression, optionally
 preceded by a type identifier (the “tag”) and a colon (`:`).  They can be put
 in front of statements and definitions.
 
+[caption=]
 .Syntax
-[subs="verbatim,macros"]
-----
-pass:quotes[_Annotation_] ::= [ [pass:quotes[_TypeIdentifier_] :] pass:quotes[PureExp] ]
-----
+====
+_Annotation_ ::= `[` [_TypeIdentifier_ `:`] _PureExp_ `]`
+====
 
 Annotations are used to write auxiliary information that can be used by
 various tools.  Unknown (user-defined) annotations are ignored by the
@@ -243,26 +251,29 @@ values.  Because values of algebraic data types are immutable, they can be
 safely passed on to other objects and cogs and make it easy to reason about
 program correctness.
 
+[caption=]
 .Syntax
-[subs="verbatim,macros"]
-----
-pass:quotes[_DataTypeDecl_] ::= data pass:quotes[_TypeId_] [pass:quotes[_TypeParams_]] [= pass:quotes[_DataConstrList_]] ;
-pass:quotes[_TypeParams_] ::= < pass:quotes[_TypeId_] (, pass:quotes[_TypeId_])∗ >
-pass:quotes[_DataConstrList_] ::= pass:quotes[_DataConstr_] (| pass:quotes[_DataConstr_])∗
-pass:quotes[_DataConstr_] ::= pass:quotes[_TypeId_] [( [pass:quotes[_TypeList_]] )]
-----
+====
+_DataTypeDecl_ ::= `data` _TypeIdentifier_ [ _TypeParams_ ] [ `=` _DataConstrList_ ] `;` +
+_TypeParams_ ::= `<` _TypeIdentifier_ { `,` _TypeIdentifier_ } `>` +
+_DataConstrList_ ::= _DataConstr_ { `|` _DataConstr_ } +
+_DataConstr_ ::= _TypeIdentifier_ [ `(` _TypeList_ `)` ]
+====
 
 Data Type _Constructors_ enumerate the possible values of a data type.
 Constructors can have zero or more arguments.
+
 
 .Example
 [source]
 ----
 data IntList = NoInt | ConsInt(Int, IntList); <1>
 data Bool = True | False; <2>
+data NotInstantiable; <3>
 ----
 <1> The data type `IntList` has two constructors: `NoInt` and `ConsInt`.
 <2> This is the definition of the built-in data type `Bool`.
+<3> This type does not have constructors and therefore cannot be instantiated.
 
 ==== Accessor Functions
 
@@ -417,12 +428,11 @@ A _Type Synonym_ is an alternative type name for a type.  Type synonyms are
 introduced with the keyword `type`.  Parametric type synonyms are not
 currently supported.
 
+[caption=]
 .Syntax
-[subs="verbatim,macros"]
-----
-pass:quotes[
-_TypeSynDecl_ ::= type _TypeIdentifier_ = _TypeName_ ;]
-----
+====
+_TypeSynDecl_ ::= `type` _TypeIdentifier_ `=` _TypeName_ `;`
+====
 
 .Example
 [source]
