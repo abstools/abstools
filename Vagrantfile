@@ -277,82 +277,8 @@ cabal sandbox add-source opennebula
 cabal install --only-dependencies
 cabal install
 
-
-echo
-echo "Installing ABS Main Generator & Smart Deployer"
-echo
-
-# install needed tools
-sudo apt-get update -y -q
-sudo apt-get install -y -q cmake bison flex python-dev python-pip
-sudo pip install antlr4-python2-runtime toposort psutil
-
-# install gecode into /home/vagrant/gecode-4.4.0
-cd /home/vagrant
-wget -nv http://www.gecode.org/download/gecode-4.4.0.tar.gz
-tar xzf gecode-4.4.0.tar.gz
-cd gecode-4.4.0
-./configure --disable-examples --prefix=/home/vagrant/gecode-4.4.0
-make && make install
-rm -rf /home/vagrant/gecode-4.4.0.tar.gz
-cat >>/home/vagrant/.bashrc <<EOF
-export PATH=/home/vagrant/gecode-4.4.0/bin:\\\$PATH
-EOF
-# update LD_LIBRARY_PATH
-if [ -z "$(grep 'export LD_LIBRARY_PATH=*' /home/vagrant/.bashrc)" ] ; then
-cat >>/home/vagrant/.bashrc <<EOF
-export LD_LIBRARY_PATH=\\\$LD_LIBRARY_PATH:/home/vagrant/gecode-4.4.0/lib
-EOF
-fi
-chmod -R 755 /home/vagrant/gecode-4.4.0
-
-# install minisearch in /home/vagrant/minisearch-0.1.0b1-Linux
-cd /home/vagrant
-wget -nv http://www.minizinc.org/minisearch/minisearch-0.1.0b1-Linux64.tar.gz
-tar xzf minisearch-0.1.0b1-Linux64.tar.gz
-rm -rf minisearch-0.1.0b1-Linux64.tar.gz
-cat >>/home/vagrant/.bashrc <<EOF
-export PATH=/home/vagrant/minisearch-0.1.0b1-Linux/bin:\\\$PATH
-EOF
-chmod -R 755 /home/vagrant/minisearch-0.1.0b1-Linux
-
-
-# install minizinc suite 1.6 in /home/vagrant/minizinc-1.6
-cd /home/vagrant
-wget -nv http://www.minizinc.org/downloads/release-1.6/minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
-tar xzf minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
-rm -rf minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
-cd /home/vagrant/minizinc-1.6
-./SETUP
-cat >>/home/vagrant/.bashrc <<EOF
-export PATH=/home/vagrant/minizinc-1.6/bin:\\\$PATH
-EOF
-chmod -R 755 /home/vagrant/minizinc-1.6
-
-# install smart_deployer in /home/vagrant/smart_deployer/abs_deployer
-cd /home/vagrant
-mkdir smart_deployer
-cd smart_deployer
-git clone --depth=1 -b smart_deployer https://github.com/jacopoMauro/abs_deployer.git
-chmod -R 755 /home/vagrant/smart_deployer
-
-# install main_generator in /home/vagrant/main_generator/abs_deployer
-cd /home/vagrant
-mkdir main_generator
-cd main_generator
-git clone --depth=1 https://github.com/jacopoMauro/abs_deployer.git
-cat >>/home/vagrant/.bashrc <<EOF
-export PATH=/home/vagrant/main_generator/abs_deployer/docker:\\\$PATH
-EOF
-chmod -R 755 /home/vagrant/main_generator
-chmod 775 /home/vagrant/main_generator/abs_deployer
-
-# install zephyrus2 in /home/vagrant/zephyrus2
-cd /home/vagrant/
-git clone --depth=1 https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git
-sudo pip install -e /home/vagrant/zephyrus2
-sudo chown -R vagrant.vagrant /home/vagrant/zephyrus2
-chmod -R 755 /home/vagrant/zephyrus2
+# execute the script to install the smart deployer and the main generator tool
+bash /vagrant/vagrant_scripts/install_smart_deployer.sh
 
 # set corresponding paths in easyinterface
 #
@@ -363,9 +289,9 @@ EC_SMARTDEPLOYERHOME="/home/vagrant/smart_deployer"
 # path to MAIN GENERATOR
 EC_MAINGENHOME="/home/vagrant/main_generator"
 #
-EC_PATH="\$EC_PATH:/home/vagrant/main_generator/abs_deployer/docker:/home/vagrant/minizinc-1.6/bin:/home/vagrant/minisearch-0.1.0b1-Linux/bin:/home/vagrant/gecode-4.4.0/bin"
+EC_PATH="\$EC_PATH:/home/vagrant/main_generator/abs_deployer/docker:/home/vagrant/MiniZincIDE:/home/vagrant/minisearch/bin:/home/vagrant/chuffed/binary/linux"
 #
-EC_LD_LIBRARY_PATH="\$EC_LD_LIBRARY_PATH:/home/vagrant/gecode-4.4.0/lib"
+EC_LD_LIBRARY_PATH="\$EC_LD_LIBRARY_PATH:"
 EOF
 sudo mv -f /tmp/ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage
 
