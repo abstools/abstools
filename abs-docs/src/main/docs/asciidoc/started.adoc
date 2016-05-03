@@ -27,7 +27,7 @@ Line terminators and white spaces are defined as in Java.
 .Syntax
 ====
 _LineTerminator_ ::= `\n` | `\r` | `\r\n` +
-_WhiteSpace_ ::= _LineTerminator_ | `␠` | `\t` | _Comment_
+_WhiteSpace_ ::= _LineTerminator_ | `␣` | `\t` | _Comment_
 ====
 // use U+2423 or U+2420 for the space symbol
 
@@ -261,21 +261,23 @@ program correctness.
 _DataTypeDecl_ ::= `data` _TypeIdentifier_ [ _TypeParams_ ] [ `=` _DataConstrList_ ] `;` +
 _TypeParams_ ::= `<` _TypeIdentifier_ { `,` _TypeIdentifier_ } `>` +
 _DataConstrList_ ::= _DataConstr_ { `|` _DataConstr_ } +
-_DataConstr_ ::= _TypeIdentifier_ [ `(` _TypeList_ `)` ]
+_DataConstr_ ::= _TypeIdentifier_ [ _DataConstrArglist_ ]
+_DataConstrArglist_ ::= `(` _Type_ [ _Identifier_ ] { `,` _Type_ [ _Identifier_ ] } `)`
 ====
 
 Data Type _Constructors_ enumerate the possible values of a data type.
-Constructors can have zero or more arguments.
+Constructors can have zero or more arguments.  Each argument can have an
+optional accessor function (see <<Accessor Functions>>).
 
 
 .Example
 [source]
 ----
-data IntList = NoInt | ConsInt(Int, IntList); <1>
+data IntList = NoInt | ConsInt(Int head, IntList tail); <1>
 data Bool = True | False; <2>
 data NotInstantiable; <3>
 ----
-<1> The data type `IntList` has two constructors: `NoInt` and `ConsInt`.
+<1> The data type `IntList` has two constructors: `NoInt` and `ConsInt`.  Both define an accessor function.
 <2> This is the definition of the built-in data type `Bool`.
 <3> This type does not have constructors and therefore cannot be instantiated.
 

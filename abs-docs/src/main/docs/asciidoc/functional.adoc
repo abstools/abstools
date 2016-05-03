@@ -1,49 +1,75 @@
-= Functional Sublanguage
+= ABS Expressions
 
-// Give an introduction of and rationale for the different parts of the functional sub-language
+This chapter specifies all ABS expressions.  ABS expressions can either be
+side effect-free (i.e., part of the _functional sublanguage_) or have side effects.
+
+The functional sublanguage of ABS is a purely-functional, side effect-free
+language.  It comprises functions and operators on built-in datatypes,
+user-defined algebraic datatypes, and user-defined functions defined on
+datatypes.
+
+Additionally, ABS contains a number of special expressions with well-defined
+side effects, such as the `new` expression which creates a new object.
+Expressions with side effects cannot be combined with other expressions, for
+example as an argument to a function call.  This slight notational
+inconvenience makes it easier to develop static analysis techniques and tools
+for ABS.
+
 
 == Operators
 
-ABS has a number of predefined operators which can be used to form Operator Expressions.
+ABS has a number of predefined operators.
 
-The following table describes the meaning as well as the associativity and the precedence of the different operators. They are grouped according to precedence, as indicated by horizontal rules, from low precedence to high precedence.
+The following table describes the meaning as well as the associativity and the
+precedence of the different operators. The list is sorted from low precedence
+to high precedence.
 
+.ABS Operators
 [options="header"]
 |=======================
-|Expression|Meaning      |Associativity |Argument types |Result type
-|e1 \|\| e2 |logical or |left |Bool, Bool |Bool
-|e1 && e2 |logical and |left |Bool, Bool |Bool
-|e1 == e2 |equality |left |compatible |Bool
-|e1 != e2 |inequality |left |compatible |Bool
-|e1 < e2 |less than |left |compatible |Bool
-|e1 < = e2 |less than or equal to |left |compatible |Bool
-|e1 > e2 |greater than |left |compatible |Bool
-|e1 >= e2 |greater than or equal to |left |compatible |Bool
-|e1 + e2 |concatenation |left |String, String |String
-|e1 + e2 |addition |left |number, number |number
-|e1 - e2 |subtraction |left |number, number |number
-|e1 * e2 |multiplication |left |number, number |number
-|e1 / e2 |division |left |number, number |Rat
-|e1 % e2 |modulo |left |number, number |Int
-|! e |logical negation |right |Bool |Bool
-|- e |integer negation |right |number |number
+|Expression | Meaning      |Associativity |Argument types |Result type
+| `e1 \|\| e2` | logical or   |left | `Bool`, `Bool` | `Bool`
+| `e1 && e2`   | logical and  |left | `Bool`, `Bool` | `Bool`
+| `e1 == e2`   | equality     |left |compatible | `Bool`
+| `e1 != e2`   | inequality   |left |compatible | `Bool`
+| `e1 < e2`    | less than    |left |compatible | `Bool`
+| `e1 \<= e2`  | less than or equal to |left |compatible | `Bool`
+| `e1 > e2`    | greater than |left |compatible | `Bool`
+| `e1 >= e2`   | greater than or equal to |left |compatible | `Bool`
+| `e1 + e2`    | concatenation |left | `String`, `String` | `String`
+| `e1 + e2`    | addition |left |number, number |number
+| `e1 - e2`    | subtraction |left |number, number |number
+| `e1 * e2`    | multiplication |left |number, number |number
+| `e1 / e2`    | division |left |number, number | `Rat`
+| `e1 % e2`    | modulo |left |number, number | `Int`
+| `!e`        | logical negation |right | `Bool` | `Bool`
+| `-e`        | integer negation |right |number |number
 |=======================
 
 == Pure Expressions
 
-Pure Expressions are side effect-free expressions. This means that these expressions cannot modify the heap.
+Pure Expressions are side effect-free expressions.  The value of these
+expressions only depends on their arguments, and they can be evaluated
+multiple times without influencing the execution semantics.
 
-=== Let Expressions
+=== The Let Expression
 
-These expressions bind variable names to pure expressions.
+The expression `let (T v) = p in b` evalutes `b`, with `v` bound to the value
+of evaluating the expression `p`.  The newly-introduced binding of `v` can
+shadow a binding of `v` outside of the `let` expression.
 
+[caption=]
 .Syntax
+====
+_LetExp_ ::= `let` `(` _Type_ _Identifier_ `)` = _PureExp_ `in` _PureExp_
+====
 
+.Example
 [source]
+----
+let (Int x) = 2 + 2 in x * 2
+----
 
-----
-let (Bool x) = True in !x
-----
 
 === Data Type Constructor Expressions
 
