@@ -112,21 +112,15 @@ be implemented in the future.
 Running a model in Erlang involves compiling the ABS code, then compiling and
 running the resulting Erlang code.
 
-Compiling all files in the current directory into Erlang is done with the following command:
+Compiling all files in the current directory into Erlang and starting the
+resulting model is done with the following commands:
 
   $ absc -erlang *.abs
-
-The model is started with the following commands, where `/Modulename/` should
-be the name of the module containing the main block:
-
-  $ erl
-  1> code:add_path("gen/erl/ebin").
-  2> cd ("gen/erl").
-  3> make:all([load]).
-  4> runtime:start("/Modulename/").
+  $ gen/erl/run
 
 This sequence of commands starts Erlang, then compiles the generated Erlang
-code and starts it.
+code and starts it.  Type `gen/erl/run -h` for a list of options accepted by
+the model.
 
 
 
