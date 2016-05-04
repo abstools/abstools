@@ -79,8 +79,9 @@ constructors, deltas and products.
 [caption=]
 .Syntax
 ====
-_Identifier_ ::= [:lower:] { [:alpha:] | [:digit:] | `\_` } +
-_TypeIdentifier_ ::= [:upper:] { [:alpha:] | [:digit:] | `_` }
+_Identifier_ ::= [: lower :] { [: alpha :] | [: digit :] | `_` } +
+
+_TypeIdentifier_ ::= [: upper :] { [: alpha :] | [: digit :] | `_` }
 ====
 
 === Keywords

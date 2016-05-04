@@ -71,56 +71,93 @@ let (Int x) = 2 + 2 in x * 2
 ----
 
 
-=== Data Type Constructor Expressions
+=== The Data Constructor Expression
 
-They are expressions that create data type values by using data type constructors. Note that for data type constructors that have no parameters, the parentheses are optional.
 
+Data Constructor Expressions are expressions that create data values by
+applying arguments to data type constructors.  Data constructor expressions
+look similar to function calls, but data constructors always start with an
+upper-case letter.
+
+For data type constructors without parameters, the parentheses are optional.
+
+[caption=]
 .Syntax
+====
+_DataConstrExp_ ::= _TypeIdentifier_ [ `(` [ _PureExp_ { `,` _PureExp_ } ] `)` ]
+====
 
+.Example
 [source]
-
 ----
 True
 Cons(True, Nil)
-ABS.StdLib.Nil
+Nil
 ----
 
-=== Function Applications
+Defining new data types and their constructors is described in <<Algebraic Data Types>>.
 
-Function Applications apply functions to arguments.
 
+=== The Function Call Expression
+
+Function calls apply arguments to functions, producing a value.  Function call
+expressions look similar to data constructor expressions, but function names
+always start with a lower-case letter.  The parentheses are mandatory in
+function calls.
+
+[caption=]
 .Syntax
+====
+_FnAppExp_ ::= _Identifier_ `(` [ _PureExp_ { `,` _PureExp_ } ] `)`
+====
 
+.Example
 [source]
-
 ----
 tail(Cons(True, Nil))
-ABS.StdLib.head(list)
+head(list)
 ----
 
-=== If-Then-Else Expression
+=== The Conditional Expression
 
-ABS has a standard if-then-else expression.
+The value of the conditional expression `if c then e1 else e2` is either the
+value of `e1` or the value of `e2`, depending on the value of `c`, which must
+be of type `Bool`.  Depending on the value of `c`, either `e1` or `e2` is
+evaluated, but not both.
+
+[caption=]
+.Syntax
+====
+_IfExp_ ::= `if` _PureExp_ `then` _PureExp_ `else` _PureExp_
+====
 
 .Syntax
-
 [source]
-
 ----
 if 5 == 4 then True else False
 ----
+
 
 === Case Expressions / Pattern Matching
 
 ABS supports pattern matching by the Case Expression. It takes an expression as first argument, which a series of patterns is matched against. The value of the case expression itself is the value of the expression on the right-hand side of the first matching expression. It is an error if no pattern matches the expression.
 
-There are five different kinds of patterns available in ABS:
+There are four different kinds of patterns available in ABS:
 
-* Pattern Variables (e.g., x, where x is not bound yet)
-* Bound Variables (e.g., x, where x is bound)
-* Literal Patterns (e.g., 5)
-* Data Constructor Patterns (e.g., Cons(Nil,x))
-* Underscore Pattern (_)
+* Variables (with different semantics depending on whether the variable is bound or not)
+* Literal Patterns (e.g., `5`)
+* Data Constructor Patterns (e.g., `Cons(Nil,x)`)
+* Underscore Pattern (`_`)
+
+[caption=]
+.Syntax
+====
+_CaseExp_ ::= `case` _PureExp_ `{` { _CaseExpBranch_ } `}` +
+_CaseExpBranch_ ::=  _Pattern_ `\=>` _PureExp_ `;` +
+_Pattern_ ::= `\_` | _Identifier_ | _Literal_ | _ConstrPattern_ +
+_ConstrPattern_ ::= _TypeIdentifier_ [ `(` [ _Pattern_ { `,` _Pattern_ }  ] `)` ]
+====
+
 
 ==== Pattern Variables
 
