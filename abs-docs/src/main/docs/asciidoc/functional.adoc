@@ -52,6 +52,32 @@ Pure Expressions are side effect-free expressions.  The value of these
 expressions only depends on their arguments, and they can be evaluated
 multiple times without influencing the execution semantics.
 
+
+[caption=]
+.Syntax
+====
+_PureExp_ ::= _Identifier_ +
+            | `this` `.` _Identifier_ +
+            | `this` +
+            | `null` +
+            | _Literal_ +
+            | _LetExp_ +
+            | _DataConstrExp_ +
+            | _FnAppExp_ +
+            | _FnAppListExp_ +
+            | _IfExp_ +
+            | _CaseExp_ +
+            | _PureExp_ _Operator_ _PureExp_ +
+            | `(` _PureExp_ `)`
+====
+where _Operator_ is a pre-defined operator from <<Operators>>.
+
+
+
+=== Literal Expressions
+
+Literals, as defined in <<Literals>>, are expressions.
+
 === The Let Expression
 
 The expression `let (T v) = p in b` evalutes `b`, with `v` bound to the value
@@ -118,6 +144,20 @@ tail(Cons(True, Nil))
 head(list)
 ----
 
+
+==== The N-ary Function Call Expression
+
+Calls to n-ary Constructors (see <<N-ary Constructors>>) are written with
+brackets (`[]`) instead of parentheses (`()`).
+
+[caption=]
+.Syntax
+====
+_FnAppListExp_ ::= _Identifier_ `[` [ _PureExp_ { `,` _PureExp_ } ] `]`
+====
+
+
+
 === The Conditional Expression
 
 The value of the conditional expression `if c then e1 else e2` is either the
@@ -140,7 +180,16 @@ if 5 == 4 then True else False
 
 === Case Expressions / Pattern Matching
 
-ABS supports pattern matching by the Case Expression. It takes an expression as first argument, which a series of patterns is matched against. The value of the case expression itself is the value of the expression on the right-hand side of the first matching expression. It is an error if no pattern matches the expression.
+ABS supports pattern matching via the Case Expression.  A case expression
+consists of an input expression and a series of branches, each consisting of a
+pattern and a right hand side expression.
+
+The case expression evaluates its input expression and attempts to match the
+resulting value against the branches until a matching pattern is found.  The
+value of the case expression itself is the value of the expression on the
+right-hand side of the first matching pattern.
+
+It is an error if no pattern matches the expression.
 
 There are four different kinds of patterns available in ABS:
 
@@ -158,86 +207,118 @@ _Pattern_ ::= `\_` | _Identifier_ | _Literal_ | _ConstrPattern_ +
 _ConstrPattern_ ::= _TypeIdentifier_ [ `(` [ _Pattern_ { `,` _Pattern_ }  ] `)` ]
 ====
 
+==== The Variable Pattern
 
-==== Pattern Variables
+Variable patterns are written as identifiers starting with a lower-case
+letter.  If the identifier does not name a variable in the current scope, the
+variable pattern matches any value and introducues a binding of the given
+identifier to the matched value for the right-hand side of the branch and the
+rest of the pattern itself.  In case a binding for that identifier is already
+in scope, its value is compared to the value being matched against.
 
-Pattern variables are simply unbound variables. Like the underscore pattern, these variables match every value, but, in addition, bind the variable to the matched value. The bound variable can then be used in the right-hand-side expression of the corresponding branch. Typically, pattern variables are used inside of data constructor patterns to extract values from data constructors. For example 
-
-[source]
-----
-def A fromJust<A>(Maybe<A> a) =
-case a {
-	Just(x) => x;
-};
-
-----
-
-==== Bound Variables
-
-If a bound variable is used as a pattern, the pattern matches if the value of the case expression is equal to the value of the bound variable.
-
-[source]
-----
-def Bool contains<A>(List<A> list, A value) =
-case list {
-	Nil => False;
-	Cons(value, _) => True;
-	Cons(_, rest) => contains(rest, value);
-};
-
-----
-
-==== Literal Patterns
-Literals can be used as patterns. This is similar to bound variables, because the pattern matches if the value of the case expression is equal to the literal value.
-
-[source]
-----
-def Bool isEmpty(String s) =
-case b {
-	"" => True;
-	_ => False;
-};
-
-----
-
-==== Data Constructor Patterns
-A data constructor pattern is like a standard data constructor expression, but where certain sub expressions can be patterns again.
+The variable being named by the variable pattern can be used in the
+right-hand-side expression of the corresponding branch.  Typically, pattern
+variables are used inside of data constructor patterns to extract values from
+data constructors.  For example:
 
 
 [source]
 ----
-def Bool negate(Bool b) =
-case b {
-	True => False;
-	False => True;
-};
-
+let (Pair<Int, Int> a) = Pair(5, 5) in
+  case a {
+    Pair(x, x) => x; <1>
+    Pair(x, y) => y; <2>
+  } <3>
 ----
+<1> This branch matches a pair with identical values.
+<2> This branch matches every pair.  Since pairs with identical values are matched by the previous branch, `x` and `y` will be different.
+<3> The value of the whole expression is 5, produced by the first branch.
 
-[source]
-----
-def List<A> remainder(List<A> list) =
-case b {
-	Cons(_, rest) => rest;
-};
-
-----
-
-==== Underscore Pattern
-The underscore pattern (_) simply matches every value. It is generally used as the last pattern in a case expression to define a default case. For example:
 
 [source]
 ----
-def Bool isNil<A>(List<A> list) =
-case list {
-	Nil => True;
-	_ => False;
-};
+let (x = 7) in
+  case Pair(5, 5) {
+    Pair(x, x) => x; <1>
+    Pair(x, y) => y; <2>
+    Pair(y, z) => z; <3>
+  } <4>
 ----
+<1> This pattern does not match since `x` is bound to 7 and does not match 5.
+<2> This pattern does not match either, for the same reason.
+<3> This pattern contains only unbound variable patterns and therefore matches.
+<4> The value of the whole expression is 5, produced by the third branch.
+
+
+
+==== The Literal Pattern
+
+Literals can be used as patterns.  The pattern matches if the value of the
+case expression is equal to the literal value.
+
+[source]
+----
+let (Pair<Int, Int> a) = Pair(5, 5) in
+  case a {
+    Pair(3, x) => x; <1>
+    Pair(x, y) => y; <2>
+  } <3>
+----
+<1> The pattern `3` does not match the value in the first position of the `Pair` constructor pattern.
+<2> This pattern matches.
+<3> The value of the whole expression is 5, produced by the second branch.
+
+
+==== The Data Constructor Pattern
+
+A data constructor pattern is written like a standard data constructor expression.
+Constructor arguments are again patterns.
+
+
+[source]
+----
+let (List<Int> l) = list[1, 2, 3] in
+  case l {
+    Nil => 0; <1>
+    Cons(1, _) => 15; <2>
+    Cons(_, Cons(y, _)) => y; <3>
+  } <4>
+----
+<1> This pattern matches the empty list.
+<2> This pattern matches a list starting with the literal `1`.
+<3> This pattern matches a list of at least length 2, and binds the second element to `y`.
+<4> The value of the whole expression is 15, produced by the second branch.
+
+
+==== The Wildcard Pattern
+
+The wildcard pattern, written with an underscore (`_`) matches any value.
+
+[source]
+----
+let (List<Int> l) = list[1, 2, 3] in
+  case l {
+    Nil => True; <1>
+    _ => False; <2>
+}; <3>
+----
+<1> This pattern matches the empty list.
+<2> This pattern matches anything.
+<3> The value of the whole expression is `False`, produced by the second branch.
+
+The wildcard pattern can be used as the last pattern in a case expression to
+define a default case.
+
 
 .Typing of Case Expressions
 
-A case expression is type-correct if and only if all its expressions and all its branches are type-correct and the right-hand side of all branches have a common super type. This common super type is also the type of the overall case expression. A branch (a pattern and its expression) is type-correct if its pattern and its right-hand side expression are type-correct. A pattern is type-correct if it can match the corresponding case ex-pression.
+A case expression is type-correct if and only if all its expressions and all
+its branches are type-correct and the right-hand side of all branches have a
+common super type.  This common super type is also the type of the overall case
+expression.  A branch (a pattern and its expression) is type-correct if its
+pattern and its right-hand side expression are type-correct.  A pattern is
+type-correct if it can match the corresponding case expression.
+
 
 == Expressions with Side Effects
 
