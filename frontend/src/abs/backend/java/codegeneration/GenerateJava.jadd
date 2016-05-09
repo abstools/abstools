@@ -204,7 +204,7 @@ aspect GenerateJava {
             s.generateJava(stream, false);
             stream.println(";");
         }
-
+        stream.println("boolean __ABS_isSameCOG();");
         stream.println("}");
     }
 
@@ -561,12 +561,28 @@ aspect GenerateJava {
         final List<PureExp> params = getParams();
         if (callee instanceof ThisExp) {
             stream.print(JavaBackend.getMethodName(getMethod()));
+            JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
         } else {
             stream.print(ABSRuntime.class.getName() + ".checkForNull(");
             callee.generateJava(stream);
-            stream.print(")." + JavaBackend.getMethodName(getMethod()));
+            stream.println(");");
+            stream.print("if (");
+            callee.generateJava(stream);
+            stream.println(".__ABS_isSameCOG()) {");
+            // synchronous method call
+            callee.generateJava(stream);
+            stream.print("." + JavaBackend.getMethodName(getMethod()));
+            JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
+            stream.println(";");
+            stream.println("} else {");
+            // asynchronous method call + get
+            callee.generateJava(stream);
+            stream.print(".async_" + JavaBackend.getMethodName(getMethod()));
+            JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
+            stream.println(".get();");
+            stream.println("}");
         }
-        JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
+
     }
 
     public void OriginalCall.generateJava(PrintStream stream) {
