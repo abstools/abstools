@@ -199,7 +199,7 @@ public class JavaGeneratorHelper {
     public static String getDebugString(ASTNode<?> node, int line) {
         String fileName = node.getCompilationUnit().getFileName().replace("\\", "\\\\");
         return "if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep(\""
-        + fileName + "\"," + line + ");";
+            + fileName + "\"," + line + ");";
     }
 
     public static void generateMethodSig(PrintStream stream, MethodSig sig, boolean async) {
