@@ -16,36 +16,6 @@ inconvenience makes it easier to develop static analysis techniques and tools
 for ABS.
 
 
-== Operators
-
-ABS has a number of predefined operators.
-
-The following table describes the meaning as well as the associativity and the
-precedence of the different operators. The list is sorted from low precedence
-to high precedence.
-
-.ABS Operators
-[options="header"]
-|=======================
-|Expression | Meaning      |Associativity |Argument types |Result type
-| `e1 \|\| e2` | logical or   |left | `Bool`, `Bool` | `Bool`
-| `e1 && e2`   | logical and  |left | `Bool`, `Bool` | `Bool`
-| `e1 == e2`   | equality     |left |compatible | `Bool`
-| `e1 != e2`   | inequality   |left |compatible | `Bool`
-| `e1 < e2`    | less than    |left |compatible | `Bool`
-| `e1 \<= e2`  | less than or equal to |left |compatible | `Bool`
-| `e1 > e2`    | greater than |left |compatible | `Bool`
-| `e1 >= e2`   | greater than or equal to |left |compatible | `Bool`
-| `e1 + e2`    | concatenation |left | `String`, `String` | `String`
-| `e1 + e2`    | addition |left |number, number |number
-| `e1 - e2`    | subtraction |left |number, number |number
-| `e1 * e2`    | multiplication |left |number, number |number
-| `e1 / e2`    | division |left |number, number | `Rat`
-| `e1 % e2`    | modulo |left |number, number | `Int`
-| `!e`        | logical negation |right | `Bool` | `Bool`
-| `-e`        | integer negation |right |number |number
-|=======================
-
 == Pure Expressions
 
 Pure Expressions are side effect-free expressions.  The value of these
@@ -67,16 +37,94 @@ _PureExp_ ::= _Identifier_ +
             | _FnAppListExp_ +
             | _IfExp_ +
             | _CaseExp_ +
-            | _PureExp_ _Operator_ _PureExp_ +
+            | _OperatorExp+
             | `(` _PureExp_ `)`
 ====
-where _Operator_ is a pre-defined operator from <<Operators>>.
-
 
 
 === Literal Expressions
 
 Literals, as defined in <<Literals>>, are expressions.
+
+=== Operator Expressions
+
+ABS has a range of unary and binary operators working on pre-defined
+datatypes.  All operators are pure (side effect-free).
+
+[caption=]
+.Syntax
+====
+_OperatorExp_ ::= _UnaryExp_ | _BinaryExp_ +
+_UnaryExp_ ::= _UnaryOp_ _PureExp_ +
+_UnaryOp_ ::= `!` | `-` +
+_BinaryExp_ ::= _PureExp_ _BinaryOp_ _PureExp_ +
+_BinaryOp_ ::= `||` | `&&` | `==` | `!=` | `<` | `\<=` | `>` | `>=` | `+` | `-` | `*` | `/` | `%`
+====
+
+
+The following table describes the meaning as well as the associativity and the
+precedence of the different operators. The list is sorted from low precedence
+to high precedence.
+
+.ABS Operators
+[options="header"]
+|=======================
+|Expression    | Meaning                  |Associativity |Argument types | Result type
+| `e1 \|\| e2` | logical or               |left          | `Bool`     | `Bool`
+| `e1 && e2`   | logical and              |left          | `Bool`     | `Bool`
+| `e1 == e2`   | equality                 |left          | compatible | `Bool`
+| `e1 != e2`   | inequality               |left          | compatible | `Bool`
+| `e1 < e2`    | less than                |left          | compatible | `Bool`
+| `e1 \<= e2`  | less than or equal to    |left          | compatible | `Bool`
+| `e1 > e2`    | greater than             |left          | compatible | `Bool`
+| `e1 >= e2`   | greater than or equal to |left          | compatible | `Bool`
+| `e1 + e2`    | concatenation            |left          | `String`   | `String`
+| `e1 + e2`    | addition                 |left          | number     | number
+| `e1 - e2`    | subtraction              |left          | number     | number
+| `e1 * e2`    | multiplication           |left          | number     | number
+| `e1 / e2`    | division                 |left          | number     | `Rat`
+| `e1 % e2`    | modulo                   |left          | number     | `Int`
+| `!e`         | logical negation         |right         | `Bool`     | `Bool`
+| `-e`         | integer negation         |right         | number     | number
+|=======================
+
+
+==== Semantics of Comparison Operators
+
+ABS has generic equality and less-than comparison between two values of the
+same type.
+
+Equality and inequality comparison is standard: by value for functional
+datatypes and by reference for objects and futures.  I.e., two strings
+`"Hello"` compare as identical via `==`, as do two sets containing identical
+values.  Two references to objects or futures compare as identical via `==` if
+they point to the same object or future.  The inequality operator `!=`
+evaluates to `True` for any two values that compare to `False` under `==` and
+vice versa.
+
+For the comparison operator `<`, an ordering is defined in the following way.
+
+- Numbers compare as usual.
+
+- Strings compare lexicographically.
+
+- Algebraic datatypes compare first by constructor name, then by comparing
+  constructor arguments left to right.
+
+.Example
+----
+Cons(_, _) < Nil
+Cons(1, _) < Cons(2, _)
+----
+
+- Objects and futures are compared by identity, in an implementation-specific
+  but stable way.  This means that for any two variables `a` and `b` that
+  point to different objects, the value of `a < b` does not change as long as
+  `a` and `b` are not re-assigned.footnote:[This ordering is not guaranteed to
+  be stable between two invocations of a program.  If ABS ever develops object
+  serialization, care must be taken to uphold any datatype invariants across
+  program invocations, e.g., when reading back an ordered list of objects.]
+
 
 === The Let Expression
 
