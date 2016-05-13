@@ -139,17 +139,19 @@ await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=R
     case NewStopped >= gb_sets:size(NewCogs) of
         true ->
             gcstats(Log, mark),
-            mark(NewState, [], ordsets:union(rpc:pmap({gc, get_references}, [], ordsets:from_list(gb_sets:to_list(gb_sets:union(NewCogs, NewState#state.root_futures))))));
+            Black=mark([], ordsets:from_list(gb_sets:to_list(gb_sets:union(NewCogs, NewState#state.root_futures)))),
+            gcstats(Log, sweep),
+            StateAfterSweep=sweep(NewState, gb_sets:from_ordset(Black)),
+            loop(StateAfterSweep);
         false -> await_stop(NewState,NewStopped)
     end.
 
-mark(State=#state{log=Log}, Black, []) ->
-    gcstats(Log, sweep),
-    sweep(State, gb_sets:from_ordset(Black));
-mark(State, Black, Gray) ->
+mark(Black, []) ->
+    Black;
+mark(Black, Gray) ->
     NewBlack = ordsets:union(Black, Gray),
     NewGray = ordsets:subtract(ordsets:union(ordsets:from_list(rpc:pmap({gc, get_references}, [], Gray))), Black),
-    mark(State, NewBlack, NewGray).
+    mark(NewBlack, NewGray).
 
 sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,
                    limit=Lim, proc_factor=PFactor, log=Log},Black) ->
@@ -173,8 +175,8 @@ sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,
                     PFactor > ?MIN_PROC_FACTOR -> PFactor - 0.05;
                     true -> PFactor
                  end,
-    loop(State#state{objects=BlackObjects, futures=BlackFutures, previous=erlang:monotonic_time(milli_seconds),
-                     limit=NewLim, proc_factor=PFactor}).
+    State#state{objects=BlackObjects, futures=BlackFutures, previous=erlang:monotonic_time(milli_seconds),
+                     limit=NewLim, proc_factor=PFactor}.
 
 get_references({Module, Ref}) ->
     Module:get_references(Ref).
