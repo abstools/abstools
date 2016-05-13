@@ -370,7 +370,11 @@ type-correct if it can match the corresponding case expression.
 
 == Expressions with Side Effects
 
-Beside pure expressions, ABS has expressions with side effects. However, these expressions are defined in such a way that they can only have a single side effect. This means that subexpressions of expressions can only be pure expressions again. This restriction simplifies the reasoning about ABS expressions.
+Beside pure expressions, ABS has expressions with side effects. However, these
+expressions are defined in such a way that they can only have a single side
+effect. This means that subexpressions of expressions can only be pure
+expressions again. This restriction simplifies the reasoning about ABS
+expressions.
 
 === New Expression
 
@@ -380,6 +384,14 @@ new local expression, or they are created in a new COG by using the new expressi
 
 .Syntax
 
+
+[caption=]
+.Syntax
+====
+_NewExp_ ::= `new` [ `local` ] _TypeName_ `(` [ _PureExp_ {`,` _PureExp_ } ] `)`
+====
+
+.Example
 [source]
 ----
 new local Foo(5)
