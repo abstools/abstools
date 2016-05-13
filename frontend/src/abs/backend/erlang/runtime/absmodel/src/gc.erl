@@ -139,7 +139,7 @@ await_stop(State=#state{cogs=Cogs,objects=Objects,futures=Futures,root_futures=R
     case NewStopped >= gb_sets:size(NewCogs) of
         true ->
             gcstats(Log, mark),
-            mark(NewState, [], ordsets:union(rpc:pmap({gc, get_references}, [], gb_sets:to_list(gb_sets:union(NewCogs, NewState#state.root_futures)))));
+            mark(NewState, [], ordsets:union(rpc:pmap({gc, get_references}, [], ordsets:from_list(gb_sets:to_list(gb_sets:union(NewCogs, NewState#state.root_futures))))));
         false -> await_stop(NewState,NewStopped)
     end.
 
@@ -148,7 +148,7 @@ mark(State=#state{log=Log}, Black, []) ->
     sweep(State, gb_sets:from_ordset(Black));
 mark(State, Black, Gray) ->
     NewBlack = ordsets:union(Black, Gray),
-    NewGray = ordsets:subtract(ordsets:union(rpc:pmap({gc, get_references}, [], Gray)), Black),
+    NewGray = ordsets:subtract(ordsets:union(ordsets:from_list(rpc:pmap({gc, get_references}, [], Gray))), Black),
     mark(State, NewBlack, NewGray).
 
 sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,
