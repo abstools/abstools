@@ -52,8 +52,9 @@ add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
     %% an object
     task:block_without_time_advance(Cog),
     Ref!{new_task,Task,Args,self(),false},
-    await_start(Task,[Args|Stack]),
-    task:acquire_token(Cog,[Args|Stack]).
+    TaskRef=await_start(Task,[Args|Stack]),
+    task:acquire_token(Cog,[Args|Stack]),
+    TaskRef.
 
 new_state(#cog{ref=Cog},TaskRef,State)->
     Cog!{new_state,TaskRef,State,undef}.
