@@ -41,11 +41,13 @@ start(DC)->
 
 add(#cog{ref=Cog},Task,Args)->
     Cog!{new_task,Task,Args,self(),false},
-    await_start(Task, Args).
+    TaskRef=await_start(Task, Args),
+    TaskRef.
 
 add_and_notify(#cog{ref=Cog},Task,Args)->
     Cog!{new_task,Task,Args,self(),true},
-    await_start(Task, Args).
+    TaskRef=await_start(Task, Args),
+    TaskRef.
 
 add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
     %% we don't want task:block since this allowed time advance while creating
