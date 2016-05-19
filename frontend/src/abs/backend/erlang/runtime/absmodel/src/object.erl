@@ -95,7 +95,9 @@ await_activation(Params) ->
 
 start(Cog,Class)->
     {ok,O}=gen_fsm:start_link(object,[Cog,Class,Class:init_internal()],[]),
-    gc:register_object(#object{class=Class,ref=O,cog=Cog}).
+    Object=#object{class=Class,ref=O,cog=Cog},
+    gc:register_object(Object),
+    Object.
 
 init([Cog=#cog{ref=CogRef},Class,Status])->
     {ok,uninitialized,#state{cog=Cog,await=[],tasks=gb_sets:empty(),class=Class,int_status=Status,new_vals=gb_trees:empty()}}.
