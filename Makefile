@@ -1,4 +1,3 @@
-
 .PHONY: help frontend vagrant-vm docker clean
 .DEFAULT_GOAL := help
 
@@ -20,7 +19,8 @@ ifeq (,$(DOCKER))
 	endif
 endif
 
-frontend: frontend/dist/absfrontend.jar ## Build ABS compiler
+frontend:			## Build ABS compiler
+	ant -buildfile frontend/build.xml dist
 
 manual:				## Build the ABS manual
 	mvn -B -f abs-docs clean install
@@ -36,6 +36,3 @@ docker: frontend		## Build and start 'easyinterface' docker image
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-
-frontend/dist/absfrontend.jar:
-	ant -buildfile frontend/build.xml dist
