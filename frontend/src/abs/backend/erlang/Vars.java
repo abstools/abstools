@@ -160,7 +160,7 @@ public class Vars extends LinkedHashMap<String, Var> {
 
     public String toStack() {
         StringBuilder sb = new StringBuilder();
-        sb.append("[O");
+        sb.append("[O,DC");
 
         for (Map.Entry<String, Var> a : this.entrySet()) {
             Var v = a.getValue();
