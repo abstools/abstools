@@ -370,20 +370,26 @@ type-correct if it can match the corresponding case expression.
 
 == Expressions with Side Effects
 
-Beside pure expressions, ABS has expressions with side effects. However, these
-expressions are defined in such a way that they can only have a single side
-effect. This means that subexpressions of expressions can only be pure
-expressions again. This restriction simplifies the reasoning about ABS
-expressions.
+ABS has expressions with side effects.  These expressions are only legal
+“stand-alone”, i.e., not as a sub-expression of another expression.  This
+means that subexpressions of expressions can only be pure expressions.  This
+restriction simplifies the reasoning about expressions in the ABS modeling
+language.
+
+
+[caption=]
+.Syntax
+====
+_EffExp_ ::= _NewExp_ | _SyncCall_ | _AsyncCall_ | _GetExp_
+====
 
 === New Expression
 
-A New Expression creates a new object from a class name and a list of arguments. In ABS objects
-can be created in two different ways. Either they are created in the current COG, using the standard
-new local expression, or they are created in a new COG by using the new expression.
-
-.Syntax
-
+A `new` expression creates a new object from a class name and a list of
+arguments.  In ABS objects can be created in two different ways.  Either they
+are created in the current COG, using the `new local` expression, or they are
+created in a new COG by using the `new` expression (see <<The ABS Actor and
+Concurrency Model>> for more details about cogs).
 
 [caption=]
 .Syntax
@@ -398,22 +404,44 @@ new local Foo(5)
 new Bar()
 ----
 
-Standard Object Creation
+Classes can declare an _init block_ (see <<Classes>>), which is executed for
+each new instance.  The semantics of the `new` expression guarantee that the
+init block is fully executed before the new object begins receiving method
+calls.  Classes can also declare a `run` method, which is automatically
+invoked after the init block and subject to the normal scheduling rules for
+processes.
 
-When using the new local expression, the new object is created in the current COG, i.e., the COG of the current receiver object.
-
-.COG Object Creation
-
-The concurrency model of ABS is based on the notion of COGs [?]. An ABS system at runtime is a set of concurrently running COGs. A COGs can be seen as an isolated subsystem, which has its own state (an object-heap) and its own internal behavior. COGs are created implicitly when creating a new object by using the new expression.
 
 === Synchronous Call Expression
 
-A Synchronous Call consists of a target expression, a method name, and a list of argument expressions.
+A synchronous call consists of a target expression evaluting to an interface
+type, a method name declared in that interface, and a list of argument expressions.
 
+[caption=]
+.Syntax
+====
+_SyncCall_ ::= _PureExp_ `.` _Identifier_ `(` _PureExp_ { `,` _PureExp_ } `)`
+====
+
+.Example
 [source]
 ----
-Bool b = x.m(5);
+Bool b = x.m(5, 3);
 ----
+
+The semantics of the synchronous method call differ depending on whether the
+caller and callee are in the same cog.  A synchronous method call between
+objects in the same cog has Java-like semantics, i.e., the caller is suspended
+and the called method starts executing immediately.  When the called method
+finishes, the caller process is scheduled and resumes execution.
+
+In the case when caller and called object are in different cogs, a synchronous
+method call is equivalent to and asynchronous method call immediately followed
+by a `get` expression on the resulting future.  This means that the intuitive
+semantics of synchronous method calls are preserved, but introduces the
+possibility of deadlocks in case the callee tries to call back to an object of
+the caller cog.
+
 
 === Asynchronous Call Expression
 

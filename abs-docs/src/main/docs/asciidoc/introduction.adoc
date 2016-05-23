@@ -53,4 +53,12 @@ Close-to-the-metal programming :: ABS is not designed to be a systems
 programming language.
 ****
 
+== The ABS Actor and Concurrency Model
 
+TBD: explain cogs, futures, processes, cooperative scheduling here.
+
+The concurrency model of ABS is based on the notion of COGs [?]. An ABS system
+at runtime is a set of concurrently running COGs. A COGs can be seen as an
+isolated subsystem, which has its own state (an object-heap) and its own
+internal behavior. COGs are created implicitly when creating a new object by
+using the `new` expression.
