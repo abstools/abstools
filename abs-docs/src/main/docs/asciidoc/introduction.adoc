@@ -1,7 +1,7 @@
-= Introduction
+== Introduction
 
 
-== The ABS Language
+=== The ABS Language
 
 The *ABS language* is an actor-based, object-oriented, executable modeling
 language.  Its prime features are:
@@ -53,7 +53,7 @@ Close-to-the-metal programming :: ABS is not designed to be a systems
 programming language.
 ****
 
-== The ABS Actor and Concurrency Model
+=== The ABS Actor and Concurrency Model
 
 TBD: explain cogs, futures, processes, cooperative scheduling here.
 

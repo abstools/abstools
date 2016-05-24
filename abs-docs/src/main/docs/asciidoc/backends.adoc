@@ -1,4 +1,4 @@
-= ABS Backends
+== ABS Backends
 
 This section describes the available and supported backends for ABS.
 Different backends have different purposes (simulation, code execution,
@@ -51,7 +51,7 @@ code from ABS.
 |===
 
 
-== Maude Backend
+=== Maude Backend
 
 The Maude backend is a high-level, executable semantics in rewriting logic of
 the ABS language.  Due to its relatively compact nature, it serves as a
@@ -69,7 +69,7 @@ Features:
 * Executable formal semantics of the ABS language
 
 
-=== How to run the Maude backend
+==== How to run the Maude backend
 
 Running a model on Maude involves compiling the code, then starting Maude with
 the resulting file as input.
@@ -94,7 +94,7 @@ In case of problems, check the following:
 - `absfrontend.jar` should be in the environment variable `CLASSPATH`.
 
 
-== Erlang Backend
+=== Erlang Backend
 
 The Erlang backend runs ABS models on the Erlang virtual machine by
 translating them into Erlang and combining them with a small runtime library
@@ -107,7 +107,7 @@ console.  More introspective and interactive capabilities are planned and will
 be implemented in the future.
 
 
-=== How to run the Erlang backend
+==== How to run the Erlang backend
 
 Running a model in Erlang involves compiling the ABS code, then compiling and
 running the resulting Erlang code.
@@ -124,7 +124,7 @@ the model.
 
 
 
-== Haskell Backend
+=== Haskell Backend
 
 The Haskell backend translates ABS models to Haskell source code, 
 consequently compiled through a Haskell compiler and executed by the machine.
@@ -233,7 +233,7 @@ type Mem = Int; // RAM measured in MB
 The backend has only been developed on and tested against the OpenNebula platform.
 This hopefully will change when more cloud providers will be supported.
 
-=== How to obtain and install
+==== How to obtain and install
 
 The compiler itself is written in Haskell and distributed as a normal Haskell package. Therefore to build abs2haskell you need either
 
@@ -261,7 +261,7 @@ To build and install the abs2haskell bakend run inside the `abs2haskell/` direct
 sudo make install
 ----
 
-=== How to run the Haskell backend
+==== How to run the Haskell backend
 
 After installing the compiler, you should
 have the program `abs2haskell` under your `PATH`.
@@ -307,11 +307,14 @@ ghc --make -threaded Example.hs # put the generated haskell file that has the ma
 ----
 
 
-== KeY-ABS Backend
+=== KeY-ABS Backend
 
 http://www.key-project.org/key-abs/README-KeY-ABS_0.1.0-src.txt[KeY-ABS]
 is a proof checker for ABS models.  It can be downloaded from
 http://www.key-project.org/key-abs/key-abs.zip.
+
+[NOTE]
+The KeY-ABS backend is currently under development and unfinished.
 
 The KeY-ABS backend can be used to generate invariants from
 annotations in the ABS source code.  A design goal is to support
@@ -332,7 +335,7 @@ Limitations / Future Work:
 * Support of pre- and postconditions of methods, in interfaces and
   classes
 
-=== Expressing a class invariant
+==== Expressing a class invariant
 
 A class Invariant is a Boolean condition over the object's fields.  It is written using an `Inv` annotation in the following way:
 
@@ -394,7 +397,7 @@ class AccountImpl(Int aid, Int balance) implements Account {
 `balance` and `aid` must be non-negative integers
 
 
-=== How to run the KeY-ABS backend
+==== How to run the KeY-ABS backend
 
 Proving the correctness of a model involves generating the invariants,
 then running KeY-ABS with the resulting file as input.
@@ -405,7 +408,3 @@ with the following command:
   $ absc -keyabs *.abs -o model.inv
 
 This generated file can then be used with KeY-ABS in the usual way.
-
-
-
-

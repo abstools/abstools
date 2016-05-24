@@ -1,7 +1,13 @@
-= ABS Expressions
+== Expressions
 
 This chapter specifies all ABS expressions.  ABS expressions can either be
 side effect-free (i.e., part of the _functional sublanguage_) or have side effects.
+
+[caption=]
+.Syntax
+====
+_Exp_ ::= _PureExp_ | _EffExp_
+====
 
 The functional sublanguage of ABS is a purely-functional, side effect-free
 language.  It comprises functions and operators on built-in datatypes,
@@ -16,7 +22,7 @@ inconvenience makes it easier to develop static analysis techniques and tools
 for ABS.
 
 
-== Pure Expressions
+=== Pure Expressions
 
 Pure Expressions are side effect-free expressions.  The value of these
 expressions only depends on their arguments, and they can be evaluated
@@ -37,16 +43,16 @@ _PureExp_ ::= _Identifier_ +
             | _FnAppListExp_ +
             | _IfExp_ +
             | _CaseExp_ +
-            | _OperatorExp+
+            | _OperatorExp_ +
             | `(` _PureExp_ `)`
 ====
 
 
-=== Literal Expressions
+==== Literal Expressions
 
 Literals, as defined in <<Literals>>, are expressions.
 
-=== Operator Expressions
+==== Operator Expressions
 
 ABS has a range of unary and binary operators working on pre-defined
 datatypes.  All operators are pure (side effect-free).
@@ -89,7 +95,7 @@ to high precedence.
 |=======================
 
 
-==== Semantics of Comparison Operators
+===== Semantics of Comparison Operators
 
 ABS has generic equality and less-than comparison between two values of the
 same type.
@@ -126,7 +132,7 @@ Cons(1, _) < Cons(2, _)
   program invocations, e.g., when reading back an ordered list of objects.]
 
 
-=== The Let Expression
+==== The Let Expression
 
 The expression `let (T v) = p in b` evalutes `b`, with `v` bound to the value
 of evaluating the expression `p`.  The newly-introduced binding of `v` can
@@ -145,7 +151,7 @@ let (Int x) = 2 + 2 in x * 2
 ----
 
 
-=== The Data Constructor Expression
+==== The Data Constructor Expression
 
 
 Data Constructor Expressions are expressions that create data values by
@@ -172,7 +178,7 @@ Nil
 Defining new data types and their constructors is described in <<Algebraic Data Types>>.
 
 
-=== The Function Call Expression
+==== The Function Call Expression
 
 Function calls apply arguments to functions, producing a value.  Function call
 expressions look similar to data constructor expressions, but function names
@@ -193,7 +199,7 @@ head(list)
 ----
 
 
-==== The N-ary Function Call Expression
+===== The N-ary Function Call Expression
 
 Calls to n-ary Constructors (see <<N-ary Constructors>>) are written with
 brackets (`[]`) instead of parentheses (`()`).
@@ -206,7 +212,7 @@ _FnAppListExp_ ::= _Identifier_ `[` [ _PureExp_ { `,` _PureExp_ } ] `]`
 
 
 
-=== The Conditional Expression
+==== The Conditional Expression
 
 The value of the conditional expression `if c then e1 else e2` is either the
 value of `e1` or the value of `e2`, depending on the value of `c`, which must
@@ -226,7 +232,7 @@ if 5 == 4 then True else False
 ----
 
 
-=== Case Expressions / Pattern Matching
+==== Case Expressions / Pattern Matching
 
 ABS supports pattern matching via the Case Expression.  A case expression
 consists of an input expression and a series of branches, each consisting of a
@@ -255,7 +261,7 @@ _Pattern_ ::= `\_` | _Identifier_ | _Literal_ | _ConstrPattern_ +
 _ConstrPattern_ ::= _TypeIdentifier_ [ `(` [ _Pattern_ { `,` _Pattern_ }  ] `)` ]
 ====
 
-==== The Variable Pattern
+===== The Variable Pattern
 
 Variable patterns are written as identifiers starting with a lower-case
 letter.  If the identifier does not name a variable in the current scope, the
@@ -299,7 +305,7 @@ let (x = 7) in
 
 
 
-==== The Literal Pattern
+===== The Literal Pattern
 
 Literals can be used as patterns.  The pattern matches if the value of the
 case expression is equal to the literal value.
@@ -317,7 +323,7 @@ let (Pair<Int, Int> a) = Pair(5, 5) in
 <3> The value of the whole expression is 5, produced by the second branch.
 
 
-==== The Data Constructor Pattern
+===== The Data Constructor Pattern
 
 A data constructor pattern is written like a standard data constructor expression.
 Constructor arguments are again patterns.
@@ -338,7 +344,7 @@ let (List<Int> l) = list[1, 2, 3] in
 <4> The value of the whole expression is 15, produced by the second branch.
 
 
-==== The Wildcard Pattern
+===== The Wildcard Pattern
 
 The wildcard pattern, written with an underscore (`_`) matches any value.
 
@@ -368,7 +374,7 @@ pattern and its right-hand side expression are type-correct.  A pattern is
 type-correct if it can match the corresponding case expression.
 
 
-== Expressions with Side Effects
+=== Expressions with Side Effects
 
 ABS has expressions with side effects.  These expressions are only legal
 “stand-alone”, i.e., not as a sub-expression of another expression.  This
@@ -383,7 +389,7 @@ language.
 _EffExp_ ::= _NewExp_ | _SyncCall_ | _AsyncCall_ | _GetExp_
 ====
 
-=== New Expression
+==== New Expression
 
 A `new` expression creates a new object from a class name and a list of
 arguments.  In ABS objects can be created in two different ways.  Either they
@@ -412,7 +418,7 @@ invoked after the init block and subject to the normal scheduling rules for
 processes.
 
 
-=== Synchronous Call Expression
+==== Synchronous Call Expression
 
 A synchronous call consists of a target expression evaluating to an interface
 type, a method name declared in that interface, and a list of argument expressions.
@@ -443,7 +449,7 @@ possibility of deadlocks in case the callee tries to call back to an object of
 the caller cog.
 
 
-=== Asynchronous Call Expression
+==== Asynchronous Call Expression
 
 An asynchronous call consists of a target expression evaluating to an
 interface type, a method name declared in that interface, and a list of
@@ -470,7 +476,7 @@ the method call.
 Fut<Bool> f = x!m(5);
 ----
 
-=== Get Expression
+==== Get Expression
 
 A get expression is used to obtain the value from a future.  The current task
 is blocked until the future has been resolved, i.e., until the value of the
@@ -489,7 +495,7 @@ Bool b = f.get;
 ----
 
 
-=== Await Expression
+==== Await Expression
 
 An await expression is a way to asynchronously call a method, wait for the
 callee to finish, and get the result in one expression.
