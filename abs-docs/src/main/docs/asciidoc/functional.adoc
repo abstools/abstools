@@ -414,7 +414,7 @@ processes.
 
 === Synchronous Call Expression
 
-A synchronous call consists of a target expression evaluting to an interface
+A synchronous call consists of a target expression evaluating to an interface
 type, a method name declared in that interface, and a list of argument expressions.
 
 [caption=]
@@ -445,7 +445,25 @@ the caller cog.
 
 === Asynchronous Call Expression
 
-An Asynchronous Call consists of a target expression, a method name, and a list of argument expressions. Instead of directly invoking the method, an asynchronous method call creates a new task in the target COG, which is executed asynchronously. This means that the calling task proceeds independently after the call, without waiting for the result. The result of an asynchronous method call is a future (Fut<V>), which can be used by the calling task to later obtain the result of the method call. That future is resolved by the task that has been created in the target COG to execute the method.
+An asynchronous call consists of a target expression evaluating to an
+interface type, a method name declared in that interface, and a list of
+argument expressions.
+
+[caption=]
+.Syntax
+====
+_AsyncCall_ ::= _PureExp_ `!` _Identifier_ `(` _PureExp_ { `,` _PureExp_ }  `)`
+====
+
+An asynchronous method call creates a new task in the COG that contains the
+target.  This means that the caller task proceeds independently and in
+parallel with the callee task, without waiting for the result.  The result of
+evaluating an asynchronous method call expression `o!m(e)` is a _future_ of
+type (`Fut<V>`), where `V` is the return type of the callee method `m`.
+
+This future is resolved (i.e., it gets a value) when the callee task finishes.
+It can be used to synchronize with the callee task and obtain the result of
+the method call.
 
 [source, java]
 ----
@@ -454,19 +472,40 @@ Fut<Bool> f = x!m(5);
 
 === Get Expression
 
-A Get Expression is used to obtain the value from a future. The current task is blocked until the value of the future is available, i.e., until the future has been resolved. No other task in the COG can be activated in the meantime.
+A get expression is used to obtain the value from a future.  The current task
+is blocked until the future has been resolved, i.e., until the value of the
+future is available.  No other task in the COG can be activated in the
+meantime.
+
+[caption=]
+.Syntax
+====
+_GetExp_ ::= _PureExp_ `.` `get`
+====
 
 [source]
 ----
 Bool b = f.get;
 ----
 
-=== Await Expression
-A common pattern for asynchronous calls is:
 
-* Execute an asynchronous call expression, store the future in a variable
-* `await` on the future
-* Assign the result to a variable
+=== Await Expression
+
+An await expression is a way to asynchronously call a method, wait for the
+callee to finish, and get the result in one expression.
+
+[caption=]
+.Syntax
+====
+_AwaitExp_ ::= `await` _AsyncCall_
+====
+
+[source]
+----
+A x = await o!m();
+----
+
+The statement above is equivalent to the three statements in the following example.
 
 [source]
 ----
@@ -475,12 +514,6 @@ await fx?;
 A x = fx.get;
 ----
 
-The await expression is a shorthand for this pattern. The preceding example can be written as follows, without the need to introduce a name for the future:
-
-[source]
-----
-A x = await o!m();
-----
 
 
 == Function Definitions
