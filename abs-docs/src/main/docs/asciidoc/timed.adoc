@@ -1,5 +1,3 @@
-= Timed Semantics for ABS Simulation
-
 == Real-Time ABS
 
 In order to run timed simulations, which forms the basis of simulations
@@ -79,7 +77,7 @@ scheduled at that point.  This means that more time might pass than expressed in
 <2> `t2` will be between 1/2 and 5 time units larger than `t`
 
 
-== Resource Modeling in ABS
+=== Resource Modeling in Real-Time ABS
 
 Resource Modeling deals with simulating and analyzing the non-functional
 properties of models: code deployment on varying numbers and kinds of
@@ -94,7 +92,7 @@ module Name;
 import * from ABS.DC;
 ----
 
-=== Deployment Components
+==== Deployment Components
 
 Modeling code deployment and code execution under resource constraints
 requires a notion of _locality_.  For this purpose, ABS offers a language
@@ -128,7 +126,7 @@ NOTE: It is an error to try to locally create deployment components (via `new
 local DeploymentComponent(...)`) or new local objects on another cog (via
 `[DC: x] new local C()`).
 
-=== Resources
+==== Resources
 
 The term _Resource_ can be used in different ways.  In ABS, we understand a
 Resource to be a countable, measurable property that is influenced by program
@@ -139,7 +137,7 @@ ABS language are defined in the `ABS.DC` module as follows:
 data Resourcetype = Speed | Bandwidth | Memory | Cores ;
 ----
 
-==== Speed
+===== Speed
 
 The `Speed` resource type models execution speed.  Intuitively, a deployment
 component with twice the number of Speed resources will execute twice as fast.
@@ -157,7 +155,7 @@ deployment component where the cog was deployed.  If the deployment component
 does not have infinite Speed resources, executing the `skip` statement might take an observable amount of time.
 
 
-==== Bandwidth
+===== Bandwidth
 
 Bandwidth is a measure of transmission speed.  Bandwidth resources are
 consumed during method invocation and `return` statements.  Bandwidth
@@ -177,7 +175,7 @@ consumed both from the deployment component where the cog was deployed, and
 from the one where `o` was deployed.
 
 
-==== Memory
+===== Memory
 
 The `Memory` resource type abstracts from the size of main memory, as a measure
 of how many and which cogs can be created on a deployment component.  In
@@ -185,7 +183,7 @@ contrast to bandwidth and speed, memory does not influence the timed behavior
 of the simulation of an ABS model; it is used for static deployment modeling.
 
 
-==== Cores
+===== Cores
 
 The `Cores` resource type expresses the number of CPU cores on a deployment
 component.  It is used for static deployment decisions and does not have
@@ -193,7 +191,7 @@ influence on the timing behavior of simulations (use the `Speed` resource type
 for this purpose).
 
 
-=== Modeling Resource Usage
+==== Modeling Resource Usage
 
 As described above, resource models are added to an ABS model using annotations.  Adding annotations to specific statements and declarations causes side-effects on the status of an applicable deployment component.
 
@@ -233,7 +231,7 @@ will fail.
 <5> Executing this method call consumes 5 Bandwidth resources.  Since `dc` has
 10 bandwidth per time unit, the message will be transported instantly.
 
-=== The CloudProvider API
+==== The CloudProvider API
 
 `(pre)launchInstance` might have a delay, the others are instantaneous.
 `launchInstance` might hand out an already-running instance if it has been

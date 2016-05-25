@@ -1,6 +1,6 @@
-= Feature Modelling
+== Feature Modelling
 
-== Deltas
+=== Deltas
 
 ABS supports the delta-oriented programming model, an approach that aids the
 development of a set of programs simultaneously from a single code base,
@@ -96,7 +96,7 @@ Deltas currently do not support the modification of the program’s main block.
 
 
 
-== Feature Modelling
+=== Products and Product Lines
 
 ABS provides language constructs and tools for modelling variable systems
 following Software Product Line (SPL) engineering practices.
@@ -108,7 +108,7 @@ the dependencies between features.  Thus the feature model defines a set of
 legal feature combinations, which represent the set of valid software products
 that can be built from the given features.
 
-=== Specifying the Product Line
+==== Specifying the Product Line
 
 The ABS configuration language links feature models, which describe the
 structure of a SPL, to delta modules, which implement behaviour.  The
@@ -159,7 +159,7 @@ delta DUnboundedDeployment(UnlimitedMachines.capacity) when UnlimitedMachines;
 delta DBoundedDeployment(LimitedMachines.capacity, LimitedMachines.machinelimit) when LimitedMachines;
 ----
 
-=== Specifying Products
+==== Specifying Products
 
 ABS allows the developer to name products that are of particular interest, in
 order to easily refer to them later when the actual code needs to be
@@ -214,7 +214,7 @@ product Org11 = SekolahBermainMatahari && (RamadhanForKids || {Money, Item});
 
 ----
 
-=== The Feature Model
+==== The Feature Model
 
 The `FeatureModel` clause specifies a number of "orthogonal" root feature
 models along with a number of extensions that specify additional constraints,
@@ -294,7 +294,7 @@ root Deployments {
 }
 ----
 
-=== Feature Model Reflection
+==== Feature Model Reflection
 
 There is support for limited reflection on the feature model and configured
 product in the module `ABS.Productline`.  The datatype `Feature` contains

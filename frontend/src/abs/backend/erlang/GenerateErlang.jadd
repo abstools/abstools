@@ -241,7 +241,7 @@ aspect GenerateErlang {
       ecs.format("set(O,'%s',%s)", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
       if (isNewDC) {
         ecs.println(",");
-        ecs.format("cog_monitor:new_dc(get(O,%s))", getVar().getName());
+        ecs.format("cog_monitor:new_dc(get(O,'%s'))", getVar().getName());
       }
     } else {
       throw new NotImplementedYetException(this);
@@ -652,7 +652,7 @@ aspect GenerateErlang {
 
   @Override
   public void FieldUse.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.format("get(O,%s)",getName());
+    ecs.format("get(O,'%s')",getName());
   }
 
   @Override
@@ -792,7 +792,7 @@ aspect GenerateErlang {
        ecs.print(vars.get(getName()));
      else{
        String tmp=vars.getTemp();
-       prePattern.pf("%s=get(O,%s),",tmp,getName());
+       prePattern.pf("%s=get(O,'%s'),",tmp,getName());
        ecs.print(tmp);
      }
   }

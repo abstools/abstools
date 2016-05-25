@@ -1,240 +1,517 @@
-= Functional Sublanguage
+== Expressions
 
-// Give an introduction of and rationale for the different parts of the functional sub-language
+This chapter specifies all ABS expressions.  ABS expressions can either be
+side effect-free (i.e., part of the _functional sublanguage_) or have side effects.
 
-== Operators
+[caption=]
+.Syntax
+====
+_Exp_ ::= _PureExp_ | _EffExp_
+====
 
-ABS has a number of predefined operators which can be used to form Operator Expressions.
+The functional sublanguage of ABS is a purely-functional, side effect-free
+language.  It comprises functions and operators on built-in datatypes,
+user-defined algebraic datatypes, and user-defined functions defined on
+datatypes.
 
-The following table describes the meaning as well as the associativity and the precedence of the different operators. They are grouped according to precedence, as indicated by horizontal rules, from low precedence to high precedence.
+Additionally, ABS contains a number of special expressions with well-defined
+side effects, such as the `new` expression which creates a new object.
+Expressions with side effects cannot be combined with other expressions, for
+example as an argument to a function call.  This slight notational
+inconvenience makes it easier to develop static analysis techniques and tools
+for ABS.
 
+
+=== Pure Expressions
+
+Pure Expressions are side effect-free expressions.  The value of these
+expressions only depends on their arguments, and they can be evaluated
+multiple times without influencing the execution semantics.
+
+
+[caption=]
+.Syntax
+====
+_PureExp_ ::= _Identifier_ +
+            | `this` `.` _Identifier_ +
+            | `this` +
+            | `null` +
+            | _Literal_ +
+            | _LetExp_ +
+            | _DataConstrExp_ +
+            | _FnAppExp_ +
+            | _FnAppListExp_ +
+            | _IfExp_ +
+            | _CaseExp_ +
+            | _OperatorExp_ +
+            | `(` _PureExp_ `)`
+====
+
+
+==== Literal Expressions
+
+Literals, as defined in <<Literals>>, are expressions.
+
+==== Operator Expressions
+
+ABS has a range of unary and binary operators working on pre-defined
+datatypes.  All operators are pure (side effect-free).
+
+[caption=]
+.Syntax
+====
+_OperatorExp_ ::= _UnaryExp_ | _BinaryExp_ +
+_UnaryExp_ ::= _UnaryOp_ _PureExp_ +
+_UnaryOp_ ::= `!` | `-` +
+_BinaryExp_ ::= _PureExp_ _BinaryOp_ _PureExp_ +
+_BinaryOp_ ::= `||` | `&&` | `==` | `!=` | `<` | `\<=` | `>` | `>=` | `+` | `-` | `*` | `/` | `%`
+====
+
+
+The following table describes the meaning as well as the associativity and the
+precedence of the different operators. The list is sorted from low precedence
+to high precedence.
+
+.ABS Operators
 [options="header"]
 |=======================
-|Expression|Meaning      |Associativity |Argument types |Result type
-|e1 \|\| e2 |logical or |left |Bool, Bool |Bool
-|e1 && e2 |logical and |left |Bool, Bool |Bool
-|e1 == e2 |equality |left |compatible |Bool
-|e1 != e2 |inequality |left |compatible |Bool
-|e1 < e2 |less than |left |compatible |Bool
-|e1 < = e2 |less than or equal to |left |compatible |Bool
-|e1 > e2 |greater than |left |compatible |Bool
-|e1 >= e2 |greater than or equal to |left |compatible |Bool
-|e1 + e2 |concatenation |left |String, String |String
-|e1 + e2 |addition |left |number, number |number
-|e1 - e2 |subtraction |left |number, number |number
-|e1 * e2 |multiplication |left |number, number |number
-|e1 / e2 |division |left |number, number |Rat
-|e1 % e2 |modulo |left |number, number |Int
-|! e |logical negation |right |Bool |Bool
-|- e |integer negation |right |number |number
+|Expression    | Meaning                  |Associativity |Argument types | Result type
+| `e1 \|\| e2` | logical or               |left          | `Bool`     | `Bool`
+| `e1 && e2`   | logical and              |left          | `Bool`     | `Bool`
+| `e1 == e2`   | equality                 |left          | compatible | `Bool`
+| `e1 != e2`   | inequality               |left          | compatible | `Bool`
+| `e1 < e2`    | less than                |left          | compatible | `Bool`
+| `e1 \<= e2`  | less than or equal to    |left          | compatible | `Bool`
+| `e1 > e2`    | greater than             |left          | compatible | `Bool`
+| `e1 >= e2`   | greater than or equal to |left          | compatible | `Bool`
+| `e1 + e2`    | concatenation            |left          | `String`   | `String`
+| `e1 + e2`    | addition                 |left          | number     | number
+| `e1 - e2`    | subtraction              |left          | number     | number
+| `e1 * e2`    | multiplication           |left          | number     | number
+| `e1 / e2`    | division                 |left          | number     | `Rat`
+| `e1 % e2`    | modulo                   |left          | number     | `Int`
+| `!e`         | logical negation         |right         | `Bool`     | `Bool`
+| `-e`         | integer negation         |right         | number     | number
 |=======================
 
-== Pure Expressions
 
-Pure Expressions are side effect-free expressions. This means that these expressions cannot modify the heap.
+===== Semantics of Comparison Operators
 
-=== Let Expressions
+ABS has generic equality and less-than comparison between two values of the
+same type.
 
-These expressions bind variable names to pure expressions.
+Equality and inequality comparison is standard: by value for functional
+datatypes and by reference for objects and futures.  I.e., two strings
+`"Hello"` compare as identical via `==`, as do two sets containing identical
+values.  Two references to objects or futures compare as identical via `==` if
+they point to the same object or future.  The inequality operator `!=`
+evaluates to `True` for any two values that compare to `False` under `==` and
+vice versa.
 
-.Syntax
+For the comparison operator `<`, an ordering is defined in the following way.
 
-[source]
+- Numbers compare as usual.
 
+- Strings compare lexicographically.
+
+- Algebraic datatypes compare first by constructor name, then by comparing
+  constructor arguments left to right.
+
+.Example
 ----
-let (Bool x) = True in !x
+Cons(_, _) < Nil
+Cons(1, _) < Cons(2, _)
 ----
 
-=== Data Type Constructor Expressions
+- Objects and futures are compared by identity, in an implementation-specific
+  but stable way.  This means that for any two variables `a` and `b` that
+  point to different objects, the value of `a < b` does not change as long as
+  `a` and `b` are not re-assigned.footnote:[This ordering is not guaranteed to
+  be stable between two invocations of a program.  If ABS ever develops object
+  serialization, care must be taken to uphold any datatype invariants across
+  program invocations, e.g., when reading back an ordered list of objects.]
 
-They are expressions that create data type values by using data type constructors. Note that for data type constructors that have no parameters, the parentheses are optional.
 
+==== The Let Expression
+
+The expression `let (T v) = p in b` evalutes `b`, with `v` bound to the value
+of evaluating the expression `p`.  The newly-introduced binding of `v` can
+shadow a binding of `v` outside of the `let` expression.
+
+[caption=]
 .Syntax
+====
+_LetExp_ ::= `let` `(` _Type_ _Identifier_ `)` = _PureExp_ `in` _PureExp_
+====
 
+.Example
 [source]
+----
+let (Int x) = 2 + 2 in x * 2
+----
 
+
+==== The Data Constructor Expression
+
+
+Data Constructor Expressions are expressions that create data values by
+applying arguments to data type constructors.  Data constructor expressions
+look similar to function calls, but data constructors always start with an
+upper-case letter.
+
+For data type constructors without parameters, the parentheses are optional.
+
+[caption=]
+.Syntax
+====
+_DataConstrExp_ ::= _TypeIdentifier_ [ `(` [ _PureExp_ { `,` _PureExp_ } ] `)` ]
+====
+
+.Example
+[source]
 ----
 True
 Cons(True, Nil)
-ABS.StdLib.Nil
+Nil
 ----
 
-=== Function Applications
+Defining new data types and their constructors is described in <<Algebraic Data Types>>.
 
-Function Applications apply functions to arguments.
 
+==== The Function Call Expression
+
+Function calls apply arguments to functions, producing a value.  Function call
+expressions look similar to data constructor expressions, but function names
+always start with a lower-case letter.  The parentheses are mandatory in
+function calls.
+
+[caption=]
 .Syntax
+====
+_FnAppExp_ ::= _Identifier_ `(` [ _PureExp_ { `,` _PureExp_ } ] `)`
+====
 
+.Example
 [source]
-
 ----
 tail(Cons(True, Nil))
-ABS.StdLib.head(list)
+head(list)
 ----
 
-=== If-Then-Else Expression
 
-ABS has a standard if-then-else expression.
+===== The N-ary Function Call Expression
+
+Calls to n-ary Constructors (see <<N-ary Constructors>>) are written with
+brackets (`[]`) instead of parentheses (`()`).
+
+[caption=]
+.Syntax
+====
+_FnAppListExp_ ::= _Identifier_ `[` [ _PureExp_ { `,` _PureExp_ } ] `]`
+====
+
+
+
+==== The Conditional Expression
+
+The value of the conditional expression `if c then e1 else e2` is either the
+value of `e1` or the value of `e2`, depending on the value of `c`, which must
+be of type `Bool`.  Depending on the value of `c`, either `e1` or `e2` is
+evaluated, but not both.
+
+[caption=]
+.Syntax
+====
+_IfExp_ ::= `if` _PureExp_ `then` _PureExp_ `else` _PureExp_
+====
 
 .Syntax
-
 [source]
-
 ----
 if 5 == 4 then True else False
 ----
 
-=== Case Expressions / Pattern Matching
 
-ABS supports pattern matching by the Case Expression. It takes an expression as first argument, which a series of patterns is matched against. The value of the case expression itself is the value of the expression on the right-hand side of the first matching expression. It is an error if no pattern matches the expression.
+==== Case Expressions / Pattern Matching
 
-There are five different kinds of patterns available in ABS:
+ABS supports pattern matching via the Case Expression.  A case expression
+consists of an input expression and a series of branches, each consisting of a
+pattern and a right hand side expression.
 
-* Pattern Variables (e.g., x, where x is not bound yet)
-* Bound Variables (e.g., x, where x is bound)
-* Literal Patterns (e.g., 5)
-* Data Constructor Patterns (e.g., Cons(Nil,x))
-* Underscore Pattern (_)
+The case expression evaluates its input expression and attempts to match the
+resulting value against the branches until a matching pattern is found.  The
+value of the case expression itself is the value of the expression on the
+right-hand side of the first matching pattern.
 
-==== Pattern Variables
+It is an error if no pattern matches the expression.
 
-Pattern variables are simply unbound variables. Like the underscore pattern, these variables match every value, but, in addition, bind the variable to the matched value. The bound variable can then be used in the right-hand-side expression of the corresponding branch. Typically, pattern variables are used inside of data constructor patterns to extract values from data constructors. For example 
+There are four different kinds of patterns available in ABS:
 
-[source]
-----
-def A fromJust<A>(Maybe<A> a) =
-case a {
-	Just(x) => x;
-};
+* Variables (with different semantics depending on whether the variable is bound or not)
+* Literal Patterns (e.g., `5`)
+* Data Constructor Patterns (e.g., `Cons(Nil,x)`)
+* Underscore Pattern (`_`)
 
-----
+[caption=]
+.Syntax
+====
+_CaseExp_ ::= `case` _PureExp_ `{` { _CaseExpBranch_ } `}` +
+_CaseExpBranch_ ::=  _Pattern_ `\=>` _PureExp_ `;` +
+_Pattern_ ::= `\_` | _Identifier_ | _Literal_ | _ConstrPattern_ +
+_ConstrPattern_ ::= _TypeIdentifier_ [ `(` [ _Pattern_ { `,` _Pattern_ }  ] `)` ]
+====
 
-==== Bound Variables
+===== The Variable Pattern
 
-If a bound variable is used as a pattern, the pattern matches if the value of the case expression is equal to the value of the bound variable.
+Variable patterns are written as identifiers starting with a lower-case
+letter.  If the identifier does not name a variable in the current scope, the
+variable pattern matches any value and introducues a binding of the given
+identifier to the matched value for the right-hand side of the branch and the
+rest of the pattern itself.  In case a binding for that identifier is already
+in scope, its value is compared to the value being matched against.
 
-[source]
-----
-def Bool contains<A>(List<A> list, A value) =
-case list {
-	Nil => False;
-	Cons(value, _) => True;
-	Cons(_, rest) => contains(rest, value);
-};
-
-----
-
-==== Literal Patterns
-Literals can be used as patterns. This is similar to bound variables, because the pattern matches if the value of the case expression is equal to the literal value.
-
-[source]
-----
-def Bool isEmpty(String s) =
-case b {
-	"" => True;
-	_ => False;
-};
-
-----
-
-==== Data Constructor Patterns
-A data constructor pattern is like a standard data constructor expression, but where certain sub expressions can be patterns again.
+The variable being named by the variable pattern can be used in the
+right-hand-side expression of the corresponding branch.  Typically, pattern
+variables are used inside of data constructor patterns to extract values from
+data constructors.  For example:
 
 
 [source]
 ----
-def Bool negate(Bool b) =
-case b {
-	True => False;
-	False => True;
-};
-
+let (Pair<Int, Int> a) = Pair(5, 5) in
+  case a {
+    Pair(x, x) => x; <1>
+    Pair(x, y) => y; <2>
+  } <3>
 ----
+<1> This branch matches a pair with identical values.
+<2> This branch matches every pair.  Since pairs with identical values are matched by the previous branch, `x` and `y` will be different.
+<3> The value of the whole expression is 5, produced by the first branch.
 
-[source]
-----
-def List<A> remainder(List<A> list) =
-case b {
-	Cons(_, rest) => rest;
-};
-
-----
-
-==== Underscore Pattern
-The underscore pattern (_) simply matches every value. It is generally used as the last pattern in a case expression to define a default case. For example:
 
 [source]
 ----
-def Bool isNil<A>(List<A> list) =
-case list {
-	Nil => True;
-	_ => False;
-};
+let (x = 7) in
+  case Pair(5, 5) {
+    Pair(x, x) => x; <1>
+    Pair(x, y) => y; <2>
+    Pair(y, z) => z; <3>
+  } <4>
 ----
+<1> This pattern does not match since `x` is bound to 7 and does not match 5.
+<2> This pattern does not match either, for the same reason.
+<3> This pattern contains only unbound variable patterns and therefore matches.
+<4> The value of the whole expression is 5, produced by the third branch.
+
+
+
+===== The Literal Pattern
+
+Literals can be used as patterns.  The pattern matches if the value of the
+case expression is equal to the literal value.
+
+[source]
+----
+let (Pair<Int, Int> a) = Pair(5, 5) in
+  case a {
+    Pair(3, x) => x; <1>
+    Pair(x, y) => y; <2>
+  } <3>
+----
+<1> The pattern `3` does not match the value in the first position of the `Pair` constructor pattern.
+<2> This pattern matches.
+<3> The value of the whole expression is 5, produced by the second branch.
+
+
+===== The Data Constructor Pattern
+
+A data constructor pattern is written like a standard data constructor expression.
+Constructor arguments are again patterns.
+
+
+[source]
+----
+let (List<Int> l) = list[1, 2, 3] in
+  case l {
+    Nil => 0; <1>
+    Cons(1, _) => 15; <2>
+    Cons(_, Cons(y, _)) => y; <3>
+  } <4>
+----
+<1> This pattern matches the empty list.
+<2> This pattern matches a list starting with the literal `1`.
+<3> This pattern matches a list of at least length 2, and binds the second element to `y`.
+<4> The value of the whole expression is 15, produced by the second branch.
+
+
+===== The Wildcard Pattern
+
+The wildcard pattern, written with an underscore (`_`) matches any value.
+
+[source]
+----
+let (List<Int> l) = list[1, 2, 3] in
+  case l {
+    Nil => True; <1>
+    _ => False; <2>
+}; <3>
+----
+<1> This pattern matches the empty list.
+<2> This pattern matches anything.
+<3> The value of the whole expression is `False`, produced by the second branch.
+
+The wildcard pattern can be used as the last pattern in a case expression to
+define a default case.
+
 
 .Typing of Case Expressions
 
-A case expression is type-correct if and only if all its expressions and all its branches are type-correct and the right-hand side of all branches have a common super type. This common super type is also the type of the overall case expression. A branch (a pattern and its expression) is type-correct if its pattern and its right-hand side expression are type-correct. A pattern is type-correct if it can match the corresponding case ex-pression.
+A case expression is type-correct if and only if all its expressions and all
+its branches are type-correct and the right-hand side of all branches have a
+common super type.  This common super type is also the type of the overall case
+expression.  A branch (a pattern and its expression) is type-correct if its
+pattern and its right-hand side expression are type-correct.  A pattern is
+type-correct if it can match the corresponding case expression.
 
-== Expressions with Side Effects
 
-Beside pure expressions, ABS has expressions with side effects. However, these expressions are defined in such a way that they can only have a single side effect. This means that subexpressions of expressions can only be pure expressions again. This restriction simplifies the reasoning about ABS expressions.
+=== Expressions with Side Effects
 
-=== New Expression
+ABS has expressions with side effects.  These expressions are only legal
+“stand-alone”, i.e., not as a sub-expression of another expression.  This
+means that subexpressions of expressions can only be pure expressions.  This
+restriction simplifies the reasoning about expressions in the ABS modeling
+language.
 
-A New Expression creates a new object from a class name and a list of arguments. In ABS objects
-can be created in two different ways. Either they are created in the current COG, using the standard
-new local expression, or they are created in a new COG by using the new expression.
 
+[caption=]
 .Syntax
+====
+_EffExp_ ::= _NewExp_ | _SyncCall_ | _AsyncCall_ | _GetExp_
+====
 
+==== New Expression
+
+A `new` expression creates a new object from a class name and a list of
+arguments.  In ABS objects can be created in two different ways.  Either they
+are created in the current COG, using the `new local` expression, or they are
+created in a new COG by using the `new` expression (see <<The ABS Actor and
+Concurrency Model>> for more details about cogs).
+
+[caption=]
+.Syntax
+====
+_NewExp_ ::= `new` [ `local` ] _TypeName_ `(` [ _PureExp_ {`,` _PureExp_ } ] `)`
+====
+
+.Example
 [source]
 ----
 new local Foo(5)
 new Bar()
 ----
 
-Standard Object Creation
+Classes can declare an _init block_ (see <<Classes>>), which is executed for
+each new instance.  The semantics of the `new` expression guarantee that the
+init block is fully executed before the new object begins receiving method
+calls.  Classes can also declare a `run` method, which is automatically
+invoked after the init block and subject to the normal scheduling rules for
+processes.
 
-When using the new local expression, the new object is created in the current COG, i.e., the COG of the current receiver object.
 
-.COG Object Creation
+==== Synchronous Call Expression
 
-The concurrency model of ABS is based on the notion of COGs [?]. An ABS system at runtime is a set of concurrently running COGs. A COGs can be seen as an isolated subsystem, which has its own state (an object-heap) and its own internal behavior. COGs are created implicitly when creating a new object by using the new expression.
+A synchronous call consists of a target expression evaluating to an interface
+type, a method name declared in that interface, and a list of argument expressions.
 
-=== Synchronous Call Expression
+[caption=]
+.Syntax
+====
+_SyncCall_ ::= _PureExp_ `.` _Identifier_ `(` _PureExp_ { `,` _PureExp_ } `)`
+====
 
-A Synchronous Call consists of a target expression, a method name, and a list of argument expressions.
-
+.Example
 [source]
 ----
-Bool b = x.m(5);
+Bool b = x.m(5, 3);
 ----
 
-=== Asynchronous Call Expression
+The semantics of the synchronous method call differ depending on whether the
+caller and callee are in the same cog.  A synchronous method call between
+objects in the same cog has Java-like semantics, i.e., the caller is suspended
+and the called method starts executing immediately.  When the called method
+finishes, the caller process is scheduled and resumes execution.
 
-An Asynchronous Call consists of a target expression, a method name, and a list of argument expressions. Instead of directly invoking the method, an asynchronous method call creates a new task in the target COG, which is executed asynchronously. This means that the calling task proceeds independently after the call, without waiting for the result. The result of an asynchronous method call is a future (Fut<V>), which can be used by the calling task to later obtain the result of the method call. That future is resolved by the task that has been created in the target COG to execute the method.
+In the case when caller and called object are in different cogs, a synchronous
+method call is equivalent to and asynchronous method call immediately followed
+by a `get` expression on the resulting future.  This means that the intuitive
+semantics of synchronous method calls are preserved, but introduces the
+possibility of deadlocks in case the callee tries to call back to an object of
+the caller cog.
+
+
+==== Asynchronous Call Expression
+
+An asynchronous call consists of a target expression evaluating to an
+interface type, a method name declared in that interface, and a list of
+argument expressions.
+
+[caption=]
+.Syntax
+====
+_AsyncCall_ ::= _PureExp_ `!` _Identifier_ `(` _PureExp_ { `,` _PureExp_ }  `)`
+====
+
+An asynchronous method call creates a new task in the COG that contains the
+target.  This means that the caller task proceeds independently and in
+parallel with the callee task, without waiting for the result.  The result of
+evaluating an asynchronous method call expression `o!m(e)` is a _future_ of
+type (`Fut<V>`), where `V` is the return type of the callee method `m`.
+
+This future is resolved (i.e., it gets a value) when the callee task finishes.
+It can be used to synchronize with the callee task and obtain the result of
+the method call.
 
 [source, java]
 ----
 Fut<Bool> f = x!m(5);
 ----
 
-=== Get Expression
+==== Get Expression
 
-A Get Expression is used to obtain the value from a future. The current task is blocked until the value of the future is available, i.e., until the future has been resolved. No other task in the COG can be activated in the meantime.
+A get expression is used to obtain the value from a future.  The current task
+is blocked until the future has been resolved, i.e., until the value of the
+future is available.  No other task in the COG can be activated in the
+meantime.
+
+[caption=]
+.Syntax
+====
+_GetExp_ ::= _PureExp_ `.` `get`
+====
 
 [source]
 ----
 Bool b = f.get;
 ----
 
-=== Await Expression
-A common pattern for asynchronous calls is:
 
-* Execute an asynchronous call expression, store the future in a variable
-* `await` on the future
-* Assign the result to a variable
+==== Await Expression
+
+An await expression is a way to asynchronously call a method, wait for the
+callee to finish, and get the result in one expression.
+
+[caption=]
+.Syntax
+====
+_AwaitExp_ ::= `await` _AsyncCall_
+====
+
+[source]
+----
+A x = await o!m();
+----
+
+The statement above is equivalent to the three statements in the following example.
 
 [source]
 ----
@@ -243,43 +520,51 @@ await fx?;
 A x = fx.get;
 ----
 
-The await expression is a shorthand for this pattern. The preceding example can be written as follows, without the need to introduce a name for the future:
-
-[source]
-----
-A x = await o!m();
-----
 
 
 == Function Definitions
 
-Functions in ABS define names for parametrized data expressions. A Function in ABS is always side effect-free, which means that it cannot manipulate the heap.
+Functions take a list of arguments and evaluate the expression in their body,
+producing a return value.  ABS functions are always pure.  This means the body
+of a function can use all <<Pure Expressions>> but no <<Expressions with Side
+Effects>>.
 
+
+Functions can be _parametric_, which means that they can take and return
+parametric datatypes.  This means that a function `head` defined over a
+parametric list datatype can return the first element of a list, regardless of
+its type.  Parametric functions are defined like normal functions but have an
+additional type parameter section inside angle brackets (`<` `>`) after the
+function name.
+
+
+[caption=]
 .Syntax
+====
+_FunctionDecl_  ::= `def` _Type_ _Identifier_ [ `<` _TypeName_ { `,` _TypeName_ } `>` ] +
+                    `(` [ _TypeName_ _Identifier_ { `,` _TypeName_ _Identifier_  } ]  `)` `=` _PureExp_ `;`
+====
+
+
 
 [source]
 ----
-def Int length(IntList list) =
+def Rat abs(Rat x) = if x > 0 then x else -x; <1>
+
+def Int length<A>(List<A> list) = <2>
 case list {
   Nil => 0;
-  Cons(n, ls) => 1 + length(ls);
-};
-----
-
-=== Parametric Functions
-
-Parametric Functions allow to work with parametric data types in a general way. For exam-
-ple, given a list of any type, a parametric function head can return the first element, regardless
-of its type. Parametric functions are defined like normal functions but have an additional type
-parameter section inside angle brackets (< >) after the function name.
-
-.Syntax
-
-----
-def A head<A>(List<A> list) =
-  case list {
-  Cons(x, xs) \=> x;
+  Cons(_, ls) => 1 + length(ls);
 };
 
+def A head<A>(List<A> list) = <3>
+  case list { Cons(x, _) => x; };
 ----
-(Note that head is a partial function.)
+<1> The `abs` function returns the absolute value of its argument.
+<2> This parametric function takes lists with arbitrary values and returns an Integer.
+<3> This parametric function returns the same type that is contained in the list.  (Note that `head` is a partial function which is not defined for empty lists.)
+
+NOTE: The ABS standard library contains some special functions that cannot be
+defined with pure expressions, for example the function `println`.  Each
+special function has to be implemented in each backend.  The details of
+implementing special functions are outside of the scope of this manual.

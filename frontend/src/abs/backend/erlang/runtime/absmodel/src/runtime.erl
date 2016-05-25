@@ -87,7 +87,7 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
     %%Init logging
     {ok, _CogMonitor} = cog_monitor:start_link(self(), Keepalive),
     %% Init garbage collector
-    gc:start(GCStatistics, Debug),
+    {ok, _GC} = gc:start(GCStatistics, Debug),
     %% Init simulation clock
     {ok, _Clock} = clock:start_link(Clocklimit),
     %% init RNG, recipe recommended by the Erlang documentation.

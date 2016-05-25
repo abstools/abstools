@@ -5,14 +5,15 @@ ABS Development Team
 :creator: ABS Development Team
 :lang: en
 :keywords: ABS, manual, modeling languages, programming languages
+:sectnumlevels: 2
 // :copyright: CC-BY-SA 3.0
 // :imagesdir: images
 
 include::introduction.adoc[]
 include::started.adoc[]
 include::functional.adoc[]
-include::oo.adoc[]
 include::imperative.adoc[]
+include::oo.adoc[]
 include::stdlib.adoc[]
 include::modules.adoc[]
 include::feature-modeling.adoc[]

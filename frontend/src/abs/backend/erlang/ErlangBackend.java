@@ -3,9 +3,11 @@
  */
 package abs.backend.erlang;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,6 +28,8 @@ import abs.frontend.parser.Main;
 public class ErlangBackend extends Main {
 
     private File destDir = new File("gen/erl/");
+
+    private static int minVersion = 18;
 
     public static void main(final String... args) {
         try {
@@ -86,6 +90,16 @@ public class ErlangBackend extends Main {
 
     public static void compile(Model m, File destDir, boolean verbose) throws IOException, InterruptedException, InternalBackendException {
         if (verbose) System.out.println("Generating Erlang code...");
+
+        // check erlang version number
+        Process versionCheck = Runtime.getRuntime().exec(new String[] { "erl", "-eval", "io:fwrite(\"~s\n\", [erlang:system_info(otp_release)]), halt().", "-noshell" }, null, new File(destDir, "absmodel"));
+        versionCheck.waitFor();
+        BufferedReader ir = new BufferedReader(new InputStreamReader(versionCheck.getInputStream()));
+        int version = Integer.parseInt(ir.readLine());
+        if (version < minVersion) {
+            String message = "ABS requires at least erlang version " + Integer.toString(minVersion) + ", installed version is " + Integer.toString(version);
+            throw new InternalBackendException(message);
+        }
         ErlApp erlApp = new ErlApp(destDir);
         m.generateErlangCode(erlApp);
         erlApp.close();

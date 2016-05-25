@@ -41,19 +41,22 @@ start(DC)->
 
 add(#cog{ref=Cog},Task,Args)->
     Cog!{new_task,Task,Args,self(),false},
-    await_start(Task, Args).
+    TaskRef=await_start(Task, Args),
+    TaskRef.
 
 add_and_notify(#cog{ref=Cog},Task,Args)->
     Cog!{new_task,Task,Args,self(),true},
-    await_start(Task, Args).
+    TaskRef=await_start(Task, Args),
+    TaskRef.
 
 add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
     %% we don't want task:block since this allowed time advance while creating
     %% an object
     task:block_without_time_advance(Cog),
     Ref!{new_task,Task,Args,self(),false},
-    await_start(Task,[Args|Stack]),
-    task:acquire_token(Cog,[Args|Stack]).
+    TaskRef=await_start(Task,[Args|Stack]),
+    task:acquire_token(Cog,[Args|Stack]),
+    TaskRef.
 
 new_state(#cog{ref=Cog},TaskRef,State)->
     Cog!{new_state,TaskRef,State,undef}.
@@ -102,8 +105,8 @@ init(Tracker,DC) ->
     process_flag(trap_exit, true),
     cog_monitor:new_cog(self()),
     Running = receive
-                  {stop_world, Sender} ->
-                      Sender ! {stopped, self()},
+                  {stop_world, _Sender} ->
+                      gc:cog_stopped(self()),
                       {gc, no_task_schedulable};
                   {gc, ok} ->
                       no_task_schedulable
@@ -114,8 +117,8 @@ init(Tracker,DC) ->
 loop(S=#state{running=no_task_schedulable})->
     New_State=
         receive
-            {stop_world, Sender} ->
-                Sender ! {stopped, self()},
+            {stop_world, _Sender} ->
+                gc:cog_stopped(self()),
                 S#state{running={gc, no_task_schedulable}}
         after 0 ->
                 receive
@@ -136,8 +139,8 @@ loop(S=#state{running=no_task_schedulable})->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
-                    {stop_world, Sender} ->
-                        Sender ! {stopped, self()},
+                    {stop_world, _Sender} ->
+                        gc:cog_stopped(self()),
                         S#state{running={gc, no_task_schedulable}}
                 end
         end,
@@ -150,8 +153,8 @@ loop(S=#state{running=no_task_schedulable})->
 loop(S=#state{running=idle})->
     New_State=
         receive
-            {stop_world, Sender} ->
-                Sender ! {stopped, self()},
+            {stop_world, _Sender} ->
+                gc:cog_stopped(self()),
                 S#state{running={gc, idle}}
         after 0 ->
                 receive
@@ -170,8 +173,8 @@ loop(S=#state{running=idle})->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
-                    {stop_world, Sender} ->
-                        Sender ! {stopped, self()},
+                    {stop_world, _Sender} ->
+                        gc:cog_stopped(self()),
                         S#state{running={gc, idle}}
                 after
                     0 ->
@@ -184,10 +187,10 @@ loop(S=#state{running=idle})->
 loop(S=#state{running=R}) when is_pid(R)->
     New_State=
         receive
-            {stop_world, Sender} ->
+            {stop_world, _Sender} ->
                 R ! {stop_world, self()},
                 S1 = await_task_stop_for_gc(S),
-                Sender ! {stopped, self()},
+                gc:cog_stopped(self()),
                 S1#state{running={gc, S1#state.running}}
         after 0 ->
                 receive
@@ -208,10 +211,10 @@ loop(S=#state{running=R}) when is_pid(R)->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
-                    {stop_world, Sender} ->
+                    {stop_world, _Sender} ->
                         R ! {stop_world, self()},
                         S1 = await_task_stop_for_gc(S),
-                        Sender ! {stopped, self()},
+                        gc:cog_stopped(self()),
                         S1#state{running={gc, S1#state.running}}
                 end
             end,
@@ -220,8 +223,8 @@ loop(S=#state{running=R}) when is_pid(R)->
 loop(S=#state{running={blocked, R}}) ->
     New_State=
         receive
-            {stop_world, Sender} ->
-                Sender ! {stopped, self()},
+            {stop_world, _Sender} ->
+                gc:cog_stopped(self()),
                 S#state{running={gc, {blocked, R}}}
         after 0 ->
                 receive
@@ -240,8 +243,8 @@ loop(S=#state{running={blocked, R}}) ->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
-                    {stop_world, Sender} ->
-                        Sender ! {stopped, self()},
+                    {stop_world, _Sender} ->
+                        gc:cog_stopped(self()),
                         S#state{running={gc, {blocked, R}}}
                 end
         end,
@@ -250,8 +253,8 @@ loop(S=#state{running={blocked, R}}) ->
 loop(S=#state{running={blocked_for_gc, R}}) ->
     New_State=
         receive
-            {stop_world, Sender} ->
-                Sender ! {stopped, self()},
+            {stop_world, _Sender} ->
+                gc:cog_stopped(self()),
                 S#state{running={gc, {blocked_for_gc, R}}}
         after 0 ->
                 receive
@@ -270,8 +273,8 @@ loop(S=#state{running={blocked_for_gc, R}}) ->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
-                    {stop_world, Sender} ->
-                        Sender ! {stopped, self()},
+                    {stop_world, _Sender} ->
+                        gc:cog_stopped(self()),
                         S#state{running={gc, {blocked_for_gc, R}}}
                 end
         end,
