@@ -445,9 +445,7 @@ Returns one element from a set.
 def A take<A>(Set<A> ss);
 ----
 
-[NOTE]
-
-To iterate over a set, use `take` to extract one value and `remove` to remove
+NOTE: To iterate over a set, use `take` to extract one value and `remove` to remove
 it from the set.  Repeat until the set is empty.
 
 // .hasNext
@@ -472,8 +470,7 @@ The following example produces a set with two entries `1 -> "ABS"` and `3 ->
 Map<Int, String> m = map[Pair(1, "ABS"), Pair(3, "SACO")];
 ----
 
-[NOTE]
-In case the arguments contain duplicate keys, the resulting map will contain all the given entries, with the first entry shadowing the following ones.
+NOTE: In case the arguments contain duplicate keys, the resulting map will contain all the given entries, with the first entry shadowing the following ones.
 
 ==== Functions
 
@@ -524,8 +521,7 @@ entry with key `k`, return the value `d`.
 def B lookupDefault<A, B>(Map<A, B> ms, A k, B d);
 ----
 
-[NOTE]
-If you need to know whether the map contains an entry for key `k`, use the
+NOTE: If you need to know whether the map contains an entry for key `k`, use the
 function `lookup` instead.
 
 

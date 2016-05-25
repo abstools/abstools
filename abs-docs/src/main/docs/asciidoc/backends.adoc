@@ -152,8 +152,7 @@ of where a type would normally be, as in this ABS block of code:
   _ s = length(l) + 4; }
 ----
 
-[NOTE]
-At the moment, the type inference cannot infer
+NOTE: At the moment, the type inference cannot infer
 _interface types_ as in `_ o = new Class();`.
 It can however infer all the other types, that is Builtin, Algebraic, and Exception data types.
 There is a plan to support this in the future.
@@ -188,9 +187,7 @@ or use them as normal ABS terms:
 } 
 ----
 
-[NOTE]
-
-At the moment, the ABS programmer can reuse (with `foreign_import`)  Haskell's _Algebraic Data types_
+NOTE: At the moment, the ABS programmer can reuse (with `foreign_import`)  Haskell's _Algebraic Data types_
 and _Pure functions_, but not monadic IO code (Haskell code with side-effects). This restriction
 is planned to be lifted in a later release of the backend.
 
@@ -313,8 +310,7 @@ http://www.key-project.org/key-abs/README-KeY-ABS_0.1.0-src.txt[KeY-ABS]
 is a proof checker for ABS models.  It can be downloaded from
 http://www.key-project.org/key-abs/key-abs.zip.
 
-[NOTE]
-The KeY-ABS backend is currently under development and unfinished.
+NOTE: The KeY-ABS backend is currently under development and unfinished.
 
 The KeY-ABS backend can be used to generate invariants from
 annotations in the ABS source code.  A design goal is to support
