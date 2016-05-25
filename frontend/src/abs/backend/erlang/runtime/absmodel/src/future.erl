@@ -18,10 +18,10 @@ start(Callee,Method,Params,CurrentCog,Stack) ->
              receive
                  {stop_world, _Sender} ->
                      task:block_without_time_advance(CurrentCog),
-                     task:acquire_token(CurrentCog, [Stack]),
+                     task:acquire_token(CurrentCog, [Ref | Stack]),
                      Loop();
                 {get_references, Sender} ->
-                    Sender ! {gc:extract_references(Stack), self()},
+                    Sender ! {gc:extract_references([Ref | Stack]), self()},
                     Loop();
                 { ok, Ref} -> ok
             end
