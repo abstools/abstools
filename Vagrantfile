@@ -289,7 +289,7 @@ EC_SMARTDEPLOYERHOME="/home/vagrant/smart_deployer"
 # path to MAIN GENERATOR
 EC_MAINGENHOME="/home/vagrant/main_generator"
 #
-EC_PATH="\$EC_PATH:/home/vagrant/main_generator/abs_deployer/docker:/home/vagrant/MiniZincIDE:/home/vagrant/minisearch/bin:/home/vagrant/chuffed/binary/linux"
+EC_PATH="\$EC_PATH:/home/vagrant/bin:/home/vagrant/main_generator/abs_deployer/docker:/home/vagrant/MiniZincIDE:/home/vagrant/minisearch/bin:/home/vagrant/chuffed/binary/linux"
 #
 EC_LD_LIBRARY_PATH="\$EC_LD_LIBRARY_PATH:"
 EOF
