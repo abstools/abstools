@@ -146,7 +146,7 @@ cd $SRC/main_generator/minizinc-1.6
 ./SETUP
 
 chmod -R 755 $SRC/main_generator
-
+sudo chmod -R 775 main_generator/minizinc-1.6
 
 # if gecode is compiled
 # update LD_LIBRARY_PATH
