@@ -1,7 +1,7 @@
 
 == Statements
 
-Similar to Java, a  statement is each of the individual instructions of a program, like the variable declarations and expressions seen in previous sections. They always end with a semicolon (;), and are executed in the same order in which they appear in a program. ABS provides flow control statements that serve to specify what has to be done by our program, when, and under which circumstances. Statements in ABS are not evaluated to a value. If one wants to assign a value to statements it would be the *Unit* value.
+This chapter specifies all ABS statements.
 
 [caption=]
 .Syntax
@@ -14,6 +14,7 @@ _Statement_ ::= _CompoundStmt_
 | _SuspendStmt_
 | _SkipStmt_
 | _AssertStmt_
+| _ThrowStmt_
 | _ReturnStmt_
 | _ExpStmt_ +
 
@@ -23,67 +24,105 @@ _CompoundStmt_ ::= _Block_
 | _TryCatchFinallyStmt_
 ====
 
-.Block
 
-This statement is also known as a *compound statement* and consists of a group of statement grouped together defining a name scope for variables. 
+=== Skip
 
+The skip statement is a statement that does nothing.
+
+[caption=]
+.Syntax
+====
+_SkipStmt_ ::= `skip` `;`
+====
+
+=== Variable Declarations
+
+A variable declaration statement is used to declare variables.  Variable
+declarations can occur at any point in a sequence of statements; i.e., it is
+not necessary to declare variables only at the beginning of methods or blocks.
+
+Variables declared inside a block are in scope for the duration of the block.
+It is an error to declare a variable with the same name of another variable in
+scope.  A local variable can have the same name as an object field.
+
+A variable declaration has an expression that defines the initial value of the
+variable.  The initialization expression is mandatory except for variables of
+reference types (interfaces and futures), in which case the variable is
+initialized with `null` if the initialization expression is omitted.
+
+[caption=]
+.Syntax
+====
+_VarDeclStmt_ ::= _TypeName_ _Identifier_ [ `=` _Exp_ ] `;`
+====
 
 [source]
-----
-{
-	a = a + 1;
-	n = n % 10;
-}
-----
-
-.Selection statement
-
-
-[source, java]
-----
-if (5 < x) {
-	y = 6;
-} 
-else {
-	y = 7;
-}
-if (True)
-	x = 5;
-
-
-----
-
-.Iteration statement (Loop)
-
-
-[source, java]
-----
-while (x < 5)
-	x = x + 1;
-----
-
-.Variable Declaration Statements
-
-A variable declaration statement is used to declare variables. A variable has an optional initialization expression for defining the initial value of the variable. The initialization expression is mandatory for variables of data types. It can be left out only for variables of reference types, in which case the variable is initialized with null. 
-
-[source, java]
 ----
 Bool b = True;
 ----
 
-.Assign Statement 
 
-The *Assign Statement* assigns a value to a variable or a field.
+=== Variable Assignment
 
+The assign statement assigns a value to a variable or a field.
 
-[source, java]
+Assignments to a field `f` can be written either `this.f = e;` or `f = e;`.
+In case a local variable `f` is in scope at the point of the assignment
+statement, the `this` prefix has to be used to assign to the field `f`; assignment
+to `f` will change the value of the local variable.
+
+[caption=]
+.Syntax
+====
+_AssignStmt_ ::= [ `this` `.` ] _Identifier_ `=` Exp `;`
+====
+
+[source]
 ----
 this.f = True;
 x = 5;
 ----
 
 
-.Await Statement
+=== Expressions as Statements
+
+An expression statement is a statement that consists of a single expression.
+When an expression statement is executed, the expression is evaluated and the
+resulting value is discarded.
+
+Expression statements are used for their side effects, for example issuing an
+asynchronous method call without waiting for its result.
+
+[caption=]
+.Syntax
+====
+_ExpStmt_ ::= _Exp_ `;`
+====
+
+NOTE: Creating an object without storing a reference (and hence never invoking
+a method on the new object) can be a meaningful operation, for example when
+the object has a `run` method and interacts with the rest of the system by
+calling methods on references passed in via the `new` expression.
+
+[source]
+----
+server!operate();
+new Client(server);
+----
+
+
+=== Assertions
+
+An *Assert Statement* is a statement for asserting certain conditions.
+
+[source, java]
+----
+assert x != null;
+----
+
+
+
+=== Process Release Point: Await
 
 *Await Statements* suspend the current task until the given guard is true [7]. The task will not be suspended if the guard is already initially true. While the task is suspended, other tasks within the same COG can be activated. Await statements are also called scheduling points, because they are the only source positions, where a task may become suspended and other tasks of the same COG can be activated.
 
@@ -96,7 +135,9 @@ await this.x == True;
 await f? & this.y > 5;
 ----
 
-.Suspend Statement
+
+
+=== Unconditional Release: Suspend
 
 A Suspend Statement causes the current task to be suspended.
 
@@ -105,16 +146,9 @@ A Suspend Statement causes the current task to be suspended.
 suspend;
 ----
 
-.Assert Statement
 
-An *Assert Statement* is a statement for asserting certain conditions.
 
-[source, java]
-----
-assert x != null;
-----
-
-.Return Statement
+=== Return
 
 A *Return Statement* defines the return value of a method. A return statement can only appear as a last statement in a method body.
 
@@ -123,7 +157,37 @@ A *Return Statement* defines the return value of a method. A return statement ca
 return x;
 ----
 
-.Case Statement
+
+
+=== Blocks of Statements
+
+This statement is also known as a *compound statement* and consists of a group of statement grouped together defining a name scope for variables. 
+
+
+[source]
+----
+{
+	a = a + 1;
+	n = n % 10;
+}
+----
+
+=== Conditionals
+
+[source, java]
+----
+if (5 < x) {
+	y = 6;
+} 
+else {
+	y = 7;
+}
+if (True)
+	x = 5;
+----
+
+
+=== Case: Pattern Matching
 
 The case statement, like the case expression, takes an expression as first argument, which is
 matched against a series of patterns. The effect of executing the case statement is the execution of
@@ -141,7 +205,17 @@ case p {
 }
 ----
 
-.Exception-signaling statement
+
+
+=== The While Loop
+
+[source, java]
+----
+while (x < 5)
+	x = x + 1;
+----
+
+=== Throw
 
 The keyword-statement `throw` is used to signal exceptions (runtime errors).
 It takes a single argument which is the exception-value to throw. For example:
@@ -181,7 +255,9 @@ by the ABS system.
 When an exception is raised (signaled), the normal flow of the program will be abrupted. In order to resume
 the normal flow, the user has to explicitly *handle* the exception.
 
-.Exception-handling Statement
+
+
+=== Handling Exceptions with Try-Catch-Finally
 
 To handle an exception --- either explicitly signaled using the `throw` keyword or implicitly by a system exception ---
 the user has to surround the offending code with a `try` block.
@@ -222,13 +298,3 @@ the finally block will first be accordingly executed,
 before re-throwing the exception to its parent caller.
 Conversely, if the parent caller does not (correctly) handle the re-thrown exception,
 the exception will be propagated to its own parent caller, and so forth and so on.
-
-.Expression Statement
-
-An *Expression Statement* is a statement that only consists of a single expression. Such statements are only executed for the effect of the expression.
-
-[source, java]
-----
-new C(x);
-
-----
