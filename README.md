@@ -8,6 +8,9 @@ This project is currently organised via "redmine" which provides a bug
 tracker, wiki and more:
 https://envisage.ifi.uio.no:8080/redmine/projects/abstools
 
+
+
+
 Folders
 -------
 
@@ -62,8 +65,8 @@ To run the collaboratory locally using Docker, execute the following commands:
     docker run -p 8080:80 --rm easyinterface
 
 Then connect your browser to http://localhost:8080/.  See the docker
-documentation for additional information on how to start the container in the
-background and other options.
+documentation for information on how to start the container in the background
+and other options.
 
 Using Vagrant
 -------------
@@ -81,6 +84,18 @@ http://localhost:8888/ to connect to an off-line version of the collaboratory.
 Currently supported browsers include Firefox, Chrome, recent IE (no Safari).
 
 Within the VM, this directory is accessible as `/vagrant`.
+
+Note for Windows Users
+----------------------
+
+Please clone the archive without line ending conversion (unfortunately
+activated by default on Windows).  Use `-c core.autocrlf=false` as argument
+for the initial `git clone` command, i.e.,
+
+    git clone https://github.com/abstools/abstools -c core.autocrlf=false
+
+Otherwise, running the tools inside Vagrant or Docker will fail with obscure
+error messages.
 
 Working with the repository
 ---------------------------
