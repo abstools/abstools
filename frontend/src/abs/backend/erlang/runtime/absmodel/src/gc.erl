@@ -136,12 +136,7 @@ idle(#cog{ref=Ref}, _From, State=#state{cogs=Cogs}) ->
     {Next, NewState} = idle_state_next(State#state{cogs=gb_sets:insert({cog, Ref}, Cogs)}),
     {reply, ok, Next, NewState};
 idle({register_future, Ref, Sender}, _From, State=#state{root_futures=RootFutures}) ->
-    Sender ! {gc, ok},
     {Next, NewState} = idle_state_next(State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)}),
-    {reply, ok, Next, NewState};
-idle({unroot, Sender}, _From, State=#state{root_futures=RootFutures, futures=Futures}) ->
-    {Next, NewState} = idle_state_next(State#state{futures=gb_sets:insert({future, Sender}, Futures),
-                                                   root_futures=gb_sets:delete({future, Sender}, RootFutures)}),
     {reply, ok, Next, NewState};
 idle(_Event, _From, State) ->
     {stop, not_supported, State}.
@@ -177,17 +172,12 @@ collecting(_Event, State) ->
     {stop, not_supported, State}.
 
 collecting(#cog{ref=Ref}, _From, State=#state{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
-    cog:stop_world(Ref),                        % FIXME does this block?
+    cog:stop_world(Ref),
     {Next, NewState} = collecting_state_next(State#state{cogs=gb_sets:insert({cog, Ref}, Cogs),
                                                          cogs_waiting_to_stop=gb_sets:insert({cog, Ref}, RunningCogs)}),
     {reply, ok, Next, NewState};
 collecting({register_future, Ref, Sender}, _From, State=#state{root_futures=RootFutures}) ->
-    Sender ! {gc, ok},
     {Next, NewState} = collecting_state_next(State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)}),
-    {reply, ok, Next, NewState};
-collecting({unroot, Sender}, _From, State=#state{root_futures=RootFutures, futures=Futures}) ->
-    {Next, NewState} = collecting_state_next(State#state{futures=gb_sets:insert({future, Sender}, Futures),
-                                                         root_futures=gb_sets:delete({future, Sender}, RootFutures)}),
     {reply, ok, Next, NewState};
 collecting(_Event, _From, State) ->
     {stop, not_supported, State}.

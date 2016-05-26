@@ -41,7 +41,7 @@ complete(Ref, Value, Sender, Cog, Stack) ->
                      task:acquire_token(Cog, [Value]),
                      Loop();
                 {get_references, Sender} ->
-                    Sender ! {gc:extract_references([Value | Stack]), self()},
+                    Sender ! {gc:extract_references([Ref, Value | Stack]), self()},
                     Loop();
                 {ok, Ref} -> ok
             end
