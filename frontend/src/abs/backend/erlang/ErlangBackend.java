@@ -92,7 +92,7 @@ public class ErlangBackend extends Main {
         if (verbose) System.out.println("Generating Erlang code...");
 
         // check erlang version number
-        Process versionCheck = Runtime.getRuntime().exec(new String[] { "erl", "-eval", "io:fwrite(\"~s\n\", [erlang:system_info(otp_release)]), halt().", "-noshell" }, null, new File(destDir, "absmodel"));
+        Process versionCheck = Runtime.getRuntime().exec(new String[] { "erl", "-eval", "io:fwrite(\"~s\n\", [erlang:system_info(otp_release)]), halt().", "-noshell" });
         versionCheck.waitFor();
         BufferedReader ir = new BufferedReader(new InputStreamReader(versionCheck.getInputStream()));
         int version = Integer.parseInt(ir.readLine());
