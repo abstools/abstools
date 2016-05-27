@@ -113,9 +113,18 @@ new Client(server);
 
 === Assertions
 
-An *Assert Statement* is a statement for asserting certain conditions.
+An assert statement is a statement for asserting certain conditions.  If the
+expression evaluates to `True`, executing an assertion is equivalent to
+`skip;`.  If the expression evalutes to `False`, it is equivalent to `throw
+AssertionFailException;`.
 
-[source, java]
+[caption=]
+.Syntax
+====
+_AssertStmt_ ::= `assert` _PureExp_ `;`
+====
+
+[source]
 ----
 assert x != null;
 ----
@@ -124,24 +133,54 @@ assert x != null;
 
 === Process Release Point: Await
 
-*Await Statements* suspend the current task until the given guard is true [7]. The task will not be suspended if the guard is already initially true. While the task is suspended, other tasks within the same COG can be activated. Await statements are also called scheduling points, because they are the only source positions, where a task may become suspended and other tasks of the same COG can be activated.
+An await statement suspends the current task until the given guard becomes
+active (evalutes to `True`).  While the task is suspended, other tasks within
+the same COG can be scheduled.
 
+In general, each cog will continue running a task without preempting it until
+the task is finished or it reaches a _scheduling point_.  Await statements are
+scheduling points, as are `suspend` statements and assignment or expression
+statements containing an await expression (see <<Await Expression>>).
 
-[source, java]
+[caption=]
+.Syntax
+====
+_AwaitStmt_ ::= `await` _Guard_ `;` +
+_Guard_ ::=  [ `this` `.` ] _Identifier_ `?` +
+| _PureExp_ +
+| _Guard_ `&` _Guard_ +
+| `duration` `(` _PureExp_ `,` _PureExp_ `)`
+====
+
+[source]
 ----
 Fut<Bool> f = x!m();
-await f?;
-await this.x == True;
-await f? & this.y > 5;
+await f?; <1>
+await this.x == True; <2>
+await f? & this.y > 5; <3>
+await duration(3, 5); <4>
 ----
+<1> A _claim guard_ becomes active when the future is resolved (contains a value).
+<2> A _field guard_ is a Boolean expression over the object state.
+<3> A _guard conjunction_ becomes active when both its components are active.
+<4> A _duration guard_ becomes active after a certain amount of simulated time has passed.  See <<Real-Time ABS>> for more on timed models.
 
 
 
 === Unconditional Release: Suspend
 
-A Suspend Statement causes the current task to be suspended.
+The suspend statement causes the current task to be suspended.
 
-[source, java]
+[caption=]
+.Syntax
+====
+_SuspendStmt_ ::= `suspend` `;`
+====
+
+NOTE: There is no guarantee that the cog will choose another task to run; the
+current task might be resumed immediately after suspending itself.
+
+[source]
 ----
 suspend;
 ----
@@ -150,9 +189,26 @@ suspend;
 
 === Return
 
-A *Return Statement* defines the return value of a method. A return statement can only appear as a last statement in a method body.
+A return statement returns a value from a method.  A return statement can only
+appear as a last statement in a method body.
 
-[source, java]
+For asynchronous method calls, executing the return statement will cause the
+future to be resolved so that it contains a value.  Any claim guards awaiting
+the future will become active.
+
+Methods that have a `Unit` return type do not need an explicit return
+statement.  The future will be resolved when the method terminates.
+
+[caption=]
+.Syntax
+====
+_ReturnStmt_ ::= `return` _Exp_ `;`
+====
+
+NOTE: ABS does not allow exiting a method from multiple points, e.g., via
+multiple `return` statements.  This makes model analysis easier.
+
+[source]
 ----
 return x;
 ----
@@ -161,20 +217,35 @@ return x;
 
 === Blocks of Statements
 
-This statement is also known as a *compound statement* and consists of a group of statement grouped together defining a name scope for variables. 
+A sequence of statements is called a _block_.  A block introduces a scope for
+local variables.
 
+[caption=]
+.Syntax
+====
+_Block_ ::= `{` { _Statement_ } `}`
+====
+
+NOTE: Semantically, a whole block is a single statement and can be written
+anywhere a single statement is valid.
 
 [source]
 ----
 {
-	a = a + 1;
-	n = n % 10;
+  Int a = 0; <1>
+  a = a + 1;
+  n = a % 10;
 }
+
+{ } <2>
 ----
+<1> The variable `a` is in scope until the end of the block.
+<2> An empty block is equivalent to `skip;`.
+
 
 === Conditionals
 
-[source, java]
+[source]
 ----
 if (5 < x) {
 	y = 6;
@@ -194,7 +265,7 @@ matched against a series of patterns. The effect of executing the case statement
 the statement (which can be a block) of the first branch whose pattern matches the expression. An example
 follows:
 
-[source, java]
+[source]
 
 ----
 Pair<Int, Int> p = Pair(2, 3);
@@ -209,7 +280,7 @@ case p {
 
 === The While Loop
 
-[source, java]
+[source]
 ----
 while (x < 5)
 	x = x + 1;
@@ -220,7 +291,7 @@ while (x < 5)
 The keyword-statement `throw` is used to signal exceptions (runtime errors).
 It takes a single argument which is the exception-value to throw. For example:
 
-[source, java]
+[source]
 
 ----
 {
