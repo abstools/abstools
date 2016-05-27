@@ -144,8 +144,8 @@ shadow a binding of `v` outside of the `let` expression.
 _LetExp_ ::= `let` `(` _Type_ _Identifier_ `)` = _PureExp_ `in` _PureExp_
 ====
 
-.Example
 [source]
+.Example
 ----
 let (Int x) = 2 + 2 in x * 2
 ----
@@ -167,8 +167,8 @@ For data type constructors without parameters, the parentheses are optional.
 _DataConstrExp_ ::= _TypeIdentifier_ [ `(` [ _PureExp_ { `,` _PureExp_ } ] `)` ]
 ====
 
-.Example
 [source]
+.Example
 ----
 True
 Cons(True, Nil)
@@ -191,8 +191,8 @@ function calls.
 _FnAppExp_ ::= _Identifier_ `(` [ _PureExp_ { `,` _PureExp_ } ] `)`
 ====
 
-.Example
 [source]
+.Example
 ----
 tail(Cons(True, Nil))
 head(list)
@@ -225,8 +225,8 @@ evaluated, but not both.
 _IfExp_ ::= `if` _PureExp_ `then` _PureExp_ `else` _PureExp_
 ====
 
-.Syntax
 [source]
+.Example
 ----
 if 5 == 4 then True else False
 ----
@@ -277,6 +277,7 @@ data constructors.  For example:
 
 
 [source]
+.Example
 ----
 let (Pair<Int, Int> a) = Pair(5, 5) in
   case a {
@@ -290,6 +291,7 @@ let (Pair<Int, Int> a) = Pair(5, 5) in
 
 
 [source]
+.Example
 ----
 let (x = 7) in
   case Pair(5, 5) {
@@ -311,6 +313,7 @@ Literals can be used as patterns.  The pattern matches if the value of the
 case expression is equal to the literal value.
 
 [source]
+.Example
 ----
 let (Pair<Int, Int> a) = Pair(5, 5) in
   case a {
@@ -330,6 +333,7 @@ Constructor arguments are again patterns.
 
 
 [source]
+.Example
 ----
 let (List<Int> l) = list[1, 2, 3] in
   case l {
@@ -349,6 +353,7 @@ let (List<Int> l) = list[1, 2, 3] in
 The wildcard pattern, written with an underscore (`_`) matches any value.
 
 [source]
+.Example
 ----
 let (List<Int> l) = list[1, 2, 3] in
   case l {
@@ -403,8 +408,8 @@ Concurrency Model>> for more details about cogs).
 _NewExp_ ::= `new` [ `local` ] _TypeName_ `(` [ _PureExp_ {`,` _PureExp_ } ] `)`
 ====
 
-.Example
 [source]
+.Example
 ----
 new local Foo(5)
 new Bar()
@@ -429,8 +434,8 @@ type, a method name declared in that interface, and a list of argument expressio
 _SyncCall_ ::= _PureExp_ `.` _Identifier_ `(` _PureExp_ { `,` _PureExp_ } `)`
 ====
 
-.Example
 [source]
+.Example
 ----
 Bool b = x.m(5, 3);
 ----
@@ -471,7 +476,8 @@ This future is resolved (i.e., it gets a value) when the callee task finishes.
 It can be used to synchronize with the callee task and obtain the result of
 the method call.
 
-[source, java]
+[source]
+.Example
 ----
 Fut<Bool> f = x!m(5);
 ----
@@ -490,6 +496,7 @@ _GetExp_ ::= _PureExp_ `.` `get`
 ====
 
 [source]
+.Example
 ----
 Bool b = f.get;
 ----
@@ -507,6 +514,7 @@ _AwaitExp_ ::= `await` _AsyncCall_
 ====
 
 [source]
+.Example
 ----
 A x = await o!m();
 ----
@@ -514,6 +522,7 @@ A x = await o!m();
 The statement above is equivalent to the three statements in the following example.
 
 [source]
+.Example
 ----
 Fut<A> fx = o!m();
 await fx?;
@@ -548,6 +557,7 @@ _FunctionDecl_  ::= `def` _Type_ _Identifier_ [ `<` _TypeName_ { `,` _TypeName_ 
 
 
 [source]
+.Example
 ----
 def Rat abs(Rat x) = if x > 0 then x else -x; <1>
 
