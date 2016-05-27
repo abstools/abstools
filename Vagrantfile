@@ -295,6 +295,9 @@ EC_LD_LIBRARY_PATH="\$EC_LD_LIBRARY_PATH:"
 EOF
 sudo mv -f /tmp/ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage
 
+# add www-data to vagrant group to allow the execution of
+# main generator within easyinterface
+sudo addgroup www-data vagrant
 
 
   SHELL

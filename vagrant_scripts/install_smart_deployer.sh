@@ -145,8 +145,7 @@ rm -rf minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
 cd $SRC/main_generator/minizinc-1.6
 ./SETUP
 
-chmod -R 755 $SRC/main_generator
-chmod -R 775 $SRC/main_generator/minizinc-1.6
+chmod -R 775 $SRC/main_generator
 
 # if gecode is compiled
 # update LD_LIBRARY_PATH
