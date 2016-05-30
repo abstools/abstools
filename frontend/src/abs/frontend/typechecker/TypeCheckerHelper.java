@@ -356,7 +356,7 @@ public class TypeCheckerHelper {
                         foundDuplicates.add(rn.getSimpleName());
                     res.put(rn.getQualifiedName(), rn);
                 }
-            } else if (d instanceof ExceptionDecl) {
+            } else if (d.isException()) {
                 ExceptionDecl ed = (ExceptionDecl) d;
                 DataConstructor ec = ed.dataConstructor;
                 assert ec != null : ed.getName();
@@ -373,7 +373,7 @@ public class TypeCheckerHelper {
                     }
                 }
             }
-            else if (d instanceof ExceptionDecl) {
+            else if (d.isException()) {
                 ExceptionDecl ed = (ExceptionDecl)d;
                 DataConstructor ec = ed.dataConstructor;
                 if (ec.getName().equals(d.getName())) {
