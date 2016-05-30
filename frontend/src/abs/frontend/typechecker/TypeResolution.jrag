@@ -404,6 +404,7 @@ aspect TypeResolution {
 
     @CheckForNull
     public DataConstructor DataConstructorExp.getDataConstructor() {
+        // KLUDGE: code duplication with ConstructorPattern.getDataConstructor()
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
         if (decl instanceof DataConstructor) {
             return (DataConstructor) decl;
@@ -411,18 +412,34 @@ aspect TypeResolution {
             if (decl.isException()) {
                 return ((ExceptionDecl)decl).dataConstructor;
             } else {
-                return null;
+                decl = lookup(new KindedName(Kind.EXCEPTION, getConstructor()));
+                if (decl.isException()) {
+                    return ((ExceptionDecl)decl).dataConstructor;
+                } else {
+                    return null;
+                }
             }
         }
     }
 
     @CheckForNull
     public DataConstructor ConstructorPattern.getDataConstructor() {
+        // KLUDGE: code duplication with DataConstructorExp.getDataConstructor()
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
         if (decl instanceof DataConstructor)
             return (DataConstructor) decl;
-        else
-            return null;    
+        else {
+            if (decl.isException()) {
+                return ((ExceptionDecl)decl).dataConstructor;
+            } else {
+                decl = lookup(new KindedName(Kind.EXCEPTION, getConstructor()));
+                if (decl.isException()) {
+                    return ((ExceptionDecl)decl).dataConstructor;
+                } else {
+                    return null;
+                }
+            }
+        }
     }
 
     /**
