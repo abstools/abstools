@@ -240,7 +240,7 @@ PATH=\$PATH:/opt/ghc/7.8.4/bin:/opt/cabal/1.20/bin:/opt/alex/3.1.3/bin:/opt/happ
 # used by the costabs executable
 export COSTABSHOME=/usr/local/lib/saco/
 # used by the costabs executable
-export ABSFRONTEND=/vagrant/frontend/dist/absfrontend.jar
+export ABSFRONTEND=/usr/local/lib/absc/frontend/dist/absfrontend.jar
 export GHC_PACKAGE_PATH=/vagrant/abs2haskell/.cabal-sandbox/x86_64-linux-ghc-7.8.4-packages.conf.d:/opt/ghc/7.8.4/lib/ghc-7.8.4/package.conf.d:/home/vagrant/.ghc/x86_64-linux-7.8.4/package.conf.d
 EOF
 
