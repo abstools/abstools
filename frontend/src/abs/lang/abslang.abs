@@ -666,6 +666,8 @@ interface DeploymentComponent {
     // time interval onwards.
     Unit incrementResources(Rat amount, Resourcetype rtype);
 
+    [Atomic] String getName();
+
     [Atomic] Unit setProvider(CloudProvider provider);
     [Atomic] CloudProvider getProvider();
     [Atomic] Time getCreationTime();
@@ -872,7 +874,6 @@ class CloudProvider(String name) implements CloudProvider {
         }
         return result;
     }
-    
 }
 
 
@@ -1040,6 +1041,7 @@ implements DeploymentComponent {
         return True;
     }
 
+    [Atomic] String getName() { return description; }
     [Atomic] Time getCreationTime() { return creationTime; }
     [Atomic] Rat getStartupDuration() { return startupDuration; }
     [Atomic] Rat getShutdownDuration() { return shutdownDuration; }
