@@ -10,7 +10,7 @@ Algebraic user-defined data types and side effect-free functions :: All data
 (except the state of objects and future variables) is immutable, and functions
 are free of side effects.  This makes understanding and reasoning about models
 easier.
-+
+
 User-defined data types are used for data modeling instead of objects, so ABS
 models are typically smaller than their Java counterparts.
 
