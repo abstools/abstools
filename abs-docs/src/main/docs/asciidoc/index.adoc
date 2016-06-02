@@ -10,13 +10,21 @@ ABS Development Team
 // :imagesdir: images
 
 include::introduction.adoc[]
-include::started.adoc[]
-include::functional.adoc[]
-include::imperative.adoc[]
-include::oo.adoc[]
-include::stdlib.adoc[]
-include::modules.adoc[]
-include::feature-modeling.adoc[]
-include::timed.adoc[]
-include::backends.adoc[]
 
+include::started.adoc[]
+
+include::functional.adoc[]
+
+include::imperative.adoc[]
+
+include::oo.adoc[]
+
+include::stdlib.adoc[]
+
+include::modules.adoc[]
+
+include::feature-modeling.adoc[]
+
+include::timed.adoc[]
+
+include::backends.adoc[]
