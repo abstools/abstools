@@ -232,7 +232,7 @@ if 5 == 4 then True else False
 ----
 
 
-==== Case Expressions / Pattern Matching
+==== Case Expressions
 
 ABS supports pattern matching via the Case Expression.  A case expression
 consists of an input expression and a series of branches, each consisting of a
