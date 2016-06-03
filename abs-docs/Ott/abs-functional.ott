@@ -1,0 +1,350 @@
+embed
+{{ coq
+Require Export Ascii.
+Require Export String.
+
+Require Import StringOrderedTypeCompat.
+Require Import FMapList.
+Module Map <: FMapInterface.S := FMapList.Make string_as_OT.
+
+Hint Resolve bool_dec : ott_coq_equality.
+Hint Resolve ascii_dec : ott_coq_equality.
+}}
+indexvar i, j, n ::=
+      {{ lex numeral }}
+      {{ coq nat }}
+      {{ coq-equality }}
+      {{ com index variables (subscripts) }}
+metavar N ::=
+      {{ lex Alphanum }}
+      {{ coq string }}
+      {{ coq-equality }}
+      {{ com uninterpreted type name }}
+metavar D ::=
+      {{ lex Alphanum }}
+      {{ coq string }}
+      {{ coq-equality }}
+      {{ com data type name }}
+metavar Co ::=
+      {{ lex Alphanum }}
+      {{ coq string }}
+      {{ coq-equality }}
+      {{ com data type constructor name }}
+metavar fn ::=
+      {{ lex Alphanum }}
+      {{ coq string }}
+      {{ coq-equality }}
+      {{ com function name }}
+metavar x, y ::=
+      {{ lex alphanum }}
+      {{ coq string }}
+      {{ coq-equality }}
+      {{ com variable }}
+grammar
+T :: T_ ::=
+   {{ com ground type }}
+  | B :: :: basic_type
+  | D :: :: d
+  | D < T1 , ... , Tn > :: :: d_param
+
+B :: B_ ::=
+  {{ com basic type }}
+  | Bool :: :: bool 
+  | Int  :: :: int
+
+A :: A_ ::=
+  {{ com type }}
+  | N :: :: name
+  | T :: :: type
+  | D < A1 , ... , An > :: :: type_param
+  | A nsubst :: M :: nsubst
+    {{ coq (nsubst_A [[A]] [[nsubst]]) }}
+
+Cons :: Cons_ ::= 
+  {{ com constructor }}
+  | Co :: :: co
+  | Co ( A1 , ... , An ) :: :: co_param
+
+% FIXME: should have <N1 , ... , Ni>?
+Dd :: Dd_ ::=
+  {{ com datatype definition }}
+  | data D = Cons1 '|' ... '|' Consn ; :: :: consl
+  | data D < N1 , ... , Ni > = Cons1 '|' ... '|' Consj ; :: :: consl_param
+
+% FIXME: should have <N1 , ... , Ni>?
+F :: F_ ::=
+  {{ com function definition }}
+  | def A fn ( A1 x1 , ... , An xn ) = e ; :: :: fn
+  | def A fn < N1 , ... , Ni > ( A1 x1 , ... , Aj xj ) = e ; :: :: fn_param
+
+b :: b_ ::=
+  {{ com boolean }}
+  {{ coq bool }}
+  {{ coq-equality }}
+%  | True :: M :: true
+%    {{ coq true }}
+%  | False :: M :: false
+%    {{ coq false }}
+
+e :: e_ ::=
+  {{ com expression }}
+  | b :: :: b
+    {{ com boolean expression }}
+  | x :: :: var
+    {{ com variable }}
+  | t :: :: term 	
+    {{ com ground term }}
+  | Co :: :: co 
+    {{ com constructor }}
+  | Co ( e1 , ... , en ) :: :: co_param 
+    {{ com constructor with parameters }}
+  | fn ( e1 , ... , en ) :: :: fn_call 
+    {{ com function call }}
+  | e xsubst :: M :: xsubst 
+    {{ coq (xsubst_e [[e]] [[xsubst]]) }}
+%  | case e { br1 ... brn } :: :: case 
+%    {{ com case with branches }}
+
+t :: term_ ::=
+  {{ com term }}
+  | Co :: :: co
+  | Co ( t1 , ... , tn ) :: :: co_param
+  | null :: :: null
+
+%br :: br_ ::=
+%  {{ com branch }}
+%  | p => e ; :: :: p_e
+%
+%p :: p_ ::=
+%  {{ com pattern }}
+%  | _ :: :: wildcard 
+%    {{ com wildcard }}
+%  | x :: :: x
+%    {{ com variable }}
+%  | t :: :: t 
+%    {{ com term }}
+%  | Co :: :: co
+%    {{ com constructor }}
+%  | Co ( p1 , ... , pn ) :: :: co_param 
+%    {{ com constructor with parameters }}
+
+sig :: sig_ ::=
+     | A1 , ... , An -> A :: :: sig
+
+ctxv :: ctxv_ ::=
+     | A :: :: A
+     | sig :: :: sig
+
+G {{ tex \Gamma }} :: G_ ::=
+  {{ coq Map.t ctxv }}
+  {{ coq-universe Type }}
+   | G [ x1 |-> A1 , ... , xn |-> An ] :: M :: add_list
+     {{ coq (fold_right (fun (ax : x * A) (G5 : G) => Map.add (fst ax) (ctxv_A (snd ax)) G5) [[G]] [[x1 |-> A1 ... xn |-> An]]) }}
+
+nsubst {{ tex \sigma }} :: nsubst_ ::=
+       {{ coq Map.t A }}
+       {{ coq-universe Type }}
+
+xsubst {{ tex \sigma }} :: xsubst_ ::=
+       {{ coq Map.t x }}
+       {{ coq-universe Type }}
+       | [ x1 |-> y1 , ... , xn |-> yn ] :: M :: many
+         {{ coq (fold_right (fun (xy : x * x) (xsubst5 : xsubst) => Map.add (fst xy) (snd xy) xsubst5) (Map.empty x) [[x1 |-> y1 ... xn |-> yn]]) }}
+
+tsubst {{ tex \sigma }} :: tsubst_ ::=
+      {{ coq Map.t t }}
+      {{ coq-universe Type }}
+      | tsubst [ y1 |-> t1 , ... , yn |-> tn ] :: M :: add_list
+        {{ coq (fold_right (fun (xt : x * t) (tsubst5 : tsubst) => Map.add (fst xt) (snd xt) tsubst5) [[tsubst]] [[y1 |-> t1 ... yn |-> tn]]) }}
+
+%%% TERMINALS %%%
+terminals :: terminals_ ::=
+	  | => :: :: pmatch {{ tex \Rightarrow }}
+  	  | {  :: :: leftbrace {{ tex \{ }}
+	  | }  :: :: rightbrace {{ tex \} }}
+	  | Bool :: :: bool {{ tex \mathsf{Bool} }}
+	  | Int :: :: int {{ tex \mathsf{Int} }}
+	  | < :: :: langle {{ tex \langle }}
+	  | > :: :: rangle {{ tex \rangle }}
+	  | True :: :: true {{ tex \mathrm{True} }}
+	  | False :: :: false {{ tex \mathrm{False} }}
+          | ~>  :: :: trans {{ tex \leadsto }}
+	  | |- :: :: turnstile {{ tex \vdash }}
+	  | |->  :: :: mapsto {{ tex \mapsto }}
+  	  | ->  :: :: arrow {{ tex \rightarrow }}
+	  | tmatch :: :: tmath {{ tex \mathrm{tmatch} }}
+	  | fresh :: :: fresh {{ tex \mathrm{fresh} }}
+	  | vars :: :: vars {{ tex \mathrm{vars} }}
+	  | [= :: :: subseteq {{ tex \subseteq }}
+
+formula :: formula_ ::= 
+  {{ com formulas }}
+  | judgement :: :: judgement
+    {{ com judgment }}
+  | formula1 ... formulan :: :: dots
+    {{ com conjunction of formulas }}
+  | G ( x ) = A :: M :: G_eq_A
+    {{ coq (Map.find [[x]] [[G]] = Some (ctxv_A [[A]])) }}
+  | G ( Co ) = sig :: M :: G_Co_eq_sig
+    {{ coq (Map.find [[Co]] [[G]] = Some (ctxv_sig [[sig]])) }}
+  | G ( fn ) = sig :: M :: G_fn_eq_sig
+    {{ coq (Map.find [[fn]] [[G]] = Some (ctxv_sig [[sig]])) }}
+  | tsubst ( x ) = t :: M :: tsubst_eq_e
+    {{ coq (Map.find [[x]] [[tsubst]] = Some [[t]]) }}
+  | tmatch ( A1 , ... , Ai , A1 , ... , Aj , nsubst ) :: M :: tmatch 
+    {{ coq (nsubst_A_list [[A1 ... Ai]] [[nsubst]] = [[A1 ... Aj]]) }}
+  | fresh ( y1 , ... , yn , e ) :: M :: fresh_vars
+    {{ coq (forall y5, In y5 [[y1 ... yn]] -> ~ In y5 (vars_e [[e]])) }}
+  | wt ( G , tsubst ) :: M :: wt
+     {{ coq (forall (x5 : x) (t5 : t) (A5 : A), Map.find x5 [[tsubst]] = Some t5 -> Map.find x5 [[G]] = Some (ctxv_A A5) -> t_e [[G]] (e_term t5) A5) }}
+
+embed
+{{ coq
+
+Fixpoint nsubst_A (A5 : A) (nsubst5 : nsubst) : A :=
+match A5 with
+| A_name N5 as A' => 
+  match Map.find N5 nsubst5 with
+  | Some A6 => A6
+  | None => A'
+  end
+| A_type T5 as A' => A'
+| A_type_param D5 l => A_type_param D5 (map (fun A5 => nsubst_A A5 nsubst5) l)
+end.
+
+Definition nsubst_A_list (A_list : list A) (nsubst5 : nsubst) : list A :=
+map (fun A5 => nsubst_A A5 nsubst5) A_list.
+
+Fixpoint xsubst_e (e5 : e) (xsubst5 : xsubst) : e := 
+match e5 with
+| e_b _ as e' => e'
+| e_var x' as e' => 
+  match Map.find x' xsubst5 with
+  | Some y5 => e_var y5
+  | None => e'
+  end
+| e_term _ as e' => e'
+| e_co _ as e' => e'
+| e_co_param Co5 l => e_co_param Co5 (map (fun e' => xsubst_e e' xsubst5) l)
+| e_fn_call fn5 l => e_fn_call fn5 (map (fun e' => xsubst_e e' xsubst5) l)
+end.
+
+Fixpoint vars_e (e5 : e) : list x := 
+match e5 with
+| e_b _ => nil
+| e_var x' => x' :: nil
+| e_term _ => nil
+| e_co _ => nil
+| e_co_param _ l => fold_right (fun e' l' => vars_e e' ++ l') nil l
+| e_fn_call _ l => fold_right (fun e' l' => vars_e e' ++ l') nil l
+end.
+}}
+
+defns
+  functional_well_formedness :: t_ ::= 
+
+defn 
+  G |- e : A :: :: e :: ''
+    {{ com well-formed expression }} by
+  
+  ------------- :: bool
+  G |- b : Bool
+
+  ------------- :: null
+  G |- null : A
+
+  G ( x ) = A
+  ----------- :: var
+  G |- x : A
+
+  tmatch ( A1 , ... , Ai , A'1 , ... , A'j , nsubst )
+  G |- e1 : A'1 ... G |- ej : A'j
+  G ( fn ) = A1 , ... , Ai -> A
+  --------------------------------------------------- :: func_expr
+  G |- fn ( e1 , ... , ej ) : A nsubst
+
+  tmatch ( A1 , ... , Ai , A'1 , ... , A'j , nsubst )
+  G |- e1 : A'1 ... G |- ej : A'j
+  G ( Co ) = A1 , ... , Ai -> D
+  --------------------------------------------------- :: cons_expr
+  G |- Co ( e1 , ... , ej ) : D
+
+  tmatch ( A1 , ... , Ai , A'1 , ... , A'j , nsubst )
+  G |- e1 : A'1 ... G |- ej : A'j
+  G ( Co ) = A1 , ... , Ai -> D < N1 , ... , Nn >
+  ------------------------------------------------------ :: cons_expr_param
+  G |- Co ( e1 , ... , ej ) : D < N1 , ... , Nn > nsubst
+
+defn 
+  G |- Cons : A :: :: cons :: '' 
+  {{ com well-formed cons }} by
+
+  G ( Co ) = A1 , ... , An -> D
+  ----------------------------- :: cons_decl
+  G |- Co ( A1 , ... , An ) : D
+
+  G ( Co ) = A1 , ... , Ai -> D < N1 , ... , Nj >
+  ----------------------------------------------- :: cons_decl_param
+  G |- Co ( A1 , ... , Ai ) : D < N1 , ... , Nj >
+
+defn
+  G |- Dd :: :: dd :: ''
+  {{ com well-formed data definition }} by
+  
+  G |- Cons1 : D ... G |- Consn : D
+  ----------------------------------- :: data_decl
+  G |- data D = Cons1 | ... | Consn ;
+
+  G |- Cons1 : D < N1 , ... , Ni > ... G |- Consj : D < N1 , ... , Ni >
+  --------------------------------------------------------------------- :: data_decl_param
+  G |- data D < N1 , ... , Ni > = Cons1 | ... | Consj ;
+
+defn
+  G |- F :: :: F :: ''
+    {{ com well-formed function declaration }} by
+
+  G ( fn ) = A1 , ... , An -> A
+  G [ x1 |-> A1 , ... , xn |-> An ] |- e : A
+  ------------------------------------------- :: func_decl
+  G |- def A fn ( A1 x1 , ... , An xn ) = e ;
+ 
+  G ( fn ) = A1 , ... , An -> A
+  G [ x1 |-> A1 , ... , xn |-> An ] |- e : A
+  ------------------------------------------------------------- :: func_decl_param
+  G |- def A fn < N1 , ... , Ni > ( A1 x1 , ... , An xn ) = e ;
+
+defn
+  G |- tsubst :: :: tsubst :: ''
+    {{ com well-formed term substitution }} by
+
+  wt ( G , tsubst )
+  ---------------------------------------- :: tsubst_wt
+  G |- tsubst
+
+defns
+  functional_evaluation :: red_ ::= 
+  
+defn
+  F1 ... Fn , tsubst |- e ~> tsubst' |- e' :: :: tsubst_e :: ''
+  {{ com expression evaluation }} by
+
+  tsubst ( x ) = t
+  -------------------------------------- :: var
+  F1 ... Fn , tsubst |- x ~> tsubst |- t
+
+  F1 ... Fn , tsubst |- e ~> tsubst' |- e'
+  -------------------------------------------------------------------------------------------------------------------------- :: cons
+  F1 ... Fn , tsubst |- Co ( e1 , ... , ei , e , e'1 , ... , e'j ) ~> tsubst' |- Co ( e1 , ... , ei , e' , e'1 , ... , e'j )
+
+  F1 ... Fn , tsubst |- e ~> tsubst' |- e'
+  -------------------------------------------------------------------------------------------------------------------------- :: fun_exp
+  F1 ... Fn , tsubst |- fn ( e1 , ... , ei , e , e'1 , ... , e'j ) ~> tsubst' |- fn ( e1 , ... , ei , e' , e'1 , ... , e'j )
+  
+  fresh ( y1 , ... , yn , e )
+  ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- :: fun_ground
+  F1 ... Fi def A fn ( A1 x1 , ... , An xn ) = e ; F'1 ... F'j , tsubst |- fn ( t1 , ... , tn ) ~> tsubst [ y1 |-> t1 , ... , yn |-> tn ] |- e [ x1 |-> y1 , ... , xn |-> yn ]
+
+  fresh ( y1 , ... , yn , e )
+  ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- :: fun_ground_param
+  F1 ... Fi def A fn < N1 , ... , Ni > ( A1 x1 , ... , An xn ) = e ; F'1 ... F'j , tsubst |- fn ( t1 , ... , tn ) ~> tsubst [ y1 |-> t1 , ... , yn |-> tn ] |- e [ x1 |-> y1 , ... , xn |-> yn ]
+

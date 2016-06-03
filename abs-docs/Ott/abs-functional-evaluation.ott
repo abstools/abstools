@@ -1,0 +1,103 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Functional level evaluation of Core ABS                      %
+%                                                              %
+% Based on the FMCO 2010 paper                                 %
+% "ABS: A Core Language for Abstract Behavioral Specification" %
+%                                                              %
+% DEPENDS: abs-functional-typing.ott                           %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+grammar
+%%% FUNCTIONAL LEVEL EVALUATION META SYNTAX %%%
+ect :: ect_ ::=
+  {{ com expression evaluation context }}
+  | subst |- e :: M :: context
+
+e :: e_ ::=
+  | e ( fn ) :: M :: efn
+    {{ com expression in function declaration }}
+    {{ tex [[e]]_{[[fn]]} }}
+  | el ( i ) :: M :: ith
+    {{ com ith expression in list }}
+
+el :: el_ ::=
+   | tl :: M :: tl
+   | skipn ( i , el ) :: M :: skipn
+   | firstn ( i , el ) :: M :: firstn
+
+%%% TERMINALS %%%
+terminals :: terminals_ ::=
+	  | fresh :: :: fresh {{ tex \mathrm{fresh} }}
+	  | <= :: :: leq {{ tex \leq }}
+	  | skipn :: :: skipn {{ tex \mathrm{skipn} }}
+	  | firstn :: :: firstn {{ tex \mathrm{firstn} }}
+	  | length :: :: length {{ tex \mathrm{length} }}
+          | ~>  :: :: trans {{ tex \leadsto }}
+
+%%% FORMULAS %%%
+formula :: formula_ ::= 
+  {{ com formulas }}
+  | fresh ( { xl } ) :: M :: fresh_xl
+    {{ com fresh variables, globally unique }}
+  | 1 <= i <= n :: M :: range
+    {{ com range }}    
+  | j = i - 1  :: M :: iminus
+    {{ com index minus one }}
+  | length ( xl ) = n :: M :: length
+    {{ com length of variable list }}
+
+%%% FUNCTIONAL LEVEL EVALUATION RULES %%%
+defns
+  functional_evaluation :: red_ ::= 
+
+defn
+  ect ~> ect' :: :: ect :: ''
+   	 {{ com expression evaluation }} by
+
+  % FIXME: formulation is different from paper, should have el = e1 , ... , en?
+  subst |- e ~> subst' |- e'
+  1 <= i <= n
+  el ( i ) = e
+  el' ( i ) = e'
+  j = i - 1
+  firstn ( j , el ) = firstn ( j , el' )
+  skipn ( i , el ) = skipn ( i , el' )
+  ------------------------------------------------------------------------------------- :: cons
+  subst |- Co ( el ) ~> subst' |- Co ( el' )
+
+  % FIXME: formulation is different from paper, should have el = e1 , ... , en?
+  subst |- e ~> subst' |- e'
+  1 <= i <= n
+  el ( i ) = e
+  el' ( i ) = e'
+  j = i - 1
+  firstn ( j , el ) = firstn ( j , el' )
+  skipn ( i , el ) = skipn ( i , el' )
+  ------------------------------------------------------------------------------------- :: fun_exp
+  subst |- fn ( el ) ~> subst' |- fn ( el' )
+
+  ---------------------------------- :: var
+  subst |- x ~> subst |- subst ( x )
+
+  subst |- e ~> subst' |- e'
+  ---------------------------------------------------- :: case1
+  subst |- case e { brl } ~> subst' |- case e' { brl }
+
+  match ( subst ( p ) , t ) =/= emptysubst
+  subst' = subst [ y1 |-> match ( subst ( p ) , t ) ( x1 ) ] ... subst' = subst [ yn |-> match ( subst ( p ) , t ) ( xn ) ]
+  yl = y1 , ... , yn   
+  fresh ( { y1 , ... , yn } )
+  xl = x1 , ... , xn
+  { x1 , ... , xn } = vars ( subst ( p ) )
+  ------------------------------------------------------------------------------------------------------------------------- :: case2
+  subst |- case t { p => e ; brl } ~> subst' |- e [ xl |-> yl ]
+  
+  match ( subst ( p1 ) , t ) = emptysubst
+  ----------------------------------------------------------- :: case3
+  subst |- case t { p => e ; brl } ~> subst |- case t { brl }
+
+  % FIXME: missing definition of e and xl, add Dd for fn into subst?
+  fresh ( { y1 , ... , yn } )
+  yl = y1 , ... , yn
+  length ( xl ( fn ) ) = n
+  -------------------------------------------------------------------------- :: fun_ground
+  subst |- fn ( tl ) ~> subst [ yl |-> tl ] |- e ( fn ) [ xl ( fn ) |-> yl ]

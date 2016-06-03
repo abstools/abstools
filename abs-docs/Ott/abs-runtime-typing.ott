@@ -1,0 +1,144 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Runtime typing of Core ABS                                   %
+%                                                              %
+% Based on the FMCO 2010 paper                                 %
+% "ABS: A Core Language for Abstract Behavioral Specification" %
+%                                                              %
+% DEPENDS: abs-runtime-syntax.ott, abs-object-typing.ott       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+grammar
+%%% RUNTIME TYPING META SYNTAX %%%
+a :: a_ ::=
+  | Txvl :: M :: Txvl
+
+Txvl {{ tex \overline{T\, x\, v} }}:: Txvl_ ::=
+    | Txv1 , ... , Txvn :: M :: Txvl
+
+T :: T_ ::=
+  | De ( v ) :: M :: dev
+  | cogtp :: M :: cog
+
+Tl :: Tl_ ::=
+   | De ( vl ) :: M :: devl
+
+G :: G_ ::=
+  | fields ( T ) :: M :: fields
+
+%%% TERMINALS %%%
+terminals :: terminals_ ::=
+	  | ok :: :: ok {{ tex \mathbf{ok} }}
+	  | |-R :: :: turnstile_r {{ tex \vdash_R }}
+	  | cogtp :: :: cogtp {{ tex \mathit{cog} }}
+
+%%% FORMULAS %%%
+formula :: formula_ ::=
+	| Al = Al' :: M :: al_eq
+	  {{ com type list equality }}
+
+%%% RUNTIME TYPING RULES %%%
+defns
+  runtime_well_formedness :: t_ ::= 
+
+defn
+  De |-R a ok :: :: a_ok :: ''
+     {{ com well-formed substitution }} by
+
+  % paper uses De |-R T v val ok
+  De ( v ) = T
+  De |- x : T
+  --------------- :: state_1
+  De |-R T x v ok
+
+  De |-R a ok
+  De |-R a' ok
+  ---------------- :: state_2
+  De |-R a , a' ok
+
+defn
+  De |-R sp ok :: :: sp_ok :: ''
+     {{ com well-formed process statement }} by
+
+  De |- e : T
+  De ( destiny ) = Fut < T >
+  -------------------------- :: return
+  De |-R return e ; ok
+
+  De ( fu ) = Fut < T >
+  ----------------------- :: cont
+  De |-R cont ( fu ) ; ok
+
+  De |- s
+  ----------- :: sp_s
+  De |-R s ok
+
+defn 
+  De |-R spl ok :: :: spl_ok :: ''
+     {{ com well-formed process statement list }} by
+
+  De |-R sp1 ok .. De |-R spn ok
+  ------------------------------ :: spl_list
+  De |-R sp1 .. spn ok
+
+defn 
+  De |-R pr ok :: :: pr_ok :: ''
+     {{ com well-formed active process }} by
+
+  -------------- :: idle
+  De |-R idle ok
+
+  % FIXME: bound variables not the same
+  De' = De [ xl |-> Tl ]
+  De' |-R Txvl ok
+  De' |-R spl ok
+  ------------------------ :: process
+  De |-R { Txvl | spl } ok
+
+defn
+  De |-R q ok :: :: q_ok :: ''
+     {{ com well-formed suspended process pool }} by
+  
+  De |-R q ok
+  De |-R q' ok
+  -------------- :: process_queue
+  De |-R q q' ok
+
+defn
+  De |-R cn ok  :: :: cn_ok :: ''
+     {{ com well-formed configuration }} by
+  
+  De |-R cn ok
+  De |-R cn' ok
+  ----------------- :: configurations
+  De |-R cn cn' ok
+
+  ---------------- :: empty
+  De |-R noconf ok
+
+  % FIXME: paper uses one rule and implication
+  De ( fu ) = Fut < T >
+  De ( v ) = T
+  ------------------------ :: future_v
+  De |-R fut ( fu , v ) ok
+
+  % FIXME: paper uses one rule and implication
+  De ( fu ) = Fut < T >
+  ---------------------------- :: future_noval
+  De |-R fut ( fu , noval ) ok
+  
+  De ( co ) = cogtp
+  --------------------------- :: cog
+  De |-R cogt ( co , act ) ok
+
+  De ( fu ) = Fut < T >
+  De ( vl ) = Tl
+  match ( m , Tl -> T , De ( o ) )
+  ----------------------------------- :: invoc
+  De |-R invoc ( o , fu , m , vl ) ok
+
+  fields ( De ( o ) ) = [ xl |-> Tl ]
+  De' = De [ xl |-> Tl ]
+  De' |-R Txvl ok
+  De' |-R pr ok
+  De' |-R q ok
+  ---------------------------------- :: object
+  De |-R ob ( o , Txvl , pr , q ) ok

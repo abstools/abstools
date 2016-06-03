@@ -1,0 +1,46 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Runtime evaluation of Core ABS                               %
+%                                                              %
+% Based on the FMCO 2010 paper                                 %
+% "ABS: A Core Language for Abstract Behavioral Specification" %
+%                                                              %
+% DEPENDS: abs-runtime-syntax.ott,                             %
+%          abs-functional-evaluation.ott                       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+grammar
+%%% GUARD EVALUATION META SYNTAX %%%
+gct :: gct_ ::=
+    {{ com guard evaluation context }}
+    | subst , cn |- g :: M :: context
+
+%%% FORMULAS %%%
+formula :: formula_ ::=
+	| futrt in cn :: M :: fut_cn
+	  {{ com future in configuration }}
+
+%%% GUARD EVALUATION %%%
+defns
+  guard_evaluation :: red_ ::=
+
+defn
+  gct ~> gct' :: :: gct :: ''
+      {{ com guard evaluation }} by
+
+  subst |- b ~> subst |- b'
+  ----------------------------------- :: bool_guard
+  subst , cn |- b ~> subst , cn |- b'
+
+  subst |- e ~> subst |- fu
+  fut ( fu , v ) in cn
+  --------------------------------------- :: reply_guard_1
+  subst , cn |- e ? ~> subst , cn |- True
+
+  subst |- e ~> subst |- fu
+  fut ( fu , noval ) in cn
+  ---------------------------------------- :: reply_guard_2
+  subst , cn |- e ? ~> subst , cn |- False
+
+  subst , cn |- g ~> subst , cn |- g''
+  subst , cn |- g' ~> subst , cn |- g'''
+  -------------------------------------------------- :: guards
+  subst , cn |- g /\ g' ~> subst , cn |- g'' /\ g'''
