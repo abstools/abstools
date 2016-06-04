@@ -322,7 +322,8 @@ start_new_task(S=#state{running=R,tasks=T,dc=DC},Task,Args,Sender,Notify,Cookie)
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     case Cookie of
         undef -> ok;
-        _ -> Sender!{Cookie,Ref}
+        {future, _, _} -> future:task_started(Sender, Ref, Cookie); % async calls
+        {started, _} -> Sender ! {Cookie, Ref}  % run methods, init blocks
     end,
     %% Don't generate "cog idle" event when we create new task - this
     %% causes spurious clock advance

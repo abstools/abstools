@@ -1,7 +1,8 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
--export([init/4,start/5]).
+-export([start/5]).
 -export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,complete/6]).
+-export([task_started/3]).
 -include_lib("abs_types.hrl").
 %%Future starts AsyncCallTask
 %%and stores result
@@ -9,26 +10,28 @@
 -behaviour(gc).
 -export([get_references/1]).
 
-start(Callee,Method,Params,CurrentCog,Stack) ->
-    Ref = spawn(?MODULE,init,[Callee,Method,Params, self()]),
-    (fun Loop() ->
-             %% Wait for message to be received, but handle GC request
-             %% in the meantime
-             receive
-                 {stop_world, _Sender} ->
-                     task:block_without_time_advance(CurrentCog),
-                     task:acquire_token(CurrentCog, [Ref | Stack]),
-                     Loop();
-                {get_references, Sender} ->
-                    Sender ! {gc:extract_references([Ref | Stack]), self()},
-                    Loop();
-                { ok, Ref} -> ok
-            end
-    end)(),
+-behaviour(gen_fsm).
+%%gen_fsm callbacks
+-export([init/1,
+         starting/2, starting/3,   % Waiting for task pid from callee cog
+         running/2,running/3,      % task is running
+         completing/2,completing/3, % task is completed, waiting for caller cog(s) to acknowledge
+         completed/2,completed/3,   % task is gone, handling poll, .get and eventual gc
+         code_change/4,handle_event/3,handle_info/3,handle_sync_event/4,terminate/3]).
+
+-record(state, {calleetask,
+                calleecog,
+                references=[],
+                value=none,
+                waiting_tasks=[]
+               }).
+
+start(Callee,Method,Params,_CurrentCog,_Stack) ->
+    {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params], []),
     Ref.
 
-complete(Ref, Status, Value, Sender, Cog, Stack) ->
-    Ref!{completed, Status, Value, Sender, Cog},
+complete(Future, Status, Value, Sender, Cog, Stack) ->
+    gen_fsm:send_event(Future, {completed, Status, Value, Sender, Cog}),
     (fun Loop() ->
              %% Wait for message to be received, but handle GC request in the
              %% meantime.
@@ -40,48 +43,31 @@ complete(Ref, Status, Value, Sender, Cog, Stack) ->
                      task:acquire_token(Cog, [Value]),
                      Loop();
                 {get_references, Sender} ->
-                    Sender ! {gc:extract_references([Ref, Value | Stack]), self()},
+                    Sender ! {gc:extract_references([Future, Value | Stack]), self()},
                     Loop();
-                {ok, Ref} -> ok
+                {value_accepted, Future} -> ok
             end
     end)().
 
-get_after_await(Ref)->
-    Ref!{get,self()},
-    receive
-        {reply,Ref,{ok,Value}}->
+get_after_await(Future)->
+    case gen_fsm:sync_send_event(Future, get) of
+        {ok,Value}->
             Value;
-        {reply,Ref,{error,Reason}}->
+        {error,Reason}->
             exit(Reason)
     end.
 
-get_blocking(Ref, Cog, Stack) ->
-    case poll(Ref) of
+get_blocking(Future, Cog, Stack) ->
+    case poll(Future) of
         true ->
-            %% Result is already there: don't block, don't allow time advance
-            Ref ! {get, self()},
-            Result = (fun Loop() ->
-                              receive
-                                  {stop_world, _Sender} ->
-                                      task:block_without_time_advance(Cog),
-                                      task:acquire_token(Cog, [Stack]),
-                                      Loop();
-                                  {get_references, Sender} ->
-                                      Sender ! {gc:extract_references(Stack), self()},
-                                      Loop();
-                                  {reply,Ref,{ok,Value}}->
-                                      Value;
-                                  {reply,Ref,{error,Reason}}->
-                                      exit(Reason)
-                              end end)(),
-            Result;
+            get_after_await(Future);
         false ->
             %% Tell future not to advance time until we picked up ourselves
-            Ref ! {wait, self()},
+            register_waiting_task(Future, self()),
             task:block_with_time_advance(Cog),
             CalleeCog = (fun Loop() ->
                      receive
-                         {value_present, Ref, CalleeCog1} ->
+                         {value_present, Future, CalleeCog1} ->
                              CalleeCog1;
                          {stop_world, _Sender} ->
                              %% we already passed back the token above.  Eat
@@ -97,34 +83,33 @@ get_blocking(Ref, Cog, Stack) ->
                 %% but doesn't hurt to try in case we fix other locations
                 %% later.  (See function `await' below for the same pattern.)
                 true ->
-                    Ref ! {okthx, self()},
+                    confirm_wait_unblocked(Future, self()),
                     task:acquire_token(Cog, Stack);
                 false ->
                     task:acquire_token(Cog, Stack),
-                    Ref ! {okthx, self()}
+                    confirm_wait_unblocked(Future, self())
             end,
             %% Only one recursion here since poll will return true now.
-            get_blocking(Ref, Cog, Stack)
+            get_after_await(Future)
     end.
 
-get_references(Ref) ->
-    Ref ! {get_references, self()},
-    receive {References, Ref} -> References end.
+get_references(Future) ->
+    gen_fsm:sync_send_event(Future, get_references).
 
-await(Ref, Cog=#cog{ref=CogRef}, Stack) ->
-    case poll(Ref) of
+await(Future, Cog=#cog{ref=CogRef}, Stack) ->
+    case poll(Future) of
         true -> ok;
         false ->
-            Ref ! {wait, self()},
+            register_waiting_task(Future, self()),
             task:release_token(Cog, waiting),
             (fun Loop() ->
                      receive
-                         {value_present, Ref, Cog} ->
+                         {value_present, Future, Cog} ->
                              %% It's an async self-call; unblock the callee
                              %% before we try to acquire the token ourselves.
-                             Ref ! {okthx, self()},
+                             confirm_wait_unblocked(Future, self()),
                              task:acquire_token(Cog, Stack);
-                         {value_present, Ref, _CalleeCog} ->
+                         {value_present, Future, _CalleeCog} ->
                              %% It's a call to another cog: get our cog to
                              %% running status before allowing the other cog
                              %% to idle.  We can't call `acquire_token' before
@@ -134,7 +119,7 @@ await(Ref, Cog=#cog{ref=CogRef}, Stack) ->
                              %% proper callee unlocking and synchronous cog
                              %% state change.
                              cog:new_state_sync(Cog,self(),runnable,Stack),
-                             Ref ! {okthx, self()},
+                             confirm_wait_unblocked(Future, self()),
                              task:loop_for_token(Stack, token),
                              cog_monitor:cog_unblocked(CogRef);
                          {stop_world, _Sender} ->
@@ -148,138 +133,155 @@ await(Ref, Cog=#cog{ref=CogRef}, Stack) ->
                      end end)()
     end.
 
-poll(Ref) ->
-    Ref ! {poll, self()},
-    receive
+task_started(Future, TaskRef, _Cookie) ->
+    gen_fsm:send_event(Future, {task_ready, TaskRef}).
+
+
+register_waiting_task(Future, Task) ->
+    gen_fsm:send_event(Future, {waiting, Task}).
+
+confirm_wait_unblocked(Future, Task) ->
+    gen_fsm:send_event(Future, {okthx, Task}).
+
+poll(Future) ->
+    case gen_fsm:sync_send_event(Future, poll) of
         completed -> true;
         unresolved -> false
     end.
 
-die(Ref, Reason) ->
-    Ref ! {die, Reason, self()}.
+die(Future, Reason) ->
+    gen_fsm:stop(Future, {shutdown, Reason}, infinity).
 
 %%Internal
 
-  
-  
-init(Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params, Caller)->
+
+init([Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params]) ->
     %%Start task
     process_flag(trap_exit, true),
-    Cookie={started, Cog, Callee},
+    %% TODO: refactor callback protocol
+    Cookie={future, Cog, Callee}, % magic, together with cog:start_new_task :(
     MonRef=monitor(process,CogRef),
     cog:add_async(Cog,async_call_task,[self(),Callee,Method|Params], Cookie),
     demonitor(MonRef),
-    TaskRef=wait_for_task_registered(Cookie, [Callee | Params], false),
-    Caller ! {ok, self()},
     gc:register_future(self()),
-    wait_for_completion(gc:extract_references(Params)).
-
-wait_for_task_registered(Cookie, Refs, StopForGC) ->
-    receive
-        {Cookie, TaskRef} ->
-            TaskRef;
-        {get_references, Sender} ->
-            Sender ! {gc:extract_references(Refs), self()},
-            wait_for_task_registered(Cookie, Refs, StopForGC)
-    end.
-
-%% Future awaiting reply from task completion
-wait_for_completion(References) ->
-    %% Receive an error or the value and move into server mode,
-    %% or receive requests for references or polling
-    receive
-        {'DOWN', _ , process, _,Reason} when Reason /= normal ->
-            gc:unroot_future(self()),
-            %% use dummy value for callee cog
-            loop({error,error_transform:transform(Reason)}, self());
-        {'EXIT',_,Reason} ->
-            gc:unroot_future(self()),
-            %% use dummy value for callee cog
-            loop({error,error_transform:transform(Reason)}, self());
-        {completed, value, Result, Sender, SenderCog}->
-            gc:unroot_future(self()),
-            convert_to_freestanding_future({ok,Result}, Sender, SenderCog);
-        {completed, exception, Result, Sender, SenderCog}->
-            gc:unroot_future(self()),
-            convert_to_freestanding_future({error, Result}, Sender, SenderCog);
-        {get_references, Sender} ->
-            Sender ! {References, self()},
-            wait_for_completion(References);
-        {poll, Sender} ->
-            Sender ! unresolved,
-            wait_for_completion(References)
-    end.
-
-%% send out notifications to all awaiting processes before allowing process to
-%% terminate.  This avoids spurious "all idle" states which cause premature
-%% clock advances.  Also process other messages (poll, get) during that time.
-convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog) ->
-    receive
-        {get,Sender} ->
-            Sender!{reply,self(),Value},
-            convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog);
-        {get_references, Sender} ->
-            Sender ! {gc:extract_references(Value), self()},
-            convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog);
-        {poll, Sender} ->
-            Sender ! completed,
-            convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog);
-        {wait,Sender}->
-            %% KLUDGE: we serialize notifications, waiting for one
-            %% okthx before sending out the next ok.  If a large
-            %% number of processes wait on a single future, this will
-            %% make things slower than necessary.
-            Sender ! {value_present, self(), CalleeCog},
-            (fun Loop() ->
-                     receive
-                         {okthx,Sender} -> ok;
-                         {get,Sender1} ->
-                             Sender1!{reply,self(),Value},
-                             Loop();
-                         {get_references, GC} ->
-                             GC ! {gc:extract_references(Value), self()},
-                             Loop();
-                         {poll, Sender1} ->
-                             Sender1!completed,
-                             Loop()
-                     end
-             end)(),
-            convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog)
-    after 0 ->
-            TerminatingProcess ! {ok, self()},
-            loop(Value, CalleeCog)
-    end.
+    {ok, starting, #state{calleetask=none,
+                          calleecog=Cog,
+                          references=gc:extract_references(Params),
+                          value=none,
+                          waiting_tasks=[]}}.
 
 
-%%Servermode
-loop(Value, CalleeCog)->
-    receive
-        {get,Sender} ->
-            Sender!{reply,self(),Value},
-            loop(Value, CalleeCog);
-        {wait,Sender} ->
-            Sender!{value_present, self(), CalleeCog},
-            loop(Value, CalleeCog);
-        {okthx, _Sender} ->
-            %% No need to synchronize with "wait" here like in
-            %% convert_to_freestanding_future -- the callee process is already
-            %% gone so we just consume this message.
-            loop(Value, CalleeCog);
-        {get_references, Sender} ->
-            Sender ! {gc:extract_references(Value), self()},
-            loop(Value, CalleeCog);
-        {poll, Sender} ->
-            Sender ! completed,
-            loop(Value, CalleeCog);
-        {die, Reason, By} ->
-            ok;
+handle_info({'DOWN', _ , process, _,Reason}, running, State) when Reason /= normal ->
+    gc:unroot_future(self()),
+    {next_state, completed, State#state{value={error,error_transform:transform(Reason)}}};
+handle_info({'EXIT',_Pid,Reason}, running, State) ->
+    gc:unroot_future(self()),
+    {next_state, completed, State#state{value={error,error_transform:transform(Reason)}}};
+handle_info(_Info, StateName, State) ->
+    {next_state, StateName, State}.
+
+terminate(_Reason, completed, _State) ->
+    ok;
+terminate(Reason, StateName, State) ->
+    error_logger:format("Future ~w got unexpected terminate with reason ~w in state ~w/~w~n", [self(), Reason, StateName, State]).
+
+code_change(_OldVsn, StateName, State, _Extra) ->
+    {ok, StateName, State}.
+
+handle_event(_Event, _StateName, State) ->
+    {stop, not_supported, State}.
+
+handle_sync_event(_Event, _From, _StateName, State) ->
+    {stop, not_supported, State}.
+
+%% State functions
+
+starting(get_references, _From, State=#state{references=References}) ->
+    {reply, References, starting, State};
+starting(poll, _From, State) ->
+    {reply, unresolved, starting, State};
+starting(_Event, _From, State) ->
+    {stop, not_supported, State}.
+
+starting({waiting, Task}, State=#state{waiting_tasks=WaitingTasks}) ->
+    {next_state, starting, State#state{waiting_tasks=[Task | WaitingTasks]}};
+starting({task_ready, TaskRef}, State=#state{calleetask=none}) ->
+    {next_state, running, State#state{calleetask=TaskRef}};
+starting(_Event, State) ->
+    {stop, not_supported, State}.
+
+
+next_state_on_completion(State=#state{waiting_tasks=[], calleetask=TerminatingProcess}) ->
+    TerminatingProcess ! {value_accepted, self()},
+    {completed, State};
+next_state_on_completion(State=#state{waiting_tasks=WaitingTasks, calleecog=CalleeCog}) ->
+    lists:map(fun (Task) -> Task ! {value_present, self(), CalleeCog} end, WaitingTasks),
+    {completing, State}.
+
+
+running(get_references, _From, State=#state{references=References}) ->
+    {reply, References, running, State};
+running(poll, _From, State) ->
+    {reply, unresolved, running, State};
+running(_Event, _From, State) ->
+    {stop, not_supported, State}.
+
+running({waiting, Task}, State=#state{waiting_tasks=WaitingTasks}) ->
+    {next_state, running, State#state{waiting_tasks=[Task | WaitingTasks]}};
+running({completed, value, Result, Sender, SenderCog}, State=#state{calleetask=Sender,calleecog=SenderCog})->
+    gc:unroot_future(self()),
+    {NextState, State1} = next_state_on_completion(State),
+    {next_state, NextState, State1#state{value={ok,Result}, references=[]}};
+running({completed, exception, Result, Sender, SenderCog}, State=#state{calleetask=Sender,calleecog=SenderCog})->
+    gc:unroot_future(self()),
+    {NextState, State1} = next_state_on_completion(State),
+    {next_state, NextState, State1#state{value={error,Result}, references=[]}};
+running(_Event, State) ->
+    {stop, not_supported, State}.
+
+
+next_state_on_okthx(State=#state{calleetask=CalleeTask,waiting_tasks=WaitingTasks}, Task) ->
+    NewWaitingTasks=lists:delete(Task, WaitingTasks),
+    case NewWaitingTasks of
+        [] ->
+            CalleeTask ! {value_accepted, self()},
+            {completed, State#state{waiting_tasks=[]}};
         _ ->
-            loop(Value, CalleeCog)
+            {completing, State#state{waiting_tasks=NewWaitingTasks}}
     end.
-        
-   
+
+completing(get_references, _From, State=#state{value=Value}) ->
+    {reply, gc:extract_references(Value), completing, State};
+completing(get, _From, State=#state{value=Value}) ->
+    {reply, Value, completing, State};
+completing(poll, _From, State) ->
+    {reply, completed, completing, State};
+completing(_Event, _From, State) ->
+    {stop, not_supported, State}.
+
+completing({okthx, Task}, State) ->
+    {NextState, State1} = next_state_on_okthx(State, Task),
+    {next_state, NextState, State1};
+completing({waiting, Task}, State=#state{calleecog=CalleeCog,waiting_tasks=WaitingTasks}) ->
+    Task!{value_present, self(), CalleeCog},
+    {next_state, completing, State=#state{waiting_tasks=[Task | WaitingTasks]}};
+completing(_Event, State) ->
+    {stop, not_supported, State}.
 
 
+completed(get_references, _From, State=#state{value=Value}) ->
+    {reply, gc:extract_references(Value), completed, State};
+completed(get, _From, State=#state{value=Value}) ->
+    {reply, Value, completed, State};
+completed(poll, _From, State) ->
+    {reply, completed, completed, State};
+completed(_Event, _From, State) ->
+    {stop, not_supported, State}.
 
-
-
+completed({okthx, _Task}, State) ->
+    {next_state, completed, State};
+completed({waiting, Task}, State=#state{calleecog=CalleeCog}) ->
+    Task!{value_present, self(), CalleeCog},
+    {next_state, completed, State};
+completed(_Event, State) ->
+    {stop, not_supported, State}.
