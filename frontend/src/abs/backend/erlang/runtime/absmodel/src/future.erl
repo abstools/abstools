@@ -11,7 +11,6 @@
 
 start(Callee,Method,Params,CurrentCog,Stack) ->
     Ref = spawn(?MODULE,init,[Callee,Method,Params, self()]),
-    gc:register_future(Ref),
     (fun Loop() ->
              %% Wait for message to be received, but handle GC request
              %% in the meantime
@@ -170,6 +169,7 @@ init(Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params, Caller)->
     cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
     demonitor(MonRef),
     Caller ! {ok, self()},
+    gc:register_future(self()),
     wait_for_completion(gc:extract_references(Params)).
 
 %% Future awaiting reply from task completion
