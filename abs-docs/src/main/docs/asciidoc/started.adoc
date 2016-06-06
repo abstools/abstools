@@ -196,6 +196,13 @@ with an uppercase letter.  In case of a parametric data type, the type name
 continues with a left angle (`<`), a list of type names separated by commas
 and ends with a right angle (`>`).
 
+[caption=]
+.Syntax
+====
+_Type_ ::= _TypeIdentifier_ [ `<` _Type_ { `,` _Type_ } `>` ]
+====
+
+
 New types are defined as either _interfaces_ or _algebraic data types_.
 Algebraic data types can be _parametric_, which is useful for defining
 “container-like” data types.  Currently only algebraic data types can be
@@ -259,11 +266,9 @@ program correctness.
 [caption=]
 .Syntax
 ====
-_DataTypeDecl_ ::= `data` _TypeIdentifier_ [ _TypeParams_ ] [ `=` _DataConstrList_ ] `;` +
+_DataTypeDecl_ ::= `data` _TypeIdentifier_ [ _TypeParams_ ] [ `=` _DataConstr_ { `|` _DataConstr_ } ] `;` +
 _TypeParams_ ::= `<` _TypeIdentifier_ { `,` _TypeIdentifier_ } `>` +
-_DataConstrList_ ::= _DataConstr_ { `|` _DataConstr_ } +
-_DataConstr_ ::= _TypeIdentifier_ [ _DataConstrArglist_ ]
-_DataConstrArglist_ ::= `(` _Type_ [ _Identifier_ ] { `,` _Type_ [ _Identifier_ ] } `)`
+_DataConstr_ ::= _TypeIdentifier_ [ `(` _Type_ [ _Identifier_ ] { `,` _Type_ [ _Identifier_ ] } `)` ]
 ====
 
 Data Type _Constructors_ enumerate the possible values of a data type.
@@ -438,7 +443,7 @@ currently supported.
 [caption=]
 .Syntax
 ====
-_TypeSynDecl_ ::= `type` _TypeIdentifier_ `=` _TypeName_ `;`
+_TypeSynDecl_ ::= `type` _TypeIdentifier_ `=` _Type_ `;`
 ====
 
 .Example

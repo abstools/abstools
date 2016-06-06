@@ -57,7 +57,7 @@ initialized with `null` if the initialization expression is omitted.
 [caption=]
 .Syntax
 ====
-_VarDeclStmt_ ::= _TypeName_ _Identifier_ [ `=` _Exp_ ] `;`
+_VarDeclStmt_ ::= _Type_ _Identifier_ [ `=` _Exp_ ] `;`
 ====
 
 [source]

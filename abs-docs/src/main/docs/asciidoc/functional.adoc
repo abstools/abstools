@@ -405,7 +405,7 @@ Concurrency Model>> for more details about cogs).
 [caption=]
 .Syntax
 ====
-_NewExp_ ::= `new` [ `local` ] _TypeName_ `(` [ _PureExp_ {`,` _PureExp_ } ] `)`
+_NewExp_ ::= `new` [ `local` ] _TypeIdentifier_ `(` [ _PureExp_ {`,` _PureExp_ } ] `)`
 ====
 
 [source]
@@ -550,8 +550,8 @@ function name.
 [caption=]
 .Syntax
 ====
-_FunctionDecl_  ::= `def` _Type_ _Identifier_ [ `<` _TypeName_ { `,` _TypeName_ } `>` ] +
-                    `(` [ _TypeName_ _Identifier_ { `,` _TypeName_ _Identifier_  } ]  `)` `=` _PureExp_ `;`
+_FunctionDecl_  ::= `def` _Type_ _Identifier_ [ `<` _TypeIdentifier_ { `,` _TypeIdentifier_ } `>` ] +
+                    `(` [ _Type_ _Identifier_ { `,` _Type_ _Identifier_  } ]  `)` `=` _PureExp_ `;`
 ====
 
 
