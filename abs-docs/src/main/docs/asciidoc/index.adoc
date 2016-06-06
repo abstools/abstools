@@ -11,7 +11,9 @@ ABS Development Team
 
 include::introduction.adoc[]
 
-include::started.adoc[]
+include::lexical.adoc[]
+
+include::types.adoc[]
 
 include::functional.adoc[]
 
