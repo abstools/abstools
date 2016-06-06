@@ -76,12 +76,18 @@ character.  Identifiers name local variables, fields, methods and functions.
 Type identifiers name interfaces, classes, types, type
 constructors, deltas and products.
 
+Identifiers can be _qualified_ with a module name (see Chapter <<Modules>>) in
+certain circumstances.
+
 [caption=]
 .Syntax
 ====
 _Identifier_ ::= [: lower :] { [: alpha :] | [: digit :] | `_` } +
 
-_TypeIdentifier_ ::= [: upper :] { [: alpha :] | [: digit :] | `_` }
+_TypeIdentifier_ ::= [: upper :] { [: alpha :] | [: digit :] | `_` } +
+
+_QualifiedIdentifier_ ::= { _TypeIdentifier_ `.` } _Identifier_ +
+_QualifiedTypeIdentifier_ ::= { _TypeIdentifier_ `.` } _TypeIdentifier_ +
 ====
 
 === Keywords
