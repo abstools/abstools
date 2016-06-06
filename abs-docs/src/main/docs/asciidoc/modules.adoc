@@ -1,28 +1,32 @@
 == Modules
 
+All ABS definitions (classes, interfaces, functions data types, type aliases)
+are contained in modules.  All definitions are visible in their own module
+only, except when the module exports the name and it is imported in another
+module or referenced by its qualified name.
+
+NOTE: The `export` clause in a module definition exports _names_, not
+definitions as such.  This means that if a module defines a class and an
+interface with the same name, both definitions will be accessible if that name
+is contained in the `export` clause.
+
 
 === Defining a Module
 
-For name spacing, code structuring, and code hiding purposes, ABS offers a
-module system.  The module system of ABS is very similar to that of Haskell.
-It uses, however, a different syntax that is similar to that of Java and
-Python.
 
+[caption=]
+.Syntax
+====
+_ModuleDecl_  ::= `module` _QualifiedTypeIdentifier_ `;` { _Export_ } { _Import_ } { _Decl_ } [ _Block_ ] +
+_Export_      ::= `export` _IdentifierList_ [ `from` _QualifiedTypeIdentifier_ ] `;` +
+              | `export` `\*` [ `from` _QualifiedTypeIdentifier_ ] `;` +
+_Import_      ::= `import` _IdentifierList_ [ `from` _QualifiedTypeIdentifier_ ] `;` +
+              | `import` `*` `from` _QualifiedTypeIdentifier_ `;` +
+_IdentifierList_ ::= _AnyIdentifier_ { `,` _AnyIdentifier_ } +
+_AnyIdentifier_ ::= _Identifier_ | _TypeIdentifier_ +
 
-[source]
-----
-ModuleDecl  ::= 'module' TypeName ';' [ExportList] [ImportList] Decl* [Block]
-ExportList  ::= Export*
-ImportList  ::= Import*
-Export      ::= 'export' AnyNameList ['from' TypeName] ';'
-              | 'export' '*' ['from' TypeName] ';'
-Import      ::= 'import' AnyNameList ['from' TypeName] ';'
-              | 'import' '*' 'from' TypeName ;
-AnyNameList ::= AnyName [, AnyName]
-AnyName     ::= Name | TypeName
-
-Decl        ::= FunDecl | TypeSynDecl | DataTypeDecl | InterfaceDecl | ClassDecl
-----
+_Decl_        ::= _FunDecl_ | _TypeSynDecl_ | _DataTypeDecl_ | _InterfaceDecl_ | _ClassDecl_
+====
 
 A module with name MyModule is declared by writing
 
