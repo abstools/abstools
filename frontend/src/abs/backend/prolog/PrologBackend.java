@@ -81,6 +81,7 @@ public class PrologBackend extends Main {
     }
     
     private void initOutStreamEtc() throws Exception {
+        destDir.mkdirs();
         if (!destDir.exists()) {
             System.err.println("Destination directory " + destDir.getAbsolutePath() + " does not exist!");
             System.exit(1);
