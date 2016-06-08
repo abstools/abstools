@@ -31,6 +31,8 @@ public interface TypeSystemExtension {
 
     void finished();
 
+    void checkStmt(Stmt s);
+
     void checkAssignStmt(AssignStmt s);
 
     void checkReturnStmt(ReturnStmt s);

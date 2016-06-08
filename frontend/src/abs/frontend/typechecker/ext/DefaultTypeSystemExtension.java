@@ -63,6 +63,9 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
     public void checkAssignStmt(AssignStmt s) {    }
     
     @Override
+    public void checkStmt(Stmt stmt) {}
+
+    @Override
     public void checkAssertStmt(AssertStmt assertStmt) {}
 
     @Override

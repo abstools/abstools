@@ -304,6 +304,13 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
 
     @Override
+    public void checkStmt(Stmt s) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkStmt(s);
+        }
+    }
+
+    @Override
     public void checkAssertStmt(AssertStmt assertStmt) {
         for (TypeSystemExtension tse : obs) {
             tse.checkAssertStmt(assertStmt);

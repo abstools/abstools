@@ -520,21 +520,25 @@ aspect TypeChecker {
 
     // STMTS
 
-    public abstract void Stmt.typeCheck(SemanticConditionList e);
+    public void Stmt.typeCheck(SemanticConditionList e) {
+    }
 
     public void IncompleteStmt.typeCheck(SemanticConditionList e) {
         // ignore
     }
     public void ExpressionStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         getExp().typeCheck(e);
     }
 
     public void VarDeclStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         getVarDecl().typeCheck(e); 
         TypeCheckerHelper.checkForDuplicatesOfVarDecl(e, this);
     }
 
     public void AssignStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         Type rht = getValue().getType();
         Type lht = getVar().getType();
 
@@ -548,6 +552,7 @@ aspect TypeChecker {
     }
 
     public void MoveCogToStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         int nerrors = e.getErrorCount();
         getTarget().typeCheck(e);
         if (e.getErrorCount() > nerrors) return;
@@ -563,6 +568,7 @@ aspect TypeChecker {
     }
 
     public void ReturnStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         MethodImpl m = getContextMethod();
         Type lht = getModel().getUnitType();
         Block block = getContextBlock();
@@ -586,12 +592,16 @@ aspect TypeChecker {
     }
 
     public void AwaitStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         getGuard().typeCheck(e);
     }
 
-    public void SuspendStmt.typeCheck(SemanticConditionList e) { /* nothing to check */ }
+    public void SuspendStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
+    }
 
     public void DurationStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         getMin().typeCheck(e);
         getMax().typeCheck(e);
         getMin().assertHasType(e, getModel().getRatType());
@@ -599,6 +609,7 @@ aspect TypeChecker {
     }
 
     public void IfStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         getCondition().typeCheck(e);
         getCondition().assertHasType(e,getModel().getBoolType());
         getThen().typeCheck(e);
@@ -608,12 +619,14 @@ aspect TypeChecker {
     }
 
     public void WhileStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         getCondition().typeCheck(e);
         getCondition().assertHasType(e,getModel().getBoolType());
         getBody().typeCheck(e);
     }
     
     public void CaseStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         getExpr().typeCheck(e); 
         Type et = getExpr().getType();
         if (!et.isDataType()) {
@@ -632,6 +645,7 @@ aspect TypeChecker {
     }       
 
     public void TryCatchFinallyStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         Type exc = getModel().getExceptionType();
         getBody().typeCheck(e);
         for (CaseBranchStmt b : getCatchs()) {
@@ -644,10 +658,12 @@ aspect TypeChecker {
         }
     }
 
-    public void SkipStmt.typeCheck(SemanticConditionList e) { 
-    /* nothing to check */ }
+    public void SkipStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
+    }
 
     public void AssertStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         getCondition().typeCheck(e);
         getCondition().assertHasType(e,getModel().getBoolType());
     }
@@ -904,11 +920,13 @@ aspect TypeChecker {
     }
     //ASPECT
     public void ThrowStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         getReason().typeCheck(e);
         getReason().assertHasType(e,getModel().getExceptionType());
     }
 
     public void DieStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         getReason().typeCheck(e);
         getReason().assertHasType(e,getModel().getExceptionType());
     }
