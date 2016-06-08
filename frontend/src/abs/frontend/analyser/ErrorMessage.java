@@ -98,6 +98,7 @@ public enum ErrorMessage {
     DUPLICATE_VARIABLE("Variable %s is already defined."),
     WRONG_DEADLINE_TYPE("Wrong type %s in deadline annotation, should be ABS.StdLib.Duration."),
     WRONG_SIZE_ANNOTATION_TYPE("Wrong type %s in size annotation, should be a number."),
+    WRONG_COST_ANNOTATION_TYPE("Wrong type %s in cost annotation, should be a number."),
     AMBIGIOUS_USE("The use of %s is ambigious. It can refer to the following definitions: %s."),
     WRONG_SCHEDULER_TYPE("Invalid scheduler expression type %s, should be ABS.Scheduler.Process."),
     THIS_STATIC("No context for `this`."),

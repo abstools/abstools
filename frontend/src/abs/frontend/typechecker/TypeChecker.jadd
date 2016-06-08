@@ -418,6 +418,7 @@ aspect TypeChecker {
 
 
     public void Block.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
         for (Stmt s : getStmts()) {
             s.typeCheck(e);
         }
