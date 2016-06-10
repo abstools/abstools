@@ -75,7 +75,7 @@ exp :         // Try eff_exp first - some of them have a pure_exp prefix
     ;
 
 eff_exp : pure_exp '.' 'get'                               # GetExp
-    | 'new' l='local'? c=TYPE_IDENTIFIER
+    | 'new' l='local'? c=qualified_type_identifier
         '(' pure_exp_list ')'                             # NewExp
     | a='await'? o=pure_exp '!' m=IDENTIFIER
         '(' pure_exp_list ')'                             # AsyncCallExp
