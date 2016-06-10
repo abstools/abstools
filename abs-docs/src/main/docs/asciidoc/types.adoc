@@ -81,9 +81,9 @@ program correctness.
 [caption=]
 .Syntax
 ====
-_DataTypeDecl_ ::= `data` _TypeIdentifier_ [ _TypeParams_ ] [ `=` _DataConstr_ { `|` _DataConstr_ } ] `;` +
-_TypeParams_ ::= `<` _TypeIdentifier_ { `,` _TypeIdentifier_ } `>` +
-_DataConstr_ ::= _TypeIdentifier_ [ `(` _Type_ [ _Identifier_ ] { `,` _Type_ [ _Identifier_ ] } `)` ]
+_DataTypeDecl_ ::= `data` _SimpleTypeIdentifier_ [ _TypeParams_ ] [ `=` _DataConstr_ { `|` _DataConstr_ } ] `;` +
+_TypeParams_ ::= `<` _SimpleTypeIdentifier_ { `,` _SimpleTypeIdentifier_ } `>` +
+_DataConstr_ ::= _SimpleTypeIdentifier_ [ `(` _Type_ [ _SimpleIdentifier_ ] { `,` _Type_ [ _SimpleIdentifier_ ] } `)` ]
 ====
 
 Data Type _Constructors_ enumerate the possible values of a data type.
@@ -258,7 +258,7 @@ currently supported.
 [caption=]
 .Syntax
 ====
-_TypeSynDecl_ ::= `type` _TypeIdentifier_ `=` _Type_ `;`
+_TypeSynDecl_ ::= `type` _SimpleTypeIdentifier_ `=` _Type_ `;`
 ====
 
 .Example

@@ -32,8 +32,8 @@ multiple times without influencing the execution semantics.
 [caption=]
 .Syntax
 ====
-_PureExp_ ::= _Identifier_ +
-            | `this` `.` _Identifier_ +
+_PureExp_ ::= _SimpleIdentifier_ +
+            | `this` `.` _SimpleIdentifier_ +
             | `this` +
             | `null` +
             | _Literal_ +
@@ -141,7 +141,7 @@ shadow a binding of `v` outside of the `let` expression.
 [caption=]
 .Syntax
 ====
-_LetExp_ ::= `let` `(` _Type_ _Identifier_ `)` = _PureExp_ `in` _PureExp_
+_LetExp_ ::= `let` `(` _Type_ _SimpleIdentifier_ `)` = _PureExp_ `in` _PureExp_
 ====
 
 [source]
@@ -257,7 +257,7 @@ There are four different kinds of patterns available in ABS:
 ====
 _CaseExp_ ::= `case` _PureExp_ `{` { _CaseExpBranch_ } `}` +
 _CaseExpBranch_ ::=  _Pattern_ `\=>` _PureExp_ `;` +
-_Pattern_ ::= `\_` | _Identifier_ | _Literal_ | _ConstrPattern_ +
+_Pattern_ ::= `\_` | _SimpleIdentifier_ | _Literal_ | _ConstrPattern_ +
 _ConstrPattern_ ::= _TypeIdentifier_ [ `(` [ _Pattern_ { `,` _Pattern_ }  ] `)` ]
 ====
 
@@ -431,7 +431,7 @@ type, a method name declared in that interface, and a list of argument expressio
 [caption=]
 .Syntax
 ====
-_SyncCall_ ::= _PureExp_ `.` _Identifier_ `(` _PureExp_ { `,` _PureExp_ } `)`
+_SyncCall_ ::= _PureExp_ `.` _SimpleIdentifier_ `(` _PureExp_ { `,` _PureExp_ } `)`
 ====
 
 [source]
@@ -463,7 +463,7 @@ argument expressions.
 [caption=]
 .Syntax
 ====
-_AsyncCall_ ::= _PureExp_ `!` _Identifier_ `(` _PureExp_ { `,` _PureExp_ }  `)`
+_AsyncCall_ ::= _PureExp_ `!` _SimpleIdentifier_ `(` _PureExp_ { `,` _PureExp_ }  `)`
 ====
 
 An asynchronous method call creates a new task in the COG that contains the
@@ -550,8 +550,8 @@ function name.
 [caption=]
 .Syntax
 ====
-_FunctionDecl_  ::= `def` _Type_ _Identifier_ [ `<` _TypeIdentifier_ { `,` _TypeIdentifier_ } `>` ] +
-                    `(` [ _Type_ _Identifier_ { `,` _Type_ _Identifier_  } ]  `)` `=` _PureExp_ `;`
+_FunctionDecl_  ::= `def` _Type_ _SimpleIdentifier_ [ `<` _SimpleTypeIdentifier_ { `,` _SimpleTypeIdentifier_ } `>` ] +
+                    `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_  } ]  `)` `=` _PureExp_ `;`
 ====
 
 

@@ -9,9 +9,9 @@ declarations.  Method names start with a lowercase letter.
 [caption=]
 .Syntax
 ====
-_InterfaceDecl_ ::= `interface` _TypeIdentifier_ [ `extends` _InterfaceList_ ] `{` { MethSig } `}` +
+_InterfaceDecl_ ::= `interface` _SimpleTypeIdentifier_ [ `extends` _InterfaceList_ ] `{` { MethSig } `}` +
 _InterfaceList_ ::= _TypeIdentifier_ { `,` _TypeIdentifier_ } +
-_MethSig_ ::= _Type_ _Identifier_ `(` [ _Type_ _Identifier_ { `,` _Type_ _Identifier_ } ] `)` `;`
+_MethSig_ ::= _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` `;`
 ====
 
 The interfaces in the example below represent a database system, providing
@@ -65,12 +65,12 @@ The init block cannot contain processor release points (i.e., `await` or
 [caption=]
 .Syntax
 ====
-_ClassDecl_ ::= `class` _TypeIdentifier_ [ `(` [ _ClassParameterList_ ] `)` ] [ `implements` _InterfaceList_ ] +
+_ClassDecl_ ::= `class` _SimpleTypeIdentifier_ [ `(` [ _ClassParameterList_ ] `)` ] [ `implements` _InterfaceList_ ] +
 `{` [ _FieldDeclList_ ] [ _Block_ ] [ _MethDeclList_ ] `}` +
-_ClassParameterList_ ::= _Type_ _Identifier_ { `,` _Type_ _Identifier_ } +
+_ClassParameterList_ ::= _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } +
 _InterfaceList_ ::= _TypeIdentifier_ { `,` _TypeIdentifier_ } +
-_FieldDeclList_ ::= { _Type_ _Identifier_ [ `=` _PureExp_ ] `;` } +
-_MethDeclList_ ::= _Type_ _Identifier_ `(` [ _Type_ _Identifier_ { `,` _Type_ _Identifier_ } ] `)` _Block_
+_FieldDeclList_ ::= { _Type_ _SimpleIdentifier_ [ `=` _PureExp_ ] `;` } +
+_MethDeclList_ ::= _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` _Block_
 ====
 
 

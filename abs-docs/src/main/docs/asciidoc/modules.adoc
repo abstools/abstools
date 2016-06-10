@@ -17,11 +17,11 @@ is contained in the `export` clause.
 [caption=]
 .Syntax
 ====
-_ModuleDecl_  ::= `module` _QualifiedTypeIdentifier_ `;` { _Export_ } { _Import_ } { _Decl_ } [ _Block_ ] +
-_Export_      ::= `export` _IdentifierList_ [ `from` _QualifiedTypeIdentifier_ ] `;` +
-              | `export` `\*` [ `from` _QualifiedTypeIdentifier_ ] `;` +
-_Import_      ::= `import` _IdentifierList_ [ `from` _QualifiedTypeIdentifier_ ] `;` +
-              | `import` `*` `from` _QualifiedTypeIdentifier_ `;` +
+_ModuleDecl_  ::= `module` _TypeIdentifier_ `;` { _Export_ } { _Import_ } { _Decl_ } [ _Block_ ] +
+_Export_      ::= `export` _IdentifierList_ [ `from` _TypeIdentifier_ ] `;` +
+              | `export` `\*` [ `from` _TypeIdentifier_ ] `;` +
+_Import_      ::= `import` _IdentifierList_ [ `from` _TypeIdentifier_ ] `;` +
+              | `import` `*` `from` _TypeIdentifier_ `;` +
 _IdentifierList_ ::= _AnyIdentifier_ { `,` _AnyIdentifier_ } +
 _AnyIdentifier_ ::= _Identifier_ | _TypeIdentifier_ +
 

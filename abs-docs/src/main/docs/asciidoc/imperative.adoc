@@ -57,7 +57,7 @@ initialized with `null` if the initialization expression is omitted.
 [caption=]
 .Syntax
 ====
-_VarDeclStmt_ ::= _Type_ _Identifier_ [ `=` _Exp_ ] `;`
+_VarDeclStmt_ ::= _Type_ _SimpleIdentifier_ [ `=` _Exp_ ] `;`
 ====
 
 [source]
@@ -79,7 +79,7 @@ to `f` will change the value of the local variable.
 [caption=]
 .Syntax
 ====
-_AssignStmt_ ::= [ `this` `.` ] _Identifier_ `=` Exp `;`
+_AssignStmt_ ::= [ `this` `.` ] _SimpleIdentifier_ `=` Exp `;`
 ====
 
 [source]
@@ -154,7 +154,7 @@ statements containing an await expression (see <<Await Expression>>).
 .Syntax
 ====
 _AwaitStmt_ ::= `await` _Guard_ `;` +
-_Guard_ ::=  [ `this` `.` ] _Identifier_ `?` +
+_Guard_ ::=  [ `this` `.` ] _SimpleIdentifier_ `?` +
 | _PureExp_ +
 | _Guard_ `&` _Guard_ +
 | `duration` `(` _PureExp_ `,` _PureExp_ `)`
