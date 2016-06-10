@@ -196,7 +196,7 @@ function_decl : annotation*
 // Interfaces
 
 interface_decl : annotation*
-        'interface' qualified_type_identifier
+        'interface' TYPE_IDENTIFIER
         ('extends' e+=interface_name (',' e+=interface_name)*)?
         '{' methodsig* '}'
     ;
@@ -206,7 +206,7 @@ methodsig : annotation* type_use IDENTIFIER paramlist ';' ;
 // Classes
 
 class_decl : annotation*
-        'class' qualified_type_identifier paramlist?
+        'class' TYPE_IDENTIFIER paramlist?
         ('implements' interface_name (',' interface_name)*)?
         '{'
         field_decl*
