@@ -615,7 +615,7 @@ module ABS.DC;
 // Interfaces
 export DeploymentComponent, CloudProvider;
 // Annotations
-export DC, Cost, Size, MaxSize, CogLocation;
+export DC, Cost, DataSize, MaxSize, CogLocation; //TODO: rename MaxSize to MaxMemory
 // Datatypes, Constructors
 export Resourcetype;
 export Speed, Cores, Bandwidth, Memory, InfRat, Fin;
@@ -627,7 +627,7 @@ import * from ABS.StdLib;
 data Resourcetype
 = Speed     // Execution speed in "cpu units" - used by [Cost: x] annotation
 | Cores     // Number of cores (static declaration for deployment planning)
-| Bandwidth // Transmit speed in "data units" - used by [Size: x] annotation
+| Bandwidth // Transmit speed in "data units" - used by [DataSize: x] annotation
 | Memory    // Memory size (static declaration for deployment planning)
 | Startupduration            // Time to start, used by CloudProvider
 | Shutdownduration           // Time to shut down, used by CloudProvider
@@ -1059,10 +1059,10 @@ def DeploymentComponent thisDC() = builtin;
 type Cost = Duration;
 
 // Annotation for async method calls: size of sent data
-type Size = Rat;
+type DataSize = Rat;
 
 // Annotation for classes: memory size of resulting cog
-type MaxSize = Rat;
+type MaxSize = Rat;             //TODO: rename to MaxMemory
 
 // Distributed execution (eg the Scala backend): where the cog will be created
 type CogLocation = String;

@@ -179,7 +179,7 @@ Bandwidth consumption is expressed via a `Size` annotation:
 
 .Example
 ----
-[Size: 2 * length(x)] o!m(x);
+[DataSize: 2 * length(x)] o!m(x);
 ----
 
 Executing the above method invocation statement will consume bandwidth
@@ -215,7 +215,7 @@ import * from ABS.DC; <1>
 interface I {
   Unit process();
 }
-[Size: 3] <2>
+[DataSize: 3] <2>
 class C implements I {
   Unit process() {
     [Cost: 10] skip; <3>
@@ -225,7 +225,7 @@ class C implements I {
   DeploymentComponent dc = new DeploymentComponent("Server",
     map[Pair(CPU, 5), Pair(Bandwidth, 10), Pair(Memory, 5)]);
   [DC: dc] I i = new C(); <4>
-  [Size: 5] i!process(); <5>
+  [DataSize: 5] i!process(); <5>
 }
 ----
 <1> Make all necessary identifiers accessible in the current module
