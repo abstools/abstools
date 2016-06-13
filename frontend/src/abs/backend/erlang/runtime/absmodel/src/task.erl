@@ -7,7 +7,8 @@
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
 -export([acquire_token/2,release_token/2,block_with_time_advance/1,block_without_time_advance/1,wait/1,wait_poll/1,commit/1,rollback/1]).
--export([await_duration/4,block_for_duration/4,block_for_resource/5]).
+-export([await_duration/4,block_for_duration/4]).
+-export([block_for_cpu/4,block_for_bandwidth/5]).
 -export([loop_for_token/2]).            % low-level; use acquire_token instead
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
@@ -155,6 +156,16 @@ block_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
                 false -> ok
             end
     end.
+
+block_for_cpu(Cog, DC, Amount, Stack) ->
+    block_for_resource(Cog, DC, cpu, Amount, Stack).
+
+block_for_bandwidth(Cog, DC, _Callee=#object{cog=#cog{dc=TargetDC}}, Amount, Stack) ->
+    case DC == TargetDC of
+        true -> ok;
+        false -> block_for_resource(Cog, DC, bw, Amount, Stack)
+    end.
+
 
 release_token(C=#cog{ref=Cog},State)->
     commit(C),

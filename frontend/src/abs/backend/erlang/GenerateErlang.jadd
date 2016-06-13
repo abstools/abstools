@@ -168,11 +168,27 @@ aspect GenerateErlang {
       first=false;
       PureExp cost = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.DC.Cost");
       if (cost != null) {
-          ecs.print("task:block_for_resource(Cog,DC,cpu,");
+          ecs.print("task:block_for_cpu(Cog,DC,");
           cost.generateErlangCode(ecs, vars);
           ecs.print(",");
           ecs.print(vars.toStack());
           ecs.println("),");
+      }
+      PureExp size = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.DC.DataSize");
+      if (size != null) {
+          Call call_exp = stmt.getCallExpression();
+          if (call_exp != null) {
+              // FIXME: only consumes bandwidth from source cog
+              // FIXME: should not consume bandwidth if call goes to same DC
+
+              ecs.print("task:block_for_bandwidth(Cog,DC,");
+              call_exp.getCallee().generateErlangCode(ecs, vars);
+              ecs.print(",");
+              size.generateErlangCode(ecs, vars);
+              ecs.print(",");
+              ecs.print(vars.toStack());
+              ecs.println("),");
+          }
       }
       ecs.pf(" %%%% %s:%s", stmt.getFileName(), stmt.getLine(stmt.getStart()));
       stmt.generateErlangCode(ecs,vars);
@@ -394,7 +410,7 @@ aspect GenerateErlang {
   public void IntLiteral.generateErlangCode(CodeStream ecs,Vars vars) {
     ecs.print( getContent());
   }
-  
+
   @Override
   public void NullExp.generateErlangCode(CodeStream ecs,Vars vars) {
     ecs.print( "null");
@@ -483,7 +499,7 @@ aspect GenerateErlang {
   public void SkipStmt.generateErlangCode(CodeStream ecs,Vars vars){
     ecs.print("skip");
   }
-  
+
   @Override
   public void GTExp.generateErlangCode(CodeStream ecs,Vars vars){
     ecs.print("cmp:gt(");
@@ -492,7 +508,7 @@ aspect GenerateErlang {
     getRight().generateErlangCode(ecs,vars);
     ecs.print(")");
   }
-  
+
   @Override
   public void LTExp.generateErlangCode(CodeStream ecs,Vars vars){
     ecs.print("cmp:lt(");
@@ -528,7 +544,7 @@ aspect GenerateErlang {
     getRight().generateErlangCode(ecs,vars);
     ecs.print(")");
   }
-  
+
   @Override
   public void NotEqExp.generateErlangCode(CodeStream ecs,Vars vars){
     ecs.print("(not cmp:eq(");
@@ -585,7 +601,7 @@ aspect GenerateErlang {
       ecs.print(")) ");
     }
   }
-  
+
   @Override
   public void MultMultExp.generateErlangCode(CodeStream ecs,Vars vars){
     if (getLeft().getType().isIntType() && getRight().getType().isIntType() ) {
@@ -601,7 +617,7 @@ aspect GenerateErlang {
       ecs.print(")) ");
     }
   }
-  
+
   @Override
   public void DivMultExp.generateErlangCode(CodeStream ecs,Vars vars){
     ecs.print(" rationals:fast_div(rationals:to_r(");
@@ -1030,4 +1046,3 @@ aspect GenerateErlang {
   }
 
 }
-

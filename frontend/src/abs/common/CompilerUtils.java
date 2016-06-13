@@ -7,8 +7,10 @@ package abs.common;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.DataConstructorExp;
+import abs.frontend.ast.Exp;
 import abs.frontend.ast.List;
 import abs.frontend.ast.PureExp;
+import abs.frontend.ast.Stmt;
 import abs.frontend.ast.TypeUse;
 import abs.frontend.ast.TypedAnnotation;
 
@@ -50,6 +52,18 @@ public class CompilerUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * Find the enclosing Stmt of an expression.
+     * TODO: throw error when not found
+     */
+    public static Stmt findStmtForExpression(Exp e) {
+        ASTNode node = e;
+        while (node != null && !(node instanceof Stmt)) {
+            node = node.getParent();
+        }
+        return (Stmt)node;
     }
 
     /**
