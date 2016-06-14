@@ -21,12 +21,18 @@ following EBNF conventions for specifying the syntax of ABS elements.
 
 Line terminators and white spaces are defined as in Java.
 
+[frame=topbot]
+[grid=none]
+[cols=">20,<80"]
 [caption=]
 .Syntax
-====
-_LineTerminator_ ::= `\n` | `\r` | `\r\n` +
-_WhiteSpace_ ::= _LineTerminator_ | `␣` | `\t` | _Comment_
-====
+|====
+| _LineTerminator_ ::=
+| `\n` {vbar} `\r` {vbar} `\r\n`
+
+| _WhiteSpace_ ::=
+| _LineTerminator_ {vbar} `␣` {vbar} `\t` {vbar} _Comment_
+|====
 // use U+2423 or U+2420 for the space symbol
 
 === Comments
@@ -34,13 +40,16 @@ ABS supports the two common Java-style styles of comments: end-of-line comments 
 
 An end-of-line comment starts with two slashes, e.g., `// text`. All text that follows `//` until the end of the line is treated as a comment.
 
+[frame=topbot]
+[grid=none]
+[cols=">20,<80"]
 [caption=]
 .Syntax
-====
-_Comment_ ::= _LineComment_ | _BlockComment_ +
-_LineComment_ ::= `//` { ? characters except _LineTerminator_ ? } _LineTerminator_ +
-_BlockComment_ ::= `/\*` { ? characters except `*/` ? } `*/`
-====
+|====
+| _Comment_ ::= | _LineComment_ {vbar} _BlockComment_ +
+| _LineComment_ ::= | `//` { ? characters except _LineTerminator_ ? } _LineTerminator_ +
+| _BlockComment_ ::= | `/\*` { ? characters except `*/` ? } `*/`
+|====
 
 
 .Example
@@ -77,20 +86,19 @@ constructors, deltas and products.
 Identifiers can be _qualified_ with a module name (see Chapter <<Modules>>) or
 _simple_ (without module name prefix).
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_SimpleIdentifier_ ::= [: lower :] { [: alpha :] | [: digit :] | `_` } +
+|====
+| _SimpleIdentifier_ ::= | [: lower :] { [: alpha :] {vbar} [: digit :] {vbar} `_` }
 
-_SimpleTypeIdentifier_ ::= [: upper :] { [: alpha :] | [: digit :] | `_` } +
+|_SimpleTypeIdentifier_ ::= | [: upper :] { [: alpha :] {vbar} [: digit :] {vbar} `_` }
 
-_QualifiedIdentifier_ ::= { _SimpleTypeIdentifier_ `.` } _SimpleIdentifier_ +
-_QualifiedTypeIdentifier_ ::= { _SimpleTypeIdentifier_ `.` } _SimpleTypeIdentifier_ +
+|_QualifiedIdentifier_ ::= | { _SimpleTypeIdentifier_ `.` } _SimpleIdentifier_
+|_QualifiedTypeIdentifier_ ::= | { _SimpleTypeIdentifier_ `.` } _SimpleTypeIdentifier_
 
-_Identifier_ ::= _SimpleIdentifier_ | _QualifiedIdentifier_ +
-_TypeIdentifier_ ::= _SimpleTypeIdentifier_ | _QualifiedTypeIdentifier_ +
-
-====
+|_Identifier_ ::= | _SimpleIdentifier_ {vbar} _QualifiedIdentifier_
+|_TypeIdentifier_ ::= | _SimpleTypeIdentifier_ {vbar} _QualifiedTypeIdentifier_
+|====
 
 === Keywords
 The following words are keywords in the ABS language and are invalid as identifiers.
@@ -120,36 +128,18 @@ written using the division operator `/`, e.g., `1/4` for one quarter.
 
 The null literal is written as `null`.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_Literal_ ::= _IntLiteral_ | _StringLiteral_ | _ThisLiteral_ | _NullLiteral_ +
-_IntLiteral_ ::= `0` | ( ( `1` | ... | `9`] ) { [: digit :] } ) +
-_StringLiteral_ ::= `"` { ? _Valid String Character_ ? } `"` +
-_ThisLiteral_ ::= `this` +
-_NullLiteral_ ::= `null`
-====
+|====
+| _Literal_ ::= | _IntLiteral_ {vbar} _StringLiteral_ {vbar} _ThisLiteral_ {vbar} _NullLiteral_
+| _IntLiteral_ ::= | `0` {vbar} ( ( `1` {vbar} ... {vbar} `9`] ) { [: digit :] } )
+| _StringLiteral_ ::= | `"` { ? _Valid String Character_ ? } `"`
+| _ThisLiteral_ ::= | `this`
+| _NullLiteral_ ::= | `null`
+|====
+
 Valid string characters are defined as in the Java language.
 
-// .Separators
-// The following characters are separators:
-
-// [width="60%",cols="9"]
-// [frame="topbot",grid="none"]
-// |=====
-// | ( | ) | { | } | [ | ] | ; | : | , |
-// |=====
-
-// .Operators
-
-
-// The following tokens are operators:
-
-// [format="csv",width="60%",cols="15"]
-// [frame="topbot",grid="none"]
-// |=====
-// ||,&&,==,!=,<,>,<=,>=,+,-,*,/,%,!,&
-// |=====
 
 === Annotations
 
@@ -157,11 +147,11 @@ Annotations consist of a syntactically valid pure expression, optionally
 preceded by a type identifier (the “tag”) and a colon (`:`).  They can be put
 in front of statements and definitions.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_Annotation_ ::= `[` [ _TypeIdentifier_ `:` ] _PureExp_ `]`
-====
+|====
+| _Annotation_ ::= | `[` [ _TypeIdentifier_ `:` ] _PureExp_ `]`
+|====
 
 Annotations are used to write auxiliary information that can be used by
 various tools.  Unknown (user-defined) annotations are ignored by the
