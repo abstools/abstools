@@ -21,10 +21,7 @@ following EBNF conventions for specifying the syntax of ABS elements.
 
 Line terminators and white spaces are defined as in Java.
 
-[frame=topbot]
-[grid=none]
-[cols=">20,<80"]
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
 | _LineTerminator_ ::=
@@ -40,10 +37,7 @@ ABS supports the two common Java-style styles of comments: end-of-line comments 
 
 An end-of-line comment starts with two slashes, e.g., `// text`. All text that follows `//` until the end of the line is treated as a comment.
 
-[frame=topbot]
-[grid=none]
-[cols=">20,<80"]
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
 | _Comment_ ::= | _LineComment_ {vbar} _BlockComment_ +

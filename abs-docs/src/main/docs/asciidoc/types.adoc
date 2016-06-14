@@ -11,11 +11,11 @@ with an uppercase letter.  In case of a parametric data type, the type name
 continues with a left angle (`<`), a list of type names separated by commas
 and ends with a right angle (`>`).
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_Type_ ::= _TypeIdentifier_ [ `<` _Type_ { `,` _Type_ } `>` ]
-====
+|====
+| _Type_ ::= | _TypeIdentifier_ [ `<` _Type_ { `,` _Type_ } `>` ]
+|====
 
 
 New types are defined as either _interfaces_ or _algebraic data types_.
@@ -78,13 +78,13 @@ values.  Because values of algebraic data types are immutable, they can be
 safely passed on to other objects and cogs and make it easy to reason about
 program correctness.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_DataTypeDecl_ ::= `data` _SimpleTypeIdentifier_ [ _TypeParams_ ] [ `=` _DataConstr_ { `|` _DataConstr_ } ] `;` +
-_TypeParams_ ::= `<` _SimpleTypeIdentifier_ { `,` _SimpleTypeIdentifier_ } `>` +
-_DataConstr_ ::= _SimpleTypeIdentifier_ [ `(` _Type_ [ _SimpleIdentifier_ ] { `,` _Type_ [ _SimpleIdentifier_ ] } `)` ]
-====
+|====
+| _DataTypeDecl_ ::= | `data` _SimpleTypeIdentifier_ [ _TypeParams_ ] [ `=` _DataConstr_ { `{vbar}` _DataConstr_ } ] `;` +
+| _TypeParams_ ::= | `<` _SimpleTypeIdentifier_ { `,` _SimpleTypeIdentifier_ } `>` +
+| _DataConstr_ ::= | _SimpleTypeIdentifier_ [ `(` _Type_ [ _SimpleIdentifier_ ] { `,` _Type_ [ _SimpleIdentifier_ ] } `)` ]
+|====
 
 Data Type _Constructors_ enumerate the possible values of a data type.
 Constructors can have zero or more arguments.  Each argument can have an
@@ -255,11 +255,11 @@ A _Type Synonym_ is an alternative type name for a type.  Type synonyms are
 introduced with the keyword `type`.  Parametric type synonyms are not
 currently supported.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_TypeSynDecl_ ::= `type` _SimpleTypeIdentifier_ `=` _Type_ `;`
-====
+|====
+| _TypeSynDecl_ ::= | `type` _SimpleTypeIdentifier_ `=` _Type_ `;`
+|====
 
 .Example
 [source]

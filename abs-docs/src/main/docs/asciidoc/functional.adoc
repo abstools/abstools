@@ -3,11 +3,11 @@
 This chapter specifies all ABS expressions.  ABS expressions can either be
 side effect-free (i.e., part of the _functional sublanguage_) or have side effects.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_Exp_ ::= _PureExp_ | _EffExp_
-====
+|====
+| _Exp_ ::= | _PureExp_ {vbar} _EffExp_
+|====
 
 The functional sublanguage of ABS is a purely-functional, side effect-free
 language.  It comprises functions and operators on built-in datatypes,
@@ -29,24 +29,23 @@ expressions only depends on their arguments, and they can be evaluated
 multiple times without influencing the execution semantics.
 
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_PureExp_ ::= _SimpleIdentifier_ +
-            | `this` `.` _SimpleIdentifier_ +
-            | `this` +
-            | `null` +
-            | _Literal_ +
-            | _LetExp_ +
-            | _DataConstrExp_ +
-            | _FnAppExp_ +
-            | _FnAppListExp_ +
-            | _IfExp_ +
-            | _CaseExp_ +
-            | _OperatorExp_ +
-            | `(` _PureExp_ `)`
-====
-
+|====
+|_PureExp_ ::= | _SimpleIdentifier_
+ {vbar} `this` `.` _SimpleIdentifier_
+ {vbar} `this`
+ {vbar} `null`
+ {vbar} _Literal_
+ {vbar} _LetExp_
+ {vbar} _DataConstrExp_
+ {vbar} _FnAppExp_
+ {vbar} _FnAppListExp_
+ {vbar} _IfExp_
+ {vbar} _CaseExp_
+ {vbar} _OperatorExp_
+ {vbar} `(` _PureExp_ `)`
+|==== 
 
 ==== Literal Expressions
 
@@ -57,15 +56,15 @@ Literals, as defined in <<Literals>>, are expressions.
 ABS has a range of unary and binary operators working on pre-defined
 datatypes.  All operators are pure (side effect-free).
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_OperatorExp_ ::= _UnaryExp_ | _BinaryExp_ +
-_UnaryExp_ ::= _UnaryOp_ _PureExp_ +
-_UnaryOp_ ::= `!` | `-` +
-_BinaryExp_ ::= _PureExp_ _BinaryOp_ _PureExp_ +
-_BinaryOp_ ::= `||` | `&&` | `==` | `!=` | `<` | `\<=` | `>` | `>=` | `+` | `-` | `*` | `/` | `%`
-====
+|====
+| _OperatorExp_ ::= | _UnaryExp_ {vbar} _BinaryExp_
+| _UnaryExp_ ::= | _UnaryOp_ _PureExp_
+| _UnaryOp_ ::= | `!` {vbar} `-`
+| _BinaryExp_ ::= | _PureExp_ _BinaryOp_ _PureExp_
+| _BinaryOp_ ::= | `{vbar}{vbar}` {vbar} `&&` {vbar} `==` {vbar} `!=` {vbar} `<` {vbar} `\<=` {vbar} `>` {vbar} `>=` {vbar} `+` {vbar} `-` {vbar} `*` {vbar} `/` {vbar} `%`
+|====
 
 
 The following table describes the meaning as well as the associativity and the
@@ -138,11 +137,11 @@ The expression `let (T v) = p in b` evalutes `b`, with `v` bound to the value
 of evaluating the expression `p`.  The newly-introduced binding of `v` can
 shadow a binding of `v` outside of the `let` expression.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_LetExp_ ::= `let` `(` _Type_ _SimpleIdentifier_ `)` = _PureExp_ `in` _PureExp_
-====
+|====
+|_LetExp_ ::= | `let` `(` _Type_ _SimpleIdentifier_ `)` = _PureExp_ `in` _PureExp_
+|====
 
 [source]
 .Example
@@ -161,11 +160,11 @@ upper-case letter.
 
 For data type constructors without parameters, the parentheses are optional.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_DataConstrExp_ ::= _TypeIdentifier_ [ `(` [ _PureExp_ { `,` _PureExp_ } ] `)` ]
-====
+|====
+| _DataConstrExp_ ::= | _TypeIdentifier_ [ `(` [ _PureExp_ { `,` _PureExp_ } ] `)` ]
+|====
 
 [source]
 .Example
@@ -185,11 +184,11 @@ expressions look similar to data constructor expressions, but function names
 always start with a lower-case letter.  The parentheses are mandatory in
 function calls.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_FnAppExp_ ::= _Identifier_ `(` [ _PureExp_ { `,` _PureExp_ } ] `)`
-====
+|====
+| _FnAppExp_ ::= | _Identifier_ `(` [ _PureExp_ { `,` _PureExp_ } ] `)`
+|====
 
 [source]
 .Example
@@ -204,11 +203,11 @@ head(list)
 Calls to n-ary Constructors (see <<N-ary Constructors>>) are written with
 brackets (`[]`) instead of parentheses (`()`).
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_FnAppListExp_ ::= _Identifier_ `[` [ _PureExp_ { `,` _PureExp_ } ] `]`
-====
+|====
+| _FnAppListExp_ ::= | _Identifier_ `[` [ _PureExp_ { `,` _PureExp_ } ] `]`
+|====
 
 
 
@@ -219,11 +218,11 @@ value of `e1` or the value of `e2`, depending on the value of `c`, which must
 be of type `Bool`.  Depending on the value of `c`, either `e1` or `e2` is
 evaluated, but not both.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_IfExp_ ::= `if` _PureExp_ `then` _PureExp_ `else` _PureExp_
-====
+|====
+| _IfExp_ ::= | `if` _PureExp_ `then` _PureExp_ `else` _PureExp_
+|====
 
 [source]
 .Example
@@ -252,14 +251,14 @@ There are four different kinds of patterns available in ABS:
 * Data Constructor Patterns (e.g., `Cons(Nil,x)`)
 * Underscore Pattern (`_`)
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_CaseExp_ ::= `case` _PureExp_ `{` { _CaseExpBranch_ } `}` +
-_CaseExpBranch_ ::=  _Pattern_ `\=>` _PureExp_ `;` +
-_Pattern_ ::= `\_` | _SimpleIdentifier_ | _Literal_ | _ConstrPattern_ +
-_ConstrPattern_ ::= _TypeIdentifier_ [ `(` [ _Pattern_ { `,` _Pattern_ }  ] `)` ]
-====
+|====
+| _CaseExp_ ::= | `case` _PureExp_ `{` { _CaseExpBranch_ } `}`
+| _CaseExpBranch_ ::=  | _Pattern_ `\=>` _PureExp_ `;`
+| _Pattern_ ::= | `_` {vbar} __SimpleIdentifier__ {vbar} __Literal__ {vbar} __ConstrPattern__
+| _ConstrPattern_ ::= | _TypeIdentifier_ [ `(` [ _Pattern_ { `,` _Pattern_ }  ] `)` ]
+|====
 
 ===== The Variable Pattern
 
@@ -388,11 +387,11 @@ restriction simplifies the reasoning about expressions in the ABS modeling
 language.
 
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_EffExp_ ::= _NewExp_ | _SyncCall_ | _AsyncCall_ | _GetExp_
-====
+|====
+| _EffExp_ ::= | _NewExp_ {vbar} _SyncCall_ {vbar} _AsyncCall_ {vbar} _GetExp_
+|====
 
 ==== New Expression
 
@@ -402,11 +401,11 @@ are created in the current COG, using the `new local` expression, or they are
 created in a new COG by using the `new` expression (see <<The ABS Actor and
 Concurrency Model>> for more details about cogs).
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_NewExp_ ::= `new` [ `local` ] _TypeIdentifier_ `(` [ _PureExp_ {`,` _PureExp_ } ] `)`
-====
+|====
+| _NewExp_ ::= | `new` [ `local` ] _TypeIdentifier_ `(` [ _PureExp_ {`,` _PureExp_ } ] `)`
+|====
 
 [source]
 .Example
@@ -428,11 +427,11 @@ processes.
 A synchronous call consists of a target expression evaluating to an interface
 type, a method name declared in that interface, and a list of argument expressions.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_SyncCall_ ::= _PureExp_ `.` _SimpleIdentifier_ `(` _PureExp_ { `,` _PureExp_ } `)`
-====
+|====
+| _SyncCall_ ::= | _PureExp_ `.` _SimpleIdentifier_ `(` _PureExp_ { `,` _PureExp_ } `)`
+|====
 
 [source]
 .Example
@@ -460,11 +459,11 @@ An asynchronous call consists of a target expression evaluating to an
 interface type, a method name declared in that interface, and a list of
 argument expressions.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_AsyncCall_ ::= _PureExp_ `!` _SimpleIdentifier_ `(` _PureExp_ { `,` _PureExp_ }  `)`
-====
+|====
+| _AsyncCall_ ::= | _PureExp_ `!` _SimpleIdentifier_ `(` _PureExp_ { `,` _PureExp_ }  `)`
+|====
 
 An asynchronous method call creates a new task in the COG that contains the
 target.  This means that the caller task proceeds independently and in
@@ -489,11 +488,11 @@ is blocked until the future has been resolved, i.e., until the value of the
 future is available.  No other task in the COG can be activated in the
 meantime.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_GetExp_ ::= _PureExp_ `.` `get`
-====
+|====
+| _GetExp_ ::= | _PureExp_ `.` `get`
+|====
 
 [source]
 .Example
@@ -507,11 +506,11 @@ Bool b = f.get;
 An await expression is a way to asynchronously call a method, wait for the
 callee to finish, and get the result in one expression.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_AwaitExp_ ::= `await` _AsyncCall_
-====
+|====
+| _AwaitExp_ ::= | `await` _AsyncCall_
+|====
 
 [source]
 .Example
@@ -547,12 +546,12 @@ additional type parameter section inside angle brackets (`<` `>`) after the
 function name.
 
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_FunctionDecl_  ::= `def` _Type_ _SimpleIdentifier_ [ `<` _SimpleTypeIdentifier_ { `,` _SimpleTypeIdentifier_ } `>` ] +
-                    `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_  } ]  `)` `=` _PureExp_ `;`
-====
+|====
+| _FunctionDecl_  ::= | `def` _Type_ _SimpleIdentifier_ [ `<` _SimpleTypeIdentifier_ { `,` _SimpleTypeIdentifier_ } `>` ]
+|                     | `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_  } ]  `)` `=` _PureExp_ `;`
+|====
 
 
 

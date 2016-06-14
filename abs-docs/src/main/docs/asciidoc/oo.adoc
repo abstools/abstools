@@ -6,13 +6,13 @@ defines a nominal type, and they can extend zero or more other
 interfaces.  The interface body consists of a list of method signature
 declarations.  Method names start with a lowercase letter.
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_InterfaceDecl_ ::= `interface` _SimpleTypeIdentifier_ [ `extends` _InterfaceList_ ] `{` { MethSig } `}` +
-_InterfaceList_ ::= _TypeIdentifier_ { `,` _TypeIdentifier_ } +
-_MethSig_ ::= _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` `;`
-====
+|====
+| _InterfaceDecl_ ::= | `interface` _SimpleTypeIdentifier_ [ `extends` _InterfaceList_ ] `{` { MethSig } `}`
+| _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
+| _MethSig_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` `;`
+|====
 
 The interfaces in the example below represent a database system, providing
 functionality to store and retrieve files, and a node of a peer-to-peer file
@@ -62,16 +62,16 @@ The init block cannot contain processor release points (i.e., `await` or
 
 
 
-[caption=]
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
-====
-_ClassDecl_ ::= `class` _SimpleTypeIdentifier_ [ `(` [ _ClassParameterList_ ] `)` ] [ `implements` _InterfaceList_ ] +
-`{` [ _FieldDeclList_ ] [ _Block_ ] [ _MethDeclList_ ] `}` +
-_ClassParameterList_ ::= _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } +
-_InterfaceList_ ::= _TypeIdentifier_ { `,` _TypeIdentifier_ } +
-_FieldDeclList_ ::= { _Type_ _SimpleIdentifier_ [ `=` _PureExp_ ] `;` } +
-_MethDeclList_ ::= _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` _Block_
-====
+|====
+| _ClassDecl_ ::= | `class` _SimpleTypeIdentifier_ [ `(` [ _ClassParameterList_ ] `)` ] [ `implements` _InterfaceList_ ]
+|                 | `{` [ _FieldDeclList_ ] [ _Block_ ] [ _MethDeclList_ ] `}`
+| _ClassParameterList_ ::= | _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ }
+| _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
+| _FieldDeclList_ ::= | { _Type_ _SimpleIdentifier_ [ `=` _PureExp_ ] `;` }
+| _MethDeclList_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` _Block_
+|====
 
 
 
