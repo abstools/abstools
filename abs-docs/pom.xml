@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-	<groupId>org.abs-models</groupId>
-	<name>ABS: Documentation</name>
-	<artifactId>abs-docs</artifactId>
-	<version>1.0-SNAPSHOT</version>
-	<packaging>jar</packaging>
+  <groupId>org.abs-models</groupId>
+  <name>ABS: Documentation</name>
+  <artifactId>abs-docs</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.docs.source>${basedir}/src/main/docs/asciidoc</project.docs.source>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.docs.source>${basedir}/src/main/docs/asciidoc</project.docs.source>
     <project.docs.source.mainfile>index.adoc</project.docs.source.mainfile>
-		<project.docs.target.root>${project.build.directory}/classes/docs</project.docs.target.root>
+    <project.docs.target.root>${project.build.directory}/classes/docs</project.docs.target.root>
     <project.docs.target.html>${project.docs.target.root}/html</project.docs.target.html>
     <project.docs.target.docbook>${project.docs.target.root}/docbook</project.docs.target.docbook>
     <project.docs.target.pdf>${project.docs.target.root}/pdf</project.docs.target.pdf>
@@ -24,14 +24,14 @@
     <version.asciidoctorj>1.5.4</version.asciidoctorj>
     <version.asciidoctorj.epub3>1.5.0-alpha.6</version.asciidoctorj.epub3>
 
-	</properties>
+  </properties>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.asciidoctor</groupId>
-				<artifactId>asciidoctor-maven-plugin</artifactId>
-				<version>${version.asciidoctor-mvn-plugin}</version>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.asciidoctor</groupId>
+        <artifactId>asciidoctor-maven-plugin</artifactId>
+        <version>${version.asciidoctor-mvn-plugin}</version>
         <dependencies>
           <dependency>
             <groupId>org.asciidoctor</groupId>
@@ -44,49 +44,50 @@
             <version>${version.asciidoctorj.epub3}</version>
           </dependency>
         </dependencies>
-				<configuration>
-					<sourceHighlighter>highlightjs</sourceHighlighter>
-					<attributes>
-						<doctype>book</doctype>
-						<docVersion>${project.version}</docVersion>
-						<docDate>2016-03-05</docDate>
-						<icons>font</icons>
-						<toc2>true</toc2>
-						<toc-position>right</toc-position>
-						<numbered>true</numbered>
-						<linkattrs>true</linkattrs>
-						<idprefix>-</idprefix>
-						<idseparator>-</idseparator>
-						<setanchors>true</setanchors>
-					</attributes>
-				</configuration>
-				<executions>
-					<execution>
-						<id>output-html</id>
-						<phase>prepare-package</phase>
-						<goals>
-							<goal>process-asciidoc</goal>
-						</goals>
-						<configuration>
+        <configuration>
+          <sourceHighlighter>highlightjs</sourceHighlighter>
+          <attributes>
+            <doctype>book</doctype>
+            <docVersion>${project.version}</docVersion>
+            <docDate>2016-03-05</docDate>
+            <icons>font</icons>
+            <toc2>true</toc2>
+            <toc-position>right</toc-position>
+            <numbered>true</numbered>
+            <linkattrs>true</linkattrs>
+            <idprefix>-</idprefix>
+            <idseparator>-</idseparator>
+            <setanchors>true</setanchors>
+            <stylesheet>asciidoctor.css</stylesheet>
+          </attributes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>output-html</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
               <sourceDocumentName>${project.docs.source.mainfile}</sourceDocumentName>
-							<sourceDirectory>${project.docs.source}</sourceDirectory>
-							<outputDirectory>${project.docs.target.html}</outputDirectory>
-							<backend>html5</backend>
-						</configuration>
-					</execution>
-					<execution>
-						<id>output-docbook</id>
-						<phase>prepare-package</phase>
-						<goals>
-							<goal>process-asciidoc</goal>
-						</goals>
-						<configuration>
+              <sourceDirectory>${project.docs.source}</sourceDirectory>
+              <outputDirectory>${project.docs.target.html}</outputDirectory>
+              <backend>html5</backend>
+            </configuration>
+          </execution>
+          <execution>
+            <id>output-docbook</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
               <sourceDocumentName>${project.docs.source.mainfile}</sourceDocumentName>
-							<sourceDirectory>${project.docs.source}</sourceDirectory>
-							<outputDirectory>${project.docs.target.docbook}</outputDirectory>
-							<backend>docbook</backend>
-						</configuration>
-					</execution>
+              <sourceDirectory>${project.docs.source}</sourceDirectory>
+              <outputDirectory>${project.docs.target.docbook}</outputDirectory>
+              <backend>docbook</backend>
+            </configuration>
+          </execution>
 
           <execution>
             <id>output-pdf</id>
@@ -96,8 +97,8 @@
             </goals>
             <configuration>
               <sourceDocumentName>${project.docs.source.mainfile}</sourceDocumentName>
-							<sourceDirectory>${project.docs.source}</sourceDirectory>
-							<outputDirectory>${project.docs.target.pdf}</outputDirectory>
+              <sourceDirectory>${project.docs.source}</sourceDirectory>
+              <outputDirectory>${project.docs.target.pdf}</outputDirectory>
               <backend>pdf</backend>
               <!-- Since 1.5.0-alpha.9 PDF back-end can use 'rouge' as well as 'coderay' source highlighting -->
               <sourceHighlighter>rouge</sourceHighlighter>
@@ -125,13 +126,13 @@
             </configuration>
           </execution>
 
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
-	<dependencies>
-	</dependencies>
+  <dependencies>
+  </dependencies>
 
 </project>
 
