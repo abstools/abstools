@@ -18,6 +18,7 @@ aspect TypeResolution {
     syn boolean Decl.isTypeSyn() = false;
     syn boolean Decl.isTypeParameter() = false;
     syn boolean Decl.isFuture() = false;
+    syn boolean Decl.isException() = false;
 
     eq ClassDecl.isClass() = true;
     eq FunctionDecl.isFunction() = true;
@@ -28,6 +29,7 @@ aspect TypeResolution {
     eq TypeParameterDecl.isTypeParameter() = true;
     eq DataTypeDecl.isFuture() = getType().isFutureType();
     eq TypeSynDecl.isFuture() = getType().isFutureType();
+    eq ExceptionDecl.isException() = true;
 
     syn Boolean Name.isSimple() = getName().indexOf('.') == -1;
 
@@ -402,25 +404,42 @@ aspect TypeResolution {
 
     @CheckForNull
     public DataConstructor DataConstructorExp.getDataConstructor() {
+        // KLUDGE: code duplication with ConstructorPattern.getDataConstructor()
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
         if (decl instanceof DataConstructor) {
             return (DataConstructor) decl;
         } else {
-            if (decl instanceof ExceptionDecl) {
+            if (decl.isException()) {
                 return ((ExceptionDecl)decl).dataConstructor;
             } else {
-                return null;
+                decl = lookup(new KindedName(Kind.EXCEPTION, getConstructor()));
+                if (decl.isException()) {
+                    return ((ExceptionDecl)decl).dataConstructor;
+                } else {
+                    return null;
+                }
             }
         }
     }
 
     @CheckForNull
     public DataConstructor ConstructorPattern.getDataConstructor() {
+        // KLUDGE: code duplication with DataConstructorExp.getDataConstructor()
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
         if (decl instanceof DataConstructor)
             return (DataConstructor) decl;
-        else
-            return null;    
+        else {
+            if (decl.isException()) {
+                return ((ExceptionDecl)decl).dataConstructor;
+            } else {
+                decl = lookup(new KindedName(Kind.EXCEPTION, getConstructor()));
+                if (decl.isException()) {
+                    return ((ExceptionDecl)decl).dataConstructor;
+                } else {
+                    return null;
+                }
+            }
+        }
     }
 
     /**

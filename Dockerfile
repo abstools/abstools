@@ -1,5 +1,6 @@
 FROM php:5.6-apache
-
+# docker build -t easyinterface .
+# docker run -d -p 8080:80 --name easyinterface easyinterface
 RUN curl https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb -\# -o erlang-solutions_1.0_all.deb \
  && dpkg -i erlang-solutions_1.0_all.deb \
  && rm erlang-solutions_1.0_all.deb \

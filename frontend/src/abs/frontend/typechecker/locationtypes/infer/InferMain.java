@@ -125,6 +125,7 @@ public class InferMain extends Main {
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             return;
 
+        destDir.mkdirs();
         if (!destDir.exists()) {
             System.err.println("Destination directory " + destDir.getAbsolutePath() + " does not exist!");
             System.exit(1);

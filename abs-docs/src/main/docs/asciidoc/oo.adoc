@@ -1,77 +1,84 @@
 == Interfaces
 
 
-Interfaces in ABS are similar to interfaces in Java. They have a name, which defines a nominal type, and they can extend arbitrary many other interfaces. The interface body consists of a list of method signature declarations. Method names start with a lowercase letter.
+Interfaces in ABS are similar to interfaces in Java.  They have a name, which
+defines a nominal type, and they can extend zero or more other
+interfaces.  The interface body consists of a list of method signature
+declarations.  Method names start with a lowercase letter.
 
-The interfaces in the example below represent a database system, providing functionality to store and retrieve files, and a node of a peer-to-peer file sharing system. Each node of a peer-to-peer system plays both the role of a server and a client. 
-
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
+|====
+| _InterfaceDecl_ ::= | `interface` _SimpleTypeIdentifier_ [ `extends` _InterfaceList_ ] `{` { MethSig } `}`
+| _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
+| _MethSig_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` `;`
+|====
+
+The interfaces in the example below represent a database system, providing
+functionality to store and retrieve files, and a node of a peer-to-peer file
+sharing system.  Each node of a peer-to-peer system plays both the role of a
+server and a client.
 
 [source]
+.Example
 ----
 interface DB {
-	File getFile(Filename fId);
-	Int getLength(Filename fId);
-	Unit storeFile(Filename fId, File file);
-	Filenames listFiles();
+  File getFile(Filename fId);
+  Int getLength(Filename fId);
+  Unit storeFile(Filename fId, File file);
+  Filenames listFiles();
 }
 interface Client {
-	List<Pair<Server,Filenames>> availFiles(List<Server> sList);
+  List<Pair<Server,Filenames>> availFiles(List<Server> sList);
 
-	Unit reqFile(Server sId, Filename fId);
+  Unit reqFile(Server sId, Filename fId);
 }
 interface Server {
-	Filenames inquire();
-	Int getLength(Filename fId);
-	Packet getPack(Filename fId, Int pNbr);
+  Filenames inquire();
+  Int getLength(Filename fId);
+  Packet getPack(Filename fId, Int pNbr);
 }
 interface Peer extends Client, Server {
-	List<Server> getNeighbors();
+  List<Server> getNeighbors();
 }
-
-
 ----
-
-// To introduce an interface:
-
-// [source, java]
-
-// ----
-// interface Animal {
-// ...
-// }
-// ----
-
-// Interfaces can be extended from (multiple) base interfaces: 
-
-// [source, java]
-
-// ----
-// interface Bird extends Animal, Flying {
-// ...
-// }
-// ----
-
-// Let's consider the example of an object that represents a "seagull". Such
-// _seagull_ object can have either the type of a +Bird+, +Animal+ or +Flying+,
-// depending on the object's particular usage in the program. In terms of type theory, this feature is called 
-// __nominal subtyping__. An example of well-typed expressions that make use of Interface types:
-
-// ----
-// seagull                     can be typed by: Bird or Animal or Flying
-// list[seagull, bee]          can be typed by: Animal or Flying
-// set[seagull, bee, boeing]   can be typed by: Flying
-// ----
-
 
 
 == Classes
 
-Like in typical class-based languages, classes in ABS are used to create objects. Classes can implement an arbitrary number of interfaces. Classes do not have constructors in ABS but instead have class parameters and an optional init block. Class parameters actually define additional fields of the class that can be used like any other declared field.
+Classes in ABS are used to create objects via the `new` expression.  Classes
+can implement an arbitrary number of interfaces.  Since classes are not types
+in ABS, classes typically implement one or more interfaces.
 
+
+Classes in ABS have zero or more _class parameters_.  Each class parameter
+defines a field of the class which is assigned a value via arguments the `new`
+expression.
+
+
+Classes have an optional init block, which is executed before any other code.
+The init block cannot contain processor release points (i.e., `await` or
+`suspend`).
+
+
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
+|====
+| _ClassDecl_ ::= | `class` _SimpleTypeIdentifier_ [ `(` [ _ClassParameterList_ ] `)` ] [ `implements` _InterfaceList_ ]
+|                 | `{` [ _FieldDeclList_ ] [ _Block_ ] [ _MethDeclList_ ] `}`
+| _ClassParameterList_ ::= | _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ }
+| _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
+| _FieldDeclList_ ::= | { _Type_ _SimpleIdentifier_ [ `=` _PureExp_ ] `;` }
+| _MethDeclList_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` _Block_
+|====
 
-[source, java]
+
+
+
+
+[source]
+.Example
 ----
 class DataBase(Map<Filename,File> db) implements DB {
 	File getFile(Filename fId) {
@@ -141,7 +148,7 @@ freeing its occupied resources. The `load` method permits the user to probe for 
 average load of the computational unit, that is how much utilized (busy) was the unit
 in the last 1 , 5 and 15 minutes of execution. The following example is self-explanatory:
 
-[source, java]
+[source]
 
 ----
 DC dc1 = new MyDC();
@@ -158,7 +165,7 @@ sits waiting to execute ABS computations. To start ABS computations, the user
 must create (active) objects inside the remote computational unit. This is
 called `object spawning', illustrated by the example:
 
-[source, java]
+[source]
 
 ----
 [DC: dc1] Interf1 o1 = new Class1(params..);

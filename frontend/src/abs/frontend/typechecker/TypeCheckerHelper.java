@@ -356,7 +356,7 @@ public class TypeCheckerHelper {
                         foundDuplicates.add(rn.getSimpleName());
                     res.put(rn.getQualifiedName(), rn);
                 }
-            } else if (d instanceof ExceptionDecl) {
+            } else if (d.isException()) {
                 ExceptionDecl ed = (ExceptionDecl) d;
                 DataConstructor ec = ed.dataConstructor;
                 assert ec != null : ed.getName();
@@ -371,18 +371,6 @@ public class TypeCheckerHelper {
                     else {
                         res.put(rn.getQualifiedName(), rn);
                     }
-                }
-            }
-            else if (d instanceof ExceptionDecl) {
-                ExceptionDecl ed = (ExceptionDecl)d;
-                DataConstructor ec = ed.dataConstructor;
-                if (ec.getName().equals(d.getName())) {
-                    // should always be true, see Main.java where the data
-                    // constructor gets constructed
-                    rn = new ResolvedDeclName(moduleName, ec);
-                    if (res.put(rn.getSimpleName(), rn) != null)
-                        foundDuplicates.add(rn.getSimpleName());
-                    res.put(rn.getQualifiedName(), rn);
                 }
             }
         }

@@ -1,0 +1,20 @@
+OTT_COQ_DIR = /usr/lib/coq/user-contrib/Ott
+OTT = ott
+
+abs-functional.pdf: abs-functional.tex
+	pdflatex abs-functional.tex
+
+abs-functional.tex: abs-functional.ott
+	$(OTT) -o abs-functional.tex \
+	       abs-functional.ott
+
+abs_functional.v: abs-functional.ott
+	$(OTT) -o abs_functional.v \
+	       -coq_expand_list_types false \
+	       abs-functional.ott
+
+abs_functional.vo: Makefile.coq_functional
+	make -f Makefile.coq_functional
+
+Makefile.coq_functional: StringOrderedTypeCompat.v abs_functional.v
+	coq_makefile -I $(OTT_COQ_DIR) StringOrderedTypeCompat.v abs_functional.v > Makefile.coq_functional

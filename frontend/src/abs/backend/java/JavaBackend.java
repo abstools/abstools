@@ -92,7 +92,7 @@ public class JavaBackend extends Main {
         final Model model = parse(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             printParserErrorAndExit();
-
+        destDir.mkdirs();
         if (!destDir.exists()) {
             System.err.println("Destination directory " + destDir.getAbsolutePath() + " does not exist!");
             System.exit(1);

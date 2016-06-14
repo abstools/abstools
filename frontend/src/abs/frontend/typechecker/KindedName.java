@@ -6,7 +6,7 @@ package abs.frontend.typechecker;
 
 public class KindedName {
     public enum Kind {
-        FUN, CLASS, TYPE_DECL, DATA_CONSTRUCTOR, MODULE;
+        FUN, CLASS, TYPE_DECL, EXCEPTION, DATA_CONSTRUCTOR, MODULE;
     }
 
     private final String name;

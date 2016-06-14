@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
 -export([init/4,start/5]).
--export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,complete/5]).
+-export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,complete/6]).
 -include_lib("abs_types.hrl").
 %%Future starts AsyncCallTask
 %%and stores result
@@ -11,7 +11,6 @@
 
 start(Callee,Method,Params,CurrentCog,Stack) ->
     Ref = spawn(?MODULE,init,[Callee,Method,Params, self()]),
-    gc:register_future(Ref),
     (fun Loop() ->
              %% Wait for message to be received, but handle GC request
              %% in the meantime
@@ -28,8 +27,8 @@ start(Callee,Method,Params,CurrentCog,Stack) ->
     end)(),
     Ref.
 
-complete(Ref, Value, Sender, Cog, Stack) ->
-    Ref!{completed, Value, Sender, Cog},
+complete(Ref, Status, Value, Sender, Cog, Stack) ->
+    Ref!{completed, Status, Value, Sender, Cog},
     (fun Loop() ->
              %% Wait for message to be received, but handle GC request in the
              %% meantime.
@@ -170,6 +169,7 @@ init(Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params, Caller)->
     cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
     demonitor(MonRef),
     Caller ! {ok, self()},
+    gc:register_future(self()),
     wait_for_completion(gc:extract_references(Params)).
 
 %% Future awaiting reply from task completion
@@ -185,9 +185,12 @@ wait_for_completion(References) ->
             gc:unroot_future(self()),
             %% use dummy value for callee cog
             loop({error,error_transform:transform(Reason)}, self());
-        {completed, Result, Sender, SenderCog}->
+        {completed, value, Result, Sender, SenderCog}->
             gc:unroot_future(self()),
             convert_to_freestanding_future({ok,Result}, Sender, SenderCog);
+        {completed, exception, Result, Sender, SenderCog}->
+            gc:unroot_future(self()),
+            convert_to_freestanding_future({error, Result}, Sender, SenderCog);
         {get_references, Sender} ->
             Sender ! {References, self()},
             wait_for_completion(References);

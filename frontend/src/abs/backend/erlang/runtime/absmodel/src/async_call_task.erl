@@ -18,14 +18,11 @@ init(_Cog,[Future,O,Method|Params])->
 
 
 start(#state{fut=Future,obj=O=#object{class=C,cog=Cog},meth=M,params=P})->
-    try 
-       Res=apply(C, M,[O|P]),
-       future:complete(Future, Res, self(), Cog, [O|P])
+    try
+        Res=apply(C, M,[O|P]),
+        future:complete(Future, value, Res, self(), Cog, [O|P])
     catch
-      _:Reason ->
-         task:rollback(Cog),
-         exit(Reason)
+        _:Reason ->
+            task:rollback(Cog),
+            future:complete(Future, exception, error_transform:transform(Reason), self(), Cog, [O|P])
     end.
-
-
-

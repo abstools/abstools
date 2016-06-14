@@ -168,7 +168,7 @@ aspect GenerateErlang {
       first=false;
       PureExp cost = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.DC.Cost");
       if (cost != null) {
-          ecs.print("task:block_for_resource(Cog,cpu,");
+          ecs.print("task:block_for_resource(Cog,DC,cpu,");
           cost.generateErlangCode(ecs, vars);
           ecs.print(",");
           ecs.print(vars.toStack());

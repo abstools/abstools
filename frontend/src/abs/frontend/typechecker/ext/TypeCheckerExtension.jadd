@@ -111,6 +111,13 @@ aspect TypeCheckerExtension {
 
     
     // STATEMENTS
+
+    refine TypeChecker public void Stmt.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
+        TypeChecker.Stmt.typeCheck(s);
+        if (s.getErrorCount() > size) return;
+        getModel().getTypeExt().checkStmt(this);
+    }
     
     refine TypeChecker public void AssertStmt.typeCheck(SemanticConditionList s) {
         int size = s.getErrorCount();

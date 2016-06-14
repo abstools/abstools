@@ -207,7 +207,7 @@ new List<ModuleDecl>(),
 
     // Interfaces
     @Override public void exitInterface_decl(ABSParser.Interface_declContext ctx) {
-        setV(ctx, new InterfaceDecl(ctx.qualified_type_identifier().getText(), l(ctx.annotation()), l(ctx.e), l(ctx.methodsig())));
+        setV(ctx, new InterfaceDecl(ctx.TYPE_IDENTIFIER().getText(), l(ctx.annotation()), l(ctx.e), l(ctx.methodsig())));
     }
 
     @Override public void exitMethodsig(ABSParser.MethodsigContext ctx) {
@@ -216,7 +216,7 @@ new List<ModuleDecl>(),
 
     // Classes
     @Override public void exitClass_decl(ABSParser.Class_declContext ctx) {
-        ClassDecl c = (ClassDecl)setV(ctx, new ClassDecl(ctx.qualified_type_identifier().getText(), l(ctx.annotation()), new List<ParamDecl>(), l(ctx.interface_name()), new Opt<InitBlock>(), l(ctx.field_decl()), l(ctx.method())));
+        ClassDecl c = (ClassDecl)setV(ctx, new ClassDecl(ctx.TYPE_IDENTIFIER().getText(), l(ctx.annotation()), new List<ParamDecl>(), l(ctx.interface_name()), new Opt<InitBlock>(), l(ctx.field_decl()), l(ctx.method())));
         if (ctx.paramlist() != null) {
             c.setParamList((List<ParamDecl>)v(ctx.paramlist()));
         }

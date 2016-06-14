@@ -1,34 +1,47 @@
-== Real-Time ABS
+== Timed ABS
 
-In order to run timed simulations, which forms the basis of simulations
-estimating the effect of different resource usage and deployment scenarios, it
-is necessary to introduce a notion of time into the language.
+Timed ABS is an extension to the core language that introduces a notion of
+abstract time.  Timed ABS can be used to model not only the functional
+behavior but also the timing-related behavior of real systems running on real
+hardware.
+
 
 The ABS notion of time is _dense time_ with _run-to-completion semantics_.
-This means that in a simulation, statements run infinitely fast. Time advances
-when all processes meet one of the following conditions:
+Timed ABS adds a clock to the language semantics that advances in response to
+certain language constructs.  Time is expressed as a rational number, so the
+clock can advance in infitesimally small steps.
 
-* the cog of the process is blocked
+NOTE: All ABS models are valid in Timed ABS.  An ABS model that contains no
+time-influencing statements will run without influencing the clock and will
+finish with the clock at zero.
+
+
+The clock does not advance on its own or in parallel with processes that are
+running.  Time advances when no process can execute a statement, i.e., all
+processes meet one of the following conditions:
+
+* the process is awaiting for a guard that is not enabled (see <<Process Release Point: Await>>)
+* the process is blocked on a future that is not available (see <<Get Expression>>)
 * the process is suspended waiting for time to advance
-* the process is waiting for a resource to become available
-* the process is suspended or blocked waiting for another process
+* the process is waiting for some resources
 
-In practice this means that all process run as long as there is "work to be
-done."  Once all processes are stuck waiting (directly or indirectly) for the
-clock, the clock advances by an amount sufficient to unblock at least one
-process (big-step time advance semantics).
+In practice this means that all process run as long as there is “work to be
+done.”
 
-NOTE: An ABS model that contains neither duration nor resource constructs will
-run without influencing the clock.  This means that all ABS models are valid
-in Real-Time ABS; Real-Time ABS is a strict super-set of ABS.
+Once all processes are waiting (directly or indirectly) for the clock, the
+clock advances by an amount sufficient to unblock at least one process
+(big-step time advance semantics).
+
+
 
 === Language constructs for expressing time in ABS
 
 The standard library contains the following definition of a time datatype:
 
+[source]
 ----
 data Time = Time(Rat timeValue);
-def Time now() = ...
+def Time now() = builtin;
 ----
 
 The function `now` always returns the current time.
@@ -166,7 +179,7 @@ Bandwidth consumption is expressed via a `Size` annotation:
 
 .Example
 ----
-[Size: 2 * length(x)] o!m(x);
+[DataSize: 2 * length(x)] o!m(x);
 ----
 
 Executing the above method invocation statement will consume bandwidth
@@ -202,7 +215,7 @@ import * from ABS.DC; <1>
 interface I {
   Unit process();
 }
-[Size: 3] <2>
+[DataSize: 3] <2>
 class C implements I {
   Unit process() {
     [Cost: 10] skip; <3>
@@ -212,7 +225,7 @@ class C implements I {
   DeploymentComponent dc = new DeploymentComponent("Server",
     map[Pair(CPU, 5), Pair(Bandwidth, 10), Pair(Memory, 5)]);
   [DC: dc] I i = new C(); <4>
-  [Size: 5] i!process(); <5>
+  [DataSize: 5] i!process(); <5>
 }
 ----
 <1> Make all necessary identifiers accessible in the current module

@@ -385,7 +385,7 @@ public class Main {
         if (e != null) {
             // TODO: if null and not -nostdlib, throw an error
             for (Decl decl : m.getDecls()) {
-                if (decl instanceof ExceptionDecl) {
+                if (decl.isException()) {
                     ExceptionDecl e1 = (ExceptionDecl)decl;
                     // KLUDGE: what do we do about annotations to exceptions?
                     DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().treeCopyNoTransform());
