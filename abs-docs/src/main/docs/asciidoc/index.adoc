@@ -6,8 +6,9 @@ ABS Development Team
 :lang: en
 :keywords: ABS, manual, modeling languages, programming languages
 :sectnumlevels: 2
-// :copyright: CC-BY-SA 3.0
-// :imagesdir: images
+:copyright: CC-BY-SA 3.0
+:imagesdir: images
+:front-cover-image: image:Title_logo.png[width=1050,height=1600]
 
 include::introduction.adoc[]
 
