@@ -139,7 +139,7 @@ assert x != null;
 
 
 
-=== Process Release Point: Await
+=== Await Statement
 
 An await statement suspends the current task until the given guard becomes
 active (evalutes to `True`).  While the task is suspended, other tasks within
@@ -172,7 +172,6 @@ await duration(3, 5); <4>
 <2> A _field guard_ is a Boolean expression over the object state.
 <3> A _guard conjunction_ becomes active when both its components are active.
 <4> A _duration guard_ becomes active after a certain amount of simulated time has passed.  See <<Real-Time ABS>> for more on timed models.
-
 
 
 === Unconditional Release: Suspend
