@@ -21,7 +21,7 @@ example as an argument to a function call.  This slight notational
 inconvenience makes it easier to develop static analysis techniques and tools
 for ABS.
 
-
+[[sec:pure-expressions]]
 === Pure Expressions
 
 Pure Expressions are side effect-free expressions.  The value of these
@@ -49,7 +49,7 @@ multiple times without influencing the execution semantics.
 
 ==== Literal Expressions
 
-Literals, as defined in <<Literals>>, are expressions.
+Literals, as defined in <<sec:literals>>, are expressions.
 
 ==== Operator Expressions
 
@@ -174,7 +174,8 @@ Cons(True, Nil)
 Nil
 ----
 
-Defining new data types and their constructors is described in <<Algebraic Data Types>>.
+Defining new data types and their constructors is described in
+<<sec:algebraic-data-types>>.
 
 
 ==== The Function Call Expression
@@ -200,7 +201,7 @@ head(list)
 
 ===== The N-ary Function Call Expression
 
-Calls to n-ary Constructors (see <<N-ary Constructors>>) are written with
+Calls to n-ary Constructors (see <<sec:n_ary-constructors>>) are written with
 brackets (`[]`) instead of parentheses (`()`).
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
@@ -230,7 +231,7 @@ evaluated, but not both.
 if 5 == 4 then True else False
 ----
 
-
+[[case-expression]]
 ==== Case Expressions
 
 ABS supports pattern matching via the Case Expression.  A case expression
@@ -377,7 +378,7 @@ expression.  A branch (a pattern and its expression) is type-correct if its
 pattern and its right-hand side expression are type-correct.  A pattern is
 type-correct if it can match the corresponding case expression.
 
-
+[[sec:side-effect-expressions]]
 === Expressions with Side Effects
 
 ABS has expressions with side effects.  These expressions are only legal
@@ -398,8 +399,8 @@ language.
 A `new` expression creates a new object from a class name and a list of
 arguments.  In ABS objects can be created in two different ways.  Either they
 are created in the current COG, using the `new local` expression, or they are
-created in a new COG by using the `new` expression (see <<The ABS Actor and
-Concurrency Model>> for more details about cogs).
+created in a new COG by using the `new` expression (see
+<<sec:concurrency-model>> for more details about cogs).
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
@@ -414,7 +415,7 @@ new local Foo(5)
 new Bar()
 ----
 
-Classes can declare an _init block_ (see <<Classes>>), which is executed for
+Classes can declare an _init block_ (see <<sec:classes>>), which is executed for
 each new instance.  The semantics of the `new` expression guarantee that the
 init block is fully executed before the new object begins receiving method
 calls.  Classes can also declare a `run` method, which is automatically
@@ -503,7 +504,7 @@ meantime.
 Bool b = f.get;
 ----
 
-
+[[await-expression]]
 ==== Await Expression
 
 An await expression is a way to asynchronously call a method, wait for the
@@ -537,8 +538,8 @@ A x = fx.get;
 
 Functions take a list of arguments and evaluate the expression in their body,
 producing a return value.  ABS functions are always pure.  This means the body
-of a function can use all <<Pure Expressions>> but no <<Expressions with Side
-Effects>>.
+of a function can use all pure expressions (see <<sec:pure-expressions>>) but
+no expressions with side effects (see <<sec:side-effect-expressions>>).
 
 
 Functions can be _parametric_, which means that they can take and return

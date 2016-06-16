@@ -77,7 +77,7 @@ character.  Identifiers name local variables, fields, methods and functions.
 Type identifiers name interfaces, classes, types, type
 constructors, deltas and products.
 
-Identifiers can be _qualified_ with a module name (see Chapter <<Modules>>) or
+Identifiers can be _qualified_ with a module name (see <<sec:modules>>) or
 _simple_ (without module name prefix).
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
@@ -109,6 +109,7 @@ The following words are keywords in the ABS language and are invalid as identifi
 `else`,`hasInterface`,`interface`,`null`,`suspend`
 |=====
 
+[[sec:literals]]
 === Literals
 
 A literal is a textual representation of a value. ABS supports three kinds of

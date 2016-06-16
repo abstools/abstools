@@ -1,3 +1,4 @@
+[[sec:interfaces]]
 == Interfaces
 
 
@@ -43,7 +44,7 @@ interface Peer extends Client, Server {
 }
 ----
 
-
+[[sec:classes]]
 == Classes
 
 Classes in ABS are used to create objects via the `new` expression.  Classes

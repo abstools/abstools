@@ -1,3 +1,4 @@
+[[sec:timed-abs]]
 == Timed ABS
 
 Timed ABS is an extension to the core language that introduces a notion of
@@ -19,8 +20,9 @@ The clock does not advance on its own or in parallel with processes that are
 running.  Time advances when no process can execute a statement, i.e., all
 processes meet one of the following conditions:
 
-* the process is awaiting for a guard that is not enabled (see <<Process Release Point: Await>>)
-* the process is blocked on a future that is not available (see <<Get Expression>>)
+* the process is awaiting for a guard that is not enabled (see <<await-stmt>>)
+* the process is blocked on a future that is not available (see
+  <<get-expression>>)
 * the process is suspended waiting for time to advance
 * the process is waiting for some resources
 
@@ -71,7 +73,7 @@ become available.
 === Statements
 
 The `await` statement can suspend the current task until time has advanced by
-a given amount via the duration guard (see <<Await Statement>>).
+a given amount via the duration guard (see <<await-stmt>>).
 
 The `duration` statement blocks the current cog until time has advanced by a
 given amount:

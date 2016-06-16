@@ -1,3 +1,4 @@
+[[sec:standard-library]]
 == The Standard Library
 
 This chapter documents the ABS standard library.  All definitions, except
@@ -41,7 +42,8 @@ The following operators apply to Boolean values:
 
 ==== Datatypes and constructors
 
-The two numeric datatypes are `Int` and `Rat`.  See <<Built-in Types>> for their syntax.
+The two numeric datatypes are `Int` and `Rat`.  See <<sec:builtin-types>> for
+their syntax.
 
 ==== Operators
 

@@ -3,8 +3,7 @@
 ABS has a static, nominal type system.  Local variables, object fields,
 function parameters and method parameters are statically typed.  A type name
 can refer to a algebraic data type, an interface, a type synonym.  There are a
-number of pre-defined data types which are documented in Chapter <<The
-Standard Library>>.
+number of pre-defined data types which are documented in Chapter <<sec:standard-library>>.
 
 A _type name_ is a sequence of letters, digits and  underscores (`_`) starting
 with an uppercase letter.  In case of a parametric data type, the type name
@@ -37,6 +36,7 @@ Map<Int, List<String>> <3>
 <3> This type name denotes a map from integers to lists of strings.
 
 
+[[sec:builtin-types]]
 === Built-in Types
 
 ABS offers the following built-in datatypes:
@@ -70,7 +70,7 @@ Fut<List<Rat>> <2>
 <1> This future will contain a value of type `String`
 <2> This future will contain a list of rational numbers
 
-
+[[sec:algebraic-data-types]]
 === Algebraic Data Types
 
 Algebraic Data Types in ABS are used to implement user-defined, immutable data
@@ -88,7 +88,7 @@ program correctness.
 
 Data Type _Constructors_ enumerate the possible values of a data type.
 Constructors can have zero or more arguments.  Each argument can have an
-optional accessor function (see <<Accessor Functions>>).
+optional accessor function (see <<sec:accessor-functions>>).
 
 
 .Example
@@ -102,6 +102,7 @@ data NotInstantiable; <3>
 <2> This is the definition of the built-in data type `Bool`.
 <3> This type does not have constructors and therefore cannot be instantiated.
 
+[[sec:accessor-functions]]
 ==== Accessor Functions
 
 Data constructor arguments can optionally have a name, which needs to be a
@@ -149,7 +150,7 @@ When using a parametric data type, concrete types are given for the type paramet
 List<Int> l = Cons(1, Cons(2, Nil));
 ----
 
-
+[[sec:n_ary-constructors]]
 ==== N-ary Constructors
 
 Literal values of recursive data types like lists and sets can be arbitrarily
@@ -247,7 +248,7 @@ Interfaces in ABS describe the functionality of objects.  Thus, Interfaces in
 ABS are similar to interfaces in Java.  Unlike Java, objects are only typed by
 interfaces and not by their class.
 
-The syntax of interfaces is explained in <<Interfaces>>.
+The syntax of interfaces is given in <<sec:interfaces>>.
 
 === Type Synonyms
 

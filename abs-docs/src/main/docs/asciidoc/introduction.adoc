@@ -53,6 +53,7 @@ Close-to-the-metal programming :: ABS is not designed to be a systems
 programming language.
 ****
 
+[[sec:concurrency-model]]
 === The ABS Actor and Concurrency Model
 
 
