@@ -139,6 +139,7 @@ assert x != null;
 
 
 
+[[await-stmt]]
 === Await Statement
 
 An await statement suspends the current task until the given guard becomes
@@ -174,6 +175,7 @@ await duration(3, 5); <4>
 <4> A _duration guard_ becomes active after a certain amount of simulated time has passed.  See <<Real-Time ABS>> for more on timed models.
 
 
+[[suspend-stmt]]
 === Unconditional Release: Suspend
 
 The suspend statement causes the current task to be suspended.

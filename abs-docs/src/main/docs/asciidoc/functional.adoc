@@ -453,6 +453,7 @@ possibility of deadlocks in case the callee tries to call back to an object of
 the caller cog.
 
 
+[[async-call-expression]]
 ==== Asynchronous Call Expression
 
 An asynchronous call consists of a target expression evaluating to an
@@ -481,7 +482,9 @@ the method call.
 Fut<Bool> f = x!m(5);
 ----
 
+[[get-expression]]
 ==== Get Expression
+
 
 A get expression is used to obtain the value from a future.  The current task
 is blocked until the future has been resolved, i.e., until the value of the
