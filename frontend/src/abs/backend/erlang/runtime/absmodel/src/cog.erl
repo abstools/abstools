@@ -40,12 +40,12 @@ start(DC)->
     Cog.
 
 add(#cog{ref=Cog},Task,Args)->
-    Cog!{new_task,Task,Args,self(),false},
+    announce_new_task(Cog, Task, Args, self(), false),
     TaskRef=await_start(Task, Args),
     TaskRef.
 
 add_and_notify(#cog{ref=Cog},Task,Args)->
-    Cog!{new_task,Task,Args,self(),true},
+    announce_new_task(Cog, Task, Args, self(), true),
     TaskRef=await_start(Task, Args),
     TaskRef.
 
@@ -59,10 +59,10 @@ add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
     TaskRef.
 
 new_state(#cog{ref=Cog},TaskRef,State)->
-    Cog!{new_state,TaskRef,State,undef}.
+    announce_task_state_changed(Cog, TaskRef, State, undef).
 
 new_state_sync(#cog{ref=Cog},TaskRef,State,Stack) ->
-    Cog!{new_state,TaskRef,State,self()},
+    announce_task_state_changed(Cog, TaskRef, State, self()),
     task:loop_for_token(Stack, new_state_finished).
 
 %% object reset / transaction interface
@@ -100,6 +100,15 @@ kill_recklessly(Cog) ->
     ok.
 
 %%Internal
+
+announce_new_task(Cog, Task, Args, Sender, Notify) ->
+    Cog!{new_task,Task,Args,Sender,Notify}.
+
+announce_task_state_changed(Cog, TaskRef, State, Sender) ->
+    Cog!{new_state,TaskRef,State,Sender}.
+
+
+
 
 init(Tracker,DC) ->
     process_flag(trap_exit, true),
