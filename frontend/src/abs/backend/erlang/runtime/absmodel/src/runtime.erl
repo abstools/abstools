@@ -90,9 +90,6 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
     {ok, _GC} = gc:start(GCStatistics, Debug),
     %% Init simulation clock
     {ok, _Clock} = clock:start_link(Clocklimit),
-    %% init RNG, recipe recommended by the Erlang documentation.
-    %% TODO: if we want reproducible runs, make seed a command-line parameter
-    random:seed(erlang:phash2([node()]), erlang:monotonic_time(), erlang:unique_integer()),
 
     %%Start main task
     Cog=cog:start(),

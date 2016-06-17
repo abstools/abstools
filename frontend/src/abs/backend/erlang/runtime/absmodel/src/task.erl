@@ -39,6 +39,9 @@ start(Cog,Task,Args)->
 
 init(Task,Cog,Args)->
     InnerState=Task:init(Cog,Args),
+    %% init RNG, recipe recommended by the Erlang documentation.
+    %% TODO: if we want reproducible runs, make seed a command-line parameter
+    random:seed(erlang:phash2([node()]), erlang:monotonic_time(), erlang:unique_integer()),
     acquire_token(Cog, InnerState),
     Val=Task:start(InnerState),
     release_token(Cog,done),
