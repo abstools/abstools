@@ -22,11 +22,13 @@ include::imperative.adoc[]
 
 include::oo.adoc[]
 
-23include::modules.adoc[]
+include::modules.adoc[]
 
 include::stdlib.adoc[]
 
 include::timed.adoc[]
+
+include::deployment.adoc[]
 
 include::feature-modeling.adoc[]
 

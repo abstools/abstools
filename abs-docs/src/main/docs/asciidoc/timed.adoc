@@ -1,24 +1,27 @@
 [[sec:timed-abs]]
 == Timed ABS
 
-Timed ABS is an extension to the core language that introduces a notion of
-abstract time.  Timed ABS can be used to model not only the functional
+Timed ABS is an extension to the core ABS language that introduces a notion of
+_abstract time_.  Timed ABS can be used to model not only the functional
 behavior but also the timing-related behavior of real systems running on real
-hardware.
+hardware.  In contrast to real systems, time in an ABS model does not advance
+by itself.  The time model of Timed ABS takes inspiration from formalisms such
+as http://uppaal.org[Timed Automata] and
+http://heim.ifi.uio.no/~peterol/RealTimeMaude/[Real-Time Maude].
+
+NOTE: All untimed ABS models are valid in Timed ABS.  An ABS model that
+contains no time-influencing statements will run without influencing the clock
+and will finish at time zero.
 
 The ABS notion of time is _dense time_ with _run-to-completion semantics_.
 Timed ABS adds a clock to the language semantics that advances in response to
 certain language constructs.  Time is expressed as a rational number, so the
 clock can advance in infitesimally small steps.
 
-NOTE: All ABS models are valid in Timed ABS.  An ABS model that contains no
-time-influencing statements will run without influencing the clock and will
-finish with the clock at zero.
 
-
-The clock does not advance on its own or in parallel with processes that are
-running.  Time advances when no process can execute a statement, i.e., all
-processes meet one of the following conditions:
+Time only advances when all processes are blocked or suspended and no process
+is ready to run.  This means that for time to advance, all processes are in
+one of the following states:
 
 * the process is awaiting for a guard that is not enabled (see <<await-stmt>>)
 * the process is blocked on a future that is not available (see
@@ -28,10 +31,6 @@ processes meet one of the following conditions:
 
 In practice this means that all process run as long as there is “work to be
 done.”
-
-Once all processes are waiting (directly or indirectly) for the clock, the
-clock advances by an amount sufficient to unblock at least one process
-(big-step time advance semantics).
 
 
 
@@ -72,22 +71,19 @@ become available.
 
 === Statements
 
-The `await` statement can suspend the current task until time has advanced by
-a given amount via the duration guard (see <<await-stmt>>).
-
-The `duration` statement blocks the current cog until time has advanced by a
-given amount:
+The `duration(min, max)` statement blocks the cog of the executing process
+until at least `min` and at most `max` time units have passed.  The `await
+duration(min, max)` statement (see <<await-stmt>>) suspends the current
+process until at least `min` and at most `max` time units have passed.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
 | _DurationStmt_ ::= | `duration` `(` _PureExp_ `,` _PureExp_ `)` `;`
+| _AwaitStmt_ ::= | `await` _Guard_ `;`
+| _Guard_ ::= | ... {vbar} _DurationGuard_
+| _DurationGuard_ ::= | `duration` `(` _PureExp_ `,` _PureExp_ `)`
 |====
-
-The `duration` statement blocks the cog of the executing process until at
-least `min` and at most `max` time units have passed.  The `await duration`
-statement suspends the current process until at least `min` and at most `max`
-time units have passed.
 
 
 The difference between `duration` and `await duration` is that in the latter
@@ -97,7 +93,7 @@ in the same cog can execute.  Note that processes in other cogs are not
 influenced by `duration` or `await duration`, except when they attempt to
 synchronize with that process.
 
-WARNING: A subtle difference between `duration` and `await duration` is that in
+NOTE: A subtle difference between `duration` and `await duration` is that in
 the latter case, the suspended process becomes eligible for scheduling after
 the specified time, but there is no guarantee that it will actually be
 scheduled at that point.  This means that more time might pass than expressed in the `await duration` guard!
@@ -120,192 +116,12 @@ scheduled at that point.  This means that more time might pass than expressed in
 <1> Here the *cog* blocks for 1/2-5 time units
 <2> `t2` will be between 1/2 and 5 time units larger than `t`
 
+=== Semantics of Time Advancement
 
-=== Resource Modeling in Real-Time ABS
-
-Resource Modeling deals with simulating and analyzing the non-functional
-properties of models: code deployment on varying numbers and kinds of
-machines, and the effects of different CPU speeds, interconnection bandwidth,
-code locality, etc. on the performance of a system.  This section describes
-the constructs ABS offers to the modeler.
-
-All language identifiers described in this section reside in the `ABS.DC` package.  To use them, define a module as follows:
-
-----
-module Name;
-import * from ABS.DC;
-----
-
-==== Deployment Components
-
-Modeling code deployment and code execution under resource constraints
-requires a notion of _locality_.  For this purpose, ABS offers a language
-construct called Deployment Component.
-
-Deployment Components are first-class language constructs in that they can be
-created, referenced and interacted with from within the model.  A reference to
-a deployment component is treated the same way as a reference to an object.
-Deployment Components are created using the `new` expression.  Any other cog
-can be created "on" a deployment component by using a `DC` annotation to the
-`new` statement.
-
-.Resources and Deployment Components
-
-Each deployment component "carries" some possibly infinite amount of resources
-for each resource type.  This is expressed as a map from resource type to a
-number, for example `map[Pair(Speed, 10), Pair(Bandwidth, 20)]`.  Resource types
-not included, such as `Memory` in the above example, are treated as being
-infinite.
-
-
-.Example
-----
-DeploymentComponent dc = new DeploymentComponent("Server 1", map[Pair(Speed, 10)]); <1>
-[DC: dc] Worker w = new CWorker(); <2>
-----
-<1> A new deployment component `dc` is created with 10 `Speed` resources
-<2> `w` will run inside `dc`
-
-NOTE: It is an error to try to locally create deployment components (via `new
-local DeploymentComponent(...)`) or new local objects on another cog (via
-`[DC: x] new local C()`).
-
-==== Resources
-
-The term _Resource_ can be used in different ways.  In ABS, we understand a
-Resource to be a countable, measurable property that is influenced by program
-execution and the passage of time.  The resources currently supported by the
-ABS language are defined in the `ABS.DC` module as follows:
-
-----
-data Resourcetype = Speed | Bandwidth | Memory | Cores ;
-----
-
-===== Speed
-
-The `Speed` resource type models execution speed.  Intuitively, a deployment
-component with twice the number of Speed resources will execute twice as fast.
-Not all statements consume Speed resources while executing -- Speed resources are
-consumed when execution in the current process reaches a statement that is
-annotated with a `Cost` annotation.
-
-.Example
-----
-[Cost: 5] skip;
-----
-
-Executing the above `skip` statement will consume 5 Speed resources from the
-deployment component where the cog was deployed.  If the deployment component
-does not have infinite Speed resources, executing the `skip` statement might take an observable amount of time.
-
-
-===== Bandwidth
-
-Bandwidth is a measure of transmission speed.  Bandwidth resources are
-consumed during method invocation and `return` statements.  Bandwidth
-resources are consumed on both the sending and the receiving deployment
-component.
-
-Bandwidth consumption is expressed via a `Size` annotation:
-
-.Example
-----
-[DataSize: 2 * length(x)] o!m(x);
-----
-
-Executing the above method invocation statement will consume bandwidth
-resources proportional to the length of list `x`.  The resources will be
-consumed both from the deployment component where the cog was deployed, and
-from the one where `o` was deployed.
-
-
-===== Memory
-
-The `Memory` resource type abstracts from the size of main memory, as a measure
-of how many and which cogs can be created on a deployment component.  In
-contrast to bandwidth and speed, memory does not influence the timed behavior
-of the simulation of an ABS model; it is used for static deployment modeling.
-
-
-===== Cores
-
-The `Cores` resource type expresses the number of CPU cores on a deployment
-component.  It is used for static deployment decisions and does not have
-influence on the timing behavior of simulations (use the `Speed` resource type
-for this purpose).
-
-
-==== Modeling Resource Usage
-
-As described above, resource models are added to an ABS model using annotations.  Adding annotations to specific statements and declarations causes side-effects on the status of an applicable deployment component.
-
-.Example
-----
-module Test;
-import * from ABS.DC; <1>
-interface I {
-  Unit process();
-}
-[DataSize: 3] <2>
-class C implements I {
-  Unit process() {
-    [Cost: 10] skip; <3>
-}
-
-{
-  DeploymentComponent dc = new DeploymentComponent("Server",
-    map[Pair(CPU, 5), Pair(Bandwidth, 10), Pair(Memory, 5)]);
-  [DC: dc] I i = new C(); <4>
-  [DataSize: 5] i!process(); <5>
-}
-----
-<1> Make all necessary identifiers accessible in the current module
-
-<2> Declare the memory needed to instantiate a cog of class `C`
-
-<3> Executing this statement costs 10 CPU units; the time needed depends on
-the CPU capacity of the deployment component, and on other cogs executing in
-parallel on the same deployment component.  In this example, executing the
-`skip` statement will take two time units.
-
-<4> Creating a new cog succeeds since the available memory (5) is more than
-the necessary memory (3).  Trying to create a second cog of the same class
-will fail.
-
-<5> Executing this method call consumes 5 Bandwidth resources.  Since `dc` has
-10 bandwidth per time unit, the message will be transported instantly.
-
-==== The CloudProvider API
-
-`(pre)launchInstance` might have a delay, the others are instantaneous.
-`launchInstance` might hand out an already-running instance if it has been
-released; in this case there will be no delay.
-
-`acquireInstance`, `releaseInstance` are called from deployment components.
-`launchInstance` does the equivalent of `acquireInstance`.
-
-
-Instance descriptions.  Call `setInstanceDescriptions` with a map of (name ->
-resources) information.  Then, `(pre)launchInstanceNamed` returns a deployment
-component with the specified resources, or `null` if the given name could not
-be found.  The resulting deployment components are then handled as normal
-(`acquireInstance`/`releaseInstance`/`killInstance`).
-
-
-----
-interface CloudProvider {
-    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d);
-    DeploymentComponent launchInstance(Map<Resourcetype, Rat> description);
-    Bool acquireInstance(DeploymentComponent instance);
-    Bool releaseInstance(DeploymentComponent instance);
-    Bool killInstance(DeploymentComponent instance);
-
-    [Atomic] Rat getAccumulatedCost();
-    [Atomic] Unit shutdown();
-
-    [Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions);
-    [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions();
-    DeploymentComponent prelaunchInstanceNamed(String instancename);
-    DeploymentComponent launchInstanceNamed(String instancename);
-}
-----
+The simulated clock advances such that it makes the least amount of “jumps”
+without missing any point of interest.  This means that when a process waits
+or blocks for an interval _(min, max)_, the clock will not advance more than
+_max_, since otherwise it would miss unblocking the process.  On the other
+hand, the clock will advance by the highest amount allowed by the model.  This
+means that if only one process waits for _(min, max)_, the clock will advance
+by _max_.
