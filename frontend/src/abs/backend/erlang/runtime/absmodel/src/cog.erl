@@ -197,7 +197,7 @@ loop(S=#state{running=R}) when is_pid(R)->
     New_State=
         receive
             {stop_world, _Sender} ->
-                R ! {stop_world, self()},
+                task:send_stop_for_gc(R),
                 S1 = await_task_stop_for_gc(S),
                 gc:cog_stopped(self()),
                 S1#state{running={gc, S1#state.running}}
@@ -221,7 +221,7 @@ loop(S=#state{running=R}) when is_pid(R)->
                     dec_ref_count->
                         dec_referencers(S);
                     {stop_world, _Sender} ->
-                        R ! {stop_world, self()},
+                        task:send_stop_for_gc(R),
                         S1 = await_task_stop_for_gc(S),
                         gc:cog_stopped(self()),
                         S1#state{running={gc, S1#state.running}}

@@ -14,7 +14,7 @@
 -include_lib("abs_types.hrl").
 
 -behaviour(gc).
--export([get_references/1]).
+-export([send_stop_for_gc/1, get_references/1]).
 
 %% Terminate recklessly.  Used to shutdown system when clock limit reached (if
 %% applicable).  Must be called when cog is stopped for GC.  (See
@@ -46,6 +46,9 @@ init(Task,Cog,Args)->
     Val=Task:start(InnerState),
     release_token(Cog,done),
     send_notifications(Val).
+
+send_stop_for_gc(Task) ->
+    Task ! {stop_world, self()}.
 
 get_references(Task) ->
     Task ! {get_references, self()},
