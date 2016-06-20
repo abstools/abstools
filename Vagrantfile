@@ -130,6 +130,13 @@ wget -nv http://costa.ls.fi.upm.es/download/saco.colab.zip
 rm saco.colab.zip
 
 echo
+echo "Installing aPET/SYCO command-line tool"
+echo
+wget -nv http://costa.ls.fi.upm.es/download/apet.colab.zip
+(cd /usr/local/lib && sudo unzip -o /home/vagrant/apet.colab.zip)
+rm apet.colab.zip
+
+echo
 echo "Moving ABS compiler into /usr/local/lib/absc"
 echo
 sudo mkdir -p /usr/local/lib/absc/frontend/bin/bash
@@ -212,6 +219,10 @@ EC_ABSTOOLSHOME="/usr/local/lib/absc"
 EC_COFLOCOHOME="/usr/local/lib/cofloco/"
 # path to SRA jar
 EC_SRAHOME="/usr/local/lib/sra/"
+# path to aPET
+EC_APETHOME="/usr/local/lib/apet"
+# path to SYCO
+EC_SYCOHOME="/usr/local/lib/apet"
 EOF
 sudo mv ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
 sudo chown root.root /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
