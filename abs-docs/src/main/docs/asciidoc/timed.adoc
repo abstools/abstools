@@ -125,3 +125,13 @@ _max_, since otherwise it would miss unblocking the process.  On the other
 hand, the clock will advance by the highest amount allowed by the model.  This
 means that if only one process waits for _(min, max)_, the clock will advance
 by _max_.
+
+[[fig-time-advance]]
+image:ABS-time-advance.png[width=510,height=150,title="Time Advance",alt="Time Advance"]
+
+Figure <<fig-time-advance>> shows two process, `P1` and `P2`.  They are
+waiting for time to advance between `(4, 6)` and `(3, 5)` units, respectively.
+Assuming that no other process is ready to run, the clock will advance the
+maximum amount that still hits the earliest interval, in this case 5.  Since
+the clock is now within both intervals, both processes will be unblocked and
+ready to run.
