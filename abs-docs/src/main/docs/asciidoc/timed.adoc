@@ -127,11 +127,11 @@ means that if only one process waits for _(min, max)_, the clock will advance
 by _max_.
 
 [[fig-time-advance]]
-image:ABS-time-advance.png[width=510,height=150,title="Time Advance",alt="Time Advance"]
+image::ABS-time-advance.png[width=510,height=150,title="Big-step time advance",alt="Big-step time advance"]
 
-Figure <<fig-time-advance>> shows two process, `P1` and `P2`.  They are
-waiting for time to advance between `(4, 6)` and `(3, 5)` units, respectively.
-Assuming that no other process is ready to run, the clock will advance the
-maximum amount that still hits the earliest interval, in this case 5.  Since
-the clock is now within both intervals, both processes will be unblocked and
-ready to run.
+Figure <<fig-time-advance>> shows a timeline with two process, `P1` and `P2`.
+They are waiting for time to advance between `(4, 6)` and `(3, 5)` units,
+respectively.  Assuming that no other process is ready to run, the clock will
+advance the maximum amount that still hits the earliest interval, in this
+case 5.  Since the clock is now within both intervals, both processes are
+unblocked and ready to run.
