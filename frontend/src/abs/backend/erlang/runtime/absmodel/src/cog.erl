@@ -40,12 +40,12 @@ start(DC)->
     Cog.
 
 add(#cog{ref=Cog},Task,Args)->
-    announce_new_task(Cog, Task, Args, self(), false),
+    announce_new_task(Cog, Task, Args, self(), false,{started, Task}),
     TaskRef=await_start(Task, Args),
     TaskRef.
 
 add_and_notify(#cog{ref=Cog},Task,Args)->
-    announce_new_task(Cog, Task, Args, self(), true),
+    announce_new_task(Cog, Task, Args, self(), true,{started, Task}),
     TaskRef=await_start(Task, Args),
     TaskRef.
 
@@ -53,7 +53,7 @@ add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
     %% we don't want task:block since this allowed time advance while creating
     %% an object
     task:block_without_time_advance(Cog),
-    announce_new_task(Ref, Task, Args, self(), false),
+    announce_new_task(Ref, Task, Args, self(), false,{started, Task}),
     TaskRef=await_start(Task,[Args|Stack]),
     task:acquire_token(Cog,[Args|Stack]),
     TaskRef.
@@ -101,8 +101,8 @@ kill_recklessly(Cog) ->
 
 %%Internal
 
-announce_new_task(Cog, Task, Args, Sender, Notify) ->
-    Cog!{new_task,Task,Args,Sender,Notify}.
+announce_new_task(Cog, Task, Args, Sender, Notify,Cookie) ->
+    Cog!{new_task,Task,Args,Sender,Notify,Cookie}.
 
 announce_task_state_changed(Cog, TaskRef, State, Sender) ->
     Cog!{new_state,TaskRef,State,Sender}.
@@ -139,9 +139,9 @@ loop(S=#state{running=no_task_schedulable})->
                             _ -> Sender!new_state_finished
                         end,
                         NewState;
-                    {new_task,Task,Args,Sender,Notify}->
+                    {new_task,Task,Args,Sender,Notify,Cookie}->
                         cog_monitor:cog_active(self()),
-                        start_new_task(S,Task,Args,Sender,Notify);
+                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
@@ -174,8 +174,8 @@ loop(S=#state{running=idle})->
                             _ -> Sender!new_state_finished
                         end,
                         NewState;
-                    {new_task,Task,Args,Sender,Notify}->
-                        start_new_task(S,Task,Args,Sender,Notify);
+                    {new_task,Task,Args,Sender,Notify,Cookie}->
+                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         set_task_state(S,R,abort);
                     inc_ref_count->
@@ -210,8 +210,8 @@ loop(S=#state{running=R}) when is_pid(R)->
                             _ -> Sender!new_state_finished
                         end,
                         NewState;
-                    {new_task,Task,Args,Sender,Notify}->
-                        start_new_task(S,Task,Args,Sender,Notify);
+                    {new_task,Task,Args,Sender,Notify,Cookie}->
+                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
                     {token,R,Task_state}->
                         set_task_state(S#state{running=idle},R,Task_state);
                     {'EXIT',R,Reason} when Reason /= normal ->
@@ -244,8 +244,8 @@ loop(S=#state{running={blocked, R}}) ->
                             _ -> Sender!new_state_finished
                         end,
                         NewState;
-                    {new_task,Task,Args,Sender,Notify}->
-                        start_new_task(S,Task,Args,Sender,Notify);
+                    {new_task,Task,Args,Sender,Notify,Cookie}->
+                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
@@ -274,8 +274,8 @@ loop(S=#state{running={blocked_for_gc, R}}) ->
                             _ -> Sender!new_state_finished
                         end,
                         NewState;
-                    {new_task,Task,Args,Sender,Notify}->
-                        start_new_task(S,Task,Args,Sender,Notify);
+                    {new_task,Task,Args,Sender,Notify,Cookie}->
+                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
                     {'EXIT',R,Reason} when Reason /= normal ->
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
@@ -329,10 +329,13 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
         _ -> loop(New_State)
     end.
 
-start_new_task(S=#state{running=R,tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify)->
+start_new_task(S=#state{running=R,tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify,Cookie)->
     Ref=task:start(#cog{ref=self(),tracker=Tracker,dc=DC},Task,Args),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
-    Sender!{started,Task,Ref},
+    case Cookie of
+        undef -> ok;
+        _ -> Sender!{Cookie,Ref}
+    end,
     %% Don't generate "cog idle" event when we create new task - this
     %% causes spurious clock advance
     R1=case R of no_task_schedulable -> idle; _ -> R end,
@@ -465,6 +468,6 @@ await_start(Task, Args) ->
         {get_references, Sender} ->
             Sender ! {gc:extract_references(Args), self()},
             await_start(Task, Args);
-        {started,Task,Ref}->
+        {{started,Task},Ref}->
             Ref
     end.
