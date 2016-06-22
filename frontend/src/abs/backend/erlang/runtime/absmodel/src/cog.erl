@@ -53,7 +53,7 @@ add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
     %% we don't want task:block since this allowed time advance while creating
     %% an object
     task:block_without_time_advance(Cog),
-    Ref!{new_task,Task,Args,self(),false},
+    announce_new_task(Ref, Task, Args, self(), false),
     TaskRef=await_start(Task,[Args|Stack]),
     task:acquire_token(Cog,[Args|Stack]),
     TaskRef.
