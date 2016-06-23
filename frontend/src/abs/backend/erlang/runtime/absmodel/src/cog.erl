@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
--export([start/0,start/1,add/3,add_and_notify/3,add_blocking/5,new_state/3,new_state_sync/4]).
+-export([start/0,start/1,add_async/4,add_and_notify/3,add_blocking/5,new_state/3,new_state_sync/4]).
 -export([add_dirty_object/2,get_and_clear_dirty/1,inc_ref_count/1,dec_ref_count/1]).
 -export([init/2]).
 -include_lib("abs_types.hrl").
@@ -39,10 +39,9 @@ start(DC)->
     gc:register_cog(Cog),
     Cog.
 
-add(#cog{ref=Cog},Task,Args)->
-    announce_new_task(Cog, Task, Args, self(), false,{started, Task}),
-    TaskRef=await_start(Task, Args),
-    TaskRef.
+add_async(#cog{ref=Cog},Task,Args,Cookie)->
+    announce_new_task(Cog, Task, Args, self(),false,Cookie),
+    ok.
 
 add_and_notify(#cog{ref=Cog},Task,Args)->
     announce_new_task(Cog, Task, Args, self(), true,{started, Task}),

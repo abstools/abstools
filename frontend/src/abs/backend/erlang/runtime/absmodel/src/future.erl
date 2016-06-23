@@ -165,12 +165,23 @@ die(Ref, Reason) ->
 init(Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params, Caller)->
     %%Start task
     process_flag(trap_exit, true),
+    Cookie={started, Cog, Callee},
     MonRef=monitor(process,CogRef),
-    cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
+    cog:add_async(Cog,async_call_task,[self(),Callee,Method|Params], Cookie),
     demonitor(MonRef),
+    TaskRef=wait_for_task_registered(Cookie, [Callee | Params], false),
     Caller ! {ok, self()},
     gc:register_future(self()),
     wait_for_completion(gc:extract_references(Params)).
+
+wait_for_task_registered(Cookie, Refs, StopForGC) ->
+    receive
+        {Cookie, TaskRef} ->
+            TaskRef;
+        {get_references, Sender} ->
+            Sender ! {gc:extract_references(Refs), self()},
+            wait_for_task_registered(Cookie, Refs, StopForGC)
+    end.
 
 %% Future awaiting reply from task completion
 wait_for_completion(References) ->
