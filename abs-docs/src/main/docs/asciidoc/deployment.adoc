@@ -1,121 +1,149 @@
 == Resource Modeling in Timed ABS
 
-Resource Modeling deals with simulating and analyzing the non-functional
-properties of models: code deployment on varying numbers and kinds of
-machines, and the effects of different CPU speeds, interconnection bandwidth,
-code locality, etc. on the performance of a system.  This section describes
-the constructs ABS offers to the modeler.
 
-All language identifiers described in this section reside in the `ABS.DC` package.  To use them, define a module as follows:
+ABS can be used to simulate the effects of deployment decisions on the cost
+and performance of running a distributed system.  To achieve this, we need to
+add the following aspects to a model:
 
-----
-module Name;
-import * from ABS.DC;
-----
-
+* A notion of _time_ to express the runtime effects of varying the system (see
+  <<sec:timed-abs>>)
+* A notion of _location_ to describe where some component of the overall
+  system is executing (see <<sec:deployment-components>>)
+* A notion of _cost_ of executing parts of a system, against various resource
+  types (see <<sec:resources>>)
 
 
+In this chapter, we deal with the non-functional properties of systems: code
+deployment on varying numbers and kinds of machines, and the effects of code
+locality and different resource types such as CPU speeds, interconnection
+bandwidth, etc. on the performance of a system.
 
+All language identifiers described in this section reside in the `ABS.DC`
+module.
+
+
+[[sec:deployment-components]]
 === Deployment Components
 
-A Deployment Component (abbreviated as `DC`) is 
-the abstraction of a computational unit which is responsible for running ABS computations (programs).
-Such a computational unit can either be realised by an OS process, physical machine, virtual machine
-or a multitude of machines. By using DCs, the programmer can write ABS programs
-that span across multiple computational units, similar to a distributed setting.
+In ABS, processes run inside cogs.  Deployment components are used to provide
+a location to cogs.  Cogs residing on the same deployment component share the
+resources provided by the deployment component.
 
-Based on the fact that a DC is a single *unit* that (pro)*actively* behaves (runs ABS code),
-it is modelled as an _active object_, discussed in the previous section.
-All DC objects are typed by the `DC` interface, defined in ABS as:
-
-[source]
-----
-interface IDC {
-  Unit shutdown();
-  Triple<Rat,Rat,Rat> load();
-}
-----
-
-With the `shutdown` method, a DC can safely be brought down, subsequently
-freeing its occupied resources. The `load` method permits the user to probe for the
-average load of the computational unit, that is how much utilized (busy) was the unit
-in the last 1 , 5 and 15 minutes of execution. The following example is self-explanatory:
-
-[source]
-
-----
-DC dc1 = new MyDC();
-Fut<Triple<Rat,Rat,Rat>> f_avgs = dc1 ! load();
-Triple<Rat,Rat,Rat> avgs = f_avgs.get();
-dc1 ! shutdown();
-----
-
-NOTE: The ABS language specification does not define any built-in DC classes.
-It is in the discretion of the ABS backends to provide with suitable DC classes (implementations).
-
-After a new DC object is created, its associated computational unit is started and
-sits waiting to execute ABS computations. To start ABS computations, the user
-must create (active) objects inside the remote computational unit. This is
-called `object spawning', illustrated by the example:
-
-[source]
-
-----
-[DC: dc1] Interf1 o1 = new Class1(params..);
-o1 ! method1( params ..);
-this.method2( o1 );
-----
-
-The `DC` annotation on a `new` creates a new object in the given DC. The created object can only be placed in a new COG.
-The returned object reference (`o1` in the example) is treated as normal (can be passed to arguments, called for its methods, etc.).
-
-The function `thisDC()` is provided that can be put anywhere inside an ABS program to return
-the computational unit where the calling code executes in.
-
-[source]
-----
-{
-  DC whereami = thisDC();
-}
-----
-
-
-
-
-=== Deployment Components
-
-Modeling code deployment and code execution under resource constraints
-requires a notion of _locality_.  For this purpose, ABS offers a language
-construct called Deployment Component.
-
-Deployment Components are first-class language constructs in that they can be
-created, referenced and interacted with from within the model.  A reference to
-a deployment component is treated the same way as a reference to an object.
-Deployment Components are created using the `new` expression.  Any other cog
-can be created "on" a deployment component by using a `DC` annotation to the
-`new` statement.
-
-.Resources and Deployment Components
-
-Each deployment component "carries" some possibly infinite amount of resources
-for each resource type.  This is expressed as a map from resource type to a
-number, for example `map[Pair(Speed, 10), Pair(Bandwidth, 20)]`.  Resource types
-not included, such as `Memory` in the above example, are treated as being
-infinite.
-
+Deployment Components are first-class constructs in the ABS language.  A
+reference to a deployment component is treated the same way as a reference to
+an object.  Deployment Components are created using the `new` expression.  Any
+other cog can be created "on" a deployment component by using a `DC`
+annotation to the `new` statement.
 
 .Example
 ----
 DeploymentComponent dc = new DeploymentComponent("Server 1", map[Pair(Speed, 10)]); <1>
 [DC: dc] Worker w = new CWorker(); <2>
 ----
-<1> A new deployment component `dc` is created with 10 `Speed` resources
-<2> `w` will run inside `dc`
+<1> A new deployment component `dc` is created with 10 `Speed` resources <2>
+`w` is created on the new deployment component `dc`
 
 NOTE: It is an error to try to locally create deployment components (via `new
 local DeploymentComponent(...)`) or new local objects on another cog (via
 `[DC: x] new local C()`).
 
+.Resources and Deployment Components
+
+As seen above, each deployment component “carries” some amount of resources
+for each resource type.  This is expressed as a map from resource type to a
+number, for example `map[Pair(Speed, 10), Pair(Bandwidth, 20)]`.  When no
+amount is given for some resource type, it is infinite.  See <<sec:resources>>
+for a description of the available resource types.
+
+==== Methods
+
+.[Atomic] Rat load(Resourcetype rtype, Int periods)
+
+Return the load (0-100) for given resource type `rtype` over the last `n`
+periods.  If resource is infinite, return `0`.
+
+.[Atomic] InfRat total(Resourcetype rtype)
+
+Return the total available amount for given resourcetype.  If the resource
+type is infinite, return `InfRat`; if it has value _value_, return
+`Fin(value)`.
+
+.Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype)
+
+Transfer `amount` resources of type `rtype` from the current deployment
+component to `target`.  Takes effect on the next time period.
+
+(This method is implemented via `decrementResources` and
+`incrementResources`.)
+
+.Unit decrementResources(Rat amount, Resourcetype rtype)
+
+Decrement available resourcetype by given amount from the next time interval
+onwards.
+
+.Unit incrementResources(Rat amount, Resourcetype rtype)
+
+Increment available resourcetype by given amount from the next time interval
+onwards.
+
+
+.[Atomic] String getName()
+
+Returns the name of the deployment component.  The name is set by the first
+argument to the `new` expression.
+
+.[Atomic] Time getCreationTime()
+
+Get the creation time of the deployment component, in terms of the simulated clock.
+
+.[Atomic] Rat getStartupDuration()
+
+Get the specified startup duration, or 0 if none specified.
+
+.[Atomic] Rat getShutdownDuration()
+
+Get the specified shutdown duration, or 0 if none specified.
+
+
+.[Atomic] Int getPaymentInterval()
+
+Get the specified payment interval, or 1 if none specified.
+
+.[Atomic] Rat getCostPerInterval()
+
+Get the specified cost per interval, or 0 if none specified.
+
+
+.Bool shutdown()
+
+Shut down the deployment component.  It is an error to create a new object on
+a deployment component that has been shutdown, or to invoke a method on an
+object residing on a deployment component that has been shut down.
+
+.[Atomic] Unit setProvider(CloudProvider provider)
+
+Set the cloud provider that manages this deployment component.  See
+<<sec:cloudprovider>> for a discussion of cloud providers.
+
+.[Atomic] CloudProvider getProvider()
+
+Get the cloud provider that manages this deployment component.  Returns `null`
+if no cloud provider set.  See <<sec:cloudprovider>> for a discussion of cloud
+providers.
+
+.Bool acquire()
+
+Convenience method for calling `acquireInstance` of the associated cloud
+provider.  If no cloud provider is set, returns `True`.
+
+.Bool release()
+
+Convenience method for calling `releaseInstance` of the associated cloud
+provider.  If no cloud provider is set, returns `True`.
+
+
+
+[[sec:resources]]
 === Resource Types
 
 The term _Resource_ can be used in different ways.  In ABS, we understand a
@@ -221,6 +249,7 @@ will fail.
 <5> Executing this method call consumes 5 Bandwidth resources.  Since `dc` has
 10 bandwidth per time unit, the message will be transported instantly.
 
+[[sec:cloudprovider]]
 === The CloudProvider API
 
 `(pre)launchInstance` might have a delay, the others are instantaneous.
