@@ -56,22 +56,37 @@ programming language.
 [[sec:concurrency-model]]
 === The ABS Actor and Concurrency Model
 
-
 As mentioned, ABS method calls are asynchronous and create a new process in
-the target, while the caller process continues to run in parallel (see
-<<async-call-expression>>).  The calling process can synchronize with the
-callee via the *future variable* associated with the method call (see
-<<await-stmt>>).  The method call’s result is then obtained from the future
-via a `get` expression (see <<get-expression>>).
+the target, while the caller process continues to run in parallel, as shown in
+Figure <<fig-future-await>>.  At point ①, P1 issues an asynchronous call to
+some object residing on another cog.  In response, a new process P2 is
+created; P1 and P2 can run in parallel.  At point ②, P1 needs the result of
+the method call and suspends itself.  At point ③, P2 finishes and returns a
+value.  P1’s cog then reactivates P1 to continue execution.
+
+[[fig-future-await]]
+image::ABS-future-await.png[width=636,height=233,title="Process call semantics",alt="Process call semantics"]
+
+The paragraph above elides some details.  An asynchronous method call (see
+<<async-call-expression>>) produces a _future variable_, which is used both to
+synchronize with the callee process (see <<await-stmt>>) and to get the result
+(see <<get-expression>>).  Future variables are first-class objects that can
+be passed along, so multiple processes can synchronize on the same future.
+
 
 The processes created by method calls are scheduled cooperatively and run
 within the scope of the target object.  Objects are grouped into COGs
 (Concurrent Object Groups).  Each cog runs one process at a time, while
-processes on different cogs run in parallel.  This means that each cog is a
-*unit of concurrency* and is in charge of scheduling the processes running on
-its objects.  Each process runs until it suspends itself (see <<await-stmt>>
-and <<suspend-stmt>>) or terminates, at which point the cog chooses the next
+processes on different cogs run in parallel, as shown in Figure
+<<fig-cog-scheduling>>.  This means that each cog is a *unit of concurrency*
+and is in charge of scheduling the processes running on its objects.  Each
+process runs until it suspends itself (see <<await-stmt>> and
+<<suspend-stmt>>) or terminates, at which point the cog chooses the next
 process to run.
+
+[[fig-cog-scheduling]]
+image::ABS-scheduling.png[width=636,height=283,title="Processes running inside their cogs",alt="Processes running inside their cogs"]
+
 
 A new cog is created by creating an object with a `new` expression (see Figure
 <<fig-object-new-cog>>).
