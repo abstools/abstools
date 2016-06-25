@@ -231,6 +231,7 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
                         false ->
                             io:format("Simulation time limit reached; terminating~n", []),
                             Cogs=gb_sets:union([State#state.active, State#state.blocked, State#state.idle]),
+                            gc:stop(), % eliminate gc crash when it receives `stopped' messages in idle state
                             gb_sets:fold(fun (Ref, ok) -> cog:stop_world(Ref) end, ok, Cogs),
                             gb_sets:fold(fun (Ref, ok) -> cog:kill_recklessly(Ref) end, ok, Cogs),
                             {ok,T1} = case T of
