@@ -189,6 +189,12 @@ aspect GenerateErlang {
               ecs.print(",");
               ecs.print(vars.toStack());
               ecs.println("),");
+          } else if (stmt instanceof ReturnStmt) {
+              ecs.print("task:block_for_bandwidth(Cog,DC,null,");
+              size.generateErlangCode(ecs, vars);
+              ecs.print(",");
+              ecs.print(vars.toStack());
+              ecs.println("),");
           }
       }
       stmt.generateErlangCode(ecs,vars);

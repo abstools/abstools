@@ -170,7 +170,11 @@ block_for_bandwidth(Cog, DC, _Callee=#object{cog=#cog{dc=TargetDC}}, Amount, Sta
     case DC == TargetDC of
         true -> ok;
         false -> block_for_resource(Cog, DC, bw, Amount, Stack)
-    end.
+    end;
+block_for_bandwidth(Cog, DC, null, Amount, Stack) ->
+    %% KLUDGE: on return statements, we don't know where the result is sent.
+    %% Consume bandwidth now -- fix this once the semantics are resolved
+    block_for_resource(Cog, DC, bw, Amount, Stack).
 
 
 release_token(C=#cog{ref=Cog},State)->
