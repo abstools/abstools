@@ -144,23 +144,29 @@ block_for_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
     task:acquire_token(Cog, Stack).
 
 block_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
-    {Result, Consumed}= dc:consume(DC,Resourcetype,Amount),
-    Remaining=rationals:sub(rationals:to_r(Amount), rationals:to_r(Consumed)),
-    case Result of
-        wait ->
-            Time=clock:distance_to_next_boundary(),
-            cog_monitor:task_waiting_for_clock(self(), CogRef, Time, Time),
-            task:block_with_time_advance(Cog),           % cause clock advance
-            loop_for_clock_advance(Stack),
-            task:acquire_token(Cog,Stack),
-            block_for_resource(Cog, DC, Resourcetype, Remaining, Stack);
-        ok ->
-            case rationals:is_positive(Remaining) of
-                %% We loop since the DC might decide to hand out less
-                %% than we ask for and less than it has available.
-                true -> block_for_resource(Cog, DC, Resourcetype, Remaining, Stack);
-                false -> ok
-            end
+    Amount_r = rationals:to_r(Amount),
+    case rationals:is_positive(Amount_r) of
+        true ->
+            {Result, Consumed}= dc:consume(DC,Resourcetype,Amount_r),
+            Remaining=rationals:sub(Amount_r, rationals:to_r(Consumed)),
+            case Result of
+                wait ->
+                    Time=clock:distance_to_next_boundary(),
+                    cog_monitor:task_waiting_for_clock(self(), CogRef, Time, Time),
+                    task:block_with_time_advance(Cog),           % cause clock advance
+                    loop_for_clock_advance(Stack),
+                    task:acquire_token(Cog,Stack),
+                    block_for_resource(Cog, DC, Resourcetype, Remaining, Stack);
+                ok ->
+                    case rationals:is_positive(Remaining) of
+                        %% We loop since the DC might decide to hand out less
+                        %% than we ask for and less than it has available.
+                        true -> block_for_resource(Cog, DC, Resourcetype, Remaining, Stack);
+                        false -> ok
+                    end
+            end;
+        false ->
+            ok
     end.
 
 block_for_cpu(Cog, DC, Amount, Stack) ->
