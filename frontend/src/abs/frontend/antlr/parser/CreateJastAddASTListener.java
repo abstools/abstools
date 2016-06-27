@@ -216,7 +216,7 @@ new List<ModuleDecl>(),
 
     // Classes
     @Override public void exitClass_decl(ABSParser.Class_declContext ctx) {
-        ClassDecl c = (ClassDecl)setV(ctx, new ClassDecl(ctx.TYPE_IDENTIFIER().getText(), l(ctx.annotation()), new List<ParamDecl>(), l(ctx.interface_name()), new Opt<InitBlock>(), l(ctx.field_decl()), l(ctx.method())));
+        ClassDecl c = (ClassDecl)setV(ctx, new ClassDecl(ctx.TYPE_IDENTIFIER().getText(), l(ctx.annotation()), new List<ParamDecl>(), l(ctx.interface_name()), new Opt<InitBlock>(), l(ctx.casestmtbranch()), l(ctx.field_decl()), l(ctx.method())));
         if (ctx.paramlist() != null) {
             c.setParamList((List<ParamDecl>)v(ctx.paramlist()));
         }

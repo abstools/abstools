@@ -211,6 +211,7 @@ class_decl : annotation*
         '{'
         field_decl*
         ('{' stmt* '}')?
+        ( 'recover' '{' casestmtbranch* '}' )?
         method*
         '}'
     ;
