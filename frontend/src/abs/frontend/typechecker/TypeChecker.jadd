@@ -254,6 +254,9 @@ aspect TypeChecker {
             getInitBlock().typeCheck(e);
             getInitBlock().checkLegalInit(e, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE);
         }
+        for (CaseBranchStmt recoverBranch : getRecoverBranchList()) {
+            recoverBranch.getRight().checkLegalInit(e, ErrorMessage.NOT_ALLOWED_IN_RECOVER_CODE);
+        }
 
         HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
         addAllMethodSigs(sigs,e);  
