@@ -189,6 +189,38 @@ client, but not its constructors.  This can be easily realized in ABS by
 putting such a data type in its own module and by only exporting the data type
 and its functions, without exporting the constructors.
 
+=== The Future Type
+
+Futures are placeholders for return values of asynchronous methods calls.
+
+Future values are produced by asynchronous method calls (see
+<<async-call-expression>>).  The current process can suspend itself until a
+future is resolved, i.e., until the return value of the asynchronous method
+call is available (see <<await-stmt>>).  The get expression returns the value
+of a future (see <<get-expression>>).  In case the future is not yet resolved,
+the get expression blocks the current cog.
+
+.Example
+[source]
+----
+Fut<Int> f = o!add(2, 3); <1>
+await f?; <2>
+Int result = f.get; <3>
+----
+<1> This statement defines a future variable `f` to hold the integer result of the method call to `add`.
+<2> The `await` statement suspends the current process until `f` is resolved.
+<3> The `get` expression returns the value computed by the `add` call.
+
+Futures are first-class values that can be stored and passed around.  In case
+only the return value of the method call is needed and not the future itself,
+a shorthand can be used that combines the above three statements:
+
+.Example
+[source]
+----
+Int result = await o!add(2, 3); <1>
+----
+<1> This statement invokes `add`, suspends the current process until the result is available, then stores it in `result`.
 
 === The Exception Type
 
