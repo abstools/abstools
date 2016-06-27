@@ -21,10 +21,15 @@ endif
 
 frontend:			## Build ABS compiler
 	ant -buildfile frontend/build.xml dist
+	@echo "Finished."
+	@echo "absc command installed in frontend/bin/bash/"
 
 manual:				## Build the ABS manual
 	mvn -B -f abs-docs clean install
-	@echo "Finished.  Output in abs-docs/target/classes/docs/(html,pdf,epub3/docbook)"
+	@echo "Finished."
+	@echo "HTML: abs-docs/target/classes/docs/html/index.html"
+	@echo "PDF: abs-docs/target/classes/docs/pdf/index.pdf"
+	@echo "Epub3: abs-docs/target/classes/docs/epub3/index.epub"
 
 vagrant:			## Build and start Vagrant virtual machine
 	vagrant up
@@ -32,7 +37,8 @@ vagrant:			## Build and start Vagrant virtual machine
 docker: frontend		## Build and start 'easyinterface' docker image
 	$(DOCKER) build -t easyinterface .
 	$(DOCKER) run -d -p 8080:80 --name easyinterface easyinterface
-	echo "Finished.  Easyinterface running on port 8080"
+	@echo "Finished."
+	@echo "Easyinterface running on http://localhost:8080/"
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
