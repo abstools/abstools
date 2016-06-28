@@ -10,6 +10,7 @@ import static abs.backend.tests.AbsASTBuilderUtil.newObj;
 import static apet.absunit.ABSUnitTestCaseTranslatorConstants.ASSERT_HELPER;
 import abs.backend.tests.AbsASTBuilderUtil.DeclNamePredicate;
 import abs.frontend.ast.Annotation;
+import abs.frontend.ast.CaseBranchStmt;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataConstructorExp;
@@ -84,6 +85,7 @@ class ABSUnitTestCaseTranslatorHelper {
 				new abs.frontend.ast.List<ParamDecl>(),
 				new abs.frontend.ast.List<InterfaceTypeUse>(),
 				new Opt<InitBlock>(),
+                                new abs.frontend.ast.List<CaseBranchStmt>(),
 				new abs.frontend.ast.List<FieldDecl>(),
 				new abs.frontend.ast.List<MethodImpl>());
 
