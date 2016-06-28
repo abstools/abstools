@@ -61,16 +61,23 @@ Classes have an optional init block, which is executed before any other code.
 The init block cannot contain processor release points (i.e., `await` or
 `suspend`).
 
+Classes have an optional recovery block.  In case an uncaught exception occurs
+in a method, the exception is matched against the patterns given in the
+recovery block, and the associated statement(s) are executed.  If the
+exception does not match any pattern in the recovery block, or if the recovery
+block itself raises an exception, the object is killed.  Code in the recovery
+block has the same restrictions as in the init block.
 
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
 | _ClassDecl_ ::= | `class` _SimpleTypeIdentifier_ [ `(` [ _ClassParameterList_ ] `)` ] [ `implements` _InterfaceList_ ]
-|                 | `{` [ _FieldDeclList_ ] [ _Block_ ] [ _MethDeclList_ ] `}`
+|                 | `{` [ _FieldDeclList_ ] [ _Block_ ] [_RecoveryBlock_] [ _MethDeclList_ ] `}`
 | _ClassParameterList_ ::= | _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ }
 | _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
 | _FieldDeclList_ ::= | { _Type_ _SimpleIdentifier_ [ `=` _PureExp_ ] `;` }
+| _RecoveryBlock_ ::= | `recover` `{` { _Pattern_ `\=>` _Stmt_ } `}`
 | _MethDeclList_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` _Block_
 |====
 
