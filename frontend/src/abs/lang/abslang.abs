@@ -46,6 +46,7 @@ export Inv, Pre, Post;
 // Various annotations
 export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer;
 export COG, Plain, Final, Atomic;
+export RESTName;
 
 // Functional breakpoints
 // TODO: find out where they are defined / used
@@ -554,6 +555,9 @@ def A watchEx<A, B>(A val, B info) = builtin;
 def Unit println(String s) = builtin;
 def Unit print(String s) = builtin;
 def String readln() = builtin;
+
+// Annotation for making an object accessible via REST
+type RESTName = String;
 
 module ABS.StdLib.Exceptions;
 export *;
