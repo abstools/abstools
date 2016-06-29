@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker.ext;
@@ -20,27 +20,38 @@ import abs.frontend.ast.VarDeclStmt;
 /**
  * @author rudi
  *
- * Checks for type of DC annotation (must be DeploymentComponent) and for creation of deployment components within another cog (not possible).
- */
-public class DeploymentComponentChecker extends DefaultTypeSystemExtension {
+ * Checks for type correctness of `new' expression annotations.
 
-    protected DeploymentComponentChecker(Model m) {
+ * - DC annotation must be of type ABS.DC.DeploymentComponent
+ *
+ * - DC annotation cannot be on `new local' expression
+ *
+ * - Deployment components cannot be created with `new local'
+ *
+ * - `RESTName' annotation must be of type String
+ */
+public class NewExpressionChecker extends DefaultTypeSystemExtension {
+
+    protected NewExpressionChecker(Model m) {
         super(m);
     }
 
     @Override
     public void checkExpressionStmt(ExpressionStmt expressionStmt) {
         checkDCCorrect(expressionStmt, CompilerUtils.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.DC.DC"));
+        checkRESTNameCorrect(expressionStmt, CompilerUtils.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.StdLib.RESTName"));
     }
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
         checkDCCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.DC.DC"));
+        checkRESTNameCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.StdLib.RESTName"));
     }
 
     @Override
     public void checkVarDeclStmt(VarDeclStmt varDeclStmt) {
         checkDCCorrect(varDeclStmt, CompilerUtils.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.DC.DC"));
+        checkRESTNameCorrect(varDeclStmt, CompilerUtils.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.StdLib.RESTName"));
     }
 
     private void checkDCCorrect(ASTNode<?> n, PureExp dc) {
@@ -49,7 +60,14 @@ public class DeploymentComponentChecker extends DefaultTypeSystemExtension {
             errors.add(new TypeError(n, ErrorMessage.WRONG_DEPLOYMENT_COMPONENT, dc.getType().getQualifiedName()));
         }
     }
-    
+
+    private void checkRESTNameCorrect(ASTNode<?> n, PureExp restname) {
+        if (restname == null) return;
+        if (!restname.getType().isStringType()) {
+            errors.add(new TypeError(n, ErrorMessage.WRONG_RESTNAME, restname.getType().getQualifiedName()));
+        }
+    }
+
     @Override
     public void checkNewExp(NewExp e) {
         if (e.hasLocal()) {
@@ -65,5 +83,4 @@ public class DeploymentComponentChecker extends DefaultTypeSystemExtension {
             }
         }
     }
-      
 }

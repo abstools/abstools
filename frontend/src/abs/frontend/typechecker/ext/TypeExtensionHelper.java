@@ -23,7 +23,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         register(new ClassKindTypeExtension(m));
         register(new FinalAnnotationTypeExtension(m));
         register(new AtomicityChecker(m));
-        register(new DeploymentComponentChecker(m));
+        register(new NewExpressionChecker(m));
         register(new DeadlineChecker(m));
         register(new SizeAnnotationChecker(m));
         register(new CostAnnotationChecker(m));
