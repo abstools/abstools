@@ -20,7 +20,11 @@ EC_ABSTOOLSHOME=\"/usr/local/lib/\"\n\
 # path to COFLOCO\n\
 EC_COFLOCOHOME=\"/usr/local/lib/cofloco/\"\n\
 # path to SRA jar\n\
-EC_SRAHOME=\"/usr/local/lib/sra/\"\n" > /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG \
+EC_SRAHOME=\"/usr/local/lib/sra/\"\n\
+# path to aPET\n\
+EC_APETHOME=\"/usr/local/lib/apet\"\n\
+# path to SYCO\n\
+EC_SYCOHOME=\"/usr/local/lib/apet\"\n" > /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG \
  && cp /var/www/easyinterface/server/config/envisage.cfg /var/www/easyinterface/server/config/eiserver.cfg \
  && cp /var/www/easyinterface/clients/web/envisage.cfg /var/www/easyinterface/clients/web/webclient.cfg \
  && chmod -R 755 /var/www/easyinterface \
@@ -55,7 +59,10 @@ RUN curl http://costa.ls.fi.upm.es/download/saco.colab.zip -\# -o saco.colab.zip
  && rm cofloco.colab.zip \
  && curl http://costa.ls.fi.upm.es/download/sra.colab.zip -\# -o sra.colab.zip \
  && unzip sra.colab.zip -d /usr/local/lib \
- && rm sra.colab.zip
+ && rm sra.colab.zip \
+ && curl http://costa.ls.fi.upm.es/download/apet.colab.zip -\# -o apet.colab.zip \
+ && unzip apet.colab.zip -d /usr/local/lib \
+ && rm apet.colab.zip
 COPY frontend/dist/absfrontend.jar /usr/local/lib/frontend/dist/absfrontend.jar
 COPY frontend/bin/bash/absc /usr/local/lib/frontend/bin/bash/absc
 RUN chmod a+r /usr/local/lib/frontend/dist/absfrontend.jar \
