@@ -42,6 +42,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
                                                , { ENVISAGE_DIR + "T4.2/D4.2.1/Crawling.abs" }
                                                , { ENVISAGE_DIR + "T4.2/D4.2.1/MapReduce.abs" }
                                                , { ENVISAGE_DIR + "T4.2/D4.2.1/Downloading.abs" }
+                                               , { ENVISAGE_DIR + "T4.4/D4.4.1/" }
                                                };
         return Arrays.asList(data);
     }
