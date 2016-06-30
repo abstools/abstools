@@ -34,16 +34,20 @@ public class CaseStudyTypeChecking extends FrontendTest {
     /**
      * Use a property to be able to point JUnit in the right direction and override the default
      */
-    private static String ENVISAGE_DIR = System.getProperty("abs.junit.envisage", "../examples/");
+    private static String EXAMPLES_DIR = System.getProperty("abs.junit.examples", "../examples/");
+    private static String ENVISAGE_DIR = System.getProperty("abs.junit.envisage", "~/envisage/");
 
     @Parameters(name="{0}")
     public static Collection<?> data() {
-        final Object[][] data = new Object[][] { { ENVISAGE_DIR + "T4.3/D4.3.1/FredhopperCloudServices.abs" }
-                                               , { ENVISAGE_DIR + "T4.2/D4.2.1/Indexing.abs" }
-                                               , { ENVISAGE_DIR + "T4.2/D4.2.1/Crawling.abs" }
-                                               , { ENVISAGE_DIR + "T4.2/D4.2.1/MapReduce.abs" }
-                                               , { ENVISAGE_DIR + "T4.2/D4.2.1/Downloading.abs" }
-                                               , { ENVISAGE_DIR + "T4.4/D4.4.1/" }
+        final Object[][] data = new Object[][] { { EXAMPLES_DIR + "T4.3/D4.3.1/FredhopperCloudServices.abs" }
+                                               , { EXAMPLES_DIR + "T4.2/D4.2.1/Indexing.abs" }
+                                               , { EXAMPLES_DIR + "T4.2/D4.2.1/Crawling.abs" }
+                                               , { EXAMPLES_DIR + "T4.2/D4.2.1/MapReduce.abs" }
+                                               , { EXAMPLES_DIR + "T4.2/D4.2.1/Downloading.abs" }
+                                               , { EXAMPLES_DIR + "T4.4/D4.4.1/" }
+                                               , { ENVISAGE_DIR + "WP4/T4.2/integrated/Atbrox.abs" }
+                                               , { ENVISAGE_DIR + "WP4/T4.2/integrated/AtbroxMultiHandset.abs" }
+                                               , { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas.abs" }
                                                };
         return Arrays.asList(data);
     }
