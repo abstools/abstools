@@ -141,10 +141,9 @@ echo "Moving ABS compiler into /usr/local/lib/absc"
 echo
 sudo mkdir -p /usr/local/lib/absc/frontend/bin/bash
 sudo mkdir -p /usr/local/lib/absc/frontend/dist
-sudo cp /vagrant/frontend/dist/absfrontend.jar /usr/local/lib/absc/frontend/dist
-sudo chmod a+r /usr/local/lib/absc/frontend/dist/absfrontend.jar
-sudo cp /vagrant/frontend/bin/bash/absc /usr/local/lib/absc/frontend/bin/bash
-sudo chmod a+rx /usr/local/lib/absc/frontend/bin/bash/absc
+sudo cp -R /vagrant/frontend/dist /vagrant/frontend/bin /vagrant/frontend/lib /usr/local/lib/absc/frontend/
+sudo chmod -R a+r /usr/local/lib/absc/frontend
+sudo chmod a+rx /usr/local/lib/absc/frontend/bin/bash/*
 
 # workaround for re-used temporary directory: need to be writable
 # by users www-data (for easyinterface) and vagrant (for commandline)

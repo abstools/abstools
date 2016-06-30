@@ -23,7 +23,7 @@ sudo pip install antlr4-python2-runtime toposort psutil
 cd $SRC
 git clone --recursive -b bind_preferences https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git
 cd zephyrus2
-git checkout 0f464ebb4fa07598875756a8fdc88e3ed3418b5f
+git checkout 6fb606bba57fb437d92f2df4a0c2faa9daa6cad5
 #check out tested version with smartdeployer
 sudo pip install -e $SRC/zephyrus2
 
