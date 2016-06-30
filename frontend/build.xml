@@ -42,7 +42,7 @@
   <property name="objenesis.jar" value="objenesis-1.2.jar" />
   <property name="target.jar" value="${dist.dir}/absfrontend.jar" />
   <property name="plugin.name" value="org.abs-models.abs.compiler" />
-  <property name="casestudies.dir" location="${base.dir}/../../../../../CaseStudies/models/" />
+  <property name="casestudies.dir" location="${base.dir}/../../examples/" />
 
 
   <!-- The package name of JastAdd generated files -->
@@ -321,16 +321,14 @@
 
   <target name="test-case-studies" depends="compile" description="typecheck all case studies">
       <antcall target="abs-typecheck">
-        <param name="absmodeldir" value="${casestudies.dir}/tradingsystem/absmodel/abs/tradingsystem"/>
+        <param name="absmodeldir" value="${casestudies.dir}/T4.2/D4.2.1/"/>
        </antcall>
-
-        <antcall target="abs-typecheck">
-            <param name="absmodeldir" value="${casestudies.dir}/vof"/>
-         </antcall>
-
-        <antcall target="abs-typecheck">
-            <param name="absmodeldir" value="${casestudies.dir}/fredhopper/replication/abs"/>
-         </antcall>
+      <antcall target="abs-typecheck">
+        <param name="absmodeldir" value="${casestudies.dir}/T4.3/D4.3.1/"/>
+       </antcall>
+      <antcall target="abs-typecheck">
+        <param name="absmodeldir" value="${casestudies.dir}/T4.4/D4.4.1/"/>
+       </antcall>
   </target>
 
   <target name="abs-typecheck">
