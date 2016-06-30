@@ -7,7 +7,7 @@ package abs.frontend.typechecker.ext;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.BoundedType;
 import abs.frontend.typechecker.DataTypeType;
@@ -26,7 +26,9 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         register(new DeploymentComponentChecker(m));
         register(new DeadlineChecker(m));
         register(new SizeAnnotationChecker(m));
+        register(new CostAnnotationChecker(m));
         register(new SchedulerChecker(m));
+        register(new MainBlockChecker(m));
     }
 
     public TypeSystemExtension getFirstRegisteredTypeExtension(Class<?> clazz) {
@@ -38,15 +40,15 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         return null;
     }
 
-    public void setSemanticErrorList(SemanticErrorList s) {
+    public void setSemanticConditionList(SemanticConditionList s) {
         for (TypeSystemExtension tse : obs) {
-            tse.setSemanticErrorList(s);
+            tse.setSemanticConditionList(s);
         }
     }
 
-    public void typeCheckStarted(Model m, SemanticErrorList e) {
+    public void typeCheckStarted(Model m, SemanticConditionList e) {
         registerDefaultExtensions(m);
-        setSemanticErrorList(e);
+        setSemanticConditionList(e);
     }
 
     public void register(TypeSystemExtension tse) {
@@ -303,6 +305,13 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
 
     @Override
+    public void checkStmt(Stmt s) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkStmt(s);
+        }
+    }
+
+    @Override
     public void checkAssertStmt(AssertStmt assertStmt) {
         for (TypeSystemExtension tse : obs) {
             tse.checkAssertStmt(assertStmt);
@@ -364,6 +373,13 @@ public class TypeExtensionHelper implements TypeSystemExtension {
             tse.checkWhileStmt(whileStmt);
         }
     }
+
+    @Override
+    public void checkModel(Model model) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkModel(model);
+        }
+    }        
 
     public void registerAll(java.util.List<TypeSystemExtension> curr) {
         obs = new ArrayList<TypeSystemExtension>(obs);

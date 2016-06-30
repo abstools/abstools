@@ -7,7 +7,7 @@ package abs.frontend.typechecker.locationtypes.infer;
 import java.util.*;
 
 import abs.frontend.analyser.HasCogs;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.Block;
@@ -263,8 +263,8 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         SatGenerator satGen = new SatGenerator(constraints);
         satGen.enableStats = enablesStats;
         results = satGen.generate(errors);
-        if (errors.isEmpty()) {
-            SemanticErrorList sel = new SemanticErrorList();
+        if (!errors.containsErrors()) {
+            SemanticConditionList sel = new SemanticConditionList();
             List<TypeSystemExtension> curr = model.getTypeExt().getTypeSystemExtensionList();
             model.getTypeExt().clearTypeSystemExtensions();
             model.getTypeExt().register(new LocationTypeExtension(model, this));

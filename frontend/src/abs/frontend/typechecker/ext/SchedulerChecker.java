@@ -44,7 +44,7 @@ public class SchedulerChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkClassDecl(ClassDecl decl) {
-        PureExp sched = CompilerUtils.getAnnotationValue(decl.getAnnotations(), "Scheduler");
+        PureExp sched = CompilerUtils.getAnnotationValueFromName(decl.getAnnotations(), "ABS.Scheduler.Scheduler");
         checkScheduleExp(sched, decl);
     }
 
@@ -52,7 +52,7 @@ public class SchedulerChecker extends DefaultTypeSystemExtension {
     public void checkExpressionStmt(ExpressionStmt e) {
         Exp exp = e.getExp();
         if (exp instanceof NewExp) {
-            PureExp sched = CompilerUtils.getAnnotationValue(e.getAnnotations(), "Scheduler");
+            PureExp sched = CompilerUtils.getAnnotationValueFromName(e.getAnnotations(), "ABS.Scheduler.Scheduler");
             checkScheduleExp(sched, e);
         }
     }
@@ -61,7 +61,7 @@ public class SchedulerChecker extends DefaultTypeSystemExtension {
     public void checkAssignStmt(AssignStmt s) {
         Exp exp = s.getValue();
         if (exp instanceof NewExp) {
-            PureExp sched = CompilerUtils.getAnnotationValue(s.getAnnotations(), "Scheduler");
+            PureExp sched = CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.Scheduler.Scheduler");
             checkScheduleExp(sched, s);
         }
     }
@@ -71,7 +71,7 @@ public class SchedulerChecker extends DefaultTypeSystemExtension {
         if (!v.getVarDecl().hasInitExp()) return;
         Exp exp = v.getVarDecl().getInitExp();
         if (exp instanceof NewExp) {
-            PureExp sched = CompilerUtils.getAnnotationValue(v.getAnnotations(), "Scheduler");
+            PureExp sched = CompilerUtils.getAnnotationValueFromName(v.getAnnotations(), "ABS.Scheduler.Scheduler");
             checkScheduleExp(sched, v);
         }
     }

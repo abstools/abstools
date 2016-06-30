@@ -76,6 +76,11 @@ aspect GenerateCoreABS {
         RewriteBlock b = new RewriteBlock(new List(), new List());
         // System.err.print("frob " + this);
         for (AwaitAsyncCall aac : aacs) {
+            // The annotations on an "await o!m();" statement need to end up
+            // on the fresh "o!m()"; move them there ("this" ends up being the
+            // subsequent ".get" statement on the anonymous future).
+            List<Annotation> annotations = this.getAnnotationList().parseTreeCopy();
+            this.setAnnotationList(new List());
             Access a = (Access)aac.getCallee().getType().lookupMethod(aac.getMethod()).getReturnType();
             /* Rewriting is also triggered from the Eclipse editor, which AGAIN doesn't have the whole
                view of the program and thus cannot resolve types. So just skip-if this is actually a
@@ -90,7 +95,8 @@ aspect GenerateCoreABS {
               nac.setPosition(start, end);
               ParametricDataTypeUse pdtu = new ParametricDataTypeUse("Fut", new List(), new List().add(du));
               pdtu.setPosition(start, end);
-              VarDeclStmt vds = new VarDeclStmt(new List(), new VarDecl(tmp, pdtu, new Opt(nac)));
+              // Annotations of the original "await o!m()" moved here
+              VarDeclStmt vds = new VarDeclStmt(annotations, new VarDecl(tmp, pdtu, new Opt(nac)));
               vds.setPosition(start, end);
               b.addStmt(vds);
               AwaitStmt as = new AwaitStmt(new List(), new ClaimGuard( new VarUse(tmp)));

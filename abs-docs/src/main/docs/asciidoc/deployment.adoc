@@ -1,0 +1,286 @@
+== Resource Modeling in Timed ABS
+
+
+ABS can be used to simulate the effects of deployment decisions on the cost
+and performance of running a distributed system.  To achieve this, we need to
+add the following aspects to a model:
+
+* A notion of _time_ to express the runtime effects of varying the system (see
+  <<sec:timed-abs>>)
+* A notion of _location_ to describe where some component of the overall
+  system is executing (see <<sec:deployment-components>>)
+* A notion of _cost_ of executing parts of a system, against various resource
+  types (see <<sec:resources>>)
+
+
+In this chapter, we deal with the non-functional properties of systems: code
+deployment on varying numbers and kinds of machines, and the effects of code
+locality and different resource types such as CPU speeds, interconnection
+bandwidth, etc. on the performance of a system.
+
+All language identifiers described in this section reside in the `ABS.DC`
+module.
+
+
+[[sec:deployment-components]]
+=== Deployment Components
+
+In ABS, processes run inside cogs.  Deployment components are used to provide
+a location to cogs.  Cogs residing on the same deployment component share the
+resources provided by the deployment component.
+
+Deployment Components are first-class constructs in the ABS language.  A
+reference to a deployment component is treated the same way as a reference to
+an object.  Deployment Components are created using the `new` expression.  Any
+other cog can be created "on" a deployment component by using a `DC`
+annotation to the `new` statement.
+
+.Example
+----
+DeploymentComponent dc = new DeploymentComponent("Server 1", map[Pair(Speed, 10)]); <1>
+[DC: dc] Worker w = new CWorker(); <2>
+----
+<1> A new deployment component `dc` is created with 10 `Speed` resources <2>
+`w` is created on the new deployment component `dc`
+
+NOTE: It is an error to try to locally create deployment components (via `new
+local DeploymentComponent(...)`) or new local objects on another cog (via
+`[DC: x] new local C()`).
+
+.Resources and Deployment Components
+
+As seen above, each deployment component “carries” some amount of resources
+for each resource type.  This is expressed as a map from resource type to a
+number, for example `map[Pair(Speed, 10), Pair(Bandwidth, 20)]`.  When no
+amount is given for some resource type, it is infinite.  See <<sec:resources>>
+for a description of the available resource types.
+
+==== Methods
+
+.[Atomic] Rat load(Resourcetype rtype, Int periods)
+
+Return the load (0-100) for given resource type `rtype` over the last `n`
+periods.  If resource is infinite, return `0`.
+
+.[Atomic] InfRat total(Resourcetype rtype)
+
+Return the total available amount for given resourcetype.  If the resource
+type is infinite, return `InfRat`; if it has value _value_, return
+`Fin(value)`.
+
+.Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype)
+
+Transfer `amount` resources of type `rtype` from the current deployment
+component to `target`.  Takes effect on the next time period.
+
+(This method is implemented via `decrementResources` and
+`incrementResources`.)
+
+.Unit decrementResources(Rat amount, Resourcetype rtype)
+
+Decrement available resourcetype by given amount from the next time interval
+onwards.
+
+.Unit incrementResources(Rat amount, Resourcetype rtype)
+
+Increment available resourcetype by given amount from the next time interval
+onwards.
+
+
+.[Atomic] String getName()
+
+Returns the name of the deployment component.  The name is set by the first
+argument to the `new` expression.
+
+.[Atomic] Time getCreationTime()
+
+Get the creation time of the deployment component, in terms of the simulated clock.
+
+.[Atomic] Rat getStartupDuration()
+
+Get the specified startup duration, or 0 if none specified.
+
+.[Atomic] Rat getShutdownDuration()
+
+Get the specified shutdown duration, or 0 if none specified.
+
+
+.[Atomic] Int getPaymentInterval()
+
+Get the specified payment interval, or 1 if none specified.
+
+.[Atomic] Rat getCostPerInterval()
+
+Get the specified cost per interval, or 0 if none specified.
+
+
+.Bool shutdown()
+
+Shut down the deployment component.  It is an error to create a new object on
+a deployment component that has been shutdown, or to invoke a method on an
+object residing on a deployment component that has been shut down.
+
+.[Atomic] Unit setProvider(CloudProvider provider)
+
+Set the cloud provider that manages this deployment component.  See
+<<sec:cloudprovider>> for a discussion of cloud providers.
+
+.[Atomic] CloudProvider getProvider()
+
+Get the cloud provider that manages this deployment component.  Returns `null`
+if no cloud provider set.  See <<sec:cloudprovider>> for a discussion of cloud
+providers.
+
+.Bool acquire()
+
+Convenience method for calling `acquireInstance` of the associated cloud
+provider.  If no cloud provider is set, returns `True`.
+
+.Bool release()
+
+Convenience method for calling `releaseInstance` of the associated cloud
+provider.  If no cloud provider is set, returns `True`.
+
+
+
+[[sec:resources]]
+=== Resource Types
+
+The term _Resource_ can be used in different ways.  In ABS, we understand a
+Resource to be a countable, measurable property that is influenced by program
+execution and the passage of time.  The resources currently supported by the
+ABS language are defined in the `ABS.DC` module as follows:
+
+----
+data Resourcetype = Speed | Bandwidth | Memory | Cores ;
+----
+
+==== Speed
+
+The `Speed` resource type models execution speed.  Intuitively, a deployment
+component with twice the number of Speed resources will execute twice as fast.
+Not all statements consume Speed resources while executing -- Speed resources are
+consumed when execution in the current process reaches a statement that is
+annotated with a `Cost` annotation.
+
+.Example
+----
+[Cost: 5] skip;
+----
+
+Executing the above `skip` statement will consume 5 Speed resources from the
+deployment component where the cog was deployed.  If the deployment component
+does not have infinite Speed resources, executing the `skip` statement might take an observable amount of time.
+
+
+==== Bandwidth
+
+Bandwidth is a measure of transmission speed.  Bandwidth resources are
+consumed during method invocation and `return` statements.  Bandwidth
+resources are consumed on both the sending and the receiving deployment
+component.
+
+Bandwidth consumption is expressed via a `Size` annotation:
+
+.Example
+----
+[DataSize: 2 * length(x)] o!m(x);
+----
+
+Executing the above method invocation statement will consume bandwidth
+resources proportional to the length of list `x`.  The resources will be
+consumed both from the deployment component where the cog was deployed, and
+from the one where `o` was deployed.
+
+
+==== Memory
+
+The `Memory` resource type abstracts from the size of main memory, as a measure
+of how many and which cogs can be created on a deployment component.  In
+contrast to bandwidth and speed, memory does not influence the timed behavior
+of the simulation of an ABS model; it is used for static deployment modeling.
+
+
+==== Cores
+
+The `Cores` resource type expresses the number of CPU cores on a deployment
+component.  It is used for static deployment decisions and does not have
+influence on the timing behavior of simulations (use the `Speed` resource type
+for this purpose).
+
+
+=== Modeling Resource Usage
+
+As described above, resource models are added to an ABS model using annotations.  Adding annotations to specific statements and declarations causes side-effects on the status of an applicable deployment component.
+
+.Example
+----
+module Test;
+import * from ABS.DC; <1>
+interface I {
+  Unit process();
+}
+[DataSize: 3] <2>
+class C implements I {
+  Unit process() {
+    [Cost: 10] skip; <3>
+}
+
+{
+  DeploymentComponent dc = new DeploymentComponent("Server",
+    map[Pair(CPU, 5), Pair(Bandwidth, 10), Pair(Memory, 5)]);
+  [DC: dc] I i = new C(); <4>
+  [DataSize: 5] i!process(); <5>
+}
+----
+<1> Make all necessary identifiers accessible in the current module
+
+<2> Declare the memory needed to instantiate a cog of class `C`
+
+<3> Executing this statement costs 10 CPU units; the time needed depends on
+the CPU capacity of the deployment component, and on other cogs executing in
+parallel on the same deployment component.  In this example, executing the
+`skip` statement will take two time units.
+
+<4> Creating a new cog succeeds since the available memory (5) is more than
+the necessary memory (3).  Trying to create a second cog of the same class
+will fail.
+
+<5> Executing this method call consumes 5 Bandwidth resources.  Since `dc` has
+10 bandwidth per time unit, the message will be transported instantly.
+
+[[sec:cloudprovider]]
+=== The CloudProvider API
+
+`(pre)launchInstance` might have a delay, the others are instantaneous.
+`launchInstance` might hand out an already-running instance if it has been
+released; in this case there will be no delay.
+
+`acquireInstance`, `releaseInstance` are called from deployment components.
+`launchInstance` does the equivalent of `acquireInstance`.
+
+
+Instance descriptions.  Call `setInstanceDescriptions` with a map of (name ->
+resources) information.  Then, `(pre)launchInstanceNamed` returns a deployment
+component with the specified resources, or `null` if the given name could not
+be found.  The resulting deployment components are then handled as normal
+(`acquireInstance`/`releaseInstance`/`killInstance`).
+
+
+----
+interface CloudProvider {
+    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d);
+    DeploymentComponent launchInstance(Map<Resourcetype, Rat> description);
+    Bool acquireInstance(DeploymentComponent instance);
+    Bool releaseInstance(DeploymentComponent instance);
+    Bool killInstance(DeploymentComponent instance);
+
+    [Atomic] Rat getAccumulatedCost();
+    [Atomic] Unit shutdown();
+
+    [Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions);
+    [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions();
+    DeploymentComponent prelaunchInstanceNamed(String instancename);
+    DeploymentComponent launchInstanceNamed(String instancename);
+}
+----

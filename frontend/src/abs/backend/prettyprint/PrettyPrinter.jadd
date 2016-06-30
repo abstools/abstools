@@ -84,11 +84,11 @@ aspect doPrettyPrinter {
 
     }
 
-    public void Product.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+    public void ProductDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("product ");
         stream.print(getName());
         stream.print("(");
-        getFeatureList().doPrettyPrint(stream, formatter, ",");
+        getProduct().getFeatureList().doPrettyPrint(stream, formatter, ",");
         stream.print(");");
 
         stream.println();

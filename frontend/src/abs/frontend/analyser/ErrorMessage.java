@@ -74,6 +74,7 @@ public enum ErrorMessage {
     CLASSKIND_COG("Cannot instantiate class %s without cog as it is annotated with class kind COG."),
     ASSIGN_TO_FINAL("Assignment to %s %s, which is annotated with [Final]."),
     NOT_ALLOWED_IN_INIT_CODE("%s are not allowed in class initialization code."),
+    NOT_ALLOWED_IN_RECOVER_CODE("%s are not allowed in class recovery code."),
     NOT_ALLOWED_IN_FINALLY_CODE("%s are not allowed in 'finally' block."),
     ATOMIC_METHOD_CONTAINS_ILLEGAL_CODE("Cannot use %s in atomic method %s."),
     ATOMIC_METHOD_WRONG_OVERRIDE("Method %s has not the same atomicity annotation from the method %s defined in interface %s."),
@@ -98,8 +99,8 @@ public enum ErrorMessage {
     DUPLICATE_VARIABLE("Variable %s is already defined."),
     WRONG_DEADLINE_TYPE("Wrong type %s in deadline annotation, should be ABS.StdLib.Duration."),
     WRONG_SIZE_ANNOTATION_TYPE("Wrong type %s in size annotation, should be a number."),
+    WRONG_COST_ANNOTATION_TYPE("Wrong type %s in cost annotation, should be a number."),
     AMBIGIOUS_USE("The use of %s is ambigious. It can refer to the following definitions: %s."),
-    AWAIT_TOO_PURE("You're not checking for anything observable in AWAIT."),
     WRONG_SCHEDULER_TYPE("Invalid scheduler expression type %s, should be ABS.Scheduler.Process."),
     THIS_STATIC("No context for `this`."),
     ORIGINAL_NOT_IN_DELTA("Calls to original(..) are only permitted in modify-class deltas."),
@@ -108,7 +109,12 @@ public enum ErrorMessage {
     ERROR_IN_PRODUCT_LINE_DELTA_ORDER("Error in product line %s. No total order exists for the given partial order of deltas."),
     ERROR_IN_PRODUCT_LINE_MISSING_DELTACLAUSE("Error in product line %s. No delta clause for delta(s): %s (dead deltas)."),
     AMBIGUOUS_PRODUCTLINE("The product line %s is potentially ambiguous: Deltas %s and %s both target class %s, but their application order is undefined."),
-    DEADLOCK_GENERATION_ERROR("Generated edge: %s.")
+    DEADLOCK_GENERATION_ERROR("Generated edge: %s."),
+    AWAIT_TOO_PURE("Warning: the await expression will never change (try awaiting for a field)."),
+    MAIN_BLOCK_NOT_FOUND("Warning: no main block found."),
+    MAIN_BLOCK_AMBIGUOUS("Warning: this main block is shadowed by the main block from module %s."),
+    UNDECLARED_PRODUCT("Product [%s] is not declared"),
+    INVALID_PRODUCT("Product [%s] does not satisfy the feature model. Constraints failed: %s.")
     ;
 
     private String pattern;

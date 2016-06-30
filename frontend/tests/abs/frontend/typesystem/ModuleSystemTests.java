@@ -7,7 +7,8 @@ package abs.frontend.typesystem;
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
-import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticCondition;
+
 import static abs.ABSTest.Config.*;
 
 public class ModuleSystemTests extends FrontendTest {
@@ -257,7 +258,7 @@ public class ModuleSystemTests extends FrontendTest {
     }
 
     @Override
-    protected SemanticError assertTypeErrors(String absCode) {
+    protected SemanticCondition assertTypeErrors(String absCode) {
        return assertTypeErrors(absCode, EXPECT_TYPE_ERROR);
     }
 

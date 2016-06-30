@@ -13,12 +13,12 @@ import com.google.common.base.Joiner;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.Feature;
-import abs.frontend.ast.ImplicitProduct;
+import abs.frontend.ast.Product;
 
 public class SPLTypeError extends TypeError {
 
     private final List<DeltaDecl> deltas; // Sequence of applied deltas that have led to this error
-    private final ImplicitProduct product; // Product that we tried to build
+    private final Product product; // Product that we tried to build
 
     /**
      * A TypeError that tracks the circumstances in which an SPL type error occurred:
@@ -27,10 +27,10 @@ public class SPLTypeError extends TypeError {
      * @param node      ASTNode where this error occurred
      * @param msg       Error message to display
      * @param deltas    List of applied DeltaDecls that have led to this error (size of list must be > 0)
-     * @param product   ImplicitProduct that we tried to build (non-null)
+     * @param product   Product that we tried to build (non-null)
      * @param args      Strings to include in ErrorMessage
      */
-    public SPLTypeError(ASTNode<?> node, ErrorMessage msg, List<DeltaDecl> deltas, ImplicitProduct product, String... args) {
+    public SPLTypeError(ASTNode<?> node, ErrorMessage msg, List<DeltaDecl> deltas, Product product, String... args) {
         super(node, msg, args);
         this.deltas = deltas;
         this.product = product;

@@ -4,6 +4,7 @@
  */
 package abs.backend.maude;
 
+import abs.common.CompilerUtils;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.IdUse;
 import abs.frontend.ast.List;
@@ -14,19 +15,6 @@ import abs.frontend.typechecker.Type;
 import java.io.PrintStream;
 
 public class MaudeCompilerHelper {
-    public static PureExp getAnnotationValue(List<Annotation> annotations, String annotationName) {
-        for (Annotation a : annotations) {
-            if (a instanceof TypedAnnotation) {
-                TypedAnnotation ta = (TypedAnnotation)a;
-                if (ta.getAccess() instanceof IdUse) {
-                    if (((IdUse)ta.getAccess()).getName().equals(annotationName))
-                    return ta.getValue();
-                }
-            }
-        }
-        return null;
-    }
-
     public static void emitParameterValueList(PrintStream stream,
                                               abs.frontend.ast.List<PureExp> params,
                                               java.util.List<Type> paramTypes)
@@ -54,15 +42,15 @@ public class MaudeCompilerHelper {
                                           List<Annotation> annotations,
                                           int defaultValue)
     {
-        PureExp cost = getAnnotationValue(annotations, "Cost");
+        PureExp cost = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.DC.Cost");
         if (cost != null || defaultValue > 0) {
-            stream.print("[");
+            stream.print("$cost(");
             if (cost == null) {
-                stream.print("\"int\"[" + Integer.toString(defaultValue) + "]");
+                stream.print("\"num\"[" + Integer.toString(defaultValue) + "]");
             } else {
                 cost.generateMaude(stream);
             }
-            stream.print("]");
+            stream.print(") ; ");
         }
     }
 

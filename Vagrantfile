@@ -39,11 +39,14 @@ Welcome to the ABS toolchain VM.
 Connect to the collaboratory at http://localhost:8888/
 
 Access the following additional tools with 'vagrant ssh'
-(install Xming / XQuartz X server on Windows/Mac to use):
 
 - eclipse          Eclipse Mars with ABS plugins
 - key-abs          Deductive verification tool
 - emacs            Emacs with ABS mode
+
+To use graphical programs, install an X server like
+Xming (Windows) or XQuartz (Mac), or access the VM
+via VNC.
 MSG
 
   config.ssh.forward_x11 = true
@@ -61,14 +64,9 @@ MSG
                       inline: <<-SHELL
 
 echo
-echo "Installing system updates"
-echo
-sudo apt-get update -y -q
-sudo apt-get dist-upgrade -y -q
-
-echo
 echo "Installing necessary tools for the ABS compiler"
 echo
+sudo apt-get update -y -q
 sudo apt-get -y -q install software-properties-common htop
 sudo apt-get -y -q install openjdk-8-jdk openjdk-8-jre
 sudo apt-get install -y -q ant antlr junit git unzip
@@ -77,7 +75,7 @@ sudo apt-get install -y -q erlang
 echo
 echo "Installing necessary tools for simulating ABS programs"
 echo
-sudo apt-get install -y -q emacs maude graphviz
+sudo apt-get install -y -q emacs maude graphviz tightvncserver
 
 echo
 echo "Downloading eclipse, this might take a while ..."
@@ -91,14 +89,14 @@ rm /home/vagrant/eclipse-rcp-mars-1-linux-gtk-x86_64.tar.gz
 echo
 echo "Building the ABS compiler and eclipse plugins"
 echo
-(cd /vagrant/eclipse-plugin ; ant -Declipse.home=/opt/eclipse build-all-plugins generate-update-site)
+(cd /vagrant/eclipse/eclipse-plugin ; ant -Declipse.home=/opt/eclipse build-all-plugins generate-update-site)
 
 echo
 echo "Deploying to eclipse"
 echo
 eclipse -application org.eclipse.equinox.p2.director -noSplash \
         -repository \
-file:/vagrant/eclipse-plugin/update-site,\
+file:/vagrant/eclipse/eclipse-plugin/update-site,\
 http://download.eclipse.org/releases/mars/ \
 -installIUs \
 org.abs-models.costabs.feature.group,\
@@ -111,7 +109,7 @@ org.abs-models.sdedit.feature.group
 
 echo
 echo "Downloading KeY-ABS, this might take a while..."
-wget -q http://www.key-project.org/key-abs/key-abs.zip
+wget -nv http://www.key-project.org/key-abs/key-abs.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/key-abs.zip)
 rm key-abs.zip
 cat >key-abs <<EOF
@@ -127,9 +125,26 @@ mkdir -p /home/vagrant/.key
 echo
 echo "Installing SACO command-line tool"
 echo
-wget -q http://costa.ls.fi.upm.es/download/saco.colab.zip
+wget -nv http://costa.ls.fi.upm.es/download/saco.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/saco.colab.zip)
 rm saco.colab.zip
+
+echo
+echo "Installing aPET/SYCO command-line tool"
+echo
+wget -nv http://costa.ls.fi.upm.es/download/apet.colab.zip
+(cd /usr/local/lib && sudo unzip -o /home/vagrant/apet.colab.zip)
+rm apet.colab.zip
+
+echo
+echo "Moving ABS compiler into /usr/local/lib/absc"
+echo
+sudo mkdir -p /usr/local/lib/absc/frontend/bin/bash
+sudo mkdir -p /usr/local/lib/absc/frontend/dist
+sudo cp /vagrant/frontend/dist/absfrontend.jar /usr/local/lib/absc/frontend/dist
+sudo chmod a+r /usr/local/lib/absc/frontend/dist/absfrontend.jar
+sudo cp /vagrant/frontend/bin/bash/absc /usr/local/lib/absc/frontend/bin/bash
+sudo chmod a+rx /usr/local/lib/absc/frontend/bin/bash/absc
 
 # workaround for re-used temporary directory: need to be writable
 # by users www-data (for easyinterface) and vagrant (for commandline)
@@ -140,10 +155,10 @@ sudo chmod -R 777 /tmp/costabs
 echo
 echo "Installing COFLOCO and SRA"
 echo
-wget -q http://costa.ls.fi.upm.es/download/cofloco.colab.zip
+wget -nv http://costa.ls.fi.upm.es/download/cofloco.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/cofloco.colab.zip)
 rm cofloco.colab.zip
-wget -q http://costa.ls.fi.upm.es/download/sra.colab.zip
+wget -nv http://costa.ls.fi.upm.es/download/sra.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/sra.colab.zip)
 rm sra.colab.zip
 
@@ -199,11 +214,15 @@ cat >ENVISAGE_CONFIG <<EOF
 # path to saco
 EC_SACOHOME="/usr/local/lib/saco/"
 # path to abs tools
-EC_ABSTOOLSHOME="/vagrant/"
+EC_ABSTOOLSHOME="/usr/local/lib/absc"
 # path to COFLOCO
 EC_COFLOCOHOME="/usr/local/lib/cofloco/"
 # path to SRA jar
 EC_SRAHOME="/usr/local/lib/sra/"
+# path to aPET
+EC_APETHOME="/usr/local/lib/apet"
+# path to SYCO
+EC_SYCOHOME="/usr/local/lib/apet"
 EOF
 sudo mv ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
 sudo chown root.root /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
@@ -228,11 +247,11 @@ fi
 
 # Set up paths
 cat >/home/vagrant/.abstoolsrc <<EOF
-PATH=\$PATH:/opt/ghc/7.8.4/bin:/opt/cabal/1.20/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin:/vagrant/abs2haskell/.cabal-sandbox/bin:/vagrant/frontend/bin/bash:/vagrant/costabs-plugin:/usr/local/lib/saco/bin
+PATH=\$PATH:/opt/ghc/7.8.4/bin:/opt/cabal/1.20/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin:/vagrant/abs2haskell/.cabal-sandbox/bin:/usr/local/lib/absc/frontend/bin/bash:/vagrant/costabs-plugin:/usr/local/lib/saco/bin
 # used by the costabs executable
 export COSTABSHOME=/usr/local/lib/saco/
 # used by the costabs executable
-export ABSFRONTEND=/vagrant/frontend/dist/absfrontend.jar
+export ABSFRONTEND=/usr/local/lib/absc/frontend/dist/absfrontend.jar
 export GHC_PACKAGE_PATH=/vagrant/abs2haskell/.cabal-sandbox/x86_64-linux-ghc-7.8.4-packages.conf.d:/opt/ghc/7.8.4/lib/ghc-7.8.4/package.conf.d:/home/vagrant/.ghc/x86_64-linux-7.8.4/package.conf.d
 EOF
 
@@ -268,6 +287,29 @@ cabal sandbox add-source haxr-browser
 cabal sandbox add-source opennebula
 cabal install --only-dependencies
 cabal install
+
+# execute the script to install the smart deployer and the main generator tool
+bash /vagrant/vagrant_scripts/install_smart_deployer.sh
+
+# set corresponding paths in easyinterface
+#
+cp /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG /tmp
+cat >> /tmp/ENVISAGE_CONFIG <<EOF
+# path to SMART DEPLOYER
+EC_SMARTDEPLOYERHOME="/home/vagrant/smart_deployer"
+# path to MAIN GENERATOR
+EC_MAINGENHOME="/home/vagrant/main_generator"
+#
+EC_PATH="\$EC_PATH:/home/vagrant/bin:/home/vagrant/main_generator/abs_deployer/docker:/home/vagrant/MiniZincIDE:/home/vagrant/minisearch/bin:/home/vagrant/chuffed/binary/linux"
+#
+EC_LD_LIBRARY_PATH="\$EC_LD_LIBRARY_PATH:"
+EOF
+sudo mv -f /tmp/ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage
+
+# add www-data to vagrant group to allow the execution of
+# main generator within easyinterface
+sudo addgroup www-data vagrant
+
 
   SHELL
 end

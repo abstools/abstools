@@ -12,7 +12,6 @@ import org.junit.Test;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.ExpFunctionDef;
 import abs.frontend.ast.FieldDecl;

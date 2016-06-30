@@ -1,8 +1,8 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
--export([start/0,start/1,add/3,add_and_notify/3,add_blocking/5,new_state/3,new_state_sync/4,inc_ref_count/1,dec_ref_count/1]).
+-export([start/0,start/1,add_async/4,add_and_notify/3,add_blocking/5,new_state/3,new_state_sync/4]).
+-export([add_dirty_object/2,get_and_clear_dirty/1,inc_ref_count/1,dec_ref_count/1]).
 -export([init/2]).
--include_lib("log.hrl").
 -include_lib("abs_types.hrl").
 -record(state,{tasks,running=idle,polling=[],tracker,referencers=1,dc=null}).
 -record(task,{ref,state=waiting}).
@@ -32,35 +32,45 @@ start(DC)->
     %% copy of the current cog (see start_new_task), the one in the cog
     %% structure itself is for evaluating thisDC().  The main block cog and
     %% DCs themselves currently do not have a DC associated.  In the case of
-    %% the main block this is arguably a bug; the implementation of deployment
-    %% components is contained in the standard library and does not use
-    %% thisDC().
+    %% the main block this is arguably a bug and means we cannot use cost
+    %% annotations; the implementation of deployment components is contained
+    %% in the standard library, so we can be sure they do not use thisDC().
     Cog = #cog{ref=spawn(cog,init, [T,DC]),tracker=T,dc=DC},
     gc:register_cog(Cog),
     Cog.
 
-add(#cog{ref=Cog},Task,Args)->
-    Cog!{new_task,Task,Args,self(),false},
-    await_start(Task, Args).
+add_async(#cog{ref=Cog},Task,Args,Cookie)->
+    announce_new_task(Cog, Task, Args, self(),false,Cookie),
+    ok.
 
 add_and_notify(#cog{ref=Cog},Task,Args)->
-    Cog!{new_task,Task,Args,self(),true},
-    await_start(Task, Args).
+    announce_new_task(Cog, Task, Args, self(), true,{started, Task}),
+    TaskRef=await_start(Task, Args),
+    TaskRef.
 
 add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
     %% we don't want task:block since this allowed time advance while creating
     %% an object
     task:block_without_time_advance(Cog),
-    Ref!{new_task,Task,Args,self(),false},
-    await_start(Task,[Args|Stack]),
-    task:acquire_token(Cog,[Args|Stack]).
+    announce_new_task(Ref, Task, Args, self(), false,{started, Task}),
+    TaskRef=await_start(Task,[Args|Stack]),
+    task:acquire_token(Cog,[Args|Stack]),
+    TaskRef.
 
 new_state(#cog{ref=Cog},TaskRef,State)->
-    Cog!{new_state,TaskRef,State,undef}.
+    announce_task_state_changed(Cog, TaskRef, State, undef).
 
 new_state_sync(#cog{ref=Cog},TaskRef,State,Stack) ->
-    Cog!{new_state,TaskRef,State,self()},
+    announce_task_state_changed(Cog, TaskRef, State, self()),
     task:loop_for_token(Stack, new_state_finished).
+
+%% object reset / transaction interface
+
+add_dirty_object(#cog{tracker=Tracker}, Object) ->
+    object_tracker:dirty(Tracker, Object).
+
+get_and_clear_dirty(#cog{tracker=Tracker}) ->
+    object_tracker:get_all_dirty(Tracker).
 
 %%Garbage collector callbacks
 
@@ -90,13 +100,21 @@ kill_recklessly(Cog) ->
 
 %%Internal
 
+announce_new_task(Cog, Task, Args, Sender, Notify,Cookie) ->
+    Cog!{new_task,Task,Args,Sender,Notify,Cookie}.
+
+announce_task_state_changed(Cog, TaskRef, State, Sender) ->
+    Cog!{new_state,TaskRef,State,Sender}.
+
+
+
+
 init(Tracker,DC) ->
-    ?DEBUG({new}),
     process_flag(trap_exit, true),
-    eventstream:event({cog,self(),new}),
+    cog_monitor:new_cog(self()),
     Running = receive
-                  {stop_world, Sender} ->
-                      Sender ! {stopped, self()},
+                  {stop_world, _Sender} ->
+                      gc:cog_stopped(self()),
                       {gc, no_task_schedulable};
                   {gc, ok} ->
                       no_task_schedulable
@@ -107,31 +125,30 @@ init(Tracker,DC) ->
 loop(S=#state{running=no_task_schedulable})->
     New_State=
         receive
-            {stop_world, Sender} ->
-                Sender ! {stopped, self()},
+            {stop_world, _Sender} ->
+                gc:cog_stopped(self()),
                 S#state{running={gc, no_task_schedulable}}
         after 0 ->
                 receive
                     {new_state,TaskRef,State,Sender}->
-                        eventstream:event({cog,self(),active}),
+                        cog_monitor:cog_active(self()),
                         NewState=set_task_state(S,TaskRef,State),
                         case Sender of
                             undef -> ok;
                             _ -> Sender!new_state_finished
                         end,
                         NewState;
-                    {new_task,Task,Args,Sender,Notify}->
-                        eventstream:event({cog,self(),active}),
-                        start_new_task(S,Task,Args,Sender,Notify);
+                    {new_task,Task,Args,Sender,Notify,Cookie}->
+                        cog_monitor:cog_active(self()),
+                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
                     {'EXIT',R,Reason} when Reason /= normal ->
-                        ?DEBUG({task_died,R,Reason}),
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
-                    {stop_world, Sender} ->
-                        Sender ! {stopped, self()},
+                    {stop_world, _Sender} ->
+                        gc:cog_stopped(self()),
                         S#state{running={gc, no_task_schedulable}}
                 end
         end,
@@ -144,8 +161,8 @@ loop(S=#state{running=no_task_schedulable})->
 loop(S=#state{running=idle})->
     New_State=
         receive
-            {stop_world, Sender} ->
-                Sender ! {stopped, self()},
+            {stop_world, _Sender} ->
+                gc:cog_stopped(self()),
                 S#state{running={gc, idle}}
         after 0 ->
                 receive
@@ -156,17 +173,16 @@ loop(S=#state{running=idle})->
                             _ -> Sender!new_state_finished
                         end,
                         NewState;
-                    {new_task,Task,Args,Sender,Notify}->
-                        start_new_task(S,Task,Args,Sender,Notify);
+                    {new_task,Task,Args,Sender,Notify,Cookie}->
+                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
                     {'EXIT',R,Reason} when Reason /= normal ->
-                        ?DEBUG({task_died,R,Reason}),
                         set_task_state(S,R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
-                    {stop_world, Sender} ->
-                        Sender ! {stopped, self()},
+                    {stop_world, _Sender} ->
+                        gc:cog_stopped(self()),
                         S#state{running={gc, idle}}
                 after
                     0 ->
@@ -179,10 +195,10 @@ loop(S=#state{running=idle})->
 loop(S=#state{running=R}) when is_pid(R)->
     New_State=
         receive
-            {stop_world, Sender} ->
-                R ! {stop_world, self()},
+            {stop_world, _Sender} ->
+                task:send_stop_for_gc(R),
                 S1 = await_task_stop_for_gc(S),
-                Sender ! {stopped, self()},
+                gc:cog_stopped(self()),
                 S1#state{running={gc, S1#state.running}}
         after 0 ->
                 receive
@@ -193,21 +209,20 @@ loop(S=#state{running=R}) when is_pid(R)->
                             _ -> Sender!new_state_finished
                         end,
                         NewState;
-                    {new_task,Task,Args,Sender,Notify}->
-                        start_new_task(S,Task,Args,Sender,Notify);
+                    {new_task,Task,Args,Sender,Notify,Cookie}->
+                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
                     {token,R,Task_state}->
                         set_task_state(S#state{running=idle},R,Task_state);
                     {'EXIT',R,Reason} when Reason /= normal ->
-                        ?DEBUG({task_died,R,Reason}),
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
-                    {stop_world, Sender} ->
-                        R ! {stop_world, self()},
+                    {stop_world, _Sender} ->
+                        task:send_stop_for_gc(R),
                         S1 = await_task_stop_for_gc(S),
-                        Sender ! {stopped, self()},
+                        gc:cog_stopped(self()),
                         S1#state{running={gc, S1#state.running}}
                 end
             end,
@@ -216,8 +231,8 @@ loop(S=#state{running=R}) when is_pid(R)->
 loop(S=#state{running={blocked, R}}) ->
     New_State=
         receive
-            {stop_world, Sender} ->
-                Sender ! {stopped, self()},
+            {stop_world, _Sender} ->
+                gc:cog_stopped(self()),
                 S#state{running={gc, {blocked, R}}}
         after 0 ->
                 receive
@@ -228,17 +243,16 @@ loop(S=#state{running={blocked, R}}) ->
                             _ -> Sender!new_state_finished
                         end,
                         NewState;
-                    {new_task,Task,Args,Sender,Notify}->
-                        start_new_task(S,Task,Args,Sender,Notify);
+                    {new_task,Task,Args,Sender,Notify,Cookie}->
+                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
                     {'EXIT',R,Reason} when Reason /= normal ->
-                        ?DEBUG({task_died,R,Reason}),
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
-                    {stop_world, Sender} ->
-                        Sender ! {stopped, self()},
+                    {stop_world, _Sender} ->
+                        gc:cog_stopped(self()),
                         S#state{running={gc, {blocked, R}}}
                 end
         end,
@@ -247,8 +261,8 @@ loop(S=#state{running={blocked, R}}) ->
 loop(S=#state{running={blocked_for_gc, R}}) ->
     New_State=
         receive
-            {stop_world, Sender} ->
-                Sender ! {stopped, self()},
+            {stop_world, _Sender} ->
+                gc:cog_stopped(self()),
                 S#state{running={gc, {blocked_for_gc, R}}}
         after 0 ->
                 receive
@@ -259,24 +273,23 @@ loop(S=#state{running={blocked_for_gc, R}}) ->
                             _ -> Sender!new_state_finished
                         end,
                         NewState;
-                    {new_task,Task,Args,Sender,Notify}->
-                        start_new_task(S,Task,Args,Sender,Notify);
+                    {new_task,Task,Args,Sender,Notify,Cookie}->
+                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
                     {'EXIT',R,Reason} when Reason /= normal ->
-                        ?DEBUG({task_died,R,Reason}),
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
                         dec_referencers(S);
-                    {stop_world, Sender} ->
-                        Sender ! {stopped, self()},
+                    {stop_world, _Sender} ->
+                        gc:cog_stopped(self()),
                         S#state{running={gc, {blocked_for_gc, R}}}
                 end
         end,
     loop(New_State);
 
 %%Garbage collector is running, wait before resuming tasks
-loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, dc=DC}) ->
+loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, dc=DC, tracker=T}) ->
     New_State=
         receive
             {get_references, Sender} ->
@@ -294,13 +307,16 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
                 S;
             {done, gc} ->
                 case Refs of
-                    0 -> eventstream:event({cog,self(),die}),
+                    0 -> cog_monitor:cog_died(self()),
                          gc:unregister_cog(self()),
+                         gen_server:stop(T),
                          stop;
                     _ -> S#state{running=Old}
                 end;
             die_prematurely ->
+                %% FIXME: should we just call exit() on the processes?
                 lists:map(fun task:kill_recklessly/1, gb_trees:keys(Tasks)),
+                gen_server:stop(T),
                 stop;
             inc_ref_count->
                 inc_referencers(S);
@@ -308,15 +324,17 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
                 dec_referencers(S)
         end,
     case New_State of
-        stop -> ?DEBUG(dying);
+        stop -> ok;
         _ -> loop(New_State)
     end.
 
-start_new_task(S=#state{running=R,tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify)->
+start_new_task(S=#state{running=R,tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify,Cookie)->
     Ref=task:start(#cog{ref=self(),tracker=Tracker,dc=DC},Task,Args),
-    ?DEBUG({new_task,R,Ref,Task,Args}),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
-    Sender!{started,Task,Ref},
+    case Cookie of
+        undef -> ok;
+        _ -> Sender!{Cookie,Ref}
+    end,
     %% Don't generate "cog idle" event when we create new task - this
     %% causes spurious clock advance
     R1=case R of no_task_schedulable -> idle; _ -> R end,
@@ -333,13 +351,11 @@ schedule_and_execute(S=#state{running=idle}) ->
     T=get_runnable(Tasks),
     State=case T of
         none-> %None found
-            ?DEBUG({schedule, no_task_schedulable}),
             S2=reset_polled(none,Polled,S1),
-            eventstream:event({cog,self(),idle}),
+            cog_monitor:cog_idle(self()),
             S2#state{running=no_task_schedulable};
         #task{ref=R} -> %Execute T
             R!token,
-            ?DEBUG({schedule,T}),
             S2=reset_polled(R,Polled,S1),
             set_task_state(S2#state{running=R},R,running)
     end,
@@ -354,7 +370,7 @@ set_task_state(S=#state{tasks=Tasks,polling=Pol},TaskRef,abort)->
     Old=gb_trees:get(TaskRef,Tasks),
     S#state{tasks=gb_trees:delete(TaskRef,Tasks),polling=lists:delete(Old, Pol)};
 set_task_state(S=#state{running=TaskRef},TaskRef,blocked) ->
-    eventstream:event({cog, self(), blocked}),
+    cog_monitor:cog_blocked(self()),
     S#state{running={blocked, TaskRef}};
 set_task_state(S=#state{running=TaskRef},TaskRef,blocked_for_gc) ->
     S#state{running={blocked_for_gc, TaskRef}};
@@ -375,7 +391,6 @@ set_task_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
           _ ->
               S1
       end,  
-    ?DEBUG({task_state_change,TaskRef,OldState,State}),
     case State of 
          done ->
            S#state{tasks=gb_trees:delete(TaskRef,Tasks)};
@@ -452,6 +467,6 @@ await_start(Task, Args) ->
         {get_references, Sender} ->
             Sender ! {gc:extract_references(Args), self()},
             await_start(Task, Args);
-        {started,Task,Ref}->
+        {{started,Task},Ref}->
             Ref
     end.

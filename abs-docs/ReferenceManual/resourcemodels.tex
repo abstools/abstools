@@ -1,0 +1,171 @@
+\chapter{Deployment Models}\label{ch:resourcemodels}
+
+
+\section{Introduction}
+
+  This section describes language features related to deployment
+  components.  Most of these features are implemented on the Maude
+  backend and ignored on the Java backend.
+
+  ABS models can be augmented with resource information and the effects
+  of resources during execution can be simulated on the Maude backend.
+  Resources are contained in \emph{deployment components}, which provide a
+  context in which concurrent object groups and their objects execute.
+  Deployment components can be used to model servers, virtual machines,
+  nodes in a network, and basically any entity that constrains execution
+  of code running in its context.
+
+  At the moment we only model CPU capacity.  A deployment component (DC)
+  can contain a certain ``CPU capacity'', which provides an abstract model
+  of speed relative to other DCs; i.e., a cpu capacity of 50 is ``twice
+  as fast'' as 25.
+
+  Executing statements costs a certain number of resources, which are
+  refilled in each time interval -- since CPU speed is related to
+  performance and hence time, simulations involving performance
+  characteristics must be done using the {{{./timedmodeling.html}timed
+  interpreter}}.
+
+\section{Language Elements}
+
+  All identifiers described in the following are contained in the module
+  \absinline{ABS.DC}.
+
+\subsection{Resource Types}
+
+Deployment components carry a specific capacity of zero or more \emph{Resource
+  types}.  Currently, we model CPU and bandwidth as resources.  CPU resources
+are modeled as a possibly infinite number of CPU ``cycles'', bandwidth as a possibly infinite amount of transfer units per time slice.
+
+\begin{absexample} 
+data InfRat = InfRat | Fin(Rat value);
+data Resourcetype = Speed | Bandwidth ;
+\end{absexample} 
+
+\subsection{Deployment Components}
+
+A deployment component (``DC'') is modeled by an ABS class and interface
+\absinline{DeploymentComponent} which is contained in the standard library in
+the module \absinline{ABS.DC}.  DCs are initialized with resource data as a
+map from resource type to amount.  Unspecified resource types are assumed to
+be infinite.  This resource information is used by the Maude backend to
+simulate cpu and bandwidth usage and performance behavior of models.
+
+\begin{absexample} 
+interface DeploymentComponent {
+    [Atomic] InfRat available(Resourcetype rtype);
+    [Atomic] Rat load(Resourcetype rtype, Int periods);
+    [Atomic] InfRat total(Resourcetype rtype);
+    Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype);
+    Unit decrementResources(Rat amount, Resourcetype rtype);
+    Unit incrementResources(Rat amount, Resourcetype rtype);
+}
+
+class DeploymentComponent (String description,
+                           Map<Resourcetype, Rat> initconfig)
+implements DeploymentComponent {
+    ...
+}
+\end{absexample} 
+
+\begin{itemize}
+\item The method \absinline{available(r)} returns the number of currently
+  available resources for the specified resource type $r$.  (The value will
+  change during execution, hence code using this method should be aware of the
+  obvious race condition.)
+\item The call \absinline{load(r, n)} returns the \emph{average load} for the
+  last $n$ time periods as an integer between 0 and 100 for the specified
+  resource type $r$.  For infinite resources, \absinline{load} returns zero.
+\item The method \absinline{total(r)} returns the number of resources currently
+  available per time unit for the resource type $r$.
+\item The method \absinline{transfer(target, amount, r)} transfers the
+  specified number of resources of type $r$ from the current DC to
+  \absinline{target}.  If the current or the target DC have an infinite number
+  of resources, their respective values are not changed.
+\item The methods \absinline{decrementResources} and
+  \absinline{incrementResources} are used to implement \absinline{transfer},
+  but can also used on their own to increment or decrement the amount of
+  resources of the current deployment component.
+\end{itemize}
+
+\subsection{Using Deployment Components}
+
+   An optional annotation \absinline{[DC: x]} attached to a \absinline{new}
+   statement expresses that the new object's cog will run in the context
+   of deployment component \absinline{x}.  By default, a new cog runs in the
+   same context as the process that generates it.  The main block runs
+   in a DC with no resource limits.
+
+\begin{absexample} 
+interface Server { ... }
+
+class ServerImp implements Server { ... }
+
+{
+  DeploymentComponent machine = new DeploymentComponent("remote",
+      map[Pair(Speed, 20)]);
+  [DC: machine] Server x = new ServerImp();  // running in dc `machine'
+  Server y = new ServerImp();                // running in current DC
+}
+\end{absexample} 
+
+\subsection{Accessing the Current Deployment Component}
+
+\begin{absexample} 
+def DeploymentComponent thisDC() = builtin;
+\end{absexample} 
+
+   The \absinline{thisDC()} function returns the current deployment
+   component, i.e., the one that was given as annotation at the \absinline{new}
+   object instantiation.  \absinline{thisDC} returns \absinline{null} if no
+   deployment component was specified.  (Due to implementation issues,
+   models containing \absinline{thisDC()} cannot be currently compiled on the
+   Java platform.)
+
+\subsection{Expressing statement costs}
+
+The annotation \absinline{[Cost: x] s} expresses that executing the statement
+\absinline{s} will consume $x$ Speed resources on the current deployment
+component.  If the current DC does not contain enough resources, the process
+will \emph{block}, consuming Speed resources each time unit, until the necessary
+amount of resources have been consumed.
+
+The annotation \absinline{[DataSize: x] o!m();} expresses that executing the
+asynchronous method call \absinline{o!m()} will consume $x$ bandwidth
+resources, both on the current and the target deployment components.
+Execution will block on the current DC until the specified amount of resources
+have been consumed.  The method call will be delivered when $x$ bandwidth
+resources have been consumed at the target DC, but never before the current DC
+has finished executing the asynchronous method call statement.
+
+When a statement has both \absinline{Cost} and \absinline{Size} annotations,
+Speed resources will be consumed first, followed by bandwidth resources.
+
+\subsection{Default statement costs}
+
+By default, statement execution costs nothing (i.e., the machine is infinitely
+fast), which preserves the normal semantics of timed ABS where only explicit
+\absinline{duration} or \absinline{await duration} statements advance the
+clock.  By compiling ABS models with the command-line parameter
+\absinline{-defaultcost=n}, all statements without an explicit
+\absinline{[Cost: x]} annotation will take \absinline{n} resources to execute.
+This approximates ``normal'' CPU behavior a bit more closely, but still
+disregards the cost of evaluating expressions (assignment of a complex
+expression will take more time on a real machine than assignment of a
+constant).
+
+\subsection{Changing the deployment component}
+
+A statement \absinline{movecogto dc;} transfers the current cog and all its
+objects to the deployment component \absinline{dc}.  On backends without
+resource modeling features (Java, Scala) this translates to a
+\absinline{skip}.
+
+\section{Future Work}
+
+The \absinline{thisDC()} function is currently undefined in the Java
+backend and will lead to a compile-time error.
+
+% Local Variables:
+% TeX-master: "absrefmanual"
+% End:

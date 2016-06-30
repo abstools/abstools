@@ -1,9 +1,8 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
 -export([init/4,start/5]).
--export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,complete/4]).
+-export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,complete/6]).
 -include_lib("abs_types.hrl").
--include_lib("log.hrl").
 %%Future starts AsyncCallTask
 %%and stores result
 
@@ -12,25 +11,24 @@
 
 start(Callee,Method,Params,CurrentCog,Stack) ->
     Ref = spawn(?MODULE,init,[Callee,Method,Params, self()]),
-    gc:register_future(Ref),
     (fun Loop() ->
              %% Wait for message to be received, but handle GC request
              %% in the meantime
              receive
                  {stop_world, _Sender} ->
                      task:block_without_time_advance(CurrentCog),
-                     task:acquire_token(CurrentCog, [Stack]),
+                     task:acquire_token(CurrentCog, [Ref | Stack]),
                      Loop();
                 {get_references, Sender} ->
-                    Sender ! {gc:extract_references(Stack), self()},
+                    Sender ! {gc:extract_references([Ref | Stack]), self()},
                     Loop();
                 { ok, Ref} -> ok
             end
     end)(),
     Ref.
 
-complete(Ref, Value, Sender, Cog) ->
-    Ref!{completed, Value, Sender, Cog},
+complete(Ref, Status, Value, Sender, Cog, Stack) ->
+    Ref!{completed, Status, Value, Sender, Cog},
     (fun Loop() ->
              %% Wait for message to be received, but handle GC request in the
              %% meantime.
@@ -42,7 +40,7 @@ complete(Ref, Value, Sender, Cog) ->
                      task:acquire_token(Cog, [Value]),
                      Loop();
                 {get_references, Sender} ->
-                    Sender ! {gc:extract_references([Value]), self()},
+                    Sender ! {gc:extract_references([Ref, Value | Stack]), self()},
                     Loop();
                 {ok, Ref} -> ok
             end
@@ -138,14 +136,13 @@ await(Ref, Cog=#cog{ref=CogRef}, Stack) ->
                              cog:new_state_sync(Cog,self(),runnable,Stack),
                              Ref ! {okthx, self()},
                              task:loop_for_token(Stack, token),
-                             eventstream:event({cog, CogRef, unblocked});
+                             cog_monitor:cog_unblocked(CogRef);
                          {stop_world, _Sender} ->
                              %% we already released the token above.  Eat the
                              %% message or we'll block at inopportune moments
                              %% later.
                              Loop();
                          {get_references, Sender} ->
-                             ?DEBUG(get_references),
                              Sender ! {gc:extract_references(Stack), self()},
                              Loop()
                      end end)()
@@ -168,11 +165,23 @@ die(Ref, Reason) ->
 init(Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params, Caller)->
     %%Start task
     process_flag(trap_exit, true),
+    Cookie={started, Cog, Callee},
     MonRef=monitor(process,CogRef),
-    cog:add(Cog,async_call_task,[self(),Callee,Method|Params]),
+    cog:add_async(Cog,async_call_task,[self(),Callee,Method|Params], Cookie),
     demonitor(MonRef),
+    TaskRef=wait_for_task_registered(Cookie, [Callee | Params], false),
     Caller ! {ok, self()},
+    gc:register_future(self()),
     wait_for_completion(gc:extract_references(Params)).
+
+wait_for_task_registered(Cookie, Refs, StopForGC) ->
+    receive
+        {Cookie, TaskRef} ->
+            TaskRef;
+        {get_references, Sender} ->
+            Sender ! {gc:extract_references(Refs), self()},
+            wait_for_task_registered(Cookie, Refs, StopForGC)
+    end.
 
 %% Future awaiting reply from task completion
 wait_for_completion(References) ->
@@ -187,9 +196,12 @@ wait_for_completion(References) ->
             gc:unroot_future(self()),
             %% use dummy value for callee cog
             loop({error,error_transform:transform(Reason)}, self());
-        {completed, Result, Sender, SenderCog}->
+        {completed, value, Result, Sender, SenderCog}->
             gc:unroot_future(self()),
             convert_to_freestanding_future({ok,Result}, Sender, SenderCog);
+        {completed, exception, Result, Sender, SenderCog}->
+            gc:unroot_future(self()),
+            convert_to_freestanding_future({error, Result}, Sender, SenderCog);
         {get_references, Sender} ->
             Sender ! {References, self()},
             wait_for_completion(References);
@@ -198,11 +210,20 @@ wait_for_completion(References) ->
             wait_for_completion(References)
     end.
 
-%% send out notifications to all awaiting processes before allowing
-%% process to terminate.  This avoids spurious "all idle" states which
-%% cause premature clock advances.
+%% send out notifications to all awaiting processes before allowing process to
+%% terminate.  This avoids spurious "all idle" states which cause premature
+%% clock advances.  Also process other messages (poll, get) during that time.
 convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog) ->
     receive
+        {get,Sender} ->
+            Sender!{reply,self(),Value},
+            convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog);
+        {get_references, Sender} ->
+            Sender ! {gc:extract_references(Value), self()},
+            convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog);
+        {poll, Sender} ->
+            Sender ! completed,
+            convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog);
         {wait,Sender}->
             %% KLUDGE: we serialize notifications, waiting for one
             %% okthx before sending out the next ok.  If a large
@@ -212,8 +233,14 @@ convert_to_freestanding_future(Value, TerminatingProcess, CalleeCog) ->
             (fun Loop() ->
                      receive
                          {okthx,Sender} -> ok;
+                         {get,Sender1} ->
+                             Sender1!{reply,self(),Value},
+                             Loop();
                          {get_references, GC} ->
                              GC ! {gc:extract_references(Value), self()},
+                             Loop();
+                         {poll, Sender1} ->
+                             Sender1!completed,
                              Loop()
                      end
              end)(),
@@ -239,14 +266,12 @@ loop(Value, CalleeCog)->
             %% gone so we just consume this message.
             loop(Value, CalleeCog);
         {get_references, Sender} ->
-            ?DEBUG(get_references),
             Sender ! {gc:extract_references(Value), self()},
             loop(Value, CalleeCog);
         {poll, Sender} ->
             Sender ! completed,
             loop(Value, CalleeCog);
         {die, Reason, By} ->
-            ?DEBUG({dying, Reason, By}),
             ok;
         _ ->
             loop(Value, CalleeCog)

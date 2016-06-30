@@ -1,0 +1,158 @@
+[[sec:modules]]
+== Modules
+
+All ABS definitions (classes, interfaces, functions data types, type aliases)
+are contained in modules.  All definitions are visible in their own module
+only, except when the module exports the name and it is imported in another
+module or referenced by its qualified name.
+
+NOTE: The `export` clause in a module definition exports _names_, not
+definitions as such.  This means that if a module defines a class and an
+interface with the same name, both definitions will be accessible if that name
+is contained in the `export` clause.
+
+
+=== Defining a Module
+
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _ModuleDecl_  ::= | `module` _TypeIdentifier_ `;` { _Export_ } { _Import_ } { _Decl_ } [ _Block_ ]
+| _Export_      ::= | `export` _IdentifierList_ [ `from` _TypeIdentifier_ ] `;`
+|              | {vbar} `export` `\*` [ `from` _TypeIdentifier_ ] `;`
+| _Import_      ::= | `import` _IdentifierList_ [ `from` _TypeIdentifier_ ] `;`
+|              | {vbar} `import` `*` `from` _TypeIdentifier_ `;`
+| _IdentifierList_ ::= | _AnyIdentifier_ { `,` _AnyIdentifier_ }
+| _AnyIdentifier_ ::= | _Identifier_ {vbar} _TypeIdentifier_
+
+| _Decl_        ::= | _FunDecl_ {vbar} _TypeSynDecl_ {vbar} _DataTypeDecl_ {vbar} _InterfaceDecl_ {vbar} _ClassDecl_
+|====
+
+A module name is a type name and must always start with an upper case letter.
+
+Every module starts with a declaration of the form
+
+    module MyModule;
+
+This declaration starts a new module named `MyModule`.  All declarations after
+this line until the next module declaration belong to the module `MyModule`.
+
+NOTE: The module `ABS.StdLib` contains the standard library and is
+automatically imported by every module.  There is no need for an explicit
+`import * from ABS.StdLib;` clause.
+
+
+=== Exporting Identifiers
+
+By default, modules do not export any names.  In order to make names defined
+within a module available to other modules, the names have to be _exported_.
+For example, to export a data type and a data constructor, one can write
+something like this:
+
+[source]
+.Example
+----
+module Drinks;
+export Drink, pourMilk, pourWater;
+data Drink = Milk | Water;
+def Drink pourMilk() = Milk;
+def Drink pourWater() = Water;
+----
+
+Note that in this example, the data constructors are not exported, and other
+modules can only create values of type `Drink` by calling the exported
+constructor functions `pourMilk` and `pourWater`.  By only exporting the data
+type without any of its constructors, one can realize _abstract data types_
+in ABS.
+
+A special export clause `export *;` exports all names that are defined in the
+module.  Note that imported names are _not_ re-exported by `export *;` (but
+can be re-exported via `export * from OtherModule;` clauses).
+
+[source]
+.Example
+----
+module Test;
+export *;
+export * from OtherModule;
+import * from OtherModule;
+----
+
+=== Importing Identifiers
+
+In order to use exported names of a module in another module, the names have
+to be imported.  In a module definition, a list of import clauses follows the
+list of export clauses.  After being imported, these names are accessible in
+the current module.
+
+Names can be accessible either qualified (with package prefix) or unqualified,
+depending on how they are imported.
+
+
+The following example makes the `Drink` data type of the module `Drinks`
+accessible as `Drinks.Drink`:
+
+[source]
+.Example
+----
+module Bar;
+import Drinks.Drink; <1>
+import pourMilk from Drinks; <2>
+----
+<1> The name `Drink` is accessible in module `Bar` as `Drinks.Drink`.
+<2> The name `pourMilk` is accessible in module `Bar` both as `Drinks.pourMilk` and `pourMilk`.
+
+
+The `import * from Module;` statement makes all names that are exported from
+module `Module` accessible without module qualifier in the current module.
+
+[source]
+.Example
+----
+module Bar;
+import * from Drinks; <1>
+----
+<1> All names from `Drinks` are accessible in `Bar` with and without the `Drinks.` prefix.
+
+
+==== Re-exporting Imported Names
+
+It is possible to re-export names that are imported from another module. For example,
+
+[source]
+.Example
+----
+module Bar;
+export * from Drinks;
+import * from Drinks;
+----
+
+re-exports from `Bar` all names that are exported by module `Drinks`.  Another
+module that writes `import * from Bar;` will have the names from `Drinks`
+accessible as well.
+
+To re-export only selected names, include only these names in the export list:
+
+[source]
+.Example
+----
+module Bar;
+export Drink; <1>
+import * from Drinks;
+----
+Only `Drink` is exported from `Bar`.
+
+
+
+Note that only names that have been imported can be re-exported.  For example:
+
+[source]
+----
+module Bar;
+export * from Drinks;
+import Drink from Drinks;
+----
+
+only re-exports `Drink`, as this is the only name imported from module
+`Drinks`.

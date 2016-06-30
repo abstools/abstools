@@ -17,8 +17,8 @@ aspect GenerateKeyAbs {
 
     public void Decl.generateKeyAbs(CodeStream stream) {}
     public void ClassDecl.generateKeyAbs(CodeStream stream) {
-        PureExp inv = CompilerUtils.getAnnotationValue(this.getAnnotationList(),
-                                                       "Inv");
+        PureExp inv = CompilerUtils.getAnnotationValueFromName(this.getAnnotationList(),
+                                                       "ABS.StdLib.Inv");
         if (inv != null) {
             String classname = this.getName();
             String interfacename = this.getImplementedInterfaceUse(0).getName();

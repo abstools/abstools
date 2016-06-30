@@ -12,9 +12,7 @@
 -export([init/1]).
 
 -define(CMDLINE_SPEC,
-        [{debug,$d,"debug",{boolean,false},"Print debug status output"},
-         {gcstats,$g, "gcstats",{boolean,false},"Print garbage collection statistics"},
-         {port,$p,"port",{integer,none},"Start http on port and keep model running"},
+        [{port,$p,"port",{integer,none},"Start http on port and keep model running"},
          {clocklimit,$l,"clock-limit",{integer,none},"Terminate simulation after given clock value"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
 
@@ -87,21 +85,11 @@ start_link(Args) ->
 start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
     io:format("Start ~w~n",[Module]),
     %%Init logging
-    eventstream:start_link(),
-    case {Debug, GCStatistics} of 
-        {false, false} ->
-            ok;
-        _ ->
-            eventstream:add_handler(console_logger,[Debug, GCStatistics])
-    end,
-    eventstream:add_handler(cog_monitor,[self(),Keepalive]),
+    {ok, _CogMonitor} = cog_monitor:start_link(self(), Keepalive),
     %% Init garbage collector
-    gc:start(GCStatistics, Debug),
+    {ok, _GC} = gc:start(GCStatistics, Debug),
     %% Init simulation clock
-    clock:start_link(Clocklimit),
-    %% init RNG, recipe recommended by the Erlang documentation.
-    %% TODO: if we want reproducible runs, make seed a command-line parameter
-    random:seed(erlang:phash2([node()]), erlang:monotonic_time(), erlang:unique_integer()),
+    {ok, _Clock} = clock:start_link(Clocklimit),
 
     %%Start main task
     Cog=cog:start(),
@@ -115,7 +103,7 @@ end_mod(TaskRef) ->
     timer:sleep(1),
     gc:stop(),
     clock:stop(),
-    eventstream:stop(),
+    cog_monitor:stop(),
     RetVal.
 
 

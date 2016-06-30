@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import abs.frontend.analyser.ErrorMessage;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.*;
 
@@ -22,7 +22,7 @@ public class ProductLineTypeAnalysisHelper {
      * (ii) its product generation mapping is total, and
      * (iii) all its products are well-typed IFJ programs.
      */
-    public static void typeCheckPL(ProductLine pl, SemanticErrorList errors) {
+    public static void typeCheckPL(ProductLine pl, SemanticConditionList errors) {
 
         // Check strong unambiguity
         checkStrongUnambiguity(pl, errors);
@@ -37,11 +37,11 @@ public class ProductLineTypeAnalysisHelper {
     }
 
 
-    public static DeltaTrie buildPFGT(ProductLine pl, SemanticErrorList errors) {
+    public static DeltaTrie buildPFGT(ProductLine pl, SemanticConditionList errors) {
         Model model = pl.getModel();
         DeltaTrie trie = new DeltaTrie(model, errors);
 
-        for (ImplicitProduct product : model.getImplicitProductList()) {
+        for (Product product : model.getProductList()) {
             // for each product: obtain sequence of deltas & add it to the trie
             Set<String> applicableDeltas = pl.findApplicableDeltas(product);
             List<String> productGenerationString = pl.sortDeltas(applicableDeltas);
@@ -59,7 +59,7 @@ public class ProductLineTypeAnalysisHelper {
      * the same class, and the modifications of the same class in different
      * delta modules in the same set have to be disjoint.
      */
-    public static boolean isStronglyUnambiguous(ProductLine pl, SemanticErrorList l) {
+    public static boolean isStronglyUnambiguous(ProductLine pl, SemanticConditionList l) {
 
         boolean result = true;
         Model model = pl.getModel();
@@ -133,7 +133,7 @@ public class ProductLineTypeAnalysisHelper {
         return result;
     }
 
-    public static void checkStrongUnambiguity(ProductLine pl, SemanticErrorList l) {
+    public static void checkStrongUnambiguity(ProductLine pl, SemanticConditionList l) {
         isStronglyUnambiguous(pl, l);
     }
 

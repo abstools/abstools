@@ -89,7 +89,7 @@ aspect GenerateMaude {
 	}
 
     public void DeltaDecl.generateMaude(PrintStream stream) {
-		stream.println("*** Delta: " + qualifiedName());
+		stream.println("*** Delta: " + getName());
     }
 	
 	public void FunctionDecl.generateMaude(PrintStream stream) {
@@ -175,8 +175,8 @@ aspect GenerateMaude {
     {
         boolean inlist = false;
         String effvar = var;
-        PureExp deadline = CompilerUtils.getAnnotationValue(annotations, "Deadline");
-        PureExp size = CompilerUtils.getAnnotationValue(annotations, "Size");
+        PureExp deadline = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.StdLib.Deadline");
+        PureExp size = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.DC.Size");
         
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
         stream.print("asynccall('"
@@ -198,8 +198,8 @@ aspect GenerateMaude {
     public void AwaitAsyncCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
         boolean inlist = false;
-        PureExp deadline = CompilerUtils.getAnnotationValue(annotations, "Deadline");
-        PureExp size = CompilerUtils.getAnnotationValue(annotations, "Size");
+        PureExp deadline = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.StdLib.Deadline");
+        PureExp size = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.DC.Size");
 
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
         stream.print("asynccall('.staticfuture ; ");
@@ -222,7 +222,7 @@ aspect GenerateMaude {
     public void SyncCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
         boolean inlist = false;
-        PureExp deadline = CompilerUtils.getAnnotationValue(annotations, "Deadline");
+        PureExp deadline = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.StdLib.Deadline");
 
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
         stream.print("synccall('.staticfuture ; ");
@@ -278,8 +278,8 @@ aspect GenerateMaude {
             stream.print(") ");
         }
         if (!hasLocal()) {
-            PureExp dc = CompilerUtils.getAnnotationValue(annotations, "DC");
-            PureExp scheduler = CompilerUtils.getAnnotationValue(annotations, "Scheduler");
+            PureExp dc = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.DC.DC");
+            PureExp scheduler = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.Scheduler.Scheduler");
             stream.print("; ");
             if (dc != null) {
                 dc.generateMaude(stream);
@@ -551,7 +551,7 @@ aspect GenerateMaude {
 
     public void ClassDecl.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        PureExp scheduler = CompilerUtils.getAnnotationValue(this.getAnnotationList(), "Scheduler");
+        PureExp scheduler = CompilerUtils.getAnnotationValueFromName(this.getAnnotationList(), "ABS.Scheduler.Scheduler");
 		stream.println("\n\n< '" + qualifiedName() + " : Class | Param: ");
         if (getNumParam() == 0) {
             stream.print("noVid");
@@ -594,7 +594,7 @@ aspect GenerateMaude {
     public void MethodImpl.generateMaude(PrintStream stream) {
         boolean inlist = false;
         MethodSig sig = getMethodSig();
-        PureExp cost = CompilerUtils.getAnnotationValue(sig.getAnnotationList(), "Cost");
+        PureExp cost = CompilerUtils.getAnnotationValueFromName(sig.getAnnotationList(), "ABS.DC.Cost");
         stream.print("< '" + sig.getName() + " : Method | Param: ");
         if (sig.getNumParam() == 0) {
             stream.print("noVid");
@@ -649,7 +649,7 @@ aspect GenerateMaude {
     public void VarDeclStmt.generateMaude(PrintStream stream) {
         // HACK FIXME: this should be an attribute
         boolean inMainBlock = getParent().getParent() instanceof MainBlock
-            || getParent().getParent().getParent() instanceof Product;
+            || getParent().getParent().getParent() instanceof ProductDecl;
 
         VarDecl var = getVarDecl();
         if (inMainBlock) {

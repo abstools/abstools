@@ -20,35 +20,35 @@
   </rm:searchPath>
   <rm:searchPath name="eclipse-plugin">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
-      <rm:uri format="file:///{0}/../eclipse-plugin/">
+      <rm:uri format="file:///{0}/../eclipse/eclipse-plugin/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
   </rm:searchPath>
   <rm:searchPath name="costabs">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
-      <rm:uri format="file:///{0}/../costabs-plugin/">
+      <rm:uri format="file:///{0}/../eclipse/costabs-plugin/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
   </rm:searchPath>
   <rm:searchPath name="apet">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
-      <rm:uri format="file:///{0}/../apet-plugin/">
+      <rm:uri format="file:///{0}/../eclipse/apet-plugin/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
   </rm:searchPath>
   <rm:searchPath name="sda">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
-      <rm:uri format="file:///{0}/../sda-plugin/">
+      <rm:uri format="file:///{0}/../eclipse/sda-plugin/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
   </rm:searchPath>
   <rm:searchPath name="sdedit">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
-      <rm:uri format="file:///{0}/../sdedit-for-abs/">
+      <rm:uri format="file:///{0}/../eclipse/sdedit-for-abs/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>

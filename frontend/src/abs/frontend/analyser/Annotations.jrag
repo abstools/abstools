@@ -10,28 +10,17 @@ aspect Annotations {
     eq MethodImpl.getNodeAnnotations() = getMethodSig().getNodeAnnotations();
     eq Stmt.getNodeAnnotations() = getAnnotations();
     eq MethodSig.getNodeAnnotations() = getAnnotations();
-    
-    // Annotation inheritance   
-    syn PureExp ASTNode.getInheritedAnnotationValue(String name) {
-        final PureExp exp = CompilerUtils.getAnnotationValue(getNodeAnnotations(), name);
+
+    // Annotation inheritance
+    syn PureExp ASTNode.getInheritedAnnotationValue(String simpleName) {
+        final PureExp exp = CompilerUtils.getAnnotationValueFromSimpleName(getNodeAnnotations(), simpleName);
         if (exp != null)
             return exp;
         if (getParent() == null)
             return null;
-        return getParent().getInheritedAnnotationValue(name);
-    }
-    
-    syn ASTNode ASTNode.getNodeWithAnnotation(String annotation) {
-        if (CompilerUtils.hasAnnotation(getNodeAnnotations(), annotation))
-            return this;
-        if (getParent() == null)
-            return null;
-        return getParent().getNodeWithAnnotation(annotation);
+        return getParent().getInheritedAnnotationValue(simpleName);
     }
 
-    syn boolean ASTNode.hasInheritedAnnotation(String annotation) =
-        getNodeWithAnnotation(annotation) != null;
-    
     /*
      * Returns 0 if this is ancestor.
      * Returns -1 if ancestor is not an ancestor of this in the AST.

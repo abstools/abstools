@@ -8,7 +8,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ProductLine;
 
@@ -29,7 +29,7 @@ public class DeltaTrieTest extends DeltaTest {
                         + "}"
                 );
         ProductLine pl = model.getProductLine();
-        DeltaTrie pfgt = ProductLineTypeAnalysisHelper.buildPFGT(pl, new SemanticErrorList());
+        DeltaTrie pfgt = ProductLineTypeAnalysisHelper.buildPFGT(pl, new SemanticConditionList());
 
         assertTrue(pfgt.getRoot().isValidProduct());
         assertEquals(2, pfgt.getRoot().getChildren().size());
@@ -57,7 +57,7 @@ public class DeltaTrieTest extends DeltaTest {
                         + "}"
                 );
         ProductLine pl = model.getProductLine();
-        DeltaTrie pfgt = ProductLineTypeAnalysisHelper.buildPFGT(pl, new SemanticErrorList());
+        DeltaTrie pfgt = ProductLineTypeAnalysisHelper.buildPFGT(pl, new SemanticConditionList());
 
         assertTrue(pfgt.getRoot().isValidProduct());
         assertEquals(3, pfgt.getRoot().getChildren().size());
@@ -99,7 +99,7 @@ public class DeltaTrieTest extends DeltaTest {
                 );
 
         ProductLine pl = model.getProductLine();
-        DeltaTrie pfgt = ProductLineTypeAnalysisHelper.buildPFGT(pl, new SemanticErrorList());
+        DeltaTrie pfgt = ProductLineTypeAnalysisHelper.buildPFGT(pl, new SemanticConditionList());
 
         // TODO: tests
     }

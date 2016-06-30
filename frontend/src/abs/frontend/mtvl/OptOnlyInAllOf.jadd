@@ -1,6 +1,6 @@
 aspect OptOnlyInAllOf {
     // checks if the feature name is repeated and for type errors of the constraints.
-    public void Group.collectErrors(SemanticErrorList c) {  
+    public void Group.collectErrors(SemanticConditionList c) {  
         super.collectErrors(c);
         if (!getCard().isAllOf())
             for (FNode fn: getFNodes())

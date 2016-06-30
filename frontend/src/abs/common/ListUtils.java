@@ -1,10 +1,11 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.common;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.utils.DynamicClassUtils;
@@ -47,5 +48,16 @@ public class ListUtils {
             return DynamicClassUtils.instance("ABS.StdLib.Set_Insert", value, toABSSet(set));
         }
     }
+
+    /*
+     * Transform a list of AST nodes into a java.util.Set
+     */
+    public static <T extends ASTNode<?>> java.util.Set<T> ASTListToSet(List<T> list) {
+        java.util.Set<T> set = new HashSet<T>();
+        for(T element : list)
+            set.add(element);
+        return set;
+    }
+
 
 }

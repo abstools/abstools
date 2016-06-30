@@ -1,15 +1,35 @@
 = ABS Documentation
 ABS Development Team
-{docVersion}
-:experimental:
+{docVersion}, {docDate}
+:doctype: book
+:creator: ABS Development Team
+:lang: en
+:keywords: ABS, manual, modeling languages, programming languages
+:sectnumlevels: 2
+:copyright: CC-BY-SA 3.0
+:imagesdir: images
+:front-cover-image: image:Title_logo.png[width=1050,height=1600]
 
-include::introduction/index-introduction.adoc[]
-include::started/index-started.adoc[]
-include::functional/index-functional.adoc[]
-include::oo/index-oo.adoc[]
-include::imperative/index-imperative.adoc[]
-include::stdlib/index-stdlib.adoc[]
-include::preprocessing/index-preprocessing.adoc[]
-include::timed/index-timed.adoc[]
-include::backends/index-backends.adoc[]
+include::introduction.adoc[]
 
+include::lexical.adoc[]
+
+include::types.adoc[]
+
+include::functional.adoc[]
+
+include::imperative.adoc[]
+
+include::oo.adoc[]
+
+include::modules.adoc[]
+
+include::stdlib.adoc[]
+
+include::timed.adoc[]
+
+include::deployment.adoc[]
+
+include::feature-modeling.adoc[]
+
+include::backends.adoc[]

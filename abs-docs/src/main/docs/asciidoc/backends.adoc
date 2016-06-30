@@ -1,0 +1,406 @@
+== ABS Backends
+
+This section describes the available and supported backends for ABS.
+Different backends have different purposes (simulation, code execution,
+visualization).  Their respective section describes their features and usage.
+
+The following table gives an overview of the features that different backends
+have.
+
+Real-Time ABS:: Simulating a dense-time clock, and language constructs
+expressing delays and task deadlines.  Used for simulating time usage of ABS
+models.
+Resource Models:: Specification of resource availability (processor power,
+bandwidth) of _Deployment Components_ and simulation of resource usage
+deployed thereon.  Builds on the semantics of Real-Time ABS.
+Deployment:: Running ABS code on a number of physical or virtual machines,
+with support for creating new cogs remotely.
+FLI:: Foreign-Language Interface, the ability to call backend-specific native
+code from ABS.
+
+
+.Backend Capabilities
+|===
+| Backend | Maude | Erlang | Haskell | Java
+
+
+| Real-Time ABS
+| yes
+| partly implemented (no deadlines)
+| -
+| -
+
+| Resource Models
+| yes
+| yes
+| -
+| -
+
+| Deployment
+| -
+| -
+| yes
+| ?
+
+| FLI
+| -
+| -
+| yes
+| planned
+
+|===
+
+
+=== Maude Backend
+
+The Maude backend is a high-level, executable semantics in rewriting logic of
+the ABS language.  Due to its relatively compact nature, it serves as a
+test-bed for new language features.
+
+Executing a model on the Maude backend results in a complete snapshot of the system state after execution has finished.
+
+The main drawback of the Maude backend is its relatively poor performance, making it not very suitable to simulate large models.
+
+Features:
+
+* CPU and bandwidth resources
+* Simulation of resource usage on deployment components
+* Timed semantics
+* Executable formal semantics of the ABS language
+
+
+==== How to run the Maude backend
+
+Running a model on Maude involves compiling the code, then starting Maude with
+the resulting file as input.
+
+Compiling all files in the current directory into Maude is done with the following command:
+
+  $ absc -maude *.abs -o model.maude
+
+The model is started with the following commands:
+
+  $ maude
+  Maude> in model.maude
+  Maude> frew start .
+
+This sequence of commands starts Maude, then loads the compiled model and
+starts it.  The resulting output is a dump of the complete system state after
+execution of the model finishes.
+
+In case of problems, check the following:
+
+- `absc` should be in the path; check the `PATH` environment variable.
+- `absfrontend.jar` should be in the environment variable `CLASSPATH`.
+
+
+=== Erlang Backend
+
+The Erlang backend runs ABS models on the Erlang virtual machine by
+translating them into Erlang and combining them with a small runtime library
+implementing key ABS concepts (cogs, futures, objects, method invocations) in
+Erlang.
+
+Executing an ABS model in Erlang currently returns the value of the last
+statement of the main block; output via `ABS.Meta.println` is printed on the
+console.  More introspective and interactive capabilities are planned and will
+be implemented in the future.
+
+
+==== How to run the Erlang backend
+
+Running a model in Erlang involves compiling the ABS code, then compiling and
+running the resulting Erlang code.
+
+Compiling all files in the current directory into Erlang and starting the
+resulting model is done with the following commands:
+
+  $ absc -erlang *.abs
+  $ gen/erl/run
+
+This sequence of commands starts Erlang, then compiles the generated Erlang
+code and starts it.  Type `gen/erl/run -h` for a list of options accepted by
+the model.
+
+
+
+=== Haskell Backend
+
+The Haskell backend translates ABS models to Haskell source code, 
+consequently compiled through a Haskell compiler and executed by the machine.
+The backend, albeit  a work in progress, already supports most ABS constructs
+and, above that, augments the language with extra features, such as `Type Inference`,
+`Foreign Imports` and real `Deployment Components`.
+
+.Type Inference
+
+With the feature of `Type Inference` enabled, the user can _optionally_ leave out
+the declaration of types of certain expressions; the backend will be responsible
+to infer those types and typecheck them in the ABS program. The type inference
+is _safe_, in the sense that it will not infer any wrong types (soundness property).
+
+To make use of this feature, the user puts an underscore `_` in place
+of where a type would normally be, as in this ABS block of code:
+
+[source, java]
+
+----
+{ _ x = 3;
+  Int y = 4; // type inference is optional
+  x = x+y;
+  _ l = Cons(x, Cons(y, Nil));
+  _ s = length(l) + 4; }
+----
+
+NOTE: At the moment, the type inference cannot infer
+_interface types_ as in `_ o = new Class();`.
+It can however infer all the other types, that is Builtin, Algebraic, and Exception data types.
+There is a plan to support this in the future.
+
+.Foreign Imports
+
+The Haskell backend extends the ABS module system with the ability
+to include Haskell-written code inside the ABS program itself.
+This feature is provided by the `foreign_import` keyword,
+which syntactically follows that of the normal `import` keyword. To illustrate this:
+
+[source, java]
+
+----
+module Bar;
+...
+foreign_import Vertex from Data.Graph;
+foreign_import vertices from Data.Graph;
+----
+
+the programmer has imported the `Vertex` algebraic datatype and
+the `vertices` function from the `Data.Graph` Haskell library module into an ABS module
+named `Bar`. Any imported Haskell term will be treated as its ABS
+counterpart. In the example case, the programmer may re-export the foreign terms
+or use them as normal ABS terms:
+
+[source]
+----
+{
+  Graph g = empty_graph();
+  List<Vertex> vs = vertices(g);
+} 
+----
+
+NOTE: At the moment, the ABS programmer can reuse (with `foreign_import`)  Haskell's _Algebraic Data types_
+and _Pure functions_, but not monadic IO code (Haskell code with side-effects). This restriction
+is planned to be lifted in a later release of the backend.
+
+.Deployment Components
+
+The Haskell backend implements the ABS feature of Deployment Components, faithfully as described in Chapter 8.
+The backend follows the view that Deployment Components are _virtual machines_ running in the Cloud.
+As such, each single DC corresponds to one Cloud virtual machine (VM).
+
+Two DC classes (implementations) are provided to support the http://opennebula.org/[OpenNebula] and
+http://azure.microsoft.com[Microsoft Azure] cloud computing platforms accordingly:
+
+[source, java]
+
+----
+class NebulaDC(CPU cpu, Mem memory) implements DC {
+  ...      
+}
+----
+
+[source, java]
+
+----
+class AzureDC(CPU cpu, Mem memory) implements DC {
+  ...
+}
+----
+
+The `CPU` and `Mem` datatypes are passed as arguments when creating the DC to parameterize
+its computing resources. These datatypes are simple defined as type synonyms to
+Int, but you can expect more sophisticated resource encodings for a future backend release.
+
+[source]
+----
+type CPU = Int; // processor cores
+type Mem = Int; // RAM measured in MB
+----
+
+[WARNING]
+The backend has only been developed on and tested against the OpenNebula platform.
+This hopefully will change when more cloud providers will be supported.
+
+==== How to obtain and install
+
+The compiler itself is written in Haskell and distributed as a normal Haskell package. Therefore to build abs2haskell you need either
+
+1) a recent release of the https://www.haskell.org/platform/[Haskell platform] (version >= 2013.2.0.0),
+
+2) the GHC compiler accompanied by the Cabal packaging system:
+
+    - GHC compiler (version >=7.6)
+    - Cabal package (version >=1.4)
+    - `cabal-install` program. The compiler depends on other community
+packages/libraries. This program will automatically fetch
+and install any library dependencies.
+
+.Downloading, building and installing the compiler
+
+Clone the repository with the command:
+
+      $ git clone git://github.com/bezirg/abs2haskell
+
+To build and install the abs2haskell bakend run inside the `abs2haskell/` directory:
+
+[source]
+
+----
+sudo make install
+----
+
+==== How to run the Haskell backend
+
+After installing the compiler, you should
+have the program `abs2haskell` under your `PATH`.
+
+Examples of running:
+
+[source]
+
+----
+$ abs2haskell Example.abs 
+
+# An ABS program may have multiple main blocks in different modules. 
+# So you have to specify in which module is the main block you want to build with
+
+$ abs2haskell --main-is=Example.abs Example.abs 
+
+$ abs2haskell examples/   # will compile all ABS files under examples directory
+----
+
+
+The compiler will generate ".hs" files for each compiled ABS module.
+No other runtime system libraries and dependencies will be generated.
+
+
+The final step before running the ABS program is to compile the generated Haskell code to machine code, as the example:
+
+[source]
+
+----
+ghc --make -threaded Example.hs # put the generated haskell file that has the main block here
+----
+
+.Running the final program
+
+[source]
+
+----
+./Example -O # means run it on 1 core with default optimizations
+./Example -O +RTS -N1 # the same as the above
+./Example -O +RTS -N2 # run it on 2 cores
+./Example -O +RTS -N4 # run it on 4 cores
+./Example -O +RTS -NK # run it on K cores
+----
+
+
+=== KeY-ABS Backend
+
+http://www.key-project.org/key-abs/README-KeY-ABS_0.1.0-src.txt[KeY-ABS]
+is a proof checker for ABS models.  It can be downloaded from
+http://www.key-project.org/key-abs/key-abs.zip.
+
+NOTE: The KeY-ABS backend is currently under development and unfinished.
+
+The KeY-ABS backend can be used to generate invariants from
+annotations in the ABS source code.  A design goal is to support
+annotations written in familiar ABS syntax; some invariants that can
+be expressed in KeY syntax proper might not be expressible in the
+ABS-flavored annotation syntax.
+
+This backend is a work-in-progress and under active development.
+
+Features:
+
+* Class invariants over Integer-typed fields
+
+Limitations / Future Work:
+
+* Support of other datatypes in invariants
+* Support of ABS functions in invariants
+* Support of pre- and postconditions of methods, in interfaces and
+  classes
+
+==== Expressing a class invariant
+
+A class Invariant is a Boolean condition over the object's fields.  It is written using an `Inv` annotation in the following way:
+
+.Example
+--------------------------------------------------
+module Account;
+export *;
+
+interface Account { 
+	Int getAid();
+	Int deposit(Int x); 
+	Int withdraw(Int x);
+	Int withdrawAsync(Int x);
+
+	Bool transfer(Int amount, Account target);
+
+}
+
+[Inv: balance >= 0 && aid >= 0] <1>
+class AccountImpl(Int aid, Int balance) implements Account {
+
+    Int getAid() { return aid; }
+    [Pre: x >= 0]
+    Int deposit(Int x) { balance = balance + x; return balance;}
+    Int withdraw(Int x) { 
+	if (balance - x >= 0) {
+	    balance = balance - x;
+	} 
+	return balance;
+    }
+
+
+    Int withdrawAsync(Int x) { 
+	Fut<Int> resFut = this!withdraw(x);
+	await resFut?;
+	return balance;
+    }
+	
+
+
+    Bool transfer(Int amount, Account target) {
+	Bool success = False;
+	if (balance - amount >= 0) {
+	    Fut<Int> newBal = this!withdraw(amount);
+	    await newBal?;
+	    Fut<Int> result = target!deposit(amount);
+	    await result?;
+	    success = True;
+	}
+	return success;
+    }
+}
+
+{
+	new AccountImpl(1,1);
+}
+--------------------------------------------------
+<1> The `Inv` annotation defines a class invariant expressing that
+`balance` and `aid` must be non-negative integers
+
+
+==== How to run the KeY-ABS backend
+
+Proving the correctness of a model involves generating the invariants,
+then running KeY-ABS with the resulting file as input.
+
+Generating invariants for all files in the current directory is done
+with the following command:
+
+  $ absc -keyabs *.abs -o model.inv
+
+This generated file can then be used with KeY-ABS in the usual way.

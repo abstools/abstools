@@ -1,7 +1,7 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
- * 
+ *
  * Prints all defined products, separated by a space for use e.g. in shell scripts.
  * @author stolz
  */
@@ -14,7 +14,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
-import abs.frontend.ast.Product;
+import abs.frontend.ast.ProductDecl;
 import abs.frontend.delta.DeltaModellingException;
 
 public class DumpProducts extends Main {
@@ -26,7 +26,7 @@ public class DumpProducts extends Main {
             // Main.parse() already printed a list of parse errors in this case.
             throw new ParseException("Can't parse input.");
         }
-        Iterator<Product> pi = m.getProducts().iterator();
+        Iterator<ProductDecl> pi = m.getProductDecls().iterator();
         while (pi.hasNext()) {
             System.out.print(pi.next().getName());
             if (pi.hasNext())
@@ -44,7 +44,7 @@ public class DumpProducts extends Main {
         printHeader();
         System.out.println(""
                 + "Usage: java " + this.getClass().getName()
-                + " [options] <absfiles>\n\n" 
+                + " [options] <absfiles>\n\n"
                 + "  <absfiles>     ABS files/directories/packages to parse\n\n"
                 + "Prints all defined products, separated by a space for use e.g. in shell scripts.");
     }

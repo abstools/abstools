@@ -4,9 +4,9 @@ aspect Model {
     eq DeltaDecl.getModuleModifier().getModel() = this.getModel();
 
     inh Model ProductLine.getModel();
-    inh Model Product.getModel();
-//    eq Model.getImplicitProduct().getModel() = this;
-    
+    inh Model ProductDecl.getModel();
+    inh Model ProductName.getModel();
+
     inh Model Modifier.getModel();
     eq ModifyClassModifier.getModifier().getModel() = this.getDelta().getModel();
     eq ModifyInterfaceModifier.getMethodSigModifier().getModel() = this.getDelta().getModel();
@@ -16,7 +16,7 @@ aspect Model {
 aspect Delta {
     inh DeltaDecl ModuleModifier.getDelta();
     eq DeltaDecl.getModuleModifier().getDelta() = this;
-    
+
     inh DeltaDecl Modifier.getDelta();
     eq ModifyClassModifier.getModifier().getDelta() = this.getDelta();
 
@@ -58,7 +58,7 @@ aspect Uses {
         for (DeltaAccess da : getDeltaAccessList()) {
             for (ModuleDecl module : getModel().getModuleDecls()) {
                 if (da.getModuleName().equals(module.getName()))
-                        usedModules.add(module);
+                    usedModules.add(module);
             }
         }
         return usedModules;
@@ -74,13 +74,13 @@ aspect AsyncCallAnnotations {
     eq RebindStmt.getVal().getAnnotations() = getAnnotations();
     eq RebindStmt.getObj().getAnnotations() = getAnnotations();
     eq ObjectGuard.getExp().getAnnotations() = new List<Annotation>();
-    
+
     syn boolean AsyncCall.hasAnnotations() = getAnnotations().getNumChild() > 0;
     syn boolean AwaitAsyncCall.hasAnnotations() = getAnnotations().getNumChild() > 0;
 }
 
 aspect Deltas {
-    
+
     // inform ProductLine about the deltas it references
     syn lazy Set<String> ProductLine.getAllDeltaIDs() {
         if (! hasDeltaClause())

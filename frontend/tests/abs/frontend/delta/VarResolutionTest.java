@@ -180,6 +180,6 @@ public class VarResolutionTest extends DeltaTest {
     public void defUseMultipleFiles() throws Exception {
         Model m = this.assertParseFilesOk(new HashSet<String>() {{ add("tests/abssamples/deltas/defuse/def.abs"); add("tests/abssamples/deltas/defuse/use.abs");}}, true);
         m.flattenForProduct("Prod");
-        assertTrue(m.typeCheck().isEmpty());
+        assertTrue(!m.typeCheck().containsErrors());
     }
 }

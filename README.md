@@ -8,31 +8,43 @@ This project is currently organised via "redmine" which provides a bug
 tracker, wiki and more:
 https://envisage.ifi.uio.no:8080/redmine/projects/abstools
 
+
+
+
 Folders
 -------
 
-* `eclipse-plugin` - the Eclipse plugin of the ABS IDE
+* `eclipse` - eclipse plugins:
+
+    * `eclipse/eclipse-plugin`: ABS IDE and compiler support plugin
+
+    * `eclipse/costabs-plugin` - The COSTA plugin for ABS
+
+    * `apet-plugin` - The aPET plugin for ABS
+
+    * `sda-plugin` - Bologna Deadlock-checker plugin for ABS
+
+    * `sdedit-for-abs` - a modified version of sdedit
+      (http://sdedit.sourceforge.net) for the visualization of UML sequence
+      charts
 
 * `frontend` - the ABS frontend as well as several backends like the
   Java backend and the Maude backend
 
-* `abs-docs` - a markdown-flavored ABS manual, currently being written.
-  It is available online at http://docs.abs-models.org.
 
-* `Documentation` - a complete LaTeX ABS reference manual, still
+* `abs-docs` - a markdown-flavored ABS manual, currently being written.  It is
+  available online at http://docs.abs-models.org.  Below
+  `abs-docs/ReferenceManual` - a complete LaTeX ABS reference manual, still
   mostly up-to-date
 
-* `sdedit-for-abs` - a modified version of sdedit
-  (http://sdedit.sourceforge.net) for the visualization of UML sequence
-  charts
 
 * `tools-website`  - the content of the tools.hats-project.eu website
 
 * `maven-support` - Maven plugin for generating Java/Maude from ABS,
   testing and packaging ABS codes
 
-* `org.abs-models.releng` - Files used by Jenkins and Buckminster for continuous integration
-  at https://envisage.ifi.uio.no:8080/jenkins/.
+* `org.abs-models.releng` - Files used by Jenkins and Buckminster for
+  continuous integration at https://envisage.ifi.uio.no:8080/jenkins/.
 
 * `abs-packages` - demonstration and description of how to use ABS
   packages (with Maven dependencies management)
@@ -41,14 +53,20 @@ Folders
   ABSUnit (a unit testing framework for ABS) (with Maven dependencies
   management)
 
-* `costabs-plugin` - The COSTA plugin for ABS
-
-* `apet-plugin` - The aPET plugin for ABS
-
-* `sda-plugin` - Bologna Deadlock-checker plugin for ABS
-
 * various leftovers from previous projects, to be evaluated and
   reactivated or pruned
+
+Using Docker
+------------
+
+To run the collaboratory locally using Docker, execute the following commands:
+
+    docker build -t easyinterface .
+    docker run -p 8080:80 --rm easyinterface
+
+Then connect your browser to http://localhost:8080/.  See the docker
+documentation for information on how to start the container in the background
+and other options.
 
 Using Vagrant
 -------------
@@ -62,9 +80,22 @@ VirtualBox from https://www.virtualbox.org
 
 To create the ABS virtual machine, run the command `vagrant up` in this
 directory.  Run `vagrant ssh` to login to that machine, or open
-http://localhost:8080/ to connect to an off-line version of the collaboratory.
+http://localhost:8888/ to connect to an off-line version of the collaboratory.
+Currently supported browsers include Firefox, Chrome, recent IE (no Safari).
 
 Within the VM, this directory is accessible as `/vagrant`.
+
+Note for Windows Users
+----------------------
+
+Please clone the archive without line ending conversion (unfortunately
+activated by default on Windows).  Use `-c core.autocrlf=false` as argument
+for the initial `git clone` command, i.e.,
+
+    git clone https://github.com/abstools/abstools -c core.autocrlf=false
+
+Otherwise, running the tools inside Vagrant or Docker will fail with obscure
+error messages.
 
 Working with the repository
 ---------------------------
@@ -73,8 +104,7 @@ Consider rebasing instead of merging your changes:
 
     git pull --rebase
 
-This avoids the various "merge branch master" commits we currently
-have.
+This avoids spurious "merge branch to master" commits.
 
 `git pull --rebase` will, in case both you and the remote repository
 have new commits, replay your local commits on top of upstream changes

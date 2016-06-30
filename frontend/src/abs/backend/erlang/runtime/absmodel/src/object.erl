@@ -15,7 +15,6 @@
 -export([new/3,new/5,activate/1,commit/1,rollback/1,new_object_task/3,die/2,alive/1]).
 %%gen_fsm callbacks
 -export([init/1,active/3,active/2,uninitialized/2,uninitialized/3,code_change/4,handle_event/3,handle_info/3,handle_sync_event/4,terminate/3]).
--include_lib("log.hrl").
 -include_lib("abs_types.hrl").
 -export([behaviour_info/1]).
 
@@ -59,7 +58,6 @@ new_object_task(#object{ref=O},TaskRef,Params)->
         end
     catch
         _:{noproc,_} ->
-            ?DEBUG({deadObject, O}),
             exit({deadObject, O})
     end.
 
@@ -68,7 +66,6 @@ alive(#object{ref=O})->
         gen_fsm:sync_send_event(O, ping)
     catch
         _:{noproc,_} ->
-            ?DEBUG({deadObject, O}),
             exit({deadObject, O})
     end.
 
@@ -98,10 +95,11 @@ await_activation(Params) ->
 
 start(Cog,Class)->
     {ok,O}=gen_fsm:start_link(object,[Cog,Class,Class:init_internal()],[]),
-    gc:register_object(#object{class=Class,ref=O,cog=Cog}).
+    Object=#object{class=Class,ref=O,cog=Cog},
+    gc:register_object(Object),
+    Object.
 
 init([Cog=#cog{ref=CogRef},Class,Status])->
-    ?DEBUG({new,CogRef, self(), Class}),
     {ok,uninitialized,#state{cog=Cog,await=[],tasks=gb_sets:empty(),class=Class,int_status=Status,new_vals=gb_trees:empty()}}.
 
 uninitialized(activate,S=#state{await=A})->
@@ -110,7 +108,6 @@ uninitialized(activate,S=#state{await=A})->
 
 uninitialized({new_task,TaskRef},From,S=#state{await=A,tasks=Tasks})->
     monitor(process,TaskRef),
-    ?DEBUG({new_task,TaskRef}),
     {reply,uninitialized,uninitialized,S#state{await=[TaskRef|A],tasks=gb_sets:add_element(TaskRef, Tasks)}}.
 
 
@@ -122,18 +119,14 @@ active({#object{class=Class},get,Field},_From,S=#state{class=C,int_status=IS,new
                none ->
                    Class:get_val_internal(IS,Field)
            end,
-    ?DEBUG({get,Field,Reply}),
     {reply,Reply,active,S};
 active({new_task,TaskRef},_From,S=#state{tasks=Tasks})->
-    ?DEBUG({new_task,TaskRef}),
     monitor(process,TaskRef),
     {reply,active,active,S#state{tasks=gb_sets:add_element(TaskRef, Tasks)}};
 active(commit,_From,S=#state{class=C,int_status=IS,new_vals=NV}) ->
-    ?DEBUG({commit}),
     ISS= lists:foldl(fun({Field,Val},Acc) -> C:set_val_internal(Acc,Field,Val) end,IS,gb_trees:to_list(NV)),
     {reply,ok,active,S#state{int_status=ISS,new_vals=gb_trees:empty()}};
 active(rollback,_From,S) ->
-    ?DEBUG({rollback}),    
     {reply,ok,active,S#state{new_vals=gb_trees:empty()}};
 active(ping,_From,S)->
     {reply,ok,active,S};
@@ -151,16 +144,14 @@ active({consume_resource, {CurrentVar, MaxVar}, Count}, _From, OS=#state{class=c
                       rationals:min(Requested,
                                     rationals:sub(rationals:to_r(Total1), Consumed))
               end,
-    case ToConsume of
-        {0,_} -> {reply, {wait, ToConsume}, active, OS};
-        _ -> ?DEBUG({consume, C, ToConsume}),
-             S1=C:set_val_internal(S,CurrentVar,
-                                   rationals:add(Consumed, ToConsume)),
-             %% We reply with "ok" not "wait" here, even when we did not
-             %% fulfill the whole request, so we are ready for small-step
-             %% consumption schemes where multiple consumers race for
-             %% resources.
-             {reply, {ok, ToConsume}, active, OS#state{int_status=S1}}
+    case rationals:is_zero(ToConsume) of
+        true -> {reply, {wait, ToConsume}, active, OS};
+        false -> S1=C:set_val_internal(S,CurrentVar, rationals:add(Consumed, ToConsume)),
+                 %% We reply with "ok" not "wait" here, even when we did not
+                 %% fulfill the whole request, so we are ready for small-step
+                 %% consumption schemes where multiple consumers race for
+                 %% resources.
+                 {reply, {ok, ToConsume}, active, OS#state{int_status=S1}}
     end;
 active({clock_advance_for_dc, Amount},_From,
        OS=#state{class=class_ABS_DC_DeploymentComponent,int_status=S}) ->
@@ -190,22 +181,22 @@ active(get_resource_json,_From,
     {reply, {ok, Result}, active, OS}.
 
 active({#object{class=Class},set,Field,Val},S=#state{class=C,new_vals=NV}) -> 
-    ?DEBUG({set,Field,Val}),
     {next_state,active,S#state{new_vals=gb_trees:enter(Field,Val,NV)}}.
 
 handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, tasks=Tasks})->
-    ?DEBUG({dying, Reason, By}),
     case C of
         class_ABS_DC_DeploymentComponent ->
             %% Keep DCs alive for visualization.  If we decide to
             %% garbage-collect them again, remember to send
-            %% `eventstream:event({dc_died, self()})' so that cog_monitor
+            %% `cog_monitor:dc_died(self())' so that cog_monitor
             %% updates its list of DCs.
             {reply, ok, active, S};
         _ ->
-            [begin ?DEBUG({terminate,T}),exit(T,Reason) end ||T<-gb_sets:to_list(Tasks), T/=By],
+            %% FIXME: check if cog_monitor needs updating here
+            [ exit(T,Reason) ||T<-gb_sets:to_list(Tasks), T/=By],
             cog:dec_ref_count(Cog),
             case gb_sets:is_element(By,Tasks) of
+                %% FIXME: send process killed_by_the_clock signal instead?
                 true -> exit(By,Reason);
                 false -> ok
             end,
@@ -213,12 +204,10 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, ta
     end;
 
 handle_sync_event(get_references, _From, StateName, S=#state{int_status=IState, new_vals=NewVals}) ->
-    ?DEBUG(get_references),
     {reply, gc:extract_references([gb_trees:values(NewVals),IState]), StateName, S}.
 
 
 handle_info({'DOWN', _MonRef, process, TaskRef,Reason} ,StateName,S=#state{tasks=Tasks})->
-    ?DEBUG({rem_dead_task,TaskRef}),
     {next_state,StateName,S#state{tasks=gb_sets:del_element(TaskRef, Tasks)}}.
 
                 

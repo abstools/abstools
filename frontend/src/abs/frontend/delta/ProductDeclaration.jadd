@@ -1,0 +1,144 @@
+aspect ProductDeclaration {
+
+    /*
+     * Evaluate all sorted ProductDecl and set the Product (i.e. the set of features)
+     */
+    public void Model.evaluateAllProductDeclarations() throws WrongProgramArgumentException {
+        // Initialize set of ProductDecl
+        Set<ProductDecl> productDecls = new HashSet<ProductDecl>(getProductDecls());
+
+        // Sort all ProductDecl
+        TopologicalSorting productSorter = new TopologicalSorting<ProductDecl>(productDecls);
+        for (ProductDecl low : productDecls) {
+            Set<String> productNames = new HashSet<String>();
+            low.getProductExpr().setRightSideProductNames(productNames);
+            for (String productName : productNames) {
+                ProductDecl high = findProduct(productName);
+                productSorter.addEdge(high, low);
+            }
+        }
+        productSorter.sort();
+        java.util.List<ProductDecl> sortedList = productSorter.getAnOrder();
+
+        // Evaluate sorted list of ProductDecl
+        for (ProductDecl p : sortedList) {
+            List<Feature> features = new List<Feature>();
+            for (Feature f : p.getProductExpr().evaluate()) {
+                features.add(f.treeCopyNoTransform());
+            }
+            p.setProduct(new Product(features));
+
+            /*
+            // Debug: Print evaluation result
+            System.out.print(p.getName() + " : ");
+            for(Feature f : features){
+                System.out.print(f.getName() + " ");
+            }
+            System.out.println();
+             */
+        }
+    }
+
+    /*
+     * Return true if this Product is the same as that Product; false otherwise.
+     */    
+    public boolean Product.equals(Product that) {
+        Set<Feature> thisFeatures = new HashSet<Feature>(ListUtils.ASTListToSet(getFeatures()));
+        Set<Feature> thatFeatures = new HashSet<Feature>(ListUtils.ASTListToSet(that.getFeatures())); 
+
+        return thisFeatures.equals(thatFeatures);
+    }
+
+    /*
+     * Return true if this Feature is the same as the Object argument; false otherwise.
+     */ 
+    public boolean Feature.equals(Object o) {
+        return o instanceof Feature && getName().equals(((Feature) o).getName());
+    }
+    public int Feature.hashCode() {
+        return getName().hashCode();
+    }
+
+    /* 
+     * Return the corresponding Product obtained through evaluating the product expression
+     * A Product is a set of features.
+     */
+    private Product ProductDecl.product;
+    public void ProductDecl.setProduct(Product prod) {
+        this.product = prod;
+    }
+    syn lazy Product ProductDecl.getProduct() {
+        return product;
+    }
+
+    /*
+     * Set all of product name recursively by given object of ProductExpr
+     */
+    public abstract void ProductExpr.setRightSideProductNames(Set<String> productNames);
+
+    public void ProductFeatureSet.setRightSideProductNames(Set<String> productNames) {
+        return;
+    }
+    public void ProductIntersect.setRightSideProductNames(Set<String> productNames) {
+        getLeft().setRightSideProductNames(productNames);
+        getRight().setRightSideProductNames(productNames);
+    }
+    public void ProductUnion.setRightSideProductNames(Set<String> productNames) {
+        getLeft().setRightSideProductNames(productNames);
+        getRight().setRightSideProductNames(productNames);
+    }
+    public void ProductDifference.setRightSideProductNames(Set<String> productNames) {
+        getLeft().setRightSideProductNames(productNames);
+        getRight().setRightSideProductNames(productNames);
+    }
+    public void ProductName.setRightSideProductNames(Set<String> productNames) {
+        productNames.add(getName());
+    }
+
+    /*
+     * Evaluate recursively the ProductExpr to get set of features
+     */
+    public abstract Set<Feature> ProductExpr.evaluate() throws WrongProgramArgumentException;
+
+    public Set<Feature> ProductFeatureSet.evaluate() throws WrongProgramArgumentException {
+        return ListUtils.ASTListToSet(getFeatures());
+    }
+    public Set<Feature> ProductIntersect.evaluate() throws WrongProgramArgumentException {
+        return intersection(getLeft().evaluate(), getRight().evaluate());
+    }
+    public Set<Feature> ProductUnion.evaluate() throws WrongProgramArgumentException {
+        return union(getLeft().evaluate(), getRight().evaluate());
+    }
+    public Set<Feature> ProductDifference.evaluate() throws WrongProgramArgumentException {
+        return difference(getLeft().evaluate(), getRight().evaluate());
+    }
+    public Set<Feature> ProductName.evaluate() throws WrongProgramArgumentException {
+        ProductDecl p = getModel().findProduct(getName());
+
+        return ListUtils.ASTListToSet(p.getProduct().getFeatures());
+    }
+
+    /*
+     * Perform the operation union by comparing two sets of the features
+     */
+    public Set<Feature> ProductUnion.union(Set<Feature> left, Set<Feature> right) {
+        left.addAll(right);
+        return left;
+    }
+
+    /*
+     * Perform the operation intersection by comparing two sets of the features
+     */
+    public Set<Feature> ProductIntersect.intersection(Set<Feature> left, Set<Feature> right) {
+        left.retainAll(right);
+        return left;
+    }
+
+    /*
+     * Perform the operation difference by comparing two sets of the features
+     */
+    public Set<Feature> ProductDifference.difference(Set<Feature> left, Set<Feature> right) {
+        left.removeAll(right);
+        return left;
+    }
+}

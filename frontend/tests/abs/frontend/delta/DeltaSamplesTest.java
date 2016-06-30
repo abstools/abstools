@@ -19,7 +19,7 @@ import abs.backend.maude.MaudeCompiler;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.Model;
@@ -38,7 +38,7 @@ public class DeltaSamplesTest extends FrontendTest {
         m.setNullPrintStream();
         m.flattenForProduct("P1");
         m.flushCache();
-        assertTrue(m.typeCheck().isEmpty());
+        assertTrue(!m.typeCheck().containsErrors());
     }
 
     @Test
@@ -47,7 +47,7 @@ public class DeltaSamplesTest extends FrontendTest {
         m.setNullPrintStream();
         m.flattenForProduct("P2");
         m.flushCache();
-        assertTrue(m.typeCheck().isEmpty());
+        assertTrue(!m.typeCheck().containsErrors());
     }
 
     @Rule
@@ -67,9 +67,9 @@ public class DeltaSamplesTest extends FrontendTest {
         m.setNullPrintStream();
         m.flattenForProduct("P4");
         m.flushCache();
-        SemanticErrorList res = m.typeCheck();
-        if (!res.isEmpty())
-            fail(res.getFirst().getMessage());
+        SemanticConditionList res = m.typeCheck();
+        if (res.containsErrors())
+            fail(res.getFirstError().getMessage());
     }
 
     @Test
@@ -85,20 +85,20 @@ public class DeltaSamplesTest extends FrontendTest {
     @Test
     public void test_ticket329() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug329.abs", true);
-        SemanticErrorList errs = m.typeCheck();
+        SemanticConditionList errs = m.typeCheck();
         /* We are expecting a missing delta in product M.PL: */
-        assertThat(errs.getFirst(), instanceOf(TypeError.class));
-        TypeError te = (TypeError) errs.getFirst();
+        assertThat(errs.getFirstError(), instanceOf(TypeError.class));
+        TypeError te = (TypeError) errs.getFirstError();
         Assert.assertEquals(ErrorMessage.NAME_NOT_RESOLVABLE, te.msg);
     }
 
     @Test
     public void test_ticket329_missingLineNo() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug329.abs", true);
-        SemanticErrorList errs = m.typeCheck();
+        SemanticConditionList errs = m.typeCheck();
         /* We are expecting a missing delta in product M.PL: */
-        assertThat(errs.getFirst(), instanceOf(TypeError.class));
-        TypeError te = (TypeError) errs.getFirst();
+        assertThat(errs.getFirstError(), instanceOf(TypeError.class));
+        TypeError te = (TypeError) errs.getFirstError();
         Assert.assertEquals(ErrorMessage.NAME_NOT_RESOLVABLE, te.msg);
         Assert.assertEquals(10, te.getLine());
     }
@@ -148,7 +148,7 @@ public class DeltaSamplesTest extends FrontendTest {
         m.flattenForProduct("P");
         m.flushCache();
         if (m.hasErrors())
-            fail(m.getErrors().getFirst().getMessage());
+            fail(m.getErrors().getFirstError().getMessage());
         assertFalse(m.hasTypeErrors());
     }
 
@@ -158,7 +158,7 @@ public class DeltaSamplesTest extends FrontendTest {
         m.flushCache();
         m.flattenForProduct("C");
         m.flushCache();
-        assertTrue(m.typeCheck().isEmpty());
+        assertTrue(!m.typeCheck().containsErrors());
     }
 
     @Test
@@ -167,6 +167,6 @@ public class DeltaSamplesTest extends FrontendTest {
         m.flushCache();
         m.flattenForProduct("C");
         m.flushCache();
-        assertTrue(m.typeCheck().isEmpty());
+        assertTrue(!m.typeCheck().containsErrors());
     }
 }

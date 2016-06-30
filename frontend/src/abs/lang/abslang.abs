@@ -13,7 +13,7 @@ export max, min, abs, pow, sqrt_newton, exp_newton, random, truncate;
 export Maybe, Nothing, Just, isJust, fromJust;
 export Either, Left, Right, left, right, isLeft, isRight;
 export Pair, fst, snd;
-export Triple, fstT, sndT, trd;
+export Triple, fstT, sndT, trdT, trd;
 
 // Sets
 export Set, EmptySet, Insert, set; //TODO: don't export EmptySet, Insert
@@ -129,7 +129,11 @@ def Bool isRight<A,B>(Either<A, B> val) = !isLeft(val);
 
 data Pair<A, B> = Pair(A fst, B snd); 
 
-data Triple<A, B, C> = Triple(A fstT, B sndT, C trd); 
+data Triple<A, B, C> = Triple(A fstT, B sndT, C trdT);
+
+// legacy, deprecated
+def C trd<A, B, C>(Triple<A, B, C> t) = case t {
+    Triple(_, _, val) => val; };
 
 // Sets
 
@@ -611,7 +615,7 @@ module ABS.DC;
 // Interfaces
 export DeploymentComponent, CloudProvider;
 // Annotations
-export DC, Cost, Size, MaxSize, CogLocation;
+export DC, Cost, DataSize, MaxSize, CogLocation; //TODO: rename MaxSize to MaxMemory
 // Datatypes, Constructors
 export Resourcetype;
 export Speed, Cores, Bandwidth, Memory, InfRat, Fin;
@@ -623,7 +627,7 @@ import * from ABS.StdLib;
 data Resourcetype
 = Speed     // Execution speed in "cpu units" - used by [Cost: x] annotation
 | Cores     // Number of cores (static declaration for deployment planning)
-| Bandwidth // Transmit speed in "data units" - used by [Size: x] annotation
+| Bandwidth // Transmit speed in "data units" - used by [DataSize: x] annotation
 | Memory    // Memory size (static declaration for deployment planning)
 | Startupduration            // Time to start, used by CloudProvider
 | Shutdownduration           // Time to shut down, used by CloudProvider
@@ -661,6 +665,8 @@ interface DeploymentComponent {
     // Increment available resourcetype by given amount from the next
     // time interval onwards.
     Unit incrementResources(Rat amount, Resourcetype rtype);
+
+    [Atomic] String getName();
 
     [Atomic] Unit setProvider(CloudProvider provider);
     [Atomic] CloudProvider getProvider();
@@ -868,7 +874,6 @@ class CloudProvider(String name) implements CloudProvider {
         }
         return result;
     }
-    
 }
 
 
@@ -1036,6 +1041,7 @@ implements DeploymentComponent {
         return True;
     }
 
+    [Atomic] String getName() { return description; }
     [Atomic] Time getCreationTime() { return creationTime; }
     [Atomic] Rat getStartupDuration() { return startupDuration; }
     [Atomic] Rat getShutdownDuration() { return shutdownDuration; }
@@ -1053,10 +1059,10 @@ def DeploymentComponent thisDC() = builtin;
 type Cost = Duration;
 
 // Annotation for async method calls: size of sent data
-type Size = Rat;
+type DataSize = Rat;
 
 // Annotation for classes: memory size of resulting cog
-type MaxSize = Rat;
+type MaxSize = Rat;             //TODO: rename to MaxMemory
 
 // Distributed execution (eg the Scala backend): where the cog will be created
 type CogLocation = String;

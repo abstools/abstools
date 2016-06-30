@@ -11,6 +11,8 @@ import abs.frontend.ast.*;
 
 aspect GenerateJava {
 
+    public boolean Model.includeDebug = true;
+
     public void Model.generateJavaCode(JavaCode code) throws IOException, JavaCodeGenerationException {
         JavaGeneratorHelper.cleanGenFolder(code);
         for (ModuleDecl decl : getModuleDecls()) {
@@ -202,7 +204,7 @@ aspect GenerateJava {
             s.generateJava(stream, false);
             stream.println(";");
         }
-
+        stream.println("boolean __ABS_isSameCOG();");
         stream.println("}");
     }
 
@@ -329,7 +331,7 @@ aspect GenerateJava {
         stream.println(" {");
 
         super.generateJava(stream);
-        if (this instanceof MainBlock || this instanceof InitBlock) {
+        if (getModel().includeDebug && (this instanceof MainBlock || this instanceof InitBlock)) {
             stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
             String name = "init block";
             if (this instanceof MainBlock)
@@ -350,10 +352,11 @@ aspect GenerateJava {
         }
 
         if (addReturn) {
-            stream.println(JavaGeneratorHelper.getDebugString(this, getEndLine()));
-
-            stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
-            stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
+            if (getModel().includeDebug) {
+                stream.println(JavaGeneratorHelper.getDebugString(this, getEndLine()));
+                stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
+                stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
+            }
 
             stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
         }
@@ -374,9 +377,10 @@ aspect GenerateJava {
             stream.print("null");
         }
         stream.println(";");
-
-        stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
-        stream.print("__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getName() + "\"," + name + ");");
+        if (getModel().includeDebug) {
+            stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
+            stream.print("__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getName() + "\"," + name + ");");
+        }
     }
 
 
@@ -385,7 +389,9 @@ aspect GenerateJava {
      */
 
     public void Stmt.generateJava(PrintStream stream) {
-        stream.println(JavaGeneratorHelper.getDebugString(this));
+        if (getModel().includeDebug) {
+            stream.println(JavaGeneratorHelper.getDebugString(this));
+        }
     }
 
     public void VarDeclStmt.generateJava(PrintStream stream) {
@@ -407,10 +413,12 @@ aspect GenerateJava {
         stream.println(";");
 
         if (getVar() instanceof VarUse) {
-            stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
-            stream.print("__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getVar().getName() + "\", ");
-            getVar().generateJava(stream);
-            stream.print(");");
+            if (getModel().includeDebug) {
+                stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
+                stream.print("__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getVar().getName() + "\", ");
+                getVar().generateJava(stream);
+                stream.print(");");
+            }
         }
 
     }
@@ -448,8 +456,10 @@ aspect GenerateJava {
             lht = m.getMethodSig().getReturnType().getType();
         }
         boolean needConversion = lht.isIntType() && getRetExp().getType().isRatType();
-        stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");      
-        stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
+        if (getModel().includeDebug) {
+            stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");      
+            stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
+        }
 
         stream.print("return ");
         getRetExp().generateJava(stream);
@@ -551,12 +561,23 @@ aspect GenerateJava {
         final List<PureExp> params = getParams();
         if (callee instanceof ThisExp) {
             stream.print(JavaBackend.getMethodName(getMethod()));
+            JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
         } else {
             stream.print(ABSRuntime.class.getName() + ".checkForNull(");
             callee.generateJava(stream);
-            stream.print(")." + JavaBackend.getMethodName(getMethod()));
+            stream.print(").__ABS_isSameCOG() ? ");
+            // synchronous method call
+            callee.generateJava(stream);
+            stream.print("." + JavaBackend.getMethodName(getMethod()));
+            JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
+            stream.print(" : ");
+            // asynchronous method call + get
+            callee.generateJava(stream);
+            stream.print(".async_" + JavaBackend.getMethodName(getMethod()));
+            JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
+            stream.print(".get()");
         }
-        JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
+
     }
 
     public void OriginalCall.generateJava(PrintStream stream) {

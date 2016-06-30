@@ -1,0 +1,41 @@
+To build and install the Eclipse plugin, install the Eclipse Plug-in
+Development Environment (PDE), then go into the eclipse-plugin/ subdirectory
+and execute:
+
+	ant -Declipse.home=<path to eclipse> build-all-plugins generate-update-site
+
+Add the resulting local update site to Eclipse (Preferences -> Install/Update
+-> Available Software Sites -> Add ...):
+
+	file:<path prefix>/abstools/eclipse/eclipse-plugin/update-site
+
+Note that the Apet and Costabs (SACO) plugins only run on Linux and will not
+be installed on Mac or Windows machines.  They do, however, run on the Eclipse
+installed in the Vagrant virtual machine.
+
+Deploy remote update site (needs access to the server):
+
+	ant -Declipse.home=<path to eclipse> deploy-update-site
+
+
+================================================================================
+                           Alternative method
+================================================================================
+Alternatively, the Eclipse plugin can be used by building and executing the
+source code of the plug-in from within Eclipse itself. First start Eclipse, then:
+
+Import the source code of the plug-in into Eclipse:
+1a. File > Import... > Existing Projects into Workspace > Next
+1b. Root directory: browse to the abstools folder (it should contain eclipse-plugin)
+1c. Select only the following two projects (de-select the others), and click Finish:
+   org.abs-models.abs.compiler
+   org.abs-models.abs.plugin
+   org.abs-models.sdedit
+
+Build and run the plug-in
+2a. In the Package Eclorer: left click the org.abs-models.abs.plugin project
+2b. Run > Debug As > Eclipse Application
+
+After waiting a couple of seconds, an internal Eclipse instance is launched.
+Within that Eclipse instance, ABS projects can be used (after importing or
+creation).

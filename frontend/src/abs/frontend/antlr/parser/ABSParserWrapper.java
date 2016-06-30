@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014 Rudolf Schlatte. All rights reserved. 
+ * Copyright (c) 2014 Rudolf Schlatte. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.antlr.parser;
@@ -28,7 +28,7 @@ public class ABSParserWrapper {
         this.raiseExceptions = raiseExceptions;
         this.stdlib = stdlib;
     }
-    
+
     public CompilationUnit parse(Reader reader) throws IOException {
         String path = "<unknown path>";
         if (file != null) path = file.getPath();

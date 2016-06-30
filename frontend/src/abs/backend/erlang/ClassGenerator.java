@@ -3,10 +3,12 @@
  */
 package abs.backend.erlang;
 
-import java.io.IOException;
+import java.io.*;
+import java.util.Iterator;
 
 import abs.backend.common.CodeStream;
 import abs.backend.erlang.ErlUtil.Mask;
+import abs.frontend.ast.CaseBranchStmt;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.MethodImpl;
@@ -15,6 +17,10 @@ import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.TypedVarOrFieldDecl;
 
 import com.google.common.collect.Iterables;
+
+import java.nio.charset.Charset;
+
+import org.apache.commons.io.output.WriterOutputStream;
 
 /**
  * Genereates the Erlang module for one class
@@ -37,6 +43,7 @@ public class ClassGenerator {
             generateHeader();
             generateExports();
             generateConstructor();
+            generateRecoverHandler();
             generateMethods();
             generateDataAccess();
         } finally {
@@ -64,8 +71,19 @@ public class ClassGenerator {
             ecs.println();
             ecs.decIndent().println("catch");
             ecs.incIndent();
-            ecs.println("exit:Error -> object:die(O, Error);");
-            ecs.println("throw:Error -> exit(Error)");
+            ecs.println("_:Error ->");
+            if (classDecl.hasRecoverBranch()) {
+                ecs.incIndent();
+                ecs.println("Recovered = try 'recover'(O, Error) catch _:RecoverError -> false end,");
+                ecs.println("case Recovered of");
+                ecs.incIndent().println("true -> exit(Error);");
+                ecs.println("false -> object:die(O, Error)");
+                ecs.decIndent().println("end");
+                ecs.decIndent();
+            } else {
+                ecs.incIndent().println("object:die(O, Error)");
+                ecs.decIndent();
+            }
             ecs.decIndent().println("end.");
             ecs.decIndent();
         }
@@ -98,14 +116,60 @@ public class ClassGenerator {
         ecs.decIndent();
     }
 
+    private void generateRecoverHandler() {
+        if (classDecl.hasRecoverBranch()) {
+            Vars vars = new Vars();
+            Vars safe = vars.pass();
+            // Build var scopes and statmemnts for each branch
+            java.util.List<Vars> branches_vars = new java.util.LinkedList<Vars>();
+            java.util.List<String> branches = new java.util.LinkedList<String>();
+            for (CaseBranchStmt b : classDecl.getRecoverBranchs()) {
+                Vars v = vars.pass();
+                StringWriter sw = new StringWriter();
+                CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),"");
+                b.getLeft().generateErlangCode(ecs, buffer, v);
+                buffer.setIndent(ecs.getIndent());
+                buffer.println("->");
+                buffer.incIndent();
+                b.getRight().generateErlangCode(buffer, v);
+                buffer.println(",");
+                buffer.print("true");
+                buffer.decIndent();
+                buffer.close();
+                branches_vars.add(v);
+                branches.add(sw.toString());
+                vars.updateTemp(v);
+            }
+            ErlUtil.functionHeader(ecs, "recover", ErlUtil.Mask.none, generatorClassMatcher(), "Exception");
+            ecs.println("Result=case Exception of ");
+            ecs.incIndent();
+            // Now print statments and mergelines for each branch.
+            java.util.List<String> mergeLines = vars.merge(branches_vars);
+            Iterator<String> ib = branches.iterator();
+            Iterator<String> im = mergeLines.iterator();
+            while (ib.hasNext()) {
+                ecs.print(ib.next());
+                ecs.incIndent();
+                ecs.print(im.next());
+                ecs.println(";");
+                ecs.decIndent();
+            }
+            ecs.println("_ -> false");
+            ecs.decIndent();
+            ecs.print("end");
+            ecs.println(".");
+            ecs.decIndent();
+        }
+    }
+
     private String generatorClassMatcher() {
         return String.format("O=#object{class=%s=C,ref=Ref,cog=Cog=#cog{ref=CogRef,dc=DC}}", modName);
     }
 
     private void generateDataAccess() {
         ErlUtil.functionHeader(ecs, "set", Mask.none,
-                String.format("O=#object{class=%s=C,ref=Ref,cog=Cog=#cog{tracker=Tracker}}", modName), "Var", "Val");
-        ecs.println("object_tracker:dirty(Tracker,O),");
+                String.format("O=#object{class=%s=C,ref=Ref,cog=Cog}", modName), "Var", "Val");
+        ecs.println("cog:add_dirty_object(Cog,O),");
         ecs.println("gen_fsm:send_event(Ref,{O,set,Var,Val}).");
         ecs.decIndent();
         ecs.println();

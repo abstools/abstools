@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import abs.common.FileUtils;
 import abs.frontend.FrontendTest;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.VarDeclStmt;
@@ -329,8 +329,8 @@ public class LocationTypeTests extends FrontendTest {
         Model m = assertParseOkStdLib(code);
         LocationTypeExtension te = new LocationTypeExtension(m);
         m.registerTypeSystemExtension(te);
-        SemanticErrorList e = m.typeCheck();
-        m.typeCheck(new SemanticErrorList());
+        SemanticConditionList e = m.typeCheck();
+        m.typeCheck(new SemanticConditionList());
     }
     
     @Test
@@ -343,7 +343,7 @@ public class LocationTypeTests extends FrontendTest {
         ltie.setLocationTypingPrecision(LocationTypingPrecision.CLASS_LOCAL_FAR);
         m.registerTypeSystemExtension(ltie);
         m.getErrors();
-        SemanticErrorList e = m.typeCheck();
+        SemanticConditionList e = m.typeCheck();
     }
     
     @Test
@@ -357,7 +357,7 @@ public class LocationTypeTests extends FrontendTest {
         ltie.setLocationTypingPrecision(LocationTypingPrecision.CLASS_LOCAL_FAR);
         m.registerTypeSystemExtension(ltie);
         m.getErrors();
-        SemanticErrorList e = m.typeCheck();
+        SemanticConditionList e = m.typeCheck();
         Model.doAACrewrite = true;
     }
 
@@ -369,8 +369,8 @@ public class LocationTypeTests extends FrontendTest {
         Model m = assertParse(code,WITH_STD_LIB);
         LocationTypeExtension te = new LocationTypeExtension(m);
         m.registerTypeSystemExtension(te);
-        SemanticErrorList e = m.typeCheck();
-        assertFalse("No type error occurred", e.isEmpty());
+        SemanticConditionList e = m.typeCheck();
+        assertFalse("No type error occurred", !e.containsErrors());
         assertInferFails(code);
     }
     
@@ -383,8 +383,8 @@ public class LocationTypeTests extends FrontendTest {
         LocationTypeExtension te = new LocationTypeExtension(m);
         m.registerTypeSystemExtension(te);
         m.getErrors();
-        SemanticErrorList e = m.typeCheck();
-        assertTrue(e.isEmpty() ? "" : "Found error "+e.get(0).getMessage(),e.isEmpty());
+        SemanticConditionList e = m.typeCheck();
+        assertTrue(!e.containsErrors() ? "" : "Found error "+e.getFirstError().getMessage(),!e.containsErrors());
         assertInferOk(code);
     }
     
@@ -393,9 +393,9 @@ public class LocationTypeTests extends FrontendTest {
         //m.setLocationTypingEnabled(true);
         LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
         m.registerTypeSystemExtension(ltie);
-        SemanticErrorList e = m.typeCheck();
+        SemanticConditionList e = m.typeCheck();
         //System.out.println(ltie.getConstraints());
-        assertEquals(e.isEmpty() ? "" : "Found error: "+e.get(0).getMessage(), fails, !e.isEmpty()); 
+        assertEquals(!e.containsErrors() ? "" : "Found error: "+e.getFirstError().getMessage(), fails, e.containsErrors()); 
         
         //assertTrue("Inference failed", generated != null);
         //assertEquals(fails, generated == null);
@@ -416,8 +416,8 @@ public class LocationTypeTests extends FrontendTest {
         Model m = assertParseFileOk(f.getAbsolutePath(), Config.WITH_STD_LIB);
         LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
         m.registerTypeSystemExtension(ltie);
-        SemanticErrorList e = m.typeCheck();
-        assertEquals(e.isEmpty() ? "" : "Found error: "+e.get(0).getMessage(), false, !e.isEmpty());
+        SemanticConditionList e = m.typeCheck();
+        assertEquals(!e.containsErrors() ? "" : "Found error: "+e.getFirstError().getMessage(), false, e.containsErrors());
         new InferMain().writeInferenceResultsBack(ltie.getResults());
         String res = FileUtils.fileToStringBuilder(f).toString();
         f.delete();

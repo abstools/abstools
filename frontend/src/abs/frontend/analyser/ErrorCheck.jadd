@@ -9,37 +9,37 @@ aspect ErrorCheck {
      * TODO: doesn't cache intermediate results, use with care.
      */
     public boolean Model.hasErrors() {
-        return !getErrors().isEmpty();
+        return getErrors().containsErrors();
     }
     
-  public SemanticErrorList Model.getErrors() {
-    SemanticErrorList s = new SemanticErrorList();
+  public SemanticConditionList Model.getErrors() {
+    SemanticConditionList s = new SemanticConditionList();
     collectErrors(s);
     return s;
   }
 
   // generic traversal that collects errors in AST
-  void ASTNode.collectErrors(SemanticErrorList c) {
+  void ASTNode.collectErrors(SemanticConditionList c) {
     for(int i = 0; i < getNumChild(); i++)
       getChild(i).collectErrors(c);
   }
 
   // add error for cyclic interface inheritance hierarchy
-  public void InterfaceDecl.collectErrors(SemanticErrorList c) {
+  public void InterfaceDecl.collectErrors(SemanticConditionList c) {
     super.collectErrors(c);
     if(hasCycleOnExtendedInterfacesChain())
         c.add(new SemanticError(this,ErrorMessage.CYCLIC_INHERITANCE,getName()));
   }
 
   // add error for undeclared interfaces
-  public void InterfaceTypeUse.collectErrors(SemanticErrorList c) {
+  public void InterfaceTypeUse.collectErrors(SemanticConditionList c) {
     super.collectErrors(c);
     if(getDecl().isUnknown())
       c.add(new SemanticError(this,ErrorMessage.UNKOWN_INTERFACE,getName()));
   }
 
   // add error for undeclared identifiers (interfaces, datatypes/type synonyms)
-  public void UnresolvedTypeUse.collectErrors(SemanticErrorList c) {
+  public void UnresolvedTypeUse.collectErrors(SemanticConditionList c) {
     super.collectErrors(c);
     if(getDecl().isUnknown())
         c.add(new SemanticError(this,ErrorMessage.UNKOWN_INTERFACE_OR_DATATYPE,getName()));
@@ -47,13 +47,13 @@ aspect ErrorCheck {
 
   // add error for undeclared interfaces
   // TODO: generalise to check other IdUse's too.
-  public void DataTypeUse.collectErrors(SemanticErrorList c) {
+  public void DataTypeUse.collectErrors(SemanticConditionList c) {
     super.collectErrors(c);
     if(getDecl().isUnknown())
         c.add(new SemanticError(this,ErrorMessage.UNKOWN_DATATYPE,getName()));
   }
 
-  public void DataConstructorExp.collectErrors(SemanticErrorList c) {
+  public void DataConstructorExp.collectErrors(SemanticConditionList c) {
     try {
       super.collectErrors(c);
       if (getDecl() == null) {
@@ -64,14 +64,14 @@ aspect ErrorCheck {
     }
   }
 
-  public void DeltaDecl.collectErrors(SemanticErrorList c) {
+  public void DeltaDecl.collectErrors(SemanticConditionList c) {
     /* FIXME: Don't collect in here, the name resolution mechanism doesn't seem to know about all the details,
      * e.g. how to resolve datatypes just added.
      */
      c.addAll(getErrsWithinDelta());
   }
 
-  coll SemanticErrorList DeltaDecl.getErrsWithinDelta() [new SemanticErrorList()] with add root Model;
+  coll SemanticConditionList DeltaDecl.getErrsWithinDelta() [new SemanticConditionList()] with add root Model;
   
   OriginalCall contributes (new TypeError(this,ErrorMessage.ORIGINAL_NOT_IN_DELTA,""))
     when (calcContextNode(ModifyMethodModifier.class) == null)
