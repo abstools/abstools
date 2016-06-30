@@ -48,6 +48,8 @@ public class CaseStudyTypeChecking extends FrontendTest {
                                                , { ENVISAGE_DIR + "WP4/T4.2/integrated/Atbrox.abs" }
                                                , { ENVISAGE_DIR + "WP4/T4.2/integrated/AtbroxMultiHandset.abs" }
                                                , { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas.abs" }
+                                               , { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas_v2.abs" }
+                                               , { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas_v2_CloudProvider.abs" }
                                                };
         return Arrays.asList(data);
     }
