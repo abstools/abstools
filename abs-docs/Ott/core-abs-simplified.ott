@@ -212,9 +212,9 @@ rhs :: rhs_ ::=
   {{ com assignment right-hand side }}
   | e :: :: e
     {{ com expression }}
-  | new C ( el ) :: :: new
-    {{ com new object }}
-  | new cog C ( el ) :: :: new_cog
+  | new local C ( el ) :: :: new_local
+    {{ com new local object (same cog) }}
+  | new C ( el ) :: :: new_cog
     {{ com new object and cog }}
   | e ! m ( el ) :: :: async_call
     {{ com asynchronous call }}
@@ -639,15 +639,15 @@ defn
   fresh ( o' )
   init ( C ) = pr
   atts ( C , |[ el ]| ( a circ l ) , o' , co ) = a'
-  ----------------------------------------------------------------------------------------------------------------------------------------------------------- :: new_object
-  ob ( o , a , { l | x = new C ( el ) : spl } , q ) cogt ( co , o ) -> ob ( o , a , { l | x = o' : spl } , q ) cogt ( co , o ) ob ( o' , a' , idle , { pr } )
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------- :: new_local_object
+  ob ( o , a , { l | x = new local C ( el ) : spl } , q ) cogt ( co , o ) -> ob ( o , a , { l | x = o' : spl } , q ) cogt ( co , o ) ob ( o' , a' , idle , { pr } )
 
   fresh ( o' ) 
   fresh ( co' )
   init ( C ) = pr
   atts ( C , |[ el ]| ( a circ l ) , o' , co' ) = a'
   ----------------------------------------------------------------------------------------------------------------------------------------------- :: new_cog_object
-  ob ( o , a , { l | x = new cog C ( el ) : spl } , q ) -> ob ( o , a , { l | x = o' : spl } , q ) ob ( o' , a' , pr , noproc ) cogt ( co' , o' )
+  ob ( o , a , { l | x = new C ( el ) : spl } , q ) -> ob ( o , a , { l | x = o' : spl } , q ) ob ( o' , a' , pr , noproc ) cogt ( co' , o' )
 
 defn
   st -> st' :: :: state :: ''

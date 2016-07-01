@@ -10,6 +10,10 @@ OTT_COQ_DIR = /usr/lib/coq/user-contrib/Ott
 OTT = ott
 PDFLATEX = pdflatex
 
+.PHONY: all
+
+all: core-abs.pdf core-abs-coq.pdf
+
 core-abs.pdf: core-abs.tex core-abs_included.tex
 	$(PDFLATEX) core-abs.tex
 
@@ -39,4 +43,4 @@ Makefile.coq: core_abs.v
 	coq_makefile -I $(OTT_COQ_DIR) core_abs.v > Makefile.coq
 
 clean:
-	rm -f core-abs.aux core-abs.log core-abs.pdf core-abs_included.aux core-abs_included.tex core_abs.v core_abs.vo core_abs.v.d core_abs.glob
+	rm -f *.aux *.log core-abs.pdf core-abs-coq.pdf core-abs_included.tex core-abs-coq.tex core_abs.v core_abs.vo core_abs.v.d core_abs.glob
