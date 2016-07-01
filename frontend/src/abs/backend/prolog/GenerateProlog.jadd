@@ -563,7 +563,7 @@ aspect GenerateProlog {
 	            block.generateProlog(s,reachInfo,quote(getName()),parameterList,fieldsList);
 	        }
 	        //we generate the rest of the methods implemented by the class
-	        List<MethodImpl> methodsList = (List<MethodImpl>) getChild(5);
+	        List<MethodImpl> methodsList = (List<MethodImpl>) getMethodList();
 	        n = methodsList.getNumChild();
 	        for (int i = 0; i < n; i++){
 	            methodsList.getChild(i).generateProlog(s,reachInfo,quote(getName())); // cons here is a DataConstructor
