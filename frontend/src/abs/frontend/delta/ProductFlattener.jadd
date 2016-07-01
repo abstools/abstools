@@ -36,6 +36,7 @@ aspect ProductFlattener {
      * Refined with MTVL-check in CSP.jadd.
      */
     public void Model.flattenForProduct(ProductDecl prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
+	assert prod != null;
         if (verbose)
             System.out.println("--- configuring product: " + prod.getName());
 
@@ -43,6 +44,8 @@ aspect ProductFlattener {
         ProductLine pl = getProductLine();
         if (pl == null)
             throw new DeltaModellingException("Model is missing a 'productline' definition");
+        if (prod.getProduct() == null)
+            throw new DeltaModellingException("No product selected");
 
         // find/sort applicable delta IDs
         Set<String> deltaids = pl.findApplicableDeltas(prod.getProduct());
@@ -117,6 +120,9 @@ aspect ProductFlattener {
      * i.e. test each application condition in the context of the features which are ON in the given product
      */
     public Set<String> ProductLine.findApplicableDeltas(Product prod) {
+
+	assert prod != null;
+	assert prod.getFeatures() != null;
 
         HashSet<String> deltaids = new HashSet<String>();
 
