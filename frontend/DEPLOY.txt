@@ -1,2 +1,0 @@
-The deployment of the absfrontend.jar currently happens via the tools-website.
-See ../tools-website/DEPLOY.txt
