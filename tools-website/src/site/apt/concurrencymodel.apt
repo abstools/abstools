@@ -1,4 +1,0 @@
-The Concurrency Model of ABS
-
-  The concurrency model of ABS is based on concurrently running <object groups>
-  also called <COG>s.

@@ -1,7 +1,0 @@
-The ABS Packages
-
-	ABS modules can be packaged as ABS packages (APK). These packages are in Java Archive format (.jar extension), 
-	storing the source of the respective ABS modules and defines the entry <<<ABS-Package-Version: 1.0>>> 
-	in the package's manifest.
-	 
-
