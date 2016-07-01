@@ -63,13 +63,13 @@ defn
 
   G |- el : ptypes ( C )
   T in interfaces ( C )
-  --------------------- :: new 
-  G |- new C ( el ) : T 
+  --------------------- :: new_local
+  G |- new local C ( el ) : T 
   
   G |- el : ptypes ( C )
   T in interfaces ( C )
   ------------------------- :: new_cog
-  G |- new cog C ( el ) : T 
+  G |- new C ( el ) : T 
 
   G |- e . m ( el ) : T
   ----------------------------- :: async_call

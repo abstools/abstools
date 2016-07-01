@@ -229,15 +229,15 @@ defn
   fresh ( o' )
   init ( C ) = process
   atts ( C , |[ el ]| ( a circ l ) , o' , co ) = a'
-  ------------------------------------------------------------------------------------------------------------------------------------------------------------------ :: new_object
-  ob ( o , a , { l | x = new C ( el ) ; :: spl } , q ) cogt ( co , o ) -> ob ( o , a , { l | x = o' ; :: spl } , q ) cogt ( co , o ) ob ( o' , a' , idle , process )
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------ :: new_local_object
+  ob ( o , a , { l | x = new local C ( el ) ; :: spl } , q ) cogt ( co , o ) -> ob ( o , a , { l | x = o' ; :: spl } , q ) cogt ( co , o ) ob ( o' , a' , idle , process )
 
   fresh ( o' ) 
   fresh ( co' )
   init ( C ) = process
   atts ( C , |[ el ]| ( a circ l ) , o' , co' ) = a'
   ---------------------------------------------------------------------------------------------------------------------------------------------------------- :: new_cog_object
-  ob ( o , a , { l | x = new cog C ( el ) ; :: spl } , q ) -> ob ( o , a , { l | x = o' ; :: spl } , q ) ob ( o' , a' , process , noproc ) cogt ( co' , o' )
+  ob ( o , a , { l | x = new C ( el ) ; :: spl } , q ) -> ob ( o , a , { l | x = o' ; :: spl } , q ) ob ( o' , a' , process , noproc ) cogt ( co' , o' )
 
 defn
   st -> st' :: :: state :: ''
