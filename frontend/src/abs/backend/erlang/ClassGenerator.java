@@ -169,7 +169,6 @@ public class ClassGenerator {
     private void generateDataAccess() {
         ErlUtil.functionHeader(ecs, "set", Mask.none,
                 String.format("O=#object{class=%s=C,ref=Ref,cog=Cog}", modName), "Var", "Val");
-        ecs.println("cog:add_dirty_object(Cog,O),");
         ecs.println("gen_fsm:send_event(Ref,{O,set,Var,Val}).");
         ecs.decIndent();
         ecs.println();

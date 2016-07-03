@@ -1,10 +1,10 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
 -export([start/0,start/1,add_async/4,add_and_notify/3,add_blocking/5,new_state/3,new_state_sync/4]).
--export([add_dirty_object/2,get_and_clear_dirty/1,inc_ref_count/1,dec_ref_count/1]).
--export([init/2]).
+-export([inc_ref_count/1,dec_ref_count/1]).
+-export([init/1]).
 -include_lib("abs_types.hrl").
--record(state,{tasks,running=idle,polling=[],tracker,referencers=1,dc=null}).
+-record(state,{tasks,running=idle,polling=[],referencers=1,dc=null}).
 -record(task,{ref,state=waiting}).
 
 %%Garbage collector callbacks
@@ -27,7 +27,6 @@ start() ->
     start(null).
 
 start(DC)->
-    {ok,T}=object_tracker:start(),
     %% There are two DC refs: the one in state is to handle GC and to create a
     %% copy of the current cog (see start_new_task), the one in the cog
     %% structure itself is for evaluating thisDC().  The main block cog and
@@ -35,7 +34,7 @@ start(DC)->
     %% the main block this is arguably a bug and means we cannot use cost
     %% annotations; the implementation of deployment components is contained
     %% in the standard library, so we can be sure they do not use thisDC().
-    Cog = #cog{ref=spawn(cog,init, [T,DC]),tracker=T,dc=DC},
+    Cog = #cog{ref=spawn(cog,init, [DC]),dc=DC},
     gc:register_cog(Cog),
     Cog.
 
@@ -63,14 +62,6 @@ new_state(#cog{ref=Cog},TaskRef,State)->
 new_state_sync(#cog{ref=Cog},TaskRef,State,Stack) ->
     announce_task_state_changed(Cog, TaskRef, State, self()),
     task:loop_for_token(Stack, new_state_finished).
-
-%% object reset / transaction interface
-
-add_dirty_object(#cog{tracker=Tracker}, Object) ->
-    object_tracker:dirty(Tracker, Object).
-
-get_and_clear_dirty(#cog{tracker=Tracker}) ->
-    object_tracker:get_all_dirty(Tracker).
 
 %%Garbage collector callbacks
 
@@ -109,7 +100,7 @@ announce_task_state_changed(Cog, TaskRef, State, Sender) ->
 
 
 
-init(Tracker,DC) ->
+init(DC) ->
     process_flag(trap_exit, true),
     cog_monitor:new_cog(self()),
     Running = receive
@@ -119,7 +110,7 @@ init(Tracker,DC) ->
                   {gc, ok} ->
                       no_task_schedulable
               end,
-    loop(#state{tasks=gb_trees:empty(),tracker=Tracker,running=Running,dc=DC}).
+    loop(#state{tasks=gb_trees:empty(),running=Running,dc=DC}).
 
 %%No task was ready to execute
 loop(S=#state{running=no_task_schedulable})->
@@ -289,7 +280,7 @@ loop(S=#state{running={blocked_for_gc, R}}) ->
     loop(New_State);
 
 %%Garbage collector is running, wait before resuming tasks
-loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, dc=DC, tracker=T}) ->
+loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, dc=DC}) ->
     New_State=
         receive
             {get_references, Sender} ->
@@ -309,14 +300,12 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
                 case Refs of
                     0 -> cog_monitor:cog_died(self()),
                          gc:unregister_cog(self()),
-                         gen_server:stop(T),
                          stop;
                     _ -> S#state{running=Old}
                 end;
             die_prematurely ->
                 %% FIXME: should we just call exit() on the processes?
                 lists:map(fun task:kill_recklessly/1, gb_trees:keys(Tasks)),
-                gen_server:stop(T),
                 stop;
             inc_ref_count->
                 inc_referencers(S);
@@ -328,8 +317,8 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
         _ -> loop(New_State)
     end.
 
-start_new_task(S=#state{running=R,tasks=T,tracker=Tracker,dc=DC},Task,Args,Sender,Notify,Cookie)->
-    Ref=task:start(#cog{ref=self(),tracker=Tracker,dc=DC},Task,Args),
+start_new_task(S=#state{running=R,tasks=T,dc=DC},Task,Args,Sender,Notify,Cookie)->
+    Ref=task:start(#cog{ref=self(),dc=DC},Task,Args),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     case Cookie of
         undef -> ok;

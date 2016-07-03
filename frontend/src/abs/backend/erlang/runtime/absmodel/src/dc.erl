@@ -85,11 +85,6 @@ update_state_and_history_for_resouce(S, Resourcetype) ->
     Consumed=var_current_for_resourcetype(Resourcetype),
     Max=var_max_for_resourcetype(Resourcetype),
     Next=var_nextmax_for_resourcetype(Resourcetype),
-    %% We know that no DeploymentComponent code runs across clock
-    %% boundaries, hence we don't need to care about commit /
-    %% rollback.  (Verify that there's no duration statements /
-    %% resource annotations in abslang.abs DeploymentComponent
-    %% implementation.)
     S1=C:set_val_internal(S,History,
                           {dataCons, C:get_val_internal(S,Consumed),
                            C:get_val_internal(S,History)}),

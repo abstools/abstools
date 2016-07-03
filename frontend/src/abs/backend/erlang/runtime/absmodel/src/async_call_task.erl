@@ -23,8 +23,5 @@ start(#state{fut=Future,obj=O=#object{class=C,cog=Cog},meth=M,params=P})->
         future:complete(Future, value, Res, self(), Cog, [O|P])
     catch
         _:Reason ->
-            %% Rollback is replaced by recovery blocks.
-            %% TODO: check against semantics of synchronous method calls; do we have any problems there?
-            %% task:rollback(Cog),
             future:complete(Future, exception, error_transform:transform(Reason), self(), Cog, [O|P])
     end.

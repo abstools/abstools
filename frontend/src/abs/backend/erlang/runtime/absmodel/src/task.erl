@@ -6,7 +6,7 @@
 %% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([acquire_token/2,release_token/2,block_with_time_advance/1,block_without_time_advance/1,wait/1,wait_poll/1,commit/1,rollback/1]).
+-export([acquire_token/2,release_token/2,block_with_time_advance/1,block_without_time_advance/1,wait/1,wait_poll/1]).
 -export([await_duration/4,block_for_duration/4]).
 -export([block_for_cpu/4,block_for_bandwidth/5]).
 -export([loop_for_token/2]).            % low-level; use acquire_token instead
@@ -114,10 +114,8 @@ loop_for_token(Stack, Token) ->
     end.
 
 wait(Cog)->
-    commit(Cog),
     cog:new_state(Cog,self(),waiting).
 wait_poll(Cog)->
-    commit(Cog),
     cog:new_state(Cog,self(),waiting_poll).
 block_with_time_advance(Cog)->
     cog:new_state(Cog,self(),blocked).
@@ -184,15 +182,8 @@ block_for_bandwidth(Cog, DC, null, Amount, Stack) ->
 
 
 release_token(C=#cog{ref=Cog},State)->
-    commit(C),
     receive
         {stop_world, _Sender} -> ok
     after 0 -> ok
     end,
     Cog!{token,self(),State}.
-
-rollback(Cog)->
-    rpc:pmap({object,rollback},[],cog:get_and_clear_dirty(Cog)).
-
-commit(Cog)->
-    rpc:pmap({object,commit},[],cog:get_and_clear_dirty(Cog)).
