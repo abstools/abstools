@@ -23,7 +23,7 @@ import java.nio.charset.Charset;
 import org.apache.commons.io.output.WriterOutputStream;
 
 /**
- * Genereates the Erlang module for one class
+ * Generates the Erlang module for one class
  * 
  * @author Georg Göri
  * 
@@ -63,6 +63,7 @@ public class ClassGenerator {
         for (MethodImpl m : classDecl.getMethodList()) {
             ecs.pf(" %%%% %s:%s", m.getFileName(), m.getLine(m.getStart()));
             MethodSig ms = m.getMethodSig();
+            ecs.pf(" %%%% %s:%s", m.getFileName(), m.getLine(m.getStart()));
             ErlUtil.functionHeader(ecs, "m_" + ms.getName(), generatorClassMatcher(), ms.getParamList());
             ecs.println("try");
             ecs.incIndent();
@@ -191,22 +192,20 @@ public class ClassGenerator {
         ecs.println("#state{}.");
         ecs.decIndent();
         ecs.println();
-        if (hasFields) {
-            first = true;
-            for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
-                if (!first) {
-                    ecs.println(";");
-                    ecs.decIndent();
-                }
-                first = false;
-                ecs.pf(" %%%% %s:%s", f.getFileName(), f.getLine(f.getStart()));
-                ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, String.format("#state{'%s'=G}", f.getName()),
-                        "'" + f.getName() + "'");
-                ecs.print("G");
-            }
-            ecs.println(".");
+        for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
+            ecs.pf(" %%%% %s:%s", f.getFileName(), f.getLine(f.getStart()));
+            ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, String.format("#state{'%s'=G}", f.getName()),
+                                   "'" + f.getName() + "'");
+            ecs.println("G;");
             ecs.decIndent();
-            ecs.println();
+        }
+        ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, "_", "_");
+        ecs.println("%% Invalid return value; handled by REST API when querying for non-existant field.");
+        ecs.println("%% Will never occur in generated code.");
+        ecs.println("none.");
+        ecs.decIndent();
+        ecs.println();
+        if (hasFields) {
             first = true;
             for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
                 if (!first) {
@@ -221,13 +220,9 @@ public class ClassGenerator {
             ecs.println(".");
             ecs.decIndent();
             ecs.println();
-        } else
-        // Generate failing Dummies
-        {
+        } else {
+            // Generate failing Dummy
             ErlUtil.functionHeader(ecs, "set_val_internal", Mask.none, "S", "S", "S");
-            ecs.println("throw(badarg).");
-            ecs.decIndent();
-            ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, "S", "S");
             ecs.println("throw(badarg).");
             ecs.decIndent();
         }
