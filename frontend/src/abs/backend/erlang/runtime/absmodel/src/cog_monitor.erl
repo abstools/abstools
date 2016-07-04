@@ -21,6 +21,9 @@
 %% communication about dcs
 -export([new_dc/1, dc_died/1, get_dcs/0]).
 
+%% the REST api
+-export([register_object_with_rest_name/2,lookup_object_from_rest_name/1]).
+
 %% gen_server interface
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
@@ -46,6 +49,7 @@
                                 % such that the Max element of the head of the
                                 % list is always MTE [Maximum Time Elapse]).
                dcs,             % list of deployment components
+               registered_objects, % Objects registered in REST API. binary |-> #object{}
                keepalive_after_clock_limit % Flag whether we kill all objects after clock limit has been reached
                                            % (false when REST API is active)
               }).
@@ -103,7 +107,11 @@ dc_died(DC) ->
 get_dcs() ->
     gen_server:call({global, cog_monitor}, get_dcs).
 
+register_object_with_rest_name(Object, Name) ->
+    gen_server:call({global, cog_monitor}, {register_object, Object, Name}).
 
+lookup_object_from_rest_name(Name) ->
+    gen_server:call({global, cog_monitor}, {lookup_object, Name}).
 
 %% gen_server callbacks
 
@@ -115,6 +123,7 @@ init([Main,Keepalive])->
                idle=gb_sets:empty(),
                clock_waiting=[],
                dcs=[],
+               registered_objects=gb_trees:empty(),
                keepalive_after_clock_limit=Keepalive}}.
 
 handle_call({keep_alive, Class}, _From, State=#state{keepalive_after_clock_limit=KeepAlive}) ->
@@ -191,6 +200,22 @@ handle_call({dc_died, O}, _From, State=#state{dcs=DCs}) ->
     {reply, ok, State#state{dcs=lists:filter(fun (#object{ref=DC}) -> DC =/= O end, DCs)}};
 handle_call(get_dcs, _From, State=#state{dcs=DCs}) ->
     {reply, DCs, State};
+handle_call({register_object, Object, Key}, _From, State=#state{registered_objects=Objects}) ->
+    Name=list_to_binary(Key),
+    object:protect_object_from_gc(Object),
+    NewObjects=case gb_trees:lookup(Name, Objects) of
+                   {value, OldObject} ->
+                       object:unprotect_object_from_gc(OldObject),
+                       gb_trees:update(Name, Object, Objects);
+                   none -> gb_trees:insert(Name, Object, Objects)
+               end,
+    {reply, ok, State#state{registered_objects=NewObjects}};
+handle_call({lookup_object, Name}, _From, State=#state{registered_objects=Objects}) ->
+    Result=case gb_trees:lookup(Name, Objects) of
+               {value, Object} -> Object;
+               none -> none
+           end,
+    {reply, Result, State};
 handle_call(Request, _From, State)->
     io:format("Unknown request: ~w~n", [Request]),
     {reply, error, State}.
