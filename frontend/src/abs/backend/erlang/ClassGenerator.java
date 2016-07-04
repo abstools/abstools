@@ -61,6 +61,7 @@ public class ClassGenerator {
 
     private void generateMethods() {
         for (MethodImpl m : classDecl.getMethodList()) {
+            ecs.pf(" %%%% %s:%s", m.getFileName(), m.getLine(m.getStart()));
             MethodSig ms = m.getMethodSig();
             ErlUtil.functionHeader(ecs, "m_" + ms.getName(), generatorClassMatcher(), ms.getParamList());
             ecs.println("try");
@@ -97,6 +98,7 @@ public class ClassGenerator {
             ecs.pf("set(O,'%s',%s),", p.getName(), "P_" + p.getName());
         }
         for (FieldDecl p : classDecl.getFields()) {
+            ecs.pf(" %%%% %s:%s", p.getFileName(), p.getLine(p.getStart()));
             if (p.hasInitExp()) {
                 ecs.format("set(O,'%s',", p.getName());
                 p.getInitExp().generateErlangCode(ecs, vars);
@@ -197,6 +199,7 @@ public class ClassGenerator {
                     ecs.decIndent();
                 }
                 first = false;
+                ecs.pf(" %%%% %s:%s", f.getFileName(), f.getLine(f.getStart()));
                 ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, String.format("#state{'%s'=G}", f.getName()),
                         "'" + f.getName() + "'");
                 ecs.print("G");
@@ -211,6 +214,7 @@ public class ClassGenerator {
                     ecs.decIndent();
                 }
                 first = false;
+                ecs.pf(" %%%% %s:%s", f.getFileName(), f.getLine(f.getStart()));
                 ErlUtil.functionHeader(ecs, "set_val_internal", Mask.none, "S", "'" + f.getName() + "'", "V");
                 ecs.format("S#state{'%s'=V}", f.getName());
             }
