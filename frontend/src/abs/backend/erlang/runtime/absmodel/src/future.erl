@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
 -export([start/5]).
--export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,complete/6]).
+-export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,value_available/6]).
 -export([task_started/3]).
 -include_lib("abs_types.hrl").
 %%Future starts AsyncCallTask
@@ -23,31 +23,17 @@
                 calleecog,
                 references=[],
                 value=none,
-                waiting_tasks=[]
+                waiting_tasks=[],
+                cookie=none
                }).
 
 start(Callee,Method,Params,_CurrentCog,_Stack) ->
     {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params], []),
     Ref.
 
-complete(Future, Status, Value, Sender, Cog, Stack) ->
-    gen_fsm:send_event(Future, {completed, Status, Value, Sender, Cog}),
-    (fun Loop() ->
-             %% Wait for message to be received, but handle GC request in the
-             %% meantime.
-             receive
-                 {stop_world, _Sender} ->
-                     task:block_without_time_advance(Cog),
-                     %% this runs in the context of the just-completed task,
-                     %% so we only need to hold on to the return value.
-                     task:acquire_token(Cog, [Value]),
-                     Loop();
-                {get_references, Sender} ->
-                    Sender ! {gc:extract_references([Future, Value | Stack]), self()},
-                    Loop();
-                {value_accepted, Future} -> ok
-            end
-    end)().
+value_available(Future, Status, Value, Sender, Cog, Cookie) ->
+    %% will send back Cookie to Sender
+    gen_fsm:send_event(Future, {completed, Status, Value, Sender, Cog, Cookie}).
 
 get_after_await(Future)->
     case gen_fsm:sync_send_event(Future, get) of
@@ -211,8 +197,8 @@ starting(_Event, State) ->
     {stop, not_supported, State}.
 
 
-next_state_on_completion(State=#state{waiting_tasks=[], calleetask=TerminatingProcess}) ->
-    TerminatingProcess ! {value_accepted, self()},
+next_state_on_completion(State=#state{waiting_tasks=[], calleetask=TerminatingProcess, cookie=Cookie}) ->
+    TerminatingProcess ! {Cookie, self()},
     {completed, State};
 next_state_on_completion(State=#state{waiting_tasks=WaitingTasks, calleecog=CalleeCog}) ->
     lists:map(fun (Task) -> Task ! {value_present, self(), CalleeCog} end, WaitingTasks),
@@ -228,23 +214,23 @@ running(_Event, _From, State) ->
 
 running({waiting, Task}, State=#state{waiting_tasks=WaitingTasks}) ->
     {next_state, running, State#state{waiting_tasks=[Task | WaitingTasks]}};
-running({completed, value, Result, Sender, SenderCog}, State=#state{calleetask=Sender,calleecog=SenderCog})->
+running({completed, value, Result, Sender, SenderCog, Cookie}, State=#state{calleetask=Sender,calleecog=SenderCog})->
     gc:unroot_future(self()),
-    {NextState, State1} = next_state_on_completion(State),
+    {NextState, State1} = next_state_on_completion(State#state{cookie=Cookie}),
     {next_state, NextState, State1#state{value={ok,Result}, references=[]}};
-running({completed, exception, Result, Sender, SenderCog}, State=#state{calleetask=Sender,calleecog=SenderCog})->
+running({completed, exception, Result, Sender, SenderCog, Cookie}, State=#state{calleetask=Sender,calleecog=SenderCog})->
     gc:unroot_future(self()),
-    {NextState, State1} = next_state_on_completion(State),
+    {NextState, State1} = next_state_on_completion(State#state{cookie=Cookie}),
     {next_state, NextState, State1#state{value={error,Result}, references=[]}};
 running(_Event, State) ->
     {stop, not_supported, State}.
 
 
-next_state_on_okthx(State=#state{calleetask=CalleeTask,waiting_tasks=WaitingTasks}, Task) ->
+next_state_on_okthx(State=#state{calleetask=CalleeTask,waiting_tasks=WaitingTasks, cookie=Cookie}, Task) ->
     NewWaitingTasks=lists:delete(Task, WaitingTasks),
     case NewWaitingTasks of
         [] ->
-            CalleeTask ! {value_accepted, self()},
+            CalleeTask ! {Cookie, self()},
             {completed, State#state{waiting_tasks=[]}};
         _ ->
             {completing, State#state{waiting_tasks=NewWaitingTasks}}
