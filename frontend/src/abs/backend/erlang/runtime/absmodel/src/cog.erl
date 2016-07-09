@@ -1,6 +1,9 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
--export([start/0,start/1,add_async/4,add_and_notify/3,add_blocking/5,new_state/3,new_state_sync/4]).
+-export([start/0,start/1,add_async/4,add_and_notify/3,add_blocking/5]).
+-export([process_is_runnable_sync/3,process_is_runnable/2,
+         process_is_waiting/2, process_is_waiting_polling/2,
+         process_is_blocked/2, process_is_blocked_for_gc/2]).
 -export([inc_ref_count/1,dec_ref_count/1]).
 -export([init/1]).
 -include_lib("abs_types.hrl").
@@ -56,12 +59,24 @@ add_blocking(#cog{ref=Ref},Task,Args,Cog,Stack)->
     task:acquire_token(Cog,[Args|Stack]),
     TaskRef.
 
-new_state(#cog{ref=Cog},TaskRef,State)->
-    announce_task_state_changed(Cog, TaskRef, State, undef).
-
-new_state_sync(#cog{ref=Cog},TaskRef,State,Stack) ->
-    announce_task_state_changed(Cog, TaskRef, State, self()),
+process_is_runnable_sync(#cog{ref=Cog},TaskRef,Stack) ->
+    announce_task_state_changed(Cog, TaskRef, runnable, self()),
     task:loop_for_token(Stack, new_state_finished).
+
+process_is_runnable(#cog{ref=Cog},TaskRef) ->
+    announce_task_state_changed(Cog, TaskRef, runnable, undef).
+
+process_is_waiting(#cog{ref=Cog},TaskRef) ->
+    announce_task_state_changed(Cog, TaskRef, waiting, undef).
+
+process_is_waiting_polling(#cog{ref=Cog},TaskRef) ->
+    announce_task_state_changed(Cog, TaskRef, waiting_poll, undef).
+
+process_is_blocked(#cog{ref=Cog},TaskRef) ->
+    announce_task_state_changed(Cog, TaskRef, blocked, undef).
+
+process_is_blocked_for_gc(#cog{ref=Cog},TaskRef) ->
+    announce_task_state_changed(Cog, TaskRef, blocked_for_gc, undef).
 
 %%Garbage collector callbacks
 

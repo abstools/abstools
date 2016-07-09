@@ -104,7 +104,7 @@ await(Future, Cog=#cog{ref=CogRef}, Stack) ->
                              %% open-code `task:acquire_token' and add the
                              %% proper callee unlocking and synchronous cog
                              %% state change.
-                             cog:new_state_sync(Cog,self(),runnable,Stack),
+                             cog:process_is_runnable_sync(Cog,self(),Stack), % FIXME: check if this line can deadlock
                              confirm_wait_unblocked(Future, self()),
                              task:loop_for_token(Stack, token),
                              cog_monitor:cog_unblocked(CogRef);

@@ -84,7 +84,7 @@ send_notifications(Val)->
             
 
 acquire_token(Cog=#cog{ref=CogRef}, Stack)->
-    cog:new_state(Cog,self(),runnable),
+    cog:process_is_runnable(Cog,self()),
     loop_for_token(Stack, token),
     cog_monitor:cog_unblocked(CogRef).
 
@@ -114,13 +114,13 @@ loop_for_token(Stack, Token) ->
     end.
 
 wait(Cog)->
-    cog:new_state(Cog,self(),waiting).
+    cog:process_is_waiting(Cog,self()).
 wait_poll(Cog)->
-    cog:new_state(Cog,self(),waiting_poll).
+    cog:process_is_waiting_polling(Cog,self()).
 block_with_time_advance(Cog)->
-    cog:new_state(Cog,self(),blocked).
+    cog:process_is_blocked(Cog,self()).
 block_without_time_advance(Cog)->
-    cog:new_state(Cog,self(),blocked_for_gc).
+    cog:process_is_blocked_for_gc(Cog,self()).
 
 %% await_duration and block_for_duration are called in different scenarios
 %% (guard vs statement), hence the different amount of work they do.
