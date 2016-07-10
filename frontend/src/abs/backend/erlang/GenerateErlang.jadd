@@ -403,6 +403,8 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),getMethodSig().getTypes(),vars,true);
+    ecs.print(",Cog,");
+    ecs.print(vars.toStack());
     ecs.println("),");
     ecs.print("future:get_blocking(TempFuture, Cog, ");
     ecs.print(vars.toStack());
@@ -416,6 +418,8 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),getMethodSig().getTypes(),vars,true);
+    ecs.print(",Cog,");
+    ecs.print(vars.toStack());
     ecs.print(")");
   }
 
@@ -917,7 +921,7 @@ aspect GenerateErlang {
       ecs.println("{stop_world, _Sender} -> % only happens when stop_world and release_token cross");
       ecs.incIndent().pf("Poll(%s);", vars.toParamList());
       ecs.decIndent().println("{get_references, Sender} ->");
-      ecs.incIndent().pf("Sender ! {gc:extract_references(%s), self()},", vars.toStack());
+      ecs.incIndent().pf("cog:submit_references(Sender, gc:extract_references(%s)),", vars.toStack());
       ecs.pf("Poll(%s);", vars.toParamList());
       ecs.decIndent().println("die_prematurely ->");
       ecs.incIndent().println("exit(killed_by_the_clock)");

@@ -27,21 +27,13 @@
 %% gen_server interface
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
-%% - main=
-%% - active=
-%% - blocked=
-%% - idle=
-%% - clock_waiting=
-%% - dcs=
-%% - keepalive_after_clock_limit=
-%%
 %% Simulation ends when no cog is active or waiting for the clock / some
-%% resources.  Note that a cog can be in "active" and "blocked" at the same
-%% time.
+%% resources.  Note that a cog is in either "active" or "idle" but can be in
+%% "active" and "blocked" at the same time.
 -record(state,{main,            % this
                active,          % non-idle cogs
-               blocked,         % cogs with process blocked on future/resource
                idle,            % idle cogs
+               blocked,         % cogs with process blocked on future/resource
                clock_waiting,   % [{Min,Max,Task,Cog}]: processes with their
                                 % cog waiting for simulated time to advance,
                                 % with minimum and maximum waiting time.
