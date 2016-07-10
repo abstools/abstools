@@ -350,19 +350,19 @@ start_new_task(S=#state{running=R,tasks=T,dc=DC},Task,Args,Sender,Notify,Cookie)
     S#state{running=R1,tasks=gb_trees:insert(Ref,#task{ref=Ref,state=runnable},T)}.
 
 
-schedule_and_execute(S=#state{running=idle}) ->
+schedule_and_execute(S=#state{running=idle,tasks=OldTasks,polling=Polling}) ->
     %Search executable task
-    {S1=#state{tasks=Tasks},Polled}=poll_waiting(S),
+    {Tasks,ReadyToRun}=poll_waiting(OldTasks,Polling),
     T=get_runnable(Tasks),
     State=case T of
         none-> %None found
-            S2=reset_polled(none,Polled,S1),
+            NewTasks=reset_polled(none,ReadyToRun,Tasks),
             cog_monitor:cog_idle(self()),
-            S2#state{running=no_task_schedulable};
+            S#state{running=no_task_schedulable,tasks=NewTasks};
         #task{ref=R} -> %Execute T
             R!token,
-            S2=reset_polled(R,Polled,S1),
-            set_task_state(S2#state{running=R},R,running)
+            NewTasks=reset_polled(R,ReadyToRun,Tasks),
+            set_task_state(S#state{running=R,tasks=NewTasks},R,running)
     end,
     State;
 schedule_and_execute(S) -> S.
@@ -414,8 +414,9 @@ get_runnable_i(It) ->
         none -> none
     end.
 
-%%Polls all tasks in the polling list
-poll_waiting(S=#state{tasks=Tasks1,polling=Pol}) ->
+%% Polls all tasks in the polling list.  Return updated Tasks tree and list of
+%% tasks ready to run (used subsequently in `reset_polled').
+poll_waiting(Tasks1, Pol) ->
     lists:foreach(fun(#task{ref=R})->  R!check end, Pol),
     {NT,Polled}=lists:foldl(fun (T=#task{ref=R},{Tasks,List}) ->
                     receive {R,true}->
@@ -424,21 +425,22 @@ poll_waiting(S=#state{tasks=Tasks1,polling=Pol}) ->
                         {Tasks,List}
                     end end ,
                  {Tasks1,[]},Pol),
-    {S#state{tasks=NT},Polled}.
+    {NT,Polled}.
 
 
-%%Resets all that where successful but not choosen
-reset_polled(Choosen,Polled,S=#state{tasks=Tasks}) ->
-    S#state{tasks=lists:foldl(fun (T=#task{ref=R},Tasks) ->
-                    case R of 
-                        Choosen -> 
-                            noop;
-                        _->
-                            R!wait
-                    end,
-                     gb_trees:update(R,T,Tasks) end ,
-                 Tasks,Polled)}.
-    
+%% Resets state in tree of all tasks that were polled but not chosen to
+%% execute.  Returns the updated Tasks tree.
+reset_polled(Chosen,Polled,Tasks1) ->
+    lists:foldl(fun (T=#task{ref=R},Tasks) ->
+                        case R of
+                            Chosen ->
+                                noop;
+                            _->
+                                R!wait
+                        end,
+                        gb_trees:update(R,T,Tasks) end ,
+                Tasks1,Polled).
+
 %%Changes reference counts in state
 inc_referencers(S=#state{referencers=N}) ->
     S#state{referencers=N+1}.
