@@ -128,7 +128,7 @@ init(DC) ->
     loop(#state{tasks=gb_trees:empty(),running=Running,dc=DC}).
 
 %%No task was ready to execute
-loop(S=#state{running=no_task_schedulable})->
+loop(S=#state{running=no_task_schedulable,tasks=Tasks})->
     New_State=
         receive
             {stop_world, _Sender} ->
@@ -146,7 +146,8 @@ loop(S=#state{running=no_task_schedulable})->
                         NewState;
                     {new_task,Task,Args,Sender,Notify,Cookie}->
                         cog_monitor:cog_active(self()),
-                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
+                        NewTasks=start_new_task(Tasks,S#state.dc,Task,Args,Sender,Notify,Cookie),
+                        S#state{tasks=NewTasks};
                     {'EXIT',R,Reason} when Reason /= normal ->
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
@@ -180,7 +181,8 @@ loop(S=#state{running=idle,tasks=OldTasks,polling=Polling})->
                         end,
                         NewState;
                     {new_task,Task,Args,Sender,Notify,Cookie}->
-                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
+                        NewTasks=start_new_task(OldTasks,S#state.dc,Task,Args,Sender,Notify,Cookie),
+                        S#state{tasks=NewTasks};
                     {'EXIT',R,Reason} when Reason /= normal ->
                         set_task_state(S,R,abort);
                     inc_ref_count->
@@ -208,7 +210,7 @@ loop(S=#state{running=idle,tasks=OldTasks,polling=Polling})->
     loop(New_State);
 
 %%Running task, wait for return of token
-loop(S=#state{running=R}) when is_pid(R)->
+loop(S=#state{running=R,tasks=Tasks}) when is_pid(R)->
     New_State=
         receive
             {stop_world, _Sender} ->
@@ -226,7 +228,8 @@ loop(S=#state{running=R}) when is_pid(R)->
                         end,
                         NewState;
                     {new_task,Task,Args,Sender,Notify,Cookie}->
-                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
+                        NewTasks=start_new_task(Tasks,S#state.dc,Task,Args,Sender,Notify,Cookie),
+                        S#state{tasks=NewTasks};
                     {token,R,Task_state}->
                         set_task_state(S#state{running=idle},R,Task_state);
                     {'EXIT',R,Reason} when Reason /= normal ->
@@ -244,7 +247,7 @@ loop(S=#state{running=R}) when is_pid(R)->
             end,
     loop(New_State);
 
-loop(S=#state{running={blocked, R}}) ->
+loop(S=#state{running={blocked, R},tasks=Tasks}) ->
     New_State=
         receive
             {stop_world, _Sender} ->
@@ -260,7 +263,8 @@ loop(S=#state{running={blocked, R}}) ->
                         end,
                         NewState;
                     {new_task,Task,Args,Sender,Notify,Cookie}->
-                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
+                        NewTasks=start_new_task(Tasks,S#state.dc,Task,Args,Sender,Notify,Cookie),
+                        S#state{tasks=NewTasks};
                     {'EXIT',R,Reason} when Reason /= normal ->
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
@@ -274,7 +278,7 @@ loop(S=#state{running={blocked, R}}) ->
         end,
     loop(New_State);
 
-loop(S=#state{running={blocked_for_gc, R}}) ->
+loop(S=#state{running={blocked_for_gc, R},tasks=Tasks}) ->
     New_State=
         receive
             {stop_world, _Sender} ->
@@ -290,7 +294,8 @@ loop(S=#state{running={blocked_for_gc, R}}) ->
                         end,
                         NewState;
                     {new_task,Task,Args,Sender,Notify,Cookie}->
-                        start_new_task(S,Task,Args,Sender,Notify,Cookie);
+                        NewTasks=start_new_task(Tasks,S#state.dc,Task,Args,Sender,Notify,Cookie),
+                        S#state{tasks=NewTasks};
                     {'EXIT',R,Reason} when Reason /= normal ->
                         set_task_state(S#state{running=idle},R,abort);
                     inc_ref_count->
@@ -342,7 +347,7 @@ loop(S=#state{tasks=Tasks, polling=Polling, running={gc,Old}, referencers=Refs, 
         _ -> loop(New_State)
     end.
 
-start_new_task(S=#state{running=R,tasks=T,dc=DC},Task,Args,Sender,Notify,Cookie)->
+start_new_task(TaskTree,DC,Task,Args,Sender,Notify,Cookie)->
     Ref=task:start(#cog{ref=self(),dc=DC},Task,Args),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     case Cookie of
@@ -352,12 +357,12 @@ start_new_task(S=#state{running=R,tasks=T,dc=DC},Task,Args,Sender,Notify,Cookie)
     end,
     %% Don't generate "cog idle" event when we create new task - this
     %% causes spurious clock advance
-    R1=case R of no_task_schedulable -> idle; _ -> R end,
+    %% R1=case R of no_task_schedulable -> idle; _ -> R end,
     %% we used to start with state=waiting but that led to spurious clock
     %% advancement (cog sent out idle event before task became runnable).  I
     %% did not see where the task state is actually set to runnable either, so
     %% don't treat state=runnable in the next line as gospel.
-    S#state{running=R1,tasks=gb_trees:insert(Ref,#task{ref=Ref,state=runnable},T)}.
+    gb_trees:insert(Ref,#task{ref=Ref,state=runnable},TaskTree).
 
 
 %%Sets state in dictionary, and updates polling list
