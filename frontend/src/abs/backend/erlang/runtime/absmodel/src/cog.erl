@@ -366,9 +366,6 @@ start_new_task(TaskTree,DC,Task,Args,Sender,Notify,Cookie)->
 
 
 %%Sets state in dictionary, and updates polling list
-set_task_state(S=#state{tasks=Tasks,polling=Pol},TaskRef,abort)->
-    Old=gb_trees:get(TaskRef,Tasks),
-    S#state{tasks=gb_trees:delete(TaskRef,Tasks),polling=lists:delete(Old, Pol)};
 set_task_state(S=#state{running=TaskRef},TaskRef,blocked) ->
     cog_monitor:cog_blocked(self()),
     S#state{running={blocked, TaskRef}};
@@ -380,23 +377,21 @@ set_task_state(S=#state{running={blocked, TaskRef}}, TaskRef, runnable) ->
 set_task_state(S=#state{running={blocked_for_gc, TaskRef}}, TaskRef, runnable) ->
     TaskRef ! token,
     S#state{running=TaskRef};
-set_task_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
-    Old=#task{state=OldState}=gb_trees:get(TaskRef,Tasks),
-    New_state=Old#task{state=State},
-    S=case State of 
-          waiting_poll ->
-              S1#state{polling=[New_state|Pol]};
-          _ when OldState == waiting_poll ->
-              S1#state{polling=lists:delete(Old, Pol)};
-          _ ->
-              S1
-      end,  
-    case State of 
-         done ->
-           S#state{tasks=gb_trees:delete(TaskRef,Tasks)};
-         _ ->
-           S#state{tasks=gb_trees:update(TaskRef,New_state,Tasks)}
-    end.
+set_task_state(S=#state{tasks=TasksOld,polling=PolOld},TaskRef,State)->
+    Old=#task{state=OldState}=gb_trees:get(TaskRef,TasksOld),
+    New=Old#task{state=State},
+    PolNew=case State of
+               waiting_poll -> [New|PolOld];
+               abort -> lists:delete(Old, PolOld);
+               _ when OldState == waiting_poll -> lists:delete(Old, PolOld);
+               _ -> PolOld
+      end,
+    TasksNew=case State of
+                 done -> gb_trees:delete(TaskRef,TasksOld);
+                 abort -> gb_trees:delete(TaskRef,TasksOld);
+                 _ -> gb_trees:update(TaskRef,New,TasksOld)
+             end,
+    S#state{tasks=TasksNew,polling=PolNew}.
 
 get_runnable(Tasks)->
     get_runnable_i(gb_trees:iterator(Tasks)).
