@@ -164,7 +164,7 @@ loop(S=#state{running=no_task_schedulable})->
     end;
 
 %%No task is running now
-loop(S=#state{running=idle})->
+loop(S=#state{running=idle,tasks=OldTasks,polling=Polling})->
     New_State=
         receive
             {stop_world, _Sender} ->
@@ -190,9 +190,19 @@ loop(S=#state{running=idle})->
                     {stop_world, _Sender} ->
                         gc:cog_stopped(self()),
                         S#state{running={gc, idle}}
-                after
-                    0 ->
-                        schedule_and_execute(S)
+                after 0 ->
+                        {Tasks,ReadyToRun}=poll_waiting(OldTasks,Polling),
+                        T=get_runnable(Tasks),
+                        case T of
+                            none-> %None found
+                                NewTasks=reset_polled(none,ReadyToRun,Tasks),
+                                cog_monitor:cog_idle(self()),
+                                S#state{running=no_task_schedulable,tasks=NewTasks};
+                            #task{ref=R} -> %Execute T
+                                R!token,
+                                NewTasks=reset_polled(R,ReadyToRun,Tasks),
+                                set_task_state(S#state{running=R,tasks=NewTasks},R,running)
+                        end
                 end
         end,
     loop(New_State);
@@ -348,24 +358,6 @@ start_new_task(S=#state{running=R,tasks=T,dc=DC},Task,Args,Sender,Notify,Cookie)
     %% did not see where the task state is actually set to runnable either, so
     %% don't treat state=runnable in the next line as gospel.
     S#state{running=R1,tasks=gb_trees:insert(Ref,#task{ref=Ref,state=runnable},T)}.
-
-
-schedule_and_execute(S=#state{running=idle,tasks=OldTasks,polling=Polling}) ->
-    %Search executable task
-    {Tasks,ReadyToRun}=poll_waiting(OldTasks,Polling),
-    T=get_runnable(Tasks),
-    State=case T of
-        none-> %None found
-            NewTasks=reset_polled(none,ReadyToRun,Tasks),
-            cog_monitor:cog_idle(self()),
-            S#state{running=no_task_schedulable,tasks=NewTasks};
-        #task{ref=R} -> %Execute T
-            R!token,
-            NewTasks=reset_polled(R,ReadyToRun,Tasks),
-            set_task_state(S#state{running=R,tasks=NewTasks},R,running)
-    end,
-    State;
-schedule_and_execute(S) -> S.
 
 
 %%Sets state in dictionary, and updates polling list
