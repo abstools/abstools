@@ -366,8 +366,6 @@ start_new_task(TaskTree,DC,Task,Args,Sender,Notify,Cookie)->
 
 
 %%Sets state in dictionary, and updates polling list
-set_task_state(S=#state{tasks=Tasks},TaskRef,done)->
-    S#state{tasks=gb_trees:delete(TaskRef,Tasks)};
 set_task_state(S=#state{tasks=Tasks,polling=Pol},TaskRef,abort)->
     Old=gb_trees:get(TaskRef,Tasks),
     S#state{tasks=gb_trees:delete(TaskRef,Tasks),polling=lists:delete(Old, Pol)};
