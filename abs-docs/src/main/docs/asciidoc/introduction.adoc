@@ -101,3 +101,7 @@ An object in an existing cog is created via the `new local` expression (see Figu
 
 [[fig-object-new-local]]
 image::new-local-object.png[width=593,height=154,title="Creating an object in the same cog",alt="Creating an object in the same cog"]
+
+
+[[sec:error-model]]
+=== Error Propagation and Recovery in ABS

@@ -146,6 +146,10 @@ An await statement suspends the current task until the given guard becomes
 active (evalutes to `True`).  While the task is suspended, other tasks within
 the same COG can be scheduled.
 
+Guards can wait for a futures to become resolved, for a Boolean condition over
+the object state to become true, or (in timed ABS) for a certain duration to
+pass.
+
 In general, each cog will continue running a task without preempting it until
 the task is finished or it reaches a _scheduling point_.  Await statements are
 scheduling points, as are `suspend` statements and assignment or expression
@@ -169,7 +173,7 @@ await this.x == True; <2>
 await f? & this.y > 5; <3>
 await duration(3, 5); <4>
 ----
-<1> A _claim guard_ becomes active when the future is resolved (contains a value).
+<1> A _claim guard_ becomes active when the future is resolved (contains a value or an exception).
 <2> A _field guard_ is a Boolean expression over the object state.
 <3> A _guard conjunction_ becomes active when both its components are active.
 <4> A _duration guard_ becomes active after a certain amount of simulated time has passed.  See <<sec:timed-abs>> for more on timed models.
@@ -224,6 +228,7 @@ multiple `return` statements.  This makes model analysis easier.
 return x;
 ----
 
+[[throw-statement]]
 === Throw
 
 The keyword-statement `throw` is used to signal exceptions (runtime errors).
@@ -367,7 +372,7 @@ while (x < 5) {
 ----
 
 
-
+[[try-catch-finally-block]]
 === Handling Exceptions with Try-Catch-Finally
 
 To handle an exception --- either explicitly signaled using the `throw` keyword or implicitly by a system exception ---
