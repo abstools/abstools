@@ -883,11 +883,11 @@ aspect GenerateErlang {
       ecs.pf("(fun Poll (%s)->",vars.toParamList());
       ecs.incIndent().println("receive check -> ");
       ecs.incIndent().pf("case %s of",sw);
-      ecs.incIndent().println("true -> CogRef!{self(),true},");
+      ecs.incIndent().println("true -> cog:process_poll_is_ready(Cog, self()),");
       ecs.incIndent().pf("receive wait -> Poll(%s);",vars.toParamList());
       ecs.incIndent().println("token -> ok");
       ecs.decIndent().println("end;");
-      ecs.decIndent().pf("false -> CogRef!{self(),false},  Poll(%s)",vars.toParamList());
+      ecs.decIndent().pf("false -> cog:process_poll_is_not_ready(Cog, self()),  Poll(%s)",vars.toParamList());
       ecs.decIndent().println("end;");
       ecs.println("{stop_world, Sender} ->");
       ecs.incIndent().pf("Poll(%s);", vars.toParamList());

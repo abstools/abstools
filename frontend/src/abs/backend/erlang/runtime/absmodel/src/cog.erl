@@ -3,7 +3,8 @@
 -export([start/0,start/1,add_async/4,add_and_notify/3,add_blocking/5]).
 -export([process_is_runnable_sync/3,process_is_runnable/2,
          process_is_waiting/2, process_is_waiting_polling/2,
-         process_is_blocked/2, process_is_blocked_for_gc/2]).
+         process_is_blocked/2, process_is_blocked_for_gc/2,
+         process_poll_is_ready/2, process_poll_is_not_ready/2]).
 -export([inc_ref_count/1,dec_ref_count/1]).
 -export([init/1]).
 -include_lib("abs_types.hrl").
@@ -77,6 +78,13 @@ process_is_blocked(#cog{ref=Cog},TaskRef) ->
 
 process_is_blocked_for_gc(#cog{ref=Cog},TaskRef) ->
     announce_task_state_changed(Cog, TaskRef, blocked_for_gc, undef).
+
+process_poll_is_ready(#cog{ref=Cog}, TaskRef) ->
+    Cog ! {TaskRef, true}.
+
+process_poll_is_not_ready(#cog{ref=Cog}, TaskRef) ->
+    Cog ! {TaskRef, false}.
+
 
 %%Garbage collector callbacks
 
