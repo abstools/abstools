@@ -6,7 +6,7 @@
 %% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([acquire_token/2,release_token/2,block_with_time_advance/1,block_without_time_advance/1,wait/1,wait_poll/1,commit/1,rollback/1]).
+-export([acquire_token/2,release_token/2,block_with_time_advance/1,block_without_time_advance/1,wait/1,wait_poll/1]).
 -export([await_duration/4,block_for_duration/4]).
 -export([block_for_cpu/4,block_for_bandwidth/5]).
 -export([loop_for_token/2]).            % low-level; use acquire_token instead
@@ -84,7 +84,7 @@ send_notifications(Val)->
             
 
 acquire_token(Cog=#cog{ref=CogRef}, Stack)->
-    cog:new_state(Cog,self(),runnable),
+    cog:process_is_runnable(Cog,self()),
     loop_for_token(Stack, token),
     cog_monitor:cog_unblocked(CogRef).
 
@@ -114,15 +114,13 @@ loop_for_token(Stack, Token) ->
     end.
 
 wait(Cog)->
-    commit(Cog),
-    cog:new_state(Cog,self(),waiting).
+    cog:process_is_waiting(Cog,self()).
 wait_poll(Cog)->
-    commit(Cog),
-    cog:new_state(Cog,self(),waiting_poll).
+    cog:process_is_waiting_polling(Cog,self()).
 block_with_time_advance(Cog)->
-    cog:new_state(Cog,self(),blocked).
+    cog:process_is_blocked(Cog,self()).
 block_without_time_advance(Cog)->
-    cog:new_state(Cog,self(),blocked_for_gc).
+    cog:process_is_blocked_for_gc(Cog,self()).
 
 %% await_duration and block_for_duration are called in different scenarios
 %% (guard vs statement), hence the different amount of work they do.
@@ -184,15 +182,8 @@ block_for_bandwidth(Cog, DC, null, Amount, Stack) ->
 
 
 release_token(C=#cog{ref=Cog},State)->
-    commit(C),
     receive
         {stop_world, _Sender} -> ok
     after 0 -> ok
     end,
     Cog!{token,self(),State}.
-
-rollback(Cog)->
-    rpc:pmap({object,rollback},[],cog:get_and_clear_dirty(Cog)).
-
-commit(Cog)->
-    rpc:pmap({object,commit},[],cog:get_and_clear_dirty(Cog)).

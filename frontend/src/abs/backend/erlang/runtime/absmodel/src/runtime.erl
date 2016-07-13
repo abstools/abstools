@@ -100,7 +100,6 @@ end_mod(TaskRef) ->
     RetVal=task:join(TaskRef),
     %% modelapi:print_statistics(),
     cog_monitor:waitfor(),
-    timer:sleep(1),
     gc:stop(),
     clock:stop(),
     cog_monitor:stop(),

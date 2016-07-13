@@ -488,9 +488,10 @@ Fut<Bool> f = x!m(5);
 
 
 A get expression is used to obtain the value from a future.  The current task
-is blocked until the future has been resolved, i.e., until the value of the
-future is available.  No other task in the COG can be activated in the
-meantime.
+is blocked until the future has been resolved, i.e., until either the return
+value is available or an exception has occurred in the callee task.  No other
+task in the COG can be activated while the current task is blocked by a get
+expression.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
@@ -503,6 +504,22 @@ meantime.
 ----
 Bool b = f.get;
 ----
+
+If the future contains a normal return value, the value of the get expression
+is that value.  If the future contains an exception thrown by the callee
+process, evaluating the get expression will throw the same exception.  The
+value thrown by a get expression can be caught by try-catch as normal (see
+<<try-catch-finally-stmt>>).
+
+The following example assigns the return value contained in `f` to the
+variable `b`.  In case of any error, `b` is assigned `False`.
+
+[source]
+.Example
+----
+try b = f.get; catch { _ => b = False; }
+----
+
 
 [[await-expression]]
 ==== Await Expression

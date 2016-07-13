@@ -20,11 +20,27 @@ init(_Cog,[Future,O,Method|Params])->
 start(#state{fut=Future,obj=O=#object{class=C,cog=Cog},meth=M,params=P})->
     try
         Res=apply(C, M,[O|P]),
-        future:complete(Future, value, Res, self(), Cog, [O|P])
+        complete_future(Future, value, Res, Cog, [O|P])
     catch
         _:Reason ->
-            %% Rollback is replaced by recovery blocks.
-            %% TODO: check against semantics of synchronous method calls; do we have any problems there?
-            %% task:rollback(Cog),
-            future:complete(Future, exception, error_transform:transform(Reason), self(), Cog, [O|P])
+            complete_future(Future, exception, error_transform:transform(Reason), Cog, [O|P])
     end.
+
+complete_future(Future, Status, Value, Cog, Stack) ->
+    future:value_available(Future, Status, Value, self(), Cog, value_accepted),
+        (fun Loop() ->
+             %% Wait for message to be received, but handle GC request in the
+             %% meantime.
+             receive
+                 {stop_world, _Sender} ->
+                     task:block_without_time_advance(Cog),
+                     %% this runs in the context of the just-completed task,
+                     %% so we only need to hold on to the return value.
+                     task:acquire_token(Cog, [Value]),
+                     Loop();
+                {get_references, Sender} ->
+                    Sender ! {gc:extract_references([Future, Value | Stack]), self()},
+                    Loop();
+                {value_accepted, Future} -> ok
+            end
+    end)().

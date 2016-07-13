@@ -19,23 +19,31 @@
 %% gen_server interface
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
-%% - main=this
-%% - active=non-idle cogs
-%% - blocked=cogs with process blocked on future/resource
-%% - idle=idle cogs
-%% - clock_waiting=[{Min,Max,Task,Cog}]: processes with their cog waiting for
-%%   simulated time to advance, with minimum and maximum waiting time.
-%%   Ordered by ascending maximum waiting time such that the Max element of
-%%   the head of the list is always MTE [Maximum Time Elapse]).
-%% - dcs=list of deployment components
-%% - timer=timeout callback before terminating program
-%% - keepalive_after_clock_limit=should we kill all objects after clock limit
-%%   has been reached y/n (used to keep state around when web server is active)
+%% - main=
+%% - active=
+%% - blocked=
+%% - idle=
+%% - clock_waiting=
+%% - dcs=
+%% - keepalive_after_clock_limit=
 %%
 %% Simulation ends when no cog is active or waiting for the clock / some
 %% resources.  Note that a cog can be in "active" and "blocked" at the same
 %% time.
--record(state,{main,active,blocked,idle,clock_waiting,dcs,timer,keepalive_after_clock_limit}).
+-record(state,{main,            % this
+               active,          % non-idle cogs
+               blocked,         % cogs with process blocked on future/resource
+               idle,            % idle cogs
+               clock_waiting,   % [{Min,Max,Task,Cog}]: processes with their
+                                % cog waiting for simulated time to advance,
+                                % with minimum and maximum waiting time.
+                                % Ordered by ascending maximum waiting time
+                                % such that the Max element of the head of the
+                                % list is always MTE [Maximum Time Elapse]).
+               dcs,             % list of deployment components
+               keepalive_after_clock_limit % Flag whether we kill all objects after clock limit has been reached
+                                           % (false when REST API is active)
+              }).
 %%External function
 
 start_link(Main, Keepalive) ->
@@ -99,18 +107,16 @@ init([Main,Keepalive])->
                idle=gb_sets:empty(),
                clock_waiting=[],
                dcs=[],
-               timer=undefined,
                keepalive_after_clock_limit=Keepalive}}.
 
 
 handle_call({cog,Cog,new}, _From, State=#state{idle=I})->
     I1=gb_sets:add_element(Cog,I),
     {reply, ok, State#state{idle=I1}};
-handle_call({cog,Cog,active}, _From, State=#state{active=A,idle=I,timer=T})->
+handle_call({cog,Cog,active}, _From, State=#state{active=A,idle=I})->
     A1=gb_sets:add_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
-    cancel(T),
-    {reply, ok, State#state{active=A1,idle=I1,timer=undefined}};
+    {reply, ok, State#state{active=A1,idle=I1}};
 handle_call({cog,Cog,idle}, _From, State=#state{active=A,idle=I})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:add_element(Cog,I),
@@ -131,10 +137,9 @@ handle_call({cog,Cog,blocked}, _From, State=#state{active=A,blocked=B})->
         false->
             {reply, ok, S1}
     end;
-handle_call({cog,Cog,unblocked}, _From, State=#state{active=A,blocked=B, timer=T})->
+handle_call({cog,Cog,unblocked}, _From, State=#state{active=A,blocked=B})->
     A1=gb_sets:add_element(Cog,A),
     B1=gb_sets:del_element(Cog,B),
-    cancel(T),
     {reply, ok, State#state{active=A1,blocked=B1}};
 handle_call({cog,Cog,die}, _From,State=#state{active=A,idle=I,blocked=B,clock_waiting=W})->
     A1=gb_sets:del_element(Cog,A),
@@ -181,8 +186,7 @@ handle_info(_Info, State)->
     {noreply, State}.
 
 
-terminate(_Reason,#state{timer=T})->
-    cancel(T),
+terminate(_Reason,_S)->
     ok.
 
 
@@ -190,30 +194,21 @@ code_change(_OldVsn, State, _Extra)->
     %% not supported
     {error, State}.
 
-%%Private
-cancel(undefined)->
-    ok;
-cancel(TRef)->
-    {ok,cancel}=timer:cancel(TRef).
-
 can_clock_advance(_OldState=#state{active=A, blocked=B},
                   _NewState=#state{active=A1, blocked=B1}) ->
     Old_idle = gb_sets:is_empty(gb_sets:subtract(A, B)),
     All_idle = gb_sets:is_empty(gb_sets:subtract(A1, B1)),
     not Old_idle and All_idle.
 
-advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,timer=T,keepalive_after_clock_limit=Keepalive}) ->
+advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,keepalive_after_clock_limit=Keepalive}) ->
     case C of
         [] ->
             %% One last clock advance to finish the last resource period
             MTE=clock:distance_to_next_boundary(),
             clock:advance(MTE),
             lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
-            {ok,T1} = case T of
-                          undefined -> timer:send_after(1000,M,wait_done);
-                          _ -> {ok,T}
-                      end,
-            State#state{timer=T1};
+            M ! wait_done,
+            State;
         [{_Min, MTE, _Task, _Cog} | _] ->
             %% advance clock before waking up processes waiting for it
             Clockresult=clock:advance(MTE),
@@ -234,11 +229,8 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
                             gc:stop(), % eliminate gc crash when it receives `stopped' messages in idle state
                             gb_sets:fold(fun (Ref, ok) -> cog:stop_world(Ref) end, ok, Cogs),
                             gb_sets:fold(fun (Ref, ok) -> cog:kill_recklessly(Ref) end, ok, Cogs),
-                            {ok,T1} = case T of
-                                          undefined -> timer:send_after(1000,M,wait_done);
-                                          _ -> {ok,T}
-                                      end,
-                            State#state{timer=T1};
+                            M ! wait_done,
+                            State;
                         true ->
                             io:format("Simulation time limit reached; terminate with Ctrl-C~n", []),
                             State
