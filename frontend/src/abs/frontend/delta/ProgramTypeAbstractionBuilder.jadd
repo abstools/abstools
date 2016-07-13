@@ -110,5 +110,12 @@ aspect ProgramTypeAbstractionBuilder {
     public void RemoveMethodModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
         ta.removeMethod(className, this);
     }
+    
+    /************************************
+     *
+     *		Traits
+     */
+     
+    public void DeltaTraitModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className){}
 
 }

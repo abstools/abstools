@@ -370,4 +370,7 @@ aspect DeltaModifierApplicator {
                     " wants to remove method signature [" + mysig + "], which was not found in interface [" + iface.qualifiedName() + "].");
     }
     
+    //traits
+    public  void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ System.out.println("I'm a trait! "+this); }
+    
 }

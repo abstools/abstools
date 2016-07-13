@@ -241,6 +241,11 @@ public class Main {
         if (verbose) {
             System.out.println("Analyzing Model...");
         }
+        
+        /*****/
+        System.out.println("Trait <-> Delta");
+        /*****/
+        
         //Preprocessor
         if (preprocess) {
             System.out.println("Preprocessing Model...");

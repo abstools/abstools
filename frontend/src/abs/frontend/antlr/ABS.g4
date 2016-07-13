@@ -209,6 +209,7 @@ class_decl : annotation*
         'class' TYPE_IDENTIFIER paramlist?
         ('implements' interface_name (',' interface_name)*)?
         '{'
+        trait_usage*
         field_decl*
         ('{' stmt* '}')?
         ( 'recover' '{' casestmtbranch* '}' )?
@@ -251,7 +252,26 @@ decl : datatype_decl
     | exception_decl
     | interface_decl
     | class_decl
+    | trait_decl
     ;
+
+
+trait_decl : 'trait' TYPE_IDENTIFIER '='
+			trait_expr
+		   ;
+
+trait_expr : '{' method* '}'						#TraitSetFragment
+		   | TYPE_IDENTIFIER						#TraitNameFragment
+		   | trait_expr trait_oper					#TraitApplyFragment
+		   ;
+
+trait_oper : 'adds' trait_expr						#TraitAddFragment
+		   | 'modifies' trait_expr					#TraitModifyFragment
+		   | 'removes' methodsig					#TraitRemoveFragment
+		   ;
+		   
+trait_usage: 'adds' TYPE_IDENTIFIER ';'
+           ; 
 
 delta_decl : 'delta' TYPE_IDENTIFIER
         ('(' p+=delta_param (',' p+=delta_param)* ')')? ';'
@@ -299,6 +319,7 @@ class_modifier_fragment : 'adds' field_decl  # DeltaAddFieldFragment
     | 'adds' method                          # DeltaAddMethodFragment
     | 'modifies' method                      # DeltaModifyMethodFragment
     | 'removes' methodsig                    # DeltaRemoveMethodFragment
+    | trait_oper							 # DeltaTraitFragment
     ;
 
 interface_modifier_fragment : 'adds' methodsig   # DeltaAddMethodsigFragment

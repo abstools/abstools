@@ -234,6 +234,11 @@ aspect DeltaParameterSubstitution {
             getChild(i).applySubstitution(subst);
         }
     }
+    
+    //trait
+    
+    @Override
+    protected void DeltaTraitModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {}
 
 
 

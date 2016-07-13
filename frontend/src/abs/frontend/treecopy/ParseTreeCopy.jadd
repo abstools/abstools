@@ -1,7 +1,6 @@
 
 import abs.frontend.ast.*;
 import abs.frontend.treecopy.ParseTreeCopyHelper; 
-
 aspect ParseTreeCopy {
     
     public Access Access.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
@@ -64,6 +63,7 @@ aspect ParseTreeCopy {
     public DeltaClassParam DeltaClassParam.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public DeltaClause DeltaClause.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public DeltaDecl DeltaDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
+    public TraitDecl TraitDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public DeltaFieldParam DeltaFieldParam.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public DeltaID DeltaID.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public Deltaparam Deltaparam.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }

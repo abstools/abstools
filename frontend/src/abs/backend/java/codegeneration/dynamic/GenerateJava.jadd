@@ -1214,4 +1214,8 @@ aspect GenerateJavaDynamic_DeltaModelling {
         }
     }
 
+//traits
+
+    public void DeltaTraitModifier.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
+    public void DeltaTraitModifier.generateJavaDynamicApplication(PrintStream stream, String className) {}
 }
