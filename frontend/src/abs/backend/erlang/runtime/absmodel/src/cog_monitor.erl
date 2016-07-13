@@ -127,31 +127,33 @@ handle_call({cog,Cog,idle}, _From, State=#state{active=A,idle=I})->
         false->
             {reply, ok, S1}
     end;
-handle_call({cog,Cog,blocked}, _From, State=#state{active=A,blocked=B})->
+handle_call({cog,Cog,blocked}, From, State=#state{active=A,blocked=B})->
     A1=gb_sets:del_element(Cog,A),
     B1=gb_sets:add_element(Cog,B),
     S1=State#state{active=A1,blocked=B1},
+    gen_server:reply(From, ok),
     case can_clock_advance(State, S1) of
         true->
-            {reply, ok, advance_clock_or_terminate(S1)};
+            {noreply, advance_clock_or_terminate(S1)};
         false->
-            {reply, ok, S1}
+            {noreply, S1}
     end;
 handle_call({cog,Cog,unblocked}, _From, State=#state{active=A,blocked=B})->
     A1=gb_sets:add_element(Cog,A),
     B1=gb_sets:del_element(Cog,B),
     {reply, ok, State#state{active=A1,blocked=B1}};
-handle_call({cog,Cog,die}, _From,State=#state{active=A,idle=I,blocked=B,clock_waiting=W})->
+handle_call({cog,Cog,die}, From,State=#state{active=A,idle=I,blocked=B,clock_waiting=W})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
     B1=gb_sets:del_element(Cog,B),
     W1=lists:filter(fun ({_Min, _Max, _Task, Cog1}) ->  Cog1 =/= Cog end, W),
     S1=State#state{active=A1,idle=I1,blocked=B1,clock_waiting=W1},
+    gen_server:reply(From, ok),
     case can_clock_advance(State, S1) of
         true->
-            {reply, ok, advance_clock_or_terminate(S1)};
+            {noreply, advance_clock_or_terminate(S1)};
         false->
-            {reply, ok, S1}
+            {noreply, S1}
     end;
 handle_call({task,Task,Cog,clock_waiting,Min,Max}, _From,
              State=#state{clock_waiting=C}) ->
