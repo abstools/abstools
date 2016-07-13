@@ -148,8 +148,11 @@ loop(S=#state{running=no_task_schedulable,tasks=Tasks})->
                         cog_monitor:cog_active(self()),
                         NewTasks=start_new_task(Tasks,S#state.dc,Task,Args,Sender,Notify,Cookie),
                         S#state{tasks=NewTasks};
-                    {'EXIT',R,Reason} when Reason /= normal ->
-                        set_task_state(S#state{running=idle},R,abort);
+                    {'EXIT',R,Reason} ->
+                        case Reason of
+                            normal -> S;
+                            _ -> set_task_state(S#state{running=idle},R,abort)
+                        end;
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
@@ -183,8 +186,11 @@ loop(S=#state{running=idle,tasks=OldTasks,polling=Polling})->
                     {new_task,Task,Args,Sender,Notify,Cookie}->
                         NewTasks=start_new_task(OldTasks,S#state.dc,Task,Args,Sender,Notify,Cookie),
                         S#state{tasks=NewTasks};
-                    {'EXIT',R,Reason} when Reason /= normal ->
-                        set_task_state(S,R,abort);
+                    {'EXIT',R,Reason} ->
+                        case Reason of
+                            normal -> S;
+                            _ -> set_task_state(S,R,abort)
+                        end;
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
@@ -232,8 +238,11 @@ loop(S=#state{running=R,tasks=Tasks}) when is_pid(R)->
                         S#state{tasks=NewTasks};
                     {token,R,Task_state}->
                         set_task_state(S#state{running=idle},R,Task_state);
-                    {'EXIT',R,Reason} when Reason /= normal ->
-                        set_task_state(S#state{running=idle},R,abort);
+                    {'EXIT',R,Reason} ->
+                        case Reason of
+                            normal -> S;
+                            _ -> set_task_state(S#state{running=idle},R,abort)
+                        end;
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
@@ -265,8 +274,11 @@ loop(S=#state{running={blocked, R},tasks=Tasks}) ->
                     {new_task,Task,Args,Sender,Notify,Cookie}->
                         NewTasks=start_new_task(Tasks,S#state.dc,Task,Args,Sender,Notify,Cookie),
                         S#state{tasks=NewTasks};
-                    {'EXIT',R,Reason} when Reason /= normal ->
-                        set_task_state(S#state{running=idle},R,abort);
+                    {'EXIT',R,Reason} ->
+                        case Reason of
+                            normal -> S;
+                            _ -> set_task_state(S#state{running=idle},R,abort)
+                        end;
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
@@ -296,8 +308,11 @@ loop(S=#state{running={blocked_for_gc, R},tasks=Tasks}) ->
                     {new_task,Task,Args,Sender,Notify,Cookie}->
                         NewTasks=start_new_task(Tasks,S#state.dc,Task,Args,Sender,Notify,Cookie),
                         S#state{tasks=NewTasks};
-                    {'EXIT',R,Reason} when Reason /= normal ->
-                        set_task_state(S#state{running=idle},R,abort);
+                    {'EXIT',R,Reason} ->
+                        case Reason of
+                            normal -> S;
+                            _ -> set_task_state(S#state{running=idle},R,abort)
+                        end;
                     inc_ref_count->
                         inc_referencers(S);
                     dec_ref_count->
