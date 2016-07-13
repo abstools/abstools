@@ -270,7 +270,7 @@ trait_oper : 'adds' trait_expr						#TraitAddFragment
 		   | 'removes' methodsig					#TraitRemoveFragment
 		   ;
 		   
-trait_usage: 'adds' TYPE_IDENTIFIER ';'
+trait_usage: 'adds' trait_expr ';'
            ; 
 
 delta_decl : 'delta' TYPE_IDENTIFIER
@@ -316,9 +316,9 @@ oo_modifier : 'adds' class_decl                            # DeltaAddClassModifi
 
 class_modifier_fragment : 'adds' field_decl  # DeltaAddFieldFragment
     | 'removes' field_decl                   # DeltaRemoveFieldFragment
-    | 'adds' method                          # DeltaAddMethodFragment
-    | 'modifies' method                      # DeltaModifyMethodFragment
-    | 'removes' methodsig                    # DeltaRemoveMethodFragment
+    | 'adds_old' method                          # DeltaAddMethodFragment
+    | 'modifies_old' method                      # DeltaModifyMethodFragment
+    | 'removes_old' methodsig                    # DeltaRemoveMethodFragment
     | trait_oper							 # DeltaTraitFragment
     ;
 

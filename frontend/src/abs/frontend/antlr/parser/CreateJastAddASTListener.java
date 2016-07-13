@@ -175,8 +175,9 @@ new List<ModuleDecl>(),
         public void exitTraitSetFragment(TraitSetFragmentContext ctx) {
              setV(ctx, new TraitSetExpr(l(ctx.method())));             
         }
-    @Override public void exitTrait_usage( ABSParser.Trait_usageContext ctx) { 
-        setV(ctx, new TraitUse(ctx.TYPE_IDENTIFIER().toString(), new List()));
+    @Override public void exitTrait_usage( ABSParser.Trait_usageContext ctx) {
+        //setV(ctx, new TraitUse(ctx.TYPE_IDENTIFIER().toString(), new List()));
+        setV(ctx, new TraitUse((TraitExpr)v(ctx.trait_expr())));
     }
     @Override public void exitTrait_decl( ABSParser.Trait_declContext ctx) { 
         setV(ctx, new TraitDecl(ctx.TYPE_IDENTIFIER().getText(), (TraitExpr)v(ctx.trait_expr())));

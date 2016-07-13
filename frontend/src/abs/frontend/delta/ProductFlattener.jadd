@@ -72,6 +72,9 @@ aspect ProductFlattener {
 
         // apply the applicable deltas in the given order
         applyDeltas(deltas);
+        
+        // apply the applicable traits 
+        applyTraits();
 
         // remember which product was generated
         productName = prod.getName();
@@ -273,4 +276,24 @@ aspect ProductFlattener {
         deltaSorter.sort();
     }
 
+  public void Model.flattenTraitOnly(){
+      applyTraits();      
+  }
+  private void Model.applyTraits() {
+  System.out.println("start applying traits");
+     boolean changed = false;
+     do{
+     changed = false;
+         for (Decl decl : getDecls()) {
+            if(decl instanceof ClassDecl){
+                ClassDecl cd = (ClassDecl)decl;
+                
+                for (TraitUse use : cd.getTraitUses()) {
+                    use.applyTo(cd);
+                    changed = true;
+                }
+            }
+        }
+     } while(changed);
+  }
 }

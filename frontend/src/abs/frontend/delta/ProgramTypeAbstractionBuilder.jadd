@@ -117,5 +117,9 @@ aspect ProgramTypeAbstractionBuilder {
      */
      
     public void DeltaTraitModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className){}
+    public void TraitAddOpr.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className){}
+    public void TraitModifyOpr.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className){}
+    public void TraitRemoveOpr.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className){}
+    public void TraitUse.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className){}
 
 }

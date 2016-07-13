@@ -41,12 +41,12 @@ TraitSetExpr : TraitExpr ::= MethodImpl*;
 TraitNameExpr : TraitExpr ::= <Name>;
 TraitModifyExpr : TraitExpr ::= TraitExpr TraitOper;
 
-abstract TraitOper;
+abstract TraitOper : Modifier;
 TraitAddOpr : TraitOper ::= TraitExpr;
 TraitModifyOpr : TraitOper ::= TraitExpr;
 TraitRemoveOpr : TraitOper ::= MethodSig;
 
-TraitUse: TypeUse; 
+TraitUse : Modifier ::= TraitExpr; 
 /***************************************/
 
 UnknownDecl: Decl; // Unknown declarations

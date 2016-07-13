@@ -242,9 +242,6 @@ public class Main {
             System.out.println("Analyzing Model...");
         }
         
-        /*****/
-        System.out.println("Trait <-> Delta");
-        /*****/
         
         //Preprocessor
         if (preprocess) {
@@ -279,7 +276,7 @@ public class Main {
                     m.flattenForProduct(product);
                 else
                     m.flattenForProductUnsafe(product);
-            }
+            }else{ m.flattenTraitOnly(); }
             if (dump) {
                 m.dumpMVars();
                 m.dump();
