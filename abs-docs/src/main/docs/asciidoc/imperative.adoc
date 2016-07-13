@@ -315,7 +315,7 @@ if (True)
   x = 5;
 ----
 
-
+[[case-stmt]]
 === Case: Pattern Matching
 
 The case statement, like the case expression (see <<case-expression>>),
@@ -372,46 +372,67 @@ while (x < 5) {
 ----
 
 
-[[try-catch-finally-block]]
+[[try-catch-finally-stmt]]
 === Handling Exceptions with Try-Catch-Finally
 
-To handle an exception --- either explicitly signaled using the `throw` keyword or implicitly by a system exception ---
-the user has to surround the offending code with a `try` block.
-The statements in the try block will be executed in sequence until an exception happens.
-Upon an exception, the execution of the try block will stop and the exception will be matched against the exception-patterns
-defined in the `catch` block.
+Executing a statement can result in an exception, either explicitly signaled
+using the `throw` keyword or implicitly, for example by dividing by zero.  The
+try-catch-finally statement is used to handle exceptions and resume normal
+execution afterwards.
 
-The catch block behaves similar to the `case statement`, with the only difference that the patterns
-can only have the type `Exception`. When the exception-pattern is matched, the statements
-associated with its catch clause will be executed. 
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _TryCatchFinallyStmt_ ::= | `try` _Stmt_ `catch` `{` { _CaseStmtBranch_ } `}` [ `finally` _Stmt_ ]
+|====
 
-After defining the catch block, the user can _optionally_ supply a `finally` block
-of statements, that will be executed regardless of an exception happening or not.
+The statement protected by `try` (which can be a block) is executed first.  If
+no exception is thrown, execution continues with the optional `finally`
+statement, then with the next statement after the try-catch-finally statement.
 
-The syntax is the following:
+If during execution of the statement protected by `try` an exception is
+thrown, it is matched one-by-one against the exception patterns defined in the
+`catch` block.  The statement following the first matching pattern will be
+executed, as in the case statement (see <<case-stmt>>).  Execution continues
+with the optional `finally` statement, then with the statement following the
+try-catch-finally statement.
+
+
+If during execution of the statement protected by `try` an exception is thrown
+that is not matched by any branch in the `catch` block, the exception is
+_unhandled_.  In this case, first the optional `finally` statement is
+executed.  If the try-catch-finally was protected by another try-catch-finally
+statement, the unhandled exception is passed on to this surrounding
+try-catch-finally statement.  Otherwise, the current process terminates and
+its future is resolved by storing the unhandled exception.  Any `get`
+expression on this future will re-throw the exception (see
+<<get-expression>>).  The object that ran the aborted process will execute its
+recovery block with the unhandled exception as parameter (see
+<<sec:classes>>).
+
+.Example
+[source]
+----
+try {
+    Int z = 1/x; <1>
+} catch {
+    DivisionByZeroException => println("We divided by zero"); <2>
+} finally {
+    println("Leaving the protected area"); <3>
+}
+----
+<1> If `x` is zero, this will throw an exception
+<2> Division by zero is handled here; other exceptions will be left unhandled
+<3> This statement is always executed
 
 [source]
 .Example
 ----
-try {
- stmt1;
- stmt2;
- ....
-}
-catch {
-  exception_pattern1  => stmt_or_block;
-  exception_pattern2  => ... ;
-  ...
-  _ => ...
-}
-finally {
-  stmt3;
-  stmt4;
-}
+try b = f.get; catch { _ => b = False; } <1>
 ----
+<1> A “catch-all” exception handler that sets `b` to a default value in case an unhandled exception was propagated via `f`
 
-If there are no matching catch-clauses,
-the finally block will first be accordingly executed,
-before re-throwing the exception to its parent caller.
-Conversely, if the parent caller does not (correctly) handle the re-thrown exception,
-the exception will be propagated to its own parent caller, and so forth and so on.
+NOTE: The `finally` block has the same restrictions as the class init and
+recovery blocks, i.e., it cannot contain processor release points (i.e.,
+`await` or `suspend`), blocking expressions (i.e., `get`), or explicitly throw
+an exception via the `throw` statement.

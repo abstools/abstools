@@ -509,7 +509,7 @@ If the future contains a normal return value, the value of the get expression
 is that value.  If the future contains an exception thrown by the callee
 process, evaluating the get expression will throw the same exception.  The
 value thrown by a get expression can be caught by try-catch as normal (see
-<<try-catch-finally-block>>).
+<<try-catch-finally-stmt>>).
 
 The following example assigns the return value contained in `f` to the
 variable `b`.  In case of any error, `b` is assigned `False`.

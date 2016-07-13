@@ -257,7 +257,7 @@ exception AnotherException(Int, String, Bool);
 In ABS, exceptions are first-class values; the user can construct
 exception-values, assign them to variables, pass them in expressions, etc.  An
 exception can be thrown via the `throw` statement (see <<throw-statement>>)
-and be caught in a `catch` block (see <<try-catch-finally-block>>).
+and be caught in a `catch` block (see <<try-catch-finally-stmt>>).
 Additionally, the object itself can recover its invariant after an uncaught
 exception in a process via its recovery block (see <<sec:classes>>).
 
