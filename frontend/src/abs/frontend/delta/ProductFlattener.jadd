@@ -69,12 +69,12 @@ aspect ProductFlattener {
             }
             println(" .");
         }
+        // apply the applicable traits 
+        applyTraits();
 
         // apply the applicable deltas in the given order
         applyDeltas(deltas);
         
-        // apply the applicable traits 
-        applyTraits();
 
         // remember which product was generated
         productName = prod.getName();
@@ -279,8 +279,40 @@ aspect ProductFlattener {
   public void Model.flattenTraitOnly(){
       applyTraits();      
   }
-  private void Model.applyTraits() {
-  System.out.println("start applying traits");
+  private void Model.applyTraits() throws DeltaModellingException{
+       System.out.println("start applying traits");
+      
+      //Collect all traits
+      LinkedList<TraitDecl> list = new LinkedList<>();
+      for (Decl decl : getDecls()) {
+          if(decl instanceof TraitDecl){
+              list.add((TraitDecl)decl);
+          }      
+      }
+  
+      //init
+      LinkedList<LinkedList<String>> lists = new LinkedList<>();
+      for (TraitDecl traitDecl : list) {
+          LinkedList<String> l = new LinkedList<>();
+          l.add(traitDecl.getName());
+          collectInTrait(traitDecl.getTraitExpr(), l);
+          lists.add(l);
+      }
+  
+      sort(lists);
+      while(lists.size() > 0){
+          LinkedList<String> l = lists.pop();
+          if(l.size() > 1) throw new DeltaModellingException("Cyclic Traits");
+          String n = l.pop();
+          for (LinkedList<String> listOther : lists) {
+            listOther.remove(n);
+        }
+          sort(lists);
+      }
+  
+  //
+  
+  //apply
      boolean changed = false;
      do{
      changed = false;
@@ -296,4 +328,30 @@ aspect ProductFlattener {
         }
      } while(changed);
   }
+  
+  
+    
+  private void Model.sort(LinkedList<LinkedList<String>> lists) {      
+      Collections.sort(lists, new Comparator<LinkedList<String>>() {
+      @Override
+      public int compare(LinkedList<String> o1, LinkedList<String> o2) {
+          if(o1.size() < o2.size())
+              return -1;
+          if(o1.size() > o2.size())
+              return 1;
+          return 0;
+      }
+      });
+    }
+private void Model.collectInTrait(ASTNode<ASTNode> traitExpr, LinkedList<String> list) {
+      if(traitExpr instanceof TraitNameExpr){
+          TraitNameExpr expr = (TraitNameExpr)traitExpr;
+          list.add(expr.getName());
+      }else if(traitExpr != null && traitExpr.children != null){
+          for (ASTNode<ASTNode> child : traitExpr.children) {
+              collectInTrait(child,list);
+        }
+      }
+  }
+    
 }

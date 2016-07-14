@@ -260,4 +260,13 @@ aspect OriginalCallResolver {
     }
     
 
+  public void OriginalCall.replaceByRealCall(MethodImpl originalMethodCopy){
+      EffExp call = new SyncCall(new ThisExp(), originalMethodCopy.getMethodSig().getName(), this.getParams().treeCopyNoTransform());
+      // set line and column from OriginalCall node
+      call.setPosition(getStart(), getEnd());
+      ASTNode parent = getParent();
+      int i = parent.getIndexOfChild(this);
+      parent.setChild(call, i);
+      call.setParent(parent);
+  }
 }

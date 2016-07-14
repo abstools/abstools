@@ -449,10 +449,44 @@ public TraitExpr TraitModifyOpr.helperLeftMost(TraitExpr tt, ArrayList<TraitOper
           // replace MethodImpl
           MethodImpl method = met.treeCopyNoTransform();
           method.setFileName(met.getFileName());
+          replaceOriginal(cd, cd.getMethod(found), method);
           cd.getMethods().setChild(method, found);
       } else
           throw new DeltaModellingWithNodeException(met.getMethodSig(), getDelta(), 
                   " wants to modify method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
+  }
+  
+  private void TraitModifyOpr.replaceOriginal(ClassDecl cd, MethodImpl met, MethodImpl flattened) {
+      ArrayList<OriginalCall> list = new ArrayList<>();
+      for (Stmt stmt : flattened.getBlock().getStmts()){
+          collectOrig(list, stmt);
+      }
+      if(list.size() > 0){
+          int i = cd.getNumMethod();
+          String name = met.getMethodSig().getName() + "_"+hashCode();
+          MethodSig sig = met.getMethodSig().treeCopyNoTransform();
+          sig.setName(name);
+          MethodImpl newMet = met.treeCopyNoTransform();
+          newMet.setParent(met.getParent());
+          newMet.setMethodSig(sig);
+          sig.setParent(newMet);
+          cd.getMethods().setChild(newMet, i);
+          for (OriginalCall orig : list) {
+            orig.replaceByRealCall(newMet);
+          }
+      }
+          
+  }
+  
+  private void TraitModifyOpr.collectOrig(ArrayList<OriginalCall> list, ASTNode<ASTNode> node){
+      if(node instanceof OriginalCall){
+          list.add((OriginalCall)node);
+          return;
+      }
+      if(node != null && node.children != null)
+	      for (ASTNode<ASTNode> child : node.children) {
+	          collectOrig(list,child);
+	      }
   }
 
   private void TraitModifyOpr.applySimple(ClassDecl cd, TraitExpr tt)  throws DeltaModellingException{
@@ -479,7 +513,9 @@ public TraitExpr TraitModifyOpr.helperLeftMost(TraitExpr tt, ArrayList<TraitOper
           
         } 
           if(resolved == null)throw new DeltaModellingException("trait error: trait not found");
-          new TraitModifyOpr(resolved.treeCopyNoTransform()).applyTo(cd);
+          TraitModifyOpr op = new TraitModifyOpr(resolved.treeCopyNoTransform());
+          op.setParent(cd);
+          op.applyTo(cd);
           /*
           TraitNameExpr actName = new TraitNameExpr(name.getName() + "_" + hashCode());
           TraitDecl decl = new TraitDecl(actName.getName(), 

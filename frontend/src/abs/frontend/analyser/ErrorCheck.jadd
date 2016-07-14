@@ -74,7 +74,8 @@ aspect ErrorCheck {
   coll SemanticConditionList DeltaDecl.getErrsWithinDelta() [new SemanticConditionList()] with add root Model;
   
   OriginalCall contributes (new TypeError(this,ErrorMessage.ORIGINAL_NOT_IN_DELTA,""))
-    when (calcContextNode(ModifyMethodModifier.class) == null)
+   // when (calcContextNode(ModifyMethodModifier.class) == null)
+    when (calcContextNode(TraitDecl.class) == null && calcContextNode(DeltaDecl.class) == null)
     to DeltaDecl.getErrsWithinDelta() for calcContextNode(DeltaDecl.class);
 }
 
