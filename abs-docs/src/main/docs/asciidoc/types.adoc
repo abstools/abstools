@@ -222,6 +222,7 @@ Int result = await o!add(2, 3); <1>
 ----
 <1> This statement invokes `add`, suspends the current process until the result is available, then stores it in `result`.
 
+[[exception-type]]
 === The Exception Type
 
 In higher-level programming languages, exceptions are generally used to signal
