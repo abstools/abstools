@@ -261,6 +261,7 @@ trait_decl : 'trait' TYPE_IDENTIFIER '='
 		   ;
 
 trait_expr : '{' method* '}'						#TraitSetFragment
+		   | method 						        #TraitSetFragment
 		   | TYPE_IDENTIFIER						#TraitNameFragment
 		   | trait_expr trait_oper					#TraitApplyFragment
 		   ;
