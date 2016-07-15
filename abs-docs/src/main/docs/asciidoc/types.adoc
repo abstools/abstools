@@ -44,13 +44,20 @@ ABS offers the following built-in datatypes:
 .ABS built-in types
 [options="header"]
 |=====
-| Name | Descrition | Example
-| `Unit` | The empty (void) type | `Unit`
-| `Bool` | Boolean values | `True`, `False`
-| `Int` | Integers of arbitrary size | `0`, `-15`
-| `Rat` | Rational numbers | `1/5`, `22/58775`
-| `String` | Strings | `"Hello world\n"`
-| `Fut<A>` | Futures | --
+ | Name      | Description                | Example           | Documentation
+ | `Unit`    | The empty (void) type      | `Unit`            | <<type-unit>>
+ | `Bool`    | Boolean values             | `True`, `False`   | <<type-bool>>
+ | `Int`     | Integers of arbitrary size | `0`, `-15`        | <<type-numbers>>
+ | `Rat`     | Rational numbers           | `1/5`, `22/58775` | <<type-numbers>>
+ | `String`  | Strings                    | `"Hello world\n"` | <<type-string>>
+ | `Fut<A>`  | Futures                    | --                | <<type-future>>
+ | `Exception` | Exceptions                | `DivisionByZeroException` | <<exception-type>>
+ | `List<A>` | Lists of values of type `A` | `list[1, 2, 3]`   | <<type-list>>
+ | `Set<A>`  | Sets of values of type `A`  | `set[True, False]` | <<type-set>>
+ | `Map<A,B>`| Maps from type `A` to `B` | `map[Pair(1, True)]` | <<type-map>>
+ | `Pair<A,B>` | Pairs of values         | `Pair(1, True)`      | <<type-pair>>
+ | `Triple<A,B,C>` | Triples of values   | `Triple(1, "hi", True)` | <<type-triple>>
+ | `Maybe<A>`   | Optional values        | `Just(True)`, `Nothing` | <<type-optionals>>
 |=====
 
 `Int` type is a subtype of `Rat`; this means that `Int` values are assignable
@@ -188,97 +195,6 @@ abstract data type, only the functions that operate on them are known to the
 client, but not its constructors.  This can be easily realized in ABS by
 putting such a data type in its own module and by only exporting the data type
 and its functions, without exporting the constructors.
-
-=== The Future Type
-
-Futures are placeholders for return values of asynchronous methods calls.
-
-Future values are produced by asynchronous method calls (see
-<<async-call-expression>>).  The current process can suspend itself until a
-future is resolved, i.e., until the return value of the asynchronous method
-call is available (see <<await-stmt>>).  The get expression returns the value
-of a future (see <<get-expression>>).  In case the future is not yet resolved,
-the get expression blocks the current cog.
-
-.Example
-[source]
-----
-Fut<Int> f = o!add(2, 3); <1>
-await f?; <2>
-Int result = f.get; <3>
-----
-<1> This statement defines a future variable `f` to hold the integer result of the method call to `add`.
-<2> The `await` statement suspends the current process until `f` is resolved.
-<3> The `get` expression returns the value computed by the `add` call.
-
-Futures are first-class values that can be stored and passed around.  In case
-only the return value of the method call is needed and not the future itself,
-a shorthand can be used that combines the above three statements:
-
-.Example
-[source]
-----
-Int result = await o!add(2, 3); <1>
-----
-<1> This statement invokes `add`, suspends the current process until the result is available, then stores it in `result`.
-
-[[exception-type]]
-=== The Exception Type
-
-In higher-level programming languages, exceptions are generally used to signal
-an _erroneous_ or _abnormal_ runtime behaviour of the program, that should be
-treated (handled) separately compared to normal values.
-
-The type `ABS.StdLib.Exception` is a special built-in data type.  Constructors
-are added to this datatype via an exception declaration.
-
-[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
-.Syntax
-|====
-| _ExceptionDecl_ ::= | `exception` _DataConstr_ `;`
-|====
-
-NOTE: The exception data type is the only data type that can be extended with
-new (user-provided) data constructors.
-
-.Example
-[source]
-----
-exception MyException;
-----
-
-An exception can also take any number of arguments as:
-
-.Example
-[source]
-----
-exception AnotherException(Int, String, Bool);
-----
-
-In ABS, exceptions are first-class values; the user can construct
-exception-values, assign them to variables, pass them in expressions, etc.  An
-exception can be thrown via the `throw` statement (see <<throw-statement>>)
-and be caught in a `catch` block (see <<try-catch-finally-stmt>>).
-Additionally, the object itself can recover its invariant after an uncaught
-exception in a process via its recovery block (see <<sec:classes>>).
-
-
-==== Predefined exceptions in the Standard Library
-
-DivisionByZeroException::
-    Raised in arithmetic expressions when the divisor (denominator) is equal to 0, as in +3/0+
-AssertionFailException::
-    The assert keyword was called with +False+ as argument
-PatternMatchFailException::
-    The pattern matching was not complete. In other words all c catch-all clause
-NullPointerException::
-    A method was called on a null object
-StackOverflowException::
-    The calling stack has reached its limit (system error)
-HeapOverflowException::
-    The memory heap is full (system error)
-KeyboardInterruptException::
-    The user pressed a key sequence to interrupt the running ABS program
 
 
 === Interface Types
