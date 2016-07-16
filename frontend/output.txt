@@ -1,0 +1,298 @@
+Buildfile: /home/afifun/abs/abstools-niken/abstools/frontend/build.xml
+
+clean:
+
+prepare:
+    [mkdir] Created dir: /home/afifun/abs/abstools-niken/abstools/frontend/gen
+    [mkdir] Created dir: /home/afifun/abs/abstools-niken/abstools/frontend/gen/data
+    [mkdir] Created dir: /home/afifun/abs/abstools-niken/abstools/frontend/dist
+    [mkdir] Created dir: /home/afifun/abs/abstools-niken/abstools/frontend/dist/plugins
+    [mkdir] Created dir: /home/afifun/abs/abstools-niken/abstools/frontend/dist/features
+    [mkdir] Created dir: /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend
+    [mkdir] Created dir: /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/parser
+    [mkdir] Created dir: /home/afifun/abs/abstools-niken/abstools/frontend/bin
+    [mkdir] Created dir: /home/afifun/abs/abstools-niken/abstools/frontend/gen/docs/api
+
+genshell:
+     [copy] Copying 16 files to /home/afifun/abs/abstools-niken/abstools/frontend/bin/bash
+     [copy] Copying 11 files to /home/afifun/abs/abstools-niken/abstools/frontend/bin/win
+
+genflex:
+     [echo] Running jflex
+    [jflex] Generated: ABSScanner.java
+
+genast:
+  [jastadd] generating node types and weaving aspects
+  [jastadd] Warning at /home/afifun/abs/abstools-niken/abstools/frontend/src/abs/frontend/typechecker/NodeReferences.jrag:7: missing inherited equation for attribute getModel in class Product when being child of Model (path: Model->Product)
+  [jastadd] Warning at /home/afifun/abs/abstools-niken/abstools/frontend/src/abs/frontend/analyser/VarResolution.jrag:264: missing inherited equation for attribute lookupVarOrFieldName in class PureExp when being child of IncompleteAccess (path: Model->CompilationUnit->DeltaDecl->AddClassModifier->ClassDecl->Annotation->IncompleteAsyncAccess->IncompleteSyncAccess->IncompleteAccess->PureExp), TypedAnnotation (path: TypedVarOrFieldDecl->ParametricDataTypeUse->TypeUse->TypedAnnotation->PureExp), and in class Access when being child of TypedVarOrFieldDecl (path: TypedVarOrFieldDecl->Access)
+  [jastadd] Warning: the NTA equation getImplicitProductList was affected by a bug causing the equation value to be discarded! (fixed since version 2.1.11)
+  [jastadd] done
+
+genp1:
+     [echo] Parser phase1
+     [java] Parser specification /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/parser/ABSParser.beaver generated from ABS.parser
+
+genp2:
+     [echo] Parser phase
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (OROR: SHIFT; goto 37) over (OROR: REDUCE data_exp = or_exp.or_exp) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (ANDAND: SHIFT; goto 39) over (ANDAND: REDUCE or_exp = or_exp.e1 OROR.OROR and_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (EQEQ: SHIFT; goto 41) over (EQEQ: REDUCE and_exp = and_exp.e1 ANDAND.ANDAND equality_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (NOTEQ: SHIFT; goto 60) over (NOTEQ: REDUCE and_exp = and_exp.e1 ANDAND.ANDAND equality_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (LT: SHIFT; goto 43) over (LT: REDUCE equality_exp = equality_exp.e1 EQEQ.EQEQ relational_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (GT: SHIFT; goto 62) over (GT: REDUCE equality_exp = equality_exp.e1 EQEQ.EQEQ relational_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (LTEQ: SHIFT; goto 96) over (LTEQ: REDUCE equality_exp = equality_exp.e1 EQEQ.EQEQ relational_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (GTEQ: SHIFT; goto 203) over (GTEQ: REDUCE equality_exp = equality_exp.e1 EQEQ.EQEQ relational_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (PLUS: SHIFT; goto 45) over (PLUS: REDUCE relational_exp = relational_exp.e1 LT.LT add_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (MINUS: SHIFT; goto 64) over (MINUS: REDUCE relational_exp = relational_exp.e1 LT.LT add_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (MULT: SHIFT; goto 47) over (MULT: REDUCE add_exp = add_exp.e1 PLUS.PLUS mult_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (DIV: SHIFT; goto 66) over (DIV: REDUCE add_exp = add_exp.e1 PLUS.PLUS mult_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (MOD: SHIFT; goto 99) over (MOD: REDUCE add_exp = add_exp.e1 PLUS.PLUS mult_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (ANDAND: SHIFT; goto 39) over (ANDAND: REDUCE or_exp = and_exp.and_exp) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (EQEQ: SHIFT; goto 41) over (EQEQ: REDUCE and_exp = equality_exp.equality_exp) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (NOTEQ: SHIFT; goto 60) over (NOTEQ: REDUCE and_exp = equality_exp.equality_exp) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (LT: SHIFT; goto 43) over (LT: REDUCE equality_exp = equality_exp.e1 NOTEQ.NOTEQ relational_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (GT: SHIFT; goto 62) over (GT: REDUCE equality_exp = equality_exp.e1 NOTEQ.NOTEQ relational_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (LTEQ: SHIFT; goto 96) over (LTEQ: REDUCE equality_exp = equality_exp.e1 NOTEQ.NOTEQ relational_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (GTEQ: SHIFT; goto 203) over (GTEQ: REDUCE equality_exp = equality_exp.e1 NOTEQ.NOTEQ relational_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (PLUS: SHIFT; goto 45) over (PLUS: REDUCE relational_exp = relational_exp.e1 GT.GT add_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (MINUS: SHIFT; goto 64) over (MINUS: REDUCE relational_exp = relational_exp.e1 GT.GT add_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (MULT: SHIFT; goto 47) over (MULT: REDUCE add_exp = add_exp.e1 MINUS.MINUS mult_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (DIV: SHIFT; goto 66) over (DIV: REDUCE add_exp = add_exp.e1 MINUS.MINUS mult_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (MOD: SHIFT; goto 99) over (MOD: REDUCE add_exp = add_exp.e1 MINUS.MINUS mult_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (DOT: SHIFT; goto 78) over (DOT: REDUCE pure_exp_no_if = THIS.THIS) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (BANG: SHIFT; goto 80) over (BANG: REDUCE pure_exp_no_if = THIS.THIS) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (LT: SHIFT; goto 43) over (LT: REDUCE equality_exp = relational_exp.relational_exp) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (GT: SHIFT; goto 62) over (GT: REDUCE equality_exp = relational_exp.relational_exp) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (LTEQ: SHIFT; goto 96) over (LTEQ: REDUCE equality_exp = relational_exp.relational_exp) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (GTEQ: SHIFT; goto 203) over (GTEQ: REDUCE equality_exp = relational_exp.relational_exp) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (PLUS: SHIFT; goto 45) over (PLUS: REDUCE relational_exp = relational_exp.e1 LTEQ.LTEQ add_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (MINUS: SHIFT; goto 64) over (MINUS: REDUCE relational_exp = relational_exp.e1 LTEQ.LTEQ add_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (MULT: SHIFT; goto 47) over (MULT: REDUCE add_exp = mult_exp.e) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (DIV: SHIFT; goto 66) over (DIV: REDUCE add_exp = mult_exp.e) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (MOD: SHIFT; goto 99) over (MOD: REDUCE add_exp = mult_exp.e) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (PLUS: SHIFT; goto 45) over (PLUS: REDUCE relational_exp = add_exp.add_exp) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (MINUS: SHIFT; goto 64) over (MINUS: REDUCE relational_exp = add_exp.add_exp) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (DOT: SHIFT; goto 121) over (DOT: REDUCE constructor_exp = type_name.f) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (DOT: SHIFT; goto 121) over (DOT: REDUCE constructor_exp = type_name.f) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (LT: SHIFT; goto 186) over (LT: REDUCE constructor_exp = type_name.f) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (PLUS: SHIFT; goto 45) over (PLUS: REDUCE relational_exp = relational_exp.e1 GTEQ.GTEQ add_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (MINUS: SHIFT; goto 64) over (MINUS: REDUCE relational_exp = relational_exp.e1 GTEQ.GTEQ add_exp.e2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (RPAREN: SHIFT; goto 377) over (RPAREN: REDUCE pure_exp = if_exp.if_exp) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (DOT: SHIFT; goto 392) over (DOT: REDUCE pure_exp_no_if = THIS.THIS) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (BANG: SHIFT; goto 397) over (BANG: REDUCE pure_exp_no_if = THIS.THIS) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (BANG: SHIFT; goto 404) over (BANG: REDUCE pure_exp_no_if = THIS.THIS) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (GUARDAND: SHIFT; goto 435) over (GUARDAND: REDUCE guard = guard.g1 GUARDAND.GUARDAND guard.g2) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (ELSE: SHIFT; goto 487) over (ELSE: REDUCE if_then_else_stmt = IF.IF LPAREN.LPAREN data_exp.e1 RPAREN.RPAREN stmt.s1) using precedence.
+   [beaver] ABSParser.beaver: Warning: Resolved Shift-Reduce conflict by selecting (RPAREN: SHIFT; goto 57) over (RPAREN: REDUCE data_exp = or_exp.or_exp) using precedence.
+   [beaver] ABSParser.beaver: 0 errors, 50 warnings.
+   [beaver] ABSParser.beaver: Generated: ABSParser.stat
+   [beaver] ABSParser.beaver: Generated: ABSParser.java
+
+genparser:
+
+genlang:
+    [mkdir] Created dir: /home/afifun/abs/abstools-niken/abstools/frontend/bin/abs/lang
+     [copy] Copying 1 file to /home/afifun/abs/abstools-niken/abstools/frontend/bin/abs/lang
+
+genruntime:
+     [copy] Copying 412 files to /home/afifun/abs/abstools-niken/abstools/frontend/bin/abs/backend/erlang
+     [echo] Trying to precompile erlang libraries, error is safe to ignore
+     [exec] ==> cowlib (compile)
+     [exec] Compiled src/cow_http_te.erl
+     [exec] Compiled src/cow_http.erl
+     [exec] Compiled src/cow_spdy.erl
+     [exec] Compiled src/cow_date.erl
+     [exec] Compiled src/cow_qs.erl
+     [exec] Compiled src/cow_multipart.erl
+     [exec] Compiled src/cow_cookie.erl
+     [exec] Compiled src/cow_ws.erl
+     [exec] Compiled src/cow_mimetypes.erl
+     [exec] Compiled src/cow_http_hd.erl
+     [exec] ==> ranch (compile)
+     [exec] Compiled src/ranch_transport.erl
+     [exec] Compiled src/ranch_acceptors_sup.erl
+     [exec] Compiled src/ranch_listener_sup.erl
+     [exec] Compiled src/ranch_protocol.erl
+     [exec] Compiled src/ranch_app.erl
+     [exec] Compiled src/ranch_ssl.erl
+     [exec] Compiled src/ranch.erl
+     [exec] Compiled src/ranch_tcp.erl
+     [exec] Compiled src/ranch_sup.erl
+     [exec] Compiled src/ranch_acceptor.erl
+     [exec] Compiled src/ranch_server.erl
+     [exec] Compiled src/ranch_conns_sup.erl
+     [exec] ==> cowboy (compile)
+     [exec] Compiled src/cowboy_middleware.erl
+     [exec] Compiled src/cowboy_sub_protocol.erl
+     [exec] Compiled src/cowboy_tls.erl
+     [exec] Compiled src/cowboy.erl
+     [exec] Compiled src/cowboy_stream.erl
+     [exec] Compiled src/cowboy_bstr.erl
+     [exec] Compiled src/cowboy_router.erl
+     [exec] Compiled src/cowboy_constraints.erl
+     [exec] Compiled src/cowboy_websocket.erl
+     [exec] Compiled src/cowboy_sup.erl
+     [exec] Compiled src/cowboy_app.erl
+     [exec] Compiled src/cowboy_handler.erl
+     [exec] Compiled src/cowboy_http2.erl
+     [exec] Compiled src/cowboy_static.erl
+     [exec] Compiled src/cowboy_clock.erl
+     [exec] Compiled src/cowboy_spdy.erl
+     [exec] Compiled src/cowboy_rest.erl
+     [exec] Compiled src/cowboy_loop.erl
+     [exec] /home/afifun/abs/abstools-niken/abstools/frontend/bin/abs/backend/erlang/runtime/deps/cowboy/src/cowboy_req.erl:1206: illegal use of variable 'Atom' in map
+     [exec] /home/afifun/abs/abstools-niken/abstools/frontend/bin/abs/backend/erlang/runtime/deps/cowboy/src/cowboy_req.erl:1209: illegal use of variable 'Atom' in map
+     [exec] /home/afifun/abs/abstools-niken/abstools/frontend/bin/abs/backend/erlang/runtime/deps/cowboy/src/cowboy_req.erl:1212: illegal use of variable 'Atom' in map
+     [exec] /home/afifun/abs/abstools-niken/abstools/frontend/bin/abs/backend/erlang/runtime/deps/cowboy/src/cowboy_req.erl:1233: illegal use of variable 'Key' in map
+     [exec] /home/afifun/abs/abstools-niken/abstools/frontend/bin/abs/backend/erlang/runtime/deps/cowboy/src/cowboy_req.erl:1244: illegal use of variable 'Key' in map
+     [exec] Compiling /home/afifun/abs/abstools-niken/abstools/frontend/bin/abs/backend/erlang/runtime/deps/cowboy/src/cowboy_req.erl failed:
+     [exec] ERROR: compile failed while processing /home/afifun/abs/abstools-niken/abstools/frontend/bin/abs/backend/erlang/runtime/deps/cowboy: rebar_abort
+
+genantlr:
+     [echo] Running antlr
+
+gen:
+
+compile:
+    [javac] Compiling 761 source files to /home/afifun/abs/abstools-niken/abstools/frontend/bin
+    [javac] warning: [options] bootstrap class path not set in conjunction with -source 1.7
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/src/abs/backend/erlang/ErlApp.java:24: warning: FileURLConnection is internal proprietary API and may be removed in a future release
+    [javac] import sun.net.www.protocol.file.FileURLConnection;
+    [javac]                                 ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/ASTNode.java:140: error: method getDataType() is already defined in class ASTNode
+    [javac]   public String getDataType() {
+    [javac]                 ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/ClassDecl.java:156: error: method getTypeInterface(HashMap<String,ArrayList<String>>) is already defined in class ClassDecl
+    [javac]   public void getTypeInterface(HashMap<String, ArrayList<String>> class_Interface){
+    [javac]               ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/List.java:224: error: method getInterfaceHierarchy(ArrayList<String>) is already defined in class List
+    [javac]   public void getInterfaceHierarchy(ArrayList<String> extList) {
+    [javac]               ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/List.java:235: error: method getAllParams(PrintWriter,HashMap<String,ArrayList<String>>,ArrayList<String>,HashMap<String,HashMap<String,ArrayList<String>>>) is already defined in class List
+    [javac]   public void getAllParams(PrintWriter stream, HashMap<String,ArrayList<String>> allAttributes, ArrayList<String> primaryKey, 
+    [javac]               ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/List.java:247: error: method getAllFields(PrintWriter,HashMap<String,ArrayList<String>>,ArrayList<String>,HashMap<String,HashMap<String,ArrayList<String>>>) is already defined in class List
+    [javac]   public void getAllFields(PrintWriter stream, HashMap<String,ArrayList<String>> allAttributes, ArrayList<String> primaryKey, 
+    [javac]               ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/List.java:259: error: method createMoreColumns(String,ArrayList<String>,ArrayList<String>) is already defined in class List
+    [javac]   public void createMoreColumns(String name, ArrayList<String> nameTemp, ArrayList<String> typeTemp){
+    [javac]               ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/List.java:281: error: method getInitValue(ArrayList<String>) is already defined in class List
+    [javac]   public void getInitValue(ArrayList<String> consTemp){
+    [javac]               ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/List.java:294: error: method getMultiValue(String,ArrayList<String>,ArrayList<String>) is already defined in class List
+    [javac]   public void getMultiValue(String name, ArrayList<String> nameTemp, ArrayList<String> typeTemp){
+    [javac]               ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/ParamDecl.java:172: error: method getParam(PrintWriter,HashMap<String,ArrayList<String>>,ArrayList<String>,HashMap<String,HashMap<String,ArrayList<String>>>) is already defined in class ParamDecl
+    [javac]   public void getParam(PrintWriter stream, HashMap<String,ArrayList<String>> allAttributes, ArrayList<String> primaryKey, 
+    [javac]               ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/FieldDecl.java:188: error: method getField(PrintWriter,HashMap<String,ArrayList<String>>,ArrayList<String>,HashMap<String,HashMap<String,ArrayList<String>>>) is already defined in class FieldDecl
+    [javac]   public void getField(PrintWriter stream, HashMap<String,ArrayList<String>> allAttributes, ArrayList<String> primaryKey, 
+    [javac]               ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/InterfaceDecl.java:100: error: method getInterfaceHierarchy(HashMap<String,ArrayList<String>>) is already defined in class InterfaceDecl
+    [javac]   public void getInterfaceHierarchy(HashMap<String, ArrayList<String>> extPair) {
+    [javac]               ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/InterfaceTypeUse.java:94: error: method getDataType() is already defined in class InterfaceTypeUse
+    [javac]   public String getDataType() {
+    [javac]                 ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/DataConstructorExp.java:111: error: method getInitValue(ArrayList<String>) is already defined in class DataConstructorExp
+    [javac]   public void getInitValue(ArrayList<String> consTemp) {
+    [javac]               ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/ParametricDataTypeUse.java:105: error: method createMoreColumns(String,ArrayList<String>,ArrayList<String>) is already defined in class ParametricDataTypeUse
+    [javac]   public void createMoreColumns(String name, ArrayList<String> nameTemp, ArrayList<String> typeTemp) {
+    [javac]               ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/ParametricDataTypeUse.java:114: error: method getMultiValue(String,ArrayList<String>,ArrayList<String>) is already defined in class ParametricDataTypeUse
+    [javac]   public void getMultiValue(String name, ArrayList<String> nameTemp, ArrayList<String> typeTemp) {
+    [javac]               ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/DataTypeUse.java:106: error: method getDataType() is already defined in class DataTypeUse
+    [javac]   public String getDataType() {
+    [javac]                 ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/src/abs/frontend/parser/Main.java:394: warning: [deprecation] fullCopy() in List has been deprecated
+    [javac]                     DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().fullCopy());
+    [javac]                                                                                                  ^
+    [javac]   where T is a type-variable:
+    [javac]     T extends ASTNode declared in class List
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/src/abs/backend/erlang/ErlApp.java:133: warning: FileURLConnection is internal proprietary API and may be removed in a future release
+    [javac]                     } else if (resource instanceof FileURLConnection) {
+    [javac]                                                    ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/ModifyMethodModifier.java:131: warning: [deprecation] fullCopy() in MethodImpl has been deprecated
+    [javac]             MethodImpl method = getMethodImpl().fullCopy();
+    [javac]                                                ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/ModifyMethodModifier.java:286: warning: [deprecation] fullCopy() in MethodImpl has been deprecated
+    [javac]         MethodImpl methodCopy = method.fullCopy();
+    [javac]                                       ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/ModifyClassModifier.java:153: warning: [deprecation] fullCopy() in InterfaceTypeUse has been deprecated
+    [javac]             InterfaceTypeUse iface2 = iface.fullCopy();
+    [javac]                                            ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/AddClassModifier.java:117: warning: [deprecation] fullCopy() in ClassDecl has been deprecated
+    [javac]         ClassDecl cls = getClassDecl().fullCopy();
+    [javac]                                       ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/AddFieldModifier.java:117: warning: [deprecation] fullCopy() in FieldDecl has been deprecated
+    [javac]         FieldDecl field = getFieldDecl().fullCopy();
+    [javac]                                         ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/AddMethodModifier.java:119: warning: [deprecation] fullCopy() in MethodImpl has been deprecated
+    [javac]         MethodImpl method = getMethodImpl().fullCopy();
+    [javac]                                            ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/OriginalCall.java:159: warning: [deprecation] fullCopy() in List has been deprecated
+    [javac]         EffExp call = new SyncCall(new ThisExp(), originalMethodCopy.getMethodSig().getName(), this.getParams().fullCopy());
+    [javac]                                                                                                                ^
+    [javac]   where T is a type-variable:
+    [javac]     T extends ASTNode declared in class List
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/src/abs/frontend/parser/ASTPreProcessor.java:94: warning: [deprecation] fullCopy() in List has been deprecated
+    [javac]             typeParams = (delta) ? pdtd.getTypeParameterList().fullCopy() : pdtd.getTypeParameterList();
+    [javac]                                                               ^
+    [javac]   where T is a type-variable:
+    [javac]     T extends ASTNode declared in class List
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/AddDataTypeModifier.java:113: warning: [deprecation] fullCopy() in DataTypeDecl has been deprecated
+    [javac]         DataTypeDecl dtd = this.getDataTypeDecl().fullCopy();
+    [javac]                                                  ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/AddExportModifier.java:89: warning: [deprecation] fullCopy() in Export has been deprecated
+    [javac]         module.addExport((Export)getExport().fullCopy());
+    [javac]                                             ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/AddFunctionModifier.java:98: warning: [deprecation] fullCopy() in FunctionDecl has been deprecated
+    [javac]         FunctionDecl func = getFunctionDecl().fullCopy();
+    [javac]                                              ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/AddImportModifier.java:91: warning: [deprecation] fullCopy() in Import has been deprecated
+    [javac]         module.addImport((Import)getImport().fullCopy());
+    [javac]                                             ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/AddInterfaceModifier.java:104: warning: [deprecation] fullCopy() in InterfaceDecl has been deprecated
+    [javac]         InterfaceDecl decl = getInterfaceDecl().fullCopy();
+    [javac]                                                ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/AddMethodSigModifier.java:103: warning: [deprecation] fullCopy() in MethodSig has been deprecated
+    [javac]         MethodSig sig = getMethodSig().fullCopy();
+    [javac]                                       ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/AddTypeSynModifier.java:96: warning: [deprecation] fullCopy() in TypeSynDecl has been deprecated
+    [javac]         TypeSynDecl type = getTypeSynDecl().fullCopy();
+    [javac]                                            ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/Const.java:93: warning: [deprecation] fullCopy() in Value has been deprecated
+    [javac]         return (Value) getValue().fullCopy();
+    [javac]                                  ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/FIDAID.java:97: warning: [deprecation] fullCopy() in Value has been deprecated
+    [javac]                         return (Value) attr.getValue().fullCopy();
+    [javac]                                                       ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/ModifyDataTypeModifier.java:98: warning: [deprecation] fullCopy() in List has been deprecated
+    [javac]             datatypedecl.setDataConstructorList(this.getDataTypeDecl().getDataConstructorList().fullCopy());
+    [javac]                                                                                                ^
+    [javac]   where T is a type-variable:
+    [javac]     T extends ASTNode declared in class List
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/ModifyDataTypeModifier.java:101: warning: [deprecation] fullCopy() in List has been deprecated
+    [javac]                 ((ParametricDataTypeDecl)datatypedecl).setTypeParameterList(((ParametricDataTypeDecl)this.getDataTypeDecl()).getTypeParameterList().fullCopy());
+    [javac]                                                                                                                                                    ^
+    [javac]   where T is a type-variable:
+    [javac]     T extends ASTNode declared in class List
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/gen/abs/frontend/ast/ModifyTypeSynModifier.java:98: warning: [deprecation] fullCopy() in TypeUse has been deprecated
+    [javac]             syndecl.setValue((TypeUse) getTypeSynDecl().getValue().fullCopy());
+    [javac]                                                                   ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/tests/abs/frontend/analyser/OtherAnalysisTests.java:48: warning: [deprecation] fullCopy() in Model has been deprecated
+    [javac]         Model m2 = m.fullCopy();
+    [javac]                     ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/tests/abs/frontend/analyser/OtherAnalysisTests.java:56: warning: [deprecation] fullCopy() in Model has been deprecated
+    [javac]         Model m2 = m.fullCopy();
+    [javac]                     ^
+    [javac] /home/afifun/abs/abstools-niken/abstools/frontend/tests/abs/frontend/analyser/OtherAnalysisTests.java:68: warning: [deprecation] fullCopy() in Model has been deprecated
+    [javac]         Model m2 = m.fullCopy();
+    [javac]                     ^
+    [javac] Note: Some input files use unchecked or unsafe operations.
+    [javac] Note: Recompile with -Xlint:unchecked for details.
+    [javac] 16 errors
+    [javac] 27 warnings

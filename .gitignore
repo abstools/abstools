@@ -19,3 +19,5 @@
 /eclipse-plugin/dist/
 /sda-plugin/dist/
 /sdedit-for-abs/dist/
+/.idea
+/.metadata

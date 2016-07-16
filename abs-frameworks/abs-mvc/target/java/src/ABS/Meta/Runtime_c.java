@@ -69,8 +69,8 @@ public final class Runtime_c extends abs.backend.java.lib.runtime.ABSObject impl
             __ABS_currentTask.newStackFrame(this, "getProductLine");
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("abs/lang/abslang.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("abs/lang/abslang.abs",1011);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("abs\\lang\\abslang.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("abs\\lang\\abslang.abs",1011);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return ((ABS.Meta.ProductLine_i)abs.backend.java.lib.runtime.ABSBuiltInFunctions.getProductLine());
         }

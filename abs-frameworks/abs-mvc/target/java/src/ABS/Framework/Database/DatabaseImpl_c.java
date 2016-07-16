@@ -82,8 +82,8 @@ public class DatabaseImpl_c extends abs.backend.java.lib.runtime.ABSObject imple
             __ABS_currentTask.setLocalVariable("msg",msg);
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/framework/Database.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/framework/Database.abs",11);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\framework\\Database.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\framework\\Database.abs",11);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return abs.backend.java.lib.types.ABSString.fromString("default implementation");
         }

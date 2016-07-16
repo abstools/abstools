@@ -1,0 +1,44 @@
+// generated abs fli code for ProgramImpl
+module MProgramDbImpl;
+export ProgramDb,ProgramDbImpl;
+import Program,ProgramImpl from MProgramModel;
+import * from ABS.FLI;
+
+
+interface ProgramDb {
+	List<Program> findAll(String className);
+	List<Program> findAllByAttributes(String className, String query);
+	Program find(String className);
+	Program findByAttributes(String className, String query);
+	Unit save(Program object);
+	Unit delete(Program object);
+	Program update(Program object);
+	String log(String log);
+}
+
+
+[Foreign]
+class ProgramDbImpl implements ProgramDb {
+	List<Program> findAllByAttributes(String className, String query) {
+		return Nil;
+	}
+	List<Program> findAll(String className) {
+		return Nil;
+	}
+	Program findByAttributes(String className, String query) {
+		return new local ProgramImpl();
+	}
+	Program find(String className) {
+		return new local ProgramImpl();
+	}
+	Unit save(Program object) {
+	}
+	Unit delete(Program object) {
+	}
+	Program update(Program object) {
+		return new local ProgramImpl();
+	}
+	String log(String log) {
+		return "return log";
+	}
+}

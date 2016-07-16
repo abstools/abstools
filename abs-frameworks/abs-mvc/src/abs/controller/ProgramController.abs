@@ -1,5 +1,6 @@
 module MProgramController;
-import Program, ProgramImpl, ProgramDb, ProgramDbImpl from MProgramModel;
+import Program, ProgramImpl from MProgramModel;
+import ProgramDb, ProgramDbImpl from MProgramDbImpl;
 import ABSHttpRequest from ABS.Framework.Http;
 import Utility, UtilityImpl from ABS.Framework.Utility;
 

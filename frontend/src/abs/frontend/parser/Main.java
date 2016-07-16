@@ -98,7 +98,10 @@ public class Main {
                abs.backend.outline.OutlinePrinterBackEnd.main(args);
            } else if (argslist.contains("-dbschema")) {
                abs.backend.dbschema.GenerateDBSchema.main(args);
-           } else {
+           } else if (argslist.contains("-flimodel")){
+                abs.backend.absframeworks.GenerateFLIModel.main(args);
+           }
+           else {
                Model m = parse(args);
                if (m.hasParserErrors()) {
                    printParserErrorAndExit();

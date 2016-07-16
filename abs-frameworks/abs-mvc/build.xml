@@ -10,8 +10,14 @@
 	<property name="external" location="external" />
 
 	<property name="src.abs" location="${src}/abs" />
+	<property name="src.abs.model" location="${src.abs}/model" />
+	<property name="src.abs.framework" location="${src.abs}/framework" />
+	<property name="src.abs.delta" location="${src.abs}/delta" />
+	<property name="src.abs.controller" location="${src.abs}/controller" />
+
 	<property name="src.java" location="${src}/java" />
-	
+	<property name="src.java.fli" location="${src.java}/fli" />
+
 	<property name="target.java.src" location="${target}/java/src" />
 	<property name="target.java.bin" location="${target}/java/bin" />
 
@@ -36,13 +42,36 @@
 	<fileset dir="${src.abs}" id="src.abs.files">
 		<include name="**/*.abs" />
 	</fileset>
+
+	<fileset dir="${src.abs}" id="src.abs.product.files">
+
+		<include name="**/*.abs" />
+		<!-- <include name="delta/D*.abs" />
+		<include name="framework/FeatureModel.abs" />
+		<include name="framework/ProductConfig.abs" />
+		<include name="framework/Product.abs" />
+		<include name="model/*.abs" /> -->
+		<!-- <exclude name="model/*Db.abs" /> -->
+	</fileset>
+
+	<fileset dir="${src.abs.model}" id="src.abs.model.files">
+		<include name="**/*.abs" />
+		<exclude name="**/*Db.abs" />
+	</fileset>
 	
 	<pathconvert property="src.abs.fileargs" refid="src.abs.files"
 		pathsep=" " />
-	
+
+	<pathconvert property="src.abs.model.fileargs" refid="src.abs.model.files"
+		pathsep=" " />
+
+	<pathconvert property="src.abs.product.fileargs" refid="src.abs.product.files"
+		pathsep=" " />
+
 	<target name="clean" description="Removes all generated files">
-		<delete failonerror="false" includeemptydirs="true">
+		<delete failonerror="true" includeemptydirs="true">
 			<fileset dir="${target}" />
+			<dirset dir="${src.abs.model}" includes="gen_*" />
 		</delete>
 	</target>
 
@@ -59,8 +88,43 @@
 	</target>
 
 	
-	<target name="abs.generate.java" description="Generates Java code"
+
+	<target name="abs.generate.fli" description="Generates Fli code"
 		depends="clean,prepare" if="absproduct.set">
+
+		<echo>FILE: ${src.abs.model.fileargs}</echo>
+		<java classname="abs.backend.absframeworks.GenerateFLIModel" fork="true"
+			failonerror="true" classpathref="build.abs.classpath">
+			<arg line="${src.abs.model.fileargs}" />
+		</java>
+		
+		<copy todir="${src.java.fli}" verbose="false">
+			<fileset dir="gen_java_db_fli"/>
+		</copy>
+
+		<copy todir="${src.abs.model}" verbose="false">
+			<fileset dir="gen_abs_db_fli"/>
+		</copy>
+
+		<delete dir="gen_java_db_fli" failonerror="true" includeemptydirs="true">
+		</delete>
+
+		<delete dir="gen_abs_db_fli" failonerror="true" includeemptydirs="true">
+		</delete>
+	</target>
+
+	<target name="abs.generate.schema" description="Generates Schema code"
+		depends="clean,prepare,abs.generate.fli" if="absproduct.set">
+
+		<echo>FILE: ${src.abs.product.fileargs}</echo>
+		<java classname="abs.backend.dbschema.GenerateDBSchema" fork="true"
+			failonerror="true" classpathref="build.abs.classpath">
+			<arg line="${src.abs.product.fileargs}" />
+		</java>
+	</target>
+	
+	<target name="abs.generate.java" description="Generates Java code"
+		depends="clean,prepare,abs.generate.schema" if="absproduct.set">
 
 		<echo>FILE: ${src.abs.fileargs}</echo>
 		<java classname="abs.backend.java.JavaBackend" fork="true"

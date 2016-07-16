@@ -65,12 +65,4 @@ public interface Program_i extends abs.backend.java.lib.types.ABSInterface {
     public  abs.backend.java.lib.runtime.ABSFut<abs.backend.java.lib.types.ABSRational> async_getBiaya();
     // Program.abs:23:1: 
     public  abs.backend.java.lib.types.ABSRational getBiaya();
-    // DModelProgramSource.abs:6:6: 
-    public  abs.backend.java.lib.runtime.ABSFut<abs.backend.java.lib.types.ABSUnit> async_setSumberDana(abs.backend.java.lib.types.ABSString sumberDana);
-    // DModelProgramSource.abs:6:6: 
-    public  abs.backend.java.lib.types.ABSUnit setSumberDana(abs.backend.java.lib.types.ABSString sumberDana);
-    // DModelProgramSource.abs:7:6: 
-    public  abs.backend.java.lib.runtime.ABSFut<abs.backend.java.lib.types.ABSString> async_getSumberDana();
-    // DModelProgramSource.abs:7:6: 
-    public  abs.backend.java.lib.types.ABSString getSumberDana();
 }

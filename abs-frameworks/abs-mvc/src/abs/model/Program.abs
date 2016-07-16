@@ -1,7 +1,7 @@
 module MProgramModel;
 
-export Program, ProgramImpl, ProgramDb, ProgramDbImpl;
-import * from ABS.FLI;
+export Program, ProgramImpl;
+// import * from ABS.FLI;
 
 interface Program
 {
@@ -25,7 +25,7 @@ interface Program
 
 class ProgramImpl implements Program
 {
-	[PK]Int idProgram = 0;
+	Int idProgram = 0;
 	String namaProgram = "";
 	String departemen = "";
 	String tempat = "";
@@ -53,41 +53,41 @@ class ProgramImpl implements Program
 }
 
 
-interface ProgramDb {
-	List<Program> findAll(String className);
-	List<Program> findAllByAttributes(String className, String query);
-	Program find(String className);
-	Program findByAttributes(String className, String query);
-	Unit save(Program object);
-	Unit delete(Program object);
-	Program update(Program object);
-	String log(String log);
-}
+// interface ProgramDb {
+// 	List<Program> findAll(String className);
+// 	List<Program> findAllByAttributes(String className, String query);
+// 	Program find(String className);
+// 	Program findByAttributes(String className, String query);
+// 	Unit save(Program object);
+// 	Unit delete(Program object);
+// 	Program update(Program object);
+// 	String log(String log);
+// }
 	
-[Foreign]
-class ProgramDbImpl implements ProgramDb {
-	List<Program> findAllByAttributes(String className, String query) {
-		return Nil;
-	}
-	List<Program> findAll(String className) {
-		return Nil;
-	}
-	Program findByAttributes(String className, String query) {
-		return new local ProgramImpl();
-	}
-	Program find(String className) {
-		return new local ProgramImpl();
-	}
-	Unit save(Program object) {
+// [Foreign]
+// class ProgramDbImpl implements ProgramDb {
+// 	List<Program> findAllByAttributes(String className, String query) {
+// 		return Nil;
+// 	}
+// 	List<Program> findAll(String className) {
+// 		return Nil;
+// 	}
+// 	Program findByAttributes(String className, String query) {
+// 		return new local ProgramImpl();
+// 	}
+// 	Program find(String className) {
+// 		return new local ProgramImpl();
+// 	}
+// 	Unit save(Program object) {
 		
-	}
-	Unit delete(Program object) {
+// 	}
+// 	Unit delete(Program object) {
 	
-	}
-	Program update(Program object) {
-		return new local ProgramImpl();
-	}
-	String log(String log) {
-		return "return log";
-	}
-}
+// 	}
+// 	Program update(Program object) {
+// 		return new local ProgramImpl();
+// 	}
+// 	String log(String log) {
+// 		return "return log";
+// 	}
+// }

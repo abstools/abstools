@@ -1,7 +1,7 @@
 package MProgramModel;
 // Program.abs:26:0: 
 public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject implements abs.backend.java.lib.types.ABSClass, MProgramModel.Program_i {
-    private static final java.lang.String[] __fieldNames = new java.lang.String[] { "idProgram", "namaProgram", "departemen", "tempat", "tanggal", "peserta", "penanggungJawab", "biaya", "sumberDana" };
+    private static final java.lang.String[] __fieldNames = new java.lang.String[] { "idProgram", "namaProgram", "departemen", "tempat", "tanggal", "peserta", "penanggungJawab", "biaya" };
     public final java.util.List<java.lang.String> getFieldNames() { return java.util.Arrays.asList(__fieldNames); }
     // Program.abs:28:1: 
     private abs.backend.java.lib.types.ABSInteger idProgram;
@@ -19,13 +19,11 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
     private abs.backend.java.lib.types.ABSString penanggungJawab;
     // Program.abs:35:1: 
     private abs.backend.java.lib.types.ABSRational biaya;
-    // DModelProgramSource.abs:12:6: 
-    private abs.backend.java.lib.types.ABSString sumberDana;
     public ProgramImpl_c() {
         getCOG().objectCreated(this);
     }
     protected final void __ABS_init() {
-        this.idProgram = abs.backend.java.lib.types.ABSInteger.fromString("0");this.namaProgram = abs.backend.java.lib.types.ABSString.fromString("");this.departemen = abs.backend.java.lib.types.ABSString.fromString("");this.tempat = abs.backend.java.lib.types.ABSString.fromString("");this.tanggal = abs.backend.java.lib.types.ABSString.fromString("");this.peserta = abs.backend.java.lib.types.ABSInteger.fromString("0");this.penanggungJawab = abs.backend.java.lib.types.ABSString.fromString("");this.biaya = abs.backend.java.lib.types.ABSInteger.fromString("0");this.sumberDana = abs.backend.java.lib.types.ABSString.fromString("");getCOG().objectInitialized(this);
+        this.idProgram = abs.backend.java.lib.types.ABSInteger.fromString("0");this.namaProgram = abs.backend.java.lib.types.ABSString.fromString("");this.departemen = abs.backend.java.lib.types.ABSString.fromString("");this.tempat = abs.backend.java.lib.types.ABSString.fromString("");this.tanggal = abs.backend.java.lib.types.ABSString.fromString("");this.peserta = abs.backend.java.lib.types.ABSInteger.fromString("0");this.penanggungJawab = abs.backend.java.lib.types.ABSString.fromString("");this.biaya = abs.backend.java.lib.types.ABSInteger.fromString("0");getCOG().objectInitialized(this);
     }
     protected final abs.backend.java.lib.types.ABSValue getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {
         if ("idProgram".equals(__ABS_fieldName)) return idProgram;
@@ -36,7 +34,6 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
         if ("peserta".equals(__ABS_fieldName)) return peserta;
         if ("penanggungJawab".equals(__ABS_fieldName)) return penanggungJawab;
         if ("biaya".equals(__ABS_fieldName)) return biaya;
-        if ("sumberDana".equals(__ABS_fieldName)) return sumberDana;
         return super.getFieldValue(__ABS_fieldName);
     }
     public final java.lang.String getClassName() { return "ProgramImpl"; }
@@ -100,10 +97,10 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.setLocalVariable("idProgram",idProgram);
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",37);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",37);
             ProgramImpl_c.this.idProgram = idProgram;
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return abs.backend.java.lib.types.ABSUnit.UNIT;
         }
@@ -140,8 +137,8 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.newStackFrame(this, "getIdProgram");
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",38);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",38);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return ProgramImpl_c.this.idProgram;
         }
@@ -182,10 +179,10 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.setLocalVariable("namaProgram",namaProgram);
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",39);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",39);
             ProgramImpl_c.this.namaProgram = namaProgram;
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return abs.backend.java.lib.types.ABSUnit.UNIT;
         }
@@ -222,8 +219,8 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.newStackFrame(this, "getNamaProgram");
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",40);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",40);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return ProgramImpl_c.this.namaProgram;
         }
@@ -264,10 +261,10 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.setLocalVariable("departemen",departemen);
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",41);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",41);
             ProgramImpl_c.this.departemen = departemen;
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return abs.backend.java.lib.types.ABSUnit.UNIT;
         }
@@ -304,8 +301,8 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.newStackFrame(this, "getDepartemen");
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",42);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",42);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return ProgramImpl_c.this.departemen;
         }
@@ -346,10 +343,10 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.setLocalVariable("tempat",tempat);
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",43);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",43);
             ProgramImpl_c.this.tempat = tempat;
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return abs.backend.java.lib.types.ABSUnit.UNIT;
         }
@@ -386,8 +383,8 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.newStackFrame(this, "getTempat");
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",44);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",44);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return ProgramImpl_c.this.tempat;
         }
@@ -428,10 +425,10 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.setLocalVariable("tanggal",tanggal);
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",45);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",45);
             ProgramImpl_c.this.tanggal = tanggal;
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return abs.backend.java.lib.types.ABSUnit.UNIT;
         }
@@ -468,8 +465,8 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.newStackFrame(this, "getTanggal");
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",46);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",46);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return ProgramImpl_c.this.tanggal;
         }
@@ -510,10 +507,10 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.setLocalVariable("peserta",peserta);
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",47);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",47);
             ProgramImpl_c.this.peserta = peserta;
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return abs.backend.java.lib.types.ABSUnit.UNIT;
         }
@@ -550,8 +547,8 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.newStackFrame(this, "getPeserta");
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",48);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",48);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return ProgramImpl_c.this.peserta;
         }
@@ -592,10 +589,10 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.setLocalVariable("penanggungJawab",penanggungJawab);
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",49);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",49);
             ProgramImpl_c.this.penanggungJawab = penanggungJawab;
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return abs.backend.java.lib.types.ABSUnit.UNIT;
         }
@@ -632,8 +629,8 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.newStackFrame(this, "getPenanggungJawab");
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",50);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",50);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return ProgramImpl_c.this.penanggungJawab;
         }
@@ -674,10 +671,10 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.setLocalVariable("biaya",biaya);
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",51);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",51);
             ProgramImpl_c.this.biaya = biaya;
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return abs.backend.java.lib.types.ABSUnit.UNIT;
         }
@@ -714,92 +711,10 @@ public final class ProgramImpl_c extends abs.backend.java.lib.runtime.ABSObject 
             __ABS_currentTask.newStackFrame(this, "getBiaya");
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",52);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\model\\Program.abs",52);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return ProgramImpl_c.this.biaya;
-        }
-    }
-    // DModelProgramSource.abs:0:0: 
-    public final abs.backend.java.lib.runtime.ABSFut<abs.backend.java.lib.types.ABSUnit> async_setSumberDana(abs.backend.java.lib.types.ABSString sumberDana) {
-        return (abs.backend.java.lib.runtime.ABSFut)abs.backend.java.lib.runtime.ABSRuntime.getCurrentRuntime().asyncCall(new abs.backend.java.lib.runtime.AbstractAsyncCallRT<MProgramModel.ProgramImpl_c>(
-            this,
-            abs.backend.java.lib.runtime.ABSRuntime.checkForNull(this),
-            new ABS.StdLib.Duration_InfDuration(),
-            new ABS.StdLib.Duration_InfDuration(),
-            abs.backend.java.lib.types.ABSBool.FALSE) {
-                abs.backend.java.lib.types.ABSString arg0;
-                public java.util.List<abs.backend.java.lib.types.ABSValue> getArgs() {
-                    return java.util.Arrays.asList(new abs.backend.java.lib.types.ABSValue[] {
-                        arg0});
-                }
-                public abs.backend.java.lib.runtime.AsyncCall<?> init(abs.backend.java.lib.types.ABSString _arg0) {
-                    arg0 = _arg0;
-                    return this;
-                }
-                public java.lang.String methodName() {
-                    return "setSumberDana";
-                }
-                public Object execute() {
-                    return target.setSumberDana(arg0
-                    );
-                }
-            }.init(sumberDana))
-        ;
-    }
-    // DModelProgramSource.abs:0:0: 
-    public final abs.backend.java.lib.types.ABSUnit setSumberDana(abs.backend.java.lib.types.ABSString sumberDana) {
-        __ABS_checkSameCOG(); 
-        if (__ABS_getRuntime().debuggingEnabled()) {
-            abs.backend.java.lib.runtime.Task<?> __ABS_currentTask = __ABS_getRuntime().getCurrentTask();
-            __ABS_currentTask.newStackFrame(this, "setSumberDana");
-            __ABS_currentTask.setLocalVariable("sumberDana",sumberDana);
-        }
-         {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",16);
-            ProgramImpl_c.this.sumberDana = sumberDana;
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
-            return abs.backend.java.lib.types.ABSUnit.UNIT;
-        }
-    }
-    // DModelProgramSource.abs:0:0: 
-    public final abs.backend.java.lib.runtime.ABSFut<abs.backend.java.lib.types.ABSString> async_getSumberDana() {
-        return (abs.backend.java.lib.runtime.ABSFut)abs.backend.java.lib.runtime.ABSRuntime.getCurrentRuntime().asyncCall(new abs.backend.java.lib.runtime.AbstractAsyncCallRT<MProgramModel.ProgramImpl_c>(
-            this,
-            abs.backend.java.lib.runtime.ABSRuntime.checkForNull(this),
-            new ABS.StdLib.Duration_InfDuration(),
-            new ABS.StdLib.Duration_InfDuration(),
-            abs.backend.java.lib.types.ABSBool.FALSE) {
-                public java.util.List<abs.backend.java.lib.types.ABSValue> getArgs() {
-                    return java.util.Arrays.asList(new abs.backend.java.lib.types.ABSValue[] {
-                    });
-                }
-                public abs.backend.java.lib.runtime.AsyncCall<?> init() {
-                    return this;
-                }
-                public java.lang.String methodName() {
-                    return "getSumberDana";
-                }
-                public Object execute() {
-                    return target.getSumberDana();
-                }
-            }.init())
-        ;
-    }
-    // DModelProgramSource.abs:0:0: 
-    public final abs.backend.java.lib.types.ABSString getSumberDana() {
-        __ABS_checkSameCOG(); 
-        if (__ABS_getRuntime().debuggingEnabled()) {
-            abs.backend.java.lib.runtime.Task<?> __ABS_currentTask = __ABS_getRuntime().getCurrentTask();
-            __ABS_currentTask.newStackFrame(this, "getSumberDana");
-        }
-         {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/model/Program.abs",21);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
-            return ProgramImpl_c.this.sumberDana;
         }
     }
 }

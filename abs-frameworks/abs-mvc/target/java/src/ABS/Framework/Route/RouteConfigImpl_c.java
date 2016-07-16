@@ -37,7 +37,7 @@ public final class RouteConfigImpl_c extends abs.backend.java.lib.runtime.ABSObj
         __ABS_result.__ABS_init();
         return (T)__ABS_result;
     }
-    // DGuidePageRoute.abs:0:0: 
+    // Route.abs:0:0: 
     public final abs.backend.java.lib.runtime.ABSFut<abs.backend.java.lib.types.ABSString> async_route(abs.backend.java.lib.types.ABSString url) {
         return (abs.backend.java.lib.runtime.ABSFut)abs.backend.java.lib.runtime.ABSRuntime.getCurrentRuntime().asyncCall(new abs.backend.java.lib.runtime.AbstractAsyncCallRT<ABS.Framework.Route.RouteConfigImpl_c>(
             this,
@@ -64,7 +64,7 @@ public final class RouteConfigImpl_c extends abs.backend.java.lib.runtime.ABSObj
             }.init(url))
         ;
     }
-    // DGuidePageRoute.abs:0:0: 
+    // Route.abs:0:0: 
     public final abs.backend.java.lib.types.ABSString route(abs.backend.java.lib.types.ABSString url) {
         __ABS_checkSameCOG(); 
         if (__ABS_getRuntime().debuggingEnabled()) {
@@ -73,73 +73,8 @@ public final class RouteConfigImpl_c extends abs.backend.java.lib.runtime.ABSObj
             __ABS_currentTask.setLocalVariable("url",url);
         }
          {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/framework/Route.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/framework/Route.abs",7);
-            abs.backend.java.lib.types.ABSString result = route$ORIGIN_core(url);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().setLocalVariable("result",result);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/framework/Route.abs",9);
-            if (abs.backend.java.lib.expr.BinOp.eq(result,abs.backend.java.lib.types.ABSString.fromString("")).toBoolean()) {
-                 {
-                    if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/framework/Route.abs",10);
-                    if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/framework/Route.abs",11);
-                    result = new abs.backend.java.lib.expr.Case() {
-                        public abs.backend.java.lib.types.ABSString of(final abs.backend.java.lib.types.ABSString url, final abs.backend.java.lib.types.ABSString __ABS_value) {
-                            final abs.backend.java.lib.expr.PatternBinding __ABS_binding0 = new abs.backend.java.lib.expr.PatternValue(abs.backend.java.lib.types.ABSString.fromString("/guide.abs")).match(__ABS_value);
-                            if (__ABS_binding0 != null) return new Object() {
-                                public abs.backend.java.lib.types.ABSString execute() { return abs.backend.java.lib.types.ABSString.fromString("MProgramController.ProgramControllerImpl@guide"); }
-                            }.execute();
-                            final abs.backend.java.lib.expr.PatternBinding __ABS_binding1 = new abs.backend.java.lib.expr.AnyPattern().match(__ABS_value);
-                            if (__ABS_binding1 != null) return new Object() {
-                                public abs.backend.java.lib.types.ABSString execute() { return abs.backend.java.lib.types.ABSString.fromString(""); }
-                            }.execute();
-                            throw new abs.backend.java.lib.expr.UnmatchedCaseException("DGuidePageRoute.abs:11:21:  value " + __ABS_value + " did not match any pattern.");
-                        }
-                    }.of(url, url);
-                    if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().setLocalVariable("result", result);}
-            }
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/framework/Route.abs",17);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
-            return result;
-        }
-    }
-    // Route.abs:0:0: 
-    public final abs.backend.java.lib.runtime.ABSFut<abs.backend.java.lib.types.ABSString> async_route$ORIGIN_core(abs.backend.java.lib.types.ABSString url) {
-        return (abs.backend.java.lib.runtime.ABSFut)abs.backend.java.lib.runtime.ABSRuntime.getCurrentRuntime().asyncCall(new abs.backend.java.lib.runtime.AbstractAsyncCallRT<ABS.Framework.Route.RouteConfigImpl_c>(
-            this,
-            abs.backend.java.lib.runtime.ABSRuntime.checkForNull(this),
-            new ABS.StdLib.Duration_InfDuration(),
-            new ABS.StdLib.Duration_InfDuration(),
-            abs.backend.java.lib.types.ABSBool.FALSE) {
-                abs.backend.java.lib.types.ABSString arg0;
-                public java.util.List<abs.backend.java.lib.types.ABSValue> getArgs() {
-                    return java.util.Arrays.asList(new abs.backend.java.lib.types.ABSValue[] {
-                        arg0});
-                }
-                public abs.backend.java.lib.runtime.AsyncCall<?> init(abs.backend.java.lib.types.ABSString _arg0) {
-                    arg0 = _arg0;
-                    return this;
-                }
-                public java.lang.String methodName() {
-                    return "route$ORIGIN_core";
-                }
-                public Object execute() {
-                    return target.route$ORIGIN_core(arg0
-                    );
-                }
-            }.init(url))
-        ;
-    }
-    // Route.abs:0:0: 
-    public final abs.backend.java.lib.types.ABSString route$ORIGIN_core(abs.backend.java.lib.types.ABSString url) {
-        __ABS_checkSameCOG(); 
-        if (__ABS_getRuntime().debuggingEnabled()) {
-            abs.backend.java.lib.runtime.Task<?> __ABS_currentTask = __ABS_getRuntime().getCurrentTask();
-            __ABS_currentTask.newStackFrame(this, "route$ORIGIN_core");
-            __ABS_currentTask.setLocalVariable("url",url);
-        }
-         {
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/framework/Route.abs",0);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/framework/Route.abs",12);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\framework\\Route.abs",0);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\framework\\Route.abs",12);
             abs.backend.java.lib.types.ABSString result = new abs.backend.java.lib.expr.Case() {
                 public abs.backend.java.lib.types.ABSString of(final abs.backend.java.lib.types.ABSString url, final abs.backend.java.lib.types.ABSString __ABS_value) {
                     final abs.backend.java.lib.expr.PatternBinding __ABS_binding0 = new abs.backend.java.lib.expr.PatternValue(abs.backend.java.lib.types.ABSString.fromString("/")).match(__ABS_value);
@@ -182,7 +117,7 @@ public final class RouteConfigImpl_c extends abs.backend.java.lib.runtime.ABSObj
                 }
             }.of(url, url);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().setLocalVariable("result",result);
-            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("/home/afifun/abs/abstools-niken/abstools/abs-frameworks/abs-mvc/src/abs/framework/Route.abs",26);
+            if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep("C:\\Users\\ls\\Documents\\afifun\\abs-microservices-framework\\abstools\\abs-frameworks\\abs-mvc\\src\\abs\\framework\\Route.abs",26);
             if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().getCurrentTask().popStackFrame();
             return result;
         }
