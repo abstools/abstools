@@ -81,11 +81,12 @@ await_activation(Params) ->
     end.
 
 
--record(state,{cog,   % a reference to the COG the object belongs to
-               await, % keeps track of all task, waiting till the object is active
-               tasks, % all task running on this object
-               class, % The class of the object (a symbol)
-               fields % the state of the object fields
+-record(state,{cog,      % a reference to the COG the object belongs to
+               await=[], % keeps track of all tasks while object is initializing
+               tasks=gb_sets:empty(),     % all task running on this object
+               class,                     % The class of the object (a symbol)
+               fields,                    % the state of the object fields
+               alive=true     % false if object is garbage collected / crashed
               }).
 
 start(Cog,Class)->
@@ -95,7 +96,7 @@ start(Cog,Class)->
     Object.
 
 init([Cog,Class,Status])->
-    {ok,uninitialized,#state{cog=Cog,await=[],tasks=gb_sets:empty(),class=Class,fields=Status}}.
+    {ok,uninitialized,#state{cog=Cog,await=[],tasks=gb_sets:empty(),class=Class,fields=Status,alive=true}}.
 
 uninitialized(activate,S=#state{await=A})->
     lists:foreach(fun(X)-> X ! active end,A),
@@ -176,7 +177,7 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, ta
             %% garbage-collect them again, remember to send
             %% `cog_monitor:dc_died(self())' so that cog_monitor
             %% updates its list of DCs.
-            {reply, ok, active, S};
+            {reply, ok, active, S#state{alive=false}};
         _ ->
             %% FIXME: check if cog_monitor needs updating here
             [ exit(T,Reason) ||T<-gb_sets:to_list(Tasks), T/=By],
@@ -186,7 +187,7 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, ta
                 true -> exit(By,Reason);
                 false -> ok
             end,
-            {stop,normal,ok,S}
+            {stop,normal,ok,S#state{alive=false}}
     end;
 
 handle_sync_event(get_references, _From, StateName, S=#state{fields=IState}) ->
