@@ -7,6 +7,11 @@
 
 -export([start_link/2, stop/0, waitfor/0]).
 
+%% should objects of this class be garbage-collected?  (Used for keeping
+%% deployment components around for visualization; didn't find a better name
+%% for the function yet)
+-export([are_objects_of_class_protected/1]).
+
 %% communication about cogs
 -export([new_cog/1, cog_active/1, cog_blocked/1, cog_unblocked/1, cog_blocked_for_clock/4, cog_idle/1, cog_died/1]).
 
@@ -59,6 +64,9 @@ waitfor()->
             ok
     end.
 
+are_objects_of_class_protected(Class) ->
+    gen_server:call({global, cog_monitor}, {keep_alive, Class}).
+
 %% Cogs interface
 new_cog(Cog) ->
     gen_server:call({global, cog_monitor}, {cog,Cog,new}).
@@ -109,7 +117,17 @@ init([Main,Keepalive])->
                dcs=[],
                keepalive_after_clock_limit=Keepalive}}.
 
-
+handle_call({keep_alive, Class}, _From, State=#state{keepalive_after_clock_limit=KeepAlive}) ->
+    %% Do not garbage-collect DeploymentComponent objects when we do
+    %% visualization (KeepAlive=true)
+    Result=case KeepAlive of
+               false -> false;
+               true -> case Class of
+                           class_ABS_DC_DeploymentComponent -> true;
+                           _ -> false
+                       end
+           end,
+    {reply, Result, State};
 handle_call({cog,Cog,new}, _From, State=#state{idle=I})->
     I1=gb_sets:add_element(Cog,I),
     {reply, ok, State#state{idle=I1}};

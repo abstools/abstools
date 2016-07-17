@@ -22,6 +22,9 @@
 -behaviour(gc).
 -export([get_references/1]).
 
+%% REST api: inhibit dying from gc while we're registered.
+-export([protect_object_from_gc/1, unprotect_object_from_gc/1]).
+
 behaviour_info(callbacks) ->
     [{get_val_internal, 2},{set_val_internal,3},{init_internal,0}];
 behaviour_info(_) ->
@@ -33,9 +36,17 @@ new(Cog,Class,Args)->
     cog:inc_ref_count(Cog),
     O=start(Cog,Class),
     object:activate(O),
+    case cog_monitor:are_objects_of_class_protected(Class) of
+        true -> protect_object_from_gc(O);
+        false -> ok
+    end,
     Class:init(O,Args).
 new(Cog,Class,Args,CreatorCog,Stack)->
     O=start(Cog,Class),
+    case cog_monitor:are_objects_of_class_protected(Class) of
+        true -> protect_object_from_gc(O);
+        false -> ok
+    end,
     cog:add_blocking(Cog,init_task,{O,Args},CreatorCog,Stack),
     O.
 
@@ -71,6 +82,13 @@ die(O,Reason) when is_pid(O) ->
 get_references(Ref) ->
     gen_fsm:sync_send_all_state_event(Ref, get_references).
 
+protect_object_from_gc(#object{ref=O}) ->
+    gen_fsm:sync_send_all_state_event(O, protect_from_gc).
+
+unprotect_object_from_gc(#object{ref=O}) ->
+    gen_fsm:send_all_state_event(O, unprotect_from_gc).
+
+
 %%Internal
 
 await_activation(Params) ->
@@ -86,7 +104,8 @@ await_activation(Params) ->
                tasks=gb_sets:empty(),     % all task running on this object
                class,                     % The class of the object (a symbol)
                fields,                    % the state of the object fields
-               alive=true     % false if object is garbage collected / crashed
+               alive=true,     % false if object is garbage collected / crashed
+               protect_from_gc=false % true if unreferenced object needs to  be kept alive
               }).
 
 start(Cog,Class)->
@@ -96,7 +115,7 @@ start(Cog,Class)->
     Object.
 
 init([Cog,Class,Status])->
-    {ok,uninitialized,#state{cog=Cog,await=[],tasks=gb_sets:empty(),class=Class,fields=Status,alive=true}}.
+    {ok,uninitialized,#state{cog=Cog,await=[],tasks=gb_sets:empty(),class=Class,fields=Status,alive=true,protect_from_gc=false}}.
 
 uninitialized(activate,S=#state{await=A})->
     lists:foreach(fun(X)-> X ! active end,A),
@@ -170,16 +189,16 @@ active({#object{class=Class},set,Field,Val},S=#state{class=Class,fields=IS}) ->
     IS1=Class:set_val_internal(IS,Field,Val),
     {next_state,active,S#state{fields=IS1}}.
 
-handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, tasks=Tasks})->
-    case C of
-        class_ABS_DC_DeploymentComponent ->
-            %% Keep DCs alive for visualization.  If we decide to
-            %% garbage-collect them again, remember to send
-            %% `cog_monitor:dc_died(self())' so that cog_monitor
-            %% updates its list of DCs.
+handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, tasks=Tasks, protect_from_gc=P})->
+    case P of
+        true ->
             {reply, ok, active, S#state{alive=false}};
         _ ->
-            %% FIXME: check if cog_monitor needs updating here
+            case C of
+                class_ABS_DC_DeploymentComponent -> cog_monitor:dc_died(self());
+                _ -> ok
+            end,
+            %% FIXME: check if cog_monitor needs updating here wrt task lists etc.
             [ exit(T,Reason) ||T<-gb_sets:to_list(Tasks), T/=By],
             cog:dec_ref_count(Cog),
             case gb_sets:is_element(By,Tasks) of
@@ -189,9 +208,26 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, ta
             end,
             {stop,normal,ok,S#state{alive=false}}
     end;
-
+handle_sync_event(protect_from_gc, _From, StateName, S) ->
+    {reply, ok, StateName, S#state{protect_from_gc=true}};
 handle_sync_event(get_references, _From, StateName, S=#state{fields=IState}) ->
     {reply, gc:extract_references(IState), StateName, S}.
+
+handle_event(unprotect_from_gc, StateName, State=#state{class=C,tasks=Tasks,cog=Cog,alive=Alive}) ->
+    case Alive of
+        true -> {next_state, StateName, State#state{protect_from_gc=false}};
+        false ->
+            case C of
+                class_ABS_DC_DeploymentComponent -> cog_monitor:dc_died(self());
+                _ -> ok
+            end,
+            %% FIXME: check if cog_monitor needs updating here wrt task lists etc.
+            [ exit(T,normal) ||T<-gb_sets:to_list(Tasks)],
+            cog:dec_ref_count(Cog),
+            {stop,normal,ok,State}
+    end;
+handle_event(_Event,_StateName,State)->
+    {stop,not_implemented,State}.
 
 
 handle_info({'DOWN', _MonRef, process, TaskRef, _Reason} ,StateName,S=#state{tasks=Tasks})->
@@ -201,8 +237,5 @@ handle_info({'DOWN', _MonRef, process, TaskRef, _Reason} ,StateName,S=#state{tas
 
 terminate(_Reason,_StateName,_Data)->
     ok.
-handle_event(_Event,_StateName,State)->
-    {stop,not_implemented,State}.
-
 code_change(_OldVsn,_StateName,_Data,_Extra)->
     not_implemented.
