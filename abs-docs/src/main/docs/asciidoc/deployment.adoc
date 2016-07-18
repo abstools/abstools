@@ -1,22 +1,21 @@
-== Resource Modeling in Timed ABS
+[[sec:deployment]]
+== Deployment and Resource Modeling
 
-
-ABS can be used to simulate the effects of deployment decisions on the cost
-and performance of running a distributed system.  To achieve this, we need to
-add the following aspects to a model:
-
-* A notion of _time_ to express the runtime effects of varying the system (see
-  <<sec:timed-abs>>)
-* A notion of _location_ to describe where some component of the overall
-  system is executing (see <<sec:deployment-components>>)
-* A notion of _cost_ of executing parts of a system, against various resource
-  types (see <<sec:resources>>)
-
-
-In this chapter, we deal with the non-functional properties of systems: code
+This chapter describes how to model non-functional properties of systems: code
 deployment on varying numbers and kinds of machines, and the effects of code
 locality and different resource types such as CPU speeds, interconnection
 bandwidth, etc. on the performance of a system.
+
+ABS can be used to simulate the effects of deployment decisions on the cost
+and performance of running a distributed system.  To achieve this, the
+following aspects were added to ABS:
+
+* A notion of _location_ to describe where a cog is executing (see
+  <<sec:deployment-components>>)
+* A notion of _time_ that allows us to observe the effects of deployment
+  decisions (see <<sec:timed-abs>>)
+* A notion of _cost_ of executing parts of a system, in terms of resource
+  types like bandwidth and processor cycles (see <<sec:resources>>)
 
 All language identifiers described in this section reside in the `ABS.DC`
 module.
@@ -32,7 +31,7 @@ resources provided by the deployment component.
 Deployment Components are first-class constructs in the ABS language.  A
 reference to a deployment component is treated the same way as a reference to
 an object.  Deployment Components are created using the `new` expression.  Any
-other cog can be created "on" a deployment component by using a `DC`
+other cog can be created “on” a deployment component by using a `DC`
 annotation to the `new` statement.
 
 .Example
@@ -40,14 +39,16 @@ annotation to the `new` statement.
 DeploymentComponent dc = new DeploymentComponent("Server 1", map[Pair(Speed, 10)]); <1>
 [DC: dc] Worker w = new CWorker(); <2>
 ----
-<1> A new deployment component `dc` is created with 10 `Speed` resources <2>
-`w` is created on the new deployment component `dc`
+<1> A new deployment component `dc` is created with 10 `Speed` resources
+<2> `w` is created on the new deployment component `dc`
 
-NOTE: It is an error to try to locally create deployment components (via `new
-local DeploymentComponent(...)`) or new local objects on another cog (via
-`[DC: x] new local C()`).
+NOTE: Deployment components cannot be created with `new local`, only with
+`new`.
 
-.Resources and Deployment Components
+NOTE: All objects of a cog must reside on the same deployment component, i.e.,
+`[DC: x] new local C()` is an error.
+
+==== Resources and Deployment Components
 
 As seen above, each deployment component “carries” some amount of resources
 for each resource type.  This is expressed as a map from resource type to a
@@ -146,41 +147,53 @@ provider.  If no cloud provider is set, returns `True`.
 [[sec:resources]]
 === Resource Types
 
-The term _Resource_ can be used in different ways.  In ABS, we understand a
-Resource to be a countable, measurable property that is influenced by program
-execution and the passage of time.  The resources currently supported by the
-ABS language are defined in the `ABS.DC` module as follows:
+The term “Resource” can be understood in different ways.  In ABS, we define
+“Resource” to be a countable, measurable property of a deployment component.
+Some resources stay constant throughout the life of a deployment component
+(e.g., the number of cores), some others are influenced by program execution
+(e.g., the available bandwidth in the current time slot).
+
+The resource types currently supported by the ABS language are defined in the
+`ABS.DC` module as follows:
 
 ----
 data Resourcetype = Speed | Bandwidth | Memory | Cores ;
 ----
 
+When a deployment component is created without explicitly giving a value for a
+resource type, it is in effect infinite.  E.g., when we want to model a denial
+of service attack, the deployment component modeling the attacker will have
+infinite speed and bandwidth.
+
+
 ==== Speed
 
 The `Speed` resource type models execution speed.  Intuitively, a deployment
-component with twice the number of Speed resources will execute twice as fast.
-Not all statements consume Speed resources while executing -- Speed resources are
-consumed when execution in the current process reaches a statement that is
-annotated with a `Cost` annotation.
+component with twice the number of `Speed` resources will execute twice as
+fast.  Not all statements consume Speed resources while executing -- Speed
+resources are consumed when execution in the current process reaches a
+statement that is annotated with a `Cost` annotation.
 
 .Example
 ----
+Time t1 = now();
 [Cost: 5] skip;
+Time t2 = now();
 ----
 
 Executing the above `skip` statement will consume 5 Speed resources from the
 deployment component where the cog was deployed.  If the deployment component
-does not have infinite Speed resources, executing the `skip` statement might take an observable amount of time.
+does not have infinite Speed resources, executing the `skip` statement might
+take an observable amount of time, i.e., `t1` and `t2` might be different.
 
 
 ==== Bandwidth
 
 Bandwidth is a measure of transmission speed.  Bandwidth resources are
-consumed during method invocation and `return` statements.  Bandwidth
-resources are consumed on both the sending and the receiving deployment
-component.
+consumed during method invocation and `return` statements.  No bandwidth is
+consumed if sender and receiver reside on the same deployment component.
 
-Bandwidth consumption is expressed via a `Size` annotation:
+Bandwidth consumption is expressed via a `DataSize` annotation:
 
 .Example
 ----
@@ -188,9 +201,10 @@ Bandwidth consumption is expressed via a `Size` annotation:
 ----
 
 Executing the above method invocation statement will consume bandwidth
-resources proportional to the length of list `x`.  The resources will be
-consumed both from the deployment component where the cog was deployed, and
-from the one where `o` was deployed.
+resources proportional to the length of list `x`.
+// The resources will be
+// consumed both from the deployment component where the cog was deployed, and
+// from the one where `o` was deployed.
 
 
 ==== Memory
