@@ -57,9 +57,8 @@ public class DeploymentComponentChecker extends DefaultTypeSystemExtension {
                 // Don't create a deployment component with "new local"
                 errors.add(new SemanticError(e, ErrorMessage.DEPLOYMENT_COMPONENT_NOT_COG, "dummy string to keep constructor happy"));
             }
-            ASTNode parent = e.getParent();
-            if (parent instanceof Stmt) { // should always be true
-                Stmt stmt = (Stmt) parent;
+            Stmt stmt = CompilerUtils.findStmtForExpression(e);
+            if (stmt != null) { // should always be true
                 if (CompilerUtils.getAnnotationValueFromName(stmt.getAnnotations(), "ABS.DC.DC") != null) {
                     errors.add(new SemanticError(e, ErrorMessage.DEPLOYMENT_COMPONENT_IGNORED, "dummy string to keep constructor happy"));
                 }
