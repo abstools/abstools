@@ -276,11 +276,8 @@ aspect GenerateErlang {
 
   @Override
   public void NewExp.generateErlangCode(CodeStream ecs,Vars vars) {
-    ASTNode parent = getParent();
-    while (!(parent instanceof Stmt) && parent != null ) {
-      parent = parent.getParent();
-    }
-    PureExp dc = CompilerUtils.getAnnotationValueFromName(((Stmt)parent).getAnnotations(), "ABS.DC.DC");
+    Stmt stmt = CompilerUtils.findStmtForExpression(this);
+    PureExp dc = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotations(), "ABS.DC.DC");
     ClassDecl classDecl = ((UnionType)getType()).getOriginatingClass();
     String className = ErlUtil.getName(classDecl);
     boolean isNewDC = getType().isDeploymentComponentType();
