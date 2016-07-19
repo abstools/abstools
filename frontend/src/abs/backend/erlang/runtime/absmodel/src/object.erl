@@ -12,7 +12,7 @@
 
 -behaviour(gen_fsm).
 %%API
--export([new/3,new/5,activate/1,new_object_task/3,die/2,alive/1]).
+-export([new/3,new/5,activate/1,new_object_task/3,die/2,alive/1,get_field_value/2,set_field_value/3]).
 %%gen_fsm callbacks
 -export([init/1,active/3,active/2,uninitialized/2,uninitialized/3,code_change/4,handle_event/3,handle_info/3,handle_sync_event/4,terminate/3]).
 -include_lib("abs_types.hrl").
@@ -88,6 +88,11 @@ protect_object_from_gc(#object{ref=O}) ->
 unprotect_object_from_gc(#object{ref=O}) ->
     gen_fsm:send_all_state_event(O, unprotect_from_gc).
 
+get_field_value(O=#object{ref=Ref}, Field) ->
+    gen_fsm:sync_send_event(Ref, {O,get,Field}).
+
+set_field_value(O=#object{ref=Ref}, Field, Value) ->
+    gen_fsm:send_event(Ref,{O,set,Field,Value}).
 
 %%Internal
 
