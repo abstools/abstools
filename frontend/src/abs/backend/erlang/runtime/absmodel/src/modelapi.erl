@@ -15,6 +15,7 @@ init(Req, _Opts) ->
             <<"default">> -> {200, <<"text/plain">>, <<"Hello Erlang!\n">>};
             <<"clock">> -> handle_clock();
             <<"dcs">> -> handle_dcs(cowboy_req:path_info(Req));
+            <<"o">> -> handle_object_query(cowboy_req:path_info(Req));
             <<"static_dcs">> -> handle_static_dcs(cowboy_req:path_info(Req));
             _ -> {404, <<"text/plain">>, <<"Not found">>}
         end,
@@ -27,6 +28,18 @@ handle_clock() ->
 
 handle_dcs([_Resource, _Filename]) ->
     {200, <<"application/json">>, get_statistics_json()}.
+
+handle_object_query([Objectname, Fieldname]) ->
+    Object=cog_monitor:lookup_object_from_rest_name(Objectname),
+    case Object of
+        none -> {404, <<"text/plain">>, <<"Object not found">>};
+        _ -> case Value=object:get_field_value(Object, binary_to_atom(Fieldname, utf8)) of
+                 none -> {404, <<"text/plain">>, <<"Field not found">>};
+                 _ -> Result=[{Fieldname,
+                               list_to_binary(builtin:toString(null, Value))}],
+                      {200, <<"text/json">>, jsx:encode(Result)}
+             end
+    end.
 
 %% Convert into JSON integers instead of floats: erlang throws badarith when
 %% the rationals get very large (test case: 5472206596936366950716234513847726699787633130083257868108935385073372521628474400544521868704326539544514945848761641723966834493669011242722490852350250920069840584545494657714176547830170076546766985189948190456085993999965841854043348210273114730931817418950948724982907640273166024155584846472815748114062887634396966520123600001491695765504058451726579037573091051607552055423198699302802395956790501740896358894471037106650700904924688637794684243427125018755079147845309097447199680 / 124463949580340014510986584728288862741803258927911335916878977240693013539088417076664562979601325740156255021810491719369575684864053619527117112327603062438063916198087526979602339983985468095190606013682227096265800975172556004113539099465524910539717462241015411708644965352863529428218264513501978734125515935814243527381509019662918750484272597804450713973581541009172909728477620791912354661828439825472308754606657629002302337966418841432399509232916424732092270353567444570118827)
