@@ -24,6 +24,7 @@
 
 %% REST api: inhibit dying from gc while we're registered.
 -export([protect_object_from_gc/1, unprotect_object_from_gc/1]).
+-export([get_whole_object_state/1]).
 
 behaviour_info(callbacks) ->
     [{get_val_internal, 2},{set_val_internal,3},{init_internal,0}];
@@ -87,6 +88,9 @@ protect_object_from_gc(#object{ref=O}) ->
 
 unprotect_object_from_gc(#object{ref=O}) ->
     gen_fsm:send_all_state_event(O, unprotect_from_gc).
+
+get_whole_object_state(#object{ref=O}) ->
+    gen_fsm:sync_send_all_state_event(O, get_whole_state).
 
 get_field_value(O=#object{ref=Ref}, Field) ->
     gen_fsm:sync_send_event(Ref, {O,get,Field}).
@@ -216,7 +220,9 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, ta
 handle_sync_event(protect_from_gc, _From, StateName, S) ->
     {reply, ok, StateName, S#state{protect_from_gc=true}};
 handle_sync_event(get_references, _From, StateName, S=#state{fields=IState}) ->
-    {reply, gc:extract_references(IState), StateName, S}.
+    {reply, gc:extract_references(IState), StateName, S};
+handle_sync_event(get_whole_state, _From, StateName, S=#state{class=C,fields=IState}) ->
+    {reply, C:get_all_state(IState), StateName, S}.
 
 handle_event(unprotect_from_gc, StateName, State=#state{class=C,tasks=Tasks,cog=Cog,alive=Alive}) ->
     case Alive of

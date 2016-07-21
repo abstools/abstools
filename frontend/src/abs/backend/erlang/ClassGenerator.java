@@ -226,10 +226,22 @@ public class ClassGenerator {
             ecs.println("throw(badarg).");
             ecs.decIndent();
         }
+        ErlUtil.functionHeader(ecs, "get_all_state", Mask.none, "S");
+        ecs.println("[");
+        ecs.incIndent();
+        first = true;
+        for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
+            if (!first) ecs.print(", ");
+            first = false;
+            ecs.pf("{ '%s', S#state.%s }",
+                   f.getName(), f.getName());
+        }
+        ecs.decIndent();
+        ecs.println("].");
     }
 
     private void generateExports() {
-        ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0]).");
+        ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0,get_all_state/1]).");
         ecs.println("-compile(export_all).");
     }
 }
