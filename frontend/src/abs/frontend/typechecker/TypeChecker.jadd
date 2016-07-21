@@ -390,6 +390,17 @@ aspect TypeChecker {
         }
     }
 
+    public void ParametricDataTypeDecl.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
+        HashSet<String> names = new HashSet<String>();
+        for (TypeParameterDecl d : getTypeParameters()) {
+            d.typeCheck(e);
+            if (!names.add(d.getName())) {
+                e.add(new TypeError(d, ErrorMessage.DUPLICATE_DATATYPE_PARAMETER, d.getName()));
+            }
+        }
+    }
+
     public void DataConstructor.typeCheck(SemanticConditionList e) {
         for (ConstructorArg d : getConstructorArgs()) {
             d.typeCheck(e);
