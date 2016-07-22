@@ -765,15 +765,6 @@ new List<ModuleDecl>(),
     @Override public void exitDeltaRemoveFieldFragment(ABSParser.DeltaRemoveFieldFragmentContext ctx) {
         setV(ctx, new RemoveFieldModifier((FieldDecl)v(ctx.field_decl())));
     }
-    @Override public void exitDeltaAddMethodFragment(ABSParser.DeltaAddMethodFragmentContext ctx) {
-        setV(ctx, new AddMethodModifier((MethodImpl)v(ctx.method())));
-    }
-    @Override public void exitDeltaModifyMethodFragment(ABSParser.DeltaModifyMethodFragmentContext ctx) {
-        setV(ctx, new ModifyMethodModifier((MethodImpl)v(ctx.method())));
-    }
-    @Override public void exitDeltaRemoveMethodFragment(ABSParser.DeltaRemoveMethodFragmentContext ctx) {
-        setV(ctx, new RemoveMethodModifier((MethodSig)v(ctx.methodsig())));
-    }
 
     @Override public void exitDeltaAddMethodsigFragment(ABSParser.DeltaAddMethodsigFragmentContext ctx) {
         setV(ctx, new AddMethodSigModifier((MethodSig)v(ctx.methodsig())));

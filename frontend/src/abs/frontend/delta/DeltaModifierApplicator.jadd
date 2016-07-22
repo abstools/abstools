@@ -449,6 +449,7 @@ public TraitExpr TraitModifyOpr.helperLeftMost(TraitExpr tt, ArrayList<TraitOper
           // replace MethodImpl
           MethodImpl method = met.treeCopyNoTransform();
           method.setFileName(met.getFileName());
+          method.setParent(met.getParent());
           replaceOriginal(cd, cd.getMethod(found), method);
           cd.getMethods().setChild(method, found);
       } else
