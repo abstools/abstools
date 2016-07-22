@@ -57,7 +57,7 @@ abs_to_json(false) -> false;
 abs_to_json(null) -> null;
 abs_to_json(Abs) when is_number(Abs) -> Abs;
 abs_to_json(Abs) when is_list(Abs) -> list_to_binary(Abs);
-abs_to_json(Abs) -> builtin:toString(null, Abs).
+abs_to_json(Abs) -> list_to_binary(builtin:toString(null, Abs)).
 
 %% Convert into JSON integers instead of floats: erlang throws badarith,
 %% possibly because of underflow, when the rationals get very large (test
