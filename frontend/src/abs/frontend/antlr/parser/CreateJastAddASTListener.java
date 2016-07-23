@@ -27,12 +27,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         if (filename != null) this.filename = filename.getPath();
     }
 
-    /**
-     * Associates JastAdd value with antlr node such that v(node) will
-     * return value.  Also sets filename and position of the JastAdd
-     * value.  Returns the passed-in JastAdd value.
-     */
-    private ASTNode<?> setV(ParserRuleContext node, ASTNode<?> value) {
+    private ASTNode<?> setASTNodePosition(ParserRuleContext node, ASTNode<?> value) {
         assert node != null;
         int startline = node.start.getLine();
         int startcol = node.start.getCharPositionInLine();
@@ -41,6 +36,28 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         int endcol = (node.stop == null ? node.start : node.stop).getCharPositionInLine();
         value.setPosition(startline, startcol, endline, endcol);
         value.setFileName(this.filename);
+        return value;
+    }
+
+    private ASTNode<?> setASTNodePosition(Token node, ASTNode<?> value) {
+        assert node != null;
+        int startline = node.getLine();
+        int startcol = node.getCharPositionInLine();
+        // for a completely empty file, CompilationUnit.stop will be null
+        int endline = startline;
+        int endcol = startcol + node.getText().length();
+        value.setPosition(startline, startcol, endline, endcol);
+        value.setFileName(this.filename);
+        return value;
+    }
+
+    /**
+     * Associates JastAdd value with antlr node such that v(node) will
+     * return value.  Also sets filename and position of the JastAdd
+     * value.  Returns the passed-in JastAdd value.
+     */
+    private ASTNode<?> setV(ParserRuleContext node, ASTNode<?> value) {
+        setASTNodePosition(node, value);
         values.put(node, value);
         return value;
     }
@@ -149,7 +166,9 @@ new List<ModuleDecl>(),
     @Override public void exitDatatype_decl(ABSParser.Datatype_declContext ctx) {
         ParametricDataTypeDecl d = (ParametricDataTypeDecl)setV(ctx, new ParametricDataTypeDecl(ctx.n.getText(), l(ctx.c), l(ctx.annotation()), new List<TypeParameterDecl>()));
         for (Token t : ctx.p) {
-            d.addTypeParameter(new TypeParameterDecl(t.getText()));
+            TypeParameterDecl tpd = new TypeParameterDecl(t.getText());
+            setASTNodePosition(t, tpd);
+            d.addTypeParameter(tpd);
         }
     }
 
@@ -166,7 +185,9 @@ new List<ModuleDecl>(),
                 assert vt instanceof UnresolvedTypeUse : vt.getClass().getName();
                 vtresolved = new DataTypeUse(vt.getName(), vt.getAnnotations());
             }
-            d.addConstructorArg(new ConstructorArg(vtresolved, a.IDENTIFIER() != null ? new Opt(new Name(a.IDENTIFIER().getText())) : new Opt()));
+            ConstructorArg ca = new ConstructorArg(vtresolved, a.IDENTIFIER() != null ? new Opt(new Name(a.IDENTIFIER().getText())) : new Opt());
+            setASTNodePosition(a, ca);
+            d.addConstructorArg(ca);
         }
     }
 
@@ -181,7 +202,9 @@ new List<ModuleDecl>(),
             ParametricFunctionDecl dp
                 = (ParametricFunctionDecl)setV(ctx, new ParametricFunctionDecl(ctx.n.getText(), t, p, d, l(ctx.annotation()), new List<TypeParameterDecl>()));
             for (Token tp : ctx.p) {
-                dp.addTypeParameter(new TypeParameterDecl(tp.getText()));
+                TypeParameterDecl tpd = new TypeParameterDecl(tp.getText());
+                setASTNodePosition(tp, tpd);
+                dp.addTypeParameter(tpd);
             }
         } else {
             setV(ctx, new FunctionDecl(ctx.n.getText(), l(ctx.annotation()), t, p, d));
@@ -196,7 +219,12 @@ new List<ModuleDecl>(),
     @Override public void exitException_decl(ABSParser.Exception_declContext ctx) {
         ExceptionDecl e = (ExceptionDecl)setV(ctx, new ExceptionDecl(ctx.n.getText(), l(ctx.annotation()), new List<ConstructorArg>()));
         for (ABSParser.Data_constructor_argContext a : ctx.a) {
-            e.addConstructorArg(new ConstructorArg((DataTypeUse)v(a.type_use()), a.IDENTIFIER() != null ? new Opt(new Name(a.IDENTIFIER().getText())) : new Opt()));
+            ConstructorArg ca = new ConstructorArg((DataTypeUse)v(a.type_use()),
+                                                   a.IDENTIFIER() != null
+                                                   ? new Opt(new Name(a.IDENTIFIER().getText()))
+                                                   : new Opt());
+            setASTNodePosition(a, ca);
+            e.addConstructorArg(ca);
         }
     }
 
@@ -246,6 +274,7 @@ new List<ModuleDecl>(),
     // Statements
     @Override public void exitVardeclStmt(ABSParser.VardeclStmtContext ctx) {
         VarDecl v = new VarDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), new Opt<Exp>());
+        setASTNodePosition(ctx, v);
         if (ctx.exp() != null) {
             v.setInitExp((Exp)v(ctx.exp()));
         }
@@ -374,8 +403,8 @@ new List<ModuleDecl>(),
     @Override public void exitVariadicFunctionExp(ABSParser.VariadicFunctionExpContext ctx) {
         List<PureExp> l = (List<PureExp>)v(ctx.pure_exp_list());
         // Construct a list literal from all given arguments
-        DataConstructorExp arglist
-            = new DataConstructorExp("Cons", new List<PureExp>());
+        DataConstructorExp arglist = new DataConstructorExp("Cons", new List<PureExp>());
+        setASTNodePosition(ctx.pure_exp_list(), arglist);
         DataConstructorExp current = arglist;
         /* DO NOT use the iterator here -- it interferes with rewriting [stolz] */
         if (l.getNumChildNoTransform() > 0) {
@@ -416,8 +445,7 @@ new List<ModuleDecl>(),
     @Override public void exitMultExp(ABSParser.MultExpContext ctx) {
         switch (ctx.op.getType()) {
         case ABSParser.MULT :
-            setV(ctx,
-                     new MultMultExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+            setV(ctx, new MultMultExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
             break;
         case ABSParser.DIV :
             setV(ctx, new DivMultExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
@@ -497,11 +525,11 @@ new List<ModuleDecl>(),
         setV(ctx, new CaseExp((PureExp)v(ctx.c), l));
     }
     @Override public void exitLetExp(ABSParser.LetExpContext ctx) {
-        setV(ctx, new LetExp(new ParamDecl(ctx.IDENTIFIER().getText(),
-                                           (TypeUse)v(ctx.type_use()),
-                                           new List<Annotation>()),
-                             (PureExp)v(ctx.i),
-                             (PureExp)v(ctx.b)));
+        ParamDecl pd = new ParamDecl(ctx.IDENTIFIER().getText(),
+                                     (TypeUse)v(ctx.type_use()),
+                                     new List<Annotation>());
+        setASTNodePosition(ctx.IDENTIFIER().getSymbol(), pd);
+        setV(ctx, new LetExp(pd, (PureExp)v(ctx.i), (PureExp)v(ctx.b)));
     }
     @Override public void exitParenExp(ABSParser.ParenExpContext ctx) {
         setV(ctx, v(ctx.pure_exp()));
