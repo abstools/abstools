@@ -343,14 +343,14 @@ aspect TypeResolution {
         when (getDecl().isInterface())
         to InterfaceTypeUse {
             InterfaceTypeUse tu = new InterfaceTypeUse(getName(), getAnnotations());
-            tu.setPosition(getStart(), getEnd());
+            tu.setPositionFromNode(this);
             tu.setAbsolutePosition(getAbsolutePosition());
             return tu;
         } 
         when (getDecl().isDataType()) 
         to DataTypeUse {
             DataTypeUse tu = new DataTypeUse(getName(), getAnnotations());
-            tu.setPosition(getStart(), getEnd());
+            tu.setPositionFromNode(this);
             tu.setAbsolutePosition(getAbsolutePosition());
             return tu;
         }
@@ -374,14 +374,14 @@ aspect TypeResolution {
                 tu = (TypeUse) decl.copy();
                 tu.setName(getName());
             }
-            tu.setPosition(getStart(), getEnd());
+            tu.setPositionFromNode(this);
             tu.setAbsolutePosition(getAbsolutePosition());
             return tu;
         }
         when (getDecl().isTypeParameter())
         to TypeParameterUse {
             TypeParameterUse tu = new TypeParameterUse(getName(), getAnnotations());
-            tu.setPosition(getStart(), getEnd());
+            tu.setPositionFromNode(this);
             tu.setAbsolutePosition(getAbsolutePosition());
             return tu;
         }

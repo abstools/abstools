@@ -39,8 +39,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         // for a completely empty file, CompilationUnit.stop will be null
         int endline = (node.stop == null ? node.start : node.stop).getLine();
         int endcol = (node.stop == null ? node.start : node.stop).getCharPositionInLine();
-        value.setPosition(ASTNode.makePosition(startline, startcol),
-                          ASTNode.makePosition(endline, endcol));
+        value.setPosition(startline, startcol, endline, endcol);
         value.setFileName(this.filename);
         values.put(node, value);
         return value;
@@ -384,7 +383,7 @@ new List<ModuleDecl>(),
             for (int i = 0; i < l.getNumChildNoTransform(); i++) {
                 PureExp e = l.getChildNoTransform(i);
                 DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
-                next.setPosition(e.getStartPos(), last.getEndPos());
+                next.setPositionFromNode(e);
                 current.addParamNoTransform(e);
                 current.addParamNoTransform(next);
                 current = next;

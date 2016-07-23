@@ -161,8 +161,6 @@ public class UtilityFunctionsTest {
 			int b = r.nextInt(100);
 			int c = r.nextInt(100);
 			int d = r.nextInt(100);
-			// when(md.getStart()).thenReturn(Symbol.makePosition(a, b));
-			// when(md.getEnd()).thenReturn(Symbol.makePosition(c, d));
 			
 			EditorPosition position = getPosition(md);
 			

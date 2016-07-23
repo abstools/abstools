@@ -75,7 +75,7 @@ public class CompilerUtils {
      */
     @SuppressWarnings("rawtypes")
     public static <T extends ASTNode, U extends ASTNode> U copyPosition(T fromNode, U toNode) {
-        toNode.setPosition(fromNode.getStart(), fromNode.getEnd());
+        toNode.setPositionFromNode(fromNode);
         return toNode;
     }
 

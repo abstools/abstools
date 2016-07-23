@@ -389,7 +389,7 @@ public class Main {
                     ExceptionDecl e1 = (ExceptionDecl)decl;
                     // KLUDGE: what do we do about annotations to exceptions?
                     DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().treeCopyNoTransform());
-                    d.setPosition(e1.getStart(), e1.getEnd());
+                    d.setPositionFromNode(e1);
                     d.setFileName(e1.getFileName());
                     d.exceptionDecl = e1;
                     e1.dataConstructor = d;

@@ -26,7 +26,6 @@ import abs.backend.java.scheduling.UserSchedulingStrategy;
 import abs.common.CompilerUtils;
 import abs.common.Constants;
 import abs.common.NotImplementedYetException;
-import abs.common.Position;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.AsyncCall;
@@ -60,8 +59,7 @@ public class JavaGeneratorHelper {
     private static final String FLI_METHOD_PREFIX = "fli_";
 
     public static void generateHelpLine(ASTNode<?> node, PrintStream stream) {
-        Position pos = new Position(node);
-        stream.println("// " + pos.getPositionString());
+        stream.println("// " + node.getPositionString());
     }
 
     public static void generateArgs(PrintStream stream, List<PureExp> args, java.util.List<Type> types) {

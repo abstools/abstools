@@ -20,7 +20,7 @@ aspect VarResolution {
          * The InitChecker was using those, I am
          * not sure if they are used for absolute
          * addressing the source anywhere. */
-        fu.setPosition(getStartPos(), getEndPos());
+        fu.setPositionFromNode(this);
         return fu;
        }
     }
@@ -287,9 +287,9 @@ aspect VarResolution {
         when (lookupVarOrFieldName(getName(),false) == null)
         to PatternVar {
             PatternVarDecl decl = new PatternVarDecl(getName());
-            decl.setPosition(getStartPos(), getEndPos());
+            decl.setPositionFromNode(this);
             PatternVar v = new PatternVar(decl);
-            v.setPosition(getStartPos(), getEndPos());
+            v.setPositionFromNode(this);
             return v;
         }
     }

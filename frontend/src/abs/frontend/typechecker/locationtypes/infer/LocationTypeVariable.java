@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import abs.common.Position;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FieldDecl;
@@ -86,8 +85,7 @@ public class LocationTypeVariable {
     public String toString() {
         String pos = "";
         if (node != null) {
-            Position p = new Position(node);
-            pos = " at " + p.getPositionString();
+            pos = " at " + node.getPositionString();
         }  
         return "v" + id + getASTNodeString();
     }

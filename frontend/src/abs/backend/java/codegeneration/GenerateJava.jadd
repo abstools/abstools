@@ -502,7 +502,7 @@ aspect GenerateJava {
         stream.print("if (!");
         getCondition().generateJava(stream);
         stream.print(".toBoolean()) throw new " + ABSAssertException.class.getName() + "(\"");
-        stream.println(new Position(this).getPositionString() + " Assertion failed\");");
+        stream.println(getPositionString() + " Assertion failed\");");
 
     }
 
@@ -717,9 +717,8 @@ aspect GenerateJava {
             stream.println(");");
             i++;
         }
-        Position pos = new Position(this);
         stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
-        stream.println(pos.getPositionString() + " value \" + __ABS_value + \" did not match any pattern.\");");
+        stream.println(getPositionString() + " value \" + __ABS_value + \" did not match any pattern.\");");
         stream.println("}");
         stream.print("}.of(");
         for (String freeVarName : getFreeVars()) {
