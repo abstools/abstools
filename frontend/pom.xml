@@ -186,8 +186,6 @@
 						<phase>generate-sources</phase>
 						<configuration>
 							<target>
-								<taskdef name="jflex" classname="JFlex.anttask.JFlexTask"
-									classpathref="maven.plugin.classpath" />
 								<jflex file="${parser.src.dir}/ABS.flex" outdir="${parser.gen.dir}"
 									nobak="yes" />
 							</target>
