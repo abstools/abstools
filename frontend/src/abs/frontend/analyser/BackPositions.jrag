@@ -4,7 +4,36 @@ aspect BackPositions {
 	syn int ASTNode.getStartPos() = getStart();
 	syn int ASTNode.getEndPos() = getEnd();
 
-	syn boolean ASTNode.hasChildren() = getNumChild() > 0;
+	static private final int ASTNode.COLUMN_FIELD_BITS = 12;
+	static private final int ASTNode.COLUMN_FIELD_MASK = (1 << COLUMN_FIELD_BITS) - 1; 
+
+	protected int ASTNode.start = 0;
+	protected int ASTNode.end = 0;
+
+	/**
+	 * Pack symbol "coordinates" into a single number.
+	 */
+	static public int ASTNode.makePosition(int line, int column)
+	{
+		return line << COLUMN_FIELD_BITS | column;
+	}
+	
+	/**
+	 * Extracts line number from a packed position.
+	 */
+	static public int ASTNode.getLine(int position)
+	{
+		return position >>> COLUMN_FIELD_BITS;
+	}
+	
+	/**
+	 * Extracts column number from a packed position.
+	 */
+	static public int ASTNode.getColumn(int position)
+	{
+		return position & COLUMN_FIELD_MASK;
+	}
+
 
 	// set the position of an AstNode, this should only be used for generated code (-> ASTPreProcessor)
 	public void ASTNode.setPosition(int startPos, int endPos) {
@@ -12,8 +41,37 @@ aspect BackPositions {
 	    end = endPos;
 	}
 
-	syn int ASTNode.getStartLine() = beaver.Symbol.getLine(getStart());
-	syn int ASTNode.getStartColumn() = beaver.Symbol.getColumn(getStart());
-	syn int ASTNode.getEndLine() = beaver.Symbol.getLine(getEnd());
-	syn int ASTNode.getEndColumn() = beaver.Symbol.getColumn(getEnd()); 
+        public void ParametricDataTypeDecl.setPosition(int startPos, int endPos) {
+            if (getName().equals("Foo")) {
+                System.out.println("Foo setting position to" + startPos);
+            }
+            start = startPos;
+            end = endPos;
+        }
+
+	/**
+	 * Returns a position in a source where this symbol starts.
+	 *
+	 * @return packed line and column numbers
+	 */
+	public int ASTNode.getStart()
+	{
+		return start;
+	}
+
+	/**
+	 * Returns a position in a source where this symbol ends.
+	 * 
+	 * @return packed line and column numbers
+	 */
+	public int ASTNode.getEnd()
+	{
+		return end;
+	}
+
+
+	syn int ASTNode.getStartLine() = getLine(getStart());
+	syn int ASTNode.getStartColumn() = getColumn(getStart());
+	syn int ASTNode.getEndLine() = getLine(getEnd());
+	syn int ASTNode.getEndColumn() = getColumn(getEnd()); 
 }

@@ -7,7 +7,6 @@ package abs.frontend.parser;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.List;
 import abs.frontend.ast.Opt;
-import beaver.Symbol;
 
 public class SourcePosition {
     private final int pos;
@@ -23,15 +22,15 @@ public class SourcePosition {
     }
 
     public int getColumn() {
-        return Symbol.getColumn(pos);
+        return ASTNode.getColumn(pos);
     }
 
     public int getLine() {
-        return Symbol.getLine(pos);
+        return ASTNode.getLine(pos);
     }
 
     public static SourcePosition findPosition(ASTNode<?> node, int line, int col) {
-        return findPosition(node, Symbol.makePosition(line, col));
+        return findPosition(node, ASTNode.makePosition(line, col));
     }
 
     /**
@@ -95,10 +94,10 @@ public class SourcePosition {
     }
 
     private static boolean smaller(int pos, int pos2) {
-        int col = Symbol.getColumn(pos);
-        int line = Symbol.getLine(pos);
-        int col2 = Symbol.getColumn(pos2);
-        int line2 = Symbol.getLine(pos2);
+        int col = ASTNode.getColumn(pos);
+        int line = ASTNode.getLine(pos);
+        int col2 = ASTNode.getColumn(pos2);
+        int line2 = ASTNode.getLine(pos2);
 
         if (line < line2)
             return true;

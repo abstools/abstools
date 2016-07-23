@@ -4,7 +4,6 @@
  */
 package abs.common;
 
-import beaver.Symbol;
 import abs.frontend.ast.ASTNode;
 
 public class Position {
@@ -13,8 +12,8 @@ public class Position {
     private final String fileName;
 
     public Position(ASTNode<?> node) {
-        line = Symbol.getLine(node.getStart());
-        col = Symbol.getColumn(node.getStart());
+        line = ASTNode.getLine(node.getStart());
+        col = ASTNode.getColumn(node.getStart());
         fileName = calcFileName(node);
         assert fileName != null;
     }

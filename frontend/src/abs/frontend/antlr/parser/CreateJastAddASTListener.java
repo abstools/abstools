@@ -39,8 +39,8 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         // for a completely empty file, CompilationUnit.stop will be null
         int endline = (node.stop == null ? node.start : node.stop).getLine();
         int endcol = (node.stop == null ? node.start : node.stop).getCharPositionInLine();
-        value.setPosition(beaver.Symbol.makePosition(startline, startcol),
-                          beaver.Symbol.makePosition(endline, endcol));
+        value.setPosition(ASTNode.makePosition(startline, startcol),
+                          ASTNode.makePosition(endline, endcol));
         value.setFileName(this.filename);
         values.put(node, value);
         return value;

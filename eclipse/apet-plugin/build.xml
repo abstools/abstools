@@ -60,7 +60,6 @@
 		
         <path id="build.classpath">
            <pathelement location="${frontend.dir}/bin" />
-           <path location="${frontend.dir}/lib/beaver.jar"/>
            <fileset dir="${frontend.dir}/lib" includes="**/*.jar" />
            <fileset refid="eclipse-plugin-jars" />
 	   <pathelement location="${absplugin.dir}/bin" />
