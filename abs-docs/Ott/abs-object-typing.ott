@@ -135,6 +135,29 @@ defn
   ------------------- :: while
   G |- while b { sl }
 
+% TODO: check that all patterns p match e
+  G |- e : A
+  G |- sbrl
+  -------------------- :: case_statement
+  G |- case e { sbrl }
+
+defn
+  G |- sbrl :: :: sbrl :: ''
+    {{ com well-formed case statement branch list}} by
+
+  G |- sbr1 .. G |- sbrn
+  -------------------- :: case_statement_branch_list
+  G |- sbr1 .. sbrn
+
+defn
+  G |- sbr :: :: sbr :: ''
+    {{ com well-formed case statement branch }} by
+
+  G' |- sl
+  G' = G circ psubst ( p , A , G )
+  ------------------- :: case_statement_branch
+  G |- p => sl
+
 defn 
   G |- sl :: :: sl :: ''
     {{ com well-formed statement list }} by
