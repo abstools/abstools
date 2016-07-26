@@ -1,5 +1,5 @@
-.PHONY: help frontend vagrant-vm docker clean
-.DEFAULT_GOAL := help
+.PHONY: help default frontend vagrant-vm docker clean
+.DEFAULT_GOAL := default
 
 ifneq (,$(findstring /cygdrive/,$(PATH)))
     UNAME := Cygwin
@@ -19,7 +19,9 @@ ifeq (,$(DOCKER))
 	endif
 endif
 
-frontend:			## Build ABS compiler
+default: help frontend
+
+frontend:			## Build ABS compiler (default)
 	ant -buildfile frontend/build.xml dist
 	@echo "Finished."
 	@echo "absc command installed in frontend/bin/bash/"
