@@ -29,9 +29,9 @@ frontend:			## Build ABS compiler (default)
 manual:				## Build the ABS manual
 	mvn -B -f abs-docs clean install
 	@echo "Finished."
-	@echo "HTML: abs-docs/target/classes/docs/html/index.html"
-	@echo "PDF: abs-docs/target/classes/docs/pdf/index.pdf"
-	@echo "Epub3: abs-docs/target/classes/docs/epub3/index.epub"
+	@echo "HTML: abs-docs/target/html/index.html"
+	@echo "PDF: abs-docs/target//pdf/index.pdf"
+	@echo "Epub3: abs-docs/target/epub3/index.epub"
 
 vagrant:			## Build and start Vagrant virtual machine
 	vagrant up
