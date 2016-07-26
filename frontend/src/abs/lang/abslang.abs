@@ -671,6 +671,7 @@ interface DeploymentComponent {
     Unit incrementResources(Rat amount, Resourcetype rtype);
 
     [Atomic] String getName();
+		[Atomic] Unit setName(String name);
 
     [Atomic] Unit setProvider(CloudProvider provider);
     [Atomic] CloudProvider getProvider();
@@ -866,7 +867,10 @@ class CloudProvider(String name) implements CloudProvider {
             Map<Resourcetype, Rat> config = fromJust(mconfig);
             dc = this.prelaunchInstance(config);
         }
-        return dc;
+				// add the instancename string in the name description of the dc
+				String name = dc.getName();
+				dc.setName(name + "(" + instancename + ")");
+				return dc;
     }
 
     DeploymentComponent launchInstanceNamed(String instancename) {
@@ -1046,6 +1050,7 @@ implements DeploymentComponent {
     }
 
     [Atomic] String getName() { return description; }
+		[Atomic] Unit setName(String name) { description = name; }
     [Atomic] Time getCreationTime() { return creationTime; }
     [Atomic] Rat getStartupDuration() { return startupDuration; }
     [Atomic] Rat getShutdownDuration() { return shutdownDuration; }
