@@ -255,6 +255,8 @@ aspect TypeChecker {
             getInitBlock().checkLegalInit(e, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE);
         }
         for (CaseBranchStmt recoverBranch : getRecoverBranchList()) {
+            recoverBranch.getLeft().typeCheck(e, getModel().getExceptionType());
+            recoverBranch.getRight().typeCheck(e);
             recoverBranch.getRight().checkLegalInit(e, ErrorMessage.NOT_ALLOWED_IN_RECOVER_CODE);
         }
 
