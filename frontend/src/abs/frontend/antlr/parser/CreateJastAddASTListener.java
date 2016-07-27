@@ -184,6 +184,7 @@ new List<ModuleDecl>(),
                 // See below, we may be facing an UnresolvedTypeUse.
                 assert vt instanceof UnresolvedTypeUse : vt.getClass().getName();
                 vtresolved = new DataTypeUse(vt.getName(), vt.getAnnotations());
+                vtresolved.setPositionFromNode(vt);
             }
             ConstructorArg ca = new ConstructorArg(vtresolved, a.IDENTIFIER() != null ? new Opt(new Name(a.IDENTIFIER().getText())) : new Opt());
             setASTNodePosition(a, ca);
