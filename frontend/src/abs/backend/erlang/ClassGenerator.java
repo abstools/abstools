@@ -4,17 +4,15 @@
 package abs.backend.erlang;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+
+import abs.common.CompilerUtils;
 
 import abs.backend.common.CodeStream;
 import abs.backend.erlang.ErlUtil.Mask;
-import abs.frontend.ast.CaseBranchStmt;
-import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.FieldDecl;
-import abs.frontend.ast.MethodImpl;
-import abs.frontend.ast.MethodSig;
-import abs.frontend.ast.ParamDecl;
-import abs.frontend.ast.TypedVarOrFieldDecl;
+import abs.frontend.ast.*;
 
 import com.google.common.collect.Iterables;
 
@@ -243,5 +241,55 @@ public class ClassGenerator {
     private void generateExports() {
         ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0,get_all_state/1]).");
         ecs.println("-compile(export_all).");
+        ecs.println();
+
+        HashSet<MethodSig> callable_sigs = new HashSet<MethodSig>();
+        HashSet<InterfaceDecl> visited = new HashSet<InterfaceDecl>();
+        for (InterfaceTypeUse i : classDecl.getImplementedInterfaceUseList()) {
+            visited.add((InterfaceDecl)i.getDecl());
+        }
+
+        while (!visited.isEmpty()) {
+            InterfaceDecl id = visited.iterator().next();
+            visited.remove(id);
+            for (MethodSig ms : id.getBodyList()) {
+                if (ms.isRESTCallable()) {
+                    callable_sigs.add(ms);
+                }
+            }
+            for (InterfaceTypeUse i : id.getExtendedInterfaceUseList()) {
+                visited.add((InterfaceDecl)i.getDecl());
+            }
+        }
+
+
+        ecs.print("exported() -> #{ ");
+        boolean first = true;
+        for (MethodSig ms : callable_sigs) {
+            if (ms.isRESTCallable()) {
+                if (!first) ecs.print(", ");
+                first = false;
+                ecs.print("<<\"" + ms.getName() + "\">> => { ");
+                ecs.print("'m_" + ms.getName() + "'");
+                ecs.print(", ");
+                ecs.print("<<\"" + ms.getReturnType().getType().getQualifiedName() + "\">>");
+                ecs.print(", ");
+                ecs.print("[ ");
+                boolean innerfirst = true;
+                for (ParamDecl p : ms.getParamList()) {
+                    if (!innerfirst) ecs.print(", ");
+                    innerfirst = false;
+                    ecs.print("{ ");
+                    ecs.print("<<\"" + p.getName() + "\">>");
+                    ecs.print(", ");
+                    ecs.print("<<\"" + p.getAccess().getType().getQualifiedName() + "\">>");
+                    ecs.print(" }");
+                }
+                ecs.print("] ");
+                ecs.print("}");
+            }
+        }
+        ecs.println(" }.");
+        ecs.println();
     }
 }
