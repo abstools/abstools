@@ -24,7 +24,7 @@
 
 %% REST api: inhibit dying from gc while we're registered.
 -export([protect_object_from_gc/1, unprotect_object_from_gc/1]).
--export([get_whole_object_state/1]).
+-export([get_whole_object_state/1,get_all_method_info/1]).
 
 behaviour_info(callbacks) ->
     [{get_val_internal, 2},{set_val_internal,3},{init_internal,0}];
@@ -97,6 +97,9 @@ get_field_value(O=#object{ref=Ref}, Field) ->
 
 set_field_value(O=#object{ref=Ref}, Field, Value) ->
     gen_fsm:send_event(Ref,{O,set,Field,Value}).
+
+get_all_method_info(_O=#object{class=C,ref=_Ref}) ->
+    C:exported().
 
 %%Internal
 

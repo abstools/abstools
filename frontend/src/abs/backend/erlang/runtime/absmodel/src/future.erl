@@ -3,6 +3,7 @@
 -export([start/3]).
 -export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,value_available/6]).
 -export([task_started/3]).
+-export([get_for_rest/1]).
 -include_lib("abs_types.hrl").
 %%Future starts AsyncCallTask
 %%and stores result
@@ -122,6 +123,18 @@ await(Future, Cog=#cog{ref=CogRef}, Stack) ->
 task_started(Future, TaskRef, _Cookie) ->
     gen_fsm:send_event(Future, {task_ready, TaskRef}).
 
+get_for_rest(Future) ->
+    register_waiting_task(Future, self()),
+    receive {value_present, Future, _Calleecog1} -> ok
+    end,
+    case gen_fsm:sync_send_event(Future, get) of
+        %% Explicitly re-export internal representation since it's
+        %% deconstructed by modelapi:handle_object_call
+        {ok,Value}->
+            {ok, Value};
+        {error,Reason}->
+            {error, Reason}
+    end.
 
 register_waiting_task(Future, Task) ->
     gen_fsm:send_event(Future, {waiting, Task}).

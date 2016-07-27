@@ -17,6 +17,8 @@ init(Req, _Opts) ->
             <<"dcs">> -> handle_dcs(cowboy_req:path_info(Req));
             <<"o">> -> handle_object_query(cowboy_req:path_info(Req));
             <<"static_dcs">> -> handle_static_dcs(cowboy_req:path_info(Req));
+            <<"call">> -> handle_object_call(cowboy_req:path_info(Req),
+                                             cowboy_req:parse_qs(Req));
             _ -> {404, <<"text/plain">>, <<"Not found">>}
         end,
     Req2 = cowboy_req:reply(Status, [{<<"content-type">>, ContentType}],
@@ -50,6 +52,50 @@ handle_object_query([Objectname]) ->
              %% array, [{}] an empty JSON object)
              State2 = case State of [] -> [{}]; _ -> State end,
              { 200, <<"text/json">>, jsx:encode(State2)}
+    end.
+
+handle_object_call([Objectname], _Params) ->
+    Object=cog_monitor:lookup_object_from_rest_name(Objectname),
+    case Object of
+        none ->  {404, <<"text/plain">>, <<"Object not found">>};
+        _ ->
+            Result=lists:map(fun ({Name, {_, Return, Params}}) ->
+                                     #{ 'name' => Name,
+                                        'return' => Return,
+                                        'parameters' =>
+                                            lists:map(fun({PName, PType}) ->
+                                                              #{
+                                                           'name' => PName,
+                                                           'type' => PType
+                                                          }
+                                                      end,
+                                                      Params)
+                                      }
+                             end,
+                             maps:to_list(object:get_all_method_info(Object))),
+            { 200, <<"text/json">>, jsx:encode(Result) }
+    end;
+handle_object_call([Objectname, Methodname], _Params) ->
+    %% _Params is a list of 2-tuples of binaries
+    Object=cog_monitor:lookup_object_from_rest_name(Objectname),
+    case Object of
+        none -> {404, <<"text/plain">>, <<"Object not found">>};
+        _ ->
+            Methods=object:get_all_method_info(Object),
+            case maps:is_key(Methodname, Methods) of
+                false -> { 400, <<"text/plain">>, <<"Object does not support method">> };
+                true ->
+                    {Method, _ReturnType, _Params}=maps:get(Methodname, Methods),
+                    Future=future:start(Object, Method, [[]]),
+                    case future:get_for_rest(Future) of
+                        {ok, Result} ->
+                            { 200, <<"text/json">>,
+                              jsx:encode([{'result', abs_to_json(Result)}]) };
+                        {error, Error} ->
+                            { 500, <<"text/json">>,
+                              jsx:encode([{'error', abs_to_json(Error)}]) }
+                    end
+            end
     end.
 
 abs_to_json(true) -> true;
