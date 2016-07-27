@@ -244,9 +244,13 @@ aspect TypeCheckerExtension {
                 getModel().getTypeExt().checkOverride(ms,sig);
             }
         }
-		getModel().getTypeExt().checkClassDecl(this);
+        getModel().getTypeExt().checkClassDecl(this);
     }
-    
+
+    refine TypeChecker public void InterfaceDecl.typeCheck(SemanticConditionList s) {
+        getModel().getTypeExt().checkInterfaceDecl(this);
+    }
+
     refine TypeChecker public void FunctionDecl.typeCheck(SemanticConditionList s) {
         int size = s.getErrorCount();
         TypeChecker.FunctionDecl.typeCheck(s);

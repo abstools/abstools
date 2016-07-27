@@ -298,6 +298,13 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
 
     @Override
+    public void checkInterfaceDecl(InterfaceDecl decl) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkInterfaceDecl(decl);
+        }
+    }
+
+    @Override
     public void checkMethodImpl(MethodImpl method) {
         for (TypeSystemExtension tse : obs) {
             tse.checkMethodImpl(method);
