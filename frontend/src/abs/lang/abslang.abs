@@ -46,7 +46,7 @@ export Inv, Pre, Post;
 // Various annotations
 export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer;
 export COG, Plain, Final, Atomic;
-export RESTName;
+export RESTName, RESTCallable;
 
 // Functional breakpoints
 // TODO: find out where they are defined / used
@@ -544,8 +544,14 @@ data FinalAnnotation = Final;
 /**
  * Declare methods to be atomic, i.e., such methods must not
  * contain scheduling code and also no .get
- */ 
+ */
 data AtomicityAnnotation = Atomic;
+
+/**
+ * Declare methods to be callable from the REST API.
+ */
+data RESTCallableAnnotation = RESTCallable;
+
 
 // functional break point
 def A watch<A>(A val) = builtin;
@@ -556,7 +562,7 @@ def Unit println(String s) = builtin;
 def Unit print(String s) = builtin;
 def String readln() = builtin;
 
-// Annotation for making an object accessible via REST
+// Annotation for marking objects, interface methods as accessible via REST
 type RESTName = String;
 
 module ABS.StdLib.Exceptions;
