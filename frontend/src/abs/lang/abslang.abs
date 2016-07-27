@@ -1082,6 +1082,7 @@ type CogLocation = String;
  */
 module ABS.SmartDeploy;
 export *;
+import * from ABS.StdLib;
 
 // definitions for the cost annotations associated to classes
 data DeployParamSpecification = Req | List(Int) | Default(String) | User ;
