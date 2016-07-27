@@ -85,6 +85,7 @@ public enum ErrorMessage {
     DEPLOYMENT_COMPONENT_IGNORED("Deployment component annotations are not allowed for local objects."),
     EXPECTED_DC("Expected a Deployment component, but received %s."),
     WRONG_RESTNAME("Wrong type %s in RESTName annotation, should be a string."),
+    WRONG_RESTCALLABLE("Parameter %s: type %s not supported for calling from REST."),
     UNDECLARED_VARIABLE("Unknown variable: %s."),
     NOT_A_LEAF("Feature cannot have more than one group of sub-features: %s."),
     OPT_NOT_IN_ALLOF("The %s feature is optional but the cardinality of its parent is not 'allof'."),

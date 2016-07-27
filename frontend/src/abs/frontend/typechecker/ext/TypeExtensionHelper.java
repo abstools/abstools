@@ -29,6 +29,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         register(new CostAnnotationChecker(m));
         register(new SchedulerChecker(m));
         register(new MainBlockChecker(m));
+        register(new RestExportChecker(m));
     }
 
     public TypeSystemExtension getFirstRegisteredTypeExtension(Class<?> clazz) {
