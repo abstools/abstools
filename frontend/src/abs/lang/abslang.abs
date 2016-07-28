@@ -869,7 +869,8 @@ class CloudProvider(String name) implements CloudProvider {
         }
 				// add the instancename string in the name description of the dc
 				String name = dc.getName();
-				dc.setName(name + "(" + instancename + ")");
+				// FIXME: The assignment is a workaround for a bug in the Java code generation [stolz]
+				Unit u = dc.setName(name + "(" + instancename + ")");
 				return dc;
     }
 
