@@ -396,8 +396,6 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),getMethodSig().getTypes(),vars,true);
-    ecs.print(", Cog, ");
-    ecs.print(vars.toStack());
     ecs.println("),");
     ecs.print("future:get_blocking(TempFuture, Cog, ");
     ecs.print(vars.toStack());
@@ -411,8 +409,6 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),getMethodSig().getTypes(),vars,true);
-    ecs.print(", Cog, ");
-    ecs.print(vars.toStack());
     ecs.print(")");
   }
 

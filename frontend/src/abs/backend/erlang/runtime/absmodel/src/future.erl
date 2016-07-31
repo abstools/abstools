@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
--export([start/5]).
+-export([start/3]).
 -export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,value_available/6]).
 -export([task_started/3]).
 -include_lib("abs_types.hrl").
@@ -27,7 +27,7 @@
                 cookie=none
                }).
 
-start(Callee,Method,Params,_CurrentCog,_Stack) ->
+start(Callee,Method,Params) ->
     {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params], []),
     Ref.
 
