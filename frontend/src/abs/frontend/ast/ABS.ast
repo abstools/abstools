@@ -112,9 +112,6 @@ ModifyInterfaceModifier : InterfaceModifier ::= <Name> MethodSigModifier*;
 
 AddFieldModifier : Modifier ::= FieldDecl;
 RemoveFieldModifier : Modifier ::= FieldDecl;
-AddMethodModifier : Modifier ::= MethodImpl;
-RemoveMethodModifier : Modifier ::= MethodSig;
-ModifyMethodModifier : Modifier ::= MethodImpl;
 AddMethodSigModifier : MethodSigModifier ::= MethodSig;
 RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
 DeltaTraitModifier : Modifier ::= TraitOper;

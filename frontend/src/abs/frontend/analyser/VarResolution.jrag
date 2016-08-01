@@ -207,10 +207,6 @@ aspect VarResolution {
     eq ClassDecl.getMethod(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
         = locallookupVarOrFieldName(name,fieldOnly);
     
-    eq AddMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) //= null;
-        = locallookupVarOrFieldName(name,fieldOnly);
-    eq ModifyMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) //= null;
-        = locallookupVarOrFieldName(name,fieldOnly);
     eq TraitSetExpr.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) //= null;
         = mylookupVarOrFieldName(name,fieldOnly);
 

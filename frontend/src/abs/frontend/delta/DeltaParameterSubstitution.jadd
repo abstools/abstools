@@ -134,13 +134,6 @@ aspect DeltaParameterSubstitution {
     protected void RemoveFieldModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         getFieldDecl().applySubstitution(subst);
     }
-    protected void AddMethodModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
-        getMethodImpl().applySubstitution(subst);
-    }
-    protected void RemoveMethodModifier.applySubstitution(Map<String,Value> subst) {}
-    protected void ModifyMethodModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
-        getMethodImpl().applySubstitution(subst);
-    }
 
     protected void AddMethodSigModifier.applySubstitution(Map<String,Value> subst) {}
     protected void RemoveMethodSigModifier.applySubstitution(Map<String,Value> subst) {}

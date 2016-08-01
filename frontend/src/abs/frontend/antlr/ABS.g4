@@ -317,9 +317,6 @@ oo_modifier : 'adds' class_decl                            # DeltaAddClassModifi
 
 class_modifier_fragment : 'adds' field_decl  # DeltaAddFieldFragment
     | 'removes' field_decl                   # DeltaRemoveFieldFragment
-    | 'adds_old' method                          # DeltaAddMethodFragment
-    | 'modifies_old' method                      # DeltaModifyMethodFragment
-    | 'removes_old' methodsig                    # DeltaRemoveMethodFragment
     | trait_oper							 # DeltaTraitFragment
     ;
 

@@ -22,6 +22,8 @@ public class ProductLineTypeAnalysisHelper {
      * (ii) its product generation mapping is total, and
      * (iii) all its products are well-typed IFJ programs.
      */
+
+/*TODO rework this with the new delta/trait implementation
     public static void typeCheckPL(ProductLine pl, SemanticConditionList errors) {
 
         // Check strong unambiguity
@@ -34,7 +36,7 @@ public class ProductLineTypeAnalysisHelper {
 
 //        System.out.println(pfgt);
 
-    }
+    }*/
 
 
     public static DeltaTrie buildPFGT(ProductLine pl, SemanticConditionList errors) {
@@ -50,7 +52,6 @@ public class ProductLineTypeAnalysisHelper {
         return trie;
     }
 
-
     /*
      * A product line is strongly unambiguous if each set in the partition of
      * the delta modules specified in the product-line declaration is
@@ -59,6 +60,7 @@ public class ProductLineTypeAnalysisHelper {
      * the same class, and the modifications of the same class in different
      * delta modules in the same set have to be disjoint.
      */
+    /*TODO rework this with the new delta/trait implementation
     public static boolean isStronglyUnambiguous(ProductLine pl, SemanticConditionList l) {
 
         boolean result = true;
@@ -136,5 +138,5 @@ public class ProductLineTypeAnalysisHelper {
     public static void checkStrongUnambiguity(ProductLine pl, SemanticConditionList l) {
         isStronglyUnambiguous(pl, l);
     }
-
+*/
 }

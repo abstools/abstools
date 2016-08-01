@@ -95,30 +95,12 @@ public class ProgramTypeAbstraction {
             errors.add(new SPLTypeError(node, ErrorMessage.NO_FIELD_DECL, deltas, product, name));
     }
 
-    public void addMethod(String className, AddMethodModifier node) {
-        String name = node.getMethodImpl().getMethodSig().getName();
-        if (! classes.get(className).get("methods").contains(name))
-            addMethod(className, name);
-        else
-            errors.add(new SPLTypeError(node, ErrorMessage.DUPLICATE_METHOD_NAME, deltas, product, name));
-    }
+
     public void addMethod(String className, String methodName) {
         classes.get(className).get("methods").add(methodName);
     }
 
-    public void modifyMethod(String className, AddMethodModifier node) {
-        String name = node.getMethodImpl().getMethodSig().getName();
-        if (! classes.get(className).get("methods").contains(name))
-            errors.add(new SPLTypeError(node, ErrorMessage.NO_METHOD_IMPL, deltas, product, name));  // FIXME Error message probably not suitable
-    }
 
-    public void removeMethod(String className, RemoveMethodModifier node) {
-        String name = node.getMethodSig().getName();
-        if (classes.get(className).get("methods").contains(name))
-            classes.get(className).get("methods").remove(name);
-        else
-            errors.add(new SPLTypeError(node, ErrorMessage.NO_METHOD_IMPL, deltas, product, name));  // FIXME Error message probably not suitable
-    }
 
 
     // helper method

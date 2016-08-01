@@ -1114,30 +1114,7 @@ aspect GenerateJavaDynamic_DeltaModelling {
         stream.println("clsNew.removeField(\"" + JavaBackend.getVariableName(name) + "\");");
     }
     
-    public void AddMethodModifier.generateJavaDynamic(PrintStream stream) {
-        DynamicJavaGeneratorHelper.generateMethodImpl(stream, getMethodImpl());
-    }
-    public void AddMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
-        String mName = JavaBackend.getMethodName(getMethodImpl().getMethodSig().getName());
-        stream.println("clsNew.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
-    }
-    
-    public void RemoveMethodModifier.generateJavaDynamic(PrintStream stream) {
-        // nothing to generate
-    }
-    public void RemoveMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
-        String mName = JavaBackend.getMethodName(getMethodSig().getName());
-        stream.println("clsNew.removeMethod(\"" + mName + "\");");
-    }
-    
-    public void ModifyMethodModifier.generateJavaDynamic(PrintStream stream) {
-        DynamicJavaGeneratorHelper.generateMethodImpl(stream, getMethodImpl());
-    }
-    public void ModifyMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
-        String mName = JavaBackend.getMethodName(getMethodImpl().getMethodSig().getName());
-        stream.println("clsNew.removeMethod(\"" + mName + "\");");
-        stream.println("clsNew.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
-    }
+
     
     public void ProductDecl.generateJavaCodeDynamic(JavaCode.Package pkg, HashMap<String, ProductDecl> allProducts) 
             throws IOException, JavaCodeGenerationException {

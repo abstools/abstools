@@ -264,55 +264,7 @@ aspect DeltaModifierApplicator {
      */
     public abstract void Modifier.applyTo(ClassDecl cd) throws DeltaModellingException;
 
-    public void RemoveMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException {
-        MethodSig mysig = this.getMethodSig();
 
-        // in given ClassDecl: find MethodDecl that matches sig
-        int found = -1;
-        for (int i = 0; i < cd.getNumMethod(); i++) {
-            MethodSig sig = cd.getMethod(i).getMethodSig();
-            if (sig.matches(mysig)) {
-                found = i;
-                break;
-            }
-        }
-        if (found >= 0)
-            // remove MethodImpl from list
-            cd.getMethods().removeChild(found);
-        else
-            throw new DeltaModellingException(getDelta(), 
-                    " wants to remove method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
-    }
-
-    public void AddMethodModifier.applyTo(ClassDecl cd) {
-        assert cd != null;
-        assert getMethodImpl() != null;
-        MethodImpl method = getMethodImpl().treeCopyNoTransform();
-        method.setFileName(getMethodImpl().getFileName());
-        cd.addMethod(method);
-    }
-
-    public void ModifyMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException {
-        MethodSig mysig = getMethodImpl().getMethodSig();
-
-        // in given ClassDecl: find MethodDecl that matches sig
-        int found = -1;
-        for (int i = 0; i < cd.getNumMethod(); i++) {
-            MethodSig sig = cd.getMethod(i).getMethodSig();
-            if (sig.matches(mysig)) {
-                found = i;
-                break;
-            }
-        }
-        if (found >= 0) {
-            // replace MethodImpl
-            MethodImpl method = getMethodImpl().treeCopyNoTransform();
-            method.setFileName(getMethodImpl().getFileName());
-            cd.getMethods().setChild(method, found);
-        } else
-            throw new DeltaModellingWithNodeException(getMethodImpl().getMethodSig(), getDelta(), 
-                    " wants to modify method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
-    }
 
     public void RemoveFieldModifier.applyTo(ClassDecl cd) throws DeltaModellingException {
         FieldDecl myfield = getFieldDecl();

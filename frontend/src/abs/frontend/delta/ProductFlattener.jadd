@@ -59,8 +59,6 @@ aspect ProductFlattener {
         // substitute delta parameters
         pl.substituteDeltaParams(deltas, prod.getProduct());
 
-        // resolve original() calls
-        resolveOriginalCalls(deltas);
 
         if (verbose) {
             System.out.print("--- applying deltas to core");

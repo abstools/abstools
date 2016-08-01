@@ -242,16 +242,7 @@ aspect doOutlinePrinter {
     public void AddFieldModifier.doOutlinePrint(PrintWriter stream, String prefix) {
     }
 
-    public void AddMethodModifier.doOutlinePrint(PrintWriter stream, String prefix) {
-    }
-
-    public void ModifyMethodModifier.doOutlinePrint(PrintWriter stream, String prefix) {
-    }
-
     public void RemoveFieldModifier.doOutlinePrint(PrintWriter stream, String prefix) {
-    }
-
-    public void RemoveMethodModifier.doOutlinePrint(PrintWriter stream, String prefix) {
     }
 
     public void AddInterfaceModifier.doOutlinePrint(PrintWriter stream, String prefix) {

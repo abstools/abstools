@@ -99,22 +99,7 @@ aspect PrettyPrint {
     public void Modifier.prettyPrint(PrintWriter w, ABSFormatter f) {
         w.print(this.getClass().getSimpleName());        
     }
-
-    public void AddMethodModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
-        super.prettyPrint(w, f);
-        w.print("(" + this.getMethodImpl().getMethodSig() + ")");       
-    }
-
-    public void ModifyMethodModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
-        super.prettyPrint(w, f);
-        w.print("(" + this.getMethodImpl().getMethodSig() + ")");       
-    }
     
-    public void RemoveMethodModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
-        super.prettyPrint(w, f);
-        w.print("(" + this.getMethodSig() + ")");       
-    }
-
     public void AddFieldModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
         super.prettyPrint(w, f);
         w.print("(" + this.getFieldDecl() + ")");        
