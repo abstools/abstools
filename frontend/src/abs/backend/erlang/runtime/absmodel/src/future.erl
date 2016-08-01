@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
--export([start/3]).
+-export([start/3,start_for_rest/3]).
 -export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,value_available/6]).
 -export([task_started/3]).
 -export([get_for_rest/1]).
@@ -25,11 +25,16 @@
                 references=[],
                 value=none,
                 waiting_tasks=[],
-                cookie=none
+                cookie=none,
+                register_in_gc=true
                }).
 
 start(Callee,Method,Params) ->
-    {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params], []),
+    {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params,true], []),
+    Ref.
+
+start_for_rest(Callee, Method, Params) ->
+    {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params,false], []),
     Ref.
 
 value_available(Future, Status, Value, Sender, Cog, Cookie) ->
@@ -127,14 +132,17 @@ get_for_rest(Future) ->
     register_waiting_task(Future, self()),
     receive {value_present, Future, _Calleecog1} -> ok
     end,
-    case gen_fsm:sync_send_event(Future, get) of
-        %% Explicitly re-export internal representation since it's
-        %% deconstructed by modelapi:handle_object_call
-        {ok,Value}->
-            {ok, Value};
-        {error,Reason}->
-            {error, Reason}
-    end.
+    Result=case gen_fsm:sync_send_event(Future, get) of
+               %% Explicitly re-export internal representation since it's
+               %% deconstructed by modelapi:handle_object_call
+               {ok,Value}->
+                   {ok, Value};
+               {error,Reason}->
+                   {error, Reason}
+           end,
+    confirm_wait_unblocked(Future, self()),
+    Result.
+
 
 register_waiting_task(Future, Task) ->
     gen_fsm:send_event(Future, {waiting, Task}).
@@ -154,7 +162,7 @@ die(Future, Reason) ->
 %%Internal
 
 
-init([Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params]) ->
+init([Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params,RegisterInGC]) ->
     %%Start task
     process_flag(trap_exit, true),
     %% TODO: refactor callback protocol
@@ -162,19 +170,29 @@ init([Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params]) ->
     MonRef=monitor(process,CogRef),
     cog:add_async(Cog,async_call_task,[self(),Callee,Method|Params], Cookie),
     demonitor(MonRef),
-    gc:register_future(self()),
+    case RegisterInGC of
+        true -> gc:register_future(self());
+        false -> ok
+    end,
     {ok, starting, #state{calleetask=none,
                           calleecog=Cog,
                           references=gc:extract_references(Params),
                           value=none,
-                          waiting_tasks=[]}}.
+                          waiting_tasks=[],
+                          register_in_gc=RegisterInGC}}.
 
 
-handle_info({'DOWN', _ , process, _,Reason}, running, State) when Reason /= normal ->
-    gc:unroot_future(self()),
+handle_info({'DOWN', _ , process, _,Reason}, running, State=#state{register_in_gc=RegisterInGC}) when Reason /= normal ->
+    case RegisterInGC of
+        true -> gc:unroot_future(self());
+        false -> ok
+    end,
     {next_state, completed, State#state{value={error,error_transform:transform(Reason)}}};
-handle_info({'EXIT',_Pid,Reason}, running, State) ->
-    gc:unroot_future(self()),
+handle_info({'EXIT',_Pid,Reason}, running, State=#state{register_in_gc=RegisterInGC}) ->
+    case RegisterInGC of
+        true -> gc:unroot_future(self());
+        false -> ok
+    end,
     {next_state, completed, State#state{value={error,error_transform:transform(Reason)}}};
 handle_info(_Info, StateName, State) ->
     {next_state, StateName, State}.
@@ -227,12 +245,18 @@ running(_Event, _From, State) ->
 
 running({waiting, Task}, State=#state{waiting_tasks=WaitingTasks}) ->
     {next_state, running, State#state{waiting_tasks=[Task | WaitingTasks]}};
-running({completed, value, Result, Sender, SenderCog, Cookie}, State=#state{calleetask=Sender,calleecog=SenderCog})->
-    gc:unroot_future(self()),
+running({completed, value, Result, Sender, SenderCog, Cookie}, State=#state{calleetask=Sender,calleecog=SenderCog,register_in_gc=RegisterInGC})->
+    case RegisterInGC of
+        true -> gc:unroot_future(self());
+        false -> ok
+    end,
     {NextState, State1} = next_state_on_completion(State#state{cookie=Cookie}),
     {next_state, NextState, State1#state{value={ok,Result}, references=[]}};
-running({completed, exception, Result, Sender, SenderCog, Cookie}, State=#state{calleetask=Sender,calleecog=SenderCog})->
-    gc:unroot_future(self()),
+running({completed, exception, Result, Sender, SenderCog, Cookie}, State=#state{calleetask=Sender,calleecog=SenderCog,register_in_gc=RegisterInGC})->
+    case RegisterInGC of
+        true -> gc:unroot_future(self());
+        false -> ok
+    end,
     {NextState, State1} = next_state_on_completion(State#state{cookie=Cookie}),
     {next_state, NextState, State1#state{value={error,Result}, references=[]}};
 running(_Event, State) ->

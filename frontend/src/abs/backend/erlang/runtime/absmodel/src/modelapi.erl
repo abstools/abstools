@@ -75,7 +75,7 @@ handle_object_call([Objectname], _Params) ->
                              maps:to_list(object:get_all_method_info(Object))),
             { 200, <<"text/json">>, jsx:encode(Result) }
     end;
-handle_object_call([Objectname, Methodname], _Params) ->
+handle_object_call([Objectname, Methodname], Parameters) ->
     %% _Params is a list of 2-tuples of binaries
     Object=cog_monitor:lookup_object_from_rest_name(Objectname),
     case Object of
@@ -85,16 +85,51 @@ handle_object_call([Objectname, Methodname], _Params) ->
             case maps:is_key(Methodname, Methods) of
                 false -> { 400, <<"text/plain">>, <<"Object does not support method">> };
                 true ->
-                    {Method, _ReturnType, _Params}=maps:get(Methodname, Methods),
-                    Future=future:start(Object, Method, [[]]),
-                    case future:get_for_rest(Future) of
-                        {ok, Result} ->
-                            { 200, <<"text/json">>,
-                              jsx:encode([{'result', abs_to_json(Result)}]) };
-                        {error, Error} ->
-                            { 500, <<"text/json">>,
-                              jsx:encode([{'error', abs_to_json(Error)}]) }
+                    {Method, _ReturnType, ParamDecls}=maps:get(Methodname, Methods),
+                    {Success, ParamValues} = decode_parameters(Parameters, ParamDecls),
+                    case Success of
+                        ok ->
+                            Future=future:start_for_rest(Object, Method, ParamValues ++ [[]]),
+                            Result=case future:get_for_rest(Future) of
+                                {ok, Value} ->
+                                    { 200, <<"text/json">>,
+                                      jsx:encode([{'result', abs_to_json(Value)}]) };
+                                {error, Error} ->
+                                    { 500, <<"text/json">>,
+                                      jsx:encode([{'error', abs_to_json(Error)}]) }
+                            end,
+                            future:die(Future, ok),
+                            Result;
+                        error -> { 400, <<"text/plain">>, <<"Error during parameter decoding">> }
                     end
+            end
+    end.
+
+decode_parameters(Parameters, ParamDecls) ->
+    PValues = maps:from_list(Parameters),
+    try {ok, lists:map(fun({Name, Type}) ->
+                      decode_parameter(maps:get(Name, PValues), Type)
+              end, ParamDecls)}
+    catch _:_ ->
+            {error, null}
+    end.
+
+decode_parameter(Value, Type) ->
+    case Type of
+        <<"ABS.StdLib.Bool">> ->
+            case Value of
+                <<"True">> -> true;
+                <<"true">> -> true;
+                <<"False">> -> false;
+                <<"false">> -> false
+            end;
+        <<"ABS.StdLib.String">> ->
+            binary_to_list(Value);
+        <<"ABS.StdLib.Int">> ->
+            {Result, Rest} = string:to_integer(binary_to_list(Value)),
+            case Rest of
+                [] -> Result;
+                _ -> throw(badarg)
             end
     end.
 

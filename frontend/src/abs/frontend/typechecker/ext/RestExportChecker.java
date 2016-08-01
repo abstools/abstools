@@ -20,7 +20,9 @@ public class RestExportChecker extends DefaultTypeSystemExtension {
     }
 
     private boolean isParameterUsableFromREST(ParamDecl param) {
-        // relax this once we implement some argument marshalling
+        if (param.getType().isBoolType()) return true;
+        if (param.getType().isStringType()) return true;
+        if (param.getType().isIntType()) return true;
         return false;
     }
 
