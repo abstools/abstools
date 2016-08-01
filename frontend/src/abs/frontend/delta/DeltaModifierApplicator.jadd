@@ -458,26 +458,59 @@ public TraitExpr TraitModifyOpr.helperLeftMost(TraitExpr tt, ArrayList<TraitOper
   }
   
   private void TraitModifyOpr.replaceOriginal(ClassDecl cd, MethodImpl met, MethodImpl flattened) {
+            
+      ASTNode<ASTNode> n = this;
+      while(n != null && !(n instanceof DeltaDecl)){
+          n = n.getParent();
+      }
+      DeltaDecl delta  = (DeltaDecl)n;
+      if(delta != null){
+          String mName = met.getMethodSig().getName();
+          HashMap<String, MethodImpl> map = deltaMap.get(mName);
+          if(map == null){
+              map = new HashMap<>();
+              map.put("core", flattened);
+              deltas.push("core");
+              deltaMap.put(mName, map);
+          }
+      }
+      
       ArrayList<OriginalCall> list = new ArrayList<>();
       for (Stmt stmt : flattened.getBlock().getStmts()){
           collectOrig(list, stmt);
       }
       if(list.size() > 0){
           int i = cd.getNumMethod();
-          String name = met.getMethodSig().getName() + "_"+hashCode();
+          String name = met.getMethodSig().getName() + (delta == null? hashCode() : "_"+delta.getName())/*+ "_"+hashCode()*/;
           MethodSig sig = met.getMethodSig().treeCopyNoTransform();
           sig.setName(name);
           MethodImpl newMet = met.treeCopyNoTransform();
           newMet.setParent(met.getParent());
           newMet.setMethodSig(sig);
+
           sig.setParent(newMet);
           cd.getMethods().setChild(newMet, i);
+
+          if(delta != null){
+              String mName = met.getMethodSig().getName();
+              HashMap<String, MethodImpl> map = deltaMap.get(mName);
+              map.put(/*delta.getName()*/deltas.peek(), newMet);
+              map.put(delta.getName(), flattened);
+              deltas.push(delta.getName());
+          }
+          
           for (OriginalCall orig : list) {
-            orig.replaceByRealCall(newMet);
+            orig.replaceByRealCall(newMet, deltaMap.get(met.getMethodSig().getName()));
           }
       }
           
   }
+  
+  private static Stack<String> TraitModifyOpr.deltas = new Stack<>();
+  
+  private static HashMap<String, HashMap<String, MethodImpl>> TraitModifyOpr.deltaMap = new HashMap<>();
+          
+  
   
   private void TraitModifyOpr.collectOrig(ArrayList<OriginalCall> list, ASTNode<ASTNode> node){
       if(node instanceof OriginalCall){
