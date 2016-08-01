@@ -52,7 +52,10 @@ handle_object_query([Objectname]) ->
              %% array, [{}] an empty JSON object)
              State2 = case State of [] -> [{}]; _ -> State end,
              { 200, <<"text/json">>, jsx:encode(State2)}
-    end.
+    end;
+handle_object_query([]) ->
+    Names=cog_monitor:list_registered_rest_names(),
+    { 200, <<"text/json">>, jsx:encode(Names) }.
 
 handle_object_call([Objectname], _Params) ->
     Object=cog_monitor:lookup_object_from_rest_name(Objectname),
