@@ -161,7 +161,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
         model.applyDelta(delta);
         assertTrue(cls.getMethods().getNumChild() == 0);
     }
-    
+
     @Test
     public void modifyMethod() throws DeltaModellingException {
         Model model = assertParseOk(
@@ -186,8 +186,12 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
         
         // make sure the MethodImpl defined in the delta is now in the class
         ModifyClassModifier cm = (ModifyClassModifier) delta.getModuleModifier(0);
-        ModifyMethodModifier mm = (ModifyMethodModifier) cm.getModifier(0);
+        DeltaTraitModifier mm = (DeltaTraitModifier)cm.getModifier(0);
+        TraitModifyOpr opr = (TraitModifyOpr)mm.getTraitOper();
+        TraitSetExpr expr = (TraitSetExpr)opr.getTraitExpr();
+        
         // It's a bit of apples (FieldUse) vs. oranges (VarUse), but the strings look the same.
-        assertEquals(cls.getMethod(0).toString(),mm.getMethodImpl().toString());
+        assertEquals(cls.getMethod(0).toString(),expr.getMethodImpl(0).toString());
     }
+    
 }

@@ -14,8 +14,8 @@ import java.util.Arrays;
 import abs.frontend.ast.*;
 
 public class OriginalCallTest extends DeltaTest {
-
-    @Test
+    /*TODO rework this with the new delta/trait implementation as resolving original calls is now done during the application of deltas/traits
+    @Test/trait
     public void originalCall() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
@@ -269,4 +269,5 @@ public class OriginalCallTest extends DeltaTest {
         assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m$ORIGIN_core"));
         assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m$ORIGIN_D1"));
     }
+    */
 }

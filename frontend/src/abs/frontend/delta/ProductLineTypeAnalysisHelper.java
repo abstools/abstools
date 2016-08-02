@@ -5,6 +5,7 @@
 package abs.frontend.delta;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,7 +24,6 @@ public class ProductLineTypeAnalysisHelper {
      * (iii) all its products are well-typed IFJ programs.
      */
 
-/*TODO rework this with the new delta/trait implementation
     public static void typeCheckPL(ProductLine pl, SemanticConditionList errors) {
 
         // Check strong unambiguity
@@ -36,7 +36,7 @@ public class ProductLineTypeAnalysisHelper {
 
 //        System.out.println(pfgt);
 
-    }*/
+    }
 
 
     public static DeltaTrie buildPFGT(ProductLine pl, SemanticConditionList errors) {
@@ -51,6 +51,26 @@ public class ProductLineTypeAnalysisHelper {
         }
         return trie;
     }
+    
+    public static boolean doThings(ProductLine pl, SemanticConditionList l, String methodID, String prefix, String deltaID, Map<String, Map<String, String>> cache){
+        boolean result = true;
+        if (cache.containsKey(prefix)) {
+            if (cache.get(prefix).containsKey(methodID)) {
+                result = false;
+                l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, cache.get(prefix).get(methodID), prefix + ", method " + methodID));
+            } else if (cache.get(prefix).containsKey("CLASS")) {
+                result = false;
+                l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, cache.get(prefix).get("CLASS"), prefix));
+            } else {
+                cache.get(prefix).put(methodID, deltaID);
+            }
+        } else {
+            cache.put(prefix, new HashMap<String, String>());
+            cache.get(prefix).put(methodID, deltaID);
+        }
+        return result;
+        
+    }
 
     /*
      * A product line is strongly unambiguous if each set in the partition of
@@ -60,7 +80,6 @@ public class ProductLineTypeAnalysisHelper {
      * the same class, and the modifications of the same class in different
      * delta modules in the same set have to be disjoint.
      */
-    /*TODO rework this with the new delta/trait implementation
     public static boolean isStronglyUnambiguous(ProductLine pl, SemanticConditionList l) {
 
         boolean result = true;
@@ -87,33 +106,26 @@ public class ProductLineTypeAnalysisHelper {
 
                 for (ModuleModifier moduleModifier : delta.getModuleModifiers()) {
                     if (moduleModifier instanceof ModifyClassModifier) {
-                        String methodID;
+                        //String methodID;
                         String prefix = ((ClassModifier) moduleModifier).qualifiedName();
 
                         for (Modifier mod : ((ModifyClassModifier) moduleModifier).getModifiers()) {
-                            if (mod instanceof AddMethodModifier)
+                            /*if (mod instanceof AddMethodModifier)
                                 methodID = ((AddMethodModifier) mod).getMethodImpl().getMethodSig().getName();
                             else if (mod instanceof RemoveMethodModifier)
                                 methodID = ((RemoveMethodModifier) mod).getMethodSig().getName();
                             else if (mod instanceof ModifyMethodModifier)
                                 methodID = ((ModifyMethodModifier) mod).getMethodImpl().getMethodSig().getName();
                             else
-                                continue;
-
-                            if (cache.containsKey(prefix)) {
-                                if (cache.get(prefix).containsKey(methodID)) {
-                                    result = false;
-                                    l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, cache.get(prefix).get(methodID), prefix + ", method " + methodID));
-                                } else if (cache.get(prefix).containsKey("CLASS")) {
-                                    result = false;
-                                    l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, cache.get(prefix).get("CLASS"), prefix));
-                                } else {
-                                    cache.get(prefix).put(methodID, deltaID);
+                                continue;*/
+                            if(mod instanceof DeltaTraitModifier){
+                                HashSet<String> methodIDSet = new HashSet<>();
+                                ((DeltaTraitModifier) mod).collectMethodIDs(methodIDSet, model);                               
+                                for (String methodID : methodIDSet) {
+                                    result = result | doThings(pl, l, methodID, prefix, deltaID, cache);                                    
                                 }
-                            } else {
-                                cache.put(prefix, new HashMap<String, String>());
-                                cache.get(prefix).put(methodID, deltaID);
                             }
+                            
                         }
                     } else if (moduleModifier instanceof AddClassModifier
                             || moduleModifier instanceof RemoveClassModifier) {
@@ -138,5 +150,5 @@ public class ProductLineTypeAnalysisHelper {
     public static void checkStrongUnambiguity(ProductLine pl, SemanticConditionList l) {
         isStronglyUnambiguous(pl, l);
     }
-*/
+
 }

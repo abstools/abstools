@@ -60,7 +60,6 @@ public class VarResolutionTest extends DeltaTest {
         FieldDecl fy = (FieldDecl) c.locallookupVarOrFieldName("y", true);
         assertThat(fy.getInitExp() , instanceOf(FieldUse.class));
     }
-
     @Test
     public void fromAddMethodModifierToCoreTest() {
         Model model = assertParseOk(
@@ -75,8 +74,10 @@ public class VarResolutionTest extends DeltaTest {
         );
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(0);
-        AddMethodModifier mod = (AddMethodModifier) mmod.getModifier(0);
-        ReturnStmt stmt = (ReturnStmt) mod.getMethodImpl().getBlock().getStmt(0);
+        DeltaTraitModifier mod = (DeltaTraitModifier) mmod.getModifier(0);
+        TraitAddOpr opr =  (TraitAddOpr)mod.getTraitOper();
+        TraitSetExpr expr = (TraitSetExpr)opr.getTraitExpr();
+        ReturnStmt stmt = (ReturnStmt) expr.getMethodImpl(0).getBlock().getStmt(0);
         assertThat(stmt.getRetExp(), instanceOf(FieldUse.class));
     }
 
@@ -95,8 +96,10 @@ public class VarResolutionTest extends DeltaTest {
                 );
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(0);
-        ModifyMethodModifier mod = (ModifyMethodModifier) mmod.getModifier(0);
-        ReturnStmt stmt = (ReturnStmt) mod.getMethodImpl().getBlock().getStmt(0);
+        DeltaTraitModifier mod = (DeltaTraitModifier) mmod.getModifier(0);
+        TraitModifyOpr opr =  (TraitModifyOpr)mod.getTraitOper();
+        TraitSetExpr expr = (TraitSetExpr)opr.getTraitExpr();
+        ReturnStmt stmt = (ReturnStmt) expr.getMethodImpl(0).getBlock().getStmt(0);
         assertThat(stmt.getRetExp(), instanceOf(FieldUse.class));
     }
     
@@ -113,11 +116,13 @@ public class VarResolutionTest extends DeltaTest {
                 );
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(0);
-        AddMethodModifier mod = (AddMethodModifier) mmod.getModifier(1);
-        ReturnStmt stmt = (ReturnStmt) mod.getMethodImpl().getBlock().getStmt(0);
+        DeltaTraitModifier mod = (DeltaTraitModifier) mmod.getModifier(1);
+        TraitAddOpr opr =  (TraitAddOpr)mod.getTraitOper();
+        TraitSetExpr expr = (TraitSetExpr)opr.getTraitExpr();
+        ReturnStmt stmt = (ReturnStmt) expr.getMethodImpl(0).getBlock().getStmt(0);
         assertThat(stmt.getRetExp(), instanceOf(FieldUse.class));
     }
-    
+
     @Test
     public void fromModifierToOtherModifyClassModifierTest() {
         Model model = assertParseOk(
@@ -133,8 +138,10 @@ public class VarResolutionTest extends DeltaTest {
                 );
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(1);
-        AddMethodModifier mod = (AddMethodModifier) mmod.getModifier(0);
-        ReturnStmt stmt = (ReturnStmt) mod.getMethodImpl().getBlock().getStmt(0);
+        DeltaTraitModifier mod = (DeltaTraitModifier) mmod.getModifier(0);
+        TraitAddOpr opr =  (TraitAddOpr)mod.getTraitOper();
+        TraitSetExpr expr = (TraitSetExpr)opr.getTraitExpr();
+        ReturnStmt stmt = (ReturnStmt) expr.getMethodImpl(0).getBlock().getStmt(0);
         assertThat(stmt.getRetExp(), instanceOf(FieldUse.class));
     }
 
@@ -152,8 +159,10 @@ public class VarResolutionTest extends DeltaTest {
                 );
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(1);
-        AddMethodModifier mod = (AddMethodModifier) mmod.getModifier(0);
-        ReturnStmt stmt = (ReturnStmt) mod.getMethodImpl().getBlock().getStmt(0);
+        DeltaTraitModifier mod = (DeltaTraitModifier) mmod.getModifier(0);
+        TraitAddOpr opr =  (TraitAddOpr)mod.getTraitOper();
+        TraitSetExpr expr = (TraitSetExpr)opr.getTraitExpr();
+        ReturnStmt stmt = (ReturnStmt) expr.getMethodImpl(0).getBlock().getStmt(0);
         assertThat(stmt.getRetExp(), instanceOf(FieldUse.class));
     }
 
@@ -171,8 +180,10 @@ public class VarResolutionTest extends DeltaTest {
         );
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(0);
-        AddMethodModifier mod = (AddMethodModifier) mmod.getModifier(0);
-        ReturnStmt stmt = (ReturnStmt) mod.getMethodImpl().getBlock().getStmt(1);
+        DeltaTraitModifier mod = (DeltaTraitModifier) mmod.getModifier(0);
+        TraitAddOpr opr =  (TraitAddOpr)mod.getTraitOper();
+        TraitSetExpr expr = (TraitSetExpr)opr.getTraitExpr();
+        ReturnStmt stmt = (ReturnStmt) expr.getMethodImpl(0).getBlock().getStmt(1);
         assertThat(stmt.getRetExp(), instanceOf(VarUse.class));
     }
     
