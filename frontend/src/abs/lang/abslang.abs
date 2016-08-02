@@ -1092,7 +1092,7 @@ export *;
 import * from ABS.StdLib;
 
 // definitions for the cost annotations associated to classes
-data DeployParamSpecification = Req | List(Int) | Default(String) | User ;
+data DeployParamSpecification = Req | List(Int) | Default(String) | User | OptList(String) ;
 data DeployScenarioElement = MaxUse(Int) |
 	Cost(String, Int) |
 	Param(String, DeployParamSpecification) |
