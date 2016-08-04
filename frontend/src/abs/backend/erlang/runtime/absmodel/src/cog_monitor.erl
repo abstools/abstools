@@ -127,7 +127,7 @@ init([Main,Keepalive])->
                idle=gb_sets:empty(),
                clock_waiting=[],
                dcs=[],
-               registered_objects=gb_trees:empty(),
+               registered_objects=maps:new(),
                keepalive_after_clock_limit=Keepalive}}.
 
 handle_call({keep_alive, Class}, _From, State=#state{keepalive_after_clock_limit=KeepAlive}) ->
@@ -205,21 +205,21 @@ handle_call({dc_died, O}, _From, State=#state{dcs=DCs}) ->
 handle_call(get_dcs, _From, State=#state{dcs=DCs}) ->
     {reply, DCs, State};
 handle_call(all_registered_names, _From, State=#state{registered_objects=Objects}) ->
-    {reply, gb_trees:keys(Objects), State};
+    {reply, maps:keys(Objects), State};
 handle_call({register_object, Object, Key}, _From, State=#state{registered_objects=Objects}) ->
     Name=list_to_binary(Key),
     object:protect_object_from_gc(Object),
-    NewObjects=case gb_trees:lookup(Name, Objects) of
-                   {value, OldObject} ->
+    NewObjects=case maps:get(Name, Objects,none) of
+                   none -> maps:put(Name, Object, Objects);
+                   OldObject ->
                        object:unprotect_object_from_gc(OldObject),
-                       gb_trees:update(Name, Object, Objects);
-                   none -> gb_trees:insert(Name, Object, Objects)
+                       maps:update(Name, Object, Objects)
                end,
     {reply, ok, State#state{registered_objects=NewObjects}};
 handle_call({lookup_object, Name}, _From, State=#state{registered_objects=Objects}) ->
-    Result=case gb_trees:lookup(Name, Objects) of
-               {value, Object} -> Object;
-               none -> none
+    Result=case maps:get(Name, Objects, none) of
+               none -> none;
+               Object -> Object
            end,
     {reply, Result, State};
 handle_call(Request, _From, State)->
