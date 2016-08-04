@@ -22,7 +22,7 @@
 -export([new_dc/1, dc_died/1, get_dcs/0]).
 
 %% the REST api
--export([register_object_with_rest_name/2,lookup_object_from_rest_name/1,list_registered_rest_names/0]).
+-export([register_object_with_rest_name/2,lookup_object_from_rest_name/1,list_registered_rest_names/0,list_registered_rest_objects/0]).
 
 %% gen_server interface
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -116,6 +116,8 @@ lookup_object_from_rest_name(Name) ->
 list_registered_rest_names() ->
     gen_server:call({global, cog_monitor}, all_registered_names).
 
+list_registered_rest_objects() ->
+    gen_server:call({global, cog_monitor}, all_registered_objects).
 
 %% gen_server callbacks
 
@@ -206,6 +208,8 @@ handle_call(get_dcs, _From, State=#state{dcs=DCs}) ->
     {reply, DCs, State};
 handle_call(all_registered_names, _From, State=#state{registered_objects=Objects}) ->
     {reply, maps:keys(Objects), State};
+handle_call(all_registered_objects, _From, State=#state{registered_objects=Objects}) ->
+    {reply, maps:values(Objects), State};
 handle_call({register_object, Object, Key}, _From, State=#state{registered_objects=Objects}) ->
     Name=list_to_binary(Key),
     object:protect_object_from_gc(Object),
