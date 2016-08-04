@@ -679,7 +679,6 @@ interface DeploymentComponent {
     [Atomic] String getName();
 		[Atomic] Unit setName(String name);
 
-    [Atomic] Unit setProvider(CloudProvider provider);
     [Atomic] CloudProvider getProvider();
     [Atomic] Time getCreationTime();
     [Atomic] Rat getStartupDuration();
@@ -694,6 +693,10 @@ interface DeploymentComponent {
     // Shut down deployment component.  Semantics of job termination / object
     // invalidation upon shutdown are currently under discussion.
     Bool shutdown();
+}
+
+interface DeploymentComponentForCloudProvider extends DeploymentComponent {
+    [Atomic] Unit setProvider(CloudProvider provider);
 }
 
 interface CloudProvider {
@@ -770,12 +773,15 @@ class CloudProvider(String name) implements CloudProvider {
     DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
         Bool mightNeedToStartAccounting = emptySet(launchedInstances);
 
-        DeploymentComponent result = new DeploymentComponent(name + "-"
+        DeploymentComponentForCloudProvider result = new DeploymentComponent(name + "-"
             + toString(nextInstanceId), d);
+        result!setProvider(this);
         nextInstanceId = nextInstanceId + 1;
         Rat startup_duration = await result!getStartupDuration();
-        launchedInstances = insertElement(launchedInstances, result);
-        result!setProvider(this);
+        // Work around a bug in the type system: upcasting in `insertElement'
+        // does not work although it should
+        DeploymentComponent stupidTypeSystem = result;
+        launchedInstances = insertElement(launchedInstances, stupidTypeSystem);
         // Start accounting after adding new machine, before waiting for
         // it to start up
         if (mightNeedToStartAccounting) this!startAccounting();
@@ -894,7 +900,7 @@ class CloudProvider(String name) implements CloudProvider {
 
 
 class DeploymentComponent (String description, Map<Resourcetype, Rat> initconfig)
-implements DeploymentComponent {
+implements DeploymentComponentForCloudProvider {
     // This class has fields that reflect execution state and resource
     // consumption; they are read / changed by the underlying runtime
     // system(s).  Be careful when renaming fields!
@@ -1025,6 +1031,8 @@ implements DeploymentComponent {
     [Atomic] Unit setProvider(CloudProvider provider) {
         this.cloudprovider = provider;
     }
+    [Atomic] DeploymentComponent convertToDC() { return this; }
+
     [Atomic] CloudProvider getProvider() { return cloudprovider; }
     Bool acquire() {
         Bool result = True;
