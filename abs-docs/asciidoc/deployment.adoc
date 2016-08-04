@@ -21,6 +21,73 @@ All language identifiers described in this section reside in the `ABS.DC`
 module.
 
 
+
+[[sec:cloudprovider]]
+=== The CloudProvider API
+
+Deployment components are usually managed by a _Cloud Provider_ instance.  The
+Cloud Provider implements the life cycle shown in Figure
+<<fig-instance-lifecycle>>.  A deployment component is _managed_ by a cloud
+provider if it was created via one of the `launchInstance` methods.
+
+[[fig-instance-lifecycle]]
+image::Cloud-API.png[width=475,height=727,title="Deployment Component lifecycle",alt="Deployment Component lifecycle"]
+
+The operations supported by deployment components during their lifecycle are
+summarized in Table <<table-dc-lifecycle>>.
+
+[[table-dc-lifecycle]]
+[options="header"]
+|====================
+| State                | Starting | Running | Terminating | Terminated
+| Create objects       | delayed  | yes     | no          | no
+| Invoke methods       | delayed  | yes     | no          | no
+| Process keep running | -        | yes     | yes/no      | -
+|====================
+
+
+
+==== Datatypes and Constructors
+
+The type for cloud provider instances is `ABS.DC.CloudProvider`.
+
+Cloud provider instances are created with a `new CloudProvider(String name)`
+expression.  It is not mandatory but recommended that each cloud provider
+instance has a unique name.
+
+It is recommended to call `setInstanceDescriptions` once after creating a
+cloud provider to set the list of named instance types that this cloud
+provider offers.
+
+
+==== Methods
+
+DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d);
+
+DeploymentComponent launchInstance(Map<Resourcetype, Rat> description);
+
+Bool acquireInstance(DeploymentComponent instance);
+
+Bool releaseInstance(DeploymentComponent instance);
+
+Bool killInstance(DeploymentComponent instance);
+
+
+[Atomic] Rat getAccumulatedCost();
+
+[Atomic] Unit shutdown();
+
+
+[Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions);
+
+[Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions();
+
+DeploymentComponent prelaunchInstanceNamed(String instancename);
+
+DeploymentComponent launchInstanceNamed(String instancename);
+
+
+
 [[sec:deployment-components]]
 === Deployment Components
 
@@ -262,39 +329,3 @@ will fail.
 
 <5> Executing this method call consumes 5 Bandwidth resources.  Since `dc` has
 10 bandwidth per time unit, the message will be transported instantly.
-
-[[sec:cloudprovider]]
-=== The CloudProvider API
-
-`(pre)launchInstance` might have a delay, the others are instantaneous.
-`launchInstance` might hand out an already-running instance if it has been
-released; in this case there will be no delay.
-
-`acquireInstance`, `releaseInstance` are called from deployment components.
-`launchInstance` does the equivalent of `acquireInstance`.
-
-
-Instance descriptions.  Call `setInstanceDescriptions` with a map of (name ->
-resources) information.  Then, `(pre)launchInstanceNamed` returns a deployment
-component with the specified resources, or `null` if the given name could not
-be found.  The resulting deployment components are then handled as normal
-(`acquireInstance`/`releaseInstance`/`killInstance`).
-
-
-----
-interface CloudProvider {
-    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d);
-    DeploymentComponent launchInstance(Map<Resourcetype, Rat> description);
-    Bool acquireInstance(DeploymentComponent instance);
-    Bool releaseInstance(DeploymentComponent instance);
-    Bool killInstance(DeploymentComponent instance);
-
-    [Atomic] Rat getAccumulatedCost();
-    [Atomic] Unit shutdown();
-
-    [Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions);
-    [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions();
-    DeploymentComponent prelaunchInstanceNamed(String instancename);
-    DeploymentComponent launchInstanceNamed(String instancename);
-}
-----
