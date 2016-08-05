@@ -154,12 +154,12 @@ collecting_state_next(State=#state{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, 
     case gb_sets:is_empty(RunningCogs) of
         true ->
             gcstats(Log, mark),
-            Black=mark([], ordsets:from_list(gb_sets:to_list(gb_sets:union(Cogs, RootFutures)))),
             Exported=gb_sets:from_list(
-                       lists:map(fun(Ref) -> {object, Ref} end,
+                       lists:map(fun(#object{ref=Ref}) -> {object, Ref} end,
                                  cog_monitor:list_registered_rest_objects())),
+            Black=mark([], ordsets:from_list(gb_sets:to_list(gb_sets:union([Cogs, RootFutures, Exported])))),
             gcstats(Log, sweep),
-            StateAfterSweep=sweep(State, gb_sets:union(Exported, gb_sets:from_ordset(Black))),
+            StateAfterSweep=sweep(State, gb_sets:from_ordset(Black)),
             {idle, StateAfterSweep};
         false ->
             {collecting, State}
