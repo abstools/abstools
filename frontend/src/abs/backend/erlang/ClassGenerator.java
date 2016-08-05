@@ -77,11 +77,11 @@ public class ClassGenerator {
                 ecs.println("Recovered = try 'recover'(O, Error) catch _:RecoverError -> false end,");
                 ecs.println("case Recovered of");
                 ecs.incIndent().println("true -> exit(Error);");
-                ecs.println("false -> object:die(O, Error)");
+                ecs.println("false -> object:die(O, Error), exit(Error)");
                 ecs.decIndent().println("end");
                 ecs.decIndent();
             } else {
-                ecs.incIndent().println("object:die(O, Error)");
+                ecs.incIndent().println("object:die(O, Error), exit(Error)");
                 ecs.decIndent();
             }
             ecs.decIndent().println("end.");
