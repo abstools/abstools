@@ -218,7 +218,7 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, ta
                 true -> exit(By,Reason);
                 false -> ok
             end,
-            {stop,normal,ok,S#state{alive=false}}
+            {stop,{shutdown, Reason},ok,S#state{alive=false}}
     end;
 handle_sync_event(protect_from_gc, _From, StateName, S) ->
     {reply, ok, StateName, S#state{protect_from_gc=true}};
@@ -238,7 +238,7 @@ handle_event(unprotect_from_gc, StateName, State=#state{class=C,tasks=Tasks,cog=
             %% FIXME: check if cog_monitor needs updating here wrt task lists etc.
             [ exit(T,normal) ||T<-gb_sets:to_list(Tasks)],
             cog:dec_ref_count(Cog),
-            {stop,normal,ok,State}
+            {stop,{shutdown, unprotected},ok,State}
     end;
 handle_event(_Event,_StateName,State)->
     {stop,not_implemented,State}.
@@ -248,8 +248,10 @@ handle_info({'DOWN', _MonRef, process, TaskRef, _Reason} ,StateName,S=#state{tas
     {next_state,StateName,S#state{tasks=gb_sets:del_element(TaskRef, Tasks)}}.
 
 
-
-terminate(_Reason,_StateName,_Data)->
+terminate({shutdown, gc}, _StateName, _Data) ->
+    ok;
+terminate({shutdown, _Reason},_StateName,_Data)->
+    gc:unregister_object(self()),
     ok.
 code_change(_OldVsn,_StateName,_Data,_Extra)->
     not_implemented.
