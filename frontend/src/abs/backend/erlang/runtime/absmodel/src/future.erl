@@ -183,9 +183,17 @@ init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Register
                                   waiting_tasks=[],
                                   register_in_gc=RegisterInGC}};
         false ->
-            {ok, completed, #state{value={error, dataObjectDeadException},
-                                   calleecog=Cog}}
-    end.
+            {ok, completed, #state{calleetask=none,
+                                   value={error, dataObjectDeadException},
+                                   calleecog=Cog,
+                                   register_in_gc=RegisterInGC}}
+    end;
+init([_Callee=null,_Method,_Params,RegisterInGC]) ->
+    {ok, completed, #state{value={error, dataNullPointerException},
+                           calleecog=none,
+                           calleetask=none,
+                           register_in_gc=RegisterInGC}}.
+
 
 
 handle_info({'DOWN', _ , process, _,Reason}, running, State=#state{register_in_gc=RegisterInGC}) when Reason /= normal ->
