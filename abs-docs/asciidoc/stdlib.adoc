@@ -305,13 +305,15 @@ AssertionFailException::
 PatternMatchFailException::
     The pattern matching was not complete. In other words all c catch-all clause
 NullPointerException::
-    A method was called on a null object
+    A method was called on `null`
 StackOverflowException::
     The calling stack has reached its limit (system error)
 HeapOverflowException::
     The memory heap is full (system error)
 KeyboardInterruptException::
     The user pressed a key sequence to interrupt the running ABS program
+ObjectDeadException::
+    A method was called on a dead (crashed) object
 
 
 [[type-list]]

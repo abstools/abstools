@@ -162,24 +162,30 @@ die(Future, Reason) ->
 %%Internal
 
 
-init([Callee=#object{cog=Cog=#cog{ref=CogRef}},Method,Params,RegisterInGC]) ->
-    %%Start task
-    process_flag(trap_exit, true),
-    %% TODO: refactor callback protocol
-    Cookie={future, Cog, Callee}, % magic, together with cog:start_new_task :(
-    MonRef=monitor(process,CogRef),
-    cog:add_async(Cog,async_call_task,[self(),Callee,Method|Params], Cookie),
-    demonitor(MonRef),
-    case RegisterInGC of
-        true -> gc:register_future(self());
-        false -> ok
-    end,
-    {ok, starting, #state{calleetask=none,
-                          calleecog=Cog,
-                          references=gc:extract_references(Params),
-                          value=none,
-                          waiting_tasks=[],
-                          register_in_gc=RegisterInGC}}.
+init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,RegisterInGC]) ->
+    case is_process_alive(Object) of
+        true ->
+            %%Start task
+            process_flag(trap_exit, true),
+            %% TODO: refactor callback protocol
+            Cookie={future, Cog, Callee}, % magic, together with cog:start_new_task :(
+            MonRef=monitor(process,CogRef),
+            cog:add_async(Cog,async_call_task,[self(),Callee,Method|Params], Cookie),
+            demonitor(MonRef),
+            case RegisterInGC of
+                true -> gc:register_future(self());
+                false -> ok
+            end,
+            {ok, starting, #state{calleetask=none,
+                                  calleecog=Cog,
+                                  references=gc:extract_references(Params),
+                                  value=none,
+                                  waiting_tasks=[],
+                                  register_in_gc=RegisterInGC}};
+        false ->
+            {ok, completed, #state{value={error, dataObjectDeadException},
+                                   calleecog=Cog}}
+    end.
 
 
 handle_info({'DOWN', _ , process, _,Reason}, running, State=#state{register_in_gc=RegisterInGC}) when Reason /= normal ->

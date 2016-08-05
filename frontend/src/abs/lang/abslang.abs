@@ -578,6 +578,7 @@ exception NullPointerException;
 exception StackOverflowEcxeption;
 exception HeapOverflowException;
 exception KeyboardInterruptException;
+exception ObjectDeadException;
 
 
 /**
