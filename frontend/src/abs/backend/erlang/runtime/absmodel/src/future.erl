@@ -130,8 +130,8 @@ task_started(Future, TaskRef, _Cookie) ->
 
 get_for_rest(Future) ->
     register_waiting_task(Future, self()),
-    receive {value_present, Future, _Calleecog1} -> ok
-    end,
+    receive {value_present, Future, _Calleecog1} -> ok end,
+    confirm_wait_unblocked(Future, self()),
     Result=case gen_fsm:sync_send_event(Future, get) of
                %% Explicitly re-export internal representation since it's
                %% deconstructed by modelapi:handle_object_call
@@ -140,7 +140,6 @@ get_for_rest(Future) ->
                {error,Reason}->
                    {error, Reason}
            end,
-    confirm_wait_unblocked(Future, self()),
     Result.
 
 
@@ -196,13 +195,15 @@ init([_Callee=null,_Method,_Params,RegisterInGC]) ->
 
 
 
-handle_info({'DOWN', _ , process, _,Reason}, running, State=#state{register_in_gc=RegisterInGC}) when Reason /= normal ->
+handle_info({'DOWN', _ , process, _,Reason}, running, State=#state{register_in_gc=RegisterInGC, waiting_tasks=WaitingTasks, calleecog=CalleeCog}) when Reason /= normal ->
+    lists:map(fun (Task) -> Task ! {value_present, self(), CalleeCog} end, WaitingTasks),
     case RegisterInGC of
         true -> gc:unroot_future(self());
         false -> ok
     end,
     {next_state, completed, State#state{value={error,error_transform:transform(Reason)}}};
-handle_info({'EXIT',_Pid,Reason}, running, State=#state{register_in_gc=RegisterInGC}) ->
+handle_info({'EXIT',_Pid,Reason}, running, State=#state{register_in_gc=RegisterInGC, waiting_tasks=WaitingTasks, calleecog=CalleeCog}) ->
+    lists:map(fun (Task) -> Task ! {value_present, self(), CalleeCog} end, WaitingTasks),
     case RegisterInGC of
         true -> gc:unroot_future(self());
         false -> ok
