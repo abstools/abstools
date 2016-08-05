@@ -202,8 +202,8 @@ active({#object{class=Class},set,Field,Val},S=#state{class=Class,fields=IS}) ->
     {next_state,active,S#state{fields=IS1}}.
 
 handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, tasks=Tasks, protect_from_gc=P})->
-    case P of
-        true ->
+    case {P, Reason} of
+        {true, gc} ->
             {reply, ok, active, S#state{alive=false}};
         _ ->
             case C of
