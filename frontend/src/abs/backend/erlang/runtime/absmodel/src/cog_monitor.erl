@@ -111,7 +111,14 @@ register_object_with_rest_name(Object, Name) ->
     gen_server:call({global, cog_monitor}, {register_object, Object, Name}).
 
 lookup_object_from_rest_name(Name) ->
-    gen_server:call({global, cog_monitor}, {lookup_object, Name}).
+    Object=gen_server:call({global, cog_monitor}, {lookup_object, Name}),
+    case Object of
+        none -> {notfound, Object};
+        #object{ref=Ref} -> case is_process_alive(Ref) of
+                 true -> {ok, Object};
+                 false -> {deadobject, Object}
+             end
+    end.
 
 list_registered_rest_names() ->
     gen_server:call({global, cog_monitor}, all_registered_names).

@@ -32,9 +32,10 @@ handle_dcs([_Resource, _Filename]) ->
     {200, <<"application/json">>, get_statistics_json()}.
 
 handle_object_query([Objectname, Fieldname]) ->
-    Object=cog_monitor:lookup_object_from_rest_name(Objectname),
-    case Object of
-        none -> {404, <<"text/plain">>, <<"Object not found">>};
+    {State, Object}=cog_monitor:lookup_object_from_rest_name(Objectname),
+    case State of
+        notfound -> {404, <<"text/plain">>, <<"Object not found">>};
+        deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
         _ -> case Value=object:get_field_value(Object, binary_to_atom(Fieldname, utf8)) of
                  none -> {404, <<"text/plain">>, <<"Field not found">>};
                  _ -> Result=[{Fieldname, abs_to_json(Value)}],
@@ -42,9 +43,10 @@ handle_object_query([Objectname, Fieldname]) ->
              end
     end;
 handle_object_query([Objectname]) ->
-    Object=cog_monitor:lookup_object_from_rest_name(Objectname),
-    case Object of
-        none -> {404, <<"text/plain">>, <<"Object not found">>};
+    {State, Object}=cog_monitor:lookup_object_from_rest_name(Objectname),
+    case State of
+        notfound -> {404, <<"text/plain">>, <<"Object not found">>};
+        deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
         _ -> State=lists:map(fun ({Key, Value}) -> {Key, abs_to_json(Value)}
                              end,
                              object:get_whole_object_state(Object)),
@@ -58,9 +60,10 @@ handle_object_query([]) ->
     { 200, <<"text/json">>, jsx:encode(Names) }.
 
 handle_object_call([Objectname], _Params) ->
-    Object=cog_monitor:lookup_object_from_rest_name(Objectname),
-    case Object of
-        none ->  {404, <<"text/plain">>, <<"Object not found">>};
+    {State, Object}=cog_monitor:lookup_object_from_rest_name(Objectname),
+    case State of
+        notfound ->  {404, <<"text/plain">>, <<"Object not found">>};
+        deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
         _ ->
             Result=lists:map(fun ({Name, {_, Return, Params}}) ->
                                      #{ 'name' => Name,
@@ -80,9 +83,10 @@ handle_object_call([Objectname], _Params) ->
     end;
 handle_object_call([Objectname, Methodname], Parameters) ->
     %% _Params is a list of 2-tuples of binaries
-    Object=cog_monitor:lookup_object_from_rest_name(Objectname),
-    case Object of
-        none -> {404, <<"text/plain">>, <<"Object not found">>};
+    {State, Object}=cog_monitor:lookup_object_from_rest_name(Objectname),
+    case State of
+        notfound -> {404, <<"text/plain">>, <<"Object not found">>};
+        deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
         _ ->
             Methods=object:get_all_method_info(Object),
             case maps:is_key(Methodname, Methods) of
