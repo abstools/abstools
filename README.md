@@ -2,13 +2,8 @@ ABS Tools [![Build Status](https://envisage.ifi.uio.no:8080/jenkins/buildStatus/
 =========
 
 Inside this repository we develop the core tools of the ABS modelling
-language.  Further information can be found on http://abs-models.org/
-
-This project is currently organised via "redmine" which provides a bug
-tracker, wiki and more:
-https://envisage.ifi.uio.no:8080/redmine/projects/abstools
-
-
+language.  Further information can be found on http://abs-models.org/.  The
+current language manual is at http://docs.abs-models.org.
 
 
 Folders
