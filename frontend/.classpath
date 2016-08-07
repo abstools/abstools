@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry excluding="**/*.jadd|**/*.jrag|bash/parseABS|bash/parseAll" kind="src" path="src"/>
 	<classpathentry kind="lib" path="lib/sat4j-maxsat.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/beaver-rt.jar" sourcepath="lib/beaver-rt-src.jar"/>
 	<classpathentry kind="lib" path="lib/easymock-3.0.jar"/>
 	<classpathentry kind="lib" path="lib/jsr305.jar"/>
 	<classpathentry kind="lib" path="lib/junit-4.11.jar">

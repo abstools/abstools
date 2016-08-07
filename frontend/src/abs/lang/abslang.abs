@@ -46,6 +46,7 @@ export Inv, Pre, Post;
 // Various annotations
 export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer;
 export COG, Plain, Final, Atomic;
+export RESTName, RESTCallable;
 
 // Functional breakpoints
 // TODO: find out where they are defined / used
@@ -543,8 +544,14 @@ data FinalAnnotation = Final;
 /**
  * Declare methods to be atomic, i.e., such methods must not
  * contain scheduling code and also no .get
- */ 
+ */
 data AtomicityAnnotation = Atomic;
+
+/**
+ * Declare methods to be callable from the REST API.
+ */
+data RESTCallableAnnotation = RESTCallable;
+
 
 // functional break point
 def A watch<A>(A val) = builtin;
@@ -554,6 +561,9 @@ def A watchEx<A, B>(A val, B info) = builtin;
 def Unit println(String s) = builtin;
 def Unit print(String s) = builtin;
 def String readln() = builtin;
+
+// Annotation for marking objects, interface methods as accessible via REST
+type RESTName = String;
 
 module ABS.StdLib.Exceptions;
 export *;
@@ -568,6 +578,7 @@ exception NullPointerException;
 exception StackOverflowEcxeption;
 exception HeapOverflowException;
 exception KeyboardInterruptException;
+exception ObjectDeadException;
 
 
 /**
@@ -667,8 +678,8 @@ interface DeploymentComponent {
     Unit incrementResources(Rat amount, Resourcetype rtype);
 
     [Atomic] String getName();
+		[Atomic] Unit setName(String name);
 
-    [Atomic] Unit setProvider(CloudProvider provider);
     [Atomic] CloudProvider getProvider();
     [Atomic] Time getCreationTime();
     [Atomic] Rat getStartupDuration();
@@ -683,6 +694,10 @@ interface DeploymentComponent {
     // Shut down deployment component.  Semantics of job termination / object
     // invalidation upon shutdown are currently under discussion.
     Bool shutdown();
+}
+
+interface DeploymentComponentForCloudProvider extends DeploymentComponent {
+    [Atomic] Unit setProvider(CloudProvider provider);
 }
 
 interface CloudProvider {
@@ -759,12 +774,15 @@ class CloudProvider(String name) implements CloudProvider {
     DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
         Bool mightNeedToStartAccounting = emptySet(launchedInstances);
 
-        DeploymentComponent result = new DeploymentComponent(name + "-"
+        DeploymentComponentForCloudProvider result = new DeploymentComponent(name + "-"
             + toString(nextInstanceId), d);
+        result!setProvider(this);
         nextInstanceId = nextInstanceId + 1;
         Rat startup_duration = await result!getStartupDuration();
-        launchedInstances = insertElement(launchedInstances, result);
-        result!setProvider(this);
+        // Work around a bug in the type system: upcasting in `insertElement'
+        // does not work although it should
+        DeploymentComponent stupidTypeSystem = result;
+        launchedInstances = insertElement(launchedInstances, stupidTypeSystem);
         // Start accounting after adding new machine, before waiting for
         // it to start up
         if (mightNeedToStartAccounting) this!startAccounting();
@@ -862,7 +880,11 @@ class CloudProvider(String name) implements CloudProvider {
             Map<Resourcetype, Rat> config = fromJust(mconfig);
             dc = this.prelaunchInstance(config);
         }
-        return dc;
+				// add the instancename string in the name description of the dc
+				String name = dc.getName();
+				// FIXME: The assignment is a workaround for a bug in the Java code generation [stolz]
+				Unit u = dc.setName(name + "(" + instancename + ")");
+				return dc;
     }
 
     DeploymentComponent launchInstanceNamed(String instancename) {
@@ -879,7 +901,7 @@ class CloudProvider(String name) implements CloudProvider {
 
 
 class DeploymentComponent (String description, Map<Resourcetype, Rat> initconfig)
-implements DeploymentComponent {
+implements DeploymentComponentForCloudProvider {
     // This class has fields that reflect execution state and resource
     // consumption; they are read / changed by the underlying runtime
     // system(s).  Be careful when renaming fields!
@@ -1010,6 +1032,8 @@ implements DeploymentComponent {
     [Atomic] Unit setProvider(CloudProvider provider) {
         this.cloudprovider = provider;
     }
+    [Atomic] DeploymentComponent convertToDC() { return this; }
+
     [Atomic] CloudProvider getProvider() { return cloudprovider; }
     Bool acquire() {
         Bool result = True;
@@ -1042,6 +1066,7 @@ implements DeploymentComponent {
     }
 
     [Atomic] String getName() { return description; }
+		[Atomic] Unit setName(String name) { description = name; }
     [Atomic] Time getCreationTime() { return creationTime; }
     [Atomic] Rat getStartupDuration() { return startupDuration; }
     [Atomic] Rat getShutdownDuration() { return shutdownDuration; }
@@ -1073,9 +1098,10 @@ type CogLocation = String;
  */
 module ABS.SmartDeploy;
 export *;
+import * from ABS.StdLib;
 
 // definitions for the cost annotations associated to classes
-data DeployParamSpecification = Req | List(Int) | Default(String) | User ;
+data DeployParamSpecification = Req | List(Int) | Default(String) | User | OptList(String) ;
 data DeployScenarioElement = MaxUse(Int) |
 	Cost(String, Int) |
 	Param(String, DeployParamSpecification) |

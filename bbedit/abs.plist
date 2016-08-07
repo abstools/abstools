@@ -43,8 +43,7 @@
 
     <key>BBLMKeywordList</key>
     <!-- The canonical list of keywords can be found in
-         frontend/src/abs/frontend/parser/ABS.flex (or in the
-         equivalent file if/when we switch away from flex/beaver) -->
+         frontend/src/abs/frontend/antlr/ABS.g4 -->
     <array>
       <string>module</string>
       <string>import</string>

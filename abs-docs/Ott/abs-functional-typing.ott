@@ -297,7 +297,7 @@ defn
 
   G |- e : A
   G |- brl : A -> B
-  ----------------------- :: case
+  ----------------------- :: case_expression
   G |- case e { brl } : B 
 
   % FIXME: uncertain if C metavar in paper should be A or B
@@ -350,20 +350,20 @@ defn
 
 defn
   G |- br : Ts :: :: br :: '' 
-    {{ com well-formed branch }} by
+    {{ com well-formed case expression branch }} by
 
   G' |- p : A
   G' |- e : B
   G' = G circ psubst ( p , A , G )
-  -------------------------------- :: branch
+  -------------------------------- :: case_expression_branch
   G |- p => e ; : A -> B
 
 defn
   G |- brl : Ts :: :: brl :: '' 
-    {{ com well-formed branch list }} by
+    {{ com well-formed case expression branch list }} by
   
   G |- br1 : A -> B .. G |- brn : A -> B
-  -------------------------------------- :: branch_list
+  -------------------------------------- :: case_expression_branch_list
   G |- br1 .. brn : A -> B
 
 defn

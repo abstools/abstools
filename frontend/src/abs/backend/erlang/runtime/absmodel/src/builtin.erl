@@ -32,7 +32,13 @@ string_interleave1([Head | Tail], Sep, Acc) ->
     string_interleave1(Tail, Sep, [Sep, Head | Acc]).
 
 constructorname_to_string(A) ->
-    lists:nthtail(4, atom_to_list(A)).
+    String = atom_to_list(A),
+    %% Constructor names start with "abs_".  Sometimes we get passed other
+    %% symbols; don't crash in that case.
+    case length(String) < 5 of
+        true -> String;
+        false -> lists:nthtail(4, String)
+    end.
 
 
 abslistish_to_string(Cog, Cons, Emp, {Cons, H, Emp}) ->

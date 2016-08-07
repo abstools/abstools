@@ -41,7 +41,6 @@ import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSValue;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.Type;
-import beaver.Symbol;
 
 public class DynamicJavaGeneratorHelper {
 
@@ -151,11 +150,10 @@ public class DynamicJavaGeneratorHelper {
     }
 
     public static String getDebugString(Stmt stmt) {
-        return getDebugString(stmt, stmt.getStart());
+        return getDebugString(stmt, stmt.getStartLine());
     }
 
-    public static String getDebugString(Stmt stmt, int pos) {
-        int line = Symbol.getLine(pos);
+    public static String getDebugString(Stmt stmt, int line) {
         String fileName = stmt.getCompilationUnit().getFileName().replace("\\", "\\\\");
         return "if (thisP.__ABS_getRuntime().debuggingEnabled()) thisP.__ABS_getRuntime().nextStep(\""
         + fileName + "\"," + line + ");";

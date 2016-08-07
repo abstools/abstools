@@ -121,18 +121,18 @@ public class ASTPreProcessor {
         // such that backends will know about it
         fd.addAnnotation(new Annotation(new StringLiteral(FUNCTIONSELECTOR)));
 
-        setPosition(fd, ca.getStartPos(), ca.getEndPos());
+        setAllPositionsFromNode(fd, ca);
         return fd;
     }
 
     /**
      * recursively set the position of this ast node and its childs
      */
-    private void setPosition(ASTNode<?> node, int startPos, int endPos) {
-        node.setPosition(startPos, endPos);
+    private void setAllPositionsFromNode(ASTNode<?> node, ASTNode<?> fromNode) {
+        node.setPositionFromNode(fromNode);
         for (int i=0; i < node.getNumChildNoTransform(); i++) {
             ASTNode<?> child = node.getChildNoTransform(i);
-            setPosition(child, startPos, endPos);
+            setAllPositionsFromNode(child, fromNode);
         }
     }
 }

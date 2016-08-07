@@ -130,7 +130,7 @@ e :: e_ ::=
   | fn ( el ) :: :: fn_call 
     {{ com function call }}
   | case e { brl } :: :: case 
-    {{ com case with branches }}
+    {{ com case expression }}
 
 el {{ tex \overline{e} }} :: el_ ::=
   {{ com expression list }}
@@ -147,11 +147,11 @@ tl {{ tex \overline{t} }} :: tl_ ::=
   | t1 , ... , tn :: :: t_list
 
 br :: br_ ::=
-  {{ com branch }}
+  {{ com case expression branch }}
   | p => e ; :: :: p_e
 
 brl {{ tex \overline{br} }} :: brl_ ::=
-  {{ com branch list }}
+  {{ com case expression branch list }}
   | br1 ... brn :: :: br_list
 
 p :: p_ ::=

@@ -4,8 +4,6 @@
  */
 package abs.frontend.parser;
 
-import beaver.Symbol;
-
 public class SyntaxError extends ParserError {
 
     public SyntaxError(final String message) {

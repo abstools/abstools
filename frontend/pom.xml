@@ -68,11 +68,6 @@
 		</dependency>
 		<dependency>
 			<groupId>eu.hats-project</groupId>
-			<artifactId>beaver</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>eu.hats-project</groupId>
 			<artifactId>jastadd2</artifactId>
 			<version>1.0</version>
 		</dependency>
@@ -186,8 +181,6 @@
 						<phase>generate-sources</phase>
 						<configuration>
 							<target>
-								<taskdef name="jflex" classname="JFlex.anttask.JFlexTask"
-									classpathref="maven.plugin.classpath" />
 								<jflex file="${parser.src.dir}/ABS.flex" outdir="${parser.gen.dir}"
 									nobak="yes" />
 							</target>
@@ -205,7 +198,7 @@
 							<target>
 								<taskdef name="jastadd" classname="jastadd.JastAddTask"
 									classpathref="maven.plugin.classpath" />
-								<jastadd package="${ast.package}" rewrite="true" beaver="true"
+								<jastadd package="${ast.package}" rewrite="true"
 									novisitcheck="true" outdir="${gen.dir}" debug="true">
 									<fileset dir=".">
 										<include name="src/abs/**/*.ast" />
@@ -227,9 +220,9 @@
 						<configuration>
 							<target>
 								<java fork="true" dir="${parser.src.dir}"
-									classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt-src.jar"
+									classpath="${ext.dir}/JastAddParser.jar"
 									classname="Main">
-									<arg line="ABS.parser '${parser.gen.dir}/ABSParser.beaver'" />
+									<arg line="ABS.parser" />
 								</java>
 							</target>
 						</configuration>
@@ -242,14 +235,6 @@
 					<execution>
 						<id>genp2</id>
 						<phase>generate-sources</phase>
-						<configuration>
-							<target>
-								<taskdef name="beaver" classname="beaver.comp.run.AntTask"
-									classpathref="maven.plugin.classpath" />
-								<beaver file="${parser.gen.dir}/ABSParser.beaver"
-									terminalNames="yes" compress="no" useSwitch="yes" reportActions="yes" />
-							</target>
-						</configuration>
 						<goals>
 							<goal>run</goal>
 						</goals>
@@ -326,11 +311,6 @@
 					<dependency>
 						<groupId>eu.hats-project</groupId>
 						<artifactId>jflex</artifactId>
-						<version>1.0</version>
-					</dependency>
-					<dependency>
-						<groupId>eu.hats-project</groupId>
-						<artifactId>beaver</artifactId>
 						<version>1.0</version>
 					</dependency>
 				</dependencies>

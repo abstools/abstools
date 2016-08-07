@@ -11,14 +11,16 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.docs.source>${basedir}/src/main/docs/asciidoc</project.docs.source>
+    <project.docs.source>${basedir}/asciidoc</project.docs.source>
+    <project.build.directory>${basedir}/manual/</project.build.directory>
     <project.docs.source.mainfile>index.adoc</project.docs.source.mainfile>
-    <project.docs.target.root>${project.build.directory}/classes/docs</project.docs.target.root>
+    <project.docs.target.root>${project.build.directory}</project.docs.target.root>
     <project.docs.target.html>${project.docs.target.root}/html</project.docs.target.html>
     <project.docs.target.docbook>${project.docs.target.root}/docbook</project.docs.target.docbook>
     <project.docs.target.pdf>${project.docs.target.root}/pdf</project.docs.target.pdf>
     <project.docs.target.epub3>${project.docs.target.root}/epub3</project.docs.target.epub3>
 
+    <!-- See https://github.com/asciidoctor/asciidoctorj for newest versions -->
     <version.asciidoctor-mvn-plugin>1.5.3</version.asciidoctor-mvn-plugin>
     <version.asciidoctorj.pdf>1.5.0-alpha.11</version.asciidoctorj.pdf>
     <version.asciidoctorj>1.5.4</version.asciidoctorj>

@@ -12,7 +12,7 @@
 
 -behaviour(gen_fsm).
 %%API
--export([new/3,new/5,activate/1,new_object_task/3,die/2,alive/1]).
+-export([new/3,new/5,activate/1,new_object_task/3,die/2,alive/1,get_field_value/2,set_field_value/3]).
 %%gen_fsm callbacks
 -export([init/1,active/3,active/2,uninitialized/2,uninitialized/3,code_change/4,handle_event/3,handle_info/3,handle_sync_event/4,terminate/3]).
 -include_lib("abs_types.hrl").
@@ -21,6 +21,10 @@
 %%Garbage collection callback
 -behaviour(gc).
 -export([get_references/1]).
+
+%% REST api: inhibit dying from gc while we're registered.
+-export([protect_object_from_gc/1, unprotect_object_from_gc/1]).
+-export([get_whole_object_state/1,get_all_method_info/1]).
 
 behaviour_info(callbacks) ->
     [{get_val_internal, 2},{set_val_internal,3},{init_internal,0}];
@@ -33,9 +37,17 @@ new(Cog,Class,Args)->
     cog:inc_ref_count(Cog),
     O=start(Cog,Class),
     object:activate(O),
+    case cog_monitor:are_objects_of_class_protected(Class) of
+        true -> protect_object_from_gc(O);
+        false -> ok
+    end,
     Class:init(O,Args).
 new(Cog,Class,Args,CreatorCog,Stack)->
     O=start(Cog,Class),
+    case cog_monitor:are_objects_of_class_protected(Class) of
+        true -> protect_object_from_gc(O);
+        false -> ok
+    end,
     cog:add_blocking(Cog,init_task,{O,Args},CreatorCog,Stack),
     O.
 
@@ -71,6 +83,24 @@ die(O,Reason) when is_pid(O) ->
 get_references(Ref) ->
     gen_fsm:sync_send_all_state_event(Ref, get_references).
 
+protect_object_from_gc(#object{ref=O}) ->
+    gen_fsm:sync_send_all_state_event(O, protect_from_gc).
+
+unprotect_object_from_gc(#object{ref=O}) ->
+    gen_fsm:send_all_state_event(O, unprotect_from_gc).
+
+get_whole_object_state(#object{ref=O}) ->
+    gen_fsm:sync_send_all_state_event(O, get_whole_state).
+
+get_field_value(O=#object{ref=Ref}, Field) ->
+    gen_fsm:sync_send_event(Ref, {O,get,Field}).
+
+set_field_value(O=#object{ref=Ref}, Field, Value) ->
+    gen_fsm:send_event(Ref,{O,set,Field,Value}).
+
+get_all_method_info(_O=#object{class=C,ref=_Ref}) ->
+    C:exported().
+
 %%Internal
 
 await_activation(Params) ->
@@ -81,11 +111,13 @@ await_activation(Params) ->
     end.
 
 
--record(state,{cog,   % a reference to the COG the object belongs to
-               await, % keeps track of all task, waiting till the object is active
-               tasks, % all task running on this object
-               class, % The class of the object (a symbol)
-               fields % the state of the object fields
+-record(state,{cog,      % a reference to the COG the object belongs to
+               await=[], % keeps track of all tasks while object is initializing
+               tasks=gb_sets:empty(),     % all task running on this object
+               class,                     % The class of the object (a symbol)
+               fields,                    % the state of the object fields
+               alive=true,     % false if object is garbage collected / crashed
+               protect_from_gc=false % true if unreferenced object needs to  be kept alive
               }).
 
 start(Cog,Class)->
@@ -95,7 +127,7 @@ start(Cog,Class)->
     Object.
 
 init([Cog,Class,Status])->
-    {ok,uninitialized,#state{cog=Cog,await=[],tasks=gb_sets:empty(),class=Class,fields=Status}}.
+    {ok,uninitialized,#state{cog=Cog,await=[],tasks=gb_sets:empty(),class=Class,fields=Status,alive=true,protect_from_gc=false}}.
 
 uninitialized(activate,S=#state{await=A})->
     lists:foreach(fun(X)-> X ! active end,A),
@@ -169,16 +201,16 @@ active({#object{class=Class},set,Field,Val},S=#state{class=Class,fields=IS}) ->
     IS1=Class:set_val_internal(IS,Field,Val),
     {next_state,active,S#state{fields=IS1}}.
 
-handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, tasks=Tasks})->
-    case C of
-        class_ABS_DC_DeploymentComponent ->
-            %% Keep DCs alive for visualization.  If we decide to
-            %% garbage-collect them again, remember to send
-            %% `cog_monitor:dc_died(self())' so that cog_monitor
-            %% updates its list of DCs.
-            {reply, ok, active, S};
+handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, tasks=Tasks, protect_from_gc=P})->
+    case {P, Reason} of
+        {true, gc} ->
+            {reply, ok, active, S#state{alive=false}};
         _ ->
-            %% FIXME: check if cog_monitor needs updating here
+            case C of
+                class_ABS_DC_DeploymentComponent -> cog_monitor:dc_died(self());
+                _ -> ok
+            end,
+            %% FIXME: check if cog_monitor needs updating here wrt task lists etc.
             [ exit(T,Reason) ||T<-gb_sets:to_list(Tasks), T/=By],
             cog:dec_ref_count(Cog),
             case gb_sets:is_element(By,Tasks) of
@@ -186,22 +218,40 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, ta
                 true -> exit(By,Reason);
                 false -> ok
             end,
-            {stop,normal,ok,S}
+            {stop,{shutdown, Reason},ok,S#state{alive=false}}
     end;
-
+handle_sync_event(protect_from_gc, _From, StateName, S) ->
+    {reply, ok, StateName, S#state{protect_from_gc=true}};
 handle_sync_event(get_references, _From, StateName, S=#state{fields=IState}) ->
-    {reply, gc:extract_references(IState), StateName, S}.
+    {reply, gc:extract_references(IState), StateName, S};
+handle_sync_event(get_whole_state, _From, StateName, S=#state{class=C,fields=IState}) ->
+    {reply, C:get_all_state(IState), StateName, S}.
+
+handle_event(unprotect_from_gc, StateName, State=#state{class=C,tasks=Tasks,cog=Cog,alive=Alive}) ->
+    case Alive of
+        true -> {next_state, StateName, State#state{protect_from_gc=false}};
+        false ->
+            case C of
+                class_ABS_DC_DeploymentComponent -> cog_monitor:dc_died(self());
+                _ -> ok
+            end,
+            %% FIXME: check if cog_monitor needs updating here wrt task lists etc.
+            [ exit(T,normal) ||T<-gb_sets:to_list(Tasks)],
+            cog:dec_ref_count(Cog),
+            {stop,{shutdown, unprotected},ok,State}
+    end;
+handle_event(_Event,_StateName,State)->
+    {stop,not_implemented,State}.
 
 
 handle_info({'DOWN', _MonRef, process, TaskRef, _Reason} ,StateName,S=#state{tasks=Tasks})->
     {next_state,StateName,S#state{tasks=gb_sets:del_element(TaskRef, Tasks)}}.
 
 
-
-terminate(_Reason,_StateName,_Data)->
+terminate({shutdown, gc}, _StateName, _Data) ->
+    ok;
+terminate({shutdown, _Reason},_StateName,_Data)->
+    gc:unregister_object(self()),
     ok.
-handle_event(_Event,_StateName,State)->
-    {stop,not_implemented,State}.
-
 code_change(_OldVsn,_StateName,_Data,_Extra)->
     not_implemented.

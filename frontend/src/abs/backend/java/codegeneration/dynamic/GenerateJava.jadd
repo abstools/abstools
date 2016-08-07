@@ -388,7 +388,7 @@ aspect GenerateJavaDynamic_Core {
 
         if (addReturn) {
             if (getModel().includeDebug) {
-                stream.println(DynamicJavaGeneratorHelper.getDebugString(this, this.getEnd()));
+                stream.println(DynamicJavaGeneratorHelper.getDebugString(this, this.getEndLine()));
 
                 stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
                 stream.println("thisP.__ABS_getRuntime().getCurrentTask().popStackFrame();");
@@ -520,7 +520,7 @@ aspect GenerateJavaDynamic_Core {
         stream.print("if (!");
         getCondition().generateJavaDynamic(stream);
         stream.print(".toBoolean()) throw new " + ABSAssertException.class.getName() + "(\"");
-        stream.println(new Position(this).getPositionString() + " Assertion failed\");");
+        stream.println(getPositionString() + " Assertion failed\");");
 
     }
 
@@ -708,9 +708,8 @@ aspect GenerateJavaDynamic_Core {
             stream.println(");");
             i++;
         }
-        Position pos = new Position(this);
         stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
-        stream.println(pos.getPositionString() + " value \" + __ABS_value + \" did not match any pattern.\");");
+        stream.println(getPositionString() + " value \" + __ABS_value + \" did not match any pattern.\");");
         stream.println("}");
         stream.print("}.of(");
         for (String freeVarName : getFreeVars()) {

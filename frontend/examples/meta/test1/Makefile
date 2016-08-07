@@ -9,7 +9,7 @@
 # gen is for dynamic, gens for generated static code
 
 BASEDIR=../..
-CP=$(BASEDIR)/bin:$(BASEDIR)/lib/beaver-rt-src.jar:$(BASEDIR)/lib/beaver-rt.jar:$(BASEDIR)/lib/org.sat4j.core.jar:$(BASEDIR)/lib/org.sat4j.pb.jar:$(BASEDIR)/lib/sat4j-pb.jar:$(BASEDIR)/lib/org.sat4j.maxsat.jar:$(BASEDIR)/lib/sat4j-maxsat.jar:$(BASEDIR)/lib/ecj-3.6.2.jar:$(BASEDIR)/lib/choco-solver-2.1.1.jar
+CP=$(BASEDIR)/bin:$(BASEDIR)/lib/org.sat4j.core.jar:$(BASEDIR)/lib/org.sat4j.pb.jar:$(BASEDIR)/lib/sat4j-pb.jar:$(BASEDIR)/lib/org.sat4j.maxsat.jar:$(BASEDIR)/lib/sat4j-maxsat.jar:$(BASEDIR)/lib/ecj-3.6.2.jar:$(BASEDIR)/lib/choco-solver-2.1.1.jar
 
 .PHONY: clean cleans gen gens
 

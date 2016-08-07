@@ -7,7 +7,6 @@
 // - Generate code for full ABS
 // - Implement the raiseExceptions flag
 // - Implement parsing of incomplete expressions and generate the corresponding AST
-// - Make ASTNode class not inherit from beaver node anymore
 grammar ABS;
 
 TraditionalComment : '/*' .*? '*/' -> skip ;
@@ -136,7 +135,8 @@ stmt : annotation* type_exp IDENTIFIER ('=' exp)? ';'              # VardeclStmt
     | annotation* '{' stmt* '}'                                    # BlockStmt
     | annotation* 'if' '(' c=pure_exp ')' l=stmt ('else' r=stmt)?  # IfStmt
     | annotation* 'while' '(' c=pure_exp ')' stmt                  # WhileStmt
-    | annotation* 'try' b=stmt 'catch' '{' casestmtbranch* '}'
+    | annotation* 'try' b=stmt
+        'catch' (('{' casestmtbranch* '}') | casestmtbranch)
         ('finally' f=stmt)?                                        # TryCatchFinallyStmt
     | annotation* 'await' guard ';'                                # AwaitStmt
     | annotation* 'suspend' ';'                                    # SuspendStmt

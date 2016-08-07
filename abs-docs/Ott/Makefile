@@ -10,13 +10,15 @@ OTT_COQ_DIR = coq/
 OTT = ott
 PDFLATEX = pdflatex
 
-.PHONY: all pdf coq help clean
+.PHONY: default all pdf coq help clean
 
-.DEFAULT_GOAL := help
+.DEFAULT_GOAL := default
+
+default: help pdf
 
 all: pdf coq			## Create both pdf and coq
 
-pdf: core-abs.pdf core-abs-coq.pdf ## Type-set ABS semantic rules
+pdf: core-abs.pdf core-abs-coq.pdf ## Type-set ABS semantic rules (default)
 
 coq: core_abs.vo		## Generate coq proof
 

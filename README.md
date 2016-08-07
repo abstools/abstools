@@ -2,43 +2,40 @@ ABS Tools [![Build Status](https://envisage.ifi.uio.no:8080/jenkins/buildStatus/
 =========
 
 Inside this repository we develop the core tools of the ABS modelling
-language.  Further information can be found on http://abs-models.org/
-
-This project is currently organised via "redmine" which provides a bug
-tracker, wiki and more:
-https://envisage.ifi.uio.no:8080/redmine/projects/abstools
-
-
+language.  Further information can be found on http://abs-models.org/.  The
+current language manual is at http://docs.abs-models.org.
 
 
 Folders
 -------
 
-* `eclipse` - eclipse plugins:
+* `frontend` - the ABS frontend as well as several backends (Erlang, Maude,
+  Java)
+
+
+* `abs-docs` - a markdown-flavored ABS manual, currently being written.  It is
+  available online at http://docs.abs-models.org.
+
+  * `abs-docs/ReferenceManual` - an older LaTeX ABS reference manual, slowly
+    being phased out
+
+  * `abs-docs/Ott` - a formal grammar for ABS, written in Ott
+
+
+* `eclipse`, `emacs`, `bbedit` - Editor support for ABS
 
     * `eclipse/eclipse-plugin`: ABS IDE and compiler support plugin
 
     * `eclipse/costabs-plugin` - The COSTA plugin for ABS
 
-    * `apet-plugin` - The aPET plugin for ABS
+    * `eclipse/apet-plugin` - The aPET plugin for ABS
 
-    * `sda-plugin` - Bologna Deadlock-checker plugin for ABS
+    * `eclipse/sda-plugin` - Bologna Deadlock-checker plugin for ABS
 
-    * `sdedit-for-abs` - a modified version of sdedit
+    * `eclipse/sdedit-for-abs` - a modified version of sdedit
       (http://sdedit.sourceforge.net) for the visualization of UML sequence
       charts
 
-* `frontend` - the ABS frontend as well as several backends like the
-  Java backend and the Maude backend
-
-
-* `abs-docs` - a markdown-flavored ABS manual, currently being written.  It is
-  available online at http://docs.abs-models.org.  Below
-  `abs-docs/ReferenceManual` - a complete LaTeX ABS reference manual, still
-  mostly up-to-date
-
-
-* `tools-website`  - the content of the tools.hats-project.eu website
 
 * `maven-support` - Maven plugin for generating Java/Maude from ABS,
   testing and packaging ABS codes

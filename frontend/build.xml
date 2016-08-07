@@ -90,14 +90,11 @@
   </path>
 
   <path id="run.classpath">
-        <pathelement location="${build.dir}" />
-        <pathelement location="${ext.dir}/beaver-rt.jar" />
-        <pathelement location="${ext.dir}/beaver-rt-src.jar" />
+    <pathelement location="${build.dir}" />
     <path refid="common.classpath"/>
   </path>
 
   <path id="compile.classpath">
-    <pathelement location="${ext.dir}/beaver.jar" />
     <pathelement location="${ext.dir}/jastadd2.jar" />
     <pathelement location="${ext.dir}/JastAddParser.jar" />
     <pathelement location="${ext.dir}/${junit.jar}" />
@@ -144,7 +141,6 @@
   <target name="javadoc" depends="gen,compile" description="Build java doc.">
     <javadoc sourcepath="${src.dir}:${gen.dir}" destdir="${apidoc.dir}">
       <classpath>
-        <pathelement location="${ext.dir}/beaver.jar" />
         <pathelement location="${ext.dir}/jastadd2.jar" />
         <pathelement location="${ext.dir}/JastAddParser.jar" />
       </classpath>
@@ -175,7 +171,7 @@
   </target>
 
   <target name="genast">
-    <jastadd package="${ast.package}" rewrite="" beaver="true" visitCheck="false" outdir="${gen.dir}" debug="true">
+    <jastadd package="${ast.package}" rewrite="" visitCheck="false" outdir="${gen.dir}" debug="true">
       <fileset dir=".">
         <include name="src/abs/**/*.ast" />
         <include name="src/abs/**/*.jrag" />
@@ -254,7 +250,6 @@
       <!-- abslang has already been copied into build.dir -->
       <fileset dir="${src.dir}" includes="abs/**,deadlock/**,autodeploy/**" excludes="abs/lang/abslang.abs" />
       <zipfileset src="${ext.dir}/apfloat.jar" />
-            <zipfileset src="${ext.dir}/beaver-rt.jar" />
       <zipfileset src="${ext.dir}/ecj-4.4.2.jar" />
       <zipfileset src="${ext.dir}/org.sat4j.core.jar" />
       <zipfileset src="${ext.dir}/org.sat4j.pb.jar" />
@@ -350,7 +345,7 @@
     </junit>
   </target>
   <!-- From command line: -->
-  <!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt-src.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
+  <!-- java -cp bin:lib/junit-4.8.1.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
 
   <target name="build-eclipse-plugin" depends="dist">
     <mkdir dir="${basedir}/${plugin.name}_${frontend.version}"/>
@@ -358,7 +353,6 @@
       <fileset dir="${basedir}">
         <include name="META-INF/"/>
         <include name="lib/apfloat.jar"/>
-        <include name="lib/beaver-rt.jar"/>
         <include name="lib/choco-solver-2.1.1.jar"/>
         <include name="lib/sat4j-maxsat.jar" />
       	<include name="lib/semisolver.jar" />

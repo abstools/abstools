@@ -34,7 +34,7 @@ public class ParseTreeCopyHelper {
             setOtherFields(node, copy, nodeClass, nodeClass);
             
             // set position
-            copy.setPosition(node.getStart(), node.getEnd());
+            copy.setPositionFromNode(node);
             
             return copy;
         } catch (Exception e) {

@@ -13,6 +13,7 @@ import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.List;
 import abs.frontend.ast.*;
+import abs.frontend.parser.SourcePosition;
 
 public class TypeCheckerHelper {
     public static void typeCheck(ConstructorPattern p, SemanticConditionList e, Type t) {
@@ -554,10 +555,11 @@ public class TypeCheckerHelper {
              * when we are NOT inside a method, e.g. when initialising a field upon declaration.
              */
             boolean isUsedInFieldDecl = use instanceof FieldUse;
-            if (isUsedInFieldDecl && use.getContextMethod() == null && use.getDecl().getEndPos() > use.getStartPos()) {
+            if (isUsedInFieldDecl && use.getContextMethod() == null
+                && SourcePosition.larger(use.getDecl().getEndLine(), use.getDecl().getEndColumn(), use.getStartLine(), use.getStartColumn())) {
                 e.add(new TypeError(use,
-                        !isUsedInFieldDecl ? ErrorMessage.VAR_USE_BEFORE_DEFINITION
-                                           : ErrorMessage.FIELD_USE_BEFORE_DEFINITION , use.getName()));
+                                    isUsedInFieldDecl ? ErrorMessage.FIELD_USE_BEFORE_DEFINITION : ErrorMessage.VAR_USE_BEFORE_DEFINITION,
+                                    use.getName()));
             }
         }
     }

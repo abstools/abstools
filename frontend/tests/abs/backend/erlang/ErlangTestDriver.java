@@ -34,6 +34,9 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     }
 
     public static boolean checkErlang() {
+        /* TODO: Should be checked earlier instead, before configuring the JUnit suites. */
+        String doAbs = System.getProperty("abs.junit.erlang");
+        Assume.assumeFalse("Erlang tests disabled via -Dabs.junit.erlang", "0".equals(doAbs));
         if (SemanticTests.checkProg("erl")) {
             // http://stackoverflow.com/a/9561398/60462
             ProcessBuilder pb = new ProcessBuilder("erl", "-eval", "erlang:display(erlang:system_info(otp_release)), halt().",  "-noshell");

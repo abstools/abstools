@@ -383,7 +383,9 @@ execution afterwards.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _TryCatchFinallyStmt_ ::= | `try` _Stmt_ `catch` `{` { _CaseStmtBranch_ } `}` [ `finally` _Stmt_ ]
+| _TryCatchFinallyStmt_ ::= | `try` _Stmt_
+|                           | `catch` ( ( `{` { _CaseStmtBranch_ } `}` ) \| _CaseStmtBranch_ )
+|                           | [ `finally` _Stmt_ ]
 |====
 
 The statement protected by `try` (which can be a block) is executed first.  If
@@ -428,7 +430,7 @@ try {
 [source]
 .Example
 ----
-try b = f.get; catch { _ => b = False; } <1>
+try b = f.get; catch _ => b = False; <1>
 ----
 <1> A “catch-all” exception handler that sets `b` to a default value in case an unhandled exception was propagated via `f`
 

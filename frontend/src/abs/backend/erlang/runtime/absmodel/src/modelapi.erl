@@ -15,7 +15,10 @@ init(Req, _Opts) ->
             <<"default">> -> {200, <<"text/plain">>, <<"Hello Erlang!\n">>};
             <<"clock">> -> handle_clock();
             <<"dcs">> -> handle_dcs(cowboy_req:path_info(Req));
+            <<"o">> -> handle_object_query(cowboy_req:path_info(Req));
             <<"static_dcs">> -> handle_static_dcs(cowboy_req:path_info(Req));
+            <<"call">> -> handle_object_call(cowboy_req:path_info(Req),
+                                             cowboy_req:parse_qs(Req));
             _ -> {404, <<"text/plain">>, <<"Not found">>}
         end,
     Req2 = cowboy_req:reply(Status, [{<<"content-type">>, ContentType}],
@@ -28,8 +31,128 @@ handle_clock() ->
 handle_dcs([_Resource, _Filename]) ->
     {200, <<"application/json">>, get_statistics_json()}.
 
-%% Convert into JSON integers instead of floats: erlang throws badarith when
-%% the rationals get very large (test case: 5472206596936366950716234513847726699787633130083257868108935385073372521628474400544521868704326539544514945848761641723966834493669011242722490852350250920069840584545494657714176547830170076546766985189948190456085993999965841854043348210273114730931817418950948724982907640273166024155584846472815748114062887634396966520123600001491695765504058451726579037573091051607552055423198699302802395956790501740896358894471037106650700904924688637794684243427125018755079147845309097447199680 / 124463949580340014510986584728288862741803258927911335916878977240693013539088417076664562979601325740156255021810491719369575684864053619527117112327603062438063916198087526979602339983985468095190606013682227096265800975172556004113539099465524910539717462241015411708644965352863529428218264513501978734125515935814243527381509019662918750484272597804450713973581541009172909728477620791912354661828439825472308754606657629002302337966418841432399509232916424732092270353567444570118827)
+handle_object_query([Objectname, Fieldname]) ->
+    {State, Object}=cog_monitor:lookup_object_from_rest_name(Objectname),
+    case State of
+        notfound -> {404, <<"text/plain">>, <<"Object not found">>};
+        deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
+        _ -> case Value=object:get_field_value(Object, binary_to_atom(Fieldname, utf8)) of
+                 none -> {404, <<"text/plain">>, <<"Field not found">>};
+                 _ -> Result=[{Fieldname, abs_to_json(Value)}],
+                      {200, <<"text/json">>, jsx:encode(Result)}
+             end
+    end;
+handle_object_query([Objectname]) ->
+    {State, Object}=cog_monitor:lookup_object_from_rest_name(Objectname),
+    case State of
+        notfound -> {404, <<"text/plain">>, <<"Object not found">>};
+        deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
+        _ -> State=lists:map(fun ({Key, Value}) -> {Key, abs_to_json(Value)}
+                             end,
+                             object:get_whole_object_state(Object)),
+             %% Special-case empty object for jsx:encode ([] is an empty JSON
+             %% array, [{}] an empty JSON object)
+             State2 = case State of [] -> [{}]; _ -> State end,
+             { 200, <<"text/json">>, jsx:encode(State2)}
+    end;
+handle_object_query([]) ->
+    Names=cog_monitor:list_registered_rest_names(),
+    { 200, <<"text/json">>, jsx:encode(Names) }.
+
+handle_object_call([Objectname], _Params) ->
+    {State, Object}=cog_monitor:lookup_object_from_rest_name(Objectname),
+    case State of
+        notfound ->  {404, <<"text/plain">>, <<"Object not found">>};
+        deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
+        _ ->
+            Result=lists:map(fun ({Name, {_, Return, Params}}) ->
+                                     #{ 'name' => Name,
+                                        'return' => Return,
+                                        'parameters' =>
+                                            lists:map(fun({PName, PType}) ->
+                                                              #{
+                                                           'name' => PName,
+                                                           'type' => PType
+                                                          }
+                                                      end,
+                                                      Params)
+                                      }
+                             end,
+                             maps:to_list(object:get_all_method_info(Object))),
+            { 200, <<"text/json">>, jsx:encode(Result) }
+    end;
+handle_object_call([Objectname, Methodname], Parameters) ->
+    %% _Params is a list of 2-tuples of binaries
+    {State, Object}=cog_monitor:lookup_object_from_rest_name(Objectname),
+    case State of
+        notfound -> {404, <<"text/plain">>, <<"Object not found">>};
+        deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
+        _ ->
+            Methods=object:get_all_method_info(Object),
+            case maps:is_key(Methodname, Methods) of
+                false -> { 400, <<"text/plain">>, <<"Object does not support method">> };
+                true ->
+                    {Method, _ReturnType, ParamDecls}=maps:get(Methodname, Methods),
+                    {Success, ParamValues} = decode_parameters(Parameters, ParamDecls),
+                    case Success of
+                        ok ->
+                            Future=future:start_for_rest(Object, Method, ParamValues ++ [[]]),
+                            Result=case future:get_for_rest(Future) of
+                                {ok, Value} ->
+                                    { 200, <<"text/json">>,
+                                      jsx:encode([{'result', abs_to_json(Value)}]) };
+                                {error, Error} ->
+                                    { 500, <<"text/json">>,
+                                      jsx:encode([{'error', abs_to_json(Error)}]) }
+                            end,
+                            future:die(Future, ok),
+                            Result;
+                        error -> { 400, <<"text/plain">>, <<"Error during parameter decoding">> }
+                    end
+            end
+    end.
+
+decode_parameters(Parameters, ParamDecls) ->
+    PValues = maps:from_list(Parameters),
+    try {ok, lists:map(fun({Name, Type}) ->
+                      decode_parameter(maps:get(Name, PValues), Type)
+              end, ParamDecls)}
+    catch _:_ ->
+            {error, null}
+    end.
+
+decode_parameter(Value, Type) ->
+    case Type of
+        <<"ABS.StdLib.Bool">> ->
+            case Value of
+                <<"True">> -> true;
+                <<"true">> -> true;
+                <<"False">> -> false;
+                <<"false">> -> false
+            end;
+        <<"ABS.StdLib.String">> ->
+            binary_to_list(Value);
+        <<"ABS.StdLib.Int">> ->
+            {Result, Rest} = string:to_integer(binary_to_list(Value)),
+            case Rest of
+                [] -> Result;
+                _ -> throw(badarg)
+            end
+    end.
+
+abs_to_json(true) -> true;
+abs_to_json(false) -> false;
+abs_to_json(null) -> null;
+abs_to_json(Abs) when is_number(Abs) -> Abs;
+abs_to_json(Abs) when is_list(Abs) -> list_to_binary(Abs);
+abs_to_json(Abs) -> list_to_binary(builtin:toString(null, Abs)).
+
+%% Convert into JSON integers instead of floats: erlang throws badarith,
+%% possibly because of underflow, when the rationals get very large (test
+%% case:
+%% 5472206596936366950716234513847726699787633130083257868108935385073372521628474400544521868704326539544514945848761641723966834493669011242722490852350250920069840584545494657714176547830170076546766985189948190456085993999965841854043348210273114730931817418950948724982907640273166024155584846472815748114062887634396966520123600001491695765504058451726579037573091051607552055423198699302802395956790501740896358894471037106650700904924688637794684243427125018755079147845309097447199680
+%% /
+%% 124463949580340014510986584728288862741803258927911335916878977240693013539088417076664562979601325740156255021810491719369575684864053619527117112327603062438063916198087526979602339983985468095190606013682227096265800975172556004113539099465524910539717462241015411708644965352863529428218264513501978734125515935814243527381509019662918750484272597804450713973581541009172909728477620791912354661828439825472308754606657629002302337966418841432399509232916424732092270353567444570118827)
 %% Besides, we only want the number to display it in a graph, so the fraction
 %% doesn't make a difference
 abs_to_erl_number({N, 1}) -> N;

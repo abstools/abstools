@@ -82,6 +82,12 @@ public class DeployInformationClass {
 
           System.out.println("  Annotation is List(\"" + port + "\", " + arity + ")");
 
+				} else if(((DataConstructorExp)spec).getDataConstructor().getName().equals("OptList")) {
+          String value = ((StringLiteral) ((DataConstructorExp) spec).getParam(0)).getContent();
+          info.addOptList(param, value);
+
+          System.out.println("  Annotation is OptList(\"" + port + "\", " + value + ")");
+
         } else if(((DataConstructorExp)spec).getDataConstructor().getName().equals("Default")) {
           System.out.print("Default");
           String value = ((StringLiteral) ((DataConstructorExp) spec).getParam(0)).getContent();

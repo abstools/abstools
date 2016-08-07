@@ -1,5 +1,5 @@
-.PHONY: help frontend vagrant-vm docker clean
-.DEFAULT_GOAL := help
+.PHONY: help default frontend vagrant-vm docker clean
+.DEFAULT_GOAL := default
 
 ifneq (,$(findstring /cygdrive/,$(PATH)))
     UNAME := Cygwin
@@ -19,7 +19,9 @@ ifeq (,$(DOCKER))
 	endif
 endif
 
-frontend:			## Build ABS compiler
+default: help frontend
+
+frontend:			## Build ABS compiler (default)
 	ant -buildfile frontend/build.xml dist
 	@echo "Finished."
 	@echo "absc command installed in frontend/bin/bash/"
@@ -27,9 +29,9 @@ frontend:			## Build ABS compiler
 manual:				## Build the ABS manual
 	mvn -B -f abs-docs clean install
 	@echo "Finished."
-	@echo "HTML: abs-docs/target/classes/docs/html/index.html"
-	@echo "PDF: abs-docs/target/classes/docs/pdf/index.pdf"
-	@echo "Epub3: abs-docs/target/classes/docs/epub3/index.epub"
+	@echo "HTML: abs-docs/target/html/index.html"
+	@echo "PDF: abs-docs/target//pdf/index.pdf"
+	@echo "Epub3: abs-docs/target/epub3/index.epub"
 
 vagrant:			## Build and start Vagrant virtual machine
 	vagrant up

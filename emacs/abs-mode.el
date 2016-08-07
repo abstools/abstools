@@ -95,6 +95,13 @@ Note that you can set this variable as a file-local variable as well."
   :group 'abs)
 (put 'abs-clock-limit 'safe-local-variable 'integerp)
 
+(defcustom abs-local-port nil
+  "Port where to start the REST API / visualization server (Erlang backend).
+Server will not be started if nil."
+  :type 'integer
+  :group 'abs)
+(put 'abs-local-port 'safe-local-variable 'integerp)
+
 (defcustom abs-default-resourcecost 0
   "Default resource cost of executing one ABS statement in the timed interpreter."
   :type 'integer
@@ -416,7 +423,8 @@ value.")
                    (erlang-dir (concat (file-name-directory (buffer-file-name))
                                        "gen/erl/absmodel"))
                    (module (abs--guess-module))
-                   (clock-limit abs-clock-limit))
+                   (clock-limit abs-clock-limit)
+                   (port abs-local-port))
                (with-current-buffer erlang-buffer
                  (comint-send-string erlang-buffer
                                      (concat "cd (\"" erlang-dir "\").\n"))
@@ -431,6 +439,7 @@ value.")
                  (comint-send-string erlang-buffer
                                      (concat "runtime:start(\""
                                              (when clock-limit (format " -l %d " clock-limit))
+                                             (when port (format " -p %d " port))
                                              ;; FIXME: reinstate `module' arg
                                              ;; once abs--guess-module doesn't
                                              ;; pick a module w/o main block

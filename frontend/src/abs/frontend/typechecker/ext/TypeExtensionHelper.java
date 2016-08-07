@@ -23,12 +23,13 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         register(new ClassKindTypeExtension(m));
         register(new FinalAnnotationTypeExtension(m));
         register(new AtomicityChecker(m));
-        register(new DeploymentComponentChecker(m));
+        register(new NewExpressionChecker(m));
         register(new DeadlineChecker(m));
         register(new SizeAnnotationChecker(m));
         register(new CostAnnotationChecker(m));
         register(new SchedulerChecker(m));
         register(new MainBlockChecker(m));
+        register(new RestExportChecker(m));
     }
 
     public TypeSystemExtension getFirstRegisteredTypeExtension(Class<?> clazz) {
@@ -294,6 +295,13 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     public void checkClassDecl(ClassDecl decl) {
         for (TypeSystemExtension tse : obs) {
             tse.checkClassDecl(decl);
+        }
+    }
+
+    @Override
+    public void checkInterfaceDecl(InterfaceDecl decl) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkInterfaceDecl(decl);
         }
     }
 

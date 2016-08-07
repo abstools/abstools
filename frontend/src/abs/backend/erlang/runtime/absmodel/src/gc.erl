@@ -8,7 +8,7 @@
 -export([start/2, stop/0, extract_references/1, get_references/1]).
 -export([register_future/1, unroot_future/1]).
 -export([register_cog/1, unregister_cog/1, cog_stopped/1]).
--export([register_object/1]).
+-export([register_object/1,unregister_object/1]).
 
 -export([behaviour_info/1]).
 
@@ -82,6 +82,11 @@ register_object(Obj) ->
     %% Obj is an #object record
     gen_fsm:send_event({global, gc}, Obj).
 
+unregister_object(#object{ref=Obj}) ->
+    gen_fsm:send_event({global, gc}, {stopped_object, Obj});
+unregister_object(Obj) when is_pid(Obj) ->
+    gen_fsm:send_event({global, gc}, {stopped_object, Obj}).
+
 
 %% gen_fsm callback functions
 
@@ -121,6 +126,9 @@ idle_state_next(State=#state{log=Log, cogs=Cogs}) ->
 idle(#object{ref=Ref}, State=#state{objects=Objects}) ->
     {Next, NewState} = idle_state_next(State#state{objects=gb_sets:insert({object, Ref}, Objects)}),
     {next_state, Next, NewState};
+idle({stopped_object, Ref}, State=#state{objects=Objects}) ->
+    {Next, NewState} = idle_state_next(State#state{objects=gb_sets:del_element({object, Ref}, Objects)}),
+    {next_state, Next, NewState};
 idle({unroot, Sender}, State=#state{root_futures=RootFutures, futures=Futures}) ->
     {Next, NewState} = idle_state_next(State#state{futures=gb_sets:insert({future, Sender}, Futures),
                                                    root_futures=gb_sets:delete({future, Sender}, RootFutures)}),
@@ -146,7 +154,10 @@ collecting_state_next(State=#state{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, 
     case gb_sets:is_empty(RunningCogs) of
         true ->
             gcstats(Log, mark),
-            Black=mark([], ordsets:from_list(gb_sets:to_list(gb_sets:union(Cogs, RootFutures)))),
+            Exported=gb_sets:from_list(
+                       lists:map(fun(#object{ref=Ref}) -> {object, Ref} end,
+                                 cog_monitor:list_registered_rest_objects())),
+            Black=mark([], ordsets:from_list(gb_sets:to_list(gb_sets:union([Cogs, RootFutures, Exported])))),
             gcstats(Log, sweep),
             StateAfterSweep=sweep(State, gb_sets:from_ordset(Black)),
             {idle, StateAfterSweep};
@@ -156,6 +167,9 @@ collecting_state_next(State=#state{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, 
 
 collecting(#object{ref=Ref}, State=#state{objects=Objects}) ->
     {Next, NewState} = collecting_state_next(State#state{objects=gb_sets:insert({object, Ref}, Objects)}),
+    {next_state, Next, NewState};
+collecting({stopped_object, Ref}, State=#state{objects=Objects}) ->
+    {Next, NewState} = collecting_state_next(State#state{objects=gb_sets:del_element({object, Ref}, Objects)}),
     {next_state, Next, NewState};
 collecting({unroot, Sender}, State=#state{root_futures=RootFutures, futures=Futures}) ->
     {Next, NewState} = collecting_state_next(State#state{futures=gb_sets:insert({future, Sender}, Futures),

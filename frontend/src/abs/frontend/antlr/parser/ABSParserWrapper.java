@@ -8,7 +8,6 @@ import java.io.*;
 
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
-import beaver.Parser;
 
 import abs.common.Constants;
 import abs.frontend.ast.*;

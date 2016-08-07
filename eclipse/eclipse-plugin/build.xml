@@ -61,7 +61,6 @@
      <pathelement location="${costabs.dir}/bin" />
      <pathelement location="${apet.dir}/bin" />
      <pathelement location="${sda.dir}/bin" />
-           <path location="${frontend.dir}/lib/beaver.jar"/>
            <fileset dir="${frontend.dir}/lib" includes="**/*.jar" />
            <fileset refid="eclipse-plugin-jars" />
         </path>

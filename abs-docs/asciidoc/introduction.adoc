@@ -105,3 +105,33 @@ image::new-local-object.png[width=593,height=154,title="Creating an object in th
 
 [[sec:error-model]]
 === Error Propagation and Recovery in ABS
+
+ABS models exceptional (unforeseen and erroneous) situations using exceptions.
+This section gives an overview of the language constructs that deal with
+exception propagation and recovery.
+
+Exceptions occur when a process cannot continue normal execution, e.g., when
+trying to divide by zero or when no pattern in a `case` expression matches the
+given value.  Exceptions can also be thrown by the modeler via the `throw`
+statement: <<throw-statement>>.  Exceptions thrown implicitly or explicitly
+are propagated and handled in the same way.
+
+The modeler can define new exceptions; see <<exception-type>>.
+
+Exceptions can be caught and handled locally, i.e., in a lexically enclosing
+`try`-`catch`-`finally` block in the same method (see <<try-catch-finally-stmt>>).
+In that case, the process continues execution and will eventually produce a
+return value to its future.
+
+In case of an _unhandled_ exception, the future of the process does not
+receive a return value; instead, it will propagate the unhandled exception to
+the caller (or any process that tries to get its value).  When evaluating
+`f.get` on a future that carries an exception instead of a normal return
+value, the exception will be _re-thrown_; it can be handled as usual via
+`try`-`catch` or left to propagate up the call chain of futures.
+
+Additionally, terminating a process in the middle of execution might leave its
+object in an inconsistent state.  To recover from this, ABS uses _recovery
+blocks_ (see <<sec:classes>>).  Unhandled exceptions are handed to the
+recovery block, which can take appropriate action to re-establish the class
+invariant and/or send asynchronous messages to other objects.

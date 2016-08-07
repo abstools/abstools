@@ -6,6 +6,7 @@ where noted otherwise, are contained in the module `ABS.StdLib` which is
 included by default in every module.  Therefore, no `import` statement is
 necessary to use these definitions.
 
+[[type-bool]]
 === Boolean values
 
 ==== Datatypes and Constructors
@@ -37,7 +38,7 @@ The following operators apply to Boolean values:
 |~ e        |logical negation (deprecated) |right |Bool |Bool
 |=======================
 
-
+[[type-numbers]]
 === Numbers
 
 ==== Datatypes and constructors
@@ -135,6 +136,7 @@ Returns an integer between 0 and its argument.
 Int random(Int below)
 ----
 
+[[type-string]]
 === Strings
 
 ==== Datatypes and Constructors
@@ -209,6 +211,7 @@ output to begin on a new line.
 def Unit print(String s)
 ----
 
+[[type-unit]]
 === Unit
 
 Unit is the empty (void) datatype.
@@ -218,8 +221,102 @@ Unit is the empty (void) datatype.
 Both the datatype and the single constructor are named `Unit`.
 
 
-// == Futures
+[[type-future]]
+=== The Future Type
 
+Futures are placeholders for return values of asynchronous methods calls.
+
+Future values are produced by asynchronous method calls (see
+<<async-call-expression>>).  The current process can suspend itself until a
+future is resolved, i.e., until the return value of the asynchronous method
+call is available (see <<await-stmt>>).  The get expression returns the value
+of a future (see <<get-expression>>).  In case the future is not yet resolved,
+the get expression blocks the current cog.
+
+.Example
+[source]
+----
+Fut<Int> f = o!add(2, 3); <1>
+await f?; <2>
+Int result = f.get; <3>
+----
+<1> This statement defines a future variable `f` to hold the integer result of the method call to `add`.
+<2> The `await` statement suspends the current process until `f` is resolved.
+<3> The `get` expression returns the value computed by the `add` call.
+
+Futures are first-class values that can be stored and passed around.  In case
+only the return value of the method call is needed and not the future itself,
+a shorthand can be used that combines the above three statements:
+
+.Example
+[source]
+----
+Int result = await o!add(2, 3); <1>
+----
+<1> This statement invokes `add`, suspends the current process until the result is available, then stores it in `result`.
+
+[[exception-type]]
+=== The Exception Type
+
+In higher-level programming languages, exceptions are generally used to signal
+an _erroneous_ or _abnormal_ runtime behaviour of the program, that should be
+treated (handled) separately compared to normal values.
+
+The type `ABS.StdLib.Exception` is a special built-in data type.  Constructors
+are added to this datatype via an exception declaration.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _ExceptionDecl_ ::= | `exception` _DataConstr_ `;`
+|====
+
+NOTE: The exception data type is the only data type that can be extended with
+new (user-provided) data constructors.
+
+.Example
+[source]
+----
+exception MyException;
+----
+
+An exception can also take any number of arguments as:
+
+.Example
+[source]
+----
+exception AnotherException(Int, String, Bool);
+----
+
+In ABS, exceptions are first-class values; the user can construct
+exception-values, assign them to variables, pass them in expressions, etc.  An
+exception can be thrown via the `throw` statement (see <<throw-statement>>)
+and be caught in a `catch` block (see <<try-catch-finally-stmt>>).
+Additionally, the object itself can recover its invariant after an uncaught
+exception in a process via its recovery block (see <<sec:classes>>).
+
+
+==== Predefined exceptions in the Standard Library
+
+DivisionByZeroException::
+    Raised in arithmetic expressions when the divisor (denominator) is equal to 0, as in +3/0+
+AssertionFailException::
+    The assert keyword was called with +False+ as argument
+PatternMatchFailException::
+    The pattern matching was not complete. In other words all c catch-all clause
+NullPointerException::
+    A method was called on `null`
+StackOverflowException::
+    The calling stack has reached its limit (system error)
+HeapOverflowException::
+    The memory heap is full (system error)
+KeyboardInterruptException::
+    The user pressed a key sequence to interrupt the running ABS program
+ObjectDeadException::
+    A method was called on a dead (crashed) object
+
+
+[[type-list]]
 === Lists
 
 A list is a sequence of values of the same type.  Lists are expressed as
@@ -346,6 +443,7 @@ Returns a list of length `n` containing `p` n times.
 def List<A> copy<A>(A p, Int n);
 ----
 
+[[type-set]]
 === Sets
 
 ==== Datatypes and Constructors
@@ -455,6 +553,7 @@ it from the set.  Repeat until the set is empty.
 // .next
 
 
+[[type-map]]
 === Maps
 
 ==== Datatypes and Constructors
@@ -563,6 +662,7 @@ the first entry already mapping `k` to a value.
 def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v);
 ----
 
+[[type-pair]]
 === Pairs
 
 ==== Datatypes and Constructors
@@ -586,6 +686,7 @@ The function `fst` returns the first value in a pair.
 
 The function `snd` returns the second value in a pair.
 
+[[type-triple]]
 === Triples
 
 ==== Datatypes and Constructors
@@ -612,6 +713,7 @@ The function `sndT` returns the second value in a triple.
 
 The function `trdT` returns the third value in a triple.
 
+[[type-optionals]]
 === Optionals
 
 ==== Datatypes and Constructors
