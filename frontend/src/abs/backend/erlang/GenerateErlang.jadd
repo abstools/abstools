@@ -652,7 +652,7 @@ aspect GenerateErlang {
 
   @Override
   public void DivMultExp.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.print(" rationals:fast_div(rationals:to_r(");
+    ecs.print(" rationals:rdiv(rationals:to_r(");
     getLeft().generateErlangCode(ecs,vars);
     ecs.print("),rationals:to_r(");
     getRight().generateErlangCode(ecs,vars);
