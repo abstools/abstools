@@ -41,6 +41,8 @@ value_available(Future, Status, Value, Sender, Cog, Cookie) ->
     %% will send back Cookie to Sender
     gen_fsm:send_event(Future, {completed, Status, Value, Sender, Cog, Cookie}).
 
+get_after_await(null) ->
+    throw(dataNullPointerException);
 get_after_await(Future)->
     case gen_fsm:sync_send_event(Future, get) of
         {ok,Value}->
@@ -49,6 +51,8 @@ get_after_await(Future)->
             exit(Reason)
     end.
 
+get_blocking(null, _Cog, _Stack) ->
+    throw(dataNullPointerException);
 get_blocking(Future, Cog, Stack) ->
     case poll(Future) of
         true ->
@@ -88,6 +92,8 @@ get_blocking(Future, Cog, Stack) ->
 get_references(Future) ->
     gen_fsm:sync_send_event(Future, get_references).
 
+await(null, _Cog, _Stack) ->
+    throw(dataNullPointerException);
 await(Future, Cog=#cog{ref=CogRef}, Stack) ->
     case poll(Future) of
         true -> ok;
@@ -149,6 +155,9 @@ register_waiting_task(Future, Task) ->
 confirm_wait_unblocked(Future, Task) ->
     gen_fsm:send_event(Future, {okthx, Task}).
 
+
+poll(null) ->
+    throw(dataNullPointerException);
 poll(Future) ->
     case gen_fsm:sync_send_event(Future, poll) of
         completed -> true;
