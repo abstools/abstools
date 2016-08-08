@@ -95,7 +95,7 @@ aspect Typing {
     eq AmbiguousDecl.getType() = UnknownType.INSTANCE;
     
     syn Type ConstructorArg.getType();
-    eq ConstructorArg.getType() = getDataTypeUse().getType();
+    eq ConstructorArg.getType() = getTypeUse().getType();
     
     syn Type VarOrFieldDecl.getType();
     eq TypedVarOrFieldDecl.getType() = getAccess().getType();

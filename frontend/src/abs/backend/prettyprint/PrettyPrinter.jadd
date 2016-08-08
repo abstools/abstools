@@ -926,7 +926,7 @@ aspect doPrettyPrinter {
     }
 
     public void ConstructorArg.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        getDataTypeUse().doPrettyPrint(stream, formatter);
+        getTypeUse().doPrettyPrint(stream, formatter);
         if (hasSelectorName()) {
             stream.print(" ");
             stream.print(getSelectorName());

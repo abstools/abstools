@@ -508,7 +508,7 @@ aspect GenerateProlog {
     }
     
     public void ConstructorArg.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
-        getDataTypeUse().generateProlog(s,reachInfo);
+        getTypeUse().generateProlog(s,reachInfo);
     }
     
     public void ParamDecl.generatePrologField(PrintStream s,ReachabilityInformation reachInfo){
