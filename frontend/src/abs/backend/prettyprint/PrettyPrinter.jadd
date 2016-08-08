@@ -599,6 +599,18 @@ aspect doPrettyPrinter {
         stream.print(";");
     }
 
+    public void AddImportModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print("adds ");
+        getImport().doPrettyPrint(stream, formatter);
+        stream.println();
+    }
+
+    public void AddExportModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print("adds ");
+        getExport().doPrettyPrint(stream, formatter);
+        stream.println();
+    }
+
     public void RemoveClassModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("removes class ");
         stream.print(getName());
