@@ -278,7 +278,6 @@ aspect ProductFlattener {
       applyTraits();      
   }
   private void Model.applyTraits() throws DeltaModellingException{
-       System.out.println("start applying traits");
       
       //Collect all traits
       LinkedList<TraitDecl> list = new LinkedList<>();

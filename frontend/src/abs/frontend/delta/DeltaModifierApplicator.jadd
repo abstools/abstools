@@ -323,10 +323,8 @@ aspect DeltaModifierApplicator {
     }
     
     //traits
-    public  void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ System.out.println("I'm a trait! "+this); getTraitOper().applyTo(cd); }
+    public  void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ getTraitOper().applyTo(cd); }
   public void TraitAddOpr.applyTo(ClassDecl cd) throws DeltaModellingException{ 
-
-		  System.out.println("I'm a trait add! "+this);
 		  TraitExpr tt = getTraitExpr();
 		  ArrayList<TraitOper> operations = new ArrayList<>();
 		  TraitExpr target = helperLeftMost(tt, operations);
@@ -365,9 +363,7 @@ aspect DeltaModifierApplicator {
   }
     
     
-       public void TraitModifyOpr.applyTo(ClassDecl cd) throws DeltaModellingException{ 
-
-      System.out.println("I'm a trait modify! "+this); 
+ public void TraitModifyOpr.applyTo(ClassDecl cd) throws DeltaModellingException{ 
       TraitExpr tt = getTraitExpr();
       ArrayList<TraitOper> operations = new ArrayList<>();
       TraitExpr target = helperLeftMost(tt, operations);
@@ -494,7 +490,6 @@ public TraitExpr TraitModifyOpr.helperLeftMost(TraitExpr tt, ArrayList<TraitOper
                     TraitDecl tDecl = (TraitDecl)decl;
                     if( tDecl.getName().equals(n.getName()) ){
                         resolved = tDecl.getTraitExpr();
-                         System.out.println("I'm a trait usage and I resolved"+tDecl.toString());
                         break;
                     }
                 }
@@ -516,7 +511,6 @@ public TraitExpr TraitModifyOpr.helperLeftMost(TraitExpr tt, ArrayList<TraitOper
   }
     		
     public  void TraitRemoveOpr.applyTo(ClassDecl cd) throws DeltaModellingException{ 
-    		System.out.println("I'm a trait remove! "+this);
 
   	        MethodSig mysig = this.getMethodSig();
 
@@ -539,7 +533,6 @@ public TraitExpr TraitModifyOpr.helperLeftMost(TraitExpr tt, ArrayList<TraitOper
   	
   	 public  void TraitUse.applyTo(ClassDecl cd) throws DeltaModellingException {
 
-      System.out.println("I'm a trait usage! "+this);
       List<Decl> list = cd.getModuleDecl().getDecls();
       TraitExpr resolved = getTraitExpr();
       if(getTraitExpr() instanceof TraitNameExpr){
@@ -549,7 +542,6 @@ public TraitExpr TraitModifyOpr.helperLeftMost(TraitExpr tt, ArrayList<TraitOper
                 TraitDecl tDecl = (TraitDecl)decl;
                 if( tDecl.getName().equals(n.getName()) ){
                     resolved = tDecl.getTraitExpr();
-      				System.out.println("I'm a trait usage and I resolved"+tDecl.toString());
                     break;
                 }
             }
@@ -564,7 +556,6 @@ public TraitExpr TraitModifyOpr.helperLeftMost(TraitExpr tt, ArrayList<TraitOper
       if(pos > -1){
           cd.getTraitUseList().removeChild(pos);
       }
-      System.out.println("I'm a trait usage! "+this);
       cd.getModuleDecl().flushCache();
   }
 }

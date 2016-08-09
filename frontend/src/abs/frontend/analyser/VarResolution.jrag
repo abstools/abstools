@@ -191,7 +191,6 @@ aspect VarResolution {
     }
 
     syn lazy VarOrFieldDecl TraitExpr.mylookupVarOrFieldName(String name, boolean fieldOnly) {
-    		System.out.println("I'm in this eq");
 	      ASTNode<ASTNode> obj = this;
 	      while(obj != null && !(obj instanceof Modifier))
 	          obj = obj.parent;
