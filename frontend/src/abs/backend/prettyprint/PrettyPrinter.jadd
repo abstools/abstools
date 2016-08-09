@@ -1153,4 +1153,10 @@ aspect doPrettyPrinter {
         getOperand().doPrettyPrint(stream, formatter);
     }
 
+    public void TraitDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+
+    }
+    public void TraitUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+
+    }
 }

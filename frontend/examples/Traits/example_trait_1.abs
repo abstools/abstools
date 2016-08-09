@@ -1,0 +1,34 @@
+module TestMod;
+
+//example for traits applied to classes
+
+trait T1 = {} 
+           removes Unit helper_1(Int i, Int j); 
+           removes Unit helper_2(Int i);
+           adds { 
+               Int better_helper_1(Int i, Int j) { return i*j; } 
+               Int better_helper_2(Int i) { return i*2; } 
+           }
+           modifies {
+                Int main_method(Int i){
+                    Int v1 = this.better_helper_1(i,2);
+                    Int v2 = this.better_helper_2(i);
+                    return v1+v2;
+                }
+           }
+
+interface Inter {}
+
+class InterImpl implements Inter {
+    adds T1;
+    Int f1 = 0;
+    Int f2 = 0;
+    Unit helper_1(Int i, Int j){ f1 = i*j; }
+    Unit helper_2(Int i) { f2 = i*2; }
+    Int main_method(Int i){
+        this.helper_1(i,2);
+        this.helper_2(i);
+        return f1+f2;
+    }
+}
+

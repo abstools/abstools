@@ -330,6 +330,8 @@ aspect DeltaModifierApplicator {
 		  TraitExpr tt = getTraitExpr();
 		  ArrayList<TraitOper> operations = new ArrayList<>();
 		  TraitExpr target = helperLeftMost(tt, operations);
+		  
+		  Collections.reverse(operations);
                   applySimple(cd,target);
                   for (TraitOper oper : operations) {
                     oper.applyTo(cd);
@@ -562,5 +564,7 @@ public TraitExpr TraitModifyOpr.helperLeftMost(TraitExpr tt, ArrayList<TraitOper
       if(pos > -1){
           cd.getTraitUseList().removeChild(pos);
       }
+      System.out.println("I'm a trait usage! "+this);
+      cd.getModuleDecl().flushCache();
   }
 }

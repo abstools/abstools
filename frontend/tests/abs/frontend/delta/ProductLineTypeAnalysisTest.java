@@ -148,7 +148,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
             msig.setName("m" + id);
             MethodImpl mimpl = new MethodImpl();
             mimpl.setMethodSig(msig);
-            List<MethodImpl> list = new LinkedList<>();
+            abs.frontend.ast.List<MethodImpl> list = new abs.frontend.ast.List<>();           
             list.add(mimpl);
             DeltaTraitModifier dmod = new DeltaTraitModifier(new TraitModifyOpr(new TraitSetExpr(list)));
 
