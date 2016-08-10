@@ -74,9 +74,10 @@ block has the same restrictions as in the init block.
 .Syntax
 |====
 | _ClassDecl_ ::= | `class` _SimpleTypeIdentifier_ [ `(` [ _ClassParameterList_ ] `)` ] [ `implements` _InterfaceList_ ]
-|                 | `{` [ _FieldDeclList_ ] [ _Block_ ] [_RecoveryBlock_] [ _MethDeclList_ ] `}`
+|                 | `{` [ _TraitUseList_ ] [ _FieldDeclList_ ] [ _Block_ ] [_RecoveryBlock_] [ _MethDeclList_ ] `}`
 | _ClassParameterList_ ::= | _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ }
 | _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
+| _TraitUseList_ ::= | adds _TraitName_`;` { `,` adds _TraitName_ `;`}
 | _FieldDeclList_ ::= | { _Type_ _SimpleIdentifier_ [ `=` _PureExp_ ] `;` }
 | _RecoveryBlock_ ::= | `recover` `{` { _Pattern_ `\=>` _Stmt_ } `}`
 | _MethDeclList_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` _Block_
@@ -130,3 +131,80 @@ Unit run() {
 ----
 
 The run method is called after object initialization.
+
+[[sec:traits]]
+== Traits
+
+ABS does not support inheritance, code reuse is realized via traits. 
+A trait can remove, modify or add methods and is applied via flattening, i.e. the code changes are applied at compile-time _before_ type checking.
+
+Similar to classes, traits in ABS are not types.
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _TraitDecl_ ::= | `trait` _TraitName_ = _TraitExpr_
+| _TraitName_ ::= | _SimpleIdentifier_
+| _TraitExpr_ ::= | _MethodSet_ {vbar} _TraitName_ {vbar} _TraitExpr_ _TraitOper_
+| _TraitOper_ ::= | `adds` _TraitExpr_ {vbar} `modifies` _TraitExpr_ {vbar} removes _MethSig_
+| _MethodSet_ ::= |  { _MethDeclList_ }
+|====
+
+
+A trait is defined with `trait` t = _T_ at module level and applied on a class with `adds` _T_.
+If one wants to define a trait that does not add methods, but only modifies or removes methods, the trait must start with
+
+
+[source]
+.Example
+----
+trait T = {} 
+----
+.Explanation
+* The operation `adds` adds all the elements of the next _MethodSet_ to the class. 
+If a method with the same name is already present in the class, the error will be raised _after_ applying all traits, during type checking.
+* The operation `modifies` changes all the elements of the next _MethodSet_ in the class to the new implementation described in this _MethodSet_. 
+If a method with the same name is not present in the class an error will be raised during trait application.
+* The operation `removes` deletes the method with the provided signature. 
+If a method with the same name is not present in the class an error will be raised during trait application.
+
+.The order of trait application is as follows:
+* All traits used within a class, in the order they are refered too
+* All traits used within a delta, in the order they are refered too
+* Within a trait expression, the operations are applied from left to right 
+
+[source]
+.Example
+----
+trait T1 = {} 
+           removes Unit helper_1(Int i, Int j); 
+           removes Unit helper_2(Int i);
+           adds { 
+               Int better_helper_1(Int i, Int j) { return i*j; } 
+               Int better_helper_2(Int i) { return i*2; } 
+           }
+           modifies {
+                Int main_method(Int i){
+                    Int v1 = this.better_helper_1(i,2);
+                    Int v2 = this.better_helper_2(i);
+                    return v1+v2;
+                }
+           }
+
+interface Inter {}
+
+class InterImpl implements Inter {
+    adds T1;
+    Int f1 = 0;
+    Int f2 = 0;
+    Unit helper_1(Int i, Int j){ f1 = i*j; }
+    Unit helper_2(Int i) { f2 = i*2; }
+    Int main_method(Int i){
+        this.helper_1(i,2);
+        this.helper_2(i);
+        return f1+f2;
+    }
+}
+
+}
+----
+First the two helper methods are removed, then the better_helper methods added and finally the main method is modfied.
