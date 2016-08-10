@@ -117,7 +117,8 @@ await_activation(Params) ->
                class,                     % The class of the object (a symbol)
                fields,                    % the state of the object fields
                alive=true,     % false if object is garbage collected / crashed
-               protect_from_gc=false % true if unreferenced object needs to  be kept alive
+               protect_from_gc=false, % true if unreferenced object needs to  be kept alive
+               termination_reason     % communicate to terminate() function
               }).
 
 start(Cog,Class)->
@@ -218,7 +219,7 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, ta
                 true -> exit(By,Reason);
                 false -> ok
             end,
-            {stop,{shutdown, Reason},ok,S#state{alive=false}}
+            {stop,normal,ok,S#state{alive=false,termination_reason=Reason}}
     end;
 handle_sync_event(protect_from_gc, _From, StateName, S) ->
     {reply, ok, StateName, S#state{protect_from_gc=true}};
@@ -238,7 +239,7 @@ handle_event(unprotect_from_gc, StateName, State=#state{class=C,tasks=Tasks,cog=
             %% FIXME: check if cog_monitor needs updating here wrt task lists etc.
             [ exit(T,normal) ||T<-gb_sets:to_list(Tasks)],
             cog:dec_ref_count(Cog),
-            {stop,{shutdown, unprotected},ok,State}
+            {stop,normal,ok,State#state{termination_reason=gc}}
     end;
 handle_event(_Event,_StateName,State)->
     {stop,not_implemented,State}.
@@ -247,10 +248,9 @@ handle_event(_Event,_StateName,State)->
 handle_info({'DOWN', _MonRef, process, TaskRef, _Reason} ,StateName,S=#state{tasks=Tasks})->
     {next_state,StateName,S#state{tasks=gb_sets:del_element(TaskRef, Tasks)}}.
 
-
-terminate({shutdown, gc}, _StateName, _Data) ->
+terminate(normal, _StateName, _Data=#state{termination_reason=gc}) ->
     ok;
-terminate({shutdown, _Reason},_StateName,_Data)->
+terminate(_Reason,_StateName, _Data)->
     gc:unregister_object(self()),
     ok.
 code_change(_OldVsn,_StateName,_Data,_Extra)->
