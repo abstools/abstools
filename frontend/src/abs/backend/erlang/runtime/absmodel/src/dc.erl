@@ -54,7 +54,12 @@ consume(#object{class=class_ABS_DC_DeploymentComponent,ref=O}, Resourcetype, Amo
                                 Amount}).
 
 update(#object{class=class_ABS_DC_DeploymentComponent,ref=O}, Interval) ->
-    gen_fsm:sync_send_event(O, {clock_advance_for_dc, Interval}).
+    %% KLUDGE: this should not be necessary
+    %% TODO: investigate why cog_monitor sometimes has dead DCs in its list
+    case is_process_alive(O) of
+        true -> gen_fsm:sync_send_event(O, {clock_advance_for_dc, Interval});
+        false -> cog_monitor:dc_died(O)
+    end.
 
 %% Callback from update event.  Handle arbitrary clock advancement
 %% amounts (within one interval, arriving at clock boundary, jumping
