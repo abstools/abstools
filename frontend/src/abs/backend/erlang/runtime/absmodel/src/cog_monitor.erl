@@ -102,7 +102,8 @@ new_dc(DC) ->
     gen_server:call({global, cog_monitor}, {newdc, DC}).
 
 dc_died(DC) ->
-    gen_server:call({global, cog_monitor}, {dc_died, DC}).
+    gen_server:cast({global, cog_monitor}, {dc_died, DC}),
+    ok.
 
 get_dcs() ->
     gen_server:call({global, cog_monitor}, get_dcs).
@@ -207,10 +208,6 @@ handle_call({cog,Task,Cog,clock_waiting,Min,Max}, _From,
 handle_call({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent}},
             _From, State=#state{dcs=DCs}) ->
     {reply, ok, State#state{dcs=[DC | DCs]}};
-handle_call({dc_died, O}, _From, State=#state{dcs=DCs}) ->
-    %% This event is not currently in use; we want DCs to stay alive for
-    %% visualization.
-    {reply, ok, State#state{dcs=lists:filter(fun (#object{ref=DC}) -> DC =/= O end, DCs)}};
 handle_call(get_dcs, _From, State=#state{dcs=DCs}) ->
     {reply, DCs, State};
 handle_call(all_registered_names, _From, State=#state{registered_objects=Objects}) ->
@@ -238,6 +235,8 @@ handle_call(Request, _From, State)->
     {reply, error, State}.
 
 
+handle_cast({dc_died, O}, State=#state{dcs=DCs}) ->
+    {noreply, State#state{dcs=lists:filter(fun (#object{ref=DC}) -> DC =/= O end, DCs)}};
 handle_cast(_Request, State) ->
     %% unused
     {noreply, State}.
