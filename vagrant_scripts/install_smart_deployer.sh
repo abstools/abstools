@@ -21,30 +21,16 @@ sudo apt-get install -y -q python-dev python-pip
 sudo pip install antlr4-python2-runtime toposort psutil
 
 cd $SRC
+rm -rf zephyrus2
 git clone --recursive -b bind_preferences https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git
 cd zephyrus2
-git checkout 6fb606bba57fb437d92f2df4a0c2faa9daa6cad5
+git checkout 924b50f04c73b8269d3b14157dd0abbf7b5bd99c
 #check out tested version with smartdeployer
 sudo pip install -e $SRC/zephyrus2
 
-# MiniSearch
-cd $SRC
-wget http://www.minizinc.org/minisearch/minisearch-0.1.0b1-Linux64.tar.gz
-tar -zxvf minisearch-0.1.0b1-Linux64.tar.gz
-mv $SRC/minisearch-0.1.0b1-Linux $SRC/minisearch
-chmod -R 755 $SRC/minisearch
-rm -rf minisearch-0.1.0b1-Linux64.tar.gz
-
-cat >> $SRC/mybashrc <<EOF
-export PATH=TOREPLACE/minisearch/bin:\$PATH
-EOF
-cat $SRC/mybashrc | sed -e "s/TOREPLACE/${_SRC}/g" >> /home/vagrant/.bashrc
-rm $SRC/mybashrc
-
-cp -rf $SRC/minisearch $DOCKER_SRC/minisearch
-
 #MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz and untar
 cd $SRC
+rm -rf $SRC/MiniZincIDE
 wget https://github.com/MiniZinc/MiniZincIDE/releases/download/2.0.13/MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz
 tar -zxvf MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz 
 mv $SRC/MiniZincIDE-2.0.13-bundle-linux-x86_64 $SRC/MiniZincIDE
@@ -61,11 +47,9 @@ cp -rf $SRC/MiniZincIDE $DOCKER_SRC/MiniZincIDE
 
 # add gecode global def to minizinc
 sudo apt-get install -y qt5-default
-cp -rf $SRC/minisearch/share/minizinc/gecode $SRC/MiniZincIDE/share/minizinc/gecode
-
-# smt solver is not installed (not used by asb_deployer)
 
 # download chuffed, add global-dir in minizinc
+rm -rf /home/vagrant/bin/fzn-chuffed
 cat >> /home/vagrant/bin/fzn-chuffed <<EOF
 #!/bin/bash
 FZN_SOLVER="fzn_chuffed"
@@ -100,12 +84,12 @@ else
 fi
 EOF
 
+rm -rf $SRC/chuffed
 cd $SRC
 git clone --depth=1 https://github.com/geoffchu/chuffed.git
 chmod 755 /home/vagrant/bin/fzn-chuffed
 chmod 755 $SRC/chuffed/binary/linux/fzn_chuffed
 cp -rf $SRC/chuffed/binary/linux/mznlib $SRC/MiniZincIDE/share/minizinc/chuffed
-cp -rf $SRC/chuffed/binary/linux/mznlib $SRC/minisearch/share/minizinc/chuffed
 
 cat >> $SRC/mybashrc <<EOF
 export PATH=TOREPLACE/chuffed/binary/linux:\$PATH
@@ -119,43 +103,13 @@ cp -f /home/vagrant/bin/fzn-chuffed $DOCKER_SRC
 
 
 # clone smart_deployer
+rm -rf $SRC/smart_deployer
 cd $SRC
 mkdir smart_deployer
 cd smart_deployer
-git clone --depth=1 -b smart_deployer https://github.com/jacopoMauro/abs_deployer.git
+git clone --depth=1 -b bind_pref https://github.com/jacopoMauro/abs_deployer.git
 chmod -R 755 $SRC/smart_deployer
 
 cat >> /home/vagrant/.bashrc <<EOF
 export CLASSPATH=\$ABSFRONTEND:\$CLASSPATH
 EOF
-
-# clone main_generator
-cd $SRC
-mkdir main_generator
-cd main_generator
-git clone --depth=1 https://github.com/jacopoMauro/abs_deployer.git
-cat >> $SRC/mybashrc <<EOF
-export PATH=TOREPLACE/main_generator/abs_deployer/docker:\$PATH
-EOF
-cat $SRC/mybashrc | sed -e "s/TOREPLACE/${_SRC}/g" >> /home/vagrant/.bashrc
-rm $SRC/mybashrc
-
-# install minizinc 1.6 for main generator inside bin
-cd $SRC/main_generator
-wget -nv http://www.minizinc.org/downloads/release-1.6/minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
-tar xzf minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
-rm -rf minizinc-1.6-x86_64-unknown-linux-gnu.tar.gz
-cd $SRC/main_generator/minizinc-1.6
-./SETUP
-
-chmod -R 775 $SRC/main_generator
-
-# if gecode is compiled
-# update LD_LIBRARY_PATH
-#if [ -z "$(grep 'export LD_LIBRARY_PATH=*' /home/vagrant/.bashrc)" ] ; then
-#cat >>/home/vagrant/.bashrc <<EOF
-#export LD_LIBRARY_PATH=\\\$LD_LIBRARY_PATH:/home/vagrant/gecode-4.4.0/lib
-#EOF
-#fi
-#chmod -R 755 /home/vagrant/gecode-4.4.0
-
