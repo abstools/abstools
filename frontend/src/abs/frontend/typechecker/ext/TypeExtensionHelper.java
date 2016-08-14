@@ -7,7 +7,7 @@ package abs.frontend.typechecker.ext;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.BoundedType;
 import abs.frontend.typechecker.DataTypeType;
@@ -23,10 +23,13 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         register(new ClassKindTypeExtension(m));
         register(new FinalAnnotationTypeExtension(m));
         register(new AtomicityChecker(m));
-        register(new DeploymentComponentChecker(m));
+        register(new NewExpressionChecker(m));
         register(new DeadlineChecker(m));
         register(new SizeAnnotationChecker(m));
+        register(new CostAnnotationChecker(m));
         register(new SchedulerChecker(m));
+        register(new MainBlockChecker(m));
+        register(new RestExportChecker(m));
     }
 
     public TypeSystemExtension getFirstRegisteredTypeExtension(Class<?> clazz) {
@@ -38,15 +41,15 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         return null;
     }
 
-    public void setSemanticErrorList(SemanticErrorList s) {
+    public void setSemanticConditionList(SemanticConditionList s) {
         for (TypeSystemExtension tse : obs) {
-            tse.setSemanticErrorList(s);
+            tse.setSemanticConditionList(s);
         }
     }
 
-    public void typeCheckStarted(Model m, SemanticErrorList e) {
+    public void typeCheckStarted(Model m, SemanticConditionList e) {
         registerDefaultExtensions(m);
-        setSemanticErrorList(e);
+        setSemanticConditionList(e);
     }
 
     public void register(TypeSystemExtension tse) {
@@ -296,9 +299,23 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
 
     @Override
+    public void checkInterfaceDecl(InterfaceDecl decl) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkInterfaceDecl(decl);
+        }
+    }
+
+    @Override
     public void checkMethodImpl(MethodImpl method) {
         for (TypeSystemExtension tse : obs) {
             tse.checkMethodImpl(method);
+        }
+    }
+
+    @Override
+    public void checkStmt(Stmt s) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkStmt(s);
         }
     }
 
@@ -364,6 +381,13 @@ public class TypeExtensionHelper implements TypeSystemExtension {
             tse.checkWhileStmt(whileStmt);
         }
     }
+
+    @Override
+    public void checkModel(Model model) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkModel(model);
+        }
+    }        
 
     public void registerAll(java.util.List<TypeSystemExtension> curr) {
         obs = new ArrayList<TypeSystemExtension>(obs);

@@ -22,17 +22,17 @@ public class DeadlineChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkExpressionStmt(ExpressionStmt e) {
-        checkDeadlineCorrect(e, CompilerUtils.getAnnotationValue(e.getAnnotations(), "Deadline"));
+        checkDeadlineCorrect(e, CompilerUtils.getAnnotationValueFromName(e.getAnnotations(), "ABS.StdLib.Deadline"));
     }
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
-        checkDeadlineCorrect(s, CompilerUtils.getAnnotationValue(s.getAnnotations(), "Deadline"));
+        checkDeadlineCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.StdLib.Deadline"));
     }
-    
+
     @Override
     public void checkVarDeclStmt(VarDeclStmt v) {
-        checkDeadlineCorrect(v, CompilerUtils.getAnnotationValue(v.getAnnotations(), "Deadline"));
+        checkDeadlineCorrect(v, CompilerUtils.getAnnotationValueFromName(v.getAnnotations(), "ABS.StdLib.Deadline"));
     }
 
     private void checkDeadlineCorrect(ASTNode<?> n, PureExp deadline) {

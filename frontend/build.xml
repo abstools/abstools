@@ -33,10 +33,8 @@
   <!-- TODO: about ast.gen.dir and JastAdd idiosyncrasies -->
   <property name="apidoc.dir" value="${gen.dir}/docs/api" />
   <property name="ast.gen.dir" value="${gen.dir}/abs/frontend" />
-  <property name="parser.src.dir" value="${src.dir}/abs/frontend/parser" />
   <property name="parser.antlr.src.dir" value="${src.dir}/abs/frontend/antlr" />
   <property name="antlr.jar" value="antlr-4.2.2-complete.jar"/>
-  <property name="parser.gen.dir" value="${gen.dir}/abs/frontend/parser" />
   <property name="junit.jar" value="junit-4.11.jar" />
   <property name="hamcrest.jar" value="hamcrest-core-1.3.jar" />
   <property name="easymock.jar" value="easymock-3.0.jar" />
@@ -44,7 +42,7 @@
   <property name="objenesis.jar" value="objenesis-1.2.jar" />
   <property name="target.jar" value="${dist.dir}/absfrontend.jar" />
   <property name="plugin.name" value="org.abs-models.abs.compiler" />
-  <property name="casestudies.dir" location="${base.dir}/../../../../../CaseStudies/models/" />
+  <property name="casestudies.dir" location="${base.dir}/../../examples/" />
 
 
   <!-- The package name of JastAdd generated files -->
@@ -71,12 +69,6 @@
     </sequential>
   </macrodef>
 
-  <!-- "jflex" is an ant task class for the scanner generator in JFlex.jar -->
-  <taskdef name="jflex" classname="JFlex.anttask.JFlexTask" classpath="${ext.dir}/JFlex.jar" />
-
-  <!-- "beaver" is an ant task class for the parser generator in beaver.jar -->
-  <taskdef name="beaver" classname="beaver.comp.run.AntTask" classpath="${ext.dir}/beaver.jar" />
-
   <!-- "jastadd" is an ant task class in jastadd2.jar -->
   <taskdef name="jastadd" classname="org.jastadd.JastAddTask" classpath="${ext.dir}/jastadd2.jar" />
 
@@ -98,14 +90,11 @@
   </path>
 
   <path id="run.classpath">
-        <pathelement location="${build.dir}" />
-        <pathelement location="${ext.dir}/beaver-rt.jar" />
-        <pathelement location="${ext.dir}/beaver-rt-src.jar" />
+    <pathelement location="${build.dir}" />
     <path refid="common.classpath"/>
   </path>
 
   <path id="compile.classpath">
-    <pathelement location="${ext.dir}/beaver.jar" />
     <pathelement location="${ext.dir}/jastadd2.jar" />
     <pathelement location="${ext.dir}/JastAddParser.jar" />
     <pathelement location="${ext.dir}/${junit.jar}" />
@@ -137,8 +126,8 @@
     <mkdir dir="${dist.dir}/plugins" />
     <mkdir dir="${dist.dir}/features" />
     <mkdir dir="${ast.gen.dir}" />
-    <mkdir dir="${parser.gen.dir}" />
     <mkdir dir="${build.dir}" />
+    <mkdir dir="${parser.antlr.src.dir}" />
     <!-- <mkdir dir = "${dist.dir}"/> -->
     <mkdir dir="${apidoc.dir}" />
   </target>
@@ -152,7 +141,6 @@
   <target name="javadoc" depends="gen,compile" description="Build java doc.">
     <javadoc sourcepath="${src.dir}:${gen.dir}" destdir="${apidoc.dir}">
       <classpath>
-        <pathelement location="${ext.dir}/beaver.jar" />
         <pathelement location="${ext.dir}/jastadd2.jar" />
         <pathelement location="${ext.dir}/JastAddParser.jar" />
       </classpath>
@@ -179,11 +167,11 @@
 
   <!-- generate ABS -->
 
-  <target name="gen" depends="genshell, genparser, genast, genlang, genruntime, genantlr">
+  <target name="gen" depends="prepare, genshell, genast, genlang, genruntime, genantlr">
   </target>
 
   <target name="genast">
-    <jastadd package="${ast.package}" rewrite="" beaver="true" visitCheck="false" outdir="${gen.dir}" debug="true">
+    <jastadd package="${ast.package}" rewrite="" visitCheck="false" outdir="${gen.dir}" debug="true">
       <fileset dir=".">
         <include name="src/abs/**/*.ast" />
         <include name="src/abs/**/*.jrag" />
@@ -236,37 +224,6 @@
     </chmod>
   </target>
 
-
-
-  <target name="genparser" depends="genflex,genp1,genp2">
-  </target>
-
-
-  <target name="genflex">
-    <!-- generate the scanner -->
-    <echo message="Running jflex" />
-    <jflex file="${parser.src.dir}/ABS.flex" outdir="${parser.gen.dir}" nobak="yes" />
-  </target>
-
-  <target name="genp1" depends="genflex, genast">
-    <echo message="Parser phase1" />
-    <!-- generate the parser phase 1, translating .parser to .beaver -->
-    <java fork="true" dir="${parser.src.dir}" classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt-src.jar" classname="Main">
-      <arg line="ABS.parser '${parser.gen.dir}/ABSParser.beaver'" />
-    </java>
-  </target>
-
-  <target name="genp2" depends="genp1">
-    <!-- generate the parser phase 2, translating .beaver to .java -->
-    <echo message="Parser phase" />
-    <beaver file="${parser.gen.dir}/ABSParser.beaver"
-      terminalNames="yes"
-      compress="no"
-      useSwitch="yes"
-      reportActions="yes"/>
-  </target>
-
-
   <target name="genantlr" depends="genast">
     <echo message="Running antlr" />
     <java fork="true" failonerror="yes"
@@ -293,7 +250,6 @@
       <!-- abslang has already been copied into build.dir -->
       <fileset dir="${src.dir}" includes="abs/**,deadlock/**,autodeploy/**" excludes="abs/lang/abslang.abs" />
       <zipfileset src="${ext.dir}/apfloat.jar" />
-            <zipfileset src="${ext.dir}/beaver-rt.jar" />
       <zipfileset src="${ext.dir}/ecj-4.4.2.jar" />
       <zipfileset src="${ext.dir}/org.sat4j.core.jar" />
       <zipfileset src="${ext.dir}/org.sat4j.pb.jar" />
@@ -360,16 +316,14 @@
 
   <target name="test-case-studies" depends="compile" description="typecheck all case studies">
       <antcall target="abs-typecheck">
-        <param name="absmodeldir" value="${casestudies.dir}/tradingsystem/absmodel/abs/tradingsystem"/>
+        <param name="absmodeldir" value="${casestudies.dir}/T4.2/D4.2.1/"/>
        </antcall>
-
-        <antcall target="abs-typecheck">
-            <param name="absmodeldir" value="${casestudies.dir}/vof"/>
-         </antcall>
-
-        <antcall target="abs-typecheck">
-            <param name="absmodeldir" value="${casestudies.dir}/fredhopper/replication/abs"/>
-         </antcall>
+      <antcall target="abs-typecheck">
+        <param name="absmodeldir" value="${casestudies.dir}/T4.3/D4.3.1/"/>
+       </antcall>
+      <antcall target="abs-typecheck">
+        <param name="absmodeldir" value="${casestudies.dir}/T4.4/D4.4.1/"/>
+       </antcall>
   </target>
 
   <target name="abs-typecheck">
@@ -391,7 +345,7 @@
     </junit>
   </target>
   <!-- From command line: -->
-  <!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt-src.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
+  <!-- java -cp bin:lib/junit-4.8.1.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
 
   <target name="build-eclipse-plugin" depends="dist">
     <mkdir dir="${basedir}/${plugin.name}_${frontend.version}"/>
@@ -399,7 +353,6 @@
       <fileset dir="${basedir}">
         <include name="META-INF/"/>
         <include name="lib/apfloat.jar"/>
-        <include name="lib/beaver-rt.jar"/>
         <include name="lib/choco-solver-2.1.1.jar"/>
         <include name="lib/sat4j-maxsat.jar" />
       	<include name="lib/semisolver.jar" />

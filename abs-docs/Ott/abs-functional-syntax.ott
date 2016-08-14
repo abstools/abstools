@@ -1,0 +1,185 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Functional level syntax of Core ABS                          %
+%                                                              %
+% Based on the FMCO 2010 paper                                 %
+% "ABS: A Core Language for Abstract Behavioral Specification" %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+indexvar i, j, n ::=
+      {{ lex numeral }}
+      {{ com index variables (subscripts) }}
+metavar tp ::=
+      {{ com type }}
+metavar N ::=
+      {{ lex Alphanum }}     
+      {{ com uninterpreted type name }}
+metavar D ::=
+      {{ lex Alphanum }}
+      {{ com data type name }}
+metavar Co ::=
+      {{ lex Alphanum }}
+      {{ com data type constructor name }}
+metavar I ::=
+      {{ lex Alphanum }}
+      {{ com interface name }}
+metavar fn ::=
+      {{ lex Alphanum }}
+      {{ com function name }}
+metavar x, y ::=
+      {{ lex alphanum }}
+      {{ com variable }}
+metavar k ::=
+      {{ lex numeral }}
+      {{ com length or distance }}
+metavar bo ::=
+      {{ lex bool }}
+      {{ com boolean expression }}
+grammar
+%%% FUNCTIONAL LEVEL SYNTAX %%%
+T :: T_ ::=
+  {{ com ground type }}
+  | B :: :: basic_type
+  | I :: :: interface
+  | D :: :: d_type
+  | D < Tl > :: :: d_type_param
+
+Tl {{ tex \overline{T} }} :: Tl_ ::=
+  {{ com ground type list }}
+  | T1 , ... , Tn :: :: t_list
+
+Tlx {{ tex \overline{T} \; \overline{x} }} :: Tlx_ ::=
+  {{ com ground type variable declaration list }}  
+  | T1 x1 , ... , Tn xn :: :: tx_list
+
+B :: B_ ::=
+  {{ com basic type }}
+  | Bool :: M :: bool 
+  | Int  :: M :: int
+  | tp :: M :: type {{ tex \ldots }}
+
+Bl {{ tex \overline{B} }} :: Bl_ ::=
+  {{ com basic type list }}
+  | B1 , ... , Bn :: :: b_list
+
+A :: A_ ::=
+  {{ com type }}
+  | N :: :: name
+  | T :: :: type
+  | D < Al > :: :: type_param  
+
+Al {{ tex \overline{A} }} :: Al_ ::=
+  {{ com type list }}
+  | A1 , ... , An :: :: a_list
+
+xl {{ tex \overline{x} }}, yl {{ tex \overline{y} }} :: xl_ ::=
+  {{ com variable list }}
+  | x1 , ... , xn :: :: x_list
+  
+Alx {{ tex \overline{A} \; \overline{x} }} :: Alx_ ::=
+  {{ com type variable declaration list }}
+  | A1 x1 , ... , An xn :: :: ax_list
+
+Cons :: Cons_ ::= 
+  {{ com constructor }}
+  | Co :: :: co
+  | Co ( Al ) :: :: co_param
+
+Consl {{ tex \overline{|\,Cons} }} :: Consl_ ::=
+  {{ com cons list }}  
+  | '|' Cons1 '|' .. '|' Consn :: :: cons_list 
+
+Dd :: Dd_ ::=
+  {{ com datatype definition }}
+  | data D = Cons Consl ; :: :: consl
+  | data D < Al > = Cons Consl ; :: :: consl_param
+
+Ddl {{ tex \overline{Dd} }} :: Ddl_ ::=
+  {{ com datatype definition list }}
+  | Dd1 .. Ddn :: :: list
+
+F :: F_ ::=
+  {{ com function definition }}
+  | def A fn ( Alx ) = e ; :: :: fn
+  | def A fn < Al > ( Alx ) = e ; :: :: fn_param
+
+Fl {{ tex \overline{F} }} :: Fl_ ::=
+  {{ com function definition list }}
+  | F1 ... Fn :: :: f_list
+
+b :: b_ ::=
+  {{ com boolean }}
+  | bo :: M :: bool
+  | True :: M :: true
+  | False :: M :: false
+
+e :: e_ ::=
+  {{ com expression }}
+  | b :: :: b
+    {{ com boolean expression }}
+  | x :: :: var	
+    {{ com variable }}
+  | t :: :: term 	
+    {{ com ground term }}
+  | this :: :: this 	
+    {{ com this }}
+  | destiny :: :: destiny 
+    {{ com destiny }}
+  | Co :: :: co 
+    {{ com constructor }}
+  | Co ( el ) :: :: co_param 
+    {{ com constructor with parameters }}
+  | fn ( el ) :: :: fn_call 
+    {{ com function call }}
+  | case e { brl } :: :: case 
+    {{ com case expression }}
+
+el {{ tex \overline{e} }} :: el_ ::=
+  {{ com expression list }}
+  | e1 , ... , en :: :: e_list
+  
+t :: t_ ::=
+  {{ com term }}
+  | Co :: :: co
+  | Co ( tl  ) :: :: co_param
+  | null :: :: null
+
+tl {{ tex \overline{t} }} :: tl_ ::=
+  {{ com term list }}
+  | t1 , ... , tn :: :: t_list
+
+br :: br_ ::=
+  {{ com case expression branch }}
+  | p => e ; :: :: p_e
+
+brl {{ tex \overline{br} }} :: brl_ ::=
+  {{ com case expression branch list }}
+  | br1 ... brn :: :: br_list
+
+p :: p_ ::=
+  {{ com pattern }}
+  | _ :: :: wildcard 
+    {{ com wildcard }}
+  | x :: :: x
+    {{ com variable }}
+  | t :: :: t 
+    {{ com term }}
+  | Co :: :: co
+    {{ com constructor }}
+  | Co ( pl ) :: :: co_param 
+    {{ com constructor with parameters }}
+
+pl {{ tex \overline{p} }} :: pl_ ::=
+  {{ com pattern list }}  
+  | p1 , ... , pn :: :: p_list
+
+%%% TERMINALS %%%
+terminals :: terminals_ ::=
+	  | => :: :: pmatch {{ tex \Rightarrow }}
+  	  | {  :: :: leftbrace {{ tex \{ }}
+	  | }  :: :: rightbrace {{ tex \} }}
+	  | Bool :: :: bool {{ tex \mathsf{Bool} }}
+	  | Int :: :: int {{ tex \mathsf{Int} }}
+	  | < :: :: langle {{ tex \langle }}
+	  | > :: :: rangle {{ tex \rangle }}
+	  | True :: :: true {{ tex \mathrm{True} }}
+	  | False :: :: false {{ tex \mathrm{False} }}
+

@@ -1,0 +1,224 @@
+<!-- This is a reusable ant (see http://ant.apache.org) script 
+     for compiling and running applications, for creating API
+     documentation and executable jar files.
+     
+     author: Markus Strauch
+-->
+<project basedir="." default="about" name="sdedit ant script">
+	<description>Quick Sequence Diagram Editor</description>
+	<property name="revision.prefix" value="0.2.8" />
+	<property location="src" name="src"/>
+	<property location="bin" name="build"/>
+	<property location="dist" name="jar"/>
+	<property location="apidoc" name="doc"/>
+	<property location="sdedit.jar" name="jarfile"/>
+	<property name="mainclass" value="net.sf.sdedit.Main"/>
+	<property name="plugin.name" value="eu.hatsproject.sdedit" />
+	<property name="dist.dir" location="${basedir}/dist" />
+	<property name="frontend.dir" location="../../frontend" />
+	
+        <macrodef name="git-revision">
+          <attribute name="output"/>
+          <attribute name="failonerror" default="false" />
+          <sequential>
+            <exec executable="git" outputproperty="head"
+                  failonerror="@{failonerror}" >
+              <arg value="rev-parse"/>
+              <arg value="--short"/>
+              <arg value="HEAD"/>
+            </exec>
+            <exec executable="git" outputproperty="dirty"
+                  failonerror="@{failonerror}" >
+              <arg value="diff"/>
+              <arg value="--shortstat"/>
+            </exec>
+            <condition  property="@{output}" value="${head}" else="${head}-dirty" >
+              <equals arg1="${dirty}" arg2=""/>
+            </condition>
+          </sequential>
+        </macrodef>
+
+	<property location="lib" name="lib" />
+	<path id="libs">
+		<fileset dir="${lib}">
+			<include name="**/*.jar"/>
+		</fileset>
+	</path>
+	
+	<pathconvert property="lib.project.manifest.classpath"
+	             pathsep=" ">
+	  <path refid="libs"/>
+	  <map from="${lib}" to="lib" />
+	</pathconvert>
+
+
+	<target description="about this ant script" name="about">
+		<echo level="info">
+			<![CDATA[
+      Available targets:
+      
+      - compile
+        compiles the application and copies resources
+    	
+      - compile_mac
+    	for MacOS X users: the same as compile;	compiles 
+    	some extra code for receiving MacOS application events
+
+      - start
+        compiles, copies resources and starts the application
+
+      - run
+        starts the application provided it has been compiled
+      
+      - server
+        like run, also starts the diagram server listening at port 62015
+     
+      - doc
+        creates api documentation
+       
+     ]]>
+		</echo>
+	</target>
+
+	<target depends="compile,run" description="compiles and starts" name="start"/>
+	<target name="init">
+		<tstamp/>
+		<mkdir dir="${build}"/>
+		<mkdir dir="${doc}"/>
+		<mkdir dir="${lib}"/>
+		<mkdir dir="dist" />	
+		<mkdir dir="dist/plugins" />
+		<mkdir dir="dist/features" />
+	</target>
+
+	<target depends="init" description="compiles the project" name="compile">
+		<copy todir="${build}">
+			<fileset dir="${src}">
+				<include name="**/*.png"/>
+				<include name="**/*.sdx"/>
+				<include name="**/*.html"/>
+				<include name="**/*.txt"/>
+				<include name="**/*.conf"/>
+			</fileset>
+		</copy>
+		<javac debug="off" 
+    	   nowarn="on"
+    	   encoding="ISO-8859-1"
+    	   failonerror="false"
+    	   source="1.5"
+		   includeantruntime="false" 
+    	   destdir="${build}" 
+    	   srcdir="${src}"
+           target="1.7">
+			<classpath>
+				<path refid="libs"/>
+			</classpath>
+			<exclude name="**/AppInstallerImpl.java"/>
+			<exclude name="**/SequenceTaglet.java"/>
+		</javac>
+	</target>
+
+	<target depends="init" description="compiles the project" name="compile_mac">
+		<copy todir="${build}">
+			<fileset dir="${src}">
+				<include name="**/*.png"/>
+				<include name="**/*.sdx"/>
+				<include name="**/*.html"/>
+				<include name="**/*.txt"/>
+			</fileset>
+		</copy>
+		<javac debug="off" 
+	           nowarn="on"
+	           encoding="ISO-8859-1"
+	           failonerror="false"
+	           source="1.5"
+	           destdir="${build}" 
+	           srcdir="${src}"
+                   target="1.7">
+			<classpath>
+				<path refid="libs"/>
+			</classpath>
+		</javac>
+	</target>
+
+	<target description="Starts the Quick Sequence Diagram server" name="server">
+		<java classname="${mainclass}" fork="true">
+			<arg value="-s"/>
+			<arg value="62015"/>
+			<classpath>
+				<path refid="libs"/>
+				<pathelement path="${build}"/>
+			</classpath>
+		</java>
+	</target>
+
+	<target description="starts the application" name="run">
+		<java classname="${mainclass}" fork="true">
+			<classpath>
+				<path refid="libs"/>
+				<pathelement path="${build}"/>
+			</classpath>
+		</java>
+	</target>
+	<target description="creates javadoc documentation" name="doc">
+		<mkdir dir="${doc}"/>
+		<javadoc destdir="${doc}" linksource="yes" packagenames="*" sourcepath="${src}">
+		</javadoc>
+	</target>
+        <target name="versionstamp">
+          <tstamp/>
+          <git-revision output="git-revision"/>
+          <condition property="plugin.version" value="${revision.prefix}.${DSTAMP}${TSTAMP}-${git-revision}" else="${revision.prefix}.${DSTAMP}${TSTAMP}">
+            <isset property="git-revision" />
+          </condition>
+        </target>
+
+ 
+	<target name="clean" description="cleans everything">
+		<delete failonerror="false" includeemptydirs="true">
+			<fileset dir="${build}" />
+			<fileset dir="${dist.dir}" />
+		</delete>
+	</target>
+
+	<target name="create-sdedit-jar" description="create the sdedit jar file" depends="compile">
+        <jar jarfile="${jarfile}">
+            <fileset dir="${build}" />
+            <manifest>
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Main-Class" value="net.sf.sdedit.Main" />
+                <attribute name="Class-Path" value="${lib.project.manifest.classpath}" />
+            </manifest>
+        </jar>
+	</target>
+	
+	<target name="build-eclipse-plugin" depends="clean,compile,versionstamp">
+        <mkdir dir="${basedir}/${plugin.name}_${plugin.version}" />
+		<antcall target="create-sdedit-jar">
+	        <param name="jarfile" location="${basedir}/${plugin.name}_${plugin.version}/sdedit.jar" />
+		</antcall>				
+		<copy todir="${basedir}/${plugin.name}_${plugin.version}" failonerror="true" overwrite="true">
+			<fileset dir="${basedir}">
+				<include name="META-INF/"/>
+				<include name="feature.xml"/>
+				<include name="lib/**"/>
+				<include name="bin/**"/>
+			</fileset>
+		</copy>
+		<manifest file="${basedir}/${plugin.name}_${plugin.version}/META-INF/MANIFEST.MF" mode="update">
+			<attribute name="Bundle-Version" value="${plugin.version}"/>
+		</manifest>
+		<replaceregexp file="${basedir}/${plugin.name}_${plugin.version}/META-INF/MANIFEST.MF"
+	                       match="eu.hatsproject.abs.compiler;bundle-version=\&quot;(.*)\&quot;"
+	                       replace="eu.hatsproject.abs.compiler;bundle-version=&quot;${frontend.version}&quot;"
+	            />
+		<zip destfile="${dist.dir}/plugins/${plugin.name}_${plugin.version}.jar" basedir="${basedir}/${plugin.name}_${plugin.version}" filesonly="true" whenempty="skip" update="false">
+			<exclude name="feature.xml" />
+		</zip>
+		<replace file="${basedir}/${plugin.name}_${plugin.version}/feature.xml" token="0.0.0.VERSION_STRING" value="${plugin.version}"/>
+		<zip destfile="${dist.dir}/features/${plugin.name}_${plugin.version}.jar" basedir="${basedir}/${plugin.name}_${plugin.version}" filesonly="true" whenempty="skip" update="false">
+			<include name="feature.xml" />
+		</zip>
+		<delete dir="${basedir}/${plugin.name}_${plugin.version}"/>
+	</target>
+</project>

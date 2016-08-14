@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.analyser;
@@ -30,13 +30,13 @@ import abs.frontend.typechecker.DataTypeType;
 import abs.frontend.typechecker.Type;
 
 public class OtherAnalysisTests extends FrontendTest {
-    
+
     @Test
     public void countCOG() {
         Model m = assertParseOk("interface I { } class C { { I i = new C(); } Unit m() { I i = new C(); } } { I i; i = new C(); i = new local C(); while (true) { i = new C(); }}");
         assertEquals(4, m.getNumberOfNewCogExpr());
     }
-    
+
     @Test
     public void finalTest() {
         assertParse("interface I { } { [Final] I i; i = null; }", Config.TYPE_CHECK, Config.WITH_STD_LIB, Config.EXPECT_TYPE_ERROR);
@@ -45,7 +45,7 @@ public class OtherAnalysisTests extends FrontendTest {
     @Test
     public void fullcopyTest() {
         Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
-        Model m2 = m.fullCopy();
+        Model m2 = m.treeCopyNoTransform();
         assertFalse(m.hasErrors());
         assertFalse(m2.hasErrors());
     }
@@ -53,27 +53,27 @@ public class OtherAnalysisTests extends FrontendTest {
     @Test
     public void fullcopyTest1() {
         Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
-        Model m2 = m.fullCopy();
+        Model m2 = m.treeCopyNoTransform();
         assertFalse(m.hasErrors());
         assertFalse(m2.hasErrors());
-        assertTrue(m.typeCheck().isEmpty());
-        assertTrue(m2.typeCheck().isEmpty());
+        assertTrue(!m.typeCheck().containsErrors());
+        assertTrue(!m2.typeCheck().containsErrors());
     }
 
     @Test
     public void fullcopyTest2() {
         Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
         assertFalse(m.hasErrors());
-        assertTrue(m.typeCheck().toString(),m.typeCheck().isEmpty());
-        Model m2 = m.fullCopy();
+        assertTrue(m.typeCheck().toString(),!m.typeCheck().containsErrors());
+        Model m2 = m.treeCopyNoTransform();
         assertFalse(m2.hasErrors());
-        assertTrue(m2.typeCheck().toString(),m2.typeCheck().isEmpty());
+        assertTrue(m2.typeCheck().toString(),!m2.typeCheck().containsErrors());
     }
-    
+
     @Test
     public void parsetreecopyTest() {
         Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
-        
+
         Model m2 = m.parseTreeCopy();
         assertEquals(prettyPrint(m), prettyPrint(m2));
         assertFalse(m.hasErrors());
@@ -85,14 +85,14 @@ public class OtherAnalysisTests extends FrontendTest {
         Model m = assertParseOk("module M; productline TestPL;" +
         "features A, B, C; ",
         Config.WITH_STD_LIB);
-        
-        
+
+
         Model m2 = m.parseTreeCopy();
         assertEquals(prettyPrint(m), prettyPrint(m2));
         assertFalse(m.hasErrors());
         assertFalse(m2.hasErrors());
     }
-    
+
     public static String prettyPrint(Model m2) {
         StringWriter writer = new StringWriter();
         PrintWriter w = new PrintWriter(writer);
@@ -113,7 +113,7 @@ public class OtherAnalysisTests extends FrontendTest {
         assertFalse(m2.hasErrors());
         assertEquals(p1, prettyPrint(m2));
     }
-    
+
     //@Test
     public void awaitTest3() {
         Model.doAACrewrite = true;
@@ -133,7 +133,7 @@ public class OtherAnalysisTests extends FrontendTest {
         AwaitAsyncCall n = (AwaitAsyncCall) down(cd);
         assertNull("Rewrite failed!", n);
     }
-    
+
     @Test
     public void testContext2() {
         Model m = assertParseOk("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
@@ -141,7 +141,7 @@ public class OtherAnalysisTests extends FrontendTest {
         AwaitAsyncCall n = (AwaitAsyncCall) down(cd);
         assertNull("Rewriting failed!",n);
     }
-    
+
     private static ASTNode<?> down(ASTNode<?> n) {
         ASTNode<?> x = null;
         for(int i =0; i<n.getNumChild(); i++) {
@@ -178,7 +178,7 @@ public class OtherAnalysisTests extends FrontendTest {
 
     @Test
     public void awaitRewriteTwice() {
-        assertTypeOK("module Test; interface I { I m(); } class C implements I { I m() { I x = await this!m(); await x!m(); return this; }}");        
+        assertTypeOK("module Test; interface I { I m(); } class C implements I { I m() { I x = await this!m(); await x!m(); return this; }}");
     }
 
     @Test
@@ -192,9 +192,9 @@ public class OtherAnalysisTests extends FrontendTest {
     @Test
     public void awaitRewriteDecl2() throws Exception {
         String deltaDecl = "delta D; modifies class C { adds Unit m() { return await this!m();}}";
-        CompilationUnit u = new ABSParserWrapper(null, true, false, false)
+        CompilationUnit u = new ABSParserWrapper(null, true, false)
             .parse(new StringReader(deltaDecl));
-        DeltaDecl d = (DeltaDecl) u.getDeltaDecl(0);
+        DeltaDecl d = u.getDeltaDecl(0);
         AwaitAsyncCall a = (AwaitAsyncCall) down(d);
         assertNotNull(a); // pity, would like this to work.
     }

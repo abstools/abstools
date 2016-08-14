@@ -251,7 +251,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     @Test
     public void negTestError() {
         Model m = assertParseOkStdLib(" { Bool b = !5; }");
-        assertEquals(ErrorMessage.EXPECTED_TYPE, m.typeCheck().getFirst().msg);
+        assertEquals(ErrorMessage.EXPECTED_TYPE, m.typeCheck().getFirstError().msg);
     }
 
     @Test
@@ -312,12 +312,16 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     @Test
     public void caseBoundVarWrongType() {
         assertTypeErrors("def Bool f(Bool x) = let (Int y) = 5 in case x { y => True; };");
-
     }
 
     @Test
     public void caseErrorConstructorNotResolvable() {
         assertTypeErrors("{ Bool x = True; Bool b = case x { Foo => False; }; }");
+    }
+
+    @Test
+    public void defTC1_ticket197() {
+        assertTypeErrors("def A f<A,A,A,A,A,A,A,A,A,A>(A a) = a;");
     }
 
     @Test

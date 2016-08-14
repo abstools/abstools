@@ -1,1 +1,1 @@
-"C:\Program Files\Java\jre7\bin\java" -Xmx512m -cp bin;lib/beaver-rt-src.jar;lib/beaver-rt.jar;lib/org.sat4j.core.jar;lib/org.sat4j.pb.jar;lib/sat4j-pb.jar;lib/org.sat4j.maxsat.jar;lib/sat4j-maxsat.jar;lib/choco-solver-2.1.1.jar;lib/commons-io-2.4.jar;lib/guava-15.0.jar deadlock.analyser.Tester %*
+"C:\Program Files\Java\jre7\bin\java" -Xmx512m -cp bin;lib/org.sat4j.core.jar;lib/org.sat4j.pb.jar;lib/sat4j-pb.jar;lib/org.sat4j.maxsat.jar;lib/sat4j-maxsat.jar;lib/choco-solver-2.1.1.jar;lib/commons-io-2.4.jar;lib/guava-15.0.jar deadlock.analyser.Tester %*

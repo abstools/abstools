@@ -2,37 +2,46 @@ ABS Tools [![Build Status](https://envisage.ifi.uio.no:8080/jenkins/buildStatus/
 =========
 
 Inside this repository we develop the core tools of the ABS modelling
-language.  Further information can be found on http://abs-models.org/
+language.  Further information can be found on http://abs-models.org/.  The
+current language manual is at http://docs.abs-models.org.
 
-This project is currently organised via "redmine" which provides a bug
-tracker, wiki and more:
-https://envisage.ifi.uio.no:8080/redmine/projects/abstools
 
 Folders
 -------
 
-* `eclipse-plugin` - the Eclipse plugin of the ABS IDE
+* `frontend` - the ABS frontend as well as several backends (Erlang, Maude,
+  Java)
 
-* `frontend` - the ABS frontend as well as several backends like the
-  Java backend and the Maude backend
 
-* `abs-docs` - a markdown-flavored ABS manual, currently being written.
-  It is available online at http://docs.abs-models.org.
+* `abs-docs` - a markdown-flavored ABS manual, currently being written.  It is
+  available online at http://docs.abs-models.org.
 
-* `Documentation` - a complete LaTeX ABS reference manual, still
-  mostly up-to-date
+  * `abs-docs/ReferenceManual` - an older LaTeX ABS reference manual, slowly
+    being phased out
 
-* `sdedit-for-abs` - a modified version of sdedit
-  (http://sdedit.sourceforge.net) for the visualization of UML sequence
-  charts
+  * `abs-docs/Ott` - a formal grammar for ABS, written in Ott
 
-* `tools-website`  - the content of the tools.hats-project.eu website
+
+* `eclipse`, `emacs`, `bbedit` - Editor support for ABS
+
+    * `eclipse/eclipse-plugin`: ABS IDE and compiler support plugin
+
+    * `eclipse/costabs-plugin` - The COSTA plugin for ABS
+
+    * `eclipse/apet-plugin` - The aPET plugin for ABS
+
+    * `eclipse/sda-plugin` - Bologna Deadlock-checker plugin for ABS
+
+    * `eclipse/sdedit-for-abs` - a modified version of sdedit
+      (http://sdedit.sourceforge.net) for the visualization of UML sequence
+      charts
+
 
 * `maven-support` - Maven plugin for generating Java/Maude from ABS,
   testing and packaging ABS codes
 
-* `org.abs-models.releng` - Files used by Jenkins and Buckminster for continuous integration
-  at https://envisage.ifi.uio.no:8080/jenkins/.
+* `org.abs-models.releng` - Files used by Jenkins and Buckminster for
+  continuous integration at https://envisage.ifi.uio.no:8080/jenkins/.
 
 * `abs-packages` - demonstration and description of how to use ABS
   packages (with Maven dependencies management)
@@ -41,25 +50,49 @@ Folders
   ABSUnit (a unit testing framework for ABS) (with Maven dependencies
   management)
 
-* `costabs-plugin` - The COSTA plugin for ABS
-
-* `apet-plugin` - The aPET plugin for ABS
-
-* `sda-plugin` - Bologna Deadlock-checker plugin for ABS
-
 * various leftovers from previous projects, to be evaluated and
   reactivated or pruned
+
+Using Docker
+------------
+
+To run the collaboratory locally using Docker, execute the following commands:
+
+    docker build -t easyinterface .
+    docker run -p 8080:80 --rm easyinterface
+
+Then connect your browser to http://localhost:8080/.  See the docker
+documentation for information on how to start the container in the background
+and other options.
 
 Using Vagrant
 -------------
 
 To develop the ABS tools without installing additional software, you
 can use [Vagrant](https://www.vagrantup.com).  Vagrant will start a
-Linux virtual machine and install the needed dependencies.  In the
-`abstools/` directory, run the command `vagrant up` to provision and
-start a VM, then `vagrant ssh` to connect.
+Linux virtual machine and install the needed dependencies.
 
-Within the VM, this directory is accessible in the directory `/vagrant`.
+First, install Vagrant from https://www.vagrantup.com/downloads.html and
+VirtualBox from https://www.virtualbox.org
+
+To create the ABS virtual machine, run the command `vagrant up` in this
+directory.  Run `vagrant ssh` to login to that machine, or open
+http://localhost:8888/ to connect to an off-line version of the collaboratory.
+Currently supported browsers include Firefox, Chrome, recent IE (no Safari).
+
+Within the VM, this directory is accessible as `/vagrant`.
+
+Note for Windows Users
+----------------------
+
+Please clone the archive without line ending conversion (unfortunately
+activated by default on Windows).  Use `-c core.autocrlf=false` as argument
+for the initial `git clone` command, i.e.,
+
+    git clone https://github.com/abstools/abstools -c core.autocrlf=false
+
+Otherwise, running the tools inside Vagrant or Docker will fail with obscure
+error messages.
 
 Working with the repository
 ---------------------------
@@ -68,8 +101,7 @@ Consider rebasing instead of merging your changes:
 
     git pull --rebase
 
-This avoids the various "merge branch master" commits we currently
-have.
+This avoids spurious "merge branch to master" commits.
 
 `git pull --rebase` will, in case both you and the remote repository
 have new commits, replay your local commits on top of upstream changes

@@ -1,4 +1,0 @@
-= Imperative Sublanguage
-
-link:side.html[Expressions with side effects]
-link:statements[Control Statements]

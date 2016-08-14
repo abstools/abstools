@@ -1,0 +1,142 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Runtime syntax of Core ABS                                   %
+%                                                              %
+% Based on the FMCO 2010 paper                                 %
+% "ABS: A Core Language for Abstract Behavioral Specification" %
+%                                                              %
+% DEPENDS: abs-object-syntax.ott                               %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+metavar oid ::= 
+      {{ lex numeral }}
+      {{ com object identifier }}
+metavar fu {{ tex \mathit{f} }} ::=
+      {{ lex numeral }}
+      {{ com future identifier }}      
+metavar cid ::= 
+      {{ lex numeral }}
+      {{ com cog identifier }}
+grammar
+%%% RUNTIME SYNTAX %%%
+o :: o_ ::=
+  {{ com object identifier }}
+  | oid :: M :: oid
+
+cn :: cn_ ::=
+  {{ com configuration }}
+  | noconf :: :: noconf
+  | futrt :: :: fut 
+  | object :: :: object 
+  | invocrt :: :: invoc
+  | cogrt :: :: cog
+  | cn cn' :: :: composition
+    {{ tex [[cn]] \; [[cn']] }}
+
+st :: st_ ::=
+  {{ com state }}
+  | { cn } :: :: cn
+
+futrt {{ tex \mathit{fut} }} :: futrt_ ::=
+  {{ com future }}
+  | fut ( fu , val ) :: :: fut
+
+object :: object_ ::=
+  {{ com object }}
+  | ob ( o , a , pr , q ) :: :: ob
+
+sp :: sp_ ::=
+  {{ com process statement }}
+  | return e ; :: :: return
+    {{ com return }}
+  | cont ( fu ) ; :: :: cont
+    {{ com continue other process }}
+  | s :: :: s
+    {{ com statement }}
+
+spl {{ tex \overline{sp} }} :: spl_ ::=
+   {{ com process statement list }}
+   | sp1 .. spn :: :: list
+   | sp '::' spl :: M :: head
+     {{ tex [[sp]]\,[[spl]] }}
+   | emptyspl :: M :: empty   
+     {{ tex \epsilon }}
+   | spl ++ spl' :: M :: app
+     {{ tex [[spl]]\,[[spl']] }}
+   | sl :: M :: sl
+
+process :: process_ ::=
+  {{ com process }}
+  | { a '|' spl } :: :: proc
+  | error :: :: error
+
+q :: q_ ::=
+  {{ com pool of suspended processes }}
+  | noproc :: :: noproc
+  | process :: :: process
+  | q q' :: :: composition
+
+invocrt {{ tex \mathit{invoc} }} :: invocrt_ ::=
+  {{ com method invocation }}
+  | invoc ( o , fu , m , vl ) :: :: invoc
+
+co {{ tex \mathit{c} }} :: co_ ::=
+  {{ com cog identifier }}
+  | cid :: M :: cid
+
+cogrt {{ tex \mathit{cog} }} :: cogrt_ ::=
+  {{ com concurrent object group }}
+  | cogt ( co , act ) :: :: cog
+
+val :: val_ ::=
+  {{ com value }}
+  | v :: :: v
+  | noval :: :: noval
+
+a, l :: a_ ::=
+  {{ com substitution }}
+  | Txv :: :: Txv
+  | a , a' :: :: composition
+
+% FIXME: not in paper
+Txv {{ tex T\, x\, v }} :: Txv_ ::=
+    | T x v :: :: txv
+
+pr {{ tex \mathit{p} }} :: pr_ ::=
+  {{ com active process }}
+  | process :: :: process
+  | idle :: :: idle
+
+v :: v_ ::=
+  {{ com value }}
+  | o :: :: o
+  | co :: :: co 
+  | fu :: :: fut
+  | b :: M :: b
+  | t :: :: t
+
+vl {{ tex \overline{v} }} :: vl_ ::=
+  {{ com value list }}
+  | v1 , .. , vn :: :: dots
+
+e :: e_ ::=
+  | v :: :: v
+    {{ com value }}
+
+act :: act_ ::=
+  {{ com active object }}
+  | o :: :: o
+  | noact :: :: noact
+
+%%% TERMINALS %%%
+terminals :: terminals_ ::=
+	  | noconf :: :: noconf {{ tex \epsilon }}
+	  | noval :: :: noval {{ tex \bot }}
+	  | noproc :: :: noproc {{ tex \emptyset }}
+	  | noact :: :: noact {{ tex \varepsilon }}
+  	  | invoc :: :: invoc {{ tex \mathsf{invoc} }}
+	  | cogt :: :: cogt {{ tex \mathsf{cog} }}
+	  | ob :: :: ob {{ tex \mathsf{ob} }}
+  	  | fut :: :: fut {{ tex \mathsf{fut} }}
+
+%%% PARSING %%%
+parsing
+cn_composition left cn_composition

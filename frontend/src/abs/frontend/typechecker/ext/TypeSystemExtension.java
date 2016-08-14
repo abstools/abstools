@@ -4,14 +4,18 @@
  */
 package abs.frontend.typechecker.ext;
 
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.ext.AdaptDirection;
 
 public interface TypeSystemExtension {
 
+    void checkModel(Model model);
+
     void checkClassDecl(ClassDecl decl);
+
+    void checkInterfaceDecl(InterfaceDecl decl);
 
     void checkMethodImpl(MethodImpl method);
 
@@ -25,9 +29,11 @@ public interface TypeSystemExtension {
     
     void checkEq(Type lt, Type t, ASTNode<?> origin);
 
-    void setSemanticErrorList(SemanticErrorList errors);
+    void setSemanticConditionList(SemanticConditionList errors);
 
     void finished();
+
+    void checkStmt(Stmt s);
 
     void checkAssignStmt(AssignStmt s);
 

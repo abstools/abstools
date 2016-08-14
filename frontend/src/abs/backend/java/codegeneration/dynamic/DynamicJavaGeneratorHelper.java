@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.codegeneration.dynamic;
@@ -41,7 +41,6 @@ import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSValue;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.Type;
-import beaver.Symbol;
 
 public class DynamicJavaGeneratorHelper {
 
@@ -151,11 +150,10 @@ public class DynamicJavaGeneratorHelper {
     }
 
     public static String getDebugString(Stmt stmt) {
-        return getDebugString(stmt, stmt.getStart());
+        return getDebugString(stmt, stmt.getStartLine());
     }
 
-    public static String getDebugString(Stmt stmt, int pos) {
-        int line = Symbol.getLine(pos);
+    public static String getDebugString(Stmt stmt, int line) {
         String fileName = stmt.getCompilationUnit().getFileName().replace("\\", "\\\\");
         return "if (thisP.__ABS_getRuntime().debuggingEnabled()) thisP.__ABS_getRuntime().nextStep(\""
         + fileName + "\"," + line + ");";
@@ -186,7 +184,7 @@ public class DynamicJavaGeneratorHelper {
         generateMethodSig(stream, sig, true, "final","");
         stream.println("{");
         stream.println("return (" + ABSFut.class.getName() + ")");
-        generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), 
+        generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(),
                 sig.getTypes(),sig.getName());
         stream.println(";");
         stream.println("}");
@@ -198,16 +196,16 @@ public class DynamicJavaGeneratorHelper {
         final List<PureExp> params = call.getParams();
         final String method = call.getMethod();
 
-        generateAsyncCall(stream, null, callee, callee.getType(), params, null, 
+        generateAsyncCall(stream, null, callee, callee.getType(), params, null,
                 call.getTypesFromExp(), method);
 
     }
 
-    private static void generateAsyncCall(PrintStream stream, final String calleeString, 
-            final PureExp callee, final Type calleeType, final List<PureExp> args, 
+    private static void generateAsyncCall(PrintStream stream, final String calleeString,
+            final PureExp callee, final Type calleeType, final List<PureExp> args,
             final List<ParamDecl> params,
             final java.util.List<Type> paramTypes,
-            final String method) 
+            final String method)
     {
         stream.print(ABSRuntime.class.getName() + ".getCurrentRuntime().asyncCall(");
         stream.print("new " + AbstractAsyncCall.class.getName() + "<" + ABSDynamicObject.class.getName() + ">(thisP, ");
@@ -243,7 +241,7 @@ public class DynamicJavaGeneratorHelper {
         final List<PureExp> params = call.getParams();
         final String method = call.getMethod();
         // FIXME: implement await, assign after async call
-        generateAsyncCall(stream, null, callee, callee.getType(), params, null, 
+        generateAsyncCall(stream, null, callee, callee.getType(), params, null,
                 call.getTypesFromExp(), method);
 
     }
@@ -255,8 +253,8 @@ public class DynamicJavaGeneratorHelper {
         stream.print(".dispatch");
         DynamicJavaGeneratorHelper.generateArgs(stream, "\"" + call.getMethod() + "\"", call.getParams(), call.getTypesFromExp());
     }
-    
-    
+
+
     private static void generateTaskInitMethod(PrintStream stream, final java.util.List<Type> paramTypes) {
         stream.print("public " + abs.backend.java.lib.runtime.AsyncCall.class.getName() + "<?> init(");
         for (int i = 0; i < paramTypes.size(); i++) {
@@ -357,7 +355,7 @@ public class DynamicJavaGeneratorHelper {
         stream.println("}");
     }
 
-    
+
     public static void fieldUse(PrintStream stream, VarOrFieldUse f) {
         stream.print("(");
         if (! f.getType().isReferenceType()) {
@@ -432,7 +430,7 @@ public class DynamicJavaGeneratorHelper {
     public static void generateExprGuard(ExpGuard expGuard, PrintStream beforeAwaitStream, PrintStream stream) {
         PureExp expr = expGuard.getPureExp();
 
-        replaceLocalVariables((PureExp)expr.copy(), beforeAwaitStream);
+        replaceLocalVariables(expr.copy(), beforeAwaitStream);
 
         stream.print("new "+JavaBackendConstants.EXPGUARD+"() { public "+ABSBool.class.getName()+" evaluateExp() { return ");
         expGuard.getPureExp().generateJavaDynamic(stream);
@@ -444,12 +442,12 @@ public class DynamicJavaGeneratorHelper {
 
     /**
      * replace all uses of local variables and parameters by a use of a newly introduced
-     * temporary final local variable 
+     * temporary final local variable
      */
     private static void replaceLocalVariables(ASTNode<?> astNode, PrintStream beforeAwaitStream) {
         if (isLocalVarUse(astNode)) {
             VarUse v = (VarUse) astNode;
-            replaceVarUse(beforeAwaitStream, v, (TypedVarOrFieldDecl) v.getDecl());                
+            replaceVarUse(beforeAwaitStream, v, (TypedVarOrFieldDecl) v.getDecl());
         } else {
             // process children:
             for (int i=0; i < astNode.getNumChild(); i++) {
@@ -478,7 +476,7 @@ public class DynamicJavaGeneratorHelper {
 
     /**
      * replaces a varUse v of the local variable vDecl by a new temporary variable, which will be
-     * written to beforeAwaitStream      
+     * written to beforeAwaitStream
      */
     private static void replaceVarUse(PrintStream beforeAwaitStream, VarUse v, TypedVarOrFieldDecl vDecl) {
         String name = JavaBackend.getVariableName(vDecl.getName());
@@ -496,7 +494,7 @@ public class DynamicJavaGeneratorHelper {
         OutputStream exprOStream = new ByteArrayOutputStream();
         try {
             PrintStream exprStream = new JavaCodeStream(exprOStream);
-            // Necessary temporary variables are written to "stream" and the 
+            // Necessary temporary variables are written to "stream" and the
             // await-expression is written to exprStream
             awaitStmt.getGuard().generateJavaGuardDynamic(stream, exprStream);
             stream.print(JavaBackendConstants.ABSRUNTIME + ".await(");
@@ -546,7 +544,7 @@ public class DynamicJavaGeneratorHelper {
         }
 
     }
-    
+
     public static String generateUserSchedulingStrategy(NewExp e, PureExp exp) {
         // TODO
         return null;
@@ -554,7 +552,7 @@ public class DynamicJavaGeneratorHelper {
 
     public static void generateDelta(DeltaDecl delta, JavaCode.Package pkg, ArrayList<String> classes)
             throws IOException, JavaCodeGenerationException {
-        
+
         PrintStream stream = null;
         String className = JavaBackend.getDeltaName(delta.getName());
         try {
@@ -563,7 +561,7 @@ public class DynamicJavaGeneratorHelper {
 
             stream.println("package " + pkg.packageName + ";");
             stream.println("public class " + className + " {");
-            
+
             stream.println("private static " + ABSDynamicDelta.class.getName() + " instance;");
             stream.println("public static " + ABSDynamicDelta.class.getName() + " singleton() {");
             stream.println("if (instance == null) {");
@@ -572,14 +570,14 @@ public class DynamicJavaGeneratorHelper {
             stream.println("}");
             stream.println("return instance;");
             stream.println("}");
-            
+
             //static apply method
             stream.println("public static void apply(" + ABSDynamicRuntime.class.getName() + " runtime) {");
             for (String cls : classes) {
                 stream.println(cls + ".apply();");
             }
             stream.println("}");
-            
+
             stream.println("}");
         } finally {
             if (stream != null)
@@ -603,15 +601,15 @@ public class DynamicJavaGeneratorHelper {
         for (ObjectUpdate ou :update.getObjectUpdates()) {
             stream.println("{");
             stream.println("// Call apply() for to update objects of class " + ou.getClassName());
-            
-            stream.println(ABSDynamicClass.class.getName() + " cls = " + JavaBackend.getClassName(ou.getClassName()) + ".singleton();"); 
+
+            stream.println(ABSDynamicClass.class.getName() + " cls = " + JavaBackend.getClassName(ou.getClassName()) + ".singleton();");
             stream.println("for (" + ABSDynamicObject.class.getName() + " obj : runtime.getAllObjects(cls)) {");
             stream.println("// exec update...");
             stream.println("System.out.println(obj.toString());");
-            
+
             stream.println("}");
             stream.println("}");
-            
+
         }
         stream.println("}");
 
@@ -619,7 +617,7 @@ public class DynamicJavaGeneratorHelper {
             generateObjectUpdate(stream, ou);
         }
     }
-    
+
     public static void generateObjectUpdate(PrintStream stream, ObjectUpdate ou) {
         // object updates are mapped to static inner classes
         DynamicJavaGeneratorHelper.generateHelpLine(ou, stream);
@@ -635,14 +633,14 @@ public class DynamicJavaGeneratorHelper {
 //            stmt.generateJavaDynamic(stream);
 //        for (AssignStmt stmt : ou.getPostBodyList())
 //            stmt.generateJavaDynamic(stream);
-        
-        
+
+
 //        stream.println("}");
 //        stream.println("}");
 
     }
-    
-    public static void generateProduct(PrintStream stream, Product prod, HashMap<String, Product> allProducts) {
+
+    public static void generateProduct(PrintStream stream, ProductDecl prod, HashMap<String, ProductDecl> allProducts) {
         stream.println("private static " + ABSDynamicProduct.class.getName() + " instance;");
         stream.println("public static " + ABSDynamicProduct.class.getName() + " singleton() {");
         stream.println("if (instance == null) {");
@@ -650,16 +648,16 @@ public class DynamicJavaGeneratorHelper {
         stream.println("instance.setName(\"" + prod.getName() + "\");");
 
         // Features (just names, currently not used)
-        for (Feature feature : prod.getFeatures())
+        for (Feature feature : prod.getProduct().getFeatures())
             stream.println("instance.addFeature(\"" + feature.getName() + "\");");
-        
+
         // Reconfigurations
         for (Reconfiguration recf : prod.getReconfigurations()) {
             stream.println("instance.addReconfiguration("
-                    + JavaBackendConstants.LIB_RDM_PACKAGE + "." 
+                    + JavaBackendConstants.LIB_RDM_PACKAGE + "."
                     + JavaBackend.getProductName(recf.getTargetProductID()) + ".singleton()"
                     + ", "
-                    + JavaBackendConstants.LIB_RDM_PACKAGE + "." 
+                    + JavaBackendConstants.LIB_RDM_PACKAGE + "."
                     + JavaBackend.getReconfigurationName(prod.getName(), recf.getTargetProductID()) + ".singleton());");
         }
 
@@ -667,24 +665,24 @@ public class DynamicJavaGeneratorHelper {
         stream.println("return instance;");
         stream.println("}");
     }
-    
-    public static void generateReconfiguration(PrintStream stream, Reconfiguration recf, Product currentP, HashMap<String, Product> allProducts) {
+
+    public static void generateReconfiguration(PrintStream stream, Reconfiguration recf, ProductDecl currentP, HashMap<String, ProductDecl> allProducts) {
         stream.println("private static " + ABSDynamicReconfiguration.class.getName() + " instance;");
         stream.println("public static " + ABSDynamicReconfiguration.class.getName() + " singleton() {");
         stream.println("if (instance == null) {");
         stream.println("instance = new " + ABSDynamicReconfiguration.class.getName() + "();");
         stream.println("instance.setName(\"" + currentP.getName() + "->" + recf.getTargetProductID() + "\");");
-        
+
         // Current and Target products
         stream.println("instance.setCurrentProduct(" + JavaBackendConstants.LIB_RDM_PACKAGE + "."
                 + JavaBackend.getProductName(currentP.getName()) + ".singleton());");
         stream.println("instance.setTargetProduct(" + JavaBackendConstants.LIB_RDM_PACKAGE + "."
                 + JavaBackend.getProductName(recf.getTargetProductID()) + ".singleton());");
-        
+
         // StateUpdate
         stream.println("instance.setUpdate(" + JavaBackendConstants.LIB_UPDATES_PACKAGE + "."
                 + JavaBackend.getUpdateName(recf.getUpdateID()) + ".singleton());");
-        
+
         // Deltas
         List<DeltaID> deltaIDs = recf.getDeltaIDs();
         stream.print("instance.setDeltas(");
@@ -710,5 +708,5 @@ public class DynamicJavaGeneratorHelper {
         stream.println("return instance;");
         stream.println("}");
     }
-    
+
 }

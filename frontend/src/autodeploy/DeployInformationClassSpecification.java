@@ -19,6 +19,12 @@ public class DeployInformationClassSpecification {
     public String toString(String _port) { return "{ \"type\": \"list\", \"arity\": " + _arity + ", \"value\": \"" + _port + "\" }"; }
   }
 
+	private class DeployInformationClassSpecificationRequirementOptList implements  IDeployInformationClassSpecificationRequirement {
+    private String _value;
+    public DeployInformationClassSpecificationRequirementOptList(String value) { _value = value; }
+    public String toString(String _port) { return "{ \"method\": \"" + _value + "\", \"interface\": \"" + _port + "\" }"; }
+  }
+
   private class DeployInformationClassSpecificationRequirementDefault implements  IDeployInformationClassSpecificationRequirement {
     private String _value;
     public DeployInformationClassSpecificationRequirementDefault(String value) { _value = value; }
@@ -65,6 +71,7 @@ public class DeployInformationClassSpecification {
 
   public void addRequirement(String param) { _params.put(param, new DeployInformationClassSpecificationRequirementReq()); }
   public void addList(String param, int arity) { _params.put(param, new DeployInformationClassSpecificationRequirementList(arity)); }
+	public void addOptList(String param, String value) { _params.put(param, new DeployInformationClassSpecificationRequirementOptList(value)); }
   public void addDefault(String param, String value) { _params.put(param, new DeployInformationClassSpecificationRequirementDefault(value)); }
   public void addUser(String param, String field) { _params.put(param, new DeployInformationClassSpecificationRequirementUser(field)); }
   public void addScenarioName(String name) { _names.add(name); }
@@ -106,6 +113,23 @@ public class DeployInformationClassSpecification {
       f.write("\n");
     }
     f.write("          ]\n"); // end of the require
+		// 5, optional lists
+		f.write("          ,\"optional_list\": [\n");
+		Iterator it = _params.entrySet().iterator();
+    while (it.hasNext()) {
+        Map.Entry pair = (Map.Entry)it.next();
+				String name = (String)pair.getKey();
+				Boolean not_found = true;
+				for(String s : _paramList)
+    			if (s.equals(name)) { not_found = false; }
+				if (not_found) {
+					f.write("            ");
+					f.write( _params.get(name).toString( name ) );
+				}
+        it.remove(); // avoids a ConcurrentModificationException
+    }
+		f.write("          ]\n"); // end of the optional list
+		// end of json object
     f.write("        }");
 
 

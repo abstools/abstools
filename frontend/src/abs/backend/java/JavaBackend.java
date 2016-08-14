@@ -44,7 +44,7 @@ public class JavaBackend extends Main {
     private File destDir = new File("gen/");
     private boolean sourceOnly = false;
     private boolean untypedJavaGen = false;
-    
+    private boolean omitDebug = false;
 
     @Override
     public List<String> parseArgs(String[] args) {
@@ -65,6 +65,8 @@ public class JavaBackend extends Main {
                 this.sourceOnly = true;
             } else if (arg.equals("-dynamic")) {
                 this.untypedJavaGen = true;
+            } else if (arg.equals("-no-debuginfo")) {
+                this.omitDebug = true;
             } else if (arg.equals("-debug")) {
                 /* Print stacktrace on exception, used in main(), must be removed from remaining args. */
             } else if(arg.equals("-java")) {
@@ -82,6 +84,7 @@ public class JavaBackend extends Main {
                 + "  -d <dir>       generate files to <dir>\n"
                 + "  -debug         print stacktrace on exception\n"
                 + "  -sourceonly    do not generate class files\n"
+                + "  -no-debuginfo  generate code without listener / debugger support\n"
                 + "  -dynamic       generate dynamically updateable code\n");
     }
 
@@ -89,7 +92,7 @@ public class JavaBackend extends Main {
         final Model model = parse(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             printParserErrorAndExit();
-
+        destDir.mkdirs();
         if (!destDir.exists()) {
             System.err.println("Destination directory " + destDir.getAbsolutePath() + " does not exist!");
             System.exit(1);
@@ -104,7 +107,7 @@ public class JavaBackend extends Main {
     }
 
     private void compile(Model m, File destDir) throws IOException, JavaCodeGenerationException {
-
+        m.includeDebug = !this.omitDebug;
         JavaCode javaCode = new JavaCode(destDir);
         if (this.untypedJavaGen) {
             if (verbose) System.out.println("Generating dynamic Java code...");
@@ -141,7 +144,7 @@ public class JavaBackend extends Main {
     }
     
     public static String getJavaType(ConstructorArg u) {
-        return getJavaType(u.getDataTypeUse());
+        return getJavaType(u.getTypeUse());
     }
     
     public static String getJavaType(TypeUse absType) {

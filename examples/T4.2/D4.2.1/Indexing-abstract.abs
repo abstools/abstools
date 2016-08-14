@@ -67,7 +67,7 @@ class Worker(MapReduce master) implements Worker {
   List<Pair<OutKeyType, OutValueType>> invokeMap(InKeyType key, InValueType value) {
     mapResults = Nil;
     this.map(key, value);
-    [Size: 20] master!finished(this);
+    [DataSize: 20] master!finished(this);
     List<Pair<OutKeyType, OutValueType>> result = mapResults;
     mapResults = Nil;
     return result;
@@ -76,7 +76,7 @@ class Worker(MapReduce master) implements Worker {
   List<OutValueType> invokeReduce(OutKeyType key, List<OutValueType> value) {
     reduceResults = Nil;
     this.reduce(key, value);
-    [Size: 15] master!finished(this);
+    [DataSize: 15] master!finished(this);
     List<OutValueType> result = reduceResults;
     reduceResults = Nil;
     return result;

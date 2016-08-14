@@ -47,7 +47,7 @@ aspect doOutlinePrinter {
 
     }
 
-    public void Product.doOutlinePrint(PrintWriter stream, String prefix) {
+    public void ProductDecl.doOutlinePrint(PrintWriter stream, String prefix) {
     }
 
     public void Feature.doOutlinePrint(PrintWriter stream, String prefix) {

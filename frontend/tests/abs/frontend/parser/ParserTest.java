@@ -365,8 +365,7 @@ public class ParserTest extends FrontendTest {
     @Test (expected = ParseException.class)
     public void deltaNameLowerCaseTest() throws Exception{
         String deltaDecl = "delta foo;";
-        new ABSParserWrapper(null, true, false, false)
-            .parse(new StringReader(deltaDecl));
+        new ABSParserWrapper(null, true, false).parse(new StringReader(deltaDecl));
     }
     
 }

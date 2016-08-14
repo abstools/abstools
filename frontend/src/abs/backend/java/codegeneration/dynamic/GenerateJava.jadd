@@ -47,12 +47,12 @@ aspect GenerateJavaDynamic_Core {
         }
         {   /* The Reconfiguration Decision Model (RDM) */
             // first remember all products by name
-            HashMap<String, Product> allProducts = new HashMap<String, Product>();
-            for (Product prod : getProducts()) {
+            HashMap<String, ProductDecl> allProducts = new HashMap<String, ProductDecl>();
+            for (ProductDecl prod : getProductDecls()) {
                 allProducts.put(prod.getName(), prod);
             }
             JavaCode.Package pkg = code.createPackage(JavaBackendConstants.LIB_RDM_PACKAGE);
-            for (Product prod : getProducts()) {
+            for (ProductDecl prod : getProductDecls()) {
                 try {
                     prod.generateJavaCodeDynamic(pkg, allProducts);
                 } catch (NotImplementedYetException e) { 
@@ -387,10 +387,12 @@ aspect GenerateJavaDynamic_Core {
         }
 
         if (addReturn) {
-            stream.println(DynamicJavaGeneratorHelper.getDebugString(this, this.getEnd()));
+            if (getModel().includeDebug) {
+                stream.println(DynamicJavaGeneratorHelper.getDebugString(this, this.getEndLine()));
 
-            stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
-            stream.println("thisP.__ABS_getRuntime().getCurrentTask().popStackFrame();");
+                stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
+                stream.println("thisP.__ABS_getRuntime().getCurrentTask().popStackFrame();");
+            }
 
             stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
         }
@@ -436,7 +438,9 @@ aspect GenerateJavaDynamic_Core {
      */
 
     public void Stmt.generateJavaDynamic(PrintStream stream) {
-        stream.println(DynamicJavaGeneratorHelper.getDebugString(this));
+        if (getModel().includeDebug) {
+            stream.println(DynamicJavaGeneratorHelper.getDebugString(this));
+        }
     }
 
     public void VarDeclStmt.generateJavaDynamic(PrintStream stream) {
@@ -516,7 +520,7 @@ aspect GenerateJavaDynamic_Core {
         stream.print("if (!");
         getCondition().generateJavaDynamic(stream);
         stream.print(".toBoolean()) throw new " + ABSAssertException.class.getName() + "(\"");
-        stream.println(new Position(this).getPositionString() + " Assertion failed\");");
+        stream.println(getPositionString() + " Assertion failed\");");
 
     }
 
@@ -704,9 +708,8 @@ aspect GenerateJavaDynamic_Core {
             stream.println(");");
             i++;
         }
-        Position pos = new Position(this);
         stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
-        stream.println(pos.getPositionString() + " value \" + __ABS_value + \" did not match any pattern.\");");
+        stream.println(getPositionString() + " value \" + __ABS_value + \" did not match any pattern.\");");
         stream.println("}");
         stream.print("}.of(");
         for (String freeVarName : getFreeVars()) {
@@ -1136,7 +1139,7 @@ aspect GenerateJavaDynamic_DeltaModelling {
         stream.println("clsNew.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
     }
     
-    public void Product.generateJavaCodeDynamic(JavaCode.Package pkg, HashMap<String, Product> allProducts) 
+    public void ProductDecl.generateJavaCodeDynamic(JavaCode.Package pkg, HashMap<String, ProductDecl> allProducts) 
             throws IOException, JavaCodeGenerationException {
         PrintStream stream = null;
         String generatedJavaClassName = JavaBackend.getProductName(getName());
@@ -1159,7 +1162,7 @@ aspect GenerateJavaDynamic_DeltaModelling {
         }
     }
     
-    public void Reconfiguration.generateJavaCodeDynamic(JavaCode.Package pkg, Product currentP, HashMap<String, Product> allProducts)
+    public void Reconfiguration.generateJavaCodeDynamic(JavaCode.Package pkg, ProductDecl currentP, HashMap<String, ProductDecl> allProducts)
             throws IOException, JavaCodeGenerationException {
         PrintStream stream = null;
         String generatedJavaClassName = JavaBackend.getReconfigurationName(currentP.getName(), getTargetProductID());

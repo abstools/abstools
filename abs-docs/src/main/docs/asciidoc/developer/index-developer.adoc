@@ -1,7 +1,0 @@
-= Developer Guide
-Under development.
-
-== Frontend
-
-=== Type Checking
-include::typechecking.adoc[]

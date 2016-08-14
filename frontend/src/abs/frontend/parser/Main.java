@@ -27,8 +27,8 @@ import choco.kernel.model.constraints.Constraint;
 import abs.frontend.mtvl.ChocoSolver;
 import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
-import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticCondition;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.antlr.parser.ABSParserWrapper;
 import abs.frontend.ast.*;
 import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
@@ -49,7 +49,6 @@ public class Main {
     protected boolean verbose = false;
     protected boolean typecheck = true;
     protected boolean stdlib = true;
-    protected boolean useJFlexAndBeaver = false;
     protected boolean dump = false;
     protected boolean debug = false;
     protected boolean allowIncompleteExpr = false;
@@ -139,8 +138,6 @@ public class Main {
                 typecheck = false;
             else if (arg.equals("-nostdlib"))
                 stdlib = false;
-            else if (arg.equals("-with-old-parser"))
-                useJFlexAndBeaver = true;
             else if (arg.equals("-loctypestats"))
                 locationTypeStats = true;
             else if (arg.equals("-loctypes")) {
@@ -262,6 +259,7 @@ public class Main {
                 System.err.flush();
             }
         } else {
+            m.evaluateAllProductDeclarations();
             rewriteModel(m, product);
 
             // type check PL before flattening
@@ -282,16 +280,17 @@ public class Main {
                 m.dump();
             }
 
-            final SemanticErrorList semErrs = m.getErrors();
-            int numSemErrs = semErrs.size();
+            final SemanticConditionList semErrs = m.getErrors();
 
-            if (numSemErrs > 0) {
-                System.err.println("Semantic errors: " + numSemErrs);
-                for (SemanticError error : semErrs) {
-                    System.err.println(error.getHelpMessage());
-                    System.err.flush();
-                }
-            } else {
+            if (semErrs.containsErrors()) {
+                System.err.println("Semantic errors: " + semErrs.getErrorCount());
+            }
+            for (SemanticCondition error : semErrs) {
+                // Print both errors and warnings
+                System.err.println(error.getHelpMessage());
+                System.err.flush();
+            }
+            if (!semErrs.containsErrors()) {
                 typeCheckModel(m);
                 analyzeMTVL(m);
             }
@@ -354,12 +353,12 @@ public class Main {
             // Adjust product_name() function
             productNameFun.setFunctionDef(new ExpFunctionDef(new StringLiteral(productname)));
             // Adjust product_features() function
-            Product p = null;
+            ProductDecl p = null;
             if (productname != null) p = m.findProduct(productname);
             if (p != null) {
                 DataConstructorExp feature_arglist = new DataConstructorExp("Cons", new List<PureExp>());
                 DataConstructorExp current = feature_arglist;
-                for (Feature f : p.getFeatures()) {
+                for (Feature f : p.getProduct().getFeatures()) {
                     DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
                     // TODO: when/if we incorporate feature parameters into
                     // the productline feature declarations (as we should), we
@@ -386,11 +385,11 @@ public class Main {
         if (e != null) {
             // TODO: if null and not -nostdlib, throw an error
             for (Decl decl : m.getDecls()) {
-                if (decl instanceof ExceptionDecl) {
+                if (decl.isException()) {
                     ExceptionDecl e1 = (ExceptionDecl)decl;
                     // KLUDGE: what do we do about annotations to exceptions?
-                    DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().fullCopy());
-                    d.setPosition(e1.getStart(), e1.getEnd());
+                    DataConstructor d = new DataConstructor(e1.getName(), e1.getConstructorArgs().treeCopyNoTransform());
+                    d.setPositionFromNode(e1);
                     d.setFileName(e1.getFileName());
                     d.exceptionDecl = e1;
                     e1.dataConstructor = d;
@@ -406,7 +405,7 @@ public class Main {
      * However, the command-line argument handling will have to stay in Main. Pity.
      */
     private void analyzeMTVL(Model m) {
-        Product p_product = null;
+        ProductDecl p_product = null;
         try {
             p_product = product == null ? null : m.findProduct(product);
         } catch (WrongProgramArgumentException e) {
@@ -453,15 +452,15 @@ public class Main {
             if (solveWith) {
                 assert product != null;
                 if (verbose)
-                    System.out.println("Searching for solution that includes "+product+"...");
+                    System.out.println("Searching for solution that includes " + product + "...");
                 if (p_product != null) {
                     ChocoSolver s = m.instantiateCSModel();
                     HashSet<Constraint> newcs = new HashSet<Constraint>();
-                    p_product.getProdConstraints(s.vars,newcs);
+                    p_product.getProduct().getProdConstraints(s.vars, newcs);
                     for (Constraint c: newcs) s.addConstraint(c);
                     System.out.println("checking solution: "+s.resultToString());
                 } else {
-                    System.out.println("Product '"+product+"' not found.");
+                    System.out.println("Product '" + product + "' not found.");
                     if (!product.contains("."))
                         System.out.println("Maybe you forgot the module name?");
                 }
@@ -469,16 +468,16 @@ public class Main {
             if (minWith) {
                 assert product != null;
                 if (verbose)
-                    System.out.println("Searching for solution that includes "+product+"...");
+                    System.out.println("Searching for solution that includes " + product + "...");
                 ChocoSolver s = m.instantiateCSModel();
                 HashSet<Constraint> newcs = new HashSet<Constraint>();
                 s.addIntVar("difference", 0, 50);
                 if (p_product != null) {
-                    m.getDiffConstraints(p_product,s.vars,newcs, "difference");
+                    m.getDiffConstraints(p_product.getProduct(), s.vars, newcs, "difference");
                     for (Constraint c: newcs) s.addConstraint(c);
-                    System.out.println("checking solution: "+s.minimiseToString("difference"));
+                    System.out.println("checking solution: " + s.minimiseToString("difference"));
                 } else {
-                    System.out.println("Product '"+product+"' not found.");
+                    System.out.println("Product '" + product + "' not found.");
                     if (!product.contains("."))
                         System.out.println("Maybe you forgot the module name?");
                 }
@@ -508,7 +507,7 @@ public class Main {
                     if (!product.contains("."))
                         System.out.println("Maybe you forgot the module name?");
                 } else {
-                    Map<String,Integer> guess = p_product.getSolution();
+                    Map<String,Integer> guess = p_product.getProduct().getSolution();
                     System.out.println("checking solution: "+s.checkSolution(guess,m));
                 }
             }
@@ -529,8 +528,8 @@ public class Main {
                 System.out.println("Typechecking Model...");
 
             registerLocationTypeChecking(m);
-            SemanticErrorList typeerrors = m.typeCheck();
-            for (SemanticError se : typeerrors) {
+            SemanticConditionList typeerrors = m.typeCheck();
+            for (SemanticCondition se : typeerrors) {
                 System.err.println(se.getHelpMessage());
             }
         }
@@ -559,8 +558,8 @@ public class Main {
         if (verbose)
             System.out.println("Typechecking Software Product Line...");
 
-        SemanticErrorList typeerrors = m.typeCheckPL();
-        for (SemanticError se : typeerrors) {
+        SemanticConditionList typeerrors = m.typeCheckPL();
+        for (SemanticCondition se : typeerrors) {
             System.err.println(se.getHelpMessage());
         }
     }
@@ -615,11 +614,17 @@ public class Main {
         }
     }
 
-    public static boolean isABSPackageFile(File f) throws IOException {
-       final ABSPackageFile absPackageFile = new ABSPackageFile(f);
-       final boolean isPackage = absPackageFile.isABSPackage();
-       absPackageFile.close();
-       return f.getName().endsWith(".jar") && isPackage;
+    public static boolean isABSPackageFile(File f) {
+        ABSPackageFile absPackageFile;
+        final boolean isPackage;
+        try {
+            absPackageFile = new ABSPackageFile(f);
+            isPackage = absPackageFile.isABSPackage();
+            absPackageFile.close();
+        } catch (IOException e) {
+            return false;
+        }
+        return f.getName().endsWith(".jar") && isPackage;
     }
 
     public static boolean isABSSourceFile(File f) {
@@ -692,8 +697,6 @@ public class Main {
                 + "                 (PID is the qualified product ID)\n"
                 + "  -notypecheck   disable typechecking\n"
                 + "  -nostdlib      do not include the standard lib\n"
-                + "  --with-old-parser\n"
-                + "                 use old (deprecated) parser implementation\n"
                 + "  -loctypes      enable location type checking\n"
                 + "  -locdefault=<loctype> \n"
                 + "                 sets the default location type to <loctype>\n"
@@ -809,8 +812,7 @@ public class Main {
             throws IOException
     {
         try {
-            return new ABSParserWrapper(file, false, stdlib, useJFlexAndBeaver)
-                .parse(reader);
+            return new ABSParserWrapper(file, false, stdlib).parse(reader);
         } finally {
             reader.close();
         }

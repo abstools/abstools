@@ -1,0 +1,29 @@
+/**
+ * This aspect returns a contained Call expression from a statement or null
+ */
+
+aspect CallExpressions {
+    syn Call Stmt.getCallExpression();
+
+    eq Stmt.getCallExpression() = null;
+    eq VarDeclStmt.getCallExpression() {
+        Exp exp = this.getVarDecl().getInitExp();
+        if (exp instanceof Call) return (Call)exp;
+        else return null;
+    }
+    eq AssignStmt.getCallExpression() {
+        Exp exp = this.getValue();
+        if (exp instanceof Call) return (Call)exp;
+        else return null;
+    }
+    eq ReturnStmt.getCallExpression() {
+        Exp exp = this.getRetExp();
+        if (exp instanceof Call) return (Call)exp;
+        else return null;
+    }
+    eq ExpressionStmt.getCallExpression() {
+        Exp exp = this.getExp();
+        if (exp instanceof Call) return (Call)exp;
+        else return null;
+    }
+}

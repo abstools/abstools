@@ -26,7 +26,6 @@ import abs.backend.java.scheduling.UserSchedulingStrategy;
 import abs.common.CompilerUtils;
 import abs.common.Constants;
 import abs.common.NotImplementedYetException;
-import abs.common.Position;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.AsyncCall;
@@ -60,8 +59,7 @@ public class JavaGeneratorHelper {
     private static final String FLI_METHOD_PREFIX = "fli_";
 
     public static void generateHelpLine(ASTNode<?> node, PrintStream stream) {
-        Position pos = new Position(node);
-        stream.println("// " + pos.getPositionString());
+        stream.println("// " + node.getPositionString());
     }
 
     public static void generateArgs(PrintStream stream, List<PureExp> args, java.util.List<Type> types) {
@@ -199,7 +197,7 @@ public class JavaGeneratorHelper {
     public static String getDebugString(ASTNode<?> node, int line) {
         String fileName = node.getCompilationUnit().getFileName().replace("\\", "\\\\");
         return "if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep(\""
-        + fileName + "\"," + line + ");";
+            + fileName + "\"," + line + ");";
     }
 
     public static void generateMethodSig(PrintStream stream, MethodSig sig, boolean async) {
@@ -269,13 +267,13 @@ public class JavaGeneratorHelper {
         }
         stream.println(",");
         PureExp rtAttr;
-        rtAttr = CompilerUtils.getAnnotationValue(annotations, "Deadline");
+        rtAttr = CompilerUtils.getAnnotationValueFromSimpleName(annotations, "Deadline");
         if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream); 
         stream.println(",");
-        rtAttr = CompilerUtils.getAnnotationValue(annotations, "Cost");
+        rtAttr = CompilerUtils.getAnnotationValueFromSimpleName(annotations, "Cost");
         if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream); 
         stream.println(",");
-        rtAttr = CompilerUtils.getAnnotationValue(annotations, "Critical");
+        rtAttr = CompilerUtils.getAnnotationValueFromSimpleName(annotations, "Critical");
         if (rtAttr == null) stream.print(ABSBool.class.getName() + ".FALSE"); else rtAttr.generateJava(stream); 
         
         stream.println(") {");

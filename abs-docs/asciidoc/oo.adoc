@@ -1,0 +1,132 @@
+[[sec:interfaces]]
+== Interfaces
+
+
+Interfaces in ABS are similar to interfaces in Java.  They have a name, which
+defines a nominal type, and they can extend zero or more other
+interfaces.  The interface body consists of a list of method signature
+declarations.  Method names start with a lowercase letter.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _InterfaceDecl_ ::= | `interface` _SimpleTypeIdentifier_ [ `extends` _InterfaceList_ ] `{` { MethSig } `}`
+| _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
+| _MethSig_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` `;`
+|====
+
+The interfaces in the example below represent a database system, providing
+functionality to store and retrieve files, and a node of a peer-to-peer file
+sharing system.  Each node of a peer-to-peer system plays both the role of a
+server and a client.
+
+[source]
+.Example
+----
+interface DB {
+  File getFile(Filename fId);
+  Int getLength(Filename fId);
+  Unit storeFile(Filename fId, File file);
+  Filenames listFiles();
+}
+interface Client {
+  List<Pair<Server,Filenames>> availFiles(List<Server> sList);
+
+  Unit reqFile(Server sId, Filename fId);
+}
+interface Server {
+  Filenames inquire();
+  Int getLength(Filename fId);
+  Packet getPack(Filename fId, Int pNbr);
+}
+interface Peer extends Client, Server {
+  List<Server> getNeighbors();
+}
+----
+
+[[sec:classes]]
+== Classes
+
+Classes in ABS are used to create objects via the `new` expression.  Classes
+can implement an arbitrary number of interfaces.  Since classes are not types
+in ABS, classes typically implement one or more interfaces.
+
+
+Classes in ABS have zero or more _class parameters_.  Each class parameter
+defines a field of the class which is assigned a value via arguments the `new`
+expression.
+
+
+Classes have an optional init block, which is executed before any other code.
+The init block cannot contain processor release points (i.e., `await` or
+`suspend`), blocking expressions (i.e., `get`), or explicitly throw an
+exception via the `throw` statement.
+
+Classes have an optional recovery block.  In case an uncaught exception occurs
+in a method, the exception is matched against the patterns given in the
+recovery block, and the associated statement(s) are executed.  If the
+exception does not match any pattern in the recovery block, or if the recovery
+block itself raises an exception, the object is killed.  Code in the recovery
+block has the same restrictions as in the init block.
+
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _ClassDecl_ ::= | `class` _SimpleTypeIdentifier_ [ `(` [ _ClassParameterList_ ] `)` ] [ `implements` _InterfaceList_ ]
+|                 | `{` [ _FieldDeclList_ ] [ _Block_ ] [_RecoveryBlock_] [ _MethDeclList_ ] `}`
+| _ClassParameterList_ ::= | _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ }
+| _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
+| _FieldDeclList_ ::= | { _Type_ _SimpleIdentifier_ [ `=` _PureExp_ ] `;` }
+| _RecoveryBlock_ ::= | `recover` `{` { _Pattern_ `\=>` _Stmt_ } `}`
+| _MethDeclList_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` _Block_
+|====
+
+
+
+
+
+[source]
+.Example
+----
+class DataBase(Map<Filename,File> db) implements DB {
+	File getFile(Filename fId) {
+		return lookup(db, fId);
+	}
+
+	Int getLength(Filename fId){
+		return length(lookup(db, fId));
+	}
+
+	Unit storeFile(Filename fId, File file) {
+		db = insert(Pair(fId,file), db);
+	}
+
+	Filenames listFiles() {
+		return keys(db);
+	}
+
+	}
+
+class Node(DB db, Peer admin, Filename file) implements Peer {
+
+	Catalog catalog;
+	List<Server> myNeighbors;
+	// implementation...
+
+}
+
+----
+
+.Active Classes
+
+A class can be active or passive. Active classes start an activity on their own upon creation. Passive classes only react to incoming method calls. A class is active if and only if it has a run method:
+
+[source]
+----
+Unit run() {
+	// active behavior ...
+}
+----
+
+The run method is called after object initialization.

@@ -13,5 +13,4 @@ aspect FLIAnnotation {
         else
             return ((ClassDecl) d).isForeign();
     }
-    
 }

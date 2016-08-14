@@ -12,22 +12,22 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import abs.frontend.analyser.ErrorMessage;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.analyser.SPLTypeError;
 import abs.frontend.ast.*;
 
 public class ProgramTypeAbstraction {
     private final Map<String, Map<String, Set<String>>> classes;
-    private final SemanticErrorList errors;
+    private final SemanticConditionList errors;
 
     // Keep track of sequence of deltas already applied to this TA, for better error reporting
     private final java.util.List<DeltaDecl> deltas;
 
     // Keep track of the product we are currently trying to build, for better error reporting
-    private ImplicitProduct product;
+    private Product product;
 
     // Constructor
-    public ProgramTypeAbstraction(SemanticErrorList errors) {
+    public ProgramTypeAbstraction(SemanticConditionList errors) {
         this.errors = errors;
         deltas = new ArrayList<DeltaDecl>();
         classes = new HashMap<String, Map<String, Set<String>>>();
@@ -47,7 +47,7 @@ public class ProgramTypeAbstraction {
         }
     }
 
-    public void applyDelta(DeltaDecl delta, ImplicitProduct product) {
+    public void applyDelta(DeltaDecl delta, Product product) {
         deltas.add(delta);
         this.product = product;
         for (ModuleModifier mod : delta.getModuleModifiers()) {

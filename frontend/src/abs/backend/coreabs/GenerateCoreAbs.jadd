@@ -1,5 +1,4 @@
 import java.io.PrintStream;
-import beaver.Symbol;
 
 aspect GenerateCoreABS {
 
@@ -8,8 +7,8 @@ aspect GenerateCoreABS {
         
         stream.println("// " + getClass().getSimpleName()
 //                + " Declared in " + getModuleDecl().getFileName()
-                + " line " + Symbol.getLine(getStart())
-                + " column " + Symbol.getColumn(getStart())
+                + " line " + getStartLine()
+                + " column " + getStartColumn()
                 );
     }
     
@@ -22,7 +21,7 @@ aspect GenerateCoreABS {
     }
  
     public void ModuleDecl.generateCoreABS(PrintStream stream) {
-        stream.println("// " + getClass().getSimpleName() + " Declared in " + getFileName() + " line " + Symbol.getLine(getStart()));
+        stream.println("// " + getClass().getSimpleName() + " Declared in " + getFileName() + " line " + getStartLine());
 
         stream.println("Module " + getName() + ";");
         
@@ -32,7 +31,7 @@ aspect GenerateCoreABS {
     }
     
     public void Decl.generateCoreABS(PrintStream stream) {
-        stream.println("// " + getClass().getSimpleName() + " Declared in " + getFileName() + " line " + Symbol.getLine(getStart()));
+        stream.println("// " + getClass().getSimpleName() + " Declared in " + getFileName() + " line " + getStartLine());
     }
 
 	/* EXPERIMENTAL unfolding of AwaitAsyncCalls into temporary variables.
@@ -76,6 +75,11 @@ aspect GenerateCoreABS {
         RewriteBlock b = new RewriteBlock(new List(), new List());
         // System.err.print("frob " + this);
         for (AwaitAsyncCall aac : aacs) {
+            // The annotations on an "await o!m();" statement need to end up
+            // on the fresh "o!m()"; move them there ("this" ends up being the
+            // subsequent ".get" statement on the anonymous future).
+            List<Annotation> annotations = this.getAnnotationList().parseTreeCopy();
+            this.setAnnotationList(new List());
             Access a = (Access)aac.getCallee().getType().lookupMethod(aac.getMethod()).getReturnType();
             /* Rewriting is also triggered from the Eclipse editor, which AGAIN doesn't have the whole
                view of the program and thus cannot resolve types. So just skip-if this is actually a
@@ -83,18 +87,17 @@ aspect GenerateCoreABS {
             if (!a.getType().isUnknownType()) {
               final TypeUse du = a.getType().toUse();
               final String tmp = "tmp"+Integer.toString(aac.hashCode());
-              final int start = aac.getStart();
-              final int end = aac.getEnd();
               // TODO: The typechecker will assert that/if the name is free, but in freak chances it may not.
               AsyncCall nac = new AsyncCall(aac.getCallee(), aac.getMethod(), aac.getParamList());
-              nac.setPosition(start, end);
+              nac.setPositionFromNode(aac);
               ParametricDataTypeUse pdtu = new ParametricDataTypeUse("Fut", new List(), new List().add(du));
-              pdtu.setPosition(start, end);
-              VarDeclStmt vds = new VarDeclStmt(new List(), new VarDecl(tmp, pdtu, new Opt(nac)));
-              vds.setPosition(start, end);
+              pdtu.setPositionFromNode(aac);
+              // Annotations of the original "await o!m()" moved here
+              VarDeclStmt vds = new VarDeclStmt(annotations, new VarDecl(tmp, pdtu, new Opt(nac)));
+              vds.setPositionFromNode(aac);
               b.addStmt(vds);
               AwaitStmt as = new AwaitStmt(new List(), new ClaimGuard( new VarUse(tmp)));
-              as.setPosition(start, end);
+              as.setPositionFromNode(aac);
               b.addStmt(as);
             }                                                 
         }

@@ -6,4 +6,4 @@ if [[ -z $PROGNAME ]] ; then
 fi
 BASEDIR="$(dirname $PROGNAME)/../.."
 
-java -Xmx512m -cp $BASEDIR/bin:$BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/lib/beaver-rt.jar:$BASEDIR/lib/org.sat4j.core.jar:$BASEDIR/lib/org.sat4j.pb.jar:$BASEDIR/lib/sat4j-pb.jar:$BASEDIR/lib/org.sat4j.maxsat.jar:$BASEDIR/lib/sat4j-maxsat.jar:$BASEDIR/lib/choco-solver-2.1.1.jar:$BASEDIR/lib/commons-io-2.4.jar:$BASEDIR/lib/guava-15.0.jar autodeploy.Tester "$@"
+java -Xmx512m -cp $BASEDIR/bin:$BASEDIR/lib/org.sat4j.core.jar:$BASEDIR/lib/org.sat4j.pb.jar:$BASEDIR/lib/sat4j-pb.jar:$BASEDIR/lib/org.sat4j.maxsat.jar:$BASEDIR/lib/sat4j-maxsat.jar:$BASEDIR/lib/choco-solver-2.1.1.jar:$BASEDIR/lib/commons-io-2.4.jar:$BASEDIR/lib/guava-15.0.jar autodeploy.Tester "$@"

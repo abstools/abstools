@@ -12,9 +12,7 @@
 -export([init/1]).
 
 -define(CMDLINE_SPEC,
-        [{debug,$d,"debug",{boolean,false},"Print debug status output"},
-         {gcstats,$g, "gcstats",{boolean,false},"Print garbage collection statistics"},
-         {port,$p,"port",{integer,none},"Start http on port and keep model running"},
+        [{port,$p,"port",{integer,none},"Start http on port and keep model running"},
          {clocklimit,$l,"clock-limit",{integer,none},"Terminate simulation after given clock value"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
 
@@ -78,32 +76,20 @@ parse(Args,Exec)->
 %% For now we just punt.
 start_link(Args) ->
     case Args of
-        [Module, Clocklimit] ->
-            {ok, _T} = start_mod(Module, false, false, Clocklimit),
-            %% io:format("~w~n", [end_mod(T)]),
+        [Module, Clocklimit, Keepalive] ->
+            {ok, _T} = start_mod(Module, false, false, Clocklimit, Keepalive),
             supervisor:start_link({local, ?MODULE}, ?MODULE, []);
         _ -> {error, false}
     end.
 
-start_mod(Module, Debug, GCStatistics, Clocklimit) ->
+start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
     io:format("Start ~w~n",[Module]),
     %%Init logging
-    eventstream:start_link(),
-    case {Debug, GCStatistics} of 
-        {false, false} ->
-            ok;
-        _ ->
-            eventstream:add_handler(console_logger,[Debug, GCStatistics])
-    end,
-    eventstream:add_handler(cog_monitor,[self()]),
+    {ok, _CogMonitor} = cog_monitor:start_link(self(), Keepalive),
     %% Init garbage collector
-    gc:start(GCStatistics, Debug),
+    {ok, _GC} = gc:start(GCStatistics, Debug),
     %% Init simulation clock
-    clock:start_link(Clocklimit),
-    %% init RNG.
-    %% TODO: if we want reproducible runs, make seed a command-line parameter
-    {A1,A2,A3} = now(),
-    random:seed(A1, A2, A3),
+    {ok, _Clock} = clock:start_link(Clocklimit),
 
     %%Start main task
     Cog=cog:start(),
@@ -114,10 +100,9 @@ end_mod(TaskRef) ->
     RetVal=task:join(TaskRef),
     %% modelapi:print_statistics(),
     cog_monitor:waitfor(),
-    timer:sleep(1),
     gc:stop(),
     clock:stop(),
-    eventstream:stop(),
+    cog_monitor:stop(),
     RetVal.
 
 
@@ -128,7 +113,7 @@ run_mod(Module, Debug, GCStatistics, Port,Clocklimit)  ->
             start_http(Port, Clocklimit),
             receive ok -> ok end;
         _ ->
-            {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit),
+            {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, false),
             end_mod(R)
     end.
 

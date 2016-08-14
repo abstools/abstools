@@ -13,13 +13,9 @@ start(_StartType, _StartArgs) ->
                                         {"/:request/[...]", modelapi, []}]}]),
     {ok, Port} = application:get_env(absmodel, port),
     {ok, Clocklimit} = application:get_env(absmodel, clocklimit),
-    case Clocklimit of
-        none -> ok;
-        _ -> io:format("Warning: clock limit and serving do not currently work together~n")
-    end,
     {ok, _} = cowboy:start_http(http, 100, [{port, Port}],
                                 [{env, [{dispatch, Dispatch}]}]),
-    runtime:start_link([?ABSMAINMODULE, Clocklimit]).
+    runtime:start_link([?ABSMAINMODULE, Clocklimit, true]).
 
 stop(_State) ->  
     ok.

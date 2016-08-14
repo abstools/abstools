@@ -105,9 +105,9 @@ aspect OriginalCallResolver {
         }
         
         // replace OriginalCall with a normal call to the copied method
-        EffExp call = new SyncCall(new ThisExp(), originalMethodCopy.getMethodSig().getName(), this.getParams().fullCopy());
+        EffExp call = new SyncCall(new ThisExp(), originalMethodCopy.getMethodSig().getName(), this.getParams().treeCopyNoTransform());
         // set line and column from OriginalCall node
-        call.setPosition(getStart(), getEnd());
+        call.setPositionFromNode(this);
         ASTNode parent = getParent();
         int i = parent.getIndexOfChild(this);
         parent.setChild(call, i);
@@ -254,7 +254,7 @@ aspect OriginalCallResolver {
      * String methodCopyID = method.getMethodSig().getName() + "_Orig" + uid;
      */
     public MethodImpl ModifyMethodModifier.copyMethod(MethodImpl method, String nameSuffix) {
-        MethodImpl methodCopy = method.fullCopy();
+        MethodImpl methodCopy = method.treeCopyNoTransform();
         methodCopy.getMethodSig().setName(method.getMethodSig().getName() + "$ORIGIN_" + nameSuffix); 
         return methodCopy;
     }

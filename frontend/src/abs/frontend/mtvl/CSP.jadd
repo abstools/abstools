@@ -17,9 +17,9 @@ Checks type errors, and if all variables are properly declared.
 
 aspect CSP {
 
-    refine ProductFlattener public void Model.flattenForProduct(Product prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
+    refine ProductFlattener public void Model.flattenForProduct(ProductDecl prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
         if (check && hasMTVL()) {
-            java.util.List<String> errors = instantiateCSModel().checkSolutionWithErrors(prod.getSolution(), this);
+            java.util.List<String> errors = instantiateCSModel().checkSolutionWithErrors(prod.getProduct().getSolution(), this);
             if (!errors.isEmpty()) {
                 String msg = "Product [" + prod.getName() + "] does not satisfy the feature model. Constraints failed:";
                 for (String s: errors)
@@ -292,7 +292,7 @@ aspect CSP {
     public Constraint MEqExp.collectConstraints(ChocoSolver s) {
         // Need to type check JUST the equality of expressions, to know if the constraints should produce  '==' or '<->'.
         // All other type checking should be done after flattening. 
-        checkType(Types.BOOL, new SemanticErrorList());
+        checkType(Types.BOOL, new SemanticConditionList());
         if (isInt)
             return ChocoSolver.eqeq(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));
         else

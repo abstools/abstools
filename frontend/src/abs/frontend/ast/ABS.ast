@@ -8,11 +8,11 @@
 Name ::= <Name>;
 DeltaID ::= <Name>;
 
-Model ::= CompilationUnit* /ImplicitProduct*/ ;
+Model ::= CompilationUnit* /Product*/ ;
 //Model ::= CompilationUnit* ;
 
 
-CompilationUnit ::= <Name> ModuleDecl* DeltaDecl* UpdateDecl* [ProductLine] Product* FeatureDecl* FExt*;
+CompilationUnit ::= <Name> ModuleDecl* DeltaDecl* UpdateDecl* [ProductLine] ProductDecl* FeatureDecl* FExt*;
 ModuleDecl ::= <Name> Export* Import* Decl* [Block:MainBlock];
 DeltaDecl ::= <Name> Param:DeltaParamDecl* DeltaAccess* ModuleModifier* ;
 UpdateDecl ::= <Name> ObjectUpdate* ;
@@ -36,7 +36,7 @@ abstract TypeDecl: Decl; // Entities used in type expressions
 
 UnknownDecl: Decl; // Unknown declarations
 AmbiguousDecl: UnknownDecl ::= <Alternative:java.util.List<Decl>>;
-ClassDecl: BehaviorDecl ::= Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
+ClassDecl: BehaviorDecl ::= Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] RecoverBranch:CaseBranchStmt* Field:FieldDecl* Method:MethodImpl*;
 FunctionDecl: BehaviorDecl ::= Annotation* TypeUse Param:ParamDecl* FunctionDef ;
 DataConstructor : BehaviorDecl ::= <Name> ConstructorArg:ConstructorArg* ;
 ParametricFunctionDecl : FunctionDecl ::= Annotation* TypeParameter:TypeParameterDecl* ;
@@ -53,7 +53,7 @@ TypeParameterDecl : TypeDecl ::= <Name>; // local declaration
 ParametricDataTypeDecl : DataTypeDecl ::= Annotation* TypeParameter:TypeParameterDecl* ;
 TypeSynDecl: TypeDecl ::= Annotation* Value:TypeUse ;
 
-ConstructorArg ::= DataTypeUse [SelectorName:Name];
+ConstructorArg ::= TypeUse [SelectorName:Name];
 
 
 abstract DeltaParamDecl;
@@ -322,6 +322,15 @@ FID: Deltaparam ::= <FeatName>;
 FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
-ImplicitProduct ::= Feature* ;
-Product : ImplicitProduct ::= <Name> Feature* Reconfiguration* ;
+// Extended Product Selection Language
+ProductDecl ::= <Name> ProductExpr Reconfiguration* ;
+
+abstract ProductExpr ;
+ProductFeatureSet : ProductExpr ::= Feature* ;
+ProductIntersect : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
+ProductUnion : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
+ProductDifference : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
+ProductName : ProductExpr ::= <Name> ;
+
+Product ::= Feature* ;
 Reconfiguration ::= <TargetProductID> DeltaID* <UpdateID> ;

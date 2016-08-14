@@ -37,7 +37,7 @@ aspect TypeCheckerExtension {
 */    
     
 //    refine Typing eq ParametricDataTypeUse.getType() {
-//        Type t = Typing.ParametricDataTypeUse.getType().fullCopy();        
+//        Type t = Typing.ParametricDataTypeUse.getType().treeCopyNoTransform();        
 //        getModel().getTypeExt().annotateType(t, this, this);
 //        return t;
 //    }
@@ -79,7 +79,7 @@ aspect TypeCheckerExtension {
     refine Typing eq DataConstructorExp.getType() {
         Type t = Typing.DataConstructorExp.getType();
         if (t != null) {
-            t = t.fullCopy();
+            t = t.treeCopyNoTransform();
         }
         return t;
     }
@@ -111,118 +111,125 @@ aspect TypeCheckerExtension {
 
     
     // STATEMENTS
+
+    refine TypeChecker public void Stmt.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
+        TypeChecker.Stmt.typeCheck(s);
+        if (s.getErrorCount() > size) return;
+        getModel().getTypeExt().checkStmt(this);
+    }
     
-    refine TypeChecker public void AssertStmt.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void AssertStmt.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.AssertStmt.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkAssertStmt(this);
     }
 
     
-    refine TypeChecker public void AssignStmt.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void AssignStmt.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.AssignStmt.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkAssignStmt(this);
     }
     
-    refine TypeChecker public void AwaitStmt.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void AwaitStmt.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.AwaitStmt.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkAwaitStmt(this);
     }
 
    
-    refine TypeChecker public void Block.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void Block.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.Block.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkBlock(this);
     }
     
-    refine TypeChecker public void ExpressionStmt.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void ExpressionStmt.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.ExpressionStmt.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkExpressionStmt(this);
     }
     
-    refine TypeChecker public void IfStmt.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void IfStmt.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.IfStmt.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkIfStmt(this);
     }
 
-    refine TypeChecker public void ReturnStmt.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void ReturnStmt.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.ReturnStmt.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkReturnStmt(this);
     }
     
-    refine TypeChecker public void SuspendStmt.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void SuspendStmt.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.SuspendStmt.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkSuspendStmt(this);
     }
 
-    refine TypeChecker public void VarDeclStmt.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void VarDeclStmt.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.VarDeclStmt.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkVarDeclStmt(this);
     }
     
-    refine TypeChecker public void WhileStmt.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void WhileStmt.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.WhileStmt.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkWhileStmt(this);
     }
 
     
     // EXPRESSIONS
     
-    refine TypeChecker public void NewExp.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void NewExp.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.NewExp.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkNewExp(this);
     }
     
-    refine TypeChecker public void Call.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void Call.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.Call.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkMethodCall(this);
         if (getMethodSig() != null) {
            getModel().getTypeExt().checkAssignable(getCallee().getType(),getMethodSig(),this);
         }
     }
     
-    refine TypeChecker public void FnApp.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void FnApp.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.FnApp.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkFnApp(this);
     }
     
 
-    refine TypeChecker public void GetExp.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void GetExp.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.GetExp.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkGetExp(this);
     }
     
-    refine TypeChecker public void ClassDecl.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void ClassDecl.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.ClassDecl.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
 
         HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
         addAllMethodSigs(sigs,s);  
@@ -237,13 +244,17 @@ aspect TypeCheckerExtension {
                 getModel().getTypeExt().checkOverride(ms,sig);
             }
         }
-		getModel().getTypeExt().checkClassDecl(this);
+        getModel().getTypeExt().checkClassDecl(this);
     }
-    
-    refine TypeChecker public void FunctionDecl.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+
+    refine TypeChecker public void InterfaceDecl.typeCheck(SemanticConditionList s) {
+        getModel().getTypeExt().checkInterfaceDecl(this);
+    }
+
+    refine TypeChecker public void FunctionDecl.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.FunctionDecl.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         
         if (getFunctionDef() instanceof ExpFunctionDef) {
             // built-in functions are assumed type-correct.
@@ -253,36 +264,36 @@ aspect TypeCheckerExtension {
         }
     }
     
-    refine TypeChecker public void MethodImpl.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void MethodImpl.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.MethodImpl.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkMethodImpl(this);
     }
 
-    refine TypeChecker public void DataConstructor.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void DataConstructor.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.DataConstructor.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
         // to guarantee type annotation:
         getType();
     }
     
     
-    refine TypeChecker public void VarDecl.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void VarDecl.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.VarDecl.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
 
         if (hasInitExp()) {
             getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType(), this);
         }
     }
 
-    refine TypeChecker public void FieldDecl.typeCheck(SemanticErrorList s) {
-        int size = s.size();
+    refine TypeChecker public void FieldDecl.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
         TypeChecker.FieldDecl.typeCheck(s);
-        if (s.size() > size) return;
+        if (s.getErrorCount() > size) return;
 
         if (hasInitExp()) {
             getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType(), this);
@@ -290,34 +301,35 @@ aspect TypeCheckerExtension {
  
      }
     
-    refine TypeChecker public void IfExp.typeCheck(SemanticErrorList e) {  
-        int size = e.size();
+    refine TypeChecker public void IfExp.typeCheck(SemanticConditionList e) {  
+        int size = e.getErrorCount();
         TypeChecker.IfExp.typeCheck(e);
-        if (e.size() > size) return;
+        if (e.getErrorCount() > size) return;
 
         getModel().getTypeExt().checkIfExp(this);
    } 
 
-    refine TypeChecker public void CaseExp.typeCheck(SemanticErrorList e) {  
-         int size = e.size();
+    refine TypeChecker public void CaseExp.typeCheck(SemanticConditionList e) {  
+         int size = e.getErrorCount();
          TypeChecker.CaseExp.typeCheck(e);
-         if (e.size() > size) return;
+         if (e.getErrorCount() > size) return;
 
          getModel().getTypeExt().checkCaseExp(this);
     } 
 
      
-     refine TypeChecker public void DataConstructorExp.typeCheck(SemanticErrorList s) {
-         int size = s.size();
+     refine TypeChecker public void DataConstructorExp.typeCheck(SemanticConditionList s) {
+         int size = s.getErrorCount();
         TypeChecker.DataConstructorExp.typeCheck(s);
-        if (s.size() > size) return;
-        
+        if (s.getErrorCount() > size) return;
+
         getModel().getTypeExt().checkDataConstructorExp(this);
    }
      
-     refine TypeChecker public void Model.typeCheck(SemanticErrorList s) {
+     refine TypeChecker public void Model.typeCheck(SemanticConditionList s) {
          getTypeExt().typeCheckStarted(this,s);
          TypeChecker.Model.typeCheck(s);
+         getTypeExt().checkModel(this);
          getTypeExt().finished();
      }
 }

@@ -1,0 +1,440 @@
+
+== Statements
+
+This chapter specifies all ABS statements.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _Statement_ ::= | _SkipStmt_
+{vbar} _VarDeclStmt_
+{vbar} _AssignStmt_
+{vbar} _ExpStmt_
+{vbar} _AssertStmt_
+{vbar} _AwaitStmt_
+{vbar} _SuspendStmt_
+{vbar} _ThrowStmt_
+{vbar} _ReturnStmt_
+{vbar} _Block_
+{vbar} _IfStmt_
+{vbar} _CaseStmt_
+{vbar} _WhileStmt_
+{vbar} _TryCatchFinallyStmt_
+|====
+
+
+=== Skip
+
+The skip statement is a statement that does nothing.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _SkipStmt_ ::= | `skip` `;`
+|====
+
+[source]
+.Example
+----
+skip;
+----
+
+=== Variable Declarations
+
+A variable declaration statement is used to declare variables.  Variable
+declarations can occur at any point in a sequence of statements; i.e., it is
+not necessary to declare variables only at the beginning of methods or blocks.
+
+Variables declared inside a block are in scope for the duration of the block.
+It is an error to declare a variable with the same name of another variable in
+scope.  A local variable can have the same name as an object field.
+
+A variable declaration has an expression that defines the initial value of the
+variable.  The initialization expression is mandatory except for variables of
+reference types (interfaces and futures), in which case the variable is
+initialized with `null` if the initialization expression is omitted.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _VarDeclStmt_ ::= | _Type_ _SimpleIdentifier_ [ `=` _Exp_ ] `;`
+|====
+
+[source]
+.Example
+----
+Bool b = True;
+----
+
+
+=== Variable Assignment
+
+The assign statement assigns a value to a variable or a field.
+
+Assignments to a field `f` can be written either `this.f = e;` or `f = e;`.
+In case a local variable `f` is in scope at the point of the assignment
+statement, the `this` prefix has to be used to assign to the field `f`; assignment
+to `f` will change the value of the local variable.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _AssignStmt_ ::= | [ `this` `.` ] _SimpleIdentifier_ `=` _Exp_ `;`
+|====
+
+[source]
+.Example
+----
+this.f = True;
+x = 5;
+----
+
+
+=== Expressions as Statements
+
+An expression statement is a statement that consists of a single expression.
+When an expression statement is executed, the expression is evaluated and the
+resulting value is discarded.
+
+Expression statements are used for their side effects, for example issuing an
+asynchronous method call without waiting for its result.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _ExpStmt_ ::= | _Exp_ `;`
+|====
+
+NOTE: Creating an object without storing a reference (and hence never invoking
+a method on the new object) can be a meaningful operation, for example when
+the object has a `run` method and interacts with the rest of the system by
+calling methods on references passed in via the `new` expression.
+
+[source]
+.Example
+----
+server!operate();
+new Client(server);
+----
+
+
+=== Assertions
+
+An assert statement is a statement for asserting certain conditions.  If the
+expression evaluates to `True`, executing an assertion is equivalent to
+`skip;`.  If the expression evalutes to `False`, it is equivalent to `throw
+AssertionFailException;`.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _AssertStmt_ ::= | `assert` _PureExp_ `;`
+|====
+
+[source]
+.Example
+----
+assert x != null;
+----
+
+
+
+[[await-stmt]]
+=== Await Statement
+
+An await statement suspends the current task until the given guard becomes
+active (evalutes to `True`).  While the task is suspended, other tasks within
+the same COG can be scheduled.
+
+Guards can wait for a futures to become resolved, for a Boolean condition over
+the object state to become true, or (in timed ABS) for a certain duration to
+pass.
+
+In general, each cog will continue running a task without preempting it until
+the task is finished or it reaches a _scheduling point_.  Await statements are
+scheduling points, as are `suspend` statements and assignment or expression
+statements containing an await expression (see <<await-expression>>).
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _AwaitStmt_ ::= | `await` _Guard_ `;`
+| _Guard_ ::= | [ `this` `.` ] _SimpleIdentifier_ `?` {vbar} _PureExp_
+{vbar} _Guard_ `&` _Guard_
+{vbar} `duration` `(` _PureExp_ `,` _PureExp_ `)`
+|====
+
+[source]
+.Example
+----
+Fut<Bool> f = x!m();
+await f?; <1>
+await this.x == True; <2>
+await f? & this.y > 5; <3>
+await duration(3, 5); <4>
+----
+<1> A _claim guard_ becomes active when the future is resolved (contains a value or an exception).
+<2> A _field guard_ is a Boolean expression over the object state.
+<3> A _guard conjunction_ becomes active when both its components are active.
+<4> A _duration guard_ becomes active after a certain amount of simulated time has passed.  See <<sec:timed-abs>> for more on timed models.
+
+
+[[suspend-stmt]]
+=== Unconditional Release: Suspend
+
+The suspend statement causes the current task to be suspended.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _SuspendStmt_ ::= | `suspend` `;`
+|====
+
+NOTE: There is no guarantee that the cog will choose another task to run; the
+current task might be resumed immediately after suspending itself.
+
+[source]
+.Example
+----
+suspend;
+----
+
+
+
+=== Return
+
+A return statement returns a value from a method.  A return statement can only
+appear as a last statement in a method body.
+
+For asynchronous method calls, executing the return statement will cause the
+future to be resolved so that it contains a value.  Any claim guards awaiting
+the future will become active.
+
+Methods that have a `Unit` return type do not need an explicit return
+statement.  The future will be resolved when the method terminates.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _ReturnStmt_ ::= | `return` _Exp_ `;`
+|====
+
+NOTE: ABS does not allow exiting a method from multiple points, e.g., via
+multiple `return` statements.  This makes model analysis easier.
+
+[source]
+.Example
+----
+return x;
+----
+
+[[throw-statement]]
+=== Throw
+
+The keyword-statement `throw` is used to signal exceptions (runtime errors).
+It takes a single argument which is the exception-value to throw. For example:
+
+[source]
+
+----
+{
+ Int x = -1;
+ if (x<0) {
+    throw NegativeNumberException(x);
+ }
+ else {
+   if (x==0) {
+      throw ZeroNumberException;
+   }
+   else ...
+}
+----
+
+NOTE: The 'throw' statement can only be used inside imperative code.
+Throwing user-exceptions inside functional code is considered bad practice:
+the user's function must be written instead to return an +Either<Exception, A>+ value,
+as in the example:
+
+----
+def Either<Exception, Int> f(x,y) = if (y < 0)
+                                    then Left(NegativeNumberException)
+                                    else Right(...)
+----
+
+Despite this, there are certain built-in system-exceptions (see Section 3.3) that can originate
+from erroneous functional code. Examples of these are
+`DivisionByZeroException` and `PatternMatchFailException`, implicitly signaled
+by the ABS system.
+
+When an exception is raised (signaled), the normal flow of the program will be abrupted. In order to resume
+the normal flow, the user has to explicitly *handle* the exception.
+
+
+
+=== Blocks of Statements
+
+A sequence of statements is called a _block_.  A block introduces a scope for
+local variables.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _Block_ ::= | `{` { _Statement_ } `}`
+|====
+
+NOTE: Semantically, a whole block is a single statement and can be written
+anywhere a single statement is valid.
+
+[source]
+.Example
+----
+{
+  Int a = 0; <1>
+  a = a + 1;
+  n = a % 10;
+}
+
+{ } <2>
+----
+<1> The variable `a` is in scope until the end of the block.
+<2> An empty block is equivalent to `skip;`.
+
+
+=== Conditionals
+
+[source]
+.Example
+----
+if (5 < x) {
+  y = 6;
+}
+else {
+  y = 7;
+}
+if (True)
+  x = 5;
+----
+
+[[case-stmt]]
+=== Case: Pattern Matching
+
+The case statement, like the case expression (see <<case-expression>>),
+consists of an expression and a series of branches, each consisting of a
+pattern and a statement (which can be a block).
+
+When a case statement is executed, its input expression is evaluated and the
+value matched against the branches until a matching pattern is found.  The
+statement in the right-hand side of that branch is then executed.  Any
+variable bindings introduced by matching the pattern are in effect while
+executing that statement.
+
+It is an error if no pattern matches the expression.
+
+For a description of the patterns available, see <<case-expression>>.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _CaseStmt_ ::= | `case` _PureExp_ `{` { _CaseStmtBranch_ } `}`
+| _CaseStmtBranch_ ::= | _Pattern_ \=> _Stmt_
+|====
+
+[source]
+.Example
+----
+Pair<Int, Int> p = Pair(2, 3);
+Int x = 0;
+case p {
+  Pair(2, y) => { x = y; skip; }
+  _ => x = -1;
+}
+----
+
+
+
+=== The While Loop
+
+The while loop repeats its body while the condition evalutes to `True`.  The
+condition is re-evaluated after each iteration of the loop.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _WhileStmt_ ::= | `while` `(` _PureExp_ `)` _Stmt_
+|====
+
+[source]
+.Example
+----
+while (x < 5) {
+  x = x + 1;
+}
+----
+
+
+[[try-catch-finally-stmt]]
+=== Handling Exceptions with Try-Catch-Finally
+
+Executing a statement can result in an exception, either explicitly signaled
+using the `throw` keyword or implicitly, for example by dividing by zero.  The
+try-catch-finally statement is used to handle exceptions and resume normal
+execution afterwards.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _TryCatchFinallyStmt_ ::= | `try` _Stmt_
+|                           | `catch` ( ( `{` { _CaseStmtBranch_ } `}` ) \| _CaseStmtBranch_ )
+|                           | [ `finally` _Stmt_ ]
+|====
+
+The statement protected by `try` (which can be a block) is executed first.  If
+no exception is thrown, execution continues with the optional `finally`
+statement, then with the next statement after the try-catch-finally statement.
+
+If during execution of the statement protected by `try` an exception is
+thrown, it is matched one-by-one against the exception patterns defined in the
+`catch` block.  The statement following the first matching pattern will be
+executed, as in the case statement (see <<case-stmt>>).  Execution continues
+with the optional `finally` statement, then with the statement following the
+try-catch-finally statement.
+
+
+If during execution of the statement protected by `try` an exception is thrown
+that is not matched by any branch in the `catch` block, the exception is
+_unhandled_.  In this case, first the optional `finally` statement is
+executed.  If the try-catch-finally was protected by another try-catch-finally
+statement, the unhandled exception is passed on to this surrounding
+try-catch-finally statement.  Otherwise, the current process terminates and
+its future is resolved by storing the unhandled exception.  Any `get`
+expression on this future will re-throw the exception (see
+<<get-expression>>).  The object that ran the aborted process will execute its
+recovery block with the unhandled exception as parameter (see
+<<sec:classes>>).
+
+.Example
+[source]
+----
+try {
+    Int z = 1/x; <1>
+} catch {
+    DivisionByZeroException => println("We divided by zero"); <2>
+} finally {
+    println("Leaving the protected area"); <3>
+}
+----
+<1> If `x` is zero, this will throw an exception
+<2> Division by zero is handled here; other exceptions will be left unhandled
+<3> This statement is always executed
+
+[source]
+.Example
+----
+try b = f.get; catch _ => b = False; <1>
+----
+<1> A “catch-all” exception handler that sets `b` to a default value in case an unhandled exception was propagated via `f`
+
+NOTE: The `finally` block has the same restrictions as the class init and
+recovery blocks, i.e., it cannot contain processor release points (i.e.,
+`await` or `suspend`), blocking expressions (i.e., `get`), or explicitly throw
+an exception via the `throw` statement.

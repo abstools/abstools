@@ -13,7 +13,7 @@ aspect ProductFlattener {
      * - apply deltas in sequence.
      */
     public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,DeltaModellingException {
-        Product prod = this.findProduct(id);
+        ProductDecl prod = this.findProduct(id);
         flattenForProduct(prod);
     }
     /**************************************************************************
@@ -21,21 +21,22 @@ aspect ProductFlattener {
      * i.e. apply each ModuleModifier to its corresponding class or interface
      */
     public void Model.flattenForProductUnsafe(String id) throws WrongProgramArgumentException,DeltaModellingException {
-        Product prod = this.findProduct(id);
+        ProductDecl prod = this.findProduct(id);
         flattenForProduct(prod, false);
     }
-    public void Model.flattenForProduct(Product prod) throws WrongProgramArgumentException,DeltaModellingException {
+    public void Model.flattenForProduct(ProductDecl prod) throws WrongProgramArgumentException,DeltaModellingException {
         flattenForProduct(prod, true);
     }
     public void Model.flattenForProduct(String id, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
-        Product prod = this.findProduct(id);
+        ProductDecl prod = this.findProduct(id);
         flattenForProduct(prod, check);
     }
 
     /**
      * Refined with MTVL-check in CSP.jadd.
      */
-    public void Model.flattenForProduct(Product prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
+    public void Model.flattenForProduct(ProductDecl prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
+	assert prod != null;
         if (verbose)
             System.out.println("--- configuring product: " + prod.getName());
 
@@ -43,9 +44,11 @@ aspect ProductFlattener {
         ProductLine pl = getProductLine();
         if (pl == null)
             throw new DeltaModellingException("Model is missing a 'productline' definition");
+        if (prod.getProduct() == null)
+            throw new DeltaModellingException("No product selected");
 
         // find/sort applicable delta IDs
-        Set<String> deltaids = pl.findApplicableDeltas(prod);
+        Set<String> deltaids = pl.findApplicableDeltas(prod.getProduct());
         java.util.List<String> sorted_deltaids = pl.sortDeltas(deltaids);
 
         // find corresponding DeltaDecls
@@ -54,7 +57,7 @@ aspect ProductFlattener {
             deltas.add(getDeltaDeclsMap().get(deltaid));
 
         // substitute delta parameters
-        pl.substituteDeltaParams(deltas, prod);
+        pl.substituteDeltaParams(deltas, prod.getProduct());
 
         // resolve original() calls
         resolveOriginalCalls(deltas);
@@ -84,16 +87,16 @@ aspect ProductFlattener {
             this.applyDelta(delta);
             for (CompilationUnit unit: this.getCompilationUnits())
                 for (ModuleDecl module: unit.getModuleDecls())
-                        module.flushCache();
+                    module.flushCache();
         }
     }
 
     /**************************************************************************
-    * apply each FunctionalModifier and ModuleModifier
-    * to its corresponding class or interface
-    *
-    * These "apply" methods are defined in "DeltaModifierApplicator.jadd"
-    */
+     * apply each FunctionalModifier and ModuleModifier
+     * to its corresponding class or interface
+     *
+     * These "apply" methods are defined in "DeltaModifierApplicator.jadd"
+     */
     public void Model.applyDelta(DeltaDecl delta) throws DeltaModellingException {
         for (ModuleModifier mod : delta.getModuleModifiers()) {
             //System.out.println("*** applying ModuleModifier " + mod);
@@ -104,12 +107,10 @@ aspect ProductFlattener {
     /**************************************************************************
      * find a particular product given by its name
      */
-    public Product Model.findProduct(String id) throws WrongProgramArgumentException {
-        for (CompilationUnit u : this.getCompilationUnits()) {
-            for (Product p : u.getProducts()) {
-                if (id.equals(p.getName()))
-                    return p;
-            }
+    public ProductDecl Model.findProduct(String id) throws WrongProgramArgumentException {
+        for (ProductDecl p : getProductDecls()) {
+            if (id.equals(p.getName()))
+                return p;
         }
         throw new WrongProgramArgumentException("Product [" + id + "] is not declared");
     }
@@ -118,7 +119,10 @@ aspect ProductFlattener {
      * Evaluate each delta clause to find the applicable delta names
      * i.e. test each application condition in the context of the features which are ON in the given product
      */
-    public Set<String> ProductLine.findApplicableDeltas(ImplicitProduct prod) {
+    public Set<String> ProductLine.findApplicableDeltas(Product prod) {
+
+	assert prod != null;
+	assert prod.getFeatures() != null;
 
         HashSet<String> deltaids = new HashSet<String>();
 
@@ -133,13 +137,13 @@ aspect ProductFlattener {
      * Evaluate both FROM and TO(WHEN) delta clauses to find the applicable delta names
      * relevant for dynamic product reconfiguration
      */
-    public Set<String> ProductLine.findApplicableDeltas(Product fromProd, Product toProd) {
+    public Set<String> ProductLine.findApplicableDeltas(ProductDecl fromProd, ProductDecl toProd) {
 
         HashSet<String> deltaids = new HashSet<String>();
 
         for (DeltaClause clause : getDeltaClauses()) {
-            if (clause.evaluateFromApplicationCondition(fromProd.getFeatures()))
-                if (clause.evaluateApplicationCondition(toProd.getFeatures()))
+            if (clause.evaluateFromApplicationCondition(fromProd.getProduct().getFeatures()))
+                if (clause.evaluateApplicationCondition(toProd.getProduct().getFeatures()))
                     deltaids.add(clause.getDeltaspec().getDeltaID());
         }
         return deltaids;
@@ -191,16 +195,16 @@ aspect ProductFlattener {
     public abstract boolean AppCond.evaluate(Set<String> features);
 
     public boolean AppCondAnd.evaluate(Set<String> features) {
-    	return getLeft().evaluate(features) && getRight().evaluate(features);
+        return getLeft().evaluate(features) && getRight().evaluate(features);
     }
     public boolean AppCondOr.evaluate(Set<String> features) {
-    	return getLeft().evaluate(features) || getRight().evaluate(features);
+        return getLeft().evaluate(features) || getRight().evaluate(features);
     }
     public boolean AppCondNot.evaluate(Set<String> features) {
-    	return !getAppCond().evaluate(features);
+        return !getAppCond().evaluate(features);
     }
     public boolean AppCondFeature.evaluate(Set<String> features) {
-    	return (features.contains(getName()));
+        return (features.contains(getName()));
     }
 
 
@@ -209,9 +213,9 @@ aspect ProductFlattener {
      * (according to a valid order of application defined by the product line)
      */
     public java.util.List<String> ProductLine.sortDeltas(Set<String> applicableDeltaIDs) {
-	    LinkedList<String> list = new LinkedList<String>(getValidOrderOfAllDeltas());
-	    list.retainAll(applicableDeltaIDs);
-	    return list;
+        LinkedList<String> list = new LinkedList<String>(getValidOrderOfAllDeltas());
+        list.retainAll(applicableDeltaIDs);
+        return list;
     }
 
     /**************************************************************************
@@ -231,7 +235,7 @@ aspect ProductFlattener {
         sortDeltas();
         return deltaSorter.getPartition();
     }
-    
+
     /**************************************************************************
      * The sorter object that computes a valid delta order
      * It is instantiated by sortDeltas().

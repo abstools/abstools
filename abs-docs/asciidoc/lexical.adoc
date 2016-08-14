@@ -1,0 +1,177 @@
+== Lexical Structure
+
+This section describes the lexical structure of the ABS language.  We use the
+following EBNF conventions for specifying the syntax of ABS elements.
+
+.EBNF syntax for this manual
+[cols="1,5"]
+|=====
+| `typewriter text` | Terminal symbols (occurring in program source code)
+| _CursiveText_ | Non-terminals (production rule names)
+| ::= | Separator between left hand side and right hand side of a rule
+| {vbar} | Variant; either of the element(s) separated by {vbar}
+| [ ] | Optionals; the enclosed elements can be omitted
+| { } | Repetition; zero or more occurrences of the enclosed elements
+| ? ? | Special group (elements in the group are specified informally)
+| [: :] | A character class, as in extended regular expression syntax
+| ( ) | Grouping
+|=====
+
+=== Line Terminators and White Spaces
+
+Line terminators and white spaces are defined as in Java.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _LineTerminator_ ::=
+| `\n` {vbar} `\r` {vbar} `\r\n`
+
+| _WhiteSpace_ ::=
+| _LineTerminator_ {vbar} `␣` {vbar} `\t` {vbar} _Comment_
+|====
+// use U+2423 or U+2420 for the space symbol
+
+=== Comments
+ABS supports the two common Java-style styles of comments: end-of-line comments and block comments.
+
+An end-of-line comment starts with two slashes, e.g., `// text`. All text that follows `//` until the end of the line is treated as a comment.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _Comment_ ::= | _LineComment_ {vbar} _BlockComment_ +
+| _LineComment_ ::= | `//` { ? characters except _LineTerminator_ ? } _LineTerminator_ +
+| _BlockComment_ ::= | `/\*` { ? characters except `*/` ? } `*/`
+|====
+
+
+.Example
+[source]
+----
+// this is a comment
+module A; // this is also a comment
+----
+
+A block comment is enclosed in `/{asterisk} {asterisk}/`,
+e.g., `/{asterisk} this is a comment {asterisk}/`.  Block comments can span
+multiple lines and do not nest.
+
+.Example
+[source]
+----
+/* this
+is a multiline
+comment */
+----
+
+
+=== Identifiers
+
+Identifiers consist of a letter followed by a sequence of letters,
+numbers and underscores (`_`).
+
+ABS distinguishes identifiers and type identifiers.  Identifiers start
+with a lower-case character, type identifiers start with an upper-case
+character.  Identifiers name local variables, fields, methods and functions.
+Type identifiers name interfaces, classes, types, type
+constructors, deltas and products.
+
+Identifiers can be _qualified_ with a module name (see <<sec:modules>>) or
+_simple_ (without module name prefix).
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _SimpleIdentifier_ ::= | [: lower :] { [: alpha :] {vbar} [: digit :] {vbar} `_` }
+
+|_SimpleTypeIdentifier_ ::= | [: upper :] { [: alpha :] {vbar} [: digit :] {vbar} `_` }
+
+|_QualifiedIdentifier_ ::= | { _SimpleTypeIdentifier_ `.` } _SimpleIdentifier_
+|_QualifiedTypeIdentifier_ ::= | { _SimpleTypeIdentifier_ `.` } _SimpleTypeIdentifier_
+
+|_Identifier_ ::= | _SimpleIdentifier_ {vbar} _QualifiedIdentifier_
+|_TypeIdentifier_ ::= | _SimpleTypeIdentifier_ {vbar} _QualifiedTypeIdentifier_
+|====
+
+=== Keywords
+The following words are keywords in the ABS language and are invalid as identifiers.
+
+// TODO check and update this list
+
+[format="csv", "ls="7",grid="none"]
+|=====
+`adds`,`core`,`export`,`hasMethod`,`let`,`product`,`this`
+`after`,`class`,`features`,`if`,`local`,`productline`,`type`
+`assert`,`data`,`from`,`implements`,`modifies`,`removes`,`when`
+`await`,`def`,`get`,`import`,`module`,`return`,`while`
+`builtin`,`delta`,`hasField`,`in`,`new`,`skip`,`case`
+`else`,`hasInterface`,`interface`,`null`,`suspend`
+|=====
+
+[[sec:literals]]
+=== Literals
+
+A literal is a textual representation of a value. ABS supports three kinds of
+literals, integer literals, string literals, and the null literal.
+
+Strings are enclosed in double quotes (`"`).  Line feed in a string is written
+as `\n`, carriage return as `\r`.
+
+ABS does not support floating point numbers currently.  Rational numbers are
+written using the division operator `/`, e.g., `1/4` for one quarter.
+
+The null literal is written as `null`.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _Literal_ ::= | _IntLiteral_ {vbar} _StringLiteral_ {vbar} _ThisLiteral_ {vbar} _NullLiteral_
+| _IntLiteral_ ::= | `0` {vbar} ( ( `1` {vbar} ... {vbar} `9`] ) { [: digit :] } )
+| _StringLiteral_ ::= | `"` { ? _Valid String Character_ ? } `"`
+| _ThisLiteral_ ::= | `this`
+| _NullLiteral_ ::= | `null`
+|====
+
+Valid string characters are defined as in the Java language.
+
+
+=== Annotations
+
+Annotations consist of a syntactically valid pure expression, optionally
+preceded by a type identifier (the “tag”) and a colon (`:`).  They can be put
+in front of statements and definitions.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _Annotation_ ::= | `[` [ _TypeIdentifier_ `:` ] _PureExp_ `]`
+|====
+
+Annotations are used to write auxiliary information that can be used by
+various tools.  Unknown (user-defined) annotations are ignored by the
+toolchain.  Pre-defined annotations are usually type-checked.
+
+.Example
+[source]
+----
+[Near] class Example { ... }
+----
+
+This is an example of an annotation with a tag:
+
+.Example
+[source]
+----
+[Cost: 15] skip;
+----
+
+Annotations are associated with the following language construct.  In the
+examples above, the first annotation pertains to the class definition of
+`Example`, the second annotation pertains to the `skip` statement.
+
+There can be more than one annotation in one place.
+
+In general, it is not an error to have more than one annotation with the same
+tag in the same place.  However, some pre-defined annotations might forbid
+this.

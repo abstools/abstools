@@ -13,19 +13,19 @@
 
 %% Interface
 start_link(Clocklimit) ->
-    gen_server:start_link({local, clock}, ?MODULE, [Clocklimit], []).
+    gen_server:start_link({global, clock}, ?MODULE, [Clocklimit], []).
 
 stop() ->
-    gen_server:call(?MODULE, stop).
+    gen_server:stop({global, clock}).
 
 advance(Amount) ->
-    gen_server:call(?MODULE, {advance, Amount}).
+    gen_server:call({global, clock}, {advance, Amount}).
 
 now() ->
-    gen_server:call(?MODULE, now).
+    gen_server:call({global, clock}, now).
 
 distance_to_next_boundary() ->
-    gen_server:call(?MODULE, next_int).
+    gen_server:call({global, clock}, next_int).
 
 %% gen_server functions
 
@@ -34,30 +34,33 @@ init([Clocklimit]) ->
 
 handle_call({advance, Amount},_From,State=#state{now=Time,limit=Limit}) ->
     Newtime=rationals:add(rationals:to_r(Time), rationals:to_r(Amount)),
-    Reply=case Limit of none -> ok;
-              _ -> case rationals:is_lesser(Time, rationals:to_r(Limit)) of true -> ok; false -> stop end
+    Reply=case Limit of none -> {reply, ok, State#state{now=Newtime}};
+              _ -> case rationals:is_lesser(Time, rationals:to_r(Limit)) of
+                       true -> {reply, ok, State#state{now=Newtime}};
+                       false -> {reply, limit_reached, State#state{now=Time}}
+                   end
           end,
-    {reply, Reply, State#state{now=Newtime}};
+    Reply;
 handle_call(now, _From, State=#state{now=Time}) ->
     {reply, Time, State};
 handle_call(next_int, _From, State=#state{now=Time}) ->
     Distance = rationals:sub(Time, rationals:to_r(rationals:trunc(Time))),
-    case Distance of
-        {0, _} -> {reply, {1,1}, State};
-        _ -> {reply, Distance, State}
-    end;
-handle_call(stop, _From, State) ->
-    {stop, normal, stopped, State}.
+    case rationals:is_zero(Distance) of
+        true -> {reply, {1,1}, State};
+        false -> {reply, Distance, State}
+    end.
 
 handle_cast(_Msg,State) ->
+    %% unused
     {noreply, State}.
 
 handle_info(_Info,State) ->
+    %% unused
     {noreply, State}.
 
 terminate(_Reason,_State) ->
     ok.
 
 code_change(_OldVsn,State,_Extra) ->
-    {ok, State}.
-
+    %% not supported
+    {error, State}.

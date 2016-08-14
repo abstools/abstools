@@ -1,0 +1,137 @@
+[[sec:timed-abs]]
+== Timed ABS
+
+Timed ABS is an extension to the core ABS language that introduces a notion of
+_abstract time_.  Timed ABS can be used to model not only the functional
+behavior but also the timing-related behavior of real systems running on real
+hardware.  In contrast to real systems, time in an ABS model does not advance
+by itself.  The time model of Timed ABS takes inspiration from formalisms such
+as http://uppaal.org[Timed Automata] and
+http://heim.ifi.uio.no/~peterol/RealTimeMaude/[Real-Time Maude].
+
+NOTE: All untimed ABS models are valid in Timed ABS.  An ABS model that
+contains no time-influencing statements will run without influencing the clock
+and will finish at time zero.
+
+The ABS notion of time is _dense time_ with _run-to-completion semantics_.
+Timed ABS adds a clock to the language semantics that advances in response to
+certain language constructs.  Time is expressed as a rational number, so the
+clock can advance in infitesimally small steps.
+
+
+Time only advances when all processes are blocked or suspended and no process
+is ready to run.  This means that for time to advance, all processes are in
+one of the following states:
+
+* the process is awaiting for a guard that is not enabled (see <<await-stmt>>)
+* the process is blocked on a future that is not available (see
+  <<get-expression>>)
+* the process is suspended waiting for time to advance
+* the process is waiting for some resources
+
+In practice this means that all process run as long as there is “work to be
+done.”
+
+
+
+=== Datatypes and Constructors
+
+Time is expressed as a datatype `Time`.  Its definition in the standard
+library is as follows:
+
+[source]
+----
+data Time = Time(Rat timeValue);
+----
+
+=== Functions
+
+The function `now` always returns the current time.
+
+[source]
+----
+def Time now()
+----
+
+Note that since ABS uses simulated time, two calls to `now` can return the same
+value.  Specifically, the result of `now()` changes only by executing
+`duration` or `await duration` statements, or by waiting for resources to
+become available.
+
+[source]
+----
+  Time t1 = now();
+  Int i = pow(2, 50);
+  Time t2 = now();
+  assert (t1 == t2); <1>
+----
+<1> This assertion will not fail, since no time has passed in the model.  Time advance in ABS is explicit.
+
+
+
+=== Statements
+
+The `duration(min, max)` statement blocks the cog of the executing process
+until at least `min` and at most `max` time units have passed.  The `await
+duration(min, max)` statement (see <<await-stmt>>) suspends the current
+process until at least `min` and at most `max` time units have passed.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _DurationStmt_ ::= | `duration` `(` _PureExp_ `,` _PureExp_ `)` `;`
+| _AwaitStmt_ ::= | `await` _Guard_ `;`
+| _Guard_ ::= | ... {vbar} _DurationGuard_
+| _DurationGuard_ ::= | `duration` `(` _PureExp_ `,` _PureExp_ `)`
+|====
+
+
+The difference between `duration` and `await duration` is that in the latter
+case other processes in the same cog can execute while the awaiting process is
+suspended.  In the case of the blocking `duration` statement, no other process
+in the same cog can execute.  Note that processes in other cogs are not
+influenced by `duration` or `await duration`, except when they attempt to
+synchronize with that process.
+
+NOTE: A subtle difference between `duration` and `await duration` is that in
+the latter case, the suspended process becomes eligible for scheduling after
+the specified time, but there is no guarantee that it will actually be
+scheduled at that point.  This means that more time might pass than expressed in the `await duration` guard!
+
+.Examples
+
+----
+  Time t = now();
+  await duration(1/2, 5); <1>
+  Time t2 = now(); <2>
+----
+<1> Here the *process* suspends for 1/2-5 time units
+<2> `t2` will be at least 1/2 time units larger than `t`
+
+----
+  Time t = now();
+  duration(1/2, 5); <1>
+  Time t2 = now(); <2>
+----
+<1> Here the *cog* blocks for 1/2-5 time units
+<2> `t2` will be between 1/2 and 5 time units larger than `t`
+
+=== Semantics of Time Advancement
+
+The simulated clock advances such that it makes the least amount of “jumps”
+without missing any point of interest.  This means that when a process waits
+or blocks for an interval _(min, max)_, the clock will not advance more than
+_max_, since otherwise it would miss unblocking the process.  On the other
+hand, the clock will advance by the highest amount allowed by the model.  This
+means that if only one process waits for _(min, max)_, the clock will advance
+by _max_.
+
+[[fig-time-advance]]
+image::ABS-time-advance.png[width=510,height=150,title="Big-step time advance",alt="Big-step time advance"]
+
+Figure <<fig-time-advance>> shows a timeline with two process, `P1` and `P2`.
+They are waiting for time to advance between `(4, 6)` and `(3, 5)` units,
+respectively.  Assuming that no other process is ready to run, the clock will
+advance the maximum amount that still hits the earliest interval, in this
+case 5.  Since the clock is now within both intervals, both processes are
+unblocked and ready to run.

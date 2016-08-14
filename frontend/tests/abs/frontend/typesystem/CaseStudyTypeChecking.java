@@ -21,9 +21,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.FrontendTest;
-import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticCondition;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
@@ -33,15 +34,22 @@ public class CaseStudyTypeChecking extends FrontendTest {
     /**
      * Use a property to be able to point JUnit in the right direction and override the default
      */
-    private static String ENVISAGE_DIR = System.getProperty("abs.junit.envisage", "../examples/");
+    private static String EXAMPLES_DIR = System.getProperty("abs.junit.examples", "../examples/");
+    private static String ENVISAGE_DIR = System.getProperty("abs.junit.envisage", "~/envisage/");
 
     @Parameters(name="{0}")
     public static Collection<?> data() {
-        final Object[][] data = new Object[][] { { ENVISAGE_DIR + "T4.3/D4.3.1/FredhopperCloudServices.abs" }
-                                               , { ENVISAGE_DIR + "T4.2/D4.2.1/Indexing.abs" }
-                                               , { ENVISAGE_DIR + "T4.2/D4.2.1/Crawling.abs" }
-                                               , { ENVISAGE_DIR + "T4.2/D4.2.1/MapReduce.abs" }
-                                               , { ENVISAGE_DIR + "T4.2/D4.2.1/Downloading.abs" }
+        final Object[][] data = new Object[][] { { EXAMPLES_DIR + "T4.3/D4.3.1/FredhopperCloudServices.abs" }
+                                               , { EXAMPLES_DIR + "T4.2/D4.2.1/Indexing.abs" }
+                                               , { EXAMPLES_DIR + "T4.2/D4.2.1/Crawling.abs" }
+                                               , { EXAMPLES_DIR + "T4.2/D4.2.1/MapReduce.abs" }
+                                               , { EXAMPLES_DIR + "T4.2/D4.2.1/Downloading.abs" }
+                                               , { EXAMPLES_DIR + "T4.4/D4.4.1/" }
+                                               , { ENVISAGE_DIR + "WP4/T4.2/integrated/Atbrox.abs" }
+                                               , { ENVISAGE_DIR + "WP4/T4.2/integrated/AtbroxMultiHandset.abs" }
+                                               , { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas.abs" }
+                                               , { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas_v2.abs" }
+                                               , { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas_v2_CloudProvider.abs" }
                                                };
         return Arrays.asList(data);
     }
@@ -60,7 +68,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
         m = assertParseFilesOk(input, TYPE_CHECK, WITH_STD_LIB);
     }
 
-    protected Model assertParseFilesOk(String srcFolder, Config... config) throws IOException {
+    protected Model assertParseFilesOk(String srcFolder, Config... config) throws IOException, WrongProgramArgumentException {
         File srcFolderF = new File(srcFolder);
         assertTrue(srcFolder,srcFolderF.exists());
         Main main = new Main();
@@ -68,18 +76,19 @@ public class CaseStudyTypeChecking extends FrontendTest {
         Model m = main.parseFiles(findAbsFiles(srcFolderF).toArray(new String[0]));
 
         if (m != null) {
+            m.evaluateAllProductDeclarations();
             if (m.hasParserErrors())
                 Assert.fail(m.getParserErrors().get(0).getMessage());
-            int numSemErrs = m.getErrors().size();
+            int numSemErrs = m.getErrors().getErrorCount();
             StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
             if (numSemErrs > 0) {
-                for (SemanticError error : m.getErrors())
+                for (SemanticCondition error : m.getErrors())
                     errs = errs.append(error.getHelpMessage() + "\n");
                 fail("Failed to parse: " + srcFolder + "\n" + errs.toString());
             } else if (isSet(TYPE_CHECK, config)) {
-                SemanticErrorList l = m.typeCheck();
-                if (!l.isEmpty()) {
-                    for (SemanticError error : l)
+                SemanticConditionList l = m.typeCheck();
+                if (l.containsErrors()) {
+                    for (SemanticCondition error : l)
                         errs = errs.append(error.getHelpMessage() + "\n");
                     fail("Failed to typecheck: " + srcFolder + "\n" + errs.toString());
                 }

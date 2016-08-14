@@ -6,14 +6,15 @@
 %% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([acquire_token/2,release_token/2,block_with_time_advance/1,block_without_time_advance/1,wait/1,wait_poll/1,commit/1,rollback/1]).
--export([await_duration/4,block_for_duration/4,block_for_resource/4]).
+-export([acquire_token/2,release_token/2,block_with_time_advance/1,block_without_time_advance/1,wait/1,wait_poll/1]).
+-export([await_duration/4,block_for_duration/4]).
+-export([block_for_cpu/4,block_for_bandwidth/5]).
 -export([loop_for_token/2]).            % low-level; use acquire_token instead
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
 
 -behaviour(gc).
--export([get_references/1]).
+-export([send_stop_for_gc/1, get_references/1]).
 
 %% Terminate recklessly.  Used to shutdown system when clock limit reached (if
 %% applicable).  Must be called when cog is stopped for GC.  (See
@@ -38,10 +39,16 @@ start(Cog,Task,Args)->
 
 init(Task,Cog,Args)->
     InnerState=Task:init(Cog,Args),
+    %% init RNG, recipe recommended by the Erlang documentation.
+    %% TODO: if we want reproducible runs, make seed a command-line parameter
+    random:seed(erlang:phash2([node()]), erlang:monotonic_time(), erlang:unique_integer()),
     acquire_token(Cog, InnerState),
     Val=Task:start(InnerState),
     release_token(Cog,done),
     send_notifications(Val).
+
+send_stop_for_gc(Task) ->
+    Task ! {stop_world, self()}.
 
 get_references(Task) ->
     Task ! {get_references, self()},
@@ -77,9 +84,9 @@ send_notifications(Val)->
             
 
 acquire_token(Cog=#cog{ref=CogRef}, Stack)->
-    cog:new_state(Cog,self(),runnable),
+    cog:process_is_runnable(Cog,self()),
     loop_for_token(Stack, token),
-    eventstream:event({cog, CogRef, unblocked}).
+    cog_monitor:cog_unblocked(CogRef).
 
 loop_for_clock_advance(Stack) ->
     receive
@@ -107,22 +114,20 @@ loop_for_token(Stack, Token) ->
     end.
 
 wait(Cog)->
-    commit(Cog),
-    cog:new_state(Cog,self(),waiting).
+    cog:process_is_waiting(Cog,self()).
 wait_poll(Cog)->
-    commit(Cog),
-    cog:new_state(Cog,self(),waiting_poll).
+    cog:process_is_waiting_polling(Cog,self()).
 block_with_time_advance(Cog)->
-    cog:new_state(Cog,self(),blocked).
+    cog:process_is_blocked(Cog,self()).
 block_without_time_advance(Cog)->
-    cog:new_state(Cog,self(),blocked_for_gc).
+    cog:process_is_blocked_for_gc(Cog,self()).
 
 %% await_duration and block_for_duration are called in different scenarios
 %% (guard vs statement), hence the different amount of work they do.
 await_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
-    case rationals:is_greater(rationals:to_r(Min), {0, 1}) of
+    case rationals:is_positive(rationals:to_r(Min)) of
         true ->
-            eventstream:event({task,self(),CogRef,clock_waiting,Min,Max}),
+            cog_monitor:task_waiting_for_clock(self(), CogRef, Min, Max),
             task:release_token(Cog,waiting),
             loop_for_clock_advance(Stack),
             task:acquire_token(Cog, Stack);
@@ -131,40 +136,54 @@ await_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
     end.
 
 block_for_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
-    eventstream:event({cog,self(),CogRef,clock_waiting,Min,Max}),
+    cog_monitor:cog_blocked_for_clock(self(), CogRef, Min, Max),
     task:block_with_time_advance(Cog),
     loop_for_clock_advance(Stack),
     task:acquire_token(Cog, Stack).
 
-block_for_resource(Cog=#cog{ref=CogRef,dc=DC}, Resourcetype, Amount, Stack) ->
-    {Result, Consumed}= dc:consume(DC,Resourcetype,Amount),
-    Remaining=rationals:sub(rationals:to_r(Amount), rationals:to_r(Consumed)),
-    case Result of
-        wait ->
-            eventstream:event({task,self(),CogRef,resource_waiting}),
-            task:block_with_time_advance(Cog),           % cause clock advance
-            loop_for_clock_advance(Stack),
-            task:acquire_token(Cog,Stack),
-            block_for_resource(Cog, Resourcetype, Remaining, Stack);
-        ok ->
-            case rationals:is_greater(Remaining, {0, 1}) of
-                %% We loop since the DC might decide to hand out less
-                %% than we ask for and less than it has available.
-                true -> block_for_resource(Cog, Resourcetype, Remaining, Stack);
-                false -> ok
-            end
+block_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
+    Amount_r = rationals:to_r(Amount),
+    case rationals:is_positive(Amount_r) of
+        true ->
+            {Result, Consumed}= dc:consume(DC,Resourcetype,Amount_r),
+            Remaining=rationals:sub(Amount_r, rationals:to_r(Consumed)),
+            case Result of
+                wait ->
+                    Time=clock:distance_to_next_boundary(),
+                    cog_monitor:task_waiting_for_clock(self(), CogRef, Time, Time),
+                    task:block_with_time_advance(Cog),           % cause clock advance
+                    loop_for_clock_advance(Stack),
+                    task:acquire_token(Cog,Stack),
+                    block_for_resource(Cog, DC, Resourcetype, Remaining, Stack);
+                ok ->
+                    case rationals:is_positive(Remaining) of
+                        %% We loop since the DC might decide to hand out less
+                        %% than we ask for and less than it has available.
+                        true -> block_for_resource(Cog, DC, Resourcetype, Remaining, Stack);
+                        false -> ok
+                    end
+            end;
+        false ->
+            ok
     end.
 
+block_for_cpu(Cog, DC, Amount, Stack) ->
+    block_for_resource(Cog, DC, cpu, Amount, Stack).
+
+block_for_bandwidth(Cog, DC, _Callee=#object{cog=#cog{dc=TargetDC}}, Amount, Stack) ->
+    case DC == TargetDC of
+        true -> ok;
+        false -> block_for_resource(Cog, DC, bw, Amount, Stack)
+    end;
+block_for_bandwidth(Cog, DC, null, Amount, Stack) ->
+    %% KLUDGE: on return statements, we don't know where the result is sent.
+    %% Consume bandwidth now -- fix this once the semantics are resolved
+    block_for_resource(Cog, DC, bw, Amount, Stack).
+
+
 release_token(C=#cog{ref=Cog},State)->
-    commit(C),
     receive
         {stop_world, _Sender} -> ok
     after 0 -> ok
     end,
     Cog!{token,self(),State}.
-
-rollback(#cog{tracker=T})->
-    rpc:pmap({object,rollback},[],object_tracker:get_all_dirty(T)).
-
-commit(#cog{tracker=T})->
-    rpc:pmap({object,commit},[],object_tracker:get_all_dirty(T)).

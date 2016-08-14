@@ -1,0 +1,375 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Functional level typing of Core ABS                          %
+%                                                              %
+% Based on the FMCO 2010 paper                                 %
+% "ABS: A Core Language for Abstract Behavioral Specification" %
+%                                                              %
+% DEPENDS: abs-functional-syntax.ott                           %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+grammar
+%%% FUNCTIONAL LEVEL TYPING META SYNTAX %%%
+A :: A_ ::=
+  | G ( x ) :: M :: gx
+  | A subst :: M :: subst
+
+Al :: Al_ ::=
+   | Bl :: M :: blist
+
+xl :: xl_ ::=
+   | xl ( fn )  :: M :: xlfn
+    {{ com variable list in function declaration }} 
+    {{ tex [[xl]]_{[[fn]]} }}
+
+e :: e_ ::=
+  | e [ xl |-> xl' ] :: M :: add
+    {{ com addition of substitution }}
+  | subst ( x ) :: M :: subst
+    {{ com substitution application }}
+
+el :: el_ ::=
+   | xl :: M :: xl
+
+brl :: brl_ ::=
+    | br brl :: M :: brbrlist
+
+p :: p_ ::=
+  | subst ( p ) :: M :: subst
+    {{ com substitution application }}
+
+G {{ tex \mathit{\Gamma} }}, De {{ tex \mathit{\Delta} }} :: G_ ::=
+  {{ com typing context mapping }}
+  | [] :: M :: empty
+    {{ com empty mapping }}
+    {{ tex \varepsilon }}
+  | [ xl1 |-> Al1 , ... , xln |-> Aln ]  :: M :: many
+    {{ com mapping }}
+  | G [ xl1 |-> Al1 , ... , xln |-> Aln ] :: M :: add
+    {{ com addition }}
+  | G1 circ ... circ Gn :: M :: composition
+    {{ com composition }}
+  | psubst ( p , A , G ) :: M :: psubst
+    {{ com pattern substitution }}
+
+% FIXME: G(Co) cannot be equal to Al -> D if G maps to Al -> B in paper, replaced with Al -> A
+Ts :: Ts_ ::=
+  {{ com type signature }}
+  | Al -> A :: M :: sig 
+  | G ( fn ) :: M :: gfn
+  | G ( Co ) :: M :: gco
+
+subst {{ tex \sigma }} :: subst_ ::=
+      {{ com substitution }}
+      | emptysubst :: M :: empty        
+      | tmatch ( Al , Al' ) :: M :: tmatch
+      | match ( p , t ) :: M :: match
+      | subst [ e1 |-> e'1 , ... , en |-> e'n ] :: M :: addition
+      | subst [ el |-> el' ] :: M :: addition_list
+
+xs :: xs_ ::=
+  {{ com variable set }}
+  | { x1 , .. , xn } :: M :: dots
+  | xs1 cup .. cup xsn :: M :: union
+  | vars ( p ) :: M :: vars
+  | dom ( subst ) :: M :: dom
+
+%%% TERMINALS %%%
+terminals :: terminals_ ::=
+          | [] :: :: empty    {{ tex [\,] }}
+	  | sub :: :: sub {{ tex \preceq }}
+	  | sseq :: :: sseq {{ tex \subseteq }}
+	  | |- :: :: turnstile {{ tex \vdash }}
+	  | |->  :: :: mapsto {{ tex \mapsto }} {{ com maps to }}
+  	  | ->  :: :: arrow {{ tex \rightarrow }}
+	  | --> :: :: implies {{ tex \longrightarrow }}
+	  | cup :: :: cup {{ tex \cup }}
+	  | vars :: :: vars {{ tex \mathrm{vars} }}
+  	  | tmatch :: :: tmatch {{ tex \mathrm{tmatch} }}
+	  | match :: :: match {{ tex \mathrm{match} }}
+	  | dom :: :: dom {{ tex \mathrm{dom} }}
+	  | psubst :: :: psubst {{ tex \mathrm{psubst} }}
+	  | circ :: :: circ {{ tex \circ }}
+	  | emptysubst :: :: emptysubst {{ tex \bot }}
+	  | =/= :: :: neq {{ tex \neq }}
+	  | not :: :: not {{ tex \neg }}
+	  | /\ :: :: and {{ tex \land }}
+	  | ALL :: :: all {{ tex \forall }}
+	  | EX :: :: exists {{ tex \exists }}
+	  | in :: :: in {{ tex \in }}
+
+%%% FORMULAS %%%
+formula :: formula_ ::= 
+  {{ com formulas }}
+  | judgement :: :: judgement
+    {{ com judgment }}
+  | formula1 ... formulan :: :: dots
+    {{ com conjunction of formulas }}
+  | formula /\ formula' :: M :: and
+    {{ com conjunction }}
+  | not formula :: M :: not
+    {{ com negated formula }} 
+  | T sub T' :: M :: sub
+    {{ com subtyping }}
+  | G sseq G' :: M :: sseq
+    {{ com mapping subset }}
+  | A = A' :: M :: a_eq
+    {{ com type equality }}
+  | A =/= A' :: M :: a_neq
+    {{ com type inequality }}
+  | Ts = Ts' :: M :: ts_eq
+    {{ com type signature equality }}
+  | subst = subst' :: M :: subst_eq
+    {{ com substitution equality }}
+  | subst =/= subst' :: M :: subst_neq
+    {{ com substitution inequality }}
+  | G = G' :: M :: g_eq
+    {{ com mapping equality }}
+  | xs = xs' :: M :: xs_eq
+    {{ com variable set equality }}
+  | p = p' :: M :: p_eq
+    {{ com pattern equality }}
+  | xl = xl' :: M :: xl_eq
+    {{ com variable list equality }}
+  | EX subst . formula :: M :: ex_subst
+    {{ com there exists [[subst]] }}
+  | ALL x in dom ( subst ) . formula :: M :: all_var_in_dom
+    {{ com for all x in domain of substitution }}
+  | x in dom ( subst ) :: M :: x_subst
+    {{ com in domain for substitution }}
+  | formula --> formula' :: M :: implies
+    {{ com implies }}
+  | e = e' :: M :: e_eq
+    {{ com expression equality }}
+  | el = el' :: M :: el_eq
+    {{ com expression list equality }}
+
+%%% VARS %%%
+defns
+  vars_def :: vars_ ::=
+
+defn
+  vars ( p ) = xs :: :: vars :: ''
+       {{ com variables in patterns }} by
+
+  ---------------- :: wildcard
+  vars ( _ ) = { }
+
+  ---------------- :: term
+  vars ( t ) = { }
+
+  ------------------ :: variable
+  vars ( x ) = { x }
+
+  ----------------------------------------------------------------- :: copl
+  vars ( Co ( p1 , .. , pn ) ) = vars ( p1 ) cup .. cup vars ( pn )
+
+%%% TMATCH %%%
+defns 
+  tmatch_def :: tmatch_ ::=
+ 
+defn
+  tmatch ( Al , Al' ) = subst :: :: tmatch :: ''
+  	 {{ com match type list }} by
+
+  % FIXME: TODO: when no match
+  %-------------------------------- :: no_match
+  %tmatch ( Al , Al' ) = emptysubst
+
+  % FIXME: TODO: when match
+  %--------------------------- :: match
+  %tmatch ( Al , Al' ) = subst
+
+%%% PSUBST %%%
+defns
+  psubst_def :: psubst_ ::=
+
+defn
+  psubst ( p , A , G ) = G' :: :: psubst :: ''
+  	 {{ com pattern substitution }} by
+
+  G ( x ) = T
+  ------------------------- :: var
+  psubst ( x , A , G ) = [] 
+
+  G ( x ) =/= T
+  ---------------------------------- :: var_not
+  psubst ( x , A , G ) = [ x |-> A ]
+
+  ------------------------- :: wildcard
+  psubst ( _ , A , G ) = []
+
+  ------------------------- :: term
+  psubst ( t , A , G ) = []
+
+  -------------------------- :: co
+  psubst ( Co , A , G ) = []
+
+  G ( Co ) = A1 , .. , An -> A
+  ----------------------------------------------------------------------------------------------------- :: co_pl
+  psubst ( Co ( p1 , .. , pn ) , A , G ) = psubst ( p1 , A1 , G ) circ .. circ psubst ( pn , An , G ) 
+
+%%% MATCH %%%
+defns
+  match_def :: match_ ::=
+
+defn
+  match ( p , t ) = subst :: :: match :: ''
+  	 {{ com match expressions and terms }} by
+
+  subst ( p ) = t
+  dom ( subst ) = vars ( p )
+  ------------------------- :: subst
+  match ( p , t ) = subst
+
+  not EX subst . subst ( p ) = t /\ dom ( subst ) = vars ( p )
+  ------------------------------------------------------------ :: no_subst
+  match ( p , t ) = emptysubst
+  
+%%% FUNCTIONAL LEVEL TYPING RULES %%%
+defns
+  functional_well_formedness :: t_ ::= 
+
+defn 
+  G |- Cons : A :: :: cons :: '' 
+  {{ com well-formed cons }} by
+
+  G ( Co ) = Al -> D
+  ------------------ :: cons_decl
+  G |- Co ( Al ) : D
+  
+  G ( Co ) = Al -> D < Bl >
+  -------------------------- :: cons_decl_bl
+  G |- Co ( Al ) : D < Bl >
+
+defn 
+  G |- Consl : A :: :: consl :: ''
+    {{ com well-formed cons list }} by
+    
+  G |- Cons1 : D .. G |- Consn : D
+  --------------------------------- :: consl
+  G |- | Cons1 | .. | Consn : D
+
+  G |- Cons1 : D < Al > .. G |- Consn : D < Al >
+  ----------------------------------------------- :: consl_al
+  G |- | Cons1 | .. | Consn : D < Al >
+
+defn
+  G |- Dd :: :: dd :: '' 
+    {{ com well-formed data definition }} by
+
+  % FIXME: not in paper
+  G |- Cons : D
+  G |- Consl : D
+  -------------------------- :: data_decl
+  G |- data D = Cons Consl ;
+
+  % FIXME: not in paper
+  G |- Cons : D < Al >
+  G |- Consl : D < Al >
+  --------------------------------- :: data_decl_al
+  G |- data D < Al > = Cons Consl ;
+
+defn
+  G |- el : Al :: :: el :: ''
+    {{ com well-formed expression list }} by
+
+  G |- e1 : A1 .. G |- en : An
+  -------------------------------- :: e_list
+  G |- e1 , .. , en : A1 , .. , An
+
+defn
+  G |- e : A :: :: e :: ''
+    {{ com well-formed expression }} by 
+
+  G |- e : T
+  T sub T'
+  ----------- :: sub
+  G |- e : T'
+
+  ------------- :: bool
+  G |- b : Bool
+
+  ------------- :: null
+  G |- null : A
+
+  G ( x ) = A
+  ----------- :: var
+  G |- x : A
+
+  G |- e : A
+  G |- brl : A -> B
+  ----------------------- :: case_expression
+  G |- case e { brl } : B 
+
+  % FIXME: uncertain if C metavar in paper should be A or B
+  tmatch ( Al , Al' ) = subst
+  subst =/= emptysubst
+  G |- el : Al'
+  G ( fn ) = Al -> B
+  ------------------------ :: func_expr
+  G |- fn ( el ) : B subst
+    
+  % FIXME: uncertain if C metavar in paper should be A or B
+  G |- el : Al'
+  subst =/= emptysubst
+  tmatch ( Al, Al' ) = subst
+  G ( Co ) = Al -> D
+  -------------------------- :: cons_expr
+  G |- Co ( el ) : D subst
+
+  % FIXME: uncertain if C metavar in paper should be A or B
+  G |- el : Al'
+  subst =/= emptysubst
+  tmatch ( Al, Al' ) = subst
+  G ( Co ) = Al -> D < Bl >
+  ------------------------------- :: cons_expr_bl
+  G |- Co ( el ) : D < Bl > subst
+
+defn
+  G |- F :: :: F :: ''
+    {{ com well-formed function declaration }} by
+
+  % FIXME: uncertain if C metavar in paper should be A or B
+  G ( fn ) = B1 , .. , Bn -> A
+  G [ x1 |-> B1 , .. , xn |-> Bn ] |- e : A
+  ------------------------------------------ :: func_decl
+  G |- def A fn ( B1 x1 , .. , Bn xn ) = e ;
+
+  % FIXME: uncertain if C metavar in paper should be A or B
+  % FIXME: Al is not used anywhere in the rule premises
+  G ( fn ) = B1 , .. , Bn -> A
+  G [ x1 |-> B1 , .. , xn |-> Bn ] |- e : A
+  -------------------------------------------------- :: func_decl_al
+  G |- def A fn < Al > ( B1 x1 , .. , Bn xn ) = e ;
+
+defn
+  G |- p : A :: :: p :: '' 
+    {{ com well-formed pattern }} by 
+
+  ---------- :: wildcard
+  G |- _ : A
+
+defn
+  G |- br : Ts :: :: br :: '' 
+    {{ com well-formed case expression branch }} by
+
+  G' |- p : A
+  G' |- e : B
+  G' = G circ psubst ( p , A , G )
+  -------------------------------- :: case_expression_branch
+  G |- p => e ; : A -> B
+
+defn
+  G |- brl : Ts :: :: brl :: '' 
+    {{ com well-formed case expression branch list }} by
+  
+  G |- br1 : A -> B .. G |- brn : A -> B
+  -------------------------------------- :: case_expression_branch_list
+  G |- br1 .. brn : A -> B
+
+defn
+  G |- subst :: :: subst :: ''
+    {{ com well-formed substitution }} by
+
+  ALL x in dom ( subst ) . G |- subst ( x ) : G ( x )
+  --------------------------------------------------- :: subst
+  G |- subst

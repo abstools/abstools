@@ -7,7 +7,7 @@ aspect ProductConstraints {
         for (Feature f: getFeatures()) {
             newcs.add(ChocoSolver.isTrue(vars.get(f.getName())));
             for (AttrAssignment aa: f.getAttrAssignments()) {
-                String fname = f.getName()+"."+aa.getName();
+                String fname = f.getName() + "." + aa.getName();
                 if (vars.containsKey(fname))
                     newcs.add(ChocoSolver.eqeq(vars.get(fname), aa.getValue().getIntValue().intValue()));
             }
@@ -15,9 +15,9 @@ aspect ProductConstraints {
     }
 
     public void Model.getDiffConstraints(Product p, Map<String,IntegerVariable> vars, Set<Constraint> newcs, String diffVar) {
-        //calculating deselected featrues, initially initialized by all features
+        //calculating deselected features, initially initialized by all features
         ArrayList<String> deselectedFeatures = new ArrayList();
-        for (String fname: features()){
+        for (String fname: features()) {
             deselectedFeatures.add(fname);
         }
 

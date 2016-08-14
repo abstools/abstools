@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.parser;
@@ -39,7 +39,7 @@ public class ParseSamplesTest extends FrontendTest {
                                                };
         return Arrays.asList(data);
     }
-    
+
     final private String input;
     final protected String product;
     protected Model m;

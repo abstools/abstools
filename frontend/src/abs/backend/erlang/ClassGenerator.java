@@ -3,21 +3,25 @@
  */
 package abs.backend.erlang;
 
-import java.io.IOException;
+import java.io.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+
+import abs.common.CompilerUtils;
 
 import abs.backend.common.CodeStream;
 import abs.backend.erlang.ErlUtil.Mask;
-import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.FieldDecl;
-import abs.frontend.ast.MethodImpl;
-import abs.frontend.ast.MethodSig;
-import abs.frontend.ast.ParamDecl;
-import abs.frontend.ast.TypedVarOrFieldDecl;
+import abs.frontend.ast.*;
 
 import com.google.common.collect.Iterables;
 
+import java.nio.charset.Charset;
+
+import org.apache.commons.io.output.WriterOutputStream;
+
 /**
- * Genereates the Erlang module for one class
+ * Generates the Erlang module for one class
  * 
  * @author Georg Göri
  * 
@@ -37,6 +41,7 @@ public class ClassGenerator {
             generateHeader();
             generateExports();
             generateConstructor();
+            generateRecoverHandler();
             generateMethods();
             generateDataAccess();
         } finally {
@@ -54,7 +59,9 @@ public class ClassGenerator {
 
     private void generateMethods() {
         for (MethodImpl m : classDecl.getMethodList()) {
+            ecs.pf(" %%%% %s:%s", m.getFileName(), m.getStartLine());
             MethodSig ms = m.getMethodSig();
+            ecs.pf(" %%%% %s:%s", m.getFileName(), m.getStartLine());
             ErlUtil.functionHeader(ecs, "m_" + ms.getName(), generatorClassMatcher(), ms.getParamList());
             ecs.println("try");
             ecs.incIndent();
@@ -64,8 +71,19 @@ public class ClassGenerator {
             ecs.println();
             ecs.decIndent().println("catch");
             ecs.incIndent();
-            ecs.println("exit:Error -> object:die(O, Error);");
-            ecs.println("throw:Error -> exit(Error)");
+            ecs.println("_:Error ->");
+            if (classDecl.hasRecoverBranch()) {
+                ecs.incIndent();
+                ecs.println("Recovered = try 'recover'(O, Error) catch _:RecoverError -> false end,");
+                ecs.println("case Recovered of");
+                ecs.incIndent().println("true -> exit(Error);");
+                ecs.println("false -> object:die(O, Error), exit(Error)");
+                ecs.decIndent().println("end");
+                ecs.decIndent();
+            } else {
+                ecs.incIndent().println("object:die(O, Error), exit(Error)");
+                ecs.decIndent();
+            }
             ecs.decIndent().println("end.");
             ecs.decIndent();
         }
@@ -79,6 +97,7 @@ public class ClassGenerator {
             ecs.pf("set(O,'%s',%s),", p.getName(), "P_" + p.getName());
         }
         for (FieldDecl p : classDecl.getFields()) {
+            ecs.pf(" %%%% %s:%s", p.getFileName(), p.getStartLine());
             if (p.hasInitExp()) {
                 ecs.format("set(O,'%s',", p.getName());
                 p.getInitExp().generateErlangCode(ecs, vars);
@@ -98,14 +117,59 @@ public class ClassGenerator {
         ecs.decIndent();
     }
 
+    private void generateRecoverHandler() {
+        if (classDecl.hasRecoverBranch()) {
+            Vars vars = new Vars();
+            Vars safe = vars.pass();
+            // Build var scopes and statmemnts for each branch
+            java.util.List<Vars> branches_vars = new java.util.LinkedList<Vars>();
+            java.util.List<String> branches = new java.util.LinkedList<String>();
+            for (CaseBranchStmt b : classDecl.getRecoverBranchs()) {
+                Vars v = vars.pass();
+                StringWriter sw = new StringWriter();
+                CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),"");
+                b.getLeft().generateErlangCode(ecs, buffer, v);
+                buffer.setIndent(ecs.getIndent());
+                buffer.println("->");
+                buffer.incIndent();
+                b.getRight().generateErlangCode(buffer, v);
+                buffer.println(",");
+                buffer.print("true");
+                buffer.decIndent();
+                buffer.close();
+                branches_vars.add(v);
+                branches.add(sw.toString());
+                vars.updateTemp(v);
+            }
+            ErlUtil.functionHeader(ecs, "recover", ErlUtil.Mask.none, generatorClassMatcher(), "Exception");
+            ecs.println("Result=case Exception of ");
+            ecs.incIndent();
+            // Now print statments and mergelines for each branch.
+            java.util.List<String> mergeLines = vars.merge(branches_vars);
+            Iterator<String> ib = branches.iterator();
+            Iterator<String> im = mergeLines.iterator();
+            while (ib.hasNext()) {
+                ecs.print(ib.next());
+                ecs.incIndent();
+                ecs.print(im.next());
+                ecs.println(";");
+                ecs.decIndent();
+            }
+            ecs.println("_ -> false");
+            ecs.decIndent();
+            ecs.print("end");
+            ecs.println(".");
+            ecs.decIndent();
+        }
+    }
+
     private String generatorClassMatcher() {
         return String.format("O=#object{class=%s=C,ref=Ref,cog=Cog=#cog{ref=CogRef,dc=DC}}", modName);
     }
 
     private void generateDataAccess() {
         ErlUtil.functionHeader(ecs, "set", Mask.none,
-                String.format("O=#object{class=%s=C,ref=Ref,cog=Cog=#cog{tracker=Tracker}}", modName), "Var", "Val");
-        ecs.println("object_tracker:dirty(Tracker,O),");
+                String.format("O=#object{class=%s=C,ref=Ref,cog=Cog}", modName), "Var", "Val");
         ecs.println("gen_fsm:send_event(Ref,{O,set,Var,Val}).");
         ecs.decIndent();
         ecs.println();
@@ -126,6 +190,19 @@ public class ClassGenerator {
         ecs.println("#state{}.");
         ecs.decIndent();
         ecs.println();
+        for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
+            ecs.pf(" %%%% %s:%s", f.getFileName(), f.getStartLine());
+            ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, String.format("#state{'%s'=G}", f.getName()),
+                                   "'" + f.getName() + "'");
+            ecs.println("G;");
+            ecs.decIndent();
+        }
+        ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, "_", "_");
+        ecs.println("%% Invalid return value; handled by REST API when querying for non-existant field.");
+        ecs.println("%% Will never occur in generated code.");
+        ecs.println("none.");
+        ecs.decIndent();
+        ecs.println();
         if (hasFields) {
             first = true;
             for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
@@ -134,40 +211,85 @@ public class ClassGenerator {
                     ecs.decIndent();
                 }
                 first = false;
-                ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, String.format("#state{'%s'=G}", f.getName()),
-                        "'" + f.getName() + "'");
-                ecs.print("G");
-            }
-            ecs.println(".");
-            ecs.decIndent();
-            ecs.println();
-            first = true;
-            for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
-                if (!first) {
-                    ecs.println(";");
-                    ecs.decIndent();
-                }
-                first = false;
+                ecs.pf(" %%%% %s:%s", f.getFileName(), f.getStartLine());
                 ErlUtil.functionHeader(ecs, "set_val_internal", Mask.none, "S", "'" + f.getName() + "'", "V");
                 ecs.format("S#state{'%s'=V}", f.getName());
             }
             ecs.println(".");
             ecs.decIndent();
             ecs.println();
-        } else
-        // Generate failing Dummies
-        {
+        } else {
+            // Generate failing Dummy
             ErlUtil.functionHeader(ecs, "set_val_internal", Mask.none, "S", "S", "S");
             ecs.println("throw(badarg).");
             ecs.decIndent();
-            ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, "S", "S");
-            ecs.println("throw(badarg).");
-            ecs.decIndent();
         }
+        ErlUtil.functionHeader(ecs, "get_all_state", Mask.none, "S");
+        ecs.println("[");
+        ecs.incIndent();
+        first = true;
+        for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
+            if (!first) ecs.print(", ");
+            first = false;
+            ecs.pf("{ '%s', S#state.%s }",
+                   f.getName(), f.getName());
+        }
+        ecs.decIndent();
+        ecs.println("].");
     }
 
     private void generateExports() {
-        ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0]).");
+        ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0,get_all_state/1]).");
         ecs.println("-compile(export_all).");
+        ecs.println();
+
+        HashSet<MethodSig> callable_sigs = new HashSet<MethodSig>();
+        HashSet<InterfaceDecl> visited = new HashSet<InterfaceDecl>();
+        for (InterfaceTypeUse i : classDecl.getImplementedInterfaceUseList()) {
+            visited.add((InterfaceDecl)i.getDecl());
+        }
+
+        while (!visited.isEmpty()) {
+            InterfaceDecl id = visited.iterator().next();
+            visited.remove(id);
+            for (MethodSig ms : id.getBodyList()) {
+                if (ms.isRESTCallable()) {
+                    callable_sigs.add(ms);
+                }
+            }
+            for (InterfaceTypeUse i : id.getExtendedInterfaceUseList()) {
+                visited.add((InterfaceDecl)i.getDecl());
+            }
+        }
+
+
+        ecs.print("exported() -> #{ ");
+        boolean first = true;
+        for (MethodSig ms : callable_sigs) {
+            if (ms.isRESTCallable()) {
+                if (!first) ecs.print(", ");
+                first = false;
+                ecs.print("<<\"" + ms.getName() + "\">> => { ");
+                ecs.print("'m_" + ms.getName() + "'");
+                ecs.print(", ");
+                ecs.print("<<\"" + ms.getReturnType().getType().getQualifiedName() + "\">>");
+                ecs.print(", ");
+                ecs.print("[ ");
+                boolean innerfirst = true;
+                for (ParamDecl p : ms.getParamList()) {
+                    if (!innerfirst) ecs.print(", ");
+                    innerfirst = false;
+                    ecs.print("{ ");
+                    ecs.print("<<\"" + p.getName() + "\">>");
+                    ecs.print(", ");
+                    ecs.print("<<\"" + p.getAccess().getType().getQualifiedName() + "\">>");
+                    ecs.print(" }");
+                }
+                ecs.print("] ");
+                ecs.print("}");
+            }
+        }
+        ecs.println(" }.");
+        ecs.println();
     }
 }

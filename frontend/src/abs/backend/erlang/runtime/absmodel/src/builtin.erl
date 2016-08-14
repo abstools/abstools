@@ -32,7 +32,13 @@ string_interleave1([Head | Tail], Sep, Acc) ->
     string_interleave1(Tail, Sep, [Sep, Head | Acc]).
 
 constructorname_to_string(A) ->
-    lists:nthtail(4, atom_to_list(A)).
+    String = atom_to_list(A),
+    %% Constructor names start with "abs_".  Sometimes we get passed other
+    %% symbols; don't crash in that case.
+    case length(String) < 5 of
+        true -> String;
+        false -> lists:nthtail(4, String)
+    end.
 
 
 abslistish_to_string(Cog, Cons, Emp, {Cons, H, Emp}) ->
@@ -60,7 +66,13 @@ toString(_Cog,S) when is_list(S) ->
         ++ "\"";
 toString(_Cog, null) -> "null";
 toString(_Cog,A) when is_atom(A) -> constructorname_to_string(A);
-toString(_Cog,P) when is_pid(P) -> pid_to_list(P);
+toString(Cog,P) when is_pid(P) ->
+    Status=future:poll(P),
+    case Status of
+        true -> Value=future:get_after_await(P),
+                pid_to_list(P) ++ ":" ++ toString(Cog, Value);
+        false -> pid_to_list(P) ++ ":empty"
+    end;
 toString(_Cog,#object{class=Cid,ref=Oid}) -> pid_to_list(Oid) ++ ":" ++ atom_to_list(Cid);
 toString(_Cog,T) when is_tuple(T) ->
     [C|A] = tuple_to_list(T),

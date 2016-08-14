@@ -1,0 +1,258 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Operational semantics of Core ABS                            %
+%                                                              %
+% Based on the FMCO 2010 paper                                 %
+% "ABS: A Core Language for Abstract Behavioral Specification" %
+%                                                              %
+% DEPENDS: abs-runtime-evaluation.ott, abs-runtime-typing.ott  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+embed 
+{{ tex-preamble \usepackage{stmaryrd} }}
+grammar
+%%% OPERATIONAL SEMANTICS META SYNTAX %%%
+process :: process_ ::=
+   | bind ( o , fu , m , vl , getclass ( o' ) ) :: M :: bind
+     {{ com process resulting from activation of method in class }}
+   | select ( q , a , cn ) :: M :: select
+   | init ( C ) :: M :: init
+
+a :: a_ ::=
+  | a circ a' :: M :: comp2
+  | a [ x |-> v ] :: M :: addition
+  | atts ( C , vl , o , co ) :: M :: atts
+  | Tl xl atts ( Tl' ) :: M :: atts_t
+
+q :: q_ ::=
+  | q cup q' :: M :: union
+  | q \ q' :: M :: diff
+
+ev {{ tex \mathrm{eval}(e) }} :: ev_ ::=
+   | |[ e ]| :: M :: e
+
+v :: v_ ::=
+  | ev ( a ) :: M :: eval_e
+    {{ tex [[ev]]_{[[a]]} }}
+  | a ( x ) :: M :: var
+  | a ( cog ) :: M :: cog
+  | a ( destiny ) :: M :: destiny
+
+elvl {{ tex \mathrm{eval}(\overline{e}) }} :: elvl_ ::=
+    | |[ el ]| :: M :: el
+
+vl :: vl_ ::=
+   | elvl ( a ) :: M :: eval
+     {{ tex [[elvl]]_{[[a]]} }}
+
+gb {{ tex \mathrm{eval}(g) }} :: gb_ ::=
+   | |[ g ]| :: M :: g
+
+bb {{ tex \mathrm{eval}(b) }} :: bb_ ::=
+   | |[ b ]| :: M :: b
+
+b :: b_ ::=
+  | gb ( cn , a ) :: M :: eval_g
+    {{ tex [[gb]]^{[[cn]]}_{[[a]]} }}
+  | bb ( a ) :: M :: eval_b
+    {{ tex [[bb]]_{[[a]]} }}
+
+T :: T_ ::=
+  | returns ( getclass ( o ) , m ) :: M :: returns
+  | Fut < T > :: M :: fut
+
+o :: o_ ::=
+  | start :: M :: start
+
+co :: co_ ::=
+   | main :: M :: main
+
+Txv :: Txv_ ::=
+    | cogtp cog v :: M :: cog
+
+cn :: cn_ ::=
+   | start ( P ) :: M :: start
+
+%%% TERMINALS %%%
+terminals :: terminals_ ::=
+	  | atts :: :: atts {{ tex \mathrm{atts} }}
+	  | getclass :: :: getclass {{ tex \mathrm{class} }}
+	  | bind :: :: bind {{ tex \mathrm{bind} }}
+	  | select :: :: select {{ tex \mathrm{select} }}
+	  | start :: :: start {{ tex \mathrm{start} }}
+	  | main :: :: main {{ tex \mathrm{main} }}
+	  | init :: :: init {{ tex \mathrm{init} }}
+	  | \ :: :: setminus {{ tex \setminus }}
+	  | returns :: :: returns {{ tex \mathrm{returns} }}
+	  | |[ :: :: lbracket {{ tex \llbracket }}
+	  | ]| :: :: rbracket {{ tex \rrbracket }}
+
+%%% FORMULAS %%%
+formula :: formula_ ::=
+	| v = v' :: M :: v_eq
+	  {{ com value equality }}
+	| v =/= v' :: M :: v_neq
+	  {{ com val inequality }}
+	| b = b' :: M :: b_eq
+	  {{ com boolean equality }}
+	| vl = vl' :: M :: vl_eq
+	  {{ com value list equality }}
+	| x in dom ( a ) :: M :: x_a
+	  {{ com in domain for substitution }}
+	| fresh ( fu ) :: M :: fresh_f
+	  {{ com fresh future identifier }}
+	| fresh ( x ) :: M :: fresh_x
+	  {{ com fresh variable }}
+	| fresh ( o ) :: M :: fresh_o	
+	  {{ com fresh object identifier }}
+	| fresh ( co ) :: M :: fresh_co
+	  {{ com fresh cog identifier }}
+	| process = process' :: M :: process_eq
+	  {{ com process equality }}
+	| a = a' :: M :: apr_eq
+	  {{ com subsitution equality }}
+	| spl = spl' :: M :: spl_eq
+	  {{ com statement list equality }}
+
+%%% OPERATIONAL SEMANTICS RULES %%%
+defns 
+  operational_semantics :: '' ::=
+
+defn start ( P ) = cn :: :: start :: ''
+           {{ tex \begin{array}{c}[[start]] ( [[P]] ) [[=]]\\ [[cn]] \end{array} }}
+     	   {{ com start configuration for program }} by
+
+  --------------------------------------------------------------------------------------------------------------------------------- :: start
+  start ( Ddl Fl Ifl Cll { Tlx ; sl } ) = cogt ( main , start ) ob ( start , cogtp cog main , { Tl xl atts ( Tl ) | sl } , noproc )
+  
+defn
+  cn -> cn' :: :: cn :: ''
+     {{ tex \begin{array}{c}[[cn]] \\[[->]] [[cn']]\end{array} }}
+     {{ com reduction }} by
+
+  ------------------------------------------------------------------------- :: skip
+  ob ( o , a , { l | skip ; :: spl } , q ) -> ob ( o , a , { l | spl } , q )
+
+  x in dom ( l )
+  :formula_v_eq: |[ e ]| ( a circ l ) = v
+  ------------------------------------------------------------------------------------ :: assign_local
+  ob ( o , a , { l | x = e ; :: spl } , q ) -> ob ( o , a , { l [ x |-> v ] | spl } , q )
+
+  x in dom ( a )
+  :formula_v_eq: |[ e ]| ( a circ l ) = v
+  ------------------------------------------------------------------------------------ :: assign_field
+  ob ( o , a , { l | x = e ; :: spl } , q ) -> ob ( o , a [ x |-> v ] , { l | spl } , q )
+
+  :formula_b_eq: |[ b ]| ( a circ l ) = True
+  -------------------------------------------------------------------------------------------- :: cond_true
+  ob ( o , a , { l | if b { sl } else { sl' } :: spl } , q ) -> ob ( o , a , { l | sl ++ spl } , q )
+
+  :formula_b_eq: |[ b ]| ( a circ l ) = False
+  --------------------------------------------------------------------------------------------- :: cond_false
+  ob ( o , a , { l | if b { sl } else { sl' } :: spl } , q ) -> ob ( o , a , { l | sl' ++ spl } , q )
+
+  :formula_b_eq: |[ b ]| ( a circ l ) = True
+  ------------------------------------------------------------------------------- :: cond_unit_true
+  ob ( o , a , { l | if b { sl } :: spl } , q ) -> ob ( o , a , { l | sl ++ spl } , q )
+
+  :formula_b_eq: |[ b ]| ( a circ l ) = False
+  ----------------------------------------------------------------------------- :: cond_unit_false
+  ob ( o , a , { l | if b { sl } :: spl } , q ) -> ob ( o , a , { l | spl } , q )
+
+  :formula_b_eq: |[ b ]| ( a circ l ) = True
+  ---------------------------------------------------------------------------------------------------------- :: while_true
+  ob ( o , a , { l | while b { sl } :: spl } , q ) -> ob ( o , a , { l | sl ++ while b { sl } :: spl } , q )
+
+  :formula_b_eq: |[ b ]| ( a circ l ) = False
+  ------------------------------------------------------------------------------- :: while_false
+  ob ( o , a , { l | while b { sl } :: spl } , q ) -> ob ( o , a , { l | spl } , q )
+
+  ----------------------------------------------------------------------------------- :: suspend
+  ob ( o , a , { l | suspend ; :: spl } , q ) -> ob ( o , a , idle , q cup { l | spl } )
+
+  -------------------------------------------------------------------------------------- :: release_cog
+  ob ( o , a , idle , q ) cogt ( co , o ) -> ob ( o , a , idle , q ) cogt ( co , noact )
+
+  :formula_v_eq: |[ e ]| ( a circ l ) = o'
+  |[ el ]| ( a circ l ) = vl
+  fresh ( fu )
+  ------------------------------------------------------------------------------------------------------------------------------------------ :: async_call
+  ob ( o , a , { l | x = e ! m ( el ) ; :: spl } , q ) -> ob ( o , a , { l | x = fu ; :: spl } , q ) invoc ( o' , fu , m , vl ) fut ( fu , noval )
+
+  bind ( o , fu , m , vl , getclass ( o ) ) = process
+  ------------------------------------------------------------------------------------ :: bind_mtd
+  ob ( o , a , pr , q ) invoc ( o , fu , m , vl ) -> ob ( o , a , pr , q cup process )
+
+  :formula_v_eq: |[ e ]| ( a circ l ) = v
+  l ( destiny ) = fu
+  ------------------------------------------------------------------------------------------------------------- :: return
+  ob ( o , a , { l | return e ; :: spl } , q ) fut ( fu , noval ) -> ob ( o , a , { l | spl } , q ) fut ( fu , v )
+
+  -------------------------------------------------------------- :: idle
+  ob ( o , a , { l | emptyspl } , q ) -> ob ( o , a , idle , q )
+
+  :formula_v_eq: |[ e ]| ( a circ l ) = fu
+  -------------------------------------------------------------------------------------------------------------------- :: read_fut
+  ob ( o , a , { l | x = e . get ; :: spl } , q ) fut ( fu , v ) -> ob ( o , a , { l | x = v ; :: spl } , q ) fut ( fu , v ) 
+
+  :formula_v_eq: |[ e ]| ( a circ l ) = o'
+  |[ el ]| ( a circ l ) = vl
+  fresh ( fu )
+  a' ( cog ) = co
+  l ( destiny ) = fu'
+  bind ( o' , fu , m , vl , getclass ( o' ) ) = { l' | spl' }
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ :: cog_sync_call
+  ob ( o , a , { l | x = e . m ( el ) ; :: spl } , q ) ob ( o' , a' , idle , q' ) cogt ( co , o ) -> ob ( o , a , idle , q cup { l | x = fu . get ; :: spl } ) fut ( fu , noval ) ob ( o' , a' , { l' | spl' ++ cont ( fu' ) ; } , q' ) cogt ( co , o' )
+
+  a' ( cog ) = co
+  l' ( destiny ) = fu
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ :: cog_sync_return_sched
+  ob ( o , a , { l | cont ( fu ) ; } , q ) cogt ( co , o ) ob ( o' , a' , idle ,  q' cup { l' | spl } ) -> ob ( o , a , idle , q ) cogt ( co , o' ) ob ( o' , a' , { l' | spl } , q' )
+
+  l ( destiny ) = fu'
+  :formula_v_eq: |[ e ]| ( a circ l ) = o
+  |[ el ]| ( a circ l ) = vl
+  fresh ( fu )
+  bind ( o , fu , m , vl , getclass ( o ) ) = { l' | spl' }
+  -------------------------------------------------------------------------------------------------------------------------------------------------------------- :: self_sync_call
+  ob ( o , a , { l | x = e . m ( el ) ; :: spl } , q ) -> ob ( o , a , { l' | spl' ++ cont ( fu' ) ; }, q cup { l | x = fu . get ; :: spl } ) fut ( fu , noval )
+  
+  l' ( destiny ) = fu
+  -------------------------------------------------------------------------------------------- :: self_sync_return_sched
+  ob ( o , a , { l | cont ( fu ) ; } , q cup { l' | spl } ) -> ob ( o , a , { l' | spl } , q )
+
+  :formula_v_eq: |[ e ]| ( a circ l ) = o'
+  fresh ( y )
+  returns ( getclass ( o' ) , m ) = T
+  a ( cog ) =/= a' ( cog )
+  --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- :: rem_sync_call
+  ob ( o , a , { l | x = e . m ( el ) ; :: spl } , q ) ob ( o' , a' , pr , q' ) -> ob ( o , a , { l , Fut < T > y null | y = o' ! m ( el ) ; :: x = y . get ; :: spl } , q ) ob ( o' , a' , pr , q' )
+
+  fresh ( o' )
+  init ( C ) = process
+  atts ( C , |[ el ]| ( a circ l ) , o' , co ) = a'
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------ :: new_local_object
+  ob ( o , a , { l | x = new local C ( el ) ; :: spl } , q ) cogt ( co , o ) -> ob ( o , a , { l | x = o' ; :: spl } , q ) cogt ( co , o ) ob ( o' , a' , idle , process )
+
+  fresh ( o' ) 
+  fresh ( co' )
+  init ( C ) = process
+  atts ( C , |[ el ]| ( a circ l ) , o' , co' ) = a'
+  ---------------------------------------------------------------------------------------------------------------------------------------------------------- :: new_cog_object
+  ob ( o , a , { l | x = new C ( el ) ; :: spl } , q ) -> ob ( o , a , { l | x = o' ; :: spl } , q ) ob ( o' , a' , process , noproc ) cogt ( co' , o' )
+
+defn
+  st -> st' :: :: state :: ''
+     {{ tex \begin{array}{c} [[st]] \\[[->]] [[st']]\end{array} }}
+     {{ com state reduction }} by
+
+  :formula_b_eq: |[ g ]| ( cn , a circ l ) = True
+  ------------------------------------------------------------------------------------------- :: await_true
+  { ob ( o , a , { l | await g ; :: spl } , q ) cn } -> { ob ( o , a , { l | spl } , q ) cn }
+
+  select ( q , a , cn ) = process
+  a ( cog ) = co
+  ----------------------------------------------------------------------------------------------------------------- :: activate
+  { ob ( o , a , idle , q ) cogt ( co , noact ) cn } -> { ob ( o , a , process , q \ process ) cogt ( co , o ) cn }
+
+  :formula_b_eq: |[ g ]| ( cn , a circ l ) = False
+  --------------------------------------------------------------------------------------------------------------------- :: await_false
+  { ob ( o , a , { l | await g ; :: spl } , q ) cn } -> { ob ( o , a , { l | suspend ; :: await g ; :: spl } , q ) cn }

@@ -4,18 +4,17 @@ import java.util.Set;
 aspect FieldUsage {
  
      /**
-     * Guard must observe something. "True" and "False" or implemented as a hack for now
-     * for those people that like to use it.
-     * TODO: If there's ever a warning infrastructure, this should probably be changed.
+     * Guard must observe something. "True" and "False" or implemented as a
+     * hack for now for those people that like to use it.
      * @see PureExp#getFields(FieldUseInfo)
      * @author stolz
      */
-     public void ExpGuard.hasFieldAccess(SemanticErrorList e) {
+     public void ExpGuard.hasFieldAccess(SemanticConditionList e) {
         final PureExp pe = getPureExp();
         final FieldUseInfo info = getPureExp().getFields();
         if ((!(pe instanceof DataConstructorExp && ("True".equals(((DataConstructorExp)pe).getConstructor()) || "False".equals(((DataConstructorExp)pe).getConstructor()))))
                     && (info.fields.isEmpty() && !info.usesBuiltin))
-            e.add(new TypeError(this,ErrorMessage.AWAIT_TOO_PURE, ""));
+            e.add(new SemanticWarning(this,ErrorMessage.AWAIT_TOO_PURE, ""));
     }
 
     /**

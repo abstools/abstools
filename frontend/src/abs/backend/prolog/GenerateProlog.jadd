@@ -508,7 +508,7 @@ aspect GenerateProlog {
     }
     
     public void ConstructorArg.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
-        getDataTypeUse().generateProlog(s,reachInfo);
+        getTypeUse().generateProlog(s,reachInfo);
     }
     
     public void ParamDecl.generatePrologField(PrintStream s,ReachabilityInformation reachInfo){
@@ -559,11 +559,11 @@ aspect GenerateProlog {
 	        }else{
 	            //if there is no init block the easiest way is to create an empty one
 	            InitBlock block=new InitBlock();
-	            block.setPosition(this.getStartPos(), this.getStartPos());
+	            block.setPositionFromNode(this);
 	            block.generateProlog(s,reachInfo,quote(getName()),parameterList,fieldsList);
 	        }
 	        //we generate the rest of the methods implemented by the class
-	        List<MethodImpl> methodsList = (List<MethodImpl>) getChild(5);
+	        List<MethodImpl> methodsList = (List<MethodImpl>) getMethodList();
 	        n = methodsList.getNumChild();
 	        for (int i = 0; i < n; i++){
 	            methodsList.getChild(i).generateProlog(s,reachInfo,quote(getName())); // cons here is a DataConstructor
@@ -677,7 +677,7 @@ aspect GenerateProlog {
     public void MethodImpl.printContextInformation(PrintStream s){
     	s.print("[");
         if(this.getModuleDecl()!=null){
-    	    s.print("programLocation('" +this.getModuleDecl().getName()+"',"+ this.getLine( this.getStart())+","+this.getLine(this.getEnd())+")");
+    	    s.print("programLocation('" +this.getModuleDecl().getName()+"',"+ this.getStartLine()+","+this.getEndLine()+")");
     	}
     	s.print("]");
     }	
@@ -746,7 +746,7 @@ aspect GenerateProlog {
     public void Stmt.printContextInformation(PrintStream s){
     	s.print("[");
         if(this.getModuleDecl()!=null){
-    	    s.print("programLocation('" +this.getModuleDecl().getName()+"',"+ this.getLine( this.getStart())+","+this.getLine(this.getEnd())+")");
+    	    s.print("programLocation('" +this.getModuleDecl().getName()+"',"+ this.getStartLine()+","+this.getEndLine()+")");
     	}
     	s.print("]");
     }	

@@ -1,0 +1,115 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Concurrent object level syntax of Core ABS                   %
+%                                                              %
+% Based on the FMCO 2010 paper                                 %
+% "ABS: A Core Language for Abstract Behavioral Specification" %
+%                                                              %
+% DEPENDS: abs-functional-syntax.ott                           %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+metavar C ::=
+      {{ lex Alphanum }}
+      {{ com class name }}
+metavar m ::=
+      {{ lex alphanum }}
+      {{ com method name }}
+grammar
+%%% CONCURRENT OBJECT LEVEL SYNTAX %%%
+% FIXME: allow empty programs?
+P :: P_ ::=
+  {{ com program }}
+  | Ddl Fl Ifl Cll { Tlx ; sl } :: :: program
+
+If {{ tex IF }} :: If_ ::=
+  {{ com interface definition }}  
+  | interface I { Sgl } :: :: if
+
+Ifl {{ tex \overline{IF} }} :: Ifl_ ::=
+  {{ com interface definition list }}  
+  | If1 .. Ifn :: :: if_list
+
+Il {{ tex \overline{I} }} :: Il_ ::=
+  {{ com interface name list }}  
+  | I1 , ... , In :: :: i_list
+  
+Cl {{ tex CL }} :: Cl_ ::=
+  {{ com class definition }}
+  | class C { Tlx ; Ml } :: :: cl
+  | class C ( Tlx ) { Tlx' ; Ml } :: :: cl_param
+  | class C implements Il { Tlx ; Ml } :: :: cl_impl
+  | class C ( Tlx ) implements Il { Tlx' ; Ml } :: :: cl_impl_param
+
+Cll {{ tex \overline{CL} }} :: Cll_ ::=
+  {{ com class definition list }}  
+  | Cl1 .. Cln :: :: cl_list
+
+Sg :: Sg_ ::=
+  {{ com method signature }}
+  | T m ( Tlx ) :: :: sg
+
+Sgd :: Sgd_ ::=
+    {{ com method signature declaration }}
+    | Sg ; :: :: decl
+
+Sgl {{ tex \overline{Sg} }} :: Sgl_ ::=
+  {{ com method signature list }}  
+  | Sgd1 .. Sgdn :: :: list
+
+M :: M_ ::=
+  {{ com method definition }}
+  | Sg { Tlx ; sl return e ; } :: :: def
+
+Ml {{ tex \overline{M} }} :: Ml_ ::=
+  {{ com method definition list }}  
+  | M1 .. Mn :: :: m_list
+
+g :: g_ ::=
+  {{ com guard }}
+  | b :: :: b
+  | e ? :: :: e
+  | g /\ g' :: :: g_g
+
+sl {{ tex \overline{s} }} :: sl_ ::=
+   | s1 .. sn :: :: s_list
+
+s :: s_ ::=
+  {{ com statement }}
+  | x = rhs ; :: :: assign 
+    {{ com assignment }}
+  | suspend ; :: :: suspend 
+    {{ com suspend }}
+  | await g ; :: :: await 
+    {{ com await guard }}
+  | skip ; :: :: skip  
+    {{ com skip }}
+  | if b { sl } :: :: if 
+    {{ com if }}
+  | if b { sl } else { sl' } :: :: if_else
+    {{ com if else }}
+  | while b { sl } :: :: while
+    {{ com while loop }}
+  | case e { sbrl } :: :: case
+    {{ com case statement }}
+
+rhs :: rhs_ ::=
+  {{ com assignment right-hand side }}
+  | e :: :: e
+    {{ com expression }}
+  | new local C ( el ) :: :: new_local
+    {{ com new local object (same cog) }}
+  | new C ( el ) :: :: new_cog
+    {{ com new object and cog }}
+  | e ! m ( el ) :: :: async_call
+    {{ com asynchronous call }}
+  | e . m ( el ) :: :: sync_call
+    {{ com synchronous call }}
+  | e . get :: :: get
+    {{ com future value }}
+
+sbr :: sbr_ ::=
+  {{ com case statement branch }}
+  | p => sl :: :: p_sl
+
+
+sbrl {{ tex \overline{sbr} }} :: brl_ ::=
+  {{ com case statement branch list }}
+  | sbr1 ... sbrn :: :: sbr_list

@@ -1,0 +1,220 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Concurrent object level typing of Core ABS                   %
+%                                                              %
+% Based on the FMCO 2010 paper                                 %
+% "ABS: A Core Language for Abstract Behavioral Specification" %
+%                                                              %
+% DEPENDS: abs-object-syntax.ott, abs-functional-typing.ott    %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+grammar
+%%% CONCURRENT OBJECT LEVEL META SYNTAX %%%
+A :: A_ ::=
+  | Fut < T > :: M :: fut
+  | G ( destiny ) :: M :: destiny
+
+Al :: Al_ ::=
+   | ptypes ( C ) :: M :: ptypes
+   | Tl :: M :: tlist
+
+Tl :: Tl_ ::=
+   | interfaces ( C ) :: M :: interfaces
+
+G :: G_ ::=
+  | G [ destiny |-> A ] :: M :: destiny
+  | G [ this |-> C , fields ( C' ) ] :: M :: class
+
+%%% TERMINALS %%%
+terminals :: terminals_ ::=
+	  | ptypes :: :: ptypes {{ tex \mathrm{ptypes} }}
+	  | interfaces :: :: interfaces {{ tex \mathrm{interfaces} }}
+	  | implementsif :: :: implementsif {{ tex \mathrm{implements} }}
+	  | fields :: :: fields {{ tex \mathrm{fields} }}
+
+%%% FORMULAS %%%
+% FIXME: replace ALL with ellipsis
+formula :: formula_ ::= 
+  {{ com formulas }}
+  | T in interfaces ( C ) :: M :: t_interfaces
+    {{ com in interfaces }}
+  | match ( m , Ts , A ) :: M :: match3
+    {{ com match method }}
+  | ALL I in Il . formula :: M :: all_i
+    {{ com for all interfaces in list }}
+  | ALL Dd in Ddl . formula :: M :: all_dd
+    {{ com for all data declarations in list }}
+  | ALL Cl in Cll . formula :: M :: all_cl
+    {{ com for all class definitions in list }}
+  | ALL F in Fl . formula :: M :: all_f
+    {{ com for all function definitions in list }}
+  | implementsif ( C , I ) :: M :: implementsif
+    {{ com class implements interface }}
+
+%%% CONCURRENT OBJECT LEVEL TYPE SYSTEM %%%
+defns
+  object_well_formedness :: t_ ::= 
+
+defn 
+  G |- rhs : A :: :: rhs :: '' 
+    {{ com well-formed rhs }} by   
+
+  :t_e: G |- e : Fut < T >
+  ------------------------ :: get
+  G |- e . get : T
+
+  G |- el : ptypes ( C )
+  T in interfaces ( C )
+  --------------------- :: new_local
+  G |- new local C ( el ) : T 
+  
+  G |- el : ptypes ( C )
+  T in interfaces ( C )
+  ------------------------- :: new_cog
+  G |- new C ( el ) : T 
+
+  G |- e . m ( el ) : T
+  ----------------------------- :: async_call
+  G |- e ! m ( el ) : Fut < T >
+
+  :t_e: G |- e : N
+  G |- el : Tl
+  match ( m , Tl -> T , N )
+  ------------------------- :: sync_call
+  G |- e . m ( el ) : T
+
+  :t_e: G |- e : T
+  ---------------- :: e
+  G |- e : T
+
+defn
+  G |- g : A :: :: g :: '' 
+    {{ com well-formed guard }} by
+
+  ------------- :: b
+  G |- b : Bool
+
+  G |- g : Bool
+  G |- g' : Bool
+  ------------------- :: and
+  G |- g /\ g' : Bool
+
+  G |- e : Fut < T >
+  ------------------ :: poll
+  G |- e ? : Bool
+
+defn
+  G |- s :: :: s :: '' 
+    {{ com well-formed statement }} by 
+
+  ----------- :: skip
+  G |- skip ;
+
+  -------------- :: suspend
+  G |- suspend ;
+  
+  G |- g : Bool
+  -------------- :: await
+  G |- await g ;
+
+  G |- rhs : G ( x )
+  ------------------ :: assign
+  G |- x = rhs ;
+
+  G |- b : Bool
+  G |- sl
+  ---------------- :: conditional_if
+  G |- if b { sl }
+
+  G |- b : Bool
+  G |- sl
+  G |- sl'
+  ----------------------------- :: conditional
+  G |- if b { sl } else { sl' }
+
+  G |- b : Bool 
+  G |- sl
+  ------------------- :: while
+  G |- while b { sl }
+
+% TODO: check that all patterns p match e
+  G |- e : A
+  G |- sbrl
+  -------------------- :: case_statement
+  G |- case e { sbrl }
+
+defn
+  G |- sbrl :: :: sbrl :: ''
+    {{ com well-formed case statement branch list}} by
+
+  G |- sbr1 .. G |- sbrn
+  -------------------- :: case_statement_branch_list
+  G |- sbr1 .. sbrn
+
+defn
+  G |- sbr :: :: sbr :: ''
+    {{ com well-formed case statement branch }} by
+
+  G' |- sl
+  G' = G circ psubst ( p , A , G )
+  ------------------- :: case_statement_branch
+  G |- p => sl
+
+defn 
+  G |- sl :: :: sl :: ''
+    {{ com well-formed statement list }} by
+  
+  G |- s1 .. G |- sn
+  ------------------ :: s_list
+  G |- s1 .. sn
+
+defn
+  G |- Ml :: :: Ml :: ''
+    {{ com well-formed method definition list }} by    
+
+  G |- M1 .. G |- Mn
+  ------------------ :: m_list
+  G |- M1 .. Mn
+
+defn 
+  G |- M :: :: M :: ''
+    {{ com well-formed method definition }} by
+     
+  % FIXME: paper has G' [ destiny |-> Fut < T'' > ] |- s
+  G' = G [ xl |-> Tl , xl' |-> Tl' ]
+  G' [ destiny |-> Fut < T'' > ] |- sl
+  G' [ destiny |-> Fut < T'' > ] |- e : T''
+  ------------------------------------------- :: method
+  G |- T'' m ( Tlx ) { Tlx' ; sl return e ; }
+
+defn
+  G |- Cl :: :: Cl :: ''
+    {{ com well-formed class definition }} by
+
+  G [ this |-> C , fields ( C ) ] |- Ml
+  ------------------------------------- :: class
+  G |- class C { Tlx ; Ml }
+
+  G [ this |-> C , fields ( C ) ] |- Ml
+  ------------------------------------- :: class_param
+  G |- class C ( Tlx ) { Tlx ; Ml }
+
+  ALL I in Il . implementsif ( C , I )
+  G [ this |-> C , fields ( C ) ] |- Ml
+  --------------------------------------- :: class_impl
+  G |- class C implements Il { Tlx ; Ml }
+
+  ALL I in Il . implementsif ( C , I )
+  G [ this |-> C , fields ( C ) ] |- Ml
+  ------------------------------------------------ :: class_impl_param
+  G |- class C ( Tlx ) implements Il { Tlx' ; Ml }
+
+defn
+  G |- P :: :: P :: ''
+    {{ com well-formed program definition }} by
+
+  % FIXME: Tlx and xl, Tl not formally related
+  ALL Dd in Ddl . G |- Dd
+  ALL Cl in Cll . G |- Cl
+  ALL F in Fl . G |- F
+  G [ xl |-> Tl ] |- sl
+  -------------------------------- :: program
+  G |- Ddl Fl Ifl Cll { Tlx ; sl }

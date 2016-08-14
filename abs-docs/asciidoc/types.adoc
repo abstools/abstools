@@ -1,0 +1,229 @@
+== Types
+
+ABS has a static, nominal type system.  Local variables, object fields,
+function parameters and method parameters are statically typed.  A type name
+can refer to a algebraic data type, an interface, a type synonym.  There are a
+number of pre-defined data types which are documented in Chapter <<sec:standard-library>>.
+
+A _type name_ is a sequence of letters, digits and  underscores (`_`) starting
+with an uppercase letter.  In case of a parametric data type, the type name
+continues with a left angle (`<`), a list of type names separated by commas
+and ends with a right angle (`>`).
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _Type_ ::= | _TypeIdentifier_ [ `<` _Type_ { `,` _Type_ } `>` ]
+|====
+
+
+New types are defined as either _interfaces_ or _algebraic data types_.
+Algebraic data types can be _parametric_, which is useful for defining
+“container-like” data types.  Currently only algebraic data types can be
+parameterized, i.e., ABS does not currently offer class templates.
+
+Note that classes are not types in ABS.
+
+.Example
+[source]
+----
+String <1>
+A_s1mple_type <2>
+Map<Int, List<String>> <3>
+----
+<1> The type name is `String`.  The string type is defined in the standard library.
+<2> This is a type name containing underscores and digits.
+<3> This type name denotes a map from integers to lists of strings.
+
+
+[[sec:builtin-types]]
+=== Built-in Types
+
+ABS offers the following built-in datatypes:
+
+.ABS built-in types
+[options="header"]
+|=====
+ | Name      | Description                | Example           | Documentation
+ | `Unit`    | The empty (void) type      | `Unit`            | <<type-unit>>
+ | `Bool`    | Boolean values             | `True`, `False`   | <<type-bool>>
+ | `Int`     | Integers of arbitrary size | `0`, `-15`        | <<type-numbers>>
+ | `Rat`     | Rational numbers           | `1/5`, `22/58775` | <<type-numbers>>
+ | `String`  | Strings                    | `"Hello world\n"` | <<type-string>>
+ | `Fut<A>`  | Futures                    | --                | <<type-future>>
+ | `Exception` | Exceptions                | `DivisionByZeroException` | <<exception-type>>
+ | `List<A>` | Lists of values of type `A` | `list[1, 2, 3]`   | <<type-list>>
+ | `Set<A>`  | Sets of values of type `A`  | `set[True, False]` | <<type-set>>
+ | `Map<A,B>`| Maps from type `A` to `B` | `map[Pair(1, True)]` | <<type-map>>
+ | `Pair<A,B>` | Pairs of values         | `Pair(1, True)`      | <<type-pair>>
+ | `Triple<A,B,C>` | Triples of values   | `Triple(1, "hi", True)` | <<type-triple>>
+ | `Maybe<A>`   | Optional values        | `Just(True)`, `Nothing` | <<type-optionals>>
+|=====
+
+`Int` type is a subtype of `Rat`; this means that `Int` values are assignable
+to places of type `Rat`.  Rational values can be converted to integers via the
+`truncate` function.
+
+The future type `Fut<A>` is a special built-in type that denotes that an ABS
+value of type `A` will become available in the future.  The value that a
+future holds and will return can be of any concrete type.
+
+.Example
+[source]
+----
+Fut<String> <1>
+Fut<List<Rat>> <2>
+----
+<1> This future will contain a value of type `String`
+<2> This future will contain a list of rational numbers
+
+[[sec:algebraic-data-types]]
+=== Algebraic Data Types
+
+Algebraic Data Types in ABS are used to implement user-defined, immutable data
+values.  Because values of algebraic data types are immutable, they can be
+safely passed on to other objects and cogs and make it easy to reason about
+program correctness.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _DataTypeDecl_ ::= | `data` _SimpleTypeIdentifier_ [ _TypeParams_ ] [ `=` _DataConstr_ { `{vbar}` _DataConstr_ } ] `;` +
+| _TypeParams_ ::= | `<` _SimpleTypeIdentifier_ { `,` _SimpleTypeIdentifier_ } `>` +
+| _DataConstr_ ::= | _SimpleTypeIdentifier_ [ `(` _Type_ [ _SimpleIdentifier_ ] { `,` _Type_ [ _SimpleIdentifier_ ] } `)` ]
+|====
+
+Data Type _Constructors_ enumerate the possible values of a data type.
+Constructors can have zero or more arguments.  Each argument can have an
+optional accessor function (see <<sec:accessor-functions>>).
+
+
+.Example
+[source]
+----
+data IntList = NoInt | ConsInt(Int head, IntList tail); <1>
+data Bool = True | False; <2>
+data NotInstantiable; <3>
+----
+<1> The data type `IntList` has two constructors: `NoInt` and `ConsInt`.  Both define an accessor function.
+<2> This is the definition of the built-in data type `Bool`.
+<3> This type does not have constructors and therefore cannot be instantiated.
+
+[[sec:accessor-functions]]
+==== Accessor Functions
+
+Data constructor arguments can optionally have a name, which needs to be a
+valid identifier.  If a name is given, it defines a function that, when passed a
+value expressed with the given constructor, return the argument.
+
+The name of an accessor function must be unique in the module it is
+defined in.  It is an error to have multiple accessor functions with the same
+name, or to have a function definition with the same name as an accessor
+function.
+
+.Example
+[source]
+----
+data Person = Person(String name, Int age);
+{
+  Person john = Person("John", 34);
+  Int age = age(john); <1>
+}
+----
+<1> The call to `age` returns 34.
+
+
+==== Parametric Data Types
+
+Algebraic data types can carry _type parameters_.  Data types with type
+parameters are called _parametric data types_.
+
+Parametric Data Types are useful to define “container” data types, such as
+lists, sets or maps. Parametric data types are declared like normal data types
+but have an additional type parameter section inside broken brackets (`<` `>`)
+after the data type name.
+
+.Example
+[source]
+----
+data List<A> = Nil | Cons(A, List<A>);
+----
+
+When using a parametric data type, concrete types are given for the type parameters.
+
+.Example
+[source]
+----
+List<Int> l = Cons(1, Cons(2, Nil));
+----
+
+[[sec:n_ary-constructors]]
+==== N-ary Constructors
+
+Literal values of recursive data types like lists and sets can be arbitrarily
+long, and nested constructor expressions can become unwieldy.  ABS provides a
+special syntax for n-ary constructors, which are transformed into constructor
+expressions via a user-supplied function.
+
+.Example
+[source]
+----
+def Set<A> set<A>(List<A> l) = <1>
+    case l {
+       Nil => EmptySet;
+       Cons(x,xs) => insertElement(set(xs), x);
+    };
+
+{
+  Set<Int> s1 = set(Cons(1, Cons(2, Cons(3, Nil)))); <2>
+  Set<Int> s = set[1, 2, 3]; <3>
+}
+----
+<1> The parametric function `set` is defined to take a list of elements and return a set.
+<2> `set` is called with a literal list constructed as normal.
+<3> `set` is called with the special n-ary constructor syntax.  The two calls return the same value.
+
+The constructor function usually has the same name as the type it is
+constructing.  For example, a value of type `Set` is constructed via the
+function `set`.
+
+
+==== Fully Abstract Data Types
+
+Using the module system it is possible to define abstract data types.  For an
+abstract data type, only the functions that operate on them are known to the
+client, but not its constructors.  This can be easily realized in ABS by
+putting such a data type in its own module and by only exporting the data type
+and its functions, without exporting the constructors.
+
+
+=== Interface Types
+
+Interfaces in ABS describe the functionality of objects.  Thus, Interfaces in
+ABS are similar to interfaces in Java.  Unlike Java, objects are only typed by
+interfaces and not by their class.
+
+The syntax of interfaces is given in <<sec:interfaces>>.
+
+=== Type Synonyms
+
+A _Type Synonym_ is an alternative type name for a type.  Type synonyms are
+introduced with the keyword `type`.  Parametric type synonyms are not
+currently supported.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _TypeSynDecl_ ::= | `type` _SimpleTypeIdentifier_ `=` _Type_ `;`
+|====
+
+.Example
+[source]
+----
+type Filename = String;
+type Filenames = Set<Filename>;
+type Servername = String;
+type Packet = String;
+type File = List<Packet>;
+type Catalog = List<Pair<Servername,Filenames>>;
+----

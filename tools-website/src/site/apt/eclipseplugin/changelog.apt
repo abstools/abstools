@@ -1,5 +1,0 @@
-Eclipse Plugin - Changelog
-
-* 0.6.5.x 
-	
-  - Enabled semantic syntax highlighting. This means that syntactically identical terms can be distinguished by their actual semantics. For example, a type use <<<Foo>>> is colored differently if <<<Foo>>> is a data type or an interface type.

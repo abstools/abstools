@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs;
@@ -11,8 +11,9 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Set;
 
-import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticCondition;
+import abs.frontend.analyser.SemanticConditionList;
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
@@ -29,7 +30,7 @@ public class ABSTest {
         ALLOW_INCOMPLETE_EXPR,
         TYPE_CHECK
     }
-        
+
     public static class ABSFileNameFilter implements FilenameFilter {
         @Override
         public boolean accept(File dir, String name) {
@@ -51,7 +52,7 @@ public class ABSTest {
      * Take a file name and returns that name if it points to an existing file,
      * otherwise if {@link File#getAbsoluteFile()} returns a file that points to
      * an existing file, this method returns {@link File#getAbsolutePath()}.
-     * 
+     *
      * @param fileName
      * @return a valid file name from the input file name
      * @throws IllegalArgumentException
@@ -62,7 +63,7 @@ public class ABSTest {
         File f = new File(fileName);
         if (f.exists()) {
             return fileName;
-        } 
+        }
         f = f.getAbsoluteFile();
         if (f.exists()) {
             return f.getAbsolutePath();
@@ -73,7 +74,7 @@ public class ABSTest {
     protected Model assertParseOk(String s, Config... config) {
         return assertParse(s,config);
     }
-    
+
     protected Model assertParse(String s, Config... config) {
 
         String preamble = "module UnitTest; export *; ";
@@ -99,17 +100,17 @@ public class ABSTest {
                             LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(p);
                             p.registerTypeSystemExtension(ltie);
                         }
-                        SemanticErrorList l = p.typeCheck();
+                        SemanticConditionList l = p.typeCheck();
                         if (isSet(EXPECT_TYPE_ERROR,config)) {
-                            if (l.isEmpty()) {
+                            if (!l.containsErrors()) {
                                 fail("Expected type errors, but none appeared");
                             }
                         } else {
-                            if (!l.isEmpty()) {
-                                fail("Failed to typecheck: " + s + "\n" + l.get(0).getMessage());
+                            if (l.containsErrors()) {
+                                fail("Failed to typecheck: " + s + "\n" + l.getFirstError().getMessage());
                             }
                         }
-                    }                    
+                    }
                 }
             }
             return p;
@@ -121,14 +122,15 @@ public class ABSTest {
     protected Model assertParseError(String absCode) {
         return assertParse(absCode, EXPECT_PARSE_ERROR);
     }
-    
+
     /**
      * Note: does not handle EXPECT_*.
      */
-    static public Model assertParseFileOk(String fileName, Config... config) throws IOException {
+    static public Model assertParseFileOk(String fileName, Config... config) throws IOException, WrongProgramArgumentException {
         Main main = new Main();
         main.setWithStdLib(isSet(WITH_STD_LIB,config));
         Model m = main.parseFiles(resolveFileName(fileName));
+        m.evaluateAllProductDeclarations();
         return assertParseModelOk(m, config);
     }
 
@@ -138,14 +140,14 @@ public class ABSTest {
         Model m = main.parseFiles(fileNames.toArray(new String[0]));
         return assertParseModelOk(m, config);
     }
-    
+
     static public Model assertParseModelOk(Model m, Config... config) throws IOException {
         if (m != null) {
             final StringBuffer errs;
             String fileNames = m.getCompilationUnit(0).getFileName();
             for (int i = 1; i < m.getCompilationUnits().getNumChild(); i++)
                 fileNames += " & " + m.getCompilationUnit(i).getFileName();
-            
+
             int parseErrs = m.getParserErrors().size();
             if (parseErrs > 0) {
                 errs = new StringBuffer("Parse errors: " + parseErrs + ". First error:\n");
@@ -153,19 +155,19 @@ public class ABSTest {
                 fail("Failed to parse: " + fileNames + "\n" + errs.toString());
                 return m;
             }
-            
-            int numSemErrs = m.getErrors().size();
-            
+
+            int numSemErrs = m.getErrors().getErrorCount();
+
 
             errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
             if (numSemErrs > 0) {
-                for (SemanticError error : m.getErrors())
+                for (SemanticCondition error : m.getErrors())
                     errs.append(error.getHelpMessage() + "\n");
                 fail("Failed to parse: " + fileNames + "\n" + errs.toString());
             } else if (isSet(TYPE_CHECK, config)) {
-                SemanticErrorList l = m.typeCheck();
-                if (!l.isEmpty()) {
-                    for (SemanticError error : l)
+                SemanticConditionList l = m.typeCheck();
+                if (l.containsErrors()) {
+                    for (SemanticCondition error : l)
                         errs.append(error.getHelpMessage() + "\n");
                     fail("Failed to typecheck: " + fileNames + "\n" + errs.toString());
                 }

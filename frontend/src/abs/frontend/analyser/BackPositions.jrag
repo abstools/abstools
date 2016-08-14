@@ -1,19 +1,59 @@
-
 aspect BackPositions {
 
-	syn int ASTNode.getStartPos() = getStart();
-	syn int ASTNode.getEndPos() = getEnd();
+        protected int ASTNode.startline = 0;
+        protected int ASTNode.startcolumn = 0;
+        protected int ASTNode.endline = 0;
+        protected int ASTNode.endcolumn = 0;
+        protected boolean ASTNode.isPositionSet = false;
 
-	syn boolean ASTNode.hasChildren() = getNumChild() > 0;
+        syn int ASTNode.getStartLine() {
+            if (isPositionSet) return startline;
+            else if (getParent() != null) return getParent().getStartLine();
+            else return 0;
+        }
+        syn int ASTNode.getStartColumn() {
+            if (isPositionSet) return startcolumn;
+            else if (getParent() != null) return getParent().getStartColumn();
+            else return 0;
+        }
+        syn int ASTNode.getEndLine() {
+            if (isPositionSet) return endline;
+            else if (getParent() != null) return getParent().getEndLine();
+            else return 0;
+        }
+        syn int ASTNode.getEndColumn() {
+            if (isPositionSet) return endcolumn;
+            else if (getParent() != null) return getParent().getEndColumn();
+            else return 0;
+        }
 
-	// set the position of an AstNode, this should only be used for generated code (-> ASTPreProcessor)
-	public void ASTNode.setPosition(int startPos, int endPos) {
-	    start = startPos;
-	    end = endPos;
-	}
+        // // beaver.Symbol encoded line+column in one integer, which some parts
+        // // of the code used for comparisons of positions.  Keep it for legacy reasons.
+        // static private final int ASTNode.COLUMN_FIELD_BITS = 12;
+        // static private final int ASTNode.COLUMN_FIELD_MASK = (1 << COLUMN_FIELD_BITS) - 1;
+        // syn int ASTNode.getEncodedStart() = startline << COLUMN_FIELD_BITS | startcolumn;
+        // syn int ASTNode.getEncodedEnd() = endline << COLUMN_FIELD_BITS | endcolumn;
 
-	syn int ASTNode.getStartLine() = beaver.Symbol.getLine(getStart());
-	syn int ASTNode.getStartColumn() = beaver.Symbol.getColumn(getStart());
-	syn int ASTNode.getEndLine() = beaver.Symbol.getLine(getEnd());
-	syn int ASTNode.getEndColumn() = beaver.Symbol.getColumn(getEnd()); 
+        // set the position of an AstNode, this should only be used for generated code (-> ASTPreProcessor)
+        public void ASTNode.setPosition(int startline, int startcolumn, int endline, int endcolumn) {
+            this.startline = startline;
+            this.startcolumn = startcolumn;
+            this.endline = endline;
+            this.endcolumn = endcolumn;
+            this.isPositionSet = true;
+        }
+
+        public void ASTNode.setPositionFromNode(ASTNode node) {
+            this.startline = node.startline;
+            this.startcolumn = node.startcolumn;
+            this.endline = node.endline;
+            this.endcolumn = node.endcolumn;
+            this.isPositionSet = true;
+        }
+
+        public String ASTNode.getPositionString() {
+            String res = getFileName();
+            if ("".equals(res)) res = "<unkown>";
+            return res + ":" + getStartLine() + ":" + getStartColumn() + ": ";
+        }
 }

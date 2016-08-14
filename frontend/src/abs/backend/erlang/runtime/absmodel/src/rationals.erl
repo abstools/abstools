@@ -1,6 +1,6 @@
 -module(rationals).
 -export([to_r/1,trunc/1]).
--export([new/2, proper/1, is_proper/1, is_greater/2, is_lesser/2, max/2, min/2, neg/1, inv/1, add/2, sub/2, mul/2, rdiv/2, fast_add/2, fast_sub/2, fast_mul/2, fast_div/2, rrem/2]).
+-export([new/2, proper/1, is_proper/1, is_greater/2, is_lesser/2, is_zero/1, is_positive/1, is_negative/1, max/2, min/2, neg/1, inv/1, add/2, sub/2, mul/2, rdiv/2, fast_add/2, fast_sub/2, fast_mul/2, fast_div/2, rrem/2]).
 -export([heron/3]).
 
 %%% extensions by Georg Göri and Rudolf Schlatte
@@ -21,11 +21,21 @@ inv({ N, D }) -> { D, N }.
 new(N, D) -> G = abs(intar:gcd(N, D)), { N div G, D div G }.
 
 proper({ N, 1 }) -> { N, 1};
-proper({ N, D }) -> new(N, D).
+proper({ N, D }) -> 
+    case D >= 0 of
+        true -> new(N, D);
+        false -> new(-N, -D)
+    end.
 
 is_greater({ N1, D1 }, { N2, D2 }) -> N1 * D2 - N2 * D1 > 0.
 
 is_lesser({ N1, D1 }, { N2, D2 }) -> N1 * D2 - N2 * D1 < 0.
+
+is_zero({N, _}) -> N =:= 0.
+
+is_positive({N, _}) -> N > 0.
+
+is_negative({N, _}) -> N < 0.
 
 max(A, B) ->
     case is_greater(A, B) of
@@ -53,11 +63,11 @@ rdiv(A, B) -> proper(fast_div(A, B)).
 
 fast_add({ N1, D1 }, { N2, D2 }) -> { N1 * D2 + N2 * D1, D1 * D2 }.
 
-fast_sub(A, B) -> fast_add(A, neg(B)).
+fast_sub({ N1, D1 }, { N2, D2 }) -> { N1 * D2 - N2 * D1, D1 * D2 }.
 
 fast_mul({ N1, D1 }, { N2, D2 }) -> { N1 * N2, D1 * D2 }.
 
-fast_div(A, B) -> fast_mul(A, inv(B)).
+fast_div({ N1, D1 }, { N2, D2 }) -> { N1 * D2, D1 * N2 }.
 
 rrem({ N1, D1 }, { N2, D2 }) -> proper({ (N1 * D2) rem (N2 * D1), D1 * D2 }).
 

@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.maude;
@@ -43,7 +43,7 @@ public class MaudeCompiler extends Main {
     private int clocklimit = 100;
     private int defaultResources = 0;
     private static boolean debug = false;
-    
+
     public static void main(final String... args) {
         /* Maude has build-in AwaitAsyncCall support */
         Model.doAACrewrite = false;
@@ -62,7 +62,7 @@ public class MaudeCompiler extends Main {
             System.exit(1);
         }
     }
-    
+
     @Override
     public List<String> parseArgs(String[] args) {
         List<String> restArgs = super.parseArgs(args);
@@ -83,6 +83,8 @@ public class MaudeCompiler extends Main {
             } else if (arg.startsWith("-main=")) {
                 mainBlock = arg.split("=")[1];
             } else if (arg.startsWith("-limit=")) {
+                // -limit implies -timed
+                module = SIMULATOR.EQ_TIMED;
                 clocklimit = Integer.parseInt(arg.split("=")[1]);
             } else if (arg.startsWith("-defaultcost=")) {
                 defaultResources = Integer.parseInt(arg.split("=")[1]);
@@ -97,13 +99,14 @@ public class MaudeCompiler extends Main {
 
         return remainingArgs;
     }
-    
-    
+
+
     /**
      * @param args
      * @throws Exception
      */
     public void compile(String[] args) throws Exception {
+        if (verbose) System.out.println("Generating Erlang code...");
         final Model model = parse(args);
         if (model.hasParserErrors()
             || model.hasErrors()
@@ -118,20 +121,22 @@ public class MaudeCompiler extends Main {
         if (is == null)
             throw new RuntimeException("Could not locate abs-interpreter.maude");
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        
+
         stream.println("*** Generated " + dateFormat.format(new Date()));
         ByteStreams.copy(is, stream);
         model.generateMaude(stream, module, mainBlock, clocklimit, defaultResources);
+        if (verbose) System.out.println("Finished.  Start `maude " + outputfile.toString() + "' to run the model.");
     }
 
     protected void printUsage() {
         super.printUsage();
         System.out.println("Maude Backend:\n"
-                + "  -main=<ModuleName> \n" 
+                + "  -main=<ModuleName> \n"
                 + "                 sets the main block to execute\n"
                 + "  -o <file>      write output to <file> instead of standard output\n"
                 + "  -timed         generate code for timed interpreter\n"
                 + "  -limit=n       set clock limit for timed interpreter to n (default 100)\n"
+                + "                 (implies -timed)\n"
                 + "  -defaultcost=n set default statement execution cost (default 0)\n"
                 + "  -debug         print stacktrace on exception\n"
         );

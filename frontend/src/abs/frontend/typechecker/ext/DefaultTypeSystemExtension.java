@@ -4,26 +4,26 @@
  */
 package abs.frontend.typechecker.ext;
 
-import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticCondition;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.ext.AdaptDirection;
 
 public class DefaultTypeSystemExtension implements TypeSystemExtension {
     
-    protected SemanticErrorList errors;
+    protected SemanticConditionList errors;
     protected final Model model;
     
     protected DefaultTypeSystemExtension(Model m) {
         model = m;
     }
     
-    public void setSemanticErrorList(SemanticErrorList s) {
+    public void setSemanticConditionList(SemanticConditionList s) {
         errors = s;
     }
 
-    protected boolean add(SemanticError e) {
+    protected boolean add(SemanticCondition e) {
         return errors.add(e);
     }
     
@@ -31,6 +31,9 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
         checkAssignable(null, null, lt, t, origin);
         checkAssignable(null, null, t, lt, origin);
     }
+
+    @Override
+    public void checkModel(Model model) {}
     
     @Override
     public void checkNewExp(NewExp e) {}
@@ -51,6 +54,9 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
     public void checkClassDecl(ClassDecl decl) {}
 
     @Override
+    public void checkInterfaceDecl(InterfaceDecl decl) {}
+
+    @Override
     public void checkMethodImpl(MethodImpl method) {}
 
     @Override
@@ -59,6 +65,9 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
     @Override
     public void checkAssignStmt(AssignStmt s) {    }
     
+    @Override
+    public void checkStmt(Stmt stmt) {}
+
     @Override
     public void checkAssertStmt(AssertStmt assertStmt) {}
 

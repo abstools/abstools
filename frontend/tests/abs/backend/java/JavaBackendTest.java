@@ -20,7 +20,7 @@ import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.scheduling.RandomSchedulingStrategy;
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.Model;
 
 public class JavaBackendTest extends ABSTest {
@@ -227,16 +227,16 @@ public class JavaBackendTest extends ABSTest {
         // c2[len+1] = Config.WITH_LOC_INF; // XXX: Trips up CI.
         model = assertParse(code, c2);
         if (model.hasErrors()) {
-            fail(model.getErrors().get(0).getHelpMessage());
+            fail(model.getErrors().getFirstError().getHelpMessage());
         } else {
-            SemanticErrorList el = model.typeCheck();
-            if (!el.isEmpty()) {
-                fail(el.get(0).getMsg());
+            SemanticConditionList el = model.typeCheck();
+            if (el.containsErrors()) {
+                fail(el.getFirstError().getMsg());
             }
         }
 
         if (model.hasErrors()) {
-            fail(model.getErrors().getFirst().getHelpMessage());
+            fail(model.getErrors().getFirstError().getHelpMessage());
             return null;
         }
         return getJavaCode(model);

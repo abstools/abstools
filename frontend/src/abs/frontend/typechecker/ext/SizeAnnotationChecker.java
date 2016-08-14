@@ -12,6 +12,7 @@ import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.ExpressionStmt;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.PureExp;
+import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.VarDeclStmt;
 
 public class SizeAnnotationChecker extends DefaultTypeSystemExtension {
@@ -22,17 +23,22 @@ public class SizeAnnotationChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkExpressionStmt(ExpressionStmt e) {
-        checkSizeAnnotationCorrect(e, CompilerUtils.getAnnotationValue(e.getAnnotations(), "Size"));
+        checkSizeAnnotationCorrect(e, CompilerUtils.getAnnotationValueFromName(e.getAnnotations(), "ABS.DC.Size"));
     }
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
-        checkSizeAnnotationCorrect(s, CompilerUtils.getAnnotationValue(s.getAnnotations(), "Size"));
+        checkSizeAnnotationCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.DC.Size"));
     }
 
     @Override
     public void checkVarDeclStmt(VarDeclStmt v) {
-        checkSizeAnnotationCorrect(v, CompilerUtils.getAnnotationValue(v.getAnnotations(), "Size"));
+        checkSizeAnnotationCorrect(v, CompilerUtils.getAnnotationValueFromName(v.getAnnotations(), "ABS.DC.Size"));
+    }
+
+    @Override
+    public void checkReturnStmt(ReturnStmt s) {
+        checkSizeAnnotationCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.DC.Size"));
     }
 
     private void checkSizeAnnotationCorrect(ASTNode<?> n, PureExp size) {

@@ -1,4 +1,0 @@
-The Module System of ABS
-
-  ABS provides a module system similar to the Haskell module system, but uses
-  a syntax that is inspired by Python and Java.

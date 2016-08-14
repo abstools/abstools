@@ -6,7 +6,7 @@ package abs.frontend.typesystem;
 
 import org.junit.Assert;
 
-import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.ParseSamplesTest;
 
@@ -29,12 +29,12 @@ public class ExamplesTypeChecking extends ParseSamplesTest {
         Model m = assertTypeCheckFileOk(input, true);
         if (product != null) {
             m.flattenForProduct(product);
-            final SemanticErrorList errors = m.getErrors();
-            if (!errors.isEmpty())
-                onError(errors.getFirst().getMessage());
+            final SemanticConditionList errors = m.getErrors();
+            if (errors.containsErrors())
+                onError(errors.getFirstError().getMessage());
             m.typeCheck(errors);
-            if (!errors.isEmpty())
-                onError(errors.getFirst().getMessage());
+            if (errors.containsErrors())
+                onError(errors.getFirstError().getMessage());
         }
         return m;
     }

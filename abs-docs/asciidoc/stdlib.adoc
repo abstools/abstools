@@ -1,0 +1,749 @@
+[[sec:standard-library]]
+== The Standard Library
+
+This chapter documents the ABS standard library.  All definitions, except
+where noted otherwise, are contained in the module `ABS.StdLib` which is
+included by default in every module.  Therefore, no `import` statement is
+necessary to use these definitions.
+
+[[type-bool]]
+=== Boolean values
+
+==== Datatypes and Constructors
+
+The literals for Boolean values are `True` and `False`.  The name of the
+datatype is `Bool`.
+
+[source]
+----
+Bool value = True;
+----
+
+==== Operators
+
+The following operators apply to Boolean values:
+
+[options="header"]
+|=======================
+|Expression |Meaning                       |Associativity |Argument types |Result type
+|e1 \|\| e2 |logical or                    |left  |Bool, Bool |Bool
+|e1 && e2   |logical and                   |left  |Bool, Bool |Bool
+|e1 == e2   |equality                      |left  |compatible |Bool
+|e1 != e2   |inequality                    |left  |compatible |Bool
+|e1 < e2    |less than                     |left  |compatible |Bool
+|e1 < = e2  |less than or equal to         |left  |compatible |Bool
+|e1 > e2    |greater than                  |left  |compatible |Bool
+|e1 >= e2   |greater than or equal to      |left  |compatible |Bool
+|! e        |logical negation              |right |Bool |Bool
+|~ e        |logical negation (deprecated) |right |Bool |Bool
+|=======================
+
+[[type-numbers]]
+=== Numbers
+
+==== Datatypes and constructors
+
+The two numeric datatypes are `Int` and `Rat`.  See <<sec:builtin-types>> for
+their syntax.
+
+==== Operators
+
+[options="header"]
+|=======================
+|Expression|Meaning      |Associativity |Argument types |Result type
+|e1 == e2 |equality |left |compatible |Bool
+|e1 != e2 |inequality |left |compatible |Bool
+|e1 < e2 |less than |left |compatible |Bool
+|e1 < = e2 |less than or equal to |left |compatible |Bool
+|e1 > e2 |greater than |left |compatible |Bool
+|e1 >= e2 |greater than or equal to |left |compatible |Bool
+|e1 + e2 |addition |left |number, number |number
+|e1 - e2 |subtraction |left |number, number |number
+|e1 * e2 |multiplication |left |number, number |number
+|e1 / e2 |division |left |number, number |Rat
+|e1 % e2 |modulo |left |number, number |Int
+|=======================
+
+
+==== Functions
+
+.min, max
+
+These functions calculate the maximum and minimum of their two arguments.
+Since ABS datatypes are ordered, they can be applied to arguments of all
+types.
+
+[source]
+----
+A max<A>(A a, A b)
+A min<A>(A a, A b)
+----
+
+.abs
+
+This function calculates the absolute (positive) value of its argument.
+
+[source]
+----
+Rat abs(Rat x)
+----
+
+.truncate
+
+Converts a rational number to an integer by truncating towards zero.
+
+[source]
+----
+Int truncate(Rat a)
+----
+
+.pow
+
+This function calculates `b` to the power of `n`.
+
+[source]
+----
+Rat pow(Rat b, Int n)
+----
+
+.sqrt_newton
+
+This function approximates the square root of `x`; it stops when two subsequent
+estimates (as per Newton's algorithm) differ by less than `epsilon`.  `estimate` is an initial estimate of the
+square root.
+
+[source]
+----
+Rat sqrt_newton(Rat x, Rat estimate, Rat epsilon)
+----
+
+.exp_newton
+
+This function approximates _e_ to the power of `x`; it stops when two subsequent
+estimates (as per Newton's algorithm) differ by less than `epsilon`.
+
+[source]
+----
+Rat exp_newton(Rat x, Rat epsilon)
+----
+
+.random
+
+Returns an integer between 0 and its argument.
+
+[source]
+----
+Int random(Int below)
+----
+
+[[type-string]]
+=== Strings
+
+==== Datatypes and Constructors
+
+The datatype for strings is `String`.
+
+String literals are enclosed in double quotes (`"`).  Line feed in a string
+literal is written as `\n`, carriage return as `\r`.
+
+==== Operators
+
+[options="header"]
+|=======================
+|Expression|Meaning      |Associativity |Argument types |Result type
+|e1 == e2 |equality |left |compatible |Bool
+|e1 != e2 |inequality |left |compatible |Bool
+|e1 < e2 |less than |left |compatible |Bool
+|e1 < = e2 |less than or equal to |left |compatible |Bool
+|e1 > e2 |greater than |left |compatible |Bool
+|e1 >= e2 |greater than or equal to |left |compatible |Bool
+|e1 + e2 |concatenation |left |String, String |String
+|=======================
+
+==== Functions
+
+.toString
+
+This function converts any data into a printable string representation.
+
+[source]
+----
+def String toString<T>(T t)
+----
+
+.substr
+
+Returns a substring of a given string `str` with length `length` starting from
+position `start` (inclusive).  The first character in a string has position 0.
+
+[source]
+----
+def String substr(String str, Int start, Int length)
+----
+
+.strlen
+
+Returns the length of the given string `str`.  The empty string (`""`) has
+length 0.
+
+[source]
+----
+def Int strlen(String str)
+----
+
+.println
+
+Prints the given string `s` to standard output, followed by a newline, meaning
+that the next output will not continue on the same line.
+
+[source]
+----
+def Unit println(String s)
+----
+
+.print
+
+Prints the given string `s` to standard output.  Does not cause the next
+output to begin on a new line.
+
+[source]
+----
+def Unit print(String s)
+----
+
+[[type-unit]]
+=== Unit
+
+Unit is the empty (void) datatype.
+
+==== Datatypes and Constructors
+
+Both the datatype and the single constructor are named `Unit`.
+
+
+[[type-future]]
+=== The Future Type
+
+Futures are placeholders for return values of asynchronous methods calls.
+
+Future values are produced by asynchronous method calls (see
+<<async-call-expression>>).  The current process can suspend itself until a
+future is resolved, i.e., until the return value of the asynchronous method
+call is available (see <<await-stmt>>).  The get expression returns the value
+of a future (see <<get-expression>>).  In case the future is not yet resolved,
+the get expression blocks the current cog.
+
+.Example
+[source]
+----
+Fut<Int> f = o!add(2, 3); <1>
+await f?; <2>
+Int result = f.get; <3>
+----
+<1> This statement defines a future variable `f` to hold the integer result of the method call to `add`.
+<2> The `await` statement suspends the current process until `f` is resolved.
+<3> The `get` expression returns the value computed by the `add` call.
+
+Futures are first-class values that can be stored and passed around.  In case
+only the return value of the method call is needed and not the future itself,
+a shorthand can be used that combines the above three statements:
+
+.Example
+[source]
+----
+Int result = await o!add(2, 3); <1>
+----
+<1> This statement invokes `add`, suspends the current process until the result is available, then stores it in `result`.
+
+[[exception-type]]
+=== The Exception Type
+
+In higher-level programming languages, exceptions are generally used to signal
+an _erroneous_ or _abnormal_ runtime behaviour of the program, that should be
+treated (handled) separately compared to normal values.
+
+The type `ABS.StdLib.Exception` is a special built-in data type.  Constructors
+are added to this datatype via an exception declaration.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _ExceptionDecl_ ::= | `exception` _DataConstr_ `;`
+|====
+
+NOTE: The exception data type is the only data type that can be extended with
+new (user-provided) data constructors.
+
+.Example
+[source]
+----
+exception MyException;
+----
+
+An exception can also take any number of arguments as:
+
+.Example
+[source]
+----
+exception AnotherException(Int, String, Bool);
+----
+
+In ABS, exceptions are first-class values; the user can construct
+exception-values, assign them to variables, pass them in expressions, etc.  An
+exception can be thrown via the `throw` statement (see <<throw-statement>>)
+and be caught in a `catch` block (see <<try-catch-finally-stmt>>).
+Additionally, the object itself can recover its invariant after an uncaught
+exception in a process via its recovery block (see <<sec:classes>>).
+
+
+==== Predefined exceptions in the Standard Library
+
+DivisionByZeroException::
+    Raised in arithmetic expressions when the divisor (denominator) is equal to 0, as in +3/0+
+AssertionFailException::
+    The assert keyword was called with +False+ as argument
+PatternMatchFailException::
+    The pattern matching was not complete. In other words all c catch-all clause
+NullPointerException::
+    A method was called on `null`
+StackOverflowException::
+    The calling stack has reached its limit (system error)
+HeapOverflowException::
+    The memory heap is full (system error)
+KeyboardInterruptException::
+    The user pressed a key sequence to interrupt the running ABS program
+ObjectDeadException::
+    A method was called on a dead (crashed) object
+
+
+[[type-list]]
+=== Lists
+
+A list is a sequence of values of the same type.  Lists are expressed as
+recursive datastructures.  The time to access a value is proportional to the
+length of the list.  The first value of a list can be accessed in constant
+time.
+
+==== Datatypes and Constructors
+
+A list is defined either as the empty list (`Nil`) or as a value `a` followed
+by another list `l` (`Cons(a, l)`).
+
+[source]
+----
+data List<A> = Nil | Cons(A head, List<A> tail);
+----
+
+Literal lists of arbitrary length can be written using a special function
+`list`.  In the following example, `l1` and `l2` contain the same elements.
+
+[source]
+----
+List<Int> l1 = list[1, 2, 3];
+List<Int> l2 = Cons(1, Cons(2, Cons(3, Nil)));
+----
+
+==== Functions
+
+.head
+
+Returns the head of a list.
+
+[source]
+----
+def A head(List<A> l);
+----
+
+.tail
+
+Returns the tail (rest) of a list.
+
+[source]
+----
+def List<A> tail(List<A> l);
+----
+
+.length
+
+Returns the length of a list.  The length of `Nil` is 0.
+
+[source]
+----
+def Int length(List<A> l);
+----
+
+
+.isEmpty
+
+Checks if a list is empty.  Returns `True` for `Nil`, `False` otherwise.
+
+[source]
+----
+def Bool isEmpty(List<A> l);
+----
+
+.nth
+
+Returns the `n`-th element of a list.  Returns the head of `l` for `n`=0,
+returns the last element of `l` for `n`=`lenght(l)-1`.
+
+It is an error if `n` is equal to or larger than `length(l)`.
+
+[source]
+----
+def A nth(List<A> l, Int n);
+----
+
+
+.without
+
+Returns a fresh list where all occurrences of `a` have been removed.
+
+[source]
+----
+def List<A> without<A>(List<A> list, A a);
+----
+
+.concatenate
+
+Returns a list containing all elements of list `list1` followed by all
+elements of list `list2`.
+
+[source]
+----
+def List<A> concatenate<A>(List<A> list1, List<A> list2);
+----
+
+
+.appendright
+
+Returns a list containing all elements of list `l` followed by the element `p`
+in the last position.
+
+[source]
+----
+def List<A> appendright<A>(List<A> l, A p);
+----
+
+.reverse
+
+Returns a list containing all elements of `l` in reverse order.
+
+[source]
+----
+def List<A> reverse<A>(List<A> l);
+----
+
+.copy
+
+Returns a list of length `n` containing `p` n times.
+
+[source]
+----
+def List<A> copy<A>(A p, Int n);
+----
+
+[[type-set]]
+=== Sets
+
+==== Datatypes and Constructors
+
+The datatype for sets with elements of type `A` is `Set<A>`.  Sets are
+constructed with a special function `set`.  The expresssion `set[]` produces
+the empty set.
+
+The following example produces a set with the three elements `1`, `2`, `3`.
+
+[source]
+----
+Set<Int> s = set[1, 2, 3, 3];
+----
+
+==== Functions
+
+.contains
+
+Returns `True` if set `ss` contains element `e`, `False` otherwise.
+
+[source]
+----
+def Bool contains<A>(Set<A> ss, A e);
+----
+
+.emptySet
+
+Returns `True` if set `xs` is empty, `False`  otherwise.
+
+[source]
+----
+def Bool contains<A>(Set<A> ss, A e);
+----
+
+.size
+
+Returns the number of elemewnts in set `xs`.
+
+[source]
+----
+def Int size<A>(Set<A> xs);
+----
+
+.union
+
+Returns a set containing all elements of sets `set1` and `set2`.
+
+[source]
+----
+def Set<A> union<A>(Set<A> set1, Set<A> set2);
+----
+
+.intersection
+
+Returns a set containing all elements that are present in both sets `set1` and
+`set2`.
+
+[source]
+----
+def Set<A> intersection<A>(Set<A> set1, Set<A> set2);
+----
+
+.difference
+
+Returns a set containing all elements of set `set1` not present in set `set2`.
+
+[]
+----
+def Set<A> intersection<A>(Set<A> set1, Set<A> set2);
+----
+
+.insertElement
+
+Returns a set with all elements of set `xs` plus element `e`.  Returns a set
+with the same elements as `xs` if `xs` already contains `e`.
+
+[source]
+----
+def Set<A> insertElement<A>(Set<A> xs, A e);
+----
+
+.remove
+
+Returns a set with all elements of set `xs` except element `e`.  Returns a set
+with the same elements as `xs` if `xs` did not contain `e`.
+
+[source]
+----
+def Set<A> remove<A>(Set<A> xs, A e);
+----
+
+.take
+
+Returns one element from a set.
+
+[source]
+----
+def A take<A>(Set<A> ss);
+----
+
+NOTE: To iterate over a set, use `take` to extract one value and `remove` to remove
+it from the set.  Repeat until the set is empty.
+
+// .hasNext
+
+// .next
+
+
+[[type-map]]
+=== Maps
+
+==== Datatypes and Constructors
+
+
+The datatype for a map from type `A` to type `B` is is `Map<A, B>`.  Maps are
+constructed using pairs of type `Pair<A, B>` and the special function `map`.
+The expresssion `map[]` produces an empty map.
+
+The following example produces a set with two entries `1 -> "ABS"` and `3 ->
+"SACO"`.
+
+[source]
+----
+Map<Int, String> m = map[Pair(1, "ABS"), Pair(3, "SACO")];
+----
+
+NOTE: In case the arguments contain duplicate keys, the resulting map will contain all the given entries, with the first entry shadowing the following ones.
+
+==== Functions
+
+.removeKey
+
+Returns a map with the first occurrence of `key` removed.
+
+[source]
+----
+def Map<A, B> removeKey<A, B>(Map<A, B> map, A key);
+----
+
+.values
+
+Returns a list of all values within the map.
+
+[source]
+----
+def List<B> values<A, B>(Map<A, B> map);
+----
+
+.keys
+
+Returns a set of all keys of the map.
+
+[source]
+----
+def Set<A> keys<A, B>(Map<A, B> map);
+----
+
+.lookup
+
+If value `v` is associated with a given key `k`, return `Just(v)`.  Otherwise,
+return `Nothing`.
+
+[source]
+----
+def Maybe<B> lookup<A, B>(Map<A, B> ms, A k);
+----
+
+.lookupDefault
+
+Returns the value associated with key `k`.  If the map does not contain an
+entry with key `k`, return the value `d`.
+
+[source]
+----
+def B lookupDefault<A, B>(Map<A, B> ms, A k, B d);
+----
+
+NOTE: If you need to know whether the map contains an entry for key `k`, use the
+function `lookup` instead.
+
+
+.lookupUnsafe
+
+Returns the value associated with key `k`.  It is an error if the map does not
+contain an entry with key `k`.
+
+[source]
+----
+def B lookupUnsafe<A, B>(Map<A, B> ms, A k);
+----
+
+
+.insert
+
+Returns a map with all entries of `map` plus an entry `p`, which is given as a
+pair (`Pair(key, value)`) and maps `key` to `value`.  If `map` already
+contains an entry with the same key `key`, it is not removed from the map but
+`lookup` will return the new value `value`.  (The function `removeKey` removes
+the first entry for a given key and thus “undoes” the effect of calling
+`insert`.)
+
+[source]
+----
+def Map<A, B> insert<A, B>(Map<A, B> map, Pair<A, B> p);
+----
+
+
+.put
+
+Returns a map with all entries of `ms` plus an entry mapping `k` to `v`, minus
+the first entry already mapping `k` to a value.
+
+[source]
+----
+def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v);
+----
+
+[[type-pair]]
+=== Pairs
+
+==== Datatypes and Constructors
+
+The `Pair<A, B>` datatype holds a pair of values of types `A` and `B`,
+respectively.  The constructor is called `Pair` as well.
+
+[source]
+----
+Pair<Int, String> pair = Pair(15, "Hello World");
+----
+
+
+==== Functions
+
+.fst
+
+The function `fst` returns the first value in a pair.
+
+.snd
+
+The function `snd` returns the second value in a pair.
+
+[[type-triple]]
+=== Triples
+
+==== Datatypes and Constructors
+
+The `Triple<A, B, C>` datatype holds a triple of values of types `A`, `B` and
+`C`, respectively.  The constructor is called `Triple` as well.
+
+[source]
+----
+Triple<Int, String, Bool> triple = Pair(15, "Hello World", False);
+----
+
+==== Functions
+
+.fstT
+
+The function `fstT` returns the first value in a triple.
+
+.sndT
+
+The function `sndT` returns the second value in a triple.
+
+.trdT
+
+The function `trdT` returns the third value in a triple.
+
+[[type-optionals]]
+=== Optionals
+
+==== Datatypes and Constructors
+
+The datatype `Maybe<A>` wraps a concrete value of type A.  The value `Nothing`
+denotes the absence of such a value.
+
+[source]
+----
+Maybe<Int> answer = Just(42);
+Maybe<String> question = Nothing;
+----
+
+==== Functions
+
+.isJust
+
+The function `isJust` returns `False` if the `Maybe` value is `Nothing`,
+`True` otherwise.
+
+[source]
+----
+def Bool isJust<A>(Maybe<A> a);
+----
+
+.fromJust
+
+The function `fromJust` returns the wrapped value of a `Maybe`.  It is an error to call `fromJust` on `Nothing`.
+
+[source]
+----
+def A fromJust<A>(Maybe<A> m);
+----

@@ -73,10 +73,11 @@ executable via the `-cp' argument."
 (put 'abs-indent 'safe-local-variable 'integerp)
 
 (defcustom abs-use-timed-interpreter nil
-  "Control whether to compile Abs code using the timed interpreter by default.
-This influences the default compilation command executed by
-\\[abs-next-action].  Note that you can set this variable as a
-file-local variable as well."
+  "Control whether Abs code uses the timed Maude interpreter by default.
+This option influences the Maude backend only.  Note that if
+`abs-clock-limit' is set as a buffer-local variable, for example
+via \\[add-file-local-variable], the timed interpreter will be
+used regardless of the value of `abs-use-timed-interpreter'."
   :type 'boolean
   :group 'abs)
 (put 'abs-use-timed-interpreter 'safe-local-variable 'booleanp)
@@ -94,6 +95,13 @@ Note that you can set this variable as a file-local variable as well."
   :group 'abs)
 (put 'abs-clock-limit 'safe-local-variable 'integerp)
 
+(defcustom abs-local-port nil
+  "Port where to start the REST API / visualization server (Erlang backend).
+Server will not be started if nil."
+  :type 'integer
+  :group 'abs)
+(put 'abs-local-port 'safe-local-variable 'integerp)
+
 (defcustom abs-default-resourcecost 0
   "Default resource cost of executing one ABS statement in the timed interpreter."
   :type 'integer
@@ -103,14 +111,6 @@ Note that you can set this variable as a file-local variable as well."
 (defvar abs-product-name nil
   "Product to be generated when compiling.")
 (put 'abs-product-name 'safe-local-variable 'stringp)
-
-(defcustom abs-debug-output nil
-  "Control whether to tell the backend to be verbose.
-This setting might not be supported on all backends, or produce
-different results."
-  :type 'boolean
-  :group 'abs)
-(put 'abs-debug-output 'safe-local-variable 'booleanp)
 
 ;;; Making faces
 (defface abs-keyword-face '((default (:inherit font-lock-keyword-face)))
@@ -294,11 +294,15 @@ value.")
 ;;; Put the regular expression for finding error messages here.
 ;;;
 (defconst abs-error-regexp
-  "^[^\0-@]+ \"\\(^\"\n]+\\)\", [^\0-@]+ \\([0-9]+\\)[-,:]"
+  "^[^\0-@]+ \"\\(^\"\n]+\\)\", [^\0-@]+ \\([0-9]+\\)[-,:]\\([0-9]+\\)[-,:]\\([Ww]arning\\)?"
   "Regular expression matching the error messages produced by the abs compiler.")
 
-(unless (assoc abs-error-regexp compilation-error-regexp-alist)
-  (add-to-list 'compilation-error-regexp-alist (list abs-error-regexp 1 2)))
+(unless (member 'abs compilation-error-regexp-alist)
+  (add-to-list 'compilation-error-regexp-alist 'abs t))
+
+(unless (assoc 'abs compilation-error-regexp-alist-alist)
+  (add-to-list 'compilation-error-regexp-alist-alist
+               (list 'abs abs-error-regexp 1 2 3 '(4))))
 
 ;;; flymake support
 (defun abs-flymake-init ()
@@ -360,7 +364,9 @@ value.")
                      (concat " -o \"" (abs--keyabs-filename) "\""))
                    (when abs-product-name
                      (concat " -product=" abs-product-name))
-                   (when (and (eql backend 'maude) abs-use-timed-interpreter)
+                   (when (and (eql backend 'maude)
+                              (or abs-use-timed-interpreter
+                                  (local-variable-p 'abs-clock-limit)))
                      (concat " -timed -limit="
                              (number-to-string abs-clock-limit)))
                    (when (and (eql backend 'maude)
@@ -417,8 +423,8 @@ value.")
                    (erlang-dir (concat (file-name-directory (buffer-file-name))
                                        "gen/erl/absmodel"))
                    (module (abs--guess-module))
-                   (debug-output abs-debug-output)
-                   (clock-limit abs-clock-limit))
+                   (clock-limit abs-clock-limit)
+                   (port abs-local-port))
                (with-current-buffer erlang-buffer
                  (comint-send-string erlang-buffer
                                      (concat "cd (\"" erlang-dir "\").\n"))
@@ -432,9 +438,13 @@ value.")
                  (comint-send-string erlang-buffer "make:all([load]).\n")
                  (comint-send-string erlang-buffer
                                      (concat "runtime:start(\""
-                                             (when debug-output " -d ")
                                              (when clock-limit (format " -l %d " clock-limit))
-                                             module
+                                             (when port (format " -p %d " port))
+                                             ;; FIXME: reinstate `module' arg
+                                             ;; once abs--guess-module doesn't
+                                             ;; pick a module w/o main block
+
+                                             ;; module
                                              "\").\n")))
                (pop-to-buffer erlang-buffer)))
     (`java (let ((java-buffer (save-excursion (shell "*abs java*")))
@@ -623,12 +633,7 @@ The following keys are set:
      ["Timed interpreter"
       (setq abs-use-timed-interpreter (not abs-use-timed-interpreter))
       :active t :style toggle
-      :selected abs-use-timed-interpreter])
-    ("Erlang Backend Options"
-     ["Debugging output"
-      (setq abs-debug-output (not abs-debug-output))
-      :active t :style toggle
-      :selected abs-debug-output])))
+      :selected abs-use-timed-interpreter])))
 
 (unless (assoc "\\.abs\\'" auto-mode-alist)
   (add-to-list 'auto-mode-alist '("\\.abs\\'" . abs-mode)))

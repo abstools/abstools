@@ -25,7 +25,7 @@ public class PrettyPrinterBackEnd extends Main {
             new PrettyPrinterBackEnd().compile(args);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
-            System.exit(0);
+            System.exit(1);
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
 

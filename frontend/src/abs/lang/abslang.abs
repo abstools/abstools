@@ -13,7 +13,7 @@ export max, min, abs, pow, sqrt_newton, exp_newton, random, truncate;
 export Maybe, Nothing, Just, isJust, fromJust;
 export Either, Left, Right, left, right, isLeft, isRight;
 export Pair, fst, snd;
-export Triple, fstT, sndT, trd;
+export Triple, fstT, sndT, trdT, trd;
 
 // Sets
 export Set, EmptySet, Insert, set; //TODO: don't export EmptySet, Insert
@@ -46,6 +46,7 @@ export Inv, Pre, Post;
 // Various annotations
 export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer;
 export COG, Plain, Final, Atomic;
+export RESTName, RESTCallable;
 
 // Functional breakpoints
 // TODO: find out where they are defined / used
@@ -129,7 +130,11 @@ def Bool isRight<A,B>(Either<A, B> val) = !isLeft(val);
 
 data Pair<A, B> = Pair(A fst, B snd); 
 
-data Triple<A, B, C> = Triple(A fstT, B sndT, C trd); 
+data Triple<A, B, C> = Triple(A fstT, B sndT, C trdT);
+
+// legacy, deprecated
+def C trd<A, B, C>(Triple<A, B, C> t) = case t {
+    Triple(_, _, val) => val; };
 
 // Sets
 
@@ -539,8 +544,14 @@ data FinalAnnotation = Final;
 /**
  * Declare methods to be atomic, i.e., such methods must not
  * contain scheduling code and also no .get
- */ 
+ */
 data AtomicityAnnotation = Atomic;
+
+/**
+ * Declare methods to be callable from the REST API.
+ */
+data RESTCallableAnnotation = RESTCallable;
+
 
 // functional break point
 def A watch<A>(A val) = builtin;
@@ -550,6 +561,9 @@ def A watchEx<A, B>(A val, B info) = builtin;
 def Unit println(String s) = builtin;
 def Unit print(String s) = builtin;
 def String readln() = builtin;
+
+// Annotation for marking objects, interface methods as accessible via REST
+type RESTName = String;
 
 module ABS.StdLib.Exceptions;
 export *;
@@ -564,6 +578,7 @@ exception NullPointerException;
 exception StackOverflowEcxeption;
 exception HeapOverflowException;
 exception KeyboardInterruptException;
+exception ObjectDeadException;
 
 
 /**
@@ -611,7 +626,7 @@ module ABS.DC;
 // Interfaces
 export DeploymentComponent, CloudProvider;
 // Annotations
-export DC, Cost, Size, MaxSize, CogLocation;
+export DC, Cost, DataSize, MaxSize, CogLocation; //TODO: rename MaxSize to MaxMemory
 // Datatypes, Constructors
 export Resourcetype;
 export Speed, Cores, Bandwidth, Memory, InfRat, Fin;
@@ -623,7 +638,7 @@ import * from ABS.StdLib;
 data Resourcetype
 = Speed     // Execution speed in "cpu units" - used by [Cost: x] annotation
 | Cores     // Number of cores (static declaration for deployment planning)
-| Bandwidth // Transmit speed in "data units" - used by [Size: x] annotation
+| Bandwidth // Transmit speed in "data units" - used by [DataSize: x] annotation
 | Memory    // Memory size (static declaration for deployment planning)
 | Startupduration            // Time to start, used by CloudProvider
 | Shutdownduration           // Time to shut down, used by CloudProvider
@@ -662,7 +677,8 @@ interface DeploymentComponent {
     // time interval onwards.
     Unit incrementResources(Rat amount, Resourcetype rtype);
 
-    [Atomic] Unit setProvider(CloudProvider provider);
+    [Atomic] String getName();
+
     [Atomic] CloudProvider getProvider();
     [Atomic] Time getCreationTime();
     [Atomic] Rat getStartupDuration();
@@ -674,10 +690,13 @@ interface DeploymentComponent {
     // releaseInstance.  If no cloud provider is set, return True.
     Bool acquire();
     Bool release();
-    // Return True if we match needed resources according to description.  For
-    // different resource types this might mean different things (e.g.,
-    // available not total memory must match vs. total CPU speed must match).
-    [Atomic] Bool matchesDescription(Map<Resourcetype, Rat> description);
+    // Shut down deployment component.  Semantics of job termination / object
+    // invalidation upon shutdown are currently under discussion.
+    Bool shutdown();
+}
+
+interface DeploymentComponentForCloudProvider extends DeploymentComponent {
+    [Atomic] Unit setProvider(CloudProviderForDeploymentComponent provider);
 }
 
 interface CloudProvider {
@@ -690,7 +709,7 @@ interface CloudProvider {
     // launchInstance does the equivalent of acquireInstance.
     Bool acquireInstance(DeploymentComponent instance);
     Bool releaseInstance(DeploymentComponent instance);
-    Bool killInstance(DeploymentComponent instance);
+    Bool shutdownInstance(DeploymentComponent instance);
 
     [Atomic] Rat getAccumulatedCost();
     [Atomic] Unit shutdown();
@@ -701,12 +720,19 @@ interface CloudProvider {
     // name could not be found.  The resulting deployment components are then
     // handled as normal (acquire/release/kill).
     [Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions);
+		[Atomic] Unit addInstanceDescription(Pair<String, Map<Resourcetype, Rat>> instanceDescription);
+		[Atomic] Unit removeInstanceDescription(String instanceDescriptionName);
     [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions();
     DeploymentComponent prelaunchInstanceNamed(String instancename);
     DeploymentComponent launchInstanceNamed(String instancename);
 }
 
-class CloudProvider(String name) implements CloudProvider {
+interface CloudProviderForDeploymentComponent extends CloudProvider {
+    Unit internalShutdownInstance(DeploymentComponentForCloudProvider instance);
+}
+
+
+class CloudProvider(String name) implements CloudProviderForDeploymentComponent {
     // Preliminary version - mind the FIXMEs!
 
     // Instance type descriptions for launchInstanceNamed()
@@ -723,9 +749,9 @@ class CloudProvider(String name) implements CloudProvider {
 
     Unit startAccounting() {
         while(keeprunning && !emptySet(launchedInstances)) {
-            await duration(1, 1);
             Rat cost = this.sumOfCosts(launchedInstances);
             accumulatedCost = accumulatedCost + cost;
+            await duration(1, 1);
         }
     }
     [Atomic] Unit shutdown() { keeprunning = False; }
@@ -749,27 +775,39 @@ class CloudProvider(String name) implements CloudProvider {
         return result;
     }
 
-    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
-        // Until we have a way of actually removing DCs, might as well re-use
-        // them
-        Bool needToStartAccounting = emptySet(launchedInstances);
-        // TODO: Is this what we want?  We might resurrect an instance
-        // that is larger than what we were asked for
-        DeploymentComponent result = this.findMatchingInstance(killedInstances, d);
-        if (result != null) {
-            killedInstances = remove(killedInstances, result);
-            launchedInstances = insertElement(launchedInstances, result);
-        } else {
-            result = new DeploymentComponent(name + "-"
-                + toString(nextInstanceId), d);
-            nextInstanceId = nextInstanceId + 1;
-            Rat startup_duration = await result!getStartupDuration();
-            await duration(startup_duration, startup_duration);
-            launchedInstances = insertElement(launchedInstances, result);
-            result!setProvider(this);
-        }
-        if (needToStartAccounting) this!startAccounting();
+    DeploymentComponent createInstance(String instancename, Map<Resourcetype, Rat> d) {
+        Bool mightNeedToStartAccounting = emptySet(launchedInstances);
+        DeploymentComponentForCloudProvider result
+        = new DeploymentComponent(instancename + "-" + toString(nextInstanceId), d);
+        result!setProvider(this);
+        nextInstanceId = nextInstanceId + 1;
+        // Work around a bug in the type system: upcasting in `insertElement'
+        // does not work although it should
+        DeploymentComponent stupidTypeSystem = result;
+        launchedInstances = insertElement(launchedInstances, stupidTypeSystem);
+        // Start accounting after adding new machine, before waiting for it to
+        // start up
+        if (mightNeedToStartAccounting) this!startAccounting();
         return result;
+    }
+
+    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
+        DeploymentComponent result = this.createInstance(name, d);
+        Rat startup_duration = await result!getStartupDuration();
+        await duration(startup_duration, startup_duration);
+        return result;
+    }
+
+    DeploymentComponent prelaunchInstanceNamed(String instancename) {
+        Maybe<Map<Resourcetype, Rat>> mconfig = lookup(instanceDescriptions, instancename);
+        DeploymentComponent dc = null;
+        if (isJust(mconfig)) {
+            Map<Resourcetype, Rat> config = fromJust(mconfig);
+            dc = this.createInstance(name + "-" + instancename, config);
+        }
+        Rat startup_duration = await dc!getStartupDuration();
+        await duration(startup_duration, startup_duration);
+        return dc;
     }
 
     DeploymentComponent launchInstance(Map<Resourcetype, Rat> d) {
@@ -780,9 +818,24 @@ class CloudProvider(String name) implements CloudProvider {
         return result;
     }
 
+    DeploymentComponent launchInstanceNamed(String instancename) {
+        // if we don't call prelaunchInstance here, remember to start
+        // accounting as well
+        DeploymentComponent result = this.prelaunchInstanceNamed(instancename);
+        if (result != null) {
+            acquiredInstances = insertElement(acquiredInstances, result);
+        }
+        return result;
+    }
+
     Bool acquireInstance(DeploymentComponent instance) {
         Bool result = True;
-        if (contains(acquiredInstances, instance)) {
+        CloudProvider cp = await instance!getProvider();
+        if (cp != this) {
+            // it's not one of "our" deployment components
+            result = False;
+        } else if (contains(acquiredInstances, instance)
+            || contains(killedInstances, instance)) {
             result = False;
         } else {
             acquiredInstances = insertElement(acquiredInstances, instance);
@@ -800,32 +853,32 @@ class CloudProvider(String name) implements CloudProvider {
         return True;
     }
 
-    Bool killInstance(DeploymentComponent instance) {
-        // Also kill an instance that is acquired.
-        // FIXME: is this the right thing?
-        acquiredInstances = remove(acquiredInstances, instance);
-        launchedInstances = remove(launchedInstances, instance);
-        killedInstances = insertElement(killedInstances, instance);
+    Bool shutdownInstance(DeploymentComponent instance) {
+        instance!shutdown();
         return True;
+    }
+
+    Unit internalShutdownInstance(DeploymentComponentForCloudProvider instance) {
+        DeploymentComponent stupidTypeSystem = instance;
+        // Also kill an instance that is acquired.  FIXME: is this the right
+        // thing, or should we refuse to shutdown?
+        acquiredInstances = remove(acquiredInstances, stupidTypeSystem);
+        // Insert `instance' into killedInstances so it doesn't get
+        // re-acquired.
+        killedInstances = insertElement(killedInstances, stupidTypeSystem);
+        Rat shutdown_duration = await instance!getShutdownDuration();
+        await duration(shutdown_duration, shutdown_duration);
+
+        // Now remove from launchedInstances (after waiting for shutdown) so
+        // shutdown duration gets billed
+        launchedInstances = remove(launchedInstances, stupidTypeSystem);
+
+        // Shut down accounting thread if necessary
+        if (emptySet(launchedInstances)) keeprunning = False;
     }
 
     [Atomic] Rat getAccumulatedCost() {
         return accumulatedCost;
-    }
-
-    DeploymentComponent findMatchingInstance(Set<DeploymentComponent> instances,
-        Map<Resourcetype, Rat> description)
-    {
-        DeploymentComponent result = null;
-        while (!emptySet(instances) && result == null) {
-            DeploymentComponent instance = take(instances);
-            instances = remove(instances, instance);
-            Bool matches = await instance!matchesDescription(description);
-            if (matches) {
-                result = instance;
-            }
-        }
-        return result;
     }
 
     // Sets up information for [pre]launchInstanceNamed()
@@ -833,39 +886,29 @@ class CloudProvider(String name) implements CloudProvider {
         this.instanceDescriptions = instanceDescriptions;
     }
 
+    // Adds an instance for [pre]launchInstanceNamed()
+    [Atomic] Unit addInstanceDescription(Pair<String, Map<Resourcetype, Rat>> instanceDescription) {
+        this.instanceDescriptions = insert(this.instanceDescriptions, instanceDescription);
+    }
+
+    // Removes an instance for [pre]launchInstanceNamed() based on its name
+    [Atomic] Unit removeInstanceDescription(String instanceDescriptionName) {
+        this.instanceDescriptions = removeKey(this.instanceDescriptions, instanceDescriptionName);
+    }
+
     [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions() {
         return this.instanceDescriptions;
     }
-
-    DeploymentComponent prelaunchInstanceNamed(String instancename) {
-        Maybe<Map<Resourcetype, Rat>> mconfig = lookup(instanceDescriptions, instancename);
-        DeploymentComponent dc = null;
-        if (isJust(mconfig)) {
-            Map<Resourcetype, Rat> config = fromJust(mconfig);
-            dc = this.prelaunchInstance(config);
-        }
-        return dc;
-    }
-
-    DeploymentComponent launchInstanceNamed(String instancename) {
-        // if we don't call prelaunchInstance here, remember to start
-        // accounting as well
-        DeploymentComponent result = this.prelaunchInstanceNamed(instancename);
-        if (result != null) {
-            acquiredInstances = insertElement(acquiredInstances, result);
-        }
-        return result;
-    }
-    
 }
 
 
 
 class DeploymentComponent (String description, Map<Resourcetype, Rat> initconfig)
-implements DeploymentComponent {
+implements DeploymentComponentForCloudProvider {
     // This class has fields that reflect execution state and resource
-    // consumption; they are changed by the underlying runtime system.
-    Time creationTime = now();
+    // consumption; they are read / changed by the underlying runtime
+    // system(s).  Be careful when renaming fields!
+
     // Histories are updated by the backend.  totalhistories stay empty in
     // case the DC has an infinite amount of resources for that type.  If
     // these field names are changed, adjust dc.erl
@@ -878,12 +921,23 @@ implements DeploymentComponent {
     List<Rat> memoryhistory = Nil;
     List<Rat> memoryhistorytotal = Nil;
     // Counters of consumed resources in current time unit.  Modified by the
-    // backend where appropriate (Speed, bandwidth self-refresh; memory doesn't.)
+    // backend where appropriate (Speed, bandwidth self-refresh; memory
+    // doesn't.)  Do not rename.
     Rat cpuconsumed = 0;
     Rat bwconsumed = 0;
     Rat memoryconsumed = 0;
-    // Initialized flag read by the backend to avoid premature execution
+
+    // Creation time and shutdown time are used by (at least) the
+    // visualization backend.  Do not rename.
+    Time creationTime = now();
+    Maybe<Time> shutdownTime = Nothing;
+
+    // Initialized flag read by the backend to avoid premature execution.  Do
+    // not rename.
     Bool initialized = False;
+    // shutdown flag read by the backend to refuse object creation.  Do not
+    // rename.
+    Bool is_shutdown = False;
     // Total amount of resources in current and next time interval.
     InfRat cpu = case lookup(initconfig, Speed) {
       Nothing => InfRat; Just(v) => Fin(v); };
@@ -902,7 +956,7 @@ implements DeploymentComponent {
     Rat shutdownDuration = lookupDefault(initconfig, Shutdownduration, 0);
     Rat numberOfCores = lookupDefault(initconfig, Cores, 1);
 
-    CloudProvider cloudprovider = null;
+    CloudProviderForDeploymentComponent cloudprovider = null;
     {
         this.initialized = True;
     }
@@ -978,9 +1032,11 @@ implements DeploymentComponent {
             }
         }
     }
-    [Atomic] Unit setProvider(CloudProvider provider) {
+    [Atomic] Unit setProvider(CloudProviderForDeploymentComponent provider) {
         this.cloudprovider = provider;
     }
+    [Atomic] DeploymentComponent convertToDC() { return this; }
+
     [Atomic] CloudProvider getProvider() { return cloudprovider; }
     Bool acquire() {
         Bool result = True;
@@ -997,41 +1053,24 @@ implements DeploymentComponent {
         return result;
     }
 
+    Bool shutdown() {
+        if (!is_shutdown) {
+            is_shutdown = True;
+            shutdownTime = Just(now());
+            if (cloudprovider != null) {
+                cloudprovider!internalShutdownInstance(this);
+            }
+        }
+        return True;
+    }
+
+    [Atomic] String getName() { return description; }
     [Atomic] Time getCreationTime() { return creationTime; }
     [Atomic] Rat getStartupDuration() { return startupDuration; }
     [Atomic] Rat getShutdownDuration() { return shutdownDuration; }
     [Atomic] Int getPaymentInterval() { return paymentInterval; }
     [Atomic] Rat getCostPerInterval() { return costPerInterval; }
     [Atomic] Rat getNumberOfCores() { return numberOfCores; }
-
-    [Atomic]
-    Bool matchesDescription(Map<Resourcetype, Rat> description) {
-        Bool result = True;
-        Set<Resourcetype> keys = keys(description);
-        while (result == True && !(emptySet(keys))) {
-            Resourcetype key = take(keys);
-            keys = remove(keys, key);
-            Rat value = lookupUnsafe(description, key);
-            case (key) {
-                Speed => {
-                    if (cpu != InfRat && finvalue(cpu) < value) result = False;
-                }
-                Bandwidth => {
-                    if (bw != InfRat && finvalue(bw) < value) result = False;
-                }
-                Memory => {
-                    if (memory != InfRat && finvalue(memory) - memoryconsumed < value)
-                    // Memory has different semantics - we ask for _free_
-                    // memory, not total memory
-                    result = False;
-                }
-                Cores => {
-                    if (numberOfCores < value) result = False;
-                }
-            }
-        }
-        return result;
-    }
 }
 
 // abbreviation for [DC: foo] annotations
@@ -1043,13 +1082,37 @@ def DeploymentComponent thisDC() = builtin;
 type Cost = Duration;
 
 // Annotation for async method calls: size of sent data
-type Size = Rat;
+type DataSize = Rat;
 
 // Annotation for classes: memory size of resulting cog
-type MaxSize = Rat;
+type MaxSize = Rat;             //TODO: rename to MaxMemory
 
 // Distributed execution (eg the Scala backend): where the cog will be created
 type CogLocation = String;
+
+/**
+ * The ABS.SmartDeploy Module contains the data definitions for the annotations
+   and interfaces used by the tool that generates automatically the Main block 
+ */
+module ABS.SmartDeploy;
+export *;
+import * from ABS.StdLib;
+
+// definitions for the cost annotations associated to classes
+data DeployParamSpecification = Req | List(Int) | Default(String) | User | OptList(String) ;
+data DeployScenarioElement = MaxUse(Int) |
+	Cost(String, Int) |
+	Param(String, DeployParamSpecification) |
+	Name(String);
+type Deploy = List<DeployScenarioElement>;
+
+// definition for the annotation used to define a SmartDeploy task. The string
+// is intended to be a json object
+type SmartDeploy = String;
+
+// interface of the smart deployment objects. This interface is empy and it will
+// be later modified by a delta automatically generated
+interface SmartDeployInterface {}
 
 /**
  * Reflective, mirror-based interface for ABS

@@ -1,0 +1,137 @@
+== Introduction
+
+
+=== The ABS Language
+
+The *ABS language* is an actor-based, object-oriented, executable modeling
+language.  Its prime features are:
+
+Algebraic user-defined data types and side effect-free functions :: All data
+(except the state of objects and future variables) is immutable, and functions
+are free of side effects.  This makes understanding and reasoning about models
+easier.
+
+User-defined data types are used for data modeling instead of objects, so ABS
+models are typically smaller than their Java counterparts.
+
+A syntax that is close to Java :: Programmers that are used to Java can easily
+learn the ABS language.
+
+Distributed, actor-based semantics :: Method calls are asynchronous and create
+a new process in the target.  Processes are scheduled cooperatively and run
+within the scope of one object.  Futures are used to synchronize with and get
+the result of another process.
+
+Interfaces for specifying object behavior :: Similar to Java, the behavior of
+a class is defined by implementing zero or more interfaces with their
+corresponding methods.
+
+Safe concurrency :: Processes run cooperatively within one object and do not
+have access to other objects' state, and data structures are immutable.  The
+most common error causes of concurrent systems (aliasing, insufficient
+locking) are avoided by the language semantics.
+
+Distributed computing :: The combination of asynchronous method calls,
+immutability and strong encapsulation makes it very easy to model distributed
+systems.
+
+A formal semantics and compositional proof theory :: ABS is designed to be
+amenable to program analysis and verification.  A variety of tools (deadlock
+checker, resource analysis, formal verification) have been developed.
+
+.Non-goals
+****
+Languages are eco-systems, and a language containing all possible features
+will be easy to use for no one.  The following areas are currently
+under-served by ABS:
+
+Parallel computing :: Algorithms relying on multiple processes operating on
+mutable state, e.g., from the domain of scientific computing, can only be
+expressed in roundabout ways.
+
+Close-to-the-metal programming :: ABS is not designed to be a systems
+programming language.
+****
+
+[[sec:concurrency-model]]
+=== The ABS Actor and Concurrency Model
+
+As mentioned, ABS method calls are asynchronous and create a new process in
+the target, while the caller process continues to run in parallel, as shown in
+Figure <<fig-future-await>>.  At point ①, P1 issues an asynchronous call to
+some object residing on another cog.  In response, a new process P2 is
+created; P1 and P2 can run in parallel.  At point ②, P1 needs the result of
+the method call and suspends itself.  At point ③, P2 finishes and returns a
+value.  P1’s cog then reactivates P1 to continue execution.
+
+[[fig-future-await]]
+image::ABS-future-await.png[width=636,height=233,title="Process call semantics",alt="Process call semantics"]
+
+The paragraph above elides some details.  An asynchronous method call (see
+<<async-call-expression>>) produces a _future variable_, which is used both to
+synchronize with the callee process (see <<await-stmt>>) and to get the result
+(see <<get-expression>>).  Future variables are first-class objects that can
+be passed along, so multiple processes can synchronize on the same future.
+
+
+The processes created by method calls are scheduled cooperatively and run
+within the scope of the target object.  Objects are grouped into COGs
+(Concurrent Object Groups).  Each cog runs one process at a time, while
+processes on different cogs run in parallel, as shown in Figure
+<<fig-cog-scheduling>>.  This means that each cog is a *unit of concurrency*
+and is in charge of scheduling the processes running on its objects.  Each
+process runs until it suspends itself (see <<await-stmt>> and
+<<suspend-stmt>>) or terminates, at which point the cog chooses the next
+process to run.
+
+[[fig-cog-scheduling]]
+image::ABS-scheduling.png[width=636,height=283,title="Processes running inside their cogs",alt="Processes running inside their cogs"]
+
+
+A new cog is created by creating an object with a `new` expression (see Figure
+<<fig-object-new-cog>>).
+
+[[fig-object-new-cog]]
+image::new-cog-object.png[width=565,height=151,title="Creating an object in a new cog",alt="Creating an object in a new cog"]
+
+
+
+An object in an existing cog is created via the `new local` expression (see Figure
+<<fig-object-new-local>>).
+
+[[fig-object-new-local]]
+image::new-local-object.png[width=593,height=154,title="Creating an object in the same cog",alt="Creating an object in the same cog"]
+
+
+[[sec:error-model]]
+=== Error Propagation and Recovery in ABS
+
+ABS models exceptional (unforeseen and erroneous) situations using exceptions.
+This section gives an overview of the language constructs that deal with
+exception propagation and recovery.
+
+Exceptions occur when a process cannot continue normal execution, e.g., when
+trying to divide by zero or when no pattern in a `case` expression matches the
+given value.  Exceptions can also be thrown by the modeler via the `throw`
+statement: <<throw-statement>>.  Exceptions thrown implicitly or explicitly
+are propagated and handled in the same way.
+
+The modeler can define new exceptions; see <<exception-type>>.
+
+Exceptions can be caught and handled locally, i.e., in a lexically enclosing
+`try`-`catch`-`finally` block in the same method (see <<try-catch-finally-stmt>>).
+In that case, the process continues execution and will eventually produce a
+return value to its future.
+
+In case of an _unhandled_ exception, the future of the process does not
+receive a return value; instead, it will propagate the unhandled exception to
+the caller (or any process that tries to get its value).  When evaluating
+`f.get` on a future that carries an exception instead of a normal return
+value, the exception will be _re-thrown_; it can be handled as usual via
+`try`-`catch` or left to propagate up the call chain of futures.
+
+Additionally, terminating a process in the middle of execution might leave its
+object in an inconsistent state.  To recover from this, ABS uses _recovery
+blocks_ (see <<sec:classes>>).  Unhandled exceptions are handed to the
+recovery block, which can take appropriate action to re-establish the class
+invariant and/or send asynchronous messages to other objects.
