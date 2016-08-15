@@ -5,8 +5,9 @@ import abs.frontend.delta.*;
 
 aspect OriginalCallResolver {
 
-    
-    
+    /*
+    * used by the trait applications
+    */  
 
   public void OriginalCall.replaceByRealCall(MethodImpl originalMethodCopy, HashMap<String, MethodImpl> deltaMap){
       EffExp call = new SyncCall(new ThisExp(), originalMethodCopy.getMethodSig().getName(), this.getParams().treeCopyNoTransform());
