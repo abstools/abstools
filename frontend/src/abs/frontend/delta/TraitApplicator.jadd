@@ -77,8 +77,8 @@ aspect TraitApplicator {
                         // remove MethodImpl from list
                         cd.getMethods().removeChild(found);
                     else
-                        throw new DeltaModellingException(getDelta(), 
-                                " wants to remove method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
+                        throw new DeltaModellingException( 
+                                "trait wants to remove method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
             }
 
     /*
@@ -215,7 +215,7 @@ aspect TraitApplicator {
               replaceOriginal(cd, cd.getMethod(found), method);
               cd.getMethods().setChild(method, found);
           } else
-              throw new DeltaModellingWithNodeException(met.getMethodSig(), getDelta(), 
+              throw new DeltaModellingException(met.getMethodSig()+
                       " wants to modify method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
       }
 

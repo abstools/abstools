@@ -279,7 +279,10 @@ aspect ProductFlattener {
     }
     
     
-    private void Model.applyTraits() throws DeltaModellingException{
+    /**************************************************************************
+     * Apply the traits 
+     */
+    public void Model.applyTraits() throws DeltaModellingException{
       
         //Collect all traits
         LinkedList<TraitDecl> list = new LinkedList<>();
@@ -309,7 +312,7 @@ aspect ProductFlattener {
             }
             sort(lists);
         }
-  
+ 
         //apply
         boolean changed = false;
         do{
@@ -318,9 +321,18 @@ aspect ProductFlattener {
                 if(decl instanceof ClassDecl){
                     ClassDecl cd = (ClassDecl)decl;
                 
-                    for (TraitUse use : cd.getTraitUses()) {
+
+                    List<TraitUse> usesAST = cd.getTraitUses(); 
+                    //this is necessary as the builtint list collects the TraitUses in the wrong order
+                    LinkedList<TraitUse> uses = new LinkedList<>();
+                    for (TraitUse traitUse : usesAST) {
+                        uses.add(traitUse);
+                    }
+                    sortUses(uses);
+                    for(int i = 0; i < uses.size(); i++){
+                        TraitUse use = uses.get(i);
                         use.applyTo(cd);
-                        changed = true;
+                        changed = true;                        
                     }
                 }
             }
@@ -329,6 +341,9 @@ aspect ProductFlattener {
   
   
     
+    /**************************************************************************
+     * Helper methods for trait application
+     */
     private void Model.sort(LinkedList<LinkedList<String>> lists) {      
         Collections.sort(lists, new Comparator<LinkedList<String>>() {
         @Override
@@ -341,6 +356,25 @@ aspect ProductFlattener {
          }
          });
     }
+    
+    private void Model.sortUses(LinkedList<TraitUse> list) {  
+      
+      Collections.sort(list, new Comparator<TraitUse>() {
+      @Override
+      public int compare(TraitUse o1, TraitUse o2) {
+          int line1 = o1.getStartLine();
+          int row1 = o1.getStartColumn();
+          int line2 = o2.getStartLine();
+          int row2 = o2.getStartColumn();
+          if((line1 < line2) || (line1 == line2 && row1 < row2))
+              return -1;
+          if((line2 < line1) || (line2 == line1 && row2 < row1))
+              return 1;
+          return 0;
+       }
+       });
+  }
+    
     
     private void Model.collectInTrait(ASTNode<ASTNode> traitExpr, LinkedList<String> list) {
         if(traitExpr instanceof TraitNameExpr){
