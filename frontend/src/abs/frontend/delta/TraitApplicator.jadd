@@ -8,12 +8,12 @@ import abs.frontend.parser.*;
 aspect TraitApplicator {
 
   	
- /*
-     * DeltaTraitModifier references trait operations from a class.
-     */
+    /*
+    * DeltaTraitModifier references trait operations from a class.
+    */
     public void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ 
                     getTraitOper().applyTo(cd); 
-                }
+    }
 
     /*
      * TraitUse is the trait application from within a class. Transform it into
@@ -21,12 +21,12 @@ aspect TraitApplicator {
      */
     public  void TraitUse.applyTo(ClassDecl cd) throws DeltaModellingException {
 
-            //find TraitDecl
-          List<Decl> list = cd.getModuleDecl().getDecls();
-          TraitExpr resolved = getTraitExpr();
-          if(getTraitExpr() instanceof TraitNameExpr){
-              TraitNameExpr n = (TraitNameExpr) getTraitExpr();
-              for (Decl decl : list) {
+         //find TraitDecl
+        List<Decl> list = cd.getModuleDecl().getDecls();
+        TraitExpr resolved = getTraitExpr();
+        if(getTraitExpr() instanceof TraitNameExpr){
+            TraitNameExpr n = (TraitNameExpr) getTraitExpr();
+            for (Decl decl : list) {
                 if(decl instanceof TraitDecl){
                     TraitDecl tDecl = (TraitDecl)decl;
                     if( tDecl.getName().equals(n.getName()) ){
@@ -34,104 +34,103 @@ aspect TraitApplicator {
                         break;
                     }
                 }
-          }
+            }
         } 
         
         //transform into TraitAddOpr
-          resolved = resolved.treeCopyNoTransform();
-          TraitAddOpr tOp = new TraitAddOpr(resolved);
-          resolved.setParent(tOp);
-          tOp.setParent(cd);
+        resolved = resolved.treeCopyNoTransform();
+        TraitAddOpr tOp = new TraitAddOpr(resolved);
+        resolved.setParent(tOp);
+        tOp.setParent(cd);
           
-          //apply
-          tOp.applyTo(cd);
+        //apply
+        tOp.applyTo(cd);
           
-          //remove from class
-          int pos = cd.getTraitUseList().getIndexOfChild(this);
-          if(pos > -1){
-              cd.getTraitUseList().removeChild(pos);
-          }
+        //remove from class
+        int pos = cd.getTraitUseList().getIndexOfChild(this);
+        if(pos > -1){
+            cd.getTraitUseList().removeChild(pos);
+        }
           
-          //cache
-          cd.getModuleDecl().flushCache();
-      }
+        //cache
+        cd.getModuleDecl().flushCache();
+    }
 
     /*
      * TraitRemoveOpr is the trait operation that removes a single method, given
      * its signature. Throws an exception if no such method is found
      */
     public  void TraitRemoveOpr.applyTo(ClassDecl cd) throws DeltaModellingException{ 
+        MethodSig mysig = this.getMethodSig();
 
-                    MethodSig mysig = this.getMethodSig();
-
-                    // in given ClassDecl: find MethodDecl that matches sig
-                    int found = -1;
-                    for (int i = 0; i < cd.getNumMethod(); i++) {
-                        MethodSig sig = cd.getMethod(i).getMethodSig();
-                        if (sig.matches(mysig)) {
-                            found = i;
-                            break;
-                        }
-                    }
-                    if (found >= 0)
-                        // remove MethodImpl from list
-                        cd.getMethods().removeChild(found);
-                    else
-                        throw new DeltaModellingException( 
-                                "trait wants to remove method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
+        // in given ClassDecl: find MethodDecl that matches sig
+        int found = -1;
+        for (int i = 0; i < cd.getNumMethod(); i++) {
+            MethodSig sig = cd.getMethod(i).getMethodSig();
+            if (sig.matches(mysig)) {
+                found = i;
+                break;
             }
+        }
+         
+        if (found >= 0)
+            // remove MethodImpl from list
+            cd.getMethods().removeChild(found);
+        else
+            throw new DeltaModellingException( 
+                        "trait wants to remove method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
+    }
 
     /*
      * TraitAddOpr is the trait operation that adds a set of methods. Throws NO
      * exception if a method with the same name is already present in the class
      */
     public void TraitAddOpr.applyTo(ClassDecl cd) throws DeltaModellingException{ 
-                      TraitExpr tt = getTraitExpr();
-                      ArrayList<TraitOper> operations = new ArrayList<>();
-                      /*
-                      *  The syntax is TraitExpression TraitOperation. 
-                      *  We search for the TraitExpression that is used by this 'adds'
-                      *  This may break the syntax, thus we collect all operation on the right
-                      *  and apply them one by one.
-                      */
-                      TraitExpr target = helperLeftMost(tt, operations);
+        TraitExpr tt = getTraitExpr();
+        ArrayList<TraitOper> operations = new ArrayList<>();
+        /*
+         *  The syntax is TraitExpression TraitOperation. 
+         *  We search for the TraitExpression that is used by this 'adds'
+         *  This may break the syntax, thus we collect all operation on the right
+         *  and apply them one by one.
+         */
+        TraitExpr target = helperLeftMost(tt, operations);
                       
-                      //necessary because the helper collects them in the wrong order
-                      Collections.reverse(operations);
-                      applySimple(cd,target);
-                      for (TraitOper oper : operations) {
-                        oper.applyTo(cd);
-                      }
+        //necessary because the helper collects them in the wrong order
+        Collections.reverse(operations);
+        applySimple(cd,target);
+        for (TraitOper oper : operations) {
+            oper.applyTo(cd);
         }
+    }    
 
     // collects all TraitOper in an AST and returns the left-most TraitExpr
     public TraitExpr TraitAddOpr.helperLeftMost(TraitExpr tt, ArrayList<TraitOper> operations){
-          if(tt instanceof TraitModifyExpr){          
-              TraitModifyExpr app = (TraitModifyExpr) tt;
-              TraitExpr next = app.getTraitExpr();
-              TraitOper opr = app.getTraitOper();
-              operations.add(opr);
-              return helperLeftMost(next, operations);
-          } else return tt;
-      }
+        if(tt instanceof TraitModifyExpr){          
+            TraitModifyExpr app = (TraitModifyExpr) tt;
+            TraitExpr next = app.getTraitExpr();
+            TraitOper opr = app.getTraitOper();
+            operations.add(opr);
+            return helperLeftMost(next, operations);
+        } else return tt;
+    }
 
     // actual application, that takes the TraitExpr tt as the set of methods to add.
     private void TraitAddOpr.applySimple(ClassDecl cd, TraitExpr tt)  throws DeltaModellingException{
-                    //tt is a set of methods
-          if(tt instanceof TraitSetExpr ){ 
-              TraitSetExpr set = (TraitSetExpr) tt;
-              for (MethodImpl met : set.getMethodImplList()) {
-                  MethodImpl method = met.treeCopyNoTransform();
-                  method.setFileName(met.getFileName());
-                  cd.addMethod(method);
+        //tt is a set of methods
+        if(tt instanceof TraitSetExpr ){ 
+            TraitSetExpr set = (TraitSetExpr) tt;
+            for (MethodImpl met : set.getMethodImplList()) {
+                MethodImpl method = met.treeCopyNoTransform();
+                method.setFileName(met.getFileName());
+                cd.addMethod(method);
             }
-          } else if(tt instanceof TraitNameExpr){ //tt references a trait
-              TraitNameExpr name = (TraitNameExpr) tt;
-              TraitUse use = new TraitUse(name.treeCopyNoTransform());
-              use.applyTo(cd);
-              //cd.addTraitUse(new TraitUse(name));
-          }else  throw new DeltaModellingException("trait error: invalid expression after adds");
-      }
+        } else if(tt instanceof TraitNameExpr){ //tt references a trait
+            TraitNameExpr name = (TraitNameExpr) tt;
+            TraitUse use = new TraitUse(name.treeCopyNoTransform());
+            use.applyTo(cd);
+        }  else  throw new DeltaModellingException("trait error: invalid expression after adds");
+    }
 
     /*
      * TraitModifyOpr is the trait operation that modifies a set of methods.
@@ -141,13 +140,13 @@ aspect TraitApplicator {
      * This is also where we resolve original calls.
      */
     public void TraitModifyOpr.applyTo(ClassDecl cd) throws DeltaModellingException{ 
-          TraitExpr tt = getTraitExpr();
-          ArrayList<TraitOper> operations = new ArrayList<>();
-          TraitExpr target = helperLeftMost(tt, operations);
-          applySimple(cd,target);
-          for (TraitOper oper : operations) {
+        TraitExpr tt = getTraitExpr();
+        ArrayList<TraitOper> operations = new ArrayList<>();
+        TraitExpr target = helperLeftMost(tt, operations);
+        applySimple(cd,target);
+        for (TraitOper oper : operations) {
             oper.applyTo(cd);
-          }
+        }
     }
 
     // collects all TraitOper in an AST and returns the left-most TraitExpr
@@ -164,60 +163,58 @@ aspect TraitApplicator {
     // actual set application, that takes the TraitExpr tt as the set of methods
     // to modify.
     private void TraitModifyOpr.applySimple(ClassDecl cd, TraitExpr tt)  throws DeltaModellingException{
-          if(tt instanceof TraitSetExpr ){ //apply each element of the set
-              TraitSetExpr set = (TraitSetExpr) tt;
-              for (MethodImpl met : set.getMethodImplList()) {
-                  apply(cd,met);
-              }
-          } else if(tt instanceof TraitNameExpr){ 
-                    
-              TraitNameExpr n = (TraitNameExpr) tt;
-                            //find corresponding TraitDecl and its leftmost TraitExpr
-              List<Decl> list = cd.getModuleDecl().getDecls();
-              TraitExpr resolved = null;
-                  for (Decl decl : list) {
-                    if(decl instanceof TraitDecl){
-                        TraitDecl tDecl = (TraitDecl)decl;
-                        if( tDecl.getName().equals(n.getName()) ){
-                            resolved = tDecl.getTraitExpr();
-                            break;
-                        }
+        if(tt instanceof TraitSetExpr ){ //apply each element of the set
+            TraitSetExpr set = (TraitSetExpr) tt;
+            for (MethodImpl met : set.getMethodImplList()) {
+                apply(cd,met);
+            }
+        } else if(tt instanceof TraitNameExpr){          
+            TraitNameExpr n = (TraitNameExpr) tt;
+            //find corresponding TraitDecl and its leftmost TraitExpr
+            List<Decl> list = cd.getModuleDecl().getDecls();
+            TraitExpr resolved = null;
+            for (Decl decl : list) {
+                if(decl instanceof TraitDecl){
+                    TraitDecl tDecl = (TraitDecl)decl;
+                    if( tDecl.getName().equals(n.getName()) ){
+                        resolved = tDecl.getTraitExpr();
+                        break;
                     }
-              
+                }
             } 
             
             //make a copy with the resolved expression and apply it
-              if(resolved == null)throw new DeltaModellingException("trait error: trait not found");
-              TraitModifyOpr op = new TraitModifyOpr(resolved.treeCopyNoTransform());
-              op.setParent(cd);
-              op.applyTo(cd);
-          }else  throw new DeltaModellingException("trait error: invalid expression after modifies");
-      }
+            if(resolved == null)throw new DeltaModellingException("trait error: trait not found");
+            TraitModifyOpr op = new TraitModifyOpr(resolved.treeCopyNoTransform());
+            op.setParent(cd);
+            op.applyTo(cd);
+        }else  throw new DeltaModellingException("trait error: invalid expression after modifies");
+    }
 
     // modifies a single method
     private void TraitModifyOpr.apply(ClassDecl cd, MethodImpl met) throws DeltaModellingException{
-          MethodSig mysig = met.getMethodSig();
+        MethodSig mysig = met.getMethodSig();
 
-          // in given ClassDecl: find MethodDecl that matches sig
-          int found = -1;
-          for (int i = 0; i < cd.getNumMethod(); i++) {
-              MethodSig sig = cd.getMethod(i).getMethodSig();
-              if (sig.matches(mysig)) {
-                  found = i;
-                  break;
-              }
-          }
-          if (found >= 0) {
-              // replace MethodImpl
-              MethodImpl method = met.treeCopyNoTransform();
-              method.setFileName(met.getFileName());
-              method.setParent(met.getParent());
-              replaceOriginal(cd, cd.getMethod(found), method);
-              cd.getMethods().setChild(method, found);
-          } else
-              throw new DeltaModellingException(met.getMethodSig()+
-                      " wants to modify method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
-      }
+        // in given ClassDecl: find MethodDecl that matches sig
+        int found = -1;
+        for (int i = 0; i < cd.getNumMethod(); i++) {
+            MethodSig sig = cd.getMethod(i).getMethodSig();
+            if (sig.matches(mysig)) {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0) {
+            // replace MethodImpl
+            MethodImpl method = met.treeCopyNoTransform();
+            method.setFileName(met.getFileName());
+            method.setParent(met.getParent());
+            replaceOriginal(cd, cd.getMethod(found), method);
+            cd.getMethods().setChild(method, found);
+        } else
+            throw new DeltaModellingException(met.getMethodSig()+
+                    " wants to modify method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
+    }
 
     /*
      * These two static fields map are needed to resolve targeted original
@@ -231,77 +228,74 @@ aspect TraitApplicator {
     // replaces all original calls
     private void TraitModifyOpr.replaceOriginal(ClassDecl cd, MethodImpl met, MethodImpl flattened) {
                 
-          //find current delta
-          ASTNode<ASTNode> n = this;
-          while(n != null && !(n instanceof DeltaDecl)){
-              n = n.getParent();
-          }
-          DeltaDecl delta  = (DeltaDecl)n;
+        //find current delta
+        ASTNode<ASTNode> n = this;
+        while(n != null && !(n instanceof DeltaDecl)){
+            n = n.getParent();
+        }
+        DeltaDecl delta  = (DeltaDecl)n;
           
-          //init it this is the first delta
-          if(delta != null){
-              String mName = met.getMethodSig().getName();
-              HashMap<String, MethodImpl> map = deltaMap.get(mName);
-              if(map == null){
-                  map = new HashMap<>();
-                  map.put("core", flattened);
-                  deltas.push("core");
-                  deltaMap.put(mName, map);
-              }
-          }
+        //init it this is the first delta
+        if(delta != null){
+            String mName = met.getMethodSig().getName();
+            HashMap<String, MethodImpl> map = deltaMap.get(mName);
+            if(map == null){
+                map = new HashMap<>();
+                map.put("core", flattened);
+                deltas.push("core");
+                deltaMap.put(mName, map);
+            }
+        }
           
-          //collect all original calls
-          ArrayList<OriginalCall> list = new ArrayList<>();
-          for (Stmt stmt : flattened.getBlock().getStmts()){
-              collectOrig(list, stmt);
-          }
+        //collect all original calls
+        ArrayList<OriginalCall> list = new ArrayList<>();
+        for (Stmt stmt : flattened.getBlock().getStmts()){
+            collectOrig(list, stmt);
+        }
           
           
-          if(list.size() > 0){
+        if(list.size() > 0){
             //rename
-              int i = cd.getNumMethod();
-              String name = met.getMethodSig().getName() + (delta == null? hashCode() : "_"+delta.getName());
-              MethodSig sig = met.getMethodSig().treeCopyNoTransform();
-              sig.setName(name);
+            int i = cd.getNumMethod();
+            String name = met.getMethodSig().getName() + (delta == null? hashCode() : "_"+delta.getName());
+            MethodSig sig = met.getMethodSig().treeCopyNoTransform();
+            sig.setName(name);
               
-              //add
-              MethodImpl newMet = met.treeCopyNoTransform();
-              newMet.setParent(met.getParent());
-              newMet.setMethodSig(sig);
+            //add
+            MethodImpl newMet = met.treeCopyNoTransform();
+            newMet.setParent(met.getParent());
+            newMet.setMethodSig(sig);
 
-              sig.setParent(newMet);
-              cd.getMethods().setChild(newMet, i);
+            sig.setParent(newMet);
+            cd.getMethods().setChild(newMet, i);
 
-                    //save delta
-              if(delta != null){
-                  String mName = met.getMethodSig().getName();
-                  HashMap<String, MethodImpl> map = deltaMap.get(mName);
-                  map.put(deltas.peek(), newMet);
-                  map.put(delta.getName(), flattened);
-                  deltas.push(delta.getName());
-              }
+            //save delta
+            if(delta != null){
+                String mName = met.getMethodSig().getName();
+                HashMap<String, MethodImpl> map = deltaMap.get(mName);
+                map.put(deltas.peek(), newMet);
+                map.put(delta.getName(), flattened);
+                deltas.push(delta.getName());
+            }
               
-              //replace
-              for (OriginalCall orig : list) {
+            //replace
+            for (OriginalCall orig : list) {
                 orig.replaceByRealCall(newMet, deltaMap.get(met.getMethodSig().getName()));
-              }
-          }
-              
-      }
+            }
+        }      
+    }
 
     // collect all original calls
-    private void TraitModifyOpr.
-
-    collectOrig(ArrayList<OriginalCall> list, ASTNode<ASTNode> node){
-          if(node instanceof OriginalCall){
-              list.add((OriginalCall)node);
-              return;
-          }
-          if(node != null && node.children != null)
-                  for (ASTNode<ASTNode> child : node.children) {
-                      collectOrig(list,child);
-                  }
-      }
-
-
+    private void TraitModifyOpr.collectOrig(ArrayList<OriginalCall> list, ASTNode<ASTNode> node){
+        if(node instanceof OriginalCall){
+            list.add((OriginalCall)node);
+            return;
+        }
+        if(node != null && node.children != null){
+            for (ASTNode<ASTNode> child : node.children) {
+                collectOrig(list,child);
+            }
+        }
+    }
+    
 }
