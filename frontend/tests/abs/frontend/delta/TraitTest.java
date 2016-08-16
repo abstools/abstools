@@ -240,4 +240,26 @@ public class TraitTest extends DeltaTest{
         model.applyTraits();
         assertTrue(cls.getMethods().getNumChild() == 0);
     }
+    
+
+    @Test
+    public void originalCallMethod()  {
+        Model model = assertParseOk(
+                "module M; "
+                + " trait T = {} modifies { Unit myMethod(){  original();  skip;} }"
+                + " class C {adds T; Unit myMethod(){ skip; }}"
+        );
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertNotNull(cls);
+        assertTrue(cls.getMethods().getNumChild() == 1);
+
+        model.applyTraits();
+        assertTrue(cls.getMethods().getNumChild() == 2);
+        assertFalse(cls.getMethod(0).getBlock().getStmt(0) instanceof SkipStmt);
+        assertTrue(cls.getMethod(0).getBlock().getStmt(1) instanceof SkipStmt);
+        assertTrue(cls.getMethod(1).getBlock().getStmt(0) instanceof SkipStmt);
+        assertFalse(cls.getMethod(0).toString().equals(cls.getMethod(1).toString()));
+    }
+    
 }
