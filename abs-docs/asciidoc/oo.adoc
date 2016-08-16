@@ -77,7 +77,7 @@ block has the same restrictions as in the init block.
 |                 | `{` [ _TraitUseList_ ] [ _FieldDeclList_ ] [ _Block_ ] [_RecoveryBlock_] [ _MethDeclList_ ] `}`
 | _ClassParameterList_ ::= | _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ }
 | _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
-| _TraitUseList_ ::= | adds _TraitName_`;` { `,` adds _TraitName_ `;`}
+| _TraitUseList_ ::= | adds _TraitName_ `;` {  adds _TraitName_ `;`}
 | _FieldDeclList_ ::= | { _Type_ _SimpleIdentifier_ [ `=` _PureExp_ ] `;` }
 | _RecoveryBlock_ ::= | `recover` `{` { _Pattern_ `\=>` _Stmt_ } `}`
 | _MethDeclList_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` _Block_
@@ -166,6 +166,8 @@ If a method with the same name is already present in the class, the error will b
 If a method with the same name is not present in the class an error will be raised during trait application.
 * The operation `removes` deletes the method with the provided signature. 
 If a method with the same name is not present in the class an error will be raised during trait application.
+* A definition of the form 'trait' t1 = t2 TE, where t2 is another trait name, will first apply t2, then continue with TE.
+If it has only the form 'trait' t1 = t2, the t1 is just an alias for t2.
 
 .The order of trait application is as follows:
 * All traits used within a class, in the order they are refered too
