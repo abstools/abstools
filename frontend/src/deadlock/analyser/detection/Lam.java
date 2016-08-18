@@ -1,5 +1,6 @@
 package deadlock.analyser.detection;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.TreeSet;
@@ -103,6 +104,7 @@ public class Lam {
             if(!contained){
                 State sNew = new State();
                 sNew.addState(s);
+                sNew.setDebugInfo(s.getDebugInfo());
                 this.states.add(sNew);
             }
         }
@@ -220,6 +222,23 @@ public class Lam {
                 return true;
         
         return false;
+    }
+
+    public void updateStackTrace(String method) {
+        for(State s: states) {
+            LinkedList<String> callStack = s.getDebugInfo().callStack;
+            if(!callStack.contains(method))
+                callStack.add(method);
+        }
+    }
+
+    public LinkedList<State> getReflexiveStates() {
+        LinkedList<State> res = new LinkedList<>();
+        for(State s: states)
+            if(s.hasReflexiveState())
+                 res.add(s);
+        
+        return res;
     }
 
 }

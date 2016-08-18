@@ -20,6 +20,16 @@ public class State {
     HashMap<GroupName, HashSet<GroupName>> depCouple;
     HashMap<GroupName, HashSet<GroupName>> depCoupleAwait;
     
+    DebugInfo di = new DebugInfo();
+    
+    public DebugInfo getDebugInfo(){
+        return di;
+    }
+    
+    public void setDebugInfo(DebugInfo di){
+        this.di = di;
+    }
+    
     public State(){
         this.depCouple = new HashMap<GroupName, HashSet<GroupName>>();
         this.depCoupleAwait = new HashMap<GroupName, HashSet<GroupName>>(); 

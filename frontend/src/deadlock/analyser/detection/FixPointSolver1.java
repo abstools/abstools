@@ -1,5 +1,6 @@
 package deadlock.analyser.detection;
 
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -772,6 +773,12 @@ public class FixPointSolver1 extends DASolver {
             res += (name + " = \n" + lampMap.get(name).toString() + "\n");
         }
         return res;
+    }
+
+    @Override
+    public void printDeadlockDetails(PrintStream out) {
+        // TODO Auto-generated method stub
+        
     }
 
    

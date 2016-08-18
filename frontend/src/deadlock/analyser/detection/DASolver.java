@@ -4,7 +4,9 @@
  */
 package deadlock.analyser.detection;
 
+import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 import deadlock.analyser.factory.Factory;
@@ -16,6 +18,7 @@ public abstract class DASolver {
 
     
     protected Boolean deadlock;
+    protected LinkedList<State> deadlockStates;
     protected Map<String, MethodContract> methodMap;
     protected MainMethodContract mmc;
     protected Factory df;
@@ -43,4 +46,6 @@ public abstract class DASolver {
     public abstract void computeSolution();
     
     public abstract String getName();
+
+    public abstract void printDeadlockDetails(PrintStream out);
 }
