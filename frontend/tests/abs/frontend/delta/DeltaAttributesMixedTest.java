@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.delta;
@@ -32,7 +32,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "    delta D(A, B, C, C.a1) when C;"
                 + "product P1( C{a1=99} );"
         );
-        
+
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("fA", cls.getField(0).getName());
@@ -56,7 +56,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "    delta D(F.a, F.b) when F;"
                 + "product P1( F{a=True, b=False} );"
         );
-        
+
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("first", cls.getField(0).getName());
@@ -77,7 +77,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "product P1( F{a=True, b=3} );"
                 , Config.WITH_STD_LIB, Config.TYPE_CHECK
         );
-        
+
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("first", cls.getField(0).getName());
@@ -91,17 +91,19 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool attr);"
-                + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+                + "uses M;"
+                + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
                 + "productline PL;"
                 + "    features F; delta D(F.a) when F;"
                 + "product P1( F{a=True} );"
         );
-        
+
+        model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("attr", cls.getField(0).getName());
         assertEquals("True()", cls.getField(0).getInitExp().value.toString());
-        
+
         //TODO test the value of x
     }
 
@@ -115,7 +117,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "    features F; delta D(F.b) when F;"
                 + "product P1( F{a=True} );"
         );
-        
+
         model.flattenForProduct("P1");
     }
 
@@ -129,7 +131,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "    features A; delta D(A, B) when A;"
                 + "product P1(A);",
                 Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR);
-        
+
         // There should be a type error if the Config defines only two delta params, but the delta itself expects 3
         assertEquals(ErrorMessage.WRONG_NUMBER_OF_ARGS, m.getTypeErrors().getFirstError().msg);
     }
@@ -177,7 +179,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         assertTrue(model.hasTypeErrors());
         assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirstError().msg);
     }
-    
+
     @Test
     public void deltaParserNPE1() throws Exception {
         assertParseError(
@@ -189,7 +191,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "product P1( F{a=} );"
         );
     }
-    
+
     @Test
     public void deltaParserIlltyped() throws Exception {
         Model model = assertParseOk(
