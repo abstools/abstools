@@ -21,10 +21,10 @@ public class OriginalCallTest extends DeltaTest {
                 "module M;"
                 + "interface I {}"
                 + "class C implements I { Unit m() {} }"
-                + "delta D; "
-                + "modifies class M.C { modifies Unit m() { original(); } }"
-                + "delta D2;"
-                + "modifies class M.C { modifies Unit m() { original(); } }"
+                + "delta D; uses M"
+                + "modifies class C { modifies Unit m() { original(); } }"
+                + "delta D2; uses M"
+                + "modifies class C { modifies Unit m() { original(); } }"
         );
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getMethods().getNumChild() == 1);
@@ -91,8 +91,8 @@ public class OriginalCallTest extends DeltaTest {
                 "module M;"
                 + "interface I {}"
                 + "class C implements I { Int one() { return 1; } }"
-                + "delta D; "
-                + "modifies class M.C { modifies Int one() { Int x = original(); return x + 1; } }"
+                + "delta D; uses M"
+                + "modifies class C { modifies Int one() { Int x = original(); return x + 1; } }"
         );
     
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
@@ -118,8 +118,8 @@ public class OriginalCallTest extends DeltaTest {
                 "module M;"
                 + "interface I {}"
                 + "class C implements I { Unit m() {} Unit n() {} Unit p() {} }"
-                + "delta D;" 
-                + "modifies class M.C {"
+                + "delta D;uses M" 
+                + "modifies class C {"
                     + "modifies Unit m() { original(); }" 
                     + "modifies Unit n() { original(); }"
                     + "modifies Unit p() { original(); }" 
@@ -160,8 +160,11 @@ public class OriginalCallTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "class C { Unit m() {} }"
+                + "uses M;"
                 + "delta D1; modifies class M.C { adds Unit n() {} }"
+                + "uses M;"
                 + "delta D2; modifies class M.C { modifies Unit m() { original(); core.original(); } }"
+                + "uses M;"
                 + "delta D3; modifies class M.C { modifies Unit n() { original(); D1.original(); } }"
         );
         
@@ -185,11 +188,12 @@ public class OriginalCallTest extends DeltaTest {
                 "module M;"
                 + "class C { }"
                 + "delta D1;"
-                + "modifies class M.C { adds Unit m() {} }"
-                + "delta D2;"
-                + "modifies class M.C { modifies Unit m() { D1.original(); } }"
-                + "delta D3;"
-                + "modifies class M.C { modifies Unit m() { D1.original(); } }"
+                + "uses M;"
+                + "modifies class C { adds Unit m() {} }"
+                + "delta D2;uses M;"
+                + "modifies class C { modifies Unit m() { D1.original(); } }"
+                + "delta D3;uses M;"
+                + "modifies class C { modifies Unit m() { D1.original(); } }"
         );
         
         DeltaDecl d1 = findDelta(model, "D1");
@@ -210,7 +214,8 @@ public class OriginalCallTest extends DeltaTest {
                 "module M;"
                 + "class C { }"
                 + "delta D1;"
-                + "modifies class M.C { modifies Unit m() { original(); } }"
+                + "uses M;"
+                + "modifies class C { modifies Unit m() { original(); } }"
         );
         
         DeltaDecl d1 = findDelta(model, "D1");
@@ -224,7 +229,8 @@ public class OriginalCallTest extends DeltaTest {
                 "module M;"
                 + "class C { }"
                 + "delta D1;"
-                + "modifies class M.C { modifies Unit m() { core.original(); } }"
+                + "uses M;"
+                + "modifies class C { modifies Unit m() { core.original(); } }"
         );
         
         DeltaDecl d1 = findDelta(model, "D1");
@@ -238,9 +244,10 @@ public class OriginalCallTest extends DeltaTest {
                 "module M;"
                 + "class C { Unit m() {} }"
                 + "delta D1;"
-                + "modifies class M.C { modifies Unit m() { core.original(); } }"
+                + "uses M;"
+                + "modifies class C { modifies Unit m() { core.original(); } }"
                 + "delta D2;"
-                + "modifies class M.C { modifies Unit m() { D1.original(); } }"
+                + "modifies class C { modifies Unit m() { D1.original(); } }"
         );
         
         DeltaDecl d1 = findDelta(model, "D1");

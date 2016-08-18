@@ -20,8 +20,8 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D; uses M;"
-                + "adds class C1(String s) {}"
-                + "adds class M.C2(String s) {}"
+                + "adds class C1(String s) {}"               
+                + "adds class C2(String s) {}"
         );
         
         DeltaDecl delta = findDelta(model, "D");
