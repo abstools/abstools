@@ -21,7 +21,8 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool a, Bool b, Bool c, Int c_a1);"
-                + "    adds class M.C { "
+                + "uses M;"
+                + "    adds class C { "
                 + "        Bool fA = a; "
                 + "        Bool fB = b; "
                 + "        Bool fC = c; "
@@ -33,6 +34,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "product P1( C{a1=99} );"
         );
 
+        model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("fA", cls.getField(0).getName());
@@ -50,13 +52,15 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool a1, Bool a2);"
-                + "    adds class M.C { Bool first = a1; Bool second = a2; }"
+                + "uses M;"
+                + "    adds class C { Bool first = a1; Bool second = a2; }"
                 + "productline PL;"
                 + "    features F;"
                 + "    delta D(F.a, F.b) when F;"
                 + "product P1( F{a=True, b=False} );"
         );
-
+        
+        model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("first", cls.getField(0).getName());
@@ -70,7 +74,8 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool a1, Int a2);"
-                + "    adds class M.C { Bool first = a1; Int second = a2; }"
+                + "uses M;"
+                + "    adds class C { Bool first = a1; Int second = a2; }"
                 + "productline PL;"
                 + "    features F;"
                 + "    delta D(F.a, F.b) when F;"
@@ -78,6 +83,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 , Config.WITH_STD_LIB, Config.TYPE_CHECK
         );
 
+        model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("first", cls.getField(0).getName());
@@ -112,12 +118,14 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool attr);"
-                + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+                + "uses M;"
+                + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
                 + "productline PL;"
                 + "    features F; delta D(F.b) when F;"
                 + "product P1( F{a=True} );"
         );
 
+        model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
     }
 
@@ -126,7 +134,8 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         Model m = assertParse(
                 "module M;"
                 + "delta D(Bool a1, Bool a2, Bool a3);"
-                + "    adds class M.C { Bool a1 = a1; Bool a2 = a2; Bool a3 = a3; }"
+                + "uses M;"
+                + "    adds class C { Bool a1 = a1; Bool a2 = a2; Bool a3 = a3; }"
                 + "productline PL;"
                 + "    features A; delta D(A, B) when A;"
                 + "product P1(A);",
@@ -141,7 +150,8 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         Model model = assertParse(
                 "module M;"
                 + "delta D(Bool attr);"
-                + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+                + "uses M;"
+                + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
                 + "productline PL;"
                 + "    features F; delta D(F.a) when F;"
                 + "product P1( F{a=3} );"
@@ -155,7 +165,8 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         Model model = assertParse(
                 "module M;"
                 + "delta D(Bool attr);"
-                + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+                + "uses M;"
+                + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
                 + "productline PL;"
                 + "    features F; delta D(3) when F;"
                 + "product P1( F );"
@@ -169,12 +180,15 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool attr);"
-                + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+                + "uses M;"
+                + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
                 + "productline PL;"
                 + "    features F; delta D(F.a) when F;"
                 + "product P1( F{a=3} );"
                 , Config.WITH_STD_LIB
         );
+        
+        model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
         assertTrue(model.hasTypeErrors());
         assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirstError().msg);
@@ -185,7 +199,8 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         assertParseError(
                 "module M;"
                 + "delta D(Bool attr);"
-                + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+                + "uses M;"
+                + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
                 + "productline PL;"
                 + "    features F; delta D(F.a) when F;"
                 + "product P1( F{a=} );"
@@ -197,11 +212,13 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool attr);"
-                + "    adds class M.C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+                + "uses M;"
+                + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
                 + "productline PL;"
                 + "    features F; delta D(F.a) when F;"
                 + "product P1( F{a=Blue} );"
         );
+        model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
         assertTrue(model.hasTypeErrors());
     }
