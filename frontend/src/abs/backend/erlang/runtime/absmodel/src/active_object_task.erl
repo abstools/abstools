@@ -10,9 +10,9 @@ init(_Cog,O)->
     object:new_object_task(O,self(),O),
     O.
 
-start(O=#object{class=C,cog=Cog=#cog{tracker=Tracker}})->
+start(O=#object{class=C})->
      try 
-         Res=apply(C, m_run,[O,[]])
+         apply(C, m_run,[O,[]])
      catch
       _:Reason ->
          object:die(O,Reason)
