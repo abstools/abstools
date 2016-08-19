@@ -249,22 +249,25 @@ In ABS, processes run inside cogs.  Deployment components are used to provide
 a location to cogs.  Cogs residing on the same deployment component share the
 resources provided by the deployment component.
 
+[[fig-deployment-component]]
+image::Deployment-component.png[width=636,height=196,title="A deployment component and its cogs",alt="A deployment component and its cogs"]
+
+
+
 Deployment Components are first-class constructs in the ABS language.  A
 reference to a deployment component is treated the same way as a reference to
-an object.  Deployment Components are created using the `new` expression.  Any
-other cog can be created “on” a deployment component by using a `DC`
+an object.  Deployment Components are created by a cloud provider instance
+(see <<sec:cloudprovider>>), but can also be created using the `new`
+expression.  A new cog is created on a deployment component by using a `DC`
 annotation to the `new` statement.
 
 .Example
 ----
-DeploymentComponent dc = new DeploymentComponent("Server 1", map[Pair(Speed, 10)]); <1>
+DeploymentComponent dc = await provider!launchInstance(map[Pair(Speed, 10)]); <1>
 [DC: dc] Worker w = new CWorker(); <2>
 ----
-<1> A new deployment component `dc` is created with 10 `Speed` resources
-<2> `w` is created on the new deployment component `dc`
-
-NOTE: Deployment components cannot be created with `new local`, only with
-`new`.
+<1> The cloud provider `provider` creates a new deployment component `dc` with 10 `Speed` resources
+<2> A new cog containing a `CWorker` object is created on the new deployment component `dc`
 
 NOTE: All objects of a cog must reside on the same deployment component, i.e.,
 `[DC: x] new local C()` is an error.
