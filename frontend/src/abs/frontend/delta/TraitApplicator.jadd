@@ -12,7 +12,7 @@ aspect TraitApplicator {
     * DeltaTraitModifier references trait operations from a class.
     */
     public void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ 
-                    getTraitOper().applyTo(cd); 
+        getTraitOper().applyTo(cd); 
     }
 
     /*
@@ -21,7 +21,7 @@ aspect TraitApplicator {
      */
     public  void TraitUse.applyTo(ClassDecl cd) throws DeltaModellingException {
 
-         //find TraitDecl
+        //find TraitDecl
         List<Decl> list = cd.getModuleDecl().getDecls();
         TraitExpr resolved = getTraitExpr();
         if(getTraitExpr() instanceof TraitNameExpr){
@@ -94,7 +94,7 @@ aspect TraitApplicator {
         else
             throw new DeltaModellingException( 
                       "trait wants to remove method [" + mysig + "], which was not found");
-  }
+    }
 
 
 
