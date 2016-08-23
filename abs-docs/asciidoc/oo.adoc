@@ -74,7 +74,7 @@ block has the same restrictions as in the init block.
 .Syntax
 |====
 | _ClassDecl_ ::= | `class` _SimpleTypeIdentifier_ [ `(` [ _ClassParameterList_ ] `)` ] [ `implements` _InterfaceList_ ]
-|                 | `{` [ _TraitUseList_ ] [ _FieldDeclList_ ] [ _Block_ ] [_RecoveryBlock_] [ _MethDeclList_ ] `}`
+|                 | `{` [ _FieldDeclList_ ] [ _Block_ ] [_RecoveryBlock_] [ _TraitUseList_ ][ _MethDeclList_ ] `}`
 | _ClassParameterList_ ::= | _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ }
 | _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
 | _TraitUseList_ ::= | adds _TraitName_ `;` {  adds _TraitName_ `;`}
@@ -151,62 +151,78 @@ Similar to classes, traits in ABS are not types.
 
 
 A trait is defined with `trait` t = _T_ at module level and applied on a class with `adds` _T_.
-If one wants to define a trait that does not add methods, but only modifies or removes methods, the trait must start with
+A trait is a set of function, whenever a trait name is used, the corresponding definition is resolved to a set of traits.
 
+.Explanation
+* The operation `adds` adds all the elements of the next _MethodSet_ to the class. 
+If a method with the same name is already present in the class (or set of methods), the error will be raised _after_ applying all traits, during type checking.
+[source]
+----
+trait T = { Unit x(){ skip; } } 
+trait T2 = { Unit y(){ skip; } } adds T
+----
+will be resolved to the set
+[source]
+----
+{ Unit x(){ skip; } Unit y(){ skip; } } 
+----
+* The operation `modifies` changes all the elements of the next _MethodSet_ in the class to the new implementation described in this _MethodSet_. 
+A trait may contain original() calls which refer to the version of the method before the trait application.
+If a method with the same name is not present in the class (or set of methods), the method is added instead and the original() calls are not resolved.
 
+A method may contain targeted original calls. These raise an error if the trait is used directly by a class
+The following is invalid:
 [source]
 .Example
 ----
-trait T = {} 
+trait T = {Unit myMethod(){ skip; }}  modifies {Unit myMethod(){ core.original(); }}
+class C {uses T; }
 ----
-.Explanation
-* The operation `adds` adds all the elements of the next _MethodSet_ to the class. 
-If a method with the same name is already present in the class, the error will be raised _after_ applying all traits, during type checking.
-* The operation `modifies` changes all the elements of the next _MethodSet_ in the class to the new implementation described in this _MethodSet_. 
-If a method with the same name is not present in the class an error will be raised during trait application.
+The following two examples are valid:
+[source]
+.Example
+----
+trait T = {Unit myMethod(){ skip; }} modifies {Unit myMethod(){ original(); }}
+class C {uses T; }
+----
+[source]
+.Example
+----
+module M;
+trait T = {Unit myMethod(){ skip; }} 
+class C {uses T; }
+
+delta D;
+modifies class M.C{
+        modifies Unit myMethod(){ core.original(); }
+}
+----
 * The operation `removes` deletes the method with the provided signature. 
-If a method with the same name is not present in the class an error will be raised during trait application.
-* A definition of the form 'trait' t1 = t2 TE, where t2 is another trait name, will first apply t2, then continue with TE.
-If it has only the form 'trait' t1 = t2, the t1 is just an alias for t2.
+If a method with the same name is not present in the class (or set of methods), an error will be raised during trait application.
 
 .The order of trait application is as follows:
 * All traits used within a class, in the order they are refered too
 * All traits used within a delta, in the order they are refered too
-* Within a trait expression, the operations are applied from left to right 
 
 [source]
 .Example
 ----
-trait T1 = {} 
-           removes Unit helper_1(Int i, Int j); 
-           removes Unit helper_2(Int i);
-           adds { 
-               Int better_helper_1(Int i, Int j) { return i*j; } 
-               Int better_helper_2(Int i) { return i*2; } 
-           }
-           modifies {
-                Int main_method(Int i){
-                    Int v1 = this.better_helper_1(i,2);
-                    Int v2 = this.better_helper_2(i);
-                    return v1+v2;
-                }
-           }
-
-interface Inter {}
-
-class InterImpl implements Inter {
-    adds T1;
-    Int f1 = 0;
-    Int f2 = 0;
-    Unit helper_1(Int i, Int j){ f1 = i*j; }
-    Unit helper_2(Int i) { f2 = i*2; }
-    Int main_method(Int i){
-        this.helper_1(i,2);
-        this.helper_2(i);
-        return f1+f2;
-    }
+module M;
+interface I { Unit x(); Unit foo(); Unit bar(); }
+trait T = Unit x() { this.foo(); original(); this.bar();  }
+trait T2 = { Unit x() { println("T2"); } } modifies T
+trait T3 = { Unit x() { println("T3"); } } modifies T
+class C implements I {
+        Int i = 0;
+        uses T2;
+        Unit foo(){ i = i+1; }
+        Unit bar(){ i = i-1; }
 }
 
+class C2 implements I {
+        Int i = 0;
+        uses T3;
+        Unit foo(){ i = i-1; }
+        Unit bar(){ i = i+1; }
 }
 ----
-First the two helper methods are removed, then the better_helper methods added and finally the main method is modfied.

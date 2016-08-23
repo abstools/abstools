@@ -401,4 +401,35 @@ public class TraitTest extends DeltaTest{
         assertTrue(cls2.getMethods().getNumChild() == 5);
     }
     
+
+    @Test
+    public void frameTest()  {
+        Model model = assertParseOk(
+                "module M;"
+                + " interface I { Unit x(); Unit foo(); Unit bar(); }"
+                + " trait T = Unit x() { this.foo(); original(); this.bar();  }"
+                + " trait T2 = { Unit x() { println(\"T2\"); } } modifies T"
+                + " trait T3 = { Unit x() { println(\"T3\"); } } modifies T"
+                + " class C implements I {"
+                + "         Int i = 0;"
+                + "         uses T2;"
+                + "         Unit foo(){ i = i+1; }"
+                + "         Unit bar(){ i = i-1; }"
+                + " }"
+                + " class C2 implements I {"
+                + "         Int i = 0;"
+                + "         uses T3;"
+                + "         Unit foo(){ i = i-1; }"
+                + "         Unit bar(){ i = i+1; }"
+                + " }"
+        );
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertNotNull(cls);
+        assertTrue(cls.getMethods().getNumChild() == 2);
+
+        model.applyTraits();
+        assertTrue(cls.getMethods().getNumChild() == 4);
+    }
+    
 }
