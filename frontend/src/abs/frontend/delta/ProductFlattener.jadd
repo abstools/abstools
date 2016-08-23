@@ -308,7 +308,7 @@ aspect ProductFlattener {
             if(l.size() > 1) throw new DeltaModellingException("Cyclic Traits");
             String n = l.pop();
             for (LinkedList<String> listOther : lists) {
-                listOther.remove(n);
+                while(listOther.remove(n));
             }
             sort(lists);
         }

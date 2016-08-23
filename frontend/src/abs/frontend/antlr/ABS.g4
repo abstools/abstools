@@ -209,10 +209,10 @@ class_decl : annotation*
         'class' TYPE_IDENTIFIER paramlist?
         ('implements' interface_name (',' interface_name)*)?
         '{'
-        trait_usage*
         field_decl*
         ('{' stmt* '}')?
         ( 'recover' '{' casestmtbranch* '}' )?
+        trait_usage*
         method*
         '}'
     ;
@@ -268,10 +268,10 @@ trait_expr : '{' method* '}'						#TraitSetFragment
 
 trait_oper : 'adds' trait_expr						#TraitAddFragment
 		   | 'modifies' trait_expr					#TraitModifyFragment
-		   | 'removes' methodsig					#TraitRemoveFragment
+		   | 'removes' methodsig 					#TraitRemoveFragment
 		   ;
 		   
-trait_usage: 'adds' trait_expr ';'
+trait_usage: 'uses' trait_expr ';'
            ; 
 
 delta_decl : 'delta' TYPE_IDENTIFIER
