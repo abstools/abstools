@@ -110,7 +110,7 @@ public class ASTPreProcessor {
         FunctionDecl fd =
             new ParametricFunctionDecl(
                     selName,    // function name
-                    ca.getDataTypeUse().copy(), // type
+                    (TypeUse)ca.getTypeUse().copy(), // type
                     parameters, // parameters
                     funDef,
                     new List<Annotation>(), // annotations

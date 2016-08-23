@@ -24,17 +24,20 @@ public class AddRemoveInterfacesTest extends DeltaTest {
                 "module M;"
                 + "interface I { Int fooi(); }"
                 + "delta D;"
-                + "adds interface M.J { Int fooj(); }"
+                +"uses M;"
+                + "adds interface J { Int fooj(); }"
                 ,
                 "module M;"
                 + "interface I { Int fooi(); }"
                 + "delta D;"
-                + "adds interface M.J extends I { Int fooj(); }"
+                +"uses M;"
+                + "adds interface J extends I { Int fooj(); }"
                 ,
                 "module M;"
                 + "interface I { Int fooi(); }"
                 + "delta D;"
-                + "adds interface M.J extends M.I { Int fooj(); }"
+                +"uses M;"
+                + "adds interface J extends I { Int fooj(); }"
                 ,
                 "module M;"
                 + "interface I { Int fooi(); }"
@@ -162,8 +165,9 @@ public class AddRemoveInterfacesTest extends DeltaTest {
                 + "interface I {}"
                 + "class C implements I {}"
                 + "delta D;"
-                + "adds interface M.J { Int foo(); }"
-                + "modifies class M.C adds J { adds Int foo() { return 99; } }"
+                +"uses M;"
+                + "adds interface J { Int foo(); }"
+                + "modifies class C adds J { adds Int foo() { return 99; } }"
         );
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
@@ -227,8 +231,9 @@ public class AddRemoveInterfacesTest extends DeltaTest {
                 + "interface I {}"
                 + "class C implements I {}"
                 + "delta D;"
-                + "adds interface M.J {}"
-                + "modifies class M.C adds J removes I {}"
+                +"uses M;"
+                + "adds interface J {}"
+                + "modifies class C adds J removes I {}"
         );
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
@@ -249,9 +254,10 @@ public class AddRemoveInterfacesTest extends DeltaTest {
                 + "interface I {}"
                 + "class C implements H,I {}"
                 + "delta D;"
-                + "adds interface M.J {}"
-                + "adds interface M.K {}"
-                + "modifies class M.C adds J,K removes H,I {}"
+                +"uses M;"
+                + "adds interface J {}"
+                + "adds interface K {}"
+                + "modifies class C adds J,K removes H,I {}"
         );
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");

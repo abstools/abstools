@@ -39,7 +39,8 @@ public class DeltaAttributesIntegerTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Int attr);"
-                + "    adds class M.C { Int myField = attr; }"
+                +"uses M;"
+                + "    adds class C { Int myField = attr; }"
                 + "productline PL;"
                 + "    features F;"
                 + "    delta D(F.a) when F;"
@@ -49,6 +50,7 @@ public class DeltaAttributesIntegerTest extends DeltaTest {
                 // + "product P3(F);"
         );
         
+        model.evaluateAllProductDeclarations();
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("myField"));
@@ -61,7 +63,8 @@ public class DeltaAttributesIntegerTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Int attr);"
-                + "    adds class M.C { Int myField = attr; }"
+                +" uses M;"
+                + "    adds class C { Int myField = attr; }"
                 + "productline PL;"
                 + "    features A,B;"
                 + "    delta D(0) when A;"
@@ -69,8 +72,9 @@ public class DeltaAttributesIntegerTest extends DeltaTest {
                 + "product P1(A);"
                 + "product P2(B);"
         );
-        
+       
         model.flattenForProduct(product);
+        model.evaluateAllProductDeclarations();
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("myField"));
 

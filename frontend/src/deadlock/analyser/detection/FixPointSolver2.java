@@ -4,6 +4,7 @@
  */
 package deadlock.analyser.detection;
 
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,6 +67,8 @@ public class FixPointSolver2 extends DASolver {
                 lam.setSecond(expansionPresent.getWPrime());
                 
                 lam.expandAndClean();
+//                lam.getFirst().updateStackTrace(mName);
+//                lam.getSecond().updateStackTrace(mName);
             }
             
             //if the number of dependencies has not change in this iteration then a fix point is found
@@ -95,7 +98,9 @@ public class FixPointSolver2 extends DASolver {
         
         //if the cycle found is no a livelock then this lock is indeed a deadlock
         this.deadlock = blMain.hasReflexiveState();
-        
+        if(this.deadlock){
+            this.deadlockStates = blMain.getReflexiveStates();
+        }
         //is it possible for a program to have more than one potential deadlocks and 
         //livelocks at the same time but the algorithm stop at the first cycle so
         //only one cyclic dependency is reported
@@ -209,6 +214,7 @@ public class FixPointSolver2 extends DASolver {
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
+        l.updateStackTrace(method);
         return l;       
     }
     
@@ -271,6 +277,7 @@ public class FixPointSolver2 extends DASolver {
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
+        l.updateStackTrace(method);
         return l;       
     }
     
@@ -348,6 +355,7 @@ public class FixPointSolver2 extends DASolver {
        // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
+        l.updateStackTrace(method);
         return l;       
     }
 
@@ -425,6 +433,7 @@ public class FixPointSolver2 extends DASolver {
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
+        l.updateStackTrace(method);
         return l;       
     }
 
@@ -515,6 +524,32 @@ public class FixPointSolver2 extends DASolver {
         }
 
         return sub;     
+    }
+
+
+    @Override
+    public void printDeadlockDetails(PrintStream out) {
+        int indent = 2;
+        out.println(printTab(indent*2)+"The following trace(s) could potentially reach a deadlock state:");
+        indent++;
+        
+        for(State s : this.deadlockStates){
+            int currentIndent = indent;
+            out.println(printTab(currentIndent*2)+">>Main");
+            for(String call : s.di.callStack){
+                currentIndent++;
+                out.println(printTab(currentIndent*2)+">>"+call);
+            }
+            out.println();
+        }
+    }
+    
+    private String printTab(int n) {
+        StringBuffer buffer = new StringBuffer (); 
+        for (int i = 0; i < n; i++) {
+            buffer.append(" ");
+        }
+        return buffer.toString();
     }
 
   

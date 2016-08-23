@@ -678,7 +678,6 @@ interface DeploymentComponent {
     Unit incrementResources(Rat amount, Resourcetype rtype);
 
     [Atomic] String getName();
-		[Atomic] Unit setName(String name);
 
     [Atomic] CloudProvider getProvider();
     [Atomic] Time getCreationTime();
@@ -697,7 +696,7 @@ interface DeploymentComponent {
 }
 
 interface DeploymentComponentForCloudProvider extends DeploymentComponent {
-    [Atomic] Unit setProvider(CloudProvider provider);
+    [Atomic] Unit setProvider(CloudProviderForDeploymentComponent provider);
 }
 
 interface CloudProvider {
@@ -728,7 +727,12 @@ interface CloudProvider {
     DeploymentComponent launchInstanceNamed(String instancename);
 }
 
-class CloudProvider(String name) implements CloudProvider {
+interface CloudProviderForDeploymentComponent extends CloudProvider {
+    Unit internalShutdownInstance(DeploymentComponentForCloudProvider instance);
+}
+
+
+class CloudProvider(String name) implements CloudProviderForDeploymentComponent {
     // Preliminary version - mind the FIXMEs!
 
     // Instance type descriptions for launchInstanceNamed()
@@ -771,23 +775,39 @@ class CloudProvider(String name) implements CloudProvider {
         return result;
     }
 
-    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
+    DeploymentComponent createInstance(String instancename, Map<Resourcetype, Rat> d) {
         Bool mightNeedToStartAccounting = emptySet(launchedInstances);
-
-        DeploymentComponentForCloudProvider result = new DeploymentComponent(name + "-"
-            + toString(nextInstanceId), d);
+        DeploymentComponentForCloudProvider result
+        = new DeploymentComponent(instancename + "-" + toString(nextInstanceId), d);
         result!setProvider(this);
         nextInstanceId = nextInstanceId + 1;
-        Rat startup_duration = await result!getStartupDuration();
         // Work around a bug in the type system: upcasting in `insertElement'
         // does not work although it should
         DeploymentComponent stupidTypeSystem = result;
         launchedInstances = insertElement(launchedInstances, stupidTypeSystem);
-        // Start accounting after adding new machine, before waiting for
-        // it to start up
+        // Start accounting after adding new machine, before waiting for it to
+        // start up
         if (mightNeedToStartAccounting) this!startAccounting();
+        return result;
+    }
+
+    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
+        DeploymentComponent result = this.createInstance(name, d);
+        Rat startup_duration = await result!getStartupDuration();
         await duration(startup_duration, startup_duration);
         return result;
+    }
+
+    DeploymentComponent prelaunchInstanceNamed(String instancename) {
+        Maybe<Map<Resourcetype, Rat>> mconfig = lookup(instanceDescriptions, instancename);
+        DeploymentComponent dc = null;
+        if (isJust(mconfig)) {
+            Map<Resourcetype, Rat> config = fromJust(mconfig);
+            dc = this.createInstance(name + "-" + instancename, config);
+        }
+        Rat startup_duration = await dc!getStartupDuration();
+        await duration(startup_duration, startup_duration);
+        return dc;
     }
 
     DeploymentComponent launchInstance(Map<Resourcetype, Rat> d) {
@@ -795,6 +815,16 @@ class CloudProvider(String name) implements CloudProvider {
         // accounting as well
         DeploymentComponent result = this.prelaunchInstance(d);
         acquiredInstances = insertElement(acquiredInstances, result);
+        return result;
+    }
+
+    DeploymentComponent launchInstanceNamed(String instancename) {
+        // if we don't call prelaunchInstance here, remember to start
+        // accounting as well
+        DeploymentComponent result = this.prelaunchInstanceNamed(instancename);
+        if (result != null) {
+            acquiredInstances = insertElement(acquiredInstances, result);
+        }
         return result;
     }
 
@@ -824,30 +854,27 @@ class CloudProvider(String name) implements CloudProvider {
     }
 
     Bool shutdownInstance(DeploymentComponent instance) {
+        instance!shutdown();
+        return True;
+    }
+
+    Unit internalShutdownInstance(DeploymentComponentForCloudProvider instance) {
+        DeploymentComponent stupidTypeSystem = instance;
         // Also kill an instance that is acquired.  FIXME: is this the right
         // thing, or should we refuse to shutdown?
-        acquiredInstances = remove(acquiredInstances, instance);
+        acquiredInstances = remove(acquiredInstances, stupidTypeSystem);
         // Insert `instance' into killedInstances so it doesn't get
         // re-acquired.
-        killedInstances = insertElement(killedInstances, instance);
+        killedInstances = insertElement(killedInstances, stupidTypeSystem);
         Rat shutdown_duration = await instance!getShutdownDuration();
         await duration(shutdown_duration, shutdown_duration);
 
         // Now remove from launchedInstances (after waiting for shutdown) so
         // shutdown duration gets billed
-        launchedInstances = remove(launchedInstances, instance);
+        launchedInstances = remove(launchedInstances, stupidTypeSystem);
 
         // Shut down accounting thread if necessary
         if (emptySet(launchedInstances)) keeprunning = False;
-
-        // Make sure the deployment component knows it is being shut down.
-        // shutdownInstance() can be called by the user directly or by the
-        // deployment component when the user invokes
-        // DeploymentComponent.shutdown(); in both cases the right thing will
-        // happen.
-        instance!shutdown();
-
-        return True;
     }
 
     [Atomic] Rat getAccumulatedCost() {
@@ -859,42 +886,18 @@ class CloudProvider(String name) implements CloudProvider {
         this.instanceDescriptions = instanceDescriptions;
     }
 
-		// Adds an instance for [pre]launchInstanceNamed()
-		[Atomic] Unit addInstanceDescription(Pair<String, Map<Resourcetype, Rat>> instanceDescription) {
-				this.instanceDescriptions = insert(this.instanceDescriptions, instanceDescription);
-		}
+    // Adds an instance for [pre]launchInstanceNamed()
+    [Atomic] Unit addInstanceDescription(Pair<String, Map<Resourcetype, Rat>> instanceDescription) {
+        this.instanceDescriptions = insert(this.instanceDescriptions, instanceDescription);
+    }
 
-		// Removes an instance for [pre]launchInstanceNamed() based on its name
-		[Atomic] Unit removeInstanceDescription(String instanceDescriptionName) {
-				this.instanceDescriptions = removeKey(this.instanceDescriptions, instanceDescriptionName);
-		}
+    // Removes an instance for [pre]launchInstanceNamed() based on its name
+    [Atomic] Unit removeInstanceDescription(String instanceDescriptionName) {
+        this.instanceDescriptions = removeKey(this.instanceDescriptions, instanceDescriptionName);
+    }
 
     [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions() {
         return this.instanceDescriptions;
-    }
-
-    DeploymentComponent prelaunchInstanceNamed(String instancename) {
-        Maybe<Map<Resourcetype, Rat>> mconfig = lookup(instanceDescriptions, instancename);
-        DeploymentComponent dc = null;
-        if (isJust(mconfig)) {
-            Map<Resourcetype, Rat> config = fromJust(mconfig);
-            dc = this.prelaunchInstance(config);
-        }
-				// add the instancename string in the name description of the dc
-				String name = dc.getName();
-				// FIXME: The assignment is a workaround for a bug in the Java code generation [stolz]
-				Unit u = dc.setName(name + "(" + instancename + ")");
-				return dc;
-    }
-
-    DeploymentComponent launchInstanceNamed(String instancename) {
-        // if we don't call prelaunchInstance here, remember to start
-        // accounting as well
-        DeploymentComponent result = this.prelaunchInstanceNamed(instancename);
-        if (result != null) {
-            acquiredInstances = insertElement(acquiredInstances, result);
-        }
-        return result;
     }
 }
 
@@ -953,7 +956,7 @@ implements DeploymentComponentForCloudProvider {
     Rat shutdownDuration = lookupDefault(initconfig, Shutdownduration, 0);
     Rat numberOfCores = lookupDefault(initconfig, Cores, 1);
 
-    CloudProvider cloudprovider = null;
+    CloudProviderForDeploymentComponent cloudprovider = null;
     {
         this.initialized = True;
     }
@@ -1029,7 +1032,7 @@ implements DeploymentComponentForCloudProvider {
             }
         }
     }
-    [Atomic] Unit setProvider(CloudProvider provider) {
+    [Atomic] Unit setProvider(CloudProviderForDeploymentComponent provider) {
         this.cloudprovider = provider;
     }
     [Atomic] DeploymentComponent convertToDC() { return this; }
@@ -1055,18 +1058,13 @@ implements DeploymentComponentForCloudProvider {
             is_shutdown = True;
             shutdownTime = Just(now());
             if (cloudprovider != null) {
-                // The user can call either DeploymentComponent!shutdown() or
-                // CloudProvider!shutdownInstance(), for the same effect.  In
-                // the latter case, the cloud provider will call shutdown() a
-                // second time, but we will not enter this if block again.
-                cloudprovider!shutdownInstance(this);
+                cloudprovider!internalShutdownInstance(this);
             }
         }
         return True;
     }
 
     [Atomic] String getName() { return description; }
-		[Atomic] Unit setName(String name) { description = name; }
     [Atomic] Time getCreationTime() { return creationTime; }
     [Atomic] Rat getStartupDuration() { return startupDuration; }
     [Atomic] Rat getShutdownDuration() { return shutdownDuration; }

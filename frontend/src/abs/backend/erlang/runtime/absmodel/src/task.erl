@@ -51,8 +51,12 @@ send_stop_for_gc(Task) ->
     Task ! {stop_world, self()}.
 
 get_references(Task) ->
-    Task ! {get_references, self()},
-    receive {References, Task} -> References end.
+    case is_process_alive(Task) of
+        true ->
+            Task ! {get_references, self()},
+            receive {References, Task} -> References end;
+        false -> []
+    end.
 
 kill_recklessly(Task) ->
     Task ! die_prematurely,

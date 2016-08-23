@@ -212,7 +212,7 @@ public class ABSContentOutlineUtils {
 				// ...append them by using formatAccess (below)
 				sb.append(OUTLINE_PARAM_OPEN_PARENTHESIS);
 				for (ConstructorArg tDecl : constList) {
-					sb.append(formatAccess(tDecl.getDataTypeUse()));
+					sb.append(formatAccess(tDecl.getTypeUse()));
 					sb.append(OUTLINE_DELIMITER + " ");
 				}
 				// cleaning up the superfluous last delimiter and whitespace

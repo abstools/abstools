@@ -144,7 +144,7 @@ public class JavaBackend extends Main {
     }
     
     public static String getJavaType(ConstructorArg u) {
-        return getJavaType(u.getDataTypeUse());
+        return getJavaType(u.getTypeUse());
     }
     
     public static String getJavaType(TypeUse absType) {

@@ -117,7 +117,8 @@ await_activation(Params) ->
                class,                     % The class of the object (a symbol)
                fields,                    % the state of the object fields
                alive=true,     % false if object is garbage collected / crashed
-               protect_from_gc=false % true if unreferenced object needs to  be kept alive
+               protect_from_gc=false, % true if unreferenced object needs to  be kept alive
+               termination_reason     % communicate to terminate() function
               }).
 
 start(Cog,Class)->
@@ -201,15 +202,11 @@ active({#object{class=Class},set,Field,Val},S=#state{class=Class,fields=IS}) ->
     IS1=Class:set_val_internal(IS,Field,Val),
     {next_state,active,S#state{fields=IS1}}.
 
-handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, tasks=Tasks, protect_from_gc=P})->
+handle_sync_event({die,Reason,By},_From,_StateName,S=#state{cog=Cog, tasks=Tasks, protect_from_gc=P})->
     case {P, Reason} of
         {true, gc} ->
             {reply, ok, active, S#state{alive=false}};
         _ ->
-            case C of
-                class_ABS_DC_DeploymentComponent -> cog_monitor:dc_died(self());
-                _ -> ok
-            end,
             %% FIXME: check if cog_monitor needs updating here wrt task lists etc.
             [ exit(T,Reason) ||T<-gb_sets:to_list(Tasks), T/=By],
             cog:dec_ref_count(Cog),
@@ -218,7 +215,7 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{class=C, cog=Cog, ta
                 true -> exit(By,Reason);
                 false -> ok
             end,
-            {stop,{shutdown, Reason},ok,S#state{alive=false}}
+            {stop,normal,ok,S#state{alive=false,termination_reason=Reason}}
     end;
 handle_sync_event(protect_from_gc, _From, StateName, S) ->
     {reply, ok, StateName, S#state{protect_from_gc=true}};
@@ -227,18 +224,14 @@ handle_sync_event(get_references, _From, StateName, S=#state{fields=IState}) ->
 handle_sync_event(get_whole_state, _From, StateName, S=#state{class=C,fields=IState}) ->
     {reply, C:get_all_state(IState), StateName, S}.
 
-handle_event(unprotect_from_gc, StateName, State=#state{class=C,tasks=Tasks,cog=Cog,alive=Alive}) ->
+handle_event(unprotect_from_gc, StateName, State=#state{tasks=Tasks,cog=Cog,alive=Alive}) ->
     case Alive of
         true -> {next_state, StateName, State#state{protect_from_gc=false}};
         false ->
-            case C of
-                class_ABS_DC_DeploymentComponent -> cog_monitor:dc_died(self());
-                _ -> ok
-            end,
             %% FIXME: check if cog_monitor needs updating here wrt task lists etc.
             [ exit(T,normal) ||T<-gb_sets:to_list(Tasks)],
             cog:dec_ref_count(Cog),
-            {stop,{shutdown, unprotected},ok,State}
+            {stop,normal,ok,State#state{termination_reason=gc}}
     end;
 handle_event(_Event,_StateName,State)->
     {stop,not_implemented,State}.
@@ -247,10 +240,19 @@ handle_event(_Event,_StateName,State)->
 handle_info({'DOWN', _MonRef, process, TaskRef, _Reason} ,StateName,S=#state{tasks=Tasks})->
     {next_state,StateName,S#state{tasks=gb_sets:del_element(TaskRef, Tasks)}}.
 
-
-terminate({shutdown, gc}, _StateName, _Data) ->
+terminate(normal, _StateName, _Data=#state{class=C,termination_reason=gc}) ->
+    case C of
+        class_ABS_DC_DeploymentComponent ->
+            cog_monitor:dc_died(self());
+        _ -> ok
+    end,
     ok;
-terminate({shutdown, _Reason},_StateName,_Data)->
+terminate(_Reason,_StateName, _Data=#state{class=C})->
+    case C of
+        class_ABS_DC_DeploymentComponent ->
+            cog_monitor:dc_died(self());
+        _ -> ok
+    end,
     gc:unregister_object(self()),
     ok.
 code_change(_OldVsn,_StateName,_Data,_Extra)->

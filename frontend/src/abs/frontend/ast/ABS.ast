@@ -53,7 +53,7 @@ TypeParameterDecl : TypeDecl ::= <Name>; // local declaration
 ParametricDataTypeDecl : DataTypeDecl ::= Annotation* TypeParameter:TypeParameterDecl* ;
 TypeSynDecl: TypeDecl ::= Annotation* Value:TypeUse ;
 
-ConstructorArg ::= DataTypeUse [SelectorName:Name];
+ConstructorArg ::= TypeUse [SelectorName:Name];
 
 
 abstract DeltaParamDecl;

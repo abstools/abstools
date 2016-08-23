@@ -68,3 +68,52 @@ COPY frontend/bin /usr/local/lib/frontend/bin
 COPY frontend/lib /usr/local/lib/frontend/lib
 RUN chmod -R a+r /usr/local/lib/frontend/ \
  && chmod a+rx /usr/local/lib/frontend/bin/bash/*
+
+
+###############
+# SmartDeployer installation
+###############
+# install needed packages
+RUN apt-get update && \
+	apt-get install -y \
+		qt5-default \
+		python-dev \
+		wget \
+		git \
+		python-pip && \
+	rm -rf /var/lib/apt/lists/* && \
+	pip install antlr4-python2-runtime toposort psutil
+# download and install zephyurs2
+RUN cd / && \
+	mkdir solvers_exec && \
+  cd /solvers_exec && \
+  git clone --recursive -b bind_preferences https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git && \
+	cd zephyrus2 && \
+	git checkout 924b50f04c73b8269d3b14157dd0abbf7b5bd99c && \ 
+	#check out tested version with smartdeployer
+  pip install -e /solvers_exec/zephyrus2
+# download MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz that comes with gecode
+RUN cd /solvers_exec && \
+	wget https://github.com/MiniZinc/MiniZincIDE/releases/download/2.0.13/MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz && \
+	tar -zxvf MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz && \
+	mv /solvers_exec/MiniZincIDE-2.0.13-bundle-linux-x86_64 /solvers_exec/MiniZincIDE && \
+	rm -rf MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz
+ENV PATH /solvers_exec/MiniZincIDE:$PATH
+# clone abs_deployer
+RUN cd /solvers_exec && \
+	git clone --recursive --depth=1 -b bind_pref https://github.com/jacopoMauro/abs_deployer.git
+ENV PATH /solvers_exec/abs_deployer:$PATH
+# download chuffed, add global-dir in minizinc
+RUN cd /solvers_exec && \
+  git clone --depth=1 https://github.com/geoffchu/chuffed.git && \
+  ( [ -d /solvers_exec/MiniZincIDE ] && \
+	  ln -s /solvers_exec/chuffed/binary/linux/mznlib /solvers_exec/MiniZincIDE/share/minizinc/chuffed || \
+		echo MiniZincIde not installed ) && \
+  ( [ -d /solvers_exec/minisearch ] && \
+	ln -s /solvers_exec/chuffed/binary/linux/mznlib /solvers_exec/minisearch/share/minizinc/chuffed || \
+		echo MiniSearch not installed )
+RUN cp /solvers_exec/abs_deployer/docker/docker_scripts/fzn-chuffed /bin/fzn-chuffed && \
+	chmod 755 /bin/fzn-chuffed && \ 
+	chmod 755 /solvers_exec/chuffed/binary/linux/fzn_chuffed
+# add the path to absfrontend.jar in classpath
+ENV CLASSPATH=/usr/local/lib/frontend/absfrontend.jar:$CLASSPATH

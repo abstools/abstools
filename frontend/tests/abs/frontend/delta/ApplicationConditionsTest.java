@@ -114,13 +114,15 @@ public class ApplicationConditionsTest extends DeltaTest {
             Model model = assertParseOk(
                     "module M;"
                             + "delta D;"
-                            + "adds class M.C {}"
+                            +"uses M;"
+                            + "adds class C {}"
                             + "productline PL;"
                             + "features A,B,C;"
                             + "delta D when " + ac + ";"
                             + "product P(A);"
                     );
 
+            model.evaluateAllProductDeclarations();
             model.flattenForProduct("P");
             Decl cls = findDecl(model, "M", "C");
             assertNotNull(cls);
@@ -144,13 +146,15 @@ public class ApplicationConditionsTest extends DeltaTest {
             Model model = assertParseOk(
                     "module M;"
                             + "delta D;"
-                            + "adds class M.C {}"
+                            +"uses M;"
+                            + "adds class C {}"
                             + "productline PL;"
                             + "features A,B,C;"
                             + "delta D when " + ac + ";"
                             + "product P(A);"
                     );
 
+            model.evaluateAllProductDeclarations();
             model.flattenForProduct("P");
             Decl cls = findDecl(model, "M", "C");
             assertNull(cls);

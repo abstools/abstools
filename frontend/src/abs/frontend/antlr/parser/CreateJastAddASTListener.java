@@ -220,7 +220,7 @@ new List<ModuleDecl>(),
     @Override public void exitException_decl(ABSParser.Exception_declContext ctx) {
         ExceptionDecl e = (ExceptionDecl)setV(ctx, new ExceptionDecl(ctx.n.getText(), l(ctx.annotation()), new List<ConstructorArg>()));
         for (ABSParser.Data_constructor_argContext a : ctx.a) {
-            ConstructorArg ca = new ConstructorArg((DataTypeUse)v(a.type_use()),
+            ConstructorArg ca = new ConstructorArg((TypeUse)v(a.type_use()),
                                                    a.IDENTIFIER() != null
                                                    ? new Opt(new Name(a.IDENTIFIER().getText()))
                                                    : new Opt());

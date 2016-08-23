@@ -45,10 +45,27 @@ public class Analyser {
   private static int FixPoint2_0 = 2;
     
   public void deadlockAnalysis(Model m, boolean verbose, int nbIteration, int fixPointVersion, PrintStream out) {
+    
+    
       
     Variable.varCounter =0;
     Long totalTimeInMs = 0L;
-      
+    Long nanoTime = System.nanoTime();
+    DeadlockPreanalysis p = new DeadlockPreanalysis(m);
+    p.analyzeModel();
+    Long ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
+    totalTimeInMs += ellapsedTime;
+    if(p.isDeadlockFree()){
+        
+        out.println("### LOCK INFORMATION RESULTED BY THE ANALYSIS ###\n");
+
+        out.println("Possible Deadlock in Main:    false");
+        out.println("Current Version:              no solver was used");
+        out.println("Note: necessary conditions for deadlocks were not present");
+        out.println();
+        out.println("Analysis Duration:            " + totalTimeInMs + "ms");
+        return;
+    }
       
     
     /* 0, Create the initial data */
@@ -64,8 +81,8 @@ public class Analyser {
      /* 1. Generate contracts */
     log.logDebug("Analyzing dependencies  to look for deadlocks...");
     
-    Long nanoTime = System.nanoTime();
-    Long ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
+    nanoTime = System.nanoTime();
+    ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
     totalTimeInMs += ellapsedTime;
     ResultInference InferenceOutput = ci.typeInference();
     Map<String, MethodContract> methodMap = InferenceOutput.getMethods();
@@ -105,8 +122,20 @@ public class Analyser {
       else { errors.add(new ErrorUnif((SolvingErrorUnif)err)); }
     }
 
-    for(GenerationError err : errors) { System.err.println(err.getHelpMessage()); }
-    if(!errors.isEmpty()) { return; }
+    out.println();
+    if(!errors.isEmpty()) {
+        out.println("### Analysis failed due to some errors ###");
+        out.println();
+        int i = 1;
+        for(GenerationError err : errors){
+            out.println(i++ + ":");
+            out.println(err.getHelpMessage()); 
+            out.println();
+        }
+        
+        
+        return; 
+    }
 
 
     // 1.3. apply it to the contracts
@@ -200,6 +229,12 @@ public class Analyser {
 
       out.println("Possible Deadlock in Main:    " + solver.isDeadlockMain());
       out.println("Current Version:              " + solver.getName() );
+      
+      if(solver.isDeadlockMain()){
+          out.println("Deadlock details: ");
+          solver.printDeadlockDetails(out);
+      }
+      
       if(fixPointVersion == FixPoint1_0){
         out.println("Saturation:                   " + ((FixPointSolver1)solver).isSatured());
         out.println("Possible Livelock in Main:    " + ((FixPointSolver1)solver).isLivelockMain());

@@ -1,8 +1,11 @@
 package deadlock.analyser.detection;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import org.stringtemplate.v4.misc.STNoSuchAttributeException;
 
 import deadlock.analyser.factory.Contract;
 import deadlock.analyser.factory.GroupName;
@@ -181,6 +184,13 @@ public class BigLam {
     public Boolean hasReflexiveState() {
         // TODO Auto-generated method stub
         return w.hasReflexiveState() || wPrime.hasReflexiveState();
+    }
+    
+    public LinkedList<State> getReflexiveStates(){
+        LinkedList<State> res = new LinkedList<>();
+        res.addAll(w.getReflexiveStates());
+        res.addAll(wPrime.getReflexiveStates());
+        return res;
     }
 
 

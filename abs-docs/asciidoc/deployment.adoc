@@ -62,29 +62,183 @@ provider offers.
 
 ==== Methods
 
-DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d);
+.setInstanceDescriptions
 
+This method sets the named instance configurations that the cloud provider
+instance should support.  These names are used in the methods
+`launchInstanceNamed` and `prelaunchInstanceNamed`.
+
+[source]
+----
+[Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions);
+----
+
+.getInstanceDescriptions
+
+This method returns the map of named instance configurations.
+
+[source]
+----
+[Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions();
+----
+
+
+.launchInstanceNamed
+
+This method creates and returns a new deployment component with a resource
+configuration corresponding to `instancename`, as set by the
+`setInstanceDescriptions` method.  If no description for `instancename`
+exists, `launchInstanceNamed` returns `null`.
+
+[source]
+----
+DeploymentComponent launchInstanceNamed(String instancename);
+----
+
+The name of the new deployment component will be `"<Cloud provider
+name>-<instancename>-<Counter>"`, i.e., a concatenation of the name of the
+cloud provider itself, the instance name, and a unique integer as suffix.
+
+If the instance description specifies a startup duration,
+`launchInstanceNamed` will only return after that amount of simulated time has
+elapsed.
+
+The returned deployment component will be acquired (as per `acquireInstance`)
+and can be used immediately.
+
+
+.prelaunchInstanceNamed
+
+This method creates and returns a new deployment component with a resource
+configuration corresponding to `instancename`, as set by the
+`setInstanceDescriptions` method.  If no description for `instancename`
+exists, `prelaunchInstanceNamed` returns `null`.
+
+[source]
+----
+DeploymentComponent prelaunchInstanceNamed(String instancename);
+----
+
+As with `launchInstance`, the name of the new deployment component will be
+`"<Cloud provider name>-<instancename>-<Counter>"`, i.e., a concatenation of
+the name of the cloud provider itself, the instance name, and a unique integer
+as suffix.
+
+The method `prelaunchInstanceNamed` returns immediately, but the method
+`acquireInstance`, when called on the returned deployment component, will not
+return before its startup duration (if specified) has elapsed.
+
+The returned deployment component needs to be acquired (as per
+`acquireInstance`) before it can be used.
+
+
+
+
+.launchInstance
+
+The `launchInstance` method creates and returns a new deployment component
+with the specified resource configuration.  It can be used when, for whatever
+reason, the resource configuration should not be registered with the cloud
+provider, but the deployment component should still be managed by it.
+
+[source]
+----
 DeploymentComponent launchInstance(Map<Resourcetype, Rat> description);
+----
 
+The name of the new deployment component will be `"<Cloud provider
+name>-<Counter>"`, i.e., a concatenation of the name of the
+cloud provider itself and a unique integer as suffix.
+
+If the resource configuration specifies a startup duration,
+`launchInstanceNamed` will only return after that amount of simulated time has
+elapsed.
+
+The returned deployment component will be acquired (as per `acquireInstance`)
+and can be used immediately.
+
+
+.prelaunchInstance
+
+This method creates and returns a new deployment component with the specified
+resource configuration.  As with `launchInstance`, this method can be used
+when, for whatever reason, the resource configuration should not be registered
+with the cloud provider, but the deployment component should still be managed
+by it.
+
+[source]
+----
+DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d)
+----
+
+The name of the new deployment component will be `"<Cloud provider
+name>-<Counter>"`, i.e., a concatenation of the name of the cloud provider
+itself and a unique integer as suffix.
+
+The method `prelaunchInstance` returns immediately, but the method
+`acquireInstance`, when called on the returned deployment component, will not
+return before its startup duration (if specified) has elapsed.
+
+The returned deployment component needs to be acquired (as per
+`acquireInstance`) before it can be used.
+
+
+.acquireInstance
+
+This method, together with `releaseInstance`, implements exclusive access to a
+deployment component.  After `acquireInstance` returns true, all further
+invocations will return false until `releaseInstance` is called for the
+deployment component.
+
+[source]
+----
 Bool acquireInstance(DeploymentComponent instance);
+----
 
+If the deployment component passed as argument was not created by the cloud
+provider, the method returns false.
+
+NOTE: The methods `acquireInstance` and `releaseInstance` are used to
+implement exclusive access in a _cooperative_ manner.  Attempting to create a
+cog on a deployment component without having acquired it beforehand will not
+lead to a runtime error; ensuring exclusive access to deployment components is
+the responsibility of the modeler.
+
+
+.releaseInstance
+
+This method releases the deployment component, such that the next call to
+`acquireInstance` will return true.
+
+[source]
+----
 Bool releaseInstance(DeploymentComponent instance);
+----
 
-Bool killInstance(DeploymentComponent instance);
+This method returns true if the deployment component was successfully
+released.  It returns false if the deployment component was already not
+acquired.
+
+If the deployment component passed as argument was not created by the cloud
+provider, the method returns false.
+
+
+
+.shutdownInstance
+
+This method shuts down a deployment component.  The effect on the cogs,
+objects and running tasks deployed on that deployment component are
+backend-specific.
+
+[source]
+----
+Bool shutdownInstance(DeploymentComponent instance);
+----
 
 
 [Atomic] Rat getAccumulatedCost();
 
-[Atomic] Unit shutdown();
-
-
-[Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions);
-
 [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions();
-
-DeploymentComponent prelaunchInstanceNamed(String instancename);
-
-DeploymentComponent launchInstanceNamed(String instancename);
 
 
 
@@ -95,22 +249,25 @@ In ABS, processes run inside cogs.  Deployment components are used to provide
 a location to cogs.  Cogs residing on the same deployment component share the
 resources provided by the deployment component.
 
+[[fig-deployment-component]]
+image::Deployment-component.png[width=636,height=196,title="A deployment component and its cogs",alt="A deployment component and its cogs"]
+
+
+
 Deployment Components are first-class constructs in the ABS language.  A
 reference to a deployment component is treated the same way as a reference to
-an object.  Deployment Components are created using the `new` expression.  Any
-other cog can be created “on” a deployment component by using a `DC`
+an object.  Deployment Components are created by a cloud provider instance
+(see <<sec:cloudprovider>>), but can also be created using the `new`
+expression.  A new cog is created on a deployment component by using a `DC`
 annotation to the `new` statement.
 
 .Example
 ----
-DeploymentComponent dc = new DeploymentComponent("Server 1", map[Pair(Speed, 10)]); <1>
+DeploymentComponent dc = await provider!launchInstance(map[Pair(Speed, 10)]); <1>
 [DC: dc] Worker w = new CWorker(); <2>
 ----
-<1> A new deployment component `dc` is created with 10 `Speed` resources
-<2> `w` is created on the new deployment component `dc`
-
-NOTE: Deployment components cannot be created with `new local`, only with
-`new`.
+<1> The cloud provider `provider` creates a new deployment component `dc` with 10 `Speed` resources
+<2> A new cog containing a `CWorker` object is created on the new deployment component `dc`
 
 NOTE: All objects of a cog must reside on the same deployment component, i.e.,
 `[DC: x] new local C()` is an error.

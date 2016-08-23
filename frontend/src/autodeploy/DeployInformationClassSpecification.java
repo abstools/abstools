@@ -116,6 +116,7 @@ public class DeployInformationClassSpecification {
 		// 5, optional lists
 		f.write("          ,\"optional_list\": [\n");
 		Iterator it = _params.entrySet().iterator();
+		Boolean first = true;
     while (it.hasNext()) {
         Map.Entry pair = (Map.Entry)it.next();
 				String name = (String)pair.getKey();
@@ -123,6 +124,11 @@ public class DeployInformationClassSpecification {
 				for(String s : _paramList)
     			if (s.equals(name)) { not_found = false; }
 				if (not_found) {
+					if (first) {
+						first = false;
+					} else {
+						f.write(",");
+					}
 					f.write("            ");
 					f.write( _params.get(name).toString( name ) );
 				}

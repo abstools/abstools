@@ -4,11 +4,28 @@ aspect BackPositions {
         protected int ASTNode.startcolumn = 0;
         protected int ASTNode.endline = 0;
         protected int ASTNode.endcolumn = 0;
+        protected boolean ASTNode.isPositionSet = false;
 
-        syn int ASTNode.getStartLine() = startline;
-        syn int ASTNode.getStartColumn() = startcolumn;
-        syn int ASTNode.getEndLine() = endline;
-        syn int ASTNode.getEndColumn() = endcolumn;
+        syn int ASTNode.getStartLine() {
+            if (isPositionSet) return startline;
+            else if (getParent() != null) return getParent().getStartLine();
+            else return 0;
+        }
+        syn int ASTNode.getStartColumn() {
+            if (isPositionSet) return startcolumn;
+            else if (getParent() != null) return getParent().getStartColumn();
+            else return 0;
+        }
+        syn int ASTNode.getEndLine() {
+            if (isPositionSet) return endline;
+            else if (getParent() != null) return getParent().getEndLine();
+            else return 0;
+        }
+        syn int ASTNode.getEndColumn() {
+            if (isPositionSet) return endcolumn;
+            else if (getParent() != null) return getParent().getEndColumn();
+            else return 0;
+        }
 
         // // beaver.Symbol encoded line+column in one integer, which some parts
         // // of the code used for comparisons of positions.  Keep it for legacy reasons.
@@ -23,6 +40,7 @@ aspect BackPositions {
             this.startcolumn = startcolumn;
             this.endline = endline;
             this.endcolumn = endcolumn;
+            this.isPositionSet = true;
         }
 
         public void ASTNode.setPositionFromNode(ASTNode node) {
@@ -30,6 +48,7 @@ aspect BackPositions {
             this.startcolumn = node.startcolumn;
             this.endline = node.endline;
             this.endcolumn = node.endcolumn;
+            this.isPositionSet = true;
         }
 
         public String ASTNode.getPositionString() {

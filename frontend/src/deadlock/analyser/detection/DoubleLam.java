@@ -80,5 +80,11 @@ public class DoubleLam {
         this.wPrime = new Lam();
     }
 
+
+    public void updateStackTrace(String method) {
+       this.w.updateStackTrace(method);
+       this.w.updateStackTrace(method);
+    }
+
   
 }
