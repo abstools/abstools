@@ -221,7 +221,7 @@ delta DParentalControl after DFileFilter when ParentalControl;
 //**********************************************************************************
 product P1 (Basic);
 product P2 (FileFilter);
-product P3 (ParentalControl);
+//product P3 (ParentalControl);
 product P4 (FileFilter, ParentalControl);
 
 //**********************************************************************************

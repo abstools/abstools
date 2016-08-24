@@ -53,14 +53,14 @@ public class DeltaSamplesTest extends FrontendTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    @Test
+    /*   @Test
     public void test_P2P_P3() throws Exception {
         Model m = assertTypeCheckFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
         m.setNullPrintStream();
         thrown.expect(DeltaModellingWithNodeException.class);
         m.flattenForProduct("P3");
     }
-
+*/
     @Test
     public void test_P2P_P4() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);

@@ -27,8 +27,8 @@ public class VarResolutionTest extends DeltaTest {
                 + "class C {"
                 + "Int x = 0;"
                 + "}"
-                + "delta D;"
-                + "modifies class M.C {"
+                + "delta D; uses M;"
+                + "modifies class C {"
                 + "adds Int y = x;"
                 + "}"
         );
@@ -47,8 +47,8 @@ public class VarResolutionTest extends DeltaTest {
                 + "class C {"
                 + "Int x = 0;"
                 + "}"
-                + "delta D;"
-                + "modifies class M.C {"
+                + "delta D;uses M;"
+                + "modifies class C {"
                 + "adds Int y = x;"
                 + "}"
         );
@@ -68,8 +68,8 @@ public class VarResolutionTest extends DeltaTest {
                 + "class C {"
                 + "Int x = 0;"
                 + "}"
-                + "delta D;"
-                + "modifies class M.C {"
+                + "delta D;uses M;"
+                + "modifies class C {"
                 + "adds Int getX() { return x; }"
                 + "}"
         );
@@ -88,8 +88,8 @@ public class VarResolutionTest extends DeltaTest {
                 + "Int x = 0;"
                 + "Int getX() { }"
                 + "}"
-                + "delta D;"
-                + "modifies class M.C {"
+                + "delta D;uses M;"
+                + "modifies class C {"
                 + "modifies Int getX() { return x; }"
                 + "}"
                 );
@@ -105,8 +105,8 @@ public class VarResolutionTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "class C { }"
-                + "delta D;"
-                + "modifies class M.C {"
+                + "delta D;uses M;"
+                + "modifies class C {"
                 + "adds Int x = 0;"
                 + "adds Int getX() { return x; }"
                 + "}"
@@ -124,10 +124,11 @@ public class VarResolutionTest extends DeltaTest {
                 "module M;"
                 + "class C { }"
                 + "delta D;"
-                + "modifies class M.C {"
+                + "uses M;"
+                + "modifies class C {"
                 + "adds Int x = 0;"
                 + "}"
-                + "modifies class M.C {"
+                + " modifies class C {"
                 + "adds Int getX() { return x; }"
                 + "}"
                 );
@@ -143,10 +144,12 @@ public class VarResolutionTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D;"
-                + "adds class M.C {"
+                + "uses M;"
+                + "adds class C {"
                 + "Int x = 0;"
                 + "}"
-                + "modifies class M.C {"
+                
+                + "modifies class C {"
                 + "adds Int getX() { return x; }"
                 + "}"
                 );
@@ -165,7 +168,8 @@ public class VarResolutionTest extends DeltaTest {
                 + "Int x = 0;"
                 + "}"
                 + "delta D;"
-                + "modifies class M.C {"
+                + "uses M;"
+                + "modifies class C {"
                 + "adds Int getX() { Int x = 17; return x; }"
                 + "}"
         );
@@ -178,8 +182,11 @@ public class VarResolutionTest extends DeltaTest {
     
     @Test
     public void defUseMultipleFiles() throws Exception {
-        Model m = this.assertParseFilesOk(new HashSet<String>() {{ add("tests/abssamples/deltas/defuse/def.abs"); add("tests/abssamples/deltas/defuse/use.abs");}}, true);
-        m.flattenForProduct("Prod");
-        assertTrue(!m.typeCheck().containsErrors());
+    Model m = this.assertParseFilesOk(new HashSet<String>() {{ add("tests/abssamples/deltas/defuse/def.abs"); add("tests/abssamples/deltas/defuse/use.abs");}}, true);
+    m.evaluateAllProductDeclarations();  
+    m.flushCache();
+    m.flattenForProduct("Prod"); 
+    m.flushCache();
+    assertTrue(!m.typeCheck().containsErrors());
     }
 }

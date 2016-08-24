@@ -21,9 +21,9 @@ public class OriginalCallTest extends DeltaTest {
                 "module M;"
                 + "interface I {}"
                 + "class C implements I { Unit m() {} }"
-                + "delta D; uses M"
+                + "delta D; uses M;"
                 + "modifies class C { modifies Unit m() { original(); } }"
-                + "delta D2; uses M"
+                + "delta D2; uses M;"
                 + "modifies class C { modifies Unit m() { original(); } }"
         );
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
@@ -73,7 +73,7 @@ public class OriginalCallTest extends DeltaTest {
         assertTrue(delta2.getNumModuleModifier() == 1);
         assertTrue(((ModifyClassModifier) delta2.getModuleModifier(0)).getNumModifier() == 1);
 
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
+        Model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
         assertTrue(delta1.getNumModuleModifier() == 2);
         assertTrue(delta2.getNumModuleModifier() == 2);
 
@@ -92,7 +92,7 @@ public class OriginalCallTest extends DeltaTest {
                 "module M;"
                 + "interface I {}"
                 + "class C implements I { Int one() { return 1; } }"
-                + "delta D; uses M"
+                + "delta D; uses M;"
                 + "modifies class C { modifies Int one() { Int x = original(); return x + 1; } }"
         );
 
@@ -100,7 +100,7 @@ public class OriginalCallTest extends DeltaTest {
         assertEquals(1, cls.getMethods().getNumChild());
 
         DeltaDecl delta1 = findDelta(model, "D");
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta1)));
+        Model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta1)));
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta1)));
 
         assertEquals(2, cls.getMethods().getNumChild());
@@ -119,7 +119,7 @@ public class OriginalCallTest extends DeltaTest {
                 "module M;"
                 + "interface I {}"
                 + "class C implements I { Unit m() {} Unit n() {} Unit p() {} }"
-                + "delta D;uses M"
+                + "delta D;uses M;"
                 + "modifies class C {"
                     + "modifies Unit m() { original(); }"
                     + "modifies Unit n() { original(); }"
@@ -131,7 +131,7 @@ public class OriginalCallTest extends DeltaTest {
         DeltaDecl delta = findDelta(model, "D");
         assertEquals(1, delta.getNumModuleModifier());
 
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
+        Model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
         assertEquals(4, delta.getNumModuleModifier());
     }
 
@@ -151,7 +151,7 @@ public class OriginalCallTest extends DeltaTest {
         DeltaDecl delta = findDelta(model, "D");
         assertEquals(1, delta.getNumModuleModifier());
 
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
+        Model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
 
         assertEquals(delta.getModuleModifiers().toString(),2, delta.getNumModuleModifier());
     }
@@ -161,18 +161,24 @@ public class OriginalCallTest extends DeltaTest {
         Model model = assertParseOk(
                 "module M;"
                 + "class C { Unit m() {} }"
+
+                + "delta D1; "
                 + "uses M;"
-                + "delta D1; modifies class M.C { adds Unit n() {} }"
+                + "modifies class C { adds Unit n() {} }"
+
+                + "delta D2; "
                 + "uses M;"
-                + "delta D2; modifies class M.C { modifies Unit m() { original(); core.original(); } }"
+                + "modifies class C { modifies Unit m() { original(); core.original(); } }"
+
+                + "delta D3; "
                 + "uses M;"
-                + "delta D3; modifies class M.C { modifies Unit n() { original(); D1.original(); } }"
+                + "modifies class C { modifies Unit n() { original(); D1.original(); } }"
         );
 
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");
         DeltaDecl d3 = findDelta(model, "D3");
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
+        Model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
@@ -227,7 +233,7 @@ public class OriginalCallTest extends DeltaTest {
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");
         DeltaDecl d3 = findDelta(model, "D3");
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
+        Model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
@@ -242,13 +248,13 @@ public class OriginalCallTest extends DeltaTest {
                 "module M;"
                 + "class C { }"
                 + "delta D1;"
-                + "uses M;"
+
                 + "modifies class C { modifies Unit m() { original(); } }"
         );
 
         DeltaDecl d1 = findDelta(model, "D1");
 
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
+        Model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
     }
 
     @Test(expected=DeltaModellingException.class)
@@ -263,7 +269,7 @@ public class OriginalCallTest extends DeltaTest {
 
         DeltaDecl d1 = findDelta(model, "D1");
 
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
+        Model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
     }
 
     @Test
@@ -275,6 +281,7 @@ public class OriginalCallTest extends DeltaTest {
                 + "uses M;"
                 + "modifies class C { modifies Unit m() { core.original(); } }"
                 + "delta D2;"
+                + "uses M;"
                 + "modifies class C { modifies Unit m() { D1.original(); } }"
         );
 
