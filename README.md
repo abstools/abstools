@@ -56,8 +56,9 @@ Folders
 Using Docker
 ------------
 
-To run the collaboratory locally using Docker, execute the following commands:
+To run the collaboratory locally using Docker, execute the following commands after cloning the repository:
 
+    make frontend
     docker build -t easyinterface .
     docker run -p 8080:80 --rm easyinterface
 
