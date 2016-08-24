@@ -27,7 +27,7 @@ aspect OriginalCallResolver {
     protected void DeltaDecl.resolveOriginalCalls(
             Collection<DeltaDecl> deltas) throws DeltaModellingException {
 
-        //System.out.println("*** Processing original calls in delta: " + this.qualifiedName());
+        //System.out.println("*** Processing original calls in delta: " + this.getName());
         for (ModuleModifier cm : getModuleModifiers()) {
            if (cm instanceof ModifyClassModifier)
                for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
@@ -183,42 +183,48 @@ aspect OriginalCallResolver {
         }
     }
     
-    /* In given delta:
+    /** In given delta:
      * return first MethodImpl that matches classid and methodid
+     * 
+     * @param methodSig         signature of method we are looking for
+     * @param classid           qualified name of the method's class (Module.Class)
+     * @param delta             delta to search for method
+     * @return                  the MethodImpl, if found
      */
     private MethodImpl ModifyMethodModifier.findOriginalInDelta(            
             MethodSig methodSig,
             String classid, 
             DeltaDecl delta) throws DeltaModellingException {
         
-        //System.out.println("*** searching in delta " + delta.getName());
         String methodid = methodSig.getName();
-        for (ModuleModifier cm : delta.getModuleModifiers()) {
-            if (cm.getName().equals(classid)) {
-                if (cm instanceof ModifyClassModifier) {
-                    for (Modifier m : ((ModifyClassModifier)cm).getModifiers()) {
-                        if (m instanceof AddMethodModifier) {
-                            MethodImpl method = ((AddMethodModifier)m).getMethodImpl();
-                            if (method.getMethodSig().getName().equals(methodid))
-                                return copyMethod(method, delta.getName());
-                        } else if (m instanceof ModifyMethodModifier) {
-                            MethodImpl method = ((ModifyMethodModifier)m).getMethodImpl();
-                            if (method.getMethodSig().getName().equals(methodid))
-                                return copyMethod(method, delta.getName());
-                        } else if (m instanceof RemoveMethodModifier) {
-                            if (((RemoveMethodModifier)m).getMethodSig().getName().equals(methodid))
-                                throw new DeltaModellingException(getDelta(),": Could not find original implementation of method " + classid + "." + methodid
-                                        + " -- it was removed by delta " + delta.getName());
-                        }
-                    }
-                } else if (cm instanceof AddClassModifier) {
-                    for (MethodImpl method : ((AddClassModifier)cm).getClassDecl().getMethods())
+        for (ModuleModifier mm : delta.getModuleModifiers()) {
+            if (mm instanceof ClassModifier) {
+                if (! Objects.equals(classid, ((ClassModifier)mm).targetQualifiedClassName()))
+                    break;
+            }
+            if (mm instanceof ModifyClassModifier) {
+                for (Modifier m : ((ModifyClassModifier)mm).getModifiers()) {
+                    if (m instanceof AddMethodModifier) {
+                        MethodImpl method = ((AddMethodModifier)m).getMethodImpl();
                         if (method.getMethodSig().getName().equals(methodid))
                             return copyMethod(method, delta.getName());
-                } else if (cm instanceof RemoveClassModifier) {
-                    throw new DeltaModellingException(getDelta(), ": Could not find original implementation of method " + classid + "." + methodid
-                            + " -- it was removed by delta " + delta.getName());
+                    } else if (m instanceof ModifyMethodModifier) {
+                        MethodImpl method = ((ModifyMethodModifier)m).getMethodImpl();
+                        if (method.getMethodSig().getName().equals(methodid))
+                            return copyMethod(method, delta.getName());
+                    } else if (m instanceof RemoveMethodModifier) {
+                        if (((RemoveMethodModifier)m).getMethodSig().getName().equals(methodid))
+                            throw new DeltaModellingException(getDelta(),": Could not find original implementation of method " + classid + "." + methodid
+                                    + " -- it was removed by delta " + delta.getName());
+                    }
                 }
+            } else if (mm instanceof AddClassModifier) {
+                for (MethodImpl method : ((AddClassModifier)mm).getClassDecl().getMethods())
+                    if (method.getMethodSig().getName().equals(methodid))
+                        return copyMethod(method, delta.getName());
+            } else if (mm instanceof RemoveClassModifier) {
+                throw new DeltaModellingException(getDelta(), ": Could not find original implementation of method " + classid + "." + methodid
+                        + " -- it was removed by delta " + delta.getName());
             }
         }
         // not found

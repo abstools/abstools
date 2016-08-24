@@ -1,11 +1,11 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.delta;
 
 import org.junit.Test;
-
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
@@ -28,27 +28,28 @@ public class OriginalCallTest extends DeltaTest {
         );
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getMethods().getNumChild() == 1);
-        
+
         DeltaDecl delta1 = findDelta(model, "D");
         assertTrue(delta1.getNumModuleModifier() == 1);
         assertTrue(((ModifyClassModifier) delta1.getModuleModifier(0)).getNumModifier() == 1);
-        
+
         DeltaDecl delta2 = findDelta(model, "D2");
         assertTrue(delta2.getNumModuleModifier() == 1);
         assertTrue(((ModifyClassModifier) delta2.getModuleModifier(0)).getNumModifier() == 1);
 
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
+        Model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
         assertTrue(delta1.getNumModuleModifier() == 2);
         assertTrue(delta2.getNumModuleModifier() == 2);
-        
+
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
-        
+
         // there should be 3 methods now: the original one and those added by the two deltas
         assertEquals(3, cls.getMethods().getNumChild());
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
         assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m$ORIGIN_core"));
         assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m$ORIGIN_D"));
     }
+
 
     @Test
     public void originalCall2() throws DeltaModellingException {
@@ -63,11 +64,11 @@ public class OriginalCallTest extends DeltaTest {
         );
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getMethods().getNumChild() == 1);
-        
+
         DeltaDecl delta1 = findDelta(model, "D");
         assertTrue(delta1.getNumModuleModifier() == 1);
         assertTrue(((ModifyClassModifier) delta1.getModuleModifier(0)).getNumModifier() == 1);
-        
+
         DeltaDecl delta2 = findDelta(model, "D2");
         assertTrue(delta2.getNumModuleModifier() == 1);
         assertTrue(((ModifyClassModifier) delta2.getModuleModifier(0)).getNumModifier() == 1);
@@ -75,9 +76,9 @@ public class OriginalCallTest extends DeltaTest {
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
         assertTrue(delta1.getNumModuleModifier() == 2);
         assertTrue(delta2.getNumModuleModifier() == 2);
-        
+
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
-        
+
         // there should be 3 methods now: the original one and those added by the two deltas
         assertEquals(3, cls.getMethods().getNumChild());
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
@@ -94,10 +95,10 @@ public class OriginalCallTest extends DeltaTest {
                 + "delta D; uses M"
                 + "modifies class C { modifies Int one() { Int x = original(); return x + 1; } }"
         );
-    
+
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals(1, cls.getMethods().getNumChild());
-        
+
         DeltaDecl delta1 = findDelta(model, "D");
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta1)));
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta1)));
@@ -106,7 +107,7 @@ public class OriginalCallTest extends DeltaTest {
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("one"));
         // make sure method has the right body
         assertTrue(cls.getMethod(0).getBlock().getStmt(1) instanceof ReturnStmt);
-        
+
         assertTrue(cls.getMethod(1).getMethodSig().getName().equals("one$ORIGIN_core"));
         // make sure method has the right body
         assertTrue(cls.getMethod(1).getBlock().getStmt(0) instanceof ReturnStmt);
@@ -118,11 +119,11 @@ public class OriginalCallTest extends DeltaTest {
                 "module M;"
                 + "interface I {}"
                 + "class C implements I { Unit m() {} Unit n() {} Unit p() {} }"
-                + "delta D;uses M" 
+                + "delta D;uses M"
                 + "modifies class C {"
-                    + "modifies Unit m() { original(); }" 
+                    + "modifies Unit m() { original(); }"
                     + "modifies Unit n() { original(); }"
-                    + "modifies Unit p() { original(); }" 
+                    + "modifies Unit p() { original(); }"
                 + "}"
         );
 
@@ -142,7 +143,7 @@ public class OriginalCallTest extends DeltaTest {
                 + "class C implements I { Unit m() {} }"
                 + "delta D;"
                 + "modifies class C {"
-                    + "modifies Unit m() { original(); original(); }" 
+                    + "modifies Unit m() { original(); original(); }"
                 + "}"
         );
 
@@ -151,12 +152,12 @@ public class OriginalCallTest extends DeltaTest {
         assertEquals(1, delta.getNumModuleModifier());
 
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
-        
+
         assertEquals(delta.getModuleModifiers().toString(),2, delta.getNumModuleModifier());
     }
-    
+
     @Test
-    public void targetedOriginalCall() throws DeltaModellingException {
+    public void targetedAndUntargetedOriginalCall() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "class C { Unit m() {} }"
@@ -167,13 +168,13 @@ public class OriginalCallTest extends DeltaTest {
                 + "uses M;"
                 + "delta D3; modifies class M.C { modifies Unit n() { original(); D1.original(); } }"
         );
-        
+
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");
         DeltaDecl d3 = findDelta(model, "D3");
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
-        
+
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals(cls.getMethods().toString(), 4, cls.getMethods().getNumChild());
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
@@ -181,6 +182,33 @@ public class OriginalCallTest extends DeltaTest {
         assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m$ORIGIN_core"));
         assertTrue(cls.getMethod(3).getMethodSig().getName().equals("n$ORIGIN_D1"));
     }
+
+    @Test
+    public void targetedOriginalCall() throws DeltaModellingException {
+        Model model = assertParseOk(
+                "module M;"
+                + "class C { Unit m() {} }"
+                + "delta D1;"
+                + "uses M;"
+                + "modifies class C { modifies Unit m() { core.original(); } }"
+                + "adds class C2 { }"
+                + "delta D2;"
+                + "modifies class M.C { modifies Unit m() { D1.original(); } }"
+        );
+
+        DeltaDecl d1 = findDelta(model, "D1");
+        DeltaDecl d2 = findDelta(model, "D2");
+
+        Model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
+        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertEquals(cls.getMethods().toString(), 3, cls.getMethods().getNumChild());
+        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
+        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m$ORIGIN_core"));
+        assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m$ORIGIN_D1"));
+    }
+
 
     @Test
     public void multipleTargetedOriginalCalls() throws DeltaModellingException {
@@ -195,13 +223,13 @@ public class OriginalCallTest extends DeltaTest {
                 + "delta D3;uses M;"
                 + "modifies class C { modifies Unit m() { D1.original(); } }"
         );
-        
+
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");
         DeltaDecl d3 = findDelta(model, "D3");
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
-        
+
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals(cls.getMethods().toString(), 2, cls.getMethods().getNumChild());
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
@@ -217,7 +245,7 @@ public class OriginalCallTest extends DeltaTest {
                 + "uses M;"
                 + "modifies class C { modifies Unit m() { original(); } }"
         );
-        
+
         DeltaDecl d1 = findDelta(model, "D1");
 
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
@@ -232,7 +260,7 @@ public class OriginalCallTest extends DeltaTest {
                 + "uses M;"
                 + "modifies class C { modifies Unit m() { core.original(); } }"
         );
-        
+
         DeltaDecl d1 = findDelta(model, "D1");
 
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
@@ -249,24 +277,18 @@ public class OriginalCallTest extends DeltaTest {
                 + "delta D2;"
                 + "modifies class C { modifies Unit m() { D1.original(); } }"
         );
-        
+
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");
-
         try {
-            // apply deltas in wrong order - note that D2 has a targeted original call to a method in D1
-            // TODO: should probably be two different tests.
-            model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d2,d1)));
-            fail("expected an exception.");
-        } catch (DeltaModellingException e) {}
-        
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
-        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
-        
-        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        assertEquals(cls.getMethods().toString(), 3, cls.getMethods().getNumChild());
-        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
-        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m$ORIGIN_core"));
-        assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m$ORIGIN_D1"));
+            // applying deltas in wrong order (D2 then D1) should throw an exception
+            // because D2 has a targeted original call to a method in D1
+            Model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d2,d1)));
+            fail("expected a DeltaModellingException");
+        } catch (DeltaModellingException e) {
+            assertThat(e.getMessage(), containsString("has not yet been applied"));
+        }
     }
+
+
 }
