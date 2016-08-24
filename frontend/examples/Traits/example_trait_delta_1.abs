@@ -2,10 +2,8 @@ module TestMod;
 
 interface Inter {}
 
-//Example for traits in classes and deltas
+//Example for traits references in deltas
 
-trait Line5 = { Unit printLine_5(){println("I'm 5!");} }
-trait Shift = Line5 removes Unit printLine_0(); 
 
 trait T2 = { 
     Unit driver(){
@@ -13,12 +11,10 @@ trait T2 = {
         this.greeting();
         this.printLine_1();
         this.printLine_2();
-        this.printLine_5();
         this.sendoff();
     }
 }
 class InterImpl(Inter inter) implements Inter {
-    adds Shift;
     Unit printLine_0(){println("I'm 0!");}
     Unit printLine_1(){println("I'm 1!");}
     Unit printLine_2(){println("I'm 2!");}
@@ -30,7 +26,6 @@ class InterImpl(Inter inter) implements Inter {
         this.printLine_2();
         this.printLine_3();
         this.printLine_4();
-        this.printLine_5();
     }
 }        
 
@@ -48,7 +43,7 @@ modifies class TestMod.InterImpl{
     }  
     modifies {
         Unit printLine_2(){original(); println("and I deleted the lines 3+4!");}
-    } 
+    }
     removes Unit printLine_3(); 
     removes Unit printLine_4();
 }

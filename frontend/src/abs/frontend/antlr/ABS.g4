@@ -260,7 +260,8 @@ trait_decl : 'trait' TYPE_IDENTIFIER '='
 			trait_expr
 		   ;
 
-trait_expr : '{' method* '}'						#TraitSetFragment
+trait_expr : 
+		    '{' method* '}'					    	#TraitSetFragment
 		   | method 						        #TraitSetFragment
 		   | TYPE_IDENTIFIER						#TraitNameFragment
 		   | trait_expr trait_oper					#TraitApplyFragment
@@ -308,7 +309,7 @@ oo_modifier : 'adds' class_decl                            # DeltaAddClassModifi
     | 'modifies' 'class' n=qualified_type_identifier
         ('adds' ia+=interface_name (',' ia+=interface_name)*)?
         ('removes' ir+=interface_name (',' ir+=interface_name)*)?
-        '{' class_modifier_fragment* '}'                   # DeltaModifyClassModifier
+        '{' class_modifier_fragment*? '}'                  # DeltaModifyClassModifier
     | 'adds' interface_decl                                # DeltaAddInterfaceModifier
     | 'removes' 'interface' qualified_type_identifier ';'  # DeltaRemoveInterfaceModifier
     | 'modifies' 'interface' qualified_type_identifier

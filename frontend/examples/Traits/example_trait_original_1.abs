@@ -4,16 +4,11 @@ interface Inter {
     Unit m(Int i);
 }
 
-//original in traits
-
-trait T1 = {} modifies { Unit m(Int i){ original(i+2); } }
+//original in traits: succeeds with and without applying deltas
+trait T1 = {Unit m(Int i) { println(toString(i)); }  } modifies { Unit m(Int i){ original(i+2); } }
 
 class InterImpl implements Inter {
-    adds T1;
-
-    Unit m(Int i) { 
-        println(toString(i));
-    }
+    uses T1;
 }
 
 delta D;

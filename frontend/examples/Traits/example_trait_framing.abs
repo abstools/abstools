@@ -1,0 +1,21 @@
+module M;
+interface I { Unit x(); Unit foo(); Unit bar(); }
+trait T = Unit x() { this.foo(); original(); this.bar();  }
+trait T2 = { Unit x() { println("T2"); } } modifies T
+trait T3 = { Unit x() { println("T3"); } } modifies T
+class C implements I {
+	Int i = 0;
+	uses T2;
+	Unit foo(){ i = i+1; }
+	Unit bar(){ i = i-1; }
+}
+
+class C2 implements I {
+	Int i = 0;
+	uses T3;
+	Unit foo(){ i = i-1; }
+	Unit bar(){ i = i+1; }
+}
+{
+
+}

@@ -14,8 +14,8 @@ class InterImpl implements Inter {
 }
 delta D3;
 modifies class Test.InterImpl{
-adds Unit asd2(){println("delta");} 
-modifies Unit asd(){println("delta");} 
+	adds Unit asd2(){println("delta");} 
+	modifies Unit asd(){println("delta");} 
 }
 
 productline Line;

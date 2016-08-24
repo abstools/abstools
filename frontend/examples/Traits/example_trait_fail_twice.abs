@@ -1,10 +1,7 @@
 module TestMod;
 
-//example for traits applied to classes
-
+//this should fail and report that main_method is declared twice
 trait T1 = {} 
-           removes Unit helper_1(Int i, Int j); 
-           removes Unit helper_2(Int i);
            adds { 
                Int better_helper_1(Int i, Int j) { return i*j; } 
                Int better_helper_2(Int i) { return i*2; } 
@@ -19,10 +16,10 @@ trait T1 = {}
 
 interface Inter {}
 
-class InterImpl implements Inter {
-    adds T1;
+class InterImpl implements Inter{
     Int f1 = 0;
     Int f2 = 0;
+    uses T1;
     Unit helper_1(Int i, Int j){ f1 = i*j; }
     Unit helper_2(Int i) { f2 = i*2; }
     Int main_method(Int i){
