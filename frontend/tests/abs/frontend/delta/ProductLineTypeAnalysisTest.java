@@ -111,8 +111,8 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         model = assertParseOk(
                 "module M;"
                         + "delta D1; modifies class M.C { adds Unit foo() {} }"
-                        + "delta D2; removes class M.C;"
-                        + "delta D3; adds class M.C {}"
+                        + "delta D2; uses M; removes class C;"
+                        + "delta D3; uses  M; adds class C {}"
                         + "productline PL;"
                         + "features A;"
                         + "delta D1;"
@@ -199,6 +199,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
                         + "}"
                 );
         //two products: {FM}, {FM, A}
+        System.out.println("Model Products: " + model.getProductList().getNumChild());
         assertEquals(2, model.getProductList().getNumChild());
     }
 

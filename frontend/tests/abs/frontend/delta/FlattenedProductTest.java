@@ -30,6 +30,7 @@ public class FlattenedProductTest extends FrontendTest {
         assertTrue(imodel.getModel() == model);
 
         List<InstNode> l = imodel.getInstNodeList();
+        
         List<InstNode> l1 = imodel.getInstNodeList();
         List<InstNode> l2 = imodel.getInstNodeList();
 
