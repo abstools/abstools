@@ -41,6 +41,7 @@ aspect doOutlinePrinter {
 
         if (hasBlock()) {
 			stream.println("<category text='main' value='main' selectable='true' />");
+            stream.println("<category text='main block' value='"+getName()+"' selectable='true' />");
         }
         stream.println("</category>");
         stream.flush();
