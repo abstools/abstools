@@ -76,8 +76,8 @@ First, install Vagrant from https://www.vagrantup.com/downloads.html and
 VirtualBox from https://www.virtualbox.org
 
 To create the ABS virtual machine, run the command `vagrant up` in this
-directory.  Run `vagrant ssh` to login to that machine, or open
-http://localhost:8888/ to connect to an off-line version of the collaboratory.
+directory.  Run `vagrant ssh` to login to that machine (login vagrant/vagrant), or open
+http://localhost:8888/ to connect to a local version of the collaboratory.
 Currently supported browsers include Firefox, Chrome, recent IE (no Safari).
 
 Within the VM, this directory is accessible as `/vagrant`.
