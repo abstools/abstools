@@ -288,10 +288,26 @@ cabal sandbox add-source habs-runtime
 cabal sandbox add-source habs-stdlib
 cabal install -j1 habs-runtime -fwait-all-cogs  # explicitly installing runtime to pass wait-all-cogs compile flag
 cabal install -j1 # install the transcompiler (will also install parser, stdlib)
+chmod -R a+xr /home/vagrant/habs
 
 # reset the library lookup path back
 export GHC_PACKAGE_PATH=/home/vagrant/habs/.cabal-sandbox/x86_64-linux-ghc-8.0.1-packages.conf.d:  
 cd /home/vagrant # DONE installing habs
+
+
+# set corresponding HABS paths in easyinterface
+#
+cp /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG /tmp
+cat >> /tmp/ENVISAGE_CONFIG <<EOF
+# path to HABS
+EC_HABSHOME="/home/vagrant/habs"
+# path to CABAL and HASKELL
+#
+EC_PATH="\$EC_PATH:/opt/ghc/8.0.1/bin:/opt/cabal/1.24/bin:/opt/happy/1.19.5/bin"
+#
+EOF
+sudo mv -f /tmp/ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage
+
 
 # execute the script to install the smart deployer and the main generator tool
 bash /vagrant/vagrant_scripts/install_smart_deployer.sh
