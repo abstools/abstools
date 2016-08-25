@@ -63,7 +63,7 @@ RUN curl http://costa.ls.fi.upm.es/download/saco.colab.zip -\# -o saco.colab.zip
  && curl http://costa.ls.fi.upm.es/download/apet.colab.zip -\# -o apet.colab.zip \
  && unzip apet.colab.zip -d /usr/local/lib \
  && rm apet.colab.zip
-COPY frontend/dist /usr/local/lib/frontend/
+COPY frontend/dist /usr/local/lib/frontend/dist
 COPY frontend/bin /usr/local/lib/frontend/bin
 COPY frontend/lib /usr/local/lib/frontend/lib
 RUN chmod -R a+r /usr/local/lib/frontend/ \
