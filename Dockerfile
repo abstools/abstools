@@ -65,8 +65,7 @@ RUN curl http://costa.ls.fi.upm.es/download/saco.colab.zip -\# -o saco.colab.zip
 COPY frontend/dist /usr/local/lib/frontend/dist
 COPY frontend/bin /usr/local/lib/frontend/bin
 COPY frontend/lib /usr/local/lib/frontend/lib
-RUN chmod -R a+r /usr/local/lib/frontend/ \
- && chmod a+rx /usr/local/lib/frontend/bin/bash/*
+RUN chmod -R a+rx /usr/local/lib/frontend
 
 
 ###############
