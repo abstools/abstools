@@ -133,6 +133,16 @@ aspect TraitApplicator {
     }
 
 
+    private static HashMap<String, String> TraitAddOpr.addedInDelta = new HashMap<>();
+    public static String TraitAddOpr.getAddedIn(String name){
+        String s = addedInDelta.get(name);
+        if( s == null) return "core";
+        return s;
+    }
+	//test only
+	public static void TraitAddOpr.cleanse(){
+        addedInDelta = new HashMap<>();
+	}
 
     /*
      * TraitAddOpr is the trait operation that adds a set of methods. Throws NO
@@ -150,15 +160,19 @@ aspect TraitApplicator {
         TraitExpr target = helperLeftMost(tt, operations);
                       
         
-            TraitSetExpr set = tt.resolve(cd);
-            for (MethodImpl met : set.getMethodImplList()) {
-		          MethodImpl newMet = met.treeCopyNoTransform();
-		          newMet.setParent(met.getParent());
-		          MethodSig newSig = met.getMethodSig().treeCopyNoTransform();
-		          newSig.setParent(newMet);
-		          newMet.setMethodSig(newSig);
-		          cd.addMethod(newMet);
-            }
+        DeltaDecl d = getDelta();
+        TraitSetExpr set = tt.resolve(cd);
+        for (MethodImpl met : set.getMethodImplList()) {
+		      MethodImpl newMet = met.treeCopyNoTransform();
+		      newMet.setParent(met.getParent());
+		      MethodSig newSig = met.getMethodSig().treeCopyNoTransform();
+		      newSig.setParent(newMet);
+		      newMet.setMethodSig(newSig);
+		      cd.addMethod(newMet);
+		      if(d != null){
+		          addedInDelta.put(newSig.getName(), d.getName());
+		      }
+        }
 
         //necessary because the helper collects them in the wrong order
         Collections.reverse(operations);
@@ -243,8 +257,14 @@ aspect TraitApplicator {
      * deltaMap maps methodnames to a map that maps delta-names (and 'core') to
      * the method bodies _before_ the application of that delta
      */
-    private static Stack<String> TraitModifyOpr.deltas=new Stack<>();
+    private static HashMap<String, Stack<String>> TraitModifyOpr.deltas=new HashMap<>();
     private static HashMap<String, HashMap<String, MethodImpl>> TraitModifyOpr.deltaMap=new HashMap<>();
+
+	//test only
+	public static void TraitModifyOpr.cleanse(){
+		deltaMap=new HashMap<>();
+		deltas=new HashMap<>();	
+	}
 
     // replaces all original calls
     private void TraitModifyOpr.replaceOriginal(ClassDecl cd, MethodImpl met, MethodImpl flattened) {
@@ -257,16 +277,21 @@ aspect TraitApplicator {
         DeltaDecl delta  = (DeltaDecl)n;
           
         //init it this is the first delta
-        if(delta != null){
             String mName = met.getMethodSig().getName();
+        if(delta != null){
             HashMap<String, MethodImpl> map = deltaMap.get(mName);
+            Stack<String> stack = deltas.get(mName);
             if(map == null){
+            	String addedIn = TraitAddOpr.getAddedIn(mName);
                 map = new HashMap<>();
-                map.put("core", flattened);
-                deltas.push("core");
-                deltaMap.put(mName, map);
+                map.put(addedIn, flattened);
+                stack = new Stack<>();
+                stack.push(addedIn);             
+                deltaMap.put(mName, map);    
+                deltas.put(mName, stack);
             }
         }
+        String origin = deltas.get(mName).peek();
           
         //collect all original calls
         ArrayList<OriginalCall> list = new ArrayList<>();
@@ -278,27 +303,35 @@ aspect TraitApplicator {
         if(list.size() > 0){
             //rename
             int i = cd.getNumMethod();
-            String name = met.getMethodSig().getName() + (delta == null? hashCode() : "_"+delta.getName());
-            MethodSig sig = met.getMethodSig().treeCopyNoTransform();
-            sig.setName(name);
-              
-            //add
-            MethodImpl newMet = met.treeCopyNoTransform();
-            newMet.setParent(met.getParent());
-            newMet.setMethodSig(sig);
-
-            sig.setParent(newMet);
-            cd.getMethods().setChild(newMet, i);
-
-            //save delta
-            if(delta != null){
-                String mName = met.getMethodSig().getName();
-                HashMap<String, MethodImpl> map = deltaMap.get(mName);
-                map.put(deltas.peek(), newMet);
-                map.put(delta.getName(), flattened);
-                deltas.push(delta.getName());
+            String name = met.getMethodSig().getName() + "$ORIGIN_"+origin+(delta == null? hashCode() : ""/*"_"+delta.getName()*/);
+            MethodImpl newMet = null;
+            for (MethodImpl oldMet : cd.getMethods()) {
+                if(oldMet.getMethodSig().getName().equals(name)){
+                    newMet = oldMet;
+                    break;
+                }
             }
-              
+            if(newMet == null){
+                MethodSig sig = met.getMethodSig().treeCopyNoTransform();
+                sig.setName(name);
+                  
+                //add
+                newMet = met.treeCopyNoTransform();
+                newMet.setParent(met.getParent());
+                newMet.setMethodSig(sig);
+    
+                sig.setParent(newMet);
+                cd.getMethods().setChild(newMet, i);
+    
+                //save delta
+                if(delta != null){
+                    HashMap<String, MethodImpl> map = deltaMap.get(mName);
+                    map.put(origin, newMet);
+                    map.put(delta.getName(), flattened);
+                    deltas.get(mName).push(delta.getName());
+                }
+            }
+            
             //replace
             for (OriginalCall orig : list) {
                 orig.replaceByRealCall(newMet, deltaMap.get(met.getMethodSig().getName()));

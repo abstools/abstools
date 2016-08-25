@@ -64,6 +64,7 @@ aspect OriginalCallResolver {
   
   public void TargetedOriginalCall.replaceByRealCall(MethodImpl originalMethodCopy, HashMap<String, MethodImpl> deltaMap){
       MethodImpl methodCopy = deltaMap.get(this.getTarget().getName());
+      if(methodCopy == null) throw new DeltaModellingException("Can't find delta to resolve targeted original call, delta has not yet been applied");
       EffExp call = new SyncCall(new ThisExp(), methodCopy.getMethodSig().getName(), this.getParams().treeCopyNoTransform());
       // set line and column from OriginalCall node
       call.setPosition(getStartLine(), getStartColumn(), getEndLine(), getEndColumn());
