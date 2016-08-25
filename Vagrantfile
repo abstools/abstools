@@ -290,8 +290,6 @@ cabal install -j1 habs-runtime -fwait-all-cogs  # explicitly installing runtime 
 cabal install -j1 # install the transcompiler (will also install parser, stdlib)
 chmod -R a+xr /home/vagrant/habs
 
-# reset the library lookup path back
-export GHC_PACKAGE_PATH=/home/vagrant/habs/.cabal-sandbox/x86_64-linux-ghc-8.0.1-packages.conf.d:  
 cd /home/vagrant # DONE installing habs
 
 
