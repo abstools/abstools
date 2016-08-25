@@ -50,7 +50,6 @@ EasyInterface is at http://localhost:8888/ei/clients/web.\n\
 </body></html>\n" > /var/www/html/index.html \
  && a2ensite easyinterface-site \
  && a2enmod headers \
- && mkdir -p /usr/local/lib/frontend/dist/
 RUN curl http://costa.ls.fi.upm.es/download/saco.colab.zip -\# -o saco.colab.zip \
  && unzip saco.colab.zip -d /usr/local/lib \
  && rm saco.colab.zip \
@@ -63,7 +62,7 @@ RUN curl http://costa.ls.fi.upm.es/download/saco.colab.zip -\# -o saco.colab.zip
  && curl http://costa.ls.fi.upm.es/download/apet.colab.zip -\# -o apet.colab.zip \
  && unzip apet.colab.zip -d /usr/local/lib \
  && rm apet.colab.zip
-COPY frontend/dist /usr/local/lib/frontend/
+COPY frontend/dist /usr/local/lib/frontend/dist
 COPY frontend/bin /usr/local/lib/frontend/bin
 COPY frontend/lib /usr/local/lib/frontend/lib
 RUN chmod -R a+r /usr/local/lib/frontend/ \
@@ -116,4 +115,4 @@ RUN cp /solvers_exec/abs_deployer/docker/docker_scripts/fzn-chuffed /bin/fzn-chu
 	chmod 755 /bin/fzn-chuffed && \ 
 	chmod 755 /solvers_exec/chuffed/binary/linux/fzn_chuffed
 # add the path to absfrontend.jar in classpath
-ENV CLASSPATH=/usr/local/lib/frontend/absfrontend.jar:$CLASSPATH
+ENV CLASSPATH=/usr/local/lib/frontend/dist/absfrontend.jar:$CLASSPATH

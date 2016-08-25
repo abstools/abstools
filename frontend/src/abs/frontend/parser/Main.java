@@ -233,7 +233,7 @@ public class Main {
 
     public void analyzeModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException, ParserConfigurationException {
         m.verbose = verbose;
-        m.debug = dump;
+        m.debug = debug;
 
         // drop attributes before calculating any attribute
         if (ignoreattr)

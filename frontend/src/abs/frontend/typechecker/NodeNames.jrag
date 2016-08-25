@@ -80,8 +80,10 @@ aspect TargetClassName {
 
 //inform modifier node about the qualified name of the class to which it applies
 aspect TargetQualifiedClassName {
+    abstract public String ClassModifier.targetQualifiedClassName();
     syn String ModifyClassModifier.targetQualifiedClassName() = this.qualifiedName();
     syn String AddClassModifier.targetQualifiedClassName() = this.qualifiedName();
+    syn String RemoveClassModifier.targetQualifiedClassName() = this.qualifiedName();
 
     inh String Modifier.targetQualifiedClassName();
     eq ModifyClassModifier.getModifier().targetQualifiedClassName() = this.qualifiedName();

@@ -1,10 +1,14 @@
-module Test.Use;
-
-delta Use; uses Test; modifies class Test {
+module Test;
+class Test {}
+{}
+delta Use;
+uses Test;
+ modifies class Test {
  adds Unit setX() {
    x = null;
 }
 }
+
 
 productline P;
 features F;

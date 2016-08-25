@@ -5,6 +5,49 @@ import abs.frontend.delta.*;
 
 aspect OriginalCallResolver {
 
+    /* Walk list of deltas in order of application and resolve original() calls.
+     * Original calls in delta are resolved by finding the original method 
+     * declaration in the list of previously applied deltas + core,
+     * copying it, and calling it instead of original().
+     */
+    /*public static void Model.resolveOriginalCalls(Collection<DeltaDecl> deltas) throws DeltaModellingException {
+        ArrayList<DeltaDecl> prevdeltas = new ArrayList<DeltaDecl>();
+        
+        for (DeltaDecl delta : deltas) {
+            delta.resolveOriginalCalls(prevdeltas);
+            prevdeltas.add(0, delta);
+        }
+    }*/
+
+    /* Resolve original() calls in current delta.
+     * Calling original() only seems to make sense in a delta that modifies
+     * an existing class by modifying a method in that class, so we only 
+     * deal with this case.
+     */
+    /*protected void DeltaDecl.resolveOriginalCalls(
+            Collection<DeltaDecl> deltas) throws DeltaModellingException {
+
+        //System.out.println("*** Processing original calls in delta: " + this.getName());
+        for (ModuleModifier cm : getModuleModifiers()) {
+           if (cm instanceof ModifyClassModifier)
+               for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
+                   if (m instanceof ModifyMethodModifier)
+                       ((ModifyMethodModifier)m).resolveOriginalCalls(deltas);
+        }
+    }*/
+    
+    
+    /* This field is used to cache the names of original MethodImpls that have been copied,
+     * so we don't need to copy them multiple times (which can result in type errors)
+     */
+    /*private Set<String> Model.originalMethodsCache = new HashSet<String>();
+    public void Model.cacheOriginalMethod(String id) {
+        originalMethodsCache.add(id);
+    }
+    public boolean Model.containsCachedOriginalMethod(String id) {
+        return originalMethodsCache.contains(id);
+    }*/
+    
     /*
     * used by the trait applications
     */  
@@ -29,4 +72,17 @@ aspect OriginalCallResolver {
       parent.setChild(call, i);
       call.setParent(parent);
   }
+    /* 
+     * traverse AST in search of OriginalCalls
+     */
+    /*protected void ASTNode.resolveOriginalCalls(
+            ModifyMethodModifier mod, 
+            Collection<DeltaDecl> deltas) throws DeltaModellingException {
+        
+        for(int i = 0; i < getNumChild(); i++) {
+            getChildNoTransform(i).resolveOriginalCalls(mod, deltas);
+        }
+    }*/
+
+    
 }

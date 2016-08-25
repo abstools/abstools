@@ -10,7 +10,7 @@ module M3;
 import * from M1;
 import * from M2;
 
-delta D;
+delta D; 
  // needs to add an "import M2.*" or similar to module M1
  modifies class M1.C adds M2.I { }
 

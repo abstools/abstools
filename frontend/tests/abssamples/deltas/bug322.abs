@@ -2,9 +2,9 @@ module M;
 
 delta Y;
 
-delta X;
-  adds interface M.I { }
-  adds interface M.J extends I { }
+delta X; uses M;
+  adds interface I { }
+  adds interface J extends I { }
 
 productline PL;
   features F, G;

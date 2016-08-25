@@ -4,3 +4,5 @@ interface I {}
 class Test {
   I x;
 }
+
+{}
