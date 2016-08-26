@@ -35,7 +35,10 @@ aspect TraitResolver {
               
             //replace
             for (OriginalCall orig : list) {
-                orig.replaceByRealCall(newMet, deltaMap.get(met.getMethodSig().getName()));
+                if(met.getParent().getParent() instanceof ClassDecl)
+                    orig.replaceByRealCall(newMet, ((ClassDecl)met.getParent().getParent()).getDeltaMap().get(met.getMethodSig().getName()));
+                else 
+                    orig.replaceByRealCall(newMet, null);
             }
         }      
     }

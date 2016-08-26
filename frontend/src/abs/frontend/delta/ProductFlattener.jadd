@@ -73,7 +73,6 @@ aspect ProductFlattener {
         // apply the applicable deltas in the given order
         applyDeltas(deltas);
         
-
         // remember which product was generated
         productName = prod.getName();
     }
@@ -89,6 +88,15 @@ aspect ProductFlattener {
             for (CompilationUnit unit: this.getCompilationUnits())
                 for (ModuleDecl module: unit.getModuleDecls())
                     module.flushCache();
+        }
+        for (CompilationUnit unit: this.getCompilationUnits()){
+            for (ModuleDecl module: unit.getModuleDecls()){
+                for (Decl decl : module.getDecls()) {
+                    if(decl instanceof ClassDecl){
+                        ((ClassDecl)decl).computeDelete();
+                    }
+                }
+            }
         }
     }
 

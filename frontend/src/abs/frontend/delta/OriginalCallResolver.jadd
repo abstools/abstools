@@ -5,55 +5,69 @@ import abs.frontend.delta.*;
 
 aspect OriginalCallResolver {
 
-    /* Walk list of deltas in order of application and resolve original() calls.
-     * Original calls in delta are resolved by finding the original method 
-     * declaration in the list of previously applied deltas + core,
-     * copying it, and calling it instead of original().
-     */
-    /*public static void Model.resolveOriginalCalls(Collection<DeltaDecl> deltas) throws DeltaModellingException {
-        ArrayList<DeltaDecl> prevdeltas = new ArrayList<DeltaDecl>();
-        
-        for (DeltaDecl delta : deltas) {
-            delta.resolveOriginalCalls(prevdeltas);
-            prevdeltas.add(0, delta);
-        }
-    }*/
 
-    /* Resolve original() calls in current delta.
-     * Calling original() only seems to make sense in a delta that modifies
-     * an existing class by modifying a method in that class, so we only 
-     * deal with this case.
+    /*
+     * These fields are needed to resolve targeted original
+     * calls. deltas is needed to remember the last applies delta (or 'core')
+     * deltaMap maps methodnames to a map that maps delta-names (and 'core') to
+     * the method bodies _before_ the application of that delta
      */
-    /*protected void DeltaDecl.resolveOriginalCalls(
-            Collection<DeltaDecl> deltas) throws DeltaModellingException {
-
-        //System.out.println("*** Processing original calls in delta: " + this.getName());
-        for (ModuleModifier cm : getModuleModifiers()) {
-           if (cm instanceof ModifyClassModifier)
-               for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
-                   if (m instanceof ModifyMethodModifier)
-                       ((ModifyMethodModifier)m).resolveOriginalCalls(deltas);
-        }
-    }*/
-    
-    
-    /* This field is used to cache the names of original MethodImpls that have been copied,
-     * so we don't need to copy them multiple times (which can result in type errors)
-     */
-    /*private Set<String> Model.originalMethodsCache = new HashSet<String>();
-    public void Model.cacheOriginalMethod(String id) {
-        originalMethodsCache.add(id);
+    private HashMap<String, Stack<String>> ClassDecl.deltas=new HashMap<>();
+    public HashMap<String, Stack<String>> ClassDecl.getDeltas(){
+        return deltas;
     }
-    public boolean Model.containsCachedOriginalMethod(String id) {
-        return originalMethodsCache.contains(id);
-    }*/
+    private HashMap<String, HashMap<String, MethodImpl>> ClassDecl.deltaMap=new HashMap<>();
+    public HashMap<String, HashMap<String, MethodImpl>> ClassDecl.getDeltaMap(){
+        return deltaMap;
+    }
+    private HashMap<String, String> ClassDecl.addedInDelta = new HashMap<>();
+    public String ClassDecl.getAddedIn(String name){
+        String s = addedInDelta.get(name);
+        if( s == null) return "core";
+        return s;
+    }    
+    public void ClassDecl.addAddedIn(String name, String nameDelta){
+        addedInDelta.put(name, nameDelta);
+    }
+    private HashSet<String> ClassDecl.usedMethods = new HashSet<>();
+    public void ClassDecl.usesMethod(String mName){
+        usedMethods.add(mName);
+    }
     
     /*
-    * used by the trait applications
-    */  
-
+     *   Whenever a modifies is applied, a new copy of the current method is added
+     *   This methods removes those, which are never called
+     */
+    public void ClassDecl.computeDelete(){
+        HashSet<String> all = new HashSet<>();
+        for (String key : deltaMap.keySet()) {
+            Collection<MethodImpl> mets = deltaMap.get(key).values();
+            for (MethodImpl mImpl : mets) {
+                if(mImpl.getMethodSig().getName().contains("$")) all.add(mImpl.getMethodSig().getName());    
+            }
+        }
+        all.removeAll(usedMethods);        
+        for (String string : all) {
+            // in given ClassDecl: find MethodDecl that matches sig
+            int found = -1;
+            for (int i = 0; i < getMethods().getNumChild(); i++) {
+                MethodSig sig = getMethods().getChild(i).getMethodSig();
+                if (sig.getName().equals(string)) {
+                    found = i;
+                    break;
+                }
+            }
+           
+            if (found >= 0)
+                getMethods().removeChild(found);
+        }
+    }
+    
   public void OriginalCall.replaceByRealCall(MethodImpl originalMethodCopy, HashMap<String, MethodImpl> deltaMap){
       EffExp call = new SyncCall(new ThisExp(), originalMethodCopy.getMethodSig().getName(), this.getParams().treeCopyNoTransform());
+      String n = originalMethodCopy.getMethodSig().getName();
+      if(n.contains("$"))
+          ((ClassDecl)originalMethodCopy.getParent().getParent()).usesMethod(n);
       // set line and column from OriginalCall node
       call.setPosition(getStartLine(), getStartColumn(), getEndLine(), getEndColumn());
       ASTNode parent = getParent();
@@ -65,6 +79,9 @@ aspect OriginalCallResolver {
   public void TargetedOriginalCall.replaceByRealCall(MethodImpl originalMethodCopy, HashMap<String, MethodImpl> deltaMap){
       MethodImpl methodCopy = deltaMap.get(this.getTarget().getName());
       if(methodCopy == null) throw new DeltaModellingException("Can't find delta to resolve targeted original call, delta has not yet been applied");
+      String n = methodCopy.getMethodSig().getName();
+      if(n.contains("$"))
+          ((ClassDecl)originalMethodCopy.getParent().getParent()).usesMethod(n);
       EffExp call = new SyncCall(new ThisExp(), methodCopy.getMethodSig().getName(), this.getParams().treeCopyNoTransform());
       // set line and column from OriginalCall node
       call.setPosition(getStartLine(), getStartColumn(), getEndLine(), getEndColumn());
@@ -73,17 +90,6 @@ aspect OriginalCallResolver {
       parent.setChild(call, i);
       call.setParent(parent);
   }
-    /* 
-     * traverse AST in search of OriginalCalls
-     */
-    /*protected void ASTNode.resolveOriginalCalls(
-            ModifyMethodModifier mod, 
-            Collection<DeltaDecl> deltas) throws DeltaModellingException {
-        
-        for(int i = 0; i < getNumChild(); i++) {
-            getChildNoTransform(i).resolveOriginalCalls(mod, deltas);
-        }
-    }*/
 
     
 }
