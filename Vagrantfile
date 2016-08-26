@@ -301,7 +301,7 @@ cat >> /tmp/ENVISAGE_CONFIG <<EOF
 EC_HABSHOME="/home/vagrant/habs"
 # path to CABAL and HASKELL
 #
-EC_PATH="\$EC_PATH:/opt/ghc/8.0.1/bin:/opt/cabal/1.24/bin:/opt/happy/1.19.5/bin"
+EC_PATH="\\$EC_PATH:/opt/ghc/8.0.1/bin:/opt/cabal/1.24/bin:/opt/happy/1.19.5/bin"
 #
 EOF
 sudo mv -f /tmp/ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage
@@ -319,9 +319,8 @@ EC_SMARTDEPLOYERHOME="/home/vagrant/smart_deployer"
 # path to MAIN GENERATOR
 EC_MAINGENHOME="/home/vagrant/main_generator"
 #
-EC_PATH="\$EC_PATH:/home/vagrant/bin:/home/vagrant/main_generator/abs_deployer/docker:/home/vagrant/MiniZincIDE:/home/vagrant/minisearch/bin:/home/vagrant/chuffed/binary/linux"
+EC_PATH="\\$EC_PATH:/home/vagrant/bin:/home/vagrant/main_generator/abs_deployer/docker:/home/vagrant/MiniZincIDE:/home/vagrant/minisearch/bin:/home/vagrant/chuffed/binary/linux"
 #
-EC_LD_LIBRARY_PATH="\$EC_LD_LIBRARY_PATH:"
 EOF
 sudo mv -f /tmp/ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage
 
