@@ -246,12 +246,12 @@ fi
 
 # Set up paths
 cat >/home/vagrant/.abstoolsrc <<EOF
-PATH=\$PATH:/opt/ghc/7.8.4/bin:/opt/cabal/1.20/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin:/vagrant/abs2haskell/.cabal-sandbox/bin:/usr/local/lib/absc/frontend/bin/bash:/vagrant/costabs-plugin:/usr/local/lib/saco/bin
+PATH=\$PATH:/opt/ghc/8.0.1/bin:/opt/cabal/1.24/bin:/opt/happy/1.19.5/bin:/home/vagrant/habs/.cabal-sandbox/bin:/usr/local/lib/absc/frontend/bin/bash:/vagrant/costabs-plugin:/usr/local/lib/saco/bin
 # used by the costabs executable
 export COSTABSHOME=/usr/local/lib/saco/
 # used by the costabs executable
 export ABSFRONTEND=/usr/local/lib/absc/frontend/dist/absfrontend.jar
-export GHC_PACKAGE_PATH=/vagrant/abs2haskell/.cabal-sandbox/x86_64-linux-ghc-7.8.4-packages.conf.d:/opt/ghc/7.8.4/lib/ghc-7.8.4/package.conf.d:/home/vagrant/.ghc/x86_64-linux-7.8.4/package.conf.d
+export GHC_PACKAGE_PATH=/home/vagrant/habs/.cabal-sandbox/x86_64-linux-ghc-8.0.1-packages.conf.d:
 EOF
 
 if [ -z "$(grep abstoolsrc /home/vagrant/.bashrc)" ] ; then
@@ -266,26 +266,46 @@ echo
 
 sudo add-apt-repository ppa:hvr/ghc
 sudo apt-get update -y -q
-sudo apt-get install -y -q ghc-7.8.4 cabal-install-1.20 happy-1.19.4 alex-3.1.3 zlib1g-dev
+sudo apt-get install -y -q ghc-8.0.1 cabal-install-1.24 happy-1.19.5
 
 echo
 echo "Building the ABS-Haskell compiler"
 echo
 
-git clone http://github.com/bezirg/abs2haskell
-cd abs2haskell
-git checkout cloud
-git submodule init
-git submodule update
+# clone habs repo and subrepos
+rm -rf /home/vagrant/habs
+git clone https://github.com/abstools/habs /home/vagrant/habs
+cd /home/vagrant/habs
+git submodule update --init
 
-export PATH=$PATH:/opt/cabal/1.20/bin:/opt/ghc/7.8.4/bin:/opt/alex/3.1.3/bin:/opt/happy/1.19.4/bin # necessary for building
-ghc-pkg init /home/vagrant/.ghc/x86_64-linux-7.8.4/package.conf.d || true  # initialize the user ghc-db if missing
+# build habs parser + transcompiler + runtime + stdlib and all of their dependencies
+export PATH=$PATH:/opt/ghc/8.0.1/bin:/opt/cabal/1.24/bin:/opt/happy/1.19.5/bin # needed to find haskell tools
+unset GHC_PACKAGE_PATH # otherwise cabal will complain
 cabal sandbox init
 cabal update
-cabal sandbox add-source haxr-browser
-cabal sandbox add-source opennebula
-cabal install --only-dependencies
-cabal install
+cabal sandbox add-source habs-parser
+cabal sandbox add-source habs-runtime
+cabal sandbox add-source habs-stdlib
+cabal install -j1 habs-runtime -fwait-all-cogs  # explicitly installing runtime to pass wait-all-cogs compile flag
+cabal install -j1 # install the transcompiler (will also install parser, stdlib)
+chmod -R a+xr /home/vagrant/habs
+
+cd /home/vagrant # DONE installing habs
+
+
+# set corresponding HABS paths in easyinterface
+#
+cp /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG /tmp
+cat >> /tmp/ENVISAGE_CONFIG <<EOF
+# path to HABS
+EC_HABSHOME="/home/vagrant/habs"
+# path to CABAL and HASKELL
+#
+EC_PATH="\\$EC_PATH:/opt/ghc/8.0.1/bin:/opt/cabal/1.24/bin:/opt/happy/1.19.5/bin"
+#
+EOF
+sudo mv -f /tmp/ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage
+
 
 # execute the script to install the smart deployer and the main generator tool
 bash /vagrant/vagrant_scripts/install_smart_deployer.sh
@@ -299,9 +319,8 @@ EC_SMARTDEPLOYERHOME="/home/vagrant/smart_deployer"
 # path to MAIN GENERATOR
 EC_MAINGENHOME="/home/vagrant/main_generator"
 #
-EC_PATH="\$EC_PATH:/home/vagrant/bin:/home/vagrant/main_generator/abs_deployer/docker:/home/vagrant/MiniZincIDE:/home/vagrant/minisearch/bin:/home/vagrant/chuffed/binary/linux"
+EC_PATH="\\$EC_PATH:/home/vagrant/bin:/home/vagrant/main_generator/abs_deployer/docker:/home/vagrant/MiniZincIDE:/home/vagrant/minisearch/bin:/home/vagrant/chuffed/binary/linux"
 #
-EC_LD_LIBRARY_PATH="\$EC_LD_LIBRARY_PATH:"
 EOF
 sudo mv -f /tmp/ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage
 
