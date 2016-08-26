@@ -7,10 +7,8 @@ aspect OriginalCallResolver {
 
 
     /*
-     * These fields are needed to resolve targeted original
-     * calls. deltas is needed to remember the last applies delta (or 'core')
-     * deltaMap maps methodnames to a map that maps delta-names (and 'core') to
-     * the method bodies _before_ the application of that delta
+     * These fields are needed to resolve targeted original calls by mapping delta names to MethodImpl.
+     * Also keeps track which ones are used. 
      */
     private HashMap<String, Stack<String>> ClassDecl.deltas=new HashMap<>();
     public HashMap<String, Stack<String>> ClassDecl.getDeltas(){
