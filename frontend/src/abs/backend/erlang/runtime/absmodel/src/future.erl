@@ -159,7 +159,7 @@ confirm_wait_unblocked(Future, Task) ->
 poll(null) ->
     throw(dataNullPointerException);
 poll(Future) ->
-    case gen_fsm:sync_send_event(Future, poll) of
+    case gen_fsm:sync_send_all_state_event(Future, poll) of
         completed -> true;
         unresolved -> false
     end.
@@ -232,6 +232,11 @@ code_change(_OldVsn, StateName, State, _Extra) ->
 handle_event(_Event, _StateName, State) ->
     {stop, not_supported, State}.
 
+handle_sync_event(poll, _From, StateName, State=#state{value=Value}) ->
+    case Value of
+        none -> {reply, unresolved, StateName, State};
+        _ -> {reply, completed, StateName, State}
+    end;
 handle_sync_event(_Event, _From, _StateName, State) ->
     {stop, not_supported, State}.
 
@@ -239,8 +244,6 @@ handle_sync_event(_Event, _From, _StateName, State) ->
 
 starting(get_references, _From, State=#state{references=References}) ->
     {reply, References, starting, State};
-starting(poll, _From, State) ->
-    {reply, unresolved, starting, State};
 starting(_Event, _From, State) ->
     {stop, not_supported, State}.
 
@@ -262,8 +265,6 @@ next_state_on_completion(State=#state{waiting_tasks=WaitingTasks, calleecog=Call
 
 running(get_references, _From, State=#state{references=References}) ->
     {reply, References, running, State};
-running(poll, _From, State) ->
-    {reply, unresolved, running, State};
 running(_Event, _From, State) ->
     {stop, not_supported, State}.
 
@@ -301,8 +302,6 @@ completing(get_references, _From, State=#state{value=Value}) ->
     {reply, gc:extract_references(Value), completing, State};
 completing(get, _From, State=#state{value=Value}) ->
     {reply, Value, completing, State};
-completing(poll, _From, State) ->
-    {reply, completed, completing, State};
 completing(_Event, _From, State) ->
     {stop, not_supported, State}.
 
@@ -320,8 +319,6 @@ completed(get_references, _From, State=#state{value=Value}) ->
     {reply, gc:extract_references(Value), completed, State};
 completed(get, _From, State=#state{value=Value}) ->
     {reply, Value, completed, State};
-completed(poll, _From, State) ->
-    {reply, completed, completed, State};
 completed(_Event, _From, State) ->
     {stop, not_supported, State}.
 
