@@ -161,7 +161,7 @@ collecting_state_next(State=#state{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, 
             gcstats(Log, mark),
             Exported=gb_sets:from_list(
                        lists:map(fun(#object{ref=Ref}) -> {object, Ref} end,
-                                 cog_monitor:list_registered_rest_objects())),
+                                 cog_monitor:list_registered_http_objects())),
             Black=mark([], ordsets:from_list(gb_sets:to_list(gb_sets:union([Cogs, RootFutures, Exported])))),
             gcstats(Log, sweep),
             StateAfterSweep=sweep(State, gb_sets:from_ordset(Black)),

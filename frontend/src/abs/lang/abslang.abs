@@ -46,7 +46,7 @@ export Inv, Pre, Post;
 // Various annotations
 export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer;
 export COG, Plain, Final, Atomic;
-export RESTName, RESTCallable;
+export HTTPName, HTTPCallable;
 
 // Functional breakpoints
 // TODO: find out where they are defined / used
@@ -548,9 +548,9 @@ data FinalAnnotation = Final;
 data AtomicityAnnotation = Atomic;
 
 /**
- * Declare methods to be callable from the REST API.
+ * Declare methods to be callable from the HTTP API.
  */
-data RESTCallableAnnotation = RESTCallable;
+data HTTPCallableAnnotation = HTTPCallable;
 
 
 // functional break point
@@ -562,8 +562,8 @@ def Unit println(String s) = builtin;
 def Unit print(String s) = builtin;
 def String readln() = builtin;
 
-// Annotation for marking objects, interface methods as accessible via REST
-type RESTName = String;
+// Annotation for marking objects, interface methods as accessible via HTTP
+type HTTPName = String;
 
 module ABS.StdLib.Exceptions;
 export *;

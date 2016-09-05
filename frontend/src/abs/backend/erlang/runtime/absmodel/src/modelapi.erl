@@ -32,7 +32,7 @@ handle_dcs([_Resource, _Filename]) ->
     {200, <<"application/json">>, get_statistics_json()}.
 
 handle_object_query([Objectname, Fieldname]) ->
-    {State, Object}=cog_monitor:lookup_object_from_rest_name(Objectname),
+    {State, Object}=cog_monitor:lookup_object_from_http_name(Objectname),
     case State of
         notfound -> {404, <<"text/plain">>, <<"Object not found">>};
         deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
@@ -43,24 +43,23 @@ handle_object_query([Objectname, Fieldname]) ->
              end
     end;
 handle_object_query([Objectname]) ->
-    {State, Object}=cog_monitor:lookup_object_from_rest_name(Objectname),
-    case State of
+    {Result, Object}=cog_monitor:lookup_object_from_http_name(Objectname),
+    case Result of
         notfound -> {404, <<"text/plain">>, <<"Object not found">>};
         deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
-        _ -> State=lists:map(fun ({Key, Value}) -> {Key, abs_to_json(Value)}
-                             end,
-                             object:get_whole_object_state(Object)),
-             %% Special-case empty object for jsx:encode ([] is an empty JSON
-             %% array, [{}] an empty JSON object)
-             State2 = case State of [] -> [{}]; _ -> State end,
-             { 200, <<"text/json">>, jsx:encode(State2)}
+        ok -> State=lists:map(fun ({Key, Value}) -> {Key, abs_to_json(Value)} end,
+                              object:get_whole_object_state(Object)),
+              %% Special-case empty object for jsx:encode ([] is an empty JSON
+              %% array, [{}] an empty JSON object)
+              State2 = case State of [] -> [{}]; _ -> State end,
+              { 200, <<"text/json">>, jsx:encode(State2)}
     end;
 handle_object_query([]) ->
-    Names=cog_monitor:list_registered_rest_names(),
+    Names=cog_monitor:list_registered_http_names(),
     { 200, <<"text/json">>, jsx:encode(Names) }.
 
 handle_object_call([Objectname], _Params) ->
-    {State, Object}=cog_monitor:lookup_object_from_rest_name(Objectname),
+    {State, Object}=cog_monitor:lookup_object_from_http_name(Objectname),
     case State of
         notfound ->  {404, <<"text/plain">>, <<"Object not found">>};
         deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
@@ -83,7 +82,7 @@ handle_object_call([Objectname], _Params) ->
     end;
 handle_object_call([Objectname, Methodname], Parameters) ->
     %% _Params is a list of 2-tuples of binaries
-    {State, Object}=cog_monitor:lookup_object_from_rest_name(Objectname),
+    {State, Object}=cog_monitor:lookup_object_from_http_name(Objectname),
     case State of
         notfound -> {404, <<"text/plain">>, <<"Object not found">>};
         deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
@@ -110,7 +109,10 @@ handle_object_call([Objectname, Methodname], Parameters) ->
                         error -> { 400, <<"text/plain">>, <<"Error during parameter decoding">> }
                     end
             end
-    end.
+    end;
+handle_object_call([], _Parameters) ->
+    Names=cog_monitor:list_registered_http_names(),
+    { 200, <<"text/json">>, jsx:encode(Names) }.
 
 decode_parameters(Parameters, ParamDecls) ->
     PValues = maps:from_list(Parameters),

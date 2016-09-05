@@ -22,7 +22,7 @@
 -behaviour(gc).
 -export([get_references/1]).
 
-%% REST api: inhibit dying from gc while we're registered.
+%% HTTP api: inhibit dying from gc while we're registered.
 -export([protect_object_from_gc/1, unprotect_object_from_gc/1]).
 -export([get_whole_object_state/1,get_all_method_info/1]).
 

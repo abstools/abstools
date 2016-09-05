@@ -21,8 +21,8 @@
 %% communication about dcs
 -export([new_dc/1, dc_died/1, get_dcs/0]).
 
-%% the REST api
--export([register_object_with_rest_name/2,lookup_object_from_rest_name/1,list_registered_rest_names/0,list_registered_rest_objects/0]).
+%% the HTTP api
+-export([register_object_with_http_name/2,lookup_object_from_http_name/1,list_registered_http_names/0,list_registered_http_objects/0]).
 
 %% gen_server interface
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -41,9 +41,9 @@
                                 % such that the Max element of the head of the
                                 % list is always MTE [Maximum Time Elapse]).
                dcs,             % list of deployment components
-               registered_objects, % Objects registered in REST API. binary |-> #object{}
+               registered_objects, % Objects registered in HTTP API. binary |-> #object{}
                keepalive_after_clock_limit % Flag whether we kill all objects after clock limit has been reached
-                                           % (false when REST API is active)
+                                           % (false when HTTP API is active)
               }).
 %%External function
 
@@ -100,10 +100,10 @@ dc_died(DC) ->
 get_dcs() ->
     gen_server:call({global, cog_monitor}, get_dcs).
 
-register_object_with_rest_name(Object, Name) ->
+register_object_with_http_name(Object, Name) ->
     gen_server:call({global, cog_monitor}, {register_object, Object, Name}).
 
-lookup_object_from_rest_name(Name) ->
+lookup_object_from_http_name(Name) ->
     Object=gen_server:call({global, cog_monitor}, {lookup_object, Name}),
     case Object of
         none -> {notfound, Object};
@@ -113,10 +113,10 @@ lookup_object_from_rest_name(Name) ->
              end
     end.
 
-list_registered_rest_names() ->
+list_registered_http_names() ->
     gen_server:call({global, cog_monitor}, all_registered_names).
 
-list_registered_rest_objects() ->
+list_registered_http_objects() ->
     gen_server:call({global, cog_monitor}, all_registered_objects).
 
 %% gen_server callbacks
