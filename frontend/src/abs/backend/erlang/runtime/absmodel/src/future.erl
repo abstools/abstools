@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
--export([start/3,start_for_rest/3]).
+-export([start/5,start_for_rest/3]).
 -export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,value_available/6]).
 -export([task_started/3]).
 -export([get_for_rest/1]).
@@ -14,7 +14,6 @@
 -behaviour(gen_fsm).
 %%gen_fsm callbacks
 -export([init/1,
-         starting/2, starting/3,   % Waiting for task pid from callee cog
          running/2,running/3,      % task is running
          completing/2,completing/3, % task is completed, waiting for caller cog(s) to acknowledge
          completed/2,completed/3,   % task is gone, handling poll, .get and eventual gc
@@ -26,20 +25,34 @@
                 value=none,
                 waiting_tasks=[],
                 cookie=none,
-                register_in_gc=true
+                register_in_gc=true,
+                caller=none
                }).
 
-start(Callee,Method,Params) ->
-    {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params,true], []),
+%% Interacting with a future caller-side
+
+start(Callee,Method,Params, Cog, Stack) ->
+    {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params,true,self()], []),
+    wait_for_future_start(Cog, Stack),
     Ref.
+
+wait_for_future_start(Cog, Stack) ->
+    receive
+        {started, _Ref} ->
+            ok;
+        {stop_world, _Sender} ->
+            cog:process_is_blocked_for_gc(Cog, self()),
+            task:acquire_token(Cog, Stack),
+            wait_for_future_start(Cog, Stack);
+        {get_references, Sender} ->
+            cog:submit_references(Sender, gc:extract_references(Stack)),
+            wait_for_future_start(Cog, Stack)
+    end.
+
 
 start_for_rest(Callee, Method, Params) ->
-    {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params,false], []),
+    {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params,false,none], []),
     Ref.
-
-value_available(Future, Status, Value, Sender, Cog, Cookie) ->
-    %% will send back Cookie to Sender
-    gen_fsm:send_event(Future, {completed, Status, Value, Sender, Cog, Cookie}).
 
 get_after_await(null) ->
     throw(dataNullPointerException);
@@ -70,7 +83,7 @@ get_blocking(Future, Cog, Stack) ->
                              %% the stop_world or we'll deadlock later.
                              Loop();
                          {get_references, Sender} ->
-                             Sender ! {gc:extract_references(Stack), self()},
+                             cog:submit_references(Sender, gc:extract_references(Stack)),
                              Loop()
                      end end)(),
             case (Cog == CalleeCog) of
@@ -89,20 +102,17 @@ get_blocking(Future, Cog, Stack) ->
             get_after_await(Future)
     end.
 
-get_references(Future) ->
-    gen_fsm:sync_send_event(Future, get_references).
-
 await(null, _Cog, _Stack) ->
     throw(dataNullPointerException);
-await(Future, Cog=#cog{ref=CogRef}, Stack) ->
-    case poll(Future) of
+await(Future, Cog, Stack) ->
+    case gen_fsm:sync_send_event(Future, {poll_or_add_waiting, self()}) of
         true -> ok;
         false ->
-            register_waiting_task(Future, self()),
             task:release_token(Cog, waiting),
             (fun Loop() ->
                      receive
                          {value_present, Future, Cog} ->
+                             cog:process_is_runnable(Cog,self()),
                              %% It's an async self-call; unblock the callee
                              %% before we try to acquire the token ourselves.
                              confirm_wait_unblocked(Future, self()),
@@ -116,23 +126,20 @@ await(Future, Cog=#cog{ref=CogRef}, Stack) ->
                              %% open-code `task:acquire_token' and add the
                              %% proper callee unlocking and synchronous cog
                              %% state change.
-                             cog:process_is_runnable_sync(Cog,self(),Stack), % FIXME: check if this line can deadlock
+                             cog:process_is_runnable(Cog,self()),
                              confirm_wait_unblocked(Future, self()),
-                             task:loop_for_token(Stack, token),
-                             cog_monitor:cog_unblocked(CogRef);
+                             task:acquire_token(Cog, Stack);
                          {stop_world, _Sender} ->
                              %% we already released the token above.  Eat the
                              %% message or we'll block at inopportune moments
                              %% later.
                              Loop();
                          {get_references, Sender} ->
-                             Sender ! {gc:extract_references(Stack), self()},
+                             cog:submit_references(Sender, gc:extract_references(Stack)),
                              Loop()
                      end end)()
     end.
 
-task_started(Future, TaskRef, _Cookie) ->
-    gen_fsm:send_event(Future, {task_ready, TaskRef}).
 
 get_for_rest(Future) ->
     register_waiting_task(Future, self()),
@@ -156,47 +163,71 @@ confirm_wait_unblocked(Future, Task) ->
     gen_fsm:send_event(Future, {okthx, Task}).
 
 
+%% Interacting with a future callee-side
+
+value_available(Future, Status, Value, Sender, Cog, Cookie) ->
+    %% will send back Cookie to Sender
+    gen_fsm:send_event(Future, {completed, Status, Value, Sender, Cog, Cookie}).
+
+task_started(Future, TaskRef, _Cookie) ->
+    gen_fsm:send_event(Future, {task_ready, TaskRef}).
+
+
+%% Interacting with a future from gc
+
+get_references(Future) ->
+    gen_fsm:sync_send_event(Future, get_references).
+
+die(Future, Reason) ->
+    gen_fsm:send_event(Future, {die, Reason}).
+
+%%Internal
+
 poll(null) ->
     throw(dataNullPointerException);
 poll(Future) ->
-    case gen_fsm:sync_send_event(Future, poll) of
+    case gen_fsm:sync_send_all_state_event(Future, poll) of
         completed -> true;
         unresolved -> false
     end.
 
-die(Future, Reason) ->
-    gen_fsm:stop(Future, {shutdown, Reason}, infinity).
 
-%%Internal
+%% gen_fsm machinery
 
-
-init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,RegisterInGC]) ->
+init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,RegisterInGC,Caller]) ->
     case is_process_alive(Object) of
         true ->
             %%Start task
             process_flag(trap_exit, true),
-            %% TODO: refactor callback protocol
-            Cookie={future, Cog, Callee}, % magic, together with cog:start_new_task :(
             MonRef=monitor(process,CogRef),
-            cog:add_async(Cog,async_call_task,[self(),Callee,Method|Params], Cookie),
+            TaskRef=cog:add_sync(Cog,async_call_task,[self(),Callee,Method|Params], Params),
             demonitor(MonRef),
             case RegisterInGC of
                 true -> gc:register_future(self());
                 false -> ok
             end,
-            {ok, starting, #state{calleetask=none,
+            case Caller of
+                none -> ok;
+                _ -> Caller ! {started, self()} % in cooperation with start/3
+            end,
+            {ok, running, #state{calleetask=TaskRef,
                                   calleecog=Cog,
                                   references=gc:extract_references(Params),
                                   value=none,
                                   waiting_tasks=[],
-                                  register_in_gc=RegisterInGC}};
+                                  register_in_gc=RegisterInGC,
+                                  caller=Caller}};
         false ->
             {ok, completed, #state{calleetask=none,
                                    value={error, dataObjectDeadException},
                                    calleecog=Cog,
                                    register_in_gc=RegisterInGC}}
     end;
-init([_Callee=null,_Method,_Params,RegisterInGC]) ->
+init([_Callee=null,_Method,_Params,RegisterInGC,Caller]) ->
+    case Caller of
+        none -> ok;
+        _ -> Caller ! {started, self()}
+    end,
     {ok, completed, #state{value={error, dataNullPointerException},
                            calleecog=none,
                            calleetask=none,
@@ -232,55 +263,43 @@ code_change(_OldVsn, StateName, State, _Extra) ->
 handle_event(_Event, _StateName, State) ->
     {stop, not_supported, State}.
 
+handle_sync_event(poll, _From, StateName, State=#state{value=Value}) ->
+    case Value of
+        none -> {reply, unresolved, StateName, State};
+        _ -> {reply, completed, StateName, State}
+    end;
 handle_sync_event(_Event, _From, _StateName, State) ->
     {stop, not_supported, State}.
 
+
+
 %% State functions
 
-starting(get_references, _From, State=#state{references=References}) ->
-    {reply, References, starting, State};
-starting(poll, _From, State) ->
-    {reply, unresolved, starting, State};
-starting(_Event, _From, State) ->
-    {stop, not_supported, State}.
-
-starting({waiting, Task}, State=#state{waiting_tasks=WaitingTasks}) ->
-    {next_state, starting, State#state{waiting_tasks=[Task | WaitingTasks]}};
-starting({task_ready, TaskRef}, State=#state{calleetask=none}) ->
-    {next_state, running, State#state{calleetask=TaskRef}};
-starting(_Event, State) ->
-    {stop, not_supported, State}.
-
-
-next_state_on_completion(State=#state{waiting_tasks=[], calleetask=TerminatingProcess, cookie=Cookie}) ->
+next_state_on_completion(State=#state{waiting_tasks=[], calleetask=TerminatingProcess, cookie=Cookie, register_in_gc=RegisterInGC}) ->
     TerminatingProcess ! {Cookie, self()},
+    case RegisterInGC of
+        true -> gc:unroot_future(self());
+        false -> ok
+    end,
     {completed, State};
 next_state_on_completion(State=#state{waiting_tasks=WaitingTasks, calleecog=CalleeCog}) ->
     lists:map(fun (Task) -> Task ! {value_present, self(), CalleeCog} end, WaitingTasks),
     {completing, State}.
 
 
+running({poll_or_add_waiting, Task}, _From, State=#state{waiting_tasks=WaitingTasks}) ->
+    {reply, false, running, State#state{waiting_tasks=[Task | WaitingTasks]}};
 running(get_references, _From, State=#state{references=References}) ->
     {reply, References, running, State};
-running(poll, _From, State) ->
-    {reply, unresolved, running, State};
 running(_Event, _From, State) ->
     {stop, not_supported, State}.
 
 running({waiting, Task}, State=#state{waiting_tasks=WaitingTasks}) ->
     {next_state, running, State#state{waiting_tasks=[Task | WaitingTasks]}};
-running({completed, value, Result, Sender, SenderCog, Cookie}, State=#state{calleetask=Sender,calleecog=SenderCog,register_in_gc=RegisterInGC})->
-    case RegisterInGC of
-        true -> gc:unroot_future(self());
-        false -> ok
-    end,
+running({completed, value, Result, Sender, SenderCog, Cookie}, State=#state{calleetask=Sender,calleecog=SenderCog})->
     {NextState, State1} = next_state_on_completion(State#state{cookie=Cookie}),
     {next_state, NextState, State1#state{value={ok,Result}, references=[]}};
-running({completed, exception, Result, Sender, SenderCog, Cookie}, State=#state{calleetask=Sender,calleecog=SenderCog,register_in_gc=RegisterInGC})->
-    case RegisterInGC of
-        true -> gc:unroot_future(self());
-        false -> ok
-    end,
+running({completed, exception, Result, Sender, SenderCog, Cookie}, State=#state{calleetask=Sender,calleecog=SenderCog})->
     {NextState, State1} = next_state_on_completion(State#state{cookie=Cookie}),
     {next_state, NextState, State1#state{value={error,Result}, references=[]}};
 running(_Event, State) ->
@@ -297,12 +316,12 @@ next_state_on_okthx(State=#state{calleetask=CalleeTask,waiting_tasks=WaitingTask
             {completing, State#state{waiting_tasks=NewWaitingTasks}}
     end.
 
+completing({poll_or_add_waiting, _Task}, _From, State) ->
+    {reply, true, completing, State};
 completing(get_references, _From, State=#state{value=Value}) ->
     {reply, gc:extract_references(Value), completing, State};
 completing(get, _From, State=#state{value=Value}) ->
     {reply, Value, completing, State};
-completing(poll, _From, State) ->
-    {reply, completed, completing, State};
 completing(_Event, _From, State) ->
     {stop, not_supported, State}.
 
@@ -316,15 +335,17 @@ completing(_Event, State) ->
     {stop, not_supported, State}.
 
 
+completed({poll_or_add_waiting, _Task}, _From, State) ->
+    {reply, true, completed, State};
 completed(get_references, _From, State=#state{value=Value}) ->
     {reply, gc:extract_references(Value), completed, State};
 completed(get, _From, State=#state{value=Value}) ->
     {reply, Value, completed, State};
-completed(poll, _From, State) ->
-    {reply, completed, completed, State};
 completed(_Event, _From, State) ->
     {stop, not_supported, State}.
 
+completed({die, _Reason}, State) ->
+    {stop, normal, State};
 completed({okthx, _Task}, State) ->
     {next_state, completed, State};
 completed({waiting, Task}, State=#state{calleecog=CalleeCog}) ->

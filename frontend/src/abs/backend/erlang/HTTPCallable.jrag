@@ -1,0 +1,6 @@
+aspect HTTPCallable {
+    syn lazy boolean MethodSig.isHTTPCallable() {
+        java.util.List<Annotation> anns = AnnotationHelper.getAnnotationsOfType(getAnnotationList(), "ABS.StdLib.HTTPCallableAnnotation");
+        return !anns.isEmpty();
+    }
+}

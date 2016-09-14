@@ -46,7 +46,7 @@ export Inv, Pre, Post;
 // Various annotations
 export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer;
 export COG, Plain, Final, Atomic;
-export RESTName, RESTCallable;
+export HTTPName, HTTPCallable;
 
 // Functional breakpoints
 // TODO: find out where they are defined / used
@@ -548,9 +548,9 @@ data FinalAnnotation = Final;
 data AtomicityAnnotation = Atomic;
 
 /**
- * Declare methods to be callable from the REST API.
+ * Declare methods to be callable from the HTTP API.
  */
-data RESTCallableAnnotation = RESTCallable;
+data HTTPCallableAnnotation = HTTPCallable;
 
 
 // functional break point
@@ -562,8 +562,8 @@ def Unit println(String s) = builtin;
 def Unit print(String s) = builtin;
 def String readln() = builtin;
 
-// Annotation for marking objects, interface methods as accessible via REST
-type RESTName = String;
+// Annotation for marking objects, interface methods as accessible via HTTP
+type HTTPName = String;
 
 module ABS.StdLib.Exceptions;
 export *;
@@ -902,7 +902,8 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
 }
 
 
-
+// KLUDGE: if extending / renaming the interface, adapt
+// frontend/typechecker/InterfaceType.java:isDeploymentComponentType()
 class DeploymentComponent (String description, Map<Resourcetype, Rat> initconfig)
 implements DeploymentComponentForCloudProvider {
     // This class has fields that reflect execution state and resource
@@ -1109,6 +1110,9 @@ type Deploy = List<DeployScenarioElement>;
 // definition for the annotation used to define a SmartDeploy task. The string
 // is intended to be a json object
 type SmartDeploy = String;
+// definition for the annotation used to define the cloud provider for 
+// SmartDeploy task. The string is intended to be a json object
+type SmartDeployCloudProvider = String;
 
 // interface of the smart deployment objects. This interface is empy and it will
 // be later modified by a delta automatically generated

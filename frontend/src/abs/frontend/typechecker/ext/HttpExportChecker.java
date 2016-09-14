@@ -13,13 +13,13 @@ import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.*;
 
-public class RestExportChecker extends DefaultTypeSystemExtension {
+public class HttpExportChecker extends DefaultTypeSystemExtension {
 
-    public RestExportChecker(Model m) {
+    public HttpExportChecker(Model m) {
         super(m);
     }
 
-    private boolean isParameterUsableFromREST(ParamDecl param) {
+    private boolean isParameterUsableFromHTTP(ParamDecl param) {
         if (param.getType().isBoolType()) return true;
         if (param.getType().isStringType()) return true;
         if (param.getType().isIntType()) return true;
@@ -29,10 +29,10 @@ public class RestExportChecker extends DefaultTypeSystemExtension {
     @Override
     public void checkInterfaceDecl(InterfaceDecl i) {
         for (MethodSig ms : i.getBodyList()) {
-            if (ms.isRESTCallable()) {
+            if (ms.isHTTPCallable()) {
                 for (ParamDecl p : ms.getParamList()) {
-                    if (!isParameterUsableFromREST(p)) {
-                        errors.add(new TypeError(p, ErrorMessage.WRONG_RESTCALLABLE, p.getName(), p.getType().getQualifiedName()));
+                    if (!isParameterUsableFromHTTP(p)) {
+                        errors.add(new TypeError(p, ErrorMessage.WRONG_HTTPCALLABLE, p.getName(), p.getType().getQualifiedName()));
                     }
                 }
             }
