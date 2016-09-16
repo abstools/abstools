@@ -85,7 +85,7 @@ process_is_blocked_for_gc(#cog{ref=Cog},TaskRef) ->
     gen_fsm:send_event(Cog, {process_blocked_for_gc, TaskRef}).
 
 return_token(#cog{ref=Cog}, TaskRef, State) ->
-    gen_fsm:send_event(Cog, {token, TaskRef, State}).
+    gen_fsm:sync_send_event(Cog, {token, TaskRef, State}).
 
 process_poll_is_ready(#cog{ref=Cog}, TaskRef) ->
     Cog ! {TaskRef, true}.
@@ -294,30 +294,11 @@ no_task_schedulable(_Event, State) ->
     {stop, not_supported, State}.
 
 
-process_running({process_runnable, TaskRef}, _From, State=#state{running_task=TaskRef}) ->
-    %% The signals crossed: TaskRef was created, the then-current running task
-    %% terminated, we chose TaskRef to run, and now we receive its token
-    %% request.
-    {reply, ok, process_running, State};
-process_running({process_runnable, TaskRef}, _From,
-                State=#state{running_task=T,runnable_tasks=Run,waiting_tasks=Wai})
-  when TaskRef /= T ->
-    {reply, ok, process_running,
-     State#state{runnable_tasks=gb_sets:add_element(TaskRef, Run),
-                 waiting_tasks=gb_sets:del_element(TaskRef, Wai)}};
-process_running(_Event, _From, State) ->
-    {stop, not_supported, State}.
-process_running({new_task,Task,Args,Sender,Notify,Cookie},
-                State=#state{runnable_tasks=Tasks,dc=DC}) ->
-    T=start_new_task(DC,Task,Args,Sender,Notify,Cookie),
-    %% Put T directly into runnable_tasks to avoid race condition of current
-    %% task ending between events `new_task' and `process_runnable' of the new
-    %% task.
-    {next_state, process_running,
-     State#state{runnable_tasks=gb_sets:add_element(T, Tasks)}};
-process_running({token, R, ProcessState},
+
+process_running({token, R, ProcessState}, From,
                 State=#state{running_task=R, runnable_tasks=Run,
                              waiting_tasks=Wai, polling_tasks=Pol}) ->
+    gen_fsm:reply(From, ok),
     NewRunnable = case ProcessState of runnable -> Run;
                       _ -> gb_sets:del_element(R, Run) end,
     NewWaiting = case ProcessState of waiting -> gb_sets:add_element(R, Wai);
@@ -343,6 +324,28 @@ process_running({token, R, ProcessState},
                          waiting_tasks=NewWaiting,
                          polling_tasks=gb_sets:del_element(T, NewPolling)}}
     end;
+process_running({process_runnable, TaskRef}, _From, State=#state{running_task=TaskRef}) ->
+    %% This can happen when a process suspends itself ({token, Id, runnable})
+    %% or when we schedule a newly-created process.  In both cases we might
+    %% have sent the token already before the process asked for it.
+    {reply, ok, process_running, State};
+process_running({process_runnable, TaskRef}, _From,
+                State=#state{running_task=T,runnable_tasks=Run,waiting_tasks=Wai})
+  when TaskRef /= T ->
+    {reply, ok, process_running,
+     State#state{runnable_tasks=gb_sets:add_element(TaskRef, Run),
+                 waiting_tasks=gb_sets:del_element(TaskRef, Wai)}};
+process_running(_Event, _From, State) ->
+    {stop, not_supported, State}.
+
+process_running({new_task,Task,Args,Sender,Notify,Cookie},
+                State=#state{runnable_tasks=Tasks,dc=DC}) ->
+    T=start_new_task(DC,Task,Args,Sender,Notify,Cookie),
+    %% We put T directly into runnable_tasks to avoid spurious idle state if
+    %% current task ends between events `new_task' and `process_runnable' of
+    %% this new task.  (A new task is runnable by definition.)
+    {next_state, process_running,
+     State#state{runnable_tasks=gb_sets:add_element(T, Tasks)}};
 process_running({process_blocked, _TaskRef}, State) ->
     cog_monitor:cog_blocked(self()),
     {next_state, process_blocked, State};
@@ -386,22 +389,10 @@ process_blocked(_Event, State) ->
     {stop, not_supported, State}.
 
 
-waiting_for_gc_stop({process_runnable, T}, _From,
-                    State=#state{waiting_tasks=Wai, runnable_tasks=Run}) ->
-    cog_monitor:cog_active(self()),
-    {reply, ok, waiting_for_gc_stop,
-     State#state{waiting_tasks=gb_sets:del_element(T, Wai),
-                 runnable_tasks=gb_sets:add_element(T, Run)}};
-waiting_for_gc_stop(_Event, _From, State) ->
-    {stop, not_supported, State}.
-waiting_for_gc_stop({new_task,Task,Args,Sender,Notify,Cookie},
-                    State=#state{waiting_tasks=Tasks,dc=DC}) ->
-    NewTask=start_new_task(DC,Task,Args,Sender,Notify,Cookie),
-    {next_state, waiting_for_gc_stop,
-     State#state{waiting_tasks=gb_sets:add_element(NewTask, Tasks)}};
-waiting_for_gc_stop({token,R,ProcessState},
+waiting_for_gc_stop({token,R,ProcessState}, From,
                     State=#state{running_task=R, runnable_tasks=Run,
                                  waiting_tasks=Wai, polling_tasks=Pol}) ->
+    gen_fsm:reply(From, ok),
     gc:cog_stopped(self()),
     NewRunnable = case ProcessState of
                       runnable -> Run;
@@ -428,6 +419,19 @@ waiting_for_gc_stop({token,R,ProcessState},
      State#state{next_state_after_gc=no_task_schedulable,
                  running_task=idle, runnable_tasks=NewRunnable,
                  waiting_tasks=NewWaiting, polling_tasks=NewPolling}};
+waiting_for_gc_stop({process_runnable, T}, _From,
+                    State=#state{waiting_tasks=Wai, runnable_tasks=Run}) ->
+    cog_monitor:cog_active(self()),
+    {reply, ok, waiting_for_gc_stop,
+     State#state{waiting_tasks=gb_sets:del_element(T, Wai),
+                 runnable_tasks=gb_sets:add_element(T, Run)}};
+waiting_for_gc_stop(_Event, _From, State) ->
+    {stop, not_supported, State}.
+waiting_for_gc_stop({new_task,Task,Args,Sender,Notify,Cookie},
+                    State=#state{waiting_tasks=Tasks,dc=DC}) ->
+    NewTask=start_new_task(DC,Task,Args,Sender,Notify,Cookie),
+    {next_state, waiting_for_gc_stop,
+     State#state{waiting_tasks=gb_sets:add_element(NewTask, Tasks)}};
 waiting_for_gc_stop({process_blocked, R}, State=#state{running_task=R}) ->
     cog_monitor:cog_blocked(self()),
     gc:cog_stopped(self()),
