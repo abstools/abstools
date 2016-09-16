@@ -31,6 +31,8 @@
 
 %% Interacting with a future caller-side
 
+start(null,_Method,_Params, _Cog, _Stack) ->
+    throw(dataNullPointerException);
 start(Callee,Method,Params, Cog, Stack) ->
     {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params,true,self()], []),
     wait_for_future_start(Cog, Stack),
@@ -63,6 +65,16 @@ get_after_await(Future)->
         {error,Reason}->
             exit(Reason)
     end.
+
+
+poll(null) ->
+    throw(dataNullPointerException);
+poll(Future) ->
+    case gen_fsm:sync_send_all_state_event(Future, poll) of
+        completed -> true;
+        unresolved -> false
+    end.
+
 
 get_blocking(null, _Cog, _Stack) ->
     throw(dataNullPointerException);
@@ -181,16 +193,6 @@ get_references(Future) ->
 die(Future, Reason) ->
     gen_fsm:send_event(Future, {die, Reason}).
 
-%%Internal
-
-poll(null) ->
-    throw(dataNullPointerException);
-poll(Future) ->
-    case gen_fsm:sync_send_all_state_event(Future, poll) of
-        completed -> true;
-        unresolved -> false
-    end.
-
 
 %% gen_fsm machinery
 
@@ -224,6 +226,8 @@ init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Register
                                    register_in_gc=RegisterInGC}}
     end;
 init([_Callee=null,_Method,_Params,RegisterInGC,Caller]) ->
+    %% This is dead code, left in for reference; a `null' callee is caught in
+    %% future:start above.
     case Caller of
         none -> ok;
         _ -> Caller ! {started, self()}
