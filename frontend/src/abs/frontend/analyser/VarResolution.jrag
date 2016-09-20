@@ -190,15 +190,25 @@ aspect VarResolution {
         return var;
     }
 
+    syn lazy VarOrFieldDecl TraitExpr.mylookupVarOrFieldName(String name, boolean fieldOnly) {
+	      ASTNode<ASTNode> obj = this;
+	      while(obj != null && !(obj instanceof Modifier))
+	          obj = obj.parent;
+	      if(obj != null){
+	          Modifier mod = (Modifier)obj;
+	          return mod.locallookupVarOrFieldName(name, fieldOnly);
+	      }else{
+	          throw new DeltaModellingException("Cannot find modifier above TraitExpr in AST!");
+	      }
+	  }
     inh VarOrFieldDecl MethodImpl.lookupVarOrFieldName(String name, boolean fieldOnly);
     
     eq ClassDecl.getMethod(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
         = locallookupVarOrFieldName(name,fieldOnly);
     
-    eq AddMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) //= null;
-        = locallookupVarOrFieldName(name,fieldOnly);
-    eq ModifyMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) //= null;
-        = locallookupVarOrFieldName(name,fieldOnly);
+    eq TraitSetExpr.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) //= null;
+        = mylookupVarOrFieldName(name,fieldOnly);
+
     
     syn lazy VarOrFieldDecl MethodImpl.locallookupVarOrFieldName(String name, boolean fieldOnly) {
         if (!fieldOnly) {

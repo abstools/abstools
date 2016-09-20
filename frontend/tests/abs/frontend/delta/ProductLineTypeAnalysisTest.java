@@ -4,6 +4,7 @@
  */
 package abs.frontend.delta;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -15,7 +16,6 @@ import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.*;
 
 public class ProductLineTypeAnalysisTest extends DeltaTest {
-
 
     @Test
     public void stronglyUnambiguousProductLine() {
@@ -148,8 +148,9 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
             msig.setName("m" + id);
             MethodImpl mimpl = new MethodImpl();
             mimpl.setMethodSig(msig);
-            ModifyMethodModifier mmod = new ModifyMethodModifier();
-            mmod.setMethodImpl(mimpl);
+            abs.frontend.ast.List<MethodImpl> list = new abs.frontend.ast.List<>();           
+            list.add(mimpl);
+            DeltaTraitModifier dmod = new DeltaTraitModifier(new TraitModifyOpr(new TraitSetExpr(list)));
 
             cu.addDeltaDecl(new DeltaDecl("D" + id,
                     new abs.frontend.ast.List<DeltaParamDecl>(),
@@ -213,4 +214,5 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         //with 10 features there should be 2^10 valid products
         assertEquals(1024, model.getProductList().getNumChild());
     }
+    
 }

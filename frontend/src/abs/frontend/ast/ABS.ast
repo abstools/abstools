@@ -29,14 +29,29 @@ FromExport: Export ::= Name* <ModuleName>;
 // (see below for Blocks)
 
 DeltaAccess: StarImport ::= <ModuleName>;
-
+/***************************************/
 abstract Decl ::= <Name>;
 abstract BehaviorDecl: Decl ::= ; // Entities used in behavior expressions
 abstract TypeDecl: Decl; // Entities used in type expressions
 
+TraitDecl : Decl ::= TraitExpr;
+
+abstract TraitExpr;
+TraitSetExpr : TraitExpr ::= MethodImpl*;
+TraitNameExpr : TraitExpr ::= <Name>;
+TraitModifyExpr : TraitExpr ::= TraitExpr TraitOper;
+
+abstract TraitOper : Modifier;
+TraitAddOpr : TraitOper ::= TraitExpr;
+TraitModifyOpr : TraitOper ::= TraitExpr;
+TraitRemoveOpr : TraitOper ::= MethodSig;
+
+TraitUse : Modifier ::= TraitExpr; 
+/***************************************/
+
 UnknownDecl: Decl; // Unknown declarations
 AmbiguousDecl: UnknownDecl ::= <Alternative:java.util.List<Decl>>;
-ClassDecl: BehaviorDecl ::= Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] RecoverBranch:CaseBranchStmt* Field:FieldDecl* Method:MethodImpl*;
+ClassDecl: BehaviorDecl ::= Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* TraitUse* [InitBlock] RecoverBranch:CaseBranchStmt* Field:FieldDecl* Method:MethodImpl*;
 FunctionDecl: BehaviorDecl ::= Annotation* TypeUse Param:ParamDecl* FunctionDef ;
 DataConstructor : BehaviorDecl ::= <Name> ConstructorArg:ConstructorArg* ;
 ParametricFunctionDecl : FunctionDecl ::= Annotation* TypeParameter:TypeParameterDecl* ;
@@ -97,11 +112,9 @@ ModifyInterfaceModifier : InterfaceModifier ::= <Name> MethodSigModifier*;
 
 AddFieldModifier : Modifier ::= FieldDecl;
 RemoveFieldModifier : Modifier ::= FieldDecl;
-AddMethodModifier : Modifier ::= MethodImpl;
-RemoveMethodModifier : Modifier ::= MethodSig;
-ModifyMethodModifier : Modifier ::= MethodImpl;
 AddMethodSigModifier : MethodSigModifier ::= MethodSig;
 RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
+DeltaTraitModifier : Modifier ::= TraitOper;
 
 ObjectUpdate ::= <ClassName> AwaitStmt UpdatePreamble PreBody:AssignStmt* PostBody:AssignStmt* ;
 UpdatePreamble ::= VarDeclStmt* ; // TODO also allow FunctionDecls and DataTypeDecls

@@ -38,6 +38,7 @@ aspect GenerateErlang {
     //Ignore include data in classes as exports
   }
 
+
   public void ClassDecl.generateErlangCode(ErlApp ea) throws IOException {
     new ClassGenerator(ea,this);
   }
@@ -937,6 +938,11 @@ aspect GenerateErlang {
 
   public void Guard.generateErlangCode(CodeStream preAwait,CodeStream ecs,Vars vars){
     throw new NotImplementedYetException(this);
+  }
+  
+  
+  public void TraitDecl.generateErlangCode(ErlApp ea) throws IOException {
+
   }
 
   public boolean Guard.hasPoll(){

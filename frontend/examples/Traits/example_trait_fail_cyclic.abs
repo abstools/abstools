@@ -1,0 +1,16 @@
+module Test;
+
+interface Inter {}
+
+//This must fail and report cyclic traits
+trait T1 = T2 removes Unit m();
+trait T2 =  T1 adds { Unit m(){ println("trait");} Unit m2(){ println("trait2");}} 
+class InterImpl implements Inter {
+    uses T1;
+    Unit asd(){println("class");}
+}        
+
+
+{
+    Inter i = new InterImpl();
+}

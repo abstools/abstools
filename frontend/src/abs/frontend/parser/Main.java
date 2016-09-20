@@ -241,6 +241,8 @@ public class Main {
         if (verbose) {
             System.out.println("Analyzing Model...");
         }
+        
+        
         //Preprocessor
         if (preprocess) {
             System.out.println("Preprocessing Model...");
@@ -274,7 +276,7 @@ public class Main {
                     m.flattenForProduct(product);
                 else
                     m.flattenForProductUnsafe(product);
-            }
+            }else{ m.flattenTraitOnly(); }
             if (dump) {
                 m.dumpMVars();
                 m.dump();

@@ -1,0 +1,24 @@
+module Test;
+
+interface Inter {}
+
+//old syntax in deltas
+
+class InterImpl implements Inter {
+    Unit asd(){println("class");}
+}        
+
+
+{
+    Inter i = new InterImpl();
+}
+delta D3;
+modifies class Test.InterImpl{
+	adds Unit asd2(){println("delta");} 
+	modifies Unit asd(){println("delta");} 
+}
+
+productline Line;
+features Feat1;
+delta D3 when Feat1;
+product Default (Feat1); 

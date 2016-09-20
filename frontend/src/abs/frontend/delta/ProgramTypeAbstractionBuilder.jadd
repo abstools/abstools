@@ -101,14 +101,17 @@ aspect ProgramTypeAbstractionBuilder {
     public void RemoveFieldModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
         ta.removeField(className, this);
     }
-    public void AddMethodModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
-        ta.addMethod(className, this);
-    }
-    public void ModifyMethodModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
-        // TODO
-    }
-    public void RemoveMethodModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
-        ta.removeMethod(className, this);
-    }
+
+    
+    /************************************
+     *
+     *		Traits
+     */
+     
+    public void DeltaTraitModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className){}
+    public void TraitAddOpr.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className){}
+    public void TraitModifyOpr.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className){}
+    public void TraitRemoveOpr.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className){}
+    public void TraitUse.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className){}
 
 }

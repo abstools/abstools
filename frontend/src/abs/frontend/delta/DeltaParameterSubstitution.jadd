@@ -134,13 +134,6 @@ aspect DeltaParameterSubstitution {
     protected void RemoveFieldModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         getFieldDecl().applySubstitution(subst);
     }
-    protected void AddMethodModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
-        getMethodImpl().applySubstitution(subst);
-    }
-    protected void RemoveMethodModifier.applySubstitution(Map<String,Value> subst) {}
-    protected void ModifyMethodModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
-        getMethodImpl().applySubstitution(subst);
-    }
 
     protected void AddMethodSigModifier.applySubstitution(Map<String,Value> subst) {}
     protected void RemoveMethodSigModifier.applySubstitution(Map<String,Value> subst) {}
@@ -234,6 +227,15 @@ aspect DeltaParameterSubstitution {
             getChild(i).applySubstitution(subst);
         }
     }
+    
+    //trait
+    
+    @Override
+    protected void DeltaTraitModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {}
+    protected void TraitAddOpr.applySubstitution(Map<String,Value> subst) {}
+    protected void TraitModifyOpr.applySubstitution(Map<String,Value> subst) {}
+    protected void TraitRemoveOpr.applySubstitution(Map<String,Value> subst) {}
+    protected void TraitUse.applySubstitution(Map<String,Value> subst) {}
 
 
 
