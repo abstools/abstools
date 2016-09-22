@@ -109,7 +109,11 @@ public class ClassGenerator {
             ecs.println(",");
         }
         if (classDecl.isActiveClass()) {
-            ecs.print("cog:add_blocking(Cog,active_object_task,O,Cog,");
+            ecs.println("task:block_without_time_advance(Cog),");
+            ecs.print("cog:add_sync(Cog,active_object_task,O,");
+            ecs.print(vars.toStack());
+            ecs.println("),");
+            ecs.print("task:acquire_token(Cog,");
             ecs.print(vars.toStack());
             ecs.println("),");
         }
@@ -198,7 +202,7 @@ public class ClassGenerator {
             ecs.decIndent();
         }
         ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, "_", "_");
-        ecs.println("%% Invalid return value; handled by REST API when querying for non-existant field.");
+        ecs.println("%% Invalid return value; handled by HTTP API when querying for non-existant field.");
         ecs.println("%% Will never occur in generated code.");
         ecs.println("none.");
         ecs.decIndent();
@@ -253,7 +257,7 @@ public class ClassGenerator {
             InterfaceDecl id = visited.iterator().next();
             visited.remove(id);
             for (MethodSig ms : id.getBodyList()) {
-                if (ms.isRESTCallable()) {
+                if (ms.isHTTPCallable()) {
                     callable_sigs.add(ms);
                 }
             }
@@ -266,7 +270,7 @@ public class ClassGenerator {
         ecs.print("exported() -> #{ ");
         boolean first = true;
         for (MethodSig ms : callable_sigs) {
-            if (ms.isRESTCallable()) {
+            if (ms.isHTTPCallable()) {
                 if (!first) ecs.print(", ");
                 first = false;
                 ecs.print("<<\"" + ms.getName() + "\">> => { ");

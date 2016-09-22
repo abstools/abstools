@@ -49,7 +49,7 @@ Alias /absexamples \"/var/www/absexamples\"\n\
 EasyInterface is at http://localhost:8888/ei/clients/web.\n\
 </body></html>\n" > /var/www/html/index.html \
  && a2ensite easyinterface-site \
- && a2enmod headers \
+ && a2enmod headers 
 RUN curl http://costa.ls.fi.upm.es/download/saco.colab.zip -\# -o saco.colab.zip \
  && unzip saco.colab.zip -d /usr/local/lib \
  && rm saco.colab.zip \
@@ -65,8 +65,7 @@ RUN curl http://costa.ls.fi.upm.es/download/saco.colab.zip -\# -o saco.colab.zip
 COPY frontend/dist /usr/local/lib/frontend/dist
 COPY frontend/bin /usr/local/lib/frontend/bin
 COPY frontend/lib /usr/local/lib/frontend/lib
-RUN chmod -R a+r /usr/local/lib/frontend/ \
- && chmod a+rx /usr/local/lib/frontend/bin/bash/*
+RUN chmod -R a+rx /usr/local/lib/frontend
 
 
 ###############
@@ -116,3 +115,35 @@ RUN cp /solvers_exec/abs_deployer/docker/docker_scripts/fzn-chuffed /bin/fzn-chu
 	chmod 755 /solvers_exec/chuffed/binary/linux/fzn_chuffed
 # add the path to absfrontend.jar in classpath
 ENV CLASSPATH=/usr/local/lib/frontend/dist/absfrontend.jar:$CLASSPATH
+
+
+#######
+# HABS
+#######
+
+RUN echo "deb http://ppa.launchpad.net/hvr/ghc/ubuntu trusty main" >> /etc/apt/sources.list
+RUN apt-get update -y -q
+RUN apt-get install -y --force-yes -q ghc-8.0.1 cabal-install-1.24 happy-1.19.5
+RUN git clone https://github.com/abstools/habs /usr/local/lib/habs && \
+    cd /usr/local/lib/habs && \
+    git submodule update --init
+ENV PATH=$PATH:/opt/ghc/8.0.1/bin:/opt/cabal/1.24/bin:/opt/happy/1.19.5/bin
+RUN cd /usr/local/lib/habs && \
+    unset GHC_PACKAGE_PATH && \
+    cabal sandbox init && \
+    cabal update && \
+    cabal sandbox add-source habs-parser && \
+    cabal sandbox add-source habs-runtime && \
+    cabal sandbox add-source habs-stdlib && \
+    cabal install -j1 habs-runtime -fwait-all-cogs && \
+    cabal install -j1
+RUN chmod -R a+xr /usr/local/lib/habs
+RUN echo "\
+# set corresponding HABS paths in easyinterface\n\
+#\n\
+# path to HABS\n\
+EC_HABSHOME=\"/usr/local/lib/habs\"\n\
+# path to CABAL and HASKELL\n\
+#\n\
+EC_PATH=\"\$EC_PATH:/opt/ghc/8.0.1/bin:/opt/cabal/1.24/bin:/opt/happy/1.19.5/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
+

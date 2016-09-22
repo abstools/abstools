@@ -236,10 +236,10 @@ aspect GenerateErlang {
               ecs.println(",");
               ecs.format("cog_monitor:new_dc(%s)", varName);
           }
-          PureExp restname = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.StdLib.RESTName");
+          PureExp restname = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.StdLib.HTTPName");
           if (restname != null) {
               ecs.println(",");
-              ecs.print("cog_monitor:register_object_with_rest_name(" + varName + ",");
+              ecs.print("cog_monitor:register_object_with_http_name(" + varName + ",");
               restname.generateErlangCode(ecs, vars);
               ecs.print(")");
           }
@@ -279,10 +279,10 @@ aspect GenerateErlang {
         ecs.format("cog_monitor:new_dc(get(O,'%s'))", getVar().getName());
     }
     if (getValue() instanceof NewExp) {
-        PureExp restname = CompilerUtils.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.RESTName");
+        PureExp restname = CompilerUtils.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.HTTPName");
         if (restname != null) {
             ecs.println(",");
-            ecs.print("cog_monitor:register_object_with_rest_name(" + varExp + ",");
+            ecs.print("cog_monitor:register_object_with_http_name(" + varExp + ",");
             restname.generateErlangCode(ecs, vars);
             ecs.print(")");
         }
@@ -329,7 +329,7 @@ aspect GenerateErlang {
   public void ExpressionStmt.generateErlangCode(CodeStream ecs,Vars vars) {
       boolean isNewDC = getExp().getType().isDeploymentComponentType()
           && getExp() instanceof NewExp;
-      PureExp restname = CompilerUtils.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.RESTName");
+      PureExp restname = CompilerUtils.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.HTTPName");
       // Need to generate code for right-hand side before creating new
       // variable
       StringWriter sw = new StringWriter();
@@ -346,7 +346,7 @@ aspect GenerateErlang {
       }
       if (restname != null) {
           ecs.println(",");
-          ecs.print("cog_monitor:register_object_with_rest_name(" + varName + ",");
+          ecs.print("cog_monitor:register_object_with_http_name(" + varName + ",");
           restname.generateErlangCode(ecs, vars);
           ecs.print(")");
       }
@@ -404,6 +404,8 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),getMethodSig().getTypes(),vars,true);
+    ecs.print(",Cog,");
+    ecs.print(vars.toStack());
     ecs.println("),");
     ecs.print("future:get_blocking(TempFuture, Cog, ");
     ecs.print(vars.toStack());
@@ -417,6 +419,8 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),getMethodSig().getTypes(),vars,true);
+    ecs.print(",Cog,");
+    ecs.print(vars.toStack());
     ecs.print(")");
   }
 
@@ -918,7 +922,7 @@ aspect GenerateErlang {
       ecs.println("{stop_world, _Sender} -> % only happens when stop_world and release_token cross");
       ecs.incIndent().pf("Poll(%s);", vars.toParamList());
       ecs.decIndent().println("{get_references, Sender} ->");
-      ecs.incIndent().pf("Sender ! {gc:extract_references(%s), self()},", vars.toStack());
+      ecs.incIndent().pf("cog:submit_references(Sender, gc:extract_references(%s)),", vars.toStack());
       ecs.pf("Poll(%s);", vars.toParamList());
       ecs.decIndent().println("die_prematurely ->");
       ecs.incIndent().println("exit(killed_by_the_clock)");

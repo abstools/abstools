@@ -22,5 +22,6 @@ do
         echo "Linking $SOURCE_DIR/$i to $i"
         rm -rf "$i"
         ln -s "$SOURCE_DIR/$i" "$i"
+        touch "$i"
     fi
 done

@@ -34,12 +34,10 @@ complete_future(Future, Status, Value, Cog, Stack) ->
              receive
                  {stop_world, _Sender} ->
                      task:block_without_time_advance(Cog),
-                     %% this runs in the context of the just-completed task,
-                     %% so we only need to hold on to the return value.
-                     task:acquire_token(Cog, [Value]),
+                     task:acquire_token(Cog, [Value | Stack]),
                      Loop();
                 {get_references, Sender} ->
-                    Sender ! {gc:extract_references([Future, Value | Stack]), self()},
+                     cog:submit_references(Sender, gc:extract_references([Future, Value | Stack])),
                     Loop();
                 {value_accepted, Future} -> ok
             end

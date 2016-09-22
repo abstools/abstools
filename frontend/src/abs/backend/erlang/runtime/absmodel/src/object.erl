@@ -22,7 +22,7 @@
 -behaviour(gc).
 -export([get_references/1]).
 
-%% REST api: inhibit dying from gc while we're registered.
+%% HTTP api: inhibit dying from gc while we're registered.
 -export([protect_object_from_gc/1, unprotect_object_from_gc/1]).
 -export([get_whole_object_state/1,get_all_method_info/1]).
 
@@ -48,7 +48,9 @@ new(Cog,Class,Args,CreatorCog,Stack)->
         true -> protect_object_from_gc(O);
         false -> ok
     end,
-    cog:add_blocking(Cog,init_task,{O,Args},CreatorCog,Stack),
+    task:block_without_time_advance(CreatorCog),
+    cog:add_sync(Cog,init_task,{O,Args}, Stack),
+    task:acquire_token(CreatorCog,[Args|Stack]),
     O.
 
 activate(#object{ref=O})->

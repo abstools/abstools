@@ -52,7 +52,7 @@ start(Log, Debug) ->
 stop() ->
     gen_fsm:stop({global, gc}).
 
-gcstats(Log, Statistics) -> 
+gcstats(Log, Statistics) ->
     case Log of
         true -> io:format("~p.~n",[{gcstats, erlang:monotonic_time(milli_seconds), Statistics}]);
         false -> ok
@@ -61,7 +61,7 @@ gcstats(Log, Statistics) ->
 
 register_future(Fut) ->
     %% Fut is the plain pid of the Future process
-    gen_fsm:sync_send_event({global, gc}, {register_future, Fut, self()}).
+    gen_fsm:send_event({global, gc}, {register_future, Fut, self()}).
 
 unroot_future(Fut) ->
     %% Fut is the plain pid of the Future process
@@ -123,6 +123,9 @@ idle_state_next(State=#state{log=Log, cogs=Cogs}) ->
             {idle, State}
     end.
 
+idle({register_future, Ref, Sender}, State=#state{root_futures=RootFutures}) ->
+    {Next, NewState} = idle_state_next(State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)}),
+    {next_state, Next, NewState};
 idle(#object{ref=Ref}, State=#state{objects=Objects}) ->
     {Next, NewState} = idle_state_next(State#state{objects=gb_sets:insert({object, Ref}, Objects)}),
     {next_state, Next, NewState};
@@ -139,12 +142,14 @@ idle({die, Cog}, State=#state{cogs=Cogs}) ->
 idle(_Event, State) ->
     {stop, not_supported, State}.
 
-idle(#cog{ref=Ref}, _From, State=#state{cogs=Cogs}) ->
-    Ref ! {gc, ok},
+idle(Cog=#cog{ref=Ref}, _From, State=#state{cogs=Cogs}) ->
     {Next, NewState} = idle_state_next(State#state{cogs=gb_sets:insert({cog, Ref}, Cogs)}),
-    {reply, ok, Next, NewState};
-idle({register_future, Ref, Sender}, _From, State=#state{root_futures=RootFutures}) ->
-    {Next, NewState} = idle_state_next(State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)}),
+    case Next of
+        idle -> cog:acknowledged_by_gc(Cog);
+        %% If we switched to collecting, we already sent stop_world -- no need
+        %% to send ack in that case.
+        _ -> ok
+    end,
     {reply, ok, Next, NewState};
 idle(_Event, _From, State) ->
     {stop, not_supported, State}.
@@ -156,7 +161,7 @@ collecting_state_next(State=#state{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, 
             gcstats(Log, mark),
             Exported=gb_sets:from_list(
                        lists:map(fun(#object{ref=Ref}) -> {object, Ref} end,
-                                 cog_monitor:list_registered_rest_objects())),
+                                 cog_monitor:list_registered_http_objects())),
             Black=mark([], ordsets:from_list(gb_sets:to_list(gb_sets:union([Cogs, RootFutures, Exported])))),
             gcstats(Log, sweep),
             StateAfterSweep=sweep(State, gb_sets:from_ordset(Black)),
@@ -165,16 +170,17 @@ collecting_state_next(State=#state{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, 
             {collecting, State}
     end.
 
+collecting({register_future, Ref, _Sender}, State=#state{root_futures=RootFutures}) ->
+    {next_state, collecting,
+     State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)}};
 collecting(#object{ref=Ref}, State=#state{objects=Objects}) ->
-    {Next, NewState} = collecting_state_next(State#state{objects=gb_sets:insert({object, Ref}, Objects)}),
-    {next_state, Next, NewState};
+    {next_state, collecting, State#state{objects=gb_sets:insert({object, Ref}, Objects)}};
 collecting({stopped_object, Ref}, State=#state{objects=Objects}) ->
-    {Next, NewState} = collecting_state_next(State#state{objects=gb_sets:del_element({object, Ref}, Objects)}),
-    {next_state, Next, NewState};
+    {next_state, collecting, State#state{objects=gb_sets:del_element({object, Ref}, Objects)}};
 collecting({unroot, Sender}, State=#state{root_futures=RootFutures, futures=Futures}) ->
-    {Next, NewState} = collecting_state_next(State#state{futures=gb_sets:insert({future, Sender}, Futures),
-                                                         root_futures=gb_sets:delete({future, Sender}, RootFutures)}),
-    {next_state, Next, NewState};
+    {next_state, collecting,
+     State#state{futures=gb_sets:insert({future, Sender}, Futures),
+                 root_futures=gb_sets:delete({future, Sender}, RootFutures)}};
 collecting({die, Cog}, State=#state{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
     {Next, NewState} = collecting_state_next(State#state{cogs=gb_sets:delete({cog, Cog}, Cogs),
                                                          cogs_waiting_to_stop=gb_sets:delete_any({cog, Cog}, RunningCogs)}),
@@ -187,12 +193,9 @@ collecting(_Event, State) ->
 
 collecting(#cog{ref=Ref}, _From, State=#state{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
     cog:stop_world(Ref),
-    {Next, NewState} = collecting_state_next(State#state{cogs=gb_sets:insert({cog, Ref}, Cogs),
-                                                         cogs_waiting_to_stop=gb_sets:insert({cog, Ref}, RunningCogs)}),
-    {reply, ok, Next, NewState};
-collecting({register_future, Ref, Sender}, _From, State=#state{root_futures=RootFutures}) ->
-    {Next, NewState} = collecting_state_next(State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)}),
-    {reply, ok, Next, NewState};
+    {reply, ok, collecting,
+     State#state{cogs=gb_sets:insert({cog, Ref}, Cogs),
+                 cogs_waiting_to_stop=gb_sets:insert({cog, Ref}, RunningCogs)}};
 collecting(_Event, _From, State) ->
     {stop, not_supported, State}.
 
@@ -230,7 +233,10 @@ sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,
                      limit=NewLim, proc_factor=PFactor}.
 
 get_references({Module, Ref}) ->
-    Module:get_references(Ref).
+    case is_process_alive(Ref) of
+        true -> Module:get_references(Ref);
+        false -> []
+    end.
 
 is_collection_needed(State=#state{objects=Objects,futures=Futures,
                                   previous=PTime,limit=Lim,proc_factor=PFactor,
@@ -238,7 +244,6 @@ is_collection_needed(State=#state{objects=Objects,futures=Futures,
     Debug
     orelse (erlang:monotonic_time(milli_seconds) - PTime) > ?MAX_COLLECTION_INTERVAL
     orelse erlang:system_info(process_count) / erlang:system_info(process_limit) > PFactor.
-
 
 extract_references(DataStructure) ->
     ordsets:from_list(lists:flatten([to_deep_list(DataStructure)])).

@@ -32,8 +32,11 @@ public class InterfaceType extends ReferenceType {
 
     @Override
     public boolean isDeploymentComponentType() {
+        // KLUDGE: we need a proper subtyping check here -- but it's all
+        // contained in abslang.abs so we make do for now
         return getQualifiedName().equals("ABS.DC.DeploymentComponent")
-            || getQualifiedName().equals("ABS.DC.DC");
+            || getQualifiedName().equals("ABS.DC.DC")
+            || getQualifiedName().equals("ABS.DC.DeploymentComponentForCloudProvider");
     }
 
 

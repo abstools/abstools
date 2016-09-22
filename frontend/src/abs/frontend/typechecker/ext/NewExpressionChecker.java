@@ -28,7 +28,7 @@ import abs.frontend.ast.VarDeclStmt;
  *
  * - Deployment components cannot be created with `new local'
  *
- * - `RESTName' annotation must be of type String
+ * - `HTTPName' annotation must be of type String
  */
 public class NewExpressionChecker extends DefaultTypeSystemExtension {
 
@@ -39,19 +39,19 @@ public class NewExpressionChecker extends DefaultTypeSystemExtension {
     @Override
     public void checkExpressionStmt(ExpressionStmt expressionStmt) {
         checkDCCorrect(expressionStmt, CompilerUtils.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.DC.DC"));
-        checkRESTNameCorrect(expressionStmt, CompilerUtils.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.StdLib.RESTName"));
+        checkHTTPNameCorrect(expressionStmt, CompilerUtils.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.StdLib.RESTName"));
     }
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
         checkDCCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.DC.DC"));
-        checkRESTNameCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.StdLib.RESTName"));
+        checkHTTPNameCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.StdLib.RESTName"));
     }
 
     @Override
     public void checkVarDeclStmt(VarDeclStmt varDeclStmt) {
         checkDCCorrect(varDeclStmt, CompilerUtils.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.DC.DC"));
-        checkRESTNameCorrect(varDeclStmt, CompilerUtils.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.StdLib.RESTName"));
+        checkHTTPNameCorrect(varDeclStmt, CompilerUtils.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.StdLib.RESTName"));
     }
 
     private void checkDCCorrect(ASTNode<?> n, PureExp dc) {
@@ -61,10 +61,10 @@ public class NewExpressionChecker extends DefaultTypeSystemExtension {
         }
     }
 
-    private void checkRESTNameCorrect(ASTNode<?> n, PureExp restname) {
+    private void checkHTTPNameCorrect(ASTNode<?> n, PureExp restname) {
         if (restname == null) return;
         if (!restname.getType().isStringType()) {
-            errors.add(new TypeError(n, ErrorMessage.WRONG_RESTNAME, restname.getType().getQualifiedName()));
+            errors.add(new TypeError(n, ErrorMessage.WRONG_HTTPNAME, restname.getType().getQualifiedName()));
         }
     }
 

@@ -17,8 +17,28 @@ following aspects were added to ABS:
 * A notion of _cost_ of executing parts of a system, in terms of resource
   types like bandwidth and processor cycles (see <<sec:resources>>)
 
-All language identifiers described in this section reside in the `ABS.DC`
-module.
+These elements work together as in Figure <<fig-resource-consumption>>:
+
+[[fig-resource-consumption]]
+image::ABS-resources.png[width=676,height=431,title="Resource Consumption",alt="Resource Consumption"]
+
+The figure shows a process with a `skip` statement with an associated cost of
+5, followed by a `println` statement with a cost of 10.  The deployment
+component `DC` has 10 resources available in each time interval.
+
+At time `t`, the `skip` statement consumes the five needed resources and is
+successfully executed.  The `println` statement consumes the remaining five
+resources but is not executed yet.
+
+At time `t+1`, the deployment component’s resources are refilled.  The five
+remaining resources of the `println` statement are consumed and the statement
+is executed.  The five remaining resources of `DC` are not used.
+
+At time `t+2`, the deployment component’s resoures are again refilled to 10.
+
+The rest of this chapter explains these language elements concerning resource
+modeling in detail.  All identifiers introduced in this section reside in the
+`ABS.DC` module.
 
 
 
@@ -254,12 +274,17 @@ image::Deployment-component.png[width=636,height=196,title="A deployment compone
 
 
 
-Deployment Components are first-class constructs in the ABS language.  A
-reference to a deployment component is treated the same way as a reference to
-an object.  Deployment Components are created by a cloud provider instance
-(see <<sec:cloudprovider>>), but can also be created using the `new`
-expression.  A new cog is created on a deployment component by using a `DC`
-annotation to the `new` statement.
+Deployment Components are first-class constructs in the ABS language.
+References to deployment components can be stored in variables of type
+`DeploymentComponent`, and the methods documented in this section can be
+called via asynchronous method calls.
+
+Deployment Components are usually created by a cloud provider instance (see
+<<sec:cloudprovider>>), but can also be created using the `new` expression.  A
+new cog is created on a deployment component by using a `DC` annotation to the
+`new` statement.
+
+NOTE: It is an error to try to create a deployment component via `new local`.
 
 .Example
 ----
@@ -284,14 +309,31 @@ for a description of the available resource types.
 
 .[Atomic] Rat load(Resourcetype rtype, Int periods)
 
-Return the load (0-100) for given resource type `rtype` over the last `n`
-periods.  If resource is infinite, return `0`.
+Return the load (0-100) for the given resource type `rtype` over the last `n`
+periods.  If the deployment component was created with infinite resources for
+the given resource type, `load` returns `0`.
+
 
 .[Atomic] InfRat total(Resourcetype rtype)
 
-Return the total available amount for given resourcetype.  If the resource
-type is infinite, return `InfRat`; if it has value _value_, return
-`Fin(value)`.
+Return the total available amount for the given resourcetype.  If the
+deployment component was created with infinite resources for the given
+resource type, `total` returns `InfRat`, otherwise `Fin(value)`.
+
+
+.Unit decrementResources(Rat amount, Resourcetype rtype)
+
+Decrease the total avilable amount for the given resourcetype by `amount` from
+the next time interval onwards.  Trying to decrement infinite resources has no
+effect.  It is an error to decrement resources by more than the available amount.
+
+
+.Unit incrementResources(Rat amount, Resourcetype rtype)
+
+Increase the total avilable amount for the given resourcetype by `amount` from
+the next time interval onwards.  Trying to increment infinite resources has no
+effect.
+
 
 .Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype)
 
@@ -301,29 +343,23 @@ component to `target`.  Takes effect on the next time period.
 (This method is implemented via `decrementResources` and
 `incrementResources`.)
 
-.Unit decrementResources(Rat amount, Resourcetype rtype)
-
-Decrement available resourcetype by given amount from the next time interval
-onwards.
-
-.Unit incrementResources(Rat amount, Resourcetype rtype)
-
-Increment available resourcetype by given amount from the next time interval
-onwards.
-
 
 .[Atomic] String getName()
 
-Returns the name of the deployment component.  The name is set by the first
-argument to the `new` expression.
+Returns the name of the deployment component.  Deployment components created
+via a `CloudProvider` are guaranteed to have a unique name if no two cloud
+providers have the same name.
+
 
 .[Atomic] Time getCreationTime()
 
 Get the creation time of the deployment component, in terms of the simulated clock.
 
+
 .[Atomic] Rat getStartupDuration()
 
 Get the specified startup duration, or 0 if none specified.
+
 
 .[Atomic] Rat getShutdownDuration()
 
@@ -334,9 +370,11 @@ Get the specified shutdown duration, or 0 if none specified.
 
 Get the specified payment interval, or 1 if none specified.
 
+
 .[Atomic] Rat getCostPerInterval()
 
-Get the specified cost per interval, or 0 if none specified.
+Get the specified cost (price) per interval, or 0 if none specified.
+
 
 
 .Bool shutdown()
@@ -345,26 +383,26 @@ Shut down the deployment component.  It is an error to create a new object on
 a deployment component that has been shutdown, or to invoke a method on an
 object residing on a deployment component that has been shut down.
 
-.[Atomic] Unit setProvider(CloudProvider provider)
 
-Set the cloud provider that manages this deployment component.  See
-<<sec:cloudprovider>> for a discussion of cloud providers.
 
 .[Atomic] CloudProvider getProvider()
 
 Get the cloud provider that manages this deployment component.  Returns `null`
-if no cloud provider set.  See <<sec:cloudprovider>> for a discussion of cloud
-providers.
+if the deployment component was not created by a cloud provider.  See
+<<sec:cloudprovider>> for a discussion of cloud providers.
+
 
 .Bool acquire()
 
 Convenience method for calling `acquireInstance` of the associated cloud
-provider.  If no cloud provider is set, returns `True`.
+provider.  If no cloud provider is set, returns `True`.  See
+<<sec:cloudprovider>> for a discussion of cloud providers.
 
 .Bool release()
 
 Convenience method for calling `releaseInstance` of the associated cloud
-provider.  If no cloud provider is set, returns `True`.
+provider.  If no cloud provider is set, returns `True`.  See
+<<sec:cloudprovider>> for a discussion of cloud providers.
 
 
 
@@ -385,18 +423,17 @@ data Resourcetype = Speed | Bandwidth | Memory | Cores ;
 ----
 
 When a deployment component is created without explicitly giving a value for a
-resource type, it is in effect infinite.  E.g., when we want to model a denial
-of service attack, the deployment component modeling the attacker will have
-infinite speed and bandwidth.
+resource type, it is assumed to have an infinite amount of that resource.
+E.g., when modeling a denial of service attack, the deployment component
+running the attacker code will have infinite speed and bandwidth.
 
 
 ==== Speed
 
 The `Speed` resource type models execution speed.  Intuitively, a deployment
 component with twice the number of `Speed` resources will execute twice as
-fast.  Not all statements consume Speed resources while executing -- Speed
-resources are consumed when execution in the current process reaches a
-statement that is annotated with a `Cost` annotation.
+fast.  Speed resources are consumed when execution in the current process
+reaches a statement that is annotated with a `Cost` annotation.
 
 .Example
 ----
@@ -421,14 +458,13 @@ Bandwidth consumption is expressed via a `DataSize` annotation:
 
 .Example
 ----
-[DataSize: 2 * length(x)] o!m(x);
+Time t1 = now();
+[DataSize: 2 * length(datalist)] o!process(datalist);
+Time t2 = now();
 ----
 
 Executing the above method invocation statement will consume bandwidth
-resources proportional to the length of list `x`.
-// The resources will be
-// consumed both from the deployment component where the cog was deployed, and
-// from the one where `o` was deployed.
+resources proportional to the length of list `datalist`.
 
 
 ==== Memory
@@ -449,7 +485,10 @@ for this purpose).
 
 === Modeling Resource Usage
 
-As described above, resource models are added to an ABS model using annotations.  Adding annotations to specific statements and declarations causes side-effects on the status of an applicable deployment component.
+As described above, resource information is added to statements of an ABS
+model using `Cost` and `DataSize` annotations.  Executing such annotated
+statements causes observable changes in the simulated time and deployment
+component load during simulation.
 
 .Example
 ----
@@ -458,31 +497,25 @@ import * from ABS.DC; <1>
 interface I {
   Unit process();
 }
-[DataSize: 3] <2>
 class C implements I {
   Unit process() {
-    [Cost: 10] skip; <3>
+    [Cost: 10] skip; <2>
 }
 
 {
   DeploymentComponent dc = new DeploymentComponent("Server",
-    map[Pair(CPU, 5), Pair(Bandwidth, 10), Pair(Memory, 5)]);
-  [DC: dc] I i = new C(); <4>
-  [DataSize: 5] i!process(); <5>
+    map[Pair(Speed, 5), Pair(Bandwidth, 10)]);
+  [DC: dc] I i = new C();
+  [DataSize: 5] i!process(); <3>
 }
 ----
 <1> Make all necessary identifiers accessible in the current module
 
-<2> Declare the memory needed to instantiate a cog of class `C`
+<2> Executing this statement costs 10 `Speed` units; the time needed depends
+on the capacity of the deployment component, and on other cogs executing in
+parallel on the same deployment component.
 
-<3> Executing this statement costs 10 CPU units; the time needed depends on
-the CPU capacity of the deployment component, and on other cogs executing in
-parallel on the same deployment component.  In this example, executing the
-`skip` statement will take two time units.
-
-<4> Creating a new cog succeeds since the available memory (5) is more than
-the necessary memory (3).  Trying to create a second cog of the same class
-will fail.
-
-<5> Executing this method call consumes 5 Bandwidth resources.  Since `dc` has
-10 bandwidth per time unit, the message will be transported instantly.
+<3> Executing this method call consumes 5 Bandwidth resources.  Since `dc` has
+10 bandwidth resourcers per time unit, the message will be transported
+instantly.  Executing the `skip` statement in the method body will not finish
+instantaneously because `dc` only has 5 `Speed` resources in total.

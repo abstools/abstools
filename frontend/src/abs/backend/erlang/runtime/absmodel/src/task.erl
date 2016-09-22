@@ -6,15 +6,14 @@
 %% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([acquire_token/2,release_token/2,block_with_time_advance/1,block_without_time_advance/1,wait/1,wait_poll/1]).
+-export([acquire_token/2,release_token/2,block_with_time_advance/1,block_without_time_advance/1]).
 -export([await_duration/4,block_for_duration/4]).
 -export([block_for_cpu/4,block_for_bandwidth/5]).
--export([loop_for_token/2]).            % low-level; use acquire_token instead
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
 
 -behaviour(gc).
--export([send_stop_for_gc/1, get_references/1]).
+-export([send_stop_for_gc/1, get_references_for_cog/1]).
 
 %% Terminate recklessly.  Used to shutdown system when clock limit reached (if
 %% applicable).  Must be called when cog is stopped for GC.  (See
@@ -50,13 +49,8 @@ init(Task,Cog,Args)->
 send_stop_for_gc(Task) ->
     Task ! {stop_world, self()}.
 
-get_references(Task) ->
-    case is_process_alive(Task) of
-        true ->
-            Task ! {get_references, self()},
-            receive {References, Task} -> References end;
-        false -> []
-    end.
+get_references_for_cog(Task) ->
+    Task ! {get_references, self()}.
 
 kill_recklessly(Task) ->
     Task ! die_prematurely,
@@ -87,40 +81,35 @@ send_notifications(Val)->
     end.
             
 
-acquire_token(Cog=#cog{ref=CogRef}, Stack)->
+acquire_token(Cog, Stack)->
     cog:process_is_runnable(Cog,self()),
-    loop_for_token(Stack, token),
-    cog_monitor:cog_unblocked(CogRef).
+    loop_for_token(Cog, Stack, token).
 
-loop_for_clock_advance(Stack) ->
+loop_for_clock_advance(Cog, Stack) ->
     receive
         {clock_finished, Sender} -> Sender ! { ok, self()};
         {stop_world, _Sender} ->
-            loop_for_clock_advance(Stack);
+            loop_for_clock_advance(Cog, Stack);
         {get_references, Sender} ->
-            Sender ! {gc:extract_references(Stack), self()},
-            loop_for_clock_advance(Stack);
+            cog:submit_references(Sender, gc:extract_references(Stack)),
+            loop_for_clock_advance(Cog, Stack);
         die_prematurely -> exit(killed_by_the_clock)
     end.
 
-loop_for_token(Stack, Token) ->
+loop_for_token(Cog, Stack, Token) ->
     %% Handle GC messages while task is waiting for signal to continue
     %% (being activated by scheduler, time advance for duration
     %% statement, resources available).
     receive
         Token -> ok;
         {stop_world, _Sender} ->
-            loop_for_token(Stack, Token);
+            loop_for_token(Cog, Stack, Token);
         {get_references, Sender} ->
-            Sender ! {gc:extract_references(Stack), self()},
-            loop_for_token(Stack, Token);
+            cog:submit_references(Sender, gc:extract_references(Stack)),
+            loop_for_token(Cog, Stack, Token);
         die_prematurely -> exit(killed_by_the_clock)
     end.
 
-wait(Cog)->
-    cog:process_is_waiting(Cog,self()).
-wait_poll(Cog)->
-    cog:process_is_waiting_polling(Cog,self()).
 block_with_time_advance(Cog)->
     cog:process_is_blocked(Cog,self()).
 block_without_time_advance(Cog)->
@@ -132,18 +121,18 @@ await_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
     case rationals:is_positive(rationals:to_r(Min)) of
         true ->
             cog_monitor:task_waiting_for_clock(self(), CogRef, Min, Max),
-            task:release_token(Cog,waiting),
-            loop_for_clock_advance(Stack),
-            task:acquire_token(Cog, Stack);
+            release_token(Cog,waiting),
+            loop_for_clock_advance(Cog, Stack),
+            acquire_token(Cog, Stack);
         false ->
             ok
     end.
 
 block_for_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
     cog_monitor:cog_blocked_for_clock(self(), CogRef, Min, Max),
-    task:block_with_time_advance(Cog),
-    loop_for_clock_advance(Stack),
-    task:acquire_token(Cog, Stack).
+    block_with_time_advance(Cog),
+    loop_for_clock_advance(Cog, Stack),
+    acquire_token(Cog, Stack).
 
 block_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
     Amount_r = rationals:to_r(Amount),
@@ -155,9 +144,9 @@ block_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
                 wait ->
                     Time=clock:distance_to_next_boundary(),
                     cog_monitor:task_waiting_for_clock(self(), CogRef, Time, Time),
-                    task:block_with_time_advance(Cog),           % cause clock advance
-                    loop_for_clock_advance(Stack),
-                    task:acquire_token(Cog,Stack),
+                    block_with_time_advance(Cog), % cause clock advance
+                    loop_for_clock_advance(Cog, Stack),
+                    acquire_token(Cog,Stack),
                     block_for_resource(Cog, DC, Resourcetype, Remaining, Stack);
                 ok ->
                     case rationals:is_positive(Remaining) of
@@ -185,9 +174,9 @@ block_for_bandwidth(Cog, DC, null, Amount, Stack) ->
     block_for_resource(Cog, DC, bw, Amount, Stack).
 
 
-release_token(C=#cog{ref=Cog},State)->
+release_token(Cog,State)->
     receive
         {stop_world, _Sender} -> ok
     after 0 -> ok
     end,
-    Cog!{token,self(),State}.
+    cog:return_token(Cog, self(), State).

@@ -108,6 +108,16 @@ Server will not be started if nil."
   :group 'abs)
 (put 'abs-default-resourcecost 'safe-local-variable 'integerp)
 
+(defcustom abs-link-source-path nil
+  "Path to link the ABS runtime sources for the erlang backend.
+This enables development of the erlang backend by symlinking its
+sources into the generated code.  Sources will not be linked if
+NIL."
+  :type '(choice (const :tag "Do not link" nil)
+                 directory)
+  :group 'abs)
+(put 'abs-link-source-path 'safe-local-variable '(lambda (x) (or (null x) (stringp x))))
+
 (defvar abs-product-name nil
   "Product to be generated when compiling.")
 (put 'abs-product-name 'safe-local-variable 'stringp)
@@ -373,6 +383,8 @@ value.")
                               (< 0 abs-default-resourcecost))
                      (concat " -defaultcost="
                              (number-to-string abs-default-resourcecost)))
+                   (when (and (eq backend 'erlang) abs-link-source-path)
+                     (concat " && cd gen/erl/ && ./link_sources " abs-link-source-path))
                    " "))))
 
 (defun abs--needs-compilation (backend)

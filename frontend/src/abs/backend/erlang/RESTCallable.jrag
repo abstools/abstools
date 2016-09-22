@@ -1,6 +1,0 @@
-aspect RESTCallable {
-    syn lazy boolean MethodSig.isRESTCallable() {
-        java.util.List<Annotation> anns = AnnotationHelper.getAnnotationsOfType(getAnnotationList(), "ABS.StdLib.RESTCallableAnnotation");
-        return !anns.isEmpty();
-    }
-}
