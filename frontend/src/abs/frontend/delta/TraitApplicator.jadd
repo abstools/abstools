@@ -44,16 +44,16 @@ aspect TraitApplicator {
 
     public void DeltaTraitModifier.rewriteToList(TraitOper tt, ArrayList<TraitOper> operations){
         operations.add(tt);
-        if(tt instanceof TraitAddOpr){
-            rewriteToList(((TraitAddOpr)tt).getTraitExpr(), operations, tt);
-        } else if(tt instanceof TraitModifyOpr){
-            rewriteToList(((TraitModifyOpr)tt).getTraitExpr(), operations, tt);
+        if(tt instanceof AddMethodModifier){
+            rewriteToList(((AddMethodModifier)tt).getTraitExpr(), operations, tt);
+        } else if(tt instanceof ModifyMethodModifier){
+            rewriteToList(((ModifyMethodModifier)tt).getTraitExpr(), operations, tt);
         }
     }
 
     /*
      * TraitUse is the trait application from within a class. Transform it into
-     * a TraitAddOpr and apply it.
+     * a AddMethodModifier and apply it.
      */
     public  void TraitUse.applyTo(ClassDecl cd) throws DeltaModellingException {
 
@@ -73,19 +73,19 @@ aspect TraitApplicator {
             }
         } 
         
-         //transform into TraitAddOpr
+         //transform into AddMethodModifier
         TraitSetExpr eSet = new TraitSetExpr();
         eSet.setMethodImplList(new List<MethodImpl>());
         eSet.setParent(cd);
         
         resolved = resolved.treeCopyNoTransform();
-        TraitAddOpr tOp = new TraitAddOpr(resolved);
+        AddMethodModifier tOp = new AddMethodModifier(resolved);
         tOp.setParent(cd);
         resolved.setParent(tOp);
           
         
         TraitSetExpr newSet = tOp.applyToSet(eSet, cd);
-        TraitAddOpr newOp = new TraitAddOpr(newSet);
+        AddMethodModifier newOp = new AddMethodModifier(newSet);
         newOp.setParent(cd);
         
         //apply
@@ -104,14 +104,14 @@ aspect TraitApplicator {
     
 
     /*
-     * TraitRemoveOpr is the trait operation that removes a single method, given
+     * RemoveMethodModifier is the trait operation that removes a single method, given
      * its signature. Throws an exception if no such method is found
      */
-    public  void TraitRemoveOpr.applyTo(ClassDecl cd) throws DeltaModellingException{    
+    public  void RemoveMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException{    
         applyToList(cd.getMethodList());
     }
     
-    private void TraitRemoveOpr.applyToList(List<MethodImpl> list) throws DeltaModellingException{ 
+    private void RemoveMethodModifier.applyToList(List<MethodImpl> list) throws DeltaModellingException{ 
         MethodSig mysig = this.getMethodSig();
 
         // in given ClassDecl: find MethodDecl that matches sig
@@ -134,10 +134,10 @@ aspect TraitApplicator {
 
 
     /*
-     * TraitAddOpr is the trait operation that adds a set of methods. Throws NO
+     * AddMethodModifier is the trait operation that adds a set of methods. Throws NO
      * exception if a method with the same name is already present in the class
      */
-    public void TraitAddOpr.applyTo(ClassDecl cd) throws DeltaModellingException{ 
+    public void AddMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ 
         TraitExpr tt = getTraitExpr();
         ArrayList<TraitOper> operations = new ArrayList<>();
         /*
@@ -176,7 +176,7 @@ aspect TraitApplicator {
     }    
 
     // collects all TraitOper in an AST and returns the left-most TraitExpr
-    public TraitExpr TraitAddOpr.helperLeftMost(TraitExpr tt, ArrayList<TraitOper> operations){
+    public TraitExpr AddMethodModifier.helperLeftMost(TraitExpr tt, ArrayList<TraitOper> operations){
         if(tt instanceof TraitModifyExpr){          
             TraitModifyExpr app = (TraitModifyExpr) tt;
             TraitExpr next = app.getTraitExpr();
@@ -188,13 +188,13 @@ aspect TraitApplicator {
 
 
     /*
-     * TraitModifyOpr is the trait operation that modifies a set of methods.
+     * ModifyMethodModifier is the trait operation that modifies a set of methods.
      * Throws an exception if a method with the same name is not present in the
      * class
      *
      * This is also where we resolve original calls.
      */
-    public void TraitModifyOpr.applyTo(ClassDecl cd) throws DeltaModellingException{ 
+    public void ModifyMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ 
         TraitExpr tt = getTraitExpr();
         ArrayList<TraitOper> operations = new ArrayList<>();
         TraitExpr target = helperLeftMost(tt, operations);
@@ -210,7 +210,7 @@ aspect TraitApplicator {
     }
 
     // collects all TraitOper in an AST and returns the left-most TraitExpr
-    public TraitExpr TraitModifyOpr.helperLeftMost(TraitExpr tt, ArrayList<TraitOper> operations){
+    public TraitExpr ModifyMethodModifier.helperLeftMost(TraitExpr tt, ArrayList<TraitOper> operations){
         if(tt instanceof TraitModifyExpr){          
             TraitModifyExpr app = (TraitModifyExpr) tt;
             TraitExpr next = app.getTraitExpr();
@@ -221,7 +221,7 @@ aspect TraitApplicator {
     }
 
     // modifies a single method
-    private void TraitModifyOpr.apply(ClassDecl cd, MethodImpl met) throws DeltaModellingException{
+    private void ModifyMethodModifier.apply(ClassDecl cd, MethodImpl met) throws DeltaModellingException{
         MethodSig mysig = met.getMethodSig();
 
         // in given ClassDecl: find MethodDecl that matches sig
@@ -248,7 +248,7 @@ aspect TraitApplicator {
 
 
     // replaces all original calls
-    private void TraitModifyOpr.replaceOriginal(ClassDecl cd, MethodImpl met, MethodImpl flattened) {
+    private void ModifyMethodModifier.replaceOriginal(ClassDecl cd, MethodImpl met, MethodImpl flattened) {
                 
         //find current delta
         ASTNode<ASTNode> n = this;
@@ -322,7 +322,7 @@ aspect TraitApplicator {
     }
 
     // collect all original calls
-    private void TraitModifyOpr.collectOrig(ArrayList<OriginalCall> list, ASTNode<ASTNode> node){
+    private void ModifyMethodModifier.collectOrig(ArrayList<OriginalCall> list, ASTNode<ASTNode> node){
         if(node instanceof OriginalCall){
             list.add((OriginalCall)node);
             return;
@@ -332,6 +332,58 @@ aspect TraitApplicator {
                 collectOrig(list,child);
             }
         }
+    }
+    
+    
+    
+    
+    
+    /***
+    backward compatibility
+    **/
+    public AddMethodModifier.AddMethodModifier(MethodImpl impl) {
+          List<MethodImpl> list = new List<>(impl);
+        TraitExpr expr = new TraitSetExpr(list);
+        setChild(expr, 0);
+        impl.setParent(list);
+        list.setParent(expr);
+    }
+    
+    public MethodImpl AddMethodModifier.getMethodImpl(){
+        TraitExpr expr = getTraitExpr();
+        if(expr != null && expr instanceof TraitSetExpr && ((TraitSetExpr)expr).getMethodImpls().numChildren == 1){
+            return ((TraitSetExpr)expr).getMethodImpls().getChild(0);
+        }
+        return null;
+    }
+    
+    public ModifyMethodModifier.ModifyMethodModifier(MethodImpl impl) {
+        List<MethodImpl> list = new List<>(impl);
+        TraitExpr expr = new TraitSetExpr(list);
+        setChild(expr, 0);
+        impl.setParent(list);
+        list.setParent(expr);
+    }
+    
+    public MethodImpl ModifyMethodModifier.getMethodImpl(){
+        TraitExpr expr = getTraitExpr();
+        if(expr != null && expr instanceof TraitSetExpr && ((TraitSetExpr)expr).getMethodImpls().numChildren == 1){
+            return ((TraitSetExpr)expr).getMethodImpls().getChild(0);
+        }
+        return null;
+    }
+      
+    public ClassDecl.ClassDecl(String p0, List<Annotation> p1, List<ParamDecl> p2, List<InterfaceTypeUse> p3, Opt<InitBlock> p5, List<CaseBranchStmt> p6, List<FieldDecl> p7, List<MethodImpl> p8) {
+        List<TraitUse> p4 = new List<>();
+        setName(p0);
+        setChild(p1, 0);
+        setChild(p2, 1);
+        setChild(p3, 2);
+        setChild(p4, 3);
+        setChild(p5, 4);
+        setChild(p6, 5);
+        setChild(p7, 6);
+        setChild(p8, 7);
     }
     
 }

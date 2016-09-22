@@ -154,13 +154,13 @@ new List<ModuleDecl>(),
     }
     
     @Override public void exitTraitAddFragment(abs.frontend.antlr.parser.ABSParser.TraitAddFragmentContext ctx) {
-        setV(ctx,new TraitAddOpr((TraitExpr) v(ctx.trait_expr())));
+        setV(ctx,new AddMethodModifier((TraitExpr) v(ctx.trait_expr())));
     }
     @Override public void exitTraitModifyFragment(abs.frontend.antlr.parser.ABSParser.TraitModifyFragmentContext ctx) {
-        setV(ctx,new TraitModifyOpr((TraitExpr) v(ctx.trait_expr())));
+        setV(ctx,new ModifyMethodModifier((TraitExpr) v(ctx.trait_expr())));
      }
     @Override public void exitTraitRemoveFragment(abs.frontend.antlr.parser.ABSParser.TraitRemoveFragmentContext ctx) {
-        setV(ctx,new TraitRemoveOpr((MethodSig) v(ctx.methodsig())/*, (TraitOper)v(ctx.trait_oper())*/));
+        setV(ctx,new RemoveMethodModifier((MethodSig) v(ctx.methodsig())/*, (TraitOper)v(ctx.trait_oper())*/));
      }
 
     

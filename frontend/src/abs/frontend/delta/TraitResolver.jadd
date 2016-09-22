@@ -10,7 +10,7 @@ aspect TraitResolver {
     public abstract TraitSetExpr TraitOper.applyToSet(TraitSetExpr set, ClassDecl cd);
     public abstract TraitSetExpr TraitExpr.resolve(ClassDecl cd);
     
-    private void TraitModifyOpr.replaceOriginal(TraitSetExpr set, MethodImpl met, MethodImpl flattened) {
+    private void ModifyMethodModifier.replaceOriginal(TraitSetExpr set, MethodImpl met, MethodImpl flattened) {
         //collect all original calls
         ArrayList<OriginalCall> list = new ArrayList<>();
         for (Stmt stmt : flattened.getBlock().getStmts()){
@@ -43,12 +43,12 @@ aspect TraitResolver {
         }      
     }
     
-    public TraitSetExpr TraitRemoveOpr.applyToSet(TraitSetExpr set, ClassDecl cd) throws DeltaModellingException{
+    public TraitSetExpr RemoveMethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd) throws DeltaModellingException{
         applyToList(set.getMethodImplList());
         return set;
     }
     
-    public TraitSetExpr TraitModifyOpr.applyToSet(TraitSetExpr set, ClassDecl cd){
+    public TraitSetExpr ModifyMethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd){
         TraitSetExpr curr = set;
         TraitExpr tt = getTraitExpr();
         ArrayList<TraitOper> operations = new ArrayList<>();
@@ -75,7 +75,7 @@ aspect TraitResolver {
     }
   
   
-    private TraitSetExpr TraitModifyOpr.apply(TraitSetExpr set, MethodImpl met) throws DeltaModellingException{
+    private TraitSetExpr ModifyMethodModifier.apply(TraitSetExpr set, MethodImpl met) throws DeltaModellingException{
         MethodSig mysig = met.getMethodSig();
 
         // in given ClassDecl: find MethodDecl that matches sig
@@ -103,7 +103,7 @@ aspect TraitResolver {
         return set;
     }
    
-    public TraitSetExpr TraitAddOpr.applyToSet(TraitSetExpr set, ClassDecl cd){
+    public TraitSetExpr AddMethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd){
         TraitSetExpr curr = set;
         TraitExpr tt = getTraitExpr();
         ArrayList<TraitOper> operations = new ArrayList<>();

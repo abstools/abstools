@@ -42,9 +42,9 @@ TraitNameExpr : TraitExpr ::= <Name>;
 TraitModifyExpr : TraitExpr ::= TraitExpr TraitOper;
 
 abstract TraitOper : Modifier;
-TraitAddOpr : TraitOper ::= TraitExpr;
-TraitModifyOpr : TraitOper ::= TraitExpr;
-TraitRemoveOpr : TraitOper ::= MethodSig;
+AddMethodModifier : TraitOper ::= TraitExpr;
+ModifyMethodModifier : TraitOper ::= TraitExpr;
+RemoveMethodModifier : TraitOper ::= MethodSig;
 
 TraitUse : Modifier ::= TraitExpr; 
 /***************************************/

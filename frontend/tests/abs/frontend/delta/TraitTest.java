@@ -9,14 +9,146 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import abs.backend.tests.AbsASTBuilderUtil;
+import abs.frontend.ast.AddMethodModifier;
+import abs.frontend.ast.Annotation;
+import abs.frontend.ast.Block;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Decl;
+import abs.frontend.ast.DeltaAccess;
 import abs.frontend.ast.DeltaDecl;
+import abs.frontend.ast.List;
+import abs.frontend.ast.MethodImpl;
+import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.ModifyClassModifier;
+import abs.frontend.ast.ModifyMethodModifier;
 import abs.frontend.ast.SkipStmt;
+import abs.frontend.ast.Stmt;
+import abs.frontend.ast.RemoveMethodModifier;
 
 public class TraitTest extends DeltaTest{
+    
 
+    @Test
+    public void addAddModifierAtRuntimeBackComp(){
+
+        Model model = assertParseOk(
+                "module M;"
+                + "class C { Unit m(){skip;} }"
+        );
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+
+        
+        MethodSig sig= AbsASTBuilderUtil.createMethodSig("n", AbsASTBuilderUtil.getUnit());
+        MethodImpl impl = new MethodImpl(sig, new Block(new List<Annotation>(), new List<Stmt>(new SkipStmt())), false);
+        AddMethodModifier opr = new AddMethodModifier(impl);
+        
+        assertNotNull(opr.getMethodImpl());
+        ModifyClassModifier mcn = new ModifyClassModifier();
+        mcn.setName("M.C");
+        
+        DeltaAccess acc= new DeltaAccess(cls.getModuleDecl().getName());
+        
+        DeltaDecl dd = new DeltaDecl();
+        dd.setName("MyDelta");
+        dd.addDeltaAccess(acc);
+        dd.addModuleModifier(mcn);
+        mcn.addModifier(opr);
+        
+        
+        mcn.setParent(dd);
+        acc.setParent(dd);
+        opr.setParent(mcn);
+        sig.setParent(opr);
+        CompilationUnit cu = model.getCompilationUnitList().getChild(0);
+        cu.addDeltaDecl(dd);
+        dd.setParent(cu);
+        
+        model.applyDelta(dd);
+
+        assertEquals(2, cls.getMethods().getNumChild());     
+    }
+    
+    @Test
+    public void addModifyModifierAtRuntimeBackComp(){
+
+        Model model = assertParseOk(
+                "module M;"
+                + "class C { Unit m(){skip;} }"
+        );
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+
+        
+        MethodSig sig= AbsASTBuilderUtil.createMethodSig("m", AbsASTBuilderUtil.getUnit());
+        MethodImpl impl = new MethodImpl(sig, new Block(new List<Annotation>(), new List<Stmt>(new SkipStmt(),new SkipStmt())), false);
+        ModifyMethodModifier opr = new ModifyMethodModifier(impl);
+        
+        assertNotNull(opr.getMethodImpl());
+        ModifyClassModifier mcn = new ModifyClassModifier();
+        mcn.setName("M.C");
+        
+        DeltaAccess acc= new DeltaAccess(cls.getModuleDecl().getName());
+        
+        DeltaDecl dd = new DeltaDecl();
+        dd.setName("MyDelta");
+        dd.addDeltaAccess(acc);
+        dd.addModuleModifier(mcn);
+        mcn.addModifier(opr);
+        
+        
+        mcn.setParent(dd);
+        acc.setParent(dd);
+        opr.setParent(mcn);
+        sig.setParent(opr);
+        CompilationUnit cu = model.getCompilationUnitList().getChild(0);
+        cu.addDeltaDecl(dd);
+        dd.setParent(cu);
+        
+        model.applyDelta(dd);
+
+        assertEquals(1, cls.getMethods().getNumChild());     
+        assertEquals(2,cls.getMethod(0).getBlock().getNumChild());
+    }
+
+    @Test
+    public void addRemoveModifierAtRuntime(){
+        Model model = assertParseOk(
+                "module M;"
+                + "class C { Unit m(){skip;} }"
+        );
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+
+        
+        MethodSig sig= AbsASTBuilderUtil.createMethodSig("m", AbsASTBuilderUtil.getUnit());
+        RemoveMethodModifier opr = new RemoveMethodModifier(sig);
+        ModifyClassModifier mcn = new ModifyClassModifier();
+        mcn.setName("M.C");
+        
+        DeltaAccess acc= new DeltaAccess(cls.getModuleDecl().getName());
+        
+        
+        DeltaDecl dd = new DeltaDecl();
+        dd.setName("MyDelta");
+        dd.addDeltaAccess(acc);
+        dd.addModuleModifier(mcn);
+        mcn.addModifier(opr);
+        
+        
+        mcn.setParent(dd);
+        acc.setParent(dd);
+        opr.setParent(mcn);
+        sig.setParent(opr);
+        CompilationUnit cu = model.getCompilationUnitList().getChild(0);
+        cu.addDeltaDecl(dd);
+        dd.setParent(cu);
+        
+        model.applyDelta(dd);
+
+        assertEquals(0, cls.getMethods().getNumChild());
+    }
+    
     @Test
     public void addMethod()  {
         Model model = assertParseOk(
