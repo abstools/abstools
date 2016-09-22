@@ -1195,12 +1195,12 @@ aspect GenerateJavaDynamic_DeltaModelling {
 
     public void DeltaTraitModifier.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
     public void DeltaTraitModifier.generateJavaDynamicApplication(PrintStream stream, String className) {}
-    public void TraitAddOpr.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
-    public void TraitAddOpr.generateJavaDynamicApplication(PrintStream stream, String className) {}
-    public void TraitModifyOpr.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
-    public void TraitModifyOpr.generateJavaDynamicApplication(PrintStream stream, String className) {}
-    public void TraitRemoveOpr.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
-    public void TraitRemoveOpr.generateJavaDynamicApplication(PrintStream stream, String className) {}
+    public void AddMethodModifier.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
+    public void AddMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {}
+    public void ModifyMethodModifier.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
+    public void ModifyMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {}
+    public void RemoveMethodModifier.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
+    public void RemoveMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {}
     public void TraitUse.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
     public void TraitUse.generateJavaDynamicApplication(PrintStream stream, String className) {}
 }

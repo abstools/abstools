@@ -232,9 +232,9 @@ aspect DeltaParameterSubstitution {
     
     @Override
     protected void DeltaTraitModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {}
-    protected void TraitAddOpr.applySubstitution(Map<String,Value> subst) {}
-    protected void TraitModifyOpr.applySubstitution(Map<String,Value> subst) {}
-    protected void TraitRemoveOpr.applySubstitution(Map<String,Value> subst) {}
+    protected void AddMethodModifier.applySubstitution(Map<String,Value> subst) {}
+    protected void ModifyMethodModifier.applySubstitution(Map<String,Value> subst) {}
+    protected void RemoveMethodModifier.applySubstitution(Map<String,Value> subst) {}
     protected void TraitUse.applySubstitution(Map<String,Value> subst) {}
 
 

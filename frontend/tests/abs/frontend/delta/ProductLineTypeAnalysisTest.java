@@ -150,7 +150,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
             mimpl.setMethodSig(msig);
             abs.frontend.ast.List<MethodImpl> list = new abs.frontend.ast.List<>();           
             list.add(mimpl);
-            DeltaTraitModifier dmod = new DeltaTraitModifier(new TraitModifyOpr(new TraitSetExpr(list)));
+            DeltaTraitModifier dmod = new DeltaTraitModifier(new ModifyMethodModifier(new TraitSetExpr(list)));
 
             cu.addDeltaDecl(new DeltaDecl("D" + id,
                     new abs.frontend.ast.List<DeltaParamDecl>(),
