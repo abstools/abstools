@@ -17,8 +17,28 @@ following aspects were added to ABS:
 * A notion of _cost_ of executing parts of a system, in terms of resource
   types like bandwidth and processor cycles (see <<sec:resources>>)
 
-All language identifiers described in this section reside in the `ABS.DC`
-module.
+These elements work together as in Figure <<fig-resource-consumption>>:
+
+[[fig-resource-consumption]]
+image::ABS-resources.png[width=676,height=431,title="Resource Consumption",alt="Resource Consumption"]
+
+The figure shows a process with a `skip` statement with an associated cost of
+5, followed by a `println` statement with a cost of 10.  The deployment
+component `DC` has 10 resources available in each time interval.
+
+At time `t`, the `skip` statement consumes the five needed resources and is
+successfully executed.  The `println` statement consumes the remaining five
+resources but is not executed yet.
+
+At time `t+1`, the deployment component’s resources are refilled.  The five
+remaining resources of the `println` statement are consumed and the statement
+is executed.  The five remaining resources of `DC` are not used.
+
+At time `t+2`, the deployment component’s resoures are again refilled to 10.
+
+The rest of this chapter explains these language elements concerning resource
+modeling in detail.  All identifiers introduced in this section reside in the
+`ABS.DC` module.
 
 
 
