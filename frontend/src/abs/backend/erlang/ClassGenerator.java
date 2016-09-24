@@ -66,7 +66,6 @@ public class ClassGenerator {
             ecs.println("try");
             ecs.incIndent();
             Vars vars = Vars.n(ms.getParamList());
-            ErlUtil.stopWorldPrelude(ecs, vars, false);
             m.getBlock().generateErlangCode(ecs, vars);
             ecs.println();
             ecs.decIndent().println("catch");
