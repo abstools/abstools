@@ -316,10 +316,10 @@ choose_runnable_process(RunnableTasks, PollingTasks) ->
 %% ready to run
 poll_waiting(P) ->
     PollingTasks = gb_sets:to_list(P),
-    lists:foreach(fun(R)-> R!check end, PollingTasks),
+    lists:foreach(fun(R)-> R ! check end, PollingTasks),
     ReadyTasks=lists:flatten(lists:map(fun(R) ->
                                                receive {R, true} -> R;
-                                                       {R, false} -> [] 
+                                                       {R, false} -> []
                                                end
                                        end, PollingTasks)),
     gb_sets:from_list(ReadyTasks).
@@ -352,7 +352,7 @@ no_task_schedulable({process_runnable, TaskRef}, _From, State=#state{waiting_tas
                          polling_tasks=Pol, runnable_tasks=NewRunnableTasks}};
         T ->       % Execute T -- might or might not be TaskRef
             cog_monitor:cog_active(self()),
-            T!token,
+            T ! token,
             {reply, ok, process_running,
              %% T can come from Pol or NewRunnableTasks - adjust cog state
              State#state{running_task=T,
@@ -400,7 +400,7 @@ process_running({token, R, ProcessState}, From,
         _ ->
             %% no need for `cog_monitor:active' since we were already running
             %% something
-            T!token,
+            T ! token,
             {next_state, process_running,
              State#state{running_task=T,
                          runnable_tasks=gb_sets:add_element(T, NewRunnable),
@@ -579,7 +579,7 @@ in_gc(resume_world, State=#state{referencers=Referencers,
                             {next_state, no_task_schedulable, State};
                         T ->                    % Execute T
                             cog_monitor:cog_active(self()),
-                            T!token,
+                            T ! token,
                             {next_state, process_running,
                              State#state{running_task=T,
                                          runnable_tasks=gb_sets:add_element(T, Run),

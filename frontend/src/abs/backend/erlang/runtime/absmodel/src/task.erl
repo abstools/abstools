@@ -25,7 +25,7 @@
 %%init(Cog,Args): Can block an will init the task.
 %%                Return Value will then by passed to start
 %%
-%%start(InitValue):Executes the task 
+%%start(InitValue):Executes the task
 
 
 behaviour_info(callbacks) ->
@@ -61,7 +61,7 @@ kill_recklessly(Task) ->
 notifyEnd(TaskRef)->
     notifyEnd(TaskRef,self()).
 notifyEnd(TaskRef,Obs)->
-    TaskRef!{notify,Obs}.
+    TaskRef ! {notify,Obs}.
 
 %%Wait on termination notification
 join(TaskRef)->
@@ -71,16 +71,16 @@ join(TaskRef)->
     end.
 
 
-   
-send_notifications(Val)->            
+
+send_notifications(Val)->
     receive
         {notify,Obs}->
-            Obs!{end_result,self(),Val},
+            Obs ! {end_result,self(),Val},
             send_notifications(Val)
     after 0->
             ok
     end.
-            
+
 
 loop_for_clock_advance(Cog, Stack) ->
     receive

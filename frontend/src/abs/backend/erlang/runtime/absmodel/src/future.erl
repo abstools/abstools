@@ -330,7 +330,7 @@ completing({okthx, Task}, State) ->
     {NextState, State1} = next_state_on_okthx(State, Task),
     {next_state, NextState, State1};
 completing({waiting, Task}, State=#state{calleecog=CalleeCog,waiting_tasks=WaitingTasks}) ->
-    Task!{value_present, self(), CalleeCog},
+    Task ! {value_present, self(), CalleeCog},
     {next_state, completing, State=#state{waiting_tasks=[Task | WaitingTasks]}};
 completing(_Event, State) ->
     {stop, not_supported, State}.
@@ -350,7 +350,7 @@ completed({die, _Reason}, State) ->
 completed({okthx, _Task}, State) ->
     {next_state, completed, State};
 completed({waiting, Task}, State=#state{calleecog=CalleeCog}) ->
-    Task!{value_present, self(), CalleeCog},
+    Task ! {value_present, self(), CalleeCog},
     {next_state, completed, State};
 completed(_Event, State) ->
     {stop, not_supported, State}.
