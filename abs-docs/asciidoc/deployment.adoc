@@ -65,6 +65,33 @@ summarized in Table <<table-dc-lifecycle>>.
 | Process keep running | -        | yes     | yes/no      | -
 |====================
 
+==== Using the CloudProvider
+
+To use deployment components via a cloud provider, follow these steps:
+
+1. Create a `CloudProvider` instance
+2. Set the instance descriptions via the `setInstanceDescriptions` method
+3. Create deployment components using the `launchInstanceNamed` method
+4. (optional) Manage access via `releaseInstance` / `acquireInstance`
+5. (optional) Release deployment components via `shutownInstance`
+
+
+[source]
+----
+module ProviderDemo;
+import * from ABS.DC;
+
+{
+    CloudProvider p = new CloudProvider("Amazon");
+    await p!setInstanceDescriptions(
+        map[Pair("T2_MICRO", map[Pair(Memory,1), Pair(Speed,1)]),
+            Pair("T2_SMALL", map[Pair(Memory,2), Pair(Speed,1)]),
+            Pair("T2_MEDIUM", map[Pair(Memory,4), Pair(Speed,2)]),
+            Pair("M4_LARGE", map[Pair(Memory,8), Pair(Speed,2)])]);
+    DeploymentComponent dc = await p!launchInstanceNamed("T2_SMALL");
+    // ... use the deployment component ...
+}
+----
 
 
 ==== Datatypes and Constructors
