@@ -148,46 +148,122 @@ handle_sync_event(_Event, _From, _StateName, State) ->
     {stop, not_supported, State}.
 
 
-%% TODO: audit process shutdown wrt communication with gc, cog_monitor,
-%% internal state
-handle_info({'EXIT',_TaskRef,normal}, StateName, State) ->
-    %% already handled in process_running (only the running process can
-    %% terminate with Reason=`normal')
-    {next_state, StateName, State};
-handle_info({'EXIT',TaskRef,Reason}, StateName,
-            State=#state{running_task=R,runnable_tasks=Run,polling_tasks=Pol,
-                        waiting_tasks=Wai})
-  when TaskRef /= R andalso Reason /= normal ->
-    %% A task crashed that was not currently running -- just drop it.
-    {next_state, StateName,
-     State#state{runnable_tasks=gb_sets:del_element(TaskRef, Run),
-                 polling_tasks=gb_sets:del_element(TaskRef, Pol),
-                 waiting_tasks=gb_sets:del_element(TaskRef, Wai)}};
-handle_info({'EXIT',TaskRef,_Reason}, StateName,
-            State=#state{running_task=TaskRef,runnable_tasks=Run,
-                         polling_tasks=Pol, waiting_tasks=Wai}) ->
-    %% The running task crashed.
-    NextStateName = case StateName of
-                        in_gc -> in_gc;
-                        waiting_for_gc_stop ->
-                            gc:cog_stopped(self()),
-                            in_gc;
-                        _ -> no_task_schedulable
+%% Handle (ab)normal process exit.  On top level, we match only on the state
+%% of the cog FSM so as to make each branch readable in conjunction with the
+%% corresponding state function.  For example, read the first branch together
+%% with `waiting_for_references/2' and `waiting_for_references/3' further down
+%% in this file.
+handle_info({'EXIT',TaskRef,_Reason}, waiting_for_references,
+            State=#state{next_state_after_gc=StateAfterGC,
+                         running_task=R, runnable_tasks=Run,
+                         waiting_tasks=Wai, polling_tasks=Pol,
+                         references=ReferenceRecord=#{
+                                      sender := Sender,
+                                      waiting := Tasks,
+                                      received := CollectedReferences}}) ->
+    NewTasks=lists:delete(TaskRef, Tasks),
+    NewStateAfterGC=case TaskRef of
+                        R -> no_task_schedulable;
+                        _ -> StateAfterGC
                     end,
-    %% TODO: check if this is correct; schedule new task if possible (i.e.,
-    %% not in gc)
-    {next_state, NextStateName,
-     State#state{running_task=idle,
+    case NewTasks of
+        [] ->
+            Sender ! {references_from_cog, CollectedReferences},
+            {next_state, in_gc,
+             State#state{
+               next_state_after_gc=NewStateAfterGC,
+               runnable_tasks=gb_sets:del_element(TaskRef, Run),
+               polling_tasks=gb_sets:del_element(TaskRef, Pol),
+               waiting_tasks=gb_sets:del_element(TaskRef, Wai),
+               references=#{}}};
+        _ ->
+            {next_state, waiting_for_references,
+             State#state{
+               next_state_after_gc=NewStateAfterGC,
+               runnable_tasks=gb_sets:del_element(TaskRef, Run),
+               polling_tasks=gb_sets:del_element(TaskRef, Pol),
+               waiting_tasks=gb_sets:del_element(TaskRef, Wai),
+               references=ReferenceRecord#{waiting := NewTasks,
+                                           received := CollectedReferences}}}
+    end;
+handle_info({'EXIT',TaskRef,_Reason}, waiting_for_gc_stop,
+            State=#state{next_state_after_gc=StateAfterGC,
+                         running_task=R, runnable_tasks=Run,
+                         waiting_tasks=Wai, polling_tasks=Pol}) ->
+    RunningTaskFinished=TaskRef==R,
+    case RunningTaskFinished of
+        true -> gc:cog_stopped(self());
+        false -> ok
+    end,
+    {next_state,
+     case RunningTaskFinished of true -> in_gc; _ -> waiting_for_gc_stop end,
+     State#state{next_state_after_gc=case RunningTaskFinished of true -> no_task_schedulable; _ -> StateAfterGC end,
+                 running_task=case RunningTaskFinished of true -> idle; _ -> R end,
                  runnable_tasks=gb_sets:del_element(TaskRef, Run),
                  polling_tasks=gb_sets:del_element(TaskRef, Pol),
                  waiting_tasks=gb_sets:del_element(TaskRef, Wai)}};
-handle_info({'EXIT',TaskRef,normal}, StateName,
-            State=#state{running_task=TaskRef,runnable_tasks=Run,
+handle_info({'EXIT',TaskRef,_Reason}, process_running,
+            State=#state{running_task=R,runnable_tasks=Run,polling_tasks=Pol,
+                         waiting_tasks=Wai}) ->
+    NewRunnable=gb_sets:del_element(TaskRef, Run),
+    NewPolling=gb_sets:del_element(TaskRef, Pol),
+    NewWaiting=gb_sets:del_element(TaskRef, Wai),
+    case TaskRef of
+        %% The running task crashed / finished -- schedule a new one;
+        %% duplicated from `process_running'.
+        R ->
+            T=choose_runnable_process(NewRunnable, NewPolling),
+            case T of
+                none->
+                    cog_monitor:cog_idle(self()),
+                    {next_state, no_task_schedulable,
+                     State#state{running_task=idle, runnable_tasks=NewRunnable,
+                                 waiting_tasks=NewWaiting, polling_tasks=NewPolling}};
+                _ ->
+                    %% no need for `cog_monitor:active' since we were already
+                    %% running something
+                    T!token,
+                    {next_state, process_running,
+                     State#state{running_task=T,
+                                 runnable_tasks=gb_sets:add_element(T, NewRunnable),
+                                 waiting_tasks=NewWaiting,
+                                 polling_tasks=gb_sets:del_element(T, NewPolling)}}
+            end;
+        %% Some other task crashed / finished -- keep calm and carry on
+        _ -> {next_state, process_running,
+              State#state{runnable_tasks=NewRunnable,
+                          polling_tasks=NewPolling,
+                          waiting_tasks=NewWaiting}}
+    end;
+handle_info({'EXIT',TaskRef,_Reason}, in_gc,
+            State=#state{running_task=R,runnable_tasks=Run,
                          polling_tasks=Pol, waiting_tasks=Wai}) ->
-    %% Normal task exit; it already passed back its token so we just need to
-    %% remove the remains.
+    NewRunnable=gb_sets:del_element(TaskRef, Run),
+    NewPolling=gb_sets:del_element(TaskRef, Pol),
+    NewWaiting=gb_sets:del_element(TaskRef, Wai),
+    case TaskRef of
+        R -> {next_state, in_gc,
+              State#state{next_state_after_gc=no_task_schedulable,
+                          runnable_tasks=NewRunnable,
+                          polling_tasks=NewPolling,
+                          waiting_tasks=NewWaiting}};
+        _ -> {next_state, in_gc,
+              State#state{runnable_tasks=NewRunnable,
+                          polling_tasks=NewPolling,
+                          waiting_tasks=NewWaiting}}
+    end;
+%% Default handling for the following states: `cog_starting',
+%% `no_task_schedulable', `process_blocked'
+
+%% TODO: in `process_blocked', consider handling crash by rescheduling.  This
+%% should not happen since a blocked process does not execute user-defined ABS
+%% code and should not be able to crash.
+handle_info({'EXIT',TaskRef,_Reason}, StateName,
+            State=#state{running_task=R,runnable_tasks=Run,
+                         polling_tasks=Pol, waiting_tasks=Wai}) ->
     {next_state, StateName,
-     State#state{runnable_tasks=gb_sets:del_element(TaskRef, Run),
+     State#state{running_task=R,
+                 runnable_tasks=gb_sets:del_element(TaskRef, Run),
                  polling_tasks=gb_sets:del_element(TaskRef, Pol),
                  waiting_tasks=gb_sets:del_element(TaskRef, Wai)}};
 handle_info(_Info, _StateName, State) ->
@@ -381,8 +457,6 @@ process_blocked({new_task,Task,Args,Sender,Notify,Cookie},
     {next_state, process_blocked,
      State#state{waiting_tasks=gb_sets:add_element(NewTask, Tasks)}};
 process_blocked(stop_world, State) ->
-    %% TODO: tell process not to unblock itself?  (Might not matter since it
-    %% won't get a token from us until gc is over)
     gc:cog_stopped(self()),
     {next_state, in_gc, State#state{next_state_after_gc=process_blocked}};
 process_blocked(_Event, State) ->
