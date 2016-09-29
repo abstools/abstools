@@ -24,6 +24,7 @@ start(#state{fut=Future,obj=O=#object{class=C,cog=Cog=#cog{ref=CogRef,dc=DC}},me
                 task:block_without_time_advance(Cog),
                 task:acquire_token(Cog, [O,DC|P]);
             die_prematurely ->
+                task:send_notifications(killed_by_the_clock),
                 exit(killed_by_the_clock)
         after 0 -> ok end,
         Res=apply(C, M,[O|P]),

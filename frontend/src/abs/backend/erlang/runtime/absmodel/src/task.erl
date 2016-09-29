@@ -93,7 +93,9 @@ loop_for_clock_advance(Cog, Stack) ->
         {get_references, Sender} ->
             cog:submit_references(Sender, gc:extract_references(Stack)),
             loop_for_clock_advance(Cog, Stack);
-        die_prematurely -> exit(killed_by_the_clock)
+        die_prematurely ->
+            send_notifications(killed_by_the_clock),
+            exit(killed_by_the_clock)
     end.
 
 loop_for_token(Cog, Stack, Token) ->
@@ -107,7 +109,9 @@ loop_for_token(Cog, Stack, Token) ->
         {get_references, Sender} ->
             cog:submit_references(Sender, gc:extract_references(Stack)),
             loop_for_token(Cog, Stack, Token);
-        die_prematurely -> exit(killed_by_the_clock)
+        die_prematurely ->
+            send_notifications(killed_by_the_clock),
+            exit(killed_by_the_clock)
     end.
 
 block_with_time_advance(Cog)->

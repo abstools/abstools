@@ -9,6 +9,7 @@
 -export([register_future/1, unroot_future/1]).
 -export([register_cog/1, unregister_cog/1, cog_stopped/1]).
 -export([register_object/1,unregister_object/1]).
+-export([prepare_shutdown/0]).
 
 -export([behaviour_info/1]).
 
@@ -16,7 +17,7 @@
 
 %% gen_fsm callbacks
 -export([init/1,terminate/3,code_change/4,handle_event/3,handle_sync_event/4,handle_info/3]).
--export([idle/2,idle/3,collecting/2,collecting/3]).
+-export([idle/2,idle/3,collecting/2,collecting/3,in_shutdown/2,in_shutdown/3]).
 
 -undef(MIN_PROC_FACTOR).
 -undef(MAX_PROC_FACTOR).
@@ -87,6 +88,8 @@ unregister_object(#object{ref=Obj}) ->
 unregister_object(Obj) when is_pid(Obj) ->
     gen_fsm:send_event({global, gc}, {stopped_object, Obj}).
 
+prepare_shutdown() ->
+    gen_fsm:sync_send_event({global, gc}, prepare_shutdown).
 
 %% gen_fsm callback functions
 
@@ -151,6 +154,8 @@ idle(Cog=#cog{ref=Ref}, _From, State=#state{cogs=Cogs}) ->
         _ -> ok
     end,
     {reply, ok, Next, NewState};
+idle(prepare_shutdown, _From, State) ->
+    {reply, ok, in_shutdown, State};
 idle(_Event, _From, State) ->
     {stop, not_supported, State}.
 
@@ -196,8 +201,19 @@ collecting(#cog{ref=Ref}, _From, State=#state{cogs=Cogs, cogs_waiting_to_stop=Ru
     {reply, ok, collecting,
      State#state{cogs=gb_sets:insert({cog, Ref}, Cogs),
                  cogs_waiting_to_stop=gb_sets:insert({cog, Ref}, RunningCogs)}};
+collecting(prepare_shutdown, _From, State) ->
+    {reply, ok, in_shutdown, State};
 collecting(_Event, _From, State) ->
     {stop, not_supported, State}.
+
+
+%% The model is terminating, cogs will stop on their own, etc.  Do not react
+%% to further messages.
+in_shutdown(_Event, State) ->
+    {next_state, in_shutdown, State}.
+in_shutdown(_Event, _From, State) ->
+    {reply, ok, in_shutdown, State}.
+
 
 
 mark(Black, []) ->

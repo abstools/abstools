@@ -122,7 +122,7 @@ resume_world(Cog) ->
     ok.
 
 kill_recklessly(Cog) ->
-    gen_fsm:stop(Cog),
+    gen_fsm:send_all_state_event(Cog, kill_recklessly),
     ok.
 
 %%Internal
@@ -137,6 +137,13 @@ terminate(Reason, StateName, State) ->
 code_change(_OldVsn, StateName, State, _Extra) ->
     {ok, StateName, State}.
 
+handle_event(kill_recklessly, _StateName,
+                  State=#state{runnable_tasks=Run,
+                               polling_tasks=Pol,
+                               waiting_tasks=Wai}) ->
+    lists:map(fun task:kill_recklessly/1,
+              gb_sets:to_list(gb_sets:union([Run, Pol, Wai]))),
+    {stop, normal, State};
 handle_event(inc_ref_count, StateName, State=#state{referencers=Referencers}) ->
     {next_state, StateName, State#state{referencers=Referencers + 1}};
 handle_event(dec_ref_count, StateName, State=#state{referencers=Referencers}) ->

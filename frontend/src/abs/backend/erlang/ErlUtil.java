@@ -196,7 +196,8 @@ public class ErlUtil {
         }
         ecs.println(");");
         ecs.decIndent().println("die_prematurely ->");
-        ecs.incIndent().println("exit(killed_by_the_clock)");
+        ecs.incIndent().println("task:send_notifications(killed_by_the_clock),");
+        ecs.println("exit(killed_by_the_clock)");
         ecs.decIndent();
         ecs.decIndent();
         ecs.println("after 0 -> ok end,");
