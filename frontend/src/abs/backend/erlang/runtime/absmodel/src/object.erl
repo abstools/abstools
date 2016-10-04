@@ -155,23 +155,30 @@ active(ping,_From,S)->
 %% Deployment components are objects, so we handle their events using
 %% the general object FSM machinery for now.
 active({consume_resource, {CurrentVar, MaxVar}, Count}, _From, OS=#state{class=class_ABS_DC_DeploymentComponent=C,fields=S}) ->
-    Total=C:get_val_internal(S,MaxVar),
-    Consumed=rationals:to_r(C:get_val_internal(S,CurrentVar)),
-    Requested=rationals:to_r(Count),
-    ToConsume=case Total of
-                  dataInfRat -> Requested;
-                  {dataFin, Total1} ->
-                      rationals:min(Requested,
-                                    rationals:sub(rationals:to_r(Total1), Consumed))
-              end,
-    case rationals:is_zero(ToConsume) of
-        true -> {reply, {wait, ToConsume}, active, OS};
-        false -> S1=C:set_val_internal(S,CurrentVar, rationals:add(Consumed, ToConsume)),
-                 %% We reply with "ok" not "wait" here, even when we did not
-                 %% fulfill the whole request, so we are ready for small-step
-                 %% consumption schemes where multiple consumers race for
-                 %% resources.
-                 {reply, {ok, ToConsume}, active, OS#state{fields=S1}}
+    Initialized=C:get_val_internal(s, 'initialized'),
+    case Initialized of
+        false ->
+            %% the init block has not run yet -- should not happen
+            {reply, {wait, 0}, active, OS};
+        _ ->
+            Total=C:get_val_internal(S,MaxVar),
+            Consumed=rationals:to_r(C:get_val_internal(S,CurrentVar)),
+            Requested=rationals:to_r(Count),
+            ToConsume=case Total of
+                          dataInfRat -> Requested;
+                          {dataFin, Total1} ->
+                              rationals:min(Requested,
+                                            rationals:sub(rationals:to_r(Total1), Consumed))
+                      end,
+            case rationals:is_zero(ToConsume) of
+                true -> {reply, {wait, ToConsume}, active, OS};
+                false -> S1=C:set_val_internal(S,CurrentVar, rationals:add(Consumed, ToConsume)),
+                         %% We reply with "ok" not "wait" here, even when we
+                         %% did not fulfill the whole request, so we are ready
+                         %% for small-step consumption schemes where multiple
+                         %% consumers race for resources.
+                         {reply, {ok, ToConsume}, active, OS#state{fields=S1}}
+            end
     end;
 active({clock_advance_for_dc, Amount},_From,
        OS=#state{class=class_ABS_DC_DeploymentComponent,fields=S}) ->
