@@ -4,6 +4,7 @@
 
 ;; Author: Rudi Schlatte <rudi@constantly.at>
 ;; Keywords: languages
+;; Version: 0.1
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -593,6 +594,7 @@ Uses the variable `abs-indent'."
 
 ;;; Putting it all together.
 
+;;;###autoload
 (define-derived-mode abs-mode fundamental-mode "Abs"
   "Major mode for editing Abs files.
 
@@ -647,6 +649,7 @@ The following keys are set:
       :active t :style toggle
       :selected abs-use-timed-interpreter])))
 
+;;;###autoload
 (unless (assoc "\\.abs\\'" auto-mode-alist)
   (add-to-list 'auto-mode-alist '("\\.abs\\'" . abs-mode)))
 
