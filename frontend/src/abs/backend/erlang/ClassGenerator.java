@@ -108,7 +108,7 @@ public class ClassGenerator {
             ecs.println(",");
         }
         if (classDecl.isActiveClass()) {
-            ecs.println("task:block_without_time_advance(Cog),");
+            ecs.println("cog:process_is_blocked_for_gc(Cog, self()),");
             ecs.print("cog:add_sync(Cog,active_object_task,O,");
             ecs.print(vars.toStack());
             ecs.println("),");

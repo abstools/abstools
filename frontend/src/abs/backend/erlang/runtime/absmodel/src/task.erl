@@ -6,7 +6,7 @@
 %% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([acquire_token/2,release_token/2,block_with_time_advance/1,block_without_time_advance/1]).
+-export([acquire_token/2,release_token/2]).
 -export([await_duration/4,block_for_duration/4]).
 -export([block_for_cpu/4,block_for_bandwidth/5]).
 -export([behaviour_info/1]).
@@ -114,11 +114,6 @@ loop_for_token(Cog, Stack, Token) ->
             exit(killed_by_the_clock)
     end.
 
-block_with_time_advance(Cog)->
-    cog:process_is_blocked(Cog,self()).
-block_without_time_advance(Cog)->
-    cog:process_is_blocked_for_gc(Cog,self()).
-
 %% await_duration and block_for_duration are called in different scenarios
 %% (guard vs statement), hence the different amount of work they do.
 await_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
@@ -134,7 +129,7 @@ await_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
 
 block_for_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
     cog_monitor:cog_blocked_for_clock(self(), CogRef, Min, Max),
-    block_with_time_advance(Cog),
+    cog:process_is_blocked(Cog,self()),
     loop_for_clock_advance(Cog, Stack),
     acquire_token(Cog, Stack).
 
@@ -148,7 +143,7 @@ block_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
                 wait ->
                     Time=clock:distance_to_next_boundary(),
                     cog_monitor:task_waiting_for_clock(self(), CogRef, Time, Time),
-                    block_with_time_advance(Cog), % cause clock advance
+                    cog:process_is_blocked(Cog,self()), % cause clock advance
                     loop_for_clock_advance(Cog, Stack),
                     acquire_token(Cog,Stack),
                     block_for_resource(Cog, DC, Resourcetype, Remaining, Stack);

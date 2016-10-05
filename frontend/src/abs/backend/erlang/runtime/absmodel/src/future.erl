@@ -85,7 +85,7 @@ get_blocking(Future, Cog, Stack) ->
         false ->
             %% Tell future not to advance time until we picked up ourselves
             register_waiting_task(Future, self()),
-            task:block_with_time_advance(Cog),
+            cog:process_is_blocked(Cog,self()),
             CalleeCog = (fun Loop() ->
                      receive
                          {value_present, Future, CalleeCog1} ->

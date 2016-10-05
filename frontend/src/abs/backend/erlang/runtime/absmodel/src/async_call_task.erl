@@ -21,7 +21,7 @@ start(#state{fut=Future,obj=O=#object{class=C,cog=Cog=#cog{ref=CogRef,dc=DC}},me
     try
         receive
             {stop_world, CogRef} ->
-                task:block_without_time_advance(Cog),
+                cog:process_is_blocked_for_gc(Cog, self()),
                 task:acquire_token(Cog, [O,DC|P]);
             die_prematurely ->
                 task:send_notifications(killed_by_the_clock),
@@ -41,7 +41,7 @@ complete_future(Future, Status, Value, Cog, Stack) ->
              %% meantime.
              receive
                  {stop_world, _Sender} ->
-                     task:block_without_time_advance(Cog),
+                     cog:process_is_blocked_for_gc(Cog, self()),
                      task:acquire_token(Cog, [Value | Stack]),
                      Loop();
                 {get_references, Sender} ->

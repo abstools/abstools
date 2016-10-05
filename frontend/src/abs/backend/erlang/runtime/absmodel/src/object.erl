@@ -48,7 +48,7 @@ new(Cog,Class,Args,CreatorCog,Stack)->
         true -> protect_object_from_gc(O);
         false -> ok
     end,
-    task:block_without_time_advance(CreatorCog),
+    cog:process_is_blocked_for_gc(CreatorCog, self()),
     cog:add_sync(Cog,init_task,{O,Args}, Stack),
     task:acquire_token(CreatorCog,[Args|Stack]),
     O.
