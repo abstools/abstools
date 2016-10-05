@@ -90,6 +90,9 @@ update_state_and_history_for_resouce(S, Resourcetype) ->
     Consumed=var_current_for_resourcetype(Resourcetype),
     Max=var_max_for_resourcetype(Resourcetype),
     Next=var_nextmax_for_resourcetype(Resourcetype),
+
+    influxdb:write(C, S, Consumed, Max, Resourcetype),
+
     S1=C:set_val_internal(S,History,
                           {dataCons, C:get_val_internal(S,Consumed),
                            C:get_val_internal(S,History)}),

@@ -103,6 +103,24 @@ Server will not be started if nil."
   :group 'abs)
 (put 'abs-local-port 'safe-local-variable 'integerp)
 
+(defcustom abs-influxdb-enable nil
+  "Enable logging via InfluxDB."
+  :type 'string
+  :group 'abs)
+(put 'abs-influxdb-enable 'safe-local-variable 'stringp)
+
+(defcustom abs-influxdb-url nil
+  "URL to running InfluxDB instance."
+  :type 'string
+  :group 'abs)
+(put 'abs-influxdb-url 'safe-local-variable 'stringp)
+
+(defcustom abs-influxdb-db nil
+  "Database name for running InfluxDB instance."
+  :type 'string
+  :group 'abs)
+(put 'abs-influxdb-db 'safe-local-variable 'stringp)
+
 (defcustom abs-default-resourcecost 0
   "Default resource cost of executing one ABS statement in the timed interpreter."
   :type 'integer
@@ -437,7 +455,10 @@ value.")
                                        "gen/erl/absmodel"))
                    (module (abs--guess-module))
                    (clock-limit abs-clock-limit)
-                   (port abs-local-port))
+                   (port abs-local-port)
+                   (influxdb-enable abs-influxdb-enable)
+                   (influxdb-url abs-influxdb-url)
+                   (influxdb-db abs-influxdb-db))
                (with-current-buffer erlang-buffer
                  (comint-send-string erlang-buffer
                                      (concat "cd (\"" erlang-dir "\").\n"))
@@ -453,6 +474,9 @@ value.")
                                      (concat "runtime:start(\""
                                              (when clock-limit (format " -l %d " clock-limit))
                                              (when port (format " -p %d " port))
+                                             (when influxdb-enable (format " -i " influxdb-enable))
+                                             (when influxdb-url (format " -u %s " influxdb-url))
+                                             (when influxdb-db (format " -d %s " influxdb-db))
                                              ;; FIXME: reinstate `module' arg
                                              ;; once abs--guess-module doesn't
                                              ;; pick a module w/o main block
