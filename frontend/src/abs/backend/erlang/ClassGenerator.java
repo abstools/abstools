@@ -112,7 +112,8 @@ public class ClassGenerator {
             ecs.print("cog:add_sync(Cog,active_object_task,O,");
             ecs.print(vars.toStack());
             ecs.println("),");
-            ecs.print("task:acquire_token(Cog,");
+            ecs.println("cog:process_is_runnable(Cog,self()),");
+            ecs.print("task:wait_for_token(Cog,");
             ecs.print(vars.toStack());
             ecs.println("),");
         }

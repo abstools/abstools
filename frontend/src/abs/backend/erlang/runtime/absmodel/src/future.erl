@@ -44,7 +44,8 @@ wait_for_future_start(Cog, Stack) ->
             ok;
         {stop_world, _Sender} ->
             cog:process_is_blocked_for_gc(Cog, self()),
-            task:acquire_token(Cog, Stack),
+            cog:process_is_runnable(Cog, self()),
+            task:wait_for_token(Cog, Stack),
             wait_for_future_start(Cog, Stack);
         {get_references, Sender} ->
             cog:submit_references(Sender, gc:extract_references(Stack)),
@@ -105,9 +106,11 @@ get_blocking(Future, Cog, Stack) ->
                 %% later.  (See function `await' below for the same pattern.)
                 true ->
                     confirm_wait_unblocked(Future, self()),
-                    task:acquire_token(Cog, Stack);
+                    cog:process_is_runnable(Cog, self()),
+                    task:wait_for_token(Cog, Stack);
                 false ->
-                    task:acquire_token(Cog, Stack),
+                    cog:process_is_runnable(Cog, self()),
+                    task:wait_for_token(Cog, Stack),
                     confirm_wait_unblocked(Future, self())
             end,
             %% Only one recursion here since poll will return true now.
@@ -128,23 +131,17 @@ await(Future, Cog, Stack) ->
                              %% It's an async self-call; unblock the callee
                              %% before we try to acquire the token ourselves.
                              confirm_wait_unblocked(Future, self()),
-                             task:acquire_token(Cog, Stack);
+                             task:wait_for_token(Cog, Stack);
                          {value_present, Future, _CalleeCog} ->
                              %% It's a call to another cog: get our cog to
                              %% running status before allowing the other cog
-                             %% to idle.  We can't call `acquire_token' before
+                             %% to idle.  We can't call `wait_for_token' before
                              %% sending `okthx' though since two pairwise
-                             %% waiting cogs will deadlock.  Instead, we
-                             %% open-code `task:acquire_token' and add the
-                             %% proper callee unlocking and synchronous cog
-                             %% state change.
+                             %% waiting cogs will deadlock.
                              cog:process_is_runnable(Cog,self()),
                              confirm_wait_unblocked(Future, self()),
-                             task:acquire_token(Cog, Stack);
+                             task:wait_for_token(Cog, Stack);
                          {stop_world, _Sender} ->
-                             %% we already released the token above.  Eat the
-                             %% message or we'll block at inopportune moments
-                             %% later.
                              Loop();
                          {get_references, Sender} ->
                              cog:submit_references(Sender, gc:extract_references(Stack)),

@@ -6,7 +6,7 @@
 %% External API
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([acquire_token/2,release_token/2]).
+-export([wait_for_token/2,release_token/2]).
 -export([await_duration/4,block_for_duration/4]).
 -export([block_for_cpu/4,block_for_bandwidth/5]).
 -export([behaviour_info/1]).
@@ -41,7 +41,8 @@ init(Task,Cog,Args)->
     %% init RNG, recipe recommended by the Erlang documentation.
     %% TODO: if we want reproducible runs, make seed a command-line parameter
     random:seed(erlang:phash2([node()]), erlang:monotonic_time(), erlang:unique_integer()),
-    acquire_token(Cog, InnerState),
+    cog:process_is_runnable(Cog, self()),
+    wait_for_token(Cog, InnerState),
     Val=Task:start(InnerState),
     release_token(Cog,done),
     send_notifications(Val).
@@ -81,10 +82,6 @@ send_notifications(Val)->
     end.
             
 
-acquire_token(Cog, Stack)->
-    cog:process_is_runnable(Cog,self()),
-    loop_for_token(Cog, Stack, token).
-
 loop_for_clock_advance(Cog, Stack) ->
     receive
         {clock_finished, Sender} -> Sender ! { ok, self()};
@@ -98,17 +95,17 @@ loop_for_clock_advance(Cog, Stack) ->
             exit(killed_by_the_clock)
     end.
 
-loop_for_token(Cog, Stack, Token) ->
+wait_for_token(Cog, Stack) ->
     %% Handle GC messages while task is waiting for signal to continue
     %% (being activated by scheduler, time advance for duration
     %% statement, resources available).
     receive
-        Token -> ok;
+        token -> ok;
         {stop_world, _Sender} ->
-            loop_for_token(Cog, Stack, Token);
+            wait_for_token(Cog, Stack);
         {get_references, Sender} ->
             cog:submit_references(Sender, gc:extract_references(Stack)),
-            loop_for_token(Cog, Stack, Token);
+            wait_for_token(Cog, Stack);
         die_prematurely ->
             send_notifications(killed_by_the_clock),
             exit(killed_by_the_clock)
@@ -122,7 +119,8 @@ await_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
             cog_monitor:task_waiting_for_clock(self(), CogRef, Min, Max),
             release_token(Cog,waiting),
             loop_for_clock_advance(Cog, Stack),
-            acquire_token(Cog, Stack);
+            cog:process_is_runnable(Cog, self()),
+            wait_for_token(Cog, Stack);
         false ->
             ok
     end.
@@ -131,7 +129,8 @@ block_for_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
     cog_monitor:cog_blocked_for_clock(self(), CogRef, Min, Max),
     cog:process_is_blocked(Cog,self()),
     loop_for_clock_advance(Cog, Stack),
-    acquire_token(Cog, Stack).
+    cog:process_is_runnable(Cog, self()),
+    wait_for_token(Cog, Stack).
 
 block_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
     Amount_r = rationals:to_r(Amount),
@@ -145,7 +144,8 @@ block_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
                     cog_monitor:task_waiting_for_clock(self(), CogRef, Time, Time),
                     cog:process_is_blocked(Cog,self()), % cause clock advance
                     loop_for_clock_advance(Cog, Stack),
-                    acquire_token(Cog,Stack),
+                    cog:process_is_runnable(Cog, self()),
+                    wait_for_token(Cog,Stack),
                     block_for_resource(Cog, DC, Resourcetype, Remaining, Stack);
                 ok ->
                     case rationals:is_positive(Remaining) of

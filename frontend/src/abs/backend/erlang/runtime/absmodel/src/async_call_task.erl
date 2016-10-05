@@ -22,7 +22,8 @@ start(#state{fut=Future,obj=O=#object{class=C,cog=Cog=#cog{ref=CogRef,dc=DC}},me
         receive
             {stop_world, CogRef} ->
                 cog:process_is_blocked_for_gc(Cog, self()),
-                task:acquire_token(Cog, [O,DC|P]);
+                cog:process_is_runnable(Cog, self()),
+                task:wait_for_token(Cog, [O,DC|P]);
             die_prematurely ->
                 task:send_notifications(killed_by_the_clock),
                 exit(killed_by_the_clock)
@@ -42,7 +43,8 @@ complete_future(Future, Status, Value, Cog, Stack) ->
              receive
                  {stop_world, _Sender} ->
                      cog:process_is_blocked_for_gc(Cog, self()),
-                     task:acquire_token(Cog, [Value | Stack]),
+                     cog:process_is_runnable(Cog, self()),
+                     task:wait_for_token(Cog, [Value | Stack]),
                      Loop();
                 {get_references, Sender} ->
                      cog:submit_references(Sender, gc:extract_references([Future, Value | Stack])),

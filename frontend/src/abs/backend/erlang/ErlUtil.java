@@ -188,7 +188,8 @@ public class ErlUtil {
         ecs.println("{stop_world, CogRef} ->");
         ecs.incIndent();
         ecs.println("cog:process_is_blocked_for_gc(Cog, self()),");
-        ecs.print("task:acquire_token(Cog, ");
+        ecs.println("cog:process_is_runnable(Cog,self()),");
+        ecs.print("task:wait_for_token(Cog,");
         if (functional) {
             ecs.print("Stack");
         } else {
