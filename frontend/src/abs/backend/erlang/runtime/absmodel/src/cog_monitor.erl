@@ -150,15 +150,16 @@ handle_call({cog,Cog,active}, _From, State=#state{active=A,idle=I})->
     A1=gb_sets:add_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
     {reply, ok, State#state{active=A1,idle=I1}};
-handle_call({cog,Cog,idle}, _From, State=#state{active=A,idle=I})->
+handle_call({cog,Cog,idle}, From, State=#state{active=A,idle=I})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:add_element(Cog,I),
     S1=State#state{active=A1,idle=I1},
+    gen_server:reply(From, ok),
     case can_clock_advance(State, S1) of
         true->
-            {reply, ok, advance_clock_or_terminate(S1)};
+            {noreply, advance_clock_or_terminate(S1)};
         false->
-            {reply, ok, S1}
+            {noreply, S1}
     end;
 handle_call({cog,Cog,blocked}, From, State=#state{active=A,blocked=B})->
     A1=gb_sets:del_element(Cog,A),
