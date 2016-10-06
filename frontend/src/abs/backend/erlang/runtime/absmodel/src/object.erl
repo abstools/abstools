@@ -41,7 +41,8 @@ new(Cog,Class,Args)->
         true -> protect_object_from_gc(O);
         false -> ok
     end,
-    Class:init(O,Args).
+    Class:init(O,Args),
+    O.
 new(Cog,Class,Args,CreatorCog,Stack)->
     O=start(Cog,Class),
     case cog_monitor:are_objects_of_class_protected(Class) of
@@ -49,9 +50,9 @@ new(Cog,Class,Args,CreatorCog,Stack)->
         false -> ok
     end,
     cog:process_is_blocked_for_gc(CreatorCog, self()),
-    cog:add_sync(Cog,init_task,{O,Args}, Stack),
+    cog:add_sync(Cog,init_task,{O,Args}, [O, Args | Stack]),
     cog:process_is_runnable(CreatorCog, self()),
-    task:wait_for_token(CreatorCog,[Args|Stack]),
+    task:wait_for_token(CreatorCog,[O, Args|Stack]),
     O.
 
 activate(#object{ref=O})->
