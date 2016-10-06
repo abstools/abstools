@@ -307,9 +307,6 @@ decrease_or_wakeup(MTE, {Min, Max, Task, Cog}) ->
               Task, Cog}};
         false ->
             Task ! {clock_finished, self()},
-            receive
-                {ok, Task} -> ok
-            end,
             {Cog, []}
     end.
 

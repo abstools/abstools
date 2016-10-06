@@ -84,7 +84,7 @@ send_notifications(Val)->
 
 loop_for_clock_advance(Cog, Stack) ->
     receive
-        {clock_finished, Sender} -> Sender ! { ok, self()};
+        {clock_finished, _Sender} -> ok;
         {stop_world, _Sender} ->
             loop_for_clock_advance(Cog, Stack);
         {get_references, Sender} ->
