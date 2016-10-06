@@ -35,7 +35,7 @@ start(null,_Method,_Params, _Cog, _Stack) ->
     throw(dataNullPointerException);
 start(Callee,Method,Params, Cog, Stack) ->
     {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params,true,self()], []),
-    wait_for_future_start(Cog, Stack),
+    wait_for_future_start(Cog, [Ref | Stack]),
     Ref.
 
 wait_for_future_start(Cog, Stack) ->
