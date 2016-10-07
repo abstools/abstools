@@ -104,14 +104,17 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
     Cog=cog:start(),
     {ok, cog:add_and_notify(Cog,main_task,[Module,self()])}.
 
-end_mod(TaskRef) ->
+end_mod(TaskRef, InfluxdbEnabled) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
     %% modelapi:print_statistics(),
     cog_monitor:waitfor(),
     gc:stop(),
     clock:stop(),
-    influxdb:stop(),
+    case InfluxdbEnabled of
+        true -> influxdb:stop();
+        _ -> ok
+    end,
     cog_monitor:stop(),
     RetVal.
 
@@ -130,8 +133,7 @@ run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
             start_http(Port, Clocklimit),
             receive ok -> ok end;
         _ ->
-            %% Keepalive if writing to InfluxDB
-            {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, InfluxdbEnable),
-            end_mod(R)
+            {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, false),
+            end_mod(R, InfluxdbEnable)
     end.
 
