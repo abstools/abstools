@@ -126,18 +126,10 @@ await(Future, Cog, Stack) ->
             task:release_token(Cog, waiting),
             (fun Loop() ->
                      receive
-                         {value_present, Future, Cog} ->
-                             cog:process_is_runnable(Cog,self()),
-                             %% It's an async self-call; unblock the callee
-                             %% before we try to acquire the token ourselves.
-                             confirm_wait_unblocked(Future, self()),
-                             task:wait_for_token(Cog, Stack);
                          {value_present, Future, _CalleeCog} ->
-                             %% It's a call to another cog: get our cog to
-                             %% running status before allowing the other cog
-                             %% to idle.  We can't call `wait_for_token' before
-                             %% sending `okthx' though since two pairwise
-                             %% waiting cogs will deadlock.
+                             %% Unblock this task before allowing the other
+                             %% task to terminate (and potentially letting its
+                             %% cog idle).
                              cog:process_is_runnable(Cog,self()),
                              confirm_wait_unblocked(Future, self()),
                              task:wait_for_token(Cog, Stack);
