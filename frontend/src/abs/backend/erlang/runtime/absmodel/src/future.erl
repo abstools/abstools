@@ -87,33 +87,22 @@ get_blocking(Future, Cog, Stack) ->
             %% Tell future not to advance time until we picked up ourselves
             register_waiting_task(Future, self()),
             cog:process_is_blocked(Cog,self()),
-            CalleeCog = (fun Loop() ->
+            (fun Loop() ->
                      receive
-                         {value_present, Future, CalleeCog1} ->
-                             CalleeCog1;
+                         {value_present, Future, _CalleeCog} ->
+                             ok;
                          {stop_world, _Sender} ->
-                             %% we already passed back the token above.  Eat
-                             %% the stop_world or we'll deadlock later.
+                             %% `cog:process_is_blocked' already passed back
+                             %% the token.  Eat the stop_world or we'll
+                             %% deadlock later.
                              Loop();
                          {get_references, Sender} ->
                              cog:submit_references(Sender, gc:extract_references(Stack)),
                              Loop()
                      end end)(),
-            case (Cog == CalleeCog) of
-                %% Try to avoid deadlock here.  Not sure if asynchronous
-                %% self-call + get without await will even reach this point,
-                %% but doesn't hurt to try in case we fix other locations
-                %% later.  (See function `await' below for the same pattern.)
-                true ->
-                    confirm_wait_unblocked(Future, self()),
-                    cog:process_is_runnable(Cog, self()),
-                    task:wait_for_token(Cog, Stack);
-                false ->
-                    cog:process_is_runnable(Cog, self()),
-                    task:wait_for_token(Cog, Stack),
-                    confirm_wait_unblocked(Future, self())
-            end,
-            %% Only one recursion here since poll will return true now.
+            cog:process_is_runnable(Cog, self()),
+            confirm_wait_unblocked(Future, self()),
+            task:wait_for_token(Cog, Stack),
             get_after_await(Future)
     end.
 
