@@ -24,10 +24,6 @@ db_post(URL, Body) ->
             gen_fsm:send_event({global, influxdb}, received_response)
     end.
 
-db_post_sync(URL, Body) ->
-    Request = {URL, [], "application/x-www-form-urlencoded", Body},
-    httpc:request(post, Request, [], []).
-
 db_get(URL) ->
     case httpc:request(get, {URL, []}, [], []) of
         {ok, S}    -> ok;
@@ -40,11 +36,8 @@ query_db(URL, Query) ->
 write_measurement(URL, DB, Measurement) ->
     db_post(format_str("~s/write?db=~s", [URL, DB]), Measurement).
 
-write_measurement_sync(URL, DB, Measurement) ->
-    db_post_sync(format_str("~s/write?db=~s", [URL, DB]), Measurement).
-
 to_influx_line_protocol(Desc, Load, Total, Type, Time) ->
-    DCLabel = re:replace(Desc, "[^a-zA-Z0-9]", "", [global, {return, list}]),
+    DCLabel = edoc_lib:escape_uri(Desc),
     format_str("~s,dc=~s load=~B,total=~B ~B~n", [Type, DCLabel, Load, Total, Time]).
 
 new_measurement(C, S, Consumed, Max, Resourcetype, Time, Clocklimit, Offset) ->
@@ -126,7 +119,7 @@ handle_info(_Info, StateName, State) ->
     {next_state, StateName, State}.
 
 terminate(_Reason, StateName, State=#state{url=URL, db=DB, measurement=Measurement}) ->
-    write_measurement_sync(URL, DB, Measurement),
+    write_measurement(URL, DB, Measurement),
     ok.
 
 code_change(_OldVsn, StateName, State, _Extra) ->
