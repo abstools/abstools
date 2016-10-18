@@ -65,14 +65,14 @@ start(DC)->
     gc:register_cog(Cog),
     Cog.
 
-add_sync(#cog{ref=Cog},Task,Args,Stack) ->
-    gen_fsm:send_event(Cog, {new_task,Task,Args,self(),false,{started, Task}}),
-    TaskRef=await_start(Cog, Task, [Args | Stack]),
+add_sync(#cog{ref=Cog},TaskType,Args,Stack) ->
+    gen_fsm:send_event(Cog, {new_task,TaskType,Args,self(),false,{started, TaskType}}),
+    TaskRef=await_start(Cog, TaskType, [Args | Stack]),
     TaskRef.
 
-add_and_notify(#cog{ref=Cog},Task,Args)->
-    gen_fsm:send_event(Cog, {new_task,Task,Args,self(),true,{started, Task}}),
-    TaskRef=await_start(Cog, Task, Args),
+add_and_notify(#cog{ref=Cog},TaskType,Args)->
+    gen_fsm:send_event(Cog, {new_task,TaskType,Args,self(),true,{started, TaskType}}),
+    TaskRef=await_start(Cog, TaskType, Args),
     TaskRef.
 
 process_is_runnable(#cog{ref=Cog},TaskRef) ->
@@ -277,12 +277,12 @@ handle_info(_Info, _StateName, State) ->
     {stop, not_supported, State}.
 
 
-await_start(Cog, Task, Args) ->
+await_start(Cog, TaskType, Args) ->
     receive
         {get_references, Sender} ->
             submit_references(Sender, gc:extract_references(Args)),
-            await_start(Cog, Task, Args);
-        {{started,Task},Ref}->
+            await_start(Cog, TaskType, Args);
+        {{started,TaskType},Ref}->
             Ref
     end.
 
@@ -293,8 +293,8 @@ init([DC]) ->
     cog_monitor:new_cog(self()),
     {ok, cog_starting, #state{dc=DC}}.
 
-start_new_task(DC,Task,Args,Sender,Notify,Cookie)->
-    Ref=task:start(#cog{ref=self(),dc=DC},Task,Args),
+start_new_task(DC,TaskType,Args,Sender,Notify,Cookie)->
+    Ref=task:start(#cog{ref=self(),dc=DC},TaskType,Args),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     case Cookie of
         undef -> ok;
@@ -362,10 +362,10 @@ no_task_schedulable({process_runnable, TaskRef}, _From, State=#state{waiting_tas
     end;
 no_task_schedulable(_Event, _From, State) ->
     {stop, not_supported, State}.
-no_task_schedulable({new_task,Task,Args,Sender,Notify,Cookie},
+no_task_schedulable({new_task,TaskType,Args,Sender,Notify,Cookie},
                     State=#state{runnable_tasks=Tasks,dc=DC}) ->
     cog_monitor:cog_active(self()),
-    NewTask=start_new_task(DC,Task,Args,Sender,Notify,Cookie),
+    NewTask=start_new_task(DC,TaskType,Args,Sender,Notify,Cookie),
     %% the new task will send process_runnable soon; we schedule it at that
     %% point, but we place it into runnable_tasks already now.
     {next_state, no_task_schedulable,
@@ -421,9 +421,9 @@ process_running({process_runnable, TaskRef}, _From,
 process_running(_Event, _From, State) ->
     {stop, not_supported, State}.
 
-process_running({new_task,Task,Args,Sender,Notify,Cookie},
+process_running({new_task,TaskType,Args,Sender,Notify,Cookie},
                 State=#state{runnable_tasks=Tasks,dc=DC}) ->
-    T=start_new_task(DC,Task,Args,Sender,Notify,Cookie),
+    T=start_new_task(DC,TaskType,Args,Sender,Notify,Cookie),
     %% We put T directly into runnable_tasks to avoid spurious idle state if
     %% current task ends between events `new_task' and `process_runnable' of
     %% this new task.  (A new task is runnable by definition.)
@@ -457,9 +457,9 @@ process_blocked({process_runnable, TaskRef}, _From,
                  runnable_tasks=gb_sets:add_element(TaskRef, Run)}};
 process_blocked(_Event, _From, State) ->
     {stop, not_supported, State}.
-process_blocked({new_task,Task,Args,Sender,Notify,Cookie},
+process_blocked({new_task,TaskType,Args,Sender,Notify,Cookie},
                     State=#state{waiting_tasks=Tasks,dc=DC}) ->
-    NewTask=start_new_task(DC,Task,Args,Sender,Notify,Cookie),
+    NewTask=start_new_task(DC,TaskType,Args,Sender,Notify,Cookie),
     %% the new task will send a runnable event soon, no need to schedule here
     {next_state, process_blocked,
      State#state{waiting_tasks=gb_sets:add_element(NewTask, Tasks)}};
@@ -508,9 +508,9 @@ waiting_for_gc_stop({process_runnable, T}, _From,
                  runnable_tasks=gb_sets:add_element(T, Run)}};
 waiting_for_gc_stop(_Event, _From, State) ->
     {stop, not_supported, State}.
-waiting_for_gc_stop({new_task,Task,Args,Sender,Notify,Cookie},
+waiting_for_gc_stop({new_task,TaskType,Args,Sender,Notify,Cookie},
                     State=#state{waiting_tasks=Tasks,dc=DC}) ->
-    NewTask=start_new_task(DC,Task,Args,Sender,Notify,Cookie),
+    NewTask=start_new_task(DC,TaskType,Args,Sender,Notify,Cookie),
     {next_state, waiting_for_gc_stop,
      State#state{waiting_tasks=gb_sets:add_element(NewTask, Tasks)}};
 waiting_for_gc_stop({process_blocked, R}, State=#state{running_task=R}) ->
@@ -552,11 +552,11 @@ in_gc({get_references, Sender}, State=#state{runnable_tasks=Run,
              State#state{references=#{sender => Sender, waiting => AllTaskList,
                                       received => []}}}
     end;
-in_gc({new_task,Task,Args,Sender,Notify,Cookie},
+in_gc({new_task,TaskType,Args,Sender,Notify,Cookie},
       State=#state{runnable_tasks=Tasks,dc=DC}) ->
     %% Tell cog_monitor now; after gc it might be too late
     cog_monitor:cog_active(self()),
-    NewTask=start_new_task(DC,Task,Args,Sender,Notify,Cookie),
+    NewTask=start_new_task(DC,TaskType,Args,Sender,Notify,Cookie),
     {next_state, in_gc,
      State#state{runnable_tasks=gb_sets:add_element(NewTask, Tasks)}};
 in_gc(resume_world, State=#state{referencers=Referencers,

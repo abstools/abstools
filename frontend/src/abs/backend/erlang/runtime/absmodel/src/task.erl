@@ -33,17 +33,17 @@ behaviour_info(callbacks) ->
 behaviour_info(_) ->
     undefined.
 
-start(Cog,Task,Args)->
-    spawn_link(task,init,[Task,Cog,Args]).
+start(Cog,TaskType,Args)->
+    spawn_link(task,init,[TaskType,Cog,Args]).
 
-init(Task,Cog,Args)->
-    InnerState=Task:init(Cog,Args),
+init(TaskType,Cog,Args)->
+    InnerState=TaskType:init(Cog,Args),
     %% init RNG, recipe recommended by the Erlang documentation.
     %% TODO: if we want reproducible runs, make seed a command-line parameter
     random:seed(erlang:phash2([node()]), erlang:monotonic_time(), erlang:unique_integer()),
     cog:process_is_runnable(Cog, self()),
     wait_for_token(Cog, InnerState),
-    Val=Task:start(InnerState),
+    Val=TaskType:start(InnerState),
     release_token(Cog,done),
     send_notifications(Val).
 
