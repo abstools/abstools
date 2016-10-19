@@ -363,13 +363,13 @@ no_task_schedulable({process_runnable, TaskRef}, _From, State=#state{waiting_tas
 no_task_schedulable(_Event, _From, State) ->
     {stop, not_supported, State}.
 no_task_schedulable({new_task,TaskType,Args,Sender,Notify,Cookie},
-                    State=#state{runnable_tasks=Tasks,dc=DC}) ->
+                    State=#state{waiting_tasks=Tasks,dc=DC}) ->
+    %% The new task will send `process_runnable' soon; preemptively block time
+    %% advance.
     cog_monitor:cog_active(self()),
     NewTask=start_new_task(DC,TaskType,Args,Sender,Notify,Cookie),
-    %% the new task will send process_runnable soon; we schedule it at that
-    %% point, but we place it into runnable_tasks already now.
     {next_state, no_task_schedulable,
-     State#state{runnable_tasks=gb_sets:add_element(NewTask, Tasks)}};
+     State#state{waiting_tasks=gb_sets:add_element(NewTask, Tasks)}};
 no_task_schedulable(stop_world, State) ->
     gc:cog_stopped(self()),
     {next_state, in_gc, State#state{next_state_after_gc=no_task_schedulable}};
@@ -422,13 +422,16 @@ process_running(_Event, _From, State) ->
     {stop, not_supported, State}.
 
 process_running({new_task,TaskType,Args,Sender,Notify,Cookie},
-                State=#state{runnable_tasks=Tasks,dc=DC}) ->
+                State=#state{waiting_tasks=Tasks,dc=DC}) ->
+    %% FIXME: This exposes a tiny window where time might advance even though
+    %% this task is runnable "real soon now".  We cannot place the new task
+    %% directly into `running_tasks' since it might lead to deadlock: a new
+    %% async_call_task synchronizes with the target object before calling
+    %% `process_runnable'; if we don't wait for that, we might schedule the
+    %% new task before the init_task for the same object has been scheduled.
     T=start_new_task(DC,TaskType,Args,Sender,Notify,Cookie),
-    %% We put T directly into runnable_tasks to avoid spurious idle state if
-    %% current task ends between events `new_task' and `process_runnable' of
-    %% this new task.  (A new task is runnable by definition.)
     {next_state, process_running,
-     State#state{runnable_tasks=gb_sets:add_element(T, Tasks)}};
+     State#state{waiting_tasks=gb_sets:add_element(T, Tasks)}};
 process_running({process_blocked, _TaskRef}, State) ->
     cog_monitor:cog_blocked(self()),
     {next_state, process_blocked, State};
@@ -553,12 +556,13 @@ in_gc({get_references, Sender}, State=#state{runnable_tasks=Run,
                                       received => []}}}
     end;
 in_gc({new_task,TaskType,Args,Sender,Notify,Cookie},
-      State=#state{runnable_tasks=Tasks,dc=DC}) ->
-    %% Tell cog_monitor now; after gc it might be too late
+      State=#state{waiting_tasks=Tasks,dc=DC}) ->
+    %% Tell cog_monitor now that we're busy; after gc it might be too late --
+    %% but don't put new task into runnable_tasks yet
     cog_monitor:cog_active(self()),
     NewTask=start_new_task(DC,TaskType,Args,Sender,Notify,Cookie),
     {next_state, in_gc,
-     State#state{runnable_tasks=gb_sets:add_element(NewTask, Tasks)}};
+     State#state{waiting_tasks=gb_sets:add_element(NewTask, Tasks)}};
 in_gc(resume_world, State=#state{referencers=Referencers,
                                  running_task=RunningTask,
                                  runnable_tasks=Run, polling_tasks=Pol,
