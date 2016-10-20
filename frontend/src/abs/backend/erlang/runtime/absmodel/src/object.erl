@@ -230,8 +230,10 @@ handle_sync_event({die,Reason,By},_From,_StateName,S=#state{cog=Cog, tasks=Tasks
     end;
 handle_sync_event(protect_from_gc, _From, StateName, S) ->
     {reply, ok, StateName, S#state{protect_from_gc=true}};
-handle_sync_event(get_references, _From, StateName, S=#state{fields=IState}) ->
-    {reply, gc:extract_references(IState), StateName, S};
+handle_sync_event(get_references, _From, StateName,
+                  S=#state{fields=IState, cog=#cog{dc=DC}}) ->
+    {reply, ordsets:union(gc:extract_references(DC),
+                          gc:extract_references(IState)), StateName, S};
 handle_sync_event(get_whole_state, _From, StateName, S=#state{class=C,fields=IState}) ->
     {reply, C:get_all_state(IState), StateName, S}.
 
