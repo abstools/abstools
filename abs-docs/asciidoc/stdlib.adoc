@@ -476,7 +476,7 @@ Returns `True` if set `xs` is empty, `False`  otherwise.
 
 [source]
 ----
-def Bool contains<A>(Set<A> ss, A e);
+def Bool emptySet<A>(Set<A> ss);
 ----
 
 .size
