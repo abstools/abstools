@@ -1,7 +1,6 @@
 
 import abs.frontend.ast.*;
 import abs.frontend.treecopy.ParseTreeCopyHelper; 
-
 aspect ParseTreeCopy {
     
     public Access Access.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
@@ -12,7 +11,6 @@ aspect ParseTreeCopy {
     public AddFieldModifier AddFieldModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public AddFunctionModifier AddFunctionModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public AddInterfaceModifier AddInterfaceModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
-    public AddMethodModifier AddMethodModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public AddMethodSigModifier AddMethodSigModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public AddTypeSynModifier AddTypeSynModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public AllOf AllOf.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
@@ -64,6 +62,7 @@ aspect ParseTreeCopy {
     public DeltaClassParam DeltaClassParam.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public DeltaClause DeltaClause.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public DeltaDecl DeltaDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
+    public TraitDecl TraitDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public DeltaFieldParam DeltaFieldParam.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public DeltaID DeltaID.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public Deltaparam Deltaparam.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
@@ -166,7 +165,6 @@ aspect ParseTreeCopy {
     public Modifier Modifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public ModifyClassModifier ModifyClassModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public ModifyInterfaceModifier ModifyInterfaceModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
-    public ModifyMethodModifier ModifyMethodModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public ModMultExp ModMultExp.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public ModuleDecl ModuleDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public MOrBoolExp MOrBoolExp.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
@@ -202,7 +200,6 @@ aspect ParseTreeCopy {
     public RelationalExpr RelationalExpr.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public RemoveClassModifier RemoveClassModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public RemoveFieldModifier RemoveFieldModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
-    public RemoveMethodModifier RemoveMethodModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public RemoveMethodSigModifier RemoveMethodSigModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public Require Require.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public ReturnStmt ReturnStmt.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }

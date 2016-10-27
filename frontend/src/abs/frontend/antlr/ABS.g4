@@ -212,6 +212,7 @@ class_decl : annotation*
         field_decl*
         ('{' stmt* '}')?
         ( 'recover' '{' casestmtbranch* '}' )?
+        trait_usage*
         method*
         '}'
     ;
@@ -251,7 +252,28 @@ decl : datatype_decl
     | exception_decl
     | interface_decl
     | class_decl
+    | trait_decl
     ;
+
+
+trait_decl : 'trait' TYPE_IDENTIFIER '='
+			trait_expr
+		   ;
+
+trait_expr : 
+		    '{' method* '}'					    	#TraitSetFragment
+		   | method 						        #TraitSetFragment
+		   | TYPE_IDENTIFIER						#TraitNameFragment
+		   | trait_expr trait_oper					#TraitApplyFragment
+		   ;
+
+trait_oper : 'adds' trait_expr						#TraitAddFragment
+		   | 'modifies' trait_expr					#TraitModifyFragment
+		   | 'removes' methodsig 					#TraitRemoveFragment
+		   ;
+		   
+trait_usage: 'uses' trait_expr ';'
+           ; 
 
 delta_decl : 'delta' TYPE_IDENTIFIER
         ('(' p+=delta_param (',' p+=delta_param)* ')')? ';'
@@ -287,7 +309,7 @@ oo_modifier : 'adds' class_decl                            # DeltaAddClassModifi
     | 'modifies' 'class' n=qualified_type_identifier
         ('adds' ia+=interface_name (',' ia+=interface_name)*)?
         ('removes' ir+=interface_name (',' ir+=interface_name)*)?
-        '{' class_modifier_fragment* '}'                   # DeltaModifyClassModifier
+        '{' class_modifier_fragment*? '}'                  # DeltaModifyClassModifier
     | 'adds' interface_decl                                # DeltaAddInterfaceModifier
     | 'removes' 'interface' qualified_type_identifier ';'  # DeltaRemoveInterfaceModifier
     | 'modifies' 'interface' qualified_type_identifier
@@ -296,9 +318,7 @@ oo_modifier : 'adds' class_decl                            # DeltaAddClassModifi
 
 class_modifier_fragment : 'adds' field_decl  # DeltaAddFieldFragment
     | 'removes' field_decl                   # DeltaRemoveFieldFragment
-    | 'adds' method                          # DeltaAddMethodFragment
-    | 'modifies' method                      # DeltaModifyMethodFragment
-    | 'removes' methodsig                    # DeltaRemoveMethodFragment
+    | trait_oper							 # DeltaTraitFragment
     ;
 
 interface_modifier_fragment : 'adds' methodsig   # DeltaAddMethodsigFragment

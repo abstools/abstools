@@ -14,7 +14,6 @@ import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.ModuleModifier;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.DeltaDecl;
@@ -32,8 +31,8 @@ import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModifyClassModifier;
-import abs.frontend.ast.ModifyMethodModifier;
 import abs.frontend.ast.ModuleDecl;
+import abs.frontend.ast.ModuleModifier;
 import abs.frontend.ast.Name;
 import abs.frontend.ast.NewExp;
 import abs.frontend.ast.Opt;
@@ -92,20 +91,6 @@ public final class AbsASTBuilderUtil {
         }
 
     }
-    
-    public static final class ModifyMethodModifierNamePredicate extends Named implements Predicate<ModifyMethodModifier> {
-
-        public ModifyMethodModifierNamePredicate(String name) {
-            super(name);
-        }
-
-        @Override
-        public boolean predicate(ModifyMethodModifier t) {
-            return name.equals(t.getMethodImpl().getMethodSig().getName());
-        }
-
-    }
-
     public static final class MethodNamePredicate extends Named implements Predicate<MethodImpl> {
 
         public MethodNamePredicate(String name) {

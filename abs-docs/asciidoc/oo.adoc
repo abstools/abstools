@@ -74,9 +74,10 @@ block has the same restrictions as in the init block.
 .Syntax
 |====
 | _ClassDecl_ ::= | `class` _SimpleTypeIdentifier_ [ `(` [ _ClassParameterList_ ] `)` ] [ `implements` _InterfaceList_ ]
-|                 | `{` [ _FieldDeclList_ ] [ _Block_ ] [_RecoveryBlock_] [ _MethDeclList_ ] `}`
+|                 | `{` [ _FieldDeclList_ ] [ _Block_ ] [_RecoveryBlock_] [ _TraitUseList_ ][ _MethDeclList_ ] `}`
 | _ClassParameterList_ ::= | _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ }
 | _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
+| _TraitUseList_ ::= | adds _TraitName_ `;` {  adds _TraitName_ `;`}
 | _FieldDeclList_ ::= | { _Type_ _SimpleIdentifier_ [ `=` _PureExp_ ] `;` }
 | _RecoveryBlock_ ::= | `recover` `{` { _Pattern_ `\=>` _Stmt_ } `}`
 | _MethDeclList_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` _Block_
@@ -130,3 +131,106 @@ Unit run() {
 ----
 
 The run method is called after object initialization.
+
+[[sec:traits]]
+== Traits
+
+ABS does not support inheritance for code reuse.  Method implementations that
+are common betwen classes can be defined once and used inside these classes by
+using _traits_.  A trait can add, remove and modify methods of a class or of
+another trait.
+
+Traits are applied to classes at compile-time and do not change the
+interface(s) of a class.  Classes and their methods are type-checked once all
+traits are applied.
+
+Similar to classes, traits in ABS are not types.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _TraitDecl_ ::= | `trait` _TraitName_ = ( `{` _MethDeclList_ `}` {vbar} _TraitName_ ) _TraiOper_*
+| _TraitName_ ::= | _SimpleIdentifier_
+| _TraitOper_ ::= | `adds` _TraitExpr_ {vbar} `modifies` _TraitExpr_ {vbar} `removes` _MethSig_+
+|====
+
+
+A trait is defined with `trait` t = _T_ at module level.
+
+The effect of applying a trait _T_ to a class (using `adds` _T_ inside the
+class body) is to add the methods comprising that trait to the class
+definition.
+
+.Explanation
+* The operation `adds` adds all the elements of the next _MethodSet_ to the class. 
+If a method with the same name is already present in the class (or set of methods), the error will be raised _after_ applying all traits, during type checking.
+[source]
+----
+trait T = { Unit x(){ skip; } } 
+trait T2 = { Unit y(){ skip; } } adds T
+----
+will be resolved to the set
+[source]
+----
+{ Unit x(){ skip; } Unit y(){ skip; } } 
+----
+* The operation `modifies` changes all the elements of the next _MethodSet_ in the class to the new implementation described in this _MethodSet_. 
+A trait may contain original() calls which refer to the version of the method before the trait application.
+If a method with the same name is not present in the class (or set of methods), the method is added instead and the original() calls are not resolved.
+
+A method may contain targeted original calls. These raise an error if the trait is used directly by a class
+The following is invalid:
+[source]
+.Example
+----
+trait T = {Unit myMethod(){ skip; }}  modifies {Unit myMethod(){ core.original(); }}
+class C {uses T; }
+----
+The following two examples are valid:
+[source]
+.Example
+----
+trait T = {Unit myMethod(){ skip; }} modifies {Unit myMethod(){ original(); }}
+class C {uses T; }
+----
+[source]
+.Example
+----
+module M;
+trait T = {Unit myMethod(){ skip; }} 
+class C {uses T; }
+
+delta D;
+modifies class M.C{
+        modifies Unit myMethod(){ core.original(); }
+}
+----
+* The operation `removes` deletes the method with the provided signature. 
+If a method with the same name is not present in the class (or set of methods), an error will be raised during trait application.
+
+.The order of trait application is as follows:
+* All traits used within a class, in the order they are refered too
+* All traits used within a delta, in the order they are refered too
+
+[source]
+.Example
+----
+module M;
+interface I { Unit x(); Unit foo(); Unit bar(); }
+trait T = Unit x() { this.foo(); original(); this.bar();  }
+trait T2 = { Unit x() { println("T2"); } } modifies T
+trait T3 = { Unit x() { println("T3"); } } modifies T
+class C implements I {
+        Int i = 0;
+        uses T2;
+        Unit foo(){ i = i+1; }
+        Unit bar(){ i = i-1; }
+}
+
+class C2 implements I {
+        Int i = 0;
+        uses T3;
+        Unit foo(){ i = i-1; }
+        Unit bar(){ i = i+1; }
+}
+----

@@ -203,19 +203,7 @@ aspect MyDumpTree
         stream.print(this.getInterfaceDecl().getName());
     }
 
-    protected void AddMethodModifier.printInfo(PrintStream stream)
-    {
-    	stream.print(this.getMethodImpl().getMethodSig());
-    }
-    protected void ModifyMethodModifier.printInfo(PrintStream stream)
-    {
-    	stream.print(this.getMethodImpl().getMethodSig());
-    }
-    protected void RemoveMethodModifier.printInfo(PrintStream stream)
-    {
-    	stream.print(this.getMethodSig());
-    }
-
+   
     protected void AddFieldModifier.printInfo(PrintStream stream)
     {
     	stream.print(this.getFieldDecl());

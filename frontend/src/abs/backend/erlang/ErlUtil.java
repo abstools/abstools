@@ -187,8 +187,9 @@ public class ErlUtil {
         ecs.incIndent();
         ecs.println("{stop_world, CogRef} ->");
         ecs.incIndent();
-        ecs.println("task:block_without_time_advance(Cog),");
-        ecs.print("task:acquire_token(Cog, ");
+        ecs.println("cog:process_is_blocked_for_gc(Cog, self()),");
+        ecs.println("cog:process_is_runnable(Cog,self()),");
+        ecs.print("task:wait_for_token(Cog,");
         if (functional) {
             ecs.print("Stack");
         } else {
@@ -196,7 +197,8 @@ public class ErlUtil {
         }
         ecs.println(");");
         ecs.decIndent().println("die_prematurely ->");
-        ecs.incIndent().println("exit(killed_by_the_clock)");
+        ecs.incIndent().println("task:send_notifications(killed_by_the_clock),");
+        ecs.println("exit(killed_by_the_clock)");
         ecs.decIndent();
         ecs.decIndent();
         ecs.println("after 0 -> ok end,");

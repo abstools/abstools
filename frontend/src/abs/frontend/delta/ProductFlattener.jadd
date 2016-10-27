@@ -59,8 +59,6 @@ aspect ProductFlattener {
         // substitute delta parameters
         pl.substituteDeltaParams(deltas, prod.getProduct());
 
-        // resolve original() calls
-        resolveOriginalCalls(deltas);
 
         if (verbose) {
             System.out.print("--- applying deltas to core");
@@ -69,10 +67,12 @@ aspect ProductFlattener {
             }
             println(" .");
         }
+        // apply the applicable traits 
+        applyTraits();
 
         // apply the applicable deltas in the given order
         applyDeltas(deltas);
-
+        
         // remember which product was generated
         productName = prod.getName();
     }
@@ -88,6 +88,15 @@ aspect ProductFlattener {
             for (CompilationUnit unit: this.getCompilationUnits())
                 for (ModuleDecl module: unit.getModuleDecls())
                     module.flushCache();
+        }
+        for (CompilationUnit unit: this.getCompilationUnits()){
+            for (ModuleDecl module: unit.getModuleDecls()){
+                for (Decl decl : module.getDecls()) {
+                    if(decl instanceof ClassDecl){
+                        ((ClassDecl)decl).computeDelete();
+                    }
+                }
+            }
         }
     }
 
@@ -273,4 +282,116 @@ aspect ProductFlattener {
         deltaSorter.sort();
     }
 
+    public void Model.flattenTraitOnly(){
+        applyTraits();      
+    }
+    
+    
+    /**************************************************************************
+     * Apply the traits 
+     */
+    public void Model.applyTraits() throws DeltaModellingException{
+      
+        //Collect all traits
+        LinkedList<TraitDecl> list = new LinkedList<>();
+        for (Decl decl : getDecls()) {
+            if(decl instanceof TraitDecl){
+                list.add((TraitDecl)decl);
+            }      
+        }
+  
+        //init
+        LinkedList<LinkedList<String>> lists = new LinkedList<>();
+        for (TraitDecl traitDecl : list) {
+            LinkedList<String> l = new LinkedList<>();
+            l.add(traitDecl.getName());
+            collectInTrait(traitDecl.getTraitExpr(), l);
+            lists.add(l);
+        }
+  
+  		//check for cyclic references
+        sort(lists);
+        while(lists.size() > 0){
+            LinkedList<String> l = lists.pop();
+            if(l.size() > 1) throw new DeltaModellingException("Cyclic Traits");
+            String n = l.pop();
+            for (LinkedList<String> listOther : lists) {
+                while(listOther.remove(n));
+            }
+            sort(lists);
+        }
+ 
+        //apply
+        boolean changed = false;
+        do{
+        changed = false;
+            for (Decl decl : getDecls()) {
+                if(decl instanceof ClassDecl){
+                    ClassDecl cd = (ClassDecl)decl;
+                
+
+                    List<TraitUse> usesAST = cd.getTraitUses(); 
+                    //this is necessary as the builtint list collects the TraitUses in the wrong order
+                    LinkedList<TraitUse> uses = new LinkedList<>();
+                    for (TraitUse traitUse : usesAST) {
+                        uses.add(traitUse);
+                    }
+                    sortUses(uses);
+                    for (TraitUse use : uses) {
+                        use.applyTo(cd);
+                        changed = true;                        
+                    }
+                }
+            }
+        } while(changed);
+    }
+  
+  
+    
+    /**************************************************************************
+     * Helper methods for trait application
+     */
+    private void Model.sort(LinkedList<LinkedList<String>> lists) {      
+        Collections.sort(lists, new Comparator<LinkedList<String>>() {
+        @Override
+        public int compare(LinkedList<String> o1, LinkedList<String> o2) {
+            if(o1.size() < o2.size())
+                return -1;
+            if(o1.size() > o2.size())
+                return 1;
+            return 0;
+         }
+         });
+    }
+    
+    private void Model.sortUses(LinkedList<TraitUse> list) {  
+      
+      Collections.sort(list, new Comparator<TraitUse>() {
+      @Override
+      public int compare(TraitUse o1, TraitUse o2) {
+          int line1 = o1.getStartLine();
+          int row1 = o1.getStartColumn();
+          int line2 = o2.getStartLine();
+          int row2 = o2.getStartColumn();
+          if((line1 < line2) || (line1 == line2 && row1 < row2))
+              return -1;
+          if((line2 < line1) || (line2 == line1 && row2 < row1))
+              return 1;
+          return 0;
+       }
+       });
+  }
+    
+    
+    private void Model.collectInTrait(ASTNode<ASTNode> traitExpr, LinkedList<String> list) {
+        if(traitExpr instanceof TraitNameExpr){
+            TraitNameExpr expr = (TraitNameExpr)traitExpr;
+            list.add(expr.getName());
+        }else if(traitExpr != null && traitExpr.children != null){
+            for (ASTNode<ASTNode> child : traitExpr.children) {
+                collectInTrait(child,list);
+            }
+        }
+    }
+    
 }

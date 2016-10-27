@@ -4,10 +4,17 @@
  */
 package abs.frontend.antlr.parser;
 
-import abs.frontend.ast.*;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.NotNull;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.*;
+import abs.frontend.antlr.parser.ABSParser.TraitApplyFragmentContext;
+import abs.frontend.antlr.parser.ABSParser.TraitNameFragmentContext;
+import abs.frontend.antlr.parser.ABSParser.TraitSetFragmentContext;
+import abs.frontend.antlr.parser.ABSParser.Trait_operContext;
+import abs.frontend.ast.*;
 
 /**
  * This class creates the JastAdd AST from an Antlr parse tree.
@@ -138,6 +145,45 @@ new List<ModuleDecl>(),
         result.setFExtList(l(ctx.fextension()));
     }
 
+    
+    // Traits
+
+
+    @Override public void exitDeltaTraitFragment(@NotNull ABSParser.DeltaTraitFragmentContext ctx) { 
+        setV(ctx,new DeltaTraitModifier((TraitOper) v(ctx.trait_oper())));
+    }
+    
+    @Override public void exitTraitAddFragment(abs.frontend.antlr.parser.ABSParser.TraitAddFragmentContext ctx) {
+        setV(ctx,new AddMethodModifier((TraitExpr) v(ctx.trait_expr())));
+    }
+    @Override public void exitTraitModifyFragment(abs.frontend.antlr.parser.ABSParser.TraitModifyFragmentContext ctx) {
+        setV(ctx,new ModifyMethodModifier((TraitExpr) v(ctx.trait_expr())));
+     }
+    @Override public void exitTraitRemoveFragment(abs.frontend.antlr.parser.ABSParser.TraitRemoveFragmentContext ctx) {
+        setV(ctx,new RemoveMethodModifier((MethodSig) v(ctx.methodsig())/*, (TraitOper)v(ctx.trait_oper())*/));
+     }
+
+    
+         @Override
+        public void exitTraitApplyFragment(TraitApplyFragmentContext ctx) {
+             setV(ctx, new TraitModifyExpr((TraitExpr)v(ctx.trait_expr()), (TraitOper)v(ctx.trait_oper())));
+        }
+         @Override
+        public void exitTraitNameFragment(TraitNameFragmentContext ctx) {
+             setV(ctx, new TraitNameExpr(ctx.TYPE_IDENTIFIER().getText()));
+        }
+         @Override
+        public void exitTraitSetFragment(TraitSetFragmentContext ctx) {
+             setV(ctx, new TraitSetExpr(l(ctx.method())));             
+        }
+    @Override public void exitTrait_usage( ABSParser.Trait_usageContext ctx) {
+        //setV(ctx, new TraitUse(ctx.TYPE_IDENTIFIER().toString(), new List()));
+        setV(ctx, new TraitUse((TraitExpr)v(ctx.trait_expr())));
+    }
+    @Override public void exitTrait_decl( ABSParser.Trait_declContext ctx) { 
+        setV(ctx, new TraitDecl(ctx.TYPE_IDENTIFIER().getText(), (TraitExpr)v(ctx.trait_expr())));
+    }
+    
     // Declarations
     @Override public void exitDecl(ABSParser.DeclContext ctx) {
         setV(ctx, v(ctx.getChild(0))); // relies on decl having one token
@@ -244,7 +290,8 @@ new List<ModuleDecl>(),
 
     // Classes
     @Override public void exitClass_decl(ABSParser.Class_declContext ctx) {
-        ClassDecl c = (ClassDecl)setV(ctx, new ClassDecl(ctx.TYPE_IDENTIFIER().getText(), l(ctx.annotation()), new List<ParamDecl>(), l(ctx.interface_name()), new Opt<InitBlock>(), l(ctx.casestmtbranch()), l(ctx.field_decl()), l(ctx.method())));
+        ClassDecl c = (ClassDecl)setV(ctx, new ClassDecl(ctx.TYPE_IDENTIFIER().getText(), l(ctx.annotation()), new List<ParamDecl>(), l(ctx.interface_name()),
+                                                         l(ctx.trait_usage()),  new Opt<InitBlock>(), l(ctx.casestmtbranch()), l(ctx.field_decl()), l(ctx.method())));
         if (ctx.paramlist() != null) {
             c.setParamList((List<ParamDecl>)v(ctx.paramlist()));
         }
@@ -718,15 +765,6 @@ new List<ModuleDecl>(),
     }
     @Override public void exitDeltaRemoveFieldFragment(ABSParser.DeltaRemoveFieldFragmentContext ctx) {
         setV(ctx, new RemoveFieldModifier((FieldDecl)v(ctx.field_decl())));
-    }
-    @Override public void exitDeltaAddMethodFragment(ABSParser.DeltaAddMethodFragmentContext ctx) {
-        setV(ctx, new AddMethodModifier((MethodImpl)v(ctx.method())));
-    }
-    @Override public void exitDeltaModifyMethodFragment(ABSParser.DeltaModifyMethodFragmentContext ctx) {
-        setV(ctx, new ModifyMethodModifier((MethodImpl)v(ctx.method())));
-    }
-    @Override public void exitDeltaRemoveMethodFragment(ABSParser.DeltaRemoveMethodFragmentContext ctx) {
-        setV(ctx, new RemoveMethodModifier((MethodSig)v(ctx.methodsig())));
     }
 
     @Override public void exitDeltaAddMethodsigFragment(ABSParser.DeltaAddMethodsigFragmentContext ctx) {

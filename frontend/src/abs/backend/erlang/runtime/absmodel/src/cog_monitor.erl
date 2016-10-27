@@ -150,15 +150,16 @@ handle_call({cog,Cog,active}, _From, State=#state{active=A,idle=I})->
     A1=gb_sets:add_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
     {reply, ok, State#state{active=A1,idle=I1}};
-handle_call({cog,Cog,idle}, _From, State=#state{active=A,idle=I})->
+handle_call({cog,Cog,idle}, From, State=#state{active=A,idle=I})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:add_element(Cog,I),
     S1=State#state{active=A1,idle=I1},
+    gen_server:reply(From, ok),
     case can_clock_advance(State, S1) of
         true->
-            {reply, ok, advance_clock_or_terminate(S1)};
+            {noreply, advance_clock_or_terminate(S1)};
         false->
-            {reply, ok, S1}
+            {noreply, S1}
     end;
 handle_call({cog,Cog,blocked}, From, State=#state{active=A,blocked=B})->
     A1=gb_sets:del_element(Cog,A),
@@ -279,7 +280,7 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
                         false ->
                             io:format("Simulation time limit reached; terminating~n", []),
                             Cogs=gb_sets:union([State#state.active, State#state.blocked, State#state.idle]),
-                            gc:stop(), % eliminate gc crash when it receives `stopped' messages in idle state
+                            gc:prepare_shutdown(), % eliminate gc crash when it receives `stopped' messages in idle state
                             gb_sets:fold(fun (Ref, ok) -> cog:stop_world(Ref) end, ok, Cogs),
                             gb_sets:fold(fun (Ref, ok) -> cog:kill_recklessly(Ref) end, ok, Cogs),
                             M ! wait_done,
@@ -307,9 +308,6 @@ decrease_or_wakeup(MTE, {Min, Max, Task, Cog}) ->
               Task, Cog}};
         false ->
             Task ! {clock_finished, self()},
-            receive
-                {ok, Task} -> ok
-            end,
             {Cog, []}
     end.
 
