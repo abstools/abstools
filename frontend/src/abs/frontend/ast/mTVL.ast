@@ -86,7 +86,6 @@ MSubAddExp: MAddExp ;
 
 //// end of intersection with PureExp
 
-
 // Variables and values
 abstract Variable: SimpleExp;
 MValue : SimpleExp ::= Value;

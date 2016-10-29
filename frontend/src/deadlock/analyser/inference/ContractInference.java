@@ -17,7 +17,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import choco.kernel.common.util.tools.ArrayUtils;
+//import choco.kernel.common.util.tools.ArrayUtils;
 
 import com.gzoumix.semisolver.constraint.Constraint;
 import com.gzoumix.semisolver.term.*;

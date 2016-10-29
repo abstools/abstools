@@ -1,15 +1,13 @@
 aspect ProductLineTypeAnalysis {
-
-
     syn lazy SemanticConditionList Model.typeCheckPL() {
         SemanticConditionList errors = new SemanticConditionList();
         if (! hasProductLine())
             return errors;
 
         ProductLineTypeAnalysisHelper.typeCheckPL(getProductLine(), errors);
+        
         return errors;
     }
-
 
     /*
      * Return all valid feature configurations of the feature model.
@@ -20,9 +18,9 @@ aspect ProductLineTypeAnalysis {
             return Collections.emptySet();
 
         ChocoSolver solver = instantiateCSModelFeaturesOnly();
+        
         return solver.getSolutionsFeaturesOnly();
     }
-
 
     /*
      * Add all possible products (i.e. all valid feature configurations = feature model solutions)
@@ -30,8 +28,8 @@ aspect ProductLineTypeAnalysis {
      */
     syn nta lazy List<Product> Model.getProductList() {
         List<Product> plist = new List<Product>();
-
         Set<Set<String>> featureConfs = getFeatureModelConfigurations();
+        
         for (Set<String> features : featureConfs) {
             // set Features
             List<Feature> flist = new List<Feature>();
@@ -42,21 +40,12 @@ aspect ProductLineTypeAnalysis {
             Product product = new Product(flist);
             plist.add(product);
         }
+        
         return plist;
     }
-
-    /* TEST */
-//    syn List<Test> Model.getTestList() {
-//        List<Test> l = new List<Test>();
-//        l.add(new Test(new List<Token>()));
-//        return l;
-//    }
-    
-
-    
+      
     // inform DeltaClause about the DeltaDecl that it references
     syn lazy DeltaDecl DeltaClause.getDeltaDecl() {
         return getProductLine().getModel().getDeltaDeclsMap().get(getDeltaspec().getDeltaID());
     }
-    
 }

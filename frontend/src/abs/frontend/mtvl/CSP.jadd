@@ -1,23 +1,17 @@
 import java.util.Collection;
 import java.util.ArrayList;
 import abs.frontend.mtvl.ChocoSolver;
-//import mtvl.analyser.*;
-import choco.Choco;
-// import choco.Choco.MAX_UPPER_BOUND;
-// import choco.Choco.MIN_LOWER_BOUND;
-import choco.kernel.model.constraints.Constraint;
-import choco.kernel.model.variables.integer.IntegerVariable;
-import choco.kernel.model.variables.integer.IntegerExpressionVariable;
+import org.chocosolver.solver.*;
+import org.chocosolver.solver.constraints.Constraint;
+import org.chocosolver.solver.variables.*;
 
 /**
 Builds constraints and solve them.
 Checks type errors, and if all variables are properly declared.
  **/
 
-
 aspect CSP {
-
-    refine ProductFlattener public void Model.flattenForProduct(ProductDecl prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
+	refine ProductFlattener public void Model.flattenForProduct(ProductDecl prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
         if (check && hasMTVL()) {
             java.util.List<String> errors = instantiateCSModel().checkSolutionWithErrors(prod.getProduct().getSolution(), this);
             if (!errors.isEmpty()) {
@@ -30,12 +24,12 @@ aspect CSP {
         /* call original: */
         refined(prod,check);  
     }
-
+    
     public ChocoSolver Model.instantiateCSModel() {
         ChocoSolver solver = new ChocoSolver(this);
-
-        // new int variable for all int variables
-        for (java.util.Map.Entry<String, BoundaryInt[]> entry : ints().entrySet()) {
+		
+		// new int variable for all int variables
+        /*for (java.util.Map.Entry<String, BoundaryInt[]> entry : ints().entrySet()) {
             String st = entry.getKey();
             if (entry.getValue().length == 2) {
                 BoundaryInt b1 = entry.getValue()[0];
@@ -45,17 +39,18 @@ aspect CSP {
             else {
                 solver.addSetVar(st, entry.getValue());
             }
-        }
+        }*/
         for (String st : bools())
             solver.addBoolVar(st);
-        for (String st : features())
-            solver.addBoolVar(st);
+        for (String name : features())
+            solver.addBoolVar(name);
 
-        collectConstraints(solver); // is adding intvars to the model!
+        collectConstraints(solver);
+        
         return solver;
     }
-
-    public ChocoSolver Model.instantiateCSModelFeaturesOnly() {
+	
+	public ChocoSolver Model.instantiateCSModelFeaturesOnly() {
         ChocoSolver solver = new ChocoSolver(this);
 
         for (String st : features())
@@ -64,7 +59,7 @@ aspect CSP {
         collectConstraints(solver);
         return solver;
     }
-
+    
     public void Model.dropAttributes() {
         // ints and bools store integer and boolean (feature) attributes. Need to be ran twice to be the same collection. 
         ints();
@@ -112,7 +107,8 @@ aspect CSP {
     public Constraint ASTNode.collectConstraints(ChocoSolver s) {
         for(int i = 0; i < getNumChild(); i++)
             getChildNoTransform(i).collectConstraints(s);
-        return Choco.TRUE;
+            
+        return s.model.trueConstraint();
     }
 
     // ROOT: has to be present
@@ -121,52 +117,45 @@ aspect CSP {
             s.forceTrue(getFeatureDecl(i).getName());
         }
         super.collectConstraints(s);
-        return Choco.TRUE;
+        
+        return s.model.trueConstraint();
     }
 
-
     public void Group.includeGroupConstraints(ChocoSolver s, String varName) {
-        IntegerVariable fvar = s.getVar(varName);
+        IntVar fvar = s.getVar(varName);
         int nfeats = getNumFNode();
         String fname = "";
-        IntegerVariable[] feats = new IntegerVariable[nfeats];
+        IntVar[] feats = new IntVar[nfeats];
+        
         for (int i = 0; i < nfeats; i++) {
             fname = getFNode(i).getFeatureDecl().getName();
-            IntegerVariable v = null;
+            IntVar v = null;
             // add intermediate variable $f if f is optional.
             if (getFNode(i) instanceof OptFeat) {
-                v = Choco.makeBooleanVar("$"+fname);
+                v = s.model.boolVar("$"+fname, true);
                 // f -> $f
-                s.addConstraint(
-                        Choco.implies(ChocoSolver.isTrue(s.getVar(fname)),ChocoSolver.isTrue(v)));
+     			s.model.ifThen(s.model.arithm(s.getVar(fname), "=", 1), s.model.arithm(v, "=", 1));
             } else {
                 v = s.getVar(fname);
             }
             // f -> fparent
-            s.addConstraint(Choco.implies(ChocoSolver.isTrue(v),ChocoSolver.isTrue(fvar)));
+            s.model.ifThen(s.model.arithm(v, "=", 1), s.model.arithm(fvar, "=", 1));
             // rec - FNode
             s.addConstraint(getFNode(i).collectConstraints(s));
             feats[i] = v;
             // f -> $f /\ f -> fparent /\ [f]
         }
         // n1 <= $f1 + ... + $fn <= n2
-        if      (getCard() instanceof AllOf)
+        if (getCard() instanceof AllOf)
             // f ->  #feats = nfeats
-            s.addConstraint(Choco.implies(ChocoSolver.isTrue(fvar),
-                    ChocoSolver.eqeq(Choco.sum(feats),nfeats)));
+            s.model.ifThen(s.model.arithm(fvar, "=", 1), s.model.sum(feats, "=", nfeats));
         else if (getCard() instanceof Minim)
             // f ->  #feats >= from
-            s.addConstraint(Choco.implies(
-                    ChocoSolver.isTrue(fvar),
-                    Choco.geq(Choco.sum(feats),((Minim) getCard()).getCFrom())));
+            s.model.ifThen(s.model.arithm(fvar, "=", 1), s.model.sum(feats, ">=", nfeats));
         else {
             // f ->  to >= #feats >= from
-            s.addConstraint(Choco.implies(
-                    ChocoSolver.isTrue(fvar),
-                    Choco.geq(Choco.sum(feats),((CRange) getCard()).getCFrom())));
-            s.addConstraint(Choco.implies(
-                    ChocoSolver.isTrue(fvar),
-                    Choco.leq(Choco.sum(feats),((CRange) getCard()).getCTo())));
+            s.model.ifThen(s.model.arithm(fvar, "=", 1), s.model.sum(feats, ">=", ((CRange) getCard()).getCFrom()));
+            s.model.ifThen(s.model.arithm(fvar, "=", 1), s.model.sum(feats, "<=", ((CRange) getCard()).getCTo()));
         }
     }
 
@@ -177,9 +166,9 @@ aspect CSP {
             s.addConstraint(acl.getConstr(i).collectConstraints(s));
 
         if (hasGroup())
-            getGroup().includeGroupConstraints(s,getName());
-
-        return Choco.TRUE;
+            getGroup().includeGroupConstraints(s, getName());
+            
+        return s.model.trueConstraint();
     }
 
     // FNODE
@@ -196,28 +185,26 @@ aspect CSP {
         if (hasGroup())
             getGroup().includeGroupConstraints(s,getName());
 
-        return Choco.TRUE;
+        return s.model.trueConstraint();
     }
 
     // IFIN/IFOUT
     public Constraint IfIn.collectConstraints(ChocoSolver s) {
-        Constraint c = Choco.implies(ChocoSolver.isTrue(s.getVar(pname())), getExpr().collectConstraints(s));
-        //s.addConstraint(c);
-        //return Choco.TRUE;
-        return c;
-    } 
+        s.model.ifThen(s.model.arithm(s.getVar(pname()), "=", 1), getExpr().collectConstraints(s));
+        return s.model.trueConstraint();
+    }
     public Constraint IfOut.collectConstraints(ChocoSolver s) {
-        Constraint c = Choco.implies(Choco.not(ChocoSolver.isTrue(s.getVar(pname()))), getExpr().collectConstraints(s));
-        return c;
+        s.model.ifThen(s.model.not(s.model.arithm(s.getVar(pname()), "=", 1)), getExpr().collectConstraints(s));
+        return s.model.trueConstraint();
     } 
 
     // REQUIRE/EXCLUDE
     public Constraint Require.collectConstraints(ChocoSolver s) {
-        Constraint c = Choco.implies(ChocoSolver.isTrue(s.getVar(pname())), ChocoSolver.isTrue(s.getVar(getFeatVar().getFName())));
-        return c;
+        s.model.ifThen(s.model.arithm(s.getVar(pname()), "=", 1), s.model.arithm(s.getVar(getFeatVar().getFName()), "=", 1));
+        return s.model.trueConstraint();
     } 
     public Constraint Exclude.collectConstraints(ChocoSolver s) {
-        Constraint c = Choco.nand(s.getVar(pname()), s.getVar(getFeatVar().getFName()));
+        Constraint c = s.model.not(s.model.and(s.getVar(pname()), s.getVar(getFeatVar().getFName())));
         return c;
     } 
 
@@ -226,66 +213,65 @@ aspect CSP {
     public Constraint MExp.collectConstraints(ChocoSolver s) {
         return null;
     }
-    public IntegerExpressionVariable MExp.collectIntExpr(ChocoSolver s) {
+    /*public IntegerExpressionVariable MExp.collectIntExpr(ChocoSolver s) {
         return null;
-    }
+    }*/
+    
     // EXP:VARS
     public Constraint Variable.collectConstraints(ChocoSolver s) {
-        return ChocoSolver.isTrue(s.getVar(getFullName()));
+        return s.model.arithm(s.getVar(getFullName()), "=", 1);
     }
-
-    public IntegerExpressionVariable Variable.collectIntExpr(ChocoSolver s) {
+    /*public IntVar Variable.collectIntExpr(ChocoSolver s) {
         return s.getVar(getFullName());
-    }
+    }*/
 
     //EXP:VALUES
-    // > ????
     public Constraint MValue.collectConstraints(ChocoSolver s) {
         return getValue().collectConstraints(s);
     }
-    public IntegerExpressionVariable MValue.collectIntExpr(ChocoSolver s) {
+    /*public IntVar MValue.collectIntExpr(ChocoSolver s) {
         return getValue().collectIntExpr(s);
-    }
+    }*/
+    
     // null is overwritten always for well-typed elements
     public Constraint Value.collectConstraints(ChocoSolver s) {return null;}
-    public IntegerExpressionVariable Value.collectIntExpr(ChocoSolver s) {return null;}
-    // < ?????
+    //public IntVar Value.collectIntExpr(ChocoSolver s) {return null;}
 
     public Constraint BoolVal.collectConstraints(ChocoSolver s) {
         if (getValue()) 
-            return Choco.TRUE;
+            return s.model.trueConstraint();
         else            
-            return Choco.FALSE;
+            return s.model.falseConstraint();
     }
-    public IntegerExpressionVariable IntVal.collectIntExpr(ChocoSolver s) {
+    /*public IntVar IntVal.collectIntExpr(ChocoSolver s) {
         return Choco.constant(getValue());
-    }
+    }*/
 
     // EXP: AddExp
-    public IntegerExpressionVariable MAddAddExp.collectIntExpr(ChocoSolver s) {
-        return Choco.plus(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));
+    /*public IntegerExpressionVariable MAddAddExp.collectIntExpr(ChocoSolver s) {
+        return Choco.plus(getLeft().collectIntExpr(s), getRight().collectIntExpr(s));
     }
     public IntegerExpressionVariable MSubAddExp.collectIntExpr(ChocoSolver s) {
-        return Choco.minus(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));
-    }
+        return Choco.minus(getLeft().collectIntExpr(s), getRight().collectIntExpr(s));
+    }*/
 
     // EXP: MultExp
-    public IntegerExpressionVariable MMultMultExp.collectIntExpr(ChocoSolver s) {
-        return Choco.mult(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));
+    /*public IntegerExpressionVariable MMultMultExp.collectIntExpr(ChocoSolver s) {
+        return Choco.mult(getLeft().collectIntExpr(s), getRight().collectIntExpr(s));
     }
     public IntegerExpressionVariable MDivMultExp.collectIntExpr(ChocoSolver s) {
-        return Choco.div(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));
+        return Choco.div(getLeft().collectIntExpr(s), getRight().collectIntExpr(s));
     }
     public IntegerExpressionVariable MModMultExp.collectIntExpr(ChocoSolver s) {
-        return Choco.mod(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));
-    }
+        return Choco.mod(getLeft().collectIntExpr(s), getRight().collectIntExpr(s));
+    }*/
 
     // EXP: Unary
-    public IntegerExpressionVariable MMinusExp.collectIntExpr(ChocoSolver s) {
+    /*public IntegerExpressionVariable MMinusExp.collectIntExpr(ChocoSolver s) {
         return Choco.neg(getOperand().collectIntExpr(s));
-    }
+    }*/
     public Constraint MNegExp.collectConstraints(ChocoSolver s) {
-        return Choco.not(getOperand().collectConstraints(s));
+        return s.model.not(getOperand().collectConstraints(s));
     }
 
     // EXP: EqualityExpr
@@ -294,36 +280,53 @@ aspect CSP {
         // All other type checking should be done after flattening. 
         checkType(Types.BOOL, new SemanticConditionList());
         if (isInt)
-            return ChocoSolver.eqeq(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));
+            //return s.model.arithm(getLeft().collectIntExpr(s), "=", getRight().collectIntExpr(s));
+        	return s.model.trueConstraint();
         else
-            return Choco.ifOnlyIf(getLeft().collectConstraints(s),getRight().collectConstraints(s));
+            s.model.ifOnlyIf(getLeft().collectConstraints(s), getRight().collectConstraints(s));
+            
+        return null;    
     }
 
     // EXP: RelationalExpr
     public Constraint MGTEQExp.collectConstraints(ChocoSolver s) {
-        return Choco.geq(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));
+    	//return s.model.arithm(getLeft().collectIntExpr(s), ">=", getRight().collectIntExpr(s));
+    	return s.model.trueConstraint();
     }
     public Constraint MLTEQExp.collectConstraints(ChocoSolver s) {
-        return Choco.leq(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));
+    	//return s.model.arithm(getLeft().collectIntExpr(s), "<=", getRight().collectIntExpr(s));
+    	return s.model.trueConstraint();
     }
     public Constraint MGTExp.collectConstraints(ChocoSolver s) {
-        return Choco.gt(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));
+    	//return s.model.arithm(getLeft().collectIntExpr(s), ">", getRight().collectIntExpr(s));
+    	return s.model.trueConstraint();
     }
     public Constraint MLTExp.collectConstraints(ChocoSolver s) {
-        return Choco.lt(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));
+    	//return s.model.arithm(getLeft().collectIntExpr(s), "<", getRight().collectIntExpr(s));
+    	return s.model.trueConstraint();
     }
 
     // EXP: BoolExp
     public Constraint MEquivExp.collectConstraints(ChocoSolver s) {
-        return Choco.ifOnlyIf(getLeft().collectConstraints(s),getRight().collectConstraints(s));
+        s.model.ifOnlyIf(getLeft().collectConstraints(s), getRight().collectConstraints(s));
+        return s.model.trueConstraint();
     }
     public Constraint MImpliesExp.collectConstraints(ChocoSolver s) {
-        return Choco.implies(getLeft().collectConstraints(s),getRight().collectConstraints(s));
+        s.model.ifThen(getLeft().collectConstraints(s), getRight().collectConstraints(s));
+        return s.model.trueConstraint();    
     }
     public Constraint MOrBoolExp.collectConstraints(ChocoSolver s) {
-        return Choco.or(getLeft().collectConstraints(s),getRight().collectConstraints(s));
+    	Constraint[] cnstrs = new Constraint[2];
+    	cnstrs[0] = getLeft().collectConstraints(s); 
+    	cnstrs[1] = getRight().collectConstraints(s);
+    	
+        return s.model.or(cnstrs);
     }
     public Constraint MAndBoolExp.collectConstraints(ChocoSolver s) {
-        return Choco.and(getLeft().collectConstraints(s),getRight().collectConstraints(s));
+    	Constraint[] cnstrs = new Constraint[2];
+    	cnstrs[0] = getLeft().collectConstraints(s); 
+    	cnstrs[1] = getRight().collectConstraints(s);
+        
+        return s.model.and(cnstrs);
     }
 }

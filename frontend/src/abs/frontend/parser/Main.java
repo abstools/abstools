@@ -23,7 +23,7 @@ import java.util.jar.JarEntry;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import choco.kernel.model.constraints.Constraint;
+import org.chocosolver.solver.constraints.*;
 import abs.frontend.mtvl.ChocoSolver;
 import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
@@ -70,7 +70,6 @@ public class Main {
     protected boolean ignoreattr = false ;
     protected boolean minimise = false ;
     protected boolean maximise = false ;
-
 
     public static void main(final String... args)  {
        new Main().mainMethod(args);
@@ -399,7 +398,6 @@ public class Main {
         }
     }
 
-
     /**
      * TODO: Should probably be introduced in Model through JastAdd by MTVL package.
      * However, the command-line argument handling will have to stay in Main. Pity.
@@ -418,14 +416,14 @@ public class Main {
                 ChocoSolver s = m.instantiateCSModel();
                 System.out.print(s.resultToString());
             }
-            if (minimise) {
+            /*if (minimise) {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for minimum solutions of "+product+" for the feature model...");
                 ChocoSolver s = m.instantiateCSModel();
                 System.out.print(s.minimiseToString(product));
-            }
-            if (maximise) {
+            }*/
+            /*if (maximise) {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for maximum solutions of "+product+" for the feature model...");
@@ -438,7 +436,7 @@ public class Main {
                     System.out.println("------ "+(i++)+"------");
                     System.out.print(s1.resultToString());
                 }
-            }
+            }*/
             if (solveall) {
                 if (verbose)
                     System.out.println("Searching for all solutions for the feature model...");
@@ -449,7 +447,7 @@ public class Main {
                     System.out.print(s.resultToString());
                 }
             }
-            if (solveWith) {
+            /*if (solveWith) {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes " + product + "...");
@@ -464,8 +462,8 @@ public class Main {
                     if (!product.contains("."))
                         System.out.println("Maybe you forgot the module name?");
                 }
-            }
-            if (minWith) {
+            }*/
+            /*if (minWith) {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes " + product + "...");
@@ -482,8 +480,8 @@ public class Main {
                         System.out.println("Maybe you forgot the module name?");
                 }
 
-            }
-            if (maxProduct) {
+            }*/
+            /*if (maxProduct) {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
@@ -498,8 +496,8 @@ public class Main {
                     System.out.println("---No solution-------------");
                 }
 
-            }
-            if (check) {
+            }*/
+            /*if (check) {
                 assert product != null;
                 ChocoSolver s = m.instantiateCSModel();
                 if (p_product == null ){
@@ -510,7 +508,7 @@ public class Main {
                     Map<String,Integer> guess = p_product.getProduct().getSolution();
                     System.out.println("checking solution: "+s.checkSolution(guess,m));
                 }
-            }
+            }*/
             if (numbersol && !ignoreattr) {
                 ChocoSolver s = m.instantiateCSModel();
                 System.out.println("Number of solutions found: "+s.countSolutions());

@@ -15,7 +15,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.*;
-import choco.cp.solver.constraints.global.IncreasingNValue.Mode;
+//import choco.cp.solver.constraints.global.IncreasingNValue.Mode;
 
 @RunWith(Parameterized.class)
 public class DeltaAttributesBooleanTest extends DeltaTest {
