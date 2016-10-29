@@ -1,19 +1,18 @@
 import java.util.Collection;
 import java.util.ArrayList;
-import abs.frontend.mtvl.ChocoSolver;
+//import abs.frontend.mtvl.ChocoSolver;
 //import mtvl.analyser.*;
-import choco.Choco;
-// import choco.Choco.MAX_UPPER_BOUND;
-// import choco.Choco.MIN_LOWER_BOUND;
-import choco.kernel.model.constraints.Constraint;
-import choco.kernel.model.variables.integer.IntegerVariable;
-import choco.kernel.model.variables.integer.IntegerExpressionVariable;
+//import choco.Choco;
+//import choco.Choco.MAX_UPPER_BOUND;
+//import choco.Choco.MIN_LOWER_BOUND;
+//import choco.kernel.model.constraints.Constraint;
+//import choco.kernel.model.variables.integer.IntegerVariable;
+//import choco.kernel.model.variables.integer.IntegerExpressionVariable;
 
 /**
 Builds constraints and solve them.
 Checks type errors, and if all variables are properly declared.
  **/
-
 
 aspect Visualization {
 

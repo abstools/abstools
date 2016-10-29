@@ -12,6 +12,7 @@
 	<classpathentry kind="lib" path="lib/commons-io-2.4.jar"/>
 	<classpathentry kind="lib" path="lib/guava-15.0.jar"/>
 	<classpathentry kind="lib" path="lib/semisolver.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Bung/Documents/Tesis/abstools/frontend/lib/choco-solver-4.0.0.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="tests"/>
@@ -20,7 +21,6 @@
 			<attribute name="ignore_optional_problems" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/choco-solver-2.1.1.jar"/>
 	<classpathentry kind="lib" path="lib/cglib-nodep-2.2.2.jar"/>
 	<classpathentry kind="lib" path="lib/objenesis-1.2.jar"/>
 	<classpathentry kind="lib" path="lib/apfloat.jar" sourcepath="lib/apfloat-1.6.3.zip">

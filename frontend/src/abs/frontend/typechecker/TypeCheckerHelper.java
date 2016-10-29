@@ -224,7 +224,7 @@ public class TypeCheckerHelper {
         }
 
         // Check solution from getProduct()
-        if (prod.getProduct() != null) {
+        /*if (prod.getProduct() != null) {
             java.util.List<String> errors = prod.getModel().instantiateCSModel().checkSolutionWithErrors(
                     prod.getProduct().getSolution(),
                     prod.getModel());
@@ -237,7 +237,7 @@ public class TypeCheckerHelper {
                 e.add(new TypeError(prod, ErrorMessage.INVALID_PRODUCT, prod.getName(), failedConstraints));
             }
         }
-
+*/
         Set<String> seen = new HashSet<String>();
         // FIXME: deal with reconfigurations
 //        for (Reconfiguration recf : prod.getReconfigurations()) {

@@ -3,7 +3,7 @@
  * This file is licensed under the terms of the Modified BSD License.
  */
 
-package abs.frontend.mtvl;
+/*package abs.frontend.mtvl;
 
 import java.text.MessageFormat;
 
@@ -152,4 +152,4 @@ public static void main(final String[] args) throws Exception {
       System.out.println();
     }
   }
-}
+}*/
