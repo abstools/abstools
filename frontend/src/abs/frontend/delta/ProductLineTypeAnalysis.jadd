@@ -1,8 +1,5 @@
 aspect ProductLineTypeAnalysis {
 
-
-
-
     public void DeltaTraitModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model){
         getTraitOper().collectMethodIDs(methodIDSet, model);;
     }
@@ -40,7 +37,6 @@ aspect ProductLineTypeAnalysis {
         if (! hasProductLine())
             return errors;
         ProductLineTypeAnalysisHelper.typeCheckPL(getProductLine(), errors);
-
         return errors;
     }
 
@@ -53,7 +49,6 @@ aspect ProductLineTypeAnalysis {
             return Collections.emptySet();
 
         ChocoSolver solver = instantiateCSModelFeaturesOnly();
-
         return solver.getSolutionsFeaturesOnly();
     }
 
@@ -64,7 +59,6 @@ aspect ProductLineTypeAnalysis {
     syn nta lazy List<Product> Model.getProductList() {
         List<Product> plist = new List<Product>();
         Set<Set<String>> featureConfs = getFeatureModelConfigurations();
-
         for (Set<String> features : featureConfs) {
             // set Features
             List<Feature> flist = new List<Feature>();
@@ -75,7 +69,6 @@ aspect ProductLineTypeAnalysis {
             Product product = new Product(flist);
             plist.add(product);
         }
-
         return plist;
     }
 
