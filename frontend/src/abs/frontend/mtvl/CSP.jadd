@@ -4,6 +4,7 @@ import abs.frontend.mtvl.ChocoSolver;
 import org.chocosolver.solver.*;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.variables.*;
+import org.chocosolver.solver.expression.discrete.arithmetic.ArExpression;
 
 /**
 Builds constraints and solve them.
@@ -29,7 +30,7 @@ aspect CSP {
         ChocoSolver solver = new ChocoSolver(this);
 		
 		// new int variable for all int variables
-        /*for (java.util.Map.Entry<String, BoundaryInt[]> entry : ints().entrySet()) {
+        for (java.util.Map.Entry<String, BoundaryInt[]> entry : ints().entrySet()) {
             String st = entry.getKey();
             if (entry.getValue().length == 2) {
                 BoundaryInt b1 = entry.getValue()[0];
@@ -37,9 +38,9 @@ aspect CSP {
                 solver.addBoundedVar(st, b1, b2);
             }
             else {
-                solver.addSetVar(st, entry.getValue());
+                //solver.addSetVar(st, entry.getValue());
             }
-        }*/
+        }
         for (String st : bools())
             solver.addBoolVar(st);
         for (String name : features())
@@ -217,29 +218,29 @@ aspect CSP {
     public Constraint MExp.collectConstraints(ChocoSolver s) {
         return null;
     }
-    /*public IntegerExpressionVariable MExp.collectIntExpr(ChocoSolver s) {
+    public ArExpression MExp.collectIntExpr(ChocoSolver s) {
         return null;
-    }*/
+    }
     
     // EXP:VARS
     public Constraint Variable.collectConstraints(ChocoSolver s) {
         return s.csmodel.arithm(s.getVar(getFullName()), "=", 1);
     }
-    /*public IntVar Variable.collectIntExpr(ChocoSolver s) {
+    public ArExpression Variable.collectIntExpr(ChocoSolver s) {
         return s.getVar(getFullName());
-    }*/
+    }
 
     //EXP:VALUES
     public Constraint MValue.collectConstraints(ChocoSolver s) {
         return getValue().collectConstraints(s);
     }
-    /*public IntVar MValue.collectIntExpr(ChocoSolver s) {
+    public ArExpression MValue.collectIntExpr(ChocoSolver s) {
         return getValue().collectIntExpr(s);
-    }*/
+    }
     
     // null is overwritten always for well-typed elements
     public Constraint Value.collectConstraints(ChocoSolver s) {return null;}
-    //public IntVar Value.collectIntExpr(ChocoSolver s) {return null;}
+    public ArExpression Value.collectIntExpr(ChocoSolver s) {return null;}
 
     public Constraint BoolVal.collectConstraints(ChocoSolver s) {
         if (getValue()) 
@@ -247,33 +248,34 @@ aspect CSP {
         else            
             return s.csmodel.falseConstraint();
     }
-    /*public IntVar IntVal.collectIntExpr(ChocoSolver s) {
-        return Choco.constant(getValue());
-    }*/
+    public ArExpression IntVal.collectIntExpr(ChocoSolver s) {
+        IntVar iv = s.csmodel.intVar("v", getValue());
+		return iv.abs();
+    }
 
     // EXP: AddExp
-    /*public IntegerExpressionVariable MAddAddExp.collectIntExpr(ChocoSolver s) {
-        return Choco.plus(getLeft().collectIntExpr(s), getRight().collectIntExpr(s));
+    public ArExpression MAddAddExp.collectIntExpr(ChocoSolver s) {
+        return getLeft().collectIntExpr(s).add(getRight().collectIntExpr(s));
     }
-    public IntegerExpressionVariable MSubAddExp.collectIntExpr(ChocoSolver s) {
-        return Choco.minus(getLeft().collectIntExpr(s), getRight().collectIntExpr(s));
-    }*/
+    public ArExpression MSubAddExp.collectIntExpr(ChocoSolver s) {
+        return getLeft().collectIntExpr(s).sub(getRight().collectIntExpr(s));
+    }
 
     // EXP: MultExp
-    /*public IntegerExpressionVariable MMultMultExp.collectIntExpr(ChocoSolver s) {
-        return Choco.mult(getLeft().collectIntExpr(s), getRight().collectIntExpr(s));
+    public ArExpression MMultMultExp.collectIntExpr(ChocoSolver s) {
+        return getLeft().collectIntExpr(s).mul(getRight().collectIntExpr(s));
     }
-    public IntegerExpressionVariable MDivMultExp.collectIntExpr(ChocoSolver s) {
-        return Choco.div(getLeft().collectIntExpr(s), getRight().collectIntExpr(s));
+    public ArExpression MDivMultExp.collectIntExpr(ChocoSolver s) {
+        return getLeft().collectIntExpr(s).div(getRight().collectIntExpr(s));
     }
-    public IntegerExpressionVariable MModMultExp.collectIntExpr(ChocoSolver s) {
-        return Choco.mod(getLeft().collectIntExpr(s), getRight().collectIntExpr(s));
-    }*/
+    public ArExpression MModMultExp.collectIntExpr(ChocoSolver s) {
+        return getLeft().collectIntExpr(s).mod(getRight().collectIntExpr(s));
+    }
 
     // EXP: Unary
-    /*public IntegerExpressionVariable MMinusExp.collectIntExpr(ChocoSolver s) {
-        return Choco.neg(getOperand().collectIntExpr(s));
-    }*/
+    public ArExpression MMinusExp.collectIntExpr(ChocoSolver s) {
+        return getOperand().collectIntExpr(s).neg();
+    }
     public Constraint MNegExp.collectConstraints(ChocoSolver s) {
         return s.csmodel.not(getOperand().collectConstraints(s));
     }
