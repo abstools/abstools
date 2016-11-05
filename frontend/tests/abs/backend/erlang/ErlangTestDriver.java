@@ -162,7 +162,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
 
     private static final String RUN_SCRIPT=  
             "#!/usr/bin/env escript\n"+
-            "%%! -pa ebin\n"+
+            "%%! -pa absmodel/ebin -pa absmodel/deps/cowboy/ebin -pa absmodel/deps/cowlib/ebin -pa absmodel/deps/ranch/ebin -pa absmodel/deps/jsx/ebin -pa ebin\n"+
             "main(Arg)->"+
             "V=runtime:start(Arg),"+
             "timer:sleep(10),"+

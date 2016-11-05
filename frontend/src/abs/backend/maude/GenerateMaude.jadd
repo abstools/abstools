@@ -1001,6 +1001,7 @@ aspect GenerateMaude {
     public int GetFatherExp.numberOfRandom(Set<String> visitedFunctions) { return getPureExp().numberOfRandom(visitedFunctions); }
     public int GetLocExp.numberOfRandom(Set<String> visitedFunctions) { return getPureExp().numberOfRandom(visitedFunctions); }
     public int NewLocExp.numberOfRandom(Set<String> visitedFunctions) { return 0; } 
+    public void TraitDecl.generateMaude(PrintStream stream) {}
   
 
 }

@@ -1,0 +1,14 @@
+module TestMod;
+
+//should fail because helper_1 can't be removed
+trait T1 = {} 
+           removes Unit helper_1(Int i, Int j); 
+           
+
+interface Inter {}
+
+class InterImpl implements Inter{
+    uses T1;
+    Unit helper_1(Int i, Int j){ f1 = i*j; }
+}
+

@@ -1,0 +1,26 @@
+module TestMod;
+
+interface Inter {
+    Unit m(Int i);
+}
+
+//original in traits: succeeds with and without applying deltas
+trait T1 = {Unit m(Int i) { println(toString(i)); }  } modifies { Unit m(Int i){ original(i+2); } }
+
+class InterImpl implements Inter {
+    uses T1;
+}
+
+delta D;
+modifies class TestMod.InterImpl{
+    modifies Unit m(Int i) { original(i*2); }
+}
+delta D2;
+modifies class TestMod.InterImpl{
+    modifies Unit m(Int i) { core.original(i*5); }
+}
+productline Line;
+features Feat;
+delta D when Feat;
+delta D2 after D when Feat;
+product Default (Feat);

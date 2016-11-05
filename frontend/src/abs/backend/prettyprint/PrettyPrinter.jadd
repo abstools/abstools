@@ -411,6 +411,7 @@ aspect doPrettyPrinter {
 
     public void CaseStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("case ");
+        getExpr().doPrettyPrint(stream, formatter);
         formatter.beforeOpenBrace();
         stream.println(" {");
         formatter.afterOpenBrace();
@@ -648,25 +649,9 @@ aspect doPrettyPrinter {
         getFieldDecl().doPrettyPrint(stream, formatter);
     }
 
-    public void AddMethodModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("adds ");
-        getMethodImpl().doPrettyPrint(stream, formatter);
-    }
-
-    public void ModifyMethodModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("modifies ");
-        getMethodImpl().doPrettyPrint(stream, formatter);
-    }
-
     public void RemoveFieldModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("removes ");
         getFieldDecl().doPrettyPrint(stream, formatter);
-    }
-
-    public void RemoveMethodModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("removes ");
-        getMethodSig().doPrettyPrint(stream, formatter);
-        stream.print(";");
     }
 
     public void AddInterfaceModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
@@ -1169,4 +1154,10 @@ aspect doPrettyPrinter {
         getOperand().doPrettyPrint(stream, formatter);
     }
 
+    public void TraitDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+
+    }
+    public void TraitUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+
+    }
 }

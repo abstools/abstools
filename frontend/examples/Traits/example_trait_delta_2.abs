@@ -1,0 +1,53 @@
+module TestMod;
+
+interface Inter {}
+
+//Example for traits in classes and deltas
+
+trait T2 = { 
+    Unit driver(){
+        println("hallo");
+        this.greeting();
+        this.printLine_1();
+        this.printLine_2();
+        this.sendoff();
+    }
+    Unit printLine_1(){println("I'm 1!");}
+    Unit printLine_2(){println("I'm 2!");}
+    Unit printLine_3(){println("I'm 3!");}
+}
+
+class InterImpl(Inter inter) implements Inter {
+	uses T2 removes Unit printLine_3();;
+}        
+
+
+class InterImpl2(Inter inter) implements Inter {
+	uses T2 removes Unit printLine_3();;
+}        
+
+
+{
+    Inter i = new InterImpl(null);
+}
+
+delta D3;
+modifies class TestMod.InterImpl{
+    adds Int i = 0;
+    adds { 
+        Unit greeting(){println("hello"); i = i + 1;} 
+        Unit sendoff(){println("goodbye"); i = i - 1;}
+    }  
+}
+modifies class TestMod.InterImpl2{
+    adds Int i = 0;
+    adds { 
+        Unit greeting(){println("hello"); i = i - 1;} 
+        Unit sendoff(){println("goodbye"); i = i + 1;}
+    }  
+}
+
+productline Line;
+features Feat1;
+delta D3 when Feat1;
+product Default (Feat1); 

@@ -23,7 +23,7 @@ EC_COFLOCOHOME=\"/usr/local/lib/cofloco/\"\n\
 EC_SRAHOME=\"/usr/local/lib/sra/\"\n\
 # path to aPET\n\
 EC_APETHOME=\"/usr/local/lib/apet\"\n\
-# path to SYCO\n\
+# path to SYCO\n\a.
 EC_SYCOHOME=\"/usr/local/lib/apet\"\n" > /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG \
  && cp /var/www/easyinterface/server/config/envisage.cfg /var/www/easyinterface/server/config/eiserver.cfg \
  && cp /var/www/easyinterface/clients/web/envisage.cfg /var/www/easyinterface/clients/web/webclient.cfg \
@@ -115,6 +115,15 @@ RUN cp /solvers_exec/abs_deployer/docker/docker_scripts/fzn-chuffed /bin/fzn-chu
 	chmod 755 /solvers_exec/chuffed/binary/linux/fzn_chuffed
 # add the path to absfrontend.jar in classpath
 ENV CLASSPATH=/usr/local/lib/frontend/dist/absfrontend.jar:$CLASSPATH
+RUN echo "\
+# set corresponding paths in easyinterface\n\
+#\n\
+# path to SmartDeployer\n\
+EC_SMARTDEPLOYERHOME=\"/solvers_exec\"\n\
+# path to minizinc\n\
+#\n\
+EC_PATH=\"\$EC_PATH::/solvers_exec/minizinc-1.6/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
+
 
 
 #######

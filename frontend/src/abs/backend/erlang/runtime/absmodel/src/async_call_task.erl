@@ -17,8 +17,17 @@ init(_Cog,[Future,O,Method|Params])->
     #state{fut=Future,obj=O,meth=Method,params=Params}.
 
 
-start(#state{fut=Future,obj=O=#object{class=C,cog=Cog},meth=M,params=P})->
+start(#state{fut=Future,obj=O=#object{class=C,cog=Cog=#cog{ref=CogRef,dc=DC}},meth=M,params=P})->
     try
+        receive
+            {stop_world, CogRef} ->
+                cog:process_is_blocked_for_gc(Cog, self()),
+                cog:process_is_runnable(Cog, self()),
+                task:wait_for_token(Cog, [O,DC|P]);
+            die_prematurely ->
+                task:send_notifications(killed_by_the_clock),
+                exit(killed_by_the_clock)
+        after 0 -> ok end,
         Res=apply(C, M,[O|P]),
         complete_future(Future, value, Res, Cog, [O|P])
     catch
@@ -33,8 +42,9 @@ complete_future(Future, Status, Value, Cog, Stack) ->
              %% meantime.
              receive
                  {stop_world, _Sender} ->
-                     task:block_without_time_advance(Cog),
-                     task:acquire_token(Cog, [Value | Stack]),
+                     cog:process_is_blocked_for_gc(Cog, self()),
+                     cog:process_is_runnable(Cog, self()),
+                     task:wait_for_token(Cog, [Future, Value | Stack]),
                      Loop();
                 {get_references, Sender} ->
                      cog:submit_references(Sender, gc:extract_references([Future, Value | Stack])),

@@ -240,6 +240,8 @@ public class Main {
         if (verbose) {
             System.out.println("Analyzing Model...");
         }
+        
+        
         //Preprocessor
         if (preprocess) {
             System.out.println("Preprocessing Model...");
@@ -273,7 +275,7 @@ public class Main {
                     m.flattenForProduct(product);
                 else
                     m.flattenForProductUnsafe(product);
-            }
+            }else{ m.flattenTraitOnly(); }
             if (dump) {
                 m.dumpMVars();
                 m.dump();
@@ -727,7 +729,7 @@ public class Main {
         String[] header = new String[] {
            "The ABS Compiler" + " v" + getVersion(),
            "Copyright (c) 2009-2013,    The HATS Consortium",
-           "Copyright (c) 2013-2015,    The Envisage Project",
+           "Copyright (c) 2013-2016,    The Envisage Project",
            "http://www.abs-models.org/" };
 
         int maxlength = header[0].length();

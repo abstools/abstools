@@ -637,7 +637,7 @@ aspect GenerateJava {
     public void InterfaceTypeUse.generateJava(PrintStream stream) {
         stream.print(JavaBackend.getJavaType(this));
     }
-
+    /******/
     public void TypeParameterUse.generateJava(PrintStream stream) {
         stream.print(getName());
     }
@@ -1021,6 +1021,20 @@ aspect GenerateJava {
     public void GetLocExp.generateJavaDynamic(PrintStream stream) { }
     public void GetFatherExp.generateJavaDynamic(PrintStream stream) { }
     public void ObjectGuard.generateJavaGuardDynamic(PrintStream beforeAwaitStream, PrintStream stream) {}
+    /*****/
+    public void TraitUse.generateJava(PrintStream stream) { }
+    public void TraitUse.generateJavaDynamic(PrintStream stream) { }
+    public void TraitDecl.generateJavaDynamic(PrintStream stream) { }
+    public void TraitDecl.generateJava(PrintStream stream) { }
+    public void DeltaTraitModifier.generateJavaDynamic(PrintStream stream) { }
+    public void DeltaTraitModifier.generateJava(PrintStream stream) { }
+    public void AddMethodModifier.generateJavaDynamic(PrintStream stream) { }
+    public void AddMethodModifier.generateJava(PrintStream stream) { }
+    public void RemoveMethodModifier.generateJavaDynamic(PrintStream stream) { }
+    public void RemoveMethodModifier.generateJava(PrintStream stream) { }
+    public void ModifyMethodModifier.generateJavaDynamic(PrintStream stream) { }
+    public void ModifyMethodModifier.generateJava(PrintStream stream) { }
+    
 }
 
 
