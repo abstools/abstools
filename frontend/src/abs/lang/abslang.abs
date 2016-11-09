@@ -659,7 +659,7 @@ def Rat sumDivsN(List<Rat> consumeds, List<Rat> totals, Int n) =
 
 def Rat averageDivsN(List<Rat> consumeds, List<Rat> totals, Int length) =
   let (Int mins) = min(length, min(length(consumeds), length(totals)))
-  in sumDivsN(consumeds, totals, mins) / mins;
+  in if mins == 0 then 0 else sumDivsN(consumeds, totals, mins) / mins;
 
 interface DeploymentComponent {
     // Return the load (0-100) for given resourcetype over the last n periods.
