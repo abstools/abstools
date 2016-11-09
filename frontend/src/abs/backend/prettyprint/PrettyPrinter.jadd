@@ -962,7 +962,7 @@ aspect doPrettyPrinter {
     }
 
     public void FieldUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print(getName());
+        stream.print("this." + getName());
     }
 
     public void VarUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
