@@ -37,16 +37,4 @@ aspect ProductConstraints {
         }
         newcs.add(ChocoSolver.eqeq(vars.get(diffVar), v));*/
     }
-
-    public boolean Model.getMaxConstraints(ChocoSolver s) {
-        int v = 0;
-        for(String fname: features()){
-            if (s.varsmap.containsKey(fname))
-                v++;
-        }
-
-        s.csmodel.arithm(s.varsmap.get("noOfFeatures"), "=",  v).post();
-        
-        return true;
-    }
 }

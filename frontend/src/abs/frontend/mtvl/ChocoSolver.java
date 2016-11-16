@@ -207,7 +207,7 @@ public class ChocoSolver {
         return result.toString();
     }
     
-    // optimize
+    // get optimized solution
     public List<Solution> optimise(String var, Boolean minimise) {
         solver = csmodel.getSolver();
         List<Solution> solutions;
@@ -217,16 +217,47 @@ public class ChocoSolver {
         return solutions;
     }
     
-    public boolean checkSolution(Map<String, Integer> solution) {
-        return checkSolution(solution, null);
+    // get maximum product to string
+    public String maxProductToString(){
+        Solution solution = maxSolution();
+        
+        StringBuilder result = new StringBuilder();
+        IntVar[] ivs = csmodel.retrieveIntVars(true);
+        for(int i=0; i<nVars; i++)
+        {
+            result.append(ivs[i].getName() + " -> " + solution.getIntVal(ivs[i]) + "\n");
+        }
+              
+        return result.toString();
     }
     
-    public boolean checkSolution(Map<String, Integer> solution, Model model) {
-        List<String> errors = checkSolutionWithErrors(solution, model);
+    // get maximum solution
+    public Solution maxSolution(){
+        List<Solution> solutions = getSolutions();
         
-        for (String s : errors) absmodel.println("Constraint failed: " + s);
+        IntVar[] ivs = csmodel.retrieveIntVars(true);
+        int maxfeat = 0;
+        Solution maxSol = null;
+        for(Solution solution : solutions)
+        {
+            int nfeats = 0;
+            for(int i=0; i<nVars; i++)
+            {
+                if(solution.getIntVal(ivs[i]) == 1) nfeats++;
+            }
+            if(nfeats>maxfeat){
+                maxfeat = nfeats;
+                maxSol = solution;
+            }  
+        }
         
-        return errors.isEmpty();
+        return maxSol;
+    }
+    
+    // check to string
+    public String checkToString(){
+        if(countSolutions() == 0) return "checking solution: false";
+        else return "checking solution: true"; 
     }
     
     public List<String> checkSolutionWithErrors(Map<String, Integer> solution, Model model) {
