@@ -217,6 +217,43 @@ public class ChocoSolver {
         return solutions;
     }
     
+    // get minWith to string
+    public String minWithToString(){
+        Solution solution = minSolution();
+        
+        StringBuilder result = new StringBuilder();
+        IntVar[] ivs = csmodel.retrieveIntVars(true);
+        for(int i=0; i<nVars; i++)
+        {
+            result.append(ivs[i].getName() + " -> " + solution.getIntVal(ivs[i]) + "\n");
+        }
+              
+        return result.toString();
+    }
+    
+    // get minimum solution
+    public Solution minSolution(){
+        List<Solution> solutions = getSolutions();
+        
+        IntVar[] ivs = csmodel.retrieveIntVars(true);
+        int minfeat = 1000;
+        Solution minSol = null;
+        for(Solution solution : solutions)
+        {
+            int nfeats = 0;
+            for(int i=0; i<nVars; i++)
+            {
+                if(solution.getIntVal(ivs[i]) == 1) nfeats++;
+            }
+            if(nfeats<minfeat){
+                minfeat = nfeats;
+                minSol = solution;
+            }  
+        }
+        
+        return minSol;
+    }
+    
     // get maximum product to string
     public String maxProductToString(){
         Solution solution = maxSolution();

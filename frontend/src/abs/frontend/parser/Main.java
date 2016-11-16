@@ -445,11 +445,8 @@ public class Main {
                 assert product != null;
                 if (verbose) System.out.println("Searching for solution that includes " + product + "...");
                 ChocoSolver s = m.instantiateCSModel();
-                HashSet<Constraint> newcs = new HashSet<Constraint>();
-                s.addIntVar("difference", 0, 50);
-                m.getDiffConstraints(p_product.getProduct(), s.varsmap, newcs, "difference");
-                for (Constraint c: newcs) s.addConstraint(c);
-                System.out.println("checking solution: " + s.minimiseToString("difference"));
+                p_product.getProduct().getProdConstraints(s);
+                System.out.println(s.minWithToString());
             }
             if (maxProduct) {
                 if (verbose) System.out.println("Searching for solution with highest number of features...");

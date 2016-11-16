@@ -11,30 +11,4 @@ aspect ProductConstraints {
             }*/
         }
     }
-
-    public void Model.getDiffConstraints(Product p, Map<String,IntVar> vars, Set<Constraint> newcs, String diffVar) {
-        //calculating deselected features, initially initialized by all features
-        /*ArrayList<String> deselectedFeatures = new ArrayList();
-        for (String fname: features()) {
-            deselectedFeatures.add(fname);
-        }
-
-        //removing the selected features to get deselected features
-        //
-        IntVar v = 0;
-        for (Feature f: p.getFeatures()) {
-            v = v + Choco.abs(Choco.minus(vars.get(f.getName()), 1));
-            for (String fname: deselectedFeatures) {
-                if(f.getName().equalsIgnoreCase(fname)) {
-                    deselectedFeatures.remove(fname);
-                    break;
-                }
-            }
-        }
-
-        for(String fname: deselectedFeatures){
-            v = Choco.plus(v, vars.get(fname));
-        }
-        newcs.add(ChocoSolver.eqeq(vars.get(diffVar), v));*/
-    }
 }
