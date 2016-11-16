@@ -27,6 +27,7 @@ aspect CSP {
     }
     
     public ChocoSolver Model.instantiateCSModel() {
+		//s.absmodel.println("  Model.instantiateCSModel");
         ChocoSolver solver = new ChocoSolver(this);
 		
 		// new int variable for all int variables
@@ -107,8 +108,9 @@ aspect CSP {
 
     // GENERAL NODE: propagate
     public Constraint ASTNode.collectConstraints(ChocoSolver s) {
-        for(int i = 0; i < getNumChild(); i++)
+        for(int i = 0; i < getNumChild(); i++){
             getChildNoTransform(i).collectConstraints(s);
+		}
             
         return s.csmodel.trueConstraint();
     }
@@ -116,7 +118,8 @@ aspect CSP {
     // ROOT: has to be present
     public Constraint CompilationUnit.collectConstraints(ChocoSolver s) {
         for (int i = 0; i < getNumFeatureDecl(); i++) {
-            s.forceTrue(getFeatureDecl(i).getName());
+        	//s.absmodel.println("s.forceTrue(" + getFeatureDecl(i).getName() + ")");
+            //s.forceTrue(getFeatureDecl(i).getName());
         }
         super.collectConstraints(s);
         
@@ -124,52 +127,61 @@ aspect CSP {
     }
 
     public void Group.includeGroupConstraints(ChocoSolver s, String varName) {
-        IntVar fvar = s.getVar(varName);
+        IntVar fparent = s.getVar(varName);
         int nfeats = getNumFNode();
         String fname = "";
         IntVar[] feats = new IntVar[nfeats];
-        
+		
         for (int i = 0; i < nfeats; i++) {
-            fname = getFNode(i).getFeatureDecl().getName();
+            fname = getFNode(i).getFeatureDecl().getName();;
             IntVar v = null;
-            // add intermediate variable $f if f is optional.
-            if (getFNode(i) instanceof OptFeat) {
-                v = s.csmodel.boolVar("$"+fname, true);
-                // f -> $f
-     			s.csmodel.ifThen(s.csmodel.arithm(s.getVar(fname), "=", 1), s.csmodel.arithm(v, "=", 1));
-            } else {
+            // add intermediate variable $f if f is optional
+            if (getFNode(i) instanceof OptFeat) { 
+            	v = s.csmodel.boolVar("$"+fname);
+            	// f -> $f
+            	s.csmodel.ifThen(s.csmodel.arithm(s.getVar(fname), "=", 1), s.csmodel.arithm(v, "=", 1));
+            } 
+            else {	
                 v = s.getVar(fname);
             }
             // f -> fparent
-            s.csmodel.ifThen(s.csmodel.arithm(v, "=", 1), s.csmodel.arithm(fvar, "=", 1));
-            // rec - FNode
+            s.absmodel.println("add constraint: " + fname + " -> " + fparent.getName());
+            s.csmodel.ifThen(s.csmodel.arithm(s.getVar(fname), "=", 1), s.csmodel.arithm(fparent, "=", 1));
+            // recursive - FNode
             s.addConstraint(getFNode(i).collectConstraints(s));
             feats[i] = v;
-            // f -> $f /\ f -> fparent /\ [f]
         }
-        // n1 <= $f1 + ... + $fn <= n2
-        if (getCard() instanceof AllOf)
-            // f ->  #feats = nfeats
-            s.csmodel.ifThen(s.csmodel.arithm(fvar, "=", 1), s.csmodel.sum(feats, "=", nfeats));
-        else if (getCard() instanceof Minim)
-            // f ->  #feats >= from
-            s.csmodel.ifThen(s.csmodel.arithm(fvar, "=", 1), s.csmodel.sum(feats, ">=", nfeats));
+        
+        // cardinality constraints
+        if (getCard() instanceof AllOf) {
+            // f ->  (sum of feats = nfeats)
+            s.absmodel.println("add constraint: " + fparent.getName() + " -> (sum of feats = " + Integer.toString(nfeats) + ")");
+            s.csmodel.ifThen(s.csmodel.arithm(fparent, "=", 1), s.csmodel.sum(feats, "=", nfeats));
+        }
+        else if (getCard() instanceof Minim){
+            // f ->  (sum of feats >= from)
+            s.absmodel.println("add constraint: " + fparent.getName() + " -> (sum of feats >= " + Integer.toString(((Minim) getCard()).getCFrom()) + ")");
+            s.csmodel.ifThen(s.csmodel.arithm(fparent, "=", 1), s.csmodel.sum(feats, ">=", ((Minim) getCard()).getCFrom()));
+        }
         else {
-            // f ->  to >= #feats >= from
-            s.csmodel.ifThen(s.csmodel.arithm(fvar, "=", 1), s.csmodel.sum(feats, ">=", ((CRange) getCard()).getCFrom()));
-            s.csmodel.ifThen(s.csmodel.arithm(fvar, "=", 1), s.csmodel.sum(feats, "<=", ((CRange) getCard()).getCTo()));
+            // f ->  (to >= sum of feats >= from)
+            s.absmodel.println("add constraint: " + fparent.getName() + " -> (sum of feats >= " + Integer.toString(((CRange) getCard()).getCFrom()) + ")");
+            s.csmodel.ifThen(s.csmodel.arithm(fparent, "=", 1), s.csmodel.sum(feats, ">=", ((CRange) getCard()).getCFrom()));
+            s.absmodel.println("add constraint: " + fparent.getName() + " -> (sum of feats <= " + Integer.toString(((CRange) getCard()).getCTo()) + ")");
+            s.csmodel.ifThen(s.csmodel.arithm(fparent, "=", 1), s.csmodel.sum(feats, "<=", ((CRange) getCard()).getCTo()));
         }
     }
 
     // FEATURE -> collect constraints, check cardinality, and check children.
     public Constraint FeatureDecl.collectConstraints(ChocoSolver s) {
         AttrConstraints acl = getAttrConstraints();
-        for(int i = 0; i < acl.getNumConstr(); i++)
+        for(int i = 0; i < acl.getNumConstr(); i++){
             s.addConstraint(acl.getConstr(i).collectConstraints(s));
+		}
 
         if (hasGroup())
             getGroup().includeGroupConstraints(s, getName());
-            
+        
         return s.csmodel.trueConstraint();
     }
 
@@ -193,48 +205,56 @@ aspect CSP {
     // IFIN/IFOUT
     public Constraint IfIn.collectConstraints(ChocoSolver s) {
         s.csmodel.ifThen(s.csmodel.arithm(s.getVar(pname()), "=", 1), getExpr().collectConstraints(s));
+       
         return s.csmodel.trueConstraint();
     }
     public Constraint IfOut.collectConstraints(ChocoSolver s) {
         s.csmodel.ifThen(s.csmodel.not(s.csmodel.arithm(s.getVar(pname()), "=", 1)), getExpr().collectConstraints(s));
+        
         return s.csmodel.trueConstraint();
     } 
 
     // REQUIRE/EXCLUDE
     public Constraint Require.collectConstraints(ChocoSolver s) {
+        s.absmodel.println("add constraint: " + pname() + " -> " + getFeatVar().getFName());
         s.csmodel.ifThen(s.csmodel.arithm(s.getVar(pname()), "=", 1), s.csmodel.arithm(s.getVar(getFeatVar().getFName()), "=", 1));
+        
         return s.csmodel.trueConstraint();
     } 
     public Constraint Exclude.collectConstraints(ChocoSolver s) {
-    	//BoolVar var1 = s.getVar(pname());
-    	//BoolVar var2 = s.getVar(getFeatVar().getFName());
-        //Constraint c = s.csmodel.not(s.csmodel.and(var1, var2));
-        //return c;
+		s.csmodel.ifThen(s.csmodel.arithm(s.getVar(pname()), "=", 1), s.csmodel.arithm(s.getVar(getFeatVar().getFName()), "=", 0));
+		
         return s.csmodel.trueConstraint();
     } 
 
     // EXPRESSIONS
     // EXP: GENERAL (always overwritten when the program type-checks)
     public Constraint MExp.collectConstraints(ChocoSolver s) {
+		s.absmodel.println("  MExp.collectConstraints");
         return null;
     }
     public ArExpression MExp.collectIntExpr(ChocoSolver s) {
-        return null;
+        s.absmodel.println("  MExp.collectIntExpr");
+		return null;
     }
     
     // EXP:VARS
     public Constraint Variable.collectConstraints(ChocoSolver s) {
-        return s.csmodel.arithm(s.getVar(getFullName()), "=", 1);
+        s.absmodel.println("  Variable.collectConstraints");
+		return s.csmodel.arithm(s.getVar(getFullName()), "=", 1);
     }
     public ArExpression Variable.collectIntExpr(ChocoSolver s) {
+		s.absmodel.println("  Variable.collectIntExpr");
         return s.getVar(getFullName());
     }
 
     //EXP:VALUES
     public Constraint MValue.collectConstraints(ChocoSolver s) {
+		s.absmodel.println("  MValue.collectConstraints");
         return getValue().collectConstraints(s);
     }
     public ArExpression MValue.collectIntExpr(ChocoSolver s) {
+		s.absmodel.println("  MValue.collectIntExpr");
         return getValue().collectIntExpr(s);
     }
     
@@ -243,45 +263,55 @@ aspect CSP {
     public ArExpression Value.collectIntExpr(ChocoSolver s) {return null;}
 
     public Constraint BoolVal.collectConstraints(ChocoSolver s) {
+		s.absmodel.println("  BoolVal.collectConstraints");
         if (getValue()) 
             return s.csmodel.trueConstraint();
         else            
             return s.csmodel.falseConstraint();
     }
     public ArExpression IntVal.collectIntExpr(ChocoSolver s) {
+		s.absmodel.println("  IntVal.collectIntExpr");
         IntVar iv = s.csmodel.intVar("v", getValue());
 		return iv.abs();
     }
 
     // EXP: AddExp
     public ArExpression MAddAddExp.collectIntExpr(ChocoSolver s) {
+		s.absmodel.println("  MAddAddExp.collectIntExpr");
         return getLeft().collectIntExpr(s).add(getRight().collectIntExpr(s));
     }
     public ArExpression MSubAddExp.collectIntExpr(ChocoSolver s) {
+		s.absmodel.println("  MSubAddExp.collectIntExpr");
         return getLeft().collectIntExpr(s).sub(getRight().collectIntExpr(s));
     }
 
     // EXP: MultExp
     public ArExpression MMultMultExp.collectIntExpr(ChocoSolver s) {
+		s.absmodel.println("  MMultMultExp.collectIntExpr");
         return getLeft().collectIntExpr(s).mul(getRight().collectIntExpr(s));
     }
     public ArExpression MDivMultExp.collectIntExpr(ChocoSolver s) {
+		s.absmodel.println("  MDivMultExp.collectIntExpr");
         return getLeft().collectIntExpr(s).div(getRight().collectIntExpr(s));
     }
     public ArExpression MModMultExp.collectIntExpr(ChocoSolver s) {
+		s.absmodel.println("  MModMultExp.collectIntExpr");
         return getLeft().collectIntExpr(s).mod(getRight().collectIntExpr(s));
     }
 
     // EXP: Unary
     public ArExpression MMinusExp.collectIntExpr(ChocoSolver s) {
+		s.absmodel.println("  MMinusExp.collectIntExpr");
         return getOperand().collectIntExpr(s).neg();
     }
     public Constraint MNegExp.collectConstraints(ChocoSolver s) {
+		s.absmodel.println("  MNegExp.collectConstraints");
         return s.csmodel.not(getOperand().collectConstraints(s));
     }
 
     // EXP: EqualityExpr
     public Constraint MEqExp.collectConstraints(ChocoSolver s) {
+		s.absmodel.println("  MEqExp.collectConstraints");
         // Need to type check JUST the equality of expressions, to know if the constraints should produce  '==' or '<->'.
         // All other type checking should be done after flattening. 
         checkType(Types.BOOL, new SemanticConditionList());
@@ -296,32 +326,39 @@ aspect CSP {
 
     // EXP: RelationalExpr
     public Constraint MGTEQExp.collectConstraints(ChocoSolver s) {
+		s.absmodel.println("  MGTEQExp.collectConstraints");
     	//return s.model.arithm(getLeft().collectIntExpr(s), ">=", getRight().collectIntExpr(s));
     	return s.csmodel.trueConstraint();
     }
     public Constraint MLTEQExp.collectConstraints(ChocoSolver s) {
+		s.absmodel.println("  MLTEQExp.collectConstraints");
     	//return s.model.arithm(getLeft().collectIntExpr(s), "<=", getRight().collectIntExpr(s));
     	return s.csmodel.trueConstraint();
     }
     public Constraint MGTExp.collectConstraints(ChocoSolver s) {
+		s.absmodel.println("  MGTExp.collectConstraints");
     	//return s.model.arithm(getLeft().collectIntExpr(s), ">", getRight().collectIntExpr(s));
     	return s.csmodel.trueConstraint();
     }
     public Constraint MLTExp.collectConstraints(ChocoSolver s) {
+		s.absmodel.println("  MLTExp.collectConstraints");
     	//return s.model.arithm(getLeft().collectIntExpr(s), "<", getRight().collectIntExpr(s));
     	return s.csmodel.trueConstraint();
     }
 
     // EXP: BoolExp
     public Constraint MEquivExp.collectConstraints(ChocoSolver s) {
+		s.absmodel.println("  MEquivExp.collectConstraints");
         s.csmodel.ifOnlyIf(getLeft().collectConstraints(s), getRight().collectConstraints(s));
         return s.csmodel.trueConstraint();
     }
     public Constraint MImpliesExp.collectConstraints(ChocoSolver s) {
+		s.absmodel.println("  MImpliesExp.collectConstraints");
         s.csmodel.ifThen(getLeft().collectConstraints(s), getRight().collectConstraints(s));
         return s.csmodel.trueConstraint();    
     }
     public Constraint MOrBoolExp.collectConstraints(ChocoSolver s) {
+		s.absmodel.println("  MOrBoolExp.collectConstraints");
     	Constraint[] cnstrs = new Constraint[2];
     	cnstrs[0] = getLeft().collectConstraints(s); 
     	cnstrs[1] = getRight().collectConstraints(s);
@@ -329,6 +366,7 @@ aspect CSP {
         return s.csmodel.or(cnstrs);
     }
     public Constraint MAndBoolExp.collectConstraints(ChocoSolver s) {
+		s.absmodel.println("  MAndBoolExp.collectConstraints");
     	Constraint[] cnstrs = new Constraint[2];
     	cnstrs[0] = getLeft().collectConstraints(s); 
     	cnstrs[1] = getRight().collectConstraints(s);

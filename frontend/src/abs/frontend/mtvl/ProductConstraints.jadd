@@ -2,15 +2,14 @@ import java.util.Map;
 import java.util.Set;
 
 aspect ProductConstraints {
-    public void Product.getProdConstraints(Map<String,IntVar> vars, Set<Constraint> newcs) {
-        /*for (Feature f: getFeatures()) {
-            newcs.add(s.model.arithm(vars.get(f.getName()), "=", 1));
-            for (AttrAssignment aa: f.getAttrAssignments()) {
+    public void Product.getProdConstraints(ChocoSolver s) {
+        for (Feature f: getFeatures()) {
+            s.csmodel.arithm(s.getVar(f.getName()), "=", 1).post();
+            /*for (AttrAssignment aa: f.getAttrAssignments()) {
                 String fname = f.getName() + "." + aa.getName();
-                if (vars.containsKey(fname))
-                    newcs.add(s.model.arithm(vars.get(fname), "=", aa.getValue().getIntValue().intValue()));
-            }
-        }*/
+                if (vars.containsKey(fname)) newcs.add(ChocoSolver.eqeq(vars.get(fname), aa.getValue().getIntValue().intValue()));
+            }*/
+        }
     }
 
     public void Model.getDiffConstraints(Product p, Map<String,IntVar> vars, Set<Constraint> newcs, String diffVar) {
@@ -39,14 +38,15 @@ aspect ProductConstraints {
         newcs.add(ChocoSolver.eqeq(vars.get(diffVar), v));*/
     }
 
-    public boolean Model.getMaxConstraints(Map<String,IntVar> vars, Set<Constraint> newcs, String maxVar) {
-        /*IntegerExpressionVariable v = Choco.ZERO;
+    public boolean Model.getMaxConstraints(ChocoSolver s) {
+        int v = 0;
         for(String fname: features()){
-            if (vars.containsKey(fname))
-                v = Choco.plus(v, vars.get(fname));
+            if (s.varsmap.containsKey(fname))
+                v++;
         }
 
-        newcs.add(ChocoSolver.eqeq(vars.get(maxVar),v));*/
+        s.csmodel.arithm(s.varsmap.get("noOfFeatures"), "=",  v).post();
+        
         return true;
     }
 }
