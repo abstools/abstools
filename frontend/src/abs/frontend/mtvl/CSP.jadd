@@ -145,7 +145,7 @@ aspect CSP {
                 v = s.getVar(fname);
             }
             // f -> fparent
-            s.absmodel.println("add constraint: " + fname + " -> " + fparent.getName());
+            //s.absmodel.println("add constraint: " + fname + " -> " + fparent.getName());
             s.csmodel.ifThen(s.csmodel.arithm(s.getVar(fname), "=", 1), s.csmodel.arithm(fparent, "=", 1));
             // recursive - FNode
             s.addConstraint(getFNode(i).collectConstraints(s));
@@ -155,17 +155,17 @@ aspect CSP {
         // cardinality constraints
         if (getCard() instanceof AllOf) {
             // f ->  (sum of feats = nfeats)
-            s.absmodel.println("add constraint: " + fparent.getName() + " -> (sum of feats = " + Integer.toString(nfeats) + ")");
+            //s.absmodel.println("add constraint: " + fparent.getName() + " -> (sum of feats = " + Integer.toString(nfeats) + ")");
             s.csmodel.ifThen(s.csmodel.arithm(fparent, "=", 1), s.csmodel.sum(feats, "=", nfeats));
         }
         else if (getCard() instanceof Minim){
             // f ->  (sum of feats >= from)
-            s.absmodel.println("add constraint: " + fparent.getName() + " -> (sum of feats >= " + Integer.toString(((Minim) getCard()).getCFrom()) + ")");
+            //s.absmodel.println("add constraint: " + fparent.getName() + " -> (sum of feats >= " + Integer.toString(((Minim) getCard()).getCFrom()) + ")");
             s.csmodel.ifThen(s.csmodel.arithm(fparent, "=", 1), s.csmodel.sum(feats, ">=", ((Minim) getCard()).getCFrom()));
         }
         else {
             // f ->  (to >= sum of feats >= from)
-            s.absmodel.println("add constraint: " + fparent.getName() + " -> (sum of feats >= " + Integer.toString(((CRange) getCard()).getCFrom()) + ")");
+            //s.absmodel.println("add constraint: " + fparent.getName() + " -> (sum of feats >= " + Integer.toString(((CRange) getCard()).getCFrom()) + ")");
             s.csmodel.ifThen(s.csmodel.arithm(fparent, "=", 1), s.csmodel.sum(feats, ">=", ((CRange) getCard()).getCFrom()));
             s.absmodel.println("add constraint: " + fparent.getName() + " -> (sum of feats <= " + Integer.toString(((CRange) getCard()).getCTo()) + ")");
             s.csmodel.ifThen(s.csmodel.arithm(fparent, "=", 1), s.csmodel.sum(feats, "<=", ((CRange) getCard()).getCTo()));
@@ -216,7 +216,7 @@ aspect CSP {
 
     // REQUIRE/EXCLUDE
     public Constraint Require.collectConstraints(ChocoSolver s) {
-        s.absmodel.println("add constraint: " + pname() + " -> " + getFeatVar().getFName());
+        //s.absmodel.println("add constraint: " + pname() + " -> " + getFeatVar().getFName());
         s.csmodel.ifThen(s.csmodel.arithm(s.getVar(pname()), "=", 1), s.csmodel.arithm(s.getVar(getFeatVar().getFName()), "=", 1));
         
         return s.csmodel.trueConstraint();

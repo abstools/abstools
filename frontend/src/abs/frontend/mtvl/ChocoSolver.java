@@ -17,6 +17,7 @@ import abs.frontend.ast.BoundaryVal;
 import abs.frontend.ast.Limit;
 import abs.frontend.ast.Model;
 
+import org.chocosolver.solver.Solution;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.exception.ContradictionException;
@@ -24,8 +25,7 @@ import org.chocosolver.solver.variables.*;
 
 public class ChocoSolver {
     public final org.chocosolver.solver.Model csmodel;
-    public boolean solved = false;
-    public boolean newsol = false;
+    public Solver solver;
     public final Map<String, IntVar> varsmap;
     private Constraint[] constraints = new Constraint[1000];
     private IntVar[] vars = new IntVar[1000];
@@ -86,7 +86,7 @@ public class ChocoSolver {
         nVars++;
         varsmap.put(name, v);
         
-        absmodel.println("adding Bool var '" + name + "'");
+        //absmodel.println("adding Bool var '" + name + "'");
     }
 
     public void addBoundedVar(String name, BoundaryInt b1, BoundaryInt b2) {
@@ -101,182 +101,120 @@ public class ChocoSolver {
             addIntVar(name, ((BoundaryVal) b1).getValue(), ((BoundaryVal) b2).getValue());
     }
 
-    public void forceTrue(String name) {
-        for(int i=0; i<nVars; i++) {
-            if(vars[i].getName() == name) {
-                vars[i].reverseValue(1);
-                break;
-            }
-        }
-    }
-
+    // add constraint
     public void addConstraint(Constraint c) {
         constraints[nConstraint] = c;
+        constraints[nConstraint].post();;
         nConstraint++;
     }
     
-    // get var
+    // get integer variable
     public IntVar getVar(String name) { return varsmap.get(name); }
     
-    // get result to string
+    // get solution to string
     public String resultToString() {
-        if (!solved)
-            solve();
-
-        if (!newsol)
-            return "-- No (more) solutions --\n";
-
+        Solution solution = getSolution();
+        
         StringBuilder result = new StringBuilder();
         IntVar[] ivs = csmodel.retrieveIntVars(true);
-        
         for(int i=0; i<nVars; i++)
         {
-            result.append(ivs[i].getName() + " -> " + ivs[i].getValue() + "\n");
+            result.append(ivs[i].getName() + " -> " + solution.getIntVal(ivs[i]) + "\n");
         }
               
         return result.toString();
     }
     
-    // solve model
-    public boolean solve() {	
-        if (!solved) {
-            for(int i=0; i<nConstraint; i++){
-                constraints[i].post();
-            }
-        }
-		
-        newsol = csmodel.getSolver().solve();
-        solved = true;
-		
-        return newsol;
+    // get solution
+    public Solution getSolution() {
+        solver = csmodel.getSolver();
+        
+        return solver.findSolution();
     }
     
-    // solve again
-    public boolean solveAgain() {
-        if (!solved) newsol = solve();
-        else newsol = csmodel.getSolver().solve();
+    // get solutions to string
+    public String resultsToString() {
+        List<Solution> solutions = getSolutions();
         
-        return newsol;
+        StringBuilder result = new StringBuilder();
+        IntVar[] ivs = csmodel.retrieveIntVars(true);
+        int s = 1;
+        for(Solution solution : solutions)
+        {
+            result.append("---Solution " + s + " ---\n");
+            for(int i=0; i<nVars; i++)
+            {
+                result.append(ivs[i].getName() + " -> " + solution.getIntVal(ivs[i]) + "\n");
+            }
+            s++;
+        }
+              
+        return result.toString();
+    }
+    
+    // get solutions
+    public List<Solution> getSolutions() {        
+        solver = csmodel.getSolver();
+        
+        return solver.findAllSolutions();
     }
     
     // count solutions
     public long countSolutions() {               
-        while(solveAgain()) { }
+        solver = csmodel.getSolver();
+        solver.findAllSolutions();
         
-        return csmodel.getSolver().getSolutionCount();
+        return solver.getSolutionCount();
     }
     
-    // get solution
-    public Map<String, Integer> getSolution() {
-        if (!solved) solve();
-
-        HashMap<String, Integer> result = new HashMap<String, Integer>();
-        IntVar[] ivs = csmodel.retrieveIntVars(true);
-        
-        for(int i=0; i<nVars; i++)
-        {
-            result.put(ivs[i].getName(), ivs[i].getValue());
-        }
-        
-        return result;
-    }
-    
-    // get solutions
-    public Set<Map<String,Integer>> getSolutions() {
-        Set<Map<String, Integer>> solutions = new HashSet<Map<String,Integer>>();
-
-        while(solveAgain()) {
-            Map<String,Integer> sol = new HashMap<String,Integer>();
-            IntVar[] ivs = csmodel.retrieveIntVars(true);
-            
-            for(int i=0; i<nVars; i++)
-            {
-                sol.put(ivs[i].getName(), ivs[i].getValue());
-            }
-            
-            solutions.add(sol);
-        }
-        
-        return solutions;
-    }
-    
-    // get minimise to string
+    // get minimize to string
     public String minimiseToString(String var) {
-        optimise(var, true);
+        List<Solution> solutions = optimise(var, true);
         
-        return resultToString();
-    }
-    
-    // get maximise to string
-    public String maximiseToString(String var) {
-        optimise(var, false);
-        
-        return resultToString();
-    }
-    
-    // get miximise to int
-    public int maximiseToInt(String var) {
-        optimise(var, false);
-        
-        return maxValue(var);
-    }
-    
-    // optimise
-    public boolean optimise(String var, Boolean minimise) {
-        // post constraints
-        if (!solved) {
-            for(int i=0; i<nConstraint; i++){
-                constraints[i].post();
-            }
-        }
-
-        // Minimise the model, if possible
-        /*if (varsmap.containsKey(var))
-            if (csmodel.getSolver().contains(varsmap.get(var))) {
-                solved = true;
-                if (minimise) newsol = solver.minimize(solver.getVar(vars.get(var)), true);
-                else newsol = solver.maximize(solver.getVar(vars.get(var)), true);
-                
-                return newsol;
-            }*/
-        
-        return false;
-    }
-    
-    public Set<Set<String>> getSolutionsFeaturesOnly() {
-        Set<Set<String>> solutions = new HashSet<Set<String>>();
-
-        while(solveAgain()) {
-            HashSet<String> sol = new HashSet<String>();
-            IntVar[] ivs = csmodel.retrieveIntVars(true);
-            
+        StringBuilder result = new StringBuilder();
+        IntVar[] ivs = csmodel.retrieveIntVars(true);
+        int s = 1;
+        for(Solution solution : solutions)
+        {
+            result.append("---Solution " + s + " ---\n");
             for(int i=0; i<nVars; i++)
             {
-                if (ivs[i].getValue() == 1)
-                    sol.add(ivs[i].getName());
+                result.append(ivs[i].getName() + " -> " + solution.getIntVal(ivs[i]) + "\n");
             }
-            
-            solutions.add(sol);
+            s++;
         }
         
-        return solutions;
+        return result.toString();
     }
     
-    public int maxValue(String optVar) {
-        if (!solved) solve();
-
-        if (!newsol) return 0;
-
-        IntVar[] ivs = csmodel.retrieveIntVars(true);
+    // get maximize to string
+    public String maximiseToString(String var) {
+        List<Solution> solutions = optimise(var, false);
         
-        for(int i=0; i<nVars; i++)
+        StringBuilder result = new StringBuilder();
+        IntVar[] ivs = csmodel.retrieveIntVars(true);
+        int s = 1;
+        for(Solution solution : solutions)
         {
-            if (ivs[i].getName().equalsIgnoreCase(optVar)) {
-                return ivs[i].getValue();
+            result.append("---Solution " + s + "---\n");
+            for(int i=0; i<nVars; i++)
+            {
+                result.append(ivs[i].getName() + " -> " + solution.getIntVal(ivs[i]) + "\n");
             }
+            s++;
         }
         
-        return 0;
+        return result.toString();
+    }
+    
+    // optimize
+    public List<Solution> optimise(String var, Boolean minimise) {
+        solver = csmodel.getSolver();
+        List<Solution> solutions;
+        if (minimise) solutions = solver.findAllOptimalSolutions(varsmap.get(var), false);
+        else solutions = solver.findAllOptimalSolutions(varsmap.get(var), true);
+        
+        return solutions;
     }
     
     public boolean checkSolution(Map<String, Integer> solution) {
@@ -398,5 +336,11 @@ public class ChocoSolver {
         
         //return csmodel.getSolver().checkSolution();
         return true;
+    }
+    
+    public Set<Set<String>> getSolutionsFeaturesOnly() {
+        Set<Set<String>> solutions = new HashSet<Set<String>>();
+
+        return solutions;
     }
 }

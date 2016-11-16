@@ -417,6 +417,11 @@ public class Main {
                 ChocoSolver s = m.instantiateCSModel();
                 System.out.print(s.resultToString());
             }
+            if (solveall) {
+                if (verbose) System.out.println("Searching for all solutions for the feature model...");
+                ChocoSolver s = m.instantiateCSModel();
+                System.out.print(s.resultsToString());            
+            }
             if (minimise) {
                 assert product != null;
                 if (verbose) System.out.println("Searching for minimum solutions of " + product + " for the feature model...");
@@ -427,23 +432,7 @@ public class Main {
                 assert product != null;
                 if (verbose) System.out.println("Searching for maximum solutions of " + product + " for the feature model...");
                 ChocoSolver s = m.instantiateCSModel();
-                System.out.print(s.maximiseToInt(product));
-                s.csmodel.arithm(s.varsmap.get(product), "=", s.maximiseToInt(product));
-                ChocoSolver s1 = m.instantiateCSModel();
-                int i=1;
-                while(s1.solveAgain()) {
-                    System.out.println("------ "+(i++)+"------");
-                    System.out.print(s1.resultToString());
-                }
-            }
-            if (solveall) {
-                if (verbose) System.out.println("Searching for all solutions for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
-                int i=1;
-                while(s.solveAgain()) {
-                    System.out.println("------ "+(i++)+"------");
-                    System.out.print(s.resultToString());
-                }
+                System.out.print(s.maximiseToString(product));
             }
             if (solveWith) {
                 assert product != null;
@@ -451,7 +440,7 @@ public class Main {
                 if (p_product != null) {
                     ChocoSolver s = m.instantiateCSModel();
                     p_product.getProduct().getProdConstraints(s);
-                    System.out.println("checking solution: " + s.resultToString());
+                    System.out.println(s.resultsToString());
                 } else {
                     System.out.println("Product '" + product + "' not found.");
                     if (!product.contains(".")) System.out.println("Maybe you forgot the module name?");
