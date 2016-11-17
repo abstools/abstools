@@ -132,7 +132,7 @@ EC_PATH=\"\$EC_PATH::/solvers_exec/minizinc-1.6/bin\"\n" >> /var/www/easyinterfa
 
 RUN echo "deb http://ppa.launchpad.net/hvr/ghc/ubuntu trusty main" >> /etc/apt/sources.list
 RUN apt-get update -y -q
-RUN apt-get install -y --force-yes -q ghc-8.0.1 cabal-install-1.24 happy-1.19.5
+RUN apt-get install -y --force-yes -q ghc-8.0.1 cabal-install-1.24 happy-1.19.5 zlib1g-dev
 RUN git clone https://github.com/abstools/habs /usr/local/lib/habs && \
     cd /usr/local/lib/habs && \
     git submodule update --init
