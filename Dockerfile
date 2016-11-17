@@ -85,9 +85,9 @@ RUN apt-get update && \
 RUN cd / && \
 	mkdir solvers_exec && \
   cd /solvers_exec && \
-  git clone --recursive -b bind_preferences https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git && \
+  git clone --recursive https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git && \
 	cd zephyrus2 && \
-	git checkout 924b50f04c73b8269d3b14157dd0abbf7b5bd99c && \ 
+	git checkout tags/v1.0 && \ 
 	#check out tested version with smartdeployer
   pip install -e /solvers_exec/zephyrus2
 # download MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz that comes with gecode
@@ -99,7 +99,9 @@ RUN cd /solvers_exec && \
 ENV PATH /solvers_exec/MiniZincIDE:$PATH
 # clone abs_deployer
 RUN cd /solvers_exec && \
-	git clone --recursive --depth=1 -b bind_pref https://github.com/jacopoMauro/abs_deployer.git
+	git clone --recursive https://github.com/jacopoMauro/abs_deployer.git && \
+	cd abs_deployer && \
+	git checkout tags/v0.3
 ENV PATH /solvers_exec/abs_deployer:$PATH
 # download chuffed, add global-dir in minizinc
 RUN cd /solvers_exec && \
@@ -123,6 +125,7 @@ EC_SMARTDEPLOYERHOME=\"/solvers_exec\"\n\
 # path to minizinc\n\
 #\n\
 EC_PATH=\"\$EC_PATH::/solvers_exec/minizinc-1.6/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
+
 
 
 
