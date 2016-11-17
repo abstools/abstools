@@ -22,9 +22,9 @@ sudo pip install antlr4-python2-runtime toposort psutil
 
 cd $SRC
 rm -rf zephyrus2
-git clone --recursive -b bind_preferences https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git
+git clone --recursive https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git
 cd zephyrus2
-git checkout 924b50f04c73b8269d3b14157dd0abbf7b5bd99c
+git checkout tags/v1.0
 #check out tested version with smartdeployer
 sudo pip install -e $SRC/zephyrus2
 
@@ -107,7 +107,9 @@ rm -rf $SRC/smart_deployer
 cd $SRC
 mkdir smart_deployer
 cd smart_deployer
-git clone --depth=1 -b bind_pref https://github.com/jacopoMauro/abs_deployer.git
+git clone --recursive https://github.com/jacopoMauro/abs_deployer.git
+cd abs_deployer
+git checkout tags/v0.3
 chmod -R 755 $SRC/smart_deployer
 
 cat >> /home/vagrant/.bashrc <<EOF
