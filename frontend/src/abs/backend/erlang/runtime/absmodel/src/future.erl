@@ -288,11 +288,15 @@ running(_Event, State) ->
     {stop, not_supported, State}.
 
 
-next_state_on_okthx(State=#state{calleetask=CalleeTask,waiting_tasks=WaitingTasks, cookie=Cookie}, Task) ->
+next_state_on_okthx(State=#state{calleetask=CalleeTask,waiting_tasks=WaitingTasks, cookie=Cookie, register_in_gc=RegisterInGC}, Task) ->
     NewWaitingTasks=lists:delete(Task, WaitingTasks),
     case NewWaitingTasks of
         [] ->
             CalleeTask ! {Cookie, self()},
+            case RegisterInGC of
+                true -> gc:unroot_future(self());
+                false -> ok
+            end,
             {completed, State#state{waiting_tasks=[]}};
         _ ->
             {completing, State#state{waiting_tasks=NewWaitingTasks}}
