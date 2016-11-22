@@ -95,4 +95,13 @@ public class ABSInteger extends ABSRational {
         return this;
     }
 
+    @Override
+    public ABSInteger numerator() {
+        return this;
+    }
+
+    @Override
+    public ABSInteger denominator() {
+        return ONE;
+    }
 }

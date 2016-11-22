@@ -89,7 +89,8 @@ aspect GenerateErlang {
 
   private final static Set<String> FnApp.ERLANG_BUILTINS=ImmutableSet.of(
       "currentms", "getProductLine", "lowlevelDeadline", "print", "println",
-      "random", "strlen", "substr", "thisDC", "toString", "truncate");
+      "random", "strlen", "substr", "thisDC", "toString",
+      "truncate", "numerator", "denominator");
   public  void FnApp.generateErlangCode(CodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
     boolean builtin = decl.getFunctionDef() instanceof BuiltinFunctionDef;

@@ -207,4 +207,12 @@ public class ABSBuiltInFunctions {
         return r.truncate();
     }
 
+    public static ABSInteger numerator(ABSRational r) {
+        return r.numerator();
+    }
+
+    public static ABSInteger denominator(ABSRational r) {
+        return r.denominator();
+    }
+
 }
