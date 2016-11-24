@@ -303,8 +303,8 @@ decrease_or_wakeup(MTE, {Min, Max, Task, Cog}) ->
     case cmp:lt(MTE, Min) of
         true ->
             {[],
-             {rationals:fast_sub(rationals:to_r(Min), rationals:to_r(MTE)),
-              rationals:fast_sub(rationals:to_r(Max), rationals:to_r(MTE)),
+             {rationals:sub(rationals:to_r(Min), rationals:to_r(MTE)),
+              rationals:sub(rationals:to_r(Max), rationals:to_r(MTE)),
               Task, Cog}};
         false ->
             Task ! {clock_finished, self()},
