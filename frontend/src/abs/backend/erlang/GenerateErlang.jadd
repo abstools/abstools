@@ -610,50 +610,56 @@ aspect GenerateErlang {
       getRight().generateErlangCode(ecs, vars);
     }
     else {
+      ecs.print("(");
       if (getLeft().getType().isIntType() && getRight().getType().isIntType() ){
         getLeft().generateErlangCode(ecs, vars);
         ecs.print(" + ");
         getRight().generateErlangCode(ecs, vars);
       }
       else {
-        ecs.print(" rationals:fast_add(rationals:to_r(");
+        ecs.print(" rationals:add(rationals:to_r(");
         getLeft().generateErlangCode(ecs,vars);
         ecs.print("),rationals:to_r(");
         getRight().generateErlangCode(ecs,vars);
-        ecs.print(")) ");
+        ecs.print("))");
       }
+      ecs.print(") ");
     }
   }
 
   @Override
   public void SubAddExp.generateErlangCode(CodeStream ecs,Vars vars){
+    ecs.print("(");
     if (getLeft().getType().isIntType() && getRight().getType().isIntType() ){
         getLeft().generateErlangCode(ecs,vars);
         ecs.print(" - ");
         getRight().generateErlangCode(ecs,vars);}
     else{
-      ecs.print(" rationals:fast_sub(rationals:to_r(");
+      ecs.print(" rationals:sub(rationals:to_r(");
       getLeft().generateErlangCode(ecs,vars);
       ecs.print("),rationals:to_r(");
       getRight().generateErlangCode(ecs,vars);
-      ecs.print(")) ");
+      ecs.print("))");
     }
+    ecs.print(") ");
   }
 
   @Override
   public void MultMultExp.generateErlangCode(CodeStream ecs,Vars vars){
+    ecs.print("(");
     if (getLeft().getType().isIntType() && getRight().getType().isIntType() ) {
       getLeft().generateErlangCode(ecs,vars);
       ecs.print(" * ");
       getRight().generateErlangCode(ecs,vars);
     }
     else {
-      ecs.print(" rationals:fast_mul(rationals:to_r(");
+      ecs.print(" rationals:mul(rationals:to_r(");
       getLeft().generateErlangCode(ecs,vars);
       ecs.print("),rationals:to_r(");
       getRight().generateErlangCode(ecs,vars);
-      ecs.print(")) ");
+      ecs.print("))");
     }
+    ecs.print(") ");
   }
 
   @Override
