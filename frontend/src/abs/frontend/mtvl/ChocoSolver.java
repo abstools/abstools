@@ -141,7 +141,7 @@ public class ChocoSolver {
         int s = 1;
         for(Solution solution : solutions)
         {
-            result.append("---Solution " + s + " ---\n");
+            result.append("---Solution " + s + "---\n");
             for(int i=0; i<nVars; i++)
             {
                 result.append(ivs[i].getName() + " -> " + solution.getIntVal(ivs[i]) + "\n");
@@ -160,8 +160,8 @@ public class ChocoSolver {
     }
     
     // count solutions
-    public long countSolutions() {               
-        solver = csmodel.getSolver();
+    public long countSolutions() {                     
+		solver = csmodel.getSolver();
         solver.findAllSolutions();
         
         return solver.getSolutionCount();
@@ -176,7 +176,7 @@ public class ChocoSolver {
         int s = 1;
         for(Solution solution : solutions)
         {
-            result.append("---Solution " + s + " ---\n");
+            result.append("---Solution " + s + "---\n");
             for(int i=0; i<nVars; i++)
             {
                 result.append(ivs[i].getName() + " -> " + solution.getIntVal(ivs[i]) + "\n");

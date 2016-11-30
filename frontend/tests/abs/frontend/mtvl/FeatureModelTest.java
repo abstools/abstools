@@ -22,6 +22,7 @@ public class FeatureModelTest extends FrontendTest {
                 "root FM"
                 );
     }
+    
     @Test
     public void minimalFMwithProduct() {
         Model model = assertParseOk(

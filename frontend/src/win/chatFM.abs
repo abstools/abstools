@@ -1,0 +1,43 @@
+/*
+productline PL;
+features Text, Voice, Video, EvMode;
+
+product Ev1(Text, Voice, Video, EvMode);
+*/
+
+root Chat {
+    group allof {
+        Mode {
+            group [1..*] { Text, Voice, Video }
+        },
+        opt Files
+    }
+}
+
+extension Voice {
+    require: Text;
+}
+
+extension Video {
+    require: Voice;
+}
+
+//*****************************************
+// Meta-model
+
+/*
+
+root Evolve {
+    group [1..*] {
+        EvMode {
+            group [0..*] {
+                AddMode,
+                RemoveMode
+            }
+            require: Mode;
+        }
+    }
+    require: Chat;
+}
+
+*/
