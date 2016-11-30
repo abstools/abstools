@@ -320,10 +320,14 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
-    public void defTC1_ticket197() {
-        assertTypeErrors("def A f<A,A,A,A,A,A,A,A,A,A>(A a) = a;");
+    public void caseErrorDuplicateFunctionTypeParameter() {
+        assertTypeErrors("def A f<A,A>(A a) = a;");
     }
 
+    public void caseErrorDuplicateDatatypeTypeParameter() {
+        assertTypeErrors("data X<A, A>;");
+    }
+    
     @Test
     public void ticket188() {
         assertTypeErrors(
