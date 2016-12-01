@@ -89,7 +89,8 @@ aspect GenerateErlang {
 
   private final static Set<String> FnApp.ERLANG_BUILTINS=ImmutableSet.of(
       "currentms", "getProductLine", "lowlevelDeadline", "print", "println",
-      "random", "strlen", "substr", "thisDC", "toString", "truncate");
+      "random", "strlen", "substr", "thisDC", "toString",
+      "truncate", "numerator", "denominator");
   public  void FnApp.generateErlangCode(CodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
     boolean builtin = decl.getFunctionDef() instanceof BuiltinFunctionDef;
@@ -609,50 +610,56 @@ aspect GenerateErlang {
       getRight().generateErlangCode(ecs, vars);
     }
     else {
+      ecs.print("(");
       if (getLeft().getType().isIntType() && getRight().getType().isIntType() ){
         getLeft().generateErlangCode(ecs, vars);
         ecs.print(" + ");
         getRight().generateErlangCode(ecs, vars);
       }
       else {
-        ecs.print(" rationals:fast_add(rationals:to_r(");
+        ecs.print(" rationals:add(rationals:to_r(");
         getLeft().generateErlangCode(ecs,vars);
         ecs.print("),rationals:to_r(");
         getRight().generateErlangCode(ecs,vars);
-        ecs.print(")) ");
+        ecs.print("))");
       }
+      ecs.print(") ");
     }
   }
 
   @Override
   public void SubAddExp.generateErlangCode(CodeStream ecs,Vars vars){
+    ecs.print("(");
     if (getLeft().getType().isIntType() && getRight().getType().isIntType() ){
         getLeft().generateErlangCode(ecs,vars);
         ecs.print(" - ");
         getRight().generateErlangCode(ecs,vars);}
     else{
-      ecs.print(" rationals:fast_sub(rationals:to_r(");
+      ecs.print(" rationals:sub(rationals:to_r(");
       getLeft().generateErlangCode(ecs,vars);
       ecs.print("),rationals:to_r(");
       getRight().generateErlangCode(ecs,vars);
-      ecs.print(")) ");
+      ecs.print("))");
     }
+    ecs.print(") ");
   }
 
   @Override
   public void MultMultExp.generateErlangCode(CodeStream ecs,Vars vars){
+    ecs.print("(");
     if (getLeft().getType().isIntType() && getRight().getType().isIntType() ) {
       getLeft().generateErlangCode(ecs,vars);
       ecs.print(" * ");
       getRight().generateErlangCode(ecs,vars);
     }
     else {
-      ecs.print(" rationals:fast_mul(rationals:to_r(");
+      ecs.print(" rationals:mul(rationals:to_r(");
       getLeft().generateErlangCode(ecs,vars);
       ecs.print("),rationals:to_r(");
       getRight().generateErlangCode(ecs,vars);
-      ecs.print(")) ");
+      ecs.print("))");
     }
+    ecs.print(") ");
   }
 
   @Override
@@ -900,7 +907,8 @@ aspect GenerateErlang {
 
   public void SuspendStmt.generateErlangCode(CodeStream ecs,Vars vars){
     ecs.println("task:release_token(Cog,runnable),");
-    ecs.print("task:acquire_token(Cog,");
+    ecs.println("cog:process_is_runnable(Cog,self()),");
+    ecs.print("task:wait_for_token(Cog,");
     ecs.print(vars.toStack());
     ecs.print(")");
   }
@@ -925,7 +933,8 @@ aspect GenerateErlang {
       ecs.incIndent().pf("cog:submit_references(Sender, gc:extract_references(%s)),", vars.toStack());
       ecs.pf("Poll(%s);", vars.toParamList());
       ecs.decIndent().println("die_prematurely ->");
-      ecs.incIndent().println("exit(killed_by_the_clock)");
+      ecs.incIndent().println("task:send_notifications(killed_by_the_clock),");
+      ecs.println("exit(killed_by_the_clock)");
       ecs.decIndent().decIndent().println("end end)");
       ecs.decIndent().format("(%s)",vars.toParamList());
     }

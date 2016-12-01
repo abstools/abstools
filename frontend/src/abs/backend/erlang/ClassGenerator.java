@@ -66,7 +66,6 @@ public class ClassGenerator {
             ecs.println("try");
             ecs.incIndent();
             Vars vars = Vars.n(ms.getParamList());
-            ErlUtil.stopWorldPrelude(ecs, vars, false);
             m.getBlock().generateErlangCode(ecs, vars);
             ecs.println();
             ecs.decIndent().println("catch");
@@ -109,11 +108,12 @@ public class ClassGenerator {
             ecs.println(",");
         }
         if (classDecl.isActiveClass()) {
-            ecs.println("task:block_without_time_advance(Cog),");
+            ecs.println("cog:process_is_blocked_for_gc(Cog, self()),");
             ecs.print("cog:add_sync(Cog,active_object_task,O,");
             ecs.print(vars.toStack());
             ecs.println("),");
-            ecs.print("task:acquire_token(Cog,");
+            ecs.println("cog:process_is_runnable(Cog,self()),");
+            ecs.print("task:wait_for_token(Cog,");
             ecs.print(vars.toStack());
             ecs.println("),");
         }

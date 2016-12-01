@@ -328,6 +328,17 @@ aspect TypeChecker {
         }
     }
 
+    public void ParametricFunctionDecl.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
+        HashSet<String> names = new HashSet<String>();
+        for (TypeParameterDecl d : getTypeParameters()) {
+            d.typeCheck(e);
+            if (!names.add(d.getName())) {
+                e.add(new TypeError(d, ErrorMessage.DUPLICATE_DATATYPE_PARAMETER, d.getName()));
+            }
+        }
+    }
+
     public void InterfaceDecl.checkCycle(SemanticConditionList e, InterfaceDecl d) {
         if (this == d) {
             e.add(new TypeError(d, ErrorMessage.CYCLIC_INHERITANCE, getName()));

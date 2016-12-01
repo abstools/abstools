@@ -129,4 +129,12 @@ public class ABSRational extends ABSBuiltInDataType {
         return ABSInteger.fromBigInt(value.truncate());
     }
 
+    public ABSInteger numerator() {
+        return ABSInteger.fromBigInt(value.numerator());
+    }
+
+    public ABSInteger denominator() {
+        return ABSInteger.fromBigInt(value.denominator());
+    }
+
 }

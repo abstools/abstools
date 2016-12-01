@@ -253,9 +253,6 @@ fmod ABS-DATA-INT is
   eq fparams("ABS.StdLib.random") = 'Range, 'Position .
   eq fdefn("ABS.StdLib.random") = $builtin("random") .
 
-  eq fparams("ABS.StdLib.truncate") = 'I .
-  eq fdefn("ABS.StdLib.truncate") = $builtin("truncate") .
-
 endfm
 
 fmod ABS-DATA-RAT is
@@ -268,7 +265,16 @@ fmod ABS-DATA-RAT is
   op _asRat : Data -> Rat .
   eq "num"[R] asRat = R .
   eq "Time"["num"[R]] asRat = R .
-  
+
+  eq fparams("ABS.StdLib.truncate") = 'I .
+  eq fdefn("ABS.StdLib.truncate") = $builtin("truncate") .
+
+  eq fparams("ABS.StdLib.numerator") = 'I .
+  eq fdefn("ABS.StdLib.numerator") = $builtin("numerator") .
+
+  eq fparams("ABS.StdLib.denominator") = 'I .
+  eq fdefn("ABS.StdLib.denominator") = $builtin("denominator") .
+
 endfm
 
 
@@ -1148,6 +1154,14 @@ mod ABS-EVAL is
   ceq eval($builtin("random"), S, CN, MAC) = "num"[ trunc(((S['Range]) asRat) * (N:Rat / 4294967296)) ]
   if N:Rat := eval("ABS.StdLib.nth"(MAC['.random] :: 'Position), S, CN, MAC) asRat .
   eq eval($builtin("truncate"), S, CN, MAC) = "num"[trunc((S['I]) asRat)] .
+
+  ceq eval($builtin("numerator"), S, CN, MAC) = "num"[ I1:Int ]
+    if (I1:Int / I2:Int ) := (S['I]) asRat .
+  eq eval($builtin("numerator"), S, CN, MAC) = S['I] [owise] .
+
+  ceq eval($builtin("denominator"), S, CN, MAC) = "num"[ I2:Int ]
+    if (I1:Int / I2:Int ) := (S['I]) asRat .
+  eq eval($builtin("denominator"), S, CN, MAC) = "num"[1] [owise] .
 
   *** ABS-DATA-STRING
   ceq eval($builtin("+"), S, CN, MAC) = "str"[I1:String + I2:String]

@@ -135,23 +135,31 @@ The run method is called after object initialization.
 [[sec:traits]]
 == Traits
 
-ABS does not support inheritance, code reuse is realized via traits. 
-A trait can remove, modify or add methods and is applied via flattening, i.e. the code changes are applied at compile-time _before_ type checking.
+ABS does not support inheritance for code reuse.  Method implementations that
+are common betwen classes can be defined once and used inside these classes by
+using _traits_.  A trait can add, remove and modify methods of a class or of
+another trait.
+
+Traits are applied to classes at compile-time and do not change the
+interface(s) of a class.  Classes and their methods are type-checked once all
+traits are applied.
 
 Similar to classes, traits in ABS are not types.
+
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _TraitDecl_ ::= | `trait` _TraitName_ = _TraitExpr_
+| _TraitDecl_ ::= | `trait` _TraitName_ = ( `{` _MethDeclList_ `}` {vbar} _TraitName_ ) _TraiOper_*
 | _TraitName_ ::= | _SimpleIdentifier_
-| _TraitExpr_ ::= | _MethodSet_ {vbar} _TraitName_ {vbar} _TraitExpr_ _TraitOper_
-| _TraitOper_ ::= | `adds` _TraitExpr_ {vbar} `modifies` _TraitExpr_ {vbar} removes _MethSig_
-| _MethodSet_ ::= |  { _MethDeclList_ }
+| _TraitOper_ ::= | `adds` _TraitExpr_ {vbar} `modifies` _TraitExpr_ {vbar} `removes` _MethSig_+
 |====
 
 
-A trait is defined with `trait` t = _T_ at module level and applied on a class with `adds` _T_.
-A trait is a set of function, whenever a trait name is used, the corresponding definition is resolved to a set of traits.
+A trait is defined with `trait` t = _T_ at module level.
+
+The effect of applying a trait _T_ to a class (using `adds` _T_ inside the
+class body) is to add the methods comprising that trait to the class
+definition.
 
 .Explanation
 * The operation `adds` adds all the elements of the next _MethodSet_ to the class. 

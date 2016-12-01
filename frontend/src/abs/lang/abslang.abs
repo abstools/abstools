@@ -9,6 +9,9 @@ export True, False, and, not;
 // Numerics
 export max, min, abs, pow, sqrt_newton, exp_newton, random, truncate;
 
+// rationals
+export numerator, denominator;
+
 // Basic utility datatypes
 export Maybe, Nothing, Just, isJust, fromJust;
 export Either, Left, Right, left, right, isLeft, isRight;
@@ -114,6 +117,15 @@ def Int random(Int below) = builtin;
  */
 def Int truncate(Rat a) = builtin;
 
+/**
+ * Returns numerator of canonical form of a.
+ */
+def Int numerator(Rat a) = builtin;
+
+/**
+ * Returns denominator of canonical form of a.
+ */
+def Int denominator(Rat a) = builtin;
 
 data Maybe<A> = Nothing | Just(A fromJust);
 
@@ -659,7 +671,7 @@ def Rat sumDivsN(List<Rat> consumeds, List<Rat> totals, Int n) =
 
 def Rat averageDivsN(List<Rat> consumeds, List<Rat> totals, Int length) =
   let (Int mins) = min(length, min(length(consumeds), length(totals)))
-  in sumDivsN(consumeds, totals, mins) / mins;
+  in if mins == 0 then 0 else sumDivsN(consumeds, totals, mins) / mins;
 
 interface DeploymentComponent {
     // Return the load (0-100) for given resourcetype over the last n periods.

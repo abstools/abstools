@@ -1,7 +1,8 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(builtin).
 -include_lib("abs_types.hrl").
--export([currentms/1,getProductLine/1,lowlevelDeadline/1,print/2,println/2,random/2,strlen/2,substr/4,thisDC/1,toString/2,truncate/2]).
+-export([currentms/1,getProductLine/1,lowlevelDeadline/1,print/2,println/2,strlen/2,substr/4,thisDC/1,toString/2]).
+-export([random/2,truncate/2,numerator/2, denominator/2]).
 %%All builtin functions
 %%Must correspond to the set in GenerateErlang.jadd:FnApp.ERLANG_BUILTINS
 
@@ -90,6 +91,18 @@ truncate(_Cog,{N,D})->
     N div D;
 truncate(_Cog,N)->
     N.
+
+numerator(_Cog, {N, D}) ->
+    N;
+numerator(_Cog, N) ->
+    N.
+
+denominator(_Cog, {N, D}) ->
+    D;
+denominator(_Cog, N) ->
+    1.
+
+
 
 println(_Cog,S)->
     io:format("~s~n",[S]).

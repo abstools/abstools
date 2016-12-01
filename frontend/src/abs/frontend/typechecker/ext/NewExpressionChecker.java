@@ -39,19 +39,19 @@ public class NewExpressionChecker extends DefaultTypeSystemExtension {
     @Override
     public void checkExpressionStmt(ExpressionStmt expressionStmt) {
         checkDCCorrect(expressionStmt, CompilerUtils.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.DC.DC"));
-        checkHTTPNameCorrect(expressionStmt, CompilerUtils.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.StdLib.RESTName"));
+        checkHTTPNameCorrect(expressionStmt, CompilerUtils.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.StdLib.HTTPName"));
     }
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
         checkDCCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.DC.DC"));
-        checkHTTPNameCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.StdLib.RESTName"));
+        checkHTTPNameCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.StdLib.HTTPName"));
     }
 
     @Override
     public void checkVarDeclStmt(VarDeclStmt varDeclStmt) {
         checkDCCorrect(varDeclStmt, CompilerUtils.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.DC.DC"));
-        checkHTTPNameCorrect(varDeclStmt, CompilerUtils.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.StdLib.RESTName"));
+        checkHTTPNameCorrect(varDeclStmt, CompilerUtils.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.StdLib.HTTPName"));
     }
 
     private void checkDCCorrect(ASTNode<?> n, PureExp dc) {

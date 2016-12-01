@@ -4,6 +4,7 @@
 
 ;; Author: Rudi Schlatte <rudi@constantly.at>
 ;; Keywords: languages
+;; Version: 0.1.1
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -20,10 +21,11 @@
 ;;; Commentary:
 
 ;;; This file contains a mode for the modeling language Abs.
-;;; 
-;;; To start Maude, you also need maude-mode, available from
-;;; http://sourceforge.net/projects/maude-mode/ -- or now included in
-;;; this directory as well.
+;;;
+;;; To simulate models using the Maude backend, you also need maude-mode,
+;;; available from http://sourceforge.net/projects/maude-mode/ -- or now
+;;; included in this directory as well.  To simulate models using the Erlang
+;;; backend, erlang-mode needs to be installed.
 
 (require 'compile)
 (require 'custom)
@@ -88,12 +90,14 @@ used regardless of the value of `abs-use-timed-interpreter'."
   :options (list 'imenu-add-menubar-index 'flymake-mode-on)
   :group 'abs)
 
-(defcustom abs-clock-limit 100
+(defcustom abs-clock-limit nil
   "Default limit value for the clock in the timed Abs interpreter.
-Note that you can set this variable as a file-local variable as well."
-  :type 'integer
+Note that you can set this variable as a file-local variable as
+well.  The Maude backend will use a default value of 100 in case
+`abs-clock-limit' is NIL but `abs-use-timed-interpreter' is set."
+  :type '(choice integer (const :tag "No limit" nil))
   :group 'abs)
-(put 'abs-clock-limit 'safe-local-variable 'integerp)
+(put 'abs-clock-limit 'safe-local-variable '(lambda (x) (or (integerp x) (null x))))
 
 (defcustom abs-local-port nil
   "Port where to start the REST API / visualization server (Erlang backend).
@@ -378,7 +382,7 @@ value.")
                               (or abs-use-timed-interpreter
                                   (local-variable-p 'abs-clock-limit)))
                      (concat " -timed -limit="
-                             (number-to-string abs-clock-limit)))
+                             (number-to-string (or abs-clock-limit 100))))
                    (when (and (eql backend 'maude)
                               (< 0 abs-default-resourcecost))
                      (concat " -defaultcost="
@@ -593,6 +597,7 @@ Uses the variable `abs-indent'."
 
 ;;; Putting it all together.
 
+;;;###autoload
 (define-derived-mode abs-mode fundamental-mode "Abs"
   "Major mode for editing Abs files.
 
@@ -647,6 +652,7 @@ The following keys are set:
       :active t :style toggle
       :selected abs-use-timed-interpreter])))
 
+;;;###autoload
 (unless (assoc "\\.abs\\'" auto-mode-alist)
   (add-to-list 'auto-mode-alist '("\\.abs\\'" . abs-mode)))
 

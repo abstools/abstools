@@ -6,16 +6,28 @@ deployment on varying numbers and kinds of machines, and the effects of code
 locality and different resource types such as CPU speeds, interconnection
 bandwidth, etc. on the performance of a system.
 
-ABS can be used to simulate the effects of deployment decisions on the cost
-and performance of running a distributed system.  To achieve this, the
-following aspects were added to ABS:
+To simulate the effects of deployment decisions on the cost and performance of
+running a distributed system, the following aspects need to be added to a
+model:
 
-* A notion of _location_ to describe where a cog is executing (see
-  <<sec:deployment-components>>)
-* A notion of _time_ that allows us to observe the effects of deployment
-  decisions (see <<sec:timed-abs>>)
-* A notion of _cost_ of executing parts of a system, in terms of resource
-  types like bandwidth and processor cycles (see <<sec:resources>>)
+* A notion of _location_ to describe where different parts of the system will
+  run
+* A notion of _cost_ of executing code on such locations; and finally
+* A notion of _time_ that allows us to observe the effects of varying the
+  location and cost.
+
+In ABS, the following language elements implement these aspects:
+
+Deployment Components :: ABS cogs can be created on a deployment component
+  (see <<sec:deployment-components>>).  Deployment components have a limited
+  number of resources available.
+
+Resource Annotations :: ABS statements can be annotated with resource costs
+  (see <<sec:resources>>).  Executing such annotated statements incurs resource costs.
+
+Timed ABS :: The time model of Section <<sec:timed-abs>> naturally extends to
+  observations on resource usage.
+
 
 These elements work together as in Figure <<fig-resource-consumption>>:
 
@@ -65,6 +77,33 @@ summarized in Table <<table-dc-lifecycle>>.
 | Process keep running | -        | yes     | yes/no      | -
 |====================
 
+==== Using the CloudProvider
+
+To use deployment components via a cloud provider, follow these steps:
+
+1. Create a `CloudProvider` instance
+2. Set the instance descriptions via the `setInstanceDescriptions` method
+3. Create deployment components using the `launchInstanceNamed` method
+4. (optional) Manage access via `releaseInstance` / `acquireInstance`
+5. (optional) Release deployment components via `shutownInstance`
+
+
+[source]
+----
+module ProviderDemo;
+import * from ABS.DC;
+
+{
+    CloudProvider p = new CloudProvider("Amazon");
+    await p!setInstanceDescriptions(
+        map[Pair("T2_MICRO", map[Pair(Memory,1), Pair(Speed,1)]),
+            Pair("T2_SMALL", map[Pair(Memory,2), Pair(Speed,1)]),
+            Pair("T2_MEDIUM", map[Pair(Memory,4), Pair(Speed,2)]),
+            Pair("M4_LARGE", map[Pair(Memory,8), Pair(Speed,2)])]);
+    DeploymentComponent dc = await p!launchInstanceNamed("T2_SMALL");
+    // ... use the deployment component ...
+}
+----
 
 
 ==== Datatypes and Constructors

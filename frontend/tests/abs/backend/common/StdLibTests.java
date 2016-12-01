@@ -93,4 +93,25 @@ public class StdLibTests extends SemanticTests {
     public void truncate2() {
         assertEvalTrue("{ Bool testresult = truncate(5) == 5; }");
     }
+
+    @Test
+    public void numerator1() {
+        assertEvalTrue("{ Bool testresult = numerator(-2/3) == -2; }");
+    }
+
+    @Test
+    public void numerator2() {
+        assertEvalTrue("{ Bool testresult = numerator(-5) == -5; }");
+    }
+
+    @Test
+    public void denominator1() {
+        assertEvalTrue("{ Bool testresult = denominator(-2/3) == 3; }");
+    }
+
+    @Test
+    public void denominator2() {
+        assertEvalTrue("{ Bool testresult = denominator(-5) == 1; }");
+    }
+
 }
