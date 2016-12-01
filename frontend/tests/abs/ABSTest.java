@@ -27,6 +27,7 @@ public class ABSTest {
         WITH_LOC_INF,
         EXPECT_PARSE_ERROR,
         EXPECT_TYPE_ERROR,
+        EXPECT_WARNING,
         ALLOW_INCOMPLETE_EXPR,
         TYPE_CHECK
     }
