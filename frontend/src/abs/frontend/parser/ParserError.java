@@ -43,4 +43,8 @@ public class ParserError extends CompilerCondition {
         return true;
     }
 
+    @Override
+    public boolean isWarning() {
+        return false;
+    }
 }
