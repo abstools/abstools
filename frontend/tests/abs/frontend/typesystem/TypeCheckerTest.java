@@ -40,8 +40,9 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
-    public void subtypingTicket188() throws Exception {
-        assertTypeCheckFileOk("tests/abssamples/Subtyping.abs", true);
+    public void subtypingTicket101() throws Exception {
+        // https://github.com/abstools/abstools/issues/101
+        assertTypeOK("interface I {} class A implements I {} { I a = new A(); List<A> as = list[null, a]; }");
     }
 
     @Test
