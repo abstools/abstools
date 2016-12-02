@@ -208,4 +208,9 @@ public class PrimitiveTypes extends SemanticTests {
         // Test that non-trivial arithmetic expressions are properly bracketized in generated code
         assertEvalTrue("def Int a() = 5; { Bool testresult = 100-(a() + 2) == 93; }");
     }
+
+    @Test
+    public void wrappedIntRatCmp() {
+        assertEvalTrue("{ Bool testresult = Time(2) == Time(2/1); }");
+    }
 }
