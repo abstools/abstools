@@ -303,16 +303,14 @@ decrease_or_wakeup(MTE, {Min, Max, Task, Cog}) ->
     case cmp:lt(MTE, Min) of
         true ->
             {[],
-             {rationals:sub(rationals:to_r(Min), rationals:to_r(MTE)),
-              rationals:sub(rationals:to_r(Max), rationals:to_r(MTE)),
-              Task, Cog}};
+             {rationals:sub(Min, MTE), rationals:sub(Max, MTE), Task, Cog}};
         false ->
             Task ! {clock_finished, self()},
             {Cog, []}
     end.
 
 add_to_clock_waiting([H={_Min,Head,_Task,_Cog} | T], I={_Min1,Max,_Task1,_Cog1}) ->
-    case rationals:is_greater(rationals:to_r(Head), rationals:to_r(Max)) of
+    case rationals:is_greater(Head, Max) of
         true -> [I, H | T];
         false -> [H | add_to_clock_waiting(T, I)]
     end;

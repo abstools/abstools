@@ -66,8 +66,8 @@ update(#object{class=class_ABS_DC_DeploymentComponent,ref=O}, Interval) ->
 %% multiple boundaries)
 update_state_and_history(S, Amount) ->
     Boundary=clock:distance_to_next_boundary(),
-    Amount1=rationals:sub(rationals:to_r(Amount), rationals:to_r(Boundary)),
-    case rationals:is_lesser(Amount1, rationals:to_r(0)) of
+    Amount1=rationals:sub(Amount, Boundary),
+    case rationals:is_negative(Amount1) of
         false -> S1=update_state_and_history_for_resouce(S, cpu),
                  S2=update_state_and_history_for_resouce(S1, bw),
                  S3=update_state_and_history_for_resouce(S2, memory),

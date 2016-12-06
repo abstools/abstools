@@ -617,11 +617,11 @@ aspect GenerateErlang {
         getRight().generateErlangCode(ecs, vars);
       }
       else {
-        ecs.print(" rationals:add(rationals:to_r(");
+        ecs.print(" rationals:add(");
         getLeft().generateErlangCode(ecs,vars);
-        ecs.print("),rationals:to_r(");
+        ecs.print(",");
         getRight().generateErlangCode(ecs,vars);
-        ecs.print("))");
+        ecs.print(")");
       }
       ecs.print(") ");
     }
@@ -635,11 +635,11 @@ aspect GenerateErlang {
         ecs.print(" - ");
         getRight().generateErlangCode(ecs,vars);}
     else{
-      ecs.print(" rationals:sub(rationals:to_r(");
+      ecs.print(" rationals:sub(");
       getLeft().generateErlangCode(ecs,vars);
-      ecs.print("),rationals:to_r(");
+      ecs.print(",");
       getRight().generateErlangCode(ecs,vars);
-      ecs.print("))");
+      ecs.print(")");
     }
     ecs.print(") ");
   }
@@ -653,22 +653,22 @@ aspect GenerateErlang {
       getRight().generateErlangCode(ecs,vars);
     }
     else {
-      ecs.print(" rationals:mul(rationals:to_r(");
+      ecs.print(" rationals:mul(");
       getLeft().generateErlangCode(ecs,vars);
-      ecs.print("),rationals:to_r(");
+      ecs.print(",");
       getRight().generateErlangCode(ecs,vars);
-      ecs.print("))");
+      ecs.print(")");
     }
     ecs.print(") ");
   }
 
   @Override
   public void DivMultExp.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.print(" rationals:rdiv(rationals:to_r(");
+    ecs.print(" rationals:rdiv(");
     getLeft().generateErlangCode(ecs,vars);
-    ecs.print("),rationals:to_r(");
+    ecs.print(",");
     getRight().generateErlangCode(ecs,vars);
-    ecs.print(")) ");
+    ecs.print(") ");
   }
 
   @Override
@@ -680,11 +680,11 @@ aspect GenerateErlang {
         getRight().generateErlangCode(ecs,vars);
         ecs.print(") ");
     } else {
-        ecs.print(" rationals:rrem(rationals:to_r(");
+        ecs.print(" rationals:rrem(");
         getLeft().generateErlangCode(ecs,vars);
-        ecs.print("),rationals:to_r(");
+        ecs.print(",");
         getRight().generateErlangCode(ecs,vars);
-        ecs.print(")) ");
+        ecs.print(") ");
     }
   }
 

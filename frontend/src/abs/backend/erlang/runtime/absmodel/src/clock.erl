@@ -33,7 +33,7 @@ init([Clocklimit]) ->
     {ok, #state{now=rationals:to_r(0), limit=Clocklimit}}.
 
 handle_call({advance, Amount},_From,State=#state{now=Time,limit=Limit}) ->
-    Newtime=rationals:add(rationals:to_r(Time), rationals:to_r(Amount)),
+    Newtime=rationals:add(Time, Amount),
     Reply=case Limit of none -> {reply, ok, State#state{now=Newtime}};
               _ -> case rationals:is_lesser(Time, rationals:to_r(Limit)) of
                        true -> {reply, ok, State#state{now=Newtime}};
@@ -44,7 +44,7 @@ handle_call({advance, Amount},_From,State=#state{now=Time,limit=Limit}) ->
 handle_call(now, _From, State=#state{now=Time}) ->
     {reply, Time, State};
 handle_call(next_int, _From, State=#state{now=Time}) ->
-    Distance = rationals:sub(Time, rationals:to_r(rationals:trunc(Time))),
+    Distance = rationals:sub(Time, rationals:trunc(Time)),
     case rationals:is_zero(Distance) of
         true -> {reply, {1,1}, State};
         false -> {reply, Distance, State}
