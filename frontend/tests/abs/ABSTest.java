@@ -72,7 +72,7 @@ public class ABSTest {
     }
 
     protected Model assertParseOk(String s, Config... config) {
-        return assertParse(s,config);
+        return assertParse(s, config);
     }
 
     protected Model assertParse(String s, Config... config) {

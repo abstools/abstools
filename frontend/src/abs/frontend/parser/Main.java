@@ -70,6 +70,9 @@ public class Main {
     protected boolean ignoreattr = false ;
     protected boolean minimise = false ;
     protected boolean maximise = false ;
+    protected boolean isvoid = false ;
+    protected boolean core = false ;
+    protected boolean variant = false ;
 
     public static void main(final String... args)  {
        new Main().mainMethod(args);
@@ -172,10 +175,16 @@ public class Main {
                 product = arg.split("=")[1];
             } else if (arg.equals("-nsol")) {
                 numbersol = true;
+            } else if (arg.equals("-isvoid")) {
+                isvoid = true;
+            } else if (arg.equals("-core")) {
+                core = true;
+            } else if (arg.equals("-variant")) {
+                variant = true;
             } else if (arg.equals("-noattr")) {
                 ignoreattr = true;
             } else if (arg.equals("-preprocess")) { //Preprocessor
-                    preprocess = true;
+                preprocess = true;
             } else if (arg.equals("-h") || arg.equals("-help")
                        || arg.equals("--help")) {
                 printUsageAndExit();
@@ -443,7 +452,7 @@ public class Main {
             }
             if (minWith) {
                 assert product != null;
-                if (verbose) System.out.println("Searching for solution that includes " + product + "...");
+                if (verbose) System.out.println("Searching for minimum solution that includes " + product + "...");
                 ChocoSolver s = m.instantiateCSModel();
                 p_product.getProduct().getProdConstraints(s);
                 System.out.println(s.minWithToString());
@@ -466,6 +475,18 @@ public class Main {
             else if (numbersol && ignoreattr) {
                 ChocoSolver s = m.instantiateCSModelFeaturesOnly();
                 System.out.println("Number of solutions found (without attributes): " + s.countSolutions());
+            }
+            if (isvoid) {
+                ChocoSolver s = m.instantiateCSModel();
+                System.out.println(s.isVoid());
+            }
+            if (core) {
+                ChocoSolver s = m.instantiateCSModel();
+                System.out.println("Core features: " + s.coreToStrings());
+            }
+            if (variant) {
+                ChocoSolver s = m.instantiateCSModel();
+                System.out.println("Variant features: " + s.variantToStrings());
             }
         }
     }
@@ -612,7 +633,6 @@ public class Main {
         System.out.println("ABS Tool Suite v"+getVersion());
         System.exit(1);
     }
-
 
     public CompilationUnit getStdLib() throws IOException {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);

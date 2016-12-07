@@ -297,6 +297,68 @@ public class ChocoSolver {
         else return "checking solution: true"; 
     }
     
+ // check to string
+    public String isVoid(){
+        if(countSolutions() == 0) return "true";
+        else return "false"; 
+    }
+    
+    // get core features to string
+    public String coreToStrings()
+    {
+        List<Solution> solutions = getSolutions();
+        
+        StringBuilder result = new StringBuilder();
+        IntVar[] ivs = csmodel.retrieveIntVars(true);
+              
+        for(int i=0; i<nVars; i++)
+        {
+            boolean core = true;
+            for(Solution solution : solutions)
+            {               
+                if(solution.getIntVal(ivs[i]) == 0)
+                {
+                    core = false;
+                    break;
+                }              
+            }
+            if(core)
+            {
+                result.append(ivs[i].getName() + "\n");
+            }
+        }
+              
+        return result.toString();
+    }
+    
+    // get variant features to string
+    public String variantToStrings()
+    {
+        List<Solution> solutions = getSolutions();
+        
+        StringBuilder result = new StringBuilder();
+        IntVar[] ivs = csmodel.retrieveIntVars(true);
+              
+        for(int i=0; i<nVars; i++)
+        {
+            boolean variant = false;
+            for(Solution solution : solutions)
+            {               
+                if(solution.getIntVal(ivs[i]) == 0)
+                {
+                    variant = true;
+                    break;
+                }              
+            }
+            if(variant)
+            {
+                result.append(ivs[i].getName() + "\n");
+            }
+        }
+              
+        return result.toString();
+    }
+    
     public List<String> checkSolutionWithErrors(Map<String, Integer> solution, Model model) {
         List<String> res = new ArrayList<String>();
         

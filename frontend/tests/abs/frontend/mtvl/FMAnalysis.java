@@ -16,7 +16,7 @@ import abs.frontend.ast.ProductDecl;
 public class FMAnalysis extends FrontendTest {
     
     static private String chatPL =
-            "product HighStatic(Text, Voice, Video, Files);" +
+            "product HighStatic(Text, Voice, Video, Files);\n" +
             "root Chat {" +
             "   group allof {" +
             "      Mode {" +
