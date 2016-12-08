@@ -224,7 +224,7 @@ handle_call({lookup_object, Name}, _From, State=#state{registered_objects=Object
            end,
     {reply, Result, State};
 handle_call(Request, _From, State)->
-    io:format("Unknown request: ~w~n", [Request]),
+    io:format(standard_error, "Unknown request: ~w~n", [Request]),
     {reply, error, State}.
 
 
@@ -280,7 +280,7 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
                 limit_reached ->
                     case Keepalive of
                         false ->
-                            io:format("Simulation time limit reached; terminating~n", []),
+                            io:format(standard_error, "Simulation time limit reached; terminating~n", []),
                             Cogs=gb_sets:union([State#state.active, State#state.blocked, State#state.idle]),
                             gc:prepare_shutdown(), % eliminate gc crash when it receives `stopped' messages in idle state
                             gb_sets:fold(fun (Ref, ok) -> cog:stop_world(Ref) end, ok, Cogs),
@@ -288,7 +288,7 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
                             M ! wait_done,
                             State;
                         true ->
-                            io:format("Simulation time limit reached; terminate with Ctrl-C~n", []),
+                            io:format(standard_error, "Simulation time limit reached; terminate with Ctrl-C~n", []),
                             State
                     end
             end

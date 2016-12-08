@@ -83,7 +83,7 @@ start_link(Args) ->
     end.
 
 start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
-    io:format("Start ~w~n",[Module]),
+    io:format(standard_error, "Start ~w~n",[Module]),
     %%Init logging
     {ok, _CogMonitor} = cog_monitor:start_link(self(), Keepalive),
     %% Init garbage collector
@@ -109,7 +109,7 @@ end_mod(TaskRef) ->
 run_mod(Module, Debug, GCStatistics, Port,Clocklimit)  ->
     case Port of
         _ when is_integer(Port) ->
-            io:format("Starting server on port ~w, abort with Ctrl-C~n", [Port]),
+            io:format(standard_error, "Starting server on port ~w, abort with Ctrl-C~n", [Port]),
             start_http(Port, Clocklimit),
             receive ok -> ok end;
         _ ->

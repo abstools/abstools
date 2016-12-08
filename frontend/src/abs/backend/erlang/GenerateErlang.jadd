@@ -529,7 +529,7 @@ aspect GenerateErlang {
       getCondition().generateErlangCode(ecs,vars);
       ecs.println(" of");
       ecs.incIndent().println("true -> ok;");
-      ecs.println("false -> io:format(\"Assertion failure at " + getFileName() + ":" + getStartLine() + "~n\"), throw(dataAssertionFailException)");
+      ecs.println("false -> io:format(standard_error, \"Assertion failure at " + getFileName() + ":" + getStartLine() + "~n\", []), throw(dataAssertionFailException)");
       ecs.decIndent().print("end");
   }
 
