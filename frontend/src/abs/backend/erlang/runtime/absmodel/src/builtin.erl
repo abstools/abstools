@@ -74,7 +74,9 @@ toString(Cog,P) when is_pid(P) ->
                 pid_to_list(P) ++ ":" ++ toString(Cog, Value);
         false -> pid_to_list(P) ++ ":empty"
     end;
-toString(_Cog,#object{class=Cid,ref=Oid}) -> pid_to_list(Oid) ++ ":" ++ atom_to_list(Cid);
+toString(_Cog,#object{class=Cid,ref=Oid}) ->
+    re:replace(string:substr(atom_to_list(Cid), 7), "_", ".", [{return, list}])
+        ++ ":" ++ pid_to_list(Oid);
 toString(_Cog,T) when is_tuple(T) ->
     [C|A] = tuple_to_list(T),
     case C of
@@ -92,14 +94,14 @@ truncate(_Cog,{N,D})->
 truncate(_Cog,N)->
     N.
 
-numerator(_Cog, {N, D}) ->
+numerator(_Cog, {N, _D}) ->
     N;
-numerator(_Cog, N) ->
-    N.
+numerator(_Cog, A) when is_integer(A) ->
+    A.
 
-denominator(_Cog, {N, D}) ->
+denominator(_Cog, {_N, D}) ->
     D;
-denominator(_Cog, N) ->
+denominator(_Cog, A) when is_integer(A) ->
     1.
 
 
