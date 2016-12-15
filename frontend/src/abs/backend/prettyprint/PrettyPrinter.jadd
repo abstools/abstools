@@ -467,10 +467,11 @@ aspect doPrettyPrinter {
         formatter.beforeCloseBrace();
         formatter.afterStmt();
         stream.print("}");
-        formatter.afterCloseBrace();
         if (hasFinally()) {
-            stream.println("finally ");
+            stream.print(" finally ");
             getFinally().doPrettyPrint(stream, formatter);
+        } else {
+            formatter.afterCloseBrace();
         }
     }
 
