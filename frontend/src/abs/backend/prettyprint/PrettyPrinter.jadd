@@ -1132,7 +1132,21 @@ aspect doPrettyPrinter {
 
     public void StringLiteral.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("\"");
-        stream.print(getContent());
+        for (char c : getContent().toCharArray()) {
+            switch (c) {
+            case '\\': stream.print("\\\\");
+                break;
+            case '"': stream.print("\\\"");
+                break;
+            case '\t': stream.print("\\t");
+                break;
+            case '\n': stream.print("\\n");
+                break;
+            case '\r': stream.print("\\r");
+                break;
+            default: stream.print(c);
+            }
+        }
         stream.print("\"");
     }
 
