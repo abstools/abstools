@@ -239,6 +239,17 @@ aspect doPrettyPrinter {
         stream.print(";");
     }
 
+    public void DieStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        getAnnotationList().doPrettyPrint(stream, formatter, "");
+        if (getNumAnnotation() > 0) {
+            stream.println();
+            formatter.afterStmt();
+        }
+        stream.print("die ");
+        getReason().doPrettyPrint(stream, formatter);
+        stream.print(";");
+    }
+
     public void AssignStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
         if (getNumAnnotation() > 0) {
