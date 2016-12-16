@@ -321,13 +321,25 @@ start_new_task(DC,TaskType,Args,Sender,Notify,Cookie)->
     Ref.
 
 choose_runnable_process(RunnableTasks, PollingTasks) ->
+    %% We prefer not to poll if we already have some runnable candidate; we'll
+    %% need to change this when we have user-defined schedulers since they
+    %% expect to be handed the full set of runnable tasks.
     Candidates=case gb_sets:is_empty(RunnableTasks) of
                    true -> poll_waiting(PollingTasks);
                    false -> RunnableTasks
                end,
     case gb_sets:is_empty(Candidates) of
         true -> none;
-        false -> gb_sets:smallest(Candidates)   % arbitrary scheduling
+        false ->
+            %% random:uniform is in the range of 1..N
+            Index=rand:uniform(gb_sets:size(Candidates)) - 1,
+            (fun TakeNth (Iter, 0) ->
+                     {Elem, _} = gb_sets:next(Iter),
+                     Elem;
+                 TakeNth(Iter, N) ->
+                     {_, Next} = gb_sets:next(Iter),
+                     TakeNth(Next, N - 1)
+             end) (gb_sets:iterator(Candidates), Index)
     end.
 
 %% Polls all tasks in the polling list.  Return a set of all polling tasks
