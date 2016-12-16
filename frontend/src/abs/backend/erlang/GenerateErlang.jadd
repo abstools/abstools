@@ -819,18 +819,15 @@ aspect GenerateErlang {
     getExpr().generateErlangCode(ecs, vars);
     ecs.println(" of ");
     ecs.incIndent();
-    boolean first = true;
     for (CaseBranch b : getBranchs()) {
         Vars v = vars.pass();
-        if (!first)
-            ecs.println(";");
-        first = false;
         b.getLeft().generateErlangCode(external, ecs, v);
         ecs.print("->");
         b.getRight().generateErlangCode(ecs, v);
+        ecs.println(";");
         vars.hideIntroduced(v);
     }
-    ecs.println();
+    ecs.println("_ -> exit(dataPatternMatchFailException)");
     ecs.decIndent();
     ecs.print("end");
     ecs.close();
