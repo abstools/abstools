@@ -298,7 +298,19 @@ public class TypeCheckerHelper {
             }
 
             if (paramType.isTypeParameter()) {
-                binding.put((TypeParameter) paramType, argType);
+                if (binding.containsKey(paramType)) {
+                    Type prevArgType = binding.get(paramType);
+                    if (prevArgType.isAssignable(argType)
+                        && !argType.isAssignable(prevArgType))
+                    {
+                        // Replace, e.g., "Int" with "Rat".  If the two types
+                        // do not match at all, we'll raise a type error
+                        // later.
+                        binding.replace((TypeParameter)paramType, argType);
+                    }
+                } else {
+                    binding.put((TypeParameter) paramType, argType);
+                }
             } else if (paramType.isDataType() && argType.isDataType()) {
                 DataTypeType paramdt = (DataTypeType) paramType;
                 DataTypeType argdt = (DataTypeType) argType;
