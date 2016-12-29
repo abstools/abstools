@@ -13,9 +13,9 @@ aspect TraitApplicator {
     * DeltaTraitModifier references trait operations from a class.
     */
     public void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ 
-        ArrayList<TraitOper> operations = new ArrayList<>();
-        rewriteToList(getTraitOper(), operations);
-        for (TraitOper traitOper : operations) {
+        ArrayList<MethodModifier> operations = new ArrayList<>();
+        rewriteToList(getMethodModifier(), operations);
+        for (MethodModifier traitOper : operations) {
             traitOper.applyTo(cd); 
         }
     }
@@ -29,11 +29,11 @@ aspect TraitApplicator {
       }'  
       the removes is applied to the class, not the set
     */	
-    public void DeltaTraitModifier.rewriteToList(TraitExpr tt, ArrayList<TraitOper> operations, TraitOper par){
+    public void DeltaTraitModifier.rewriteToList(TraitExpr tt, ArrayList<MethodModifier> operations, MethodModifier par){
         if(tt instanceof TraitModifyExpr){         
             TraitModifyExpr app = (TraitModifyExpr) tt;
             TraitExpr next = app.getTraitExpr();
-            TraitOper opr = app.getTraitOper();
+            MethodModifier opr = app.getMethodModifier();
             next.setParent(par);
             //app.setTraitExpr(null);
             par.setChild(next, 0);
@@ -42,7 +42,7 @@ aspect TraitApplicator {
     }
   
 
-    public void DeltaTraitModifier.rewriteToList(TraitOper tt, ArrayList<TraitOper> operations){
+    public void DeltaTraitModifier.rewriteToList(MethodModifier tt, ArrayList<MethodModifier> operations){
         operations.add(tt);
         if(tt instanceof AddMethodModifier){
             rewriteToList(((AddMethodModifier)tt).getTraitExpr(), operations, tt);
@@ -139,9 +139,9 @@ aspect TraitApplicator {
      */
     public void AddMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ 
         TraitExpr tt = getTraitExpr();
-        ArrayList<TraitOper> operations = new ArrayList<>();
+        ArrayList<MethodModifier> operations = new ArrayList<>();
         /*
-         *  The syntax is TraitExpression TraitOperation. 
+         *  The syntax is TraitExpression MethodModifieration. 
          *  We search for the TraitExpression that is used by this 'adds'
          *  This may break the syntax, thus we collect all operation on the right
          *  and apply them one by one.
@@ -170,17 +170,17 @@ aspect TraitApplicator {
 
         //necessary because the helper collects them in the wrong order
         Collections.reverse(operations);
-        for (TraitOper oper : operations) {
+        for (MethodModifier oper : operations) {
             oper.applyTo(cd);
         }
     }    
 
-    // collects all TraitOper in an AST and returns the left-most TraitExpr
-    public TraitExpr AddMethodModifier.helperLeftMost(TraitExpr tt, ArrayList<TraitOper> operations){
+    // collects all MethodModifier in an AST and returns the left-most TraitExpr
+    public TraitExpr AddMethodModifier.helperLeftMost(TraitExpr tt, ArrayList<MethodModifier> operations){
         if(tt instanceof TraitModifyExpr){          
             TraitModifyExpr app = (TraitModifyExpr) tt;
             TraitExpr next = app.getTraitExpr();
-            TraitOper opr = app.getTraitOper();
+            MethodModifier opr = app.getMethodModifier();
             operations.add(opr);
             return helperLeftMost(next, operations);
         } else return tt;
@@ -196,7 +196,7 @@ aspect TraitApplicator {
      */
     public void ModifyMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ 
         TraitExpr tt = getTraitExpr();
-        ArrayList<TraitOper> operations = new ArrayList<>();
+        ArrayList<MethodModifier> operations = new ArrayList<>();
         TraitExpr target = helperLeftMost(tt, operations);
 
             TraitSetExpr set = target.resolve(cd);
@@ -204,17 +204,17 @@ aspect TraitApplicator {
                 apply(cd,met);
             }
 
-        for (TraitOper oper : operations) {
+        for (MethodModifier oper : operations) {
             oper.applyTo(cd);
         }
     }
 
-    // collects all TraitOper in an AST and returns the left-most TraitExpr
-    public TraitExpr ModifyMethodModifier.helperLeftMost(TraitExpr tt, ArrayList<TraitOper> operations){
+    // collects all MethodModifier in an AST and returns the left-most TraitExpr
+    public TraitExpr ModifyMethodModifier.helperLeftMost(TraitExpr tt, ArrayList<MethodModifier> operations){
         if(tt instanceof TraitModifyExpr){          
             TraitModifyExpr app = (TraitModifyExpr) tt;
             TraitExpr next = app.getTraitExpr();
-            TraitOper opr = app.getTraitOper();
+            MethodModifier opr = app.getMethodModifier();
             operations.add(opr);
             return helperLeftMost(next, operations);
         } else return tt;

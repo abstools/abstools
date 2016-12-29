@@ -150,7 +150,7 @@ new List<ModuleDecl>(),
 
 
     @Override public void exitDeltaTraitFragment(@NotNull ABSParser.DeltaTraitFragmentContext ctx) { 
-        setV(ctx,new DeltaTraitModifier((TraitOper) v(ctx.trait_oper())));
+        setV(ctx,new DeltaTraitModifier((MethodModifier) v(ctx.trait_oper())));
     }
     
     @Override public void exitTraitAddFragment(abs.frontend.antlr.parser.ABSParser.TraitAddFragmentContext ctx) {
@@ -160,13 +160,13 @@ new List<ModuleDecl>(),
         setV(ctx,new ModifyMethodModifier((TraitExpr) v(ctx.trait_expr())));
      }
     @Override public void exitTraitRemoveFragment(abs.frontend.antlr.parser.ABSParser.TraitRemoveFragmentContext ctx) {
-        setV(ctx,new RemoveMethodModifier((MethodSig) v(ctx.methodsig())/*, (TraitOper)v(ctx.trait_oper())*/));
+        setV(ctx,new RemoveMethodModifier((MethodSig) v(ctx.methodsig())/*, (MethodModifier)v(ctx.trait_oper())*/));
      }
 
     
          @Override
         public void exitTraitApplyFragment(TraitApplyFragmentContext ctx) {
-             setV(ctx, new TraitModifyExpr((TraitExpr)v(ctx.trait_expr()), (TraitOper)v(ctx.trait_oper())));
+             setV(ctx, new TraitModifyExpr((TraitExpr)v(ctx.trait_expr()), (MethodModifier)v(ctx.trait_oper())));
         }
          @Override
         public void exitTraitNameFragment(TraitNameFragmentContext ctx) {

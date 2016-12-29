@@ -4,7 +4,6 @@
  */
 package abs.frontend.delta;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -16,6 +15,38 @@ import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.*;
 
 public class ProductLineTypeAnalysisTest extends DeltaTest {
+
+    @Test
+    public void wellFormedProductLine() {
+        Model model = assertParseOk(
+                "module M;"
+                        + "delta D1;"
+                        + "delta D2;"
+                        + "productline PL;"
+                        + "features A;"
+                        + "delta D1 after D2;"
+                );
+        ProductLine pl = model.getProductLine();
+        SemanticConditionList errors = new SemanticConditionList();
+
+        assertFalse(ProductLineTypeAnalysisHelper.wellFormedProductLine(pl, errors));
+        assertEquals(1, errors.getErrorCount());
+
+        model = assertParseOk(
+                "module M;"
+                        + "delta D1;"
+                        + "delta D2;"
+                        + "productline PL;"
+                        + "features A;"
+                        + "delta D1 after D2;"
+                        + "delta D2;"
+                );
+        pl = model.getProductLine();
+        errors = new SemanticConditionList();
+
+        assertTrue(ProductLineTypeAnalysisHelper.wellFormedProductLine(pl, errors));
+        assertEquals(0, errors.getErrorCount());
+    }
 
     @Test
     public void stronglyUnambiguousProductLine() {
@@ -148,7 +179,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
             msig.setName("m" + id);
             MethodImpl mimpl = new MethodImpl();
             mimpl.setMethodSig(msig);
-            abs.frontend.ast.List<MethodImpl> list = new abs.frontend.ast.List<>();           
+            abs.frontend.ast.List<MethodImpl> list = new abs.frontend.ast.List<>();
             list.add(mimpl);
             DeltaTraitModifier dmod = new DeltaTraitModifier(new ModifyMethodModifier(new TraitSetExpr(list)));
 
@@ -174,11 +205,11 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
     }
 
 
-//    @Test
-//    public void ntaTest() {
-//        Model model = new Model();
-//        assertEquals(1, model.getTestList().getNumChild());
-//    }
+    //    @Test
+    //    public void ntaTest() {
+    //        Model model = new Model();
+    //        assertEquals(1, model.getTestList().getNumChild());
+    //    }
 
     @Test
     public void Products1() {
@@ -214,5 +245,5 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         //with 10 features there should be 2^10 valid products
         assertEquals(1024, model.getProductList().getNumChild());
     }
-    
+
 }

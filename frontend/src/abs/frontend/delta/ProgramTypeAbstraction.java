@@ -95,7 +95,6 @@ public class ProgramTypeAbstraction {
             errors.add(new SPLTypeError(node, ErrorMessage.NO_FIELD_DECL, deltas, product, name));
     }
 
-
     public void addMethod(String className, String methodName) {
         classes.get(className).get("methods").add(methodName);
     }

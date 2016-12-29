@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.analyser.TypeError;
@@ -23,19 +24,54 @@ public class ProductLineTypeAnalysisHelper {
      * (ii) its product generation mapping is total, and
      * (iii) all its products are well-typed IFJ programs.
      */
-
     public static void typeCheckPL(ProductLine pl, SemanticConditionList errors) {
 
-        // Check strong unambiguity
-        checkStrongUnambiguity(pl, errors);
+        assert pl != null;
 
-        // Build the product family generation trie. Hereby check that
-        // - product generation mapping is total
-        // - TODO all products are well-typed programs
-        DeltaTrie pfgt = buildPFGT(pl, errors);
+        if (wellFormedProductLine(pl, errors)) {
+            // Check strong unambiguity
+            checkStrongUnambiguity(pl, errors);
 
-//        System.out.println(pfgt);
+            // Build the product family generation trie. Hereby check that
+            // - product generation mapping is total
+            // - TODO all products are well-typed programs
+            DeltaTrie pfgt = buildPFGT(pl, errors);
 
+            // System.out.println(pfgt);
+        }
+    }
+
+    /*
+     * Check that the 'productline' declaration is well formed. This means...
+     * - after clauses do not reference any deltaIDs that do not have their own delta clause
+     * - deltas named in the productline correspond to actual DeltaDecls
+     */
+    protected static boolean wellFormedProductLine(ProductLine pl, SemanticConditionList e) {
+        boolean wellformed = true;
+
+        // preliminaries
+        final Set<String> declaredDeltas = pl.getModel().getDeltaDeclsMap().keySet();
+        final Set<String> referencedDeltas = new HashSet<String>(pl.getDeltaClauses().getNumChild());
+        for (DeltaClause clause : pl.getDeltaClauses())
+            referencedDeltas.add(clause.getDeltaspec().getDeltaID());
+
+        // check
+        for (DeltaClause clause : pl.getDeltaClauses()) {
+            // ensure deltas in the productline correspond to actual DeltaDecls
+            if (!declaredDeltas.contains(clause.getDeltaspec().getDeltaID())) {
+                e.add(new SemanticError(clause, ErrorMessage.NO_DELTA_DECL, clause.getDeltaspec().getDeltaID()));
+                wellformed = false;
+            }
+            // 'after' clauses do not reference any deltaIDs that do not have their own delta clause
+            for (DeltaID id : clause.getAfterDeltaIDs()) {
+                String afterID = id.getName();
+                if (!referencedDeltas.contains(afterID)) {
+                    e.add(new SemanticError(clause, ErrorMessage.MISSING_DELTA_CLAUSE_ERROR, afterID, pl.getName()));
+                    wellformed = false;
+                }
+            }
+        }
+        return wellformed;
     }
 
 
@@ -51,7 +87,7 @@ public class ProductLineTypeAnalysisHelper {
         }
         return trie;
     }
-    
+
     public static boolean doThings(ProductLine pl, SemanticConditionList l, String methodID, String prefix, String deltaID, Map<String, Map<String, String>> cache){
         boolean result = true;
         if (cache.containsKey(prefix)) {
@@ -69,7 +105,11 @@ public class ProductLineTypeAnalysisHelper {
             cache.get(prefix).put(methodID, deltaID);
         }
         return result;
-        
+
+    }
+
+    public static void checkStrongUnambiguity(ProductLine pl, SemanticConditionList l) {
+        isStronglyUnambiguous(pl, l);
     }
 
     /*
@@ -85,14 +125,15 @@ public class ProductLineTypeAnalysisHelper {
         boolean result = true;
         Model model = pl.getModel();
 
-//        for (Set<String> set : pl.getDeltaPartition()) {
-//            System.out.print("Delta partition: {");
-//            for (String el : set)
-//                System.err.print(" " + el + " ");
-//            System.out.print("}   ");
-//        }
-//        System.out.println();
+        //        for (Set<String> set : pl.getDeltaPartition()) {
+        //            System.out.print("Delta partition: {");
+        //            for (String el : set)
+        //                System.err.print(" " + el + " ");
+        //            System.out.print("}   ");
+        //        }
+        //        System.out.println();
 
+        assert pl.getDeltaPartition() != null;
         for (Set<String> set : pl.getDeltaPartition()) {
 
             // Remember the names of classes and methods modified by deltas in
@@ -102,8 +143,10 @@ public class ProductLineTypeAnalysisHelper {
             Map<String, Map<String, String>> cache = new HashMap<String, Map<String, String>>();
 
             for (String deltaID : set) {
-                DeltaDecl delta = model.getDeltaDeclsMap().get(deltaID); // assumes the DeltaDecl exists!
+                // assumes the DeltaDecl corresponding to deltaID exists (wellFormedProductLine)
+                DeltaDecl delta = model.getDeltaDeclsMap().get(deltaID);
 
+                assert delta.getModuleModifiers() != null;
                 for (ModuleModifier moduleModifier : delta.getModuleModifiers()) {
                     if (moduleModifier instanceof ModifyClassModifier) {
                         //String methodID;
@@ -118,14 +161,13 @@ public class ProductLineTypeAnalysisHelper {
                                 methodID = ((ModifyMethodModifier) mod).getMethodImpl().getMethodSig().getName();
                             else
                                 continue;*/
-                            if(mod instanceof DeltaTraitModifier){
+                            if(mod instanceof DeltaTraitModifier) {
                                 HashSet<String> methodIDSet = new HashSet<>();
-                                ((DeltaTraitModifier) mod).collectMethodIDs(methodIDSet, model);                               
+                                ((DeltaTraitModifier) mod).collectMethodIDs(methodIDSet, model);
                                 for (String methodID : methodIDSet) {
-                                    result = result | doThings(pl, l, methodID, prefix, deltaID, cache);                                    
+                                    result = result | doThings(pl, l, methodID, prefix, deltaID, cache);
                                 }
                             }
-                            
                         }
                     } else if (moduleModifier instanceof AddClassModifier
                             || moduleModifier instanceof RemoveClassModifier) {
@@ -144,11 +186,9 @@ public class ProductLineTypeAnalysisHelper {
                 // functions, ADTs, etc
             }
         }
+        // FIXME remove boolean result unless needed
         return result;
     }
 
-    public static void checkStrongUnambiguity(ProductLine pl, SemanticConditionList l) {
-        isStronglyUnambiguous(pl, l);
-    }
 
 }

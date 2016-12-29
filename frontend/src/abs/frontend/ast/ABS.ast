@@ -39,12 +39,8 @@ TraitDecl : Decl ::= TraitExpr;
 abstract TraitExpr;
 TraitSetExpr : TraitExpr ::= MethodImpl*;
 TraitNameExpr : TraitExpr ::= <Name>;
-TraitModifyExpr : TraitExpr ::= TraitExpr TraitOper;
+TraitModifyExpr : TraitExpr ::= TraitExpr MethodModifier;
 
-abstract TraitOper : Modifier;
-AddMethodModifier : TraitOper ::= TraitExpr;
-ModifyMethodModifier : TraitOper ::= TraitExpr;
-RemoveMethodModifier : TraitOper ::= MethodSig;
 
 TraitUse : Modifier ::= TraitExpr; 
 /***************************************/
@@ -82,10 +78,8 @@ HasInterface : HasCondition ::= InterfaceTypeUse;
 
 abstract ModuleModifier;
 abstract NamespaceModifier : ModuleModifier;
- 
 abstract OOModifier : ModuleModifier;
 abstract ClassModifier : OOModifier;
-abstract Modifier;
 abstract InterfaceModifier : OOModifier;
 abstract MethodSigModifier;
 
@@ -110,11 +104,16 @@ AddInterfaceModifier : InterfaceModifier ::= InterfaceDecl;
 RemoveInterfaceModifier : InterfaceModifier ::= <Name>;
 ModifyInterfaceModifier : InterfaceModifier ::= <Name> MethodSigModifier*;
 
+abstract Modifier;
+abstract MethodModifier : Modifier;
+AddMethodModifier : MethodModifier ::= TraitExpr;
+ModifyMethodModifier : MethodModifier ::= TraitExpr;
+RemoveMethodModifier : MethodModifier ::= MethodSig;
 AddFieldModifier : Modifier ::= FieldDecl;
 RemoveFieldModifier : Modifier ::= FieldDecl;
 AddMethodSigModifier : MethodSigModifier ::= MethodSig;
 RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
-DeltaTraitModifier : Modifier ::= TraitOper;
+DeltaTraitModifier : Modifier ::= MethodModifier;
 
 ObjectUpdate ::= <ClassName> AwaitStmt UpdatePreamble PreBody:AssignStmt* PostBody:AssignStmt* ;
 UpdatePreamble ::= VarDeclStmt* ; // TODO also allow FunctionDecls and DataTypeDecls

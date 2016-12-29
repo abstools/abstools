@@ -241,6 +241,7 @@ aspect ProductFlattener {
      * The Delta partition contains all possible orders in which the deltas can be applied
      */
     syn lazy java.util.List<Set<String>> ProductLine.getDeltaPartition() {
+
         sortDeltas();
         return deltaSorter.getPartition();
     }
@@ -252,31 +253,27 @@ aspect ProductFlattener {
     private TopologicalSorting<String> ProductLine.deltaSorter = null;
 
     /**************************************************************************
-     * Sort all deltas of the product line. This only has to be done once.
+     * Sort ALL deltas of the product line. This only has to be done once.
      * The result is used in multiple places:
      * - Type checking the product line
      * - Flattening for a certain product 
      */
-    private void ProductLine.sortDeltas() {
+    private void ProductLine.sortDeltas() throws DeltaModellingException {
         if (deltaSorter == null)
             deltaSorter = new TopologicalSorting<String>(getAllDeltaIDs());
         else
             return; // assume already sorted
 
-        // sort            
+        // sort
         for (DeltaClause clause : getDeltaClauses()) {
             String deltaID = clause.getDeltaspec().getDeltaID();
             for (DeltaID id : clause.getAfterDeltaIDs()) {
                 String afterID = id.getName();
-                try {
-                    deltaSorter.addEdge(afterID, deltaID);
-                } catch (DeltaModellingException e) {
-                    /* Should never reach this point as long as 
-                     *   1. sorter is instantiated with all available deltaIDs and
-                     *   2. the type checker made sure that 'after' clauses do not contain any deltaIDs that do not have their own delta clause -- FIXME!!
-                     */
-                    assert false;
-                }
+                /* To prevent DeltaModellingException, before calling addEdge() we ensure:
+                 *   1. deltaSorter is instantiated above with all available deltaIDs
+                 *   2. PL is well formed by running wellFormedProductLine()
+                 */
+                deltaSorter.addEdge(afterID, deltaID);
             }
         }
         deltaSorter.sort();
