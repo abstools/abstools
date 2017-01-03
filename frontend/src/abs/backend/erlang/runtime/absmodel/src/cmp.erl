@@ -12,6 +12,13 @@ eq(I,{N,D}) when is_integer(N),is_integer(D),is_integer(I) ->
     eq({I,1},{N,D});
 eq({N,D},{N1,D1}) when is_integer(N),is_integer(D),is_integer(N1),is_integer(D1)->
     rationals:proper({N,D})==rationals:proper({N1,D1});
+eq({}, {}) -> true;
+eq({A}, {B}) when is_tuple(A), is_tuple(B) -> eq(A, B);
+eq(A, B) when is_tuple(A), is_tuple(B) ->
+    case eq(element(1, A), element(1, B)) of
+        true -> eq(erlang:delete_element(1,A),erlang:delete_element(1,B));
+        false -> false
+    end;
 eq(A,B)->
     A==B.
 

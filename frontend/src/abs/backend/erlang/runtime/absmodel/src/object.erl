@@ -170,7 +170,7 @@ active({consume_resource, {CurrentVar, MaxVar}, Count}, _From, OS=#state{class=c
                           dataInfRat -> Requested;
                           {dataFin, Total1} ->
                               rationals:min(Requested,
-                                            rationals:sub(rationals:to_r(Total1), Consumed))
+                                            rationals:sub(Total1, Consumed))
                       end,
             case rationals:is_zero(ToConsume) of
                 true -> {reply, {wait, ToConsume}, active, OS};

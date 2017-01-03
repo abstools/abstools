@@ -191,12 +191,12 @@ handle_call({cog,Cog,die}, From,State=#state{active=A,idle=I,blocked=B,clock_wai
     end;
 handle_call({task,Task,Cog,clock_waiting,Min,Max}, _From,
              State=#state{clock_waiting=C}) ->
-    C1=add_to_clock_waiting(C,{Min,Max,Task,Cog}),
+    C1=add_to_clock_waiting(C,Min,Max,Task,Cog),
     {reply, ok,State#state{clock_waiting=C1}};
 handle_call({cog,Task,Cog,clock_waiting,Min,Max}, _From,
              State=#state{clock_waiting=C}) ->
     %% {cog, blocked} event comes separately
-    C1=add_to_clock_waiting(C,{Min,Max,Task,Cog}),
+    C1=add_to_clock_waiting(C,Min,Max,Task,Cog),
     {reply, ok, State#state{clock_waiting=C1}};
 handle_call({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent}},
             _From, State=#state{dcs=DCs}) ->
@@ -224,7 +224,7 @@ handle_call({lookup_object, Name}, _From, State=#state{registered_objects=Object
            end,
     {reply, Result, State};
 handle_call(Request, _From, State)->
-    io:format("Unknown request: ~w~n", [Request]),
+    io:format(standard_error, "Unknown request: ~w~n", [Request]),
     {reply, error, State}.
 
 
@@ -264,11 +264,13 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
             M ! wait_done,
             State;
         [{_Min, MTE, _Task, _Cog} | _] ->
+            OldTime=clock:now(),
+            Delta=rationals:sub(MTE, OldTime),
             %% advance clock before waking up processes waiting for it
-            Clockresult=clock:advance(MTE),
+            Clockresult=clock:advance(Delta),
             case Clockresult of
                 ok ->
-                    lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
+                    lists:foreach(fun(DC) -> dc:update(DC, Delta) end, DCs),
                     {A1,C1}=lists:unzip(
                               lists:map(
                                 fun(I) -> decrease_or_wakeup(MTE, I) end,
@@ -278,7 +280,7 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
                 limit_reached ->
                     case Keepalive of
                         false ->
-                            io:format("Simulation time limit reached; terminating~n", []),
+                            io:format(standard_error, "Simulation time limit reached; terminating~n", []),
                             Cogs=gb_sets:union([State#state.active, State#state.blocked, State#state.idle]),
                             gc:prepare_shutdown(), % eliminate gc crash when it receives `stopped' messages in idle state
                             gb_sets:fold(fun (Ref, ok) -> cog:stop_world(Ref) end, ok, Cogs),
@@ -286,33 +288,33 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
                             M ! wait_done,
                             State;
                         true ->
-                            io:format("Simulation time limit reached; terminate with Ctrl-C~n", []),
+                            io:format(standard_error, "Simulation time limit reached; terminate with Ctrl-C~n", []),
                             State
                     end
             end
     end .
 
-decrease_or_wakeup(MTE, {Min, Max, Task, Cog}) ->
-    %% Compute, for one entry in the clock_waiting queue, either a new entry
-    %% with decreased deadline, or wake up the task and note the cog that
-    %% should be re-added to the active set.  Note that we optimistically mark
+decrease_or_wakeup(MTE, E={Min, _Max, Task, Cog}) ->
+    %% Wake up a task if its minimum waiting time has passed, and mark its cog
+    %% to be ready; keep the task otherwise.  Note that we optimistically mark
     %% the cog as active: since it was idle before and we just unblocked a
     %% task, the cog will signal itself as active anyway as soon as the
     %% freshly-unblocked tasks gets around to telling it (and in the meantime,
     %% we might erroneously advance the clock a second time otherwise).
     case cmp:lt(MTE, Min) of
         true ->
-            {[],
-             {rationals:sub(rationals:to_r(Min), rationals:to_r(MTE)),
-              rationals:sub(rationals:to_r(Max), rationals:to_r(MTE)),
-              Task, Cog}};
+            {[], E};
         false ->
             Task ! {clock_finished, self()},
             {Cog, []}
     end.
+add_to_clock_waiting(C, Min, Max, Task, Cog) ->
+    Time=clock:now(),
+    add_to_clock_waiting(C, {rationals:add(Time, Min), rationals:add(Time, Max),
+                             Task, Cog}).
 
 add_to_clock_waiting([H={_Min,Head,_Task,_Cog} | T], I={_Min1,Max,_Task1,_Cog1}) ->
-    case rationals:is_greater(rationals:to_r(Head), rationals:to_r(Max)) of
+    case rationals:is_greater(Head, Max) of
         true -> [I, H | T];
         false -> [H | add_to_clock_waiting(T, I)]
     end;

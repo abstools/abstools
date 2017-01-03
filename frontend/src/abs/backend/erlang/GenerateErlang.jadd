@@ -529,7 +529,7 @@ aspect GenerateErlang {
       getCondition().generateErlangCode(ecs,vars);
       ecs.println(" of");
       ecs.incIndent().println("true -> ok;");
-      ecs.println("false -> io:format(\"Assertion failure at " + getFileName() + ":" + getStartLine() + "~n\"), throw(dataAssertionFailException)");
+      ecs.println("false -> io:format(standard_error, \"Assertion failure at " + getFileName() + ":" + getStartLine() + "~n\", []), throw(dataAssertionFailException)");
       ecs.decIndent().print("end");
   }
 
@@ -617,11 +617,11 @@ aspect GenerateErlang {
         getRight().generateErlangCode(ecs, vars);
       }
       else {
-        ecs.print(" rationals:add(rationals:to_r(");
+        ecs.print(" rationals:add(");
         getLeft().generateErlangCode(ecs,vars);
-        ecs.print("),rationals:to_r(");
+        ecs.print(",");
         getRight().generateErlangCode(ecs,vars);
-        ecs.print("))");
+        ecs.print(")");
       }
       ecs.print(") ");
     }
@@ -635,11 +635,11 @@ aspect GenerateErlang {
         ecs.print(" - ");
         getRight().generateErlangCode(ecs,vars);}
     else{
-      ecs.print(" rationals:sub(rationals:to_r(");
+      ecs.print(" rationals:sub(");
       getLeft().generateErlangCode(ecs,vars);
-      ecs.print("),rationals:to_r(");
+      ecs.print(",");
       getRight().generateErlangCode(ecs,vars);
-      ecs.print("))");
+      ecs.print(")");
     }
     ecs.print(") ");
   }
@@ -653,22 +653,22 @@ aspect GenerateErlang {
       getRight().generateErlangCode(ecs,vars);
     }
     else {
-      ecs.print(" rationals:mul(rationals:to_r(");
+      ecs.print(" rationals:mul(");
       getLeft().generateErlangCode(ecs,vars);
-      ecs.print("),rationals:to_r(");
+      ecs.print(",");
       getRight().generateErlangCode(ecs,vars);
-      ecs.print("))");
+      ecs.print(")");
     }
     ecs.print(") ");
   }
 
   @Override
   public void DivMultExp.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.print(" rationals:rdiv(rationals:to_r(");
+    ecs.print(" rationals:rdiv(");
     getLeft().generateErlangCode(ecs,vars);
-    ecs.print("),rationals:to_r(");
+    ecs.print(",");
     getRight().generateErlangCode(ecs,vars);
-    ecs.print(")) ");
+    ecs.print(") ");
   }
 
   @Override
@@ -680,11 +680,11 @@ aspect GenerateErlang {
         getRight().generateErlangCode(ecs,vars);
         ecs.print(") ");
     } else {
-        ecs.print(" rationals:rrem(rationals:to_r(");
+        ecs.print(" rationals:rrem(");
         getLeft().generateErlangCode(ecs,vars);
-        ecs.print("),rationals:to_r(");
+        ecs.print(",");
         getRight().generateErlangCode(ecs,vars);
-        ecs.print(")) ");
+        ecs.print(") ");
     }
   }
 
@@ -819,18 +819,15 @@ aspect GenerateErlang {
     getExpr().generateErlangCode(ecs, vars);
     ecs.println(" of ");
     ecs.incIndent();
-    boolean first = true;
     for (CaseBranch b : getBranchs()) {
         Vars v = vars.pass();
-        if (!first)
-            ecs.println(";");
-        first = false;
         b.getLeft().generateErlangCode(external, ecs, v);
         ecs.print("->");
         b.getRight().generateErlangCode(ecs, v);
+        ecs.println(";");
         vars.hideIntroduced(v);
     }
-    ecs.println();
+    ecs.println("_ -> exit(dataPatternMatchFailException)");
     ecs.decIndent();
     ecs.print("end");
     ecs.close();

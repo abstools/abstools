@@ -70,17 +70,22 @@ public class ClassGenerator {
             ecs.println();
             ecs.decIndent().println("catch");
             ecs.incIndent();
-            ecs.println("_:Error ->");
+            ecs.println("_:Exception ->");
             if (classDecl.hasRecoverBranch()) {
                 ecs.incIndent();
-                ecs.println("Recovered = try 'recover'(O, Error) catch _:RecoverError -> false end,");
+                ecs.println("Recovered = try 'recover'(O, Exception) catch _:RecoverError -> io:format(standard_error, \"Recovery block for ~s in class " + classDecl.qualifiedName() + " failed with exception ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, RecoverError)]), false end,");
                 ecs.println("case Recovered of");
-                ecs.incIndent().println("true -> exit(Error);");
-                ecs.println("false -> object:die(O, Error), exit(Error)");
+                ecs.incIndent().println("true -> exit(Exception);");
+                ecs.println("false ->");
+                ecs.incIndent();
+                ecs.println("io:format(standard_error, \"Uncaught ~s in method " + ms.getName() + " not handled successfully by recovery block, killing object ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, O)]),");
+                ecs.println("object:die(O, Exception), exit(Exception)");
                 ecs.decIndent().println("end");
                 ecs.decIndent();
             } else {
-                ecs.incIndent().println("object:die(O, Error), exit(Error)");
+                ecs.incIndent();
+                ecs.println("io:format(standard_error, \"Uncaught ~s in method " + ms.getName() + " and no recovery block in class definition, killing object ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, O)]),");
+                ecs.println("object:die(O, Exception), exit(Exception)");
                 ecs.decIndent();
             }
             ecs.decIndent().println("end.");

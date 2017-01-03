@@ -134,8 +134,10 @@ public abstract class CompilerCondition {
     public abstract int getColumn();
 
     public abstract int getLine();
-    
+
     public abstract boolean isError();
+
+    public abstract boolean isWarning();
 
     @Override
     public String toString() {

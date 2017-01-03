@@ -150,7 +150,7 @@ new List<ModuleDecl>(),
 
 
     @Override public void exitDeltaTraitFragment(@NotNull ABSParser.DeltaTraitFragmentContext ctx) { 
-        setV(ctx,new DeltaTraitModifier((TraitOper) v(ctx.trait_oper())));
+        setV(ctx,new DeltaTraitModifier((MethodModifier) v(ctx.trait_oper())));
     }
     
     @Override public void exitTraitAddFragment(abs.frontend.antlr.parser.ABSParser.TraitAddFragmentContext ctx) {
@@ -160,13 +160,13 @@ new List<ModuleDecl>(),
         setV(ctx,new ModifyMethodModifier((TraitExpr) v(ctx.trait_expr())));
      }
     @Override public void exitTraitRemoveFragment(abs.frontend.antlr.parser.ABSParser.TraitRemoveFragmentContext ctx) {
-        setV(ctx,new RemoveMethodModifier((MethodSig) v(ctx.methodsig())/*, (TraitOper)v(ctx.trait_oper())*/));
+        setV(ctx,new RemoveMethodModifier((MethodSig) v(ctx.methodsig())/*, (MethodModifier)v(ctx.trait_oper())*/));
      }
 
     
          @Override
         public void exitTraitApplyFragment(TraitApplyFragmentContext ctx) {
-             setV(ctx, new TraitModifyExpr((TraitExpr)v(ctx.trait_expr()), (TraitOper)v(ctx.trait_oper())));
+             setV(ctx, new TraitModifyExpr((TraitExpr)v(ctx.trait_expr()), (MethodModifier)v(ctx.trait_oper())));
         }
          @Override
         public void exitTraitNameFragment(TraitNameFragmentContext ctx) {
@@ -345,14 +345,38 @@ new List<ModuleDecl>(),
         setV(ctx, new Block(l(ctx.annotation()), l(ctx.stmt())));
     }
     @Override public void exitIfStmt(ABSParser.IfStmtContext ctx) {
+        Stmt l = (Stmt)v(ctx.l);
+        if (!(l instanceof Block)) {
+            setV(ctx.l, new Block(new List<Annotation>(), new List(l)));
+        }
+        if (ctx.r != null) {
+            Stmt r = (Stmt)v(ctx.r);
+            if (!(r instanceof Block)) {
+                setV(ctx.r, new Block(new List<Annotation>(), new List(r)));
+            }
+        }
         setV(ctx, new IfStmt(l(ctx.annotation()), (PureExp)v(ctx.c),
-                             (Stmt)v(ctx.l), o(ctx.r)));
+                             (Block)v(ctx.l), o(ctx.r)));
     }
     @Override public void exitWhileStmt(ABSParser.WhileStmtContext ctx) {
-        setV(ctx, new WhileStmt(l(ctx.annotation()), (PureExp)v(ctx.c), (Stmt)v(ctx.stmt())));
+        Stmt body = (Stmt)v(ctx.stmt());
+        if (!(body instanceof Block)) {
+            setV(ctx.stmt(), new Block(new List<Annotation>(), new List(body)));
+        }
+        setV(ctx, new WhileStmt(l(ctx.annotation()), (PureExp)v(ctx.c), (Block)v(ctx.stmt())));
     }
-	@Override public void exitTryCatchFinallyStmt(ABSParser.TryCatchFinallyStmtContext ctx) {
-        setV(ctx, new TryCatchFinallyStmt(l(ctx.annotation()), (Stmt)v(ctx.b),
+    @Override public void exitTryCatchFinallyStmt(ABSParser.TryCatchFinallyStmtContext ctx) {
+        Stmt body = (Stmt)v(ctx.b);
+        if (!(body instanceof Block)) {
+            setV(ctx.b, new Block(new List<Annotation>(), new List(body)));
+        }
+        if (ctx.f != null) {
+            Stmt finall = (Stmt)v(ctx.f);
+            if (!(finall instanceof Block)) {
+                setV(ctx.f, new Block(new List<Annotation>(), new List(finall)));
+            }
+        }
+        setV(ctx, new TryCatchFinallyStmt(l(ctx.annotation()), (Block)v(ctx.b),
                                           l(ctx.casestmtbranch()), o(ctx.f)));
     }
     @Override public void exitAwaitStmt(ABSParser.AwaitStmtContext ctx) {
@@ -393,7 +417,11 @@ new List<ModuleDecl>(),
         setV(ctx, new CaseStmt(l(ctx.annotation()), (PureExp)v(ctx.c), l(ctx.casestmtbranch())));
     }
     @Override public void exitCasestmtbranch(ABSParser.CasestmtbranchContext ctx) {
-        setV(ctx, new CaseBranchStmt((Pattern)v(ctx.pattern()), (Stmt)v(ctx.stmt())));
+        Stmt body = (Stmt)v(ctx.stmt());
+        if (!(body instanceof Block)) {
+            setV(ctx.stmt(), new Block(new List<Annotation>(), new List(body)));
+        }
+        setV(ctx, new CaseBranchStmt((Pattern)v(ctx.pattern()), (Block)v(ctx.stmt())));
     }
 
     // Annotations

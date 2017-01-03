@@ -137,7 +137,7 @@ block_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
     case rationals:is_positive(Amount_r) of
         true ->
             {Result, Consumed}= dc:consume(DC,Resourcetype,Amount_r),
-            Remaining=rationals:sub(Amount_r, rationals:to_r(Consumed)),
+            Remaining=rationals:sub(Amount_r, Consumed),
             case Result of
                 wait ->
                     Time=clock:distance_to_next_boundary(),

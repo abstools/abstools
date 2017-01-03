@@ -40,8 +40,9 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
-    public void subtypingTicket188() throws Exception {
-        assertTypeCheckFileOk("tests/abssamples/Subtyping.abs", true);
+    public void subtypingTicket101() throws Exception {
+        // https://github.com/abstools/abstools/issues/101
+        assertTypeOK("interface I {} class A implements I {} { I a = new A(); List<I> as = list[null, a]; }");
     }
 
     @Test
@@ -237,12 +238,12 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void testAwaitBoolOk() {
-        assertTypeErrors("{ Bool b = False; await b; }");
+        assertWarnings("{ Bool b = False; await b; }");
     }
 
     @Test
     public void testAwaitAndOk() {
-        assertTypeErrors("{ await False && True; }");
+        assertWarnings("{ await False && True; }");
     }
 
     @Test
@@ -259,7 +260,7 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void testAwaitTooPure3() {
         // recursive def!
-        assertTypeErrors("{ await lookupDefault(insert(EmptyMap, Pair(1,timeValue(Time(0)))),1,0) > 0; }");
+        assertWarnings("{ await lookupDefault(insert(EmptyMap, Pair(1,timeValue(Time(0)))),1,0) > 0; }");
     }
 
     @Test

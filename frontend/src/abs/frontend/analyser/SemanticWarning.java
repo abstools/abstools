@@ -30,4 +30,8 @@ public class SemanticWarning extends SemanticCondition {
         return false;
     }
 
+    @Override
+    public boolean isWarning() {
+        return true;
+    }
 }

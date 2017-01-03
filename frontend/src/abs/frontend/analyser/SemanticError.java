@@ -32,8 +32,11 @@ public class SemanticError extends SemanticCondition {
 
     @Override
     public boolean isError() {
-        // TODO Auto-generated method stub
         return true;
     }
 
+    @Override
+    public boolean isWarning() {
+        return false;
+    }
 }
