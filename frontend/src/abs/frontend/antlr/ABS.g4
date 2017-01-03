@@ -270,6 +270,7 @@ trait_expr :
 trait_oper : 'adds' trait_expr						#TraitAddFragment
 		   | 'modifies' trait_expr					#TraitModifyFragment
 		   | 'removes' methodsig 					#TraitRemoveFragment
+		   | 'removes' '{' methodsig* '}' 		    #TraitRemoveFragment
 		   ;
 		   
 trait_usage: 'uses' trait_expr ';'

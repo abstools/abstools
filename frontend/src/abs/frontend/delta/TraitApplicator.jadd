@@ -112,24 +112,24 @@ aspect TraitApplicator {
     }
     
     private void RemoveMethodModifier.applyToList(List<MethodImpl> list) throws DeltaModellingException{ 
-        MethodSig mysig = this.getMethodSig();
-
-        // in given ClassDecl: find MethodDecl that matches sig
-        int found = -1;
-        for (int i = 0; i < list.getNumChild(); i++) {
-            MethodSig sig = list.getChild(i).getMethodSig();
-            if (sig.matches(mysig)) {
-                found = i;
-                break;
+        for (MethodSig mysig : getMethodSigList()){
+            // in given ClassDecl: find MethodDecl that matches sig
+            int found = -1;
+            for (int i = 0; i < list.getNumChild(); i++) {
+                MethodSig sig = list.getChild(i).getMethodSig();
+                if (sig.matches(mysig)) {
+                    found = i;
+                    break;
+                }
             }
-        }
        
-        if (found >= 0)
-            // remove MethodImpl from list
-            list.removeChild(found);
-        else
-            throw new DeltaModellingException( 
-                      "trait wants to remove method [" + mysig + "], which was not found");
+            if (found >= 0)
+                // remove MethodImpl from list
+                list.removeChild(found);
+            else
+                throw new DeltaModellingException( 
+                    "trait wants to remove method [" + mysig + "], which was not found");
+        }
     }
 
 
