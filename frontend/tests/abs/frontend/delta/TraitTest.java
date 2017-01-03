@@ -122,7 +122,8 @@ public class TraitTest extends DeltaTest{
 
         
         MethodSig sig= AbsASTBuilderUtil.createMethodSig("m", AbsASTBuilderUtil.getUnit());
-        RemoveMethodModifier opr = new RemoveMethodModifier(sig);
+        List<MethodSig> l = new List<MethodSig>(sig);
+        RemoveMethodModifier opr = new RemoveMethodModifier(l);
         ModifyClassModifier mcn = new ModifyClassModifier();
         mcn.setName("M.C");
         
@@ -350,6 +351,22 @@ public class TraitTest extends DeltaTest{
     }
 
     @Test
+    public void removeExistingMethodSetInClassSucc()  {
+        Model model = assertParseOk(
+                "module M;"
+                + "trait T = {Unit myMethod(){skip;}Unit myMethod2(){skip;}}  "
+                + "class C {uses T removes { Unit myMethod(); Unit myMethod2(); };  }"
+        );
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertNotNull(cls);
+        assertTrue(cls.getMethods().getNumChild() == 0);
+
+        model.applyTraits();
+        assertTrue(cls.getMethods().getNumChild() == 0);
+    }
+
+    @Test
     public void addAndRemoveExistingMethod()  {
         Model model = assertParseOk(
                 "module M; "
@@ -401,7 +418,7 @@ public class TraitTest extends DeltaTest{
     }
     
     @Test
-    public void circularTraits()  {
+    public void circularTraitsMultiMod()  {
         Model model = assertParseOk(
                 "module M;"
                 + "trait T = {Unit myMethod(){ skip; }} "
@@ -416,6 +433,8 @@ public class TraitTest extends DeltaTest{
         model.applyTraits();
         assertTrue(cls.getMethods().getNumChild() == 1);
     }
+    
+    
     
 
     @Test
@@ -531,6 +550,46 @@ public class TraitTest extends DeltaTest{
         model.applyDelta(delta);
         assertTrue(cls.getMethods().getNumChild() == 5);
         assertTrue(cls2.getMethods().getNumChild() == 5);
+    }
+    
+    
+    @Test
+    public void removeSetFromDelta() {
+        Model model = assertParseOk("module TestMod;" 
+                + "interface Inter {}" 
+                + "trait T2 = { " 
+                + "  Unit driver(){"
+                + "    println(\"hallo\");" 
+                + "    this.greeting();" 
+                + "    this.printLine_1();" 
+                + "    this.printLine_2();"
+                + "    this.sendoff();" 
+                + "  }" 
+                + "  Unit printLine_1(){println(\"I'm 1!\");}"
+                + "  Unit printLine_2(){println(\"I'm 2!\");}" 
+                + "  Unit printLine_3(){println(\"I'm 3!\");}"
+                + "}"
+                + "class InterImpl(Inter inter) implements Inter {  uses T2;  }"
+                + "class InterImpl2(Inter inter) implements Inter { uses T2; }"
+                + ""
+                + "delta D3;" + "modifies class TestMod.InterImpl{" 
+                + "    adds Int i = 0;" 
+                + "    removes { "
+                + "      Unit printLine_1(); Unit printLine_2(); Unit printLine_3(); }"
+                +"}");
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "TestMod", "InterImpl");
+        assertNotNull(cls);
+        assertTrue(cls.getMethods().getNumChild() == 0);
+
+        model.applyTraits();
+
+        assertTrue(cls.getMethods().getNumChild() == 4);
+        DeltaDecl delta = findDelta(model, "D3");
+        assertNotNull(delta);
+        assertThat(delta, instanceOf(DeltaDecl.class));
+        model.applyDelta(delta);
+        assertTrue(cls.getMethods().getNumChild() == 1);
     }
     
 

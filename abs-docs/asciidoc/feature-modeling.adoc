@@ -50,9 +50,7 @@ InterfaceModifier ::= 'adds' MethSig ';'
 
 Modifier ::= 'adds' FieldDecl
            | 'removes' FieldDecl
-           | 'adds' MethDecl
-           | 'removes' MethSig
-           | 'modifies' MethDecl
+           | TraitOper 
         
 DeltaParams ::= '(' DeltaParam (',' DeltaParam)* ')'
 
