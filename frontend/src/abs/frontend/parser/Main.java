@@ -264,6 +264,12 @@ public class Main {
             m.evaluateAllProductDeclarations();
             rewriteModel(m, product);
 
+
+            m.flattenTraitOnly();
+            System.out.println("start simplifications!");
+            m.collapseTraitModifiers();
+            System.out.println("done with simplifications!");
+            
             // type check PL before flattening
 //            if (typecheck)
 //                typeCheckProductLine(m);
@@ -275,9 +281,7 @@ public class Main {
                     m.flattenForProduct(product);
                 else
                     m.flattenForProductUnsafe(product);
-            } else {
-                m.flattenTraitOnly();
-            }
+            } 
 
             if (dump) {
                 m.dumpMVars();

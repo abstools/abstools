@@ -15,6 +15,52 @@ import abs.frontend.parser.*;
  */
 aspect DeltaModifierApplicator {
 
+
+    public void ModuleModifier.collapseTraitModifiers() { }
+    public void Modifier.collapseTraitModifiers(ClassDecl cd) { }
+    @Override
+    public void ModifyClassModifier.collapseTraitModifiers() { 
+        for (Modifier mod : getModifierList()) {
+            mod.collapseTraitModifiers(getClassDecl());
+        }
+    }
+    
+    
+    @Override
+    public void DeltaTraitModifier.collapseTraitModifiers(ClassDecl cd) { 
+    	getMethodModifier().collapseTraitModifiers(cd);
+    }
+
+    @Override
+    public void ModifyMethodModifier.collapseTraitModifiers(ClassDecl cd){
+    	System.out.println("collapsing!");
+        TraitExpr tt = getTraitExpr();
+        TraitSetExpr set = tt.resolve(cd);
+        ModifyMethodModifier newMod = this.copy();
+        newMod.setParent(getParent());
+        set.setParent(null);
+        newMod.setChild(set, 0);
+        parent.setChild(newMod, parent.getIndexOfChild(this));
+    }
+    
+    
+    @Override
+    public void AddMethodModifier.collapseTraitModifiers(ClassDecl cd){
+    	System.out.println("collapsing!");
+        TraitExpr tt = getTraitExpr();
+        TraitSetExpr set = tt.resolve(cd);
+        AddMethodModifier newMod = this.copy();
+        newMod.setParent(getParent());
+        set.setParent(null);
+        newMod.setChild(set, 0);
+        parent.setChild(newMod, parent.getIndexOfChild(this));
+    }
+    
+        
+    @Override
+    public void RemoveMethodModifier.collapseTraitModifiers(ClassDecl cd){ }
+    
+    
     abstract public void ModuleModifier.apply() throws DeltaModellingException;
 
     /**************************************************************************

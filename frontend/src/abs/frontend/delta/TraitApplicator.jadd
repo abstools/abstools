@@ -8,16 +8,22 @@ import abs.frontend.parser.*;
 aspect TraitApplicator {
 
 
-  	
+
+    
+    
+       
+    
+  
     /*
     * DeltaTraitModifier references trait operations from a class.
     */
     public void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ 
         ArrayList<MethodModifier> operations = new ArrayList<>();
-        rewriteToList(getMethodModifier(), operations);
-        for (MethodModifier traitOper : operations) {
-            traitOper.applyTo(cd); 
-        }
+        //rewriteToList(getMethodModifier(), operations);
+        //for (MethodModifier traitOper : operations) {
+        //    traitOper.applyTo(cd); 
+        //}
+        getMethodModifier().applyTo(cd); 
     }
   
     /*
@@ -167,12 +173,12 @@ aspect TraitApplicator {
 		          cd.addAddedIn(newSig.getName(), d.getName());
 		      }
         }
-
+/*
         //necessary because the helper collects them in the wrong order
         Collections.reverse(operations);
         for (MethodModifier oper : operations) {
             oper.applyTo(cd);
-        }
+        }*/
     }    
 
     // collects all MethodModifier in an AST and returns the left-most TraitExpr
