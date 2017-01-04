@@ -20,20 +20,40 @@ aspect DeltaModifierApplicator {
     public void Modifier.collapseTraitModifiers(ClassDecl cd) { }
     @Override
     public void ModifyClassModifier.collapseTraitModifiers() { 
-        for (Modifier mod : getModifierList()) {
+    	ArrayList<Modifier> cop = new ArrayList<Modifier>();
+    	for( Modifier mod :getModifierList() ) cop.add(mod);
+        for ( Modifier mod : cop ) {
             mod.collapseTraitModifiers(getClassDecl());
         }
     }
     
     
     @Override
-    public void DeltaTraitModifier.collapseTraitModifiers(ClassDecl cd) { 
-    	getMethodModifier().collapseTraitModifiers(cd);
+    public void DeltaTraitModifier.collapseTraitModifiers(ClassDecl cd) {
+    
+        ArrayList<MethodModifier> operations = new ArrayList<>();
+        rewriteToList(getMethodModifier(), operations);
+        if(operations.size() >= 2){
+            ASTNode parent = getParent();
+            parent.removeChild(parent.getIndexOfChild(this));
+            for (MethodModifier traitOper : operations) {
+
+				DeltaTraitModifier newDel = this.copy();
+				newDel.setParent(null);
+				traitOper.setParent(null);
+				newDel.setChild(traitOper, 0);
+				newDel.collapseTraitModifiers(cd);
+				ModifyClassModifier mm = (ModifyClassModifier) parent.getParent();
+				mm.addModifier(newDel);
+            } 
+        } else {
+    	    getMethodModifier().collapseTraitModifiers(cd);
+    	}
     }
 
     @Override
     public void ModifyMethodModifier.collapseTraitModifiers(ClassDecl cd){
-    	System.out.println("collapsing!");
+    	System.out.println("collapsing mod!"+this);
         TraitExpr tt = getTraitExpr();
         TraitSetExpr set = tt.resolve(cd);
         ModifyMethodModifier newMod = this.copy();
@@ -46,7 +66,7 @@ aspect DeltaModifierApplicator {
     
     @Override
     public void AddMethodModifier.collapseTraitModifiers(ClassDecl cd){
-    	System.out.println("collapsing!");
+    	System.out.println("collapsing add!"+this);
         TraitExpr tt = getTraitExpr();
         TraitSetExpr set = tt.resolve(cd);
         AddMethodModifier newMod = this.copy();
@@ -58,7 +78,7 @@ aspect DeltaModifierApplicator {
     
         
     @Override
-    public void RemoveMethodModifier.collapseTraitModifiers(ClassDecl cd){ }
+    public void RemoveMethodModifier.collapseTraitModifiers(ClassDecl cd){System.out.println("collapsing rem!"+this); }
     
     
     abstract public void ModuleModifier.apply() throws DeltaModellingException;

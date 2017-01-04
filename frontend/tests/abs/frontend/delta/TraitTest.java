@@ -530,12 +530,12 @@ public class TraitTest extends DeltaTest{
                 + "    adds Int i = 0;" 
                 + "    adds { "
                 + "      Unit greeting(){println(\"hello\"); i = i + 1;} "
-                + "      Unit sendoff(){println(\"goodbye\"); i = i - 1;}};}"
+                + "      Unit sendoff(){println(\"goodbye\"); i = i - 1;}}}"
                 + "modifies class TestMod.InterImpl2{" + 
                 "      adds Int i = 0;" + 
                 "      adds { "
                 + "      Unit greeting(){println(\"hello\"); i = i + 1;} "
-                + "      Unit sendoff(){println(\"goodbye\"); i = i - 1;} };}");
+                + "      Unit sendoff(){println(\"goodbye\"); i = i - 1;}}}");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "TestMod", "InterImpl");
         assertNotNull(cls);
@@ -578,7 +578,7 @@ public class TraitTest extends DeltaTest{
                 + "delta D3;" + "modifies class TestMod.InterImpl{" 
                 + "    adds Int i = 0;" 
                 + "    removes { "
-                + "      Unit printLine_1(); Unit printLine_2(); Unit printLine_3(); };"
+                + "      Unit printLine_1(); Unit printLine_2(); Unit printLine_3(); }"
                 +"}");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "TestMod", "InterImpl");
@@ -615,7 +615,7 @@ public class TraitTest extends DeltaTest{
                 + ""
                 + "delta D3;" + "modifies class TestMod.InterImpl{" 
                 + "    adds Int i = 0;" 
-                + "    adds T modifies T2;"
+                + "    adds T modifies T2"
                 +"}");
         
 
@@ -654,7 +654,7 @@ public class TraitTest extends DeltaTest{
                 + ""
                 + "delta D3;" + "modifies class TestMod.InterImpl{" 
                 + "    adds Int i = 0;" 
-                + "    modifies T adds T2;"
+                + "    modifies T adds T2"
                 +"}");
         
 
@@ -691,7 +691,7 @@ public class TraitTest extends DeltaTest{
                 + ""
                 + "delta D3;" + "modifies class TestMod.InterImpl{" 
                 + "    adds Int i = 0;" 
-                + "    modifies T removes {Unit printLine_2();};"
+                + "    modifies T removes {Unit printLine_2();}"
                 +"}");
         
 
@@ -759,7 +759,6 @@ public class TraitTest extends DeltaTest{
                 + "}"
                 + "trait T2 = { " 
                 + "  Unit printLine_2(){println(\"I'm 2!\");}" 
-                + "  Unit printLine_3(){println(\"I'm 3!\");}"
                 + "}"                
                 + "trait T3 = { " 
                 + "  Unit printLine_5(){println(\"I'm 5!\");}"
@@ -773,7 +772,7 @@ public class TraitTest extends DeltaTest{
                 + ""
                 + "delta D3;" + "modifies class TestMod.InterImpl{" 
                 + "    adds Int i = 0;" 
-                + "    adds T modifies T2 removes {Unit printLine_2();};"
+                + "    adds T modifies T2 removes {Unit printLine_2();}"
                 + "    modifies T3 adds T4 "
                 +"}");
         
@@ -800,7 +799,63 @@ public class TraitTest extends DeltaTest{
         DeltaTraitModifier dml2 = (DeltaTraitModifier) mm.getModifier(2);
         ModifyMethodModifier mcl2 = (ModifyMethodModifier) dml2.getMethodModifier();
         TraitExpr set2 = mcl2.getTraitExpr();
-        assertTrue(set2.getChild(0).getNumChild() == 4);
+        assertTrue(set2.getChild(0).getNumChild() == 1);
+        assertThat(set2, instanceOf(TraitSetExpr.class));
+        
+        
+    }
+
+    @Test
+    public void collapseTest6()  {
+        Model model = assertParseOk("module TestMod;" 
+                + "interface Inter {}" 
+                + "trait T = { " 
+                + "  Unit printLine_1(){println(\"I'm 1!\");}"
+                + "  Unit printLine_2(){println(\"I'm 2!\");}" 
+                + "}"
+                + "trait T2 = { " 
+                + "  Unit printLine_2(){println(\"I'm 2!\");}" 
+                + "}"                
+                + "trait T3 = { " 
+                + "  Unit printLine_5(){println(\"I'm 5!\");}"
+                + "  Unit printLine_6(){println(\"I'm 6!\");}" 
+                + "}"
+                + "trait T4 = { " 
+                + "  Unit printLine_7(){println(\"I'm 7!\");}" 
+                + "  Unit printLine_8(){println(\"I'm 8!\");}"
+                + "}"
+                + "class InterImpl(Inter inter) implements Inter {   }"
+                + ""
+                + "delta D3;" + "modifies class TestMod.InterImpl{" 
+                + "    adds Int i = 0;" 
+                + "    adds T modifies T2 removes Unit printLine_2();"
+                + "    modifies T3 adds T4 "
+                +"}");
+        
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "TestMod", "InterImpl");
+        assertNotNull(cls);
+        assertTrue(cls.getMethods().getNumChild() == 0);
+
+        model.applyTraits();
+        model.collapseTraitModifiers();
+        
+        DeltaDecl delta = findDelta(model, "D3");
+        assertNotNull(delta);
+        assertThat(delta, instanceOf(DeltaDecl.class));
+        
+        ModifyClassModifier mm = (ModifyClassModifier)delta.getModuleModifier(0);
+        DeltaTraitModifier dml = (DeltaTraitModifier) mm.getModifier(1);
+        AddMethodModifier mcl = (AddMethodModifier) dml.getMethodModifier();
+        TraitExpr set = mcl.getTraitExpr();
+        assertTrue(set.getChild(0).getNumChild() == 2);
+        assertThat(set, instanceOf(TraitSetExpr.class));
+        
+
+        DeltaTraitModifier dml2 = (DeltaTraitModifier) mm.getModifier(2);
+        ModifyMethodModifier mcl2 = (ModifyMethodModifier) dml2.getMethodModifier();
+        TraitExpr set2 = mcl2.getTraitExpr();
+        assertTrue(set2.getChild(0).getNumChild() == 1);
         assertThat(set2, instanceOf(TraitSetExpr.class));
         
         

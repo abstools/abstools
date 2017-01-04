@@ -266,9 +266,7 @@ public class Main {
 
 
             m.flattenTraitOnly();
-            System.out.println("start simplifications!");
             m.collapseTraitModifiers();
-            System.out.println("done with simplifications!");
             
             // type check PL before flattening
 //            if (typecheck)

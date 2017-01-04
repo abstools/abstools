@@ -28,6 +28,7 @@ public class ExamplesTypeChecking extends ParseSamplesTest {
     protected Model parse(String input) throws Exception {
         Model m = assertTypeCheckFileOk(input, true);
         if (product != null) {
+            m.collapseTraitModifiers();
             m.flattenForProduct(product);
             final SemanticConditionList errors = m.getErrors();
             if (errors.containsErrors())

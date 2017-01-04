@@ -267,10 +267,11 @@ trait_expr :
 		   | trait_expr trait_oper					#TraitApplyFragment
 		   ;
 
-trait_oper : 'adds' trait_expr						#TraitAddFragment
-		   | 'modifies' trait_expr					#TraitModifyFragment
-		   | 'removes' methodsig 					#TraitRemoveFragment
+trait_oper : 
+		     'removes' methodsig 					#TraitRemoveFragment
 		   | 'removes' '{' methodsig* '}' 		    #TraitRemoveFragment
+		   | 'adds' trait_expr						#TraitAddFragment
+		   | 'modifies' trait_expr					#TraitModifyFragment
 		   ;
 		   
 trait_usage: 'uses' trait_expr ';'
@@ -319,7 +320,7 @@ oo_modifier : 'adds' class_decl                            # DeltaAddClassModifi
 
 class_modifier_fragment : 'adds' field_decl  # DeltaAddFieldFragment
     | 'removes' field_decl                   # DeltaRemoveFieldFragment
-    | trait_oper (';'?)						 # DeltaTraitFragment
+    | trait_oper     						 # DeltaTraitFragment
     ;
 
 interface_modifier_fragment : 'adds' methodsig   # DeltaAddMethodsigFragment
