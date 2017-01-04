@@ -6,7 +6,7 @@ RUN curl https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb -\# 
  && rm erlang-solutions_1.0_all.deb \
  && echo "deb http://ftp.debian.org/debian jessie-backports main\n" > /etc/apt/sources.list.d/jessie-backports.list \
  && apt-get -y update \
- && apt-get -y install --no-install-recommends unzip git openssl-blacklist libmcrypt-dev erlang openjdk-8-jre gawk \
+ && apt-get -y install --no-install-recommends unzip git openssl-blacklist libmcrypt-dev erlang openjdk-8-jre gawk graphviz\
  && docker-php-ext-install mcrypt \
  && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/abstools/absexamples.git /var/www/absexamples \
@@ -62,6 +62,7 @@ RUN curl http://costa.ls.fi.upm.es/download/saco.colab.zip -\# -o saco.colab.zip
  && curl http://costa.ls.fi.upm.es/download/apet.colab.zip -\# -o apet.colab.zip \
  && unzip apet.colab.zip -d /usr/local/lib \
  && rm apet.colab.zip
+RUN mkdir -p /usr/local/lib/frontend
 COPY frontend/dist /usr/local/lib/frontend/dist
 COPY frontend/bin /usr/local/lib/frontend/bin
 COPY frontend/lib /usr/local/lib/frontend/lib
