@@ -109,9 +109,9 @@ aspect DeltaModifierApplicator {
             next.setParent(par);
             //app.setTraitExpr(null);
             par.setChild(next, 0);
-            rewriteToList(opr, operations);
             if(next instanceof TraitModifyExpr)
-            	rewriteToList(par, operations);
+            	rewriteToList(next, operations, par);
+            rewriteToList(opr, operations);
         } 
     }
   
