@@ -108,7 +108,7 @@ abstract Modifier;
 abstract MethodModifier : Modifier;
 AddMethodModifier : MethodModifier ::= TraitExpr;
 ModifyMethodModifier : MethodModifier ::= TraitExpr;
-RemoveMethodModifier : MethodModifier ::= MethodSig;
+RemoveMethodModifier : MethodModifier ::= MethodSig*;
 AddFieldModifier : Modifier ::= FieldDecl;
 RemoveFieldModifier : Modifier ::= FieldDecl;
 AddMethodSigModifier : MethodSigModifier ::= MethodSig;

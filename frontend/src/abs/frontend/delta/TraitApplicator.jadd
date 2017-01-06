@@ -5,51 +5,7 @@ import abs.common.*;
 import abs.frontend.parser.*;
 
 
-aspect TraitApplicator {
-
-
-  	
-    /*
-    * DeltaTraitModifier references trait operations from a class.
-    */
-    public void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ 
-        ArrayList<MethodModifier> operations = new ArrayList<>();
-        rewriteToList(getMethodModifier(), operations);
-        for (MethodModifier traitOper : operations) {
-            traitOper.applyTo(cd); 
-        }
-    }
-  
-    /*
-    *  Fixes the parse tree and splits a big trait operation into a list of trait operations
-    *  This is needed so in 
-      'modifies class M.C{ 
-          adds { Unit n(){skip;} } 
-          removes Unit m();
-      }'  
-      the removes is applied to the class, not the set
-    */	
-    public void DeltaTraitModifier.rewriteToList(TraitExpr tt, ArrayList<MethodModifier> operations, MethodModifier par){
-        if(tt instanceof TraitModifyExpr){         
-            TraitModifyExpr app = (TraitModifyExpr) tt;
-            TraitExpr next = app.getTraitExpr();
-            MethodModifier opr = app.getMethodModifier();
-            next.setParent(par);
-            //app.setTraitExpr(null);
-            par.setChild(next, 0);
-            rewriteToList(opr, operations);
-        } 
-    }
-  
-
-    public void DeltaTraitModifier.rewriteToList(MethodModifier tt, ArrayList<MethodModifier> operations){
-        operations.add(tt);
-        if(tt instanceof AddMethodModifier){
-            rewriteToList(((AddMethodModifier)tt).getTraitExpr(), operations, tt);
-        } else if(tt instanceof ModifyMethodModifier){
-            rewriteToList(((ModifyMethodModifier)tt).getTraitExpr(), operations, tt);
-        }
-    }
+aspect TraitApplicator {    
 
     /*
      * TraitUse is the trait application from within a class. Transform it into
@@ -112,24 +68,24 @@ aspect TraitApplicator {
     }
     
     private void RemoveMethodModifier.applyToList(List<MethodImpl> list) throws DeltaModellingException{ 
-        MethodSig mysig = this.getMethodSig();
-
-        // in given ClassDecl: find MethodDecl that matches sig
-        int found = -1;
-        for (int i = 0; i < list.getNumChild(); i++) {
-            MethodSig sig = list.getChild(i).getMethodSig();
-            if (sig.matches(mysig)) {
-                found = i;
-                break;
+        for (MethodSig mysig : getMethodSigList()){
+            // in given ClassDecl: find MethodDecl that matches sig
+            int found = -1;
+            for (int i = 0; i < list.getNumChild(); i++) {
+                MethodSig sig = list.getChild(i).getMethodSig();
+                if (sig.matches(mysig)) {
+                    found = i;
+                    break;
+                }
             }
-        }
        
-        if (found >= 0)
-            // remove MethodImpl from list
-            list.removeChild(found);
-        else
-            throw new DeltaModellingException( 
-                      "trait wants to remove method [" + mysig + "], which was not found");
+            if (found >= 0)
+                // remove MethodImpl from list
+                list.removeChild(found);
+            else
+                throw new DeltaModellingException( 
+                    "trait wants to remove method [" + mysig + "], which was not found");
+        }
     }
 
 
@@ -167,12 +123,12 @@ aspect TraitApplicator {
 		          cd.addAddedIn(newSig.getName(), d.getName());
 		      }
         }
-
+/*
         //necessary because the helper collects them in the wrong order
         Collections.reverse(operations);
         for (MethodModifier oper : operations) {
             oper.applyTo(cd);
-        }
+        }*/
     }    
 
     // collects all MethodModifier in an AST and returns the left-most TraitExpr

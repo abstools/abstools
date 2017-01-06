@@ -264,6 +264,10 @@ public class Main {
             m.evaluateAllProductDeclarations();
             rewriteModel(m, product);
 
+
+            m.flattenTraitOnly();
+            m.collapseTraitModifiers();
+            
             // type check PL before flattening
 //            if (typecheck)
 //                typeCheckProductLine(m);
@@ -275,9 +279,7 @@ public class Main {
                     m.flattenForProduct(product);
                 else
                     m.flattenForProductUnsafe(product);
-            } else {
-                m.flattenTraitOnly();
-            }
+            } 
 
             if (dump) {
                 m.dumpMVars();

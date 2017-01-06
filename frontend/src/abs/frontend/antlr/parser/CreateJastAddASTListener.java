@@ -10,6 +10,7 @@ import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
+import abs.frontend.antlr.parser.ABSParser.MethodsigContext;
 import abs.frontend.antlr.parser.ABSParser.TraitApplyFragmentContext;
 import abs.frontend.antlr.parser.ABSParser.TraitNameFragmentContext;
 import abs.frontend.antlr.parser.ABSParser.TraitSetFragmentContext;
@@ -160,7 +161,11 @@ new List<ModuleDecl>(),
         setV(ctx,new ModifyMethodModifier((TraitExpr) v(ctx.trait_expr())));
      }
     @Override public void exitTraitRemoveFragment(abs.frontend.antlr.parser.ABSParser.TraitRemoveFragmentContext ctx) {
-        setV(ctx,new RemoveMethodModifier((MethodSig) v(ctx.methodsig())/*, (MethodModifier)v(ctx.trait_oper())*/));
+        List<MethodSig> l = new List<MethodSig>();
+        for (MethodsigContext methodSig : ctx.methodsig()) {
+            l.add((MethodSig)v(methodSig));
+        }
+        setV(ctx,new RemoveMethodModifier(l));
      }
 
     

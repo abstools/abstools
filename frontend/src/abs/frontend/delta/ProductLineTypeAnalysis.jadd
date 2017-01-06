@@ -9,7 +9,9 @@ aspect ProductLineTypeAnalysis {
         getTraitExpr().collectMethodIDs(methodIDSet, model); 
     }
     public void RemoveMethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model) {
-        methodIDSet.add(getMethodSig().getName());
+        for (MethodSig sig : getMethodSigList()) {
+            methodIDSet.add(sig.getName());        
+        }
     }
     public void AddMethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model) {
         getTraitExpr().collectMethodIDs(methodIDSet, model); 
