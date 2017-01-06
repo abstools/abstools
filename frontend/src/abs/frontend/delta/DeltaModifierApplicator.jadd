@@ -55,7 +55,6 @@ aspect DeltaModifierApplicator {
 
     @Override
     public void ModifyMethodModifier.collapseTraitModifiers(ClassDecl cd){
-    	System.out.println("collapsing mod!"+this);
         TraitExpr tt = getTraitExpr();
         TraitSetExpr set = tt.resolve(cd);
         ModifyMethodModifier newMod = this.copy();
@@ -68,7 +67,6 @@ aspect DeltaModifierApplicator {
     
     @Override
     public void AddMethodModifier.collapseTraitModifiers(ClassDecl cd){
-    	System.out.println("collapsing add!"+this);
         TraitExpr tt = getTraitExpr();
         TraitSetExpr set = tt.resolve(cd);
         AddMethodModifier newMod = this.copy();

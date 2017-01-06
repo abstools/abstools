@@ -881,11 +881,14 @@ public class TraitTest extends DeltaTest{
                 + "adds Int i = 0;"
                 + "adds T " 
                 + "modifies T2 " 
+                + "removes { Unit printLine_0(); }"
+                + "                removes { Unit printLine_1(); }"
                 + "adds {"
                 + "Unit printLine_2(){println(\"I'm 2!\");}"
-                + "Unit printLine_3(){println(\"I'm 3!\");} "
+                + "Unit printLine_3(){println(\"I'm 3!\");}" 
                 + "}"
-                + "removes { Unit printLine_0(); Unit printLine_3(); }"
+                + "removes { Unit printLine_2(); }"
+                + "removes { Unit printLine_3(); }"
                 + "}"
                 );
         
@@ -902,7 +905,7 @@ public class TraitTest extends DeltaTest{
         assertThat(delta, instanceOf(DeltaDecl.class));
 
         ModifyClassModifier mm = (ModifyClassModifier)delta.getModuleModifier(0);
-        assertTrue(mm.getModifierList().getNumChild() == 5);
+        assertTrue(mm.getModifierList().getNumChild() == 8);
         
         
         DeltaTraitModifier dml = (DeltaTraitModifier) mm.getModifier(1);
