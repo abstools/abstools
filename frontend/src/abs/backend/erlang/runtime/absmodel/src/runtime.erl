@@ -109,7 +109,6 @@ end_mod(TaskRef) ->
 run_mod(Module, Debug, GCStatistics, Port,Clocklimit)  ->
     case Port of
         _ when is_integer(Port) ->
-            io:format(standard_error, "Starting server on port ~w, abort with Ctrl-C~n", [Port]),
             start_http(Port, Clocklimit),
             receive ok -> ok end;
         _ ->
