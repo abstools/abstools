@@ -197,9 +197,7 @@
       <arg value="../bin/rebar" />
       <arg value="compile" />
     </exec>
-    <copy todir="${build.dir}/abs/backend/maude" >
-      <fileset dir="${src.dir}/abs/backend/maude/" file="abs-interpreter.maude" />
-    </copy>
+    <copy file="${src.dir}/abs/backend/maude/abs-interpreter.maude" todir="${build.dir}/abs/backend/maude" />
   </target>	
 
   <target name="genshell">
