@@ -76,7 +76,7 @@ final class DeltaForGetSetFieldsBuilder {
 	}
 
 	RemoveMethodModifier removeRun() {
-		RemoveMethodModifier modifier = new RemoveMethodModifier(createMethodSig(RUN_METHOD, getUnit()));
+		RemoveMethodModifier modifier = new RemoveMethodModifier(new abs.frontend.ast.List<>(createMethodSig(RUN_METHOD, getUnit())));
 		return modifier;
 	}
 
