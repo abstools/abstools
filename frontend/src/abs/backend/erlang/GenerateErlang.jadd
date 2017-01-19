@@ -103,7 +103,7 @@ aspect GenerateErlang {
     else {
       ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
     }
-    ErlUtil.argumentList(ecs,null, builtin, isContextImperative(), getParams(), decl.getTypes(), vars);
+    ErlUtil.argumentList(ecs,null, builtin, isFnAppContextImperative(), getParams(), decl.getTypes(), vars);
   }
 
   @Override
