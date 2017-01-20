@@ -63,6 +63,16 @@ public class ClassGenerator {
             MethodSig ms = m.getMethodSig();
             ecs.pf(" %%%% %s:%s", m.getFileName(), m.getStartLine());
             ErlUtil.functionHeader(ecs, "m_" + ms.getName(), generatorClassMatcher(), ms.getParamList());
+            ecs.print("put(vars, #{");
+            boolean first = true;
+            for (ParamDecl p : ms.getParamList()) {
+                if (first == true) first = false;
+                else ecs.print(",");
+                // Same name construction as
+                // ErlUtil.functionHeader(CodeStream, String, List<String>, Mask)
+                ecs.format(" '%s' => %s", p.getName(), Vars.PREFIX + p.getName() + "_0");
+            }
+            ecs.println(" }),");
             ecs.println("try");
             ecs.incIndent();
             Vars vars = Vars.n(ms.getParamList());
@@ -96,6 +106,7 @@ public class ClassGenerator {
 
     private void generateConstructor() {
         ErlUtil.functionHeaderParamsAsList(ecs, "init", generatorClassMatcher(), classDecl.getParamList(), Mask.none);
+        ecs.println("put(vars, #{}),");
         Vars vars = Vars.n();
         for (ParamDecl p : classDecl.getParamList()) {
             ecs.pf("set(O,'%s',%s),", p.getName(), "P_" + p.getName());
