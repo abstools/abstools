@@ -728,9 +728,9 @@ aspect GenerateErlang {
           b.getLeft().generateErlangCode(ecs, buffer, v);
           buffer.setIndent(ecs.getIndent());
           buffer.println("->");
-          buffer.incIndent();
+          buffer.incIndent().incIndent();
           b.getRight().generateErlangCode(buffer, v);
-          buffer.decIndent();
+          buffer.decIndent().decIndent();
           buffer.close();
           branches_vars.add(v);
           branches.add(sw.toString());
