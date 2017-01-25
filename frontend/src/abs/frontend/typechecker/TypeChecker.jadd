@@ -681,6 +681,9 @@ aspect TypeChecker {
         for (CaseBranchStmt b : getCatchs()) {
             b.getLeft().typeCheck(e, exc);
             b.getRight().typeCheck(e);
+            for (PatternVarUse pv : b.getLeft().getBoundPatternVars()) {
+                e.add(new TypeError(pv, ErrorMessage.MATCHING_NOT_ALLOWED_IN_CATCH, pv.getName()));
+            }
         }
         if (hasFinally()) {
             getFinally().typeCheck(e);
