@@ -4,6 +4,8 @@
  */
 package abs.backend.common;
 
+import java.io.File;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -63,4 +65,26 @@ public class StmtTests extends SemanticTests {
     public void caseStatementTest() {
         assertEvalTrue("{ Int x = 0; case Pair(2, 3) { Pair(2, y) => x = y; _ => skip; } Bool testresult = x == 3; }");
     }
+    
+    @Test
+    public void caseStmtField() throws Exception {
+        assertEvalTrue(new File("tests/abssamples/backend/StmtTests/caseStmtField.abs"));
+     }
+
+    @Test
+    public void caseStmtBoundLocal() throws Exception {
+        assertEvalTrue(new File("tests/abssamples/backend/StmtTests/caseStmtBoundLocal.abs"));
+     }
+
+    @Test
+    public void caseStmtBoundParameter() throws Exception {
+        assertEvalTrue(new File("tests/abssamples/backend/StmtTests/caseStmtBoundParameter.abs"));
+     }
+
+    @Test
+    public void caseStmtBoundAssignedParameter() throws Exception {
+        assertEvalTrue(new File("tests/abssamples/backend/StmtTests/caseStmtBoundAssignedParameter.abs"));
+     }
+
+
 }
