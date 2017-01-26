@@ -75,7 +75,6 @@ aspect FnAppContext {
     eq DeltaDecl.getChild().isVarUseContextImperative(VarUse v) = true;
 
     eq FunctionDecl.getChild().isVarUseContextImperative(VarUse v) = false;
-    eq Annotation.getChild().isVarUseContextImperative(VarUse v) = false;
     eq LetExp.getChild().isVarUseContextImperative(VarUse v) {
         if (v.getDecl().equals(getVar())) return false;
         else return isVarUseContextImperative(v);
