@@ -64,6 +64,7 @@ aspect FnAppContext {
     inh boolean LetExp.isVarUseContextImperative(VarUse v);
     inh boolean Block.isVarUseContextImperative(VarUse v);
     inh boolean CaseBranchStmt.isVarUseContextImperative(VarUse v);
+    inh boolean CaseBranch.isVarUseContextImperative(VarUse v);
     eq Block.getChild().isVarUseContextImperative(VarUse v) {
         for (VarDecl d : getDirectVars()) {
             if (v.getDecl().equals(d)) return true;
@@ -80,6 +81,12 @@ aspect FnAppContext {
         else return isVarUseContextImperative(v);
     }
     eq CaseBranchStmt.getRight().isVarUseContextImperative(VarUse v) {
+        for (PatternVar pv : getLeft().getFreePatternVars()) {
+            if (v.getDecl().equals(pv.getVar())) return false;
+        }
+        return isVarUseContextImperative(v);
+    }
+    eq CaseBranch.getRight().isVarUseContextImperative(VarUse v) {
         for (PatternVar pv : getLeft().getFreePatternVars()) {
             if (v.getDecl().equals(pv.getVar())) return false;
         }
