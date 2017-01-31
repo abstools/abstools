@@ -278,6 +278,7 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
                     State#state{active=gb_sets:union(A, gb_sets:from_list(lists:flatten(A1))),
                                 clock_waiting=lists:flatten(C1)};
                 limit_reached ->
+                    influxdb:flush(),
                     case Keepalive of
                         false ->
                             io:format(standard_error, "Simulation time limit reached; terminating~n", []),

@@ -107,7 +107,8 @@ public class ErlApp {
             "absmodel/rebar.config",
             "gcstats_as_csv.erl",
             "bin/*",
-            "link_sources"
+            "link_sources",
+            "influx-grafana/*"
             );
     private static final Set<String> EXEC_FILES = ImmutableSet.of(
             "bin/rebar",

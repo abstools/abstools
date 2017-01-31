@@ -1,0 +1,18 @@
+InfluxSrv:
+  image: tutum/influxdb:latest
+  ports:
+    - "8083:8083"
+    - "8086:8086"
+  environment:
+    - PRE_CREATE_DB=absmodel
+    - ADMIN_USER=root
+    - INFLUXDB_INIT_PWD=root
+grafana:
+  image: grafana/grafana:latest
+  ports:
+    - "3000:3000"
+  environment:
+    - GF_AUTH_ANONYMOUS_ENABLED=true
+    - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+  links:
+    - "InfluxSrv:influxsrv"
