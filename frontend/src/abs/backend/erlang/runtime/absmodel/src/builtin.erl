@@ -1,7 +1,8 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(builtin).
 -include_lib("abs_types.hrl").
--export([currentms/1,getProductLine/1,lowlevelDeadline/1,print/2,println/2,random/2,strlen/2,substr/4,thisDC/1,toString/2,truncate/2]).
+-export([currentms/1,getProductLine/1,lowlevelDeadline/1,print/2,println/2,strlen/2,substr/4,thisDC/1,toString/2]).
+-export([random/2,truncate/2,numerator/2, denominator/2]).
 %%All builtin functions
 %%Must correspond to the set in GenerateErlang.jadd:FnApp.ERLANG_BUILTINS
 
@@ -73,7 +74,9 @@ toString(Cog,P) when is_pid(P) ->
                 pid_to_list(P) ++ ":" ++ toString(Cog, Value);
         false -> pid_to_list(P) ++ ":empty"
     end;
-toString(_Cog,#object{class=Cid,ref=Oid}) -> pid_to_list(Oid) ++ ":" ++ atom_to_list(Cid);
+toString(_Cog,#object{class=Cid,ref=Oid}) ->
+    re:replace(string:substr(atom_to_list(Cid), 7), "_", ".", [{return, list}])
+        ++ ":" ++ pid_to_list(Oid);
 toString(_Cog,T) when is_tuple(T) ->
     [C|A] = tuple_to_list(T),
     case C of
@@ -90,6 +93,18 @@ truncate(_Cog,{N,D})->
     N div D;
 truncate(_Cog,N)->
     N.
+
+numerator(_Cog, {N, _D}) ->
+    N;
+numerator(_Cog, A) when is_integer(A) ->
+    A.
+
+denominator(_Cog, {_N, D}) ->
+    D;
+denominator(_Cog, A) when is_integer(A) ->
+    1.
+
+
 
 println(_Cog,S)->
     io:format("~s~n",[S]).

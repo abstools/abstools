@@ -39,12 +39,8 @@ TraitDecl : Decl ::= TraitExpr;
 abstract TraitExpr;
 TraitSetExpr : TraitExpr ::= MethodImpl*;
 TraitNameExpr : TraitExpr ::= <Name>;
-TraitModifyExpr : TraitExpr ::= TraitExpr TraitOper;
+TraitModifyExpr : TraitExpr ::= TraitExpr MethodModifier;
 
-abstract TraitOper : Modifier;
-AddMethodModifier : TraitOper ::= TraitExpr;
-ModifyMethodModifier : TraitOper ::= TraitExpr;
-RemoveMethodModifier : TraitOper ::= MethodSig;
 
 TraitUse : Modifier ::= TraitExpr; 
 /***************************************/
@@ -82,10 +78,8 @@ HasInterface : HasCondition ::= InterfaceTypeUse;
 
 abstract ModuleModifier;
 abstract NamespaceModifier : ModuleModifier;
- 
 abstract OOModifier : ModuleModifier;
 abstract ClassModifier : OOModifier;
-abstract Modifier;
 abstract InterfaceModifier : OOModifier;
 abstract MethodSigModifier;
 
@@ -110,11 +104,16 @@ AddInterfaceModifier : InterfaceModifier ::= InterfaceDecl;
 RemoveInterfaceModifier : InterfaceModifier ::= <Name>;
 ModifyInterfaceModifier : InterfaceModifier ::= <Name> MethodSigModifier*;
 
+abstract Modifier;
+abstract MethodModifier : Modifier;
+AddMethodModifier : MethodModifier ::= TraitExpr;
+ModifyMethodModifier : MethodModifier ::= TraitExpr;
+RemoveMethodModifier : MethodModifier ::= MethodSig*;
 AddFieldModifier : Modifier ::= FieldDecl;
 RemoveFieldModifier : Modifier ::= FieldDecl;
 AddMethodSigModifier : MethodSigModifier ::= MethodSig;
 RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
-DeltaTraitModifier : Modifier ::= TraitOper;
+DeltaTraitModifier : Modifier ::= MethodModifier;
 
 ObjectUpdate ::= <ClassName> AwaitStmt UpdatePreamble PreBody:AssignStmt* PostBody:AssignStmt* ;
 UpdatePreamble ::= VarDeclStmt* ; // TODO also allow FunctionDecls and DataTypeDecls
@@ -182,11 +181,11 @@ ExpressionStmt: Stmt ::= Exp:Exp;
 AssertStmt: Stmt ::= Condition:PureExp;
 VarDeclStmt: Stmt ::= VarDecl:VarDecl;
 
-IfStmt: Stmt ::= Condition:PureExp Then:Stmt [Else:Stmt];
-WhileStmt: Stmt ::= Condition:PureExp Body:Stmt;
+IfStmt: Stmt ::= Condition:PureExp Then:Block [Else:Block];
+WhileStmt: Stmt ::= Condition:PureExp Body:Block;
 CaseStmt : Stmt ::= Expr:PureExp Branch:CaseBranchStmt* ;
-CaseBranchStmt ::= Left:Pattern Right:Stmt ;
-TryCatchFinallyStmt : Stmt ::= Body:Stmt Catch:CaseBranchStmt* [Finally:Stmt] ;
+CaseBranchStmt ::= Left:Pattern Right:Block ;
+TryCatchFinallyStmt : Stmt ::= Body:Block Catch:CaseBranchStmt* [Finally:Block] ;
 // A Block is the body of programs and methods and is also used for initblocks
 // It contains a list of zero or more ast.VarOrFieldDecl
 // and zero or more ast.Stmt, these are named Fields and Stmts resp.

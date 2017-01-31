@@ -63,6 +63,16 @@ public class ClassGenerator {
             MethodSig ms = m.getMethodSig();
             ecs.pf(" %%%% %s:%s", m.getFileName(), m.getStartLine());
             ErlUtil.functionHeader(ecs, "m_" + ms.getName(), generatorClassMatcher(), ms.getParamList());
+            ecs.print("put(vars, #{");
+            boolean first = true;
+            for (ParamDecl p : ms.getParamList()) {
+                if (first == true) first = false;
+                else ecs.print(",");
+                // Same name construction as
+                // ErlUtil.functionHeader(CodeStream, String, List<String>, Mask)
+                ecs.format(" '%s' => %s", p.getName(), Vars.PREFIX + p.getName() + "_0");
+            }
+            ecs.println(" }),");
             ecs.println("try");
             ecs.incIndent();
             Vars vars = Vars.n(ms.getParamList());
@@ -70,17 +80,22 @@ public class ClassGenerator {
             ecs.println();
             ecs.decIndent().println("catch");
             ecs.incIndent();
-            ecs.println("_:Error ->");
+            ecs.println("_:Exception ->");
             if (classDecl.hasRecoverBranch()) {
                 ecs.incIndent();
-                ecs.println("Recovered = try 'recover'(O, Error) catch _:RecoverError -> false end,");
+                ecs.println("Recovered = try 'recover'(O, Exception) catch _:RecoverError -> io:format(standard_error, \"Recovery block for ~s in class " + classDecl.qualifiedName() + " failed with exception ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, RecoverError)]), false end,");
                 ecs.println("case Recovered of");
-                ecs.incIndent().println("true -> exit(Error);");
-                ecs.println("false -> object:die(O, Error), exit(Error)");
+                ecs.incIndent().println("true -> exit(Exception);");
+                ecs.println("false ->");
+                ecs.incIndent();
+                ecs.println("io:format(standard_error, \"Uncaught ~s in method " + ms.getName() + " not handled successfully by recovery block, killing object ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, O)]),");
+                ecs.println("object:die(O, Exception), exit(Exception)");
                 ecs.decIndent().println("end");
                 ecs.decIndent();
             } else {
-                ecs.incIndent().println("object:die(O, Error), exit(Error)");
+                ecs.incIndent();
+                ecs.println("io:format(standard_error, \"Uncaught ~s in method " + ms.getName() + " and no recovery block in class definition, killing object ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, O)]),");
+                ecs.println("object:die(O, Exception), exit(Exception)");
                 ecs.decIndent();
             }
             ecs.decIndent().println("end.");
@@ -91,6 +106,7 @@ public class ClassGenerator {
 
     private void generateConstructor() {
         ErlUtil.functionHeaderParamsAsList(ecs, "init", generatorClassMatcher(), classDecl.getParamList(), Mask.none);
+        ecs.println("put(vars, #{}),");
         Vars vars = Vars.n();
         for (ParamDecl p : classDecl.getParamList()) {
             ecs.pf("set(O,'%s',%s),", p.getName(), "P_" + p.getName());
@@ -108,11 +124,12 @@ public class ClassGenerator {
             ecs.println(",");
         }
         if (classDecl.isActiveClass()) {
-            ecs.println("task:block_without_time_advance(Cog),");
+            ecs.println("cog:process_is_blocked_for_gc(Cog, self()),");
             ecs.print("cog:add_sync(Cog,active_object_task,O,");
             ecs.print(vars.toStack());
             ecs.println("),");
-            ecs.print("task:acquire_token(Cog,");
+            ecs.println("cog:process_is_runnable(Cog,self()),");
+            ecs.print("task:wait_for_token(Cog,");
             ecs.print(vars.toStack());
             ecs.println("),");
         }

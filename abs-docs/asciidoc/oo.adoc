@@ -15,6 +15,10 @@ declarations.  Method names start with a lowercase letter.
 | _MethSig_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` `;`
 |====
 
+Method declarations can carry an `[Atomic]` annotation.  The compiler will
+statically check that any definitions for such methods do not contain
+suspension points (`suspend` and `await` statements).
+
 The interfaces in the example below represent a database system, providing
 functionality to store and retrieve files, and a node of a peer-to-peer file
 sharing system.  Each node of a peer-to-peer system plays both the role of a
@@ -84,7 +88,22 @@ block has the same restrictions as in the init block.
 |====
 
 
+A class definition contains zero or more method definitions.  Each method has
+a name, return type and zero or more parameters.  All methods declared in an
+interface that is implemented by the class or one of their superinterfaces
+must be defined in the class body or in one of its traits.  A class is free to
+define methods not declared in an interface; such methods are private to the
+class and cannot be called from outside the class.
 
+NOTE: ABS currently does not support method overloading.  Each method must
+have a unique name since methods are not disambiguated by their parameter
+lists.
+
+Definitions for atomic method declarations have to be annotated with
+`[Atomic]` as well.  The compiler will statically check that the definition
+does not contain suspension points (`suspend` and `await` statements).  Such
+methods can be called from init blocks; all other methods cannot be called
+from init blocks.
 
 
 [source]

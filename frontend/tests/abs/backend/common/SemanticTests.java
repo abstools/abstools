@@ -4,8 +4,10 @@
  */
 package abs.backend.common;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -14,12 +16,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import abs.ABSTest;
+import abs.ABSTest.Config;
 import abs.backend.BackendTestDriver;
 import abs.backend.erlang.ErlangTestDriver;
 import abs.backend.java.JavaTestDriver;
 // import abs.backend.java.dynamic.JavaDynamicTestDriver;
 import abs.backend.maude.MaudeCompiler;
 import abs.backend.maude.MaudeTestDriver;
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 
 @RunWith(Parameterized.class)
@@ -96,6 +101,22 @@ public abstract class SemanticTests {
         try {
             assertNotNull(m.lookupModule("BackendTest"));
             driver.assertEvalTrue(m);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e); // TODO: remove; too many too handle
+                                           // for now.
+        }
+    }
+    
+    public void assertEvalTrue(File f) {
+        Model m;
+        try {
+            m = ABSTest.assertParseFileOk(f.getPath(), Config.WITH_STD_LIB);
+            assertNotNull(m.lookupModule("BackendTest"));
+            assertFalse(m.hasParserErrors());
+            assertFalse(m.hasTypeErrors());
+            assertEvalTrue(m);
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {

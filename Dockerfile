@@ -6,7 +6,7 @@ RUN curl https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb -\# 
  && rm erlang-solutions_1.0_all.deb \
  && echo "deb http://ftp.debian.org/debian jessie-backports main\n" > /etc/apt/sources.list.d/jessie-backports.list \
  && apt-get -y update \
- && apt-get -y install --no-install-recommends unzip git openssl-blacklist libmcrypt-dev erlang openjdk-8-jre \
+ && apt-get -y install --no-install-recommends unzip git openssl-blacklist libmcrypt-dev erlang openjdk-8-jre gawk graphviz\
  && docker-php-ext-install mcrypt \
  && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/abstools/absexamples.git /var/www/absexamples \
@@ -23,7 +23,7 @@ EC_COFLOCOHOME=\"/usr/local/lib/cofloco/\"\n\
 EC_SRAHOME=\"/usr/local/lib/sra/\"\n\
 # path to aPET\n\
 EC_APETHOME=\"/usr/local/lib/apet\"\n\
-# path to SYCO\n\
+# path to SYCO\n\a.
 EC_SYCOHOME=\"/usr/local/lib/apet\"\n" > /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG \
  && cp /var/www/easyinterface/server/config/envisage.cfg /var/www/easyinterface/server/config/eiserver.cfg \
  && cp /var/www/easyinterface/clients/web/envisage.cfg /var/www/easyinterface/clients/web/webclient.cfg \
@@ -62,6 +62,7 @@ RUN curl http://costa.ls.fi.upm.es/download/saco.colab.zip -\# -o saco.colab.zip
  && curl http://costa.ls.fi.upm.es/download/apet.colab.zip -\# -o apet.colab.zip \
  && unzip apet.colab.zip -d /usr/local/lib \
  && rm apet.colab.zip
+RUN mkdir -p /usr/local/lib/frontend
 COPY frontend/dist /usr/local/lib/frontend/dist
 COPY frontend/bin /usr/local/lib/frontend/bin
 COPY frontend/lib /usr/local/lib/frontend/lib
@@ -85,9 +86,9 @@ RUN apt-get update && \
 RUN cd / && \
 	mkdir solvers_exec && \
   cd /solvers_exec && \
-  git clone --recursive -b bind_preferences https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git && \
+  git clone --recursive https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git && \
 	cd zephyrus2 && \
-	git checkout 924b50f04c73b8269d3b14157dd0abbf7b5bd99c && \ 
+	git checkout tags/v1.0 && \ 
 	#check out tested version with smartdeployer
   pip install -e /solvers_exec/zephyrus2
 # download MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz that comes with gecode
@@ -99,7 +100,9 @@ RUN cd /solvers_exec && \
 ENV PATH /solvers_exec/MiniZincIDE:$PATH
 # clone abs_deployer
 RUN cd /solvers_exec && \
-	git clone --recursive --depth=1 -b bind_pref https://github.com/jacopoMauro/abs_deployer.git
+	git clone --recursive https://github.com/jacopoMauro/abs_deployer.git && \
+	cd abs_deployer && \
+	git checkout tags/v0.3
 ENV PATH /solvers_exec/abs_deployer:$PATH
 # download chuffed, add global-dir in minizinc
 RUN cd /solvers_exec && \
@@ -115,6 +118,16 @@ RUN cp /solvers_exec/abs_deployer/docker/docker_scripts/fzn-chuffed /bin/fzn-chu
 	chmod 755 /solvers_exec/chuffed/binary/linux/fzn_chuffed
 # add the path to absfrontend.jar in classpath
 ENV CLASSPATH=/usr/local/lib/frontend/dist/absfrontend.jar:$CLASSPATH
+RUN echo "\
+# set corresponding paths in easyinterface\n\
+#\n\
+# path to SmartDeployer\n\
+EC_SMARTDEPLOYERHOME=\"/solvers_exec\"\n\
+# path to minizinc\n\
+#\n\
+EC_PATH=\"\$EC_PATH::/solvers_exec/minizinc-1.6/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
+
+
 
 
 #######
@@ -123,7 +136,7 @@ ENV CLASSPATH=/usr/local/lib/frontend/dist/absfrontend.jar:$CLASSPATH
 
 RUN echo "deb http://ppa.launchpad.net/hvr/ghc/ubuntu trusty main" >> /etc/apt/sources.list
 RUN apt-get update -y -q
-RUN apt-get install -y --force-yes -q ghc-8.0.1 cabal-install-1.24 happy-1.19.5
+RUN apt-get install -y --force-yes -q ghc-8.0.1 cabal-install-1.24 happy-1.19.5 zlib1g-dev
 RUN git clone https://github.com/abstools/habs /usr/local/lib/habs && \
     cd /usr/local/lib/habs && \
     git submodule update --init

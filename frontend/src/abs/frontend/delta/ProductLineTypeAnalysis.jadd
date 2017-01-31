@@ -1,40 +1,46 @@
 aspect ProductLineTypeAnalysis {
-
-
-    
     
     public void DeltaTraitModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model){ 
-        getTraitOper().collectMethodIDs(methodIDSet, model);;
+        getMethodModifier().collectMethodIDs(methodIDSet, model);
     }
-	public abstract void TraitOper.collectMethodIDs(HashSet<String> methodIDSet, Model model);
-	public void ModifyMethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model){ getTraitExpr().collectMethodIDs(methodIDSet, model); }
-	public void RemoveMethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model){ methodIDSet.add(getMethodSig().getName()); }	
-    public void AddMethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model){ getTraitExpr().collectMethodIDs(methodIDSet, model); }
+
+    public abstract void MethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model);
+    public void ModifyMethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model) { 
+        getTraitExpr().collectMethodIDs(methodIDSet, model); 
+    }
+    public void RemoveMethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model) {
+        for (MethodSig sig : getMethodSigList()) {
+            methodIDSet.add(sig.getName());        
+        }
+    }
+    public void AddMethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model) {
+        getTraitExpr().collectMethodIDs(methodIDSet, model); 
+    }
     
-	public abstract void TraitExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model);
+    public abstract void TraitExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model);
     
-     public void TraitNameExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model){ 
-      for (Decl decl : model.getDecls()) {
-        if(decl instanceof TraitDecl){
-            TraitDecl tDecl = (TraitDecl)decl;
-            if(tDecl.getName().equals(this.getName())){
-                tDecl.getTraitExpr().collectMethodIDs(methodIDSet, model);
+    public void TraitNameExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model){ 
+        for (Decl decl : model.getDecls()) {
+            if(decl instanceof TraitDecl){
+                TraitDecl tDecl = (TraitDecl)decl;
+                if(tDecl.getName().equals(this.getName())){
+                    tDecl.getTraitExpr().collectMethodIDs(methodIDSet, model);
+                }
             }
         }
     }
-  }
     public void TraitModifyExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model){ 
-      getTraitExpr().collectMethodIDs(methodIDSet, model); 
-      getTraitOper().collectMethodIDs(methodIDSet, model); 
-  }
-  
-    public void TraitSetExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model){ 
-      for (MethodImpl met : getMethodImplList()) {
-        methodIDSet.add(met.getMethodSig().getName());
+        getTraitExpr().collectMethodIDs(methodIDSet, model); 
+        getMethodModifier().collectMethodIDs(methodIDSet, model); 
     }
-  }
-    
-    
+
+    public void TraitSetExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model){ 
+        for (MethodImpl met : getMethodImplList()) {
+            methodIDSet.add(met.getMethodSig().getName());
+        }
+    }
+
+
     syn lazy SemanticConditionList Model.typeCheckPL() {
         SemanticConditionList errors = new SemanticConditionList();
         if (! hasProductLine())
@@ -46,7 +52,7 @@ aspect ProductLineTypeAnalysis {
 
     /*
      * Return all valid feature configurations of the feature model.
-     * This is done by solving the CSP and only considering features (no attributes, as that could result in an infinite number of configurations)
+     * This is done by solving the CSP and only considering features (no attributes, as that could result in a quasi infinite number of configurations)
      */
     syn lazy Set<Set<String>> Model.getFeatureModelConfigurations() {
         if (! hasMTVL())
@@ -91,7 +97,5 @@ aspect ProductLineTypeAnalysis {
     syn lazy DeltaDecl DeltaClause.getDeltaDecl() {
         return getProductLine().getModel().getDeltaDeclsMap().get(getDeltaspec().getDeltaID());
     }
-    
-    
     
 }

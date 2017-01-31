@@ -266,8 +266,8 @@ extract_references(DataStructure) ->
 
 to_deep_list(#object{ref=Ref}) ->
     {object, Ref};
-to_deep_list(#cog{}) ->
-    [];
+to_deep_list(#cog{dc=#object{ref=Ref}}) ->
+    {object, Ref};
 to_deep_list(Ref) when is_pid(Ref) ->
     {future, Ref};
 to_deep_list(DataStructure) when is_tuple(DataStructure) ->

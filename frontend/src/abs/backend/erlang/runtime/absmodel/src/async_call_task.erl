@@ -21,8 +21,9 @@ start(#state{fut=Future,obj=O=#object{class=C,cog=Cog=#cog{ref=CogRef,dc=DC}},me
     try
         receive
             {stop_world, CogRef} ->
-                task:block_without_time_advance(Cog),
-                task:acquire_token(Cog, [O,DC|P]);
+                cog:process_is_blocked_for_gc(Cog, self()),
+                cog:process_is_runnable(Cog, self()),
+                task:wait_for_token(Cog, [O,DC|P]);
             die_prematurely ->
                 task:send_notifications(killed_by_the_clock),
                 exit(killed_by_the_clock)
@@ -41,8 +42,9 @@ complete_future(Future, Status, Value, Cog, Stack) ->
              %% meantime.
              receive
                  {stop_world, _Sender} ->
-                     task:block_without_time_advance(Cog),
-                     task:acquire_token(Cog, [Value | Stack]),
+                     cog:process_is_blocked_for_gc(Cog, self()),
+                     cog:process_is_runnable(Cog, self()),
+                     task:wait_for_token(Cog, [Future, Value | Stack]),
                      Loop();
                 {get_references, Sender} ->
                      cog:submit_references(Sender, gc:extract_references([Future, Value | Stack])),

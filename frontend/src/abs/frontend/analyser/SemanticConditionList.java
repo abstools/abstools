@@ -14,6 +14,7 @@ public class SemanticConditionList implements Iterable<SemanticCondition> {
 
     ArrayList<SemanticCondition> contents = new ArrayList<SemanticCondition>();
     boolean containsErrors = false;
+    boolean containsWarnings = false;
 
     public SemanticConditionList() {}
     
@@ -30,10 +31,21 @@ public class SemanticConditionList implements Iterable<SemanticCondition> {
         return containsErrors;
     }
 
+    public boolean containsWarnings() {
+        return containsWarnings;
+    }
+
     public int getErrorCount() {
         int count = 0;
         for (SemanticCondition c : contents) {
             if (c.isError()) count = count + 1;
+        }
+        return count;
+    }
+    public int getWarningCount() {
+        int count = 0;
+        for (SemanticCondition c : contents) {
+            if (c.isWarning()) count = count + 1;
         }
         return count;
     }
@@ -45,6 +57,13 @@ public class SemanticConditionList implements Iterable<SemanticCondition> {
         return null;
     }
 
+    public SemanticCondition getFirstWarning() {
+        for (SemanticCondition c : contents) {
+            if (c.isWarning()) return c;
+        }
+        return null;
+    }
+
     public boolean add(TypeCheckerException e) {
         containsErrors = true;
         return contents.add(e.getTypeError());
@@ -52,11 +71,13 @@ public class SemanticConditionList implements Iterable<SemanticCondition> {
     
     public boolean add(SemanticCondition e) {
         if (e.isError()) containsErrors = true;
+        if (e.isWarning()) containsWarnings = true;
         return contents.add(e);
     }
 
     public boolean addAll(SemanticConditionList l) {
         if (!containsErrors) containsErrors = l.containsErrors();
+        if (!containsWarnings) containsWarnings = l.containsWarnings();
         return contents.addAll(l.contents);
     }
 

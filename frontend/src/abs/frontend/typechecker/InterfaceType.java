@@ -15,10 +15,15 @@ import abs.frontend.ast.List;
 import abs.frontend.ast.MethodSig;
 
 public class InterfaceType extends ReferenceType {
+    private final java.util.List<Type> supertypes;
     private final InterfaceDecl decl;
 
     public InterfaceType(InterfaceDecl decl) {
         this.decl = decl;
+        this.supertypes = new java.util.ArrayList<Type>();
+        for (InterfaceTypeUse i : decl.getExtendedInterfaceUses()) {
+            supertypes.add(i.getType());
+        }
     }
 
     public InterfaceDecl getDecl() {
@@ -68,14 +73,13 @@ public class InterfaceType extends ReferenceType {
     private boolean isAssignable(Type t, Set<Type> visitedTypes) {
         if (visitedTypes.contains(this))
             return false;
-        
+
         visitedTypes.add(this);
         if (super.isAssignable(t))
             return true;
 
-        for (InterfaceTypeUse i : decl.getExtendedInterfaceUses()) {
-            Type it = i.getType();
-            if (it.isInterfaceType()) {
+        for (Type it : supertypes) {
+            if (it.isInterfaceType()) { // maybe UnkownType
                 if (((InterfaceType)it).isAssignable(t, visitedTypes))
                     return true;
             }

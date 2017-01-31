@@ -1,0 +1,44 @@
+/**
+ * This aspect returns the names of the free and bound variables of a Pattern.
+ *
+ * A pattern variable is free if it does not occur in the surrounding context;
+ * it is bound if a definition with the same name occurs in a surrounding
+ * context.
+ */
+
+aspect FreePatternVars {
+    syn lazy java.util.List<PatternVar> Pattern.getFreePatternVars();
+    
+    eq PatternVar.getFreePatternVars() {
+        return Collections.singletonList(this);
+    }
+    
+    eq PatternVarUse.getFreePatternVars() = Collections.emptyList();
+    eq LiteralPattern.getFreePatternVars() = Collections.emptyList();
+    eq UnderscorePattern.getFreePatternVars() = Collections.emptyList();
+    eq ConstructorPattern.getFreePatternVars() {
+        ArrayList<PatternVar> res = new ArrayList<PatternVar>();
+        for (Pattern p : getParams()) {
+            res.addAll(p.getFreePatternVars());
+        }
+        return res;
+    }
+    
+    
+    syn lazy java.util.List<PatternVarUse> Pattern.getBoundPatternVars();
+    
+    eq PatternVarUse.getBoundPatternVars() {
+        return Collections.singletonList(this);
+    }
+    
+    eq PatternVar.getBoundPatternVars() = Collections.emptyList();
+    eq LiteralPattern.getBoundPatternVars() = Collections.emptyList();
+    eq UnderscorePattern.getBoundPatternVars() = Collections.emptyList();
+    eq ConstructorPattern.getBoundPatternVars() {
+        ArrayList<PatternVarUse> res = new ArrayList<PatternVarUse>();
+        for (Pattern p : getParams()) {
+            res.addAll(p.getBoundPatternVars());
+        }
+        return res;
+    }
+}

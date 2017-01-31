@@ -1,0 +1,19 @@
+module BackendTest;
+
+interface I {
+    Bool test(Int field);
+}
+
+class C implements I {
+    Bool test(Int field) {
+        return case 0 {
+            field => True;
+            _ => False;
+        };
+    }
+}
+
+{
+    I i = new C();
+    Bool testresult = await i!test(0);
+}

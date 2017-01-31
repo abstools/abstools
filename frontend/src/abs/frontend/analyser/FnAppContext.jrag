@@ -1,41 +1,127 @@
 /**
- * Analysis of function application to determine if it is being called
- * from an imperative or functional context.
- *
- * This is used by the Erlang garbage collector to determine
- * whether to add local variables to the data structure representing
- * the execution stack when applying a function. In a functional context,
- * all objects and futures are already present in the data structure passed
- * to the function, and there's no need to extend it.
+ * Analysis of function application and variable use context, mostly for the
+ * purpose of Erlang code generation.  Context can be imperative (within a
+ * statement block) or functional (within a function body), although it is a
+ * bit more complicated than that.
  */
 aspect FnAppContext {
-    inh lazy boolean FnApp.isContextImperative();
-    syn boolean FnApp.isContextFunctional();
 
-    eq FnApp.isContextFunctional() = !isContextImperative();
+    /**
+     * Analysis of function application to determine if it is being called
+     * from an imperative or functional context.
+     *
+     * Function calls are in an imperative context if they occur within an
+     * imperative statement.
+     *
+     * This is used by the Erlang garbage collector to determine whether to
+     * add local variables to the data structure representing the execution
+     * stack when applying a function.  See ErlUtil.argumentList()
+     */
+
+    inh lazy boolean FnApp.isFnAppContextImperative();
 
     // Statements (Imperative)
-    eq FieldDecl.getInitExp().isContextImperative() = true;
-    eq VarDecl.getInitExp().isContextImperative() = true;
-    eq AssignStmt.getValue().isContextImperative() = true;
-    eq DurationStmt.getMin().isContextImperative() = true;
-    eq DurationStmt.getMax().isContextImperative() = true;
-    eq MoveCogToStmt.getTarget().isContextImperative() = true;
-    eq ExpressionStmt.getExp().isContextImperative() = true;
-    eq AssertStmt.getCondition().isContextImperative() = true;
-    eq IfStmt.getCondition().isContextImperative() = true;
-    eq WhileStmt.getCondition().isContextImperative() = true;
-    eq CaseStmt.getExpr().isContextImperative() = true;
-    eq ReturnStmt.getRetExp().isContextImperative() = true;
-    eq ThrowStmt.getReason().isContextImperative() = true;
-    eq DieStmt.getReason().isContextImperative() = true;
-    eq AwaitStmt.getGuard().isContextImperative() = true;
-    eq RebindStmt.getObj().isContextImperative() = true;
-    eq RebindStmt.getVal().isContextImperative() = true;
-    eq MoveStmt.getLoc().isContextImperative() = true;
-    eq MoveStmt.getTo().isContextImperative() = true;
+    eq FieldDecl.getInitExp().isFnAppContextImperative() = true;
+    eq VarDecl.getInitExp().isFnAppContextImperative() = true;
+    eq AssignStmt.getValue().isFnAppContextImperative() = true;
+    eq DurationStmt.getMin().isFnAppContextImperative() = true;
+    eq DurationStmt.getMax().isFnAppContextImperative() = true;
+    eq MoveCogToStmt.getTarget().isFnAppContextImperative() = true;
+    eq ExpressionStmt.getExp().isFnAppContextImperative() = true;
+    eq AssertStmt.getCondition().isFnAppContextImperative() = true;
+    eq IfStmt.getCondition().isFnAppContextImperative() = true;
+    eq WhileStmt.getCondition().isFnAppContextImperative() = true;
+    eq CaseStmt.getExpr().isFnAppContextImperative() = true;
+    eq ReturnStmt.getRetExp().isFnAppContextImperative() = true;
+    eq ThrowStmt.getReason().isFnAppContextImperative() = true;
+    eq DieStmt.getReason().isFnAppContextImperative() = true;
+    eq AwaitStmt.getGuard().isFnAppContextImperative() = true;
+    eq RebindStmt.getObj().isFnAppContextImperative() = true;
+    eq RebindStmt.getVal().isFnAppContextImperative() = true;
+    eq MoveStmt.getLoc().isFnAppContextImperative() = true;
+    eq MoveStmt.getTo().isFnAppContextImperative() = true;
 
     // Function
-    eq ExpFunctionDef.getRhs().isContextImperative() = false;
-    eq Annotation.getValue().isContextImperative() = false; // Are annotations compiled?
+    eq ExpFunctionDef.getRhs().isFnAppContextImperative() = false;
+    eq Annotation.getValue().isFnAppContextImperative() = false; // Are annotations compiled?
+
+    /**
+     * Analysis of variable use to determine if it is within an imperative or
+     * functional context.
+     *
+     * Variables are declared in an imperative context if their definition
+     * occurs within an imperative statement, i.e., as a variable declaration
+     * or method parameter.  Variables bound via function parameter, `let',
+     * `case' or `catch' are in a functional context.
+     *
+     * This is used by the Erlang code generator to emit code for accessing
+     * the variable's value.
+     */
+
+    syn boolean VarUse.isVarUseContextImperative() = isVarUseContextImperative(this);
+
+    inh boolean VarUse.isVarUseContextImperative(VarUse v);
+    inh boolean LetExp.isVarUseContextImperative(VarUse v);
+    inh boolean Block.isVarUseContextImperative(VarUse v);
+    inh boolean CaseBranchStmt.isVarUseContextImperative(VarUse v);
+    inh boolean CaseBranch.isVarUseContextImperative(VarUse v);
+    eq Block.getChild().isVarUseContextImperative(VarUse v) {
+        for (VarDecl d : getDirectVars()) {
+            if (v.getDecl().equals(d)) return true;
+        }
+        return isVarUseContextImperative(v);
+    }
+    eq ClassDecl.getChild().isVarUseContextImperative(VarUse v) = true;
+    eq UpdateDecl.getChild().isVarUseContextImperative(VarUse v) = true;
+    eq DeltaDecl.getChild().isVarUseContextImperative(VarUse v) = true;
+
+    eq FunctionDecl.getChild().isVarUseContextImperative(VarUse v) = false;
+    eq LetExp.getChild().isVarUseContextImperative(VarUse v) {
+        if (v.getDecl().equals(getVar())) return false;
+        else return isVarUseContextImperative(v);
+    }
+    eq CaseBranchStmt.getRight().isVarUseContextImperative(VarUse v) {
+        for (PatternVar pv : getLeft().getFreePatternVars()) {
+            if (v.getDecl().equals(pv.getVar())) return false;
+        }
+        return isVarUseContextImperative(v);
+    }
+    eq CaseBranch.getRight().isVarUseContextImperative(VarUse v) {
+        for (PatternVar pv : getLeft().getFreePatternVars()) {
+            if (v.getDecl().equals(pv.getVar())) return false;
+        }
+        return isVarUseContextImperative(v);
+    }
+
+    /**
+     * Analysis of parameter declarations to determine whether they are in
+     * imperative (method) or functional (let, case, function, catch) context.
+     */
+
+    syn boolean ParamDecl.isParamDeclImperative() = isParamDeclImperative(this);
+    inh boolean ParamDecl.isParamDeclImperative(ParamDecl p);
+    inh boolean LetExp.isParamDeclImperative(ParamDecl p);
+    inh boolean CaseBranchStmt.isParamDeclImperative(ParamDecl p);
+    eq LetExp.getExp().isParamDeclImperative(ParamDecl p) {
+        if (getVar().equals(p)) return false;
+        else return isParamDeclImperative(p);
+    }
+    eq CaseBranchStmt.getRight().isParamDeclImperative(ParamDecl p) {
+        for (PatternVar pv : getLeft().getFreePatternVars()) {
+            if (pv.getVar().equals(p)) return false;
+        }
+        return isParamDeclImperative(p);
+    }
+    eq ClassDecl.getChild().isParamDeclImperative(ParamDecl p) {
+        // The only declarations in enclosing contexts are field declarations
+        // in classes, which are always imperative
+        return true;
+    }
+    eq FunctionDecl.getChild().isParamDeclImperative(ParamDecl p) {
+        // Function declarations are always top-level; we could check that p
+        // is defined but it is currently not possible to reference a
+        // declaration inside a function body that is not declared in a
+        // lexically-enclosing scope
+        return false;
+    }
 }

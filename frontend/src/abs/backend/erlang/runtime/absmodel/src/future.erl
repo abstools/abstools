@@ -35,7 +35,7 @@ start(null,_Method,_Params, _Cog, _Stack) ->
     throw(dataNullPointerException);
 start(Callee,Method,Params, Cog, Stack) ->
     {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params,true,self()], []),
-    wait_for_future_start(Cog, Stack),
+    wait_for_future_start(Cog, [Ref | Stack]),
     Ref.
 
 wait_for_future_start(Cog, Stack) ->
@@ -44,7 +44,8 @@ wait_for_future_start(Cog, Stack) ->
             ok;
         {stop_world, _Sender} ->
             cog:process_is_blocked_for_gc(Cog, self()),
-            task:acquire_token(Cog, Stack),
+            cog:process_is_runnable(Cog, self()),
+            task:wait_for_token(Cog, Stack),
             wait_for_future_start(Cog, Stack);
         {get_references, Sender} ->
             cog:submit_references(Sender, gc:extract_references(Stack)),
@@ -85,32 +86,23 @@ get_blocking(Future, Cog, Stack) ->
         false ->
             %% Tell future not to advance time until we picked up ourselves
             register_waiting_task(Future, self()),
-            task:block_with_time_advance(Cog),
-            CalleeCog = (fun Loop() ->
+            cog:process_is_blocked(Cog,self()),
+            (fun Loop() ->
                      receive
-                         {value_present, Future, CalleeCog1} ->
-                             CalleeCog1;
+                         {value_present, Future, _CalleeCog} ->
+                             ok;
                          {stop_world, _Sender} ->
-                             %% we already passed back the token above.  Eat
-                             %% the stop_world or we'll deadlock later.
+                             %% `cog:process_is_blocked' already passed back
+                             %% the token.  Eat the stop_world or we'll
+                             %% deadlock later.
                              Loop();
                          {get_references, Sender} ->
                              cog:submit_references(Sender, gc:extract_references(Stack)),
                              Loop()
                      end end)(),
-            case (Cog == CalleeCog) of
-                %% Try to avoid deadlock here.  Not sure if asynchronous
-                %% self-call + get without await will even reach this point,
-                %% but doesn't hurt to try in case we fix other locations
-                %% later.  (See function `await' below for the same pattern.)
-                true ->
-                    confirm_wait_unblocked(Future, self()),
-                    task:acquire_token(Cog, Stack);
-                false ->
-                    task:acquire_token(Cog, Stack),
-                    confirm_wait_unblocked(Future, self())
-            end,
-            %% Only one recursion here since poll will return true now.
+            cog:process_is_runnable(Cog, self()),
+            confirm_wait_unblocked(Future, self()),
+            task:wait_for_token(Cog, Stack),
             get_after_await(Future)
     end.
 
@@ -123,28 +115,14 @@ await(Future, Cog, Stack) ->
             task:release_token(Cog, waiting),
             (fun Loop() ->
                      receive
-                         {value_present, Future, Cog} ->
-                             cog:process_is_runnable(Cog,self()),
-                             %% It's an async self-call; unblock the callee
-                             %% before we try to acquire the token ourselves.
-                             confirm_wait_unblocked(Future, self()),
-                             task:acquire_token(Cog, Stack);
                          {value_present, Future, _CalleeCog} ->
-                             %% It's a call to another cog: get our cog to
-                             %% running status before allowing the other cog
-                             %% to idle.  We can't call `acquire_token' before
-                             %% sending `okthx' though since two pairwise
-                             %% waiting cogs will deadlock.  Instead, we
-                             %% open-code `task:acquire_token' and add the
-                             %% proper callee unlocking and synchronous cog
-                             %% state change.
+                             %% Unblock this task before allowing the other
+                             %% task to terminate (and potentially letting its
+                             %% cog idle).
                              cog:process_is_runnable(Cog,self()),
                              confirm_wait_unblocked(Future, self()),
-                             task:acquire_token(Cog, Stack);
+                             task:wait_for_token(Cog, Stack);
                          {stop_world, _Sender} ->
-                             %% we already released the token above.  Eat the
-                             %% message or we'll block at inopportune moments
-                             %% later.
                              Loop();
                          {get_references, Sender} ->
                              cog:submit_references(Sender, gc:extract_references(Stack)),
@@ -310,11 +288,15 @@ running(_Event, State) ->
     {stop, not_supported, State}.
 
 
-next_state_on_okthx(State=#state{calleetask=CalleeTask,waiting_tasks=WaitingTasks, cookie=Cookie}, Task) ->
+next_state_on_okthx(State=#state{calleetask=CalleeTask,waiting_tasks=WaitingTasks, cookie=Cookie, register_in_gc=RegisterInGC}, Task) ->
     NewWaitingTasks=lists:delete(Task, WaitingTasks),
     case NewWaitingTasks of
         [] ->
             CalleeTask ! {Cookie, self()},
+            case RegisterInGC of
+                true -> gc:unroot_future(self());
+                false -> ok
+            end,
             {completed, State#state{waiting_tasks=[]}};
         _ ->
             {completing, State#state{waiting_tasks=NewWaitingTasks}}
@@ -333,7 +315,7 @@ completing({okthx, Task}, State) ->
     {NextState, State1} = next_state_on_okthx(State, Task),
     {next_state, NextState, State1};
 completing({waiting, Task}, State=#state{calleecog=CalleeCog,waiting_tasks=WaitingTasks}) ->
-    Task!{value_present, self(), CalleeCog},
+    Task ! {value_present, self(), CalleeCog},
     {next_state, completing, State=#state{waiting_tasks=[Task | WaitingTasks]}};
 completing(_Event, State) ->
     {stop, not_supported, State}.
@@ -353,7 +335,7 @@ completed({die, _Reason}, State) ->
 completed({okthx, _Task}, State) ->
     {next_state, completed, State};
 completed({waiting, Task}, State=#state{calleecog=CalleeCog}) ->
-    Task!{value_present, self(), CalleeCog},
+    Task ! {value_present, self(), CalleeCog},
     {next_state, completed, State};
 completed(_Event, State) ->
     {stop, not_supported, State}.

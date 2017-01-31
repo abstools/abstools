@@ -107,7 +107,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         try {
             f = Files.createTempDir();
             f.deleteOnExit();
-            genCode(model, f, true);
+            genCode(model, f, false);
             make(f);
         } finally {
             try {

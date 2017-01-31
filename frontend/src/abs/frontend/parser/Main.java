@@ -73,37 +73,37 @@ public class Main {
 
 
     public static void main(final String... args)  {
-       new Main().mainMethod(args);
+        new Main().mainMethod(args);
     }
 
     public void mainMethod(final String... args) {
-       try {
-           java.util.List<String> argslist = Arrays.asList(args);
-           if (argslist.contains("-maude")) {
-               abs.backend.maude.MaudeCompiler.main(args);
-           } else if(argslist.contains("-java")) {
-               abs.backend.java.JavaBackend.main(args);
-           } else if (argslist.contains("-erlang")) {
-               abs.backend.erlang.ErlangBackend.main(args);
-           } else if (argslist.contains("-prolog")) {
-               abs.backend.prolog.PrologBackend.main(args);
-           } else if (argslist.contains("-coreabs")) {
-               abs.backend.coreabs.CoreAbsBackend.main(args);
-           } else if (argslist.contains("-prettyprint")) {
-               abs.backend.prettyprint.PrettyPrinterBackEnd.main(args);
-           } else if (argslist.contains("-keyabs")) {
-               abs.backend.keyabs.KeyAbsBackend.main(args);
-           } else if (argslist.contains("-outline")) {
-               abs.backend.outline.OutlinePrinterBackEnd.main(args);
-           } else {
-               Model m = parse(args);
-               if (m.hasParserErrors()) {
-                   printParserErrorAndExit();
-               }
-           }
-       } catch (Exception e) {
-          printErrorAndExit(e.getMessage());
-       }
+        try {
+            java.util.List<String> argslist = Arrays.asList(args);
+            if (argslist.contains("-maude")) {
+                abs.backend.maude.MaudeCompiler.main(args);
+            } else if(argslist.contains("-java")) {
+                abs.backend.java.JavaBackend.main(args);
+            } else if (argslist.contains("-erlang")) {
+                abs.backend.erlang.ErlangBackend.main(args);
+            } else if (argslist.contains("-prolog")) {
+                abs.backend.prolog.PrologBackend.main(args);
+            } else if (argslist.contains("-coreabs")) {
+                abs.backend.coreabs.CoreAbsBackend.main(args);
+            } else if (argslist.contains("-prettyprint")) {
+                abs.backend.prettyprint.PrettyPrinterBackEnd.main(args);
+            } else if (argslist.contains("-keyabs")) {
+                abs.backend.keyabs.KeyAbsBackend.main(args);
+            } else if (argslist.contains("-outline")) {
+                abs.backend.outline.OutlinePrinterBackEnd.main(args);
+            } else {
+                Model m = parse(args);
+                if (m.hasParserErrors()) {
+                    printParserErrorAndExit();
+                }
+            }
+        } catch (Exception e) {
+            printErrorAndExit(e.getMessage());
+        }
     }
 
     public void setWithStdLib(boolean withStdLib) {
@@ -176,9 +176,9 @@ public class Main {
             } else if (arg.equals("-noattr")) {
                 ignoreattr = true;
             } else if (arg.equals("-preprocess")) { //Preprocessor
-                    preprocess = true;
+                preprocess = true;
             } else if (arg.equals("-h") || arg.equals("-help")
-                       || arg.equals("--help")) {
+                    || arg.equals("--help")) {
                 printUsageAndExit();
             } else
                 remainingArgs.add(arg);
@@ -206,16 +206,16 @@ public class Main {
 
             File f = new File(fileName);
             if (!f.canRead()) {
-               throw new IllegalArgumentException("File "+fileName+" cannot be read");
+                throw new IllegalArgumentException("File "+fileName+" cannot be read");
             }
 
             if (!f.isDirectory() && !isABSSourceFile(f) && !isABSPackageFile(f)) {
-               throw new IllegalArgumentException("File "+fileName+" is not a legal ABS file");
+                throw new IllegalArgumentException("File "+fileName+" is not a legal ABS file");
             }
         }
 
         for (String fileName : fileNames) {
-           parseFileOrDirectory(units, new File(fileName));
+            parseFileOrDirectory(units, new File(fileName));
         }
 
         if (stdlib)
@@ -241,8 +241,8 @@ public class Main {
         if (verbose) {
             System.out.println("Analyzing Model...");
         }
-        
-        
+
+
         //Preprocessor
         if (preprocess) {
             System.out.println("Preprocessing Model...");
@@ -264,10 +264,13 @@ public class Main {
             m.evaluateAllProductDeclarations();
             rewriteModel(m, product);
 
+
+            m.flattenTraitOnly();
+            m.collapseTraitModifiers();
+            
             // type check PL before flattening
-            // [ramus] disabled temporarily due to a bug
-            //if (typecheck)
-            //    typeCheckProductLine(m);
+//            if (typecheck)
+//                typeCheckProductLine(m);
 
             // flatten before checking error, to avoid calculating *wrong* attributes
             if (fullabs) {
@@ -276,7 +279,8 @@ public class Main {
                     m.flattenForProduct(product);
                 else
                     m.flattenForProductUnsafe(product);
-            }else{ m.flattenTraitOnly(); }
+            } 
+
             if (dump) {
                 m.dumpMVars();
                 m.dump();
@@ -317,7 +321,7 @@ public class Main {
      * @throws WrongProgramArgumentException
      */
     private static void rewriteModel(Model m, String productname)
-        throws WrongProgramArgumentException
+            throws WrongProgramArgumentException
     {
         // Generate reflective constructors for all features
         ProductLine pl = m.getProductLine();
@@ -730,10 +734,10 @@ public class Main {
     protected static void printHeader() {
 
         String[] header = new String[] {
-           "The ABS Compiler" + " v" + getVersion(),
-           "Copyright (c) 2009-2013,    The HATS Consortium",
-           "Copyright (c) 2013-2016,    The Envisage Project",
-           "http://www.abs-models.org/" };
+                "The ABS Compiler" + " v" + getVersion(),
+                "Copyright (c) 2009-2013,    The HATS Consortium",
+                "Copyright (c) 2013-2016,    The Envisage Project",
+        "http://www.abs-models.org/" };
 
         int maxlength = header[0].length();
         StringBuilder starline = new StringBuilder();

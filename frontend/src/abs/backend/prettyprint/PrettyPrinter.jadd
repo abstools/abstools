@@ -228,6 +228,28 @@ aspect doPrettyPrinter {
         stream.print(";");
     }
 
+    public void ThrowStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        getAnnotationList().doPrettyPrint(stream, formatter, "");
+        if (getNumAnnotation() > 0) {
+            stream.println();
+            formatter.afterStmt();
+        }
+        stream.print("throw ");
+        getReason().doPrettyPrint(stream, formatter);
+        stream.print(";");
+    }
+
+    public void DieStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        getAnnotationList().doPrettyPrint(stream, formatter, "");
+        if (getNumAnnotation() > 0) {
+            stream.println();
+            formatter.afterStmt();
+        }
+        stream.print("die ");
+        getReason().doPrettyPrint(stream, formatter);
+        stream.print(";");
+    }
+
     public void AssignStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
         if (getNumAnnotation() > 0) {
@@ -445,10 +467,11 @@ aspect doPrettyPrinter {
         formatter.beforeCloseBrace();
         formatter.afterStmt();
         stream.print("}");
-        formatter.afterCloseBrace();
         if (hasFinally()) {
-            stream.println("finally ");
+            stream.print(" finally ");
             getFinally().doPrettyPrint(stream, formatter);
+        } else {
+            formatter.afterCloseBrace();
         }
     }
 
@@ -962,7 +985,7 @@ aspect doPrettyPrinter {
     }
 
     public void FieldUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print(getName());
+        stream.print("this." + getName());
     }
 
     public void VarUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
@@ -1132,7 +1155,21 @@ aspect doPrettyPrinter {
 
     public void StringLiteral.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("\"");
-        stream.print(getContent());
+        for (char c : getContent().toCharArray()) {
+            switch (c) {
+            case '\\': stream.print("\\\\");
+                break;
+            case '"': stream.print("\\\"");
+                break;
+            case '\t': stream.print("\\t");
+                break;
+            case '\n': stream.print("\\n");
+                break;
+            case '\r': stream.print("\\r");
+                break;
+            default: stream.print(c);
+            }
+        }
         stream.print("\"");
     }
 

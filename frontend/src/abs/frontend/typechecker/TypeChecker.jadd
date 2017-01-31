@@ -328,6 +328,17 @@ aspect TypeChecker {
         }
     }
 
+    public void ParametricFunctionDecl.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
+        HashSet<String> names = new HashSet<String>();
+        for (TypeParameterDecl d : getTypeParameters()) {
+            d.typeCheck(e);
+            if (!names.add(d.getName())) {
+                e.add(new TypeError(d, ErrorMessage.DUPLICATE_DATATYPE_PARAMETER, d.getName()));
+            }
+        }
+    }
+
     public void InterfaceDecl.checkCycle(SemanticConditionList e, InterfaceDecl d) {
         if (this == d) {
             e.add(new TypeError(d, ErrorMessage.CYCLIC_INHERITANCE, getName()));
@@ -670,6 +681,9 @@ aspect TypeChecker {
         for (CaseBranchStmt b : getCatchs()) {
             b.getLeft().typeCheck(e, exc);
             b.getRight().typeCheck(e);
+            for (PatternVarUse pv : b.getLeft().getBoundPatternVars()) {
+                e.add(new TypeError(pv, ErrorMessage.MATCHING_NOT_ALLOWED_IN_CATCH, pv.getName()));
+            }
         }
         if (hasFinally()) {
             getFinally().typeCheck(e);
@@ -1077,9 +1091,9 @@ aspect TypeCheckProductline {
             dc.typeCheck(getModel().getDeltaDeclsMap(), definedFeatures, e);
             deadDeltas.remove(dc.getDeltaspec().getDeltaID());
         }
-        // check for DeltaDecls missing a DeltaClause in the ProductLine declaration - this should be a warning, not error
-        //if (! deadDeltas.isEmpty())
-        //    e.add(new TypeError(this, ErrorMessage.ERROR_IN_PRODUCT_LINE_MISSING_DELTACLAUSE, getName(), StringUtils.join(",", deadDeltas)));
+        // Warn about DeltaDecls missing a DeltaClause in the ProductLine declaration
+        if (! deadDeltas.isEmpty())
+            e.add(new SemanticWarning(this, ErrorMessage.MISSING_DELTA_CLAUSE, getName(), StringUtils.join(",", deadDeltas)));
             
         Set<String> fs = new HashSet<String>();
         for (Feature f : getFeatures()) {

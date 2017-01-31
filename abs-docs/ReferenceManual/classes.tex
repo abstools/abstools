@@ -118,7 +118,7 @@ class DataBase(Map<Filename,File> db) implements DB {
   }
   
   Unit storeFile(Filename fId, File file) {
-      db = insert(Pair(fId,file), db);
+      db = insert(db, Pair(fId,file));
   }
   
   Filenames listFiles() {

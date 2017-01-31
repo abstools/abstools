@@ -187,7 +187,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
         // make sure the MethodImpl defined in the delta is now in the class
         ModifyClassModifier cm = (ModifyClassModifier) delta.getModuleModifier(0);
         DeltaTraitModifier mm = (DeltaTraitModifier)cm.getModifier(0);
-        ModifyMethodModifier opr = (ModifyMethodModifier)mm.getTraitOper();
+        ModifyMethodModifier opr = (ModifyMethodModifier)mm.getMethodModifier();
         TraitSetExpr expr = (TraitSetExpr)opr.getTraitExpr();
         
         // It's a bit of apples (FieldUse) vs. oranges (VarUse), but the strings look the same.

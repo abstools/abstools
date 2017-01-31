@@ -248,6 +248,9 @@ aspect TypeCheckerExtension {
     }
 
     refine TypeChecker public void InterfaceDecl.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
+        TypeChecker.InterfaceDecl.typeCheck(s);
+        if (s.getErrorCount() > size) return;
         getModel().getTypeExt().checkInterfaceDecl(this);
     }
 

@@ -7,7 +7,7 @@ import abs.frontend.parser.*;
 
 aspect TraitResolver {
 
-    public abstract TraitSetExpr TraitOper.applyToSet(TraitSetExpr set, ClassDecl cd);
+    public abstract TraitSetExpr MethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd);
     public abstract TraitSetExpr TraitExpr.resolve(ClassDecl cd);
     
     private void ModifyMethodModifier.replaceOriginal(TraitSetExpr set, MethodImpl met, MethodImpl flattened) {
@@ -51,9 +51,9 @@ aspect TraitResolver {
     public TraitSetExpr ModifyMethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd){
         TraitSetExpr curr = set;
         TraitExpr tt = getTraitExpr();
-        ArrayList<TraitOper> operations = new ArrayList<>();
+        ArrayList<MethodModifier> operations = new ArrayList<>();
         /*
-         *  The syntax is TraitExpression TraitOperation. 
+         *  The syntax is TraitExpression MethodModifieration. 
          *  We search for the TraitExpression that is used by this 'adds'
          *  This may break the syntax, thus we collect all operation on the right
          *  and apply them one by one.
@@ -68,7 +68,7 @@ aspect TraitResolver {
         //necessary because the helper collects them in the wrong order
         Collections.reverse(operations);
       
-        for (TraitOper oper : operations) {
+        for (MethodModifier oper : operations) {
             curr = oper.applyToSet(curr, cd);
         }
         return curr;
@@ -106,9 +106,9 @@ aspect TraitResolver {
     public TraitSetExpr AddMethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd){
         TraitSetExpr curr = set;
         TraitExpr tt = getTraitExpr();
-        ArrayList<TraitOper> operations = new ArrayList<>();
+        ArrayList<MethodModifier> operations = new ArrayList<>();
         /*
-         *  The syntax is TraitExpression TraitOperation. 
+         *  The syntax is TraitExpression MethodModifieration. 
          *  We search for the TraitExpression that is used by this 'adds'
          *  This may break the syntax, thus we collect all operation on the right
          *  and apply them one by one.
@@ -127,7 +127,7 @@ aspect TraitResolver {
         //necessary because the helper collects them in the wrong order
         Collections.reverse(operations);
       
-        for (TraitOper oper : operations) {
+        for (MethodModifier oper : operations) {
             curr = oper.applyToSet(curr, cd);
         }
         return curr;
@@ -159,7 +159,7 @@ aspect TraitResolver {
     
     public TraitSetExpr TraitModifyExpr.resolve(ClassDecl cd) throws DeltaModellingException {
         TraitSetExpr set = getTraitExpr().resolve(cd);
-        TraitOper oper = this.getTraitOper();
+        MethodModifier oper = this.getMethodModifier();
         return oper.applyToSet(set, cd);
     }
     

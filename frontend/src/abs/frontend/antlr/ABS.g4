@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014, Rudolf Schlatte. All rights reserved. 
+ * Copyright (c) 2014, Rudolf Schlatte. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 
@@ -200,7 +200,7 @@ interface_decl : annotation*
         ('extends' e+=interface_name (',' e+=interface_name)*)?
         '{' methodsig* '}'
     ;
-    
+
 methodsig : annotation* type_use IDENTIFIER paramlist ';' ;
 
 // Classes
@@ -256,24 +256,21 @@ decl : datatype_decl
     ;
 
 
-trait_decl : 'trait' TYPE_IDENTIFIER '='
-			trait_expr
-		   ;
+trait_decl : 'trait' TYPE_IDENTIFIER '=' trait_expr ;
 
-trait_expr : 
-		    '{' method* '}'					    	#TraitSetFragment
-		   | method 						        #TraitSetFragment
-		   | TYPE_IDENTIFIER						#TraitNameFragment
-		   | trait_expr trait_oper					#TraitApplyFragment
-		   ;
+trait_expr : '{' method* '}'		            #TraitSetFragment
+    | method 				            #TraitSetFragment
+    | TYPE_IDENTIFIER				    #TraitNameFragment
+    | trait_expr trait_oper	                    #TraitApplyFragment
+    ;
 
-trait_oper : 'adds' trait_expr						#TraitAddFragment
-		   | 'modifies' trait_expr					#TraitModifyFragment
-		   | 'removes' methodsig 					#TraitRemoveFragment
-		   ;
-		   
-trait_usage: 'uses' trait_expr ';'
-           ; 
+trait_oper : 'removes' methodsig                    #TraitRemoveFragment
+    | 'removes' '{' methodsig* '}'                  #TraitRemoveFragment
+    | 'adds' trait_expr                             #TraitAddFragment
+    | 'modifies' trait_expr                         #TraitModifyFragment
+    ;
+
+trait_usage: 'uses' trait_expr ';' ;
 
 delta_decl : 'delta' TYPE_IDENTIFIER
         ('(' p+=delta_param (',' p+=delta_param)* ')')? ';'
@@ -318,7 +315,7 @@ oo_modifier : 'adds' class_decl                            # DeltaAddClassModifi
 
 class_modifier_fragment : 'adds' field_decl  # DeltaAddFieldFragment
     | 'removes' field_decl                   # DeltaRemoveFieldFragment
-    | trait_oper							 # DeltaTraitFragment
+    | trait_oper     						 # DeltaTraitFragment
     ;
 
 interface_modifier_fragment : 'adds' methodsig   # DeltaAddMethodsigFragment
@@ -400,14 +397,14 @@ product_decl : 'product' TYPE_IDENTIFIER
       ('{' product_reconfiguration* '}' | ';')
     |
       '=' product_expr ';'
-    )        
+    )
     ;
 
 product_reconfiguration : product=TYPE_IDENTIFIER
         'delta' delta_id (',' delta_id)*
         'stateupdate' update=TYPE_IDENTIFIER ';'
     ;
-    
+
 // Product Expression
 product_expr
     : '{' feature (',' feature)* '}'                          # ProductFeatureSet

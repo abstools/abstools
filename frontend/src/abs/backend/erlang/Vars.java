@@ -173,7 +173,7 @@ public class Vars extends LinkedHashMap<String, Var> {
             sb.append(PREFIX).append(a.getKey()).append("_").append(v.getCount());
         }
 
-        sb.append("|Stack]");
+        sb.append("|lists:map(fun({_, X}) -> X end, maps:to_list(get(vars))) ++ Stack]");
 
         return sb.toString();
     }

@@ -30,7 +30,7 @@ public class LocationType {
     public String toString() {
         return name;
     }
-    
+
     public static LocationType createFromName(String name) {
         for (LocationType t : ALLTYPES) {
             if (t.name.equals(name))
@@ -51,6 +51,20 @@ public class LocationType {
         @Override
         public String toAnnoString() {
             return "[Far] ";
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || !(o instanceof ParameterizedFarType)) {
+                return false;
+            } else {
+                if (this == o) {
+                    return true;
+                } else {
+                    ParameterizedFarType lt = (ParameterizedFarType) o;
+                    return toString().equals(lt.toString());
+                }
+            }
         }
     }
     
