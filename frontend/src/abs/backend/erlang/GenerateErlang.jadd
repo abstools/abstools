@@ -1056,18 +1056,22 @@ aspect GenerateErlang {
 
   @Override
   public void WhileStmt.generateErlangCode(CodeStream ecs, Vars vars) {
-    ecs.println("(fun Loop ()->");
+    String va = vars.toParamList();
+    Vars save=vars.pass();
+    vars.incAll();
+    ecs.pf("%s=(fun Loop (%s)->",vars.toParamList(), va);
     ecs.incIndent().print("case ");
-    getCondition().generateErlangCode(ecs, vars);
+    getCondition().generateErlangCode(ecs, save);
     ecs.println(" of");
-    ecs.print("false -> ok;");
-    ecs.decIndent().print("true -> ");
+    ecs.pf("false -> %s;", va);
+    ecs.print("true -> ");
     ecs.incIndent();
-    ErlUtil.stopWorldPrelude(ecs, vars, false);
-    getBody().generateErlangCode(ecs, vars);
+    ErlUtil.stopWorldPrelude(ecs, save, false);
+    getBody().generateErlangCode(ecs, save);
     ecs.println(",");
-    ecs.decIndent().pf("Loop()  end end)");
-    ecs.decIndent().format("()");
+    save.retainAll(vars);
+    ecs.decIndent().pf("Loop(%s)  end end)", save.toParamList());
+    ecs.decIndent().format("(%s)",va);
   }
 
   // We discriminate between throw and exit: throw terminates the

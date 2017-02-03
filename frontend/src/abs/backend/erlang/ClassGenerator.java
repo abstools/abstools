@@ -75,7 +75,7 @@ public class ClassGenerator {
             ecs.println(" }),");
             ecs.println("try");
             ecs.incIndent();
-            Vars vars = Vars.n(ms.getParamList());
+            Vars vars = new Vars();
             m.getBlock().generateErlangCode(ecs, vars);
             ecs.println();
             ecs.decIndent().println("catch");
