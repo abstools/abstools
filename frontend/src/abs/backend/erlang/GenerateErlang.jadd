@@ -400,9 +400,15 @@ aspect GenerateErlang {
     ecs.incIndent();
     ecs.println("case is_process_alive(ObjRef) of");
     ecs.incIndent();
-    ecs.format("true -> T:'m_%s'", getMethod());
+    ecs.println("true ->");
+    ecs.incIndent();
+    ecs.println("Vars=get(vars),");
+    ecs.format("Result=T:'m_%s'", getMethod());
     ErlUtil.argumentList(ecs,getCallee(),false,true,params,getMethodSig().getTypes(),vars);
-    ecs.println(";");
+    ecs.println(",");
+    ecs.println("put(vars, Vars),");
+    ecs.println("Result;");
+    ecs.decIndent();
     ecs.format("false -> throw(dataObjectDeadException)");
     ecs.println();
     ecs.decIndent().println("end;");
