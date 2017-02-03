@@ -257,11 +257,17 @@ can_clock_advance(_OldState=#state{active=A, blocked=B},
 advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,keepalive_after_clock_limit=Keepalive}) ->
     case C of
         [] ->
-            %% One last clock advance to finish the last resource period
-            MTE=clock:distance_to_next_boundary(),
-            clock:advance(MTE),
-            lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
-            M ! wait_done,
+            case Keepalive of
+                false ->
+                    %% One last clock advance to finish the last resource period
+                    MTE=clock:distance_to_next_boundary(),
+                    clock:advance(MTE),
+                    lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
+                    M ! wait_done;
+                true ->
+                    %% We are probably serving via http; don't advance time
+                    ok
+            end,
             State;
         [{_Min, MTE, _Task, _Cog} | _] ->
             OldTime=clock:now(),
