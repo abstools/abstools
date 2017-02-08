@@ -284,6 +284,75 @@ NIL."
 ;;; Minimal auto-insert mode support
 (define-auto-insert 'abs-mode '("Module name: " "module " str ";" ?\n ?\n))
 
+
+;;; Calculating the set of required input files based on the current buffer.
+;;;
+
+(defun abs--current-buffer-imports ()
+  (let ((imports (save-excursion
+                    (goto-char (point-min))
+                    (cl-loop
+                     for match = (re-search-forward (rx bol (0+ blank) bow "import" eow (1+ any) bow "from" eow (1+ blank)
+                                                        (group (1+ (or (syntax word) ".")))
+                                                        (0+ blank) ";")
+                                                    (point-max) t)
+                     while match
+                     collect (substring-no-properties (match-string 1))))))
+    (delete-dups imports)))
+
+(defun abs--file-imports (file)
+  (with-temp-buffer
+    (insert-file-contents file)
+    (abs--current-buffer-imports)))
+
+(defun abs--current-buffer-module-definitions ()
+  (save-excursion
+    (goto-char (point-min))
+    (cl-loop
+     for match = (re-search-forward (rx bol (0+ blank) "module" (1+ blank)
+                                        (group (1+ (or (syntax word) ".")))
+                                        (0+ blank) ";")
+                                    (point-max) t)
+     while match
+     collect (substring-no-properties (match-string 1)))))
+
+(defun abs--file-module-definitions (file)
+  (with-temp-buffer
+    (insert-file-contents file)
+    (abs--current-buffer-module-definitions)))
+
+(defun abs--module-file-alist ()
+  ;; TODO: consider searching subdirectories, etc. -- for now, special cases
+  ;; can be handled by the user via setting `abs-input-files'
+  (let ((module-file-alist nil))
+    (dolist (file (directory-files "." nil "\\.abs\\'" t))
+      (dolist (module (abs--file-module-definitions file))
+        (push (cons module file) module-file-alist)))
+    module-file-alist))
+
+(defun abs--calculate-input-files ()
+  (let* ((module-locations-alist (abs--module-file-alist))
+         (files (list (file-name-nondirectory (buffer-file-name))))
+         (known-modules (abs--file-module-definitions buffer-file-name))
+         (needed-modules (cl-set-difference (abs--current-buffer-imports) known-modules)))
+    (while needed-modules
+      (let* ((needed-module (pop needed-modules))
+             (location (assoc needed-module module-locations-alist)))
+        ;; "best-effort" results:
+        ;;
+        ;; - ignore modules that are not found; the compiler / syntax checker
+        ;;   will complain anyway.  This also handles modules from the
+        ;;   standard library “by accident”.
+        ;;
+        ;; - for modules defined in multiple files, use an arbitrary file and
+        ;;   hope for the best.
+        (when location
+          (cl-pushnew (cdr location) files))))
+    ;; have current buffer first in list; among others, the Maude backend
+    ;; expects this.
+    (nreverse files)))
+
+
 ;;; Compiling the current buffer.
 ;;;
 (defvar abs-maude-output-file nil
@@ -297,13 +366,19 @@ Add a file-local setting to override the default value.")
 
 (defvar abs-input-files nil
   "List of Abs files to be compiled by \\[abs-next-action].
-If nil, the file visited in the current buffer will be used.  If
-set, the first element determines the name of the generated Maude
-file if generating Maude code.
+If nil, use the file visiting the current file, and any abs file
+in the current directory that defines a module mentioned in an
+`import' statement in any other file to be compiled.  When
+multiple files in the current directory declare a needed module,
+an arbitrary file among them is chosen.
 
-Add a file-local setting (\\[add-file-local-variable]) to
-override the default value.  Put a section like the following at
-the end of your buffer:
+If set, the first element determines the name of the generated
+Maude file if generating Maude code and `abs-maude-output-file'
+is not set.
+
+It is possible to to explicitly set the list of files to be
+compiled.  Put a section like the following at the end of your
+buffer:
 
 // Local Variables:
 // abs-input-files: (\"file1.abs\" \"file2.abs\")
@@ -339,14 +414,16 @@ value.")
 ;;; flymake support
 (defun abs-flymake-init ()
   (when abs-compiler-program
-    (list
-     abs-compiler-program
-     (remove nil (list
-                  (when (string= (file-name-nondirectory (buffer-file-name))
-                                 "abslang.abs")
-                    "-nostdlib")
-                  (flymake-init-create-temp-buffer-copy
-                   'flymake-create-temp-inplace))))))
+    (let* ((filename (file-name-nondirectory (buffer-file-name)))
+           (other-files (delete filename (abs--calculate-input-files))))
+      (list
+       abs-compiler-program
+       (remove nil (cl-list*
+                    (when (string= filename "abslang.abs")
+                      "-nostdlib")
+                    (flymake-init-create-temp-buffer-copy
+                     'flymake-create-temp-inplace)
+                    other-files))))))
 
 (unless (assoc "\\.abs\\'" flymake-allowed-file-name-masks)
   (add-to-list 'flymake-allowed-file-name-masks
@@ -360,7 +437,9 @@ value.")
       (< (cl-first d1) (cl-first d2))))
 
 (defun abs--input-files ()
-  (or abs-input-files (list (file-name-nondirectory (buffer-file-name)))))
+  (or abs-input-files
+      (abs--calculate-input-files)
+      (list (buffer-file-name))))
 
 (defun abs--maude-filename ()
   (or abs-maude-output-file
