@@ -118,6 +118,7 @@ public enum ErrorMessage {
     AWAIT_TOO_PURE("Warning: the await expression will never change (try awaiting for a field)."),
     MAIN_BLOCK_NOT_FOUND("Warning: no main block found."),
     MAIN_BLOCK_AMBIGUOUS("Warning: this main block is shadowed by the main block from module %s."),
+    IMPLICIT_TRUNCATION("Warning: Implicit truncation from Rat to Int is deprecated."),
     UNDECLARED_PRODUCT("Product [%s] is not declared"),
     INVALID_PRODUCT("Product [%s] does not satisfy the feature model. Constraints failed: %s."),
     MATCHING_NOT_ALLOWED_IN_CATCH("Non-free pattern variable %s (not allowed in catch branches).")

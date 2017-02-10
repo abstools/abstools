@@ -9,6 +9,7 @@ import java.util.*;
 import abs.common.Constants;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticWarning;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.List;
@@ -58,6 +59,9 @@ public class TypeCheckerHelper {
         Type te = rhte.getType();
         if (!te.isAssignable(lht)) {
             l.add(new TypeError(n, ErrorMessage.CANNOT_ASSIGN, te, lht));
+        }
+        if (te.isRatType() && lht.isIntType()) {
+            l.add(new SemanticWarning(n, ErrorMessage.IMPLICIT_TRUNCATION, "dummy"));
         }
     }
 
@@ -119,6 +123,9 @@ public class TypeCheckerHelper {
                 Type expType = exp.getType();
                 if (!expType.isAssignable(argType)) {
                     l.add(new TypeError(n, ErrorMessage.TYPE_MISMATCH, exp.getType(), argType));
+                }
+                if (expType.isRatType() && argType.isIntType()) {
+                    l.add(new SemanticWarning(n, ErrorMessage.IMPLICIT_TRUNCATION, "dummy"));
                 }
             }
         }
