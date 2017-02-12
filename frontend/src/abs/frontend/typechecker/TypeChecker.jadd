@@ -895,6 +895,13 @@ aspect TypeChecker {
             e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
         } else {
             DataConstructor c = (DataConstructor) decl;
+            String cname = c.qualifiedName();
+            // Warn about using constructors that should not have been
+            // exported from their module
+            if (TypeCheckerHelper.deprecatedConstructors.contains(cname)
+                && !(cname.startsWith(getModuleDecl().getName()))) {
+                e.add(new SemanticWarning(this, ErrorMessage.DEPRECATED_CONSTRUCTOR, c.qualifiedName()));
+            }
 
             if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
                 TypeCheckerHelper.typeCheckMatchingParams(e,this,c);

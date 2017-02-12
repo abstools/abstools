@@ -15,8 +15,19 @@ import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.List;
 import abs.frontend.ast.*;
 import abs.frontend.parser.SourcePosition;
+import com.google.common.collect.ImmutableSet;
 
 public class TypeCheckerHelper {
+
+    // Warn about using constructors that should not have been exported from
+    // their module (used in DataConstructorExp.typeCheck() defined in
+    // TypeChecker.jadd)
+    public static Set<String> deprecatedConstructors
+        = ImmutableSet.of("ABS.StdLib.Set", "ABS.StdLib.EmptySet", "ABS.StdLib.Insert",
+                          "ABS.StdLib.Map", "ABS.StdLib.EmptyMap", "ABS.StdLib.InsertAssoc");
+
+
+
     public static void typeCheck(ConstructorPattern p, SemanticConditionList e, Type t) {
         DataConstructor c = p.getDataConstructor();
         if (c == null) {
