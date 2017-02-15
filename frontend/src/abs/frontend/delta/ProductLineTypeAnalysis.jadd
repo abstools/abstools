@@ -1,25 +1,25 @@
 aspect ProductLineTypeAnalysis {
-    
-    public void DeltaTraitModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model){ 
+
+    public void DeltaTraitModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model){
         getMethodModifier().collectMethodIDs(methodIDSet, model);
     }
 
     public abstract void MethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model);
-    public void ModifyMethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model) { 
-        getTraitExpr().collectMethodIDs(methodIDSet, model); 
+    public void ModifyMethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model) {
+        getTraitExpr().collectMethodIDs(methodIDSet, model);
     }
     public void RemoveMethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model) {
         for (MethodSig sig : getMethodSigList()) {
-            methodIDSet.add(sig.getName());        
+            methodIDSet.add(sig.getName());
         }
     }
     public void AddMethodModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model) {
-        getTraitExpr().collectMethodIDs(methodIDSet, model); 
+        getTraitExpr().collectMethodIDs(methodIDSet, model);
     }
-    
+
     public abstract void TraitExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model);
-    
-    public void TraitNameExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model){ 
+
+    public void TraitNameExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model){
         for (Decl decl : model.getDecls()) {
             if(decl instanceof TraitDecl){
                 TraitDecl tDecl = (TraitDecl)decl;
@@ -29,18 +29,22 @@ aspect ProductLineTypeAnalysis {
             }
         }
     }
-    public void TraitModifyExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model){ 
-        getTraitExpr().collectMethodIDs(methodIDSet, model); 
-        getMethodModifier().collectMethodIDs(methodIDSet, model); 
+    public void TraitModifyExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model){
+        getTraitExpr().collectMethodIDs(methodIDSet, model);
+        getMethodModifier().collectMethodIDs(methodIDSet, model);
     }
 
-    public void TraitSetExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model){ 
+    public void TraitSetExpr.collectMethodIDs(HashSet<String> methodIDSet, Model model){
         for (MethodImpl met : getMethodImplList()) {
             methodIDSet.add(met.getMethodSig().getName());
         }
     }
 
 
+
+    /*
+     * Top-level method for type-checking the SPL
+     */
     syn lazy SemanticConditionList Model.typeCheckPL() {
         SemanticConditionList errors = new SemanticConditionList();
         if (! hasProductLine())
@@ -49,17 +53,20 @@ aspect ProductLineTypeAnalysis {
         return errors;
     }
 
-
     /*
      * Return all valid feature configurations of the feature model.
-     * This is done by solving the CSP and only considering features (no attributes, as that could result in a quasi infinite number of configurations)
+     * This is done by solving the CSP and only considering features
+     * (no attributes, as that could result in a quasi infinite number of configurations)
      */
-    syn lazy Set<Set<String>> Model.getFeatureModelConfigurations() {
+    syn lazy Set<Map<String,Integer>> Model.getFeatureModelConfigurations() {
         if (! hasMTVL())
             return Collections.emptySet();
 
-        ChocoSolver solver = instantiateCSModelFeaturesOnly();
-        return solver.getSolutionsFeaturesOnly();
+        dropAttributes(); // Features ONLY
+        ChocoSolver solver = instantiateCSModel();
+
+        // Each configuration is represented as a map: FeatureName->Value; the value will always be 1
+        return solver.getSolutions();
     }
 
 
@@ -70,11 +77,11 @@ aspect ProductLineTypeAnalysis {
     syn nta lazy List<Product> Model.getProductList() {
         List<Product> plist = new List<Product>();
 
-        Set<Set<String>> featureConfs = getFeatureModelConfigurations();
-        for (Set<String> features : featureConfs) {
+        Set<Map<String,Integer>> featureConfs = getFeatureModelConfigurations();
+        for (Map<String,Integer> features : featureConfs) {
             // set Features
             List<Feature> flist = new List<Feature>();
-            for (String fname : features) {
+            for (String fname : features.keySet()) {
                 Feature feature = new Feature(fname, new List<AttrAssignment>()); // disregard any attribute assignments
                 flist.add(feature);
             }
@@ -84,18 +91,9 @@ aspect ProductLineTypeAnalysis {
         return plist;
     }
 
-    /* TEST */
-//    syn List<Test> Model.getTestList() {
-//        List<Test> l = new List<Test>();
-//        l.add(new Test(new List<Token>()));
-//        return l;
-//    }
-    
 
-    
     // inform DeltaClause about the DeltaDecl that it references
     syn lazy DeltaDecl DeltaClause.getDeltaDecl() {
         return getProductLine().getModel().getDeltaDeclsMap().get(getDeltaspec().getDeltaID());
     }
-    
 }
