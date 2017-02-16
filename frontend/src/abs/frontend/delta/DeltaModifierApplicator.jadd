@@ -29,7 +29,6 @@ aspect DeltaModifierApplicator {
         }
     }
 
-    /*
     @Override
     public void DeltaTraitModifier.collapseTraitModifiers(ClassDecl cd) {
 
@@ -52,7 +51,6 @@ aspect DeltaModifierApplicator {
     	    getMethodModifier().collapseTraitModifiers(cd);
     	}
     }
-    */
 
     @Override
     public void ModifyMethodModifier.collapseTraitModifiers(ClassDecl cd){
