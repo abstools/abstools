@@ -62,7 +62,7 @@ public class ProductLineTypeAnalysisHelper {
                 e.add(new SemanticError(clause, ErrorMessage.NO_DELTA_DECL, clause.getDeltaspec().getDeltaID()));
                 wellformed = false;
             }
-            // 'after' clauses do not reference any deltaIDs that do not have their own delta clause
+            // ensure 'after' clauses do not reference any deltaIDs that do not have their own delta clause
             for (DeltaID id : clause.getAfterDeltaIDs()) {
                 String afterID = id.getName();
                 if (!referencedDeltas.contains(afterID)) {
@@ -88,26 +88,6 @@ public class ProductLineTypeAnalysisHelper {
         return trie;
     }
 
-    public static boolean doThings(ProductLine pl, SemanticConditionList l, String methodID, String prefix, String deltaID, Map<String, Map<String, String>> cache){
-        boolean result = true;
-        if (cache.containsKey(prefix)) {
-            if (cache.get(prefix).containsKey(methodID)) {
-                result = false;
-                l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, cache.get(prefix).get(methodID), prefix + ", method " + methodID));
-            } else if (cache.get(prefix).containsKey("CLASS")) {
-                result = false;
-                l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, cache.get(prefix).get("CLASS"), prefix));
-            } else {
-                cache.get(prefix).put(methodID, deltaID);
-            }
-        } else {
-            cache.put(prefix, new HashMap<String, String>());
-            cache.get(prefix).put(methodID, deltaID);
-        }
-        return result;
-
-    }
-
     public static void checkStrongUnambiguity(ProductLine pl, SemanticConditionList l) {
         isStronglyUnambiguous(pl, l);
     }
@@ -125,10 +105,11 @@ public class ProductLineTypeAnalysisHelper {
         boolean result = true;
         Model model = pl.getModel();
 
+        //        System.out.print("Delta partition: ");
         //        for (Set<String> set : pl.getDeltaPartition()) {
-        //            System.out.print("Delta partition: {");
+        //            System.out.print("{");
         //            for (String el : set)
-        //                System.err.print(" " + el + " ");
+        //                System.out.print(" " + el + " ");
         //            System.out.print("}   ");
         //        }
         //        System.out.println();
@@ -161,11 +142,13 @@ public class ProductLineTypeAnalysisHelper {
                                 methodID = ((ModifyMethodModifier) mod).getMethodImpl().getMethodSig().getName();
                             else
                                 continue;*/
+
                             if(mod instanceof DeltaTraitModifier) {
                                 HashSet<String> methodIDSet = new HashSet<>();
                                 ((DeltaTraitModifier) mod).collectMethodIDs(methodIDSet, model);
+
                                 for (String methodID : methodIDSet) {
-                                    result = result | doThings(pl, l, methodID, prefix, deltaID, cache);
+                                    result = result & doThings(pl, l, methodID, prefix, deltaID, cache);
                                 }
                             }
                         }
@@ -175,7 +158,9 @@ public class ProductLineTypeAnalysisHelper {
                         String prefix = ((ClassModifier) moduleModifier).qualifiedName();
                         if (cache.containsKey(prefix)) {
                             result = false;
-                            l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, cache.get(prefix).get("CLASS"), prefix));
+                            assert ! cache.get(prefix).isEmpty();
+                            String otherDeltaID = cache.get(prefix).values().iterator().next();
+                            l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, otherDeltaID, prefix));
                         } else {
                             cache.put(prefix, new HashMap<String, String>());
                             cache.get(prefix).put("CLASS", deltaID);
@@ -187,6 +172,25 @@ public class ProductLineTypeAnalysisHelper {
             }
         }
         // FIXME remove boolean result unless needed
+        return result;
+    }
+
+    public static boolean doThings(ProductLine pl, SemanticConditionList l, String methodID, String prefix, String deltaID, Map<String, Map<String, String>> cache) {
+        boolean result = true;
+        if (cache.containsKey(prefix)) {
+            if (cache.get(prefix).containsKey(methodID)) {
+                result = false;
+                l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, cache.get(prefix).get(methodID), prefix + ", method " + methodID));
+            } else if (cache.get(prefix).containsKey("CLASS")) {
+                result = false;
+                l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, cache.get(prefix).get("CLASS"), prefix));
+            } else {
+                cache.get(prefix).put(methodID, deltaID);
+            }
+        } else {
+            cache.put(prefix, new HashMap<String, String>());
+            cache.get(prefix).put(methodID, deltaID);
+        }
         return result;
     }
 

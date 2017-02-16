@@ -42,7 +42,7 @@ TraitNameExpr : TraitExpr ::= <Name>;
 TraitModifyExpr : TraitExpr ::= TraitExpr MethodModifier;
 
 
-TraitUse : Modifier ::= TraitExpr; 
+TraitUse : Modifier ::= TraitExpr;
 /***************************************/
 
 UnknownDecl: Decl; // Unknown declarations
@@ -113,6 +113,7 @@ AddFieldModifier : Modifier ::= FieldDecl;
 RemoveFieldModifier : Modifier ::= FieldDecl;
 AddMethodSigModifier : MethodSigModifier ::= MethodSig;
 RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
+
 DeltaTraitModifier : Modifier ::= MethodModifier;
 
 ObjectUpdate ::= <ClassName> AwaitStmt UpdatePreamble PreBody:AssignStmt* PostBody:AssignStmt* ;
