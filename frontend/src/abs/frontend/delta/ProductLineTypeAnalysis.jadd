@@ -1,5 +1,65 @@
 aspect ProductLineTypeAnalysis {
 
+    // inform DeltaClause about the DeltaDecl that it references
+    syn lazy DeltaDecl DeltaClause.getDeltaDecl() {
+        return getProductLine().getModel().getDeltaDeclsMap().get(getDeltaspec().getDeltaID());
+    }
+
+    /*
+     * Top-level method for type-checking the SPL
+     */
+    syn lazy SemanticConditionList Model.typeCheckPL() {
+        SemanticConditionList errors = new SemanticConditionList();
+        if (! hasProductLine())
+            return errors;
+        ProductLineTypeAnalysisHelper.typeCheckPL(getProductLine(), errors);
+        return errors;
+    }
+
+    /*
+     * Return all valid feature configurations of the feature model.
+     * This is done by solving the CSP and only considering features
+     * (no attributes, as that could result in a quasi infinite number of configurations)
+     */
+    syn lazy Set<Map<String,Integer>> Model.getFeatureModelConfigurations() {
+        if (! hasMTVL())
+            return Collections.emptySet();
+
+        dropAttributes(); // Features ONLY
+        ChocoSolver solver = instantiateCSModel();
+
+        // Each configuration is represented as a map: FeatureName->Value
+        return solver.getSolutions();
+    }
+
+
+    /*
+     * Add all possible products (i.e. all valid feature configurations = feature model solutions)
+     * as non-terminal attributes (NTAs) to the AST (as List of Products to the Model node)
+     */
+    syn nta lazy List<Product> Model.getProductList() {
+        List<Product> plist = new List<Product>();
+
+        Set<Map<String,Integer>> featureConfs = getFeatureModelConfigurations();
+        for (Map<String,Integer> features : featureConfs) {
+            // set Features
+            List<Feature> flist = new List<Feature>();
+            for (String fname : features.keySet()) {
+                // only add selected features
+                if (features.get(fname) == 1) {
+		            Feature feature = new Feature(fname, new List<AttrAssignment>()); // disregard any attribute assignments
+		            flist.add(feature);
+                }
+            }
+            Product product = new Product(flist);
+            plist.add(product);
+        }
+        return plist;
+    }
+
+
+
+
     public void DeltaTraitModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model){
         getMethodModifier().collectMethodIDs(methodIDSet, model);
     }
@@ -40,60 +100,4 @@ aspect ProductLineTypeAnalysis {
         }
     }
 
-
-
-    /*
-     * Top-level method for type-checking the SPL
-     */
-    syn lazy SemanticConditionList Model.typeCheckPL() {
-        SemanticConditionList errors = new SemanticConditionList();
-        if (! hasProductLine())
-            return errors;
-        ProductLineTypeAnalysisHelper.typeCheckPL(getProductLine(), errors);
-        return errors;
-    }
-
-    /*
-     * Return all valid feature configurations of the feature model.
-     * This is done by solving the CSP and only considering features
-     * (no attributes, as that could result in a quasi infinite number of configurations)
-     */
-    syn lazy Set<Map<String,Integer>> Model.getFeatureModelConfigurations() {
-        if (! hasMTVL())
-            return Collections.emptySet();
-
-        dropAttributes(); // Features ONLY
-        ChocoSolver solver = instantiateCSModel();
-
-        // Each configuration is represented as a map: FeatureName->Value; the value will always be 1
-        return solver.getSolutions();
-    }
-
-
-    /*
-     * Add all possible products (i.e. all valid feature configurations = feature model solutions)
-     * as non-terminal attributes (NTAs) to the AST (as List of Products to the Model node)
-     */
-    syn nta lazy List<Product> Model.getProductList() {
-        List<Product> plist = new List<Product>();
-
-        Set<Map<String,Integer>> featureConfs = getFeatureModelConfigurations();
-        for (Map<String,Integer> features : featureConfs) {
-            // set Features
-            List<Feature> flist = new List<Feature>();
-            for (String fname : features.keySet()) {
-                Feature feature = new Feature(fname, new List<AttrAssignment>()); // disregard any attribute assignments
-                flist.add(feature);
-            }
-            Product product = new Product(flist);
-            plist.add(product);
-        }
-        return plist;
-    }
-
-
-    // inform DeltaClause about the DeltaDecl that it references
-    syn lazy DeltaDecl DeltaClause.getDeltaDecl() {
-        return getProductLine().getModel().getDeltaDeclsMap().get(getDeltaspec().getDeltaID());
-    }
 }

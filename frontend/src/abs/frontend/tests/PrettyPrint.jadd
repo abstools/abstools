@@ -5,11 +5,11 @@ import abs.frontend.tests.*;
 /**
  * A pretty printer to generate ABS source code from an AST.
  * It is uses an ABSFormatter to format the output.
- * 
+ *
  * @author Jan Schäfer
  */
 aspect PrettyPrint {
-    
+
     public String ASTNode.toString() {
         StringWriter writer = new StringWriter();
         PrintWriter w = new PrintWriter(writer);
@@ -17,24 +17,24 @@ aspect PrettyPrint {
         prettyPrint(w,f);
         return writer.toString();
     }
-    
+
     public void ASTNode.prettyPrint(PrintWriter w, ABSFormatter f) {
         w.print(this.getClass().getSimpleName()+"(");
         prettyPrintChildren(w,f);
         w.print(")");
     }
-    
+
     public void ASTNode.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
         for(int i = 0; i < getNumChild(); i++) {
             if (i > 0) w.print(",");
             getChild(i).prettyPrint(w,f);
         }
     }
-    
+
     public void List.prettyPrint(PrintWriter w, ABSFormatter f) {
         prettyPrintChildren(w,f);
     }
-    
+
     public void TypeUse.prettyPrint(PrintWriter w, ABSFormatter f) {
         w.print(getName());
     }
@@ -42,7 +42,7 @@ aspect PrettyPrint {
     public void VarOrFieldUse.prettyPrint(PrintWriter w, ABSFormatter f) {
         w.print(getName());
     }
-    
+
     public void ParametricDataTypeUse.prettyPrint(PrintWriter w, ABSFormatter f) {
         w.print(getName());
         w.print('<');
@@ -56,7 +56,7 @@ aspect PrettyPrint {
         getParams().prettyPrint(w,f);
         w.print(')');
     }
-    
+
     public void MethodSig.prettyPrint(PrintWriter w, ABSFormatter f) {
         getReturnType().prettyPrint(w,f);
         w.print(' ');
@@ -83,37 +83,37 @@ aspect PrettyPrint {
         w.print(' ');
         w.print(getName());
     }
-    
+
 
     public void ClassDecl.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
         w.print(getName());
         w.print(' ');
-        super.prettyPrintChildren(w,f);        
+        super.prettyPrintChildren(w,f);
     }
-    
+
     public void OOModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
         w.print(this.getClass().getSimpleName() + "(" + this.qualifiedName() + ")");
-        
+
     }
 
     public void Modifier.prettyPrint(PrintWriter w, ABSFormatter f) {
-        w.print(this.getClass().getSimpleName());        
+        w.print(this.getClass().getSimpleName());
     }
-    
+
     public void AddFieldModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
         super.prettyPrint(w, f);
-        w.print("(" + this.getFieldDecl() + ")");        
+        w.print("(" + this.getFieldDecl() + ")");
     }
 
     public void RemoveFieldModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
         super.prettyPrint(w, f);
-        w.print("(" + this.getFieldDecl() + ")");        
+        w.print("(" + this.getFieldDecl() + ")");
     }
 
     public void AddClassModifier.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
         w.print(getClassDecl().getName());
         w.print(' ');
-        super.prettyPrintChildren(w,f);   
+        super.prettyPrintChildren(w,f);
     }
 
     public void RemoveClassModifier.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
@@ -123,15 +123,15 @@ aspect PrettyPrint {
     public void ModifyClassModifier.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
         w.print(getName());
         w.print(' ');
-        super.prettyPrintChildren(w,f);   
+        super.prettyPrintChildren(w,f);
     }
 
     public void AddInterfaceModifier.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
         w.print(getInterfaceDecl().getName());
         w.print(' ');
-        super.prettyPrintChildren(w,f);   
+        super.prettyPrintChildren(w,f);
     }
-    
+
     public abstract void Value.prettyPrintChildren(PrintWriter w, ABSFormatter f);
     public void UnknownVal.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
         w.print("Const(" + getValue() + ")");
@@ -145,7 +145,7 @@ aspect PrettyPrint {
     public void IntVal.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
         w.print("Const(" + getIntValue() + ")");
     }
-    
+
     public void StringLiteral.prettyPrint(PrintWriter w, ABSFormatter f) {
         w.print("StringLiteral(" + this.getContent() + ")");
     }
@@ -163,4 +163,14 @@ aspect PrettyPrint {
     public void DeltaID.prettyPrint(PrintWriter w, ABSFormatter f) {
     	w.print("DeltaID(\"" + this.getName() + "\")");
     }
+
+    public void Feature.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print(getName()+"{");
+        super.prettyPrintChildren(w,f);
+        w.print("}");
+    }
+    public void AttrAssignment.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print(getName() + "=" + getValue());
+    }
+
 }
