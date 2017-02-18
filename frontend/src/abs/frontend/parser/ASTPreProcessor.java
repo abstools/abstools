@@ -5,6 +5,9 @@
 package abs.frontend.parser;
 
 import abs.frontend.ast.*;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  * Preprocesses the AST directly after it has been parsed, before any name and type analysis.
@@ -31,98 +34,169 @@ public class ASTPreProcessor {
         for (Decl decl : moduleDecl.getDecls()) {
             if (decl.isDataType()) {
                 DataTypeDecl dtd = (DataTypeDecl) decl;
-                for (DataConstructor c : dtd.getDataConstructors()) {
-                    int i = 0;
-                    for (ConstructorArg ca : c.getConstructorArgs()) {
-                        if (ca.hasSelectorName()) {
-                            moduleDecl.addDeclNoTransform(createSelectorFunction(dtd, c, ca, i, false));
-                        }
-                        i++;
-                    }
+                for (FunctionDecl fd : createSelectorFunctions(dtd, false)) {
+                    moduleDecl.addDeclNoTransform(fd);
                 }
             }
         }
     }
 
-    public FunctionDecl createSelectorFunctionForDeltaApplication(DataTypeDecl dtd, DataConstructor c, ConstructorArg ca, int numArg) {
-        return createSelectorFunction(dtd, c, ca, numArg, true);
+    public LinkedList<FunctionDecl> createSelectorFunctionsForDeltaApplication(DataTypeDecl dtd) {
+        return createSelectorFunctions(dtd, true);
+    }
+
+    private List<Pattern> makePatternList(int constructorArgs, int numArg) {
+        List<Pattern> patternList = new List<Pattern>();
+        for (int i = 0; i < constructorArgs; i++) {
+            if (i == numArg)
+                patternList.add(new PatternVar(new PatternVarDecl("res")));
+            else
+                patternList.add(new UnderscorePattern());
+        }
+        return patternList;
+    }
+
+    private FunctionDef makeAccessorFunction(LinkedList<DataDeclarationArg> args) {
+        List<CaseBranch> branches = new List<CaseBranch>();
+
+        for (DataDeclarationArg d : args) {
+            String constructorName = d.getConstructor().getName();
+            List<Pattern> pattern = makePatternList(d.getConstructor().getNumConstructorArg(), d.getPosition());
+            branches.add(new CaseBranch(new ConstructorPattern(constructorName, pattern), new VarUse("res")));
+        }
+
+        return new ExpFunctionDef(new CaseExp(new VarUse("data"), branches));
     }
 
     /**
-     * Creates for a selector a corresponding function, e.g.
+     * Given a data decleration, map each argument name to the corresponding
+     * DataDeclarationArg, containing the data constructor, the argument and
+     * the position of the argument.
+     */
+    private Map<String, LinkedList<DataDeclarationArg>> makeConstructorMap(DataTypeDecl dtd) {
+        Map<String, LinkedList<DataDeclarationArg>> constructors = new HashMap<String, LinkedList<DataDeclarationArg>>();
+
+        for (DataConstructor c : dtd.getDataConstructors()) {
+            int i = 0;
+            for (ConstructorArg ca : c.getConstructorArgs()) {
+                if (!ca.hasSelectorName())
+                    continue;
+                String name = ca.getSelectorName().getName();
+                LinkedList<DataDeclarationArg> tmp = constructors.get(name);
+                if (tmp == null) {
+                    tmp = new LinkedList<DataDeclarationArg>();
+                    constructors.put(name, tmp);
+                }
+                tmp.add(new DataDeclarationArg(c, ca, i));
+                i++;
+            }
+        }
+
+        return constructors;
+    }
+
+    /**
+     * Given a data decleration, generate selector functions, e.g.
      *
      * <pre>
-     * data Foo = Bar(String baz, Bool isTrue, String name);
+     * data Foo = Bar(Bool isTrue, String name) | Baz(String name);
      * </pre>
      *
      * creates:
      * <pre>
      * def Bool isTrue(Foo data) =
      *     case data {
-     *     Bar(_,res,_) => res;
+     *     Bar(res,_) => res;
+     *     };
+     *
+     * def String name(Foo data) =
+     *     case data {
+     *     Bar(_,res) => res;
+     *     Baz(res) => res;
      *     };
      * <pre>
      */
-    private FunctionDecl createSelectorFunction(DataTypeDecl dtd, DataConstructor c, ConstructorArg ca, int numArg, boolean delta) {
-        String selName = ca.getSelectorName().getName();
+    private LinkedList<FunctionDecl> createSelectorFunctions(DataTypeDecl dtd, boolean delta) {
+        // We need to know what data constructor and what argument inside that
+        // data constructors a name corresponds to.
+        Map<String, LinkedList<DataDeclarationArg>> constructors = makeConstructorMap(dtd);
 
-        // the list of patterns, e.g. _,res,_
-        List<Pattern> patternList = new List<Pattern>();
-        for (int i = 0; i < c.getNumConstructorArg(); i++) {
-            if (i == numArg)
-                patternList.add(new PatternVar(new PatternVarDecl("res")));
-            else
-                patternList.add(new UnderscorePattern());
-        }
+        LinkedList<FunctionDecl> fds = new LinkedList<FunctionDecl>();
 
-        // the case expression
-        FunctionDef funDef =
-            new ExpFunctionDef(
-                new CaseExp(
-                    new VarUse("data"),
-                    new List<CaseBranch>().add(
-                        new CaseBranch(
-                            new ConstructorPattern(c.getName(), patternList),
-                            new VarUse("res")))));
+        // Make an accessor function for every argument name in the declaration
+        for (String name : constructors.keySet()) {
+            // Make the function body, containing a single case statement with
+            // a branch for each constructor
+            FunctionDef funDef = makeAccessorFunction(constructors.get(name));
 
-        // the type parameters of the function
-        List<TypeParameterDecl> typeParams;
-        // the type of the parameter of the function
-        TypeUse paramType;
-        if (dtd instanceof ParametricDataTypeDecl) {
-            ParametricDataTypeDecl pdtd = (ParametricDataTypeDecl) dtd;
-            typeParams = (delta) ? pdtd.getTypeParameterList().treeCopyNoTransform() : pdtd.getTypeParameterList();
-            List<TypeUse> typeParams2 = new List<TypeUse>();
-            for (TypeParameterDecl p : typeParams) {
-                typeParams2.add(p.getType().toUse());
+            // the type parameters of the function
+            List<TypeParameterDecl> typeParams;
+            // the type of the parameter of the function
+            TypeUse paramType;
+
+            if (dtd instanceof ParametricDataTypeDecl) {
+                ParametricDataTypeDecl pdtd = (ParametricDataTypeDecl) dtd;
+                typeParams = delta ? pdtd.getTypeParameterList().treeCopyNoTransform() : pdtd.getTypeParameterList();
+                List<TypeUse> typeParams2 = new List<TypeUse>();
+                for (TypeParameterDecl p : typeParams) {
+                    typeParams2.add(p.getType().toUse());
+                }
+                paramType = new ParametricDataTypeUse(pdtd.getName(), new List<Annotation>(), typeParams2);
+            } else {
+                typeParams = new List<TypeParameterDecl>();
+                paramType = dtd.getType().toUse();
             }
-            paramType = new ParametricDataTypeUse(dtd.getName(), new List<Annotation>(), typeParams2);
-        } else {
-            typeParams = new List<TypeParameterDecl>();
-            paramType = dtd.getType().toUse();
+
+            List<ParamDecl> parameters = new List<ParamDecl>()
+                .add(new ParamDecl("data",paramType,new List<Annotation>()));
+
+            // Get an arbitrary constructor argument, which is used to decide
+            // the return type of the function (if there are mismatching types,
+            // then let the type checker catch it).
+            ConstructorArg ca = constructors.get(name).element().getArg();
+
+            // the complete function definition
+            FunctionDecl fd =
+                new ParametricFunctionDecl(
+                                           name, // function name
+                                           (TypeUse)ca.getTypeUse().copy(), // type
+                                           parameters, // parameters
+                                           funDef,
+                                           new List<Annotation>(), // annotations
+                                           typeParams
+                                           );
+
+            // annotate that this function is a selector function
+            // such that backends will know about it
+            fd.addAnnotation(new Annotation(new StringLiteral(FUNCTIONSELECTOR)));
+
+            for (DataDeclarationArg d : constructors.get(name)) {
+                setAllPositionsFromNode(fd, d.getArg());
+            }
+
+            fds.add(fd);
+        }
+        return fds;
+    }
+
+    /**
+     * A utility class for storing an constructor argument, along with the
+     * enclosing constructor and the position.
+     */
+    private class DataDeclarationArg {
+        private final DataConstructor constructor;
+        private final ConstructorArg arg;
+        private final int position;
+
+        public DataDeclarationArg(DataConstructor constructor, ConstructorArg arg, int position) {
+            this.constructor = constructor;
+            this.arg = arg;
+            this.position = position;
         }
 
-
-
-        List<ParamDecl> parameters = new List<ParamDecl>()
-                .add(new ParamDecl("data",paramType,new List<Annotation>()));
-        // the complete function definition
-        FunctionDecl fd =
-            new ParametricFunctionDecl(
-                    selName,    // function name
-                    (TypeUse)ca.getTypeUse().copy(), // type
-                    parameters, // parameters
-                    funDef,
-                    new List<Annotation>(), // annotations
-                    typeParams
-                    );
-
-        // annotate that this function is a selector function
-        // such that backends will know about it
-        fd.addAnnotation(new Annotation(new StringLiteral(FUNCTIONSELECTOR)));
-
-        setAllPositionsFromNode(fd, ca);
-        return fd;
+        public DataConstructor getConstructor(){ return constructor; }
+        public ConstructorArg getArg(){ return arg; }
+        public int getPosition(){ return position; }
     }
 
     /**
