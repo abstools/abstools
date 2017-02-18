@@ -5,6 +5,7 @@
 package abs.frontend.analyser;
 
 public enum ErrorMessage {
+    ACESSOR_INCOMPARABLE_TYPE("Accessor functions with incomparable types, %s and %s."),
     CYCLIC_INHERITANCE("Cyclic inheritance chain for interface: %s."),
     UNKOWN_INTERFACE("Unknown interface: %s."),
     UNKOWN_DATATYPE("Unknown datatype: %s."),

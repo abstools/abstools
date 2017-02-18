@@ -525,7 +525,7 @@ aspect doPrettyPrinter {
         stream.print(";");
     }
     
-    private boolean FunctionDecl.isSelector() {
+    protected boolean FunctionDecl.isSelector() {
     	for (Annotation a : getAnnotationList()) {
             if (! (a.getValue() instanceof StringLiteral)) {
                 continue;

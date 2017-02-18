@@ -329,6 +329,10 @@ aspect TypeChecker {
     }
 
     public void ParametricFunctionDecl.typeCheck(SemanticConditionList e) {
+        // Selectors are generated, and assumed to be type correct.
+        if (isSelector()) {
+            return;
+        }
         super.typeCheck(e);
         HashSet<String> names = new HashSet<String>();
         for (TypeParameterDecl d : getTypeParameters()) {
@@ -397,10 +401,25 @@ aspect TypeChecker {
 
     public void DataTypeDecl.typeCheck(SemanticConditionList e) {
         HashSet<String> names = new HashSet<String>();
+        HashMap<String, Type> argumentType = new HashMap<String, Type>();
         for (DataConstructor c : getDataConstructors()) {
             c.typeCheck(e);
             if (!names.add(c.getName())) {
                 e.add(new TypeError(c, ErrorMessage.DUPLICATE_CONSTRUCTOR, c.getName()));
+            }
+            // Record the type associated with each selector name, and ensure
+            // it is the same for every selector with the same name
+            for (ConstructorArg ca : c.getConstructorArgs()) {
+                if (!ca.hasSelectorName())
+                    continue;
+                String argName = ca.getSelectorName().getName();
+                Type t1 = ca.getType();
+                Type t2 = argumentType.get(argName);
+                if (t2 != null && !t1.equals(t2)) {
+                    e.add(new TypeError(ca, ErrorMessage.ACESSOR_INCOMPARABLE_TYPE, t1, t2));
+                } else {
+                    argumentType.put(argName, t1);
+                }
             }
         }
     }
