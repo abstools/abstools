@@ -324,7 +324,7 @@ public class TypeCheckerHelper {
                         // Replace, e.g., "Int" with "Rat".  If the two types
                         // do not match at all, we'll raise a type error
                         // later.
-                        binding.replace((TypeParameter)paramType, argType);
+                        binding.put((TypeParameter)paramType, argType);
                     }
                 } else {
                     binding.put((TypeParameter) paramType, argType);
