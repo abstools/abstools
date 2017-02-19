@@ -36,10 +36,11 @@ public class ProductLineTypeAnalysisHelper {
             // - product generation mapping is total
             // - TODO all products are well-typed programs
             DeltaTrie pfgt = buildPFGT(pl, errors);
-
-            // System.out.println(pfgt);
+            //System.out.println("Trie:\n" + pfgt.toString());
+            //System.out.println("Trie height:\n" + pfgt.height());
         }
     }
+
 
     /*
      * Check that the 'productline' declaration is well formed. This means...
@@ -175,7 +176,7 @@ public class ProductLineTypeAnalysisHelper {
         return result;
     }
 
-    public static boolean doThings(ProductLine pl, SemanticConditionList l, String methodID, String prefix, String deltaID, Map<String, Map<String, String>> cache) {
+    private static boolean doThings(ProductLine pl, SemanticConditionList l, String methodID, String prefix, String deltaID, Map<String, Map<String, String>> cache) {
         boolean result = true;
         if (cache.containsKey(prefix)) {
             if (cache.get(prefix).containsKey(methodID)) {

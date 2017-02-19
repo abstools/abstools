@@ -264,13 +264,12 @@ public class Main {
             m.evaluateAllProductDeclarations();
             rewriteModel(m, product);
 
-
             m.flattenTraitOnly();
             m.collapseTraitModifiers();
-            
+
             // type check PL before flattening
-//            if (typecheck)
-//                typeCheckProductLine(m);
+            if (typecheck)
+                typeCheckProductLine(m);
 
             // flatten before checking error, to avoid calculating *wrong* attributes
             if (fullabs) {
@@ -279,7 +278,7 @@ public class Main {
                     m.flattenForProduct(product);
                 else
                     m.flattenForProductUnsafe(product);
-            } 
+            }
 
             if (dump) {
                 m.dumpMVars();

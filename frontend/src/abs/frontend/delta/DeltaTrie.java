@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Strings;
+
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.Product;
@@ -43,7 +45,7 @@ public class DeltaTrie {
 
     /**********************************************************************************************/
     /*
-     * Trie Node
+     * Trie node
      */
     class Node {
         private final Map<String, Node> children;
@@ -96,7 +98,8 @@ public class DeltaTrie {
                 nextNode.addWord(word, product, d+1);
             else {
                 nextNode.isValidProduct = true;
-                // TODO type check this product (?)
+                //System.out.println("TA: \n" + ta);
+                // TODO type check this product (???)
                 //System.out.println(".");
             }
         }
@@ -119,29 +122,64 @@ public class DeltaTrie {
             return ta;
         }
 
+        /*
         @Override
         public String toString() {
-            return toString(new StringBuilder());
+            return toString(new StringBuilder(), false);
         }
 
-        public String toString(StringBuilder s) {
+
+        public String toString(StringBuilder s, boolean printTA) {
             s.append("Delta: " + deltaID + ".  " + "Valid Product: " + isValidProduct + "\n");
-            s.append(ta.toString());
+            if (printTA)
+                s.append(ta.toString());
             for (Node child : children.values())
-                child.toString(s);
+                child.toString(s, printTA);
             return s.toString();
+        }
+         */
+
+        protected int height() {
+            int h = 0;
+            for (Node child : children.values())
+                h = Math.max(h, child.height());
+            return 1 + h;
+        }
+
+        protected void traversePreorder(StringBuilder s, int level) {
+            s.append(Strings.repeat("|   ", level));
+            s.append("|---");
+            s.append(getDeltaID() + (isValidProduct() ? "\u2713" : "") + "\n");
+            for (Node child : getChildren().values())
+                child.traversePreorder(s, level+1);
         }
 
     }
-    /**********************************************************************************************/
+
+    /*
+     * Convenience methods
+     */
 
     public Node getRoot() {
         return root;
     }
 
+    /*
+     * Height of the tree (1=only root node)
+     */
+    public int height() {
+        return root.height();
+    }
+
+    /*
+     * Return a textual representation of the tree
+     * A checkmark next to a node means it represents a valid product.
+     */
     @Override
     public String toString() {
-        return root.toString();
+        StringBuilder s = new StringBuilder();
+        root.traversePreorder(s, 0);
+        return s.toString();
     }
 
 }
