@@ -124,6 +124,12 @@ Server will not be started if nil."
   :group 'abs)
 (put 'abs-influxdb-db 'safe-local-variable 'stringp)
 
+(defcustom abs-compile-with-coverage-info nil
+  "Control whether to generate erlang code with coverage info."
+  :type 'boolean
+  :group 'abs)
+(put 'abs-compile-with-coverage-info 'safe-local-variable 'booleanp)
+
 (defcustom abs-default-resourcecost 0
   "Default resource cost of executing one ABS statement in the timed interpreter."
   :type 'integer
@@ -484,6 +490,10 @@ value.")
                               (< 0 abs-default-resourcecost))
                      (concat " -defaultcost="
                              (number-to-string abs-default-resourcecost)))
+                   (when (and (eq backend 'erlang) abs-compile-with-coverage-info)
+                     " -cover")
+                   ;; this branch must be last since it invokes a second
+                   ;; command after `absc'
                    (when (and (eq backend 'erlang) abs-link-source-path)
                      (concat " && cd gen/erl/ && ./link_sources " abs-link-source-path))
                    " "))))
@@ -726,7 +736,11 @@ The following keys are set:
   (easy-menu-add abs-mode-menu abs-mode-map)
   ;; speedbar support
   (when (fboundp 'speedbar-add-supported-extension)
-    (speedbar-add-supported-extension ".abs")))
+    (speedbar-add-supported-extension ".abs"))
+  ;; code coverage (https://github.com/AdamNiederer/cov/blob/master/cov.el)
+  (when (featurep 'cov)
+    (make-local-variable 'cov-coverage-file-paths)
+    (push "gen/erl/absmodel" cov-coverage-file-paths)))
 
 ;;; Set up the "Abs" pull-down menu
 (easy-menu-define abs-mode-menu abs-mode-map

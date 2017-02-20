@@ -112,7 +112,8 @@ public class ClassGenerator {
             ecs.pf("set(O,'%s',%s),", p.getName(), "P_" + p.getName());
         }
         for (FieldDecl p : classDecl.getFields()) {
-            ecs.pf(" %%%% %s:%s", p.getFileName(), p.getStartLine());
+            ErlUtil.emitLocationInformation(ecs, p.getModel(), p.getFileName(),
+                                            p.getStartLine(), p.getEndLine());
             if (p.hasInitExp()) {
                 ecs.format("set(O,'%s',", p.getName());
                 p.getInitExp().generateErlangCode(ecs, vars);

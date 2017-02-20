@@ -8,7 +8,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import abs.backend.common.CodeStream;
+import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PureExp;
@@ -203,4 +205,13 @@ public class ErlUtil {
         ecs.decIndent();
         ecs.println("after 0 -> ok end,");
     }
+
+    public static void emitLocationInformation(CodeStream ecs, Model m, String filename, int start, int end) {
+        if (m.generate_erlang_coverage) {
+            ecs.pf("coverage:register(\"%s\", %s, %s),", new java.io.File(filename).getName(), start, end);
+        } else {
+            ecs.pf(" %%%% %s:%s--%s", filename, start, end);
+        }
+    }
+
 }

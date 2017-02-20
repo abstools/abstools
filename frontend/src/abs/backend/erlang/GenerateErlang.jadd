@@ -11,24 +11,35 @@ import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtensio
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeVariable;
 import abs.frontend.typechecker.locationtypes.LocationType;
 
+import java.util.EnumSet;
+
 import abs.backend.erlang.ErlUtil.Mask;
+import abs.backend.erlang.ErlangBackend.CompileOptions;
 import org.apache.commons.io.output.WriterOutputStream;
 import java.nio.charset.Charset;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 aspect GenerateErlang {
 
-  public void Model.generateErlangCode(ErlApp ea) throws IOException{
-    for (ModuleDecl decl : getModuleDecls()) {
-      decl.generateErlangCode(ea);
-      MainBlock mb = getMainBlock();
-      if (mb != null) {
-            String moduleName = ((ModuleDecl)(mb.getParent().getParent())).getName();
-            String erlModulename = ErlUtil.getModuleName(moduleName);
-            ea.generateModuleDefinitions(moduleName, erlModulename);
-      }
+    public boolean Model.generate_erlang_coverage = false;
+
+    public void Model.generateErlangCode(ErlApp ea, EnumSet<ErlangBackend.CompileOptions> compileOptions) throws IOException{
+        generate_erlang_coverage = compileOptions.contains(ErlangBackend.CompileOptions.COVERAGE);
+        if (compileOptions.contains(ErlangBackend.CompileOptions.VERBOSE)) {
+            System.out.print("Generating Erlang code in " + ea.destDir.toString());
+            if (generate_erlang_coverage) System.out.print(" with coverage information");
+            System.out.println();
+        }
+        for (ModuleDecl decl : getModuleDecls()) {
+            decl.generateErlangCode(ea);
+            MainBlock mb = getMainBlock();
+            if (mb != null) {
+                String moduleName = ((ModuleDecl)(mb.getParent().getParent())).getName();
+                String erlModulename = ErlUtil.getModuleName(moduleName);
+                ea.generateModuleDefinitions(moduleName, erlModulename);
+            }
+        }
     }
-   }
 
   public void Decl.generateErlangCode(ErlApp ea) throws IOException {
     throw new NotImplementedYetException(this);
@@ -169,7 +180,7 @@ aspect GenerateErlang {
       if(!first)
         ecs.println(",");
       first=false;
-      ecs.pf(" %%%% %s:%s", stmt.getFileName(), stmt.getStartLine());
+      stmt.generateErlangLocationInfo(ecs);
       PureExp cost = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.DC.Cost");
       if (cost != null) {
           ecs.print("task:block_for_cpu(Cog,DC,");
@@ -1111,6 +1122,44 @@ aspect GenerateErlang {
       ecs.print(",");
       ecs.print(vars.toStack());
       ecs.print(")");
+  }
+
+  
+  public void Stmt.generateErlangLocationInfo(CodeStream ecs) {
+      ErlUtil.emitLocationInformation(ecs, getModel(), getFileName(),
+                                      getStartLine(), getEndLine());
+  }
+
+  public void Block.generateErlangLocationInfo(CodeStream ecs) {
+      // TODO: register open / close brace if source of first/last statement
+      // is not on same block
+  }
+
+  public void IfStmt.generateErlangLocationInfo(CodeStream ecs) {
+      // Only mark condition as executed, not the whole then- and else-branch
+      ErlUtil.emitLocationInformation(ecs, getModel(), getFileName(),
+                                      getCondition().getStartLine(),
+                                      getCondition().getEndLine());
+  }
+
+  public void WhileStmt.generateErlangLocationInfo(CodeStream ecs) {
+      // Only mark condition as executed, not the whole then- and else-branch
+      ErlUtil.emitLocationInformation(ecs, getModel(), getFileName(),
+                                      getCondition().getStartLine(),
+                                      getCondition().getEndLine());
+  }
+
+  public void CaseStmt.generateErlangLocationInfo(CodeStream ecs) {
+      // Only mark condition as executed, not the whole then- and else-branch
+      ErlUtil.emitLocationInformation(ecs, getModel(), getFileName(),
+                                      getExpr().getStartLine(),
+                                      getExpr().getEndLine());
+  }
+
+  public void TryCatchFinallyStmt.generateErlangLocationInfo(CodeStream ecs) {
+      // Only mark first line as executed
+      ErlUtil.emitLocationInformation(ecs, getModel(), getFileName(),
+                                      getStartLine(), getStartLine());
   }
 
 }

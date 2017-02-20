@@ -99,6 +99,7 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
     {ok, _GC} = gc:start(GCStatistics, Debug),
     %% Init simulation clock
     {ok, _Clock} = clock:start_link(Clocklimit),
+    {ok, _Coverage} = coverage:start_link(),
 
     %%Start main task
     Cog=cog:start(),
@@ -108,9 +109,11 @@ end_mod(TaskRef, InfluxdbEnabled) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
     %% modelapi:print_statistics(),
+    coverage:write_files(),
     cog_monitor:waitfor(),
     gc:stop(),
     clock:stop(),
+    coverage:stop(),
     case InfluxdbEnabled of
         true -> influxdb:stop();
         _ -> ok
