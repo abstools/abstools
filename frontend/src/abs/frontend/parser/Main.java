@@ -560,9 +560,10 @@ public class Main {
 
     private void typeCheckProductLine(Model m) {
 
-        if (verbose)
-            System.out.println("Typechecking Software Product Line...");
-
+        if (verbose) {
+            int n = m.getFeatureModelConfigurations().size();
+            System.out.println("Typechecking Software Product Line (" + n + " products)...");
+        }
         SemanticConditionList typeerrors = m.typeCheckPL();
         for (SemanticCondition se : typeerrors) {
             System.err.println(se.getHelpMessage());
