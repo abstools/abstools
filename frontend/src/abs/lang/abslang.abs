@@ -356,8 +356,12 @@ def Map<A, B> map<A, B>(List<Pair<A, B>> l) =
      Nil => EmptyMap; 
      Cons(hd, tl) => InsertAssoc(hd, map(tl)); 
   };
-  
-  
+
+/**
+ * Returns True if map 'map' is empty, False otherwise.
+ */
+def Bool emptyMap<A, B>(Map<A, B> map) = (map == EmptyMap);
+
 def Map<A, B> removeKey<A, B>(Map<A, B> map, A key) = // remove from the map
   case map {
   	EmptyMap => map;

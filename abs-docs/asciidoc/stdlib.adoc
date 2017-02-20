@@ -594,6 +594,15 @@ NOTE: In case the arguments contain duplicate keys, the resulting map will conta
 
 ==== Functions
 
+.emptyMap
+
+Returns `True` if the map is empty, `False` otherwise.
+
+[source]
+----
+def Bool emptyMap<A, B>(Map<A, B> map);
+----
+
 .removeKey
 
 Returns a map with the first occurrence of `key` removed.
