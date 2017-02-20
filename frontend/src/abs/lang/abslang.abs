@@ -433,21 +433,12 @@ def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v) =
 
 /**
  * Returns a string with the base-10 textual representation of 'n'.
+ *
+ * This function is from the distant past when ABS had no generic `toString'.
+ * Kept for backward compatibility.
  */
-def String intToString(Int n) =
-  case n < 0 {
-    True => "-" + intToStringPos(-n);
-    False => intToStringPos(n);
-  };
 
-def String intToStringPos(Int n) =
-  let (Int div) = (n / 10) in
-  let (Int res) = (n % 10) in
-  case n {
-    0 => "0"; 1 => "1"; 2 => "2"; 3 => "3"; 4 => "4";
-    5 => "5"; 6 => "6"; 7 => "7"; 8 => "8"; 9 => "9";
-    _ => intToStringPos(div) + intToStringPos(res);
-  };
+def String intToString(Int n) = toString(n);
 
 /**
  * Returns a substring of string str of the given length starting from start (inclusive)
