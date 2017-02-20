@@ -224,14 +224,9 @@ aspect DeltaModifierApplicator {
         DataTypeDecl dtd = this.getDataTypeDecl().treeCopyNoTransform();
         dtd.setFileName(getDataTypeDecl().getFileName());
         module.getDecls().addChild(dtd);
-        for (DataConstructor c : dtd.getDataConstructors()) {
-            int i = 0;
-            for (ConstructorArg ca : c.getConstructorArgs()) {
-                if (ca.hasSelectorName()) {
-                    module.getDecls().addChild(new ASTPreProcessor().createSelectorFunctionForDeltaApplication(dtd, c, ca, i));
-                }
-                i++;
-            }
+
+        for (FunctionDecl fd : new ASTPreProcessor().createSelectorFunctionsForDeltaApplication(dtd)) {
+            module.getDecls().addChild(fd);
         }
     }
 

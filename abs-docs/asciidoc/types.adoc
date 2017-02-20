@@ -117,9 +117,9 @@ valid identifier.  If a name is given, it defines a function that, when passed a
 value expressed with the given constructor, return the argument.
 
 The name of an accessor function must be unique in the module it is
-defined in.  It is an error to have multiple accessor functions with the same
-name, or to have a function definition with the same name as an accessor
-function.
+defined in.  It is an error to have a function definition with the same name as an accessor
+function or to have multiple accessor functions with the same name, unless they
+belong to the same data type.
 
 .Example
 [source]
