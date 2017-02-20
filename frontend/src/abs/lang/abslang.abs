@@ -31,7 +31,7 @@ export length, isEmpty, nth, without, concatenate, appendright, reverse, copy;
 // Maps
 export Map, EmptyMap, InsertAssoc, map; // TODO: don't export EmptyMap, InsertAssoc
 
-export removeKey, values, keys, lookup, lookupMaybe, lookupUnsafe,
+export emptyMap, removeKey, values, keys, lookup, lookupMaybe, lookupUnsafe,
   lookupDefault, insert, put;
   
 // String functions
