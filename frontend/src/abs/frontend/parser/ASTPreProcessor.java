@@ -77,18 +77,18 @@ public class ASTPreProcessor {
         Map<String, LinkedList<DataDeclarationArg>> constructors = new HashMap<String, LinkedList<DataDeclarationArg>>();
 
         for (DataConstructor c : dtd.getDataConstructors()) {
-            int i = 0;
+            int argpos = 0;
             for (ConstructorArg ca : c.getConstructorArgs()) {
-                if (!ca.hasSelectorName())
-                    continue;
-                String name = ca.getSelectorName().getName();
-                LinkedList<DataDeclarationArg> tmp = constructors.get(name);
-                if (tmp == null) {
-                    tmp = new LinkedList<DataDeclarationArg>();
-                    constructors.put(name, tmp);
+                if (ca.hasSelectorName()) {
+                    String name = ca.getSelectorName().getName();
+                    LinkedList<DataDeclarationArg> tmp = constructors.get(name);
+                    if (tmp == null) {
+                        tmp = new LinkedList<DataDeclarationArg>();
+                        constructors.put(name, tmp);
+                    }
+                    tmp.add(new DataDeclarationArg(c, ca, argpos));
                 }
-                tmp.add(new DataDeclarationArg(c, ca, i));
-                i++;
+                argpos++;
             }
         }
 
