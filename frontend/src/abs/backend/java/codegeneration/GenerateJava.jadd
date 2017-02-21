@@ -18,10 +18,10 @@ aspect GenerateJava {
         for (ModuleDecl decl : getModuleDecls()) {
             try {
                 decl.generateJavaCode(code);
-            } catch (NotImplementedYetException e) { 
-                throw new JavaCodeGenerationException("Module " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
-            } catch (RuntimeException e) { 
-                throw new JavaCodeGenerationException("Module " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
+            } catch (NotImplementedYetException e) {
+                throw new JavaCodeGenerationException("Module " + decl.getName() + ":" + e.getLocalizedMessage(),e);
+            } catch (RuntimeException e) {
+                throw new JavaCodeGenerationException("Module " + decl.getName() + ":" + e.getLocalizedMessage(),e);
             }
         }
     }
@@ -29,10 +29,10 @@ aspect GenerateJava {
 
     // Provide easy access to the Java package that is generated for each ModuleDecl
     private JavaCode.Package ModuleDecl.generatedJavaPackage = null;
-    public JavaCode.Package ModuleDecl.getJavaPackage() throws JavaCodeGenerationException { 
+    public JavaCode.Package ModuleDecl.getJavaPackage() throws JavaCodeGenerationException {
         if (generatedJavaPackage != null)
-            return generatedJavaPackage; 
-        else 
+            return generatedJavaPackage;
+        else
             throw new JavaCodeGenerationException("A Java Package is not yet associated with this ModuleDecl (this only happens upon code generation).");
     }
 
@@ -457,7 +457,7 @@ aspect GenerateJava {
         }
         boolean needConversion = lht.isIntType() && getRetExp().getType().isRatType();
         if (getModel().includeDebug) {
-            stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");      
+            stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
             stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
         }
 
@@ -533,7 +533,7 @@ aspect GenerateJava {
     public void DurationGuard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream) {
         stream.print("new " + JavaBackendConstants.EXPGUARD+
                 "() { public " + ABSBool.class.getName()+
-                " evaluateExp() { return " + 
+                " evaluateExp() { return " +
                 ABSBool.class.getName() + ".TRUE; }}");
     }
 
@@ -563,26 +563,29 @@ aspect GenerateJava {
             stream.print(JavaBackend.getMethodName(getMethod()));
             JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
         } else {
+            stream.print("if (");
             stream.print(ABSRuntime.class.getName() + ".checkForNull(");
             callee.generateJava(stream);
-            stream.print(").__ABS_isSameCOG() ? ");
+            stream.println(").__ABS_isSameCOG()) {");
             // synchronous method call
             callee.generateJava(stream);
             stream.print("." + JavaBackend.getMethodName(getMethod()));
             JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
-            stream.print(" : ");
+            stream.println(";");
+            stream.println("} else {");
             // asynchronous method call + get
             callee.generateJava(stream);
             stream.print(".async_" + JavaBackend.getMethodName(getMethod()));
             JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
-            stream.print(".get()");
+            stream.println(".get();");
+            stream.println("}");
         }
 
     }
 
     public void OriginalCall.generateJava(PrintStream stream) {
         // TODO: implement
-        // throw new NotImplementedYetException(this); 
+        // throw new NotImplementedYetException(this);
     }
 
     public void GetExp.generateJava(PrintStream stream) {
@@ -623,7 +626,7 @@ aspect GenerateJava {
                 JavaGeneratorHelper.generateArgs(stream, "this, new " + strategy + "(), " + dc_exp, getParams(), decl.getTypes());
             else
                 JavaGeneratorHelper.generateArgs(stream, "this, null, " + dc_exp, getParams(), decl.getTypes());
-            
+
         } else {
             stream.print(className + ".__ABS_createNewObject");
             JavaGeneratorHelper.generateArgs(stream, "this", getParams(), decl.getTypes());
@@ -766,8 +769,8 @@ aspect GenerateJava {
         // Have to explicitly type the call due to a bug in the JastAdd Java
         // compiler that generates wrong code otherwise.
         FunctionDecl d = (FunctionDecl)getDecl();
-        
-        		
+
+
         if (d.getFunctionDef() instanceof BuiltinFunctionDef) {
             JavaGeneratorHelper.generateBuiltInFnApp(stream,this);
             return;
@@ -1011,7 +1014,7 @@ aspect GenerateJava {
     /* Components */
     public void RebindStmt.generateJava(String indent, PrintStream stream) { }
     public void MoveStmt.generateJava(String indent, PrintStream stream) { }
-    
+
     public void NewLocExp.generateJava(PrintStream stream) { }
     public void GetLocExp.generateJava(PrintStream stream) { }
     public void GetFatherExp.generateJava(PrintStream stream) { }
@@ -1034,7 +1037,7 @@ aspect GenerateJava {
     public void RemoveMethodModifier.generateJava(PrintStream stream) { }
     public void ModifyMethodModifier.generateJavaDynamic(PrintStream stream) { }
     public void ModifyMethodModifier.generateJava(PrintStream stream) { }
-    
+
 }
 
 
