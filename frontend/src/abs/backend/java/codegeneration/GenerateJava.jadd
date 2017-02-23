@@ -563,22 +563,19 @@ aspect GenerateJava {
             stream.print(JavaBackend.getMethodName(getMethod()));
             JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
         } else {
-            stream.print("if (");
             stream.print(ABSRuntime.class.getName() + ".checkForNull(");
             callee.generateJava(stream);
-            stream.println(").__ABS_isSameCOG()) {");
+            stream.print(").__ABS_isSameCOG() ? ");
             // synchronous method call
             callee.generateJava(stream);
             stream.print("." + JavaBackend.getMethodName(getMethod()));
             JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
-            stream.println(";");
-            stream.println("} else {");
+            stream.print(" : ");
             // asynchronous method call + get
             callee.generateJava(stream);
             stream.print(".async_" + JavaBackend.getMethodName(getMethod()));
             JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
-            stream.println(".get();");
-            stream.println("}");
+            stream.print(".get()");
         }
 
     }
