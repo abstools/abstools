@@ -10,6 +10,7 @@ start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([{'_',
                                        [{"/", cowboy_static, {priv_file, absmodel, "index.html"}},
                                         {"/static/[...]", cowboy_static, {priv_dir, absmodel, "static"}},
+                                        {"/v1/:request/[...]", modelapi_v1, []},
                                         {"/:request/[...]", modelapi, []}]}]),
     {ok, Port} = application:get_env(absmodel, port),
     {ok, Clocklimit} = application:get_env(absmodel, clocklimit),
