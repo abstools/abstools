@@ -175,6 +175,14 @@ Currently supported return value types are:
 - `Bool`, encoded as a JSON boolean value
 - `String`, encoded as a JSON string value
 - `Int`, encoded as a JSON integer.
+- `List<A>` (for supported type `A`), encoded as a JSON list
+- `Set<A>` (for supported type `A`), encoded as a JSON list with encoded A
+  values; guaranteed to contain no duplicate elements
+- `Map<A, B>` (for supported types `A`, `B`), encoded as a JSON object.  Keys
+  in the resulting JSON object are generated from their ABS counterpart via
+  `toString()` since JSON only supports keys of type String; the corresponding
+  values are encoded as JSON values.
+
 
 ===== Starting the Model API
 

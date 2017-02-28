@@ -147,6 +147,24 @@ abs_to_json(false) -> false;
 abs_to_json(null) -> null;
 abs_to_json(Abs) when is_number(Abs) -> Abs;
 abs_to_json(Abs) when is_list(Abs) -> list_to_binary(Abs);
+abs_to_json(dataNil) -> [];
+abs_to_json(Abs={dataCons, _, _}) ->
+    lists:map(fun abs_to_json/1, abs_to_erl_list(Abs));
+abs_to_json(dataEmptySet) -> [];
+abs_to_json(Abs={dataInsert, _, _}) ->
+    lists:map(fun abs_to_json/1, abs_set_to_erl_list(Abs));
+abs_to_json(dataEmptyMap) -> #{};
+abs_to_json(Abs={dataInsertAssoc, _, _}) ->
+    maps:fold(fun (K, V, Result) ->
+                      Result#{
+                        case is_list(K) of
+                            true -> list_to_binary(K);
+                            false -> list_to_binary(builtin:toString(null, K))
+                        end
+                        => abs_to_json(V)}
+              end,
+              #{},
+              abs_map_to_erl_map(Abs));
 abs_to_json(Abs) -> list_to_binary(builtin:toString(null, Abs)).
 
 %% Convert into JSON integers instead of floats: erlang throws badarith,
@@ -163,6 +181,15 @@ abs_to_erl_number(I) -> I.
 
 abs_to_erl_list(dataNil) -> [];
 abs_to_erl_list({dataCons, A, R}) -> [A | abs_to_erl_list(R)].
+
+abs_set_to_erl_list(dataEmptySet) -> [];
+abs_set_to_erl_list({dataInsert, Item, Set}) -> [Item | abs_set_to_erl_list(Set)].
+
+abs_map_to_erl_map(dataEmptyMap) -> #{};
+abs_map_to_erl_map({dataInsertAssoc, {dataPair, Key, Value}, Map}) ->
+    Restmap = abs_map_to_erl_map(Map),
+    Restmap#{Key => Value}.
+
 
 convert_number_list(List) ->
     lists:map(fun abs_to_erl_number/1, lists:reverse(abs_to_erl_list(List))).
