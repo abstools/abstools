@@ -141,6 +141,7 @@ public class DataTypeType extends Type  {
         DataTypeType t = (DataTypeType) o;
         if (!t.decl.equals(this.decl))
             return false;
+        if (numTypeArgs() != t.numTypeArgs()) return false;
         for (int i = 0; i < numTypeArgs(); i++) {
             if (!getTypeArg(i).equals(t.getTypeArg(i)))
                 return false;
@@ -167,6 +168,7 @@ public class DataTypeType extends Type  {
             if (this.isNumericType() && dt.isNumericType()) return true;
             return false;
         }
+        if (numTypeArgs() != dt.numTypeArgs()) return false;
         for (int i = 0; i < numTypeArgs(); i++) {
             if (!getTypeArg(i).isAssignable(dt.getTypeArg(i), true))
                 return false;
