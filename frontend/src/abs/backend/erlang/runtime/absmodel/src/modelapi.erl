@@ -6,6 +6,7 @@
 -record(state, {}).
 
 -export([print_statistics/0]).
+-export([abs_to_json/1]).                % callback from data_constructor_info
 
 
 init(Req, _Opts) ->
@@ -165,6 +166,8 @@ abs_to_json(Abs={dataInsertAssoc, _, _}) ->
               end,
               #{},
               abs_map_to_erl_map(Abs));
+abs_to_json(Abs) when is_tuple(Abs) ->
+    abs_constructor_info:to_json(tuple_to_list(Abs));
 abs_to_json(Abs) -> list_to_binary(builtin:toString(null, Abs)).
 
 %% Convert into JSON integers instead of floats: erlang throws badarith,

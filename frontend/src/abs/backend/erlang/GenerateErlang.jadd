@@ -39,6 +39,7 @@ aspect GenerateErlang {
                 ea.generateModuleDefinitions(moduleName, erlModulename);
             }
         }
+        ea.generateDataConstructorInfo(this);
     }
 
   public void Decl.generateErlangCode(ErlApp ea) throws IOException {

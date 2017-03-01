@@ -23,6 +23,7 @@ import org.apache.commons.io.FileUtils;
 
 import sun.net.www.protocol.file.FileURLConnection;
 import abs.backend.common.CodeStream;
+import abs.frontend.ast.*;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
@@ -187,4 +188,53 @@ public class ErlApp {
         hcs.println("-define(ABSMAINMODULE," + erlModulename + ").");
         hcs.close();
     }
+
+    public void generateDataConstructorInfo(Model model) throws IOException {
+        CodeStream s = createSourceFile("abs_constructor_info");
+        s.println("%%This file is licensed under the terms of the Modified BSD License.");
+        s.println("-module(abs_constructor_info).");
+        s.println("-compile(export_all).");
+        s.println("-include_lib(\"../include/abs_types.hrl\").");
+        s.println();
+        String separator = "";
+
+        for (ModuleDecl m : model.getModuleDecls()) {
+            for (Decl d : m.getDecls()) {
+                if (d instanceof DataTypeDecl) {
+                    DataTypeDecl dd = (DataTypeDecl) d;
+                    for (DataConstructor c : dd.getDataConstructors()) {
+                        boolean useToString = true;
+                        for (ConstructorArg ca : c.getConstructorArgs()) {
+                            if (ca.hasSelectorName()) useToString = false;
+                        }
+                        if (!useToString) {
+                            s.println(separator);
+                            separator = ";";
+                            s.format("to_json(Abs=[data%s | _]) -> ", c.getName());
+                            String mapSeparator = "";
+                            s.print("#{");
+                            for (int elem = 0; elem < c.getNumConstructorArg(); elem++) {
+                                ConstructorArg ca = c.getConstructorArg(elem);
+                                if (ca.hasSelectorName()) {
+                                    s.print(mapSeparator);
+                                    mapSeparator = ",\n";
+                                    s.format("<<\"%s\">> => modelapi:abs_to_json(lists:nth(%s, Abs))",
+                                             ca.getSelectorName(),
+                                             // nth() indexes 1-based and
+                                             // we need to skip over the first
+                                             // element:
+                                             elem + 2);
+                                }
+                            }
+                            s.print("}");
+                        }
+                    }
+                }
+            }
+        }
+        s.println(separator);
+        s.pf("to_json(Abs) -> list_to_binary(builtin:toString(null, list_to_tuple(Abs))).");
+        s.close();
+    }
+
 }

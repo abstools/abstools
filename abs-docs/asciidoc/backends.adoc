@@ -161,27 +161,39 @@ method such that it is callable from outside, given an exposed object that imple
 It is a compile-time error if the method takes parameters whose types are not
 supported.
 
-The method can have an arbitrary return type.  Supported data types will be
-returned as the equivalent JSON types, other values will be returned as
-strings via the ABS `toString()` function.
-
 Currently supported parameter types are:
+
 - `Bool`: encoded in the query string as literal upper- or lowercase `true` /
-       `false`, e.g., `?p=True`, `?p=true`, `?p=False`, `?p=false`
+  `false`, e.g., `?p=True`, `?p=true`, `?p=False`, `?p=false`
+
 - `Int`: encoded in the query string as a string of digits, e.g., `?p=42`
+
 - `String`: URLEncoded text, e.g., `?p=Hello%20World!`
 
-Currently supported return value types are:
+The method can have an arbitrary return type, which will be returned as a
+string via the ABS `toString()` function, except for the following cases.
+
+The following value types are handled specially as return type of an exposed
+method:
+
 - `Bool`, encoded as a JSON boolean value
+
 - `String`, encoded as a JSON string value
+
 - `Int`, encoded as a JSON integer.
+
 - `List<A>` (for supported type `A`), encoded as a JSON list
-- `Set<A>` (for supported type `A`), encoded as a JSON list with encoded A
-  values; guaranteed to contain no duplicate elements
+
+- `Set<A>` (for supported type `A`), encoded as a JSON list; guaranteed to
+  contain no duplicate elements
+
 - `Map<A, B>` (for supported types `A`, `B`), encoded as a JSON object.  Keys
   in the resulting JSON object are generated from their ABS counterpart via
-  `toString()` since JSON only supports keys of type String; the corresponding
-  values are encoded as JSON values.
+  `toString()` since JSON only supports keys of type String.
+
+- Datatypes with at least one named constructor argument: encoded as a JSON
+  object mapping argument names to their value.  The resulting map will not
+  contain the values of unnamed constructor arguments.
 
 
 ===== Starting the Model API
