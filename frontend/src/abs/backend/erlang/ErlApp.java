@@ -22,7 +22,9 @@ import java.util.jar.JarFile;
 import org.apache.commons.io.FileUtils;
 
 import sun.net.www.protocol.file.FileURLConnection;
+
 import abs.backend.common.CodeStream;
+import abs.common.CompilerUtils;
 import abs.frontend.ast.*;
 
 import com.google.common.collect.ImmutableSet;
@@ -205,7 +207,11 @@ public class ErlApp {
                     for (DataConstructor c : dd.getDataConstructors()) {
                         boolean useToString = true;
                         for (ConstructorArg ca : c.getConstructorArgs()) {
-                            if (ca.hasSelectorName()) useToString = false;
+                            List<Annotation> ann = ca.getTypeUse().getAnnotations();
+                            PureExp key = CompilerUtils.getAnnotationValueFromName(ann, "ABS.StdLib.HTTPName");
+                            if (ca.hasSelectorName() || key != null) {
+                                useToString = false;
+                            }
                         }
                         if (!useToString) {
                             s.println(separator);
@@ -213,19 +219,30 @@ public class ErlApp {
                             s.format("to_json(Abs=[data%s | _]) -> ", c.getName());
                             String mapSeparator = "";
                             s.print("#{");
+                            s.incIndent();
                             for (int elem = 0; elem < c.getNumConstructorArg(); elem++) {
                                 ConstructorArg ca = c.getConstructorArg(elem);
-                                if (ca.hasSelectorName()) {
-                                    s.print(mapSeparator);
-                                    mapSeparator = ",\n";
+                                List<Annotation> ann = ca.getTypeUse().getAnnotations();
+                                String key = null;
+                                PureExp keyann = CompilerUtils.getAnnotationValueFromName(ann, "ABS.StdLib.HTTPName");
+                                if (keyann != null && keyann instanceof StringLiteral) {
+                                    key = ((StringLiteral)keyann).getContent();
+                                } else if (ca.hasSelectorName()) {
+                                    key = ca.getSelectorName().toString();
+                                }
+                                if (key != null) {
+                                    s.println(mapSeparator);
+                                    mapSeparator = ",";
                                     s.format("<<\"%s\">> => modelapi:abs_to_json(lists:nth(%s, Abs))",
-                                             ca.getSelectorName(),
+                                             key,
                                              // nth() indexes 1-based and
                                              // we need to skip over the first
                                              // element:
                                              elem + 2);
                                 }
                             }
+                            s.println();
+                            s.decIndent();
                             s.print("}");
                         }
                     }

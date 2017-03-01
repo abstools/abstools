@@ -191,10 +191,17 @@ method:
   in the resulting JSON object are generated from their ABS counterpart via
   `toString()` since JSON only supports keys of type String.
 
-- Datatypes with at least one named constructor argument: encoded as a JSON
-  object mapping argument names to their value.  The resulting map will not
-  contain the values of unnamed constructor arguments.
+- Datatypes with at least one named constructor argument, or a constructor
+  argument with `HTTPName` annotation: encoded as a JSON object mapping
+  argument names to their value.  The resulting map will not contain the
+  values of unnamed / unannotated constructor arguments.  When an argument is
+  both named and annotated, the annotation takes precedence.
 
+In the following example, a return value `D("x")` will be encoded as `{"effective key": "x"}`.
+
+----
+data D = D([HTTPName: "effective key"] String overriden);
+----
 
 ===== Starting the Model API
 

@@ -88,6 +88,8 @@ public enum ErrorMessage {
     EXPECTED_DC("Expected a Deployment component, but received %s."),
     WRONG_HTTPNAME("Wrong type %s in HTTPName annotation, should be a string."),
     WRONG_HTTPCALLABLE("Parameter %s: type %s not supported for calling from HTTP."),
+    DUPLICATE_HTTPNAME("Warning: Duplicate HTTP name %s in datatype declaration."),
+
     UNDECLARED_VARIABLE("Unknown variable: %s."),
     NOT_A_LEAF("Feature cannot have more than one group of sub-features: %s."),
     OPT_NOT_IN_ALLOF("The %s feature is optional but the cardinality of its parent is not 'allof'."),
