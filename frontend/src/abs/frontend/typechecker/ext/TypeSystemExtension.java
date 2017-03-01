@@ -17,6 +17,8 @@ public interface TypeSystemExtension {
 
     void checkInterfaceDecl(InterfaceDecl decl);
 
+    void checkDataTypeDecl(DataTypeDecl decl);
+
     void checkMethodImpl(MethodImpl method);
 
     void checkAssignable(Type adaptTo, AdaptDirection dir, Type rht, Type lht, ASTNode<?> n);

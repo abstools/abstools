@@ -306,6 +306,13 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
 
     @Override
+    public void checkDataTypeDecl(DataTypeDecl decl) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkDataTypeDecl(decl);
+        }
+    }
+
+    @Override
     public void checkMethodImpl(MethodImpl method) {
         for (TypeSystemExtension tse : obs) {
             tse.checkMethodImpl(method);

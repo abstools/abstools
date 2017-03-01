@@ -266,6 +266,15 @@ aspect TypeCheckerExtension {
             getModel().getTypeExt().checkAssignable(def.getRhs().getType(), getType(), this);
         }
     }
+
+    refine TypeChecker public void DataTypeDecl.typeCheck(SemanticConditionList s) {
+        int size = s.getErrorCount();
+        TypeChecker.DataTypeDecl.typeCheck(s);
+        if (s.getErrorCount() > size) return;
+
+        getModel().getTypeExt().checkDataTypeDecl(this);
+    }
+
     
     refine TypeChecker public void MethodImpl.typeCheck(SemanticConditionList s) {
         int size = s.getErrorCount();
