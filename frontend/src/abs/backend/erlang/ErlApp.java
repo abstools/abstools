@@ -105,7 +105,6 @@ public class ErlApp {
             "start_console",
             "run",
             "absmodel/rebar.config",
-            "gcstats_as_csv.erl",
             "bin/*",
             "link_sources",
             "influx-grafana/*"
