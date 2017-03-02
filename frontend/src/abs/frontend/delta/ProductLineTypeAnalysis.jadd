@@ -1,3 +1,5 @@
+import com.google.common.base.Joiner;
+
 aspect ProductLineTypeAnalysis {
 
     // inform DeltaClause about the DeltaDecl that it references
@@ -57,10 +59,19 @@ aspect ProductLineTypeAnalysis {
         return plist;
     }
 
+    /*
+     * Return a string listing all features of the product, e.g. {A,B,C,D}
+     */
+    syn lazy String Product.getFeatureSetAsString() {
+        Set<String> features = new HashSet<String>();
+        for (Feature feature : getFeatures())
+            features.add(feature.getName());
+        Joiner joiner = Joiner.on(",").skipNulls();
+        String featureSet = joiner.join(features);
+        return "{" + featureSet + "}";
+    }
 
-
-
-    public void DeltaTraitModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model){
+    public void DeltaTraitModifier.collectMethodIDs(HashSet<String> methodIDSet, Model model) {
         getMethodModifier().collectMethodIDs(methodIDSet, model);
     }
 

@@ -34,6 +34,7 @@ import abs.frontend.ast.*;
 import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
 import abs.frontend.configurator.visualizer.FMVisualizer;
 import abs.frontend.delta.DeltaModellingException;
+import abs.frontend.delta.ProductLineTypeAnalysisHelper;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -133,6 +134,9 @@ public class Main {
             else if (arg.startsWith("-product=")) {
                 fullabs = true;
                 product = arg.split("=")[1];
+            } else if (arg.startsWith("-allproducts")) {
+                fullabs = true;
+                product = null;
             }
             else if (arg.equals("-notypecheck"))
                 typecheck = false;
@@ -260,45 +264,53 @@ public class Main {
                 System.err.println(e.getHelpMessage());
                 System.err.flush();
             }
-        } else {
-            m.evaluateAllProductDeclarations();
-            rewriteModel(m, product);
+            return;
+        }
 
-            m.flattenTraitOnly();
-            m.collapseTraitModifiers();
+        m.evaluateAllProductDeclarations();
+        rewriteModel(m, product);
 
-            // type check PL before flattening
+        m.flattenTraitOnly();
+        m.collapseTraitModifiers();
+
+        // type check PL before flattening
+        if (typecheck)
+            typeCheckProductLine(m);
+
+        // flatten before checking error, to avoid calculating *wrong* attributes
+        if (fullabs) {
+            if (product==null) {
+                // Build all SPL configurations (valid feature selections, ignoring attributes), one by one (for performance measuring)
+                if (verbose)
+                    System.out.println("Building ALL " + m.getFeatureModelConfigurations().size() + " feature model configurations...");
+                ProductLineTypeAnalysisHelper.buildAllConfigurations(m);
+                return;
+            }
             if (typecheck)
-                typeCheckProductLine(m);
+                // apply deltas that correspond to given product
+                m.flattenForProduct(product);
+            else
+                m.flattenForProductUnsafe(product);
+        }
 
-            // flatten before checking error, to avoid calculating *wrong* attributes
-            if (fullabs) {
-                if (typecheck)
-                    // apply deltas that correspond to given product
-                    m.flattenForProduct(product);
-                else
-                    m.flattenForProductUnsafe(product);
-            }
+        if (dump) {
+            m.dumpMVars();
+            m.dump();
+        }
 
-            if (dump) {
-                m.dumpMVars();
-                m.dump();
-            }
+        final SemanticConditionList semErrs = m.getErrors();
 
-            final SemanticConditionList semErrs = m.getErrors();
-
-            if (semErrs.containsErrors()) {
-                System.err.println("Semantic errors: " + semErrs.getErrorCount());
-            }
-            for (SemanticCondition error : semErrs) {
-                // Print both errors and warnings
-                System.err.println(error.getHelpMessage());
-                System.err.flush();
-            }
-            if (!semErrs.containsErrors()) {
-                typeCheckModel(m);
-                analyzeMTVL(m);
-            }
+        if (semErrs.containsErrors()) {
+            System.err.println("Semantic errors: " + semErrs.getErrorCount());
+        }
+        for (SemanticCondition error : semErrs) {
+            // Print both errors and warnings
+            System.err.println(error.getHelpMessage());
+            System.err.flush();
+        }
+        if (!semErrs.containsErrors()) {
+            typeCheckModel(m);
+            analyzeMTVL(m);
         }
     }
 
@@ -699,8 +711,7 @@ public class Main {
                 + "Common options:\n"
                 + "  -version       print version\n"
                 + "  -v             verbose output\n"
-                + "  -product=<PID> build given product by applying deltas\n"
-                + "                 (PID is the qualified product ID)\n"
+                + "  -product=<PID> build given product by applying deltas (PID is the product ID)\n"
                 + "  -notypecheck   disable typechecking\n"
                 + "  -nostdlib      do not include the standard lib\n"
                 + "  -loctypes      enable location type checking\n"
@@ -726,7 +737,7 @@ public class Main {
                 + "                 with minimum number of changes.\n"
                 + "  -nsol          count the number of solutions\n"
                 + "  -noattr        ignore the attributes\n"
-                + "  -check=<PID>   check satisfiability of a product with qualified name PID\n"
+                + "  -check=<PID>   check satisfiability of a product with name PID\n"
                 + "  -preprocess    Preprocessing the Model\n" //Preprocessor
                 + "  -h             print this message\n");
     }

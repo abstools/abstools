@@ -13,8 +13,8 @@ aspect ProductFlattener {
      * - apply deltas in sequence.
      */
     public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,DeltaModellingException {
-        ProductDecl prod = this.findProduct(id);
-        flattenForProduct(prod);
+        ProductDecl decl = this.findProduct(id);
+        flattenForProduct(decl);
     }
     /**************************************************************************
      * Apply delta to model without checking if the product is valid wrt the feature model
@@ -24,8 +24,8 @@ aspect ProductFlattener {
         ProductDecl prod = this.findProduct(id);
         flattenForProduct(prod, false);
     }
-    public void Model.flattenForProduct(ProductDecl prod) throws WrongProgramArgumentException,DeltaModellingException {
-        flattenForProduct(prod, true);
+    public void Model.flattenForProduct(ProductDecl decl) throws WrongProgramArgumentException,DeltaModellingException {
+        flattenForProduct(decl, true);
     }
     public void Model.flattenForProduct(String id, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
         ProductDecl prod = this.findProduct(id);
@@ -35,20 +35,23 @@ aspect ProductFlattener {
     /**
      * Refined with MTVL-check in CSP.jadd.
      */
-    public void Model.flattenForProduct(ProductDecl prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
-	assert prod != null;
+    public void Model.flattenForProduct(ProductDecl decl, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
+	assert decl != null;
         if (verbose)
-            System.out.println("--- configuring product: " + prod.getName());
+            System.out.println("--- configuring product: " + decl.getName());
+        flattenForProduct(decl.getProduct());
+        // remember which product was generated
+        productName = decl.getName();
+    }
 
+    public void Model.flattenForProduct(Product product) throws DeltaModellingException {
         // find product line
         ProductLine pl = getProductLine();
         if (pl == null)
             throw new DeltaModellingException("Model is missing a 'productline' definition");
-        if (prod.getProduct() == null)
-            throw new DeltaModellingException("No product selected");
 
         // find/sort applicable delta IDs
-        Set<String> deltaids = pl.findApplicableDeltas(prod.getProduct());
+        Set<String> deltaids = pl.findApplicableDeltas(product);
         java.util.List<String> sorted_deltaids = pl.sortDeltas(deltaids);
 
         // find corresponding DeltaDecls
@@ -57,8 +60,7 @@ aspect ProductFlattener {
             deltas.add(getDeltaDeclsMap().get(deltaid));
 
         // substitute delta parameters
-        pl.substituteDeltaParams(deltas, prod.getProduct());
-
+        pl.substituteDeltaParams(deltas, product);
 
         if (verbose) {
             System.out.print("--- applying deltas to core");
@@ -67,30 +69,29 @@ aspect ProductFlattener {
             }
             println(" .");
         }
-        // apply the applicable traits 
+        // apply the applicable traits
         applyTraits();
 
         // apply the applicable deltas in the given order
         applyDeltas(deltas);
-        
-        // remember which product was generated
-        productName = prod.getName();
     }
+
+
     /**************************************************************************
      * Simplifications before product line type checking
      */
-    public void Model.collapseTraitModifiers() {      
+    public void Model.collapseTraitModifiers() {
         for (DeltaDecl delta : getDeltaDecls()) {
             delta.collapseTraitModifiers();
         }
     }
-    
-    public void DeltaDecl.collapseTraitModifiers() {         
+
+    public void DeltaDecl.collapseTraitModifiers() {
         for (ModuleModifier mod : getModuleModifierList()) {
             mod.collapseTraitModifiers();
         }
     }
-    
+
     /**************************************************************************
      * Apply deltas to model
      */
@@ -232,7 +233,7 @@ aspect ProductFlattener {
 
 
     /**************************************************************************
-     * Return sorted List of applicable Delta names 
+     * Return sorted List of applicable Delta names
      * (according to a valid order of application defined by the product line)
      */
     public java.util.List<String> ProductLine.sortDeltas(Set<String> applicableDeltaIDs) {
@@ -242,9 +243,9 @@ aspect ProductFlattener {
     }
 
     /**************************************************************************
-     * Obtain a valid delta application order that contains ALL deltas 
-     * (disregarding application conditions). This order is used to determine an 
-     * application order for individual products by removing the non-applicable deltas 
+     * Obtain a valid delta application order that contains ALL deltas
+     * (disregarding application conditions). This order is used to determine an
+     * application order for individual products by removing the non-applicable deltas
      */
     syn lazy java.util.List<String> ProductLine.getValidOrderOfAllDeltas() {
         sortDeltas();
@@ -270,7 +271,7 @@ aspect ProductFlattener {
      * Sort ALL deltas of the product line. This only has to be done once.
      * The result is used in multiple places:
      * - Type checking the product line
-     * - Flattening for a certain product 
+     * - Flattening for a certain product
      */
     private void ProductLine.sortDeltas() throws DeltaModellingException {
         if (deltaSorter == null)
@@ -294,23 +295,23 @@ aspect ProductFlattener {
     }
 
     public void Model.flattenTraitOnly(){
-        applyTraits();      
+        applyTraits();
     }
-    
-    
+
+
     /**************************************************************************
-     * Apply the traits 
+     * Apply the traits
      */
     public void Model.applyTraits() throws DeltaModellingException{
-      
+
         //Collect all traits
         LinkedList<TraitDecl> list = new LinkedList<>();
         for (Decl decl : getDecls()) {
             if(decl instanceof TraitDecl){
                 list.add((TraitDecl)decl);
-            }      
+            }
         }
-  
+
         //init
         LinkedList<LinkedList<String>> lists = new LinkedList<>();
         for (TraitDecl traitDecl : list) {
@@ -319,7 +320,7 @@ aspect ProductFlattener {
             collectInTrait(traitDecl.getTraitExpr(), l);
             lists.add(l);
         }
-  
+
   		//check for cyclic references
         sort(lists);
         while(lists.size() > 0){
@@ -331,7 +332,7 @@ aspect ProductFlattener {
             }
             sort(lists);
         }
- 
+
         //apply
         boolean changed = false;
         do{
@@ -339,9 +340,9 @@ aspect ProductFlattener {
             for (Decl decl : getDecls()) {
                 if(decl instanceof ClassDecl){
                     ClassDecl cd = (ClassDecl)decl;
-                
 
-                    List<TraitUse> usesAST = cd.getTraitUses(); 
+
+                    List<TraitUse> usesAST = cd.getTraitUses();
                     //this is necessary as the builtint list collects the TraitUses in the wrong order
                     LinkedList<TraitUse> uses = new LinkedList<>();
                     for (TraitUse traitUse : usesAST) {
@@ -350,19 +351,19 @@ aspect ProductFlattener {
                     sortUses(uses);
                     for (TraitUse use : uses) {
                         use.applyTo(cd);
-                        changed = true;                        
+                        changed = true;
                     }
                 }
             }
         } while(changed);
     }
-  
-  
-    
+
+
+
     /**************************************************************************
      * Helper methods for trait application
      */
-    private void Model.sort(LinkedList<LinkedList<String>> lists) {      
+    private void Model.sort(LinkedList<LinkedList<String>> lists) {
         Collections.sort(lists, new Comparator<LinkedList<String>>() {
         @Override
         public int compare(LinkedList<String> o1, LinkedList<String> o2) {
@@ -374,9 +375,9 @@ aspect ProductFlattener {
          }
          });
     }
-    
-    private void Model.sortUses(LinkedList<TraitUse> list) {  
-      
+
+    private void Model.sortUses(LinkedList<TraitUse> list) {
+
       Collections.sort(list, new Comparator<TraitUse>() {
       @Override
       public int compare(TraitUse o1, TraitUse o2) {
@@ -392,8 +393,8 @@ aspect ProductFlattener {
        }
        });
   }
-    
-    
+
+
     private void Model.collectInTrait(ASTNode<ASTNode> traitExpr, LinkedList<String> list) {
         if(traitExpr instanceof TraitNameExpr){
             TraitNameExpr expr = (TraitNameExpr)traitExpr;
@@ -404,5 +405,5 @@ aspect ProductFlattener {
             }
         }
     }
-    
+
 }

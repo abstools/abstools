@@ -4,15 +4,9 @@
  */
 package abs.frontend.analyser;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
-import com.google.common.base.Joiner;
-
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.DeltaDecl;
-import abs.frontend.ast.Feature;
 import abs.frontend.ast.Product;
 
 public class SPLTypeError extends TypeError {
@@ -50,16 +44,10 @@ public class SPLTypeError extends TypeError {
         s.append("core");
         String appliedDeltas = s.toString();
 
-        Set<String> features = new HashSet<String>();
-        for (Feature feature : product.getFeatures())
-            features.add(feature.getName());
-        Joiner joiner = Joiner.on(",").skipNulls();
-        String featureSet = joiner.join(features);
-
         return getMsg()
                 + " When applying delta " + lastDelta
                 + " on top of " + appliedDeltas
-                + ", while building product {" + featureSet + "}.";
+                + ", while building product " + product.getFeatureSetAsString() + ".";
     }
 
 }

@@ -195,5 +195,18 @@ public class ProductLineTypeAnalysisHelper {
         return result;
     }
 
+    /*
+     * Build all SPL configurations (valid feature selections, ignoring attributes), one by one
+     * The purpose is to measure how long this takes, so we can compare it with the performance of type checking the SPL.
+     *
+     */
+    public static void buildAllConfigurations(Model m) {
+
+        for (Product product : m.getProductList()) {
+            System.out.println("Flattening product: " + product.getFeatureSetAsString());
+            Model thisModel = m.treeCopyNoTransform();
+            thisModel.flattenForProduct(product);
+        }
+    }
 
 }
