@@ -128,6 +128,23 @@ This sequence of commands starts Erlang, then compiles the generated Erlang
 code and starts it.  Type `gen/erl/run -h` for a list of options accepted by
 the model.
 
+==== Generating code coverage information
+
+The Erlang backend can optionally generate code coverage information in a
+format inspired by gnu `gcov` (see
+https://gcc.gnu.org/onlinedocs/gcc/Invoking-Gcov.html).  The coverage
+information contains line numbers and execution count, but not the source code
+itself.  This is sufficient for some tools to visualize code coverage, e.g.,
+`cov-mode` for Emacs (https://github.com/AdamNiederer/cov).
+
+To generate code coverage information, compile an abs model with the `-cover` switch, then run it as normal, i.e.,
+
+  $ absc -erlang -cover *.abs
+  $ gen/erl/run
+
+For each `.abs` file, running the model will generate a `.abs.gcov` file in
+the directory `gen/erl/absmodel` after the simulation finishes.
+
 ==== The Model API
 
 The Erlang backend supports querying a running model via _exposing_ selected
