@@ -199,6 +199,9 @@ method:
 
 - `Int`, encoded as a JSON integer.
 
+- `Rat`, converted to a floating point number.  The behavior is unspecified if
+  the given value is outside of floating point range.
+
 - `List<A>` (for supported type `A`), encoded as a JSON list
 
 - `Set<A>` (for supported type `A`), encoded as a JSON list; guaranteed to

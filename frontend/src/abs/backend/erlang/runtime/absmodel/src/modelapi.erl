@@ -147,6 +147,7 @@ abs_to_json(true) -> true;
 abs_to_json(false) -> false;
 abs_to_json(null) -> null;
 abs_to_json(Abs) when is_number(Abs) -> Abs;
+abs_to_json({N, D}) when is_integer(N), is_integer(D) -> N / D;
 abs_to_json(Abs) when is_list(Abs) -> list_to_binary(Abs);
 abs_to_json(dataNil) -> [];
 abs_to_json(Abs={dataCons, _, _}) ->
