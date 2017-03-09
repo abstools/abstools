@@ -153,7 +153,7 @@ public class ErlApp {
                     String outputFile = f.replace('/', File.separatorChar);
                     File file = new File(destDir, outputFile);
                     file.getParentFile().mkdirs();
-                    ByteStreams.copy(is, Files.newOutputStreamSupplier(file));
+                    ByteStreams.copy(is, Files.asByteSink(file).openStream());
                 }
             }
         } finally {
@@ -174,7 +174,7 @@ public class ErlApp {
                 if (!entry.isDirectory()) {
                     is = jarFile.getInputStream(entry);
                     ByteStreams.copy(is, 
-                            Files.newOutputStreamSupplier(new File(outname, relFilename)));
+                                     Files.asByteSink(new File(outname, relFilename)).openStream());
                 } else {
                     new File(outname, relFilename).mkdirs();
                 }

@@ -7,13 +7,13 @@ Bundle-Vendor: ABS-Models
 Main-Class: abs.frontend.parser.Main
 Bundle-ClassPath: .,
  bin,
- lib/apfloat.jar,
+ lib/apfloat-1.8.2.jar,
  lib/sat4j-maxsat.jar,
  lib/choco-solver-2.1.1.jar,
- lib/commons-io-2.4.jar,
+ lib/commons-io-2.5.jar,
  lib/semisolver.jar,
- lib/antlr-4.2.2-complete.jar,
- lib/guava-15.0.jar
+ lib/antlr-4.6-complete.jar,
+ lib/guava-20.0.jar
 Eclipse-BundleShape: dir
 Export-Package: .,
  abs;uses:="abs.frontend.ast",

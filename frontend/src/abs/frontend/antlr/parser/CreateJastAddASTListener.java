@@ -6,7 +6,6 @@ package abs.frontend.antlr.parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
@@ -150,7 +149,7 @@ new List<ModuleDecl>(),
     // Traits
 
 
-    @Override public void exitDeltaTraitFragment(@NotNull ABSParser.DeltaTraitFragmentContext ctx) { 
+    @Override public void exitDeltaTraitFragment(ABSParser.DeltaTraitFragmentContext ctx) { 
         setV(ctx,new DeltaTraitModifier((MethodModifier) v(ctx.trait_oper())));
     }
     

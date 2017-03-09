@@ -69,12 +69,7 @@
 		<dependency>
 			<groupId>eu.hats-project</groupId>
 			<artifactId>jastadd2</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>eu.hats-project</groupId>
-			<artifactId>jast-add-parser</artifactId>
-			<version>1.0</version>
+			<version>2.2.2</version>
 		</dependency>
 		<dependency>
 			<groupId>eu.hats-project</groupId>
@@ -101,7 +96,7 @@
 		 <dependency>
 		 	<groupId>org.apfloat</groupId>
 		 	<artifactId>apfloat</artifactId>
-		 	<version>1.6.3</version>
+		 	<version>1.8.2</version>
 		 </dependency>
 		 
 		 <dependency>
