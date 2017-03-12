@@ -572,8 +572,11 @@ public class Main {
 
     private void typeCheckProductLine(Model m) {
 
+        int n = m.getFeatureModelConfigurations().size();
+        if (n == 0)
+            return;
+
         if (verbose) {
-            int n = m.getFeatureModelConfigurations().size();
             System.out.println("Typechecking Software Product Line (" + n + " products)...");
         }
         SemanticConditionList typeerrors = m.typeCheckPL();
