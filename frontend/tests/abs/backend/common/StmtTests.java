@@ -86,5 +86,10 @@ public class StmtTests extends SemanticTests {
         assertEvalTrue(new File("tests/abssamples/backend/StmtTests/caseStmtBoundAssignedParameter.abs"));
      }
 
+    @Test
+    public void caseStmtMatchFailure() throws Exception {
+        assertEvalTrue(new File("tests/abssamples/backend/StmtTests/caseStmtMatchFailure.abs"));
+     }
+
 
 }
