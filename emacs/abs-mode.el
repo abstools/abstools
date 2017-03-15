@@ -84,10 +84,10 @@ used regardless of the value of `abs-use-timed-interpreter'."
   :group 'abs)
 (put 'abs-use-timed-interpreter 'safe-local-variable 'booleanp)
 
-(defcustom abs-mode-hook (list 'imenu-add-menubar-index 'flymake-mode-on)
+(defcustom abs-mode-hook (list 'imenu-add-menubar-index 'abs-flymake-mode-on)
   "Hook for customizing `abs-mode'."
   :type 'hook
-  :options (list 'imenu-add-menubar-index 'flymake-mode-on)
+  :options (list 'imenu-add-menubar-index 'abs-flymake-mode-on)
   :group 'abs)
 
 (defcustom abs-clock-limit nil
@@ -418,6 +418,12 @@ value.")
                (list 'abs abs-error-regexp 1 2 3 '(4))))
 
 ;;; flymake support
+(defun abs-flymake-mode-on ()
+  (cond ((file-exists-p buffer-file-name)
+         (flymake-mode-on)
+         (remove-hook 'after-save-hook 'abs-flymake-mode-on t))
+        (t (add-hook 'after-save-hook 'abs-flymake-mode-on nil t))))
+
 (defun abs-flymake-init ()
   (when abs-compiler-program
     (let* ((filename (file-name-nondirectory (buffer-file-name)))
