@@ -497,6 +497,14 @@ aspect GenerateJava {
         getBody().generateJava(stream);
     }
 
+    public void CaseStmt.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
+    public void TryCatchFinallyStmt.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
     public void AssertStmt.generateJava(PrintStream stream) {
         super.generateJava(stream);
         stream.print("if (!");
