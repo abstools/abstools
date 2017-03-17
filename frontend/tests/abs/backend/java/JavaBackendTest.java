@@ -244,7 +244,7 @@ public class JavaBackendTest extends ABSTest {
 
     static JavaCode getJavaCode(Model model) throws IOException, JavaCodeGenerationException {
         JavaCode code = new JavaCode();
-        model.generateJavaCode(code);
+        model.generateJavaCode(code, true);
         return code;
     }
 

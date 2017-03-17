@@ -13,7 +13,8 @@ import abs.frontend.ast.*;
 
 aspect GenerateJavaDynamic_Core {
 
-    public void Model.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
+    public void Model.generateJavaCodeDynamic(JavaCode code, boolean includeDebug) throws IOException, JavaCodeGenerationException {
+        this.includeDebug = includeDebug;
         DynamicJavaGeneratorHelper.cleanGenFolder(code);
         for (ModuleDecl decl : getModuleDecls()) {
             try {

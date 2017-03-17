@@ -64,7 +64,7 @@ public class ABSUnitRunner extends Main {
 
     private void compile(Model m, File destDir) throws IOException, JavaCodeGenerationException {
         JavaCode javaCode = new JavaCode(destDir);
-        m.generateJavaCode(javaCode);        
+        m.generateJavaCode(javaCode, true);
         javaCode.compile();
     }
 

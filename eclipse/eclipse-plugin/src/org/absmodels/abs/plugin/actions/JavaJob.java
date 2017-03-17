@@ -313,7 +313,9 @@ public class JavaJob extends Job {
                     throw new AbsJobException(e);
                 }
             }
-            model.generateJavaCode(javaCode);
+            // TODO: the second parameter toggles listener code creation (3
+            // Java method calls per ABS statement); make this configurable
+            model.generateJavaCode(javaCode, true);
 
             int countUnits=model.getNumCompilationUnit();
             if(countUnits==0) throw new AbsJobException("No compilation unit found");
