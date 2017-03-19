@@ -881,10 +881,18 @@ aspect GenerateJava {
     }
 
     public void IntLiteral.generateJava(PrintStream stream) {
+        // Long.MAX_VALUE = 9223372036854775807L
+        boolean needsFromString = getContent().length() > 18;
         stream.print(ABSInteger.class.getName());
-        stream.print(".fromString(\"");
-        stream.print(getContent());
-        stream.print("\")");
+        if (needsFromString) {
+            stream.print(".fromString(\"");
+            stream.print(getContent());
+            stream.print("\")");
+        } else {
+            stream.print(".fromLong(");
+            stream.print(getContent());
+            stream.print("L)");
+        }
     }
 
     public void StringLiteral.generateJava(PrintStream stream) {

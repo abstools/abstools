@@ -69,6 +69,12 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
+    public void intLtLong() {
+        // 2^63, i.e., Long.MAX_VALUE + 1
+        assertEvalTrue("{ Bool testresult = 5 < 9223372036854775808;  }");
+    }
+
+    @Test
     public void intLtEq() {
         assertEvalTrue("{ Bool testresult = 5 <= 10;  }");
     }
