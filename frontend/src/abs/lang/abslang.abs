@@ -21,7 +21,7 @@ export Triple, fstT, sndT, trdT, trd;
 // Sets
 export Set, EmptySet, Insert, set; //TODO: don't export EmptySet, Insert
 
-export contains, emptySet, size, union, intersection, difference,
+export contains, emptySet, size, union, intersection, difference, isSubset,
   insertElement, remove, take, hasNext, next;
 
 // Lists
@@ -235,6 +235,17 @@ def Set<A> difference<A>(Set<A> set1, Set<A> set2) =
             else difference(set1, ss2);
       };
    };
+
+/**
+ * Returns True if set 'set' contains all element of 'maybe_subset', False
+ * otherwise.
+ */
+def Bool isSubset<A>(Set<A> maybe_subset, Set<A> set) =
+    case maybe_subset {
+        EmptySet => True;
+        Insert(elem, rest) => contains(set, elem) && isSubset(rest, set);
+    };
+
 
 /**
  * Returns a set with all elements of set 'xs' plus element 'e'.

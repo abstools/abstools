@@ -530,9 +530,19 @@ def Set<A> intersection<A>(Set<A> set1, Set<A> set2);
 
 Returns a set containing all elements of set `set1` not present in set `set2`.
 
-[]
+[source]
 ----
 def Set<A> intersection<A>(Set<A> set1, Set<A> set2);
+----
+
+.isSubset
+
+Returns `True` if `set` contains all elements of `maybe_subset`, `False`
+otherwise.
+
+[source]
+----
+def Bool isSubset<A>(Set<A> maybe_subset, Set<A> set);
 ----
 
 .insertElement

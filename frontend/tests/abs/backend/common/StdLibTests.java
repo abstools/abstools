@@ -38,6 +38,12 @@ public class StdLibTests extends SemanticTests {
     }
 
     @Test
+    public void setIsSubset() {
+        assertEvalTrue(" { Set<Int> s1 = set[1,2,3]; Set<Int> s2 = set[1,2,4]; Set<Int> res = union(s1,s2);"
+                + "Bool testresult = isSubset(s1, s2) == False && isSubset(s1, res) == True; }");
+    }
+
+    @Test
     public void setRemove() {
         assertEvalTrue("{ Set<Int> set = set[1, 2, 3]; Bool testresult = !contains(remove(set, 3), 3); }");
     }
