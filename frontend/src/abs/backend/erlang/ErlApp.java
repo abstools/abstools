@@ -233,7 +233,7 @@ public class ErlApp {
                                 if (key != null) {
                                     s.println(mapSeparator);
                                     mapSeparator = ",";
-                                    s.format("<<\"%s\">> => modelapi:abs_to_json(lists:nth(%s, Abs))",
+                                    s.format("<<\"%s\"/utf8>> => modelapi:abs_to_json(lists:nth(%s, Abs))",
                                              key,
                                              // nth() indexes 1-based and
                                              // we need to skip over the first
@@ -250,7 +250,7 @@ public class ErlApp {
             }
         }
         s.println(separator);
-        s.pf("to_json(Abs) -> list_to_binary(builtin:toString(null, list_to_tuple(Abs))).");
+        s.pf("to_json(Abs) -> builtin:toString(null, list_to_tuple(Abs)).");
         s.close();
     }
 

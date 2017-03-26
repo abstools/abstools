@@ -15,77 +15,85 @@ currentms(_Cog)->
     %% (MS*1000000 + S)*1000 + MuS div 1000.
     clock:now().
 
-substr(_Cog,S,Start,Len) ->
-    lists:sublist(S, Start+1, Len).
+substr(_Cog, B, Start, Len) ->
+    iolist_to_binary(substr_bin(B, Start, Len, [])).
+
+substr_bin(_, 0, 0, Acc) ->
+    lists:reverse(Acc);
+substr_bin(<<C/utf8, Rest/binary>>, 0, Len, Acc) ->
+    substr_bin(Rest, 0, Len - 1, [C | Acc]);
+substr_bin(<<_/utf8, Rest/binary>>, Start, Len, []) ->
+    substr_bin(Rest, Start - 1, Len, []).
+
+
+%% https://medium.com/@jlouis666/erlang-string-handling-7588daad8f05
+strlen(_Cog, B) ->
+    strlen_bin(B, 0).
+strlen_bin(<<>>, K) -> K;
+strlen_bin(<<_/utf8, Rest/binary>>, K) -> strlen_bin(Rest, K+1).
 
 random(_Cog,N)->
     random:uniform(N)-1.
 
-strlen(_Cog,S)->
-    length(S).
-
-
-string_interleave(Items, Sep) ->
-    lists:flatten(lists:reverse(string_interleave1(Items, Sep, []))).
-
-string_interleave1([Head | []], _Sep, Acc) -> [Head | Acc];
-string_interleave1([Head | Tail], Sep, Acc) ->
-    string_interleave1(Tail, Sep, [Sep, Head | Acc]).
 
 constructorname_to_string(A) ->
     String = atom_to_list(A),
     %% Constructor names start with "abs_".  Sometimes we get passed other
-    %% symbols; don't crash in that case.
-    case length(String) < 5 of
-        true -> String;
-        false -> lists:nthtail(4, String)
-    end.
+    %% symbols; pass these through unmolested.
+    Realname = case string:str(String, "abs_") == 0 of
+                   true -> lists:nthtail(4, String);
+                   false -> String
+               end,
+    list_to_binary(Realname).
 
 
-abslistish_to_string(Cog, Cons, Emp, {Cons, H, Emp}) ->
+abslistish_to_iolist(Cog, Cons, Emp, {Cons, H, Emp}) ->
     toString(Cog, H);
-abslistish_to_string(Cog, Cons, Emp, {Cons, H, T={Cons, _, _}}) ->
-    toString(Cog, H) ++ ", " ++ abslistish_to_string(Cog, Cons, Emp, T);
-abslistish_to_string(Cog, Cons, _Emp, {Cons, H, T}) ->
-    toString(Cog, H) ++ ", " ++ toString(Cog, T).
+abslistish_to_iolist(Cog, Cons, Emp, {Cons, H, T={Cons, _, _}}) ->
+    [toString(Cog, H), ", ", abslistish_to_iolist(Cog, Cons, Emp, T)];
+abslistish_to_iolist(Cog, Cons, _Emp, {Cons, H, T}) ->
+    [toString(Cog, H), ", ", toString(Cog, T)].
 
 
-toString(_Cog, true) -> "True";
-toString(_Cog, false) -> "False";
+toString(_Cog, true) -> <<"True"/utf8>>;
+toString(_Cog, false) -> <<"False"/utf8>>;
 toString(_Cog,I) when is_integer(I) ->
-    integer_to_list(I);
+    integer_to_binary(I);
 toString(_Cog,{N,D}) when is_integer(N),is_integer(D)->
     {N1, D1} = rationals:proper({N, D}),
     case D1 of
-        1 -> integer_to_list(N1);
-        _ -> integer_to_list(N1) ++ "/" ++ integer_to_list(D1)
+        1 -> integer_to_binary(N1);
+        _ -> iolist_to_binary([integer_to_binary(N1), <<"/"/utf8>>, integer_to_binary(D1)])
     end;
-toString(_Cog,S) when is_list(S) ->
-    "\"" ++ lists:flatten(lists:map(fun($\\) -> "\\\\";
-                                       ($") -> "\\\"";
-                                       (X) -> X end, S))
-        ++ "\"";
-toString(_Cog, null) -> "null";
+toString(_Cog,S) when is_binary(S) ->
+    iolist_to_binary(["\"",
+                      binary:replace(S, [<<"\\">>, <<"\"">>], <<"\\">>, [global, {insert_replaced, 1}]),
+                      "\""]);
+toString(_Cog, null) -> <<"null"/utf8>>;
 toString(_Cog,A) when is_atom(A) -> constructorname_to_string(A);
 toString(Cog,P) when is_pid(P) ->
     Status=future:poll(P),
     case Status of
         true -> Value=future:get_after_await(P),
-                pid_to_list(P) ++ ":" ++ toString(Cog, Value);
-        false -> pid_to_list(P) ++ ":empty"
+                iolist_to_binary([pid_to_list(P), ":", toString(Cog, Value)]);
+        false -> iolist_to_binary([pid_to_list(P), ":empty"])
     end;
 toString(_Cog,#object{class=Cid,ref=Oid}) ->
-    re:replace(string:substr(atom_to_list(Cid), 7), "_", ".", [{return, list}])
-        ++ ":" ++ pid_to_list(Oid);
+    %% TODO: use binary:replace?
+    iolist_to_binary([re:replace(string:substr(atom_to_list(Cid), 7), "_", ".", [{return, list}]),
+                      ":", pid_to_list(Oid)]);
 toString(_Cog,T) when is_tuple(T) ->
     [C|A] = tuple_to_list(T),
     case C of
-        dataCons -> "list[" ++ abslistish_to_string(_Cog, dataCons, dataNil, T) ++ "]";
-        dataInsert -> "set[" ++ abslistish_to_string(_Cog, dataInsert, dataEmptySet, T) ++ "]";
-        dataInsertAssoc -> "map[" ++ abslistish_to_string(_Cog, dataInsertAssoc, dataEmptyMap, T) ++ "]";
-        _ -> constructorname_to_string(C)
-                 ++ "(" ++ string_interleave([toString(_Cog,X) || X <- A], ", ")
-                 ++ ")"
+        dataCons ->
+            iolist_to_binary(["list[", abslistish_to_iolist(_Cog, dataCons, dataNil, T), "]"]);
+        dataInsert -> 
+            iolist_to_binary(["set[", abslistish_to_iolist(_Cog, dataInsert, dataEmptySet, T), "]"]);
+        dataInsertAssoc ->
+            iolist_to_binary(["map[", abslistish_to_iolist(_Cog, dataInsertAssoc, dataEmptyMap, T), "]"]);
+        _ -> iolist_to_binary([constructorname_to_string(C),
+                               "(", lists:join(",", [toString(_Cog,X) || X <- A]),
+                               ")"])
     end.
 
 

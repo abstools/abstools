@@ -14,7 +14,7 @@ init(Req, _Opts) ->
         case cowboy_req:binding(request, Req, <<"default">>) of
             <<"default">> -> {200, <<"text/plain">>, <<"Hello Erlang!\n">>};
             <<"clock">> -> handle_clock();
-            <<"dcs">> -> handle_dcs(cowboy_req:path_info(Req));
+            <<"dcs">> -> handle_dcs();
             <<"o">> -> handle_object_query(cowboy_req:path_info(Req));
             <<"static_dcs">> -> handle_static_dcs(cowboy_req:path_info(Req));
             <<"call">> -> handle_object_call(cowboy_req:path_info(Req),
@@ -26,9 +26,9 @@ init(Req, _Opts) ->
     {ok, Req2, #state{}}.
 
 handle_clock() ->
-    {200, <<"text/plain">> , "Now: " ++ builtin:toString(null, clock:now()) ++ "\n" }.
+    {200, <<"text/plain">> , iolist_to_binary(["Now: ", builtin:toString(null, clock:now()), "\n"]) }.
 
-handle_dcs([_Resource, _Filename]) ->
+handle_dcs() ->
     {200, <<"application/json">>, get_statistics_json()}.
 
 handle_object_query([Objectname, Fieldname]) ->
@@ -133,21 +133,17 @@ decode_parameter(Value, Type) ->
                 <<"false">> -> false
             end;
         <<"ABS.StdLib.String">> ->
-            binary_to_list(Value);
+            Value;
         <<"ABS.StdLib.Int">> ->
-            {Result, Rest} = string:to_integer(binary_to_list(Value)),
-            case Rest of
-                [] -> Result;
-                _ -> throw(badarg)
-            end
+            binary_to_integer(Value)
     end.
 
 abs_to_json(true) -> true;
 abs_to_json(false) -> false;
 abs_to_json(null) -> null;
 abs_to_json(Abs) when is_number(Abs) -> Abs;
-abs_to_json(Abs) when is_list(Abs) -> list_to_binary(Abs);
-abs_to_json(Abs) -> list_to_binary(builtin:toString(null, Abs)).
+abs_to_json(Abs) when is_binary(Abs) -> Abs;
+abs_to_json(Abs) -> builtin:toString(null, Abs).
 
 %% Convert into JSON integers instead of floats: erlang throws badarith,
 %% possibly because of underflow, when the rationals get very large (test

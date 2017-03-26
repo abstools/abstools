@@ -208,13 +208,12 @@ handle_call(all_registered_names, _From, State=#state{registered_objects=Objects
 handle_call(all_registered_objects, _From, State=#state{registered_objects=Objects}) ->
     {reply, maps:values(Objects), State};
 handle_call({register_object, Object, Key}, _From, State=#state{registered_objects=Objects}) ->
-    Name=list_to_binary(Key),
     object:protect_object_from_gc(Object),
-    NewObjects=case maps:get(Name, Objects,none) of
-                   none -> maps:put(Name, Object, Objects);
+    NewObjects=case maps:get(Key, Objects,none) of
+                   none -> maps:put(Key, Object, Objects);
                    OldObject ->
                        object:unprotect_object_from_gc(OldObject),
-                       maps:update(Name, Object, Objects)
+                       maps:update(Key, Object, Objects)
                end,
     {reply, ok, State#state{registered_objects=NewObjects}};
 handle_call({lookup_object, Name}, _From, State=#state{registered_objects=Objects}) ->

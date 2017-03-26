@@ -205,8 +205,8 @@ active(get_resource_json,_From,
       OS=#state{class=class_ABS_DC_DeploymentComponent=C,fields=S}) ->
     Name=C:get_val_internal(S,description),
     History=C:get_val_internal(S,cpuhistory),
-    Result=[{list_to_binary("name"), list_to_binary(Name)},
-           {list_to_binary("values"), History}],
+    Result=[{<<"name">>, Name},
+            {<<"values">>, History}],
     {reply, {ok, Result}, active, OS}.
 
 active({#object{class=Class},set,Field,Val},S=#state{class=Class,fields=IS}) ->
