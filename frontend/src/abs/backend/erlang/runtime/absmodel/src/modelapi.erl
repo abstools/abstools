@@ -143,11 +143,9 @@ abs_to_json(true) -> true;
 abs_to_json(false) -> false;
 abs_to_json(null) -> null;
 abs_to_json(Abs) when is_number(Abs) -> Abs;
+abs_to_json(Abs) when is_list(Abs) -> lists:map(abs_to_json/1, Abs);
 abs_to_json({N, D}) when is_integer(N), is_integer(D) -> N / D;
 abs_to_json(Abs) when is_binary(Abs) -> Abs;
-abs_to_json(dataNil) -> [];
-abs_to_json(Abs={dataCons, _, _}) ->
-    lists:map(fun abs_to_json/1, abs_to_erl_list(Abs));
 abs_to_json(dataEmptySet) -> [];
 abs_to_json(Abs={dataInsert, _, _}) ->
     lists:map(fun abs_to_json/1, abs_set_to_erl_list(Abs));
@@ -179,9 +177,6 @@ abs_to_erl_number({N, 1}) -> N;
 abs_to_erl_number({N, D}) -> N div D;
 abs_to_erl_number(I) -> I.
 
-abs_to_erl_list(dataNil) -> [];
-abs_to_erl_list({dataCons, A, R}) -> [A | abs_to_erl_list(R)].
-
 abs_set_to_erl_list(dataEmptySet) -> [];
 abs_set_to_erl_list({dataInsert, Item, Set}) -> [Item | abs_set_to_erl_list(Set)].
 
@@ -192,7 +187,7 @@ abs_map_to_erl_map({dataInsertAssoc, {dataPair, Key, Value}, Map}) ->
 
 
 convert_number_list(List) ->
-    lists:map(fun abs_to_erl_number/1, lists:reverse(abs_to_erl_list(List))).
+    lists:map(fun abs_to_erl_number/1, lists:reverse(List)).
 
 create_history_list({dataTime, StartingTime}, History, Totalhistory) ->
     History2 = convert_number_list(History),

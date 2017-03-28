@@ -31,7 +31,8 @@ gt(I,{N,D}) when is_integer(N),is_integer(D),is_integer(I) ->
     gt({I,1},{N,D});
 gt({N,D},{N1,D1}) when is_integer(N),is_integer(D),is_integer(N1),is_integer(D1)->
     rationals:is_greater({N,D},{N1,D1});
-%%As we loop through rest of tuple elements, in case we only compare one remaining element we go into the tuple
+%% As we loop through rest of tuple elements, in case we only compare one
+%% remaining element we go into the tuple
 gt({}, {}) -> false;
 gt({A},{B}) when is_tuple(A),is_tuple(B)->
    gt(A,B);
@@ -44,6 +45,14 @@ gt(A,T) when is_atom(A),is_tuple(T)->
    A>element(1,T);
 gt(T,A) when is_atom(A),is_tuple(T)->
    element(1,T)>A;
+gt([A | RA], [B | RB]) ->
+    case eq(A, B) of
+        true -> gt(RA, RB);
+        false -> gt(A, B)
+    end;
+%% "Nil" > "Cons"
+gt([], [_A | _B]) -> true;
+gt([_A | _B], []) -> false;
 gt(A,B)->
   A>B.
 
@@ -65,6 +74,14 @@ lt(A,T) when is_atom(A),is_tuple(T)->
     A<element(1,T);
 lt(T,A) when is_atom(A),is_tuple(T)->
     element(1,T)<A;
+lt([A | RA], [B | RB]) ->
+    case eq(A, B) of
+        true -> lt(RA, RB);
+        false -> lt(A, B)
+    end;
+%% "Cons" < "Nil"
+lt([], [_A | _B]) -> false;
+lt([_A | _B], []) -> true;
 %% no need to handle null < pid separately; atom < tuple < pid in Erlang
 lt(A,B)->
     A<B.

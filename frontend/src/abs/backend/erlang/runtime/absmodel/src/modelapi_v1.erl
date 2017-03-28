@@ -157,11 +157,8 @@ abs_to_erl_number({N, 1}) -> N;
 abs_to_erl_number({N, D}) -> N div D;
 abs_to_erl_number(I) -> I.
 
-abs_to_erl_list(dataNil) -> [];
-abs_to_erl_list({dataCons, A, R}) -> [A | abs_to_erl_list(R)].
-
 convert_number_list(List) ->
-    lists:map(fun abs_to_erl_number/1, lists:reverse(abs_to_erl_list(List))).
+    lists:map(fun abs_to_erl_number/1, lists:reverse(List)).
 
 create_history_list({dataTime, StartingTime}, History, Totalhistory) ->
     History2 = convert_number_list(History),

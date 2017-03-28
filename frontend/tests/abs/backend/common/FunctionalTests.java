@@ -115,6 +115,11 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void dataTypeLtEqInner() {
+        assertEvalTrue("{ Bool testresult = Cons(5,Cons(3, Nil)) < Cons(5, Nil);  }");
+    }
+
+    @Test
     public void dataTypeLtEqNull() {
         assertEvalTrue("interface I {} class C implements I {} { I i = new C(); Bool testresult = null <= i;  }");
     }

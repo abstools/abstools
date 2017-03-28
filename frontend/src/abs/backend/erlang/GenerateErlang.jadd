@@ -898,22 +898,31 @@ aspect GenerateErlang {
 
   @Override
   public void ConstructorPattern.generateErlangCode(CodeStream prePattern,CodeStream ecs,Vars vars){
-    //Handling for bool
-    final String c = getDataConstructor().getName();
-    if("True".equals(c) || "False".equals(c))
-      ecs.print(c.toLowerCase());
-    else{
-      if(getParams().getNumChild() > 0)
-        ecs.print("{");
-      ecs.print("data");
-      ecs.print(c);
-      for (Pattern p : getParams()) {
-        ecs.print(",");
-        p.generateErlangCode(prePattern,ecs,vars);
+      //Handling for bool
+      final String c = getDataConstructor().getName();
+      final String qualifiedName = getDataConstructor().qualifiedName();
+      if("True".equals(c) || "False".equals(c)) {
+          ecs.print(c.toLowerCase());
+      } else if (qualifiedName.equals("ABS.StdLib.Nil")) {
+          ecs.print("[]");
+      } else if (qualifiedName.equals("ABS.StdLib.Cons")) {
+          ecs.print("[");
+          getParam(0).generateErlangCode(prePattern, ecs, vars);
+          ecs.print(" | ");
+          getParam(1).generateErlangCode(prePattern, ecs, vars);
+          ecs.print("]");
+      } else {
+          if(getParams().getNumChild() > 0)
+              ecs.print("{");
+          ecs.print("data");
+          ecs.print(c);
+          for (Pattern p : getParams()) {
+              ecs.print(",");
+              p.generateErlangCode(prePattern,ecs,vars);
+          }
+          if(getParams().getNumChild() > 0)
+              ecs.print("}");
       }
-      if(getParams().getNumChild() > 0)
-        ecs.print("}");
-    }
   }
 
   public void UnderscorePattern.generateErlangCode(CodeStream prePattern,CodeStream ecs,Vars vars){
@@ -923,20 +932,29 @@ aspect GenerateErlang {
   public void DataConstructorExp.generateErlangCode(CodeStream ecs,Vars vars){
     //Handling for bool
     final String c = getDataConstructor().getName();
-    if("True".equals(c) || "False".equals(c))
-      ecs.print(c.toLowerCase());
-    else{
-      if(getParams().getNumChild() > 0)
-        ecs.print("{");
-      ecs.print("data");
-      ecs.print(c);
-      for (PureExp p : getParams()) {
-        ecs.print(",");
-        p.generateErlangCode(ecs,vars);
-      }
-      if(getParams().getNumChild() > 0)
-        ecs.print("}");
-      }
+    final String qualifiedName = getDataConstructor().qualifiedName();
+    if("True".equals(c) || "False".equals(c)) {
+        ecs.print(c.toLowerCase());
+    } else if (qualifiedName.equals("ABS.StdLib.Nil")) {
+        ecs.print("[]");
+    } else if (qualifiedName.equals("ABS.StdLib.Cons")) {
+        ecs.print("[");
+        getParam(0).generateErlangCode(ecs, vars);
+        ecs.print(" | ");
+        getParam(1).generateErlangCode(ecs, vars);
+        ecs.print("]");
+    } else {
+        if(getParams().getNumChild() > 0)
+            ecs.print("{");
+        ecs.print("data");
+        ecs.print(c);
+        for (PureExp p : getParams()) {
+            ecs.print(",");
+            p.generateErlangCode(ecs,vars);
+        }
+        if(getParams().getNumChild() > 0)
+            ecs.print("}");
+    }
   }
 
   public void SuspendStmt.generateErlangCode(CodeStream ecs,Vars vars){

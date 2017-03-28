@@ -82,12 +82,14 @@ toString(_Cog,#object{class=Cid,ref=Oid}) ->
     %% TODO: use binary:replace?
     iolist_to_binary([re:replace(string:substr(atom_to_list(Cid), 7), "_", ".", [{return, list}]),
                       ":", pid_to_list(Oid)]);
-toString(_Cog,T) when is_tuple(T) ->
+toString(_Cog, L) when is_list(L) ->
+    iolist_to_binary(["list[",
+                      lists:join(", ", lists:map(fun(I) -> toString(_Cog, I) end, L)),
+                      "]"]);
+toString(_Cog, T) when is_tuple(T) ->
     [C|A] = tuple_to_list(T),
     case C of
-        dataCons ->
-            iolist_to_binary(["list[", abslistish_to_iolist(_Cog, dataCons, dataNil, T), "]"]);
-        dataInsert -> 
+        dataInsert ->
             iolist_to_binary(["set[", abslistish_to_iolist(_Cog, dataInsert, dataEmptySet, T), "]"]);
         dataInsertAssoc ->
             iolist_to_binary(["map[", abslistish_to_iolist(_Cog, dataInsertAssoc, dataEmptyMap, T), "]"]);
