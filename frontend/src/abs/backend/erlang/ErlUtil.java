@@ -214,4 +214,7 @@ public class ErlUtil {
         }
     }
 
+    public static String absParamDeclToErlVarName(ParamDecl p) {
+        return Vars.PREFIX + p.getName() + "_0";
+    }
 }

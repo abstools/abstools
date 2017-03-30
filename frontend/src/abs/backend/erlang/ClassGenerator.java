@@ -70,7 +70,7 @@ public class ClassGenerator {
                 else ecs.print(",");
                 // Same name construction as
                 // ErlUtil.functionHeader(CodeStream, String, List<String>, Mask)
-                ecs.format(" '%s' => %s", p.getName(), Vars.PREFIX + p.getName() + "_0");
+                ecs.format(" '%s' => %s", p.getName(), ErlUtil.absParamDeclToErlVarName(p));
             }
             ecs.println(" }),");
             ecs.println("try");

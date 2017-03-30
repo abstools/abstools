@@ -18,6 +18,7 @@ import abs.backend.erlang.ErlangBackend.CompileOptions;
 import org.apache.commons.io.output.WriterOutputStream;
 import java.nio.charset.Charset;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 aspect GenerateErlang {
 
@@ -71,24 +72,44 @@ aspect GenerateErlang {
     //Ignore
   }
 
+  private final static Map<String, String> FunctionDecl.ERLANG_OVERRIDES
+      =ImmutableMap.<String, String>builder()
+      .put("ABS.StdLib.length", "'f_length'(_, V_list, _) -> length(V_list).")
+      .put("ABS.StdLib.isEmpty", "'f_isEmpty'(_, V_list, _) -> V_list == [].")
+      .put("ABS.StdLib.nth", "'f_nth'(_, V_list, N, _) -> try\n"
+           // Erlang nth is 1-based, abs nth is zero-based
+           + "    lists:nth(N + 1, V_list)\n"
+           // it will be a `function_clause' going beyond the end of `V_list'
+           + "  catch _:_ -> exit(dataPatternMatchFailException)\n"
+           + "end.")
+      .put("ABS.StdLib.concatenate", "'f_concatenate'(_, V_list1, V_list2, _) ->  V_list1 ++ V_list2.")
+      .put("ABS.StdLib.appendright", "'f_appendright'(_, V_list, V_p, _) ->  V_list ++ [V_p].")
+      .put("ABS.StdLib.reverse", "'f_reverse'(_, V_list, _) ->  lists:reverse(V_list).")
+      .put("ABS.StdLib.copy", "'f_copy'(_, V_p, N, _) ->  lists:duplicate(N, V_p).")
+      .build();
+
   @Override
   public void FunctionDecl.generateErlangCode(ErlApp ea) throws IOException{
-    CodeStream ecs= ea.getFunStream(moduleName());
-    ErlUtil.functionHeader(ecs,"f_"+getName(),"Cog=#cog{ref=CogRef}",getParams());
-    boolean needTrunc=getType().isIntType() && getFunctionDef() instanceof ExpFunctionDef
-        && ((ExpFunctionDef) getFunctionDef()).getRhs().getType().isRatType();
-    Vars vars = Vars.n(getParams());
-    ErlUtil.stopWorldPrelude(ecs, vars, true);
-    if (needTrunc) {
-      ecs.print("rationals:trunc(");
-    }
-    getFunctionDef().generateErlangCode(ecs,vars);
-    if (needTrunc) {
-      ecs.print(")");
-    }
-    ecs.println(".");
-    ecs.decIndent();
-    ecs.println();
+      CodeStream ecs= ea.getFunStream(moduleName());
+      if (ERLANG_OVERRIDES.containsKey(qualifiedName())) {
+          ecs.println(ERLANG_OVERRIDES.get(qualifiedName()));
+      } else {
+          ErlUtil.functionHeader(ecs,"f_"+getName(),"Cog=#cog{ref=CogRef}",getParams());
+          boolean needTrunc=getType().isIntType() && getFunctionDef() instanceof ExpFunctionDef
+              && ((ExpFunctionDef) getFunctionDef()).getRhs().getType().isRatType();
+          Vars vars = Vars.n(getParams());
+          ErlUtil.stopWorldPrelude(ecs, vars, true);
+          if (needTrunc) {
+              ecs.print("rationals:trunc(");
+          }
+          getFunctionDef().generateErlangCode(ecs,vars);
+          if (needTrunc) {
+              ecs.print(")");
+          }
+          ecs.println(".");
+          ecs.decIndent();
+      }
+      ecs.println();
   }
 
   public  void FunctionDef.generateErlangCode(CodeStream ecs,Vars vars) throws IOException{
