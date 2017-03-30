@@ -102,11 +102,18 @@ aspect FnAppContext {
     inh boolean ParamDecl.isParamDeclImperative(ParamDecl p);
     inh boolean LetExp.isParamDeclImperative(ParamDecl p);
     inh boolean CaseBranchStmt.isParamDeclImperative(ParamDecl p);
-    eq LetExp.getExp().isParamDeclImperative(ParamDecl p) {
+    inh boolean CaseBranch.isParamDeclImperative(ParamDecl p);
+    eq LetExp.getVar().isParamDeclImperative(ParamDecl p) {
         if (getVar().equals(p)) return false;
         else return isParamDeclImperative(p);
     }
     eq CaseBranchStmt.getRight().isParamDeclImperative(ParamDecl p) {
+        for (PatternVar pv : getLeft().getFreePatternVars()) {
+            if (pv.getVar().equals(p)) return false;
+        }
+        return isParamDeclImperative(p);
+    }
+    eq CaseBranch.getRight().isParamDeclImperative(ParamDecl p) {
         for (PatternVar pv : getLeft().getFreePatternVars()) {
             if (pv.getVar().equals(p)) return false;
         }
