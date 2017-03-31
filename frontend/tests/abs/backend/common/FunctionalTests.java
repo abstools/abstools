@@ -75,6 +75,11 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void dataTypeNEq() {
+        assertEvalTrue("{ Bool testresult = list[1, 2, 3] != list[1, 2]; }");
+    }
+
+    @Test
     public void dataTypeGt() {
         assertEvalTrue("{ Bool testresult = Nil > Cons(10, Nil);  }");
     }
