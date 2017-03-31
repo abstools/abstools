@@ -19,6 +19,8 @@ eq(A, B) when is_tuple(A), is_tuple(B) ->
         true -> eq(erlang:delete_element(1,A),erlang:delete_element(1,B));
         false -> false
     end;
+eq(A, B) when is_list(A), is_list(B) ->
+    lists:all(fun(X) -> X end, lists:zipwith(fun cmp:eq/2, A, B));
 eq(A,B)->
     A==B.
 
