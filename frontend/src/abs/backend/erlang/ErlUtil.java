@@ -14,7 +14,6 @@ import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PureExp;
-import abs.frontend.typechecker.Type;
 
 /**
  * Utility functions to mostly generate headers or parameter lists.
@@ -118,9 +117,9 @@ public class ErlUtil {
         return "m_" + name.replace('.', '_');
     }
 
-    public static void buildParams(CodeStream ecs, abs.frontend.ast.List<PureExp> params, List<Type> paramTypes, Vars vars, boolean emptyStack) {
+    public static void buildParams(CodeStream ecs, abs.frontend.ast.List<PureExp> params, Vars vars, boolean emptyStack) {
         ecs.print("[");
-        buildParamsWithOutBrackets(ecs, params, paramTypes, vars);
+        buildParamsWithOutBrackets(ecs, params, vars);
 
         if (params.hasChildren()) {
             ecs.print(',');
@@ -135,26 +134,18 @@ public class ErlUtil {
         ecs.print("]");
     }
 
-    public static void buildParamsWithOutBrackets(CodeStream ecs, abs.frontend.ast.List<PureExp> params, List<Type> paramTypes, Vars vars) {
+    public static void buildParamsWithOutBrackets(CodeStream ecs, abs.frontend.ast.List<PureExp> params, Vars vars) {
         boolean first = true;
-        int num = paramTypes.size();
-        for (int i = 0; i < num; i++) {
-            PureExp param = params.getChild(i);
-            Type paramType = paramTypes.get(i);
-            boolean needTrunc=paramType.isIntType()
-                && param.getType().isRatType();
+        for (PureExp a : params) {
             if (!first)
                 ecs.print(',');
             else
                 first = false;
-
-            if (needTrunc) ecs.print("rationals:trunc(");
-            param.generateErlangCode(ecs, vars);
-            if (needTrunc) ecs.print(")");
+            a.generateErlangCode(ecs, vars);
         }
     }
 
-    public static void argumentList(CodeStream ecs, PureExp callee, boolean builtin, boolean imperativeContext, abs.frontend.ast.List<PureExp> params, List<Type> paramTypes, Vars vars) {
+    public static void argumentList(CodeStream ecs, PureExp callee, boolean builtin, boolean imperativeContext, abs.frontend.ast.List<PureExp> params, Vars vars) {
         ecs.print("(");
         if (callee != null) {
             callee.generateErlangCode(ecs, vars);
@@ -169,7 +160,7 @@ public class ErlUtil {
             }
         }
 
-        buildParamsWithOutBrackets(ecs, params, paramTypes, vars);
+        buildParamsWithOutBrackets(ecs, params, vars);
 
         if (!builtin) {
             ecs.print(',');

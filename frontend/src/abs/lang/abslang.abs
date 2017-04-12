@@ -523,7 +523,7 @@ def Duration deadline() =
 def Duration subtractFromDuration(Duration d, Rat v) =
   case d {
       InfDuration => InfDuration;
-      Duration(x) => Duration(max(x - v, 0));
+      Duration(x) => Duration(x - v);
   };
 
 // Annotation data types for KeyABS invariants, preconditions, postconditions
@@ -970,10 +970,10 @@ implements DeploymentComponentForCloudProvider {
     Int paymentInterval = 
         case lookup(initconfig, PaymentInterval) {
             Nothing => 1; Just(n) => truncate(n); };
-    Rat costPerInterval = lookupDefault(initconfig, CostPerInterval, 0);
-    Rat startupDuration = lookupDefault(initconfig, Startupduration, 0);
-    Rat shutdownDuration = lookupDefault(initconfig, Shutdownduration, 0);
-    Rat numberOfCores = lookupDefault(initconfig, Cores, 1);
+    Rat costPerInterval = lookupDefault(initconfig, CostPerInterval, 0/1);
+    Rat startupDuration = lookupDefault(initconfig, Startupduration, 0/1);
+    Rat shutdownDuration = lookupDefault(initconfig, Shutdownduration, 0/1);
+    Rat numberOfCores = lookupDefault(initconfig, Cores, 1/1);
 
     CloudProviderForDeploymentComponent cloudprovider = null;
     {

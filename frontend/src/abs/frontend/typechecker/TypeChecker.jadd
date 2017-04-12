@@ -746,8 +746,8 @@ aspect TypeChecker {
     public void DurationGuard.typeCheck(SemanticConditionList e) {
         getMin().typeCheck(e);
         getMax().typeCheck(e);
-        getMin().assertHasType(e, getModel().getIntType());
-        getMax().assertHasType(e, getModel().getIntType());
+        getMin().assertHasType(e, getModel().getRatType());
+        getMax().assertHasType(e, getModel().getRatType());
     }
 
     // EXPRESSIONS
@@ -857,7 +857,7 @@ aspect TypeChecker {
         getElseExp().typeCheck(e);
         Type tt = getThenExp().getType();
         Type et = getElseExp().getType();
-        if (!et.isAssignable(tt)) {
+        if (!(et.isAssignable(tt) || tt.isAssignable(et))) {
             e.add(new TypeError(this, ErrorMessage.IF_DIFFERENT_TYPE, tt, et));
         }
     }
@@ -941,7 +941,8 @@ aspect TypeChecker {
          int size = e.getErrorCount();
          getOperand().typeCheck(e);
          if (e.getErrorCount() == size)
-             getOperand().assertHasType(e,getModel().getIntType());
+             // KLUDGE: we'd like to say "any numeric type please" here
+             getOperand().assertHasType(e,getModel().getRatType());
     }
 
     public void NegExp.typeCheck(SemanticConditionList e) {

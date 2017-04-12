@@ -71,9 +71,6 @@ public class TypeCheckerHelper {
         if (!te.isAssignable(lht)) {
             l.add(new TypeError(n, ErrorMessage.CANNOT_ASSIGN, te, lht));
         }
-        if (te.isRatType() && lht.isIntType()) {
-            l.add(new SemanticWarning(n, ErrorMessage.IMPLICIT_TRUNCATION, "dummy"));
-        }
     }
 
     public static void typeCheckParamList(SemanticConditionList l, HasParams params) {
@@ -134,9 +131,6 @@ public class TypeCheckerHelper {
                 Type expType = exp.getType();
                 if (!expType.isAssignable(argType)) {
                     l.add(new TypeError(n, ErrorMessage.TYPE_MISMATCH, exp.getType(), argType));
-                }
-                if (expType.isRatType() && argType.isIntType()) {
-                    l.add(new SemanticWarning(n, ErrorMessage.IMPLICIT_TRUNCATION, "dummy"));
                 }
             }
         }

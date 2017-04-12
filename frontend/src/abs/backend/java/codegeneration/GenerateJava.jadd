@@ -270,10 +270,6 @@ aspect GenerateJava {
         if (getFunctionDef() instanceof BuiltinFunctionDef)
             return;
 
-        boolean needsTruncate = getType().isIntType()
-            && getFunctionDef() instanceof ExpFunctionDef
-            && ((ExpFunctionDef) getFunctionDef()).getRhs().getType().isRatType() ;
-
         JavaGeneratorHelper.generateHelpLine(this,stream);
 
         String className = JavaBackend.getFunctionName(getName());
@@ -290,9 +286,6 @@ aspect GenerateJava {
         stream.print("return (");
         getFunctionDef().generateJava(stream);
         stream.print(")");
-        if (needsTruncate) {
-            stream.print(".truncate()");
-        }
         stream.println(";");
         stream.println("}");
         stream.println("}");
@@ -371,9 +364,6 @@ aspect GenerateJava {
 
         if (hasInitExp()) {
             getInitExp().generateJava(stream);
-            if (getType().isIntType() && getInitExp().getType().isRatType()) {
-                stream.print(".truncate()");
-            }
         } else {
             stream.print("null");
         }
@@ -408,9 +398,6 @@ aspect GenerateJava {
         getVar().generateJava(stream);
         stream.print(" = ");
         getValue().generateJava(stream);
-        if (getVar().getType().isIntType() && getValue().getType().isRatType()) {
-            stream.print(".truncate()");
-        }
         stream.println(";");
 
         if (getVar() instanceof VarUse) {
@@ -464,9 +451,6 @@ aspect GenerateJava {
 
         stream.print("return ");
         getRetExp().generateJava(stream);
-        if (lht.isIntType() && getRetExp().getType().isRatType()) {
-            stream.print(".truncate()");
-        }
         stream.println(";");
     }
 
@@ -874,9 +858,6 @@ aspect GenerateJava {
             stream.print(", ");
         }
         getVal().generateJava(stream);
-        if (getVar().getType().isIntType() && getVal().getType().isRatType()) {
-            stream.print(".truncate()");
-        }
         stream.print(")");
     }
 

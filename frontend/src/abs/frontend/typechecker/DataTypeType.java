@@ -164,8 +164,8 @@ public class DataTypeType extends Type  {
 
         DataTypeType dt = (DataTypeType) t;
         if (!dt.decl.equals(this.decl)) {
-            // Int and Rat are cross-assignable, with implicit truncation
-            if (this.isNumericType() && dt.isNumericType()) return true;
+            // Int can be assigned to Rat
+            if (this.isNumericType() && dt.isRatType()) return true;
             return false;
         }
         if (numTypeArgs() != dt.numTypeArgs()) return false;

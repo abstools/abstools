@@ -96,17 +96,9 @@ aspect GenerateErlang {
           ecs.println(ERLANG_OVERRIDES.get(qualifiedName()));
       } else {
           ErlUtil.functionHeader(ecs,"f_"+getName(),"Cog=#cog{ref=CogRef}",getParams());
-          boolean needTrunc=getType().isIntType() && getFunctionDef() instanceof ExpFunctionDef
-              && ((ExpFunctionDef) getFunctionDef()).getRhs().getType().isRatType();
           Vars vars = Vars.n(getParams());
           ErlUtil.stopWorldPrelude(ecs, vars, true);
-          if (needTrunc) {
-              ecs.print("rationals:trunc(");
-          }
           getFunctionDef().generateErlangCode(ecs,vars);
-          if (needTrunc) {
-              ecs.print(")");
-          }
           ecs.println(".");
           ecs.decIndent();
       }
@@ -137,7 +129,7 @@ aspect GenerateErlang {
     else {
       ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
     }
-    ErlUtil.argumentList(ecs,null, builtin, isFnAppContextImperative(), getParams(), decl.getTypes(), vars);
+    ErlUtil.argumentList(ecs,null, builtin, isFnAppContextImperative(), getParams(), vars);
   }
 
   @Override
@@ -255,15 +247,10 @@ aspect GenerateErlang {
       StringWriter sw = new StringWriter();
       CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
       if(hasInitExp()){
-        boolean needTrunc=getType().isIntType() && getInitExp().getType().isRatType();
-        if (needTrunc)
-          buffer.print("rationals:trunc(");
         getInitExp().generateErlangCode(buffer,vars);
-        if (needTrunc)
-          buffer.print(")");
-        }
-      else
+      } else {
         buffer.print("null");
+      }
       buffer.close();
       ecs.format("put(vars, (get(vars))#{'%s' => %s})",  this.getName(), sw.toString().substring(ecs.getIndent().length()));
       if (getInitExp() instanceof NewExp) {
@@ -288,16 +275,10 @@ aspect GenerateErlang {
   public void AssignStmt.generateErlangCode(CodeStream ecs,Vars vars) {
     StringWriter sw = new StringWriter();
     CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
-    boolean needTrunc=getVar().getType().isIntType() && getValue().getType().isRatType();
     boolean isNewDC = getVar().getType().isDeploymentComponentType()
         && getValue() instanceof NewExp;
     String varExp = "";
-    if (needTrunc)
-      buffer.print("rationals:trunc(");
-    // Need to generate RHS code before modifying vars
     getValue().generateErlangCode(buffer,vars);
-    if (needTrunc)
-      buffer.print(")");
     buffer.close();
     if(getVar() instanceof VarUse) {
         VarUse v = (VarUse)getVar();
@@ -355,13 +336,13 @@ aspect GenerateErlang {
         dc.generateErlangCode(ecs, vars);
       }
       ecs.format("),%s,",className);
-      ErlUtil.buildParams(ecs,getParams(),classDecl.getTypes(),vars,true);
+      ErlUtil.buildParams(ecs,getParams(),vars,true);
       ecs.print(",Cog,");
       ecs.print(vars.toStack());
       ecs.print(")");
     } else {
       ecs.format("object:new(Cog,%s,",className);
-      ErlUtil.buildParams(ecs,getParams(),classDecl.getTypes(),vars,false);
+      ErlUtil.buildParams(ecs,getParams(),vars,false);
       ecs.print(")");
     }
   }
@@ -397,7 +378,6 @@ aspect GenerateErlang {
 
   @Override
   public void ReturnStmt.generateErlangCode(CodeStream ecs,Vars vars) {
-    //Return needs possible truncation
     MethodImpl m = getContextMethod();
     Type lht = getModel().getUnitType();
     if (m != null) { lht = m.getMethodSig().getReturnType().getType(); }
@@ -416,10 +396,7 @@ aspect GenerateErlang {
       ecs.println(",");
       ecs.print(varName);
     } else {
-      boolean needTrunc=lht.isIntType() && getRetExp().getType().isRatType();
-      if (needTrunc) { ecs.print("rationals:trunc("); }
       getRetExp().generateErlangCode(ecs, vars);
-      if (needTrunc) { ecs.print(")"); }
     }
   }
 
@@ -438,7 +415,7 @@ aspect GenerateErlang {
     ecs.incIndent();
     ecs.println("Vars=get(vars),");
     ecs.format("Result=T:'m_%s'", getMethod());
-    ErlUtil.argumentList(ecs,getCallee(),false,true,params,getMethodSig().getTypes(),vars);
+    ErlUtil.argumentList(ecs,getCallee(),false,true,params,vars);
     ecs.println(",");
     ecs.println("put(vars, Vars),");
     ecs.println("Result;");
@@ -450,7 +427,7 @@ aspect GenerateErlang {
     ecs.incIndent().print("TempFuture = future:start(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
-    ErlUtil.buildParams(ecs,getParams(),getMethodSig().getTypes(),vars,true);
+    ErlUtil.buildParams(ecs,getParams(),vars,true);
     ecs.print(",Cog,");
     ecs.print(vars.toStack());
     ecs.println("),");
@@ -465,7 +442,7 @@ aspect GenerateErlang {
     ecs.print("future:start(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
-    ErlUtil.buildParams(ecs,getParams(),getMethodSig().getTypes(),vars,true);
+    ErlUtil.buildParams(ecs,getParams(),vars,true);
     ecs.print(",Cog,");
     ecs.print(vars.toStack());
     ecs.print(")");
@@ -747,12 +724,7 @@ aspect GenerateErlang {
     v.nVignoreOverload(getVar());
     getExp().generateErlangCode(ecs,v);
     ecs.print(" end(");
-    boolean needTrunc=getVar().getType().isIntType() && getVal().getType().isRatType();
-    if (needTrunc)
-      ecs.print("rationals:trunc(");
     getVal().generateErlangCode(ecs,vars);
-    if (needTrunc)
-      ecs.print(")");
     ecs.print("))");
   }
 

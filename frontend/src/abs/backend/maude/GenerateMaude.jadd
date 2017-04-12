@@ -448,12 +448,8 @@ aspect GenerateMaude {
 
     public void LetExp.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        boolean needConversion = getVar().getType().isIntType()
-            && getVal().getType().isRatType() ;
         stream.print("( let '" + getVar().getName() + " = ");
-        if (needConversion) stream.print("\"ABS.StdLib.truncate\"(");
         getVal().generateMaude(stream);
-        if (needConversion) stream.print(")");
         stream.print("in ");
         getExp().generateMaude(stream);
         stream.print(" )");
@@ -657,13 +653,9 @@ aspect GenerateMaude {
                 int randomcount = var.getInitExp().numberOfRandom(new TreeSet<String>());
                 MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
                 if (var.getInitExp() instanceof PureExp) {
-                    boolean needConversion = var.getType().isIntType()
-                        && var.getInitExp().getType().isRatType() ;
                     MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
                     stream.print("assign( @ '" + var.getName() + " ; ");
-                    if (needConversion) stream.print("\"ABS.StdLib.truncate\"(");
                     var.getInitExp().generateMaude(stream);
-                    if (needConversion) stream.print(")");
                     stream.print(") ");
                 } else {
                     var.getInitExp().generateMaudeAsStatement(stream, var.getName(), getAnnotations());
@@ -679,14 +671,10 @@ aspect GenerateMaude {
                 int randomcount = var.getInitExp().numberOfRandom(new TreeSet<String>());
                 MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
                 if (var.getInitExp() instanceof PureExp) {
-                    boolean needConversion = var.getType().isIntType()
-                        && var.getInitExp().getType().isRatType() ;
                     MaudeCompilerHelper.emitCostAnnotation(stream, getAnnotations(), getModel().defaultResources);
                     stream.print("$vardecl( '" + var.getName() + " ; ");
                     if (var.hasInitExp()) {
-                        if (needConversion) stream.print("\"ABS.StdLib.truncate\"(");
                         var.getInitExp().generateMaude(stream);
-                        if (needConversion) stream.print(")");
                     } else {
                         stream.print("null ");
                     }
@@ -718,15 +706,11 @@ aspect GenerateMaude {
         int randomcount = getValue().numberOfRandom(new TreeSet<String>());
         MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
         if (getValue() instanceof PureExp) {
-            boolean needConversion = getVar().getType().isIntType()
-                && getValue().getType().isRatType() ;
             MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
             stream.print("assign( ");
             getVar().generateMaude(stream);
             stream.print("; ");
-            if (needConversion) stream.print("\"ABS.StdLib.truncate\"(");
             getValue().generateMaude(stream);
-            if (needConversion) stream.print(")");
             stream.print(") ");
         } else {
             getValue().generateMaudeAsStatement(stream, ((VarOrFieldUse)getVar()).getName(), getAnnotations());
@@ -741,13 +725,9 @@ aspect GenerateMaude {
             if (m != null) {
                 lht = m.getMethodSig().getReturnType().getType();
             }
-            boolean needConversion = lht.isIntType()
-                && getRetExp().getType().isRatType() ;
             MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
             stream.print("return( ");
-            if (needConversion) stream.print("\"ABS.StdLib.truncate\"(");
             getRetExp().generateMaude(stream);
-            if (needConversion) stream.print(")");
             stream.print(") ");
         } else {
             String var = "_";
