@@ -114,15 +114,17 @@ aspect GenerateErlang {
   }
 
   private final static Set<String> FnApp.ERLANG_BUILTINS=ImmutableSet.of(
-      "currentms", "getProductLine", "lowlevelDeadline", "print", "println",
-      "random", "strlen", "substr", "thisDC", "toString",
-      "truncate", "numerator", "denominator");
+      "ABS.StdLib.currentms", "ABS.Meta.getProductLine",
+      "ABS.StdLib.lowlevelDeadline", "ABS.StdLib.print", "ABS.StdLib.println",
+      "ABS.StdLib.random", "ABS.StdLib.strlen", "ABS.StdLib.substr",
+      "ABS.DC.thisDC", "ABS.StdLib.toString",
+      "ABS.StdLib.truncate", "ABS.StdLib.numerator", "ABS.StdLib.denominator");
   public  void FnApp.generateErlangCode(CodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
     boolean builtin = decl.getFunctionDef() instanceof BuiltinFunctionDef;
     if(builtin){
-      if(!ERLANG_BUILTINS.contains(decl.getName()))
-          throw new NotImplementedYetException(this, "The builtin function "+decl.getName() + "is not implemented in the Erlang backend yet");
+      if(!ERLANG_BUILTINS.contains(decl.qualifiedName()))
+          throw new NotImplementedYetException(this, "The builtin function "+decl.qualifiedName() + "is not implemented in the Erlang backend yet");
       ecs.print("builtin:");
       ecs.print(decl.getName());
     }
