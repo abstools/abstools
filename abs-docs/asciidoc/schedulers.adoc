@@ -1,0 +1,92 @@
+[[sec:schedulers]]
+== User-Defined Schedulers
+
+User-defined schedulers are an experimental feature of Timed ABS.  They are
+available on the Maude and Erlang backends.  This section describes the
+current state of the implementation on the Erlang backend.
+
+All identifiers introduced in this section reside in the `ABS.Scheduler`
+module, which is not imported by default.
+
+
+=== Defining Schedulers
+
+A scheduler is a function that takes a list of processes and chooses one of
+them.  Schedulers are ordinary ABS functions.
+
+The following two example schedulers illustrate the concept.  The first,
+deterministic scheduler takes the first process off the list; the second
+scheduler chooses a non-deterministic one.
+
+[source]
+.Example
+----
+def Process defaultscheduler(List<Process> queue) = head(queue);
+
+def Process randomscheduler(List<Process> queue) = nth(queue, random(length(queue)));
+----
+
+All schedulers must have a result type `Process` and must take an argument of
+type `List<Process>` as their first argument.
+
+NOTE: Schedulers can have more than one argument; arguments after the first
+one will be filled with the value of object fields at scheduling time.  This
+feature is available in the Maude backend only but will be implemented in the
+Erlang backend as well.
+
+=== Processes and Process Attributes
+
+A _process_ is an ABS abstract datatype; i.e., there is no constructor
+available to create a `Process` value inside ABS.  Processes are created by
+the runtime and handed to schedulers.
+
+Processes have _attributes_ which can be used by schedulers to choose the next
+process to run.  For example, a scheduler could always prefer processes that
+run a certain method.  The following attributes are available:
+
+[options="header"]
+|=======================
+|Name |Type |Meaning
+|`method` |`String` |Name of the method executed by the process
+|`arrival` |`Time` |Time when method call was issued
+|=======================
+
+NOTE: The attributes `cost`, `procDeadline`, `start`, `crit` are available in
+the Maude backend only but will be implemented in the Erlang backend as well.
+The attributes `value`, `finish` are under consideration since their
+usefulness is questionable.
+// Duration cost(Process p) = builtin;
+// Duration procDeadline(Process p) = builtin;
+// Time start(Process p) = builtin;
+// Time finish(Process p) = builtin;
+// Bool crit(Process p) = builtin;
+// Int value(Process p) = builtin;
+
+=== Using Schedulers
+
+Schedulers apply to _cogs_ since cogs are responsible for scheduling one of
+their processes when idle.  Since cogs are created via `new` expressions, a
+scheduler can be given at that point via an annotation.  Classes can have a
+_default scheduler_ that is given as an annotation to the class definition;
+any cog created when instantiating this class will have that scheduler by
+default (unless overridden by an annotation at the `new` expression).
+
+The following example shows how to define a class that uses the
+`randomscheduler` by default.  The first argument (the list of processes) must
+have the name `queue`.
+
+[source]
+.Example
+----
+[Scheduler: defaultscheduler(queue)] class C implements I {
+  ...
+}
+----
+
+The following example shows how to create a cog with a different scheduler.
+
+[source]
+.Example
+----
+   [Scheduler: randomscheduler(queue)] I instance = new C();
+----

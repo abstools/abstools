@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
--export([start/5,start_for_rest/3]).
+-export([start/6,start_for_rest/4]).
 -export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,value_available/6]).
 -export([task_started/3]).
 -export([get_for_rest/1]).
@@ -31,10 +31,10 @@
 
 %% Interacting with a future caller-side
 
-start(null,_Method,_Params, _Cog, _Stack) ->
+start(null,_Method,_Params, _Info, _Cog, _Stack) ->
     throw(dataNullPointerException);
-start(Callee,Method,Params, Cog, Stack) ->
-    {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params,true,self()], []),
+start(Callee,Method,Params, Info, Cog, Stack) ->
+    {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params,Info,true,self()], []),
     wait_for_future_start(Cog, [Ref | Stack]),
     Ref.
 
@@ -53,8 +53,8 @@ wait_for_future_start(Cog, Stack) ->
     end.
 
 
-start_for_rest(Callee, Method, Params) ->
-    {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params,false,none], []),
+start_for_rest(Callee, Method, Params, Info) ->
+    {ok, Ref} = gen_fsm:start(?MODULE,[Callee,Method,Params,Info,false,none], []),
     Ref.
 
 get_after_await(null) ->
@@ -174,13 +174,13 @@ die(Future, Reason) ->
 
 %% gen_fsm machinery
 
-init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,RegisterInGC,Caller]) ->
+init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,RegisterInGC,Caller]) ->
     case is_process_alive(Object) of
         true ->
             %%Start task
             process_flag(trap_exit, true),
             MonRef=monitor(process,CogRef),
-            TaskRef=cog:add_sync(Cog,async_call_task,[self(),Callee,Method|Params], Params),
+            TaskRef=cog:add_sync(Cog,async_call_task,[self(),Callee,Method|Params], Info, Params),
             demonitor(MonRef),
             case RegisterInGC of
                 true -> gc:register_future(self());

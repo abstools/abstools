@@ -118,7 +118,8 @@ aspect GenerateErlang {
       "ABS.StdLib.lowlevelDeadline", "ABS.StdLib.print", "ABS.StdLib.println",
       "ABS.StdLib.random", "ABS.StdLib.strlen", "ABS.StdLib.substr",
       "ABS.DC.thisDC", "ABS.StdLib.toString",
-      "ABS.StdLib.truncate", "ABS.StdLib.numerator", "ABS.StdLib.denominator");
+      "ABS.StdLib.truncate", "ABS.StdLib.numerator", "ABS.StdLib.denominator",
+      "ABS.Scheduler.method", "ABS.Scheduler.arrival");
   public  void FnApp.generateErlangCode(CodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
     boolean builtin = decl.getFunctionDef() instanceof BuiltinFunctionDef;
@@ -322,20 +323,32 @@ aspect GenerateErlang {
     Stmt stmt = CompilerUtils.findStmtForExpression(this);
     PureExp dc = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotations(), "ABS.DC.DC");
     ClassDecl classDecl = ((UnionType)getType()).getOriginatingClass();
+    PureExp scheduler = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotations(), "ABS.Scheduler.Scheduler");
+    if (scheduler == null) {
+        scheduler = CompilerUtils.getAnnotationValueFromName(classDecl.getAnnotations(), "ABS.Scheduler.Scheduler");
+    }
     String className = ErlUtil.getName(classDecl);
     boolean isNewDC = getType().isDeploymentComponentType();
     if (((UnionType) getType()).getOriginatingClass().isForeign())
       className = "ffi_" + className;
     if (!hasLocal()) {
-      ecs.format("object:new(cog:start(");
+      ecs.print("object:new(cog:start(");
       if (isNewDC) {
           // do nothing, call cog:start/0.  thisDC() within a DC will fail
           // (but the implementation of deployment components is entirely
-          // within the standard library).
+          // within the standard library).  We also don't support user-defined
+          // schedulers on them.
       } else if (dc == null) {
-        ecs.format("DC");
+        ecs.print("DC");
       } else {
         dc.generateErlangCode(ecs, vars);
+      }
+      if (scheduler != null && !isNewDC) {
+          FnApp schedulerfun = (FnApp)scheduler;
+          FunctionDecl decl = (FunctionDecl)(schedulerfun.getDecl());
+          ecs.print(", fun ");
+          ecs.print(ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
+          ecs.print("/" + (decl.getNumParam() + 2));
       }
       ecs.format("),%s,",className);
       ErlUtil.buildParams(ecs,getParams(),vars,true);
@@ -430,7 +443,8 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
-    ecs.print(",Cog,");
+    ecs.format(",#process_info{method= <<\"%s\"/utf8>>},", getMethod());
+    ecs.print("Cog,");
     ecs.print(vars.toStack());
     ecs.println("),");
     ecs.print("future:get_blocking(TempFuture, Cog, ");
@@ -445,7 +459,8 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
-    ecs.print(",Cog,");
+    ecs.format(",#process_info{method= <<\"%s\"/utf8>>},", getMethod());
+    ecs.print("Cog,");
     ecs.print(vars.toStack());
     ecs.print(")");
   }
@@ -982,8 +997,8 @@ aspect GenerateErlang {
       ecs.pf("(fun Poll (%s)->",vars.toParamList());
       ecs.incIndent().println("receive check -> ");
       ecs.incIndent().pf("case %s of",sw);
-      ecs.incIndent().pf("true -> cog:process_poll_is_ready(Cog, self()), Poll(%s);",vars.toParamList());
-      ecs.pf("false -> cog:process_poll_is_not_ready(Cog, self()),  Poll(%s)",vars.toParamList());
+      ecs.incIndent().pf("true -> cog:process_poll_is_ready(Cog, self(), get(process_info)), Poll(%s);",vars.toParamList());
+      ecs.pf("false -> cog:process_poll_is_not_ready(Cog, self(), get(process_info)),  Poll(%s)",vars.toParamList());
       ecs.decIndent().println("end;");
       ecs.decIndent().pf("wait -> Poll(%s);", vars.toParamList());
       ecs.println("token -> ok;");

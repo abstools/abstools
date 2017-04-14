@@ -28,6 +28,8 @@ include::stdlib.adoc[]
 
 include::timed.adoc[]
 
+include::schedulers.adoc[]
+
 include::deployment.adoc[]
 
 include::feature-modeling.adoc[]

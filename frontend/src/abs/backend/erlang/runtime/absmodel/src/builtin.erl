@@ -1,10 +1,12 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(builtin).
+%%All builtin functions
+%%Must correspond to the set in GenerateErlang.jadd:FnApp.ERLANG_BUILTINS
 -include_lib("abs_types.hrl").
 -export([currentms/1,getProductLine/1,lowlevelDeadline/1,print/2,println/2,strlen/2,substr/4,thisDC/1,toString/2]).
 -export([random/2,truncate/2,numerator/2, denominator/2]).
-%%All builtin functions
-%%Must correspond to the set in GenerateErlang.jadd:FnApp.ERLANG_BUILTINS
+
+-export([method/2, arrival/2]).
 
 
 %% Copied from Erlang R19 lists:join
@@ -137,3 +139,9 @@ getProductLine(_Cog)->
 
 thisDC(#cog{dc=DC}) ->
     DC.
+
+%% ABS.Scheduler functions
+method(_Cog, #process_info{method=Method}) ->
+    Method.
+arrival(_Cog, #process_info{arrival=Arrival}) ->
+    Arrival.
