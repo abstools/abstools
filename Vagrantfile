@@ -30,7 +30,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # please see the online documentation at
   # https://docs.vagrantup.com/v2/
 
-  config.vm.box = "ubuntu/wily64"
+  config.vm.box = "hashicorp/precise64"
   config.vm.network "forwarded_port", guest: 80, host: 8888
 
   config.vm.post_up_message = <<-MSG
@@ -68,7 +68,7 @@ echo "Installing necessary tools for the ABS compiler"
 echo
 sudo apt-get update -y -q
 sudo apt-get -y -q install software-properties-common htop
-sudo apt-get -y -q install openjdk-8-jdk openjdk-8-jre
+sudo apt-get -y -q install default-jre
 sudo apt-get install -y -q ant antlr junit git unzip
 sudo apt-get install -y -q erlang
 
