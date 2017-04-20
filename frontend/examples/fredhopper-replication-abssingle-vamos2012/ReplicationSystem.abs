@@ -1,0 +1,1435 @@
+module RS;
+
+import * from RS.Util;
+
+class RSMain { }
+
+{
+    new RSMain();
+}
+
+delta RD;
+uses RS;
+    adds interface Node {
+        DataBase getDataBase();
+        Bool isShutdownRequested();
+        Unit requestShutDown();
+    }
+
+    adds interface Client extends Node {
+        ClientDataBase getClientDataBase();
+    }
+
+    adds interface ClientConnector extends Client {
+        Unit setAcceptor(ServerAcceptor acceptor);
+    }
+
+    adds interface SyncClient extends Client, ClientStateMachine {
+        [Far] ServerAcceptor getAcceptor();
+        Unit incrementJob();
+    }
+
+    adds interface InternalClient extends SyncClient {
+        ClientId getId();
+    }
+
+    adds interface ConcurrentInternalClient extends InternalClient {
+        Bool canGoTo(State state);
+    }
+
+    adds interface ClientStateMachine {
+        Unit waitToBoot();
+        Unit boot();
+        Unit start();
+        Unit waitToReplicate();
+        Unit replicate();
+        Unit end();
+    }
+
+    adds interface ClientJob extends Worker  {
+        Bool registerReplicationItems(CheckPoint checkpoint);
+        Maybe<FileSize> processFile(FileId id);
+        Unit processContent(File file);
+        Unit receiveSchedule();
+    }
+
+    adds interface Tester {
+        Unit setResult(Node actual);
+    }
+
+    adds interface Commandee {
+        [Atomic] Unit command(Command command);
+    }
+
+    adds interface Worker extends Commandee {
+        ClientId forClient();
+    }
+
+    adds interface SyncServerClientCoordinator {
+        Unit process();
+        Unit startReplicationUpdate(ConnectionThread worker);
+        Unit finishReplicationUpdate(ConnectionThread worker);
+        Unit finishClient(ClientId cid);
+    }
+
+    adds interface SyncServerClientCoordinatorSpec
+    extends SyncServerClientCoordinator {
+        Unit refreshSnapShot();
+        Unit clearSnapshot();
+    }
+
+    adds interface InternalCoordinator {
+        Unit process();
+    }
+
+    adds interface ServerAcceptor {
+        [Far] ConnectionThread getConnection(ClientJob job);
+    }
+
+    adds interface SyncServerAcceptor extends ServerAcceptor {
+        Bool isAcceptingConnection();
+        Unit suspendConnection();
+        Unit resumingConnection();
+    }
+
+    adds interface ConnectionThread extends Worker { }
+
+    adds interface ServerNode extends Node {
+        ServerSchedule getSchedule();
+    }
+
+    adds interface SyncServer extends ServerNode {
+        SyncServerAcceptor getAcceptor();
+        [Far] SyncServerClientCoordinator getCoordinator();
+        [Near] ReplicationSnapshot getReplicationSnapshot();
+    }
+
+    adds interface InternalServer extends SyncServer {
+        Unit debug();
+    }
+
+    adds interface ReplicationSnapshot {
+        Unit refreshSnapshot(Bool refreshSnapshot);
+        Unit clearSnapshot();
+        Int getIndexingId();
+        Set<ServerReplicationItem> getItems();
+        Bool hasUpdated();
+    }
+
+    adds interface ServerReplicationItem {
+        FileEntry getContents();
+        Command getCommand();
+        ReplicationItemType getType();
+        FileId getAbsoluteDir();
+        [Atomic] Unit refresh();
+        [Atomic] Unit cleanup();
+    }
+
+    adds interface DataBase {
+        [Atomic] FileContent getContent(FileId fId);
+        [Atomic] Bool hasFile(FileId fId);
+        [Atomic] Set<FileId> listFiles();
+    }
+
+    adds interface ServerDataBase extends DataBase {
+        [Atomic] Bool refresh(Bool updateFileStore);
+        [Atomic] Set<FileId> listCheckPointFiles();
+    }
+
+    adds interface ClientDataBase extends DataBase {
+        [Atomic] Bool prepareReplicationItem(CheckPoint cp);
+        [Atomic] Unit updateFile(FileId fId, FileSize size);
+    }
+
+    adds class ClientJobImpl([Far] InternalClient client, JobType job)
+    implements ClientJob {
+
+        Command command = EndSnapShot;
+        Bool hasSchedule = False;
+
+        // A flag to see if new job should start
+        Bool newJob = False;
+
+        ConnectionThread thread = null;
+        [Far] ClientDataBase db;
+
+        ConnectionThread getConnectionThread() {
+            Fut<ServerAcceptor> fs = client!getAcceptor();
+            ServerAcceptor acceptor = fs.get;
+
+            // Acquire a connection
+            Fut<ConnectionThread> t = acceptor!getConnection(this); await t?;
+            return t.get;
+        }
+
+        Unit setDb() {
+            Fut<ClientDataBase> fd = client!getClientDataBase();
+            this.db = fd.get;
+        }
+
+        // starts a replication job
+        Unit scheduleNewJob() {
+            await newJob;
+            new local ClientJobImpl(this.client,Replication);
+        }
+
+        Unit run() {
+            // set data base
+            this.setDb();
+
+            // Acquire a connection
+            this.thread = this.getConnectionThread();
+            if (thread != null) {
+                // Connection successful!
+                Fut<Unit> unit;
+                if (this.job == Boot) {
+                    this.becomeState(Booting);
+
+                    this.thread!command(ListSchedule);
+                    await hasSchedule == True;
+
+                    //establish the next schedule triggers!
+                    this!scheduleNewJob();
+
+                } else {
+                    this.becomeState(WorkOnReplicate);
+
+                    this.thread!command(SearchSchedule);
+                    await hasSchedule == True;
+
+                    //establish the next schedule triggers!
+                    this!scheduleNewJob();
+
+                    // wait for current job to start then end
+                    await command == StartSnapShot;
+                    await command == EndSnapShot;
+                }
+
+                this.becomeState(WaitToReplicate);
+
+                unit = this.client!incrementJob();
+                unit.get;
+
+                //allow next job to proceed
+                newJob = True;
+
+            } else {
+                // Connection unsuccessful! Perform shutdown
+                this.shutDownClient();
+            }
+        }
+
+        Unit becomeState(State state) {
+            if (state == WaitToBoot) {
+                Fut<Unit> unit = this.client!waitToBoot(); unit.get;
+            } else if (state == Booting) {
+                Fut<Unit> unit = this.client!boot(); unit.get;
+            } else if (state == WorkOnReplicate) {
+                Fut<Unit> unit = this.client!replicate(); unit.get;
+            } else if (state == WaitToReplicate) {
+                Fut<Unit> unit = this.client!waitToReplicate(); unit.get;
+            } else if (state == End) {
+                Fut<Unit> unit = this.client!end(); unit.get;
+            }
+        }
+
+        ClientId forClient() {
+            Fut<ClientId> fut = client!getId();
+            return fut.get;
+        }
+
+        Unit shutDownClient() {
+            Fut<Unit> unit = client!requestShutDown(); unit.get;
+            unit = this.client!end(); unit.get;
+        }
+
+        Bool registerReplicationItems(CheckPoint checkpoint) {
+            Fut<Bool> reg = db!prepareReplicationItem(checkpoint);
+            return reg.get;
+        }
+
+        Bool hasFile(FileId id) {
+            Fut<Bool> he = db!hasFile(id); await he?;
+            return he.get;
+        }
+
+        Maybe<FileSize> processFile(FileId id) {
+            Maybe<FileSize> result = Nothing;
+            Fut<Set<FileId>> fs = db!listFiles();
+            Set<FileId> fids = fs.get;
+            if (contains(fids,id)) {
+                Bool he = this.hasFile(id);
+                if (he) {
+                    Fut<FileContent> contentf = db!getContent(id); await contentf?;
+                    FileContent content = contentf.get;
+                    if (isFile(content)) {
+                        FileSize size = content(content);
+                        result = Just(size);
+                    }
+                }
+            }
+            return result;
+        }
+
+        Unit overwrite(File file) {
+            FileId id = fst(file);
+            FileSize size = fileContent(file);
+            Fut<Unit> u = db!updateFile(id,size); await u?;
+        }
+
+        Unit continue(File file) {
+            FileId id = fst(file);
+            FileSize size = fileContent(file);
+
+            Bool he = this.hasFile(id);
+            FileSize fsize = 0;
+            if (he) {
+                Fut<FileContent> s = db!getContent(fst(file)); await s?;
+                FileContent c = s.get;
+                fsize = content(c);
+            }
+
+            size = size + fsize;
+            Fut<Unit> u = db!updateFile(id,size); await u?;
+        }
+
+        Unit processContent(File file) {
+            await isAppendCommand(command);
+            if (command == SkipFile) {
+                skip;
+            } else if (command == OverwriteFile) {
+                this.overwrite(file);
+            } else if (command == ContinueFile) {
+                this.continue(file);
+            }
+        }
+
+        [Atomic] Unit command(Command c) {
+            command = c;
+        }
+
+        Unit receiveSchedule() { hasSchedule = True; }
+
+        Int getId() { return 1; }
+    }
+
+    adds class SyncClientImpl(ClientId id, Tester tester)
+    implements InternalClient, ClientConnector {
+
+        Map<State,Set<State>> machine = EmptyMap;
+
+        ServerAcceptor acceptor = null;
+        ClientDataBase db = null;
+
+        State state = Start;
+        Int jobCount = 0;
+        Bool shutDown = False;
+
+        {
+            // Defines possible transitions
+            Pair<State,Set<State>> start =           Pair(Start,            set[WaitToBoot]);
+            Pair<State,Set<State>> waitToBoot =      Pair(WaitToBoot,       set[Booting,End]);
+            Pair<State,Set<State>> booting =         Pair(Booting,          set[WaitToBoot,WaitToReplicate,End]);
+            Pair<State,Set<State>> waitToReplicate = Pair(WaitToReplicate,  set[WaitToBoot,WorkOnReplicate,End]);
+            Pair<State,Set<State>> workOnReplicate = Pair(WorkOnReplicate,  set[WaitToBoot,WaitToReplicate,End]);
+
+            // Creates states machine
+            this.machine = map[start,waitToBoot,booting,waitToReplicate,workOnReplicate];
+
+            // initialize the client side data base
+            this.db = new local DataBaseImpl(EmptyMap);
+        }
+
+        ClientId getId() {
+            return this.id;
+        }
+
+        Bool isShutdownRequested() {
+            return this.shutDown;
+        }
+
+        Unit requestShutDown() {
+            this.shutDown = True;
+            tester!setResult(this);
+        }
+
+        Unit incrementJob() {
+            jobCount = jobCount + 1;
+        }
+
+        ServerAcceptor getAcceptor() {
+            return this.acceptor;
+        }
+
+        Unit run() {
+            // Makes a transition
+            this.becomesState(WaitToBoot);
+
+            // wait for acceptor to be ready
+            await acceptor != null;
+
+            this.incrementJob();
+
+            // starts a boot job
+            new ClientJobImpl(this,Boot);
+        }
+
+        ClientDataBase getClientDataBase() {
+            return db;
+        }
+
+        DataBase getDataBase() {
+            return db;
+        }
+
+        Unit becomesState(State state) {
+            assert contains(lookup(machine,this.state),state);
+            this.state = state;
+        }
+
+        Unit setAcceptor([Far] ServerAcceptor acc) {
+            this.acceptor = acc;
+        }
+
+        Unit waitToBoot() {
+            this.becomesState(WaitToBoot);
+        }
+
+        Unit boot() {
+            this.becomesState(Booting);
+        }
+
+        Unit start() {
+            this.becomesState(Booting);
+        }
+
+        Unit waitToReplicate() {
+            this.becomesState(WaitToReplicate);
+        }
+
+        Unit replicate() {
+            this.becomesState(WorkOnReplicate);
+        }
+
+        Unit end() {
+            this.becomesState(End);
+        }
+
+
+    }
+
+    adds class TesterImpl(ServerNode expected) implements Tester {
+
+        Node actual;
+        ServerSchedule schedule = EmptySet;
+        Set<Triple<FileId,FileContent,FileContent>> result = EmptySet;
+
+        Unit setResult(Node actual) {
+            this.actual = actual;
+            this.assertData();
+        }
+
+        Unit assertData() {
+            Fut<DataBase> fe = this.expected!getDataBase();
+            DataBase e = fe.get;
+
+            Fut<ServerSchedule> schf = this.expected!getSchedule();
+            this.schedule = schf.get;
+
+            Fut<DataBase> fa = this.actual!getDataBase();
+            DataBase a = fa.get;
+
+            this.checkDatas(e,a);
+        }
+
+        Unit checkDatas(DataBase e, DataBase a) {
+            //check against schedule!
+            ServerSchedule ss = this.schedule;
+            while (hasNext(ss)) {
+                Pair<ServerSchedule,Schedule> ns = next(ss);
+                this.checkData(snd(ns),e,a);
+                ss = fst(ns);
+            }
+        }
+
+        Unit checkData(Schedule s, DataBase e, DataBase a) {
+            if (isLeft(item(s))) {
+                FileId id = left(item(s));
+                Fut<FileContent> ccg = e!getContent(id);
+                FileContent ce = ccg.get;
+
+                Fut<FileContent> ccf = a!getContent(id);
+                FileContent ca = ccf.get;
+
+                if (isFile(ce)) {
+                    this.compareFile(file(id,content(ce)),file(id,content(ca)));
+                } else {
+                    this.compareDir(dir(id,entries(ce)),dir(id,entries(ca)));
+                }
+            }
+
+            if (isRight(item(s))) {
+                FileId id = fst(right(item(s)));
+                String pattern = snd(right(item(s)));
+
+                Fut<FileContent> ccg = e!getContent(id);
+                FileContent ce = ccg.get;
+
+                Fut<FileContent> ccf = a!getContent(id);
+                FileContent ca = ccf.get;
+
+                if (isFile(ce)) {
+                    if (filter(pattern,id)) {
+                        this.compareFile(file(id,content(ce)),file(id,content(ca)));
+                    }
+                } else {
+                    this.compareDir1(pattern,dir(id,entries(ce)),dir(id,entries(ca)));
+                }
+            }
+        }
+
+        Unit compareDir1(String pattern, Directory e, Directory a) {
+            Set<FileId> fids = filters(pattern,getFileIdFromDir(e));
+            Set<FileId> eids = filters(pattern,getFileIdFromDir(a));
+            this.compareFiles(e,a,fids,eids);
+        }
+
+        Unit compareDir(Directory e, Directory a) {
+            Set<FileId> fids = getFileIdFromDir(e);
+            Set<FileId> eids = getFileIdFromDir(a);
+            this.compareFiles(e,a,fids,eids);
+        }
+
+        Unit compareFiles(
+            Directory e, Directory a,
+            Set<FileId> fids, Set<FileId> eids) {
+
+            assert size(fids) == size(eids);
+            while (hasNext(fids)) {
+                Pair<Set<FileId>,FileId> nd = next(fids);
+                FileId id = snd(nd);
+                FileContent es = fromJust(getFromEntryIn(e,id));
+                FileContent as = fromJust(getFromEntryIn(a,id));
+                result = Insert(Triple(id,es,as),result);
+                assert(es == as);
+                fids = fst(nd);
+            }
+        }
+
+        Unit compareFile(File e, File a) {
+            FileId id = getFileId(Left(e));
+            FileContent es = getFileContent(Left(e));
+            FileContent as = getFileContent(Left(a));
+            result = Insert(Triple(id,es,as),result);
+            assert(es == as);
+        }
+
+    }
+
+    adds class SyncServerAcceptorImpl([Near] InternalServer server)
+    implements SyncServerAcceptor {
+
+        // A flag representing com.fredhopper.replication.server.SyncServerAcceptorThread.waitForResumingSignal
+        // A flag representing com.fredhopper.replication.server.SyncServerAcceptorThread.acceptingConnections
+        Bool accept = True;
+
+        Int threads = 0; // for debugging
+
+        // Return a null thread if server is/has been shutting down
+        ConnectionThread getConnection(ClientJob job) {
+            ConnectionThread thread = null;
+
+            // Shutdown flag
+            Bool shutdown = this.server.isShutdownRequested();
+            if (~ shutdown) {
+                await accept;
+                thread = new ConnectionThreadImpl(job,server,threads);
+                threads = threads + 1; // for debugging
+            }
+
+            return thread;
+        }
+
+        Bool isAcceptingConnection() {
+            return accept;
+        }
+
+        Unit suspendConnection() {
+            accept = False;
+        }
+
+        Unit resumingConnection() {
+            accept = True;
+        }
+    }
+
+    adds class ConnectionThreadImpl(
+            [Far] ClientJob job,
+            [Far] InternalServer server,
+            Int id) implements ConnectionThread {
+
+        SyncServerClientCoordinator coord;
+        Maybe<Command> cmd = Nothing;
+
+        Unit run() {
+            Fut<SyncServerClientCoordinator> c = server!getCoordinator(); await c?;
+            this.coord = c.get;
+
+            // register and refresh snapshot
+            Fut<Unit> rp = this.coord!startReplicationUpdate(this); await rp?;
+
+            // wait for client's command
+            await this.cmd != Nothing;
+
+            // Send schedules
+            rp = this.job!receiveSchedule(); await rp?;
+
+            if (cmd != Just(ListSchedule)) {
+
+                // Get replication items
+                Fut<ReplicationSnapshot> sp = this.server!getReplicationSnapshot();
+                ReplicationSnapshot snapshot = sp.get;
+
+                Fut<CheckPoint> cpf = snapshot!getIndexingId(); await cpf?;
+                CheckPoint cp = cpf.get;
+
+                Fut<Bool> b = job!registerReplicationItems(cp); await b?;
+                Bool register = b.get;
+
+                Set<Set<File>> filesets = EmptySet;
+                if (register) {
+                    Fut<Set<ServerReplicationItem>> nis = snapshot!getItems(); await nis?;
+                    Set<ServerReplicationItem> newitems = nis.get;
+                    filesets = this.registerItems(newitems);
+                }
+
+                // start snapshot
+                rp = this.job!command(StartSnapShot); await rp?;
+
+                while (hasNext(filesets)) {
+                    Pair<Set<Set<File>>,Set<File>> nfs = next(filesets);
+                    filesets = fst(nfs);
+                    Set<File> fileset = snd(nfs);
+                    this.transferItems(fileset);
+                }
+
+                // before ending snapshot replication
+                // tell server this client has completed its session
+                ClientId cid = this.forClient();
+
+                // this is superfluous call! (waiting period)
+                rp = this.server!debug(); await rp?;
+
+                rp = this.coord!finishClient(cid); await rp?;
+
+                // end snapshot
+                rp = this.job!command(EndSnapShot); await rp?;
+
+            }
+
+            rp = this.coord!finishReplicationUpdate(this); await rp?;
+
+        }
+
+        ClientId forClient() {
+            Fut<ClientId> id = job!forClient();
+            return id.get;
+        }
+
+        [Atomic] Unit command(Command c) {
+            this.cmd = Just(c);
+        }
+
+        /*
+     * Register replication items with client
+     * Returns a set of files to be replicated
+     */
+        Set<Set<File>> registerItems(Set<ServerReplicationItem> items) {
+            Set<Set<File>> regs = EmptySet;
+
+            //iterate over possible check points
+            while (hasNext(items)) {
+                Pair<Set<ServerReplicationItem>,ServerReplicationItem> nis = next(items);
+                items = fst(nis);
+                ServerReplicationItem item = snd(nis);
+
+                // For now convert to a set
+                // will convert it into directory
+                Fut<FileEntry> entryf = item!getContents(); await entryf?;
+                FileEntry entry = entryf.get;
+
+                Set<File> result = EmptySet;
+                Set<FileId> ids = getFileIdFromEntries1(entry);
+                while (hasNext(ids)) {
+                    Pair<Set<FileId>,FileId> nids = next(ids);
+                    FileId id = snd(nids);
+                    Maybe<FileContent> content = getFromEntry(entry,id);
+                    result = Insert(Pair(id,fromJust(content)),result);
+                    ids = fst(nids);
+                }
+
+                regs = Insert(result,regs);
+            }
+
+            return regs;
+        }
+
+        Unit transferItems(Set<File> fileset) {
+            while (hasNext(fileset)) {
+                Pair<Set<File>,File> nf = next(fileset);
+                fileset = fst(nf);
+                File file = snd(nf);
+                FileSize tsize = fileContent(file);
+
+                Fut<Unit> rp = job!command(AppendSearchFile); await rp?;
+                Fut<Maybe<FileSize>> fs = job!processFile(fst(file)); await fs?;
+                Maybe<FileSize> content = fs.get;
+
+                FileSize size = 0;
+                if (isJust(content)) {
+                    size = fromJust(content);
+                }
+
+                if (size > tsize) {
+                    rp = job!command(OverwriteFile);
+                    await rp?;
+                    rp = job!processContent(file);
+                    await rp?;
+                } else {
+                    // find out how much is still need to be replicated
+                    if (tsize - size > 0) {
+                        rp = job!command(ContinueFile);
+                        await rp?;
+
+                        file = file(fst(file),tsize - size);
+                        rp = job!processContent(file);
+                        await rp?;
+                    } else {
+                        rp = job!command(SkipFile);
+                        await rp?;
+                    }
+                }
+
+            }
+            Fut<Unit> rp = job!command(EndSearchFile); await rp?;
+        }
+    }
+
+    adds class SyncServerClientCoordinatorImpl(
+            [Far] SyncServer server,
+            [Far] ReplicationSnapshot snapshot,
+            Set<ClientId> clients) implements SyncServerClientCoordinatorSpec {
+
+        Int count = 0;
+        Maybe<CheckPoint> cps = Nothing;
+
+        Bool shutDown = False;
+
+        // Mimic internal choice
+        Bool internal = False;
+
+        SyncServerAcceptor acceptor = null;
+        Set<ConnectionThread> threads = EmptySet;
+
+        // Keep track of current list of clients (used for invariant checking)
+        Set<ClientId> currentClients = EmptySet;
+
+        //trace of clients activity
+        //initialise with empty trace
+        List<List<ClientId>> traces = Cons(Nil,Nil);
+
+        Unit process() {
+            Fut<Unit> unit;
+
+            // get SyncServerAcceptor
+            Fut<SyncServerAcceptor> fs = this.server!getAcceptor(); await fs?;
+            this.acceptor = fs.get;
+
+            Bool shutdown = this.isServerShutdownRequested();
+            while (~shutdown) {
+                //try polling on the return boolean value
+                Fut<Bool> fd = acceptor!isAcceptingConnection(); await fd?;
+                Bool accept = fd.get;
+
+                // There is a consideration about how long
+                // a worker should have been working
+                // This is abstracted in this model and
+                // so we use a flag to model this.
+                if (accept) {
+                    if (~ emptySet(threads) && internal) {
+                        unit = this.acceptor!suspendConnection(); await unit?;
+                        this.internal = False;
+                    } else {
+                        this.internal = True;
+                    }
+                } else {
+                    if (emptySet(threads)) {
+                        unit = this.acceptor!resumingConnection(); await unit?;
+                    }
+                }
+                shutdown = this.isServerShutdownRequested();
+            }
+
+            // Shutdown sequence
+            await threads == EmptySet;
+            unit = this.acceptor!resumingConnection(); await unit?;
+        }
+
+        Bool isServerShutdownRequested() {
+            Fut<Bool> fd = this.server!isShutdownRequested(); await fd?;
+            return fd.get;
+        }
+
+        // Setting up a replication session
+        Unit startReplicationUpdate(ConnectionThread thread) {
+            this.threads = Insert(thread,this.threads);
+            if (size(this.threads) == 1) {
+                this.refreshSnapShot();
+            }
+        }
+
+        // Tidy up after a replication session
+        Unit finishReplicationUpdate(ConnectionThread thread) {
+            if (contains(this.threads,thread)) {
+                if (size(this.threads) == 1) {
+                    this.clearSnapshot();
+                }
+                this.threads = remove(this.threads,thread);
+            }
+        }
+
+        Unit clearSnapshot() {
+            Fut<Unit> unit = this.snapshot!clearSnapshot(); unit.get;
+        }
+
+        Unit refreshSnapShot() {
+            count = count + 1; //for debug
+
+            Bool makeChange = this.isNotWaitingForMoreClient();
+
+            // advance check point only after data
+            // has been replicated to all clients
+            Fut<Unit> unit = this.snapshot!refreshSnapshot(makeChange); unit.get;
+
+            // check point to see if any items has been reloaded
+            CheckPoint cp = this.getCurrentCheckPoint();
+
+            // check point to see if an update has happened
+            Fut<Bool> rf = this.snapshot!hasUpdated();
+            Bool up = rf.get;
+            this.shutDown = ~up;
+
+            //reset the current client lists
+            //if refresh is successful and is not waiting
+            //for more clients.
+            if (makeChange) {
+                if (this.cps == Nothing) {
+                    this.cps = Just(cp);
+                    this.traces = appendright(this.traces,Nil);
+                } else if (cp > fromJust(this.cps)) {
+                    this.cps = Just(cp);
+                    this.traces = appendright(this.traces,Nil);
+                }
+
+                if (~this.shutDown) {
+                    this.currentClients = this.clients;
+                } else {
+                    unit = this.server!requestShutDown(); unit.get;
+                }
+            }
+
+        }
+
+        ClientId getClientId([Far] ConnectionThread thread) {
+            Fut<ClientId> fid = thread!forClient();
+            return fid.get;
+        }
+
+        Unit removeClient(ConnectionThread thread) {
+            ClientId id = this.getClientId(thread);
+            this.currentClients = remove(this.currentClients,id);
+        }
+
+        Unit addClient(ConnectionThread thread) {
+            ClientId id = this.getClientId(thread);
+            assert ~contains(this.currentClients,id);
+            this.currentClients= Insert(id,this.currentClients);
+        }
+
+        Bool isNotWaitingForMoreClient() {
+            return this.currentClients == EmptySet;
+        }
+
+        CheckPoint getCurrentCheckPoint() {
+            Fut<CheckPoint> cf = this.snapshot!getIndexingId();
+            return cf.get;
+        }
+
+        Unit finishClient(ClientId cid) {
+            CheckPoint cp = this.getCurrentCheckPoint();
+            this.currentClients = remove(this.currentClients,cid);
+            assert length(this.traces) > cp - 1;
+            this.traces = setAt(this.traces,appendright(nth(this.traces,cp-1),cid),cp-1);
+        }
+
+        Int getCount() {
+            return this.count;
+        }
+    }
+
+    adds class ReplicationSnapshotImpl(
+        ServerDataBase db,
+        ServerSchedule schedules) implements ReplicationSnapshot {
+
+        Int count = 0;
+        Int update = 0;
+
+        //cps increments after each time
+        //changes to be made to item store
+        Bool updated = False;
+        CheckPoint cps = 0;
+
+        // if snapshot is cleaned
+        Bool clean = True;
+
+        Set<ServerReplicationItem> items = EmptySet;
+
+        Set<ServerReplicationItem> getItems() {
+            return this.items;
+        }
+
+        Unit refreshSnapshot(Bool makeChange) {
+            count = count + 1; //for debug
+            if (clean) {
+                // advance check point only after data
+                // has been replicated to all clients
+                if (makeChange) {
+                    this.cps = this.cps + 1;
+                }
+
+                updated = this.db.refresh(makeChange);
+                if (updated) {
+                    update = update + 1; //for debug
+
+                    this.createReplicationItems();
+                    Set<ServerReplicationItem> titems = this.getItems();
+                    while (hasNext(titems)) {
+                        Pair<Set<ServerReplicationItem>,ServerReplicationItem> ni = next(titems);
+                        titems = fst(ni);
+                        ServerReplicationItem item = snd(ni);
+                        item.refresh();
+                    }
+
+                    clean = False;
+                }
+            }
+
+        }
+
+        Unit createReplicationItems() {
+            ServerSchedule tsc = schedules;
+            while (hasNext(tsc)) {
+                Pair<ServerSchedule,Schedule> ns = next(tsc);
+                this.replicationItem(snd(ns));
+                tsc = fst(ns);
+            }
+        }
+
+        [Modifies]
+        Unit replicationItem(Schedule schedule) {
+            if (isSearchItem(schedule)) {
+                ServerReplicationItem item = new local SearchDirectoryItem(left(item(schedule)),this.db);
+                this.items = Insert(item,this.items);
+            }
+
+            if (isFileItem(schedule)) {
+                // this will be defined in the deltas
+                Pair<FileId,String> it = right(item(schedule));
+                ServerReplicationItem item = new local ReplicationFilePattern(fst(it),snd(it),this.db);
+                this.items = Insert(item,this.items);
+            }
+
+            if (isLogItem(schedule)) {
+                // this will be defined in the deltas
+                ServerReplicationItem item = new local ReplicationLogItem(left(item(schedule)),this.db);
+                this.items = Insert(item,this.items);
+            }
+
+        }
+
+        //Clear snapshot
+        Unit clearSnapshot() {
+            this.items = EmptySet;
+            clean = True;
+        }
+
+        Bool hasUpdated() {
+            return this.updated;
+        }
+
+        Int getIndexingId() {
+            return this.cps;
+        }
+
+    }
+
+    adds class SearchDirectoryItem(FileId qualified, ServerDataBase db)
+    implements ServerReplicationItem {
+
+        Directory snapshot = rootDir();
+
+        {
+            this.cleanup();
+        }
+
+        FileEntry getContents() {
+            return dirContent(snapshot);
+        }
+
+        Command getCommand() {
+            return AppendSearchFile;
+        }
+
+        ReplicationItemType getType() {
+            return SearchReplicationDirectory;
+        }
+
+        FileId getAbsoluteDir() {
+            return qualified;
+        }
+
+        [Atomic] Unit refresh() {
+            // get all file names for the newest check points
+            Set<FileId> fids = this.db.listCheckPointFiles();
+            while (hasNext(fids)) {
+                Pair<Set<FileId>,FileId> nt = next(fids);
+                fids = fst(nt);
+                FileId fid = snd(nt);
+
+                // check if this file is in the item's directory
+                if (isAncester(this.qualified,fid)) {
+                    FileContent content = this.db.getContent(fid);
+                    snapshot = updateDirWithContent(snapshot,fid,content);
+                }
+            }
+        }
+
+        [Atomic] Unit cleanup() {
+            this.snapshot = updateDirWithDir(rootDir(),emptyDir(qualified));
+        }
+
+    }
+
+    adds class SyncServerImpl(
+            Map<CheckPoint,Map<FileId,FileContent>> datas,
+            ServerSchedule schedules,
+            Set<ClientId> clients) implements InternalServer, SyncServer {
+
+        Bool shutDown = False;
+
+        Int debug = 0; //for debugging
+
+        [Far] SyncServerClientCoordinator coordinator = null;
+        [Near] SyncServerAcceptor acceptor = null;
+        [Near] ServerDataBase db = null;
+        [Near] ReplicationSnapshot snapshot = null;
+
+        {
+            this.db = new local DataBaseImpl(datas);
+            this.snapshot = new local ReplicationSnapshotImpl(this.db,this.schedules);
+        }
+
+        Unit run() {
+            this.coordinator = new SyncServerClientCoordinatorImpl(this,snapshot,clients);
+            this.acceptor = new local SyncServerAcceptorImpl(this);
+            this.coordinator!process();
+        }
+
+        DataBase getDataBase() {
+            return this.db;
+        }
+
+        ServerSchedule getSchedule() {
+            return this.schedules;
+        }
+
+        ReplicationSnapshot getReplicationSnapshot() {
+            return this.snapshot;
+        }
+
+        Unit debug() { debug = debug + 1; }
+
+        Bool isShutdownRequested() {
+            return shutDown;
+        }
+
+        Unit requestShutDown() {
+            this.shutDown = True;
+        }
+
+        SyncServerClientCoordinator getCoordinator() {
+            await coordinator != null;
+            return this.coordinator;
+        }
+
+        SyncServerAcceptor getAcceptor() {
+            await acceptor != null;
+            return this.acceptor;
+        }
+
+
+    }
+
+    adds class DataBaseImpl(Map<CheckPoint, Map<FileId,FileContent>> db)
+    implements ServerDataBase, ClientDataBase {
+
+        Int count = 0; //for debug
+
+        CheckPoint ccp = -1;
+        Set<CheckPoint> checkPoints = keys(db);
+
+        // Begin with the root location (id = 0)
+        Directory rloc = rootDir();
+
+        // ClientDataBase
+        [Atomic] Bool prepareReplicationItem(CheckPoint p) {
+            Bool result = False;
+            if (~ contains(checkPoints,p)) {
+                checkPoints = Insert(p,checkPoints);
+                ccp = p;
+                result = True;
+            }
+            return result;
+        }
+
+        [Atomic] Bool advancedCheckPoint() {
+            Bool result = False;
+            if (hasNext(checkPoints)) {
+                Pair<Set<CheckPoint>,CheckPoint> nt = next(checkPoints);
+                checkPoints = fst(nt);
+                ccp = snd(nt);
+                result = True;
+            }
+            return result;
+        }
+
+        [Atomic] Bool refresh(Bool update) {
+            count = count + 1;
+            Bool more = False;
+
+            // advanced to the next check point;
+            // only if update if required
+            if (update) {
+                more = this.advancedCheckPoint();
+            }
+
+            // if update is not required
+            // then update the filestore of the current checkpoint
+            // else update the filestore of the next checkpoint
+            if (~update || more) {
+                Map<FileId,FileContent> updates = lookup(db,ccp);
+                this.rloc = updateDirWithContents(this.rloc,updates);
+            }
+
+            return (~update || more);
+        }
+
+        // Returns 0 if file not found.
+        [Atomic] FileContent getContent(FileId fId) {
+            Maybe<FileContent> result = Nothing;
+            if (fId == rootId()) {
+                result = Just(getFileContent(Right(rloc)));
+            } else {
+                result = getFromEntryIn(rloc,fId);
+            }
+            return fromJust(result);
+        }
+
+        [Atomic] Bool hasFile(FileId fId) {
+            return hasEntriesIn(rloc,fId);
+        }
+
+        [Atomic] Map<FileId,FileContent> checkPointFiles() {
+            return lookupDefault(db,ccp,EmptyMap);
+        }
+
+        // Updates file store
+        // ClientDataBase
+        [Atomic] Unit updateFile(FileId fId, FileSize size) {
+            rloc = updateDirWithFile(rloc,file(fId,size));
+        }
+
+        [Atomic] Set<FileId> listCheckPointFiles() {
+            Map<FileId,FileContent> checkPointFiles = this.checkPointFiles();
+            return keys(checkPointFiles);
+        }
+
+        [Atomic] Set<FileId> listFiles() {
+            Set<FileId> nieuw = getFileIdFromDir(rloc);
+            return nieuw;
+        }
+    }
+
+    adds class ReplicationFilePattern(FileId qualified, String pattern, ServerDataBase db)
+    implements ServerReplicationItem {
+
+        Directory snapshot = rootDir();
+
+        {
+            this.cleanup();
+        }
+
+        FileEntry getContents() {
+            return dirContent(snapshot);
+        }
+
+        Command getCommand() {
+            return ReceivePatternFile;
+        }
+
+        ReplicationItemType getType() {
+            return ReplicationFilePattern;
+        }
+
+        FileId getAbsoluteDir() {
+            return qualified;
+        }
+
+        [Atomic] Unit refresh() {
+            // get all file names for the newest check points
+            Set<FileId> fids = this.db.listCheckPointFiles();
+            while (hasNext(fids)) {
+                Pair<Set<FileId>,FileId> nt = next(fids);
+                fids = fst(nt);
+                FileId fid = snd(nt);
+
+                // check if this file is in the item's directory
+                if (isAncester(this.qualified,fid) && filter(pattern,fid)) {
+                    FileContent content = this.db.getContent(fid);
+                    snapshot = updateDirWithContent(snapshot,fid,content);
+                }
+            }
+        }
+
+        [Atomic] Unit cleanup() {
+            this.snapshot = updateDirWithDir(rootDir(),emptyDir(qualified));
+        }
+    }
+
+    adds class ReplicationLogItem(FileId qualified, ServerDataBase db)
+        implements ServerReplicationItem {
+
+        Directory snapshot = rootDir();
+
+        {
+            this.cleanup();
+        }
+
+        FileEntry getContents() {
+            return dirContent(snapshot);
+        }
+
+        Command getCommand() {
+            return AppendSearchFile;
+        }
+
+        ReplicationItemType getType() {
+            return SearchReplicationDirectory;
+        }
+
+        FileId getAbsoluteDir() {
+            return qualified;
+        }
+
+        [Atomic] Unit refresh() {
+            // get all file names for the newest check points
+            Set<FileId> fids = this.db.listCheckPointFiles();
+            while (hasNext(fids)) {
+                Pair<Set<FileId>,FileId> nt = next(fids);
+                fids = fst(nt);
+                FileId fid = snd(nt);
+
+                // check if this file is in the item's directory
+                if (isAncester(this.qualified,fid)) {
+                    FileContent content = this.db.getContent(fid);
+                    snapshot = updateDirWithContent(snapshot,fid,content);
+                }
+            }
+        }
+
+        [Atomic] Unit cleanup() {
+            this.snapshot = updateDirWithDir(rootDir(),emptyDir(qualified));
+        }
+    }
+
+    adds class System(
+        Map<CheckPoint,Map<FileId,FileContent>> items,
+        List<Schedule> schedules,
+        Set<ClientId> cids) {
+
+        ServerSchedule setschedules = EmptySet;
+
+        Unit run() {
+            // One SyncServer
+            [Far] SyncServer syncserver = new SyncServerImpl(items,listToSet(schedules),cids);
+
+            Set<[Far] ClientConnector> syncclients = EmptySet;
+
+            Set<ClientId> iterator = cids;
+            while (hasNext(iterator)) {
+                Pair<Set<ClientId>,ClientId> nt = next(iterator);
+                Tester tester = new TesterImpl(syncserver);
+                ClientConnector syncclient = new SyncClientImpl(snd(nt),tester);
+                syncclients = insertElement(syncclients,syncclient);
+                iterator = fst(nt);
+            }
+
+            Fut<SyncServerAcceptor> acc = syncserver!getAcceptor(); await acc?;
+            [Far] SyncServerAcceptor acceptor = acc.get;
+
+            Set<ClientConnector> clientIterator = syncclients;
+            while (hasNext(clientIterator)) {
+                Pair<Set<ClientConnector>,ClientConnector> nt = next(clientIterator);
+                ClientConnector syncclient = snd(nt);
+                syncclient!setAcceptor(acceptor);
+                clientIterator = fst(nt);
+            }
+
+        }
+    }
+
+    modifies class RSMain {
+        adds TestData datas =
+            map[Pair(1,
+                    map[file("dir1/file1",1),
+                        file("dir1/file2",2)]),
+                Pair(2,
+                    map[file("dir2/file1",3),
+                        file("dir2/file2",4)]),
+                Pair(3,
+                    map[file("dir3/file1",3),
+                        file("dir3/file2",4)]),
+                Pair(4,
+                    map[file("dir4/file4",1),
+                        file("dir4/file5",2)])
+            ];
+
+        adds List<Schedule> file =
+            list[FileItem("dir2","dir2/dir21")];
+
+        adds List<Schedule> log =
+            list[LogItem("dir1")];
+
+        adds Set<ClientId> cids = set[0,1];
+
+        adds Unit run() {
+            TestData items = this.getDatas();
+            List<Schedule> schedules = this.getSchedules();
+            Set<ClientId> cids = this.getCids();
+            new local System(items,schedules,cids);
+        }
+
+        adds List<Schedule> getSchedules() {
+            return list[SearchItem("dir3"),SearchItem("dir1"), SearchItem("dir2"), SearchItem("dir4")];
+        }
+
+        adds TestData getDatas() {
+            return datas;
+        }
+
+        adds Set<ClientId> getCids() {
+            return cids;
+        }
+    }
+
+
+delta CD(Int c);
+    uses RS;
+    modifies class RSMain {
+        modifies Set<ClientId> getCids() {
+            Set<ClientId> cs = RD.original();
+            return takeSet(cs,c);
+        }
+    }
+
+delta DD(Int s);
+    uses RS;
+    modifies class RSMain {
+        modifies List<Schedule> getSchedules() {
+            List<Schedule> ss = RD.original();
+            return take(ss,s);
+        }
+    }
+
+delta FD(Int f);
+    uses RS;
+    modifies class RSMain {
+        modifies List<Schedule> getSchedules() {
+            List<Schedule> ss = RD.original();
+            return concatenate(ss,take(this.file,f));
+        }
+    }
+
+delta DFD;
+    uses RS;
+    modifies class RSMain {
+        modifies List<Schedule> getSchedules() {
+            List<Schedule> ss = DD.original();
+            List<Schedule> xs = FD.original();
+            return concatenate(ss,xs);
+        }
+    }
+
+delta JD(Int l);
+    uses RS;
+    modifies class RSMain {
+        modifies List<Schedule> getSchedules() {
+            List<Schedule> ss = RD.original();
+            return concatenate(ss,take(this.log,l));
+        }
+
+    }
+
+delta JCD;
+    uses RS;
+    modifies class RSMain {
+        modifies Set<ClientId> getCids() {
+            Set<ClientId> cs = CD.original();
+            if (size(cs) == 1) {
+                cs = Insert(failSafe(),cs);
+            }
+            return cs;
+        }
+    }
+
+
+delta DFJD(Bool ds, Bool fs, Bool js);
+    uses RS;
+    modifies class RSMain {
+        modifies List<Schedule> getSchedules() {
+            List<Schedule> ss = Nil;
+            if (ds) { List<Schedule> xs = DD.original(); ss = concatenate(ss,xs); }
+            if (fs) { List<Schedule> xs = FD.original(); ss = concatenate(ss,xs); }
+            if (js) { List<Schedule> xs = JD.original(); ss = concatenate(ss,xs); }
+            return ss;
+        }
+    }
+
+
+productline RS;
+    features RS, Client, Schedule, DSched, FSched, JSched;
+
+    delta RD when RS;
+    delta CD(Client.c) after RD when Client;
+    delta DD(DSched.s) after RD when DSched;
+    delta FD(FSched.f) after DD when FSched;
+    delta JD(JSched.l) after FD when JSched;
+    delta JCD after CD,JD when Client;//, JSched;
+    delta DFJD(DSched,FSched,JSched) after DD,FD,JD when DSched && FSched && JSched;
+
+
+product DP(RS); //default
+product SingleClient(RS, Client{c=1}, DSched{s=3});
+product TwoClients(RS, Client{c=2}, DSched{s=3});
+product Clients(RS, Client{c=2}, DSched{s=3}, FSched{f=1}, JSched{l=1});
+
