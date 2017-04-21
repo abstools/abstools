@@ -48,9 +48,9 @@ random(_Cog,N)->
 
 constructorname_to_string(A) ->
     String = atom_to_list(A),
-    %% Constructor names start with "abs_".  Sometimes we get passed other
+    %% Constructor names start with "data".  Sometimes we get passed other
     %% symbols; pass these through unmolested.
-    Realname = case string:str(String, "abs_") == 1 of
+    Realname = case string:str(String, "data") == 1 of
                    true -> lists:nthtail(4, String);
                    false -> String
                end,
