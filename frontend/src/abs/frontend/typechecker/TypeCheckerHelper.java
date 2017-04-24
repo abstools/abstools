@@ -578,6 +578,7 @@ public class TypeCheckerHelper {
             /* Check that fields are not used before they are defined,
              * when we are NOT inside a method, e.g. when initialising a field upon declaration.
              */
+            // FIXME: this could break down wrt deltas
             boolean isUsedInFieldDecl = use instanceof FieldUse;
             if (isUsedInFieldDecl && use.getContextMethod() == null
                 && SourcePosition.larger(use.getDecl().getEndLine(), use.getDecl().getEndColumn(), use.getStartLine(), use.getStartColumn())) {
