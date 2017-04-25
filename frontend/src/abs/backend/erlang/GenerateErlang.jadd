@@ -124,7 +124,7 @@ aspect GenerateErlang {
     boolean builtin = decl.getFunctionDef() instanceof BuiltinFunctionDef;
     if(builtin){
       if(!ERLANG_BUILTINS.contains(decl.qualifiedName()))
-          throw new NotImplementedYetException(this, "The builtin function "+decl.qualifiedName() + "is not implemented in the Erlang backend yet");
+          throw new NotImplementedYetException(this, "The builtin function "+decl.qualifiedName() + " is not implemented in the Erlang backend yet");
       ecs.print("builtin:");
       ecs.print(decl.getName());
     }
