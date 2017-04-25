@@ -21,7 +21,7 @@ public final class AnyType extends Type {
     }
     
     @Override
-    public boolean isAssignable(Type t) {
+    public boolean isAssignableTo(Type t) {
         return true;
     }
 

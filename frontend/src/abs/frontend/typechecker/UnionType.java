@@ -57,12 +57,12 @@ public class UnionType extends ReferenceType {
     }
 
     @Override
-    public boolean isAssignable(Type t) {
-        if (super.isAssignable(t))
+    public boolean isAssignableTo(Type t) {
+        if (super.isAssignableTo(t))
             return true;
 
         for (InterfaceType it : types) {
-            if (it.isAssignable(t))
+            if (it.isAssignableTo(t))
                 return true;
         }
         return false;

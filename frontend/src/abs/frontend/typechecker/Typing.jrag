@@ -217,7 +217,7 @@ aspect Typing {
             return getModel().getRatType();
         } else {
             Type mostGeneralType = getThenExp().getType();
-            if (mostGeneralType.isAssignable(getElseExp().getType())) {
+            if (mostGeneralType.isAssignableTo(getElseExp().getType())) {
                 mostGeneralType = getElseExp().getType();
             }
             return mostGeneralType;
@@ -230,7 +230,7 @@ aspect Typing {
    			 mostGeneralType = b.getType();
    		 } else {
    			 Type t2 = b.getType();
-   			 if (mostGeneralType.isAssignable(t2)) {
+   			 if (mostGeneralType.isAssignableTo(t2)) {
    				 mostGeneralType = t2;
    			 } 
    		 }

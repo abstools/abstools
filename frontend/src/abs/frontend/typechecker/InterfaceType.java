@@ -59,8 +59,8 @@ public class InterfaceType extends ReferenceType {
     }
 
     @Override
-    public boolean isAssignable(Type t, boolean considerSubtyping) {
-        if (super.isAssignable(t))
+    public boolean isAssignableTo(Type t, boolean considerSubtyping) {
+        if (super.isAssignableTo(t))
             return true;
 
         if (considerSubtyping) {
@@ -75,7 +75,7 @@ public class InterfaceType extends ReferenceType {
             return false;
 
         visitedTypes.add(this);
-        if (super.isAssignable(t))
+        if (super.isAssignableTo(t))
             return true;
 
         for (Type it : supertypes) {
@@ -88,8 +88,8 @@ public class InterfaceType extends ReferenceType {
     }
 
     @Override
-    public boolean isAssignable(Type t) {
-        return this.isAssignable(t, true);
+    public boolean isAssignableTo(Type t) {
+        return this.isAssignableTo(t, true);
     }
 
     @Override

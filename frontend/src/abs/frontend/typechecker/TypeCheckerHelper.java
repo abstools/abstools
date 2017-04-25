@@ -68,7 +68,7 @@ public class TypeCheckerHelper {
 
     public static void checkAssignment(SemanticConditionList l, ASTNode<?> n, Type lht, Exp rhte) {
         Type te = rhte.getType();
-        if (!te.isAssignable(lht)) {
+        if (!te.isAssignableTo(lht)) {
             l.add(new TypeError(n, ErrorMessage.CANNOT_ASSIGN, te, lht));
         }
     }
@@ -129,7 +129,7 @@ public class TypeCheckerHelper {
                 PureExp exp = args.getChild(i);
                 exp.typeCheck(l);
                 Type expType = exp.getType();
-                if (!expType.isAssignable(argType)) {
+                if (!expType.isAssignableTo(argType)) {
                     l.add(new TypeError(n, ErrorMessage.TYPE_MISMATCH, exp.getType(), argType));
                 }
             }
@@ -312,8 +312,8 @@ public class TypeCheckerHelper {
             if (paramType.isTypeParameter()) {
                 if (binding.containsKey(paramType)) {
                     Type prevArgType = binding.get(paramType);
-                    if (prevArgType.isAssignable(argType)
-                        && !argType.isAssignable(prevArgType))
+                    if (prevArgType.isAssignableTo(argType)
+                        && !argType.isAssignableTo(prevArgType))
                     {
                         // Replace, e.g., "Int" with "Rat".  If the two types
                         // do not match at all, we'll raise a type error

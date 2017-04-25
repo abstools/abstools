@@ -306,7 +306,7 @@ aspect TypeChecker {
                 InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
                 // find the location where the error should be marked:
                 for (InterfaceTypeUse implementedInterface : getImplementedInterfaceUses()) {
-                    if (implementedInterface.getDecl().getType().isAssignable(d.getType())) {
+                    if (implementedInterface.getDecl().getType().isAssignableTo(d.getType())) {
                         location = implementedInterface;
                         break;
                     }
@@ -500,7 +500,7 @@ aspect TypeChecker {
             errorNode = lastStmt;
         }
 
-        if (!lastType.isAssignable(sig.getReturnType().getType())) {
+        if (!lastType.isAssignableTo(sig.getReturnType().getType())) {
             e.add(new TypeError(errorNode,ErrorMessage.CANNOT_ASSIGN,lastType,sig.getReturnType().getType()));
         }
 
@@ -628,7 +628,7 @@ aspect TypeChecker {
         }
 
         Type rht = getRetExp().getType();
-        if (!rht.isAssignable(lht)) {
+        if (!rht.isAssignableTo(lht)) {
             e.add(new TypeError(this,ErrorMessage.CANNOT_ASSIGN,rht,lht));
         }
 
@@ -825,7 +825,7 @@ aspect TypeChecker {
         if (! (rt.isNumericType() || rt.isStringType())) {
             e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, rt));
         }
-        if (!lt.isAssignable(rt) && !rt.isAssignable(lt)) {
+        if (!lt.isAssignableTo(rt) && !rt.isAssignableTo(lt)) {
             e.add(new TypeError(this, ErrorMessage.ADD_INCOMPARABLE_TYPE, lt, rt));
         }
 
@@ -845,7 +845,7 @@ aspect TypeChecker {
         getRight().typeCheck(e);
         Type tl = getLeft().getType();
         Type tr = getRight().getType();
-        if (!tl.isAssignable(tr) && !tr.isAssignable(tl)) {
+        if (!tl.isAssignableTo(tr) && !tr.isAssignableTo(tl)) {
             e.add(new TypeError(this, ErrorMessage.COMPARISON_INCOMPARABLE_TYPE, tl, tr));
         }
     }
@@ -857,7 +857,7 @@ aspect TypeChecker {
         getElseExp().typeCheck(e);
         Type tt = getThenExp().getType();
         Type et = getElseExp().getType();
-        if (!(et.isAssignable(tt) || tt.isAssignable(et))) {
+        if (!(et.isAssignableTo(tt) || tt.isAssignableTo(et))) {
             e.add(new TypeError(this, ErrorMessage.IF_DIFFERENT_TYPE, tt, et));
         }
     }
@@ -873,7 +873,7 @@ aspect TypeChecker {
         for (CaseBranch b : getBranchs()) {
             b.typeCheck(e,(DataTypeType) et);
             Type t2 = b.getType();
-            if (!t2.isAssignable(t)) {
+            if (!t2.isAssignableTo(t)) {
                 e.add(new TypeError(this,ErrorMessage.BRANCH_INCOMPARABLE_TYPE,t,t2));
             }
         }
@@ -974,7 +974,7 @@ aspect TypeChecker {
     }
 
     public void Exp.assertHasType(SemanticConditionList l, Type t) {
-        if (!getType().isAssignable(t)) {
+        if (!getType().isAssignableTo(t)) {
             l.add(new TypeError(this, ErrorMessage.EXPECTED_TYPE, t, getType()));
         }
     }

@@ -221,11 +221,11 @@ public abstract class Type {
         return false;
     }
 
-    public boolean isAssignable(Type t, boolean considerSubtyping) {
-        return isAssignable(t);
+    public boolean isAssignableTo(Type t, boolean considerSubtyping) {
+        return isAssignableTo(t);
     }
 
-    public boolean isAssignable(Type t) {
+    public boolean isAssignableTo(Type t) {
         if (t == null)
             throw new IllegalArgumentException("t is null");
 
@@ -238,7 +238,7 @@ public abstract class Type {
         if (t.isBoundedType()) {
             BoundedType bt = (BoundedType) t;
             if (bt.hasBoundType())
-                return this.isAssignable(bt.getBoundType());
+                return this.isAssignableTo(bt.getBoundType());
             bt.bindTo(this);
             return true;
         }

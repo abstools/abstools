@@ -109,7 +109,7 @@ public class SchedulerChecker extends DefaultTypeSystemExtension {
                     } else {
                         // argtype: field; paramtype: function arg
                         Type paramtype = sd.getParam(i).getType();
-                        if (!argtype.isAssignable(paramtype)) {
+                        if (!argtype.isAssignableTo(paramtype)) {
                             errors.add(new TypeError(arg, ErrorMessage.TYPE_MISMATCH, argtype, paramtype));
                         }
                     }
