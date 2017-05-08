@@ -405,7 +405,9 @@ aspect TypeChecker {
         for (DataConstructor c : getDataConstructors()) {
             c.typeCheck(e);
             if (!names.add(c.getName())) {
-                e.add(new TypeError(c, ErrorMessage.DUPLICATE_CONSTRUCTOR, c.getName()));
+                e.add(new TypeError(c, ErrorMessage.DUPLICATE_CONSTRUCTOR, c.getName(),
+                                    // TODO add " at file:line" with location of first constructor
+                                    ""));
             }
             // Record the type associated with each selector name, and ensure
             // it is the same for every selector with the same name

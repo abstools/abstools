@@ -312,7 +312,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void fnAppTypeArgs4() {
-        assertTypeOK("def B nth<B>(List<B> list, Int n) = nth(tail(list), n-1) ; ");
+        assertTypeOK("def B nth2<B>(List<B> list, Int n) = nth2(tail(list), n-1) ; ");
     }
 
     @Test

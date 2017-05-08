@@ -58,7 +58,9 @@ public class ProgramTypeAbstraction {
     public void addClass(AddClassModifier node) {
         String className = node.qualifiedName();
         if (classes.containsKey(className))
-            errors.add(new SPLTypeError(node, ErrorMessage.DUPLICATE_CLASS_NAME, deltas, product, className));
+            errors.add(new SPLTypeError(node, ErrorMessage.DUPLICATE_CLASS_NAME, deltas, product, className,
+                                        // TODO add " at file:line" with location of original definition
+                                        ""));
         else
             addClass(className);
     }

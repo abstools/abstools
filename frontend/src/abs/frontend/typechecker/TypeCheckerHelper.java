@@ -336,11 +336,20 @@ public class TypeCheckerHelper {
     static final StarImport STDLIB_IMPORT = new StarImport(Constants.STDLIB_NAME);
 
     public static void checkForDuplicateDecls(ModuleDecl mod, SemanticConditionList errors) {
-        ArrayList<KindedName> duplicateNames = new ArrayList<KindedName>();
-        Map<KindedName, ResolvedName> names = getDefinedNames(mod, duplicateNames);
-        for (KindedName n : duplicateNames) {
+        Map<KindedName, ResolvedName> duplicateNames = new HashMap<KindedName, ResolvedName>();
+        Map<KindedName, ResolvedName> names = getVisibleNames(mod, duplicateNames);
+        for (KindedName n : duplicateNames.keySet()) {
             ResolvedName rn = names.get(n);
+            ResolvedName origrn = duplicateNames.get(n);
             ErrorMessage msg = null;
+            String location = "";
+            if (origrn instanceof ResolvedDeclName) {
+                Decl decl = ((ResolvedDeclName)origrn).getDecl();
+                location = " at " + decl.getFileName() + ":" + decl.getStartLine() + ":" + decl.getStartColumn();
+            } else if (origrn instanceof ResolvedAmbigiousName) {
+                Decl decl = ((AmbiguousDecl)((ResolvedAmbigiousName)origrn).getDecl()).getAlternative().get(0);
+                location = " at " + decl.getFileName() + ":" + decl.getStartLine() + ":" + decl.getStartColumn();
+            }
             switch (n.getKind()) {
             case CLASS:
                 msg = ErrorMessage.DUPLICATE_CLASS_NAME;
@@ -354,31 +363,39 @@ public class TypeCheckerHelper {
             case TYPE_DECL:
                 msg = ErrorMessage.DUPLICATE_TYPE_DECL;
                 break;
+            case EXCEPTION:
+                msg = ErrorMessage.DUPLICATE_EXCEPTION_DECL;
+                break;
             case MODULE:
                 assert false; // doesn't happen, no modules within modules
                 break;
+            default:
+                assert false;   // detect if we added a new KindedName.Kind
+                break;
             }
-            errors.add(new TypeError(rn.getDecl(), msg, n.getName()));
+            errors.add(new TypeError(rn.getDecl(), msg, n.getName(), location));
         }
     }
 
     public static ResolvedMap getDefinedNames(ModuleDecl mod,
-            java.util.List<KindedName> foundDuplicates) {
+            Map<KindedName, ResolvedName> foundDuplicates) {
         ResolvedMap res = new ResolvedMap();
         ResolvedModuleName moduleName = new ResolvedModuleName(mod);
 
         for (Decl d : mod.getDeclList()) {
             ResolvedDeclName rn = new ResolvedDeclName(moduleName, d);
-            if (res.put(rn.getSimpleName(), rn) != null)
-                foundDuplicates.add(rn.getSimpleName());
+            if (res.containsKey(rn.getSimpleName()))
+                foundDuplicates.put(rn.getSimpleName(), res.get(rn.getSimpleName()));
+            res.put(rn.getSimpleName(), rn);
             res.put(rn.getQualifiedName(), rn);
 
             if (d instanceof DataTypeDecl) {
                 DataTypeDecl dataDecl = (DataTypeDecl) d;
                 for (DataConstructor c : dataDecl.getDataConstructors()) {
                     rn = new ResolvedDeclName(moduleName, c);
-                    if (res.put(rn.getSimpleName(), rn) != null)
-                        foundDuplicates.add(rn.getSimpleName());
+                    if (res.containsKey(rn.getSimpleName()))
+                        foundDuplicates.put(rn.getSimpleName(), res.get(rn.getSimpleName()));
+                    res.put(rn.getSimpleName(), rn);
                     res.put(rn.getQualifiedName(), rn);
                 }
             } else if (d.isException()) {
@@ -392,7 +409,7 @@ public class TypeCheckerHelper {
                     // If it's already in there, is it from the same location -- from stdlib?
                     ResolvedName tryIt = res.get(rn);
                     if (tryIt != null && tryIt.getDecl() != ed)
-                        foundDuplicates.add(rn.getSimpleName());
+                        foundDuplicates.put(rn.getSimpleName(), tryIt);
                     else {
                         res.put(rn.getQualifiedName(), rn);
                     }
@@ -415,11 +432,15 @@ public class TypeCheckerHelper {
             } else if (i instanceof NamedImport) {
                 NamedImport ni = (NamedImport) i;
                 for (Name n : ni.getNames()) {
-                    ModuleDecl md = mod.lookupModule(n.getModuleName());
-                    if (md != null)
-                        try {
-                            res.addAllNames(md.getExportedNames(), n);
-                        } catch (TypeCheckerException e) {} // NADA
+                    // statements like "import X;" lead to earlier type error;
+                    // avoid calling lookupModule(null) here
+                    if (!n.isSimple()) {
+                        ModuleDecl md = mod.lookupModule(n.getModuleName());
+                        if (md != null)
+                            try {
+                                res.addAllNames(md.getExportedNames(), n);
+                            } catch (TypeCheckerException e) {} // NADA
+                    }
                 }
             } else if (i instanceof FromImport) {
                 FromImport fi = (FromImport) i;
@@ -436,12 +457,22 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    public static ResolvedMap getVisibleNames(ModuleDecl mod) {
+    public static ResolvedMap getVisibleNames(ModuleDecl mod, Map<KindedName, ResolvedName> foundDuplicates) {
         ResolvedMap res = new ResolvedMap();
+        ResolvedMap ownNames = getDefinedNames(mod, foundDuplicates);
+
         // add imported names:
         res.putAll(mod.getImportedNames());
-        // defined names hide imported names:
-        res.putAll(mod.getDefinedNames());
+
+        // Find shadowing entries
+        for (KindedName entry : ownNames.keySet()) {
+            if (res.containsKey(entry) && !ownNames.get(entry).equals(res.get(entry))) {
+                foundDuplicates.put(entry, res.get(entry));
+            }
+        }
+
+        // defined names hide imported names for the purpose of this method
+        res.putAll(ownNames);
         return res;
     }
 

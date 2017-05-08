@@ -198,12 +198,19 @@ public class ModuleSystemTests extends FrontendTest {
                      "module B; export *; def Int foo() = 4;" +
                      "module C; import * from A; import * from B; {Int x = foo(); } ");
     }
-    
+
+    @Test
+    public void module_duplicate_definition() throws Exception {
+        // don't silently overwrite imported functions etc. 
+        // https://github.com/abstools/abstools/issues/144
+        assertTypeErrors("module Test2; export *; def Int foo() = 42; module Test; import * from Test2; def Int foo() = 24;", Config.EXPECT_TYPE_ERROR);
+    }
+
     @Test
     public void shadowImportedNames() {
         // see bug #271
         // the definition of interface I in B should shadow the imported interface 
-        assertTypeOKWithStdLib("module A; export I;\n" +
+        assertTypeErrorsWithStdLib("module A; export I;\n" +
         		"interface I{ Unit a(); }\n" +
         		"\n" +
                         "module B; import I from A; \n" +
