@@ -340,7 +340,7 @@ NIL."
   (let* ((module-locations-alist (abs--module-file-alist))
          (files (list (file-name-nondirectory (buffer-file-name))))
          (known-modules (abs--file-module-definitions buffer-file-name))
-         (needed-modules (cl-set-difference (abs--current-buffer-imports) known-modules)))
+         (needed-modules (cl-set-difference (abs--current-buffer-imports) known-modules :test 'equal)))
     (while needed-modules
       (let* ((needed-module (pop needed-modules))
              (location (assoc needed-module module-locations-alist)))
