@@ -108,9 +108,9 @@ implementing key ABS concepts (cogs, futures, objects, method invocations) in
 Erlang.
 
 Executing an ABS model in Erlang currently returns the value of the last
-statement of the main block; output via `ABS.Meta.println` is printed on the
-console.  More introspective and interactive capabilities are planned and will
-be implemented in the future.
+statement of the main block; output via `ABS.StdLib.println` is printed on the
+console.  For additional introspective and interactive capabilities, the
+Erlang backend supports a Model API (see below).
 
 
 ==== How to run the Erlang backend
