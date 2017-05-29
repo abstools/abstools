@@ -209,7 +209,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             f.deleteOnExit();
             String mainModule = genCode(model, f, true);
             make(f);
-            assertEquals("true",run(f, mainModule));
+            assertEquals("True",run(f, mainModule));
         } finally {
             try {
                 FileUtils.deleteDirectory(f);
