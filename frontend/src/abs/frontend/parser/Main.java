@@ -46,6 +46,7 @@ import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtensio
 public class Main {
 
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
+    public static final String UNKNOWN_FILENAME = "<unknown file>";
     protected boolean preprocess = false; //Preprocessor
     protected boolean verbose = false;
     protected boolean typecheck = true;

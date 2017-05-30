@@ -343,11 +343,13 @@ public class TypeCheckerHelper {
             ResolvedName origrn = duplicateNames.get(n);
             ErrorMessage msg = null;
             String location = "";
+            Decl decl = null;
             if (origrn instanceof ResolvedDeclName) {
-                Decl decl = ((ResolvedDeclName)origrn).getDecl();
-                location = " at " + decl.getFileName() + ":" + decl.getStartLine() + ":" + decl.getStartColumn();
+                decl = ((ResolvedDeclName)origrn).getDecl();
             } else if (origrn instanceof ResolvedAmbigiousName) {
-                Decl decl = ((AmbiguousDecl)((ResolvedAmbigiousName)origrn).getDecl()).getAlternative().get(0);
+                decl = ((AmbiguousDecl)((ResolvedAmbigiousName)origrn).getDecl()).getAlternative().get(0);
+            }
+            if (decl != null && !decl.getFileName().equals(abs.frontend.parser.Main.UNKNOWN_FILENAME)) {
                 location = " at " + decl.getFileName() + ":" + decl.getStartLine() + ":" + decl.getStartColumn();
             }
             switch (n.getKind()) {

@@ -23,7 +23,7 @@ import abs.frontend.ast.*;
  */
 public class CreateJastAddASTListener extends ABSBaseListener {
 
-    String filename = "<unknown file>";
+    String filename = abs.frontend.parser.Main.UNKNOWN_FILENAME;
 
     /** maps antlr nodes to JastAdd nodes - see antlr book Sec.7.5 */
     ParseTreeProperty<ASTNode<?>> values = new ParseTreeProperty<ASTNode<?>>();
