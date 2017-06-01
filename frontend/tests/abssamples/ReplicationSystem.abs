@@ -581,12 +581,12 @@ implements InternalClient, ClientConnector {
 		
 }
 
-def List<A> take<A>(List<A> ss,Int i) =
+def List<A> mytake<A>(List<A> ss,Int i) =
 	case i {
 		0 => Nil;
 		_ => case ss {
 				Nil => Nil;
-				Cons(x,xs) => Cons(x,take(xs,i-1));
+				Cons(x,xs) => Cons(x,mytake(xs,i-1));
 			}; 
 	};
 
@@ -636,7 +636,7 @@ class Main {
 		TestData items = this.getDatas();
 		List<Schedule> schedules = this.getSchedules();
 		Set<ClientId> cids = this.getCids();
-		new local ReplicationSystem(takeMap(datas,1),take(schedules,1),set[0]);
+		new local ReplicationSystem(takeMap(datas,1),mytake(schedules,1),set[0]);
 		//new local ReplicationSystem(items,schedules,cids);
 	}
 	
@@ -1500,13 +1500,6 @@ def Set<B> snds<A, B>(Set<Pair<A, B>> ps) =
   	Insert(x,xs) => Insert(snd(x),snds(xs));
   };
   
-// Functions on set
-def Set<A> union<A>(Set<A> set1, Set<A> set2) =
-  	case set1 { 
-  		EmptySet => set2; 
-  		Insert(s, ss) => Insert(s, union(ss, remove(set2,s)));
-  	};
-  
 // Functions on data Command
 def Bool isAppendCommand(Command c) = 
 	case c {
@@ -1565,12 +1558,6 @@ def Bool subset<A>(Set<A> s, Set<A> t) =
 	};
 
 // 	
-def Int pow(Int b, Int e) =
-	case e {
-		0 => 1;
-		_ => b * pow(b,e-1); 
-	};
-
 
 // String operations
 // c must have length 1 currently
