@@ -58,8 +58,8 @@ class DataBaseImpl(Map<Filename, File> db) implements DataBase {
   }
 
   Unit storeFile(Filename fId, File file) {
-    db = InsertAssoc(Pair(fId,file), db);
-  } 
+    db = put(db, fId, file);
+  }
 
   Filenames listFiles() {
     return keys(db);
@@ -118,7 +118,7 @@ class Node(DataBase db, Filename file) implements Peer {
 
   Catalog availFiles (List<Peer> sList) {
     Catalog cat = Nil;
-    Filenames fNames = EmptySet; 
+    Filenames fNames = set[]; 
     Fut<Filenames> fN;
     Catalog catList = Nil; 
     Fut<Catalog> cL;
