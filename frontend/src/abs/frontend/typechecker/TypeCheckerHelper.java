@@ -34,6 +34,11 @@ public class TypeCheckerHelper {
             e.add(new SemanticError(p, ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, p.getConstructor()));
             return;
         }
+        String cname = c.qualifiedName();
+        if (deprecatedConstructors.contains(cname)
+            && !(cname.startsWith(p.getModuleDecl().getName()))) {
+            e.add(new SemanticWarning(p, ErrorMessage.DEPRECATED_CONSTRUCTOR, c.qualifiedName()));
+        }
 
         if (c.getNumConstructorArg() != p.getNumParam()) {
             e.add(new TypeError(p, ErrorMessage.WRONG_NUMBER_OF_ARGS, c.getNumConstructorArg(), p.getNumParam()));
