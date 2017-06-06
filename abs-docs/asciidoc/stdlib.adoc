@@ -567,7 +567,7 @@ def Set<A> remove<A>(Set<A> xs, A e);
 
 .take
 
-Returns one element from a set.
+Returns one element from a non-empty set.
 
 [source]
 ----
@@ -576,6 +576,15 @@ def A take<A>(Set<A> ss);
 
 NOTE: To iterate over a set, use `take` to extract one value and `remove` to remove
 it from the set.  Repeat until the set is empty.
+
+.takeMaybe
+
+Returns one element from a set, or `Nothing` for an empty set.
+
+[source]
+----
+def Maybe<A> takeMaybe<A>(Set<A> ss);
+----
 
 // .hasNext
 

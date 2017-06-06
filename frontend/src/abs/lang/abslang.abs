@@ -22,7 +22,7 @@ export Triple, fstT, sndT, trdT, trd;
 export Set, EmptySet, Insert, set; //TODO: don't export EmptySet, Insert
 
 export contains, emptySet, size, union, intersection, difference, isSubset,
-  insertElement, remove, take, hasNext, next;
+  insertElement, remove, take, takeMaybe, hasNext, next;
 
 // Lists
 export List, Nil, Cons, head, tail, list;
@@ -277,6 +277,17 @@ def A take<A>(Set<A> ss) =
   case ss {
     Insert(e, _) => e;
   };
+
+/**
+ * Returns one (arbitrary) element from a set, or Nothing for empty sets.
+ */
+def Maybe<A> takeMaybe<A>(Set<A> ss) =
+  case ss {
+    EmptySet => Nothing;
+    Insert(e, _) => Just(e);
+  };
+
+
 
 // checks whether the input set has more elements to be iterated.
 def Bool hasNext<A>(Set<A> s) = ! emptySet(s); 

@@ -49,6 +49,21 @@ public class StdLibTests extends SemanticTests {
     }
 
     @Test
+    public void setTake() {
+        assertEvalTrue("{ Set<Int> set = set[1]; Bool testresult = take(set) == 1; }");
+    }
+
+    @Test
+    public void setTakeMaybe() {
+        assertEvalTrue("{ Set<Int> set = set[1]; Bool testresult = takeMaybe(set) == Just(1); }");
+    }
+
+    @Test
+    public void setTakeMaybeEmpty() {
+        assertEvalTrue("{ Set<Int> set = set[]; Bool testresult = takeMaybe(set) == Nothing; }");
+    }
+
+    @Test
     public void mapLookup() {
         assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookup(map, 3) == Just(300); }");
     }
