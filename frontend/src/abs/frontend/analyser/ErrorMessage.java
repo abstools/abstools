@@ -39,6 +39,7 @@ public enum ErrorMessage {
     DUPLICATE_CONSTRUCTOR("Constructor %s is already defined%s."),
     DUPLICATE_DATATYPE_PARAMETER("Type parameter %s is used more than once."),
     DUPLICATE_CLASS_NAME("Class %s is already defined%s."),
+    DUPLICATE_INTERFACE_NAME("Interface %s is already defined%s."),
     DUPLICATE_FUN_NAME("Function %s is already defined%s."),
     DUPLICATE_METHOD_NAME("Method %s is already defined."),
     DUPLICATE_PARAM_NAME("Parameter %s is already defined."),
@@ -58,7 +59,7 @@ public enum ErrorMessage {
     NULL_NOT_HERE("Can't use constant 'null' here."),
     CANNOT_IMPL_INTERFACE("Interface %s has a method %s that overloads a method from another implemented interface."),
     TARGET_NO_INTERFACE_TYPE("Target expression is not typable to an interface."),
-    METHOD_NOT_FOUND("Method %s could not be found."),
+    NO_METHOD_DECL("Method %s could not be found."),
     NO_CLASS_DECL("Class %s could not be found."),
     NO_FIELD_DECL("Field %s could not be found."),
     NO_DELTA_DECL("Delta %s could not be found."),
@@ -128,7 +129,9 @@ public enum ErrorMessage {
     DEPRECATED_CONSTRUCTOR("Warning: The constructor %s is deprecated (use exported functions instead)."),
     UNDECLARED_PRODUCT("Product %s is not declared"),
     INVALID_PRODUCT("Product %s does not satisfy the feature model. Constraints failed: %s."),
-    MATCHING_NOT_ALLOWED_IN_CATCH("Non-free pattern variable %s (not allowed in catch branches).")
+    MATCHING_NOT_ALLOWED_IN_CATCH("Non-free pattern variable %s (not allowed in catch branches)."),
+    DUPLICATE_INTERFACE_IMPLEMENTATION("Class %s already implements interface %s."),
+    MISSING_INTERFACE_IMPLEMENTATION("Class %s does not implement interface %s.")
     ;
 
     private String pattern;
