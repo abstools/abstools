@@ -40,28 +40,43 @@ aspect GenerateCoreABS {
      */
     public static boolean Model.doAACrewrite = true;
 
-    coll Set<AwaitAsyncCall> Stmt.getAACs() [new HashSet()] with add root Stmt;
-    AwaitAsyncCall contributes this to Stmt.getAACs() for closestParent(Stmt.class);
-
-    public boolean Stmt.hasAwaitAsyncStmt() {
-        return getAACs().size() > 0;
+    // Since rewriting happens during type-checking, make sure we don't
+    // attempt a rewrite without type-checking information
+    public boolean AwaitAsyncCall.canBeRewritten() {
+        if (!amInCoreAbs()) return false;
+        Type calleetype = getCallee().getType();
+        if (calleetype.isUnknownType()) return false;
+        Access a = (Access)calleetype.lookupMethod(getMethod()).getReturnType();
+        if (a.getType().isUnknownType()) return false;
+        return true;
     }
 
-    public boolean Block.blockHasAwaitAsyncStmt() {
+    coll Set<AwaitAsyncCall> Stmt.getRewritableAACs() [new HashSet()] with add root Stmt;
+    AwaitAsyncCall contributes this when canBeRewritten()
+        to Stmt.getRewritableAACs() for closestParent(Stmt.class);
+
+    public boolean Stmt.hasRewritableAwaitAsyncCall() {
+        return getRewritableAACs().size() > 0;
+    }
+
+    public boolean Block.blockHasRewritableAwaitAsyncCalls() {
         for (Stmt s : getStmtListNoTransform()) {
-            if (s.hasAwaitAsyncStmt()) return true;
+            if (s.hasRewritableAwaitAsyncCall()) return true;
         }
         return false;
     }
 
 
     rewrite Block {
-        when (Model.doAACrewrite && closestParent(Model.class) != null // && getCallee().getType().lookupMethod(getMethod()) != null
-              && blockHasAwaitAsyncStmt())
+        when (Model.doAACrewrite // don't attempt if told not to
+              && blockHasRewritableAwaitAsyncCalls() // do we have an AwaitAsyncExpr?
+              && amInCoreAbs()  // don't attempt in deltas, traits (type information unavailable)
+              && closestParent(Model.class) != null // don't attempt in detached subtree
+              )
         to Block {
             List<Stmt> newStatements = new List<Stmt>();
             for (Stmt s : getStmtListNoTransform()) {
-                if (!s.hasAwaitAsyncStmt()) {
+                if (!s.hasRewritableAwaitAsyncCall()) {
                     newStatements.add(s.parseTreeCopy());
                 } else {
                     // insert two statements: VarDecl for temporary variable
@@ -69,52 +84,45 @@ aspect GenerateCoreABS {
                     // replace AwaitAsyncCall with GetExp in our original
                     // statement.
 
-                    // getAACs() will be a singleton; we never have >1 EffExp per statement
-                    AwaitAsyncCall aac = s.getAACs().iterator().next();
-                    Access a = (Access)aac.getCallee().getType().lookupMethod(aac.getMethod()).getReturnType();
-                    /* Rewriting is also triggered from the Eclipse editor,
-                       which AGAIN doesn't have the whole view of the program
-                       and thus cannot resolve types. So just skip-if this is
-                       actually a problem, a subsequent stage will like the
-                       type-checker will (hopefully) discover it. */
-                    if (a.getType().isUnknownType())  {
-                        newStatements.add(s.parseTreeCopy());
+                    // getRewritableAACs() will be a singleton; we never have >1 EffExp per statement
+                    AwaitAsyncCall aac = s.getRewritableAACs().iterator().next();
+                    Type calleetype = aac.getCallee().getType();
+                    Access a = (Access)calleetype.lookupMethod(aac.getMethod()).getReturnType();
+                    final String varName = "tmp"+Integer.toString(aac.hashCode());
+                    // The annotations on an "await o!m();"-containing
+                    // statement need to end up on the fresh "o!m()"; move
+                    // them there
+                    List<Annotation> annotations = s.getAnnotationList().parseTreeCopy();
+                    final TypeUse du = a.getType().toUse();
+                    // TODO: The typechecker will assert that/if the name is
+                    // free, but in freak chances it may not.
+                    AsyncCall nac = new AsyncCall(aac.getCallee(), aac.getMethod(), aac.getParamList());
+                    nac.setPositionFromNode(aac);
+                    ParametricDataTypeUse pdtu = new ParametricDataTypeUse("Fut", new List(), new List().add(du));
+                    pdtu.setPositionFromNode(aac);
+                    // Annotations of the original "await o!m()" moved here
+                    VarDeclStmt vds = new VarDeclStmt(annotations, new VarDecl(varName, pdtu, new Opt(nac)));
+                    vds.setPositionFromNode(aac);
+                    AwaitStmt as = new AwaitStmt(new List(), new ClaimGuard( new VarUse(varName)));
+                    as.setPositionFromNode(aac);
+                    GetExp g = new GetExp(new VarUse(varName));
+                    g.setPositionFromNode(aac);
+
+                    newStatements.add(vds);
+                    newStatements.add(as);
+
+                    if (s instanceof VarDeclStmt) {
+                        ((VarDeclStmt)s).getVarDecl().setInitExp(g);
+                    } else if (s instanceof AssignStmt) {
+                        ((AssignStmt)s).setValue(g);
+                    } else if (s instanceof ReturnStmt) {
+                        ((ReturnStmt)s).setRetExp(g);
+                    } else if (s instanceof ExpressionStmt) {
+                        ((ExpressionStmt)s).setExp(g);
                     } else {
-                        final String varName = "tmp"+Integer.toString(aac.hashCode());
-                        // The annotations on an "await o!m();"-containing
-                        // statement need to end up on the fresh "o!m()"; move
-                        // them there
-                        List<Annotation> annotations = s.getAnnotationList().parseTreeCopy();
-                        final TypeUse du = a.getType().toUse();
-                        // TODO: The typechecker will assert that/if the name is free, but in freak chances it may not.
-                        AsyncCall nac = new AsyncCall(aac.getCallee(), aac.getMethod(), aac.getParamList());
-                        nac.setPositionFromNode(aac);
-                        ParametricDataTypeUse pdtu = new ParametricDataTypeUse("Fut", new List(), new List().add(du));
-                        pdtu.setPositionFromNode(aac);
-                        // Annotations of the original "await o!m()" moved here
-                        VarDeclStmt vds = new VarDeclStmt(annotations, new VarDecl(varName, pdtu, new Opt(nac)));
-                        vds.setPositionFromNode(aac);
-                        AwaitStmt as = new AwaitStmt(new List(), new ClaimGuard( new VarUse(varName)));
-                        as.setPositionFromNode(aac);
-                        GetExp g = new GetExp(new VarUse(varName));
-                        g.setPositionFromNode(aac);
-
-                        newStatements.add(vds);
-                        newStatements.add(as);
-
-                        if (s instanceof VarDeclStmt) {
-                            ((VarDeclStmt)s).getVarDecl().setInitExp(g);
-                        } else if (s instanceof AssignStmt) {
-                            ((AssignStmt)s).setValue(g);
-                        } else if (s instanceof ReturnStmt) {
-                            ((ReturnStmt)s).setRetExp(g);
-                        } else if (s instanceof ExpressionStmt) {
-                            ((ExpressionStmt)s).setExp(g);
-                        } else {
-                            throw new NotImplementedYetException(this, "Don't know how to rewrite statement " + s.getClass().toString());
-                        }
-                        newStatements.add(s.parseTreeCopy());
+                        throw new NotImplementedYetException(this, "Don't know how to rewrite statement " + s.getClass().toString());
                     }
+                    newStatements.add(s.parseTreeCopy());
                 }
             }
             setStmtList(newStatements);
