@@ -296,17 +296,17 @@ public class FunctionalTests extends SemanticTests {
     /* https://github.com/abstools/abstools/issues/62 - Int vs. Rat */
     @Test
     public void testPow1() {
-        assertEvalTrue("def Rat pow(Int n, Int i) = if i < 0 then 1 / pow(n, -i) else case i { 0 => 1; _ => n * pow(n, i-1);  }; { Bool testresult = True; }");
+        assertEvalTrue("def Rat pow2(Int n, Int i) = if i < 0 then 1 / pow2(n, -i) else case i { 0 => 1; _ => n * pow2(n, i-1);  }; { Bool testresult = True; }");
     }
 
     @Test
     public void testPow2() {
-        assertEvalTrue("def Rat pow(Int n, Int i) = if i < 0 then 1 / pow(n, -i) else case i { 0 => 1; _ => n * pow(n, i-1);  }; { Bool testresult = True; }");
+        assertEvalTrue("def Rat pow2(Int n, Int i) = if i < 0 then 1 / pow2(n, -i) else case i { 0 => 1; _ => n * pow2(n, i-1);  }; { Bool testresult = True; }");
     }
     
     @Test
     public void testIntRatCase() {
-        assertEvalTrue("def Rat pow(Int n, Int i) = case i < 0 { True => 1 / pow(n, -i); False => case i { 0 => 1; _ => n * pow(n, i-1);};  }; { Bool testresult = True; }");
+        assertEvalTrue("def Rat pow2(Int n, Int i) = case i < 0 { True => 1 / pow2(n, -i); False => case i { 0 => 1; _ => n * pow2(n, i-1);};  }; { Bool testresult = True; }");
     }
 
     @Test

@@ -3,9 +3,9 @@ import * from ABS.DC;
 import println from ABS.Meta;
 
 // A crawler can ask for the head or the full document.
-data DocHead = Head(Int lastUpdated, Int size);
+data DocHead = Head(Int lastUpdated, Int headsize);
 
-data Document = Document(DocHead head, List<Url> references);
+data Document = Document(DocHead dochead, List<Url> references);
 
 // Highly abstract URLs: instead of storing a host part and performing
 // hostname lookup, we store the server reference directly
@@ -19,7 +19,7 @@ interface WebServer {
 class WebServer (Map<String, Document> pages) implements WebServer {
     Maybe<DocHead> getHead(String path) {
         Maybe<Document> doc = lookup(pages, path);
-        return if doc == Nothing then Nothing else Just(head(fromJust(doc)));
+        return if doc == Nothing then Nothing else Just(dochead(fromJust(doc)));
     }
     Maybe<Document> getPage(String path) {
         return lookup(pages, path);
@@ -32,8 +32,8 @@ interface Crawler {
 
 class Crawler implements Crawler {
     List<Url> seeds = Nil;
-    Map<Url, DocHead> seen = EmptyMap;
-    Map<Url, Document> crawled = EmptyMap;
+    Map<Url, DocHead> seen = map[];
+    Map<Url, Document> crawled = map[];
     
     Unit run() {
         while (True) {
@@ -64,7 +64,7 @@ class Crawler implements Crawler {
     Unit getAndStoreDocument(Url url) {
         Maybe<Document> document = await host(url)!getPage(path(url));
         if (document != Nothing) {
-            seen = put(seen, url, head(fromJust(document)));
+            seen = put(seen, url, dochead(fromJust(document)));
             crawled = put(crawled, url, fromJust(document));
         }
     }
