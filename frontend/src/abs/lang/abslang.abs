@@ -1128,13 +1128,15 @@ module ABS.SmartDeploy;
 export *;
 import * from ABS.StdLib;
 
-// definitions for the cost annotations associated to classes
+// definitions for the cost annotations associated to classes.
+// These are now deprecated
 data DeployParamSpecification = Req | List(Int) | Default(String) | User | OptList(String) ;
 data DeployScenarioElement = MaxUse(Int) |
 	Cost(String, Int) |
 	Param(String, DeployParamSpecification) |
 	Name(String);
-type Deploy = List<DeployScenarioElement>;
+type Deploy = List<DeployScenarioElement> ;
+
 
 // definition for the annotation used to define a SmartDeploy task. The string
 // is intended to be a json object
@@ -1142,6 +1144,9 @@ type SmartDeploy = String;
 // definition for the annotation used to define the cloud provider for 
 // SmartDeploy task. The string is intended to be a json object
 type SmartDeployCloudProvider = String;
+// definition for the annotation used to define a DeployCost task. The string
+// is intended to be a json object
+type SmartDeployCost = String;
 
 // interface of the smart deployment objects. This interface is empy and it will
 // be later modified by a delta automatically generated
