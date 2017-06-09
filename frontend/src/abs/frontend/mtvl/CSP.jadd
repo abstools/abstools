@@ -28,7 +28,7 @@ aspect CSP {
             }
         }
         /* call original: */
-        refined(prod,check);  
+        refined(prod,check);
     }
 
     public ChocoSolver Model.instantiateCSModel() {
@@ -55,22 +55,16 @@ aspect CSP {
         return solver;
     }
 
-    public ChocoSolver Model.instantiateCSModelFeaturesOnly() {
-        ChocoSolver solver = new ChocoSolver(this);
-
-        for (String st : features())
-            solver.addBoolVar(st);
-
-        collectConstraints(solver);
-        return solver;
-    }
-
     public void Model.dropAttributes() {
-        // ints and bools store integer and boolean (feature) attributes. Need to be ran twice to be the same collection. 
+        // ints and bools store integer and boolean (feature) attributes. Need to be ran twice to be the same collection.
+        //System.out.println("ints: " + ints());
         ints();
         ints().clear();
+        //System.out.println("ints: " + ints());
+        //System.out.println("bools: " + bools());
         bools();
         bools().clear();
+        //System.out.println("bools: " + bools());
         for (CompilationUnit c: getCompilationUnits())
             c.dropAttributes();
     }
@@ -205,21 +199,21 @@ aspect CSP {
         //s.addConstraint(c);
         //return Choco.TRUE;
         return c;
-    } 
+    }
     public Constraint IfOut.collectConstraints(ChocoSolver s) {
         Constraint c = Choco.implies(Choco.not(ChocoSolver.isTrue(s.getVar(pname()))), getExpr().collectConstraints(s));
         return c;
-    } 
+    }
 
     // REQUIRE/EXCLUDE
     public Constraint Require.collectConstraints(ChocoSolver s) {
         Constraint c = Choco.implies(ChocoSolver.isTrue(s.getVar(pname())), ChocoSolver.isTrue(s.getVar(getFeatVar().getFName())));
         return c;
-    } 
+    }
     public Constraint Exclude.collectConstraints(ChocoSolver s) {
         Constraint c = Choco.nand(s.getVar(pname()), s.getVar(getFeatVar().getFName()));
         return c;
-    } 
+    }
 
     // EXPRESSIONS
     // EXP: GENERAL (always overwritten when the program type-checks)
@@ -252,9 +246,9 @@ aspect CSP {
     // < ?????
 
     public Constraint BoolVal.collectConstraints(ChocoSolver s) {
-        if (getValue()) 
+        if (getValue())
             return Choco.TRUE;
-        else            
+        else
             return Choco.FALSE;
     }
     public IntegerExpressionVariable IntVal.collectIntExpr(ChocoSolver s) {
@@ -291,7 +285,7 @@ aspect CSP {
     // EXP: EqualityExpr
     public Constraint MEqExp.collectConstraints(ChocoSolver s) {
         // Need to type check JUST the equality of expressions, to know if the constraints should produce  '==' or '<->'.
-        // All other type checking should be done after flattening. 
+        // All other type checking should be done after flattening.
         checkType(Types.BOOL, new SemanticConditionList());
         if (isInt)
             return ChocoSolver.eqeq(getLeft().collectIntExpr(s),getRight().collectIntExpr(s));

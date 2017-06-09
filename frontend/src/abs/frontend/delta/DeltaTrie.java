@@ -35,12 +35,10 @@ public class DeltaTrie {
 
     // Adds a word to the Trie
     public void addWord(List<String> word, Product product) {
-        // System.out.print("DeltaSequence");
         if (word.size() == 0) // no deltas
             root.isValidProduct = true;
         else
             root.addWord(word, product, 0);
-        // System.out.println();
     }
 
     /**********************************************************************************************/
@@ -98,7 +96,6 @@ public class DeltaTrie {
                 nextNode.addWord(word, product, d+1);
             else {
                 nextNode.isValidProduct = true;
-                //System.out.println("TA: \n" + ta);
                 // TODO type check this product (???)
                 //System.out.println(".");
             }

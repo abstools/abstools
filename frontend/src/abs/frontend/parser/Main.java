@@ -280,10 +280,10 @@ public class Main {
 
         // flatten before checking error, to avoid calculating *wrong* attributes
         if (fullabs) {
-            if (product==null) {
+            if (product == null) {
                 // Build all SPL configurations (valid feature selections, ignoring attributes), one by one (for performance measuring)
                 if (verbose)
-                    System.out.println("Building ALL " + m.getFeatureModelConfigurations().size() + " feature model configurations...");
+                    System.out.println("Building ALL " + m.getProductList().getNumChild() + " feature model configurations...");
                 ProductLineTypeAnalysisHelper.buildAllConfigurations(m);
                 return;
             }
@@ -423,9 +423,9 @@ public class Main {
      * However, the command-line argument handling will have to stay in Main. Pity.
      */
     private void analyzeMTVL(Model m) {
-        ProductDecl p_product = null;
+        ProductDecl productDecl = null;
         try {
-            p_product = product == null ? null : m.findProduct(product);
+            productDecl = product == null ? null : m.findProduct(product);
         } catch (WrongProgramArgumentException e) {
             // ignore in case we're just solving.
         }
@@ -434,7 +434,7 @@ public class Main {
                 if (verbose)
                     System.out.println("Searching for solutions for the feature model...");
                 ChocoSolver s = m.instantiateCSModel();
-                System.out.print(s.resultToString());
+                System.out.print(s.getSolutionsAsString());
             }
             if (minimise) {
                 assert product != null;
@@ -454,33 +454,28 @@ public class Main {
                 int i=1;
                 while(s1.solveAgain()) {
                     System.out.println("------ "+(i++)+"------");
-                    System.out.print(s1.resultToString());
+                    System.out.print(s1.getSolutionsAsString());
                 }
             }
             if (solveall) {
                 if (verbose)
                     System.out.println("Searching for all solutions for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
-                int i=1;
-                while(s.solveAgain()) {
-                    System.out.println("------ "+(i++)+"------");
-                    System.out.print(s.resultToString());
-                }
+                ChocoSolver solver = m.instantiateCSModel();
+                System.out.print(solver.getSolutionsAsString());
             }
             if (solveWith) {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes " + product + "...");
-                if (p_product != null) {
+                if (productDecl != null) {
                     ChocoSolver s = m.instantiateCSModel();
                     HashSet<Constraint> newcs = new HashSet<Constraint>();
-                    p_product.getProduct().getProdConstraints(s.vars, newcs);
-                    for (Constraint c: newcs) s.addConstraint(c);
-                    System.out.println("checking solution: "+s.resultToString());
+                    productDecl.getProduct().getProdConstraints(s.vars, newcs);
+                    for (Constraint c: newcs)
+                        s.addConstraint(c);
+                    System.out.println("checking solution:\n" + s.getSolutionsAsString());
                 } else {
                     System.out.println("Product '" + product + "' not found.");
-                    if (!product.contains("."))
-                        System.out.println("Maybe you forgot the module name?");
                 }
             }
             if (minWith) {
@@ -490,14 +485,12 @@ public class Main {
                 ChocoSolver s = m.instantiateCSModel();
                 HashSet<Constraint> newcs = new HashSet<Constraint>();
                 s.addIntVar("difference", 0, 50);
-                if (p_product != null) {
-                    m.getDiffConstraints(p_product.getProduct(), s.vars, newcs, "difference");
+                if (productDecl != null) {
+                    m.getDiffConstraints(productDecl.getProduct(), s.vars, newcs, "difference");
                     for (Constraint c: newcs) s.addConstraint(c);
                     System.out.println("checking solution: " + s.minimiseToString("difference"));
                 } else {
                     System.out.println("Product '" + product + "' not found.");
-                    if (!product.contains("."))
-                        System.out.println("Maybe you forgot the module name?");
                 }
 
             }
@@ -520,12 +513,10 @@ public class Main {
             if (check) {
                 assert product != null;
                 ChocoSolver s = m.instantiateCSModel();
-                if (p_product == null ){
-                    System.out.println("Product '"+product+"' not found.");
-                    if (!product.contains("."))
-                        System.out.println("Maybe you forgot the module name?");
+                if (productDecl == null ){
+                    System.out.println("Product '" + product + "' not found.");
                 } else {
-                    Map<String,Integer> guess = p_product.getProduct().getSolution();
+                    Map<String,Integer> guess = productDecl.getProduct().getSolution();
                     System.out.println("checking solution: "+s.checkSolution(guess,m));
                 }
             }
@@ -573,7 +564,8 @@ public class Main {
 
     private void typeCheckProductLine(Model m) {
 
-        int n = m.getFeatureModelConfigurations().size();
+        //int n = m.getFeatureModelConfigurations().size();
+        int n = m.getProductList().getNumChild();
         if (n == 0)
             return;
 
@@ -727,15 +719,15 @@ public class Main {
                 + "                 where <scope> in " + Arrays.toString(LocationTypingPrecision.values()) + "\n"
                 + "  -dump          dump AST to standard output \n"
                 + "  -solve         solve constraint satisfaction problem (CSP) for the feature\n"
-                + "                 model\n"
-                + "  -solveall      get ALL solutions for the CSP\n"
+                + "                 model and print a solution\n"
+                + "  -solveall      print ALL solutions for the CSP\n"
                 + "  -solveWith=<PID>\n"
                 + "                 solve CSP by finding a product that includes PID.\n"
                 + "  -min=<var>     minimise variable <var> when solving the CSP for the feature\n"
                 + "                 model\n"
                 + "  -max=<var>     maximise variable <var> when solving the CSP for the feature\n"
                 + "                 model\n"
-                + "  -maxProduct    get the solution that has the most number of features\n"
+                + "  -maxProduct    print the solution that has the most number of features\n"
                 + "  -minWith=<PID> \n"
                 + "                 solve CSP by finding a solution that tries to include PID\n"
                 + "                 with minimum number of changes.\n"

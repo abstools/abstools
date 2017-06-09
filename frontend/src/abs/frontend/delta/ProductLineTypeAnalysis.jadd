@@ -20,13 +20,18 @@ aspect ProductLineTypeAnalysis {
 
     /*
      * Return all valid feature configurations of the feature model.
-     * This is done by solving the CSP and only considering features
-     * (no attributes, as that could result in a quasi infinite number of configurations)
+     * These are determined by solving the CSP.
+     *
+     * TODO:
+     * Solve the CSP only considering features (no attributes, as that could result
+     * in a quasi infinite number of configurations).
+     * Note that we drop attributes anyway in Model.getProductList() below.
      */
     syn lazy Set<Map<String,Integer>> Model.getFeatureModelConfigurations() {
         if (! hasMTVL())
             return Collections.emptySet();
 
+        // FIXME Once dropped, you cannot get attibutes back
         dropAttributes(); // Features ONLY
         ChocoSolver solver = instantiateCSModel();
 
@@ -34,27 +39,45 @@ aspect ProductLineTypeAnalysis {
         return solver.getSolutions();
     }
 
-
-    /*
-     * Add all possible products (i.e. all valid feature configurations = feature model solutions)
-     * as non-terminal attributes (NTAs) to the AST (as List of Products to the Model node)
+    /* Return all products (a.k.a. configurations/variants/solutions) of the feature model
+     * -- not to be confused with the explicitly declared products (product P(...)).
+     * -- feature attributes are ignored
+     *
+     * Add all products as non-terminal attributes (NTAs)
+     * to the AST (as a List<Product> to the Model node)
      */
     syn nta lazy List<Product> Model.getProductList() {
-        List<Product> plist = new List<Product>();
 
+        List<Product> plist = new List<Product>();
+        Set<String> cache = new HashSet<String>();
+
+        long time0 = System.currentTimeMillis();
         Set<Map<String,Integer>> featureConfs = getFeatureModelConfigurations();
+        long time1 = System.currentTimeMillis();
+        if (this.debug)
+            System.out.println("\u23F1 Solving CSP duration (s): " + (time1 - time0)/1000.0);
+
         for (Map<String,Integer> features : featureConfs) {
             // set Features
             List<Feature> flist = new List<Feature>();
             for (String fname : features.keySet()) {
-                // only add selected features
-                if (features.get(fname) == 1) {
-		            Feature feature = new Feature(fname, new List<AttrAssignment>()); // disregard any attribute assignments
-		            flist.add(feature);
+                if (fname.startsWith("$")) // internal ChocoSolver variable
+                    continue;
+                if (fname.contains(".")) // feature *attribute*
+                    continue;
+                if (features.get(fname) == 1) { // only add *selected* features
+                    Feature feature = new Feature(fname, new List<AttrAssignment>()); // disregard any attribute assignments
+                    flist.add(feature);
                 }
             }
-            Product product = new Product(flist);
-            plist.add(product);
+            /* Avoid adding same product mutiple times (due to attributes with different assigned values).
+             * FIXME this is unnecessary once getFeatureModelConfigurations() returns only feature sets without attributes.
+             */
+            if (! cache.contains(flist.toString())) {
+                cache.add(flist.toString());
+                Product product = new Product(flist);
+                plist.add(product);
+            }
         }
         return plist;
     }
@@ -63,9 +86,10 @@ aspect ProductLineTypeAnalysis {
      * Return a string listing all features of the product, e.g. {A,B,C,D}
      */
     syn lazy String Product.getFeatureSetAsString() {
-        Set<String> features = new HashSet<String>();
+        java.util.List<String> features = new ArrayList<String>();
         for (Feature feature : getFeatures())
             features.add(feature.getName());
+        java.util.Collections.sort(features);
         Joiner joiner = Joiner.on(",").skipNulls();
         String featureSet = joiner.join(features);
         return "{" + featureSet + "}";

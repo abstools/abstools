@@ -15,6 +15,8 @@ import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.*;
+import abs.frontend.mtvl.ChocoSolver;
+import choco.kernel.model.constraints.Constraint;
 
 public class ProductLineTypeAnalysisHelper {
 
@@ -29,15 +31,21 @@ public class ProductLineTypeAnalysisHelper {
         assert pl != null;
 
         if (wellFormedProductLine(pl, errors)) {
+            long time0 = System.currentTimeMillis();
             // Check strong unambiguity
             checkStrongUnambiguity(pl, errors);
-
             // Build the product family generation trie. Hereby check that
             // - product generation mapping is total
             // - TODO all products are well-typed programs
             DeltaTrie pfgt = buildPFGT(pl, errors);
-            //System.out.println("Trie:\n" + pfgt.toString());
-            //System.out.println("Trie height:\n" + pfgt.height());
+
+            if (pl.getModel().debug) {
+                //System.out.println("Trie height:\n" + pfgt.height());
+                //System.out.println("Trie:\n" + pfgt.toString());
+                long time1 = System.currentTimeMillis();
+                System.out.println("\u23F1 Type checking SPL duration (s): " + ((time1 - time0)/1000.0));
+            }
+
         }
     }
 
@@ -101,20 +109,21 @@ public class ProductLineTypeAnalysisHelper {
      * the same class, and the modifications of the same class in different
      * delta modules in the same set have to be disjoint.
      */
-    public static boolean isStronglyUnambiguous(ProductLine pl, SemanticConditionList l) {
+    public static boolean isStronglyUnambiguous(ProductLine pl, SemanticConditionList errors) {
 
         boolean result = true;
         Model model = pl.getModel();
 
-        //        System.out.print("Delta partition: ");
-        //        for (Set<String> set : pl.getDeltaPartition()) {
-        //            System.out.print("{");
-        //            for (String el : set)
-        //                System.out.print(" " + el + " ");
-        //            System.out.print("}   ");
-        //        }
-        //        System.out.println();
-
+        /*
+        System.out.print("Delta partition: ");
+        for (Set<String> set : pl.getDeltaPartition()) {
+            System.out.print("{");
+            for (String el : set)
+                System.out.print(" " + el + " ");
+            System.out.print("}   ");
+        }
+        System.out.println();
+         */
         assert pl.getDeltaPartition() != null;
         for (Set<String> set : pl.getDeltaPartition()) {
 
@@ -144,12 +153,33 @@ public class ProductLineTypeAnalysisHelper {
                             else
                                 continue;*/
 
-                            if(mod instanceof DeltaTraitModifier) {
+                            if (mod instanceof DeltaTraitModifier) {
                                 HashSet<String> methodIDSet = new HashSet<>();
                                 ((DeltaTraitModifier) mod).collectMethodIDs(methodIDSet, model);
 
                                 for (String methodID : methodIDSet) {
-                                    result = result & doThings(pl, l, methodID, prefix, deltaID, cache);
+                                    if (cache.containsKey(prefix)) {
+                                        if (cache.get(prefix).containsKey(methodID)) {
+                                            result = false;
+                                            String otherDeltaID = cache.get(prefix).get(methodID);
+                                            if (! deltaID.equals(otherDeltaID))
+                                                errors.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, otherDeltaID, prefix + ", method " + methodID));
+                                            else
+                                                ; // FIXME also a kind of ambiguity but needs a different error message
+                                        } else if (cache.get(prefix).containsKey("CLASS")) {
+                                            result = false;
+                                            String otherDeltaID = cache.get(prefix).get("CLASS");
+                                            if (! deltaID.equals(otherDeltaID))
+                                                errors.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, otherDeltaID, prefix));
+                                            else
+                                                ; // FIXME also a kind of ambiguity but needs a different error message
+                                        } else {
+                                            cache.get(prefix).put(methodID, deltaID);
+                                        }
+                                    } else {
+                                        cache.put(prefix, new HashMap<String, String>());
+                                        cache.get(prefix).put(methodID, deltaID);
+                                    }
                                 }
                             }
                         }
@@ -161,7 +191,8 @@ public class ProductLineTypeAnalysisHelper {
                             result = false;
                             assert ! cache.get(prefix).isEmpty();
                             String otherDeltaID = cache.get(prefix).values().iterator().next();
-                            l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, otherDeltaID, prefix));
+                            errors.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, otherDeltaID, prefix));
+                            System.out.println("3 ambiguity due to " + deltaID + "<>" + otherDeltaID);
                         } else {
                             cache.put(prefix, new HashMap<String, String>());
                             cache.get(prefix).put("CLASS", deltaID);
@@ -172,26 +203,7 @@ public class ProductLineTypeAnalysisHelper {
                 // functions, ADTs, etc
             }
         }
-        // FIXME remove boolean result unless needed
-        return result;
-    }
-
-    private static boolean doThings(ProductLine pl, SemanticConditionList l, String methodID, String prefix, String deltaID, Map<String, Map<String, String>> cache) {
-        boolean result = true;
-        if (cache.containsKey(prefix)) {
-            if (cache.get(prefix).containsKey(methodID)) {
-                result = false;
-                l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, cache.get(prefix).get(methodID), prefix + ", method " + methodID));
-            } else if (cache.get(prefix).containsKey("CLASS")) {
-                result = false;
-                l.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, cache.get(prefix).get("CLASS"), prefix));
-            } else {
-                cache.get(prefix).put(methodID, deltaID);
-            }
-        } else {
-            cache.put(prefix, new HashMap<String, String>());
-            cache.get(prefix).put(methodID, deltaID);
-        }
+        // TODO remove boolean result unless needed
         return result;
     }
 
@@ -202,11 +214,59 @@ public class ProductLineTypeAnalysisHelper {
      */
     public static void buildAllConfigurations(Model m) {
 
+        long timeSum = 0;
         for (Product product : m.getProductList()) {
-            System.out.println("Flattening product: " + product.getFeatureSetAsString());
+
+            long time0 = System.currentTimeMillis();
+            if (m.debug)
+                System.out.println("\u23F1 Flattening product: " + product.getFeatureSetAsString());
+
+            // Find a solution to the feature model that satisfies the product feature selection
+            ChocoSolver s = m.instantiateCSModel();
+            HashSet<Constraint> newcs = new HashSet<Constraint>();
+            product.getProdConstraints(s.vars, newcs);
+            for (Constraint c: newcs)
+                s.addConstraint(c);
+
+            Map<String, Integer> solution = s.getSolution();
+            if (m.debug)
+                System.out.println("\u23F1 Full product configuration: " + solution);
+            long time1 = System.currentTimeMillis();
+
+            // map the solution to the product,
+            // i.e. add attribute assignments to features
+            for (String fname : solution.keySet()) {
+                if (fname.startsWith("$")) // ignore internal ChocoSolver variable
+                    continue;
+                if (fname.contains(".")) {
+                    String[] parts = fname.split("\\.");
+                    String fid = parts[0];
+                    String aid = parts[1];
+                    Integer val = solution.get(fname);
+                    for (Feature feature : product.getFeatures()) {
+                        if (feature.getName().equals(fid)) {
+                            feature.addAttrAssignment(new AttrAssignment(aid, new IntVal(val)));
+                            break;
+                        }
+                    }
+                }
+            }
+
+            long time2 = System.currentTimeMillis();
+
             Model thisModel = m.treeCopyNoTransform();
+
+            long time3 = System.currentTimeMillis();
             thisModel.flattenForProduct(product);
+
+            long time4 = System.currentTimeMillis();
+            timeSum += (time4 - time3);
+            if (m.debug) {
+                System.out.println("\u23F1 Time: " + (time1 - time0) + " | " + (time2 - time1) + " | " + (time3 - time2) + " | " + (time4 - time3) + " | " + "Total(s): " + ((time4 - time0)/1000.0));
+            }
         }
+        if (m.debug)
+            System.out.println("\u23F1 Flattening total time (s): " + timeSum/1000.0);
     }
 
 }

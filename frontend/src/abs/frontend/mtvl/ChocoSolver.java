@@ -304,9 +304,13 @@ public class ChocoSolver {
         return result;
     }
 
+    /*
+     * Return ALL solutions of the feature model
+     */
     public Set<Map<String,Integer>> getSolutions() {
         Set<Map<String, Integer>> solutions = new HashSet<Map<String,Integer>>();
 
+        //int i=0;
         while(solveAgain()) {
             Map<String,Integer> sol = new HashMap<String,Integer>();
             Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
@@ -314,42 +318,38 @@ public class ChocoSolver {
                 IntegerVariable var = it.next();
                 sol.put(var.getName(), solver.getVar(var).getVal());
             }
+            //System.out.println(i++ + " sol: " + sol);
             solutions.add(sol);
         }
         return solutions;
     }
 
-    public Set<Set<String>> getSolutionsFeaturesOnly() {
-        Set<Set<String>> solutions = new HashSet<Set<String>>();
+    //    public Set<Set<String>> getSolutionsFeaturesOnly() {
+    //        Set<Set<String>> solutions = new HashSet<Set<String>>();
+    //
+    //        while(solveAgain()) {
+    //            HashSet<String> sol = new HashSet<String>();
+    //            Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
+    //            while (it.hasNext()) {
+    //                IntegerVariable var = it.next();
+    //                if (solver.getVar(var).getVal() == 1) // We are dealing with features only, where 1 means TRUE
+    //                    sol.add(var.getName());
+    //            }
+    //            solutions.add(sol);
+    //        }
+    //        return solutions;
+    //    }
 
-        while(solveAgain()) {
-            HashSet<String> sol = new HashSet<String>();
-            Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
-            while (it.hasNext()) {
-                IntegerVariable var = it.next();
-                if (solver.getVar(var).getVal() == 1) // We are dealing with features only, where 1 means TRUE
-                    sol.add(var.getName());
-            }
-            solutions.add(sol);
-        }
-        return solutions;
-    }
-
-    public String resultToString() {
-
-        if (!solved)
-            solve();
-
-        if (!newsol)
-            return "-- No (more) solutions --\n";
-
+    public String getSolutionsAsString() {
         StringBuilder result = new StringBuilder();
-
-        Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
-        while (it.hasNext()) {
-            IntegerVariable var = it.next();
-            if (absmodel.debug || !var.getName().startsWith("$"))
-                result.append(var.getName() + " -> " + solver.getVar(var).getVal() + "\n");
+        Set<Map<String,Integer>> solutions = getSolutions();
+        int i=1;
+        for (Map<String,Integer> sol : solutions) {
+            result.append("------ " + (i++) + "------\n");
+            for (String var : sol.keySet()) {
+                if (absmodel.debug || !var.startsWith("$"))
+                    result.append(var + " -> " + sol.get(var) + "\n");
+            }
         }
         return result.toString();
     }
@@ -373,14 +373,14 @@ public class ChocoSolver {
 
     public String minimiseToString(String var) {
         optimise(var, true);
-        return resultToString();
+        return getSolutionsAsString();
     }
 
     public String maximiseToString(String var) {
         if (absmodel.debug)
             absmodel.println("optimising " + var);
         optimise(var, false);
-        return resultToString();
+        return getSolutionsAsString();
     }
 
     public int maximiseToInt(String var) {

@@ -77,7 +77,9 @@ aspect DeltaModifierApplicator {
 
 
     @Override
-    public void RemoveMethodModifier.collapseTraitModifiers(ClassDecl cd){System.out.println("collapsing rem!"+this); }
+    public void RemoveMethodModifier.collapseTraitModifiers(ClassDecl cd) {
+        //System.out.println("collapsing rem!"+this);
+    }
 
 
     abstract public void ModuleModifier.apply() throws DeltaModellingException;
