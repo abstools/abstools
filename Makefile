@@ -55,11 +55,11 @@ manual:				## Build the ABS manual
 vagrant:			## Build and start Vagrant virtual machine
 	vagrant up
 
-docker: frontend		## Build and start 'easyinterface' docker image
-	$(DOCKER) build -t easyinterface $(ROOT_DIR)
-	$(DOCKER) run -d -p 8080:80 --name easyinterface easyinterface
+docker: frontend		## Build and start collaboratory docker image
+	$(DOCKER) build -t abslang/collaboratory $(ROOT_DIR)
+	$(DOCKER) run -d -p 8080:80 --name collaboratory abslang/collaboratory
 	@echo "Finished."
-	@echo "Easyinterface running on http://localhost:8080/"
+	@echo "Collaboratory running on http://localhost:8080/"
 
 server:				## Deploy development environment on $(SERVER)
 	@:$(call check_defined, SERVER, server name or address)

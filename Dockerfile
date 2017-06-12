@@ -134,29 +134,29 @@ EC_PATH=\"\$EC_PATH::/solvers_exec/minizinc-1.6/bin\"\n" >> /var/www/easyinterfa
 # HABS
 #######
 
-RUN echo "deb http://ppa.launchpad.net/hvr/ghc/ubuntu trusty main" >> /etc/apt/sources.list
-RUN apt-get update -y -q
-RUN apt-get install -y --force-yes -q ghc-8.0.1 cabal-install-1.24 happy-1.19.5 zlib1g-dev
-RUN git clone https://github.com/abstools/habs /usr/local/lib/habs && \
-    cd /usr/local/lib/habs && \
-    git submodule update --init
-ENV PATH=$PATH:/opt/ghc/8.0.1/bin:/opt/cabal/1.24/bin:/opt/happy/1.19.5/bin
-RUN cd /usr/local/lib/habs && \
-    unset GHC_PACKAGE_PATH && \
-    cabal sandbox init && \
-    cabal update && \
-    cabal sandbox add-source habs-parser && \
-    cabal sandbox add-source habs-runtime && \
-    cabal sandbox add-source habs-stdlib && \
-    cabal install -j1 habs-runtime -fwait-all-cogs && \
-    cabal install -j1
-RUN chmod -R a+xr /usr/local/lib/habs
-RUN echo "\
-# set corresponding HABS paths in easyinterface\n\
-#\n\
-# path to HABS\n\
-EC_HABSHOME=\"/usr/local/lib/habs\"\n\
-# path to CABAL and HASKELL\n\
-#\n\
-EC_PATH=\"\$EC_PATH:/opt/ghc/8.0.1/bin:/opt/cabal/1.24/bin:/opt/happy/1.19.5/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
+# RUN echo "deb http://ppa.launchpad.net/hvr/ghc/ubuntu trusty main" >> /etc/apt/sources.list
+# RUN apt-get update -y -q
+# RUN apt-get install -y --force-yes -q ghc-8.0.1 cabal-install-1.24 happy-1.19.5 zlib1g-dev
+# RUN git clone https://github.com/abstools/habs /usr/local/lib/habs && \
+#     cd /usr/local/lib/habs && \
+#     git submodule update --init
+# ENV PATH=$PATH:/opt/ghc/8.0.1/bin:/opt/cabal/1.24/bin:/opt/happy/1.19.5/bin
+# RUN cd /usr/local/lib/habs && \
+#     unset GHC_PACKAGE_PATH && \
+#     cabal sandbox init && \
+#     cabal update && \
+#     cabal sandbox add-source habs-parser && \
+#     cabal sandbox add-source habs-runtime && \
+#     cabal sandbox add-source habs-stdlib && \
+#     cabal install -j1 habs-runtime -fwait-all-cogs && \
+#     cabal install -j1
+# RUN chmod -R a+xr /usr/local/lib/habs
+# RUN echo "\
+# # set corresponding HABS paths in easyinterface\n\
+# #\n\
+# # path to HABS\n\
+# EC_HABSHOME=\"/usr/local/lib/habs\"\n\
+# # path to CABAL and HASKELL\n\
+# #\n\
+# EC_PATH=\"\$EC_PATH:/opt/ghc/8.0.1/bin:/opt/cabal/1.24/bin:/opt/happy/1.19.5/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
 
