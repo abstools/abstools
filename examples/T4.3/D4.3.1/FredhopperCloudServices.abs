@@ -502,12 +502,6 @@ def Map<Customer, Map<Config, Int>> updateConfig(Map<Customer, Map<Config, Int>>
 			};
 	};
 
-def List<X> take<X>(List<X> ls, Int n) =
-	case ls {
-		Nil => Nil;
-		Cons(x, xs) => if n == 0 then Nil else Cons(x, take(xs, n - 1));
-	};
-
 def Bool inListAll<X>(List<X> ls, List<X> ms) =
 	case ms {
 		Nil => True;
@@ -524,12 +518,6 @@ def Map<X, Y> removeAll<X, Y>(Map<X, Y> map, List<X> xs) =
 	case xs {
 		Nil => map;
 		Cons(x, nx) => removeAll(removeKey(map, x), nx);
-	};
-
-def List<X> difference<X>(List<X> xs, List<X> ys) =
-	case ys {
-		Nil => Nil;
-		Cons(y, ny) => difference(without(xs, y), ny);
 	};
 
 def List<Y> lookupMap<X, Y>(Map<X, Y> map, List<X> xs) =
