@@ -134,7 +134,7 @@ public class Main {
                 debug = true;
             else if (arg.equals("-v"))
                 verbose = true;
-            else if (arg.equals("-version"))
+            else if (arg.equals("-version") || arg.equals("--version"))
                 printVersionAndExit();
             else if (arg.startsWith("-product=")) {
                 fullabs = true;
@@ -683,6 +683,7 @@ public class Main {
 
     protected static void printVersionAndExit() {
         System.out.println("ABS Tool Suite v"+getVersion());
+        System.out.println("Built from git tree " + getGitVersion());
         System.exit(1);
     }
 
@@ -756,7 +757,7 @@ public class Main {
                 "Copyright (c) 2013-2016,    The Envisage Project",
         "http://www.abs-models.org/" };
 
-        int maxlength = header[0].length();
+        int maxlength = header[2].length();
         StringBuilder starline = new StringBuilder();
         for (int i = 0; i < maxlength + 4; i++) {
             starline.append("*");
@@ -771,6 +772,15 @@ public class Main {
         }
 
         System.out.println(starline);
+        if (getGitVersion().endsWith("dirty")) {
+            System.out.println("This version of the compiler was created from repository version");
+            System.out.println("  " + getGitVersion());
+            System.out.println("with uncommitted changes.  Repeatable simulation cannot be guaranteed.");
+        } else {
+            System.out.println("For repeatable simulations, insert the following comment into the model:");
+            System.out.println("// Compiled with git version " + getGitVersion());
+        }
+        System.out.println();
     }
 
     private static String getVersion() {
@@ -780,6 +790,16 @@ public class Main {
         else
             return version;
     }
+
+
+    private static String getGitVersion() {
+        String version = Main.class.getPackage().getSpecificationVersion();
+        if (version == null)
+            return "HEAD-dirty";
+        else
+            return version;
+    }
+
 
     public CompilationUnit parseUnit(File file) throws Exception {
         Reader reader = getUTF8FileReader(file);
