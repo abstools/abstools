@@ -104,6 +104,8 @@ public class Main {
                 }
             }
         } catch (Exception e) {
+            if (e.getMessage() == null) { e.printStackTrace(); }
+            assert e.getMessage() != null : e.toString();
             printErrorAndExit(e.getMessage());
         }
     }
@@ -665,6 +667,7 @@ public class Main {
     }
 
     protected static void printErrorAndExit(String error) {
+	assert error != null;
         System.err.println("\nCompilation failed:\n");
         System.err.println("  " + error);
         System.err.println();

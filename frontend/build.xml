@@ -315,7 +315,7 @@
     </junit>
   </target>
 
-  <target name="test-case-studies" depends="compile" description="typecheck all case studies">
+  <target name="test-case-studies" description="typecheck all case studies">
       <antcall target="abs-typecheck">
         <param name="absmodeldir" value="${casestudies.dir}/T4.2/D4.2.1/"/>
        </antcall>
@@ -329,7 +329,8 @@
 
   <target name="abs-typecheck">
     <echo message="Typechecking ABS models in ${absmodeldir} ..." />
-        <java classname="abs.frontend.parser.Main">
+        <java fork="true" classname="abs.frontend.parser.Main">
+            <assertions><enable package="abs"/></assertions>
             <classpath refid="run.classpath"/>
             <arg line="${absmodeldir}"/>
         </java>

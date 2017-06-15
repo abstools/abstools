@@ -16,7 +16,7 @@ class Simulator{
 
 	Unit run(){
 		UserDB user_db = new UserDBImpl();
-		ResourcePool pool = new ResourcePool();
+		Queriable_RP pool = new ResourcePool();
 		ResourceFactory factory = new ResourceFactoryImpl(pool);
 		ExecutionEngine engine = new ExecutionEngineImpl(pool);
 		RPM rpm = new RPMImpl(user_db, factory, engine, pool);
