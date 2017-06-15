@@ -58,8 +58,6 @@ public class KeyAbsBackend extends Main {
                 } else {
                     outputfile = new File(restArgs.get(i));
                 }
-            } else if (arg.startsWith("-debug")) {
-                debug  = true;
             } else if (arg.equals("-keyabs")) {
                 // nothing to do
             } else {
@@ -93,11 +91,9 @@ public class KeyAbsBackend extends Main {
         model.generateKeyAbs(stream);
     }
 
-    protected void printUsage() {
-        super.printUsage();
-        System.out.println("KeyAbs Backend:\n"
-                + "  -o <file>      write output to <file> instead of standard output\n"
-                + "  -debug         print stacktrace on exception\n"
+    public static void printUsage() {
+        System.out.println("KeyAbs Backend (-keyabs):\n"
+                         + "  -o <file>      write output to <file> instead of standard output\n"
         );
     }
 

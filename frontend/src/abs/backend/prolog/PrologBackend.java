@@ -155,11 +155,11 @@ public class PrologBackend extends Main {
         return remainingArgs;
     }
 
-    protected void printUsage() {
-        super.printUsage();
-        System.out.println("Prolog Backend:");
+    public static void printUsage() {
+        System.out.println("Prolog Backend (-prolog):");
         System.out.println("  -d <dir>     generate files to <dir>");
         System.out.println("  -fn <dir>    output file name");
+        System.out.println();
     }
     
     private void printAST(ASTNode<?> ast, int level) {

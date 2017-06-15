@@ -98,9 +98,8 @@ public class PrettyPrinterBackEnd extends Main {
         model.doPrettyPrint(writer, formatter);
     }
     
-    protected void printUsage() {
-        super.printUsage();
-        System.out.println("ABS Pretty Printer:\n"
+    public static void printUsage() {
+        System.out.println("ABS Pretty Printer (-prettyprint):\n"
                 + "  -f             force pretty printing even if there are type errors\n"
                 + "  -o <file>      write output to <file> instead of standard output\n"
         );

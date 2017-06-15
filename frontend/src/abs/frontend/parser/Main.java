@@ -81,6 +81,10 @@ public class Main {
     public void mainMethod(final String... args) {
         try {
             java.util.List<String> argslist = Arrays.asList(args);
+            if (argslist.contains("-help") || argslist.contains("-h")
+                || argslist.contains("--help")) {
+                printUsageAndExit();
+            }
             if (argslist.contains("-maude")) {
                 abs.backend.maude.MaudeCompiler.main(args);
             } else if(argslist.contains("-java")) {
@@ -693,11 +697,10 @@ public class Main {
         return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream));
     }
 
-    protected void printUsage() {
+    public static void printUsage() {
         printHeader();
         System.out.println(""
-                + "Usage: java " + this.getClass().getName()
-                + " [backend] [options] <absfiles>\n\n"
+                + "Usage: java abs.frontend.parser.Main [backend] [options] <absfiles>\n\n"
                 + "  <absfiles>     ABS files/directories/packages to parse\n\n"
                 + "Available backends:\n"
                 + "  -maude         generate Maude code\n"
@@ -739,6 +742,14 @@ public class Main {
                 + "  -check=<PID>   check satisfiability of a product with name PID\n"
                 + "  -preprocess    Preprocessing the Model\n" //Preprocessor
                 + "  -h             print this message\n");
+        abs.backend.maude.MaudeCompiler.printUsage();
+        abs.backend.java.JavaBackend.printUsage();
+        abs.backend.erlang.ErlangBackend.printUsage();
+        abs.backend.prolog.PrologBackend.printUsage();
+        abs.backend.coreabs.CoreAbsBackend.printUsage();
+        abs.backend.prettyprint.PrettyPrinterBackEnd.printUsage();
+        abs.backend.keyabs.KeyAbsBackend.printUsage();
+        abs.backend.outline.OutlinePrinterBackEnd.printUsage();
     }
 
     protected static void printHeader() {

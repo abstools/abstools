@@ -53,9 +53,8 @@ public class CoreAbsBackend extends Main {
         return remainingArgs;
     }
 
-    protected void printUsage() {
-        super.printUsage();
-        System.out.println("Core ABS Backend: (no additional options)\n"
+    public static void printUsage() {
+        System.out.println("Core ABS Backend (-coreabs): (no additional options)\n"
         );
     }
 }

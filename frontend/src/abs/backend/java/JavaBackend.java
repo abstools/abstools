@@ -80,9 +80,8 @@ public class JavaBackend extends Main {
         return remainingArgs;
     }
 
-    protected void printUsage() {
-        super.printUsage();
-        System.out.println("Java Backend:\n"
+    public static void printUsage() {
+        System.out.println("Java Backend (-java):\n"
                 + "  -d <dir>       generate files to <dir>\n"
                 + "  -debug         print stacktrace on exception\n"
                 + "  -sourceonly    do not generate class files\n"
