@@ -97,8 +97,6 @@ public class Main {
                 abs.backend.coreabs.CoreAbsBackend.main(args);
             } else if (argslist.contains("-prettyprint")) {
                 abs.backend.prettyprint.PrettyPrinterBackEnd.main(args);
-            } else if (argslist.contains("-keyabs")) {
-                abs.backend.keyabs.KeyAbsBackend.main(args);
             } else if (argslist.contains("-outline")) {
                 abs.backend.outline.OutlinePrinterBackEnd.main(args);
             } else {
@@ -748,7 +746,6 @@ public class Main {
         abs.backend.prolog.PrologBackend.printUsage();
         abs.backend.coreabs.CoreAbsBackend.printUsage();
         abs.backend.prettyprint.PrettyPrinterBackEnd.printUsage();
-        abs.backend.keyabs.KeyAbsBackend.printUsage();
         abs.backend.outline.OutlinePrinterBackEnd.printUsage();
     }
 
