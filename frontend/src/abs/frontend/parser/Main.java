@@ -707,7 +707,6 @@ public class Main {
                 + "  -haskell       generate Haskell code\n" // this is just for help printing; the execution of the compiler is done by the bash scipt absc
                 + "  -prolog        generate Prolog\n"
                 + "  -prettyprint   pretty-print ABS code\n\n"
-                + "type 'absc -<backend> -help' to see backend-specific options\n\n"
                 + "Common options:\n"
                 + "  -version       print version\n"
                 + "  -v             verbose output\n"
