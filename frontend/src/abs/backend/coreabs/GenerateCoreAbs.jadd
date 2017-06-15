@@ -46,7 +46,9 @@ aspect GenerateCoreABS {
         if (!amInCoreAbs()) return false;
         Type calleetype = getCallee().getType();
         if (calleetype.isUnknownType()) return false;
-        Access a = (Access)calleetype.lookupMethod(getMethod()).getReturnType();
+        MethodSig m = calleetype.lookupMethod(getMethod());
+        if (m == null) return false;
+        Access a = (Access)m.getReturnType();
         if (a.getType().isUnknownType()) return false;
         return true;
     }
