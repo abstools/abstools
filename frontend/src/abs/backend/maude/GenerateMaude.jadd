@@ -326,6 +326,19 @@ aspect GenerateMaude {
         stream.print("\"num\"[" + getContent() + "] ");
     }
 
+    public void ListLiteral.generateMaude(PrintStream stream) {
+        for (PureExp e : getPureExps()) {
+            stream.print("\"ABS.StdLib.Cons\"[");
+            e.generateMaude(stream);
+            stream.print(" :: ");
+        }
+        stream.print("\"ABS.StdLib.Nil\"[ emp ]");
+        for (int i = 0; i < getNumPureExp(); i++) {
+            stream.print("]");
+        }
+        stream.print(" ");
+    }
+
     syn String Unary.maudePrefixOperator();
     eq MinusExp.maudePrefixOperator() = "--";
     eq NegExp.maudePrefixOperator() = "~";

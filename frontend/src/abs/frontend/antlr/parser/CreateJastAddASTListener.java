@@ -493,23 +493,13 @@ new List<ModuleDecl>(),
     }
     @Override public void exitVariadicFunctionExp(ABSParser.VariadicFunctionExpContext ctx) {
         List<PureExp> l = (List<PureExp>)v(ctx.pure_exp_list());
-        // Construct a list literal from all given arguments
-        DataConstructorExp arglist = new DataConstructorExp("Cons", new List<PureExp>());
-        setASTNodePosition(ctx.pure_exp_list(), arglist);
-        DataConstructorExp current = arglist;
-        /* DO NOT use the iterator here -- it interferes with rewriting [stolz] */
-        if (l.getNumChildNoTransform() > 0) {
-            PureExp last = l.getChildNoTransform(l.getNumChildNoTransform()-1);
-            for (int i = 0; i < l.getNumChildNoTransform(); i++) {
-                PureExp e = l.getChildNoTransform(i);
-                DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
-                next.setPositionFromNode(e);
-                current.addParamNoTransform(e);
-                current.addParamNoTransform(next);
-                current = next;
-            }
+        PureExp arglist = null;
+        if (l.getNumChildNoTransform() == 0) {
+            arglist = new DataConstructorExp("Nil", new List<PureExp>());
+        } else {
+            arglist = new ListLiteral(l);
         }
-        current.setConstructor("Nil");
+        setASTNodePosition(ctx.pure_exp_list(), arglist);
         List<PureExp> llist = new List<PureExp>();
         llist.add(arglist);
         setV(ctx, new FnApp(ctx.qualified_identifier().getText(), llist));

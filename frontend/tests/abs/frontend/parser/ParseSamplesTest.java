@@ -36,7 +36,8 @@ public class ParseSamplesTest extends FrontendTest {
                                                , { "tests/abssamples/RandomBool.abs" , null}
                                                , { "tests/abssamples/LexicalTest.abs", null}
                                                , { "tests/abssamples/ReplicationSystem.abs" , null}
-                                               };
+                                               , { "tests/abssamples/10wikipediadocstokenized.abs" , null}                                               
+        };
         return Arrays.asList(data);
     }
 

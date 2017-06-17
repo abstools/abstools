@@ -1173,6 +1173,18 @@ aspect doPrettyPrinter {
         stream.print("\"");
     }
 
+    public void ListLiteral.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        for (PureExp e : getPureExps()) {
+            stream.print("Cons(");
+            e.doPrettyPrint(stream, formatter);
+            stream.print(", ");
+        }
+        stream.print("Nil");
+        for (int i = 0; i < getNumPureExp(); i++) {
+            stream.print(")");
+        }
+    }
+
     public void NullExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("null");
     }

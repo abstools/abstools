@@ -36,6 +36,7 @@ public enum ErrorMessage {
     WRONG_NUMBER_OF_ARGS("Wrong number of arguments. Expected %s, but found %s."),
     WRONG_NUMBER_OF_TYPE_ARGS("Wrong number of type arguments for parametric type %s. Expected %s, but found %s."),
     TYPE_MISMATCH("Type %s does not match declared type %s."),
+    LIST_LITERAL_TYPE_MISMATCH("All elements must have the same type %s, type %s does not match."),
     DUPLICATE_CONSTRUCTOR("Constructor %s is already defined%s."),
     DUPLICATE_DATATYPE_PARAMETER("Type parameter %s is used more than once."),
     DUPLICATE_CLASS_NAME("Class %s is already defined%s."),
