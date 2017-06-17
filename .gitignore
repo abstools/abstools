@@ -31,3 +31,4 @@ build/
 eclipsehome.properties
 .bundle/
 .metadata/
+**/*.iml
