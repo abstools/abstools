@@ -571,6 +571,35 @@ aspect doPrettyPrinter {
         formatter.afterStmt();
     }
 
+    public void PartialFunctionDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+      getAnnotationList().doPrettyPrint(stream, formatter, "");
+      if (getNumAnnotation() > 0) {
+          stream.println();
+          formatter.afterStmt();
+      }
+      stream.print("def ");
+      getTypeUse().doPrettyPrint(stream, formatter);
+      stream.print(" ");
+      stream.print(getName());
+      doPrettyPrintTypeParam(stream, formatter);
+      stream.print("(");
+      getParamList().doPrettyPrint(stream, formatter, ",");
+      stream.print(") (");
+      getFuncParamList().doPrettyPrint(stream, formatter, ",");
+      stream.print(") = ");
+      getPartialFunctionDef().doPrettyPrint(stream, formatter);
+      formatter.afterStmt();
+    }
+
+    public void PartialFunctionDef.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.println();
+        formatter.afterOpenBrace();
+        formatter.afterStmt();
+        getPureExp().doPrettyPrint(stream, formatter);
+        stream.print(";");
+        formatter.beforeCloseBrace();
+    }
+
     public void FunctionDecl.doPrettyPrintTypeParam(PrintWriter stream, ABSFormatter formatter) { }
 
     public void ParametricFunctionDecl.doPrettyPrintTypeParam(PrintWriter stream, ABSFormatter formatter) { 
@@ -579,6 +608,16 @@ aspect doPrettyPrinter {
             getTypeParameterList().doPrettyPrint(stream, formatter, ",");
             stream.print(">");
         }	
+    }
+
+    public void PartialFunctionDecl.doPrettyPrintTypeParam(PrintWriter stream, ABSFormatter formatter) {}
+
+    public void ParametricPartialFunctionDecl.doPrettyPrintTypeParam(PrintWriter stream, ABSFormatter formatter) {
+       if (getNumTypeParameter() > 0) {
+           stream.print("<");
+           getTypeParameterList().doPrettyPrint(stream, formatter, ",");
+           stream.print(">");
+       }
     }
 
     public void BuiltinFunctionDef.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {

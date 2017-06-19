@@ -74,6 +74,7 @@ aspect Typing {
     /**********/
     eq ClassDecl.getType() = new UnionType(this, getImplementedInterfaceUses());
     eq FunctionDecl.getType() = getTypeUse().getType();
+    eq PartialFunctionDecl.getType() = getModel().getUnitType();
     eq DataConstructor.getType() = getDataTypeDecl().getType();
 //    eq DeltaDecl.getType() = getModel().getUnitType();
 
@@ -365,6 +366,7 @@ aspect Typing {
     }
     
     FunctionDecl implements HasParams;
+    PartialFunctionDecl implements HasParams;
     ClassDecl implements HasParams;
     MethodSig implements HasParams;
 
@@ -389,6 +391,7 @@ aspect Typing {
     
     DataConstructor implements HasTypes;
     ParametricFunctionDecl implements HasTypes;
+    ParametricPartialFunctionDecl implements HasTypes;
     ConstructorPattern implements HasTypes;
     public java.util.List<Type> ConstructorPattern.getTypes() {
         return TypeCheckerHelper.getTypes(getParams());
@@ -414,6 +417,7 @@ aspect Typing {
     
     ParametricDataTypeDecl implements HasTypeParameters;
     ParametricFunctionDecl implements HasTypeParameters;
+    ParametricPartialFunctionDecl implements HasTypeParameters;
     
     public java.util.List<Type> HasParams.getTypes()              { return TypeCheckerHelper.getTypes(getParams()); }
     public java.util.List<Type> HasActualParams.getTypesFromExp() { return TypeCheckerHelper.getTypes(getParams()); }

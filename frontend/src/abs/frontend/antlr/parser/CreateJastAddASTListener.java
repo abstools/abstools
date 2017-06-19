@@ -266,6 +266,25 @@ new List<ModuleDecl>(),
         }
     }
 
+    @Override
+    public void exitPar_function_decl(ABSParser.Par_function_declContext ctx) {
+        PartialFunctionDef d = new PartialFunctionDef((PureExp)v(ctx.e));
+        List<ParamDecl> params = (List<ParamDecl>) v(ctx.paramlist(0));
+        List<ParamDecl> funcParams = (List<ParamDecl>) v(ctx.paramlist(1));
+        TypeUse t = (TypeUse) v(ctx.type_use());
+        if(ctx.p != null && !ctx.p.isEmpty()) {
+            ParametricPartialFunctionDecl fd =
+                (ParametricPartialFunctionDecl) setV(ctx, new ParametricPartialFunctionDecl(ctx.n.getText(), l(ctx.annotation()), new List<TypeParameterDecl>(), t, params, funcParams, d));
+            for (Token tp : ctx.p) {
+                TypeParameterDecl tpd = new TypeParameterDecl(tp.getText());
+                setASTNodePosition(tp, tpd);
+                fd.addTypeParameter(tpd);
+            }
+        } else {
+            setV(ctx, new PartialFunctionDecl(ctx.n.getText(), l(ctx.annotation()), t, params, funcParams, d));
+        }
+    }
+
     @Override public void exitTypesyn_decl(ABSParser.Typesyn_declContext ctx) {
 
         setV(ctx, new TypeSynDecl(ctx.TYPE_IDENTIFIER().getText(), (List<Annotation>)v(ctx.annotations()), (TypeUse)v(ctx.type_use())));

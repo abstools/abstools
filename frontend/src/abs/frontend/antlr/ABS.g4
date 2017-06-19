@@ -197,6 +197,16 @@ function_decl : annotations
         '='
         ('builtin' | e=pure_exp) ';' ;
 
+// Partially defined functions
+
+par_function_decl : annotation*
+        'def' type_use n=IDENTIFIER
+        ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
+        paramlist
+        paramlist
+        '='
+        e=pure_exp ';' ;
+
 // Interfaces
 
 interface_decl : annotations
@@ -252,6 +262,7 @@ module_import : 'import'
 // exactly one token
 decl : datatype_decl
     | function_decl
+    | par_function_decl
     | typesyn_decl
     | exception_decl
     | interface_decl

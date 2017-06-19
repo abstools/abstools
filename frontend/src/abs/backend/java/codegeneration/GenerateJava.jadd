@@ -373,6 +373,8 @@ aspect GenerateJava {
         stream.println("}");
     }
 
+    public void PartialFunctionDecl.generateJava(PrintStream stream) {}
+
     public void FunctionDef.generateJava(PrintStream stream) { }
 
     public void ExpFunctionDef.generateJava(PrintStream stream) {

@@ -42,6 +42,10 @@ TraitModifyExpr : TraitExpr ::= TraitExpr MethodModifier;
 TraitUse ::= TraitExpr;
 /***************************************/
 
+PartialFunctionDef ::= PureExp ;
+PartialFunctionDecl : Decl ::= Annotation* TypeUse Param:ParamDecl* FuncParam:ParamDecl* PartialFunctionDef ;
+ParametricPartialFunctionDecl : PartialFunctionDecl ::= Annotation* TypeParameter:TypeParameterDecl* TypeUse Param:ParamDecl* FuncParam:ParamDecl* PartialFunctionDef ;
+
 UnknownDecl: Decl; // Unknown declarations
 AmbiguousDecl: UnknownDecl ::= <Alternative:java.util.List<Decl>>;
 ClassDecl: BehaviorDecl ::= Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* TraitUse* [InitBlock] RecoverBranch:CaseBranchStmt* Field:FieldDecl* Method:MethodImpl*;

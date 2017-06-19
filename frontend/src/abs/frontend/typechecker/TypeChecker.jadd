@@ -350,6 +350,8 @@ aspect TypeChecker {
         }
     }
 
+    public void PartialFunctionDecl.typeCheck(SemanticConditionList e) {}
+
     public void InterfaceDecl.checkCycle(SemanticConditionList e, InterfaceDecl d) {
         if (this == d) {
             e.add(new TypeError(d, ErrorMessage.CYCLIC_INHERITANCE, getName()));

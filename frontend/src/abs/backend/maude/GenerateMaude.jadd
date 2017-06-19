@@ -111,6 +111,8 @@ aspect GenerateMaude {
         stream.println();
 	}
 
+  public void PartialFunctionDecl.generateMaude(PrintStream stream) {}
+
     abstract public void FunctionDef.generateMaude(PrintStream stream);
     public void ExpFunctionDef.generateMaude(PrintStream stream) {
         getRhs().generateMaude(stream);
