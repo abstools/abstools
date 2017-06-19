@@ -4,6 +4,7 @@
  */
 package abs.frontend.antlr.parser;
 
+import abs.frontend.antlr.parser.ABSParser.Function_paramlistContext;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -269,8 +270,8 @@ new List<ModuleDecl>(),
     @Override
     public void exitPar_function_decl(ABSParser.Par_function_declContext ctx) {
         PartialFunctionDef d = new PartialFunctionDef((PureExp)v(ctx.e));
-        List<ParamDecl> params = (List<ParamDecl>) v(ctx.paramlist(0));
-        List<ParamDecl> funcParams = (List<ParamDecl>) v(ctx.paramlist(1));
+        List<ParamDecl> params = (List<ParamDecl>) v(ctx.params);
+        List<FunctionParamDecl> funcParams = (List<FunctionParamDecl>) v(ctx.functions);
         TypeUse t = (TypeUse) v(ctx.type_use());
         if(ctx.p != null && !ctx.p.isEmpty()) {
             ParametricPartialFunctionDecl fd =
@@ -691,6 +692,14 @@ new List<ModuleDecl>(),
 
     @Override public void exitParam_decl(ABSParser.Param_declContext ctx) {
         setV(ctx, new ParamDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), (List<Annotation>)v(ctx.annotations())));
+    }
+
+    @Override public void exitFunction_paramlist(ABSParser.Function_paramlistContext ctx) {
+        setV(ctx, l(ctx.function_param_decl()));
+    }
+
+    @Override public void exitFunction_param_decl(ABSParser.Function_param_declContext ctx) {
+        setV(ctx, new FunctionParamDecl(ctx.IDENTIFIER().getText()));
     }
 
     @Override public void exitInterface_name(ABSParser.Interface_nameContext ctx) {

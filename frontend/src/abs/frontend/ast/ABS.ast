@@ -43,8 +43,8 @@ TraitUse ::= TraitExpr;
 /***************************************/
 
 PartialFunctionDef ::= PureExp ;
-PartialFunctionDecl : Decl ::= Annotation* TypeUse Param:ParamDecl* FuncParam:ParamDecl* PartialFunctionDef ;
-ParametricPartialFunctionDecl : PartialFunctionDecl ::= Annotation* TypeParameter:TypeParameterDecl* TypeUse Param:ParamDecl* FuncParam:ParamDecl* PartialFunctionDef ;
+PartialFunctionDecl : Decl ::= Annotation* TypeUse Param:ParamDecl* FuncParam:FunctionParamDecl* PartialFunctionDef ;
+ParametricPartialFunctionDecl : PartialFunctionDecl ::= Annotation* TypeParameter:TypeParameterDecl* TypeUse Param:ParamDecl* FuncParam:FunctionParamDecl* PartialFunctionDef ;
 
 UnknownDecl: Decl; // Unknown declarations
 AmbiguousDecl: UnknownDecl ::= <Alternative:java.util.List<Decl>>;
@@ -117,6 +117,7 @@ ObjectUpdate ::= <ClassName> AwaitStmt UpdatePreamble PreBody:AssignStmt* PostBo
 UpdatePreamble ::= VarDeclStmt* ; // TODO also allow FunctionDecls and DataTypeDecls
 
 abstract VarOrFieldDecl ::= <Name>;
+FunctionParamDecl : VarOrFieldDecl ;
 abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ;
 VarDecl: TypedVarOrFieldDecl ::= [InitExp:Exp];
 FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation* <Port:boolean>; // (For Component Model) //

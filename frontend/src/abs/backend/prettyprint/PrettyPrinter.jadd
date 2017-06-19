@@ -591,6 +591,10 @@ aspect doPrettyPrinter {
       formatter.afterStmt();
     }
 
+    public void FunctionParamDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+      stream.print(getName());
+    }
+
     public void PartialFunctionDef.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.println();
         formatter.afterOpenBrace();

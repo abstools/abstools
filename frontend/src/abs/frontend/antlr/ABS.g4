@@ -199,11 +199,14 @@ function_decl : annotations
 
 // Partially defined functions
 
+function_param_decl: IDENTIFIER ;
+function_paramlist: '(' (function_param_decl (',' function_param_decl)*)? ')' ;
+
 par_function_decl : annotation*
         'def' type_use n=IDENTIFIER
         ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
-        paramlist
-        paramlist
+        params=paramlist
+        functions=function_paramlist
         '='
         e=pure_exp ';' ;
 
