@@ -393,6 +393,7 @@ public class Main {
                 currentFeatureFun.setFunctionDef(new ExpFunctionDef(feature_arglist));
             }
         }
+        m.flushTreeCache();
     }
 
     /** Handle exceptions: add exceptions as constructors to the

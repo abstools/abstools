@@ -54,65 +54,55 @@ public class ABSPreProcessor {
     //Ajit
     public void preProcessModel(Model m) throws ParserConfigurationException, FileNotFoundException
     {
-        {
-            List<CompilationUnit> lsCompilationUnits = new List<CompilationUnit>();
+        List<CompilationUnit> lsCompilationUnits = new List<CompilationUnit>();
 
-            List<FNode> lsFnode = new List<FNode>();
+        List<FNode> lsFnode = new List<FNode>();
 
-            lsCompilationUnits = m.getCompilationUnits();
-            arlAttributes = GetXmlTagValues("Attribute");
+        lsCompilationUnits = m.getCompilationUnits();
+        arlAttributes = GetXmlTagValues("Attribute");
 
-            for (CompilationUnit compilationUnit : lsCompilationUnits)
-            {
-                if(!compilationUnit.getName().contains(".abs"))
+        for (CompilationUnit compilationUnit : lsCompilationUnits) {
+            if(!compilationUnit.getName().contains(".abs"))
                 {
-                lFE = compilationUnit.getFExtList();
-                lFD = compilationUnit.getFeatureDeclList();
+                    lFE = compilationUnit.getFExtList();
+                    lFD = compilationUnit.getFeatureDeclList();
                 }
 
-                for(FExt oFeatureExt : lFE)
-                {
-                    lFE1.add(oFeatureExt.copy());
-                    System.out.print("\n Feature Ext : " + oFeatureExt.getName());
-                }
-
-                for (FeatureDecl oFD : lFD) {
-                    lFD1.add(oFD.copy());
-                    //System.out.print("\n Feature Declaration: " + oFD.getName());
-                    if(oFD.hasGroup())
-                    {
-                        lsFnode = oFD.getGroup().getFNodeList();
-                        for (FNode oFnode : lsFnode) {
-                            //System.out.print("\nFeature Declaration Child Name: " + oFnode.getFeat().getName() + "\n");
-                            lFD.add(oFnode.getFeatureDecl().copy());
-                        }
-                    }
-                    else
-                    {
-                        //System.out.print("\n Else part for this Feature Declaration: " + oFD.getName());
-                    }
-                }
+            for(FExt oFeatureExt : lFE) {
+                lFE1.add(oFeatureExt.copy());
+                System.out.print("\n Feature Ext : " + oFeatureExt.getName());
             }
 
-            boolean IsExtensionPresent = false;
-            for (FeatureDecl oFD : lFD1)
-            {
-                IsExtensionPresent = false;
-                for(FExt oFE: lFE1)
-                {
-                    if(oFE.getName().equals(oFD.getName().toString()))
-                    {
-                        WriteExistingExtension(oFE, oFD);
-                        IsExtensionPresent = true;
+            for (FeatureDecl oFD : lFD) {
+                lFD1.add(oFD.copy());
+                //System.out.print("\n Feature Declaration: " + oFD.getName());
+                if(oFD.hasGroup()) {
+                    lsFnode = oFD.getGroup().getFNodeList();
+                    for (FNode oFnode : lsFnode) {
+                        //System.out.print("\nFeature Declaration Child Name: " + oFnode.getFeat().getName() + "\n");
+                        lFD.add(oFnode.getFeatureDecl().copy());
                     }
-                }
-                if(!IsExtensionPresent)
-                {
-                    WriteMissingExtension(oFD);
+                } else {
+                    //System.out.print("\n Else part for this Feature Declaration: " + oFD.getName());
                 }
             }
-            System.out.print("Pre-processing has been done successfully!!");
         }
+
+        boolean IsExtensionPresent = false;
+        for (FeatureDecl oFD : lFD1) {
+            IsExtensionPresent = false;
+            for(FExt oFE: lFE1) {
+                if(oFE.getName().equals(oFD.getName().toString())) {
+                    WriteExistingExtension(oFE, oFD);
+                    IsExtensionPresent = true;
+                }
+            }
+            if(!IsExtensionPresent) {
+                WriteMissingExtension(oFD);
+            }
+        }
+        m.flushTreeCache();
+        System.out.print("Pre-processing has been done successfully!!");
     }
 
     //Ajit
