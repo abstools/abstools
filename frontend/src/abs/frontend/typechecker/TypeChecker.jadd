@@ -960,11 +960,12 @@ aspect TypeChecker {
             exp.typeCheck(e);
             Type expt = exp.getType();
             if (!t.isUnknownType()) {
-                if (t.isAssignableTo(expt)) {
-                    t = expt;
-                } else {
+                if (!expt.isAssignableTo(t)) {
                     e.add(new TypeError(exp, ErrorMessage.LIST_LITERAL_TYPE_MISMATCH, t, expt));
                     break;
+                }
+                if (t.isAssignableTo(expt)) {
+                    t = expt;
                 }
             } else {
                 t = expt;
