@@ -376,4 +376,54 @@ public class ParserTest extends FrontendTest {
         new ABSParserWrapper(null, true, false).parse(new StringReader(functionDecl));
     }
 
+    @Test
+    public void partialFunctionDecl() {
+        // fun_exp = IDENTIFIER
+        assertParseOk("def Int inc(Int x)() = x;");
+        assertParseOk("def Int inc(Int x)(f_1) = x;");
+        assertParseOk("def Int inc(Int x)(f_1, f_2) = x;");
+        assertParseOk("def Datatype fn(Int x , Int y)() = x;");
+
+        // fun_exp = Term(co,l)
+        assertParseOk("def Int inc(Int x)() = plus(x,one());");
+
+        // fun_exp = f_1(x)
+        assertParseOk("def Int apply(Int x)(f_1) = f_1(x);");
+
+        // fun_exp = Term(f_1(x))
+        assertParseOk("def Int applyAndInc(Int x)(f_1) = plus(f_1(x), one());");
+
+        assertParseOk("def TPair revPair(TPair p)(f_1) = pair(snd(f_1(p)),fst(p));");
+        // using let
+        assertParseOk("def TPair revPair(TPair p)() = let(T x) = fst(p) in pair(snd(p),x);");
+        assertParseOk("def TPair revPair(TPair p)(f_1) = let(T x) = f_1(fst(p)) in pair(snd(p),x);");
+        assertParseOk("def TPair revPair(TPair p)(f_1) = let(T x) = fst(p) in pair(f_1(snd(p)),x);");
+        // using nested let
+        assertParseOk("def TPair revPair(TPair p)() = let(T x) = fst(p) in let(T y) = snd(p) in pair(y,x);");
+        assertParseOk("def TPair revPair(TPair p)(f_1) = let(T x) = fst(p) in let(T y) = f_1(snd(p)) in pair(y,x);");
+        assertParseOk("def TPair revPair(TPair p)(f_1) = let(T x) = fst(p) in let(T y) = snd(p) in pair(f_1(y),x);");
+    }
+
+    @Test
+    public void parametricPartialFunctionDecl() {
+        assertParseOk("def Int length<A>(List<A> list)(f_1) = case list { Nil => 0; Cons(_, rest) => 1 + length(rest); };");
+        assertParseOk("def Int length<A>(List<A> list)(inc, dec) = case list { Nil => 0; Cons(_, rest) => inc(dec(1)) + length(rest); };");
+        assertParseOk("def A nth<A>(List<A> list)(f_1) = case n { 0 => head(list) ; _ => nth(tail(list), n-1) ; };");
+    }
+
+    @Test
+    public void partialFunctionTypedFunctionParameter() {
+        assertParseError("def Int add(Int y)(Int x) = y;");
+        assertParseError("def Int add(Int y)(f_1, Int x) f_1(y);");
+    }
+
+    @Test
+    public void partialFunctionInvalidParameterSymbols() {
+        assertParseError("def Int identity(Int y)(f1<Int>) = y;");
+        assertParseError("def Int zero()(f-n) = 0;");
+        assertParseError("def Int zero()(f!n) = 0;");
+        assertParseError("def Int zero()(f?n) = 0;");
+    }
+
+
 }
