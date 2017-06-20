@@ -22,8 +22,8 @@ public final class NullType extends ReferenceType {
     }
     
     @Override
-    public boolean isAssignable(Type t) {
-        if (super.isAssignable(t))
+    public boolean isAssignableTo(Type t) {
+        if (super.isAssignableTo(t))
             return true;
         return t instanceof ReferenceType;
     }

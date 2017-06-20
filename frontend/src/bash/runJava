@@ -5,8 +5,8 @@ if [[ -z $PROGNAME ]] ; then
     PROGNAME="$0"
 fi
 BASEDIR="$(dirname $PROGNAME)/../.."
-CP=$BASEDIR/bin:$BASEDIR/lib/*
+CP=gen:$BASEDIR/bin:$BASEDIR/lib/*
 
 #echo $CP
 
-java -Xmx512m -cp gen:$CP "$@"
+java -Xmx512m -cp $CP "$@"

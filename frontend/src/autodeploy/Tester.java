@@ -74,9 +74,9 @@ public class Tester extends Main {
     return remainingArgs;
   }
     
-  @Override
-  protected void printUsage() {
-    super.printUsage();
+
+  public static void printUsage() {
+    Main.printUsage();
     System.out.println("Deadlock analyzer:\n  -JSON=<var>     name of the generated JSON file\n");
   }
 

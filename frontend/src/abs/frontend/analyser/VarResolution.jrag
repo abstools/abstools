@@ -7,6 +7,8 @@ aspect VarResolution {
     syn lazy VarOrFieldDecl VarOrFieldUse.getDecl();
     eq VarUse.getDecl() = lookupVarOrFieldName(getName(),false);
     eq FieldUse.getDecl() = lookupVarOrFieldName(getName(),true);
+    syn lazy VarOrFieldDecl PatternVarUse.getDecl();
+    eq PatternVarUse.getDecl() = lookupVarOrFieldName(getName(), false);
 
     /**
      * Replace VarUse nodes with field accesses, since in the grammar this.x and x are different.
@@ -42,6 +44,20 @@ aspect VarResolution {
         }
         return res;
     }
+
+    /**
+     * Get directly declared variables.  Does not descent into sub-blocks.
+     **/
+    syn lazy Collection<VarDecl> Block.getDirectVars() {
+        ArrayList<VarDecl> res = new ArrayList<VarDecl>();
+        for (Stmt stmt : getStmts()) {
+            if (stmt instanceof VarDeclStmt) {
+                res.add(((VarDeclStmt) stmt).getVarDecl());
+            }
+        }
+        return res;
+    }
+
     
     syn lazy PatternVarDecl Pattern.locallookupVarOrFieldName(String name, boolean fieldOnly);
     eq Pattern.locallookupVarOrFieldName(String name, boolean fieldOnly) = null;

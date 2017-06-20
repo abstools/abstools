@@ -34,7 +34,7 @@ adds interface Voice {
 }
 
 modifies class ClientImpl adds Voice {
-    adds List<Call> ongoingCalls;
+    adds List<Call> ongoingCalls = Nil;
     adds Call call(Client client) {
         Call c = new local CallImpl();
         ongoingCalls = appendright(ongoingCalls, c);

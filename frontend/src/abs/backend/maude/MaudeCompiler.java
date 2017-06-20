@@ -128,9 +128,8 @@ public class MaudeCompiler extends Main {
         if (verbose) System.out.println("Finished.  Start `maude " + outputfile.toString() + "' to run the model.");
     }
 
-    protected void printUsage() {
-        super.printUsage();
-        System.out.println("Maude Backend:\n"
+    public static void printUsage() {
+        System.out.println("Maude Backend (-maude):\n"
                 + "  -main=<ModuleName> \n"
                 + "                 sets the main block to execute\n"
                 + "  -o <file>      write output to <file> instead of standard output\n"

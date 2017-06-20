@@ -98,8 +98,8 @@ public class ABSTestRunnerCompiler extends Main {
         }
     }
     
-    protected void printUsage() {
-        super.printUsage();
+    public static void printUsage() {
+        Main.printUsage();
         System.out.println("ABSUnit Test Runner Generator:\n"
                 + "  -o <file>      write output to <file> instead of standard output\n"
         );

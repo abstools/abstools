@@ -258,7 +258,9 @@ is_collection_needed(State=#state{objects=Objects,futures=Futures,
                                   previous=PTime,limit=Lim,proc_factor=PFactor,
                                   debug=Debug}) ->
     Debug
-    orelse (erlang:monotonic_time(milli_seconds) - PTime) > ?MAX_COLLECTION_INTERVAL
+    %% do not aim for interactivity; we're fine with few but large gc pauses
+
+    %% orelse (erlang:monotonic_time(milli_seconds) - PTime) > ?MAX_COLLECTION_INTERVAL
     orelse erlang:system_info(process_count) / erlang:system_info(process_limit) > PFactor.
 
 extract_references(DataStructure) ->

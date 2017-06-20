@@ -58,7 +58,7 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
 
     static JavaCode getJavaCodeDynamic(Model model) throws IOException, JavaCodeGenerationException {
         JavaCode code = new JavaCode();
-        model.generateJavaCodeDynamic(code);
+        model.generateJavaCodeDynamic(code, true);
         return code;
     }
 

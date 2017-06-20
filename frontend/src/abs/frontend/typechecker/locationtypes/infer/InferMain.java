@@ -109,8 +109,8 @@ public class InferMain extends Main {
         }
     }
 
-    protected void printUsage() {
-        super.printUsage();
+    public static void printUsage() {
+        Main.printUsage();
         System.out.println("Location Type Inferrer:");
         System.out.println("  -d <dir>     generate files to <dir>");
         System.out.println("  -locinferwritebackscope=<scope>,<scope>,... "); 

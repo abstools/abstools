@@ -84,10 +84,10 @@ used regardless of the value of `abs-use-timed-interpreter'."
   :group 'abs)
 (put 'abs-use-timed-interpreter 'safe-local-variable 'booleanp)
 
-(defcustom abs-mode-hook (list 'imenu-add-menubar-index 'flymake-mode-on)
+(defcustom abs-mode-hook (list 'imenu-add-menubar-index 'abs-flymake-mode-on)
   "Hook for customizing `abs-mode'."
   :type 'hook
-  :options (list 'imenu-add-menubar-index 'flymake-mode-on)
+  :options (list 'imenu-add-menubar-index 'abs-flymake-mode-on)
   :group 'abs)
 
 (defcustom abs-clock-limit nil
@@ -105,6 +105,30 @@ Server will not be started if nil."
   :type 'integer
   :group 'abs)
 (put 'abs-local-port 'safe-local-variable 'integerp)
+
+(defcustom abs-influxdb-enable nil
+  "Enable logging via InfluxDB."
+  :type 'string
+  :group 'abs)
+(put 'abs-influxdb-enable 'safe-local-variable 'stringp)
+
+(defcustom abs-influxdb-url nil
+  "URL to running InfluxDB instance."
+  :type 'string
+  :group 'abs)
+(put 'abs-influxdb-url 'safe-local-variable 'stringp)
+
+(defcustom abs-influxdb-db nil
+  "Database name for running InfluxDB instance."
+  :type 'string
+  :group 'abs)
+(put 'abs-influxdb-db 'safe-local-variable 'stringp)
+
+(defcustom abs-compile-with-coverage-info nil
+  "Control whether to generate erlang code with coverage info."
+  :type 'boolean
+  :group 'abs)
+(put 'abs-compile-with-coverage-info 'safe-local-variable 'booleanp)
 
 (defcustom abs-default-resourcecost 0
   "Default resource cost of executing one ABS statement in the timed interpreter."
@@ -266,6 +290,75 @@ NIL."
 ;;; Minimal auto-insert mode support
 (define-auto-insert 'abs-mode '("Module name: " "module " str ";" ?\n ?\n))
 
+
+;;; Calculating the set of required input files based on the current buffer.
+;;;
+
+(defun abs--current-buffer-imports ()
+  (let ((imports (save-excursion
+                    (goto-char (point-min))
+                    (cl-loop
+                     for match = (re-search-forward (rx bol (0+ blank) bow "import" eow (1+ any) bow "from" eow (1+ blank)
+                                                        (group (1+ (or (syntax word) ".")))
+                                                        (0+ blank) ";")
+                                                    (point-max) t)
+                     while match
+                     collect (substring-no-properties (match-string 1))))))
+    (delete-dups imports)))
+
+(defun abs--file-imports (file)
+  (with-temp-buffer
+    (insert-file-contents file)
+    (abs--current-buffer-imports)))
+
+(defun abs--current-buffer-module-definitions ()
+  (save-excursion
+    (goto-char (point-min))
+    (cl-loop
+     for match = (re-search-forward (rx bol (0+ blank) "module" (1+ blank)
+                                        (group (1+ (or (syntax word) ".")))
+                                        (0+ blank) ";")
+                                    (point-max) t)
+     while match
+     collect (substring-no-properties (match-string 1)))))
+
+(defun abs--file-module-definitions (file)
+  (with-temp-buffer
+    (insert-file-contents file)
+    (abs--current-buffer-module-definitions)))
+
+(defun abs--module-file-alist ()
+  ;; TODO: consider searching subdirectories, etc. -- for now, special cases
+  ;; can be handled by the user via setting `abs-input-files'
+  (let ((module-file-alist nil))
+    (dolist (file (directory-files "." nil "\\.abs\\'" t))
+      (dolist (module (abs--file-module-definitions file))
+        (push (cons module file) module-file-alist)))
+    module-file-alist))
+
+(defun abs--calculate-input-files ()
+  (let* ((module-locations-alist (abs--module-file-alist))
+         (files (list (file-name-nondirectory (buffer-file-name))))
+         (known-modules (abs--file-module-definitions buffer-file-name))
+         (needed-modules (cl-set-difference (abs--current-buffer-imports) known-modules :test 'equal)))
+    (while needed-modules
+      (let* ((needed-module (pop needed-modules))
+             (location (assoc needed-module module-locations-alist)))
+        ;; "best-effort" results:
+        ;;
+        ;; - ignore modules that are not found; the compiler / syntax checker
+        ;;   will complain anyway.  This also handles modules from the
+        ;;   standard library “by accident”.
+        ;;
+        ;; - for modules defined in multiple files, use an arbitrary file and
+        ;;   hope for the best.
+        (when location
+          (cl-pushnew (cdr location) files))))
+    ;; have current buffer first in list; among others, the Maude backend
+    ;; expects this.
+    (nreverse files)))
+
+
 ;;; Compiling the current buffer.
 ;;;
 (defvar abs-maude-output-file nil
@@ -279,13 +372,19 @@ Add a file-local setting to override the default value.")
 
 (defvar abs-input-files nil
   "List of Abs files to be compiled by \\[abs-next-action].
-If nil, the file visited in the current buffer will be used.  If
-set, the first element determines the name of the generated Maude
-file if generating Maude code.
+If nil, use the file visiting the current file, and any abs file
+in the current directory that defines a module mentioned in an
+`import' statement in any other file to be compiled.  When
+multiple files in the current directory declare a needed module,
+an arbitrary file among them is chosen.
 
-Add a file-local setting (\\[add-file-local-variable]) to
-override the default value.  Put a section like the following at
-the end of your buffer:
+If set, the first element determines the name of the generated
+Maude file if generating Maude code and `abs-maude-output-file'
+is not set.
+
+It is possible to to explicitly set the list of files to be
+compiled.  Put a section like the following at the end of your
+buffer:
 
 // Local Variables:
 // abs-input-files: (\"file1.abs\" \"file2.abs\")
@@ -319,16 +418,24 @@ value.")
                (list 'abs abs-error-regexp 1 2 3 '(4))))
 
 ;;; flymake support
+(defun abs-flymake-mode-on ()
+  (cond ((file-exists-p buffer-file-name)
+         (flymake-mode-on)
+         (remove-hook 'after-save-hook 'abs-flymake-mode-on t))
+        (t (add-hook 'after-save-hook 'abs-flymake-mode-on nil t))))
+
 (defun abs-flymake-init ()
   (when abs-compiler-program
-    (list
-     abs-compiler-program
-     (remove nil (list
-                  (when (string= (file-name-nondirectory (buffer-file-name))
-                                 "abslang.abs")
-                    "-nostdlib")
-                  (flymake-init-create-temp-buffer-copy
-                   'flymake-create-temp-inplace))))))
+    (let* ((filename (file-name-nondirectory (buffer-file-name)))
+           (other-files (delete filename (abs--calculate-input-files))))
+      (list
+       abs-compiler-program
+       (remove nil (cl-list*
+                    (when (string= filename "abslang.abs")
+                      "-nostdlib")
+                    (flymake-init-create-temp-buffer-copy
+                     'flymake-create-temp-inplace)
+                    other-files))))))
 
 (unless (assoc "\\.abs\\'" flymake-allowed-file-name-masks)
   (add-to-list 'flymake-allowed-file-name-masks
@@ -342,7 +449,9 @@ value.")
       (< (cl-first d1) (cl-first d2))))
 
 (defun abs--input-files ()
-  (or abs-input-files (list (file-name-nondirectory (buffer-file-name)))))
+  (or abs-input-files
+      (abs--calculate-input-files)
+      (list (buffer-file-name))))
 
 (defun abs--maude-filename ()
   (or abs-maude-output-file
@@ -387,6 +496,10 @@ value.")
                               (< 0 abs-default-resourcecost))
                      (concat " -defaultcost="
                              (number-to-string abs-default-resourcecost)))
+                   (when (and (eq backend 'erlang) abs-compile-with-coverage-info)
+                     " -cover")
+                   ;; this branch must be last since it invokes a second
+                   ;; command after `absc'
                    (when (and (eq backend 'erlang) abs-link-source-path)
                      (concat " && cd gen/erl/ && ./link_sources " abs-link-source-path))
                    " "))))
@@ -440,7 +553,10 @@ value.")
                                        "gen/erl/absmodel"))
                    (module (abs--guess-module))
                    (clock-limit abs-clock-limit)
-                   (port abs-local-port))
+                   (port abs-local-port)
+                   (influxdb-enable abs-influxdb-enable)
+                   (influxdb-url abs-influxdb-url)
+                   (influxdb-db abs-influxdb-db))
                (with-current-buffer erlang-buffer
                  (comint-send-string erlang-buffer
                                      (concat "cd (\"" erlang-dir "\").\n"))
@@ -456,6 +572,9 @@ value.")
                                      (concat "runtime:start(\""
                                              (when clock-limit (format " -l %d " clock-limit))
                                              (when port (format " -p %d " port))
+                                             (when influxdb-enable (format " -i " influxdb-enable))
+                                             (when influxdb-url (format " -u %s " influxdb-url))
+                                             (when influxdb-db (format " -d %s " influxdb-db))
                                              ;; FIXME: reinstate `module' arg
                                              ;; once abs--guess-module doesn't
                                              ;; pick a module w/o main block
@@ -623,7 +742,11 @@ The following keys are set:
   (easy-menu-add abs-mode-menu abs-mode-map)
   ;; speedbar support
   (when (fboundp 'speedbar-add-supported-extension)
-    (speedbar-add-supported-extension ".abs")))
+    (speedbar-add-supported-extension ".abs"))
+  ;; code coverage (https://github.com/AdamNiederer/cov/blob/master/cov.el)
+  (when (featurep 'cov)
+    (make-local-variable 'cov-coverage-file-paths)
+    (push "gen/erl/absmodel" cov-coverage-file-paths)))
 
 ;;; Set up the "Abs" pull-down menu
 (easy-menu-define abs-mode-menu abs-mode-map

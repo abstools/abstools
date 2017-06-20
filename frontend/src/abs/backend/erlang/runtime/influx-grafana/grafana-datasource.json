@@ -1,0 +1,10 @@
+{
+  "name": "absmodel",
+  "type": "influxdb",
+  "url": "http://localhost:8086",
+  "access": "direct",
+  "isDefault": true,
+  "database": "absmodel",
+  "user": "root",
+  "password": "root"
+}

@@ -9,18 +9,35 @@ import java.util.*;
 import abs.common.Constants;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticWarning;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.List;
 import abs.frontend.ast.*;
 import abs.frontend.parser.SourcePosition;
+import com.google.common.collect.ImmutableSet;
 
 public class TypeCheckerHelper {
+
+    // Warn about using constructors that should not have been exported from
+    // their module (used in DataConstructorExp.typeCheck() defined in
+    // TypeChecker.jadd)
+    public static Set<String> deprecatedConstructors
+        = ImmutableSet.of("ABS.StdLib.Set", "ABS.StdLib.EmptySet", "ABS.StdLib.Insert",
+                          "ABS.StdLib.Map", "ABS.StdLib.EmptyMap", "ABS.StdLib.InsertAssoc");
+
+
+
     public static void typeCheck(ConstructorPattern p, SemanticConditionList e, Type t) {
         DataConstructor c = p.getDataConstructor();
         if (c == null) {
             e.add(new SemanticError(p, ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, p.getConstructor()));
             return;
+        }
+        String cname = c.qualifiedName();
+        if (deprecatedConstructors.contains(cname)
+            && !(cname.startsWith(p.getModuleDecl().getName()))) {
+            e.add(new SemanticWarning(p, ErrorMessage.DEPRECATED_CONSTRUCTOR, c.qualifiedName()));
         }
 
         if (c.getNumConstructorArg() != p.getNumParam()) {
@@ -56,7 +73,7 @@ public class TypeCheckerHelper {
 
     public static void checkAssignment(SemanticConditionList l, ASTNode<?> n, Type lht, Exp rhte) {
         Type te = rhte.getType();
-        if (!te.isAssignable(lht)) {
+        if (!te.isAssignableTo(lht)) {
             l.add(new TypeError(n, ErrorMessage.CANNOT_ASSIGN, te, lht));
         }
     }
@@ -117,7 +134,7 @@ public class TypeCheckerHelper {
                 PureExp exp = args.getChild(i);
                 exp.typeCheck(l);
                 Type expType = exp.getType();
-                if (!expType.isAssignable(argType)) {
+                if (!expType.isAssignableTo(argType)) {
                     l.add(new TypeError(n, ErrorMessage.TYPE_MISMATCH, exp.getType(), argType));
                 }
             }
@@ -300,13 +317,13 @@ public class TypeCheckerHelper {
             if (paramType.isTypeParameter()) {
                 if (binding.containsKey(paramType)) {
                     Type prevArgType = binding.get(paramType);
-                    if (prevArgType.isAssignable(argType)
-                        && !argType.isAssignable(prevArgType))
+                    if (prevArgType.isAssignableTo(argType)
+                        && !argType.isAssignableTo(prevArgType))
                     {
                         // Replace, e.g., "Int" with "Rat".  If the two types
                         // do not match at all, we'll raise a type error
                         // later.
-                        binding.replace((TypeParameter)paramType, argType);
+                        binding.put((TypeParameter)paramType, argType);
                     }
                 } else {
                     binding.put((TypeParameter) paramType, argType);
@@ -324,11 +341,22 @@ public class TypeCheckerHelper {
     static final StarImport STDLIB_IMPORT = new StarImport(Constants.STDLIB_NAME);
 
     public static void checkForDuplicateDecls(ModuleDecl mod, SemanticConditionList errors) {
-        ArrayList<KindedName> duplicateNames = new ArrayList<KindedName>();
-        Map<KindedName, ResolvedName> names = getDefinedNames(mod, duplicateNames);
-        for (KindedName n : duplicateNames) {
+        Map<KindedName, ResolvedName> duplicateNames = new HashMap<KindedName, ResolvedName>();
+        Map<KindedName, ResolvedName> names = getVisibleNames(mod, duplicateNames);
+        for (KindedName n : duplicateNames.keySet()) {
             ResolvedName rn = names.get(n);
+            ResolvedName origrn = duplicateNames.get(n);
             ErrorMessage msg = null;
+            String location = "";
+            Decl decl = null;
+            if (origrn instanceof ResolvedDeclName) {
+                decl = ((ResolvedDeclName)origrn).getDecl();
+            } else if (origrn instanceof ResolvedAmbigiousName) {
+                decl = ((AmbiguousDecl)((ResolvedAmbigiousName)origrn).getDecl()).getAlternative().get(0);
+            }
+            if (decl != null && !decl.getFileName().equals(abs.frontend.parser.Main.UNKNOWN_FILENAME)) {
+                location = " at " + decl.getFileName() + ":" + decl.getStartLine() + ":" + decl.getStartColumn();
+            }
             switch (n.getKind()) {
             case CLASS:
                 msg = ErrorMessage.DUPLICATE_CLASS_NAME;
@@ -342,31 +370,39 @@ public class TypeCheckerHelper {
             case TYPE_DECL:
                 msg = ErrorMessage.DUPLICATE_TYPE_DECL;
                 break;
+            case EXCEPTION:
+                msg = ErrorMessage.DUPLICATE_EXCEPTION_DECL;
+                break;
             case MODULE:
                 assert false; // doesn't happen, no modules within modules
                 break;
+            default:
+                assert false;   // detect if we added a new KindedName.Kind
+                break;
             }
-            errors.add(new TypeError(rn.getDecl(), msg, n.getName()));
+            errors.add(new TypeError(rn.getDecl(), msg, n.getName(), location));
         }
     }
 
     public static ResolvedMap getDefinedNames(ModuleDecl mod,
-            java.util.List<KindedName> foundDuplicates) {
+            Map<KindedName, ResolvedName> foundDuplicates) {
         ResolvedMap res = new ResolvedMap();
         ResolvedModuleName moduleName = new ResolvedModuleName(mod);
 
         for (Decl d : mod.getDeclList()) {
             ResolvedDeclName rn = new ResolvedDeclName(moduleName, d);
-            if (res.put(rn.getSimpleName(), rn) != null)
-                foundDuplicates.add(rn.getSimpleName());
+            if (res.containsKey(rn.getSimpleName()))
+                foundDuplicates.put(rn.getSimpleName(), res.get(rn.getSimpleName()));
+            res.put(rn.getSimpleName(), rn);
             res.put(rn.getQualifiedName(), rn);
 
             if (d instanceof DataTypeDecl) {
                 DataTypeDecl dataDecl = (DataTypeDecl) d;
                 for (DataConstructor c : dataDecl.getDataConstructors()) {
                     rn = new ResolvedDeclName(moduleName, c);
-                    if (res.put(rn.getSimpleName(), rn) != null)
-                        foundDuplicates.add(rn.getSimpleName());
+                    if (res.containsKey(rn.getSimpleName()))
+                        foundDuplicates.put(rn.getSimpleName(), res.get(rn.getSimpleName()));
+                    res.put(rn.getSimpleName(), rn);
                     res.put(rn.getQualifiedName(), rn);
                 }
             } else if (d.isException()) {
@@ -380,7 +416,7 @@ public class TypeCheckerHelper {
                     // If it's already in there, is it from the same location -- from stdlib?
                     ResolvedName tryIt = res.get(rn);
                     if (tryIt != null && tryIt.getDecl() != ed)
-                        foundDuplicates.add(rn.getSimpleName());
+                        foundDuplicates.put(rn.getSimpleName(), tryIt);
                     else {
                         res.put(rn.getQualifiedName(), rn);
                     }
@@ -403,11 +439,15 @@ public class TypeCheckerHelper {
             } else if (i instanceof NamedImport) {
                 NamedImport ni = (NamedImport) i;
                 for (Name n : ni.getNames()) {
-                    ModuleDecl md = mod.lookupModule(n.getModuleName());
-                    if (md != null)
-                        try {
-                            res.addAllNames(md.getExportedNames(), n);
-                        } catch (TypeCheckerException e) {} // NADA
+                    // statements like "import X;" lead to earlier type error;
+                    // avoid calling lookupModule(null) here
+                    if (!n.isSimple()) {
+                        ModuleDecl md = mod.lookupModule(n.getModuleName());
+                        if (md != null)
+                            try {
+                                res.addAllNames(md.getExportedNames(), n);
+                            } catch (TypeCheckerException e) {} // NADA
+                    }
                 }
             } else if (i instanceof FromImport) {
                 FromImport fi = (FromImport) i;
@@ -424,12 +464,22 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    public static ResolvedMap getVisibleNames(ModuleDecl mod) {
+    public static ResolvedMap getVisibleNames(ModuleDecl mod, Map<KindedName, ResolvedName> foundDuplicates) {
         ResolvedMap res = new ResolvedMap();
+        ResolvedMap ownNames = getDefinedNames(mod, foundDuplicates);
+
         // add imported names:
         res.putAll(mod.getImportedNames());
-        // defined names hide imported names:
-        res.putAll(mod.getDefinedNames());
+
+        // Find shadowing entries
+        for (KindedName entry : ownNames.keySet()) {
+            if (res.containsKey(entry) && !ownNames.get(entry).equals(res.get(entry))) {
+                foundDuplicates.put(entry, res.get(entry));
+            }
+        }
+
+        // defined names hide imported names for the purpose of this method
+        res.putAll(ownNames);
         return res;
     }
 
@@ -566,6 +616,7 @@ public class TypeCheckerHelper {
             /* Check that fields are not used before they are defined,
              * when we are NOT inside a method, e.g. when initialising a field upon declaration.
              */
+            // FIXME: this could break down wrt deltas
             boolean isUsedInFieldDecl = use instanceof FieldUse;
             if (isUsedInFieldDecl && use.getContextMethod() == null
                 && SourcePosition.larger(use.getDecl().getEndLine(), use.getDecl().getEndColumn(), use.getStartLine(), use.getStartColumn())) {

@@ -49,7 +49,7 @@ aspect TypeResolution {
 
     syn ResolvedMap ModuleDecl.getVisibleNames() circular [new ResolvedMap()];
     eq ModuleDecl.getVisibleNames() {
-        return TypeCheckerHelper.getVisibleNames(this);
+        return TypeCheckerHelper.getVisibleNames(this, new HashMap<KindedName, ResolvedName>());
     }
 
     syn ResolvedMap ModuleDecl.getExportedNames() circular [new ResolvedMap()];
@@ -64,7 +64,7 @@ aspect TypeResolution {
 
     syn ResolvedMap ModuleDecl.getDefinedNames() circular [new ResolvedMap()];
     eq ModuleDecl.getDefinedNames() {
-        return TypeCheckerHelper.getDefinedNames(this, new ArrayList<KindedName>());
+        return TypeCheckerHelper.getDefinedNames(this, new HashMap<KindedName, ResolvedName>());
     }
 
     syn lazy boolean ModuleDecl.exportsName(String name) {

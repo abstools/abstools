@@ -3,7 +3,7 @@
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.parser;
-
+// These tests are deactivated in AllFrontendTests.java since the tested functionality has not been implemented in the antlr-based parser.
 import static org.junit.Assert.*;
 
 import org.junit.Test;

@@ -34,6 +34,7 @@ import abs.frontend.ast.*;
 import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
 import abs.frontend.configurator.visualizer.FMVisualizer;
 import abs.frontend.delta.DeltaModellingException;
+import abs.frontend.delta.ProductLineTypeAnalysisHelper;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -45,6 +46,7 @@ import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtensio
 public class Main {
 
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
+    public static final String UNKNOWN_FILENAME = "<unknown file>";
     protected boolean preprocess = false; //Preprocessor
     protected boolean verbose = false;
     protected boolean typecheck = true;
@@ -79,6 +81,10 @@ public class Main {
     public void mainMethod(final String... args) {
         try {
             java.util.List<String> argslist = Arrays.asList(args);
+            if (argslist.contains("-help") || argslist.contains("-h")
+                || argslist.contains("--help")) {
+                printUsageAndExit();
+            }
             if (argslist.contains("-maude")) {
                 abs.backend.maude.MaudeCompiler.main(args);
             } else if(argslist.contains("-java")) {
@@ -91,8 +97,6 @@ public class Main {
                 abs.backend.coreabs.CoreAbsBackend.main(args);
             } else if (argslist.contains("-prettyprint")) {
                 abs.backend.prettyprint.PrettyPrinterBackEnd.main(args);
-            } else if (argslist.contains("-keyabs")) {
-                abs.backend.keyabs.KeyAbsBackend.main(args);
             } else if (argslist.contains("-outline")) {
                 abs.backend.outline.OutlinePrinterBackEnd.main(args);
             } else {
@@ -102,6 +106,8 @@ public class Main {
                 }
             }
         } catch (Exception e) {
+            if (e.getMessage() == null) { e.printStackTrace(); }
+            assert e.getMessage() != null : e.toString();
             printErrorAndExit(e.getMessage());
         }
     }
@@ -128,11 +134,14 @@ public class Main {
                 debug = true;
             else if (arg.equals("-v"))
                 verbose = true;
-            else if (arg.equals("-version"))
+            else if (arg.equals("-version") || arg.equals("--version"))
                 printVersionAndExit();
             else if (arg.startsWith("-product=")) {
                 fullabs = true;
                 product = arg.split("=")[1];
+            } else if (arg.startsWith("-allproducts")) {
+                fullabs = true;
+                product = null;
             }
             else if (arg.equals("-notypecheck"))
                 typecheck = false;
@@ -260,46 +269,53 @@ public class Main {
                 System.err.println(e.getHelpMessage());
                 System.err.flush();
             }
-        } else {
-            m.evaluateAllProductDeclarations();
-            rewriteModel(m, product);
+            return;
+        }
 
+        m.evaluateAllProductDeclarations();
+        rewriteModel(m, product);
 
-            m.flattenTraitOnly();
-            m.collapseTraitModifiers();
-            
-            // type check PL before flattening
-//            if (typecheck)
-//                typeCheckProductLine(m);
+        m.flattenTraitOnly();
+        m.collapseTraitModifiers();
 
-            // flatten before checking error, to avoid calculating *wrong* attributes
-            if (fullabs) {
-                if (typecheck)
-                    // apply deltas that correspond to given product
-                    m.flattenForProduct(product);
-                else
-                    m.flattenForProductUnsafe(product);
-            } 
+        // type check PL before flattening
+        if (typecheck)
+            typeCheckProductLine(m);
 
-            if (dump) {
-                m.dumpMVars();
-                m.dump();
+        // flatten before checking error, to avoid calculating *wrong* attributes
+        if (fullabs) {
+            if (product == null) {
+                // Build all SPL configurations (valid feature selections, ignoring attributes), one by one (for performance measuring)
+                if (verbose)
+                    System.out.println("Building ALL " + m.getProductList().getNumChild() + " feature model configurations...");
+                ProductLineTypeAnalysisHelper.buildAllConfigurations(m);
+                return;
             }
+            if (typecheck)
+                // apply deltas that correspond to given product
+                m.flattenForProduct(product);
+            else
+                m.flattenForProductUnsafe(product);
+        }
 
-            final SemanticConditionList semErrs = m.getErrors();
+        if (dump) {
+            m.dumpMVars();
+            m.dump();
+        }
 
-            if (semErrs.containsErrors()) {
-                System.err.println("Semantic errors: " + semErrs.getErrorCount());
-            }
-            for (SemanticCondition error : semErrs) {
-                // Print both errors and warnings
-                System.err.println(error.getHelpMessage());
-                System.err.flush();
-            }
-            if (!semErrs.containsErrors()) {
-                typeCheckModel(m);
-                analyzeMTVL(m);
-            }
+        final SemanticConditionList semErrs = m.getErrors();
+
+        if (semErrs.containsErrors()) {
+            System.err.println("Semantic errors: " + semErrs.getErrorCount());
+        }
+        for (SemanticCondition error : semErrs) {
+            // Print both errors and warnings
+            System.err.println(error.getHelpMessage());
+            System.err.flush();
+        }
+        if (!semErrs.containsErrors()) {
+            typeCheckModel(m);
+            analyzeMTVL(m);
         }
     }
 
@@ -377,6 +393,7 @@ public class Main {
                 currentFeatureFun.setFunctionDef(new ExpFunctionDef(feature_arglist));
             }
         }
+        m.flushTreeCache();
     }
 
     /** Handle exceptions: add exceptions as constructors to the
@@ -411,9 +428,9 @@ public class Main {
      * However, the command-line argument handling will have to stay in Main. Pity.
      */
     private void analyzeMTVL(Model m) {
-        ProductDecl p_product = null;
+        ProductDecl productDecl = null;
         try {
-            p_product = product == null ? null : m.findProduct(product);
+            productDecl = product == null ? null : m.findProduct(product);
         } catch (WrongProgramArgumentException e) {
             // ignore in case we're just solving.
         }
@@ -422,7 +439,7 @@ public class Main {
                 if (verbose)
                     System.out.println("Searching for solutions for the feature model...");
                 ChocoSolver s = m.instantiateCSModel();
-                System.out.print(s.resultToString());
+                System.out.print(s.getSolutionsAsString());
             }
             if (minimise) {
                 assert product != null;
@@ -442,33 +459,28 @@ public class Main {
                 int i=1;
                 while(s1.solveAgain()) {
                     System.out.println("------ "+(i++)+"------");
-                    System.out.print(s1.resultToString());
+                    System.out.print(s1.getSolutionsAsString());
                 }
             }
             if (solveall) {
                 if (verbose)
                     System.out.println("Searching for all solutions for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
-                int i=1;
-                while(s.solveAgain()) {
-                    System.out.println("------ "+(i++)+"------");
-                    System.out.print(s.resultToString());
-                }
+                ChocoSolver solver = m.instantiateCSModel();
+                System.out.print(solver.getSolutionsAsString());
             }
             if (solveWith) {
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes " + product + "...");
-                if (p_product != null) {
+                if (productDecl != null) {
                     ChocoSolver s = m.instantiateCSModel();
                     HashSet<Constraint> newcs = new HashSet<Constraint>();
-                    p_product.getProduct().getProdConstraints(s.vars, newcs);
-                    for (Constraint c: newcs) s.addConstraint(c);
-                    System.out.println("checking solution: "+s.resultToString());
+                    productDecl.getProduct().getProdConstraints(s.vars, newcs);
+                    for (Constraint c: newcs)
+                        s.addConstraint(c);
+                    System.out.println("checking solution:\n" + s.getSolutionsAsString());
                 } else {
                     System.out.println("Product '" + product + "' not found.");
-                    if (!product.contains("."))
-                        System.out.println("Maybe you forgot the module name?");
                 }
             }
             if (minWith) {
@@ -478,14 +490,12 @@ public class Main {
                 ChocoSolver s = m.instantiateCSModel();
                 HashSet<Constraint> newcs = new HashSet<Constraint>();
                 s.addIntVar("difference", 0, 50);
-                if (p_product != null) {
-                    m.getDiffConstraints(p_product.getProduct(), s.vars, newcs, "difference");
+                if (productDecl != null) {
+                    m.getDiffConstraints(productDecl.getProduct(), s.vars, newcs, "difference");
                     for (Constraint c: newcs) s.addConstraint(c);
                     System.out.println("checking solution: " + s.minimiseToString("difference"));
                 } else {
                     System.out.println("Product '" + product + "' not found.");
-                    if (!product.contains("."))
-                        System.out.println("Maybe you forgot the module name?");
                 }
 
             }
@@ -508,12 +518,10 @@ public class Main {
             if (check) {
                 assert product != null;
                 ChocoSolver s = m.instantiateCSModel();
-                if (p_product == null ){
-                    System.out.println("Product '"+product+"' not found.");
-                    if (!product.contains("."))
-                        System.out.println("Maybe you forgot the module name?");
+                if (productDecl == null ){
+                    System.out.println("Product '" + product + "' not found.");
                 } else {
-                    Map<String,Integer> guess = p_product.getProduct().getSolution();
+                    Map<String,Integer> guess = productDecl.getProduct().getSolution();
                     System.out.println("checking solution: "+s.checkSolution(guess,m));
                 }
             }
@@ -561,9 +569,14 @@ public class Main {
 
     private void typeCheckProductLine(Model m) {
 
-        if (verbose)
-            System.out.println("Typechecking Software Product Line...");
+        //int n = m.getFeatureModelConfigurations().size();
+        int n = m.getProductList().getNumChild();
+        if (n == 0)
+            return;
 
+        if (verbose) {
+            System.out.println("Typechecking Software Product Line (" + n + " products)...");
+        }
         SemanticConditionList typeerrors = m.typeCheckPL();
         for (SemanticCondition se : typeerrors) {
             System.err.println(se.getHelpMessage());
@@ -657,6 +670,7 @@ public class Main {
     }
 
     protected static void printErrorAndExit(String error) {
+	assert error != null;
         System.err.println("\nCompilation failed:\n");
         System.err.println("  " + error);
         System.err.println();
@@ -670,6 +684,7 @@ public class Main {
 
     protected static void printVersionAndExit() {
         System.out.println("ABS Tool Suite v"+getVersion());
+        System.out.println("Built from git tree " + getGitVersion());
         System.exit(1);
     }
 
@@ -682,11 +697,10 @@ public class Main {
         return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream));
     }
 
-    protected void printUsage() {
+    public static void printUsage() {
         printHeader();
         System.out.println(""
-                + "Usage: java " + this.getClass().getName()
-                + " [backend] [options] <absfiles>\n\n"
+                + "Usage: java abs.frontend.parser.Main [backend] [options] <absfiles>\n\n"
                 + "  <absfiles>     ABS files/directories/packages to parse\n\n"
                 + "Available backends:\n"
                 + "  -maude         generate Maude code\n"
@@ -695,12 +709,10 @@ public class Main {
                 + "  -haskell       generate Haskell code\n" // this is just for help printing; the execution of the compiler is done by the bash scipt absc
                 + "  -prolog        generate Prolog\n"
                 + "  -prettyprint   pretty-print ABS code\n\n"
-                + "type 'absc -<backend> -help' to see backend-specific options\n\n"
                 + "Common options:\n"
                 + "  -version       print version\n"
                 + "  -v             verbose output\n"
-                + "  -product=<PID> build given product by applying deltas\n"
-                + "                 (PID is the qualified product ID)\n"
+                + "  -product=<PID> build given product by applying deltas (PID is the product ID)\n"
                 + "  -notypecheck   disable typechecking\n"
                 + "  -nostdlib      do not include the standard lib\n"
                 + "  -loctypes      enable location type checking\n"
@@ -712,23 +724,30 @@ public class Main {
                 + "                 where <scope> in " + Arrays.toString(LocationTypingPrecision.values()) + "\n"
                 + "  -dump          dump AST to standard output \n"
                 + "  -solve         solve constraint satisfaction problem (CSP) for the feature\n"
-                + "                 model\n"
-                + "  -solveall      get ALL solutions for the CSP\n"
+                + "                 model and print a solution\n"
+                + "  -solveall      print ALL solutions for the CSP\n"
                 + "  -solveWith=<PID>\n"
                 + "                 solve CSP by finding a product that includes PID.\n"
                 + "  -min=<var>     minimise variable <var> when solving the CSP for the feature\n"
                 + "                 model\n"
                 + "  -max=<var>     maximise variable <var> when solving the CSP for the feature\n"
                 + "                 model\n"
-                + "  -maxProduct    get the solution that has the most number of features\n"
+                + "  -maxProduct    print the solution that has the most number of features\n"
                 + "  -minWith=<PID> \n"
                 + "                 solve CSP by finding a solution that tries to include PID\n"
                 + "                 with minimum number of changes.\n"
                 + "  -nsol          count the number of solutions\n"
                 + "  -noattr        ignore the attributes\n"
-                + "  -check=<PID>   check satisfiability of a product with qualified name PID\n"
+                + "  -check=<PID>   check satisfiability of a product with name PID\n"
                 + "  -preprocess    Preprocessing the Model\n" //Preprocessor
                 + "  -h             print this message\n");
+        abs.backend.maude.MaudeCompiler.printUsage();
+        abs.backend.java.JavaBackend.printUsage();
+        abs.backend.erlang.ErlangBackend.printUsage();
+        abs.backend.prolog.PrologBackend.printUsage();
+        abs.backend.coreabs.CoreAbsBackend.printUsage();
+        abs.backend.prettyprint.PrettyPrinterBackEnd.printUsage();
+        abs.backend.outline.OutlinePrinterBackEnd.printUsage();
     }
 
     protected static void printHeader() {
@@ -739,7 +758,7 @@ public class Main {
                 "Copyright (c) 2013-2016,    The Envisage Project",
         "http://www.abs-models.org/" };
 
-        int maxlength = header[0].length();
+        int maxlength = header[2].length();
         StringBuilder starline = new StringBuilder();
         for (int i = 0; i < maxlength + 4; i++) {
             starline.append("*");
@@ -754,6 +773,15 @@ public class Main {
         }
 
         System.out.println(starline);
+        if (getGitVersion().endsWith("dirty")) {
+            System.out.println("This version of the compiler was created from repository version");
+            System.out.println("  " + getGitVersion());
+            System.out.println("with uncommitted changes.  Repeatable simulation cannot be guaranteed.");
+        } else {
+            System.out.println("For repeatable simulations, insert the following comment into the model:");
+            System.out.println("// Compiled with git version " + getGitVersion());
+        }
+        System.out.println();
     }
 
     private static String getVersion() {
@@ -763,6 +791,16 @@ public class Main {
         else
             return version;
     }
+
+
+    private static String getGitVersion() {
+        String version = Main.class.getPackage().getSpecificationVersion();
+        if (version == null)
+            return "HEAD-dirty";
+        else
+            return version;
+    }
+
 
     public CompilationUnit parseUnit(File file) throws Exception {
         Reader reader = getUTF8FileReader(file);

@@ -530,9 +530,19 @@ def Set<A> intersection<A>(Set<A> set1, Set<A> set2);
 
 Returns a set containing all elements of set `set1` not present in set `set2`.
 
-[]
+[source]
 ----
-def Set<A> intersection<A>(Set<A> set1, Set<A> set2);
+def Set<A> difference<A>(Set<A> set1, Set<A> set2);
+----
+
+.isSubset
+
+Returns `True` if `set` contains all elements of `maybe_subset`, `False`
+otherwise.
+
+[source]
+----
+def Bool isSubset<A>(Set<A> maybe_subset, Set<A> set);
 ----
 
 .insertElement
@@ -557,7 +567,7 @@ def Set<A> remove<A>(Set<A> xs, A e);
 
 .take
 
-Returns one element from a set.
+Returns one element from a non-empty set.
 
 [source]
 ----
@@ -566,6 +576,15 @@ def A take<A>(Set<A> ss);
 
 NOTE: To iterate over a set, use `take` to extract one value and `remove` to remove
 it from the set.  Repeat until the set is empty.
+
+.takeMaybe
+
+Returns one element from a set, or `Nothing` for an empty set.
+
+[source]
+----
+def Maybe<A> takeMaybe<A>(Set<A> ss);
+----
 
 // .hasNext
 
@@ -593,6 +612,15 @@ Map<Int, String> m = map[Pair(1, "ABS"), Pair(3, "SACO")];
 NOTE: In case the arguments contain duplicate keys, the resulting map will contain all the given entries, with the first entry shadowing the following ones.
 
 ==== Functions
+
+.emptyMap
+
+Returns `True` if the map is empty, `False` otherwise.
+
+[source]
+----
+def Bool emptyMap<A, B>(Map<A, B> map);
+----
 
 .removeKey
 

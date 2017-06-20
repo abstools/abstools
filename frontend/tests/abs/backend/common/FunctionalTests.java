@@ -6,6 +6,9 @@ package abs.backend.common;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -13,6 +16,7 @@ import org.junit.runners.Parameterized;
 import abs.ABSTest;
 import abs.ABSTest.Config;
 import abs.backend.BackendTestDriver;
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 
 @RunWith(Parameterized.class)
@@ -66,6 +70,16 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void dataTypeEq4() {
+        assertEvalTrue("{ Bool testresult = list[1, 2, 3] == list[1/1, 2/1, 3/1]; }");
+    }
+
+    @Test
+    public void dataTypeNEq() {
+        assertEvalTrue("{ Bool testresult = list[1, 2, 3] != list[1, 2]; }");
+    }
+
+    @Test
     public void dataTypeGt() {
         assertEvalTrue("{ Bool testresult = Nil > Cons(10, Nil);  }");
     }
@@ -108,6 +122,11 @@ public class FunctionalTests extends SemanticTests {
     @Test
     public void dataTypeLtEq() {
         assertEvalTrue("{ Bool testresult = Cons(5, Nil) <= Cons(10, Nil);  }");
+    }
+
+    @Test
+    public void dataTypeLtEqInner() {
+        assertEvalTrue("{ Bool testresult = Cons(5,Cons(3, Nil)) < Cons(5, Nil);  }");
     }
 
     @Test
@@ -228,6 +247,31 @@ public class FunctionalTests extends SemanticTests {
     public void casePatternIntLiteral() {
         assertEvalTrue("def Bool f() = let (Int i) = 4 in case i { 2 => False; 4 => True; };" + CALL_F);
     }
+    
+    @Test
+    public void caseField() throws Exception {
+        assertEvalTrue(new File("tests/abssamples/backend/FunctionalTests/caseField.abs"));
+     }
+
+    @Test
+    public void caseBoundLocalField() throws Exception {
+        assertEvalTrue(new File("tests/abssamples/backend/FunctionalTests/caseBoundLocal.abs"));
+     }
+
+    @Test
+    public void caseBoundLet() throws Exception {
+        assertEvalTrue(new File("tests/abssamples/backend/FunctionalTests/caseBoundLet.abs"));
+     }
+
+    @Test
+    public void caseBoundParameter() throws Exception {
+        assertEvalTrue(new File("tests/abssamples/backend/FunctionalTests/caseBoundParameter.abs"));
+     }
+
+    @Test
+    public void caseBoundAssignedParameter() throws Exception {
+        assertEvalTrue(new File("tests/abssamples/backend/FunctionalTests/caseBoundAssignedParameter.abs"));
+     }
 
     @Test
     public void typeSynonyms() {
@@ -249,20 +293,20 @@ public class FunctionalTests extends SemanticTests {
         assertEvalTrue("{ Set<Int> s = set[4,4,4]; Bool testresult = (size(s) == 1);}");
     }
 
-    /* Redmine #140 - Int vs. Rat */
+    /* https://github.com/abstools/abstools/issues/62 - Int vs. Rat */
     @Test
     public void testPow1() {
-        assertEvalTrue("def Int pow(Int n, Int i) = if i < 0 then 1 / pow(n, -i) else case i { 0 => 1; _ => n * pow(n, i-1);  }; { Bool testresult = True; }");
+        assertEvalTrue("def Rat pow2(Int n, Int i) = if i < 0 then 1 / pow2(n, -i) else case i { 0 => 1; _ => n * pow2(n, i-1);  }; { Bool testresult = True; }");
     }
 
     @Test
     public void testPow2() {
-        assertEvalTrue("def Rat pow(Int n, Int i) = if i < 0 then 1 / pow(n, -i) else case i { 0 => 1; _ => n * pow(n, i-1);  }; { Bool testresult = True; }");
+        assertEvalTrue("def Rat pow2(Int n, Int i) = if i < 0 then 1 / pow2(n, -i) else case i { 0 => 1; _ => n * pow2(n, i-1);  }; { Bool testresult = True; }");
     }
     
     @Test
     public void testIntRatCase() {
-        assertEvalTrue("def Int pow(Int n, Int i) = case i < 0 { True => 1 / pow(n, -i); False => case i { 0 => 1; _ => n * pow(n, i-1);};  }; { Bool testresult = True; }");
+        assertEvalTrue("def Rat pow2(Int n, Int i) = case i < 0 { True => 1 / pow2(n, -i); False => case i { 0 => 1; _ => n * pow2(n, i-1);};  }; { Bool testresult = True; }");
     }
 
     @Test
@@ -278,10 +322,6 @@ public class FunctionalTests extends SemanticTests {
     
     @Test
     public void patternVarRewOK() throws Exception {
-        String fileName = "tests/abssamples/PVTest2.abs";
-        Model m = ABSTest.assertParseFileOk(fileName, Config.WITH_STD_LIB);
-        assertFalse(m.hasParserErrors());
-        assertFalse(m.hasTypeErrors());
-        assertEvalTrue(m);
+        assertEvalTrue(new File("tests/abssamples/PVTest2.abs"));
     }
 }

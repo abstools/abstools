@@ -45,7 +45,7 @@ public class PrimitiveTypes extends SemanticTests {
 
     @Test
     public void intDiv() {
-        assertEvalTrue("{ Int x = 10/4; Bool testresult = x == 2;  }");
+        assertEvalTrue("{ Int x = truncate(10/4); Bool testresult = x == 2;  }");
     }
 
     @Test
@@ -66,6 +66,12 @@ public class PrimitiveTypes extends SemanticTests {
     @Test
     public void intLt() {
         assertEvalTrue("{ Bool testresult = 5 < 10;  }");
+    }
+
+    @Test
+    public void intLtLong() {
+        // 2^63, i.e., Long.MAX_VALUE + 1
+        assertEvalTrue("{ Bool testresult = 5 < 9223372036854775808;  }");
     }
 
     @Test
@@ -168,17 +174,7 @@ public class PrimitiveTypes extends SemanticTests {
         assertEvalTrue("{ Bool testresult = \"\" != \" \"; }");
     }
 
-    @Test
-    public void intRatParameter() {
-        assertEvalTrue("def Int c(Int a)=a/2; { Int a =c(5/2); Bool testresult = a ==1; }");
-    }
-
-    @Test
-    public void intRatLet() {
-        assertEvalTrue("{  Bool testresult = let (Int x) = 5/2 in x == 2; }");
-    }
-
-    @Test
+   @Test
     public void intRatGtEq() {
         assertEvalTrue("{ Bool testresult = 101/100 > 1;  }");
     }

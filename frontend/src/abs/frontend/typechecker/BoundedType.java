@@ -37,9 +37,9 @@ public class BoundedType extends Type {
     }
     
     @Override
-    public boolean isAssignable(Type t) {
+    public boolean isAssignableTo(Type t) {
         if (hasBoundType())
-            return boundType.isAssignable(t);
+            return boundType.isAssignableTo(t);
         // minimally invasive change wrt original code: arguably we should not
         // have side effects in this method.
         if (t != this) boundType = t;

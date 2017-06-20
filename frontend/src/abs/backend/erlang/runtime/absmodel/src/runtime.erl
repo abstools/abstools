@@ -13,6 +13,9 @@
 
 -define(CMDLINE_SPEC,
         [{port,$p,"port",{integer,none},"Start http on port and keep model running"},
+         {influxdb_enable,$i,"influxdb-enable",undefined,"Enable writing to InfluxDB"},
+         {influxdb_url,$u,"influxdb-url",{string,"http://localhost:8086"},"Write log data to influxdb database located at URL"},
+         {influxdb_db,$d,"influxdb-db",{string,"absmodel"},"Name of the influx database log data is written to"},
          {clocklimit,$l,"clock-limit",{integer,none},"Terminate simulation after given clock value"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
 
@@ -30,7 +33,7 @@ init([]) ->
 start()->
     case init:get_plain_arguments() of
         []->
-            run_mod(?ABSMAINMODULE, false, false, none, none);
+            run_mod(?ABSMAINMODULE, false, false, none, none, none, none, none);
         Args->
             start(Args)
    end.    
@@ -65,7 +68,13 @@ parse(Args,Exec)->
             GCStatistics=proplists:get_value(gcstats,Parsed, false),
             Port=proplists:get_value(port,Parsed,none),
             Clocklimit=proplists:get_value(clocklimit,Parsed,none),
-            run_mod(Module, Debug, GCStatistics, Port,Clocklimit);
+
+            InfluxdbUrl=proplists:get_value(influxdb_url,Parsed),
+            InfluxdbDB=proplists:get_value(influxdb_db,Parsed),
+            InfluxdbEnable=proplists:get_value(influxdb_enable,Parsed, false),
+
+            run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
+                    InfluxdbUrl, InfluxdbDB, InfluxdbEnable);
         _ ->
             getopt:usage(?CMDLINE_SPEC,Exec)
     end.
@@ -90,30 +99,43 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
     {ok, _GC} = gc:start(GCStatistics, Debug),
     %% Init simulation clock
     {ok, _Clock} = clock:start_link(Clocklimit),
+    {ok, _Coverage} = coverage:start_link(),
 
     %%Start main task
     Cog=cog:start(),
     {ok, cog:add_and_notify(Cog,main_task,[Module,self()])}.
 
-end_mod(TaskRef) ->
+end_mod(TaskRef, InfluxdbEnabled) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
     %% modelapi:print_statistics(),
+    coverage:write_files(),
     cog_monitor:waitfor(),
     gc:stop(),
     clock:stop(),
+    coverage:stop(),
+    case InfluxdbEnabled of
+        true -> influxdb:stop();
+        _ -> ok
+    end,
     cog_monitor:stop(),
     RetVal.
 
 
-run_mod(Module, Debug, GCStatistics, Port,Clocklimit)  ->
+run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
+        InfluxdbUrl, InfluxdbDB, InfluxdbEnable)  ->
+
+    case InfluxdbEnable of
+        true -> {ok, _Influxdb} = influxdb:start_link(InfluxdbUrl, InfluxdbDB, Clocklimit);
+        _ -> ok
+    end,
+
     case Port of
         _ when is_integer(Port) ->
-            io:format(standard_error, "Starting server on port ~w, abort with Ctrl-C~n", [Port]),
             start_http(Port, Clocklimit),
             receive ok -> ok end;
         _ ->
             {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, false),
-            end_mod(R)
+            end_mod(R, InfluxdbEnable)
     end.
 

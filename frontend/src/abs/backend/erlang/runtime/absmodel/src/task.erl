@@ -111,26 +111,43 @@ wait_for_token(Cog, Stack) ->
             exit(killed_by_the_clock)
     end.
 
+%% Check for legal amounts of min, max; if Max < Min, use Max only
+check_duration_amount(Min, Max) ->
+    case rationals:is_negative(Min) or rationals:is_negative(Max) of
+        true -> ok;
+        false -> case rationals:is_lesser(Min, Max) of
+                     true -> {Min, Max};
+                     false -> {Max, Max}        % take the lesser amount
+                 end
+    end.
+
 %% await_duration and block_for_duration are called in different scenarios
 %% (guard vs statement), hence the different amount of work they do.
-await_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
-    case rationals:is_positive(rationals:to_r(Min)) of
-        true ->
+await_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
+    case check_duration_amount(MMin, MMax) of
+        {Min, Max} ->
             cog_monitor:task_waiting_for_clock(self(), CogRef, Min, Max),
             release_token(Cog,waiting),
             loop_for_clock_advance(Cog, Stack),
             cog:process_is_runnable(Cog, self()),
+            cog_monitor:task_confirm_clock_wakeup(self()),
             wait_for_token(Cog, Stack);
-        false ->
+        _ ->
             ok
     end.
 
-block_for_duration(Cog=#cog{ref=CogRef},Min,Max,Stack) ->
-    cog_monitor:cog_blocked_for_clock(self(), CogRef, Min, Max),
-    cog:process_is_blocked(Cog,self()),
-    loop_for_clock_advance(Cog, Stack),
-    cog:process_is_runnable(Cog, self()),
-    wait_for_token(Cog, Stack).
+block_for_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
+    case check_duration_amount(MMin, MMax) of
+        {Min, Max} ->
+            cog_monitor:cog_blocked_for_clock(self(), CogRef, Min, Max),
+            cog:process_is_blocked(Cog,self()),
+            loop_for_clock_advance(Cog, Stack),
+            cog:process_is_runnable(Cog, self()),
+            cog_monitor:task_confirm_clock_wakeup(self()),
+            wait_for_token(Cog, Stack);
+        _ ->
+            ok
+    end.
 
 block_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
     Amount_r = rationals:to_r(Amount),
@@ -145,6 +162,7 @@ block_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
                     cog:process_is_blocked(Cog,self()), % cause clock advance
                     loop_for_clock_advance(Cog, Stack),
                     cog:process_is_runnable(Cog, self()),
+                    cog_monitor:task_confirm_clock_wakeup(self()),
                     wait_for_token(Cog,Stack),
                     block_for_resource(Cog, DC, Resourcetype, Remaining, Stack);
                 ok ->

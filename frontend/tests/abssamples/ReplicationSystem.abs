@@ -480,7 +480,7 @@ implements ClientJob {
 [COG] class SyncClientImpl(ClientId id) 
 implements InternalClient, ClientConnector {
 	
-	Map<State,Set<State>> machine = EmptyMap;
+	Map<State,Set<State>> machine = map[];
 	
 	ServerAcceptor acceptor = null;
 	ClientDataBase db = null;
@@ -501,7 +501,7 @@ implements InternalClient, ClientConnector {
 		this.machine = map[start,waitToBoot,booting,waitToReplicate,workOnReplicate];
 	
 		// initialize the client side data base
-		this.db = new local DataBaseImpl(EmptyMap);
+		this.db = new local DataBaseImpl(map[]);
 	}
 	
 	ClientId getId() {
@@ -581,30 +581,30 @@ implements InternalClient, ClientConnector {
 		
 }
 
-def List<A> take<A>(List<A> ss,Int i) =
+def List<A> takeList<A>(List<A> ss,Int i) =
 	case i {
 		0 => Nil;
 		_ => case ss {
 				Nil => Nil;
-				Cons(x,xs) => Cons(x,take(xs,i-1));
+				Cons(x,xs) => Cons(x,takeList(xs,i-1));
 			}; 
 	};
 
 def Set<A> takeSet<A>(Set<A> ss,Int i) =
 	case i {
-		0 => EmptySet;
-		_ => case ss {
-				EmptySet => EmptySet;
-				Insert(x,xs) => Insert(x,takeSet(xs,i-1));
+		0 => set[];
+		_ => case takeMaybe(ss) {
+				Nothing => set[];
+				Just(x) => insertElement(takeSet(remove(ss, x),i-1),x);
 			}; 
 	};
 	
 def Map<A,B> takeMap<A,B>(Map<A,B> mp,Int i) =
 	case i {
-		0 => EmptyMap;
+		0 => map[];
 		_ => case mp {
-				EmptyMap => EmptyMap;
-				InsertAssoc(x,xs) => InsertAssoc(x,takeMap(xs,i-1));
+				EmptyMap => map[];
+				InsertAssoc(x,xs) => insert(takeMap(xs,i-1), x);
 			}; 
 	};
 	 
@@ -636,7 +636,7 @@ class Main {
 		TestData items = this.getDatas();
 		List<Schedule> schedules = this.getSchedules();
 		Set<ClientId> cids = this.getCids();
-		new local ReplicationSystem(takeMap(datas,1),take(schedules,1),set[0]);
+		new local ReplicationSystem(takeMap(datas,1),takeList(schedules,1),set[0]);
 		//new local ReplicationSystem(items,schedules,cids);
 	}
 	
@@ -653,11 +653,8 @@ class Main {
 	}
 }
 
-def Set<A> listToSet<A>(List<A> a) = 
-	case a {
-		Nil => EmptySet;
-		Cons(x,xs) => Insert(x,listToSet(xs));
-	};
+def Set<A> listToSet<A>(List<A> a) = set(a);
+
 
 //ReplicationSystem simulator
 class ReplicationSystem(
@@ -665,14 +662,14 @@ class ReplicationSystem(
 	List<Schedule> schedules,
 	Set<ClientId> cids) {
 
-	ServerSchedule setschedules = EmptySet;
+	ServerSchedule setschedules = set[];
 	
 	Unit run() {
 		// One SyncServer
 		[Far] SyncServer syncserver = new SyncServerImpl(items,listToSet(schedules),cids);
 		
-		Set<[Far] ClientConnector> syncclients = EmptySet;
-		Set<[Far] Tester> testers = EmptySet;
+		Set<[Far] ClientConnector> syncclients = set[];
+		Set<[Far] Tester> testers = set[];
 		
 		Set<ClientId> iterator = cids;
 		while (hasNext(iterator)) {
@@ -706,8 +703,8 @@ class ReplicationSystem(
  */
 class TesterImpl(ServerNode expected, Node actual) implements Tester {
 	
-	ServerSchedule schedule = EmptySet; 
-	Set<Triple<FileId,FileContent,FileContent>> result = EmptySet;
+	ServerSchedule schedule = set[]; 
+	Set<Triple<FileId,FileContent,FileContent>> result = set[];
 	
 	Unit run() {
 		Bool shutdown = False;
@@ -774,7 +771,7 @@ class TesterImpl(ServerNode expected, Node actual) implements Tester {
 			FileId id = snd(nd);
 			FileContent es = fromJust(getFromEntryIn(e,id));
 			FileContent as = fromJust(getFromEntryIn(a,id));
-			result = Insert(Triple(id,es,as),result);			
+			result = insertElement(result, Triple(id,es,as));
 			assert(es == as);
 			fids = fst(nd); 
 		}
@@ -784,7 +781,7 @@ class TesterImpl(ServerNode expected, Node actual) implements Tester {
 		FileId id = getFileId(Left(e));
 		FileContent es = getFileContent(Left(e));
 		FileContent as = getFileContent(Left(a));
-		result = Insert(Triple(id,es,as),result);			
+		result = insertElement(result, Triple(id,es,as));
 		assert(es == as);
 	}
 	
@@ -860,7 +857,7 @@ implements SyncServerAcceptor {
 			Fut<Bool> b = job!registerReplicationItems(cp); await b?;
 			Bool register = b.get;
 			
-			Set<Set<File>> filesets = EmptySet;
+			Set<Set<File>> filesets = set[];
 			if (register) {
 				Fut<Set<ServerReplicationItem>> nis = snapshot!getItems(); await nis?;
 				Set<ServerReplicationItem> newitems = nis.get;
@@ -909,7 +906,7 @@ implements SyncServerAcceptor {
 	 * Returns a set of files to be replicated
 	 */
 	Set<Set<File>> registerItems(Set<ServerReplicationItem> items) {
-		Set<Set<File>> regs = EmptySet;	
+		Set<Set<File>> regs = set[];	
 	
 		//iterate over possible check points
 		while (hasNext(items)) {
@@ -922,17 +919,17 @@ implements SyncServerAcceptor {
 			Fut<FileEntry> entryf = item!getContents(); await entryf?;
 			FileEntry entry = entryf.get;
 			
-			Set<File> result = EmptySet;
+			Set<File> result = set[];
 			Set<FileId> ids = getFileIdFromEntries1(entry);
 			while (hasNext(ids)) {
 				Pair<Set<FileId>,FileId> nids = next(ids);
 				FileId id = snd(nids);
 				Maybe<FileContent> content = getFromEntry(entry,id);
-				result = Insert(Pair(id,fromJust(content)),result);
+				result = insertElement(result, Pair(id,fromJust(content)));
 				ids = fst(nids);
 			}
 			
-			regs = Insert(result,regs);
+			regs = insertElement(regs,result);
 		}
 		
 		return regs;
@@ -995,10 +992,10 @@ implements SyncServerAcceptor {
 	Bool internal = False;
 	
 	SyncServerAcceptor acceptor = null;
-	Set<ConnectionThread> threads = EmptySet;
+	Set<ConnectionThread> threads = set[];
 	
 	// Keep track of current list of clients (used for invariant checking)
-	Set<ClientId> currentClients = EmptySet;
+	Set<ClientId> currentClients = set[];
 	
 	//trace of clients activity
 	//initialise with empty trace
@@ -1037,7 +1034,7 @@ implements SyncServerAcceptor {
 		}
 		
 		// Shutdown sequence
-		await threads == EmptySet;
+		await threads == set[];
 		unit = this.acceptor!resumingConnection(); await unit?;
 	}
 	
@@ -1048,7 +1045,7 @@ implements SyncServerAcceptor {
 	
 	// Setting up a replication session
 	Unit startReplicationUpdate(ConnectionThread thread) {
-		this.threads = Insert(thread,this.threads);
+		this.threads = insertElement(this.threads, thread);
 		if (size(this.threads) == 1) {
 			this.refreshSnapShot();
 		}
@@ -1119,7 +1116,7 @@ implements SyncServerAcceptor {
 	Unit addClient(ConnectionThread thread) {
 		ClientId id = this.getClientId(thread);
 		assert !contains(this.currentClients,id);
-		this.currentClients= Insert(id,this.currentClients);
+		this.currentClients= insertElement(this.currentClients, id);
 	}
 	
 	/*
@@ -1130,7 +1127,7 @@ implements SyncServerAcceptor {
 	 * Note that this method is not exposed through any interface
 	 */
 	Bool isNotWaitingForMoreClient() {
-		return this.currentClients == EmptySet;
+		return this.currentClients == set[];
 	}
 	
 	CheckPoint getCurrentCheckPoint() {
@@ -1169,7 +1166,7 @@ class ReplicationSnapshotImpl(
 	// if snapshot is cleaned
 	Bool clean = True;
 	
-	Set<ServerReplicationItem> items = EmptySet;
+	Set<ServerReplicationItem> items = set[];
 	
 	Set<ServerReplicationItem> getItems() {
 		return this.items;
@@ -1220,7 +1217,7 @@ class ReplicationSnapshotImpl(
 	Unit replicationItem(Schedule schedule) {
 		if (isSearchItem(schedule)) {
 			ServerReplicationItem item = new local SearchDirectoryItem(left(item(schedule)),this.db);
-			this.items = Insert(item,this.items);
+			this.items = insertElement(this.items, item);
 		} 
 		
 		/*
@@ -1241,7 +1238,7 @@ class ReplicationSnapshotImpl(
 	
 	//Clear snapshot
 	Unit clearSnapshot() {
-		this.items = EmptySet;
+		this.items = set[];
 		clean = True;
 	}
 	
@@ -1386,7 +1383,7 @@ implements ServerDataBase, ClientDataBase {
 	[Atomic] Bool prepareReplicationItem(CheckPoint p) {
 		Bool result = False;
 		if (! contains(checkPoints,p)) {
-			checkPoints = Insert(p,checkPoints);
+			checkPoints = insertElement(checkPoints, p);
 			ccp = p;
 			result = True;
 		}
@@ -1441,7 +1438,7 @@ implements ServerDataBase, ClientDataBase {
 	}
   
 	[Atomic] Map<FileId,FileContent> checkPointFiles() {
-		return lookupDefault(db,ccp,EmptyMap);
+		return lookupDefault(db,ccp,map[]);
 	}
 	
 	// Updates file store
@@ -1489,23 +1486,16 @@ def A fromJustDefault<A>(Maybe<A> m, A a) =
 
 // Functions on set of pairs
 def Set<A> fsts<A, B>(Set<Pair<A, B>> ps) =
-  case ps {
-  	EmptySet => EmptySet;
-  	Insert(x,xs) => Insert(fst(x),fsts(xs));
+  case takeMaybe(ps) {
+  	Nothing => set[];
+  	Just(x) => insertElement(fsts(remove(ps, x)), fst(x));
   };
   
 def Set<B> snds<A, B>(Set<Pair<A, B>> ps) =
-  case ps {
-  	EmptySet => EmptySet;
-  	Insert(x,xs) => Insert(snd(x),snds(xs));
+  case takeMaybe(ps) {
+  	Nothing => set[];
+  	Just(x) => insertElement(snds(remove(ps, x)), snd(x));
   };
-  
-// Functions on set
-def Set<A> union<A>(Set<A> set1, Set<A> set2) =
-  	case set1 { 
-  		EmptySet => set2; 
-  		Insert(s, ss) => Insert(s, union(ss, remove(set2,s)));
-  	};
   
 // Functions on data Command
 def Bool isAppendCommand(Command c) = 
@@ -1555,21 +1545,7 @@ def List<A> setAt<A>(List<A> list, A a, Int i) =
 			 };
 	};
 	
-def Bool setEquals<A>(Set<A> s, Set<A> t) = size(s) == size(t) && subset(s,t);
-
-// t is a subset of s
-def Bool subset<A>(Set<A> s, Set<A> t) = 
-	case t {
-		EmptySet => True;
-		Insert(x,xs) => contains(s,x) && subset(s,xs);
-	};
-
-// 	
-def Int pow(Int b, Int e) =
-	case e {
-		0 => 1;
-		_ => b * pow(b,e-1); 
-	};
+def Bool setEquals<A>(Set<A> s, Set<A> t) = size(s) == size(t) && isSubset(s,t);
 
 
 // String operations
@@ -1618,12 +1594,12 @@ def Bool filter(String pattern, String text) = isPrefixText(pattern,text);
 
 // filters a set of strings against some pattern
 def Set<String> filters(String pattern, Set<String> ts) =
-	case ts {
-		EmptySet => EmptySet;
-		Insert(l,ls) => 
+	case takeMaybe(ts) {
+		Nothing => set[];
+		Just(l) => 
 			case filter(pattern,l) {
-				True => Insert(l,filters(pattern,ls));
-				False => filters(pattern,ls);
+				True => insertElement(filters(pattern,remove(ts, l)), l);
+				False => filters(pattern,remove(ts, l));
 			};
 	};
 
@@ -1689,7 +1665,7 @@ def List<String> deroot(List<String> path) =
 
 def File file(FileId i, FileSize s) = Pair(i,Content(s));
 def Directory rootDir() = emptyDir(rootPath());
-def Directory emptyDir(FileId i) = Pair(i,Entries(EmptyMap));
+def Directory emptyDir(FileId i) = Pair(i,Entries(map[]));
 def Directory dir(FileId i, FileEntry e) = Pair(i,Entries(e));
 
 def String fileSep() = "/";
@@ -1753,20 +1729,20 @@ def Set<FileId> getFileIdFromDir(Directory d) =
 	
 def Set<FileId> getFileIdFromEntries1(FileEntry fe) =
 	case fe {
-		EmptyMap => EmptySet;
+		EmptyMap => set[];
 		InsertAssoc(Pair(i,c),fs) => 
 			case isFile(c) {
-				True => Insert(i,getFileIdFromEntries1(fs));
+				True => insertElement(getFileIdFromEntries1(fs), i);
 				False => union(getFileIdFromEntries(i,entries(c)),getFileIdFromEntries1(fs));
 			};
 	};
 	
 def Set<FileId> getFileIdFromEntries(FileId id, FileEntry fe) =
 	case fe {
-		EmptyMap => EmptySet;
+		EmptyMap => set[];
 		InsertAssoc(Pair(i,c),fs) => 
 			case isFile(c) {
-				True => Insert(makePath(id,i),getFileIdFromEntries(id,fs));
+				True => insertElement(getFileIdFromEntries(id,fs), makePath(id,i));
 				False => union(getFileIdFromEntries(makePath(id,i),entries(c)),getFileIdFromEntries(id,fs));
 			};
 	};
@@ -1830,7 +1806,7 @@ def Maybe<FileContent> getFromEntryIn(Directory d, FileId qualified) =
 		Entries(e) => 
 			case fst(d) == rootPath() {
 				True => getFromEntry(e,qualified); //root id '0' is disregard
-				_ => getFromEntry(InsertAssoc(d,EmptyMap),qualified); 
+				_ => getFromEntry(map[d],qualified); 
 			};
 	};
 
@@ -1898,8 +1874,8 @@ def FileContent create(List<String> path, FileContent c) =
 	case c {
 		Content(s) => 
 			case path {
-				Cons(p,Nil) => Entries(InsertAssoc(Pair(p,c),EmptyMap));
-				Cons(p,ps) => Entries(InsertAssoc(Pair(p,create(ps,c)),EmptyMap));
+				Cons(p,Nil) => Entries(map[Pair(p,c)]);
+				Cons(p,ps) => Entries(map[Pair(p,create(ps,c))]);
 			};
 		_ => c;
 	};

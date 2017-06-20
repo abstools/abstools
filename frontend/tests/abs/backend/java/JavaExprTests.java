@@ -94,7 +94,7 @@ public class JavaExprTests extends JavaBackendTest {
     public void caseExpr1() throws Exception {
         assertValidJavaExecution(true,
                 "module Test;",
-                "data MyData = MyDataCons | Nothing;",
+                "data MyData = MyDataCons | MyNothing;",
                 "{",
                     "assert case MyDataCons {",
                     "   Test.MyDataCons => True;",
@@ -108,7 +108,7 @@ public class JavaExprTests extends JavaBackendTest {
     public void caseExpr2() throws Exception {
         assertValidJavaExecution(true,
                 "module Test;",
-                "data MyData = MyDataCons | Nothing;",
+                "data MyData = MyDataCons | MyNothing;",
                 "{",
                     "assert case MyDataCons {",
                     "   MyDataCons => True;",

@@ -76,7 +76,7 @@ public class JavaPrimitiveTests extends JavaBackendTest {
 
     @Test
     public void testIntDivideOps() throws Exception {
-        assertValidStdLib(" { Int i = 7 / 5; }");
+        assertValidStdLib(" { Int i = truncate(7 / 5); }");
     }
 
     @Test

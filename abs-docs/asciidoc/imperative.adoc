@@ -328,9 +328,9 @@ statement in the right-hand side of that branch is then executed.  Any
 variable bindings introduced by matching the pattern are in effect while
 executing that statement.
 
-It is an error if no pattern matches the expression.
+If no pattern matches the expression, `PatternMatchFailException` is thrown.
 
-For a description of the patterns available, see <<case-expression>>.
+For a description of the pattern syntax, see <<case-expression>>.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax

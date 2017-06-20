@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.regex.Matcher;
+import java.util.EnumSet;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
@@ -75,7 +76,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
 
     @Override
     public void assertEvalTrue(String absCode) throws Exception {
-        Assert.assertEquals("true", runAndCheck(absCode));
+        Assert.assertEquals("True", runAndCheck(absCode));
     }
 
     /**
@@ -119,12 +120,10 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     }
 
     /**
-     * Generates Erlang code in target directory
+     * Generates Erlang code in target directory, adding a last statement that
+     * prints the value of the `testresult' variable.
      * 
-     * To retrieve the testresult value, we inject in the mainblock a return
-     * statement, which will then be the result of the execution
-     * 
-     * @return the Module Name, which contains the Main Block
+     * @return a Module Name containing a Main Block
      * @throws InternalBackendException 
      * 
      */
@@ -137,10 +136,19 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         }
         MainBlock mb = model.getMainBlock();
         if (mb != null && appendResultprinter) {
-            mb.addStmt(new ReturnStmt(new List<Annotation>(),
-                                      new VarUse("testresult")));
+            // We search for this output in the `run' method below
+            mb.addStmt(new ExpressionStmt(
+                new List<Annotation>(),
+                new FnApp("ABS.StdLib.println",
+                          new List<PureExp>(new AddAddExp(new StringLiteral("RES="),
+                                                          new FnApp("ABS.StdLib.toString", new List<PureExp>(new VarUse("testresult"))))))));
         }
-        ErlangBackend.compile(model, targetDir, true);
+        ErlangBackend.compile(model, targetDir,
+// use the following argument for silent compiler:
+                              EnumSet.noneOf(ErlangBackend.CompileOptions.class)
+// use the following argument for verbose compiler output:
+                              // EnumSet.of(ErlangBackend.CompileOptions.VERBOSE)
+                              );
         if (mb == null)
             return null;
         else
@@ -160,25 +168,15 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         Assert.assertEquals("Compile failed", 0, p.waitFor());
     }
 
-    private static final String RUN_SCRIPT=  
-            "#!/usr/bin/env escript\n"+
-            "%%! -pa absmodel/ebin -pa absmodel/deps/cowboy/ebin -pa absmodel/deps/cowlib/ebin -pa absmodel/deps/ranch/ebin -pa absmodel/deps/jsx/ebin -pa ebin\n"+
-            "main(Arg)->"+
-            "V=runtime:start(Arg),"+
-            "timer:sleep(10),"+
-            "io:format(\"RES=~p~n\",[V]).";
      /**
      * Executes mainModule
-     * 
-     * We replace the run script by a new version, which will write the Result
-     * to STDOUT Furthermore to detect faults, we have a Timeout process, which
-     * will kill the runtime system after 2 seconds
+     *
+     * To detect faults, we have a Timeout process which will kill the
+     * runtime system after 2 seconds
      */
     private String run(File workDir, String mainModule) throws Exception {
         String val = null;
         File runFile = new File(workDir, "run");
-        Files.write(RUN_SCRIPT, runFile, Charset.forName("UTF-8"));
-        runFile.setExecutable(true);
         ProcessBuilder pb = new ProcessBuilder(runFile.getAbsolutePath(), mainModule);
         pb.directory(workDir);
         pb.redirectErrorStream(true);
@@ -192,7 +190,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             String line = br.readLine();
             if (line == null)
                 break;
-            if (line.startsWith("RES="))
+            if (line.startsWith("RES=")) // see `genCode' above
                 val = line.split("=")[1];
         }
         int res = p.waitFor();
@@ -211,7 +209,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             f.deleteOnExit();
             String mainModule = genCode(model, f, true);
             make(f);
-            assertEquals("true",run(f, mainModule));
+            assertEquals("True",run(f, mainModule));
         } finally {
             try {
                 FileUtils.deleteDirectory(f);

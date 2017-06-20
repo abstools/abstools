@@ -4,11 +4,16 @@
  */
 package abs.common;
 
+import java.util.ArrayList;
+
+import com.google.common.collect.ImmutableList;
+
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Annotation;
-import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.Exp;
 import abs.frontend.ast.List;
+import abs.frontend.ast.MethodSig;
+import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.TypeUse;
@@ -59,7 +64,7 @@ public class CompilerUtils {
      * TODO: throw error when not found
      */
     public static Stmt findStmtForExpression(Exp e) {
-        ASTNode node = e;
+        ASTNode<?> node = e;
         while (node != null && !(node instanceof Stmt)) {
             node = node.getParent();
         }
@@ -77,6 +82,20 @@ public class CompilerUtils {
     public static <T extends ASTNode, U extends ASTNode> U copyPosition(T fromNode, U toNode) {
         toNode.setPositionFromNode(fromNode);
         return toNode;
+    }
+
+
+    /**
+     * Get the return type & parameter types of a method as list of Strings
+     * Format: (return type, parameter types..)
+     *
+     */
+    public static java.util.List<String> getMethodParameterTypes(MethodSig sig) {
+        java.util.List<String> types = new ArrayList<String>();
+        types.add(sig.getType().toString());  // return type
+        for (ParamDecl par : sig.getParams())
+            types.add(par.getAccess().getType().toString());
+        return ImmutableList.copyOf(types);
     }
 
 }

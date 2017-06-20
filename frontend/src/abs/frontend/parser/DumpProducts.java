@@ -39,11 +39,10 @@ public class DumpProducts extends Main {
         new DumpProducts().mainMethod(args);
     }
 
-    @Override
-    protected void printUsage() {
+    public static void printUsage() {
         printHeader();
         System.out.println(""
-                + "Usage: java " + this.getClass().getName()
+                + "Usage: java abs.frontend.parser.DumpProducts"
                 + " [options] <absfiles>\n\n"
                 + "  <absfiles>     ABS files/directories/packages to parse\n\n"
                 + "Prints all defined products, separated by a space for use e.g. in shell scripts.");

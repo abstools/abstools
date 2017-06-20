@@ -6,7 +6,6 @@ package abs.frontend.antlr.parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
@@ -24,7 +23,7 @@ import abs.frontend.ast.*;
  */
 public class CreateJastAddASTListener extends ABSBaseListener {
 
-    String filename = "<unknown file>";
+    String filename = abs.frontend.parser.Main.UNKNOWN_FILENAME;
 
     /** maps antlr nodes to JastAdd nodes - see antlr book Sec.7.5 */
     ParseTreeProperty<ASTNode<?>> values = new ParseTreeProperty<ASTNode<?>>();
@@ -150,7 +149,7 @@ new List<ModuleDecl>(),
     // Traits
 
 
-    @Override public void exitDeltaTraitFragment(@NotNull ABSParser.DeltaTraitFragmentContext ctx) { 
+    @Override public void exitDeltaTraitFragment(ABSParser.DeltaTraitFragmentContext ctx) { 
         setV(ctx,new DeltaTraitModifier((MethodModifier) v(ctx.trait_oper())));
     }
     
@@ -419,7 +418,18 @@ new List<ModuleDecl>(),
         setV(ctx, new ExpressionStmt(l(ctx.annotation()), (Exp)v(ctx.exp())));
     }
     @Override public void exitCaseStmt(ABSParser.CaseStmtContext ctx) {
-        setV(ctx, new CaseStmt(l(ctx.annotation()), (PureExp)v(ctx.c), l(ctx.casestmtbranch())));
+        List<CaseBranchStmt> branches = l(ctx.casestmtbranch());
+        // Add default branch that throws PatternMatchFailException.  See
+        // "Behavior of non-exhaustive case statement: no branch match = skip
+        // or error?" on abs-dev on Jan 25-26, 2017
+        Block block = new Block(new List(), new List());
+        block.addStmt(new ThrowStmt(new List(),
+                                    new DataConstructorExp("PatternMatchFailException",
+                                                           new List())));
+        CaseBranchStmt defaultBranch = new CaseBranchStmt(new UnderscorePattern(), block);
+        setASTNodePosition(ctx, defaultBranch);
+        branches.add(defaultBranch);
+        setV(ctx, new CaseStmt(l(ctx.annotation()), (PureExp)v(ctx.c), branches));
     }
     @Override public void exitCasestmtbranch(ABSParser.CasestmtbranchContext ctx) {
         Stmt body = (Stmt)v(ctx.stmt());
@@ -483,23 +493,13 @@ new List<ModuleDecl>(),
     }
     @Override public void exitVariadicFunctionExp(ABSParser.VariadicFunctionExpContext ctx) {
         List<PureExp> l = (List<PureExp>)v(ctx.pure_exp_list());
-        // Construct a list literal from all given arguments
-        DataConstructorExp arglist = new DataConstructorExp("Cons", new List<PureExp>());
-        setASTNodePosition(ctx.pure_exp_list(), arglist);
-        DataConstructorExp current = arglist;
-        /* DO NOT use the iterator here -- it interferes with rewriting [stolz] */
-        if (l.getNumChildNoTransform() > 0) {
-            PureExp last = l.getChildNoTransform(l.getNumChildNoTransform()-1);
-            for (int i = 0; i < l.getNumChildNoTransform(); i++) {
-                PureExp e = l.getChildNoTransform(i);
-                DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
-                next.setPositionFromNode(e);
-                current.addParamNoTransform(e);
-                current.addParamNoTransform(next);
-                current = next;
-            }
+        PureExp arglist = null;
+        if (l.getNumChildNoTransform() == 0) {
+            arglist = new DataConstructorExp("Nil", new List<PureExp>());
+        } else {
+            arglist = new ListLiteral(l);
         }
-        current.setConstructor("Nil");
+        setASTNodePosition(ctx.pure_exp_list(), arglist);
         List<PureExp> llist = new List<PureExp>();
         llist.add(arglist);
         setV(ctx, new FnApp(ctx.qualified_identifier().getText(), llist));

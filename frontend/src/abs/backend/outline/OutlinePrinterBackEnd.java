@@ -97,9 +97,8 @@ public class OutlinePrinterBackEnd extends Main {
         model.doOutlinePrint(writer, "");
     }
     
-    protected void printUsage() {
-        super.printUsage();
-        System.out.println("ABS Pretty Printer:\n"
+    public static void printUsage() {
+        System.out.println("ABS Outline Printer (-outline):\n"
                 + "  -f             force pretty printing even if there are type errors\n"
                 + "  -o <file>      write output to <file> instead of standard output\n"
         );

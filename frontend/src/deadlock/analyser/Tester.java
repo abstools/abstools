@@ -87,9 +87,9 @@ public class Tester extends Main {
         return remainingArgs;
     }
     
-    @Override
-    protected void printUsage() {
-        super.printUsage();
+
+    public static void printUsage() {
+        Main.printUsage();
         System.out.println("Deadlock analyzer:\n"
                 + "  -it=<var>     max number of iterations before saturating\n"
                 + "  -fixPointVersion=<var>     Default value 1 for original version, value 2 for the newest version\n");

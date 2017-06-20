@@ -11,17 +11,18 @@ import abs.frontend.ast.*;
 
 aspect GenerateJava {
 
-    public boolean Model.includeDebug = true;
+    boolean Model.includeDebug = true;
 
-    public void Model.generateJavaCode(JavaCode code) throws IOException, JavaCodeGenerationException {
+    public void Model.generateJavaCode(JavaCode code, boolean includeDebug) throws IOException, JavaCodeGenerationException {
+        this.includeDebug = includeDebug;
         JavaGeneratorHelper.cleanGenFolder(code);
         for (ModuleDecl decl : getModuleDecls()) {
             try {
                 decl.generateJavaCode(code);
-            } catch (NotImplementedYetException e) { 
-                throw new JavaCodeGenerationException("Module " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
-            } catch (RuntimeException e) { 
-                throw new JavaCodeGenerationException("Module " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
+            } catch (NotImplementedYetException e) {
+                throw new JavaCodeGenerationException("Module " + decl.getName() + ":" + e.getLocalizedMessage(),e);
+            } catch (RuntimeException e) {
+                throw new JavaCodeGenerationException("Module " + decl.getName() + ":" + e.getLocalizedMessage(),e);
             }
         }
     }
@@ -29,10 +30,10 @@ aspect GenerateJava {
 
     // Provide easy access to the Java package that is generated for each ModuleDecl
     private JavaCode.Package ModuleDecl.generatedJavaPackage = null;
-    public JavaCode.Package ModuleDecl.getJavaPackage() throws JavaCodeGenerationException { 
+    public JavaCode.Package ModuleDecl.getJavaPackage() throws JavaCodeGenerationException {
         if (generatedJavaPackage != null)
-            return generatedJavaPackage; 
-        else 
+            return generatedJavaPackage;
+        else
             throw new JavaCodeGenerationException("A Java Package is not yet associated with this ModuleDecl (this only happens upon code generation).");
     }
 
@@ -269,10 +270,6 @@ aspect GenerateJava {
         if (getFunctionDef() instanceof BuiltinFunctionDef)
             return;
 
-        boolean needsTruncate = getType().isIntType()
-            && getFunctionDef() instanceof ExpFunctionDef
-            && ((ExpFunctionDef) getFunctionDef()).getRhs().getType().isRatType() ;
-
         JavaGeneratorHelper.generateHelpLine(this,stream);
 
         String className = JavaBackend.getFunctionName(getName());
@@ -289,9 +286,6 @@ aspect GenerateJava {
         stream.print("return (");
         getFunctionDef().generateJava(stream);
         stream.print(")");
-        if (needsTruncate) {
-            stream.print(".truncate()");
-        }
         stream.println(";");
         stream.println("}");
         stream.println("}");
@@ -370,9 +364,6 @@ aspect GenerateJava {
 
         if (hasInitExp()) {
             getInitExp().generateJava(stream);
-            if (getType().isIntType() && getInitExp().getType().isRatType()) {
-                stream.print(".truncate()");
-            }
         } else {
             stream.print("null");
         }
@@ -407,9 +398,6 @@ aspect GenerateJava {
         getVar().generateJava(stream);
         stream.print(" = ");
         getValue().generateJava(stream);
-        if (getVar().getType().isIntType() && getValue().getType().isRatType()) {
-            stream.print(".truncate()");
-        }
         stream.println(";");
 
         if (getVar() instanceof VarUse) {
@@ -457,15 +445,12 @@ aspect GenerateJava {
         }
         boolean needConversion = lht.isIntType() && getRetExp().getType().isRatType();
         if (getModel().includeDebug) {
-            stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");      
+            stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
             stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
         }
 
         stream.print("return ");
         getRetExp().generateJava(stream);
-        if (lht.isIntType() && getRetExp().getType().isRatType()) {
-            stream.print(".truncate()");
-        }
         stream.println(";");
     }
 
@@ -533,7 +518,7 @@ aspect GenerateJava {
     public void DurationGuard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream) {
         stream.print("new " + JavaBackendConstants.EXPGUARD+
                 "() { public " + ABSBool.class.getName()+
-                " evaluateExp() { return " + 
+                " evaluateExp() { return " +
                 ABSBool.class.getName() + ".TRUE; }}");
     }
 
@@ -582,7 +567,7 @@ aspect GenerateJava {
 
     public void OriginalCall.generateJava(PrintStream stream) {
         // TODO: implement
-        // throw new NotImplementedYetException(this); 
+        // throw new NotImplementedYetException(this);
     }
 
     public void GetExp.generateJava(PrintStream stream) {
@@ -623,7 +608,7 @@ aspect GenerateJava {
                 JavaGeneratorHelper.generateArgs(stream, "this, new " + strategy + "(), " + dc_exp, getParams(), decl.getTypes());
             else
                 JavaGeneratorHelper.generateArgs(stream, "this, null, " + dc_exp, getParams(), decl.getTypes());
-            
+
         } else {
             stream.print(className + ".__ABS_createNewObject");
             JavaGeneratorHelper.generateArgs(stream, "this", getParams(), decl.getTypes());
@@ -766,8 +751,8 @@ aspect GenerateJava {
         // Have to explicitly type the call due to a bug in the JastAdd Java
         // compiler that generates wrong code otherwise.
         FunctionDecl d = (FunctionDecl)getDecl();
-        
-        		
+
+
         if (d.getFunctionDef() instanceof BuiltinFunctionDef) {
             JavaGeneratorHelper.generateBuiltInFnApp(stream,this);
             return;
@@ -873,17 +858,22 @@ aspect GenerateJava {
             stream.print(", ");
         }
         getVal().generateJava(stream);
-        if (getVar().getType().isIntType() && getVal().getType().isRatType()) {
-            stream.print(".truncate()");
-        }
         stream.print(")");
     }
 
     public void IntLiteral.generateJava(PrintStream stream) {
+        // Long.MAX_VALUE = 9223372036854775807L
+        boolean needsFromString = getContent().length() > 18;
         stream.print(ABSInteger.class.getName());
-        stream.print(".fromString(\"");
-        stream.print(getContent());
-        stream.print("\")");
+        if (needsFromString) {
+            stream.print(".fromString(\"");
+            stream.print(getContent());
+            stream.print("\")");
+        } else {
+            stream.print(".fromLong(");
+            stream.print(getContent());
+            stream.print("L)");
+        }
     }
 
     public void StringLiteral.generateJava(PrintStream stream) {
@@ -891,6 +881,18 @@ aspect GenerateJava {
         stream.print(".fromString(\"");
         JavaGeneratorHelper.printEscapedString(stream, getContent());
         stream.print("\")");
+    }
+
+    public void ListLiteral.generateJava(PrintStream stream) {
+        for (PureExp e : getPureExps()) {
+            stream.print("new ABS.StdLib.List_Cons(");
+            e.generateJava(stream);
+            stream.print(", ");
+        }
+        stream.print("new ABS.StdLib.List_Nil()");
+        for (int i = 0; i < getNumPureExp(); i++) {
+            stream.print(")");
+        }
     }
 
     public void NullExp.generateJava(PrintStream stream) {
@@ -1011,7 +1013,7 @@ aspect GenerateJava {
     /* Components */
     public void RebindStmt.generateJava(String indent, PrintStream stream) { }
     public void MoveStmt.generateJava(String indent, PrintStream stream) { }
-    
+
     public void NewLocExp.generateJava(PrintStream stream) { }
     public void GetLocExp.generateJava(PrintStream stream) { }
     public void GetFatherExp.generateJava(PrintStream stream) { }
@@ -1034,7 +1036,7 @@ aspect GenerateJava {
     public void RemoveMethodModifier.generateJava(PrintStream stream) { }
     public void ModifyMethodModifier.generateJavaDynamic(PrintStream stream) { }
     public void ModifyMethodModifier.generateJava(PrintStream stream) { }
-    
+
 }
 
 

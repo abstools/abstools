@@ -1,0 +1,28 @@
+root RS {
+    group allof {
+        opt Load {
+            group [1 .. 3] {
+                CheckPoint {
+                    Int cp in [1 .. 3]; // was 10
+                },
+                Client {
+                    Int c in [1 .. 3];  // was 20
+                    JSched -> c >= 2;
+                },
+                Schedule {
+                    group [1 .. 3] {
+                        DSched {
+                            Int s in [1 .. 5];
+                        },
+                        FSched {
+                            Int f in [1 .. 5];
+                        },
+                        JSched {
+                            Int l in [1 .. 5];
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

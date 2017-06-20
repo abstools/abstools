@@ -7,9 +7,12 @@ package abs.backend.tests;
 import static org.junit.Assert.*;
 
 import java.io.*;
+import java.util.EnumSet;
+
 import org.junit.*;
 
 import abs.backend.erlang.ErlApp;
+import abs.backend.erlang.ErlangBackend;
 import abs.frontend.typesystem.CaseStudyTypeChecking;
 
 public class OtherCodeGenTests extends CaseStudyTypeChecking {
@@ -45,7 +48,7 @@ public class OtherCodeGenTests extends CaseStudyTypeChecking {
         tmp.mkdir();
         tmp.deleteOnExit();
         ErlApp ea = new ErlApp(tmp);
-        m.generateErlangCode(ea);
+        m.generateErlangCode(ea, EnumSet.noneOf(ErlangBackend.CompileOptions.class));
         ea.close();
     }
 }

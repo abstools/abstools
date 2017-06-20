@@ -57,6 +57,9 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
     public void checkInterfaceDecl(InterfaceDecl decl) {}
 
     @Override
+    public void checkDataTypeDecl(DataTypeDecl decl) {}
+
+    @Override
     public void checkMethodImpl(MethodImpl method) {}
 
     @Override

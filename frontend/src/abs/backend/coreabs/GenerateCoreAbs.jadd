@@ -34,127 +34,102 @@ aspect GenerateCoreABS {
         stream.println("// " + getClass().getSimpleName() + " Declared in " + getFileName() + " line " + getStartLine());
     }
 
-	/* EXPERIMENTAL unfolding of AwaitAsyncCalls into temporary variables.
-	 * MAY and in fact WILL EAT YOUR DOG!
-	 * Note that both use of print()-statements and the debugger (implicitly through its calls to toString())
-	 * in here will change the evaluation order and may lead to Heisenbugs!
-	 *             [stolz]
-	 */
-
-	/** Global switch whether this rewriting is enabled.
-	 *  If you ever have to turn this off, make sure all the missing operations in the
-	 *  AwaitAsyncCall-class have been filled in.
-	 */
-	public static boolean Model.doAACrewrite = true;
-
-	coll Set<AwaitAsyncCall> Stmt.getAACs() [new HashSet()] with add root Stmt;
-	AwaitAsyncCall contributes this to Stmt.getAACs() for closestParent(Stmt.class);
-
-    /**
-     * Only for use by the AwaitAsyncCall-rewriting logic!
+    /** Global switch whether this rewriting is enabled.  If you ever have to
+     *  turn this off, make sure all the missing operations in the
+     *  AwaitAsyncCall-class have been filled in.
      */
-    protected java.util.List<AwaitAsyncCall> Stmt.aacs = new LinkedList();
+    public static boolean Model.doAACrewrite = true;
 
-    rewrite Stmt {
-      /* This is the magic: getAACs() will trigger the rewriting of child nodes. These will store the original AAC
-         UPSTREAM in their parent Stmt. Since Stmts are nested, this statement here might actually not need to
-         be rewritten, ie. aacs.isEmpty() after the DFS traversal. Observe how the FGS, l-to-r traversal nicely
-         establishes the order in which to generate the temporary variables!
-         
-         getAACs() will be NON-EMPTY if there is at least one "failed rewrite" downstream (*):
-         to derive the type for the temporary variable, we need semantic info, which
-         is not available if the AwaitAsyncCall is actually ill-typed! 
-         NB: this is probably gross abuse of JastAdd! [stolz]
-       */
-      when (
-       !(this instanceof Block) && Model.doAACrewrite
-          /* trigger DFS */ 
-          && getAACs().isEmpty() && !aacs.isEmpty()
-       )
-      to RewriteBlock {
-        RewriteBlock b = new RewriteBlock(new List(), new List());
-        // System.err.print("frob " + this);
-        for (AwaitAsyncCall aac : aacs) {
-            // The annotations on an "await o!m();" statement need to end up
-            // on the fresh "o!m()"; move them there ("this" ends up being the
-            // subsequent ".get" statement on the anonymous future).
-            List<Annotation> annotations = this.getAnnotationList().parseTreeCopy();
-            this.setAnnotationList(new List());
-            Access a = (Access)aac.getCallee().getType().lookupMethod(aac.getMethod()).getReturnType();
-            /* Rewriting is also triggered from the Eclipse editor, which AGAIN doesn't have the whole
-               view of the program and thus cannot resolve types. So just skip-if this is actually a
-               problem, a subsequent stage will like the type-checker will (hopefully) discover it. */
-            if (!a.getType().isUnknownType()) {
-              final TypeUse du = a.getType().toUse();
-              final String tmp = "tmp"+Integer.toString(aac.hashCode());
-              // TODO: The typechecker will assert that/if the name is free, but in freak chances it may not.
-              AsyncCall nac = new AsyncCall(aac.getCallee(), aac.getMethod(), aac.getParamList());
-              nac.setPositionFromNode(aac);
-              ParametricDataTypeUse pdtu = new ParametricDataTypeUse("Fut", new List(), new List().add(du));
-              pdtu.setPositionFromNode(aac);
-              // Annotations of the original "await o!m()" moved here
-              VarDeclStmt vds = new VarDeclStmt(annotations, new VarDecl(tmp, pdtu, new Opt(nac)));
-              vds.setPositionFromNode(aac);
-              b.addStmt(vds);
-              AwaitStmt as = new AwaitStmt(new List(), new ClaimGuard( new VarUse(tmp)));
-              as.setPositionFromNode(aac);
-              b.addStmt(as);
-            }                                                 
+    // Since rewriting happens during type-checking, make sure we don't
+    // attempt a rewrite without type-checking information
+    public boolean AwaitAsyncCall.canBeRewritten() {
+        if (!amInCoreAbs()) return false;
+        Type calleetype = getCallee().getType();
+        if (calleetype.isUnknownType()) return false;
+        MethodSig m = calleetype.lookupMethod(getMethod());
+        if (m == null) return false;
+        Access a = (Access)m.getReturnType();
+        if (a.getType().isUnknownType()) return false;
+        return true;
+    }
+
+    coll Set<AwaitAsyncCall> Stmt.getRewritableAACs() [new HashSet()] with add root Stmt;
+    AwaitAsyncCall contributes this when canBeRewritten()
+        to Stmt.getRewritableAACs() for closestParent(Stmt.class);
+
+    public boolean Stmt.hasRewritableAwaitAsyncCall() {
+        return getRewritableAACs().size() > 0;
+    }
+
+    public boolean Block.blockHasRewritableAwaitAsyncCalls() {
+        for (Stmt s : getStmtListNoTransform()) {
+            if (s.hasRewritableAwaitAsyncCall()) return true;
         }
-        aacs.clear(); // flush downstream rewrite info.
-        b.addStmt(this);
-        return b;
-      }
+        return false;
     }
 
-    public int Block.hasRewriteBlockAt() {
-      for(int i=0;i<getNumStmtNoTransform();i++) {
-        if (getStmtsNoTransform().getChild(i) instanceof RewriteBlock)
-          return i;
-      }
-      return -1;
+
+    rewrite Block {
+        when (Model.doAACrewrite // don't attempt if told not to
+              && blockHasRewritableAwaitAsyncCalls() // do we have an AwaitAsyncExpr?
+              && amInCoreAbs()  // don't attempt in deltas, traits (type information unavailable)
+              && closestParent(Model.class) != null // don't attempt in detached subtree
+              )
+        to Block {
+            List<Stmt> newStatements = new List<Stmt>();
+            for (Stmt s : getStmtListNoTransform()) {
+                if (!s.hasRewritableAwaitAsyncCall()) {
+                    newStatements.add(s.parseTreeCopy());
+                } else {
+                    // insert two statements: VarDecl for temporary variable
+                    // receiving future, then Await that variable.  Finally,
+                    // replace AwaitAsyncCall with GetExp in our original
+                    // statement.
+
+                    // getRewritableAACs() will be a singleton; we never have >1 EffExp per statement
+                    AwaitAsyncCall aac = s.getRewritableAACs().iterator().next();
+                    Type calleetype = aac.getCallee().getType();
+                    Access a = (Access)calleetype.lookupMethod(aac.getMethod()).getReturnType();
+                    final String varName = "tmp"+Integer.toString(aac.hashCode());
+                    // The annotations on an "await o!m();"-containing
+                    // statement need to end up on the fresh "o!m()"; move
+                    // them there
+                    List<Annotation> annotations = s.getAnnotationList().parseTreeCopy();
+                    final TypeUse du = a.getType().toUse();
+                    // TODO: The typechecker will assert that/if the name is
+                    // free, but in freak chances it may not.
+                    AsyncCall nac = new AsyncCall(aac.getCallee(), aac.getMethod(), aac.getParamList());
+                    nac.setPositionFromNode(aac);
+                    ParametricDataTypeUse pdtu = new ParametricDataTypeUse("Fut", new List(), new List().add(du));
+                    pdtu.setPositionFromNode(aac);
+                    // Annotations of the original "await o!m()" moved here
+                    VarDeclStmt vds = new VarDeclStmt(annotations, new VarDecl(varName, pdtu, new Opt(nac)));
+                    vds.setPositionFromNode(aac);
+                    AwaitStmt as = new AwaitStmt(new List(), new ClaimGuard( new VarUse(varName)));
+                    as.setPositionFromNode(aac);
+                    GetExp g = new GetExp(new VarUse(varName));
+                    g.setPositionFromNode(aac);
+
+                    newStatements.add(vds);
+                    newStatements.add(as);
+
+                    if (s instanceof VarDeclStmt) {
+                        ((VarDeclStmt)s).getVarDecl().setInitExp(g);
+                    } else if (s instanceof AssignStmt) {
+                        ((AssignStmt)s).setValue(g);
+                    } else if (s instanceof ReturnStmt) {
+                        ((ReturnStmt)s).setRetExp(g);
+                    } else if (s instanceof ExpressionStmt) {
+                        ((ExpressionStmt)s).setExp(g);
+                    } else {
+                        throw new NotImplementedYetException(this, "Don't know how to rewrite statement " + s.getClass().toString());
+                    }
+                    newStatements.add(s.parseTreeCopy());
+                }
+            }
+            setStmtList(newStatements);
+            return this;
+        }
+
     }
-
-	/* Because we are rewriting a statement into a statement sequence, we go this
-	 * intermediate step of replacing a statement with AwaitAsyncCall into a special type
-	 * of Block, the RewriteBlock. Then, an outermost block will check if it contains a
-	 * RewriteBlock, which must be inlined in place. (Otherwise variable scoping would be wrong
-	 * AFTER the block. If we want to have intermediate type-correctness, we could consider
-	 *  "dragging" subsequent statements into the RewriteBlock, but that would complicate things.
-	 */ 
-	rewrite Block {
-	  when (hasRewriteBlockAt() > -1)
-	  to Block {
-	    int i =0;
-	    do {
-	      ASTNode<?> n = getStmtListNoTransform().getChild(i);
-	      if (n != null && n instanceof RewriteBlock) {
-	        RewriteBlock b = (RewriteBlock) n;
-	        // Be careful not to confuse children with statements here!
-	        List<Stmt> list = getStmtListNoTransform();
-	        list.removeChild(i);
-	        for(int j=0;j<b.getNumStmtNoTransform();j++) {
-	          Stmt s = (Stmt) b.getStmtListNoTransform().getChild(j);
-	          list.insertChild(s,i+j);
-	        }
-	        return this;
-	      }
-	      i++;   
-	    } while (i<getNumStmt());
-	    return this;
-	}}
-
-    rewrite AwaitAsyncCall {
-    /* Preempt typechecking: if there's anything wrong, don't touch it.
-     * Precondition must cover logic in Stmt-rewrite above (*)! 
-     */
-    when (Model.doAACrewrite && closestParent(Model.class) != null && getCallee().getType().lookupMethod(getMethod()) != null)
-    to GetExp {
-      GetExp g = new GetExp(new VarUse("tmp"+Integer.toString(hashCode())));
-      Stmt s = (Stmt) closestParent(Stmt.class);
-      assert !(s instanceof Block);
-      assert s != null;
-      s.aacs.add(this);
-      return g;
-    }}
 }

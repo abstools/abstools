@@ -21,8 +21,8 @@ export Triple, fstT, sndT, trdT, trd;
 // Sets
 export Set, EmptySet, Insert, set; //TODO: don't export EmptySet, Insert
 
-export contains, emptySet, size, union, intersection, difference,
-  insertElement, remove, take, hasNext, next;
+export contains, emptySet, size, union, intersection, difference, isSubset,
+  insertElement, remove, take, takeMaybe, hasNext, next;
 
 // Lists
 export List, Nil, Cons, head, tail, list;
@@ -31,7 +31,7 @@ export length, isEmpty, nth, without, concatenate, appendright, reverse, copy;
 // Maps
 export Map, EmptyMap, InsertAssoc, map; // TODO: don't export EmptyMap, InsertAssoc
 
-export removeKey, values, keys, lookup, lookupMaybe, lookupUnsafe,
+export emptyMap, removeKey, values, keys, lookup, lookupMaybe, lookupUnsafe,
   lookupDefault, insert, put;
   
 // String functions
@@ -237,6 +237,17 @@ def Set<A> difference<A>(Set<A> set1, Set<A> set2) =
    };
 
 /**
+ * Returns True if set 'set' contains all element of 'maybe_subset', False
+ * otherwise.
+ */
+def Bool isSubset<A>(Set<A> maybe_subset, Set<A> set) =
+    case maybe_subset {
+        EmptySet => True;
+        Insert(elem, rest) => contains(set, elem) && isSubset(rest, set);
+    };
+
+
+/**
  * Returns a set with all elements of set 'xs' plus element 'e'.
  * Returns 'xs' if 'xs' already contains 'e'.
  */
@@ -266,6 +277,17 @@ def A take<A>(Set<A> ss) =
   case ss {
     Insert(e, _) => e;
   };
+
+/**
+ * Returns one (arbitrary) element from a set, or Nothing for empty sets.
+ */
+def Maybe<A> takeMaybe<A>(Set<A> ss) =
+  case ss {
+    EmptySet => Nothing;
+    Insert(e, _) => Just(e);
+  };
+
+
 
 // checks whether the input set has more elements to be iterated.
 def Bool hasNext<A>(Set<A> s) = ! emptySet(s); 
@@ -356,8 +378,12 @@ def Map<A, B> map<A, B>(List<Pair<A, B>> l) =
      Nil => EmptyMap; 
      Cons(hd, tl) => InsertAssoc(hd, map(tl)); 
   };
-  
-  
+
+/**
+ * Returns True if map 'map' is empty, False otherwise.
+ */
+def Bool emptyMap<A, B>(Map<A, B> map) = (map == EmptyMap);
+
 def Map<A, B> removeKey<A, B>(Map<A, B> map, A key) = // remove from the map
   case map {
   	EmptyMap => map;
@@ -433,21 +459,12 @@ def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v) =
 
 /**
  * Returns a string with the base-10 textual representation of 'n'.
+ *
+ * This function is from the distant past when ABS had no generic `toString'.
+ * Kept for backward compatibility.
  */
-def String intToString(Int n) =
-  case n < 0 {
-    True => "-" + intToStringPos(-n);
-    False => intToStringPos(n);
-  };
 
-def String intToStringPos(Int n) =
-  let (Int div) = (n / 10) in
-  let (Int res) = (n % 10) in
-  case n {
-    0 => "0"; 1 => "1"; 2 => "2"; 3 => "3"; 4 => "4";
-    5 => "5"; 6 => "6"; 7 => "7"; 8 => "8"; 9 => "9";
-    _ => intToStringPos(div) + intToStringPos(res);
-  };
+def String intToString(Int n) = toString(n);
 
 /**
  * Returns a substring of string str of the given length starting from start (inclusive)
@@ -517,7 +534,7 @@ def Duration deadline() =
 def Duration subtractFromDuration(Duration d, Rat v) =
   case d {
       InfDuration => InfDuration;
-      Duration(x) => Duration(max(x - v, 0));
+      Duration(x) => Duration(x - v);
   };
 
 // Annotation data types for KeyABS invariants, preconditions, postconditions
@@ -964,10 +981,10 @@ implements DeploymentComponentForCloudProvider {
     Int paymentInterval = 
         case lookup(initconfig, PaymentInterval) {
             Nothing => 1; Just(n) => truncate(n); };
-    Rat costPerInterval = lookupDefault(initconfig, CostPerInterval, 0);
-    Rat startupDuration = lookupDefault(initconfig, Startupduration, 0);
-    Rat shutdownDuration = lookupDefault(initconfig, Shutdownduration, 0);
-    Rat numberOfCores = lookupDefault(initconfig, Cores, 1);
+    Rat costPerInterval = lookupDefault(initconfig, CostPerInterval, 0/1);
+    Rat startupDuration = lookupDefault(initconfig, Startupduration, 0/1);
+    Rat shutdownDuration = lookupDefault(initconfig, Shutdownduration, 0/1);
+    Rat numberOfCores = lookupDefault(initconfig, Cores, 1/1);
 
     CloudProviderForDeploymentComponent cloudprovider = null;
     {
@@ -1111,13 +1128,15 @@ module ABS.SmartDeploy;
 export *;
 import * from ABS.StdLib;
 
-// definitions for the cost annotations associated to classes
+// definitions for the cost annotations associated to classes.
+// These are now deprecated
 data DeployParamSpecification = Req | List(Int) | Default(String) | User | OptList(String) ;
 data DeployScenarioElement = MaxUse(Int) |
 	Cost(String, Int) |
 	Param(String, DeployParamSpecification) |
 	Name(String);
-type Deploy = List<DeployScenarioElement>;
+type Deploy = List<DeployScenarioElement> ;
+
 
 // definition for the annotation used to define a SmartDeploy task. The string
 // is intended to be a json object
@@ -1125,6 +1144,9 @@ type SmartDeploy = String;
 // definition for the annotation used to define the cloud provider for 
 // SmartDeploy task. The string is intended to be a json object
 type SmartDeployCloudProvider = String;
+// definition for the annotation used to define a DeployCost task. The string
+// is intended to be a json object
+type SmartDeployCost = String;
 
 // interface of the smart deployment objects. This interface is empy and it will
 // be later modified by a delta automatically generated
@@ -1253,4 +1275,67 @@ data Feature;
 
 def String product_name() = "";
 def List<Feature> product_features() = Nil;
+
+/**
+ * JUnit XML support.
+ *
+ * Datatypes to write JUnit XML files which can be used e.g. in continuous
+ * integration systems like Jenkins.
+ * Schema: http://llg.cubic.org/docs/junit/
+ * Note that you will have to manually escape XML characters in strings!
+ */
+
+module ABS.JUnit;
+export *;
+import * from ABS.StdLib;
+
+data Testsuites = Testsuites (Maybe<String> isNamed, List<Testsuite> ttss);
+data Testsuite  = Testsuite (String name, List<Testcase> tcs);
+data Result     = Passed | Skipped | Error(String) | Failure(String);
+data Testcase   = Testcase (String tcname, String tcclassname, Result result, Maybe<String> stdout, Maybe<String> stderr);
+
+def String iterate(List<Testcase> tcs) =
+  case tcs {
+    Nil => "";
+    Cons(tc, rest) => render(tc) + iterate(rest);
+  };
+
+def String render(Testcase tc) =
+  let (String res) = "<testcase name=\""+ tcname(tc)+"\" classname=\""+tcclassname(tc)+"\">\n" in
+  case result(tc) {
+    Passed => res;
+    Skipped => res + "<skipped />\n";
+    Error(msg) => res + "<error message=\""+msg+"\" />\n";
+    Failure(msg) => res + "<failure message=\""+msg+"\" />\n";
+  } +
+  /* TODO: XML escaping? */
+  case stdout(tc) {
+    Nothing => "";
+    Just(msg) => "<system-out>\n"+msg+"\n</system-out>\n";
+  } +
+  case stderr(tc) {
+    Nothing => "";
+    Just(msg) => "<system-err>\n"+msg+"\n</system-err>\n";
+  }
+  + "</testcase>\n";
+
+def String writeTestsuites(Testsuites tss) =
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<testsuites>\n"
+ + iterateTS(ttss(tss))
+ + "</testsuites>";
+
+def String iterateTS(List<Testsuite> tss) =
+  case tss {
+    Nil => "";
+    Cons(ts, rest) => writeWithHeader(False, ts) + iterateTS(rest);
+  };
+
+def String writeTestsuite(Testsuite ts) = writeWithHeader(True,ts);
+
+def String writeWithHeader(Bool withHeader, Testsuite ts) =
+    if (withHeader) then "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" else ""
+    + "<testsuite"
+    + " name=\"" +name(ts) +"\" tests=\""+toString(length(tcs(ts)))+"\">\n"
+    + iterate(tcs(ts))
+    + "</testsuite>\n";
 

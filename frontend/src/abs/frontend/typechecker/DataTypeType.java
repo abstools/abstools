@@ -141,6 +141,7 @@ public class DataTypeType extends Type  {
         DataTypeType t = (DataTypeType) o;
         if (!t.decl.equals(this.decl))
             return false;
+        if (numTypeArgs() != t.numTypeArgs()) return false;
         for (int i = 0; i < numTypeArgs(); i++) {
             if (!getTypeArg(i).equals(t.getTypeArg(i)))
                 return false;
@@ -149,13 +150,13 @@ public class DataTypeType extends Type  {
     }
 
     @Override
-    public boolean isAssignable(Type t) {
-        return this.isAssignable(t, true);
+    public boolean isAssignableTo(Type t) {
+        return this.isAssignableTo(t, true);
     }
 
     @Override
-    public boolean isAssignable(Type t, boolean considerSubtyping) {
-        if (super.isAssignable(t))
+    public boolean isAssignableTo(Type t, boolean considerSubtyping) {
+        if (super.isAssignableTo(t))
             return true;
 
         if (!(t instanceof DataTypeType))
@@ -163,12 +164,13 @@ public class DataTypeType extends Type  {
 
         DataTypeType dt = (DataTypeType) t;
         if (!dt.decl.equals(this.decl)) {
-            // Int and Rat are cross-assignable, with implicit truncation
-            if (this.isNumericType() && dt.isNumericType()) return true;
+            // Int can be assigned to Rat
+            if (this.isNumericType() && dt.isRatType()) return true;
             return false;
         }
+        if (numTypeArgs() != dt.numTypeArgs()) return false;
         for (int i = 0; i < numTypeArgs(); i++) {
-            if (!getTypeArg(i).isAssignable(dt.getTypeArg(i), true))
+            if (!getTypeArg(i).isAssignableTo(dt.getTypeArg(i), true))
                 return false;
         }
         return true;
