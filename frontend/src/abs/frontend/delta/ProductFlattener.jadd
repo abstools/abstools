@@ -93,20 +93,6 @@ aspect ProductFlattener {
             mod.collapseTraitModifiers();
         }
     }
-    /**************************************************************************
-     * Simplifications before product line type checking
-     */
-    public void Model.collapseTraitModifiers() {      
-        for (DeltaDecl delta : getDeltaDecls()) {
-            delta.collapseTraitModifiers();
-        }
-    }
-    
-    public void DeltaDecl.collapseTraitModifiers() {         
-        for (ModuleModifier mod : getModuleModifierList()) {
-            mod.collapseTraitModifiers();
-        }
-    }
     
     /**************************************************************************
      * Apply deltas to model

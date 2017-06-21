@@ -93,46 +93,6 @@ aspect DeltaModifierApplicator {
   
     /*
     *  Fixes the parse tree and splits a big trait operation into a list of trait operations
-    *  This is needed so in 
-      'modifies class M.C{ 
-          adds { Unit n(){skip;} } 
-          removes Unit m();
-      }'  
-      the removes is applied to the class, not the set
-    */	
-    public void DeltaTraitModifier.rewriteToList(TraitExpr tt, ArrayList<MethodModifier> operations, MethodModifier par){
-        if(tt instanceof TraitModifyExpr){         
-            TraitModifyExpr app = (TraitModifyExpr) tt;
-            TraitExpr next = app.getTraitExpr();
-            MethodModifier opr = app.getMethodModifier();
-            next.setParent(par);
-            //app.setTraitExpr(null);
-            par.setChild(next, 0);
-            if(next instanceof TraitModifyExpr)
-            	rewriteToList(next, operations, par);
-            rewriteToList(opr, operations);
-        } 
-    }
-  
-
-    public void DeltaTraitModifier.rewriteToList(MethodModifier tt, ArrayList<MethodModifier> operations){
-        operations.add(tt);
-        if(tt instanceof AddMethodModifier){
-            rewriteToList(((AddMethodModifier)tt).getTraitExpr(), operations, tt);
-        } else if(tt instanceof ModifyMethodModifier){
-            rewriteToList(((ModifyMethodModifier)tt).getTraitExpr(), operations, tt);
-        }
-    }
-
-    /*
-    * DeltaTraitModifier references trait operations from a class.
-    */
-    public void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{
-        getMethodModifier().applyTo(cd);
-    }
-
-    /*
-    *  Fixes the parse tree and splits a big trait operation into a list of trait operations
     *  This is needed so in
       'modifies class M.C{
           adds { Unit n(){skip;} }
