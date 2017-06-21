@@ -14,7 +14,7 @@ aspect ProductLineTypeAnalysis {
         SemanticConditionList errors = new SemanticConditionList();
         if (! hasProductLine())
             return errors;
-        ProductLineTypeAnalysisHelper.typeCheckPL(getProductLine(), errors);
+        ProductLineAnalysisHelper.typeCheckPL(getProductLine(), errors);
         return errors;
     }
 

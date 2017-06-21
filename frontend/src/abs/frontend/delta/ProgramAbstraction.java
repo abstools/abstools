@@ -18,7 +18,7 @@ import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.analyser.SPLTypeError;
 import abs.frontend.ast.*;
 
-public class ProgramTypeAbstraction {
+public class ProgramAbstraction {
     /* Remember essential program information in a Program Signature Table (PST)
      * This includes:
      * - classes
@@ -30,7 +30,7 @@ public class ProgramTypeAbstraction {
      *   - interface methods (name => return type, argument types, TODO? argument names)
      *
      * We use a data structure based on maps (in the hope that maps can be created/accessed faster than objects)
-     * Goal: using ProgramTypeAbstractions instead of accessing the AST node objects should be much faster
+     * Goal: using ProgramAbstractions instead of accessing the AST node objects should be much faster
      */
     private final Map<String, Map<String, Map<String,java.util.List<String>>>> classes;
     private final Map<String, Map<String, Map<String,java.util.List<String>>>> interfaces;
@@ -44,7 +44,7 @@ public class ProgramTypeAbstraction {
     private Product product;
 
     // Constructor
-    public ProgramTypeAbstraction(SemanticConditionList errors) {
+    public ProgramAbstraction(SemanticConditionList errors) {
         this.errors = errors;
         deltas = new ArrayList<DeltaDecl>();
         classes = new HashMap<String, Map<String, Map<String,java.util.List<String>>>>();
@@ -52,7 +52,7 @@ public class ProgramTypeAbstraction {
     }
 
     // Copy constructor
-    public ProgramTypeAbstraction(ProgramTypeAbstraction sourceTA) {
+    public ProgramAbstraction(ProgramAbstraction sourceTA) {
         this.errors = sourceTA.errors;
         this.deltas = new ArrayList<DeltaDecl>(sourceTA.deltas);
         classes = new HashMap<String, Map<String, Map<String,java.util.List<String>>>>();
@@ -81,7 +81,7 @@ public class ProgramTypeAbstraction {
         deltas.add(delta);
         this.product = product;
         for (ModuleModifier mod : delta.getModuleModifiers()) {
-            mod.applyToTypeAbstraction(this);
+            mod.applyToProgramAbstraction(this);
         }
     }
 

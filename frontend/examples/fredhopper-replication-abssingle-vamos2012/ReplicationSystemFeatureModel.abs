@@ -2,9 +2,9 @@ root RS {
     group allof {
         opt Load {
             group [1 .. 3] {
-                CheckPoint {
+                /*CheckPoint {
                     Int cp in [1 .. 3]; // was 10
-                },
+                },  // this feature is never used, has no implementation */
                 Client {
                     Int c in [1 .. 3];  // was 20
                     JSched -> c >= 2;

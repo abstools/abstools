@@ -18,7 +18,7 @@ import abs.frontend.ast.*;
 import abs.frontend.mtvl.ChocoSolver;
 import choco.kernel.model.constraints.Constraint;
 
-public class ProductLineTypeAnalysisHelper {
+public class ProductLineAnalysisHelper {
 
     /*
      * An IFΔJ product line is type-safe if the following conditions hold:

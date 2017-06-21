@@ -34,7 +34,7 @@ import abs.frontend.ast.*;
 import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
 import abs.frontend.configurator.visualizer.FMVisualizer;
 import abs.frontend.delta.DeltaModellingException;
-import abs.frontend.delta.ProductLineTypeAnalysisHelper;
+import abs.frontend.delta.ProductLineAnalysisHelper;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -288,7 +288,7 @@ public class Main {
                 // Build all SPL configurations (valid feature selections, ignoring attributes), one by one (for performance measuring)
                 if (verbose)
                     System.out.println("Building ALL " + m.getProductList().getNumChild() + " feature model configurations...");
-                ProductLineTypeAnalysisHelper.buildAllConfigurations(m);
+                ProductLineAnalysisHelper.buildAllConfigurations(m);
                 return;
             }
             if (typecheck)
