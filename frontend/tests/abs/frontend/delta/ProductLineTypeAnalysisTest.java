@@ -32,7 +32,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         /*
          * No delta clause for D2
          */
-        assertFalse(ProductLineTypeAnalysisHelper.wellFormedProductLine(pl, errors));
+        assertFalse(ProductLineAnalysisHelper.wellFormedProductLine(pl, errors));
         assertEquals(1, errors.getErrorCount());
     }
 
@@ -53,7 +53,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         /*
          * All OK
          */
-        assertTrue(ProductLineTypeAnalysisHelper.wellFormedProductLine(pl, errors));
+        assertTrue(ProductLineAnalysisHelper.wellFormedProductLine(pl, errors));
         assertEquals(0, errors.getErrorCount());
     }
 
@@ -71,7 +71,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         ProductLine pl = model.getProductLine();
         SemanticConditionList errors = new SemanticConditionList();
 
-        assertTrue(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
+        assertTrue(ProductLineAnalysisHelper.isStronglyUnambiguous(pl, errors));
         assertEquals(0, errors.getErrorCount());
     }
 
@@ -93,7 +93,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
          * Both deltas are in same partition (no order specified)
          * They modify class C in different ways, by adding different methods
          */
-        assertTrue(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
+        assertTrue(ProductLineAnalysisHelper.isStronglyUnambiguous(pl, errors));
         assertEquals(0, errors.getErrorCount());
     }
 
@@ -110,7 +110,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         /*
          * No deltas, no worries
          */
-        assertTrue(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
+        assertTrue(ProductLineAnalysisHelper.isStronglyUnambiguous(pl, errors));
         assertEquals(0, errors.getErrorCount());
 
         List<Set<String>> partition = pl.getDeltaPartition();
@@ -134,7 +134,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         /* Both deltas are in same partition (no order specified)
          * Both deltas modify the same method C.foo
          */
-        assertFalse(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
+        assertFalse(ProductLineAnalysisHelper.isStronglyUnambiguous(pl, errors));
         assertEquals(1, errors.getErrorCount());
     }
 
@@ -155,7 +155,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         /* Both deltas are in same partition (no order specified)
          * Both deltas act on the same class C
          */
-        assertFalse(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
+        assertFalse(ProductLineAnalysisHelper.isStronglyUnambiguous(pl, errors));
         assertEquals(1, errors.getErrorCount());
     }
 
@@ -178,7 +178,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         /* All 3 deltas are in same partition
          * D1, D2, D3 act on the same class C
          */
-        assertFalse(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
+        assertFalse(ProductLineAnalysisHelper.isStronglyUnambiguous(pl, errors));
         assertEquals(2, errors.getErrorCount());
     }
 
@@ -223,7 +223,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
         SemanticConditionList errors = new SemanticConditionList();
 
         long startTime = System.currentTimeMillis();
-        assertTrue(ProductLineTypeAnalysisHelper.isStronglyUnambiguous(pl, errors));
+        assertTrue(ProductLineAnalysisHelper.isStronglyUnambiguous(pl, errors));
         long stopTime = System.currentTimeMillis();
         //System.out.println(n + " deltas. time (ms): " + (stopTime - startTime));
     }

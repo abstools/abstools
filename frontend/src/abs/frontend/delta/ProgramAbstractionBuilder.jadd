@@ -1,12 +1,12 @@
 import com.google.common.collect.ImmutableList;
 
-aspect ProgramTypeAbstractionBuilder {
+aspect ProgramAbstractionBuilder {
 
     /*******************************************************************************************************
      *
      * Build type abstraction of the core program
      */
-    public void Model.buildCoreTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void Model.buildCoreAbstraction(ProgramAbstraction ta) {
         for (Decl decl : getDecls()) {
             if (decl.isClass()) {
                 String className = decl.qualifiedName();
@@ -31,16 +31,16 @@ aspect ProgramTypeAbstractionBuilder {
     }
 
 
-    abstract public void ModuleModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta);
-    abstract public void Modifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className);
+    abstract public void ModuleModifier.applyToProgramAbstraction(ProgramAbstraction ta);
+    abstract public void Modifier.applyToProgramAbstraction(ProgramAbstraction ta, String className);
 
     /*******************************************************************************************************
      *
      * Class Modifiers
      */
-    public void AddClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void AddClassModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         if (getModel().debug)
-            System.out.println("___ applyToTypeAbstraction " + getClass().getName());
+            System.out.println("___ applyToProgramAbstraction " + getClass().getName());
         ta.classAdd(this);
         String className = getClassDecl().qualifiedName();
         for (FieldDecl field : getClassDecl().getFields())
@@ -51,9 +51,9 @@ aspect ProgramTypeAbstractionBuilder {
         }
     }
 
-    public void ModifyClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void ModifyClassModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         if (getModel().debug)
-            System.out.println("___ applyToTypeAbstraction " + getClass().getName());
+            System.out.println("___ applyToProgramAbstraction " + getClass().getName());
         String className = qualifiedName();
         if (ta.existsClass(this)) {
             for (InterfaceTypeUse iface : getAddedInterfaces())
@@ -61,13 +61,13 @@ aspect ProgramTypeAbstractionBuilder {
             for (InterfaceTypeUse iface : getRemovedInterfaces())
                 ta.classInterfaceRemove(className, iface);
             for (Modifier mod : getModifiers())
-                mod.applyToTypeAbstraction(ta, className);
+                mod.applyToProgramAbstraction(ta, className);
         }
     }
 
-    public void RemoveClassModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void RemoveClassModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         if (getModel().debug)
-            System.out.println("___ applyToTypeAbstraction " + getClass().getName());
+            System.out.println("___ applyToProgramAbstraction " + getClass().getName());
         ta.classRemove(this);
     }
 
@@ -75,48 +75,48 @@ aspect ProgramTypeAbstractionBuilder {
     /*
      * Interface Modifiers
      */
-    public void AddInterfaceModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void AddInterfaceModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         if (getModel().debug)
-            System.out.println("___ applyToTypeAbstraction " + getClass().getName());
+            System.out.println("___ applyToProgramAbstraction " + getClass().getName());
         // TODO
     }
-    public void ModifyInterfaceModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void ModifyInterfaceModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         if (getModel().debug)
-            System.out.println("___ applyToTypeAbstraction " + getClass().getName());
+            System.out.println("___ applyToProgramAbstraction " + getClass().getName());
         // TODO
     }
-    public void RemoveInterfaceModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void RemoveInterfaceModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         if (getModel().debug)
-            System.out.println("___ applyToTypeAbstraction " + getClass().getName());
+            System.out.println("___ applyToProgramAbstraction " + getClass().getName());
         // TODO
     }
 
     /*
      * Export/Import Modifiers
      */
-    public void AddExportModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void AddExportModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         // TODO
     }
-    public void AddImportModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void AddImportModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         // TODO
     }
 
     /*
      * Functional Modifiers
      */
-    public void AddDataTypeModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void AddDataTypeModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         // TODO
     }
-    public void ModifyDataTypeModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void ModifyDataTypeModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         // TODO
     }
-    public void AddFunctionModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void AddFunctionModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         // TODO
     }
-    public void AddTypeSynModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void AddTypeSynModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         // TODO
     }
-    public void ModifyTypeSynModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta) {
+    public void ModifyTypeSynModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         // TODO
     }
 
@@ -125,14 +125,14 @@ aspect ProgramTypeAbstractionBuilder {
      *
      * Modifiers are applied to classes
      */
-    public void AddFieldModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+    public void AddFieldModifier.applyToProgramAbstraction(ProgramAbstraction ta, String className) {
         if (getModel().debug)
-            System.out.println("___ applyToTypeAbstraction " + getClass().getName());
+            System.out.println("___ applyToProgramAbstraction " + getClass().getName());
         ta.classFieldAdd(className, this);
     }
-    public void RemoveFieldModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+    public void RemoveFieldModifier.applyToProgramAbstraction(ProgramAbstraction ta, String className) {
         if (getModel().debug)
-            System.out.println("___ applyToTypeAbstraction " + getClass().getName());
+            System.out.println("___ applyToProgramAbstraction " + getClass().getName());
         ta.classFieldRemove(className, this);
     }
 
@@ -142,25 +142,32 @@ aspect ProgramTypeAbstractionBuilder {
      *		Modifiers shared between deltas and traits
      */
 
-    public void DeltaTraitModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+    // Eduard will make this obsolete
+    public void TraitUse.applyToProgramAbstraction(ProgramAbstraction ta, String className) {
+        // TODO
         if (getModel().debug)
-            System.out.println("___ applyToTypeAbstraction " + getClass().getName());
-        getMethodModifier().applyToTypeAbstraction(ta, className);
+            System.out.println("___ applyToProgramAbstraction " + getClass().getName());
     }
 
-    public void AddMethodModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+    public void DeltaTraitModifier.applyToProgramAbstraction(ProgramAbstraction ta, String className) {
         if (getModel().debug)
-            System.out.println("___ applyToTypeAbstraction " + getClass().getName());
+            System.out.println("___ applyToProgramAbstraction " + getClass().getName());
+        getMethodModifier().applyToProgramAbstraction(ta, className);
+    }
+
+    public void AddMethodModifier.applyToProgramAbstraction(ProgramAbstraction ta, String className) {
+        if (getModel().debug)
+            System.out.println("___ applyToProgramAbstraction " + getClass().getName());
         ta.classMethodAdd(className, this);
     }
-    public void ModifyMethodModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+    public void ModifyMethodModifier.applyToProgramAbstraction(ProgramAbstraction ta, String className) {
         if (getModel().debug)
-            System.out.println("___ applyToTypeAbstraction " + getClass().getName());
+            System.out.println("___ applyToProgramAbstraction " + getClass().getName());
         ta.classMethodModify(className, this);
     }
-    public void RemoveMethodModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
+    public void RemoveMethodModifier.applyToProgramAbstraction(ProgramAbstraction ta, String className) {
         if (getModel().debug)
-            System.out.println("___ applyToTypeAbstraction " + getClass().getName());
+            System.out.println("___ applyToProgramAbstraction " + getClass().getName());
         ta.classMethodRemove(className, this);
     }
 
