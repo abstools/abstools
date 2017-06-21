@@ -142,13 +142,6 @@ aspect ProgramTypeAbstractionBuilder {
      *		Modifiers shared between deltas and traits
      */
 
-    // Eduard will make this obsolete
-    public void TraitUse.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
-        // TODO
-        if (getModel().debug)
-            System.out.println("___ applyToTypeAbstraction " + getClass().getName());
-    }
-
     public void DeltaTraitModifier.applyToTypeAbstraction(ProgramTypeAbstraction ta, String className) {
         if (getModel().debug)
             System.out.println("___ applyToTypeAbstraction " + getClass().getName());

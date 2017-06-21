@@ -64,12 +64,30 @@ aspect TraitApplicator {
      * its signature. Throws an exception if no such method is found
      */
     public  void RemoveMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException{
-        applyToList(cd.getMethodList());
+         for (MethodSig mysig : getMethodSigList()){
+            // in given list: find MethodDecl that matches sig
+            int found = -1;
+            for (int i = 0; i < cd.getMethodList().getNumChild(); i++) {
+                MethodSig sig = cd.getMethodList().getChild(i).getMethodSig();
+                if (sig.matches(mysig)) {
+                    found = i;
+                    break;
+                }
+            }
+
+            if (found >= 0)
+                // remove MethodImpl from list
+                cd.getMethodList().removeChild(found);
+            else
+            throw new DeltaModellingException("Delta " + getDelta().getName() +
+                    " wants to remove method " + mysig + ", which was not found in class " + cd.qualifiedName() + ".");
+        }
+        //applyToList(cd.getMethodList());
     }
 
     private void RemoveMethodModifier.applyToList(List<MethodImpl> list) throws DeltaModellingException{
         for (MethodSig mysig : getMethodSigList()){
-            // in given ClassDecl: find MethodDecl that matches sig
+            // in given list: find MethodDecl that matches sig
             int found = -1;
             for (int i = 0; i < list.getNumChild(); i++) {
                 MethodSig sig = list.getChild(i).getMethodSig();
