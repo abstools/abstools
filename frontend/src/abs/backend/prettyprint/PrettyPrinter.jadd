@@ -1176,6 +1176,15 @@ aspect doPrettyPrinter {
         stream.print(")");
     }
 
+    public void ParFnApp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print(getName());
+        stream.print("(");
+        getParamList().doPrettyPrint(stream, formatter, ",");
+        stream.print(") (");
+        getFuncParamList().doPrettyPrint(stream, formatter, ",");
+        stream.print(")");
+    }
+
     public void IfExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("if ");
         getCondExp().doPrettyPrint(stream, formatter);
