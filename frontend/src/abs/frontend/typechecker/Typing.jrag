@@ -266,6 +266,7 @@ aspect Typing {
    		 return declaredResultType;
    	 }
     }
+    eq ParFnApp.getType() = getModel().getUnitType();
     eq DataConstructorExp.getType() {
 	 DataConstructor d = getDataConstructor();
 	 if (d == null)

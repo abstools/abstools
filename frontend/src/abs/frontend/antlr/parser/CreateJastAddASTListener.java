@@ -4,7 +4,6 @@
  */
 package abs.frontend.antlr.parser;
 
-import abs.frontend.antlr.parser.ABSParser.Function_paramlistContext;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -540,6 +539,15 @@ new List<ModuleDecl>(),
             : (List<PureExp>)v(ctx.pure_exp_list());
         setV(ctx, new FnApp(ctx.qualified_identifier().getText(), l));
     }
+    @Override public void exitPartialFunctionExp(ABSParser.PartialFunctionExpContext ctx) {
+        List<PureExp> params = ctx.pure_exp_list() == null
+            ? new List<PureExp>()
+            : (List<PureExp>)v(ctx.pure_exp_list());
+        List<FunctionParamDecl> functionParams = ctx.function_name_list() == null
+            ? new List<FunctionParamDecl>()
+            : (List<FunctionParamDecl>)v(ctx.function_name_list());
+        setV(ctx, new ParFnApp(ctx.qualified_identifier().getText(), params, functionParams));
+    }
     @Override public void exitVariadicFunctionExp(ABSParser.VariadicFunctionExpContext ctx) {
         List<PureExp> l = (List<PureExp>)v(ctx.pure_exp_list());
         PureExp arglist = null;
@@ -694,11 +702,15 @@ new List<ModuleDecl>(),
         setV(ctx, new ParamDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), (List<Annotation>)v(ctx.annotations())));
     }
 
-    @Override public void exitFunction_paramlist(ABSParser.Function_paramlistContext ctx) {
-        setV(ctx, l(ctx.function_param_decl()));
+    @Override public void exitFunction_name_paramlist(ABSParser.Function_name_paramlistContext ctx) {
+        setV(ctx, v(ctx.function_name_list()));
     }
 
-    @Override public void exitFunction_param_decl(ABSParser.Function_param_declContext ctx) {
+    @Override public void exitFunction_name_list(ABSParser.Function_name_listContext ctx) {
+        setV(ctx, l(ctx.function_name_decl()));
+    }
+
+    @Override public void exitFunction_name_decl(ABSParser.Function_name_declContext ctx) {
         setV(ctx, new FunctionParamDecl(ctx.IDENTIFIER().getText()));
     }
 

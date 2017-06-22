@@ -335,6 +335,8 @@ aspect GenerateJavaDynamic_Core {
 
     public void PartialFunctionDecl.generateJavaDynamic(PrintStream stream) {}
 
+    public void ParFnApp.generateJavaDynamic(PrintStream stream) {}
+
     public void FunctionDef.generateJavaDynamic(PrintStream stream) { }
 
     public void ExpFunctionDef.generateJavaDynamic(PrintStream stream) {

@@ -425,5 +425,24 @@ public class ParserTest extends FrontendTest {
         assertParseError("def Int zero()(f?n) = 0;");
     }
 
+    @Test
+    public void callPartialFunction() {
+        assertParseOk("{ f()(); }");
+        assertParseOk("{ f_1()(); }");
+        assertParseOk("{ f(x)(); }");
+        assertParseOk("{ f(g(x))(); }");
+        assertParseOk("{ f(x, y)(); }");
+        assertParseOk("{ f()(g); }");
+        assertParseOk("{ f()(g, h); }");
+        assertParseOk("{ f()(some_func, other_func); }");
+    }
 
+    @Test
+    public void callPartialFunctionInvalidParams() {
+        assertParseError("{ f()(g(x)); }");
+        assertParseError(" { f()(f g); }");
+        assertParseError(" { f()(f()); }");
+        assertParseError(" { f()(g()); }");
+        assertParseError(" { f()(0); }");
+    }
 }

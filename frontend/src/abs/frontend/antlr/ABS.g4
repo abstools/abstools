@@ -84,26 +84,27 @@ eff_exp : pure_exp '.' 'get'                               # GetExp
         '(' pure_exp_list ')'                             # OriginalCallExp
     ;
 
-pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
-    | qualified_identifier '[' pure_exp_list ']'           # VariadicFunctionExp
-    | qualified_type_identifier ('(' pure_exp_list ')')?   # ConstructorExp
-    | op=(NEGATION | NEGATION_CREOL | MINUS) pure_exp      # UnaryExp
-    | l=pure_exp op=(MULT | DIV | MOD) r=pure_exp          # MultExp
-    | l=pure_exp op=(PLUS | MINUS) r=pure_exp              # AddExp
-    | l=pure_exp op=(LT | GT | LTEQ | GTEQ) r=pure_exp     # GreaterExp
-    | l=pure_exp op=(EQEQ | NOTEQ) r=pure_exp              # EqualExp
-    | l=pure_exp op='&&' r=pure_exp                        # AndExp
-    | l=pure_exp op='||' r=pure_exp                        # OrExp
-    | var_or_field_ref                                     # VarOrFieldExp
-    | INTLITERAL                                           # IntExp
-    | STRINGLITERAL                                        # StringExp
-    | 'this'                                               # ThisExp
-    | 'null'                                               # NullExp
-    | 'if' c=pure_exp 'then' l=pure_exp 'else' r=pure_exp  # IfExp
-    | 'case' c=pure_exp '{' casebranch* '}'                # CaseExp
+pure_exp : qualified_identifier '(' pure_exp_list ')'                        # FunctionExp
+    | qualified_identifier '(' pure_exp_list ')' '(' function_name_list ')'  # PartialFunctionExp
+    | qualified_identifier '[' pure_exp_list ']'                             # VariadicFunctionExp
+    | qualified_type_identifier ('(' pure_exp_list ')')?                     # ConstructorExp
+    | op=(NEGATION | NEGATION_CREOL | MINUS) pure_exp                        # UnaryExp
+    | l=pure_exp op=(MULT | DIV | MOD) r=pure_exp                            # MultExp
+    | l=pure_exp op=(PLUS | MINUS) r=pure_exp                                # AddExp
+    | l=pure_exp op=(LT | GT | LTEQ | GTEQ) r=pure_exp                       # GreaterExp
+    | l=pure_exp op=(EQEQ | NOTEQ) r=pure_exp                                # EqualExp
+    | l=pure_exp op='&&' r=pure_exp                                          # AndExp
+    | l=pure_exp op='||' r=pure_exp                                          # OrExp
+    | var_or_field_ref                                                       # VarOrFieldExp
+    | INTLITERAL                                                             # IntExp
+    | STRINGLITERAL                                                          # StringExp
+    | 'this'                                                                 # ThisExp
+    | 'null'                                                                 # NullExp
+    | 'if' c=pure_exp 'then' l=pure_exp 'else' r=pure_exp                    # IfExp
+    | 'case' c=pure_exp '{' casebranch* '}'                                  # CaseExp
     | 'let' '(' type_use IDENTIFIER ')' '=' i=pure_exp
-        'in' b=pure_exp                                    # LetExp
-    | '(' pure_exp ')'                                     # ParenExp
+        'in' b=pure_exp                                                      # LetExp
+    | '(' pure_exp ')'                                                       # ParenExp
     ;
 
 casebranch : pattern '=>' pure_exp ';' ;
@@ -199,14 +200,15 @@ function_decl : annotations
 
 // Partially defined functions
 
-function_param_decl: IDENTIFIER ;
-function_paramlist: '(' (function_param_decl (',' function_param_decl)*)? ')' ;
+function_name_decl: IDENTIFIER ;
+function_name_list: (function_name_decl (',' function_name_decl)*)? ;
+function_name_paramlist: '(' function_name_list ')' ;
 
 par_function_decl : annotation*
         'def' type_use n=IDENTIFIER
         ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
         params=paramlist
-        functions=function_paramlist
+        functions=function_name_paramlist
         '='
         e=pure_exp ';' ;
 
