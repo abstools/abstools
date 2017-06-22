@@ -42,7 +42,7 @@ TraitNameExpr : TraitExpr ::= <Name>;
 TraitModifyExpr : TraitExpr ::= TraitExpr MethodModifier;
 
 
-TraitUse : Modifier ::= TraitExpr;
+TraitUse ::= TraitExpr;
 /***************************************/
 
 UnknownDecl: Decl; // Unknown declarations
