@@ -88,7 +88,8 @@ RUN cd / && \
   cd /solvers_exec && \
   git clone --recursive https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git && \
 	cd zephyrus2 && \
-	git checkout tags/v1.0 && \ 
+	#git checkout tags/v1.0 && \
+	git checkout 5df3baf && \
 	#check out tested version with smartdeployer
   pip install -e /solvers_exec/zephyrus2
 # download MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz that comes with gecode
@@ -101,8 +102,9 @@ ENV PATH /solvers_exec/MiniZincIDE:$PATH
 # clone abs_deployer
 RUN cd /solvers_exec && \
 	git clone --recursive https://github.com/jacopoMauro/abs_deployer.git && \
-	cd abs_deployer && \
-	git checkout tags/v0.3
+	cd abs_deployer # && \
+	git checkout daa4625
+	# git checkout tags/v0.3
 ENV PATH /solvers_exec/abs_deployer:$PATH
 # download chuffed, add global-dir in minizinc
 RUN cd /solvers_exec && \
