@@ -266,11 +266,26 @@ code_change(_OldVsn, State, _Extra)->
     %% not supported
     {error, State}.
 
-can_clock_advance(_OldState=#state{active=A, blocked=B},
-                  _NewState=#state{active=A1, blocked=B1, active_before_next_clock=ABNC}) ->
+can_clock_advance(_OldState=#state{active=A, blocked=B, active_before_next_clock=ABNC},
+                  _NewState=#state{active=A1, blocked=B1, active_before_next_clock=ABNC1}) ->
+    %% This function detects a state change between old and new state.  The
+    %% clock can advance under the following circumstances:
+    %%
+    %% - All tasks waken up in the previous advance have acknowledged receipt
+    %%   of that signal, AND either of:
+    %%   - At least one cog used to run but is idle/blocked now; OR
+    %%   - All cogs are idle or blocked AND the last task woken up in the
+    %%     previous advance has just now acknowledged receipt of the signal.
+    %%
+    %% The second case can happen if a cog runs two tasks: one awaiting on a
+    %% duration, the other one blocking on a second (longer) duration.  In
+    %% that case, the suspended task signals readiness but the cog remains
+    %% blocked.
+
     Old_idle = gb_sets:is_empty(gb_sets:subtract(A, B)),
     All_idle = gb_sets:is_empty(gb_sets:subtract(A1, B1)),
-    (ABNC == []) andalso (not Old_idle and All_idle).
+    (ordsets:size(ABNC1) == 0) andalso ((not Old_idle and All_idle)
+                                        orelse (Old_idle and All_idle and (ordsets:size(ABNC) > 0))) .
 
 advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,keepalive_after_clock_limit=Keepalive}) ->
     case C of
