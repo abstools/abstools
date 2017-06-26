@@ -259,7 +259,7 @@ AppCond       ::= AppCond '&&' AppCond
 ----
 
 
-Features and delta modules are associated through _application conditions_,
+Features and delta modules are associated through _application conditions_ (a.k.a. _activation conditions_),
 which are logical expressions over the set of features and attributes in a
 feature model. The collection of applicable delta modules is given by the
 application conditions that are true for a particular feature and attribute
@@ -291,7 +291,7 @@ generated. A product definition states which features are to be included in
 the product and sets attributes of those features to concrete values. In the simplest
 case products are declared directly, by listing the features that they include.
 It is also possible to declare products based on other products using 
-`product expressions`. Product expressions use set-theoretic operations (union, 
+_product expressions_. Product expressions use set-theoretic operations (union, 
 intersection, complement) over products and sets of features.
 
 
@@ -320,7 +320,7 @@ product WordsearchFull (Wordsearch, Cost{cost=10}, UnlimitedMachines{capacity=20
 product WordsearchDemo (Wordsearch, Cost{cost=10}, LimitedMachines{capacity=20, machinelimit=2});
 ----
 
-Here are some product definitions for the `CharityOrganizationExample` with ProductExpr:
+Here are some product definitions for the `CharityOrganizationExample` with `ProductExpr`:
 
 [source]
 ----
@@ -342,12 +342,14 @@ product Org11 = SekolahBermainMatahari && (RamadhanForKids || {Money, Item});
 
 Because the number of variants in an SPL can be very large, checking them 
 efficiently (e.g., to ensure that they are all well-typed) is challenging. 
-Building each variant in order to check it is usually not feasible from a 
+Building each variant in order to type-check it is usually not feasible from a 
 performace perspective. Instead, the ABS compiler employs a number of efficient 
 consistency checks. These fall into two categories.
 
 * _Family-based_ analysis steps operate on the SPL definition itself,
 * Analysis steps operate on lightweight _abstractions_ of the SPL variants.
 
-These checks help ensure that all products defined by an SPL specified in ABS can 
-be built and are well-typed ABS programs.
+These checks are performed automatically upon compilation and help ensure that 
+all variants defined by an SPL specified in ABS can be built and are well-typed 
+ABS programs.
+
