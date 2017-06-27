@@ -1,0 +1,111 @@
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
+import abs.frontend.pardef.*;
+
+aspect PartialFunctionApplier {
+
+    public void Model.flattenPartialFunctions() {
+        for (ModuleDecl moduleDecl : getModuleDecls()) {
+            moduleDecl.flattenPartialFunctions();
+        }
+
+        // TODO use check results
+        if(!checkAbsence(ParFnApp.class)
+            || !checkAbsence(PartialFunctionDecl.class)
+            || !checkAbsence(PartialFunctionDef.class)) {
+            throw new RuntimeException("Did not remove all partial function nodes");
+        }
+    }
+
+    private <T extends ASTNode<?>> boolean Model.checkAbsence(Class<T> type) {
+        return TreeUtil.collectChildren(this, type).isEmpty();
+    }
+
+    void ModuleDecl.flattenPartialFunctions() {
+        Map<String, PartialFunctionWrapper> functions = collectPartialFunctions();
+
+        for (ParFnApp fnApp : TreeUtil.collectChildren(this, ParFnApp.class)) {
+            PartialFunctionWrapper function = functions.get(fnApp.getName());
+            if (function == null) {
+                // TODO handle errors
+                throw new RuntimeException("No such function: " + fnApp.getName());
+            }
+
+            FunctionDecl appliedFunction = function.apply(fnApp);
+            addDecl(appliedFunction);
+            FnApp appliedFunctionCall = fnApp.apply(appliedFunction);
+            TreeUtil.replace(fnApp, appliedFunctionCall);
+        }
+
+        for (PartialFunctionWrapper wrapper : functions.values()) {
+            wrapper.removeFromParent();
+        }
+    }
+
+    private Map<String, PartialFunctionWrapper> ModuleDecl.collectPartialFunctions() {
+        Map<String, PartialFunctionWrapper> result = new HashMap<>(32);
+
+        for (Decl decl : getDecls()) {
+            if (decl instanceof PartialFunctionDecl) {
+                PartialFunctionDecl functionDecl = (PartialFunctionDecl) decl;
+                result.put(functionDecl.getName(), new PartialFunctionWrapper(functionDecl));
+            }
+        }
+
+        return Collections.unmodifiableMap(result);
+    }
+
+    public FunctionDecl PartialFunctionDecl.apply(ParFnApp fnApp, int applyCount) {
+        FunctionDecl decl = new FunctionDecl();
+        apply(decl, fnApp, applyCount);
+        return decl;
+    }
+
+    public FunctionDecl ParametricPartialFunctionDecl.apply(ParFnApp fnApp, int applyCount) {
+        ParametricFunctionDecl decl = new ParametricFunctionDecl();
+        // TODO do this differently
+        apply(decl, fnApp, applyCount);
+        decl.setTypeParameterList(getTypeParameters().treeCopy());
+        return decl;
+    }
+
+    protected void PartialFunctionDecl.apply(FunctionDecl applied, ParFnApp fnApp, int applyCount) {
+        int funcParamCount = getNumFuncParam();
+        if(funcParamCount != fnApp.getNumFuncParam()) {
+            // TODO handle errors
+            throw new RuntimeException("Wrong number of arguments");
+        }
+        Map<String, String> functions = new HashMap<>(funcParamCount * 2);
+        for (int i = 0; i < funcParamCount; ++i) {
+            String funcParam = getFuncParam(i).getName();
+            String actualParam = fnApp.getFuncParam(i).getName();
+            functions.put(funcParam, actualParam);
+        }
+
+        applied.setName(getName() + "_" + applyCount);
+        applied.setAnnotationList(getAnnotations().treeCopy());
+        // TODO add annotation referencing original
+
+        applied.setTypeUse(getTypeUse().treeCopy());
+        applied.setParamList(getParams().treeCopy());
+        applied.setFunctionDef(getPartialFunctionDef().apply(functions));
+    }
+
+    public FunctionDef PartialFunctionDef.apply(Map<String, String> functions) {
+        PureExp expression = getPureExp().treeCopy();
+        for (FnApp innerCall : TreeUtil.collectChildren(expression, FnApp.class)) {
+            String newName = functions.get(innerCall.getName());
+            if (newName != null) {
+                innerCall.setName(newName);
+            }
+        }
+
+        return new ExpFunctionDef(expression);
+    }
+
+    public FnApp ParFnApp.apply(FunctionDecl function) {
+        return new FnApp(function.getName(), getParamList().treeCopy());
+    }
+}
