@@ -31,8 +31,6 @@ import abs.frontend.analyser.SemanticCondition;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.antlr.parser.ABSParserWrapper;
 import abs.frontend.ast.*;
-import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
-import abs.frontend.configurator.visualizer.FMVisualizer;
 import abs.frontend.delta.DeltaModellingException;
 import abs.frontend.delta.ProductLineAnalysisHelper;
 import abs.frontend.typechecker.locationtypes.LocationType;
@@ -47,7 +45,6 @@ public class Main {
 
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
     public static final String UNKNOWN_FILENAME = "<unknown file>";
-    protected boolean preprocess = false; //Preprocessor
     protected boolean verbose = false;
     protected boolean typecheck = true;
     protected boolean stdlib = true;
@@ -81,8 +78,7 @@ public class Main {
     public void mainMethod(final String... args) {
         try {
             java.util.List<String> argslist = Arrays.asList(args);
-            if (argslist.contains("-help") || argslist.contains("-h")
-                || argslist.contains("--help")) {
+            if (argslist.contains("-help") || argslist.contains("-h") || argslist.contains("--help")) {
                 printUsageAndExit();
             }
             if (argslist.contains("-maude")) {
@@ -184,8 +180,6 @@ public class Main {
                 numbersol = true;
             } else if (arg.equals("-noattr")) {
                 ignoreattr = true;
-            } else if (arg.equals("-preprocess")) { //Preprocessor
-                preprocess = true;
             } else if (arg.equals("-h") || arg.equals("-help")
                     || arg.equals("--help")) {
                 printUsageAndExit();
@@ -247,20 +241,9 @@ public class Main {
         // drop attributes before calculating any attribute
         if (ignoreattr)
             m.dropAttributes();
+
         if (verbose) {
             System.out.println("Analyzing Model...");
-        }
-
-
-        //Preprocessor
-        if (preprocess) {
-            System.out.println("Preprocessing Model...");
-            ABSPreProcessor oABSPreProcessor = new ABSPreProcessor();
-            oABSPreProcessor.preProcessModel(m); //For Pre-processing...
-
-            // Transformation of microTVL to Future Model Editor compatible XML
-            FMVisualizer oFMVisualizer = new FMVisualizer();
-            oFMVisualizer.ParseMicroTVLFile(m);
         }
 
         if (m.hasParserErrors()) {
@@ -670,7 +653,7 @@ public class Main {
     }
 
     protected static void printErrorAndExit(String error) {
-	assert error != null;
+        assert error != null;
         System.err.println("\nCompilation failed:\n");
         System.err.println("  " + error);
         System.err.println();
@@ -739,7 +722,6 @@ public class Main {
                 + "  -nsol          count the number of solutions\n"
                 + "  -noattr        ignore the attributes\n"
                 + "  -check=<PID>   check satisfiability of a product with name PID\n"
-                + "  -preprocess    Preprocessing the Model\n" //Preprocessor
                 + "  -h             print this message\n");
         abs.backend.maude.MaudeCompiler.printUsage();
         abs.backend.java.JavaBackend.printUsage();
