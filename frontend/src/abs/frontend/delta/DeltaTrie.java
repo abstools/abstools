@@ -115,7 +115,7 @@ public class DeltaTrie {
             return isValidProduct;
         }
 
-        public ProgramAbstraction getProgramTypeAbstraction() {
+        public ProgramAbstraction getProgramAbstraction() {
             return ta;
         }
 

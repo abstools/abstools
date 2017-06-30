@@ -1,7 +1,8 @@
 aspect ProductDeclaration {
 
     /*
-     * Evaluate all sorted ProductDecl and set the Product (i.e. the set of features)
+     * Evaluate all sorted ProductDecls (i.e. compute the set of features from the ProductExpresion)
+     * and remember it for later use -- via ProductDecl.getProduct()
      */
     public void Model.evaluateAllProductDeclarations() throws WrongProgramArgumentException {
         // Initialize set of ProductDecl
@@ -27,31 +28,21 @@ aspect ProductDeclaration {
                 features.add(f.treeCopyNoTransform());
             }
             p.setProduct(new Product(features));
-
-            /*
-            // Debug: Print evaluation result
-            System.out.print(p.getName() + " : ");
-            for(Feature f : features){
-                System.out.print(f.getName() + " ");
-            }
-            System.out.println();
-             */
         }
     }
 
     /*
      * Return true if this Product is the same as that Product; false otherwise.
-     */    
+     */
     public boolean Product.equals(Product that) {
         Set<Feature> thisFeatures = new HashSet<Feature>(ListUtils.ASTListToSet(getFeatures()));
-        Set<Feature> thatFeatures = new HashSet<Feature>(ListUtils.ASTListToSet(that.getFeatures())); 
-
+        Set<Feature> thatFeatures = new HashSet<Feature>(ListUtils.ASTListToSet(that.getFeatures()));
         return thisFeatures.equals(thatFeatures);
     }
 
     /*
      * Return true if this Feature is the same as the Object argument; false otherwise.
-     */ 
+     */
     public boolean Feature.equals(Object o) {
         return o instanceof Feature && getName().equals(((Feature) o).getName());
     }
@@ -59,7 +50,7 @@ aspect ProductDeclaration {
         return getName().hashCode();
     }
 
-    /* 
+    /*
      * Return the corresponding Product obtained through evaluating the product expression
      * A Product is a set of features.
      */

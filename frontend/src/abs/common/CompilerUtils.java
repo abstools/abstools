@@ -4,16 +4,11 @@
  */
 package abs.common;
 
-import java.util.ArrayList;
-
-import com.google.common.collect.ImmutableList;
 
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.Exp;
 import abs.frontend.ast.List;
-import abs.frontend.ast.MethodSig;
-import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.TypeUse;
@@ -83,19 +78,4 @@ public class CompilerUtils {
         toNode.setPositionFromNode(fromNode);
         return toNode;
     }
-
-
-    /**
-     * Get the return type & parameter types of a method as list of Strings
-     * Format: (return type, parameter types..)
-     *
-     */
-    public static java.util.List<String> getMethodParameterTypes(MethodSig sig) {
-        java.util.List<String> types = new ArrayList<String>();
-        types.add(sig.getType().toString());  // return type
-        for (ParamDecl par : sig.getParams())
-            types.add(par.getAccess().getType().toString());
-        return ImmutableList.copyOf(types);
-    }
-
 }

@@ -255,9 +255,8 @@ public class Main {
             return;
         }
 
-        m.evaluateAllProductDeclarations();
+        m.evaluateAllProductDeclarations(); // resolve ProductExpressions to simple sets of features
         rewriteModel(m, product);
-
         m.flattenTraitOnly();
         m.collapseTraitModifiers();
 
@@ -560,9 +559,9 @@ public class Main {
         if (verbose) {
             System.out.println("Typechecking Software Product Line (" + n + " products)...");
         }
-        SemanticConditionList typeerrors = m.typeCheckPL();
-        for (SemanticCondition se : typeerrors) {
-            System.err.println(se.getHelpMessage());
+        SemanticConditionList errors = m.typeCheckPL();
+        for (SemanticCondition err : errors) {
+            System.err.println(err.getHelpMessage());
         }
     }
 
