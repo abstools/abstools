@@ -25,7 +25,16 @@ aspect PartialFunctionApplier {
 
     void ModuleDecl.flattenPartialFunctions() {
         Map<String, PartialFunctionWrapper> functions = collectPartialFunctions();
+        if(functions.isEmpty()) {
+            return;
+        }
 
+        // declare annotation type
+        String annotationTypeName = getName() + "Expansion";
+        TypeUse intTypeUse = new UnresolvedTypeUse("Int", new List<Annotation>());
+        addDecl(new TypeSynDecl(annotationTypeName, new List<Annotation>(), intTypeUse));
+        TypeUse annotationType = new UnresolvedTypeUse(annotationTypeName, new List<Annotation>());
+        int expansionCount = 0;
         for (ParFnApp fnApp : TreeUtil.collectChildren(this, ParFnApp.class)) {
             PartialFunctionWrapper function = functions.get(fnApp.getName());
             if (function == null) {
@@ -33,10 +42,18 @@ aspect PartialFunctionApplier {
                 throw new RuntimeException("No such function: " + fnApp.getName());
             }
 
-            FunctionDecl appliedFunction = function.apply(fnApp);
+            PureExp expansionCountLiteral = new IntLiteral(Integer.toString(expansionCount++));
+            Annotation annotation = new TypedAnnotation(expansionCountLiteral, annotationType.treeCopy());
+            FunctionDecl appliedFunction = function.apply(fnApp, annotation);
             addDecl(appliedFunction);
             FnApp appliedFunctionCall = fnApp.apply(appliedFunction);
             TreeUtil.replace(fnApp, appliedFunctionCall);
+            Stmt stmt = TreeUtil.findParent(appliedFunctionCall, Stmt.class);
+            if (stmt != null) {
+                // TODO handle missing parent statement (e.g. in function definitions)
+                // TODO merge with existing annotation of same type
+                stmt.addAnnotation(annotation.treeCopy());
+            }
         }
 
         for (PartialFunctionWrapper wrapper : functions.values()) {
@@ -57,21 +74,21 @@ aspect PartialFunctionApplier {
         return Collections.unmodifiableMap(result);
     }
 
-    public FunctionDecl PartialFunctionDecl.apply(ParFnApp fnApp, int applyCount) {
+    public FunctionDecl PartialFunctionDecl.apply(ParFnApp fnApp, Annotation annotation, int applyCount) {
         FunctionDecl decl = new FunctionDecl();
-        apply(decl, fnApp, applyCount);
+        apply(decl, fnApp, annotation, applyCount);
         return decl;
     }
 
-    public FunctionDecl ParametricPartialFunctionDecl.apply(ParFnApp fnApp, int applyCount) {
+    public FunctionDecl ParametricPartialFunctionDecl.apply(ParFnApp fnApp, Annotation annotation, int applyCount) {
         ParametricFunctionDecl decl = new ParametricFunctionDecl();
         // TODO do this differently
-        apply(decl, fnApp, applyCount);
+        apply(decl, fnApp, annotation, applyCount);
         decl.setTypeParameterList(getTypeParameters().treeCopy());
         return decl;
     }
 
-    protected void PartialFunctionDecl.apply(FunctionDecl applied, ParFnApp fnApp, int applyCount) {
+    protected void PartialFunctionDecl.apply(FunctionDecl applied, ParFnApp fnApp, Annotation annotation, int applyCount) {
         int funcParamCount = getNumFuncParam();
         if(funcParamCount != fnApp.getNumFuncParam()) {
             // TODO handle errors
@@ -80,8 +97,7 @@ aspect PartialFunctionApplier {
 
         String appliedName = appliedName(applyCount);
         applied.setName(appliedName);
-        applied.setAnnotationList(getAnnotations().treeCopy());
-        // TODO add annotation referencing original
+        applied.setAnnotationList(getAnnotations().treeCopy().add(annotation));
         applied.setTypeUse(getTypeUse().treeCopy());
         applied.setParamList(getParams().treeCopy());
 

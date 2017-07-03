@@ -1,7 +1,6 @@
 package abs.frontend.pardef;
 
 import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.FnApp;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -39,6 +38,16 @@ public final class TreeUtil {
         }
     }
 
+    public static <T extends ASTNode<?>> T findParent(ASTNode<?> node, Class<T> parentType) {
+        if (parentType.isInstance(node)) {
+            return parentType.cast(node);
+        } else if (node == null) {
+            return null;
+        } else {
+            return findParent(node.getParent(), parentType);
+        }
+    }
+
     public static void removeFromParent(ASTNode<?> node) {
         ASTNode<?> parent = node.getParent();
         parent.removeChild(parent.getIndexOfChild(node));
@@ -51,5 +60,4 @@ public final class TreeUtil {
         parent.removeChild(index);
         parent.setChild(newNode, index);
     }
-
 }
