@@ -78,7 +78,7 @@ aspect PartialFunctionApplier {
             throw new RuntimeException("Wrong number of arguments");
         }
 
-        String appliedName = getName() + "_" + applyCount;
+        String appliedName = appliedName(applyCount);
         applied.setName(appliedName);
         applied.setAnnotationList(getAnnotations().treeCopy());
         // TODO add annotation referencing original
@@ -94,6 +94,11 @@ aspect PartialFunctionApplier {
         // enable recursion by replacing partial function name with applied name
         functions.put(getName(), appliedName);
         applied.setFunctionDef(getPartialFunctionDef().apply(functions));
+    }
+
+    protected String PartialFunctionDecl.appliedName(int applyCount) {
+        // avoid collisions by capitalizing the applied function name
+        return StringUtils.capitalize(getName()) + "_" + applyCount;
     }
 
     public FunctionDef PartialFunctionDef.apply(Map<String, String> functions) {
