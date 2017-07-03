@@ -37,24 +37,32 @@ aspect PartialFunctionApplier {
         addDecl(new TypeSynDecl(annotationTypeName, new List<Annotation>(), intTypeUse));
         TypeUse annotationType = new UnresolvedTypeUse(annotationTypeName, new List<Annotation>());
         int expansionCount = 0;
-        for (ParFnApp fnApp : TreeUtil.collectChildren(this, ParFnApp.class)) {
-            PartialFunctionWrapper function = functions.get(fnApp.getName());
-            if (function == null) {
-                // TODO handle errors
-                throw new RuntimeException("No such function: " + fnApp.getName());
-            }
+        int oldExpansionCount = -1;
+        while (oldExpansionCount != expansionCount && !TreeUtil.isAbsent(this, ParFnApp.class)) {
+            oldExpansionCount = expansionCount;
+            for (ParFnApp fnApp : TreeUtil.collectChildren(this, ParFnApp.class)) {
+                if (TreeUtil.findParent(fnApp, PartialFunctionDecl.class) != null) {
+                    // ignore ParFnApp within pardef that has not been expanded yet
+                    continue;
+                }
+                PartialFunctionWrapper function = functions.get(fnApp.getName());
+                if (function == null) {
+                    // TODO handle errors
+                    throw new RuntimeException("No such function: " + fnApp.getName());
+                }
 
-            PureExp expansionCountLiteral = new IntLiteral(Integer.toString(expansionCount++));
-            Annotation annotation = new TypedAnnotation(expansionCountLiteral, annotationType.treeCopy());
-            FunctionDecl appliedFunction = function.apply(fnApp, annotation);
-            addDecl(appliedFunction);
-            FnApp appliedFunctionCall = fnApp.apply(appliedFunction);
-            TreeUtil.replace(fnApp, appliedFunctionCall);
-            Stmt stmt = TreeUtil.findParent(appliedFunctionCall, Stmt.class);
-            if (stmt != null) {
-                // TODO handle missing parent statement (e.g. in function definitions)
-                // TODO merge with existing annotation of same type
-                stmt.addAnnotation(annotation.treeCopy());
+                PureExp expansionCountLiteral = new IntLiteral(Integer.toString(expansionCount++));
+                Annotation annotation = new TypedAnnotation(expansionCountLiteral, annotationType.treeCopy());
+                FunctionDecl appliedFunction = function.apply(fnApp, annotation);
+                addDecl(appliedFunction);
+                FnApp appliedFunctionCall = fnApp.apply(appliedFunction);
+                TreeUtil.replace(fnApp, appliedFunctionCall);
+                Stmt stmt = TreeUtil.findParent(appliedFunctionCall, Stmt.class);
+                if (stmt != null) {
+                    // TODO handle missing parent statement (e.g. in function definitions)
+                    // TODO merge with existing annotation of same type
+                    stmt.addAnnotation(annotation.treeCopy());
+                }
             }
         }
 
