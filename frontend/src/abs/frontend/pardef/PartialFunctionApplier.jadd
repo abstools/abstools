@@ -29,6 +29,12 @@ aspect PartialFunctionApplier {
             return;
         }
 
+        // check for cycles
+        for (PartialFunctionWrapper wrapper : functions.values()) {
+            PartialFunctionDecl function = wrapper.getFunction();
+            function.checkCycles(functions);
+        }
+
         // declare annotation type
         String annotationTypeName = getName() + "Expansion";
         TypeUse intTypeUse = new UnresolvedTypeUse("Int", new List<Annotation>());
@@ -72,6 +78,25 @@ aspect PartialFunctionApplier {
         }
 
         return Collections.unmodifiableMap(result);
+    }
+
+    public void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionWrapper> functions) {
+        checkCycles(functions, new HashSet<String>());
+    }
+
+    private void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionWrapper> functions, Set<String> visited) {
+        if (!visited.add(getName())) {
+            throw new RuntimeException("Cycle detected");
+        }
+        for (ParFnApp parFnApp : TreeUtil.collectChildren(this, ParFnApp.class)) {
+            PartialFunctionWrapper called = functions.get(parFnApp.getName());
+            if (called == null) {
+                // will be caught somewhere else
+                continue;
+            }
+            PartialFunctionDecl calledFunction = called.getFunction();
+            calledFunction.checkCycles(functions, new HashSet<>(visited));
+        }
     }
 
     public FunctionDecl PartialFunctionDecl.apply(ParFnApp fnApp, Annotation annotation, int applyCount) {
