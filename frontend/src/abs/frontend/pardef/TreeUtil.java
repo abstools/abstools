@@ -60,4 +60,8 @@ public final class TreeUtil {
         parent.removeChild(index);
         parent.setChild(newNode, index);
     }
+
+    public static boolean isAbsent(ASTNode<?> node, Class<? extends ASTNode<?>> type) {
+        return collectChildren(node, type).isEmpty();
+    }
 }

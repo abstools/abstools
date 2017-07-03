@@ -12,15 +12,11 @@ aspect PartialFunctionApplier {
         }
 
         // TODO use check results
-        if(!checkAbsence(ParFnApp.class)
-            || !checkAbsence(PartialFunctionDecl.class)
-            || !checkAbsence(PartialFunctionDef.class)) {
+        if(!TreeUtil.isAbsent(this, ParFnApp.class)
+            || !TreeUtil.isAbsent(this, PartialFunctionDecl.class)
+            || !TreeUtil.isAbsent(this, PartialFunctionDef.class)) {
             throw new RuntimeException("Did not remove all partial function nodes");
         }
-    }
-
-    private <T extends ASTNode<?>> boolean Model.checkAbsence(Class<T> type) {
-        return TreeUtil.collectChildren(this, type).isEmpty();
     }
 
     void ModuleDecl.flattenPartialFunctions() {
