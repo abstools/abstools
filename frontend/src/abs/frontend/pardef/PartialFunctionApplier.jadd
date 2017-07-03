@@ -77,19 +77,22 @@ aspect PartialFunctionApplier {
             // TODO handle errors
             throw new RuntimeException("Wrong number of arguments");
         }
+
+        String appliedName = getName() + "_" + applyCount;
+        applied.setName(appliedName);
+        applied.setAnnotationList(getAnnotations().treeCopy());
+        // TODO add annotation referencing original
+        applied.setTypeUse(getTypeUse().treeCopy());
+        applied.setParamList(getParams().treeCopy());
+
         Map<String, String> functions = new HashMap<>(funcParamCount * 2);
         for (int i = 0; i < funcParamCount; ++i) {
             String funcParam = getFuncParam(i).getName();
             String actualParam = fnApp.getFuncParam(i).getName();
             functions.put(funcParam, actualParam);
         }
-
-        applied.setName(getName() + "_" + applyCount);
-        applied.setAnnotationList(getAnnotations().treeCopy());
-        // TODO add annotation referencing original
-
-        applied.setTypeUse(getTypeUse().treeCopy());
-        applied.setParamList(getParams().treeCopy());
+        // enable recursion by replacing partial function name with applied name
+        functions.put(getName(), appliedName);
         applied.setFunctionDef(getPartialFunctionDef().apply(functions));
     }
 
