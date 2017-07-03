@@ -205,6 +205,53 @@ interfaces and not by their class.
 
 The syntax of interfaces is given in <<sec:interfaces>>.
 
+[[sec:exception-types]]
+=== Exceptions
+
+In higher-level programming languages, exceptions are generally used to signal
+an _erroneous_ or _abnormal_ runtime behaviour of the program, that should be
+treated (handled) separately compared to normal values.
+
+Exceptions are declared with the keyword `exception`.  Exceptions are of type
+`ABS.StdLib.Exception`, which is pre-defined in the standard library.
+
+
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _ExceptionDecl_ ::= | `exception` _SimpleTypeIdentifier_ `;`
+|====
+
+Like any other constructor or datatype name, exceptions always start with an
+upper-case letter.
+
+.Example
+[source]
+----
+exception MyException;
+----
+
+In ABS, exceptions are first-class values; the user can construct
+exception-values, assign them to variables, pass them in expressions, etc.  An
+exception can be thrown via the `throw` statement (see <<throw-statement>>)
+and be caught in a `catch` block (see <<try-catch-finally-stmt>>).
+Additionally, the object itself can recover its invariant after an uncaught
+exception in a process via its recovery block (see <<sec:classes>>).
+
+NOTE: Unlike normal datatype constructors, exceptions cannot take
+arguments yet.  This feature is planned for a future version of ABS.
+
+// An exception can also take any number of arguments as:
+
+// .Example
+// [source]
+// ----
+// exception AnotherException(Int, String, Bool);
+// ----
+
+
+
 === Type Synonyms
 
 A _Type Synonym_ is an alternative type name for a type.  Type synonyms are

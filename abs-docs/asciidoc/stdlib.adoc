@@ -274,48 +274,15 @@ Int result = await o!add(2, 3); <1>
 ----
 <1> This statement invokes `add`, suspends the current process until the result is available, then stores it in `result`.
 
-[[exception-type]]
-=== The Exception Type
+[[stdlib:predefined-exceptions]]
+=== Predefined exceptions in the Standard Library
 
-In higher-level programming languages, exceptions are generally used to signal
-an _erroneous_ or _abnormal_ runtime behaviour of the program, that should be
-treated (handled) separately compared to normal values.
+ABS provides pre-defined exceptions that are thrown in specific circumstances.
+See <<sec:exception-types>> for information about exceptions.
 
-The type `ABS.StdLib.Exception` is a special built-in data type.  Constructors
-are added to this datatype via an exception declaration.
-
-[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
-.Syntax
-|====
-| _ExceptionDecl_ ::= | `exception` _DataConstr_ `;`
-|====
-
-NOTE: The exception data type is the only data type that can be extended with
-new (user-provided) data constructors.
-
-.Example
-[source]
-----
-exception MyException;
-----
-
-An exception can also take any number of arguments as:
-
-.Example
-[source]
-----
-exception AnotherException(Int, String, Bool);
-----
-
-In ABS, exceptions are first-class values; the user can construct
-exception-values, assign them to variables, pass them in expressions, etc.  An
-exception can be thrown via the `throw` statement (see <<throw-statement>>)
-and be caught in a `catch` block (see <<try-catch-finally-stmt>>).
-Additionally, the object itself can recover its invariant after an uncaught
-exception in a process via its recovery block (see <<sec:classes>>).
-
-
-==== Predefined exceptions in the Standard Library
+NOTE: This list is subject to revision in future versions of ABS.  Not all
+these exceptions are currently thrown by different backends in the described
+situation.
 
 DivisionByZeroException::
     Raised in arithmetic expressions when the divisor (denominator) is equal to 0, as in +3/0+

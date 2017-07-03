@@ -231,44 +231,35 @@ return x;
 [[throw-statement]]
 === Throw
 
-The keyword-statement `throw` is used to signal exceptions (runtime errors).
-It takes a single argument which is the exception-value to throw. For example:
+The statement `throw` signals an exception (see <<sec:exception-types>>).
+It takes a single argument which is the exception value to throw.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _ThrowStmt_ ::= | `throw` _PureExp_ `;`
+|====
+
+
 
 [source]
-
+.Example
 ----
-{
- Int x = -1;
- if (x<0) {
-    throw NegativeNumberException(x);
- }
- else {
-   if (x==0) {
-      throw ZeroNumberException;
-   }
-   else ...
-}
+  throw AssertionFailException;
 ----
 
-NOTE: The 'throw' statement can only be used inside imperative code.
-Throwing user-exceptions inside functional code is considered bad practice:
-the user's function must be written instead to return an +Either<Exception, A>+ value,
-as in the example:
+Note that the 'throw' statement can only be used inside imperative code.
+Functional code that cannot return a value in all cases should use the `Maybe`
+datatype.
 
 ----
-def Either<Exception, Int> f(x,y) = if (y < 0)
-                                    then Left(NegativeNumberException)
-                                    else Right(...)
+def Maybe<Int> f(Int x, Int y) = if (y < 0) then None else Just(x);
 ----
 
-Despite this, there are certain built-in system-exceptions (see Section 3.3) that can originate
-from erroneous functional code. Examples of these are
-`DivisionByZeroException` and `PatternMatchFailException`, implicitly signaled
-by the ABS system.
-
-When an exception is raised (signaled), the normal flow of the program will be abrupted. In order to resume
-the normal flow, the user has to explicitly *handle* the exception.
-
+Furthermore, note that some built-in exceptions, like
+`DivisionByZeroException` and `PatternMatchFailException` can originate from
+functional code.  See <<stdlib:predefined-exceptions>> for a list of built-in
+exceptions.
 
 
 === Blocks of Statements
