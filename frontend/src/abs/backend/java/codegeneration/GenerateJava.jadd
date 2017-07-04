@@ -883,6 +883,18 @@ aspect GenerateJava {
         stream.print("\")");
     }
 
+    public void ListLiteral.generateJava(PrintStream stream) {
+        for (PureExp e : getPureExps()) {
+            stream.print("new ABS.StdLib.List_Cons(");
+            e.generateJava(stream);
+            stream.print(", ");
+        }
+        stream.print("new ABS.StdLib.List_Nil()");
+        for (int i = 0; i < getNumPureExp(); i++) {
+            stream.print(")");
+        }
+    }
+
     public void NullExp.generateJava(PrintStream stream) {
         stream.print("null");
     }

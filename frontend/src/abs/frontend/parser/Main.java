@@ -31,10 +31,8 @@ import abs.frontend.analyser.SemanticCondition;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.antlr.parser.ABSParserWrapper;
 import abs.frontend.ast.*;
-import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
-import abs.frontend.configurator.visualizer.FMVisualizer;
 import abs.frontend.delta.DeltaModellingException;
-import abs.frontend.delta.ProductLineTypeAnalysisHelper;
+import abs.frontend.delta.ProductLineAnalysisHelper;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -47,7 +45,6 @@ public class Main {
 
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
     public static final String UNKNOWN_FILENAME = "<unknown file>";
-    protected boolean preprocess = false; //Preprocessor
     protected boolean verbose = false;
     protected boolean typecheck = true;
     protected boolean stdlib = true;
@@ -81,8 +78,7 @@ public class Main {
     public void mainMethod(final String... args) {
         try {
             java.util.List<String> argslist = Arrays.asList(args);
-            if (argslist.contains("-help") || argslist.contains("-h")
-                || argslist.contains("--help")) {
+            if (argslist.contains("-help") || argslist.contains("-h") || argslist.contains("--help")) {
                 printUsageAndExit();
             }
             if (argslist.contains("-maude")) {
@@ -184,8 +180,6 @@ public class Main {
                 numbersol = true;
             } else if (arg.equals("-noattr")) {
                 ignoreattr = true;
-            } else if (arg.equals("-preprocess")) { //Preprocessor
-                preprocess = true;
             } else if (arg.equals("-h") || arg.equals("-help")
                     || arg.equals("--help")) {
                 printUsageAndExit();
@@ -247,20 +241,9 @@ public class Main {
         // drop attributes before calculating any attribute
         if (ignoreattr)
             m.dropAttributes();
+
         if (verbose) {
             System.out.println("Analyzing Model...");
-        }
-
-
-        //Preprocessor
-        if (preprocess) {
-            System.out.println("Preprocessing Model...");
-            ABSPreProcessor oABSPreProcessor = new ABSPreProcessor();
-            oABSPreProcessor.preProcessModel(m); //For Pre-processing...
-
-            // Transformation of microTVL to Future Model Editor compatible XML
-            FMVisualizer oFMVisualizer = new FMVisualizer();
-            oFMVisualizer.ParseMicroTVLFile(m);
         }
 
         if (m.hasParserErrors()) {
@@ -272,9 +255,8 @@ public class Main {
             return;
         }
 
-        m.evaluateAllProductDeclarations();
+        m.evaluateAllProductDeclarations(); // resolve ProductExpressions to simple sets of features
         rewriteModel(m, product);
-
         m.flattenTraitOnly();
         m.collapseTraitModifiers();
 
@@ -288,7 +270,7 @@ public class Main {
                 // Build all SPL configurations (valid feature selections, ignoring attributes), one by one (for performance measuring)
                 if (verbose)
                     System.out.println("Building ALL " + m.getProductList().getNumChild() + " feature model configurations...");
-                ProductLineTypeAnalysisHelper.buildAllConfigurations(m);
+                ProductLineAnalysisHelper.buildAllConfigurations(m);
                 return;
             }
             if (typecheck)
@@ -393,6 +375,7 @@ public class Main {
                 currentFeatureFun.setFunctionDef(new ExpFunctionDef(feature_arglist));
             }
         }
+        m.flushTreeCache();
     }
 
     /** Handle exceptions: add exceptions as constructors to the
@@ -576,9 +559,9 @@ public class Main {
         if (verbose) {
             System.out.println("Typechecking Software Product Line (" + n + " products)...");
         }
-        SemanticConditionList typeerrors = m.typeCheckPL();
-        for (SemanticCondition se : typeerrors) {
-            System.err.println(se.getHelpMessage());
+        SemanticConditionList errors = m.typeCheckPL();
+        for (SemanticCondition err : errors) {
+            System.err.println(err.getHelpMessage());
         }
     }
 
@@ -669,7 +652,7 @@ public class Main {
     }
 
     protected static void printErrorAndExit(String error) {
-	assert error != null;
+        assert error != null;
         System.err.println("\nCompilation failed:\n");
         System.err.println("  " + error);
         System.err.println();
@@ -738,7 +721,6 @@ public class Main {
                 + "  -nsol          count the number of solutions\n"
                 + "  -noattr        ignore the attributes\n"
                 + "  -check=<PID>   check satisfiability of a product with name PID\n"
-                + "  -preprocess    Preprocessing the Model\n" //Preprocessor
                 + "  -h             print this message\n");
         abs.backend.maude.MaudeCompiler.printUsage();
         abs.backend.java.JavaBackend.printUsage();

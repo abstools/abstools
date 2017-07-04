@@ -4,6 +4,8 @@
  */
 package abs.frontend.parser;
 
+//These tests are deactivated in AllFrontendTests.java since the tested functionality has not been implemented in the antlr-based parser.
+
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;

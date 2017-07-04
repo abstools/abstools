@@ -15,6 +15,7 @@ aspect ProductFlattener {
     public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,DeltaModellingException {
         ProductDecl decl = this.findProduct(id);
         flattenForProduct(decl);
+        flushTreeCache();
     }
     /**************************************************************************
      * Apply delta to model without checking if the product is valid wrt the feature model
@@ -84,6 +85,7 @@ aspect ProductFlattener {
         for (DeltaDecl delta : getDeltaDecls()) {
             delta.collapseTraitModifiers();
         }
+        flushTreeCache();
     }
 
     public void DeltaDecl.collapseTraitModifiers() {
@@ -91,7 +93,7 @@ aspect ProductFlattener {
             mod.collapseTraitModifiers();
         }
     }
-
+    
     /**************************************************************************
      * Apply deltas to model
      */
@@ -356,6 +358,7 @@ aspect ProductFlattener {
                 }
             }
         } while(changed);
+        flushTreeCache();
     }
 
 

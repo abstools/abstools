@@ -6,7 +6,7 @@ RUN curl https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb -\# 
  && rm erlang-solutions_1.0_all.deb \
  && echo "deb http://ftp.debian.org/debian jessie-backports main\n" > /etc/apt/sources.list.d/jessie-backports.list \
  && apt-get -y update \
- && apt-get -y install --no-install-recommends unzip git openssl-blacklist libmcrypt-dev erlang default-jre gawk graphviz\
+ && apt-get -y install --no-install-recommends unzip git openssl-blacklist libmcrypt-dev erlang default-jre gawk graphviz netcat-openbsd\
  && docker-php-ext-install mcrypt \
  && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/abstools/absexamples.git /var/www/absexamples \
@@ -88,7 +88,8 @@ RUN cd / && \
   cd /solvers_exec && \
   git clone --recursive https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git && \
 	cd zephyrus2 && \
-	git checkout tags/v1.0 && \ 
+	#git checkout tags/v1.0 && \
+	git checkout 5df3baf && \
 	#check out tested version with smartdeployer
   pip install -e /solvers_exec/zephyrus2
 # download MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz that comes with gecode
@@ -101,8 +102,9 @@ ENV PATH /solvers_exec/MiniZincIDE:$PATH
 # clone abs_deployer
 RUN cd /solvers_exec && \
 	git clone --recursive https://github.com/jacopoMauro/abs_deployer.git && \
-	cd abs_deployer && \
-	git checkout tags/v0.3
+	cd abs_deployer # && \
+	git checkout daa4625
+	# git checkout tags/v0.3
 ENV PATH /solvers_exec/abs_deployer:$PATH
 # download chuffed, add global-dir in minizinc
 RUN cd /solvers_exec && \

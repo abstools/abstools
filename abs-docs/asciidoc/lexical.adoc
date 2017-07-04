@@ -101,12 +101,14 @@ The following words are keywords in the ABS language and are invalid as identifi
 
 [format="csv", "ls="7",grid="none"]
 |=====
-`adds`,`core`,`export`,`hasMethod`,`let`,`product`,`this`
-`after`,`class`,`features`,`if`,`local`,`productline`,`type`
-`assert`,`data`,`from`,`implements`,`modifies`,`removes`,`when`
-`await`,`def`,`get`,`import`,`module`,`return`,`while`
-`builtin`,`delta`,`hasField`,`in`,`new`,`skip`,`case`
-`else`,`hasInterface`,`interface`,`null`,`suspend`
+`adds`, `after`, `assert`, `await`, `builtin`, `case`, `catch`
+`class`, `core`, `data`, `def`, `delta`, `die`, `else`
+`exception`, `export`, `extends`, `features`, `finally`, `from`, `get`
+`hasField`, `hasInterface`, `hasMethod`, `if`, `implements`, `import`, `in`
+`interface`, `let`, `local`, `modifies`, `module`, `new`, `null`
+`original`, `product`, `productline`, `recover`, `removes`, `return`, `skip`
+`suspend`, `this`, `throw`, `trait`, `try`, `type`, `uses`
+`when`, `while`,,
 |=====
 
 [[sec:literals]]

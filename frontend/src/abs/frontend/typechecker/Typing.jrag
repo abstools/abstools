@@ -58,6 +58,7 @@ aspect Typing {
     syn Type Model.getRatType() = getStdDataType("Rat");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
+    syn Type Model.getListType(Type typeArg) = ((DataTypeType)getStdDataType("List")).withTypeArgs(typeArg);
     syn Type Model.getExceptionType() = getStdDataType("Exception");
     syn DataTypeType Model.getFutType(Type typeArg) = ((DataTypeType)getStdDataType("Fut")).withTypeArgs(typeArg);
     syn DataTypeType Model.getResultType(Type typeArg) = ((DataTypeType)getStdDataType("Result")).withTypeArgs(typeArg);
@@ -252,7 +253,6 @@ aspect Typing {
    	 }
     }
     eq DataConstructorExp.getType() {
-
 	 DataConstructor d = getDataConstructor();
 	 if (d == null)
 	   return UnknownType.INSTANCE;
@@ -267,6 +267,25 @@ aspect Typing {
    		 return declaredResultType;
    	 }
    	 
+    }
+    eq ListLiteral.getType() {
+        if (hasPureExp()) {
+            Type t = UnknownType.INSTANCE;
+            for (PureExp exp : getPureExps()) {
+                Type expt = exp.getType();
+                if (!t.isUnknownType()) {
+                    if (t.isAssignableTo(expt)) { t = expt; }
+                } else {
+                    t = expt;
+                }
+            }
+            // TODO: get most general type across content list
+            return getModel().getListType(t);
+        } else {
+            // CreateJastAddASTListener:exitVariadicFunctionExp() does not
+            // create empty ListLiteral, so this branch is currently dead code
+            return getModel().getListType(UnknownType.INSTANCE);
+        }
     }
     eq LetExp.getType() = getExp().getType();
     eq IntLiteral.getType() = getModel().getIntType();

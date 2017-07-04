@@ -46,10 +46,10 @@ frontend:			## Build ABS compiler (default)
 	@echo "absc command installed in frontend/bin/bash/"
 
 manual:				## Build the ABS manual
-	mvn -B -f $(ROOT_DIR)/abs-docs clean install
+	mvn -B -f $(ROOT_DIR)/abs-docs/pom.xml clean install
 	@echo "Finished."
 	@echo "HTML: abs-docs/target/html/index.html"
-	@echo "PDF: abs-docs/target//pdf/index.pdf"
+	@echo "PDF: abs-docs/target/pdf/index.pdf"
 	@echo "Epub3: abs-docs/target/epub3/index.epub"
 
 vagrant:			## Build and start Vagrant virtual machine

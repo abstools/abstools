@@ -49,18 +49,18 @@ public class DeltaTrie {
         private final Map<String, Node> children;
         private String deltaID = null;
         private boolean isValidProduct = false;
-        private final ProgramTypeAbstraction ta;
+        private final ProgramAbstraction ta;
 
         // Constructor for top level root node
         public Node(SemanticConditionList errors) {
             this.deltaID = "core";
             this.children = new HashMap<String, Node>();
-            this.ta = new ProgramTypeAbstraction(errors);
-            model.buildCoreTypeAbstraction(ta);
+            this.ta = new ProgramAbstraction(errors);
+            model.buildCoreAbstraction(ta);
         }
 
         // Constructor for child node
-        public Node(String name, ProgramTypeAbstraction ta) {
+        public Node(String name, ProgramAbstraction ta) {
             this.children = new HashMap<String, Node>();
             this.deltaID = name;
             this.ta = ta;
@@ -81,7 +81,7 @@ public class DeltaTrie {
                 // node already exists
                 nextNode = children.get(word.get(d));
             } else {
-                ProgramTypeAbstraction nextTA = new ProgramTypeAbstraction(ta);
+                ProgramAbstraction nextTA = new ProgramAbstraction(ta);
                 nextNode = new Node(word.get(d), nextTA);
 
                 // Apply delta to nextNode's program type abstraction
@@ -115,7 +115,7 @@ public class DeltaTrie {
             return isValidProduct;
         }
 
-        public ProgramTypeAbstraction getProgramTypeAbstraction() {
+        public ProgramAbstraction getProgramAbstraction() {
             return ta;
         }
 

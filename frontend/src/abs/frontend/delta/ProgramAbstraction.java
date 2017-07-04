@@ -18,7 +18,7 @@ import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.analyser.SPLTypeError;
 import abs.frontend.ast.*;
 
-public class ProgramTypeAbstraction {
+public class ProgramAbstraction {
     /* Remember essential program information in a Program Signature Table (PST)
      * This includes:
      * - classes
@@ -30,10 +30,17 @@ public class ProgramTypeAbstraction {
      *   - interface methods (name => return type, argument types, TODO? argument names)
      *
      * We use a data structure based on maps (in the hope that maps can be created/accessed faster than objects)
-     * Goal: using ProgramTypeAbstractions instead of accessing the AST node objects should be much faster
+     * Goal: using ProgramAbstractions instead of accessing the AST node objects should be much faster
      */
     private final Map<String, Map<String, Map<String,java.util.List<String>>>> classes;
+    public Map<String, Map<String, Map<String, java.util.List<String>>>> getClasses() {
+        return classes;
+    }
+
     private final Map<String, Map<String, Map<String,java.util.List<String>>>> interfaces;
+    public Map<String, Map<String, Map<String, java.util.List<String>>>> getInterfaces() {
+        return interfaces;
+    }
 
     private final SemanticConditionList errors;
 
@@ -44,7 +51,7 @@ public class ProgramTypeAbstraction {
     private Product product;
 
     // Constructor
-    public ProgramTypeAbstraction(SemanticConditionList errors) {
+    public ProgramAbstraction(SemanticConditionList errors) {
         this.errors = errors;
         deltas = new ArrayList<DeltaDecl>();
         classes = new HashMap<String, Map<String, Map<String,java.util.List<String>>>>();
@@ -52,7 +59,7 @@ public class ProgramTypeAbstraction {
     }
 
     // Copy constructor
-    public ProgramTypeAbstraction(ProgramTypeAbstraction sourceTA) {
+    public ProgramAbstraction(ProgramAbstraction sourceTA) {
         this.errors = sourceTA.errors;
         this.deltas = new ArrayList<DeltaDecl>(sourceTA.deltas);
         classes = new HashMap<String, Map<String, Map<String,java.util.List<String>>>>();
@@ -81,7 +88,7 @@ public class ProgramTypeAbstraction {
         deltas.add(delta);
         this.product = product;
         for (ModuleModifier mod : delta.getModuleModifiers()) {
-            mod.applyToTypeAbstraction(this);
+            mod.applyToProgramAbstraction(this);
         }
     }
 
@@ -94,8 +101,17 @@ public class ProgramTypeAbstraction {
             errors.add(new SPLTypeError(node, ErrorMessage.DUPLICATE_CLASS_NAME, deltas, product, className,
                     // TODO add " at file:line" with location of original definition
                     ""));
-        else
+        else {
             classAdd(className);
+            for (ParamDecl field : node.getClassDecl().getParams())
+                classFieldAdd(className, field.getName(), getVarType(field));
+            for (FieldDecl field : node.getClassDecl().getFields())
+                classFieldAdd(className, field.getName(), getVarType(field));
+            for (MethodImpl method : node.getClassDecl().getMethods()) {
+                java.util.List<String> types = getMethodParameterTypes(method.getMethodSig());
+                classMethodAdd(className, method.getMethodSig().getName(), types);
+            }
+        }
     }
     public void classAdd(String className) {
         classes.put(className, new HashMap<String, Map<String,java.util.List<String>>>());
@@ -113,7 +129,7 @@ public class ProgramTypeAbstraction {
 
     public void classFieldAdd(String className, AddFieldModifier node) {
         String name = node.getFieldDecl().getName();
-        String type = node.getFieldDecl().getType().toString();
+        String type = getVarType(node.getFieldDecl());
         if (! classes.get(className).get("fields").containsKey(name))
             classFieldAdd(className, name, type);
         else
@@ -126,7 +142,7 @@ public class ProgramTypeAbstraction {
 
     public void classFieldRemove(String className, RemoveFieldModifier node) {
         String name = node.getFieldDecl().getName();
-        String type = node.getFieldDecl().getType().toString();
+        String type = getVarType(node.getFieldDecl());
         if (classes.get(className).get("fields").containsKey(name) && type.equals(classes.get(className).get("fields").get(name).get(0)))
             classes.get(className).get("fields").remove(name);
         else
@@ -135,7 +151,7 @@ public class ProgramTypeAbstraction {
 
     public void classMethodAdd(String className, AddMethodModifier node) {
         String name = node.getMethodImpl().getMethodSig().getName();
-        java.util.List<String> types = CompilerUtils.getMethodParameterTypes(node.getMethodImpl().getMethodSig());
+        java.util.List<String> types = getMethodParameterTypes(node.getMethodImpl().getMethodSig());
         if (! classes.get(className).get("methods").containsKey(name))
             classMethodAdd(className, name, types);
         else
@@ -145,16 +161,15 @@ public class ProgramTypeAbstraction {
                             + StringUtils.join(",", types.subList(1, types.size())) + ")"));
     }
 
-    public void classMethodAdd(String name, String methodName, java.util.List<String> types) {
-        // types: first entry is return type; rest is argument types
-        classes.get(name).get("methods").put(methodName, types);
+    public void classMethodAdd(String className, String methodName, java.util.List<String> types) {
+        classes.get(className).get("methods").put(methodName, types);
     }
 
     public void classMethodRemove(String className, RemoveMethodModifier node) {
         String name = node.getMethodSig(0).getName();
-        java.util.List<String> types = CompilerUtils.getMethodParameterTypes(node.getMethodSig(0)); // A MethodModifier should only reference one method
+        java.util.List<String> types = getMethodParameterTypes(node.getMethodSig(0)); // A MethodModifier should only reference one method
         if (classes.get(className).get("methods").containsKey(name) && types.equals(classes.get(className).get("methods").get(name)))
-            classes.get(className).get("fields").remove(name);
+            classes.get(className).get("methods").remove(name);
         else
             errors.add(new SPLTypeError(node, ErrorMessage.NO_METHOD_DECL, deltas, product,
                     types.get(0) + " "
@@ -164,7 +179,7 @@ public class ProgramTypeAbstraction {
 
     public void classMethodModify(String className, ModifyMethodModifier node) {
         String name = node.getMethodImpl().getMethodSig().getName();
-        java.util.List<String> types = CompilerUtils.getMethodParameterTypes(node.getMethodImpl().getMethodSig());
+        java.util.List<String> types = getMethodParameterTypes(node.getMethodImpl().getMethodSig());
         if (!(classes.get(className).get("methods").containsKey(name) && types.equals(classes.get(className).get("methods").get(name))))
             errors.add(new SPLTypeError(node, ErrorMessage.NO_METHOD_DECL, deltas, product,
                     types.get(0) + " "
@@ -194,6 +209,9 @@ public class ProgramTypeAbstraction {
 
     /*
      * Interfaces
+     * - add
+     * - remove
+     * - modify
      */
     public void interfaceAdd(AddInterfaceModifier node) {
         String name = node.qualifiedName();
@@ -208,9 +226,22 @@ public class ProgramTypeAbstraction {
         interfaces.put(name, new HashMap<String, Map<String,java.util.List<String>>>());
         interfaces.get(name).put("methods", new HashMap<String,java.util.List<String>>());
     }
+
     // types: first entry is return type; rest is argument types
     public void interfaceMethodAdd(String name, String methodName, java.util.List<String> types) {
         interfaces.get(name).get("methods").put(methodName, types);
+    }
+
+    public void interfaceMethodRemove(String ifName, RemoveMethodSigModifier node) {
+        String name = node.getMethodSig().getName();
+        java.util.List<String> types = getMethodParameterTypes(node.getMethodSig());
+        if (interfaces.get(ifName).get("methods").containsKey(name) && types.equals(interfaces.get(ifName).get("methods").get(name)))
+            interfaces.get(ifName).get("methods").remove(name);
+        else
+            errors.add(new SPLTypeError(node, ErrorMessage.NO_METHOD_DECL, deltas, product,
+                    types.get(0) + " "
+                            + name + "("
+                            + StringUtils.join(",", types.subList(1, types.size())) + ")"));
     }
 
 
@@ -254,4 +285,25 @@ public class ProgramTypeAbstraction {
         }
         return s.toString();
     }
+
+    /*
+     * Get the return type & parameter types of a method as list of Strings
+     * Format: (return type, parameter types...)
+     *
+     * We use the types as declared in the source, not as determined by type resolution, which might fail.
+     * I.e. we simply use the Access's String representation (and not Access.getType()).
+     */
+    public static java.util.List<String> getMethodParameterTypes(MethodSig sig) {
+        java.util.List<String> types = new ArrayList<String>();
+        types.add(sig.getReturnType().toString());
+        for (ParamDecl par : sig.getParams()) {
+            types.add(par.getAccess().toString());
+        }
+        return ImmutableList.copyOf(types);
+    }
+
+    public static String getVarType(TypedVarOrFieldDecl var) {
+        return var.getAccess().toString();
+    }
+
 }

@@ -83,14 +83,14 @@ aspect DeltaModifierApplicator {
 
 
     abstract public void ModuleModifier.apply() throws DeltaModellingException;
-
+  
     /*
     * DeltaTraitModifier references trait operations from a class.
     */
-    public void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{
-        getMethodModifier().applyTo(cd);
+    public void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ 
+        getMethodModifier().applyTo(cd); 
     }
-
+  
     /*
     *  Fixes the parse tree and splits a big trait operation into a list of trait operations
     *  This is needed so in

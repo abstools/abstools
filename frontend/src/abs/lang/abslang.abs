@@ -1287,7 +1287,7 @@ def List<Feature> product_features() = Nil;
 
 module ABS.JUnit;
 export *;
-import List, Maybe, String from ABS.StdLib;
+import * from ABS.StdLib;
 
 data Testsuites = Testsuites (Maybe<String> isNamed, List<Testsuite> ttss);
 data Testsuite  = Testsuite (String name, List<Testcase> tcs);

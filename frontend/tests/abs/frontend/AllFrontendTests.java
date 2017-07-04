@@ -20,12 +20,15 @@ import deadlock.DeadlockCheckerTests;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         ModuleSystemTests.class, FreeVarTest.class,
-        ParserTest.class, RecoverTest.class, DuplicateCheckTest.class, InterfaceDeclarationTest.class,
+        ParserTest.class, 
+        // RecoverTest.class, // deactivated since switching parser to antlr
+        DuplicateCheckTest.class, InterfaceDeclarationTest.class,
         ParseSamplesTest.class, VarResolutionTest.class, TypingTest.class, TypeCheckerTest.class,
         NegativeTypeCheckerTests.class, LocationTypeTests.class,
         ExamplesTypeChecking.class, AnnotationTests.class,
         ClassKindTests.class, OtherAnalysisTests.class, AtomicityTests.class,
-        BackPositionTest.class, IncompleteExpTests.class,
+        BackPositionTest.class,
+        // IncompleteExpTests.class, // deactivated since switching parser to antlr
         SearchSolutionsTest.class,
         TestABSPackages.class, CaseStudyTypeChecking.class
         , DeadlockCheckerTests.class, DeadlockCasestudies.class, OriginalCallTest.class, TraitTest.class

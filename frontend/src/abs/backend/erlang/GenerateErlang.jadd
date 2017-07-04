@@ -479,6 +479,18 @@ aspect GenerateErlang {
   }
 
   @Override
+  public void ListLiteral.generateErlangCode(CodeStream ecs, Vars vars) {
+      ecs.print("[ ");
+      String divider = "";
+      for (PureExp p : getPureExpList()) {
+          ecs.print(divider);
+          divider = ", ";
+          p.generateErlangCode(ecs, vars);
+      }
+      ecs.print("] ");
+  }
+
+  @Override
   public void NullExp.generateErlangCode(CodeStream ecs,Vars vars) {
     ecs.print( "null");
   }

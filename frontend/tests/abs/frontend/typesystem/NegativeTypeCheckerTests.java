@@ -368,6 +368,16 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void fnAppListIncompatibleElement() {
+        assertTypeErrors("{ Set<Int> s = set[4, \"hello\"]; }");
+    }
+
+    @Test
+    public void fnAppListIncompatibleListType() {
+        assertTypeErrors("{ Set<Int> s = set[4, 4/3]; }");
+    }
+
+    @Test
     public void fnTypecheckNoCrash() {
         assertTypeErrors("def List<String> map2list<A>(Map<String,A> map) =" + "case map {" + "EmptyMap => Nil ;"
                 + "Insert(Pair(b,_), tail) => Cons(b, map2list(tail)) ;" + "};");

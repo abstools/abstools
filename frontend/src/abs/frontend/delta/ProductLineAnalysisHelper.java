@@ -18,7 +18,7 @@ import abs.frontend.ast.*;
 import abs.frontend.mtvl.ChocoSolver;
 import choco.kernel.model.constraints.Constraint;
 
-public class ProductLineTypeAnalysisHelper {
+public class ProductLineAnalysisHelper {
 
     /*
      * An IFΔJ product line is type-safe if the following conditions hold:
@@ -27,26 +27,26 @@ public class ProductLineTypeAnalysisHelper {
      * (iii) all its products are well-typed IFJ programs.
      */
     public static void typeCheckPL(ProductLine pl, SemanticConditionList errors) {
-
         assert pl != null;
 
-        if (wellFormedProductLine(pl, errors)) {
-            long time0 = System.currentTimeMillis();
-            // Check strong unambiguity
-            checkStrongUnambiguity(pl, errors);
-            // Build the product family generation trie. Hereby check that
-            // - product generation mapping is total
-            // - TODO all products are well-typed programs
-            DeltaTrie pfgt = buildPFGT(pl, errors);
+        if (! wellFormedProductLine(pl, errors))
+            return;
 
-            if (pl.getModel().debug) {
-                //System.out.println("Trie height:\n" + pfgt.height());
-                //System.out.println("Trie:\n" + pfgt.toString());
-                long time1 = System.currentTimeMillis();
-                System.out.println("\u23F1 Type checking SPL duration (s): " + ((time1 - time0)/1000.0));
-            }
+        long time0 = System.currentTimeMillis();
+        // Check strong unambiguity
+        checkStrongUnambiguity(pl, errors);
+        // Build the product family generation trie. Hereby check that
+        // - product generation mapping is total
+        // - TODO all products are well-typed programs
+        DeltaTrie pfgt = buildPFGT(pl, errors);
 
+        if (pl.getModel().debug) {
+            //System.out.println("Trie height:\n" + pfgt.height());
+            //System.out.println("Trie:\n" + pfgt.toString());
+            long time1 = System.currentTimeMillis();
+            System.out.println("\u23F1 Type checking SPL duration (s): " + ((time1 - time0)/1000.0));
         }
+
     }
 
 

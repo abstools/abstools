@@ -322,6 +322,16 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    public void fnAppListUpgradableListType() {
+        assertTypeOK("{ Set<Rat> s = set[4/3, 4]; }");
+    }
+
+    @Test
+    public void fnAppListUpgradableListType2() {
+        assertTypeOK("{ Set<Rat> s = set[4, 4/3]; }");
+    }
+
+    @Test
     public void constructorTypeArgs() {
         assertTypeOK("{ Maybe<Bool> o = Just(True); }");
     }

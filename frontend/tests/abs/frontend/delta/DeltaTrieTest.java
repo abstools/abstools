@@ -29,7 +29,7 @@ public class DeltaTrieTest extends DeltaTest {
                         + "}"
                 );
         ProductLine pl = model.getProductLine();
-        DeltaTrie pfgt = ProductLineTypeAnalysisHelper.buildPFGT(pl, new SemanticConditionList());
+        DeltaTrie pfgt = ProductLineAnalysisHelper.buildPFGT(pl, new SemanticConditionList());
 
         //System.out.println(pfgt.toString());
 
@@ -59,7 +59,7 @@ public class DeltaTrieTest extends DeltaTest {
                         + "}"
                 );
         ProductLine pl = model.getProductLine();
-        DeltaTrie pfgt = ProductLineTypeAnalysisHelper.buildPFGT(pl, new SemanticConditionList());
+        DeltaTrie pfgt = ProductLineAnalysisHelper.buildPFGT(pl, new SemanticConditionList());
 
         assertTrue(pfgt.getRoot().isValidProduct());
         assertEquals(3, pfgt.getRoot().getChildren().size());
@@ -101,7 +101,7 @@ public class DeltaTrieTest extends DeltaTest {
                 );
 
         ProductLine pl = model.getProductLine();
-        DeltaTrie pfgt = ProductLineTypeAnalysisHelper.buildPFGT(pl, new SemanticConditionList());
+        DeltaTrie pfgt = ProductLineAnalysisHelper.buildPFGT(pl, new SemanticConditionList());
 
         // TODO: tests
     }
