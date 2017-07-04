@@ -23,12 +23,11 @@ public class Tester extends Main {
     private int fixpointVersion = 2;
 
     public static void main(final String... args) {
-        // TODO Auto-generated method stub
         try {
             new Tester().compile(args);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
-            System.exit(0);
+            System.exit(127);
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
@@ -36,22 +35,23 @@ public class Tester extends Main {
                 e.printStackTrace();
             }
 
-            System.exit(1);  
+            System.exit(127);  
         }
     }
 
     private void compile(String[] args) throws DeltaModellingException, IOException, WrongProgramArgumentException, ParserConfigurationException {
-        // TODO Auto-generated method stub
         final Model model = this.parse(args);
-        if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
-            return;
-        
+        if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
+	    System.exit(127);
+        }
+
         if (verbose) {
             System.out.println("Starting deadlock analysis...");
         }
         /*Instantiate the analyzer and perform deadlock analysis*/
         Analyser a = new Analyser();
         a.deadlockAnalysis(model, verbose, numberOfIterations, fixpointVersion, System.out);
+	// NOT REACHED
     }
     
     @Override

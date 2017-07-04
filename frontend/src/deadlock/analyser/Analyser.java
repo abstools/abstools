@@ -45,8 +45,6 @@ public class Analyser {
   private static int FixPoint2_0 = 2;
     
   public void deadlockAnalysis(Model m, boolean verbose, int nbIteration, int fixPointVersion, PrintStream out) {
-    
-    
       
     Variable.varCounter =0;
     Long totalTimeInMs = 0L;
@@ -64,7 +62,7 @@ public class Analyser {
         out.println("Note: necessary conditions for deadlocks were not present");
         out.println();
         out.println("Analysis Duration:            " + totalTimeInMs + "ms");
-        return;
+	System.exit(0);
     }
       
     
@@ -116,7 +114,7 @@ public class Analyser {
       log.logDebug("###############################################################\n");
     }
 
-    ArrayList<GenerationError> errors = new ArrayList<GenerationError>(c.getErrors().size());
+    List<GenerationError> errors = new ArrayList<GenerationError>(c.getErrors().size());
     for(SolvingError err : c.getErrors()) {
       if(err instanceof SolvingErrorLoop) { errors.add(new ErrorLoop((SolvingErrorLoop)err)); }
       else { errors.add(new ErrorUnif((SolvingErrorUnif)err)); }
@@ -133,8 +131,7 @@ public class Analyser {
             out.println();
         }
         
-        
-        return; 
+        System.exit(127);
     }
 
 
@@ -240,8 +237,8 @@ public class Analyser {
         out.println("Possible Livelock in Main:    " + ((FixPointSolver1)solver).isLivelockMain());
       }
     out.println("Analysis Duration:            " + totalTimeInMs + "ms");
+    System.exit(1);
     }
-
 }
 
 
