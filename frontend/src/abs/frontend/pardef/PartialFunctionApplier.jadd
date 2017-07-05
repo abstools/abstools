@@ -63,7 +63,7 @@ aspect PartialFunctionApplier {
 
                 FnApp expandedFunctionCall = fnApp.apply(expandedWrapper.getExpanded());
                 TreeUtil.replace(fnApp, expandedFunctionCall);
-                AnnotationUtil.annotateCall(expandedFunctionCall, expandedWrapper.getExpansionIndex());
+                AnnotationUtil.annotateCall(expandedFunctionCall, expandedWrapper.getExpansionId());
             }
         }
 

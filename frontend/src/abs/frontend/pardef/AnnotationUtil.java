@@ -16,25 +16,35 @@ public final class AnnotationUtil {
     private AnnotationUtil() {
     }
 
-    public static void annotateExpansion(FunctionDecl expansion, int expansionIndex) {
-        addToAnnotations(expansion.getAnnotations(), TypeUtil.expansionType(), expansionIndex);
+    public static void annotateExpansion(FunctionDecl expansion, int expansionId) {
+        addToAnnotations(expansion.getAnnotations(), TypeUtil.expansionType(), expansionId);
     }
 
-    public static void annotateCall(FnApp call, int expansionIndex) {
+    /**
+     * <p>Annotates the parent Statement or Function node with an ExpansionCall annotation.</p>
+     *
+     * <p>If said node already has an annotation with the ExpansionCall type, the expansionIndex will be added to the
+     * existing annotation.</p>
+     *
+     * @param call the call to use as a starting point to look for a Stmt or FunctionDecl parent
+     * @param expansionId the ID of the called Expansion
+     * @throws IllegalArgumentException if there is no Stmt or FunctionDecl parent
+     */
+    public static void annotateCall(FnApp call, int expansionId) {
         Stmt parent = TreeUtil.findParent(call, Stmt.class);
         if (parent == null) {
             FunctionDecl parentFunction = TreeUtil.findParent(call, FunctionDecl.class);
-            if (parentFunction != null) {
-                addToAnnotations(parentFunction.getAnnotations(), TypeUtil.expansionCallType(), expansionIndex);
+            if (parentFunction == null) {
+                throw new IllegalArgumentException("Function call has no parent Statement or FunctionDecl: " + call);
             }
-            // TODO handle missing parent statement
+            addToAnnotations(parentFunction.getAnnotations(), TypeUtil.expansionCallType(), expansionId);
         } else {
-            addToAnnotations(parent.getAnnotations(), TypeUtil.expansionCallType(), expansionIndex);
+            addToAnnotations(parent.getAnnotations(), TypeUtil.expansionCallType(), expansionId);
         }
     }
 
-    private static void addToAnnotations(List<Annotation> annotations, Access annotationType, int expansionIndex) {
-        PureExp indexLiteral = new IntLiteral(Integer.toString(expansionIndex));
+    private static void addToAnnotations(List<Annotation> annotations, Access annotationType, int expansionId) {
+        IntLiteral indexLiteral = new IntLiteral(Integer.toString(expansionId));
         Annotation toAdd = null;
         for (Annotation annotation : annotations) {
             if (annotation instanceof TypedAnnotation) {
@@ -54,6 +64,14 @@ public final class AnnotationUtil {
         PureExp value = toAdd.getValue();
         if (value instanceof ListLiteral) {
             ListLiteral list = (ListLiteral) value;
+            for (PureExp exp : list.getPureExps()) {
+                if (exp instanceof IntLiteral) {
+                    IntLiteral intLiteral = (IntLiteral) exp;
+                    if (intLiteral.getContent().equals(indexLiteral.getContent())) {
+                        return;
+                    }
+                }
+            }
             list.addPureExp(indexLiteral);
         } else {
             throw new IllegalArgumentException("Annotation list contains invalid expansion annotation");
