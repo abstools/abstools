@@ -32,43 +32,46 @@ aspect PartialFunctionApplier {
 
         Map<String, ExpandedWrapper> expanded = new HashMap<>(functions.size() * 4);
 
-        int expansionCount = 0;
-        int oldExpansionCount = -1;
-        while (oldExpansionCount != expansionCount && !TreeUtil.isAbsent(this, ParFnApp.class)) {
-            oldExpansionCount = expansionCount;
-            for (ParFnApp fnApp : TreeUtil.collectChildren(this, ParFnApp.class)) {
-                if (TreeUtil.findParent(fnApp, PartialFunctionDecl.class) != null) {
-                    // ignore ParFnApp within pardef that has not been expanded yet
-                    continue;
-                }
-                PartialFunctionDecl function = functions.get(fnApp.getName());
-                if (function == null) {
-                    // TODO handle errors
-                    throw new RuntimeException("No such function: " + fnApp.getName());
-                }
-
-                String expandedName = function.expandedName(fnApp);
-                ExpandedWrapper expandedWrapper;
-                expandedWrapper = expanded.get(expandedName);
-
-                if (expandedWrapper == null) {
-                    FunctionDecl expandedFunction = function.expand(fnApp);
-                    addDecl(expandedFunction);
-                    AnnotationUtil.annotateExpansion(expandedFunction, expansionCount);
-                    expandedWrapper = new ExpandedWrapper(expandedFunction, expansionCount);
-                    expanded.put(expandedName, expandedWrapper);
-
-                    ++expansionCount;
-                }
-
-                FnApp expandedFunctionCall = fnApp.apply(expandedWrapper.getExpanded());
-                TreeUtil.replace(fnApp, expandedFunctionCall);
-                AnnotationUtil.annotateCall(expandedFunctionCall, expandedWrapper.getExpansionId());
-            }
-        }
+        expandChildParFnApps(this, functions, expanded, 0);
 
         for (PartialFunctionDecl function : functions.values()) {
             TreeUtil.removeFromParent(function);
+        }
+    }
+
+    private void ModuleDecl.expandChildParFnApps(ASTNode<?> node,
+        Map<String, PartialFunctionDecl> functions,
+        Map<String, ExpandedWrapper> expanded,
+        int expansionCount) {
+        for (ParFnApp fnApp : TreeUtil.collectChildren(node, ParFnApp.class)) {
+            if (TreeUtil.findParent(fnApp, PartialFunctionDecl.class) != null) {
+                // ignore ParFnApp within pardef that has not been expanded yet
+                continue;
+            }
+            PartialFunctionDecl function = functions.get(fnApp.getName());
+            if (function == null) {
+                // TODO handle errors
+                throw new RuntimeException("No such partially defined function: " + fnApp.getName());
+            }
+
+            String expandedName = function.expandedName(fnApp);
+            ExpandedWrapper expandedWrapper;
+            expandedWrapper = expanded.get(expandedName);
+
+            if (expandedWrapper == null) {
+                FunctionDecl expandedFunction = function.expand(fnApp);
+                addDecl(expandedFunction);
+                AnnotationUtil.annotateExpansion(expandedFunction, expansionCount);
+                expandedWrapper = new ExpandedWrapper(expandedFunction, expansionCount);
+                expanded.put(expandedName, expandedWrapper);
+                ++expansionCount;
+
+                expandChildParFnApps(expandedFunction, functions, expanded, expansionCount);
+            }
+
+            FnApp expandedFunctionCall = fnApp.apply(expandedWrapper.getExpanded());
+            TreeUtil.replace(fnApp, expandedFunctionCall);
+            AnnotationUtil.annotateCall(expandedFunctionCall, expandedWrapper.getExpansionId());
         }
     }
 
@@ -153,6 +156,11 @@ aspect PartialFunctionApplier {
     }
 
     public FnApp ParFnApp.apply(FunctionDecl function) {
-        return new FnApp(function.getName(), getParamList().treeCopy());
+        List<PureExp> params = getParamList();
+        if (params == null) {
+            throw new IllegalStateException("ParFnApp.apply() called twice");
+        }
+        TreeUtil.removeFromParent(params);
+        return new FnApp(function.getName(), params);
     }
 }
