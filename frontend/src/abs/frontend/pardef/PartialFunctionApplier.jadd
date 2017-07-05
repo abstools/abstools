@@ -20,22 +20,18 @@ aspect PartialFunctionApplier {
     }
 
     void ModuleDecl.flattenPartialFunctions() {
-        Map<String, PartialFunctionWrapper> functions = collectPartialFunctions();
+        Map<String, PartialFunctionDecl> functions = collectPartialFunctions();
         if(functions.isEmpty()) {
             return;
         }
 
         // check for cycles
-        for (PartialFunctionWrapper wrapper : functions.values()) {
-            PartialFunctionDecl function = wrapper.getFunction();
+        for (PartialFunctionDecl function : functions.values()) {
             function.checkCycles(functions);
         }
 
-        // declare annotation type
-        String annotationTypeName = getName() + "Expansion";
-        TypeUse intTypeUse = new UnresolvedTypeUse("Int", new List<Annotation>());
-        addDecl(new TypeSynDecl(annotationTypeName, new List<Annotation>(), intTypeUse));
-        TypeUse annotationType = new UnresolvedTypeUse(annotationTypeName, new List<Annotation>());
+        Map<String, ExpandedWrapper> expanded = new HashMap<>(functions.size() * 4);
+
         int expansionCount = 0;
         int oldExpansionCount = -1;
         while (oldExpansionCount != expansionCount && !TreeUtil.isAbsent(this, ParFnApp.class)) {
@@ -45,90 +41,81 @@ aspect PartialFunctionApplier {
                     // ignore ParFnApp within pardef that has not been expanded yet
                     continue;
                 }
-                PartialFunctionWrapper function = functions.get(fnApp.getName());
+                PartialFunctionDecl function = functions.get(fnApp.getName());
                 if (function == null) {
                     // TODO handle errors
                     throw new RuntimeException("No such function: " + fnApp.getName());
                 }
 
-                PureExp expansionCountLiteral = new IntLiteral(Integer.toString(expansionCount++));
-                Annotation annotation = new TypedAnnotation(expansionCountLiteral, annotationType.treeCopy());
-                FunctionDecl appliedFunction = function.apply(fnApp, annotation);
-                addDecl(appliedFunction);
-                FnApp appliedFunctionCall = fnApp.apply(appliedFunction);
-                TreeUtil.replace(fnApp, appliedFunctionCall);
-                Stmt stmt = TreeUtil.findParent(appliedFunctionCall, Stmt.class);
-                if (stmt != null) {
-                    // TODO handle missing parent statement (e.g. in function definitions)
-                    // TODO merge with existing annotation of same type
-                    stmt.addAnnotation(annotation.treeCopy());
+                String expandedName = function.expandedName(fnApp);
+                ExpandedWrapper expandedWrapper;
+                expandedWrapper = expanded.get(expandedName);
+
+                if (expandedWrapper == null) {
+                    FunctionDecl expandedFunction = function.expand(fnApp);
+                    addDecl(expandedFunction);
+                    AnnotationUtil.annotateExpansion(expandedFunction, expansionCount);
+                    expandedWrapper = new ExpandedWrapper(expandedFunction, expansionCount);
+                    expanded.put(expandedName, expandedWrapper);
+
+                    ++expansionCount;
                 }
+
+                FnApp expandedFunctionCall = fnApp.apply(expandedWrapper.getExpanded());
+                TreeUtil.replace(fnApp, expandedFunctionCall);
+                AnnotationUtil.annotateCall(expandedFunctionCall, expandedWrapper.getExpansionIndex());
             }
         }
 
-        for (PartialFunctionWrapper wrapper : functions.values()) {
-            wrapper.removeFromParent();
+        for (PartialFunctionDecl function : functions.values()) {
+            TreeUtil.removeFromParent(function);
         }
     }
 
-    private Map<String, PartialFunctionWrapper> ModuleDecl.collectPartialFunctions() {
-        Map<String, PartialFunctionWrapper> result = new HashMap<>(32);
+    private Map<String, PartialFunctionDecl> ModuleDecl.collectPartialFunctions() {
+        Map<String, PartialFunctionDecl> result = new HashMap<>(32);
 
         for (Decl decl : getDecls()) {
             if (decl instanceof PartialFunctionDecl) {
                 PartialFunctionDecl functionDecl = (PartialFunctionDecl) decl;
-                result.put(functionDecl.getName(), new PartialFunctionWrapper(functionDecl));
+                result.put(functionDecl.getName(), functionDecl);
             }
         }
 
         return Collections.unmodifiableMap(result);
     }
 
-    public void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionWrapper> functions) {
+    public void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionDecl> functions) {
         checkCycles(functions, new HashSet<String>());
     }
 
-    private void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionWrapper> functions, Set<String> visited) {
+    private void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionDecl> functions, Set<String> visited) {
         if (!visited.add(getName())) {
             throw new RuntimeException("Cycle detected");
         }
         for (ParFnApp parFnApp : TreeUtil.collectChildren(this, ParFnApp.class)) {
-            PartialFunctionWrapper called = functions.get(parFnApp.getName());
+            PartialFunctionDecl called = functions.get(parFnApp.getName());
             if (called == null) {
                 // will be caught somewhere else
                 continue;
             }
-            PartialFunctionDecl calledFunction = called.getFunction();
-            calledFunction.checkCycles(functions, new HashSet<>(visited));
+            called.checkCycles(functions, new HashSet<>(visited));
         }
     }
 
-    public FunctionDecl PartialFunctionDecl.apply(ParFnApp fnApp, Annotation annotation, int applyCount) {
-        FunctionDecl decl = new FunctionDecl();
-        apply(decl, fnApp, annotation, applyCount);
-        return decl;
-    }
-
-    public FunctionDecl ParametricPartialFunctionDecl.apply(ParFnApp fnApp, Annotation annotation, int applyCount) {
-        ParametricFunctionDecl decl = new ParametricFunctionDecl();
-        // TODO do this differently
-        apply(decl, fnApp, annotation, applyCount);
-        decl.setTypeParameterList(getTypeParameters().treeCopy());
-        return decl;
-    }
-
-    protected void PartialFunctionDecl.apply(FunctionDecl applied, ParFnApp fnApp, Annotation annotation, int applyCount) {
+    public FunctionDecl PartialFunctionDecl.expand(ParFnApp fnApp) {
+        FunctionDecl expanded = new FunctionDecl();
         int funcParamCount = getNumFuncParam();
         if(funcParamCount != fnApp.getNumFuncParam()) {
             // TODO handle errors
             throw new RuntimeException("Wrong number of arguments");
         }
 
-        String appliedName = appliedName(applyCount);
-        applied.setName(appliedName);
-        applied.setAnnotationList(getAnnotations().treeCopy().add(annotation));
-        applied.setTypeUse(getTypeUse().treeCopy());
-        applied.setParamList(getParams().treeCopy());
+        String expandedName = expandedName(fnApp);
+        expanded.setName(expandedName);
+        expanded.setAnnotationList(getAnnotations().treeCopy());
+        expanded.setTypeUse(getTypeUse().treeCopy());
+        expanded.setParamList(getParams().treeCopy());
 
         Map<String, String> functions = new HashMap<>(funcParamCount * 2);
         for (int i = 0; i < funcParamCount; ++i) {
@@ -136,14 +123,21 @@ aspect PartialFunctionApplier {
             String actualParam = fnApp.getFuncParam(i).getName();
             functions.put(funcParam, actualParam);
         }
-        // enable recursion by replacing partial function name with applied name
-        functions.put(getName(), appliedName);
-        applied.setFunctionDef(getPartialFunctionDef().apply(functions));
+        // enable recursion by replacing partial function name with expanded name
+        functions.put(getName(), expandedName);
+        expanded.setFunctionDef(getPartialFunctionDef().apply(functions));
+
+        return expanded;
     }
 
-    protected String PartialFunctionDecl.appliedName(int applyCount) {
+    public String PartialFunctionDecl.expandedName(ParFnApp fnApp) {
         // avoid collisions by capitalizing the applied function name
-        return StringUtils.capitalize(getName()) + "_" + applyCount;
+        StringBuilder builder = new StringBuilder().append(StringUtils.capitalize(getName()));
+        for (FunctionParamDecl funcParam : fnApp.getFuncParams()) {
+            builder.append('_').append(funcParam.getName());
+        }
+
+        return builder.toString();
     }
 
     public FunctionDef PartialFunctionDef.apply(Map<String, String> functions) {

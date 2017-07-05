@@ -50,6 +50,7 @@ export Inv, Pre, Post;
 export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer;
 export COG, Plain, Final, Atomic;
 export HTTPName, HTTPCallable;
+export Expansion, ExpansionCall;
 
 // Functional breakpoints
 // TODO: find out where they are defined / used
@@ -589,6 +590,10 @@ data AtomicityAnnotation = Atomic;
  * Declare methods to be callable from the HTTP API.
  */
 data HTTPCallableAnnotation = HTTPCallable;
+
+// Annotation data types to associate expanded Partially Defined Functions and their calls
+type Expansion = List<Int>;
+type ExpansionCall = List<Int>;
 
 
 // functional break point
