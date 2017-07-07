@@ -11,17 +11,19 @@ aspect ProgramAbstractionBuilder {
             if (decl.isClass()) {
                 String className = decl.qualifiedName();
                 ta.classAdd(className);
+                for (ParamDecl field : ((ClassDecl) decl).getParams())
+                    ta.classFieldAdd(className, field.getName(), ProgramAbstraction.getVarType(field));
                 for (FieldDecl field : ((ClassDecl) decl).getFields())
-                    ta.classFieldAdd(className, field.getName(), field.getType().toString());
+                    ta.classFieldAdd(className, field.getName(), ProgramAbstraction.getVarType(field));
                 for (MethodImpl method : ((ClassDecl) decl).getMethods()) {
-                    java.util.List<String> types = CompilerUtils.getMethodParameterTypes(method.getMethodSig());
+                    java.util.List<String> types = ProgramAbstraction.getMethodParameterTypes(method.getMethodSig());
                     ta.classMethodAdd(className, method.getMethodSig().getName(), types);
                 }
             } else if (decl.isInterface()) {
                 String ifName = decl.qualifiedName();
                 ta.interfaceAdd(ifName);
                 for (MethodSig sig : ((InterfaceDecl) decl).getBodys()) {
-                    java.util.List<String> types = CompilerUtils.getMethodParameterTypes(sig);
+                    java.util.List<String> types = ProgramAbstraction.getMethodParameterTypes(sig);
                     ta.interfaceMethodAdd(ifName, sig.getName(), types);
                 }
             }
@@ -42,13 +44,6 @@ aspect ProgramAbstractionBuilder {
         if (getModel().debug)
             System.out.println("___ applyToProgramAbstraction " + getClass().getName());
         ta.classAdd(this);
-        String className = getClassDecl().qualifiedName();
-        for (FieldDecl field : getClassDecl().getFields())
-            ta.classFieldAdd(className, field.getName(),  field.getType().toString());
-        for (MethodImpl method : getClassDecl().getMethods()) {
-            java.util.List<String> types = CompilerUtils.getMethodParameterTypes(method.getMethodSig());
-            ta.classMethodAdd(className, method.getMethodSig().getName(), types);
-        }
     }
 
     public void ModifyClassModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
@@ -78,7 +73,7 @@ aspect ProgramAbstractionBuilder {
     public void AddInterfaceModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         if (getModel().debug)
             System.out.println("___ applyToProgramAbstraction " + getClass().getName());
-        // TODO
+        ta.interfaceAdd(this);
     }
     public void ModifyInterfaceModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         if (getModel().debug)

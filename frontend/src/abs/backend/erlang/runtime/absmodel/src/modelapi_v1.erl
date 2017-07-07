@@ -39,7 +39,7 @@ handle_object_query([Objectname, Fieldname]) ->
         _ -> case Value=object:get_field_value(Object, binary_to_atom(Fieldname, utf8)) of
                  none -> {404, <<"text/plain">>, <<"Field not found">>};
                  _ -> Result=[{Fieldname, abs_to_json(Value)}],
-                      {200, <<"text/json">>, jsx:encode(Result)}
+                      {200, <<"application/json">>, jsx:encode(Result)}
              end
     end;
 handle_object_query([Objectname]) ->
@@ -52,11 +52,11 @@ handle_object_query([Objectname]) ->
               %% Special-case empty object for jsx:encode ([] is an empty JSON
               %% array, [{}] an empty JSON object)
               State2 = case State of [] -> [{}]; _ -> State end,
-              { 200, <<"text/json">>, jsx:encode(State2)}
+              { 200, <<"application/json">>, jsx:encode(State2)}
     end;
 handle_object_query([]) ->
     Names=cog_monitor:list_registered_http_names(),
-    { 200, <<"text/json">>, jsx:encode(Names) }.
+    { 200, <<"application/json">>, jsx:encode(Names) }.
 
 handle_object_call([Objectname], _Params) ->
     {State, Object}=cog_monitor:lookup_object_from_http_name(Objectname),
@@ -78,7 +78,7 @@ handle_object_call([Objectname], _Params) ->
                                       }
                              end,
                              maps:to_list(object:get_all_method_info(Object))),
-            { 200, <<"text/json">>, jsx:encode(Result) }
+            { 200, <<"application/json">>, jsx:encode(Result) }
     end;
 handle_object_call([Objectname, Methodname], Parameters) ->
     %% _Params is a list of 2-tuples of binaries
@@ -98,10 +98,10 @@ handle_object_call([Objectname, Methodname], Parameters) ->
                             Future=future:start_for_rest(Object, Method, ParamValues ++ [[]]),
                             Result=case future:get_for_rest(Future) of
                                 {ok, Value} ->
-                                    { 200, <<"text/json">>,
+                                    { 200, <<"application/json">>,
                                       jsx:encode([{'result', abs_to_json(Value)}]) };
                                 {error, Error} ->
-                                    { 500, <<"text/json">>,
+                                    { 500, <<"application/json">>,
                                       jsx:encode([{'error', abs_to_json(Error)}]) }
                             end,
                             future:die(Future, ok),
@@ -112,7 +112,7 @@ handle_object_call([Objectname, Methodname], Parameters) ->
     end;
 handle_object_call([], _Parameters) ->
     Names=cog_monitor:list_registered_http_names(),
-    { 200, <<"text/json">>, jsx:encode(Names) }.
+    { 200, <<"application/json">>, jsx:encode(Names) }.
 
 decode_parameters(Parameters, ParamDecls) ->
     PValues = maps:from_list(Parameters),
