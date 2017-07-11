@@ -23,6 +23,11 @@ aspect ErrorCheck {
     for(int i = 0; i < getNumChild(); i++)
       getChild(i).collectErrors(c);
   }
+  
+  // ignore errors in trait declarations, all relevant ones are caught after applying
+  void TraitDecl.collectErrors(SemanticConditionList c) {
+
+  }
 
   // add error for cyclic interface inheritance hierarchy
   public void InterfaceDecl.collectErrors(SemanticConditionList c) {
