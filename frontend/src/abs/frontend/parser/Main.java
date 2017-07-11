@@ -694,6 +694,7 @@ public class Main {
                 + "Common options:\n"
                 + "  -version       print version\n"
                 + "  -v             verbose output\n"
+                + "  -debug         print stacktrace on exception\n"
                 + "  -product=<PID> build given product by applying deltas (PID is the product ID)\n"
                 + "  -notypecheck   disable typechecking\n"
                 + "  -nostdlib      do not include the standard lib\n"
