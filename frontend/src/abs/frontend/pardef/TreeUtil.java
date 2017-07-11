@@ -1,8 +1,8 @@
 package abs.frontend.pardef;
 
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.VarUse;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -17,21 +17,24 @@ public final class TreeUtil {
         return Collections.unmodifiableList(result);
     }
 
-    private static <T extends ASTNode<?>> void findChildren(java.util.List<T> list, ASTNode<?> node,
-        Class<T> type) {
+    private static <T extends ASTNode<?>> void findChildren(java.util.List<T> list, ASTNode<?> node, Class<T> type) {
         if (node != null) {
             if (type.isInstance(node)) {
                 list.add(type.cast(node));
             }
 
-            Iterator<? extends ASTNode> iterator = node.astChildIterator();
-            while (iterator.hasNext()) {
+            for (int index = 0; index < node.getNumChildNoTransform(); ++index) {
                 ASTNode<?> child;
                 try {
-                    child = iterator.next();
+                    child = node.getChildNoTransform(index);
                 } catch (RuntimeException e) {
-                    // catches weird VarUse error claiming to have no parent
-                    continue;
+                    if (node instanceof VarUse) {
+                        // TODO find out what causes this
+                        // TODO change to continue;
+                        throw e;
+                    } else {
+                        throw e;
+                    }
                 }
                 findChildren(list, child, type);
             }

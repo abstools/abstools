@@ -4,6 +4,7 @@
  */
 package abs.frontend.antlr.parser;
 
+import abs.frontend.antlr.parser.ABSParser.Type_useContext;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -546,7 +547,13 @@ new List<ModuleDecl>(),
         List<FunctionParamDecl> functionParams = ctx.function_name_list() == null
             ? new List<FunctionParamDecl>()
             : (List<FunctionParamDecl>)v(ctx.function_name_list());
-        setV(ctx, new ParFnApp(ctx.qualified_identifier().getText(), params, functionParams));
+
+        if (ctx.type_use_param_list() == null) {
+            setV(ctx, new ParFnApp(ctx.qualified_identifier().getText(), params, functionParams));
+        } else {
+            List<TypeUse> typeParams = (List<TypeUse>) v(ctx.type_use_param_list());
+            setV(ctx, new ParametricParFnApp(ctx.qualified_identifier().getText(), typeParams, params, functionParams));
+        }
     }
     @Override public void exitVariadicFunctionExp(ABSParser.VariadicFunctionExpContext ctx) {
         List<PureExp> l = (List<PureExp>)v(ctx.pure_exp_list());
@@ -742,6 +749,14 @@ new List<ModuleDecl>(),
             for (ABSParser.Type_useContext c : ctx.type_use()) {
                 p.addParam((TypeUse)v(c));
             }
+        }
+    }
+
+    @Override
+    public void exitType_use_param_list(ABSParser.Type_use_param_listContext ctx) {
+        List<TypeUse> list = (List<TypeUse>) setV(ctx, new List<TypeUse>());
+        for (ABSParser.Type_useContext typeUseContext : ctx.type_use()) {
+            list.add((TypeUse) v(typeUseContext));
         }
     }
 

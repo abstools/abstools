@@ -133,6 +133,58 @@ aspect PartialFunctionApplier {
         return expanded;
     }
 
+    public FunctionDecl ParametricPartialFunctionDecl.expand(ParFnApp uncheckedFnApp) {
+        FunctionDecl decl = super.expand(uncheckedFnApp);
+
+        if(!(uncheckedFnApp instanceof ParametricParFnApp)) {
+            // TODO error handling
+            throw new RuntimeException("Calling parametric partially defined functions needs type parameters");
+        }
+        ParametricParFnApp fnApp = (ParametricParFnApp) uncheckedFnApp;
+        if(fnApp.getNumTypeParam() != getNumTypeParameter()) {
+            // TODO error handling
+            throw new RuntimeException("Not the same amount of type parameters");
+        }
+
+        Map<String, TypeUse> typeBindings = new HashMap<>(getNumTypeParameter() * 2);
+        for (int index = 0; index < getNumTypeParameter(); ++index) {
+            TypeParameterDecl typeParamDecl = getTypeParameter(index);
+            TypeUse typeParam = fnApp.getTypeParam(index);
+            typeBindings.put(typeParamDecl.getName(), typeParam);
+        }
+
+        for (TypeUse typeUse : TreeUtil.collectChildren(decl.getTypeUseNoTransform(), TypeUse.class)) {
+            TypeUse binding = typeBindings.get(typeUse.getName());
+            if (binding != null) {
+                TreeUtil.replace(typeUse, binding.treeCopy());
+            }
+        }
+
+        for (ParamDecl param : decl.getParams()) {
+            for (TypeUse typeUse : TreeUtil.collectChildren(param.getAccessNoTransform(), TypeUse.class)) {
+                TypeUse binding = typeBindings.get(typeUse.getName());
+                if (binding != null) {
+                    TreeUtil.replace(typeUse, binding.treeCopy());
+                }
+            }
+        }
+
+        FunctionDef functionDef = decl.getFunctionDef();
+        if (functionDef instanceof ExpFunctionDef) {
+            ExpFunctionDef def = (ExpFunctionDef) functionDef;
+            for (TypeUse typeUse : TreeUtil.collectChildren(def.getRhsNoTransform(), TypeUse.class)) {
+                TypeUse binding = typeBindings.get(typeUse.getName());
+                if (binding != null) {
+                    TreeUtil.replace(typeUse, binding.treeCopy());
+                }
+            }
+        } else {
+            // TODO implement builtin
+            throw new RuntimeException("Builtin is not supported yet");
+        }
+        return decl;
+    }
+
     public String PartialFunctionDecl.expandedName(ParFnApp fnApp) {
         // avoid collisions by capitalizing the applied function name
         StringBuilder builder = new StringBuilder().append(StringUtils.capitalize(getName()));

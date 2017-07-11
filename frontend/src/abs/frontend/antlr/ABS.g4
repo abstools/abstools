@@ -85,7 +85,7 @@ eff_exp : pure_exp '.' 'get'                               # GetExp
     ;
 
 pure_exp : qualified_identifier '(' pure_exp_list ')'                        # FunctionExp
-    | qualified_identifier '(' pure_exp_list ')' '(' function_name_list ')'  # PartialFunctionExp
+    | qualified_identifier type_use_param_list? '(' pure_exp_list ')' '(' function_name_list ')' # PartialFunctionExp
     | qualified_identifier '[' pure_exp_list ']'                             # VariadicFunctionExp
     | qualified_type_identifier ('(' pure_exp_list ')')?                     # ConstructorExp
     | op=(NEGATION | NEGATION_CREOL | MINUS) pure_exp                        # UnaryExp
@@ -203,6 +203,7 @@ function_decl : annotations
 function_name_decl: IDENTIFIER ;
 function_name_list: (function_name_decl (',' function_name_decl)*)? ;
 function_name_paramlist: '(' function_name_list ')' ;
+type_use_param_list: ('<' p+=type_use (',' p+=type_use)* '>') ;
 
 par_function_decl : annotation*
         'def' type_use n=IDENTIFIER
