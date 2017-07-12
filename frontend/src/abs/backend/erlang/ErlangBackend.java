@@ -41,8 +41,9 @@ public class ErlangBackend extends Main {
     private static int minVersion = 18;
 
     public static void main(final String... args) {
+        ErlangBackend backEnd = new ErlangBackend();
         try {
-            new ErlangBackend().compile(args);
+            backEnd.compile(args);
         } catch (InternalBackendException e) {
             System.err.println(e.getMessage());
             System.exit(1);
@@ -51,7 +52,7 @@ public class ErlangBackend extends Main {
             System.exit(0);
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
-            if (Arrays.asList(args).contains("-debug")) {
+            if (backEnd.debug) {
                 e.printStackTrace();
             }
             System.exit(1);

@@ -18,18 +18,18 @@ import abs.frontend.tests.ABSFormatter;
 public class OutlinePrinterBackEnd extends Main {
     private File outputfile;
     private boolean force = false;
-    private static boolean debug = false;
     
     public static void main(final String... args) {
+        OutlinePrinterBackEnd backEnd = new OutlinePrinterBackEnd();
         try {
-            new OutlinePrinterBackEnd().compile(args);
+            backEnd.compile(args);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
             System.exit(0);
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
-            if (debug) {
+            if (backEnd.debug) {
                 e.printStackTrace();
             }
 
@@ -57,8 +57,6 @@ public class OutlinePrinterBackEnd extends Main {
                 }
             } else if (arg.equals("-f"))  {
                 force = true;
-            } else if (arg.equals("-debug")) {
-                debug = true;
             } else if (arg.equals("-outline")) {
                 // nothing to do
             } else {

@@ -25,15 +25,16 @@ public class JavaBackend extends Main {
     public final static String CHARSET = "UTF-8";
 
     public static void main(final String... args) {
+        JavaBackend backEnd = new JavaBackend();
         try {
-            new JavaBackend().compile(args);
+            backEnd.compile(args);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
             System.exit(0);
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
-            if (Arrays.asList(args).contains("-debug")) {
+            if (backEnd.debug) {
                 e.printStackTrace();
             }
 
@@ -69,8 +70,6 @@ public class JavaBackend extends Main {
                 this.includeDebug = false;
             } else if (arg.equals("-debuginfo")) {
                 this.includeDebug = true;
-            } else if (arg.equals("-debug")) {
-                /* Print stacktrace on exception, used in main(), must be removed from remaining args. */
             } else if(arg.equals("-java")) {
                 // nothing to do
             } else {
@@ -83,7 +82,6 @@ public class JavaBackend extends Main {
     public static void printUsage() {
         System.out.println("Java Backend (-java):\n"
                 + "  -d <dir>       generate files to <dir>\n"
-                + "  -debug         print stacktrace on exception\n"
                 + "  -sourceonly    do not generate class files\n"
                 + "  -no-debuginfo  generate code without listener / debugger support (default)\n"
                 + "  -debuginfo     generate code with listener / debugger support\n"
