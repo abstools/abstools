@@ -294,7 +294,7 @@ NIL."
 ;;; Calculating the set of required input files based on the current buffer.
 ;;;
 
-(defun abs--current-buffer-imports ()
+(defun abs--current-buffer-referenced-modules ()
   (let ((imports (save-excursion
                     (goto-char (point-min))
                     (cl-loop
@@ -303,13 +303,22 @@ NIL."
                                                         (0+ blank) ";")
                                                     (point-max) t)
                      while match
+                     collect (substring-no-properties (match-string 1)))))
+        (uses (save-excursion
+                    (goto-char (point-min))
+                    (cl-loop
+                     for match = (re-search-forward (rx bol (0+ blank) bow "uses" eow (1+ blank)
+                                                        (group (1+ (or (syntax word) ".")))
+                                                        (0+ blank) ";")
+                                                    (point-max) t)
+                     while match
                      collect (substring-no-properties (match-string 1))))))
-    (delete-dups imports)))
+    (delete-dups (append imports uses))))
 
 (defun abs--file-imports (file)
   (with-temp-buffer
     (insert-file-contents file)
-    (abs--current-buffer-imports)))
+    (abs--current-buffer-referenced-modules)))
 
 (defun abs--current-buffer-module-definitions ()
   (save-excursion
@@ -340,7 +349,7 @@ NIL."
   (let* ((module-locations-alist (abs--module-file-alist))
          (files (list (file-name-nondirectory (buffer-file-name))))
          (known-modules (abs--file-module-definitions buffer-file-name))
-         (needed-modules (cl-set-difference (abs--current-buffer-imports) known-modules :test 'equal)))
+         (needed-modules (cl-set-difference (abs--current-buffer-referenced-modules) known-modules :test 'equal)))
     (while needed-modules
       (let* ((needed-module (pop needed-modules))
              (location (assoc needed-module module-locations-alist)))
