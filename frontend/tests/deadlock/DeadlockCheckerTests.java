@@ -5,11 +5,13 @@
 package deadlock;
 
 import org.junit.Assume;
+import org.junit.Ignore;
 
 import deadlock.analyser.Analyser;
 import abs.frontend.ast.Model;
 import abs.frontend.typesystem.ExamplesTypeChecking;
 
+@Ignore("blocked by #156")
 public class DeadlockCheckerTests extends ExamplesTypeChecking {
 
     public DeadlockCheckerTests(String input, String product) {

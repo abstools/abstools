@@ -40,8 +40,8 @@ import deadlock.DeadlockCheckerTests;
             SearchSolutionsTest.class,
             TestABSPackages.class,
             CaseStudyTypeChecking.class,
-            // DeadlockCheckerTests.class, // deactivated until #156 is fixed
-            // DeadlockCasestudies.class,  // deactivated until #156 is fixed
+            DeadlockCheckerTests.class, // deactivated until #156 is fixed
+            DeadlockCasestudies.class,  // deactivated until #156 is fixed
             OriginalCallTest.class,
             TraitTest.class
             })
