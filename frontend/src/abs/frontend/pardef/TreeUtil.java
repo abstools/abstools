@@ -11,7 +11,7 @@ public final class TreeUtil {
     private TreeUtil() {
     }
 
-    public static <T extends ASTNode<?>> List<T> collectChildren(ASTNode<?> root, Class<T> type) {
+    public static <T extends ASTNode<?>> List<T> findChildren(ASTNode<?> root, Class<T> type) {
         List<T> result = new LinkedList<T>();
         findChildren(result, root, type);
         return Collections.unmodifiableList(result);
@@ -65,6 +65,6 @@ public final class TreeUtil {
     }
 
     public static boolean isAbsent(ASTNode<?> node, Class<? extends ASTNode<?>> type) {
-        return collectChildren(node, type).isEmpty();
+        return findChildren(node, type).isEmpty();
     }
 }

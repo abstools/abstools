@@ -6,9 +6,9 @@ import abs.frontend.pardef.*;
 
 aspect PartialFunctionApplier {
 
-    public void Model.flattenPartialFunctions() {
+    public void Model.expandPartialFunctions() {
         for (ModuleDecl moduleDecl : getModuleDecls()) {
-            moduleDecl.flattenPartialFunctions();
+            moduleDecl.expandPartialFunctions();
         }
 
         // TODO use check results
@@ -19,7 +19,7 @@ aspect PartialFunctionApplier {
         }
     }
 
-    void ModuleDecl.flattenPartialFunctions() {
+    void ModuleDecl.expandPartialFunctions() {
         Map<String, PartialFunctionDecl> functions = collectPartialFunctions();
         if(functions.isEmpty()) {
             return;
@@ -43,15 +43,15 @@ aspect PartialFunctionApplier {
         Map<String, PartialFunctionDecl> functions,
         Map<String, ExpandedWrapper> expanded,
         int expansionCount) {
-        for (ParFnApp fnApp : TreeUtil.collectChildren(node, ParFnApp.class)) {
+        for (ParFnApp fnApp : TreeUtil.findChildren(node, ParFnApp.class)) {
             if (TreeUtil.findParent(fnApp, PartialFunctionDecl.class) != null) {
                 // ignore ParFnApp within pardef that has not been expanded yet
                 continue;
             }
             PartialFunctionDecl function = functions.get(fnApp.getName());
             if (function == null) {
-                // TODO handle errors
-                throw new RuntimeException("No such partially defined function: " + fnApp.getName());
+                String message = "No such partially defined function: " + fnApp.getName();
+                throw new DeltaModellingException(message);
             }
 
             String expandedName = function.expandedName(fnApp);
@@ -94,9 +94,10 @@ aspect PartialFunctionApplier {
 
     private void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionDecl> functions, Set<String> visited) {
         if (!visited.add(getName())) {
-            throw new RuntimeException("Cycle detected");
+            String message = "Pardef call cycle detected (in " + getName() + "): " + visited;
+            throw new DeltaModellingException(message);
         }
-        for (ParFnApp parFnApp : TreeUtil.collectChildren(this, ParFnApp.class)) {
+        for (ParFnApp parFnApp : TreeUtil.findChildren(this, ParFnApp.class)) {
             PartialFunctionDecl called = functions.get(parFnApp.getName());
             if (called == null) {
                 // will be caught somewhere else
@@ -110,8 +111,8 @@ aspect PartialFunctionApplier {
         FunctionDecl expanded = new FunctionDecl();
         int funcParamCount = getNumFuncParam();
         if(funcParamCount != fnApp.getNumFuncParam()) {
-            // TODO handle errors
-            throw new RuntimeException("Wrong number of arguments");
+            String message = "Wrong number of function arguments for partially defined function " + getName();
+            throw new DeltaModellingException(message);
         }
 
         String expandedName = expandedName(fnApp);
@@ -137,13 +138,13 @@ aspect PartialFunctionApplier {
         FunctionDecl decl = super.expand(uncheckedFnApp);
 
         if(!(uncheckedFnApp instanceof ParametricParFnApp)) {
-            // TODO error handling
-            throw new RuntimeException("Calling parametric partially defined functions needs type parameters");
+            String message = "Calling parametric partially defined function '" + getName() + "' needs type parameters";
+            throw new DeltaModellingException(message);
         }
         ParametricParFnApp fnApp = (ParametricParFnApp) uncheckedFnApp;
         if(fnApp.getNumTypeParam() != getNumTypeParameter()) {
-            // TODO error handling
-            throw new RuntimeException("Not the same amount of type parameters");
+            String message = "Wrong number of type parameters for partially defined function " + getName();
+            throw new DeltaModellingException(message);
         }
 
         Map<String, TypeUse> typeBindings = new HashMap<>(getNumTypeParameter() * 2);
@@ -153,7 +154,7 @@ aspect PartialFunctionApplier {
             typeBindings.put(typeParamDecl.getName(), typeParam);
         }
 
-        for (TypeUse typeUse : TreeUtil.collectChildren(decl.getTypeUseNoTransform(), TypeUse.class)) {
+        for (TypeUse typeUse : TreeUtil.findChildren(decl.getTypeUseNoTransform(), TypeUse.class)) {
             TypeUse binding = typeBindings.get(typeUse.getName());
             if (binding != null) {
                 TreeUtil.replace(typeUse, binding.treeCopy());
@@ -161,7 +162,7 @@ aspect PartialFunctionApplier {
         }
 
         for (ParamDecl param : decl.getParams()) {
-            for (TypeUse typeUse : TreeUtil.collectChildren(param.getAccessNoTransform(), TypeUse.class)) {
+            for (TypeUse typeUse : TreeUtil.findChildren(param.getAccessNoTransform(), TypeUse.class)) {
                 TypeUse binding = typeBindings.get(typeUse.getName());
                 if (binding != null) {
                     TreeUtil.replace(typeUse, binding.treeCopy());
@@ -172,7 +173,7 @@ aspect PartialFunctionApplier {
         FunctionDef functionDef = decl.getFunctionDef();
         if (functionDef instanceof ExpFunctionDef) {
             ExpFunctionDef def = (ExpFunctionDef) functionDef;
-            for (TypeUse typeUse : TreeUtil.collectChildren(def.getRhsNoTransform(), TypeUse.class)) {
+            for (TypeUse typeUse : TreeUtil.findChildren(def.getRhsNoTransform(), TypeUse.class)) {
                 TypeUse binding = typeBindings.get(typeUse.getName());
                 if (binding != null) {
                     TreeUtil.replace(typeUse, binding.treeCopy());
@@ -215,7 +216,7 @@ aspect PartialFunctionApplier {
 
     public FunctionDef PartialFunctionDef.apply(Map<String, String> functions) {
         PureExp expression = getPureExp().treeCopy();
-        for (FnApp innerCall : TreeUtil.collectChildren(expression, FnApp.class)) {
+        for (FnApp innerCall : TreeUtil.findChildren(expression, FnApp.class)) {
             String newName = functions.get(innerCall.getName());
             if (newName != null) {
                 innerCall.setName(newName);
