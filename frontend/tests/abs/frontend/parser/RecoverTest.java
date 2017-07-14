@@ -7,6 +7,7 @@ package abs.frontend.parser;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.junit.Ignore;
 
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.ClassDecl;
@@ -14,6 +15,7 @@ import abs.frontend.ast.Decl;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.Model;
 
+@Ignore
 public class RecoverTest extends FrontendTest {
 
     @Test

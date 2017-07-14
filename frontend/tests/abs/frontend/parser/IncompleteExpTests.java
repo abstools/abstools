@@ -7,10 +7,12 @@ package abs.frontend.parser;
 //These tests are deactivated in AllFrontendTests.java since the tested functionality has not been implemented in the antlr-based parser.
 
 import org.junit.Test;
+import org.junit.Ignore;
 
 import abs.frontend.FrontendTest;
 import static abs.ABSTest.Config.*;
 
+@Ignore
 public class IncompleteExpTests extends FrontendTest {
     
     @Test
