@@ -110,8 +110,13 @@ aspect PartialFunctionApplier {
     public FunctionDecl PartialFunctionDecl.expand(ParFnApp fnApp) {
         FunctionDecl expanded = new FunctionDecl();
         int funcParamCount = getNumFuncParam();
-        if(funcParamCount != fnApp.getNumFuncParam()) {
+        if (funcParamCount != fnApp.getNumFuncParam()) {
             String message = "Wrong number of function arguments for partially defined function " + getName();
+            throw new DeltaModellingException(message);
+        }
+
+        if (getNumParam() != fnApp.getNumParam()) {
+            String message = "Wrong number of arguments for partially defined function " + getName();
             throw new DeltaModellingException(message);
         }
 
