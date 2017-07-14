@@ -187,12 +187,30 @@ aspect PartialFunctionApplier {
 
     public String PartialFunctionDecl.expandedName(ParFnApp fnApp) {
         // avoid collisions by capitalizing the applied function name
-        StringBuilder builder = new StringBuilder().append(StringUtils.capitalize(getName()));
+        StringBuilder builder = new StringBuilder()
+            .append(StringUtils.capitalize(getName()))
+            .append('_').append(getModuleDecl().getName());
+
         for (FunctionParamDecl funcParam : fnApp.getFuncParams()) {
             builder.append('_').append(funcParam.getName());
         }
 
         return builder.toString();
+    }
+
+    public String ParametricPartialFunctionDecl.expandedName(ParFnApp fnApp) {
+        String result = super.expandedName(fnApp);
+        if(fnApp instanceof ParametricParFnApp) {
+            // if this is not the case, it will be caught elsewhere
+            ParametricParFnApp paramFnApp = (ParametricParFnApp) fnApp;
+            StringBuilder builder = new StringBuilder();
+
+            for (TypeUse typeUse : paramFnApp.getTypeParams()) {
+                builder.append('_').append(typeUse.getName());
+            }
+            result += builder.toString();
+        }
+        return result;
     }
 
     public FunctionDef PartialFunctionDef.apply(Map<String, String> functions) {
