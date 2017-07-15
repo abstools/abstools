@@ -78,6 +78,7 @@ public class PrettyPrinterBackEnd extends Main {
         final Model model = parseFiles(parseArgs(args).toArray(new String[0]));
         if (keepsugar) {
             model.doAACrewrite = false;
+            model.doForEachRewrite = false;
         }
         analyzeModel(model);
         if (! force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {

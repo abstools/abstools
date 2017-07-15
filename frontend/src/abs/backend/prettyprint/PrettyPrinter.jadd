@@ -431,6 +431,15 @@ aspect doPrettyPrinter {
         getBody().doPrettyPrint(stream, formatter);
     }
 
+    public void ForeachStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print("foreach (");
+        stream.print(getLoopVarDecl().getName());
+        stream.print(" in ");
+        getListExp().doPrettyPrint(stream, formatter);
+        stream.print(") ");
+        getBody().doPrettyPrint(stream, formatter);
+    }
+
     public void CaseStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("case ");
         getExpr().doPrettyPrint(stream, formatter);

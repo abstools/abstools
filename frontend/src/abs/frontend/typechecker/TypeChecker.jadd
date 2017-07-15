@@ -676,6 +676,19 @@ aspect TypeChecker {
         getBody().typeCheck(e);
     }
 
+    public void ForeachStmt.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
+        getListExp().typeCheck(e);
+        // assertHasType() is too specific -- we need to check that ListExp is
+        // a list, not its specific type (List<Int>)
+        if (!getListExp().getType().getDecl().qualifiedName().equals(getModel().getListType().getDecl().qualifiedName())) {
+            e.add(new TypeError(getListExp(), ErrorMessage.EXPECTED_TYPE,
+                                getModel().getListType().getDecl().qualifiedName(),
+                                getListExp().getType().getDecl().qualifiedName()));
+        }
+        getBody().typeCheck(e);
+    }
+
     public void CaseStmt.typeCheck(SemanticConditionList e) {
         super.typeCheck(e);
         getExpr().typeCheck(e);

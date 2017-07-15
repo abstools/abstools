@@ -125,6 +125,7 @@ VarDecl: TypedVarOrFieldDecl ::= [InitExp:Exp];
 FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation* <Port:boolean>; // (For Component Model) //
 ParamDecl: TypedVarOrFieldDecl ::= Annotation*;
 PatternVarDecl: VarOrFieldDecl;
+LoopVarDecl: VarOrFieldDecl;    // for ForeachStmt
 
 abstract FunctionDef;
 BuiltinFunctionDef: FunctionDef;
@@ -184,6 +185,7 @@ VarDeclStmt: Stmt ::= VarDecl:VarDecl;
 
 IfStmt: Stmt ::= Condition:PureExp Then:Block [Else:Block];
 WhileStmt: Stmt ::= Condition:PureExp Body:Block;
+ForeachStmt: Stmt ::= LoopVarDecl ListExp:PureExp Body:Block;
 CaseStmt : Stmt ::= Expr:PureExp Branch:CaseBranchStmt* ;
 CaseBranchStmt ::= Left:Pattern Right:Block ;
 TryCatchFinallyStmt : Stmt ::= Body:Block Catch:CaseBranchStmt* [Finally:Block] ;

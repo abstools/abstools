@@ -58,6 +58,7 @@ aspect Typing {
     syn Type Model.getRatType() = getStdDataType("Rat");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
+    syn Type Model.getListType() = (DataTypeType)getStdDataType("List");
     syn Type Model.getListType(Type typeArg) = ((DataTypeType)getStdDataType("List")).withTypeArgs(typeArg);
     syn Type Model.getExceptionType() = getStdDataType("Exception");
     syn DataTypeType Model.getFutType(Type typeArg) = ((DataTypeType)getStdDataType("Fut")).withTypeArgs(typeArg);
@@ -106,7 +107,18 @@ aspect Typing {
    	 PatternVar v = (PatternVar) getParent(); 
    	 return v.getType();
     }
-    
+
+    eq LoopVarDecl.getType() {
+        ForeachStmt fs = (ForeachStmt) getParent();
+        Type lt = fs.getListExp().getType();
+        // Just being a bit defensive here.  We don't bother checking if it's
+        // a list, etc. since this will be caught by the type checker.
+        if (lt.isDataType()) {
+            DataTypeType llt = (DataTypeType)lt;
+            if (llt.numTypeArgs() == 1) return llt.getTypeArg(0);
+        }
+        return UnknownType.INSTANCE;
+    }
     /* Annotations */
     syn lazy Type Annotation.getType() = getValue().getType();
     

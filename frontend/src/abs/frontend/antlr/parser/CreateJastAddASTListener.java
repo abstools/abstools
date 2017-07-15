@@ -369,6 +369,13 @@ new List<ModuleDecl>(),
         }
         setV(ctx, new WhileStmt(l(ctx.annotation()), (PureExp)v(ctx.c), (Block)v(ctx.stmt())));
     }
+    @Override public void exitForeachStmt(ABSParser.ForeachStmtContext ctx) {
+        Stmt body = (Stmt)v(ctx.stmt());
+        if (!(body instanceof Block)) {
+            setV(ctx.stmt(), new Block(new List<Annotation>(), new List(body)));
+        }
+        setV(ctx, new ForeachStmt(l(ctx.annotation()), new LoopVarDecl(ctx.i.getText()), (PureExp)v(ctx.l), (Block)v(ctx.stmt())));
+    }
     @Override public void exitTryCatchFinallyStmt(ABSParser.TryCatchFinallyStmtContext ctx) {
         Stmt body = (Stmt)v(ctx.b);
         if (!(body instanceof Block)) {
