@@ -66,6 +66,24 @@ initialized with `null` if the initialization expression is omitted.
 Bool b = True;
 ----
 
+==== Constant Declarations
+
+Variable and field declarations can carry a `Final` annotation.  the effect of
+such an annotation is to forbid re-assignment to such variables.
+
+The following example will lead to a compile-time error since we are trying to
+assign a new value to `constant_i`:
+
+[source]
+.Example
+----
+{
+    [Final] Int constant_i = 24;
+    constant_i = 25;
+}
+----
+
+
 
 === Variable Assignment
 

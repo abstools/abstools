@@ -99,12 +99,6 @@ NOTE: ABS currently does not support method overloading.  Each method must
 have a unique name since methods are not disambiguated by their parameter
 lists.
 
-Definitions for atomic method declarations have to be annotated with
-`[Atomic]` as well.  The compiler will statically check that the definition
-does not contain suspension points (`suspend` and `await` statements).  Such
-methods can be called from init blocks; all other methods cannot be called
-from init blocks.
-
 
 [source]
 .Example
@@ -138,7 +132,57 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
 
 ----
 
-.Active Classes
+=== Atomic Methods
+
+Definitions for atomic method declarations have to be annotated with
+`[Atomic]` as well.  The compiler will statically check that the definition
+does not contain suspension points (`suspend` and `await` statements) and
+blocking `get` expressions.  Such methods can be called inside init blocks and
+in `finally` clauses; all other methods cannot be called in these places.
+
+The following example shows a call to an atomic method from an init block.
+Removing the `Atomic` annotation from method `m` would lead to a compile-time
+error.
+
+[source]
+.Example
+----
+class Sample {
+    Int field = 12;
+
+    {
+        field = this.m();
+    }
+
+    [Atomic] Int m() {
+        return 24;
+    }
+}
+----
+
+
+=== Constant Fields
+
+Similar to variable declarations, field declarations can carry a `Final`
+annotation.  the effect of such an annotation is to forbid re-assignment to
+such a field.
+
+The following example will lead to a compile-time error since we are trying to
+assign a new value to `constant_i`:
+
+[source]
+.Example
+----
+class Sample {
+    [Final] Int constant_i = 24;
+    Unit m() {
+        constant_i = 25;
+    }
+}
+----
+
+
+=== Active Classes
 
 A class can be active or passive. Active classes start an activity on their own upon creation. Passive classes only react to incoming method calls. A class is active if and only if it has a run method:
 
