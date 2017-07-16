@@ -210,15 +210,15 @@
   </target>
   
   <target name="genruntime">
-    <copy todir="${build.dir}/abs/backend/erlang" >
-      <fileset dir="${src.dir}/abs/backend/erlang/" includes="runtime/**/*" />
-    </copy>
     <echo message="Trying to precompile erlang libraries, error is safe to ignore" />
-    <exec executable="escript" dir="${build.dir}/abs/backend/erlang/runtime/absmodel"
+    <exec executable="escript" dir="${src.dir}/abs/backend/erlang/runtime/absmodel"
           failonerror="false" failifexecutionfails="false">
       <arg value="../bin/rebar" />
       <arg value="compile" />
     </exec>
+    <copy todir="${build.dir}/abs/backend/erlang" >
+      <fileset dir="${src.dir}/abs/backend/erlang/" includes="runtime/**/*" />
+    </copy>
     <copy file="${src.dir}/abs/backend/maude/abs-interpreter.maude" todir="${build.dir}/abs/backend/maude" />
   </target>	
 
