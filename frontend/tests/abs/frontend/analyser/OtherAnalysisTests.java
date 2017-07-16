@@ -43,6 +43,41 @@ public class OtherAnalysisTests extends FrontendTest {
     }
 
     @Test
+    public void atomicTestFail1() {
+        // await / get in atomic method
+        assertParse("interface I {[Atomic] Unit n();} class C implements I {[Atomic] Unit n() {await this!n();}}",
+                    Config.TYPE_CHECK, Config.WITH_STD_LIB, Config.EXPECT_TYPE_ERROR);
+    }
+
+    @Test
+    public void atomicTestFail2() {
+        // suspend in atomic method
+        assertParse("interface I {[Atomic] Unit n();} class C implements I {[Atomic] Unit n() {suspend;}}",
+                    Config.TYPE_CHECK, Config.WITH_STD_LIB, Config.EXPECT_TYPE_ERROR);
+    }
+
+    @Test
+    public void atomicTestFail3() {
+        // synccall to non-atomic method
+        assertParse("interface I {Unit m(); [Atomic] Unit n();} class C implements I {Unit m() { skip; } [Atomic] Unit n() {this.m();}}",
+                    Config.TYPE_CHECK, Config.WITH_STD_LIB, Config.EXPECT_TYPE_ERROR);
+    }
+
+    @Test
+    public void atomicTestOk1() {
+        // synccall to atomic method
+        assertParse("interface I { [Atomic] Unit n();} class C implements I { [Atomic] Unit n() {this.n();}}",
+                    Config.TYPE_CHECK, Config.WITH_STD_LIB);
+    }
+
+    @Test
+    public void atomicTestOk2() {
+        // non-synccall to non-atomic method
+        assertParse("interface I {Unit m(); [Atomic] Unit n();} class C implements I {Unit m() { skip; } [Atomic] Unit n() {this!m();}}",
+                    Config.TYPE_CHECK, Config.WITH_STD_LIB);
+    }
+
+    @Test
     public void fullcopyTest() {
         Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
         Model m2 = m.treeCopyNoTransform();

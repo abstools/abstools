@@ -442,12 +442,11 @@ aspect TypeResolution {
         }
     }
 
-    /**
-     * TODO Someone should really document why ALSO AsyncCall.isAsync() = false;
-     */
     syn boolean Call.isAsync();
     eq SyncCall.isAsync() = false;
     eq Call.isAsync() = false;
+    eq AsyncCall.isAsync() = true;
+    eq AwaitAsyncCall.isAsync() = true;
 
     syn lazy ModuleDecl ASTNode.getModuleDecl() = (ModuleDecl) calcContextNode(ModuleDecl.class);
     /**
