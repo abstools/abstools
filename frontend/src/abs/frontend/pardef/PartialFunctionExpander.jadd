@@ -21,9 +21,6 @@ aspect PartialFunctionApplier {
 
     void ModuleDecl.expandPartialFunctions() {
         Map<String, PartialFunctionDecl> functions = collectPartialFunctions();
-        if(functions.isEmpty()) {
-            return;
-        }
 
         // check for cycles
         for (PartialFunctionDecl function : functions.values()) {
