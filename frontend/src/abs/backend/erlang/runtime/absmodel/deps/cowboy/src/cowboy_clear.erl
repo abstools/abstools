@@ -1,4 +1,4 @@
-%% Copyright (c) 2015-2017, Loïc Hoguin <essen@ninenines.eu>
+%% Copyright (c) 2016-2017, Loïc Hoguin <essen@ninenines.eu>
 %%
 %% Permission to use, copy, modify, and/or distribute this software for any
 %% purpose with or without fee is hereby granted, provided that the above
@@ -12,18 +12,18 @@
 %% ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 %% OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
--module(cowboy_tls).
+-module(cowboy_clear).
 -behavior(ranch_protocol).
 
 -export([start_link/4]).
 -export([proc_lib_hack/5]).
 
--spec start_link(ranch:ref(), ssl:sslsocket(), module(), cowboy:opts()) -> {ok, pid()}.
+-spec start_link(ranch:ref(), inet:socket(), module(), cowboy:opts()) -> {ok, pid()}.
 start_link(Ref, Socket, Transport, Opts) ->
 	Pid = proc_lib:spawn_link(?MODULE, proc_lib_hack, [self(), Ref, Socket, Transport, Opts]),
 	{ok, Pid}.
 
--spec proc_lib_hack(pid(), ranch:ref(), ssl:sslsocket(), module(), cowboy:opts()) -> ok.
+-spec proc_lib_hack(pid(), ranch:ref(), inet:socket(), module(), cowboy:opts()) -> ok.
 proc_lib_hack(Parent, Ref, Socket, Transport, Opts) ->
 	try
 		init(Parent, Ref, Socket, Transport, Opts)
@@ -34,15 +34,10 @@ proc_lib_hack(Parent, Ref, Socket, Transport, Opts) ->
 		_:Reason -> exit({Reason, erlang:get_stacktrace()})
 	end.
 
--spec init(pid(), ranch:ref(), ssl:sslsocket(), module(), cowboy:opts()) -> ok.
+-spec init(pid(), ranch:ref(), inet:socket(), module(), cowboy:opts()) -> ok.
 init(Parent, Ref, Socket, Transport, Opts) ->
 	ok = ranch:accept_ack(Ref),
-	case ssl:negotiated_protocol(Socket) of
-		{ok, <<"h2">>} ->
-			init(Parent, Ref, Socket, Transport, Opts, cowboy_http2);
-		_ -> %% http/1.1 or no protocol negotiated.
-			init(Parent, Ref, Socket, Transport, Opts, cowboy_http)
-	end.
+	init(Parent, Ref, Socket, Transport, Opts, cowboy_http).
 
 init(Parent, Ref, Socket, Transport, Opts, Protocol) ->
 	_ = case maps:get(connection_type, Opts, supervisor) of

@@ -21,7 +21,7 @@ init(Req, _Opts) ->
                                              cowboy_req:parse_qs(Req));
             _ -> {404, <<"text/plain">>, <<"Not found">>}
         end,
-    Req2 = cowboy_req:reply(Status, [{<<"content-type">>, ContentType}],
+    Req2 = cowboy_req:reply(Status, #{<<"content-type">> => ContentType},
                             Body, Req),
     {ok, Req2, #state{}}.
 

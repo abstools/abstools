@@ -424,7 +424,7 @@ horse_parse() ->
 
 -spec boundary() -> binary().
 boundary() ->
-	base64:encode(crypto:rand_bytes(48)).
+	cow_base64url:encode(crypto:strong_rand_bytes(48), #{padding => false}).
 
 %% @doc Return the first part's head.
 %%
@@ -523,9 +523,11 @@ horse_build() ->
 %% @doc Convenience function for extracting information from headers
 %% when parsing a multipart/form-data stream.
 
--spec form_data(headers())
+-spec form_data(headers() | #{binary() => binary()})
 	-> {data, binary()}
-	| {file, binary(), binary(), binary(), binary()}.
+	| {file, binary(), binary(), binary()}.
+form_data(Headers) when is_map(Headers) ->
+	form_data(maps:to_list(Headers));
 form_data(Headers) ->
 	{_, DispositionBin} = lists:keyfind(<<"content-disposition">>, 1, Headers),
 	{<<"form-data">>, Params} = parse_content_disposition(DispositionBin),
@@ -538,12 +540,7 @@ form_data(Headers) ->
 				false -> <<"text/plain">>;
 				{_, T} -> T
 			end,
-			TransferEncoding = case lists:keyfind(
-					<<"content-transfer-encoding">>, 1, Headers) of
-				false -> <<"7bit">>;
-				{_, TE} -> TE
-			end,
-			{file, FieldName, Filename, Type, TransferEncoding}
+			{file, FieldName, Filename, Type}
 	end.
 
 -ifdef(TEST).
@@ -554,8 +551,7 @@ form_data_test_() ->
 		{[{<<"content-disposition">>,
 				<<"form-data; name=\"files\"; filename=\"file1.txt\"">>},
 			{<<"content-type">>, <<"text/x-plain">>}],
-			{file, <<"files">>, <<"file1.txt">>,
-				<<"text/x-plain">>, <<"7bit">>}}
+			{file, <<"files">>, <<"file1.txt">>, <<"text/x-plain">>}}
 	],
 	[{lists:flatten(io_lib:format("~p", [V])),
 		fun() -> R = form_data(V) end} || {V, R} <- Tests].

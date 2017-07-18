@@ -16,14 +16,24 @@
 
 %% Parsing.
 -export([parse/1]).
+-export([parse/2]).
+-export([parse_settings_payload/1]).
 
 %% Building.
 -export([data/3]).
+-export([data_header/3]).
 -export([headers/3]).
+-export([priority/4]).
 -export([rst_stream/2]).
 -export([settings/1]).
+-export([settings_payload/1]).
+-export([settings_ack/0]).
 -export([push_promise/3]).
+-export([ping/1]).
 -export([ping_ack/1]).
+-export([goaway/3]).
+-export([window_update/1]).
+-export([window_update/2]).
 
 -type streamid() :: pos_integer().
 -type fin() :: fin | nofin.
@@ -67,11 +77,18 @@
 
 %% Parsing.
 
+parse(<< Len:24, _/bits >>, MaxFrameSize) when Len > MaxFrameSize ->
+	{connection_error, frame_size_error, 'The frame size exceeded SETTINGS_MAX_FRAME_SIZE. (RFC7540 4.2)'};
+parse(Data, _) ->
+	parse(Data).
+
 %%
 %% DATA frames.
 %%
 parse(<< _:24, 0:8, _:9, 0:31, _/bits >>) ->
 	{connection_error, protocol_error, 'DATA frames MUST be associated with a stream. (RFC7540 6.1)'};
+parse(<< 0:24, 0:8, _:4, 1:1, _:35, _/bits >>) ->
+	{connection_error, frame_size_error, 'DATA frames with padding flag MUST have a length > 0. (RFC7540 6.1)'};
 parse(<< Len0:24, 0:8, _:4, 1:1, _:35, PadLen:8, _/bits >>) when PadLen >= Len0 ->
 	{connection_error, protocol_error, 'Length of padding MUST be less than length of payload. (RFC7540 6.1)'};
 %% No padding.
@@ -92,6 +109,12 @@ parse(<< Len0:24, 0:8, _:4, 1:1, _:2, FlagEndStream:1, _:1, StreamID:31, PadLen:
 %%
 parse(<< _:24, 1:8, _:9, 0:31, _/bits >>) ->
 	{connection_error, protocol_error, 'HEADERS frames MUST be associated with a stream. (RFC7540 6.2)'};
+parse(<< 0:24, 1:8, _:4, 1:1, _:35, _/bits >>) ->
+	{connection_error, frame_size_error, 'HEADERS frames with padding flag MUST have a length > 0. (RFC7540 6.1)'};
+parse(<< Len:24, 1:8, _:2, 1:1, _:37, _/bits >>) when Len < 5 ->
+	{connection_error, frame_size_error, 'HEADERS frames with priority flag MUST have a length >= 5. (RFC7540 6.1)'};
+parse(<< Len:24, 1:8, _:2, 1:1, _:37, _/bits >>) when Len < 6 ->
+	{connection_error, frame_size_error, 'HEADERS frames with padding and priority flags MUST have a length >= 6. (RFC7540 6.1)'};
 parse(<< Len0:24, 1:8, _:4, 1:1, _:35, PadLen:8, _/bits >>) when PadLen >= Len0 ->
 	{connection_error, protocol_error, 'Length of padding MUST be less than length of payload. (RFC7540 6.2)'};
 parse(<< Len0:24, 1:8, _:2, 1:1, _:1, 1:1, _:35, PadLen:8, _/bits >>) when PadLen >= Len0 - 5 ->
@@ -148,8 +171,8 @@ parse(<< 4:24, 3:8, _:9, 0:31, _/bits >>) ->
 parse(<< 4:24, 3:8, _:9, StreamID:31, ErrorCode:32, Rest/bits >>) ->
 	{ok, {rst_stream, StreamID, parse_error_code(ErrorCode)}, Rest};
 %% @todo same as priority
-parse(<< BadLen:24, 3:8, _:9, StreamID:31, _:BadLen/binary, Rest/bits >>) ->
-	{stream_error, StreamID, frame_size_error, 'RST_STREAM frames MUST be 4 bytes wide. (RFC7540 6.4)', Rest};
+parse(<< _:24, 3:8, _:9, _:31, _/bits >>) ->
+	{connection_error, frame_size_error, 'RST_STREAM frames MUST be 4 bytes wide. (RFC7540 6.4)'};
 %%
 %% SETTINGS frames.
 %%
@@ -160,14 +183,20 @@ parse(<< _:24, 4:8, _:7, 1:1, _:1, 0:31, _/bits >>) ->
 parse(<< Len:24, 4:8, _:7, 0:1, _:1, 0:31, _/bits >>) when Len rem 6 =/= 0 ->
 	{connection_error, frame_size_error, 'SETTINGS frames MUST have a length multiple of 6. (RFC7540 6.5)'};
 parse(<< Len:24, 4:8, _:7, 0:1, _:1, 0:31, Rest/bits >>) when byte_size(Rest) >= Len ->
-	parse_settings(Rest, Len, #{});
+	parse_settings_payload(Rest, Len, #{});
 parse(<< _:24, 4:8, _/bits >>) ->
 	{connection_error, protocol_error, 'SETTINGS frames MUST NOT be associated with a stream. (RFC7540 6.5)'};
 %%
 %% PUSH_PROMISE frames.
 %%
+parse(<< Len:24, 5:8, _:40, _/bits >>) when Len < 4 ->
+	{connection_error, frame_size_error, 'PUSH_PROMISE frames MUST have a length >= 4. (RFC7540 4.2, RFC7540 6.6)'};
+parse(<< Len:24, 5:8, _:4, 1:1, _:35, _/bits >>) when Len < 5 ->
+	{connection_error, frame_size_error, 'PUSH_PROMISE frames with padding flag MUST have a length >= 5. (RFC7540 4.2, RFC7540 6.6)'};
 parse(<< _:24, 5:8, _:9, 0:31, _/bits >>) ->
 	{connection_error, protocol_error, 'PUSH_PROMISE frames MUST be associated with a stream. (RFC7540 6.6)'};
+parse(<< Len0:24, 5:8, _:4, 1:1, _:35, PadLen:8, _/bits >>) when PadLen >= Len0 - 4 ->
+	{connection_error, protocol_error, 'Length of padding MUST be less than length of payload. (RFC7540 6.6)'};
 parse(<< Len0:24, 5:8, _:4, 0:1, FlagEndHeaders:1, _:3, StreamID:31, _:1, PromisedStreamID:31, Rest0/bits >>)
 		when byte_size(Rest0) >= Len0 - 4 ->
 	Len = Len0 - 4,
@@ -191,7 +220,7 @@ parse(<< 8:24, 6:8, _:7, 0:1, _:1, 0:31, Opaque:64, Rest/bits >>) ->
 	{ok, {ping, Opaque}, Rest};
 parse(<< 8:24, 6:8, _:104, _/bits >>) ->
 	{connection_error, protocol_error, 'PING frames MUST NOT be associated with a stream. (RFC7540 6.7)'};
-parse(<< _:24, 6:8, _/bits >>) ->
+parse(<< Len:24, 6:8, _/bits >>) when Len =/= 8 ->
 	{connection_error, frame_size_error, 'PING frames MUST be 8 bytes wide. (RFC7540 6.7)'};
 %%
 %% GOAWAY frames.
@@ -200,6 +229,8 @@ parse(<< Len0:24, 7:8, _:9, 0:31, _:1, LastStreamID:31, ErrorCode:32, Rest0/bits
 	Len = Len0 - 8,
 	<< DebugData:Len/binary, Rest/bits >> = Rest0,
 	{ok, {goaway, LastStreamID, parse_error_code(ErrorCode), DebugData}, Rest};
+parse(<< Len:24, 7:8, _:40, _/bits >>) when Len < 8 ->
+	{connection_error, frame_size_error, 'GOAWAY frames MUST have a length >= 8. (RFC7540 4.2, RFC7540 6.8)'};
 parse(<< _:24, 7:8, _:40, _/bits >>) ->
 	{connection_error, protocol_error, 'GOAWAY frames MUST NOT be associated with a stream. (RFC7540 6.8)'};
 %%
@@ -213,7 +244,7 @@ parse(<< 4:24, 8:8, _:9, StreamID:31, _:1, 0:31, _/bits >>) ->
 	{stream_error, StreamID, protocol_error, 'WINDOW_UPDATE frames MUST have a non-zero increment. (RFC7540 6.9)'};
 parse(<< 4:24, 8:8, _:9, StreamID:31, _:1, Increment:31, Rest/bits >>) ->
 	{ok, {window_update, StreamID, Increment}, Rest};
-parse(<< _:24, 8:8, _/bits >>) ->
+parse(<< Len:24, 8:8, _/bits >>) when Len =/= 4->
 	{connection_error, frame_size_error, 'WINDOW_UPDATE frames MUST be 4 bytes wide. (RFC7540 6.9)'};
 %%
 %% CONTINUATION frames.
@@ -223,10 +254,31 @@ parse(<< _:24, 9:8, _:9, 0:31, _/bits >>) ->
 parse(<< Len:24, 9:8, _:5, FlagEndHeaders:1, _:3, StreamID:31, HeaderBlockFragment:Len/binary, Rest/bits >>) ->
 	{ok, {continuation, StreamID, parse_head_fin(FlagEndHeaders), HeaderBlockFragment}, Rest};
 %%
+%% Unknown frames are ignored.
+%%
+parse(<< Len:24, Type:8, _:40, _:Len/binary, Rest/bits >>) when Type > 9 ->
+	{ignore, Rest};
+%%
 %% Incomplete frames.
 %%
 parse(_) ->
 	more.
+
+-ifdef(TEST).
+parse_ping_test() ->
+	Ping = ping(1234567890),
+	_ = [more = parse(binary:part(Ping, 0, I)) || I <- lists:seq(1, byte_size(Ping) - 1)],
+	{ok, {ping, 1234567890}, <<>>} = parse(Ping),
+	{ok, {ping, 1234567890}, << 42 >>} = parse(<< Ping/binary, 42 >>),
+	ok.
+
+parse_windows_update_test() ->
+	WindowUpdate = << 4:24, 8:8, 0:9, 0:31, 0:1, 12345:31 >>,
+	_ = [more = parse(binary:part(WindowUpdate, 0, I)) || I <- lists:seq(1, byte_size(WindowUpdate) - 1)],
+	{ok, {window_update, 12345}, <<>>} = parse(WindowUpdate),
+	{ok, {window_update, 12345}, << 42 >>} = parse(<< WindowUpdate/binary, 42 >>),
+	ok.
+-endif.
 
 parse_fin(0) -> nofin;
 parse_fin(1) -> fin.
@@ -253,46 +305,53 @@ parse_error_code(12) -> inadequate_security;
 parse_error_code(13) -> http_1_1_required;
 parse_error_code(_) -> unknown_error.
 
-parse_settings(Rest, 0, Settings) ->
+parse_settings_payload(SettingsPayload) ->
+	{ok, {settings, Settings}, <<>>}
+		= parse_settings_payload(SettingsPayload, byte_size(SettingsPayload), #{}),
+	Settings.
+
+parse_settings_payload(Rest, 0, Settings) ->
 	{ok, {settings, Settings}, Rest};
 %% SETTINGS_HEADER_TABLE_SIZE.
-parse_settings(<< 1:16, Value:32, Rest/bits >>, Len, Settings) ->
-	parse_settings(Rest, Len - 6, Settings#{header_table_size => Value});
+parse_settings_payload(<< 1:16, Value:32, Rest/bits >>, Len, Settings) ->
+	parse_settings_payload(Rest, Len - 6, Settings#{header_table_size => Value});
 %% SETTINGS_ENABLE_PUSH.
-parse_settings(<< 2:16, 0:32, Rest/bits >>, Len, Settings) ->
-	parse_settings(Rest, Len - 6, Settings#{enable_push => false});
-parse_settings(<< 2:16, 1:32, Rest/bits >>, Len, Settings) ->
-	parse_settings(Rest, Len - 6, Settings#{enable_push => true});
-parse_settings(<< 2:16, _:32, _/bits >>, _, _) ->
+parse_settings_payload(<< 2:16, 0:32, Rest/bits >>, Len, Settings) ->
+	parse_settings_payload(Rest, Len - 6, Settings#{enable_push => false});
+parse_settings_payload(<< 2:16, 1:32, Rest/bits >>, Len, Settings) ->
+	parse_settings_payload(Rest, Len - 6, Settings#{enable_push => true});
+parse_settings_payload(<< 2:16, _:32, _/bits >>, _, _) ->
 	{connection_error, protocol_error, 'The SETTINGS_ENABLE_PUSH value MUST be 0 or 1. (RFC7540 6.5.2)'};
 %% SETTINGS_MAX_CONCURRENT_STREAMS.
-parse_settings(<< 3:16, Value:32, Rest/bits >>, Len, Settings) ->
-	parse_settings(Rest, Len - 6, Settings#{max_concurrent_streams => Value});
+parse_settings_payload(<< 3:16, Value:32, Rest/bits >>, Len, Settings) ->
+	parse_settings_payload(Rest, Len - 6, Settings#{max_concurrent_streams => Value});
 %% SETTINGS_INITIAL_WINDOW_SIZE.
-parse_settings(<< 4:16, Value:32, _/bits >>, _, _) when Value > 16#7fffffff ->
+parse_settings_payload(<< 4:16, Value:32, _/bits >>, _, _) when Value > 16#7fffffff ->
 	{connection_error, flow_control_error, 'The maximum SETTINGS_INITIAL_WINDOW_SIZE value is 0x7fffffff. (RFC7540 6.5.2)'};
-parse_settings(<< 4:16, Value:32, Rest/bits >>, Len, Settings) ->
-	parse_settings(Rest, Len - 6, Settings#{initial_window_size => Value});
+parse_settings_payload(<< 4:16, Value:32, Rest/bits >>, Len, Settings) ->
+	parse_settings_payload(Rest, Len - 6, Settings#{initial_window_size => Value});
 %% SETTINGS_MAX_FRAME_SIZE.
-parse_settings(<< 5:16, Value:32, _/bits >>, _, _) when Value =< 16#3fff ->
+parse_settings_payload(<< 5:16, Value:32, _/bits >>, _, _) when Value =< 16#3fff ->
 	{connection_error, protocol_error, 'The SETTINGS_MAX_FRAME_SIZE value must be > 0x3fff. (RFC7540 6.5.2)'};
-parse_settings(<< 5:16, Value:32, Rest/bits >>, Len, Settings) when Value =< 16#ffffff ->
-	parse_settings(Rest, Len - 6, Settings#{max_frame_size => Value});
-parse_settings(<< 5:16, _:32, _/bits >>, _, _) ->
+parse_settings_payload(<< 5:16, Value:32, Rest/bits >>, Len, Settings) when Value =< 16#ffffff ->
+	parse_settings_payload(Rest, Len - 6, Settings#{max_frame_size => Value});
+parse_settings_payload(<< 5:16, _:32, _/bits >>, _, _) ->
 	{connection_error, protocol_error, 'The SETTINGS_MAX_FRAME_SIZE value must be =< 0xffffff. (RFC7540 6.5.2)'};
 %% SETTINGS_MAX_HEADER_LIST_SIZE.
-parse_settings(<< 6:16, Value:32, Rest/bits >>, Len, Settings) ->
-	parse_settings(Rest, Len - 6, Settings#{max_header_list_size => Value});
-parse_settings(<< _:48, Rest/bits >>, Len, Settings) ->
-	parse_settings(Rest, Len - 6, Settings).
+parse_settings_payload(<< 6:16, Value:32, Rest/bits >>, Len, Settings) ->
+	parse_settings_payload(Rest, Len - 6, Settings#{max_header_list_size => Value});
+parse_settings_payload(<< _:48, Rest/bits >>, Len, Settings) ->
+	parse_settings_payload(Rest, Len - 6, Settings).
 
 %% Building.
 
 %% @todo Check size and create multiple frames if needed.
 data(StreamID, IsFin, Data) ->
-	Len = iolist_size(Data),
+	[data_header(StreamID, IsFin, iolist_size(Data)), Data].
+
+data_header(StreamID, IsFin, Len) ->
 	FlagEndStream = flag_fin(IsFin),
-	[<< Len:24, 0:15, FlagEndStream:1, 0:1, StreamID:31 >>, Data].
+	<< Len:24, 0:15, FlagEndStream:1, 0:1, StreamID:31 >>.
 
 %% @todo Check size of HeaderBlock and use CONTINUATION frames if needed.
 headers(StreamID, IsFin, HeaderBlock) ->
@@ -300,6 +359,10 @@ headers(StreamID, IsFin, HeaderBlock) ->
 	FlagEndStream = flag_fin(IsFin),
 	FlagEndHeaders = 1,
 	[<< Len:24, 1:8, 0:5, FlagEndHeaders:1, 0:1, FlagEndStream:1, 0:1, StreamID:31 >>, HeaderBlock].
+
+priority(StreamID, E, DepStreamID, Weight) ->
+	FlagExclusive = exclusive(E),
+	<< 5:24, 2:8, 0:9, StreamID:31, FlagExclusive:1, DepStreamID:31, Weight:8 >>.
 
 rst_stream(StreamID, Reason) ->
 	ErrorCode = error_code(Reason),
@@ -309,17 +372,41 @@ rst_stream(StreamID, Reason) ->
 settings(#{}) ->
 	<< 0:24, 4:8, 0:40 >>.
 
+%% @todo Actually implement it. :-)
+settings_payload(#{}) ->
+	<<>>.
+
+settings_ack() ->
+	<< 0:24, 4:8, 1:8, 0:32 >>.
+
 %% @todo Check size of HeaderBlock and use CONTINUATION frames if needed.
 push_promise(StreamID, PromisedStreamID, HeaderBlock) ->
 	Len = iolist_size(HeaderBlock) + 4,
 	FlagEndHeaders = 1,
 	[<< Len:24, 5:8, 0:5, FlagEndHeaders:1, 0:3, StreamID:31, 0:1, PromisedStreamID:31 >>, HeaderBlock].
 
+ping(Opaque) ->
+	<< 8:24, 6:8, 0:40, Opaque:64 >>.
+
 ping_ack(Opaque) ->
 	<< 8:24, 6:8, 0:7, 1:1, 0:32, Opaque:64 >>.
 
+goaway(LastStreamID, Reason, DebugData) ->
+	ErrorCode = error_code(Reason),
+	Len = iolist_size(DebugData) + 8,
+	[<< Len:24, 7:8, 0:41, LastStreamID:31, ErrorCode:32 >>, DebugData].
+
+window_update(Increment) ->
+	window_update(0, Increment).
+
+window_update(StreamID, Increment) when Increment =< 16#7fffffff ->
+	<< 4:24, 8:8, 0:8, StreamID:32, 0:1, Increment:31 >>.
+
 flag_fin(nofin) -> 0;
 flag_fin(fin) -> 1.
+
+exclusive(shared) -> 0;
+exclusive(exclusive) -> 1.
 
 error_code(no_error) -> 0;
 error_code(protocol_error) -> 1;
