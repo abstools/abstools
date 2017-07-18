@@ -51,7 +51,7 @@ aspect PartialFunctionApplier {
             PartialFunctionDecl function = functions.get(fnApp.getName());
             if (function == null) {
                 String message = "No such partially defined function: " + fnApp.getName();
-                throw new DeltaModellingException(message);
+                throw new PardefModellingException(fnApp, message);
             }
 
             String expandedName = function.expandedName(fnApp);
@@ -95,7 +95,7 @@ aspect PartialFunctionApplier {
     private void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionDecl> functions, Set<String> visited) {
         if (!visited.add(getName())) {
             String message = "Pardef call cycle detected (in " + getName() + "): " + visited;
-            throw new DeltaModellingException(message);
+            throw new PardefModellingException(message);
         }
         for (ParFnApp parFnApp : TreeUtil.findChildren(this, ParFnApp.class)) {
             PartialFunctionDecl called = functions.get(parFnApp.getName());
@@ -112,12 +112,12 @@ aspect PartialFunctionApplier {
         int funcParamCount = getNumFuncParam();
         if (funcParamCount != fnApp.getNumFuncParam()) {
             String message = "Wrong number of function arguments for partially defined function " + getName();
-            throw new DeltaModellingException(message);
+            throw new PardefModellingException(fnApp, message);
         }
 
         if (getNumParam() != fnApp.getNumParam()) {
             String message = "Wrong number of arguments for partially defined function " + getName();
-            throw new DeltaModellingException(message);
+            throw new PardefModellingException(fnApp, message);
         }
 
         String expandedName = expandedName(fnApp);
@@ -144,12 +144,12 @@ aspect PartialFunctionApplier {
 
         if(!(uncheckedFnApp instanceof ParametricParFnApp)) {
             String message = "Calling parametric partially defined function '" + getName() + "' needs type parameters";
-            throw new DeltaModellingException(message);
+            throw new PardefModellingException(uncheckedFnApp, message);
         }
         ParametricParFnApp fnApp = (ParametricParFnApp) uncheckedFnApp;
         if(fnApp.getNumTypeParam() != getNumTypeParameter()) {
             String message = "Wrong number of type parameters for partially defined function " + getName();
-            throw new DeltaModellingException(message);
+            throw new PardefModellingException(fnApp, message);
         }
 
         Map<String, TypeUse> typeBindings = new HashMap<>(getNumTypeParameter() * 2);
