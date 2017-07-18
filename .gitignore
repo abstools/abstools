@@ -32,3 +32,4 @@ eclipsehome.properties
 .bundle/
 .metadata/
 **/*.iml
+**/*.eml
