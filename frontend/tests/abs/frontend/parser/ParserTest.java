@@ -438,6 +438,20 @@ public class ParserTest extends FrontendTest {
     }
 
     @Test
+    public void callParametricPartialFunction() {
+        assertParseOk("{ f<A>()(); }");
+        assertParseOk("{ f<A, B>()(); }");
+        assertParseOk("{ f<Test1, Test2>()(); }");
+    }
+
+    @Test
+    public void callParametricPartialFunctionInvalidParams() {
+        assertParseError("{ f<>()(); }");
+        assertParseError("{ f<,A>()(); }");
+        assertParseError("{ f<A,>()(); }");
+    }
+
+    @Test
     public void callPartialFunctionInvalidParams() {
         assertParseError("{ f()(g(x)); }");
         assertParseError(" { f()(f g); }");
