@@ -72,8 +72,13 @@ aspect FnAppContext {
         return isVarUseContextImperative(v);
     }
     eq ClassDecl.getChild().isVarUseContextImperative(VarUse v) = true;
+    eq MethodSig.getChild().isVarUseContextImperative(VarUse v) = true;
+    eq MethodImpl.getBlock().isVarUseContextImperative(VarUse v) = true;
+    // neither/nor: variables in annotations are not evaluated
+    eq Annotation.getChild().isVarUseContextImperative(VarUse v) = false;
     eq UpdateDecl.getChild().isVarUseContextImperative(VarUse v) = true;
     eq DeltaDecl.getChild().isVarUseContextImperative(VarUse v) = true;
+    eq ModuleDecl.getBlock().isVarUseContextImperative(VarUse v) = true;
 
     eq FunctionDecl.getChild().isVarUseContextImperative(VarUse v) = false;
     eq LetExp.getChild().isVarUseContextImperative(VarUse v) {
@@ -123,6 +128,25 @@ aspect FnAppContext {
         // The only declarations in enclosing contexts are field declarations
         // in classes, which are always imperative
         return true;
+    }
+    eq MethodSig.getChild().isParamDeclImperative(ParamDecl p) {
+        return true;
+    }
+    eq HasField.getFieldDecl().isParamDeclImperative(ParamDecl p) {
+        return true;
+    }
+    eq DeltaFieldParam.getChild().isParamDeclImperative(ParamDecl p) {
+        return true;
+    }
+    eq MethodModifier.getChild().isParamDeclImperative(ParamDecl p) {
+        return true;
+    }
+    eq ModifyClassModifier.getChild().isParamDeclImperative(ParamDecl p) {
+        return true;
+    }
+    eq Annotation.getChild().isParamDeclImperative(ParamDecl p) {
+        // neither/nor: annotations are not evaluated
+        return false;
     }
     eq FunctionDecl.getChild().isParamDeclImperative(ParamDecl p) {
         // Function declarations are always top-level; we could check that p
