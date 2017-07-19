@@ -19,6 +19,7 @@ import abs.backend.common.InternalBackendException;
 import abs.common.NotImplementedYetException;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
+import org.apache.commons.io.output.NullOutputStream;
 
 /**
  * Translates given ABS Files to an Erlang program
@@ -136,6 +137,7 @@ public class ErlangBackend extends Main {
 	String[] rebarProgram = new String[] {"escript", "../bin/rebar", "compile"};
         Process p = Runtime.getRuntime().exec(rebarProgram, null, new File(destDir, "absmodel"));
         if (options.contains(CompileOptions.VERBOSE)) IOUtils.copy(p.getInputStream(), System.out);
+        else IOUtils.copy(p.getInputStream(), new NullOutputStream());
         p.waitFor();
         if (p.exitValue() != 0) {
             String message = "Compilation of generated erlang code failed with exit value " + p.exitValue();
