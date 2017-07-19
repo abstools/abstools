@@ -235,7 +235,7 @@ root Deployments {
     LimitedMachines { Int capacity in [ 0 .. 10000 ] ;
       Int bandwidth in [ 0 .. 10000 ] ;
       Int machinelimit in [ 0 .. 100 ] ; }
-  }    
+  }
 }
 
 // Local Variables:
