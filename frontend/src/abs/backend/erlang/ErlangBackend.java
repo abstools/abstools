@@ -101,9 +101,28 @@ public class ErlangBackend extends Main {
         compile(model, destDir, compileOptions);
     }
 
+    private static boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("win");
+    }
+
+    private static String getEscapedDoubleQuote() {
+        if(isWindows()) {
+            // "" will be resolved to "
+            return "\"\"";
+        } else {
+            // " just works
+            return "\"";
+        }
+    }
+
     public static void compile(Model m, File destDir, EnumSet<CompileOptions> options) throws IOException, InterruptedException, InternalBackendException {
         // check erlang version number
-        Process versionCheck = Runtime.getRuntime().exec(new String[] { "erl", "-eval", "io:fwrite(\"~s\n\", [erlang:system_info(otp_release)]), halt().", "-noshell" });
+        String erlVersionCheckCode = "io:fwrite("
+            + getEscapedDoubleQuote()
+            + "~s\n"
+            + getEscapedDoubleQuote()
+            + ", [erlang:system_info(otp_release)]), halt().";
+        Process versionCheck = Runtime.getRuntime().exec(new String[] { "erl", "-eval", erlVersionCheckCode, "-noshell" });
         versionCheck.waitFor();
         BufferedReader ir = new BufferedReader(new InputStreamReader(versionCheck.getInputStream()));
         int version = Integer.parseInt(ir.readLine());
