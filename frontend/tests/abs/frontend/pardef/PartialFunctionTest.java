@@ -17,8 +17,10 @@ public class PartialFunctionTest extends PardefTest {
         return result;
     }
 
-    private void testExpand(Model model, String expectedName) {
-        assertHasFunction(expand(model), expandedName(expectedName));
+    private void testExpand(Model model, String... expectedNames) {
+        for (String expectedName : expectedNames) {
+            assertHasFunction(expand(model), expandedName(expectedName));
+        }
     }
 
     @Test
@@ -43,5 +45,14 @@ public class PartialFunctionTest extends PardefTest {
             decFunction(),
             "def Int multi_param()(f1, f2) = f1(f2(0))"
         ), "Multi_param_%s_inc_dec");
+    }
+
+    @Test
+    public void definitionContainsParFnApp() {
+        testExpand(parse(
+            "Int i = outer(0)()",
+            "def Int outer(Int i)() = inner(i)()",
+            "def Int inner(Int i)() = i * 2"
+        ), "Outer_%s", "Inner_%s");
     }
 }

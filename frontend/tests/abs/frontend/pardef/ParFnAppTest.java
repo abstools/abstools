@@ -20,8 +20,10 @@ public class ParFnAppTest extends PardefTest {
         return result;
     }
 
-    private void testExpand(Model model, String expectedName) {
-        assertHasCall(expand(model), expandedName(expectedName));
+    private void testExpand(Model model, String... expectedNames) {
+        for (String expectedName : expectedNames) {
+            assertHasCall(expand(model), expandedName(expectedName));
+        }
     }
 
     @Test(expected = PardefModellingException.class)
@@ -153,5 +155,15 @@ public class ParFnAppTest extends PardefTest {
             halveFunction(),
             applyFunction()
         ));
+    }
+
+    @Test
+    public void nestedCalls() {
+        testExpand(parse(
+            "Int i = apply<Int, Int>(apply<Int, Int>(0)(dec))(inc)",
+            incFunction(),
+            decFunction(),
+            applyFunction()
+        ), "Apply_%s_dec_Int_Int", "Apply_%s_inc_Int_Int");
     }
 }
