@@ -1,7 +1,6 @@
 package abs.frontend.pardef;
 
 import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.VarUse;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,19 +23,7 @@ public final class TreeUtil {
             }
 
             for (int index = 0; index < node.getNumChildNoTransform(); ++index) {
-                ASTNode<?> child;
-                try {
-                    child = node.getChildNoTransform(index);
-                } catch (RuntimeException e) {
-                    if (node instanceof VarUse) {
-                        // TODO find out what causes this
-                        // TODO change to continue;
-                        throw e;
-                    } else {
-                        throw e;
-                    }
-                }
-                findChildren(list, child, type);
+                findChildren(list, node.getChildNoTransform(index), type);
             }
         }
     }
