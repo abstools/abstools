@@ -49,7 +49,7 @@ UnknownDecl: Decl; // Unknown declarations
 AmbiguousDecl: UnknownDecl ::= <Alternative:java.util.List<Decl>>;
 ClassDecl: BehaviorDecl ::= Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* TraitUse* [InitBlock] RecoverBranch:CaseBranchStmt* Field:FieldDecl* Method:MethodImpl*;
 FunctionDecl: BehaviorDecl ::= Annotation* TypeUse Param:ParamDecl* FunctionDef ;
-DataConstructor : BehaviorDecl ::= <Name> ConstructorArg:ConstructorArg* ;
+DataConstructor : Decl ::= <Name> ConstructorArg:ConstructorArg* ;
 ParametricFunctionDecl : FunctionDecl ::= Annotation* TypeParameter:TypeParameterDecl* ;
 InterfaceDecl: TypeDecl ::= Annotation* ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
 DataTypeDecl: TypeDecl ::= Annotation* DataConstructor* ;
