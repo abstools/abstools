@@ -4,6 +4,8 @@
  */
 package abs.backend.common;
 
+import java.io.File;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -24,5 +26,10 @@ public class TimeTests extends SemanticTests {
    @Test
    public void duration1() {
       assertEvalTrue("{ Bool testresult = True; duration(1,1); }");
+   }
+   
+   @Test
+   public void costStmtBug160() {
+       assertEvalTrue(new File("tests/abssamples/backend/TimeTests/bug160.abs"));
    }
 }

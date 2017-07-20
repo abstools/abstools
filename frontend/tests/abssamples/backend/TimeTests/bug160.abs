@@ -1,0 +1,16 @@
+module BackendTest;
+
+// Check for compilation with various permutations of cost statements
+
+class C {
+    Int costfield = 10;
+    Unit m() {
+        Int costlocal = 15;
+        [Cost: costlocal] skip;
+        [Cost: costfield] skip;
+    }
+}
+
+{
+    Bool testresult = True;
+}
