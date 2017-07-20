@@ -2,7 +2,7 @@ package abs.frontend.pardef;
 
 import abs.frontend.ast.ASTNode;
 
-public final class PardefModellingException extends RuntimeException {
+public class PardefModellingException extends RuntimeException {
 
     public PardefModellingException() {
         super();

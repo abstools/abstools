@@ -20,18 +20,18 @@ aspect PartialFunctionApplier {
     }
 
     void ModuleDecl.expandPartialFunctions() {
-        Map<String, PartialFunctionDecl> functions = collectPartialFunctions();
+        Map<String, PartialFunctionDecl> functionByName = collectPartialFunctions();
 
         // check for cycles
-        for (PartialFunctionDecl function : functions.values()) {
-            function.checkCycles(functions);
+        for (PartialFunctionDecl function : functionByName.values()) {
+            function.checkCycles(functionByName);
         }
 
-        Map<String, ExpandedWrapper> expanded = new HashMap<>(functions.size() * 4);
+        Map<String, ExpandedWrapper> expanded = new HashMap<>(functionByName.size() * 4);
 
-        expandChildParFnApps(this, functions, expanded, 0);
+        expandChildParFnApps(this, functionByName, expanded, 0);
 
-        for (PartialFunctionDecl function : functions.values()) {
+        for (PartialFunctionDecl function : functionByName.values()) {
             TreeUtil.removeFromParent(function);
         }
     }
@@ -72,6 +72,10 @@ aspect PartialFunctionApplier {
         }
     }
 
+    /**
+     * Collects all Pardefs declared in this module and returns a map from their names to their declarations.
+     * @return an unmodifiable map (functionName -> functionDeclaration), never null
+     */
     private Map<String, PartialFunctionDecl> ModuleDecl.collectPartialFunctions() {
         Map<String, PartialFunctionDecl> result = new HashMap<>(32);
 
@@ -85,22 +89,25 @@ aspect PartialFunctionApplier {
         return Collections.unmodifiableMap(result);
     }
 
-    public void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionDecl> functions) {
-        checkCycles(functions, new HashSet<String>());
+    public void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionDecl> functionByName) {
+        checkCycles(functionByName, new HashSet<String>());
     }
 
-    private void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionDecl> functions, Set<String> visited) {
+    private void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionDecl> functionByName, Set<String> visited) {
         if (!visited.add(getName())) {
-            String message = "Pardef call cycle detected (in " + getName() + "): " + visited;
-            throw new PardefModellingException(message);
+            throw new PardefCycleException(this);
         }
         for (ParFnApp parFnApp : TreeUtil.findChildren(this, ParFnApp.class)) {
-            PartialFunctionDecl called = functions.get(parFnApp.getName());
+            PartialFunctionDecl called = functionByName.get(parFnApp.getName());
             if (called == null) {
                 // will be caught somewhere else
                 continue;
             }
-            called.checkCycles(functions, new HashSet<>(visited));
+            try {
+            called.checkCycles(functionByName, new HashSet<>(visited));
+            } catch (PardefCycleException e) {
+                throw e.calledBy(this);
+            }
         }
     }
 
@@ -123,15 +130,15 @@ aspect PartialFunctionApplier {
         expanded.setTypeUse(getTypeUse().treeCopy());
         expanded.setParamList(getParams().treeCopy());
 
-        Map<String, String> functions = new HashMap<>(funcParamCount * 2);
+        Map<String, String> funcParamBindings = new HashMap<>(funcParamCount * 2);
         for (int i = 0; i < funcParamCount; ++i) {
-            String funcParam = getFuncParam(i).getName();
-            String actualParam = fnApp.getFuncParam(i).getName();
-            functions.put(funcParam, actualParam);
+            String paramName = getFuncParam(i).getName();
+            String binding = fnApp.getFuncParam(i).getName();
+            funcParamBindings.put(paramName, binding);
         }
         // enable recursion by replacing partial function name with expanded name
-        functions.put(getName(), expandedName);
-        expanded.setFunctionDef(getPartialFunctionDef().apply(functions));
+        funcParamBindings.put(getName(), expandedName);
+        expanded.setFunctionDef(getPartialFunctionDef().apply(funcParamBindings));
 
         return expanded;
     }
@@ -156,6 +163,7 @@ aspect PartialFunctionApplier {
             typeBindings.put(typeParamDecl.getName(), typeParam);
         }
 
+        // apply type bindings to return type
         for (TypeUse typeUse : TreeUtil.findChildren(decl.getTypeUseNoTransform(), TypeUse.class)) {
             TypeUse binding = typeBindings.get(typeUse.getName());
             if (binding != null) {
@@ -163,6 +171,7 @@ aspect PartialFunctionApplier {
             }
         }
 
+        // apply type bindings to parameters
         for (ParamDecl param : decl.getParams()) {
             for (TypeUse typeUse : TreeUtil.findChildren(param.getAccessNoTransform(), TypeUse.class)) {
                 TypeUse binding = typeBindings.get(typeUse.getName());
@@ -172,6 +181,7 @@ aspect PartialFunctionApplier {
             }
         }
 
+        // apply type bindings in function definition
         FunctionDef functionDef = decl.getFunctionDef();
         if (functionDef instanceof ExpFunctionDef) {
             ExpFunctionDef def = (ExpFunctionDef) functionDef;
@@ -183,11 +193,16 @@ aspect PartialFunctionApplier {
             }
         } else {
             // TODO implement builtin
-            throw new RuntimeException("Builtin is not supported yet");
+            throw new RuntimeException("Builtin pardefs are not supported yet");
         }
         return decl;
     }
 
+    /**
+     * Returns the name for the expanded version of this function based on the specified function call.<br>
+     *
+     * @return CapitalizedFunctioName_moduleName_funcParam1_funcParam2[...]
+     */
     public String PartialFunctionDecl.expandedName(ParFnApp fnApp) {
         // avoid collisions by capitalizing the applied function name
         StringBuilder builder = new StringBuilder()
@@ -201,6 +216,11 @@ aspect PartialFunctionApplier {
         return builder.toString();
     }
 
+    /**
+     * Returns the name for the expanded version of this function based on the specified function call.<br>
+     *
+     * @return CapitalizedFunctioName_moduleName_funcParam1_funcParam2[...]_typeParam1_typeParam2[...]
+     */
     public String ParametricPartialFunctionDecl.expandedName(ParFnApp fnApp) {
         String result = super.expandedName(fnApp);
         if(fnApp instanceof ParametricParFnApp) {
@@ -216,10 +236,18 @@ aspect PartialFunctionApplier {
         return result;
     }
 
-    public FunctionDef PartialFunctionDef.apply(Map<String, String> functions) {
+    /**
+     * <p>Gets a FunctionDef instance based on this PartialFunctionDef.</p>
+     *
+     * In the resulting FunctionDef, all function calls to functions contained in the specified map are replaced by
+     * calls to the respective value in the map.
+     *
+     * @return a FunctionDef
+     */
+    public FunctionDef PartialFunctionDef.apply(Map<String, String> functionBindings) {
         PureExp expression = getPureExp().treeCopy();
         for (FnApp innerCall : TreeUtil.findChildren(expression, FnApp.class)) {
-            String newName = functions.get(innerCall.getName());
+            String newName = functionBindings.get(innerCall.getName());
             if (newName != null) {
                 innerCall.setName(newName);
             }
@@ -228,6 +256,14 @@ aspect PartialFunctionApplier {
         return new ExpFunctionDef(expression);
     }
 
+    /**
+     * <p>Gets an applied version of this ParFnApp.</p>
+     *
+     * After calling this method, this object is in an invalid state and should be discarded.
+     *
+     * @return a FnApp
+     * @throws IllegalStateException if this method is called twice
+     */
     public FnApp ParFnApp.apply(FunctionDecl function) {
         List<PureExp> params = getParamList();
         if (params == null) {
