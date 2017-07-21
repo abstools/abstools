@@ -47,8 +47,7 @@ aspect PartialFunctionApplier {
             }
             PartialFunctionDecl function = functions.get(fnApp.getName());
             if (function == null) {
-                String message = "No such partially defined function: " + fnApp.getName();
-                throw new PardefModellingException(fnApp, message);
+                throw new PardefModellingException(fnApp, ErrorMessage.FUNCTION_NOT_RESOLVABLE, fnApp.getName());
             }
 
             String expandedName = function.expandedName(fnApp);
@@ -115,26 +114,44 @@ aspect PartialFunctionApplier {
 
     public void PartialFunctionDecl.checkValid(ParFnApp fnApp) {
         if (getNumFuncParam() != fnApp.getNumFuncParam()) {
-            String message = "Wrong number of function arguments for partially defined function " + getName();
-            throw new PardefModellingException(fnApp, message);
+            throw new PardefModellingException(
+                fnApp,
+                ErrorMessage.WRONG_NUMBER_OF_FUNC_ARGS,
+                getNumFuncParam(),
+                fnApp.getNumFuncParam()
+            );
         }
 
         if (getNumParam() != fnApp.getNumParam()) {
-            String message = "Wrong number of arguments for partially defined function " + getName();
-            throw new PardefModellingException(fnApp, message);
+            throw new PardefModellingException(
+                fnApp,
+                ErrorMessage.WRONG_NUMBER_OF_ARGS,
+                getNumParam(),
+                fnApp.getNumParam()
+            );
         }
     }
 
     public void ParametricPartialFunctionDecl.checkValid(ParFnApp uncheckedFnApp) {
         super.checkValid(uncheckedFnApp);
         if(!(uncheckedFnApp instanceof ParametricParFnApp)) {
-            String message = "Calling parametric partially defined function '" + getName() + "' needs type parameters";
-            throw new PardefModellingException(uncheckedFnApp, message);
+            throw new PardefModellingException(
+                uncheckedFnApp,
+                ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS_FUNCTION,
+                getName(),
+                getNumTypeParameter(),
+                0
+            );
         }
         ParametricParFnApp fnApp = (ParametricParFnApp) uncheckedFnApp;
         if(fnApp.getNumTypeParam() != getNumTypeParameter()) {
-            String message = "Wrong number of type parameters for partially defined function " + getName();
-            throw new PardefModellingException(fnApp, message);
+            throw new PardefModellingException(
+                fnApp,
+                ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS_FUNCTION,
+                getName(),
+                getNumTypeParameter(),
+                fnApp.getNumTypeParam()
+            );
         }
     }
 

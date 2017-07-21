@@ -34,6 +34,8 @@ public enum ErrorMessage {
     COMPARISON_INCOMPARABLE_TYPE("Comparison expression with incomparable types, %s and %s."),
     ADD_INCOMPARABLE_TYPE("Add expression with incomparable types, %s and %s."),
     WRONG_NUMBER_OF_ARGS("Wrong number of arguments. Expected %s, but found %s."),
+    WRONG_NUMBER_OF_FUNC_ARGS("Wrong number of function arguments. Expected %s, but found %s."),
+    WRONG_NUMBER_OF_TYPE_ARGS_FUNCTION("Wrong number of type arguments for parametric function %s. Expected %s, but found %s."),
     WRONG_NUMBER_OF_TYPE_ARGS("Wrong number of type arguments for parametric type %s. Expected %s, but found %s."),
     TYPE_MISMATCH("Type %s does not match declared type %s."),
     LIST_LITERAL_TYPE_MISMATCH("All elements must have the same type %s, type %s does not match."),
