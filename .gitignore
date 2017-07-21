@@ -33,3 +33,4 @@ eclipsehome.properties
 .metadata/
 **/*.iml
 **/*.eml
+**/.idea/
