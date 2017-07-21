@@ -39,7 +39,7 @@ public class ErlangBackend extends Main {
     private File destDir = new File("gen/erl/");
     private EnumSet<CompileOptions> compileOptions = EnumSet.noneOf(CompileOptions.class);
 
-    private static int minVersion = 18;
+    private static int minVersion = 19;
 
     public static void main(final String... args) {
         ErlangBackend backEnd = new ErlangBackend();
