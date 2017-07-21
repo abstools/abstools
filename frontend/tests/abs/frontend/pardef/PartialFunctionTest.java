@@ -55,4 +55,14 @@ public class PartialFunctionTest extends PardefTest {
             "def Int inner(Int i)() = i * 2"
         ), "Outer_%s", "Inner_%s");
     }
+
+    @Test(expected = PardefModellingException.class)
+    public void duplicateFunction() {
+        expand(parse(
+            "inc(1)",
+            incFunction(),
+            applyFunction(),
+            applyFunction()
+        ));
+    }
 }
