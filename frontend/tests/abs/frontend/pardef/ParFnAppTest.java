@@ -166,4 +166,13 @@ public class ParFnAppTest extends PardefTest {
             applyFunction()
         ), "Apply_%s_dec_Int_Int", "Apply_%s_inc_Int_Int");
     }
+
+    @Test(expected = PardefModellingException.class)
+    public void invalidCallToAlreadyExpanded() {
+        expand(parse(
+            "apply<Int, Int>(Nil)(inc); apply<Int, Int>(Nil, 42)(inc)",
+            incFunction(),
+            applyFunction()
+        ));
+    }
 }

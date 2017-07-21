@@ -64,6 +64,8 @@ aspect PartialFunctionApplier {
                 ++expansionCount;
 
                 expandChildParFnApps(expandedFunction, functions, expanded, expansionCount);
+            } else {
+                function.checkValid(fnApp);
             }
 
             FnApp expandedFunctionCall = fnApp.apply(expandedWrapper.getExpanded());
@@ -111,10 +113,8 @@ aspect PartialFunctionApplier {
         }
     }
 
-    public FunctionDecl PartialFunctionDecl.expand(ParFnApp fnApp) {
-        FunctionDecl expanded = new FunctionDecl();
-        int funcParamCount = getNumFuncParam();
-        if (funcParamCount != fnApp.getNumFuncParam()) {
+    public void PartialFunctionDecl.checkValid(ParFnApp fnApp) {
+        if (getNumFuncParam() != fnApp.getNumFuncParam()) {
             String message = "Wrong number of function arguments for partially defined function " + getName();
             throw new PardefModellingException(fnApp, message);
         }
@@ -123,13 +123,31 @@ aspect PartialFunctionApplier {
             String message = "Wrong number of arguments for partially defined function " + getName();
             throw new PardefModellingException(fnApp, message);
         }
+    }
 
+    public void ParametricPartialFunctionDecl.checkValid(ParFnApp uncheckedFnApp) {
+        super.checkValid(uncheckedFnApp);
+        if(!(uncheckedFnApp instanceof ParametricParFnApp)) {
+            String message = "Calling parametric partially defined function '" + getName() + "' needs type parameters";
+            throw new PardefModellingException(uncheckedFnApp, message);
+        }
+        ParametricParFnApp fnApp = (ParametricParFnApp) uncheckedFnApp;
+        if(fnApp.getNumTypeParam() != getNumTypeParameter()) {
+            String message = "Wrong number of type parameters for partially defined function " + getName();
+            throw new PardefModellingException(fnApp, message);
+        }
+    }
+
+    public FunctionDecl PartialFunctionDecl.expand(ParFnApp fnApp) {
+        checkValid(fnApp);
+        FunctionDecl expanded = new FunctionDecl();
         String expandedName = expandedName(fnApp);
         expanded.setName(expandedName);
         expanded.setAnnotationList(getAnnotations().treeCopy());
         expanded.setTypeUse(getTypeUse().treeCopy());
         expanded.setParamList(getParams().treeCopy());
 
+        int funcParamCount = getNumFuncParam();
         Map<String, String> funcParamBindings = new HashMap<>(funcParamCount * 2);
         for (int i = 0; i < funcParamCount; ++i) {
             String paramName = getFuncParam(i).getName();
@@ -145,17 +163,8 @@ aspect PartialFunctionApplier {
 
     public FunctionDecl ParametricPartialFunctionDecl.expand(ParFnApp uncheckedFnApp) {
         FunctionDecl decl = super.expand(uncheckedFnApp);
-
-        if(!(uncheckedFnApp instanceof ParametricParFnApp)) {
-            String message = "Calling parametric partially defined function '" + getName() + "' needs type parameters";
-            throw new PardefModellingException(uncheckedFnApp, message);
-        }
+        // cast is checked in checkValid()
         ParametricParFnApp fnApp = (ParametricParFnApp) uncheckedFnApp;
-        if(fnApp.getNumTypeParam() != getNumTypeParameter()) {
-            String message = "Wrong number of type parameters for partially defined function " + getName();
-            throw new PardefModellingException(fnApp, message);
-        }
-
         Map<String, TypeUse> typeBindings = new HashMap<>(getNumTypeParameter() * 2);
         for (int index = 0; index < getNumTypeParameter(); ++index) {
             TypeParameterDecl typeParamDecl = getTypeParameter(index);
