@@ -87,8 +87,8 @@ public final class TreeUtil {
             throw new IllegalArgumentException();
         }
         int index = parent.getIndexOfChild(oldNode);
-        parent.removeChild(index);
         parent.setChild(newNode, index);
+        oldNode.setParent(null);
     }
 
     /**
