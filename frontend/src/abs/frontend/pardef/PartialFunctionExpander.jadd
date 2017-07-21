@@ -83,7 +83,13 @@ aspect PartialFunctionApplier {
         for (Decl decl : getDecls()) {
             if (decl instanceof PartialFunctionDecl) {
                 PartialFunctionDecl functionDecl = (PartialFunctionDecl) decl;
-                result.put(functionDecl.getName(), functionDecl);
+                String functionName = functionDecl.getName();
+                if (result.containsKey(functionName)) {
+                    throw new PardefModellingException(
+                        ErrorMessage.DUPLICATE_FUN_NAME.withArgs(functionName, "")
+                    );
+                }
+                result.put(functionName, functionDecl);
             }
         }
 
