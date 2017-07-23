@@ -1199,7 +1199,7 @@ aspect doPrettyPrinter {
     }
 
     public void NegExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("~ ");
+        stream.print("! ");
         getOperand().doPrettyPrint(stream, formatter);
     }
 
