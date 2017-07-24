@@ -65,4 +65,24 @@ public class PartialFunctionTest extends PardefTest {
             applyFunction()
         ));
     }
+
+    @Test
+    public void passFuncParam() {
+        testExpand(parse(
+            "test(1)(inc)",
+            incFunction(),
+            applyFunction(),
+            "def Int test(Int i)(f) = apply<Int, Int>(i)(f)"
+        ), "Test_%s_inc", "Apply_%s_inc_Int_Int");
+    }
+
+    @Test
+    public void callInnerParametricWithTypeParams() {
+        testExpand(parse(
+            "test<Int, Int>(1)()",
+            applyFunction(),
+            incFunction(),
+            "def B test<A, B>(A a)() = apply<A, B>(a)(inc)"
+        ), "Test_%s_Int_Int", "Apply_%s_inc_Int_Int");
+    }
 }

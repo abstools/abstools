@@ -285,6 +285,15 @@ aspect PartialFunctionApplier {
             }
         }
 
+        for (ParFnApp innerCall : TreeUtil.findChildren(expression, ParFnApp.class)) {
+            for (FunctionParamDecl funcParam : innerCall.getFuncParamsNoTransform()) {
+                String binding = functionBindings.get(funcParam.getName());
+                if (binding != null) {
+                    funcParam.setName(binding);
+                }
+            }
+        }
+
         return new ExpFunctionDef(expression);
     }
 
