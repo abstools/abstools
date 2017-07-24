@@ -4,7 +4,7 @@ import java.util.Set;
 import java.util.HashSet;
 import abs.frontend.pardef.*;
 
-aspect PartialFunctionApplier {
+aspect PartialFunctionExpander {
 
     public void Model.expandPartialFunctions() {
         for (ModuleDecl moduleDecl : getModuleDecls()) {
