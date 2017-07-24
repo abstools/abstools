@@ -86,9 +86,9 @@ eff_exp : pure_exp '.' 'get'                               # GetExp
 
 pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
     | qualified_identifier
-        type_use_param_list?
+        type_use_paramlist?
         '(' pure_exp_list ')'
-        '(' function_name_list ')'                         # PartialFunctionExp
+        '(' function_list ')'                              # PartialFunctionExp
     | qualified_identifier '[' pure_exp_list ']'           # VariadicFunctionExp
     | qualified_type_identifier ('(' pure_exp_list ')')?   # ConstructorExp
     | op=(NEGATION | NEGATION_CREOL | MINUS) pure_exp      # UnaryExp
@@ -205,16 +205,24 @@ function_decl : annotations
 
 function_name_decl: IDENTIFIER ;
 function_name_list: (function_name_decl (',' function_name_decl)*)? ;
-function_name_paramlist: '(' function_name_list ')' ;
-type_use_param_list: ('<' p+=type_use (',' p+=type_use)* '>') ;
+type_use_paramlist: ('<' p+=type_use (',' p+=type_use)* '>') ;
 
 par_function_decl : annotation*
         'def' type_use n=IDENTIFIER
         ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
         params=paramlist
-        functions=function_name_paramlist
+        '(' functions=function_name_list ')'
         '='
         e=pure_exp ';' ;
+
+// used by PartialFunctionExp
+function_name_param_decl: IDENTIFIER ;
+function_param: function_name_param_decl | anon_function_decl ;
+function_list: (function_param (',' function_param)*)? ;
+
+// Anonymous functions
+
+anon_function_decl : params=paramlist '=>' pure_exp ;
 
 // Interfaces
 

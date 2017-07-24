@@ -533,6 +533,34 @@ new List<ModuleDecl>(),
         }
     }
 
+    @Override
+    public void exitFunction_list(ABSParser.Function_listContext ctx) {
+        List<ParFnAppParamDecl> list = ctx.function_param() == null
+            ? new List<ParFnAppParamDecl>()
+            : (List<ParFnAppParamDecl>) l(ctx.function_param());
+        setV(ctx, list);
+    }
+
+    @Override
+    public void exitFunction_param(ABSParser.Function_paramContext ctx) {
+        if(ctx.anon_function_decl() != null) {
+            setV(ctx, v(ctx.anon_function_decl()));
+        } else if(ctx.function_name_param_decl() != null) {
+            setV(ctx, v(ctx.function_name_param_decl()));
+        }
+    }
+
+    @Override public void exitFunction_name_param_decl(ABSParser.Function_name_param_declContext ctx) {
+        setV(ctx, new NamedParFnAppParam(ctx.IDENTIFIER().getText()));
+    }
+
+    @Override
+    public void exitAnon_function_decl(ABSParser.Anon_function_declContext ctx) {
+        List<ParamDecl> params = (List<ParamDecl>) v(ctx.params);
+        PureExp pureExp = (PureExp) v(ctx.pure_exp());
+        setV(ctx, new AnonymousFunctionDecl(params, pureExp));
+    }
+
     // Pure expressions
     @Override public void exitFunctionExp(ABSParser.FunctionExpContext ctx) {
         List<PureExp> l = ctx.pure_exp_list() == null
@@ -543,15 +571,15 @@ new List<ModuleDecl>(),
     @Override public void exitPartialFunctionExp(ABSParser.PartialFunctionExpContext ctx) {
         List<PureExp> params = ctx.pure_exp_list() == null
             ? new List<PureExp>()
-            : (List<PureExp>)v(ctx.pure_exp_list());
-        List<FunctionParamDecl> functionParams = ctx.function_name_list() == null
-            ? new List<FunctionParamDecl>()
-            : (List<FunctionParamDecl>)v(ctx.function_name_list());
+            : (List<PureExp>) v(ctx.pure_exp_list());
+        List<ParFnAppParamDecl> functionParams = ctx.function_list() == null
+            ? new List<ParFnAppParamDecl>()
+            : (List<ParFnAppParamDecl>) v(ctx.function_list());
 
-        if (ctx.type_use_param_list() == null) {
+        if (ctx.type_use_paramlist() == null) {
             setV(ctx, new ParFnApp(ctx.qualified_identifier().getText(), params, functionParams));
         } else {
-            List<TypeUse> typeParams = (List<TypeUse>) v(ctx.type_use_param_list());
+            List<TypeUse> typeParams = (List<TypeUse>) v(ctx.type_use_paramlist());
             setV(ctx, new ParametricParFnApp(ctx.qualified_identifier().getText(), typeParams, params, functionParams));
         }
     }
@@ -709,10 +737,6 @@ new List<ModuleDecl>(),
         setV(ctx, new ParamDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), (List<Annotation>)v(ctx.annotations())));
     }
 
-    @Override public void exitFunction_name_paramlist(ABSParser.Function_name_paramlistContext ctx) {
-        setV(ctx, v(ctx.function_name_list()));
-    }
-
     @Override public void exitFunction_name_list(ABSParser.Function_name_listContext ctx) {
         setV(ctx, l(ctx.function_name_decl()));
     }
@@ -753,7 +777,7 @@ new List<ModuleDecl>(),
     }
 
     @Override
-    public void exitType_use_param_list(ABSParser.Type_use_param_listContext ctx) {
+    public void exitType_use_paramlist(ABSParser.Type_use_paramlistContext ctx) {
         List<TypeUse> list = (List<TypeUse>) setV(ctx, new List<TypeUse>());
         for (ABSParser.Type_useContext typeUseContext : ctx.type_use()) {
             list.add((TypeUse) v(typeUseContext));

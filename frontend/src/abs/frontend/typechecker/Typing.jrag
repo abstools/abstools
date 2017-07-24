@@ -74,7 +74,6 @@ aspect Typing {
     /**********/
     eq ClassDecl.getType() = new UnionType(this, getImplementedInterfaceUses());
     eq FunctionDecl.getType() = getTypeUse().getType();
-    eq PartialFunctionDecl.getType() = UnknownType.INSTANCE;
     eq DataConstructor.getType() = getDataTypeDecl().getType();
 //    eq DeltaDecl.getType() = getModel().getUnitType();
 
@@ -94,6 +93,10 @@ aspect Typing {
     eq TypeSynDecl.getType() { 
         return getValue().getType(); 
     }
+
+    // Partially defined functions and friends
+    eq PartialFunctionDecl.getType() = AnyType.INSTANCE;
+    eq ParFnApp.getType() = AnyType.INSTANCE;
     
     eq ExceptionDecl.getType() = getModel().getExceptionType();
     eq UnknownDecl.getType() = UnknownType.INSTANCE;
@@ -266,7 +269,6 @@ aspect Typing {
    		 return declaredResultType;
    	 }
     }
-    eq ParFnApp.getType() = UnknownType.INSTANCE;
     eq DataConstructorExp.getType() {
 	 DataConstructor d = getDataConstructor();
 	 if (d == null)

@@ -170,9 +170,45 @@ public class ParFnAppTest extends PardefTest {
     @Test(expected = PardefModellingException.class)
     public void invalidCallToAlreadyExpanded() {
         expand(parse(
-            "apply<Int, Int>(Nil)(inc); apply<Int, Int>(Nil, 42)(inc)",
+            "apply<Int, Int>(0)(inc); apply<Int, Int>(0, 42)(inc)",
             incFunction(),
             applyFunction()
         ));
     }
+
+    @Test
+    public void callWithAnonymousFunction() {
+        testExpand(parse(
+            "apply<Int, Int>(0)((Int i) => i)",
+            applyFunction()
+        ));
+
+        testExpand(parse(
+            "apply<Int, Int>(0)((Int i) => i + 1)",
+            applyFunction()
+        ));
+
+        testExpand(parse(
+            "apply<Int, Int>(0)((Int i) => inc(i))",
+            applyFunction(),
+            incFunction()
+        ));
+    }
+
+    @Test(expected = PardefModellingException.class)
+    public void anonymousTooManyArgs() {
+        expand(parse(
+           "apply<Int, Int>(0)((Int i, Int j) => i)",
+           applyFunction()
+        ));
+    }
+
+    @Test(expected = PardefModellingException.class)
+    public void anonymousTooFewArgs() {
+        expand(parse(
+            "apply<Int, Int>(0)(() => i)",
+            applyFunction()
+        ));
+    }
+
 }

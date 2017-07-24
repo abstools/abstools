@@ -459,4 +459,31 @@ public class ParserTest extends FrontendTest {
         assertParseError(" { f()(g()); }");
         assertParseError(" { f()(0); }");
     }
+
+    @Test
+    public void anonymousFunction() {
+        assertParseOk("{ f()((Int i) => Int i); }");
+        assertParseOk("{ f()((Int i) => Int i + 1); }");
+        assertParseOk("{ f()((Int i) => Int inc(i)); }");
+        assertParseOk("{ f()((Int i) => Int 0); }");
+        assertParseOk("{ f()(() => Int 0); }");
+        assertParseOk("{ f()((Int i) => Rat i); }");
+        assertParseOk("{ f()((Int i, Int j) => Int i + j); }");
+    }
+
+    @Test
+    public void multipleAnonymousFunctions() {
+        assertParseOk("{ f()((Int i) => Int i, (Int j) => Int j); }");
+        assertParseOk("{ f()((Int i) => Int i, inc); }");
+    }
+
+    @Test
+    public void anonymousFunctionNoReturnType() {
+        assertParseError("{ f()((Int i) => i); }");
+    }
+
+    @Test
+    public void anonymousFunctionNoParamBraces() {
+        assertParseError("{ f()(Int i => Int i);}");
+    }
 }

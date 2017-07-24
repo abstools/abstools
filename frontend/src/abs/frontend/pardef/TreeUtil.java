@@ -84,7 +84,10 @@ public final class TreeUtil {
         Objects.requireNonNull(newNode);
         ASTNode<?> parent = oldNode.getParent();
         if (parent == null || newNode.getParent() != null) {
-            throw new IllegalArgumentException();
+            String message = parent == null
+                ? "oldNode is detached"
+                : "newNode is not detached";
+            throw new IllegalArgumentException(message);
         }
         int index = parent.getIndexOfChild(oldNode);
         parent.setChild(newNode, index);

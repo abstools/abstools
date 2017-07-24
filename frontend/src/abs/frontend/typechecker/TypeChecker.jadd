@@ -351,8 +351,7 @@ aspect TypeChecker {
     }
 
     public void PartialFunctionDecl.typeCheck(SemanticConditionList e) {}
-
-    public void PartialFunctionDef.typeCheck(SemanticConditionList e) {}
+    public void ParFnApp.typeCheck(SemanticConditionList e) {}
 
     public void InterfaceDecl.checkCycle(SemanticConditionList e, InterfaceDecl d) {
         if (this == d) {

@@ -604,6 +604,17 @@ aspect doPrettyPrinter {
         formatter.beforeCloseBrace();
     }
 
+    public void NamedParFnAppParam.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print(getName());
+    }
+
+    public void AnonymousFunctionDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print("(");
+        getParams().doPrettyPrint(stream, formatter, ",");
+        stream.print(") => ");
+        getPureExp().doPrettyPrint(stream, formatter);
+    }
+
     public void FunctionDecl.doPrettyPrintTypeParam(PrintWriter stream, ABSFormatter formatter) { }
 
     public void ParametricFunctionDecl.doPrettyPrintTypeParam(PrintWriter stream, ABSFormatter formatter) { 

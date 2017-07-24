@@ -161,14 +161,14 @@ aspect PartialFunctionExpander {
         expanded.setParamList(getParams().treeCopy());
 
         int funcParamCount = getNumFuncParam();
-        Map<String, String> funcParamBindings = new HashMap<>(funcParamCount * 2);
+        Map<String, ParFnAppParamDecl> funcParamBindings = new HashMap<>(funcParamCount * 2);
         for (int i = 0; i < funcParamCount; ++i) {
             String paramName = getFuncParam(i).getName();
-            String binding = fnApp.getFuncParam(i).getName();
+            ParFnAppParamDecl binding = fnApp.getFuncParam(i);
             funcParamBindings.put(paramName, binding);
         }
         // enable recursion by replacing partial function name with expanded name
-        funcParamBindings.put(getName(), expandedName);
+        funcParamBindings.put(getName(), new NamedParFnAppParam(expandedName));
         expanded.setFunctionDef(getPartialFunctionDef().apply(funcParamBindings));
 
         return expanded;
@@ -231,8 +231,15 @@ aspect PartialFunctionExpander {
             .append(StringUtils.capitalize(getName()))
             .append('_').append(getModuleDecl().getName());
 
-        for (FunctionParamDecl funcParam : fnApp.getFuncParams()) {
-            builder.append('_').append(funcParam.getName());
+        for (ParFnAppParamDecl funcParam : fnApp.getFuncParamsNoTransform()) {
+            builder.append('_');
+            if (funcParam instanceof NamedParFnAppParam) {
+                NamedParFnAppParam namedParam = (NamedParFnAppParam) funcParam;
+                builder.append(namedParam.getName());
+            } else {
+                // TODO name this differently and uniquely
+                builder.append("anon");
+            }
         }
 
         return builder.toString();
@@ -259,32 +266,43 @@ aspect PartialFunctionExpander {
     }
 
     /**
-     * <p>Gets a FunctionDef instance based on this PartialFunctionDef.</p>
-     *
-     * In the resulting FunctionDef, all function calls to functions contained in the specified map are replaced by
-     * calls to the respective value in the map.
-     *
-     * @return a FunctionDef
-     */
-    public FunctionDef PartialFunctionDef.apply(Map<String, String> functionBindings) {
+    * <p>Gets a FunctionDef instance based on this PartialFunctionDef.</p>
+    *
+    * In the resulting FunctionDef, all function calls to functions contained in the specified map are replaced by
+    * calls to the respective value in the map.
+    *
+    * @return a FunctionDef
+    */
+    public FunctionDef PartialFunctionDef.apply(Map<String, ParFnAppParamDecl> bindingByName) {
         PureExp expression = getPureExp().treeCopy();
+        FunctionDef result = new ExpFunctionDef(expression);
+
+        applyBindings(expression, bindingByName);
+
+        return result;
+    }
+
+    private void PartialFunctionDef.applyBindings(PureExp expression, Map<String, ParFnAppParamDecl> bindingByName) {
         for (FnApp innerCall : TreeUtil.findChildren(expression, FnApp.class)) {
-            String newName = functionBindings.get(innerCall.getName());
-            if (newName != null) {
-                innerCall.setName(newName);
+            ParFnAppParamDecl binding = bindingByName.get(innerCall.getName());
+            if (binding != null) {
+                PureExp replacement = binding.getExpression(innerCall);
+                TreeUtil.replace(innerCall, replacement);
+                applyBindings(replacement, bindingByName);
             }
         }
 
         for (ParFnApp innerCall : TreeUtil.findChildren(expression, ParFnApp.class)) {
-            for (FunctionParamDecl funcParam : innerCall.getFuncParamsNoTransform()) {
-                String binding = functionBindings.get(funcParam.getName());
-                if (binding != null) {
-                    funcParam.setName(binding);
+            for (ParFnAppParamDecl funcParam : innerCall.getFuncParamsNoTransform()) {
+                if (funcParam instanceof NamedParFnAppParam) {
+                    NamedParFnAppParam namedFuncParam = (NamedParFnAppParam) funcParam;
+                    ParFnAppParamDecl binding = bindingByName.get(namedFuncParam.getName());
+                    if (binding != null) {
+                        TreeUtil.replace(namedFuncParam, binding.treeCopyNoTransform());
+                    }
                 }
             }
         }
-
-        return new ExpFunctionDef(expression);
     }
 
     /**
