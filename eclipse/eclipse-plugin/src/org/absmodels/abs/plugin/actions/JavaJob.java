@@ -297,7 +297,8 @@ public class JavaJob extends Job {
                 /* [stolz] Flattening for a product will mangle the model according to [ramus]...
                  */
                 // work on a copy:
-                model = model.parseTreeCopy();
+                model = model.treeCopyNoTransform();
+                model.flushTreeCache();
 
                 String productN = product.getName();
                 try {

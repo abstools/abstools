@@ -1,9 +1,6 @@
 //$Id$
 //
 
-// If you add classes here, add them to
-// frontend/src/abs/frontend/treecopy/ParseTreeCopy.jadd as well
-
 // needed for lists of strings
 Name ::= <Name>;
 DeltaID ::= <Name>;

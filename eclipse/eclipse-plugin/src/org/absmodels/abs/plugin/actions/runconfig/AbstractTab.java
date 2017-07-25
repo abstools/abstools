@@ -110,7 +110,8 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 					/* Check product if any */
 
 					// work on a copy:
-					model = model.parseTreeCopy();
+					model = model.treeCopyNoTransform();
+                                        model.flushTreeCache();
 
 					if (prod != null) {
 						model.flattenForProduct(prod);

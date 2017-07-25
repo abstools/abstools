@@ -206,7 +206,8 @@ public class IncrementalModelBuilder {
 				monitor.beginTask("Checking products", model.getProductDecls().size());
 				for (ProductDecl p : model.getProductDecls()) {
 					monitor.subTask("Checking "+p.getName());
-					Model m2 = model.parseTreeCopy();
+					Model m2 = model.treeCopyNoTransform();
+                                        m2.flushTreeCache();
 					Main.exceptionHack(m2);
 					try {
 						m2.flattenForProduct(p);
