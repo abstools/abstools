@@ -1,10 +1,23 @@
 package abs.frontend.pardef;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
+import abs.backend.prettyprint.DefaultABSFormatter;
+import abs.backend.prolog.ReachabilityInformation;
+import abs.common.NotImplementedYetException;
+import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.PartialFunctionDecl;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import org.junit.Test;
 
 public class PartialFunctionTest extends PardefTest {
@@ -23,11 +36,20 @@ public class PartialFunctionTest extends PardefTest {
         }
     }
 
+    private PartialFunctionDecl getPartialFunction(Model model, String name) {
+        for (PartialFunctionDecl func : TreeUtil.findChildren(model, PartialFunctionDecl.class)) {
+            if (func.getName().equals(name)) {
+                return func;
+            }
+        }
+        return null;
+    }
+
     @Test
-    public void unusedFunctionRemoved() {
+    public void unusedFunctionNotRemoved() {
         Model model = assertParseOk("def Int f()() = 0;");
         model.expandPartialFunctions();
-        assertNull(getFunction(model));
+        assertFalse(TreeUtil.isAbsent(model, PartialFunctionDecl.class));
     }
 
     @Test
@@ -84,5 +106,94 @@ public class PartialFunctionTest extends PardefTest {
             incFunction(),
             "def B test<A, B>(A a)() = apply<A, B>(a)(inc)"
         ), "Test_%s_Int_Int", "Apply_%s_inc_Int_Int");
+    }
+
+    @Test
+    public void noErlangCodeGenerated() throws IOException, NotImplementedYetException {
+        Model model = expand(parse(
+            "apply<Int, Int>(0)(inc)",
+            applyFunction(),
+            incFunction()
+        ));
+        PartialFunctionDecl func = getPartialFunction(model, "apply");
+        assertNotNull(func);
+        func.generateErlangCode(null);
+    }
+
+    @Test
+    public void noJavaCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
+        Model model = expand(parse(
+            "apply<Int, Int>(0)(inc)",
+            applyFunction(),
+            incFunction()
+        ));
+        PartialFunctionDecl func = getPartialFunction(model, "apply");
+        assertNotNull(func);
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        func.generateJava(new PrintStream(os));
+        assertEquals("", os.toString("utf-8"));
+    }
+
+    @Test
+    public void noDynamicJavaCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
+        Model model = expand(parse(
+            "apply<Int, Int>(0)(inc)",
+            applyFunction(),
+            incFunction()
+        ));
+        PartialFunctionDecl func = getPartialFunction(model, "apply");
+        assertNotNull(func);
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        func.generateJavaDynamic(new PrintStream(os));
+        assertEquals("", os.toString("utf-8"));
+    }
+
+    @Test
+    public void noMaudeCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
+        Model model = expand(parse(
+            "apply<Int, Int>(0)(inc)",
+            applyFunction(),
+            incFunction()
+        ));
+        PartialFunctionDecl func = getPartialFunction(model, "apply");
+        assertNotNull(func);
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        func.generateMaude(new PrintStream(os));
+        assertEquals("", os.toString("utf-8"));
+    }
+
+    @Test
+    public void noPrologCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
+        Model model = expand(parse(
+            "apply<Int, Int>(0)(inc)",
+            applyFunction(),
+            incFunction()
+        ));
+        PartialFunctionDecl func = getPartialFunction(model, "apply");
+        assertNotNull(func);
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        func.generateProlog(new PrintStream(os), new ReachabilityInformation(new ArrayList<ASTNode<?>>()));
+        assertEquals("", os.toString("utf-8"));
+    }
+
+    @Test
+    public void prettyPrintImplemented() throws NotImplementedYetException, IOException {
+        Model model = expand(parse(
+            "apply<Int, Int>(0)(inc)",
+            applyFunction(),
+            incFunction()
+        ));
+        PartialFunctionDecl func = getPartialFunction(model, "apply");
+        assertNotNull(func);
+
+        try (StringWriter writer = new StringWriter();
+            PrintWriter pw = new PrintWriter(writer)) {
+            func.prettyPrint(pw, new DefaultABSFormatter(pw));
+            assertFalse(writer.toString().isEmpty());
+        }
     }
 }

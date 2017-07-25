@@ -10,13 +10,6 @@ aspect PartialFunctionApplier {
         for (ModuleDecl moduleDecl : getModuleDecls()) {
             moduleDecl.expandPartialFunctions();
         }
-
-        // TODO use check results
-        if(!TreeUtil.isAbsent(this, ParFnApp.class)
-            || !TreeUtil.isAbsent(this, PartialFunctionDecl.class)
-            || !TreeUtil.isAbsent(this, PartialFunctionDef.class)) {
-            throw new RuntimeException("Did not remove all partial function nodes");
-        }
     }
 
     void ModuleDecl.expandPartialFunctions() {
@@ -30,10 +23,6 @@ aspect PartialFunctionApplier {
         Map<String, ExpandedWrapper> expanded = new HashMap<>(functionByName.size() * 4);
 
         expandChildParFnApps(this, functionByName, expanded, 0);
-
-        for (PartialFunctionDecl function : functionByName.values()) {
-            TreeUtil.removeFromParent(function);
-        }
     }
 
     private void ModuleDecl.expandChildParFnApps(ASTNode<?> node,

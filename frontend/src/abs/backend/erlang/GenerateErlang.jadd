@@ -113,6 +113,10 @@ aspect GenerateErlang {
     ecs.print("builtin");
   }
 
+  public void PartialFunctionDecl.generateErlangCode(ErlApp ea) throws IOException {
+    // ignore
+  }
+
   private final static Set<String> FnApp.ERLANG_BUILTINS=ImmutableSet.of(
       "ABS.StdLib.currentms", "ABS.Meta.getProductLine",
       "ABS.StdLib.lowlevelDeadline", "ABS.StdLib.print", "ABS.StdLib.println",
