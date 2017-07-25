@@ -220,8 +220,8 @@ Similar to classes, traits in ABS are not types.
 
 A trait is defined with `trait` t = _T_ at module level.
 
-The effect of applying a trait _T_ to a class (using `adds` _T_ inside the
-class body) is to add the methods comprising that trait to the class
+The effect of applying a trait _T_ to a class (using `uses` _T_ inside the
+class body) is to add the methods in that trait to the class
 definition.
 
 .Explanation
