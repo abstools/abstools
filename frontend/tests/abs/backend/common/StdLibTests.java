@@ -22,6 +22,16 @@ public class StdLibTests extends SemanticTests {
     }
 
     @Test
+    public void setElements() {
+        assertEvalTrue("{ Set<Int> s = set[1, 2, 3]; Bool testresult = elements(s) == list[1, 2, 3]; }");
+    }
+
+    @Test
+    public void setElementsEmpty() {
+        assertEvalTrue("{ Set<Int> s = set[]; Bool testresult = elements(s) == list[]; }");
+    }
+
+    @Test
     public void setContains1() {
         assertEvalTrue("{ Set<Int> s = set[1, 2, 3]; Bool testresult = contains(s, 3); }");
     }

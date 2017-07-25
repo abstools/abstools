@@ -484,11 +484,20 @@ def Bool emptySet<A>(Set<A> ss);
 
 .size
 
-Returns the number of elemewnts in set `xs`.
+Returns the number of elements in set `xs`.
 
 [source]
 ----
 def Int size<A>(Set<A> xs);
+----
+
+.elements
+
+Returns a list with all elements in set `xs`.
+
+[source]
+----
+def List<A> elements<A>(Set<A> xs);
 ----
 
 .union
