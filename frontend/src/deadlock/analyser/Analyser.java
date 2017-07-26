@@ -21,16 +21,12 @@
 package deadlock.analyser;
 
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.io.PrintStream;
 
 import abs.frontend.ast.Model;
-import abs.frontend.ast.InterfaceDecl;
-import abs.frontend.ast.ClassDecl;
 import deadlock.analyser.factory.*;
 import com.gzoumix.semisolver.term.*;
 import deadlock.analyser.generation.*;
@@ -44,7 +40,7 @@ public class Analyser {
   private static int FixPoint1_0 = 1;
   private static int FixPoint2_0 = 2;
     
-  public void deadlockAnalysis(Model m, boolean verbose, int nbIteration, int fixPointVersion, PrintStream out) {
+  public int deadlockAnalysis(Model m, boolean verbose, int nbIteration, int fixPointVersion, PrintStream out) {
       
     Variable.varCounter =0;
     Long totalTimeInMs = 0L;
@@ -62,7 +58,7 @@ public class Analyser {
         out.println("Note: necessary conditions for deadlocks were not present");
         out.println();
         out.println("Analysis Duration:            " + totalTimeInMs + "ms");
-	System.exit(0);
+	return 0;
     }
       
     
@@ -131,7 +127,7 @@ public class Analyser {
             out.println();
         }
         
-        System.exit(127);
+        return 127;
     }
 
 
@@ -237,7 +233,7 @@ public class Analyser {
         out.println("Possible Livelock in Main:    " + ((FixPointSolver1)solver).isLivelockMain());
       }
     out.println("Analysis Duration:            " + totalTimeInMs + "ms");
-    System.exit(1);
+    return 1;
     }
 }
 

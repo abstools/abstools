@@ -24,7 +24,7 @@ public class Tester extends Main {
 
     public static void main(final String... args) {
         try {
-            new Tester().compile(args);
+            System.exit(new Tester().compile(args));
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
             System.exit(127);
@@ -39,10 +39,10 @@ public class Tester extends Main {
         }
     }
 
-    private void compile(String[] args) throws DeltaModellingException, IOException, WrongProgramArgumentException, ParserConfigurationException {
+    private int compile(String[] args) throws DeltaModellingException, IOException, WrongProgramArgumentException, ParserConfigurationException {
         final Model model = this.parse(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
-	    System.exit(127);
+	    return 127;
         }
 
         if (verbose) {
@@ -50,8 +50,7 @@ public class Tester extends Main {
         }
         /*Instantiate the analyzer and perform deadlock analysis*/
         Analyser a = new Analyser();
-        a.deadlockAnalysis(model, verbose, numberOfIterations, fixpointVersion, System.out);
-	// NOT REACHED
+        return a.deadlockAnalysis(model, verbose, numberOfIterations, fixpointVersion, System.out);
     }
     
     @Override

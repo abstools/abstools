@@ -6,12 +6,10 @@ package deadlock;
 
 import org.junit.Assume;
 import org.junit.Test;
-import org.junit.Ignore;
 
 import deadlock.analyser.Analyser;
 import abs.frontend.typesystem.CaseStudyTypeChecking;
 
-@Ignore("blocked by #156")
 public class DeadlockCasestudies extends CaseStudyTypeChecking {
 
     public DeadlockCasestudies(String input) {
