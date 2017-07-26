@@ -39,6 +39,7 @@ public enum ErrorMessage {
     LIST_LITERAL_TYPE_MISMATCH("All elements must have the same type %s, type %s does not match."),
     DUPLICATE_CONSTRUCTOR("Constructor %s is already defined%s."),
     DUPLICATE_DATATYPE_PARAMETER("Type parameter %s is used more than once."),
+    EXISTING_DATATYPE_PARAMETER("Using existing type %s as type parameter name."),
     DUPLICATE_CLASS_NAME("Class %s is already defined%s."),
     DUPLICATE_INTERFACE_NAME("Interface %s is already defined%s."),
     DUPLICATE_FUN_NAME("Function %s is already defined%s."),

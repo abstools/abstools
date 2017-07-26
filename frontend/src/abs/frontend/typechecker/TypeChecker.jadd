@@ -340,6 +340,10 @@ aspect TypeChecker {
             if (!names.add(d.getName())) {
                 e.add(new TypeError(d, ErrorMessage.DUPLICATE_DATATYPE_PARAMETER, d.getName()));
             }
+            if (!lookup(new KindedName(Kind.TYPE_DECL,d.getName())).isUnknown()) {
+                e.add(new TypeError(d, ErrorMessage.EXISTING_DATATYPE_PARAMETER,
+                                    d.getName()));
+            }
         }
     }
 
@@ -433,6 +437,10 @@ aspect TypeChecker {
             d.typeCheck(e);
             if (!names.add(d.getName())) {
                 e.add(new TypeError(d, ErrorMessage.DUPLICATE_DATATYPE_PARAMETER, d.getName()));
+            }
+            if (!lookup(new KindedName(Kind.TYPE_DECL,d.getName())).isUnknown()) {
+                e.add(new TypeError(d, ErrorMessage.EXISTING_DATATYPE_PARAMETER,
+                                    d.getName()));
             }
         }
     }

@@ -1,6 +1,6 @@
 module RoseTree;
 
-data RoseTree<Int> = RoseTree(Int,List<RoseTree<Int>>);
+data RoseTree<A> = RoseTree(A,List<RoseTree<A>>);
 
 def Bool dfs_fun(RoseTree<Int> t, Int v) = case t {
     RoseTree(v_,Nil) => v == v_;
