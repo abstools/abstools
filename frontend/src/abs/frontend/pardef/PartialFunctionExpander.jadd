@@ -25,7 +25,7 @@ aspect PartialFunctionApplier {
         expandChildParFnApps(this, functionByName, expanded, 0);
     }
 
-    private void ModuleDecl.expandChildParFnApps(ASTNode<?> node,
+    private int ModuleDecl.expandChildParFnApps(ASTNode<?> node,
         Map<String, PartialFunctionDecl> functions,
         Map<String, ExpandedWrapper> expanded,
         int expansionCount) {
@@ -51,7 +51,7 @@ aspect PartialFunctionApplier {
                 expanded.put(expandedName, expandedWrapper);
                 ++expansionCount;
 
-                expandChildParFnApps(expandedFunction, functions, expanded, expansionCount);
+                expansionCount = expandChildParFnApps(expandedFunction, functions, expanded, expansionCount);
             } else {
                 function.checkValid(fnApp);
             }
@@ -60,6 +60,7 @@ aspect PartialFunctionApplier {
             TreeUtil.replace(fnApp, expandedFunctionCall);
             AnnotationUtil.annotateCall(expandedFunctionCall, expandedWrapper.getExpansionId());
         }
+        return expansionCount;
     }
 
     /**
