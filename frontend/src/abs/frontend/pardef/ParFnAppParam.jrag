@@ -24,4 +24,7 @@ aspect ParFnAppParam {
 
         return result;
     }
+
+    static int AnonymousFunctionDecl.anonCounter = 0;
+    syn lazy int AnonymousFunctionDecl.getAnonId() = anonCounter++;
 }

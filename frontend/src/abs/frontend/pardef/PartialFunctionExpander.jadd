@@ -236,9 +236,10 @@ aspect PartialFunctionExpander {
             if (funcParam instanceof NamedParFnAppParam) {
                 NamedParFnAppParam namedParam = (NamedParFnAppParam) funcParam;
                 builder.append(namedParam.getName());
-            } else {
+            } else if (funcParam instanceof AnonymousFunctionDecl) {
+                AnonymousFunctionDecl anon = (AnonymousFunctionDecl) funcParam;
                 // TODO name this differently and uniquely
-                builder.append("anon");
+                builder.append("anon").append(anon.getAnonId());
             }
         }
 
