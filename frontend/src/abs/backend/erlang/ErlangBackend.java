@@ -39,7 +39,7 @@ public class ErlangBackend extends Main {
     private File destDir = new File("gen/erl/");
     private EnumSet<CompileOptions> compileOptions = EnumSet.noneOf(CompileOptions.class);
 
-    private static int minVersion = 19;
+    public static int minErlangVersion = 19;
 
     public static void main(final String... args) {
         ErlangBackend backEnd = new ErlangBackend();
@@ -116,7 +116,7 @@ public class ErlangBackend extends Main {
         }
     }
 
-    public static void compile(Model m, File destDir, EnumSet<CompileOptions> options) throws IOException, InterruptedException, InternalBackendException {
+    public static int getErlangVersion()  throws IOException, InterruptedException {
         // check erlang version number
         String erlVersionCheckCode = "io:fwrite("
             + getEscapedDoubleQuote()
@@ -127,8 +127,13 @@ public class ErlangBackend extends Main {
         versionCheck.waitFor();
         BufferedReader ir = new BufferedReader(new InputStreamReader(versionCheck.getInputStream()));
         int version = Integer.parseInt(ir.readLine());
-        if (version < minVersion) {
-            String message = "ABS requires at least erlang version " + Integer.toString(minVersion) + ", installed version is " + Integer.toString(version);
+        return version;
+    }
+
+    public static void compile(Model m, File destDir, EnumSet<CompileOptions> options) throws IOException, InterruptedException, InternalBackendException {
+        int version = getErlangVersion();
+        if (version < minErlangVersion) {
+            String message = "ABS requires at least erlang version " + Integer.toString(minErlangVersion) + ", installed version is " + Integer.toString(version);
             throw new InternalBackendException(message);
         }
         ErlApp erlApp = new ErlApp(destDir);

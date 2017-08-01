@@ -11,8 +11,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.util.regex.Matcher;
 import java.util.EnumSet;
 
 import org.apache.commons.io.FileUtils;
@@ -23,6 +21,7 @@ import abs.ABSTest;
 import abs.backend.BackendTestDriver;
 import abs.backend.common.InternalBackendException;
 import abs.backend.common.SemanticTests;
+import abs.backend.erlang.ErlangBackend;
 import abs.frontend.ast.*;
 
 import com.google.common.io.Files;
@@ -39,19 +38,9 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         String doAbs = System.getProperty("abs.junit.erlang");
         Assume.assumeFalse("Erlang tests disabled via -Dabs.junit.erlang", "0".equals(doAbs));
         if (SemanticTests.checkProg("erl")) {
-            // http://stackoverflow.com/a/9561398/60462
-            ProcessBuilder pb = new ProcessBuilder("erl", "-eval", "erlang:display(erlang:system_info(otp_release)), halt().",  "-noshell");
             try {
-                Process p = pb.start();
-                InputStreamReader r = new InputStreamReader(p.getInputStream());
-                BufferedReader b = new BufferedReader(r);
-                Assert.assertEquals(0, p.waitFor());
-                String version = b.readLine();
-                java.util.regex.Pattern pat = java.util.regex.Pattern.compile("\"(\\d*).*");
-                Matcher m = pat.matcher(version);
-                Assert.assertTrue("Could not identify Erlang version: "+version, m.matches());
-                String v = m.group(1);
-                Assume.assumeTrue("Need Erlang R17 or better.",Integer.parseInt(v) >= 17);
+                Assume.assumeTrue("Need Erlang R" + Integer.toString(ErlangBackend.minErlangVersion) + " or later.",
+                                  ErlangBackend.getErlangVersion() >= ErlangBackend.minErlangVersion);
             } catch (IOException e) {
                 return false;
             } catch (InterruptedException e) {
