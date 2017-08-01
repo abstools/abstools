@@ -81,7 +81,6 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             f.deleteOnExit();
             Model model = assertParseOk(absCode, Config.WITH_STD_LIB, Config.TYPE_CHECK, /* XXX:CI Config.WITH_LOC_INF, */ Config.WITHOUT_MODULE_NAME);
             String mainModule = genCode(model, f, true);
-            make(f);
             return run(f, mainModule);
         } finally {
             try {
@@ -98,7 +97,6 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             f = Files.createTempDir();
             f.deleteOnExit();
             genCode(model, f, false);
-            make(f);
         } finally {
             try {
                 FileUtils.deleteDirectory(f);
@@ -146,18 +144,6 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     }
 
     /**
-     * Complies code in workDir
-     */
-    private void make(File workDir) throws Exception {
-        ProcessBuilder pb = new ProcessBuilder("erl", "-pa", "ebin", "-noshell", "-noinput", "-eval",
-                "case make:all() of up_to_date -> halt(0); _ -> halt(1) end.");
-        pb.directory(workDir);
-        pb.inheritIO();
-        Process p = pb.start();
-        Assert.assertEquals("Compile failed", 0, p.waitFor());
-    }
-
-     /**
      * Executes mainModule
      *
      * To detect faults, we have a Timeout process which will kill the
@@ -197,7 +183,6 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             f = Files.createTempDir();
             f.deleteOnExit();
             String mainModule = genCode(model, f, true);
-            make(f);
             assertEquals("True",run(f, mainModule));
         } finally {
             try {
