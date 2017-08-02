@@ -31,14 +31,16 @@ public class ABSParserWrapper {
     public CompilationUnit parse(Reader reader) throws IOException {
         String path = "<unknown path>";
         if (file != null) path = file.getPath();
+        SyntaxErrorCollector errorlistener
+            = new SyntaxErrorCollector(file, raiseExceptions);
         ANTLRInputStream input = new ANTLRInputStream(reader);
         abs.frontend.antlr.parser.ABSLexer lexer
             = new abs.frontend.antlr.parser.ABSLexer(input);
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(errorlistener);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         abs.frontend.antlr.parser.ABSParser aparser
             = new abs.frontend.antlr.parser.ABSParser(tokens);
-        SyntaxErrorCollector errorlistener
-            = new SyntaxErrorCollector(file, raiseExceptions);
         aparser.removeErrorListeners();
         aparser.addErrorListener(errorlistener);
         ParseTree tree = aparser.goal();

@@ -34,7 +34,6 @@ public class ParseSamplesTest extends FrontendTest {
                                                , { "examples/chatPL/" , "LowEnd" }
                                                //, { "examples/chatPL/" , "Regular" } // invalid in HATS repository too (missing class definitions)
                                                , { "tests/abssamples/RandomBool.abs" , null}
-                                               , { "tests/abssamples/LexicalTest.abs", null}
                                                , { "tests/abssamples/ReplicationSystem.abs" , null}
                                                , { "tests/abssamples/10wikipediadocstokenized.abs" , null}                                               
         };
