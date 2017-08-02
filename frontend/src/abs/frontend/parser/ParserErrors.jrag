@@ -4,7 +4,6 @@ import abs.frontend.parser.ParserError;
 aspect ParserErrors {
 
     private java.util.List<ParserError> CompilationUnit.parserErrors = new ArrayList<ParserError>();
-    private java.util.List<ParserError> Model.parserErrors = new ArrayList<ParserError>();
     
     public void CompilationUnit.setParserErrors(java.util.List<ParserError> errors) {
     	parserErrors = errors;
@@ -20,21 +19,19 @@ aspect ParserErrors {
 	}
 
 	public boolean Model.hasParserErrors() {
-	    assert getParserErrors() != null : this;
-		return !getParserErrors().isEmpty();
+            return !getParserErrors().isEmpty();
 	}
 
 	public java.util.List<ParserError> Model.getParserErrors() {
-            if (parserErrors.isEmpty()) {
-		for (CompilationUnit u : getCompilationUnits()) {
-			if (u.getParserErrors() != null) {
-				parserErrors.addAll(u.getParserErrors());
-			}
-		}
+            java.util.List<ParserError> parserErrors = new ArrayList<ParserError>();
+            for (CompilationUnit u : getCompilationUnits()) {
+                if (u.getParserErrors() != null) {
+                    parserErrors.addAll(u.getParserErrors());
+                }
             }
             return parserErrors;
 	}
-	
+
 }
 // Local Variables:
 // mode: java
