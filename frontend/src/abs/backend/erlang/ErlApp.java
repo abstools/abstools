@@ -145,7 +145,6 @@ public class ErlApp {
                     } else {
                         throw new UnsupportedOperationException("File type: "+resource);
                     }
-                    
                 } else {
                     is = ClassLoader.getSystemResourceAsStream(RUNTIME_PATH + f);
                     if (is == null)
@@ -153,7 +152,7 @@ public class ErlApp {
                     String outputFile = f.replace('/', File.separatorChar);
                     File file = new File(destDir, outputFile);
                     file.getParentFile().mkdirs();
-                    ByteStreams.copy(is, Files.asByteSink(file).openStream());
+                    Files.asByteSink(file).writeFrom(is);
                 }
             }
         } finally {
