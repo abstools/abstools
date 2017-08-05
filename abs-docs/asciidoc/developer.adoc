@@ -1,6 +1,45 @@
 = Developer Guide
 Under development.
 
+== Adding new language elements
+
+=== Modify parser and AST
+
+* modify `ABS.ast`: introduce new language elements
+* modify `abs.g4`: decide on surface syntax
+* add to `CreateJastAddASTListener.java`: create AST elements defined in `ABS.ast`
+
+=== Add type checking
+
+* modify type checker
+** `typeCheck()`, `gettype()`
+** make variable definitions visible to rest of program
+
+=== Adapt backends
+
+This applies to new language elements that are not rewritten into more basic forms
+
+* modify each backend to generate the required code
+
+=== Rewrite into more basic forms
+
+* Introduce boolean flag to disable rewriting
+* Only rewrite in core part of the language
+
+  In deltas, traits: type information not available, other semantic
+  constraints not met, ...
+
+* Adapt pretty-printer, including `-nosugar` directive
+
+* Never re-insert AST fragments, always copy
+
+* Consider invalidating caches afterwards
+
+=== Write test cases
+
+=== Update manual
+
+
 == Type Checking
 
 === Type Checking the SPL
