@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<project name="ABS Frontend" default="dist" basedir=".">
+<project name="ABS Frontend" default="compile" basedir="."
+         xmlns:if="ant:if" xmlns:unless="ant:unless">
   <!-- $Id$ -->
 
   <!-- this is needed to be able to call targets from maven -->
@@ -155,10 +156,32 @@
     <mkdir dir="${apidoc.dir}" />
   </target>
 
-  <target name="compile" depends="prepare, gen" description="Compiles all java files in the source directory.">
+  <target name="compile" depends="prepare,gen,versionstamp" description="Compiles all java files in the source directory and generates absfrontend.jar.">
     <javac srcdir="${src.dir}:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off" encoding="utf-8" target="1.7" source="1.7">
       <classpath refid="compile.classpath" />
     </javac>
+    <jar jarfile="${target.jar}">
+      <fileset dir="${build.dir}" includes="abs/**,deadlock/**,autodeploy/**" />
+      <!-- abslang has already been copied into build.dir -->
+      <fileset dir="${src.dir}" includes="abs/**,deadlock/**,autodeploy/**" excludes="abs/lang/abslang.abs" />
+      <zipfileset src="${ext.dir}/${apfloat.jar}" />
+      <zipfileset src="${ext.dir}/${ecj.jar}" />
+      <zipfileset src="${ext.dir}/org.sat4j.core.jar" />
+      <zipfileset src="${ext.dir}/org.sat4j.pb.jar" />
+      <zipfileset src="${ext.dir}/sat4j-maxsat.jar" />
+      <zipfileset src="${ext.dir}/choco-solver-2.1.1.jar" />
+      <zipfileset src="${ext.dir}/semisolver.jar" />
+      <zipfileset src="${ext.dir}/${guava.jar}" />
+      <zipfileset src="${ext.dir}/${commons-io.jar}" />
+      <zipfileset src="${ext.dir}/${antlr.jar}" />
+      <manifest>
+        <attribute name="Main-Class" value="abs.frontend.parser.Main"/>
+        <attribute name="Implementation-Version" value="${revision.prefix}"/>
+        <attribute name="Bundle-Version" value="${frontend.version}"/>
+        <!-- Pretty sure that's not the meaning of that attribute, but we'll take it -->
+        <attribute name="Specification-Version" value="${frontend.git-long-revision}"/>
+      </manifest>
+    </jar>
   </target>
 
   <target name="javadoc" depends="gen,compile" description="Build java doc.">
@@ -192,8 +215,18 @@
   <target name="gen" depends="prepare, genshell, genast, genlang, genruntime, genantlr">
   </target>
 
-  <target name="genast">
-    <jastadd package="${ast.package}" rewrite="" visitCheck="false" outdir="${gen.dir}" debug="true">
+  <target name="genast" unless="genast.notRequired">
+    <!-- Check if JastAdd-generated files are out of date.  We use
+         ASTNode.java instead of one of our own classes since this will always
+         be present.  -->
+    <uptodate property="genast.notRequired" targetfile="${ast.gen.dir}/ast/ASTNode.java">
+      <srcfiles dir="${src.dir}" includes="abs/**/*.ast" />
+      <srcfiles dir="${src.dir}" includes="abs/**/*.jrag" />
+      <srcfiles dir="${src.dir}" includes="abs/**/*.jadd" />
+    </uptodate>
+    <echo if:set="genast.notRequired">No change in *.ast / *.jadd / *.jrag files, skipping.</echo>
+    <jastadd package="${ast.package}" rewrite="" visitCheck="false" outdir="${gen.dir}" debug="true"
+             unless:set="genast.notRequired" >
       <fileset dir=".">
         <include name="src/abs/**/*.ast" />
         <include name="src/abs/**/*.jrag" />
@@ -208,7 +241,7 @@
       <fileset dir="${src.dir}/abs/lang" includes="**/*.abs" />
     </copy>
   </target>
-  
+
   <target name="genruntime">
     <echo message="Trying to precompile erlang libraries, error is safe to ignore" />
     <exec executable="escript" dir="${src.dir}/abs/backend/erlang/runtime/absmodel"
@@ -269,32 +302,8 @@
   </target>
 
   <!-- create distribution files for ABS -->
-  <target name="dist" depends="clean,compile,versionstamp" description="create distribution files">
-    <jar jarfile="${target.jar}">
-      <fileset dir="${build.dir}" includes="abs/**,deadlock/**,autodeploy/**" />
-      <!-- abslang has already been copied into build.dir -->
-      <fileset dir="${src.dir}" includes="abs/**,deadlock/**,autodeploy/**" excludes="abs/lang/abslang.abs" />
-      <zipfileset src="${ext.dir}/${apfloat.jar}" />
-      <zipfileset src="${ext.dir}/${ecj.jar}" />
-      <zipfileset src="${ext.dir}/org.sat4j.core.jar" />
-      <zipfileset src="${ext.dir}/org.sat4j.pb.jar" />
-      <zipfileset src="${ext.dir}/sat4j-maxsat.jar" />
-      <zipfileset src="${ext.dir}/choco-solver-2.1.1.jar" />
-      <zipfileset src="${ext.dir}/semisolver.jar" />
-      <zipfileset src="${ext.dir}/${guava.jar}" />
-      <zipfileset src="${ext.dir}/${commons-io.jar}" />
-      <zipfileset src="${ext.dir}/${antlr.jar}" />
-      <manifest>
-        <attribute name="Main-Class" value="abs.frontend.parser.Main"/>
-        <attribute name="Implementation-Version" value="${revision.prefix}"/>
-        <attribute name="Bundle-Version" value="${frontend.version}"/>
-        <!-- Pretty sure that's not the meaning of that attribute, but we'll take it -->
-        <attribute name="Specification-Version" value="${frontend.git-long-revision}"/>
-      </manifest>
-    </jar>
+  <target name="dist" depends="clean,compile" description="create distribution files">
   </target>
-
-
 
   <!-- suite file -->
   <property name="test.frontend.suite.name" value="abs.frontend.AllFrontendTests" />

@@ -41,7 +41,7 @@ endif
 default: help frontend
 
 frontend:			## Build ABS compiler (default)
-	ant -buildfile $(ROOT_DIR)/frontend/build.xml dist
+	ant -buildfile $(ROOT_DIR)/frontend/build.xml
 	@echo "Finished."
 	@echo "absc command installed in frontend/bin/bash/"
 
