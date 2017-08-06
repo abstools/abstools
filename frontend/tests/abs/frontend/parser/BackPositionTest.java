@@ -41,7 +41,8 @@ public class BackPositionTest extends FrontendTest {
 
     @Test
     public void test6() {
-        assertNodeAtPos("module M; interface Intf { } class C { C m() { Intf someName; } } ", 1, 51, InterfaceTypeUse.class);
+        // do not check for InterfaceTypeUse since if we skip type inference it might be UnresolvedTypeUse
+        assertNodeAtPos("module M; interface Intf { } class C { C m() { Intf someName; } } ", 1, 51, TypeUse.class);
     }
 
 

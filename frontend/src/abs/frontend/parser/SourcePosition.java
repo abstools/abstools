@@ -34,7 +34,8 @@ public class SourcePosition {
     public static SourcePosition findPosition(ASTNode<?> node, int searchline, int searchcolumn) {
         if (inNode(node, searchline, searchcolumn)) {
             for (int i = 0; i < node.getNumChildNoTransform(); i++) {
-                SourcePosition pos = findPosition(node.getChildNoTransform(i), searchline, searchcolumn);
+                ASTNode child = node.getChildNoTransform(i);
+                SourcePosition pos = findPosition(child, searchline, searchcolumn);
                 if (pos != null) {
                     return pos;
                 }
@@ -49,14 +50,14 @@ public class SourcePosition {
         if (node instanceof Opt<?>) {
             Opt<?> opt = (Opt<?>) node;
             if (opt.hasChildren()) {
-                node = opt.getChildNoTransform(0);
+                return inNode(opt.getChildNoTransform(0), line, column);
             } else {
                 return false;
             }
         } else if (node instanceof List<?>) {
             if (node.getNumChildNoTransform() == 0) {
                 return false;
-            } else if (node.getEndLine() == 0 && node.getEndColumn() == 0) {
+            } else if (!node.isPositionSet()) {
                 // if position is not set, check children
                 if (node.getNumChildNoTransform() == 0) {
                     return false;
@@ -69,11 +70,11 @@ public class SourcePosition {
                 return true;
             }
         }
-
+        // we're a list with our own position, or a non-list / non-opt node
         if (smaller(line, column, node.getStartLine(), node.getStartColumn())
             || larger(line, column, node.getEndLine(), node.getEndColumn()))
             return false;
-        return true;
+        else return true;
     }
 
     public static boolean larger(int line1, int column1, int line2, int column2) {

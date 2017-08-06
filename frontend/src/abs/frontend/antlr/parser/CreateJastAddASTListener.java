@@ -36,11 +36,14 @@ public class CreateJastAddASTListener extends ABSBaseListener {
 
     private ASTNode<?> setASTNodePosition(ParserRuleContext node, ASTNode<?> value) {
         assert node != null;
-        int startline = node.start.getLine();
-        int startcol = node.start.getCharPositionInLine();
+        Token start = node.getStart();
+        Token stop = node.getStop();
         // for a completely empty file, CompilationUnit.stop will be null
-        int endline = (node.stop == null ? node.start : node.stop).getLine();
-        int endcol = (node.stop == null ? node.start : node.stop).getCharPositionInLine();
+        if (stop == null) stop = start;
+        int startline = start.getLine();
+        int startcol = start.getCharPositionInLine();
+        int endline = stop.getLine();
+        int endcol = stop.getCharPositionInLine() + stop.getText().length();
         value.setPosition(startline, startcol, endline, endcol);
         value.setFileName(this.filename);
         return value;
@@ -315,6 +318,8 @@ new List<ModuleDecl>(),
 
     @Override public void exitMethod(ABSParser.MethodContext ctx) {
         MethodSig ms = new MethodSig(ctx.IDENTIFIER().getText(), l(ctx.annotation()), (Access)v(ctx.type_use()), (List<ParamDecl>)v(ctx.paramlist()));
+        ms.setPosition(ctx.IDENTIFIER().getSymbol().getLine(), ctx.IDENTIFIER().getSymbol().getCharPositionInLine(),
+                       ctx.paramlist().getStop().getLine(), ctx.paramlist().getStop().getCharPositionInLine() + ctx.paramlist().getStop().getText().length());
         Block b = new Block(new List<Annotation>(), new List<Stmt>());
         for (ABSParser.StmtContext s : ctx.stmt()) {
             b.addStmt((Stmt)v(s));
