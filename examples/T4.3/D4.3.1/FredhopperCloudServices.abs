@@ -736,7 +736,7 @@ implements MonitorPlatformService {
 		}
 
 		//update record
-		endPoints = put(endPoints, endPoint, difference(lookupDefault(endPoints, endPoint, Nil), serviceIds));
+		endPoints = put(endPoints, endPoint, elements(difference(set(lookupDefault(endPoints, endPoint, Nil)), set(serviceIds))));
 		customers = updateConfig(customers, customer, oldC, Config(st, current));
 	}
 
