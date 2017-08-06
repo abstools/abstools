@@ -11,7 +11,7 @@ public final class AnyType extends Type {
     public Type copy() {
         return INSTANCE;
     }
-    
+
     private AnyType() {
     }
 
@@ -19,7 +19,11 @@ public final class AnyType extends Type {
     public boolean equals(Object o) {
         return o instanceof AnyType;
     }
-    
+
+    public int hashCode() {
+        return 42;              // we're a singleton
+    }
+
     @Override
     public boolean isAssignableTo(Type t) {
         return true;

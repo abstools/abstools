@@ -6,6 +6,8 @@ package abs.frontend.typechecker;
 
 public class BoundedType extends Type {
     private Type boundType;
+    private boolean gaveOutHashCode = false; // don't give out different values
+    private int hashCode = 42;
 
     public BoundedType() {
 
@@ -44,6 +46,12 @@ public class BoundedType extends Type {
         // have side effects in this method.
         if (t != this) boundType = t;
         return true;
+    }
+
+    public int hashCode() {
+        if (!gaveOutHashCode && hasBoundType()) hashCode =  boundType.hashCode();
+        gaveOutHashCode = true;
+        return hashCode;
     }
 
     @Override
