@@ -200,6 +200,9 @@
       <fileset dir="${build.dir}" />
       <fileset dir="${dist.dir}" />
       <fileset dir="${basedir}/gen-eclipse" />
+      <fileset dir="${src.dir}">
+        <include name="**/ebin/*.beam" />
+      </fileset>
     </delete>
   </target>
 
