@@ -64,6 +64,8 @@ aspect FnAppContext {
     inh boolean LetExp.isVarUseContextImperative(VarUse v);
     inh boolean ParamDecl.isVarUseContextImperative(VarUse v);
     inh boolean Block.isVarUseContextImperative(VarUse v);
+    inh boolean VarDecl.isVarUseContextImperative(VarUse v);
+    inh boolean FieldDecl.isVarUseContextImperative(VarUse v);
     inh boolean Annotation.isVarUseContextImperative(VarUse v);
     inh boolean CaseBranchStmt.isVarUseContextImperative(VarUse v);
     inh boolean CaseBranch.isVarUseContextImperative(VarUse v);
@@ -75,8 +77,14 @@ aspect FnAppContext {
     }
     eq ClassDecl.getChild().isVarUseContextImperative(VarUse v) = true;
     eq InterfaceDecl.getChild().isVarUseContextImperative(VarUse v) = true;
-    eq VarDecl.getChild().isVarUseContextImperative(VarUse v) = true;
-    eq FieldDecl.getChild().isVarUseContextImperative(VarUse v) = true;
+    eq VarDecl.getChild().isVarUseContextImperative(VarUse v) {
+        if (getName().equals(v.getName())) return true;
+        else return isVarUseContextImperative(v);
+    }
+    eq FieldDecl.getChild().isVarUseContextImperative(VarUse v) {
+        if (getName().equals(v.getName())) return true;
+        else return isVarUseContextImperative(v);
+    }
     eq ExceptionDecl.getChild().isVarUseContextImperative(VarUse v) = false;
     eq DataConstructor.getChild().isVarUseContextImperative(VarUse v) = false;
     eq TypeSynDecl.getChild().isVarUseContextImperative(VarUse v) = false;
