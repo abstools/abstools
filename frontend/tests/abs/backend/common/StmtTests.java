@@ -87,6 +87,12 @@ public class StmtTests extends SemanticTests {
     }
 
     @Test
+    public void caseStmtEmbeddedVarDecl() {
+        // bug 164
+        assertEvalTrue("{ case Just(5) { Just(y) => { Rat z = abs(y); } } Bool testresult = True; }");
+    }
+
+    @Test
     public void caseStmtMatchFailure() throws Exception {
         assertEvalTrue(new File("tests/abssamples/backend/StmtTests/caseStmtMatchFailure.abs"));
      }
