@@ -1,0 +1,1678 @@
+//==========================================================================
+// ETICS.abs
+// THIS IS THE UPDATED (2016) VERSION OF THE ENG "ETICS" MODEL
+//==========================================================================
+
+module ETICS;
+
+import * from ABS.DC;
+
+//==========================================================================
+// FUNCTIONS
+//==========================================================================
+
+def Rat randomf() = random(10000000)/10000000;
+def Int ceiling(Rat r) = truncate(r) + 1;
+
+def Int next_power_of_2(Rat r, Int current) =
+  if r < current then current else next_power_of_2(r, current * 2);
+def Rat sqrt(Rat r) = sqrt_newton(r, r, 1/100);
+
+//==========================================================================
+// CONSTANTS
+//==========================================================================
+
+def Bool global_logging() = True; // turn on/off the Tally 'println' logging
+def Int global_request_count() = 5; // total number of requests to generate
+def Int global_population_count() = 50; // total number of solutions in a single GA population
+
+def Rat global_xP() = 1; // unit cost per size for requests
+def Rat global_kCT() = 1; // completion time constant
+def Rat global_xCT() = 1; // unit completion time penalty
+def Rat global_xFR() = 1; // unit failure rate penalty
+def Rat global_N() = 50; // failure rate modulo
+def Rat global_du() = 60; // VM time unit (in minutes)
+def Rat global_dAT() = 1; // action time
+
+def Rat global_min_vm_power() = 16/10;
+def Rat global_max_vm_power() = 168/10;
+
+def Rat global_min_request_size() = 1;
+def Rat global_max_request_size() = 32;
+
+//=====================================
+// Aliases
+//=====================================
+
+data Price = Price(Rat priceValue);
+
+//==========================================================================
+// FUNC TYPES
+//==========================================================================
+
+//==========================================================================
+// ServiceLevels
+
+def Rat bronzeSL() = 1/2;
+def Rat silverSL() = 3/4;
+def Rat goldSL() = 1;
+
+data ServiceLevel = ServiceLevel(Rat serviceLevelValue);
+
+//==========================================================================
+// SLA
+
+data SLA = SLA(	Int slaId, 
+			   	Int slaTimeZone, 
+			   	Int slaUserCount,
+			   	ServiceLevel slaServiceLevel); 
+
+def Rat maxFR(SLA sla) 
+	= ceiling(2/serviceLevelValue(slaServiceLevel(sla)));
+
+//==========================================================================
+// RequestPriority
+
+def Rat adHocPriority() = 1;
+def Rat scheduledPriority() = 1/2;
+
+data RequestPriority = RequestPriority(Rat requestPriorityValue);
+
+//==========================================================================
+// VMData
+
+data VMId = VMId(Int vmIdValue);
+data VMData = VMData(VMId vmId, Rat vmClock, Int vmCores, Int vmMemory, Int vmDisk);
+
+def Rat vmPower(VMData d) 
+	= vmPower3(vmClock(d), vmCores(d), vmMemory(d));
+
+def Rat vmPower3(Rat clk, Int cor, Int mem)
+	= (clk * cor) + (6 * mem / 10);
+
+def Rat vmSpec(VMData d) 
+	= vmPower(d) + vmDisk(d);
+
+def Duration vmDeployTime(VMData d) 
+	= Duration((2/10) * vmSpec(d));
+
+def Price vmUnitCost(VMData d) 
+	= Price((266/100000) * vmSpec(d));
+
+//==========================================================================
+// Request
+
+data RequestId = RequestId(Int requestIdValue);
+data Request = NoRequest | Request(	RequestId requestId,  
+									Rat requestSize,
+									Int requestUser,
+									RequestPriority requestPriority,
+									Time requestReceiveTime,
+									SLA requestSLA,
+									VMData requestDefaultVMData);
+
+def Rat requestPhi(Request r) 
+	= rawRequestPhi(requestSLA(r), requestPriority(r));
+
+def Rat rawRequestPhi(SLA sla, RequestPriority p) 
+	= serviceLevelValue(slaServiceLevel(sla)) * requestPriorityValue(p);
+
+def Duration requestMaxCT(Request r)
+	= rawRequestMaxCT(requestSize(r), requestPhi(r));
+
+def Duration rawRequestMaxCT(Rat size, Rat phi)
+	= Duration((global_kCT() * size) / phi);
+
+def Price requestPrice(Request r)
+	= Price(global_xP() * requestSize(r) * requestPhi(r));
+
+def Price requestPenaltyFR(Request r)
+	= Price(global_xFR() * serviceLevelValue(slaServiceLevel(requestSLA(r))) 
+							* serviceLevelValue(slaServiceLevel(requestSLA(r))));
+							
+
+//==========================================================================
+// VMInfo
+
+data VMInfo = VMInfo(	VMData vmInfoVMData,
+					  	Time vmInfoActionTime,
+					  	Time vmInfoStartTime,
+					  	Time vmInfoLaunchTime,
+						Rat vmScore,
+					  	Bool vmInfoFirstUse);
+
+//==========================================================================
+// Task
+
+data Task = Task(Request taskRequest, List<VMInfo> taskVMInfoList);
+
+//==========================================================================
+// Problem
+
+data Problem = Problem(	Map<RequestId, Task> problemTaskMap,
+						Map<VMId, VMInfo> problemVMInfoMap);
+
+//==========================================================================
+// Solution
+
+data Solution = NoSolution | Solution(	Problem solutionProblem,
+										List<Request> solutionRejections,
+										Map<VMId, Pair<VMInfo, List<Request>>> solutionAssignments,
+    									Price solutionUtility,
+    									List<Pair<RequestId,Int>> solutionMaps);
+
+//==========================================================================
+// SOLVER
+//==========================================================================
+
+interface Solver {
+    Unit startSolving(Problem problem, Map<VMId, VM> pool);
+	Solution stopSolving();
+	Solution bestSolution();
+}
+
+class Solver(
+	Rat vmPower
+) implements Solver{
+
+	//=====================================
+ 	// Properties
+	//=====================================
+
+	Bool cancelled = False;
+	Solution best = NoSolution;
+	List<Solution> solutions = Nil;
+
+	//=====================================
+ 	// Interface Methods
+	//=====================================
+
+	Solution stopSolving(){
+		cancelled = True;
+		return best;
+	}
+
+	Solution bestSolution(){
+		return best;
+	}
+
+    Unit startSolving(Problem problem, Map<VMId, VM> pool){
+		cancelled = False;
+		best = NoSolution;
+		solutions = Nil;
+		
+		// generate initial random solutions ..
+
+		Map<RequestId, Task> task_map = problemTaskMap(problem);
+		Int n = global_population_count(); //ceiling(vmPower) * size(keys(task_map));
+		Int i = 0;
+		while (!cancelled && i < n){
+			Solution solution = this.randomSolution(problem);
+			solutions = Cons(solution, solutions);
+          	i = i + 1;
+		}
+		
+		// iterate through successive generations ..
+      
+		while (!cancelled){
+			solutions = this.qsortByDescendingUtility(solutions);
+			this.updateBestSolution( nth( solutions, 0 ) );
+          	solutions = this.createNextGeneration(solutions, n, pool);
+			await duration(1, 1);
+		}
+		
+	}
+  
+  	List<Solution> createNextGeneration(List<Solution> previous, Int pop_count, Map<VMId, VM> pool){
+		List<VM> vms = values(pool);
+		Int vm_count = length( vms );	
+      	Int top_count = ceiling(pop_count / 20);
+    	List<Solution> next_generation = Nil;
+		Int i = 0;
+		while (!cancelled && i < pop_count){
+			Solution solution = nth(previous, random(top_count));
+			Rat f = randomf();
+			if (f < 1/4 || vm_count == 0){
+				solution = this.mutate(solution);
+			}else if (f < 1/2){
+				Solution another = nth(previous, random(top_count));
+				solution = this.crossover(solution, another);
+			}else if (f < 3/4){
+                 	// note: vm_count > 0 (see 1st case above)
+      			VM vm = nth(vms, random(vm_count));
+      			if (vm != null){
+					solution = await vm!bestSolution();
+                }
+			}// just use 'solution' again
+			next_generation = Cons(solution, next_generation);
+			i = i + 1;
+		}
+		return next_generation;
+    }
+
+	//=====================================
+ 	// Private
+	//=====================================
+
+	//======== Quicksort Solution list by descending utility ========
+
+	List<Solution> qsortByDescendingUtility(List<Solution> list){
+      	List<Solution> res = Nil;
+      	Solution head = head(list);
+      	Pair<List<Solution>, List<Solution>> split = this.qsplit( head, tail(list) );
+        List<Solution> sorted_small = fst(split);
+      	if (sorted_small != Nil){
+          	sorted_small = this.qsortByDescendingUtility( sorted_small );
+        }
+      	List<Solution> sorted_big = snd(split);
+      	if (sorted_big != Nil){
+          	sorted_big = this.qsortByDescendingUtility( sorted_big );
+        }
+      	if (sorted_small != Nil){
+            if (sorted_big != Nil){
+          		res = concatenate( sorted_small, Cons( head, sorted_big ) );
+        	}else{
+              	res = appendright( sorted_small, head );
+        	}
+        }else if (sorted_big != Nil){
+            res = Cons( head, sorted_big);
+        }else{
+          	res = list[ head ];
+        }
+        return res;
+	}
+	
+	Pair<List<Solution>, List<Solution>> qsplit(Solution x, List<Solution> list){
+		Rat x_util = priceValue( solutionUtility( x ) );
+		List<Solution> smaller = Nil;
+		List<Solution> bigger = Nil;
+		while(list != Nil){
+			Solution h = head(list);
+            Rat h_util = priceValue( solutionUtility( h ) );
+			if (h_util < x_util ){ // note '<' = DESCENDING
+				bigger = Cons(h, bigger);
+			}else{
+				smaller = Cons(h, smaller);
+			}
+			list = tail(list);
+		}
+		return Pair(smaller, bigger);
+	}
+
+	//=====================================
+
+	Unit updateBestSolution(Solution solution){
+		if (!cancelled && solution != NoSolution){
+			if (best != NoSolution){
+				Rat best_u = priceValue(solutionUtility(best));
+				Rat u = priceValue(solutionUtility(solution));
+				if (u > best_u){
+					best = solution;
+				}
+			}else{
+				best = solution;
+			}
+		}
+	}
+	
+	Solution randomSolution(Problem problem){
+		Map<RequestId, Task> task_map = problemTaskMap(problem);
+		List<Task> task_list = values(task_map);
+		List<Pair<RequestId,Int>> maps = Nil;
+		while (task_list != Nil){
+			Task task = head(task_list);
+			Pair<RequestId,Int> map = this.randomMap(task);
+			maps = appendright(maps, map);
+			task_list = tail(task_list);
+		}
+		maps = this.randomiseOrder(maps);
+		return this.createSolution(problem, maps);
+	}
+
+	List<Pair<RequestId,Int>> randomiseOrder(List<Pair<RequestId,Int>> maps){
+        List<Pair<RequestId,Int>> input = maps;
+		List<Pair<RequestId,Int>> output = Nil;
+		while (input != Nil){
+          	Int n = length(input);
+			Int i = random(n);
+			Pair<RequestId,Int> map = nth(input, i);
+			input = without(input, map);
+			output = Cons(map, output);
+		}
+		return output;
+	}
+
+	Pair<RequestId,Int> randomMap(Task task){
+		Request request = taskRequest(task);
+		RequestId request_uuid = requestId(request);
+		List<VMInfo> vm_info_list = taskVMInfoList(task);
+		Int n = length(vm_info_list);
+		Int i = 0;
+		Int selected = -1;
+		while (i < n){
+			if (selected < 0 && randomf() > (1/4)){
+				selected = i;
+			}
+			i = i + 1;
+		}
+		if (selected < 0){
+			selected = random(n + 1); // extra ‘1’ is for rejections
+		}
+        return Pair(request_uuid, selected);
+    }
+
+	Solution createSolution(Problem problem, List<Pair<RequestId,Int>> maps){
+        Map<RequestId, Task> task_map = problemTaskMap(problem);
+		List<Request> rejected = Nil;
+		Map<VMId, Pair<VMInfo, List<Request>>> assigned = map[];
+		Rat utility = 0;
+		Int n = length(maps);
+		Int i = 0;
+		while (i < n){
+          	Pair<RequestId,Int> map = nth(maps, i);
+			RequestId request_id = fst(map);
+			Int vmi_index = snd(map);
+			Maybe<Task> maybe_task = lookup(task_map, request_id);
+			if (maybe_task != Nothing){
+				Task task = fromJust(maybe_task);
+				Request request = taskRequest(task);
+				List<VMInfo> vmis = taskVMInfoList(task);
+				if (vmi_index >= length(vmis)){
+					rejected = Cons(request, rejected);
+					Rat penalty_fr = priceValue(requestPenaltyFR(request));
+					utility = utility - penalty_fr;
+				}else{
+					VMInfo vm_info = nth(vmis, vmi_index);
+					VMId vm_id = vmId(vmInfoVMData(vm_info));
+					Maybe<Pair<VMInfo, List<Request>>> maybe_assigned = lookup(assigned, vm_id);
+					List<Request> requests = Nil;
+					if (maybe_assigned != Nothing){
+						Pair<VMInfo, List<Request>> p = fromJust(maybe_assigned);
+						requests = snd(p);
+					}
+					requests = Cons(request, requests);
+					assigned = put(assigned, vm_id, Pair(vm_info, requests));
+				}
+			}
+			i = i + 1;
+		}
+		Set<VMId> vm_ids = keys(assigned);
+		while (hasNext(vm_ids)){
+            VMId vm_id = take(vm_ids);
+			Maybe<Pair<VMInfo, List<Request>>> maybe_assigned = lookup(assigned, vm_id);
+			if (maybe_assigned != Nothing){
+				Pair<VMInfo, List<Request>> p = fromJust(maybe_assigned);
+				VMInfo vm_info = fst(p);
+				List<Request> requests = snd(p);
+				Triple<Rat, List<Request>, List<Request>> t = this.utility(vm_info, requests);
+				utility = utility + fstT(t);
+				List<Request> accepted = sndT(t);
+				List<Request> rejects = trd(t);
+				if (length(rejects) > 0){
+					assigned = put(assigned, vm_id, Pair(vm_info, accepted));
+					while (rejects != Nil){
+						rejected = Cons(head(rejects), rejected);
+						rejects = tail(rejects);
+					}
+				} 
+			}
+          	vm_ids = remove(vm_ids, vm_id);
+		}
+		return Solution(problem, rejected, assigned, Price(utility), maps);
+	}
+
+	Triple<Rat, List<Request>, List<Request>> utility(VMInfo vm_info, List<Request> requests){
+		VMData vmData = vmInfoVMData(vm_info);
+		Rat utility = 0;
+		List<Request> accepted = Nil;
+		List<Request> rejected = Nil;
+		Rat tACT = timeValue(vmInfoActionTime(vm_info));
+		Rat tSTART = timeValue(vmInfoStartTime(vm_info));
+		Rat tLAUNCH = timeValue(vmInfoLaunchTime(vm_info));
+		Bool used = !vmInfoFirstUse(vm_info);
+		List<Request> list = requests;
+		while (list != Nil){
+			Request request = head(list);
+			Rat tRCV = timeValue(requestReceiveTime(request));
+			Rat size = requestSize(request);
+			Rat pow = vmPower(vmData);
+			Rat dXT = ((11/10) * size) / pow;
+			Rat tEND = tSTART + (2 * dXT);
+			Rat dAT = tACT - tRCV;
+			Rat dQT = tSTART - tACT;
+			Rat dXT_1_5 = ((3/2) * dXT);
+			
+			// price for using VM ..
+
+			Rat uc = priceValue(vmUnitCost(vmData));
+			Rat price_at_start = 0;
+			if (used){
+				price_at_start = uc * ceiling((tSTART - tLAUNCH) / global_du());
+			}
+			Rat price_at_end = uc * ceiling((tEND - tLAUNCH) / global_du());
+			Rat vm_price = price_at_end - price_at_start;
+			
+			// completion-time penalty ..
+			
+			Rat dCT = dAT + dQT + dXT_1_5;
+			Rat maxCT = durationValue(requestMaxCT(request));
+			Rat diffCT = 0;
+			if (dCT > maxCT){
+				diffCT = dCT - maxCT;
+			}
+			Rat phi = requestPhi(request);
+			Rat penalty_ct = global_xCT() * diffCT * phi;
+			
+			// utility ..
+	
+			Rat income = priceValue(requestPrice(request));
+			utility = utility + (income - penalty_ct - vm_price);
+			
+			// will it survive the time-out?
+
+			Rat penalty_fr = priceValue(requestPenaltyFR(request));
+			Rat cut_dCT = maxCT + (global_xCT() * ((income - vm_price + penalty_fr) / phi));
+			Rat dTO = cut_dCT - dAT - dXT_1_5;
+			if (dTO < dQT){
+				utility = utility - 100000;
+				rejected = Cons(request, rejected);
+			}else{
+				accepted = Cons(request, accepted);
+			}
+
+			// now for the next request ..
+
+			tSTART = tEND;
+			used = True;
+			list = tail(list);
+		}
+		return Triple(utility, accepted, rejected);
+	}
+
+	Solution mutate(Solution solution){
+		Problem problem = solutionProblem(solution);
+		Map<RequestId, Task> task_map = problemTaskMap(problem);
+		List<Pair<RequestId,Int>> old_maps = solutionMaps(solution);
+		List<Pair<RequestId,Int>> new_maps = Nil;
+		Int i = 0;
+		Int replace = random(length(old_maps)); // choose a map to mutate
+		while(old_maps != Nil){
+			Pair<RequestId,Int> old_map = head(old_maps);
+			Bool use_old_map = True;
+			if (i == replace){
+				RequestId request_id = fst(old_map);
+				Maybe<Task> maybe_task = lookup(task_map, request_id);
+				if (maybe_task != Nothing){
+					Task task = fromJust(maybe_task);
+					Pair<RequestId,Int> new_map = this.randomMap(task);
+					new_maps = appendright(new_maps, new_map);
+					use_old_map = False;
+				}
+			}
+			if (use_old_map){
+				new_maps = appendright(new_maps, old_map);
+			}
+			old_maps = tail(old_maps);
+			i = i + 1;
+		}
+		return this.createSolution(problem, new_maps);
+	}
+
+	Solution crossover(Solution s1, Solution s2){
+		Problem problem = solutionProblem(s1);
+		Map<RequestId, Task> task_map = problemTaskMap(problem);
+		List<Pair<RequestId,Int>> old_maps = solutionMaps(s1);
+		List<Pair<RequestId,Int>> new_maps = Nil;
+		List<RequestId> used = Nil;
+		Int i = 0;
+		Int n = random(length(old_maps)); // random crossover point
+		while (i < n){
+			Pair<RequestId,Int> map = head(old_maps);
+			new_maps = appendright(new_maps, map);
+			used = Cons(fst(map), used);
+			old_maps = tail(old_maps);
+			i = i + 1;
+		}
+		old_maps = solutionMaps(s2);
+		while(old_maps != Nil){
+			Pair<RequestId,Int> map = head(old_maps);
+			Bool already_used = this.contains(used, fst(map));
+			if (!already_used){
+				new_maps = appendright(new_maps, map);
+			}
+			old_maps = tail(old_maps);
+		}
+		return this.createSolution(problem, new_maps);
+	}
+
+	Bool contains(List<RequestId> list, RequestId target){
+		Int targetId = requestIdValue(target);
+		Bool found = False;
+		List<RequestId> l = list;
+		while (!found && l != Nil){
+			Int id = requestIdValue(head(l));
+			if (targetId == id){
+				found = True;
+			}
+			l = tail(l);
+		}
+		return found;
+	}
+	
+}
+
+//==========================================================================
+// Processor
+//==========================================================================
+
+data Progress = Starting | Processing | Stopping | Stopped;
+
+interface RequestProcessor {
+	Unit process(Request request);
+	Bool isFree();
+}
+
+class RequestProcessor(
+	VM vm
+) implements RequestProcessor{
+
+	Bool is_free = True;
+	Rat vmPower = -1;
+
+	Unit process(Request request){
+		if (vmPower < 0){
+			VMData vmData = await vm!vmData();
+			vmPower = vmPower(vmData);
+		}
+		Rat dXT = (requestSize(request) * (1 + ((randomf() * 2) - (1/10)))) / vmPower;
+		Rat dXT_2 = dXT/2;
+		vm!notifyProgress(request, Starting);
+		duration(dXT_2, dXT_2);
+		vm!notifyProgress(request, Processing);
+		duration(dXT, dXT);
+		vm!notifyProgress(request, Stopping);
+		duration(dXT_2, dXT_2);
+		vm!notifyProgress(request, Stopped);
+	}
+	
+	Bool isFree(){ return is_free; }
+	
+}
+
+//==========================================================================
+// VIRTUAL MACHINE
+//==========================================================================
+
+//=====================================
+// VM
+//=====================================
+
+interface VM extends Solver{
+	Bool canKill();
+	VMData vmData();
+	Unit launch();
+	Time launchTime();
+	Time startTime();
+	Duration executionTime();
+	Bool hasPendingRequests();
+	Request currentRequest();
+	Bool hasCompletedRequests();
+	Unit assignRequest(Request request);
+	Unit notifyProgress(Request request, Progress progress);
+	VMInfo vmInfo(Time actionTime);
+	DeploymentComponent dc();
+	
+	// from Solver
+    //Unit startSolving(Problem problem, Map<VMId, VM> pool);
+	//Solution stopSolving();
+	//Solution bestSolution();
+}
+
+class VM(
+	VMData vmData,
+	Tally tally
+) implements VM{
+
+	//=====================================
+ 	// Properties
+	//=====================================
+
+	Time launchTime = Time(-1);
+	Time startTime = Time(-1);
+	Duration executionTime = Duration(-1);
+	Bool hasCompletedRequests = False;
+	Solver solver;
+	List<Request> queue = Nil;
+	Request currentRequest = NoRequest;
+	RequestProcessor processor;
+	DeploymentComponent dc;
+
+	//=====================================
+ 	// VM Interface Methods
+	//=====================================
+	
+	Bool canKill(){
+		return currentRequest == NoRequest && length(queue) == 0;
+	}
+
+	VMData vmData(){
+		return vmData;	
+	}
+
+	DeploymentComponent dc(){
+		return dc;	
+	}
+
+	Bool isInstance(){
+		return True;
+	}
+
+	VMInfo vmInfo(Time actionTime){
+		Rat at = timeValue(actionTime);
+		Time tNOW = now();
+		Rat dQT = this.estimatedQueuingTimeForNewRequests();
+		Time tSTART = Time(timeValue(tNOW) + dQT);
+		Rat score = this.score();
+		return VMInfo(	vmData,
+					  	actionTime,
+					  	tSTART,
+					  	launchTime,
+						score,
+					  	!hasCompletedRequests);
+	}
+
+	Time launchTime(){
+		return launchTime;
+	}
+
+	Time startTime(){
+		return startTime;
+	}
+
+	Duration executionTime(){
+		return executionTime;
+	}
+
+	Bool hasPendingRequests(){
+		return length(queue) > 0;
+	}
+	
+	Request currentRequest(){
+		return currentRequest;
+	}
+	
+	Bool hasCompletedRequests(){
+		return hasCompletedRequests;
+	}
+
+	Unit assignRequest(Request request){
+		if (processor != null && currentRequest == NoRequest){ // = Available
+			Fut<Unit> fu = tally!enqueued(this, request, Duration(-1));
+			this.processRequest(request);
+		}else{
+			Bool used = this.hasCompletedRequests();
+			Rat tNOW = timeValue(now());
+			Rat tLAUNCH = timeValue(launchTime);
+
+			// machine price …
+
+			Rat dXT = this.expectedExecutionTime(request);
+			Rat dPT = 2 * dXT; // expected processing time
+			Rat dQT = this.estimatedQueuingTimeForNewRequests();
+			Rat tSTART = tNOW + dQT;
+			Rat uc = priceValue(vmUnitCost(vmData));
+			Rat price_at_start = 0;
+			if (used){
+				price_at_start = uc * ceiling((tSTART - tLAUNCH) / global_du());
+			}
+			Rat tEND = tSTART + dPT;
+			Rat price_at_end = uc * ceiling((tEND - tLAUNCH) / global_du());
+			Rat vm_price = price_at_end - price_at_start;
+
+			// cut-off completion time ..
+
+			Rat maxCT = durationValue(requestMaxCT(request));
+			Rat request_price = priceValue(requestPrice(request));
+			Rat penalty_fr = priceValue(requestPenaltyFR(request));
+			Rat phi = requestPhi(request);
+			Rat dCT = maxCT + (global_xCT() * ((request_price - vm_price + penalty_fr) / phi));
+
+			// time-out
+			Rat tRCV = timeValue(requestReceiveTime(request));
+			Rat dACT = tNOW - tRCV;
+			Rat dTO = dCT - dACT - ((15/10) * dXT);
+
+			if (dTO < dQT){
+				// reject the request
+				Fut<Unit> fu = tally!rejected(request);
+			}else{
+				queue = appendright(queue, request);
+				Fut<Unit> fu = tally!enqueued(this, request, Duration(dTO));
+				fu = this!delayedTimeOut(request, dTO);
+				if (processor != null && currentRequest == NoRequest){
+					this.processRequest(request); // Q: is this ever called ?
+				}
+			}
+		}
+	}
+
+	Unit launch(){
+		launchTime = now();
+		dc = thisDC();
+		Fut<Unit> fu = tally!launched(this);
+		Duration dDT = vmDeployTime(vmData);
+		Rat d = durationValue(dDT);
+		await duration(d, d); // WAIT (non-blocking) for duration d
+		processor = new RequestProcessor(this); // —> Separate COG on DEPLOYMENT COMP
+		fu = tally!deployed(this);
+		Unit u = this.processNextRequestIfAny();
+	}
+
+	Unit notifyProgress( Request request, Progress progress ){
+		if (currentRequest == request){
+			Rat dXT = this.expectedExecutionTime(request);
+			Rat dXT_2 = dXT/2;
+			if (progress == Starting){
+				Fut<Unit> fu = tally!settingUp(this, request, Duration(dXT_2));
+			}else if (progress == Processing){
+				Fut<Unit> fu = tally!executing(this, request, Duration(dXT));
+			}else if (progress == Stopping){
+				Fut<Unit> fu = tally!cleaningUp(this, request, Duration(dXT_2));
+			}else{
+				currentRequest = NoRequest;
+				Fut<Unit> fu = tally!finished(this, request);
+				startTime = Time(-1);
+				executionTime = Duration(-1);
+				Unit u = this.processNextRequestIfAny();
+			}
+		}
+	}
+
+	//=====================================
+ 	// Solver Interface Methods
+	//=====================================
+
+    Unit startSolving(Problem problem, Map<VMId, VM> pool){
+		if (solver == null){
+			solver = new Solver(vmPower(vmData)); // —> Separate COG on DEPLOYMENT COMP
+		}
+		Fut<Unit> u = solver!startSolving(problem, pool);
+	}
+
+	Solution stopSolving(){
+		Solution solution = NoSolution;
+		if (solver != null){
+			solution = await solver!stopSolving();
+		}
+		return solution;
+	}
+
+	Solution bestSolution(){
+		Solution solution = NoSolution;
+		if (solver != null){
+			solution = await solver!bestSolution();
+		}
+		return solution;
+	}
+
+	//=====================================
+ 	// Private
+	//=====================================
+
+	Rat score(){
+		Rat spec = vmSpec(vmData);
+		if (currentRequest != NoRequest){
+			spec = spec * 10; // bias available instances
+		}
+		Rat dQT = this.estimatedQueuingTimeForNewRequests();
+		return (priceValue(vmUnitCost(vmData)) * dQT ) / spec;
+	}
+
+	Rat estimatedQueuingTimeForNewRequests(){
+		Rat d = 0;
+		List<Request> list = queue;
+		while (list != Nil){
+			Request request = head(list); 
+			Rat dXT = this.expectedExecutionTime(request);
+			d = d + (2 * dXT); // sum the processing times for queued requests
+			list = tail(list);
+		}
+		Rat tNOW = timeValue(now());
+		if (processor == null){ // = not yet deployed
+			Duration dt = vmDeployTime(vmData);
+			d = d + durationValue(dt) - (tNOW - timeValue(launchTime));
+		}else if (currentRequest != NoRequest){ // = Busy
+			Rat tSTART = timeValue(startTime);
+			Rat dXT = durationValue(executionTime);
+			if (tSTART >= 0 && dXT >= 0){
+				d = d + (2 * dXT) - (tNOW - tSTART);
+			}
+		}
+		if (d < 0){
+			d = 0;
+		}
+        return d;
+	}
+
+	Unit processNextRequestIfAny(){
+		if (length(queue) > 0){
+			Request request = head(queue);
+			queue = without(queue, request);
+			Unit u = this.processRequest(request);		}
+	}
+
+	Unit processRequest(Request request){
+		if (processor != null && currentRequest == NoRequest){ // = Available
+			currentRequest = request;
+			startTime = now();
+			Rat dXT = this.expectedExecutionTime(request);
+			executionTime = Duration(dXT);
+			Fut<Unit> u = processor!process(request);
+		}else{
+
+			// TODO - IllegalStateException?
+
+		}
+	}
+
+	Rat expectedExecutionTime(Request request){
+		return ((11/10) * requestSize(request)) / vmPower(vmData);
+	}
+
+	Unit delayedTimeOut(Request request, Rat dTO){ // called asynchronously by this (see assignRequest)
+		await duration(dTO, dTO);
+		Bool still_queued = this.enqueued(request);
+		if (still_queued){
+			queue = without(queue, request); // reject the request
+			Fut<Unit> fu = tally!timedOut( request );
+		}
+	}
+
+	Bool enqueued(Request request){
+		Int target = requestIdValue(requestId(request));
+		List<Request> q = queue;
+		Bool found = False;
+		while(!found && q != Nil){
+			Int r = requestIdValue(requestId(head(q)));
+			if (r == target){
+				found = True;
+			}
+			q = tail(q);
+		}
+		return found;
+	}
+	
+}
+
+//==========================================================================
+// RPM
+//==========================================================================
+
+interface RPM{
+	Unit receive(Request request);
+}
+
+class RPM(
+	Tally tally
+) implements RPM{
+
+	List<Request> pendingRequests = Nil;
+	Bool active = False;
+	Solver solver;
+	Map<VMId, VM> resourcePool = map[];
+	Int cycle_count = 0;
+	CloudProvider cloudProvider;
+	
+	// INIT
+	{
+		solver = new Solver(global_max_vm_power()); // —> Separate COG
+		cloudProvider = new CloudProvider("name of a cloud provider"); // —> Separate COG
+	}
+
+	Unit receive(Request request){
+		tally!received(request);
+		pendingRequests = appendright(pendingRequests, request);
+		if (!active){
+			this!activate();
+		}
+	}
+	
+	Unit activate(){
+		
+		List<Request> pending_requests = pendingRequests;
+		pendingRequests = Nil;
+        active = True;
+		
+		Rat tNOW = timeValue(now());
+		Rat tACT = tNOW + global_dAT();
+		Map<VMId, VMInfo> vm_info_map = map[];
+		
+		// **** stop all running solvers & get best solution ..
+		
+      	Solution best = await solver!stopSolving();
+		Rat best_u = -10000000;
+		if (best != NoSolution){
+			best_u = priceValue(solutionUtility(best));
+		}
+		List<VM> vms = values(resourcePool);
+		while (vms != Nil){
+			VM vm = head(vms);
+			VMInfo vm_info = await vm!vmInfo(Time(tACT));
+			vm_info_map = put(vm_info_map, vmId(vmInfoVMData(vm_info)), vm_info);
+      		Solution vm_best = await vm!stopSolving();
+			Rat vm_best_u = -10000000;
+			if (vm_best != NoSolution){
+				vm_best_u = priceValue(solutionUtility(vm_best));
+			}
+			if (vm_best_u > best_u){
+				best = vm_best;
+				best_u = vm_best_u;
+			}
+			vms = tail(vms);
+		}
+		if (best == NoSolution){
+			println("WARNING: no best solution");
+        }else{
+			List<Pair<VMInfo, List<Request>>> assigned = values(solutionAssignments(best));
+			while (assigned != Nil){
+				Pair<VMInfo, List<Request>> a = head(assigned);
+				this.assign(fst(a),snd(a));
+				assigned = tail(assigned);
+			}
+			List<Request> rejected = solutionRejections(best);
+			while (rejected != Nil){
+				this.reject(head(rejected));
+				rejected = tail(rejected);
+			}
+		}
+		
+		// **** restart the solvers for the next round ..	
+		
+
+		Map<RequestId,Task> task_map = map[];
+		List<Request> temp_pending_requests = pending_requests;
+		
+		while(temp_pending_requests != Nil){
+            Request request = head(temp_pending_requests);
+			VMInfo vm_info = this.vmInfoForDefaultVM(request, Time(tACT));
+			vm_info_map = put(vm_info_map, vmId(vmInfoVMData(vm_info)), vm_info);
+			temp_pending_requests = tail(temp_pending_requests);
+		}
+		temp_pending_requests = pending_requests;
+		while(temp_pending_requests != Nil){
+			Request request = head(temp_pending_requests);
+			List<VMInfo> valid_vm_info_list = Nil;
+			List<VMInfo> vm_info_list = values(vm_info_map);
+			while(vm_info_list != Nil){
+				VMInfo vm_info = head(vm_info_list);
+				VMData vm_data = vmInfoVMData(vm_info);
+				if (vmDisk(vm_data) >= requestSize(request)){
+					valid_vm_info_list = Cons(vm_info, valid_vm_info_list);
+				}
+				vm_info_list = tail(vm_info_list);
+			}
+			if (length(valid_vm_info_list) > 0){
+				valid_vm_info_list = this.qsortByAscendingScore(valid_vm_info_list);
+				task_map = put(task_map, requestId(request), Task(request, valid_vm_info_list));
+			}else{
+				this.reject(request);
+			}
+          	temp_pending_requests = tail(temp_pending_requests);
+		}
+        if (length(values(task_map)) > 0){
+          	Problem problem = Problem(task_map, vm_info_map);
+			solver!startSolving(problem, resourcePool);
+          	vms = values(resourcePool);
+			while (vms != Nil){
+				VM vm = head(vms);
+				vm!startSolving(problem, resourcePool);
+				vms = tail(vms);
+			}
+			await duration(global_dAT(), global_dAT());
+			await this!activate();
+		}else{
+			active = False;
+		}
+	}
+
+	VMInfo vmInfoForDefaultVM(Request r, Time actionTime){
+		VMData vm_data = requestDefaultVMData(r);
+		Rat tACT = timeValue(actionTime);
+		Rat tDT = durationValue(vmDeployTime(vm_data));
+		Rat ut = priceValue(vmUnitCost(vm_data));
+		Rat score = (ut * tDT) / vmSpec(vm_data);
+		return VMInfo(vm_data,actionTime,Time(tACT + tDT),actionTime,score,True);
+	}
+	// Quicksort VMInfo list by ascending score
+
+	List<VMInfo> qsortByAscendingScore(List<VMInfo> list){
+      	List<VMInfo> res = Nil;
+      	VMInfo head = head(list);
+      	Pair<List<VMInfo>, List<VMInfo>> split = this.qsplit( head, tail(list) );
+        List<VMInfo> sorted_small = fst(split);
+      	if (sorted_small != Nil){
+          	sorted_small = this.qsortByAscendingScore( sorted_small );
+        }
+      	List<VMInfo> sorted_big = snd(split);
+      	if (sorted_big != Nil){
+          	sorted_big = this.qsortByAscendingScore( sorted_big );
+        }
+      	if (sorted_small != Nil){
+            if (sorted_big != Nil){
+          		res = concatenate( sorted_small, Cons( head, sorted_big ) );
+        	}else{
+              	res = appendright( sorted_small, head );
+        	}
+        }else if (sorted_big != Nil){
+            res = Cons( head, sorted_big);
+        }else{
+          	res = list[ head ];
+        }
+        return res;
+	}
+	
+	Pair<List<VMInfo>, List<VMInfo>> qsplit(VMInfo x, List<VMInfo> list){
+		Rat x_score = vmScore(x);
+		List<VMInfo> smaller = Nil;
+		List<VMInfo> bigger = Nil;
+		while(list != Nil){
+			VMInfo h = head(list);
+            Rat h_score = vmScore(h);
+			if (h_score > x_score ){
+				bigger = Cons(h, bigger);
+			}else{
+				smaller = Cons(h, smaller);
+			}
+			list = tail(list);
+		}
+		return Pair(smaller, bigger);
+	}
+	
+	Unit reject(Request request){
+		tally.rejected(request);
+	}
+	
+	Unit assign(VMInfo vm_info, List<Request> requests){
+		VMData vm_data = vmInfoVMData(vm_info);
+		VMId vm_id = vmId(vm_data);
+		Maybe<VM> maybe_vm = lookup(resourcePool, vm_id);
+		VM vm = null;
+		if (maybe_vm == Nothing){
+			vm = this.createAndLaunchNewVM(vm_data);
+		}else{
+			vm = fromJust(maybe_vm);
+		}
+		List<Request> rs = requests;
+		while(rs != Nil){
+			vm!assignRequest(head(rs));
+			rs = tail(rs);
+		}
+	}
+
+	VM createAndLaunchNewVM( VMData vm_data ){
+		Map<Resourcetype, Rat> resources = this.resourceMap( vm_data );
+		DeploymentComponent dc = cloudProvider.launchInstance( resources );
+		[DC: dc] VM vm = new VM( vm_data, tally );
+		await vm!launch();
+		put( resourcePool, vmId(vm_data), vm ); // add the new vm to the pool
+		this!killVMWhenPossible( vm );
+		return vm;
+	}
+
+	Map<Resourcetype, Rat> resourceMap( VMData vm_data ){
+		Map<Resourcetype, Rat> result = map[];
+		put( result, Cores, vmClock(vm_data) * vmCores(vm_data) );
+		put( result, Memory, vmMemory(vm_data) );
+		return result;
+	}
+	
+	Unit killVMWhenPossible(VM vm){
+		Rat du = global_du(); // wait a fixed time
+		await duration(du, du);
+		Bool canKill = await vm!canKill();
+		if (canKill){
+			VMData vm_data = await vm!vmData();
+			resourcePool = removeKey(resourcePool, vmId(vm_data));
+			DeploymentComponent dc = await vm!dc();
+			dc.release();	
+    		cloudProvider.shutdownInstance( dc );
+			tally.killed(vm);
+		}else{
+			this!killVMWhenPossible(vm); // keep calling ...
+		}
+	}
+
+}
+
+
+//==========================================================================
+// VMConfig - used for calculating default VM in Simulator
+//==========================================================================
+
+data VMConfig = NoVMConfig | VMConfig(Rat vmcClock, Int vmcCores, Int vmcMemory);
+
+/* ORIGINAL CLK/CORES/MEM values ...
+for clk in [1.0, 1.25, 1.5] as [Float] { // possible CLK values
+	for cores in [1, 2, 4, 8] as [Float]{ // possible CORES values
+        for mem in [1, 2, 4, 8] as [Float]{ // possible MEM values
+            _available_powers!.append( (clk * cores) + (0.6 * mem) )
+        }
+    }
+}
+*/
+
+def List<VMConfig> vmConfigs() = list[
+  	// clk = 1.0
+	VMConfig(1, 1, 1), 
+	VMConfig(1, 1, 2), 
+	VMConfig(1, 1, 4), 
+	VMConfig(1, 1, 8),
+	VMConfig(1, 2, 1), 
+	VMConfig(1, 2, 2), 
+	VMConfig(1, 2, 4), 
+	VMConfig(1, 2, 8),
+	VMConfig(1, 4, 1), 
+	VMConfig(1, 4, 2), 
+	VMConfig(1, 4, 4), 
+	VMConfig(1, 4, 8),
+	VMConfig(1, 8, 1), 
+	VMConfig(1, 8, 2), 
+	VMConfig(1, 8, 4), 
+	VMConfig(1, 8, 8),
+  	// clk = 1.25
+	VMConfig(125/100, 1, 1), 
+	VMConfig(125/100, 1, 2), 
+	VMConfig(125/100, 1, 4), 
+	VMConfig(125/100, 1, 8),
+	VMConfig(125/100, 2, 1), 
+	VMConfig(125/100, 2, 2), 
+	VMConfig(125/100, 2, 4), 
+	VMConfig(125/100, 2, 8),
+	VMConfig(125/100, 4, 1), 
+	VMConfig(125/100, 4, 2), 
+	VMConfig(125/100, 4, 4), 
+	VMConfig(125/100, 4, 8),
+	VMConfig(125/100, 8, 1), 
+	VMConfig(125/100, 8, 2), 
+	VMConfig(125/100, 8, 4), 
+	VMConfig(125/100, 8, 8),
+  	// clk = 1.5
+	VMConfig(15/10, 1, 1), 
+	VMConfig(15/10, 1, 2), 
+	VMConfig(15/10, 1, 4), 
+	VMConfig(15/10, 1, 8),
+	VMConfig(15/10, 2, 1), 
+	VMConfig(15/10, 2, 2), 
+	VMConfig(15/10, 2, 4), 
+	VMConfig(15/10, 2, 8),
+	VMConfig(15/10, 4, 1), 
+	VMConfig(15/10, 4, 2), 
+	VMConfig(15/10, 4, 4), 
+	VMConfig(15/10, 4, 8),
+	VMConfig(15/10, 8, 1), 
+	VMConfig(15/10, 8, 2), 
+	VMConfig(15/10, 8, 4), 
+	VMConfig(15/10, 8, 8)
+	];
+
+def VMConfig minVMConfig() = head(vmConfigs());
+
+def VMConfig maxVMConfig() = nth(vmConfigs(), length(vmConfigs()) - 1);
+
+def Rat vm_power(VMConfig cf) = vmPower3(vmcClock(cf), vmcCores(cf), vmcMemory(cf));
+
+//==========================================================================
+// SIMULATOR
+//==========================================================================
+
+interface Simulator {
+	Unit start();
+}
+
+class Simulator(
+	List<SLA> slas
+) 
+implements Simulator {
+
+	Unit start(){
+		Tally tally = new Tally(); // —> Separate COG
+		tally!simulationStarted();
+		RPM rpm = new RPM(tally); // —> Separate COG
+		Int count = 0;
+		Int max = global_request_count();
+		while (count < max){
+			count = count + 1;
+			Request request = this.nextRequest(count);
+			Time rcv = requestReceiveTime(request);
+			Rat wake = timeValue(rcv) - timeValue(now());
+			duration(wake, wake);
+			rpm!receive(request); // ******** ASYNC CALL
+		}
+		tally!simulationEnded();
+	}
+
+	Request nextRequest(Int count){
+		Rat time = timeValue(now()) + ( randomf() * (5/1000) * (count%200) );
+		Rat min = global_min_request_size();
+		Rat max = global_max_request_size();
+		Rat size = min + ( randomf() * ( max - min ) );
+		Rat p = adHocPriority();
+		if ( randomf() > 8/10 ){
+			p = scheduledPriority();
+		}
+		RequestPriority priority = RequestPriority(p);
+		SLA sla = nth(slas, random(length(slas)));
+		Rat phi = rawRequestPhi(sla, priority);
+		VMData defaultVM = this.calculateDefaultVM(VMId(count), size, phi);
+		return Request(	RequestId(count),  
+						size,
+						random(slaUserCount(sla)),
+						priority,
+						Time(time),
+						sla,
+						defaultVM);
+	}
+
+	//=====================================
+ 	// Private - Calculations for Default VM
+	//=====================================
+
+	VMData calculateDefaultVM(VMId vmId, Rat size, Rat phi){
+		Rat pow = sqrt((825/100)*size);
+		Int disk = next_power_of_2(size, 1); //truncate(power(2,ceiling(log2(size))));
+		Pair<VMConfig, VMConfig> closest = this.closestAvailablePowers(pow);
+		VMConfig a = fst(closest);
+		VMConfig b = snd(closest);
+		VMData d1 = VMData(vmId, vmcClock(a), vmcCores(a), vmcMemory(a), disk);
+		Rat u1 = this.expectedUtilityForDefaultVM(d1, size, phi);
+		if (b != NoVMConfig){
+			VMData d2 = VMData(vmId, vmcClock(b), vmcCores(b), vmcMemory(b), disk);
+			Rat u2 = this.expectedUtilityForDefaultVM(d2, size, phi);
+            if (u2 > u1){
+                d1 = d2;
+            }
+        }
+        return d1;
+	}
+
+	Pair<VMConfig,VMConfig> closestAvailablePowers(Rat targetPower){
+		Pair<VMConfig,VMConfig> result = Pair(NoVMConfig, NoVMConfig);
+		VMConfig min_config = minVMConfig();
+		Rat min_power = vm_power(min_config);
+		if (targetPower < min_power){
+			result = Pair(min_config, NoVMConfig);
+		}else{
+			VMConfig max_config = maxVMConfig();
+			Rat max_power = vm_power(max_config);
+        	if (targetPower > max_power){
+				result = Pair(max_config, NoVMConfig);
+			}else{
+				VMConfig last = NoVMConfig;
+				Bool done = False;
+				List<VMConfig> configs = vmConfigs();
+				while ( !done && configs != Nil ){
+                    VMConfig config = head(configs);
+				    Rat pow = vm_power(config);
+				    if (pow >= targetPower){
+						result = Pair(config, last);
+						done = True;
+				    }
+				    last = config;
+                    configs = tail(configs);
+				}
+			}
+		}
+		return result;
+	}
+
+	Rat expectedUtilityForDefaultVM(VMData d, Rat size, Rat phi){
+		Rat pow = vmPower(d);
+		Rat disk = vmDisk(d);
+		Rat b = size / pow;
+		Rat f = (2/10) * (pow + disk);
+		Rat a = f + ((22/10) * b);
+		Rat dCT = f + ((165/100) * b) + global_dAT();
+		Rat deltaCT = 0;
+		Duration max = rawRequestMaxCT(size, phi);
+		Rat mCT = durationValue(max);
+		if ( dCT > mCT ){
+			deltaCT = dCT - mCT;
+		}
+		Price xu = vmUnitCost(d);
+		Rat uc = priceValue(vmUnitCost(d)); 
+		return (phi * ((global_xP() * size) - (global_xCT() * dCT))) - (uc * ceiling(a/global_du()));
+	}
+	
+}
+
+//==========================================================================
+// TALLY
+//==========================================================================
+
+interface Tally {
+	Unit simulationStarted();	
+	Unit simulationEnded();	
+	Unit received(Request r);
+	Unit enqueued(VM vm, Request r, Duration timeOut);
+	Unit settingUp(VM vm, Request r, Duration d);
+	Unit executing(VM vm, Request r, Duration d);
+	Unit cleaningUp(VM vm, Request r, Duration d);
+	Unit finished(VM vm, Request r);
+	Unit rejected(Request r);
+	Unit timedOut(Request r);
+	Unit launched(VM vm);
+	Unit deployed(VM vm);
+	Unit killed(VM vm);
+}
+
+class Tally() 
+implements Tally {
+
+	//=====================================
+ 	// Properties
+
+	Rat total_utility = 0;
+	Rat total_Request_income = 0;
+	Rat total_CT_penalties = 0;
+	Rat total_FR_penalties = 0;
+	Rat total_VM_cost = 0;
+
+	// SLA.id -> [ User.id -> ( failure_count, success_count ) ]
+	Map<Int,Map<Int,Pair<Int,Int>>> histories = map[];
+
+	//=====================================
+ 	// Interface Methods
+
+	Unit simulationStarted(){
+		// logging
+		if (global_logging()){
+			println("START");
+		}
+	}
+	
+	Unit simulationEnded(){
+		// logging
+		if (global_logging()){
+			println("END");
+		}
+	}
+	
+	Unit received(Request r){
+		// logging
+		if (global_logging()){
+			String s = this.requestStr(r);
+			s = "RECEIVED:" + s;
+			println(s);
+		}
+	}
+
+	Unit enqueued(VM vm, Request r, Duration timeOut){
+		// logging
+		if (global_logging()){
+			String s = this.vmIdAndRequestIdAndDurationStr(vm, r, timeOut);
+			s = "ENQUEUED:" + s;
+			println(s);
+		}
+	}
+
+	Unit settingUp(VM vm, Request r, Duration d){
+		// logging
+		if (global_logging()){
+			String s = this.vmIdAndRequestIdAndDurationStr(vm, r, d);
+			s = "SETTING_UP:" + s;
+			println(s);
+		}
+	}
+
+	Unit executing(VM vm, Request r, Duration d){
+		// logging
+		if (global_logging()){
+			String s = this.vmIdAndRequestIdAndDurationStr(vm, r, d);
+			s = "EXECUTING:" + s;
+			println(s);
+		}
+	}
+
+	Unit cleaningUp(VM vm, Request r, Duration d){
+		this.requestHandled(r, False);
+		// logging
+		if (global_logging()){
+			String s = this.vmIdAndRequestIdAndDurationStr(vm, r, d);
+			s = "CLEANING_UP:" + s;
+			println(s);
+		}
+	}
+
+	Unit finished(VM vm, Request r){
+		// logging
+		if (global_logging()){
+			String s = this.vmIdAndRequestIdStr(vm, r);
+			s = "FINISHED:" + s;
+			println(s);
+		}
+	}
+
+	Unit rejected(Request r){
+		this.requestHandled(r, True);
+		// logging
+		if (global_logging()){
+			String s = this.requestIdStr(r);
+			s = "REJECTED:" + s;
+			println(s);
+		}
+	}
+
+	Unit timedOut(Request r){
+		this.requestHandled(r, True);
+		// logging
+		if (global_logging()){
+			String s = this.requestIdStr(r);
+			s = "TIMED_OUT:" + s;
+			println(s);
+		}
+	}
+
+	Unit launched(VM vm){
+		// logging
+		if (global_logging()){
+			String s = this.vmStr(vm);
+			s = "LAUNCHED:" + s;
+			println(s);
+		}
+	}
+
+	Unit deployed(VM vm){
+		// logging
+		if (global_logging()){
+			String s = this.vmIdStr(vm);
+			s = "DEPLOYED:" + s;
+			println(s);
+		}
+	}
+
+	Unit killed(VM vm){
+		// calculate total cost of using the VM ..
+		Time launchTime = await vm!launchTime();
+		VMData vm_data = await vm!vmData();
+		Rat unitCost = priceValue(vmUnitCost(vm_data));
+      	Rat t_now = timeValue( now() );
+        Rat t_then = timeValue(launchTime)/global_du();
+        Rat time_units = ceiling(t_now - t_then)/1;
+        Rat vm_cost = unitCost * time_units;
+		this.incrementTotalVMCostsBy(vm_cost); // <== VM COST APPLIED
+		// logging
+		if (global_logging()){
+			String s = this.vmIdStr(vm);
+			s = "KILLED:" + s;
+			println(s);
+		}
+	}
+
+	//=====================================
+ 	// Private - Tallies
+
+	Unit incrementTotalRequestIncomeBy(Rat request_price){
+		total_Request_income = total_Request_income + request_price;
+		total_utility = total_utility + request_price;
+		// logging
+		this.printTotal("INCOME", total_Request_income);
+		this.printTotal("UTILITY", total_utility);
+	}
+
+	Unit incrementTotalCTPenaltiesBy(Rat penalty_ct){
+		total_CT_penalties = total_CT_penalties + penalty_ct;
+		total_utility = total_utility - penalty_ct;
+		// logging
+		this.printTotal("CT_PENALTIES", total_CT_penalties);
+		this.printTotal("UTILITY", total_utility);
+	}
+
+	Unit incrementTotalFRPenaltiesBy(Rat penalty_fr){
+		total_FR_penalties = total_FR_penalties + penalty_fr;
+		total_utility = total_utility - penalty_fr;
+		// logging
+		this.printTotal("FR_PENALTIES", total_FR_penalties);
+		this.printTotal("UTILITY", total_utility);
+	}
+
+	Unit incrementTotalVMCostsBy(Rat vm_cost){
+		total_VM_cost = total_VM_cost + vm_cost;
+		total_utility = total_utility - vm_cost;
+		// logging
+		this.printTotal("VM_COST", total_VM_cost);
+		this.printTotal("UTILITY", total_utility);
+	}
+
+	Unit printTotal(String key, Rat value){
+		// logging
+		if (global_logging()){
+			String s = toString(value);
+			s = key + "=" + s;
+			println(s);
+		}
+	}
+
+	//=====================================
+ 	// Private - Histories
+
+	Unit requestHandled(Request request, Bool failed){
+		SLA sla = requestSLA(request);
+		Int sla_id = slaId(sla);
+		Maybe<Map<Int,Pair<Int,Int>>> maybe_sla_record = lookup(histories, sla_id);
+		Map<Int,Pair<Int,Int>> sla_record = map[];
+		if (maybe_sla_record != Nothing){
+			sla_record = fromJust(maybe_sla_record);
+		}
+		Int user_id = requestUser(request);
+		Maybe<Pair<Int,Int>> maybe_user_record = lookup(sla_record, user_id);
+		Pair<Int,Int> user_record = Pair(0,0);
+		if (maybe_user_record != Nothing){
+			user_record = fromJust(maybe_user_record);
+		}
+		Int failure_count = fst(user_record);
+		Int success_count = snd(user_record);
+		if (failed){
+			// request failed ..
+			failure_count = failure_count + 1;
+		}else{
+			// request completed ..
+			success_count = success_count + 1;
+			// calculate the income ..
+			Rat price = priceValue(requestPrice(request));
+			this.incrementTotalRequestIncomeBy(price); // <== REQUEST INCOME APPLIED
+			// calculate CT penalty ..
+			Rat dCT = timeValue(now()) - timeValue(requestReceiveTime(request));
+			Rat maxCT = durationValue(requestMaxCT(request));
+			if (dCT > maxCT){
+				Rat penalty_ct = global_xCT() * (dCT - maxCT) * requestPhi(request);
+				this.incrementTotalCTPenaltiesBy(penalty_ct); // <== COMPLETION TIME PENALTY APPLIED
+			}
+		}
+		if (failure_count + success_count >= global_N()){
+			Rat fr_penalty = this.calculateFailureRatePenalty(sla, failure_count);
+			this.incrementTotalFRPenaltiesBy(fr_penalty); // <== FAILURE RATE PENALTY APPLIED
+			failure_count = 0;
+			success_count = 0;
+		}
+		user_record = Pair(failure_count, success_count);
+		sla_record = put(sla_record, user_id, user_record);
+		put(histories, sla_id, sla_record);
+	}
+
+	Rat calculateFailureRatePenalty(SLA sla, Int failure_count){
+		Rat result = 0;
+		Rat max_fr = maxFR(sla);
+		if (failure_count > max_fr){
+			Rat diff = failure_count - max_fr;
+			Rat kSL = serviceLevelValue(slaServiceLevel(sla));
+			result = diff * global_xFR() * kSL * kSL;
+		}
+		return result;
+	}
+
+	//=====================================
+ 	// Private - Strings
+
+	String requestStr(Request request){
+		String r_id = this.requestIdStr(request);
+		String r_size = toString(requestSize(request));
+		String r_pri = toString(requestPriorityValue(requestPriority(request)));
+		return "RQ(" + r_id + ",size=" + r_size + ",pri=" + r_pri + ")";
+	}
+
+	String vmStr(VM vm){
+		VMData vm_data = await vm!vmData();
+		String vm_id = this.vmDataIdStr(vm_data);
+		String vm_power = toString(vmPower(vm_data));
+		String vm_disk = toString(vmDisk(vm_data));
+		return "VM(" + vm_id + ",power=" + vm_power + ",disk=" + vm_disk + ")";
+	}
+
+	String vmIdAndRequestIdAndDurationStr(VM vm, Request request, Duration d){
+		String vm_and_r_ids = this.vmIdAndRequestIdStr(vm, request);
+		String dur = this.durationStr(d);
+		return vm_and_r_ids + ",D(" + dur + ")"; 
+	}
+
+	String vmIdAndRequestIdStr(VM vm, Request request){
+		String vm_id = this.vmIdStr(vm);
+		String r_id = this.requestIdStr(request);
+		return "VM(" + vm_id + "),RQ(" + r_id + ")";
+	}
+
+	String requestIdStr(Request request){
+		String s = toString(requestIdValue(requestId(request)));
+		return "id=" + s;
+	}
+
+	String vmIdStr(VM vm){
+		VMData vm_data = await vm!vmData();
+		return this.vmDataIdStr(vm_data);
+	}
+
+	String vmDataIdStr(VMData vm_data){
+		String s = toString(vmIdValue(vmId(vm_data)));
+		return "id=" + s;
+	}
+
+	String durationStr(Duration d){
+		String s = toString(durationValue(d));
+		return "dur=" + s;
+	}
+	
+}
+
+//==========================================================================
+// MAIN
+//==========================================================================
+ 
+{
+	
+	List<SLA> slas = list[
+		SLA(0, 0, 10, ServiceLevel(bronzeSL())),
+		SLA(1, 0, 10, ServiceLevel(silverSL())),
+	    SLA(2, 0, 10, ServiceLevel(goldSL()))];
+	Simulator simulator = new local Simulator(slas);
+	simulator.start();
+	
+}

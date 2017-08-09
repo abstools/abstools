@@ -44,7 +44,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
                                                , { EXAMPLES_DIR + "T4.2/D4.2.1/Crawling.abs" }
                                                , { EXAMPLES_DIR + "T4.2/D4.2.1/MapReduce.abs" }
                                                , { EXAMPLES_DIR + "T4.2/D4.2.1/Downloading.abs" }
-                                               , { EXAMPLES_DIR + "T4.4/D4.4.1/" }
+                                               , { EXAMPLES_DIR + "T4.4/D4.4.1/ETICS.abs" }
                                                , { ENVISAGE_DIR + "WP4/T4.2/integrated/Atbrox.abs" }
                                                , { ENVISAGE_DIR + "WP4/T4.2/integrated/AtbroxMultiHandset.abs" }
                                                , { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas.abs" }
