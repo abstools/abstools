@@ -148,7 +148,7 @@ Rat exp_newton(Rat x, Rat epsilon)
 
 .random
 
-Returns an integer between 0 and its argument.
+Returns an integer between 0 (inclusive) and its argument (exclusive).
 
 [source]
 ----
