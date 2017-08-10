@@ -40,23 +40,23 @@ public final class TreeUtil {
     }
 
     /**
-     * Finds the nearest parent of the specified node with the specified type. If the specified node is of the searched
+     * Finds the closest parent of the specified node with the specified type. If the specified node has the searched
      * type, it will be returned.
      *
      * @param node a node
      * @param parentType the type to search for
      * @param <T> the <code>parentType</code>
      * @return the nearest parent of <code>node</code> with type <code>parentType</code>, or null
-     * @throws NullPointerException if parentType is null
+     * @throws NullPointerException if any argument is null
      */
-    public static <T extends ASTNode<?>> T findParent(ASTNode<?> node, Class<T> parentType) {
+    public static <T> T findParent(ASTNode<?> node, Class<T> parentType) {
         if (parentType.isInstance(node)) {
             return parentType.cast(node);
         } else if (node == null) {
             return null;
-        } else {
-            return findParent(node.getParent(), parentType);
         }
+
+        return findParent(node.getParent(), parentType);
     }
 
     /**

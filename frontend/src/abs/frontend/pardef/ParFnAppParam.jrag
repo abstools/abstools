@@ -5,7 +5,8 @@ aspect ParFnAppParam {
 
     eq NamedParFnAppParam.getExpression(FnApp toReplace) = new FnApp(getName(), toReplace.getParams().treeCopyNoTransform());
     eq AnonymousFunctionDecl.getExpression(FnApp toReplace) {
-        PureExp result = getPureExpNoTransform().treeCopyNoTransform();
+        PureExp exp = getPureExpNoTransform().treeCopyNoTransform();
+        PureExp result = exp;
 
         int numParam = getNumParam();
         if (numParam != toReplace.getNumParam()) {
@@ -22,9 +23,71 @@ aspect ParFnAppParam {
             );
         }
 
+        Map<String, ParamDecl> freeVars = getFreeVars();
+        for (VarOrFieldUse varUse : TreeUtil.findChildren(exp, VarOrFieldUse.class)) {
+            ParamDecl replacement = freeVars.get(varUse.getName());
+            if (replacement != null) {
+                varUse.setName(replacement.getName());
+            }
+        }
+
         return result;
     }
 
-    static int AnonymousFunctionDecl.anonCounter = 0;
-    syn lazy int AnonymousFunctionDecl.getAnonId() = anonCounter++;
+    syn lazy Map<String, ParamDecl> AnonymousFunctionDecl.getFreeVars() {
+        ASTNode<?> parent = getParent();
+        setParent(null);
+        java.util.List<VarOrFieldUse> freeVarUses = new LinkedList<>();
+        for (VarOrFieldUse use : TreeUtil.findChildren(this, VarOrFieldUse.class)) {
+            VarOrFieldDecl varDecl = use.getDecl();
+            if (varDecl == null) {
+                freeVarUses.add(use);
+            }
+        }
+        setParent(parent);
+
+        Map<String, ParamDecl> result = new HashMap<>();
+        for (VarOrFieldUse freeVarUse : freeVarUses) {
+            Type type = freeVarUse.getType();
+            if (type.isUnknownType()) {
+                // TODO refine message
+                throw new PardefModellingException("Unknown var: " + freeVarUse.getName());
+            }
+            ParamDecl param = result.get(freeVarUse.getName());
+            if (param == null) {
+                String qualifiedName = qualifyName(freeVarUse.getName());
+                param = new ParamDecl(qualifiedName, type.toUse(), new List<Annotation>());
+                result.put(freeVarUse.getName(), param);
+            } else {
+                // TODO check for same type
+            }
+        }
+
+        return Collections.unmodifiableMap(result);
+    }
+
+    public String AnonymousFunctionDecl.qualifyName(String name) {
+        return name + "_" + getPureExpNoTransform().getExpId();
+    }
+
+    public void AnonymousFunctionDecl.addClosureParams(FunctionDecl func) {
+        List<ParamDecl> params = func.getParams();
+        for (ParamDecl freeVar : getFreeVars().values()) {
+            params.add(freeVar.treeCopyNoTransform());
+        }
+    }
+
+    public void AnonymousFunctionDecl.addClosureParams(ParFnApp fnApp) {
+        for (String freeVarName : getFreeVars().keySet()) {
+            fnApp.addParam(new VarUse(freeVarName));
+        }
+    }
+
+    syn lazy int PureExp.getExpId() {
+        // TODO this can cause collisions. Should create actual IDs.
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        this.doPrettyPrint(pw, new DefaultABSFormatter(pw));
+        return sw.toString().hashCode();
+    }
 }

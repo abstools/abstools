@@ -296,6 +296,22 @@ aspect VarResolution {
         return lookupVarOrFieldName(name, fieldOnly);
     }
 
+    eq AnonymousFunctionDecl.getPureExp().lookupVarOrFieldName(String name, boolean fieldOnly) {
+        return locallookupVarOrFieldName(name,fieldOnly);
+    }
+    syn VarOrFieldDecl AnonymousFunctionDecl.locallookupVarOrFieldName(String name, boolean fieldOnly) {
+        for (VarOrFieldDecl decl : getParams()) {
+            if (decl.getName().equals(name))
+                return decl;
+        }
+        // TODO explain this
+        if (getParent() == null) {
+            return null;
+        }
+        return ((PureExp) getParent().getParent()).lookupVarOrFieldName(name, fieldOnly);
+    }
+
+
     eq HasMethod.getMethodSig().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
     
     // TODO: return something more meaningful here?

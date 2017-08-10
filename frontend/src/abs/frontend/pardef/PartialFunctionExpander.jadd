@@ -34,6 +34,12 @@ aspect PartialFunctionExpander {
                 // ignore ParFnApp within pardef that has not been expanded yet
                 continue;
             }
+
+            if (TreeUtil.findParent(fnApp, Model.class) == null) {
+                // Ignore detached calls
+                continue;
+            }
+
             PartialFunctionDecl function = functions.get(fnApp.getName());
             if (function == null) {
                 throw new PardefModellingException(fnApp, ErrorMessage.FUNCTION_NOT_RESOLVABLE, fnApp.getName());
@@ -166,6 +172,11 @@ aspect PartialFunctionExpander {
             String paramName = getFuncParam(i).getName();
             ParFnAppParamDecl binding = fnApp.getFuncParam(i);
             funcParamBindings.put(paramName, binding);
+
+            if (binding instanceof AnonymousFunctionDecl) {
+                AnonymousFunctionDecl anon = (AnonymousFunctionDecl) binding;
+                anon.addClosureParams(expanded);
+            }
         }
         // enable recursion by replacing partial function name with expanded name
         funcParamBindings.put(getName(), new NamedParFnAppParam(expandedName));
@@ -232,14 +243,12 @@ aspect PartialFunctionExpander {
             .append('_').append(getModuleDecl().getName());
 
         for (ParFnAppParamDecl funcParam : fnApp.getFuncParamsNoTransform()) {
-            builder.append('_');
             if (funcParam instanceof NamedParFnAppParam) {
                 NamedParFnAppParam namedParam = (NamedParFnAppParam) funcParam;
-                builder.append(namedParam.getName());
+                builder.append('_').append(namedParam.getName());
             } else if (funcParam instanceof AnonymousFunctionDecl) {
                 AnonymousFunctionDecl anon = (AnonymousFunctionDecl) funcParam;
-                // TODO name this differently and uniquely
-                builder.append("anon").append(anon.getAnonId());
+                builder.append(anon.qualifyName(""));
             }
         }
 
@@ -319,6 +328,14 @@ aspect PartialFunctionExpander {
         if (params == null) {
             throw new IllegalStateException("ParFnApp.apply() called twice");
         }
+
+        for (ParFnAppParamDecl fnParam : getFuncParamsNoTransform()) {
+            if (fnParam instanceof AnonymousFunctionDecl) {
+                AnonymousFunctionDecl anon = (AnonymousFunctionDecl) fnParam;
+                anon.addClosureParams(this);
+            }
+        }
+
         TreeUtil.removeFromParent(params);
         return new FnApp(function.getName(), params);
     }
