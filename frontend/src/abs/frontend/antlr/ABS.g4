@@ -135,6 +135,8 @@ stmt : annotation* type_exp IDENTIFIER ('=' exp)? ';'              # VardeclStmt
     | annotation* '{' stmt* '}'                                    # BlockStmt
     | annotation* 'if' '(' c=pure_exp ')' l=stmt ('else' r=stmt)?  # IfStmt
     | annotation* 'while' '(' c=pure_exp ')' stmt                  # WhileStmt
+    | annotation* 'foreach' '(' i=IDENTIFIER 'in' l=pure_exp ')' stmt
+                                                                   # ForeachStmt
     | annotation* 'try' b=stmt
         'catch' (('{' casestmtbranch* '}') | casestmtbranch)
         ('finally' f=stmt)?                                        # TryCatchFinallyStmt

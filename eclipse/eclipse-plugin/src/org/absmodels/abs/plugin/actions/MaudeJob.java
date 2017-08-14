@@ -187,7 +187,8 @@ public class MaudeJob extends Job{
 			}
 			if (getProduct() != null) {
 				// work on a copy:
-                model = model.parseTreeCopy();
+                            model = model.treeCopy();
+                            model.flushTreeCache();
 				
 				model.flattenForProduct(getProduct());
 				model.flushCache(); // #335

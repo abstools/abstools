@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.parser;
@@ -65,14 +65,14 @@ public class ParserTest extends FrontendTest {
     public void testEmptyBlock() {
         assertParseOk("{ }"); // No decls.
     }
-    
+
     @Test
     public void ifExp() {
-        assertParseOk("{ (if True then x else x).get; }" ); 
-        assertParseOk("{ Int x = 5; if(if 4 == 5 then True else False) { x = 4; } else { x = 3; } }" ); 
+        assertParseOk("{ (if True then x else x).get; }" );
+        assertParseOk("{ Int x = 5; if(if 4 == 5 then True else False) { x = 4; } else { x = 3; } }" );
         assertParseOk("{ if True then x else x.get; }" );
     }
-    
+
 
     @Test
     public void testStmts() {
@@ -140,7 +140,7 @@ public class ParserTest extends FrontendTest {
         assertParseOk("data IntList = IntNil | Cons(Int, IntList) ; ");
         assertParseOk("data IntList = IntNil | Cons(Prelude.Int, IntList) ; ");
     }
-    
+
     @Test
     public void dataTypeSelectors() {
         assertParseOk("data Foo = Bla(Int i);");
@@ -329,7 +329,7 @@ public class ParserTest extends FrontendTest {
     public void exportStar() {
         assertParseOk("export *;");
     }
-    
+
     @Test
     public void ticket189() {
         assertParseError("def Unit foo() = Unit;\n"+
@@ -340,32 +340,38 @@ public class ParserTest extends FrontendTest {
                "   _ => foo() // Note missing semicolon\n"+
                "}; \n" +
              "} \n" +
-          "} \n");         
+          "} \n");
     }
-    
-    
+
+
     @Test
     public void ticket203() {
         assertParseError("def Bool g() = f(s a, s b);");
     }
-    
+
     @Test
     public void ticket238() throws Exception{
         assertParseOk("module T238; delta D; productline P; features F,G; delta D when F && (! G);");
         // fails because logical connectives apart from && are not implemented yet...
     }
-    
+
     @Test
     public void entry_deltadecl() throws Exception {
         CompilationUnit u = new ABSParserWrapper().parse(new StringReader("delta Mon;"));
         DeltaDecl d = (DeltaDecl) u.getDeltaDecl(0);
         Assert.assertNotNull(d);
     }
-    
+
     @Test (expected = ParseException.class)
     public void deltaNameLowerCaseTest() throws Exception{
         String deltaDecl = "delta foo;";
         new ABSParserWrapper(null, true, false).parse(new StringReader(deltaDecl));
     }
-    
+
+    @Test(expected = ParseException.class)
+    public void testIllegalCharacter() throws Exception {
+        String functionDecl = "module LexicalTest; def Bool æåëßfë() = True;";
+        new ABSParserWrapper(null, true, false).parse(new StringReader(functionDecl));
+    }
+
 }

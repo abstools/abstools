@@ -47,6 +47,7 @@ public class Main {
     public static final String UNKNOWN_FILENAME = "<unknown file>";
     protected boolean verbose = false;
     protected boolean typecheck = true;
+    protected boolean checkspl = false;
     protected boolean stdlib = true;
     protected boolean dump = false;
     protected boolean debug = false;
@@ -138,7 +139,8 @@ public class Main {
             } else if (arg.startsWith("-allproducts")) {
                 fullabs = true;
                 product = null;
-            }
+            } else if (arg.equals("-checkspl"))
+                checkspl = true;
             else if (arg.equals("-notypecheck"))
                 typecheck = false;
             else if (arg.equals("-nostdlib"))
@@ -260,8 +262,8 @@ public class Main {
         m.flattenTraitOnly();
         m.collapseTraitModifiers();
 
-        // type check PL before flattening
-        if (typecheck)
+        // check PL before flattening
+        if (checkspl)
             typeCheckProductLine(m);
 
         // flatten before checking error, to avoid calculating *wrong* attributes
@@ -694,7 +696,9 @@ public class Main {
                 + "Common options:\n"
                 + "  -version       print version\n"
                 + "  -v             verbose output\n"
+                + "  -debug         print stacktrace on exception\n"
                 + "  -product=<PID> build given product by applying deltas (PID is the product ID)\n"
+                + "  -checkspl      Check the SPL for errors\n"
                 + "  -notypecheck   disable typechecking\n"
                 + "  -nostdlib      do not include the standard lib\n"
                 + "  -loctypes      enable location type checking\n"

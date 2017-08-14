@@ -21,8 +21,8 @@ export Triple, fstT, sndT, trdT, trd;
 // Sets
 export Set, EmptySet, Insert, set; //TODO: don't export EmptySet, Insert
 
-export contains, emptySet, size, union, intersection, difference, isSubset,
-  insertElement, remove, take, takeMaybe, hasNext, next;
+export contains, emptySet, size, elements, union, intersection, difference,
+  isSubset, insertElement, remove, take, takeMaybe, hasNext, next;
 
 // Lists
 export List, Nil, Cons, head, tail, list;
@@ -186,6 +186,15 @@ def Int size<A>(Set<A> xs) =
       EmptySet => 0 ; 
       Insert(s, ss) => 1 + size(ss); 
    };
+
+/**
+ * Returns a list containing the elements of set `xs'.
+ */
+def List<A> elements<A>(Set<A> xs) =
+  case xs {
+      EmptySet => Nil;
+      Insert(s, ss) => Cons(s, elements(ss));
+  };
 
 /**
  * Returns the union of sets 'set1' and 'set2'.

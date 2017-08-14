@@ -146,8 +146,11 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
     private void updateModelFromNature() {
         Model build = absNature.getCompleteModel();
         if (build != null && model != build) {
-            model = build.parseTreeCopy();
-            // XXX Check if parseTreeCopy does the right thing.
+            model = build.treeCopyNoTransform();
+            model.flushTreeCache();
+            // XXX Check if treeCopyNoTransform + flushTreeCache does the
+            // right thing.  (We used parseTreeCopy but were unsure about that
+            // as well)
             Main.exceptionHack(model);
             notifyChangeListeners();
         }

@@ -60,7 +60,7 @@
 
 -spec key() -> binary().
 key() ->
-	base64:encode(crypto:rand_bytes(16)).
+	base64:encode(crypto:strong_rand_bytes(16)).
 
 %% @doc Encode the key into the accept value for the Websocket handshake response.
 
@@ -138,7 +138,8 @@ init_permessage_deflate(InflateWindowBits, DeflateWindowBits, Opts) ->
 	Inflate = zlib:open(),
 	ok = zlib:inflateInit(Inflate, -InflateWindowBits),
 	Deflate = zlib:open(),
-	%% @todo Remove this case .. of for OTP 18+ if PR https://github.com/erlang/otp/pull/633 gets merged.
+	%% zlib 1.2.11+ now rejects -8. It used to transform it to -9.
+	%% We need to use 9 when 8 is requested for interoperability.
 	DeflateWindowBits2 = case DeflateWindowBits of
 		8 -> 9;
 		_ -> DeflateWindowBits
@@ -149,6 +150,16 @@ init_permessage_deflate(InflateWindowBits, DeflateWindowBits, Opts) ->
 		-DeflateWindowBits2,
 		maps:get(mem_level, Opts, 8),
 		maps:get(strategy, Opts, default)),
+	%% Set the owner pid of the zlib contexts if requested.
+	_ = case Opts of
+		#{owner := Pid} ->
+			true = erlang:port_connect(Inflate, Pid),
+			true = unlink(Inflate),
+			true = erlang:port_connect(Deflate, Pid),
+			unlink(Deflate);
+		_ ->
+			true
+	end,
 	{Inflate, Deflate}.
 
 %% @doc Negotiate the x-webkit-deflate-frame extension.
@@ -546,36 +557,36 @@ masked_frame({close, Payload}, Extensions) ->
 masked_frame({close, StatusCode, Payload}, _) ->
 	Len = 2 + iolist_size(Payload),
 	true = Len =< 125,
-	MaskKeyBin = << MaskKey:32 >> = crypto:rand_bytes(4),
+	MaskKeyBin = << MaskKey:32 >> = crypto:strong_rand_bytes(4),
 	[<< 1:1, 0:3, 8:4, 1:1, Len:7 >>, MaskKeyBin, mask(iolist_to_binary([<< StatusCode:16 >>, Payload]), MaskKey, <<>>)];
 masked_frame({ping, Payload}, _) ->
 	Len = iolist_size(Payload),
 	true = Len =< 125,
-	MaskKeyBin = << MaskKey:32 >> = crypto:rand_bytes(4),
+	MaskKeyBin = << MaskKey:32 >> = crypto:strong_rand_bytes(4),
 	[<< 1:1, 0:3, 9:4, 1:1, Len:7 >>, MaskKeyBin, mask(iolist_to_binary(Payload), MaskKey, <<>>)];
 masked_frame({pong, Payload}, _) ->
 	Len = iolist_size(Payload),
 	true = Len =< 125,
-	MaskKeyBin = << MaskKey:32 >> = crypto:rand_bytes(4),
+	MaskKeyBin = << MaskKey:32 >> = crypto:strong_rand_bytes(4),
 	[<< 1:1, 0:3, 10:4, 1:1, Len:7 >>, MaskKeyBin, mask(iolist_to_binary(Payload), MaskKey, <<>>)];
 %% Data frames, deflate-frame extension.
 masked_frame({text, Payload}, #{deflate := Deflate, deflate_takeover := TakeOver}) ->
-	MaskKeyBin = << MaskKey:32 >> = crypto:rand_bytes(4),
+	MaskKeyBin = << MaskKey:32 >> = crypto:strong_rand_bytes(4),
 	Payload2 = mask(deflate_frame(Payload, Deflate, TakeOver), MaskKey, <<>>),
 	Len = payload_length(Payload2),
 	[<< 1:1, 1:1, 0:2, 1:4, 1:1, Len/bits >>, MaskKeyBin, Payload2];
 masked_frame({binary, Payload}, #{deflate := Deflate, deflate_takeover := TakeOver}) ->
-	MaskKeyBin = << MaskKey:32 >> = crypto:rand_bytes(4),
+	MaskKeyBin = << MaskKey:32 >> = crypto:strong_rand_bytes(4),
 	Payload2 = mask(deflate_frame(Payload, Deflate, TakeOver), MaskKey, <<>>),
 	Len = payload_length(Payload2),
 	[<< 1:1, 1:1, 0:2, 2:4, 1:1, Len/bits >>, MaskKeyBin, Payload2];
 %% Data frames.
 masked_frame({text, Payload}, _) ->
-	MaskKeyBin = << MaskKey:32 >> = crypto:rand_bytes(4),
+	MaskKeyBin = << MaskKey:32 >> = crypto:strong_rand_bytes(4),
 	Len = payload_length(Payload),
 	[<< 1:1, 0:3, 1:4, 1:1, Len/bits >>, MaskKeyBin, mask(iolist_to_binary(Payload), MaskKey, <<>>)];
 masked_frame({binary, Payload}, _) ->
-	MaskKeyBin = << MaskKey:32 >> = crypto:rand_bytes(4),
+	MaskKeyBin = << MaskKey:32 >> = crypto:strong_rand_bytes(4),
 	Len = payload_length(Payload),
 	[<< 1:1, 0:3, 2:4, 1:1, Len/bits >>, MaskKeyBin, mask(iolist_to_binary(Payload), MaskKey, <<>>)].
 

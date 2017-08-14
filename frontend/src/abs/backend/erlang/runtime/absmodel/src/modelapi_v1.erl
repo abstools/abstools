@@ -3,6 +3,7 @@
 %% V1 of the model API.  Current until February 2017; use for models / tools
 %% that cannot be adapted otherwise.
 -module(modelapi_v1).
+-include_lib("abs_types.hrl").
 
 -behaviour(cowboy_handler).
 -export([init/2, terminate/3]).
@@ -21,7 +22,7 @@ init(Req, _Opts) ->
                                              cowboy_req:parse_qs(Req));
             _ -> {404, <<"text/plain">>, <<"Not found">>}
         end,
-    Req2 = cowboy_req:reply(Status, [{<<"content-type">>, ContentType}],
+    Req2 = cowboy_req:reply(Status, #{<<"content-type">> => ContentType},
                             Body, Req),
     {ok, Req2, #state{}}.
 
@@ -95,7 +96,7 @@ handle_object_call([Objectname, Methodname], Parameters) ->
                     {Success, ParamValues} = decode_parameters(Parameters, ParamDecls),
                     case Success of
                         ok ->
-                            Future=future:start_for_rest(Object, Method, ParamValues ++ [[]]),
+                            Future=future:start_for_rest(Object, Method, ParamValues ++ [[]], #process_info{method=Methodname}),
                             Result=case future:get_for_rest(Future) of
                                 {ok, Value} ->
                                     { 200, <<"application/json">>,

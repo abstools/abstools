@@ -14,6 +14,7 @@
 
 -module(cow_http_hd).
 
+%% Parsing.
 -export([parse_accept/1]).
 -export([parse_accept_charset/1]).
 % @todo -export([parse_accept_datetime/1]). RFC7089
@@ -27,8 +28,8 @@
 % @todo -export([parse_access_control_allow_origin/1]). CORS
 % @todo -export([parse_access_control_expose_headers/1]). CORS
 % @todo -export([parse_access_control_max_age/1]). CORS
-% @todo -export([parse_access_control_request_headers/1]). CORS
-% @todo -export([parse_access_control_request_method/1]). CORS
+-export([parse_access_control_request_headers/1]).
+-export([parse_access_control_request_method/1]).
 -export([parse_age/1]).
 -export([parse_allow/1]).
 % @todo -export([parse_alternates/1]). RFC2295
@@ -56,7 +57,7 @@
 % @todo -export([parse_forwarded/1]). RFC7239
 % @todo -export([parse_from/1]). RFC7231
 -export([parse_host/1]).
-% @todo -export([parse_http2_settings/1]). HTTP/2 (upcoming)
+-export([parse_http2_settings/1]).
 -export([parse_if_match/1]).
 -export([parse_if_modified_since/1]).
 -export([parse_if_none_match/1]).
@@ -69,7 +70,7 @@
 -export([parse_max_forwards/1]).
 % @todo -export([parse_memento_datetime/1]). RFC7089
 % @todo -export([parse_negotiate/1]). RFC2295
-% @todo -export([parse_origin/1]). CORS, RFC6454
+-export([parse_origin/1]).
 -export([parse_pragma/1]).
 % @todo -export([parse_prefer/1]). RFC7240
 -export([parse_proxy_authenticate/1]).
@@ -110,6 +111,14 @@
 -export([parse_x_forwarded_for/1]).
 % @todo -export([parse_x_frame_options/1]). RFC7034
 
+%% Building.
+-export([access_control_allow_credentials/0]).
+-export([access_control_allow_headers/1]).
+-export([access_control_allow_methods/1]).
+-export([access_control_allow_origin/1]).
+-export([access_control_expose_headers/1]).
+-export([access_control_max_age/1]).
+
 -type etag() :: {weak | strong, binary()}.
 -export_type([etag/0]).
 
@@ -126,7 +135,7 @@
 -include("cow_parse.hrl").
 
 -ifdef(TEST).
--include_lib("triq/include/triq.hrl").
+-include_lib("proper/include/proper.hrl").
 
 vector(Min, Max, Dom) -> ?LET(N, choose(Min, Max), vector(N, Dom)).
 small_list(Dom) -> vector(0, 10, Dom).
@@ -153,13 +162,13 @@ token() ->
 		list_to_binary(T)).
 
 abnf_char() ->
-	int(1, 127).
+	integer(1, 127).
 
 vchar() ->
-	int(33, 126).
+	integer(33, 126).
 
 obs_text() ->
-	int(128, 255).
+	integer(128, 255).
 
 qdtext() ->
 	frequency([
@@ -191,7 +200,7 @@ parameter() ->
 
 weight() ->
 	frequency([
-		{90, int(0, 1000)},
+		{90, integer(0, 1000)},
 		{10, undefined}
 	]).
 
@@ -202,6 +211,8 @@ qvalue_to_iodata(Q) when Q < 100 -> [<<"0.0">>, integer_to_binary(Q)];
 qvalue_to_iodata(Q) when Q < 1000 -> [<<"0.">>, integer_to_binary(Q)];
 qvalue_to_iodata(1000) -> <<"1">>.
 -endif.
+
+%% Parsing.
 
 %% @doc Parse the Accept header.
 
@@ -694,6 +705,80 @@ horse_parse_accept_ranges_bytes() ->
 horse_parse_accept_ranges_other() ->
 	horse:repeat(200000,
 		parse_accept_ranges(<<"bytes, pages, kilos">>)
+	).
+-endif.
+
+%% @doc Parse the Access-Control-Request-Headers header.
+
+-spec parse_access_control_request_headers(binary()) -> [binary()].
+parse_access_control_request_headers(Headers) ->
+	token_ci_list(Headers, []).
+
+-ifdef(TEST).
+headers() ->
+	?LET(L,
+		list({ows(), ows(), token()}),
+		case L of
+			[] -> {[], <<>>};
+			_ ->
+				<< _, Headers/binary >> = iolist_to_binary([[OWS1, $,, OWS2, M] || {OWS1, OWS2, M} <- L]),
+				{[?LOWER(M) || {_, _, M} <- L], Headers}
+		end).
+
+prop_parse_access_control_request_headers() ->
+	?FORALL({L, Headers},
+		headers(),
+		L =:= parse_access_control_request_headers(Headers)).
+
+parse_access_control_request_headers_test_() ->
+	Tests = [
+		{<<>>, []},
+		{<<"Content-Type">>, [<<"content-type">>]},
+		{<<"accept, authorization, content-type">>, [<<"accept">>, <<"authorization">>, <<"content-type">>]},
+		{<<"accept,, , authorization,content-type">>, [<<"accept">>, <<"authorization">>, <<"content-type">>]}
+	],
+	[{V, fun() -> R = parse_access_control_request_headers(V) end} || {V, R} <- Tests].
+
+horse_parse_access_control_request_headers() ->
+	horse:repeat(200000,
+		parse_access_control_request_headers(<<"accept, authorization, content-type">>)
+	).
+-endif.
+
+%% @doc Parse the Access-Control-Request-Method header.
+
+-spec parse_access_control_request_method(binary()) -> binary().
+parse_access_control_request_method(Method) ->
+	true = <<>> =/= Method,
+	ok = validate_token(Method),
+	Method.
+
+validate_token(<< C, R/bits >>) when ?IS_TOKEN(C) -> validate_token(R);
+validate_token(<<>>) -> ok. 
+
+-ifdef(TEST).
+parse_access_control_request_method_test_() ->
+	Tests = [
+		<<"GET">>,
+		<<"HEAD">>,
+		<<"POST">>,
+		<<"PUT">>,
+		<<"DELETE">>,
+		<<"TRACE">>,
+		<<"CONNECT">>,
+		<<"whatever">>
+	],
+	[{V, fun() -> R = parse_access_control_request_method(V) end} || {V, R} <- Tests].
+
+parse_access_control_request_method_error_test_() ->
+	Tests = [
+		<<>>
+	],
+	[{V, fun() -> {'EXIT', _} = (catch parse_access_control_request_method(V)) end} || V <- Tests].
+
+horse_parse_access_control_request_method() ->
+	horse:repeat(200000,
+		parse_access_control_request_method(<<"POST">>)
 	).
 -endif.
 
@@ -1674,7 +1759,7 @@ etag(<< C, R/bits >>, Strength, Tag) when ?IS_ETAGC(C) ->
 
 -ifdef(TEST).
 etagc() ->
-	?SUCHTHAT(C, int(16#21, 16#ff), C =/= 16#22 andalso C =/= 16#7f).
+	?SUCHTHAT(C, integer(16#21, 16#ff), C =/= 16#22 andalso C =/= 16#7f).
 
 etag() ->
 	?LET({Strength, Tag},
@@ -1835,7 +1920,7 @@ host() -> vector(1, 255, elements(host_chars())).
 
 host_port() ->
 	?LET({Host, Port},
-		{host(), oneof([undefined, int(1, 65535)])},
+		{host(), oneof([undefined, integer(1, 65535)])},
 		begin
 			HostBin = list_to_binary(Host),
 			{{?LOWER(HostBin), Port},
@@ -1882,6 +1967,12 @@ horse_parse_host_ipv6_v4() ->
 		parse_host(<<"[::ffff:192.0.2.1]:8080">>)
 	).
 -endif.
+
+%% @doc Parse the HTTP2-Settings header.
+
+-spec parse_http2_settings(binary()) -> map().
+parse_http2_settings(HTTP2Settings) ->
+	cow_http2:parse_settings_payload(base64:decode(HTTP2Settings)).
 
 %% @doc Parse the If-Match header.
 
@@ -2079,6 +2170,148 @@ parse_max_forwards_error_test_() ->
 		<<"4.17">>
 	],
 	[{V, fun() -> {'EXIT', _} = (catch parse_max_forwards(V)) end} || V <- Tests].
+-endif.
+
+%% @doc Parse the Origin header.
+
+%% According to the RFC6454 we should generate
+%% a fresh globally unique identifier and return that value if:
+%% - URI does not use a hierarchical element as a naming authority
+%%   or the URI is not an absolute URI
+%% - the implementation doesn't support the protocol given by uri-scheme
+%% Thus, erlang reference represents a GUID here.
+%%
+%% We only seek to have legal characters and separate the
+%% host and port values. The number of segments in the host
+%% or the size of each segment is not checked.
+%%
+%% There is no way to distinguish IPv4 addresses from regular
+%% names until the last segment is reached therefore we do not
+%% differentiate them.
+%%
+%% @todo The following valid hosts are currently rejected: IPv6
+%% addresses with a zone identifier; IPvFuture addresses;
+%% and percent-encoded addresses.
+
+-spec parse_origin(binary()) -> [{binary(), binary(), 0..65535} | reference()].
+parse_origin(Origins) ->
+	nonempty(origin_scheme(Origins, [])).
+
+origin_scheme(<<>>, Acc) -> Acc;
+origin_scheme(<< "http://", R/bits >>, Acc) -> origin_host(R, Acc, <<"http">>);
+origin_scheme(<< "https://", R/bits >>, Acc) -> origin_host(R, Acc, <<"https">>);
+origin_scheme(<< C, R/bits >>, Acc) when ?IS_TOKEN(C)  -> origin_scheme(next_origin(R), [make_ref()|Acc]).
+
+origin_host(<< $[, R/bits >>, Acc, Scheme) -> origin_ipv6_address(R, Acc, Scheme, << $[ >>);
+origin_host(Host, Acc, Scheme) -> origin_reg_name(Host, Acc, Scheme, <<>>).
+
+origin_ipv6_address(<< $] >>, Acc, Scheme, IP) ->
+	lists:reverse([{Scheme, << IP/binary, $] >>, default_port(Scheme)}|Acc]);
+origin_ipv6_address(<< $], $\s, R/bits >>, Acc, Scheme, IP) ->
+	origin_scheme(R, [{Scheme, << IP/binary, $] >>, default_port(Scheme)}|Acc]);
+origin_ipv6_address(<< $], $:, Port/bits >>, Acc, Scheme, IP) ->
+	origin_port(Port, Acc, Scheme, << IP/binary, $] >>, <<>>);
+origin_ipv6_address(<< C, R/bits >>, Acc, Scheme, IP) when ?IS_HEX(C) or (C =:= $:) or (C =:= $.) ->
+	?LOWER(origin_ipv6_address, R, Acc, Scheme, IP).
+
+origin_reg_name(<<>>, Acc, Scheme, Name) ->
+	lists:reverse([{Scheme, Name, default_port(Scheme)}|Acc]);
+origin_reg_name(<< $\s, R/bits >>, Acc, Scheme, Name) ->
+	origin_scheme(R, [{Scheme, Name, default_port(Scheme)}|Acc]);
+origin_reg_name(<< $:, Port/bits >>, Acc, Scheme, Name) ->
+	origin_port(Port, Acc, Scheme, Name, <<>>);
+origin_reg_name(<< C, R/bits >>, Acc, Scheme, Name) when ?IS_URI_UNRESERVED(C) or ?IS_URI_SUB_DELIMS(C) ->
+	?LOWER(origin_reg_name, R, Acc, Scheme, Name).
+
+origin_port(<<>>, Acc, Scheme, Host, Port) ->
+	lists:reverse([{Scheme, Host, binary_to_integer(Port)}|Acc]);
+origin_port(<< $\s, R/bits >>, Acc, Scheme, Host, Port) ->
+	origin_scheme(R, [{Scheme, Host, binary_to_integer(Port)}|Acc]);
+origin_port(<< C, R/bits >>, Acc, Scheme, Host, Port) when ?IS_DIGIT(C) ->
+	origin_port(R, Acc, Scheme, Host, << Port/binary, C >>).
+
+next_origin(<<>>) -> <<>>;
+next_origin(<< $\s, C, R/bits >>) when ?IS_TOKEN(C) -> << C, R/bits >>;
+next_origin(<< C, R/bits >>) when ?IS_TOKEN(C) or (C =:= $:) or (C =:= $/) -> next_origin(R).
+
+default_port(<< "http" >>) -> 80;
+default_port(<< "https" >>) -> 443.
+
+-ifdef(TEST).
+scheme() -> oneof([<<"http">>, <<"https">>]).
+
+scheme_host_port() ->
+	?LET({Scheme, Host, Port},
+		{scheme(), host(), integer(1, 65535)},
+		begin
+			HostBin = list_to_binary(Host),
+			{[{Scheme, ?LOWER(HostBin), Port}],
+				case default_port(Scheme) of
+					Port -> << Scheme/binary, "://", HostBin/binary>>;
+					_ -> << Scheme/binary, "://", HostBin/binary, $:, (integer_to_binary(Port))/binary >>
+				end}
+		end).
+
+prop_parse_origin() ->
+	?FORALL({Res, Origin}, scheme_host_port(), Res =:= parse_origin(Origin)).
+
+parse_origin_test_() ->
+	Tests = [
+		{<<"http://www.example.org:8080">>, [{<<"http">>, <<"www.example.org">>, 8080}]},
+		{<<"http://www.example.org">>, [{<<"http">>, <<"www.example.org">>, 80}]},
+		{<<"http://192.0.2.1:8080">>, [{<<"http">>, <<"192.0.2.1">>, 8080}]},
+		{<<"http://192.0.2.1">>, [{<<"http">>, <<"192.0.2.1">>, 80}]},
+		{<<"http://[2001:db8::1]:8080">>, [{<<"http">>, <<"[2001:db8::1]">>, 8080}]},
+		{<<"http://[2001:db8::1]">>, [{<<"http">>, <<"[2001:db8::1]">>, 80}]},
+		{<<"http://[::ffff:192.0.2.1]:8080">>, [{<<"http">>, <<"[::ffff:192.0.2.1]">>, 8080}]},
+		{<<"http://[::ffff:192.0.2.1]">>, [{<<"http">>, <<"[::ffff:192.0.2.1]">>, 80}]},
+		{<<"http://example.org https://blue.example.com:8080">>,
+			[{<<"http">>, <<"example.org">>, 80},
+			 {<<"https">>, <<"blue.example.com">>, 8080}]}
+	],
+	[{V, fun() -> R = parse_origin(V) end} || {V, R} <- Tests].
+
+parse_origin_reference_test_() ->
+	Tests = [
+		<<"null">>,
+		<<"httpx://example.org:80">>,
+		<<"httpx://example.org:80 null">>,
+		<<"null null">>
+	],
+	[{V, fun() -> [true = is_reference(Ref) || Ref <- parse_origin(V)] end} || V <- Tests].
+
+parse_origin_error_test_() ->
+	Tests = [
+		<<>>,
+		<<"null", $\t, "null">>,
+		<<"null", $\s, $\s, "null">>
+	],
+	[{V, fun() -> {'EXIT', _} = (catch parse_origin(V)) end} || V <- Tests].
+
+horse_parse_origin_blue_example_org() ->
+	horse:repeat(200000,
+		parse_origin(<<"http://blue.example.org:8080">>)
+	).
+
+horse_parse_origin_ipv4() ->
+	horse:repeat(200000,
+		parse_origin(<<"http://192.0.2.1:8080">>)
+	).
+
+horse_parse_origin_ipv6() ->
+	horse:repeat(200000,
+		parse_origin(<<"http://[2001:db8::1]:8080">>)
+	).
+
+horse_parse_origin_ipv6_v4() ->
+	horse:repeat(200000,
+		parse_origin(<<"http://[::ffff:192.0.2.1]:8080">>)
+	).
+
+horse_parse_origin_null() ->
+	horse:repeat(200000,
+		parse_origin(<<"null">>)
+	).
 -endif.
 
 %% @doc Parse the Pragma header.
@@ -2460,7 +2693,7 @@ parse_sec_websocket_version_req(SecWebSocketVersion) when byte_size(SecWebSocket
 -ifdef(TEST).
 prop_parse_sec_websocket_version_req() ->
 	?FORALL(Version,
-		int(0, 255),
+		integer(0, 255),
 		Version =:= parse_sec_websocket_version_req(integer_to_binary(Version))).
 
 parse_sec_websocket_version_req_test_() ->
@@ -2511,7 +2744,7 @@ ws_version_list_sep(<< $,, R/bits >>, Acc) -> ws_version_list(R, Acc).
 -ifdef(TEST).
 sec_websocket_version_resp() ->
 	?LET(L,
-		non_empty(list({ows(), ows(), int(0, 255)})),
+		non_empty(list({ows(), ows(), integer(0, 255)})),
 		begin
 			<< _, SecWebSocketVersion/binary >> = iolist_to_binary(
 				[[OWS1, $,, OWS2, integer_to_binary(V)] || {OWS1, OWS2, V} <- L]),
@@ -2601,7 +2834,7 @@ te() ->
 			L2 = case Trail of
 				no_trailers -> L;
 				trailers ->
-					Rand = random:uniform(length(L) + 1) - 1,
+					Rand = rand:uniform(length(L) + 1) - 1,
 					{Before, After} = lists:split(Rand, L),
 					Before ++ [{<<"trailers">>, undefined}|After]
 			end,
@@ -2614,7 +2847,6 @@ te() ->
 	).
 
 prop_parse_te() ->
-	random:seed(os:timestamp()),
 	?FORALL({Trail, L, TE},
 		te(),
 		begin
@@ -2987,6 +3219,149 @@ parse_x_forwarded_for_error_test_() ->
 	[{V, fun() -> {'EXIT', _} = (catch parse_x_forwarded_for(V)) end} || V <- Tests].
 -endif.
 
+%% Building.
+
+%% @doc Build the Access-Control-Allow-Credentials header.
+
+-spec access_control_allow_credentials() -> iodata().
+access_control_allow_credentials() -> <<"true">>.
+
+%% @doc Build the Access-Control-Allow-Headers header.
+
+-spec access_control_allow_headers([binary()]) -> iodata().
+access_control_allow_headers(Headers) ->
+	join_token_list(nonempty(Headers)).
+
+-ifdef(TEST).
+access_control_allow_headers_test_() ->
+	Tests = [
+		{[<<"accept">>], <<"accept">>},
+		{[<<"accept">>, <<"authorization">>, <<"content-type">>], <<"accept, authorization, content-type">>}
+	],
+	[{lists:flatten(io_lib:format("~p", [V])),
+		fun() -> R = iolist_to_binary(access_control_allow_headers(V)) end} || {V, R} <- Tests].
+
+access_control_allow_headers_error_test_() ->
+	Tests = [
+		[]
+	],
+	[{lists:flatten(io_lib:format("~p", [V])),
+		fun() -> {'EXIT', _} = (catch access_control_allow_headers(V)) end} || V <- Tests].
+
+horse_access_control_allow_headers() ->
+	horse:repeat(200000,
+		access_control_allow_headers([<<"accept">>, <<"authorization">>, <<"content-type">>])
+	).
+-endif.
+
+%% @doc Build the Access-Control-Allow-Methods header.
+
+-spec access_control_allow_methods([binary()]) -> iodata().
+access_control_allow_methods(Methods) ->
+	join_token_list(nonempty(Methods)).
+
+-ifdef(TEST).
+access_control_allow_methods_test_() ->
+	Tests = [
+		{[<<"GET">>], <<"GET">>},
+		{[<<"GET">>, <<"POST">>, <<"DELETE">>], <<"GET, POST, DELETE">>}
+	],
+	[{lists:flatten(io_lib:format("~p", [V])),
+		fun() -> R = iolist_to_binary(access_control_allow_methods(V)) end} || {V, R} <- Tests].
+
+access_control_allow_methods_error_test_() ->
+	Tests = [
+		[]
+	],
+	[{lists:flatten(io_lib:format("~p", [V])),
+		fun() -> {'EXIT', _} = (catch access_control_allow_methods(V)) end} || V <- Tests].
+
+horse_access_control_allow_methods() ->
+	horse:repeat(200000,
+		access_control_allow_methods([<<"GET">>, <<"POST">>, <<"DELETE">>])
+	).
+-endif.
+
+%% @doc Build the Access-Control-Allow-Origin header.
+
+-spec access_control_allow_origin({binary(), binary(), 0..65535} | reference() | '*') -> iodata().
+access_control_allow_origin({Scheme, Host, Port}) ->
+	case default_port(Scheme) of
+		Port -> [Scheme, <<"://">>, Host];
+		_ -> [Scheme, <<"://">>, Host, <<":">>, integer_to_binary(Port)]
+	end;
+access_control_allow_origin('*') -> <<$*>>;
+access_control_allow_origin(Ref) when is_reference(Ref) -> <<"null">>.
+
+-ifdef(TEST).
+access_control_allow_origin_test_() ->
+	Tests = [
+		{{<<"http">>, <<"www.example.org">>, 8080}, <<"http://www.example.org:8080">>},
+		{{<<"http">>, <<"www.example.org">>, 80}, <<"http://www.example.org">>},
+		{{<<"http">>, <<"192.0.2.1">>, 8080}, <<"http://192.0.2.1:8080">>},
+		{{<<"http">>, <<"192.0.2.1">>, 80}, <<"http://192.0.2.1">>},
+		{{<<"http">>, <<"[2001:db8::1]">>, 8080}, <<"http://[2001:db8::1]:8080">>},
+		{{<<"http">>, <<"[2001:db8::1]">>, 80}, <<"http://[2001:db8::1]">>},
+		{{<<"http">>, <<"[::ffff:192.0.2.1]">>, 8080}, <<"http://[::ffff:192.0.2.1]:8080">>},
+		{{<<"http">>, <<"[::ffff:192.0.2.1]">>, 80}, <<"http://[::ffff:192.0.2.1]">>},
+		{make_ref(), <<"null">>},
+		{'*', <<$*>>}
+	],
+	[{lists:flatten(io_lib:format("~p", [V])),
+		fun() -> R = iolist_to_binary(access_control_allow_origin(V)) end} || {V, R} <- Tests].
+
+horse_access_control_allow_origin() ->
+	horse:repeat(200000,
+		access_control_allow_origin({<<"http">>, <<"example.org">>, 8080})
+	).
+-endif.
+
+%% @doc Build the Access-Control-Expose-Headers header.
+
+-spec access_control_expose_headers([binary()]) -> iodata().
+access_control_expose_headers(Headers) ->
+	join_token_list(nonempty(Headers)).
+
+-ifdef(TEST).
+access_control_expose_headers_test_() ->
+	Tests = [
+		{[<<"accept">>], <<"accept">>},
+		{[<<"accept">>, <<"authorization">>, <<"content-type">>], <<"accept, authorization, content-type">>}
+	],
+	[{lists:flatten(io_lib:format("~p", [V])),
+		fun() -> R = iolist_to_binary(access_control_expose_headers(V)) end} || {V, R} <- Tests].
+
+access_control_expose_headers_error_test_() ->
+	Tests = [
+		[]
+	],
+	[{lists:flatten(io_lib:format("~p", [V])),
+		fun() -> {'EXIT', _} = (catch access_control_expose_headers(V)) end} || V <- Tests].
+
+horse_access_control_expose_headers() ->
+	horse:repeat(200000,
+		access_control_expose_headers([<<"accept">>, <<"authorization">>, <<"content-type">>])
+	).
+-endif.
+
+%% @doc Build the Access-Control-Max-Age header.
+
+-spec access_control_max_age(non_neg_integer()) -> iodata().
+access_control_max_age(MaxAge) -> integer_to_binary(MaxAge).
+
+-ifdef(TEST).
+access_control_max_age_test_() ->
+	Tests = [
+		{0, <<"0">>},
+		{42, <<"42">>},
+		{69, <<"69">>},
+		{1337, <<"1337">>},
+		{3495, <<"3495">>},
+		{1234567890, <<"1234567890">>}
+	],
+	[{V, fun() -> R = access_control_max_age(V) end} || {V, R} <- Tests].
+-endif.
+
 %% Internal.
 
 %% Only return if the list is not empty.
@@ -3015,3 +3390,9 @@ token_ci(R, Acc, T) -> token_ci_list_sep(R, [T|Acc]).
 token_ci_list_sep(<<>>, Acc) -> lists:reverse(Acc);
 token_ci_list_sep(<< C, R/bits >>, Acc) when ?IS_WS(C) -> token_ci_list_sep(R, Acc);
 token_ci_list_sep(<< $,, R/bits >>, Acc) -> token_ci_list(R, Acc).
+
+join_token_list([]) -> [];
+join_token_list([H|T]) -> join_token_list(T, [H]).
+
+join_token_list([], Acc) -> lists:reverse(Acc);
+join_token_list([H|T], Acc) -> join_token_list(T, [H,<<", ">>|Acc]).

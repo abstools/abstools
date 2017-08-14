@@ -1,4 +1,4 @@
-# jsx (v2.8.0) #
+# jsx (v2.8.2) #
 
 
 an erlang application for consuming, producing and manipulating [json][json]. 
@@ -10,7 +10,7 @@ current status: [![Build Status](https://secure.travis-ci.org/talentdeficit/jsx.
 
 **jsx** is released under the terms of the [MIT][MIT] license
 
-copyright 2010-2015 alisdair sullivan
+copyright 2010-2016 alisdair sullivan
 
 ## really important note ##
 
@@ -47,6 +47,18 @@ for the overview or [migrating from 1.x](#migrating) for the details
 
 
 ## quickstart ##
+
+#### to add to a rebar3 project ####
+Add to `rebar.config`
+```erlang
+...
+{erl_opts, [debug_info]}.
+{deps, [
+       ...
+       {jsx, {git, "https://github.com/talentdeficit/jsx.git", {branch, "v2.8.0"}}}
+]}.
+...
+```
 
 #### to build the library and run tests ####
 

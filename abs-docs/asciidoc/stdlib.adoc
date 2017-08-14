@@ -148,7 +148,7 @@ Rat exp_newton(Rat x, Rat epsilon)
 
 .random
 
-Returns an integer between 0 and its argument.
+Returns an integer between 0 (inclusive) and its argument (exclusive).
 
 [source]
 ----
@@ -305,10 +305,13 @@ ObjectDeadException::
 [[type-list]]
 === Lists
 
-A list is a sequence of values of the same type.  Lists are expressed as
-recursive datastructures.  The time to access a value is proportional to the
-length of the list.  The first value of a list can be accessed in constant
-time.
+A list is a sequence of values of the same type.  Lists are constructed via
+the `list` constructor function, e.g., `list[1, 2, 3]` creates a list of three
+integers.  An empty list is created via `list[]` or `Nil`.
+
+The time to access a value via `nth` is proportional to the length of the
+list.  The first value of a list can be accessed in constant time, using the
+`head` function.
 
 ==== Datatypes and Constructors
 
@@ -432,18 +435,32 @@ def List<A> copy<A>(A p, Int n);
 [[type-set]]
 === Sets
 
-==== Datatypes and Constructors
+A set contains elements of the same type, without duplicates.  Sets are
+constructed via the `set` constructor function, e.g., `set[1, 2, 2, 3]`
+creates a set of three integers 1, 2, 3.  The expresssion `set[]` produces the
+empty set.
 
-The datatype for sets with elements of type `A` is `Set<A>`.  Sets are
-constructed with a special function `set`.  The expresssion `set[]` produces
-the empty set.
+To add an element to a set, use the function `insertElement`, to remove an
+element, use `remove`.  To test for set membership, use the function
+`contains`.
 
-The following example produces a set with the three elements `1`, `2`, `3`.
+The `takeMaybe` function can be used to iterate through a set.  It is used as follows:
 
 [source]
 ----
-Set<Int> s = set[1, 2, 3, 3];
+
+def Unit printAll<A>(Set<A> set) =
+  case takeMaybe(set) {
+    Nothing => println("Finished");
+    Just(e) => let (Unit dummy) = println("Element " + toString(e)) in printAll(remove(set, e));
+  };
 ----
+
+
+==== Datatypes and Constructors
+
+The datatype for sets with elements of type `A` is `Set<A>`.  The `set` constructor function is used to construct sets.
+
 
 ==== Functions
 
@@ -467,11 +484,20 @@ def Bool emptySet<A>(Set<A> ss);
 
 .size
 
-Returns the number of elemewnts in set `xs`.
+Returns the number of elements in set `xs`.
 
 [source]
 ----
 def Int size<A>(Set<A> xs);
+----
+
+.elements
+
+Returns a list with all elements in set `xs`.
+
+[source]
+----
+def List<A> elements<A>(Set<A> xs);
 ----
 
 .union
@@ -534,15 +560,13 @@ def Set<A> remove<A>(Set<A> xs, A e);
 
 .take
 
-Returns one element from a non-empty set.
+Returns one element from a non-empty set.  It is an error to call `take` on an
+empty set; consider using `takeMaybe` in that case.
 
 [source]
 ----
 def A take<A>(Set<A> ss);
 ----
-
-NOTE: To iterate over a set, use `take` to extract one value and `remove` to remove
-it from the set.  Repeat until the set is empty.
 
 .takeMaybe
 
@@ -561,14 +585,13 @@ def Maybe<A> takeMaybe<A>(Set<A> ss);
 [[type-map]]
 === Maps
 
-==== Datatypes and Constructors
+Maps are dictionaries storing a _value_ for each _key_.  
 
+Maps are constructed using by passing a list of type `Pair<A, B>` to the `map`
+constructor function.  The keys of the resulting map are of type `A` and
+values are of type `B`.  The expresssion `map[]` produces an empty map.
 
-The datatype for a map from type `A` to type `B` is is `Map<A, B>`.  Maps are
-constructed using pairs of type `Pair<A, B>` and the special function `map`.
-The expresssion `map[]` produces an empty map.
-
-The following example produces a set with two entries `1 -> "ABS"` and `3 ->
+The following example produces a map with two entries `1 -> "ABS"` and `3 ->
 "SACO"`.
 
 [source]
@@ -576,7 +599,19 @@ The following example produces a set with two entries `1 -> "ABS"` and `3 ->
 Map<Int, String> m = map[Pair(1, "ABS"), Pair(3, "SACO")];
 ----
 
-NOTE: In case the arguments contain duplicate keys, the resulting map will contain all the given entries, with the first entry shadowing the following ones.
+NOTE: In case of duplicate keys, it is unspecified which value the map will
+contain for a given key.
+
+The value associated with a key can be obtained using the `lookup` and
+`lookupDefault` functions.
+
+Iterating through a map can be done via iterating over its set of keys,
+obtained via the `keys` function.
+
+==== Datatypes and Constructors
+
+The datatype for a map from type `A` to type `B` is is `Map<A, B>`.  The `map`
+constuctor function is used to construct maps.
 
 ==== Functions
 

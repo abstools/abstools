@@ -19,6 +19,7 @@ import abs.backend.common.InternalBackendException;
 import abs.common.NotImplementedYetException;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
+import org.apache.commons.io.output.NullOutputStream;
 
 /**
  * Translates given ABS Files to an Erlang program
@@ -38,11 +39,12 @@ public class ErlangBackend extends Main {
     private File destDir = new File("gen/erl/");
     private EnumSet<CompileOptions> compileOptions = EnumSet.noneOf(CompileOptions.class);
 
-    private static int minVersion = 18;
+    public static int minErlangVersion = 19;
 
     public static void main(final String... args) {
+        ErlangBackend backEnd = new ErlangBackend();
         try {
-            new ErlangBackend().compile(args);
+            backEnd.compile(args);
         } catch (InternalBackendException e) {
             System.err.println(e.getMessage());
             System.exit(1);
@@ -51,7 +53,7 @@ public class ErlangBackend extends Main {
             System.exit(0);
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
-            if (Arrays.asList(args).contains("-debug")) {
+            if (backEnd.debug) {
                 e.printStackTrace();
             }
             System.exit(1);
@@ -100,14 +102,38 @@ public class ErlangBackend extends Main {
         compile(model, destDir, compileOptions);
     }
 
-    public static void compile(Model m, File destDir, EnumSet<CompileOptions> options) throws IOException, InterruptedException, InternalBackendException {
+    private static boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("win");
+    }
+
+    private static String getEscapedDoubleQuote() {
+        if(isWindows()) {
+            // "" will be resolved to "
+            return "\"\"";
+        } else {
+            // " just works
+            return "\"";
+        }
+    }
+
+    public static int getErlangVersion()  throws IOException, InterruptedException {
         // check erlang version number
-        Process versionCheck = Runtime.getRuntime().exec(new String[] { "erl", "-eval", "io:fwrite(\"~s\n\", [erlang:system_info(otp_release)]), halt().", "-noshell" });
+        String erlVersionCheckCode = "io:fwrite("
+            + getEscapedDoubleQuote()
+            + "~s\n"
+            + getEscapedDoubleQuote()
+            + ", [erlang:system_info(otp_release)]), halt().";
+        Process versionCheck = Runtime.getRuntime().exec(new String[] { "erl", "-eval", erlVersionCheckCode, "-noshell" });
         versionCheck.waitFor();
         BufferedReader ir = new BufferedReader(new InputStreamReader(versionCheck.getInputStream()));
         int version = Integer.parseInt(ir.readLine());
-        if (version < minVersion) {
-            String message = "ABS requires at least erlang version " + Integer.toString(minVersion) + ", installed version is " + Integer.toString(version);
+        return version;
+    }
+
+    public static void compile(Model m, File destDir, EnumSet<CompileOptions> options) throws IOException, InterruptedException, InternalBackendException {
+        int version = getErlangVersion();
+        if (version < minErlangVersion) {
+            String message = "ABS requires at least erlang version " + Integer.toString(minErlangVersion) + ", installed version is " + Integer.toString(version);
             throw new InternalBackendException(message);
         }
         ErlApp erlApp = new ErlApp(destDir);
@@ -116,6 +142,7 @@ public class ErlangBackend extends Main {
 	String[] rebarProgram = new String[] {"escript", "../bin/rebar", "compile"};
         Process p = Runtime.getRuntime().exec(rebarProgram, null, new File(destDir, "absmodel"));
         if (options.contains(CompileOptions.VERBOSE)) IOUtils.copy(p.getInputStream(), System.out);
+        else IOUtils.copy(p.getInputStream(), new NullOutputStream());
         p.waitFor();
         if (p.exitValue() != 0) {
             String message = "Compilation of generated erlang code failed with exit value " + p.exitValue();

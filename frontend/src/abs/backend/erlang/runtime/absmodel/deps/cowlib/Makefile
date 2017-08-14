@@ -2,17 +2,24 @@
 
 PROJECT = cowlib
 PROJECT_DESCRIPTION = Support library for manipulating Web protocols.
-PROJECT_VERSION = 1.3.0
+PROJECT_VERSION = 2.0.0-rc.1
 
 #ERLC_OPTS += +bin_opt_info
-OTP_DEPS = crypto
+ifdef HIPE
+	ERLC_OPTS += -smp +native
+	TEST_ERLC_OPTS += -smp +native
+endif
+
+LOCAL_DEPS = crypto
 DIALYZER_OPTS = -Werror_handling -Wunmatched_returns
-CI_OTP = OTP-18.0.3
+
+CI_OTP ?= OTP-19.0.7 OTP-19.1.6 OTP-19.2.3 OTP-19.3.6.1 OTP-20.0.1
+CI_HIPE ?= $(lastword $(CI_OTP))
+# CI_ERLLVM ?= $(CI_HIPE)
 
 TEST_ERLC_OPTS += +'{parse_transform, eunit_autoexport}' +'{parse_transform, horse_autoexport}'
-TEST_DEPS = horse triq
-dep_horse = git https://github.com/extend/horse master
-dep_triq = git https://github.com/krestenkrab/triq master
+TEST_DEPS = horse proper
+dep_horse = git https://github.com/ninenines/horse.git master
 
 include erlang.mk
 
@@ -48,5 +55,4 @@ ifeq ($(MAKECMDGOALS),perfs)
 endif
 
 perfs: test-build
-	$(gen_verbose) erl -noshell -pa ebin deps/horse/ebin \
-		-eval 'horse:app_perf($(PROJECT)), erlang:halt().'
+	$(gen_verbose) erl -noshell -pa ebin -eval 'horse:app_perf($(PROJECT)), erlang:halt().'

@@ -43,6 +43,41 @@ public class OtherAnalysisTests extends FrontendTest {
     }
 
     @Test
+    public void atomicTestFail1() {
+        // await / get in atomic method
+        assertParse("interface I {[Atomic] Unit n();} class C implements I {[Atomic] Unit n() {await this!n();}}",
+                    Config.TYPE_CHECK, Config.WITH_STD_LIB, Config.EXPECT_TYPE_ERROR);
+    }
+
+    @Test
+    public void atomicTestFail2() {
+        // suspend in atomic method
+        assertParse("interface I {[Atomic] Unit n();} class C implements I {[Atomic] Unit n() {suspend;}}",
+                    Config.TYPE_CHECK, Config.WITH_STD_LIB, Config.EXPECT_TYPE_ERROR);
+    }
+
+    @Test
+    public void atomicTestFail3() {
+        // synccall to non-atomic method
+        assertParse("interface I {Unit m(); [Atomic] Unit n();} class C implements I {Unit m() { skip; } [Atomic] Unit n() {this.m();}}",
+                    Config.TYPE_CHECK, Config.WITH_STD_LIB, Config.EXPECT_TYPE_ERROR);
+    }
+
+    @Test
+    public void atomicTestOk1() {
+        // synccall to atomic method
+        assertParse("interface I { [Atomic] Unit n();} class C implements I { [Atomic] Unit n() {this.n();}}",
+                    Config.TYPE_CHECK, Config.WITH_STD_LIB);
+    }
+
+    @Test
+    public void atomicTestOk2() {
+        // non-synccall to non-atomic method
+        assertParse("interface I {Unit m(); [Atomic] Unit n();} class C implements I {Unit m() { skip; } [Atomic] Unit n() {this!m();}}",
+                    Config.TYPE_CHECK, Config.WITH_STD_LIB);
+    }
+
+    @Test
     public void fullcopyTest() {
         Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
         Model m2 = m.treeCopyNoTransform();
@@ -70,29 +105,6 @@ public class OtherAnalysisTests extends FrontendTest {
         assertTrue(m2.typeCheck().toString(),!m2.typeCheck().containsErrors());
     }
 
-    @Test
-    public void parsetreecopyTest() {
-        Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
-
-        Model m2 = m.parseTreeCopy();
-        assertEquals(prettyPrint(m), prettyPrint(m2));
-        assertFalse(m.hasErrors());
-        assertFalse(m2.hasErrors());
-    }
-
-    @Test
-    public void parsetreecopyTest2() {
-        Model m = assertParseOk("module M; productline TestPL;" +
-        "features A, B, C; ",
-        Config.WITH_STD_LIB);
-
-
-        Model m2 = m.parseTreeCopy();
-        assertEquals(prettyPrint(m), prettyPrint(m2));
-        assertFalse(m.hasErrors());
-        assertFalse(m2.hasErrors());
-    }
-
     public static String prettyPrint(Model m2) {
         StringWriter writer = new StringWriter();
         PrintWriter w = new PrintWriter(writer);
@@ -104,11 +116,13 @@ public class OtherAnalysisTests extends FrontendTest {
     //@Test
     public void awaitTest2() {
         Model.doAACrewrite = true;
+        // FIXME: the code in this example is incorrect (no await statement in init block allowed)
         Model m = assertParseOk("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!m(Unit());}}");
         assertFalse(m.hasErrors());
         final String p1 = prettyPrint(m);
         Model.doAACrewrite = false;
         // Model m2 = assertParseOk("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
+        // FIXME: the code in this example is incorrect (no await statement in init block allowed)
         Model m2 = assertParseOk("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!m(Unit());}}");
         assertFalse(m2.hasErrors());
         assertEquals(p1, prettyPrint(m2));
@@ -117,10 +131,12 @@ public class OtherAnalysisTests extends FrontendTest {
     //@Test
     public void awaitTest3() {
         Model.doAACrewrite = true;
+        // FIXME: the code in this example is incorrect (no await statement in init block allowed)
         Model m = assertParseOk("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!n(Unit());}}");
         assertFalse(m.hasErrors());
         final String p1 = prettyPrint(m);
         Model.doAACrewrite = false;
+        // FIXME: the code in this example is incorrect (no await statement in init block allowed)
         Model m2 = assertParseOk("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!n(Unit());}}");
         assertFalse(m2.hasErrors());
         assertEquals(p1, prettyPrint(m2));
@@ -128,6 +144,7 @@ public class OtherAnalysisTests extends FrontendTest {
 
     @Test
     public void testContext1() {
+        // FIXME: the code in this example is incorrect (no await statement in init block allowed)
         Model m = assertParseOk("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
         ClassDecl cd = (ClassDecl) m.lookupModule("UnitTest").getDecl(2);
         AwaitAsyncCall n = (AwaitAsyncCall) down(cd);
@@ -136,6 +153,7 @@ public class OtherAnalysisTests extends FrontendTest {
 
     @Test
     public void testContext2() {
+        // FIXME: the code in this example is incorrect (no await statement in init block allowed)
         Model m = assertParseOk("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
         ClassDecl cd = (ClassDecl) m.lookupModule("UnitTest").getDecl(2);
         AwaitAsyncCall n = (AwaitAsyncCall) down(cd);
@@ -192,9 +210,8 @@ public class OtherAnalysisTests extends FrontendTest {
     @Test
     public void awaitRewriteDecl2() throws Exception {
         String deltaDecl = "delta D; modifies class C { adds Unit m() { return await this!m();}}";
-        CompilationUnit u = new ABSParserWrapper(null, true, false)
-            .parse(new StringReader(deltaDecl));
-        DeltaDecl d = u.getDeltaDecl(0);
+        Model m = assertParseOk(deltaDecl);
+        DeltaDecl d = m.findDelta("D");
         AwaitAsyncCall a = (AwaitAsyncCall) down(d);
         assertNotNull(a); // pity, would like this to work.
     }

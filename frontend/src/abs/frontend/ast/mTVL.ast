@@ -3,9 +3,6 @@
 /// mTVL - root and extension ///
 /////////////////////////////////
 
-// If you add classes here, add them to
-// frontend/src/abs/frontend/treecopy/ParseTreeCopy.jadd as well
-
 // TODO: remove FeatureModelDecl when removing beaver parser, antlr doesn't need it
 FeatureModelDecl ::= FeatureDecl* FExt*;
 

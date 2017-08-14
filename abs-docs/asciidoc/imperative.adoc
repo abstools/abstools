@@ -19,6 +19,7 @@ This chapter specifies all ABS statements.
 {vbar} _IfStmt_
 {vbar} _CaseStmt_
 {vbar} _WhileStmt_
+{vbar} _ForeachStmt_
 {vbar} _TryCatchFinallyStmt_
 |====
 
@@ -65,6 +66,24 @@ initialized with `null` if the initialization expression is omitted.
 ----
 Bool b = True;
 ----
+
+==== Constant Declarations
+
+Variable and field declarations can carry a `Final` annotation.  the effect of
+such an annotation is to forbid re-assignment to such variables.
+
+The following example will lead to a compile-time error since we are trying to
+assign a new value to `constant_i`:
+
+[source]
+.Example
+----
+{
+    [Final] Int constant_i = 24;
+    constant_i = 25;
+}
+----
+
 
 
 === Variable Assignment
@@ -359,6 +378,28 @@ condition is re-evaluated after each iteration of the loop.
 ----
 while (x < 5) {
   x = x + 1;
+}
+----
+
+=== The Foreach Loop
+
+The foreach loop repeatedly executes its body with the loop variable bound to
+each element of the given list, in sequence.  The rules for the loop variable
+follow the rules of local variable declarations in blocks: the loop variable
+cannot shadow an existing variable, but can use the same name as an object
+field.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _ForeachStmt_ ::= | `foreach` `(` _Identifier_ ` `in` _PureExp_ `)` _Stmt_
+|====
+
+[source]
+.Example
+----
+foreach (i in list[1, 2, 3]) {
+  println("i = " + toString(i));
 }
 ----
 

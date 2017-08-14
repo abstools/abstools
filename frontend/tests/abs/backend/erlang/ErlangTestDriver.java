@@ -11,8 +11,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.util.regex.Matcher;
 import java.util.EnumSet;
 
 import org.apache.commons.io.FileUtils;
@@ -23,6 +21,7 @@ import abs.ABSTest;
 import abs.backend.BackendTestDriver;
 import abs.backend.common.InternalBackendException;
 import abs.backend.common.SemanticTests;
+import abs.backend.erlang.ErlangBackend;
 import abs.frontend.ast.*;
 
 import com.google.common.io.Files;
@@ -39,19 +38,9 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         String doAbs = System.getProperty("abs.junit.erlang");
         Assume.assumeFalse("Erlang tests disabled via -Dabs.junit.erlang", "0".equals(doAbs));
         if (SemanticTests.checkProg("erl")) {
-            // http://stackoverflow.com/a/9561398/60462
-            ProcessBuilder pb = new ProcessBuilder("erl", "-eval", "erlang:display(erlang:system_info(otp_release)), halt().",  "-noshell");
             try {
-                Process p = pb.start();
-                InputStreamReader r = new InputStreamReader(p.getInputStream());
-                BufferedReader b = new BufferedReader(r);
-                Assert.assertEquals(0, p.waitFor());
-                String version = b.readLine();
-                java.util.regex.Pattern pat = java.util.regex.Pattern.compile("\"(\\d*).*");
-                Matcher m = pat.matcher(version);
-                Assert.assertTrue("Could not identify Erlang version: "+version, m.matches());
-                String v = m.group(1);
-                Assume.assumeTrue("Need Erlang R17 or better.",Integer.parseInt(v) >= 17);
+                Assume.assumeTrue("Need Erlang R" + Integer.toString(ErlangBackend.minErlangVersion) + " or later.",
+                                  ErlangBackend.getErlangVersion() >= ErlangBackend.minErlangVersion);
             } catch (IOException e) {
                 return false;
             } catch (InterruptedException e) {
@@ -92,7 +81,6 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             f.deleteOnExit();
             Model model = assertParseOk(absCode, Config.WITH_STD_LIB, Config.TYPE_CHECK, /* XXX:CI Config.WITH_LOC_INF, */ Config.WITHOUT_MODULE_NAME);
             String mainModule = genCode(model, f, true);
-            make(f);
             return run(f, mainModule);
         } finally {
             try {
@@ -109,7 +97,6 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             f = Files.createTempDir();
             f.deleteOnExit();
             genCode(model, f, false);
-            make(f);
         } finally {
             try {
                 FileUtils.deleteDirectory(f);
@@ -157,18 +144,6 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     }
 
     /**
-     * Complies code in workDir
-     */
-    private void make(File workDir) throws Exception {
-        ProcessBuilder pb = new ProcessBuilder("erl", "-pa", "ebin", "-noshell", "-noinput", "-eval",
-                "case make:all() of up_to_date -> halt(0); _ -> halt(1) end.");
-        pb.directory(workDir);
-        pb.inheritIO();
-        Process p = pb.start();
-        Assert.assertEquals("Compile failed", 0, p.waitFor());
-    }
-
-     /**
      * Executes mainModule
      *
      * To detect faults, we have a Timeout process which will kill the
@@ -208,7 +183,6 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             f = Files.createTempDir();
             f.deleteOnExit();
             String mainModule = genCode(model, f, true);
-            make(f);
             assertEquals("True",run(f, mainModule));
         } finally {
             try {

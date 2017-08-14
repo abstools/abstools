@@ -1,0 +1,9 @@
+module BackendTest;
+
+{
+    Bool testresult = True;
+    List<Int> l = list[];
+    foreach (elem in l) {
+        testresult = False;
+    }
+}

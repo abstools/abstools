@@ -14,7 +14,11 @@ public final class UnknownType extends Type {
     public boolean equals(Object o) {
         return o instanceof UnknownType;
     }
-    
+
+    public int hashCode() {
+        return 42;
+    }
+
     @Override
     public boolean isUnknownType() {
         return true;

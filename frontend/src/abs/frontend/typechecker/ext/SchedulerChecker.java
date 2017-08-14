@@ -116,6 +116,10 @@ public class SchedulerChecker extends DefaultTypeSystemExtension {
                 }
             }
         }
+        if (class_decl.getType().isDeploymentComponentType()) {
+            errors.add(new TypeError(loc, ErrorMessage.SCHEDULER_ON_DC,
+                                     "dummy"));
+        }
     }
 
     @Override

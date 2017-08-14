@@ -1,9 +1,10 @@
-module Test;
-class Test {}
+module Test.Use;
+
 {}
+
 delta Use;
 uses Test;
- modifies class Test {
+modifies class Test {
  adds Unit setX() {
    x = null;
 }

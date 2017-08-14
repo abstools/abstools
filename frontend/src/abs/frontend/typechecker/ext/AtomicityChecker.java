@@ -12,6 +12,7 @@ import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.AwaitStmt;
+import abs.frontend.ast.AwaitAsyncCall;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.GetExp;
 import abs.frontend.ast.MethodImpl;
@@ -44,7 +45,7 @@ public class AtomicityChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkGetExp(GetExp e) {
-        ensureNonAtomic(e,e.getContextMethod(),"a suspend statement");
+        ensureNonAtomic(e,e.getContextMethod(),"a blocking get expression");
     }
     
     @Override
@@ -52,8 +53,13 @@ public class AtomicityChecker extends DefaultTypeSystemExtension {
         if (!call.isAsync()) {
             MethodSig sig = call.getMethodSig();
             if (!isAtomic(sig.getAnnotations())) {
-                ensureNonAtomic(call, call.getContextMethod(), "a synchronous call of a non-atomic method");
+                ensureNonAtomic(call, call.getContextMethod(), "a synchronous call to non-atomic method " + sig.getName());
             }
+        } else if (call instanceof AwaitAsyncCall) {
+            // This is for the case when AwaitAsyncCall rewriting is turned
+            // off (e.g., in the Maude backend); otherwise, this case is
+            // caught by the `await' and `get' changes elsewhere in this file.
+            ensureNonAtomic(call, call.getContextMethod(), "an await expression");
         }
     }
     

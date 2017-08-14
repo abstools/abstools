@@ -62,7 +62,11 @@ aspect FnAppContext {
 
     inh boolean VarUse.isVarUseContextImperative(VarUse v);
     inh boolean LetExp.isVarUseContextImperative(VarUse v);
+    inh boolean ParamDecl.isVarUseContextImperative(VarUse v);
     inh boolean Block.isVarUseContextImperative(VarUse v);
+    inh boolean VarDecl.isVarUseContextImperative(VarUse v);
+    inh boolean FieldDecl.isVarUseContextImperative(VarUse v);
+    inh boolean Annotation.isVarUseContextImperative(VarUse v);
     inh boolean CaseBranchStmt.isVarUseContextImperative(VarUse v);
     inh boolean CaseBranch.isVarUseContextImperative(VarUse v);
     eq Block.getChild().isVarUseContextImperative(VarUse v) {
@@ -72,10 +76,31 @@ aspect FnAppContext {
         return isVarUseContextImperative(v);
     }
     eq ClassDecl.getChild().isVarUseContextImperative(VarUse v) = true;
+    eq InterfaceDecl.getChild().isVarUseContextImperative(VarUse v) = true;
+    eq VarDecl.getChild().isVarUseContextImperative(VarUse v) {
+        if (getName().equals(v.getName())) return true;
+        else return isVarUseContextImperative(v);
+    }
+    eq FieldDecl.getChild().isVarUseContextImperative(VarUse v) {
+        if (getName().equals(v.getName())) return true;
+        else return isVarUseContextImperative(v);
+    }
+    eq ExceptionDecl.getChild().isVarUseContextImperative(VarUse v) = false;
+    eq DataConstructor.getChild().isVarUseContextImperative(VarUse v) = false;
+    eq TypeSynDecl.getChild().isVarUseContextImperative(VarUse v) = false;
+    eq DataTypeDecl.getChild().isVarUseContextImperative(VarUse v) = false;
+    eq MethodSig.getChild().isVarUseContextImperative(VarUse v) = true;
+    eq MethodImpl.getBlock().isVarUseContextImperative(VarUse v) = true;
+    // neither/nor: variables in annotations are not evaluated - check
+    // surrounding context for variable of the same name
+    eq Annotation.getChild().isVarUseContextImperative(VarUse v) = isVarUseContextImperative(v);
+    // parameters can be in either context
+    eq ParamDecl.getChild().isVarUseContextImperative(VarUse v) = isVarUseContextImperative(v);
     eq UpdateDecl.getChild().isVarUseContextImperative(VarUse v) = true;
     eq DeltaDecl.getChild().isVarUseContextImperative(VarUse v) = true;
-
+    eq ModuleDecl.getBlock().isVarUseContextImperative(VarUse v) = true;
     eq FunctionDecl.getChild().isVarUseContextImperative(VarUse v) = false;
+
     eq LetExp.getChild().isVarUseContextImperative(VarUse v) {
         if (v.getDecl().equals(getVar())) return false;
         else return isVarUseContextImperative(v);
@@ -101,6 +126,7 @@ aspect FnAppContext {
     syn boolean ParamDecl.isParamDeclImperative() = isParamDeclImperative(this);
     inh boolean ParamDecl.isParamDeclImperative(ParamDecl p);
     inh boolean LetExp.isParamDeclImperative(ParamDecl p);
+    inh boolean Annotation.isParamDeclImperative(ParamDecl p);
     inh boolean CaseBranchStmt.isParamDeclImperative(ParamDecl p);
     inh boolean CaseBranch.isParamDeclImperative(ParamDecl p);
     eq LetExp.getVar().isParamDeclImperative(ParamDecl p) {
@@ -123,6 +149,25 @@ aspect FnAppContext {
         // The only declarations in enclosing contexts are field declarations
         // in classes, which are always imperative
         return true;
+    }
+    eq MethodSig.getChild().isParamDeclImperative(ParamDecl p) {
+        return true;
+    }
+    eq HasField.getFieldDecl().isParamDeclImperative(ParamDecl p) {
+        return true;
+    }
+    eq DeltaFieldParam.getChild().isParamDeclImperative(ParamDecl p) {
+        return true;
+    }
+    eq MethodModifier.getChild().isParamDeclImperative(ParamDecl p) {
+        return true;
+    }
+    eq ModifyClassModifier.getChild().isParamDeclImperative(ParamDecl p) {
+        return true;
+    }
+    eq Annotation.getChild().isParamDeclImperative(ParamDecl p) {
+        // neither/nor: annotations are not evaluated
+        return isParamDeclImperative(p);
     }
     eq FunctionDecl.getChild().isParamDeclImperative(ParamDecl p) {
         // Function declarations are always top-level; we could check that p

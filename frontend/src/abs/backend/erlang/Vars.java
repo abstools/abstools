@@ -88,6 +88,15 @@ public class Vars extends LinkedHashMap<String, Var> {
     }
 
     /**
+     * Introduces a new variable from a plain name and ignores if it overloads
+     * a previous one (used in annotations)
+     */
+    public String nVFromStringIgnoreOverload(String name) {
+        put(name, new Var(false));
+        return get(name);
+    }
+
+    /**
      * Increase counter of variable
      */
     public String inc(String name) {

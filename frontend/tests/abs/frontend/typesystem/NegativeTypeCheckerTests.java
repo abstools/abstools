@@ -62,39 +62,42 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
-    public void parametericDataTypesOK() {
+    public void parametricDataTypesOK() {
         assertTypeOK("interface I {} interface J extends I {} data Foo<A> = Bar(A); { J j; Foo<I> f = Bar(j); }");
     }
 
     @Test
-    public void parametericDataTypeNoTypeArgs() {
+    public void parametricDataTypeNoTypeArgs() {
         assertTypeErrors("data Foo<A> = Bar(A) | Nul; { Foo f = Nul; }");
     }
     
     
     @Test
-    public void parametericDataTypeNoTypeArgs2() {
+    public void parametricDataTypeNoTypeArgs2() {
         assertTypeErrors("class Test { { Pair p = Pair(5,Pair(4,5)); } }");
     }
 
     @Test
-    public void parametericDataTypeNoTypeArgs3() {
+    public void parametricDataTypeNoTypeArgs3() {
         assertTypeOK("type Euro = Int; type Cent = Int; type Money = Pair<Euro,Cent>;"
                 + "def Money createMoney(Euro e, Cent c) = Pair(e,c); ");
     }
     
     @Test
-    public void parametericDataTypeNoTypeArgs4() {
+    public void parametricDataTypeNoTypeArgs4() {
         assertTypeErrors("data Foo<A> = Bar(A) | Nul; type Foo2 = Foo; { Foo2 f = Nul; }");
     }
 
     @Test
-    public void parametericDataTypeIndirect() {
+    public void parametricDataTypeIndirect() {
         assertTypeErrors("data Foo<A> = Bar(A); type Foo2 = Foo<String>; { Foo2 f = Bar(2); }");
     }
 
-    
-    
+    @Test
+    public void parametricDataTypeShadowingParameter() {
+        assertTypeErrors("data Foo<Int> = Bar(Int);");
+    }
+
     @Test
     public void testClassError() {
         assertTypeErrors("interface I {} interface J{} class C implements J {} { I i; i = new local C(); }");
@@ -322,6 +325,11 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     @Test
     public void caseErrorDuplicateFunctionTypeParameter() {
         assertTypeErrors("def A f<A,A>(A a) = a;");
+    }
+
+    @Test
+    public void parametricFunctionTypeShadowingParameter() {
+        assertTypeErrors("def A f<A,Int>(A a) = a;");
     }
 
     public void caseErrorDuplicateDatatypeTypeParameter() {

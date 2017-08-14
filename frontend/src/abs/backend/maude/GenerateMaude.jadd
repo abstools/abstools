@@ -649,12 +649,15 @@ aspect GenerateMaude {
         stream.print("> ");
     }
 
-    abstract public void Stmt.generateMaude(PrintStream stream);
+    public void Stmt.generateMaude(PrintStream stream) {
+        stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
+        throw new NotImplementedYetException(this);
+    }
 
     public void IncompleteStmt.generateMaude(PrintStream stream) {
         // ignore
     }
-    
+
     public void VarDeclStmt.generateMaude(PrintStream stream) {
         // HACK FIXME: this should be an attribute
         boolean inMainBlock = getParent().getParent() instanceof MainBlock

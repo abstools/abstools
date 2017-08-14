@@ -30,11 +30,10 @@ public class ParseSamplesTest extends FrontendTest {
                                                , { "examples/SmartHome/abs/" , "FireAlarm" }
                                                , { "examples/SmartHome/abs/" , "Test" }
                                                , { "examples/chatPL/" , null }
-                                               , { "examples/chatPL/" , "HighEnd" }
+                                               //, { "examples/chatPL/" , "HighEnd" } // invalid in HATS repository too (missing class definitions)
                                                , { "examples/chatPL/" , "LowEnd" }
-                                               , { "examples/chatPL/" , "Regular" }
+                                               //, { "examples/chatPL/" , "Regular" } // invalid in HATS repository too (missing class definitions)
                                                , { "tests/abssamples/RandomBool.abs" , null}
-                                               , { "tests/abssamples/LexicalTest.abs", null}
                                                , { "tests/abssamples/ReplicationSystem.abs" , null}
                                                , { "tests/abssamples/10wikipediadocstokenized.abs" , null}                                               
         };

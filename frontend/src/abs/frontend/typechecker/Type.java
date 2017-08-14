@@ -212,10 +212,7 @@ public abstract class Type {
         return true;
     }
 
-    public int hashCode() {
-        assert false : "hashCode not designed:"+this;
-        return 42; // any arbitrary constant will do
-        }
+    public abstract int hashCode();
 
     public boolean isBoundedType() {
         return false;

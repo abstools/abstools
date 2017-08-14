@@ -32,7 +32,7 @@ aspect ProductLineTypeAnalysis {
             return Collections.emptySet();
 
         // FIXME Once dropped, you cannot get attibutes back
-        dropAttributes(); // Features ONLY
+        //dropAttributes(); // Features ONLY
         ChocoSolver solver = instantiateCSModel();
 
         // Each configuration is represented as a map: FeatureName->Value

@@ -40,11 +40,11 @@ public class PrologBackend extends Main {
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
         } catch (Exception e) {
-            if (Arrays.asList(args).contains("-v")) {
-                System.err.println("An error occurred during compilation:\n" + e.getMessage());
+            System.err.println("An error occurred during compilation:\n" + e.getMessage());
+            if (prologBE != null && prologBE.debug) {
                 e.printStackTrace();
             }
-            //System.exit(1);
+            System.exit(1);
         } finally {
             if (prologBE != null && prologBE.outStream != null) prologBE.outStream.close();
         }

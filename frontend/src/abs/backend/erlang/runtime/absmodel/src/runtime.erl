@@ -1,5 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(runtime).
+-include_lib("abs_types.hrl").
+
 %% Starts execution of a module
 %% start or run accept commandline arguments
 -behaviour(supervisor).
@@ -103,7 +105,7 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
 
     %%Start main task
     Cog=cog:start(),
-    {ok, cog:add_and_notify(Cog,main_task,[Module,self()])}.
+    {ok, cog:add_and_notify(Cog,main_task,[Module,self()], #process_info{method= <<".main"/utf8>>})}.
 
 end_mod(TaskRef, InfluxdbEnabled) ->
     %%Wait for termination of main task and idle state

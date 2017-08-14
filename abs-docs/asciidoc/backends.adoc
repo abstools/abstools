@@ -30,6 +30,12 @@ code from ABS.
 | -
 | -
 
+| User-defined Schedulers
+| yes
+| partial
+| -
+| -
+
 | Resource Models
 | yes
 | yes

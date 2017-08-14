@@ -20,7 +20,11 @@ public final class NullType extends ReferenceType {
     public boolean equals(Object o) {
         return o instanceof NullType;
     }
-    
+
+    public int hashCode() {
+        return 42;
+    }
+
     @Override
     public boolean isAssignableTo(Type t) {
         if (super.isAssignableTo(t))

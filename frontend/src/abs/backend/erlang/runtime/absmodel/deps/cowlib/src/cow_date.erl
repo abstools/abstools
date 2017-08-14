@@ -15,10 +15,12 @@
 -module(cow_date).
 
 -export([parse_date/1]).
+-export([rfc1123/1]).
 -export([rfc2109/1]).
+-export([rfc7231/1]).
 
 -ifdef(TEST).
--include_lib("triq/include/triq.hrl").
+-include_lib("proper/include/proper.hrl").
 -endif.
 
 %% @doc Parse the HTTP date (IMF-fixdate, rfc850, asctime).
@@ -141,12 +143,12 @@ asctime_day(D1, D2) -> (D1 - $0) * 10 + (D2 - $0).
 -ifdef(TEST).
 day_name() -> oneof(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]).
 day_name_l() -> oneof(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]).
-year() -> int(1951, 2050).
-month() -> int(1, 12).
-day() -> int(1, 31).
-hour() -> int(23).
-minute() -> int(59).
-second() -> int(60).
+year() -> integer(1951, 2050).
+month() -> integer(1, 12).
+day() -> integer(1, 31).
+hour() -> integer(0, 23).
+minute() -> integer(0, 59).
+second() -> integer(0, 60).
 
 fixdate_gen() ->
 	?LET({DayName, Y, Mo, D, H, Mi, S},
@@ -199,6 +201,12 @@ horse_http_date_asctime() ->
 	).
 -endif.
 
+%% @doc Return the date formatted according to RFC1123.
+
+-spec rfc1123(calendar:datetime()) -> binary().
+rfc1123(DateTime) ->
+	rfc7231(DateTime).
+
 %% @doc Return the date formatted according to RFC2109.
 
 -spec rfc2109(calendar:datetime()) -> binary().
@@ -220,19 +228,56 @@ rfc2109_test_() ->
 	],
 	[{R, fun() -> R = rfc2109(D) end} || {R, D} <- Tests].
 
-horse_rfc2019_20130101_000000() ->
+horse_rfc2109_20130101_000000() ->
 	horse:repeat(100000,
 		rfc2109({{2013, 1, 1}, {0, 0, 0}})
 	).
 
-horse_rfc2019_20131231_235959() ->
+horse_rfc2109_20131231_235959() ->
 	horse:repeat(100000,
 		rfc2109({{2013, 12, 31}, {23, 59, 59}})
 	).
 
-horse_rfc2019_12340506_070809() ->
+horse_rfc2109_12340506_070809() ->
 	horse:repeat(100000,
 		rfc2109({{1234, 5, 6}, {7, 8, 9}})
+	).
+-endif.
+
+%% @doc Return the date formatted according to RFC7231.
+
+-spec rfc7231(calendar:datetime()) -> binary().
+rfc7231({Date = {Y, Mo, D}, {H, Mi, S}}) ->
+	Wday = calendar:day_of_the_week(Date),
+	<<	(weekday(Wday))/binary, ", ",
+		(pad_int(D))/binary, " ",
+		(month(Mo))/binary, " ",
+		(year(Y))/binary, " ",
+		(pad_int(H))/binary, ":",
+		(pad_int(Mi))/binary, ":",
+		(pad_int(S))/binary, " GMT" >>.
+
+-ifdef(TEST).
+rfc7231_test_() ->
+	Tests = [
+		{<<"Sat, 14 May 2011 14:25:33 GMT">>, {{2011, 5, 14}, {14, 25, 33}}},
+		{<<"Sun, 01 Jan 2012 00:00:00 GMT">>, {{2012, 1,  1}, { 0,  0,  0}}}
+	],
+	[{R, fun() -> R = rfc7231(D) end} || {R, D} <- Tests].
+
+horse_rfc7231_20130101_000000() ->
+	horse:repeat(100000,
+		rfc7231({{2013, 1, 1}, {0, 0, 0}})
+	).
+
+horse_rfc7231_20131231_235959() ->
+	horse:repeat(100000,
+		rfc7231({{2013, 12, 31}, {23, 59, 59}})
+	).
+
+horse_rfc7231_12340506_070809() ->
+	horse:repeat(100000,
+		rfc7231({{1234, 5, 6}, {7, 8, 9}})
 	).
 -endif.
 

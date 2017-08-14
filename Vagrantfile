@@ -66,6 +66,8 @@ MSG
 echo
 echo "Installing necessary tools for the ABS compiler"
 echo
+sudo wget -nv https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
+sudo dpkg -i erlang-solutions_1.0_all.deb && sudo rm erlang-solutions_1.0_all.deb
 sudo apt-get update -y -q
 sudo apt-get -y -q install software-properties-common htop
 sudo apt-get -y -q install default-jre default-jdk ant antlr junit git unzip erlang

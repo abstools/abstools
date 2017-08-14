@@ -16,7 +16,7 @@ public class NotImplementedYetException extends RuntimeException {
     }
 
     public NotImplementedYetException(ASTNode node) {
-        super(messagePrefix(node) + "The AST element " + node.getClass() + " is not implemented yet");
+        super(messagePrefix(node) + "The AST " + node.getClass() + " is not implemented yet");
     }
 
     public NotImplementedYetException(ASTNode node, String message) {

@@ -100,13 +100,24 @@ aspect DeltaParameterSubstitution {
         for (int i = 0; i < dparams.getNumChild(); i++)
             subst.put(getParam(i).getName(), dparams.getChildNoTransform(i).calcValue(features));
 
-        //System.out.println("## collected subst [" + getName() + "]: " + subst);
+        if (getModel().verbose) System.err.println("--- applying delta parameters [" + getName() + "]: " + subst);
 
         for (ModuleModifier mod : getModuleModifiers()) {
             mod.applySubstitution(subst);
         }
     }
 
+
+    abstract protected void ModuleModifier.applySubstitution(Map<String,Value> subst);
+
+    // Nothing to substitute in the data type part
+    protected void DataTypeModifier.applySubstitution(Map<String,Value> subst) {}
+    protected void NamespaceModifier.applySubstitution(Map<String,Value> subst) {}
+    protected void TypeSynModifier.applySubstitution(Map<String,Value> subst) {}
+
+    protected void FunctionModifier.applySubstitution(Map<String,Value> subst) {
+        // TODO: should we substitute delta parameters in function bodies?
+    }
 
     // apply a substitution to OOModifier
     abstract protected void OOModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException;
@@ -123,10 +134,9 @@ aspect DeltaParameterSubstitution {
     protected void RemoveInterfaceModifier.applySubstitution(Map<String,Value> subst) {}
     protected void ModifyInterfaceModifier.applySubstitution(Map<String,Value> subst) {}
 
-    // TODO apply substitution to FunctionalModifier
-
     // apply a substitution to Modifier
     abstract protected void Modifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException;
+    abstract protected void TraitExpr.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException;
 
     protected void AddFieldModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
         getFieldDecl().applySubstitution(subst);
@@ -188,8 +198,8 @@ aspect DeltaParameterSubstitution {
     */
     @Override
     protected void VarOrFieldUse.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
-        //System.out.println("%%% Substituting value " + getName());
-        //System.out.println("%%% using subst: " + subst);
+        // if (getModel().verbose) System.err.println("%%% Substituting value " + getName());
+        // if (getModel().verbose) System.err.println("%%% using subst: " + subst);
         Value v = subst.get(getName());
         if (v != null) {
             // TODO: Maven is a bit particular about the generic type here:
@@ -199,7 +209,7 @@ aspect DeltaParameterSubstitution {
             if (p instanceof AssignStmt && i == 1) 
               throw new DeltaModellingWithNodeException(this, "You're substituting the LHS of an assignment?!");
             p.setChild(v.calcExpr(), i);
-            //System.out.println("%%% assigning " + v.calcExpr());
+            // if (getModel().verbose) System.err.println("%%% assigning " + v.calcExpr());
         }
 
     }
@@ -227,16 +237,30 @@ aspect DeltaParameterSubstitution {
             getChild(i).applySubstitution(subst);
         }
     }
-    
+
     //trait
-    
+
     @Override
-    protected void DeltaTraitModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {}
-    protected void AddMethodModifier.applySubstitution(Map<String,Value> subst) {}
-    protected void ModifyMethodModifier.applySubstitution(Map<String,Value> subst) {}
+    protected void DeltaTraitModifier.applySubstitution(Map<String,Value> subst) throws DeltaModellingWithNodeException {
+        getMethodModifier().applySubstitution(subst);
+    }
+    protected void AddMethodModifier.applySubstitution(Map<String,Value> subst) {
+        getTraitExpr().applySubstitution(subst);
+    }
+    protected void ModifyMethodModifier.applySubstitution(Map<String,Value> subst) {
+        getTraitExpr().applySubstitution(subst);
+    }
     protected void RemoveMethodModifier.applySubstitution(Map<String,Value> subst) {}
     protected void TraitUse.applySubstitution(Map<String,Value> subst) {}
 
-
-
+    protected void TraitNameExpr.applySubstitution(Map<String,Value> subst) {}
+    protected void TraitSetExpr.applySubstitution(Map<String,Value> subst) {
+        for (MethodImpl i : getMethodImpls()) {
+            i.applySubstitution(subst);
+        }
+    }
+    protected void TraitModifyExpr.applySubstitution(Map<String,Value> subst) {
+        getTraitExpr().applySubstitution(subst);
+        getMethodModifier().applySubstitution(subst);
+    }
 }

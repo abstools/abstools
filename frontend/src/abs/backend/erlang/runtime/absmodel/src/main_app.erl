@@ -14,8 +14,10 @@ start(_StartType, _StartArgs) ->
                                         {"/:request/[...]", modelapi, []}]}]),
     {ok, Port} = application:get_env(absmodel, port),
     {ok, Clocklimit} = application:get_env(absmodel, clocklimit),
-    case cowboy:start_http(http, 100, [{port, Port}],
-                                [{env, [{dispatch, Dispatch}]}]) of
+    %% In case we need a random port, see example at bottom of
+    %% https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy.start_clear/
+    case cowboy:start_clear(http, [{port, Port}],
+                            #{env => #{dispatch => Dispatch}}) of
         {ok, _} -> io:format(standard_error, "Starting server on port ~w, abort with Ctrl-C~n", [Port]);
         _ -> io:format("Failed to start model API on port ~w (is another model already running?)~nAborting~n", [Port]),
              halt(1)
