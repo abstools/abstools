@@ -8,10 +8,6 @@ import org.junit.Test;
 
 public class ParFnAppTest extends PardefTest {
 
-    private FnApp expandFunction(Model model, String expandedName) {
-        return getCall(expand(model), expandedName);
-    }
-
     private FnApp assertHasCall(Model model, String expectedName) {
         FnApp result = getCall(model, expectedName);
         String errorMessage = "No expanded function call with name " + expectedName + " created"
@@ -207,6 +203,22 @@ public class ParFnAppTest extends PardefTest {
     public void anonymousTooFewArgs() {
         expand(parse(
             "apply<Int, Int>(0)(() => i)",
+            applyFunction()
+        ));
+    }
+
+    @Test
+    public void anonymousSimpleClosure() {
+        testExpand(parse(
+            "Int x = 0; apply<Int, Int>(0)((Int i) => i + x)",
+            applyFunction()
+        ));
+    }
+
+    @Test
+    public void anonymousNestedClosure() {
+        testExpand(parse(
+            "Int x = 0; apply<Int, Int>(0)((Int i) => apply<Int, Int>(i)((Int j) => j + x))",
             applyFunction()
         ));
     }
