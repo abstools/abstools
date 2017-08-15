@@ -83,11 +83,13 @@ aspect ParFnAppParam {
         }
     }
 
-    syn lazy int PureExp.getExpId() {
-        // TODO this can cause collisions. Should create actual IDs.
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        this.doPrettyPrint(pw, new DefaultABSFormatter(pw));
-        return sw.toString().hashCode();
+    syn lazy String PureExp.getExpId() {
+          // TODO this can cause collisions. Should create actual IDs.
+          StringWriter sw = new StringWriter();
+          PrintWriter pw = new PrintWriter(sw);
+          this.doPrettyPrint(pw, new DefaultABSFormatter(pw));
+          long hashCode = sw.toString().hashCode();
+          // avoid negative numbers
+          return Long.toString(hashCode - Integer.MIN_VALUE);
     }
 }
