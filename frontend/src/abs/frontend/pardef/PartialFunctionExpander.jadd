@@ -12,21 +12,25 @@ aspect PartialFunctionExpander {
         }
     }
 
+    public PartialFunctionDecl ModuleDecl.getPartialFunction(String name) {
+        ResolvedName resolved = resolveName(new KindedName(Kind.PARTIAL_FUN, name));
+        return resolved == null ? null : (PartialFunctionDecl) resolved.getDecl();
+    }
+
     void ModuleDecl.expandPartialFunctions() {
-        Map<String, PartialFunctionDecl> functionByName = collectPartialFunctions();
+        java.util.List<PartialFunctionDecl> partialFunctions = TreeUtil.findChildren(getDecls(), PartialFunctionDecl.class);
 
         // check for cycles
-        for (PartialFunctionDecl function : functionByName.values()) {
-            function.checkCycles(functionByName);
+        for (PartialFunctionDecl function : partialFunctions) {
+            function.checkCycles(this);
         }
 
-        Map<String, ExpandedWrapper> expanded = new HashMap<>(functionByName.size() * 4);
+        Map<String, ExpandedWrapper> expanded = new HashMap<>(partialFunctions.size() * 4);
 
-        expandChildParFnApps(this, functionByName, expanded, 0);
+        expandChildParFnApps(this, expanded, 0);
     }
 
     private int ModuleDecl.expandChildParFnApps(ASTNode<?> node,
-        Map<String, PartialFunctionDecl> functions,
         Map<String, ExpandedWrapper> expanded,
         int expansionCount) {
         for (ParFnApp fnApp : TreeUtil.findChildren(node, ParFnApp.class)) {
@@ -40,7 +44,7 @@ aspect PartialFunctionExpander {
                 continue;
             }
 
-            PartialFunctionDecl function = functions.get(fnApp.getName());
+            PartialFunctionDecl function = getPartialFunction(fnApp.getName());
             if (function == null) {
                 throw new PardefModellingException(fnApp, ErrorMessage.FUNCTION_NOT_RESOLVABLE, fnApp.getName());
             }
@@ -57,7 +61,7 @@ aspect PartialFunctionExpander {
                 expanded.put(expandedName, expandedWrapper);
                 ++expansionCount;
 
-                expansionCount = expandChildParFnApps(expandedFunction, functions, expanded, expansionCount);
+                expansionCount = expandChildParFnApps(expandedFunction, expanded, expansionCount);
             } else {
                 function.checkValid(fnApp);
             }
@@ -69,45 +73,22 @@ aspect PartialFunctionExpander {
         return expansionCount;
     }
 
-    /**
-     * Collects all Pardefs declared in this module and returns a map from their names to their declarations.
-     * @return an unmodifiable map (functionName -> functionDeclaration), never null
-     */
-    private Map<String, PartialFunctionDecl> ModuleDecl.collectPartialFunctions() {
-        Map<String, PartialFunctionDecl> result = new HashMap<>(32);
-
-        for (Decl decl : getDecls()) {
-            if (decl instanceof PartialFunctionDecl) {
-                PartialFunctionDecl functionDecl = (PartialFunctionDecl) decl;
-                String functionName = functionDecl.getName();
-                if (result.containsKey(functionName)) {
-                    throw new PardefModellingException(
-                        ErrorMessage.DUPLICATE_FUN_NAME.withArgs(functionName, "")
-                    );
-                }
-                result.put(functionName, functionDecl);
-            }
-        }
-
-        return Collections.unmodifiableMap(result);
+    public void PartialFunctionDecl.checkCycles(ModuleDecl module) {
+        checkCycles(module, new HashSet<String>());
     }
 
-    public void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionDecl> functionByName) {
-        checkCycles(functionByName, new HashSet<String>());
-    }
-
-    private void PartialFunctionDecl.checkCycles(Map<String, PartialFunctionDecl> functionByName, Set<String> visited) {
+    private void PartialFunctionDecl.checkCycles(ModuleDecl module, Set<String> visited) {
         if (!visited.add(getName())) {
             throw new PardefCycleException(this);
         }
         for (ParFnApp parFnApp : TreeUtil.findChildren(this, ParFnApp.class)) {
-            PartialFunctionDecl called = functionByName.get(parFnApp.getName());
+            PartialFunctionDecl called = module.getPartialFunction(parFnApp.getName());
             if (called == null) {
                 // will be caught somewhere else
                 continue;
             }
             try {
-            called.checkCycles(functionByName, new HashSet<>(visited));
+                called.checkCycles(module, new HashSet<>(visited));
             } catch (PardefCycleException e) {
                 throw e.calledBy(this);
             }
