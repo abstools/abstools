@@ -53,7 +53,7 @@ qualified_identifier : (TYPE_IDENTIFIER '.')* IDENTIFIER ;
 // being exactly one token
 any_identifier : qualified_type_identifier | qualified_identifier ;
 // type_use has annotations
-type_use : annotation* n=qualified_type_identifier
+type_use : annotations n=qualified_type_identifier
         ('<' p+=type_use (',' p+=type_use)*  '>')? ;
 // type_exp does not have annotations (on the base type)
 // This is how we (seem to) disambiguate between annotations on
@@ -61,7 +61,7 @@ type_use : annotation* n=qualified_type_identifier
 type_exp : n=qualified_type_identifier
         ('<' p+=type_use (',' p+=type_use)*  '>')? ;
 paramlist : '(' (param_decl (',' param_decl)*)? ')' ;
-param_decl : annotation* type_exp IDENTIFIER ;
+param_decl : annotations type_exp IDENTIFIER ;
 
 interface_name : qualified_type_identifier ;
 delta_id : TYPE_IDENTIFIER ;
@@ -123,33 +123,35 @@ pure_exp_list : (pure_exp (',' pure_exp)*)? ;
 list_literal : '[' pure_exp (',' pure_exp)* ']' ;
 
 // Annotations
-annotation : '[' (l=type_use ':')? r=pure_exp ']' ;
+annotation : (l=type_use ':')? r=pure_exp ;
+
+annotations: ('[' al+=annotation (',' al+=annotation)* ']')* ;
 
 // Statements
 
-stmt : annotation* type_exp IDENTIFIER ('=' exp)? ';'              # VardeclStmt
-    | annotation* var_or_field_ref '=' exp ';'                     # AssignStmt
-    | annotation* 'skip' ';'                                       # SkipStmt
-    | annotation* 'return' exp ';'                                 # ReturnStmt
-    | annotation* 'assert' exp ';'                                 # AssertStmt
-    | annotation* '{' stmt* '}'                                    # BlockStmt
-    | annotation* 'if' '(' c=pure_exp ')' l=stmt ('else' r=stmt)?  # IfStmt
-    | annotation* 'while' '(' c=pure_exp ')' stmt                  # WhileStmt
-    | annotation* 'foreach' '(' i=IDENTIFIER 'in' l=pure_exp ')' stmt
+stmt : annotations type_exp IDENTIFIER ('=' exp)? ';'              # VardeclStmt
+    | annotations var_or_field_ref '=' exp ';'                     # AssignStmt
+    | annotations 'skip' ';'                                       # SkipStmt
+    | annotations 'return' exp ';'                                 # ReturnStmt
+    | annotations 'assert' exp ';'                                 # AssertStmt
+    | annotations '{' stmt* '}'                                    # BlockStmt
+    | annotations 'if' '(' c=pure_exp ')' l=stmt ('else' r=stmt)?  # IfStmt
+    | annotations 'while' '(' c=pure_exp ')' stmt                  # WhileStmt
+    | annotations 'foreach' '(' i=IDENTIFIER 'in' l=pure_exp ')' stmt
                                                                    # ForeachStmt
-    | annotation* 'try' b=stmt
+    | annotations 'try' b=stmt
         'catch' (('{' casestmtbranch* '}') | casestmtbranch)
         ('finally' f=stmt)?                                        # TryCatchFinallyStmt
-    | annotation* 'await' guard ';'                                # AwaitStmt
-    | annotation* 'suspend' ';'                                    # SuspendStmt
-    | annotation* 'duration' '(' f=pure_exp ',' t=pure_exp ')' ';' # DurationStmt
-    | annotation* 'throw' pure_exp ';'                             # ThrowStmt
-    | annotation* 'die' pure_exp ';'                               # DieStmt
-    | annotation* 'movecogto' pure_exp ';'                         # MoveCogToStmt
+    | annotations 'await' guard ';'                                # AwaitStmt
+    | annotations 'suspend' ';'                                    # SuspendStmt
+    | annotations 'duration' '(' f=pure_exp ',' t=pure_exp ')' ';' # DurationStmt
+    | annotations 'throw' pure_exp ';'                             # ThrowStmt
+    | annotations 'die' pure_exp ';'                               # DieStmt
+    | annotations 'movecogto' pure_exp ';'                         # MoveCogToStmt
         // TODO: rebind, subloc
-    | annotation* exp ';'                                          # ExpStmt
+    | annotations exp ';'                                          # ExpStmt
         // Prefer case expression to case statement, so case statement comes later
-    | annotation* 'case' c=pure_exp '{' casestmtbranch* '}'        # CaseStmt
+    | annotations 'case' c=pure_exp '{' casestmtbranch* '}'        # CaseStmt
         // case
     ;
 
@@ -165,7 +167,7 @@ casestmtbranch : pattern '=>' stmt ;
 // Datatypes
 
 datatype_decl :
-        annotation*
+        annotations
         'data' n=TYPE_IDENTIFIER
         ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
         ('=' c+=data_constructor ('|' c+=data_constructor)*)? ';' ;
@@ -177,18 +179,18 @@ data_constructor_arg : type_use IDENTIFIER? ;
 
 // Type synonyms
 
-typesyn_decl : annotation*
+typesyn_decl : annotations
         'type' TYPE_IDENTIFIER '=' type_use ';' ;
 
 // Exceptions
 
-exception_decl : annotation*
+exception_decl : annotations
         'exception' n=TYPE_IDENTIFIER
         ('(' a+=data_constructor_arg (',' a+=data_constructor_arg)* ')')? ';' ;
 
 // Functions
 
-function_decl : annotation*
+function_decl : annotations
         'def' type_use n=IDENTIFIER
         ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
         paramlist
@@ -197,17 +199,17 @@ function_decl : annotation*
 
 // Interfaces
 
-interface_decl : annotation*
+interface_decl : annotations
         'interface' TYPE_IDENTIFIER
         ('extends' e+=interface_name (',' e+=interface_name)*)?
         '{' methodsig* '}'
     ;
 
-methodsig : annotation* type_use IDENTIFIER paramlist ';' ;
+methodsig : annotations type_use IDENTIFIER paramlist ';' ;
 
 // Classes
 
-class_decl : annotation*
+class_decl : annotations
         'class' TYPE_IDENTIFIER paramlist?
         ('implements' interface_name (',' interface_name)*)?
         '{'
@@ -219,9 +221,9 @@ class_decl : annotation*
         '}'
     ;
 
-field_decl : annotation* type_use IDENTIFIER ('=' pure_exp)? ';' ;
+field_decl : annotations type_use IDENTIFIER ('=' pure_exp)? ';' ;
 
-method : annotation* type_use IDENTIFIER paramlist '{' stmt* '}' ;
+method : annotations type_use IDENTIFIER paramlist '{' stmt* '}' ;
 
 // Module declaration
 module_decl : 'module' qualified_type_identifier ';'
@@ -467,7 +469,7 @@ boundary_int : star='*' | boundary_val ;
 
 boundary_val : m='-'? i=INTLITERAL ;
 
-main_block : annotation* '{' stmt* '}' ;
+main_block : annotations '{' stmt* '}' ;
 
 compilation_unit : module_decl* delta_decl*
         update_decl*
