@@ -19,6 +19,7 @@ aspect TypeResolution {
     syn boolean Decl.isTypeParameter() = false;
     syn boolean Decl.isFuture() = false;
     syn boolean Decl.isException() = false;
+    syn boolean Decl.isPartialFunction() = false;
 
     eq ClassDecl.isClass() = true;
     eq FunctionDecl.isFunction() = true;
@@ -30,6 +31,7 @@ aspect TypeResolution {
     eq DataTypeDecl.isFuture() = getType().isFutureType();
     eq TypeSynDecl.isFuture() = getType().isFutureType();
     eq ExceptionDecl.isException() = true;
+    eq PartialFunctionDecl.isPartialFunction() = true;
 
     syn Boolean Name.isSimple() = getName().indexOf('.') == -1;
 
