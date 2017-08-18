@@ -83,13 +83,21 @@ aspect ParFnAppParam {
         }
     }
 
+    /**
+    * Stores the IDs for all pure expressions. Keys are the pretty-printed pure expressions.
+    */
+    static Map<String, String> PureExp.pureExpIds = new HashMap<>(256);
+
     syn lazy String PureExp.getExpId() {
-          // TODO this can cause collisions. Should create actual IDs.
-          StringWriter sw = new StringWriter();
-          PrintWriter pw = new PrintWriter(sw);
-          this.doPrettyPrint(pw, new DefaultABSFormatter(pw));
-          long hashCode = sw.toString().hashCode();
-          // avoid negative numbers
-          return Long.toString(hashCode - Integer.MIN_VALUE);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        this.doPrettyPrint(pw, new DefaultABSFormatter(pw));
+        String prettyPrinted = sw.toString();
+        String id = PureExp.pureExpIds.get(prettyPrinted);
+        if (id == null) {
+            id = Integer.toString(PureExp.pureExpIds.size());
+            PureExp.pureExpIds.put(prettyPrinted, id);
+        }
+        return id;
     }
 }
