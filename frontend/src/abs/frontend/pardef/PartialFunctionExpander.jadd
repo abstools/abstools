@@ -145,6 +145,7 @@ aspect PartialFunctionExpander {
 
         int funcParamCount = getNumFuncParam();
         Map<String, ParFnAppParamDecl> funcParamBindings = new HashMap<>(funcParamCount * 2);
+        java.util.List<AnonymousFunctionDecl> addedClosures = new LinkedList<>();
         for (int i = 0; i < funcParamCount; ++i) {
             String paramName = getFuncParam(i).getName();
             ParFnAppParamDecl binding = fnApp.getFuncParam(i);
@@ -152,7 +153,7 @@ aspect PartialFunctionExpander {
 
             if (binding instanceof AnonymousFunctionDecl) {
                 AnonymousFunctionDecl anon = (AnonymousFunctionDecl) binding;
-                anon.addClosureParams(expanded);
+                anon.addClosureParams(addedClosures, expanded);
             }
         }
         // enable recursion by replacing partial function name with expanded name
@@ -306,10 +307,11 @@ aspect PartialFunctionExpander {
             throw new IllegalStateException("ParFnApp.apply() called twice");
         }
 
+        java.util.List<AnonymousFunctionDecl> addedClosures = new LinkedList<>();
         for (ParFnAppParamDecl fnParam : getFuncParamsNoTransform()) {
             if (fnParam instanceof AnonymousFunctionDecl) {
                 AnonymousFunctionDecl anon = (AnonymousFunctionDecl) fnParam;
-                anon.addClosureParams(this);
+                anon.addClosureParams(addedClosures, this);
             }
         }
 

@@ -70,17 +70,35 @@ aspect ParFnAppParam {
         return name + "_" + getPureExpNoTransform().getExpId();
     }
 
-    public void AnonymousFunctionDecl.addClosureParams(FunctionDecl func) {
+    public void AnonymousFunctionDecl.addClosureParams(java.util.List<AnonymousFunctionDecl> added, FunctionDecl func) {
+        for (AnonymousFunctionDecl anon : added) {
+            if (anon.getPureExpNoTransform().getExpId().equals(this.getPureExpNoTransform().getExpId())) {
+                // Closure params for this pure expression were already added
+                return;
+            }
+        }
+
         List<ParamDecl> params = func.getParams();
         for (ParamDecl freeVar : getFreeVars().values()) {
             params.add(freeVar.treeCopyNoTransform());
         }
+
+        added.add(this);
     }
 
-    public void AnonymousFunctionDecl.addClosureParams(ParFnApp fnApp) {
+    public void AnonymousFunctionDecl.addClosureParams(java.util.List<AnonymousFunctionDecl> added, ParFnApp fnApp) {
+        for (AnonymousFunctionDecl anon : added) {
+            if (anon.getPureExpNoTransform().getExpId().equals(this.getPureExpNoTransform().getExpId())) {
+                // Closure params for this pure expression were already added
+                return;
+            }
+        }
+
         for (String freeVarName : getFreeVars().keySet()) {
             fnApp.addParam(new VarUse(freeVarName));
         }
+
+        added.add(this);
     }
 
     /**
