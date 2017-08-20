@@ -118,7 +118,7 @@ org.abs-models.sdedit.feature.group
 
 echo
 echo "Downloading KeY-ABS, this might take a while..."
-wget -nv http://www.key-project.org/key-abs/key-abs.zip
+wget -nv http://i12www.ira.uka.de/key/key-abs/key-abs.zip
 (cd /usr/local/lib && sudo unzip -o /home/ubuntu/key-abs.zip)
 rm key-abs.zip
 cat >key-abs <<EOF
