@@ -32,21 +32,22 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.box = "ubuntu/xenial64"
   config.vm.network "forwarded_port", guest: 80, host: 8888
+  config.vm.network "forwarded_port", guest: 3389, host: 33389
 
   config.vm.post_up_message = <<-MSG
 Welcome to the ABS toolchain VM.
 
 Connect to the collaboratory at http://localhost:8888/
 
-Access the following additional tools with 'vagrant ssh'
+The following programs are available when logged into the VM:
 
 - eclipse          Eclipse Mars with ABS plugins
 - key-abs          Deductive verification tool
 - emacs            Emacs with ABS mode
 
-To use graphical programs, install an X server like
-Xming (Windows) or XQuartz (Mac), or access the VM
-via VNC.
+Login to the machine with 'vagrant ssh' (terminal, with
+X11 forwarding) or 'vagrant rdp' (GUI).  Username/password
+is ubuntu/ubuntu.
 MSG
 
   config.ssh.forward_x11 = true
@@ -75,7 +76,15 @@ sudo apt-get -y -q install default-jre default-jdk ant antlr junit git unzip erl
 echo
 echo "Installing necessary tools for simulating ABS programs"
 echo
-sudo apt-get install -y -q emacs maude graphviz tightvncserver
+sudo apt-get install -y -q emacs maude graphviz
+
+echo
+echo "Installing rdp support"
+echo
+sudo apt-get install -y -q xrdp xubuntu-desktop
+sudo systemctl start xrdp
+sudo systemctl enable xrdp
+echo "ubuntu:ubuntu" | sudo chpasswd
 
 echo
 echo "Downloading eclipse, this might take a while ..."
