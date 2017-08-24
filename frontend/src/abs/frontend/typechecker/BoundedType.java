@@ -14,6 +14,19 @@ public class BoundedType extends Type {
     }
 
     public void bindTo(Type t) {
+        if (t == this) {
+            assert false : "Trying to bind BoundedType to itself";
+            return;
+        }
+        while (t.isBoundedType()) {
+            BoundedType bt = (BoundedType)t;
+            if (!bt.hasBoundType()) {
+                t = bt.getBoundType();
+            } else {
+                assert false : "Trying to bind to a BoundedType that is itself unbound";
+                return;         // TODO: how should we handle this?
+            }
+        }
         boundType = t;
     }
 
@@ -44,7 +57,7 @@ public class BoundedType extends Type {
             return boundType.isAssignableTo(t);
         // minimally invasive change wrt original code: arguably we should not
         // have side effects in this method.
-        if (t != this) boundType = t;
+        if (t != this) bindTo(t);
         return true;
     }
 
@@ -98,7 +111,7 @@ public class BoundedType extends Type {
         if (!hasBoundType()) {
             // minimally invasive change wrt original code: arguably we should
             // not have side effects in this method.
-            if (t != this) boundType = t;
+            if (t != this) bindTo(t); // FIXME: is this correct?  Doesn't look so
             return true;
         }
         return false;
