@@ -392,6 +392,11 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void listLiteralUnknownType() {
+        assertTypeErrors("{ List<Int> x = list[nth(unknown(), 1), nth(unknown(), 2)]; }");
+    }
+
+    @Test
     public void missingConstructorNoSO() {
         /* Frob not visible, gave once an SO */
         assertTypeErrors("type Tuple = Map<Int, Int>;"
@@ -401,7 +406,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
                 +"    lookup(tuple, fst(pair)) == Just(snd(pair)) &&"
                 +"    tupleMatches(tuple, rest);"
                 +"  EmptyMap => True;"
-                +"};");        
+                +"};");
     }
 
     @Test
