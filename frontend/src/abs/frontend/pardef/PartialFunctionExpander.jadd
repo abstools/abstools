@@ -210,6 +210,18 @@ aspect PartialFunctionExpander {
     }
 
     /**
+    * Sanitizes the given identifier name by replacing illegal characters.
+    * For example "m_StdLib.Int test" becomes "m_StdLib_Int_test".
+    *
+    * @param identifier the identifier name to sanitize
+    * @returns a string without illegal characters
+    */
+    protected String PartialFunctionDecl.sanitizeIdentifierName(String identifier) {
+        // In theory, catching "." would suffice, but you never know...
+        return identifier.replaceAll("[^a-zA-Z\\d_]", "_");
+    }
+
+    /**
      * Returns the name for the expanded version of this function based on the specified function call.<br>
      *
      * @return CapitalizedFunctioName_moduleName_funcParam1_funcParam2[...]
@@ -230,7 +242,7 @@ aspect PartialFunctionExpander {
             }
         }
 
-        return builder.toString();
+        return sanitizeIdentifierName(builder.toString());
     }
 
     /**
@@ -250,7 +262,7 @@ aspect PartialFunctionExpander {
             }
             result += builder.toString();
         }
-        return result;
+        return sanitizeIdentifierName(result);
     }
 
     /**
