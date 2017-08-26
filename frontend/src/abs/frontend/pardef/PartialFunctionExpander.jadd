@@ -36,7 +36,7 @@ aspect PartialFunctionExpander {
             }
 
             if (TreeUtil.findParent(fnApp, Model.class) == null) {
-                // Ignore detached calls
+                // Ignore calls that are in a detached subtree by now
                 continue;
             }
 
@@ -69,6 +69,11 @@ aspect PartialFunctionExpander {
         return expansionCount;
     }
 
+    /**
+    * Checks for cycles in this PartialFunctionDecl.
+    * @param module the ModuleDecl containing this pardef
+    * @throws PardefCycleException if a cycle is detected
+    */
     public void PartialFunctionDecl.checkCycles(ModuleDecl module) {
         checkCycles(module, new HashSet<String>());
     }
@@ -91,6 +96,11 @@ aspect PartialFunctionExpander {
         }
     }
 
+    /**
+    * Checks whether a ParFnApp is a valid call to this function by comparing parameter counts.
+    * @param fnApp a ParFnApp calling this PartialFunctionDecl
+    * @throws PardefModellingException if the call is invalid
+    */
     public void PartialFunctionDecl.checkValid(ParFnApp fnApp) {
         if (getNumFuncParam() != fnApp.getNumFuncParam()) {
             throw new PardefModellingException(
@@ -111,9 +121,11 @@ aspect PartialFunctionExpander {
         }
     }
 
+    @Override
     public void ParametricPartialFunctionDecl.checkValid(ParFnApp uncheckedFnApp) {
         super.checkValid(uncheckedFnApp);
         if(!(uncheckedFnApp instanceof ParametricParFnApp)) {
+            // Parametric pardefs MUST be called with type parameters
             throw new PardefModellingException(
                 uncheckedFnApp,
                 ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS_FUNCTION,
@@ -134,6 +146,12 @@ aspect PartialFunctionExpander {
         }
     }
 
+    /**
+    * Creates an expanded version of this partially defined function based on the specified function call.
+    * @param fnApp a call to this function
+    * @return a detached FunctionDecl
+    * @throws PardefModellingException if the given ParFnApp is not a valid call to this function
+    */
     public FunctionDecl PartialFunctionDecl.expand(ParFnApp fnApp) {
         checkValid(fnApp);
         FunctionDecl expanded = new FunctionDecl();
@@ -163,6 +181,7 @@ aspect PartialFunctionExpander {
         return expanded;
     }
 
+    @Override
     public FunctionDecl ParametricPartialFunctionDecl.expand(ParFnApp uncheckedFnApp) {
         FunctionDecl decl = super.expand(uncheckedFnApp);
         // cast is checked in checkValid()
@@ -214,7 +233,7 @@ aspect PartialFunctionExpander {
     * For example "m_StdLib.Int test" becomes "m_StdLib_Int_test".
     *
     * @param identifier the identifier name to sanitize
-    * @returns a string without illegal characters
+    * @return a string without illegal characters
     */
     protected String PartialFunctionDecl.sanitizeIdentifierName(String identifier) {
         // In theory, catching "." would suffice, but you never know...
@@ -250,6 +269,7 @@ aspect PartialFunctionExpander {
      *
      * @return CapitalizedFunctioName_moduleName_funcParam1_funcParam2[...]_typeParam1_typeParam2[...]
      */
+    @Override
     public String ParametricPartialFunctionDecl.expandedName(ParFnApp fnApp) {
         String result = super.expandedName(fnApp);
         if(fnApp instanceof ParametricParFnApp) {
@@ -275,6 +295,7 @@ aspect PartialFunctionExpander {
     */
     public FunctionDef PartialFunctionDef.apply(Map<String, ParFnAppParamDecl> bindingByName) {
         PureExp expression = getPureExp().treeCopy();
+        // Wrap the expression BEFORE applying the bindings so it has a parent
         FunctionDef result = new ExpFunctionDef(expression);
 
         applyBindings(expression, bindingByName);
@@ -306,7 +327,7 @@ aspect PartialFunctionExpander {
     }
 
     /**
-     * <p>Gets an applied version of this ParFnApp.</p>
+     * <p>Creates a function call to the specified expanded pardef with the parameters of this pardef call.</p>
      *
      * After calling this method, this object is in an invalid state and should be discarded.
      *

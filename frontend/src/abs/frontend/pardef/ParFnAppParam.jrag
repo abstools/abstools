@@ -1,6 +1,15 @@
 import abs.frontend.pardef.*;
 
+/**
+* This aspect handles parameters for ParFnApps (function references and anonymous functions).
+*/
 aspect ParFnAppParam {
+    /**
+    * Gets an expression with which occurrences of this ParFnApp parameter should be replaced in the function expansion.
+    *
+    @param toReplace a FnApp calling the function represented by this ParFnAppParamDecl
+    @return a pure expression to replace the given FnApp with
+    */
     syn PureExp ParFnAppParamDecl.getExpression(FnApp toReplace);
 
     eq NamedParFnAppParam.getExpression(FnApp toReplace) = new FnApp(getName(), toReplace.getParams().treeCopyNoTransform());
@@ -13,8 +22,12 @@ aspect ParFnAppParam {
             throw new PardefModellingException(toReplace, ErrorMessage.WRONG_NUMBER_OF_ARGS, numParam, toReplace.getNumParam());
         }
 
-        // Wrap the expression by let expressions for each parameter
-        // TODO note: this obviously has some flaws, but works for a start (should be fixed alongside the introduction of closures)
+        /*
+        Wrap the expression by let expressions for each parameter.
+        Alternatives would be:
+        a) rename all occurrences of each parameter in the expression
+        b) create a new named function for each anonymous function (clutters namespace)
+        */
         for (int i = 0; i < numParam; ++i) {
             result = new LetExp(
                 getParamNoTransform(i).treeCopyNoTransform(),
@@ -23,6 +36,7 @@ aspect ParFnAppParam {
             );
         }
 
+        // All free variables have different names in the expansion
         Map<String, ParamDecl> freeVars = getFreeVars();
         for (VarOrFieldUse varUse : TreeUtil.findChildren(exp, VarOrFieldUse.class)) {
             ParamDecl replacement = freeVars.get(varUse.getName());
@@ -34,8 +48,16 @@ aspect ParFnAppParam {
         return result;
     }
 
+    /**
+    * Determines the free vars in this anonymous function's expression.
+    * The resulting map maps from the name of the free var to a ParamDecl with a different (qualified) name.
+    * @return an immutable map (free var name - closure param) with predictable iteration order
+    */
     syn lazy Map<String, ParamDecl> AnonymousFunctionDecl.getFreeVars() {
         ASTNode<?> parent = getParent();
+        // Temporarily set the parent to null.
+        // If the type of a VarUse in the expression can't be looked up, it is a free var.
+        // See AnonymousFunctionDecl.locallookupVarOrFieldName() in VarResolution.jrag
         setParent(null);
         java.util.List<VarOrFieldUse> freeVarUses = new LinkedList<>();
         for (VarOrFieldUse use : TreeUtil.findChildren(this, VarOrFieldUse.class)) {
@@ -46,7 +68,8 @@ aspect ParFnAppParam {
         }
         setParent(parent);
 
-        Map<String, ParamDecl> result = new HashMap<>();
+        // Now find the type of each free var
+        Map<String, ParamDecl> result = new LinkedHashMap<>();
         for (VarOrFieldUse freeVarUse : freeVarUses) {
             Type type = freeVarUse.getType();
             if (type.isUnknownType()) {
@@ -58,8 +81,6 @@ aspect ParFnAppParam {
                 String qualifiedName = qualifyName(freeVarUse.getName());
                 param = new ParamDecl(qualifiedName, type.toUse(), new List<Annotation>());
                 result.put(freeVarUse.getName(), param);
-            } else {
-                // TODO check for same type
             }
         }
 
@@ -70,6 +91,13 @@ aspect ParFnAppParam {
         return name + "_" + getPureExpNoTransform().getExpId();
     }
 
+    /**
+    * Adds the closure params for this anonymous function to the given FunctionDecl.
+    * If the params for this anonymous function's PureExp have already been added, this method will do nothing.
+    * After adding the closure params to the function, this AnonymousFunctionDecl will be added to the passed list.
+    * @param added a list of anonymous functions that already added their closure params
+    * @param func a function to add the closure params to
+    */
     public void AnonymousFunctionDecl.addClosureParams(java.util.List<AnonymousFunctionDecl> added, FunctionDecl func) {
         for (AnonymousFunctionDecl anon : added) {
             if (anon.getPureExpNoTransform().getExpId().equals(this.getPureExpNoTransform().getExpId())) {
@@ -86,6 +114,13 @@ aspect ParFnAppParam {
         added.add(this);
     }
 
+    /**
+    * Adds the closure params for this anonymous function to the given ParFnApp.
+    * If the params for this anonymous function's PureExp have already been added, this method will do nothing.
+    * After adding the closure params to the function call, this AnonymousFunctionDecl will be added to the passed list.
+    * @param added a list of anonymous functions that already added their closure params
+    * @param func a function call to add the closure params to
+    */
     public void AnonymousFunctionDecl.addClosureParams(java.util.List<AnonymousFunctionDecl> added, ParFnApp fnApp) {
         for (AnonymousFunctionDecl anon : added) {
             if (anon.getPureExpNoTransform().getExpId().equals(this.getPureExpNoTransform().getExpId())) {
@@ -106,6 +141,11 @@ aspect ParFnAppParam {
     */
     static Map<String, String> PureExp.pureExpIds = new HashMap<>(256);
 
+    /**
+    * Determines an ID for this pure expression.
+    * IDs are guaranteed to be the same for expressions which are syntactically identical and
+    * to be different for expressions that are not.
+    */
     syn lazy String PureExp.getExpId() {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
