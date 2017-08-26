@@ -462,24 +462,19 @@ public class ParserTest extends FrontendTest {
 
     @Test
     public void anonymousFunction() {
-        assertParseOk("{ f()((Int i) => Int i); }");
-        assertParseOk("{ f()((Int i) => Int i + 1); }");
-        assertParseOk("{ f()((Int i) => Int inc(i)); }");
-        assertParseOk("{ f()((Int i) => Int 0); }");
-        assertParseOk("{ f()(() => Int 0); }");
-        assertParseOk("{ f()((Int i) => Rat i); }");
-        assertParseOk("{ f()((Int i, Int j) => Int i + j); }");
+        assertParseOk("{ f()((Int i) => i); }");
+        assertParseOk("{ f()((Int i) => i + 1); }");
+        assertParseOk("{ f()((Int i) => inc(i)); }");
+        assertParseOk("{ f()((Int i) => 0); }");
+        assertParseOk("{ f()(() => 0); }");
+        assertParseOk("{ f()((Int i) => i); }");
+        assertParseOk("{ f()((Int i, Int j) => i + j); }");
     }
 
     @Test
     public void multipleAnonymousFunctions() {
-        assertParseOk("{ f()((Int i) => Int i, (Int j) => Int j); }");
-        assertParseOk("{ f()((Int i) => Int i, inc); }");
-    }
-
-    @Test
-    public void anonymousFunctionNoReturnType() {
-        assertParseError("{ f()((Int i) => i); }");
+        assertParseOk("{ f()((Int i) => i, (Int j) => j); }");
+        assertParseOk("{ f()((Int i) => i, inc); }");
     }
 
     @Test
