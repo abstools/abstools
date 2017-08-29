@@ -37,19 +37,17 @@ aspect ParFnAppParam {
         }
 
         // All free variables have different names in the expansion
-        Map<String, ParamDecl> freeVars = getFreeVars();
-        // TODO replace this rather hacky way to determine whether a var is free
-        // Temporarily set an anonymous function as the pure expression's parent
-        AnonymousFunctionDecl tmpAnon = new AnonymousFunctionDecl(getParams().treeCopy(), result);
-        for (VarOrFieldUse varUse : TreeUtil.findChildren(exp, VarOrFieldUse.class)) {
-            if (varUse.getDecl() == null) {
-                ParamDecl replacement = freeVars.get(varUse.getName());
-                if (replacement != null) {
-                    varUse.setName(replacement.getName());
-                }
-            }
+        for (Map.Entry<String, ParamDecl> entry : getFreeVars().entrySet()) {
+            ParamDecl closureParam = entry.getValue();
+            Access closureType = closureParam.getAccess();
+            ParamDecl letParam = new ParamDecl(entry.getKey(), closureType, new List<Annotation>());
+            VarUse closureUse = new VarUse(closureParam.getName());
+            result = new LetExp(
+                letParam,
+                closureUse,
+                result
+            );
         }
-        TreeUtil.removeFromParent(result);
 
         return result;
     }
