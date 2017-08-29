@@ -29,15 +29,15 @@ aspect PartialFunctionExpander {
     }
 
     private int ModuleDecl.expandChildParFnApps(ASTNode<?> node, int expansionCount) {
-        for (ParFnApp fnApp : TreeUtil.findChildren(node, ParFnApp.class)) {
+        for (ParFnApp fnApp : TreeUtil.findChildren(node, ParFnApp.class, true)) {
             if (TreeUtil.findParent(fnApp, PartialFunctionDecl.class) != null) {
                 // ignore ParFnApp within pardef that has not been expanded yet
                 continue;
             }
 
             if (TreeUtil.findParent(fnApp, Model.class) == null) {
-                // Ignore calls that are in a detached subtree by now
-                continue;
+                // If this happens, it's a compiler error
+                throw new RuntimeException("This should not have happened");
             }
 
             PartialFunctionDecl function = getPartialFunction(fnApp.getName());
@@ -65,6 +65,8 @@ aspect PartialFunctionExpander {
             FnApp expandedFunctionCall = fnApp.apply(expandedWrapper.getExpanded());
             TreeUtil.replace(fnApp, expandedFunctionCall);
             AnnotationUtil.annotateCall(expandedFunctionCall, expandedWrapper.getExpansionId());
+            // expand ParFnApps in params of expandedFunctionCall
+            expansionCount = expandChildParFnApps(expandedFunctionCall, expansionCount);
         }
         return expansionCount;
     }
@@ -327,19 +329,11 @@ aspect PartialFunctionExpander {
     }
 
     /**
-     * <p>Creates a function call to the specified expanded pardef with the parameters of this pardef call.</p>
-     *
-     * After calling this method, this object is in an invalid state and should be discarded.
+     * <p>Creates a function call to the specified expanded pardef with a copy of the this pardef call's params.</p>
      *
      * @return a FnApp
-     * @throws IllegalStateException if this method is called twice
      */
     public FnApp ParFnApp.apply(FunctionDecl function) {
-        List<PureExp> params = getParamList();
-        if (params == null) {
-            throw new IllegalStateException("ParFnApp.apply() called twice");
-        }
-
         java.util.List<AnonymousFunctionDecl> addedClosures = new LinkedList<>();
         for (ParFnAppParamDecl fnParam : getFuncParamsNoTransform()) {
             if (fnParam instanceof AnonymousFunctionDecl) {
@@ -348,7 +342,7 @@ aspect PartialFunctionExpander {
             }
         }
 
-        TreeUtil.removeFromParent(params);
-        return new FnApp(function.getName(), params);
+        List<PureExp> params = getParamList();
+        return new FnApp(function.getName(), params.treeCopyNoTransform());
     }
 }

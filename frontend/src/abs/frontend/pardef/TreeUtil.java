@@ -22,19 +22,40 @@ public final class TreeUtil {
      * @throws NullPointerException if <code>type</code> is null
      */
     public static <T extends ASTNode<?>> List<T> findChildren(ASTNode<?> root, Class<T> type) {
+        return findChildren(root, type, false);
+    }
+
+    /**
+     * Finds all children of <code>root</code> with the specified <code>type</code>. If <code>root</code> has the
+     * specified type, it will be included in the result.
+     *
+     * @param root a node to use as a root for searching
+     * @param type the type to search for
+     * @param lazy if true, children of found T nodes will not be included
+     * @param <T> the child <code>type</code>
+     * @return an unmodifiable list of nodes, never null
+     * @throws NullPointerException if <code>type</code> is null
+     */
+    public static <T extends ASTNode<?>> List<T> findChildren(ASTNode<?> root, Class<T> type, boolean lazy) {
         List<T> result = new LinkedList<>();
-        findChildren(result, root, Objects.requireNonNull(type));
+        findChildren(result, root, Objects.requireNonNull(type), lazy);
         return Collections.unmodifiableList(result);
     }
 
-    private static <T extends ASTNode<?>> void findChildren(java.util.List<T> list, ASTNode<?> node, Class<T> type) {
+    private static <T extends ASTNode<?>> void findChildren(java.util.List<T> list,
+        ASTNode<?> node,
+        Class<T> type,
+        boolean lazy) {
         if (node != null) {
             if (type.isInstance(node)) {
                 list.add(type.cast(node));
+                if (lazy) {
+                    return;
+                }
             }
 
             for (int index = 0; index < node.getNumChildNoTransform(); ++index) {
-                findChildren(list, node.getChildNoTransform(index), type);
+                findChildren(list, node.getChildNoTransform(index), type, lazy);
             }
         }
     }
@@ -107,6 +128,6 @@ public final class TreeUtil {
         Objects.requireNonNull(node);
         Objects.requireNonNull(type);
         // TODO could be implement more efficiently with fail-fast behaviour
-        return findChildren(node, type).isEmpty();
+        return findChildren(node, type, true).isEmpty();
     }
 }
