@@ -14,7 +14,7 @@ aspect ParFnAppParam {
 
     eq NamedParFnAppParam.getExpression(FnApp toReplace) = new FnApp(getName(), toReplace.getParams().treeCopyNoTransform());
     eq AnonymousFunctionDecl.getExpression(FnApp toReplace) {
-        PureExp exp = getPureExpNoTransform().treeCopyNoTransform();
+        PureExp exp = getPureExp().treeCopy();
         PureExp result = exp;
 
         int numParam = getNumParam();
@@ -30,7 +30,7 @@ aspect ParFnAppParam {
         */
         for (int i = 0; i < numParam; ++i) {
             result = new LetExp(
-                getParamNoTransform(i).treeCopyNoTransform(),
+                getParam(i).treeCopy(),
                 toReplace.getParamNoTransform(i).treeCopyNoTransform(),
                 result
             );
@@ -38,12 +38,18 @@ aspect ParFnAppParam {
 
         // All free variables have different names in the expansion
         Map<String, ParamDecl> freeVars = getFreeVars();
+        // TODO replace this rather hacky way to determine whether a var is free
+        // Temporarily set an anonymous function as the pure expression's parent
+        AnonymousFunctionDecl tmpAnon = new AnonymousFunctionDecl(getParams().treeCopy(), result);
         for (VarOrFieldUse varUse : TreeUtil.findChildren(exp, VarOrFieldUse.class)) {
-            ParamDecl replacement = freeVars.get(varUse.getName());
-            if (replacement != null) {
-                varUse.setName(replacement.getName());
+            if (varUse.getDecl() == null) {
+                ParamDecl replacement = freeVars.get(varUse.getName());
+                if (replacement != null) {
+                    varUse.setName(replacement.getName());
+                }
             }
         }
+        TreeUtil.removeFromParent(result);
 
         return result;
     }
