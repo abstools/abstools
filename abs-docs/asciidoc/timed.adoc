@@ -16,7 +16,7 @@ and will finish at time zero.
 The ABS notion of time is _dense time_ with _run-to-completion semantics_.
 Timed ABS adds a clock to the language semantics that advances in response to
 certain language constructs.  Time is expressed as a rational number, so the
-clock can advance in infitesimally small steps.
+clock can advance in infinitesimally small steps.
 
 
 Time only advances when all processes are blocked or suspended and no process
