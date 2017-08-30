@@ -99,6 +99,9 @@ aspect ParFnAppParam {
     * Adds the closure params for this anonymous function to the given FunctionDecl.
     * If the params for this anonymous function's PureExp have already been added, this method will do nothing.
     * After adding the closure params to the function, this AnonymousFunctionDecl will be added to the passed list.
+    *
+    * <p>If the function contains any recursive calls, the closure params will be added.</p>
+    *
     * @param added a list of anonymous functions that already added their closure params
     * @param func a function to add the closure params to
     */
@@ -110,9 +113,19 @@ aspect ParFnAppParam {
             }
         }
 
+        java.util.List<FnApp> recursiveCalls = new LinkedList<>();
+        for (FnApp call : TreeUtil.findChildren(func, FnApp.class)) {
+            if (call.getName().equals(func.getName())) {
+                recursiveCalls.add(call);
+            }
+        }
+
         List<ParamDecl> params = func.getParams();
         for (ParamDecl freeVar : getFreeVars().values()) {
             params.add(freeVar.treeCopyNoTransform());
+            for (FnApp recursiveCall : recursiveCalls) {
+                recursiveCall.addParam(new VarUse(freeVar.getName()));
+            }
         }
 
         added.add(this);
