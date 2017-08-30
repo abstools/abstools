@@ -1,5 +1,6 @@
 package abs.frontend.pardef;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import abs.frontend.ast.FnApp;
@@ -107,6 +108,17 @@ public class ParFnAppTest extends PardefTest {
                 + "Nil => Nil;\n"
                 + "}"
         ), "Map_%s_halve_Int_Rat");
+    }
+
+    @Test
+    public void recursionWithClosure() {
+        Model m = expand(parse(
+            true,
+            "Int x = 0; Int y = 1; rec()((Int i) => x, (Int j) => y)",
+            "def Int rec()(f, g) = rec()"
+        ));
+        FnApp call = assertHasCall(m, expandedName("Rec_%s_0_1"));
+        assertEquals(2, call.getNumParam());
     }
 
     @Test
