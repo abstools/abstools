@@ -77,8 +77,7 @@ aspect ParFnAppParam {
         for (VarOrFieldUse freeVarUse : freeVarUses) {
             Type type = freeVarUse.getType();
             if (type.isUnknownType()) {
-                // TODO refine message
-                throw new PardefModellingException("Unknown var: " + freeVarUse.getName());
+                throw new PardefModellingException(freeVarUse, ErrorMessage.UNDECLARED_VARIABLE, freeVarUse.getName());
             }
             ParamDecl param = result.get(freeVarUse.getName());
             if (param == null) {
