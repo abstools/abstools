@@ -19,7 +19,17 @@ join_prepend(Sep, [H|T]) -> [Sep,H|join_prepend(Sep,T)].
 
 
 lowlevelDeadline(_Cog) ->
-    -1.
+    ProcessInfo = get(process_info),
+    case ProcessInfo#process_info.procDeadline of
+        dataInfDuration -> -1;
+        {dataDuration, Amount} ->
+            Now=clock:now(),
+            {dataTime, CreateTime} = ProcessInfo#process_info.creation,
+            %% negative result means infinite deadline so we clamp with 0 -
+            %% this is arguably wrong but was demanded by the Java backend :(
+            Deadline=rationals:max(rationals:sub(Amount, rationals:sub(Now, CreateTime)), 0)
+    end.
+
 currentms(_Cog)->
     %% %% FIXME: There should be a compile-time option whether to use
     %% %% simulated or wall-clock time

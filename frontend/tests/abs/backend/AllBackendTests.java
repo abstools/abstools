@@ -9,6 +9,7 @@ import org.junit.runners.Suite;
 
 import abs.backend.common.AllSemanticTests;
 import abs.backend.erlang.AllErlangTests;
+import abs.backend.erlang.ErlangTests;
 import abs.backend.java.AllJavaTests;
 import abs.backend.maude.AnnotationsTests;
 import abs.backend.maude.MaudeTests;
@@ -18,7 +19,7 @@ import abs.backend.tests.OtherCodeGenTests;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ AllJavaTests.class, AllSemanticTests.class, MaudeTests.MaudeEqTests.class,
-        MaudeTests.MaudeRlTests.class, AnnotationsTests.class, ASTBasedABSTestRunnerGeneratorTest.class,
-        PrettyPrinterTests.class, OtherCodeGenTests.class, AllErlangTests.class })
+            MaudeTests.MaudeRlTests.class, AnnotationsTests.class, ASTBasedABSTestRunnerGeneratorTest.class,
+            PrettyPrinterTests.class, OtherCodeGenTests.class, AllErlangTests.class})
 public class AllBackendTests {
 }

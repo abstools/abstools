@@ -455,12 +455,19 @@ aspect GenerateErlang {
 
   @Override
   public void AsyncCall.generateErlangCode(CodeStream ecs,Vars vars){
+    Stmt stmt = CompilerUtils.findStmtForExpression(this);
+    PureExp deadline = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.StdLib.Deadline");
     ecs.print("future:start(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
-    ecs.format(",#process_info{method= <<\"%s\"/utf8>>},", getMethod());
-    ecs.print("Cog,");
+    ecs.format(",#process_info{method= <<\"%s\"/utf8>>, creation={dataTime,builtin:currentms(Cog)}, procDeadline=", getMethod());
+    if (deadline != null) {
+        deadline.generateErlangCode(ecs, vars);
+    } else {
+        ecs.print("dataInfDuration");
+    }
+    ecs.print("},Cog,");
     ecs.print(vars.toStack());
     ecs.print(")");
   }
