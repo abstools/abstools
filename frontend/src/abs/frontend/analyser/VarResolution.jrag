@@ -296,26 +296,6 @@ aspect VarResolution {
         return lookupVarOrFieldName(name, fieldOnly);
     }
 
-    eq AnonymousFunctionDecl.getPureExp().lookupVarOrFieldName(String name, boolean fieldOnly) {
-        return locallookupVarOrFieldName(name,fieldOnly);
-    }
-    syn VarOrFieldDecl AnonymousFunctionDecl.locallookupVarOrFieldName(String name, boolean fieldOnly) {
-        for (VarOrFieldDecl decl : getParams()) {
-            if (decl.getName().equals(name))
-                return decl;
-        }
-        /*
-        If there is no parent, the type resolution should stop here.
-        This is a special case for anonymous functions to make it easy to determine free vars (see AnonymousFunctionDecl.getFreeVars().
-        This behavior should not interfere with anything, because the normal type resolution would simply fail in a detached subtree.
-        */
-        if (getParent() == null) {
-            return null;
-        }
-        // If there is a parent, it will always be the function parameter list of a ParFnApp, which is a PureExp
-        return ((PureExp) getParent().getParent()).lookupVarOrFieldName(name, fieldOnly);
-    }
-
     eq HasMethod.getMethodSig().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
     
     // TODO: return something more meaningful here?

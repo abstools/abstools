@@ -52,38 +52,33 @@ aspect ParFnAppParam {
         return result;
     }
 
+    syn lazy Set<String> AnonymousFunctionDecl.getFreeVarNames() {
+        Set<String> res = new HashSet<>(getPureExp().getFreeVars());
+        for (ParamDecl param : getParams()) {
+            res.remove(param.getName());
+        }
+        return res;
+    }
+
     /**
     * Determines the free vars in this anonymous function's expression.
     * The resulting map maps from the name of the free var to a ParamDecl with a different (qualified) name.
     * @return an immutable map (free var name - closure param) with predictable iteration order
     */
     syn lazy Map<String, ParamDecl> AnonymousFunctionDecl.getFreeVars() {
-        ASTNode<?> parent = getParent();
-        // Temporarily set the parent to null.
-        // If the type of a VarUse in the expression can't be looked up, it is a free var.
-        // See AnonymousFunctionDecl.locallookupVarOrFieldName() in VarResolution.jrag
-        setParent(null);
-        java.util.List<VarOrFieldUse> freeVarUses = new LinkedList<>();
-        for (VarOrFieldUse use : TreeUtil.findChildren(this, VarOrFieldUse.class)) {
-            VarOrFieldDecl varDecl = use.getDecl();
-            if (varDecl == null) {
-                freeVarUses.add(use);
-            }
-        }
-        setParent(parent);
-
-        // Now find the type of each free var
+        // Find the type of each free var and create a ParamDecl with it
         Map<String, ParamDecl> result = new LinkedHashMap<>();
-        for (VarOrFieldUse freeVarUse : freeVarUses) {
-            Type type = freeVarUse.getType();
-            if (type.isUnknownType()) {
-                throw new PardefModellingException(freeVarUse, ErrorMessage.UNDECLARED_VARIABLE, freeVarUse.getName());
-            }
-            ParamDecl param = result.get(freeVarUse.getName());
+        PureExp pureExp = getPureExp();
+        for (String freeVar : getFreeVarNames()) {
+            ParamDecl param = result.get(freeVar);
             if (param == null) {
-                String qualifiedName = qualifyName(freeVarUse.getName());
-                param = new ParamDecl(qualifiedName, type.toUse(), new List<Annotation>());
-                result.put(freeVarUse.getName(), param);
+                VarOrFieldDecl decl = pureExp.lookupVarOrFieldName(freeVar, false);
+                if (decl == null) {
+                    throw new PardefModellingException(pureExp, ErrorMessage.UNDECLARED_VARIABLE, freeVar);
+                }
+                String qualifiedName = qualifyName(freeVar);
+                param = new ParamDecl(qualifiedName, decl.getType().toUse(), new List<Annotation>());
+                result.put(freeVar, param);
             }
         }
 

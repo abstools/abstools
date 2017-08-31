@@ -55,6 +55,21 @@ aspect VarUsage {
 		return res;
 	}
 
+	eq ParFnApp.getFreeVars() {
+	    Set<String> res = new HashSet<String>();
+	    for (PureExp e : getParams()) {
+	        res.addAll(e.getFreeVars());
+	    }
+
+	    for (ParFnAppParamDecl param : getFuncParams()) {
+	        if (param instanceof AnonymousFunctionDecl) {
+	            AnonymousFunctionDecl anon = (AnonymousFunctionDecl) param;
+	            res.addAll(anon.getFreeVarNames());
+	        }
+	    }
+	    return res;
+	}
+
 	eq DataConstructorExp.getFreeVars() {
 		HashSet<String> res = new HashSet<String>();
 		for (PureExp e : getParams()) {
