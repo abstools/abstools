@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import abs.frontend.ast.FnApp;
+import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
 import java.util.regex.Pattern;
 import org.junit.Test;
@@ -18,11 +19,12 @@ public class ParFnAppTest extends PardefTest {
         return result;
     }
 
-    private void testExpand(Model model, String... expectedNames) {
+    private Model testExpand(Model model, String... expectedNames) {
         model = expand(model);
         for (String expectedName : expectedNames) {
             assertHasCall(model, expandedName(expectedName));
         }
+        return model;
     }
 
     @Test(expected = PardefModellingException.class)
@@ -119,7 +121,7 @@ public class ParFnAppTest extends PardefTest {
             "Int x = 0; Int y = 1; rec()((Int i) => x, (Int j) => y)",
             "def Int rec()(f, g) = rec()"
         ));
-        FnApp call = assertHasCall(m, expandedName("Rec_%s_\\d_\\d"));
+        FnApp call = assertHasCall(m, expandedName("Rec_%s_\\d+_\\d+"));
         assertEquals(2, call.getNumParam());
     }
 
@@ -202,7 +204,12 @@ public class ParFnAppTest extends PardefTest {
             "apply<Int, Int>(0)((Int i) => inc(i))",
             applyFunction(),
             incFunction()
-        ), "Apply_%s_\\d_Int_Int");
+        ), "Apply_%s_\\d+_Int_Int");
+
+        testExpand(parse(
+            "Int i = test()(() => 1)",
+            "def Int test()(f) = f()"
+        ), "Test_%s_\\d+");
     }
 
     @Test(expected = PardefModellingException.class)
@@ -227,7 +234,7 @@ public class ParFnAppTest extends PardefTest {
             true,
             "Int x = 0; apply<Int, Int>(0)((Int i) => i + x)",
             applyFunction()
-        ), "Apply_%s_\\d_Int_Int");
+        ), "Apply_%s_\\d+_Int_Int");
     }
 
     @Test
@@ -236,7 +243,7 @@ public class ParFnAppTest extends PardefTest {
             true,
             "Int x = 0; apply<Int, Int>(0)((Int i) => apply<Int, Int>(i)((Int j) => j + x))",
             applyFunction()
-        ), "Apply_%s_\\d_Int_Int");
+        ), "Apply_%s_\\d+_Int_Int");
     }
 
     @Test
@@ -245,6 +252,28 @@ public class ParFnAppTest extends PardefTest {
             true,
             "Int x = 1; test(0)((Int i) => x + i)",
             "def Int test(Int x_0)(f) = f(x_0)"
-        ), "Test_%s_\\d");
+        ), "Test_%s_\\d+");
     }
+
+    @Test
+    public void multipleAnonsUsingSameClosureVar() {
+        testExpand(parse(
+            true,
+            "Int x = 1; test()(() => x, () => -x)",
+            "def Int test()(f, g) = f() + g()"
+        ), "Test_%s_\\d+_\\d+");
+    }
+
+    @Test
+    public void sameAnonTwiceOnlyOneClosure() {
+        Model m = testExpand(parse(
+            true,
+            "Int x = 1; test()(() => x, () => x)",
+            "def Int test()(f, g) = f() + g()"
+        ), "Test_%s_\\d+_\\d+");
+        FunctionDecl function = getFunction(m, Pattern.compile(expandedName("Test_%s_\\d+_\\d+")));
+        assertNotNull(function);
+        assertEquals(1, function.getNumParam());
+    }
+
 }
