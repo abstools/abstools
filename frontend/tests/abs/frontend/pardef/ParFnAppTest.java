@@ -5,12 +5,13 @@ import static org.junit.Assert.assertNotNull;
 
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.Model;
+import java.util.regex.Pattern;
 import org.junit.Test;
 
 public class ParFnAppTest extends PardefTest {
 
     private FnApp assertHasCall(Model model, String expectedName) {
-        FnApp result = getCall(model, expectedName);
+        FnApp result = getCall(model, Pattern.compile(expectedName));
         String errorMessage = "No expanded function call with name " + expectedName + " created"
             + " (functions: " + getFunctions(model) + ")";
         assertNotNull(errorMessage, result);
@@ -18,8 +19,9 @@ public class ParFnAppTest extends PardefTest {
     }
 
     private void testExpand(Model model, String... expectedNames) {
+        model = expand(model);
         for (String expectedName : expectedNames) {
-            assertHasCall(expand(model), expandedName(expectedName));
+            assertHasCall(model, expandedName(expectedName));
         }
     }
 
@@ -117,7 +119,7 @@ public class ParFnAppTest extends PardefTest {
             "Int x = 0; Int y = 1; rec()((Int i) => x, (Int j) => y)",
             "def Int rec()(f, g) = rec()"
         ));
-        FnApp call = assertHasCall(m, expandedName("Rec_%s_0_1"));
+        FnApp call = assertHasCall(m, expandedName("Rec_%s_\\d_\\d"));
         assertEquals(2, call.getNumParam());
     }
 
@@ -200,14 +202,14 @@ public class ParFnAppTest extends PardefTest {
             "apply<Int, Int>(0)((Int i) => inc(i))",
             applyFunction(),
             incFunction()
-        ));
+        ), "Apply_%s_\\d_Int_Int");
     }
 
     @Test(expected = PardefModellingException.class)
     public void anonymousTooManyArgs() {
         expand(parse(
-           "apply<Int, Int>(0)((Int i, Int j) => i)",
-           applyFunction()
+            "apply<Int, Int>(0)((Int i, Int j) => i)",
+            applyFunction()
         ));
     }
 
@@ -222,17 +224,27 @@ public class ParFnAppTest extends PardefTest {
     @Test
     public void anonymousSimpleClosure() {
         testExpand(parse(
+            true,
             "Int x = 0; apply<Int, Int>(0)((Int i) => i + x)",
             applyFunction()
-        ));
+        ), "Apply_%s_\\d_Int_Int");
     }
 
     @Test
     public void anonymousNestedClosure() {
         testExpand(parse(
+            true,
             "Int x = 0; apply<Int, Int>(0)((Int i) => apply<Int, Int>(i)((Int j) => j + x))",
             applyFunction()
-        ));
+        ), "Apply_%s_\\d_Int_Int");
     }
 
+    @Test
+    public void closureParamSameNameAsFunctionParam() {
+        testExpand(parse(
+            true,
+            "Int x = 1; test(0)((Int i) => x + i)",
+            "def Int test(Int x_0)(f) = f(x_0)"
+        ), "Test_%s_\\d");
+    }
 }

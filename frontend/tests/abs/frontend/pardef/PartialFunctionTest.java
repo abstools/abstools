@@ -18,14 +18,15 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class PartialFunctionTest extends PardefTest {
 
-    private FunctionDecl assertHasFunction(Model model, String expectedName) {
-        FunctionDecl result = getFunction(model, expectedName);
-        String errorMessage = "No expanded function with name " + expectedName + " created"
+    private FunctionDecl assertHasFunction(Model model, String regex) {
+        FunctionDecl result = getFunction(model, Pattern.compile(regex));
+        String errorMessage = "No expanded function with name " + regex + " created"
             + " (functions: " + getFunctions(model) + ")";
         assertNotNull(errorMessage, result);
         return result;
@@ -37,9 +38,10 @@ public class PartialFunctionTest extends PardefTest {
         }
     }
 
-    private PartialFunctionDecl getPartialFunction(Model model, String name) {
+    private PartialFunctionDecl getPartialFunction(Model model, String regex) {
+        Pattern pattern = Pattern.compile(regex);
         for (PartialFunctionDecl func : TreeUtil.findChildren(model, PartialFunctionDecl.class)) {
-            if (func.getName().equals(name)) {
+            if (pattern.matcher(func.getName()).matches()) {
                 return func;
             }
         }

@@ -6,6 +6,7 @@ import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public abstract class PardefTest extends FrontendTest {
 
@@ -49,18 +50,18 @@ public abstract class PardefTest extends FrontendTest {
         }
     }
 
-    protected final FunctionDecl getFunction(Model model, String name) {
+    protected final FunctionDecl getFunction(Model model, Pattern regex) {
         for (FunctionDecl decl : TreeUtil.findChildren(model, FunctionDecl.class)) {
-            if (decl.getName().equals(name)) {
+            if (regex.matcher(decl.getName()).matches()) {
                 return decl;
             }
         }
         return null;
     }
 
-    protected final FnApp getCall(Model model, String name) {
+    protected final FnApp getCall(Model model, Pattern regex) {
         for (FnApp fnApp : TreeUtil.findChildren(model, FnApp.class)) {
-            if (fnApp.getName().equals(name)) {
+            if (regex.matcher(fnApp.getName()).matches()) {
                 return fnApp;
             }
         }

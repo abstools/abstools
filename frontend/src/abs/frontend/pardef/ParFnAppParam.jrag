@@ -147,6 +147,7 @@ aspect ParFnAppParam {
         added.add(this);
     }
 
+    // TODO this should probably be reset somewhere
     /**
     * Stores the IDs for all pure expressions. Keys are the pretty-printed pure expressions.
     */
