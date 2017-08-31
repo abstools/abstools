@@ -91,7 +91,7 @@ aspect ParFnAppParam {
     }
 
     public String AnonymousFunctionDecl.qualifyName(String name) {
-        return name + "_" + getPureExpNoTransform().getExpId();
+        return StringUtils.capitalize(name) + "_" + getPureExpNoTransform().getExpId();
     }
 
     /**
