@@ -19,6 +19,7 @@
          {influxdb_url,$u,"influxdb-url",{string,"http://localhost:8086"},"Write log data to influxdb database located at URL"},
          {influxdb_db,$d,"influxdb-db",{string,"absmodel"},"Name of the influx database log data is written to"},
          {clocklimit,$l,"clock-limit",{integer,none},"Terminate simulation after given clock value"},
+         {schedulers,$s,"schedulers",{integer,none},"Set number of online schedulers"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
 
 
@@ -38,13 +39,13 @@ start()->
             run_mod(?ABSMAINMODULE, false, false, none, none, none, none, none);
         Args->
             start(Args)
-   end.    
+   end.
 
 start(Args) ->
-    parse(Args,"start").        
+    parse(Args,"start").
 
 run(Args) ->
-    parse(Args,"run").    
+    parse(Args,"run").
 
 start_http() ->
     {ok, _} = application:ensure_all_started(absmodel).
@@ -74,7 +75,18 @@ parse(Args,Exec)->
             InfluxdbUrl=proplists:get_value(influxdb_url,Parsed),
             InfluxdbDB=proplists:get_value(influxdb_db,Parsed),
             InfluxdbEnable=proplists:get_value(influxdb_enable,Parsed, false),
-
+            Schedulers=proplists:get_value(schedulers,Parsed,undefined),
+            case Schedulers of
+                undefined -> undefined;
+                _ -> MaxSchedulers=erlang:system_info(schedulers),
+                     case Schedulers > MaxSchedulers of
+                         true ->
+                             io:format(standard_error, "Warning: setting online schedulers to ~w (maximum) instead of ~w (requested)~n", [MaxSchedulers, Schedulers]);
+                         _ -> ok
+                     end,
+                     erlang:system_flag(schedulers_online,
+                                        min(Schedulers, MaxSchedulers))
+            end,
             run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
                     InfluxdbUrl, InfluxdbDB, InfluxdbEnable);
         _ ->
