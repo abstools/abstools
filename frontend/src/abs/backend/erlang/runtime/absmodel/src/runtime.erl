@@ -75,9 +75,9 @@ parse(Args,Exec)->
             InfluxdbUrl=proplists:get_value(influxdb_url,Parsed),
             InfluxdbDB=proplists:get_value(influxdb_db,Parsed),
             InfluxdbEnable=proplists:get_value(influxdb_enable,Parsed, false),
-            Schedulers=proplists:get_value(schedulers,Parsed,undefined),
+            Schedulers=proplists:get_value(schedulers,Parsed,none),
             case Schedulers of
-                undefined -> undefined;
+                none -> none;
                 _ -> MaxSchedulers=erlang:system_info(schedulers),
                      case Schedulers > MaxSchedulers of
                          true ->
