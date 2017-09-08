@@ -308,9 +308,19 @@ aspect ProductFlattener {
 
         //Collect all traits
         LinkedList<TraitDecl> list = new LinkedList<>();
+        Map<String,TraitDecl> names = new HashMap<>();
+        
         for (Decl decl : getDecls()) {
             if(decl instanceof TraitDecl){
-                list.add((TraitDecl)decl);
+                TraitDecl tDecl = (TraitDecl)decl;
+                if(!names.containsKey(tDecl.getName())){
+                    list.add(tDecl);
+                    names.put(tDecl.getName(),tDecl);
+                }else{
+                    throw new DeltaModellingException("The trait name "+tDecl.getName()+" at "+ 
+                                                      tDecl.getPositionString() +" has already been used at "+
+                                                      names.get(tDecl.getName()).getPositionString());
+                }
             }
         }
 
