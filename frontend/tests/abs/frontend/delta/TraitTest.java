@@ -35,6 +35,12 @@ import abs.frontend.ast.RemoveMethodModifier;
 public class TraitTest extends DeltaTest{
     
 
+    @Test(expected = DeltaModellingException.class)
+    public void reusedName(){
+        Model model = assertParseOk("module M; trait T = {} module B; trait T = {}");
+        model.applyTraits();
+    }
+    
     @Test
     public void addAddModifierAtRuntimeBackComp(){
 
