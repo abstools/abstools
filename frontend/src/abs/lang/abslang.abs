@@ -39,7 +39,7 @@ export toString, intToString, substr, strlen;
 
 // Real-Time ABS datatypes
 export Time, timeValue, currentms, now, timeDifference, timeLessThan;
-export Duration, durationValue, isDurationInfinite, addDuration, subtractDuration, durationLessThan, subtractFromDuration;
+export Duration, InfDuration, durationValue, isDurationInfinite, addDuration, subtractDuration, durationLessThan, subtractFromDuration;
 export lowlevelDeadline, deadline;
 export Deadline, Critical;
 

@@ -270,18 +270,20 @@ aspect VarResolution {
     
     // eq DeltaDecl.getModuleModifier(int i).lookupVarOrFieldName(String name, boolean fieldOnly) { assert false; return null; } // XXX
     
-    eq CaseExp.getBranch(int i).lookupVarOrFieldName(String name, boolean fieldOnly) {
+    inh VarOrFieldDecl CaseBranch.lookupVarOrFieldName(String name, boolean fieldOnly);
+    eq CaseBranch.getRight().lookupVarOrFieldName(String name, boolean fieldOnly) {
         if (!fieldOnly) {
-            VarOrFieldDecl d = getBranch(i).getLeft().locallookupVarOrFieldName(name,fieldOnly);
+            VarOrFieldDecl d = getLeft().locallookupVarOrFieldName(name,fieldOnly);
             if (d != null)
                 return d;
         }
         return lookupVarOrFieldName(name, fieldOnly);
     }
 
-    eq CaseStmt.getBranch(int i).lookupVarOrFieldName(String name, boolean fieldOnly) {
+    inh VarOrFieldDecl CaseBranchStmt.lookupVarOrFieldName(String name, boolean fieldOnly);
+    eq CaseBranchStmt.getRight().lookupVarOrFieldName(String name, boolean fieldOnly) {
         if (!fieldOnly) {
-            VarOrFieldDecl d = getBranch(i).getLeft().locallookupVarOrFieldName(name,fieldOnly);
+            VarOrFieldDecl d = getLeft().locallookupVarOrFieldName(name,fieldOnly);
             if (d != null)
                 return d;
         }
