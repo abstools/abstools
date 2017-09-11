@@ -26,6 +26,8 @@ include::modules.adoc[]
 
 include::stdlib.adoc[]
 
+include::modelapi.adoc[]
+
 include::timed.adoc[]
 
 include::schedulers.adoc[]
