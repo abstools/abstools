@@ -108,7 +108,7 @@ public class ParFnAppTest extends PardefTest {
             "List<Rat> l = map<Int, Rat>(Nil)(halve);",
             halveFunction(),
             "def List<B> map<A, B>(List<A> list)(f) = case list {\n"
-                + "Cons(x, xs) => Cons(f_1(x), map(xs));\n"
+                + "Cons(x, xs) => Cons(f(x), map(xs));\n"
                 + "Nil => Nil;\n"
                 + "};"
         ), "Map_%s_halve_Int_Rat");
@@ -117,7 +117,6 @@ public class ParFnAppTest extends PardefTest {
     @Test
     public void recursionWithClosure() {
         Model m = expand(parse(
-            true,
             "Int x = 0; Int y = 1; rec()((Int i) => x, (Int j) => y);",
             "def Int rec()(f, g) = rec();"
         ));
@@ -136,7 +135,7 @@ public class ParFnAppTest extends PardefTest {
             "List<Rat> l = map<Int, Rat>(Nil)(halve);",
             halveFunction(),
             "def List<B> map<A, B>(List<A> list)(f) = case list {\n"
-                + "Cons(x, xs) => Cons(f_1(x), map(xs));\n"
+                + "Cons(x, xs) => Cons(f(x), map(xs));\n"
                 + "Nil => Nil;\n"
                 + "};"
         ), "Map_%s_halve_Int_Rat");
@@ -231,7 +230,6 @@ public class ParFnAppTest extends PardefTest {
     @Test
     public void anonymousSimpleClosure() {
         testExpand(parse(
-            true,
             "Int x = 0; apply<Int, Int>(0)((Int i) => i + x);",
             applyFunction()
         ), "Apply_%s_\\d+_Int_Int");
@@ -240,7 +238,6 @@ public class ParFnAppTest extends PardefTest {
     @Test
     public void anonymousNestedClosure() {
         testExpand(parse(
-            true,
             "Int x = 0; apply<Int, Int>(0)((Int i) => apply<Int, Int>(i)((Int j) => j + x));",
             applyFunction()
         ), "Apply_%s_\\d+_Int_Int");
@@ -249,7 +246,6 @@ public class ParFnAppTest extends PardefTest {
     @Test
     public void closureParamSameNameAsFunctionParam() {
         testExpand(parse(
-            true,
             "Int x = 1; test(0)((Int i) => x + i);",
             "def Int test(Int x_0)(f) = f(x_0);"
         ), "Test_%s_\\d+");
@@ -258,7 +254,6 @@ public class ParFnAppTest extends PardefTest {
     @Test
     public void multipleAnonsUsingSameClosureVar() {
         testExpand(parse(
-            true,
             "Int x = 1; test()(() => x, () => -x);",
             "def Int test()(f, g) = f() + g();"
         ), "Test_%s_\\d+_\\d+");
@@ -267,7 +262,6 @@ public class ParFnAppTest extends PardefTest {
     @Test
     public void sameAnonTwiceOnlyOneClosure() {
         Model m = testExpand(parse(
-            true,
             "Int x = 1; test()(() => x, () => x);",
             "def Int test()(f, g) = f() + g();"
         ), "Test_%s_\\d+_\\d+");

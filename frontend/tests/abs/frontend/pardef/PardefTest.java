@@ -1,6 +1,9 @@
 package abs.frontend.pardef;
 
+import static org.junit.Assert.assertFalse;
+
 import abs.frontend.FrontendTest;
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
@@ -41,15 +44,6 @@ public abstract class PardefTest extends FrontendTest {
         return builder.append(']').toString();
     }
 
-    protected final FunctionDecl getFunction(Model model) {
-        List<FunctionDecl> functions = TreeUtil.findChildren(model, FunctionDecl.class);
-        if (functions.isEmpty()) {
-            return null;
-        } else {
-            return functions.get(0);
-        }
-    }
-
     protected final FunctionDecl getFunction(Model model, Pattern regex) {
         for (FunctionDecl decl : TreeUtil.findChildren(model, FunctionDecl.class)) {
             if (regex.matcher(decl.getName()).matches()) {
@@ -74,11 +68,13 @@ public abstract class PardefTest extends FrontendTest {
 
     protected final Model expand(Model model) {
         model.expandPartialFunctions();
+        SemanticConditionList e = model.typeCheck();
+        assertFalse("Type check errors! First: " + e.getFirstError(), e.containsErrors());
         return model;
     }
 
     protected final Model parse(String functionCall, String... functions) {
-        return parse(false, functionCall, functions);
+        return parse(true, functionCall, functions);
     }
 
     protected final Model parse(boolean withStbLib, String functionCall, String... functions) {

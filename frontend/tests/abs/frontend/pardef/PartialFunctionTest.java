@@ -8,9 +8,12 @@ import abs.backend.prettyprint.DefaultABSFormatter;
 import abs.backend.prolog.ReachabilityInformation;
 import abs.common.NotImplementedYetException;
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.Decl;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.PartialFunctionDecl;
+import abs.frontend.typechecker.KindedName;
+import abs.frontend.typechecker.KindedName.Kind;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -28,13 +31,17 @@ public class PartialFunctionTest extends PardefTest {
         String errorMessage = "No expanded function with name " + regex + " created"
             + " (functions: " + getFunctions(model) + ")";
         assertNotNull(errorMessage, result);
+        Decl decl = model.lookup(new KindedName(Kind.FUN, result.getName()));
+        assertFalse("Could not lookup function " + result.getName(), decl.isUnknown());
         return result;
     }
 
-    private void testExpand(Model model, String... expectedNames) {
+    private Model testExpand(Model model, String... expectedNames) {
+        model = expand(model);
         for (String expectedName : expectedNames) {
-            assertHasFunction(expand(model), expandedName(expectedName));
+            assertHasFunction(model, expandedName(expectedName));
         }
+        return model;
     }
 
     private PartialFunctionDecl getPartialFunction(Model model, String regex) {
@@ -153,11 +160,11 @@ public class PartialFunctionTest extends PardefTest {
 
     @Test
     public void noMaudeCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
-        Model model = expand(parse(
+        Model model = testExpand(parse(
             "apply<Int, Int>(0)(inc);",
             applyFunction(),
             incFunction()
-        ));
+        ), "Apply_%s_inc_Int_Int");
         PartialFunctionDecl func = getPartialFunction(model, "apply");
         assertNotNull(func);
 

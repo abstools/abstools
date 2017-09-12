@@ -26,6 +26,8 @@ aspect PartialFunctionExpander {
         }
 
         expandChildParFnApps(this, expandedPartialFunctions.size());
+        // flush cache so expanded functions can be resolved
+        flushCache();
     }
 
     private int ModuleDecl.expandChildParFnApps(ASTNode<?> node, int expansionCount) {
