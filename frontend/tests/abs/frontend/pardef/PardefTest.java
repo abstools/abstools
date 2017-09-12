@@ -13,19 +13,19 @@ public abstract class PardefTest extends FrontendTest {
     private static final String MODULE_NAME = "UnitTest";
 
     protected String applyFunction() {
-        return "def B apply<A, B>(A a)(f) = f(a)";
+        return "def B apply<A, B>(A a)(f) = f(a);";
     }
 
     protected String incFunction() {
-        return "def Int inc(Int i) = i + 1";
+        return "def Int inc(Int i) = i + 1;";
     }
 
     protected String decFunction() {
-        return "def Int dec(Int i) = i - 1";
+        return "def Int dec(Int i) = i - 1;";
     }
 
     protected String halveFunction() {
-        return "def Rat halve(Int i) = i / 2";
+        return "def Rat halve(Int i) = i / 2;";
     }
 
     protected final String getFunctions(Model model) {
@@ -84,11 +84,11 @@ public abstract class PardefTest extends FrontendTest {
     protected final Model parse(boolean withStbLib, String functionCall, String... functions) {
         StringBuilder builder = new StringBuilder(functions.length * 30);
         for (String function : functions) {
-            builder.append(function).append(';');
+            builder.append(function);
         }
 
         builder.append("{ ")
-            .append(functionCall).append(';')
+            .append(functionCall)
             .append(" }");
 
         String code = builder.toString();
