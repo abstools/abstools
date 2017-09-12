@@ -45,6 +45,7 @@ public enum ErrorMessage {
     DUPLICATE_CLASS_NAME("Class %s is already defined%s."),
     DUPLICATE_INTERFACE_NAME("Interface %s is already defined%s."),
     DUPLICATE_FUN_NAME("Function %s is already defined%s."),
+    DUPLICATE_PARTIAL_FUN_NAME("Partial function %s is already defined%s."),
     DUPLICATE_METHOD_NAME("Method %s is already defined."),
     DUPLICATE_PARAM_NAME("Parameter %s is already defined."),
     DUPLICATE_TYPE_DECL("Type (interface, datatype or exception) %s is already defined%s."),

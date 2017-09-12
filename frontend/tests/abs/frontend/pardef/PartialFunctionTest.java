@@ -19,7 +19,6 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class PartialFunctionTest extends PardefTest {
@@ -88,16 +87,6 @@ public class PartialFunctionTest extends PardefTest {
             "def Int outer(Int i)() = inner(i)();",
             "def Int inner(Int i)() = i * 2;"
         ), "Outer_%s", "Inner_%s");
-    }
-
-    @Ignore("This isn't checked anymore since the ModuleDecl function lookup is used.")
-    @Test(expected = PardefModellingException.class)
-    public void duplicateFunction() {
-        expand(parse(
-            "",
-            applyFunction(),
-            applyFunction()
-        ));
     }
 
     @Test

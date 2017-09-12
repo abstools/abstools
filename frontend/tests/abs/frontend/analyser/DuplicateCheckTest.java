@@ -5,6 +5,7 @@
 package abs.frontend.analyser;
 
 import static abs.frontend.analyser.ErrorMessage.*;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -50,9 +51,16 @@ public class DuplicateCheckTest extends FrontendTest {
         assertEndsWith(p.typeCheck().getFirstError(), DUPLICATE_FUN_NAME.withArgs("zero", ""));
     }
 
+    @Test
+    public void duplicatePartialFunctions() {
+        Model m = assertParseOk("data Test = Test; def Test zero()() = Test; def Test zero()() = Test;");
+        assertEndsWith(m.typeCheck().getFirstError(), DUPLICATE_PARTIAL_FUN_NAME.withArgs("zero", ""));
+    }
+
     private void assertEndsWith(SemanticCondition expected, String actual) {
-        assertTrue("Expected that " + expected.getHelpMessage() + " ends with " + actual, expected.getHelpMessage()
-                .endsWith(actual));
+        assertNotNull("Duplicate not detected", expected);
+        assertTrue("Expected that " + expected.getHelpMessage() + " ends with " + actual,
+            expected.getHelpMessage().endsWith(actual));
     }
 
 }
