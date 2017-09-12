@@ -270,4 +270,34 @@ public class ParFnAppTest extends PardefTest {
         assertEquals(1, function.getNumParam());
     }
 
+    @Test
+    public void importExpansion() {
+        // name import
+        testExpand(assertParseOkStdLib(
+            "import test from Pardef;"
+                + incFunction()
+                + "{ test()(inc); }"
+                + "module Pardef; export *;"
+                + "def Int test()(f) = f(0);"
+        ), "Test_Pardef_inc");
+
+        // star import
+        testExpand(assertParseOkStdLib(
+            "import * from Pardef;"
+                + incFunction()
+                + "{ test()(inc); }"
+                + "module Pardef; export *;"
+                + "def Int test()(f) = f(0);"
+        ), "Test_Pardef_inc");
+
+        // import function and pardef
+        testExpand(assertParseOkStdLib(
+            "import test from Pardef;"
+                + "import inc from IncMod;"
+                + "{ test()(inc); }"
+                + "module Pardef; export *; def Int test()(f) = f(0);"
+                + "module IncMod; export *; " + incFunction()
+        ), "Test_Pardef_inc");
+    }
+
 }
