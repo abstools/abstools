@@ -50,13 +50,13 @@ aspect Variables {
     // Checks type of variables and features.
 
     syn boolean Variable.isBool();
-    eq   FAVar.isBool() = ((Model)calcContextNode(Model.class)).bools().contains(getFullName());
-    eq  AttVar.isBool() = ((Model)calcContextNode(Model.class)).bools().contains(getFullName());
-    eq FeatVar.isBool() = ((Model)calcContextNode(Model.class)).features().contains(getFName());
+    eq   FAVar.isBool() = calcContextNode(Model.class).bools().contains(getFullName());
+    eq  AttVar.isBool() = calcContextNode(Model.class).bools().contains(getFullName());
+    eq FeatVar.isBool() = calcContextNode(Model.class).features().contains(getFName());
 
     syn boolean Variable.isInt();
-    eq   FAVar.isInt() = ((Model)calcContextNode(Model.class)).ints().containsKey(getFullName());
-    eq  AttVar.isInt() = ((Model)calcContextNode(Model.class)).ints().containsKey(getFullName());
+    eq   FAVar.isInt() = calcContextNode(Model.class).ints().containsKey(getFullName());
+    eq  AttVar.isInt() = calcContextNode(Model.class).ints().containsKey(getFullName());
     eq FeatVar.isInt() = false;
 
     // get variables in an attribute declaration, and checks if it is repeated.
@@ -67,7 +67,7 @@ aspect Variables {
                 if (getAType() instanceof IntMType) {
                     //       System.out.println("searching for att "+pname()+"."+getName()+" in "+ivars);
                     // check also for bools, but not check in bool for ints!
-                    if (((Model)calcContextNode(Model.class)).bools().contains(pname()+"."+getName()))
+                    if (calcContextNode(Model.class).bools().contains(pname()+"."+getName()))
                         isRepeated = true;
                     IntMType type = (IntMType) getAType();
                     final BoundaryInt[] boundaries = {type.getMin(),type.getMax()};
@@ -78,7 +78,7 @@ aspect Variables {
                     if (getAType() instanceof IntListMType) {
                         //      System.out.println("searching for att "+pname()+"."+getName()+" in "+ivars);
                         // check also for bools, but not check in bool for ints!
-                        if (((Model)calcContextNode(Model.class)).bools().contains(pname()+"."+getName()))
+                        if (calcContextNode(Model.class).bools().contains(pname()+"."+getName()))
                             isRepeated = true;
                         IntListMType type = (IntListMType) getAType();
                         // note that "type" is a list with at least a value, because of the parser

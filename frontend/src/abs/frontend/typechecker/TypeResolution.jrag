@@ -448,20 +448,20 @@ aspect TypeResolution {
     eq AsyncCall.isAsync() = true;
     eq AwaitAsyncCall.isAsync() = true;
 
-    syn lazy ModuleDecl ASTNode.getModuleDecl() = (ModuleDecl) calcContextNode(ModuleDecl.class);
+    syn lazy ModuleDecl ASTNode.getModuleDecl() = calcContextNode(ModuleDecl.class);
     /**
      * Return this objects surrounding declaration. Uses the Null Object Pattern,
      * so don't cast the result, as it may be an UnknownDecl.
      */
     syn lazy Decl ASTNode.getContextDecl() {
-        Decl d = (Decl) calcContextNode(Decl.class);
+        Decl d = calcContextNode(Decl.class);
         return (d == null ? Model.unknownDecl : d);
     }
-    syn lazy MethodImpl ASTNode.getContextMethod() = (MethodImpl) calcContextNode(MethodImpl.class);
-    syn lazy Block ASTNode.getContextBlock() = (Block) calcContextNode(Block.class);
+    syn lazy MethodImpl ASTNode.getContextMethod() = calcContextNode(MethodImpl.class);
+    syn lazy Block ASTNode.getContextBlock() = calcContextNode(Block.class);
 
     /** returns the parent compilation unit of this node **/
-    syn lazy CompilationUnit ASTNode.getCompilationUnit() = (CompilationUnit) calcContextNode(CompilationUnit.class);
+    syn lazy CompilationUnit ASTNode.getCompilationUnit() = calcContextNode(CompilationUnit.class);
 
     /**
      * checks whether the two elements are defined in the same method or block
@@ -475,20 +475,20 @@ aspect TypeResolution {
      * This method (presumably) finds the outermost match conforming to `clazz`.
      */
     @CheckForNull
-    public ASTNode<?> ASTNode.calcContextNode(Class<?> clazz) {
+    public <N extends ASTNode<?>> N ASTNode.calcContextNode(Class<N> clazz) {
         ASTNode<?> n = this;
         while (n != null) {
             ASTNode<?> parent = n.getParent();
 
             if (clazz.isInstance(n)) {
                 if (parent == null)
-                    return n;
+                    return clazz.cast(n);
 
-                ASTNode<?> pn = parent.calcContextNode(clazz);
+                N pn = parent.calcContextNode(clazz);
                 if (pn != null)
                     return pn;
                 else
-                    return n;
+                    return clazz.cast(n);
             }
             n = parent;
         }
@@ -500,11 +500,11 @@ aspect TypeResolution {
      * object's parent. May return null.
      */
     @CheckForNull
-    public ASTNode<?> ASTNode.closestParent(Class<?> clazz) {
+    public <N extends ASTNode<?>> N ASTNode.closestParent(Class<N> clazz) {
         ASTNode<?> n = getParent();
         while (n != null) {
             if (clazz.isInstance(n))
-                return n;
+                return clazz.cast(n);
             else
                 n = n.getParent();
         }
