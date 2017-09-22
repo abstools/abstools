@@ -379,62 +379,62 @@ public class ParserTest extends FrontendTest {
     @Test
     public void partialFunctionDecl() {
         // fun_exp = IDENTIFIER
-        assertParseOk("def Int inc(Int x)() = x;");
-        assertParseOk("def Int inc(Int x)(f_1) = x;");
-        assertParseOk("def Int inc(Int x)(f_1, f_2) = x;");
-        assertParseOk("def Datatype fn(Int x , Int y)() = x;");
+        assertParseOk("def Int inc()(Int x) = x;");
+        assertParseOk("def Int inc(f_1)(Int x) = x;");
+        assertParseOk("def Int inc(f_1, f_2)(Int x) = x;");
+        assertParseOk("def Datatype fn()(Int x , Int y) = x;");
 
         // fun_exp = Term(co,l)
-        assertParseOk("def Int inc(Int x)() = plus(x,one());");
+        assertParseOk("def Int inc()(Int x) = plus(x,one());");
 
         // fun_exp = f_1(x)
-        assertParseOk("def Int apply(Int x)(f_1) = f_1(x);");
+        assertParseOk("def Int apply(f_1)(Int x) = f_1(x);");
 
         // fun_exp = Term(f_1(x))
-        assertParseOk("def Int applyAndInc(Int x)(f_1) = plus(f_1(x), one());");
+        assertParseOk("def Int applyAndInc(f_1)(Int x) = plus(f_1(x), one());");
 
-        assertParseOk("def TPair revPair(TPair p)(f_1) = pair(snd(f_1(p)),fst(p));");
+        assertParseOk("def TPair revPair(f_1)(TPair p) = pair(snd(f_1(p)),fst(p));");
         // using let
-        assertParseOk("def TPair revPair(TPair p)() = let(T x) = fst(p) in pair(snd(p),x);");
-        assertParseOk("def TPair revPair(TPair p)(f_1) = let(T x) = f_1(fst(p)) in pair(snd(p),x);");
-        assertParseOk("def TPair revPair(TPair p)(f_1) = let(T x) = fst(p) in pair(f_1(snd(p)),x);");
+        assertParseOk("def TPair revPair()(TPair p) = let(T x) = fst(p) in pair(snd(p),x);");
+        assertParseOk("def TPair revPair(f_1)(TPair p) = let(T x) = f_1(fst(p)) in pair(snd(p),x);");
+        assertParseOk("def TPair revPair(f_1)(TPair p) = let(T x) = fst(p) in pair(f_1(snd(p)),x);");
         // using nested let
-        assertParseOk("def TPair revPair(TPair p)() = let(T x) = fst(p) in let(T y) = snd(p) in pair(y,x);");
-        assertParseOk("def TPair revPair(TPair p)(f_1) = let(T x) = fst(p) in let(T y) = f_1(snd(p)) in pair(y,x);");
-        assertParseOk("def TPair revPair(TPair p)(f_1) = let(T x) = fst(p) in let(T y) = snd(p) in pair(f_1(y),x);");
+        assertParseOk("def TPair revPair()(TPair p) = let(T x) = fst(p) in let(T y) = snd(p) in pair(y,x);");
+        assertParseOk("def TPair revPair(f_1)(TPair p) = let(T x) = fst(p) in let(T y) = f_1(snd(p)) in pair(y,x);");
+        assertParseOk("def TPair revPair(f_1)(TPair p) = let(T x) = fst(p) in let(T y) = snd(p) in pair(f_1(y),x);");
     }
 
     @Test
     public void parametricPartialFunctionDecl() {
-        assertParseOk("def Int length<A>(List<A> list)(f_1) = case list { Nil => 0; Cons(_, rest) => 1 + length(rest); };");
-        assertParseOk("def Int length<A>(List<A> list)(inc, dec) = case list { Nil => 0; Cons(_, rest) => inc(dec(1)) + length(rest); };");
-        assertParseOk("def A nth<A>(List<A> list)(f_1) = case n { 0 => head(list) ; _ => nth(tail(list), n-1) ; };");
+        assertParseOk("def Int length<A>(f_1)(List<A> list) = case list { Nil => 0; Cons(_, rest) => 1 + length(rest); };");
+        assertParseOk("def Int length<A>(inc, dec)(List<A> list) = case list { Nil => 0; Cons(_, rest) => inc(dec(1)) + length(rest); };");
+        assertParseOk("def A nth<A>(f_1)(List<A> list) = case n { 0 => head(list) ; _ => nth(tail(list), n-1) ; };");
     }
 
     @Test
     public void partialFunctionTypedFunctionParameter() {
-        assertParseError("def Int add(Int y)(Int x) = y;");
-        assertParseError("def Int add(Int y)(f_1, Int x) f_1(y);");
+        assertParseError("def Int add(Int x)(Int y) = y;");
+        assertParseError("def Int add(f_1, Int x)(Int y) f_1(y);");
     }
 
     @Test
     public void partialFunctionInvalidParameterSymbols() {
-        assertParseError("def Int identity(Int y)(f1<Int>) = y;");
-        assertParseError("def Int zero()(f-n) = 0;");
-        assertParseError("def Int zero()(f!n) = 0;");
-        assertParseError("def Int zero()(f?n) = 0;");
+        assertParseError("def Int identity(f1<Int>)(Int y) = y;");
+        assertParseError("def Int zero(f-n)() = 0;");
+        assertParseError("def Int zero(f!n)() = 0;");
+        assertParseError("def Int zero(f?n)() = 0;");
     }
 
     @Test
     public void callPartialFunction() {
         assertParseOk("{ f()(); }");
         assertParseOk("{ f_1()(); }");
-        assertParseOk("{ f(x)(); }");
-        assertParseOk("{ f(g(x))(); }");
-        assertParseOk("{ f(x, y)(); }");
-        assertParseOk("{ f()(g); }");
-        assertParseOk("{ f()(g, h); }");
-        assertParseOk("{ f()(some_func, other_func); }");
+        assertParseOk("{ f()(x); }");
+        assertParseOk("{ f()(g(x)); }");
+        assertParseOk("{ f()(x, y); }");
+        assertParseOk("{ f(g)(); }");
+        assertParseOk("{ f(g, h)(); }");
+        assertParseOk("{ f(some_func, other_func)(); }");
     }
 
     @Test
@@ -453,32 +453,32 @@ public class ParserTest extends FrontendTest {
 
     @Test
     public void callPartialFunctionInvalidParams() {
-        assertParseError("{ f()(g(x)); }");
-        assertParseError(" { f()(f g); }");
-        assertParseError(" { f()(f()); }");
-        assertParseError(" { f()(g()); }");
-        assertParseError(" { f()(0); }");
+        assertParseError("{ f(g(x))(); }");
+        assertParseError(" { f(f g)(); }");
+        assertParseError(" { f(f())(); }");
+        assertParseError(" { f(g())(); }");
+        assertParseError(" { f(0)(); }");
     }
 
     @Test
     public void anonymousFunction() {
-        assertParseOk("{ f()((Int i) => i); }");
-        assertParseOk("{ f()((Int i) => i + 1); }");
-        assertParseOk("{ f()((Int i) => inc(i)); }");
-        assertParseOk("{ f()((Int i) => 0); }");
-        assertParseOk("{ f()(() => 0); }");
-        assertParseOk("{ f()((Int i) => i); }");
-        assertParseOk("{ f()((Int i, Int j) => i + j); }");
+        assertParseOk("{ f((Int i) => i)(); }");
+        assertParseOk("{ f((Int i) => i + 1)(); }");
+        assertParseOk("{ f((Int i) => inc(i))(); }");
+        assertParseOk("{ f((Int i) => 0)(); }");
+        assertParseOk("{ f(() => 0)(); }");
+        assertParseOk("{ f((Int i) => i)(); }");
+        assertParseOk("{ f((Int i, Int j) => i + j)(); }");
     }
 
     @Test
     public void multipleAnonymousFunctions() {
-        assertParseOk("{ f()((Int i) => i, (Int j) => j); }");
-        assertParseOk("{ f()((Int i) => i, inc); }");
+        assertParseOk("{ f((Int i) => i, (Int j) => j)(); }");
+        assertParseOk("{ f((Int i) => i, inc)(); }");
     }
 
     @Test
     public void anonymousFunctionNoParamBraces() {
-        assertParseError("{ f()(Int i => Int i);}");
+        assertParseError("{ f(Int i => i)();}");
     }
 }

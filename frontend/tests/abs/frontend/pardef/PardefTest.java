@@ -16,7 +16,7 @@ public abstract class PardefTest extends FrontendTest {
     private static final String MODULE_NAME = "UnitTest";
 
     protected String applyFunction() {
-        return "def B apply<A, B>(A a)(f) = f(a);";
+        return "def B apply<A, B>(f)(A a) = f(a);";
     }
 
     protected String incFunction() {

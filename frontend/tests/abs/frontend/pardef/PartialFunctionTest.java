@@ -71,55 +71,55 @@ public class PartialFunctionTest extends PardefTest {
             "def Int f()() = 1;"
         ), "F_%s");
         testExpand(parse(
-            "f(1)();",
-            "def Int f(Int i)() = i;"),
+            "f()(0);",
+            "def Int f()(Int i) = i;"),
             "F_%s");
         testExpand(parse(
-            "Int result = f(10)(inc);",
+            "Int result = f(inc)(10);",
             incFunction(),
-            "def Int f(Int i)(f_1) = f_1(i);"
+            "def Int f(f_1)(Int i) = f_1(i);"
         ), "F_%s_inc");
         testExpand(parse(
-            "multi_param()(inc, dec);",
+            "multi_param(inc, dec)();",
             incFunction(),
             decFunction(),
-            "def Int multi_param()(f1, f2) = f1(f2(0));"
+            "def Int multi_param(f1, f2)() = f1(f2(0));"
         ), "Multi_param_%s_inc_dec");
     }
 
     @Test
     public void definitionContainsParFnApp() {
         testExpand(parse(
-            "Int i = outer(0)();",
-            "def Int outer(Int i)() = inner(i)();",
-            "def Int inner(Int i)() = i * 2;"
+            "Int i = outer()(0);",
+            "def Int outer()(Int i) = inner()(i);",
+            "def Int inner()(Int i) = i * 2;"
         ), "Outer_%s", "Inner_%s");
     }
 
     @Test
     public void passFuncParam() {
         testExpand(parse(
-            "test(1)(inc);",
+            "test(inc)(1);",
             incFunction(),
             applyFunction(),
-            "def Int test(Int i)(f) = apply<Int, Int>(i)(f);"
+            "def Int test(f)(Int i) = apply<Int, Int>(f)(i);"
         ), "Test_%s_inc", "Apply_%s_inc_Int_Int");
     }
 
     @Test
     public void callInnerParametricWithTypeParams() {
         testExpand(parse(
-            "test<Int, Int>(1)();",
+            "test<Int, Int>()(1);",
             applyFunction(),
             incFunction(),
-            "def B test<A, B>(A a)() = apply<A, B>(a)(inc);"
+            "def B test<A, B>()(A a) = apply<A, B>(inc)(a);"
         ), "Test_%s_Int_Int", "Apply_%s_inc_Int_Int");
     }
 
     @Test
     public void noErlangCodeGenerated() throws IOException, NotImplementedYetException {
         Model model = expand(parse(
-            "apply<Int, Int>(0)(inc);",
+            "apply<Int, Int>(inc)(0);",
             applyFunction(),
             incFunction()
         ));
@@ -131,7 +131,7 @@ public class PartialFunctionTest extends PardefTest {
     @Test
     public void noJavaCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
         Model model = expand(parse(
-            "apply<Int, Int>(0)(inc);",
+            "apply<Int, Int>(inc)(0);",
             applyFunction(),
             incFunction()
         ));
@@ -146,7 +146,7 @@ public class PartialFunctionTest extends PardefTest {
     @Test
     public void noDynamicJavaCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
         Model model = expand(parse(
-            "apply<Int, Int>(0)(inc);",
+            "apply<Int, Int>(inc)(0);",
             applyFunction(),
             incFunction()
         ));
@@ -161,7 +161,7 @@ public class PartialFunctionTest extends PardefTest {
     @Test
     public void noMaudeCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
         Model model = testExpand(parse(
-            "apply<Int, Int>(0)(inc);",
+            "apply<Int, Int>(inc)(0);",
             applyFunction(),
             incFunction()
         ), "Apply_%s_inc_Int_Int");
@@ -176,7 +176,7 @@ public class PartialFunctionTest extends PardefTest {
     @Test
     public void noPrologCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
         Model model = expand(parse(
-            "apply<Int, Int>(0)(inc);",
+            "apply<Int, Int>(inc)(0);",
             applyFunction(),
             incFunction()
         ));
@@ -191,7 +191,7 @@ public class PartialFunctionTest extends PardefTest {
     @Test
     public void prettyPrintImplemented() throws NotImplementedYetException, IOException {
         Model model = expand(parse(
-            "apply<Int, Int>(0)(inc);",
+            "apply<Int, Int>(inc)(0);",
             applyFunction(),
             incFunction()
         ));
