@@ -108,7 +108,7 @@ aspect ParFnAppParam {
         }
 
         java.util.List<FnApp> recursiveCalls = new LinkedList<>();
-        for (FnApp call : TreeUtil.findChildren(func, FnApp.class)) {
+        for (FnApp call : func.findChildren(FnApp.class)) {
             if (call.getName().equals(func.getName())) {
                 recursiveCalls.add(call);
             }

@@ -46,7 +46,7 @@ public class PartialFunctionTest extends PardefTest {
 
     private PartialFunctionDecl getPartialFunction(Model model, String regex) {
         Pattern pattern = Pattern.compile(regex);
-        for (PartialFunctionDecl func : TreeUtil.findChildren(model, PartialFunctionDecl.class)) {
+        for (PartialFunctionDecl func : model.findChildren(PartialFunctionDecl.class)) {
             if (pattern.matcher(func.getName()).matches()) {
                 return func;
             }

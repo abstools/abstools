@@ -31,9 +31,9 @@ public final class AnnotationUtil {
      * @throws IllegalArgumentException if there is no Stmt or FunctionDecl parent
      */
     public static void annotateCall(FnApp call, int expansionId) {
-        Stmt parent = TreeUtil.findParent(call, Stmt.class);
+        Stmt parent = call.closestParent(Stmt.class);
         if (parent == null) {
-            FunctionDecl parentFunction = TreeUtil.findParent(call, FunctionDecl.class);
+            FunctionDecl parentFunction = call.closestParent(FunctionDecl.class);
             if (parentFunction == null) {
                 throw new IllegalArgumentException("Function call has no parent Statement or FunctionDecl: " + call);
             }

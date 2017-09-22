@@ -21,7 +21,7 @@ aspect PartialFunctionExpander {
 
     void ModuleDecl.expandPartialFunctions() {
         // check for cycles
-        for (PartialFunctionDecl function : TreeUtil.findChildren(getDecls(), PartialFunctionDecl.class)) {
+        for (PartialFunctionDecl function : getDecls().findChildren(PartialFunctionDecl.class)) {
             function.checkCycles(this);
         }
 
@@ -31,13 +31,13 @@ aspect PartialFunctionExpander {
     }
 
     private int ModuleDecl.expandChildParFnApps(ASTNode<?> node, int expansionCount) {
-        for (ParFnApp fnApp : TreeUtil.findChildren(node, ParFnApp.class, true)) {
-            if (TreeUtil.findParent(fnApp, PartialFunctionDecl.class) != null) {
+        for (ParFnApp fnApp : node.findChildren(ParFnApp.class, true)) {
+            if (fnApp.closestParent(PartialFunctionDecl.class) != null) {
                 // ignore ParFnApp within pardef that has not been expanded yet
                 continue;
             }
 
-            if (TreeUtil.findParent(fnApp, Model.class) == null) {
+            if (fnApp.closestParent(Model.class) == null) {
                 // If this happens, it's a compiler error
                 throw new RuntimeException("This should not have happened");
             }
@@ -65,7 +65,7 @@ aspect PartialFunctionExpander {
             }
 
             FnApp expandedFunctionCall = fnApp.apply(expandedWrapper.getExpanded());
-            TreeUtil.replace(fnApp, expandedFunctionCall);
+            fnApp.replaceWith(expandedFunctionCall);
             AnnotationUtil.annotateCall(expandedFunctionCall, expandedWrapper.getExpansionId());
             // expand ParFnApps in params of expandedFunctionCall
             expansionCount = expandChildParFnApps(expandedFunctionCall, expansionCount);
@@ -86,7 +86,7 @@ aspect PartialFunctionExpander {
         if (!visited.add(getName())) {
             throw new PardefCycleException(this);
         }
-        for (ParFnApp parFnApp : TreeUtil.findChildren(this, ParFnApp.class)) {
+        for (ParFnApp parFnApp : this.findChildren(ParFnApp.class)) {
             PartialFunctionDecl called = module.getPartialFunction(parFnApp.getName());
             if (called == null) {
                 // will be caught somewhere else
@@ -202,19 +202,19 @@ aspect PartialFunctionExpander {
         }
 
         // apply type bindings to return type
-        for (TypeUse typeUse : TreeUtil.findChildren(decl.getTypeUseNoTransform(), TypeUse.class)) {
+        for (TypeUse typeUse : decl.getTypeUseNoTransform().findChildren(TypeUse.class)) {
             TypeUse binding = typeBindings.get(typeUse.getName());
             if (binding != null) {
-                TreeUtil.replace(typeUse, binding.treeCopy());
+                typeUse.replaceWith(binding.treeCopy());
             }
         }
 
         // apply type bindings to parameters
         for (ParamDecl param : decl.getParams()) {
-            for (TypeUse typeUse : TreeUtil.findChildren(param.getAccessNoTransform(), TypeUse.class)) {
+            for (TypeUse typeUse : param.getAccessNoTransform().findChildren(TypeUse.class)) {
                 TypeUse binding = typeBindings.get(typeUse.getName());
                 if (binding != null) {
-                    TreeUtil.replace(typeUse, binding.treeCopy());
+                    typeUse.replaceWith(binding.treeCopy());
                 }
             }
         }
@@ -223,10 +223,10 @@ aspect PartialFunctionExpander {
         FunctionDef functionDef = decl.getFunctionDef();
         if (functionDef instanceof ExpFunctionDef) {
             ExpFunctionDef def = (ExpFunctionDef) functionDef;
-            for (TypeUse typeUse : TreeUtil.findChildren(def.getRhsNoTransform(), TypeUse.class)) {
+            for (TypeUse typeUse : def.getRhsNoTransform().findChildren(TypeUse.class)) {
                 TypeUse binding = typeBindings.get(typeUse.getName());
                 if (binding != null) {
-                    TreeUtil.replace(typeUse, binding.treeCopy());
+                    typeUse.replaceWith(binding.treeCopy());
                 }
             }
         } else {
@@ -312,22 +312,22 @@ aspect PartialFunctionExpander {
     }
 
     private void PartialFunctionDef.applyBindings(PureExp expression, Map<String, ParFnAppParamDecl> bindingByName) {
-        for (FnApp innerCall : TreeUtil.findChildren(expression, FnApp.class)) {
+        for (FnApp innerCall : expression.findChildren(FnApp.class)) {
             ParFnAppParamDecl binding = bindingByName.get(innerCall.getName());
             if (binding != null) {
                 PureExp replacement = binding.getExpression(innerCall);
-                TreeUtil.replace(innerCall, replacement);
+                innerCall.replaceWith(replacement);
                 applyBindings(replacement, bindingByName);
             }
         }
 
-        for (ParFnApp innerCall : TreeUtil.findChildren(expression, ParFnApp.class)) {
+        for (ParFnApp innerCall : expression.findChildren(ParFnApp.class)) {
             for (ParFnAppParamDecl funcParam : innerCall.getFuncParamsNoTransform()) {
                 if (funcParam instanceof NamedParFnAppParam) {
                     NamedParFnAppParam namedFuncParam = (NamedParFnAppParam) funcParam;
                     ParFnAppParamDecl binding = bindingByName.get(namedFuncParam.getName());
                     if (binding != null) {
-                        TreeUtil.replace(namedFuncParam, binding.treeCopyNoTransform());
+                        namedFuncParam.replaceWith(binding.treeCopyNoTransform());
                     }
                 }
             }

@@ -481,23 +481,6 @@ aspect TypeResolution {
         return null;
     }
 
-    /**
-     * This method finds the closest parent conforming to `clazz`, starting from this
-     * object's parent. May return null.
-     */
-    @CheckForNull
-    public <N extends ASTNode<?>> N ASTNode.closestParent(Class<N> clazz) {
-        ASTNode<?> n = getParent();
-        while (n != null) {
-            if (clazz.isInstance(n))
-                return clazz.cast(n);
-            else
-                n = n.getParent();
-        }
-        return null;
-    }
-
-
     syn lazy MethodImpl ClassDecl.lookupMethod(String name) {
         for (MethodImpl m : getMethods()) {
             if (m.getMethodSig().getName().equals(name))

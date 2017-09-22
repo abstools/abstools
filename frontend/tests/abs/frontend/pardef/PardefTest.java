@@ -33,7 +33,7 @@ public abstract class PardefTest extends FrontendTest {
 
     protected final String getFunctions(Model model) {
         StringBuilder builder = new StringBuilder().append('[');
-        Iterator<FunctionDecl> iterator = TreeUtil.findChildren(model, FunctionDecl.class).iterator();
+        Iterator<FunctionDecl> iterator = model.findChildren(FunctionDecl.class).iterator();
         while (iterator.hasNext()) {
             FunctionDecl decl = iterator.next();
             builder.append(decl.getName());
@@ -45,7 +45,7 @@ public abstract class PardefTest extends FrontendTest {
     }
 
     protected final FunctionDecl getFunction(Model model, Pattern regex) {
-        for (FunctionDecl decl : TreeUtil.findChildren(model, FunctionDecl.class)) {
+        for (FunctionDecl decl : model.findChildren(FunctionDecl.class)) {
             if (regex.matcher(decl.getName()).matches()) {
                 return decl;
             }
@@ -54,7 +54,7 @@ public abstract class PardefTest extends FrontendTest {
     }
 
     protected final FnApp getCall(Model model, Pattern regex) {
-        for (FnApp fnApp : TreeUtil.findChildren(model, FnApp.class)) {
+        for (FnApp fnApp : model.findChildren(FnApp.class)) {
             if (regex.matcher(fnApp.getName()).matches()) {
                 return fnApp;
             }
