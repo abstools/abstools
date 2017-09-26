@@ -10,6 +10,7 @@ import abs.frontend.ast.ListLiteral;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.TypedAnnotation;
+import java.util.Objects;
 
 public final class AnnotationUtil {
 
@@ -17,7 +18,9 @@ public final class AnnotationUtil {
     }
 
     public static void annotateExpansion(FunctionDecl expansion, int expansionId) {
-        addToAnnotations(expansion.getAnnotations(), TypeUtil.expansionType(), expansionId);
+        IntLiteral indexLiteral = new IntLiteral(Integer.toString(expansionId));
+        Annotation annotation = new TypedAnnotation(indexLiteral, TypeUtil.expansionType());
+        expansion.addAnnotation(annotation);
     }
 
     /**
@@ -43,18 +46,49 @@ public final class AnnotationUtil {
         }
     }
 
-    private static void addToAnnotations(List<Annotation> annotations, Access annotationType, int expansionId) {
-        IntLiteral indexLiteral = new IntLiteral(Integer.toString(expansionId));
-        Annotation toAdd = null;
+    /**
+     * Gets the expansion ID of a function declaration. If the function declaration is not an expansion, -1 is
+     * returned.
+     *
+     * @param decl a function declaration
+     * @return an expansion ID, or -1
+     * @throws NullPointerException if decl is null
+     */
+    public static int getExpansionId(FunctionDecl decl) {
+        Objects.requireNonNull(decl);
+        Annotation annotation = getAnnotation(decl.getAnnotationsNoTransform(), TypeUtil.expansionType());
+        if (annotation == null) {
+            return -1;
+        }
+        PureExp value = annotation.getValue();
+        if (value instanceof IntLiteral) {
+            IntLiteral intValue = (IntLiteral) value;
+            try {
+                int result = Integer.parseInt(intValue.getContent());
+                return result < 0 ? -1 : result;
+            } catch (NumberFormatException e) {
+                return -1;
+            }
+        } else {
+            return -1;
+        }
+    }
+
+    private static Annotation getAnnotation(List<Annotation> annotations, Access annotationType) {
         for (Annotation annotation : annotations) {
             if (annotation instanceof TypedAnnotation) {
                 TypedAnnotation typedAnnotation = (TypedAnnotation) annotation;
                 if (typedAnnotation.getAccess().matches(annotationType)) {
-                    toAdd = annotation;
-                    break;
+                    return annotation;
                 }
             }
         }
+        return null;
+    }
+
+    private static void addToAnnotations(List<Annotation> annotations, Access annotationType, int expansionId) {
+        IntLiteral indexLiteral = new IntLiteral(Integer.toString(expansionId));
+        Annotation toAdd = getAnnotation(annotations, annotationType);
 
         if (toAdd == null) {
             toAdd = new TypedAnnotation(new ListLiteral(new List<PureExp>()), annotationType);

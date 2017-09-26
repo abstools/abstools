@@ -17,7 +17,15 @@ aspect PartialFunctionExpander {
         return resolved == null ? null : (PartialFunctionDecl) resolved.getDecl();
     }
 
-    private final Map<String, ExpandedWrapper> ModuleDecl.expandedPartialFunctions = new HashMap<>(32);
+    syn int ModuleDecl.getExpansionCount() {
+        int result = 0;
+        for (FunctionDecl decl : getDeclsNoTransform().findChildren(FunctionDecl.class)) {
+            if (AnnotationUtil.getExpansionId(decl) > -1) {
+                ++result;
+            }
+        }
+        return result;
+    }
 
     void ModuleDecl.expandPartialFunctions() {
         // check for cycles
@@ -25,9 +33,23 @@ aspect PartialFunctionExpander {
             function.checkCycles(this);
         }
 
-        expandChildParFnApps(this, expandedPartialFunctions.size());
-        // flush cache so expanded functions can be resolved
-        flushCache();
+        expandChildParFnApps(this, getExpansionCount());
+    }
+
+    private ExpandedWrapper ModuleDecl.getExpansion(String expansionName) {
+        ResolvedName resolved = resolveName(new KindedName(Kind.FUN, expansionName));
+        if (resolved != null) {
+            FunctionDecl decl = (FunctionDecl) resolved.getDecl();
+            int expansionId = AnnotationUtil.getExpansionId(decl);
+            if (expansionId > -1) {
+                return new ExpandedWrapper(decl, expansionId);
+            }
+        }
+        return null;
+    }
+
+    private void ModuleDecl.expandChildParFnApps() {
+        expandChildParFnApps(this, getExpansionCount());
     }
 
     private int ModuleDecl.expandChildParFnApps(ASTNode<?> node, int expansionCount) {
@@ -37,7 +59,7 @@ aspect PartialFunctionExpander {
                 continue;
             }
 
-            if (fnApp.closestParent(Model.class) == null) {
+            if (fnApp.closestParent(ModuleDecl.class) == null) {
                 // If this happens, it's a compiler error
                 throw new RuntimeException("This should not have happened");
             }
@@ -49,15 +71,16 @@ aspect PartialFunctionExpander {
 
             String expandedName = function.expandedName(fnApp);
             ExpandedWrapper expandedWrapper;
-            expandedWrapper = expandedPartialFunctions.get(expandedName);
+            expandedWrapper = getExpansion(expandedName);
 
             if (expandedWrapper == null) {
                 FunctionDecl expandedFunction = function.expand(fnApp);
                 addDecl(expandedFunction);
                 AnnotationUtil.annotateExpansion(expandedFunction, expansionCount);
                 expandedWrapper = new ExpandedWrapper(expandedFunction, expansionCount);
-                expandedPartialFunctions.put(expandedName, expandedWrapper);
                 ++expansionCount;
+                // flush cache so expanded function can be resolved
+                flushAttrCache();
 
                 expansionCount = expandChildParFnApps(expandedFunction, expansionCount);
             } else {

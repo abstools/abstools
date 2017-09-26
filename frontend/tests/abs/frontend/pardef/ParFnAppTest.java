@@ -271,6 +271,15 @@ public class ParFnAppTest extends PardefTest {
     }
 
     @Test
+    public void sameAnonTwiceOnlyOneExpansion() {
+        testExpand(parse(
+            "apply<Int, Int>((Int i) => i)(1);"
+            + "apply<Int, Int>((Int i) => i)(1);",
+            applyFunction()
+        ), "Apply_%s_\\d+_Int_Int");
+    }
+
+    @Test
     public void importExpansion() {
         // name import
         testExpand(assertParseOkStdLib(

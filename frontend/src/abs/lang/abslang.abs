@@ -592,7 +592,7 @@ data AtomicityAnnotation = Atomic;
 data HTTPCallableAnnotation = HTTPCallable;
 
 // Annotation data types to associate expanded Partially Defined Functions and their calls
-type Expansion = List<Int>;
+type Expansion = Int;
 type ExpansionCall = List<Int>;
 
 
