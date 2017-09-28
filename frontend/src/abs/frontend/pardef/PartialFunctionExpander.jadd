@@ -218,10 +218,29 @@ aspect PartialFunctionExpander {
         // cast is checked in checkValid()
         ParametricParFnApp fnApp = (ParametricParFnApp) uncheckedFnApp;
         Map<String, TypeUse> typeBindings = new HashMap<>(getNumTypeParameter() * 2);
+        java.util.List<TypeParameterDecl> unresolvedTypeParams = new LinkedList<>();
         for (int index = 0; index < getNumTypeParameter(); ++index) {
             TypeParameterDecl typeParamDecl = getTypeParameter(index);
             TypeUse typeParam = fnApp.getTypeParam(index);
-            typeBindings.put(typeParamDecl.getName(), typeParam);
+            if (typeParam.getDecl() != null && typeParam.getDecl().isTypeParameter()) {
+                // if the bound type is a type parameter itself, the expanded function should be parametric
+                TypeParameterDecl boundTypeParameterDecl = (TypeParameterDecl) typeParam.getDecl();
+                unresolvedTypeParams.add(boundTypeParameterDecl.treeCopyNoTransform());
+                typeBindings.put(typeParamDecl.getName(), typeParam);
+            } else {
+                typeBindings.put(typeParamDecl.getName(), typeParam);
+            }
+        }
+
+        if (!unresolvedTypeParams.isEmpty()) {
+            decl = new ParametricFunctionDecl(
+                decl.getName(),
+                decl.getTypeUseNoTransform(),
+                decl.getParamsNoTransform(),
+                decl.getFunctionDefNoTransform(),
+                decl.getAnnotations(),
+                ListUtils.toASTList(unresolvedTypeParams)
+            );
         }
 
         // apply type bindings to return type
@@ -310,6 +329,9 @@ aspect PartialFunctionExpander {
 
             for (TypeUse typeUse : paramFnApp.getTypeParams()) {
                 builder.append('_').append(typeUse.getName());
+                if (typeUse.getDecl() != null && typeUse.getDecl().isTypeParameter()) {
+                    builder.append("param");
+                }
             }
             result += builder.toString();
         }

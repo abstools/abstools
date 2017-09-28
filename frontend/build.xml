@@ -228,7 +228,7 @@
       <srcfiles dir="${src.dir}" includes="abs/**/*.jadd" />
     </uptodate>
     <echo if:set="genast.notRequired">No change in *.ast / *.jadd / *.jrag files, skipping.</echo>
-    <jastadd package="${ast.package}" rewrite="" visitCheck="false" outdir="${gen.dir}" debug="true"
+    <jastadd package="${ast.package}" rewrite="" visitCheck="false" outdir="${gen.dir}" debug="true" noinheqcheck="true"
              unless:set="genast.notRequired" >
       <fileset dir=".">
         <include name="src/abs/**/*.ast" />
