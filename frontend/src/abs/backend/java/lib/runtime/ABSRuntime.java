@@ -494,15 +494,13 @@ public class ABSRuntime {
         if (foreignClass != null) {
            try {
               Constructor<?>[] cs = foreignClass.getConstructors();
-              if (cs.length == 0) return foreignClass.newInstance();
+              if (cs.length == 0) return foreignClass.getDeclaredConstructor().newInstance();
               return cs[0].newInstance(args);
-           } catch (InstantiationException e) {
-              e.printStackTrace();
-           } catch (IllegalAccessException e) {
-              e.printStackTrace();
-           } catch (IllegalArgumentException e) {
-              e.printStackTrace();
-           } catch (InvocationTargetException e) {
+           } catch (InstantiationException
+               | IllegalAccessException
+               | InvocationTargetException
+               | IllegalArgumentException
+               | NoSuchMethodException e) {
               e.printStackTrace();
            }
         }
