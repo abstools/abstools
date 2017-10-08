@@ -61,11 +61,11 @@ public class DeployInformationClassSpecification {
   public void setProvide(int p) { _provide = p; }
   public int getProvide() { return _provide; }
 
-  public void addCost(String resource, int cost) { _cost.put(resource, new Integer(cost)); }
+  public void addCost(String resource, int cost) { _cost.put(resource, cost); }
   public int getCost(String resource) {
     Integer cost = _cost.get(resource);
     if(cost == null) { return 0; }
-    else { return cost.intValue(); }
+    else { return cost; }
   }
 
 
