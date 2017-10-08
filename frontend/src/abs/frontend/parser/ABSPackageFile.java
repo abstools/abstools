@@ -48,7 +48,7 @@ public class ABSPackageFile extends JarFile {
      * @throws IOException if this JAR file cannot be read at all
      */
     public boolean isABSPackage() throws IOException {
-        return getManifest() != null && getVersion() != null;
+        return getManifest() != null && getJarVersion() != null;
     }
 
     /**
@@ -57,7 +57,7 @@ public class ABSPackageFile extends JarFile {
      * @throws IOException if this JAR file cannot be read at all
      * @throws NullPointerException if there is no ABS section in the MANIFEST file
      */
-    public String getVersion() throws IOException {
+    public String getJarVersion() throws IOException {
         assert getManifest() != null;
         return getManifest().getMainAttributes().getValue(VERSION_ATTRIBUTE);
     }
