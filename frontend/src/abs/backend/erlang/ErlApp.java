@@ -21,8 +21,6 @@ import java.util.jar.JarFile;
 
 import org.apache.commons.io.FileUtils;
 
-import sun.net.www.protocol.file.FileURLConnection;
-
 import abs.backend.common.CodeStream;
 import abs.common.CompilerUtils;
 import abs.frontend.ast.*;
@@ -137,7 +135,7 @@ public class ErlApp {
                     if (resource instanceof JarURLConnection) {
                         copyJarDirectory(((JarURLConnection) resource).getJarFile(),
                                 inname, outname);
-                    } else if (resource instanceof FileURLConnection) {
+                    } else if (resource.getURL().getProtocol().equals("file")) {
                         /* stolz: This at least works for the unit tests from within Eclipse */
                         File file = new File("src");
                         assert file.exists();
