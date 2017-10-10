@@ -953,30 +953,49 @@ aspect GenerateErlang {
   }
 
   public void DataConstructorExp.generateErlangCode(CodeStream ecs,Vars vars){
-    //Handling for bool
-    final String c = getDataConstructor().getName();
+    final String simpleName = getDataConstructor().getName();
     final String qualifiedName = getDataConstructor().qualifiedName();
-    if("True".equals(c) || "False".equals(c)) {
-        ecs.print(c.toLowerCase());
+    if (qualifiedName.equals("ABS.StdLib.False")) {
+        ecs.print("false");
+    } else if (qualifiedName.equals("ABS.StdLib.True")) {
+        ecs.print("true");
     } else if (qualifiedName.equals("ABS.StdLib.Nil")) {
         ecs.print("[]");
     } else if (qualifiedName.equals("ABS.StdLib.Cons")) {
+        String interp = "";
         ecs.print("[");
-        getParam(0).generateErlangCode(ecs, vars);
-        ecs.print(" | ");
-        getParam(1).generateErlangCode(ecs, vars);
+        PureExp c = this;
+        while (c instanceof DataConstructorExp
+               && ((DataConstructorExp)c).getDataConstructor().qualifiedName()
+               .equals("ABS.StdLib.Cons")) {
+            DataConstructorExp cp = (DataConstructorExp)c;
+            ecs.print(interp);
+            interp = ", ";
+            cp.getParam(0).generateErlangCode(ecs, vars);
+            c = cp.getParam(1);
+        }
+        if (c instanceof DataConstructorExp
+            && ((DataConstructorExp)c).getDataConstructor().qualifiedName()
+            .equals("ABS.StdLib.Nil")) {
+            // do nothing
+        } else {
+            ecs.print(" | ");
+            c.generateErlangCode(ecs, vars);
+        }
         ecs.print("]");
     } else {
-        if(getParams().getNumChild() > 0)
-            ecs.print("{");
-        ecs.print("data");
-        ecs.print(c);
-        for (PureExp p : getParams()) {
-            ecs.print(",");
-            p.generateErlangCode(ecs,vars);
-        }
-        if(getParams().getNumChild() > 0)
+        if(getParams().getNumChild() == 0) {
+            ecs.print("data");
+            ecs.print(simpleName);
+        } else {
+            ecs.print("{ data");
+            ecs.print(simpleName);
+            for (PureExp p : getParams()) {
+                ecs.print(",");
+                p.generateErlangCode(ecs,vars);
+            }
             ecs.print("}");
+        }
     }
   }
 
