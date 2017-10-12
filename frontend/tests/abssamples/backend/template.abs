@@ -1,0 +1,21 @@
+// This is a template file for a file-based unit test.  To create a new unit
+// test, copy this file using a suitable name and location, add your test code
+// and add an invocation into the corresponding test suite (e.g.,
+// tests/abs/backend/common/FunctionalTests.java for a test below
+// FunctionalTests/).
+module BackendTest;
+
+interface I {
+    Bool test();
+}
+
+class C implements I {
+    Bool test() {
+        return True;
+    }
+}
+
+{
+    I i = new C();
+    Bool testresult = await i!test();
+}
