@@ -2,7 +2,6 @@
 /.vagrant
 /.recommenders
 .rebar/
-ebin/
 bin/
 build/
 /**/gen/
