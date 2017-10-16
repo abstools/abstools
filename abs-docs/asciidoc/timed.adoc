@@ -29,7 +29,7 @@ one of the following states:
 * the process is suspended waiting for time to advance
 * the process is waiting for some resources
 
-In practice this means that all process run as long as there is “work to be
+In practice this means that all processes run as long as there is “work to be
 done.”
 
 
