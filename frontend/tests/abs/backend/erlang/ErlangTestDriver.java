@@ -147,7 +147,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      * Executes mainModule
      *
      * To detect faults, we have a Timeout process which will kill the
-     * runtime system after 2 seconds
+     * runtime system after 10 seconds
      */
     private String run(File workDir, String mainModule) throws Exception {
         String val = null;
@@ -206,7 +206,7 @@ class TimeoutThread implements Runnable {
     @Override
     public void run() {
         try {
-            Thread.sleep(2000);
+            Thread.sleep(10000);
             p.destroy();
         } catch (InterruptedException e) {
         }
