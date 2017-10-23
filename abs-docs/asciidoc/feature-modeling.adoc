@@ -38,51 +38,57 @@ representation and check the models for syntax and semantic errors.  The role
 of the back ends is to generate code for the models targeting some suitable
 execution or simulation environment.
 
-[source]
-----
-DeltaDecl      ::= 'delta' TypeId [DeltaParams] ';' [ModuleAccess] ModuleModifier*
-ModuleModifier ::= 'adds' ClassDecl
-                 | 'removes' 'class' TypeName ';'
-                 | 'modifies' 'class' TypeName
-                   ['adds' TypeId (',' TypeId)*] ['removes' TypeId (',' TypeId)*]
-                   '{' Modifier* '}'
-                 | 'adds' InterfaceDecl
-                 | 'removes' 'interface' TypeName ';'
-                 | 'modifies' 'interface' TypeName '{' InterfaceModifier* '}'
-                 | 'adds' FunctionDecl
-                 | 'adds' DataTypeDecl
-                 | 'modifies' DataTypeDecl
-                 | 'adds' TypeSynDecl
-                 | 'modifies' TypeSynDecl
-                 | 'adds' Import
-                 | 'adds' Export
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _DeltaDecl_      ::= | `delta` _SimpleTypeIdentifier_ [ `(` _DeltaParam_ { `,` _DeltaParam_ } `)` ] `;` +
+ { _ModuleAccess_ } { _ModuleModifier_ }
 
-InterfaceModifier ::= 'adds' MethSig ';'
-                    | 'removes' MethSig ';'
+| _DeltaParam_ ::= | _Type_ _SimpleIdentifier_ +
+                   {vbar} _QualifiedTypeIdentifier_ _HasCondition_
 
-Modifier ::= 'adds' FieldDecl
-           | 'removes' FieldDecl
-           | TraitOper 
-        
-DeltaParams ::= '(' DeltaParam (',' DeltaParam)* ')'
+| _HasCondition_ ::= | `hasField` FieldDecl +
+               {vbar} `hasMethod` MethSig +
+               {vbar} `hasInterface` TypeId
 
-DeltaParam ::= Identifier HasCondition*
-             | Type Identifier
+| _ModuleAccess_ ::= | `uses` _TypeId_ `;`
 
-ModuleAccess ::= 'uses' TypeId ';'
+| _ModuleModifier_ ::= | `adds` _ClassDecl_ +
+                    {vbar} `removes` `class` _TypeIdentifier_ `;` +
+                    {vbar} `modifies` `class` _TypeIdentifier_ +
+                    {nbsp} [`adds` _TypeIdentifier_ { `,` _TypeIdentifier_ } ] +
+                    {nbsp} [`removes` _TypeIdentifier_ { `,` _TypeIdentifier_ } ] +
+                    {nbsp} `{` { ClassModifier } `}` +
+                    {vbar} `adds` _InterfaceDecl_ +
+                    {vbar} `removes` `interface` _TypeIdentifier_ `;` +
+                    {vbar} `modifies` `interface` _TypeIdentifier_ `{` { _InterfaceModifier_ } `}` +
+                    {vbar} `adds` _FunctionDecl_ +
+                    {vbar} `adds` _DataTypeDecl_ +
+                    {vbar} `modifies` _DataTypeDecl_ +
+                    {vbar} `adds` _TypeSynDecl_ +
+                    {vbar} `modifies` _TypeSynDecl_ +
+                    {vbar} `adds` _Import_ +
+                    {vbar} `adds` _Export_
+| _ClassModifier_ ::= | `adds` _FieldDecl_ +
+               {vbar} `removes` _FieldDecl_ +
+               {vbar} `adds` _Method_ +
+               {vbar} `modifies` _Method_ +
+               {vbar} `removes` _MethodSig_
 
-HasCondition ::= 'hasField' FieldDecl
-               | 'hasMethod' MethSig
-               | 'hasInterface' TypeId
-----
+
+| _InterfaceModifier_ ::= | `adds` _MethSig_ +
+                    {vbar} `removes` _MethSig_
+
+|====
+
 
 The `DeltaDecl` clause specifies the syntax of delta modules, consisting of a
 unique identifier, a module access directive, a list of parameters and a
 sequence of module modifiers.  The _module access_ directive gives the delta
 access to the namespace of a particular module.  In other words, it specifies
 the ABS module to which modifications using unqualified identifiers apply by
-default.  A delta can still make changes to several modules by fully
-qualifying the `TypeName` of module modifiers.
+default.  A delta can still make modifications to classes and interfaces in
+several modules by fully qualifying the `TypeName` of module modifiers.
 
 While delta modelling supports a broad range of ways to modify an ABS model,
 not all ABS program entities are modifiable.  These unsupported modifications
