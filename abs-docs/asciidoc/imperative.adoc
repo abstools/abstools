@@ -313,6 +313,17 @@ anywhere a single statement is valid.
 
 === Conditionals
 
+ABS has the standard conditional statement.  The condition has to evaluate to
+a Boolean value.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _IfStmt_ ::= | `if` `(` _PureExp_ `)` _Stmt_ [ `else` _Stmt_ ]
+|====
+
+
+
 [source]
 .Example
 ----
