@@ -243,7 +243,7 @@ resulting value against the branches until a matching pattern is found.  The
 value of the case expression itself is the value of the expression on the
 right-hand side of the first matching pattern.
 
-It is an error if no pattern matches the expression.
+If no pattern matches the expression, a `PatternMatchFailException` is thrown.
 
 There are four different kinds of patterns available in ABS:
 
