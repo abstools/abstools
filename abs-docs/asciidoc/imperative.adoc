@@ -6,20 +6,20 @@ This chapter specifies all ABS statements.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _Statement_ ::= | _SkipStmt_
-{vbar} _VarDeclStmt_
-{vbar} _AssignStmt_
-{vbar} _ExpStmt_
-{vbar} _AssertStmt_
-{vbar} _AwaitStmt_
-{vbar} _SuspendStmt_
-{vbar} _ThrowStmt_
-{vbar} _ReturnStmt_
-{vbar} _Block_
-{vbar} _IfStmt_
-{vbar} _CaseStmt_
-{vbar} _WhileStmt_
-{vbar} _ForeachStmt_
+| _Statement_ ::= | _SkipStmt_ +
+{vbar} _VarDeclStmt_ +
+{vbar} _AssignStmt_ +
+{vbar} _ExpStmt_ +
+{vbar} _AssertStmt_ +
+{vbar} _AwaitStmt_ +
+{vbar} _SuspendStmt_ +
+{vbar} _ThrowStmt_ +
+{vbar} _ReturnStmt_ +
+{vbar} _Block_ +
+{vbar} _IfStmt_ +
+{vbar} _CaseStmt_ +
+{vbar} _WhileStmt_ +
+{vbar} _ForeachStmt_ +
 {vbar} _TryCatchFinallyStmt_
 |====
 
@@ -86,7 +86,7 @@ assign a new value to `constant_i`:
 
 
 
-=== Variable Assignment
+=== Assignment
 
 The assign statement assigns a value to a variable or a field.
 
@@ -178,8 +178,9 @@ statements containing an await expression (see <<await-expression>>).
 .Syntax
 |====
 | _AwaitStmt_ ::= | `await` _Guard_ `;`
-| _Guard_ ::= | [ `this` `.` ] _SimpleIdentifier_ `?` {vbar} _PureExp_
-{vbar} _Guard_ `&` _Guard_
+| _Guard_ ::= | [ `this` `.` ] _SimpleIdentifier_ `?` +
+{vbar} _PureExp_ +
+{vbar} _Guard_ `&` _Guard_ +
 {vbar} `duration` `(` _PureExp_ `,` _PureExp_ `)`
 |====
 
@@ -346,7 +347,7 @@ For a description of the pattern syntax, see <<case-expression>>.
 .Syntax
 |====
 | _CaseStmt_ ::= | `case` _PureExp_ `{` { _CaseStmtBranch_ } `}`
-| _CaseStmtBranch_ ::= | _Pattern_ \=> _Stmt_
+| _CaseStmtBranch_ ::= | _Pattern_ `\=>` _Stmt_
 |====
 
 [source]
@@ -392,7 +393,7 @@ field.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _ForeachStmt_ ::= | `foreach` `(` _Identifier_ ` `in` _PureExp_ `)` _Stmt_
+| _ForeachStmt_ ::= | `foreach` `(` _Identifier_ `in` _PureExp_ `)` _Stmt_
 |====
 
 [source]
@@ -415,9 +416,9 @@ execution afterwards.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _TryCatchFinallyStmt_ ::= | `try` _Stmt_
-|                           | `catch` ( ( `{` { _CaseStmtBranch_ } `}` ) \| _CaseStmtBranch_ )
-|                           | [ `finally` _Stmt_ ]
+| _TryCatchFinallyStmt_ ::= | `try` _Stmt_ +
+                              `catch` ( `{` { _CaseStmtBranch_ } `}`  {vbar} _CaseStmtBranch_ ) +
+                              [ `finally` _Stmt_ ]
 |====
 
 The statement protected by `try` (which can be a block) is executed first.  If

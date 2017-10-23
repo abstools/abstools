@@ -10,7 +10,7 @@ declarations.  Method names start with a lowercase letter.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _InterfaceDecl_ ::= | `interface` _SimpleTypeIdentifier_ [ `extends` _InterfaceList_ ] `{` { MethSig } `}`
+| _InterfaceDecl_ ::= | `interface` _SimpleTypeIdentifier_ [ `extends` _InterfaceList_ ] `{` { _MethSig_ } `}`
 | _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
 | _MethSig_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` `;`
 |====
@@ -77,14 +77,14 @@ block has the same restrictions as in the init block.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _ClassDecl_ ::= | `class` _SimpleTypeIdentifier_ [ `(` [ _ClassParameterList_ ] `)` ] [ `implements` _InterfaceList_ ]
-|                 | `{` [ _FieldDeclList_ ] [ _Block_ ] [_RecoveryBlock_] [ _TraitUseList_ ][ _MethDeclList_ ] `}`
+| _ClassDecl_ ::= | `class` _SimpleTypeIdentifier_ [ `(` [ _ClassParameterList_ ] `)` ] [ `implements` _InterfaceList_ ] +
+                    `{` [ _FieldDeclList_ ] [ _Block_ ] [_RecoveryBlock_] [ _TraitUseList_ ] { _MethDecl_ } `}`
 | _ClassParameterList_ ::= | _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ }
 | _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
 | _TraitUseList_ ::= | adds _TraitName_ `;` {  adds _TraitName_ `;`}
 | _FieldDeclList_ ::= | { _Type_ _SimpleIdentifier_ [ `=` _PureExp_ ] `;` }
 | _RecoveryBlock_ ::= | `recover` `{` { _Pattern_ `\=>` _Stmt_ } `}`
-| _MethDeclList_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` _Block_
+| _MethDecl_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` _Block_
 |====
 
 
@@ -212,9 +212,11 @@ Similar to classes, traits in ABS are not types.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _TraitDecl_ ::= | `trait` _TraitName_ = ( `{` _MethDeclList_ `}` {vbar} _TraitName_ ) _TraiOper_*
+| _TraitDecl_ ::= | `trait` _TraitName_ = ( `{` { _MethDecl_ } `}` {vbar} _TraitName_ ) { _TraitOper_ }
 | _TraitName_ ::= | _SimpleIdentifier_
-| _TraitOper_ ::= | `adds` _TraitExpr_ {vbar} `modifies` _TraitExpr_ {vbar} `removes` _MethSig_+
+| _TraitOper_ ::= | `adds` _TraitExpr_ +
+{vbar} `modifies` _TraitExpr_ +
+{vbar} `removes` _MethSig_
 |====
 
 

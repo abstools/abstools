@@ -32,18 +32,18 @@ multiple times without influencing the execution semantics.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-|_PureExp_ ::= | _SimpleIdentifier_
- {vbar} `this` `.` _SimpleIdentifier_
- {vbar} `this`
- {vbar} `null`
- {vbar} _Literal_
- {vbar} _LetExp_
- {vbar} _DataConstrExp_
- {vbar} _FnAppExp_
- {vbar} _FnAppListExp_
- {vbar} _IfExp_
- {vbar} _CaseExp_
- {vbar} _OperatorExp_
+|_PureExp_ ::= | _SimpleIdentifier_ +
+ {vbar} `this` `.` _SimpleIdentifier_ +
+ {vbar} `this` +
+ {vbar} `null` +
+ {vbar} _Literal_ +
+ {vbar} _LetExp_ +
+ {vbar} _DataConstrExp_ +
+ {vbar} _FnAppExp_ +
+ {vbar} _FnAppListExp_ +
+ {vbar} _IfExp_ +
+ {vbar} _CaseExp_ +
+ {vbar} _OperatorExp_ +
  {vbar} `(` _PureExp_ `)`
 |==== 
 
@@ -257,7 +257,10 @@ There are four different kinds of patterns available in ABS:
 |====
 | _CaseExp_ ::= | `case` _PureExp_ `{` { _CaseExpBranch_ } `}`
 | _CaseExpBranch_ ::=  | _Pattern_ `\=>` _PureExp_ `;`
-| _Pattern_ ::= | `_` {vbar} __SimpleIdentifier__ {vbar} __Literal__ {vbar} __ConstrPattern__
+| _Pattern_ ::= | `_` +
+                 {vbar} __SimpleIdentifier__ +
+                 {vbar} __Literal__ +
+                 {vbar} __ConstrPattern__
 | _ConstrPattern_ ::= | _TypeIdentifier_ [ `(` [ _Pattern_ { `,` _Pattern_ }  ] `)` ]
 |====
 
@@ -391,7 +394,10 @@ language.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _EffExp_ ::= | _NewExp_ {vbar} _SyncCall_ {vbar} _AsyncCall_ {vbar} _GetExp_
+| _EffExp_ ::= | _NewExp_ +
+                 {vbar} _SyncCall_ +
+                 {vbar} _AsyncCall_ +
+                 {vbar} _GetExp_
 |====
 
 ==== New Expression
@@ -570,8 +576,9 @@ function name.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _FunctionDecl_  ::= | `def` _Type_ _SimpleIdentifier_ [ `<` _SimpleTypeIdentifier_ { `,` _SimpleTypeIdentifier_ } `>` ]
-|                     | `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_  } ]  `)` `=` _PureExp_ `;`
+| _FunctionDecl_  ::= | `def` _Type_ _SimpleIdentifier_ [ `<` _SimpleTypeIdentifier_ { `,` _SimpleTypeIdentifier_ } `>` ] +
+                        `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_  } ]  `)` +
+                        `=` _PureExp_ `;`
 |====
 
 

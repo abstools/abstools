@@ -19,14 +19,20 @@ is contained in the `export` clause.
 .Syntax
 |====
 | _ModuleDecl_  ::= | `module` _TypeIdentifier_ `;` { _Export_ } { _Import_ } { _Decl_ } [ _Block_ ]
-| _Export_      ::= | `export` _IdentifierList_ [ `from` _TypeIdentifier_ ] `;`
-|              | {vbar} `export` `\*` [ `from` _TypeIdentifier_ ] `;`
-| _Import_      ::= | `import` _IdentifierList_ [ `from` _TypeIdentifier_ ] `;`
-|              | {vbar} `import` `*` `from` _TypeIdentifier_ `;`
+| _Export_      ::= | `export` _IdentifierList_ [ `from` _TypeIdentifier_ ] `;` +
+                 {vbar} `export` `*` [ `from` _TypeIdentifier_ ] `;`
+| _Import_      ::= | `import` _IdentifierList_ [ `from` _TypeIdentifier_ ] `;` +
+                 {vbar} `import` `*` `from` _TypeIdentifier_ `;`
 | _IdentifierList_ ::= | _AnyIdentifier_ { `,` _AnyIdentifier_ }
 | _AnyIdentifier_ ::= | _Identifier_ {vbar} _TypeIdentifier_
 
-| _Decl_        ::= | _FunDecl_ {vbar} _TypeSynDecl_ {vbar} _DataTypeDecl_ {vbar} _ExceptionDecl_ {vbar} _InterfaceDecl_ {vbar} _ClassDecl_ {vbar} _TraitDecl_
+| _Decl_        ::= | _FunDecl_ +
+{vbar} _TypeSynDecl_ +
+{vbar} _DataTypeDecl_ +
+{vbar} _ExceptionDecl_ +
+{vbar} _InterfaceDecl_ +
+{vbar} _ClassDecl_ +
+{vbar} _TraitDecl_
 |====
 
 A module name is a type name and must always start with an upper case letter.
