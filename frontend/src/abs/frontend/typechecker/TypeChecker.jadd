@@ -318,13 +318,16 @@ aspect TypeChecker {
     }
 
     public void FunctionDecl.typeCheck(SemanticConditionList e) {
+        int nerrors = e.getErrorCount();
         TypeCheckerHelper.typeCheckParamList(e,this);
         getTypeUse().typeCheck(e);
         if (getFunctionDef() instanceof ExpFunctionDef) {
             // built-in functions are assumed type-correct.
             ExpFunctionDef def = (ExpFunctionDef)getFunctionDef();
             def.getRhs().typeCheck(e);
-            TypeCheckerHelper.checkAssignment(e,this,getTypeUse().getType(), def.getRhs());
+            if (nerrors == e.getErrorCount()) {
+                TypeCheckerHelper.checkAssignment(e,this,getTypeUse().getType(), def.getRhs());
+            }
         }
     }
 

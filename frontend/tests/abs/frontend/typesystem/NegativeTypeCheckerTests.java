@@ -283,6 +283,12 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void unknownVarError() {
+        // crashed the compiler while trying to work with Unknown types
+        assertTypeErrors("def Int s(List<Int> p) = if True then head(s) else head(s);");
+    }
+
+    @Test
     public void newError() {
         assertTypeErrors("interface I { } { I i; i = new local I(); }");
     }
