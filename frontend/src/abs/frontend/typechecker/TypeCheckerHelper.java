@@ -132,10 +132,13 @@ public class TypeCheckerHelper {
             for (int i = 0; i < params.size(); i++) {
                 Type argType = params.get(i);
                 PureExp exp = args.getChild(i);
+                int nerrors = l.getErrorCount();
                 exp.typeCheck(l);
-                Type expType = exp.getType();
-                if (!expType.isAssignableTo(argType)) {
-                    l.add(new TypeError(n, ErrorMessage.TYPE_MISMATCH, exp.getType(), argType));
+                if (nerrors == l.getErrorCount()) {
+                    Type expType = exp.getType();
+                    if (!expType.isAssignableTo(argType)) {
+                        l.add(new TypeError(n, ErrorMessage.TYPE_MISMATCH, exp.getType(), argType));
+                    }
                 }
             }
         }

@@ -645,20 +645,21 @@ aspect TypeChecker {
     }
 
     public void ReturnStmt.typeCheck(SemanticConditionList e) {
+        int nerrors = e.getErrorCount();
         super.typeCheck(e);
+        getRetExp().typeCheck(e);
+
         MethodImpl m = getContextMethod();
-        Type lht = getModel().getUnitType();
         Block block = getContextBlock();
 
         if (m != null) {
-            lht = m.getMethodSig().getReturnType().getType();
             block = m.getBlock();
         }
 
-        getRetExp().typeCheck(e);
-
         Stmt lastStmt = block.getStmt(block.getNumStmt()-1);
         if (lastStmt != this) {
+            // this also catches a return statement in the middle of a main
+            // block, when we don't have an enclosing method (m == null)
             e.add(new TypeError(this, ErrorMessage.RETURN_STMT_MUST_BE_LAST, new String[0]));
         }
     }
@@ -848,28 +849,34 @@ aspect TypeChecker {
 
 
     public void GetExp.typeCheck(SemanticConditionList e) {
-        if (!getPureExp().getType().isFutureType()) {
-            e.add(new TypeError(getPureExp(), ErrorMessage.EXPECTED_FUT_TYPE, getPureExp().getType()));
-        }
+        int nerrors = e.getErrorCount();
         getPureExp().typeCheck(e);
+        if (nerrors == e.getErrorCount()) {
+            if (!getPureExp().getType().isFutureType()) {
+                e.add(new TypeError(getPureExp(), ErrorMessage.EXPECTED_FUT_TYPE, getPureExp().getType()));
+            }
+        }
     }
+
     public void AddAddExp.typeCheck(SemanticConditionList e) {
         // Special case: can also "add" strings.
-        Type lt = getLeft().getType();
-        Type rt = getRight().getType();
-
-        if (! (lt.isNumericType() || lt.isStringType())) {
-            e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, lt));
-        }
-        if (! (rt.isNumericType() || rt.isStringType())) {
-            e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, rt));
-        }
-        if (!lt.isAssignableTo(rt) && !rt.isAssignableTo(lt)) {
-            e.add(new TypeError(this, ErrorMessage.ADD_INCOMPARABLE_TYPE, lt, rt));
-        }
-
+        int nerrors = e.getErrorCount();
         getLeft().typeCheck(e);
         getRight().typeCheck(e);
+        if (nerrors == e.getErrorCount()) {
+            Type lt = getLeft().getType();
+            Type rt = getRight().getType();
+
+            if (! (lt.isNumericType() || lt.isStringType())) {
+                e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, lt));
+            }
+            if (! (rt.isNumericType() || rt.isStringType())) {
+                e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, rt));
+            }
+            if (!lt.isAssignableTo(rt) && !rt.isAssignableTo(lt)) {
+                e.add(new TypeError(this, ErrorMessage.ADD_INCOMPARABLE_TYPE, lt, rt));
+            }
+        }
     }
     public void ArithmeticExp.typeCheck(SemanticConditionList e) {
         TypeCheckerHelper.typeCheckBinary(e,this,getModel().getRatType());
@@ -880,40 +887,54 @@ aspect TypeChecker {
     }
 
     public void RelationalExpr.typeCheck(SemanticConditionList e) {
+        int nerrors = e.getErrorCount();
         getLeft().typeCheck(e);
         getRight().typeCheck(e);
-        Type tl = getLeft().getType();
-        Type tr = getRight().getType();
-        if (!tl.isAssignableTo(tr) && !tr.isAssignableTo(tl)) {
-            e.add(new TypeError(this, ErrorMessage.COMPARISON_INCOMPARABLE_TYPE, tl, tr));
+        if (nerrors == e.getErrorCount()) {
+            Type tl = getLeft().getType();
+            Type tr = getRight().getType();
+            if (!tl.isAssignableTo(tr) && !tr.isAssignableTo(tl)) {
+                e.add(new TypeError(this, ErrorMessage.COMPARISON_INCOMPARABLE_TYPE, tl, tr));
+            }
         }
     }
 
     public void IfExp.typeCheck(SemanticConditionList e) {
+        int nerrors = e.getErrorCount();
         getCondExp().typeCheck(e);
-        getCondExp().assertHasType(e,getModel().getBoolType());
         getThenExp().typeCheck(e);
         getElseExp().typeCheck(e);
-        Type tt = getThenExp().getType();
-        Type et = getElseExp().getType();
-        if (!(et.isAssignableTo(tt) || tt.isAssignableTo(et))) {
-            e.add(new TypeError(this, ErrorMessage.IF_DIFFERENT_TYPE, tt, et));
+        if (nerrors == e.getErrorCount()) {
+            getCondExp().assertHasType(e,getModel().getBoolType());
+            Type tt = getThenExp().getType();
+            Type et = getElseExp().getType();
+            if (!(et.isAssignableTo(tt) || tt.isAssignableTo(et))) {
+                e.add(new TypeError(this, ErrorMessage.IF_DIFFERENT_TYPE, tt, et));
+            }
         }
     }
 
     public void CaseExp.typeCheck(SemanticConditionList e) {
+        int nerrors = e.getErrorCount();
         getExpr().typeCheck(e);
-        Type et = getExpr().getType();
-        if (!et.isDataType()) {
-            e.add(new TypeError(getExpr(),ErrorMessage.CASE_NO_DATATYPE,et));
-            return;
-        }
-        Type t = getType();
-        for (CaseBranch b : getBranchs()) {
-            b.typeCheck(e,(DataTypeType) et);
-            Type t2 = b.getType();
-            if (!t2.isAssignableTo(t)) {
-                e.add(new TypeError(this,ErrorMessage.BRANCH_INCOMPARABLE_TYPE,t,t2));
+        if (nerrors == e.getErrorCount()) {
+            Type et = getExpr().getType();
+            if (et.isDataType())  {
+                // we do not type-check the branches if we cannot determine
+                // our own type
+                Type t = getType();
+                for (CaseBranch b : getBranchs()) {
+                    nerrors = e.getErrorCount();
+                    b.typeCheck(e,(DataTypeType) et);
+                    if (nerrors == e.getErrorCount()) {
+                        Type t2 = b.getType();
+                        if (!t2.isAssignableTo(t)) {
+                            e.add(new TypeError(this,ErrorMessage.BRANCH_INCOMPARABLE_TYPE,t,t2));
+                        }
+                    }
+                }
+            } else {
+                e.add(new TypeError(getExpr(),ErrorMessage.CASE_NO_DATATYPE,et));
             }
         }
     }
@@ -976,10 +997,13 @@ aspect TypeChecker {
 
     }
     public void LetExp.typeCheck(SemanticConditionList e) {
+        int nerrors = e.getErrorCount();
         getVar().typeCheck(e);
         getVal().typeCheck(e);
         getExp().typeCheck(e);
-        TypeCheckerHelper.checkAssignment(e,this,getVar().getAccess().getType(),getVal());
+        if (nerrors == e.getErrorCount()) {
+            TypeCheckerHelper.checkAssignment(e,this,getVar().getAccess().getType(),getVal());
+        }
     }
 
     public void MinusExp.typeCheck(SemanticConditionList e) {
