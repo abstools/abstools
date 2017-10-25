@@ -482,6 +482,16 @@ aspect TypeChecker {
         }
     }
 
+    public void MainBlock.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
+        if (getNumStmt() > 0) {
+            Stmt lastStmt = getStmt(getNumStmt()-1);
+            if (lastStmt instanceof ReturnStmt) {
+                e.add(new TypeError(lastStmt, ErrorMessage.MAIN_BLOCK_RETURN_STMT, "dummy"));
+            }
+        }
+    }
+
     /**
      * Proxy.
      * @see {@link MethodImpl#getType()}
@@ -499,12 +509,27 @@ aspect TypeChecker {
         }
 
         Type lastType = getMethodSig().getReturnType().getType();
-        if (!lastType.isUnitType()) {
-            // need return stmt
+        if (b.getNumStmt() > 0) {
             Stmt lastStmt = b.getStmt(b.getNumStmt()-1);
-            // return stmt checks for proper type on its own
             if (!(lastStmt instanceof ReturnStmt)) {
-                e.add(new TypeError(lastStmt,ErrorMessage.METHOD_IMPL_MISSING_RETURN_STMT, sig.getName()));
+                if (!lastType.isUnitType()) {
+                    // need return stmt
+                    e.add(new TypeError(lastStmt,ErrorMessage.METHOD_IMPL_MISSING_RETURN_STMT, sig.getName()));
+                }
+            } else {
+                ReturnStmt rs = (ReturnStmt) lastStmt;
+                Type rht = rs.getRetExp().getType();
+                if (!rht.isUnknownType()) {
+                    // if UnknownType, ReturnStmt.typeCheck will notice
+                    if (!rht.isAssignableTo(lastType)) {
+                        e.add(new TypeError(rs,ErrorMessage.WRONG_RETURN_STMT_TYPE,rht.toString(),sig.getName(),lastType.toString()));
+                    }
+                }
+            }
+        } else {
+            if (!lastType.isUnitType()) {
+                // need return stmt
+                e.add(new TypeError(this,ErrorMessage.METHOD_IMPL_MISSING_RETURN_STMT, sig.getName()));
             }
         }
     }
@@ -625,11 +650,6 @@ aspect TypeChecker {
         if (m != null) {
             lht = m.getMethodSig().getReturnType().getType();
             block = m.getBlock();
-        }
-
-        Type rht = getRetExp().getType();
-        if (!rht.isAssignableTo(lht)) {
-            e.add(new TypeError(this,ErrorMessage.WRONG_RETURN_STMT_TYPE,lht.toString(),m.getMethodSig().getName(),rht.toString()));
         }
 
         getRetExp().typeCheck(e);

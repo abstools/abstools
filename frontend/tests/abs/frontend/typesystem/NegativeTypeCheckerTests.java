@@ -416,7 +416,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void methodMissingReturn() {
-        assertTypeErrors("class C { Bool m() {  } }", ErrorMessage.CANNOT_ASSIGN);
+        assertTypeErrors("class C { Bool m() {  } }", ErrorMessage.METHOD_IMPL_MISSING_RETURN_STMT);
     }
 
     @Test
