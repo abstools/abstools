@@ -56,6 +56,8 @@ public enum ErrorMessage {
     METHOD_IMPL_WRONG_NUM_PARAMS("Method %s does not have the same number of parameters as defined in interface %s. Expected %s, but found %s."),
     METHOD_IMPL_WRONG_PARAM_TYPE("Parameter %s of method %s has a different type as defined in interface %s. Expected %s, but found %s."),
     METHOD_IMPL_WRONG_RETURN_TYPE("Method %s has not the same return type as defined in interface %s. Expected %s, but found %s."),
+    WRONG_RETURN_STMT_TYPE("Cannot return a value of type %s from %s (expected %s)"),
+    METHOD_IMPL_MISSING_RETURN_STMT("Method %s has a non-Unit return type but no return statememt."),
     RUN_METHOD_WRONG_NUM_PARAMS("Method run does not have the expected number of parameters.  Expected 0, but found %s."),
     RUN_METHOD_WRONG_RETURN_TYPE("Method run does not have the expected return type.  Expected ABS.StdLib.Unit, but found %s."),
     NULL_NOT_HERE("Can't use constant 'null' here."),

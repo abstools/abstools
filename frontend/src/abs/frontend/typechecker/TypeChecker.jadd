@@ -498,22 +498,15 @@ aspect TypeChecker {
             TypeCheckerHelper.typeCheckRunMethodSig(e, sig);
         }
 
-        Type lastType = getModel().getUnitType();
-        ASTNode<?> errorNode = this;
-        if (b.getNumStmt() > 0) {
+        Type lastType = getMethodSig().getReturnType().getType();
+        if (!lastType.isUnitType()) {
+            // need return stmt
             Stmt lastStmt = b.getStmt(b.getNumStmt()-1);
-            lastType = lastStmt.getType();
-
-            // otherwise check is already done in ReturnStmt
-            if (lastStmt instanceof ReturnStmt)
-                return;
-            errorNode = lastStmt;
+            // return stmt checks for proper type on its own
+            if (!(lastStmt instanceof ReturnStmt)) {
+                e.add(new TypeError(lastStmt,ErrorMessage.METHOD_IMPL_MISSING_RETURN_STMT, sig.getName()));
+            }
         }
-
-        if (!lastType.isAssignableTo(sig.getReturnType().getType())) {
-            e.add(new TypeError(errorNode,ErrorMessage.CANNOT_ASSIGN,lastType,sig.getReturnType().getType()));
-        }
-
     }
 
     public void VarDecl.typeCheck(SemanticConditionList e) {
@@ -636,7 +629,7 @@ aspect TypeChecker {
 
         Type rht = getRetExp().getType();
         if (!rht.isAssignableTo(lht)) {
-            e.add(new TypeError(this,ErrorMessage.CANNOT_ASSIGN,rht,lht));
+            e.add(new TypeError(this,ErrorMessage.WRONG_RETURN_STMT_TYPE,lht.toString(),m.getMethodSig().getName(),rht.toString()));
         }
 
         getRetExp().typeCheck(e);
