@@ -10,8 +10,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 /**
- * Preprocesses the AST directly after it has been parsed, before any name and type analysis.
- * Typically, syntactic sugar is eliminated in this phase
+ * Preprocesses the AST directly after it has been parsed, before any name and
+ * type analysis.  Typically, syntactic sugar is eliminated in this phase.
+ *
+ * Note that we might not have a full model yet - consider using NoTransform()
+ * for accessors.
+ *
  * Currently the following things are done:
  *
  *  - selector names of constructors are transformed to functions
@@ -139,12 +143,14 @@ public class ASTPreProcessor {
                 typeParams = delta ? pdtd.getTypeParameterList().treeCopyNoTransform() : pdtd.getTypeParameterList();
                 List<TypeUse> typeParams2 = new List<TypeUse>();
                 for (TypeParameterDecl p : typeParams) {
-                    typeParams2.add(p.getType().toUse());
+                    // was p.getType().toUse() but we're not type-checked yet
+                    typeParams2.add(new TypeParameterUse(p.getName(), new List<Annotation>()));
                 }
                 paramType = new ParametricDataTypeUse(pdtd.getName(), new List<Annotation>(), typeParams2);
             } else {
                 typeParams = new List<TypeParameterDecl>();
-                paramType = dtd.getType().toUse();
+                // was dtd.getType().toUse() but we're not type-checked yet
+                paramType = new DataTypeUse(dtd.getName(), new List<Annotation>());
             }
 
             List<ParamDecl> parameters = new List<ParamDecl>()
