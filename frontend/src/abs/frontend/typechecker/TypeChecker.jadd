@@ -454,14 +454,16 @@ aspect TypeChecker {
         }
     }
 
+    public void ExceptionConstructor.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
+    }
+
     public void ConstructorArg.typeCheck(SemanticConditionList e) {
         getTypeUse().typeCheck(e);
     }
 
     public void ExceptionDecl.typeCheck(SemanticConditionList e) {
-        for (ConstructorArg d : getConstructorArgs()) {
-            d.typeCheck(e);
-        }
+        super.typeCheck(e);
     }
 
     public void TypeSynDecl.typeCheck(SemanticConditionList e) {

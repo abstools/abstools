@@ -228,6 +228,7 @@ new List<ModuleDecl>(),
     @Override public void exitData_constructor(ABSParser.Data_constructorContext ctx) {
         DataConstructor d
             = (DataConstructor)setV(ctx, new DataConstructor(ctx.n.getText(), new List<ConstructorArg>()));
+        // KLUDGE: copied into exitException_decl
         for (ABSParser.Data_constructor_argContext a : ctx.a) {
             final TypeUse vt = (TypeUse) v(a.type_use());
             final DataTypeUse vtresolved;
@@ -271,15 +272,27 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitException_decl(ABSParser.Exception_declContext ctx) {
-        ExceptionDecl e = (ExceptionDecl)setV(ctx, new ExceptionDecl(ctx.n.getText(), (List<Annotation>)v(ctx.annotations()), new List<ConstructorArg>()));
+        ExceptionConstructor d
+            = new ExceptionConstructor(ctx.n.getText(), new List<ConstructorArg>());
+        // KLUDGE: copy of exitData_constructor
         for (ABSParser.Data_constructor_argContext a : ctx.a) {
-            ConstructorArg ca = new ConstructorArg((TypeUse)v(a.type_use()),
-                                                   a.IDENTIFIER() != null
-                                                   ? new Opt(new Name(a.IDENTIFIER().getText()))
-                                                   : new Opt());
+            final TypeUse vt = (TypeUse) v(a.type_use());
+            final DataTypeUse vtresolved;
+            if (vt instanceof DataTypeUse) {
+                vtresolved = (DataTypeUse) vt;
+            } else {
+                // See below, we may be facing an UnresolvedTypeUse.
+                assert vt instanceof UnresolvedTypeUse : vt.getClass().getName();
+                vtresolved = new DataTypeUse(vt.getName(), vt.getAnnotations());
+                vtresolved.setPositionFromNode(vt);
+            }
+            ConstructorArg ca = new ConstructorArg(vtresolved, a.IDENTIFIER() != null ? new Opt(new Name(a.IDENTIFIER().getText())) : new Opt());
             setASTNodePosition(a, ca);
-            e.addConstructorArg(ca);
+            d.addConstructorArg(ca);
         }
+        List<DataConstructor> l = new List<DataConstructor>();
+        l.add(d);
+        setV(ctx, new ExceptionDecl(ctx.n.getText(), (List<Annotation>)v(ctx.annotations()), l));
     }
 
     @Override public void exitMain_block(ABSParser.Main_blockContext ctx) {

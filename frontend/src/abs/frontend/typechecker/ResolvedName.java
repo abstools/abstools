@@ -26,8 +26,6 @@ public abstract class ResolvedName {
             return KindedName.Kind.CLASS;
         else if (getDecl().isFunction())
             return KindedName.Kind.FUN;
-        else if(getDecl().isException())
-            return KindedName.Kind.EXCEPTION;
         else
             return KindedName.Kind.TYPE_DECL;
 

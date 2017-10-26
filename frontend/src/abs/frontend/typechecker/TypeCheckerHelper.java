@@ -45,10 +45,12 @@ public class TypeCheckerHelper {
             return;
         }
 
-        assert t.isDataType() || t.isExceptionType() : t; // TODO: more instances of this? Maybe exception should imply datatype?
+        assert t.isDataType() || t.isExceptionType() : t; // isExceptionType only for clarity, since exceptions are datatypes
 
-        if (!t.getDecl().equals(c.getDataTypeDecl())) {
-            e.add(new TypeError(p, ErrorMessage.WRONG_CONSTRUCTOR, t.toString(), p.getConstructor()));
+        if (!t.isExceptionType()) {
+            if (!t.getDecl().equals(c.getDataTypeDecl())) {
+                e.add(new TypeError(p, ErrorMessage.WRONG_CONSTRUCTOR, t.toString(), p.getConstructor()));
+            }
         }
 
         Type myType = p.getType();
@@ -373,9 +375,6 @@ public class TypeCheckerHelper {
             case TYPE_DECL:
                 msg = ErrorMessage.DUPLICATE_TYPE_DECL;
                 break;
-            case EXCEPTION:
-                msg = ErrorMessage.DUPLICATE_EXCEPTION_DECL;
-                break;
             case MODULE:
                 assert false; // doesn't happen, no modules within modules
                 break;
@@ -409,12 +408,12 @@ public class TypeCheckerHelper {
                     res.put(rn.getQualifiedName(), rn);
                 }
             } else if (d.isException()) {
+                // FIXME unreachable
                 ExceptionDecl ed = (ExceptionDecl) d;
-                DataConstructor ec = ed.dataConstructor;
+                DataConstructor ec = ed.getDataConstructor(0);
                 assert ec != null : ed.getName();
                 if (ec.getName().equals(d.getName())) {
-                    // should always be true, see Main.java where the data
-                    // constructor gets constructed
+                    // should always be true, see CreateJastAddASTListener
                     rn = new ResolvedDeclName(moduleName, ec);
                     // If it's already in there, is it from the same location -- from stdlib?
                     ResolvedName tryIt = res.get(rn);

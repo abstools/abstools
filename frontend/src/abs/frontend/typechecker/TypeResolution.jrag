@@ -215,21 +215,6 @@ aspect TypeResolution {
     eq ModifyTypeSynModifier.getTypeSynDecl().getModuleDecl() = findModule();
     eq AddDataTypeModifier.getDataTypeDecl().getModuleDecl() = findModule();
     eq ModifyDataTypeModifier.getDataTypeDecl().getModuleDecl() = findModule();
-    public ExceptionDecl DataConstructor.exceptionDecl = null;
-    public DataConstructor ExceptionDecl.dataConstructor = null;
-    eq DataTypeDecl.getDataConstructor(int i).getModuleDecl() {
-        if (qualifiedName().equals(Constants.STDLIB_NAME+".Exception")) {
-            // In general, Exceptions are not declared in the same module as
-            // the Exception datatype; this is different from normal
-            // constructors as long as ABS doesn't have open datatypes.
-            // DataConstructor nodes are added to the Exception DataTypeDecl
-            // in Main.java:analyzeModel.
-            return getDataConstructor(i).exceptionDecl.getModuleDecl();
-        } else {
-            return getModuleDecl();
-        }
-    }
-
 
     inh ModuleDecl Export.getModuleDecl();
     eq ModuleDecl.getExport().getModuleDecl() = this;
@@ -259,6 +244,7 @@ aspect TypeResolution {
     eq ParametricFunctionDecl.getFunctionDef().lookup(KindedName name) = localLookup(name);
     eq ParametricFunctionDecl.getTypeUse().lookup(KindedName name) = localLookup(name);
     eq ParametricFunctionDecl.getParam().lookup(KindedName name) = localLookup(name);
+    eq ExceptionDecl.getDataConstructor().lookup(KindedName name) = localLookup(name);
 
     // Expose *lookup* at various places in the AST
     inh Decl Exp.lookup(KindedName name);
@@ -273,6 +259,7 @@ aspect TypeResolution {
     inh Decl ParametricFunctionDecl.lookup(KindedName name);
     inh Decl ClassDecl.lookup(KindedName name);
     inh Decl InterfaceDecl.lookup(KindedName name);
+    inh Decl ExceptionDecl.lookup(KindedName name);
 
     eq ModuleDecl.getDecl(int i).lookup(KindedName name) = lookup(name);
     eq Model.getCompilationUnit(int i).lookup(KindedName name) = lookup(name);
@@ -339,7 +326,30 @@ aspect TypeResolution {
         return lookup(name);
     }
 
+    syn lazy Decl ExceptionDecl.localLookup(KindedName name) {
+        if (name.getKind() == Kind.TYPE_DECL) {
+            if (name.getName().equals(getName())) {
+                return this;
+            }
+        }
+        // XXX we'd expect Kind.DATA_CONSTRUCTOR but it's TYPE_DECL
+        for (DataConstructor d : getDataConstructors()) {
+            // should be only one
+            if (d.getName().equals(name.getName())) {
+                return d;
+            }
+        }
+        return lookup(name);
+    }
+
     rewrite UnresolvedTypeUse {
+        when (getDecl().isException())
+        to ExceptionTypeUse {
+            ExceptionTypeUse eu = new ExceptionTypeUse(getName(), getAnnotations());
+            eu.setPositionFromNode(this);
+            eu.setAbsolutePosition(getAbsolutePosition());
+            return eu;
+        }
         when (getDecl().isInterface())
         to InterfaceTypeUse {
             InterfaceTypeUse tu = new InterfaceTypeUse(getName(), getAnnotations());
@@ -403,43 +413,23 @@ aspect TypeResolution {
     }
 
     @CheckForNull
-    public DataConstructor DataConstructorExp.getDataConstructor() {
-        // KLUDGE: code duplication with ConstructorPattern.getDataConstructor()
+    syn DataConstructor DataConstructorExp.getDataConstructor() {
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
-        if (decl instanceof DataConstructor) {
-            return (DataConstructor) decl;
-        } else {
-            if (decl.isException()) {
-                return ((ExceptionDecl)decl).dataConstructor;
-            } else {
-                decl = lookup(new KindedName(Kind.EXCEPTION, getConstructor()));
-                if (decl.isException()) {
-                    return ((ExceptionDecl)decl).dataConstructor;
-                } else {
-                    return null;
-                }
-            }
+        if (decl == null) return null;
+        if (decl.isUnknown()) {
+            return null;
         }
+        return (DataConstructor) decl;
     }
 
     @CheckForNull
-    public DataConstructor ConstructorPattern.getDataConstructor() {
-        // KLUDGE: code duplication with DataConstructorExp.getDataConstructor()
+    syn DataConstructor ConstructorPattern.getDataConstructor() {
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
-        if (decl instanceof DataConstructor)
-            return (DataConstructor) decl;
-        else {
-            if (decl.isException()) {
-                return ((ExceptionDecl)decl).dataConstructor;
-            } else {
-                decl = lookup(new KindedName(Kind.EXCEPTION, getConstructor()));
-                if (decl.isException()) {
-                    return ((ExceptionDecl)decl).dataConstructor;
-                } else {
-                    return null;
-                }
-            }
+        if (decl == null) return null;
+        if (decl.isUnknown()) {
+            return null;
         }
+        return (DataConstructor) decl;
     }
 
     syn boolean Call.isAsync();
