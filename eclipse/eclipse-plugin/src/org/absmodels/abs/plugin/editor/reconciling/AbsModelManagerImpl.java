@@ -57,7 +57,6 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
             model.addCompilationUnit(cu);
         }
 
-        Main.exceptionHack(model);
         if (!model.hasParserErrors()) {
             if (withTypechecks) {
                 extendedTypechecking();
@@ -89,7 +88,6 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
                 model.registerTypeSystemExtension(ltie);
             }
         }
-        Main.exceptionHack(model);
         SemanticConditionList typeErrors = model.typeCheck();
 
         updateMarkers(typeErrors);
@@ -151,7 +149,6 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
             // XXX Check if treeCopyNoTransform + flushTreeCache does the
             // right thing.  (We used parseTreeCopy but were unsure about that
             // as well)
-            Main.exceptionHack(model);
             notifyChangeListeners();
         }
     }

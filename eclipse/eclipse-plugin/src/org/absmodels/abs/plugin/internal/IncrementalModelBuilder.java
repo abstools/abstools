@@ -66,7 +66,6 @@ public class IncrementalModelBuilder {
 			addCompilationUnit(u);
 		}
 		Assert.isNotNull(model);
-		Main.exceptionHack(model);
 	}
 
 	/**
@@ -173,8 +172,6 @@ public class IncrementalModelBuilder {
 		if(model == null)
 			throw new NoModelException();
 
-		Main.exceptionHack(model);
-
 		if(model.hasParserErrors())
 			return new SemanticConditionList(); // don't typecheck if the model has parsererrors
 //			throw new TypecheckInternalException(new Exception("Model has parser errors!"));
@@ -208,7 +205,6 @@ public class IncrementalModelBuilder {
 					monitor.subTask("Checking "+p.getName());
 					Model m2 = model.treeCopyNoTransform();
                                         m2.flushTreeCache();
-					Main.exceptionHack(m2);
 					try {
 						m2.flattenForProduct(p);
 						SemanticConditionList p_errs = m2.typeCheck();
@@ -241,8 +237,6 @@ public class IncrementalModelBuilder {
 	}
 
 	public synchronized Model getCompleteModel(){
-		if (model != null)
-			Main.exceptionHack(model);
 		return model;
 	}
 
