@@ -404,17 +404,11 @@ aspect TypeResolution {
     eq DataTypeDecl.getDataConstructor().getDataTypeDecl() = this;
     eq ModuleDecl.getDecl().getDataTypeDecl() = null; // never called
 
-    syn Decl DataConstructorExp.getDecl() {
-        DataConstructor dc = getDataConstructor();
-        if (dc == null)
-            return Model.unknownDecl;
-        else
-            return dc;
-    }
+    syn Decl DataConstructorExp.getDecl() = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
 
     @CheckForNull
     syn DataConstructor DataConstructorExp.getDataConstructor() {
-        Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
+        Decl decl = getDecl();
         if (decl == null) return null;
         if (decl.isUnknown()) {
             return null;
