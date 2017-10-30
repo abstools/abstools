@@ -81,5 +81,12 @@ aspect TreeUtils {
         int index = parent.getIndexOfChild(this);
         parent.setChild(newNode, index);
         this.setParent(null);
+
+        // TODO does this need to be done for more than 1 level?
+        while(parent != null) {
+            parent.flushCache();
+            parent.is$Final(false);
+            parent = parent.getParent();
+        }
     }
 }
