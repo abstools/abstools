@@ -45,4 +45,9 @@ public class ErlangTests extends ABSTest {
     public void scheduler_priority() {
         assertEvalTrue(new File("tests/abssamples/backend/TimeTests/scheduler_priority.abs"));
     }
+
+    @Test
+    public void scheduler_deadline() {
+        assertEvalTrue(new File("tests/abssamples/backend/TimeTests/scheduler_deadline.abs"));
+    }
 }

@@ -26,6 +26,22 @@ def Process defaultscheduler(List<Process> queue) = head(queue);
 def Process randomscheduler(List<Process> queue) = nth(queue, random(length(queue)));
 ----
 
+It is possible to formulate an Earliest Deadline First (EDF) scheduler in ABS:
+
+[source]
+.Example
+----
+def Process find_shortest_deadline(Process candidate, List<Process> l) =
+  if l == Nil then candidate
+  else if durationLessThan(procDeadline(head(l)), procDeadline(candidate))
+    then find_shortest_deadline(head(l), tail(l))
+    else find_shortest_deadline(candidate, tail(l));
+
+def Process earliest_deadline_scheduler(List<Process> queue) =
+find_shortest_deadline(head(queue), tail(queue));
+----
+
+
 All schedulers must have a result type `Process` and must take an argument of
 type `List<Process>` as their first argument.
 
@@ -49,9 +65,10 @@ run a certain method.  The following attributes are available:
 |Name |Type |Meaning
 |`method` |`String` |Name of the method executed by the process
 |`arrival` |`Time` |Time when method call was issued
+|`procDeadline` |`Duration` | The (current) deadline value of the process (`InfDuration` if none)
 |=======================
 
-NOTE: The attributes `cost`, `procDeadline`, `start`, `crit` are available in
+NOTE: The attributes `cost`, `start`, `crit` are available in
 the Maude backend only but will be implemented in the Erlang backend as well.
 The attributes `value`, `finish` are under consideration since their
 usefulness is questionable.
@@ -90,3 +107,4 @@ The following example shows how to create a cog with a different scheduler.
 ----
    [Scheduler: randomscheduler(queue)] I instance = new C();
 ----
+

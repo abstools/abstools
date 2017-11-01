@@ -119,7 +119,7 @@ aspect GenerateErlang {
       "ABS.StdLib.random", "ABS.StdLib.strlen", "ABS.StdLib.substr",
       "ABS.DC.thisDC", "ABS.StdLib.toString",
       "ABS.StdLib.truncate", "ABS.StdLib.numerator", "ABS.StdLib.denominator",
-      "ABS.Scheduler.method", "ABS.Scheduler.arrival");
+      "ABS.Scheduler.method", "ABS.Scheduler.arrival", "ABS.Scheduler.procDeadline");
   public  void FnApp.generateErlangCode(CodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
     boolean builtin = decl.getFunctionDef() instanceof BuiltinFunctionDef;
