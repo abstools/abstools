@@ -355,8 +355,8 @@ fmod ABS-DATA-TIME is
   eq fdefn("ABS.Scheduler.arrival") = $builtin("arrival") .
   eq fparams("ABS.Scheduler.cost") = 'P .
   eq fdefn("ABS.Scheduler.cost") = $builtin("cost") .
-  eq fparams("ABS.Scheduler.procDeadline") = 'P .
-  eq fdefn("ABS.Scheduler.procDeadline") = $builtin("procDeadline") .
+  eq fparams("ABS.Scheduler.proc_deadline") = 'P .
+  eq fdefn("ABS.Scheduler.proc_deadline") = $builtin("proc_deadline") .
   eq fparams("ABS.Scheduler.start") = 'P .
   eq fdefn("ABS.Scheduler.start") = $builtin("start") .
   eq fparams("ABS.Scheduler.finish") = 'P .
@@ -1182,7 +1182,7 @@ mod ABS-EVAL is
   eq eval($builtin("method"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = METHOD:Data .
   eq eval($builtin("arrival"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = ARRIVAL:Data .
   eq eval($builtin("cost"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = COST:Data .
-  eq eval($builtin("procDeadline"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = DEADLINE:Data .
+  eq eval($builtin("proc_deadline"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = DEADLINE:Data .
   eq eval($builtin("start"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = START:Data .
   eq eval($builtin("finish"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = FINISH:Data .
   eq eval($builtin("crit"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = CRIT:Data .

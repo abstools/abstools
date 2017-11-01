@@ -28,7 +28,7 @@ def Process edf_h(Process p, List<Process> l) =
                      
 // edf comparison
 def Bool edf_comp(Process p1, Process p2) = 
-        durationLessThan(procDeadline(p1), procDeadline(p2));
+        durationLessThan(proc_deadline(p1), proc_deadline(p2));
 
 
 {

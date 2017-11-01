@@ -119,7 +119,7 @@ aspect GenerateErlang {
       "ABS.StdLib.random", "ABS.StdLib.strlen", "ABS.StdLib.substr",
       "ABS.DC.thisDC", "ABS.StdLib.toString",
       "ABS.StdLib.truncate", "ABS.StdLib.numerator", "ABS.StdLib.denominator",
-      "ABS.Scheduler.method", "ABS.Scheduler.arrival", "ABS.Scheduler.procDeadline");
+      "ABS.Scheduler.method", "ABS.Scheduler.arrival", "ABS.Scheduler.proc_deadline");
   public  void FnApp.generateErlangCode(CodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
     boolean builtin = decl.getFunctionDef() instanceof BuiltinFunctionDef;
@@ -461,7 +461,7 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
-    ecs.format(",#process_info{method= <<\"%s\"/utf8>>, creation={dataTime,builtin:currentms(Cog)}, procDeadline=", getMethod());
+    ecs.format(",#process_info{method= <<\"%s\"/utf8>>, creation={dataTime,builtin:currentms(Cog)}, proc_deadline=", getMethod());
     if (deadline != null) {
         deadline.generateErlangCode(ecs, vars);
     } else {

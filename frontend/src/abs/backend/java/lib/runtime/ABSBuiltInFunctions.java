@@ -98,7 +98,7 @@ public class ABSBuiltInFunctions {
         }
     }
 
-    public static ABSDataType procDeadline(ABSProcess p) {
+    public static ABSDataType proc_deadline(ABSProcess p) {
         if (p.getDeadline() == -1) {
             Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_InfDuration");
             return DynamicClassUtils.instance(type);

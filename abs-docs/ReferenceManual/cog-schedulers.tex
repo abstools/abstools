@@ -28,14 +28,14 @@
 \begin{absexample} 
 data Pid;
 data Process = Process(Pid pid, String method, Time arrival,
-    Duration cost, Duration procdeadline, Time start, Time finish, 
+    Duration cost, Duration proc_deadline, Time start, Time finish, 
     Bool crit, Int value);
 \end{absexample} 
 
    \absinline{method} contains the name of the method the process is running,
    \absinline{arrival} the time when the call arrived at the object,
    \absinline{cost} the specified cost of the process (or \absinline{0} when no cost
-   annotation given), \absinline{procdeadline} is the deadline (or
+   annotation given), \absinline{proc_deadline} is the deadline (or
    \absinline{InfDuration} when no deadline given at the call site).
    \absinline{start} and \absinline{finish} are bookkeeping values, and \absinline{crit}
    and \absinline{value} are currently unused but will contain criticality

@@ -8,7 +8,7 @@
         creation={dataTime, 0},       % filled in at point of async call (file GenerateErlang.jadd)
         arrival={dataTime, -1},       % filled in by cog when receiving signal
         cost=dataInfDuration,         % filled in via annotation
-        procDeadline=dataInfDuration, % deadline relative to time at call, filled in via annotation cat point of async call (file GenerateErlang.jadd)
+        proc_deadline=dataInfDuration, % deadline relative to time at call, filled in via annotation cat point of async call (file GenerateErlang.jadd)
         start={dataTime, -1},         % filled in upon first scheduling
         crit=false                    % filled in via annotation
        }).
