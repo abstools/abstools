@@ -633,4 +633,34 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void constructorPatternBorked1() {
         assertTypeErrors("interface I {} { List<I> is = Nil;   Unit u = case is { Cons(I(x), Nil) => Unit; }; }", ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE);
     }
+    
+    @Test
+    public void schedulerInvalid1() {
+        assertTypeErrors("module M; import * from ABS.Scheduler; [Scheduler: xx] class C { }");
+    }
+
+    @Test
+    public void schedulerInvalid2() {
+        assertTypeErrors("module M; import * from ABS.Scheduler; [Scheduler: foo(queue)] class C { }");
+    }
+    
+    @Test
+    public void schedulerInvalid3() {
+        assertTypeErrors("module M; import * from ABS.Scheduler; def Process f(List<Process> queue) = head(queue); [Scheduler: f(x)] class C { }");
+    }
+    
+    @Test
+    public void schedulerInvalid4() {
+        assertTypeErrors("module M; import * from ABS.Scheduler; def Process f(List<Process> queue) = head(queue); [Scheduler: f(queue, b)] class C { }");
+    }
+    
+    @Test
+    public void schedulerInvalid5() {
+        assertTypeErrors("module M; import * from ABS.Scheduler; def Process f(List<Process> queue, String x) = head(queue); [Scheduler: f(queue, b)] class C { }");
+    }
+
+    @Test
+    public void schedulerInvalid6() {
+        assertTypeErrors("module M; import * from ABS.Scheduler; def Process f(List<Process> queue, String x) = head(queue); [Scheduler: f(queue, b)] class C { Int b = 0; }");
+    }
 }

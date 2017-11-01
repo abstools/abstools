@@ -36,6 +36,11 @@ public class SchedulerChecker extends DefaultTypeSystemExtension {
         }
         FnApp s = (FnApp) sched;
         Type scheduler_type = s.getType();
+        if (s.getDecl().isUnknown()) {
+            errors.add(new TypeError(loc, ErrorMessage.FUNCTION_NOT_RESOLVABLE,
+                                     s.getName()));
+            return;
+        }
         FunctionDecl sd = (FunctionDecl)s.getDecl();
         // check scheduling function return type
         boolean schedulerTypeCorrect = scheduler_type.isDataType()
@@ -60,7 +65,7 @@ public class SchedulerChecker extends DefaultTypeSystemExtension {
             errors.add(new TypeError(loc, ErrorMessage.WRONG_SCHEDULER_ANNOTATION_TYPE,
                                      "dummy"));
             errors.add(new TypeError(sd, ErrorMessage.WRONG_SCHEDULER_FUN_TYPE,
-                                     "dummy"));
+                                     s.getName()));
         }
         if (s.getNumParam() == 0 || !(s.getParam(0) instanceof VarUse)
             || !((VarUse)s.getParam(0)).getName().equals("queue")) {

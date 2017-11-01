@@ -115,7 +115,7 @@ public enum ErrorMessage {
     WRONG_COST_ANNOTATION_TYPE("Wrong type %s in cost annotation, should be a number."),
     AMBIGIOUS_USE("The use of %s is ambigious. It can refer to the following definitions: %s."),
     WRONG_SCHEDULER_ANNOTATION_TYPE("Invalid scheduler expression, should be function invocation of type ABS.Scheduler.Process and first argument of type List<ABS.Scheduler.Process>."),
-    WRONG_SCHEDULER_FUN_TYPE("Function invalid as scheduler function, first argument must be of type List<ABS.Scheduler.Process>, return type must be ABS.Scheduler.Process."),
+    WRONG_SCHEDULER_FUN_TYPE("Function %s invalid as scheduler function, first argument must be of type List<ABS.Scheduler.Process>, return type must be ABS.Scheduler.Process."),
     WRONG_SCHEDULER_FIRST_ARGUMENT("Invalid scheduler first argument, must be `queue'."),
     WRONG_SCHEDULER_FIELD_ARGUMENT("Invalid scheduler argument %s, must be a field name of class %s."),
     SCHEDULER_ON_DC("User-defined schedulers are not supported on deployment components."),
