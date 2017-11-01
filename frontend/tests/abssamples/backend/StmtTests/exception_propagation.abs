@@ -1,0 +1,19 @@
+module BackendTest;
+
+exception MyE;
+
+interface I {
+    Bool m();
+}
+
+class C implements I {
+    Bool m() { throw MyE; return False; }
+}
+
+{
+    I o = new C();
+    Bool testresult = False;
+    try testresult = await o!m();
+    catch MyE => testresult = True;
+    println("Result: " + toString(testresult));
+}

@@ -195,11 +195,6 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
-    public void divByZero() throws Exception {
-        assertEvalFails("{Bool testresult = 1/0 != 0;}");
-    }
-
-    @Test
     public void bug131() {
         // Test that non-trivial arithmetic expressions are properly bracketized in generated code
         assertEvalTrue("def Int a() = 5; { Bool testresult = 100-(a() + 2) == 93; }");

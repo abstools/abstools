@@ -4,6 +4,8 @@
  */
 package abs.backend.common;
 
+import java.io.File;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -18,26 +20,26 @@ public class ExceptionTests extends SemanticTests {
         
    @Test
    public void ticket175() {
-       String program =
-  "exception MyException(Int, Bool);"
-+ "{"
-+ "  Int x=0;"
-+ "  Bool testresult = False;"
-+ "  try {"
-+ "    x = x + 1;"
-+ "    throw MyException(x, True);"
-+ "    x = x + 100;"
-+ "  } catch {"
-+ "    MyException(0,False) => skip;"
-+ "    MyException(1,False) => skip;"
-+ "    MyException(1,True) => { x=x+1; x = x + 2; }"
-+ "  }"
-+ "  finally {"
-+ "    x=x+1;"
-+ "  }"
-+ "  testresult = (x == 5);"
-+ "}" ;
-      assertEvalTrue(program);
+       assertEvalTrue(new File("tests/abssamples/backend/StmtTests/exception_ticket175.abs"));
+   }
+ 
+   @Test
+   public void testException() {
+       assertEvalTrue("exception MyE(Bool); { Bool testresult = False; try throw MyE(True); catch MyE(value) => testresult = value; }");
    }
    
+   @Test
+   public void divByZero() throws Exception {
+       assertEvalFails("{Bool testresult = 1/0 != 0;}");
+   }
+
+   @Test
+   public void divByZeroCaught() throws Exception {
+       assertEvalTrue("{Bool testresult = False; try 1/0; catch DivisionByZeroException => testresult = True; }");
+   }
+
+   @Test
+   public void testExceptionPropagation() {
+       assertEvalTrue(new File("tests/abssamples/backend/StmtTests/exception_propagation.abs"));
+   }
 }

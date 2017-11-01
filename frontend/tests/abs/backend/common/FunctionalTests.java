@@ -180,6 +180,17 @@ public class FunctionalTests extends SemanticTests {
     }
     
     @Test
+    public void exceptionDataType() {
+        assertEvalTrue("exception MyE(Bool); { Bool testresult = False; MyE e = MyE(True); case e { MyE(value) => testresult = value; } }");
+    }
+    
+    @Test
+    public void exceptionSelector() {
+        assertEvalTrue("exception MyE(Bool myevalue); { MyE e = MyE(True); Bool testresult = myevalue(e); }");
+    }
+    
+    
+    @Test
     public void letExp() {
         assertEvalTrue("def Bool f() = let (Bool x) = True in x;" + CALL_F);
     }

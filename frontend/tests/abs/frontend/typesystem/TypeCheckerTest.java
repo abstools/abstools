@@ -352,6 +352,21 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    public void exception1() {
+        assertTypeOK("exception E; { Exception e = E; }");
+    }
+
+    @Test
+    public void exception2() {
+        assertTypeOK("exception E(String); { Exception e = E(\"hello\"); }");
+    }
+
+    @Test
+    public void exception3() {
+        assertTypeOK("exception E(String); { String x = \"\"; try skip; catch E(p) => x = p; }");
+    }
+
+    @Test
     public void synonym1() {
         assertTypeOK("type A = Int; type B = A; { B b = 1; }");
     }
