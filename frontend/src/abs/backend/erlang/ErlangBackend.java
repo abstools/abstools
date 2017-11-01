@@ -92,7 +92,8 @@ public class ErlangBackend extends Main {
         System.out.println("Erlang Backend (-erlang):\n"
                            + "  -d <dir>       Create code below <dir> (default gen/erl/)\n"
                            + "  -cover         Compile with run-time statement execution count recording.\n"
-                           + "                 Results in <dir>/absmodel/*.gcov after model finishes)\n");
+                           + "                 Results in <dir>/absmodel/*.gcov after model finishes)\n\n"
+                           + "  For help on Erlang runtime options, start model with -h\n");
     }
 
     private void compile(String[] args) throws Exception {
