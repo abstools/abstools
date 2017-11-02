@@ -9,15 +9,6 @@
 -export([method/2, arrival/2, proc_deadline/2]).
 
 
-%% Copied from Erlang R19 lists:join
-%% TODO: when we switch to R19, use lists:join
-join(_Sep, []) -> [];
-join(Sep, [H|T]) -> [H|join_prepend(Sep, T)].
-
-join_prepend(_Sep, []) -> [];
-join_prepend(Sep, [H|T]) -> [Sep,H|join_prepend(Sep,T)].
-
-
 lowlevelDeadline(_Cog) ->
     ProcessInfo = get(process_info),
     case ProcessInfo#process_info.proc_deadline of
@@ -106,7 +97,7 @@ toString(_Cog,#object{class=Cid,ref=Oid}) ->
                       ":", pid_to_list(Oid)]);
 toString(_Cog, L) when is_list(L) ->
     iolist_to_binary(["list[",
-                      join(", ", lists:map(fun(I) -> toString(_Cog, I) end, L)),
+                      lists:join(", ", lists:map(fun(I) -> toString(_Cog, I) end, L)),
                       "]"]);
 toString(_Cog, T) when is_tuple(T) ->
     [C|A] = tuple_to_list(T),
@@ -116,7 +107,7 @@ toString(_Cog, T) when is_tuple(T) ->
         dataInsertAssoc ->
             iolist_to_binary(["map[", abslistish_to_iolist(_Cog, dataInsertAssoc, dataEmptyMap, T), "]"]);
         _ -> iolist_to_binary([constructorname_to_string(C),
-                               "(", join(",", [toString(_Cog,X) || X <- A]),
+                               "(", lists:join(",", [toString(_Cog,X) || X <- A]),
                                ")"])
     end.
 
