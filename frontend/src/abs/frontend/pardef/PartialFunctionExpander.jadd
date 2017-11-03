@@ -60,7 +60,7 @@ aspect PartialFunctionExpander {
             }
 
             if (fnApp.closestParent(ModuleDecl.class) == null) {
-                // This should never happen, because we're collected the child ParFnApp nodes lazily.
+                // This should never happen, because we have collected the child ParFnApp nodes lazily.
                 throw new RuntimeException("Encountered a detached ParFnApp node.");
             }
 
