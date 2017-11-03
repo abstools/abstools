@@ -65,9 +65,12 @@ aspect TreeUtils {
     /**
      * Replaces this node with the <code>newNode</code> in this node's parent node.
      *
+     * <p>The (former) parent of this node will be set to non-final and its cache will be flushed.
+     * However, this method will not attempt to invoke any rewrites.<p>
+     *
      * @param newNode a node to insert instead
      * @throws NullPointerException if newNode is null
-     * @throws IllegalArgumentException if <code>newNode</code> is not detached
+     * @throws IllegalArgumentException if <code>newNode</code> is not detached or this node is detached
      */
     public void ASTNode.replaceWith(ASTNode<?> newNode) {
         Objects.requireNonNull(newNode);
@@ -82,11 +85,7 @@ aspect TreeUtils {
         parent.setChild(newNode, index);
         this.setParent(null);
 
-        // TODO does this need to be done for more than 1 level?
-        while(parent != null) {
-            parent.flushCache();
-            parent.is$Final(false);
-            parent = parent.getParent();
-        }
+        parent.is$Final(false);
+        parent.flushCache();
     }
 }
