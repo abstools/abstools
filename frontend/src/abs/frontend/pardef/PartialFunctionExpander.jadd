@@ -60,8 +60,8 @@ aspect PartialFunctionExpander {
             }
 
             if (fnApp.closestParent(ModuleDecl.class) == null) {
-                // If this happens, it's a compiler error
-                throw new RuntimeException("This should not have happened");
+                // This should never happen, because we're collected the child ParFnApp nodes lazily.
+                throw new RuntimeException("Encountered a detached ParFnApp node.");
             }
 
             PartialFunctionDecl function = getPartialFunction(fnApp.getName());
@@ -272,8 +272,8 @@ aspect PartialFunctionExpander {
                 }
             }
         } else {
-            // TODO implement builtin
-            throw new RuntimeException("Builtin pardefs are not supported yet");
+            // this could only happen if the AST and the ANTLR grammar are modified.
+            throw new RuntimeException("Unsupported function definition");
         }
         return decl;
     }
