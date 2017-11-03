@@ -9,17 +9,31 @@ import abs.frontend.ast.List;
 import abs.frontend.ast.ListLiteral;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.Stmt;
+import abs.frontend.ast.TypeUse;
 import abs.frontend.ast.TypedAnnotation;
+import abs.frontend.ast.UnresolvedTypeUse;
 import java.util.Objects;
 
 public final class AnnotationUtil {
 
+    // Annotation type names
+    private static final String EXPANSION = "Expansion";
+    private static final String EXPANSION_CALL = "ExpansionCall";
+
     private AnnotationUtil() {
+    }
+
+    private static TypeUse expansionType() {
+        return new UnresolvedTypeUse(EXPANSION, new List<Annotation>());
+    }
+
+    private static TypeUse expansionCallType() {
+        return new UnresolvedTypeUse(EXPANSION_CALL, new List<Annotation>());
     }
 
     public static void annotateExpansion(FunctionDecl expansion, int expansionId) {
         IntLiteral indexLiteral = new IntLiteral(Integer.toString(expansionId));
-        Annotation annotation = new TypedAnnotation(indexLiteral, TypeUtil.expansionType());
+        Annotation annotation = new TypedAnnotation(indexLiteral, expansionType());
         expansion.addAnnotation(annotation);
     }
 
@@ -40,9 +54,9 @@ public final class AnnotationUtil {
             if (parentFunction == null) {
                 throw new IllegalArgumentException("Function call has no parent Statement or FunctionDecl: " + call);
             }
-            addToAnnotations(parentFunction.getAnnotations(), TypeUtil.expansionCallType(), expansionId);
+            addToAnnotations(parentFunction.getAnnotations(), expansionCallType(), expansionId);
         } else {
-            addToAnnotations(parent.getAnnotations(), TypeUtil.expansionCallType(), expansionId);
+            addToAnnotations(parent.getAnnotations(), expansionCallType(), expansionId);
         }
     }
 
@@ -56,7 +70,7 @@ public final class AnnotationUtil {
      */
     public static int getExpansionId(FunctionDecl decl) {
         Objects.requireNonNull(decl);
-        Annotation annotation = getAnnotation(decl.getAnnotationsNoTransform(), TypeUtil.expansionType());
+        Annotation annotation = getAnnotation(decl.getAnnotationsNoTransform(), expansionType());
         if (annotation == null) {
             return -1;
         }
