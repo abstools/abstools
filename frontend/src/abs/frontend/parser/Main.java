@@ -256,8 +256,6 @@ public class Main {
             return;
         }
 
-        m.expandPartialFunctions();
-
         m.evaluateAllProductDeclarations(); // resolve ProductExpressions to simple sets of features
         rewriteModel(m, product);
         m.flattenTraitOnly();
