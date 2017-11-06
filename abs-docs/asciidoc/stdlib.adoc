@@ -432,6 +432,44 @@ Returns a list of length `n` containing `p` n times.
 def List<A> copy<A>(A p, Int n);
 ----
 
+.map
+
+Applies a function to each element of a list, returning a list of results in the same order.
+
+[source]
+----
+def List<B> map<A, B>(fn)(List<A> l);
+----
+
+.filter
+
+Returns a list containing only the elements in the given list for which the given predicate returns `True`.
+
+[source]
+----
+def List<T> filter<T>(predicate)(List<T> l);
+----
+
+.foldl
+
+Accumulates a value starting with `init` and applying `accumulate` from left to right
+to current accumulator value and each element.
+
+[source]
+----
+def T foldl(accumulate)(List<T> l, T init);
+----
+
+.foldr
+
+Accumulates a value starting with `init` and applying `accumulate` from right to left
+to each element and current accumulator value.
+
+[source]
+----
+def T foldr(accumulate)(List<T> l, T init);
+----
+
 [[type-set]]
 === Sets
 
