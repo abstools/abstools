@@ -137,7 +137,7 @@ get_for_rest(Future) ->
     confirm_wait_unblocked(Future, self()),
     Result=case gen_fsm:sync_send_event(Future, get) of
                %% Explicitly re-export internal representation since it's
-               %% deconstructed by modelapi:handle_object_call
+               %% deconstructed by modelapi_v2:handle_object_call
                {ok,Value}->
                    {ok, Value};
                {error,Reason}->

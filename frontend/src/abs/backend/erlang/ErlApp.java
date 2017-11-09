@@ -230,7 +230,7 @@ public class ErlApp {
                                 if (key != null) {
                                     s.println(mapSeparator);
                                     mapSeparator = ",";
-                                    s.format("<<\"%s\"/utf8>> => modelapi:abs_to_json(lists:nth(%s, Abs))",
+                                    s.format("<<\"%s\"/utf8>> => modelapi_v2:abs_to_json(lists:nth(%s, Abs))",
                                              key,
                                              // nth() indexes 1-based and
                                              // we need to skip over the first

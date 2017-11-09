@@ -122,7 +122,7 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
 end_mod(TaskRef, InfluxdbEnabled) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
-    %% modelapi:print_statistics(),
+    %% modelapi_v2:print_statistics(),
     coverage:write_files(),
     cog_monitor:waitfor(),
     gc:stop(),
