@@ -126,6 +126,14 @@ GET http://localhost:8080/o/C1/field
 When querying for an unknown object or an unknown field, the HTTP request will
 produce a 404 response code.
 
+NOTE: All queries in this section can be prepended with a `/v2/` prefix, i.e.,
+`http://localhost:8080/v2/o/...`.  In case incompatible changes are introduced
+to the Model API in the future, for example by introducing new return value
+encodings, reasonable effort will be made to keep the semantics of invocations
+of queries with prefix `/v2/` unchanged.
+
+
+
 === Invoking methods
 
 The following query returns, for an object exposed as `C1`, a JSON array of
@@ -163,3 +171,8 @@ When querying with invalid method parameters, the HTTP request will produce a
 When the invoked method throws an exception, the HTTP request will produce a
 500 response code.
 
+NOTE: All queries in this section can be prepended with a `/v2/` prefix, i.e.,
+`http://localhost:8080/v2/call/...`.  In case incompatible changes are
+introduced to the Model API in the future, for example by introducing new
+return value encodings, reasonable effort will be made to keep the semantics
+of invocations of queries with prefix `/v2/` unchanged.

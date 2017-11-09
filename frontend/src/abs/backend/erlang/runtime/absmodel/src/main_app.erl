@@ -11,7 +11,8 @@ start(_StartType, _StartArgs) ->
                                        [{"/", cowboy_static, {priv_file, absmodel, "index.html"}},
                                         {"/static/[...]", cowboy_static, {priv_dir, absmodel, "static"}},
                                         {"/v1/:request/[...]", modelapi_v1, []},
-                                        {"/:request/[...]", modelapi, []}]}]),
+                                        {"/v2/:request/[...]", modelapi_v2, []},
+                                        {"/:request/[...]", modelapi_v2, []}]}]),
     {ok, Port} = application:get_env(absmodel, port),
     {ok, Clocklimit} = application:get_env(absmodel, clocklimit),
     %% In case we need a random port, see example at bottom of
