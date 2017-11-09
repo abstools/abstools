@@ -27,7 +27,7 @@ public class ParseSamplesTest extends FrontendTest {
                                                , { "examples/SmartHome/abs/" , null}
                                                , { "examples/SmartHome/abs/" , "OilHeating" }
                                                , { "examples/SmartHome/abs/" , "ElectricHeating" }
-                                               , { "examples/SmartHome/abs/" , "FireAlarm" }
+                                               //, { "examples/SmartHome/abs/" , "FireAlarm" } // invalid example, `reset` method undefined
                                                , { "examples/SmartHome/abs/" , "Test" }
                                                , { "examples/chatPL/" , null }
                                                //, { "examples/chatPL/" , "HighEnd" } // invalid in HATS repository too (missing class definitions)
