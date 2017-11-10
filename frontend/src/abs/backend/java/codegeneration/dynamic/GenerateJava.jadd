@@ -333,6 +333,8 @@ aspect GenerateJavaDynamic_Core {
         stream.println("}");
     }
 
+    public void PartialFunctionDecl.generateJavaCodeDynamic(JavaCode.Package pkg) {}
+
     public void PartialFunctionDecl.generateJavaDynamic(PrintStream stream) {}
 
     public void ParFnApp.generateJavaDynamic(PrintStream stream) {}
