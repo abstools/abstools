@@ -95,8 +95,8 @@ aspect Typing {
     }
 
     // Partially defined functions and friends
-    eq PartialFunctionDecl.getType() = AnyType.INSTANCE;
-    eq ParFnApp.getType() = AnyType.INSTANCE;
+    eq PartialFunctionDecl.getType() = UnknownType.INSTANCE;
+    eq ParFnApp.getType() = UnknownType.INSTANCE;
     
     eq ExceptionDecl.getType() = getModel().getExceptionType();
     eq UnknownDecl.getType() = UnknownType.INSTANCE;
