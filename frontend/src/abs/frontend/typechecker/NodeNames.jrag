@@ -108,20 +108,6 @@ aspect QualifiedName {
     }
 }
 
-// inform Nodes about the name of the file where they were declared
-aspect FileName {
-    /* When flattening, nodes get copied from one CompilationUnit to another, therefore 
-     * the information about the source file where they were originally declared is lost.
-     * We prevent this by setting sourceFileName whenever a node is copied using treeCopyNoTransform().
-     * When calling getFileName() on a node whose originalFileName is null, we delegate to the parent node.
-     * At the latest when reaching the CompilationUnit, we should get a meaningful value.
-     */
-    private String ASTNode.sourceFileName = null;
-    public void ASTNode.setFileName(String fileName) { this.sourceFileName = fileName; }
-    syn String ASTNode.getFileName() = this.sourceFileName == null ? getParent().getFileName() : this.sourceFileName;
-    syn String Model.getFileName() = "<invalid>";
-}
-
 // inform Model about which product of the SPL it represents; default is "core"
 aspect SPLProduct {
     private String Model.productName = "core";
