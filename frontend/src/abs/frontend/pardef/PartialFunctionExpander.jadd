@@ -75,6 +75,16 @@ aspect PartialFunctionExpander {
 
             if (expandedWrapper == null) {
                 FunctionDecl expandedFunction = function.expand(fnApp);
+
+                for (ASTNode<?> child : expandedFunction.findChildren(ASTNode.class)) {
+                    // all children should derive their position string from the FunctionDecl
+                    child.isPositionSet = false;
+                    child.setFileName(null);
+                }
+                // users should see their own code in the error message, not the generated code
+                expandedFunction.setPositionFromNode(fnApp);
+                expandedFunction.setFileName(fnApp.getFileName());
+
                 addDecl(expandedFunction);
                 AnnotationUtil.annotateExpansion(expandedFunction, expansionCount);
                 expandedWrapper = new ExpandedWrapper(expandedFunction, expansionCount);
