@@ -49,6 +49,7 @@ aspect BackPositions {
             this.startcolumn = node.startcolumn;
             this.endline = node.endline;
             this.endcolumn = node.endcolumn;
+            this.setFileName(node.getFileName());
             this.isPositionSet = true;
         }
 
