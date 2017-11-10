@@ -106,12 +106,8 @@ public class ParFnAppTest extends PardefTest {
     public void recursion() {
         testExpand(parse(
             "List<Rat> l = map<Int, Rat>(halve)(Nil);",
-            halveFunction(),
-            "def List<B> map<A, B>(f)(List<A> list) = case list {\n"
-                + "Cons(x, xs) => Cons(f(x), map(xs));\n"
-                + "Nil => Nil;\n"
-                + "};"
-        ), "Map_%s_halve_Int_Rat");
+            halveFunction()
+        ), "Map_ABS_StdLib_halve_Int_Rat");
     }
 
     @Test
@@ -133,12 +129,8 @@ public class ParFnAppTest extends PardefTest {
         ), "Apply_%s_halve_Int_Rat");
         testExpand(parse(
             "List<Rat> l = map<Int, Rat>(halve)(Nil);",
-            halveFunction(),
-            "def List<B> map<A, B>(f)(List<A> list) = case list {\n"
-                + "Cons(x, xs) => Cons(f(x), map(xs));\n"
-                + "Nil => Nil;\n"
-                + "};"
-        ), "Map_%s_halve_Int_Rat");
+            halveFunction()
+        ), "Map_ABS_StdLib_halve_Int_Rat");
     }
 
     @Test(expected = PardefModellingException.class)
