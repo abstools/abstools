@@ -660,41 +660,28 @@ afterwards during type checking.
                         `=` _PureExp_ `;`
 |====
 
-Consider the following partial function definition that defines a scheme for map functions and its
-application with a function that doubles its input and the generated code.
+[source]
+.Example
+----
+// Simply applies a function fn to a value.
+def B apply<A, B>(fn)(A value) = fn(a);
+
+def Int double(Int x) = x * 2;
+
+{
+  // doubled = 4
+  Int doubled = apply<Int, Int>(double)(2);
+}
+----
 
 [source]
 .Example
 ----
-def List<T2> map<T1, T2>(fn)(List<T1> list) = case list {
-  Cons(x, xs) => Cons(fn(x), map(xs));
-  Nil => Nil;
-};
-
-def double(Int x) = x * 2;
+def Int double(Int x) = x * 2;
 
 {
-  List<Int> list = list[1, 2, 3];
-  list = map<Int,Int>(double)(list);
-}
-----
-
-The application of the partially defined function map generates a new function with a collision-free name -- we'll use `Map_1` in this example.
-The `Expansion` and `ExpansionCall` annotations link the new function and the statement that generated it.
-This is not used for code generation, but helps error reporting.
-
-[source]
-----
-[Expansion: 1] def List<Int> Map_1(List<Int> list) = case list {
-  Cons(x, xs) => Cons(double(x), Map_1(xs));
-  Nil => Nil;
-};
-
-def double(Int x) = x * 2;
-
-{
-  List<Int> list = list[1, 2, 3];
-  [ExpansionCall: [1]] list = Map_1(list);
+  // doubled = [2, 4, 6]
+  List<Int> doubled = map<Int, Int>(double)(list[1, 2, 3]);
 }
 ----
 
@@ -705,8 +692,8 @@ NOTE: If multiple statements call a partially defined function with the same fun
 === Anonymous Functions
 
 To reduce the need to declare a function with a new function name explicitly every time a partially
-defined function is called, ABS uses anonymous functions. Anonymous functions are
-only allowed in the first arguments set of partially defined function calls.
+defined function is called, ABS uses anonymous functions. +
+Anonymous functions are only allowed in the first arguments set of partially defined function calls.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
@@ -717,17 +704,12 @@ only allowed in the first arguments set of partially defined function calls.
 An anonymous function specifies a number of parameters and an expression that may refer to
 the declared parameters.
 
-The following code is equivalent to the previous example, but does not define the `double` function
-explicitly.
+The following example is equivalent to the previous example, but does not define the `double`
+function explicitly.
 
 [source]
 .Example
 ----
-def List<T2> map<T1, T2>(fn)(List<T1> list) = case list {
-  Cons(x, xs) => Cons(fn(x), map(xs));
-  Nil => Nil;
-};
-
 {
   List<Int> list = list[1, 2, 3];
   list = map<Int, Int>((Int y) => y * 2)(list);
@@ -742,42 +724,7 @@ statement that caused the expansion.
 When using anonymous functions to instantiate partially defined functions, the expression of the
 anonymous function may refer to the fields, parameters and local variables of the context in which
 the function is instantiated. In this case the closure is computed and added as additional
-parameters to the function definition resulting from expanding the partially defined function.
-
-Consider the following example and the code generated from it:
-[source]
-.Example
-----
-def List<T2> map<T1, T2>(fn)(List<T1> list) = case list {
-  Cons(x, xs) => Cons(fn(x), map(xs));
-  Nil => Nil;
-};
-
-{
-  List<Int> list = list[1, 2, 3];
-  Int i = 2;
-  list = map<Int, Int>((Int y) => y * i)(list);
-}
-----
-
-The application of `map` again generates a function `Map_1`. The anonymous function is inlined into `Map_1`.
-The anonymous function needs context to be computed, thus `i` is added as `I_<anonID>` to the parameters of `Map_1`.
-The inlined anonymous function is wrapped by _let_ expressions to reverse the name mangling.
-
-[source]
-----
-[Expansion: 0] def List<Int> Map_1(List<Int> list, Int I_0) = case list {
-  Cons( x, xs ) => Cons(let (Int y) = x in let (Int i) = I_0 in y * i, Map_1(xs, I_0));
-  Nil => Nil;
-};
-
-{
-  List<Int> list = list[1, 2, 3];
-  Int i = 2;
-  [ExpansionCall: [0]]
-  list = Map_1(list, i);
-}
-----
+parameters to the expanded function definition.
 
 NOTE: Calling the same partially defined function in multiple expressions with the (syntactically) equivalent
-anonymous function will only generate one expansion.
+anonymous function will only generate one expanded function definition.
