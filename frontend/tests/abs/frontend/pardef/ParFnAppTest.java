@@ -3,9 +3,11 @@ package abs.frontend.pardef;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import abs.frontend.ast.Decl;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.ModuleDecl;
 import java.util.regex.Pattern;
 import org.junit.Test;
 
@@ -116,7 +118,7 @@ public class ParFnAppTest extends PardefTest {
             "Int x = 0; Int y = 1; rec((Int i) => x, (Int j) => y)();",
             "def Int rec(f, g)() = rec();"
         ));
-        FnApp call = assertHasCall(m, expandedName("Rec_%s_\\d+_\\d+"));
+        FnApp call = assertHasCall(m, expandedName("Rec_%s_Anon\\d+"));
         assertEquals(2, call.getNumParam());
     }
 
@@ -184,23 +186,23 @@ public class ParFnAppTest extends PardefTest {
         testExpand(parse(
             "apply<Int, Int>((Int i) => i)(0);",
             applyFunction()
-        ));
+        ), "Apply_%s_Anon\\d+_Int_Int");
 
         testExpand(parse(
             "apply<Int, Int>((Int i) => i + 1)(0);",
             applyFunction()
-        ));
+        ), "Apply_%s_Anon\\d+_Int_Int");
 
         testExpand(parse(
             "apply<Int, Int>((Int i) => inc(i))(0);",
             applyFunction(),
             incFunction()
-        ), "Apply_%s_\\d+_Int_Int");
+        ), "Apply_%s_Anon\\d+_Int_Int");
 
         testExpand(parse(
             "Int i = test(() => 1)();",
             "def Int test(f)() = f();"
-        ), "Test_%s_\\d+");
+        ), "Test_%s_Anon\\d+");
     }
 
     @Test(expected = PardefModellingException.class)
@@ -224,7 +226,7 @@ public class ParFnAppTest extends PardefTest {
         testExpand(parse(
             "Int x = 0; apply<Int, Int>((Int i) => i + x)(0);",
             applyFunction()
-        ), "Apply_%s_\\d+_Int_Int");
+        ), "Apply_%s_Anon\\d+_Int_Int");
     }
 
     @Test
@@ -232,7 +234,7 @@ public class ParFnAppTest extends PardefTest {
         testExpand(parse(
             "Int x = 0; apply<Int, Int>((Int i) => apply<Int, Int>((Int j) => j + x)(i))(0);",
             applyFunction()
-        ), "Apply_%s_\\d+_Int_Int");
+        ), "Apply_%s_Anon\\d+_Int_Int");
     }
 
     @Test
@@ -240,7 +242,7 @@ public class ParFnAppTest extends PardefTest {
         testExpand(parse(
             "Int x = 1; test((Int i) => x + i)(0);",
             "def Int test(f)(Int x_0) = f(x_0);"
-        ), "Test_%s_\\d+");
+        ), "Test_%s_Anon\\d+");
     }
 
     @Test
@@ -248,27 +250,40 @@ public class ParFnAppTest extends PardefTest {
         testExpand(parse(
             "Int x = 1; test(() => x, () => -x)();",
             "def Int test(f, g)() = f() + g();"
-        ), "Test_%s_\\d+_\\d+");
+        ), "Test_%s_Anon\\d+");
     }
 
     @Test
-    public void sameAnonTwiceOnlyOneClosure() {
+    public void sameAnonTwiceTwoClosureParams() {
         Model m = testExpand(parse(
             "Int x = 1; test(() => x, () => x)();",
             "def Int test(f, g)() = f() + g();"
-        ), "Test_%s_\\d+_\\d+");
-        FunctionDecl function = getFunction(m, Pattern.compile(expandedName("Test_%s_\\d+_\\d+")));
+        ), "Test_%s_Anon\\d+");
+        FunctionDecl function = getFunction(m, Pattern.compile(expandedName("Test_%s_Anon\\d+")));
         assertNotNull(function);
-        assertEquals(1, function.getNumParam());
+        assertEquals(2, function.getNumParam());
+        assertEquals("X0", function.getParam(0).getName());
+        assertEquals("X1", function.getParam(1).getName());
     }
 
     @Test
-    public void sameAnonTwiceOnlyOneExpansion() {
-        testExpand(parse(
+    public void sameAnonTwiceTwoExpansions() {
+        Model m = testExpand(parse(
             "apply<Int, Int>((Int i) => i)(1);"
-            + "apply<Int, Int>((Int i) => i)(1);",
+                + "apply<Int, Int>((Int i) => i)(1);",
             applyFunction()
-        ), "Apply_%s_\\d+_Int_Int");
+        ));
+        ModuleDecl module = m.lookupModule("UnitTest");
+        int foundExpansions = 0;
+        for (Decl decl : module.getDecls()) {
+            if (decl instanceof FunctionDecl) {
+                FunctionDecl fun = (FunctionDecl) decl;
+                if (fun.getName().startsWith("Apply_")) {
+                    ++foundExpansions;
+                }
+            }
+        }
+        assertEquals(2, foundExpansions);
     }
 
     @Test

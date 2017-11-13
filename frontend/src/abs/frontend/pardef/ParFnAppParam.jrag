@@ -86,27 +86,17 @@ aspect ParFnAppParam {
     }
 
     public String AnonymousFunctionDecl.qualifyName(String name) {
-        return StringUtils.capitalize(name) + "_" + getPureExpNoTransform().getExpId();
+        return StringUtils.capitalize(name) + getAnonId();
     }
 
     /**
     * Adds the closure params for this anonymous function to the given FunctionDecl.
-    * If the params for this anonymous function's PureExp have already been added, this method will do nothing.
-    * After adding the closure params to the function, this AnonymousFunctionDecl will be added to the passed list.
     *
-    * <p>If the function contains any recursive calls, the closure params will be added.</p>
+    * <p>If the function contains any recursive calls, the closure params will be added to the calls.</p>
     *
-    * @param added a list of anonymous functions that already added their closure params
     * @param func a function to add the closure params to
     */
-    public void AnonymousFunctionDecl.addClosureParams(java.util.List<AnonymousFunctionDecl> added, FunctionDecl func) {
-        for (AnonymousFunctionDecl anon : added) {
-            if (anon.getPureExpNoTransform().getExpId().equals(this.getPureExpNoTransform().getExpId())) {
-                // Closure params for this pure expression were already added
-                return;
-            }
-        }
-
+    public void AnonymousFunctionDecl.addClosureParams(FunctionDecl func) {
         java.util.List<FnApp> recursiveCalls = new LinkedList<>();
         for (FnApp call : func.findChildren(FnApp.class)) {
             if (call.getName().equals(func.getName())) {
@@ -121,52 +111,35 @@ aspect ParFnAppParam {
                 recursiveCall.addParam(new VarUse(freeVar.getName()));
             }
         }
-
-        added.add(this);
     }
 
     /**
     * Adds the closure params for this anonymous function to the given ParFnApp.
-    * If the params for this anonymous function's PureExp have already been added, this method will do nothing.
-    * After adding the closure params to the function call, this AnonymousFunctionDecl will be added to the passed list.
-    * @param added a list of anonymous functions that already added their closure params
     * @param func a function call to add the closure params to
     */
-    public void AnonymousFunctionDecl.addClosureParams(java.util.List<AnonymousFunctionDecl> added, ParFnApp fnApp) {
-        for (AnonymousFunctionDecl anon : added) {
-            if (anon.getPureExpNoTransform().getExpId().equals(this.getPureExpNoTransform().getExpId())) {
-                // Closure params for this pure expression were already added
-                return;
-            }
-        }
-
+    public void AnonymousFunctionDecl.addClosureParams(ParFnApp fnApp) {
         for (String freeVarName : getFreeVars().keySet()) {
             fnApp.addParam(new VarUse(freeVarName));
         }
-
-        added.add(this);
     }
 
-    // TODO this should probably be reset somewhere
     /**
-    * Stores the IDs for all pure expressions. Keys are the pretty-printed pure expressions.
+    * Gets the ID of this AnonymousFunctionDecl.
+    *
+    * The IDs of AnonymousFunctionDecls are only unique for every ParFnApp instance.
+    * @return an ID
+    * @throws IllegalStateException if this node does not have a List parent
     */
-    static Map<String, String> PureExp.pureExpIds = new HashMap<>(256);
+    syn lazy int AnonymousFunctionDecl.getAnonId() {
+        ASTNode<?> parent = getParent();
+        if (!(parent instanceof List)) {
+            throw new IllegalStateException("AnonymousFunctionDecl is detached, can't find ID");
+        }
 
-    /**
-    * Determines an ID for this pure expression.
-    * IDs are guaranteed to be the same for expressions which are syntactically identical and
-    * to be different for expressions that are not.
-    */
-    syn lazy String PureExp.getExpId() {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        this.doPrettyPrint(pw, new DefaultABSFormatter(pw));
-        String prettyPrinted = sw.toString();
-        String id = PureExp.pureExpIds.get(prettyPrinted);
-        if (id == null) {
-            id = Integer.toString(PureExp.pureExpIds.size());
-            PureExp.pureExpIds.put(prettyPrinted, id);
+        List list = (List) parent;
+        int id = list.getIndexOfChild(this);
+        if (id == -1) {
+            throw new IllegalStateException("Anon decl is not a child of parent list (???)");
         }
         return id;
     }

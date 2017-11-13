@@ -725,6 +725,3 @@ When using anonymous functions to instantiate partially defined functions, the e
 anonymous function may refer to the fields, parameters and local variables of the context in which
 the function is instantiated. In this case the closure is computed and added as additional
 parameters to the expanded function definition.
-
-NOTE: Calling the same partially defined function in multiple expressions with the (syntactically) equivalent
-anonymous function will only generate one expanded function definition.

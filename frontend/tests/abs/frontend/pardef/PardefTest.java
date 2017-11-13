@@ -7,7 +7,8 @@ import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
-import java.util.Iterator;
+import com.google.common.base.Joiner;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -32,16 +33,13 @@ public abstract class PardefTest extends FrontendTest {
     }
 
     protected final String getFunctions(Model model) {
-        StringBuilder builder = new StringBuilder().append('[');
-        Iterator<FunctionDecl> iterator = model.findChildren(FunctionDecl.class).iterator();
-        while (iterator.hasNext()) {
-            FunctionDecl decl = iterator.next();
-            builder.append(decl.getName());
-            if (iterator.hasNext()) {
-                builder.append(", ");
-            }
+        List<FunctionDecl> functions = model.findChildren(FunctionDecl.class);
+        // The desired function is probably at the end, so we reverse the list
+        LinkedList<String> reversedNames = new LinkedList<>();
+        for (FunctionDecl fun : functions) {
+            reversedNames.addFirst(fun.getName());
         }
-        return builder.append(']').toString();
+        return '[' + Joiner.on(", ").join(reversedNames) + ']';
     }
 
     protected final FunctionDecl getFunction(Model model, Pattern regex) {

@@ -69,12 +69,12 @@ aspect PartialFunctionExpander {
                 throw new PardefModellingException(fnApp, ErrorMessage.FUNCTION_NOT_RESOLVABLE, fnApp.getName());
             }
 
-            String expandedName = function.expandedName(fnApp);
+            String expandedName = function.expandedName(fnApp, expansionCount);
             ExpandedWrapper expandedWrapper;
             expandedWrapper = getExpansion(expandedName);
 
             if (expandedWrapper == null) {
-                FunctionDecl expandedFunction = function.expand(fnApp);
+                FunctionDecl expandedFunction = function.expand(fnApp, expandedName);
 
                 for (ASTNode<?> child : expandedFunction.findChildren(ASTNode.class)) {
                     // all children should derive their position string from the FunctionDecl
@@ -189,10 +189,9 @@ aspect PartialFunctionExpander {
     * @return a detached FunctionDecl
     * @throws PardefModellingException if the given ParFnApp is not a valid call to this function
     */
-    public FunctionDecl PartialFunctionDecl.expand(ParFnApp fnApp) {
+    public FunctionDecl PartialFunctionDecl.expand(ParFnApp fnApp, String expandedName) {
         checkValid(fnApp);
         FunctionDecl expanded = new FunctionDecl();
-        String expandedName = expandedName(fnApp);
         expanded.setName(expandedName);
         expanded.setAnnotationList(getAnnotations().treeCopy());
         expanded.setTypeUse(getTypeUse().treeCopy());
@@ -211,11 +210,10 @@ aspect PartialFunctionExpander {
         expanded.setFunctionDef(getPartialFunctionDef().apply(funcParamBindings));
 
         // must happen after recursive calls have been renamed to the expanded name
-        java.util.List<AnonymousFunctionDecl> addedClosures = new LinkedList<>();
         for (ParFnAppParamDecl funcParam : fnApp.getFuncParams()) {
             if (funcParam instanceof AnonymousFunctionDecl) {
                 AnonymousFunctionDecl anon = (AnonymousFunctionDecl) funcParam;
-                anon.addClosureParams(addedClosures, expanded);
+                anon.addClosureParams(expanded);
             }
         }
 
@@ -223,8 +221,8 @@ aspect PartialFunctionExpander {
     }
 
     @Override
-    public FunctionDecl ParametricPartialFunctionDecl.expand(ParFnApp uncheckedFnApp) {
-        FunctionDecl decl = super.expand(uncheckedFnApp);
+    public FunctionDecl ParametricPartialFunctionDecl.expand(ParFnApp uncheckedFnApp, String expansionName) {
+        FunctionDecl decl = super.expand(uncheckedFnApp, expansionName);
         // cast is checked in checkValid()
         ParametricParFnApp fnApp = (ParametricParFnApp) uncheckedFnApp;
         Map<String, TypeUse> typeBindings = new HashMap<>(getNumTypeParameter() * 2);
@@ -303,23 +301,27 @@ aspect PartialFunctionExpander {
     /**
      * Returns the name for the expanded version of this function based on the specified function call.<br>
      *
-     * @return CapitalizedFunctioName_moduleName_funcParam1_funcParam2[...]
+     * @return CapitalizedFunctionName_moduleName_funcParam1_funcParam2[...]
      */
-    public String PartialFunctionDecl.expandedName(ParFnApp fnApp) {
+    public String PartialFunctionDecl.expandedName(ParFnApp fnApp, int nextExpansionId) {
         // avoid collisions by capitalizing the applied function name
         StringBuilder builder = new StringBuilder()
             .append(StringUtils.capitalize(getName()))
             .append('_').append(getModuleDecl().getName());
+
+        boolean foundAnon = false;
 
         for (ParFnAppParamDecl funcParam : fnApp.getFuncParamsNoTransform()) {
             if (funcParam instanceof NamedParFnAppParam) {
                 NamedParFnAppParam namedParam = (NamedParFnAppParam) funcParam;
                 builder.append('_').append(namedParam.getName());
             } else if (funcParam instanceof AnonymousFunctionDecl) {
-                AnonymousFunctionDecl anon = (AnonymousFunctionDecl) funcParam;
-                builder.append(anon.qualifyName(""));
+                foundAnon = true;
             }
         }
+
+        // every call with at least one anonymous function parameter should generate a new expansion
+        if (foundAnon) builder.append("_Anon").append(nextExpansionId);
 
         return sanitizeIdentifierName(builder.toString());
     }
@@ -330,8 +332,8 @@ aspect PartialFunctionExpander {
      * @return CapitalizedFunctioName_moduleName_funcParam1_funcParam2[...]_typeParam1_typeParam2[...]
      */
     @Override
-    public String ParametricPartialFunctionDecl.expandedName(ParFnApp fnApp) {
-        String result = super.expandedName(fnApp);
+    public String ParametricPartialFunctionDecl.expandedName(ParFnApp fnApp, int nextExpansionId) {
+        String result = super.expandedName(fnApp, nextExpansionId);
         if(fnApp instanceof ParametricParFnApp) {
             // if this is not the case, it will be caught elsewhere
             ParametricParFnApp paramFnApp = (ParametricParFnApp) fnApp;
@@ -395,11 +397,10 @@ aspect PartialFunctionExpander {
      * @return a FnApp
      */
     public FnApp ParFnApp.apply(FunctionDecl function) {
-        java.util.List<AnonymousFunctionDecl> addedClosures = new LinkedList<>();
         for (ParFnAppParamDecl fnParam : getFuncParamsNoTransform()) {
             if (fnParam instanceof AnonymousFunctionDecl) {
                 AnonymousFunctionDecl anon = (AnonymousFunctionDecl) fnParam;
-                anon.addClosureParams(addedClosures, this);
+                anon.addClosureParams(this);
             }
         }
 
