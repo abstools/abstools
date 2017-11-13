@@ -251,8 +251,9 @@ return x;
 [[throw-statement]]
 === Throw
 
-The statement `throw` signals an exception (see <<sec:exception-types>>).
-It takes a single argument which is the exception value to throw.
+The statement `throw` signals an exception (see <<sec:exception-types>>).  It
+takes a single argument of type `ABS.StdLib.Exception`, which is the exception
+value to throw.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
@@ -460,7 +461,7 @@ recovery block with the unhandled exception as parameter (see
 [source]
 ----
 try {
-    Int z = 1/x; <1>
+    Rat z = 1/x; <1>
 } catch {
     DivisionByZeroException => println("We divided by zero"); <2>
 } finally {
@@ -470,6 +471,9 @@ try {
 <1> If `x` is zero, this will throw an exception
 <2> Division by zero is handled here; other exceptions will be left unhandled
 <3> This statement is always executed
+
+As a syntactic convenience, when matching only a single pattern, the braces
+around the catch block can be omitted.
 
 [source]
 .Example

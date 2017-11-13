@@ -212,24 +212,30 @@ In higher-level programming languages, exceptions are generally used to signal
 an _erroneous_ or _abnormal_ runtime behaviour of the program, that should be
 treated (handled) separately compared to normal values.
 
-Exceptions are declared with the keyword `exception`.  Exceptions are of type
-`ABS.StdLib.Exception`, which is pre-defined in the standard library.
-
+Exceptions are declared with the keyword `exception`, followed by the name of
+an exception and an optional list of parameters.  The semantics are the same
+as for defining data constructors; naming a parameter will create an accessor
+function (see <<sec:accessor-functions>>).
 
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _ExceptionDecl_ ::= | `exception` _SimpleTypeIdentifier_ `;`
+| _ExceptionDecl_ ::= | `exception` _SimpleTypeIdentifier_  [ ( _Type_ [ _SimpleIdentifier_ ] { , _Type_ [ _SimpleIdentifier_ ] } ) ] `;`
 |====
 
 Like any other constructor or datatype name, exceptions always start with an
 upper-case letter.
 
+Exceptions are of type `ABS.StdLib.Exception`, which is pre-defined in the
+standard library.  It is possible to store exception values in variables of
+type `Exception`.
+
 .Example
 [source]
 ----
 exception MyException;
+exception MyOtherException(String param, Int); // no accessor for second param
 ----
 
 In ABS, exceptions are first-class values; the user can construct
@@ -238,17 +244,6 @@ exception can be thrown via the `throw` statement (see <<throw-statement>>)
 and be caught in a `catch` block (see <<try-catch-finally-stmt>>).
 Additionally, the object itself can recover its invariant after an uncaught
 exception in a process via its recovery block (see <<sec:classes>>).
-
-NOTE: Unlike normal datatype constructors, exceptions cannot take
-arguments yet.  This feature is planned for a future version of ABS.
-
-// An exception can also take any number of arguments as:
-
-// .Example
-// [source]
-// ----
-// exception AnotherException(Int, String, Bool);
-// ----
 
 
 
