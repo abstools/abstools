@@ -233,12 +233,12 @@ ExceptionConstructorExp : DataConstructorExp ;
 LetExp : PureExp ::= Var:ParamDecl Val:PureExp Exp:PureExp ;
 FnApp : PureExp ::= <Name> Param:PureExp* ;
 
-abstract ParFnAppParamDecl ;
-NamedParFnAppParam : ParFnAppParamDecl ::= <Name> ;
-AnonymousFunctionDecl : ParFnAppParamDecl ::= Param:ParamDecl* PureExp ;
+abstract ParFnAppParam ;
+NamedParFnAppParam : ParFnAppParam ::= <Name> ;
+AnonymousFunctionDecl : ParFnAppParam ::= Param:ParamDecl* PureExp ;
 
-ParFnApp : PureExp ::= <Name> Param:PureExp* FuncParam:ParFnAppParamDecl* ;
-ParametricParFnApp : ParFnApp ::= <Name> TypeParam:TypeUse* Param:PureExp* FuncParam:ParFnAppParamDecl* ;
+ParFnApp : PureExp ::= <Name> Param:PureExp* FuncParam:ParFnAppParam* ;
+ParametricParFnApp : ParFnApp ::= <Name> TypeParam:TypeUse* Param:PureExp* FuncParam:ParFnAppParam* ;
 
 CaseExp : PureExp ::= Expr:PureExp Branch:CaseBranch* ;
 IfExp : PureExp ::= CondExp:PureExp ThenExp:PureExp ElseExp:PureExp ;

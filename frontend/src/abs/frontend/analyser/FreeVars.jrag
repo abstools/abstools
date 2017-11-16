@@ -61,7 +61,7 @@ aspect VarUsage {
 	        res.addAll(e.getFreeVars());
 	    }
 
-	    for (ParFnAppParamDecl param : getFuncParams()) {
+	    for (ParFnAppParam param : getFuncParams()) {
 	        if (param instanceof AnonymousFunctionDecl) {
 	            AnonymousFunctionDecl anon = (AnonymousFunctionDecl) param;
 	            res.addAll(anon.getFreeVarNames());

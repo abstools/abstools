@@ -7,10 +7,10 @@ aspect ParFnAppParam {
     /**
     * Gets an expression with which occurrences of this ParFnApp parameter should be replaced in the function expansion.
     *
-    @param toReplace a FnApp calling the function represented by this ParFnAppParamDecl
+    @param toReplace a FnApp calling the function represented by this ParFnAppParam
     @return a pure expression to replace the given FnApp with
     */
-    syn PureExp ParFnAppParamDecl.getExpression(FnApp toReplace);
+    syn PureExp ParFnAppParam.getExpression(FnApp toReplace);
 
     eq NamedParFnAppParam.getExpression(FnApp toReplace) = new FnApp(getName(), toReplace.getParams().treeCopyNoTransform());
     eq AnonymousFunctionDecl.getExpression(FnApp toReplace) {

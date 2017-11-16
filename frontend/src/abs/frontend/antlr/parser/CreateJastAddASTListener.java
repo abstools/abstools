@@ -535,9 +535,9 @@ new List<ModuleDecl>(),
 
     @Override
     public void exitFunction_list(ABSParser.Function_listContext ctx) {
-        List<ParFnAppParamDecl> list = ctx.function_param() == null
-            ? new List<ParFnAppParamDecl>()
-            : (List<ParFnAppParamDecl>) l(ctx.function_param());
+        List<ParFnAppParam> list = ctx.function_param() == null
+            ? new List<ParFnAppParam>()
+            : (List<ParFnAppParam>) l(ctx.function_param());
         setV(ctx, list);
     }
 
@@ -572,9 +572,9 @@ new List<ModuleDecl>(),
         List<PureExp> params = ctx.pure_exp_list() == null
             ? new List<PureExp>()
             : (List<PureExp>) v(ctx.pure_exp_list());
-        List<ParFnAppParamDecl> functionParams = ctx.function_list() == null
-            ? new List<ParFnAppParamDecl>()
-            : (List<ParFnAppParamDecl>) v(ctx.function_list());
+        List<ParFnAppParam> functionParams = ctx.function_list() == null
+            ? new List<ParFnAppParam>()
+            : (List<ParFnAppParam>) v(ctx.function_list());
 
         if (ctx.type_use_paramlist() == null) {
             setV(ctx, new ParFnApp(ctx.qualified_identifier().getText(), params, functionParams));

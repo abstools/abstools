@@ -198,10 +198,10 @@ aspect PartialFunctionExpander {
         expanded.setParamList(getParams().treeCopy());
 
         int funcParamCount = getNumFuncParam();
-        Map<String, ParFnAppParamDecl> funcParamBindings = new HashMap<>(funcParamCount * 2);
+        Map<String, ParFnAppParam> funcParamBindings = new HashMap<>(funcParamCount * 2);
         for (int i = 0; i < funcParamCount; ++i) {
             String paramName = getFuncParam(i).getName();
-            ParFnAppParamDecl binding = fnApp.getFuncParam(i);
+            ParFnAppParam binding = fnApp.getFuncParam(i);
             funcParamBindings.put(paramName, binding);
         }
 
@@ -210,7 +210,7 @@ aspect PartialFunctionExpander {
         expanded.setFunctionDef(getPartialFunctionDef().apply(funcParamBindings));
 
         // must happen after recursive calls have been renamed to the expanded name
-        for (ParFnAppParamDecl funcParam : fnApp.getFuncParams()) {
+        for (ParFnAppParam funcParam : fnApp.getFuncParams()) {
             if (funcParam instanceof AnonymousFunctionDecl) {
                 AnonymousFunctionDecl anon = (AnonymousFunctionDecl) funcParam;
                 anon.addClosureParams(expanded);
@@ -311,7 +311,7 @@ aspect PartialFunctionExpander {
 
         boolean foundAnon = false;
 
-        for (ParFnAppParamDecl funcParam : fnApp.getFuncParamsNoTransform()) {
+        for (ParFnAppParam funcParam : fnApp.getFuncParamsNoTransform()) {
             if (funcParam instanceof NamedParFnAppParam) {
                 NamedParFnAppParam namedParam = (NamedParFnAppParam) funcParam;
                 builder.append('_').append(namedParam.getName());
@@ -358,7 +358,7 @@ aspect PartialFunctionExpander {
     *
     * @return a FunctionDef
     */
-    public FunctionDef PartialFunctionDef.apply(Map<String, ParFnAppParamDecl> bindingByName) {
+    public FunctionDef PartialFunctionDef.apply(Map<String, ParFnAppParam> bindingByName) {
         PureExp expression = getPureExp().treeCopy();
         // Wrap the expression BEFORE applying the bindings so it has a parent
         FunctionDef result = new ExpFunctionDef(expression);
@@ -368,9 +368,9 @@ aspect PartialFunctionExpander {
         return result;
     }
 
-    private void PartialFunctionDef.applyBindings(PureExp expression, Map<String, ParFnAppParamDecl> bindingByName) {
+    private void PartialFunctionDef.applyBindings(PureExp expression, Map<String, ParFnAppParam> bindingByName) {
         for (FnApp innerCall : expression.findChildren(FnApp.class)) {
-            ParFnAppParamDecl binding = bindingByName.get(innerCall.getName());
+            ParFnAppParam binding = bindingByName.get(innerCall.getName());
             if (binding != null) {
                 PureExp replacement = binding.getExpression(innerCall);
                 innerCall.replaceWith(replacement);
@@ -379,10 +379,10 @@ aspect PartialFunctionExpander {
         }
 
         for (ParFnApp innerCall : expression.findChildren(ParFnApp.class)) {
-            for (ParFnAppParamDecl funcParam : innerCall.getFuncParamsNoTransform()) {
+            for (ParFnAppParam funcParam : innerCall.getFuncParamsNoTransform()) {
                 if (funcParam instanceof NamedParFnAppParam) {
                     NamedParFnAppParam namedFuncParam = (NamedParFnAppParam) funcParam;
-                    ParFnAppParamDecl binding = bindingByName.get(namedFuncParam.getName());
+                    ParFnAppParam binding = bindingByName.get(namedFuncParam.getName());
                     if (binding != null) {
                         namedFuncParam.replaceWith(binding.treeCopyNoTransform());
                     }
@@ -397,7 +397,7 @@ aspect PartialFunctionExpander {
      * @return a FnApp
      */
     public FnApp ParFnApp.apply(FunctionDecl function) {
-        for (ParFnAppParamDecl fnParam : getFuncParamsNoTransform()) {
+        for (ParFnAppParam fnParam : getFuncParamsNoTransform()) {
             if (fnParam instanceof AnonymousFunctionDecl) {
                 AnonymousFunctionDecl anon = (AnonymousFunctionDecl) fnParam;
                 anon.addClosureParams(this);
