@@ -42,4 +42,9 @@ public class ExceptionTests extends SemanticTests {
    public void testExceptionPropagation() {
        assertEvalTrue(new File("tests/abssamples/backend/StmtTests/exception_propagation.abs"));
    }
+   
+   @Test
+   public void testExceptionNullFuture() {
+       assertEvalTrue(new File("tests/abssamples/backend/StmtTests/exception_nullfuture.abs"));
+   }
 }

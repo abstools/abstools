@@ -374,8 +374,7 @@ aspect GenerateErlang {
       getExp().generateErlangCode(buffer,vars);
       buffer.close();
       String exp = sw.toString().substring(ecs.getIndent().length());
-      // won't clash with any ABS variable because UPPERCASE
-      String varName = vars.inc("TEMP");
+      String varName = vars.getTemp();
       ecs.print(varName + " = " + exp);
       if (isNewDC) {
           ecs.println(",");
@@ -403,8 +402,7 @@ aspect GenerateErlang {
       CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
       getRetExp().generateErlangCode(buffer,vars);
       buffer.close();
-      // won't class with any variable because UPPERCASE
-      String varName = vars.inc("TEMP");
+      String varName = vars.getTemp();
       ecs.format("%s = %s", varName,sw.toString().substring(ecs.getIndent().length()));
       ecs.println(",");
       ecs.format("cog_monitor:new_dc(%s)", varName);
@@ -843,7 +841,7 @@ aspect GenerateErlang {
           branches.add(sw.toString());
           vars.updateTemp(v);
       }
-      // Now print statments and mergelines for each branch.
+      // Now print statements and mergelines for each branch.
       java.util.List<String> mergeLines = vars.merge(branches_vars);
       boolean first = true;
       Iterator<String> ib = branches.iterator();

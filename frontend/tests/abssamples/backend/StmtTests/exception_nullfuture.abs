@@ -1,0 +1,9 @@
+module BackendTest;
+
+{
+    Bool testresult = False;
+    Fut<Int> f;
+    try f.get; catch NullPointerException => testresult = True;
+    // also check for fixed codegeneration bug triggered by the next line
+    List<Int> xx = list[];
+}
