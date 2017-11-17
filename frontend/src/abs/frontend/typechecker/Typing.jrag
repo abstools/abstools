@@ -97,7 +97,15 @@ aspect Typing {
     // Partially defined functions and friends
     eq PartialFunctionDecl.getType() = UnknownType.INSTANCE;
     eq ParFnApp.getType() = UnknownType.INSTANCE;
-    
+
+    syn Type ParFnAppParam.getType();
+    eq AnonymousFunctionDecl.getType() = getPureExp().getType();
+    eq NamedParFnAppParam.getType() {
+        FunctionDecl fun = (FunctionDecl) getModuleDecl().lookup(new KindedName(Kind.FUN, getName()));
+        if (fun == null) return UnknownType.INSTANCE;
+        else return fun.getType();
+    }
+
     eq ExceptionDecl.getType() = getModel().getExceptionType();
     eq UnknownDecl.getType() = UnknownType.INSTANCE;
     eq AmbiguousDecl.getType() = UnknownType.INSTANCE;
