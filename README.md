@@ -9,8 +9,8 @@ current language manual is at http://docs.abs-models.org.
 Folders
 -------
 
-* `frontend` - the ABS frontend as well as several backends (Erlang, Maude,
-  Java)
+* `frontend` - the ABS compiler and runtime support.  See frontend/README for
+  installation instructions.
 
 
 * `abs-docs` - a markdown-flavored ABS manual, currently being written.  It is
@@ -56,15 +56,13 @@ Folders
 Using Docker
 ------------
 
-To run the collaboratory locally using Docker, execute the following commands after cloning the repository:
+To run the ABS collaboratory (a browser-based IDE for ABS) locally using
+Docker, execute the following command:
 
-    make frontend
-    docker build -t easyinterface .
-    docker run -p 8080:80 --rm easyinterface
+    docker run -p 8080:80 --rm abslang/collaboratory:latest
 
-Then connect your browser to http://localhost:8080/.  See the docker
-documentation for information on how to start the container in the background
-and other options.
+Then connect your browser to http://localhost:8080/.  It is not necessary to
+clone the repository or compile the toolchain to run the ABS collaboratory.
 
 Using Vagrant
 -------------
