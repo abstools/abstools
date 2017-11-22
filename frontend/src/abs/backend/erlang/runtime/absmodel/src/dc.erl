@@ -4,7 +4,10 @@
 %% A deployment component (dc) is implemented as an object with class
 %% ABS.DC.DeploymentComponent, and shares many characteristics with
 %% other objects.  Specifically, messages specific to dcs are handled
-%% by the normal object gen_fsm machinery, matching the class name.
+%% by the normal object gen_statem machinery, matching the class name.
+
+%% KLUDGE: This module directly sends (via gen_statem:call / gen_statem:cast)
+%% events into the state function(s) defined in object.erl; this is not good.
 
 %% This module exports functions specific to deployment components.
 
@@ -48,16 +51,16 @@ var_totalhistory_for_resourcetype(bw) ->
 
 consume(#object{class=class_ABS_DC_DeploymentComponent,ref=O}, Resourcetype, Amount) ->
     %% => {ok, Consumed}
-    gen_fsm:sync_send_event(O, {consume_resource,
-                                {var_current_for_resourcetype(Resourcetype),
-                                 var_max_for_resourcetype(Resourcetype)},
-                                Amount}).
+    gen_statem:call(O, {consume_resource,
+                        {var_current_for_resourcetype(Resourcetype),
+                         var_max_for_resourcetype(Resourcetype)},
+                        Amount}).
 
 update(#object{class=class_ABS_DC_DeploymentComponent,ref=O}, Interval) ->
     %% KLUDGE: this should not be necessary
     %% TODO: investigate why cog_monitor sometimes has dead DCs in its list
     case is_process_alive(O) of
-        true -> gen_fsm:sync_send_event(O, {clock_advance_for_dc, Interval});
+        true -> gen_statem:call(O, {clock_advance_for_dc, Interval});
         false -> cog_monitor:dc_died(O)
     end.
 
@@ -107,12 +110,12 @@ update_state_and_history_for_resouce(S, Resourcetype) ->
 
 
 get_description(#object{class=class_ABS_DC_DeploymentComponent,ref=O}) ->
-    {ok, Reply} = gen_fsm:sync_send_event(O, get_dc_info_string),
+    {ok, Reply} = gen_statem:call(O, get_dc_info_string),
     Reply.
 
 get_resource_history(#object{class=class_ABS_DC_DeploymentComponent,ref=O}, Type) ->
     {ok, {dc_info, Description, CreationTime, History, Totalhistory}} =
-        gen_fsm:sync_send_event(O, {get_resource_history,
-                                    var_history_for_resourcetype(Type),
-                                    var_totalhistory_for_resourcetype(Type)}),
+        gen_statem:call(O, {get_resource_history,
+                            var_history_for_resourcetype(Type),
+                            var_totalhistory_for_resourcetype(Type)}),
     [Description, CreationTime, History, Totalhistory].
