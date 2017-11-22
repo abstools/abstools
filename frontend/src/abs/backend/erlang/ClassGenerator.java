@@ -186,13 +186,15 @@ public class ClassGenerator {
     }
 
     private void generateDataAccess() {
+        // FIXME: we should eliminate 'set', 'get' and directly use
+        // object:set_field_value / object:get_field_value instead
         ErlUtil.functionHeader(ecs, "set", Mask.none,
                 String.format("O=#object{class=%s=C,ref=Ref,cog=Cog}", modName), "Var", "Val");
-        ecs.println("gen_fsm:send_event(Ref,{O,set,Var,Val}).");
+        ecs.println("object:set_field_value(O, Var, Val).");
         ecs.decIndent();
         ecs.println();
         ErlUtil.functionHeader(ecs, "get", Mask.none, generatorClassMatcher(), "Var");
-        ecs.println("gen_fsm:sync_send_event(Ref,{O,get,Var}).");
+        ecs.println("object:get_field_value(O,Var).");
         ecs.decIndent();
         ecs.println();
         ecs.print("-record(state,{");
