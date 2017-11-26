@@ -2,12 +2,14 @@ package abs.frontend.pardef;
 
 import static org.junit.Assert.assertFalse;
 
+import abs.backend.prettyprint.DefaultABSFormatter;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
 import com.google.common.base.Joiner;
+import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -65,10 +67,21 @@ public abstract class PardefTest extends FrontendTest {
     }
 
     protected final Model expand(Model model) {
-        model.expandPartialFunctions();
-        SemanticConditionList e = model.typeCheck();
-        assertFalse("Type check errors! First: " + e.getFirstError(), e.containsErrors());
-        return model;
+        try {
+            model.expandPartialFunctions();
+            SemanticConditionList e = model.typeCheck();
+            assertFalse("Type check errors! First: " + e.getFirstError(), e.containsErrors());
+            return model;
+        } catch (Throwable e) {
+            if (e instanceof PardefModellingException) {
+                // prettyprint could fail if expansion left the AST in an invalid state
+                throw e;
+            }
+            PrintWriter pw = new PrintWriter(System.out);
+            model.lookupModule("UnitTest").doPrettyPrint(pw, new DefaultABSFormatter(pw));
+            pw.flush();
+            throw e;
+        }
     }
 
     protected final Model parse(String functionCall, String... functions) {

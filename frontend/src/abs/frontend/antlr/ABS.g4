@@ -86,7 +86,6 @@ eff_exp : pure_exp '.' 'get'                               # GetExp
 
 pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
     | qualified_identifier
-        type_use_paramlist?
         '(' function_list ')'
         '(' pure_exp_list ')'                              # PartialFunctionExp
     | qualified_identifier '[' pure_exp_list ']'           # VariadicFunctionExp

@@ -102,24 +102,34 @@ public class PartialFunctionTest extends PardefTest {
             "test(inc)(1);",
             incFunction(),
             applyFunction(),
-            "def Int test(f)(Int i) = apply<Int, Int>(f)(i);"
-        ), "Test_%s_inc", "Apply_%s_inc_Int_Int");
+            "def Int test(f)(Int i) = apply(f)(i);"
+        ), "Test_%s_inc", "Apply_%s_inc");
     }
 
     @Test
     public void callInnerParametricWithTypeParams() {
         testExpand(parse(
-            "test<Int, Int>()(1);",
+            "test()(1);",
             applyFunction(),
             incFunction(),
-            "def B test<A, B>()(A a) = apply<A, B>(inc)(a);"
-        ), "Test_%s_Int_Int", "Apply_%s_inc_Int_Int");
+            "def B test<A, B>()(A a) = apply(inc)(a);"
+        ), "Test_%s", "Apply_%s_inc");
+    }
+
+    @Test(expected = PardefModellingException.class)
+    public void multipleFunctionsDifferentTypeParam() {
+        testExpand(parse(
+            "addResults(expectsString, expectsInt)(1);",
+            "def Int addResults<T>(f, g)(T t) = f(t) + g(t);",
+            "def Int expectsString(String s) = 1;",
+            "def Int expectsInt(Int i) = 2;"
+        ));
     }
 
     @Test
     public void noErlangCodeGenerated() throws IOException, NotImplementedYetException {
         Model model = expand(parse(
-            "apply<Int, Int>(inc)(0);",
+            "apply(inc)(0);",
             applyFunction(),
             incFunction()
         ));
@@ -131,7 +141,7 @@ public class PartialFunctionTest extends PardefTest {
     @Test
     public void noJavaCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
         Model model = expand(parse(
-            "apply<Int, Int>(inc)(0);",
+            "apply(inc)(0);",
             applyFunction(),
             incFunction()
         ));
@@ -146,7 +156,7 @@ public class PartialFunctionTest extends PardefTest {
     @Test
     public void noDynamicJavaCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
         Model model = expand(parse(
-            "apply<Int, Int>(inc)(0);",
+            "apply(inc)(0);",
             applyFunction(),
             incFunction()
         ));
@@ -161,10 +171,10 @@ public class PartialFunctionTest extends PardefTest {
     @Test
     public void noMaudeCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
         Model model = testExpand(parse(
-            "apply<Int, Int>(inc)(0);",
+            "apply(inc)(0);",
             applyFunction(),
             incFunction()
-        ), "Apply_%s_inc_Int_Int");
+        ), "Apply_%s_inc");
         PartialFunctionDecl func = getPartialFunction(model, "apply");
         assertNotNull(func);
 
@@ -176,7 +186,7 @@ public class PartialFunctionTest extends PardefTest {
     @Test
     public void noPrologCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
         Model model = expand(parse(
-            "apply<Int, Int>(inc)(0);",
+            "apply(inc)(0);",
             applyFunction(),
             incFunction()
         ));
@@ -191,7 +201,7 @@ public class PartialFunctionTest extends PardefTest {
     @Test
     public void prettyPrintImplemented() throws NotImplementedYetException, IOException {
         Model model = expand(parse(
-            "apply<Int, Int>(inc)(0);",
+            "apply(inc)(0);",
             applyFunction(),
             incFunction()
         ));

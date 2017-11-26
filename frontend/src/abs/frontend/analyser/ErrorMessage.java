@@ -24,6 +24,7 @@ public enum ErrorMessage {
     VAR_USE_BEFORE_DEFINITION("Variable %s cannot be used before it was defined."),
     FIELD_USE_BEFORE_DEFINITION("Field %s cannot be used before it was defined."),
     TYPE_NOT_RESOLVABLE("Type %s cannot be resolved."),
+    TYPE_PARAM_NOT_RESOLVABLE("Incompatible type parameter candidates for param %s: %s and %s"),
     CONSTRUCTOR_NOT_RESOLVABLE("Data constructor %s cannot be resolved."),
     FUNCTION_NOT_RESOLVABLE("Function %s cannot be resolved."),
     MODULE_NOT_RESOLVABLE("Module %s cannot be resolved."),

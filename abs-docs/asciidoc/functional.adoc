@@ -216,14 +216,10 @@ brackets (`[]`) instead of parentheses (`()`).
 Calls to partially defined functions (see <<sec:partially-defined-functions>>) are similar to
 function call expressions, but have an additional prepended set of arguments.
 
-If the called partially defined function has type parameters,
-they have to be explicitly included in the call expression.
-
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
 | _ParFnApp_ ::= | _Identifier_ +
-  [ `<` _TypeIdentifier_ { `,` _TypeIdentifier_ } `>` ] +
   `(` [ _ParFnAppParam_ { `,` _ParFnAppParam_ } ] `)` +
   `(` [ _PureExp_ { `,` _PureExp_ } ] `)`
 

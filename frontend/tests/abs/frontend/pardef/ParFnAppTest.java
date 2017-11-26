@@ -2,7 +2,9 @@ package abs.frontend.pardef;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import abs.frontend.analyser.SemanticConditionList;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
@@ -15,8 +17,9 @@ public class ParFnAppTest extends PardefTest {
 
     private FnApp assertHasCall(Model model, String expectedName) {
         FnApp result = getCall(model, Pattern.compile(expectedName));
-        String errorMessage = "No expanded function call with name " + expectedName + " created"
-            + " (functions: " + getFunctions(model) + ")";
+        String errorMessage =
+            "No expanded function call with name " + expectedName + " created"
+                + " (functions: " + getFunctions(model) + ")";
         assertNotNull(errorMessage, result);
         return result;
     }
@@ -32,7 +35,7 @@ public class ParFnAppTest extends PardefTest {
     @Test(expected = PardefModellingException.class)
     public void tooManyFuncArgs() {
         expand(parse(
-            "apply<Int, Int>(inc, inc)(0);",
+            "apply(inc, inc)(0);",
             incFunction(),
             applyFunction()
         ));
@@ -41,15 +44,39 @@ public class ParFnAppTest extends PardefTest {
     @Test(expected = PardefModellingException.class)
     public void tooFewFuncArgs() {
         expand(parse(
-            "apply<Int, Int>()(0);",
+            "apply()(0);",
             applyFunction()
         ));
+    }
+
+    @Test
+    public void tooManyArgsForFuncParam() {
+        Model m = parse(
+            "apply(tooFew)(0);",
+            applyFunction(),
+            "def Int tooFew() = 0;"
+        );
+        m.expandPartialFunctions();
+        SemanticConditionList conditions = m.typeCheck();
+        assertTrue(conditions.containsErrors());
+    }
+
+    @Test
+    public void tooFewArgsForFuncParam() {
+        Model m = parse(
+            "apply(tooMany)(0);",
+            applyFunction(),
+            "def Int tooMany(Int i, Int j) = 0;"
+        );
+        m.expandPartialFunctions();
+        SemanticConditionList conditions = m.typeCheck();
+        assertTrue(conditions.containsErrors());
     }
 
     @Test(expected = PardefModellingException.class)
     public void tooManyArgs() {
         expand(parse(
-            "apply<Int, Int>(inc)(0, 1);",
+            "apply(inc)(0, 1);",
             incFunction(),
             applyFunction()
         ));
@@ -58,7 +85,7 @@ public class ParFnAppTest extends PardefTest {
     @Test(expected = PardefModellingException.class)
     public void tooFewArgs() {
         expand(parse(
-            "apply<Int, Int>(inc)();",
+            "apply(inc)();",
             incFunction(),
             applyFunction()
         ));
@@ -67,7 +94,7 @@ public class ParFnAppTest extends PardefTest {
     @Test(expected = PardefModellingException.class)
     public void callingUnknown() {
         expand(parse(
-            "apply<Int, Int>(inc)(0);",
+            "apply(inc)(0);",
             incFunction()
         ));
     }
@@ -107,9 +134,9 @@ public class ParFnAppTest extends PardefTest {
     @Test
     public void recursion() {
         testExpand(parse(
-            "List<Rat> l = map<Int, Rat>(halve)(Nil);",
+            "List<Rat> l = map(halve)(Nil);",
             halveFunction()
-        ), "Map_ABS_StdLib_halve_Int_Rat");
+        ), "Map_ABS_StdLib_halve");
     }
 
     @Test
@@ -123,59 +150,67 @@ public class ParFnAppTest extends PardefTest {
     }
 
     @Test
-    public void parametricCall() {
+    public void simpleParametricCall() {
         testExpand(parse(
-            "Rat r = apply<Int, Rat>(halve)(2);",
+            "Rat r = apply(halve)(2);",
             halveFunction(),
             applyFunction()
-        ), "Apply_%s_halve_Int_Rat");
+        ), "Apply_%s_halve");
+    }
+
+    @Test
+    public void deepParametricCall() {
+        // List<A> instead of just A in simple case
         testExpand(parse(
-            "List<Rat> l = map<Int, Rat>(halve)(Nil);",
+            "List<Rat> l = map(halve)(Nil);",
             halveFunction()
-        ), "Map_ABS_StdLib_halve_Int_Rat");
+        ), "Map_ABS_StdLib_halve");
     }
 
-    @Test(expected = PardefModellingException.class)
-    public void parametricCallWithoutParamsNotPossible() {
-        expand(parse(
-            "apply(halve)(2);",
+    @Test
+    public void parametricCallInBody() {
+        testExpand(parse(
+            "callApply(halve)(1);",
             halveFunction(),
-            applyFunction()
-        ));
+            applyFunction(),
+            "def D callApply<C, D>(fn)(C c) = apply(fn)(c);"
+        ), "Apply_%s_halve", "CallApply_%s_halve");
     }
 
-    @Test(expected = PardefModellingException.class)
-    public void tooFewTypeParams() {
-        expand(parse(
-            "apply<Int>(halve)(2);",
-            halveFunction(),
+    @Test
+    public void parametricIdentity() {
+        testExpand(parse(
+            "Int i = apply(identity)(0);"
+                + "Rat j = apply(identity)(1/2);"
+                + "String s = apply(identity)(\"foo\");",
+            "def T identity<T>(T t) = t;",
             applyFunction()
-        ));
+        ), "Apply_%s_identity");
     }
 
-    @Test(expected = PardefModellingException.class)
-    public void tooManyTypeParams() {
-        expand(parse(
-            "apply<Int, Rat, Int>(halve)(2);",
-            halveFunction(),
-            applyFunction()
+    @Test
+    public void parametricFunctionReturnType() {
+        testExpand(parse(
+            "Int i = applyOnString(two)(\"foo\");",
+            "def T applyOnString<T>(fn)(String s) = fn(s);",
+            "def Int two(String s) = 2;"
         ));
     }
 
     @Test
     public void nestedCalls() {
         testExpand(parse(
-            "Int i = apply<Int, Int>(inc)(apply<Int, Int>(dec)(0));",
+            "Int i = apply(inc)(apply(dec)(0));",
             incFunction(),
             decFunction(),
             applyFunction()
-        ), "Apply_%s_dec_Int_Int", "Apply_%s_inc_Int_Int");
+        ), "Apply_%s_dec", "Apply_%s_inc");
     }
 
     @Test(expected = PardefModellingException.class)
     public void invalidCallToAlreadyExpanded() {
         expand(parse(
-            "apply<Int, Int>(inc)(0); apply<Int, Int>(inc)(0, 42);",
+            "apply(inc)(0); apply(inc)(0, 42);",
             incFunction(),
             applyFunction()
         ));
@@ -184,20 +219,20 @@ public class ParFnAppTest extends PardefTest {
     @Test
     public void callWithAnonymousFunction() {
         testExpand(parse(
-            "apply<Int, Int>((Int i) => i)(0);",
+            "apply((Int i) => i)(0);",
             applyFunction()
-        ), "Apply_%s_Anon\\d+_Int_Int");
+        ), "Apply_%s_Anon\\d+");
 
         testExpand(parse(
-            "apply<Int, Int>((Int i) => i + 1)(0);",
+            "apply((Int i) => i + 1)(0);",
             applyFunction()
-        ), "Apply_%s_Anon\\d+_Int_Int");
+        ), "Apply_%s_Anon\\d+");
 
         testExpand(parse(
-            "apply<Int, Int>((Int i) => inc(i))(0);",
+            "apply((Int i) => inc(i))(0);",
             applyFunction(),
             incFunction()
-        ), "Apply_%s_Anon\\d+_Int_Int");
+        ), "Apply_%s_Anon\\d+");
 
         testExpand(parse(
             "Int i = test(() => 1)();",
@@ -208,7 +243,7 @@ public class ParFnAppTest extends PardefTest {
     @Test(expected = PardefModellingException.class)
     public void anonymousTooManyArgs() {
         expand(parse(
-            "apply<Int, Int>((Int i, Int j) => i)(0);",
+            "apply((Int i, Int j) => i)(0);",
             applyFunction()
         ));
     }
@@ -216,7 +251,7 @@ public class ParFnAppTest extends PardefTest {
     @Test(expected = PardefModellingException.class)
     public void anonymousTooFewArgs() {
         expand(parse(
-            "apply<Int, Int>(() => i)(0);",
+            "apply(() => i)(0);",
             applyFunction()
         ));
     }
@@ -224,17 +259,17 @@ public class ParFnAppTest extends PardefTest {
     @Test
     public void anonymousSimpleClosure() {
         testExpand(parse(
-            "Int x = 0; apply<Int, Int>((Int i) => i + x)(0);",
+            "Int x = 0; apply((Int i) => i + x)(0);",
             applyFunction()
-        ), "Apply_%s_Anon\\d+_Int_Int");
+        ), "Apply_%s_Anon\\d+");
     }
 
     @Test
     public void anonymousNestedClosure() {
         testExpand(parse(
-            "Int x = 0; apply<Int, Int>((Int i) => apply<Int, Int>((Int j) => j + x)(i))(0);",
+            "Int x = 0; apply((Int i) => apply((Int j) => j + x)(i))(0);",
             applyFunction()
-        ), "Apply_%s_Anon\\d+_Int_Int");
+        ), "Apply_%s_Anon\\d+");
     }
 
     @Test
@@ -269,8 +304,8 @@ public class ParFnAppTest extends PardefTest {
     @Test
     public void sameAnonTwiceTwoExpansions() {
         Model m = testExpand(parse(
-            "apply<Int, Int>((Int i) => i)(1);"
-                + "apply<Int, Int>((Int i) => i)(1);",
+            "apply((Int i) => i)(1);"
+                + "apply((Int i) => i)(1);",
             applyFunction()
         ));
         ModuleDecl module = m.lookupModule("UnitTest");

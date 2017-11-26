@@ -576,12 +576,7 @@ new List<ModuleDecl>(),
             ? new List<ParFnAppParam>()
             : (List<ParFnAppParam>) v(ctx.function_list());
 
-        if (ctx.type_use_paramlist() == null) {
-            setV(ctx, new ParFnApp(ctx.qualified_identifier().getText(), params, functionParams));
-        } else {
-            List<TypeUse> typeParams = (List<TypeUse>) v(ctx.type_use_paramlist());
-            setV(ctx, new ParametricParFnApp(ctx.qualified_identifier().getText(), typeParams, params, functionParams));
-        }
+        setV(ctx, new ParFnApp(ctx.qualified_identifier().getText(), params, functionParams));
     }
     @Override public void exitVariadicFunctionExp(ABSParser.VariadicFunctionExpContext ctx) {
         List<PureExp> l = (List<PureExp>)v(ctx.pure_exp_list());

@@ -238,7 +238,6 @@ NamedParFnAppParam : ParFnAppParam ::= <Name> ;
 AnonymousFunctionDecl : ParFnAppParam ::= Param:ParamDecl* PureExp ;
 
 ParFnApp : PureExp ::= <Name> Param:PureExp* FuncParam:ParFnAppParam* ;
-ParametricParFnApp : ParFnApp ::= <Name> TypeParam:TypeUse* Param:PureExp* FuncParam:ParFnAppParam* ;
 
 CaseExp : PureExp ::= Expr:PureExp Branch:CaseBranch* ;
 IfExp : PureExp ::= CondExp:PureExp ThenExp:PureExp ElseExp:PureExp ;
