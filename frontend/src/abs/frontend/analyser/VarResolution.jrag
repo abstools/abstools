@@ -96,6 +96,13 @@ aspect VarResolution {
         }
         return null;
     }
+    eq PartialFunctionDecl.locallookupVarOrFieldName(String name, boolean fieldOnly) {
+        for (VarOrFieldDecl decl : getParams()) {
+            if (decl.getName().equals(name))
+                return decl;
+        }
+        return null;
+    }
 
     /**
      * FIXME: ignores fieldOnly - refactor to avoid confusion?
@@ -308,6 +315,10 @@ aspect VarResolution {
        warning for the missing eq (which we didn't get) or JastAdd error, because the eq doesn't match an inh.
        So it somehow matches the one above here, but doesn't trigger a warning... */
     eq ExpFunctionDef.getRhs().lookupVarOrFieldName(String name, boolean fieldOnly) { FunctionDecl fd = (FunctionDecl) getParent(); return fd.locallookupVarOrFieldName(name, fieldOnly); }
+    eq PartialFunctionDef.getPureExp().lookupVarOrFieldName(String name, boolean fieldOnly) {
+        PartialFunctionDecl fd = (PartialFunctionDecl) getParent();
+        return fd.locallookupVarOrFieldName(name, fieldOnly);
+    }
     inh VarOrFieldDecl Stmt.lookupVarOrFieldName(String name, boolean fieldOnly);
     eq ClassDecl.getInitBlock().lookupVarOrFieldName(String name, boolean fieldOnly) = locallookupVarOrFieldName(name,fieldOnly);
     inh VarOrFieldDecl PatternVarUse.lookupVarOrFieldName(String name, boolean fieldOnly);

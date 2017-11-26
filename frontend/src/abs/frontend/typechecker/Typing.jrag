@@ -95,8 +95,8 @@ aspect Typing {
     }
 
     // Partially defined functions and friends
-    eq PartialFunctionDecl.getType() = UnknownType.INSTANCE;
-    eq ParFnApp.getType() = UnknownType.INSTANCE;
+    eq PartialFunctionDecl.getType() = getTypeUse().getType();
+    eq ParFnApp.getType() = getDecl().getType();
 
     syn Type ParFnAppParam.getType();
     eq AnonymousFunctionDecl.getType() = getPureExp().getType();
@@ -378,8 +378,16 @@ aspect Typing {
     }
     
     FunctionDecl implements HasParams;
+    PartialFunctionDecl implements HasParams;
+    ParFnAppParam implements HasParams;
     ClassDecl implements HasParams;
     MethodSig implements HasParams;
+
+    @Override
+    public List<ParamDecl> NamedParFnAppParam.getParams() {
+        FunctionDecl fun = (FunctionDecl) getModuleDecl().lookup(new KindedName(Kind.FUN, getName()));
+        return fun.getParams();
+    }
 
     /**
      * These classes have actual parameters.
@@ -400,11 +408,6 @@ aspect Typing {
       java.util.List<Type> getTypes();
     }
 
-    AnonymousFunctionDecl implements HasTypes;
-    public java.util.List<Type> AnonymousFunctionDecl.getTypes() {
-        return TypeCheckerHelper.getTypes(getParams());
-    }
-    
     DataConstructor implements HasTypes;
     ParametricFunctionDecl implements HasTypes;
     ConstructorPattern implements HasTypes;
@@ -446,6 +449,7 @@ aspect Typing {
     Exp implements HasType;
     Pattern implements HasType;
     ConstructorArg implements HasType;
+    ParFnAppParam implements HasType;
 
     // Unfortunately must be in same file as the interface. TypeChecker would be a better place:
 
