@@ -88,4 +88,23 @@ aspect TreeUtils {
         parent.is$Final(false);
         parent.flushCache();
     }
+
+    /**
+     * Removes the specified node from this list.
+     *
+     * <p>If the specified node is not a child of this list, this method will return false.</p>
+     *
+     * @param child a child node of this list
+     * @return true, if the specified child was a child of this list
+     * @throws NullPointerException if child is null
+     */
+    public boolean List.removeChild(ASTNode<?> child) {
+        Objects.requireNonNull(child);
+        int index = getIndexOfChild(child);
+        if (index == -1) {
+            return false;
+        }
+        removeChild(index);
+        return true;
+    }
 }
