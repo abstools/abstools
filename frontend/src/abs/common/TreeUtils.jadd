@@ -87,6 +87,8 @@ aspect TreeUtils {
 
         parent.is$Final(false);
         parent.flushCache();
+        this.flushTreeCache();
+        newNode.flushTreeCache();
     }
 
     /**
