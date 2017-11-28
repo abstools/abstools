@@ -232,8 +232,8 @@ function call expressions, but have an additional prepended set of arguments.
 [source]
 .Example
 ----
-map<Int, String>(toString)(list[1, 2])
-filter<Int>((Int i) => i > 0)(list[0, 1, 2])
+map(toString)(list[1, 2])
+filter((Int i) => i > 0)(list[0, 1, 2])
 ----
 
 
@@ -666,7 +666,7 @@ def Int double(Int x) = x * 2;
 
 {
   // doubled = 4
-  Int doubled = apply<Int, Int>(double)(2);
+  Int doubled = apply(double)(2);
 }
 ----
 
@@ -677,7 +677,7 @@ def Int double(Int x) = x * 2;
 
 {
   // doubled = [2, 4, 6]
-  List<Int> doubled = map<Int, Int>(double)(list[1, 2, 3]);
+  List<Int> doubled = map(double)(list[1, 2, 3]);
 }
 ----
 
@@ -708,7 +708,7 @@ function explicitly.
 ----
 {
   List<Int> list = list[1, 2, 3];
-  list = map<Int, Int>((Int y) => y * 2)(list);
+  list = map((Int y) => y * 2)(list);
 }
 ----
 
