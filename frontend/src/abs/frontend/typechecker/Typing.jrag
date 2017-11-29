@@ -385,7 +385,11 @@ aspect Typing {
 
     @Override
     public List<ParamDecl> NamedParFnAppParam.getParams() {
-        FunctionDecl fun = (FunctionDecl) getModuleDecl().lookup(new KindedName(Kind.FUN, getName()));
+        Decl decl = getModuleDecl().lookup(new KindedName(Kind.FUN, getName()));
+        if (decl.isUnknown()) {
+            return new List<>();
+        }
+        FunctionDecl fun = (FunctionDecl) decl;
         return fun.getParams();
     }
 
