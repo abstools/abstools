@@ -12,7 +12,12 @@ aspect ParFnAppParam {
     */
     syn PureExp ParFnAppParam.getExpression(FnApp toReplace);
 
-    eq NamedParFnAppParam.getExpression(FnApp toReplace) = new FnApp(getName(), toReplace.getParams().treeCopyNoTransform());
+    eq NamedParFnAppParam.getExpression(FnApp toReplace) {
+        FnApp result = new FnApp(getName(), toReplace.getParams().treeCopyNoTransform());
+        result.setPositionFromNode(this);
+        return result;
+    }
+
     eq AnonymousFunctionDecl.getExpression(FnApp toReplace) {
         PureExp exp = getPureExp().treeCopy();
         PureExp result = exp;
@@ -49,6 +54,7 @@ aspect ParFnAppParam {
             );
         }
 
+        result.setPositionFromNode(getPureExp());
         return result;
     }
 

@@ -153,10 +153,20 @@ aspect PartialFunctionExpander {
         module.addDecl(expanded);
         module.flushAttrCache();
 
+        for (ASTNode<?> child : getPartialFunctionDefNoTransform().findChildren(ASTNode.class)) {
+            // all children should derive their position string from the FunctionDecl
+            child.isPositionSet = false;
+            child.setFileName(null);
+        }
+        // users should see their own code in the error message, not the generated code
+        expanded.setPositionFromNode(fnApp);
+
         Map<String, ParFnAppParam> funcParamBindings = getFuncParamBindings(fnApp);
 
         // enable recursion by replacing partial function name with expanded name
-        funcParamBindings.put(getName(), new NamedParFnAppParam(expanded.getName()));
+        NamedParFnAppParam recursiveBinding = new NamedParFnAppParam(expanded.getName());
+        recursiveBinding.setPositionFromNode(expanded);
+        funcParamBindings.put(getName(), recursiveBinding);
         expanded.setFunctionDef(getPartialFunctionDef().apply(funcParamBindings));
 
         // must happen after recursive calls have been renamed to the expanded name
@@ -170,15 +180,6 @@ aspect PartialFunctionExpander {
         for (ParFnApp childParFnApp : expanded.getFunctionDef().findChildren(ParFnApp.class, true)) {
             childParFnApp.expand();
         }
-
-        for (ASTNode<?> child : expanded.findChildren(ASTNode.class)) {
-            // all children should derive their position string from the FunctionDecl
-            child.isPositionSet = false;
-            child.setFileName(null);
-        }
-        // users should see their own code in the error message, not the generated code
-        expanded.setPositionFromNode(fnApp);
-        expanded.setFileName(fnApp.getFileName());
 
         return expanded;
     }
@@ -220,7 +221,6 @@ aspect PartialFunctionExpander {
         decl.setParamList(superDecl.getParams().treeCopy());
         decl.setFunctionDef(superDecl.getFunctionDef().treeCopy());
         decl.setPositionFromNode(superDecl);
-        decl.setFileName(superDecl.getFileName());
         superDecl.replaceWith(decl);
         module.flushAttrCache();
 
@@ -291,8 +291,7 @@ aspect PartialFunctionExpander {
                 decl.getParams().treeCopy(),
                 decl.getFunctionDef().treeCopy()
             );
-            decl.setPositionFromNode(decl);
-            decl.setFileName(decl.getFileName());
+            replacement.setPositionFromNode(decl);
             decl.replaceWith(replacement);
             module.flushAttrCache();
             return replacement;
@@ -400,6 +399,7 @@ aspect PartialFunctionExpander {
         PureExp expression = getPureExp().treeCopy();
         // Wrap the expression BEFORE applying the bindings so it has a parent
         FunctionDef result = new ExpFunctionDef(expression);
+        result.setPositionFromNode(this);
 
         applyBindings(expression, bindingByName);
 
