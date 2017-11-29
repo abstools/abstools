@@ -56,7 +56,7 @@ aspect PartialFunctionExpander {
         for (ParFnApp fnApp : node.findChildren(ParFnApp.class, true)) {
             if (fnApp.closestParent(PartialFunctionDecl.class) != null) {
                 // ignore ParFnApp within pardef that has not been expanded yet
-                return;
+                continue;
             }
 
             if (fnApp.closestParent(ModuleDecl.class) == null) {
