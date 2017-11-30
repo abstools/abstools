@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.analyser;
@@ -129,7 +129,19 @@ public class FreeVarTest extends FrontendTest {
         Exp e = getExp("{ Int x = 3; Int y = 4; Int z = 5; Int a = if x == 3 then y else z; }", 3);
         assertEquals(e.getFreeVars(), "x", "y", "z");
     }
-    
+
+    @Test
+    public void parFnApp() {
+        Exp e = getSecondExp("def Unit f(Bool b)() = Unit; { Bool b; Unit u = f(b)(); }");
+        assertEquals(e.getFreeVars(), "b");
+    }
+
+    @Test
+    public void parFnAppAnonymousFunction() {
+        Exp e = getSecondExp("def Bool f()(g) = g(); { Bool b; Bool b2 = f()(() => b); }");
+        assertEquals(e.getFreeVars(), "b");
+    }
+
     public void assertEquals(Set<String> actual, String... expected) {
         Assert.assertEquals(new HashSet<String>(Arrays.asList(expected)), actual);
     }

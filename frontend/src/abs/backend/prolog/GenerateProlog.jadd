@@ -1108,6 +1108,9 @@ aspect GenerateProlog {
        //we ignore deltas by now!
     }
 
+    public void PartialFunctionDecl.generateProlog(PrintStream s, ReachabilityInformation reachInfo) {
+        // ignore pardefs
+    }
 
     //real time abs
     public void DurationGuard.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {

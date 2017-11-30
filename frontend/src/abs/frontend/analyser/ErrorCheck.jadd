@@ -69,6 +69,8 @@ aspect ErrorCheck {
     }
   }
 
+  public void ParametricPartialFunctionDecl.collectErrors(SemanticConditionList c) { }
+
   public void DeltaDecl.collectErrors(SemanticConditionList c) {
     /* FIXME: Don't collect in here, the name resolution mechanism doesn't seem to know about all the details,
      * e.g. how to resolve datatypes just added.

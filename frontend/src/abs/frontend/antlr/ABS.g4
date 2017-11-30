@@ -85,6 +85,9 @@ eff_exp : pure_exp '.' 'get'                               # GetExp
     ;
 
 pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
+    | qualified_identifier
+        '(' function_list ')'
+        '(' pure_exp_list ')'                              # PartialFunctionExp
     | qualified_identifier '[' pure_exp_list ']'           # VariadicFunctionExp
     | qualified_type_identifier ('(' pure_exp_list ')')?   # ConstructorExp
     | op=(NEGATION | NEGATION_CREOL | MINUS) pure_exp      # UnaryExp
@@ -197,6 +200,29 @@ function_decl : annotations
         '='
         ('builtin' | e=pure_exp) ';' ;
 
+// Partially defined functions
+
+function_name_decl: IDENTIFIER ;
+function_name_list: (function_name_decl (',' function_name_decl)*)? ;
+type_use_paramlist: ('<' p+=type_use (',' p+=type_use)* '>') ;
+
+par_function_decl : annotation*
+        'def' type_use n=IDENTIFIER
+        ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
+        '(' functions=function_name_list ')'
+        params=paramlist
+        '='
+        e=pure_exp ';' ;
+
+// used by PartialFunctionExp
+function_name_param_decl: IDENTIFIER ;
+function_param: function_name_param_decl | anon_function_decl ;
+function_list: (function_param (',' function_param)*)? ;
+
+// Anonymous functions
+
+anon_function_decl : params=paramlist '=>' pure_exp ;
+
 // Interfaces
 
 interface_decl : annotations
@@ -252,6 +278,7 @@ module_import : 'import'
 // exactly one token
 decl : datatype_decl
     | function_decl
+    | par_function_decl
     | typesyn_decl
     | exception_decl
     | interface_decl

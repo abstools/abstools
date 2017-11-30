@@ -256,7 +256,7 @@
       <fileset dir="${src.dir}/abs/backend/erlang/" includes="runtime/**/*" />
     </copy>
     <copy file="${src.dir}/abs/backend/maude/abs-interpreter.maude" todir="${build.dir}/abs/backend/maude" />
-  </target>	
+  </target>
 
   <target name="genshell">
     <copy todir="${bash.build.dir}">

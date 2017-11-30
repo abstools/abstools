@@ -8,6 +8,7 @@ import abs.frontend.analyser.*;
 import abs.frontend.delta.OriginalCallTest;
 import abs.frontend.delta.TraitTest;
 import abs.frontend.mtvl.SearchSolutionsTest;
+import abs.frontend.pardef.PardefTests;
 import abs.frontend.parser.*;
 import abs.frontend.typesystem.*;
 
@@ -43,6 +44,7 @@ import deadlock.DeadlockCheckerTests;
             DeadlockCheckerTests.class,
             DeadlockCasestudies.class,
             OriginalCallTest.class,
-            TraitTest.class
+            TraitTest.class,
+            PardefTests.class
             })
 public class AllFrontendTests {}

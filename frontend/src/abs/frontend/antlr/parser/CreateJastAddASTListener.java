@@ -4,6 +4,7 @@
  */
 package abs.frontend.antlr.parser;
 
+import abs.frontend.antlr.parser.ABSParser.Type_useContext;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -266,6 +267,25 @@ new List<ModuleDecl>(),
         }
     }
 
+    @Override
+    public void exitPar_function_decl(ABSParser.Par_function_declContext ctx) {
+        PartialFunctionDef d = new PartialFunctionDef((PureExp)v(ctx.e));
+        List<ParamDecl> params = (List<ParamDecl>) v(ctx.params);
+        List<FunctionParamDecl> funcParams = (List<FunctionParamDecl>) v(ctx.functions);
+        TypeUse t = (TypeUse) v(ctx.type_use());
+        if(ctx.p != null && !ctx.p.isEmpty()) {
+            ParametricPartialFunctionDecl fd =
+                (ParametricPartialFunctionDecl) setV(ctx, new ParametricPartialFunctionDecl(ctx.n.getText(), l(ctx.annotation()), new List<TypeParameterDecl>(), t, params, funcParams, d));
+            for (Token tp : ctx.p) {
+                TypeParameterDecl tpd = new TypeParameterDecl(tp.getText());
+                setASTNodePosition(tp, tpd);
+                fd.addTypeParameter(tpd);
+            }
+        } else {
+            setV(ctx, new PartialFunctionDecl(ctx.n.getText(), l(ctx.annotation()), t, params, funcParams, d));
+        }
+    }
+
     @Override public void exitTypesyn_decl(ABSParser.Typesyn_declContext ctx) {
 
         setV(ctx, new TypeSynDecl(ctx.TYPE_IDENTIFIER().getText(), (List<Annotation>)v(ctx.annotations()), (TypeUse)v(ctx.type_use())));
@@ -513,12 +533,50 @@ new List<ModuleDecl>(),
         }
     }
 
+    @Override
+    public void exitFunction_list(ABSParser.Function_listContext ctx) {
+        List<ParFnAppParam> list = ctx.function_param() == null
+            ? new List<ParFnAppParam>()
+            : (List<ParFnAppParam>) l(ctx.function_param());
+        setV(ctx, list);
+    }
+
+    @Override
+    public void exitFunction_param(ABSParser.Function_paramContext ctx) {
+        if(ctx.anon_function_decl() != null) {
+            setV(ctx, v(ctx.anon_function_decl()));
+        } else if(ctx.function_name_param_decl() != null) {
+            setV(ctx, v(ctx.function_name_param_decl()));
+        }
+    }
+
+    @Override public void exitFunction_name_param_decl(ABSParser.Function_name_param_declContext ctx) {
+        setV(ctx, new NamedParFnAppParam(ctx.IDENTIFIER().getText()));
+    }
+
+    @Override
+    public void exitAnon_function_decl(ABSParser.Anon_function_declContext ctx) {
+        List<ParamDecl> params = (List<ParamDecl>) v(ctx.params);
+        PureExp pureExp = (PureExp) v(ctx.pure_exp());
+        setV(ctx, new AnonymousFunctionDecl(params, pureExp));
+    }
+
     // Pure expressions
     @Override public void exitFunctionExp(ABSParser.FunctionExpContext ctx) {
         List<PureExp> l = ctx.pure_exp_list() == null
             ? new List<PureExp>()
             : (List<PureExp>)v(ctx.pure_exp_list());
         setV(ctx, new FnApp(ctx.qualified_identifier().getText(), l));
+    }
+    @Override public void exitPartialFunctionExp(ABSParser.PartialFunctionExpContext ctx) {
+        List<PureExp> params = ctx.pure_exp_list() == null
+            ? new List<PureExp>()
+            : (List<PureExp>) v(ctx.pure_exp_list());
+        List<ParFnAppParam> functionParams = ctx.function_list() == null
+            ? new List<ParFnAppParam>()
+            : (List<ParFnAppParam>) v(ctx.function_list());
+
+        setV(ctx, new ParFnApp(ctx.qualified_identifier().getText(), params, functionParams));
     }
     @Override public void exitVariadicFunctionExp(ABSParser.VariadicFunctionExpContext ctx) {
         List<PureExp> l = (List<PureExp>)v(ctx.pure_exp_list());
@@ -674,6 +732,14 @@ new List<ModuleDecl>(),
         setV(ctx, new ParamDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), (List<Annotation>)v(ctx.annotations())));
     }
 
+    @Override public void exitFunction_name_list(ABSParser.Function_name_listContext ctx) {
+        setV(ctx, l(ctx.function_name_decl()));
+    }
+
+    @Override public void exitFunction_name_decl(ABSParser.Function_name_declContext ctx) {
+        setV(ctx, new FunctionParamDecl(ctx.IDENTIFIER().getText()));
+    }
+
     @Override public void exitInterface_name(ABSParser.Interface_nameContext ctx) {
         setV(ctx, new InterfaceTypeUse(ctx.qualified_type_identifier().getText(),
                                        new List()));
@@ -702,6 +768,14 @@ new List<ModuleDecl>(),
             for (ABSParser.Type_useContext c : ctx.type_use()) {
                 p.addParam((TypeUse)v(c));
             }
+        }
+    }
+
+    @Override
+    public void exitType_use_paramlist(ABSParser.Type_use_paramlistContext ctx) {
+        List<TypeUse> list = (List<TypeUse>) setV(ctx, new List<TypeUse>());
+        for (ABSParser.Type_useContext typeUseContext : ctx.type_use()) {
+            list.add((TypeUse) v(typeUseContext));
         }
     }
 

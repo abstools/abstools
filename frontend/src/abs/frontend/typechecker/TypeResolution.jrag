@@ -19,6 +19,7 @@ aspect TypeResolution {
     syn boolean Decl.isTypeParameter() = false;
     syn boolean Decl.isFuture() = false;
     syn boolean Decl.isException() = false;
+    syn boolean Decl.isPartialFunction() = false;
 
     eq ClassDecl.isClass() = true;
     eq FunctionDecl.isFunction() = true;
@@ -30,6 +31,7 @@ aspect TypeResolution {
     eq DataTypeDecl.isFuture() = getType().isFutureType();
     eq TypeSynDecl.isFuture() = getType().isFutureType();
     eq ExceptionDecl.isException() = true;
+    eq PartialFunctionDecl.isPartialFunction() = true;
 
     syn Boolean Name.isSimple() = getName().indexOf('.') == -1;
 
@@ -242,8 +244,11 @@ aspect TypeResolution {
 
     eq ParametricDataTypeDecl.getDataConstructor().lookup(KindedName name) = localLookup(name);
     eq ParametricFunctionDecl.getFunctionDef().lookup(KindedName name) = localLookup(name);
+    eq ParametricPartialFunctionDecl.getPartialFunctionDef().lookup(KindedName name) = localLookup(name);
     eq ParametricFunctionDecl.getTypeUse().lookup(KindedName name) = localLookup(name);
+    eq ParametricPartialFunctionDecl.getTypeUse().lookup(KindedName name) = localLookup(name);
     eq ParametricFunctionDecl.getParam().lookup(KindedName name) = localLookup(name);
+    eq ParametricPartialFunctionDecl.getParam().lookup(KindedName name) = localLookup(name);
     eq ExceptionDecl.getDataConstructor().lookup(KindedName name) = localLookup(name);
 
     // Expose *lookup* at various places in the AST
@@ -257,6 +262,7 @@ aspect TypeResolution {
 
     inh Decl ParametricDataTypeDecl.lookup(KindedName name);
     inh Decl ParametricFunctionDecl.lookup(KindedName name);
+    inh Decl PartialFunctionDecl.lookup(KindedName name);
     inh Decl ClassDecl.lookup(KindedName name);
     inh Decl InterfaceDecl.lookup(KindedName name);
     inh Decl ExceptionDecl.lookup(KindedName name);
@@ -319,6 +325,13 @@ aspect TypeResolution {
     // to model. Make sure we only pick up TYPES, and not prematurely abort
     // when data constructors and types overlap (Redmine #109)
     syn lazy Decl ParametricFunctionDecl.localLookup(KindedName name) {
+        if (name.getKind() == Kind.TYPE_DECL)
+            for (TypeParameterDecl d : getTypeParameters())
+                if (d.getName().equals(name.getName()))
+                    return d;
+        return lookup(name);
+    }
+    syn lazy Decl ParametricPartialFunctionDecl.localLookup(KindedName name) {
         if (name.getKind() == Kind.TYPE_DECL)
             for (TypeParameterDecl d : getTypeParameters())
                 if (d.getName().equals(name.getName()))
@@ -397,8 +410,8 @@ aspect TypeResolution {
         }
     }
 
-
     syn lazy Decl FnApp.getDecl() = lookup(new KindedName(Kind.FUN,getName()));
+    syn lazy Decl ParFnApp.getDecl() = lookup(new KindedName(Kind.PARTIAL_FUN, getName()));
 
     inh DataTypeDecl DataConstructor.getDataTypeDecl();
     eq DataTypeDecl.getDataConstructor().getDataTypeDecl() = this;
@@ -478,23 +491,6 @@ aspect TypeResolution {
         }
         return null;
     }
-
-    /**
-     * This method finds the closest parent conforming to `clazz`, starting from this
-     * object's parent. May return null.
-     */
-    @CheckForNull
-    public <N extends ASTNode<?>> N ASTNode.closestParent(Class<N> clazz) {
-        ASTNode<?> n = getParent();
-        while (n != null) {
-            if (clazz.isInstance(n))
-                return clazz.cast(n);
-            else
-                n = n.getParent();
-        }
-        return null;
-    }
-
 
     syn lazy MethodImpl ClassDecl.lookupMethod(String name) {
         for (MethodImpl m : getMethods()) {

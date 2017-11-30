@@ -369,6 +369,9 @@ public class TypeCheckerHelper {
             case FUN:
                 msg = ErrorMessage.DUPLICATE_FUN_NAME;
                 break;
+            case PARTIAL_FUN:
+                msg = ErrorMessage.DUPLICATE_PARTIAL_FUN_NAME;
+                break;
             case DATA_CONSTRUCTOR:
                 msg = ErrorMessage.DUPLICATE_CONSTRUCTOR;
                 break;

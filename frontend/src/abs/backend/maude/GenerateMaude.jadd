@@ -111,6 +111,13 @@ aspect GenerateMaude {
         stream.println();
 	}
 
+  public void PartialFunctionDecl.generateMaude(PrintStream stream) {}
+
+  public void ParFnApp.generateMaude(PrintStream stream) {}
+  public int ParFnApp.numberOfRandom(Set<String> visitedFunctions) {
+    return 0;
+  }
+
     abstract public void FunctionDef.generateMaude(PrintStream stream);
     public void ExpFunctionDef.generateMaude(PrintStream stream) {
         getRhs().generateMaude(stream);

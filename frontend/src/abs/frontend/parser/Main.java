@@ -261,6 +261,8 @@ public class Main {
         m.flattenTraitOnly();
         m.collapseTraitModifiers();
 
+        m.expandPartialFunctions();
+
         // check PL before flattening
         if (checkspl)
             typeCheckProductLine(m);
