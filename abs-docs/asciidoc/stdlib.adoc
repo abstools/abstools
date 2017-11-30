@@ -458,24 +458,26 @@ def List<T> filter<T>(predicate)(List<T> l);
 
 Accumulates a value starting with `init` and applying `accumulate` from left
 to right to current accumulator value and each element.  The function
-`accumulate` must take two arguments of type `T` and return a value of type
-`T`.
+`accumulate` must take two arguments: the first of type `A` (the type of the
+list) and the second of type `B` (the accumulator and result type), and return
+a value of type `B`.
 
 [source]
 ----
-def T foldl(accumulate)(List<T> l, T init);
+def B foldl<A, B>(accumulate)(List<A> l, B init);
 ----
 
 .foldr
 
 Accumulates a value starting with `init` and applying `accumulate` from right
 to left to each element and current accumulator value.  The function
-`accumulate` must take two arguments of type `T` and return a value of type
-`T`.
+`accumulate` must take two arguments: the first of type `A` (the type of the
+list) and the second of type `B` (the accumulator and result type), and return
+a value of type `B`.
 
 [source]
 ----
-def T foldr(accumulate)(List<T> l, T init);
+def B foldr<A, B>(accumulate)(List<A> l, B init);
 ----
 
 [[type-set]]

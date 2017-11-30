@@ -609,12 +609,12 @@ def List<T> filter<T>(predicate)(List<T> list) = case list {
 	Cons(x, xs) => let (List<T> filtered) = filter(xs) in if (predicate(x)) then Cons(x, filtered) else filtered;
 };
 
-def T foldl<T>(f)(List<T> list, T val) = case list {
+def B foldl<A, B>(f)(List<A> list, B val) = case list {
     Nil => val;
-    Cons(x, xs) => foldl(xs, f(val, x));
+    Cons(x, xs) => foldl(xs, f(x, val));
 };
 
-def T foldr<T>(f)(List<T> list, T val) = case list {
+def B foldr<A, B>(f)(List<A> list, B val) = case list {
     Nil => val;
     Cons(x, xs) => f(x, foldr(xs, val));
 };
