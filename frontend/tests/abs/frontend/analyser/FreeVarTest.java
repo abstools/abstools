@@ -132,13 +132,13 @@ public class FreeVarTest extends FrontendTest {
 
     @Test
     public void parFnApp() {
-        Exp e = getSecondExp("def Unit f(Bool b)() = Unit; { Bool b; Unit u = f(b)(); }");
+        Exp e = getSecondExp("def Unit f()(Bool b) = Unit; { Bool b = True; Unit u = f()(b); }");
         assertEquals(e.getFreeVars(), "b");
     }
 
     @Test
     public void parFnAppAnonymousFunction() {
-        Exp e = getSecondExp("def Bool f()(g) = g(); { Bool b; Bool b2 = f()(() => b); }");
+        Exp e = getSecondExp("def Bool f(g)() = g(); { Bool b = True; Bool b2 = f(() => b)(); }");
         assertEquals(e.getFreeVars(), "b");
     }
 
