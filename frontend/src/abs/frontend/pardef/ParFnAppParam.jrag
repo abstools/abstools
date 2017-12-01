@@ -19,8 +19,16 @@ aspect ParFnAppParam {
     }
 
     eq AnonymousFunctionDecl.getExpression(FnApp toReplace) {
-        PureExp exp = getPureExp().treeCopy();
-        PureExp result = exp;
+        PureExp result = getPureExp().treeCopy();
+        if (result instanceof FieldUse) {
+            FieldUse fieldUse = (FieldUse) result;
+            result = new VarUse(fieldUse.getName());
+        }
+        for (FieldUse fieldUse : result.findChildren(FieldUse.class, true)) {
+            // FieldUse can't have children, so this is OK to do without recursion
+            VarUse replacement = new VarUse(fieldUse.getName());
+            fieldUse.replaceWith(replacement);
+        }
 
         int numParam = getNumParam();
         if (numParam != toReplace.getNumParam()) {

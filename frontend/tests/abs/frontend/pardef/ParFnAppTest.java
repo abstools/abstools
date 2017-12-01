@@ -198,6 +198,44 @@ public class ParFnAppTest extends PardefTest {
     }
 
     @Test
+    public void fieldUseInAnon() {
+        testExpand(assertParseOkStdLib(
+            "def Int produce(fn)() = fn();\n"
+                + "class C {\n"
+                + "Int i = 1;\n"
+                + "Unit m() {\n"
+                + "Int j = produce(() => i)();"
+                + "}\n"
+                + "}\n"
+        ));
+    }
+
+    @Test
+    public void deepFieldUseInAnon() {
+        testExpand(assertParseOkStdLib(
+            "def Int produce(fn)() = fn();\n"
+                + "class C {\n"
+                + "Int i = 1;\n"
+                + "Unit m() {\n"
+                + "Int j = produce(() => 1 + i)();"
+                + "}\n"
+                + "}\n"
+        ));
+    }
+
+    @Test
+    public void fieldUseInParametric() {
+        testExpand(assertParseOkStdLib(
+            "class Test() {\n"
+                + "  Int i = 0;\n"
+                + "  Unit init() {\n"
+                + "    List<Int> test = map((String s) => i)(list[\"foo\"]);\n"
+                + "  }\n"
+                + "}"
+        ));
+    }
+
+    @Test
     public void nestedCalls() {
         testExpand(parse(
             "Int i = apply(inc)(apply(dec)(0));",
