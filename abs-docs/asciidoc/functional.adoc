@@ -632,6 +632,8 @@ defined with pure expressions, for example the function `println`.  Each
 special function has to be implemented in each backend.  The details of
 implementing special functions are outside of the scope of this manual.
 
+
+
 [[sec:partially-defined-functions]]
 === Partial Function Definitions
 
@@ -643,15 +645,18 @@ definitions_.
 
 Partial function definitions are function definitions taking an additional set
 of parameters.  These additional parameters can be either names of normal
-functions, or anonymous functions.  Partial function definitions define a set
-of functions which only differ in function applications but share overall
-structure.  Put another way, partial function definitions define second-order
-functions -- functions that take first-order functions as arguments.
-Partially defined functions can be used inside functional code, but cannot be
-passed as parameters to other partial functions.
+functions, or anonymous functions (see <<sec:anonymous-functions>>).  Partial
+function definitions define a set of functions which only differ in function
+applications but share overall structure.  Put another way, partial function
+definitions define second-order functions -- functions that take first-order
+functions as arguments.  Partially defined functions can be used inside
+functional code, but cannot be passed as parameters to other partial
+functions.
 
 A partially defined function is called the same way as a normal function, with
-a separate argument list containing the functional arguments.
+a separate argument list containing the functional arguments.  For recursion
+inside the body of a partially defined function, omit the function parameter
+list.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
@@ -679,6 +684,11 @@ def Int double(Int x) = x * 2;
 [source]
 .Example
 ----
+def List<B> map<A, B>(f)(List<A> list) = case list { <1>
+    Nil => Nil;
+    Cons(x, xs) => Cons(f(x), map(xs)); <2>
+};
+
 def Int double(Int x) = x * 2;
 
 {
@@ -686,6 +696,8 @@ def Int double(Int x) = x * 2;
   List<Int> doubled = map(double)(list[1, 2, 3]);
 }
 ----
+<1> This definition of `map` is contained in the standard library.
+<2> Note the recursive call to `map` omits the function parameter list.
 
 NOTE: For each call of a partial function, a normal function definition is
 generated at compile time by replacing the functional parameters syntactically
@@ -695,12 +707,15 @@ similar errors are caught afterwards during type checking.  If multiple
 statements call a partially defined function with the same function-name
 arguments, only one expansion is generated.
 
+
+[[sec:anonymous-functions]]
 === Anonymous Functions
 
 To reduce the need to declare a function with a new function name explicitly
 every time a partially defined function is called, ABS uses anonymous
 functions.  Anonymous functions are only allowed in the first arguments list
 calls to partially defined functions.
+
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
