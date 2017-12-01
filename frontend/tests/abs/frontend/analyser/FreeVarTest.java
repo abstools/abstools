@@ -12,7 +12,16 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
+import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Exp;
+import abs.frontend.ast.MethodImpl;
+import abs.frontend.ast.ReturnStmt;
+import abs.frontend.ast.Stmt;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class FreeVarTest extends FrontendTest {
 
@@ -140,6 +149,25 @@ public class FreeVarTest extends FrontendTest {
     public void parFnAppAnonymousFunction() {
         Exp e = getSecondExp("def Bool f(g)() = g(); { Bool b = True; Bool b2 = f(() => b)(); }");
         assertEquals(e.getFreeVars(), "b");
+    }
+
+    @Test
+    public void fieldUse() {
+        ClassDecl clazz = getFirstClassDecl(assertParseOkStdLib(
+            "class C {"
+                + "Int i = 0;"
+                + "Int m() {"
+                + "return i + 1;"
+                + "}"
+                + "}"
+        ));
+        MethodImpl method = clazz.lookupMethod("m");
+        assertNotNull(method);
+        Stmt stmt = method.getBlock().getStmt(0);
+        assertTrue(stmt instanceof ReturnStmt);
+        ReturnStmt returnStmt = (ReturnStmt) stmt;
+        Exp exp = returnStmt.getRetExp();
+        assertEquals(exp.getFreeVars(), "i");
     }
 
     public void assertEquals(Set<String> actual, String... expected) {
