@@ -4,11 +4,11 @@ import java.util.Set;
 aspect VarUsage {
 
 	syn lazy Set<String> Exp.getFreeVars();
-	
-	eq Exp.getFreeVars() = Collections.emptySet(); 
-	
-	eq VarUse.getFreeVars() = Collections.singleton(getName());
-	
+
+	eq Exp.getFreeVars() = Collections.emptySet();
+
+	eq VarOrFieldUse.getFreeVars() = Collections.singleton(getName());
+
 	eq Binary.getFreeVars() {
 		HashSet<String> res = new HashSet<String>();
 		res.addAll(getLeft().getFreeVars());
@@ -21,23 +21,23 @@ aspect VarUsage {
 		res.addAll(getOperand().getFreeVars());
 		return res;
 	}
-	
+
 	eq LetExp.getFreeVars() {
 		HashSet<String> res = new HashSet<String>();
 		res.addAll(getExp().getFreeVars());
 		res.remove(getVar().getName());
 		res.addAll(getVal().getFreeVars());
-		return res;				
+		return res;
 	}
-	
+
     eq IfExp.getFreeVars() {
         HashSet<String> res = new HashSet<String>();
         res.addAll(getCondExp().getFreeVars());
         res.addAll(getThenExp().getFreeVars());
         res.addAll(getElseExp().getFreeVars());
-        return res;             
+        return res;
     }
-	
+
 	eq CaseExp.getFreeVars() {
 		HashSet<String> res = new HashSet<String>();
 		res.addAll(getExpr().getFreeVars());
@@ -46,7 +46,7 @@ aspect VarUsage {
 		}
 		return res;
 	}
-	
+
 	eq FnApp.getFreeVars() {
 		HashSet<String> res = new HashSet<String>();
 		for (PureExp e : getParams()) {
@@ -104,7 +104,7 @@ aspect VarUsage {
 	syn lazy Collection<String> CaseBranch.getFreeVars() {
 		HashSet<String> res = new HashSet<String>();
 		res.addAll(getLeft().getFreeVars());
-		
+
 		res.addAll(getRight().getFreeVars());
 		for (PatternVar v : getLeft().getFreePatternVars()) {
 			res.remove(v.getVar().getName());
@@ -113,9 +113,9 @@ aspect VarUsage {
 	}
 
 	syn lazy Collection<String> Pattern.getFreeVars();
-	
+
 	eq Pattern.getFreeVars() = Collections.emptySet();
-	
+
 	eq PatternVarUse.getFreeVars() = Collections.singleton(getName());
 
 	eq ConstructorPattern.getFreeVars() {
@@ -123,6 +123,6 @@ aspect VarUsage {
 		for (Pattern p : getParams()) {
 			res.addAll(p.getFreeVars());
 		}
-		return res;		
-	}	
+		return res;
+	}
 }
