@@ -570,6 +570,46 @@ aspect GenerateJava {
         getBody().generateJava(stream);
     }
 
+    public void CaseStmt.generateJava(PrintStream stream) {
+        String varType = JavaBackend.getQualifiedString(getExpr().getType());
+        String varName = "__ABS_value" + this.hashCode();
+        stream.println("do {");
+        stream.print("final " + varType + " " + varName + " = ");
+        getExpr().generateJava(stream);
+        stream.println(";");
+        for (int branchcount = 0; branchcount < getNumBranch(); branchcount++) {
+            CaseBranchStmt b = getBranch(branchcount);
+            Pattern pattern = b.getLeft();
+            String bindingName = "__ABS_binding" + pattern.hashCode();
+            stream.print("final " + PatternBinding.class.getName() + " " + bindingName + " = ");
+            pattern.generateJava(stream);
+            stream.println(".match(" + varName + ");");
+            stream.println("if (" + bindingName + " != null) {");
+            java.util.List<PatternVar> freeVars = pattern.getFreePatternVars();
+            for (int varcount = 0; varcount < freeVars.size(); varcount++) {
+                PatternVar var = freeVars.get(varcount);
+                stream.print(JavaBackend.getQualifiedString(var.getType()));
+                stream.print(" " + JavaBackend.getVariableName(var.getVar().getName()));
+                // Hoping and praying that free variables and binding values
+                // are in the same order
+                stream.print(" = (" + JavaBackend.getQualifiedString(var.getType()) + ")" + bindingName + ".getBinding(" + varcount +");");
+            }
+            b.getRight().generateJava(stream);
+            if (branchcount == getNumBranch() - 1) {
+                // KLUDGE: leave this in until we can generate ABS `throw'
+                // statements
+                stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
+                stream.println(getPositionString() + " value \" + " + varName + " + \" did not match any pattern.\");");
+            } else {
+                // Found a match => exit the statement
+                stream.println("continue;");
+            }
+            stream.println("}");
+        }
+        stream.println("} while(false);");
+    }
+
+
     public void AssertStmt.generateJava(PrintStream stream) {
         super.generateJava(stream);
         stream.print("if (!");
