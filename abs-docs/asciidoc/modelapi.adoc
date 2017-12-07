@@ -23,7 +23,7 @@ $ gen/erl/run -p 8080
 
 When running a model with the model API activated, it will not return to the
 command line after the simulation has finished.  Instead, the model will keep
-listening indefinitely for requests and has to be termianted manually.
+listening indefinitely for requests and has to be terminated manually.
 
 === Exposing objects
 
@@ -97,7 +97,7 @@ accessor function nor an `HTTPName` annotation.
 
 ----
 data D1 = D(String key, Int);
-data D2 = D([HTTPName: "effective key"] String overriden, Int);
+data D2 = D([HTTPName: "effective key"] String overridden, Int);
 ----
 
 === Querying object state

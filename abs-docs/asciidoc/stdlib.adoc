@@ -374,7 +374,7 @@ def Bool isEmpty(List<A> l);
 .nth
 
 Returns the `n`-th element of a list.  Returns the head of `l` for `n`=0,
-returns the last element of `l` for `n`=`lenght(l)-1`.
+returns the last element of `l` for `n`=`length(l)-1`.
 
 It is an error if `n` is equal to or larger than `length(l)`.
 
@@ -485,7 +485,7 @@ def B foldr<A, B>(accumulate)(List<A> l, B init);
 
 A set contains elements of the same type, without duplicates.  Sets are
 constructed via the `set` constructor function, e.g., `set[1, 2, 2, 3]`
-creates a set of three integers 1, 2, 3.  The expresssion `set[]` produces the
+creates a set of three integers 1, 2, 3.  The expression `set[]` produces the
 empty set.
 
 To add an element to a set, use the function `insertElement`, to remove an
@@ -637,7 +637,7 @@ Maps are dictionaries storing a _value_ for each _key_.
 
 Maps are constructed using by passing a list of type `Pair<A, B>` to the `map`
 constructor function.  The keys of the resulting map are of type `A` and
-values are of type `B`.  The expresssion `map[]` produces an empty map.
+values are of type `B`.  The expression `map[]` produces an empty map.
 
 The following example produces a map with two entries `1 -> "ABS"` and `3 ->
 "SACO"`.
@@ -659,7 +659,7 @@ obtained via the `keys` function.
 ==== Datatypes and Constructors
 
 The datatype for a map from type `A` to type `B` is is `Map<A, B>`.  The `map`
-constuctor function is used to construct maps.
+constructor function is used to construct maps.
 
 ==== Functions
 

@@ -90,7 +90,7 @@ block has the same restrictions as in the init block.
 
 A class definition contains zero or more method definitions.  Each method has
 a name, return type and zero or more parameters.  All methods declared in an
-interface that is implemented by the class or one of their superinterfaces
+interface that is implemented by the class or one of their super-interfaces
 must be defined in the class body or in one of its traits.  A class is free to
 define methods not declared in an interface; such methods are private to the
 class and cannot be called from outside the class.
@@ -199,7 +199,7 @@ The run method is called after object initialization.
 == Traits
 
 ABS does not support inheritance for code reuse.  Method implementations that
-are common betwen classes can be defined once and used inside these classes by
+are common between classes can be defined once and used inside these classes by
 using _traits_.  A trait can add, remove and modify methods of a class or of
 another trait.
 
@@ -274,8 +274,8 @@ modifies class M.C{
 If a method with the same name is not present in the class (or set of methods), an error will be raised during trait application.
 
 .The order of trait application is as follows:
-* All traits used within a class, in the order they are refered too
-* All traits used within a delta, in the order they are refered too
+* All traits used within a class, in the order they are referred to
+* All traits used within a delta, in the order they are referred to
 
 [source]
 .Example

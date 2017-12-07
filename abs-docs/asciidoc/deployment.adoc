@@ -46,7 +46,7 @@ At time `t+1`, the deployment component’s resources are refilled.  The five
 remaining resources of the `println` statement are consumed and the statement
 is executed.  The five remaining resources of `DC` are not used.
 
-At time `t+2`, the deployment component’s resoures are again refilled to 10.
+At time `t+2`, the deployment component’s resources are again refilled to 10.
 
 The rest of this chapter explains these language elements concerning resource
 modeling in detail.  All identifiers introduced in this section reside in the
@@ -85,7 +85,7 @@ To use deployment components via a cloud provider, follow these steps:
 2. Set the instance descriptions via the `setInstanceDescriptions` method
 3. Create deployment components using the `launchInstanceNamed` method
 4. (optional) Manage access via `releaseInstance` / `acquireInstance`
-5. (optional) Release deployment components via `shutownInstance`
+5. (optional) Release deployment components via `shutdownInstance`
 
 
 [source]
@@ -362,14 +362,14 @@ resource type, `total` returns `InfRat`, otherwise `Fin(value)`.
 
 .Unit decrementResources(Rat amount, Resourcetype rtype)
 
-Decrease the total avilable amount for the given resourcetype by `amount` from
+Decrease the total available amount for the given resourcetype by `amount` from
 the next time interval onwards.  Trying to decrement infinite resources has no
 effect.  It is an error to decrement resources by more than the available amount.
 
 
 .Unit incrementResources(Rat amount, Resourcetype rtype)
 
-Increase the total avilable amount for the given resourcetype by `amount` from
+Increase the total available amount for the given resourcetype by `amount` from
 the next time interval onwards.  Trying to increment infinite resources has no
 effect.
 
@@ -555,6 +555,6 @@ on the capacity of the deployment component, and on other cogs executing in
 parallel on the same deployment component.
 
 <3> Executing this method call consumes 5 Bandwidth resources.  Since `dc` has
-10 bandwidth resourcers per time unit, the message will be transported
+10 bandwidth resources per time unit, the message will be transported
 instantly.  Executing the `skip` statement in the method body will not finish
 instantaneously because `dc` only has 5 `Speed` resources in total.

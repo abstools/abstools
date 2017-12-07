@@ -134,7 +134,7 @@ Cons(1, _) < Cons(2, _)
 
 ==== The Let Expression
 
-The expression `let (T v) = p in b` evalutes `b`, with `v` bound to the value
+The expression `let (T v) = p in b` evaluates `b`, with `v` bound to the value
 of evaluating the expression `p`.  The newly-introduced binding of `v` can
 shadow a binding of `v` outside of the `let` expression.
 
@@ -294,7 +294,7 @@ There are four different kinds of patterns available in ABS:
 
 Variable patterns are written as identifiers starting with a lower-case
 letter.  If the identifier does not name a variable in the current scope, the
-variable pattern matches any value and introducues a binding of the given
+variable pattern matches any value and introduces a binding of the given
 identifier to the matched value for the right-hand side of the branch and the
 rest of the pattern itself.  In case a binding for that identifier is already
 in scope, its value is compared to the value being matched against.
@@ -412,7 +412,7 @@ type-correct if it can match the corresponding case expression.
 
 ABS has expressions with side effects.  These expressions are only legal
 “stand-alone”, i.e., not as a sub-expression of another expression.  This
-means that subexpressions of expressions can only be pure expressions.  This
+means that sub-expressions of expressions can only be pure expressions.  This
 restriction simplifies the reasoning about expressions in the ABS modeling
 language.
 

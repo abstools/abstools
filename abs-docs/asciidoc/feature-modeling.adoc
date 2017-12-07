@@ -90,7 +90,7 @@ the ABS module to which modifications using unqualified identifiers apply by
 default.  A delta can still make modifications to classes and interfaces in
 several modules by fully qualifying the `TypeName` of module modifiers.
 
-While delta modelling supports a broad range of ways to modify an ABS model,
+While delta modeling supports a broad range of ways to modify an ABS model,
 not all ABS program entities are modifiable.  These unsupported modifications
 are listed here for completeness.  While these modifications could be easily
 specified and implemented, we opted not to overload the language with features
@@ -170,7 +170,7 @@ for a feature, and if the extended feature has no children a group can also be
 specified.  This is particularly useful for specifying constraints that do not
 fit into the tree structure given by the root feature model.
 
-Here is an example feature model for the `DeltaResourceExample` productline,
+Here is an example feature model for the `DeltaResourceExample` product line,
 defining valid combinations of features and valid ranges of parameters for
 cost, capacity and number of machines:
 
@@ -241,7 +241,7 @@ An ABS _product_ is simply a set of features associated with a name.
 ==== Specifying the Product Line
 
 The ABS configuration language links feature models, which describe the
-structure of a SPL, to delta modules, which implement behaviour.  The
+structure of a SPL, to delta modules, which implement behavior.  The
 configuration defines, for each selection of features satisfied by the product
 selection, which delta modules should be applied to the core.  Furthermore, it
 guides the code generation by ordering the application of the delta modules.
@@ -316,7 +316,7 @@ AttributeAssignments ::= '{' AttributeAssignment (',' AttributeAssignment '}'
 AttributeAssignment ::= AName '=' Literal
 ----
 
-Here are some product definitions for the `DeltaResourceExample` productline:
+Here are some product definitions for the `DeltaResourceExample` product line:
 
 [source]
 ----
@@ -349,7 +349,7 @@ product Org11 = SekolahBermainMatahari && (RamadhanForKids || {Money, Item});
 Because the number of variants in an SPL can be very large, checking them 
 efficiently (e.g., to ensure that they are all well-typed) is challenging. 
 Building each variant in order to type-check it is usually not feasible from a 
-performace perspective. Instead, the ABS compiler employs a number of efficient 
+performance perspective. Instead, the ABS compiler employs a number of efficient 
 consistency checks. These fall into two categories.
 
 * _Family-based_ analysis steps operate on the SPL definition itself,

@@ -26,7 +26,7 @@ code from ABS.
 
 | Real-Time ABS
 | yes
-| yes (deadline implementation missign)
+| yes (deadline implementation missing)
 | -
 | -
 
@@ -163,7 +163,7 @@ and, above that, augments the language with extra features, such as `Type Infere
 
 With the feature of `Type Inference` enabled, the user can _optionally_ leave out
 the declaration of types of certain expressions; the backend will be responsible
-to infer those types and typecheck them in the ABS program. The type inference
+to infer those types and type-check them in the ABS program. The type inference
 is _safe_, in the sense that it will not infer any wrong types (soundness property).
 
 To make use of this feature, the user puts an underscore `_` in place
@@ -277,7 +277,7 @@ Clone the repository with the command:
 
       $ git clone git://github.com/bezirg/abs2haskell
 
-To build and install the abs2haskell bakend run inside the `abs2haskell/` directory:
+To build and install the abs2haskell backend run inside the `abs2haskell/` directory:
 
 [source]
 

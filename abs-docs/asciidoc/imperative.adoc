@@ -141,7 +141,7 @@ new Client(server);
 
 An assert statement is a statement for asserting certain conditions.  If the
 expression evaluates to `True`, executing an assertion is equivalent to
-`skip;`.  If the expression evalutes to `False`, it is equivalent to `throw
+`skip;`.  If the expression evaluates to `False`, it is equivalent to `throw
 AssertionFailException;`.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
@@ -162,7 +162,7 @@ assert x != null;
 === Await Statement
 
 An await statement suspends the current task until the given guard becomes
-active (evalutes to `True`).  While the task is suspended, other tasks within
+active (evaluates to `True`).  While the task is suspended, other tasks within
 the same COG can be scheduled.
 
 Guards can wait for a futures to become resolved, for a Boolean condition over
@@ -377,7 +377,7 @@ case p {
 
 === The While Loop
 
-The while loop repeats its body while the condition evalutes to `True`.  The
+The while loop repeats its body while the condition evaluates to `True`.  The
 condition is re-evaluated after each iteration of the loop.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]

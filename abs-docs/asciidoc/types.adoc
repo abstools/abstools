@@ -209,7 +209,7 @@ The syntax of interfaces is given in <<sec:interfaces>>.
 === Exceptions
 
 In higher-level programming languages, exceptions are generally used to signal
-an _erroneous_ or _abnormal_ runtime behaviour of the program, that should be
+an _erroneous_ or _abnormal_ runtime behavior of the program, that should be
 treated (handled) separately compared to normal values.
 
 Exceptions are declared with the keyword `exception`, followed by the name of
