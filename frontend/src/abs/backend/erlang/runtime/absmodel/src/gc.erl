@@ -13,11 +13,11 @@
 
 -export([behaviour_info/1]).
 
--behaviour(gen_fsm).
+-behaviour(gen_statem).
 
-%% gen_fsm callbacks
--export([init/1,terminate/3,code_change/4,handle_event/3,handle_sync_event/4,handle_info/3]).
--export([idle/2,idle/3,collecting/2,collecting/3,in_shutdown/2,in_shutdown/3]).
+%% gen_statem callbacks
+-export([init/1, callback_mode/0,terminate/3,code_change/4]).
+-export([idle/3,collecting/3,in_shutdown/3]).
 
 -undef(MIN_PROC_FACTOR).
 -undef(MAX_PROC_FACTOR).
@@ -34,7 +34,7 @@
 -define(RED_THRESH, 0.25).
 -define(INC_THRESH, 0.75).
 
--record(state, {
+-record(data, {
           cogs=gb_sets:empty(),                 %root
           root_futures=gb_sets:empty(),         %root
           objects=gb_sets:empty(),              %collected
@@ -48,10 +48,10 @@ behaviour_info(callbacks) ->
     [{get_references, 1}].
 
 start(Log, Debug) ->
-    gen_fsm:start_link({global, gc}, ?MODULE, [Log, Debug], []).
+    gen_statem:start_link({global, gc}, ?MODULE, [Log, Debug], []).
 
 stop() ->
-    gen_fsm:stop({global, gc}).
+    gen_statem:stop({global, gc}).
 
 gcstats(Log, Statistics) ->
     case Log of
@@ -62,105 +62,95 @@ gcstats(Log, Statistics) ->
 
 register_future(Fut) ->
     %% Fut is the plain pid of the Future process
-    gen_fsm:send_event({global, gc}, {register_future, Fut, self()}).
+    gen_statem:cast({global, gc}, {register_future, Fut, self()}).
 
 unroot_future(Fut) ->
     %% Fut is the plain pid of the Future process
-    gen_fsm:send_event({global, gc}, {unroot, Fut}).
+    gen_statem:cast({global, gc}, {unroot, Fut}).
 
 register_cog(Cog) ->
     %% Cog is a #cog record
-    gen_fsm:sync_send_event({global, gc}, Cog).
+    gen_statem:call({global, gc}, Cog).
 
 unregister_cog(Cog) ->
     %% Cog is the plain pid of the Cog process
-    gen_fsm:send_event({global, gc}, {die, Cog}).
+    gen_statem:cast({global, gc}, {die, Cog}).
 
 cog_stopped(Cog) ->
-    gen_fsm:send_event({global, gc}, {stopped, Cog}).
+    gen_statem:cast({global, gc}, {stopped, Cog}).
 
 register_object(Obj) ->
     %% Obj is an #object record
-    gen_fsm:send_event({global, gc}, Obj).
+    gen_statem:cast({global, gc}, Obj).
 
 unregister_object(#object{ref=Obj}) ->
-    gen_fsm:send_event({global, gc}, {stopped_object, Obj});
+    gen_statem:cast({global, gc}, {stopped_object, Obj});
 unregister_object(Obj) when is_pid(Obj) ->
-    gen_fsm:send_event({global, gc}, {stopped_object, Obj}).
+    gen_statem:cast({global, gc}, {stopped_object, Obj}).
 
 prepare_shutdown() ->
-    gen_fsm:sync_send_event({global, gc}, prepare_shutdown).
+    gen_statem:call({global, gc}, prepare_shutdown).
 
-%% gen_fsm callback functions
+%% gen_statem callback functions
+
+callback_mode() -> state_functions.
 
 init([Log, Debug]) ->
-    {ok, idle, #state{log=Log, debug=Debug}}.
+    {ok, idle, #data{log=Log, debug=Debug}}.
 
-handle_info(_Info, StateName, State) ->
-    {next_state, StateName, State}.
-
-terminate(_Reason, _StateName, _State) ->
+terminate(_Reason, _State, _Data) ->
     ok.
 
-code_change(_OldVsn, StateName, State, _Extra) ->
-    {ok, StateName, State}.
+code_change(_OldVsn, State, Data, _Extra) ->
+    {ok, State, Data}.
 
-handle_event(_Event, _StateName, State) ->
-    {stop, not_supported, State}.
-
-handle_sync_event(_Event, _From, _StateName, State) ->
-    {stop, not_supported, State}.
 
 %% State functions
 
 %% idle: collect cogs and futures, possibly switch to stop_world
 
-
-idle_state_next(State=#state{log=Log, cogs=Cogs}) ->
-    case is_collection_needed(State) of
+idle_state_next(Data=#data{log=Log, cogs=Cogs}) ->
+    case is_collection_needed(Data) of
         true ->
             gcstats(Log, stop_world),
             gb_sets:fold(fun ({cog, Ref}, ok) -> cog:stop_world(Ref) end, ok, Cogs),
-            {collecting, State#state{cogs_waiting_to_stop=Cogs}};
+            {collecting, Data#data{cogs_waiting_to_stop=Cogs}};
         false ->
-            {idle, State}
+            {idle, Data}
     end.
 
-idle({register_future, Ref, Sender}, State=#state{root_futures=RootFutures}) ->
-    {Next, NewState} = idle_state_next(State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)}),
-    {next_state, Next, NewState};
-idle(#object{ref=Ref}, State=#state{objects=Objects}) ->
-    {Next, NewState} = idle_state_next(State#state{objects=gb_sets:insert({object, Ref}, Objects)}),
-    {next_state, Next, NewState};
-idle({stopped_object, Ref}, State=#state{objects=Objects}) ->
-    {Next, NewState} = idle_state_next(State#state{objects=gb_sets:del_element({object, Ref}, Objects)}),
-    {next_state, Next, NewState};
-idle({unroot, Sender}, State=#state{root_futures=RootFutures, futures=Futures}) ->
-    {Next, NewState} = idle_state_next(State#state{futures=gb_sets:insert({future, Sender}, Futures),
+idle(cast, {register_future, Ref, Sender}, Data=#data{root_futures=RootFutures}) ->
+    {NextState, NewData} = idle_state_next(Data#data{root_futures=gb_sets:insert({future, Ref}, RootFutures)}),
+    {next_state, NextState, NewData};
+idle(cast, #object{ref=Ref}, Data=#data{objects=Objects}) ->
+    {NextState, NewData} = idle_state_next(Data#data{objects=gb_sets:insert({object, Ref}, Objects)}),
+    {next_state, NextState, NewData};
+idle(cast, {stopped_object, Ref}, Data=#data{objects=Objects}) ->
+    {NextState, NewData} = idle_state_next(Data#data{objects=gb_sets:del_element({object, Ref}, Objects)}),
+    {next_state, NextState, NewData};
+idle(cast, {unroot, Sender}, Data=#data{root_futures=RootFutures, futures=Futures}) ->
+    {NextState, NewData} = idle_state_next(Data#data{futures=gb_sets:insert({future, Sender}, Futures),
                                                    root_futures=gb_sets:delete({future, Sender}, RootFutures)}),
-    {next_state, Next, NewState};
-idle({die, Cog}, State=#state{cogs=Cogs}) ->
-    {Next, NewState} = idle_state_next(State#state{cogs=gb_sets:delete({cog, Cog}, Cogs)}),
-    {next_state, Next, NewState};
-idle(_Event, State) ->
-    {stop, not_supported, State}.
-
-idle(Cog=#cog{ref=Ref}, _From, State=#state{cogs=Cogs}) ->
-    {Next, NewState} = idle_state_next(State#state{cogs=gb_sets:insert({cog, Ref}, Cogs)}),
-    case Next of
+    {next_state, NextState, NewData};
+idle(cast, {die, Cog}, Data=#data{cogs=Cogs}) ->
+    {NextState, NewData} = idle_state_next(Data#data{cogs=gb_sets:delete({cog, Cog}, Cogs)}),
+    {next_state, NextState, NewData};
+idle({call, From}, Cog=#cog{ref=Ref}, Data=#data{cogs=Cogs}) ->
+    {NextState, NewData} = idle_state_next(Data#data{cogs=gb_sets:insert({cog, Ref}, Cogs)}),
+    case NextState of
         idle -> cog:acknowledged_by_gc(Cog);
         %% If we switched to collecting, we already sent stop_world -- no need
         %% to send ack in that case.
         _ -> ok
     end,
-    {reply, ok, Next, NewState};
-idle(prepare_shutdown, _From, State) ->
-    {reply, ok, in_shutdown, State};
-idle(_Event, _From, State) ->
-    {stop, not_supported, State}.
+    {next_state, NextState, NewData, {reply, From, ok}};
+idle({call, From}, prepare_shutdown, Data) ->
+    {next_state, in_shutdown, Data, {reply, From, ok}};
+idle(_Event, _From, Data) ->
+    {stop, not_supported, Data}.
 
 
-collecting_state_next(State=#state{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, root_futures=RootFutures, log=Log}) ->
+collecting_state_next(Data=#data{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, root_futures=RootFutures, log=Log}) ->
     case gb_sets:is_empty(RunningCogs) of
         true ->
             gcstats(Log, mark),
@@ -169,51 +159,45 @@ collecting_state_next(State=#state{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, 
                                  cog_monitor:list_registered_http_objects())),
             Black=mark([], ordsets:from_list(gb_sets:to_list(gb_sets:union([Cogs, RootFutures, Exported])))),
             gcstats(Log, sweep),
-            StateAfterSweep=sweep(State, gb_sets:from_ordset(Black)),
-            {idle, StateAfterSweep};
+            DataAfterSweep=sweep(Data, gb_sets:from_ordset(Black)),
+            {idle, DataAfterSweep};
         false ->
-            {collecting, State}
+            {collecting, Data}
     end.
 
-collecting({register_future, Ref, _Sender}, State=#state{root_futures=RootFutures}) ->
-    {next_state, collecting,
-     State#state{root_futures=gb_sets:insert({future, Ref}, RootFutures)}};
-collecting(#object{ref=Ref}, State=#state{objects=Objects}) ->
-    {next_state, collecting, State#state{objects=gb_sets:insert({object, Ref}, Objects)}};
-collecting({stopped_object, Ref}, State=#state{objects=Objects}) ->
-    {next_state, collecting, State#state{objects=gb_sets:del_element({object, Ref}, Objects)}};
-collecting({unroot, Sender}, State=#state{root_futures=RootFutures, futures=Futures}) ->
-    {next_state, collecting,
-     State#state{futures=gb_sets:insert({future, Sender}, Futures),
+collecting(cast, {register_future, Ref, _Sender}, Data=#data{root_futures=RootFutures}) ->
+    {keep_state, Data#data{root_futures=gb_sets:insert({future, Ref}, RootFutures)}};
+collecting(cast, #object{ref=Ref}, Data=#data{objects=Objects}) ->
+    {keep_state, Data#data{objects=gb_sets:insert({object, Ref}, Objects)}};
+collecting(cast, {stopped_object, Ref}, Data=#data{objects=Objects}) ->
+    {keep_state, Data#data{objects=gb_sets:del_element({object, Ref}, Objects)}};
+collecting(cast, {unroot, Sender}, Data=#data{root_futures=RootFutures, futures=Futures}) ->
+    {keep_state,
+     Data#data{futures=gb_sets:insert({future, Sender}, Futures),
                  root_futures=gb_sets:delete({future, Sender}, RootFutures)}};
-collecting({die, Cog}, State=#state{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
-    {Next, NewState} = collecting_state_next(State#state{cogs=gb_sets:delete({cog, Cog}, Cogs),
+collecting(cast, {die, Cog}, Data=#data{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
+    {NextState, NewData} = collecting_state_next(Data#data{cogs=gb_sets:delete({cog, Cog}, Cogs),
                                                          cogs_waiting_to_stop=gb_sets:delete_any({cog, Cog}, RunningCogs)}),
-    {next_state, Next, NewState};
-collecting({stopped, Ref}, State=#state{cogs_waiting_to_stop=RunningCogs}) ->
-    {Next, NewState} = collecting_state_next(State#state{cogs_waiting_to_stop=gb_sets:delete({cog, Ref}, RunningCogs)}),
-    {next_state, Next, NewState};
-collecting(_Event, State) ->
-    {stop, not_supported, State}.
-
-collecting(#cog{ref=Ref}, _From, State=#state{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
+    {next_state, NextState, NewData};
+collecting(cast, {stopped, Ref}, Data=#data{cogs_waiting_to_stop=RunningCogs}) ->
+    {NextState, NewData} = collecting_state_next(Data#data{cogs_waiting_to_stop=gb_sets:delete({cog, Ref}, RunningCogs)}),
+    {next_state, NextState, NewData};
+collecting({call, From}, #cog{ref=Ref}, Data=#data{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
     cog:stop_world(Ref),
-    {reply, ok, collecting,
-     State#state{cogs=gb_sets:insert({cog, Ref}, Cogs),
-                 cogs_waiting_to_stop=gb_sets:insert({cog, Ref}, RunningCogs)}};
-collecting(prepare_shutdown, _From, State) ->
-    {reply, ok, in_shutdown, State};
-collecting(_Event, _From, State) ->
-    {stop, not_supported, State}.
+    {keep_state,
+     Data#data{cogs=gb_sets:insert({cog, Ref}, Cogs),
+                 cogs_waiting_to_stop=gb_sets:insert({cog, Ref}, RunningCogs)},
+    {reply, From, ok}};
+collecting({call, From}, prepare_shutdown, Data) ->
+    {next_state, in_shutdown, Data, {reply, From, ok}};
+collecting(_Event, _From, Data) ->
+    {stop, not_supported, Data}.
 
 
 %% The model is terminating, cogs will stop on their own, etc.  Do not react
 %% to further messages.
-in_shutdown(_Event, State) ->
-    {next_state, in_shutdown, State}.
-in_shutdown(_Event, _From, State) ->
-    {reply, ok, in_shutdown, State}.
-
+in_shutdown(_Event, State, Data) ->
+    {next_state, in_shutdown, Data}.
 
 
 mark(Black, []) ->
@@ -223,7 +207,7 @@ mark(Black, Gray) ->
     NewGray = ordsets:subtract(ordsets:union(ordsets:from_list(rpc:pmap({gc, get_references}, [], Gray))), Black),
     mark(NewBlack, NewGray).
 
-sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,
+sweep(Data=#data{cogs=Cogs,objects=Objects,futures=Futures,
                    limit=Lim, proc_factor=PFactor, log=Log},Black) ->
     WhiteObjects = gb_sets:subtract(Objects, Black),
     WhiteFutures = gb_sets:subtract(Futures, Black),
@@ -245,7 +229,7 @@ sweep(State=#state{cogs=Cogs,objects=Objects,futures=Futures,
                     PFactor > ?MIN_PROC_FACTOR -> PFactor - 0.05;
                     true -> PFactor
                  end,
-    State#state{objects=BlackObjects, futures=BlackFutures, previous=erlang:monotonic_time(milli_seconds),
+    Data#data{objects=BlackObjects, futures=BlackFutures, previous=erlang:monotonic_time(milli_seconds),
                      limit=NewLim, proc_factor=PFactor}.
 
 get_references({Module, Ref}) ->
@@ -254,7 +238,7 @@ get_references({Module, Ref}) ->
         false -> []
     end.
 
-is_collection_needed(State=#state{objects=Objects,futures=Futures,
+is_collection_needed(Data=#data{objects=Objects,futures=Futures,
                                   previous=PTime,limit=Lim,proc_factor=PFactor,
                                   debug=Debug}) ->
     Debug
