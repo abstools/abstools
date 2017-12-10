@@ -48,11 +48,10 @@
   :type '(radio (const maude)
                 (const java)
                 (const erlang)
-                (const prolog)
-                (const keyabs))
+                (const prolog))
   :group 'abs)
 (put 'abs-target-language 'safe-local-variable
-     #'(lambda (x) (member x '(maude java erlang prolog keyabs))))
+     #'(lambda (x) (member x '(maude java erlang prolog))))
 
 (defcustom abs-compiler-program (or (executable-find "absc") "absc")
   "Path to the Abs compiler."
@@ -466,9 +465,6 @@ value.")
   (or abs-maude-output-file
       (concat (file-name-sans-extension (car (abs--input-files))) ".maude")))
 
-(defun abs--keyabs-filename ()
-  (concat (file-name-sans-extension (car (abs--input-files))) ".inv"))
-
 (defun abs--absolutify-filename (filename)
   (if (file-name-absolute-p filename)
       filename
@@ -492,8 +488,6 @@ value.")
                               (abs--input-files) " ")
                    (when (eql backend 'maude)
                      (concat " -o \"" (abs--maude-filename) "\""))
-                   (when (eql backend 'keyabs)
-                     (concat " -o \"" (abs--keyabs-filename) "\""))
                    (when abs-product-name
                      (concat " -product=" abs-product-name))
                    (when (and (eql backend 'maude)
@@ -520,8 +514,7 @@ value.")
                                       (`erlang "gen/erl/absmodel/Emakefile")
                                       (`java "gen/ABS/StdLib/Bool.java")
                                       ;; FIXME Prolog backend can use -fn outfile
-                                      (`prolog "abs.pl")
-                                      (`keyabs (abs--keyabs-filename)))))
+                                      (`prolog "abs.pl"))))
          (abs-modtime (nth 5 (file-attributes (buffer-file-name))))
          (output-modtime (nth 5 (file-attributes abs-output-file))))
     (or (not output-modtime)
@@ -629,7 +622,7 @@ Argument FLAG will prompt for language backend to use if 1."
   (let ((backend (if (= 1 flag)
                      abs-target-language
                    (intern (completing-read "Target language: "
-                                            '("maude" "erlang" "java" "keyabs")
+                                            '("maude" "erlang" "java")
                                             nil t nil nil "maude")))))
     (if (abs--needs-compilation backend)
         (abs--compile-model backend)
@@ -774,10 +767,10 @@ The following keys are set:
       :active t
       :style radio
       :selected (eq abs-target-language 'erlang)]
-     ["Key-abs" (setq abs-target-language 'keyabs)
+     ["Java" (setq abs-target-language 'java)
       :active t
       :style radio
-      :selected (eq abs-target-language 'keyabs)])
+      :selected (eq abs-target-language 'java)])
     ("Maude Backend Options"
      ["Timed interpreter"
       (setq abs-use-timed-interpreter (not abs-use-timed-interpreter))
