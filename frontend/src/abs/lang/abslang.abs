@@ -31,9 +31,9 @@ export length, isEmpty, nth, without, concatenate, appendright, reverse, copy;
 // Maps
 export Map, EmptyMap, InsertAssoc, map; // TODO: don't export EmptyMap, InsertAssoc
 
-export emptyMap, removeKey, values, keys, lookup, lookupMaybe, lookupUnsafe,
-  lookupDefault, insert, put;
-  
+export emptyMap, removeKey, values, keys, entries,
+  lookup, lookupMaybe, lookupUnsafe, lookupDefault, insert, put;
+
 // String functions
 export toString, intToString, substr, strlen;
 
@@ -419,7 +419,16 @@ def Set<A> keys<A, B>(Map<A, B> map) =
     EmptyMap => EmptySet ;
     InsertAssoc(Pair(a, _), tail) => insertElement(keys(tail), a); 
   };
-    
+
+/**
+ * Returns a list containing all entries of map 'map'.
+ */
+def List<Pair<A, B>> entries<A, B>(Map<A, B> map) =
+  case map {
+      EmptyMap => Nil;
+      InsertAssoc(e, tail) => Cons(e, entries(tail));
+  };
+
 /**
  * Returns the value associated with key 'k' in map 'ms', or 'Nothing'.
  */

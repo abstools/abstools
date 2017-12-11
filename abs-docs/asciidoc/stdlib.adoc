@@ -653,8 +653,9 @@ contain for a given key.
 The value associated with a key can be obtained using the `lookup` and
 `lookupDefault` functions.
 
-Iterating through a map can be done via iterating over its set of keys,
-obtained via the `keys` function.
+A map can be iterated over via the functions `keys`, `values` and `entries`,
+which return the set of keys and the list of values and entries of the map,
+respectively.
 
 ==== Datatypes and Constructors
 
@@ -697,6 +698,15 @@ Returns a set of all keys of the map.
 [source]
 ----
 def Set<A> keys<A, B>(Map<A, B> map);
+----
+
+.entries
+
+Returns a list of all entries (i.e., pairs of key and value) of the map.
+
+[source]
+----
+def List<Pair<A, B>> entries<A, B>(Map<A, B> map);
 ----
 
 .lookup

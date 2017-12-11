@@ -98,6 +98,21 @@ public class StdLibTests extends SemanticTests {
         assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = put(map, 4, 400) == map[Pair(1, 100), Pair(2, 200), Pair(3, 300), Pair(4, 400)]; }");
     }
 
+    @Test
+    public void mapKeys() {
+        assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = keys(map) == set[1, 2, 3]; }");
+    }
+
+    @Test
+    public void mapValues() {
+        assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = values(map) == list[100, 200, 300]; }");
+    }
+
+    @Test
+    public void mapEntries() {
+        assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = entries(map) == list[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; }");
+    }
+
     // BUILT-IN FUNCTIONS
 
     @Test
