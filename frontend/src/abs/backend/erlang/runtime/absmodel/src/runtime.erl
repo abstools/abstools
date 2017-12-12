@@ -20,6 +20,7 @@
          {influxdb_db,$d,"influxdb-db",{string,"absmodel"},"Name of the influx database log data is written to"},
          {clocklimit,$l,"clock-limit",{integer,none},"Halt simulation after given clock value"},
          {schedulers,$s,"schedulers",{integer,none},"Set number of online erlang schedulers"},
+         {version,$v,"version",undefined,"Output version and exit"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
 
 
@@ -60,6 +61,11 @@ start_http(Port, Clocklimit) ->
 parse(Args,Exec)->
     case getopt:parse_and_check(?CMDLINE_SPEC,Args) of
         {ok,{Parsed,[]}} ->
+            case proplists:get_value(version, Parsed, none) of
+                none -> ok;
+                _ -> io:format("~s~n", [?ABSCOMPILERVERSION]),
+                     halt(0)
+            end,
             Module = case proplists:get_value(main_module,Parsed,none) of
                          none -> ?ABSMAINMODULE;
                          [] -> ?ABSMAINMODULE;

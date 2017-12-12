@@ -185,6 +185,8 @@ public class ErlApp {
         hcs.println("%%This file is licensed under the terms of the Modified BSD License.");
         hcs.println("-undef(ABSMAINMODULE).");
         hcs.println("-define(ABSMAINMODULE," + erlModulename + ").");
+        hcs.println("-undef(ABSCOMPILERVERSION).");
+        hcs.println("-define(ABSCOMPILERVERSION,\"" + abs.frontend.parser.Main.getVersion() + "." + abs.frontend.parser.Main.getGitVersion() + "\").");
         hcs.close();
     }
 

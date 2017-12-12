@@ -743,7 +743,7 @@ public class Main {
         System.out.println();
     }
 
-    private static String getVersion() {
+    public static String getVersion() {
         String version = Main.class.getPackage().getImplementationVersion();
         if (version == null)
             return "HEAD";
@@ -752,7 +752,7 @@ public class Main {
     }
 
 
-    private static String getGitVersion() {
+    public static String getGitVersion() {
         String version = Main.class.getPackage().getSpecificationVersion();
         if (version == null)
             return "HEAD-dirty";

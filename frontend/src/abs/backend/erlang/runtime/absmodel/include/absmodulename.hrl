@@ -5,3 +5,5 @@
 %% runtime support files.
 -undef(ABSMAINMODULE).
 -define(ABSMAINMODULE,undef).
+-undef(ABSCOMPILERVERSION).
+-define(ABSCOMPILERVERSION,"source").

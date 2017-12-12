@@ -90,6 +90,8 @@ public class Config {
     public void printHelp() {
         System.err.println(" ABS Java Backend - Runtime Configuration Options");
         System.err.println(" ================================================");
+        System.err.println(" Toolchain version " + abs.frontend.parser.Main.getVersion() + "." + abs.frontend.parser.Main.getGitVersion());
+        System.err.println();
         for (Option o : options.options) {
             if (o.type != OptionType.BOOLEAN) {
                 System.err.println(String.format("%36s\t%s", "-"+o.name + "=<"
