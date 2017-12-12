@@ -20,6 +20,7 @@ init(Req, _Opts) ->
             <<"static_dcs">> -> handle_static_dcs(cowboy_req:path_info(Req));
             <<"call">> -> handle_object_call(cowboy_req:path_info(Req),
                                              cowboy_req:parse_qs(Req));
+            <<"quit">> -> halt(0);
             _ -> {404, <<"text/plain">>, <<"Not found">>}
         end,
     Req2 = cowboy_req:reply(Status, #{<<"content-type">> => ContentType},

@@ -21,9 +21,21 @@ $ absc -erlang my-model.abs
 $ gen/erl/run -p 8080
 ----
 
+=== Shutting down the Model API
+
 When running a model with the model API activated, it will not return to the
 command line after the simulation has finished.  Instead, the model will keep
-listening indefinitely for requests and has to be terminated manually.
+listening for requests and method calls.
+
+A running model can be terminated manually from the console (for example, via
+pressing `Ctrl-C`), or by requesting the URL `/quit`.  The following command
+will terminate a model running on port 8080:
+
+----
+$ curl localhost:8080/quit
+curl: (52) Empty reply from server
+----
+
 
 === Exposing objects
 
