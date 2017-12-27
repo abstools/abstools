@@ -12,12 +12,17 @@ import java.io.StringWriter;
 
 import org.junit.Test;
 
+import abs.ABSTest;
+import abs.ABSTest.Config;
 import abs.frontend.antlr.parser.ABSParserWrapper;
+import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.DeltaDecl;
+import abs.frontend.ast.Model;
+import abs.frontend.ast.ModuleDecl;
 import abs.frontend.tests.ABSFormatter;
 import abs.frontend.tests.EmptyFormatter;
 
-public class PrettyPrinterTests {
+public class PrettyPrinterTests extends ABSTest {
 
     @Test
     public void prettyPrinterAddDataTypeModifierTest() throws Exception{
@@ -30,12 +35,18 @@ public class PrettyPrinterTests {
     @Test
     public void prettyPrinterModifyInterfaceModifierTest() throws Exception{
         String deltaDecl = "delta Foo;modifies interface X{removes Int fooMethod();adds Int fooMethod();}";
-        DeltaDecl d = (DeltaDecl) new ABSParserWrapper(null, true, false)
-            .parse(new StringReader(deltaDecl)).getDeltaDecl(0);
-        assertEquals("deltaFoo;modifiesinterfaceX{removesIntfooMethod();addsIntfooMethod();}", replaceWhitespaceChars(prettyPrint(d)));
+        Model m = assertParseOk(deltaDecl, Config.WITHOUT_MODULE_NAME);
+        assertEquals("deltaFoo;modifiesinterfaceX{removesIntfooMethod();addsIntfooMethod();}", replaceWhitespaceChars(prettyPrint(m)));
+    }
+    
+    @Test
+    public void prettyPrinterListLiteralTest() throws Exception {
+        String ms = "module Test; { List<Int> x = list[1, 2, 3]; }";
+        Model m = assertParseOk(ms, Config.WITHOUT_MODULE_NAME);
+        assertEquals("moduleTest;{List<Int>x=list[1,2,3];}", replaceWhitespaceChars(prettyPrint(m)));
     }
 
-    private String prettyPrint(DeltaDecl d) {
+    private String prettyPrint(ASTNode<?> d) {
         StringWriter writer = new StringWriter();
         PrintWriter w = new PrintWriter(writer);
         ABSFormatter f = new EmptyFormatter();
