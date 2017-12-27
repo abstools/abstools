@@ -59,6 +59,7 @@ aspect doPrettyPrinter {
         formatter.afterStmt();
 
         for (Import i : getImportList()) {
+            if (i instanceof StarImport && ((StarImport)i).getModuleName().equals(Constants.STDLIB_NAME)) continue;
             i.doPrettyPrint(stream, formatter);
             stream.println();
             formatter.afterStmt();
