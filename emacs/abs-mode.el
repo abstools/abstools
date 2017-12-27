@@ -719,7 +719,7 @@ Uses the variable `abs-indent'."
 ;;; Putting it all together.
 
 ;;;###autoload
-(define-derived-mode abs-mode fundamental-mode "Abs"
+(define-derived-mode abs-mode prog-mode "Abs"
   "Major mode for editing Abs files.
 
 The following keys are set:
