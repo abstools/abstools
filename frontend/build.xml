@@ -11,6 +11,8 @@
   <property environment="env" />
   <!-- include environment variables -->
 
+  <property name="java.langlevel" value="1.8"/>
+
   <property name="src.dir" value="${basedir}/src" />
   <property name="bash.dir" value="${src.dir}/bash" />
   <property name="win.dir" value="${src.dir}/win" />
@@ -157,7 +159,7 @@
   </target>
 
   <target name="compile" depends="prepare,gen,versionstamp" description="Compiles all java files in the source directory and generates absfrontend.jar.">
-    <javac srcdir="${src.dir}:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off" encoding="utf-8" target="1.7" source="1.7">
+    <javac srcdir="${src.dir}:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off" encoding="utf-8" target="${java.langlevel}" source="${java.langlevel}">
       <classpath refid="compile.classpath" />
     </javac>
     <jar jarfile="${target.jar}">
