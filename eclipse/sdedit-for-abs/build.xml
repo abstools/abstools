@@ -109,7 +109,7 @@
 		   includeantruntime="false" 
     	   destdir="${build}" 
     	   srcdir="${src}"
-           target="1.7">
+           target="1.8">
 			<classpath>
 				<path refid="libs"/>
 			</classpath>
@@ -134,7 +134,7 @@
 	           source="1.5"
 	           destdir="${build}" 
 	           srcdir="${src}"
-                   target="1.7">
+                   target="1.8">
 			<classpath>
 				<path refid="libs"/>
 			</classpath>
