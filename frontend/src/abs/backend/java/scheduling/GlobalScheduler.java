@@ -32,7 +32,7 @@ public class GlobalScheduler {
      * their next step
      * protected by lock of this
      */
-    private final ArrayList<SimpleLock> nextStepWaitStack = new ArrayList<SimpleLock>();
+    private final ArrayList<SimpleLock> nextStepWaitStack = new ArrayList<>();
 
     public GlobalScheduler(ABSRuntime runtime, GlobalSchedulingStrategy strategy) {
         this.strategy = strategy;
@@ -56,7 +56,7 @@ public class GlobalScheduler {
             if (options.isEmpty()) {
                 List<SimpleSchedulerThread> activeThreads = runtime.getThreadManager().getAllCopyOf(SimpleSchedulerThread.class);
                 if (!activeThreads.isEmpty()) {
-                    Set<Task<?>> suspendedTasks = new HashSet<Task<?>>();
+                    Set<Task<?>> suspendedTasks = new HashSet<>();
                     for (SimpleSchedulerThread st : activeThreads) {
                         Task<?> t = st.getExecutingTask().task;
                         if (t != null && !t.isFinished()) {

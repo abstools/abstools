@@ -1,4 +1,4 @@
-/** 
+/**
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.erlang;
@@ -23,9 +23,9 @@ import org.apache.commons.io.output.NullOutputStream;
 
 /**
  * Translates given ABS Files to an Erlang program
- * 
+ *
  * @author Georg Göri
- * 
+ *
  */
 public class ErlangBackend extends Main {
 
@@ -63,7 +63,7 @@ public class ErlangBackend extends Main {
     @Override
     public List<String> parseArgs(String[] args) {
         List<String> restArgs = super.parseArgs(args);
-        List<String> remainingArgs = new ArrayList<String>();
+        List<String> remainingArgs = new ArrayList<>();
 
         for (int i = 0; i < restArgs.size(); i++) {
             String arg = restArgs.get(i);

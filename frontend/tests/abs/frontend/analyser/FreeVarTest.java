@@ -171,6 +171,6 @@ public class FreeVarTest extends FrontendTest {
     }
 
     public void assertEquals(Set<String> actual, String... expected) {
-        Assert.assertEquals(new HashSet<String>(Arrays.asList(expected)), actual);
+        Assert.assertEquals(new HashSet<>(Arrays.asList(expected)), actual);
     }
 }

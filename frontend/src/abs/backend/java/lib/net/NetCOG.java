@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.net;
@@ -25,20 +25,20 @@ import abs.backend.java.lib.types.ABSValue;
  */
 public class NetCOG extends COG {
     private NetNode node;
-    private final Map<Promise, ABSValue> promises = new HashMap<Promise, ABSValue>();
-    private final Map<Promise, ABSFut<? super ABSValue>> futureMap 
-        = new HashMap<Promise, ABSFut<? super ABSValue>>();
+    private final Map<Promise, ABSValue> promises = new HashMap<>();
+    private final Map<Promise, ABSFut<? super ABSValue>> futureMap
+        = new HashMap<>();
 
     public NetCOG(NetNode node, ABSNetRuntime runtime, Class<?> clazz) {
         super(runtime, clazz, null);
         this.node = node;
     }
-    
+
     synchronized void processMsg(Msg msg) {
         if (msg instanceof CallMsg) {
             CallMsg cm = (CallMsg) msg;
             // FIXME: create task and replace promises with futures
-            Task<?> task = new Task(cm.call); 
+            Task<?> task = new Task(cm.call);
             addTask(task);
         } else {
             PromiseMsg pm = (PromiseMsg) msg;
@@ -53,7 +53,7 @@ public class NetCOG extends COG {
     public synchronized void setNode(NetNode node) {
         this.node = node;
     }
-    
+
     public synchronized NetNode getNode() {
         return node;
     }
@@ -61,7 +61,7 @@ public class NetCOG extends COG {
     public synchronized void registerFuture(NetFut<? super ABSValue> fut) {
         if (futureMap.containsKey(fut.getPromise()))
             throw new IllegalStateException("Future for promises already existed");
-        
+
         futureMap.put(fut.getPromise(), fut);
         ABSValue v = promises.get(fut.getPromise());
         if (v != null) {
@@ -69,7 +69,7 @@ public class NetCOG extends COG {
             return;
         }
     }
-    
+
     @Override
     public void register(ABSObject absObject) {
         getNode().registerObject(absObject);

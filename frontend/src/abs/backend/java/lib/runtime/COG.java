@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.runtime;
@@ -42,7 +42,7 @@ public class COG implements ABSValue {
         id = runtime.freshCOGID();
         this.dc = dc;
     }
-    
+
     public ABSRuntime getRuntime() {
         return runtime;
     }
@@ -80,7 +80,7 @@ public class COG implements ABSValue {
         if (view != null)
             view.objectInitialized(absObject);
     }
-    
+
     private View view;
 
     public synchronized COGView getView() {
@@ -93,7 +93,7 @@ public class COG implements ABSValue {
     private class View implements COGView {
         private List<ObjectCreationObserver> creationListeners;
         private Map<String, List<ObjectCreationObserver>> creationClassListeners;
-        
+
         synchronized void notifyListeners(ABSObject absObject, boolean created) {
             if (creationListeners != null) {
                 for (ObjectCreationObserver l : creationListeners) {
@@ -115,7 +115,7 @@ public class COG implements ABSValue {
                     }
                 }
             }
-            
+
         }
 
         synchronized void objectCreated(ABSObject absObject) {
@@ -125,11 +125,11 @@ public class COG implements ABSValue {
         synchronized void objectInitialized(ABSObject absObject) {
             notifyListeners(absObject, false);
         }
-        
+
         @Override
         public synchronized void registerObjectCreationListener(ObjectCreationObserver listener) {
             if (creationListeners == null) {
-                creationListeners = new ArrayList<ObjectCreationObserver>(1);
+                creationListeners = new ArrayList<>(1);
             }
             creationListeners.add(listener);
         }
@@ -137,12 +137,12 @@ public class COG implements ABSValue {
         @Override
         public synchronized void registerObjectCreationListener(String className, ObjectCreationObserver e) {
             if (creationClassListeners == null) {
-                creationClassListeners = new HashMap<String, List<ObjectCreationObserver>>();
+                creationClassListeners = new HashMap<>();
             }
 
             List<ObjectCreationObserver> list = creationClassListeners.get(className);
             if (list == null) {
-                list = new ArrayList<ObjectCreationObserver>(1);
+                list = new ArrayList<>(1);
                 creationClassListeners.put(className, list);
             }
             list.add(e);

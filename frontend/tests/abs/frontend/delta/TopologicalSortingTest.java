@@ -27,7 +27,7 @@ public class TopologicalSortingTest extends DeltaTest {
         deltas = new DeltaID[numNodes];
         for (int i=0; i<numNodes; i++)
             deltas[i] = new DeltaID("D" + i);
-        TopologicalSorting<DeltaID> sorter = new TopologicalSorting<DeltaID>(new HashSet<DeltaID>(Arrays.asList(deltas)));
+        TopologicalSorting<DeltaID> sorter = new TopologicalSorting<>(new HashSet<>(Arrays.asList(deltas)));
         sorter.addEdge(deltas[0], deltas[1]); // cycle
         sorter.addEdge(deltas[1], deltas[0]); // cycle
         sorter.addEdge(deltas[2], deltas[0]);
@@ -40,7 +40,7 @@ public class TopologicalSortingTest extends DeltaTest {
         numNodes = 1;
         deltas = new DeltaID[numNodes];
         deltas[0] = new DeltaID("D0");
-        TopologicalSorting<DeltaID> sorter = new TopologicalSorting<DeltaID>(new HashSet<DeltaID>(Arrays.asList(deltas)));
+        TopologicalSorting<DeltaID> sorter = new TopologicalSorting<>(new HashSet<>(Arrays.asList(deltas)));
         sorter.addEdge(deltas[0], deltas[0]); // cycle
         sorter.sort();
     }
@@ -50,7 +50,7 @@ public class TopologicalSortingTest extends DeltaTest {
     private TopologicalSorting<DeltaID> init0_1() {
         numNodes = 0;
         deltas = new DeltaID[numNodes];
-        TopologicalSorting<DeltaID> sorter = new TopologicalSorting<DeltaID>(new HashSet<DeltaID>(Arrays.asList(deltas)));
+        TopologicalSorting<DeltaID> sorter = new TopologicalSorting<>(new HashSet<>(Arrays.asList(deltas)));
         sorter.addEdge(new DeltaID("D0"), new DeltaID("D1"));
         return sorter;
     }

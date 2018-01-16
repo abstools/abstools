@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.tests;
@@ -22,19 +22,19 @@ import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.typechecker.Type;
 
 /**
- * 
+ *
  * @author pwong
  * @deprecated use {@link ASTBasedABSTestRunnerGenerator}
  */
 @Deprecated
 public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerator {
-    
+
     public StringBasedABSTestRunnerGenerator(Model model) {
         super(model);
     }
 
-    private Map<InterfaceDecl, Set<ClassDecl>> tests = new HashMap<InterfaceDecl, Set<ClassDecl>>();
-    
+    private Map<InterfaceDecl, Set<ClassDecl>> tests = new HashMap<>();
+
     @Override
     public void generateTestRunner(PrintStream stream) {
         TestRunnerScriptBuilder imports = generateImports();
@@ -49,12 +49,12 @@ public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGene
         stream.print("}");
         stream.print(TestRunnerScriptBuilder.NEWLINE);
     }
-    
+
     /**
      * For each test interface and classes, append the corresponding
      * import declaration to a {@link StringBuilder} and return that
      * string builder
-     * 
+     *
      * @return a reference to that string builder
      */
     private TestRunnerScriptBuilder generateImports() {
@@ -67,12 +67,12 @@ public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGene
         }
         return builder;
     }
-    
+
     /**
      * Append a line of the form "import n from m;" to builder where n is the
      * name of the specified decl and m is the name of the {@link ModuleDecl} of
      * that decl.
-     * 
+     *
      * @param builder
      * @param decl
      * @return a reference to {@code builder}
@@ -80,25 +80,25 @@ public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGene
     private TestRunnerScriptBuilder generateImport(TestRunnerScriptBuilder builder, Decl decl) {
         return generateImport(builder, decl.getName(), decl.getModuleDecl().getName());
     }
-    
+
     private TestRunnerScriptBuilder generateImport(TestRunnerScriptBuilder builder, String name, String module) {
         if (module.equals(absStdLib)) {
             return builder;
         }
         return builder.append("import ").append(name).append(" from ").append(module).append(";").newLine();
     }
-    
+
     private TestRunnerScriptBuilder generateImports(TestRunnerScriptBuilder builder, Set<Type> types) {
         for (Type type : types) {
-            generateImport(builder, type.getSimpleName(), type.getModuleName());   
+            generateImport(builder, type.getSimpleName(), type.getModuleName());
         }
         return builder;
     }
-    
+
     private TestRunnerScriptBuilder generateMainBlock(TestRunnerScriptBuilder imports) {
         TestRunnerScriptBuilder builder = new TestRunnerScriptBuilder();
         builder.increaseIndent();
-        Set<Type> paramNames = new HashSet<Type>();
+        Set<Type> paramNames = new HashSet<>();
         builder.append("Set<Fut<Unit>> ").append(futs).append(" = EmptySet;").newLine();
         builder.append("Fut<Unit> ").append(fut).append(";").newLine();
         for (InterfaceDecl key : tests.keySet()) {
@@ -112,9 +112,9 @@ public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGene
         generateImports(imports, paramNames);
         return builder;
     }
-    
+
     private Set<Type> generateTestClassImpl(InterfaceDecl inf, ClassDecl clazz, TestRunnerScriptBuilder main) {
-        Set<Type> paramNames = new HashSet<Type>();
+        Set<Type> paramNames = new HashSet<>();
         Type dataType = generateDataPoints(inf, clazz, paramNames, main);
         String namePrefix = clazz.getName();
         int instance = 0;
@@ -123,7 +123,7 @@ public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGene
             if (needdata) {
                 if (dataType == null) {
                     throw new IllegalStateException("Test method requires arguments but test class defines no data point");
-                } 
+                }
                 /*
                  * a while loop over all data points
                  */
@@ -134,7 +134,7 @@ public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGene
                 main.append(dataType).append(" ").append(dataValue).append(" = snd(nt);").newLine();
                 main.append(dataPointSet).append(" = fst(nt);").newLine();
             }
-            
+
             /*
              * Add those methods that are not ignored
              */
@@ -144,7 +144,7 @@ public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGene
                 main = newCog(main, inf, clazz, objectRef);
                 generateAsyncTestCall(main, objectRef, method);
             }
-            
+
             if (needdata) {
                 main.decreaseIndent().append("}").newLine(); // end while
             }
@@ -153,10 +153,10 @@ public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGene
 
         return paramNames;
     }
-    
+
     /**
      * Generates data points for test class {@code clazz}
-     * 
+     *
      * @param inf
      * @param clazz
      * @param paramNames
@@ -196,9 +196,9 @@ public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGene
 
         return data;
     }
-    
+
     private TestRunnerScriptBuilder generateWaitSync(TestRunnerScriptBuilder builder) {
-        return 
+        return
           builder
             .append("//waits for methods return...").newLine()
             .append("while (hasNext(").append(futs).append(")) {").newLine().increaseIndent() // begin while
@@ -208,13 +208,13 @@ public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGene
             .append(fut).append(".get;").newLine()
             .decreaseIndent().append("}").newLine(); // end while
     }
-    
+
     /**
      * Write the line of the form {@code objectRef!method(d);}, where d is
      * {@link #dataValue} to {@code builder}, if {@code method} takes an
      * argument, otherwise it write the line of the form
      * {@code objectRef!method();} to {@code builder}.
-     * 
+     *
      * @param main
      * @param objectRef
      * @param method
@@ -231,11 +231,11 @@ public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGene
         }
         main.append(futs).append("= Insert(").append(fut).append(",").append(futs).append(");").newLine();
     }
-    
+
     /**
      * Write the line of the form {@code inf name = new cog clazz();} to
      * {@code builder}
-     * 
+     *
      * @param main
      * @param inf
      * @param clazz
@@ -251,7 +251,7 @@ public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGene
      * {@code inf name = new cog clazz();} to {@code builder}, otherwise it
      * writes the line of the form {@code inf name = new clazz();} to
      * {@code builder}.
-     * 
+     *
      * @param main
      * @param inf
      * @param clazz

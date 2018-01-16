@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker;
@@ -20,7 +20,7 @@ public class InterfaceType extends ReferenceType {
 
     public InterfaceType(InterfaceDecl decl) {
         this.decl = decl;
-        this.supertypes = new java.util.ArrayList<Type>();
+        this.supertypes = new java.util.ArrayList<>();
         for (InterfaceTypeUse i : decl.getExtendedInterfaceUses()) {
             supertypes.add(i.getType());
         }
@@ -64,7 +64,7 @@ public class InterfaceType extends ReferenceType {
             return true;
 
         if (considerSubtyping) {
-            if (isAssignable(t,new HashSet<Type>()))
+            if (isAssignable(t, new HashSet<>()))
                 return true;
         }
         return false;
@@ -96,12 +96,12 @@ public class InterfaceType extends ReferenceType {
     public String toString() {
         return decl.getName();
     }
-    
+
     @Override
     public String getModuleName() {
         return decl.getModuleDecl().getName();
     }
-    
+
     @Override
     public String getSimpleName() {
         return decl.getName();
@@ -124,6 +124,6 @@ public class InterfaceType extends ReferenceType {
 
     @Override
     public InterfaceTypeUse toUse() {
-        return new InterfaceTypeUse(getQualifiedName(), new List<Annotation>());
+        return new InterfaceTypeUse(getQualifiedName(), new List<>());
     }
 }

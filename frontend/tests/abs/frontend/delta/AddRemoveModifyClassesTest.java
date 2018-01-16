@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.delta;
@@ -23,7 +23,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
                 + "adds class C1(String s) {}"
                 + "adds class C2(String s) {}"
         );
-        
+
         DeltaDecl delta = findDelta(model, "D");
         assertNotNull(delta);
         assertThat(delta, instanceOf(DeltaDecl.class));
@@ -57,7 +57,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
         cls = (ClassDecl) findDecl(model, "M", "C");
         assertNull(cls);
     }
-    
+
     @Test
     public void addField() throws DeltaModellingException {
         Model model = assertParseOk(
@@ -79,12 +79,12 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
         assertTrue(cls.getFields().getNumChild() == 1);
         assertTrue(cls.getField(0).getName().equals("myField"));
     }
-    
+
     @Test
     public void removeField() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
-                + "class C { String myField = \"hello\"; } " 
+                + "class C { String myField = \"hello\"; } "
                 + "delta D;"
                 + "modifies class M.C { removes String myField; }"
         );
@@ -99,7 +99,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
         model.applyDelta(delta);
         assertEquals(0, cls.getFields().getNumChild());
     }
-    
+
     @Test
     public void modifyField() throws DeltaModellingException {
         // remove and re-add field with different type
@@ -116,12 +116,12 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");
 
-        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
+        model.applyDeltas(new ArrayList<>(Arrays.asList(d1, d2)));
         assertTrue(cls.getFields().getNumChild() == 1);
         assertTrue(cls.getField(0).getName().equals("f"));
         assertTrue(cls.getField(0).getAccess().toString().equals("Int"));
     }
-    
+
     @Test
     public void addMethod() throws DeltaModellingException {
         Model model = assertParseOk(
@@ -141,7 +141,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
         assertTrue(cls.getMethods().getNumChild() == 1);
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("myMethod"));
     }
-    
+
     @Test
     public void removeMethod() throws DeltaModellingException {
         Model model = assertParseOk(
@@ -183,15 +183,15 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
         model.applyDelta(delta);
         assertTrue(cls.getMethods().getNumChild() == 1);
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("myMethod"));
-        
+
         // make sure the MethodImpl defined in the delta is now in the class
         ModifyClassModifier cm = (ModifyClassModifier) delta.getModuleModifier(0);
         DeltaTraitModifier mm = (DeltaTraitModifier)cm.getModifier(0);
         ModifyMethodModifier opr = (ModifyMethodModifier)mm.getMethodModifier();
         TraitSetExpr expr = (TraitSetExpr)opr.getTraitExpr();
-        
+
         // It's a bit of apples (FieldUse) vs. oranges (VarUse), but the strings look the same.
         assertEquals(cls.getMethod(0).toString(),expr.getMethodImpl(0).toString());
     }
-    
+
 }

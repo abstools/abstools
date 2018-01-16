@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.prolog;
@@ -24,11 +24,11 @@ public class PrologBackend extends Main {
 
     public static int awaitId = 0;
     public static boolean entriesMode = false;
-    
+
     public static void main(final String... args) {
         runFromShell(args);
     }
-    
+
     public static void runFromShell(final String[] args){
         awaitId = 0;
         PrologBackend prologBE = null;
@@ -49,7 +49,7 @@ public class PrologBackend extends Main {
             if (prologBE != null && prologBE.outStream != null) prologBE.outStream.close();
         }
     }
-    
+
     public static void runFromPlugin(Model m,String dir,String fn,ArrayList<ASTNode<?>> entries){
         awaitId = 0;
         PrologBackend prologBE = null;
@@ -62,16 +62,16 @@ public class PrologBackend extends Main {
             if (prologBE != null && prologBE.outStream != null) prologBE.outStream.close();
         }
     }
-    
+
     // This is the constructor used from runFromShell
     public PrologBackend(String[] args) throws Exception {
         // This parses the args and the ABS program producing the AST whose root is model
-        model = parse(args); 
+        model = parse(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             printParserErrorAndExit();
         initOutStreamEtc();
     }
-    
+
     // This is the constructor used from runFromPlugin
     public PrologBackend(Model m,String dir,String fn,ArrayList<ASTNode<?>> es) throws Exception {
         model = m;
@@ -79,7 +79,7 @@ public class PrologBackend extends Main {
         entries = es;
         initOutStreamEtc();
     }
-    
+
     private void initOutStreamEtc() throws Exception {
         destDir.mkdirs();
         if (!destDir.exists()) {
@@ -93,40 +93,40 @@ public class PrologBackend extends Main {
         if (verbose)
             printAST(model, 0);
         outFile = new File(destDir, outFilename);
-        // destDir and outFilename are initialized either in the constructor or in parseArgs, 
+        // destDir and outFilename are initialized either in the constructor or in parseArgs,
         // which is called from parse
         outStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(outFile)));
     }
-    
+
     private void generateProlog(){
         if (entries != null){ // mode with entries
             entriesMode = true;
             collectReachableCode(entries);
         }
-        
+
         //print discontiguous predicate to avoid warnings when loading the file
         outStream.print(":-discontiguous mainBlock/3,def/6, data/3,methodImpl/5,"+
         "module/1, starImport/1,type/2,interface/3,class/3.\n");
-        
+
         model.generateProlog(outStream,reachInfo);
     }
 
     private void collectReachableCode(ArrayList<ASTNode<?>> entries) {
         reachInfo = new ReachabilityInformation(entries);
-     
+
         while (reachInfo.changed()) {
            try {
                model.collectReachableCode(reachInfo);
            } catch (Exception e){
                e.printStackTrace();
-           }          
+           }
         }
-        //System.out.println(reachInfo.toString());  
+        //System.out.println(reachInfo.toString());
     }
 
     public List<String> parseArgs(String[] args) {
         List<String> restArgs = super.parseArgs(args);
-        List<String> remainingArgs = new ArrayList<String>();
+        List<String> remainingArgs = new ArrayList<>();
 
         for (int i = 0; i < restArgs.size(); i++) {
             String arg = restArgs.get(i);
@@ -161,7 +161,7 @@ public class PrologBackend extends Main {
         System.out.println("  -fn <dir>    output file name");
         System.out.println();
     }
-    
+
     private void printAST(ASTNode<?> ast, int level) {
         if (ast != null) {
             printTab(level);
@@ -176,7 +176,7 @@ public class PrologBackend extends Main {
         for (int i = 0; i < n; i++)
             System.out.print("    ");
     }
-    
+
     // Auxiliary methods
 
     public static String initialToUpperCase(String s){
@@ -184,7 +184,7 @@ public class PrologBackend extends Main {
         cs[0] = Character.toUpperCase(cs[0]);
         return new String(cs);
     }
-    
+
     public static String varTransform(String s){
         return "l('"+s+"')";
     }

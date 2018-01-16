@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker.locationtypes.infer;
@@ -39,50 +39,50 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     private static final int THRESHOLD = 5;
 
     private LocationTypingPrecision precision = LocationTypingPrecision.CLASS_LOCAL_FAR;
-    
+
     public void setLocationTypingPrecision(LocationTypingPrecision p) {
         precision = p;
     }
-    
-    
+
+
     private Map<LocationTypeVariable, LocationType> results;
     private LocationType defaultType = LocationType.INFER;
-    
-    private Map<HasCogs, List<LocationType>> farTypes = new HashMap<HasCogs, List<LocationType>>();
-    
+
+    private Map<HasCogs, List<LocationType>> farTypes = new HashMap<>();
+
     public LocationTypeInferrerExtension(Model m) {
         super(m);
     }
-    
+
     public void setDefaultType(LocationType type) {
         defaultType = type;
     }
 
-    private Set<Constraint> constraints = new HashSet<Constraint>();
+    private Set<Constraint> constraints = new HashSet<>();
     //private List<LocationType> globalFarTypes = new ArrayList<LocationType>();
     boolean enablesStats;;
-    
+
     public Set<Constraint> getConstraints() {
         return constraints;
     }
-    
+
     public Map<LocationTypeVariable, LocationType> getResults() {
         return results;
     }
-    
+
     public static LocationTypeVariable getLV(Type t) {
-        LocationTypeVariable ltv = (LocationTypeVariable) t.getMetaData(LocationTypeVariable.VAR_KEY); 
+        LocationTypeVariable ltv = (LocationTypeVariable) t.getMetaData(LocationTypeVariable.VAR_KEY);
         return ltv;
     }
-    
+
     private LocationTypeVariable adaptTo(LocationTypeVariable expLocType, AdaptDirection dir, LocationTypeVariable adaptTo, ASTNode<?> typeNode, ASTNode<?> originatingNode) {
         LocationTypeVariable tv = LocationTypeVariable.newVar(constraints, typeNode, false, getFarTypes(originatingNode), null);
         constraints.add(Constraint.adaptConstraint(tv, expLocType, dir, adaptTo));
         //System.out.println("Require " + tv + " = " + expLocType + " |>" + adaptTo);
         return tv;
     }
-    
-    
+
+
     private void adaptAndSet(Type rht, AdaptDirection dir, LocationTypeVariable adaptTo, ASTNode<?> originatingNode) {
         if (adaptTo != LocationTypeVariable.ALWAYS_NEAR) { // Optimization
             LocationTypeVariable rhtlv = getLV(rht);
@@ -90,15 +90,15 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
             annotateVar(rht, tv);
         }
     }
-    
+
     private void annotateVar(Type t, LocationTypeVariable tv) {
         t.addMetaData(LocationTypeVariable.VAR_KEY,tv);
     }
-    
+
     private LocationTypeVariable addNewVar(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
         LocationTypeExtension.getLocationTypeFromAnnotations(t, originatingNode); // check consistency of annotations
         LocationTypeVariable ltv = getLV(t);
-        if (ltv != null) 
+        if (ltv != null)
             return ltv;
         LocationType lt = getLocationTypeOrDefault(t, originatingNode);
         LocationTypeVariable tv;
@@ -107,11 +107,12 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         } else if (lt.isFar() && precision != LocationTypingPrecision.BASIC){
             tv = LocationTypeVariable.newVar(constraints, typeNode, true, getFarTypes(originatingNode), LocationTypeExtension.getLocationTypeFromAnnotations(t, originatingNode));
             @SuppressWarnings("unchecked")
-            MultiListIterable<LocationType> fars = new MultiListIterable<LocationType>(Arrays.asList(LocationType.FAR), getFarTypes(originatingNode));
+            MultiListIterable<LocationType> fars = new MultiListIterable<>(Arrays.asList(LocationType.FAR),
+                getFarTypes(originatingNode));
             constraints.add(Constraint.constConstraint(tv, fars , Constraint.MUST_HAVE));
         } else {
             tv = LocationTypeVariable.getFromLocationType(lt);
-        } 
+        }
         annotateVar(t, tv);
         return tv;
     }
@@ -148,7 +149,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
             if (b != null) {
                 node = b;
                 prefix = "M";
-            } 
+            }
         }
         if (node == null) {
             return Collections.emptyList();
@@ -157,7 +158,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         if (e != null) {
             return e;
         } else {
-            List<LocationType> result = new ArrayList<LocationType>();
+            List<LocationType> result = new ArrayList<>();
             int numberOfNewCogs = node.getNumberOfNewCogExpr();
             if (numberOfNewCogs > THRESHOLD) {
                 numberOfNewCogs = THRESHOLD;
@@ -169,7 +170,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
             return result;
         }
     }
-    
+
     private LocationType getLocationTypeOrDefault(Type t, ASTNode<?> originatingNode) {
         LocationType lt = LocationTypeExtension.getLocationTypeFromAnnotations(t, originatingNode);
         if (lt == null) {
@@ -189,7 +190,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
                 sub = adaptTo(getLV(rht), dir, getLV(adaptTo), null, n);
             }
             constraints.add(Constraint.subConstraint(sub, tv));
-        } 
+        }
     }
 
     @Override
@@ -210,7 +211,8 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
                 //ltv = LocationTypeVariable.ALWAYS_FAR;
                 ltv = LocationTypeVariable.newVar(constraints, typeNode, false, getFarTypes(originatingNode), null);
                 @SuppressWarnings("unchecked")
-                MultiListIterable<LocationType> mi = new MultiListIterable<LocationType>(Arrays.asList(LocationType.FAR), getFarTypes(originatingNode));
+                MultiListIterable<LocationType> mi = new MultiListIterable<>(Arrays.asList(LocationType.FAR),
+                    getFarTypes(originatingNode));
                 constraints.add(Constraint.constConstraint(ltv, mi, Constraint.MUST_HAVE));
             } else {
                 ltv = LocationTypeVariable.ALWAYS_NEAR;
@@ -219,7 +221,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         } else {
             if (t.isReferenceType()) {
                 addNewVar(t, originatingNode, typeNode);
-            } 
+            }
             if (t.isNullType()) {
                 annotateVar(t, LocationTypeVariable.ALWAYS_BOTTOM);
             }
@@ -229,7 +231,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     @Override
     public void checkMethodCall(Call call) {
         LocationTypeVariable lv = getLV(call.getCallee().getType());
-        assert lv != null : "Can't get LV for " + call.getCallee().getType().toString(); 
+        assert lv != null : "Can't get LV for " + call.getCallee().getType().toString();
         if (call instanceof SyncCall) {
             //checkEq(lv, LocationTypeVariable.ALWAYS_NEAR, Constraint.SHOULD_HAVE);
             constraints.add(Constraint.constConstraint(lv, LocationType.NEAR, Constraint.SHOULD_HAVE));
@@ -249,7 +251,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     public void checkEq(Type t1, Type t2, ASTNode<?> node) {
         checkEq(getLV(t1), getLV(t2), Constraint.SHOULD_HAVE);
     }
-    
+
     @Override
     public void finished() {
         if (enablesStats) {
@@ -259,7 +261,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
                 results = satGen.generate(errors);
             }
         }
-            
+
         SatGenerator satGen = new SatGenerator(constraints);
         satGen.enableStats = enablesStats;
         results = satGen.generate(errors);

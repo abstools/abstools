@@ -81,7 +81,7 @@ public class TypeCheckerHelper {
     }
 
     public static void typeCheckParamList(SemanticConditionList l, HasParams params) {
-        Set<String> names = new HashSet<String>();
+        Set<String> names = new HashSet<>();
         for (ParamDecl d : params.getParams()) {
             if (!names.add(d.getName())) {
                 l.add(new TypeError(d, ErrorMessage.DUPLICATE_PARAM_NAME, d.getName()));
@@ -113,7 +113,7 @@ public class TypeCheckerHelper {
     }
 
     public static java.util.List<Type> applyBindings(Map<TypeParameter, Type> binding, java.util.List<Type> types) {
-        ArrayList<Type> res = new ArrayList<Type>(types.size());
+        ArrayList<Type> res = new ArrayList<>(types.size());
         for (Type t : types) {
             res.add(t.applyBinding(binding));
         }
@@ -237,7 +237,7 @@ public class TypeCheckerHelper {
         }
 
         // Check the right side of product expression that contains in prodNames
-        Set<String> productNames = new HashSet<String>();
+        Set<String> productNames = new HashSet<>();
         prod.getProductExpr().setRightSideProductNames(productNames);
         for (String productName : productNames) {
             if (!prodNames.contains(productName)) {
@@ -260,7 +260,7 @@ public class TypeCheckerHelper {
             }
         }
 
-        Set<String> seen = new HashSet<String>();
+        Set<String> seen = new HashSet<>();
         // FIXME: deal with reconfigurations
 //        for (Reconfiguration recf : prod.getReconfigurations()) {
 //            if (!seen.add(recf.getTargetProductID()))
@@ -286,7 +286,7 @@ public class TypeCheckerHelper {
      * be checked when actually trying to flatten the product, I hope.
      */
     private static Collection<DeltaClause> findDeltasForFeature(Model m, Feature f) {
-        Collection<DeltaClause> dcs = new ArrayList<DeltaClause>();
+        Collection<DeltaClause> dcs = new ArrayList<>();
         for (int i = 0; i < m.getProductLine().getNumDeltaClause(); i++) {
             DeltaClause dc = m.getProductLine().getDeltaClause(i);
             if (dc.refersTo(f)) {
@@ -297,7 +297,7 @@ public class TypeCheckerHelper {
     }
 
     public static <T extends ASTNode<?>> java.util.List<Type> getTypes(List<T> params) {
-        ArrayList<Type> res = new ArrayList<Type>();
+        ArrayList<Type> res = new ArrayList<>();
         for (ASTNode<?> u : params) {
             res.add(((HasType)u).getType());
         }
@@ -346,7 +346,7 @@ public class TypeCheckerHelper {
     static final StarImport STDLIB_IMPORT = new StarImport(Constants.STDLIB_NAME);
 
     public static void checkForDuplicateDecls(ModuleDecl mod, SemanticConditionList errors) {
-        Map<KindedName, ResolvedName> duplicateNames = new HashMap<KindedName, ResolvedName>();
+        Map<KindedName, ResolvedName> duplicateNames = new HashMap<>();
         Map<KindedName, ResolvedName> names = getVisibleNames(mod, duplicateNames);
         for (KindedName n : duplicateNames.keySet()) {
             ResolvedName rn = names.get(n);
@@ -541,7 +541,7 @@ public class TypeCheckerHelper {
      * check a list of compilation units for duplicate module names, product names, delta names
      */
     public static void checkForDuplicateModules(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
-        Set<String> seenModules = new HashSet<String>();
+        Set<String> seenModules = new HashSet<>();
         for (CompilationUnit u : compilationUnits) {
             for (ModuleDecl module : u.getModuleDecls()) {
                 if (!seenModules.add(module.getName())) {
@@ -551,7 +551,7 @@ public class TypeCheckerHelper {
         }
     }
     public static void checkForDuplicateProducts(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
-        Set<String> seen = new HashSet<String>();
+        Set<String> seen = new HashSet<>();
         for (CompilationUnit u : compilationUnits) {
             for (ProductDecl p : u.getProductDecls()) {
                 if (!seen.add(p.getName()))
@@ -560,7 +560,7 @@ public class TypeCheckerHelper {
         }
     }
     public static void checkForDuplicateDeltas(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
-        Set<String> seen = new HashSet<String>();
+        Set<String> seen = new HashSet<>();
         for (CompilationUnit u : compilationUnits) {
             for (DeltaDecl d : u.getDeltaDecls()) {
                 if (!seen.add(d.getName()))
@@ -569,7 +569,7 @@ public class TypeCheckerHelper {
         }
     }
     public static void checkForDuplicateUpdates(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
-        Set<String> seen = new HashSet<String>();
+        Set<String> seen = new HashSet<>();
         for (CompilationUnit u : compilationUnits) {
             for (UpdateDecl d : u.getUpdateDecls()) {
                 if (!seen.add(d.getName()))

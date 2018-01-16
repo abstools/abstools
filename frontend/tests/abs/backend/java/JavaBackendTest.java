@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java;
@@ -32,7 +32,7 @@ public class JavaBackendTest extends ABSTest {
     /**
      * Additional arguments when running the compiled ABS program.
      */
-    final protected List<String> absArgs = new ArrayList<String>();
+    final protected List<String> absArgs = new ArrayList<>();
 
     public final long seed;
     public final static long seed_UNUSED = -1;
@@ -50,7 +50,7 @@ public class JavaBackendTest extends ABSTest {
     protected ABSRuntime makeAbsRuntime() {
         return new ABSRuntime();
     }
-    
+
     void assertValidStdLib(String absCode) throws Exception {
         assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, Config.WITH_STD_LIB, Config.WITHOUT_MODULE_NAME));
     }
@@ -69,15 +69,15 @@ public class JavaBackendTest extends ABSTest {
             javaCode.deleteCode();
         }
     }
-    
+
     /**
      * compiles and executes the given code
-     * ABS assertions can be used to check the result 
+     * ABS assertions can be used to check the result
      */
     protected void assertValidJavaExecution(String absFile, boolean useStdLib) throws Exception {
         FileReader fileReader = new FileReader(absFile);
         BufferedReader bufferedReader = new BufferedReader(fileReader);
-        List<String> lines = new ArrayList<String>();
+        List<String> lines = new ArrayList<>();
         String line = null;
         while ((line = bufferedReader.readLine()) != null) {
             lines.add(line);
@@ -101,11 +101,11 @@ public class JavaBackendTest extends ABSTest {
             final boolean[] finished = new boolean[] {false};
             final List<ABSException> exceptions = Collections.synchronizedList(new ArrayList<ABSException>());
             r.addSystemObserver(new SystemObserver() {
-                
+
                 @Override
                 public void systemStarted() {
                 }
-                
+
                 @Override
                 public void systemFinished() {
                     synchronized (finished) {
@@ -113,18 +113,18 @@ public class JavaBackendTest extends ABSTest {
                         finished.notifyAll();
                     }
                 }
-                
+
                 @Override
                 public void systemError(ABSException e) {
                     exceptions.add(e);
                 }
-                
+
                 @Override
                 public void newCOGCreated(COGView cog, ObjectView initialObject) {
                 }
             });
             r.start(new File(genDir), "Test.Main");
-            
+
             while (!finished[0]) {
                 synchronized (finished) {
                     finished.wait(100);
@@ -155,7 +155,7 @@ public class JavaBackendTest extends ABSTest {
         StringBuffer output = new StringBuffer();
         javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
 
-        ArrayList<String> args = new ArrayList<String>();
+        ArrayList<String> args = new ArrayList<>();
         args.add("java");
         args.addAll(Arrays.asList(jvmargs));
         args.addAll(Arrays.asList("-cp", "bin" + File.pathSeparator + "lib/apfloat-1.8.2.jar" + File.pathSeparator + javaCode.getSrcDir().getAbsolutePath()+"/gen/test", javaCode.getFirstMainClass()));

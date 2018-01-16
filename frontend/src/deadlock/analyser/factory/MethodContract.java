@@ -35,7 +35,7 @@ public class MethodContract extends TermStructured {
   public MethodContract(List<Term> l) { super(name, l); }
 
   public MethodContract(MethodInterface mi, Contract cp, Contract cf){
-    super(name, new ArrayList<Term>(2));
+    super(name, new ArrayList<>(2));
     subterms.add(mi);
     subterms.add(cp);
     subterms.add(cf);
@@ -45,7 +45,7 @@ public class MethodContract extends TermStructured {
   public MethodInterface getMethodInterface() { return (MethodInterface)subterms.get(0); }
   public Contract getContractPresent() { return (Contract)subterms.get(1); }
   public Contract getContractFuture() { return (Contract)subterms.get(2); }
-  
+
 //  public Contract getContract(){
 //      List<Term> pairSeq = new LinkedList<Term>();
 //      pairSeq.add(getContractPresent());

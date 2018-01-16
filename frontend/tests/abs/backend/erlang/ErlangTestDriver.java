@@ -1,6 +1,6 @@
 /**
 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.erlang;
@@ -70,7 +70,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
 
     /**
      * Parses, complies, runs given code and returns value of testresult.
-     * 
+     *
      * @param absCode
      * @return either the Result, or if an execution error occurred null
      */
@@ -109,10 +109,10 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     /**
      * Generates Erlang code in target directory, adding a last statement that
      * prints the value of the `testresult' variable.
-     * 
+     *
      * @return a Module Name containing a Main Block
-     * @throws InternalBackendException 
-     * 
+     * @throws InternalBackendException
+     *
      */
     private String genCode(Model model, File targetDir, boolean appendResultprinter) throws IOException, InterruptedException, InternalBackendException {
         if (model.hasErrors()) {
@@ -125,10 +125,11 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         if (mb != null && appendResultprinter) {
             // We search for this output in the `run' method below
             mb.addStmt(new ExpressionStmt(
-                new List<Annotation>(),
+                new List<>(),
                 new FnApp("ABS.StdLib.println",
-                          new List<PureExp>(new AddAddExp(new StringLiteral("RES="),
-                                                          new FnApp("ABS.StdLib.toString", new List<PureExp>(new VarUse("testresult"))))))));
+                    new List<>(new AddAddExp(new StringLiteral("RES="),
+                        new FnApp("ABS.StdLib.toString",
+                            new List<>(new VarUse("testresult"))))))));
         }
         ErlangBackend.compile(model, targetDir,
 // use the following argument for silent compiler:
@@ -156,7 +157,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         pb.directory(workDir);
         pb.redirectErrorStream(true);
         Process p = pb.start();
-       
+
         Thread t = new Thread(new TimeoutThread(p));
         t.start();
         // Search for result
@@ -190,7 +191,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             } catch (IOException e) {
                 // Ignore Ex, File should be deleted anyway
             }
-        }        
+        }
     }
 }
 

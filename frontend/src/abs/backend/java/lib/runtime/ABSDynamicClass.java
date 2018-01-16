@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.runtime;
@@ -20,8 +20,8 @@ import abs.backend.java.observing.manipulation.ClassManipulator;
 
 public class ABSDynamicClass implements ABSClass {
     private String name;
-    private Map<String, ABSField> fields = new HashMap<String, ABSField>();
-    private Map<String, ABSClosure> methods = new HashMap<String,ABSClosure>();
+    private Map<String, ABSField> fields = new HashMap<>();
+    private Map<String, ABSClosure> methods = new HashMap<>();
     private ABSClosure constructor;
     private List<String> params;
     private ABSDynamicClass nextVersion;
@@ -40,32 +40,32 @@ public class ABSDynamicClass implements ABSClass {
         else
             throw new DynamicException("Field " + fName + " already defined for class " + name + ".");
     }
-    
+
     public void removeField(String fName) throws DynamicException {
         if (fields.containsKey(fName))
             fields.remove(fName);
         else
             throw new DynamicException("Field " + fName + " not defined for class " + name + ".");
     }
-    
+
     public ABSField getField(String fName) throws DynamicException {
         if (fields.containsKey(fName))
             return fields.get(fName);
         else
             throw new DynamicException("Field " + fName + " not defined for class " + name + ".");
     }
-    
+
     public boolean hasMethod(String mName) {
         return methods.containsKey(mName);
     }
-    
+
     public void addMethod(String mName, ABSClosure m) throws DynamicException {
         if (! hasMethod(mName))
             methods.put(mName, m);
         else
             throw new DynamicException("Method " + mName + " already defined for class " + name + ".");
     }
-    
+
     public void removeMethod(String mName) throws DynamicException {
         if (hasMethod(mName))
             methods.remove(mName);
@@ -96,7 +96,7 @@ public class ABSDynamicClass implements ABSClass {
         return methods.keySet();
     }
 
-    
+
     public void setParams(String... args) {
         setParams(Arrays.asList(args));
     }
@@ -110,7 +110,7 @@ public class ABSDynamicClass implements ABSClass {
         }
         return params;
     }
-   
+
     // Create the "next version" of this class, which can be updated independently
     public ABSDynamicClass createNextVersion() {
         ABSDynamicClass copy = new ABSDynamicClass();
@@ -129,7 +129,7 @@ public class ABSDynamicClass implements ABSClass {
     public ABSDynamicClass getNextVersion() {
         return nextVersion;
     }
-    
+
     private View __view;
     public synchronized ClassManipulator getView() {
         if (__view == null) {
@@ -137,7 +137,7 @@ public class ABSDynamicClass implements ABSClass {
         }
         return __view;
     }
-    
+
     private class View implements ClassManipulator {
 
         @Override
@@ -147,31 +147,31 @@ public class ABSDynamicClass implements ABSClass {
 
         @Override
         public List<String> getFieldNames() {
-            return new ArrayList<String>(ABSDynamicClass.this.getFieldNames());
+            return new ArrayList<>(ABSDynamicClass.this.getFieldNames());
         }
 
         @Override
         public List<String> getMethodNames() {
             if (methods == null) return Collections.emptyList();
-            return new ArrayList<String>(methods.keySet());
+            return new ArrayList<>(methods.keySet());
         }
 
         @Override
         public void addField(String name, String type, ABSClosure init) {
             // FIXME
             if (fields == null) {
-                fields = new HashMap<String,ABSField>();
+                fields = new HashMap<>();
             }
             fields.put(name, new ABSField());
         }
-        
+
     }
 
     @Override
     public ABSBool eq(ABSValue o) {
         if (o instanceof ABSDynamicClass)
             return ABSBool.fromBoolean(name.equals(((ABSDynamicClass)o).getName()));
-        else 
+        else
             return ABSBool.FALSE;
     }
 

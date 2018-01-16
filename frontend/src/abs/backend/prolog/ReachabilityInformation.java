@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.prolog;
@@ -27,7 +27,7 @@ import abs.frontend.typechecker.InterfaceType;
  * model from a given set of initial entries.
  * It can record the processed elements and the reachable elements. It can
  * also be queried about the reachability of an element.
- * 
+ *
  * @author aeflores
  *
  */
@@ -48,7 +48,7 @@ public class ReachabilityInformation {
      */
     private Hashtable<ASTNode<?>, Boolean> reachableFuncts;
     /**
-     * Records the MainBlocks that are reachable. 
+     * Records the MainBlocks that are reachable.
      * (these will only be added by the constructor)
      */
     private Hashtable<MainBlock, Boolean> reachableMainBlocks;
@@ -69,12 +69,12 @@ public class ReachabilityInformation {
      */
     public ReachabilityInformation(ArrayList<ASTNode<?>> entries) {
         // Sets creation
-        reachableMethods = new HashSet<String>();
-        reachableInterfacesOrClasses = new HashSet<String>();
-        reachableFuncts = new Hashtable<ASTNode<?>, Boolean>();
-        reachableMainBlocks = new Hashtable<MainBlock, Boolean>();
+        reachableMethods = new HashSet<>();
+        reachableInterfacesOrClasses = new HashSet<>();
+        reachableFuncts = new Hashtable<>();
+        reachableMainBlocks = new Hashtable<>();
 
-        processedMethods = new HashSet<String>();
+        processedMethods = new HashSet<>();
 
         ClassDecl ownerClass;
         abs.frontend.ast.List<InterfaceTypeUse> interfaces;
@@ -129,7 +129,7 @@ public class ReachabilityInformation {
     }
 /**
  * finds the class where the given class belongs to
- * @param node 
+ * @param node
  * @return the class that owns the parameter node or null if node does not belong to any class
  */
     private ClassDecl obtainOwnerClass(ASTNode<?> node) {
@@ -145,13 +145,13 @@ public class ReachabilityInformation {
             } else
                 foundClass = true;
         }
-        // FIXME: these two should be equivalent, so better use 
+        // FIXME: these two should be equivalent, so better use
         assert ancestor == node.calcContextNode(ClassDecl.class);
         return (ClassDecl) ancestor;
     }
 /**
  * returns true if there has been any change since the last time it was executed
- * @return 
+ * @return
  */
     public boolean changed() {
         if (changed) {
@@ -235,7 +235,7 @@ public class ReachabilityInformation {
             Iterator<InterfaceTypeUse> it = interfaces.iterator();
             //checks if the method is reachable with its class name
             reachable = reachableMethods.contains(getMethodId(clazz, method.getMethodSig()));
-          //checks if the method is reachable with any interface name that is 
+          //checks if the method is reachable with any interface name that is
           //implemented by its class
             while (!reachable && it.hasNext())
                 reachable = isReachable(it.next(), method.getMethodSig());
@@ -249,7 +249,7 @@ public class ReachabilityInformation {
         //checks if the method is reachable with inter
         reachable = reachableMethods.contains(getMethodId(inter, method));
         if (!reachable) {
-            //checks if the method is reachable with any interface that is 
+            //checks if the method is reachable with any interface that is
             //implemented by inter
             abs.frontend.ast.List<InterfaceTypeUse> interfaces = ((InterfaceDecl) inter.getDecl())
                     .getExtendedInterfaceUseList();
@@ -274,7 +274,7 @@ public class ReachabilityInformation {
             return false;
     }
 
- 
+
     /**
      * Sets the parameter to processed
      * @param funct

@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.debugging;
@@ -13,7 +13,7 @@ import abs.backend.java.observing.ObjectView;
 public class COGInfo {
     final COGView cog;
     final ObjectView initialObject;
-    final List<TaskInfo> tasks = new ArrayList<TaskInfo>();
+    final List<TaskInfo> tasks = new ArrayList<>();
 
     COGInfo(COGView cog, ObjectView o) {
         this.cog = cog;
@@ -23,12 +23,12 @@ public class COGInfo {
     public void addTask(TaskInfo task) {
         tasks.add(task);
     }
-    
+
     //New Method
     public List<TaskInfo> getTasks(){
         return tasks;
     }
-    
+
     public ObjectView getInitialObject(){
         return initialObject;
     }

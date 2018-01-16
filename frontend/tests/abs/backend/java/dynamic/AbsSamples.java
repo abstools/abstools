@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.dynamic;
@@ -22,7 +22,7 @@ public class AbsSamples extends JavaBackendDynamicTest {
         super();
         this.fileName = f;
     }
-    
+
     /*
      * Collect all ABS code samples in tests/abssamples/meta/
      */
@@ -33,7 +33,7 @@ public class AbsSamples extends JavaBackendDynamicTest {
         ABSFileNameFilter filter = new ABSFileNameFilter();
         File dirHandle = new File(dir);
         final String[] absFiles = dirHandle.list(filter);
-        Collection<String[]> data = new HashSet<String[]>();
+        Collection<String[]> data = new HashSet<>();
         for (int i=0; i < absFiles.length; i++) {
             String[] path = { dir + s + absFiles[i] };
             data.add(path);

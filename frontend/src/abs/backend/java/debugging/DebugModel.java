@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.debugging;
@@ -24,10 +24,10 @@ import abs.backend.java.observing.TaskStackFrameView;
 import abs.backend.java.observing.TaskView;
 
 public class DebugModel implements TaskObserver, TaskSchedulerObserver {
-    final Map<TaskView, TaskInfo> taskToLineMap = new HashMap<TaskView, TaskInfo>();
-    final Map<COGView, COGInfo> cogInfo = new HashMap<COGView, COGInfo>();
-    final ArrayList<DebugModelListener> listener = new ArrayList<DebugModelListener>();
-    final Set<TaskView> steppingTasks = new HashSet<TaskView>();
+    final Map<TaskView, TaskInfo> taskToLineMap = new HashMap<>();
+    final Map<COGView, COGInfo> cogInfo = new HashMap<>();
+    final ArrayList<DebugModelListener> listener = new ArrayList<>();
+    final Set<TaskView> steppingTasks = new HashSet<>();
 
     public COGInfo getCOGInfo(COGView view) {
         return cogInfo.get(view);
@@ -51,7 +51,7 @@ public class DebugModel implements TaskObserver, TaskSchedulerObserver {
         COGInfo info = new COGInfo(cog, initialObject);
         synchronized (this) {
             cogInfo.put(cog, info);
-            localList = new ArrayList<DebugModelListener>(listener);
+            localList = new ArrayList<>(listener);
         }
 
         for (DebugModelListener l : localList) {
@@ -72,7 +72,7 @@ public class DebugModel implements TaskObserver, TaskSchedulerObserver {
         ArrayList<DebugModelListener> localList;
         synchronized (this) {
             taskToLineMap.put(task, line);
-            localList = new ArrayList<DebugModelListener>(listener);
+            localList = new ArrayList<>(listener);
         }
 
         for (DebugModelListener l : localList) {
@@ -208,28 +208,28 @@ public class DebugModel implements TaskObserver, TaskSchedulerObserver {
         getTaskInfo(task).isStepping = false;
         getSema(task).release();
     }
-    
+
     //New Methods
     public List<COGView> getCOGs(){
-        List<COGView> cogs = new ArrayList<COGView>();
+        List<COGView> cogs = new ArrayList<>();
         cogs.addAll(cogInfo.keySet());
         return cogs;
     }
-    
+
     public List<COGInfo> getCOGInfos(){
-        List<COGInfo> cogInfos = new ArrayList<COGInfo>();
+        List<COGInfo> cogInfos = new ArrayList<>();
         for(COGView cog : getCOGs()){
             cogInfos.add(cogInfo.get(cog));
         }
         return cogInfos;
     }
-    
+
     public List<TaskInfo> getTaskInfos(COGView cog){
         return cogInfo.get(cog).getTasks();
     }
-    
+
     public List<TaskView> getTasks(COGView cog){
-        List<TaskView> tasks = new ArrayList<TaskView>();
+        List<TaskView> tasks = new ArrayList<>();
         for(TaskInfo taskInfo : getTaskInfos(cog)) {
             tasks.add(taskInfo.getTaskView());
         }
@@ -239,19 +239,19 @@ public class DebugModel implements TaskObserver, TaskSchedulerObserver {
     @Override
     public void stackFrameCreated(TaskView task, TaskStackFrameView stackFrame) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void stackFrameRemoved(TaskView task, TaskStackFrameView oldFrame) {
         // TODO Auto-generated method stub
-        
+
     }
 
 }

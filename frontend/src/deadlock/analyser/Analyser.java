@@ -36,12 +36,12 @@ import com.gzoumix.semisolver.constraint.*;
 import com.gzoumix.semisolver.substitution.*;
 
 public class Analyser {
-    
+
   private static int FixPoint1_0 = 1;
   private static int FixPoint2_0 = 2;
-    
+
   public int deadlockAnalysis(Model m, boolean verbose, int nbIteration, int fixPointVersion, PrintStream out) {
-      
+
     Variable.varCounter =0;
     Long totalTimeInMs = 0L;
     Long nanoTime = System.nanoTime();
@@ -50,7 +50,7 @@ public class Analyser {
     Long ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
     totalTimeInMs += ellapsedTime;
     if(p.isDeadlockFree()){
-        
+
         out.println("### LOCK INFORMATION RESULTED BY THE ANALYSIS ###\n");
 
         out.println("Possible Deadlock in Main:    false");
@@ -60,8 +60,8 @@ public class Analyser {
         out.println("Analysis Duration:            " + totalTimeInMs + "ms");
 	return 0;
     }
-      
-    
+
+
     /* 0, Create the initial data */
     Factory df = new Factory(verbose);
     AnalyserLog log = new AnalyserLog();
@@ -74,14 +74,14 @@ public class Analyser {
 
      /* 1. Generate contracts */
     log.logDebug("Analyzing dependencies  to look for deadlocks...");
-    
+
     nanoTime = System.nanoTime();
     ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
     totalTimeInMs += ellapsedTime;
     ResultInference InferenceOutput = ci.typeInference();
     Map<String, MethodContract> methodMap = InferenceOutput.getMethods();
     Constraint c = InferenceOutput.getConstraint();
-   
+
     log.logDebug("###############################################################\n");
     log.logDebug("Contract and Constraint generation finished...");
     log.logDebug("Ellapsed time: " + ellapsedTime + "ms");
@@ -100,7 +100,7 @@ public class Analyser {
     c.solve();
     ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
     totalTimeInMs += ellapsedTime;
-    
+
     if(!c.getErrors().isEmpty()) {
       log.logDebug("Generation of Contract failed: constraint not satisfiable");
       log.logDebug("###############################################################\n");
@@ -110,7 +110,7 @@ public class Analyser {
       log.logDebug("###############################################################\n");
     }
 
-    List<GenerationError> errors = new ArrayList<GenerationError>(c.getErrors().size());
+    List<GenerationError> errors = new ArrayList<>(c.getErrors().size());
     for(SolvingError err : c.getErrors()) {
       if(err instanceof SolvingErrorLoop) { errors.add(new ErrorLoop((SolvingErrorLoop)err)); }
       else { errors.add(new ErrorUnif((SolvingErrorUnif)err)); }
@@ -123,10 +123,10 @@ public class Analyser {
         int i = 1;
         for(GenerationError err : errors){
             out.println(i++ + ":");
-            out.println(err.getHelpMessage()); 
+            out.println(err.getHelpMessage());
             out.println();
         }
-        
+
         return 127;
     }
 
@@ -142,13 +142,13 @@ public class Analyser {
     }
     ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
     totalTimeInMs += ellapsedTime;
-    
+
     if(verbose) {
       out.println("###############################################################\n");
       out.println("Substitution completed");
       out.println("Ellapsed time: " + ellapsedTime + "ms");
-      
-        
+
+
       out.println("###############################################################\n");
       out.println("Contract and Constraint computation finished...");
       out.println("  Constraint:\n  -----------");
@@ -164,28 +164,28 @@ public class Analyser {
     }
 
     /* 2. Analyze the contract */
-    
+
     //if(verbose) out.println("Creating CCT...");
     //nanoTime = System.nanoTime();
 //    Map<String, Term> cct = new HashMap<String, Term>();
-    
+
 //    for(String k : methodMap.keySet()){
-//      if(methodMap.get(k) != null){   
+//      if(methodMap.get(k) != null){
 //          cct.put(k, methodMap.get(k));
 //      }
 //    }
     if(verbose) out.println("Applying substitution to Main Contract...");
-    
+
     //cct.put("Main.main", s.apply(InferenceOutput.getMainContractPresent()));
     MainMethodContract mmc = new MainMethodContract((Contract)s.apply(InferenceOutput.getMainContractPresent()), (Contract)s.apply(InferenceOutput.getMainContractFuture()));
 //    List<Contract> mainContracts = new LinkedList<Contract>();
 //    mainContracts.add(InferenceOutput.getMainContractPresent());
 //    mainContracts.add(InferenceOutput.getMainContractFuture());
 //    cct.put("Main.main", s.apply(df.newContractSequence(mainContracts)));
-    
+
     ellapsedTime = (System.nanoTime() - nanoTime)/1000000L;
     totalTimeInMs += ellapsedTime;
-//    
+//
     if(verbose) {
         out.println("CCT creation completed");
         out.println("Ellapsed time: " + ellapsedTime + "ms");
@@ -198,36 +198,36 @@ public class Analyser {
         out.println("    \"MAIN.main\": " + mmc.toString());
         out.println("*****END CONTRACTS*******");
     }
-//    
+//
     if(verbose){
         out.println("###############################################################\n");
         out.println("Computing Dependencies...");
     }
-    
+
     nanoTime = System.nanoTime();
-    
+
     DASolver solver = (fixPointVersion == FixPoint2_0)? new FixPointSolver2(df, methodMap, mmc):new FixPointSolver1(df, methodMap, mmc, nbIteration);
-    
+
 
     solver.computeSolution();
     ellapsedTime = (System.nanoTime() - nanoTime) / 1000000L;
     totalTimeInMs += ellapsedTime;
-    
+
     if(verbose) {
         out.println("Dependency analysis completed");
         out.println("Ellapsed time: " + ellapsedTime + "ms");
     }
-            
+
     out.println("### LOCK INFORMATION RESULTED BY THE ANALYSIS ###\n");
 
       out.println("Possible Deadlock in Main:    " + solver.isDeadlockMain());
       out.println("Current Version:              " + solver.getName() );
-      
+
       if(solver.isDeadlockMain()){
           out.println("Deadlock details: ");
           solver.printDeadlockDetails(out);
       }
-      
+
       if(fixPointVersion == FixPoint1_0){
         out.println("Saturation:                   " + ((FixPointSolver1)solver).isSatured());
         out.println("Possible Livelock in Main:    " + ((FixPointSolver1)solver).isLivelockMain());

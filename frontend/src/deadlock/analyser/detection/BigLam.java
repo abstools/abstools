@@ -41,11 +41,11 @@ public class BigLam {
 
         this.w = new Lam();
         this.wPrime = new Lam();
-        
-        this.bTilde = new TreeSet<GroupName>();
-        this.aTilde = new TreeSet<GroupName>();
+
+        this.bTilde = new TreeSet<>();
+        this.aTilde = new TreeSet<>();
     }
-    
+
     // constructor from methodName and methodContract
     public BigLam(String method, Term methodContractInferred){
         //initialize the lam for the method MethodName, and use this MethodContract obtained form inference algorithm to produce
@@ -73,11 +73,11 @@ public class BigLam {
 
             Set<GroupName> bTildeTemp = contractP.fn();
             bTildeTemp.addAll(contractF.fn());
-            
+
             this.bTilde = bTildeTemp;
             this.bTilde.addAll(ret.fn());
             this.bTilde.removeAll(_this.fn());
-            this.aTilde = new TreeSet<GroupName>();
+            this.aTilde = new TreeSet<>();
             this.aTilde.addAll(_this.fn());
             for(IRecord t : args){
                 this.bTilde.removeAll(t.fn());
@@ -85,8 +85,8 @@ public class BigLam {
             }
         }
         else {
-            this.bTilde = new TreeSet<GroupName>();
-            this.aTilde = new TreeSet<GroupName>();
+            this.bTilde = new TreeSet<>();
+            this.aTilde = new TreeSet<>();
         }
 
     }
@@ -140,7 +140,7 @@ public class BigLam {
 
     //Return the freeVariable of a BigLamp
     public Set<GroupName> fv(){
-        Set<GroupName> fv = new TreeSet<GroupName>();
+        Set<GroupName> fv = new TreeSet<>();
         fv.addAll(this.w.fv());
         fv.addAll(this.wPrime.fv());
         return fv;
@@ -153,30 +153,30 @@ public class BigLam {
     }
 
 
-   
+
     //check just for Get Cycle
     public Boolean hasCycleGet(){
         //it has cycle if any of the two lamps is cyclic
         return w.hasCycleGet() || wPrime.hasCycleGet();
     }
 
-    
-  
+
+
     //check just for Await Cycle
     public Boolean hasCycleAwait(){
       //it has cycle if any of the two lamps is cyclic
         return w.hasCycleAwait() || wPrime.hasCycleAwait();
     }
-    
+
     //toString method
     public String toString(){
         return "< \n" + this.w.toString() + " , \n" + this.wPrime.toString() + ">";
     }
 
-    //According to version2 of the fix point algorithm this method adds the missing dependencies from the transitive closure 
+    //According to version2 of the fix point algorithm this method adds the missing dependencies from the transitive closure
     //of the dependencies of not new names and removes all dependencies with new names
     public void expandAndClean() {
-        
+
         w.expandAndClean();
         wPrime.expandAndClean();
     }
@@ -185,7 +185,7 @@ public class BigLam {
         // TODO Auto-generated method stub
         return w.hasReflexiveState() || wPrime.hasReflexiveState();
     }
-    
+
     public LinkedList<State> getReflexiveStates(){
         LinkedList<State> res = new LinkedList<>();
         res.addAll(w.getReflexiveStates());

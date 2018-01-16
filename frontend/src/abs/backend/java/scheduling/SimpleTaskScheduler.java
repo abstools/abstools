@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.scheduling;
@@ -34,14 +34,14 @@ import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 /**
  * A simple scheduler that is not the most efficient one, but is easy to
  * understand and also makes it easy to override the scheduling behavior
- * 
+ *
  * @author Jan Schäfer
- * 
+ *
  */
 public class SimpleTaskScheduler implements TaskScheduler {
     private final AtomicLong idCounter = new AtomicLong();
     static Logger logger = Logging.getLogger("scheduler");
-    private final ABSThreadManager threadManager; 
+    private final ABSThreadManager threadManager;
     private final ScheduableTasksFilter scheduableTasksFilter;
 
     public class TaskInfo {
@@ -62,7 +62,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
          * always waiting on a guard
          */
         public ABSGuard guard;
-        
+
         /**
          * stores whether this task has already been activated once
          */
@@ -75,7 +75,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         public boolean isSchedulable() {
             return !isSuspended() || guard.isTrue();
         }
-        
+
         public boolean isSuspended() {
             return guard != null;
         }
@@ -87,7 +87,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         public void suspend(ABSGuard g) {
             guard = g;
         }
-        
+
         public String toString() {
             return "Task " + task.getID();
         }
@@ -101,16 +101,16 @@ public class SimpleTaskScheduler implements TaskScheduler {
      * definitely be scheduled. Note that this list does not include tasks that
      * are suspended on an unstable guard, i.e., a guard that may become false
      * after it was true. Such tasks are in the suspendedTasks list.
-     * 
+     *
      * Invariant: for all task in readyTasks: task.isSuspended() == false
      */
-    protected final List<TaskInfo> readyTasks = new ArrayList<TaskInfo>();
+    protected final List<TaskInfo> readyTasks = new ArrayList<>();
 
     /**
      * Holds a list of all suspended tasks Invariant: for all task in
      * suspendedTasks: task.isSuspended() == true
      */
-    protected final List<TaskInfo> suspendedTasks = new ArrayList<TaskInfo>();
+    protected final List<TaskInfo> suspendedTasks = new ArrayList<>();
 
     /**
      * Holds the currently active task or is null if there is no active task
@@ -166,10 +166,10 @@ public class SimpleTaskScheduler implements TaskScheduler {
         logger.finest("next step done");
     }
 
-    
+
     @Override
     public synchronized void addTask(final Task<?> task) {
-        
+
         readyTasks.add(new TaskInfo(task));
         if (view != null)
             view.taskAdded(task.getView());
@@ -195,7 +195,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     class SimpleSchedulerThread extends ABSThread implements GuardWaiter {
 
         private final TaskInfo executingTask;
-        
+
         private boolean active;
 
         private ABSGuard guard;
@@ -210,9 +210,9 @@ public class SimpleTaskScheduler implements TaskScheduler {
         public TaskInfo getExecutingTask() {
             return executingTask;
         }
-        
+
         public List<Task<?>> getSuspendedTasks() {
-            List<Task<?>> result = new ArrayList<Task<?>>();
+            List<Task<?>> result = new ArrayList<>();
             for (TaskInfo ti : suspendedTasks) {
                 result.add(ti.task);
             }
@@ -229,7 +229,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
                 else
                     taskFinished();
             } catch (SystemTerminatedException e){
-                
+
             } finally {
                 finished();
             }
@@ -256,7 +256,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
                 }
             }
         }
-        
+
         synchronized void setGuard(ABSGuard g) {
             logger.finest(executingTask + " awaiting " + g);
             active = false;
@@ -271,7 +271,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         }
 
         void await(ABSGuard g) {
-            
+
             logger.finest(executingTask + " next step done going into monitor");
             synchronized (this) {
                 try {
@@ -320,7 +320,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
                     logger.finest("Calling do schedule");
                     doSchedule();
                 }
-                
+
             });
             logger.finest("Done");
         } else {
@@ -332,7 +332,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         logger.finest("Executing doSchedule...");
 
         List<TaskInfo> choices = getSchedulableTasks();
-            
+
         if (logger.isLoggable(Level.INFO))
             logger.info("COG " + cog.getID() + " scheduling choices: " + choices);
 
@@ -340,7 +340,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
             logger.info("Choices are empty!");
             runtime.doNextStep();
             return;
-        } 
+        }
 
         TaskInfo nextTask = schedule(choices);
         nextTask.hasBeenActivated = true;
@@ -352,7 +352,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
             } else {
                 readyTasks.remove(nextTask);
             }
-            
+
             activateTask(nextTask);
         }
 
@@ -360,7 +360,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
     private synchronized List<TaskInfo> getSchedulableTasks() {
         List<TaskInfo> suspendedTasksWithSatisfiedGuards = unsuspendTasks();
-        List<TaskInfo> choices = new ArrayList<TaskInfo>(readyTasks);
+        List<TaskInfo> choices = new ArrayList<>(readyTasks);
         choices.addAll(suspendedTasksWithSatisfiedGuards);
         List<TaskInfo> choicesFiltered = scheduableTasksFilter.filter(choices);
         return choicesFiltered;
@@ -378,9 +378,9 @@ public class SimpleTaskScheduler implements TaskScheduler {
             activeTask.task.setStart(System.currentTimeMillis());
         }
     }
-    
+
     private synchronized List<TaskInfo> unsuspendTasks() {
-        List<TaskInfo> tasksWithSatisfiedGuards = new ArrayList<TaskInfo>(0);
+        List<TaskInfo> tasksWithSatisfiedGuards = new ArrayList<>(0);
 
         Iterator<TaskInfo> it = suspendedTasks.iterator();
         while (it.hasNext()) {
@@ -405,7 +405,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     private volatile View view;
 
     private final Object viewCreatorLock = new Object();
-    
+
     @Override
     public TaskSchedulerView getView() {
         synchronized (viewCreatorLock) {
@@ -447,10 +447,10 @@ public class SimpleTaskScheduler implements TaskScheduler {
                 logger.fine("issuing a schedule");
                 schedule();
             }
-             
+
         }
 
-        
+
         runtime.doNextStep();
 
         synchronized (this) {
@@ -459,7 +459,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
         if (newTask != currentTask) {
             thread.await(g);
-        } 
+        }
 
         if (view != null)
             view.taskResumed(currentTask.task.getView(), g);
@@ -483,39 +483,39 @@ public class SimpleTaskScheduler implements TaskScheduler {
     public TaskSchedulingStrategy getSchedulingStrategy() {
         return schedulingStrategy;
     }
-    
+
     // Enable changing the task scheduling strategy at runtime
     public void setSchedulingStrategy(TaskSchedulingStrategy strat) {
         schedulingStrategy = strat;
     }
-    
+
     private class View extends AbstractTaskSchedulerView {
 
-        @Override 
+        @Override
         public List<TaskView> getSchedulableTasks() {
             synchronized (SimpleTaskScheduler.this) {
-                ArrayList<TaskView> result = new ArrayList<TaskView>();
+                ArrayList<TaskView> result = new ArrayList<>();
                 if (getActiveTask() != null) {
                     result.add(getActiveTask());
                     return result;
                 }
-                
+
                 for (TaskInfo t : SimpleTaskScheduler.this.getSchedulableTasks()) {
                     result.add(t.task.getView());
                 }
-                
+
                 return result;
             }
         }
-        
+
         @Override
         public List<TaskView> getReadyTasks() {
             synchronized (SimpleTaskScheduler.this) {
-                ArrayList<TaskView> result = new ArrayList<TaskView>();
+                ArrayList<TaskView> result = new ArrayList<>();
                 for (TaskInfo t : readyTasks) {
                     result.add(t.task.getView());
                 }
-                
+
                 return result;
             }
         }
@@ -523,18 +523,18 @@ public class SimpleTaskScheduler implements TaskScheduler {
         @Override
         public List<TaskView> getSuspendedTasks() {
             synchronized (SimpleTaskScheduler.this) {
-                ArrayList<TaskView> result = new ArrayList<TaskView>();
+                ArrayList<TaskView> result = new ArrayList<>();
                 for (TaskInfo t : suspendedTasks) {
                     result.add(t.task.getView());
                 }
                 return result;
             }
-            
+
         }
 
         @Override
         public TaskView getActiveTask() {
-            Task<?> activeTask = SimpleTaskScheduler.this.getActiveTask(); 
+            Task<?> activeTask = SimpleTaskScheduler.this.getActiveTask();
             if (activeTask == null)
                 return null;
             return activeTask.getView();

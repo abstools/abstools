@@ -38,7 +38,7 @@ public class ContractElementUnion extends ContractElement {
   public ContractElementUnion(List<Term> l) { super(name, l); }
 
   public ContractElementUnion(ASTNode pos, Contract a, Contract b){
-    super(pos, name, new LinkedList<Term>());
+    super(pos, name, new LinkedList<>());
     subterms.add(a);
     subterms.add(b);
   }

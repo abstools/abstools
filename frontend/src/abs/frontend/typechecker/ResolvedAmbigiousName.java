@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker;
@@ -12,14 +12,14 @@ import abs.frontend.ast.Decl;
 
 public class ResolvedAmbigiousName extends ResolvedName {
 
-    private List<ResolvedName> alternatives = new LinkedList<ResolvedName>();
-    
+    private List<ResolvedName> alternatives = new LinkedList<>();
+
     public ResolvedAmbigiousName(ResolvedName alternative1, ResolvedName alternative2) {
         addAlternative(alternative1);
         addAlternative(alternative2);
-        
+
     }
-    
+
     private void addAlternative(ResolvedName alternative) {
         if (alternative instanceof ResolvedAmbigiousName) {
             ResolvedAmbigiousName resolvedAmbigiousName = (ResolvedAmbigiousName) alternative;
@@ -42,14 +42,14 @@ public class ResolvedAmbigiousName extends ResolvedName {
     public ResolvedModuleName getModuleName() {
         return getFirstAlternative().getModuleName();
     }
-    
+
     @Override
     public Decl getDecl() {
         return new AmbiguousDecl("", getAlternatives());
     }
 
     private List<Decl> getAlternatives() {
-        List<Decl> result = new LinkedList<Decl>();
+        List<Decl> result = new LinkedList<>();
         for (ResolvedName r : alternatives) {
             result.add(r.getDecl());
         }

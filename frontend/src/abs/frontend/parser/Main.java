@@ -122,7 +122,7 @@ public class Main {
     }
 
     public java.util.List<String> parseArgs(String[] args) {
-        ArrayList<String> remainingArgs = new ArrayList<String>();
+        ArrayList<String> remainingArgs = new ArrayList<>();
 
         for (String arg : args) {
             if (arg.equals("-dump"))
@@ -202,7 +202,7 @@ public class Main {
             printErrorAndExit("Please provide at least one input file");
         }
 
-        java.util.List<CompilationUnit> units = new ArrayList<CompilationUnit>();
+        java.util.List<CompilationUnit> units = new ArrayList<>();
 
         for (String fileName : fileNames) {
             if (fileName.startsWith("-")) {
@@ -226,7 +226,7 @@ public class Main {
         if (stdlib)
             units.add(getStdLib());
 
-        List<CompilationUnit> unitList = new List<CompilationUnit>();
+        List<CompilationUnit> unitList = new List<>();
         for (CompilationUnit u : units) {
             unitList.add(u);
         }
@@ -355,7 +355,7 @@ public class Main {
                 // TODO: when/if we incorporate feature parameters into the
                 // productline feature declarations (as we should), we need to
                 // adjust the DataConstructor arguments here.
-                featureDecl.addDataConstructor(new DataConstructor(f.getName(), new List<ConstructorArg>()));
+                featureDecl.addDataConstructor(new DataConstructor(f.getName(), new List<>()));
             }
             // Adjust product_name() function
             productNameFun.setFunctionDef(new ExpFunctionDef(new StringLiteral(productname)));
@@ -363,14 +363,14 @@ public class Main {
             ProductDecl p = null;
             if (productname != null) p = m.findProduct(productname);
             if (p != null) {
-                DataConstructorExp feature_arglist = new DataConstructorExp("Cons", new List<PureExp>());
+                DataConstructorExp feature_arglist = new DataConstructorExp("Cons", new List<>());
                 DataConstructorExp current = feature_arglist;
                 for (Feature f : p.getProduct().getFeatures()) {
-                    DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
+                    DataConstructorExp next = new DataConstructorExp("Cons", new List<>());
                     // TODO: when/if we incorporate feature parameters into
                     // the productline feature declarations (as we should), we
                     // need to adjust the DataConstructorExp arguments here.
-                    current.addParam(new DataConstructorExp(f.getName(), new List<PureExp>()));
+                    current.addParam(new DataConstructorExp(f.getName(), new List<>()));
                     current.addParam(next);
                     current = next;
                 }
@@ -432,7 +432,7 @@ public class Main {
                     System.out.println("Searching for solution that includes " + product + "...");
                 if (productDecl != null) {
                     ChocoSolver s = m.instantiateCSModel();
-                    HashSet<Constraint> newcs = new HashSet<Constraint>();
+                    HashSet<Constraint> newcs = new HashSet<>();
                     productDecl.getProduct().getProdConstraints(s.vars, newcs);
                     for (Constraint c: newcs)
                         s.addConstraint(c);
@@ -446,7 +446,7 @@ public class Main {
                 if (verbose)
                     System.out.println("Searching for solution that includes " + product + "...");
                 ChocoSolver s = m.instantiateCSModel();
-                HashSet<Constraint> newcs = new HashSet<Constraint>();
+                HashSet<Constraint> newcs = new HashSet<>();
                 s.addIntVar("difference", 0, 50);
                 if (productDecl != null) {
                     m.getDiffConstraints(productDecl.getProduct(), s.vars, newcs, "difference");
@@ -462,7 +462,7 @@ public class Main {
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
                 ChocoSolver s = m.instantiateCSModel();
-                HashSet<Constraint> newcs = new HashSet<Constraint>();
+                HashSet<Constraint> newcs = new HashSet<>();
                 s.addIntVar("noOfFeatures", 0, 50);
                 if (m.getMaxConstraints(s.vars,newcs, "noOfFeatures")) {
                     for (Constraint c: newcs) s.addConstraint(c);
@@ -557,7 +557,7 @@ public class Main {
     }
 
     public java.util.List<CompilationUnit> parseABSPackageFile(File file) throws IOException {
-        java.util.List<CompilationUnit> res = new ArrayList<CompilationUnit>();
+        java.util.List<CompilationUnit> res = new ArrayList<>();
         parseABSPackageFile(res, file);
         return res;
     }
@@ -792,7 +792,7 @@ public class Main {
     }
 
     public static Iterable<File> toFiles(Iterable<String> fileNames) {
-        ArrayList<File> files = new ArrayList<File>();
+        ArrayList<File> files = new ArrayList<>();
         for (String s : fileNames) {
             files.add(new File(s));
         }
@@ -804,7 +804,7 @@ public class Main {
     }
 
     public Model parse(File file, String sourceCode, Reader reader) throws IOException  {
-        List<CompilationUnit> units = new List<CompilationUnit>();
+        List<CompilationUnit> units = new List<>();
         if (stdlib)
             units.add(getStdLib());
         units.add(parseUnit(file, sourceCode, reader));

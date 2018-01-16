@@ -44,7 +44,7 @@ public class Contract extends GenericStructuredTerm {
   public void fusion(Contract c) {
     if(c.subterms.isEmpty()) { return; }
     if(this.subterms.isEmpty()) { this.add(c); return; }
-    
+
     Term end = this.subterms.get(this.subterms.size() -1);
     Term first = c.subterms.get(0);
     Term res = null;
@@ -52,7 +52,7 @@ public class Contract extends GenericStructuredTerm {
       if(first instanceof ContractElementAwait) {
        res = new ContractElementInvkA(((ContractElementInvk)end).getPosition(), (ContractElementInvk)end, (ContractElementAwait)first);
       } else if(first instanceof ContractElementGet) {
-       res = new ContractElementInvkG(((ContractElementInvk)end).getPosition(), (ContractElementInvk)end, (ContractElementGet)first);      
+       res = new ContractElementInvkG(((ContractElementInvk)end).getPosition(), (ContractElementInvk)end, (ContractElementGet)first);
       } }
     if(res != null) {
       this.subterms.set(this.subterms.size() - 1, res);
@@ -76,7 +76,7 @@ public class Contract extends GenericStructuredTerm {
     // 2. local clean
     Iterator<Term> i = getSubTerms().iterator();
     if(!i.hasNext()) return; // no subterms, nothing to do
-    
+
     Term first = i.next();
     Term second;
     while(i.hasNext()) {
@@ -86,7 +86,7 @@ public class Contract extends GenericStructuredTerm {
         GroupName asecond = ((ContractElementGet)second).whosWaiting();
         GroupName bfirst = ((ContractElementInvkA)first).getAwait().whosWaited();
         GroupName bsecond = ((ContractElementGet)second).whosWaited();
-      
+
         if(!((afirst.equals(asecond)) && (bfirst.equals(bsecond)))) {
           subterms_cleaned.addLast(first);
           first = second;
@@ -98,13 +98,13 @@ public class Contract extends GenericStructuredTerm {
     this.subterms = subterms_cleaned;
   }*/
 
-  
-  
+
+
   /* Basic Get */
   public List<ContractElement> getList() {
-    List<ContractElement> res = new LinkedList<ContractElement>();
-    for(Term t : getSubTerms()) { 
-        res.add((ContractElement)t); 
+    List<ContractElement> res = new LinkedList<>();
+    for(Term t : getSubTerms()) {
+        res.add((ContractElement)t);
     }
     return res;
   }
@@ -112,7 +112,7 @@ public class Contract extends GenericStructuredTerm {
   /* toString */
   public String toString(){
     if(subterms.isEmpty()) return "0";
-    
+
     Iterator<Term> i = subterms.iterator();
     String res = "";
     while (i.hasNext()) {

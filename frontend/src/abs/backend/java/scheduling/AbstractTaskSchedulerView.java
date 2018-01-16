@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.scheduling;
@@ -24,7 +24,7 @@ public abstract class AbstractTaskSchedulerView implements TaskSchedulerView {
 
     private synchronized List<TaskSchedulerObserver> getObservers() {
         if (observers == null) {
-            observers = new ArrayList<TaskSchedulerObserver>(1);
+            observers = new ArrayList<>(1);
         }
         return observers;
     }
@@ -52,9 +52,9 @@ public abstract class AbstractTaskSchedulerView implements TaskSchedulerView {
             l.taskReady(view);
         }
     }
-    
+
     public synchronized List<TaskSchedulerObserver> getObserverCopy() {
-        return new ArrayList<TaskSchedulerObserver>(observers);
+        return new ArrayList<>(observers);
     }
-    
+
 }

@@ -34,7 +34,7 @@ public class ContractElementInvk extends ContractElement {
   /* Constructors */
   public ContractElementInvk(String name, List<Term> l) { super(name, l); } // DO NOT USE !!!
   public ContractElementInvk(ASTNode pos, String nameClass, String nameMethod, MethodInterface mi){
-    super(pos, prefix + nameClass + "." + nameMethod, new ArrayList<Term>(1));
+    super(pos, prefix + nameClass + "." + nameMethod, new ArrayList<>(1));
     subterms.add(mi);
   }
 

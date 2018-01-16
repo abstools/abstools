@@ -21,8 +21,8 @@ import abs.backend.java.observing.TaskView;
 public class DefaultTaskScheduler implements TaskScheduler {
     private static final Logger log = Logging.getLogger(ABSRuntime.class.getName());
 
-    private final List<Task<?>> newTasks = new LinkedList<Task<?>>();
-    private final List<SchedulerThread> suspendedTasks = new LinkedList<SchedulerThread>();
+    private final List<Task<?>> newTasks = new LinkedList<>();
+    private final List<SchedulerThread> suspendedTasks = new LinkedList<>();
     private Task<?> activeTask;
     private volatile SchedulerThread thread;
     private final COG cog;

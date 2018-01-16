@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typesystem;
@@ -98,7 +98,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
     }
 
     private List<String> findAbsFiles(File srcFolder) {
-        List<String> result = new java.util.LinkedList<String>();
+        List<String> result = new java.util.LinkedList<>();
         if (srcFolder.exists() && !srcFolder.isDirectory()) {
             assertTrue(srcFolder.getName().endsWith(".abs"));
             result.add(srcFolder.getAbsolutePath());

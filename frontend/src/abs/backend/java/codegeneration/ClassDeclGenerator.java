@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.codegeneration;
@@ -101,9 +101,9 @@ public class ClassDeclGenerator {
         JavaGeneratorHelper.generateParamArgs(stream, "null, null, null", decl.getParams());
         stream.println("; }");
 
-        // static constructor method for new cog C    
+        // static constructor method for new cog C
         stream.print("public static final <T extends " + className + "> T __ABS_createNewCOG");
-        JavaGeneratorHelper.generateParams(stream, 
+        JavaGeneratorHelper.generateParams(stream,
                 ABSObject.class.getName() + " __ABS_source, "
                 + UserSchedulingStrategy.class.getName() + " Strategy, "
                 + "ABS.DC.DeploymentComponent_i DC",
@@ -120,7 +120,7 @@ public class ClassDeclGenerator {
 
         stream.println(";");
         stream.println("__ABS_runtime.cogCreated(__ABS_result);");
-        stream.println("__ABS_cog.getScheduler().addTask(new " + Task.class.getName() + "(new " + 
+        stream.println("__ABS_cog.getScheduler().addTask(new " + Task.class.getName() + "(new " +
                 ABSInitObjectCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result)));");
 
         if (decl.isActiveClass()) {
@@ -225,7 +225,7 @@ public class ClassDeclGenerator {
     }
 
     private java.util.List<String> getFieldNames() {
-        java.util.List<String> fieldNames = new ArrayList<String>();
+        java.util.List<String> fieldNames = new ArrayList<>();
         for (ParamDecl p : decl.getParams()) {
             fieldNames.add(p.getName());
         }

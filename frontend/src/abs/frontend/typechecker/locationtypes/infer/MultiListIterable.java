@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker.locationtypes.infer;
@@ -16,7 +16,7 @@ public class MultiListIterable<T> implements Iterable<T> {
         }
         this.args = args;
     }
-    
+
     @Override
     public Iterator<T> iterator() {
         return new Iterator<T>() {
@@ -28,7 +28,7 @@ public class MultiListIterable<T> implements Iterable<T> {
                 setNextIterator();
                 return currentIt != null;
             }
-            
+
             private void setNextIterator() {
                 if (currentIt == null)
                     return;
@@ -52,19 +52,19 @@ public class MultiListIterable<T> implements Iterable<T> {
             public void remove() {
                 throw new UnsupportedOperationException();
             }
-            
+
         };
     }
-    
-    
+
+
     public static <T> List<T> fromIterable(Iterable<T> it) {
-        List<T> result = new ArrayList<T>();
+        List<T> result = new ArrayList<>();
         for (T t : it) {
             result.add(t);
         }
         return result;
     }
-    
+
     public String toString() {
         return fromIterable(this).toString();
     }

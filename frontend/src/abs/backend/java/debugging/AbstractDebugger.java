@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.debugging;
@@ -18,7 +18,7 @@ import abs.backend.java.observing.TaskView;
 public abstract class AbstractDebugger implements Debugger {
     protected int step;
 
-    protected final Map<String, FileContent> fileContent = new HashMap<String, FileContent>();
+    protected final Map<String, FileContent> fileContent = new HashMap<>();
 
     @Override
     public synchronized void nextStep(TaskView taskView, String fileName, int line) {
@@ -27,7 +27,7 @@ public abstract class AbstractDebugger implements Debugger {
 
     static class FileContent {
         File file;
-        ArrayList<String> lines = new ArrayList<String>();
+        ArrayList<String> lines = new ArrayList<>();
 
         FileContent(File file) {
             this.file = file;

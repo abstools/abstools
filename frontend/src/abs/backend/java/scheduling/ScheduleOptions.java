@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.scheduling;
@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class ScheduleOptions {
-    private List<ScheduleAction> actions = new ArrayList<ScheduleAction>();
+    private List<ScheduleAction> actions = new ArrayList<>();
 
     public int numOptions() {
         return actions.size();
@@ -25,7 +25,7 @@ public class ScheduleOptions {
 
         actions.add(a);
     }
-    
+
 
     public List<ScheduleAction> allOptions() {
         return Collections.unmodifiableList(actions);

@@ -33,7 +33,7 @@ public class RecordField extends GenericStructuredTerm implements IRecord { // n
   /* Constructors */
   public  RecordField(String name, List<Term> fields) { super(name, fields); }
   public RecordField(String name, IRecord r) {
-    super(prefix + name, new LinkedList<Term>());
+    super(prefix + name, new LinkedList<>());
     subterms.add(r);
   }
 

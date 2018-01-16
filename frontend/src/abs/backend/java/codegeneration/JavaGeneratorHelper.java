@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.codegeneration;
@@ -160,18 +160,18 @@ public class JavaGeneratorHelper {
         if (!builtInFunctionExists(name)) {
             throw new NotImplementedYetException(app, "The built in function '" + name + "' is not implemented in the Java backend.");
         }
-        
+
         // if builtin function returns a non-builtin type, cast the returned value to that type
         boolean returnsGeneratedDataType = ! JavaBackend.isBuiltinDataType(app.getType());
         if (returnsGeneratedDataType)
             stream.print("((" + JavaBackend.getQualifiedString(app.getType()) +  ")");
-        
+
         stream.print(ABSBuiltInFunctions.class.getName() + "." + name);
         String firstArgs = null;
         if (Constants.isFunctionalBreakPointFunctionName(d.getModuleDecl().getName() + "." + name))
             firstArgs = generateFunctionalBreakPointArgs(app);
         generateArgs(stream, firstArgs, app.getParams(), d.getTypes());
-        
+
         if (returnsGeneratedDataType)
             stream.print(")");
     }
@@ -225,8 +225,9 @@ public class JavaGeneratorHelper {
         generateMethodSig(stream, sig, true, "final", "");
         stream.println(" {");
         stream.print("return (" + ABSFut.class.getName() + ")");
-        
-        generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), sig, new List<Annotation>());
+
+        generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), sig,
+            new List<>());
         stream.println(";");
         stream.println("}");
     }
@@ -237,16 +238,16 @@ public class JavaGeneratorHelper {
         final List<PureExp> params = call.getParams();
         final MethodSig sig = call.getMethodSig();
         final List<Annotation> annotations = call.getAnnotations();
-        
+
         generateAsyncCall(stream, null, callee, callee.getType(), params, null, sig, annotations);
     }
 
-    private static void generateAsyncCall(PrintStream stream, final String calleeString, 
-            final PureExp callee, final Type calleeType, final List<PureExp> args, 
+    private static void generateAsyncCall(PrintStream stream, final String calleeString,
+            final PureExp callee, final Type calleeType, final List<PureExp> args,
             final List<ParamDecl> params,
             final MethodSig sig,
             final List<Annotation> annotations) {
-        
+
         final java.util.List<Type> paramTypes = sig.getTypes();
         stream.print(ABSRuntime.class.getName() + ".getCurrentRuntime().asyncCall(");
         String targetType = JavaBackend.getQualifiedString(calleeType);
@@ -257,7 +258,7 @@ public class JavaGeneratorHelper {
                 stream.print(calleeString);
             else
                 callee.generateJava(stream);
-        } else { 
+        } else {
             stream.print(ABSRuntime.class.getName() + ".checkForNull(");
             if (calleeString != null)
                 stream.print(calleeString);
@@ -268,28 +269,28 @@ public class JavaGeneratorHelper {
         stream.println(",");
         PureExp rtAttr;
         rtAttr = CompilerUtils.getAnnotationValueFromSimpleName(annotations, "Deadline");
-        if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream); 
+        if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream);
         stream.println(",");
         rtAttr = CompilerUtils.getAnnotationValueFromSimpleName(annotations, "Cost");
-        if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream); 
+        if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream);
         stream.println(",");
         rtAttr = CompilerUtils.getAnnotationValueFromSimpleName(annotations, "Critical");
-        if (rtAttr == null) stream.print(ABSBool.class.getName() + ".FALSE"); else rtAttr.generateJava(stream); 
-        
+        if (rtAttr == null) stream.print(ABSBool.class.getName() + ".FALSE"); else rtAttr.generateJava(stream);
+
         stream.println(") {");
         int i = 0;
         for (Type t : paramTypes) {
             stream.println(JavaBackend.getQualifiedString(t) + " arg" + i + ";");
             i++;
         }
-        
+
         generateTaskGetArgsMethod(stream, paramTypes.size());
         generateTaskInitMethod(stream, paramTypes);
-        
+
         stream.println("public java.lang.String methodName() {");
         stream.println("return \"" + sig.getName() + "\";");
         stream.println("}");
-        
+
         stream.println("public Object execute() {");
         stream.print("return target." + JavaBackend.getMethodName(sig.getName()) + "(");
         for (i = 0; i < paramTypes.size(); i++) {
@@ -306,18 +307,18 @@ public class JavaGeneratorHelper {
             JavaGeneratorHelper.generateParamArgs(stream, params);
         stream.println(")");
     }
-    
+
     public static void generateAwaitAsyncCall(PrintStream stream, AwaitAsyncCall call) {
         final PureExp callee = call.getCallee();
         final List<PureExp> params = call.getParams();
         final MethodSig sig = call.getMethodSig();
         final List<Annotation> annotations = call.getAnnotations();
         // FIXME: implement await, assignment afterwards
-        
+
 //        OutputStream exprOStream = new ByteArrayOutputStream();
 //        PrintStream exprStream = new PrintStream(exprOStream);
 //        ClaimGuard guard = new ClaimGuard();
-//        // Necessary temporary variables are written to "stream" and the 
+//        // Necessary temporary variables are written to "stream" and the
 //        // await-expression is written to exprStream
 //
 //        // FIXME: implement await, assignment afterwards
@@ -378,7 +379,7 @@ public class JavaGeneratorHelper {
 
         if (m.isForeign()) {
             generateFLIMethod(stream,m);
-        }      
+        }
 
     }
 
@@ -424,7 +425,7 @@ public class JavaGeneratorHelper {
      * @param code
      */
     public static void cleanGenFolder(JavaCode code) {
-        File genDir = code.getSrcDir(); 
+        File genDir = code.getSrcDir();
         cleanGenFolderRecursively(genDir);
     }
 
@@ -490,12 +491,12 @@ public class JavaGeneratorHelper {
 
     /**
      * replace all uses of local variables and parameters by a use of a newly introduced
-     * temporary final local variable 
+     * temporary final local variable
      */
     private static void replaceLocalVariables(ASTNode<?> astNode, PrintStream beforeAwaitStream) {
         if (isLocalVarUse(astNode)) {
             VarUse v = (VarUse) astNode;
-            replaceVarUse(beforeAwaitStream, v, (TypedVarOrFieldDecl) v.getDecl());                
+            replaceVarUse(beforeAwaitStream, v, (TypedVarOrFieldDecl) v.getDecl());
         } else {
             // process children:
             for (int i=0; i < astNode.getNumChild(); i++) {
@@ -524,7 +525,7 @@ public class JavaGeneratorHelper {
 
     /**
      * replaces a varUse v of the local variable vDecl by a new temporary variable, which will be
-     * written to beforeAwaitStream      
+     * written to beforeAwaitStream
      */
     private static void replaceVarUse(PrintStream beforeAwaitStream, VarUse v, TypedVarOrFieldDecl vDecl) {
         String name = JavaBackend.getVariableName(vDecl.getName());
@@ -541,7 +542,7 @@ public class JavaGeneratorHelper {
     public static void generateAwaitStmt(AwaitStmt awaitStmt, PrintStream stream) {
         OutputStream exprOStream = new ByteArrayOutputStream();
         PrintStream exprStream = new PrintStream(exprOStream);
-        // Necessary temporary variables are written to "stream" and the 
+        // Necessary temporary variables are written to "stream" and the
         // await-expression is written to exprStream
         awaitStmt.getGuard().generateJavaGuard(stream, exprStream);
         stream.print(JavaBackendConstants.ABSRUNTIME + ".await(");
@@ -560,10 +561,10 @@ public class JavaGeneratorHelper {
             stream.println("package " + pkg.packageName + ";");
             stream.print("public final class " + className);
             stream.println(" extends " + UserSchedulingStrategy.class.getName() + " {");
-            
+
             stream.println("public synchronized " + ABSProcess.class.getName() + " userschedule(Object q) {");
             stream.println("ABS.StdLib.List<" + ABSProcess.class.getName() + "> queue = (ABS.StdLib.List<" + ABSProcess.class.getName() + ">) q;");
-            
+
             // call the given scheduling function
             // here goes whatever is specified in the Scheduler annotation
             // i.e. a function call or some other code that returns a Process
@@ -576,7 +577,7 @@ public class JavaGeneratorHelper {
 
             // connect generated TaskSchedulingStrategy to the cog's TaskScheduler
             return pkg.packageName + "." + className;
-            
+
         } catch (JavaCodeGenerationException e) {
             // TODO properly handle exception
             e.printStackTrace();

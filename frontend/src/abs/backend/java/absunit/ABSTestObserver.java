@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.absunit;
@@ -26,7 +26,7 @@ public class ABSTestObserver extends RegistratingObserver implements FutObserver
     private final TestModel model;
     private final ABSUnitGUI gui;
 
-    private Map<Integer, LinkedList<SyncTestInfo>> syncTests = new HashMap<Integer, LinkedList<SyncTestInfo>>();
+    private Map<Integer, LinkedList<SyncTestInfo>> syncTests = new HashMap<>();
 
     class SyncTestInfo {
         public TaskView task;
@@ -155,7 +155,7 @@ public class ABSTestObserver extends RegistratingObserver implements FutObserver
         synchronized (syncTests) {
             LinkedList<SyncTestInfo> testsOfTask = syncTests.get(task.getID());
             if (testsOfTask == null) {
-                testsOfTask = new LinkedList<SyncTestInfo>();
+                testsOfTask = new LinkedList<>();
                 syncTests.put(task.getID(), testsOfTask);
             }
             testsOfTask.addLast(syncTestInfo);
@@ -181,6 +181,6 @@ public class ABSTestObserver extends RegistratingObserver implements FutObserver
                 model.testFinished(task);
                 pop(task.getID());
             }
-        }        
+        }
     }
 }

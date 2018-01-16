@@ -15,7 +15,7 @@ public class ListUtils {
 
     @SuppressWarnings("rawtypes")
     public static <A extends ASTNode> java.util.List<A> toJavaList(List<A> argList) {
-        ArrayList<A> res = new ArrayList<A>(argList.getNumChild());
+        ArrayList<A> res = new ArrayList<>(argList.getNumChild());
         for (A a : argList) {
             res.add(a);
         }
@@ -48,7 +48,7 @@ public class ListUtils {
         if (l.isEmpty()) {
             return DynamicClassUtils.instance("ABS.StdLib.List_Nil");
         } else {
-            ArrayList<ABSValue> ml = new ArrayList<ABSValue>(l); // make sure we can use remove()
+            ArrayList<ABSValue> ml = new ArrayList<>(l); // make sure we can use remove()
             ABSValue head = ml.remove(0);
             return DynamicClassUtils.instance("ABS.StdLib.List_Cons", head, toABSList(ml));
         }
@@ -71,7 +71,7 @@ public class ListUtils {
      * Transform a list of AST nodes into a java.util.Set
      */
     public static <T extends ASTNode<?>> java.util.Set<T> ASTListToSet(List<T> list) {
-        java.util.Set<T> set = new HashSet<T>();
+        java.util.Set<T> set = new HashSet<>();
         for (T element : list) {
             set.add(element);
         }

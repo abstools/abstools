@@ -37,7 +37,7 @@ public class ContractElementInvkA extends ContractElement {
   /* Constructors */
   public ContractElementInvkA(List<Term> l) { super(name, l); }
   public ContractElementInvkA(ASTNode pos, ContractElementInvk ci, ContractElementAwait ca) {
-    super(pos, name, new ArrayList<Term>(2));
+    super(pos, name, new ArrayList<>(2));
     subterms.add(ci);
     subterms.add(ca);
   }

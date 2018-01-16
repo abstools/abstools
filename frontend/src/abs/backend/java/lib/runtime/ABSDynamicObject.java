@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.runtime;
@@ -21,21 +21,21 @@ import abs.backend.java.observing.ObjectView;
 public class ABSDynamicObject extends ABSObject {
     private ABSDynamicClass clazz;
     private Map<String,ABSValue> fields;
-    
+
     public ABSDynamicObject(ABSDynamicClass clazz, ABSValue... params) {
         this.clazz = clazz;
         initializeFields(params);
     }
-    
+
     public ABSDynamicObject(COG cog, ABSDynamicClass clazz, ABSValue... params) {
         super(cog);
         this.clazz = clazz;
         initializeFields(params);
     }
-    
+
     private void initializeFields(ABSValue[] params) {
-        fields = new HashMap<String,ABSValue>();
-        
+        fields = new HashMap<>();
+
         // parameters
         if (params.length != clazz.getParams().size()) throw new DynamicException("Type mismatch");
         for (int i = 0; i < params.length; i++) {
@@ -53,7 +53,7 @@ public class ABSDynamicObject extends ABSObject {
 //            System.out.println("*** Class " + clazz.getName() + ": Field " + s + " = " + getFieldValue_Internal(s));
 //        }
     }
-    
+
     @Override
     public final ABSDynamicRuntime __ABS_getRuntime() {
         ABSRuntime runtime = super.__ABS_getRuntime();
@@ -70,7 +70,7 @@ public class ABSDynamicObject extends ABSObject {
     public void setCOG(COG cog) {
         this.__cog = cog;
     }
-    
+
     public void setClazz(ABSDynamicClass clazz) {
         this.clazz = clazz;
     }
@@ -78,18 +78,18 @@ public class ABSDynamicObject extends ABSObject {
     public ABSDynamicClass getClazz() {
         return clazz;
     }
-    
+
     public List<String> getFieldNames() {
-        return new ArrayList<String>(clazz.getFieldNames());
+        return new ArrayList<>(clazz.getFieldNames());
     }
-    
+
     public ABSValue getFieldValue(String field) throws NoSuchFieldException {
         if (fields.containsKey(field))
             return fields.get(field);
         else
             throw new NoSuchFieldException(field);
     }
-    
+
     public ABSValue getFieldValue_Internal(String field) {
         try {
             return getFieldValue(field);
@@ -97,21 +97,21 @@ public class ABSDynamicObject extends ABSObject {
             throw new DynamicException("Field not found: " + field);
         }
     }
-    
+
     public void setFieldValue(String fieldName, ABSValue val) {
         fields.put(fieldName, val);
     }
-    
+
     public void __ABS_init() {
         clazz.getConstructor().exec(this);
         this.getCOG().objectInitialized(this);
     }
-    
+
     public ABSValue dispatch(String mName, ABSValue... params) {
         ABSClosure method = clazz.getMethod(mName);
         return method.exec(this, params);
     }
-    
+
     public ABSUnit run() {
         ABSClosure cl = clazz.getMethod("run");
         if (cl != null) {
@@ -119,9 +119,9 @@ public class ABSDynamicObject extends ABSObject {
         }
         return ABSUnit.UNIT;
     }
-    
-    
-    
+
+
+
     public synchronized ObjectView getView() {
         if (__view == null) {
             __view = new View();
@@ -169,9 +169,9 @@ public class ABSDynamicObject extends ABSObject {
         @Override
         public List<String> getFieldNames() {
             if (fields == null) return Collections.emptyList();
-            return new ArrayList<String>(fields.keySet());
+            return new ArrayList<>(fields.keySet());
         }
 
     }
-        
+
 }

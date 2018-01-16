@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.visualization;
@@ -40,13 +40,13 @@ import abs.backend.java.observing.TaskView;
 public class SequenceDiagramVisualization implements SystemObserver, TaskObserver, ObjectCreationObserver, TaskSchedulerObserver {
     private static final int MAX_ARG_LENGTH = 30;
 
-    Set<FutView> waitingFutures = new HashSet<FutView>();
-    Set<FutView> resolvedFutures = new HashSet<FutView>();
+    Set<FutView> waitingFutures = new HashSet<>();
+    Set<FutView> resolvedFutures = new HashSet<>();
 
-    final Map<COGView, String> createdCOGClasses = new HashMap<COGView, String>();
+    final Map<COGView, String> createdCOGClasses = new HashMap<>();
 
-    final Map<COGView, Integer> objectIds = new HashMap<COGView, Integer>();
-    final Map<String, AtomicInteger> idCounters = new HashMap<String, AtomicInteger>();
+    final Map<COGView, Integer> objectIds = new HashMap<>();
+    final Map<String, AtomicInteger> idCounters = new HashMap<>();
 
     protected String getName() {
         return "Simulation";
@@ -79,18 +79,18 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 writeOutLn(getActorName(initialObject) + ":" + className + "[a]" + "\"" + className + " [COG " + cog.getID() + "]\"");
             }
         }
-        
+
         cog.registerObjectCreationListener(this);
 
     }
-    
+
     @Override
     public synchronized void objectCreated(ObjectView o) {
 /*        if (!staticActors) {
             writeOut(getActorName(o) + ":" + o.getClassName() + "[a]");
         }
-*/        
-        
+*/
+
     }
 
     @Override
@@ -98,10 +98,10 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
 /*        if (!staticActors) {
             writeOut(getActorName(o) + ":" + o.getClassName() + "[a]");
         }
-*/        
-        
+*/
+
     }
-    
+
 
     protected synchronized Integer getID(ObjectView v) {
         Integer id = objectIds.get(v.getCOG());
@@ -121,7 +121,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         return getObservedClasses().contains(className);
     }
 
-    
+
     @Override
     public synchronized void systemStarted() {
         worker = new Worker();
@@ -129,7 +129,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         writeOutLn(getName());
         initializeActors();
     }
-    
+
     protected void writeOutLn(String s) {
         writeOut(s + "\n");
     }
@@ -222,7 +222,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         if (task.getSource() == null) {
             return;
         }
-        
+
         String sourceClass = getClassName(task.getSource());
         String targetClass = getClassName(task.getTarget());
 
@@ -274,7 +274,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
 
             writeOut(shorten(String.valueOf(argString.toString())));
             writeOutLn(")");
-            
+
         }
     }
 
@@ -283,7 +283,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     }
 
     private String getClassName(ObjectView obj) {
-        return createdCOGClasses.get(obj.getCOG());        
+        return createdCOGClasses.get(obj.getCOG());
     }
 
     private String shorten(String arg) {
@@ -407,7 +407,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         // never invoked
     }
 
-    public static final List<String> EMPTY_STRING_LIST = new ArrayList<String>(0);
+    public static final List<String> EMPTY_STRING_LIST = new ArrayList<>(0);
 
     Collection<String> getObservedClasses() {
         return createdCOGClasses.values();
@@ -448,13 +448,13 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     @Override
     public void stackFrameCreated(TaskView task, TaskStackFrameView stackFrame) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -465,13 +465,13 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     private static class Worker extends Thread {
         private PrintWriter out;
         volatile private boolean stopped = false;
-        
-        private final ArrayBlockingQueue<String> buffer = new ArrayBlockingQueue<String>(10000000,true);
+
+        private final ArrayBlockingQueue<String> buffer = new ArrayBlockingQueue<>(10000000, true);
         private Worker() {
             super("SDEdit Communication Thread");
             super.setDaemon(true);
         }
-        
+
         @Override public void run() {
             connect();
             while(!stopped || !buffer.isEmpty()) {
@@ -484,7 +484,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                  }
              }
         }
-        
+
         void stopMe() {
             stopped = true;
             interrupt();
@@ -497,8 +497,8 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                     try {
                         Socket sk = new Socket("localhost", 60001);
                         out = new PrintWriter(sk.getOutputStream());
-                        
-                        
+
+
                         return;
                     } catch (java.net.SocketException e) {
                         try {
@@ -515,7 +515,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 e.printStackTrace();
             }
         }
-        
+
         public void write(String s) {
             boolean f = false;
             while(!f) {
@@ -532,6 +532,6 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     @Override
     public void stackFrameRemoved(TaskView task, TaskStackFrameView oldFrame) {
         // TODO Auto-generated method stub
-        
+
     }
 }

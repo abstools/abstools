@@ -59,7 +59,7 @@ public class ABSRuntime {
 
 
     /** URIs for loading foreign classes */
-    private List<URL> classPath = new ArrayList<URL>();
+    private List<URL> classPath = new ArrayList<>();
 
     private PrintStream outStream = System.out;
     private PrintStream errStream = System.err;
@@ -131,7 +131,7 @@ public class ABSRuntime {
         }
     }
 
-    private final List<SystemObserver> systemObserver = new ArrayList<SystemObserver>();
+    private final List<SystemObserver> systemObserver = new ArrayList<>();
 
     private GlobalSchedulingStrategy globalSchedulingStrategy;
     private GlobalScheduler globalScheduler;
@@ -370,12 +370,12 @@ public class ABSRuntime {
     }
 
     public <T extends ABSRef> ABSFut<?> asyncCall(AsyncCall<T> call) {
-        Task<T> task = new Task<T>(call);
+        Task<T> task = new Task<>(call);
         task.schedule();
         return task.getFut();
     }
 
-    private final Map<Class<?>,AtomicInteger> objectIds = new HashMap<Class<?>,AtomicInteger>();
+    private final Map<Class<?>,AtomicInteger> objectIds = new HashMap<>();
     public long getFreshObjectID(Class<?> clazz) {
         AtomicInteger ai = null;
         synchronized (objectIds) {
@@ -409,7 +409,7 @@ public class ABSRuntime {
     /**
      * Maps ABS class names of foreign classes to Java class implementations
      */
-    private final Map<String, Class<?>> foreignClasses = new HashMap<String, Class<?>>();
+    private final Map<String, Class<?>> foreignClasses = new HashMap<>();
 
     private Properties fliProperties;
     private synchronized Class<?> getForeignClass(String name) {

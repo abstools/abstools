@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.scheduling;
@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HistoryItem {
-    
-    
+
+
     public int cogId;
     public int taskid;
     public HistoryAction action;
@@ -37,7 +37,7 @@ public class HistoryItem {
     public boolean matches(ScheduleAction a) {
         if (cogId != a.getCOG().getID())
             return false;
-        
+
         if ((a instanceof StepTask && action != HistoryAction.EXECUTE)
                 || (a instanceof ScheduleTask && action != HistoryAction.SCHEDULE)
                 || (a instanceof ActivateTask && action != HistoryAction.ACTIVATE))
@@ -59,13 +59,13 @@ public class HistoryItem {
     public String toString() {
         return cogId + "," + action.toString() + "," + taskid;
     }
-    
-    
-    
+
+
+
     public static List<HistoryItem> loadHistory(File f) throws IOException {
         List<HistoryItem> history;
         BufferedReader reader = new BufferedReader(new FileReader(f));
-        history = new ArrayList<HistoryItem>();
+        history = new ArrayList<>();
         while (reader.ready()) {
             String s = reader.readLine();
             if (s == null)
@@ -77,5 +77,5 @@ public class HistoryItem {
 
         return history;
     }
-    
+
 }

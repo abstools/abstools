@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.runtime;
@@ -17,18 +17,18 @@ public class ABSDynamicProduct extends ABSDynamicObject {
     public ABSDynamicProduct() {
         super(Product.singleton());
     }
-    
+
     protected String name;
-    private Set<ABSDynamicFeature> features = new HashSet<ABSDynamicFeature>();
-    private Map<ABSDynamicProduct,ABSDynamicReconfiguration> reconfigurations = new HashMap<ABSDynamicProduct,ABSDynamicReconfiguration>();
-    
+    private Set<ABSDynamicFeature> features = new HashSet<>();
+    private Map<ABSDynamicProduct,ABSDynamicReconfiguration> reconfigurations = new HashMap<>();
+
     public String getName() {
         return name;
     }
     public void setName(String name) {
         this.name = name;
     }
-   
+
     public Set<ABSDynamicFeature> getFeatures() {
         return features;
     }
@@ -47,11 +47,11 @@ public class ABSDynamicProduct extends ABSDynamicObject {
     public Set<ABSDynamicProduct> getConfigurableProducts() {
         return reconfigurations.keySet();
     }
-    
+
     public void addReconfiguration(ABSDynamicProduct targetP, ABSDynamicReconfiguration recf) {
         reconfigurations.put(targetP, recf);
     }
-    
+
     public ABSDynamicReconfiguration getReconfiguration(ABSDynamicProduct targetP) {
         if (! reconfigurations.containsKey(targetP))
             return reconfigurations.get(targetP);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.absunit;
@@ -42,7 +42,7 @@ public class ABSUnitGUI extends JFrame implements TestModelListener {
 
     private JLabel details;
 
-    
+
     private JLabel statLabel;
 
     private JLabel testRunStatus;
@@ -67,7 +67,7 @@ public class ABSUnitGUI extends JFrame implements TestModelListener {
 
         JPanel failureCard = new JPanel();
         failureList = new JList();
-        
+
         failureList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         failureList.setVisibleRowCount(-1);
         JScrollPane listScroller = new JScrollPane(failureList);
@@ -75,7 +75,7 @@ public class ABSUnitGUI extends JFrame implements TestModelListener {
 
         failureCard.add(listScroller);
 
-        
+
         JPanel traceCard = new JPanel();
         JTextArea traceView = new JTextArea();
         traceView.setEditable(false);
@@ -90,16 +90,16 @@ public class ABSUnitGUI extends JFrame implements TestModelListener {
         statLabel = new JLabel(getStatistics());
         bar = new Bar();
 
-        
-        
+
+
         barPanel.add(testRunStatus);
         barPanel.add(bar);
         barPanel.add(statLabel);
 
         final JPanel detailsPanel = new JPanel();
         detailsPanel.setLayout(new BorderLayout());
-        
-        
+
+
         details = new JLabel("") {
             private static final long serialVersionUID = 1320537354431551958L;
 
@@ -110,21 +110,21 @@ public class ABSUnitGUI extends JFrame implements TestModelListener {
                 return new Dimension(100, 100);
             }
         };
-        
+
         details.setAutoscrolls(true);
-        
+
         details.setVerticalAlignment(SwingConstants.NORTH);
         details.setHorizontalAlignment(SwingConstants.LEFT);
 
-        
+
         JScrollPane detailsScroller = new JScrollPane(details);
         detailsScroller.setPreferredSize(new Dimension(250, 80));
 
         detailsPanel.add(new JLabel("Details: "), BorderLayout.NORTH);
         detailsPanel.add(new JScrollPane(detailsScroller, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED), BorderLayout.CENTER);
-        
-        
+
+
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(barPanel, BorderLayout.NORTH);
         getContentPane().add(cards, BorderLayout.CENTER);
@@ -136,32 +136,32 @@ public class ABSUnitGUI extends JFrame implements TestModelListener {
         Runnable guiRun = new Runnable() {
             @Override
             public void run() {
-                Vector<TestStatus> failedTests = new Vector<TestStatus>(); 
+                Vector<TestStatus> failedTests = new Vector<>();
                 for (TestStatus status : model.getAllFinishedTests()) {
                     if (status.getStatus() != TestStatus.Status.OK) {
                         failedTests.add(status);
                     }
-                }        
-                
+                }
+
                 failureList.setListData(failedTests);
-                failureList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {            
+                failureList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
                     @Override
                     public void valueChanged(ListSelectionEvent ev) {
                         TestStatus value = (TestStatus) failureList.getSelectedValue();
-                        
+
                         details.setText(value.displayString());
                     }
                 });
 
                 testRunStatus.setText(getTestRunStatus());
                 statLabel.setText(getStatistics());
-                bar.set(model.successful(), model.failed(), model.deadlocked(), model.error(), model.active());        
-                                
+                bar.set(model.successful(), model.failed(), model.deadlocked(), model.error(), model.active());
+
                 repaint();
             }
         };
         if (SwingUtilities.isEventDispatchThread()) {
-          guiRun.run();  
+          guiRun.run();
         } else {
             try {
                 SwingUtilities.invokeAndWait(guiRun);
@@ -197,7 +197,7 @@ public class ABSUnitGUI extends JFrame implements TestModelListener {
     static class Bar extends JPanel {
 
         private static final long serialVersionUID = 1555451748887382403L;
-        
+
         private static Color OK = Color.GREEN;
         private static Color FAILED = Color.RED;
         private static Color ERROR = Color.ORANGE;
@@ -267,6 +267,6 @@ public class ABSUnitGUI extends JFrame implements TestModelListener {
 
     @Override
     public void systemFinished() {
-        updateBarPanels();        
+        updateBarPanels();
     }
 }

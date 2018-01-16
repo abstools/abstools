@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.runtime.metaABS;
@@ -21,7 +21,7 @@ import abs.common.ListUtils;
 public class Product {
     private static ABSDynamicClass thisClass;
 
-    /* 
+    /*
      * Create singleton object
      */
     public static ABSDynamicClass singleton() {
@@ -31,17 +31,17 @@ public class Product {
         }
         return thisClass;
     }
-    
+
     /*
      * Define the methods of this class
      */
     public static void setupMetaAPI() {
         thisClass.setName("Product");
-        
-        /* 
-         * MetaABS Product API -- cf. abslang.abs module ABS.Meta 
+
+        /*
+         * MetaABS Product API -- cf. abslang.abs module ABS.Meta
          */
-        
+
         thisClass.addMethod(/*ABSString*/ "getName", new ABSClosure() {
             @Override
             public ABSString exec(ABSDynamicObject t, ABSValue... params) {
@@ -54,7 +54,7 @@ public class Product {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicProduct thisP = (ABSDynamicProduct)t;
-                ArrayList<ABSDynamicFeature> features = new ArrayList<ABSDynamicFeature>();
+                ArrayList<ABSDynamicFeature> features = new ArrayList<>();
                 for (ABSDynamicFeature f : thisP.getFeatures()) {
                     features.add(f);
                 }
@@ -80,5 +80,5 @@ public class Product {
         });
 
     }
-    
+
 }

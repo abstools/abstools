@@ -17,7 +17,7 @@ import abs.frontend.typechecker.TypeParameter;
 import abs.frontend.typechecker.KindedName.Kind;
 
 public class TypeExtensionHelper implements TypeSystemExtension {
-    private java.util.List<TypeSystemExtension> obs = new ArrayList<TypeSystemExtension>();
+    private java.util.List<TypeSystemExtension> obs = new ArrayList<>();
 
     private void registerDefaultExtensions(Model m) {
         register(new ClassKindTypeExtension(m));
@@ -53,21 +53,21 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
 
     public void register(TypeSystemExtension tse) {
-        obs = new ArrayList<TypeSystemExtension>(obs);
+        obs = new ArrayList<>(obs);
         obs.add(tse);
     }
 
     public void unregister(TypeSystemExtension tse) {
-        obs = new ArrayList<TypeSystemExtension>(obs);
+        obs = new ArrayList<>(obs);
         obs.remove(tse);
     }
 
     public void clearTypeSystemExtensions() {
-        obs = new ArrayList<TypeSystemExtension>();
+        obs = new ArrayList<>();
     }
 
     public java.util.List<TypeSystemExtension> getTypeSystemExtensionList() {
-        return new ArrayList<TypeSystemExtension>(obs);
+        return new ArrayList<>(obs);
     }
 
     public void checkMethodCall(Call call) {
@@ -208,7 +208,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     public void checkDataConstructorExp(DataConstructorExp e) {
         DataConstructor decl = (DataConstructor) e.getDecl();
         if (decl.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
-            HashMap<TypeParameter, Type> map = new HashMap<TypeParameter, Type>();
+            HashMap<TypeParameter, Type> map = new HashMap<>();
             for (int i = 0; i < decl.getNumConstructorArg(); i++) {
                 Type rht = e.getParam(i).getType();
                 Type arg = decl.getConstructorArg(i).getType();
@@ -221,7 +221,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     public void checkFnApp(FnApp f) {
         FunctionDecl decl = (FunctionDecl) f.getDecl();
         if (decl instanceof ParametricFunctionDecl) {
-            HashMap<TypeParameter, Type> map = new HashMap<TypeParameter, Type>();
+            HashMap<TypeParameter, Type> map = new HashMap<>();
             for (int i = 0; i < decl.getNumParam(); i++) {
                 Type t = f.getParam(i).getType();
                 Type arg = decl.getParam(i).getType();
@@ -394,10 +394,10 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         for (TypeSystemExtension tse : obs) {
             tse.checkModel(model);
         }
-    }        
+    }
 
     public void registerAll(java.util.List<TypeSystemExtension> curr) {
-        obs = new ArrayList<TypeSystemExtension>(obs);
+        obs = new ArrayList<>(obs);
         obs.addAll(curr);
     }
 }
