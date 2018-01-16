@@ -27,7 +27,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     String filename = abs.frontend.parser.Main.UNKNOWN_FILENAME;
 
     /** maps antlr nodes to JastAdd nodes - see antlr book Sec.7.5 */
-    ParseTreeProperty<ASTNode<?>> values = new ParseTreeProperty<ASTNode<?>>();
+    ParseTreeProperty<ASTNode<?>> values = new ParseTreeProperty<>();
     UnresolvedTypeUse t = null;
     CompilationUnit result = null;
 
@@ -35,7 +35,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         if (filename != null) this.filename = filename.getPath();
     }
 
-    private ASTNode<?> setASTNodePosition(ParserRuleContext node, ASTNode<?> value) {
+    private <T extends ASTNode<?>> T setASTNodePosition(ParserRuleContext node, T value) {
         assert node != null;
         Token start = node.getStart();
         Token stop = node.getStop();
@@ -50,7 +50,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         return value;
     }
 
-    private ASTNode<?> setASTNodePosition(Token node, ASTNode<?> value) {
+    private <T extends ASTNode<?>> T setASTNodePosition(Token node, T value) {
         assert node != null;
         int startline = node.getLine();
         int startcol = node.getCharPositionInLine();
@@ -67,7 +67,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
      * return value.  Also sets filename and position of the JastAdd
      * value.  Returns the passed-in JastAdd value.
      */
-    private ASTNode<?> setV(ParserRuleContext node, ASTNode<?> value) {
+    private <T extends ASTNode<?>> T setV(ParserRuleContext node, T value) {
         setASTNodePosition(node, value);
         values.put(node, value);
         return value;
@@ -77,20 +77,20 @@ public class CreateJastAddASTListener extends ABSBaseListener {
      * Returns the AstNode for the given antlr parse node.  The result
      * is guaranteed to be non-null.
      */
-    private ASTNode<?> v(ParseTree node) {
+    @SuppressWarnings("unchecked")
+    private <T extends ASTNode<?>> T v(ParseTree node) {
         ASTNode<?> result = values.get(node);
         if (result == null) throw new NullPointerException();
-        return result;
+        return (T) result;
     }
 
     /**
      * Returns a fresh Opt<ASTNode> filled with the result of v(node) if
      * node is non-null, empty otherwise.
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private Opt o(ParseTree node) {
-        if (node == null) return new Opt();
-        else return new Opt(v(node));
+    private <T extends ASTNode<?>> Opt<T> o(ParseTree node) {
+        if (node == null) return new Opt<>();
+        else return new Opt<>(v(node));
     }
 
     /**
@@ -98,9 +98,8 @@ public class CreateJastAddASTListener extends ABSBaseListener {
      * The result list elements are found via 'v' and are guaranteed
      * non-null.
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private List l(java.util.List<? extends ParseTree> l) {
-        List result = new List();
+    private <T extends ASTNode<?>> List<T> l(java.util.List<? extends ParseTree> l) {
+        List<T> result = new List<>();
         for (ParseTree n : l) {
             result.add(v(n));
         }
@@ -133,11 +132,11 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
 
     @Override public void enterCompilation_unit(ABSParser.Compilation_unitContext ctx) {
-        this.result = (CompilationUnit)setV(ctx, new CompilationUnit(this.filename,
-new List<ModuleDecl>(),
-                              new List<DeltaDecl>(),new List<UpdateDecl>(),
-                              new Opt<ProductLine>(),new List<ProductDecl>(),
-                              new List<FeatureDecl>(),new List<FExt>()));
+        this.result = setV(ctx, new CompilationUnit(this.filename,
+            new List<>(),
+            new List<>(), new List<>(),
+            new Opt<>(), new List<>(),
+            new List<>(), new List<>()));
     }
 
     @Override public void exitCompilation_unit(ABSParser.Compilation_unitContext ctx) {
@@ -149,14 +148,14 @@ new List<ModuleDecl>(),
         result.setFExtList(l(ctx.fextension()));
     }
 
-    
+
     // Traits
 
 
-    @Override public void exitDeltaTraitFragment(ABSParser.DeltaTraitFragmentContext ctx) { 
-        setV(ctx,new DeltaTraitModifier((MethodModifier) v(ctx.trait_oper())));
+    @Override public void exitDeltaTraitFragment(ABSParser.DeltaTraitFragmentContext ctx) {
+        setV(ctx,new DeltaTraitModifier(v(ctx.trait_oper())));
     }
-    
+
     @Override public void exitTraitAddFragment(abs.frontend.antlr.parser.ABSParser.TraitAddFragmentContext ctx) {
         setV(ctx,new AddMethodModifier((TraitExpr) v(ctx.trait_expr())));
     }
@@ -164,17 +163,17 @@ new List<ModuleDecl>(),
         setV(ctx,new ModifyMethodModifier((TraitExpr) v(ctx.trait_expr())));
      }
     @Override public void exitTraitRemoveFragment(abs.frontend.antlr.parser.ABSParser.TraitRemoveFragmentContext ctx) {
-        List<MethodSig> l = new List<MethodSig>();
+        List<MethodSig> l = new List<>();
         for (MethodsigContext methodSig : ctx.methodsig()) {
-            l.add((MethodSig)v(methodSig));
+            l.add(v(methodSig));
         }
         setV(ctx,new RemoveMethodModifier(l));
      }
 
-    
+
          @Override
         public void exitTraitApplyFragment(TraitApplyFragmentContext ctx) {
-             setV(ctx, new TraitModifyExpr((TraitExpr)v(ctx.trait_expr()), (MethodModifier)v(ctx.trait_oper())));
+             setV(ctx, new TraitModifyExpr(v(ctx.trait_expr()), v(ctx.trait_oper())));
         }
          @Override
         public void exitTraitNameFragment(TraitNameFragmentContext ctx) {
@@ -182,16 +181,16 @@ new List<ModuleDecl>(),
         }
          @Override
         public void exitTraitSetFragment(TraitSetFragmentContext ctx) {
-             setV(ctx, new TraitSetExpr(l(ctx.method())));             
+             setV(ctx, new TraitSetExpr(l(ctx.method())));
         }
     @Override public void exitTrait_usage( ABSParser.Trait_usageContext ctx) {
         //setV(ctx, new TraitUse(ctx.TYPE_IDENTIFIER().toString(), new List()));
-        setV(ctx, new TraitUse((TraitExpr)v(ctx.trait_expr())));
+        setV(ctx, new TraitUse(v(ctx.trait_expr())));
     }
-    @Override public void exitTrait_decl( ABSParser.Trait_declContext ctx) { 
-        setV(ctx, new TraitDecl(ctx.TYPE_IDENTIFIER().getText(), (TraitExpr)v(ctx.trait_expr())));
+    @Override public void exitTrait_decl( ABSParser.Trait_declContext ctx) {
+        setV(ctx, new TraitDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.trait_expr())));
     }
-    
+
     // Declarations
     @Override public void exitDecl(ABSParser.DeclContext ctx) {
         setV(ctx, v(ctx.getChild(0))); // relies on decl having one token
@@ -218,7 +217,8 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitDatatype_decl(ABSParser.Datatype_declContext ctx) {
-        ParametricDataTypeDecl d = (ParametricDataTypeDecl)setV(ctx, new ParametricDataTypeDecl(ctx.n.getText(), l(ctx.c), (List<Annotation>)v(ctx.annotations()), new List<TypeParameterDecl>()));
+        ParametricDataTypeDecl d = setV(ctx, new ParametricDataTypeDecl(ctx.n.getText(), l(ctx.c), v(ctx.annotations()),
+            new List<>()));
         for (Token t : ctx.p) {
             TypeParameterDecl tpd = new TypeParameterDecl(t.getText());
             setASTNodePosition(t, tpd);
@@ -228,10 +228,10 @@ new List<ModuleDecl>(),
 
     @Override public void exitData_constructor(ABSParser.Data_constructorContext ctx) {
         DataConstructor d
-            = (DataConstructor)setV(ctx, new DataConstructor(ctx.n.getText(), new List<ConstructorArg>()));
+            = setV(ctx, new DataConstructor(ctx.n.getText(), new List<>()));
         // KLUDGE: copied into exitException_decl
         for (ABSParser.Data_constructor_argContext a : ctx.a) {
-            final TypeUse vt = (TypeUse) v(a.type_use());
+            final TypeUse vt = v(a.type_use());
             final DataTypeUse vtresolved;
             if (vt instanceof DataTypeUse) {
                 vtresolved = (DataTypeUse) vt;
@@ -241,7 +241,7 @@ new List<ModuleDecl>(),
                 vtresolved = new DataTypeUse(vt.getName(), vt.getAnnotations());
                 vtresolved.setPositionFromNode(vt);
             }
-            ConstructorArg ca = new ConstructorArg(vtresolved, a.IDENTIFIER() != null ? new Opt(new Name(a.IDENTIFIER().getText())) : new Opt());
+            ConstructorArg ca = new ConstructorArg(vtresolved, a.IDENTIFIER() != null ? new Opt<>(new Name(a.IDENTIFIER().getText())) : new Opt<>());
             setASTNodePosition(a, ca);
             d.addConstructorArg(ca);
         }
@@ -251,31 +251,33 @@ new List<ModuleDecl>(),
         // TODO: datatypes do not distinguish between DataTypeDecl and
         // ParametricDataTypeDecl; it would be nice to do this for
         // functions as well.
-        FunctionDef d = ctx.e == null ? new BuiltinFunctionDef() : new ExpFunctionDef((PureExp)v(ctx.e));
-        List<ParamDecl> p = (List<ParamDecl>)v(ctx.paramlist());
-        TypeUse t = (TypeUse)v(ctx.type_use());
+        FunctionDef d = ctx.e == null ? new BuiltinFunctionDef() : new ExpFunctionDef(v(ctx.e));
+        List<ParamDecl> p = v(ctx.paramlist());
+        TypeUse t = v(ctx.type_use());
         if (ctx.p != null && !ctx.p.isEmpty()) {
             ParametricFunctionDecl dp
-                = (ParametricFunctionDecl)setV(ctx, new ParametricFunctionDecl(ctx.n.getText(), t, p, d, (List<Annotation>)v(ctx.annotations()), new List<TypeParameterDecl>()));
+                = setV(ctx, new ParametricFunctionDecl(ctx.n.getText(), t, p, d, v(ctx.annotations()),
+                new List<>()));
             for (Token tp : ctx.p) {
                 TypeParameterDecl tpd = new TypeParameterDecl(tp.getText());
                 setASTNodePosition(tp, tpd);
                 dp.addTypeParameter(tpd);
             }
         } else {
-            setV(ctx, new FunctionDecl(ctx.n.getText(), (List<Annotation>)v(ctx.annotations()), t, p, d));
+            setV(ctx, new FunctionDecl(ctx.n.getText(), v(ctx.annotations()), t, p, d));
         }
     }
 
     @Override
     public void exitPar_function_decl(ABSParser.Par_function_declContext ctx) {
-        PartialFunctionDef d = new PartialFunctionDef((PureExp)v(ctx.e));
-        List<ParamDecl> params = (List<ParamDecl>) v(ctx.params);
-        List<FunctionParamDecl> funcParams = (List<FunctionParamDecl>) v(ctx.functions);
-        TypeUse t = (TypeUse) v(ctx.type_use());
+        PartialFunctionDef d = new PartialFunctionDef(v(ctx.e));
+        List<ParamDecl> params = v(ctx.params);
+        List<FunctionParamDecl> funcParams = v(ctx.functions);
+        TypeUse t = v(ctx.type_use());
         if(ctx.p != null && !ctx.p.isEmpty()) {
             ParametricPartialFunctionDecl fd =
-                (ParametricPartialFunctionDecl) setV(ctx, new ParametricPartialFunctionDecl(ctx.n.getText(), l(ctx.annotation()), new List<TypeParameterDecl>(), t, params, funcParams, d));
+                setV(ctx, new ParametricPartialFunctionDecl(ctx.n.getText(), l(ctx.annotation()),
+                    new List<>(), t, params, funcParams, d));
             for (Token tp : ctx.p) {
                 TypeParameterDecl tpd = new TypeParameterDecl(tp.getText());
                 setASTNodePosition(tp, tpd);
@@ -288,15 +290,15 @@ new List<ModuleDecl>(),
 
     @Override public void exitTypesyn_decl(ABSParser.Typesyn_declContext ctx) {
 
-        setV(ctx, new TypeSynDecl(ctx.TYPE_IDENTIFIER().getText(), (List<Annotation>)v(ctx.annotations()), (TypeUse)v(ctx.type_use())));
+        setV(ctx, new TypeSynDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.annotations()), v(ctx.type_use())));
     }
 
     @Override public void exitException_decl(ABSParser.Exception_declContext ctx) {
         ExceptionConstructor d
-            = new ExceptionConstructor(ctx.n.getText(), new List<ConstructorArg>());
+            = new ExceptionConstructor(ctx.n.getText(), new List<>());
         // KLUDGE: copy of exitData_constructor
         for (ABSParser.Data_constructor_argContext a : ctx.a) {
-            final TypeUse vt = (TypeUse) v(a.type_use());
+            final TypeUse vt = v(a.type_use());
             final DataTypeUse vtresolved;
             if (vt instanceof DataTypeUse) {
                 vtresolved = (DataTypeUse) vt;
@@ -306,39 +308,40 @@ new List<ModuleDecl>(),
                 vtresolved = new DataTypeUse(vt.getName(), vt.getAnnotations());
                 vtresolved.setPositionFromNode(vt);
             }
-            ConstructorArg ca = new ConstructorArg(vtresolved, a.IDENTIFIER() != null ? new Opt(new Name(a.IDENTIFIER().getText())) : new Opt());
+            ConstructorArg ca = new ConstructorArg(vtresolved, a.IDENTIFIER() != null ? new Opt<>(new Name(a.IDENTIFIER().getText())) : new Opt<>());
             setASTNodePosition(a, ca);
             d.addConstructorArg(ca);
         }
-        List<DataConstructor> l = new List<DataConstructor>();
+        List<DataConstructor> l = new List<>();
         l.add(d);
-        setV(ctx, new ExceptionDecl(ctx.n.getText(), (List<Annotation>)v(ctx.annotations()), l));
+        setV(ctx, new ExceptionDecl(ctx.n.getText(), v(ctx.annotations()), l));
     }
 
     @Override public void exitMain_block(ABSParser.Main_blockContext ctx) {
-        setV(ctx, new MainBlock((List<Annotation>)v(ctx.annotations()), l(ctx.stmt())));
+        setV(ctx, new MainBlock(v(ctx.annotations()), l(ctx.stmt())));
     }
 
     // Interfaces
     @Override public void exitInterface_decl(ABSParser.Interface_declContext ctx) {
-        setV(ctx, new InterfaceDecl(ctx.TYPE_IDENTIFIER().getText(), (List<Annotation>)v(ctx.annotations()), l(ctx.e), l(ctx.methodsig())));
+        setV(ctx, new InterfaceDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.annotations()), l(ctx.e), l(ctx.methodsig())));
     }
 
     @Override public void exitMethodsig(ABSParser.MethodsigContext ctx) {
-        setV(ctx, new MethodSig(ctx.IDENTIFIER().getText(), (List<Annotation>)v(ctx.annotations()), (Access)v(ctx.type_use()), (List<ParamDecl>)v(ctx.paramlist())));
+        setV(ctx, new MethodSig(ctx.IDENTIFIER().getText(), v(ctx.annotations()), v(ctx.type_use()), v(ctx.paramlist())));
     }
 
     // Classes
     @Override public void exitClass_decl(ABSParser.Class_declContext ctx) {
-        ClassDecl c = (ClassDecl)setV(ctx, new ClassDecl(ctx.TYPE_IDENTIFIER().getText(), (List<Annotation>)v(ctx.annotations()), new List<ParamDecl>(), l(ctx.interface_name()),
-                                                         l(ctx.trait_usage()),  new Opt<InitBlock>(), l(ctx.casestmtbranch()), l(ctx.field_decl()), l(ctx.method())));
+        ClassDecl c = setV(ctx, new ClassDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.annotations()),
+            new List<>(), l(ctx.interface_name()),
+                                                         l(ctx.trait_usage()), new Opt<>(), l(ctx.casestmtbranch()), l(ctx.field_decl()), l(ctx.method())));
         if (ctx.paramlist() != null) {
-            c.setParamList((List<ParamDecl>)v(ctx.paramlist()));
+            c.setParamList(v(ctx.paramlist()));
         }
         if (ctx.stmt() != null && !ctx.stmt().isEmpty()) {
-            InitBlock b = new InitBlock(new List<Annotation>(), new List<Stmt>());
+            InitBlock b = new InitBlock(new List<>(), new List<>());
             for (ABSParser.StmtContext s : ctx.stmt()) {
-                b.addStmt((Stmt)v(s));
+                b.addStmt(v(s));
             }
             c.setInitBlock(b);
         }
@@ -346,16 +349,18 @@ new List<ModuleDecl>(),
 
     @Override public void exitField_decl(ABSParser.Field_declContext ctx) {
         // FIXME: 'port' missing (for component model)
-        FieldDecl f = (FieldDecl)setV(ctx, new FieldDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_use()), o(ctx.pure_exp()), (List<Annotation>)v(ctx.annotations()), false));
+        FieldDecl f = setV(ctx, new FieldDecl(ctx.IDENTIFIER().getText(), v(ctx.type_use()), o(ctx.pure_exp()),
+            v(ctx.annotations()), false));
     }
 
     @Override public void exitMethod(ABSParser.MethodContext ctx) {
-        MethodSig ms = new MethodSig(ctx.IDENTIFIER().getText(), (List<Annotation>)v(ctx.annotations()), (Access)v(ctx.type_use()), (List<ParamDecl>)v(ctx.paramlist()));
+        MethodSig ms = new MethodSig(ctx.IDENTIFIER().getText(), v(ctx.annotations()), v(ctx.type_use()),
+            v(ctx.paramlist()));
         ms.setPosition(ctx.IDENTIFIER().getSymbol().getLine(), ctx.IDENTIFIER().getSymbol().getCharPositionInLine(),
                        ctx.paramlist().getStop().getLine(), ctx.paramlist().getStop().getCharPositionInLine() + ctx.paramlist().getStop().getText().length());
-        Block b = new Block(new List<Annotation>(), new List<Stmt>());
+        Block b = new Block(new List<>(), new List<>());
         for (ABSParser.StmtContext s : ctx.stmt()) {
-            b.addStmt((Stmt)v(s));
+            b.addStmt(v(s));
         }
         // FIXME: 'critical' missing (for component model)
         setV(ctx, new MethodImpl(ms, b, false));
@@ -363,131 +368,131 @@ new List<ModuleDecl>(),
 
     // Statements
     @Override public void exitVardeclStmt(ABSParser.VardeclStmtContext ctx) {
-        VarDecl v = new VarDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), new Opt<Exp>());
+        VarDecl v = new VarDecl(ctx.IDENTIFIER().getText(), v(ctx.type_exp()), new Opt<>());
         setASTNodePosition(ctx, v);
         if (ctx.exp() != null) {
-            v.setInitExp((Exp)v(ctx.exp()));
+            v.setInitExp(v(ctx.exp()));
         }
-        setV(ctx, new VarDeclStmt((List<Annotation>)v(ctx.annotations()), v));
+        setV(ctx, new VarDeclStmt(v(ctx.annotations()), v));
     }
 
     @Override public void exitAssignStmt(ABSParser.AssignStmtContext ctx) {
-        setV(ctx, new AssignStmt((List<Annotation>)v(ctx.annotations()), (VarOrFieldUse)v(ctx.var_or_field_ref()), (Exp)v(ctx.exp())));
+        setV(ctx, new AssignStmt(v(ctx.annotations()), v(ctx.var_or_field_ref()), v(ctx.exp())));
     }
     @Override public void exitSkipStmt(ABSParser.SkipStmtContext ctx) {
-        setV(ctx, new SkipStmt((List<Annotation>)v(ctx.annotations())));
+        setV(ctx, new SkipStmt(v(ctx.annotations())));
     }
     @Override public void exitReturnStmt(ABSParser.ReturnStmtContext ctx) {
-        setV(ctx, new ReturnStmt((List<Annotation>)v(ctx.annotations()), (Exp)v(ctx.exp())));
+        setV(ctx, new ReturnStmt(v(ctx.annotations()), v(ctx.exp())));
     }
     @Override public void exitAssertStmt(ABSParser.AssertStmtContext ctx) {
-        setV(ctx, new AssertStmt((List<Annotation>)v(ctx.annotations()), (PureExp)v(ctx.exp())));
+        setV(ctx, new AssertStmt(v(ctx.annotations()), v(ctx.exp())));
     }
     @Override public void exitBlockStmt(ABSParser.BlockStmtContext ctx) {
-        setV(ctx, new Block((List<Annotation>)v(ctx.annotations()), l(ctx.stmt())));
+        setV(ctx, new Block(v(ctx.annotations()), l(ctx.stmt())));
     }
     @Override public void exitIfStmt(ABSParser.IfStmtContext ctx) {
-        Stmt l = (Stmt)v(ctx.l);
+        Stmt l = v(ctx.l);
         if (!(l instanceof Block)) {
-            setV(ctx.l, new Block(new List<Annotation>(), new List(l)));
+            setV(ctx.l, new Block(new List<>(), new List<>(l)));
         }
         if (ctx.r != null) {
-            Stmt r = (Stmt)v(ctx.r);
+            Stmt r = v(ctx.r);
             if (!(r instanceof Block)) {
-                setV(ctx.r, new Block(new List<Annotation>(), new List(r)));
+                setV(ctx.r, new Block(new List<>(), new List<>(r)));
             }
         }
-        setV(ctx, new IfStmt((List<Annotation>)v(ctx.annotations()), (PureExp)v(ctx.c),
-                             (Block)v(ctx.l), o(ctx.r)));
+        setV(ctx, new IfStmt(v(ctx.annotations()), v(ctx.c),
+            v(ctx.l), o(ctx.r)));
     }
     @Override public void exitWhileStmt(ABSParser.WhileStmtContext ctx) {
-        Stmt body = (Stmt)v(ctx.stmt());
+        Stmt body = v(ctx.stmt());
         if (!(body instanceof Block)) {
-            setV(ctx.stmt(), new Block(new List<Annotation>(), new List(body)));
+            setV(ctx.stmt(), new Block(new List<>(), new List<>(body)));
         }
-        setV(ctx, new WhileStmt((List<Annotation>)v(ctx.annotations()), (PureExp)v(ctx.c), (Block)v(ctx.stmt())));
+        setV(ctx, new WhileStmt(v(ctx.annotations()), v(ctx.c), v(ctx.stmt())));
     }
     @Override public void exitForeachStmt(ABSParser.ForeachStmtContext ctx) {
-        Stmt body = (Stmt)v(ctx.stmt());
+        Stmt body = v(ctx.stmt());
         if (!(body instanceof Block)) {
-            setV(ctx.stmt(), new Block(new List<Annotation>(), new List(body)));
+            setV(ctx.stmt(), new Block(new List<>(), new List<>(body)));
         }
-        setV(ctx, new ForeachStmt((List<Annotation>)v(ctx.annotations()), new LoopVarDecl(ctx.i.getText()), (PureExp)v(ctx.l), (Block)v(ctx.stmt())));
+        setV(ctx, new ForeachStmt(v(ctx.annotations()), new LoopVarDecl(ctx.i.getText()), v(ctx.l), v(ctx.stmt())));
     }
     @Override public void exitTryCatchFinallyStmt(ABSParser.TryCatchFinallyStmtContext ctx) {
-        Stmt body = (Stmt)v(ctx.b);
+        Stmt body = v(ctx.b);
         if (!(body instanceof Block)) {
-            setV(ctx.b, new Block(new List<Annotation>(), new List(body)));
+            setV(ctx.b, new Block(new List<>(), new List<>(body)));
         }
         if (ctx.f != null) {
-            Stmt finall = (Stmt)v(ctx.f);
+            Stmt finall = v(ctx.f);
             if (!(finall instanceof Block)) {
-                setV(ctx.f, new Block(new List<Annotation>(), new List(finall)));
+                setV(ctx.f, new Block(new List<>(), new List<>(finall)));
             }
         }
-        setV(ctx, new TryCatchFinallyStmt((List<Annotation>)v(ctx.annotations()), (Block)v(ctx.b),
+        setV(ctx, new TryCatchFinallyStmt(v(ctx.annotations()), v(ctx.b),
                                           l(ctx.casestmtbranch()), o(ctx.f)));
     }
     @Override public void exitAwaitStmt(ABSParser.AwaitStmtContext ctx) {
-        setV(ctx, new AwaitStmt((List<Annotation>)v(ctx.annotations()), (Guard)v(ctx.guard())));
+        setV(ctx, new AwaitStmt(v(ctx.annotations()), v(ctx.guard())));
     }
     @Override public void exitClaimGuard(ABSParser.ClaimGuardContext ctx) {
-        setV(ctx, new ClaimGuard((VarOrFieldUse)v(ctx.var_or_field_ref())));
+        setV(ctx, new ClaimGuard(v(ctx.var_or_field_ref())));
     }
     @Override public void exitDurationGuard(ABSParser.DurationGuardContext ctx) {
-        setV(ctx, new DurationGuard((PureExp)v(ctx.min), (PureExp)v(ctx.max)));
+        setV(ctx, new DurationGuard(v(ctx.min), v(ctx.max)));
     }
     @Override public void exitExpGuard(ABSParser.ExpGuardContext ctx) {
-        setV(ctx, new ExpGuard((PureExp)v(ctx.e)));
+        setV(ctx, new ExpGuard(v(ctx.e)));
     }
     @Override public void exitAndGuard(ABSParser.AndGuardContext ctx) {
-        setV(ctx, new AndGuard((Guard)v(ctx.l), (Guard)v(ctx.r)));
+        setV(ctx, new AndGuard(v(ctx.l), v(ctx.r)));
     }
     @Override public void exitSuspendStmt(ABSParser.SuspendStmtContext ctx) {
-        setV(ctx, new SuspendStmt((List<Annotation>)v(ctx.annotations())));
+        setV(ctx, new SuspendStmt(v(ctx.annotations())));
     }
     @Override public void exitDurationStmt(ABSParser.DurationStmtContext ctx) {
-        setV(ctx, new DurationStmt((List<Annotation>)v(ctx.annotations()), (PureExp)v(ctx.f),
-                                   (PureExp)v(ctx.t)));
+        setV(ctx, new DurationStmt(v(ctx.annotations()), v(ctx.f),
+            v(ctx.t)));
     }
     @Override public void exitThrowStmt(ABSParser.ThrowStmtContext ctx) {
-        setV(ctx, new ThrowStmt((List<Annotation>)v(ctx.annotations()), (PureExp)v(ctx.pure_exp())));
+        setV(ctx, new ThrowStmt(v(ctx.annotations()), v(ctx.pure_exp())));
     }
     @Override public void exitDieStmt(ABSParser.DieStmtContext ctx) {
-        setV(ctx, new DieStmt((List<Annotation>)v(ctx.annotations()), (PureExp)v(ctx.pure_exp())));
+        setV(ctx, new DieStmt(v(ctx.annotations()), v(ctx.pure_exp())));
     }
     @Override public void exitMoveCogToStmt(ABSParser.MoveCogToStmtContext ctx) {
-        setV(ctx, new MoveCogToStmt((List<Annotation>)v(ctx.annotations()), (PureExp)v(ctx.pure_exp())));
+        setV(ctx, new MoveCogToStmt(v(ctx.annotations()), v(ctx.pure_exp())));
     }
     @Override public void exitExpStmt(ABSParser.ExpStmtContext ctx) {
-        setV(ctx, new ExpressionStmt((List<Annotation>)v(ctx.annotations()), (Exp)v(ctx.exp())));
+        setV(ctx, new ExpressionStmt(v(ctx.annotations()), v(ctx.exp())));
     }
     @Override public void exitCaseStmt(ABSParser.CaseStmtContext ctx) {
         List<CaseBranchStmt> branches = l(ctx.casestmtbranch());
         // Add default branch that throws PatternMatchFailException.  See
         // "Behavior of non-exhaustive case statement: no branch match = skip
         // or error?" on abs-dev on Jan 25-26, 2017
-        Block block = new Block(new List(), new List());
-        block.addStmt(new ThrowStmt(new List(),
+        Block block = new Block(new List<>(), new List<>());
+        block.addStmt(new ThrowStmt(new List<>(),
                                     new DataConstructorExp("PatternMatchFailException",
-                                                           new List())));
+                                                           new List<>())));
         CaseBranchStmt defaultBranch = new CaseBranchStmt(new UnderscorePattern(), block);
         setASTNodePosition(ctx, defaultBranch);
         branches.add(defaultBranch);
-        setV(ctx, new CaseStmt((List<Annotation>)v(ctx.annotations()), (PureExp)v(ctx.c), branches));
+        setV(ctx, new CaseStmt(v(ctx.annotations()), v(ctx.c), branches));
     }
     @Override public void exitCasestmtbranch(ABSParser.CasestmtbranchContext ctx) {
-        Stmt body = (Stmt)v(ctx.stmt());
+        Stmt body = v(ctx.stmt());
         if (!(body instanceof Block)) {
-            setV(ctx.stmt(), new Block(new List<Annotation>(), new List(body)));
+            setV(ctx.stmt(), new Block(new List<>(), new List<>(body)));
         }
-        setV(ctx, new CaseBranchStmt((Pattern)v(ctx.pattern()), (Block)v(ctx.stmt())));
+        setV(ctx, new CaseBranchStmt(v(ctx.pattern()), v(ctx.stmt())));
     }
 
     // Annotations
     @Override public void exitAnnotation(ABSParser.AnnotationContext ctx) {
-        if (ctx.l == null) setV(ctx, new Annotation((PureExp)v(ctx.r)));
-        else setV(ctx, new TypedAnnotation((PureExp)v(ctx.r), (Access)v(ctx.l)));
+        if (ctx.l == null) setV(ctx, new Annotation(v(ctx.r)));
+        else setV(ctx, new TypedAnnotation(v(ctx.r), v(ctx.l)));
     }
 
     @Override public void exitAnnotations(ABSParser.AnnotationsContext ctx) {
@@ -504,30 +509,30 @@ new List<ModuleDecl>(),
 
     // Side-effectful expressions
     @Override public void exitGetExp(ABSParser.GetExpContext ctx) {
-        setV(ctx, new GetExp((PureExp)v(ctx.pure_exp())));
+        setV(ctx, new GetExp(v(ctx.pure_exp())));
     }
     @Override public void exitNewExp(ABSParser.NewExpContext ctx) {
-        NewExp n = (NewExp)setV(ctx, new NewExp(ctx.c.getText(), (List<PureExp>)v(ctx.pure_exp_list()), new Opt<Local>()));
+        NewExp n = setV(ctx, new NewExp(ctx.c.getText(), v(ctx.pure_exp_list()), new Opt<>()));
         if (ctx.l != null) { n.setLocal(new Local()); }
     }
     @Override public void exitAsyncCallExp(ABSParser.AsyncCallExpContext ctx) {
         if (ctx.a != null) {
-            setV(ctx, new AwaitAsyncCall((PureExp)v(ctx.o), ctx.m.getText(), (List<PureExp>)v(ctx.pure_exp_list())));
+            setV(ctx, new AwaitAsyncCall(v(ctx.o), ctx.m.getText(), v(ctx.pure_exp_list())));
         } else {
-            setV(ctx, new AsyncCall((PureExp)v(ctx.o), ctx.m.getText(), (List<PureExp>)v(ctx.pure_exp_list())));
+            setV(ctx, new AsyncCall(v(ctx.o), ctx.m.getText(), v(ctx.pure_exp_list())));
         }
     }
     @Override public void exitSyncCallExp(ABSParser.SyncCallExpContext ctx) {
-        setV(ctx, new SyncCall((PureExp)v(ctx.o), ctx.m.getText(), (List<PureExp>)v(ctx.pure_exp_list())));
+        setV(ctx, new SyncCall(v(ctx.o), ctx.m.getText(), v(ctx.pure_exp_list())));
     }
     @Override public void exitOriginalCallExp(ABSParser.OriginalCallExpContext ctx) {
         List<PureExp> l = ctx.pure_exp_list() == null
-            ? new List<PureExp>()
-            : (List<PureExp>)v(ctx.pure_exp_list());
+            ? new List<>()
+            : v(ctx.pure_exp_list());
         if (ctx.c != null) {
             setV(ctx, new TargetedOriginalCall(new DeltaID("core"), l));
         } else if (ctx.d != null) {
-            setV(ctx, new TargetedOriginalCall((DeltaID)v(ctx.d), l));
+            setV(ctx, new TargetedOriginalCall(v(ctx.d), l));
         } else {
             setV(ctx, new OriginalCall(l));
         }
@@ -536,8 +541,8 @@ new List<ModuleDecl>(),
     @Override
     public void exitFunction_list(ABSParser.Function_listContext ctx) {
         List<ParFnAppParam> list = ctx.function_param() == null
-            ? new List<ParFnAppParam>()
-            : (List<ParFnAppParam>) l(ctx.function_param());
+            ? new List<>()
+            : l(ctx.function_param());
         setV(ctx, list);
     }
 
@@ -556,45 +561,45 @@ new List<ModuleDecl>(),
 
     @Override
     public void exitAnon_function_decl(ABSParser.Anon_function_declContext ctx) {
-        List<ParamDecl> params = (List<ParamDecl>) v(ctx.params);
-        PureExp pureExp = (PureExp) v(ctx.pure_exp());
+        List<ParamDecl> params = v(ctx.params);
+        PureExp pureExp = v(ctx.pure_exp());
         setV(ctx, new AnonymousFunctionDecl(params, pureExp));
     }
 
     // Pure expressions
     @Override public void exitFunctionExp(ABSParser.FunctionExpContext ctx) {
         List<PureExp> l = ctx.pure_exp_list() == null
-            ? new List<PureExp>()
-            : (List<PureExp>)v(ctx.pure_exp_list());
+            ? new List<>()
+            : v(ctx.pure_exp_list());
         setV(ctx, new FnApp(ctx.qualified_identifier().getText(), l));
     }
     @Override public void exitPartialFunctionExp(ABSParser.PartialFunctionExpContext ctx) {
         List<PureExp> params = ctx.pure_exp_list() == null
-            ? new List<PureExp>()
-            : (List<PureExp>) v(ctx.pure_exp_list());
+            ? new List<>()
+            : v(ctx.pure_exp_list());
         List<ParFnAppParam> functionParams = ctx.function_list() == null
-            ? new List<ParFnAppParam>()
-            : (List<ParFnAppParam>) v(ctx.function_list());
+            ? new List<>()
+            : v(ctx.function_list());
 
         setV(ctx, new ParFnApp(ctx.qualified_identifier().getText(), params, functionParams));
     }
     @Override public void exitVariadicFunctionExp(ABSParser.VariadicFunctionExpContext ctx) {
-        List<PureExp> l = (List<PureExp>)v(ctx.pure_exp_list());
+        List<PureExp> l = v(ctx.pure_exp_list());
         PureExp arglist = null;
         if (l.getNumChildNoTransform() == 0) {
-            arglist = new DataConstructorExp("Nil", new List<PureExp>());
+            arglist = new DataConstructorExp("Nil", new List<>());
         } else {
             arglist = new ListLiteral(l);
         }
         setASTNodePosition(ctx.pure_exp_list(), arglist);
-        List<PureExp> llist = new List<PureExp>();
+        List<PureExp> llist = new List<>();
         llist.add(arglist);
         setV(ctx, new FnApp(ctx.qualified_identifier().getText(), llist));
     }
     @Override public void exitConstructorExp(ABSParser.ConstructorExpContext ctx) {
         List<PureExp> l = ctx.pure_exp_list() == null
-            ? new List<PureExp>()
-            : (List<PureExp>)v(ctx.pure_exp_list());
+            ? new List<>()
+            : v(ctx.pure_exp_list());
         setV(ctx,
                  new DataConstructorExp(ctx.qualified_type_identifier().getText(),
                                         l));
@@ -603,67 +608,67 @@ new List<ModuleDecl>(),
         switch (ctx.op.getType()) {
         case ABSParser.NEGATION :
         case ABSParser.NEGATION_CREOL :
-            setV(ctx, new NegExp((PureExp)v(ctx.pure_exp())));
+            setV(ctx, new NegExp(v(ctx.pure_exp())));
             break;
         case ABSParser.MINUS :
-            setV(ctx, new MinusExp((PureExp)v(ctx.pure_exp())));
+            setV(ctx, new MinusExp(v(ctx.pure_exp())));
             break;
         }
     }
     @Override public void exitMultExp(ABSParser.MultExpContext ctx) {
         switch (ctx.op.getType()) {
         case ABSParser.MULT :
-            setV(ctx, new MultMultExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+            setV(ctx, new MultMultExp(v(ctx.l), v(ctx.r)));
             break;
         case ABSParser.DIV :
-            setV(ctx, new DivMultExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+            setV(ctx, new DivMultExp(v(ctx.l), v(ctx.r)));
             break;
         case ABSParser.MOD :
-            setV(ctx, new ModMultExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+            setV(ctx, new ModMultExp(v(ctx.l), v(ctx.r)));
             break;
         }
     }
     @Override public void exitAddExp(ABSParser.AddExpContext ctx) {
         switch (ctx.op.getType()) {
         case ABSParser.PLUS :
-            setV(ctx, new AddAddExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+            setV(ctx, new AddAddExp(v(ctx.l), v(ctx.r)));
             break;
         case ABSParser.MINUS :
-            setV(ctx, new SubAddExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+            setV(ctx, new SubAddExp(v(ctx.l), v(ctx.r)));
             break;
         }
     }
     @Override public void exitGreaterExp(ABSParser.GreaterExpContext ctx) {
         switch (ctx.op.getType()) {
         case ABSParser.LT :
-            setV(ctx, new LTExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+            setV(ctx, new LTExp(v(ctx.l), v(ctx.r)));
             break;
         case ABSParser.GT :
-            setV(ctx, new GTExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+            setV(ctx, new GTExp(v(ctx.l), v(ctx.r)));
             break;
         case ABSParser.LTEQ :
-            setV(ctx, new LTEQExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+            setV(ctx, new LTEQExp(v(ctx.l), v(ctx.r)));
             break;
         case ABSParser.GTEQ :
-            setV(ctx, new GTEQExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+            setV(ctx, new GTEQExp(v(ctx.l), v(ctx.r)));
             break;
         }
     }
     @Override public void exitEqualExp(ABSParser.EqualExpContext ctx) {
         switch (ctx.op.getType()) {
         case ABSParser.EQEQ :
-            setV(ctx, new EqExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+            setV(ctx, new EqExp(v(ctx.l), v(ctx.r)));
             break;
         case ABSParser.NOTEQ :
-            setV(ctx, new NotEqExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+            setV(ctx, new NotEqExp(v(ctx.l), v(ctx.r)));
             break;
         }
     }
     @Override public void exitAndExp(ABSParser.AndExpContext ctx) {
-        setV(ctx, new AndBoolExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+        setV(ctx, new AndBoolExp(v(ctx.l), v(ctx.r)));
     }
     @Override public void exitOrExp(ABSParser.OrExpContext ctx) {
-        setV(ctx, new OrBoolExp((PureExp)v(ctx.l), (PureExp)v(ctx.r)));
+        setV(ctx, new OrBoolExp(v(ctx.l), v(ctx.r)));
     }
     @Override public void exitVarOrFieldExp(ABSParser.VarOrFieldExpContext ctx) {
         setV(ctx, v(ctx.var_or_field_ref()));
@@ -681,31 +686,31 @@ new List<ModuleDecl>(),
         setV(ctx, new NullExp());
     }
     @Override public void exitIfExp(ABSParser.IfExpContext ctx) {
-        setV(ctx, new IfExp((PureExp)v(ctx.c),
-                                (PureExp)v(ctx.l),
-                                (PureExp)v(ctx.r)));
+        setV(ctx, new IfExp(v(ctx.c),
+            v(ctx.l),
+            v(ctx.r)));
     }
     @Override public void exitCaseExp(ABSParser.CaseExpContext ctx) {
-        List<CaseBranch> l = new List<CaseBranch>();
+        List<CaseBranch> l = new List<>();
         for (ABSParser.CasebranchContext b : ctx.casebranch()) {
-            l.add((CaseBranch)v(b));
+            l.add(v(b));
         }
-        setV(ctx, new CaseExp((PureExp)v(ctx.c), l));
+        setV(ctx, new CaseExp(v(ctx.c), l));
     }
     @Override public void exitLetExp(ABSParser.LetExpContext ctx) {
         ParamDecl pd = new ParamDecl(ctx.IDENTIFIER().getText(),
-                                     (TypeUse)v(ctx.type_use()),
-                                     new List<Annotation>());
+            v(ctx.type_use()),
+            new List<>());
         setASTNodePosition(ctx.IDENTIFIER().getSymbol(), pd);
-        setV(ctx, new LetExp(pd, (PureExp)v(ctx.i), (PureExp)v(ctx.b)));
+        setV(ctx, new LetExp(pd, v(ctx.i), v(ctx.b)));
     }
     @Override public void exitParenExp(ABSParser.ParenExpContext ctx) {
         setV(ctx, v(ctx.pure_exp()));
     }
 
     @Override public void exitCasebranch(ABSParser.CasebranchContext ctx) {
-        setV(ctx, new CaseBranch((Pattern)v(ctx.pattern()),
-                                     (PureExp)v(ctx.pure_exp())));
+        setV(ctx, new CaseBranch(v(ctx.pattern()),
+            v(ctx.pure_exp())));
     }
 
     @Override public void exitUnderscorePattern(ABSParser.UnderscorePatternContext ctx) {
@@ -729,7 +734,7 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitParam_decl(ABSParser.Param_declContext ctx) {
-        setV(ctx, new ParamDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), (List<Annotation>)v(ctx.annotations())));
+        setV(ctx, new ParamDecl(ctx.IDENTIFIER().getText(), v(ctx.type_exp()), v(ctx.annotations())));
     }
 
     @Override public void exitFunction_name_list(ABSParser.Function_name_listContext ctx) {
@@ -741,14 +746,13 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitInterface_name(ABSParser.Interface_nameContext ctx) {
-        setV(ctx, new InterfaceTypeUse(ctx.qualified_type_identifier().getText(),
-                                       new List()));
+        setV(ctx, new InterfaceTypeUse(ctx.qualified_type_identifier().getText(), new List<>()));
     }
 
     @Override public void exitPure_exp_list(ABSParser.Pure_exp_listContext ctx) {
-        List<PureExp> l = (List<PureExp>)setV(ctx, new List<PureExp>());
+        List<PureExp> l = setV(ctx, new List<PureExp>());
         for (ABSParser.Pure_expContext a : ctx.pure_exp()) {
-            l.add((PureExp)v(a));
+            l.add(v(a));
         }
     }
 
@@ -760,35 +764,37 @@ new List<ModuleDecl>(),
          */
         if (ctx.p.isEmpty()) {
             // normal type use
-            setV(ctx, new UnresolvedTypeUse(ctx.n.getText(), (List<Annotation>)v(ctx.annotations())));
+            setV(ctx, new UnresolvedTypeUse(ctx.n.getText(), v(ctx.annotations())));
         } else {
             // parametric type use
             ParametricDataTypeUse p
-                = (ParametricDataTypeUse)setV(ctx, new ParametricDataTypeUse(ctx.n.getText(), (List<Annotation>)v(ctx.annotations()), new List<TypeUse>()));
+                = setV(ctx, new ParametricDataTypeUse(ctx.n.getText(), v(ctx.annotations()),
+                new List<>()));
             for (ABSParser.Type_useContext c : ctx.type_use()) {
-                p.addParam((TypeUse)v(c));
+                p.addParam(v(c));
             }
         }
     }
 
     @Override
     public void exitType_use_paramlist(ABSParser.Type_use_paramlistContext ctx) {
-        List<TypeUse> list = (List<TypeUse>) setV(ctx, new List<TypeUse>());
+        List<TypeUse> list = setV(ctx, new List<TypeUse>());
         for (ABSParser.Type_useContext typeUseContext : ctx.type_use()) {
-            list.add((TypeUse) v(typeUseContext));
+            list.add(v(typeUseContext));
         }
     }
 
     @Override public void exitType_exp(ABSParser.Type_expContext ctx) {
         if (ctx.p.isEmpty()) {
             // normal type use
-            setV(ctx, new UnresolvedTypeUse(ctx.n.getText(), new List<Annotation>()));
+            setV(ctx, new UnresolvedTypeUse(ctx.n.getText(), new List<>()));
         } else {
             // parametric type use
             ParametricDataTypeUse p
-                = (ParametricDataTypeUse)setV(ctx, new ParametricDataTypeUse(ctx.n.getText(), new List<Annotation>(), new List<TypeUse>()));
+                = setV(ctx, new ParametricDataTypeUse(ctx.n.getText(), new List<>(),
+                new List<>()));
             for (ABSParser.Type_useContext c : ctx.type_use()) {
-                p.addParam((TypeUse)v(c));
+                p.addParam(v(c));
             }
         }
     }
@@ -822,24 +828,24 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitDeltaFieldParam(ABSParser.DeltaFieldParamContext ctx) {
-        setV(ctx, new DeltaFieldParam((ParamDecl)v(ctx.param_decl())));
+        setV(ctx, new DeltaFieldParam(v(ctx.param_decl())));
     }
 
     @Override public void exitDeltaClassParam(ABSParser.DeltaClassParamContext ctx) {
         setV(ctx, new DeltaClassParam(ctx.qualified_type_identifier().getText(),
-                                      (HasCondition)v(ctx.has_condition())));
+            v(ctx.has_condition())));
     }
 
     @Override public void exitDeltaHasFieldCondition(ABSParser.DeltaHasFieldConditionContext ctx) {
-        setV(ctx, new HasField((FieldDecl)v(ctx.f)));
+        setV(ctx, new HasField(v(ctx.f)));
     }
 
     @Override public void exitDeltaHasMethodCondition(ABSParser.DeltaHasMethodConditionContext ctx) {
-        setV(ctx, new HasMethod((MethodSig)v(ctx.m)));
+        setV(ctx, new HasMethod(v(ctx.m)));
     }
 
     @Override public void exitDeltaHasInterfaceCondition(ABSParser.DeltaHasInterfaceConditionContext ctx) {
-        setV(ctx, new HasInterface((InterfaceTypeUse)v(ctx.i)));
+        setV(ctx, new HasInterface(v(ctx.i)));
     }
 
     @Override public void exitDelta_access(ABSParser.Delta_accessContext ctx) {
@@ -851,27 +857,27 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitDeltaAddFunctionModifier(ABSParser.DeltaAddFunctionModifierContext ctx) {
-        setV(ctx, new AddFunctionModifier((FunctionDecl)v(ctx.function_decl())));
+        setV(ctx, new AddFunctionModifier(v(ctx.function_decl())));
     }
 
     @Override public void exitDeltaAddDataTypeModifier(ABSParser.DeltaAddDataTypeModifierContext ctx) {
-        setV(ctx, new AddDataTypeModifier((DataTypeDecl)v(ctx.datatype_decl())));
+        setV(ctx, new AddDataTypeModifier(v(ctx.datatype_decl())));
     }
 
     @Override public void exitDeltaAddTypeSynModifier(ABSParser.DeltaAddTypeSynModifierContext ctx) {
-        setV(ctx, new AddTypeSynModifier((TypeSynDecl)v(ctx.typesyn_decl())));
+        setV(ctx, new AddTypeSynModifier(v(ctx.typesyn_decl())));
     }
 
     @Override public void exitDeltaModifyTypeSynModifier(ABSParser.DeltaModifyTypeSynModifierContext ctx) {
-        setV(ctx, new ModifyTypeSynModifier((TypeSynDecl)v(ctx.typesyn_decl())));
+        setV(ctx, new ModifyTypeSynModifier(v(ctx.typesyn_decl())));
     }
 
     @Override public void exitDeltaModifyDataTypeModifier(ABSParser.DeltaModifyDataTypeModifierContext ctx) {
-        setV(ctx, new ModifyDataTypeModifier((DataTypeDecl)v(ctx.datatype_decl())));
+        setV(ctx, new ModifyDataTypeModifier(v(ctx.datatype_decl())));
     }
 
     @Override public void exitDeltaAddClassModifier(ABSParser.DeltaAddClassModifierContext ctx) {
-        setV(ctx, new AddClassModifier((ClassDecl)v(ctx.class_decl())));
+        setV(ctx, new AddClassModifier(v(ctx.class_decl())));
     }
 
     @Override public void exitDeltaRemoveClassModifier(ABSParser.DeltaRemoveClassModifierContext ctx) {
@@ -884,7 +890,7 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitDeltaAddInterfaceModifier(ABSParser.DeltaAddInterfaceModifierContext ctx) {
-        setV(ctx, new AddInterfaceModifier((InterfaceDecl)v(ctx.interface_decl())));
+        setV(ctx, new AddInterfaceModifier(v(ctx.interface_decl())));
     }
 
     @Override public void exitDeltaRemoveInterfaceModifier(ABSParser.DeltaRemoveInterfaceModifierContext ctx) {
@@ -897,24 +903,24 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitDeltaAddFieldFragment(ABSParser.DeltaAddFieldFragmentContext ctx) {
-        setV(ctx, new AddFieldModifier((FieldDecl)v(ctx.field_decl())));
+        setV(ctx, new AddFieldModifier(v(ctx.field_decl())));
     }
     @Override public void exitDeltaRemoveFieldFragment(ABSParser.DeltaRemoveFieldFragmentContext ctx) {
-        setV(ctx, new RemoveFieldModifier((FieldDecl)v(ctx.field_decl())));
+        setV(ctx, new RemoveFieldModifier(v(ctx.field_decl())));
     }
 
     @Override public void exitDeltaAddMethodsigFragment(ABSParser.DeltaAddMethodsigFragmentContext ctx) {
-        setV(ctx, new AddMethodSigModifier((MethodSig)v(ctx.methodsig())));
+        setV(ctx, new AddMethodSigModifier(v(ctx.methodsig())));
     }
     @Override public void exitDeltaRemoveMethodsigFragment(ABSParser.DeltaRemoveMethodsigFragmentContext ctx) {
-        setV(ctx, new RemoveMethodSigModifier((MethodSig)v(ctx.methodsig())));
+        setV(ctx, new RemoveMethodSigModifier(v(ctx.methodsig())));
     }
 
     @Override public void exitDeltaAddModuleImportFragment(ABSParser.DeltaAddModuleImportFragmentContext ctx) {
-        setV(ctx, new AddImportModifier((Import)v(ctx.module_import())));
+        setV(ctx, new AddImportModifier(v(ctx.module_import())));
     }
     @Override public void exitDeltaAddModuleExportFragment(ABSParser.DeltaAddModuleExportFragmentContext ctx) {
-        setV(ctx, new AddExportModifier((Export)v(ctx.module_export())));
+        setV(ctx, new AddExportModifier(v(ctx.module_export())));
     }
 
     // Updates (?)
@@ -924,17 +930,17 @@ new List<ModuleDecl>(),
 
     @Override public void exitObjectUpdateDecl(ABSParser.ObjectUpdateDeclContext ctx) {
         setV(ctx, new ObjectUpdate(ctx.qualified_type_identifier().getText(),
-                                   new AwaitStmt(new List(), (Guard)v(ctx.guard())),
+                                   new AwaitStmt(new List<>(), v(ctx.guard())),
                                    new UpdatePreamble(l(ctx.update_preamble_decl())),
                                    l(ctx.pre), l(ctx.post)));
     }
 
     @Override public void exitObjectUpdateAssignStmt(ABSParser.ObjectUpdateAssignStmtContext ctx) {
-        setV(ctx, new AssignStmt(new List(), (VarOrFieldUse)v(ctx.var_or_field_ref()), (Exp)v(ctx.exp())));
+        setV(ctx, new AssignStmt(new List<>(), v(ctx.var_or_field_ref()), v(ctx.exp())));
     }
 
     @Override public void exitUpdatePreambleDecl(ABSParser.UpdatePreambleDeclContext ctx) {
-        setV(ctx, new VarDeclStmt(new List(), new VarDecl(ctx.IDENTIFIER().getText(), (Access)v(ctx.type_exp()), new Opt())));
+        setV(ctx, new VarDeclStmt(new List<>(), new VarDecl(ctx.IDENTIFIER().getText(), v(ctx.type_exp()), new Opt<>())));
     }
 
 
@@ -959,15 +965,14 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitDelta_clause(ABSParser.Delta_clauseContext ctx) {
-        setV(ctx, new DeltaClause((Deltaspec)v(ctx.deltaspec()),
+        setV(ctx, new DeltaClause(v(ctx.deltaspec()),
                                   ctx.after_condition() == null ? new List()
-                                  : (List)v(ctx.after_condition()),
+                                  : v(ctx.after_condition()),
                                   o(ctx.from_condition()), o(ctx.when_condition())));
     }
 
     @Override public void exitDeltaspec(ABSParser.DeltaspecContext ctx) {
-        setV(ctx, new Deltaspec(ctx.TYPE_IDENTIFIER().getText(),
-                                l(ctx.deltaspec_param())));
+        setV(ctx, new Deltaspec(ctx.TYPE_IDENTIFIER().getText(), l(ctx.deltaspec_param())));
     }
 
     @Override public void exitBoolOrIDDeltaspecParam(ABSParser.BoolOrIDDeltaspecParamContext ctx) {
@@ -1000,15 +1005,15 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitNotApplicationCondition(ABSParser.NotApplicationConditionContext ctx) {
-        setV(ctx, new AppCondNot((AppCond)v(ctx.application_condition())));
+        setV(ctx, new AppCondNot(v(ctx.application_condition())));
     }
 
     @Override public void exitAndApplicationCondition(ABSParser.AndApplicationConditionContext ctx) {
-        setV(ctx, new AppCondAnd((AppCond)v(ctx.l), (AppCond)v(ctx.r)));
+        setV(ctx, new AppCondAnd(v(ctx.l), v(ctx.r)));
     }
 
     @Override public void exitOrApplicationCondition(ABSParser.OrApplicationConditionContext ctx) {
-        setV(ctx, new AppCondOr((AppCond)v(ctx.l), (AppCond)v(ctx.r)));
+        setV(ctx, new AppCondOr(v(ctx.l), v(ctx.r)));
     }
 
     @Override public void exitParenApplicationCondition(ABSParser.ParenApplicationConditionContext ctx) {
@@ -1026,13 +1031,12 @@ new List<ModuleDecl>(),
             setV(ctx, new ProductDecl(ctx.TYPE_IDENTIFIER().getText(), new ProductFeatureSet(l(ctx.feature())), l(ctx.product_reconfiguration())));
         } else {
             // new syntax: using product expressions
-            setV(ctx, new ProductDecl(ctx.TYPE_IDENTIFIER().getText(), (ProductExpr)v(ctx.product_expr()), l(ctx.product_reconfiguration())));
+            setV(ctx, new ProductDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.product_expr()), l(ctx.product_reconfiguration())));
         }
     }
 
     @Override public void exitProduct_reconfiguration(ABSParser.Product_reconfigurationContext ctx) {
-        setV(ctx, new Reconfiguration(ctx.product.getText(),
-                                      l(ctx.delta_id()), ctx.update.getText()));
+        setV(ctx, new Reconfiguration(ctx.product.getText(), l(ctx.delta_id()), ctx.update.getText()));
     }
 
     // Product Expression
@@ -1041,15 +1045,15 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitProductIntersect(ABSParser.ProductIntersectContext ctx) {
-        setV(ctx, new ProductIntersect((ProductExpr)v(ctx.l), (ProductExpr)v(ctx.r)));
+        setV(ctx, new ProductIntersect(v(ctx.l), v(ctx.r)));
     }
 
     @Override public void exitProductUnion(ABSParser.ProductUnionContext ctx) {
-        setV(ctx, new ProductUnion((ProductExpr)v(ctx.l), (ProductExpr)v(ctx.r)));
+        setV(ctx, new ProductUnion(v(ctx.l), v(ctx.r)));
     }
 
     @Override public void exitProductDifference(ABSParser.ProductDifferenceContext ctx) {
-        setV(ctx, new ProductDifference((ProductExpr)v(ctx.l), (ProductExpr)v(ctx.r)));
+        setV(ctx, new ProductDifference(v(ctx.l), v(ctx.r)));
     }
 
     @Override public void exitProductName(ABSParser.ProductNameContext ctx) {
@@ -1086,16 +1090,16 @@ new List<ModuleDecl>(),
     }
 
     @Override public void exitFnode(ABSParser.FnodeContext ctx) {
-        if (ctx.o == null) setV(ctx, new MandFeat((FeatureDecl)v(ctx.feature_decl())));
-        else setV(ctx, new OptFeat((FeatureDecl)v(ctx.feature_decl())));
+        if (ctx.o == null) setV(ctx, new MandFeat(v(ctx.feature_decl())));
+        else setV(ctx, new OptFeat(v(ctx.feature_decl())));
     }
 
 
 	@Override public void exitFeatureDeclConstraintIfIn(ABSParser.FeatureDeclConstraintIfInContext ctx) {
-        setV(ctx, new IfIn((MExp)v(ctx.mexp())));
+        setV(ctx, new IfIn(v(ctx.mexp())));
     }
 	@Override public void exitFeatureDeclConstraintIfOut(ABSParser.FeatureDeclConstraintIfOutContext ctx) {
-        setV(ctx, new IfOut((MExp)v(ctx.mexp())));
+        setV(ctx, new IfOut(v(ctx.mexp())));
     }
 	@Override public void exitFeatureDeclConstraintExclude(ABSParser.FeatureDeclConstraintExcludeContext ctx) {
         setV(ctx, new Exclude(new FeatVar(ctx.TYPE_IDENTIFIER().getText())));
@@ -1108,53 +1112,53 @@ new List<ModuleDecl>(),
         if (ctx.op != null) {
             switch (ctx.op.getType()) {
             case ABSParser.OROR :
-                setV(ctx, new MOrBoolExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MOrBoolExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.ANDAND :
-                setV(ctx, new MAndBoolExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MAndBoolExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.IMPLIES :
-                setV(ctx, new MImpliesExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MImpliesExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.EQUIV :
-                setV(ctx, new MEquivExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MEquivExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.EQEQ :
-                setV(ctx, new MEqExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MEqExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.NOTEQ :
-                setV(ctx, new MNotEqExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MNotEqExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.LT :
-                setV(ctx, new MLTExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MLTExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.GT :
-                setV(ctx, new MGTExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MGTExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.LTEQ :
-                setV(ctx, new MLTEQExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MLTEQExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.GTEQ :
-                setV(ctx, new MGTEQExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MGTEQExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.PLUS :
-                setV(ctx, new MAddAddExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MAddAddExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.MINUS :
-                if (ctx.l != null) setV(ctx, new MSubAddExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
-                else setV(ctx, new MMinusExp((MExp)v(ctx.a)));
+                if (ctx.l != null) setV(ctx, new MSubAddExp(v(ctx.l), v(ctx.r)));
+                else setV(ctx, new MMinusExp(v(ctx.a)));
                 return;
             case ABSParser.MULT :
-                setV(ctx, new MMultMultExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MMultMultExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.DIV :
-                setV(ctx, new MDivMultExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MDivMultExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.MOD :
-                setV(ctx, new MModMultExp((MExp)v(ctx.l), (MExp)v(ctx.r)));
+                setV(ctx, new MModMultExp(v(ctx.l), v(ctx.r)));
                 return;
             case ABSParser.NEGATION :
-                setV(ctx, new MNegExp((MExp)v(ctx.a)));
+                setV(ctx, new MNegExp(v(ctx.a)));
                 return;
             }
         } else if (ctx.a != null)
@@ -1180,24 +1184,17 @@ new List<ModuleDecl>(),
     @Override public void exitFeature_decl_attribute(ABSParser.Feature_decl_attributeContext ctx) {
         String t = ctx.TYPE_IDENTIFIER().getText();
         if (ctx.l != null) {
-            setV(ctx, new Attribute(ctx.IDENTIFIER().getText(),
-                                    new IntMType(t, (BoundaryInt)v(ctx.l),
-                                                 (BoundaryInt)v(ctx.u))));
+            setV(ctx, new Attribute(ctx.IDENTIFIER().getText(), new IntMType(t, v(ctx.l), v(ctx.u))));
         } else if (ctx.is != null && !ctx.is.isEmpty()) {
-            setV(ctx, new Attribute(ctx.IDENTIFIER().getText(),
-                                    new IntListMType(t, l(ctx.is))));
+            setV(ctx, new Attribute(ctx.IDENTIFIER().getText(), new IntListMType(t, l(ctx.is))));
         } else if (t.equals("Int")) {
-            setV(ctx, new Attribute(ctx.IDENTIFIER().getText(),
-                                    new IntMType(t, new Limit(), new Limit())));
+            setV(ctx, new Attribute(ctx.IDENTIFIER().getText(), new IntMType(t, new Limit(), new Limit())));
         } else if (t.equals("String")) {
-            setV(ctx, new Attribute(ctx.IDENTIFIER().getText(),
-                                    new StringMType(t)));
+            setV(ctx, new Attribute(ctx.IDENTIFIER().getText(), new StringMType(t)));
         } else if (t.equals("Bool")) {
-            setV(ctx, new Attribute(ctx.IDENTIFIER().getText(),
-                                    new BoolMType(t)));
+            setV(ctx, new Attribute(ctx.IDENTIFIER().getText(), new BoolMType(t)));
         } else {
-            setV(ctx, new Attribute(ctx.IDENTIFIER().getText(),
-                                    new UnresolvedMType(t)));
+            setV(ctx, new Attribute(ctx.IDENTIFIER().getText(), new UnresolvedMType(t)));
         }
     }
 
@@ -1206,9 +1203,7 @@ new List<ModuleDecl>(),
         else setV(ctx, v(ctx.boundary_val()));
     }
 	@Override public void exitBoundary_val(ABSParser.Boundary_valContext ctx) {
-        setV(ctx, new BoundaryVal((ctx.m == null
-                                   ? +1 : -1)
-                                  * Integer.parseInt(ctx.INTLITERAL().getText())));
+        setV(ctx, new BoundaryVal((ctx.m == null ? +1 : -1) * Integer.parseInt(ctx.INTLITERAL().getText())));
     }
 
 }
