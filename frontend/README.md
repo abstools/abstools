@@ -4,7 +4,7 @@
 
 Compiling ABS needs [ant](https://ant.apache.org) and the [Java
 JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
-version 7 or later.  Running models requires
+version 8 or later.  Running models requires
 [Erlang](http://www.erlang.org/downloads) version 19 or later or, if using the
 Maude backend, [Maude](http://maude.cs.uiuc.edu/download/).
 
