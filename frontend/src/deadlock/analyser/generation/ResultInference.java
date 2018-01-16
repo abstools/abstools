@@ -18,7 +18,7 @@ public class ResultInference {
 
   /* Constructor */
   public ResultInference(){
-    this.methods = new HashMap<String, MethodContract>();
+    this.methods = new HashMap<>();
     this.constraint = null;
     this.mainCP = null;
     this.mainCF = null;
@@ -35,7 +35,7 @@ public class ResultInference {
   /* Basic Estension */
   public void add(Constraint c) {
     if(this.constraint == null) { this.constraint = c; }
-    else if(c != null) { this.constraint.add(c); }	
+    else if(c != null) { this.constraint.add(c); }
   }
 
   public void add(String className, String methodName, MethodContract contract){

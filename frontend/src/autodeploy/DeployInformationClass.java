@@ -16,11 +16,11 @@ public class DeployInformationClass {
   private Map<String, String> _paramType; // type of every parameter
 
   public DeployInformationClass(abs.frontend.ast.List<ParamDecl> l) {
-    _cost = new HashMap<String, Integer>();
-    _spec = new LinkedList<DeployInformationClassSpecification>();
+    _cost = new HashMap<>();
+    _spec = new LinkedList<>();
 
-    _paramList = new LinkedList<String>();
-    _paramType = new HashMap<String, String>();
+    _paramList = new LinkedList<>();
+    _paramType = new HashMap<>();
 
 
     for(ParamDecl decl: l) { // init the list of parameters with their respective types

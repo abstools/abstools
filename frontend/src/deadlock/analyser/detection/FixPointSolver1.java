@@ -32,51 +32,51 @@ import com.gzoumix.semisolver.term.TermStructured;
 public class FixPointSolver1 extends DASolver {
 
 
-    Boolean saturation;    
+    Boolean saturation;
     int nOfIterations;
     int nOfDep;
     Boolean livelock;
-    
+
     @Override
     public String getName() {return "Fix Point 1.0";}
 
     public FixPointSolver1(Factory f, Map<String, MethodContract> map, MainMethodContract mmc, int i){
         super(f, map, mmc);
-        
+
         this.nOfIterations = i;
         this.nOfDep = 0;
 
         this.saturation = false;
-        this.livelock = false;        
+        this.livelock = false;
     }
 
-    //this method performs the deadlock analysis using a fix point algorithm 
+    //this method performs the deadlock analysis using a fix point algorithm
     @Override
     public void computeSolution(){
-        
+
         //perform an infinite cycle, since thanks to the saturation a fix point is always reached
         for(int i=0; ; i++){
-            
+
             //perform one step expansion for each method
             for(String mName : methodMap.keySet()){
 
                 //get the method contract
                 Term contrP = methodMap.get(mName).getContractPresent();
                 Term contrF = methodMap.get(mName).getContractFuture();
-                
-                
+
+
                 // I want to isolate the contract (body contract), only Main.main has already the right contract
                 //if(contr instanceof MethodContract){
-                
+
                 //}
 
                 // In this first version of algorithm I want to work only with contract single (not contractSeq)
-                // but inference return always a contractSeq, even if it is a single contract, so, I 'clear' it, if 
+                // but inference return always a contractSeq, even if it is a single contract, so, I 'clear' it, if
                 // I have a contractSeq with only one subterm inside, it will be our contract to check
                 if(((Contract) contrP).getList().size() == 1){
                     contrP = ((Contract) contrP).getList().get(0);
                 }
-                
+
                 if(((Contract) contrF).getList().size() == 1){
                     contrF = ((Contract) contrF).getList().get(0);
                 }
@@ -87,7 +87,7 @@ public class FixPointSolver1 extends DASolver {
                 if(this.saturation){
                      subFresh = lampMap.get(mName).getLastBFresh();
                 }
-                    
+
                 else{
                     Set<GroupName> bTilde = lampMap.get(mName).getbTilde();
                     subFresh = new VarSubstitution();
@@ -96,7 +96,7 @@ public class FixPointSolver1 extends DASolver {
 
                 //resulting lam after expansion
                 DoubleLam expansion, expansionF;
-                
+
                 //apply the corresponding rule
                 if(contrP instanceof ContractElementGet)             { expansion = wGet(mName, (ContractElementGet) contrP, subFresh);}
                 else if(contrP instanceof ContractElementAwait)      { expansion = wAwait(mName, (ContractElementAwait) contrP, subFresh);}
@@ -107,7 +107,7 @@ public class FixPointSolver1 extends DASolver {
                 else if(contrP instanceof ContractElementUnion)      { expansion = wUnion(mName, (ContractElementUnion) contrP, subFresh);}
                 else if(contrP instanceof ContractElementParallel)   { expansion = wParallel(mName, (ContractElementParallel) contrP, subFresh);}
                 else                                                 { expansion = wSeq(mName, (Contract) contrP, subFresh);}
-                
+
               //apply the corresponding rule
                 if(contrF instanceof ContractElementGet)             { expansionF = wGet(mName, (ContractElementGet) contrF, subFresh);}
                 else if(contrF instanceof ContractElementAwait)      { expansionF = wAwait(mName, (ContractElementAwait) contrF, subFresh);}
@@ -118,41 +118,41 @@ public class FixPointSolver1 extends DASolver {
                 else if(contrF instanceof ContractElementUnion)      { expansionF = wUnion(mName, (ContractElementUnion) contrF, subFresh);}
                 else if(contrF instanceof ContractElementParallel)   { expansionF = wParallel(mName, (ContractElementParallel) contrF, subFresh);}
                 else                                                { expansionF = wSeq(mName, (Contract) contrF, subFresh);}
-                
+
                 //put lams in sequence
                 expansion.seqComposition(expansionF);
-                
+
                 //Update the lam with the expansion result
                 BigLam lam = lampMap.get(mName);
-                
+
                 lam.setFirst(expansion.getW());
                 lam.setSecond(expansion.getWPrime());
                 lam.setLastBFresh(subFresh);
             }
 
-            //check for cycles            
+            //check for cycles
             //BigLam blMain = lampMap.get("Main.main");
             BigLam blMain = new BigLam("Main.main", mmc);
-            
+
             DoubleLam expansionPresent = wSeq(null, mmc.getContractPresent(), new VarSubstitution());
             DoubleLam expansionFuture = wSeq(null, mmc.getContractFuture(), new VarSubstitution());
-            
+
             expansionPresent.seqComposition(expansionFuture);
-            
+
             blMain.setFirst(expansionPresent.getW());
             blMain.setSecond(expansionPresent.getWPrime());
-            
+
             blMain.expandAndClean();
-            
+
             if(blMain.hasCycle()){
                 //a cyclic dependency was found
                 //if there is a pure await dependencies cycle then there is livelock
                 this.deadlock = blMain.hasCycleGet();
-                
+
                 //if the cycle found is no a livelock then this lock is indeed a deadlock
                 this.livelock = !this.deadlock;
-                
-                //is it possible for a program to have more than one potential deadlocks and 
+
+                //is it possible for a program to have more than one potential deadlocks and
                 //livelocks at the same time but the algorithm stop at the first cycle so
                 //only one cyclic dependency is reported
                 return;
@@ -167,7 +167,7 @@ public class FixPointSolver1 extends DASolver {
             }
             if(newNumberOfDep == this.nOfDep) return;
             else this.nOfDep = newNumberOfDep;
-            
+
             //if the default number of iterations is reached then saturate
             this.saturation = i >= nOfIterations;
         }
@@ -176,23 +176,23 @@ public class FixPointSolver1 extends DASolver {
     // The rule W-Gzero of the Analysis
     private DoubleLam wGet(String mName, ContractElementGet cGet, VarSubstitution bFresh){
         // it will contains the result of the application of the rule
-        DoubleLam l = new DoubleLam();                
+        DoubleLam l = new DoubleLam();
         // here we extract the 2 variable from the contractGet and apply on them the fresh renaming (bTilde)
         GroupName a = cGet.whosWaiting();
         GroupName b = cGet.whosWaited();
         a = bFresh.apply(a);
-        b = bFresh.apply(b);            
+        b = bFresh.apply(b);
         // here we calculate the solution of the application of the rule
         Lam w = new Lam();
         Lam wPrime = new Lam();
         w.addCouple(a, b);
-       
+
         //I learn reading again the paper that only the first lamp obtain the couple
-        //wPrime.addCouple(a, b);               
+        //wPrime.addCouple(a, b);
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
-        return l;       
+        return l;
     }
 
     // The rule W-Azero of the Analysis
@@ -212,14 +212,14 @@ public class FixPointSolver1 extends DASolver {
         Lam w = new Lam();
         Lam wPrime = new Lam();
         w.addCoupleAwait(a, b);
-        
+
         //I learn reading again the paper that only the first lamp obtain the couple
         //wPrime.addCouple(a, b);
 
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
-        return l;       
+        return l;
     }
 
     // The rule W-Invk of the Analysis
@@ -260,7 +260,7 @@ public class FixPointSolver1 extends DASolver {
             //here we recover ALL the free variable of the lamp of the method invoked and remove the variable of the formal parameters
             Set<GroupName> aPrimeTilde = bLamp.getFirst().fv();
             aPrimeTilde.addAll(bLamp.getSecond().fv());
-            Set<GroupName> aTildeTermVar = new TreeSet<GroupName>();
+            Set<GroupName> aTildeTermVar = new TreeSet<>();
             for(GroupName v : aTilde) aTildeTermVar.add(v);
             aPrimeTilde.removeAll(aTildeTermVar);
             //System.out.println("aPrimeTilde to substitute is :" + aPrimeTilde.toString() );
@@ -313,9 +313,9 @@ public class FixPointSolver1 extends DASolver {
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
-        return l;       
+        return l;
     }
-    
+
     // The rule W-Invk of the Analysis
     private DoubleLam wSyncInvk(String mName, ContractElementSyncInvk cInvk, VarSubstitution bFresh){
         // it will contains the result of the application of the rule
@@ -350,7 +350,7 @@ public class FixPointSolver1 extends DASolver {
             //here we recover ALL the free variable of the lamp of the method invoked and remove the variable of the formal parameters
             Set<GroupName> aPrimeTilde = bLamp.getFirst().fv();
             aPrimeTilde.addAll(bLamp.getSecond().fv());
-            Set<GroupName> aTildeTermVar = new TreeSet<GroupName>();
+            Set<GroupName> aTildeTermVar = new TreeSet<>();
             for(GroupName v : aTilde) aTildeTermVar.add(v);
             aPrimeTilde.removeAll(aTildeTermVar);
             //System.out.println("aPrimeTilde to substitute is :" + aPrimeTilde.toString() );
@@ -407,9 +407,9 @@ public class FixPointSolver1 extends DASolver {
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
-        return l;       
+        return l;
     }
-    
+
     // The rule W-GInvk of the Analysis
     private DoubleLam wGInvk(String mName, ContractElementInvkG cGInvk, VarSubstitution bFresh){
         // it will contains the result of the application of the rule
@@ -447,7 +447,7 @@ public class FixPointSolver1 extends DASolver {
             //here we recover ALL the free variable of the lamp of the method invoked and remove the variable of the formal parameters
             Set<GroupName> aPrimeTilde = bLamp.getFirst().fv();
             aPrimeTilde.addAll(bLamp.getSecond().fv());
-            Set<GroupName> aTildeTermVar = new TreeSet<GroupName>();
+            Set<GroupName> aTildeTermVar = new TreeSet<>();
             for(GroupName v : aTilde) aTildeTermVar.add(v);
             aPrimeTilde.removeAll(aTildeTermVar);
 
@@ -520,7 +520,7 @@ public class FixPointSolver1 extends DASolver {
 
         // we add the get Pair of names at the two lamps
         w.addCouple(a, b);
-        
+
         //same comment of the rule w-Gzero
         //wPrime.addCouple(a, b);
 
@@ -528,7 +528,7 @@ public class FixPointSolver1 extends DASolver {
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
-        return l;       
+        return l;
     }
 
     // The rule W-AInvk of the Analysis
@@ -568,7 +568,7 @@ public class FixPointSolver1 extends DASolver {
             //here we recover ALL the free variable of the lamp of the method invoked and remove the variable of the formal parameters
             Set<GroupName> aPrimeTilde = bLamp.getFirst().fv();
             aPrimeTilde.addAll(bLamp.getSecond().fv());
-            Set<GroupName> aTildeTermVar = new TreeSet<GroupName>();
+            Set<GroupName> aTildeTermVar = new TreeSet<>();
             for(GroupName v : aTilde) aTildeTermVar.add(v);
             aPrimeTilde.removeAll(aTildeTermVar);
 
@@ -631,14 +631,14 @@ public class FixPointSolver1 extends DASolver {
 
         // we add the get Pair of names at the two lamps
         w.addCoupleAwait(a, b);
-        
+
         //same comment of the rule w-Gzero
         //wPrime.addCouple(a, b);
 
         // we compose and return the solution <w,wPrime>
         l.setW(w);
         l.setWPrime(wPrime);
-        return l;       
+        return l;
     }
 
     // The rule W-Union of the Analysis
@@ -653,61 +653,61 @@ public class FixPointSolver1 extends DASolver {
         DoubleLam l = new DoubleLam();
         l.union(l1, l2);
 
-        return l;       
-    }       
+        return l;
+    }
 
-    
+
     // The rule W-Par of the Analysis
     private DoubleLam wParallel(String mName, ContractElementParallel contr, VarSubstitution bFresh){
-        
+
         List<Contract> contracts = contr.getContracts();
-                
+
         DoubleLam l = new DoubleLam();
         for(Contract c : contracts){
             DoubleLam l1 = wSeq(mName, c, bFresh);
             DoubleLam res = new DoubleLam();
             res.parallel(l, l1);
-            
+
             l = res;
         }
-        
-        return l;       
-    }      
+
+        return l;
+    }
 
     // The rule W-Seq of the Analysis
     public DoubleLam wSeq(String mName, Contract contr, VarSubstitution bFresh){
         List<ContractElement> contracts = ((Contract) contr).getList();
         DoubleLam l = new DoubleLam();
-        
+
         for(ContractElement c : contracts){
             if(c instanceof ContractElementGet) {
                 DoubleLam lr = wGet(mName, (ContractElementGet) c, bFresh);
-                l.seqComposition(lr);   
+                l.seqComposition(lr);
             }else if(c instanceof ContractElementAwait) {
                 DoubleLam lr = wAwait(mName, (ContractElementAwait) c, bFresh);
-                l.seqComposition(lr);   
+                l.seqComposition(lr);
             }else if(c instanceof ContractElementSyncInvk){ //this means that contr is a ContractSyncInvk
                 DoubleLam lr = wSyncInvk(mName, (ContractElementSyncInvk) c, bFresh);
-                l.seqComposition(lr);   
+                l.seqComposition(lr);
             }else if(c instanceof ContractElementInvk){ //this means that contr is a ContractInvk
                 DoubleLam lr = wInvk(mName, (ContractElementInvk) c, bFresh);
-                l.seqComposition(lr);   
+                l.seqComposition(lr);
             }else if(c instanceof ContractElementInvkG){
                 DoubleLam lr = wGInvk(mName, (ContractElementInvkG) c, bFresh);
-                l.seqComposition(lr);   
+                l.seqComposition(lr);
             }else if(c instanceof ContractElementInvkA){
                 DoubleLam lr = wAInvk(mName, (ContractElementInvkA) c, bFresh);
-                l.seqComposition(lr);   
+                l.seqComposition(lr);
             }else if(c instanceof ContractElementUnion){
                 DoubleLam lr = wUnion(mName, (ContractElementUnion) c, bFresh);
-                l.seqComposition(lr);   
+                l.seqComposition(lr);
             }else if(c instanceof ContractElementParallel){
                 DoubleLam lr = wParallel(mName, (ContractElementParallel) c, bFresh);
-                l.seqComposition(lr);   
+                l.seqComposition(lr);
             }
         }
-        return l;       
-    }       
+        return l;
+    }
 
     // The rule W-SeqInUnion of the Analysis
 //    private DoubleLam wSeqInUnion(String mName, Contract contr, VarSubstitution bFresh){
@@ -716,23 +716,23 @@ public class FixPointSolver1 extends DASolver {
 //        for(ContractElement c : contracts){
 //            if(c instanceof ContractElementGet) {
 //                DoubleLam lr = wGet(mName, (ContractElementGet) c, bFresh);
-//                l.seqComposition(lr);   
+//                l.seqComposition(lr);
 //            }else if(c instanceof ContractElementAwait) {
 //                DoubleLam lr = wAwait(mName, (ContractElementAwait) c, bFresh);
-//                l.seqComposition(lr);   
+//                l.seqComposition(lr);
 //            }else if(c instanceof ContractElementInvk){ //this means that contr is a ContractInvk
 //                DoubleLam lr = wInvk(mName, (ContractElementInvk) c, bFresh);
-//                l.seqComposition(lr);   
+//                l.seqComposition(lr);
 //            }else if(c instanceof ContractElementInvkG){
 //                DoubleLam lr = wGInvk(mName, (ContractElementInvkG) c, bFresh);
-//                l.seqComposition(lr);   
+//                l.seqComposition(lr);
 //            }else if(c instanceof ContractElementInvkA){
 //                DoubleLam lr = wAInvk(mName, (ContractElementInvkA) c, bFresh);
-//                l.seqComposition(lr);   
+//                l.seqComposition(lr);
 //            }
 //        }
-//        return l;       
-//    }       
+//        return l;
+//    }
 
     //final info like saturation and various lock
 
@@ -740,7 +740,7 @@ public class FixPointSolver1 extends DASolver {
         return this.saturation;
     }
 
-   
+
 
     public boolean isLivelockMain(){
         return this.livelock;
@@ -764,7 +764,7 @@ public class FixPointSolver1 extends DASolver {
             }
         }
 
-        return sub;     
+        return sub;
     }
 
     public String toString(){
@@ -778,9 +778,9 @@ public class FixPointSolver1 extends DASolver {
     @Override
     public void printDeadlockDetails(PrintStream out) {
         // TODO Auto-generated method stub
-        
+
     }
 
-   
+
 
 }

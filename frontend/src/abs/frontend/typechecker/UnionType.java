@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker;
@@ -21,7 +21,7 @@ public class UnionType extends ReferenceType {
     private final ClassDecl originatingClass;
 
     public UnionType(ClassDecl classDecl, List<InterfaceTypeUse> types) {
-        this.types = new ArrayList<InterfaceType>();
+        this.types = new ArrayList<>();
         for (InterfaceTypeUse t : types) {
             if (t.getType() instanceof InterfaceType) // maybe UnkownType
                 this.types.add((InterfaceType) t.getType());
@@ -30,7 +30,7 @@ public class UnionType extends ReferenceType {
     }
 
     public UnionType(ClassDecl classDecl, InterfaceType... types) {
-        this.types = new ArrayList<InterfaceType>();
+        this.types = new ArrayList<>();
         this.types.addAll(Arrays.asList(types));
         originatingClass = classDecl;
     }
@@ -116,13 +116,13 @@ public class UnionType extends ReferenceType {
         return originatingClass;
     }
 
-    
+
     // Use the name of the originating class
     @Override
     public String getModuleName() {
         return originatingClass.getModuleDecl().getName();
     }
-    
+
     @Override
     public String getSimpleName() {
         return originatingClass.getName();
@@ -132,15 +132,15 @@ public class UnionType extends ReferenceType {
     public Type copy() {
         return new UnionType(originatingClass,types.toArray(new InterfaceType[0]));
     }
-    
+
     @Override
     public Collection<MethodSig> getAllMethodSigs() {
         return originatingClass.getAllMethodSigs();
     }
-    
+
     @Override
     public Collection<FieldDecl> getAllFieldDecls() {
-        ArrayList<FieldDecl> res = new ArrayList<FieldDecl>();
+        ArrayList<FieldDecl> res = new ArrayList<>();
         for (FieldDecl d : originatingClass.getFieldList()) {
             res.add(d);
         }

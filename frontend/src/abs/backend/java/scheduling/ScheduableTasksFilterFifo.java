@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.scheduling;
@@ -16,9 +16,9 @@ public class ScheduableTasksFilterFifo implements ScheduableTasksFilter {
 
     @Override
     public List<TaskInfo> filter(List<TaskInfo> scheduableTasks) {
-          List<TaskInfo> result = new ArrayList<TaskInfo>(scheduableTasks.size());
-          
-          with_next_task : 
+          List<TaskInfo> result = new ArrayList<>(scheduableTasks.size());
+
+          with_next_task :
           for (TaskInfo task : scheduableTasks) {
               if (!task.hasBeenActivated) {
                   for (TaskInfo otherTask : scheduableTasks) {

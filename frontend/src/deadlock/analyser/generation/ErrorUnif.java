@@ -29,14 +29,14 @@ import com.gzoumix.semisolver.constraint.Edge;
 import com.gzoumix.semisolver.constraint.History;
 import com.gzoumix.semisolver.constraint.Information;
 
-public class ErrorUnif implements GenerationError { 
+public class ErrorUnif implements GenerationError {
 
   private Edge edge;
   private List<ErrorEdge> origin;
 
   public ErrorUnif(SolvingErrorUnif err) {
     edge = err.getEdge();
-    origin = new LinkedList<ErrorEdge>();
+    origin = new LinkedList<>();
     for(Information info : edge.getHistory().getInformations()) { origin.add(new ErrorEdge((ASTNodeInformation)info)); }
   }
 

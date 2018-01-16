@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.analyser;
@@ -12,12 +12,12 @@ import abs.frontend.typechecker.TypeCheckerException;
 @SuppressWarnings("serial")
 public class SemanticConditionList implements Iterable<SemanticCondition> {
 
-    ArrayList<SemanticCondition> contents = new ArrayList<SemanticCondition>();
+    ArrayList<SemanticCondition> contents = new ArrayList<>();
     boolean containsErrors = false;
     boolean containsWarnings = false;
 
     public SemanticConditionList() {}
-    
+
     public SemanticConditionList(TypeCheckerException e) {
         add(e);
     }
@@ -68,7 +68,7 @@ public class SemanticConditionList implements Iterable<SemanticCondition> {
         containsErrors = true;
         return contents.add(e.getTypeError());
     }
-    
+
     public boolean add(SemanticCondition e) {
         if (e.isError()) containsErrors = true;
         if (e.isWarning()) containsWarnings = true;

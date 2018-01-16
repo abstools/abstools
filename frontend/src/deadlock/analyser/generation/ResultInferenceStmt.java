@@ -21,17 +21,17 @@ public class ResultInferenceStmt {
     //this.record = res;
     this.contract = contract;
     this.constraint = constraint;
-    this.environment = new LinkedList<TypingEnvironment>();
+    this.environment = new LinkedList<>();
     environment.add(env);
   }
-  
+
   /* Constructor */
   public ResultInferenceStmt(Contract contract, Constraint constraint, List<TypingEnvironment> envList) {
 
     //this.record = res;
     this.contract = contract;
     this.constraint = constraint;
-    this.environment = new LinkedList<TypingEnvironment>();
+    this.environment = new LinkedList<>();
     environment.addAll(envList);
   }
 
@@ -40,9 +40,9 @@ public class ResultInferenceStmt {
   //public Record getRecord() { return this.record; }
   public Contract getContract() { return this.contract; }
   public Constraint getConstraint() { return this.constraint; }
- 
+
   public List<TypingEnvironment> getEnvironment/*List*/() { return this.environment; }
-  
+
   //public TypingEnvironment getEnvironment() { return this.environment.get(0); }
 
 

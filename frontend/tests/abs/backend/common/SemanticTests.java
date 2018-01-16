@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.common;
@@ -57,7 +57,7 @@ public abstract class SemanticTests {
 
     @Parameters(name = "{0}")
     public static Collection<Object[]> data() {
-        final Collection<Object[]> data = new LinkedList<Object[]>();
+        final Collection<Object[]> data = new LinkedList<>();
         /* TODO: Mark Maude tests as ignored instead of just missing them */
         /*
          * TODO: For the Java backend, we just use different RUNTIME options,
@@ -96,7 +96,7 @@ public abstract class SemanticTests {
                                            // for now.
         }
     }
-    
+
     public void assertEvalTrue(Model m) {
         try {
             assertNotNull(m.lookupModule("BackendTest"));
@@ -108,7 +108,7 @@ public abstract class SemanticTests {
                                            // for now.
         }
     }
-    
+
     public void assertEvalTrue(File f) {
         Model m;
         try {

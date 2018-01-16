@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.tests;
@@ -47,9 +47,9 @@ import abs.frontend.ast.VarOrFieldUse;
 import abs.frontend.ast.VarUse;
 
 /**
- * 
+ *
  * @author woner
- * 
+ *
  */
 public final class AbsASTBuilderUtil {
 
@@ -78,7 +78,7 @@ public final class AbsASTBuilderUtil {
         }
 
     }
-    
+
     public static final class ModifyClassModifierNamePredicate extends Named implements Predicate<ModifyClassModifier> {
 
         public ModifyClassModifierNamePredicate(String name) {
@@ -103,7 +103,7 @@ public final class AbsASTBuilderUtil {
         }
 
     }
-    
+
     public static final class MethodSigNamePredicate extends Named implements Predicate<MethodSig> {
 
         public MethodSigNamePredicate(String name) {
@@ -116,7 +116,7 @@ public final class AbsASTBuilderUtil {
         }
 
     }
-    
+
     public static final class FieldNamePredicate extends Named implements Predicate<FieldDecl> {
 
         public FieldNamePredicate(String name) {
@@ -131,9 +131,9 @@ public final class AbsASTBuilderUtil {
     }
 
     public static final <T extends Decl> Predicate<T> namePred(String name) {
-        return new DeclNamePredicate<T>(name);
+        return new DeclNamePredicate<>(name);
     }
-    
+
     public static final FieldDecl getFieldDecl(ClassDecl clazz, Predicate<FieldDecl> p) {
         for (FieldDecl f : clazz.getFields()) {
             if (p.predicate(f)) {
@@ -177,7 +177,7 @@ public final class AbsASTBuilderUtil {
         }
         return null;
     }
-    
+
     public static final MethodImpl findMethodImpl(ClassDecl clazz, Predicate<MethodImpl> pred) {
         for (MethodImpl m : clazz.getMethodList()) {
                 if (pred.predicate(m)) {
@@ -197,7 +197,7 @@ public final class AbsASTBuilderUtil {
     }
 
     public static final FnApp getFnApp(String fn, PureExp... exps) {
-        List<PureExp> ps = new List<PureExp>();
+        List<PureExp> ps = new List<>();
         for (PureExp p : exps) {
             ps.add(p);
         }
@@ -220,7 +220,7 @@ public final class AbsASTBuilderUtil {
         ex.setExp(exp);
         return ex;
     }
-    
+
     public static final Call getCall(PureExp who, String method, boolean sync, PureExp... exps) {
         Call call;
         if (sync) {
@@ -235,44 +235,44 @@ public final class AbsASTBuilderUtil {
         }
         return call;
     }
-    
+
     public static final InterfaceDecl createInterface(String interfaceName) {
-        return new InterfaceDecl(interfaceName, 
-                        new abs.frontend.ast.List<Annotation>(), 
-                        new abs.frontend.ast.List<InterfaceTypeUse>(), 
-                        new abs.frontend.ast.List<MethodSig>());
+        return new InterfaceDecl(interfaceName,
+            new abs.frontend.ast.List<>(),
+            new abs.frontend.ast.List<>(),
+            new abs.frontend.ast.List<>());
     }
-    
+
     public static final MethodImpl createMethodImpl(MethodSig method) {
         MethodImpl methodImpl = new MethodImpl(method.copy(), new Block(), false);
         return methodImpl;
     }
 
-    
-    public static final MethodSig createMethodSig(String methodName, 
+
+    public static final MethodSig createMethodSig(String methodName,
             Access returnType,
             ParamDecl... decls) {
-    
-        abs.frontend.ast.List<ParamDecl> dl = 
-                new abs.frontend.ast.List<ParamDecl>();
-        
+
+        abs.frontend.ast.List<ParamDecl> dl =
+            new abs.frontend.ast.List<>();
+
         for (ParamDecl d : decls) {
                 dl.add(d);
         }
-        
+
         MethodSig method = new MethodSig(methodName,
-                        new abs.frontend.ast.List<Annotation>(),
+            new abs.frontend.ast.List<>(),
                         returnType, dl);
-        
+
         return method;
     }
-    
+
     public static final <T extends ModuleModifier> T findClassOrIfaceModifier(
             DeltaDecl delta, Class<T> klazz, Predicate<T> predicate) {
-    
-        abs.frontend.ast.List<ModuleModifier> modifiers = 
+
+        abs.frontend.ast.List<ModuleModifier> modifiers =
                         delta.getModuleModifiers();
-        
+
         for (int i=0; i<modifiers.getNumChild(); i++) {
                 ModuleModifier modifier = modifiers.getChild(i);
                 if (klazz.isInstance(modifier)) {
@@ -284,7 +284,7 @@ public final class AbsASTBuilderUtil {
         }
         return null;
     }
-    
+
     public static final PureExp getThis() {
         return new VarUse("this");
     }
@@ -310,20 +310,20 @@ public final class AbsASTBuilderUtil {
     }
 
     public static final VarDeclStmt getVarDecl(String name, Access a, Exp exp) {
-        Opt<Exp> opt = new Opt<Exp>();
+        Opt<Exp> opt = new Opt<>();
         if (exp != null) {
             opt.setChild(exp, 0);
         }
-        return new VarDeclStmt(new List<Annotation>(), new VarDecl(name, a, opt));
+        return new VarDeclStmt(new List<>(), new VarDecl(name, a, opt));
     }
-    
+
     public static final FieldDecl makeFieldDecl(Access access, String name) {
         FieldDecl fd = new FieldDecl();
         fd.setName(name);
         fd.setAccess(access);
         return fd;
     }
-    
+
     public static final NewExp newObj(ClassDecl clazz, boolean local, PureExp... ps) {
         NewExp ne = new NewExp();
         ne.setClassName(clazz.getName());
@@ -337,12 +337,12 @@ public final class AbsASTBuilderUtil {
     }
 
     public static final VarDeclStmt newObj(InterfaceDecl inf, ClassDecl clazz, String name, boolean local) {
-        return getVarDecl(name, new InterfaceTypeUse(inf.getName(), new List<Annotation>()), newObj(clazz, local));
+        return getVarDecl(name, new InterfaceTypeUse(inf.getName(), new List<>()), newObj(clazz, local));
     }
 
     /**
      * Generates import statement {@code import DeclName from DeclModule;}
-     * 
+     *
      * @param decl
      * @return
      */
@@ -351,7 +351,7 @@ public final class AbsASTBuilderUtil {
     }
 
     public static final Set<Import> generateImportsAST(Set<TypeUse> typeUses) {
-        Set<Import> imports = new HashSet<Import>();
+        Set<Import> imports = new HashSet<>();
         for (TypeUse type : typeUses) {
             if (type instanceof DataTypeUse) {
                 imports.addAll(generateImportAST(type));
@@ -363,7 +363,7 @@ public final class AbsASTBuilderUtil {
     }
 
     public static final Set<Import> generateImportAST(TypeUse t) {
-        Set<Import> imports = new HashSet<Import>();
+        Set<Import> imports = new HashSet<>();
         imports.add(generateImportAST(t.getName(), t.getModuleDecl().getName()));
         if (t instanceof ParametricDataTypeUse) {
             for (TypeUse st : ((ParametricDataTypeUse) t).getParams()) {
@@ -375,7 +375,7 @@ public final class AbsASTBuilderUtil {
 
     /**
      * Generates import statement {@code import name from module;}
-     * 
+     *
      * @param name
      * @param module
      * @return
@@ -385,7 +385,7 @@ public final class AbsASTBuilderUtil {
     }
 
     public static final DataTypeUse getUnit() {
-        return new DataTypeUse("Unit", new abs.frontend.ast.List<Annotation>());
+        return new DataTypeUse("Unit", new abs.frontend.ast.List<>());
     }
 
 }

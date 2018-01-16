@@ -8,29 +8,29 @@ public class NetworkGraph {
         private Map<String,String> attributes;
         public void addAttribute(String key, String value) {
             if (attributes == null) {
-                attributes = new HashMap<String,String>();
+                attributes = new HashMap<>();
             }
             attributes.put(key,value);
         }
-        
+
         public String getAttribute(String key) {
             return attributes.get(key);
         }
-        
+
         public void putAll(AttributeStore s) {
             attributes.putAll(s.attributes);
         }
     }
-    
-    
+
+
     public static class GraphNode extends AttributeStore {
         public final String id;
         public GraphNode(String id) {
             this.id = id;
         }
     }
-   
-    
+
+
     public static class GraphEdge extends AttributeStore {
         public final GraphNode source;
         public final GraphNode target;
@@ -38,15 +38,15 @@ public class NetworkGraph {
             this.source = source;
             this.target = target;
         }
-        
+
     }
-   
+
     public GraphNode newNode(String id) {
         return new GraphNode(id);
     }
-    
+
     public GraphEdge newEdge(GraphNode source, GraphNode target) {
         return new GraphEdge(source,target);
     }
-    
+
 }

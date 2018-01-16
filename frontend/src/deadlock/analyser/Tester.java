@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package deadlock.analyser;
@@ -18,7 +18,7 @@ import abs.frontend.delta.DeltaModellingException;
 import abs.frontend.parser.Main;
 
 public class Tester extends Main {
-    
+
     protected int numberOfIterations = 3;
     private int fixpointVersion = 2;
 
@@ -35,7 +35,7 @@ public class Tester extends Main {
                 e.printStackTrace();
             }
 
-            System.exit(127);  
+            System.exit(127);
         }
     }
 
@@ -52,11 +52,11 @@ public class Tester extends Main {
         Analyser a = new Analyser();
         return a.deadlockAnalysis(model, verbose, numberOfIterations, fixpointVersion, System.out);
     }
-    
+
     @Override
     public List<String> parseArgs(String[] args) {
         List<String> restArgs = super.parseArgs(args);
-        List<String> remainingArgs = new ArrayList<String>();
+        List<String> remainingArgs = new ArrayList<>();
 
         for (int i = 0; i < restArgs.size(); i++) {
             String arg = restArgs.get(i);
@@ -67,11 +67,11 @@ public class Tester extends Main {
                        System.err.println("The number of iterations (-it) should be an integer");
                        System.exit(1);
                    }
-            } 
+            }
             else if (arg.startsWith("-fixPointVersion=")){
                 try{
                     fixpointVersion = Integer.parseInt(arg.split("=")[1]);
-                   
+
                 } catch (Exception e) {
                     System.err.println(restArgs.toString());
                     System.err.println(e.toString());
@@ -85,7 +85,7 @@ public class Tester extends Main {
         }
         return remainingArgs;
     }
-    
+
 
     public static void printUsage() {
         Main.printUsage();

@@ -30,7 +30,7 @@ public class RecordVariable extends TermVariable implements IRecord {
 
   public RecordVariable(Variable v) { super(v); }
 
-  public Set<GroupName> fn() { return new HashSet<GroupName>(); }
+  public Set<GroupName> fn() { return new HashSet<>(); }
 
 }
 

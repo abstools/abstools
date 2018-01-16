@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.runtime;
@@ -23,52 +23,52 @@ import abs.backend.java.codegeneration.dynamic.DynamicException;
 
 public class ABSDynamicRuntime extends ABSRuntime {
 
-    /* 
+    /*
      * Object roster maintains a list of objects in the system
-     * 
+     *
      */
-    private Map<ABSDynamicClass, Set<WeakReference<ABSDynamicObject>>> objectRoster 
-        = new HashMap<ABSDynamicClass, Set<WeakReference<ABSDynamicObject>>>();
-    
+    private Map<ABSDynamicClass, Set<WeakReference<ABSDynamicObject>>> objectRoster
+        = new HashMap<>();
+
     public void registerObject(ABSDynamicObject obj) {
         Set<WeakReference<ABSDynamicObject>> objectSet;
         if (objectRoster.get(obj.getClazz()) == null) {
-            objectSet = new HashSet<WeakReference<ABSDynamicObject>>();
+            objectSet = new HashSet<>();
             objectRoster.put(obj.getClazz(), objectSet);
         } else {
             objectSet = objectRoster.get(obj.getClazz());
         }
-        objectSet.add(new WeakReference<ABSDynamicObject>(obj));
+        objectSet.add(new WeakReference<>(obj));
         System.out.println("*** Runtime registered instance of " + obj.getClazz().getName());
     }
-    
+
     public Set<ABSDynamicObject> getAllObjects(ABSDynamicClass cls) {
-        Set<ABSDynamicObject> allObjects = new HashSet<ABSDynamicObject>();
+        Set<ABSDynamicObject> allObjects = new HashSet<>();
         for (WeakReference<ABSDynamicObject> weakObject : objectRoster.get(cls)) {
             if (weakObject.get() != null)
                allObjects.add(weakObject.get());
         }
         return allObjects;
     }
-    
-    
+
+
     /*
      * The Dynamic SPL
      */
     private ABSDynamicProductLine dspl = null;
     public void initDSPL(ABSDynamicProduct initP) {
         dspl = new ABSDynamicProductLine();
-        
+
         dspl.addProduct(initP);
         dspl.setCurrentProduct(initP);
         // TODO add all products and reconfigurations that are reachable from initP
-        
+
         // A rudimentary but practical management interface
         Thread listener = new NetworkListenerThread(this, "ABS Runtime Network Interface");
         listener.start();
 
     }
-    
+
     public ABSDynamicProductLine getDSPL() {
         return dspl;
     }
@@ -82,9 +82,9 @@ public class ABSDynamicRuntime extends ABSRuntime {
         }
         return (ABSDynamicRuntime) rt;
     }
-    
-    
-    
+
+
+
     /*
      * The Open Adaptivity Interface
      */
@@ -94,7 +94,7 @@ public class ABSDynamicRuntime extends ABSRuntime {
             super(name);
             this.runtime = r;
         }
-        
+
         public void run() {
             final int myPort = 8810;
             ServerSocket ssock;

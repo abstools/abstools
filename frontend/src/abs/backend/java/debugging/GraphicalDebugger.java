@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.debugging;
@@ -98,9 +98,9 @@ public class GraphicalDebugger implements SystemObserver {
     @Override
     public void systemFinished() {
         // TODO Auto-generated method stub
-        
+
     }
-    
+
     public static Color getColor(TaskState ts) {
         switch(ts) {
         case READY: return (ColorUtils.setSaturation(Color.YELLOW, 0.5f));
@@ -111,7 +111,7 @@ public class GraphicalDebugger implements SystemObserver {
         case ASSERTION_FAILED: return (ColorUtils.PSYCHEDELIC_PURPLE);
         case EXCEPTION: return (ColorUtils.PSYCHEDELIC_PURPLE);
         case BLOCKED: return ColorUtils.setSaturation(Color.RED, 0.5f);
-        default: throw new IllegalArgumentException("Unknown Taskstate " + ts); 
+        default: throw new IllegalArgumentException("Unknown Taskstate " + ts);
         }
     }
 
@@ -123,9 +123,9 @@ public class GraphicalDebugger implements SystemObserver {
             public void run() {
                 e.getMessage();
                 // TODO Auto-generated method stub
-                
+
             }
-        
+
         });*/
         JOptionPane.showMessageDialog(window.frame,
                 e.getMessage(),
@@ -148,7 +148,7 @@ class SourceView extends JPanel implements DebugModelListener {
 
     File file;
 
-    private final Map<TaskState, DefaultHighlightPainter> highlightPainters = new HashMap<TaskState, DefaultHighlightPainter>();
+    private final Map<TaskState, DefaultHighlightPainter> highlightPainters = new HashMap<>();
     private final String fileName;
 
     SourceView(DebugModel model, String fileName) {
@@ -191,41 +191,41 @@ class SourceView extends JPanel implements DebugModelListener {
 
         model.registerListener(this);
     }
-    
+
     /**
-     * Creates a {@link File} that has the file content referred by the 
+     * Creates a {@link File} that has the file content referred by the
      * input file name. If the input file name points to an existing file this
      * method just returns a {@link File} for this file, otherwise this
-     * method checks if the file name conforms to a {@link JarURLConnection} that 
-     * points to a package. If so, this method extract that particular 
+     * method checks if the file name conforms to a {@link JarURLConnection} that
+     * points to a package. If so, this method extract that particular
      * ABS file from that package to a temporary file and returns a {@link File}
      * to that temporary file.
-     * 
+     *
      * @param fileName
      * @return
      */
     private File getFileFromName(String fileName) {
         File file = new File(fileName);
         if (file.exists()) {
-            return file; 
+            return file;
         }
-        
+
         try {
             final URL jarURL = new URL(fileName);
-            
-            final JarURLConnection connection = 
+
+            final JarURLConnection connection =
                 (JarURLConnection) jarURL.openConnection();
-            
+
             final JarEntry entry = connection.getJarEntry();
 
-            final InputStream input = 
+            final InputStream input =
                 connection.getJarFile().getInputStream(entry);
-            
-            final File tmp = 
+
+            final File tmp =
                 File.createTempFile(entry.getName(),null);
-            
+
             tmp.deleteOnExit();
-            
+
             final OutputStream output = new FileOutputStream(tmp);
             int read = 0;
             byte[] bytes = new byte[1024];
@@ -239,7 +239,7 @@ class SourceView extends JPanel implements DebugModelListener {
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
-        
+
     }
 
     private void createHighlightPainters() {
@@ -259,7 +259,7 @@ class SourceView extends JPanel implements DebugModelListener {
                 textArea.append(line + "\n");
                 lineArea.append(lineNo + " \n");
                 taskArea.append("       \n");
-                taskLineInfo.add(new ArrayList<TaskInfo>(0));
+                taskLineInfo.add(new ArrayList<>(0));
                 lineNo++;
             }
         } catch (FileNotFoundException e) {
@@ -273,8 +273,8 @@ class SourceView extends JPanel implements DebugModelListener {
         textArea.setEditable(false);
     }
 
-    List<List<TaskInfo>> taskLineInfo = new ArrayList<List<TaskInfo>>();
-    Map<TaskInfo, Object> highlightTags = new HashMap<TaskInfo, Object>();
+    List<List<TaskInfo>> taskLineInfo = new ArrayList<>();
+    Map<TaskInfo, Object> highlightTags = new HashMap<>();
 
     class Highlight {
         TaskInfo info;
@@ -288,7 +288,7 @@ class SourceView extends JPanel implements DebugModelListener {
         String string = "";
         boolean first = true;
         List<TaskInfo> tasks = taskLineInfo.get(line - 1);
-        List<Highlight> highlights = new ArrayList<Highlight>();
+        List<Highlight> highlights = new ArrayList<>();
         try {
             int start = taskArea.getLineStartOffset(line - 1);
             for (TaskInfo info : tasks) {
@@ -493,7 +493,7 @@ class TaskTable extends JPanel {
             }
         }
 
-        private List<BtnPanel> btns = new ArrayList<BtnPanel>();
+        private List<BtnPanel> btns = new ArrayList<>();
 
         private BtnPanel getBtns(final int row) {
             final TaskInfo task = tableModel.rows.get(row);
@@ -529,7 +529,7 @@ class TaskTable extends JPanel {
     class TableModel extends AbstractTableModel implements DebugModelListener {
         private static final long serialVersionUID = 1L;
 
-        final List<TaskInfo> rows = new ArrayList<TaskInfo>();
+        final List<TaskInfo> rows = new ArrayList<>();
         protected final String[] columnNames = new String[] { "Task ID", "Source", "Target", "Method", "State",
                 "Condition", "COG", "Future" };
 
@@ -730,9 +730,9 @@ class COGTree extends JPanel {
     }
 
     class RootNode extends DefaultMutableTreeNode implements DebugModelListener, ObjectCreationObserver {
-        Map<COGView, DefaultMutableTreeNode> cogs = new HashMap<COGView, DefaultMutableTreeNode>();
-        Map<TaskInfo, DefaultMutableTreeNode> tasks = new HashMap<TaskInfo, DefaultMutableTreeNode>();
-        Map<ObjectView, DefaultMutableTreeNode> objects = new HashMap<ObjectView, DefaultMutableTreeNode>();
+        Map<COGView, DefaultMutableTreeNode> cogs = new HashMap<>();
+        Map<TaskInfo, DefaultMutableTreeNode> tasks = new HashMap<>();
+        Map<ObjectView, DefaultMutableTreeNode> objects = new HashMap<>();
 
         @Override
         public void taskInfoChanged(TaskInfo line) {
@@ -794,7 +794,7 @@ class COGTree extends JPanel {
         public void objectInitialized(ObjectView o) {
             // nothing
         }
-        
+
         private void addObjectNode(ObjectView o) {
             DefaultMutableTreeNode objectsNode = (DefaultMutableTreeNode) cogs.get(o.getCOG()).getChildAt(0);
             DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(o);
@@ -838,7 +838,7 @@ class COGTable extends JPanel {
 
     class TableModel extends AbstractTableModel implements DebugModelListener {
 
-        final List<COGInfo> rows = new ArrayList<COGInfo>();
+        final List<COGInfo> rows = new ArrayList<>();
         protected final String[] columnNames = new String[] { "COG ID", "Class", "Tasks" };
         protected final Class<?>[] columnClasses = new Class<?>[] { String.class, String.class, String.class };
 
@@ -922,7 +922,7 @@ class DebugWindow implements DebugModelListener {
     final COGTree cogTree;
     final DebugModel model;
 
-    final Map<String, SourceView> windows = new HashMap<String, SourceView>();
+    final Map<String, SourceView> windows = new HashMap<>();
 
     // private COGTable cogTable;
 
@@ -942,12 +942,12 @@ class DebugWindow implements DebugModelListener {
 
         /*
          * nextStepBtn = new JButton("Step Arbitrary Task");
-         * 
+         *
          * nextStepBtn.addActionListener(new ActionListener() {
-         * 
+         *
          * @Override public void actionPerformed(ActionEvent arg0) {
          * model.stepRandom(); } });
-         * 
+         *
          * frame.add(nextStepBtn,BorderLayout.NORTH);
          */
 

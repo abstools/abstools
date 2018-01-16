@@ -208,9 +208,9 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
             DeltaTraitModifier dmod = new DeltaTraitModifier(new ModifyMethodModifier(new TraitSetExpr(list)));
 
             cu.addDeltaDecl(new DeltaDecl("D" + id,
-                    new abs.frontend.ast.List<DeltaParamDecl>(),
-                    new abs.frontend.ast.List<DeltaAccess>(),
-                    new abs.frontend.ast.List<ModuleModifier>(cmod)));
+                new abs.frontend.ast.List<>(),
+                new abs.frontend.ast.List<>(),
+                new abs.frontend.ast.List<>(cmod)));
 
             DeltaClause dc = new DeltaClause();
             Deltaspec dspec = new Deltaspec();

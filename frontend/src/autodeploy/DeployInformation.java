@@ -12,9 +12,9 @@ public class DeployInformation {
   private Map<String, Set<String>> _implements;
 
   public DeployInformation() {
-    _map = new HashMap<String, DeployInformationClass>();
-    _extends = new HashMap<String, Set<String>>();
-    _implements = new HashMap<String, Set<String>>();
+    _map = new HashMap<>();
+    _extends = new HashMap<>();
+    _implements = new HashMap<>();
   }
 
   public void extractInformation(Model model) {
@@ -28,7 +28,7 @@ public class DeployInformation {
       if (decl instanceof InterfaceDecl) {
         list = ((InterfaceDecl) decl).getExtendedInterfaceUseList();
         if(list != null) {
-          Set<String> extended = new HashSet<String>();
+          Set<String> extended = new HashSet<>();
           for (InterfaceTypeUse use : list) {
             extended.add(use.getType().getQualifiedName());
           }
@@ -38,7 +38,7 @@ public class DeployInformation {
       if (decl instanceof ClassDecl) {
         list =  ((ClassDecl) decl).getImplementedInterfaceUseList();
         if(list != null) {
-          Set<String> extended = new HashSet<String>();
+          Set<String> extended = new HashSet<>();
           for (InterfaceTypeUse use : list) {
             extended.add(use.getType().getQualifiedName());
           }

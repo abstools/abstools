@@ -34,7 +34,7 @@ public class ContractElementGet extends ContractElement {
   /* Constructors */
   public ContractElementGet(List<Term> l) { super(name, l); }
   public ContractElementGet(ASTNode pos, GroupName a, GroupName b){
-    super(pos, name, new ArrayList<Term>(2));
+    super(pos, name, new ArrayList<>(2));
     subterms.add(a);
     subterms.add(b);
   }

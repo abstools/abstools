@@ -35,7 +35,7 @@ public class ContractElementSyncInvk extends ContractElement {
   /* Constructors */
   public ContractElementSyncInvk(String name, List<Term> l) { super(name, l); }
   public ContractElementSyncInvk(ASTNode pos, String nameClass, String nameMethod, MethodInterface mi){
-    super(pos, prefix + nameClass + "." + nameMethod, new ArrayList<Term>(1));
+    super(pos, prefix + nameClass + "." + nameMethod, new ArrayList<>(1));
     subterms.add(mi);
   }
 

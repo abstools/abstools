@@ -20,9 +20,9 @@ import com.google.common.collect.Sets;
 
 /**
  * Used for tracking variables through different scopes
- * 
+ *
  * @author Georg Göri
- * 
+ *
  */
 public class Vars extends LinkedHashMap<String, Var> {
     public static final String PREFIX = "V_";
@@ -200,13 +200,13 @@ public class Vars extends LinkedHashMap<String, Var> {
      * Merges multiple Var instance in that one, so counters of variables are
      * set to maximum. To have this variables also bound, in each branch, this
      * method will return necessary code lines which set this variables
-     * 
+     *
      */
     public List<String> merge(List<Vars> vars) {
-        List<StringBuilder> mergeLines = new ArrayList<StringBuilder>(vars.size());
+        List<StringBuilder> mergeLines = new ArrayList<>(vars.size());
         for (int i = 0; i < vars.size(); i++)
             mergeLines.add(new StringBuilder(","));
-        Set<String> used = new HashSet<String>();
+        Set<String> used = new HashSet<>();
         for (java.util.Map.Entry<String, Var> a : this.entrySet()) {
             if (a.getValue().isSet()) {
                 used.add(a.getKey());
@@ -231,7 +231,7 @@ public class Vars extends LinkedHashMap<String, Var> {
             temp = Math.max(temp, v.temp);
 
         // Hide all variables, which are not used in this instance
-        Map<String, Boolean> allVars = new HashMap<String, Boolean>();
+        Map<String, Boolean> allVars = new HashMap<>();
         for (Vars vs : vars) {
             for (Map.Entry<String, Var> v : vs.entrySet()) {
                 if (!allVars.containsKey(v.getKey()) || !allVars.get(v.getKey())) {
@@ -259,7 +259,7 @@ public class Vars extends LinkedHashMap<String, Var> {
         }
 
         // Built return val
-        List<String> res = new ArrayList<String>(vars.size());
+        List<String> res = new ArrayList<>(vars.size());
         for (StringBuilder sb : mergeLines) {
             sb.deleteCharAt(sb.length() - 1);
             res.add(sb.toString());

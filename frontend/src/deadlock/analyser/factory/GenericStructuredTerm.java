@@ -38,7 +38,7 @@ public class GenericStructuredTerm extends TermStructured {
   /* Basic Get */
   public Set<GroupName> fn() {
     Set<TermVariable> set = this.fvTerm();
-    Set<GroupName> res = new HashSet<GroupName>();
+    Set<GroupName> res = new HashSet<>();
     for(TermVariable v : set) { if(v instanceof GroupName) { res.add((GroupName)v); } }
     return res;
   }

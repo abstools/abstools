@@ -1,5 +1,5 @@
 /**
- * 
+ *
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.erlang;
@@ -31,12 +31,12 @@ import com.google.common.io.Files;
 
 /**
  * Represents a to be generate Erlang application.
- * 
+ *
  * Provides facilities to create a module and creates a copy of the runtime
  * there.
- * 
+ *
  * @author Georg Göri
- * 
+ *
  */
 public class ErlApp {
 
@@ -44,7 +44,7 @@ public class ErlApp {
     public File destCodeDir;
     public File destIncludeDir;
 
-    public Map<String, CodeStream> funMod = new HashMap<String, CodeStream>();
+    public Map<String, CodeStream> funMod = new HashMap<>();
 
     public ErlApp(File destDir) throws IOException {
         super();
@@ -69,7 +69,7 @@ public class ErlApp {
 
     /**
      * All functions for an ABS module are stored in one Erlang module.
-     * 
+     *
      * This method creates the necessary stream.
      */
     public CodeStream getFunStream(String moduleName) throws FileNotFoundException, UnsupportedEncodingException {
@@ -116,7 +116,7 @@ public class ErlApp {
             "start_console",
             "link_sources"
             );
-        
+
     private static final String RUNTIME_PATH = "abs/backend/erlang/runtime/";
 
     private void copyRuntime() throws IOException {
@@ -170,8 +170,7 @@ public class ErlApp {
                 String relFilename = entry.getName().substring(inname.length());
                 if (!entry.isDirectory()) {
                     is = jarFile.getInputStream(entry);
-                    ByteStreams.copy(is, 
-                                     Files.asByteSink(new File(outname, relFilename)).openStream());
+                    ByteStreams.copy(is, Files.asByteSink(new File(outname, relFilename)).openStream());
                 } else {
                     new File(outname, relFilename).mkdirs();
                 }

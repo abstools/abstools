@@ -25,9 +25,10 @@ public class Factory extends com.gzoumix.semisolver.factory.Factory {
     private IRecord dummyDataType;
 
     /* Constructor */
-    public Factory(boolean v) { verbose = v; dummyDataType = new RecordDataType(RecordDataType._prefix + "DUMMY", new LinkedList<Term>()); }
+    public Factory(boolean v) { verbose = v; dummyDataType = new RecordDataType(RecordDataType._prefix + "DUMMY",
+        new LinkedList<>()); }
 
-  
+
   /* 1. RECORDS */
 
   public RecordField newRecordField(String name, IRecord r) {
@@ -49,12 +50,12 @@ public class Factory extends com.gzoumix.semisolver.factory.Factory {
     RecordDataType res = new RecordDataType(data,r);
     return res;
   }
-  
+
   public GroupName newGroupName() {
     GroupName res = new GroupName(new Variable());
     return res;
   }
-  
+
   public GroupName newGroupName(boolean isFresh) {
       GroupName res = new GroupName(new Variable(), isFresh);
       return res;
@@ -65,62 +66,62 @@ public class Factory extends com.gzoumix.semisolver.factory.Factory {
     return res;
   }
 
-  
-  
+
+
   /* 2. CONTRACTS */
 
   public Contract newContractEmpty() { return new Contract(); }
 
   public Contract newContractSequence(List<Contract> ce) {
-    List<Term> l = new LinkedList<Term>();
+    List<Term> l = new LinkedList<>();
     for(Contract contract: ce) { l.addAll(((TermStructured)contract).getSubTerms()); }
     return new Contract(l);
   }
 
   public Contract newContractAwait(ASTNode n, GroupName a, GroupName b) {
-    List<Term> l = new ArrayList<Term>();
+    List<Term> l = new ArrayList<>();
     l.add(new ContractElementAwait(n, a, b));
     return new Contract(l);
   }
 
   public Contract newContractGet(ASTNode n, GroupName a, GroupName b) {
-    List<Term> l = new LinkedList<Term>();
+    List<Term> l = new LinkedList<>();
     l.add(new ContractElementGet(n, a, b));
     return new Contract(l);
   }
 
   public Contract newContractInvk(ASTNode n, String nameClass, String nameMethod, MethodInterface mi) {
-    List<Term> l = new LinkedList<Term>();
+    List<Term> l = new LinkedList<>();
     l.add(new ContractElementInvk(n, nameClass, nameMethod, mi));
     return new Contract(l);
   }
 
   public Contract newContractSyncInvk(ASTNode n, String nameClass, String nameMethod, MethodInterface mi) {
-    List<Term> l = new LinkedList<Term>();
+    List<Term> l = new LinkedList<>();
     l.add(new ContractElementSyncInvk(n, nameClass, nameMethod, mi));
     return new Contract(l);
   }
 
   public Contract newContractInvkA(ASTNode n, ContractElementInvk i, ContractElementAwait a) {
-    List<Term> l = new LinkedList<Term>();
+    List<Term> l = new LinkedList<>();
     l.add(new ContractElementInvkA(n, i, a));
     return new Contract(l);
   }
 
   public Contract newContractInvkG(ASTNode n, ContractElementInvk i, ContractElementGet g) {
-    List<Term> l = new LinkedList<Term>();
+    List<Term> l = new LinkedList<>();
     l.add(new ContractElementInvkG(n, i, g));
     return new Contract(l);
   }
 
   public Contract newContractUnion(ASTNode n,  Contract c1, Contract c2) {
-    List<Term> l = new LinkedList<Term>();
+    List<Term> l = new LinkedList<>();
     l.add(new ContractElementUnion(n, c1, c2));
     return new Contract(l);
   }
 
   public Contract newContractParallel(ASTNode n,  List<Contract> l) {
-      List<Term> l1 = new LinkedList<Term>();
+      List<Term> l1 = new LinkedList<>();
       l1.add(new ContractElementParallel(n, l));
       return new Contract(l1);
     }
@@ -130,7 +131,7 @@ public class Factory extends com.gzoumix.semisolver.factory.Factory {
   public MethodInterface newMethodInterface(IRecord r, List<IRecord> s, IRecord res){
     return new MethodInterface(r, s, res);
   }
-	
+
   public MethodContract newMethodContract(MethodInterface mi, Contract cp,Contract cf){
     return new MethodContract(mi, cp, cf);
   }
@@ -141,7 +142,7 @@ public class Factory extends com.gzoumix.semisolver.factory.Factory {
 
   public TermVariable freshTermVariableFromTerm(Term t) {
     if(t instanceof GroupName) { return newGroupName(); }
-    else if(t instanceof IRecord) { return newRecordVariable(); }   
+    else if(t instanceof IRecord) { return newRecordVariable(); }
     else{ System.out.println("WHAT THE HELL !!!???"); return super.freshTermVariableFromTerm(t); }
   }
 
@@ -197,7 +198,7 @@ public class Factory extends com.gzoumix.semisolver.factory.Factory {
 		//If cGetorAwait is null return c
 		if(cGetorAwait == null) return c;
 
-		
+
 		//Case cGetorAwait is a ContractGet
 		if((((TermStructured) cGetorAwait).getConstructor()).equals("ContractGet")){
 			//Case c is a ContractInvk
@@ -211,7 +212,7 @@ public class Factory extends com.gzoumix.semisolver.factory.Factory {
 				//Case LastContract is not a ContractInvk
 				if(!(((TermStructured) lastTerm).getConstructor()).startsWith("Class")){
 					subs.add(cGetorAwait);
-					//ther's no concatenation and we add together c and cGetorAwait 
+					//ther's no concatenation and we add together c and cGetorAwait
 					return newContractSequence(subs);
 				}
 				//Case LastContract is a ContractInvk
@@ -253,11 +254,11 @@ public class Factory extends com.gzoumix.semisolver.factory.Factory {
 				t.add(c);
 				t.add(cGetorAwait);
 				return newContractSequence(t);
-			}	
+			}
 		//last case where cGetorAwait is neither a get or an await contract and we add it to c
 		} else return addContract(c,cGetorAwait);
 	}
-	
+
 */
 	public Term cleanContractMethod(Term cm){
 		//this method has sense only if Term cm is a MethodContract
@@ -265,12 +266,12 @@ public class Factory extends com.gzoumix.semisolver.factory.Factory {
 			//I recover the 2 main term inside the MethodContract, in particular, the contract c
 			Term mi = ((TermStructured) cm).getSubTerms().get(0);
 			Term c = ((TermStructured) cm).getSubTerms().get(1);
-			
+
 			//if c is a contractSeq we need to control it
 			if(((TermStructured) c).getConstructor().equals("ContractSeq")){
 				//but only if the contractSeq contains 2 or more contract we need to analyze it
 				if(((TermStructured) c).getSubTerms().size() > 1){
-					List<Term> cCopy = new LinkedList<Term>();
+					List<Term> cCopy = new LinkedList<>();
 					Iterator<Term> i = ((TermStructured) c).getSubTerms().iterator();
 					while(i.hasNext()){
 						Term j=i.next();
@@ -300,18 +301,18 @@ public class Factory extends com.gzoumix.semisolver.factory.Factory {
 							cCopy.add(j);
 						}
 					}
-					List<Term> newMc = new LinkedList<Term>();
+					List<Term> newMc = new LinkedList<>();
 					newMc.add(mi);
 					newMc.add(newTerm("ContractSeq", cCopy));
 					return newTerm("MethodContract",newMc);
-					
+
 				} else return cm;
 			} else return cm;
-			
+
 		} else if(((TermStructured) cm).getConstructor().equals("ContractSeq")){
 			//but only if the contractSeq contains 2 or more contract we need to analyze it
 			if(((TermStructured) cm).getSubTerms().size() > 1){
-				List<Term> cCopy = new LinkedList<Term>();
+				List<Term> cCopy = new LinkedList<>();
 				Iterator<Term> i = ((TermStructured) cm).getSubTerms().iterator();
 				while(i.hasNext()){
 					Term j=i.next();
@@ -341,20 +342,20 @@ public class Factory extends com.gzoumix.semisolver.factory.Factory {
 						cCopy.add(j);
 					}
 				}
-				return newTerm("ContractSeq", cCopy);	
+				return newTerm("ContractSeq", cCopy);
 			} else return cm;
 		}else return cm;
 
 	}
 
 
-	
+
 
     public ContractElementParallel newContractElementParallel(Contract c1, ContractElementParallel c2) {
-        
+
         c2.getSubTerms().add(c1);
         return c2;
-        
+
     }
 
 
@@ -367,6 +368,6 @@ public class Factory extends com.gzoumix.semisolver.factory.Factory {
         //return dummyDataType;
         return this.newRecordVariable();
     }
-	
+
 
 } // end class DeadlockFactory

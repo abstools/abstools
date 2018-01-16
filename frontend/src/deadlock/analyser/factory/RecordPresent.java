@@ -35,17 +35,17 @@ public class RecordPresent extends GenericStructuredTerm implements IRecord {
   /* Constructors */
   public RecordPresent(List<Term> l) { super(name, l); }
   public RecordPresent(GroupName a, List<RecordField> fields) {
-    super(name, new LinkedList<Term>());
+    super(name, new LinkedList<>());
     subterms.add(a);
     subterms.addAll(fields);
   }
-  
+
 
   /* Basic Get */
   public GroupName getRoot() {
     return ((GroupName)(getSubTerms().get(0)));
   }
-  
+
   public IRecord getField(String name) {
     IRecord res;
     for(Term sub : subterms.subList(1, subterms.size())) {

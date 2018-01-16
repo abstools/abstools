@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.codegeneration;
@@ -16,8 +16,8 @@ import java.util.List;
 
 public class JavaCode {
     private final File srcDir;
-    private final List<File> files = new ArrayList<File>();
-    private final List<String> mainClasses = new ArrayList<String>();
+    private final List<File> files = new ArrayList<>();
+    private final List<String> mainClasses = new ArrayList<>();
 
     public JavaCode() throws IOException {
         srcDir = File.createTempFile("absjavabackend", Long.toString(System.nanoTime()));
@@ -64,7 +64,7 @@ public class JavaCode {
                     throw new JavaCodeGenerationException("The Java backend does not support main blocks in " +
                     		"modules with name 'Main'. Please try to use a different name.");
                 }
-                throw new JavaCodeGenerationException("The Java backend does not support using the name " + 
+                throw new JavaCodeGenerationException("The Java backend does not support using the name " +
                       name + " as module name, because it collides with a generated classname. " +
                       		"Please try to use a different name.");
             }
@@ -107,7 +107,7 @@ public class JavaCode {
     }
 
     public void compile(String... args) throws JavaCodeGenerationException {
-        ArrayList<String> args2 = new ArrayList<String>();
+        ArrayList<String> args2 = new ArrayList<>();
         args2.addAll(Arrays.asList(args));
         args2.addAll(Arrays.asList(getFileNames()));
         JavaCompiler.compile(args2.toArray(new String[0]));

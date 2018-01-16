@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014, Rudolf Schlatte. All rights reserved. 
+ * Copyright (c) 2014, Rudolf Schlatte. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.antlr.parser;
@@ -27,7 +27,7 @@ public class SyntaxErrorCollector extends BaseErrorListener {
     }
 
     public java.util.List<ParserError> parserErrors
-        = new java.util.ArrayList<ParserError>();
+        = new java.util.ArrayList<>();
 
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,

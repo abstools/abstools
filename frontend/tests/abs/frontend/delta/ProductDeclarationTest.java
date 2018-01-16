@@ -36,8 +36,8 @@ public class ProductDeclarationTest extends DeltaTest {
         Product impl = p.getProduct();
         assertEquals(3, impl.getNumFeature());
 
-        Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3"));
-        Set<String> actual = new HashSet<String>();
+        Set<String> expected = new HashSet<>(Arrays.asList("F1", "F2", "F3"));
+        Set<String> actual = new HashSet<>();
         for (Feature f : impl.getFeatures())
             actual.add(f.getName());
         assertEquals(expected, actual);
@@ -55,8 +55,8 @@ public class ProductDeclarationTest extends DeltaTest {
         Product impl = p.getProduct();
         assertEquals(3, impl.getNumFeature());
 
-        Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3"));
-        Set<String> actual = new HashSet<String>();
+        Set<String> expected = new HashSet<>(Arrays.asList("F1", "F2", "F3"));
+        Set<String> actual = new HashSet<>();
         for (Feature f : impl.getFeatures())
             actual.add(f.getName());
         assertEquals(expected, actual);
@@ -74,8 +74,8 @@ public class ProductDeclarationTest extends DeltaTest {
         Product impl = p.getProduct();
         assertEquals(2, impl.getNumFeature());
 
-        Set<String> expected = new HashSet<String>(Arrays.asList("F2", "F3"));
-        Set<String> actual = new HashSet<String>();
+        Set<String> expected = new HashSet<>(Arrays.asList("F2", "F3"));
+        Set<String> actual = new HashSet<>();
         for (Feature f : impl.getFeatures())
             actual.add(f.getName());
         assertEquals(expected, actual);
@@ -93,8 +93,8 @@ public class ProductDeclarationTest extends DeltaTest {
         Product impl = p.getProduct();
         assertEquals(4, impl.getNumFeature());
 
-        Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3", "F4"));
-        Set<String> actual = new HashSet<String>();
+        Set<String> expected = new HashSet<>(Arrays.asList("F1", "F2", "F3", "F4"));
+        Set<String> actual = new HashSet<>();
         for (Feature f : impl.getFeatures())
             actual.add(f.getName());
         assertEquals(expected, actual);
@@ -112,8 +112,8 @@ public class ProductDeclarationTest extends DeltaTest {
         Product impl = p.getProduct();
         assertEquals(2, impl.getNumFeature());
 
-        Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F4"));
-        Set<String> actual = new HashSet<String>();
+        Set<String> expected = new HashSet<>(Arrays.asList("F1", "F4"));
+        Set<String> actual = new HashSet<>();
         for (Feature f : impl.getFeatures())
             actual.add(f.getName());
         assertEquals(expected, actual);
@@ -132,8 +132,8 @@ public class ProductDeclarationTest extends DeltaTest {
         Product impl = p.getProduct();
         assertEquals(3, impl.getNumFeature());
 
-        Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3"));
-        Set<String> actual = new HashSet<String>();
+        Set<String> expected = new HashSet<>(Arrays.asList("F1", "F2", "F3"));
+        Set<String> actual = new HashSet<>();
         for (Feature f : impl.getFeatures())
             actual.add(f.getName());
         assertEquals(expected, actual);
@@ -213,8 +213,8 @@ public class ProductDeclarationTest extends DeltaTest {
         Product impl = p.getProduct();
         assertEquals(2, impl.getNumFeature());
 
-        Set<String> expected = new HashSet<String>(Arrays.asList("F3", "F5"));
-        Set<String> actual = new HashSet<String>();
+        Set<String> expected = new HashSet<>(Arrays.asList("F3", "F5"));
+        Set<String> actual = new HashSet<>();
         for (Feature f : impl.getFeatures())
             actual.add(f.getName());
         assertEquals(expected, actual);
@@ -232,8 +232,8 @@ public class ProductDeclarationTest extends DeltaTest {
         Product impl = p.getProduct();
         assertEquals(1, impl.getNumFeature());
 
-        Set<String> expected = new HashSet<String>(Arrays.asList("F3"));
-        Set<String> actual = new HashSet<String>();
+        Set<String> expected = new HashSet<>(Arrays.asList("F3"));
+        Set<String> actual = new HashSet<>();
         for (Feature f : impl.getFeatures())
             actual.add(f.getName());
         assertEquals(expected, actual);
@@ -245,11 +245,11 @@ public class ProductDeclarationTest extends DeltaTest {
 
         ProductDecl p = model.findProduct("P1");
 
-        Set<String> actual = new HashSet<String>();
+        Set<String> actual = new HashSet<>();
         p.getProductExpr().setRightSideProductNames(actual);
         assertEquals(3, actual.size());
 
-        Set<String> expected = new HashSet<String>(Arrays.asList("P2", "P3", "P4"));
+        Set<String> expected = new HashSet<>(Arrays.asList("P2", "P3", "P4"));
         assertEquals(expected, actual);
     }
 
@@ -267,8 +267,8 @@ public class ProductDeclarationTest extends DeltaTest {
         Product impl = p.getProduct();
         assertEquals(3, impl.getNumFeature());
 
-        Set<String> expected = new HashSet<String>(Arrays.asList("F1", "F2", "F3"));
-        Set<String> actual = new HashSet<String>();
+        Set<String> expected = new HashSet<>(Arrays.asList("F1", "F2", "F3"));
+        Set<String> actual = new HashSet<>();
         for (Feature f : impl.getFeatures())
             actual.add(f.getName());
         assertEquals(expected, actual);

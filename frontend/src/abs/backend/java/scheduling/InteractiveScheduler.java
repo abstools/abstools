@@ -266,7 +266,7 @@ class InteractiveOptionPnl extends JPanel implements SchedulerGUISwing {
         }
     }
 
-    final Map<COG, BtnLine> btnLines = new HashMap<COG, BtnLine>();
+    final Map<COG, BtnLine> btnLines = new HashMap<>();
 
     @Override
     public synchronized void showOptions(ScheduleOptions options) {
@@ -401,7 +401,7 @@ class SchedulerChoosePnl extends JPanel implements ItemListener {
 
 class HistoryPnl extends JPanel {
     JTextArea historyArea;
-    List<ScheduleAction> history = new ArrayList<ScheduleAction>();
+    List<ScheduleAction> history = new ArrayList<>();
     JButton saveHistory;
     private final SchedulerGUI schedulerGUI;
 
@@ -483,7 +483,7 @@ interface SchedulingObserver {
 class ReplayOptionPnl extends JPanel implements SchedulerGUISwing, TotalSchedulingStrategy {
     JButton loadHistoryBtn;
     private InteractiveScheduler scheduler;
-    private List<HistoryItem> history = new ArrayList<HistoryItem>(0);
+    private List<HistoryItem> history = new ArrayList<>(0);
     private ScheduleOptions options;
 
     public ReplayOptionPnl(InteractiveScheduler scheduler) {

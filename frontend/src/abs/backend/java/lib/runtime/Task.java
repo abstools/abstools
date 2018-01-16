@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.runtime;
@@ -23,7 +23,7 @@ public class Task<T extends ABSRef> {
     private final int id;
     private Thread executingThread;
     private ABSException exception;
-    
+
     private final TaskStack stack;
     private final AsyncCall<T> call;
 
@@ -38,7 +38,7 @@ public class Task<T extends ABSRef> {
     private long start;
     private long finish;
 
-    
+
     public Task(AsyncCall<T> call) {
         this.call = call;
         future = new ABSTaskFut(this);
@@ -49,7 +49,7 @@ public class Task<T extends ABSRef> {
         } else {
             stack = null;
         }
-        
+
         this.arrival = System.currentTimeMillis();
         if (call instanceof AbstractAsyncCallRT) {
             AbstractAsyncCallRT<?> callRT = (AbstractAsyncCallRT<?>)call;
@@ -69,7 +69,7 @@ public class Task<T extends ABSRef> {
     public int getID() {
         return id;
     }
-    
+
     public long getArrival() {
         return arrival;
     }
@@ -85,7 +85,7 @@ public class Task<T extends ABSRef> {
     public long getStart() {
         return start;
     }
-    
+
     public void setStart(long ms) {
         start = ms;
     }
@@ -123,7 +123,7 @@ public class Task<T extends ABSRef> {
     public synchronized ABSException getException() {
         return exception;
     }
-    
+
     // not synchronized as only called when task is locked
     public void setException(ABSException exception) {
         this.exception = exception;
@@ -163,21 +163,21 @@ public class Task<T extends ABSRef> {
             }
         }
     }
-    
+
     public void newStackFrame(ABSObject target, String methodName) {
         if (stack != null) {
-            
+
             ClassView cv = null;
-            if (target != null) 
+            if (target != null)
                 cv = target.getView().getClassView();
-                
+
             Frame f = stack.pushNewFrame(new ABSMethod(cv,methodName));
             if (view != null) {
                 view.newStackFrameCreated(f);
             }
         }
     }
-    
+
     public void run() {
         synchronized (this) {
             if (view != null)
@@ -185,7 +185,7 @@ public class Task<T extends ABSRef> {
             executingThread = Thread.currentThread();
         }
 
-        
+
         try {
             ABSValue res = (ABSValue) call.execute();
             future.resolve(res);
@@ -194,11 +194,11 @@ public class Task<T extends ABSRef> {
             future.smash(e);
             getCOG().getRuntime().handleABSException(this,e);
         } catch (SystemTerminatedException e) {
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             ABSException absException = new ABSAssertException("Sorry, this is a bug in the Java backend of ABS: " +
-                        "Unexpected exception: " + e); 
+                        "Unexpected exception: " + e);
             // TODO new subclass for internal error
             absException.setStackTrace(e.getStackTrace());
             getCOG().getRuntime().handleABSException(this, absException );
@@ -217,7 +217,7 @@ public class Task<T extends ABSRef> {
     }
 
     private volatile View view;
-    
+
     private Object viewCreationLock = new Object();
     private boolean finished = false;
 
@@ -239,7 +239,7 @@ public class Task<T extends ABSRef> {
         return call;
     }
 
-    
+
     public synchronized void nextStep(String fileName, int line) {
         if (view != null)
             view.nextStep(fileName, line);
@@ -258,7 +258,7 @@ public class Task<T extends ABSRef> {
         public void stackFrameRemoved(Frame oldFrame) {
             for (TaskObserver l : getObservers()) {
                 l.stackFrameRemoved(this, oldFrame);
-            }            
+            }
         }
 
         public synchronized void localVariableChanged(Frame f,String name, ABSValue v) {
@@ -305,7 +305,7 @@ public class Task<T extends ABSRef> {
 
         private synchronized List<TaskObserver> getObservers() {
             if (taskListener == null)
-                taskListener = new ArrayList<TaskObserver>(1);
+                taskListener = new ArrayList<>(1);
             return taskListener;
         }
 
@@ -378,7 +378,7 @@ public class Task<T extends ABSRef> {
     }
 
     public synchronized void setFinished(boolean b) {
-       finished = b;        
+       finished = b;
     }
 
 }

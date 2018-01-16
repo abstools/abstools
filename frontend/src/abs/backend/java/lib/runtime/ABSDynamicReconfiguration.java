@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.runtime;
@@ -18,7 +18,7 @@ public class ABSDynamicReconfiguration extends ABSDynamicObject {
     private String name;
     private ABSDynamicProduct currentP;
     private ABSDynamicProduct targetP;
-    private List<ABSDynamicDelta> deltas = new ArrayList<ABSDynamicDelta>();
+    private List<ABSDynamicDelta> deltas = new ArrayList<>();
     private ABSDynamicUpdate update = null;
 
     public String getName() {
@@ -34,14 +34,14 @@ public class ABSDynamicReconfiguration extends ABSDynamicObject {
     public void setCurrentProduct(ABSDynamicProduct p) {
         this.currentP = p;
     }
-    
+
     public ABSDynamicProduct getTargetProduct() {
         return targetP;
     }
     public void setTargetProduct(ABSDynamicProduct p) {
         this.targetP = p;
     }
-    
+
     public void setDeltas(List<ABSDynamicDelta> deltaList) {
         this.deltas.addAll(deltaList);
     }

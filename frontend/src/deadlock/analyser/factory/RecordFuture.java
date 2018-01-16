@@ -33,7 +33,7 @@ public class RecordFuture extends GenericStructuredTerm implements IRecord {
   /* Constructors */
   public RecordFuture(List<Term> l) { super(name, l); }
   public  RecordFuture(GroupName a, IRecord r) {
-    super(name, new ArrayList<Term>(2));
+    super(name, new ArrayList<>(2));
     subterms.add(a);
     subterms.add(r);
   }

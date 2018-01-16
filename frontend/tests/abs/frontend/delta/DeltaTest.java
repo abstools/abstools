@@ -34,16 +34,16 @@ public class DeltaTest extends FrontendTest {
     protected void typeCheck(Model m, ProductDecl p, SemanticConditionList e) {
         Map<String,Feature> featureNames = null;
         if (m.hasProductLine()) {
-            featureNames = new HashMap<String,Feature>();
+            featureNames = new HashMap<>();
             for (Feature f : m.getProductLine().getFeatures()) {
                 featureNames.put(f.getName(),f);
             }
         }
-        HashSet<String> productNames = new HashSet<String>();
+        HashSet<String> productNames = new HashSet<>();
         for (ProductDecl prod : m.getProductDecls()) {
             productNames.add(prod.getName());
         }
-        HashSet<String> updateNames = new HashSet<String>();
+        HashSet<String> updateNames = new HashSet<>();
         for (UpdateDecl upd : m.getUpdateDecls()) {
             updateNames.add(upd.getName());
         }

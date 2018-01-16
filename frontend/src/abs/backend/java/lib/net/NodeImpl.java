@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.lib.net;
@@ -23,19 +23,19 @@ import abs.backend.java.lib.runtime.ABSObject;
 
 /**
  * Representing a Node in the ABS network
- * 
+ *
  * @author Jan Schäfer
  *
  */
 public class NodeImpl implements NetNode {
     private final int id;
     private final Router router;
-    private final Map<NetNode,ArcImpl> outArcs = new HashMap<NetNode, ArcImpl>();
-    private final List<ArcImpl> inArcs = new ArrayList<ArcImpl>();
-    private final Set<ABSObject> objects = new HashSet<ABSObject>();
-    private final Set<NetCOG> cogs = new HashSet<NetCOG>();
+    private final Map<NetNode,ArcImpl> outArcs = new HashMap<>();
+    private final List<ArcImpl> inArcs = new ArrayList<>();
+    private final Set<ABSObject> objects = new HashSet<>();
+    private final Set<NetCOG> cogs = new HashSet<>();
     private final Random random = new Random();
-    
+
     public NodeImpl(int id) {
         this.id = id;
 	router = new DefaultRouter(this);
@@ -45,7 +45,7 @@ public class NodeImpl implements NetNode {
 	this.id = id;
 	this.router = router;
     }
-    
+
     @Override
     public void addInArcs(List<ArcImpl> arcs) {
         inArcs.addAll(arcs);
@@ -55,9 +55,9 @@ public class NodeImpl implements NetNode {
     public void addOutArcs(Map<NetNode, ArcImpl> arcs) {
 	outArcs.putAll(arcs);
     }
-    
+
     public synchronized boolean processNextMsg() {
-        List<ArcImpl> shuffledList = new ArrayList<ArcImpl>(inArcs);
+        List<ArcImpl> shuffledList = new ArrayList<>(inArcs);
         Collections.shuffle(shuffledList);
         for (ArcImpl arc : shuffledList) {
             if (!arc.getQueue().isEmpty()) {
@@ -68,11 +68,11 @@ public class NodeImpl implements NetNode {
         }
         return false;
     }
-    
+
     public void sendMsg(Msg m) {
-        
+
     }
-    
+
     @Override
     public synchronized void processMsg(Msg m) {
         if (m instanceof ObjectTargetMsg) {
@@ -97,7 +97,7 @@ public class NodeImpl implements NetNode {
             } else {
                 routeAway(m);
             }
-        } 
+        }
     }
 
     private void routeAway(Msg m) {
@@ -121,10 +121,10 @@ public class NodeImpl implements NetNode {
     public void performStep() {
         if (processNextMsg())
             return;
-        
+
         if (migrateGroup())
             return;
-            
+
         if (migrateObject())
             return;
     }
@@ -153,7 +153,7 @@ public class NodeImpl implements NetNode {
     public int getId() {
 	return id;
     }
-    
+
     private synchronized boolean migrateObject() {
         for (ABSObject o : objects) {
             NetCOG cog = (NetCOG)o.getCOG();
@@ -168,7 +168,7 @@ public class NodeImpl implements NetNode {
     }
 
     private synchronized boolean migrateGroup() {
-        if (random.nextBoolean()) 
+        if (random.nextBoolean())
             return false;
 
         if (cogs.isEmpty())
@@ -176,10 +176,10 @@ public class NodeImpl implements NetNode {
 
         NetCOG cog = cogs.iterator().next();
         cogs.remove(cog);
-        
+
         ArcImpl arc = outArcs.values().iterator().next();
         arc.getQueue().enqueue(new COGMsg(cog));
-        
+
         return true;
     }
 

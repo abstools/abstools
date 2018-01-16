@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker.locationtypes.infer;
@@ -33,22 +33,22 @@ public class SatGenerator {
     final Set<LocationTypeVariable> vars;
     boolean enableStats = false;
     private boolean enableDebug = false;
-    
+
     final List<List<Integer>> output;
-    
+
     final Environment e;
-    
-    
-    
-    
+
+
+
+
     public SatGenerator(Set<Constraint> constraints) {
         this.constraints = constraints;
         initializeConstraints();
         e = new Environment();
-        output = new ArrayList<List<Integer>>();
-        vars = new HashSet<LocationTypeVariable>();
+        output = new ArrayList<>();
+        vars = new HashSet<>();
     }
-    
+
     private void initializeConstraints() {
         for (LocationType lt : LocationType.ALLVISTYPES) {
             LocationTypeVariable cltv = LocationTypeVariable.getFromLocationType(lt);
@@ -59,19 +59,19 @@ public class SatGenerator {
 
     public Map<LocationTypeVariable, LocationType> generate(SemanticConditionList s) {
         Map<LocationTypeVariable, LocationType> res = generate();
-        
+
         if (res == null) {
             s.add(new LocationInferenceError());
         }
-        
+
         return res;
-        
+
     }
-        
+
     public Map<LocationTypeVariable, LocationType> generate() {
         long startNanos = System.nanoTime();
 
-        Map<LocationTypeVariable, LocationType> tvl = new HashMap<LocationTypeVariable, LocationType>();
+        Map<LocationTypeVariable, LocationType> tvl = new HashMap<>();
         for (Constraint c : constraints) {
             if (enableDebug) System.out.println(c);
             List<List<Integer>> gen = c.generateSat(e);
@@ -82,9 +82,9 @@ public class SatGenerator {
         if (enableStats) {
             System.out.println("Constraint generation time: " + (genNanos - startNanos) / 1000000);
         }
-        
+
         StringBuilder weights = new StringBuilder();
-        
+
         int countNiceConstraints = 0;
         for (LocationTypeVariable tv : vars) {
             if (tv.getNode() != null) {
@@ -102,13 +102,13 @@ public class SatGenerator {
                 weights.append("0\n");
             }
         }
-        
+
         StringBuilder sb = new StringBuilder();
         int nbclauses = output.size() + countNiceConstraints;
         int nbvars = e.current;
-        
+
         addInitLine(sb,nbclauses,nbvars);
-        
+
         // update should_have
         int newShouldHave = countNiceConstraints * Constraint.NICE_TO_HAVE + 1;
         for (List<Integer> line : output) {
@@ -129,27 +129,27 @@ public class SatGenerator {
             System.out.println(sb.length());
             throw e;
         }
-        
+
         sb.append(weights);
-        
+
         if (enableStats) {
            System.out.println("Number of variables: " + nbvars);
            System.out.println("Number of clauses: " + nbclauses);
         }
-        
+
         //System.out.println(sb);
-        
+
         IPBSolver solver = org.sat4j.maxsat.SolverFactory.newDefault();//instance().defaultSolver();
         //IPBSolver solver = org.sat4j.pb.SolverFactory.newBoth();
-        
+
         //System.exit(0);
-        
+
         WeightedMaxSatDecorator wmsd = new WeightedMaxSatDecorator(solver);
-        
+
         WDimacsReader reader = new WDimacsReader(wmsd);
-        
+
         //System.out.println(sb.toString());
-        
+
         try {
             InputStream is = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
             IProblem problem = reader.parseInstance(is);
@@ -190,7 +190,7 @@ public class SatGenerator {
                         TypedVar tv = e.vars().get(i-1);
                         //System.out.println(tv.v + " : " + tv.t);
                         tvl.put(tv.v, tv.t);
-                    }   
+                    }
                 }
                 if (enableDebug) System.out.println("Solution: " + tvl);
                 if (enableStats) {
@@ -205,7 +205,7 @@ public class SatGenerator {
                             if (t.isParametricFar()) paramfars++;
                             if (t.isNear()) nears++;
                             if (t.isSomewhere()) sws++;
-                        } 
+                        }
                     }
                     System.out.println("Fars: " + fars);
                     System.out.println("Somewheres: " + sws);
@@ -245,5 +245,5 @@ public class SatGenerator {
         sb.append(Constraint.MUST_HAVE);
         sb.append("\n");
     }
-    
+
 }

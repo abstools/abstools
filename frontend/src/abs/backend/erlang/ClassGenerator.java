@@ -22,9 +22,9 @@ import org.apache.commons.io.output.WriterOutputStream;
 
 /**
  * Generates the Erlang module for one class
- * 
+ *
  * @author Georg Göri
- * 
+ *
  */
 public class ClassGenerator {
     private final CodeStream ecs;
@@ -140,8 +140,8 @@ public class ClassGenerator {
             Vars vars = new Vars();
             Vars safe = vars.pass();
             // Build var scopes and statmemnts for each branch
-            java.util.List<Vars> branches_vars = new java.util.LinkedList<Vars>();
-            java.util.List<String> branches = new java.util.LinkedList<String>();
+            java.util.List<Vars> branches_vars = new java.util.LinkedList<>();
+            java.util.List<String> branches = new java.util.LinkedList<>();
             for (CaseBranchStmt b : classDecl.getRecoverBranchs()) {
                 Vars v = vars.pass();
                 StringWriter sw = new StringWriter();
@@ -263,8 +263,8 @@ public class ClassGenerator {
         ecs.println("-compile(export_all).");
         ecs.println();
 
-        HashSet<MethodSig> callable_sigs = new HashSet<MethodSig>();
-        HashSet<InterfaceDecl> visited = new HashSet<InterfaceDecl>();
+        HashSet<MethodSig> callable_sigs = new HashSet<>();
+        HashSet<InterfaceDecl> visited = new HashSet<>();
         for (InterfaceTypeUse i : classDecl.getImplementedInterfaceUseList()) {
             visited.add((InterfaceDecl)i.getDecl());
         }

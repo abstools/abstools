@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker;
@@ -19,15 +19,15 @@ import abs.frontend.ast.TypeUse;
 
 public abstract class Type {
     private static final Object ANNOTATION_KEY = "ANNOTATION_KEY";
-    
-    protected Map<Object,Object> metaData = new HashMap<Object,Object>();
+
+    protected Map<Object,Object> metaData = new HashMap<>();
     {
         metaData.put(ANNOTATION_KEY, Collections.EMPTY_LIST);
     }
-    
+
     public Type withAnnotations(abs.frontend.ast.List<Annotation> anns) {
         Type copy = this.fullCopy();
-        List<TypeAnnotation> newAnnos = new ArrayList<TypeAnnotation>();
+        List<TypeAnnotation> newAnnos = new ArrayList<>();
         @SuppressWarnings("unchecked")
         List<TypeAnnotation> annos = (List<TypeAnnotation>) copy.getMetaData(ANNOTATION_KEY);
         if (annos != null) {
@@ -37,25 +37,25 @@ public abstract class Type {
         copy.addMetaData(ANNOTATION_KEY, newAnnos);
         return copy;
     }
-    
+
     public void addMetaData(Object key, Object value) {
         metaData.put(key, value);
     }
-    
+
     public Object getMetaData(Object key) {
         return metaData.get(key);
     }
-    
+
     public Type fullCopy() {
         Type copy = copy();
         copy.metaData.putAll(metaData);
         return copy;
     }
-    
+
     protected abstract Type copy();
-    
+
     private List<TypeAnnotation> convertToTypeAnnotations(abs.frontend.ast.List<Annotation> anns) {
-        ArrayList<TypeAnnotation> res = new ArrayList<TypeAnnotation>();
+        ArrayList<TypeAnnotation> res = new ArrayList<>();
         for (Annotation a : anns) {
             Type t = a.getType();
             if (t.isAnnotationType()) {
@@ -65,7 +65,7 @@ public abstract class Type {
         return res;
     }
 
-    
+
     /**
      * A string representation of this type
      */
@@ -81,7 +81,7 @@ public abstract class Type {
             }
             res.append("] ");
         }
-        
+
         res.append(getQualifiedName());
         return res.toString();
     }
@@ -97,7 +97,7 @@ public abstract class Type {
         modulePart = modulePart == null ? "" : modulePart+".";
         return modulePart+getSimpleName();
     }
-    
+
     /**
      * The module name of this type.
      * e.g., for type ABS.StdLib.List<Bool> returns ABS.StdLib
@@ -111,7 +111,7 @@ public abstract class Type {
 
     /**
      * The simple name of this type without the module name.
-     * Does not include type arguments. 
+     * Does not include type arguments.
      * E.g. for type ABS.StdLib.List<Bool> returns List
      * @return the simple name of this type without the module name
      */
@@ -134,7 +134,7 @@ public abstract class Type {
     public boolean isAnnotationType() {
         return false;
     }
-    
+
     public boolean isReferenceType() {
         return false;
     }
@@ -255,25 +255,25 @@ public abstract class Type {
     public List<TypeAnnotation> getTypeAnnotations() {
         return Collections.unmodifiableList((List<TypeAnnotation>) getMetaData(ANNOTATION_KEY));
     }
-    
+
     public Collection<MethodSig> getAllMethodSigs() {
         return Collections.emptyList();
     }
-    
+
     public Collection<FieldDecl> getAllFieldDecls() {
         return Collections.emptyList();
     }
-    
+
     /**
-     * returns the declaration of this type or null if there is no 
+     * returns the declaration of this type or null if there is no
      * declaration for this type
      */
     public Decl getDecl() {
         return null;
     }
-    
+
     public Type applyBinding(Map<TypeParameter, Type> binding) { return this; }
-    
+
     /**
      * Use by the rewriting logic for AwaitAsyncCalls in GenerateCoreAbs.
      */

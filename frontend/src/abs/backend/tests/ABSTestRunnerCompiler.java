@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.tests;
@@ -15,13 +15,13 @@ import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
 /**
- * 
+ *
  * @author pwong
  *
  */
 public class ABSTestRunnerCompiler extends Main {
     private File outputfile;
-    
+
     public static void main(final String... args) {
         try {
             new ABSTestRunnerCompiler().compile(args);
@@ -39,11 +39,11 @@ public class ABSTestRunnerCompiler extends Main {
             System.exit(1);
         }
     }
-    
+
     @Override
     public List<String> parseArgs(String[] args) {
         List<String> restArgs = super.parseArgs(args);
-        List<String> remainingArgs = new ArrayList<String>();
+        List<String> remainingArgs = new ArrayList<>();
 
         for (int i = 0; i < restArgs.size(); i++) {
             String arg = restArgs.get(i);
@@ -58,7 +58,7 @@ public class ABSTestRunnerCompiler extends Main {
                         outputfile.delete();
                     }
                 }
-                
+
             } else {
                 remainingArgs.add(arg);
             }
@@ -66,7 +66,7 @@ public class ABSTestRunnerCompiler extends Main {
 
         return remainingArgs;
     }
-    
+
     /**
      * @param args
      * @throws Exception
@@ -77,7 +77,7 @@ public class ABSTestRunnerCompiler extends Main {
             return;
 
         final PrintStream stream;
-        final String loc; 
+        final String loc;
         if (outputfile != null) {
             stream = new PrintStream(outputfile);
             loc = outputfile.getAbsolutePath();
@@ -85,11 +85,11 @@ public class ABSTestRunnerCompiler extends Main {
             stream = System.out;
             loc = "Standard Output Stream";
         }
-        
+
         if (verbose) {
             System.out.println("Generating Test Runner to "+loc+"...");
         }
-        
+
         ABSTestRunnerGenerator gen = new ASTBasedABSTestRunnerGenerator(model);
         if (gen.hasUnitTest()) {
             gen.generateTestRunner(stream);
@@ -97,7 +97,7 @@ public class ABSTestRunnerCompiler extends Main {
             throw new IllegalStateException("Cannot generate test runner");
         }
     }
-    
+
     public static void printUsage() {
         Main.printUsage();
         System.out.println("ABSUnit Test Runner Generator:\n"

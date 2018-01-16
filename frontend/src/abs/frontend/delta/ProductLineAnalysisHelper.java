@@ -60,7 +60,7 @@ public class ProductLineAnalysisHelper {
 
         // preliminaries
         final Set<String> declaredDeltas = pl.getModel().getDeltaDeclsMap().keySet();
-        final Set<String> referencedDeltas = new HashSet<String>(pl.getDeltaClauses().getNumChild());
+        final Set<String> referencedDeltas = new HashSet<>(pl.getDeltaClauses().getNumChild());
         for (DeltaClause clause : pl.getDeltaClauses())
             referencedDeltas.add(clause.getDeltaspec().getDeltaID());
 
@@ -131,7 +131,7 @@ public class ProductLineAnalysisHelper {
             // current set
             // { Module.Class -> { Method -> Delta } }
             // { Module.Class -> { "CLASS" -> Delta } }
-            Map<String, Map<String, String>> cache = new HashMap<String, Map<String, String>>();
+            Map<String, Map<String, String>> cache = new HashMap<>();
 
             for (String deltaID : set) {
                 // assumes the DeltaDecl corresponding to deltaID exists (wellFormedProductLine)
@@ -177,7 +177,7 @@ public class ProductLineAnalysisHelper {
                                             cache.get(prefix).put(methodID, deltaID);
                                         }
                                     } else {
-                                        cache.put(prefix, new HashMap<String, String>());
+                                        cache.put(prefix, new HashMap<>());
                                         cache.get(prefix).put(methodID, deltaID);
                                     }
                                 }
@@ -194,7 +194,7 @@ public class ProductLineAnalysisHelper {
                             errors.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, otherDeltaID, prefix));
                             System.out.println("3 ambiguity due to " + deltaID + "<>" + otherDeltaID);
                         } else {
-                            cache.put(prefix, new HashMap<String, String>());
+                            cache.put(prefix, new HashMap<>());
                             cache.get(prefix).put("CLASS", deltaID);
                         }
                     }
@@ -223,7 +223,7 @@ public class ProductLineAnalysisHelper {
 
             // Find a solution to the feature model that satisfies the product feature selection
             ChocoSolver s = m.instantiateCSModel();
-            HashSet<Constraint> newcs = new HashSet<Constraint>();
+            HashSet<Constraint> newcs = new HashSet<>();
             product.getProdConstraints(s.vars, newcs);
             for (Constraint c: newcs)
                 s.addConstraint(c);

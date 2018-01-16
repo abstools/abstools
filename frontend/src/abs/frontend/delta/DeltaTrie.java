@@ -54,14 +54,14 @@ public class DeltaTrie {
         // Constructor for top level root node
         public Node(SemanticConditionList errors) {
             this.deltaID = "core";
-            this.children = new HashMap<String, Node>();
+            this.children = new HashMap<>();
             this.ta = new ProgramAbstraction(errors);
             model.buildCoreAbstraction(ta);
         }
 
         // Constructor for child node
         public Node(String name, ProgramAbstraction ta) {
-            this.children = new HashMap<String, Node>();
+            this.children = new HashMap<>();
             this.deltaID = name;
             this.ta = ta;
         }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.absunit;
@@ -16,36 +16,36 @@ import abs.backend.java.observing.TaskView;
 
 public class TestModel {
 
-    private List<TaskView> ok = new LinkedList<TaskView>();
-    private List<TaskView> failedAssertion = new LinkedList<TaskView>();
-    private List<TaskView> error = new LinkedList<TaskView>();
-    private List<TaskView> deadlocked = new LinkedList<TaskView>();
+    private List<TaskView> ok = new LinkedList<>();
+    private List<TaskView> failedAssertion = new LinkedList<>();
+    private List<TaskView> error = new LinkedList<>();
+    private List<TaskView> deadlocked = new LinkedList<>();
 
-    private final HashMap<Integer, LinkedList<TestStatus>> activeTests = new HashMap<Integer, LinkedList<TestStatus>>();
-    private final LinkedList<TestStatus> finishedTests = new LinkedList<TestStatus>();
+    private final HashMap<Integer, LinkedList<TestStatus>> activeTests = new HashMap<>();
+    private final LinkedList<TestStatus> finishedTests = new LinkedList<>();
     private TestModelListener listener;
 
     public void testStarted(TaskView task) {
-        
+
         final String testMethod;
         final String className;
         final List<ABSValue> testMethodArguments;
-        final LinkedList<ABSValue> arguments = new LinkedList<ABSValue>();
+        final LinkedList<ABSValue> arguments = new LinkedList<>();
         if (task.getStack().hasFrames()) {
             final TaskStackFrameView currentF = task.getStack().getCurrentFrame();
             testMethod = currentF.getMethod().getName();
-            className = currentF.getMethod().getClassView().getName(); 
-            
+            className = currentF.getMethod().getClassView().getName();
+
             for (String parameterName : currentF.getVariableNames()) {
                 arguments.add(currentF.getValue(parameterName));
             }
-                        
+
         } else {
             testMethod = task.getMethodName();
             className  = task.getTarget().getClassName();
             arguments.addAll(task.getArgs());
         }
-        
+
         if (!task.getStack().hasFrames()) {
             System.out.println("Not yet started " + testMethod + " for task " + task.getID());
         } else {
@@ -88,7 +88,7 @@ public class TestModel {
         synchronized (activeTests) {
             LinkedList<TestStatus> testsOfTask = activeTests.get(ts.getTaskID());
             if (testsOfTask == null) {
-                testsOfTask = new LinkedList<TestStatus>();
+                testsOfTask = new LinkedList<>();
                 activeTests.put(ts.getTaskID(), testsOfTask);
             }
             testsOfTask.addLast(ts);
@@ -109,7 +109,7 @@ public class TestModel {
 
     public synchronized void testFinished(TaskView task) {
         System.out.println("Test " + task.getID() + " finished: " + task.hasException());
-               
+
         final TestStatus status = pop(task.getID());
         if (task.hasException()) {
             if (task.getException().isAssertion()) {

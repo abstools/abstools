@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.coreabs;
@@ -13,7 +13,7 @@ import abs.frontend.parser.Main;
 
 public class CoreAbsBackend extends Main {
 
-    
+
     public CoreAbsBackend() {
         super();
         // TODO Auto-generated constructor stub
@@ -29,7 +29,7 @@ public class CoreAbsBackend extends Main {
             printErrorAndExit(e.getMessage());
         }
     }
-    
+
     /**
      * @param args
      */
@@ -40,7 +40,7 @@ public class CoreAbsBackend extends Main {
     @Override
     public List<String> parseArgs(String[] args) {
         List<String> restArgs = super.parseArgs(args);
-        List<String> remainingArgs = new ArrayList<String>();
+        List<String> remainingArgs = new ArrayList<>();
 
         for (int i = 0; i < restArgs.size(); i++) {
             String arg = restArgs.get(i);

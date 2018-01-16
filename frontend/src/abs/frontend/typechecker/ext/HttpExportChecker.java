@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2016, The Envisage Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2016, The Envisage Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker.ext;
@@ -45,7 +45,7 @@ public class HttpExportChecker extends DefaultTypeSystemExtension {
     @Override
     public void checkDataTypeDecl(DataTypeDecl decl) {
         for (DataConstructor c : decl.getDataConstructors()) {
-            Set<String> names = new HashSet<String>();
+            Set<String> names = new HashSet<>();
             for (ConstructorArg ca : c.getConstructorArgs()) {
                 ASTNode arg = null;
                 String key = null;

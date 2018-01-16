@@ -103,7 +103,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
         synchronized (this) {
             if (waitingThreads == null)
                 return;
-            copy = new ArrayList<GuardWaiter>(waitingThreads);
+            copy = new ArrayList<>(waitingThreads);
             waitingThreads.clear();
         }
 
@@ -165,7 +165,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
             return false;
         }
         if (waitingThreads == null)
-            waitingThreads = new ArrayList<GuardWaiter>(1);
+            waitingThreads = new ArrayList<>(1);
         waitingThreads.add(thread);
         return true;
     }
@@ -190,7 +190,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
 
         private synchronized List<FutObserver> getObservers() {
             if (futObserver == null)
-                futObserver = new ArrayList<FutObserver>(1);
+                futObserver = new ArrayList<>(1);
             return futObserver;
         }
 

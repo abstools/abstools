@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.absunit;
@@ -21,20 +21,20 @@ import abs.frontend.ast.ModuleDecl;
 import abs.frontend.parser.Main;
 
 public class ABSUnitRunner extends Main {
-    
+
     private String destDir = "/Users/bubel/tmp/abs/bin";
     private String sourceDir = "/Users/bubel/tmp/abs/java";
     private String modelDir = "/Users/bubel/tmp/abs/model/Assertions.abs";
-    
-    private List<MethodSig> testMethods = new ArrayList<MethodSig>(10);
-       
+
+    private List<MethodSig> testMethods = new ArrayList<>(10);
+
     public void compile() throws Exception {
         final Model model = parseFiles(modelDir);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             return;
         compile(model, new File(destDir));
-        
-        analyzeModelUnit(model);        
+
+        analyzeModelUnit(model);
     }
 
     private void analyzeModelUnit(Model model) {
@@ -50,9 +50,9 @@ public class ABSUnitRunner extends Main {
                             for (Annotation a : ms.getAnnotations()) {
                                 if (a.getType().getSimpleName().equals("Test")) {
                                     System.out.println("Found test method:" + ms.getName());
-                                    testMethods.add(ms);                                    
+                                    testMethods.add(ms);
                                 } else if (a.getType().getSimpleName().equals("Suite")) {
-                                    System.out.println("Found test suite:" + ms.getName());                                    
+                                    System.out.println("Found test suite:" + ms.getName());
                                 }
                             }
                         }
@@ -68,16 +68,16 @@ public class ABSUnitRunner extends Main {
         javaCode.compile();
     }
 
-    /** 
+    /**
      * registers the ABS Unit observers and runs the test suite
-     * 
+     *
      * @throws IOException
      * @throws JavaCodeGenerationException
      */
     private void runTestSuite() throws IOException, JavaCodeGenerationException {
-    }    
-    
-    
+    }
+
+
     public static void main(String... args) {
         try {
             new ABSUnitRunner().compile();
@@ -86,8 +86,8 @@ public class ABSUnitRunner extends Main {
             e.printStackTrace();
         }
     }
-    
 
-    
-    
+
+
+
 }

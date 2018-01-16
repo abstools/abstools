@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.outline;
@@ -18,7 +18,7 @@ import abs.frontend.tests.ABSFormatter;
 public class OutlinePrinterBackEnd extends Main {
     private File outputfile;
     private boolean force = false;
-    
+
     public static void main(final String... args) {
         OutlinePrinterBackEnd backEnd = new OutlinePrinterBackEnd();
         try {
@@ -36,11 +36,11 @@ public class OutlinePrinterBackEnd extends Main {
             System.exit(1);
         }
     }
-    
+
     @Override
     public List<String> parseArgs(String[] args) {
         List<String> restArgs = super.parseArgs(args);
-        List<String> remainingArgs = new ArrayList<String>();
+        List<String> remainingArgs = new ArrayList<>();
 
         for (int i = 0; i < restArgs.size(); i++) {
             String arg = restArgs.get(i);
@@ -66,7 +66,7 @@ public class OutlinePrinterBackEnd extends Main {
 
         return remainingArgs;
     }
-    
+
     /**
      * @param args
      * @throws Exception
@@ -78,7 +78,7 @@ public class OutlinePrinterBackEnd extends Main {
         }
 
         final PrintStream stream;
-        final String loc; 
+        final String loc;
         if (outputfile != null) {
             stream = new PrintStream(outputfile);
             loc = outputfile.getAbsolutePath();
@@ -86,20 +86,20 @@ public class OutlinePrinterBackEnd extends Main {
             stream = System.out;
             loc = "Standard Output Stream";
         }
-        
+
         if (verbose) {
             System.out.println("Output ABS model source code to "+loc+"...");
         }
-        
+
         PrintWriter writer = new PrintWriter(stream,true);
         model.doOutlinePrint(writer, "");
     }
-    
+
     public static void printUsage() {
         System.out.println("ABS Outline Printer (-outline):\n"
                 + "  -f             force pretty printing even if there are type errors\n"
                 + "  -o <file>      write output to <file> instead of standard output\n"
         );
     }
-    
+
 }

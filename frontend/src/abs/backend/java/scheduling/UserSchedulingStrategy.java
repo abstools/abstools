@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.scheduling;
@@ -23,10 +23,10 @@ public abstract class UserSchedulingStrategy implements TaskSchedulingStrategy {
         System.out.println(scheduler.getCOG().toString() + " Scheduling (" + schedulableTasks.size() + " processes in queue)...");
 
         // Remember TaskInfos based on their Pids to speed things up a little
-        HashMap<Integer, TaskInfo> taskMap = new HashMap<Integer, TaskInfo>();
-        
+        HashMap<Integer, TaskInfo> taskMap = new HashMap<>();
+
         // Convert List<TaskInfo> to ArrayList<ABSProcess>
-        ArrayList<ABSProcess> processes = new ArrayList<ABSProcess>();
+        ArrayList<ABSProcess> processes = new ArrayList<>();
 
         for (TaskInfo taskInfo : schedulableTasks) {
             taskMap.put(taskInfo.task.getID(), taskInfo);
@@ -50,16 +50,16 @@ public abstract class UserSchedulingStrategy implements TaskSchedulingStrategy {
         // Convert ArryList<ABSProcess> to ABS.StdLib.List of ABSProcess
         final Object queue = ListUtils.toABSList(processes);
         ABSProcess result = userschedule(queue);
-        
+
         // Convert returned ABSValue (actually an ABSProcess) to TaskInfo
         int selectedPid = result.getPid();
         logger.info("scheduling Task " + selectedPid);
         return taskMap.get(selectedPid);
     }
-    
+
     // to be implemented by the generated subclass
     protected abstract ABSProcess userschedule(final Object queue);
-    
+
 
 }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package deadlock.analyser.detection;
@@ -18,7 +18,7 @@ import abs.frontend.ast.VarUse;
 import deadlock.analyser.AnalyserLog;
 
 /**
- * A class to pre-process the program in order to evaluate whether the program 
+ * A class to pre-process the program in order to evaluate whether the program
  * requires a deadlock analysis.
  * @author groman
  *
@@ -36,12 +36,12 @@ public class DeadlockPreanalysis {
     /**
      * Get expressions found and their await statement (if exists)
      */
-    private HashMap<GetExp,AwaitStmt> getExpressions; 
-    
+    private HashMap<GetExp,AwaitStmt> getExpressions;
+
     /**
-     * DataType Field declarations found in the program and if they might have a future value 
+     * DataType Field declarations found in the program and if they might have a future value
      */
-    private HashMap<FieldDecl,Boolean> dataFieldDecls; 
+    private HashMap<FieldDecl,Boolean> dataFieldDecls;
 
     /**
      * Stores the model
@@ -49,17 +49,17 @@ public class DeadlockPreanalysis {
      */
     public DeadlockPreanalysis(Model model) {
         this.model = model;
-        log = new AnalyserLog(); 
-        getExpressions = new HashMap<GetExp,AwaitStmt> (); 
-        dataFieldDecls = new HashMap<FieldDecl,Boolean>(); 
+        log = new AnalyserLog();
+        getExpressions = new HashMap<>();
+        dataFieldDecls = new HashMap<>();
     }
 
-    /** 
-     * Applies the deadlock preanalysis 
+    /**
+     * Applies the deadlock preanalysis
      */
     public void analyzeModel () {
         try {
-            //CompilationUnit cu = model.getCompilationUnits().getChild(0); 
+            //CompilationUnit cu = model.getCompilationUnits().getChild(0);
             for (CompilationUnit cu : model.getCompilationUnits()) {
                 computeInstructions(cu,0);
                 if (cu.hasMainBlock()) {
@@ -69,9 +69,9 @@ public class DeadlockPreanalysis {
             }
             System.out.println(getExpressions);
             System.out.println(this);
-            
-            
-            
+
+
+
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -79,7 +79,7 @@ public class DeadlockPreanalysis {
     }
 
     /**
-     * Computes all instructions (recursively) searching get statements and field declarations. 
+     * Computes all instructions (recursively) searching get statements and field declarations.
      * Relates get statements to previous "await" statements on the same variable.
      * Process all fields evaluating their types and detecting if they can contain a future variable.
      * @param node Node to be evaluated
@@ -93,16 +93,16 @@ public class DeadlockPreanalysis {
 
         // We evaluate all field declarations
         if (node instanceof FieldDecl) {
-            processFieldDecl ((FieldDecl)node); 
+            processFieldDecl ((FieldDecl)node);
         }
-        
+
         // Search recursively
         for(int i = 0; i < node.getNumChild(); i++) {
             ASTNode<?> child =  node.getChild(i);
 
             // If we find an await we search for its get
             if (node.getChild(i) instanceof AwaitStmt && node.getNumChild() > i) {
-                //processAwait((AwaitStmt)node.getChild(i), node.getChild(i+1)); 
+                //processAwait((AwaitStmt)node.getChild(i), node.getChild(i+1));
                 processAwait((AwaitStmt)node.getChild(i), i, node);
             }
             computeInstructions(child, level + 1);
@@ -110,28 +110,28 @@ public class DeadlockPreanalysis {
     }
 
     private void processAwait (AwaitStmt await, int position, ASTNode<?> node) {
-        String varAwait = null; 
+        String varAwait = null;
         if (await.getGuard().getChild(0) instanceof VarUse) {
             varAwait = ((VarUse)await.getGuard().getChild(0)).getName();
         }
 
         int getPos = position + 1;
-        GetExp getInst = null; 
+        GetExp getInst = null;
         if (varAwait != null) {
-            while (getPos < node.getNumChild() && 
+            while (getPos < node.getNumChild() &&
                     getInst == null) {
-                getInst = lookforGetOperation(await,node.getChild(getPos),varAwait); 
+                getInst = lookforGetOperation(await,node.getChild(getPos),varAwait);
                 if (getInst == null) {
-                    getPos ++; 
+                    getPos ++;
                 }
             }
         }
 //        System.out.println("PROCESANDO " + position + " " + getPos);
 
-        boolean used = false; 
+        boolean used = false;
         for (int i = position+1; i < getPos && !used; i ++) {
             used = isVarUsed(node.getChild(i),varAwait);
-        }       
+        }
         if (used && getInst != null) {
             getExpressions.put((GetExp)getInst, null);
         }
@@ -140,16 +140,16 @@ public class DeadlockPreanalysis {
 
     private boolean isVarUsed (ASTNode<?> node, String var) {
         if (node instanceof VarUse) {
-            VarUse vUse = (VarUse) node; 
+            VarUse vUse = (VarUse) node;
             if (var.equals(vUse.getName())) {
-                return true; 
+                return true;
             }
         }
-        boolean used = false; 
+        boolean used = false;
         for (int i = 0; i < node.getNumChild() && !used ; i++) {
-            used = isVarUsed (node.getChild(i), var); 
+            used = isVarUsed (node.getChild(i), var);
         }
-        return used; 
+        return used;
     }
 
 
@@ -161,18 +161,18 @@ public class DeadlockPreanalysis {
 //    }
 
     private GetExp lookforGetOperation (AwaitStmt await, ASTNode<?> node, String varName) {
-        GetExp result = null; 
+        GetExp result = null;
         if (node instanceof GetExp) {
-            GetExp get = (GetExp)node;   
+            GetExp get = (GetExp)node;
             if (varName.equals(((VarUse)get.getChild(0)).getName())) {
-                result = (GetExp)node; 
+                result = (GetExp)node;
                 getExpressions.put((GetExp)node, await);
             }
         }
         for (int i = 0; i < node.getNumChild() && result == null; i ++) {
             result = lookforGetOperation(await, node.getChild(i), varName);
         }
-        return result; 
+        return result;
     }
 
     private void processFieldDecl (FieldDecl field) {
@@ -185,26 +185,26 @@ public class DeadlockPreanalysis {
     }
 
     private boolean hasFutureVariables (ASTNode<?> node) {
-        boolean result = false; 
-        result = (node instanceof DataTypeUse && 
-                "Fut".equals(((DataTypeUse)node).getName())); 
+        boolean result = false;
+        result = (node instanceof DataTypeUse &&
+                "Fut".equals(((DataTypeUse)node).getName()));
 
         for (int i = 0; i < node.getNumChild() && !result; i ++) {
             result = result || hasFutureVariables(node.getChild(i));
         }
-        return result; 
+        return result;
     }
 
     public boolean isDeadlockFree () {
-        boolean result = true; 
+        boolean result = true;
         for (GetExp get: getExpressions.keySet()) {
-            result = result && (getExpressions.get(get) != null); 
+            result = result && (getExpressions.get(get) != null);
         }
 
         for (Boolean value: dataFieldDecls.values()) {
-            result = result && !value; 
+            result = result && !value;
         }
-        return result; 
+        return result;
     }
 
     public String toString () {
@@ -213,9 +213,9 @@ public class DeadlockPreanalysis {
         buffer.append("----- GET Expressions evaluation --------\n");
         for(GetExp get: getExpressions.keySet() ) {
             buffer.append(get.toString());
-            buffer.append("["); 
-            int line = get.getStartLine(); 
-            buffer.append(get.getCompilationUnit().getName() + ":" + (line != 0? + line:"_")); 
+            buffer.append("[");
+            int line = get.getStartLine();
+            buffer.append(get.getCompilationUnit().getName() + ":" + (line != 0? + line:"_"));
             buffer.append("]");
             buffer.append(":" + (getExpressions.get(get) != null? true:false)+ "\n");
         }
@@ -223,17 +223,17 @@ public class DeadlockPreanalysis {
         buffer.append("----- Field Types -----------------------\n");
 
         for (FieldDecl field: dataFieldDecls.keySet()) {
-            buffer.append(field.getContextDecl().getName() + "." + field.getName() + " [" + 
-                    field.getCompilationUnit().getName() + ":" + field.getStartLine() + "]"); 
+            buffer.append(field.getContextDecl().getName() + "." + field.getName() + " [" +
+                    field.getCompilationUnit().getName() + ":" + field.getStartLine() + "]");
             buffer.append(" might contain a future value?: " + dataFieldDecls.get(field) + "\n");
         }
         buffer.append("*****************************************");
-        return buffer.toString(); 
+        return buffer.toString();
     }
 
 
     private String printTab(int n) {
-        StringBuffer buffer = new StringBuffer (); 
+        StringBuffer buffer = new StringBuffer ();
         for (int i = 0; i < n; i++) {
             buffer.append("    ");
         }

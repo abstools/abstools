@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package autodeploy;
@@ -21,7 +21,7 @@ import abs.frontend.delta.DeltaModellingException;
 import abs.frontend.parser.Main;
 
 public class Tester extends Main {
-    
+
   private String _JSONName = "toto.json";
 
   public static void main(final String... args) {
@@ -33,7 +33,7 @@ public class Tester extends Main {
     } catch (Exception e) {
       System.err.println("An error occurred during compilation:\n" + e.getMessage());
       if (Arrays.asList(args).contains("-debug")) { e.printStackTrace(); }
-      System.exit(1);  
+      System.exit(1);
     }
   }
 
@@ -60,7 +60,7 @@ public class Tester extends Main {
   @Override
   public List<String> parseArgs(String[] args) {
     List<String> restArgs = super.parseArgs(args);
-    List<String> remainingArgs = new ArrayList<String>();
+    List<String> remainingArgs = new ArrayList<>();
     for (int i = 0; i < restArgs.size(); i++) {
       String arg = restArgs.get(i);
       if (arg.startsWith("-JSON=")){
@@ -73,7 +73,7 @@ public class Tester extends Main {
     }
     return remainingArgs;
   }
-    
+
 
   public static void printUsage() {
     Main.printUsage();

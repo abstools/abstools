@@ -17,9 +17,9 @@ import abs.frontend.ast.PureExp;
 
 /**
  * Utility functions to mostly generate headers or parameter lists.
- * 
+ *
  * @author Georg Göri
- * 
+ *
  */
 public class ErlUtil {
 
@@ -52,7 +52,7 @@ public class ErlUtil {
     // Not used when garbage collector pause points are added to functions
     // Consider removing
     public static final void functionHeader(CodeStream ecs, String funName, abs.frontend.ast.List<ParamDecl> args) {
-        List<String> a = new ArrayList<String>(args.getNumChild());
+        List<String> a = new ArrayList<>(args.getNumChild());
         for (ParamDecl p : args)
             a.add(p.getName());
         functionHeader(ecs, funName, a, Mask.all);
@@ -60,7 +60,7 @@ public class ErlUtil {
 
     public static final void functionHeader(CodeStream ecs, String funName, String firstParameter,
             abs.frontend.ast.List<ParamDecl> args) {
-        List<String> a = new ArrayList<String>(args.getNumChild());
+        List<String> a = new ArrayList<>(args.getNumChild());
         a.add(firstParameter);
         for (ParamDecl p : args)
             a.add(p.getName());
@@ -124,7 +124,7 @@ public class ErlUtil {
         if (params.hasChildren()) {
             ecs.print(',');
         }
-        
+
         if (emptyStack) {
             ecs.print("[]");
         } else {

@@ -24,11 +24,11 @@ public final class AnnotationUtil {
     }
 
     private static TypeUse expansionType() {
-        return new UnresolvedTypeUse(EXPANSION, new List<Annotation>());
+        return new UnresolvedTypeUse(EXPANSION, new List<>());
     }
 
     private static TypeUse expansionCallType() {
-        return new UnresolvedTypeUse(EXPANSION_CALL, new List<Annotation>());
+        return new UnresolvedTypeUse(EXPANSION_CALL, new List<>());
     }
 
     public static void annotateExpansion(FunctionDecl expansion, int expansionId) {
@@ -105,7 +105,7 @@ public final class AnnotationUtil {
         Annotation toAdd = getAnnotation(annotations, annotationType);
 
         if (toAdd == null) {
-            toAdd = new TypedAnnotation(new ListLiteral(new List<PureExp>()), annotationType);
+            toAdd = new TypedAnnotation(new ListLiteral(new List<>()), annotationType);
             annotations.add(toAdd);
         }
 

@@ -15,12 +15,12 @@ public class Lam {
 
     // Constructor
     public Lam(){
-        this.states = new LinkedList<State>();
+        this.states = new LinkedList<>();
     }
 
     // Constructor copy
     public Lam(Lam l){
-        this.states = new LinkedList<State>(l.getStates());
+        this.states = new LinkedList<>(l.getStates());
     }
 
     // Constructor copy2
@@ -39,12 +39,12 @@ public class Lam {
 
     //add state to lamp
     public void addState(State s){
-       
+
         for(State sthis : this.states){
             if(sthis.containState(s))
                 return;
         }
-        
+
         this.states.add(s);
     }
 
@@ -72,7 +72,7 @@ public class Lam {
         for(State s : states){
             s.addCouple(a, b);
         }
-        
+
     }
 
     // add couple of dependencies (await) on a Lamp, it means to add that couple to all the states in the lamp
@@ -80,11 +80,11 @@ public class Lam {
         if(states.isEmpty()){
             states.add(new State());
         }
-        
+
         for(State s : states){
             s.addCoupleAwait(a, b);
         }
-       
+
     }
 
 
@@ -99,7 +99,7 @@ public class Lam {
                 if(contained = s1.containState(s))
                     break;
             }
-            
+
             //if s is not contained then add the state
             if(!contained){
                 State sNew = new State();
@@ -113,10 +113,10 @@ public class Lam {
     //TODO ABEL: Check correctness
     // parallel between this Lam and Lam l, this is the || lam operator
     public void parallel(Lam l){
-        
+
         // if Lamp l is empty, the result of parallel is this
         if(l.states.isEmpty()) return;
-        
+
         // if Lamp this is empty, the result of parallel is l
         if(this.states.isEmpty()){
             this.addLamp(l);
@@ -125,7 +125,7 @@ public class Lam {
 
         //now we can work assuming that both l and this have at least one state
         //we need to calculate the cartesian product
-        LinkedList<State> cartesianState = new LinkedList<State>();
+        LinkedList<State> cartesianState = new LinkedList<>();
         for(State s1 : this.states){
             for(State s2 : l.states){
                 State s3 = new State();
@@ -134,7 +134,7 @@ public class Lam {
                 cartesianState.add(s3);
             }
         }
-        
+
         this.states = cartesianState;
     }
 
@@ -143,7 +143,7 @@ public class Lam {
     //TODO ABEL: Check correctness
     // get the FreeVariable of a Lamp
     public Set<GroupName> fv(){
-        Set<GroupName> fv = new TreeSet<GroupName>();
+        Set<GroupName> fv = new TreeSet<>();
         for(State s : states){
             fv.addAll(s.fv());
         }
@@ -165,8 +165,8 @@ public class Lam {
             i+=st.numberOfDep();
         return i;
     }
-    
-    
+
+
     //check for Cycle that might be composed by any kind of dependencies
     //if there is a cycle and there is at least one get dependency then this is a deadlock
     //otherwise this is a livelock and the result will be the same of hasAwaitCycle
@@ -179,7 +179,7 @@ public class Lam {
     }
 
 
-   
+
     //check for a pure get dependencies cycle
     public Boolean hasCycleGet(){
         //it has cycle if there is any cyclic state
@@ -189,7 +189,7 @@ public class Lam {
         return false;
     }
 
-    
+
     //check just for Await Cycle, this check for what is called livelock
     public Boolean hasCycleAwait(){
         //it has cycle if there is any cyclic state
@@ -198,7 +198,7 @@ public class Lam {
                 return true;
         return false;
     }
-    
+
 
     public String toString(){
         String res = "";
@@ -208,7 +208,7 @@ public class Lam {
         return res;
     }
 
-    //According to version2 of the fix point algorithm this method adds the missing dependencies from the transitive closure 
+    //According to version2 of the fix point algorithm this method adds the missing dependencies from the transitive closure
     //of the dependencies of not new names and removes all dependencies with new names
     public void expandAndClean() {
         for(State s: states)
@@ -220,7 +220,7 @@ public class Lam {
         for(State s: states)
             if(s.hasReflexiveState())
                 return true;
-        
+
         return false;
     }
 
@@ -237,7 +237,7 @@ public class Lam {
         for(State s: states)
             if(s.hasReflexiveState())
                  res.add(s);
-        
+
         return res;
     }
 

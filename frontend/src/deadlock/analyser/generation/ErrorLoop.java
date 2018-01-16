@@ -30,7 +30,7 @@ import com.gzoumix.semisolver.constraint.History;
 import com.gzoumix.semisolver.constraint.HistoryPath;
 import com.gzoumix.semisolver.constraint.Information;
 
-public class ErrorLoop implements GenerationError { 
+public class ErrorLoop implements GenerationError {
 
   class Inner { public Edge edge; public List<ErrorEdge> origin; public Inner(Edge e, List<ErrorEdge> o) { edge = e; origin = o; } }
   private List<Inner> origin;
@@ -38,11 +38,11 @@ public class ErrorLoop implements GenerationError {
 
   public ErrorLoop(SolvingErrorLoop loop) {
     edge = loop.getEdge();
-    origin = new LinkedList<Inner>();
+    origin = new LinkedList<>();
 
     List<ErrorEdge> o;
     for(History h : loop.getHistory().getList()) {
-      o = new LinkedList<ErrorEdge>();
+      o = new LinkedList<>();
       for(Information info : h.getInformations()) { o.add(new ErrorEdge((ASTNodeInformation)info)); }
       origin.add(new Inner(h.getEdge(), o));
     }
@@ -51,7 +51,7 @@ public class ErrorLoop implements GenerationError {
   public String getHelpMessage() {
     String res = "*********************\n";
     res = res  + "* Cannot generate contract in presence of Recursive Structure\n";
-    res = res  + "* Structure defined with the following edges:\n*****\n"; 
+    res = res  + "* Structure defined with the following edges:\n*****\n";
     Iterator<Inner> itin = origin.iterator();
     while(itin.hasNext()) {
       Inner in = itin.next();

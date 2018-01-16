@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.delta;
@@ -25,10 +25,10 @@ public class SourceCodePositionTest extends DeltaTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
-    
+
     @Test
     public void test() throws IOException {
-        
+
         File fcore = folder.newFile("core.abs");
         File fd1 = folder.newFile("delta1.abs");
         File fd2 = folder.newFile("delta2.abs");
@@ -36,7 +36,7 @@ public class SourceCodePositionTest extends DeltaTest {
             FileWriter writer = new FileWriter(fcore);
             writer.write(
                     "module M;"
-                    + "class C0 { Unit m() {} }" 
+                    + "class C0 { Unit m() {} }"
                     );
             writer.close();
         }
@@ -57,17 +57,17 @@ public class SourceCodePositionTest extends DeltaTest {
                     );
             writer.close();
         }
-        
-        HashSet<String> fileNames = new HashSet<String>();
+
+        HashSet<String> fileNames = new HashSet<>();
         fileNames.add(fcore.getCanonicalPath());
         fileNames.add(fd1.getCanonicalPath());
         fileNames.add(fd2.getCanonicalPath());
-        
+
         Model model = assertParseFilesOk(fileNames, true);
-        
+
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");
-        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
+        model.applyDeltas(new ArrayList<>(Arrays.asList(d1, d2)));
 
         {
             ClassDecl cls = (ClassDecl)findDecl(model, "M", "C0");
@@ -79,6 +79,6 @@ public class SourceCodePositionTest extends DeltaTest {
             assertEquals(cls.getMethod(0).getFileName(), d2.getFileName());
         }
     }
-    
+
     //TODO test line and column positions
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.delta;
@@ -99,17 +99,17 @@ public class ApplicationConditionsTest extends DeltaTest {
 
     @Test
     public void evaluateTrue() throws DeltaModellingException, WrongProgramArgumentException {
-        ArrayList<String> acs = new ArrayList<String>(Arrays.asList(
-                "A",
-                "A || B",
-                "!(B && B)",
-                "A || (B && B)",
-                "A && !B",
-                "A || !A",
-                "C || A",
-                "(C || A) && !B"
-                ));
-        
+        ArrayList<String> acs = new ArrayList<>(Arrays.asList(
+            "A",
+            "A || B",
+            "!(B && B)",
+            "A || (B && B)",
+            "A && !B",
+            "A || !A",
+            "C || A",
+            "(C || A) && !B"
+        ));
+
         for (String ac : acs) {
             Model model = assertParseOk(
                     "module M;"
@@ -131,16 +131,16 @@ public class ApplicationConditionsTest extends DeltaTest {
 
     @Test
     public void evaluateFalse() throws DeltaModellingException, WrongProgramArgumentException {
-        ArrayList<String> acs = new ArrayList<String>(Arrays.asList(
-                "C",
-                "!A",
-                "!B && B",
-                "(A || B) && B",
-                "A && B",
-                "!A && B",
-                "A && !A",
-                "B || C"
-                ));
+        ArrayList<String> acs = new ArrayList<>(Arrays.asList(
+            "C",
+            "!A",
+            "!B && B",
+            "(A || B) && B",
+            "A && B",
+            "!A && B",
+            "A && !A",
+            "B || C"
+        ));
 
         for (String ac : acs) {
             Model model = assertParseOk(
@@ -160,5 +160,5 @@ public class ApplicationConditionsTest extends DeltaTest {
             assertNull(cls);
         }
     }
-    
+
 }

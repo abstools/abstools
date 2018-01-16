@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker;
@@ -61,7 +61,7 @@ public class TypeParameter extends Type {
     public Type copy() {
         return new TypeParameter(decl);
     }
-    
+
     @Override
     public Type applyBinding(Map<TypeParameter, Type> binding) {
         Type res = binding.get(this);
@@ -73,6 +73,6 @@ public class TypeParameter extends Type {
 
     @Override
     public TypeParameterUse toUse() {
-        return new TypeParameterUse(getQualifiedName(), new List<Annotation>());
+        return new TypeParameterUse(getQualifiedName(), new List<>());
     }
 }

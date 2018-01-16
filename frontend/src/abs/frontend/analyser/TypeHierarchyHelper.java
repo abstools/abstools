@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.analyser;
@@ -26,7 +26,7 @@ public class TypeHierarchyHelper {
     }
 
     public static List<InterfaceDecl> getTypeDecls(Iterable<InterfaceTypeUse> extendedInterfaceUseList) {
-        List<InterfaceDecl> result = new ArrayList<InterfaceDecl>(); 
+        List<InterfaceDecl> result = new ArrayList<>();
         for (InterfaceTypeUse extended : extendedInterfaceUseList) {
             Decl decl = extended.getDecl();
             if (decl instanceof InterfaceDecl) {

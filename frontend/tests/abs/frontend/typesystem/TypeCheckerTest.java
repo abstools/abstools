@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typesystem;
@@ -33,7 +33,7 @@ public class TypeCheckerTest extends FrontendTest {
     public void lizeth() throws Exception {
         assertTypeCheckFileOk("tests/abssamples/lizeth.abs", false);
     }
-    
+
     @Test
     public void rosetreeTicket187() throws Exception {
         assertTypeCheckFileOk("tests/abssamples/RoseTree.abs", true);
@@ -64,7 +64,7 @@ public class TypeCheckerTest extends FrontendTest {
     public void fieldInit() {
         assertNoTypeErrorsNoLib("interface I {} class C implements I { I i = this; }");
     }
-    
+
     @Test
     public void testClass() {
         assertNoTypeErrorsNoLib("interface I {} class C implements I {} { I i; i = new local C(); }");
@@ -114,7 +114,7 @@ public class TypeCheckerTest extends FrontendTest {
     public void dataTypeSelectorsTypeParam() {
         assertTypeOK("data User<A> = User(List<A> names); { User<String> s = User(list[\"sdasd\"]); List<String> names = names(s); } ");
     }
-    
+
     @Test
     public void dataTypeSelectorsTypeParam2() {
         assertTypeOK("data Foo<A> = Foo(A f);");
@@ -189,7 +189,7 @@ public class TypeCheckerTest extends FrontendTest {
     public void testIfExp2() {
         assertTypeOK("def X frob<X>(X x) = if (True) then x else x;");
     }
-    
+
     @Test
     public void caseVarOk() {
         assertTypeOK("data Foo = Bar(Bool); { Foo x = Bar(True);" + " Bool b = case x { Bar(y) => y; }; }");
@@ -250,7 +250,7 @@ public class TypeCheckerTest extends FrontendTest {
     public void testAwaitTooPure1OK() {
         assertTypeOK("{ await timeValue(now()) > 0; }");
     }
-    
+
     @Test
     public void testAwaitTooPure2OK() {
         // recursive def!
@@ -379,7 +379,7 @@ public class TypeCheckerTest extends FrontendTest {
                      "{ I i = new local C(); " +
                      "  Maybe<I> o = Just(i); }");
     }
-    
+
     @Test
     public void testListArgs() {
         assertTypeOK(" interface Database { } class DataBaseImpl(Map<String, List<String>> db) implements Database { } "
@@ -404,7 +404,7 @@ public class TypeCheckerTest extends FrontendTest {
     public void classParams() {
         assertTypeOK("interface I { Bool m(); } class C(Bool b) implements I { Bool m() { return b; } }");
     }
-    
+
     @Test
     public void classParamsMethodShadowsField() {
         Model m = assertParseOkStdLib("class C(Bool b) { Bool m(Bool b) { return b; } }");
@@ -448,20 +448,20 @@ public class TypeCheckerTest extends FrontendTest {
     public void newExp() {
         assertTypeOK("class C(Bool b) { } { new local C(True); }");
     }
-    
+
     @Test
     public void methodSigs() {
-        Model m = assertParseOk("interface I { Unit m(); } interface J { Unit n(); } interface K extends I, J { Unit foo(); } { K k; } ", Config.WITH_STD_LIB); 
+        Model m = assertParseOk("interface I { Unit m(); } interface J { Unit n(); } interface K extends I, J { Unit foo(); } { K k; } ", Config.WITH_STD_LIB);
         ModuleDecl module = m.lookupModule("UnitTest");
         InterfaceDecl d = (InterfaceDecl) module.getDecl(2);
-        ArrayList<MethodSig> list = new ArrayList<MethodSig>(d.getAllMethodSigs());
+        ArrayList<MethodSig> list = new ArrayList<>(d.getAllMethodSigs());
         assertEquals(list.toString(),3,list.size());
-        
+
         VarDeclStmt stmt = (VarDeclStmt) module.getBlock().getStmt(0);
         Collection<MethodSig> sigs = stmt.getVarDecl().getAccess().getType().getAllMethodSigs();
-        assertArrayEquals(sigs.toArray(),d.getAllMethodSigs().toArray());     
+        assertArrayEquals(sigs.toArray(),d.getAllMethodSigs().toArray());
     }
-    
+
     @Test
     public void ticket256() {
         assertTypeOK("data D = Ticket256(Set<Int>);"
@@ -475,7 +475,7 @@ public class TypeCheckerTest extends FrontendTest {
     public void ticket296() {
         assertTypeErrors("module FunArgsTypeCheckBug; def Int f(Map<Int,Int> m) = lookupDefault(m, 42);");
     }
- 
+
     @Test
     public void test_Movecogto1() {
         Model m = assertParseOk("class C { Unit do() { movecogto 1; }}", Config.WITH_STD_LIB);

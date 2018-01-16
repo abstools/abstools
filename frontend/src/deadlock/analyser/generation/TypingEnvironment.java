@@ -35,17 +35,17 @@ public class TypingEnvironment {
   private Set<String>searchPath;
 
   private List<Map<String, ITypingEnvironmentVariableType>> variables;  // stack frame of mapping variable => record or future
-  private Map<TypingEnvironmentVariableTypeFuture, ITypingEnvironmentFutureType> futures;  // mapping future => checked or unchecked 
+  private Map<TypingEnvironmentVariableTypeFuture, ITypingEnvironmentFutureType> futures;  // mapping future => checked or unchecked
 
 
 
   /* Constructor */
   public TypingEnvironment() {
-    methods    = new HashMap<>(); 
+    methods    = new HashMap<>();
     functions  = new HashMap<>();
     types      = new HashMap<>();
     searchPath = new HashSet<>();
-    variables  = new LinkedList<>(); 
+    variables  = new LinkedList<>();
     futures    = new HashMap<>();
   }
 
@@ -97,19 +97,19 @@ public class TypingEnvironment {
     ITypingEnvironmentVariableType res = null;
     for(Map<String, ITypingEnvironmentVariableType> map: variables) {
       res = map.get(name);
-      if(res != null) return res;    
+      if(res != null) return res;
     }
     if((res == null) && (name != "this")) {
       RecordPresent t = (RecordPresent)(getVariable("this"));
       assert t != null : name;
       res = t.getField(name); // possible nullPointerException
     }
-    return res; 
+    return res;
   }
 
   public IRecord getVariableRecord(String name) {
     ITypingEnvironmentVariableType var = this.getVariable(name);
-    
+
     return (var instanceof IRecord)?(IRecord)var : this.getFuture((TypingEnvironmentVariableTypeFuture)var).getRecord();
   }
 
@@ -129,9 +129,9 @@ public class TypingEnvironment {
   }
 
   public ContractElementParallel unsync(ASTNode<?> pos) {
-    LinkedList<Contract> contracts = new LinkedList<Contract>();
+    LinkedList<Contract> contracts = new LinkedList<>();
     Contract c;
-  
+
     for(ITypingEnvironmentFutureType t: this.futures.values()) {
       if(t instanceof TypingEnvironmentFutureTypeUntick) {
         c = new Contract();
@@ -159,7 +159,7 @@ public class TypingEnvironment {
   public void putFunction(String moduleName, String name, FunctionInterface func)                   { functions.put(moduleName + _connector + name, func); }
   public void putDataType(String moduleName, String name, DataTypeInterface type)                        { types.put(moduleName + _connector + name, type); }
 
-  public void newScope() { variables.add(0, new HashMap<String, ITypingEnvironmentVariableType>()); }
+  public void newScope() { variables.add(0, new HashMap<>()); }
   public void popScope() { variables.remove(0); }
   public void putVariable(String name, ITypingEnvironmentVariableType record) { variables.get(0).put(name, record); }
   public void putFuture(TypingEnvironmentVariableTypeFuture f, ITypingEnvironmentFutureType z) { futures.put(f, z); }
@@ -177,7 +177,7 @@ public class TypingEnvironment {
   public void add(TypingEnvironment e) {
     this.variables.putAll(e.variables);
     this.methods.putAll(e.methods);
-    
+
     this.functions.putAll(e.functions);
     this.futures.putAll(e.futures);
     this.types.putAll(e.types);
@@ -191,7 +191,7 @@ public class TypingEnvironment {
       if(this.methods.containsKey(entry.getKey())) { this.methods.put(entry.getKey(), entry.getValue()); }
     }
   }*/
-  
+
   /* toString */
   public String toStringSearchPath() {
     String res = "{ ";

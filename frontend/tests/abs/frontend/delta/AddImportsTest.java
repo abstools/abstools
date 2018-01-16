@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.delta;
@@ -16,7 +16,7 @@ import abs.frontend.ast.*;
 import abs.frontend.typechecker.*;
 
 public class AddImportsTest extends DeltaTest {
-    
+
     @Test
     public void addImport() throws DeltaModellingException {
         Model model = assertParseOk(
@@ -25,10 +25,10 @@ public class AddImportsTest extends DeltaTest {
                 + "interface J {}"
                 + "module Exporter2; export *;"
                 + "interface K {}"
-                
+
                 + "module M;"
                 + "class C {}"
-                
+
                 + "delta D; uses M;"
                 + "adds import Exporter.I;"
                 + "adds import J from Exporter;"
@@ -39,8 +39,8 @@ public class AddImportsTest extends DeltaTest {
         );
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         DeltaDecl delta = findDelta(model, "D");
-        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
-        
+        model.applyDeltas(new ArrayList<>(Arrays.asList(delta)));
+
         ModuleDecl clsmodule = cls.getModuleDecl();
         Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
         KindedName symbol1 = new KindedName(KindedName.Kind.TYPE_DECL, "Exporter.I");
@@ -59,7 +59,7 @@ public class AddImportsTest extends DeltaTest {
 
                 + "module M;"
                 + "class C {}"
-                
+
                 + "delta D1; uses Exporter;"
                 + "adds export I;"
 
@@ -70,8 +70,8 @@ public class AddImportsTest extends DeltaTest {
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");
-        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
-        
+        model.applyDeltas(new ArrayList<>(Arrays.asList(d1, d2)));
+
         ModuleDecl clsmodule = cls.getModuleDecl();
         Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
         KindedName symbol1 = new KindedName(KindedName.Kind.TYPE_DECL, "Exporter.I");

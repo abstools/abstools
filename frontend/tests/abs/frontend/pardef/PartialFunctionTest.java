@@ -194,7 +194,7 @@ public class PartialFunctionTest extends PardefTest {
         assertNotNull(func);
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        func.generateProlog(new PrintStream(os), new ReachabilityInformation(new ArrayList<ASTNode<?>>()));
+        func.generateProlog(new PrintStream(os), new ReachabilityInformation(new ArrayList<>()));
         assertEquals("", os.toString("utf-8"));
     }
 

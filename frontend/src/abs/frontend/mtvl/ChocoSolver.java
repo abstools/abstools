@@ -40,7 +40,7 @@ public class ChocoSolver {
     public final Map<String, IntegerVariable> vars;
     public final Map<String, Integer> defaultvals;
     // private boolean debug = false;
-    private List<Constraint> constraints = new ArrayList<Constraint>();
+    private List<Constraint> constraints = new ArrayList<>();
     private Model absmodel = new Model();
 
     public ChocoSolver() {
@@ -48,8 +48,8 @@ public class ChocoSolver {
         cpmodel = new CPModel();
         solver = new CPSolver();
         ChocoLogging.setVerbosity(Verbosity.SILENT);
-        vars = new HashMap<String, IntegerVariable>();
-        defaultvals = new HashMap<String, Integer>();
+        vars = new HashMap<>();
+        defaultvals = new HashMap<>();
         ChocoLogging.setVerbosity(Verbosity.OFF);
     }
 
@@ -294,7 +294,7 @@ public class ChocoSolver {
         if (!solved)
             solve();
 
-        HashMap<String, Integer> result = new HashMap<String, Integer>();
+        HashMap<String, Integer> result = new HashMap<>();
 
         Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
         while (it.hasNext()) {
@@ -308,11 +308,11 @@ public class ChocoSolver {
      * Return ALL solutions of the feature model
      */
     public Set<Map<String,Integer>> getSolutions() {
-        Set<Map<String, Integer>> solutions = new HashSet<Map<String,Integer>>();
+        Set<Map<String, Integer>> solutions = new HashSet<>();
 
         //int i=0;
         while(solveAgain()) {
-            Map<String,Integer> sol = new HashMap<String,Integer>();
+            Map<String,Integer> sol = new HashMap<>();
             Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
             while (it.hasNext()) {
                 IntegerVariable var = it.next();
@@ -412,7 +412,7 @@ public class ChocoSolver {
     // }
 
     public List<String> checkSolutionWithErrors(Map<String, Integer> solution, Model model) {
-        List<String> res = new ArrayList<String>();
+        List<String> res = new ArrayList<>();
         // check first for limits of variables
         for (IntegerVariable v : vars.values()) {
             CPModel m = new CPModel();
@@ -526,8 +526,8 @@ public class ChocoSolver {
         try {
             // aux variables
             int val;
-            Set<String> newFeatures = new HashSet<String>();
-            Set<String> newParents = new HashSet<String>();
+            Set<String> newFeatures = new HashSet<>();
+            Set<String> newParents = new HashSet<>();
 
             if (absmodel.debug)
                 absmodel.println("Adding new values:");

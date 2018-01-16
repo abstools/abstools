@@ -44,7 +44,7 @@ public class TopologicalSorting<T> {
             for (T rn : nodes)
                 incidence.put(cn, rn, false);
 
-        partition = new ArrayList<Set<T>>();
+        partition = new ArrayList<>();
     }
 
     public void addEdge(T high, T low) throws DeltaModellingException {
@@ -60,11 +60,11 @@ public class TopologicalSorting<T> {
 
     public void sort() throws DeltaModellingException {
         boolean rootNode;
-        Set<T> nodes = new HashSet<T>(this.nodes);
+        Set<T> nodes = new HashSet<>(this.nodes);
 
         int currentSet = 0;
         while (nodes.size() > 0) {
-            partition.add(new HashSet<T>());
+            partition.add(new HashSet<>());
 
             for (T node : nodes) {
                 rootNode = true;
@@ -103,7 +103,7 @@ public class TopologicalSorting<T> {
             return preferredOrder;
 
         checkSorted();
-        preferredOrder = new ArrayList<T>(nodes.size());
+        preferredOrder = new ArrayList<>(nodes.size());
         for (Set<T> set : partition)
             preferredOrder.addAll(set);
 
