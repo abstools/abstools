@@ -1,3 +1,9 @@
+import abs.common.TreeUtilsHelper;
+
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
 aspect TreeUtils {
 
     /**
@@ -24,8 +30,8 @@ aspect TreeUtils {
      * @return an unmodifiable list of nodes, never null
      * @throws NullPointerException if <code>type</code> is null
      */
-    public <N extends ASTNode<?>> java.util.List<N> ASTNode.findChildren(Class<N> type) {
-        return findChildren(type, false);
+    public <N> java.util.List<N> ASTNode.findChildren(Class<N> type) {
+        return TreeUtilsHelper.findChildren(this, type);
     }
 
     /**
@@ -37,29 +43,33 @@ aspect TreeUtils {
      * @return an unmodifiable list of nodes, never null
      * @throws NullPointerException if <code>type</code> is null
      */
-    public <N extends ASTNode<?>> java.util.List<N> ASTNode.findChildren(Class<N> type, boolean lazy) {
-        java.util.List<N> result = new LinkedList<>();
-        findChildren(result, this, Objects.requireNonNull(type), lazy);
-        return Collections.unmodifiableList(result);
+    public <N> java.util.List<N> ASTNode.findChildren(Class<N> type, boolean lazy) {
+        return TreeUtilsHelper.findChildren(this, type, lazy);
     }
 
-    private <N extends ASTNode<?>> void ASTNode.findChildren(
-        java.util.List<N> list,
-        ASTNode<?> node,
-        Class<N> type,
-        boolean lazy) {
-        if (node != null) {
-            if (type.isInstance(node)) {
-                list.add(type.cast(node));
-                if (lazy) {
-                    return;
-                }
-            }
-
-            for (int index = 0; index < node.getNumChildNoTransform(); ++index) {
-                findChildren(list, node.getChildNoTransform(index), type, lazy);
-            }
-        }
+    /**
+     * Lazily finds children of this node which can be casted by the cast function.
+     * This node will also be included if applicable.
+     *
+     * <p>The cast function receives an ASTNode and tries to cast it to the desired return type.
+     * If the node can't be casted, it returns null.
+     * See the convenience functions {@link TreeUtilsHelper#cast(Class)} and {@link TreeUtilsHelper#recurse(java.util.List)}.
+     * </p>
+     *
+     * <p>The recurse predicate receives a node casted by the cast function and decides
+     * whether to recurse over the nodes children.
+     * See the convenience function {@link TreeUtilsHelper#recurse(java.util.List)}.
+     * </p>
+     *
+     * @param cast a function receiving an ASTNode and casts to N, or returns null
+     * @param recurse if the cast function could cast a node, this predicate decides whether to recurse over the casted node's children
+     * @param <N> the type of nodes in the returned stream
+     * @return a stream of nodes
+     */
+    public <N> Stream<N> ASTNode.findChildren(
+            Function<? super ASTNode<?>, N> cast,
+            Predicate<? super N> recurse) {
+        return TreeUtilsHelper.findChildren(this, cast, recurse);
     }
 
     /**
