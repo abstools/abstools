@@ -205,7 +205,7 @@ NIL."
        "move" "father"
        "product"                                      ; product definition
        "let" "in"
-       "if" "then" "else" "return" "while"            ; the statements
+       "if" "then" "else" "return" "while" "foreach"  ; the statements
        "await" "assert" "throw" "die" "get" "skip" "suspend"
        "original" "movecogto"
        "try" "catch" "finally"
