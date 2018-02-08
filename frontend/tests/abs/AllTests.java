@@ -10,6 +10,5 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
     abs.frontend.AllFrontendTests.class
-    , abs.backend.AllBackendTests.class
-	, abs.common.AllCommonTests.class })
+    , abs.backend.AllBackendTests.class })
 public class AllTests {}

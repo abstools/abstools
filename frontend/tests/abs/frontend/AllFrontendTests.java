@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend;
@@ -12,6 +12,7 @@ import abs.frontend.pardef.PardefTests;
 import abs.frontend.parser.*;
 import abs.frontend.typesystem.*;
 
+import abs.frontend.utils.UtilTests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -45,6 +46,7 @@ import deadlock.DeadlockCheckerTests;
             DeadlockCasestudies.class,
             OriginalCallTest.class,
             TraitTest.class,
-            PardefTests.class
+            PardefTests.class,
+            UtilTests.class
             })
 public class AllFrontendTests {}
