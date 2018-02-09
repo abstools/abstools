@@ -177,6 +177,25 @@ aspect GenerateCoreABS {
             result.setPositionFromNode(this);
             result.setAnnotationList(getAnnotations().treeCopyNoTransform());
 
+            // special case: foreach (i in list[]) { ... }
+            // foreach (i in elements(set[])) { ... } etc.
+            {
+                // these checks are a bit paranoid since the type checker
+                // already guarantees that `listtype' is of type List<A>.
+                // What we really want to know is whether we know the type of
+                // A, which we don't when we're dealing with an empty literal
+                // list.  (Note that this is not a type error.)
+                if (listtype.isDataType()
+                    && ((DataTypeType)listtype).hasTypeArgs()
+                    && ((DataTypeType)listtype).numTypeArgs() == 1
+                    && ((DataTypeType)listtype).getTypeArg(0).isBoundedType()
+                    && !((BoundedType)(((DataTypeType)listtype).getTypeArg(0))).hasBoundType()
+                    ) {
+                    // We loop over an empty list: eliminate the loop body
+                    return result;
+                }
+            }
+
             // (2)
             VarDeclStmt listvarstmt = new VarDeclStmt(new List(), new VarDecl(listvarname, listtype.toUse(), new Opt(getListExp().treeCopyNoTransform())));
             result.addStmt(listvarstmt);

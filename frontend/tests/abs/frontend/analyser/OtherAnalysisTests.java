@@ -215,4 +215,9 @@ public class OtherAnalysisTests extends FrontendTest {
         AwaitAsyncCall a = (AwaitAsyncCall) down(d);
         assertNotNull(a); // pity, would like this to work.
     }
+
+    @Test
+    public void foreachRewriteEmptyListLiteral() {
+        assertTypeOK("module Test; { foreach (i in elements(set[])) { skip; } }");
+    }
 }
