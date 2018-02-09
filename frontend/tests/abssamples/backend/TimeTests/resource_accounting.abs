@@ -1,0 +1,18 @@
+module BackendTest;
+import * from ABS.DC;
+
+{
+    Bool testresult = False;
+
+    CloudProvider cp = new CloudProvider("test");
+    await cp!setInstanceDescriptions(map[Pair("t", map[Pair(PaymentInterval, 2),
+                    Pair(CostPerInterval, 1)])]);
+    DC dc = await cp!launchInstanceNamed("t");
+    dc = await cp!launchInstanceNamed("t");
+    dc = await cp!launchInstanceNamed("t");
+    await duration(2, 2);
+    await dc!shutdown();
+    await duration(3, 3);
+    Rat cost = await cp!getAccumulatedCost();
+    testresult = cost == 5;
+}

@@ -760,6 +760,7 @@ interface DeploymentComponent {
     [Atomic] Rat getShutdownDuration();
     [Atomic] Int getPaymentInterval();
     [Atomic] Rat getCostPerInterval();
+    [Atomic] Rat getAccumulatedCost(); // calculated via creation time + cost + payment interval
     [Atomic] Rat getNumberOfCores();
     // Convenience methods for calling CloudProvider acquireInstance,
     // releaseInstance.  If no cloud provider is set, return True.
@@ -786,7 +787,7 @@ interface CloudProvider {
     Bool releaseInstance(DeploymentComponent instance);
     Bool shutdownInstance(DeploymentComponent instance);
 
-    [Atomic] Rat getAccumulatedCost();
+    Rat getAccumulatedCost();
     [Atomic] Unit shutdown();
 
     // Instance descriptions.  Call setInstanceDescriptions with a map of
@@ -819,35 +820,11 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
     Set<DeploymentComponent> acquiredInstances = set[];
     Set<DeploymentComponent> killedInstances = set[];
     Int nextInstanceId = 0;
-    Rat accumulatedCost = 0;
-    Bool keeprunning = True;    // Flag for forced shutdown
+    Rat accumulatedCostOfKilledDCs = 0;
 
-    Unit startAccounting() {
-        while(keeprunning && !emptySet(launchedInstances)) {
-            Rat cost = this.sumOfCosts(launchedInstances);
-            accumulatedCost = accumulatedCost + cost;
-            await duration(1, 1);
-        }
-    }
-    [Atomic] Unit shutdown() { keeprunning = False; }
-
-    Rat sumOfCosts(Set<DeploymentComponent> dcs) {
-        Rat result = 0;
-        Time t = now();
-        while (!emptySet(dcs)) {
-            DeploymentComponent dc = take(dcs);
-            dcs = remove(dcs, dc);
-            Rat cost = await dc!getCostPerInterval();
-            if (cost > 0) {
-                Time creationtime = await dc!getCreationTime();
-                Rat time_elapse = timeDifference(t, creationtime);
-                Int interval = await dc!getPaymentInterval();
-                if (time_elapse % interval == 0) {
-                    result = result + cost;
-                }
-            }
-        }
-        return result;
+    [Atomic] Unit shutdown() {
+        // legacy method from when CloudProvider was an active object
+        skip;
     }
 
     DeploymentComponent createInstance(String instancename, Map<Resourcetype, Rat> d) {
@@ -860,9 +837,6 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
         // does not work although it should
         DeploymentComponent stupidTypeSystem = result;
         launchedInstances = insertElement(launchedInstances, stupidTypeSystem);
-        // Start accounting after adding new machine, before waiting for it to
-        // start up
-        if (mightNeedToStartAccounting) this!startAccounting();
         return result;
     }
 
@@ -886,16 +860,12 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
     }
 
     DeploymentComponent launchInstance(Map<Resourcetype, Rat> d) {
-        // if we don't call prelaunchInstance here, remember to start
-        // accounting as well
         DeploymentComponent result = this.prelaunchInstance(d);
         acquiredInstances = insertElement(acquiredInstances, result);
         return result;
     }
 
     DeploymentComponent launchInstanceNamed(String instancename) {
-        // if we don't call prelaunchInstance here, remember to start
-        // accounting as well
         DeploymentComponent result = this.prelaunchInstanceNamed(instancename);
         if (result != null) {
             acquiredInstances = insertElement(acquiredInstances, result);
@@ -948,12 +918,18 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
         // shutdown duration gets billed
         launchedInstances = remove(launchedInstances, stupidTypeSystem);
 
-        // Shut down accounting thread if necessary
-        if (emptySet(launchedInstances)) keeprunning = False;
+        Rat cost = await instance!getAccumulatedCost();
+        accumulatedCostOfKilledDCs = accumulatedCostOfKilledDCs + cost;
     }
 
-    [Atomic] Rat getAccumulatedCost() {
-        return accumulatedCost;
+    Rat getAccumulatedCost() {
+        Rat result = 0;
+        Time t = now();
+        foreach (dc in elements(launchedInstances)) {
+            Rat cost = await dc!getAccumulatedCost();
+            result = result + cost;
+        }
+        return result + accumulatedCostOfKilledDCs;
     }
 
     // Sets up information for [pre]launchInstanceNamed()
@@ -1146,6 +1122,16 @@ implements DeploymentComponentForCloudProvider {
     [Atomic] Rat getShutdownDuration() { return shutdownDuration; }
     [Atomic] Int getPaymentInterval() { return paymentInterval; }
     [Atomic] Rat getCostPerInterval() { return costPerInterval; }
+
+    [Atomic] Rat getAccumulatedCost() {
+        Rat result = 0;
+        if (costPerInterval > 0 && paymentInterval > 0) {
+            Int nIntervals = truncate(truncate(timeDifference(creationTime, now())) / paymentInterval);
+            result = nIntervals * costPerInterval;
+        }
+        return result;
+    }
+
     [Atomic] Rat getNumberOfCores() { return numberOfCores; }
 }
 
