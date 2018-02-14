@@ -2,18 +2,16 @@
 
 ## Preliminaries ##
 
-Compiling ABS needs [ant](https://ant.apache.org) and the [Java
+Compiling ABS needs [ant](https://ant.apache.org), the [Java
 JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
-version 8 or later.  Running models requires
-[Erlang](http://www.erlang.org/downloads) version 19 or later or, if using the
-Maude backend, [Maude](http://maude.cs.uiuc.edu/download/).
-
+version 8 or later, and [Erlang](http://www.erlang.org/downloads) version 20
+or later.  If using the Maude backend, also install
+[Maude](http://maude.cs.uiuc.edu/download/).
 
 ## Building the compiler ##
 
 To build the compiler, run `make frontend` in the project root directory, or
-`ant dist` in the `frontend/` subdirectory.  You may need to set the following
-variable:
+`make` in this subdirectory.  You may need to set the following variable:
 
     export ANT_OPTS=-Xmx1g
 

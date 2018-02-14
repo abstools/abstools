@@ -2,19 +2,20 @@ ABS Tools [![Build Status](https://envisage.ifi.uio.no:8080/jenkins/buildStatus/
 =========
 
 Inside this repository we develop the core tools of the ABS modelling
-language.  Further information can be found on http://abs-models.org/.  The
-current language manual is at http://docs.abs-models.org.
+language.  The current language manual is at http://docs.abs-models.org.
 
 
 Folders
 -------
 
 * `frontend` - the ABS compiler and runtime support.  See frontend/README for
-  installation instructions.
+  installation instructions.  (short version: install jdk8, ant and erlang
+  v20, then run `make frontend` in this directory.)
 
 
-* `abs-docs` - a markdown-flavored ABS manual, currently being written.  It is
-  available online at http://docs.abs-models.org.
+* `abs-docs` - the ABS language manual, available online at
+  http://docs.abs-models.org.  To generate the manual locally, install maven,
+  then run `make manual`.
 
   * `abs-docs/ReferenceManual` - an older LaTeX ABS reference manual, slowly
     being phased out
@@ -22,7 +23,8 @@ Folders
   * `abs-docs/Ott` - a formal grammar for ABS, written in Ott
 
 
-* `eclipse`, `emacs`, `bbedit` - Editor support for ABS
+* `eclipse`, `emacs`, `bbedit` - Editor support for ABS.  Note that the
+  eclipse plugin is currently unmaintained and suffers from some bit-rot.
 
     * `eclipse/eclipse-plugin`: ABS IDE and compiler support plugin
 
@@ -36,10 +38,6 @@ Folders
       (http://sdedit.sourceforge.net) for the visualization of UML sequence
       charts
 
-
-* `maven-support` - Maven plugin for generating Java/Maude from ABS,
-  testing and packaging ABS codes
-
 * `org.abs-models.releng` - Files used by Jenkins and Buckminster for
   continuous integration at https://envisage.ifi.uio.no:8080/jenkins/.
 
@@ -52,6 +50,9 @@ Folders
 
 * various leftovers from previous projects, to be evaluated and
   reactivated or pruned
+
+    * `maven-support` - Maven plugin for generating Java/Maude from ABS,
+      testing and packaging ABS codes
 
 Using Docker
 ------------
