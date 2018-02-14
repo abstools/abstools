@@ -105,6 +105,7 @@ public class ErlApp {
             "Dockerfile",
             "start_console",
             "run",
+            "run.bat",
             "absmodel/rebar.config",
             "bin/*",
             "link_sources",
