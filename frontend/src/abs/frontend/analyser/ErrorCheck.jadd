@@ -20,10 +20,10 @@ aspect ErrorCheck {
 
   // generic traversal that collects errors in AST
   void ASTNode.collectErrors(SemanticConditionList c) {
-      for(int i = 0; i < getNumChild(); i++) {
-          // "NoTransform": don't attempt to rewrite anything yet since we
-          // don't know that things are type-correct, and rewriting usually
-          // uses type information
+      // "NoTransform": don't attempt to rewrite anything yet since we don't
+      // know that things are type-correct, and rewriting usually uses type
+      // information
+      for(int i = 0; i < getNumChildNoTransform(); i++) {
           getChildNoTransform(i).collectErrors(c);
       }
   }
