@@ -422,6 +422,30 @@ public class TraitTest extends DeltaTest{
     }
 
     @Test
+    public void sameTraitNameDifferentModules() {
+        Model model = assertParseOk("\n"
+                + "module M;"
+                + "export T2;"
+                + "trait T = { Unit myMethod() { skip; } }"
+                + "trait T2 = T removes Unit myMethod();"
+                + "\n"
+                + "module N;"
+                + "import T2 from M;"
+                + "trait T = T2 adds { Unit foo() { skip; } }"
+                + "class C { uses T; }"
+        );
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "N", "C");
+        assertNotNull(cls);
+        assertTrue(cls.getMethods().getNumChild() == 0);
+
+        model.applyTraits();
+
+        assertEquals(1, cls.getNumMethod());
+        assertTrue(cls.getMethods().getChild(0).getBlock().getStmt(0) instanceof SkipStmt);
+    }
+
+    @Test
     public void circularTraitsMultiMod()  {
         Model model = assertParseOk(
                 "module M;"
