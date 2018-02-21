@@ -50,16 +50,16 @@ EasyInterface is at http://localhost:8888/ei/clients/web.\n\
 </body></html>\n" > /var/www/html/index.html \
  && a2ensite easyinterface-site \
  && a2enmod headers 
-RUN curl http://costa.ls.fi.upm.es/download/saco.colab.zip -\# -o saco.colab.zip \
+RUN curl http://costa.fdi.ucm.es/download/saco.colab.zip -\# -o saco.colab.zip \
  && unzip saco.colab.zip -d /usr/local/lib \
  && rm saco.colab.zip \
- && curl http://costa.ls.fi.upm.es/download/cofloco.colab.zip -\# -o cofloco.colab.zip \
+ && curl http://costa.fdi.ucm.es/download/cofloco.colab.zip -\# -o cofloco.colab.zip \
  && unzip cofloco.colab.zip -d /usr/local/lib \
  && rm cofloco.colab.zip \
- && curl http://costa.ls.fi.upm.es/download/sra.colab.zip -\# -o sra.colab.zip \
+ && curl http://costa.fdi.ucm.es/download/sra.colab.zip -\# -o sra.colab.zip \
  && unzip sra.colab.zip -d /usr/local/lib \
  && rm sra.colab.zip \
- && curl http://costa.ls.fi.upm.es/download/apet.colab.zip -\# -o apet.colab.zip \
+ && curl http://costa.fdi.ucm.es/download/apet.colab.zip -\# -o apet.colab.zip \
  && unzip apet.colab.zip -d /usr/local/lib \
  && rm apet.colab.zip
 RUN mkdir -p /usr/local/lib/frontend

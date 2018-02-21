@@ -1,6 +1,6 @@
 /**
 Copyright (C) 2010  E.Albert, P.Arenas, S.Genaim, G.Puebla, and D.Zanardini, G. Roman
-                    https://costa.ls.fi.upm.es
+                    https://costa.fdi.ucm.es/
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

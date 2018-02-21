@@ -134,14 +134,14 @@ mkdir -p /home/vagrant/.key
 echo
 echo "Installing SACO command-line tool"
 echo
-wget -nv http://costa.ls.fi.upm.es/download/saco.colab.zip
+wget -nv http://costa.fdi.ucm.es/download/saco.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/saco.colab.zip)
 rm saco.colab.zip
 
 echo
 echo "Installing aPET/SYCO command-line tool"
 echo
-wget -nv http://costa.ls.fi.upm.es/download/apet.colab.zip
+wget -nv http://costa.fdi.ucm.es/download/apet.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/apet.colab.zip)
 rm apet.colab.zip
 
@@ -163,10 +163,10 @@ sudo chmod -R 777 /tmp/costabs
 echo
 echo "Installing COFLOCO and SRA"
 echo
-wget -nv http://costa.ls.fi.upm.es/download/cofloco.colab.zip
+wget -nv http://costa.fdi.ucm.es/download/cofloco.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/cofloco.colab.zip)
 rm cofloco.colab.zip
-wget -nv http://costa.ls.fi.upm.es/download/sra.colab.zip
+wget -nv http://costa.fdi.ucm.es/download/sra.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/sra.colab.zip)
 rm sra.colab.zip
 

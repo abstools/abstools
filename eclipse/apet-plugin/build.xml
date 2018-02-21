@@ -33,7 +33,7 @@
         </macrodef>
 
 	<target name="download-apet-binary">
-	   <get src="http://costa.ls.fi.upm.es/~mzamalloa/apet_exe" 
+	   <get src="http://costa.fdi.ucm.es/~mzamalloa/apet_exe" 
 		    dest="${basedir}"
 		    usetimestamp="true"/>
 	   <chmod perm="a+x" file="${basedir}/apet_exe" />
