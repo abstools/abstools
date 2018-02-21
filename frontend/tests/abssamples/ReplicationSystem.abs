@@ -750,7 +750,7 @@ class TesterImpl(ServerNode expected, Node actual) implements Tester {
 			if (isFile(ce)) {
 				this.compareFile(file(id,content(ce)),file(id,content(ca)));
 			} else {
-				this.compareDir(dir(id,entries(ce)),dir(id,entries(ca)));
+				this.compareDir(dir(id,dir_entries(ce)),dir(id,dir_entries(ca)));
 			}
 		} 
 	}
@@ -1678,8 +1678,8 @@ def FileSize content(FileContent c) = case c { Content(s) => s; };
 def FileSize fileContent(File f) = content(snd(f));
 
 // partial
-def FileEntry entries(FileContent c) = case c { Entries(fs) => fs; };
-def FileEntry dirContent(Directory f) = entries(snd(f));
+def FileEntry dir_entries(FileContent c) = case c { Entries(fs) => fs; };
+def FileEntry dirContent(Directory f) = dir_entries(snd(f));
 	
 def FileId getFileId(Either<File,Directory> f) =
 	case f {
@@ -1733,7 +1733,7 @@ def Set<FileId> getFileIdFromEntries1(FileEntry fe) =
 		InsertAssoc(Pair(i,c),fs) => 
 			case isFile(c) {
 				True => insertElement(getFileIdFromEntries1(fs), i);
-				False => union(getFileIdFromEntries(i,entries(c)),getFileIdFromEntries1(fs));
+				False => union(getFileIdFromEntries(i,dir_entries(c)),getFileIdFromEntries1(fs));
 			};
 	};
 	
@@ -1743,7 +1743,7 @@ def Set<FileId> getFileIdFromEntries(FileId id, FileEntry fe) =
 		InsertAssoc(Pair(i,c),fs) => 
 			case isFile(c) {
 				True => insertElement(getFileIdFromEntries(id,fs), makePath(id,i));
-				False => union(getFileIdFromEntries(makePath(id,i),entries(c)),getFileIdFromEntries(id,fs));
+				False => union(getFileIdFromEntries(makePath(id,i),dir_entries(c)),getFileIdFromEntries(id,fs));
 			};
 	};
 	
