@@ -312,7 +312,7 @@ completing(cast, {okthx, Task}, Data) ->
     {next_state, NextState, Data1};
 completing(cast, {waiting, Task}, Data=#data{calleecog=CalleeCog,waiting_tasks=WaitingTasks}) ->
     Task ! {value_present, self(), CalleeCog},
-    {keep_state_and_data, Data=#data{waiting_tasks=[Task | WaitingTasks]}};
+    {keep_state, Data#data{waiting_tasks=[Task | WaitingTasks]}};
 completing({call, From}, Msg, Data) ->
     handle_call(From, Msg, Data);
 completing(info, Msg, Data) ->
