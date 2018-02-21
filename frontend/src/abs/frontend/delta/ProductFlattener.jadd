@@ -401,7 +401,7 @@ aspect ProductFlattener {
             TraitNameExpr nameExpr = (TraitNameExpr) traitExpr;
             list.add(nameExpr.getDecl(traitExpr.getModuleDecl()));
         } else if(traitExpr != null){
-            for (ASTNode<ASTNode> child : traitExpr.astChildren()) {
+            for (ASTNode<ASTNode> child : traitExpr.astChildrenNoTransform()) {
                 collectInTrait(child, list);
             }
         }
