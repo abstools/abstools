@@ -20,7 +20,8 @@ init(Req, _Opts) ->
             <<"o">> -> handle_object_query(cowboy_req:path_info(Req));
             <<"static_dcs">> -> handle_static_dcs(cowboy_req:path_info(Req));
             <<"call">> -> handle_object_call(cowboy_req:path_info(Req),
-                                             cowboy_req:parse_qs(Req));
+                                             cowboy_req:parse_qs(Req),
+                                             Req);
             <<"quit">> -> halt(0);              %sorry
             _ -> {404, <<"text/plain">>, <<"Not found">>}
         end,
@@ -61,7 +62,10 @@ handle_object_query([]) ->
     Names=cog_monitor:list_registered_http_names(),
     { 200, <<"application/json">>, jsx:encode(Names, [{space, 1}, {indent, 2}]) }.
 
-handle_object_call([Objectname], _Params) ->
+handle_object_call([], _Parameters, _Req) ->
+    Names=cog_monitor:list_registered_http_names(),
+    { 200, <<"application/json">>, jsx:encode(Names, [{space, 1}, {indent, 2}]) };
+handle_object_call([Objectname], _Params, _Req) ->
     {State, Object}=cog_monitor:lookup_object_from_http_name(Objectname),
     case State of
         notfound ->  {404, <<"text/plain">>, <<"Object not found">>};
@@ -83,7 +87,7 @@ handle_object_call([Objectname], _Params) ->
                              maps:to_list(object:get_all_method_info(Object))),
             { 200, <<"application/json">>, jsx:encode(Result, [{space, 1}, {indent, 2}]) }
     end;
-handle_object_call([Objectname, Methodname], Parameters) ->
+handle_object_call([Objectname, Methodname], Parameters, Req) ->
     %% _Params is a list of 2-tuples of binaries
     {State, Object}=cog_monitor:lookup_object_from_http_name(Objectname),
     case State of
@@ -94,42 +98,61 @@ handle_object_call([Objectname, Methodname], Parameters) ->
             case maps:is_key(Methodname, Methods) of
                 false -> { 400, <<"text/plain">>, <<"Object does not support method">> };
                 true ->
+                    %% FIXME: we ignore the updated request `Req2'.  Hopefully
+                    %% this won't matter since we don't attempt to read the
+                    %% request body again (body can only be read once).
+                    {ok, Body, Req2} = case cowboy_req:has_body(Req) of
+                               false -> {ok, <<"[]">>, Req};
+                               true -> cowboy_req:read_body(Req)
+                           end,
                     {Method, _ReturnType, ParamDecls}=maps:get(Methodname, Methods),
-                    {Success, ParamValues} = decode_parameters(Parameters, ParamDecls),
-                    case Success of
-                        ok ->
+                    case decode_parameters(Parameters, ParamDecls, Body) of
+                        { ok, ParamValues } ->
                             Future=future:start_for_rest(Object, Method, ParamValues ++ [[]], #process_info{method=Methodname}),
                             Result=case future:get_for_rest(Future) of
                                 {ok, Value} ->
                                     { 200, <<"application/json">>,
-                                      jsx:encode([{'result', abs_to_json(Value)}], [{space, 1}, {indent, 2}]) };
+                                      jsx:encode([{'result', abs_to_json(Value)}],
+                                                 [{space, 1}, {indent, 2}]) };
                                 {error, Error} ->
                                     { 500, <<"application/json">>,
-                                      jsx:encode([{'error', abs_to_json(Error)}], [{space, 1}, {indent, 2}]) }
+                                      jsx:encode([{'error', abs_to_json(Error)}],
+                                                 [{space, 1}, {indent, 2}]) }
                             end,
                             future:die(Future, ok),
                             Result;
-                        error -> { 400, <<"text/plain">>, <<"Error during parameter decoding">> }
+                        { error, Msg } ->
+                            { 400, <<"application/json">>,
+                              jsx:encode([{'error', Msg }],
+                                         [{space, 1}, {indent, 2}]) }
                     end
             end
-    end;
-handle_object_call([], _Parameters) ->
-    Names=cog_monitor:list_registered_http_names(),
-    { 200, <<"application/json">>, jsx:encode(Names, [{space, 1}, {indent, 2}]) }.
+    end.
 
-decode_parameters(Parameters, ParamDecls) ->
-    PValues = maps:from_list(Parameters),
-    try {ok, lists:map(fun({Name, Type}) ->
-                      decode_parameter(maps:get(Name, PValues), Type)
-              end, ParamDecls)}
+decode_parameters(URLParameters, ParamDecls, Body) ->
+    %% TODO: There could be better error reporting here:
+    %% - check for well-formed JSON body (needs to be a list)
+    %% - When parameter missing: report its name
+    try
+        BodyValues = jsx:decode(Body),
+        Parameters = maps:merge(
+                       %% URL parameters override JSON parameters
+                       maps:from_list(BodyValues), maps:from_list(URLParameters)),
+        {ok, lists:map(fun({Name, Type}) ->
+                               decode_parameter(maps:get(Name, Parameters), Type)
+                       end, ParamDecls)}
     catch _:_ ->
-            {error, null}
+            {error, <<"Error during parameter decoding">>}
     end.
 
 decode_parameter(Value, Type) ->
     case Type of
         <<"ABS.StdLib.Bool">> ->
             case Value of
+                %% JSON
+                true -> true;
+                false -> false;
+                %% URLencoded
                 <<"True">> -> true;
                 <<"true">> -> true;
                 <<"False">> -> false;
@@ -138,7 +161,12 @@ decode_parameter(Value, Type) ->
         <<"ABS.StdLib.String">> ->
             Value;
         <<"ABS.StdLib.Int">> ->
-            binary_to_integer(Value)
+            case is_integer(Value) of
+                %% JSON
+                true -> Value;
+                %% URLencoded
+                false -> binary_to_integer(Value)
+            end
     end.
 
 abs_to_json(true) -> true;
