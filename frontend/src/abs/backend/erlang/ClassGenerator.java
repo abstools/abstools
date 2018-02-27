@@ -13,6 +13,8 @@ import abs.common.CompilerUtils;
 import abs.backend.common.CodeStream;
 import abs.backend.erlang.ErlUtil.Mask;
 import abs.frontend.ast.*;
+import abs.frontend.typechecker.DataTypeType;
+import abs.frontend.typechecker.Type;
 
 import com.google.common.collect.Iterables;
 
@@ -258,6 +260,23 @@ public class ClassGenerator {
         ecs.println("].");
     }
 
+    private void generateParameterDescription(Type paramtype) {
+        ecs.print("<<\"" + paramtype.getQualifiedName() + "\">>,");
+        ecs.print(" {");
+        if (paramtype.isDataType()) {
+            DataTypeType paramdatatype = (DataTypeType)paramtype;
+            if (paramdatatype.hasTypeArgs()) {
+                String interp = "";
+                for (Type typearg : paramdatatype.getTypeArgs()) {
+                    ecs.print(interp);
+                    interp = ", ";
+                    generateParameterDescription(typearg);
+                }
+            }
+        }
+        ecs.print(" }");
+    }
+
     private void generateExports() {
         ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0,get_all_state/1]).");
         ecs.println("-compile(export_all).");
@@ -292,17 +311,19 @@ public class ClassGenerator {
                 ecs.print("<<\"" + ms.getName() + "\">> => { ");
                 ecs.print("'m_" + ms.getName() + "'");
                 ecs.print(", ");
-                ecs.print("<<\"" + ms.getReturnType().getType().getQualifiedName() + "\">>");
+                ecs.print("<<\"" + ms.getReturnType().getType().toString() + "\">>");
                 ecs.print(", ");
                 ecs.print("[ ");
                 boolean innerfirst = true;
                 for (ParamDecl p : ms.getParamList()) {
+                    // For each parameter, we need name, human-readable type,
+                    // ABS type, and ABS type arguments (if present)
                     if (!innerfirst) ecs.print(", ");
                     innerfirst = false;
                     ecs.print("{ ");
-                    ecs.print("<<\"" + p.getName() + "\">>");
-                    ecs.print(", ");
-                    ecs.print("<<\"" + p.getAccess().getType().getQualifiedName() + "\">>");
+                    ecs.print("<<\"" + p.getName() + "\">>, ");
+                    ecs.print("<<\"" + p.getType().toString() + "\">>, ");
+                    generateParameterDescription(p.getType());
                     ecs.print(" }");
                 }
                 ecs.print("] ");

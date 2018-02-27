@@ -86,13 +86,17 @@ supported.
 | URLEncoded text, e.g., `?p=Hello%20World!`
 | JSON string
 
+| `List<A>` (where `A` can be decoded)
+| not supported
+| JSON list with elements of type `A`
+
 | All others
 | not supported
 | not supported
 |===
 
-The method can have an arbitrary return type, which will be returned as a
-string via the ABS `toString()` function, except for the cases enumerated in
+The method can have any return type.  Method call results will be returned as
+a string via the ABS `toString()` function, except for the types enumerated in
 the following table.
 
 [caption="Encoding of return values", cols="33,67"]

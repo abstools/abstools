@@ -71,20 +71,21 @@ handle_object_call([Objectname], _Params, _Req) ->
         notfound ->  {404, <<"text/plain">>, <<"Object not found">>};
         deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
         _ ->
-            Result=lists:map(fun ({Name, {_, Return, Params}}) ->
-                                     #{ 'name' => Name,
-                                        'return' => Return,
-                                        'parameters' =>
-                                            lists:map(fun({PName, PType}) ->
-                                                              #{
-                                                           'name' => PName,
-                                                           'type' => PType
-                                                          }
-                                                      end,
-                                                      Params)
-                                      }
-                             end,
-                             maps:to_list(object:get_all_method_info(Object))),
+            Result=lists:map(
+                     fun ({Name, {_, Return, Params}}) ->
+                             #{ 'name' => Name,
+                                'return' => Return,
+                                'parameters' =>
+                                    lists:map(fun({PName, PDescription, _PType, _PTypeArgs}) ->
+                                                  #{
+                                                   'name' => PName,
+                                                   'type' => PDescription
+                                                  }
+                                              end,
+                                              Params)
+                              }
+                     end,
+                     maps:to_list(object:get_all_method_info(Object))),
             { 200, <<"application/json">>, jsx:encode(Result, [{space, 1}, {indent, 2}]) }
     end;
 handle_object_call([Objectname, Methodname], Parameters, Req) ->
@@ -138,14 +139,14 @@ decode_parameters(URLParameters, ParamDecls, Body) ->
         Parameters = maps:merge(
                        %% URL parameters override JSON parameters
                        maps:from_list(BodyValues), maps:from_list(URLParameters)),
-        {ok, lists:map(fun({Name, Type}) ->
-                               decode_parameter(maps:get(Name, Parameters), Type)
+        {ok, lists:map(fun({Name, _Description, Type, TypeArgs}) ->
+                               decode_parameter(maps:get(Name, Parameters), Type, TypeArgs)
                        end, ParamDecls)}
     catch _:_ ->
             {error, <<"Error during parameter decoding">>}
     end.
 
-decode_parameter(Value, Type) ->
+decode_parameter(Value, Type, TypeArgs) ->
     case Type of
         <<"ABS.StdLib.Bool">> ->
             case Value of
@@ -166,7 +167,10 @@ decode_parameter(Value, Type) ->
                 true -> Value;
                 %% URLencoded
                 false -> binary_to_integer(Value)
-            end
+            end;
+        <<"ABS.StdLib.List">> ->
+            {Type2, TypeArgs2} = TypeArgs,
+            lists:map(fun(V) -> decode_parameter(V, Type2, TypeArgs2) end, Value)
     end.
 
 abs_to_json(true) -> true;
