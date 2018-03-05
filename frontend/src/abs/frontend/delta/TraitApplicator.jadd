@@ -12,32 +12,15 @@ aspect TraitApplicator {
      * a AddMethodModifier and apply it.
      */
     public void TraitUse.applyTo(ClassDecl cd) throws DeltaModellingException {
-        //find TraitDecl
-        List<Decl> list = cd.getModuleDecl().getDecls();
-        TraitExpr resolved = getTraitExpr();
-        if(getTraitExpr() instanceof TraitNameExpr){
-            TraitNameExpr n = (TraitNameExpr) getTraitExpr();
-            for (Decl decl : list) {
-                if(decl instanceof TraitDecl){
-                    TraitDecl tDecl = (TraitDecl)decl;
-                    if( tDecl.getName().equals(n.getName()) ){
-                        resolved = tDecl.getTraitExpr();
-                        break;
-                    }
-                }
-            }
-        }
+        TraitExpr traitExpr = getTraitExpr().treeCopyNoTransform();
 
         //transform into AddMethodModifier
         TraitSetExpr eSet = new TraitSetExpr();
         eSet.setMethodImplList(new List<>());
         eSet.setParent(cd);
 
-        resolved = resolved.treeCopyNoTransform();
-        AddMethodModifier tOp = new AddMethodModifier(resolved);
+        AddMethodModifier tOp = new AddMethodModifier(traitExpr);
         tOp.setParent(cd);
-        resolved.setParent(tOp);
-
 
         TraitSetExpr newSet = tOp.applyToSet(eSet, cd);
         AddMethodModifier newOp = new AddMethodModifier(newSet);
@@ -250,7 +233,7 @@ aspect TraitApplicator {
 
         //collect all original calls
         ArrayList<OriginalCall> list = new ArrayList<>();
-        for (Stmt stmt : flattened.getBlock().getStmts()){
+        for (Stmt stmt : flattened.getBlockNoTransform().getStmtsNoTransform()) {
             collectOrig(list, stmt);
         }
 

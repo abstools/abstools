@@ -50,6 +50,7 @@ public enum ErrorMessage {
     DUPLICATE_METHOD_NAME("Method %s is already defined."),
     DUPLICATE_PARAM_NAME("Parameter %s is already defined."),
     DUPLICATE_TYPE_DECL("Type (interface, datatype or exception) %s is already defined%s."),
+    DUPLICATE_TRAIT_NAME("Trait %s is already defined%s."),
     DUPLICATE_FIELD_NAME("Field %s is already defined."),
     DUPLICATE_MODULE_NAME("Module %s is already defined."),
     ONLY_INTERFACE_EXTEND("Interfaces can only extend other interfaces, but %s is not an interface."),
