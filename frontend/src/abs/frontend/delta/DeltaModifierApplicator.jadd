@@ -53,26 +53,22 @@ aspect DeltaModifierApplicator {
     }
 
     @Override
-    public void ModifyMethodModifier.collapseTraitModifiers(ClassDecl cd){
-        TraitExpr tt = getTraitExpr();
-        TraitSetExpr set = tt.resolve(cd);
-        ModifyMethodModifier newMod = this.copy();
-        newMod.setParent(getParent());
-        set.setParent(null);
-        newMod.setChild(set, 0);
+    public void ModifyMethodModifier.collapseTraitModifiers(ClassDecl cd) {
+        MethodModifier newMod = new ModifyMethodModifier(getTraitExprNoTransform().resolve(cd));
+        ASTNode<?> parent = getParent();
         parent.setChild(newMod, parent.getIndexOfChild(this));
+        this.setParent(null);
+        parent.flushCache();
     }
 
 
     @Override
-    public void AddMethodModifier.collapseTraitModifiers(ClassDecl cd){
-        TraitExpr tt = getTraitExpr();
-        TraitSetExpr set = tt.resolve(cd);
-        AddMethodModifier newMod = this.copy();
-        newMod.setParent(getParent());
-        set.setParent(null);
-        newMod.setChild(set, 0);
+    public void AddMethodModifier.collapseTraitModifiers(ClassDecl cd) {
+        MethodModifier newMod = new AddMethodModifier(getTraitExprNoTransform().resolve(cd));
+        ASTNode<?> parent = getParent();
         parent.setChild(newMod, parent.getIndexOfChild(this));
+        this.setParent(null);
+        parent.flushCache();
     }
 
 
@@ -83,14 +79,14 @@ aspect DeltaModifierApplicator {
 
 
     abstract public void ModuleModifier.apply() throws DeltaModellingException;
-  
+
     /*
     * DeltaTraitModifier references trait operations from a class.
     */
-    public void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ 
-        getMethodModifier().applyTo(cd); 
+    public void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{
+        getMethodModifier().applyTo(cd);
     }
-  
+
     /*
     *  Fixes the parse tree and splits a big trait operation into a list of trait operations
     *  This is needed so in
