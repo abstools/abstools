@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker;
@@ -53,7 +53,7 @@ public class KindedName {
         final int pos = name.lastIndexOf('.');
         return (pos == -1) ? name : name.substring(pos + 1, name.length());
     }
-    
+
     public boolean isQualified() {
         return name.indexOf('.') > -1;
     }

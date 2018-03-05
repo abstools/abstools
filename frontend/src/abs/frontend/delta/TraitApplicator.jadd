@@ -11,8 +11,7 @@ aspect TraitApplicator {
      * TraitUse is the trait application from within a class. Transform it into
      * a AddMethodModifier and apply it.
      */
-    public  void TraitUse.applyTo(ClassDecl cd) throws DeltaModellingException {
-
+    public void TraitUse.applyTo(ClassDecl cd) throws DeltaModellingException {
         //find TraitDecl
         List<Decl> list = cd.getModuleDecl().getDecls();
         TraitExpr resolved = getTraitExpr();
@@ -29,9 +28,9 @@ aspect TraitApplicator {
             }
         }
 
-         //transform into AddMethodModifier
+        //transform into AddMethodModifier
         TraitSetExpr eSet = new TraitSetExpr();
-        eSet.setMethodImplList(new List<MethodImpl>());
+        eSet.setMethodImplList(new List<>());
         eSet.setParent(cd);
 
         resolved = resolved.treeCopyNoTransform();
@@ -49,7 +48,7 @@ aspect TraitApplicator {
 
         //remove from class
         int pos = cd.getTraitUseList().getIndexOfChild(this);
-        if(pos > -1){
+        if (pos > -1) {
             cd.getTraitUseList().removeChild(pos);
         }
 
@@ -63,7 +62,7 @@ aspect TraitApplicator {
      * RemoveMethodModifier is the trait operation that removes a single method, given
      * its signature. Throws an exception if no such method is found
      */
-    public  void RemoveMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException{
+    public void RemoveMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException{
          for (MethodSig mysig : getMethodSigList()){
             // in given list: find MethodDecl that matches sig
             int found = -1;

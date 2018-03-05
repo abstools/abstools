@@ -16,15 +16,15 @@ aspect TraitResolver {
         for (Stmt stmt : flattened.getBlock().getStmts()){
             collectOrig(list, stmt);
         }
-          
-          
+
+
         if(list.size() > 0){
             //rename
             int i = set.getNumMethodImpl();
             String name = met.getMethodSig().getName() + hashCode();
             MethodSig sig = met.getMethodSig().treeCopyNoTransform();
             sig.setName(name);
-              
+
             //add
             MethodImpl newMet = met.treeCopyNoTransform();
             newMet.setParent(met.getParent());
@@ -32,49 +32,51 @@ aspect TraitResolver {
 
             sig.setParent(newMet);
             set.getMethodImpls().setChild(newMet, i);
-              
+
             //replace
             for (OriginalCall orig : list) {
                 if(met.getParent().getParent() instanceof ClassDecl)
                     orig.replaceByRealCall(newMet, ((ClassDecl)met.getParent().getParent()).getDeltaMap().get(met.getMethodSig().getName()));
-                else 
+                else
                     orig.replaceByRealCall(newMet, null);
             }
-        }      
+        }
     }
-    
+
+    @Override
     public TraitSetExpr RemoveMethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd) throws DeltaModellingException{
         applyToList(set.getMethodImplList());
         return set;
     }
-    
-    public TraitSetExpr ModifyMethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd){
+
+    @Override
+    public TraitSetExpr ModifyMethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd) {
         TraitSetExpr curr = set;
         TraitExpr tt = getTraitExpr();
         ArrayList<MethodModifier> operations = new ArrayList<>();
         /*
-         *  The syntax is TraitExpression MethodModifieration. 
+         *  The syntax is TraitExpression MethodModifier.
          *  We search for the TraitExpression that is used by this 'adds'
          *  This may break the syntax, thus we collect all operation on the right
          *  and apply them one by one.
          */
         TraitExpr target = helperLeftMost(tt, operations);
-        TraitSetExpr next = target.resolve(cd);      
+        TraitSetExpr next = target.resolve(cd);
 
         for (MethodImpl impl : next.getMethodImplList()) {
-            curr = apply(curr, impl);        
+            curr = apply(curr, impl);
         }
-      
+
         //necessary because the helper collects them in the wrong order
         Collections.reverse(operations);
-      
+
         for (MethodModifier oper : operations) {
             curr = oper.applyToSet(curr, cd);
         }
         return curr;
     }
-  
-  
+
+
     private TraitSetExpr ModifyMethodModifier.apply(TraitSetExpr set, MethodImpl met) throws DeltaModellingException{
         MethodSig mysig = met.getMethodSig();
 
@@ -92,7 +94,7 @@ aspect TraitResolver {
             MethodImpl method = met.treeCopyNoTransform();
             method.setFileName(met.getFileName());
             method.setParent(met.getParent());
-            replaceOriginal(set, set.getMethodImpl(found), method); 
+            replaceOriginal(set, set.getMethodImpl(found), method);
             set.getMethodImpls().setChild(method, found);
         } else {
             MethodImpl method = met.treeCopyNoTransform();
@@ -102,20 +104,21 @@ aspect TraitResolver {
         }
         return set;
     }
-   
+
+    @Override
     public TraitSetExpr AddMethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd){
         TraitSetExpr curr = set;
         TraitExpr tt = getTraitExpr();
         ArrayList<MethodModifier> operations = new ArrayList<>();
         /*
-         *  The syntax is TraitExpression MethodModifieration. 
+         *  The syntax is TraitExpression MethodModifier.
          *  We search for the TraitExpression that is used by this 'adds'
          *  This may break the syntax, thus we collect all operation on the right
          *  and apply them one by one.
          */
         TraitExpr target = helperLeftMost(tt, operations);
         TraitSetExpr next = target.resolve(cd);
- 
+
         for (MethodImpl impl : next.getMethodImplList()) {
             MethodImpl newMet = impl.treeCopyNoTransform();
             newMet.setParent(impl.getParent());
@@ -126,7 +129,7 @@ aspect TraitResolver {
         }
         //necessary because the helper collects them in the wrong order
         Collections.reverse(operations);
-      
+
         for (MethodModifier oper : operations) {
             curr = oper.applyToSet(curr, cd);
         }
@@ -162,5 +165,5 @@ aspect TraitResolver {
         MethodModifier oper = this.getMethodModifier();
         return oper.applyToSet(set, cd);
     }
-    
+
 }
