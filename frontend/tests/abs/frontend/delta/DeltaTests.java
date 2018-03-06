@@ -18,7 +18,6 @@ import org.junit.runners.Suite.SuiteClasses;
     DeltaSamplesTest.class,
     DeltaSyntax.class,
     DeltaTrieTest.class,
-    FlattenedProductTest.class,
     ModifyInterfacesTest.class,
     OriginalCallTest.class,
     ProductDeclarationTest.class,
