@@ -22,7 +22,7 @@ aspect TraitApplicator {
         AddMethodModifier tOp = new AddMethodModifier(traitExpr);
         tOp.setParent(cd);
 
-        TraitSetExpr newSet = tOp.applyToSet(eSet, cd);
+        TraitSetExpr newSet = tOp.applyToSet(eSet, cd.getModuleDecl());
         AddMethodModifier newOp = new AddMethodModifier(newSet);
         newOp.setParent(cd);
 
@@ -111,7 +111,7 @@ aspect TraitApplicator {
         } catch(RuntimeException e) {
             //trait outside of delta
         }
-        TraitSetExpr set = tt.resolve(cd);
+        TraitSetExpr set = tt.resolve(cd.getModuleDecl());
         for (MethodImpl met : set.getMethodImplList()) {
 		      MethodImpl newMet = met.treeCopyNoTransform();
 		      newMet.setParent(met.getParent());
@@ -155,7 +155,7 @@ aspect TraitApplicator {
         ArrayList<MethodModifier> operations = new ArrayList<>();
         TraitExpr target = helperLeftMost(tt, operations);
 
-            TraitSetExpr set = target.resolve(cd);
+            TraitSetExpr set = target.resolve(cd.getModuleDecl());
             for (MethodImpl met : set.getMethodImplList()) {
                 apply(cd,met);
             }

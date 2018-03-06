@@ -19,18 +19,18 @@ aspect DeltaModifierApplicator {
 	 * These methods simplify nested trait operators in deltas and collapse them to operations on sets
 	 */
     public void ModuleModifier.collapseTraitModifiers() { }
-    public void Modifier.collapseTraitModifiers(ClassDecl cd) { }
+    public void Modifier.collapseTraitModifiers(ModuleDecl module) { }
     @Override
     public void ModifyClassModifier.collapseTraitModifiers() {
     	ArrayList<Modifier> cop = new ArrayList<Modifier>();
     	for( Modifier mod :getModifierList() ) cop.add(mod);
         for ( Modifier mod : cop ) {
-            mod.collapseTraitModifiers(getClassDecl());
+            mod.collapseTraitModifiers(findModule());
         }
     }
 
     @Override
-    public void DeltaTraitModifier.collapseTraitModifiers(ClassDecl cd) {
+    public void DeltaTraitModifier.collapseTraitModifiers(ModuleDecl module) {
 
         ArrayList<MethodModifier> operations = new ArrayList<>();
         rewriteToList(getMethodModifier(), operations);
@@ -43,18 +43,18 @@ aspect DeltaModifierApplicator {
 				newDel.setParent(null);
 				traitOper.setParent(null);
 				newDel.setChild(traitOper, 0);
-				newDel.collapseTraitModifiers(cd);
+				newDel.collapseTraitModifiers(module);
 				ModifyClassModifier mm = (ModifyClassModifier) parent.getParent();
 				mm.addModifier(newDel);
             }
         } else {
-    	    getMethodModifier().collapseTraitModifiers(cd);
+    	    getMethodModifier().collapseTraitModifiers(module);
     	}
     }
 
     @Override
-    public void ModifyMethodModifier.collapseTraitModifiers(ClassDecl cd) {
-        MethodModifier newMod = new ModifyMethodModifier(getTraitExprNoTransform().resolve(cd));
+    public void ModifyMethodModifier.collapseTraitModifiers(ModuleDecl module) {
+        MethodModifier newMod = new ModifyMethodModifier(getTraitExprNoTransform().resolve(module));
         ASTNode<?> parent = getParent();
         parent.setChild(newMod, parent.getIndexOfChild(this));
         this.setParent(null);
@@ -63,8 +63,8 @@ aspect DeltaModifierApplicator {
 
 
     @Override
-    public void AddMethodModifier.collapseTraitModifiers(ClassDecl cd) {
-        MethodModifier newMod = new AddMethodModifier(getTraitExprNoTransform().resolve(cd));
+    public void AddMethodModifier.collapseTraitModifiers(ModuleDecl module) {
+        MethodModifier newMod = new AddMethodModifier(getTraitExprNoTransform().resolve(module));
         ASTNode<?> parent = getParent();
         parent.setChild(newMod, parent.getIndexOfChild(this));
         this.setParent(null);
@@ -73,7 +73,7 @@ aspect DeltaModifierApplicator {
 
 
     @Override
-    public void RemoveMethodModifier.collapseTraitModifiers(ClassDecl cd) {
+    public void RemoveMethodModifier.collapseTraitModifiers(ModuleDecl module) {
         //System.out.println("collapsing rem!"+this);
     }
 
