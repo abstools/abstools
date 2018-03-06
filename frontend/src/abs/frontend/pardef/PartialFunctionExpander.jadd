@@ -54,8 +54,12 @@ aspect PartialFunctionExpander {
 
     public void ModuleDecl.expandChildParFnApps(ASTNode<?> node) {
         for (ParFnApp fnApp : node.findChildren(ParFnApp.class, true)) {
-            if (fnApp.closestParent(PartialFunctionDecl.class) != null) {
-                // ignore ParFnApp within pardef that has not been expanded yet
+            if (fnApp.closestParent(PartialFunctionDecl.class) != null
+                    || fnApp.closestParent(TraitDecl.class) != null) {
+                /*
+                 1) ignore ParFnApp within PartialFunctionDecl (not expanded yet)
+                 2) ignore ParFnApp within TraitDecl (pardef expansion happens after traits have been applied)
+                 */
                 continue;
             }
 
