@@ -68,6 +68,7 @@ public abstract class PardefTest extends FrontendTest {
 
     protected final Model expand(Model model) {
         try {
+            model.flattenTraitOnly();
             model.expandPartialFunctions();
             SemanticConditionList e = model.typeCheck();
             assertFalse("Type check errors! First: " + e.getFirstError(), e.containsErrors());

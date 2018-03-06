@@ -389,4 +389,29 @@ public class ParFnAppTest extends PardefTest {
         ), "Test_Pardef_inc");
     }
 
+    @Test
+    public void usageInTrait() {
+        testExpand(assertParseOkStdLib(
+            "module ParFnAppInTrait;\n"
+                + "\n"
+                + "trait T = {\n"
+                + "    Int m(){\n"
+                + "        List<Int> l = list[1, 2, 3];\n"
+                + "        return foldl((Int i, Int j) => i + j)(l, 0);\n"
+                + "   }\n"
+                + "}\n"
+                + "\n"
+                + "interface C {\n"
+                + "\tInt m();\n"
+                + "}\n"
+                + "\n"
+                + "class C implements C {\n"
+                + "    uses T;\n"
+                + "}\n"
+                + "\n"
+                + "{\n"
+                + "\tC c = new C();\n"
+                + "\tInt i = c.m();\n"
+                + "}\n"), "Foldl_ABS_StdLib_Anon\\d+");
+    }
 }
