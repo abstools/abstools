@@ -19,13 +19,13 @@ stop() ->
     gen_server:stop({global, clock}).
 
 advance(Amount) ->
-    gen_server:call({global, clock}, {advance, Amount}).
+    gen_server:call({global, clock}, {advance, Amount}, infinity).
 
 now() ->
-    gen_server:call({global, clock}, now).
+    gen_server:call({global, clock}, now, infinity).
 
 distance_to_next_boundary() ->
-    gen_server:call({global, clock}, next_int).
+    gen_server:call({global, clock}, next_int, infinity).
 
 %% gen_server functions
 

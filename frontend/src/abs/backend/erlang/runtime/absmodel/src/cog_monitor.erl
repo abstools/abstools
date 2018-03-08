@@ -66,53 +66,53 @@ waitfor()->
     end.
 
 are_objects_of_class_protected(Class) ->
-    gen_server:call({global, cog_monitor}, {keep_alive, Class}).
+    gen_server:call({global, cog_monitor}, {keep_alive, Class}, infinity).
 
 %% Cogs interface
 new_cog(Cog) ->
-    gen_server:call({global, cog_monitor}, {cog,Cog,new}).
+    gen_server:call({global, cog_monitor}, {cog,Cog,new}, infinity).
 
 cog_active(Cog) ->
-    gen_server:call({global, cog_monitor}, {cog,Cog,active}).
+    gen_server:call({global, cog_monitor}, {cog,Cog,active}, infinity).
 
 cog_blocked(Cog) ->
-    gen_server:call({global, cog_monitor}, {cog, Cog, blocked}).
+    gen_server:call({global, cog_monitor}, {cog, Cog, blocked}, infinity).
 
 cog_unblocked(Cog) ->
-    gen_server:call({global, cog_monitor}, {cog, Cog, unblocked}).
+    gen_server:call({global, cog_monitor}, {cog, Cog, unblocked}, infinity).
 
 cog_idle(Cog) ->
-    gen_server:call({global, cog_monitor}, {cog,Cog,idle}).
+    gen_server:call({global, cog_monitor}, {cog,Cog,idle}, infinity).
 
 cog_died(Cog) ->
-    gen_server:call({global, cog_monitor}, {cog,Cog,die}).
+    gen_server:call({global, cog_monitor}, {cog,Cog,die}, infinity).
 
 cog_blocked_for_clock(Task, Cog, Min, Max) ->
-    gen_server:call({global, cog_monitor}, {cog,Task,Cog,clock_waiting,Min,Max}).
+    gen_server:call({global, cog_monitor}, {cog,Task,Cog,clock_waiting,Min,Max}, infinity).
 
 %% Tasks interface
 task_waiting_for_clock(Task, Cog, Min, Max) ->
-    gen_server:call({global, cog_monitor}, {task,Task,Cog,clock_waiting,Min,Max}).
+    gen_server:call({global, cog_monitor}, {task,Task,Cog,clock_waiting,Min,Max}, infinity).
 
 task_confirm_clock_wakeup(Task) ->
     gen_server:cast({global, cog_monitor}, {task_confirm_clock_wakeup, Task}).
 
 %% Deployment Components interface
 new_dc(DC) ->
-    gen_server:call({global, cog_monitor}, {newdc, DC}).
+    gen_server:call({global, cog_monitor}, {newdc, DC}, infinity).
 
 dc_died(DC) ->
     gen_server:cast({global, cog_monitor}, {dc_died, DC}),
     ok.
 
 get_dcs() ->
-    gen_server:call({global, cog_monitor}, get_dcs).
+    gen_server:call({global, cog_monitor}, get_dcs, infinity).
 
 register_object_with_http_name(Object, Name) ->
-    gen_server:call({global, cog_monitor}, {register_object, Object, Name}).
+    gen_server:call({global, cog_monitor}, {register_object, Object, Name}, infinity).
 
 lookup_object_from_http_name(Name) ->
-    Object=gen_server:call({global, cog_monitor}, {lookup_object, Name}),
+    Object=gen_server:call({global, cog_monitor}, {lookup_object, Name}, infinity),
     case Object of
         none -> {notfound, Object};
         #object{ref=Ref} -> case is_process_alive(Ref) of
@@ -122,10 +122,10 @@ lookup_object_from_http_name(Name) ->
     end.
 
 list_registered_http_names() ->
-    gen_server:call({global, cog_monitor}, all_registered_names).
+    gen_server:call({global, cog_monitor}, all_registered_names, infinity).
 
 list_registered_http_objects() ->
-    gen_server:call({global, cog_monitor}, all_registered_objects).
+    gen_server:call({global, cog_monitor}, all_registered_objects, infinity).
 
 %% gen_server callbacks
 

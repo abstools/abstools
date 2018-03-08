@@ -22,7 +22,7 @@ register(File, Startline, Endline) ->
     gen_server:cast({global, coverage}, {register, File, Startline, Endline}).
 
 write_files() ->
-    gen_server:call({global, coverage}, write_files).
+    gen_server:call({global, coverage}, write_files, infinity).
 
 %% gen_server functions
 
