@@ -115,5 +115,6 @@ aspect Deltas {
     inh boolean Block.amInCoreAbs();
     inh boolean AwaitAsyncCall.amInCoreAbs();
     inh boolean ForeachStmt.amInCoreAbs();
+    inh boolean ParFnApp.amInCoreAbs();
 }
 
