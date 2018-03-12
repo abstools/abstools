@@ -141,7 +141,7 @@ public class ProductLineAnalysisHelper {
                 for (ModuleModifier moduleModifier : delta.getModuleModifiers()) {
                     if (moduleModifier instanceof ModifyClassModifier) {
                         //String methodID;
-                        String prefix = ((ClassModifier) moduleModifier).qualifiedName();
+                        String prefix = ((ClassModifier) moduleModifier).getQualifiedName();
 
                         for (Modifier mod : ((ModifyClassModifier) moduleModifier).getModifiers()) {
                             /*if (mod instanceof AddMethodModifier)
@@ -186,7 +186,7 @@ public class ProductLineAnalysisHelper {
                     } else if (moduleModifier instanceof AddClassModifier
                             || moduleModifier instanceof RemoveClassModifier) {
 
-                        String prefix = ((ClassModifier) moduleModifier).qualifiedName();
+                        String prefix = ((ClassModifier) moduleModifier).getQualifiedName();
                         if (cache.containsKey(prefix)) {
                             result = false;
                             assert ! cache.get(prefix).isEmpty();

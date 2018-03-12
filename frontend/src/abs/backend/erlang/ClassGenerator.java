@@ -82,7 +82,7 @@ public class ClassGenerator {
             ecs.println("_:Exception ->");
             if (classDecl.hasRecoverBranch()) {
                 ecs.incIndent();
-                ecs.println("Recovered = try 'recover'(O, Exception) catch _:RecoverError -> io:format(standard_error, \"Recovery block for ~s in class " + classDecl.qualifiedName() + " failed with exception ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, RecoverError)]), false end,");
+                ecs.println("Recovered = try 'recover'(O, Exception) catch _:RecoverError -> io:format(standard_error, \"Recovery block for ~s in class " + classDecl.getQualifiedName() + " failed with exception ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, RecoverError)]), false end,");
                 ecs.println("case Recovered of");
                 ecs.incIndent().println("true -> exit(Exception);");
                 ecs.println("false ->");

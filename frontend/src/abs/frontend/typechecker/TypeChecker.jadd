@@ -707,11 +707,11 @@ aspect TypeChecker {
         // assertHasType() is too specific -- we need to check that ListExp is
         // a list, not its specific type (List<Int>)
         if (!getListExp().getType().isUnknownType()
-            && !getListExp().getType().getDecl().qualifiedName()
-                .equals(getModel().getListType().getDecl().qualifiedName())) {
+            && !getListExp().getType().getDecl().getQualifiedName()
+                .equals(getModel().getListType().getDecl().getQualifiedName())) {
             e.add(new TypeError(getListExp(), ErrorMessage.EXPECTED_TYPE,
-                                getModel().getListType().getDecl().qualifiedName(),
-                                getListExp().getType().getDecl().qualifiedName()));
+                                getModel().getListType().getDecl().getQualifiedName(),
+                                getListExp().getType().getDecl().getQualifiedName()));
         }
         getBody().typeCheck(e);
     }
@@ -998,12 +998,12 @@ aspect TypeChecker {
             e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
         } else {
             DataConstructor c = (DataConstructor) decl;
-            String cname = c.qualifiedName();
+            String cname = c.getQualifiedName();
             // Warn about using constructors that should not have been
             // exported from their module
             if (TypeCheckerHelper.deprecatedConstructors.contains(cname)
                 && !(cname.startsWith(getModuleDecl().getName()))) {
-                e.add(new SemanticWarning(this, ErrorMessage.DEPRECATED_CONSTRUCTOR, c.qualifiedName()));
+                e.add(new SemanticWarning(this, ErrorMessage.DEPRECATED_CONSTRUCTOR, c.getQualifiedName()));
             }
 
             if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {

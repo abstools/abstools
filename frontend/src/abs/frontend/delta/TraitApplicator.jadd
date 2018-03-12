@@ -62,7 +62,7 @@ aspect TraitApplicator {
                 cd.getMethodList().removeChild(found);
             else
             throw new DeltaModellingException("Delta " + getDelta().getName() +
-                    " wants to remove method " + mysig + ", which was not found in class " + cd.qualifiedName() + ".");
+                    " wants to remove method " + mysig + ", which was not found in class " + cd.getQualifiedName() + ".");
         }
         //applyToList(cd.getMethodList());
     }
@@ -198,7 +198,7 @@ aspect TraitApplicator {
             cd.getMethods().setChild(method, found);
         } else
             throw new DeltaModellingException("Delta " + getDelta().getName() +
-                    " wants to modify method " + mysig + ", which was not found in class " + cd.qualifiedName() + ".");
+                    " wants to modify method " + mysig + ", which was not found in class " + cd.getQualifiedName() + ".");
     }
 
 

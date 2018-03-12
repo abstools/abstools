@@ -97,7 +97,7 @@ aspect PrettyPrint {
     }
 
     public void OOModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
-        w.print(this.getClass().getSimpleName() + "(" + this.qualifiedName() + ")");
+        w.print(this.getClass().getSimpleName() + "(" + this.getQualifiedName() + ")");
 
     }
 

@@ -92,8 +92,8 @@ aspect GenerateErlang {
   @Override
   public void FunctionDecl.generateErlangCode(ErlApp ea) throws IOException{
       CodeStream ecs= ea.getFunStream(moduleName());
-      if (ERLANG_OVERRIDES.containsKey(qualifiedName())) {
-          ecs.println(ERLANG_OVERRIDES.get(qualifiedName()));
+      if (ERLANG_OVERRIDES.containsKey(getQualifiedName())) {
+          ecs.println(ERLANG_OVERRIDES.get(getQualifiedName()));
       } else {
           ErlUtil.functionHeader(ecs,"f_"+getName(),"Cog=#cog{ref=CogRef}",getParams());
           Vars vars = Vars.n(getParams());
@@ -131,8 +131,8 @@ aspect GenerateErlang {
     FunctionDecl decl = (FunctionDecl)getDecl();
     boolean builtin = decl.getFunctionDef() instanceof BuiltinFunctionDef;
     if(builtin){
-      if(!ERLANG_BUILTINS.contains(decl.qualifiedName()))
-          throw new NotImplementedYetException(this, "The builtin function "+decl.qualifiedName() + " is not implemented in the Erlang backend yet");
+      if(!ERLANG_BUILTINS.contains(decl.getQualifiedName()))
+          throw new NotImplementedYetException(this, "The builtin function "+decl.getQualifiedName() + " is not implemented in the Erlang backend yet");
       ecs.print("builtin:");
       ecs.print(decl.getName());
     }
@@ -954,7 +954,7 @@ aspect GenerateErlang {
   public void ConstructorPattern.generateErlangCode(CodeStream prePattern,CodeStream ecs,Vars vars){
       //Handling for bool
       final String c = getDataConstructor().getName();
-      final String qualifiedName = getDataConstructor().qualifiedName();
+      final String qualifiedName = getDataConstructor().getQualifiedName();
       if("True".equals(c) || "False".equals(c)) {
           ecs.print(c.toLowerCase());
       } else if (qualifiedName.equals("ABS.StdLib.Nil")) {
@@ -985,7 +985,7 @@ aspect GenerateErlang {
 
   public void DataConstructorExp.generateErlangCode(CodeStream ecs,Vars vars){
     final String simpleName = getDataConstructor().getName();
-    final String qualifiedName = getDataConstructor().qualifiedName();
+    final String qualifiedName = getDataConstructor().getQualifiedName();
     if (qualifiedName.equals("ABS.StdLib.False")) {
         ecs.print("false");
     } else if (qualifiedName.equals("ABS.StdLib.True")) {
@@ -997,7 +997,7 @@ aspect GenerateErlang {
         ecs.print("[");
         PureExp c = this;
         while (c instanceof DataConstructorExp
-               && ((DataConstructorExp)c).getDataConstructor().qualifiedName()
+               && ((DataConstructorExp)c).getDataConstructor().getQualifiedName()
                .equals("ABS.StdLib.Cons")) {
             DataConstructorExp cp = (DataConstructorExp)c;
             ecs.print(interp);
@@ -1006,7 +1006,7 @@ aspect GenerateErlang {
             c = cp.getParam(1);
         }
         if (c instanceof DataConstructorExp
-            && ((DataConstructorExp)c).getDataConstructor().qualifiedName()
+            && ((DataConstructorExp)c).getDataConstructor().getQualifiedName()
             .equals("ABS.StdLib.Nil")) {
             // do nothing
         } else {

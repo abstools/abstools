@@ -34,10 +34,10 @@ public class TypeCheckerHelper {
             e.add(new SemanticError(p, ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, p.getConstructor()));
             return;
         }
-        String cname = c.qualifiedName();
+        String cname = c.getQualifiedName();
         if (deprecatedConstructors.contains(cname)
             && !(cname.startsWith(p.getModuleDecl().getName()))) {
-            e.add(new SemanticWarning(p, ErrorMessage.DEPRECATED_CONSTRUCTOR, c.qualifiedName()));
+            e.add(new SemanticWarning(p, ErrorMessage.DEPRECATED_CONSTRUCTOR, cname));
         }
 
         if (c.getNumConstructorArg() != p.getNumParam()) {
@@ -590,7 +590,7 @@ public class TypeCheckerHelper {
     public static String getAlternativesAsString(AmbiguousDecl a) {
         String result = "";
         for (Decl alternative : a.getAlternative()) {
-            result += "\n * " + alternative.qualifiedName() +  " (defined in " +
+            result += "\n * " + alternative.getQualifiedName() +  " (defined in " +
                     alternative.getFileName() + ", line " + alternative.getStartLine() + ")";
         }
         return result;

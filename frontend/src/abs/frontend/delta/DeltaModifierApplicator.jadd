@@ -380,7 +380,7 @@ aspect DeltaModifierApplicator {
             cd.getFields().removeChild(found);
         else
             throw new DeltaModellingWithNodeException(getFieldDecl(), getDelta(),
-                    " wants to remove field [" + myfield + "], which was not found in class [" + cd.qualifiedName() + "].");
+                    " wants to remove field [" + myfield + "], which was not found in class [" + cd.getQualifiedName() + "].");
     }
 
     public void AddFieldModifier.applyTo(ClassDecl cd) {
@@ -417,7 +417,7 @@ aspect DeltaModifierApplicator {
             iface.getBodys().removeChild(found);
         else
             throw new DeltaModellingException(getDelta(),
-                    " wants to remove method signature [" + mysig + "], which was not found in interface [" + iface.qualifiedName() + "].");
+                    " wants to remove method signature [" + mysig + "], which was not found in interface [" + iface.getQualifiedName() + "].");
     }
 
 

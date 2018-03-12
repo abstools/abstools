@@ -157,8 +157,8 @@ public class ContractInference {
                     InterfaceDecl d = ((InterfaceType) it.getType()).getDecl();
                     if (res.containsKey(d)) {
                         _log.logWarning("WARNING: the class \"" + res.get(d).getName() + "\" and \""
-                                + ((ClassDecl) decl).qualifiedName() + "\" both implement the interface \""
-                                + d.qualifiedName() + "\"."
+                                + ((ClassDecl) decl).getQualifiedName() + "\" both implement the interface \""
+                                + d.getQualifiedName() + "\"."
                                 + "This will probably cause an erroneous deadlock analysis");
                     } else {
                         res.put(d, (ClassDecl) decl);
