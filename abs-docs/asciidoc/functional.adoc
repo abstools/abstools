@@ -450,7 +450,7 @@ new Bar()
 Classes can declare an _init block_ (see <<sec:classes>>), which is executed for
 each new instance.  The semantics of the `new` expression guarantee that the
 init block is fully executed before the new object begins receiving method
-calls.  Classes can also declare a `run` method, which is automatically
+calls.  Classes can also declare a `run` method, which is asynchronously
 invoked after the init block and subject to the normal scheduling rules for
 processes.
 

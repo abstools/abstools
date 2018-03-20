@@ -193,7 +193,7 @@ Unit run() {
 }
 ----
 
-The run method is called after object initialization.
+The run method is asynchronously called after object initialization.
 
 [[sec:traits]]
 == Traits
