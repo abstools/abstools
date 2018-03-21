@@ -5,8 +5,7 @@
 package abs.frontend;
 
 import abs.frontend.analyser.*;
-import abs.frontend.delta.OriginalCallTest;
-import abs.frontend.delta.TraitTest;
+import abs.frontend.delta.DeltaTests;
 import abs.frontend.mtvl.SearchSolutionsTest;
 import abs.frontend.pardef.PardefTests;
 import abs.frontend.parser.*;
@@ -27,7 +26,6 @@ import deadlock.DeadlockCheckerTests;
             DuplicateCheckTest.class,
             InterfaceDeclarationTest.class,
             ParseSamplesTest.class,
-            VarResolutionTest.class,
             TypingTest.class,
             TypeCheckerTest.class,
             NegativeTypeCheckerTests.class,
@@ -44,8 +42,7 @@ import deadlock.DeadlockCheckerTests;
             CaseStudyTypeChecking.class,
             DeadlockCheckerTests.class,
             DeadlockCasestudies.class,
-            OriginalCallTest.class,
-            TraitTest.class,
+            DeltaTests.class,
             PardefTests.class,
             UtilTests.class
             })

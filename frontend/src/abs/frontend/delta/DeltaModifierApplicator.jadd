@@ -19,18 +19,18 @@ aspect DeltaModifierApplicator {
 	 * These methods simplify nested trait operators in deltas and collapse them to operations on sets
 	 */
     public void ModuleModifier.collapseTraitModifiers() { }
-    public void Modifier.collapseTraitModifiers(ClassDecl cd) { }
+    public void Modifier.collapseTraitModifiers(ModuleDecl module) { }
     @Override
     public void ModifyClassModifier.collapseTraitModifiers() {
     	ArrayList<Modifier> cop = new ArrayList<Modifier>();
     	for( Modifier mod :getModifierList() ) cop.add(mod);
         for ( Modifier mod : cop ) {
-            mod.collapseTraitModifiers(getClassDecl());
+            mod.collapseTraitModifiers(findModule());
         }
     }
 
     @Override
-    public void DeltaTraitModifier.collapseTraitModifiers(ClassDecl cd) {
+    public void DeltaTraitModifier.collapseTraitModifiers(ModuleDecl module) {
 
         ArrayList<MethodModifier> operations = new ArrayList<>();
         rewriteToList(getMethodModifier(), operations);
@@ -43,54 +43,50 @@ aspect DeltaModifierApplicator {
 				newDel.setParent(null);
 				traitOper.setParent(null);
 				newDel.setChild(traitOper, 0);
-				newDel.collapseTraitModifiers(cd);
+				newDel.collapseTraitModifiers(module);
 				ModifyClassModifier mm = (ModifyClassModifier) parent.getParent();
 				mm.addModifier(newDel);
             }
         } else {
-    	    getMethodModifier().collapseTraitModifiers(cd);
+    	    getMethodModifier().collapseTraitModifiers(module);
     	}
     }
 
     @Override
-    public void ModifyMethodModifier.collapseTraitModifiers(ClassDecl cd){
-        TraitExpr tt = getTraitExpr();
-        TraitSetExpr set = tt.resolve(cd);
-        ModifyMethodModifier newMod = this.copy();
-        newMod.setParent(getParent());
-        set.setParent(null);
-        newMod.setChild(set, 0);
+    public void ModifyMethodModifier.collapseTraitModifiers(ModuleDecl module) {
+        MethodModifier newMod = new ModifyMethodModifier(getTraitExprNoTransform().resolve(module));
+        ASTNode<?> parent = getParent();
         parent.setChild(newMod, parent.getIndexOfChild(this));
+        this.setParent(null);
+        parent.flushCache();
     }
 
 
     @Override
-    public void AddMethodModifier.collapseTraitModifiers(ClassDecl cd){
-        TraitExpr tt = getTraitExpr();
-        TraitSetExpr set = tt.resolve(cd);
-        AddMethodModifier newMod = this.copy();
-        newMod.setParent(getParent());
-        set.setParent(null);
-        newMod.setChild(set, 0);
+    public void AddMethodModifier.collapseTraitModifiers(ModuleDecl module) {
+        MethodModifier newMod = new AddMethodModifier(getTraitExprNoTransform().resolve(module));
+        ASTNode<?> parent = getParent();
         parent.setChild(newMod, parent.getIndexOfChild(this));
+        this.setParent(null);
+        parent.flushCache();
     }
 
 
     @Override
-    public void RemoveMethodModifier.collapseTraitModifiers(ClassDecl cd) {
+    public void RemoveMethodModifier.collapseTraitModifiers(ModuleDecl module) {
         //System.out.println("collapsing rem!"+this);
     }
 
 
     abstract public void ModuleModifier.apply() throws DeltaModellingException;
-  
+
     /*
     * DeltaTraitModifier references trait operations from a class.
     */
-    public void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{ 
-        getMethodModifier().applyTo(cd); 
+    public void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{
+        getMethodModifier().applyTo(cd);
     }
-  
+
     /*
     *  Fixes the parse tree and splits a big trait operation into a list of trait operations
     *  This is needed so in
@@ -333,16 +329,16 @@ aspect DeltaModifierApplicator {
      */
     public ClassDecl ClassModifier.findClass() {
         //System.out.println("=== Delta " + getDelta().getName() + " looking for ClassDecl: " + this.getName());
-        try {
-            ModuleDecl module = findModule();
-            for (Decl decl : module.getDecls()) {
-                if (decl instanceof ClassDecl && decl.getName().equals(this.getSimpleName()))
-                    return (ClassDecl) decl;
+        ModuleDecl module = findModule();
+        for (Decl decl : module.getDecls()) {
+            if (decl instanceof ClassDecl && decl.getName().equals(this.getSimpleName())) {
+                return (ClassDecl) decl;
             }
-            // not found
-            throw new DeltaModellingException(getDelta(),
-                    " wants to modify class [" + this.getSimpleName() + "], which was not found in module [" + module.getName() + "].");
-        } catch (DeltaModellingException e) { return null; }
+        }
+
+        // not found
+        throw new DeltaModellingException(getDelta(), " wants to modify class [" + this.getSimpleName()
+                + "], which was not found in module [" + module.getName() + "].");
     }
 
     public InterfaceDecl InterfaceModifier.findInterface() throws DeltaModellingException {

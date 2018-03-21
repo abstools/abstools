@@ -31,6 +31,7 @@ public class DeltaOrderingTest extends DeltaTest {
                         + "product P(A);"
 
                 );
+        model.evaluateAllProductDeclarations();
         model.flattenForProduct("P");
     }
 
@@ -51,6 +52,7 @@ public class DeltaOrderingTest extends DeltaTest {
                         + "product P(A);"
 
                 );
+        model.evaluateAllProductDeclarations();
         model.flattenForProduct("P");
     }
 
@@ -71,7 +73,7 @@ public class DeltaOrderingTest extends DeltaTest {
         model.evaluateAllProductDeclarations();
         ProductDecl prod = model.findProduct("P1");
         ProductLine pl = model.getProductLine();
-       
+
         Set<String> deltaids = pl.findApplicableDeltas(prod.getProduct());
         List<String> sorted_deltaids = pl.sortDeltas(deltaids);
         assertArrayEquals(new String[]{ "D1" }, sorted_deltaids.toArray());
@@ -80,6 +82,7 @@ public class DeltaOrderingTest extends DeltaTest {
         deltaids = pl.findApplicableDeltas(prod.getProduct());
         sorted_deltaids = pl.sortDeltas(deltaids);
         assertArrayEquals(new String[]{ "D1", "D2" }, sorted_deltaids.toArray());
+        assertFalse(model.typeCheck().containsErrors());
     }
 
     @Test
@@ -122,5 +125,6 @@ public class DeltaOrderingTest extends DeltaTest {
         sorted_deltaids = pl.sortDeltas(deltaids);
         assertArrayEquals(new String[]{ "D9", "D7", "D5", "D3", "D1" }, sorted_deltaids.toArray());
 
+        assertFalse(model.typeCheck().containsErrors());
     }
 }

@@ -7,24 +7,27 @@ import abs.frontend.parser.*;
 
 aspect TraitResolver {
 
-    public abstract TraitSetExpr MethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd);
-    public abstract TraitSetExpr TraitExpr.resolve(ClassDecl cd);
-    
+    public abstract TraitSetExpr MethodModifier.applyToSet(TraitSetExpr set, ModuleDecl module);
+    public final TraitSetExpr TraitExpr.resolve(ModuleDecl applyModule) {
+        return resolve(applyModule, applyModule);
+    }
+    protected abstract TraitSetExpr TraitExpr.resolve(ModuleDecl applyModule, ModuleDecl lookupModule);
+
     private void ModifyMethodModifier.replaceOriginal(TraitSetExpr set, MethodImpl met, MethodImpl flattened) {
         //collect all original calls
         ArrayList<OriginalCall> list = new ArrayList<>();
         for (Stmt stmt : flattened.getBlock().getStmts()){
             collectOrig(list, stmt);
         }
-          
-          
+
+
         if(list.size() > 0){
             //rename
             int i = set.getNumMethodImpl();
             String name = met.getMethodSig().getName() + hashCode();
             MethodSig sig = met.getMethodSig().treeCopyNoTransform();
             sig.setName(name);
-              
+
             //add
             MethodImpl newMet = met.treeCopyNoTransform();
             newMet.setParent(met.getParent());
@@ -32,49 +35,51 @@ aspect TraitResolver {
 
             sig.setParent(newMet);
             set.getMethodImpls().setChild(newMet, i);
-              
+
             //replace
             for (OriginalCall orig : list) {
                 if(met.getParent().getParent() instanceof ClassDecl)
                     orig.replaceByRealCall(newMet, ((ClassDecl)met.getParent().getParent()).getDeltaMap().get(met.getMethodSig().getName()));
-                else 
+                else
                     orig.replaceByRealCall(newMet, null);
             }
-        }      
+        }
     }
-    
-    public TraitSetExpr RemoveMethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd) throws DeltaModellingException{
+
+    @Override
+    public TraitSetExpr RemoveMethodModifier.applyToSet(TraitSetExpr set, ModuleDecl module) throws DeltaModellingException{
         applyToList(set.getMethodImplList());
         return set;
     }
-    
-    public TraitSetExpr ModifyMethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd){
+
+    @Override
+    public TraitSetExpr ModifyMethodModifier.applyToSet(TraitSetExpr set, ModuleDecl module) {
         TraitSetExpr curr = set;
         TraitExpr tt = getTraitExpr();
         ArrayList<MethodModifier> operations = new ArrayList<>();
         /*
-         *  The syntax is TraitExpression MethodModifieration. 
+         *  The syntax is TraitExpression MethodModifier.
          *  We search for the TraitExpression that is used by this 'adds'
          *  This may break the syntax, thus we collect all operation on the right
          *  and apply them one by one.
          */
         TraitExpr target = helperLeftMost(tt, operations);
-        TraitSetExpr next = target.resolve(cd);      
+        TraitSetExpr next = target.resolve(module);
 
         for (MethodImpl impl : next.getMethodImplList()) {
-            curr = apply(curr, impl);        
+            curr = apply(curr, impl);
         }
-      
+
         //necessary because the helper collects them in the wrong order
         Collections.reverse(operations);
-      
+
         for (MethodModifier oper : operations) {
-            curr = oper.applyToSet(curr, cd);
+            curr = oper.applyToSet(curr, module);
         }
         return curr;
     }
-  
-  
+
+
     private TraitSetExpr ModifyMethodModifier.apply(TraitSetExpr set, MethodImpl met) throws DeltaModellingException{
         MethodSig mysig = met.getMethodSig();
 
@@ -92,7 +97,7 @@ aspect TraitResolver {
             MethodImpl method = met.treeCopyNoTransform();
             method.setFileName(met.getFileName());
             method.setParent(met.getParent());
-            replaceOriginal(set, set.getMethodImpl(found), method); 
+            replaceOriginal(set, set.getMethodImpl(found), method);
             set.getMethodImpls().setChild(method, found);
         } else {
             MethodImpl method = met.treeCopyNoTransform();
@@ -102,20 +107,21 @@ aspect TraitResolver {
         }
         return set;
     }
-   
-    public TraitSetExpr AddMethodModifier.applyToSet(TraitSetExpr set, ClassDecl cd){
+
+    @Override
+    public TraitSetExpr AddMethodModifier.applyToSet(TraitSetExpr set, ModuleDecl module){
         TraitSetExpr curr = set;
         TraitExpr tt = getTraitExpr();
         ArrayList<MethodModifier> operations = new ArrayList<>();
         /*
-         *  The syntax is TraitExpression MethodModifieration. 
+         *  The syntax is TraitExpression MethodModifier.
          *  We search for the TraitExpression that is used by this 'adds'
          *  This may break the syntax, thus we collect all operation on the right
          *  and apply them one by one.
          */
         TraitExpr target = helperLeftMost(tt, operations);
-        TraitSetExpr next = target.resolve(cd);
- 
+        TraitSetExpr next = target.resolve(module);
+
         for (MethodImpl impl : next.getMethodImplList()) {
             MethodImpl newMet = impl.treeCopyNoTransform();
             newMet.setParent(impl.getParent());
@@ -126,41 +132,46 @@ aspect TraitResolver {
         }
         //necessary because the helper collects them in the wrong order
         Collections.reverse(operations);
-      
+
         for (MethodModifier oper : operations) {
-            curr = oper.applyToSet(curr, cd);
+            curr = oper.applyToSet(curr, module);
         }
         return curr;
     }
-  
-    public TraitSetExpr TraitNameExpr.resolve(ClassDecl cd) throws DeltaModellingException {
 
-        List<Decl> list = cd.getModuleDecl().getDecls();
-        TraitExpr decl = null;
-        for (Decl sDecl : list) {
-            if (sDecl instanceof TraitDecl) {
-                TraitDecl tDecl = (TraitDecl) sDecl;
-                if (tDecl.getName().equals(getName())) {
-                    decl = tDecl.getTraitExpr();
-                    break;
-                }
-            }
-        }
+    /**
+     * Looks up the TraitDecl this TraitNameExpr is referring to in the specified module.
+     * @param module a ModuleDecl
+     * @return a TraitDecl
+     * @throws DeltaModellingException if the trait can't be found
+     */
+    public TraitDecl TraitNameExpr.getDecl(ModuleDecl module) throws DeltaModellingException {
+        Decl decl = module.lookup(new KindedName(Kind.TRAIT_DECL, getName()));
 
-     if (decl == null)
-        throw new DeltaModellingException("couldn't resolve trait: " + getName() + " " + getPositionString());
-     else 
-		return decl.resolve(cd);
+        if (decl.isUnknown())
+            throw new DeltaModellingException("couldn't resolve trait: " + getName() + " " + getPositionString());
+        else
+            return ((TraitDecl) decl);
     }
-    
-    public TraitSetExpr TraitSetExpr.resolve(ClassDecl cd) throws DeltaModellingException {
-	    return this;
+
+    @Override
+    public TraitSetExpr TraitNameExpr.resolve(ModuleDecl applyModule, ModuleDecl lookupModule) throws DeltaModellingException {
+        TraitDecl decl = getDecl(lookupModule);
+        return decl.getTraitExpr().resolve(applyModule, decl.getModuleDecl());
     }
-    
-    public TraitSetExpr TraitModifyExpr.resolve(ClassDecl cd) throws DeltaModellingException {
-        TraitSetExpr set = getTraitExpr().resolve(cd);
+
+    @Override
+    public TraitSetExpr TraitSetExpr.resolve(ModuleDecl applyModule, ModuleDecl lookupModule) throws DeltaModellingException {
+	    TraitSetExpr result = this.treeCopyNoTransform();
+	    result.setParent(applyModule);
+	    return result;
+    }
+
+    @Override
+    public TraitSetExpr TraitModifyExpr.resolve(ModuleDecl applyModule, ModuleDecl lookupModule) throws DeltaModellingException {
+        TraitSetExpr set = getTraitExpr().resolve(applyModule, lookupModule);
         MethodModifier oper = this.getMethodModifier();
-        return oper.applyToSet(set, cd);
+        return oper.applyToSet(set, applyModule);
     }
-    
+
 }

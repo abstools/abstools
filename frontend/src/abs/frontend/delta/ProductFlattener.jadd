@@ -93,7 +93,7 @@ aspect ProductFlattener {
             mod.collapseTraitModifiers();
         }
     }
-    
+
     /**************************************************************************
      * Apply deltas to model
      */
@@ -304,35 +304,36 @@ aspect ProductFlattener {
     /**************************************************************************
      * Apply the traits
      */
-    public void Model.applyTraits() throws DeltaModellingException{
-
+    public void Model.applyTraits() throws DeltaModellingException {
         //Collect all traits
-        LinkedList<TraitDecl> list = new LinkedList<>();
+        LinkedList<TraitDecl> allTraitDecls = new LinkedList<>();
         for (Decl decl : getDecls()) {
-            if(decl instanceof TraitDecl){
-                list.add((TraitDecl)decl);
+            if (decl instanceof TraitDecl) {
+                allTraitDecls.add((TraitDecl) decl);
             }
         }
 
         //init
-        LinkedList<LinkedList<String>> lists = new LinkedList<>();
-        for (TraitDecl traitDecl : list) {
-            LinkedList<String> l = new LinkedList<>();
-            l.add(traitDecl.getName());
+        LinkedList<LinkedList<TraitDecl>> lists = new LinkedList<>();
+        for (TraitDecl traitDecl : allTraitDecls) {
+            LinkedList<TraitDecl> l = new LinkedList<>();
+            l.add(traitDecl);
             collectInTrait(traitDecl.getTraitExpr(), l);
             lists.add(l);
         }
 
-  		//check for cyclic references
-        sort(lists);
-        while(lists.size() > 0){
-            LinkedList<String> l = lists.pop();
-            if(l.size() > 1) throw new DeltaModellingException("Cyclic Traits");
-            String n = l.pop();
-            for (LinkedList<String> listOther : lists) {
-                while(listOther.remove(n));
+        //check for cyclic references
+        sortBySize(lists);
+        while (lists.size() > 0) {
+            LinkedList<TraitDecl> l = lists.pop();
+            if (l.size() > 1) {
+                throw new DeltaModellingException("Cyclic Traits");
             }
-            sort(lists);
+            TraitDecl n = l.pop();
+            for (LinkedList<TraitDecl> listOther : lists) {
+                while (listOther.remove(n));
+            }
+            sortBySize(lists);
         }
 
         //apply
@@ -366,17 +367,14 @@ aspect ProductFlattener {
     /**************************************************************************
      * Helper methods for trait application
      */
-    private void Model.sort(LinkedList<LinkedList<String>> lists) {
-        Collections.sort(lists, new Comparator<LinkedList<String>>() {
-        @Override
-        public int compare(LinkedList<String> o1, LinkedList<String> o2) {
-            if(o1.size() < o2.size())
-                return -1;
-            if(o1.size() > o2.size())
-                return 1;
-            return 0;
-         }
-         });
+    private void Model.sortBySize(java.util.List<? extends java.util.List<?>> lists) {
+        // TODO can be replaced by "lists.sort(Comparator.comparingInt(java.util.List::size));" with Java 8 syntax support
+        lists.sort(new Comparator<java.util.List<?>>() {
+            @Override
+            public int compare(java.util.List<?> o1, java.util.List<?> o2) {
+                return Integer.compare(o1.size(), o2.size());
+            }
+        });
     }
 
     private void Model.sortUses(LinkedList<TraitUse> list) {
@@ -398,13 +396,13 @@ aspect ProductFlattener {
   }
 
 
-    private void Model.collectInTrait(ASTNode<ASTNode> traitExpr, LinkedList<String> list) {
-        if(traitExpr instanceof TraitNameExpr){
-            TraitNameExpr expr = (TraitNameExpr)traitExpr;
-            list.add(expr.getName());
-        }else if(traitExpr != null && traitExpr.children != null){
-            for (ASTNode<ASTNode> child : traitExpr.children) {
-                collectInTrait(child,list);
+    private void Model.collectInTrait(ASTNode<?> traitExpr, java.util.List<TraitDecl> list) {
+        if (traitExpr instanceof TraitNameExpr){
+            TraitNameExpr nameExpr = (TraitNameExpr) traitExpr;
+            list.add(nameExpr.getDecl(traitExpr.getModuleDecl()));
+        } else if(traitExpr != null){
+            for (ASTNode<ASTNode> child : traitExpr.astChildrenNoTransform()) {
+                collectInTrait(child, list);
             }
         }
     }

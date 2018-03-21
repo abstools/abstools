@@ -1,12 +1,12 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker;
 
 public class KindedName {
     public enum Kind {
-        FUN, CLASS, TYPE_DECL, DATA_CONSTRUCTOR, MODULE, PARTIAL_FUN;
+        FUN, CLASS, TYPE_DECL, DATA_CONSTRUCTOR, MODULE, PARTIAL_FUN, TRAIT_DECL;
     }
 
     private final String name;
@@ -53,7 +53,7 @@ public class KindedName {
         final int pos = name.lastIndexOf('.');
         return (pos == -1) ? name : name.substring(pos + 1, name.length());
     }
-    
+
     public boolean isQualified() {
         return name.indexOf('.') > -1;
     }

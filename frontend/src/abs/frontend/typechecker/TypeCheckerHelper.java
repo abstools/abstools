@@ -378,6 +378,9 @@ public class TypeCheckerHelper {
             case TYPE_DECL:
                 msg = ErrorMessage.DUPLICATE_TYPE_DECL;
                 break;
+            case TRAIT_DECL:
+                msg = ErrorMessage.DUPLICATE_TRAIT_NAME;
+                break;
             case MODULE:
                 assert false; // doesn't happen, no modules within modules
                 break;

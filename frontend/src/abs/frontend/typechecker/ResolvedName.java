@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker;
@@ -26,8 +26,10 @@ public abstract class ResolvedName {
             return KindedName.Kind.CLASS;
         else if (getDecl().isFunction())
             return KindedName.Kind.FUN;
-        else if(getDecl().isPartialFunction())
+        else if (getDecl().isPartialFunction())
             return KindedName.Kind.PARTIAL_FUN;
+        else if (getDecl().isTrait())
+            return KindedName.Kind.TRAIT_DECL;
         else
             return KindedName.Kind.TYPE_DECL;
 

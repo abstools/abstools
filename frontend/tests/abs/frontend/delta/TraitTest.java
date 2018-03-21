@@ -5,17 +5,17 @@
 package abs.frontend.delta;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.*;
-
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import abs.backend.tests.AbsASTBuilderUtil;
 import abs.frontend.ast.AddMethodModifier;
-import abs.frontend.ast.Annotation;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.CompilationUnit;
-import abs.frontend.ast.Decl;
 import abs.frontend.ast.DeltaAccess;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.DeltaTraitModifier;
@@ -25,12 +25,11 @@ import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModifyClassModifier;
 import abs.frontend.ast.ModifyMethodModifier;
-import abs.frontend.ast.ModuleModifier;
+import abs.frontend.ast.RemoveMethodModifier;
 import abs.frontend.ast.SkipStmt;
-import abs.frontend.ast.Stmt;
 import abs.frontend.ast.TraitExpr;
 import abs.frontend.ast.TraitSetExpr;
-import abs.frontend.ast.RemoveMethodModifier;
+import org.junit.Test;
 
 public class TraitTest extends DeltaTest{
 
@@ -423,6 +422,30 @@ public class TraitTest extends DeltaTest{
     }
 
     @Test
+    public void sameTraitNameDifferentModules() {
+        Model model = assertParseOk("\n"
+                + "module M;"
+                + "export T2;"
+                + "trait T = { Unit myMethod() { skip; } }"
+                + "trait T2 = T removes Unit myMethod();"
+                + "\n"
+                + "module N;"
+                + "import T2 from M;"
+                + "trait T = T2 adds { Unit foo() { skip; } }"
+                + "class C { uses T; }"
+        );
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "N", "C");
+        assertNotNull(cls);
+        assertTrue(cls.getMethods().getNumChild() == 0);
+
+        model.applyTraits();
+
+        assertEquals(1, cls.getNumMethod());
+        assertTrue(cls.getMethods().getChild(0).getBlock().getStmt(0) instanceof SkipStmt);
+    }
+
+    @Test
     public void circularTraitsMultiMod()  {
         Model model = assertParseOk(
                 "module M;"
@@ -482,14 +505,29 @@ public class TraitTest extends DeltaTest{
     }
 
     @Test
-    public void removeInClassVsRemoveInTrait()  {
-        Model model = assertParseOk(
-                "module M;"
-                +"trait T = { Unit x() { println(\"signature change\"); } Unit y() { skip; } }"
-                +"trait T2 = T removes Unit x();  adds { Unit x(Int i) { skip; } } "
-                +"class C  { uses T2; }"
-                +"class C2  { uses T adds { Unit x(Int i) { skip; } } removes Unit x();;}"
+    public void removeInClass() {
+        Model model = assertParseOk("module M;"
+                + "trait T = { Unit x() { println(\"signature change\"); } Unit y() { skip; } }"
+                + "class C  { uses T adds { Unit x(Int i) { skip; } } removes Unit x();;}"
+        );
 
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertNotNull(cls);
+        assertTrue(cls.getMethods().getNumChild() == 0);
+
+        model.applyTraits();
+        assertTrue(cls.getMethods().getNumChild() == 2);
+        assertTrue(cls.getMethod(0).getBlock().getStmt(0) instanceof SkipStmt);
+        assertTrue(cls.getMethod(1).getBlock().getStmt(0) instanceof SkipStmt);
+    }
+
+    @Test
+    public void removeInClassVsRemoveInTrait() {
+        Model model = assertParseOk("module M;"
+                + "trait T = { Unit x() { println(\"signature change\"); } Unit y() { skip; } }"
+                + "trait T2 = T removes Unit x();  adds { Unit x(Int i) { skip; } } "
+                + "class C  { uses T2; }"
+                + "class C2  { uses T adds { Unit x(Int i) { skip; } } removes Unit x();;}"
         );
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
@@ -632,7 +670,7 @@ public class TraitTest extends DeltaTest{
         DeltaTraitModifier dml = (DeltaTraitModifier) mm.getModifier(1);
         AddMethodModifier mcl = (AddMethodModifier) dml.getMethodModifier();
         TraitExpr expr = mcl.getTraitExpr();
-        TraitExpr set = expr.resolve(cls);
+        TraitExpr set = expr.resolve(cls.getModuleDecl());
         assertTrue(set.getChild(0).getNumChild() == 3);
 
     }
@@ -671,7 +709,7 @@ public class TraitTest extends DeltaTest{
         DeltaTraitModifier dml = (DeltaTraitModifier) mm.getModifier(1);
         ModifyMethodModifier mcl = (ModifyMethodModifier) dml.getMethodModifier();
         TraitExpr expr = mcl.getTraitExpr();
-        TraitExpr set = expr.resolve(cls);
+        TraitExpr set = expr.resolve(cls.getModuleDecl());
         assertTrue(set.getChild(0).getNumChild() == 4);
 
     }
@@ -708,7 +746,7 @@ public class TraitTest extends DeltaTest{
         DeltaTraitModifier dml = (DeltaTraitModifier) mm.getModifier(1);
         ModifyMethodModifier mcl = (ModifyMethodModifier) dml.getMethodModifier();
         TraitExpr expr = mcl.getTraitExpr();
-        TraitExpr set = expr.resolve(cls);
+        TraitExpr set = expr.resolve(cls.getModuleDecl());
         assertTrue(set.getChild(0).getNumChild() == 1);
         assertThat(set, instanceOf(TraitSetExpr.class));
     }
@@ -745,7 +783,7 @@ public class TraitTest extends DeltaTest{
         DeltaTraitModifier dml = (DeltaTraitModifier) mm.getModifier(1);
         ModifyMethodModifier mcl = (ModifyMethodModifier) dml.getMethodModifier();
         TraitExpr expr = mcl.getTraitExpr();
-        TraitExpr set = expr.resolve(cls);
+        TraitExpr set = expr.resolve(cls.getModuleDecl());
         assertTrue(set.getChild(0).getNumChild() == 3);
         assertThat(set, instanceOf(TraitSetExpr.class));
     }
@@ -953,6 +991,70 @@ public class TraitTest extends DeltaTest{
 
         model.applyTraits();
         assertTrue(cls.getMethods().getNumChild() == 4);
+    }
+
+    @Test
+    public void addMethodWithImportedTrait()  {
+        Model model = assertParseOk(
+            "module M;"
+                + "export T;"
+                + "trait T = { Unit myMethod(){ skip; } }"
+                + "class C { uses T; }"
+                + "\n"
+                + "module N;"
+                + "export T;"
+                + "import T from M;"
+                + "class C { uses T; }"
+                + "\n"
+                + "module O;"
+                + "import T from N;"
+                + "class C { uses T; }"
+        );
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "N", "C");
+        ClassDecl cls2 = (ClassDecl) findDecl(model, "O", "C");
+        assertNotNull(cls);
+        assertTrue(cls.getMethods().getNumChild() == 0);
+        assertNotNull(cls2);
+        assertTrue(cls2.getMethods().getNumChild() == 0);
+
+        model.applyTraits();
+        assertTrue(cls.getMethods().getNumChild() == 1);
+        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("myMethod"));
+        assertTrue(cls2.getMethods().getNumChild() == 1);
+        assertTrue(cls2.getMethod(0).getMethodSig().getName().equals("myMethod"));
+    }
+
+    @Test
+    public void multipleNameResolveSteps() {
+        Model model = assertParseOk("\n"
+                + "module M;"
+                + "export T;"
+                + "trait T = { Unit myMethod(){ skip; } }"
+                + "\n"
+                + "module N;"
+                + "export U;"
+                + "import T from M;"
+                + "trait U = T modifies {}"
+                + "class C { uses U; }"
+                + "\n"
+                + "module O;"
+                + "import U from N;"
+                + "class D { uses U; }"
+        );
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "N", "C");
+        ClassDecl cls2 = (ClassDecl) findDecl(model, "O", "D");
+        assertNotNull(cls);
+        assertTrue(cls.getMethods().getNumChild() == 0);
+        assertNotNull(cls2);
+        assertTrue(cls2.getMethods().getNumChild() == 0);
+
+        model.applyTraits();
+        assertTrue(cls.getMethods().getNumChild() == 1);
+        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("myMethod"));
+        assertTrue(cls2.getMethods().getNumChild() == 1);
+        assertTrue(cls2.getMethod(0).getMethodSig().getName().equals("myMethod"));
     }
 
 }

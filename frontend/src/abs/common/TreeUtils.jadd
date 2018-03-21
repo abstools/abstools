@@ -119,4 +119,38 @@ aspect TreeUtils {
         removeChild(index);
         return true;
     }
+
+    public Iterator<T> ASTNode.astChildIteratorNoTransform() {
+        return new java.util.Iterator<T>() {
+            private int index = 0;
+
+            @Override
+            public boolean hasNext() {
+                return index < getNumChildNoTransform();
+            }
+
+            @Override
+            public T next() {
+                if (hasNext()) {
+                    return getChildNoTransform(index++);
+                } else {
+                    throw new NoSuchElementException();
+                }
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    public Iterable<T> ASTNode.astChildrenNoTransform() {
+        return new Iterable<T>() {
+            @Override
+            public Iterator<T> iterator() {
+                return astChildIteratorNoTransform();
+            }
+        };
+    }
 }
