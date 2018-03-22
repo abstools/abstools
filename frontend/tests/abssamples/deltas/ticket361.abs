@@ -10,8 +10,11 @@ module M3;
 import * from M1;
 import * from M2;
 
-delta D; 
- // needs to add an "import M2.*" or similar to module M1
+delta D;
+ uses M1;
+ adds import M2.I;
+ // modifiers follow normal scoping rules: M2.I needs to be imported to be
+ // accessible within M1, even within a delta.
  modifies class M1.C adds M2.I { }
 
 productline PL;

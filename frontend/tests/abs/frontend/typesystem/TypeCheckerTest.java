@@ -10,6 +10,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import abs.ABSTest;
@@ -35,6 +36,7 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    @Ignore("https://github.com/abstools/abstools/issues/100")
     public void rosetreeTicket187() throws Exception {
         assertTypeCheckFileOk("tests/abssamples/RoseTree.abs", true);
     }

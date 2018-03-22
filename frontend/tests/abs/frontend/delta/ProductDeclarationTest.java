@@ -241,7 +241,7 @@ public class ProductDeclarationTest extends DeltaTest {
 
     @Test
     public void rightSideProductName() throws WrongProgramArgumentException {
-        Model model = assertParseOk("product P1 = P2 && P3 || P4 || {F1, F2};");
+        Model model = assertParseOk("product P2(); product P3(); product P4(); product P1 = P2 && P3 || P4 || {F1, F2};");
 
         ProductDecl p = model.findProduct("P1");
 

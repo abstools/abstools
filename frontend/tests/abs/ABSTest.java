@@ -94,6 +94,8 @@ public class ABSTest {
                 if (p.hasParserErrors()) {
                     fail("Failed to parse: " + s + "\n" + p.getParserErrors().get(0).getMessage());
                 } else {
+                    // make ProductDecl.getProduct() not return null
+                    p.evaluateAllProductDeclarations();
                     if (isSet(TYPE_CHECK, config)) {
                         if (isSet(WITH_LOC_INF, config)) {
                             LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(p);
