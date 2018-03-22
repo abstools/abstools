@@ -73,6 +73,15 @@ public class FunctionalTests extends SemanticTests {
     public void dataTypeEq4() {
         assertEvalTrue("{ Bool testresult = list[1, 2, 3] == list[1/1, 2/1, 3/1]; }");
     }
+    
+    @Test
+    public void dataTypeEq5() {
+        // Test for a crash in the Erlang backend: rational numbers are
+        // encoded as 2-tuples of integers, data types are encoded as tagged
+        // tuples and were compared left-to-right.  This case reduced to a
+        // division by zero.
+        assertEvalTrue("data A = A(Int, Int); { Bool testresult = A(1, 0) == A(1, 0); }");
+    }
 
     @Test
     public void dataTypeNEq() {

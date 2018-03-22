@@ -15,10 +15,8 @@ eq({N,D},{N1,D1}) when is_integer(N),is_integer(D),is_integer(N1),is_integer(D1)
 eq({}, {}) -> true;
 eq({A}, {B}) when is_tuple(A), is_tuple(B) -> eq(A, B);
 eq(A, B) when is_tuple(A), is_tuple(B) ->
-    case eq(element(1, A), element(1, B)) of
-        true -> eq(erlang:delete_element(1,A),erlang:delete_element(1,B));
-        false -> false
-    end;
+    %% tuples representing rational numbers are handled above
+    eq(tuple_to_list(A), tuple_to_list(B));
 eq([], []) -> true;
 eq([A | RA], []) -> false;
 eq([], [B | RB]) -> false;
@@ -42,10 +40,7 @@ gt({}, {}) -> false;
 gt({A},{B}) when is_tuple(A),is_tuple(B)->
    gt(A,B);
 gt(A,B) when is_tuple(A),is_tuple(B)->
-   case eq(element(1,A),element(1,B)) of
-       true -> gt(erlang:delete_element(1,A),erlang:delete_element(1,B));
-       false ->  gt(element(1,A),element(1,B))
-   end;
+    gt(tuple_to_list(A), tuple_to_list(B));
 gt(A,T) when is_atom(A),is_tuple(T)->
    A>element(1,T);
 gt(T,A) when is_atom(A),is_tuple(T)->
@@ -71,10 +66,7 @@ lt({A},{B}) when is_tuple(A),is_tuple(B)->
    lt(A,B);
 lt({}, {}) -> false;
 lt(A,B) when is_tuple(A),is_tuple(B)->
-   case eq(element(1,A),element(1,B)) of
-       true -> lt(erlang:delete_element(1,A),erlang:delete_element(1,B));
-       false ->  lt(element(1,A),element(1,B))
-   end;
+    lt(tuple_to_list(A), tuple_to_list(B));
 lt(A,T) when is_atom(A),is_tuple(T)->
     A<element(1,T);
 lt(T,A) when is_atom(A),is_tuple(T)->
