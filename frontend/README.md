@@ -15,19 +15,20 @@ To build the compiler, run `make frontend` in the project root directory, or
 
     export ANT_OPTS=-Xmx1g
 
-A successful build generates the file `dist/absfrontend.jar` which
-contains the compiler and runtime support files.  A convenience script
-called `absc` that invokes the ABS compiler can be found in
-`bin/bash/` (for Unix-like systems) and `bin/win` (for Windows).
+A successful build generates the file `dist/absfrontend.jar` which contains
+the compiler and runtime support files.  A convenience script called `absc`
+that invokes the ABS compiler can be found in `bin/bash/` (for Unix-like
+systems) and `bin/win` (for Windows).  For a list of options to the compiler,
+see the output of `absc -help`.
 
-## Compiling ABS code ##
+## Checking ABS code ##
 
 Invoke the ABS compiler with
 
     bin/bash/absc [options] <absfiles>
 
 This will type-check the given input files and output a list of warnings and
-errors.  For a list of options to the compiler, use `absc -help`.
+errors.
 
 ## Using the Erlang backend ##
 

@@ -4,6 +4,14 @@ ABS Tools [![Build Status](https://envisage.ifi.uio.no:8080/jenkins/buildStatus/
 Inside this repository we develop the core tools of the ABS modelling
 language.  The current language manual is at http://docs.abs-models.org.
 
+To run the ABS collaboratory (a browser-based IDE for ABS) locally using
+Docker, execute the following command:
+
+    docker run -p 8080:80 --rm abslang/collaboratory:latest
+
+Then connect your browser to http://localhost:8080/.  It is not necessary to
+clone the repository or compile the toolchain to run the ABS collaboratory in this way.
+
 
 Folders
 -------
@@ -53,17 +61,6 @@ Folders
 
     * `maven-support` - Maven plugin for generating Java/Maude from ABS,
       testing and packaging ABS codes
-
-Using Docker
-------------
-
-To run the ABS collaboratory (a browser-based IDE for ABS) locally using
-Docker, execute the following command:
-
-    docker run -p 8080:80 --rm abslang/collaboratory:latest
-
-Then connect your browser to http://localhost:8080/.  It is not necessary to
-clone the repository or compile the toolchain to run the ABS collaboratory.
 
 Using Vagrant
 -------------
