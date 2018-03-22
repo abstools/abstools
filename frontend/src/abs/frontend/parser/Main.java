@@ -193,7 +193,7 @@ public class Main {
 
     public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException, ParserConfigurationException {
         Model m = parseFiles(parseArgs(args).toArray(new String[0]));
-        analyzeModel(m);
+        analyzeFlattenAndRewriteModel(m);
         return m;
     }
 
@@ -235,7 +235,19 @@ public class Main {
         return m;
     }
 
-    public void analyzeModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException, ParserConfigurationException {
+    /**
+     * This horrible method does too many things and needs to be in every code
+     * path that expects a working model, especially when products are
+     * involved.  (ProductDecl.getProduct() returns null until
+     * evaluateAllProductDeclarations() was called once.)
+     *
+     * @param m
+     * @throws WrongProgramArgumentException
+     * @throws DeltaModellingException
+     * @throws FileNotFoundException
+     * @throws ParserConfigurationException
+     */
+    public void analyzeFlattenAndRewriteModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException, ParserConfigurationException {
         m.verbose = verbose;
         m.debug = debug;
 

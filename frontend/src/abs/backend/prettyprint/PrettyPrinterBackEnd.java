@@ -80,7 +80,7 @@ public class PrettyPrinterBackEnd extends Main {
             model.doAACrewrite = false;
             model.doForEachRewrite = false;
         }
-        analyzeModel(model);
+        analyzeFlattenAndRewriteModel(model);
         if (! force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
             printParserErrorAndExit();
         }
