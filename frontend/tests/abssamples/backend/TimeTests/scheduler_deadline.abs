@@ -15,7 +15,7 @@ interface I {
     Bool getState();
 }
 
-//[Scheduler: earliest_deadline_scheduler(queue)]
+[Scheduler: earliest_deadline_scheduler(queue)]
 class C implements I {
     Bool flag = False;
     Bool testresult = True;
