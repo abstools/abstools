@@ -48,4 +48,9 @@ public class MaudeTestDriver implements BackendTestDriver {
         String code = out.toString();
         maude.assertMaudeCodeResult(code, "ABS.StdLib.True");
     }
+
+    @Override
+    public BackendName getBackendName() {
+        return BackendName.MAUDE;
+    }
 }

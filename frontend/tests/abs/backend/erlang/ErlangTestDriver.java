@@ -193,6 +193,11 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             }
         }
     }
+
+    @Override
+    public BackendName getBackendName() {
+        return BackendName.ERLANG;
+    }
 }
 
 class TimeoutThread implements Runnable {
