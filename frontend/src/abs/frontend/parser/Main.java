@@ -382,8 +382,8 @@ public class Main {
                     // TODO: when/if we incorporate feature parameters into
                     // the productline feature declarations (as we should), we
                     // need to adjust the DataConstructorExp arguments here.
-                    current.addParam(new DataConstructorExp(f.getName(), new List<>()));
-                    current.addParam(next);
+                    current.addParamNoTransform(new DataConstructorExp(f.getName(), new List<>()));
+                    current.addParamNoTransform(next);
                     current = next;
                 }
                 current.setConstructor("Nil");
