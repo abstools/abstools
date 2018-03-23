@@ -11,6 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -104,6 +105,7 @@ public class DeltaSamplesTest extends FrontendTest {
     }
 
     @Test
+    @Ignore("https://github.com/abstools/abstools/issues/193")
     public void test_ticket324_A() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug324.abs", true);
         m.flattenForProduct("A");
