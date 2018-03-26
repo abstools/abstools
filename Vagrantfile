@@ -64,13 +64,17 @@ MSG
                       privileged: false,
                       inline: <<-SHELL
 
+sudo apt-get update -y -q
+
 # Make sure we can read log files etc.
 sudo adduser vagrant adm
 
-sudo apt-get update -y -q
+# add www-data to vagrant group to allow the execution of
+# main generator within easyinterface
+sudo addgroup www-data vagrant
 
 echo
-echo "Installing rdp support"
+echo "### Installing rdp support"
 echo
 sudo apt-get install -y -q xrdp xubuntu-desktop
 sudo systemctl start xrdp
@@ -79,7 +83,7 @@ echo "vagrant:vagrant" | sudo chpasswd
 
 
 echo
-echo "Installing necessary tools for the ABS compiler"
+echo "### Installing necessary tools for building the ABS compiler"
 echo
 sudo wget -nv https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
 sudo dpkg -i erlang-solutions_1.0_all.deb && sudo rm erlang-solutions_1.0_all.deb
@@ -87,20 +91,32 @@ sudo apt-get -y -q install software-properties-common htop
 sudo apt-get -y -q install default-jre default-jdk ant antlr junit git unzip erlang
 
 echo
-echo "Installing necessary tools for simulating ABS programs"
+echo "### Installing tools for simulating ABS programs"
 echo
 sudo apt-get install -y -q emacs maude graphviz
 
 echo
-echo "Compiling the ABS compiler"
+echo "### Compiling the ABS compiler"
 echo
 (cd /vagrant/frontend ; ant dist)
+
+echo
+echo "### Moving ABS compiler into /usr/local/lib/absc"
+echo
+sudo mkdir -p /usr/local/lib/absc/frontend/bin/bash
+sudo mkdir -p /usr/local/lib/absc/frontend/dist
+sudo cp -R /vagrant/frontend/dist /vagrant/frontend/bin /vagrant/frontend/lib /usr/local/lib/absc/frontend/
+sudo chmod -R a+r /usr/local/lib/absc/frontend
+sudo chmod a+rx /usr/local/lib/absc/frontend/bin/bash/*
+
+
 
 # Install eclipse support
 bash /vagrant/vagrant_scripts/install_eclipse.sh
 
 echo
-echo "Downloading KeY-ABS, this might take a while..."
+echo "### Downloading KeY-ABS, this might take a while..."
+echo
 wget -nv http://i12www.ira.uka.de/key/key-abs/key-abs.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/key-abs.zip)
 rm key-abs.zip
@@ -115,27 +131,18 @@ sudo chmod a+x /usr/local/bin/key-abs
 mkdir -p /home/vagrant/.key
 
 echo
-echo "Installing SACO command-line tool"
+echo "### Installing SACO command-line tool"
 echo
 wget -nv http://costa.fdi.ucm.es/download/saco.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/saco.colab.zip)
 rm saco.colab.zip
 
 echo
-echo "Installing aPET/SYCO command-line tool"
+echo "### Installing aPET/SYCO command-line tool"
 echo
 wget -nv http://costa.fdi.ucm.es/download/apet.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/apet.colab.zip)
 rm apet.colab.zip
-
-echo
-echo "Moving ABS compiler into /usr/local/lib/absc"
-echo
-sudo mkdir -p /usr/local/lib/absc/frontend/bin/bash
-sudo mkdir -p /usr/local/lib/absc/frontend/dist
-sudo cp -R /vagrant/frontend/dist /vagrant/frontend/bin /vagrant/frontend/lib /usr/local/lib/absc/frontend/
-sudo chmod -R a+r /usr/local/lib/absc/frontend
-sudo chmod a+rx /usr/local/lib/absc/frontend/bin/bash/*
 
 # workaround for re-used temporary directory: need to be writable
 # by users www-data (for easyinterface) and ubuntu (for commandline)
@@ -144,7 +151,7 @@ sudo chown -R www-data.www-data /tmp/costabs
 sudo chmod -R 777 /tmp/costabs
 
 echo
-echo "Installing COFLOCO and SRA"
+echo "### Installing COFLOCO and SRA"
 echo
 wget -nv http://costa.fdi.ucm.es/download/cofloco.colab.zip
 (cd /usr/local/lib && sudo unzip -o /home/vagrant/cofloco.colab.zip)
@@ -154,7 +161,7 @@ wget -nv http://costa.fdi.ucm.es/download/sra.colab.zip
 rm sra.colab.zip
 
 echo
-echo "Setting up apache and easyinterface"
+echo "### Setting up apache and easyinterface"
 echo
 sudo apt-get -y -q install apache2 apache2-utils openssl-blacklist python-software-properties
 # https://askubuntu.com/questions/756181/installing-php-5-6-on-xenial-16-04
@@ -223,7 +230,7 @@ sudo chown root.root /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
 (cd /var/www/easyinterface/clients/web ; sudo cp envisage.cfg webclient.cfg)
 
 echo
-echo "Setting up the user environment: .bashrc, .emacs"
+echo "### Setting up the user environment: .bashrc, .emacs"
 echo
 
 # Set up Emacs
@@ -260,24 +267,5 @@ bash /vagrant/vagrant_scripts/install_habs.sh
 # execute the script to install the smart deployer and the main generator tool
 bash /vagrant/vagrant_scripts/install_smart_deployer.sh
 
-# set corresponding paths in easyinterface
-#
-cp /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG /tmp
-cat >> /tmp/ENVISAGE_CONFIG <<EOF
-# path to SMART DEPLOYER
-EC_SMARTDEPLOYERHOME="/home/vagrant/smart_deployer"
-# path to MAIN GENERATOR
-EC_MAINGENHOME="/home/vagrant/main_generator"
-#
-EC_PATH="\\$EC_PATH:/home/vagrant/bin:/home/vagrant/main_generator/abs_deployer/docker:/home/vagrant/MiniZincIDE:/home/vagrant/minisearch/bin:/home/vagrant/chuffed/binary/linux"
-#
-EOF
-sudo mv -f /tmp/ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage
-
-# add www-data to vagrant group to allow the execution of
-# main generator within easyinterface
-sudo addgroup www-data vagrant
-
-
-  SHELL
+SHELL
 end

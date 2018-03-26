@@ -13,7 +13,7 @@ _SRC="${SRC//\//\\/}"
 [ -d $SRC/bin ] || mkdir $SRC/bin
 
 echo
-echo "Installing Smart Deployer"
+echo "### Installing Smart Deployer"
 echo
 
 # zephyrus2
@@ -115,3 +115,17 @@ chmod -R 755 $SRC/smart_deployer
 cat >> $SRC/.bashrc <<EOF
 export CLASSPATH=\$ABSFRONTEND:\$CLASSPATH
 EOF
+
+# set corresponding paths in easyinterface
+#
+cp /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG /tmp
+cat >> /tmp/ENVISAGE_CONFIG <<EOF
+# path to SMART DEPLOYER
+EC_SMARTDEPLOYERHOME="/home/vagrant/smart_deployer"
+# path to MAIN GENERATOR
+EC_MAINGENHOME="/home/vagrant/main_generator"
+#
+EC_PATH="\\$EC_PATH:/home/vagrant/bin:/home/vagrant/main_generator/abs_deployer/docker:/home/vagrant/MiniZincIDE:/home/vagrant/minisearch/bin:/home/vagrant/chuffed/binary/linux"
+#
+EOF
+sudo mv -f /tmp/ENVISAGE_CONFIG /var/www/easyinterface/server/bin/envisage

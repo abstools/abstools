@@ -3,14 +3,14 @@ SRC="/home/vagrant"
 [ -d $SRC ] || mkdir $SRC
 
 echo
-echo "Installing Haskell"
+echo "### Installing Haskell"
 echo
 
 sudo add-apt-repository -y -u ppa:hvr/ghc
 sudo apt-get install -y -q ghc-8.0.1 cabal-install-1.24 happy-1.19.5 zlib1g-dev
 
 echo
-echo "Building the ABS-Haskell compiler"
+echo "### Building the ABS-Haskell compiler"
 echo
 
 # clone habs repo and subrepos

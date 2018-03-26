@@ -1,5 +1,9 @@
 echo
-echo "Downloading eclipse, this might take a while ..."
+echo "### Installing eclipse"
+echo
+
+echo
+echo "### Downloading eclipse, this might take a while ..."
 echo
 wget -nv "http://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/mars/1/eclipse-rcp-mars-1-linux-gtk-x86_64.tar.gz&r=1" -O eclipse-rcp-mars-1-linux-gtk-x86_64.tar.gz
 echo "Installing eclipse in /opt/eclipse and setting up paths ..."
@@ -8,12 +12,12 @@ sudo ln -s /opt/eclipse/eclipse /usr/local/bin/eclipse
 rm /home/vagrant/eclipse-rcp-mars-1-linux-gtk-x86_64.tar.gz
 
 echo
-echo "Building the ABS compiler and eclipse plugins"
+echo "### Building the ABS compiler and eclipse plugins"
 echo
 (cd /vagrant/eclipse/eclipse-plugin ; ant -Declipse.home=/opt/eclipse build-all-plugins generate-update-site)
 
 echo
-echo "Deploying to eclipse"
+echo "### Deploying to eclipse"
 echo
 eclipse -application org.eclipse.equinox.p2.director -noSplash \
         -repository \
