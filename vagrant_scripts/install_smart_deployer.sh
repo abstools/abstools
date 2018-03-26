@@ -1,5 +1,5 @@
 # where to save the downloaded and compiled code
-SRC="/home/ubuntu"
+SRC="/home/vagrant"
 [ -d $SRC ] || mkdir $SRC
 
 # path where to store the binaries & other files for docker
@@ -10,7 +10,7 @@ DOCKER_SRC="/vagrant/build"
 _SRC="${SRC//\//\\/}"
 
 
-[ -d /home/ubuntu/bin ] || mkdir /home/ubuntu/bin
+[ -d $SRC/bin ] || mkdir $SRC/bin
 
 echo
 echo "Installing Smart Deployer"
@@ -40,7 +40,7 @@ rm -rf MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz
 cat >> $SRC/mybashrc <<EOF
 export PATH=TOREPLACE/MiniZincIDE:\$PATH
 EOF
-cat $SRC/mybashrc | sed -e "s/TOREPLACE/${_SRC}/g" >> /home/ubuntu/.bashrc
+cat $SRC/mybashrc | sed -e "s/TOREPLACE/${_SRC}/g" >> $SRC/.bashrc
 rm $SRC/mybashrc
 
 cp -rf $SRC/MiniZincIDE $DOCKER_SRC/MiniZincIDE
@@ -49,8 +49,8 @@ cp -rf $SRC/MiniZincIDE $DOCKER_SRC/MiniZincIDE
 sudo apt-get install -y qt5-default
 
 # download chuffed, add global-dir in minizinc
-rm -rf /home/ubuntu/bin/fzn-chuffed
-cat >> /home/ubuntu/bin/fzn-chuffed <<EOF
+rm -rf $SRC/bin/fzn-chuffed
+cat >> $SRC/bin/fzn-chuffed <<EOF
 #!/bin/bash
 FZN_SOLVER="fzn_chuffed"
 OUT_FILE=""
@@ -87,19 +87,19 @@ EOF
 rm -rf $SRC/chuffed
 cd $SRC
 git clone --depth=1 https://github.com/geoffchu/chuffed.git
-chmod 755 /home/ubuntu/bin/fzn-chuffed
+chmod 755 $SRC/bin/fzn-chuffed
 chmod 755 $SRC/chuffed/binary/linux/fzn_chuffed
 cp -rf $SRC/chuffed/binary/linux/mznlib $SRC/MiniZincIDE/share/minizinc/chuffed
 
 cat >> $SRC/mybashrc <<EOF
 export PATH=TOREPLACE/chuffed/binary/linux:\$PATH
 EOF
-cat $SRC/mybashrc | sed -e "s/TOREPLACE/${_SRC}/g" >> /home/ubuntu/.bashrc
+cat $SRC/mybashrc | sed -e "s/TOREPLACE/${_SRC}/g" >> $SRC/.bashrc
 rm $SRC/mybashrc
 
 # copy files for docker
 cp -f $SRC/chuffed/binary/linux/fzn_chuffed $DOCKER_SRC
-cp -f /home/ubuntu/bin/fzn-chuffed $DOCKER_SRC
+cp -f $SRC/bin/fzn-chuffed $DOCKER_SRC
 
 
 # clone smart_deployer
@@ -112,6 +112,6 @@ cd abs_deployer
 git checkout tags/v0.3
 chmod -R 755 $SRC/smart_deployer
 
-cat >> /home/ubuntu/.bashrc <<EOF
+cat >> $SRC/.bashrc <<EOF
 export CLASSPATH=\$ABSFRONTEND:\$CLASSPATH
 EOF
