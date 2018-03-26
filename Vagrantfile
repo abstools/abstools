@@ -64,6 +64,9 @@ MSG
                       privileged: false,
                       inline: <<-SHELL
 
+# Make sure we can read log files etc.
+sudo adduser vagrant adm
+
 echo
 echo "Installing necessary tools for the ABS compiler"
 echo
