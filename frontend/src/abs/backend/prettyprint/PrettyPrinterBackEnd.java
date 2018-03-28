@@ -29,7 +29,7 @@ public class PrettyPrinterBackEnd extends Main {
         int result = 0;
         PrettyPrinterBackEnd backEnd = new PrettyPrinterBackEnd();
         try {
-            backEnd.compile(args);
+            result = backEnd.compile(args);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
             result = 1;
@@ -80,7 +80,7 @@ public class PrettyPrinterBackEnd extends Main {
      * @param args
      * @throws Exception
      */
-    public void compile(String[] args) throws Exception {
+    public int compile(String[] args) throws Exception {
         final Model model = parseFiles(parseArgs(args).toArray(new String[0]));
         if (keepsugar) {
             model.doAACrewrite = false;
@@ -88,7 +88,8 @@ public class PrettyPrinterBackEnd extends Main {
         }
         analyzeFlattenAndRewriteModel(model);
         if (! force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
-            printErrorMessageAndExit();
+            printErrorMessage();
+            return 1;
         }
 
         final PrintStream stream;
@@ -108,6 +109,7 @@ public class PrettyPrinterBackEnd extends Main {
         PrintWriter writer = new PrintWriter(stream,true);
         ABSFormatter formatter = new DefaultABSFormatter(writer);
         model.doPrettyPrint(writer, formatter);
+        return 0;
     }
 
     public static void printUsage() {

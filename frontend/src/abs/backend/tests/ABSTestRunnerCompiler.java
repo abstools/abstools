@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import abs.backend.common.InternalBackendException;
 import abs.common.NotImplementedYetException;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
@@ -41,7 +42,7 @@ public class ABSTestRunnerCompiler extends Main {
     }
 
     @Override
-    public List<String> parseArgs(String[] args) {
+    public List<String> parseArgs(String[] args) throws InternalBackendException {
         List<String> restArgs = super.parseArgs(args);
         List<String> remainingArgs = new ArrayList<>();
 

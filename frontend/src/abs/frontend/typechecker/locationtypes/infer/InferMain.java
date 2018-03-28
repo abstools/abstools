@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
+import abs.backend.common.InternalBackendException;
 import abs.common.FileUtils;
 import abs.common.NotImplementedYetException;
 import abs.common.WrongProgramArgumentException;
@@ -42,7 +43,8 @@ public class InferMain extends Main {
             m.compile(args);
         } catch (WrongProgramArgumentException pe) {
             System.err.println(pe.getMessage());
-            m.printUsageAndExit();
+            m.printUsage();
+            System.exit(1);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
             System.exit(1);
@@ -57,7 +59,7 @@ public class InferMain extends Main {
     private File destDir = new File(".");
 
     @Override
-    public List<String> parseArgs(String[] args) {
+    public List<String> parseArgs(String[] args) throws InternalBackendException {
         List<String> restArgs = super.parseArgs(args);
         List<String> remainingArgs = new ArrayList<>();
 

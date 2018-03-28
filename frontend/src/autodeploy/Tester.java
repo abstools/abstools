@@ -14,6 +14,7 @@ import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import abs.backend.common.InternalBackendException;
 import abs.common.NotImplementedYetException;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
@@ -38,7 +39,7 @@ public class Tester extends Main {
   }
 
   private void compile(String[] args)
-      throws DeltaModellingException, IOException, WrongProgramArgumentException, ParserConfigurationException,FileNotFoundException {
+      throws DeltaModellingException, IOException, WrongProgramArgumentException, ParserConfigurationException,FileNotFoundException, InternalBackendException {
     final Model model = this.parse(args);
     // the extraction of the cost annotations can proceed even if the code
     // is not type safe.
@@ -58,7 +59,7 @@ public class Tester extends Main {
 
 
   @Override
-  public List<String> parseArgs(String[] args) {
+  public List<String> parseArgs(String[] args) throws InternalBackendException {
     List<String> restArgs = super.parseArgs(args);
     List<String> remainingArgs = new ArrayList<>();
     for (int i = 0; i < restArgs.size(); i++) {

@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import abs.backend.common.InternalBackendException;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.SemanticCondition;
@@ -68,7 +69,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
         m = assertParseFilesOk(input, TYPE_CHECK, WITH_STD_LIB);
     }
 
-    protected Model assertParseFilesOk(String srcFolder, Config... config) throws IOException, WrongProgramArgumentException {
+    protected Model assertParseFilesOk(String srcFolder, Config... config) throws IOException, WrongProgramArgumentException, InternalBackendException {
         File srcFolderF = new File(srcFolder);
         assertTrue(srcFolder,srcFolderF.exists());
         Main main = new Main();

@@ -12,6 +12,7 @@ import java.util.Iterator;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import abs.backend.common.InternalBackendException;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ProductDecl;
@@ -20,7 +21,7 @@ import abs.frontend.delta.DeltaModellingException;
 public class DumpProducts extends Main {
 
     @Override
-    public Model parse(final String[] args) throws DeltaModellingException, IOException, WrongProgramArgumentException, ParserConfigurationException {
+    public Model parse(final String[] args) throws DeltaModellingException, IOException, WrongProgramArgumentException, ParserConfigurationException, InternalBackendException {
         Model m = super.parse(args);
         if (m.hasParserErrors()) {
             // Main.parse() already printed a list of parse errors in this case.

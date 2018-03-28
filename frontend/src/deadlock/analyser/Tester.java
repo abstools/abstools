@@ -11,6 +11,7 @@ import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import abs.backend.common.InternalBackendException;
 import abs.common.NotImplementedYetException;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
@@ -39,7 +40,7 @@ public class Tester extends Main {
         }
     }
 
-    private int compile(String[] args) throws DeltaModellingException, IOException, WrongProgramArgumentException, ParserConfigurationException {
+    private int compile(String[] args) throws DeltaModellingException, IOException, WrongProgramArgumentException, ParserConfigurationException, InternalBackendException {
         final Model model = this.parse(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
 	    return 127;
@@ -54,7 +55,7 @@ public class Tester extends Main {
     }
 
     @Override
-    public List<String> parseArgs(String[] args) {
+    public List<String> parseArgs(String[] args) throws InternalBackendException {
         List<String> restArgs = super.parseArgs(args);
         List<String> remainingArgs = new ArrayList<>();
 

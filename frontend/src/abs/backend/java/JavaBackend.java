@@ -95,10 +95,11 @@ public class JavaBackend extends Main {
     }
 
     private int compile(String[] args) throws Exception {
-        int result = 0;
-        final Model model = parse(args);
-        if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
-            printErrorMessageAndExit();
+                final Model model = parse(args);
+        if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
+            printErrorMessage();
+            return 1;
+        }
         destDir.mkdirs();
         if (!destDir.exists()) {
             throw new InternalBackendException("Destination directory " + destDir.getAbsolutePath() + " does not exist!");
@@ -109,7 +110,7 @@ public class JavaBackend extends Main {
         }
 
         compile(model, destDir);
-        return result;
+        return 0;
     }
 
     private void compile(Model m, File destDir) throws IOException, JavaCodeGenerationException {

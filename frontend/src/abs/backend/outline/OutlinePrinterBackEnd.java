@@ -28,7 +28,7 @@ public class OutlinePrinterBackEnd extends Main {
         int result = 0;
         OutlinePrinterBackEnd backEnd = new OutlinePrinterBackEnd();
         try {
-            backEnd.compile(args);
+            result = backEnd.compile(args);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
             result = 1;
@@ -77,10 +77,11 @@ public class OutlinePrinterBackEnd extends Main {
      * @param args
      * @throws Exception
      */
-    public void compile(String[] args) throws Exception {
+    public int compile(String[] args) throws Exception {
         final Model model = parse(args);
         if (! force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
-            printErrorMessageAndExit();
+            printErrorMessage();
+            return 1;
         }
 
         final PrintStream stream;
@@ -99,6 +100,7 @@ public class OutlinePrinterBackEnd extends Main {
 
         PrintWriter writer = new PrintWriter(stream,true);
         model.doOutlinePrint(writer, "");
+        return 0;
     }
 
     public static void printUsage() {

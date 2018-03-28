@@ -17,6 +17,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import abs.backend.common.InternalBackendException;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.Model;
@@ -27,7 +28,7 @@ public class SourceCodePositionTest extends DeltaTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void test() throws IOException {
+    public void test() throws IOException, InternalBackendException {
 
         File fcore = folder.newFile("core.abs");
         File fd1 = folder.newFile("delta1.abs");

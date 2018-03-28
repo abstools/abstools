@@ -54,7 +54,7 @@ public class MaudeCompiler extends Main {
         Model.doAACrewrite = false;
         MaudeCompiler compiler = new MaudeCompiler();
         try {
-            compiler.compile(args);
+            return compiler.compile(args);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
             return 1;
@@ -66,7 +66,6 @@ public class MaudeCompiler extends Main {
             }
             return 1;
         }
-        return 0;
     }
 
     @Override
@@ -108,27 +107,32 @@ public class MaudeCompiler extends Main {
      * @param args
      * @throws Exception
      */
-    public void compile(String[] args) throws Exception {
+    public int compile(String[] args) throws Exception {
         if (verbose) System.out.println("Generating Maude code...");
         final Model model = parse(args);
         if (model.hasParserErrors()
             || model.hasErrors()
             || model.hasTypeErrors())
-            printErrorMessageAndExit();
+        {
+            printErrorMessage();
+            return 1;
+        }
 
         PrintStream stream = System.out;
         if (outputfile != null) {
             stream = new PrintStream(outputfile);
         }
         InputStream is = ClassLoader.getSystemResourceAsStream(RUNTIME_INTERPRETER_PATH);
-        if (is == null)
-            throw new RuntimeException("Could not locate abs-interpreter.maude");
+        if (is == null) {
+            throw new InternalBackendException("Could not locate abs-interpreter.maude");
+        }
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
         stream.println("*** Generated " + dateFormat.format(new Date()));
         ByteStreams.copy(is, stream);
         model.generateMaude(stream, module, mainBlock, clocklimit, defaultResources);
         if (verbose) System.out.println("Finished.  Start `maude " + outputfile.toString() + "' to run the model.");
+        return 0;
     }
 
     public static void printUsage() {

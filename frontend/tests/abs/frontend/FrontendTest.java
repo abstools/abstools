@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Set;
 
 import abs.ABSTest;
+import abs.backend.common.InternalBackendException;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticCondition;
@@ -37,7 +38,7 @@ public class FrontendTest extends ABSTest {
         return assertParse(s, WITH_STD_LIB);
     }
 
-    protected Model assertParseFileOk(String fileName, boolean withStdLib) throws IOException, WrongProgramArgumentException {
+    protected Model assertParseFileOk(String fileName, boolean withStdLib) throws IOException, WrongProgramArgumentException, InternalBackendException {
         if (withStdLib) {
             return assertParseFileOk(fileName, WITH_STD_LIB);
         } else {
@@ -45,7 +46,7 @@ public class FrontendTest extends ABSTest {
         }
     }
 
-    protected Model assertParseFilesOk(Set<String> fileNames, boolean withStdLib) throws IOException {
+    protected Model assertParseFilesOk(Set<String> fileNames, boolean withStdLib) throws IOException, InternalBackendException {
         if (withStdLib) {
             return assertParseFilesOk(fileNames, WITH_STD_LIB);
         } else {
@@ -53,7 +54,7 @@ public class FrontendTest extends ABSTest {
         }
     }
 
-    protected Model assertTypeCheckFileOk(String fileName, boolean withStdLib) throws IOException, WrongProgramArgumentException {
+    protected Model assertTypeCheckFileOk(String fileName, boolean withStdLib) throws IOException, WrongProgramArgumentException, InternalBackendException {
         if (withStdLib) { 
             return assertParseFileOk(fileName, TYPE_CHECK, WITH_STD_LIB);
         } else {
