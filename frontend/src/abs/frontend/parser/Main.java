@@ -84,8 +84,9 @@ public class Main {
             java.util.List<String> argslist = Arrays.asList(args);
             if (argslist.contains("-help") || argslist.contains("-h") || argslist.contains("--help")) {
                 printUsage();
-            }
-            else if (argslist.contains("-maude")) {
+            } else if (argslist.contains("-version") || argslist.contains("--version")) {
+                printVersion();
+            } else if (argslist.contains("-maude")) {
                 result = abs.backend.maude.MaudeCompiler.doMain(args);
             } else if(argslist.contains("-java")) {
                 result = abs.backend.java.JavaBackend.doMain(args);
@@ -141,8 +142,6 @@ public class Main {
                 debug = true;
             else if (arg.equals("-v"))
                 verbose = true;
-            else if (arg.equals("-version") || arg.equals("--version"))
-                printVersion();
             else if (arg.startsWith("-product=")) {
                 fullabs = true;
                 product = arg.split("=")[1];
