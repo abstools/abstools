@@ -166,4 +166,12 @@ public class ObjectTests extends SemanticTests {
     public void testFutST1() {
         assertEvalTrue("interface A {} interface B extends A {} interface I { A mA(); B mB(); } { case False { True => { I o = null; Fut<A> f = o!mB();} False => {skip;}} Bool testresult = True; }");
     }
+    
+    @Test
+    public void testIdentifiersAsKeywords() {
+        // https://github.com/abstools/abstools/issues/194
+        // Erlang objected to "fun" as field / class parameter name.
+        // throw in a "static" as well to try and trip up Java.
+        assertEvalTrue("class A(Bool static) { Bool fun = False; } { Bool testresult = True; }");
+    }
 }

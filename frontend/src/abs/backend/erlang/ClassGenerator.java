@@ -253,7 +253,7 @@ public class ClassGenerator {
         for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
             if (!first) ecs.print(", ");
             first = false;
-            ecs.pf("{ '%s', S#state.%s }",
+            ecs.pf("{ '%s', S#state.'%s' }",
                    f.getName(), f.getName());
         }
         ecs.decIndent();
