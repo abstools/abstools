@@ -94,7 +94,7 @@ public class BackPositionTest extends FrontendTest {
     }
 
     private void assertNodeAtPos(String absCode, int line, int col, Class<?> clazz) {
-        Model m = assertParseOk(absCode, WITHOUT_MODULE_NAME,ALLOW_INCOMPLETE_EXPR);
+        Model m = assertParseOk(absCode, WITHOUT_MODULE_NAME);
         SourcePosition pos = SourcePosition.findPosition(m.getCompilationUnit(0), line, col);
         assertNotNull("Expected to find " + clazz + " at " + line + ":" + col + " but found nothing", pos);
         assertTrue("Expected " + clazz + " but found " + pos.getContextNode().getClass(),

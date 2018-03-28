@@ -296,7 +296,6 @@ public class AbsNature implements IProjectNature {
 
 							Main m = new Main();
 							m.setWithStdLib(true);
-							m.setAllowIncompleteExpr(withincomplete);
 
 							List<CompilationUnit> units = new ArrayList<CompilationUnit>();
 							if (isABSPackage(file)) {
@@ -406,7 +405,6 @@ public class AbsNature implements IProjectNature {
 		try {
 			Main m = new Main();
 			m.setWithStdLib(true);
-			m.setAllowIncompleteExpr(true);
 			List<CompilationUnit> units = new ArrayList<CompilationUnit>();
 			for (PackageEntry entry : packageContainer.getPackages()) {
 				File file = new File(entry.getPath());
@@ -622,7 +620,6 @@ public class AbsNature implements IProjectNature {
 			Object monitor) {
 		Main m = new Main();
 		m.setWithStdLib(true);
-		m.setAllowIncompleteExpr(withincomplete);
 
 		List<CompilationUnit> units = new ArrayList<CompilationUnit>();
 		try {

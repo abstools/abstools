@@ -608,9 +608,6 @@ aspect TypeChecker {
     public void Stmt.typeCheck(SemanticConditionList e) {
     }
 
-    public void IncompleteStmt.typeCheck(SemanticConditionList e) {
-        // ignore
-    }
     public void ExpressionStmt.typeCheck(SemanticConditionList e) {
         super.typeCheck(e);
         getExp().typeCheck(e);

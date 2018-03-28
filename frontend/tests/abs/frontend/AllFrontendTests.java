@@ -36,7 +36,6 @@ import deadlock.DeadlockCheckerTests;
             OtherAnalysisTests.class,
             AtomicityTests.class,
             BackPositionTest.class,
-            // IncompleteExpTests.class, // deactivated since switching parser to antlr
             SearchSolutionsTest.class,
             TestABSPackages.class,
             CaseStudyTypeChecking.class,

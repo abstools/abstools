@@ -73,8 +73,7 @@ public class ProposalFactory{
 
 		
 		/**
-		 * Creates the list of completion proposals for the current qualifier. The list contains all top level elements 
-		 * as well as methods and fields for incomplete access (dot or exclamation mark).
+		 * Creates the list of completion proposals for the current qualifier. The list contains all top level elements.
 		 * The list of keywords has to be provided by the frontend.
 		 * @see abs.frontend.parser.Keywords
 		 */
@@ -96,11 +95,7 @@ public class ProposalFactory{
 				}
 				ASTNode<?> accessNode = getASTNodeOfOffset(doc, cu, tmpOffset);
 				addMainblockProposals(node);
-				if(accessNode instanceof IncompleteAccess){
-					addIncompleteAccessProposals(accessNode); 
-				} else if(accessNode instanceof IncompleteNewExp){
-					addClassProposals(node);
-				} else if (accessNode instanceof FieldUse) {
+				if (accessNode instanceof FieldUse) {
 				    addFieldUseProposals((FieldUse)accessNode);
 				} else {
 				    addKeywordProposals();
@@ -193,23 +188,6 @@ public class ProposalFactory{
 			
 			Collections.sort(tempQual, comp);
 			proposals.addAll(0, tempQual);
-		}
-
-		/**
-		 * add proposals for the incomplete access under the cursor. An incomplete access exists if
-		 * the user enters a dot or an exclamation mark after an identifier. An incomplete access
-		 * proposal can be a method of an interface or a field
-		 * @param accessNode the node under the cursor
-		 */
-		private void addIncompleteAccessProposals(ASTNode<?> accessNode) {
-			if(accessNode == null){
-				throw new IllegalArgumentException("AccessNode may not be null!");
-			}
-			
-			IncompleteAccess ia = (IncompleteAccess)accessNode;
-			PureExp target = ia.getTarget();
-			Type type = target.getType();
-			addMethodProposal(type);
 		}
 
         private void addMethodProposal(Type type) {

@@ -567,10 +567,6 @@ aspect GenerateJavaDynamic_Core {
 
     public abstract void Exp.generateJavaDynamic(PrintStream stream);
 
-    public void IncompleteExp.generateJavaDynamic(PrintStream s) {
-        // never called for type correct programs
-    }
-
     public void AsyncCall.generateJavaDynamic(PrintStream stream) {
         DynamicJavaGeneratorHelper.generateAsyncCall(stream, this);
     }

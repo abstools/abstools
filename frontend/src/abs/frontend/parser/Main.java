@@ -52,7 +52,6 @@ public class Main {
     protected boolean stdlib = true;
     protected boolean dump = false;
     protected boolean debug = false;
-    protected boolean allowIncompleteExpr = false;
     protected LocationType defaultLocationType = null;
     protected boolean locationTypeInferenceEnabled = false;
     // Must be public for AspectJ instrumentation
@@ -122,10 +121,6 @@ public class Main {
 
     public void setWithStdLib(boolean withStdLib) {
         this.stdlib = withStdLib;
-    }
-
-    public void setAllowIncompleteExpr(boolean b) {
-        allowIncompleteExpr = b;
     }
 
     public void setTypeChecking(boolean b) {
@@ -835,22 +830,8 @@ public class Main {
     }
 
     public static Model parseString(String s, boolean withStdLib) throws Exception {
-        return parseString(s,withStdLib,false);
-    }
-
-    /**
-     * Calls {@link #parseString(String, boolean, boolean, boolean)} with withDbLib set to false.
-     *
-     * @param s
-     * @param withStdLib
-     * @param allowIncompleteExpr
-     * @return Model
-     * @throws Exception
-     */
-    public static Model parseString(String s, boolean withStdLib, boolean allowIncompleteExpr) throws Exception {
         Main m = new Main();
         m.setWithStdLib(withStdLib);
-        m.setAllowIncompleteExpr(allowIncompleteExpr);
         return m.parse(null, s, new StringReader(s));
     }
 

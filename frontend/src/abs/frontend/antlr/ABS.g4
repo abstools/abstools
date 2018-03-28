@@ -6,7 +6,7 @@
 // TODO for moving tools from beaver/flex to antlr:
 // - Generate code for full ABS
 // - Implement the raiseExceptions flag
-// - Implement parsing of incomplete expressions and generate the corresponding AST
+
 grammar ABS;
 
 TraditionalComment : '/*' .*? '*/' -> skip ;

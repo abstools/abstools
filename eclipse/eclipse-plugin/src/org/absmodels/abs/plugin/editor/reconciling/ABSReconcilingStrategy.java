@@ -35,7 +35,6 @@ public class ABSReconcilingStrategy implements IReconcilingStrategy {
         this.editor = editor;
         editor.setReconciler(this);
         absParser = new Main();
-        absParser.setAllowIncompleteExpr(true);
         absParser.setTypeChecking(false);
     }
 

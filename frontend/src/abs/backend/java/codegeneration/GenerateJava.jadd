@@ -656,11 +656,6 @@ aspect GenerateJava {
 
     public abstract void Exp.generateJava(PrintStream stream);
 
-    public void IncompleteExp.generateJava(PrintStream s) {
-        // never called for type correct programs
-        throw new JavaBackendException(this, "should never happen in type-correct programs!");
-    }
-
     public void AsyncCall.generateJava(PrintStream stream) {
         JavaGeneratorHelper.generateAsyncCall(stream, this);
     }

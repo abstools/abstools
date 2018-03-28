@@ -29,7 +29,6 @@ public class ABSTest {
         EXPECT_PARSE_ERROR,
         EXPECT_TYPE_ERROR,
         EXPECT_WARNING,
-        ALLOW_INCOMPLETE_EXPR,
         TYPE_CHECK
     }
 
@@ -85,8 +84,7 @@ public class ABSTest {
         if (!isSet(WITHOUT_MODULE_NAME, config))
             s = preamble + s;
         try {
-            Model p = Main.parseString(s, isSet(WITH_STD_LIB, config),
-                    isSet(ALLOW_INCOMPLETE_EXPR, config));
+            Model p = Main.parseString(s, isSet(WITH_STD_LIB, config));
 
             if (isSet(EXPECT_PARSE_ERROR,config)) {
                 if (!p.hasParserErrors())
