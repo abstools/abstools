@@ -17,6 +17,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubProgressMonitor;
 
+import abs.backend.common.InternalBackendException;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticError;
@@ -114,7 +115,11 @@ public class IncrementalModelBuilder {
 			Activator.logException(e);
 			// Your plugin is probably busted.
 			return null;
-		}
+		} catch(InternalBackendException e) {
+			Activator.logException(e);
+			// Your plugin is probably busted.
+			return null;
+                }
 
 		File src = new File(bundle, stdLib.getFileName());
 		if (!src.exists()) {
