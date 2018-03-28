@@ -77,14 +77,20 @@ public class ABSUnitRunner extends Main {
     private void runTestSuite() throws IOException, JavaCodeGenerationException {
     }
 
-
     public static void main(String... args) {
+        doMain(args);
+    }
+
+
+    public static int doMain(String... args) {
         try {
             new ABSUnitRunner().compile();
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+            return 1;
         }
+        return 0;
     }
 
 

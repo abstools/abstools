@@ -42,26 +42,32 @@ public class ErlangBackend extends Main {
     public static int minErlangVersion = 19;
 
     public static void main(final String... args) {
+        doMain(args);
+    }
+
+    public static int doMain(final String... args) {
+        int result = 0;
         ErlangBackend backEnd = new ErlangBackend();
         try {
-            backEnd.compile(args);
+            result = backEnd.compile(args);
         } catch (InternalBackendException e) {
             System.err.println(e.getMessage());
-            System.exit(1);
+            return 1;
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
-            System.exit(1);
+            return 1;
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
             if (backEnd.debug) {
                 e.printStackTrace();
             }
-            System.exit(1);
+            return 1;
         }
+        return result;
     }
 
     @Override
-    public List<String> parseArgs(String[] args) {
+    public List<String> parseArgs(String[] args) throws InternalBackendException {
         List<String> restArgs = super.parseArgs(args);
         List<String> remainingArgs = new ArrayList<>();
 
@@ -72,8 +78,7 @@ public class ErlangBackend extends Main {
             } else if (arg.equals("-d")) {
                 i++;
                 if (i == restArgs.size()) {
-                    System.err.println("Please provide an output directory");
-                    System.exit(1);
+                    throw new InternalBackendException("Please provide an output directory");
                 } else {
                     destDir = new File(restArgs.get(i));
                 }
@@ -96,11 +101,14 @@ public class ErlangBackend extends Main {
                            + "  For help on Erlang runtime options, start model with -h\n");
     }
 
-    private void compile(String[] args) throws Exception {
+    private int compile(String[] args) throws Exception {
         final Model model = parse(args);
-        if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
-            printErrorMessageAndExit();
+        if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
+            printErrorMessage();
+            return 1;
+        }
         compile(model, destDir, compileOptions);
+        return 0;
     }
 
     private static boolean isWindows() {

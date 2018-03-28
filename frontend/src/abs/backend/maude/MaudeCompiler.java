@@ -15,6 +15,7 @@ import java.util.List;
 
 import com.google.common.io.ByteStreams;
 
+import abs.backend.common.InternalBackendException;
 import abs.common.NotImplementedYetException;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
@@ -44,6 +45,11 @@ public class MaudeCompiler extends Main {
     private int defaultResources = 0;
 
     public static void main(final String... args) {
+        doMain(args);
+    }
+
+
+    public static int doMain(final String... args) {
         /* Maude has build-in AwaitAsyncCall support */
         Model.doAACrewrite = false;
         MaudeCompiler compiler = new MaudeCompiler();
@@ -51,20 +57,20 @@ public class MaudeCompiler extends Main {
             compiler.compile(args);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
-            System.exit(1);
+            return 1;
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
             if (compiler.debug) {
                 e.printStackTrace();
             }
-
-            System.exit(1);
+            return 1;
         }
+        return 0;
     }
 
     @Override
-    public List<String> parseArgs(String[] args) {
+    public List<String> parseArgs(String[] args) throws InternalBackendException {
         List<String> restArgs = super.parseArgs(args);
         List<String> remainingArgs = new ArrayList<>();
 
@@ -75,8 +81,7 @@ public class MaudeCompiler extends Main {
             } else if (arg.equals("-o")) {
                 i++;
                 if (i == restArgs.size()) {
-                    System.err.println("Please provide an output file");
-                    System.exit(1);
+                    throw new InternalBackendException("Missing output file name after '-o'");
                 } else {
                     outputfile = new File(restArgs.get(i));
                 }
@@ -104,7 +109,7 @@ public class MaudeCompiler extends Main {
      * @throws Exception
      */
     public void compile(String[] args) throws Exception {
-        if (verbose) System.out.println("Generating Erlang code...");
+        if (verbose) System.out.println("Generating Maude code...");
         final Model model = parse(args);
         if (model.hasParserErrors()
             || model.hasErrors()

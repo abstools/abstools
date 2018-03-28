@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.List;
 
+import abs.backend.common.InternalBackendException;
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
 import abs.backend.java.lib.runtime.ABSFut;
@@ -25,12 +26,17 @@ public class JavaBackend extends Main {
     public final static String CHARSET = "UTF-8";
 
     public static void main(final String... args) {
+        doMain(args);
+    }
+
+    public static int doMain(final String... args) {
+        int result = 0;
         JavaBackend backEnd = new JavaBackend();
         try {
-            backEnd.compile(args);
+            result = backEnd.compile(args);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
-            System.exit(1);
+            result = 1;
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
@@ -38,8 +44,9 @@ public class JavaBackend extends Main {
                 e.printStackTrace();
             }
 
-            System.exit(1);
+            result = 1;
         }
+        return result;
     }
 
     private File destDir = new File("gen/");
@@ -48,7 +55,7 @@ public class JavaBackend extends Main {
     private boolean includeDebug = false;
 
     @Override
-    public List<String> parseArgs(String[] args) {
+    public List<String> parseArgs(String[] args) throws InternalBackendException {
         List<String> restArgs = super.parseArgs(args);
         List<String> remainingArgs = new ArrayList<>();
 
@@ -57,8 +64,7 @@ public class JavaBackend extends Main {
             if (arg.equals("-d")) {
                 i++;
                 if (i == restArgs.size()) {
-                    System.err.println("Please provide a destination directory");
-                    System.exit(1);
+                    throw new InternalBackendException("Destination directory name not given after '-d'");
                 } else {
                     destDir = new File(args[i]);
                 }
@@ -88,22 +94,22 @@ public class JavaBackend extends Main {
                 + "  -dynamic       generate dynamically updateable code\n");
     }
 
-    private void compile(String[] args) throws Exception {
+    private int compile(String[] args) throws Exception {
+        int result = 0;
         final Model model = parse(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             printErrorMessageAndExit();
         destDir.mkdirs();
         if (!destDir.exists()) {
-            System.err.println("Destination directory " + destDir.getAbsolutePath() + " does not exist!");
-            System.exit(1);
+            throw new InternalBackendException("Destination directory " + destDir.getAbsolutePath() + " does not exist!");
         }
 
         if (!destDir.canWrite()) {
-            System.err.println("Destination directory " + destDir.getAbsolutePath() + " cannot be written to!");
-            System.exit(1);
+            throw new InternalBackendException("Destination directory " + destDir.getAbsolutePath() + " cannot be written to!");
         }
 
         compile(model, destDir);
+        return result;
     }
 
     private void compile(Model m, File destDir) throws IOException, JavaCodeGenerationException {

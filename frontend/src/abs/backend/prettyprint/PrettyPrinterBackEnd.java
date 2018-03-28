@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import abs.backend.common.InternalBackendException;
 import abs.common.NotImplementedYetException;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
@@ -21,12 +22,17 @@ public class PrettyPrinterBackEnd extends Main {
     private boolean keepsugar = false;
 
     public static void main(final String... args) {
+        doMain(args);
+    }
+
+    public static int doMain(final String... args) {
+        int result = 0;
         PrettyPrinterBackEnd backEnd = new PrettyPrinterBackEnd();
         try {
             backEnd.compile(args);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
-            System.exit(1);
+            result = 1;
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
@@ -34,12 +40,13 @@ public class PrettyPrinterBackEnd extends Main {
                 e.printStackTrace();
             }
 
-            System.exit(1);
+            result = 1;
         }
+        return result;
     }
 
     @Override
-    public List<String> parseArgs(String[] args) {
+    public List<String> parseArgs(String[] args) throws InternalBackendException {
         List<String> restArgs = super.parseArgs(args);
         List<String> remainingArgs = new ArrayList<>();
 
@@ -48,8 +55,7 @@ public class PrettyPrinterBackEnd extends Main {
             if (arg.equals("-o")) {
                 i++;
                 if (i == restArgs.size()) {
-                    System.err.println("Please provide an output file");
-                    System.exit(1);
+                    throw new InternalBackendException("Missing output file name after '-o'");
                 } else {
                     outputfile = new File(restArgs.get(i));
                     if (outputfile.exists()) {

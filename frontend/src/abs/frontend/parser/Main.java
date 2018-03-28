@@ -25,6 +25,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import choco.kernel.model.constraints.Constraint;
 import abs.frontend.mtvl.ChocoSolver;
+import abs.backend.common.InternalBackendException;
 import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticCondition;
@@ -73,40 +74,49 @@ public class Main {
 
 
     public static void main(final String... args)  {
-        new Main().mainMethod(args);
+        int result = new Main().mainMethod(args);
+        if (result != 0) System.exit(result);
     }
 
-    public void mainMethod(final String... args) {
+    public int mainMethod(final String... args) {
+        int result = 0;
         try {
             java.util.List<String> argslist = Arrays.asList(args);
             if (argslist.contains("-help") || argslist.contains("-h") || argslist.contains("--help")) {
-                printUsageAndExit();
+                printUsage();
             }
-            if (argslist.contains("-maude")) {
-                abs.backend.maude.MaudeCompiler.main(args);
+            else if (argslist.contains("-maude")) {
+                result = abs.backend.maude.MaudeCompiler.doMain(args);
             } else if(argslist.contains("-java")) {
-                abs.backend.java.JavaBackend.main(args);
+                result = abs.backend.java.JavaBackend.doMain(args);
             } else if (argslist.contains("-erlang")) {
-                abs.backend.erlang.ErlangBackend.main(args);
+                result = abs.backend.erlang.ErlangBackend.doMain(args);
             } else if (argslist.contains("-prolog")) {
-                abs.backend.prolog.PrologBackend.main(args);
+                result = abs.backend.prolog.PrologBackend.doMain(args);
             } else if (argslist.contains("-coreabs")) {
-                abs.backend.coreabs.CoreAbsBackend.main(args);
+                result = abs.backend.coreabs.CoreAbsBackend.doMain(args);
             } else if (argslist.contains("-prettyprint")) {
-                abs.backend.prettyprint.PrettyPrinterBackEnd.main(args);
+                result = abs.backend.prettyprint.PrettyPrinterBackEnd.doMain(args);
             } else if (argslist.contains("-outline")) {
-                abs.backend.outline.OutlinePrinterBackEnd.main(args);
+                result = abs.backend.outline.OutlinePrinterBackEnd.doMain(args);
             } else {
                 Model m = parse(args);
                 if (m.hasParserErrors() || m.hasErrors() || m.hasTypeErrors()) {
-                    printErrorMessageAndExit();
+                    printErrorMessage();
+                    result = 1;
                 }
             }
+        } catch (InternalBackendException e) {
+            // don't print stack trace here
+            printError(e.getMessage());
+            result = 1;
         } catch (Exception e) {
             if (e.getMessage() == null) { e.printStackTrace(); }
             assert e.getMessage() != null : e.toString();
-            printErrorAndExit(e.getMessage());
+            printError(e.getMessage());
+            result = 1;
         }
+        return result;
     }
 
     public void setWithStdLib(boolean withStdLib) {
@@ -121,7 +131,7 @@ public class Main {
         typecheck = b;
     }
 
-    public java.util.List<String> parseArgs(String[] args) {
+    public java.util.List<String> parseArgs(String[] args) throws InternalBackendException {
         ArrayList<String> remainingArgs = new ArrayList<>();
 
         for (String arg : args) {
@@ -132,7 +142,7 @@ public class Main {
             else if (arg.equals("-v"))
                 verbose = true;
             else if (arg.equals("-version") || arg.equals("--version"))
-                printVersionAndExit();
+                printVersion();
             else if (arg.startsWith("-product=")) {
                 fullabs = true;
                 product = arg.split("=")[1];
@@ -184,22 +194,22 @@ public class Main {
                 ignoreattr = true;
             } else if (arg.equals("-h") || arg.equals("-help")
                     || arg.equals("--help")) {
-                printUsageAndExit();
+                printUsage();
             } else
                 remainingArgs.add(arg);
         }
         return remainingArgs;
     }
 
-    public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException, ParserConfigurationException {
+    public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException, ParserConfigurationException, InternalBackendException {
         Model m = parseFiles(parseArgs(args).toArray(new String[0]));
         analyzeFlattenAndRewriteModel(m);
         return m;
     }
 
-    public Model parseFiles(String... fileNames) throws IOException {
+    public Model parseFiles(String... fileNames) throws IOException, InternalBackendException {
         if (fileNames.length == 0) {
-            printErrorAndExit("Please provide at least one input file");
+            throw new IllegalArgumentException("Please provide at least one input file");
         }
 
         java.util.List<CompilationUnit> units = new ArrayList<>();
@@ -634,35 +644,27 @@ public class Main {
         units.add(parseUnit(file, null, reader));
     }
 
-    protected static void printErrorMessageAndExit() {
+    protected static void printErrorMessage() {
         System.err.println("\nCompilation failed.");
-        System.exit(1);
     }
 
-    protected static void printErrorAndExit(String error) {
+    protected static void printError(String error) {
         assert error != null;
         System.err.println("\nCompilation failed:\n");
         System.err.println("  " + error);
         System.err.println();
-        System.exit(1);
     }
 
-    protected void printUsageAndExit() {
-        printUsage();
-        System.exit(1);
-    }
-
-    protected static void printVersionAndExit() {
+    protected static void printVersion() {
         System.out.println("ABS Tool Suite v"+getVersion());
         System.out.println("Built from git tree " + getGitVersion());
-        System.exit(1);
     }
 
 
-    public CompilationUnit getStdLib() throws IOException {
+    public CompilationUnit getStdLib() throws IOException, InternalBackendException {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
         if (stream == null) {
-            printErrorAndExit("Could not find ABS Standard Library");
+            throw new InternalBackendException("Could not find ABS Standard Library");
         }
         return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream));
     }
@@ -811,11 +813,11 @@ public class Main {
         return files;
     }
 
-    public Model parse(File file, String sourceCode, InputStream stream) throws IOException {
+    public Model parse(File file, String sourceCode, InputStream stream) throws IOException, InternalBackendException {
         return parse(file, sourceCode, new BufferedReader(new InputStreamReader(stream)));
     }
 
-    public Model parse(File file, String sourceCode, Reader reader) throws IOException  {
+    public Model parse(File file, String sourceCode, Reader reader) throws IOException, InternalBackendException  {
         List<CompilationUnit> units = new List<>();
         if (stdlib)
             units.add(getStdLib());

@@ -8,6 +8,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import abs.backend.common.InternalBackendException;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
@@ -19,26 +20,28 @@ public class CoreAbsBackend extends Main {
         // TODO Auto-generated constructor stub
     }
 
-    public void mainMethod(final String... args) {
+    public int mainMethod(final String... args) {
         try {
             Model m = new CoreAbsBackend().parse(args);
             PrintStream stream = System.out;
             m.generateCoreABS(stream);
-            System.exit(0);
+            return 0;
         } catch (Exception e) {
-            printErrorAndExit(e.getMessage());
+            printError(e.getMessage());
+            return 1;
         }
     }
 
-    /**
-     * @param args
-     */
-    public static void main(final String... args)  {
-        new CoreAbsBackend().mainMethod(args);
+    public static void main(final String... args) {
+        doMain(args);
+    }
+
+    public static int doMain(final String... args)  {
+        return new CoreAbsBackend().mainMethod(args);
     }
 
     @Override
-    public List<String> parseArgs(String[] args) {
+    public List<String> parseArgs(String[] args) throws InternalBackendException {
         List<String> restArgs = super.parseArgs(args);
         List<String> remainingArgs = new ArrayList<>();
 
