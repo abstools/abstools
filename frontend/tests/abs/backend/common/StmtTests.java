@@ -6,11 +6,13 @@ package abs.backend.common;
 
 import java.io.File;
 
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import abs.backend.BackendTestDriver;
+import abs.backend.BackendTestDriver.BackendName;
 
 @RunWith(Parameterized.class)
 public class StmtTests extends SemanticTests {
@@ -94,6 +96,8 @@ public class StmtTests extends SemanticTests {
 
     @Test
     public void caseStmtMatchFailure() throws Exception {
+        // https://github.com/abstools/abstools/issues/196
+        Assume.assumeFalse("Not implemented on Java backend yet", driver.getBackendName() == BackendName.JAVA);
         assertEvalTrue(new File("tests/abssamples/backend/StmtTests/caseStmtMatchFailure.abs"));
      }
 
