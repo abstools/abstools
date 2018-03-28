@@ -82,7 +82,7 @@ public class PrettyPrinterBackEnd extends Main {
         }
         analyzeFlattenAndRewriteModel(model);
         if (! force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
-            printParserErrorAndExit();
+            printErrorMessageAndExit();
         }
 
         final PrintStream stream;

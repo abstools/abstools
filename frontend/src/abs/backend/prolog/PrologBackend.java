@@ -68,7 +68,7 @@ public class PrologBackend extends Main {
         // This parses the args and the ABS program producing the AST whose root is model
         model = parse(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
-            printParserErrorAndExit();
+            printErrorMessageAndExit();
         initOutStreamEtc();
     }
 

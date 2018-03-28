@@ -29,7 +29,7 @@ public class Tester extends Main {
         new Tester().compile(args);
     } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
-            System.exit(0);
+            System.exit(1);
     } catch (Exception e) {
       System.err.println("An error occurred during compilation:\n" + e.getMessage());
       if (Arrays.asList(args).contains("-debug")) { e.printStackTrace(); }

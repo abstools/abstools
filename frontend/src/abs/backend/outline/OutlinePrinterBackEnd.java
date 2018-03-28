@@ -25,7 +25,7 @@ public class OutlinePrinterBackEnd extends Main {
             backEnd.compile(args);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
-            System.exit(0);
+            System.exit(1);
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
@@ -74,7 +74,7 @@ public class OutlinePrinterBackEnd extends Main {
     public void compile(String[] args) throws Exception {
         final Model model = parse(args);
         if (! force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
-            printParserErrorAndExit();
+            printErrorMessageAndExit();
         }
 
         final PrintStream stream;

@@ -50,7 +50,7 @@ public class ErlangBackend extends Main {
             System.exit(1);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
-            System.exit(0);
+            System.exit(1);
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
             if (backEnd.debug) {
@@ -99,7 +99,7 @@ public class ErlangBackend extends Main {
     private void compile(String[] args) throws Exception {
         final Model model = parse(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
-            printParserErrorAndExit();
+            printErrorMessageAndExit();
         compile(model, destDir, compileOptions);
     }
 

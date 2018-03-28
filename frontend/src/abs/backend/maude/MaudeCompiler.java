@@ -51,7 +51,7 @@ public class MaudeCompiler extends Main {
             compiler.compile(args);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
-            System.exit(0);
+            System.exit(1);
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
@@ -109,7 +109,7 @@ public class MaudeCompiler extends Main {
         if (model.hasParserErrors()
             || model.hasErrors()
             || model.hasTypeErrors())
-            printParserErrorAndExit();
+            printErrorMessageAndExit();
 
         PrintStream stream = System.out;
         if (outputfile != null) {

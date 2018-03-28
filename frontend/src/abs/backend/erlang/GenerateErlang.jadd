@@ -879,7 +879,7 @@ aspect GenerateErlang {
     ecs.print("case ");
     ecs.setIndent(external.getIndent());
     getExpr().generateErlangCode(ecs, vars);
-    ecs.println(" of ");
+    ecs.println(" of");
     ecs.incIndent();
     for (CaseBranch b : getBranchs()) {
         Vars v = vars.pass();

@@ -45,7 +45,7 @@ public class InferMain extends Main {
             m.printUsageAndExit();
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
-            System.exit(0);
+            System.exit(1);
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
             e.printStackTrace();

@@ -98,8 +98,8 @@ public class Main {
                 abs.backend.outline.OutlinePrinterBackEnd.main(args);
             } else {
                 Model m = parse(args);
-                if (m.hasParserErrors()) {
-                    printParserErrorAndExit();
+                if (m.hasParserErrors() || m.hasErrors() || m.hasTypeErrors()) {
+                    printErrorMessageAndExit();
                 }
             }
         } catch (Exception e) {
@@ -634,8 +634,8 @@ public class Main {
         units.add(parseUnit(file, null, reader));
     }
 
-    protected static void printParserErrorAndExit() {
-        System.err.println("\nCompilation failed with syntax errors.");
+    protected static void printErrorMessageAndExit() {
+        System.err.println("\nCompilation failed.");
         System.exit(1);
     }
 
