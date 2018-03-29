@@ -41,7 +41,7 @@ endif
 default: help frontend
 
 frontend:			## Build ABS compiler (default)
-	$(MAKE) -C frontend
+	$(MAKE) -C $(ROOT_DIR)/frontend
 
 manual:				## Build the ABS manual
 	mvn -B -f $(ROOT_DIR)/abs-docs/pom.xml clean install
