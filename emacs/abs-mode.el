@@ -43,7 +43,7 @@
   "Major mode for editing files in the programming / modeling language Abs."
   :group 'languages)
 
-(defcustom abs-target-language 'maude
+(defcustom abs-target-language 'erlang
   "The default target language for code generation."
   :type '(radio (const maude)
                 (const java)
