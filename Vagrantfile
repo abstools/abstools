@@ -87,6 +87,7 @@ echo "### Installing necessary tools for building the ABS compiler"
 echo
 sudo wget -nv https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
 sudo dpkg -i erlang-solutions_1.0_all.deb && sudo rm erlang-solutions_1.0_all.deb
+sudo apt-get update -y -q       # otherwise we'll install old erlangs from ubuntu main
 sudo apt-get -y -q install software-properties-common htop
 sudo apt-get -y -q install default-jre default-jdk ant antlr junit git unzip erlang
 
@@ -239,6 +240,7 @@ cat >/home/vagrant/.emacs <<EOF
 ;; Set up ABS, Maude.  Added by Vagrant provisioning
 (add-to-list 'load-path "/vagrant/emacs")
 (require 'abs-mode)
+(setq abs-compiler-program "/usr/local/lib/absc/frontend/bin/bash/absc")
 (add-to-list 'auto-mode-alist (cons "\\\\.abs\\\\'" 'abs-mode))
 (require 'maude-mode)
 (add-to-list 'auto-mode-alist '("\\\\.maude\\\\'" maude-mode))
