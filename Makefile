@@ -59,14 +59,13 @@ docker: frontend		## Build and start collaboratory docker image
 	@echo "Finished."
 	@echo "Collaboratory running on http://localhost:8080/"
 
-server:				## Deploy development environment on $(SERVER)
-	@:$(call check_defined, SERVER, server name or address)
-	ssh ubuntu@$(SERVER) sudo apt-get -y update
-	ssh ubuntu@$(SERVER) sudo apt-get -y install make openjdk-8-jdk openjdk-8-jre ant erlang emacs git
-	ssh ubuntu@$(SERVER) git clone https://github.com/abstools/abstools
-	scp Makefile ubuntu@$(SERVER):~/abstools/Makefile
-	ssh ubuntu@$(SERVER) make -f "~/abstools/Makefile" frontend
-	ssh ubuntu@$(SERVER) 'echo "PATH=\$$HOME/abstools/frontend/bin/bash:\$$PATH" >> ~/.bashrc'
+server:				## Deploy development environment on Debian-based server
+	@:$(call check_defined, SERVER, server name or address as accepted by ssh)
+	ssh $(SERVER) sudo apt-get -y update
+	ssh $(SERVER) sudo apt-get -y install make openjdk-8-jdk openjdk-8-jre ant erlang emacs git
+	ssh $(SERVER) git clone https://github.com/abstools/abstools
+	ssh $(SERVER) make -f "~/abstools/Makefile" frontend
+	ssh $(SERVER) 'echo "PATH=\$$HOME/abstools/frontend/bin/bash:\$$PATH" >> ~/.bashrc'
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
