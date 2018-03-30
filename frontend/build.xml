@@ -29,7 +29,7 @@
   a JUnit test class (yet).
   -->
   <property name="threadCount" value="2" />
-  <!-- machine-readable JUnit output goes here: -->
+  <!-- JUnit output goes here: -->
   <property name="test.data.dir" location="${gen.test.dir}/data"/>
   <property name="ext.dir" value="${basedir}/lib" />
   <property name="ast.src.dir" value="${src.dir}/abs/frontend/ast" />
@@ -317,45 +317,46 @@
   <property name="test.backend.java.lib.net.suite.name" value="abs.backend.java.lib.net.AllNetTests" />
 
   <!-- invoke 'compile' once up front, so that the sub-tasks see the updated build. -->
-  <target name="tests-all" depends="compile">
+  <target name="tests-all" depends="compile" description="Runs the test suite.">
     <parallel threadCount="${threadCount}">
       <antcall target="tests-frontend" />
       <antcall target="tests-backend" />
     </parallel>
+    <echo message="Test logs in  ${test.data.dir}" />
   </target>
 
   <target name="tests-backend-semantic" depends="compile">
-    <junit fork="yes">
+    <junit fork="yes" printsummary="yes">
       <assertions><enable package="abs"/></assertions>
       <test name="${test.backend.semantic.suite.name}" todir="${test.data.dir}" />
-      <formatter type="plain" usefile="false" />
+      <formatter type="plain" />
       <formatter type="xml" />
       <classpath refid="test.classpath" />
     </junit>
   </target>
 
 
-  <target name="tests-backend" depends="compile">
-    <junit fork="yes">
+  <target name="tests-backend">
+    <junit fork="yes" printsummary="yes">
       <assertions><enable package="abs"/></assertions>
       <test name="${test.backend.suite.name}" todir="${test.data.dir}" />
-      <formatter type="plain" usefile="false" />
+      <formatter type="plain" />
       <formatter type="xml" />
       <classpath refid="test.classpath" />
     </junit>
   </target>
 
   <target name="tests-backend-net" depends="compile">
-    <junit fork="yes">
+    <junit fork="yes" printsummary="yes">
       <assertions><enable package="abs"/></assertions>
       <test name="${test.backend.java.lib.net.suite.name}" todir="${test.data.dir}" />
-      <formatter type="plain" usefile="false" />
+      <formatter type="plain" />
       <formatter type="xml" />
       <classpath refid="test.classpath" />
     </junit>
   </target>
 
-  <target name="test-case-studies" description="typecheck all case studies">
+  <target name="test-case-studies">
       <antcall target="abs-typecheck">
         <param name="absmodeldir" value="${casestudies.dir}/T4.2/D4.2.1/"/>
        </antcall>
@@ -367,7 +368,7 @@
        </antcall>
   </target>
 
-  <target name="abs-typecheck">
+  <target name="abs-typecheck" depends="compile">
     <echo message="Typechecking ABS models in ${absmodeldir} ..." />
         <java fork="true" classname="abs.frontend.parser.Main">
             <assertions><enable package="abs"/></assertions>
@@ -376,12 +377,12 @@
         </java>
   </target>
 
-  <target name="tests-frontend" depends="compile">
-    <junit fork="yes">
+  <target name="tests-frontend">
+    <junit fork="yes" printsummary="yes">
       <sysproperty key="abs.junit.casestudies" value="${casestudies.dir}/" />
       <assertions><enable package="abs"/></assertions>
       <test name="${test.frontend.suite.name}" todir="${test.data.dir}" />
-      <formatter type="plain" usefile="false" />
+      <formatter type="plain" />
       <formatter type="xml" />
       <classpath refid="test.classpath" />
     </junit>
