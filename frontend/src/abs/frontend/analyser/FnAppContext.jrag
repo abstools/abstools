@@ -40,9 +40,12 @@ aspect FnAppContext {
     eq RebindStmt.getVal().isFnAppContextImperative() = true;
     eq MoveStmt.getLoc().isFnAppContextImperative() = true;
     eq MoveStmt.getTo().isFnAppContextImperative() = true;
+    eq ForeachStmt.getListExp().isFnAppContextImperative() = true;
 
     // Function
     eq ExpFunctionDef.getRhs().isFnAppContextImperative() = false;
+    eq PartialFunctionDecl.getPartialFunctionDef().isFnAppContextImperative() = false;
+    eq PartialFunctionDecl.getFuncParam().isFnAppContextImperative() = false;
     eq Annotation.getValue().isFnAppContextImperative() = false; // Are annotations compiled?
 
     /**
@@ -100,6 +103,7 @@ aspect FnAppContext {
     eq DeltaDecl.getChild().isVarUseContextImperative(VarUse v) = true;
     eq ModuleDecl.getBlock().isVarUseContextImperative(VarUse v) = true;
     eq FunctionDecl.getChild().isVarUseContextImperative(VarUse v) = false;
+    eq PartialFunctionDecl.getChild().isVarUseContextImperative(VarUse v) = false;
 
     eq LetExp.getChild().isVarUseContextImperative(VarUse v) {
         if (v.getDecl().equals(getVar())) return false;
@@ -176,4 +180,17 @@ aspect FnAppContext {
         // lexically-enclosing scope
         return false;
     }
+    eq PartialFunctionDecl.getChild().isParamDeclImperative(ParamDecl p) {
+        return false;
+    }
+    
+    // Blocks of statements occur only in methods, never functions
+    eq Block.getStmt().isParamDeclImperative(ParamDecl p) = true;
+    eq Block.getAnnotation().isParamDeclImperative(ParamDecl p) = true;
+    // Unused at the moment: Erlang currently doesn't support object updates
+    eq ObjectUpdate.getChild().isParamDeclImperative(ParamDecl p) = true;
+    eq InterfaceDecl.getAnnotation().isParamDeclImperative(ParamDecl p) = true;
+    eq DataTypeDecl.getAnnotation().isParamDeclImperative(ParamDecl p) = false;
+    eq TypeSynDecl.getAnnotation().isParamDeclImperative(ParamDecl p) = false;
+    eq TypeUse.getAnnotation().isParamDeclImperative(ParamDecl p) = false;
 }

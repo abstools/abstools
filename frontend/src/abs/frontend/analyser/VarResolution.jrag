@@ -104,15 +104,23 @@ aspect VarResolution {
         return null;
     }
 
-    /**
-     * FIXME: ignores fieldOnly - refactor to avoid confusion?
-     */
+    syn lazy VarDecl DataConstructor.locallookupVarOrFieldName(String name, boolean fieldOnly);
+    eq DataConstructor.locallookupVarOrFieldName(String name, boolean fieldOnly) = null;
+
+
+
+    // we find function parameters in function annotations
+    eq FunctionDecl.getAnnotation().lookupVarOrFieldName(String name, boolean fieldOnly) = locallookupVarOrFieldName(name, fieldOnly);
+    // we find function parameters in result datatype annotations
+    eq FunctionDecl.getTypeUse().lookupVarOrFieldName(String name, boolean fieldOnly) = locallookupVarOrFieldName(name, fieldOnly);
+
     eq ClassDecl.locallookupVarOrFieldName(String name, boolean fieldOnly) {
-   	  for (ParamDecl p : getParams()) {
-   		  if (p.getName().equals(name)) 
-   			  return p;
-   	  }
-   	 
+        // At this point only fields are in scope so we can ignore fieldOnly
+        for (ParamDecl p : getParams()) {
+            if (p.getName().equals(name))
+                return p;
+        }
+
         for (FieldDecl d : getFields()) {
             if (d.getName().equals(name))
                 return d;
@@ -131,8 +139,8 @@ aspect VarResolution {
                      return d;
             }
             i--;
-		}
-	  }
+        }
+      }
       return lookupVarOrFieldName(name,fieldOnly);
     }
 
@@ -148,7 +156,7 @@ aspect VarResolution {
         }
         return null;
     }
-    
+
     syn lazy VarOrFieldDecl MethodSig.locallookupVarOrFieldName(String name, boolean fieldOnly) {
         if (!fieldOnly) {
             for (ParamDecl d : getParams()) {
@@ -158,7 +166,7 @@ aspect VarResolution {
         }
         return null;
     }
-    
+
     syn lazy VarOrFieldDecl AddFieldModifier.locallookupVarOrFieldName(String name, boolean fieldOnly) {
         FieldDecl d = getFieldDecl();
         if (d.getName().equals(name))
@@ -166,8 +174,8 @@ aspect VarResolution {
         else
             return null;
     }
-    
-    
+
+
     /* Resolution of variables used inside deltas
      * TODO use SPL configuration for guidance as of which deltas must have been applied before this delta.
      * But for now this will do:
@@ -238,9 +246,20 @@ aspect VarResolution {
 	  }
     inh VarOrFieldDecl MethodImpl.lookupVarOrFieldName(String name, boolean fieldOnly);
     
-    eq ClassDecl.getMethod(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
+    eq ClassDecl.getMethod(int i).lookupVarOrFieldName(String name, boolean fieldOnly)
         = locallookupVarOrFieldName(name,fieldOnly);
-    
+    eq ClassDecl.getInitBlock().lookupVarOrFieldName(String name, boolean fieldOnly) = locallookupVarOrFieldName(name,fieldOnly);
+    eq ClassDecl.getImplementedInterfaceUse().lookupVarOrFieldName(String name, boolean fieldOnly) = locallookupVarOrFieldName(name,fieldOnly);
+    eq ClassDecl.getRecoverBranch(int i).lookupVarOrFieldName(String name, boolean fieldOnly) {
+        if (!fieldOnly) {
+            VarOrFieldDecl result = getRecoverBranch(i).getLeft().locallookupVarOrFieldName(name, fieldOnly);
+            if (result != null) return result;
+        }
+        return locallookupVarOrFieldName(name, fieldOnly);
+    }
+    // we find field and parameter names inside class annotations
+    eq ClassDecl.getAnnotation().lookupVarOrFieldName(String name, boolean fieldOnly) = locallookupVarOrFieldName(name, fieldOnly);
+
     eq TraitSetExpr.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) //= null;
         = mylookupVarOrFieldName(name,fieldOnly);
 
@@ -256,19 +275,36 @@ aspect VarResolution {
 
     eq InterfaceDecl.getBody(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
         = getBody(i).locallookupVarOrFieldName(name,fieldOnly);
-    
+    // there are no identifiers at the scope of interface declarations, data
+    // type declarations, type synonym declarations
+    eq InterfaceDecl.getAnnotation().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
+    eq InterfaceDecl.getExtendedInterfaceUse().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
+    eq DataTypeDecl.getAnnotation().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
+    eq DataTypeDecl.getDataConstructor(int i).lookupVarOrFieldName(String name, boolean fieldOnly) = getDataConstructor(i).locallookupVarOrFieldName(name, fieldOnly);
+    eq TypeSynDecl.getAnnotation().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
+    eq TypeSynDecl.getValue().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
+
+
     eq MethodImpl.getMethodSig().lookupVarOrFieldName(String name, boolean fieldOnly) { 
         if (!fieldOnly) {
             VarOrFieldDecl d = getMethodSig().locallookupVarOrFieldName(name,fieldOnly);
-            if (d != null) 
-                return d;
+            if (d != null) return d;
         }
 
         return lookupVarOrFieldName(name,fieldOnly);
     }
-    
+
     eq MethodImpl.getBlock().lookupVarOrFieldName(String name, boolean fieldOnly) {
         return locallookupVarOrFieldName(name,fieldOnly);
+    }
+    eq MethodSig.getAnnotation().lookupVarOrFieldName(String name, boolean fieldOnly) {
+        if (!fieldOnly) {
+            VarOrFieldDecl d = locallookupVarOrFieldName(name, fieldOnly);
+            if (d != null) return d;
+        }
+        // A MethodImpl can talk about its surrounding class, but a MethodSig
+        // occurs in interface contexts etc., so maybe can't
+        return null;
     }
     
     eq ModuleDecl.getBlock().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
@@ -303,11 +339,21 @@ aspect VarResolution {
         return lookupVarOrFieldName(name, fieldOnly);
     }
 
+    eq ParamDecl.getAnnotation().lookupVarOrFieldName(String name, boolean fieldOnly) {
+        // For now, an annotation on a parameter can only talk about the
+        // parameter itself, so we don't recurse upwards via inheriting
+        // lookupVarOrFieldName().
+
+        // KLUDGE we ignore fieldOnly
+        if (name.equals(getName())) return this;
+        else return null;
+    }
+
     eq HasMethod.getMethodSig().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
-    
+
     // TODO: return something more meaningful here?
     eq UpdateDecl.getObjectUpdate().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
-    
+
     inh VarOrFieldDecl Exp.lookupVarOrFieldName(String name, boolean fieldOnly);
     /* [stolz/georgo]
        This is weird: here seems to be the reason for the failing patternVarTest, where the parent of the
@@ -320,7 +366,6 @@ aspect VarResolution {
         return fd.locallookupVarOrFieldName(name, fieldOnly);
     }
     inh VarOrFieldDecl Stmt.lookupVarOrFieldName(String name, boolean fieldOnly);
-    eq ClassDecl.getInitBlock().lookupVarOrFieldName(String name, boolean fieldOnly) = locallookupVarOrFieldName(name,fieldOnly);
     inh VarOrFieldDecl PatternVarUse.lookupVarOrFieldName(String name, boolean fieldOnly);
     
 	inh VarOrFieldDecl FieldDecl.lookupVarOrFieldName(String name, boolean fieldOnly);
