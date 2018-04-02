@@ -367,7 +367,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 	    } else if (element instanceof DataTypeDecl) {
 	        return ((DataTypeDecl) element).getNumDataConstructor() > 0;
 	    } else if (element instanceof MainBlock) {
-	        return ((MainBlock) element).getNumVar() > 0;
+	        return ((MainBlock) element).getVars().size() > 0;
 	    } else if (element instanceof List<?>) {
 	        return hasChilden((List<?>) element);
 	    } else if (element instanceof DeltaDecl) {

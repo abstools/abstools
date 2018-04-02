@@ -27,8 +27,6 @@ aspect VarResolution {
        }
     }
 
-    syn int Block.getNumVar() = getVars().size();
-    
     /**
      * Get declared variables.
      * FIXME: descends into nested blocks, but not into IF/WHILE?!?
