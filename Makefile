@@ -62,7 +62,7 @@ docker: frontend		## Build and start collaboratory docker image
 server:				## Deploy development environment on Debian-based server
 	@:$(call check_defined, SERVER, server name or address as accepted by ssh)
 	ssh $(SERVER) sudo apt-get -y update
-	ssh $(SERVER) sudo apt-get -y install make openjdk-8-jdk openjdk-8-jre ant erlang emacs git
+	ssh $(SERVER) sudo apt-get -y install make openjdk-8-jdk openjdk-8-jre ant erlang maude emacs git
 	ssh $(SERVER) git clone https://github.com/abstools/abstools
 	ssh $(SERVER) make -f "~/abstools/Makefile" frontend
 	ssh $(SERVER) 'echo "PATH=\$$HOME/abstools/frontend/bin/bash:\$$PATH" >> ~/.bashrc'
