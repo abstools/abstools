@@ -59,7 +59,7 @@ new(Cog,Class,Args,CreatorCog,Stack)->
         false -> ok
     end,
     cog:process_is_blocked_for_gc(CreatorCog, self()),
-    cog:add_sync(Cog,init_task,none,O,{O,Args},
+    cog:add_sync(Cog,init_task,none,O,Args,
                  #process_info{method= <<".init"/utf8>>}, [O, Args | Stack]),
     cog:process_is_runnable(CreatorCog, self()),
     task:wait_for_token(CreatorCog,[O, Args|Stack]),

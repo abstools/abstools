@@ -22,14 +22,14 @@
 
 
 %%Task behaviours have to implemented:
-%%init(Cog,Args): Can block an will init the task.
-%%                Return Value will then by passed to start
+%% init(Cog,Future,Object,Args): Can block and will init the task.  Return
+%% value will be passed to start/1
 %%
-%%start(InitValue):Executes the task
+%% start(InitValue): Executes the task
 
 
 behaviour_info(callbacks) ->
-    [{init, 2},{start,1}];
+    [{init, 4},{start,1}];
 behaviour_info(_) ->
     undefined.
 
@@ -38,7 +38,7 @@ start(Cog,TaskType,Future,CalleeObj,Args,Info)->
 
 init(TaskType,Cog,Future,CalleeObj,Args,Info)->
     put(process_info, Info#process_info{pid=self(),this=CalleeObj,destiny=Future}),
-    InnerState=TaskType:init(Cog,Args),
+    InnerState=TaskType:init(Cog,Future,CalleeObj,Args),
     %% init RNG, recipe recommended by the Erlang documentation.
     %% TODO: if we want reproducible runs, make seed a command-line parameter
     random:seed(erlang:phash2([node()]), erlang:monotonic_time(), erlang:unique_integer()),

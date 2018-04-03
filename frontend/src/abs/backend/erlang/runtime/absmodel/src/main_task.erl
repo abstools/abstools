@@ -1,12 +1,12 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(main_task).
 -behaviour(task).
--export([init/2,start/1]).
+-export([init/4,start/1]).
 %%Executes main block
 
 
 
-init(Cog,[Main,Starter])->
+init(Cog,_Future,_CalleeObj,[Main,Starter])->
     link(Starter),
     {Main,Cog}.
 
