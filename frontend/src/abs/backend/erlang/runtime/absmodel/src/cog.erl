@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
--export([start/0,start/1,start/2,add_and_notify/4,add_sync/5]).
+-export([start/0,start/1,start/2,add_and_notify/6,add_sync/7]).
 -export([process_is_runnable/2,
          process_is_blocked/2, process_is_blocked_for_gc/2,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
@@ -72,13 +72,13 @@ start(DC, Scheduler)->
     gc:register_cog(Cog),
     Cog.
 
-add_sync(#cog{ref=Cog},TaskType,Args,Info,Stack) ->
-    gen_statem:cast(Cog, {new_task,TaskType,Args,Info,self(),false,{started, TaskType}}),
+add_sync(#cog{ref=Cog},TaskType,Future,CalleeObj,Args,Info,Stack) ->
+    gen_statem:cast(Cog, {new_task,TaskType,Future,CalleeObj,Args,Info,self(),false,{started, TaskType}}),
     TaskRef=await_start(Cog, TaskType, [Args | Stack]),
     TaskRef.
 
-add_and_notify(#cog{ref=Cog},TaskType,Args,Info)->
-    gen_statem:cast(Cog, {new_task,TaskType,Args,Info,self(),true,{started, TaskType}}),
+add_and_notify(#cog{ref=Cog},TaskType,Future,CalleeObj,Args,Info)->
+    gen_statem:cast(Cog, {new_task,TaskType,Future,CalleeObj,Args,Info,self(),true,{started, TaskType}}),
     TaskRef=await_start(Cog, TaskType, Args),
     TaskRef.
 
@@ -199,7 +199,7 @@ init([DC, Scheduler]) ->
     cog_monitor:new_cog(self()),
     {ok, cog_starting, #data{dc=DC, scheduler=Scheduler}}.
 
-start_new_task(DC,TaskType,Args,Info,Sender,Notify,Cookie)->
+start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie)->
     ArrivalInfo=Info#process_info{arrival={dataTime, clock:now()}},
     Ref=task:start(#cog{ref=self(),dc=DC},TaskType,Args,ArrivalInfo),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
@@ -292,13 +292,13 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
                        new_tasks=NewNewTasks},
              {reply, From, ok}}
     end;
-no_task_schedulable(cast, {new_task,TaskType,Args,Info,Sender,Notify,Cookie},
+no_task_schedulable(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                     Data=#data{new_tasks=Tasks,dc=DC,
                                  process_infos=ProcessInfos}) ->
     %% The new task will send `process_runnable' soon; preemptively block time
     %% advance.
     cog_monitor:cog_active(self()),
-    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Args,Info,Sender,Notify,Cookie),
+    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                  process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
@@ -363,10 +363,10 @@ process_running({call, From}, {process_runnable, TaskRef},
                  waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                  new_tasks=gb_sets:del_element(TaskRef, New)},
      {reply, From, ok}};
-process_running(cast, {new_task,TaskType,Args,Info,Sender,Notify,Cookie},
+process_running(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                 Data=#data{new_tasks=Tasks,dc=DC,
                            process_infos=ProcessInfos}) ->
-    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Args,Info,Sender,Notify,Cookie),
+    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
@@ -447,10 +447,10 @@ process_blocked({call, From}, {process_runnable, TaskRef},
                runnable_tasks=gb_sets:add_element(TaskRef, Run),
                new_tasks=gb_sets:del_element(TaskRef, New)},
      {reply, From, ok}};
-process_blocked(cast, {new_task,TaskType,Args,Info,Sender,Notify,Cookie},
+process_blocked(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                 Data=#data{new_tasks=Tasks,dc=DC,
                            process_infos=ProcessInfos}) ->
-    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Args,Info,Sender,Notify,Cookie),
+    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
@@ -506,10 +506,10 @@ waiting_for_gc_stop({call, From}, {process_runnable, T},
                runnable_tasks=gb_sets:add_element(T, Run),
                new_tasks=gb_sets:del_element(T, New)},
      {reply, From, ok}};
-waiting_for_gc_stop(cast, {new_task,TaskType,Args,Info,Sender,Notify,Cookie},
+waiting_for_gc_stop(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                     Data=#data{new_tasks=Tasks,dc=DC,
                                process_infos=ProcessInfos}) ->
-    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Args,Info,Sender,Notify,Cookie),
+    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
@@ -582,12 +582,12 @@ in_gc(cast, {get_references, Sender},
              Data#data{references=#{sender => Sender, waiting => AllTaskList,
                                     received => []}}}
     end;
-in_gc(cast, {new_task,TaskType,Args,Info,Sender,Notify,Cookie},
+in_gc(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
       Data=#data{new_tasks=Tasks,dc=DC,process_infos=ProcessInfos}) ->
     %% Tell cog_monitor now that we're busy; after gc it might be too late --
     %% but don't put new task into runnable_tasks yet
     cog_monitor:cog_active(self()),
-    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Args,Info,Sender,Notify,Cookie),
+    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
