@@ -246,7 +246,7 @@ public class ClassGenerator {
             ecs.println("throw(badarg).");
             ecs.decIndent();
         }
-        ErlUtil.functionHeader(ecs, "get_all_state", Mask.none, "S");
+        ErlUtil.functionHeader(ecs, "get_state_for_modelapi", Mask.none, "S");
         ecs.println("[");
         ecs.incIndent();
         first = true;
@@ -278,7 +278,7 @@ public class ClassGenerator {
     }
 
     private void generateExports() {
-        ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0,get_all_state/1]).");
+        ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0,get_state_for_modelapi/1]).");
         ecs.println("-compile(export_all).");
         ecs.println();
 
