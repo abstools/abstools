@@ -51,6 +51,13 @@ public class ExceptionTests extends SemanticTests {
    }
    
    @Test
+   public void testExceptionNoPropagation() {
+       // https://github.com/abstools/abstools/issues/115
+       Assume.assumeFalse("Not implemented on Java backend yet", driver.getBackendName() == BackendName.JAVA);
+       assertEvalTrue(new File("tests/abssamples/backend/StmtTests/exception_no_propagation.abs"));
+   }
+   
+   @Test
    public void testExceptionNullFuture() {
        Assume.assumeFalse("Not implemented on Java / Maude backend yet", driver.getBackendName() == BackendName.JAVA || driver.getBackendName() == BackendName.MAUDE);
        assertEvalTrue(new File("tests/abssamples/backend/StmtTests/exception_nullfuture.abs"));

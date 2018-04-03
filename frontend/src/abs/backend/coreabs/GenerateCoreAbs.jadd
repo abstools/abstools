@@ -115,16 +115,21 @@ aspect GenerateCoreABS {
 
                     if (s instanceof VarDeclStmt) {
                         ((VarDeclStmt)s).getVarDecl().setInitExp(g);
+                        newStatements.add(s.treeCopyNoTransform());
                     } else if (s instanceof AssignStmt) {
                         ((AssignStmt)s).setValue(g);
+                        newStatements.add(s.treeCopyNoTransform());
                     } else if (s instanceof ReturnStmt) {
                         ((ReturnStmt)s).setRetExp(g);
+                        newStatements.add(s.treeCopyNoTransform());
                     } else if (s instanceof ExpressionStmt) {
-                        ((ExpressionStmt)s).setExp(g);
+                        // This branch intentionally left blank: do not get
+                        // (and ignore) a value here, and do not raise an
+                        // exception either.  See
+                        // https://github.com/abstools/abstools/issues/115
                     } else {
                         throw new NotImplementedYetException(this, "Don't know how to rewrite statement " + s.getClass().toString());
                     }
-                    newStatements.add(s.treeCopyNoTransform());
                 }
             }
             setStmtList(newStatements);
@@ -225,3 +230,7 @@ aspect GenerateCoreABS {
     }
 
 }
+
+// Local Variables:
+// mode: java
+// End:

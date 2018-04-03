@@ -557,7 +557,7 @@ try b = f.get; catch { _ => b = False; }
 ==== Await Expression
 
 An await expression is a way to asynchronously call a method, wait for the
-callee to finish, and get the result in one expression.
+callee to finish, and optionally get the result in one expression.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
@@ -571,7 +571,7 @@ callee to finish, and get the result in one expression.
 A x = await o!m();
 ----
 
-The statement above is equivalent to the three statements in the following example.
+The statement above is equivalent to these three statements:
 
 [source]
 .Example
@@ -579,6 +579,33 @@ The statement above is equivalent to the three statements in the following examp
 Fut<A> fx = o!m();
 await fx?;
 A x = fx.get;
+----
+
+===== Exception Propagation and the Await Expression
+
+As explained in Section <<get-expression>>, exceptions propagate from callee
+to caller via the `get` expression.  An `await` statement will proceed once
+the callee process has finished, but an exception in the future will not be
+raised when executing the `await` statement.  To align the `await` expression
+with that behavior, an exception will only be raised when the return value of
+a method call is used, e.g., by assigning it to a variable. Hence the
+following line of code will not raise an error even if the call to `o!m()`
+results in an exception:
+
+[source]
+.Example
+----
+await o!m();
+----
+
+Since the return value is ignored in the statement above, it is equivalent to
+these two statements:
+
+[source]
+.Example
+----
+Fut<A> fx = o!m();
+await fx?;
 ----
 
 

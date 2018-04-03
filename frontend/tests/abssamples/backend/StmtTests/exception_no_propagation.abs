@@ -1,0 +1,19 @@
+module BackendTest;
+
+exception MyE;
+
+interface I {
+    Bool m();
+}
+
+class C implements I {
+    Bool m() { throw MyE; return False; }
+}
+
+{
+    I o = new C();
+    Bool testresult = True;
+    // this should not propagate the exception
+    try await o!m();
+    catch MyE => testresult = False;
+}
