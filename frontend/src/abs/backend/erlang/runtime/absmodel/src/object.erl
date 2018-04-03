@@ -20,7 +20,7 @@
 
 %% KLUDGE: dc.erl directly sends events as well.  This is not good; we should
 %% export those as functions.
--export([new/3,new/5,activate/1,new_object_task/3,die/2,alive/1,get_field_value/2,set_field_value/3]).
+-export([new/3,new/5,activate/1,new_object_task/3,die/2,alive/1,get_field_value/2,set_field_value/3,get_whole_state/1,set_whole_state/2]).
 
 %% Garbage collection callback
 -behaviour(gc).
@@ -113,6 +113,12 @@ get_field_value(O=#object{ref=Ref}, Field) ->
 set_field_value(O=#object{ref=Ref}, Field, Value) ->
     gen_statem:call(Ref,{O,set,Field,Value}).
 
+get_whole_state(O=#object{ref=Ref}) ->
+    gen_statem:call(Ref,{O, get_whole_state}).
+
+set_whole_state(O=#object{ref=Ref}, State) ->
+    gen_statem:call(Ref,{O, set_whole_state}, State).
+
 get_all_method_info(_O=#object{class=C,ref=_Ref}) ->
     C:exported().
 
@@ -164,6 +170,8 @@ uninitialized(info, Msg, Data) ->
 active({call, From}, {#object{class=Class},get,Field}, Data=#data{class=Class,fields=OState})->
     Reply= Class:get_val_internal(OState,Field),
     {keep_state_and_data, {reply, From, Reply}};
+active({call, From}, {#object{class=Class},get_whole_state}, Data=#data{class=Class,fields=OState})->
+    {keep_state_and_data, {reply, From, OState}};
 active({call, From}, {new_task,TaskRef}, Data=#data{tasks=Tasks})->
     monitor(process,TaskRef),
     {keep_state,Data#data{tasks=gb_sets:add_element(TaskRef, Tasks)}, {reply, From, active}};
@@ -228,6 +236,8 @@ active({call, From}, get_resource_json,
 active({call, From}, {#object{class=Class},set,Field,Val},Data=#data{class=Class,fields=OState}) ->
     OState1=Class:set_val_internal(OState,Field,Val),
     {keep_state, Data#data{fields=OState1}, {reply, From, ok}};
+active({call, From}, {#object{class=Class},set_whole_state,Val},Data=#data{class=Class,fields=OState}) ->
+    {keep_state, Data#data{fields=Val}, {reply, From, ok}};
 active({call, From}, Msg, Data) ->
     handle_call(From, Msg, Data);
 active(cast, Msg, Data) ->
