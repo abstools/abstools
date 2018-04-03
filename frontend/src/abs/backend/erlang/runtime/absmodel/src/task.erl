@@ -4,7 +4,7 @@
 
 
 %% External API
--export([start/4,init/4,join/1,notifyEnd/1,notifyEnd/2]).
+-export([start/6,init/6,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
 -export([wait_for_token/2,release_token/2]).
 -export([await_duration/4,block_for_duration/4]).
@@ -33,11 +33,11 @@ behaviour_info(callbacks) ->
 behaviour_info(_) ->
     undefined.
 
-start(Cog,TaskType,Args,Info)->
-    spawn_link(task,init,[TaskType,Cog,Args,Info]).
+start(Cog,TaskType,Future,CalleeObj,Args,Info)->
+    spawn_link(task,init,[TaskType,Cog,Future,CalleeObj,Args,Info]).
 
-init(TaskType,Cog,Args,Info)->
-    put(process_info, Info#process_info{pid=self()}),
+init(TaskType,Cog,Future,CalleeObj,Args,Info)->
+    put(process_info, Info#process_info{pid=self(),this=CalleeObj,destiny=Future}),
     InnerState=TaskType:init(Cog,Args),
     %% init RNG, recipe recommended by the Erlang documentation.
     %% TODO: if we want reproducible runs, make seed a command-line parameter

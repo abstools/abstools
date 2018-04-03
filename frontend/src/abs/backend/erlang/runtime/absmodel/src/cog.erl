@@ -201,7 +201,7 @@ init([DC, Scheduler]) ->
 
 start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie)->
     ArrivalInfo=Info#process_info{arrival={dataTime, clock:now()}},
-    Ref=task:start(#cog{ref=self(),dc=DC},TaskType,Args,ArrivalInfo),
+    Ref=task:start(#cog{ref=self(),dc=DC},TaskType,Future,CalleeObj,Args,ArrivalInfo),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     case Cookie of
         undef -> ok;
