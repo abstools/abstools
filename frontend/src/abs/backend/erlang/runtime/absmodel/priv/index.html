@@ -109,6 +109,12 @@
             var graphs = new Array();
             for(var i = 0; i < graphData.length; i++){
                 options['title'] = graphData[i].name;
+                if (graphData[i].values[0].length == 2) {
+                    options['labels'] = ["", "used"];
+                }
+                else {
+                    options['labels'] = ["", "used", "total"];
+                }
                 graphs.push(new Dygraph(
                             document.getElementById("graph_"+(1+i)),
                             graphData[i].values,
