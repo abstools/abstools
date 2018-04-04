@@ -124,8 +124,8 @@ public class ClassGenerator {
             ecs.println(",");
         }
         if (classDecl.isActiveClass()) {
-            ecs.println("cog:process_is_blocked_for_gc(Cog, self()),");
-            ecs.print("cog:add_task(Cog,active_object_task,none,O,[],#process_info{method= <<\"run\"/utf8>>},");
+            ecs.println("cog:process_is_blocked_for_gc(Cog, self(), get(this)),");
+            ecs.print("cog:add_task(Cog,active_object_task,null,O,[],#process_info{method= <<\"run\"/utf8>>,this=O,destiny=null},");
             ecs.print(vars.toStack());
             ecs.println("),");
             ecs.println("cog:process_is_runnable(Cog,self()),");

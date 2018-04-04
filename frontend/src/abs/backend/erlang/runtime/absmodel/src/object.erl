@@ -50,7 +50,14 @@ new(Cog,Class,Args)->
         true -> protect_object_from_gc(O);
         false -> ok
     end,
+    %% Run the init block in the scope of the new object.  This is safe since
+    %% scheduling is not allowed in init blocks.
+    OldThis=get(this),
+    put(this, object:get_whole_state(O)),
     Class:init(O,Args),
+    %% FIXME: can we construct a pathological case involving synchronous
+    %% atomic callbacks?
+    put(this, OldThis),
     O.
 new(Cog,Class,Args,CreatorCog,Stack)->
     O=start(Cog,Class),
@@ -58,9 +65,10 @@ new(Cog,Class,Args,CreatorCog,Stack)->
         true -> protect_object_from_gc(O);
         false -> ok
     end,
-    cog:process_is_blocked_for_gc(CreatorCog, self()),
+    cog:process_is_blocked_for_gc(CreatorCog, self(), get(this)),
     cog:add_task(Cog,init_task,none,O,Args,
-                 #process_info{method= <<".init"/utf8>>}, [O, Args | Stack]),
+                 #process_info{method= <<".init"/utf8>>, this=O, destiny=null},
+                 [O, Args | Stack]),
     cog:process_is_runnable(CreatorCog, self()),
     task:wait_for_token(CreatorCog,[O, Args|Stack]),
     O.
@@ -107,17 +115,29 @@ unprotect_object_from_gc(#object{ref=O}) ->
 get_object_state_for_json(#object{ref=O}) ->
     gen_statem:call(O, get_state_for_modelapi).
 
-get_field_value(O=#object{ref=Ref}, Field) ->
-    gen_statem:call(Ref, {O,get,Field}).
+get_field_value(O=#object{ref=Ref,class=C}, Field) ->
+    Value=C:get_val_internal(get(this), Field),
+    Value2=gen_statem:call(Ref, {O,get,Field}),
+    case Value==Value2 of
+        true -> ok;
+        false -> io:format("Object attribute mismatch: object ~p vs local ~p~n", [Value, Value2]),
+                 exit("Internal error")
+    end,
+    Value.
 
-set_field_value(O=#object{ref=Ref}, Field, Value) ->
-    gen_statem:call(Ref,{O,set,Field,Value}).
+set_field_value(O=#object{ref=Ref,class=C}, Field, Value) ->
+    gen_statem:call(Ref,{O,set,Field,Value}),
+    put(this, C:set_val_internal(get(this), Field, Value)).
 
 get_whole_state(O=#object{ref=Ref}) ->
-    gen_statem:call(Ref,{O, get_whole_state}).
+    gen_statem:call(Ref, get_whole_state);
+get_whole_state(void) ->
+    %% fixup main block: O (i.e., 'this') is bound to the symbol 'void' there.
+    {state}.
+
 
 set_whole_state(O=#object{ref=Ref}, State) ->
-    gen_statem:call(Ref,{O, set_whole_state}, State).
+    gen_statem:call(Ref,{O, set_whole_state, State}).
 
 get_all_method_info(_O=#object{class=C,ref=_Ref}) ->
     C:exported().
@@ -170,8 +190,6 @@ uninitialized(info, Msg, Data) ->
 active({call, From}, {#object{class=Class},get,Field}, Data=#data{class=Class,fields=OState})->
     Reply= Class:get_val_internal(OState,Field),
     {keep_state_and_data, {reply, From, Reply}};
-active({call, From}, {#object{class=Class},get_whole_state}, Data=#data{class=Class,fields=OState})->
-    {keep_state_and_data, {reply, From, OState}};
 active({call, From}, {new_task,TaskRef}, Data=#data{tasks=Tasks})->
     monitor(process,TaskRef),
     {keep_state,Data#data{tasks=gb_sets:add_element(TaskRef, Tasks)}, {reply, From, active}};
@@ -237,6 +255,12 @@ active({call, From}, {#object{class=Class},set,Field,Val},Data=#data{class=Class
     OState1=Class:set_val_internal(OState,Field,Val),
     {keep_state, Data#data{fields=OState1}, {reply, From, ok}};
 active({call, From}, {#object{class=Class},set_whole_state,Val},Data=#data{class=Class,fields=OState}) ->
+    %% FIXME diagnostic code: remove this
+    case Val==OState of
+        true -> ok;
+        false -> io:format("Object states do not agree: old ~p vs incoming ~p~n", [OState, Val]),
+                 exit("Internal error")
+    end,
     {keep_state, Data#data{fields=Val}, {reply, From, ok}};
 active({call, From}, Msg, Data) ->
     handle_call(From, Msg, Data);
@@ -266,6 +290,8 @@ handle_call(From, get_references,
                   Data=#data{fields=OState, cog=#cog{dc=DC}}) ->
     {keep_state_and_data, {reply, From, ordsets:union(gc:extract_references(DC),
                                                       gc:extract_references(OState))}};
+handle_call(From, get_whole_state, Data=#data{class=Class,fields=OState})->
+    {keep_state_and_data, {reply, From, OState}};
 handle_call(From, get_state_for_modelapi, Data=#data{class=C,fields=OState}) ->
     {keep_state_and_data, {reply, From, C:get_state_for_modelapi(OState)}}.
 

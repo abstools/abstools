@@ -43,7 +43,7 @@ wait_for_future_start(Cog, Stack) ->
         {started, _Ref} ->
             ok;
         {stop_world, _Sender} ->
-            cog:process_is_blocked_for_gc(Cog, self()),
+            cog:process_is_blocked_for_gc(Cog, self(), get(this)),
             cog:process_is_runnable(Cog, self()),
             task:wait_for_token(Cog, Stack),
             wait_for_future_start(Cog, Stack);
@@ -86,7 +86,7 @@ get_blocking(Future, Cog, Stack) ->
         false ->
             %% Tell future not to advance time until we picked up ourselves
             register_waiting_task(Future, self()),
-            cog:process_is_blocked(Cog,self()),
+            cog:process_is_blocked(Cog,self(), get(this)),
             (fun Loop() ->
                      receive
                          {value_present, Future, _CalleeCog} ->
@@ -182,7 +182,7 @@ init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,Reg
             %%Start task
             process_flag(trap_exit, true),
             MonRef=monitor(process,CogRef),
-            TaskRef=cog:add_task(Cog,async_call_task,self(),Callee,[Method|Params], Info, Params),
+            TaskRef=cog:add_task(Cog,async_call_task,self(),Callee,[Method|Params], Info#process_info{this=Callee,destiny=self()}, Params),
             demonitor(MonRef),
             case RegisterInGC of
                 true -> gc:register_future(self());

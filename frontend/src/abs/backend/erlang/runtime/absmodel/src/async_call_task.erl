@@ -21,7 +21,7 @@ start(#state{fut=Future,obj=O=#object{class=C,cog=Cog=#cog{ref=CogRef,dc=DC}},me
     try
         receive
             {stop_world, CogRef} ->
-                cog:process_is_blocked_for_gc(Cog, self()),
+                cog:process_is_blocked_for_gc(Cog, self(), get(this)),
                 cog:process_is_runnable(Cog, self()),
                 task:wait_for_token(Cog, [O,DC|P]);
             die_prematurely ->
@@ -42,7 +42,7 @@ complete_future(Future, Status, Value, Cog, Stack) ->
              %% meantime.
              receive
                  {stop_world, _Sender} ->
-                     cog:process_is_blocked_for_gc(Cog, self()),
+                     cog:process_is_blocked_for_gc(Cog, self(), get(this)),
                      cog:process_is_runnable(Cog, self()),
                      task:wait_for_token(Cog, [Future, Value | Stack]),
                      Loop();
