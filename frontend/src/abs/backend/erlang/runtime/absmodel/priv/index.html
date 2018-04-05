@@ -109,7 +109,8 @@
             var graphs = new Array();
             for(var i = 0; i < graphData.length; i++){
                 options['title'] = graphData[i].name;
-                if (graphData[i].values[0].length == 2) {
+                if (graphData[i].values.length > 0 &&
+                    graphData[i].values[0].length == 2) {
                     options['labels'] = ["", "used"];
                 }
                 else {
