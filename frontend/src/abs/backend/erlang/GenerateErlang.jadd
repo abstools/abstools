@@ -908,7 +908,7 @@ aspect GenerateErlang {
   @Override
   public void PatternVarUse.generateErlangCode(CodeStream prePattern,CodeStream ecs,Vars vars){
       VarOrFieldDecl decl = this.getDecl();
-      if (decl instanceof FieldDecl) {
+      if (decl instanceof FieldDecl || decl instanceof ClassParamDecl) {
           String tmp=vars.getTemp();
           prePattern.pf("%s=get(O,'%s'),",tmp,getName());
           ecs.print(tmp);

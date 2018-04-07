@@ -122,6 +122,7 @@ abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ;
 VarDecl: TypedVarOrFieldDecl ::= [InitExp:Exp];
 FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation* <Port:boolean>; // (For Component Model) //
 ParamDecl: TypedVarOrFieldDecl ::= Annotation*;
+ClassParamDecl: ParamDecl;
 PatternVarDecl: VarOrFieldDecl;
 LoopVarDecl: VarOrFieldDecl;    // for ForeachStmt
 

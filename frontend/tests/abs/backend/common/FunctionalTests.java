@@ -289,6 +289,11 @@ public class FunctionalTests extends SemanticTests {
      }
 
     @Test
+    public void caseBoundClassParameter() throws Exception {
+        assertEvalTrue(new File("tests/abssamples/backend/FunctionalTests/caseBoundClassParameter.abs"));
+     }
+
+    @Test
     public void caseBoundAssignedParameter() throws Exception {
         assertEvalTrue(new File("tests/abssamples/backend/FunctionalTests/caseBoundAssignedParameter.abs"));
      }
