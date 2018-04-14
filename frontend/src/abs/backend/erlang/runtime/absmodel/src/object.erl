@@ -117,16 +117,16 @@ get_object_state_for_json(#object{ref=O}) ->
 
 get_field_value(O=#object{ref=Ref,class=C}, Field) ->
     Value=C:get_val_internal(get(this), Field),
-    Value2=gen_statem:call(Ref, {O,get,Field}),
-    case Value==Value2 of
-        true -> ok;
-        false -> io:format("Object attribute mismatch: object ~p vs local ~p~n", [Value, Value2]),
-                 exit("Internal error")
-    end,
+    %% Value2=gen_statem:call(Ref, {O,get,Field}),
+    %% case Value==Value2 of
+    %%     true -> ok;
+    %%     false -> io:format("Object attribute mismatch: object ~p vs local ~p~n", [Value, Value2]),
+    %%              exit("Internal error")
+    %% end,
     Value.
 
 set_field_value(O=#object{ref=Ref,class=C}, Field, Value) ->
-    gen_statem:call(Ref,{O,set,Field,Value}),
+    %% gen_statem:call(Ref,{O,set,Field,Value}),
     put(this, C:set_val_internal(get(this), Field, Value)).
 
 get_whole_state(O=#object{ref=Ref}) ->
@@ -255,12 +255,11 @@ active({call, From}, {#object{class=Class},set,Field,Val},Data=#data{class=Class
     OState1=Class:set_val_internal(OState,Field,Val),
     {keep_state, Data#data{fields=OState1}, {reply, From, ok}};
 active({call, From}, {#object{class=Class},set_whole_state,Val},Data=#data{class=Class,fields=OState}) ->
-    %% FIXME diagnostic code: remove this
-    case Val==OState of
-        true -> ok;
-        false -> io:format("Object states do not agree: old ~p vs incoming ~p~n", [OState, Val]),
-                 exit("Internal error")
-    end,
+    %% case Val==OState of
+    %%     true -> ok;
+    %%     false -> io:format("Object states do not agree: old ~p vs incoming ~p~n", [OState, Val]),
+    %%              exit("Internal error")
+    %% end,
     {keep_state, Data#data{fields=Val}, {reply, From, ok}};
 active({call, From}, Msg, Data) ->
     handle_call(From, Msg, Data);
