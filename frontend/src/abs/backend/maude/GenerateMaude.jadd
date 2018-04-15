@@ -958,36 +958,6 @@ aspect GenerateMaude {
         return 0; // bogus
     }
 
-    /* Components */
-    public void NewLocExp.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations) { stream.print("newloc( " + var + " ) "); }
-    public void GetFatherExp.generateMaude(PrintStream stream) {stream.print("getloc( "); getPureExp().generateMaude(stream); stream.print(" ) ");}
-    public void GetLocExp.generateMaude(PrintStream stream) {stream.print("getfather( "); getPureExp().generateMaude(stream); stream.print(" ) ");}
-    
-    public void RebindStmt.generateMaude(PrintStream stream) { // I guess the access to the elements of the Rebind is done as specified in ABS.ast
-      stream.print("rebind( ");
-      getObj().generateMaude(stream);
-      stream.print("; '" + getField() + " ; ");
-      getVal().generateMaude(stream);
-      stream.print(") ");
-    }
-
-    public void MoveStmt.generateMaude(PrintStream stream) {
-      stream.print("subloc(");
-      getLoc().generateMaude(stream);
-      stream.print(" ; ");
-      getTo().generateMaude(stream);
-      stream.print(" ) ");      
-    }
-    
-    public void ObjectGuard.generateMaude(PrintStream stream) {
-      stream.print("( cr( ");
-      getExp().generateMaude(stream);
-      stream.print(")) ");
-    }
-    
-    public int GetFatherExp.numberOfRandom(Set<String> visitedFunctions) { return getPureExp().numberOfRandom(visitedFunctions); }
-    public int GetLocExp.numberOfRandom(Set<String> visitedFunctions) { return getPureExp().numberOfRandom(visitedFunctions); }
-    public int NewLocExp.numberOfRandom(Set<String> visitedFunctions) { return 0; } 
     public void TraitDecl.generateMaude(PrintStream stream) {}
   
 

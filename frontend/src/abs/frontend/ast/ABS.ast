@@ -299,19 +299,6 @@ abstract EqualityExpr : RelationalExpr;
 EqExp : EqualityExpr ;
 NotEqExp : EqualityExpr ;
 
-// (For Component Model) //
-  // Component: statements
-RebindStmt: Stmt        ::= Obj:Exp <Field> Val:Exp;
-MoveStmt: Stmt          ::= Loc:PureExp To:PureExp;
-  // Component: Guards of object
-ObjectGuard: Guard      ::= Exp;
-  // Component expressions to get a location
-NewLocExp: EffExp;
-GetLocExp: PureExp       ::= PureExp;
-GetFatherExp: PureExp    ::= PureExp;
-
-
-
 // Feature Configuration and Product Selection Language (CL/PSL)
 ProductLine ::= <Name> Feature* DeltaClause* ;
 Feature ::= <Name> AttrAssignment*;

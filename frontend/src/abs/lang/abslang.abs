@@ -1,7 +1,7 @@
 module ABS.StdLib;
 
 // Scalar datatypes
-export Unit, String, Int, Rat, Bool, Fut, Exception, Location;
+export Unit, String, Int, Rat, Bool, Fut, Exception;
 
 // Booleans
 export True, False, and, not;
@@ -76,7 +76,6 @@ data Rat;                       // builtin
 data Bool = True | False;       // builtin
 data Fut<A>;                    // builtin
 data Exception;                 // builtin
-data Location;                  // (For Component model) //
 
 def Bool and(Bool a, Bool b) = a && b;
 def Bool not(Bool a) = !a;

@@ -1150,19 +1150,6 @@ aspect GenerateJava {
         stream.print(")");
     }
 
-    /* Components */
-    public void RebindStmt.generateJava(String indent, PrintStream stream) { }
-    public void MoveStmt.generateJava(String indent, PrintStream stream) { }
-
-    public void NewLocExp.generateJava(PrintStream stream) { }
-    public void GetLocExp.generateJava(PrintStream stream) { }
-    public void GetFatherExp.generateJava(PrintStream stream) { }
-    public void ObjectGuard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream) {}
-
-    public void NewLocExp.generateJavaDynamic(PrintStream stream) { }
-    public void GetLocExp.generateJavaDynamic(PrintStream stream) { }
-    public void GetFatherExp.generateJavaDynamic(PrintStream stream) { }
-    public void ObjectGuard.generateJavaGuardDynamic(PrintStream beforeAwaitStream, PrintStream stream) {}
     /*****/
     public void TraitUse.generateJava(PrintStream stream) { }
     public void TraitUse.generateJavaDynamic(PrintStream stream) { }

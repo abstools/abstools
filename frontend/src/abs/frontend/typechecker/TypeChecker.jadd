@@ -1286,14 +1286,6 @@ aspect TypeCheckProductline {
 	eq AppCondNot.refersTo(Feature f) = getAppCond().refersTo(f);
 }
 
-/* Components */
-aspect TypeCheckComponents {
-    public void MoveStmt.typeCheck(SemanticConditionList e) {}
-    public void RebindStmt.typeCheck(SemanticConditionList e) {}
-
-    public void ObjectGuard.typeCheck(SemanticConditionList e) { }
-
-}
 // Local Variables:
 // mode: java
 // End:

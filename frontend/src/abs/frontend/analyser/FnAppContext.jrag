@@ -36,10 +36,6 @@ aspect FnAppContext {
     eq ThrowStmt.getReason().isFnAppContextImperative() = true;
     eq DieStmt.getReason().isFnAppContextImperative() = true;
     eq AwaitStmt.getGuard().isFnAppContextImperative() = true;
-    eq RebindStmt.getObj().isFnAppContextImperative() = true;
-    eq RebindStmt.getVal().isFnAppContextImperative() = true;
-    eq MoveStmt.getLoc().isFnAppContextImperative() = true;
-    eq MoveStmt.getTo().isFnAppContextImperative() = true;
     eq ForeachStmt.getListExp().isFnAppContextImperative() = true;
 
     // Function

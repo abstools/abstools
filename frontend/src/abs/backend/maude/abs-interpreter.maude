@@ -129,8 +129,6 @@ fmod ABS-EXPRESSION is
   op ?(_)  : Expr -> Expr [ctor format (! o d d d)] .
   *** duration guard expression
   op ?duration(_;_) : Expr Expr -> Expr [ctor format (! o d d d d d) ] .
-  *** Component Model Extension: consistency guard
-  op cr(_) : Expr -> Expr  [ctor format (! o d d d)] .
   *** Error terms
   op $error : String -> Expr [ctor format (r o)] .
 
@@ -597,13 +595,6 @@ mod ABS-STATEMENT is
   op $pushrandom : -> AbortableStmt [ctor format (r o)] .
   op $poprandom : -> AbortableStmt [ctor format (r o)] .
 
-  *** Component Model Extension: rebind et subloc
-  op rebind(_;_;_) : Expr Vid Expr -> AbortableStmt [ctor format (b d o b o b o b o)] .
-  op newloc(_) : Vid -> AbortableStmt [ctor format (r d o r o)] .
-  op getloc(_;_) : Vid Expr -> AbortableStmt [ctor format (b d o b o b o)] .
-  op getfather(_;_) : Vid Expr -> AbortableStmt [ctor format (b d o b o b o)] .
-  op subloc(_;_) : Expr Expr -> AbortableStmt [ctor format (b d o b o b o)] .
-
   --- Assertion Failure.
   --- This `statement' represents an assertion failure.  It
   --- stops evaluation of the executing object at that point.
@@ -840,20 +831,6 @@ mod ABS-CONFIGURATION is
   subsort Oid < Cogid .
   op <_: Cog | Objects:_, DC:_, Sched:_, Pr:_, PrQ:_ > : Cogid Configuration Oid Expr Process MProc -> Cog
     [ctor format (nc d d c d n o! d n o! d n o! d n o! d n o!++ c-- on ) ] .
-
-  *** Component Model Extension: Location
-  sort Location .
-  subsort Location  < Data .
-  sort LocInfo .
-  subsort LocInfo  < Configuration .
-  
-  op loc-top     : -> Location [ctor] .
-  op loc-cog(_)  : Cogid -> Location [ctor format (b o b o o)] .
-  op loc-comp(_) : Nat -> Location [ctor format (b o b o o)] .
-
-  op < LocId | _ > : Nat -> LocInfo [ctor] .
-  op < locRel | _ ; _ > : Data Data -> LocInfo [ctor] .
-
 
   *** Useful for real-time maude, and in general for accessing the whole
   *** configuration.  FIXME: We should use another name, since State is used
@@ -1483,8 +1460,7 @@ mod ABS-MACHINE-BASICS-COMMON is
       DC: ob('ABS.DC.DeploymentComponent, -1),
       Sched: "ABS.Scheduler.defaultscheduler"('queue),
       Pr: idle,
-      PrQ: noProc >
-    < LocId | 0 > . *** Component Model Extension
+      PrQ: noProc > .
 
   *** evaluate cost expression only once.
   ceq < T : Clock | Limit: LIM, Random: RAND >
@@ -2902,127 +2878,6 @@ mod ABS-RECEIVE-RESULT is
 
 endm
 
-
-**********************************************
-*** Component Model Extension: Rebind, Newloc, GetLoc, GetFather and Subloc
-mod ABS-REBIND-RL is
-  protecting ABS-EVAL .
-
-  vars O O' : Oid .    vars C C' : Cid .    vars S L S' : Subst .
-  var SL : StmtList .  vars W : MProc .  vars F F' : Nat .
-  vars E E' : Expr .   vars D D' : Data .       var CG : Cogid .
-  var Q : Qid .
-  var OBJS : Configuration .
-  vars LIVE LIVE' : Bool .
-
-  crl
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | rebind(E ; Q ; E') ; SL }, PrQ: W >
-  =>   
-    < CG : Cog | Objects: object(O, C, insert(Q, D, S), F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
-  if O := L['this]
-      /\ O = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ D := eval(E', (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ D' := (S :: L)[Q]
-      /\ S['.nbcr] == "num"[0]
-      [label rebind-local] .
-
-  crl
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) object(O', C', S', F', LIVE') OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | rebind(E ; Q ; E') ; SL }, PrQ: W >
-  =>   
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) object(O', C', insert(Q, D, S'), F', LIVE') OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
-  if O := L['this]
-      /\ O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ D := eval(E', (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ D' := (S :: L)[Q]
-      /\ S'['.nbcr] == "num"[0]
-    [label rebind-distant] .
-
-endm
-mod ABS-NEWLOC-RL is
-  protecting ABS-EVAL .
-
-  var O : Oid .        vars C : Cid .  vars S L : Subst .
-  var SL : StmtList .  var W : MProc .   vars G : Nat .
-  var A : Vid .     var EL : ExprList .
-  var CG : Cogid .
-  var OBJS : Configuration .
-
-  rl
-    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newloc( A ); SL }, PrQ: W >
-    < LocId | G >
-  =>
-    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; loc-comp( G )); SL }, PrQ: W  >
-    < locRel | loc-top ; loc-comp( G ) >
-    < LocId | s G >
-    [label new-location] .
-endm
-mod ABS-GETLOC-RL is
-  protecting ABS-EVAL .
-
-  vars O O' : Oid .        vars C C' : Cid .  vars S L S' : Subst .
-  var SL : StmtList .  var P : Process . vars W W' : MProc .   vars F F' : Nat .
-  var A : Vid .     var E : Expr .
-  vars CG CG' : Cogid .
-  vars OBJS OBJS' : Configuration .
-  var LIVE : Bool .
-
-  crl
-    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | getloc( A ; E ); SL }, PrQ: W >
-    < CG' : Cog | Objects: object(O', C, S, F, LIVE) OBJS', DC: DC':Data, Sched: SCH':Expr, Pr: P, PrQ: W' >
-  =>
-    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; loc-cog( CG' )); SL }, PrQ: W >
-    < CG' : Cog | Objects: object(O', C, S, F, LIVE) OBJS', DC: DC':Data, Sched: SCH':Expr, Pr: P, PrQ: W' >
-  if O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
-    [label get-location] .
-
-  crl
-    < CG : Cog | Objects: object(O', C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | getloc( A ; E ); SL }, PrQ: W >
-  =>
-    < CG : Cog | Objects: object(O', C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; loc-cog( CG )); SL }, PrQ: W >
-  if O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
-    [label get-location-local] .
-endm
-mod ABS-GETFATHERLOC-RL is
-  protecting ABS-EVAL .
-
-  var O : Oid .        vars B C : Cid .  vars S L : Subst .
-  var SL : StmtList .  var W : MProc .   vars F G : Nat .
-  var A : Vid .     var E : Expr .
-  var CG : Cogid . vars L1 L2 : Location .
-  var OBJS : Configuration .
-  var LIVE : Bool .
-
-  crl
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | getfather( A ; E ); SL }, PrQ: W >
-    < locRel | L1 ; L2 >
-  =>
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; L1 ); SL }, PrQ: W >
-    < locRel | L1 ; L2 >
-  if O := L['this]
-      /\ L2 := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
-    [label get-father-location] .
-endm
-mod ABS-SUBLOC-RL is
-  protecting ABS-EVAL .
-
-  var O : Oid .        vars B C : Cid .  vars S L : Subst .
-  var SL : StmtList .  var W : MProc .   vars F G : Nat .
-  var E1 E2 : Expr .     var EL : ExprList .
-  var CG : Cogid . vars Loc Lp Ln : Location .
-  var OBJS : Configuration .
-  var LIVE : Bool .
-
-  crl
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | subloc( E1 ; E2 ); SL }, PrQ: W >
-    < locRel | Lp ; Loc >
-  =>
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
-    < locRel | Ln ; Loc >
-  if O := L['this]
-      /\ Loc = eval(E1, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
-      /\ Ln := eval(E2, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
-    [label get-move-location] .
-endm
 **********************************************
 
 mod ABS-SIMULATOR-RL is
@@ -3042,12 +2897,6 @@ mod ABS-SIMULATOR-RL is
   protecting ABS-STMT-RETURN-RL .
   protecting ABS-STMT-THROW-DIE-TRY-CATCH-FINALLY-RL .
   protecting ABS-RECEIVE-RESULT .
-  --- Component Model Extension
-  protecting ABS-REBIND-RL .
-  protecting ABS-NEWLOC-RL .
-  protecting ABS-GETLOC-RL .
-  protecting ABS-GETFATHERLOC-RL .
-  protecting ABS-SUBLOC-RL .
 
   --- System initialisation with arbitrary class.  In Abs, the compiler will
   --- generate an operator "start" in the generated module that reduces to
@@ -3080,12 +2929,6 @@ mod ABS-SIMULATOR-EQ-TIMED is
   protecting ABS-STMT-RETURN-EQ-TIMED .
   protecting ABS-STMT-THROW-DIE-TRY-CATCH-FINALLY-EQ-TIMED .
   protecting ABS-RECEIVE-RESULT .
-  --- Component Model Extension
-  protecting ABS-REBIND-RL .
-  protecting ABS-NEWLOC-RL .
-  protecting ABS-GETLOC-RL .
-  protecting ABS-GETFATHERLOC-RL .
-  protecting ABS-SUBLOC-RL .
 
 
   --- System initialisation with arbitrary class.  In Abs, the compiler will

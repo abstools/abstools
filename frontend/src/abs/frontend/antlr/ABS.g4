@@ -151,7 +151,6 @@ stmt : annotations type_exp IDENTIFIER ('=' exp)? ';'              # VardeclStmt
     | annotations 'throw' pure_exp ';'                             # ThrowStmt
     | annotations 'die' pure_exp ';'                               # DieStmt
     | annotations 'movecogto' pure_exp ';'                         # MoveCogToStmt
-        // TODO: rebind, subloc
     | annotations exp ';'                                          # ExpStmt
         // Prefer case expression to case statement, so case statement comes later
     | annotations 'case' c=pure_exp '{' casestmtbranch* '}'        # CaseStmt
