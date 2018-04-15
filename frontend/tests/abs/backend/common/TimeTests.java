@@ -6,11 +6,13 @@ package abs.backend.common;
 
 import java.io.File;
 
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import abs.backend.BackendTestDriver;
+import abs.backend.BackendTestDriver.BackendName;
 
 @RunWith(Parameterized.class)
 public class TimeTests extends SemanticTests {
@@ -31,5 +33,17 @@ public class TimeTests extends SemanticTests {
    @Test
    public void costStmtBug160() {
        assertEvalTrue(new File("tests/abssamples/backend/TimeTests/bug160.abs"));
+   }
+
+   @Test
+   public void deadline1() throws Exception {
+       Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
+       assertEvalTrue(new File("tests/abssamples/backend/TimeTests/deadline1.abs"));
+   }
+
+   @Test
+   public void resource_accounting() {
+       Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
+       assertEvalTrue(new File("tests/abssamples/backend/TimeTests/resource_accounting.abs"));
    }
 }

@@ -4,6 +4,9 @@
  */
 package abs.backend.common;
 
+import java.io.File;
+
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -174,4 +177,17 @@ public class ObjectTests extends SemanticTests {
         // throw in a "static" as well to try and trip up Java.
         assertEvalTrue("class A(Bool static) { Bool fun = False; } { Bool testresult = True; }");
     }
+
+    @Test
+    public void scheduler_priority() {
+        Assume.assumeTrue("Only meaningful with custom scheduler support", driver.supportsCustomSchedulers());
+        assertEvalTrue(new File("tests/abssamples/backend/TimeTests/scheduler_priority.abs"));
+    }
+
+    @Test
+    public void scheduler_deadline() {
+        Assume.assumeTrue("Only meaningful with Timed ABS and custom scheduler support", driver.supportsTimedAbs() && driver.supportsCustomSchedulers());
+        assertEvalTrue(new File("tests/abssamples/backend/TimeTests/scheduler_deadline.abs"));
+    }
+
 }

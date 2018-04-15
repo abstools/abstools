@@ -36,23 +36,5 @@ public class ErlangTests extends ABSTest {
         }
     }
 
-    @Test
-    public void deadline1() throws Exception {
-        assertEvalTrue(new File("tests/abssamples/backend/TimeTests/deadline1.abs"));
-    }
-    
-    @Test
-    public void scheduler_priority() {
-        assertEvalTrue(new File("tests/abssamples/backend/TimeTests/scheduler_priority.abs"));
-    }
-
-    @Test
-    public void scheduler_deadline() {
-        assertEvalTrue(new File("tests/abssamples/backend/TimeTests/scheduler_deadline.abs"));
-    }
-
-    @Test
-    public void resource_accounting() {
-        assertEvalTrue(new File("tests/abssamples/backend/TimeTests/resource_accounting.abs"));
-    }
+    // No Erlang-specific tests at the moment
 }
