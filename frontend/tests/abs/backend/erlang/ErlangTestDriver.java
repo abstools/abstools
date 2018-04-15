@@ -198,6 +198,12 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     public BackendName getBackendName() {
         return BackendName.ERLANG;
     }
+
+    @Override
+    public boolean supportsCustomSchedulers() { return true; }
+
+    @Override
+    public boolean supportsTimedAbs() { return true; }
 }
 
 class TimeoutThread implements Runnable {
