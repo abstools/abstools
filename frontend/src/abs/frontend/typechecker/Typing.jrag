@@ -227,7 +227,15 @@ aspect Typing {
         if (mostGeneralType.isIntType()) return getRight().getType();
         return mostGeneralType;
     }
-    eq DivMultExp.getType() = getModel().getRatType(); // Rat in all cases
+    eq DivMultExp.getType() {
+        if (getLeft().getType().isDoubleType()
+            && getRight().getType().isDoubleType()) {
+            return getModel().getDoubleType();
+        } else {
+            // Int / Int becomes Rat
+            return getModel().getRatType();
+        }
+    }
     eq BoolExp.getType() = getModel().getBoolType();
     eq RelationalExpr.getType() = getModel().getBoolType();
     eq IfExp.getType() {
