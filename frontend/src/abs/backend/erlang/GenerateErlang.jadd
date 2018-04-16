@@ -503,6 +503,11 @@ aspect GenerateErlang {
   }
 
   @Override
+  public void DoubleLiteral.generateErlangCode(CodeStream ecs,Vars vars) {
+    ecs.print( getContent());
+  }
+
+  @Override
   public void ListLiteral.generateErlangCode(CodeStream ecs, Vars vars) {
       ecs.print("[ ");
       String divider = "";

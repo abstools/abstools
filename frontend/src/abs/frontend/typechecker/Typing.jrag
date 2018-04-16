@@ -55,6 +55,7 @@ aspect Typing {
     /* TODO: Those will lead to utter confusion when running without stdlib, as e.g. RelExps depend on Bool. */
     syn Type Model.getUnitType() = getStdDataType("Unit");
     syn Type Model.getIntType() = getStdDataType("Int");
+    syn Type Model.getDoubleType() = getStdDataType("Double");
     syn Type Model.getRatType() = getStdDataType("Rat");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
@@ -308,6 +309,7 @@ aspect Typing {
     }
     eq LetExp.getType() = getExp().getType();
     eq IntLiteral.getType() = getModel().getIntType();
+    eq DoubleLiteral.getType() =  getModel().getDoubleType();
     eq StringLiteral.getType() =  getModel().getStringType();
     eq NullExp.getType() = NullType.INSTANCE;
     eq ThisExp.getType() = getContextDecl().getType();

@@ -1,7 +1,7 @@
 module ABS.StdLib;
 
 // Scalar datatypes
-export Unit, String, Int, Rat, Bool, Fut, Exception;
+export Unit, String, Int, Rat, Double, Bool, Fut, Exception;
 
 // Booleans
 export True, False, and, not;
@@ -73,6 +73,7 @@ data Unit = Unit;               // builtin
 data String;                    // builtin  
 data Int;                       // builtin
 data Rat;                       // builtin
+data Double;                    // builtin
 data Bool = True | False;       // builtin
 data Fut<A>;                    // builtin
 data Exception;                 // builtin

@@ -1016,6 +1016,10 @@ aspect GenerateJava {
         }
     }
 
+    public void DoubleLiteral.generateJava(PrintStream stream) {
+        stream.print(getContent());
+    }
+
     public void StringLiteral.generateJava(PrintStream stream) {
         stream.print(ABSString.class.getName());
         stream.print(".fromString(\"");
