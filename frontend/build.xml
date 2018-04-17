@@ -42,7 +42,7 @@
   <property name="commons-io.jar" value="commons-io-2.5.jar"/>
   <property name="ecj.jar" value="ecj-4.6.2.jar"/>
   <property name="guava.jar" value="guava-20.0.jar"/>
-  <property name="jastadd2.jar" value="jastadd2-2.2.2.jar"/>
+  <property name="jastadd2.jar" value="jastadd-2.3.2.jar"/>
   <property name="junit.jar" value="junit-4.12.jar" />
   <property name="hamcrest.jar" value="hamcrest-core-1.3.jar" />
   <property name="easymock.jar" value="easymock-3.0.jar" />
