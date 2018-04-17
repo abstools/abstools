@@ -37,4 +37,6 @@ public class ErlangTests extends ABSTest {
     }
 
     // No Erlang-specific tests at the moment
+
+    // If you add tests here, re-activate this class in AllErlangTests.java or they won't run
 }
