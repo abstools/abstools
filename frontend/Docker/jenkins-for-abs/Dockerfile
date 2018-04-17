@@ -63,18 +63,18 @@ ENV PATH /minizinc:$PATH
 
 #COPY ./docker_scripts/antlr-runtime-3.2.jar /antlr-runtime-3.2.jar
 
-#RUN apt-get update && \
+RUN apt-get update && \
 	# openjdk and unzip for the fzn2smt	
-#	apt-get install -y \
-#		unzip \
-#		openjdk-8-jdk && \
-#	rm -rf /var/lib/apt/lists/* && \
-#  cd /solvers_exec && \
-#  wget http://ima.udg.edu/recerca/lap/fzn2smt/version/fzn2smt-2-0-02.zip && \
-#  unzip fzn2smt-2-0-02.zip && \
-#  rm -rf fzn2smt-2-0-02.zip
+	apt-get install -y \
+		unzip \
+		openjdk-8-jdk && \
+	rm -rf /var/lib/apt/lists/* && \
+  cd /solvers_exec && \
+  wget http://ima.udg.edu/recerca/lap/fzn2smt/version/fzn2smt-2-0-02.zip && \
+  unzip fzn2smt-2-0-02.zip && \
+  rm -rf fzn2smt-2-0-02.zip
 
-#ENV CLASSPATH=/solvers_exec/fzn2smt-2-0-02:/antlr-runtime-3.2.jar:$CLASSPATH
+ENV CLASSPATH=/solvers_exec/fzn2smt-2-0-02:/antlr-runtime-3.2.jar:$CLASSPATH
 
 ###############
 # download and compile z3
