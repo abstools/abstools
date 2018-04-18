@@ -70,6 +70,8 @@ abslistish_to_iolist(Cog, Cons, _Emp, {Cons, H, T}) ->
 
 toString(_Cog, true) -> <<"True"/utf8>>;
 toString(_Cog, false) -> <<"False"/utf8>>;
+toString(_Cog,I) when is_float(I) ->
+    float_to_binary(I, [{decimals, 253}, compact]);
 toString(_Cog,I) when is_integer(I) ->
     integer_to_binary(I);
 toString(_Cog,{N,D}) when is_integer(N),is_integer(D)->

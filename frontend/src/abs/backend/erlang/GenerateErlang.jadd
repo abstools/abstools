@@ -683,17 +683,17 @@ aspect GenerateErlang {
     }
     else {
       ecs.print("(");
-      if (getLeft().getType().isIntType() && getRight().getType().isIntType() ){
-        getLeft().generateErlangCode(ecs, vars);
-        ecs.print(" + ");
-        getRight().generateErlangCode(ecs, vars);
-      }
-      else {
-        ecs.print(" rationals:add(");
-        getLeft().generateErlangCode(ecs,vars);
-        ecs.print(",");
-        getRight().generateErlangCode(ecs,vars);
-        ecs.print(")");
+      if (getLeft().getType().isIntType() && getRight().getType().isIntType()
+          || getLeft().getType().isDoubleType() && getRight().getType().isDoubleType()) {
+          getLeft().generateErlangCode(ecs, vars);
+          ecs.print(" + ");
+          getRight().generateErlangCode(ecs, vars);
+      } else {
+          ecs.print(" rationals:add(");
+          getLeft().generateErlangCode(ecs,vars);
+          ecs.print(",");
+          getRight().generateErlangCode(ecs,vars);
+          ecs.print(")");
       }
       ecs.print(") ");
     }
@@ -702,16 +702,17 @@ aspect GenerateErlang {
   @Override
   public void SubAddExp.generateErlangCode(CodeStream ecs,Vars vars){
     ecs.print("(");
-    if (getLeft().getType().isIntType() && getRight().getType().isIntType() ){
+    if (getLeft().getType().isIntType() && getRight().getType().isIntType()
+        || getLeft().getType().isDoubleType() && getRight().getType().isDoubleType()) {
         getLeft().generateErlangCode(ecs,vars);
         ecs.print(" - ");
-        getRight().generateErlangCode(ecs,vars);}
-    else{
-      ecs.print(" rationals:sub(");
-      getLeft().generateErlangCode(ecs,vars);
-      ecs.print(",");
-      getRight().generateErlangCode(ecs,vars);
-      ecs.print(")");
+        getRight().generateErlangCode(ecs,vars);
+    } else {
+        ecs.print(" rationals:sub(");
+        getLeft().generateErlangCode(ecs,vars);
+        ecs.print(",");
+        getRight().generateErlangCode(ecs,vars);
+        ecs.print(")");
     }
     ecs.print(") ");
   }
@@ -719,7 +720,8 @@ aspect GenerateErlang {
   @Override
   public void MultMultExp.generateErlangCode(CodeStream ecs,Vars vars){
     ecs.print("(");
-    if (getLeft().getType().isIntType() && getRight().getType().isIntType() ) {
+    if (getLeft().getType().isIntType() && getRight().getType().isIntType()
+        || getLeft().getType().isDoubleType() && getRight().getType().isDoubleType()) {
       getLeft().generateErlangCode(ecs,vars);
       ecs.print(" * ");
       getRight().generateErlangCode(ecs,vars);
@@ -736,19 +738,31 @@ aspect GenerateErlang {
 
   @Override
   public void DivMultExp.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.print(" rationals:rdiv(");
-    getLeft().generateErlangCode(ecs,vars);
-    ecs.print(",");
-    getRight().generateErlangCode(ecs,vars);
-    ecs.print(") ");
+      if (getLeft().getType().isDoubleType() && getRight().getType().isDoubleType()) {
+          getLeft().generateErlangCode(ecs,vars);
+          ecs.print(" / ");
+          getRight().generateErlangCode(ecs,vars);
+      } else {
+          ecs.print(" rationals:rdiv(");
+          getLeft().generateErlangCode(ecs,vars);
+          ecs.print(",");
+          getRight().generateErlangCode(ecs,vars);
+          ecs.print(") ");
+      }
   }
 
   @Override
   public void ModMultExp.generateErlangCode(CodeStream ecs,Vars vars){
-    if (getLeft().getType().isIntType() && getRight().getType().isIntType() ) {
+    if (getLeft().getType().isIntType() && getRight().getType().isIntType()) {
         ecs.print("(");
         getLeft().generateErlangCode(ecs,vars);
         ecs.print(" rem ");
+        getRight().generateErlangCode(ecs,vars);
+        ecs.print(") ");
+    } else if (getLeft().getType().isDoubleType() && getRight().getType().isDoubleType()) {
+        ecs.print("math:fmod(");
+        getLeft().generateErlangCode(ecs,vars);
+        ecs.print(", ");
         getRight().generateErlangCode(ecs,vars);
         ecs.print(") ");
     } else {

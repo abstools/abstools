@@ -190,19 +190,7 @@ fmod ABS-DATA-FLOAT is
   op _asFloat : Data -> Float .
   eq "float"[F] asFloat = F .
 
-  eq "-" ("float"[F]) = "float"[-(F)] .
-  eq "+" ("float"[F] :: "float"[F']) = "float"[F + F'] .
-  eq "-" ("float"[F] :: "float"[F']) = "float"[ _-_(F, F')] .
-  eq "*" ("float"[F] :: "float"[F']) = "float"[F * F'] .
-  eq "/" ("float"[F] :: "float"[F']) = "float"[F / F'] .
-  eq "%" ("float"[F] :: "float"[F']) = "float"[F rem F'] .
-  eq "**" ("float"[F] :: "float"[F']) = "float"[F ^ F'] .
-
-  eq "<"  ("float"[F] :: "float"[F']) = (F < F') asAbsBool .
-  eq "<=" ("float"[F] :: "float"[F']) = (F <= F') asAbsBool .
-  eq ">"  ("float"[F] :: "float"[F']) = (F > F') asAbsBool .
-  eq ">=" ("float"[F] :: "float"[F']) = (F >= F') asAbsBool .
-
+  *** definition of arithmetic operators is in ABS-DATA-INT
 endfm
 
 
@@ -449,6 +437,7 @@ mod ABS-DATATYPES is
 
   op toAbsString : Data -> String .
   eq toAbsString("num"[N:Rat]) = string(N:Rat, 10) .
+  eq toAbsString("float"[N:Float]) = string(N:Float) .
   *** FIXME this does not handle strings with embedded backslashes
   eq toAbsString("str"[S:String]) = "\"" + S:String + "\"" .
   eq toAbsString(null) = "null" .
@@ -923,6 +912,7 @@ mod ABS-EVAL is
   vars Q1 Q2 : String .
   vars R1 R2 : Rat .
   vars I1 I2 : Rat .
+  vars F1 F2 : Float .
   var QID : Qid .
   var M : Mid .
   vars S S' : Subst .
@@ -1097,6 +1087,8 @@ mod ABS-EVAL is
   eq dataLessThan(emp, emp) = false .
   eq dataLessThan("num"[R1] :: DL1, "num"[R2] :: DL2) =
   R1 < R2 or-else (R1 == R2 and dataLessThan(DL1, DL2)) .
+  eq dataLessThan("float"[F1] :: DL1, "float"[F2] :: DL2) =
+  F1 < F2 or-else (F1 == F2 and dataLessThan(DL1, DL2)) .
   eq dataLessThan("str"[Q1] :: DL1, "str"[Q2] :: DL2) = Q1 < Q2 or-else (Q1 == Q2 and dataLessThan(DL1, DL2)) .
   eq dataLessThan(Q1[CDL1] :: DL1, Q2[CDL2] :: DL2) =
   Q1 < Q2 or-else ((Q1 == Q2 and dataLessThan(CDL1, CDL2)) or-else dataLessThan(DL1, DL2)) .
@@ -1117,17 +1109,35 @@ mod ABS-EVAL is
   eq eval($builtin(">"), S, CN, MAC) = dataLessThan(S['I2], S['I1]) asAbsBool .
   eq eval($builtin(">="), S, CN, MAC) = ((S['I1] == S['I2]) or-else dataLessThan(S['I2], S['I1])) asAbsBool .
 
+  *** ABS-DATA-FLOAT
+  ceq eval($builtin("--"), S, CN, MAC) = "float"[ - I:Float ]
+    if "float"[I:Float] := S['I] .
+  ceq eval($builtin("+"), S, CN, MAC) = "float"[I1:Float + I2:Float]
+    if "float"[I1:Float] := S['I1] /\ "float"[I2:Float] := S['I2] .
+  ceq eval($builtin("-"), S, CN, MAC) = "float"[I1:Float - I2:Float]
+    if "float"[I1:Float] := S['I1] /\ "float"[I2:Float] := S['I2] .
+  ceq eval($builtin("*"), S, CN, MAC) = "float"[I1:Float * I2:Float]
+    if "float"[I1:Float] := S['I1] /\ "float"[I2:Float] := S['I2] .
+  ceq eval($builtin("/"), S, CN, MAC) = "float"[I1:Float / I2:Float]
+    if "float"[I1:Float] := S['I1] /\ "float"[I2:Float] := S['I2] .
+  ceq eval($builtin("%"), S, CN, MAC) = "float"[I1:Float rem I2:Float]
+    if "float"[I1:Float] := S['I1] /\ "float"[I2:Float] := S['I2] .
 
   *** ABS-DATA-RAT
-  eq eval($builtin("--"), S, CN, MAC) = "num"[-(S['I]) asRat] .
+  ceq eval($builtin("--"), S, CN, MAC) = "num"[ - I:Rat ]
+    if "num"[I:Rat] := S['I] .
   ceq eval($builtin("+"), S, CN, MAC) = "num"[I1:Rat + I2:Rat]
-  if "num"[I1:Rat] := S['I1] /\ "num"[I2:Rat] := S['I2] .
-  eq eval($builtin("-"), S, CN, MAC) = "num"[(S['I1]) asRat - (S['I2]) asRat] .
-  eq eval($builtin("*"), S, CN, MAC) = "num"[(S['I1]) asRat * (S['I2]) asRat] .
+    if "num"[I1:Rat] := S['I1] /\ "num"[I2:Rat] := S['I2] .
+  ceq eval($builtin("-"), S, CN, MAC) = "num"[I1:Rat - I2:Rat]
+    if "num"[I1:Rat] := S['I1] /\ "num"[I2:Rat] := S['I2] .
+  ceq eval($builtin("*"), S, CN, MAC) = "num"[I1:Rat * I2:Rat]
+    if "num"[I1:Rat] := S['I1] /\ "num"[I2:Rat] := S['I2] .
   *** ceq eval($builtin("/"), S, CN, N) = "num"[I1:Int quo I2:Int] .
   *** if "num"[I1:Int] := S['I1] /\ "num"[I2:Int] := S['I2] .
-  eq eval($builtin("/"), S, CN, MAC) = "num"[(S['I1]) asRat / (S['I2]) asRat] .
-  eq eval($builtin("%"), S, CN, MAC) = "num"[(S['I1]) asRat rem (S['I2]) asRat] .
+  ceq eval($builtin("/"), S, CN, MAC) = "num"[I1:Rat / I2:Rat]
+    if "num"[I1:Rat] := S['I1] /\ "num"[I2:Rat] := S['I2] .
+  ceq eval($builtin("%"), S, CN, MAC) = "num"[I1:Rat rem I2:Rat]
+    if "num"[I1:Rat] := S['I1] /\ "num"[I2:Rat] := S['I2] .
   --- 4294967296 == 2^32
   ceq eval($builtin("random"), S, CN, MAC) = "num"[ trunc(((S['Range]) asRat) * (N:Rat / 4294967296)) ]
   if N:Rat := eval("ABS.StdLib.nth"(MAC['.random] :: 'Position), S, CN, MAC) asRat .
