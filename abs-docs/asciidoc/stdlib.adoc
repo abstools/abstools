@@ -42,25 +42,26 @@ The following operators apply to Boolean values:
 
 ==== Datatypes and constructors
 
-The two numeric datatypes are `Int` and `Rat`.  See <<sec:builtin-types>> for
-their syntax.
+The numeric datatypes of ABS are `Int` (arbitrary-length integers), `Rat`
+(arbitrary-precision rational numbers) and `Double` (64-bit floating point).
+See <<sec:builtin-types>> for their syntax.
 
 ==== Operators
 
 [options="header"]
 |=======================
 |Expression|Meaning      |Associativity |Argument types |Result type
-|e1 == e2 |equality |left |compatible |Bool
-|e1 != e2 |inequality |left |compatible |Bool
-|e1 < e2 |less than |left |compatible |Bool
-|e1 < = e2 |less than or equal to |left |compatible |Bool
-|e1 > e2 |greater than |left |compatible |Bool
-|e1 >= e2 |greater than or equal to |left |compatible |Bool
-|e1 + e2 |addition |left |number, number |number
-|e1 - e2 |subtraction |left |number, number |number
-|e1 * e2 |multiplication |left |number, number |number
-|e1 / e2 |division |left |number, number |Rat
-|e1 % e2 |modulo |left |number, number |Int
+|`e1 == e2` |equality |left |compatible |`Bool`
+|`e1 != e2` |inequality |left |compatible |`Bool`
+|`e1 < e2` |less than |left |compatible |`Bool`
+|`e1 < = e2` |less than or equal to |left |compatible |`Bool`
+|`e1 > e2` |greater than |left |compatible |`Bool`
+|`e1 >= e2` |greater than or equal to |left |compatible |`Bool`
+|`e1 + e2` |addition |left |number, number |number
+|`e1 - e2` |subtraction |left |number, number |number
+|`e1 * e2` |multiplication |left |number, number |number
+|`e1 / e2` |division |left |number, number |`Rat` or `Double`
+|`e1 % e2` |modulo |left |number, number |number
 |=======================
 
 

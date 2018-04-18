@@ -114,14 +114,13 @@ The following words are keywords in the ABS language and are invalid as identifi
 [[sec:literals]]
 === Literals
 
-A literal is a textual representation of a value. ABS supports three kinds of
-literals, integer literals, string literals, and the null literal.
+A literal is a textual representation of a value. ABS supports integer
+literals, float (double) literals, string literals, and the null literal.
+Rational numbers are written using the division operator `/`, e.g., `1/4` for
+one quarter.
 
 Strings are enclosed in double quotes (`"`).  Line feed in a string is written
 as `\n`, carriage return as `\r`.
-
-ABS does not support floating point numbers currently.  Rational numbers are
-written using the division operator `/`, e.g., `1/4` for one quarter.
 
 The null literal is written as `null`.
 
@@ -129,7 +128,8 @@ The null literal is written as `null`.
 .Syntax
 |====
 | _Literal_ ::= | _IntLiteral_ {vbar} _StringLiteral_ {vbar} _ThisLiteral_ {vbar} _NullLiteral_
-| _IntLiteral_ ::= | `0` {vbar} ( ( `1` {vbar} ... {vbar} `9`] ) { [: digit :] } )
+| _IntLiteral_ ::= | `0` {vbar} ( ( `1` {vbar} ... {vbar} `9` ) { [: digit :] } )
+| _DoubleLiteral_ ::= | [ _IntLiteral_ ] `.` [: digit :] { [: digit :] } [ ( `e` {vbar} `E` ) [ `-` {vbar} `+` ] _IntLiteral_ ]
 | _StringLiteral_ ::= | `"` { ? _Valid String Character_ ? } `"`
 | _ThisLiteral_ ::= | `this`
 | _NullLiteral_ ::= | `null`

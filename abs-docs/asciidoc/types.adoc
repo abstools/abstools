@@ -52,6 +52,7 @@ ABS offers the following built-in datatypes:
  | `Bool`    | Boolean values             | `True`, `False`   | <<type-bool>>
  | `Int`     | Integers of arbitrary size | `0`, `-15`        | <<type-numbers>>
  | `Rat`     | Rational numbers           | `1/5`, `22/58775` | <<type-numbers>>
+ | `Double`  | Floating-point numbers     | `0.5`, `1.0e-15`  | <<type-numbers>>
  | `String`  | Strings                    | `"Hello world\n"` | <<type-string>>
  | `Fut<A>`  | Futures                    | --                | <<type-future>>
  | `Exception` | Exceptions                | `DivisionByZeroException` | <<exception-type>>
@@ -65,7 +66,7 @@ ABS offers the following built-in datatypes:
 
 `Int` type is a subtype of `Rat`; this means that `Int` values are assignable
 to places of type `Rat`.  Rational values can be converted to integers via the
-`truncate` function.
+`truncate` function.  `Double` is a distinct numeric type.
 
 The future type `Fut<A>` is a special built-in type that denotes that an ABS
 value of type `A` will become available in the future.  The value that a
