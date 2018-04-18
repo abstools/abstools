@@ -158,7 +158,8 @@
     <mkdir dir="${apidoc.dir}" />
   </target>
 
-  <target name="compile" depends="prepare,gen,versionstamp" description="Compiles all java files in the source directory and generates absfrontend.jar.">
+  <target name="compile" depends="prepare,gen,versionstamp"
+          description="generate absfrontend.jar and `absc' invocation script">
     <javac srcdir="${src.dir}:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off" encoding="utf-8" target="${java.langlevel}" source="${java.langlevel}">
       <classpath refid="compile.classpath" />
     </javac>
@@ -186,7 +187,7 @@
     </jar>
   </target>
 
-  <target name="javadoc" depends="gen,compile" description="Build java doc.">
+  <target name="javadoc" depends="gen,compile">
     <javadoc sourcepath="${src.dir}:${gen.dir}" destdir="${apidoc.dir}">
       <classpath>
         <pathelement location="${ext.dir}/${jastadd2.jar}" />
@@ -195,7 +196,7 @@
   </target>
 
 
-  <target name="clean" description="cleans everything">
+  <target name="clean" description="remove generated and intermediate files">
     <delete failonerror="false" includeemptydirs="true">
       <fileset dir="${gen.dir}" />
       <!--       <fileset dir = "${gen.dir}/docs"/> -->
@@ -307,7 +308,7 @@
   </target>
 
   <!-- create distribution files for ABS -->
-  <target name="dist" depends="clean,compile" description="create distribution files">
+  <target name="dist" depends="clean,compile" description="perform clean rebuild">
   </target>
 
   <!-- suite file -->
@@ -317,7 +318,7 @@
   <property name="test.backend.java.lib.net.suite.name" value="abs.backend.java.lib.net.AllNetTests" />
 
   <!-- invoke 'compile' once up front, so that the sub-tasks see the updated build. -->
-  <target name="tests-all" depends="compile" description="Runs the test suite.">
+  <target name="tests-all" depends="compile" description="run the test suite">
     <parallel threadCount="${threadCount}">
       <antcall target="tests-frontend" />
       <antcall target="tests-backend" />
