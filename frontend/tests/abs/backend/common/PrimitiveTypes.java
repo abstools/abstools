@@ -39,8 +39,18 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
+    public void intAddLong() {
+        assertEvalTrue("{ Bool testresult = 92233720368547758070 + 9223372036854775807 == 101457092405402533877;  }");
+    }
+
+    @Test
     public void intSub() {
         assertEvalTrue("{ Bool testresult = 10 - 5 == 5;  }");
+    }
+
+    @Test
+    public void intSubLong() {
+        assertEvalTrue("{ Bool testresult = 92233720368547758070 - 9223372036854775807 == 83010348331692982263;  }");
     }
 
     @Test
@@ -51,6 +61,11 @@ public class PrimitiveTypes extends SemanticTests {
     @Test
     public void intMult() {
         assertEvalTrue("{ Bool testresult = 2 * 5 == 10;  }");
+    }
+
+    @Test
+    public void intMultLong() {
+        assertEvalTrue("{ Bool testresult = 92233720368547758070 * 9223372036854775807 == 850705917302346158473969077842325012490;  }");
     }
 
     @Test
