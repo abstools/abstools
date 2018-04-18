@@ -274,6 +274,12 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void plusError3() {
+        // https://github.com/abstools/abstools/issues/202
+        assertTypeErrors("{ Int i = 4 + (1/2) + 4; }");
+    }
+
+    @Test
     public void getError() {
         assertTypeErrors("{ Bool f = True; f.get; }");
     }

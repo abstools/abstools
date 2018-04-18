@@ -220,7 +220,6 @@ aspect Typing {
         return new DataTypeType((ParametricDataTypeDecl)d,this).withAnnotations(getAnnotations());
     }
     eq Unary.getType() = getOperand().getType();
-    eq AddAddExp.getType() = getLeft().getType();  // number or string
     eq ArithmeticExp.getType() {
         // Int or Rat, depending on operands
         Type mostGeneralType = getLeft().getType();
