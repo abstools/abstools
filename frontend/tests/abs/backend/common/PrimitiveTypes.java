@@ -170,6 +170,61 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
+    public void doubleAdd() {
+        assertEvalTrue("{ Bool testresult = 5.0 + 5.0 == 10.0;  }");
+    }
+
+    @Test
+    public void doubleSub() {
+        assertEvalTrue("{ Bool testresult = 10.0 - 5.0 == 5.0;  }");
+    }
+
+    @Test
+    public void doubleDiv() {
+        assertEvalTrue("{ Double result = 10.0/4.0; Bool testresult = result == 2.5;  }");
+    }
+
+    @Test
+    public void doubleMult() {
+        assertEvalTrue("{ Bool testresult = 2.0 * 5.0 == 10.0;  }");
+    }
+
+    @Test
+    public void doubleMod() {
+        assertEvalTrue("{ Bool testresult = 10.0 % 3.0 == 1.0;  }");
+    }
+
+    @Test
+    public void doubleGt() {
+        assertEvalTrue("{ Bool testresult = 10.0 > 5.0;  }");
+    }
+
+    @Test
+    public void doubleLt() {
+        assertEvalTrue("{ Bool testresult = 5.0 < 10.0;  }");
+    }
+
+    @Test
+    public void doubleLtEq() {
+        assertEvalTrue("{ Bool testresult = 5.0 <= 10.0;  }");
+    }
+
+    @Test
+    public void doubleLtEq2() {
+        assertEvalTrue("{ Bool testresult = 5.0 <= 5.0;  }");
+    }
+
+    @Test
+    public void doubleGtEq() {
+        assertEvalTrue("{ Bool testresult = 10.0 >= 5.0;  }");
+    }
+
+    @Test
+    public void doubleGtEq2() {
+        assertEvalTrue("{ Bool testresult = 5.0 >= 5.0;  }");
+    }
+
+    @Test
     public void stringEq() {
         assertEvalTrue("{ Bool testresult = \"xx\" == \"xx\";  }");
     }
@@ -228,6 +283,11 @@ public class PrimitiveTypes extends SemanticTests {
     @Test
     public void ratToString() {
 	assertEvalTrue("{ Bool testresult = toString(5/2) == \"5/2\"; }");
+    }
+
+    @Test
+    public void doubleToString() {
+        assertEvalTrue("{ Bool testresult = toString(2.5) == \"2.5\"; }");
     }
 
     @Test

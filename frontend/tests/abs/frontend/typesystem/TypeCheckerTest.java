@@ -135,6 +135,8 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void plusOk() {
         assertTypeOK("{ Int i = 4 + 5; }");
+        assertTypeOK("{ Double i = 4.0 + 5.0; }");
+        assertTypeOK("{ Double i = 4.0e+08 + 5.0E-12; }");
     }
 
     @Test
