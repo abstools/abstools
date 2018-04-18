@@ -56,7 +56,9 @@ public class NewExpressionChecker extends DefaultTypeSystemExtension {
 
     private void checkDCCorrect(ASTNode<?> n, PureExp dc) {
         if (dc == null) return;
-        if (!dc.getType().isDeploymentComponentType()) {
+        dc.typeCheck(errors);
+        if (dc.getType().isUnknownType()
+            || !dc.getType().isDeploymentComponentType()) {
             errors.add(new TypeError(n, ErrorMessage.WRONG_DEPLOYMENT_COMPONENT, dc.getType().getQualifiedName()));
         }
     }

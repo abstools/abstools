@@ -37,7 +37,9 @@ public class DeadlineChecker extends DefaultTypeSystemExtension {
 
     private void checkDeadlineCorrect(ASTNode<?> n, PureExp deadline) {
         if (deadline == null) return;
-        if (!deadline.getType().getQualifiedName().equals("ABS.StdLib.Duration")) {
+        deadline.typeCheck(errors);
+        if (deadline.getType().isUnknownType()
+            || !deadline.getType().getQualifiedName().equals("ABS.StdLib.Duration")) {
             errors.add(new TypeError(n, ErrorMessage.WRONG_DEADLINE_TYPE,
                                      deadline.getType().getQualifiedName()));
         }

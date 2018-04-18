@@ -675,4 +675,21 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void schedulerInvalid6() {
         assertTypeErrors("module M; import * from ABS.Scheduler; def Process f(List<Process> queue, String x) = head(queue); [Scheduler: f(queue, b)] class C { Int b = 0; }");
     }
+
+    @Test
+    public void annotationCostInvalid() {
+        assertTypeErrors("module M; import * from ABS.DC; def Rat error(Rat x) = x; { [Cost: error(False)] skip; } ");
+    }
+    @Test
+    public void annotationDCInvalid() {
+        assertTypeErrors("module M; import * from ABS.DC; def DC error(Rat x) = null; class C {} { [DC: error(False)] new C(); } ");
+    }
+    @Test
+    public void annotationDeadlineInvalid() {
+        assertTypeErrors("module M; import * from ABS.DC; def Duration error(Rat x) = Duration(x); interface I { Unit m(); } class C implements I { Unit m() { skip; } } { I i = new C(); [Deadline: error(False)] i!m(); } ");
+    }
+    @Test
+    public void annotationDataSizeInvalid() {
+        assertTypeErrors("module M; import * from ABS.DC; def Rat error(Rat x) = x; interface I { Unit m(); } class C implements I { Unit m() { skip; } } { I i = new C(); [DataSize: error(False)] i!m(); } ");
+    }
 }
