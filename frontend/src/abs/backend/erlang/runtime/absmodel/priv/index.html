@@ -1,149 +1,114 @@
 <!DOCTYPE html>
 <html>
 
-    <head>
-        <title>Another graph library :-)</title>
-        <script type="text/javascript" src="static/js/dygraph-combined.js"></script>
-        <script type="text/javascript" src="static/js/synchronizer.js"></script>
-        <script type="text/javascript" src="static/js/jquery-1.11.3.js"></script>
-        <link rel="stylesheet" type="text/css" href="static/css/main.css" /> 
-    </head>
+  <head>
+    <title>Deployment Component Visualization</title>
+    <script type="text/javascript" src="static/js/d3.5.1.0.min.js"></script>
+    <script type="text/javascript" src="static/js/jquery.3.3.1.min.js"></script>
+    <style>
+      path {
+          fill: none;
+          stroke: #aaa;
+      }
+      path.cpu-values {
+          stroke: green;
+      }
+      path.cpu-totals {
+          stroke: blue;
+      }
+    </style>
+  </head>
 
-    <body>
+  <body>
+    <div id="graphs"></div>
+  </body>
 
-        <div id="menuPane">
-            <table id="toggleViewer">
-                <tr>
-                    <td><button id="gridToggle">Toggle grid</button></td>
-                </tr>
-                <tr>
-                    <th><button id="graphToggle">Toggle check</button></th>
-                </tr>
-            </table>
-        </div>
+  <script type='text/javascript'>
 
-        <div id="graphPane">
-        </div>
-
-    </body>
-
-
-    <script type='text/javascript'>
-
-    // See http://dygraphs.com/options.html
-    var options = {
-            legend: 'always',
-            animatedZooms: true,
-            title: 'Deployment component 1',
-            labels: ["","used","total"],
-            height: 342,
-            width: 900,
-            ylabel: 'CPU',
-            xlabel: 'Time',
-            titleHeight: 25, // Not pixels, not sure what this is
-            // Freeze y-axis on vertical zoom, and give room for labels (107)
-            // valueRange: [0,107],
-            includeZero: true,
-            drawGrid: false
-     };
-    
-
-    $(document).ready(function(){
-
-        // Toggle the background grid
-        $("#gridToggle").on('click', function(ev){
-            ev.preventDefault();
-            var gs = $(document).data('graphs');
-            for(var i = 0; i < gs.length; i++){
-                gs[i].updateOptions(
-                    { drawGrid: !gs[i].user_attrs_.drawGrid }
-                );
+    function generateCpuGraphs(container_div_id, cpudata) {
+        const container_div = $(container_div_id);
+        const size = { x: 900, y: 350 };
+        const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+        const graph_size = { x: size.x - margin.left - margin.right,
+                             y: size.y - margin.top - margin.bottom };
+        cpudata.forEach(function(dc_data, dc_index) {
+            // either 1 or 2: we receive dc data with or without max values
+            const max_index = dc_data.values[0].length - 1;
+            const svg_id = 'svg' + dc_index;
+            const value_id = 'value' + dc_index;
+            const total_id = 'total' + dc_index;
+            container_div.append(`<h3>${dc_data.name}</h3>`);
+            container_div.append(`<svg id=${svg_id} width=${size.x} height=${size.y}></svg>`);
+            let graph = d3.select('#' + svg_id)
+                .append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
+            let x = d3.scaleLinear()
+                .domain(d3.extent(dc_data.values, d => d[0]))
+                .range([0, graph_size.x]);
+            let xaxis = d3.axisBottom(x);
+            // normally maximum total, but maximum value in case the DC has
+            // unlimited total
+            let y = d3.scaleLinear()
+                .domain([0, d3.max(dc_data.values, d => d[max_index])])
+                .range([graph_size.y, 0]);
+            let valueLineGenerator = d3.line()
+                .x(d => Math.trunc(x(d[0])))
+                .y(d => Math.trunc(y(d[1])));
+            graph.append("g")
+                .attr("transform", `translate(0, ${graph_size.y})`)
+                .attr("class", "axis axis-x")
+                .call(xaxis)
+                .append("text")
+                .attr("fill", "#000")
+                .attr("x", graph_size.x)
+                .attr("dy", "2ex")
+                .attr("text-anchor", "end")
+                .text("Time");
+            graph.append("g")
+                .call(d3.axisLeft(y))
+                .append("text")
+                .attr("fill", "#000")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", "0.71em")
+                .attr("text-anchor", "end")
+                .text("CPU");
+            graph.append("path")
+                .datum(dc_data.values)
+                .attr("class", "cpu-values zoomable")
+                .attr("d", valueLineGenerator(dc_data.values));
+            if (max_index > 1) {
+                let totalLineGenerator = d3.line()
+                    .x(d => Math.trunc(x(d[0])))
+                    .y(d => Math.trunc(y(d[2])))
+                    .defined(d => d.length > 2);
+                graph.append("path")
+                    .datum(dc_data.values)
+                    .attr("class", "cpu-totals zoomable")
+                    .attr("d", totalLineGenerator(dc_data.values));
             }
+            d3.select('#' + svg_id)
+                .call(d3.zoom()
+                      .scaleExtent([1, Infinity])
+                      .translateExtent([[0, 0], [graph_size.x, graph_size.y]])
+                      .on("zoom", () => {
+                          let t = d3.event.transform;
+                          graph.selectAll(".zoomable")
+                              .attr("transform",
+                                    `translate(${t.x}, 0) scale(${t.k}, 1)`);
+                          graph.select(".axis-x")
+                              .call(xaxis.scale(t.rescaleX(x)));
+                      }));
         });
+    }
 
-        // Toggle visibility of a graph / deployment component
-        $(document).on('change', ":checkbox", function(ev){
-            var grpId = '#graph'+ this.name.substring(10);
-            $(grpId).toggle();
-        });
-
-        // Toggle all / nothing for the checkboxes
-        $("#graphToggle").on('click', function(ev){
-            // Look for at least one checked box
-            var hasChecked = false;
-            var checkboxes = $(":checkbox").each(function(i, e){
-                if( this.checked ){
-                    hasChecked = true;
-                    return false;
-                }
+    $(document).ready(() => {
+        $.when($.getJSON("/dcs/cpu/data.json"))
+            .done(cpudata => {
+                generateCpuGraphs('#graphs', cpudata);
             });
-            // Set all boxes in checked/unchecked state
-            checkboxes.each(function(i, e){
-                if( e.checked !== !hasChecked ) {
-                    $(e).trigger('change');
-                }
-                e.checked = !hasChecked;
-            });
-
-        });
-
-
-        // Append divs to draw graphs on, and some rows + checkboxes
-        function appendTableRowsAndDivs(num){
-            var firstRow = $("table tr:eq(0)");
-            var secondRow = $("table tr:eq(1)");
-            var wrapperDiv = $("#graphPane");
-            for(var i = 0; i < num; i++){
-                firstRow.append("<th> DC "+ (1+i) + "</th>");
-                secondRow.append(
-                        "<td><input type='checkbox' name='toggleview_" +
-                        (1+i)+ "' checked /></td>");
-                wrapperDiv.append("<div id='graph_" + (1+i)
-                        +"' class='paddedGraph'></div>");
-            }
-        }
-
-
-        // Draw graphs from JSON and return all Dygraph's
-        function buildGraphs(graphData){
-            var graphs = new Array();
-            for(var i = 0; i < graphData.length; i++){
-                options['title'] = graphData[i].name;
-                if (graphData[i].values.length > 0 &&
-                    graphData[i].values[0].length == 2) {
-                    options['labels'] = ["", "used"];
-                }
-                else {
-                    options['labels'] = ["", "used", "total"];
-                }
-                graphs.push(new Dygraph(
-                            document.getElementById("graph_"+(1+i)),
-                            graphData[i].values,
-                            options));
-            }
-            return graphs;
-        }
-
-
-        // Fetch JSON and populate graphs
-        function loadJSON(){
-            $.ajax({
-                type: 'GET',
-                url:  'dcs/cpu/data.json',
-                success:function(data){
-                   appendTableRowsAndDivs(data.length);
-                   var gs = buildGraphs(data);
-                   $(document).data('graphs', gs);
-                   Dygraph.synchronize(gs);
-                },
-            });
-        }
-
-        loadJSON();
-
     });
 
-    </script>
+  </script>
 
 </html>
 
