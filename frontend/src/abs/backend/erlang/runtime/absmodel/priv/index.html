@@ -35,12 +35,19 @@
             // either 1 or 2: we receive dc data with or without max values
             const max_index = dc_data.values[0].length - 1;
             const svg_id = 'svg' + dc_index;
+            const clip_id = 'clip' + dc_index;
             const value_id = 'value' + dc_index;
             const total_id = 'total' + dc_index;
             container_div.append(`<h3>${dc_data.name}</h3>`);
             container_div.append(`<svg id=${svg_id} width=${size.x} height=${size.y}></svg>`);
-            let graph = d3.select('#' + svg_id)
-                .append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
+            let svg = d3.select('#' + svg_id);
+            svg.append("defs").append("clipPath")
+                .attr("id", clip_id)
+                .append("rect")
+                .attr("width", graph_size.x)
+                .attr("height", graph_size.y);
+            let graph = svg.append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
             let x = d3.scaleLinear()
                 .domain(d3.extent(dc_data.values, d => d[0]))
                 .range([0, graph_size.x]);
@@ -72,7 +79,9 @@
                 .attr("dy", "0.71em")
                 .attr("text-anchor", "end")
                 .text("CPU");
-            graph.append("path")
+            let mainarea = graph.append("g")
+                .attr("clip-path", `url(#${clip_id})`);
+            mainarea.append("path")
                 .datum(dc_data.values)
                 .attr("class", "cpu-values zoomable")
                 .attr("d", valueLineGenerator(dc_data.values));
@@ -81,23 +90,22 @@
                     .x(d => Math.trunc(x(d[0])))
                     .y(d => Math.trunc(y(d[2])))
                     .defined(d => d.length > 2);
-                graph.append("path")
+                mainarea.append("path")
                     .datum(dc_data.values)
                     .attr("class", "cpu-totals zoomable")
                     .attr("d", totalLineGenerator(dc_data.values));
             }
-            d3.select('#' + svg_id)
-                .call(d3.zoom()
-                      .scaleExtent([1, Infinity])
-                      .translateExtent([[0, 0], [graph_size.x, graph_size.y]])
-                      .on("zoom", () => {
-                          let t = d3.event.transform;
-                          graph.selectAll(".zoomable")
-                              .attr("transform",
-                                    `translate(${t.x}, 0) scale(${t.k}, 1)`);
-                          graph.select(".axis-x")
-                              .call(xaxis.scale(t.rescaleX(x)));
-                      }));
+            svg.call(d3.zoom()
+                     .scaleExtent([1, Infinity])
+                     .translateExtent([[margin.left, margin.top], [graph_size.x, graph_size.y]])
+                     .on("zoom", () => {
+                         let t = d3.event.transform;
+                         graph.selectAll(".zoomable")
+                             .attr("transform",
+                                   `translate(${t.x}, 0) scale(${t.k}, 1)`);
+                         graph.select(".axis-x")
+                             .call(xaxis.scale(t.rescaleX(x)));
+                     }));
         });
     }
 
