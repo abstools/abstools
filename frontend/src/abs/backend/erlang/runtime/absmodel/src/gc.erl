@@ -248,7 +248,10 @@ is_collection_needed(Data=#data{objects=Objects,futures=Futures,
     orelse erlang:system_info(process_count) / erlang:system_info(process_limit) > PFactor.
 
 extract_references(DataStructure) ->
-    ordsets:from_list(lists:flatten([to_deep_list(DataStructure)])).
+    ordsets:from_list(lists:flatten([to_deep_list(DataStructure),
+				     %% local variables for tasks,
+				     %% `undefined' otherwise.
+				     to_deep_list(get(vars))])).
 
 to_deep_list(#object{ref=Ref}) ->
     {object, Ref};
@@ -260,5 +263,7 @@ to_deep_list(DataStructure) when is_tuple(DataStructure) ->
     lists:map(fun to_deep_list/1, tuple_to_list(DataStructure));
 to_deep_list(List) when is_list(List) ->
     lists:map(fun to_deep_list/1, List);
+to_deep_list(Map) when is_map(Map) ->
+    to_deep_list(maps:to_list(Map));
 to_deep_list(_FlatData) ->
     [].
