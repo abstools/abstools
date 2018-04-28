@@ -249,9 +249,8 @@
   </target>
 
   <target name="genruntime">
-    <echo message="Trying to precompile erlang libraries, error is safe to ignore" />
-    <exec executable="escript" dir="${src.dir}/abs/backend/erlang/runtime/absmodel"
-          failonerror="false" failifexecutionfails="false">
+    <echo message="Compiling erlang runtime libraries" />
+    <exec executable="escript" dir="${src.dir}/abs/backend/erlang/runtime/absmodel">
       <arg value="../bin/rebar" />
       <arg value="compile" />
     </exec>
