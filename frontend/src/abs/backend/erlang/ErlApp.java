@@ -127,6 +127,7 @@ public class ErlApp {
         // how to handle the other case.
         URLConnection resource = getClass().getResource("").openConnection();
         try {
+            new File(destDir + "/absmodel/ebin").mkdirs();
             for (String f : RUNTIME_FILES) {
                 if (f.endsWith("/*")) {
                     String dirname = f.substring(0, f.length() - 2);

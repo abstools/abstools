@@ -5,6 +5,7 @@ package abs.backend.erlang;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
@@ -148,8 +149,22 @@ public class ErlangBackend extends Main {
         ErlApp erlApp = new ErlApp(destDir);
         m.generateErlangCode(erlApp, options);
         erlApp.close();
-	String[] rebarProgram = new String[] {"escript", "../bin/rebar", "compile"};
-        Process p = Runtime.getRuntime().exec(rebarProgram, null, new File(destDir, "absmodel"));
+
+        List<String> compile_command = new ArrayList<String>();
+        // We used to call "rebar compile" here but calling erlc directly
+        // removes 1.5s from the compile time
+        compile_command.add("erlc");
+        compile_command.add("-I");
+        compile_command.add(destDir + "/absmodel/include");
+        compile_command.add("-o");
+        compile_command.add(destDir + "/absmodel/ebin");
+        Arrays.stream(new File(destDir, "absmodel/src/")
+                      .listFiles(new FilenameFilter() {
+                              public boolean accept(File dir, String name) {
+                                  return name.endsWith(".erl");
+                              }}))
+            .forEach((File f) -> compile_command.add(f.toString()));
+        Process p = Runtime.getRuntime().exec(compile_command.toArray(new String[0]));
         if (options.contains(CompileOptions.VERBOSE)) IOUtils.copy(p.getInputStream(), System.out);
         else IOUtils.copy(p.getInputStream(), new NullOutputStream());
         p.waitFor();
