@@ -101,6 +101,7 @@ public class ErlApp {
             // do not copy this since absmodulename.hrl is generated later --
             // runtime.erl and main_app.erl use the wrong constant
             // "absmodel/ebin/*",
+            "absmodel/ebin/absmodel.app",
             "absmodel/Emakefile",
             "Dockerfile",
             "start_console",
