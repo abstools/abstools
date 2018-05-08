@@ -219,4 +219,19 @@ public class PrimitiveTypes extends SemanticTests {
     public void wrappedIntRatCmp() {
         assertEvalTrue("{ Bool testresult = Time(2) == Time(2/1); }");
     }
+
+    @Test
+    public void intToString() {
+	assertEvalTrue("{ Bool testresult = toString(5) == \"5\"; }");
+    }
+
+    @Test
+    public void ratToString() {
+	assertEvalTrue("{ Bool testresult = toString(5/2) == \"5/2\"; }");
+    }
+
+    @Test
+    public void stringToString() {
+	assertEvalTrue("{ Bool testresult = toString(\"Hello\") == \"\\\"Hello\\\"\"; }");
+    }
 }
