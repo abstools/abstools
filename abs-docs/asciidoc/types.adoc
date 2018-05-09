@@ -22,7 +22,10 @@ Algebraic data types can be _parametric_, which is useful for defining
 “container-like” data types.  Currently only algebraic data types can be
 parameterized, i.e., ABS does not currently offer class templates.
 
-Note that classes are not types in ABS.
+Note that classes are not types in ABS; object references are typed by an
+interface that the object’s class implements.  (Classes that do not implement
+any interfaces can be instantiated, and can interact with the rest of the
+system via their `run` method and constructor arguments.)
 
 .Example
 [source]

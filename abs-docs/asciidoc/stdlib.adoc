@@ -35,7 +35,6 @@ The following operators apply to Boolean values:
 |e1 > e2    |greater than                  |left  |compatible |Bool
 |e1 >= e2   |greater than or equal to      |left  |compatible |Bool
 |! e        |logical negation              |right |Bool |Bool
-|~ e        |logical negation (deprecated) |right |Bool |Bool
 |=======================
 
 [[type-numbers]]
