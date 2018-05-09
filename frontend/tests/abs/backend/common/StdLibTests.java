@@ -179,4 +179,14 @@ public class StdLibTests extends SemanticTests {
     public void minRat() {
         assertEvalTrue("{Bool testresult = min(-2/5, 3/5) == -2/5;}");
     }
+
+    @Test
+    public void maxFloat() {
+        assertEvalTrue("{Bool testresult = max(-2.0, 3.0) == 3.0;}");
+    }
+
+    @Test
+    public void minFloat() {
+        assertEvalTrue("{Bool testresult = min(-2.0, 3.0) == -2.0;}");
+    }
 }
