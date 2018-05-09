@@ -21,6 +21,7 @@ import abs.backend.java.lib.types.ABSDataType;
 import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSProcess;
 import abs.backend.java.lib.types.ABSRational;
+import abs.backend.java.lib.types.ABSFloat;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 import abs.backend.java.lib.types.ABSValue;
@@ -215,4 +216,7 @@ public class ABSBuiltInFunctions {
         return r.denominator();
     }
 
+    public static ABSFloat float__(ABSRational r) {
+        return r.toFloat();
+    }
 }

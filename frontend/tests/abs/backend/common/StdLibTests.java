@@ -161,6 +161,10 @@ public class StdLibTests extends SemanticTests {
     }
 
     @Test
+    public void float1() {
+        assertEvalTrue("{ Bool testresult = float(5/2) == 2.5; }");
+    }
+    @Test
     public void maxInt() {
         assertEvalTrue("{Bool testresult = max(-2, 3) == 3;}");
     }

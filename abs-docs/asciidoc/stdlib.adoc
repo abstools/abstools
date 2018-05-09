@@ -97,6 +97,15 @@ Converts a rational number to an integer by truncating towards zero.
 Int truncate(Rat a)
 ----
 
+.float
+
+Converts an integer or rational number into a floating-point number.
+
+[source]
+----
+Float float(Rat a)
+----
+
 .numerator
 
 Returns the numerator of a rational number, or the number itself for an

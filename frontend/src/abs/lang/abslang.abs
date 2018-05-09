@@ -9,7 +9,10 @@ export True, False, and, not;
 // Numerics
 export max, min, abs, pow, sqrt_newton, exp_newton, random, truncate;
 
-// rationals
+// Floats
+export float;
+
+// Rationals
 export numerator, denominator;
 
 // Basic utility datatypes
@@ -120,6 +123,11 @@ def Int random(Int below) = builtin;
  * Truncates a towards zero.
  */
 def Int truncate(Rat a) = builtin;
+
+/**
+ * Converts a rational into a float.
+ */
+def Float float(Rat a) = builtin;
 
 /**
  * Returns numerator of canonical form of a.

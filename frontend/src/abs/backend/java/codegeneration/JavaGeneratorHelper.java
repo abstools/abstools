@@ -156,8 +156,8 @@ public class JavaGeneratorHelper {
 
     public static void generateBuiltInFnApp(PrintStream stream, FnApp app) {
         FunctionDecl d = (FunctionDecl) app.getDecl();
-        String name = d.getName();
-        if (!builtInFunctionExists(name)) {
+        String name = builtInFunctionJavaName(d.getName());
+        if (name == null) {
             throw new NotImplementedYetException(app, "The built in function '" + name + "' is not implemented in the Java backend.");
         }
 
@@ -181,13 +181,16 @@ public class JavaGeneratorHelper {
                 .append("\", ").append(app.getStartLine()).toString();
     }
 
-    private static boolean builtInFunctionExists(String name) {
+    private static String builtInFunctionJavaName(String name) {
         for (Method m : ABSBuiltInFunctions.class.getMethods()) {
             if (m.getName().equals(name)) {
-                return true;
+                return name;
+            }
+            if (m.getName().equals(name + "__")) {
+                return name + "__";
             }
         }
-        return false;
+        return null;
     }
 
     public static String getDebugString(ASTNode<?> node) {
