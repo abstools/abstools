@@ -160,4 +160,23 @@ public class StdLibTests extends SemanticTests {
         assertEvalTrue("{ Bool testresult = denominator(-5) == 1; }");
     }
 
+    @Test
+    public void maxInt() {
+        assertEvalTrue("{Bool testresult = max(-2, 3) == 3;}");
+    }
+
+    @Test
+    public void minInt() {
+        assertEvalTrue("{Bool testresult = min(-2, 3) == -2;}");
+    }
+
+    @Test
+    public void maxRat() {
+        assertEvalTrue("{Bool testresult = max(-2/5, 3/5) == 3/5;}");
+    }
+
+    @Test
+    public void minRat() {
+        assertEvalTrue("{Bool testresult = min(-2/5, 3/5) == -2/5;}");
+    }
 }
