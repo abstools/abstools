@@ -170,57 +170,57 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
-    public void doubleAdd() {
+    public void floatAdd() {
         assertEvalTrue("{ Bool testresult = 5.0 + 5.0 == 10.0;  }");
     }
 
     @Test
-    public void doubleSub() {
+    public void floatSub() {
         assertEvalTrue("{ Bool testresult = 10.0 - 5.0 == 5.0;  }");
     }
 
     @Test
-    public void doubleDiv() {
-        assertEvalTrue("{ Double result = 10.0/4.0; Bool testresult = result == 2.5;  }");
+    public void floatDiv() {
+        assertEvalTrue("{ Float result = 10.0/4.0; Bool testresult = result == 2.5;  }");
     }
 
     @Test
-    public void doubleMult() {
+    public void floatMult() {
         assertEvalTrue("{ Bool testresult = 2.0 * 5.0 == 10.0;  }");
     }
 
     @Test
-    public void doubleMod() {
+    public void floatMod() {
         assertEvalTrue("{ Bool testresult = 10.0 % 3.0 == 1.0;  }");
     }
 
     @Test
-    public void doubleGt() {
+    public void floatGt() {
         assertEvalTrue("{ Bool testresult = 10.0 > 5.0;  }");
     }
 
     @Test
-    public void doubleLt() {
+    public void floatLt() {
         assertEvalTrue("{ Bool testresult = 5.0 < 10.0;  }");
     }
 
     @Test
-    public void doubleLtEq() {
+    public void floatLtEq() {
         assertEvalTrue("{ Bool testresult = 5.0 <= 10.0;  }");
     }
 
     @Test
-    public void doubleLtEq2() {
+    public void floatLtEq2() {
         assertEvalTrue("{ Bool testresult = 5.0 <= 5.0;  }");
     }
 
     @Test
-    public void doubleGtEq() {
+    public void floatGtEq() {
         assertEvalTrue("{ Bool testresult = 10.0 >= 5.0;  }");
     }
 
     @Test
-    public void doubleGtEq2() {
+    public void floatGtEq2() {
         assertEvalTrue("{ Bool testresult = 5.0 >= 5.0;  }");
     }
 
@@ -286,7 +286,7 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
-    public void doubleToString() {
+    public void floatToString() {
         assertEvalTrue("{ Bool testresult = toString(2.5) == \"2.5\"; }");
     }
 

@@ -115,7 +115,7 @@ The following words are keywords in the ABS language and are invalid as identifi
 === Literals
 
 A literal is a textual representation of a value. ABS supports integer
-literals, float (double) literals, string literals, and the null literal.
+literals, floating-point literals, string literals, and the null literal.
 Rational numbers are written using the division operator `/`, e.g., `1/4` for
 one quarter.
 
@@ -129,7 +129,7 @@ The null literal is written as `null`.
 |====
 | _Literal_ ::= | _IntLiteral_ {vbar} _StringLiteral_ {vbar} _ThisLiteral_ {vbar} _NullLiteral_
 | _IntLiteral_ ::= | `0` {vbar} ( ( `1` {vbar} ... {vbar} `9` ) { [: digit :] } )
-| _DoubleLiteral_ ::= | [ _IntLiteral_ ] `.` [: digit :] { [: digit :] } [ ( `e` {vbar} `E` ) [ `-` {vbar} `+` ] _IntLiteral_ ]
+| _FloatLiteral_ ::= | [ _IntLiteral_ ] `.` [: digit :] { [: digit :] } [ ( `e` {vbar} `E` ) [ `-` {vbar} `+` ] _IntLiteral_ ]
 | _StringLiteral_ ::= | `"` { ? _Valid String Character_ ? } `"`
 | _ThisLiteral_ ::= | `this`
 | _NullLiteral_ ::= | `null`

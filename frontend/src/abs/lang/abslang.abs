@@ -1,7 +1,7 @@
 module ABS.StdLib;
 
 // Scalar datatypes
-export Unit, String, Int, Rat, Double, Bool, Fut, Exception;
+export Unit, String, Int, Rat, Float, Bool, Fut, Exception;
 
 // Booleans
 export True, False, and, not;
@@ -69,11 +69,11 @@ import Cost from ABS.DC;
 
 import * from ABS.StdLib.Exceptions;
 
-data Unit = Unit;               // builtin  
-data String;                    // builtin  
+data Unit = Unit;               // builtin
+data String;                    // builtin
 data Int;                       // builtin
 data Rat;                       // builtin
-data Double;                    // builtin
+data Float;                     // builtin
 data Bool = True | False;       // builtin
 data Fut<A>;                    // builtin
 data Exception;                 // builtin
@@ -83,7 +83,7 @@ def Bool not(Bool a) = !a;
 
 def A max<A>(A a, A b) = if a > b then a else b;
 def A min<A>(A a, A b) = if a < b then a else b;
-    
+
 def Rat abs(Rat x) = if x > 0 then x else -x;
 
 def Rat pow(Rat b, Int n) =

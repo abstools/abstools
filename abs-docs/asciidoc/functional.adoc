@@ -88,7 +88,7 @@ to high precedence.
 | `e1 + e2`    | addition                 |left          | number     | number
 | `e1 - e2`    | subtraction              |left          | number     | number
 | `e1 * e2`    | multiplication           |left          | number     | number
-| `e1 / e2`    | division                 |left          | number     | `Rat` or `Double`
+| `e1 / e2`    | division                 |left          | number     | `Rat` or `Float`
 | `e1 % e2`    | modulo                   |left          | number     | number
 | `!e`         | logical negation         |right         | `Bool`     | `Bool`
 | `-e`         | integer negation         |right         | number     | number

@@ -228,8 +228,8 @@ public class DataTypeType extends Type  {
         return decl.getName().equals("Rat");
     }
 
-    public boolean isDoubleType() {
-        return decl.getName().equals("Double");
+    public boolean isFloatType() {
+        return decl.getName().equals("Float");
     }
 
     public boolean isStringType() {

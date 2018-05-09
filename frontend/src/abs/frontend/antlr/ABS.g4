@@ -24,7 +24,7 @@ INTLITERAL : '0' | [1-9] DIGIT* ;
 STRINGLITERAL
   :  '"' (STR_ESC | ~('\\' | '"' | '\r' | '\n'))* '"'
   ;
-DOUBLELITERAL : INTLITERAL? '.' DIGIT+ EXPONENT? ;
+FLOATLITERAL : INTLITERAL? '.' DIGIT+ EXPONENT? ;
 fragment STR_ESC
   :  '\\' ('\\' | '"' | 't' | 'n' | 'r')
   ;
@@ -100,7 +100,7 @@ pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
     | l=pure_exp op='&&' r=pure_exp                        # AndExp
     | l=pure_exp op='||' r=pure_exp                        # OrExp
     | var_or_field_ref                                     # VarOrFieldExp
-    | DOUBLELITERAL                                        # DoubleExp
+    | FLOATLITERAL                                         # FloatExp
     | INTLITERAL                                           # IntExp
     | STRINGLITERAL                                        # StringExp
     | 'this'                                               # ThisExp

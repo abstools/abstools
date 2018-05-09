@@ -321,7 +321,7 @@ aspect GenerateMaude {
         stream.print("\"num\"[" + getContent() + "] ");
     }
 
-    public void DoubleLiteral.generateMaude(PrintStream stream) {
+    public void FloatLiteral.generateMaude(PrintStream stream) {
         stream.print("\"float\"[" + getContent() + "] ");
     }
 

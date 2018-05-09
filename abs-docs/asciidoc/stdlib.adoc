@@ -43,7 +43,7 @@ The following operators apply to Boolean values:
 ==== Datatypes and constructors
 
 The numeric datatypes of ABS are `Int` (arbitrary-length integers), `Rat`
-(arbitrary-precision rational numbers) and `Double` (64-bit floating point).
+(arbitrary-precision rational numbers) and `Float` (64-bit floating point).
 See <<sec:builtin-types>> for their syntax.
 
 ==== Operators
@@ -60,7 +60,7 @@ See <<sec:builtin-types>> for their syntax.
 |`e1 + e2` |addition |left |number, number |number
 |`e1 - e2` |subtraction |left |number, number |number
 |`e1 * e2` |multiplication |left |number, number |number
-|`e1 / e2` |division |left |number, number |`Rat` or `Double`
+|`e1 / e2` |division |left |number, number |`Rat` or `Float`
 |`e1 % e2` |modulo |left |number, number |number
 |=======================
 
