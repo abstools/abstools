@@ -584,16 +584,12 @@ value.")
                                              ;; module
                                              "\").\n")))
                (pop-to-buffer erlang-buffer)))
-    (`java (let ((java-buffer (save-excursion (shell "*abs java*")))
-                 (java-dir (file-name-directory (buffer-file-name)))
-                 (module (abs--guess-module)))
-             (with-current-buffer java-buffer
-               (comint-send-string java-buffer
-                                   (concat "cd \"" java-dir "\"\n"))
-               (goto-char (point-max))
-               (insert "java -cp gen:" abs-java-classpath
-                       " " module ".Main && exit")
-               (comint-send-input))))
+    (`java (let* ((module (abs--guess-module))
+                  (java-buffer (get-buffer-create (concat "*abs java " module "*")))
+                  (command (concat "java -cp gen:" abs-java-classpath
+                                   " " module ".Main")))
+             (pop-to-buffer java-buffer)
+             (shell-command command java-buffer)))
     (other (error "Don't know how to run with target %s" backend))))
 
 (defun abs-next-action (flag)
