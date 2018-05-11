@@ -10,7 +10,7 @@ export True, False, and, not;
 export max, min, abs, pow, sqrt_newton, exp_newton, random, truncate;
 
 // Floats
-export float;
+export float, rat;
 
 // Rationals
 export numerator, denominator;
@@ -128,6 +128,11 @@ def Int truncate(Rat a) = builtin;
  * Converts a rational into a float.
  */
 def Float float(Rat a) = builtin;
+
+/**
+ * Converts a float into a rational.
+ */
+def Rat rat(Float f) = builtin;
 
 /**
  * Returns numerator of canonical form of a.

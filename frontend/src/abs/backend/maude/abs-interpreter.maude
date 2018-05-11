@@ -192,6 +192,8 @@ fmod ABS-DATA-FLOAT is
 
   eq fparams("ABS.StdLib.float") = 'I .
   eq fdefn("ABS.StdLib.float") = $builtin("float") .
+  eq fparams("ABS.StdLib.rat") = 'I .
+  eq fdefn("ABS.StdLib.rat") = $builtin("rat") .
 
   *** definition of arithmetic operators is in ABS-DATA-INT
 endfm
@@ -1156,6 +1158,7 @@ mod ABS-EVAL is
 
   *** ABS-DATA-FLOAT
   eq eval($builtin("float"), S, CN, MAC) = "float"[float((S['I]) asRat)] .
+  eq eval($builtin("rat"), S, CN, MAC) = "num"[rat((S['I]) asFloat)] .
 
   *** ABS-DATA-STRING
   ceq eval($builtin("+"), S, CN, MAC) = "str"[I1:String + I2:String]

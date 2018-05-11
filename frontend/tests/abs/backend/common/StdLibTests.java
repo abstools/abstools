@@ -164,6 +164,42 @@ public class StdLibTests extends SemanticTests {
     public void float1() {
         assertEvalTrue("{ Bool testresult = float(5/2) == 2.5; }");
     }
+
+    @Test
+    public void float2() {
+        assertEvalTrue("{ Bool testresult = float(-5/2) == -2.5; }");
+    }
+
+    @Test
+    public void float3() {
+        assertEvalTrue("{ Bool testresult = float(0) == 0.0; }");
+    }
+
+    @Test
+    public void float4() {
+        assertEvalTrue("{ Bool testresult = float(1) == 1.0; }");
+    }
+
+    @Test
+    public void rat1() {
+        assertEvalTrue("{ Bool testresult = rat(2.5) == 5/2; }");
+    }
+
+    @Test
+    public void rat2() {
+        assertEvalTrue("{ Bool testresult = rat(-2.5) == -5/2; }");
+    }
+
+    @Test
+    public void rat3() {
+        assertEvalTrue("{ Bool testresult = rat(0.0) == 0; }");
+    }
+
+    @Test
+    public void rat4() {
+        assertEvalTrue("{ Bool testresult = rat(1.0) == 1; }");
+    }
+
     @Test
     public void maxInt() {
         assertEvalTrue("{Bool testresult = max(-2, 3) == 3;}");

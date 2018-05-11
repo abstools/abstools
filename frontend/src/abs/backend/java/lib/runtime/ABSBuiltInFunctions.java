@@ -219,4 +219,8 @@ public class ABSBuiltInFunctions {
     public static ABSFloat float__(ABSRational r) {
         return r.toFloat();
     }
+
+    public static ABSRational rat(ABSFloat f) {
+        return ABSRational.fromDouble(f.getDouble());
+    }
 }

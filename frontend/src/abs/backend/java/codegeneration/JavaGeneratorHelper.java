@@ -158,7 +158,7 @@ public class JavaGeneratorHelper {
         FunctionDecl d = (FunctionDecl) app.getDecl();
         String name = builtInFunctionJavaName(d.getName());
         if (name == null) {
-            throw new NotImplementedYetException(app, "The built in function '" + name + "' is not implemented in the Java backend.");
+            throw new NotImplementedYetException(app, "The built in function '" + d.getName() + "' is not implemented in the Java backend.");
         }
 
         // if builtin function returns a non-builtin type, cast the returned value to that type

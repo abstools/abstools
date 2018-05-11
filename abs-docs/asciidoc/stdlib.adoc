@@ -106,6 +106,15 @@ Converts an integer or rational number into a floating-point number.
 Float float(Rat a)
 ----
 
+.rat
+
+Converts  a floating-point number into a rational number.
+
+[source]
+----
+Rat rat(Float f)
+----
+
 .numerator
 
 Returns the numerator of a rational number, or the number itself for an

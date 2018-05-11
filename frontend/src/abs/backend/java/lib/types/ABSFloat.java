@@ -4,6 +4,8 @@
  */
 package abs.backend.java.lib.types;
 
+import org.apfloat.Apfloat;
+
 public class ABSFloat extends ABSBuiltInDataType {
 
     private final double value;
@@ -99,6 +101,6 @@ public class ABSFloat extends ABSBuiltInDataType {
 
     @Override
     public String toString() {
-        return Double.toString(this.value);
+        return new Apfloat(this.value).toString(true);
     }
 }

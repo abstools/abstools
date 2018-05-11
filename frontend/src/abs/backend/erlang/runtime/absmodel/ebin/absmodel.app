@@ -8,5 +8,5 @@
               {modules,[active_object_task,async_call_task,builtin,clock,cmp,
                         cog,cog_monitor,coverage,dc,error_transform,future,gc,
                         getopt,influxdb,init_task,intar,main_app,main_task,
-                        modelapi_v1,modelapi_v2,object,rationals,runtime,
-                        task]}]}.
+                        mochinum,modelapi_v1,modelapi_v2,object,rationals,
+                        runtime,task]}]}.
