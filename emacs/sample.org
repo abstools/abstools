@@ -6,6 +6,7 @@ Press ~C-c C-c~ within the following code block.  If abs-mode is setup
 correctly (i.e., if you can compile and run abs programs from within emacs),
 the program's output should appear below the block.
 
+#+name: example
 #+BEGIN_SRC abs :results output :var name="Rudi"
   {
       println("Hello " + name() + "!");
@@ -16,9 +17,9 @@ the program's output should appear below the block.
 
 The given code is prepended with ~module Org;~, so it's not necessary to
 define the module in an abs block.  All parameters are converted into
-zero-argument functions of type ~String~ or ~Int~, which are exported from
-~Org~, so if the code uses another module it can use ~import * from Org'~ to
-access parameters given to the block.
+zero-argument functions of type ~String~ or ~Int~, which are exported from the
+~Org~ module, so if the code uses another module it can use ~import * from
+Org;~ to access parameters given to the block.
 
 * Missing
 

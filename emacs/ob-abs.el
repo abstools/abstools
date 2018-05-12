@@ -38,8 +38,8 @@
 ;; - [ ] parameters: list
 ;; - [ ] parameters: matrix
 ;; 
-;; * [0/1]Maybe
-;; - [ ] auto-create main block parameters?
+;; * [0/1] Maybe
+;; - [ ] auto-create main block when code block is not surrounded by { }
 
 (declare-function org-entry-get "org" (pom property &optional inherit literal-nil))
 (declare-function org-remove-indentation "org" (code &optional n))
