@@ -144,7 +144,7 @@ rat(_Cog, F) ->
         _ ->
             Length = length(Rest) - 1,
             Factor = mochinum:int_pow(10, Length),
-            { trunc(F * Factor), Factor }
+            rationals:new(trunc(F * Factor), Factor)
     end.
 
 println(_Cog,S)->
