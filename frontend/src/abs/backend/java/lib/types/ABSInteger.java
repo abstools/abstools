@@ -6,6 +6,7 @@ package abs.backend.java.lib.types;
 
 import java.math.BigInteger;
 
+import org.apfloat.Apfloat;
 import org.apfloat.Apint;
 import org.apfloat.Aprational;
 
@@ -103,5 +104,13 @@ public class ABSInteger extends ABSRational {
     @Override
     public ABSInteger denominator() {
         return ONE;
+    }
+
+    public static ABSInteger floor(ABSFloat f) {
+        return new ABSInteger(new Apfloat(f.getDouble()).floor());
+    }
+
+    public static ABSInteger ceil(ABSFloat f) {
+        return new ABSInteger(new Apfloat(f.getDouble()).ceil());
     }
 }

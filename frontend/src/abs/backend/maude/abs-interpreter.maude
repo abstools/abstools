@@ -194,6 +194,10 @@ fmod ABS-DATA-FLOAT is
   eq fdefn("ABS.StdLib.float") = $builtin("float") .
   eq fparams("ABS.StdLib.rat") = 'I .
   eq fdefn("ABS.StdLib.rat") = $builtin("rat") .
+  eq fparams("ABS.StdLib.floor") = 'I .
+  eq fdefn("ABS.StdLib.floor") = $builtin("floor") .
+  eq fparams("ABS.StdLib.ceil") = 'I .
+  eq fdefn("ABS.StdLib.ceil") = $builtin("ceil") .
   eq fparams("ABS.StdLib.sqrt") = 'I .
   eq fdefn("ABS.StdLib.sqrt") = $builtin("sqrt") .
 
@@ -1161,6 +1165,8 @@ mod ABS-EVAL is
   *** ABS-DATA-FLOAT
   eq eval($builtin("float"), S, CN, MAC) = "float"[float((S['I]) asRat)] .
   eq eval($builtin("rat"), S, CN, MAC) = "num"[rat((S['I]) asFloat)] .
+  eq eval($builtin("floor"), S, CN, MAC) = "num"[rat(floor((S['I]) asFloat))] .
+  eq eval($builtin("ceil"), S, CN, MAC) = "num"[rat(ceiling((S['I]) asFloat))] .
   eq eval($builtin("sqrt"), S, CN, MAC) = "float"[sqrt((S['I]) asFloat)] .
 
   *** ABS-DATA-STRING

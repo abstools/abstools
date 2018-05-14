@@ -224,6 +224,14 @@ public class ABSBuiltInFunctions {
         return ABSRational.fromDouble(f.getDouble());
     }
 
+    public static ABSInteger floor(ABSFloat f) {
+        return ABSInteger.floor(f);
+    }
+
+    public static ABSInteger ceil(ABSFloat f) {
+        return ABSInteger.ceil(f);
+    }
+
     public static ABSFloat sqrt__(ABSFloat f) {
         return ABSFloat.fromDouble(Math.sqrt(f.getDouble()));
     }

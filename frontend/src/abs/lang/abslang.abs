@@ -10,7 +10,7 @@ export True, False, and, not;
 export max, min, abs, pow, sqrt_newton, exp_newton, random, truncate;
 
 // Floats
-export float, rat;
+export float, rat, floor, ceil;
 export sqrt;
 
 // Rationals
@@ -136,6 +136,16 @@ def Float float(Rat a) = builtin;
  * Converts a float into a rational.
  */
 def Rat rat(Float f) = builtin;
+
+/**
+ * Converts a float into the largest smaller or equal integer.
+ */
+def Int floor(Float f) = builtin;
+
+/**
+ * Converts a float into the smallest larger or equal integer.
+ */
+def Int ceil(Float f) = builtin;
 
 /**
  * Returns numerator of canonical form of a.

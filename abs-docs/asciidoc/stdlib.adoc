@@ -115,6 +115,25 @@ Converts  a floating-point number into a rational number.
 Rat rat(Float f)
 ----
 
+.floor
+
+Returns the largest integer smaller or equal to the argument.
+
+[source]
+----
+Int floor(Float f)
+----
+
+
+.ceil
+
+Returns the smallest integer larger or equal to the argument.
+
+[source]
+----
+Int ceil(Float f)
+----
+
 .numerator
 
 Returns the numerator of a rational number, or the number itself for an
