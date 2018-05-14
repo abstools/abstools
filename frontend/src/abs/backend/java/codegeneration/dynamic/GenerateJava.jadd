@@ -893,6 +893,10 @@ aspect GenerateJavaDynamic_Core {
         stream.print("\")");
     }
 
+    public void FloatLiteral.generateJavaDynamic(PrintStream stream) {
+        stream.print(getContent() + "d");
+    }
+
     public void StringLiteral.generateJavaDynamic(PrintStream stream) {
         stream.print(ABSString.class.getName());
         stream.print(".fromString(\"");

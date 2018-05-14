@@ -1251,6 +1251,10 @@ aspect doPrettyPrinter {
         stream.print("\"");
     }
 
+    public void FloatLiteral.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print(getContent());
+    }
+
     public void ListLiteral.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("[");
         String interp = "";

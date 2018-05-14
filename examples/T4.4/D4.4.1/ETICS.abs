@@ -16,7 +16,7 @@ def Int ceiling(Rat r) = truncate(r) + 1;
 
 def Int next_power_of_2(Rat r, Int current) =
   if r < current then current else next_power_of_2(r, current * 2);
-def Rat sqrt(Rat r) = sqrt_newton(r, r, 1/100);
+def Rat rsqrt(Rat r) = sqrt_newton(r, r, 1/100);
 
 //==========================================================================
 // CONSTANTS
@@ -1278,7 +1278,7 @@ implements Simulator {
 	//=====================================
 
 	VMData calculateDefaultVM(VMId vmId, Rat size, Rat phi){
-		Rat pow = sqrt((825/100)*size);
+		Rat pow = rsqrt((825/100)*size);
 		Int disk = next_power_of_2(size, 1); //truncate(power(2,ceiling(log2(size))));
 		Pair<VMConfig, VMConfig> closest = this.closestAvailablePowers(pow);
 		VMConfig a = fst(closest);

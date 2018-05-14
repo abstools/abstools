@@ -324,6 +324,10 @@ aspect GenerateProlog {
         s.print(getContent());
     }
 
+    public void FloatLiteral.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
+        s.print(getContent());
+    }
+
     public void ListLiteral.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         for (PureExp e : getPureExps()) {
             s.print("cons('Cons'(");

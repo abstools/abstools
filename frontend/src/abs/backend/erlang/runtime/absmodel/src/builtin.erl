@@ -5,6 +5,7 @@
 -include_lib("abs_types.hrl").
 -export([currentms/1,getProductLine/1,lowlevelDeadline/1,print/2,println/2,strlen/2,substr/4,thisDC/1,toString/2]).
 -export([random/2,truncate/2,numerator/2, denominator/2]).
+-export([float/2, rat/2, floor/2, ceil/2, sqrt/2]).
 
 -export([method/2, arrival/2, proc_deadline/2]).
 
@@ -70,6 +71,8 @@ abslistish_to_iolist(Cog, Cons, _Emp, {Cons, H, T}) ->
 
 toString(_Cog, true) -> <<"True"/utf8>>;
 toString(_Cog, false) -> <<"False"/utf8>>;
+toString(_Cog,I) when is_float(I) ->
+    list_to_binary(mochinum:digits(I));
 toString(_Cog,I) when is_integer(I) ->
     integer_to_binary(I);
 toString(_Cog,{N,D}) when is_integer(N),is_integer(D)->
@@ -127,7 +130,31 @@ denominator(_Cog, {_N, D}) ->
 denominator(_Cog, A) when is_integer(A) ->
     1.
 
+float(_Cog, {N, D}) ->
+    N / D;
+float(_Cog, A) when is_integer(A) ->
+    float(A).
 
+rat(_Cog, F) ->
+    %% this is slightly ugly.
+    Rest = lists:dropwhile(fun(E) -> E /= $. end, mochinum:digits(F)),
+    case Rest of
+        ".0" ->
+            trunc(F);
+        _ ->
+            Length = length(Rest) - 1,
+            Factor = mochinum:int_pow(10, Length),
+            rationals:new(trunc(F * Factor), Factor)
+    end.
+
+floor(_Cog, F) ->
+    erlang:floor(F).
+
+ceil(_Cog, F) ->
+    erlang:ceil(F).
+
+sqrt(_Cog, F) ->
+    math:sqrt(F).
 
 println(_Cog,S)->
     io:format("~s~n",[S]).

@@ -161,6 +161,66 @@ public class StdLibTests extends SemanticTests {
     }
 
     @Test
+    public void float1() {
+        assertEvalTrue("{ Bool testresult = float(5/2) == 2.5; }");
+    }
+
+    @Test
+    public void float2() {
+        assertEvalTrue("{ Bool testresult = float(-5/2) == -2.5; }");
+    }
+
+    @Test
+    public void float3() {
+        assertEvalTrue("{ Bool testresult = float(0) == 0.0; }");
+    }
+
+    @Test
+    public void float4() {
+        assertEvalTrue("{ Bool testresult = float(1) == 1.0; }");
+    }
+
+    @Test
+    public void rat1() {
+        assertEvalTrue("{ Bool testresult = rat(2.5) == 5/2; }");
+    }
+
+    @Test
+    public void rat2() {
+        assertEvalTrue("{ Bool testresult = rat(-2.5) == -5/2; }");
+    }
+
+    @Test
+    public void rat3() {
+        assertEvalTrue("{ Bool testresult = rat(0.0) == 0; }");
+    }
+
+    @Test
+    public void rat4() {
+        assertEvalTrue("{ Bool testresult = rat(1.0) == 1; }");
+    }
+
+    @Test
+    public void floor1() {
+        assertEvalTrue("{ Bool testresult = floor(2.5) == 2;}");
+    }
+
+    @Test
+    public void floor2() {
+        assertEvalTrue("{ Bool testresult = floor(-2.5) == -3;}");
+    }
+
+    @Test
+    public void ceil1() {
+        assertEvalTrue("{ Bool testresult = ceil(2.5) == 3;}");
+    }
+
+    @Test
+    public void ceil2() {
+        assertEvalTrue("{ Bool testresult = ceil(-2.5) == -2;}");
+    }
+
+    @Test
     public void maxInt() {
         assertEvalTrue("{Bool testresult = max(-2, 3) == 3;}");
     }
@@ -178,5 +238,20 @@ public class StdLibTests extends SemanticTests {
     @Test
     public void minRat() {
         assertEvalTrue("{Bool testresult = min(-2/5, 3/5) == -2/5;}");
+    }
+
+    @Test
+    public void maxFloat() {
+        assertEvalTrue("{Bool testresult = max(-2.0, 3.0) == 3.0;}");
+    }
+
+    @Test
+    public void minFloat() {
+        assertEvalTrue("{Bool testresult = min(-2.0, 3.0) == -2.0;}");
+    }
+
+    @Test
+    public void sqrt1() {
+        assertEvalTrue("{Bool testresult = sqrt(4.0) == 2.0;}");
     }
 }

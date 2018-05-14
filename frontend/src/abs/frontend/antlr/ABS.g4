@@ -17,12 +17,14 @@ WhiteSpace : [ \t\f\r\n]+ -> skip ;
 
 fragment LETTER : [A-Za-z] ;
 fragment DIGIT : [0-9] ;
+fragment EXPONENT : ('e' | 'E' | 'e+' | 'E+' | 'e-' | 'E-') DIGIT+;
 IDENTIFIER : [a-z] (LETTER | DIGIT | '_')* ;
 TYPE_IDENTIFIER : [A-Z] (LETTER | DIGIT | '_')* ;
 INTLITERAL : '0' | [1-9] DIGIT* ;
 STRINGLITERAL
   :  '"' (STR_ESC | ~('\\' | '"' | '\r' | '\n'))* '"'
   ;
+FLOATLITERAL : INTLITERAL? '.' DIGIT+ EXPONENT? ;
 fragment STR_ESC
   :  '\\' ('\\' | '"' | 't' | 'n' | 'r')
   ;
@@ -98,6 +100,7 @@ pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
     | l=pure_exp op='&&' r=pure_exp                        # AndExp
     | l=pure_exp op='||' r=pure_exp                        # OrExp
     | var_or_field_ref                                     # VarOrFieldExp
+    | FLOATLITERAL                                         # FloatExp
     | INTLITERAL                                           # IntExp
     | STRINGLITERAL                                        # StringExp
     | 'this'                                               # ThisExp

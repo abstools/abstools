@@ -676,6 +676,9 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     @Override public void exitIntExp(ABSParser.IntExpContext ctx) {
         setV(ctx, new IntLiteral(ctx.INTLITERAL().getText()));
     }
+    @Override public void exitFloatExp(ABSParser.FloatExpContext ctx) {
+        setV(ctx, new FloatLiteral(ctx.FLOATLITERAL().getText()));
+    }
     @Override public void exitStringExp(ABSParser.StringExpContext ctx) {
         setV(ctx, makeStringLiteral(ctx.STRINGLITERAL().getText()));
     }

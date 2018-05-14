@@ -881,7 +881,23 @@ aspect TypeChecker {
         }
     }
     public void ArithmeticExp.typeCheck(SemanticConditionList e) {
-        TypeCheckerHelper.typeCheckBinary(e,this,getModel().getRatType());
+        int nerrors = e.getErrorCount();
+        getLeft().typeCheck(e);
+        getRight().typeCheck(e);
+        if (nerrors == e.getErrorCount()) {
+            Type lt = getLeft().getType();
+            Type rt = getRight().getType();
+
+            if (! (lt.isNumericType())) {
+                e.add(new TypeError(this, ErrorMessage.EXPECTED_NUMERIC_TYPE, lt));
+            }
+            if (! (rt.isNumericType())) {
+                e.add(new TypeError(this, ErrorMessage.EXPECTED_NUMERIC_TYPE, rt));
+            }
+            if (!lt.isAssignableTo(rt) && !rt.isAssignableTo(lt)) {
+                e.add(new TypeError(this, ErrorMessage.ARITHMETIC_INCOMPATIBLE_TYPE, lt, rt));
+            }
+        }
     }
 
     public void BoolExp.typeCheck(SemanticConditionList e) {

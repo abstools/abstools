@@ -321,6 +321,10 @@ aspect GenerateMaude {
         stream.print("\"num\"[" + getContent() + "] ");
     }
 
+    public void FloatLiteral.generateMaude(PrintStream stream) {
+        stream.print("\"float\"[" + getContent() + "] ");
+    }
+
     public void ListLiteral.generateMaude(PrintStream stream) {
         for (PureExp e : getPureExps()) {
             stream.print("\"ABS.StdLib.Cons\"[");

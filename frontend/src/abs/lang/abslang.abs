@@ -1,7 +1,7 @@
 module ABS.StdLib;
 
 // Scalar datatypes
-export Unit, String, Int, Rat, Bool, Fut, Exception;
+export Unit, String, Int, Rat, Float, Bool, Fut, Exception;
 
 // Booleans
 export True, False, and, not;
@@ -9,7 +9,11 @@ export True, False, and, not;
 // Numerics
 export max, min, abs, pow, sqrt_newton, exp_newton, random, truncate;
 
-// rationals
+// Floats
+export float, rat, floor, ceil;
+export sqrt;
+
+// Rationals
 export numerator, denominator;
 
 // Basic utility datatypes
@@ -69,10 +73,11 @@ import Cost from ABS.DC;
 
 import * from ABS.StdLib.Exceptions;
 
-data Unit = Unit;               // builtin  
-data String;                    // builtin  
+data Unit = Unit;               // builtin
+data String;                    // builtin
 data Int;                       // builtin
 data Rat;                       // builtin
+data Float;                     // builtin
 data Bool = True | False;       // builtin
 data Fut<A>;                    // builtin
 data Exception;                 // builtin
@@ -82,7 +87,7 @@ def Bool not(Bool a) = !a;
 
 def A max<A>(A a, A b) = if a > b then a else b;
 def A min<A>(A a, A b) = if a < b then a else b;
-    
+
 def Rat abs(Rat x) = if x > 0 then x else -x;
 
 def Rat pow(Rat b, Int n) =
@@ -98,6 +103,8 @@ def Rat sqrt_newton(Rat x, Rat estimate, Rat epsilon) =
   in if abs(estimate - next) < epsilon
     then estimate
     else sqrt_newton(x, next, epsilon);
+
+def Float sqrt(Float x) = builtin;
 
 def Rat exp_newton_helper(Rat acc, Rat x, Int next_round, Rat numerator, Int denominator, Rat epsilon) =
   let (Rat next) = (numerator * x) / (denominator * next_round)
@@ -119,6 +126,26 @@ def Int random(Int below) = builtin;
  * Truncates a towards zero.
  */
 def Int truncate(Rat a) = builtin;
+
+/**
+ * Converts a rational into a float.
+ */
+def Float float(Rat a) = builtin;
+
+/**
+ * Converts a float into a rational.
+ */
+def Rat rat(Float f) = builtin;
+
+/**
+ * Converts a float into the largest smaller or equal integer.
+ */
+def Int floor(Float f) = builtin;
+
+/**
+ * Converts a float into the smallest larger or equal integer.
+ */
+def Int ceil(Float f) = builtin;
 
 /**
  * Returns numerator of canonical form of a.

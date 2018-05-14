@@ -5,6 +5,9 @@ aspect ConstantFolding {
         when (getOperand().isConstant()
               && getOperand().getType().isIntType())
         to IntLiteral new IntLiteral("-" + ((IntLiteral)getOperand()).getContent());
+        when (getOperand().isConstant()
+              && getOperand().getType().isFloatType())
+        to FloatLiteral new FloatLiteral("-" + ((FloatLiteral)getOperand()).getContent());
     }
     
     rewrite MultMultExp {

@@ -183,8 +183,12 @@ public abstract class Type {
         return false;
     }
 
+    public boolean isFloatType() {
+        return false;
+    }
+
     public boolean isNumericType() {
-        return isIntType() || isRatType();
+        return isIntType() || isRatType() || isFloatType();
     }
 
     public boolean isExceptionType() {

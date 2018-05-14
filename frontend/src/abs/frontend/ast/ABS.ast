@@ -217,6 +217,7 @@ abstract LiteralExp: PureExp;
 // For now the literal just contain a variable Content of type String.
 StringLiteral: LiteralExp ::= <Content> ;
 IntLiteral: LiteralExp ::= <Content>;
+FloatLiteral: LiteralExp ::= <Content>;
 // We have to treat lists specially since various parts of the toolchain crash
 // when recursing through 10000-deep DataConstructorExps
 ListLiteral: LiteralExp ::= PureExp*;

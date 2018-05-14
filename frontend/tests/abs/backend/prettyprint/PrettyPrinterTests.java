@@ -46,6 +46,13 @@ public class PrettyPrinterTests extends ABSTest {
         assertEquals("moduleTest;{List<Int>x=list[1,2,3];}", replaceWhitespaceChars(prettyPrint(m)));
     }
 
+    @Test
+    public void prettyPrinterFloatLiteralTest() throws Exception {
+        String ms = "module Test; { Float x = 3.1415927; }";
+        Model m = assertParseOk(ms, Config.WITHOUT_MODULE_NAME);
+        assertEquals("moduleTest;{Floatx=3.1415927;}", replaceWhitespaceChars(prettyPrint(m)));
+    }
+
     private String prettyPrint(ASTNode<?> d) {
         StringWriter writer = new StringWriter();
         PrintWriter w = new PrintWriter(writer);

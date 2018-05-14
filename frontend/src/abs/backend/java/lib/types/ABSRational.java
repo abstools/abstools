@@ -6,7 +6,9 @@ package abs.backend.java.lib.types;
 
 import java.math.BigInteger;
 
+import org.apfloat.Apfloat;
 import org.apfloat.Apint;
+import org.apfloat.ApintMath;
 import org.apfloat.Aprational;
 
 /**
@@ -116,6 +118,20 @@ public class ABSRational extends ABSBuiltInDataType {
         return fromBigInt(new Apint(l));
     }
 
+    public static ABSRational fromDouble(double v) {
+
+        if (v == 0.0) { return ZERO; }
+        if (v == 1.0) { return ONE; }
+        String doubles = ABSFloat.fromDouble(v).toString();
+        if (doubles.endsWith(".0")) {
+            return fromLong(Math.round(v));
+        }
+        long length_of_fraction = doubles.length() - (doubles.indexOf('.') + 1);
+        Apint den = ApintMath.pow(new Apint(10), length_of_fraction);
+        Apint num = new Apfloat(v).multiply(den).truncate();
+        return new ABSRational(new Aprational(num, den));
+    }
+
     public int toInt() {
         return value.intValue();
     }
@@ -137,4 +153,7 @@ public class ABSRational extends ABSBuiltInDataType {
         return ABSInteger.fromBigInt(value.denominator());
     }
 
+    public ABSFloat toFloat() {
+        return ABSFloat.fromDouble(value.doubleValue());
+    }
 }

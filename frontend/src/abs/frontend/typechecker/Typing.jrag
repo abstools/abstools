@@ -55,6 +55,7 @@ aspect Typing {
     /* TODO: Those will lead to utter confusion when running without stdlib, as e.g. RelExps depend on Bool. */
     syn Type Model.getUnitType() = getStdDataType("Unit");
     syn Type Model.getIntType() = getStdDataType("Int");
+    syn Type Model.getFloatType() = getStdDataType("Float");
     syn Type Model.getRatType() = getStdDataType("Rat");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
@@ -226,7 +227,15 @@ aspect Typing {
         if (mostGeneralType.isIntType()) return getRight().getType();
         return mostGeneralType;
     }
-    eq DivMultExp.getType() = getModel().getRatType(); // Rat in all cases
+    eq DivMultExp.getType() {
+        if (getLeft().getType().isFloatType()
+            && getRight().getType().isFloatType()) {
+            return getModel().getFloatType();
+        } else {
+            // Int / Int becomes Rat
+            return getModel().getRatType();
+        }
+    }
     eq BoolExp.getType() = getModel().getBoolType();
     eq RelationalExpr.getType() = getModel().getBoolType();
     eq IfExp.getType() {
@@ -308,6 +317,7 @@ aspect Typing {
     }
     eq LetExp.getType() = getExp().getType();
     eq IntLiteral.getType() = getModel().getIntType();
+    eq FloatLiteral.getType() =  getModel().getFloatType();
     eq StringLiteral.getType() =  getModel().getStringType();
     eq NullExp.getType() = NullType.INSTANCE;
     eq ThisExp.getType() = getContextDecl().getType();
