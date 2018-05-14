@@ -193,6 +193,24 @@ negative.
 Float sqrt(Float x)
 ----
 
+.log
+
+This function returns the natural logarithm of its argument.
+
+[source]
+----
+Float log(Float x)
+----
+
+.exp
+
+This function returns Euler’s number _e_ raised to the power of `x`.
+
+[source]
+----
+Float exp(Float x)
+----
+
 .random
 
 Returns an integer between 0 (inclusive) and its argument (exclusive).

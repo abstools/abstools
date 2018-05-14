@@ -11,7 +11,7 @@ export max, min, abs, pow, sqrt_newton, exp_newton, random, truncate;
 
 // Floats
 export float, rat, floor, ceil;
-export sqrt;
+export sqrt, log, exp;
 
 // Rationals
 export numerator, denominator;
@@ -105,6 +105,10 @@ def Rat sqrt_newton(Rat x, Rat estimate, Rat epsilon) =
     else sqrt_newton(x, next, epsilon);
 
 def Float sqrt(Float x) = builtin;
+
+def Float log(Float x) = builtin;
+
+def Float exp(Float x) = builtin;
 
 def Rat exp_newton_helper(Rat acc, Rat x, Int next_round, Rat numerator, Int denominator, Rat epsilon) =
   let (Rat next) = (numerator * x) / (denominator * next_round)

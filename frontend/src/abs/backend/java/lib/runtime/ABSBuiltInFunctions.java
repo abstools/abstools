@@ -232,7 +232,15 @@ public class ABSBuiltInFunctions {
         return ABSInteger.ceil(f);
     }
 
-    public static ABSFloat sqrt__(ABSFloat f) {
+    public static ABSFloat sqrt(ABSFloat f) {
         return ABSFloat.fromDouble(StrictMath.sqrt(f.getDouble()));
+    }
+
+    public static ABSFloat log(ABSFloat f) {
+        return ABSFloat.fromDouble(StrictMath.log(f.getDouble()));
+    }
+
+    public static ABSFloat exp(ABSFloat f) {
+        return ABSFloat.fromDouble(StrictMath.exp(f.getDouble()));
     }
 }

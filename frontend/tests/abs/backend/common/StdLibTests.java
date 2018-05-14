@@ -254,4 +254,9 @@ public class StdLibTests extends SemanticTests {
     public void sqrt1() {
         assertEvalTrue("{Bool testresult = sqrt(4.0) == 2.0;}");
     }
+
+    @Test
+    public void logexp1() {
+        assertEvalTrue("{Bool testresult = log(exp(1.0)) == 1.0;}");
+    }
 }
