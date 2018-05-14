@@ -233,6 +233,6 @@ public class ABSBuiltInFunctions {
     }
 
     public static ABSFloat sqrt__(ABSFloat f) {
-        return ABSFloat.fromDouble(Math.sqrt(f.getDouble()));
+        return ABSFloat.fromDouble(StrictMath.sqrt(f.getDouble()));
     }
 }
