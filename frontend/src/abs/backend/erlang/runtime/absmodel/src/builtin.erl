@@ -5,7 +5,7 @@
 -include_lib("abs_types.hrl").
 -export([currentms/1,getProductLine/1,lowlevelDeadline/1,print/2,println/2,strlen/2,substr/4,thisDC/1,toString/2]).
 -export([random/2,truncate/2,numerator/2, denominator/2]).
--export([float/2, rat/2]).
+-export([float/2, rat/2, sqrt/2]).
 
 -export([method/2, arrival/2, proc_deadline/2]).
 
@@ -146,6 +146,9 @@ rat(_Cog, F) ->
             Factor = mochinum:int_pow(10, Length),
             rationals:new(trunc(F * Factor), Factor)
     end.
+
+sqrt(_Cog, F) ->
+    math:sqrt(F).
 
 println(_Cog,S)->
     io:format("~s~n",[S]).

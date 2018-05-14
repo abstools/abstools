@@ -229,4 +229,9 @@ public class StdLibTests extends SemanticTests {
     public void minFloat() {
         assertEvalTrue("{Bool testresult = min(-2.0, 3.0) == -2.0;}");
     }
+
+    @Test
+    public void sqrt1() {
+        assertEvalTrue("{Bool testresult = sqrt(4.0) == 2.0;}");
+    }
 }

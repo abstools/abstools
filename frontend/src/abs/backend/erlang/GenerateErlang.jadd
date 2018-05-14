@@ -123,7 +123,7 @@ aspect GenerateErlang {
       "ABS.StdLib.random", "ABS.StdLib.strlen", "ABS.StdLib.substr",
       "ABS.DC.thisDC", "ABS.StdLib.toString",
       "ABS.StdLib.truncate", "ABS.StdLib.numerator", "ABS.StdLib.denominator",
-      "ABS.StdLib.float", "ABS.StdLib.rat",
+      "ABS.StdLib.float", "ABS.StdLib.rat", "ABS.StdLib.sqrt",
       "ABS.Scheduler.method", "ABS.Scheduler.arrival", "ABS.Scheduler.proc_deadline");
   public  void FnApp.generateErlangCode(CodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();

@@ -164,6 +164,16 @@ estimates (as per Newton's algorithm) differ by less than `epsilon`.
 Rat exp_newton(Rat x, Rat epsilon)
 ----
 
+.sqrt
+
+This function returns the square root of `x`.  It is an error if `x` is
+negative.
+
+[source]
+----
+Float sqrt(Float x)
+----
+
 .random
 
 Returns an integer between 0 (inclusive) and its argument (exclusive).

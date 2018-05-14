@@ -223,4 +223,8 @@ public class ABSBuiltInFunctions {
     public static ABSRational rat(ABSFloat f) {
         return ABSRational.fromDouble(f.getDouble());
     }
+
+    public static ABSFloat sqrt__(ABSFloat f) {
+        return ABSFloat.fromDouble(Math.sqrt(f.getDouble()));
+    }
 }
