@@ -14,11 +14,11 @@
 -export([init/1]).
 
 -define(CMDLINE_SPEC,
-        [{port,$p,"port",{integer,none},"Start model API on given port and keep model running"},
+        [{port,$p,"port",{integer,none},"Listen for model API requests on port (0 for random port) and keep model running"},
          {influxdb_enable,$i,"influxdb-enable",undefined,"Enable writing to InfluxDB"},
          {influxdb_url,$u,"influxdb-url",{string,"http://localhost:8086"},"Write log data to influxdb database located at URL"},
          {influxdb_db,$d,"influxdb-db",{string,"absmodel"},"Name of the influx database log data is written to"},
-         {clocklimit,$l,"clock-limit",{integer,none},"Halt simulation after given clock value"},
+         {clocklimit,$l,"clock-limit",{integer,none},"Do not advance simulation clock above given clock value"},
          {schedulers,$s,"schedulers",{integer,none},"Set number of online erlang schedulers"},
          {version,$v,"version",undefined,"Output version and exit"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
