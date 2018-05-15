@@ -58,6 +58,7 @@
                 .domain([0, d3.max(dc_data.values, d => d[max_index])])
                 .range([graph_size.y, 0]);
             let valueLineGenerator = d3.line()
+                .curve(d3.curveStepAfter)
                 .x(d => Math.trunc(x(d[0])))
                 .y(d => Math.trunc(y(d[1])));
             graph.append("g")
@@ -87,6 +88,7 @@
                 .attr("d", valueLineGenerator(dc_data.values));
             if (max_index > 1) {
                 let totalLineGenerator = d3.line()
+                    .curve(d3.curveStepAfter)
                     .x(d => Math.trunc(x(d[0])))
                     .y(d => Math.trunc(y(d[2])))
                     .defined(d => d.length > 2);
