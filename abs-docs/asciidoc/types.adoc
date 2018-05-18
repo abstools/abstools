@@ -68,6 +68,10 @@ ABS offers the following built-in datatypes:
 to places of type `Rat`.  Rational values can be converted to integers via the
 `truncate` function.  `Float` is a distinct numeric type.
 
+CAUTION: Support for floating-point calculations is under development;
+calculations resulting in `Inf` or `NaN` currently have unspecified runtime
+behavior.
+
 The future type `Fut<A>` is a special built-in type that denotes that an ABS
 value of type `A` will become available in the future.  The value that a
 future holds and will return can be of any concrete type.

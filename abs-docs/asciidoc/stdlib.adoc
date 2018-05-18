@@ -46,6 +46,10 @@ The numeric datatypes of ABS are `Int` (arbitrary-length integers), `Rat`
 (arbitrary-precision rational numbers) and `Float` (64-bit floating point).
 See <<sec:builtin-types>> for their syntax.
 
+CAUTION: Support for floating-point calculations is under development;
+calculations resulting in `Inf` or `NaN` currently have unspecified runtime
+behavior.
+
 ==== Operators
 
 [options="header"]
