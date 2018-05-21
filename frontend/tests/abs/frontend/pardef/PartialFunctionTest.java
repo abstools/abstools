@@ -69,22 +69,22 @@ public class PartialFunctionTest extends PardefTest {
         testExpand(parse(
             "f()();",
             "def Int f()() = 1;"
-        ), "F_%s");
+        ), "f_%s__");
         testExpand(parse(
             "f()(0);",
             "def Int f()(Int i) = i;"),
-            "F_%s");
+            "f_%s__");
         testExpand(parse(
             "Int result = f(inc)(10);",
             incFunction(),
             "def Int f(f_1)(Int i) = f_1(i);"
-        ), "F_%s_inc");
+        ), "f_%s_inc__");
         testExpand(parse(
             "multi_param(inc, dec)();",
             incFunction(),
             decFunction(),
             "def Int multi_param(f1, f2)() = f1(f2(0));"
-        ), "Multi_param_%s_inc_dec");
+        ), "multi_param_%s_inc_dec__");
     }
 
     @Test
@@ -93,7 +93,7 @@ public class PartialFunctionTest extends PardefTest {
             "Int i = outer()(0);",
             "def Int outer()(Int i) = inner()(i);",
             "def Int inner()(Int i) = i * 2;"
-        ), "Outer_%s", "Inner_%s");
+        ), "outer_%s__", "inner_%s__");
     }
 
     @Test
@@ -103,7 +103,7 @@ public class PartialFunctionTest extends PardefTest {
             incFunction(),
             applyFunction(),
             "def Int test(f)(Int i) = apply(f)(i);"
-        ), "Test_%s_inc", "Apply_%s_inc");
+        ), "test_%s_inc__", "apply_%s_inc__");
     }
 
     @Test
@@ -113,7 +113,7 @@ public class PartialFunctionTest extends PardefTest {
             applyFunction(),
             incFunction(),
             "def B test<A, B>()(A a) = apply(inc)(a);"
-        ), "Test_%s", "Apply_%s_inc");
+        ), "test_%s__", "apply_%s_inc__");
     }
 
     @Test(expected = PardefModellingException.class)
@@ -174,7 +174,7 @@ public class PartialFunctionTest extends PardefTest {
             "apply(inc)(0);",
             applyFunction(),
             incFunction()
-        ), "Apply_%s_inc");
+        ), "apply_%s_inc__");
         PartialFunctionDecl func = getPartialFunction(model, "apply");
         assertNotNull(func);
 

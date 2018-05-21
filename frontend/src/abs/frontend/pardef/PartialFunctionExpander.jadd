@@ -371,12 +371,11 @@ aspect PartialFunctionExpander {
     /**
      * Returns the name for the expanded version of this function based on the specified function call.<br>
      *
-     * @return CapitalizedFunctionName_moduleName_funcParam1_funcParam2[...]
+     * @return functionName_ModuleName_funcParam1_funcParam2[...]
      */
     public String PartialFunctionDecl.expandedName(ParFnApp fnApp, int nextExpansionId) {
-        // avoid collisions by capitalizing the applied function name
         StringBuilder builder = new StringBuilder()
-            .append(StringUtils.capitalize(getName()))
+            .append(getName())
             .append('_').append(getModuleDecl().getName());
 
         boolean foundAnon = false;
@@ -392,6 +391,7 @@ aspect PartialFunctionExpander {
 
         // every call with at least one anonymous function parameter should generate a new expansion
         if (foundAnon) builder.append("_Anon").append(nextExpansionId);
+        builder.append("__");
 
         return sanitizeIdentifierName(builder.toString());
     }
@@ -486,3 +486,7 @@ aspect PartialFunctionExpander {
         return new FnApp(function.getName(), params.treeCopyNoTransform());
     }
 }
+
+// Local Variables:
+// mode: java
+// End:

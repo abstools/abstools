@@ -136,7 +136,7 @@ public class ParFnAppTest extends PardefTest {
         testExpand(parse(
             "List<Rat> l = map(halve)(Nil);",
             halveFunction()
-        ), "Map_ABS_StdLib_halve");
+        ), "map_ABS_StdLib_halve__");
     }
 
     @Test
@@ -145,7 +145,7 @@ public class ParFnAppTest extends PardefTest {
             "Int x = 0; Int y = 1; rec((Int i) => x, (Int j) => y)();",
             "def Int rec(f, g)() = rec();"
         ));
-        FnApp call = assertHasCall(m, expandedName("Rec_%s_Anon\\d+"));
+        FnApp call = assertHasCall(m, expandedName("rec_%s_Anon\\d+__"));
         assertEquals(2, call.getNumParam());
     }
 
@@ -155,7 +155,7 @@ public class ParFnAppTest extends PardefTest {
             "Rat r = apply(halve)(2);",
             halveFunction(),
             applyFunction()
-        ), "Apply_%s_halve");
+        ), "apply_%s_halve__");
     }
 
     @Test
@@ -164,7 +164,7 @@ public class ParFnAppTest extends PardefTest {
         testExpand(parse(
             "List<Rat> l = map(halve)(Nil);",
             halveFunction()
-        ), "Map_ABS_StdLib_halve");
+        ), "map_ABS_StdLib_halve__");
     }
 
     @Test
@@ -174,7 +174,7 @@ public class ParFnAppTest extends PardefTest {
             halveFunction(),
             applyFunction(),
             "def D callApply<C, D>(fn)(C c) = apply(fn)(c);"
-        ), "Apply_%s_halve", "CallApply_%s_halve");
+        ), "apply_%s_halve__", "callApply_%s_halve__");
     }
 
     @Test
@@ -185,7 +185,7 @@ public class ParFnAppTest extends PardefTest {
                 + "String s = apply(identity)(\"foo\");",
             "def T identity<T>(T t) = t;",
             applyFunction()
-        ), "Apply_%s_identity");
+        ), "apply_%s_identity__");
     }
 
     @Test
@@ -242,7 +242,7 @@ public class ParFnAppTest extends PardefTest {
             incFunction(),
             decFunction(),
             applyFunction()
-        ), "Apply_%s_dec", "Apply_%s_inc");
+        ), "apply_%s_dec__", "apply_%s_inc__");
     }
 
     @Test(expected = PardefModellingException.class)
@@ -259,23 +259,23 @@ public class ParFnAppTest extends PardefTest {
         testExpand(parse(
             "apply((Int i) => i)(0);",
             applyFunction()
-        ), "Apply_%s_Anon\\d+");
+        ), "apply_%s_Anon\\d+__");
 
         testExpand(parse(
             "apply((Int i) => i + 1)(0);",
             applyFunction()
-        ), "Apply_%s_Anon\\d+");
+        ), "apply_%s_Anon\\d+__");
 
         testExpand(parse(
             "apply((Int i) => inc(i))(0);",
             applyFunction(),
             incFunction()
-        ), "Apply_%s_Anon\\d+");
+        ), "apply_%s_Anon\\d+__");
 
         testExpand(parse(
             "Int i = test(() => 1)();",
             "def Int test(f)() = f();"
-        ), "Test_%s_Anon\\d+");
+        ), "test_%s_Anon\\d+__");
     }
 
     @Test(expected = PardefModellingException.class)
@@ -299,7 +299,7 @@ public class ParFnAppTest extends PardefTest {
         testExpand(parse(
             "Int x = 0; apply((Int i) => i + x)(0);",
             applyFunction()
-        ), "Apply_%s_Anon\\d+");
+        ), "apply_%s_Anon\\d+__");
     }
 
     @Test
@@ -307,7 +307,7 @@ public class ParFnAppTest extends PardefTest {
         testExpand(parse(
             "Int x = 0; apply((Int i) => apply((Int j) => j + x)(i))(0);",
             applyFunction()
-        ), "Apply_%s_Anon\\d+");
+        ), "apply_%s_Anon\\d+__");
     }
 
     @Test
@@ -315,7 +315,7 @@ public class ParFnAppTest extends PardefTest {
         testExpand(parse(
             "Int x = 1; test((Int i) => x + i)(0);",
             "def Int test(f)(Int x_0) = f(x_0);"
-        ), "Test_%s_Anon\\d+");
+        ), "test_%s_Anon\\d+__");
     }
 
     @Test
@@ -323,7 +323,7 @@ public class ParFnAppTest extends PardefTest {
         testExpand(parse(
             "Int x = 1; test(() => x, () => -x)();",
             "def Int test(f, g)() = f() + g();"
-        ), "Test_%s_Anon\\d+");
+        ), "test_%s_Anon\\d+__");
     }
 
     @Test
@@ -331,12 +331,12 @@ public class ParFnAppTest extends PardefTest {
         Model m = testExpand(parse(
             "Int x = 1; test(() => x, () => x)();",
             "def Int test(f, g)() = f() + g();"
-        ), "Test_%s_Anon\\d+");
-        FunctionDecl function = getFunction(m, Pattern.compile(expandedName("Test_%s_Anon\\d+")));
+        ), "test_%s_Anon\\d+__");
+        FunctionDecl function = getFunction(m, Pattern.compile(expandedName("test_%s_Anon\\d+__")));
         assertNotNull(function);
         assertEquals(2, function.getNumParam());
-        assertEquals("X0", function.getParam(0).getName());
-        assertEquals("X1", function.getParam(1).getName());
+        assertEquals("x__0__", function.getParam(0).getName());
+        assertEquals("x__1__", function.getParam(1).getName());
     }
 
     @Test
@@ -351,7 +351,7 @@ public class ParFnAppTest extends PardefTest {
         for (Decl decl : module.getDecls()) {
             if (decl instanceof FunctionDecl) {
                 FunctionDecl fun = (FunctionDecl) decl;
-                if (fun.getName().startsWith("Apply_")) {
+                if (fun.getName().startsWith("apply_")) {
                     ++foundExpansions;
                 }
             }
@@ -368,7 +368,7 @@ public class ParFnAppTest extends PardefTest {
                 + "{ test(inc)(); }"
                 + "module Pardef; export *;"
                 + "def Int test(f)() = f(0);"
-        ), "Test_Pardef_inc");
+        ), "test_Pardef_inc__");
 
         // star import
         testExpand(assertParseOkStdLib(
@@ -377,7 +377,7 @@ public class ParFnAppTest extends PardefTest {
                 + "{ test(inc)(); }"
                 + "module Pardef; export *;"
                 + "def Int test(f)() = f(0);"
-        ), "Test_Pardef_inc");
+        ), "test_Pardef_inc__");
 
         // import function and pardef
         testExpand(assertParseOkStdLib(
@@ -386,7 +386,7 @@ public class ParFnAppTest extends PardefTest {
                 + "{ test(inc)(); }"
                 + "module Pardef; export *; def Int test(f)() = f(0);"
                 + "module IncMod; export *; " + incFunction()
-        ), "Test_Pardef_inc");
+        ), "test_Pardef_inc__");
     }
 
     @Test
@@ -412,6 +412,6 @@ public class ParFnAppTest extends PardefTest {
                 + "{\n"
                 + "\tC c = new C();\n"
                 + "\tInt i = c.m();\n"
-                + "}\n"), "Foldl_ABS_StdLib_Anon\\d+");
+                + "}\n"), "foldl_ABS_StdLib_Anon\\d+__");
     }
 }

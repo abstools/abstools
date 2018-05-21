@@ -90,7 +90,7 @@ aspect ParFnAppParam {
                 if (decl == null) {
                     throw new PardefModellingException(pureExp, ErrorMessage.UNDECLARED_VARIABLE, freeVar);
                 }
-                String qualifiedName = qualifyName(freeVar);
+                String qualifiedName = qualifyParamName(freeVar);
                 param = new ParamDecl(qualifiedName, decl.getType().toUse(), new List<Annotation>());
                 result.put(freeVar, param);
             }
@@ -99,8 +99,11 @@ aspect ParFnAppParam {
         return Collections.unmodifiableMap(result);
     }
 
-    public String AnonymousFunctionDecl.qualifyName(String name) {
-        return StringUtils.capitalize(name) + getAnonId();
+    public String AnonymousFunctionDecl.qualifyParamName(String name) {
+        // KLUDGE: We want to use a syntactically valid name so pretty-printed
+        // code can be further processed; try to use something not easily
+        // written by accident
+        return name + "__" + getAnonId() + "__";
     }
 
     /**
@@ -158,3 +161,7 @@ aspect ParFnAppParam {
         return id;
     }
 }
+
+// Local Variables:
+// mode: java
+// End:

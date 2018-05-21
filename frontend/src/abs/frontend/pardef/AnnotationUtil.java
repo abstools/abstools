@@ -100,18 +100,36 @@ public final class AnnotationUtil {
         return null;
     }
 
-    private static void addToAnnotations(List<Annotation> annotations, Access annotationType, int expansionId) {
+    /**
+     * Add an ExpansionCall annotation, or an argument to an existing
+     * annotation.  Creates or adds to [ExpansionCall : list[expansionId]]
+     * annotation.
+     *
+     * @param annotations The list to mutate
+     * @param annotationType Currently always EXPANSION_CALL
+     * @param expansionId An integer to add to the list.
+     */
+    private static void addToAnnotations(List<Annotation> annotations,
+                                         Access annotationType,
+                                         int expansionId)
+    {
         IntLiteral indexLiteral = new IntLiteral(Integer.toString(expansionId));
         Annotation toAdd = getAnnotation(annotations, annotationType);
 
         if (toAdd == null) {
-            toAdd = new TypedAnnotation(new ListLiteral(new List<>()), annotationType);
+            List<PureExp> llist = new List<>(new ListLiteral(new List<PureExp>(indexLiteral)));
+            toAdd = new TypedAnnotation(new FnApp("list", llist), annotationType);
             annotations.add(toAdd);
-        }
-
-        PureExp value = toAdd.getValue();
-        if (value instanceof ListLiteral) {
-            ListLiteral list = (ListLiteral) value;
+        } else {
+            PureExp value = toAdd.getValue();
+            if (!(value instanceof FnApp)) {
+                throw new IllegalArgumentException("Annotation list contains invalid expansion annotation");
+            }
+            FnApp fvalue = (FnApp)value;
+            if (!fvalue.getName().equals("list")) {
+                throw new IllegalArgumentException("Annotation list contains invalid expansion annotation");
+            }
+            ListLiteral list = (ListLiteral) fvalue.getParam(0);
             for (PureExp exp : list.getPureExps()) {
                 if (exp instanceof IntLiteral) {
                     IntLiteral intLiteral = (IntLiteral) exp;
@@ -121,8 +139,6 @@ public final class AnnotationUtil {
                 }
             }
             list.addPureExp(indexLiteral);
-        } else {
-            throw new IllegalArgumentException("Annotation list contains invalid expansion annotation");
         }
     }
 }
