@@ -276,7 +276,7 @@ public class StdLibTests extends SemanticTests {
 	assertEvalTrue("{ Bool testresult = foldl((Int elem, Int acc) => elem + acc)(list[1, 2, 3], 0) == 6; }");
     }
 
-    @Test @Ignore("https://github.com/abstools/abstools/issues/212")
+    @Test
     public void foldr1() {
 	assertEvalTrue("{ Bool testresult = foldr((Int elem, Int acc) => elem + acc)(list[1, 2, 3], 0) == 6; }");
     }

@@ -257,11 +257,22 @@ aspect PartialFunctionExpander {
             // look for usage as parameter of expanded ParFnApp
             for (FnApp childFnApp : decl.getFunctionDef().findChildren(FnApp.class)) {
                 Decl functionDecl =  childFnApp.getDecl();
+
+                if (functionDecl.equals(decl)) {
+                    /*
+                     * for recursive calls, we're interested in it being used in a let expression,
+                     * because that's essentially a usage of the return type as a function parameter.
+                     */
+                    if (childFnApp.getParent() instanceof LetExp) {
+                        LetExp let = (LetExp) childFnApp.getParent();
+                        resolveType(typeBindings, paramName, let.getVarNoTransform().getType(), childFnApp.getType());
+                    }
+                    continue;
+                }
+
                 if (functionDecl.isUnknown()
                     // only interested in expansion calls
-                    || AnnotationUtil.getExpansionId((FunctionDecl) functionDecl) == -1
-                    // not interested in recursive calls
-                    || functionDecl.equals(decl)) {
+                    || AnnotationUtil.getExpansionId((FunctionDecl) functionDecl) == -1) {
                     continue;
                 }
                 resolveParams(typeBindings, paramName, childFnApp, (FunctionDecl) functionDecl);
