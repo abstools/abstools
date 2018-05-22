@@ -96,6 +96,10 @@ public class ABSTest {
                     // make ProductDecl.getProduct() not return null
                     p.evaluateAllProductDeclarations();
                     if (isSet(TYPE_CHECK, config)) {
+                        // copy other choice parts of Main.analyzeFlattenAndRewriteModel
+                        p.flattenTraitOnly();
+                        p.collapseTraitModifiers();
+                        p.expandPartialFunctions();
                         if (isSet(WITH_LOC_INF, config)) {
                             LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(p);
                             p.registerTypeSystemExtension(ltie);

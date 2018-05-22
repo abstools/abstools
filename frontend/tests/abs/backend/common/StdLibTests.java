@@ -4,6 +4,7 @@
  */
 package abs.backend.common;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -258,5 +259,25 @@ public class StdLibTests extends SemanticTests {
     @Test
     public void logexp1() {
         assertEvalTrue("{Bool testresult = log(exp(1.0)) == 1.0;}");
+    }
+
+    @Test
+    public void map1() {
+	assertEvalTrue("{ Bool testresult = map((Int x) => x + 1)(list[1, 2, 3]) == list[2, 3, 4]; }");
+    }
+
+    @Test
+    public void filter1() {
+	assertEvalTrue("{ Bool testresult = filter((Int x) => x % 2 == 0)(list[1, 2, 3]) == list[2]; }");
+    }
+
+    @Test
+    public void foldl1() {
+	assertEvalTrue("{ Bool testresult = foldl((Int elem, Int acc) => elem + acc)(list[1, 2, 3], 0) == 6; }");
+    }
+
+    @Test @Ignore("https://github.com/abstools/abstools/issues/212")
+    public void foldr1() {
+	assertEvalTrue("{ Bool testresult = foldr((Int elem, Int acc) => elem + acc)(list[1, 2, 3], 0) == 6; }");
     }
 }
