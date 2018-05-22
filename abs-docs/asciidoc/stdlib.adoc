@@ -382,6 +382,12 @@ The time to access a value via `nth` is proportional to the length of the
 list.  The first value of a list can be accessed in constant time, using the
 `head` function.
 
+The `map`, `fold` and `filter` second-order functions described in
+this section implement common functional programming patterns.  To
+execute some statements for each element in a list, use a `foreach`
+loop (see <<foreach-loop>>).
+
+
 ==== Datatypes and Constructors
 
 A list is defined either as the empty list (`Nil`) or as a value `a` followed
