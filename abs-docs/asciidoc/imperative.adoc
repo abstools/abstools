@@ -213,6 +213,11 @@ The suspend statement causes the current task to be suspended.
 NOTE: There is no guarantee that the cog will choose another task to run; the
 current task might be resumed immediately after suspending itself.
 
+WARNING: It is tempting to misuse the `suspend` statement for
+busy-waiting (`while (!condition) suspend; doTheThing();`).  In all
+cases, it is better to await on the condition: `await condition; doTheThing();`.
+
+
 [source]
 .Example
 ----
