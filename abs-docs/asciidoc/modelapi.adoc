@@ -229,6 +229,18 @@ $ curl http://localhost:8080/call/C1/method?param1=value\&param2=50
 $ curl -d "{ 'param1': 'value', 'param2': 50 }" http://localhost:8080/call/C1/method
 ----
 
+The following example shows how to call a method that takes a `List<Int>` called `mylist` from Javascript using the JQuery library:
+
+[source, javascript]
+----
+$.ajax({
+    url: "call/Model/testConfig",
+    type: "POST",
+    data: JSON.stringify({ "mylist": [1,2,3] }),
+}).done(function(result) {
+    console.log("Result: " + JSON.stringify(result));
+});
+----
 
 Care must be taken to disable timeouts on the HTTP client when querying for
 long-running methods in this way.
