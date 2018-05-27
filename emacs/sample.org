@@ -7,7 +7,7 @@ correctly (i.e., if you can compile and run abs programs from within emacs),
 the program's output should appear below the block.
 
 #+name: example
-#+BEGIN_SRC abs :results output :var name="Rudi"
+#+BEGIN_SRC abs :results output :var name="Rudi" :exports both
   {
       println("Hello " + name() + "!");
   }
