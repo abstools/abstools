@@ -14,8 +14,8 @@
 
 # To use the tools, execute "vagrant up" then "vagrant ssh".
 
-# For running graphical programs from inside the VM (eclipse,
-# key-abs), you will need an X server installed: XQuartz
+# For running graphical programs from inside the VM (key-abs), you
+# will need an X server installed: XQuartz
 # (http://xquartz.macosforge.org) for OS X or Xming
 # (http://sourceforge.net/projects/xming/) for Windows.
 
@@ -41,9 +41,9 @@ Connect to the collaboratory at http://localhost:8888/
 
 The following programs are available when logged into the VM:
 
-- eclipse          Eclipse Mars with ABS plugins
+- absc             Command-line abs compiler
 - key-abs          Deductive verification tool
-- emacs            Emacs with ABS mode
+- emacs            Emacs editor with pre-configured ABS support
 
 Login to the machine with 'vagrant ssh' (terminal, with
 X11 forwarding) or 'vagrant rdp' (GUI).  Username/password
@@ -111,9 +111,6 @@ sudo chmod -R a+r /usr/local/lib/absc/frontend
 sudo chmod a+rx /usr/local/lib/absc/frontend/bin/bash/*
 
 
-
-# Install eclipse support
-bash /vagrant/vagrant_scripts/install_eclipse.sh
 
 echo
 echo "### Downloading KeY-ABS, this might take a while..."

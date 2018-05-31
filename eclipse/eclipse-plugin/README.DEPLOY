@@ -1,5 +1,0 @@
-To deploy the plugin to the official HATS update site
-use the ant-target "deploy-update-site".
-This currently requires to have rsync installed on the platform.
-In addition, it is required to have the necessary ssh-key.
-

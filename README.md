@@ -31,20 +31,7 @@ Folders
   * `abs-docs/Ott` - a formal grammar for ABS, written in Ott
 
 
-* `eclipse`, `emacs`, `bbedit` - Editor support for ABS.  Note that the
-  eclipse plugin is currently unmaintained and suffers from some bit-rot.
-
-    * `eclipse/eclipse-plugin`: ABS IDE and compiler support plugin
-
-    * `eclipse/costabs-plugin` - The COSTA plugin for ABS
-
-    * `eclipse/apet-plugin` - The aPET plugin for ABS
-
-    * `eclipse/sda-plugin` - Bologna Deadlock-checker plugin for ABS
-
-    * `eclipse/sdedit-for-abs` - a modified version of sdedit
-      (http://sdedit.sourceforge.net) for the visualization of UML sequence
-      charts
+* `emacs`, `bbedit` - Editor support for ABS.
 
 * `org.abs-models.releng` - Files used by Jenkins and Buckminster for
   continuous integration at https://envisage.ifi.uio.no:8080/jenkins/.

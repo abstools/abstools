@@ -202,7 +202,6 @@
       <!--       <fileset dir = "${gen.dir}/docs"/> -->
       <fileset dir="${build.dir}" />
       <fileset dir="${dist.dir}" />
-      <fileset dir="${basedir}/gen-eclipse" />
       <fileset dir="${src.dir}">
         <include name="**/ebin/*.beam" />
       </fileset>
@@ -389,41 +388,6 @@
   </target>
   <!-- From command line: -->
   <!-- java -cp bin:lib/junit-4.12.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
-
-  <target name="build-eclipse-plugin" depends="dist">
-    <mkdir dir="${basedir}/${plugin.name}_${frontend.version}"/>
-    <copy todir="${basedir}/${plugin.name}_${frontend.version}" failonerror="true" overwrite="true">
-      <fileset dir="${basedir}">
-        <include name="META-INF/"/>
-        <include name="${ext.dir}/${apfloat.jar}"/>
-        <include name="${ext.dir}/choco-solver-2.1.1.jar"/>
-        <include name="${ext.dir}/sat4j-maxsat.jar" />
-        <include name="${ext.dir}/semisolver.jar" />
-        <include name="${ext.dir}/${guava.jar}" />
-        <include name="${ext.dir}/${commons-io.jar}" />
-        <include name="${ext.dir}/${antlr.jar}" />
-        <include name="feature.xml"/>
-      </fileset>
-      <fileset dir="${build.dir}">
-        <include name="abs/"/>
-        <include name="deadlock/"/>
-      </fileset>
-      <fileset dir="${src.dir}">
-        <include name="abs/backend/maude/abs-interpreter.maude" />
-      </fileset>
-    </copy>
-    <manifest file="${basedir}/${plugin.name}_${frontend.version}/META-INF/MANIFEST.MF" mode="update">
-      <attribute name="Bundle-Version" value="${frontend.version}"/>
-    </manifest>
-    <zip destfile="${dist.dir}/plugins/${plugin.name}_${frontend.version}.jar" basedir="${basedir}/${plugin.name}_${frontend.version}" filesonly="true" whenempty="skip" update="false">
-      <exclude name="feature.xml" />
-    </zip>
-    <replace file="${basedir}/${plugin.name}_${frontend.version}/feature.xml" token="0.0.0.VERSION_STRING" value="${frontend.version}"/>
-    <zip destfile="${dist.dir}/features/${plugin.name}_${frontend.version}.jar" basedir="${basedir}/${plugin.name}_${frontend.version}" filesonly="true" whenempty="skip" update="false">
-      <include name="feature.xml" />
-    </zip>
-    <delete dir="${basedir}/${plugin.name}_${frontend.version}"/>
-  </target>
 
   <target name="findbugs" depends="compile">
       <findbugs home="${findbugs.home}"
