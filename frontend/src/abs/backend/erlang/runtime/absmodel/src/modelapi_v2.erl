@@ -161,6 +161,13 @@ decode_parameter(Value, Type, TypeArgs) ->
             end;
         <<"ABS.StdLib.String">> ->
             Value;
+        <<"ABS.StdLib.Float">> ->
+            case is_float(Value) of
+                %% JSON
+                true -> Value;
+                %% URLencoded
+                false -> binary_to_float(Value)
+            end;
         <<"ABS.StdLib.Int">> ->
             case is_integer(Value) of
                 %% JSON

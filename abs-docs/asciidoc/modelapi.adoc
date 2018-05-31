@@ -82,6 +82,10 @@ supported.
 | a string of digits, e.g., `?p=42`
 | JSON integer
 
+| `Float`
+| a floating-point number, e.g., `?p=3.14`
+| JSON float
+
 | `String`
 | URLEncoded text, e.g., `?p=Hello%20World!`
 | JSON string
@@ -111,6 +115,8 @@ the following table.
 
 | `Rat` | JSON float, via integer division.  The behavior is unspecified if
   the `Rat` value is outside of floating point range.
+
+| `Float` | JSON float
 
 | `List<A>` | JSON list, with elements converted one-by-one per this table.
 
