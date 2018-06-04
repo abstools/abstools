@@ -1,0 +1,38 @@
+// A collection of tests for the Model API.
+module BackendTest;
+
+interface I {
+    // The following methods can be called via GET and POST
+    [HTTPCallable] Int test_int(Int p);
+    [HTTPCallable] Bool test_bool(Bool p);
+    [HTTPCallable] Float test_float(Float p);
+    [HTTPCallable] String test_string(String p);
+    // The following methods can only be called via POST
+    [HTTPCallable] List<Int> test_list_int(List<Int> p);
+    [HTTPCallable] List<Bool> test_list_bool(List<Bool> p);
+    [HTTPCallable] List<Float> test_list_float(List<Float> p);
+    [HTTPCallable] List<String> test_list_string(List<String> p);
+}
+
+class C implements I {
+    // curl localhost:8080/call/test/test_int?p=5 => { "result": 5 }
+    // curl -d "{'p': 5}" localhost:8080/call/test/test_int => ditto
+    Int test_int(Int p) { return p; }
+    Bool test_bool(Bool p) { return p; }
+    Float test_float(Float p) { return p; }
+    String test_string(String p) { return p; }
+
+    // curl -d "{'p': [1, 2, 3] }" localhost:8080/call/test/test_list_int
+    List<Int> test_list_int(List<Int> p) { return p; }
+    List<Bool> test_list_bool(List<Bool> p) { return p; }
+    List<Float> test_list_float(List<Float> p) { return p; }
+    List<String> test_list_string(List<String> p) { return p; }
+}
+
+{
+    [HTTPName: "test"] I i = new C();
+}
+
+// Local Variables:
+// abs-local-port: 0
+// End:
