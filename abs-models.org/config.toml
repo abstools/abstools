@@ -7,5 +7,7 @@ theme = "hugo-theme-learn"
 
 # For search functionnality
 [outputs]
-home = [ "HTML", "RSS", "JSON"]
+  home = [ "HTML", "RSS", "JSON"]
 
+[params]
+  themeVariant = "abs"
