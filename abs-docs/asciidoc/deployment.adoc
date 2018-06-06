@@ -323,6 +323,10 @@ Deployment Components are usually created by a cloud provider instance (see
 new cog is created on a deployment component by using a `DC` annotation to the
 `new` statement.
 
+If no `DC` annotation is given for a `new` statement, the fresh cog
+(and its first object) are created on the same deployment component as
+the current cog.
+
 NOTE: It is an error to try to create a deployment component via `new local`.
 
 .Example
