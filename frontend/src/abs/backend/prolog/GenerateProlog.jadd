@@ -33,19 +33,31 @@ aspect GenerateProlog {
         //the standard behavior should work
         super.generateProlog(s,reachInfo);
     }
+    public void ExceptionDecl.generateProlog(PrintStream s, ReachabilityInformation reachInfo) {
+        // exception declarations are generated as constructions for
+        // the datatype "ABS.StdLib.Exception"
+    }
 
     public void ParametricDataTypeDecl.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         s.print("data(" + quote(getName()) + ",[");
-        List<DataConstructor> cs = getDataConstructorList();
-        int n = cs.getNumChild();
-        for (int i = 0; i < n; i++){
-            cs.getChild(i).generateProlog(s,reachInfo); // cons here is a DataConstructor
-            if (i != n-1) s.print(",");
+        if (getQualifiedName().equals("ABS.StdLib.Exception")) {
+            String separator = "";
+            for (ExceptionDecl e : getModel().getExceptionDeclarations()) {
+                s.print(separator); separator = ",";
+                e.getDataConstructor(0).generateProlog(s, reachInfo);
+            }
+        } else {
+            List<DataConstructor> cs = getDataConstructorList();
+            int n = cs.getNumChild();
+            for (int i = 0; i < n; i++){
+                cs.getChild(i).generateProlog(s,reachInfo); // cons here is a DataConstructor
+                if (i != n-1) s.print(",");
+            }
         }
         s.print("],[");
         // child(1) and child(2) are resp. annotations and type parameters. I ignore the annotations
 
-        n = getNumTypeParameter();
+        int n = getNumTypeParameter();
         for (int i = 0; i < n; i++){
             getTypeParameter(i).generateProlog(s,reachInfo);
             if (i != n-1) s.print(",");
