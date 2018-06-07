@@ -1,0 +1,223 @@
+---
+title: "CostABS"
+date: 2018-06-07
+showDate: false
+type: post
+draft: false
+---
+
+CostABS is a a static analyzer for automatically inferring upper/lower bounds
+on the worst/best-case Resource usage (a.k.a. cost) of ABS programs.  The
+inferred upper bounds have important applications in the fields of program
+optimization, verification and certification.  CostABS is parametric on the
+cost model, i.e., the type of cost that the user wants to infer (e.g., number
+of steps, amount of memory allocated, amount of data transmitted, etc.), and
+it supports different notions of cost such as sequential, parallel, peak, etc.
+In this tutorial, we overview the different features of CostABS by example.
+
+* General Overview: Resource Analysis
+
+In what follows we present how to use EasyInterface with the different
+analyses that CostABS is able to perform with some examples.
+
+We first show how to start to use CostABS within the ABS collaboratory.  For
+this, we must first select the analysis in the top pull-down menu, and, for
+executing the analysis, we click on ~Run~.  The ~Clear~ button (top right)
+removes all previous results.
+
+The parameters of the selected analysis can be configured by clicking on the
+~Settings~ button located in the top-left corner of the EasyInterface page.
+The results of the selected analysis are presented in the console at the
+bottom of the screen.  This can be done by means of graphs, text messages,
+markers, highlighters in the code, and interactions among them.  In the
+following, we describe the use of CostABS by analyzing several examples.
+
+** Basic Resource Analysis
+
+Let us start by performing the basic resource analysis computed by CostABS and
+described in [[http://link.springer.com/chapter/10.1007%2F978-3-642-54862-8_46][this paper]]. To do it, open the file ~VendingMachine_init.abs~,
+which contains the following code:
+
+#+BEGIN_SRC abs
+   module VendingMachine_init;
+
+   interface VendingMachine {
+    Unit insertCoin();
+    Unit insertCoins( Int nCoins );
+    Int retrieveCoins();
+   }
+
+   interface PrettyPrinter {
+    Unit showIncome( Int nCoins );
+    Unit showCoin();
+  }
+
+  class IVendingMachine( Int coins, PrettyPrinter out ) implements VendingMachine{
+    Unit insertCoin(){
+      coins = coins + 1;
+  }
+
+    Unit insertCoins( Int nCoins ){
+      while( nCoins > 0 ){
+      nCoins = nCoins - 1;
+      Fut<Unit> f = this ! insertCoin();
+      await f?;
+      }
+    }
+
+     [coins < max(coins)]
+     Int retrieveCoins(){
+       Int total = 0;
+
+       while( coins > 0 ){
+        coins = coins - 1;
+        Fut<Unit> f = out ! showCoin();
+        //await f?;
+        total = total + 1;
+       }
+       return total;
+     }
+    }
+
+
+  class IPrettyPrinter implements PrettyPrinter{
+     Unit showIncome( Int nCoins ){ /*Show something*/ }
+     Unit showCoin(){ /*Show something*/ }
+  }
+
+  class IMain {
+     Unit main( Int n ){
+       PrettyPrinter o = new IPrettyPrinter();
+       VendingMachine v = new IVendingMachine( 0, o );
+
+       v ! insertCoins(n);
+       Fut<Int> f = v ! retrieveCoins();
+       await f?;
+       Int total = f.get;
+       o ! showIncome( total );
+     }
+  }
+#+END_SRC
+
+By selecting Resource Analysis and clicking on ~Settings~ a pop-up window
+appears and shows the configuration that allows us to set up the parameters
+for the analysis.  The following parameters are available:
+
+- Cost model :: The cost model indicates the type of resource that we are interested in measuring. The user can select among the following cost metrics: termination (only termination is proved), steps (counts the number of executed instructions), objects (counts the number of executed new instructions), tasks (counts the number of asynchronous calls to methods), memory (measures the size of the created data structures), data transmitted (measures the amount of data transmitted among the distributed objects), user-defined model (allows to write annotations in the code of the form ~[cost == expr]~ and the analysis accumulates the cost specified by the user in ~expr~ every time this program point is visited).
+
+- Cost centers :: This option allows us to decide whether we want to obtain the cost per cost center (i.e., for each of the abstract objects inferred by the analysis) or a monolithic expression that accumulates the whole computation in the distributed system. The value no refers to the latter case. If we want to separate the cost per cost center, we have again two possibilities. The option class shows the cost of all objects of the same class together, while objectindicates the cost attributed to each abstract object.
+
+- Asymptotic bounds :: Upper bounds can be displayed in asymptotic or non-asymptotic form. The former one is obtained by removing all constants and subsumed expressions from the non-asymptotic cost, only showing the complexity order.
+
+- Symbolic or numeric :: Next, if the cost model is memory or objects, the upper bounds can be shown either symbolically, in terms of symbolic sizes (we use ~size(A)~ to refer to the size of an object of type ~A~), or numeric, by assigning a predefined measure to them.
+
+- Debug :: sets the verbosity of the output (the higher the number, the more verbose the output).
+
+- Rely Guarantee :: performs the resource analysis taking into account the possible interleavings in the tasks execution (as described in [[http://dx.doi.org/10.1007/978-3-319-02444-8_25][this paper]]).
+
+- Peak Cost Analysis :: computes the peak cost analysis for all objects which are identified (see [[http://dx.doi.org/10.1007/978-3-319-10936-7_2][this paper]]).
+
+- Parallel Cost Analysis :: computes the parallel cost analysis of the program (see [[http://dx.doi.org/10.1007/978-3-662-48288-9_16][this paper]]).
+
+- Non-cumulative Cost Analysis :: computes the non-cumulative cost of the program (see [[http://dx.doi.org/10.1007/978-3-662-46681-0_6][this paper]]).
+
+- Backend of the Analysis :: SACO uses PUBS or CoFloCo as backend to solve the cost equations (see [[http://envisage-project.eu/wp-content/uploads/2013/09/APLAS14techReport.pdf][this technical report]]).
+
+- Conditional UBs :: computes a set of conditional upper bounds according to some conditions on the input parameters (see [[http://envisage-project.eu/wp-content/uploads/2013/09/APLAS14techReport.pdf][this technical report]]).
+
+- Timed Cost Analysis :: computes the cost analysis in time (see [[https://www.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_SE/Page_Content/Group_Members/Antonio_Flores-Montoya/ResourceAnalysisTime_TechReport.pdf][this technical report]]).
+
+Let us analyze the program ~VendingMachine_init.abs~ with the default values,
+except for the ~Asymptotic bounds~ parameter that must be set to ~yes~.  Click
+on ~Refresh Outline~ and select the entry method (method ~main~ of class
+~IMain~) in the Outline (the region on the right of the page).  Then click on
+~Run~ to perform the analysis.  The result should be shown in the console as
+follows:
+
+#+BEGIN_EXAMPLE
+Method IMain.main terminates?: YES
+UB for 'IMain.main'(this,n,max(coins)) = nat(n)+nat(max(coins))
+#+END_EXAMPLE
+
+It can be seen in the resource analysis results given by CostABS that the
+upper bound is linear and it is a function on ~n~ (the input parameter of
+~main~) and on the maximum value that the field ~coins~ can take, denoted
+~max(coins)~.  Variable ~n~ is wrapped by function ~nat~ previously defined to
+avoid negative costs.  The upper bound is shown in the console view and also
+at the method’s header when the mouse passes over the marker in line 48 in the
+program.
+
+Now, let us analyze the main method of the file ~VendingMachine.abs~, which contains the following code:
+
+#+BEGIN_SRC abs
+  module VendingMachine;
+  interface VendingMachine {
+      Unit insertCoin();
+      Unit insertCoins( Int nCoins );
+      Int retrieveCoins();
+  }
+  interface PrettyPrinter {
+      Unit showIncome( Int nCoins );
+      Unit showCoin();
+  }
+  interface Main{
+      Unit main( Int n );
+  }
+  class IVendingMachine( Int coins, PrettyPrinter out ) implements VendingMachine{
+      Unit insertCoin(){
+          coins = coins + 1;
+      }
+      Unit insertCoins( Int nCoins ){
+          while( nCoins > 0 ){
+              nCoins = nCoins - 1;
+              Fut<Unit> f = this ! insertCoin();
+              await f?;
+          }
+      }
+      Int retrieveCoins(){
+          Int result = 0;
+          while( coins > 0 ){
+              coins = coins - 1;
+              Fut<Unit> f = out ! showCoin();
+              await f?;
+              result = result + 1;
+          }
+          return result;
+      }
+  }
+  class IPrettyPrinter implements PrettyPrinter{
+      Unit showIncome( Int nCoins ){ /*Show something*/ }
+      Unit showCoin(){ /*Show something*/ }
+  }
+  class IMain implements Main{
+      Unit main( Int n ){
+          PrettyPrinter o = new IPrettyPrinter();
+          VendingMachine v = new IVendingMachine( 0, o );
+          v ! insertCoins(n);
+          Fut<Int> f = v ! retrieveCoins();
+          await f?;
+          Int result = f.get;
+          o ! showIncome( result );
+      }
+  }
+#+END_SRC
+
+This file is just like the previous example, but includes the ~await~ instruction at line 37 that was commented out in the previous program.
+Analyze this program with the same configuration as before: default setting
+values, except for the asymptotic bounds parameter set to ~yes~.  Click on
+~Refresh Outline~ and select the entry method (method ~main~ of class ~IMain~)
+in the outline. Then click on ~Run~ to perform the analysis.  The results will be shown like this:
+
+#+BEGIN_EXAMPLE
+Method IMain.main terminates?: UNKOWN
+UB for 'IMain.main'(this,n) = nat(n)+c(failed(no_rf,[scc=7,cr=entrywhile_1/4]))
+#+END_EXAMPLE
+
+The analyzer shows, by using a warning marker (see line 41), that the resource analysis cannot infer an upper bound nor guarantee the termination of the program.
+
+** Rely-Guarantee Resource Analysis
+
+Let us now perform the rely-guarantee resource analysis, described in [[http://dx.doi.org/10.1007/978-3-319-02444-8_25][this paper]], on the main method of the ~VendingMachine.abs~ file. To do so, we set the
+option Rely Guarantee to yes and the Cost Model to termination.
+
+# FIXME: Rely Guarantee option is not visible in the current Collaboratory
