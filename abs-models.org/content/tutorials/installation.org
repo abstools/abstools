@@ -1,5 +1,5 @@
 ---
-title: "Installation"
+title: "Local Installation"
 date: 2017-06-27T17:30:57+02:00
 showDate: false
 type: "post"
@@ -8,8 +8,6 @@ draft: false
 
 This tutorial guides you through getting the various tools comprising the ABS
 toolchain running.
-
-# more
 
 Some tools are platform-agnostic while some are running
 only on some platforms.  We make an effort to get you up and running, no

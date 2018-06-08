@@ -217,7 +217,131 @@ The analyzer shows, by using a warning marker (see line 41), that the resource a
 
 ** Rely-Guarantee Resource Analysis
 
+{{% notice info %}}
+NOTE: this analysis is not currently available.
+{{% /notice %}}
+
 Let us now perform the rely-guarantee resource analysis, described in [[http://dx.doi.org/10.1007/978-3-319-02444-8_25][this paper]], on the main method of the ~VendingMachine.abs~ file. To do so, we set the
 option Rely Guarantee to yes and the Cost Model to termination.
 
-# FIXME: Rely Guarantee option is not visible in the current Collaboratory
+After applying the analysis, it can be seen on the default console that
+CostABS proves that all methods of the program terminate.  Let us now slightly
+modify the example to make method ~insertCoins~ non-terminating by removing
+line 35 with the instruction ~coins = coins – 1~.  The analysis information is
+displayed as follows. For each strongly connected component(SCC) (SCC-while
+loops and recursive methods are basically the SCCs in a program), the analysis
+places a marker in the entry line to the SCC.  If the SCC is terminating
+(eg. line 25), by clicking on the marker, the lines that compose this SCC are
+highlighted in yellow. On the other hand, if the SCC is non-terminating (line
+34), by clicking on the marker, CostABS highlights the lines of the SCC in
+blue.  Besides the markers, the list of all SCCs of the program and their
+computed termination results are printed by CostABS on the console.
+
+At this point, let us perform the rely guarantee resource analysis to infer
+the cost of the program.  Restore the original code of line 35, click on
+~Settings~ and select the ~Steps~ cost model with the option ~Rely guarantee~
+set to ~yes~.  Then click on ~Run~ to perform the analysis.
+
+The resulting upper bound obtained is a function in terms on ~n~ (the input
+parameter of ~main~) and in terms of the maximum value that field ~coins~ can
+take, denoted ~max(coins)~.  We can observe that the cost of ~main~ is linear
+with respect to both.  In addition, CostABS shows a marker to the left of each
+method header to display their corresponding upper bounds.
+
+** Load Balance
+
+At this point, let us use the resource analysis to study the load balance of
+the program ~Performance.abs~, which contains the following code:
+
+#+BEGIN_SRC abs
+   module Parallel;
+   import * from ABS.StdLib;
+
+  interface I {
+      Unit m (Int n);
+      Unit p (Int n, I x);
+      Unit m2 (Int n);
+      Unit q ();
+  }
+
+  class C implements I{
+      Unit m (Int n) {
+          I a = new C();
+          while (n > 0) {
+              a!p(n, a);
+              n = n - 1;
+          }
+      }
+
+      Unit mthis (Int n) {
+          I a = new C();
+          while (n > 0) {
+              a!p(n, this);
+              n = n - 1;
+          }
+      }
+
+      Unit p (Int n, I x) {
+          while (n > 0) {
+              x!q();
+              n = n - 1;
+          }
+      }
+
+      Unit m2 (Int n) {
+          while (n > 0) {
+              I a = new C ();
+              a!p(n, a);
+              n = n - 1;
+          }
+      }
+
+      Unit q () {
+          skip;
+      }
+
+  }
+#+END_SRC
+
+As the concurrency unit of ABS is the object, this analysis uses the cost
+centers to assign the cost of each execution step to the object where the step
+is performed.  We start by applying the Resource Analysis and setting the
+option ~Cost Centers~ to ~object~ in the settings.  Then click on ~Refresh
+Outline~ and select the method ~C.m~ on the right region of the page. Finally,
+click on ~Run~ to perform the analysis.  In the console, we see the following output:
+
+#+BEGIN_EXAMPLE
+UB Object Sensitive for C.m(this,n): 6*c([C.m])+nat(n)* (2*c([C.m])+5*c([C.m])+3*c([1,C.m])+nat(n)* (2*c([1,C.m])+5*c([1,C.m])+2*c([1,C.m]))+2*c([1,C.m])+c([1,C.m]))+2*c([C.m])+c([C.m])+c([1,C.m])
+UB for cobox ([13,12],C): 1+nat(n)* (6+9*nat(n))
+UB for cobox ([12],C.m): 9+7*nat(n)
+#+END_EXAMPLE
+
+CostABS returns the cost centers in the program, one cost center labelled with
+~[12]~ which corresponds to the object that executes ~C.m~ and another one
+labelled with ~[13,12]~, which abstracts the object created at line 13.  The
+labels of the nodes contain the program lines where the corresponding object
+is created.  That is, the node labeled as ~[13,12]~ corresponds to the ~C~ object, created at line 13 while executing the main method, the node
+identified by line 12. In addition, CostABS shows a graph with both nodes in
+the ~Console Graph~ view at the bottom of the screen.  By clicking on the node
+~[12]~, CostABS shows a dialog box with the upper bound on the number of steps
+performed by this node.  Similarly, by clicking on the node ~[13,12]~, it shows
+the number of steps that can be executed by the object identified with
+~[13,12]~.
+
+We can observe that the node ~[12]~ performs a number of steps that is bounded
+by a linear function on the input parameter ~n~, while in the node ~[13,12]~ the number of steps is bounded by a quadratic function on ~n~.  If we analyze
+method ~C.mthis~, the cost is distributed in a different way.  In this case,
+both nodes ~[20]~ and ~[21,20]~ have a quadratic upper bound on the number of
+steps performed by each node. The difference between both methods is that the
+call ~x!q()~ at line 30 is performed in object ~[13,12]~ in the former case,
+and in object ~[20]~ in the latter.
+
+We can obtain the number of instances of each object we can have in each node.
+Select ~C.m2~ and unselect the previously selected methods on the outline on
+the right of the page, and perform the Resource Analysis, setting the options
+~Cost Model~ to ~Objects~ and ~Cost Centers~ to ~Object~.  It can be seen in
+the output of CostABS that the number of instances of the object identified by
+~[37,35]~ is bounded by ~n~ (the input argument of method ~m2~).  Finally, we
+can apply the resource analysis to ~C.m2~ selecting ~Cost Model~ to ~Steps~ to
+obtain the results of the analysis for this method regarding the number of
+steps.
