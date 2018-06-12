@@ -54,4 +54,7 @@ public class JavaDynamicTestDriver implements BackendTestDriver {
 
     @Override
     public boolean supportsTimedAbs() { return false; }
+
+    @Override
+    public boolean supportsExceptions() { return false; }
 }

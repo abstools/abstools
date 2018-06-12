@@ -17,6 +17,8 @@ public interface BackendTestDriver {
     public abstract boolean supportsTimedAbs();
 
     public abstract boolean supportsCustomSchedulers();
+    
+    public abstract boolean supportsExceptions();
 
     public abstract void assertEvalEquals(String absCode, boolean value) throws Exception;
 

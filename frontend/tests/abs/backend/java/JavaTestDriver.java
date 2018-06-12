@@ -61,4 +61,7 @@ public class JavaTestDriver implements BackendTestDriver {
 
     @Override
     public boolean supportsTimedAbs() { return false; }
+
+    @Override
+    public boolean supportsExceptions() { return false; }
 }

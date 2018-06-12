@@ -59,4 +59,8 @@ public class MaudeTestDriver implements BackendTestDriver {
 
     @Override
     public boolean supportsTimedAbs() { return maude.mode == MaudeCompiler.SIMULATOR.EQ_TIMED; }
+
+    @Override
+    // MISSING: recovery block, throwing exceptions from expressions
+    public boolean supportsExceptions() { return false; }
 }

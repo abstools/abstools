@@ -190,4 +190,10 @@ public class ObjectTests extends SemanticTests {
         assertEvalTrue(new File("tests/abssamples/backend/TimeTests/scheduler_deadline.abs"));
     }
 
+    @Test
+    public void classRecover1() throws Exception {
+        Assume.assumeTrue("Only meaningful with exception support", driver.supportsExceptions());
+        assertEvalTrue(new File("tests/abssamples/backend/ObjectTests/recover1.abs"));
+     }
+
 }

@@ -1,0 +1,30 @@
+module BackendTest;
+
+interface I {
+    Unit crash();
+    Bool test();
+}
+
+class C implements I {
+    Bool flag = False;
+    recover {
+        AssertionFailException => {
+            head(list[1]);  // Drive-by test for
+                            // https://github.com/abstools/abstools/issues/215
+            flag = True;
+        }
+    }
+    Unit crash() {
+        assert(False);
+    }
+    Bool test() {
+        return flag;
+    }
+}
+
+{
+    I i = new C();
+    await i!crash();
+    Bool testresult = await i!test();
+    println("Result: " + toString(testresult));
+}
