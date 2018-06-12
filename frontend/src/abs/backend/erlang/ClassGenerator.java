@@ -162,6 +162,7 @@ public class ClassGenerator {
                 vars.updateTemp(v);
             }
             ErlUtil.functionHeader(ecs, "recover", ErlUtil.Mask.none, generatorClassMatcher(), "Exception");
+            ecs.println("Stack = [],");
             ecs.println("Result=case Exception of ");
             ecs.incIndent();
             // Now print statments and mergelines for each branch.
