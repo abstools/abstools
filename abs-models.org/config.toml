@@ -11,3 +11,8 @@ theme = "hugo-theme-learn"
 
 [params]
   themeVariant = "abs"
+  # Location of the collaboratory.  Use in org-mode:
+  # [[{{% siteparam "eifilelink" %}}/collaboratory/path/to/File.abs][File.abs]]
+  # in Markdown:
+  # [File.abs]({{% siteparam "eifilelink" %}}/collaboratory/path/to/File.abs)
+  eifilelink = "http://ei.abs-models.org:8082/clients/web/index.html?file="

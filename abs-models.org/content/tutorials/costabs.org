@@ -35,7 +35,7 @@ following, we describe the use of CostABS by analyzing several examples.
 ** Basic Resource Analysis
 
 Let us start by performing the basic resource analysis computed by CostABS and
-described in [[http://link.springer.com/chapter/10.1007%2F978-3-642-54862-8_46][this paper]]. To do it, open the file ~VendingMachine_init.abs~,
+described in [[http://link.springer.com/chapter/10.1007%2F978-3-642-54862-8_46][this paper]]. To do it, open the file [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost][VendingMachine_init.abs],
 which contains the following code:
 
 #+BEGIN_SRC abs
@@ -127,12 +127,11 @@ for the analysis.  The following parameters are available:
 
 - Timed Cost Analysis :: computes the cost analysis in time (see [[https://www.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_SE/Page_Content/Group_Members/Antonio_Flores-Montoya/ResourceAnalysisTime_TechReport.pdf][this technical report]]).
 
-Let us analyze the program ~VendingMachine_init.abs~ with the default values,
-except for the ~Asymptotic bounds~ parameter that must be set to ~yes~.  Click
-on ~Refresh Outline~ and select the entry method (method ~main~ of class
-~IMain~) in the Outline (the region on the right of the page).  Then click on
-~Run~ to perform the analysis.  The result should be shown in the console as
-follows:
+Let us analyze the program [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost][VendingMachine_init.abs]] with the default values, except for the ~Asymptotic bounds~ parameter that
+must be set to ~yes~.  Click on ~Refresh Outline~ and select the entry method
+(method ~main~ of class ~IMain~) in the Outline (the region on the right of
+the page).  Then click on ~Run~ to perform the analysis.  The result should be
+shown in the console as follows:
 
 #+BEGIN_EXAMPLE
 Method IMain.main terminates?: YES
@@ -147,7 +146,7 @@ avoid negative costs.  The upper bound is shown in the console view and also
 at the method’s header when the mouse passes over the marker in line 48 in the
 program.
 
-Now, let us analyze the main method of the file ~VendingMachine.abs~, which contains the following code:
+Now, let us analyze the main method of the file [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/VendingMachine.abs&app=cost][VendingMachine.abs]], which contains the following code:
 
 #+BEGIN_SRC abs
   module VendingMachine;
@@ -221,7 +220,7 @@ The analyzer shows, by using a warning marker (see line 41), that the resource a
 NOTE: this analysis is not currently available.
 {{% /notice %}}
 
-Let us now perform the rely-guarantee resource analysis, described in [[http://dx.doi.org/10.1007/978-3-319-02444-8_25][this paper]], on the main method of the ~VendingMachine.abs~ file. To do so, we set the
+Let us now perform the rely-guarantee resource analysis, described in [[http://dx.doi.org/10.1007/978-3-319-02444-8_25][this paper]], on the main method of the [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/VendingMachine.abs&app=cost][VendingMachine.abs]] file. To do so, we set the
 option Rely Guarantee to yes and the Cost Model to termination.
 
 After applying the analysis, it can be seen on the default console that
@@ -251,7 +250,7 @@ method header to display their corresponding upper bounds.
 ** Load Balance
 
 At this point, let us use the resource analysis to study the load balance of
-the program ~Performance.abs~, which contains the following code:
+the program [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/Performance.abs&app=cost][Performance.abs]], which contains the following code:
 
 #+BEGIN_SRC abs
    module Parallel;
