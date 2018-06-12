@@ -123,7 +123,9 @@ for the analysis.  The following parameters are available:
 
 - Backend of the Analysis :: SACO uses PUBS or CoFloCo as backend to solve the cost equations (see [[http://envisage-project.eu/wp-content/uploads/2013/09/APLAS14techReport.pdf][this technical report]]).
 
-- Conditional UBs :: computes a set of conditional upper bounds according to some conditions on the input parameters (see [[http://envisage-project.eu/wp-content/uploads/2013/09/APLAS14techReport.pdf][this technical report]]).
+- Conditional Upper Bounds :: computes a set of conditional upper bounds (UBs)
+     according to some conditions on the input parameters (see [[http://envisage-project.eu/wp-content/uploads/2013/09/APLAS14techReport.pdf][this technical
+     report]]).
 
 - Timed Cost Analysis :: computes the cost analysis in time (see [[https://www.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_SE/Page_Content/Group_Members/Antonio_Flores-Montoya/ResourceAnalysisTime_TechReport.pdf][this technical report]]).
 
@@ -221,7 +223,7 @@ NOTE: this analysis is not currently available.
 {{% /notice %}}
 
 Let us now perform the rely-guarantee resource analysis, described in [[http://dx.doi.org/10.1007/978-3-319-02444-8_25][this paper]], on the main method of the [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/VendingMachine.abs&app=cost][VendingMachine.abs]] file. To do so, we set the
-option Rely Guarantee to yes and the Cost Model to termination.
+option ~Rely Guarantee~ to ~yes~ and the ~Cost Model~ to ~termination~.
 
 After applying the analysis, it can be seen on the default console that
 CostABS proves that all methods of the program terminate.  Let us now slightly
@@ -238,8 +240,7 @@ computed termination results are printed by CostABS on the console.
 
 At this point, let us perform the rely guarantee resource analysis to infer
 the cost of the program.  Restore the original code of line 35, click on
-~Settings~ and select the ~Steps~ cost model with the option ~Rely guarantee~
-set to ~yes~.  Then click on ~Run~ to perform the analysis.
+~Settings~ and select the ~Steps~ cost model with the option ~Rely guarantee~ set to ~yes~.  Then click on ~Run~ to perform the analysis.
 
 The resulting upper bound obtained is a function in terms on ~n~ (the input
 parameter of ~main~) and in terms of the maximum value that field ~coins~ can
@@ -344,3 +345,90 @@ the output of CostABS that the number of instances of the object identified by
 can apply the resource analysis to ~C.m2~ selecting ~Cost Model~ to ~Steps~ to
 obtain the results of the analysis for this method regarding the number of
 steps.
+
+** Transmission Data Sizes
+
+Now, let us perform the transmission data size analysis to the following code:
+
+#+BEGIN_SRC abs
+  module DemoTraffic;
+  import * from ABS.StdLib;
+
+  interface II {
+          Unit work (Int n, List<Int> l);
+  }
+
+  interface IS {
+          Int process (List<Int> l);
+  }
+
+  class Master (IS s) implements II {
+
+
+          Unit work (Int n, List<Int> l){
+                  while (n>0) {
+                          l = Cons(1,l);
+                          Fut<Int> q = s!process(l);
+                          q.get;
+                          n = n - 1;
+                  }
+          }
+
+  }
+
+  class Slave () implements IS{
+          Int process (List<Int> l) {return 1;}
+  }
+
+  class IMain {
+          Unit main (List<Int> l, Int n) {
+                  IS s = new  Slave();
+                  II m = new  Master(s);
+                  m!work(n,l);
+           }
+  }
+#+END_SRC
+
+Open the file [[{{% siteparam "eifilelink" %}}/collaboratory/path/to/DataTransmitted.abs][DataTransmitted.abs]].  To analyze this file with the transmission
+data size analysis, select the analysis ~Resource Analysis (SACO)~ and set the
+option ~Cost Model~ to ~Traffic~.  Then refresh the outline and apply the
+analysis to the method ~IMain.main~. 
+
+When the analysis is applied, the console will show the upper bound
+expressions for all possible pairs of objects identified by the analysis:
+
+#+BEGIN_EXAMPLE
+UB Object Sensitive for IMain.main(this,l,n): c(o([IMain.main],[2,IMain.main],Master.work))* (1+c(i)+nat(l))+c(o([2,IMain.main],[IMain.main],Master.work))* (1+c(i))+c(o([IMain.main],[2,IMain.main],Master.init))* (1+c(i))+c(o([2,IMain.main],[IMain.main],Master.init))*c(i)+c(o([IMain.main],[1,IMain.main],Slave.init))*c(i)+c(o([1,IMain.main],[IMain.main],Slave.init))*c(i)+nat(n)* (c(o([2,IMain.main],[1,IMain.main],Slave.process))* (c(i)+nat(l+2*n))+c(o([1,IMain.main],[2,IMain.main],Slave.process))* (1+c(i)))
+UB for interactions between ([31],[32,31]): c(i)
+UB for interactions between ([31],[33,31]): 2+nat(l)+2*c(i)
+UB for interactions between ([33,31],[32,31]): nat(n)* (c(i)+nat(l+2*n))
+UB for interactions between ([32,31],[31]): c(i)
+UB for interactions between ([33,31],[31]): 1+2*c(i)
+UB for interactions between ([32,31],[33,31]): nat(n)* (1+c(i))
+#+END_EXAMPLE
+
+For example, the last line of the console output is the upper bound of the
+size of the data transmitted from the node ~[32,31]~ to the node ~[33,31]~,
+that are the ~Slave~ and ~Master~ objects created at line 32 and line 33,
+respectively.  We can observe that this upper bound linearly depends on the
+input parameter ~n~, which is the number of times the method ~process~ in the
+~Slave~ object is invoked.  On the other hand, the data transmitted from the
+~Master~ object ~[33,31]~ to the ~Slave~ object ~[32,31]~ is different, as the
+invocation contains the list ~l~ which is passed as argument to the method
+~process~.  In this case, the upper bound is a quadratic function on the
+parameter ~n~, as the list passed as argument grows at each iteration of the
+loop at line 16, and this loop iterates ~n~ times.
+
+In addition to the console information, the graph in output tab ~Console
+Graph~ shows the objects creation.  By clicking on a node in the graph, a
+message outputs the UBs (upper bounds) for all transmissions data sizes that
+the selected object can perform and the objects involved in such
+transmissions.  For example, by clicking on the node ~[32,31]~, which
+corresponds to the ~Master~ object, we can see the upper bounds on the data
+transmitted (incoming and outgoing transmissions) from this object.  As
+before, the labels of the nodes contain the program lines where the
+corresponding object is created. For instance, the node labeled as ~[32,31]~
+corresponds to the ~Master~ object, created at line 32 while executing the
+main method, the object identified by line 31.  In such upper bounds, the cost
+expression ~c(i)~ represents the cost of establishing the communication.
+
