@@ -196,13 +196,12 @@ NIL."
        "case" "=>" "new" "local"                      ; the functionals
        "extends"                                      ; the interfaces
        "implements"                                   ; the class
+       "recover"
        "delta" "adds" "modifies" "removes" "uses"
        "hasField" "hasMethod" "hasInterface"          ; Deltas
        "productline" "features" "core" "after" "when" ; productlines
        "root" "extension" "group" "opt"
        "oneof" "allof" "ifin" "ifout" "exclude" "require"
-       "critical" "port" "rebind" "location"          ; component model
-       "move" "father"
        "product"                                      ; product definition
        "let" "in"
        "if" "then" "else" "return" "while" "foreach"  ; the statements
