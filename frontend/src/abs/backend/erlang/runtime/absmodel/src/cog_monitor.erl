@@ -13,7 +13,7 @@
 -export([are_objects_of_class_protected/1]).
 
 %% communication about cogs
--export([new_cog/1, cog_active/1, cog_blocked/1, cog_unblocked/1, cog_blocked_for_clock/4, cog_idle/1, cog_died/1]).
+-export([new_cog/2, cog_active/1, cog_blocked/1, cog_unblocked/1, cog_blocked_for_clock/4, cog_idle/1, cog_died/1]).
 
 %% communication about tasks
 -export([task_waiting_for_clock/4, task_confirm_clock_wakeup/1]).
@@ -44,7 +44,9 @@
                                 % ordset of {Task, Cog} of tasks that need to
                                 % acknowledge waking up before next clock
                                 % advance
-
+               cog_names,       % A mapping from cogs to a unique identifier
+                                % for the cog (represented as a list of
+                                % numbers).
                dcs,             % list of deployment components
                registered_objects, % Objects registered in HTTP API. binary |-> #object{}
                keepalive_after_clock_limit % Flag whether we kill all objects after clock limit has been reached
@@ -69,8 +71,8 @@ are_objects_of_class_protected(Class) ->
     gen_server:call({global, cog_monitor}, {keep_alive, Class}, infinity).
 
 %% Cogs interface
-new_cog(Cog) ->
-    gen_server:call({global, cog_monitor}, {cog,Cog,new}, infinity).
+new_cog(ParentCog, Cog) ->
+    gen_server:call({global, cog_monitor}, {cog,ParentCog, Cog,new}, infinity).
 
 cog_active(Cog) ->
     gen_server:call({global, cog_monitor}, {cog,Cog,active}, infinity).
@@ -141,6 +143,7 @@ init([Main,Keepalive])->
                clock_waiting=[],
                dcs=[],
                active_before_next_clock=ordsets:new(),
+               cog_names=maps:new(),
                registered_objects=maps:new(),
                keepalive_after_clock_limit=Keepalive}}.
 
@@ -155,9 +158,13 @@ handle_call({keep_alive, Class}, _From, State=#state{keepalive_after_clock_limit
                        end
            end,
     {reply, Result, State};
-handle_call({cog,Cog,new}, _From, State=#state{idle=I})->
+handle_call({cog,ParentCog,Cog,new}, _From, State=#state{idle=I,cog_names=M})->
+    {C, N} = maps:get(ParentCog, M, {[], 0}),
+    Id = [N | C],
+    M2 = maps:put(ParentCog, {C, N+1}, M),
+    NewM = maps:put(Cog, {Id, 0}, M2),
     I1=gb_sets:add_element(Cog,I),
-    {reply, ok, State#state{idle=I1}};
+    {reply, Id, State#state{idle=I1, cog_names=NewM}};
 handle_call({cog,Cog,active}, _From, State=#state{active=A,idle=I})->
     A1=gb_sets:add_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),

@@ -339,14 +339,14 @@ aspect GenerateErlang {
     if (((UnionType) getType()).getOriginatingClass().isForeign())
       className = "ffi_" + className;
     if (!hasLocal()) {
-      ecs.print("object:new(cog:start(");
+      ecs.print("object:new(cog:start(Cog");
       if (isNewDC) {
           // do nothing, call cog:start/0.  thisDC() within a DC will fail
           // (but the implementation of deployment components is entirely
           // within the standard library).  We also don't support user-defined
           // schedulers on them.
       } else if (dc == null) {
-        ecs.print("DC");
+        ecs.print(",DC");
       } else {
         dc.generateErlangCode(ecs, vars);
       }

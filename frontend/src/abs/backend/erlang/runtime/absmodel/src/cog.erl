@@ -52,6 +52,8 @@
          dc=null,
          %% user-defined scheduler
          scheduler=undefined,
+         %% A unique identifier that is stable across runs
+         id,
          %% Map from pid to process_info structure (see
          %% ../include/abs_types.hrl); updated when token passed.
          process_infos=#{}
@@ -67,10 +69,10 @@
 start() ->
     start(null, undefined).
 
-start(DC) ->
-    start(DC, undefined).
+start(ParentCog, DC) ->
+    start(ParentCog, DC, undefined).
 
-start(DC, Scheduler)->
+start(ParentCog, DC, Scheduler)->
     %% There are two DC refs: the one in `data' is to handle GC and to create
     %% a copy of the current cog (see start_new_task), the one in the cog
     %% structure itself is for evaluating thisDC().  The main block cog and
@@ -79,7 +81,7 @@ start(DC, Scheduler)->
     %% annotations in the main block; the implementation of deployment
     %% components is contained in the standard library, so we can be sure they
     %% do not use `thisDC()'.
-    {ok, CogRef} = gen_statem:start(?MODULE, [DC, Scheduler], []),
+    {ok, CogRef} = gen_statem:start(?MODULE, [ParentCog, DC, Scheduler], []),
     Cog=#cog{ref=CogRef,dc=DC},
     gc:register_cog(Cog),
     Cog.
@@ -206,10 +208,13 @@ await_start(Cog, TaskType, Args) ->
 
 callback_mode() -> state_functions.
 
-init([DC, Scheduler]) ->
+init([ParentCog, DC, Scheduler]) ->
     process_flag(trap_exit, true),
-    cog_monitor:new_cog(self()),
-    {ok, cog_starting, #data{dc=DC, scheduler=Scheduler}}.
+    Id = case ParentCog of
+             null -> cog_monitor:new_cog(ParentCog, self());
+             _ -> cog_monitor:new_cog(ParentCog#cog.ref, self())
+         end,
+    {ok, cog_starting, #data{dc=DC, scheduler=Scheduler, id=Id}}.
 
 start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie)->
     ArrivalInfo=Info#process_info{arrival={dataTime, clock:now()}},
