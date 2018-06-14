@@ -38,6 +38,8 @@ public class ErlangBackend extends Main {
     }
 
     private File destDir = new File("gen/erl/");
+    private File http_index_file = null;
+    private File http_static_dir = null;
     private EnumSet<CompileOptions> compileOptions = EnumSet.noneOf(CompileOptions.class);
 
     public static int minErlangVersion = 19;
@@ -83,6 +85,20 @@ public class ErlangBackend extends Main {
                 } else {
                     destDir = new File(restArgs.get(i));
                 }
+            } else if(arg.equals("-http-index-file")) {
+                i++;
+                if (i == restArgs.size()) {
+                    throw new InternalBackendException("Please provide an index.html file");
+                } else {
+                    http_index_file = new File(restArgs.get(i));
+                }
+            } else if(arg.equals("-http-static-dir")) {
+                i++;
+                if (i == restArgs.size()) {
+                    throw new InternalBackendException("Please provide a directory with static files");
+                } else {
+                    http_static_dir = new File(restArgs.get(i));
+                }
             } else if (arg.equals("-cover")) {
                 compileOptions.add(CompileOptions.COVERAGE);
             } else {
@@ -98,7 +114,11 @@ public class ErlangBackend extends Main {
         System.out.println("Erlang Backend (-erlang):\n"
                            + "  -d <dir>       Create code below <dir> (default gen/erl/)\n"
                            + "  -cover         Compile with run-time statement execution count recording.\n"
-                           + "                 Results in <dir>/absmodel/*.gcov after model finishes)\n\n"
+                           + "                 Results in <dir>/absmodel/*.gcov after model finishes)\n"
+                           + "  -http-index-file <file>\n"
+                           + "                 Display <file> when accessing the Model API via browser\n"
+                           + "  -http-static-dir <dir>\n"
+                           + "                 Make contents of <dir> accessible below /static/ in Model API\n\n"
                            + "  For help on Erlang runtime options, start model with -h\n");
     }
 
@@ -140,13 +160,13 @@ public class ErlangBackend extends Main {
         return version;
     }
 
-    public static void compile(Model m, File destDir, EnumSet<CompileOptions> options) throws IOException, InterruptedException, InternalBackendException {
+    public void compile(Model m, File destDir, EnumSet<CompileOptions> options) throws IOException, InterruptedException, InternalBackendException {
         int version = getErlangVersion();
         if (version < minErlangVersion) {
             String message = "ABS requires at least erlang version " + Integer.toString(minErlangVersion) + ", installed version is " + Integer.toString(version);
             throw new InternalBackendException(message);
         }
-        ErlApp erlApp = new ErlApp(destDir);
+        ErlApp erlApp = new ErlApp(destDir, http_index_file, http_static_dir);
         m.generateErlangCode(erlApp, options);
         erlApp.close();
 

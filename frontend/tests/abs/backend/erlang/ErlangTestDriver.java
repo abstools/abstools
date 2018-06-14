@@ -131,7 +131,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
                         new FnApp("ABS.StdLib.toString",
                             new List<>(new VarUse("testresult"))))))));
         }
-        ErlangBackend.compile(model, targetDir,
+        new ErlangBackend().compile(model, targetDir,
 // use the following argument for silent compiler:
                               EnumSet.noneOf(ErlangBackend.CompileOptions.class)
 // use the following argument for verbose compiler output:

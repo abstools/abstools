@@ -260,3 +260,27 @@ When querying with invalid method parameters, the HTTP request will produce a
 When the invoked method throws an exception, the HTTP request will produce a
 500 response code.
 
+=== Customizing Browser-Based Display
+
+Since the Model API is implemented via HTTP, it can be accessed from a
+web browser.  The `-http-index-file` command-line switch is used
+to supply an `index.html` file at compile-time:
+
+  $ absc -erlang -http-index-file ./index.html *.abs
+
+When running a model on port 8080 and accessing
+`http://localhost:8080/` from a browser, the contents of that file
+will be displayed.
+
+Sometimes it is necessary to add additional files for visualization,
+e.g., CSS files, images or JavaScript libraries.  The contents of one
+directory can be added to the model via the `-http-static-dir`
+command-line switch:
+
+  $ absc -erlang -http-index-file ./index.html -http-static-dir ./support-files/ *.abs
+
+The contents of the given directory are copied at compile-time.  The
+files within that directory are available within the Model API below
+the `static/` path.  For example, a file `./support-files/js/d3.js`
+will be accessible as `http://localhost:8080/static/js/d3.js`.
+
