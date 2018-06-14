@@ -26,7 +26,8 @@ is contained in the `export` clause.
 | _IdentifierList_ ::= | _AnyIdentifier_ { `,` _AnyIdentifier_ }
 | _AnyIdentifier_ ::= | _Identifier_ {vbar} _TypeIdentifier_
 
-| _Decl_        ::= | _FunDecl_ +
+| _Decl_        ::= | _FunctionDecl_ +
+{vbar} _PartialFunctionDecl_ +
 {vbar} _TypeSynDecl_ +
 {vbar} _DataTypeDecl_ +
 {vbar} _ExceptionDecl_ +
