@@ -6,6 +6,7 @@ type: post
 draft: false
 ---
 
+
 CostABS is a a static analyzer for automatically inferring upper/lower bounds
 on the worst/best-case Resource usage (a.k.a. cost) of ABS programs.  The
 inferred upper bounds have important applications in the fields of program
@@ -13,7 +14,10 @@ optimization, verification and certification.  CostABS is parametric on the
 cost model, i.e., the type of cost that the user wants to infer (e.g., number
 of steps, amount of memory allocated, amount of data transmitted, etc.), and
 it supports different notions of cost such as sequential, parallel, peak, etc.
+
 In this tutorial, we overview the different features of CostABS by example.
+All examples are linked to the collaboratory where you can directly replay the
+steps described in the tutorial.
 
 * General Overview: Resource Analysis
 
@@ -35,7 +39,7 @@ following, we describe the use of CostABS by analyzing several examples.
 ** Basic Resource Analysis
 
 Let us start by performing the basic resource analysis computed by CostABS and
-described in [[http://link.springer.com/chapter/10.1007%2F978-3-642-54862-8_46][this paper]]. To do it, open the file [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost][VendingMachine_init.abs],
+described in [[http://link.springer.com/chapter/10.1007%2F978-3-642-54862-8_46][this paper]]. To do it, open the file [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost][VendingMachine_init.abs]],
 which contains the following code:
 
 #+BEGIN_SRC abs
@@ -432,3 +436,131 @@ corresponds to the ~Master~ object, created at line 32 while executing the
 main method, the object identified by line 31.  In such upper bounds, the cost
 expression ~c(i)~ represents the cost of establishing the communication.
 
+** Non-Cumulative Cost
+
+We can illustrate the analysis for computing the non-cumulative cost with the
+file [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/Noncumulative.abs&app=cost][Noncumulative.abs]], which contains the following code:
+
+#+BEGIN_SRC abs
+  module Noncumulative;
+  import * from ABS.StdLib;
+  class IMain {
+      Unit main (Int s, Int n) {
+          [x == acquire(10)]
+          Int i= 0;
+          [r == acquire(100)]
+          i = 0;
+          [r == acquire(s)]
+          i = 1;
+          [r == release()]
+          i = 2;
+          [y == acquire(n)]
+          i = 3;
+          [x == release()]
+          i = 4;
+      }
+  }
+#+END_SRC
+
+In ~Settings~, restore the default values and set the option ~noncumulative_cost~ to ~yes~.  Then refresh the outline and select the method ~IMain.main~.  The results obtained after clicking ~Run~ show that we have two sets of program points that can lead to the maximum on the number of resources acquired, as well as their corresponding upper bound expressions.  The set ~[L6,L8,L10]~ corresponds to the acquireinstructions at lines 6, 8 and 10 of the program.  With this set of ~acquire~ instructions, we obtain an upper bound of the number of resources that linearly depends on the input parameter ~s~ because of the ~acquire~ at line 10.  The set ~[L6,L8,L14]~ can also lead to the maximum number of resources acquired, if the actual value of the input parameter ~n~ is larger than ~s~.
+
+** Peak Cost Analysis
+
+Let us continue by performing the peak cost analysis to the program [[{{% siteparam "eifilelink"
+  %}}/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost][VendingMachine_init.abs]].  Similarly to other analyses, we first select the entry method (method ~main~ in class ~IMain~) in the outline view and start the Resource Analysis (SACO) with default options, with the exception of the option ~Peak Cost~, which must be set to ~yes~.  After clicking ~Run~, the peak cost analysis outputs in the console.
+
+#+BEGIN_EXAMPLE
+Closure time 2 ms.
+Direct mhp time 0 ms.
+ Indirect mhp time 24 ms.
+Configurations found for queue [49,48] -- IPrettyPrinter.showIncome,IPrettyPrinter.showCoin
+   -- IPrettyPrinter.init
+UBs for the configurations of queue [49,48]
+   -- UB_k for [49,48]-[IPrettyPrinter.showIncome,IPrettyPrinter.showCoin]): 2+2*nat(max(coins)-1)
+   -- UB_k for [49,48]-[IPrettyPrinter.init]): 0
+
+Configurations found for queue [50,48] -- IVendingMachine.insertCoins,IVendingMachine.retrieveCoins,IVendingMachine.insertCoin
+   -- IVendingMachine.init
+UBs for the configurations of queue [50,48]
+   -- UB_k for [50,48]-[IVendingMachine.insertCoins,IVendingMachine.retrieveCoins,IVendingMachine.insertCoin]): 13+14*nat(n)+13*nat(max(coins)-1)
+   -- UB_k for [50,48]-[IVendingMachine.init]): 0
+#+END_EXAMPLE
+
+For each identified ABS object, all possible queue configurations are shown. A queue configuration is the set of tasks that can be in the task queue simultaneously. For each queue configuration, the tasks involved in the configuration are shown. In addition, the total cost associated with the configuration is displayed as well.
+
+The analysis of the program ~VendingMachine_init.abs~ shows that there are two possible queue configurations for each object identified in the program.  For example, for the object ~[49,48]~ one of the configurations contains tasks for methods ~showIncome~ and ~showCoin~, and the number of steps executed by those tasks linearly depends on the value of the field ~coins~.
+
+As before, the output tab ~Console Graph~ also shows a graph where the labels of the nodes contain the program lines where the corresponding object is created.  For instance, the node labeled as ~[49,48]~ corresponds to the ~PrettyPrinter~ object, created at line 49 while executing the ~main~ method which starts at line 48.  By clicking on a node, the queue configurations that have been identified and their costs are shown in a message.
+
+** Parallel Cost
+
+Let us perform the parallel cost analysis described in [[http://dx.doi.org/10.1007/978-3-662-48288-9_16][this paper]].  To do so, we open the file [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/Parallel.abs&app=cost][Parallel.abs]], which contains the following code:
+
+#+BEGIN_SRC abs
+  module Parallel;
+  import * from ABS.StdLib;
+
+  interface IX {
+      Unit p (IY y);
+  }
+
+  interface IY {
+      Unit q ();
+      Unit s ();
+  }
+
+  class X implements IX {
+      Unit p (IY y) {
+          skip;
+          y!s();
+          Int method_end = 0;
+      }
+  }
+
+  class Y implements IY {
+      Unit q () {
+          Int method_end = 0;
+      }
+      Unit s () {
+          Int method_end = 0;
+      }
+
+  }
+
+  class IMain {
+      Unit main () {
+
+          IX x = new  X ();
+          IY y = new  Y ();
+
+          x!p(y);
+          skip;
+          y!q();
+          Int method_end = 0;
+      }
+  }
+#+END_SRC
+
+Select the entry method ~IMain.main~ in the outline and apply the Resource Analysis by restoring the default values and setting the option ~Parallel Cost~  to ~yes~.  The analysis results show the computed upper bound expressions obtained for all paths identified in the DFG (distributed flow graph) of the program.  In addition, the result shows the number of nodes and edges of the computed DFG.
+
+#+BEGIN_EXAMPLE
+Closure time 1 ms.
+Direct mhp time 0 ms.
+ Indirect mhp time 3 ms.
+DFG Number of Nodes: 11
+DFG Number of Edges: 12
+DFG Number of Exit nodes: 4
+Number of Paths found: 16
+The Parallel Cost for IMain.main(this) is the maximum of the expressions (4):
+UB Expression: 10
+UB Expression: 14
+UB Expression: 13
+UB Expression: 9
+#+END_EXAMPLE
+
+# * [0/3] TODOs                                                      :noexport:
+# - [ ] Add boilerplate text at beginning of each task: "Restore settings to
+#   default and set the following options ..."
+# - [ ] Add overview / table of contents at the start
+# - [ ] Add short explanation of the tool to each section + link to
+#   documentation or paper
