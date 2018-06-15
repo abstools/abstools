@@ -158,7 +158,7 @@ terminate(Reason, StateName, Data) ->
 code_change(_OldVsn, StateName, Data, _Extra) ->
     {ok, StateName, Data}.
 
-handle_cast(kill_recklessly, _StateName,
+handle_event(cast, kill_recklessly, _StateName,
                   Data=#data{runnable_tasks=Run,
                              polling_tasks=Pol,
                              waiting_tasks=Wai,
@@ -166,14 +166,12 @@ handle_cast(kill_recklessly, _StateName,
     lists:map(fun task:kill_recklessly/1,
               gb_sets:to_list(gb_sets:union([Run, Pol, Wai, New]))),
     {stop, normal, Data};
-handle_cast(inc_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
+handle_event(cast, inc_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
     {keep_state, Data#data{referencers=Referencers + 1}};
-handle_cast(dec_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
+handle_event(cast, dec_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
     {keep_state, Data#data{referencers=Referencers - 1}};
-handle_cast(_Event, _StateName, Data) ->
-    {stop, not_supported, Data}.
-
-
+handle_event(cast, _Event, _StateName, Data) ->
+    {stop, not_supported, Data};
 
 %% Default handling for the following states: `cog_starting',
 %% `no_task_schedulable', `process_blocked'
@@ -181,7 +179,7 @@ handle_cast(_Event, _StateName, Data) ->
 %% TODO: in `process_blocked', consider handling crash by rescheduling.  This
 %% should not happen since a blocked process does not execute user-defined ABS
 %% code and should not be able to crash.
-handle_info({'EXIT',TaskRef,_Reason}, StateName,
+handle_event(info, {'EXIT',TaskRef,_Reason}, StateName,
             Data=#data{running_task=R,runnable_tasks=Run, polling_tasks=Pol,
                        waiting_tasks=Wai, new_tasks=New,
                        process_infos=ProcessInfos}) ->
@@ -192,7 +190,7 @@ handle_info({'EXIT',TaskRef,_Reason}, StateName,
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                new_tasks=gb_sets:del_element(TaskRef, New),
                process_infos=maps:remove(TaskRef, ProcessInfos)}};
-handle_info(_Info, _StateName, Data) ->
+handle_event(info, _Info, _StateName, Data) ->
     {stop, not_supported, Data}.
 
 
@@ -268,10 +266,8 @@ cog_starting(cast, stop_world, Data)->
     {next_state, in_gc, Data#data{next_state_after_gc=no_task_schedulable}};
 cog_starting(cast, acknowledged_by_gc, Data)->
     {next_state, no_task_schedulable, Data};
-cog_starting(cast, Event, Data) ->
-    handle_cast(Event, cog_starting, Data);
-cog_starting(info, Event, Data) ->
-    handle_info(Event, cog_starting, Data).
+cog_starting(EventType, Event, Data) ->
+    handle_event(EventType, Event, cog_starting, Data).
 
 
 no_task_schedulable({call, From}, {process_runnable, TaskRef},
@@ -322,10 +318,8 @@ no_task_schedulable(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,N
 no_task_schedulable(cast, stop_world, Data) ->
     gc:cog_stopped(self()),
     {next_state, in_gc, Data#data{next_state_after_gc=no_task_schedulable}};
-no_task_schedulable(cast, Event, Data) ->
-    handle_cast(Event, no_task_schedulable, Data);
-no_task_schedulable(info, Event, Data) ->
-    handle_info(Event, no_task_schedulable, Data).
+no_task_schedulable(EventType, Event, Data) ->
+    handle_event(EventType, Event, no_task_schedulable, Data).
 
 
 
@@ -399,8 +393,6 @@ process_running(cast, stop_world, Data=#data{running_task=R}) ->
     task:send_stop_for_gc(R),
     {next_state, waiting_for_gc_stop,
      Data#data{next_state_after_gc=process_running}};
-process_running(cast, Event, Data) ->
-    handle_cast(Event, process_running, Data);
 process_running(info, {'EXIT',TaskRef,_Reason},
             Data=#data{running_task=R,runnable_tasks=Run,polling_tasks=Pol,
                        waiting_tasks=Wai,new_tasks=New,scheduler=Scheduler,
@@ -446,8 +438,8 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                         new_tasks=NewNew,
                         process_infos=NewProcessInfos}}
     end;
-process_running(info, Event, Data) ->
-    handle_info(Event, process_running, Data).
+process_running(EventType, Event, Data) ->
+    handle_event(EventType, Event, process_running, Data).
 
 
 
@@ -474,10 +466,8 @@ process_blocked(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notif
 process_blocked(cast, stop_world, Data) ->
     gc:cog_stopped(self()),
     {next_state, in_gc, Data#data{next_state_after_gc=process_blocked}};
-process_blocked(cast, Event, Data) ->
-    handle_cast(Event, process_blocked, Data);
-process_blocked(info, Event, Data) ->
-    handle_info(Event, process_blocked, Data).
+process_blocked(EventType, Event, Data) ->
+    handle_event(EventType, Event, process_blocked, Data).
 
 
 
@@ -538,8 +528,6 @@ waiting_for_gc_stop(cast, {process_blocked_for_gc, R},
                     Data=#data{running_task=R}) ->
     gc:cog_stopped(self()),
     {next_state, in_gc, Data#data{next_state_after_gc=process_blocked}};
-waiting_for_gc_stop(cast, Event, Data) ->
-    handle_cast(Event, waiting_for_gc_stop, Data);
 waiting_for_gc_stop(info, {'EXIT',TaskRef,_Reason},
             Data=#data{next_state_after_gc=StateAfterGC,
                        running_task=R, runnable_tasks=Run,
@@ -565,8 +553,8 @@ waiting_for_gc_stop(info, {'EXIT',TaskRef,_Reason},
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                process_infos=maps:remove(TaskRef, ProcessInfos),
                new_tasks=gb_sets:del_element(TaskRef, New)}};
-waiting_for_gc_stop(info, Event, Data) ->
-    handle_info(Event, waiting_for_gc_stop, Data).
+waiting_for_gc_stop(EventType, Event, Data) ->
+    handle_event(EventType, Event, waiting_for_gc_stop, Data).
 
 
 
@@ -648,9 +636,7 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                 _ -> {next_state, NextState, Data}
             end
         end;
-in_gc(cast, Event, Data) ->
-    handle_cast(Event, in_gc, Data);
-in_gc(info, {'EXIT',TaskRef,_Reason},
+in_gc(EventType, {'EXIT',TaskRef,_Reason},
             Data=#data{running_task=R,runnable_tasks=Run, polling_tasks=Pol,
                        waiting_tasks=Wai, new_tasks=New,
                        process_infos=ProcessInfos}) ->
@@ -674,8 +660,8 @@ in_gc(info, {'EXIT',TaskRef,_Reason},
                         new_tasks=NewNew,
                         process_infos=NewProcessInfos}}
     end;
-in_gc(info, Event, Data) ->
-    handle_info(Event, in_gc, Data).
+in_gc(EventType, Event, Data) ->
+    handle_event(EventType, Event, in_gc, Data).
 
 
 
@@ -709,8 +695,6 @@ waiting_for_references(cast, {references, Task, References},
              Data#data{references=ReferenceRecord#{waiting := NewTasks,
                                                    received := ordsets:union(CollectedReferences, References)}}}
     end;
-waiting_for_references(cast, Event, Data) ->
-    handle_cast(Event, waiting_for_references, Data);
 waiting_for_references(info, {'EXIT',TaskRef,_Reason},
             Data=#data{next_state_after_gc=StateAfterGC,
                        running_task=R, runnable_tasks=Run,
@@ -749,5 +733,5 @@ waiting_for_references(info, {'EXIT',TaskRef,_Reason},
                references=ReferenceRecord#{waiting := NewTasks,
                                            received := CollectedReferences}}}
     end;
-waiting_for_references(info, Event, Data) ->
-    handle_info(Event, waiting_for_references, Data).
+waiting_for_references(EventType, Event, Data) ->
+    handle_event(EventType, Event, waiting_for_references, Data).
