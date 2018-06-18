@@ -161,13 +161,14 @@ handle_call({keep_alive, Class}, _From, State=#state{keepalive_after_clock_limit
                        end
            end,
     {reply, Result, State};
-handle_call({cog,ParentCog,Cog,new}, _From, State=#state{idle=I,cog_names=M})->
+handle_call({cog,ParentCog,Cog,new}, _From, State=#state{idle=I,cog_names=M,trace_map=T})->
     {C, N} = maps:get(ParentCog, M, {[], 0}),
     Id = [N | C],
     M2 = maps:put(ParentCog, {C, N+1}, M),
     NewM = maps:put(Cog, {Id, 0}, M2),
     I1=gb_sets:add_element(Cog,I),
-    {reply, Id, State#state{idle=I1, cog_names=NewM}};
+    ShownId = lists:reverse(Id),
+    {reply, {ShownId, maps:get(ShownId, T, [])}, State#state{idle=I1, cog_names=NewM}};
 handle_call({cog,Cog,active}, _From, State=#state{active=A,idle=I})->
     A1=gb_sets:add_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
@@ -296,9 +297,10 @@ terminate(_Reason, State=#state{idle=I, cog_names=M, trace_map=T})->
              fun (Cog, AccT) ->
                      Trace = lists:reverse(cog:get_scheduling_trace(Cog)),
                      {Id, _} = maps:get(Cog, M),
-                     maps:put(lists:reverse(Id), Trace, AccT)
+                     ShownId = lists:reverse(Id),
+                     maps:put(ShownId, Trace, AccT)
              end, T, I),
-    io:format("Scheduling traces:~n~p~n", [NewM]),
+    io:format("Scheduling traces:~n~w~n", [NewM]),
     ok.
 
 

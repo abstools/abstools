@@ -58,6 +58,8 @@
          next_fut_id=0,
          %% A list of the scheduling decisions made
          recorded=[],
+         %% A list of scheduling decisions that is to be made
+         replaying=[],
          %% Map from pid to process_info structure (see
          %% ../include/abs_types.hrl); updated when token passed.
          process_infos=#{}
@@ -225,11 +227,11 @@ callback_mode() -> state_functions.
 
 init([ParentCog, DC, Scheduler]) ->
     process_flag(trap_exit, true),
-    Id = case ParentCog of
-             null -> cog_monitor:new_cog(ParentCog, self());
-             _ -> cog_monitor:new_cog(ParentCog#cog.ref, self())
-         end,
-    {ok, cog_starting, #data{dc=DC, scheduler=Scheduler, id=Id}}.
+    {Id, ReplayTrace} = case ParentCog of
+                            null -> cog_monitor:new_cog(ParentCog, self());
+                            _ -> cog_monitor:new_cog(ParentCog#cog.ref, self())
+                        end,
+    {ok, cog_starting, #data{dc=DC, scheduler=Scheduler, id=Id, replaying=ReplayTrace}}.
 
 start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie)->
     ArrivalInfo=Info#process_info{arrival={dataTime, clock:now()}},
