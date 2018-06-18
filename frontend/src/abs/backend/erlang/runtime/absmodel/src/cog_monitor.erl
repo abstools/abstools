@@ -13,7 +13,7 @@
 -export([are_objects_of_class_protected/1]).
 
 %% communication about cogs
--export([new_cog/2, cog_active/1, cog_blocked/1, cog_unblocked/1, cog_blocked_for_clock/4, cog_idle/1, cog_died/1]).
+-export([new_cog/2, cog_active/1, cog_blocked/1, cog_unblocked/1, cog_blocked_for_clock/4, cog_idle/1, cog_died/2]).
 
 %% communication about tasks
 -export([task_waiting_for_clock/4, task_confirm_clock_wakeup/1]).
@@ -47,6 +47,8 @@
                cog_names,       % A mapping from cogs to a unique identifier
                                 % for the cog (represented as a list of
                                 % numbers).
+               trace_map,       % A mapping from cog names to abstract
+                                % scheduling traces
                dcs,             % list of deployment components
                registered_objects, % Objects registered in HTTP API. binary |-> #object{}
                keepalive_after_clock_limit % Flag whether we kill all objects after clock limit has been reached
@@ -86,8 +88,8 @@ cog_unblocked(Cog) ->
 cog_idle(Cog) ->
     gen_server:call({global, cog_monitor}, {cog,Cog,idle}, infinity).
 
-cog_died(Cog) ->
-    gen_server:call({global, cog_monitor}, {cog,Cog,die}, infinity).
+cog_died(Cog, RecordedTrace) ->
+    gen_server:call({global, cog_monitor}, {cog,Cog,RecordedTrace,die}, infinity).
 
 cog_blocked_for_clock(Task, Cog, Min, Max) ->
     gen_server:call({global, cog_monitor}, {cog,Task,Cog,clock_waiting,Min,Max}, infinity).
@@ -144,6 +146,7 @@ init([Main,Keepalive])->
                dcs=[],
                active_before_next_clock=ordsets:new(),
                cog_names=maps:new(),
+               trace_map=maps:new(),
                registered_objects=maps:new(),
                keepalive_after_clock_limit=Keepalive}}.
 
@@ -211,13 +214,17 @@ handle_call({cog,Cog,unblocked}, _From, State=#state{active=A,blocked=B})->
     A1=gb_sets:add_element(Cog,A),
     B1=gb_sets:del_element(Cog,B),
     {reply, ok, State#state{active=A1,blocked=B1}};
-handle_call({cog,Cog,die}, From,State=#state{active=A,idle=I,blocked=B,clock_waiting=W, active_before_next_clock=ABNC})->
+handle_call({cog,Cog,RecordedTrace,die},
+            From,State=#state{active=A,idle=I,blocked=B,clock_waiting=W,
+                              active_before_next_clock=ABNC,
+                              cog_names=M, trace_map=T})->
     ABNC1=ordsets:filter(fun ({_, Cog1}) -> Cog1 =/= Cog end, ABNC),
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
     B1=gb_sets:del_element(Cog,B),
     W1=lists:filter(fun ({_Min, _Max, _Task, Cog1}) ->  Cog1 =/= Cog end, W),
-    S1=State#state{active=A1,idle=I1,blocked=B1,clock_waiting=W1, active_before_next_clock=ABNC1},
+    T1=maps:put(maps:get(Cog, M), RecordedTrace, T),
+    S1=State#state{active=A1,idle=I1,blocked=B1,clock_waiting=W1, active_before_next_clock=ABNC1,trace_map=T1},
     gen_server:reply(From, ok),
     case can_clock_advance(State, S1) of
         true->
@@ -284,7 +291,14 @@ handle_info(_Info, State)->
     {noreply, State}.
 
 
-terminate(_Reason,_S)->
+terminate(_Reason, State=#state{idle=I, cog_names=M, trace_map=T})->
+    NewM = gb_sets:fold(
+             fun (Cog, AccT) ->
+                     Trace = lists:reverse(cog:get_scheduling_trace(Cog)),
+                     {Id, _} = maps:get(Cog, M),
+                     maps:put(lists:reverse(Id), Trace, AccT)
+             end, T, I),
+    io:format("Scheduling traces:~n~p~n", [NewM]),
     ok.
 
 

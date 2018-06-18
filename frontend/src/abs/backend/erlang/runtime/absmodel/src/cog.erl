@@ -4,7 +4,7 @@
 -export([process_is_runnable/2,
          process_is_blocked/2, process_is_blocked_for_gc/2,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
-         submit_references/2, new_future_id/1]).
+         submit_references/2, new_future_id/1, get_scheduling_trace/1]).
 -export([return_token/4]).
 -export([inc_ref_count/1,dec_ref_count/1]).
 -include_lib("abs_types.hrl").
@@ -56,6 +56,8 @@
          id,
          %% Cog-unique (and stable) ids for futures
          next_fut_id=0,
+         %% A list of the scheduling decisions made
+         recorded=[],
          %% Map from pid to process_info structure (see
          %% ../include/abs_types.hrl); updated when token passed.
          process_infos=#{}
@@ -124,6 +126,9 @@ submit_references(CogRef, Refs) ->
 new_future_id(#cog{ref=Cog}) ->
     gen_statem:call(Cog, new_future_id).
 
+get_scheduling_trace(CogRef) ->
+    gen_statem:call(CogRef, get_scheduling_trace).
+
 %%Garbage collector callbacks
 
 acknowledged_by_gc(#cog{ref=Cog}) ->
@@ -181,6 +186,9 @@ handle_event(cast, _Event, _StateName, Data) ->
 handle_event({call, From}, new_future_id, _StateName,
              Data=#data{next_fut_id=N, id=Id}) ->
     {keep_state, Data#data{next_fut_id=N+1}, {reply, From, {Id, N}}};
+handle_event({call, From}, get_scheduling_trace, _StateName,
+             Data=#data{recorded=T}) ->
+    {keep_state_and_data, {reply, From, T}};
 
 %% Default handling for the following states: `cog_starting',
 %% `no_task_schedulable', `process_blocked'
@@ -283,7 +291,8 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
                     Data=#data{waiting_tasks=Wai,polling_tasks=Pol,
                                runnable_tasks=Run, new_tasks=New,
                                scheduler=Scheduler,
-                               process_infos=ProcessInfos}) ->
+                               process_infos=ProcessInfos,
+                               recorded=Recorded}) ->
     %% we go through the complete scheduling algorithm even though we already
     %% have a runnable candidate since some polling tasks might have become
     %% unstuck, and for user-defined scheduling we want a complete task list
@@ -303,6 +312,12 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
                        new_tasks=NewNewTasks},
              {reply, From, ok}};
         T ->       % Execute T -- might or might not be TaskRef
+            TaskInfo = maps:get(T, ProcessInfos),
+            NewRecorded = case TaskInfo#process_info.id of
+                                  undefined -> Recorded;
+                                  Id -> [Id | Recorded]
+                              end,
+
             cog_monitor:cog_active(self()),
             T ! token,
             {next_state, process_running,
@@ -311,7 +326,7 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
                        waiting_tasks=NewWaitingTasks,
                        polling_tasks=gb_sets:del_element(T, Pol),
                        runnable_tasks=gb_sets:add_element(T, NewRunnableTasks),
-                       new_tasks=NewNewTasks},
+                       new_tasks=NewNewTasks, recorded=NewRecorded},
              {reply, From, ok}}
     end;
 no_task_schedulable(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
@@ -336,7 +351,8 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
                 Data=#data{running_task=R, runnable_tasks=Run,
                            waiting_tasks=Wai, polling_tasks=Pol,
                            new_tasks=New, scheduler=Scheduler,
-                           process_infos=ProcessInfos}) ->
+                           process_infos=ProcessInfos,
+                           recorded=Recorded}) ->
     gen_statem:reply(From, ok),
     NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
     NewRunnable = case ProcessState of runnable -> Run;
@@ -361,13 +377,20 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
         _ ->
             %% no need for `cog_monitor:active' since we were already running
             %% something
+            TaskInfo = maps:get(T, NewProcessInfos),
+            NewRecorded = case TaskInfo#process_info.id of
+                                  undefined -> Recorded;
+                                  Id -> [Id | Recorded]
+                              end,
+
             T ! token,
             {keep_state,
              Data#data{running_task=T,
                        runnable_tasks=gb_sets:add_element(T, NewRunnable),
                        waiting_tasks=NewWaiting,
                        polling_tasks=gb_sets:del_element(T, NewPolling),
-                       process_infos=NewProcessInfos}}
+                       process_infos=NewProcessInfos,
+                       recorded=NewRecorded}}
     end;
 process_running({call, From}, {process_runnable, TaskRef}, Data=#data{running_task=TaskRef}) ->
     %% This can happen when a process suspends itself ({token, Id, runnable})
@@ -405,7 +428,8 @@ process_running(cast, stop_world, Data=#data{running_task=R}) ->
 process_running(info, {'EXIT',TaskRef,_Reason},
             Data=#data{running_task=R,runnable_tasks=Run,polling_tasks=Pol,
                        waiting_tasks=Wai,new_tasks=New,scheduler=Scheduler,
-                       process_infos=ProcessInfos}) ->
+                       process_infos=ProcessInfos,
+                       recorded=Recorded}) ->
     NewProcessInfos=maps:remove(TaskRef, ProcessInfos),
     NewRunnable=gb_sets:del_element(TaskRef, Run),
     NewPolling=gb_sets:del_element(TaskRef, Pol),
@@ -430,6 +454,12 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                 _ ->
                     %% no need for `cog_monitor:active' since we were already
                     %% running something
+                    TaskInfo = maps:get(T, NewProcessInfos),
+                    NewRecorded = case TaskInfo#process_info.id of
+                                          undefined -> Recorded;
+                                          Id -> [Id | Recorded]
+                                      end,
+
                     T!token,
                     {keep_state,
                      Data#data{running_task=T,
@@ -437,7 +467,8 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                                waiting_tasks=NewWaiting,
                                polling_tasks=gb_sets:del_element(T, NewPolling),
                                new_tasks=NewNew,
-                               process_infos=NewProcessInfos}}
+                               process_infos=NewProcessInfos,
+                               recorded=NewRecorded}}
             end;
         %% Some other task crashed / finished -- keep calm and carry on
         _ -> {keep_state,
@@ -610,9 +641,10 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                                      runnable_tasks=Run, polling_tasks=Pol,
                                      next_state_after_gc=NextState,
                                      scheduler=Scheduler,
-                                     process_infos=ProcessInfos}) ->
+                                     process_infos=ProcessInfos,
+                                     recorded=Recorded}) ->
     case Referencers > 0 of
-        false -> cog_monitor:cog_died(self()),
+        false -> cog_monitor:cog_died(self(), Recorded),
                  gc:unregister_cog(self()),
                  {stop, normal, Data};
         true ->
@@ -626,12 +658,19 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                             %% advance in the meantime
                             {next_state, no_task_schedulable, Data};
                         T ->                    % Execute T
+                            TaskInfo = maps:get(T, ProcessInfos),
+                            NewRecorded = case TaskInfo#process_info.id of
+                                                  undefined -> Recorded;
+                                                  Id -> [Id | Recorded]
+                                              end,
+
                             cog_monitor:cog_active(self()),
                             T ! token,
                             {next_state, process_running,
                              Data#data{running_task=T,
                                        runnable_tasks=gb_sets:add_element(T, Run),
-                                       polling_tasks=gb_sets:del_element(T, Pol)}}
+                                       polling_tasks=gb_sets:del_element(T, Pol),
+                                       recorded=NewRecorded}}
                     end;
                 process_running ->
                     %% when switching to `in_gc' we're never in state
