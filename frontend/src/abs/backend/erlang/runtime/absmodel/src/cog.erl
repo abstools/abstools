@@ -4,7 +4,7 @@
 -export([process_is_runnable/2,
          process_is_blocked/2, process_is_blocked_for_gc/2,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
-         submit_references/2]).
+         submit_references/2, new_future_id/1]).
 -export([return_token/4]).
 -export([inc_ref_count/1,dec_ref_count/1]).
 -include_lib("abs_types.hrl").
@@ -54,6 +54,8 @@
          scheduler=undefined,
          %% A unique identifier that is stable across runs
          id,
+         %% Cog-unique (and stable) ids for futures
+         next_fut_id=0,
          %% Map from pid to process_info structure (see
          %% ../include/abs_types.hrl); updated when token passed.
          process_infos=#{}
@@ -119,6 +121,9 @@ submit_references(#cog{ref=CogRef}, Refs) ->
 submit_references(CogRef, Refs) ->
     gen_statem:cast(CogRef, {references, self(), Refs}).
 
+new_future_id(#cog{ref=Cog}) ->
+    gen_statem:call(Cog, new_future_id).
+
 %%Garbage collector callbacks
 
 acknowledged_by_gc(#cog{ref=Cog}) ->
@@ -172,6 +177,10 @@ handle_event(cast, dec_ref_count, _StateName, Data=#data{referencers=Referencers
     {keep_state, Data#data{referencers=Referencers - 1}};
 handle_event(cast, _Event, _StateName, Data) ->
     {stop, not_supported, Data};
+
+handle_event({call, From}, new_future_id, _StateName,
+             Data=#data{next_fut_id=N, id=Id}) ->
+    {keep_state, Data#data{next_fut_id=N+1}, {reply, From, {Id, N}}};
 
 %% Default handling for the following states: `cog_starting',
 %% `no_task_schedulable', `process_blocked'

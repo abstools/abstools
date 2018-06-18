@@ -8,6 +8,7 @@
         destiny=undefined,            % pid of the task's future (`null` for main task and init task)
         method= <<"">> ,              % name of the executing method (file GenerateErlang.jadd)
         creation={dataTime, 0},       % filled in at point of async call (file GenerateErlang.jadd)
+        id=undefined,                 % filled in when added to cog
         arrival={dataTime, -1},       % filled in by cog when receiving signal
         cost=dataInfDuration,         % filled in via annotation
         proc_deadline=dataInfDuration, % deadline relative to time at call, filled in via annotation cat point of async call (file GenerateErlang.jadd)
