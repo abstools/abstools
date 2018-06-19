@@ -243,7 +243,15 @@ start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie)->
     end,
     ArrivalInfo#process_info{pid=Ref}.
 
-choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos) ->
+choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, [Id | _]) ->
+    Candidate = [Proc || {Proc, Info} <- maps:to_list(ProcessInfos), Info#process_info.id == Id],
+    case Candidate of
+        [Proc] -> B = gb_sets:is_member(Proc, RunnableTasks) orelse
+                      gb_sets:is_member(Proc, poll_waiting(PollingTasks)),
+                  case B of true -> Proc; false -> none end;
+        [] -> none
+    end;
+choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, []) ->
     Candidates=gb_sets:union(RunnableTasks, poll_waiting(PollingTasks)),
     case gb_sets:is_empty(Candidates) of
         true -> none;
@@ -294,14 +302,14 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
                                runnable_tasks=Run, new_tasks=New,
                                scheduler=Scheduler,
                                process_infos=ProcessInfos,
-                               recorded=Recorded}) ->
+                               recorded=Recorded,replaying=Replaying}) ->
     %% we go through the complete scheduling algorithm even though we already
     %% have a runnable candidate since some polling tasks might have become
     %% unstuck, and for user-defined scheduling we want a complete task list
     NewRunnableTasks = gb_sets:add_element(TaskRef, Run),
     NewWaitingTasks = gb_sets:del_element(TaskRef, Wai),
     NewNewTasks = gb_sets:del_element(TaskRef, New),
-    T=choose_runnable_process(Scheduler, NewRunnableTasks, Pol, ProcessInfos),
+    T=choose_runnable_process(Scheduler, NewRunnableTasks, Pol, ProcessInfos, Replaying),
     case T of
         none->     % None found -- should not happen
             case gb_sets:is_empty(NewNewTasks) of
@@ -316,6 +324,7 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
         T ->       % Execute T -- might or might not be TaskRef
             TaskInfo = maps:get(T, ProcessInfos),
             NewRecorded = [TaskInfo#process_info.id | Recorded],
+            NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
 
             cog_monitor:cog_active(self()),
             T ! token,
@@ -325,7 +334,7 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
                        waiting_tasks=NewWaitingTasks,
                        polling_tasks=gb_sets:del_element(T, Pol),
                        runnable_tasks=gb_sets:add_element(T, NewRunnableTasks),
-                       new_tasks=NewNewTasks, recorded=NewRecorded},
+                       new_tasks=NewNewTasks, recorded=NewRecorded, replaying=NewReplaying},
              {reply, From, ok}}
     end;
 no_task_schedulable(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
@@ -351,7 +360,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
                            waiting_tasks=Wai, polling_tasks=Pol,
                            new_tasks=New, scheduler=Scheduler,
                            process_infos=ProcessInfos,
-                           recorded=Recorded}) ->
+                           recorded=Recorded,replaying=Replaying}) ->
     gen_statem:reply(From, ok),
     NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
     NewRunnable = case ProcessState of runnable -> Run;
@@ -362,7 +371,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
                      _ -> Pol end,
     %% for `ProcessState' = `done', we just drop the task from Run (it can't
     %% be in Wai or Pol)
-    T=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos),
+    T=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos, Replaying),
     case T of
         none->
             case gb_sets:is_empty(New) of
@@ -378,6 +387,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
             %% something
             TaskInfo = maps:get(T, NewProcessInfos),
             NewRecorded = [TaskInfo#process_info.id | Recorded],
+            NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
 
             T ! token,
             {keep_state,
@@ -386,7 +396,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
                        waiting_tasks=NewWaiting,
                        polling_tasks=gb_sets:del_element(T, NewPolling),
                        process_infos=NewProcessInfos,
-                       recorded=NewRecorded}}
+                       recorded=NewRecorded, replaying=NewReplaying}}
     end;
 process_running({call, From}, {process_runnable, TaskRef}, Data=#data{running_task=TaskRef}) ->
     %% This can happen when a process suspends itself ({token, Id, runnable})
@@ -425,7 +435,7 @@ process_running(info, {'EXIT',TaskRef,_Reason},
             Data=#data{running_task=R,runnable_tasks=Run,polling_tasks=Pol,
                        waiting_tasks=Wai,new_tasks=New,scheduler=Scheduler,
                        process_infos=ProcessInfos,
-                       recorded=Recorded}) ->
+                       recorded=Recorded,replaying=Replaying}) ->
     NewProcessInfos=maps:remove(TaskRef, ProcessInfos),
     NewRunnable=gb_sets:del_element(TaskRef, Run),
     NewPolling=gb_sets:del_element(TaskRef, Pol),
@@ -435,7 +445,7 @@ process_running(info, {'EXIT',TaskRef,_Reason},
         %% The running task crashed / finished -- schedule a new one;
         %% duplicated from `process_running'.
         R ->
-            T=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos),
+            T=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos, Replaying),
             case T of
                 none->
                     case gb_sets:is_empty(NewNew) of
@@ -452,6 +462,8 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                     %% running something
                     TaskInfo = maps:get(T, NewProcessInfos),
                     NewRecorded = [TaskInfo#process_info.id | Recorded],
+                    NewReplaying = case Replaying of [] -> []; [X | Rest] ->
+                Rest end,
 
                     T!token,
                     {keep_state,
@@ -461,7 +473,7 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                                polling_tasks=gb_sets:del_element(T, NewPolling),
                                new_tasks=NewNew,
                                process_infos=NewProcessInfos,
-                               recorded=NewRecorded}}
+                               recorded=NewRecorded, replaying=NewReplaying}}
             end;
         %% Some other task crashed / finished -- keep calm and carry on
         _ -> {keep_state,
@@ -635,7 +647,7 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                                      next_state_after_gc=NextState,
                                      scheduler=Scheduler,
                                      process_infos=ProcessInfos,
-                                     recorded=Recorded}) ->
+                                     recorded=Recorded,replaying=Replaying}) ->
     case Referencers > 0 of
         false -> cog_monitor:cog_died(self(), Recorded),
                  gc:unregister_cog(self()),
@@ -643,7 +655,7 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
         true ->
             case NextState of
                 no_task_schedulable ->
-                    T=choose_runnable_process(Scheduler, Run, Pol, ProcessInfos),
+                    T=choose_runnable_process(Scheduler, Run, Pol, ProcessInfos, Replaying),
                     case T of
                         none->   % None found
                             %% Do not send `cog_idle()' here since a task
@@ -653,6 +665,7 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                         T ->                    % Execute T
                             TaskInfo = maps:get(T, ProcessInfos),
                             NewRecorded = [TaskInfo#process_info.id | Recorded],
+                            NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
 
                             cog_monitor:cog_active(self()),
                             T ! token,
@@ -660,7 +673,7 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                              Data#data{running_task=T,
                                        runnable_tasks=gb_sets:add_element(T, Run),
                                        polling_tasks=gb_sets:del_element(T, Pol),
-                                       recorded=NewRecorded}}
+                                       recorded=NewRecorded, replaying=NewReplaying}}
                     end;
                 process_running ->
                     %% when switching to `in_gc' we're never in state
