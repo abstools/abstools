@@ -348,6 +348,7 @@ aspect GenerateErlang {
       } else if (dc == null) {
         ecs.print(",DC");
       } else {
+        ecs.print(",");
         dc.generateErlangCode(ecs, vars);
       }
       if (scheduler != null && !isNewDC) {

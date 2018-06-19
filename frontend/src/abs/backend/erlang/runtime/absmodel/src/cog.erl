@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
--export([start/0,start/1,start/2,add_main_task/3,add_task/7]).
+-export([start/0,start/1,start/2,start/3,add_main_task/3,add_task/7]).
 -export([process_is_runnable/2,
          process_is_blocked/2, process_is_blocked_for_gc/2,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
@@ -73,7 +73,10 @@
 %%API
 
 start() ->
-    start(null, undefined).
+    start(null, null, undefined).
+
+start(ParentCog) ->
+    start(ParentCog, null, undefined).
 
 start(ParentCog, DC) ->
     start(ParentCog, DC, undefined).
