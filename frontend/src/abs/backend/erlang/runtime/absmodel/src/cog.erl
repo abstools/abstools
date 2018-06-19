@@ -315,10 +315,7 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
              {reply, From, ok}};
         T ->       % Execute T -- might or might not be TaskRef
             TaskInfo = maps:get(T, ProcessInfos),
-            NewRecorded = case TaskInfo#process_info.id of
-                                  undefined -> Recorded;
-                                  Id -> [Id | Recorded]
-                              end,
+            NewRecorded = [TaskInfo#process_info.id | Recorded],
 
             cog_monitor:cog_active(self()),
             T ! token,
@@ -380,10 +377,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
             %% no need for `cog_monitor:active' since we were already running
             %% something
             TaskInfo = maps:get(T, NewProcessInfos),
-            NewRecorded = case TaskInfo#process_info.id of
-                                  undefined -> Recorded;
-                                  Id -> [Id | Recorded]
-                              end,
+            NewRecorded = [TaskInfo#process_info.id | Recorded],
 
             T ! token,
             {keep_state,
@@ -457,10 +451,7 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                     %% no need for `cog_monitor:active' since we were already
                     %% running something
                     TaskInfo = maps:get(T, NewProcessInfos),
-                    NewRecorded = case TaskInfo#process_info.id of
-                                          undefined -> Recorded;
-                                          Id -> [Id | Recorded]
-                                      end,
+                    NewRecorded = [TaskInfo#process_info.id | Recorded],
 
                     T!token,
                     {keep_state,
@@ -661,10 +652,7 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                             {next_state, no_task_schedulable, Data};
                         T ->                    % Execute T
                             TaskInfo = maps:get(T, ProcessInfos),
-                            NewRecorded = case TaskInfo#process_info.id of
-                                                  undefined -> Recorded;
-                                                  Id -> [Id | Recorded]
-                                              end,
+                            NewRecorded = [TaskInfo#process_info.id | Recorded],
 
                             cog_monitor:cog_active(self()),
                             T ! token,
