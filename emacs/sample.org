@@ -13,6 +13,17 @@ the program's output should appear below the block.
   }
 #+END_SRC
 
+
+#+name: list-example
+#+BEGIN_SRC abs :results output :var names='("Rudi" "Hans") :exports both
+  {
+      foreach (name in names()) {
+          println("Hello " + name + "!");
+      }
+  }
+#+END_SRC
+
+
 * Internals
 
 The given code is prepended with ~module Org;~, so it's not necessary to

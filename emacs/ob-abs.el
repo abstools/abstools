@@ -31,12 +31,14 @@
 (require 'abs-mode)
 (require 'ob)
 
-;; * [2/4] TODOs
+;; * [3/6] TODOs
 ;; 
 ;; - [X] auto-create module
 ;; - [X] parameters: simple
-;; - [ ] parameters: list
+;; - [X] parameters: list
 ;; - [ ] parameters: matrix
+;; - [ ] parse output: simple
+;; - [ ] parse output: reassemble lists / tables
 ;; 
 ;; * [0/1] Maybe
 ;; - [ ] auto-create main block when code block is not surrounded by { }
@@ -130,7 +132,6 @@ support for sessions"
   "Determine the type of VAL.
 Return a list (TYPE-NAME FORMAT).  TYPE-NAME should be the name of the type.
 FORMAT can be either a format string or a function which is called with VAL."
-  ;; TODO
   (let* ((basetype (org-babel-abs-val-to-base-type val))
          (type
           (pcase basetype
@@ -157,15 +158,18 @@ FORMAT can be either a format string or a function which is called with VAL."
      ;;         val
      ;;         ",\n")
      ;;        (if (eq org-babel-c-variant 'd) "\n]" "\n}"))))))
-     ;; ((or (listp val) (vectorp val)) ;; a list declared in the #+begin_src line
-     ;;  `(,(car type)
-     ;;    (lambda (val)
-     ;;      (cons
-     ;;       (format "[%d]" (length val))
-     ;;       (concat
-     ;;        (if (eq org-babel-c-variant 'd) "[" "{")
-     ;;        (mapconcat (lambda (v) (format ,(cadr type) v)) val ",")
-     ;;        (if (eq org-babel-c-variant 'd) "]" "}"))))))
+     ((or (listp val) (vectorp val)) ;; a list declared in the #+begin_src line
+      `(,(concat "List<" (car type) ">")
+        (lambda (val)
+          ;; called by `org-babel-abs-format-val'
+          (cons
+           ;; function name suffix
+           ""
+           ;; data converted into ABS
+           (concat
+            "list["
+            (mapconcat (lambda (v) (format ,(cadr type) v)) val ",")
+            "]")))))
      (t ;; treat unknown types as string
       type))))
 
@@ -177,18 +181,18 @@ FORMAT can be either a format string or a function which is called with VAL."
   (cond
    ((integerp val) 'integerp)
    ((floatp val) 'floatp)
-   ;; ((or (listp val) (vectorp val))
-   ;;  (let ((type nil))
-   ;;    (mapc (lambda (v)
-   ;;            (pcase (org-babel-abs-val-to-base-type v)
-   ;;              (`stringp (setq type 'stringp))
-   ;;              (`floatp
-   ;;               (if (or (not type) (eq type 'integerp))
-   ;;                   (setq type 'floatp)))
-   ;;              (`integerp
-   ;;               (unless type (setq type 'integerp)))))
-   ;;          val)
-   ;;    type))
+   ((or (listp val) (vectorp val))
+    (let ((type nil))
+      (mapc (lambda (v)
+              (pcase (org-babel-abs-val-to-base-type v)
+                (`stringp (setq type 'stringp))
+                (`floatp
+                 (if (or (not type) (eq type 'integerp))
+                     (setq type 'floatp)))
+                (`integerp
+                 (unless type (setq type 'integerp)))))
+            val)
+      type))
    (t 'stringp)))
 
 (defun org-babel-abs-var-exports (pair)
