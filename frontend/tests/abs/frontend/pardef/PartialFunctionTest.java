@@ -24,36 +24,7 @@ import java.util.ArrayList;
 import java.util.regex.Pattern;
 import org.junit.Test;
 
-public class PartialFunctionTest extends PardefTest {
-
-    private FunctionDecl assertHasFunction(Model model, String regex) {
-        FunctionDecl result = getFunction(model, Pattern.compile(regex));
-        String errorMessage = "No expanded function with name " + regex + " created"
-            + " (functions: " + getFunctions(model) + ")";
-        assertNotNull(errorMessage, result);
-        Decl decl = model.lookup(new KindedName(Kind.FUN, result.getName()));
-        assertFalse("Could not lookup function " + result.getName(), decl.isUnknown());
-        return result;
-    }
-
-    private Model testExpand(Model model, String... expectedNames) {
-        model = expand(model);
-        for (String expectedName : expectedNames) {
-            assertHasFunction(model, expandedName(expectedName));
-        }
-        return model;
-    }
-
-    private PartialFunctionDecl getPartialFunction(Model model, String regex) {
-        Pattern pattern = Pattern.compile(regex);
-        for (PartialFunctionDecl func : model.findChildren(PartialFunctionDecl.class)) {
-            if (pattern.matcher(func.getName()).matches()) {
-                return func;
-            }
-        }
-        return null;
-    }
-
+public class PartialFunctionTest extends AbstractPartialFunctionTest {
     @Test
     public void unusedFunctionNotRemoved() {
         Model model = expand(parse(
@@ -104,26 +75,6 @@ public class PartialFunctionTest extends PardefTest {
             applyFunction(),
             "def Int test(f)(Int i) = apply(f)(i);"
         ), "test_%s_inc__", "apply_%s_inc__");
-    }
-
-    @Test
-    public void callInnerParametricWithTypeParams() {
-        testExpand(parse(
-            "test()(1);",
-            applyFunction(),
-            incFunction(),
-            "def B test<A, B>()(A a) = apply(inc)(a);"
-        ), "test_%s__", "apply_%s_inc__");
-    }
-
-    @Test(expected = PardefModellingException.class)
-    public void multipleFunctionsDifferentTypeParam() {
-        testExpand(parse(
-            "addResults(expectsString, expectsInt)(1);",
-            "def Int addResults<T>(f, g)(T t) = f(t) + g(t);",
-            "def Int expectsString(String s) = 1;",
-            "def Int expectsInt(Int i) = 2;"
-        ));
     }
 
     @Test
@@ -208,10 +159,13 @@ public class PartialFunctionTest extends PardefTest {
         PartialFunctionDecl func = getPartialFunction(model, "apply");
         assertNotNull(func);
 
+        String printed;
         try (StringWriter writer = new StringWriter();
             PrintWriter pw = new PrintWriter(writer)) {
-            func.prettyPrint(pw, new DefaultABSFormatter(pw));
-            assertFalse(writer.toString().isEmpty());
+            func.doPrettyPrint(pw, new DefaultABSFormatter(pw));
+            printed = writer.toString();
         }
+
+        assertFalse(printed.isEmpty());
     }
 }
