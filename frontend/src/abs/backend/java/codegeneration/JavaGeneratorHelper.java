@@ -555,12 +555,18 @@ public class JavaGeneratorHelper {
 
     public static String generateUserSchedulingStrategy(NewExp exp, PureExp scheduler) {
         String className = "UserSchedulingStrategy_" + JavaBackend.getRandomName();
-        PrintStream stream = null;
+        JavaCode.Package pkg;
+        File file;
         try {
-            JavaCode.Package pkg = exp.getModuleDecl().getJavaPackage();
-            File file = pkg.createJavaFile(className);
-            stream = new JavaCodeStream(file);
+            pkg = exp.getModuleDecl().getJavaPackage();
+            file = pkg.createJavaFile(className);
+        } catch (JavaCodeGenerationException | IOException e) {
+            // TODO properly handle exceptions
+            e.printStackTrace();
+            return null;
+        }
 
+        try (PrintStream stream = JavaCodeStream.from(file)){
             stream.println("package " + pkg.packageName + ";");
             stream.print("public final class " + className);
             stream.println(" extends " + UserSchedulingStrategy.class.getName() + " {");
@@ -580,16 +586,9 @@ public class JavaGeneratorHelper {
 
             // connect generated TaskSchedulingStrategy to the cog's TaskScheduler
             return pkg.packageName + "." + className;
-
-        } catch (JavaCodeGenerationException e) {
-            // TODO properly handle exception
-            e.printStackTrace();
         } catch (IOException e) {
             // TODO properly handle exception
             e.printStackTrace();
-        } finally {
-            if (stream != null)
-                stream.close();
         }
         return null;
     }

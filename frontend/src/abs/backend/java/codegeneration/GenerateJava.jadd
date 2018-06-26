@@ -53,7 +53,7 @@ aspect GenerateJava {
             File file = generatedJavaPackage.createJavaFile(mainName);
             PrintStream stream = null;
             try {
-                stream = new JavaCodeStream(file);
+                stream = JavaCodeStream.from(file);
                 stream.println("package " + generatedJavaPackage.packageName + ";");
                 //stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
 
@@ -87,7 +87,7 @@ aspect GenerateJava {
         try {
             String name = JavaBackend.getJavaName(this);
             File file = pkg.createJavaFile(name);
-            s = new JavaCodeStream(file);
+            s = JavaCodeStream.from(file);
             s.println("package " + pkg.packageName + ";");
             //s.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
             generateJava(s);
@@ -599,7 +599,8 @@ aspect GenerateJava {
                 // KLUDGE: leave this in until we can generate ABS `throw'
                 // statements
                 stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
-                stream.println(getPositionString() + " value \" + " + varName + " + \" did not match any pattern.\");");
+                JavaGeneratorHelper.printEscapedString(stream, getPositionString());
+                stream.println(" value \" + " + varName + " + \" did not match any pattern.\");");
             } else {
                 // Found a match => exit the statement
                 stream.println("continue;");
@@ -615,7 +616,8 @@ aspect GenerateJava {
         stream.print("if (!");
         getCondition().generateJava(stream);
         stream.print(".toBoolean()) throw new " + ABSAssertException.class.getName() + "(\"");
-        stream.println(getPositionString() + " Assertion failed\");");
+        JavaGeneratorHelper.printEscapedString(stream, getPositionString());
+        stream.println(" Assertion failed\");");
 
     }
 
@@ -843,7 +845,8 @@ aspect GenerateJava {
             i++;
         }
         stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
-        stream.println(getPositionString() + " value \" + __ABS_value + \" did not match any pattern.\");");
+        JavaGeneratorHelper.printEscapedString(stream, getPositionString());
+        stream.println(" value \" + __ABS_value + \" did not match any pattern.\");");
         stream.println("}");
         stream.print("}.of(");
         for (String freeVarName : getFreeVars()) {

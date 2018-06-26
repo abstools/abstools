@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.backend.java.codegeneration;
@@ -12,7 +12,7 @@ import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 import abs.backend.java.JavaBackend;
 
 class JavaCompiler {
-    private static final String DEFAULT_PREFIX = "-encoding " + JavaBackend.CHARSET+" -source 5 -nowarn -noExit ";
+    private static final String DEFAULT_PREFIX = "-encoding " + JavaBackend.CHARSET.name() +" -source 5 -nowarn -noExit ";
 
     public static void main(String... args) throws JavaCodeGenerationException {
         if (!compile(args))
@@ -26,7 +26,7 @@ class JavaCompiler {
         }
         return compile(sb.toString());
     }
-    
+
     public static boolean compile(String args) throws JavaCodeGenerationException {
         StringWriter outWriter = new StringWriter();
         StringWriter errWriter = new StringWriter();
