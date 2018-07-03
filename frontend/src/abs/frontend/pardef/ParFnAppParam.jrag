@@ -132,7 +132,7 @@ aspect ParFnAppParam {
 
     /**
     * Adds the closure params for this anonymous function to the given ParFnApp.
-    * @param func a function call to add the closure params to
+    * @param fnApp a function call to add the closure params to
     */
     public void AnonymousFunctionDecl.addClosureParams(ParFnApp fnApp) {
         for (String freeVarName : getFreeVars().keySet()) {
