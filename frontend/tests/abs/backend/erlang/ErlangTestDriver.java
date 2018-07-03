@@ -152,7 +152,8 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      */
     private String run(File workDir, String mainModule) throws Exception {
         String val = null;
-        File runFile = new File(workDir, "run");
+        String runFileName = ErlangBackend.isWindows() ? "run.bat" : "run";
+        File runFile = new File(workDir, runFileName);
         ProcessBuilder pb = new ProcessBuilder(runFile.getAbsolutePath(), mainModule);
         pb.directory(workDir);
         pb.redirectErrorStream(true);

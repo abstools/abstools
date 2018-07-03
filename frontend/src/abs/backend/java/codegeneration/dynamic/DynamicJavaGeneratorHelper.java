@@ -11,7 +11,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -492,17 +491,13 @@ public class DynamicJavaGeneratorHelper {
 
     public static void generateAwaitStmt(AwaitStmt awaitStmt, PrintStream stream) {
         OutputStream exprOStream = new ByteArrayOutputStream();
-        try {
-            PrintStream exprStream = new JavaCodeStream(exprOStream);
-            // Necessary temporary variables are written to "stream" and the
-            // await-expression is written to exprStream
-            awaitStmt.getGuard().generateJavaGuardDynamic(stream, exprStream);
-            stream.print(JavaBackendConstants.ABSRUNTIME + ".await(");
-            stream.print(exprOStream.toString());
-            stream.println(");");
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalArgumentException(e);
-        }
+        PrintStream exprStream = JavaCodeStream.from(exprOStream);
+        // Necessary temporary variables are written to "stream" and the
+        // await-expression is written to exprStream
+        awaitStmt.getGuard().generateJavaGuardDynamic(stream, exprStream);
+        stream.print(JavaBackendConstants.ABSRUNTIME + ".await(");
+        stream.print(exprOStream.toString());
+        stream.println(");");
     }
 
     public static void assign(PrintStream stream, AssignStmt assign) {
@@ -553,12 +548,9 @@ public class DynamicJavaGeneratorHelper {
     public static void generateDelta(DeltaDecl delta, JavaCode.Package pkg, ArrayList<String> classes)
             throws IOException, JavaCodeGenerationException {
 
-        PrintStream stream = null;
         String className = JavaBackend.getDeltaName(delta.getName());
-        try {
-            File file = pkg.createJavaFile(className);
-            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
-
+        File file = pkg.createJavaFile(className);
+        try (PrintStream stream = JavaCodeStream.from(file)) {
             stream.println("package " + pkg.packageName + ";");
             stream.println("public class " + className + " {");
 
@@ -579,9 +571,6 @@ public class DynamicJavaGeneratorHelper {
             stream.println("}");
 
             stream.println("}");
-        } finally {
-            if (stream != null)
-                stream.close();
         }
     }
 

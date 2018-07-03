@@ -3,6 +3,7 @@
  */
 package abs.backend.erlang;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -132,7 +133,8 @@ public class ErlangBackend extends Main {
         return 0;
     }
 
-    private static boolean isWindows() {
+    @VisibleForTesting
+    static boolean isWindows() {
         return System.getProperty("os.name").toLowerCase().contains("win");
     }
 

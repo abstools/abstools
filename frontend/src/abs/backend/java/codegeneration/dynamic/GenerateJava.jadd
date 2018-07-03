@@ -82,7 +82,7 @@ aspect GenerateJavaDynamic_Core {
             File file = p.createJavaFile(mainName);
             PrintStream stream = null;
             try {
-                stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+                stream = JavaCodeStream.from(file);
                 stream.println("package " + p.packageName + ";");
 
                 stream.println("public class " + mainName + " extends " + ABSDynamicObject.class.getName() + " {");
@@ -123,7 +123,7 @@ aspect GenerateJavaDynamic_Core {
         try {
             String name = JavaBackend.getJavaName(this);
             File file = pkg.createJavaFile(name);
-            s = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+            s = JavaCodeStream.from(file);
             s.println("package " + pkg.packageName + ";");
             generateJavaDynamic(s);
         } finally {
@@ -527,8 +527,8 @@ aspect GenerateJavaDynamic_Core {
         stream.print("if (!");
         getCondition().generateJavaDynamic(stream);
         stream.print(".toBoolean()) throw new " + ABSAssertException.class.getName() + "(\"");
-        stream.println(getPositionString() + " Assertion failed\");");
-
+        DynamicJavaGeneratorHelper.printEscapedString(stream, getPositionString());
+        stream.println(" Assertion failed\");");
     }
 
     /*
@@ -712,7 +712,8 @@ aspect GenerateJavaDynamic_Core {
             i++;
         }
         stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
-        stream.println(getPositionString() + " value \" + __ABS_value + \" did not match any pattern.\");");
+        DynamicJavaGeneratorHelper.printEscapedString(stream, getPositionString());
+        stream.println(" value \" + __ABS_value + \" did not match any pattern.\");");
         stream.println("}");
         stream.print("}.of(");
         for (String freeVarName : getFreeVars()) {
@@ -1056,7 +1057,7 @@ aspect GenerateJavaDynamic_DeltaModelling {
         generatedJavaClassName = JavaBackend.getModifierName();
         try {
             File file = pkg.createJavaFile(generatedJavaClassName);
-            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+            stream = JavaCodeStream.from(file);
             stream.println("package " + pkg.packageName + ";");
 
             // gen header
@@ -1142,7 +1143,7 @@ aspect GenerateJavaDynamic_DeltaModelling {
         
         try {
             File file = pkg.createJavaFile(generatedJavaClassName);
-            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+            stream = JavaCodeStream.from(file);
             // gen header
             stream.println("package " + pkg.packageName + ";");
             stream.println("public class " + generatedJavaClassName + " {");
@@ -1165,7 +1166,7 @@ aspect GenerateJavaDynamic_DeltaModelling {
         
         try {
             File file = pkg.createJavaFile(generatedJavaClassName);
-            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+            stream = JavaCodeStream.from(file);
             // gen header
             stream.println("package " + pkg.packageName + ";");
             stream.println("public class " + generatedJavaClassName + " {");
@@ -1188,7 +1189,7 @@ aspect GenerateJavaDynamic_DeltaModelling {
         
         try {
             File file = pkg.createJavaFile(generatedJavaClassName);
-            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+            stream = JavaCodeStream.from(file);
             // gen header
             stream.println("package " + pkg.packageName + ";");
             stream.println("public class " + generatedJavaClassName + " {");
