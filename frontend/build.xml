@@ -249,7 +249,9 @@
 
   <target name="genruntime">
     <echo message="Compiling erlang runtime libraries" />
-    <exec executable="escript" dir="${src.dir}/abs/backend/erlang/runtime/absmodel">
+    <exec executable="escript"
+          dir="${src.dir}/abs/backend/erlang/runtime/absmodel"
+          failonerror="true">
       <arg value="../bin/rebar" />
       <arg value="compile" />
     </exec>
