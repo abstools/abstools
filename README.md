@@ -18,20 +18,21 @@ Folders
 
 * `frontend` - the ABS compiler and runtime support.  See frontend/README for
   installation instructions.  (short version: install jdk8, ant and erlang
-  v20, then run `make frontend` in this directory.)
+  version 21, then run `make frontend` in this directory.)
 
 
 * `abs-docs` - the ABS language manual, available online at
   http://docs.abs-models.org.  To generate the manual locally, install maven,
   then run `make manual`.
 
-  * `abs-docs/ReferenceManual` - an older LaTeX ABS reference manual, slowly
-    being phased out
+  * `abs-docs/ReferenceManual` - an older LaTeX ABS reference manual,
+    now mostly of historical interest
 
-  * `abs-docs/Ott` - a formal grammar for ABS, written in Ott
+  * `abs-docs/Ott` - a formal grammar for a large subset of ABS,
+    written in [Ott](https://www.cl.cam.ac.uk/~pes20/ott/)
 
 
-* `emacs`, `bbedit` - Editor support for ABS.
+* `emacs` - Editor support for ABS.
 
 * `org.abs-models.releng` - Files used by Jenkins and Buckminster for
   continuous integration at https://envisage.ifi.uio.no:8080/jenkins/.
