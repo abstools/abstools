@@ -1027,9 +1027,12 @@ aspect TypeChecker {
     public void MinusExp.typeCheck(SemanticConditionList e) {
          int size = e.getErrorCount();
          getOperand().typeCheck(e);
-         if (e.getErrorCount() == size)
-             // KLUDGE: we'd like to say "any numeric type please" here
-             getOperand().assertHasType(e,getModel().getRatType());
+         if (e.getErrorCount() == size) {
+             if (!getOperand().getType().isNumericType()) {
+                 e.add(new TypeError(getOperand(), ErrorMessage.EXPECTED_NUMERIC_TYPE,
+                                     getOperand().getType()));
+             }
+         }
     }
 
     public void NegExp.typeCheck(SemanticConditionList e) {

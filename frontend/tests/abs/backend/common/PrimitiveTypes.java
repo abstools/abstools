@@ -34,6 +34,11 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
+    public void intMinus() {
+        assertEvalTrue("{ Int x = -1; x = -x; Bool testresult = x == 1; }");
+    }
+
+    @Test
     public void intAdd() {
         assertEvalTrue("{ Bool testresult = 5 + 5 == 10;  }");
     }
@@ -110,6 +115,11 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
+    public void ratMinus() {
+        assertEvalTrue("{ Rat x = -1/2; x = -x; Bool testresult = x == 1/2; }");
+    }
+
+    @Test
     public void ratAdd() {
         assertEvalTrue("{ Bool testresult = 5/2 + 5/2 == 5;  }");
     }
@@ -167,6 +177,11 @@ public class PrimitiveTypes extends SemanticTests {
     @Test
     public void ratGtEq2() {
         assertEvalTrue("{ Bool testresult = 5/3 >= 5/3;  }");
+    }
+
+    @Test
+    public void floatMinus() {
+        assertEvalTrue("{ Float x = -1.0; x = -x; Bool testresult = x == 1.0; }");
     }
 
     @Test
