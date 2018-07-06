@@ -24,7 +24,7 @@
   </body>
 
   <script type='text/javascript'>
-
+    'use strict';
     function generateCpuGraphs(container_div_id, cpudata) {
         const container_div = $(container_div_id);
         const size = { x: 900, y: 350 };
@@ -40,24 +40,24 @@
             const total_id = 'total' + dc_index;
             container_div.append(`<h3>${dc_data.name}</h3>`);
             container_div.append(`<svg id=${svg_id} width=${size.x} height=${size.y}></svg>`);
-            let svg = d3.select('#' + svg_id);
+            const svg = d3.select('#' + svg_id);
             svg.append("defs").append("clipPath")
                 .attr("id", clip_id)
                 .append("rect")
                 .attr("width", graph_size.x)
                 .attr("height", graph_size.y);
-            let graph = svg.append("g")
+            const graph = svg.append("g")
                 .attr("transform", `translate(${margin.left}, ${margin.top})`);
-            let x = d3.scaleLinear()
+            const x = d3.scaleLinear()
                 .domain(d3.extent(dc_data.values, d => d[0]))
                 .range([0, graph_size.x]);
-            let xaxis = d3.axisBottom(x);
+            const xaxis = d3.axisBottom(x);
             // normally maximum total, but maximum value in case the DC has
             // unlimited total
-            let y = d3.scaleLinear()
+            const y = d3.scaleLinear()
                 .domain([0, d3.max(dc_data.values, d => d[max_index])])
                 .range([graph_size.y, 0]);
-            let valueLineGenerator = d3.line()
+            const valueLineGenerator = d3.line()
                 .curve(d3.curveStepAfter)
                 .x(d => Math.trunc(x(d[0])))
                 .y(d => Math.trunc(y(d[1])));
@@ -80,14 +80,14 @@
                 .attr("dy", "0.71em")
                 .attr("text-anchor", "end")
                 .text("CPU");
-            let mainarea = graph.append("g")
+            const mainarea = graph.append("g")
                 .attr("clip-path", `url(#${clip_id})`);
             mainarea.append("path")
                 .datum(dc_data.values)
                 .attr("class", "cpu-values zoomable")
                 .attr("d", valueLineGenerator(dc_data.values));
             if (max_index > 1) {
-                let totalLineGenerator = d3.line()
+                const totalLineGenerator = d3.line()
                     .curve(d3.curveStepAfter)
                     .x(d => Math.trunc(x(d[0])))
                     .y(d => Math.trunc(y(d[2])))
