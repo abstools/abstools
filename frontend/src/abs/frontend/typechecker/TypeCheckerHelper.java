@@ -536,7 +536,12 @@ public class TypeCheckerHelper {
         String varName = v.getVarDecl().getName();
         VarOrFieldDecl otherVar = v.lookupVarOrFieldName(varName , false);
         if (otherVar != null && v.inSameMethodOrBlock(otherVar)) {
-            e.add(new TypeError(v,ErrorMessage.VARIABLE_ALREADY_DECLARED, varName));
+            String location = "";
+            if (!otherVar.getFileName().equals(abs.frontend.parser.Main.UNKNOWN_FILENAME)) {
+                location = " at " + otherVar.getFileName()
+                    + ":" + otherVar.getStartLine() + ":" + otherVar.getStartColumn();
+            }
+            e.add(new TypeError(v,ErrorMessage.VARIABLE_ALREADY_DECLARED, varName, location));
         }
     }
 
@@ -544,11 +549,19 @@ public class TypeCheckerHelper {
      * check a list of compilation units for duplicate module names, product names, delta names
      */
     public static void checkForDuplicateModules(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
-        Set<String> seenModules = new HashSet<>();
+        Map<String, ModuleDecl> seenModules = new HashMap<>();
         for (CompilationUnit u : compilationUnits) {
             for (ModuleDecl module : u.getModuleDecls()) {
-                if (!seenModules.add(module.getName())) {
-                    errors.add(new TypeError(module, ErrorMessage.DUPLICATE_MODULE_NAME,module.getName()));
+                if (seenModules.containsKey(module.getName())) {
+                    ModuleDecl prev = seenModules.get(module.getName());
+                    String location = "";
+                    if (!prev.getFileName().equals(abs.frontend.parser.Main.UNKNOWN_FILENAME)) {
+                        location = " at " + prev.getFileName()
+                            + ":" + prev.getStartLine() + ":" + prev.getStartColumn();
+                    }
+                    errors.add(new TypeError(module, ErrorMessage.DUPLICATE_MODULE_NAME,module.getName(), location));
+                } else {
+                    seenModules.put(module.getName(), module);
                 }
             }
         }
