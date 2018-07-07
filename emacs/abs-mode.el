@@ -245,6 +245,7 @@ NIL."
 (modify-syntax-entry ?* ". 23b"   abs-mode-syntax-table)
 (modify-syntax-entry ?\n ">"   abs-mode-syntax-table)
 (modify-syntax-entry ?\^m ">"  abs-mode-syntax-table)
+(modify-syntax-entry ?` "\"" abs-mode-syntax-table)
 
 (defvar abs-imenu-syntax-alist
   ;; Treat dot as symbol constituent to handle qualified identifiers

@@ -131,6 +131,25 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         return new StringLiteral(s.toString());
     }
 
+    private PureExp makeTemplateStringLiteral(String tokenText) {
+        StringBuffer s = new StringBuffer(tokenText.length() - 2);
+        // i = 1..len-1 to skip beginning and ending \` of the stringliteral
+        for (int i = 1; i < tokenText.length() - 1; i++) {
+            char c = tokenText.charAt(i);
+            if (c == '\\') {
+                i++;
+                c = tokenText.charAt(i);
+                switch (c) {
+                    // only handling ` and \ here
+                default : s.append(c); break;
+                }
+            } else {
+                s.append(c);
+            }
+        }
+        return new StringLiteral(s.toString());
+    }
+
     @Override public void enterCompilation_unit(ABSParser.Compilation_unitContext ctx) {
         this.result = setV(ctx, new CompilationUnit(this.filename,
             new List<>(),
@@ -681,6 +700,9 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
     @Override public void exitStringExp(ABSParser.StringExpContext ctx) {
         setV(ctx, makeStringLiteral(ctx.STRINGLITERAL().getText()));
+    }
+    @Override public void exitTemplateStringExp(ABSParser.TemplateStringExpContext ctx) {
+        setV(ctx, makeTemplateStringLiteral(ctx.TEMPLATESTRINGLITERAL().getText()));
     }
     @Override public void exitThisExp(ABSParser.ThisExpContext ctx) {
         setV(ctx, new ThisExp());

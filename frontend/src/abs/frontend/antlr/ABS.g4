@@ -21,14 +21,20 @@ fragment EXPONENT : ('e' | 'E' | 'e+' | 'E+' | 'e-' | 'E-') DIGIT+;
 IDENTIFIER : [a-z] (LETTER | DIGIT | '_')* ;
 TYPE_IDENTIFIER : [A-Z] (LETTER | DIGIT | '_')* ;
 INTLITERAL : '0' | [1-9] DIGIT* ;
+FLOATLITERAL : INTLITERAL? '.' DIGIT+ EXPONENT? ;
 STRINGLITERAL
   :  '"' (STR_ESC | ~('\\' | '"' | '\r' | '\n'))* '"'
   ;
-FLOATLITERAL : INTLITERAL? '.' DIGIT+ EXPONENT? ;
 fragment STR_ESC
   :  '\\' ('\\' | '"' | 't' | 'n' | 'r')
   ;
-// STRINGLITERAL : '"' ('\\"' | '\\\\'|.)*? '"' ;
+TEMPLATESTRINGLITERAL
+    : '`' (TEMPLATESTR_ESC | ~('\\' | '`'))* '`'
+    ;
+fragment TEMPLATESTR_ESC
+  :  '\\' ('\\' | '`')
+  ;
+
 
 NEGATION_CREOL : '~' ;
 NEGATION : '!' ;
@@ -103,6 +109,7 @@ pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
     | FLOATLITERAL                                         # FloatExp
     | INTLITERAL                                           # IntExp
     | STRINGLITERAL                                        # StringExp
+    | TEMPLATESTRINGLITERAL                                # TemplateStringExp
     | 'this'                                               # ThisExp
     | 'null'                                               # NullExp
     | 'if' c=pure_exp 'then' l=pure_exp 'else' r=pure_exp  # IfExp
