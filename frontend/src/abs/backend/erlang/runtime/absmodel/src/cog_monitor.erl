@@ -22,7 +22,7 @@
 -export([new_dc/1, dc_died/1, get_dcs/0]).
 
 %% the HTTP api
--export([register_object_with_http_name/2,lookup_object_from_http_name/1,list_registered_http_names/0,list_registered_http_objects/0]).
+-export([register_object_with_http_name/2,lookup_object_from_http_name/1,list_registered_http_names/0,list_registered_http_objects/0,increase_clock_limit/1]).
 
 %% gen_server interface
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -127,6 +127,9 @@ list_registered_http_names() ->
 list_registered_http_objects() ->
     gen_server:call({global, cog_monitor}, all_registered_objects, infinity).
 
+increase_clock_limit(Amount) ->
+    gen_server:call({global, cog_monitor}, {clock_limit_increased, Amount}, infinity).
+
 %% gen_server callbacks
 
 %%The callback gets as parameter the pid of the runtime process, which waits for all cogs to be idle
@@ -181,6 +184,22 @@ handle_call({cog,Cog,blocked}, From, State=#state{active=A,blocked=B})->
         false->
             {noreply, S1}
     end;
+handle_call({clock_limit_increased, Amount}, From, State) ->
+    %% KLUDGE: Ideally we'd like to only be told that the limit has
+    %% increased, without having to do it ourselves.  Consider
+    %% converting cog_monitor to gen_fsm and switching between
+    %% at_limit and running states.
+    Was_blocked = clock:is_at_limit(),
+    {Success, Newlimit} = clock:advance_limit(Amount),
+    S1 = case Was_blocked of
+             true ->
+                 %% If clock didn't advance (Success == error), this
+                 %% does advance clock since limit stayed the same
+                 advance_clock_or_terminate(State);
+             false ->
+                 State
+         end,
+    {reply, {Success, Newlimit}, S1};
 handle_call({cog,Cog,unblocked}, _From, State=#state{active=A,blocked=B})->
     A1=gb_sets:add_element(Cog,A),
     B1=gb_sets:del_element(Cog,B),
@@ -308,7 +327,7 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
             %% advance clock before waking up processes waiting for it
             Clockresult=clock:advance(Delta),
             case Clockresult of
-                ok ->
+                {ok, _} ->
                     lists:foreach(fun(DC) -> dc:update(DC, Delta) end, DCs),
                     {A1,C1}=lists:unzip(
                               lists:map(
@@ -316,7 +335,7 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
                                 C)),
                     State#state{clock_waiting=lists:flatten(C1),
                                 active_before_next_clock=ordsets:from_list(lists:flatten(A1))};
-                limit_reached ->
+                {limit_reached, _} ->
                     influxdb:flush(),
                     case Keepalive of
                         false ->
@@ -328,7 +347,7 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
                             M ! wait_done,
                             State;
                         true ->
-                            io:format(standard_error, "Simulation time limit reached; terminate with Ctrl-C~n", []),
+                            io:format(standard_error, "Simulation time limit reached; terminate with Ctrl-C or increase via model api~n", []),
                             State
                     end
             end
