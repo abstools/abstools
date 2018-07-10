@@ -773,14 +773,16 @@ interface DeploymentComponent {
     // Return the total available amount for given resourcetype.
     [Atomic] InfRat total(Resourcetype rtype);
     // Utility method, implemented in terms of 'decrementResources' /
-    // 'incrementResources'.
-    Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype);
+    // 'incrementResources'.  Returns the amount transferred.
+    [Atomic] Rat transfer(DeploymentComponent target, Rat amount, Resourcetype rtype);
     // Decrement available resourcetype by given amount from the next
-    // time interval onwards.
-    Unit decrementResources(Rat amount, Resourcetype rtype);
+    // time interval onwards.  Will not decrement resource below 0.
+    // Returns the amount by which the resource was decreased.
+    [Atomic] Rat decrementResources(Rat amount, Resourcetype rtype);
     // Increment available resourcetype by given amount from the next
-    // time interval onwards.
-    Unit incrementResources(Rat amount, Resourcetype rtype);
+    // time interval onwards.  Returns amount by which the resource
+    // was increased.
+    [Atomic] Rat incrementResources(Rat amount, Resourcetype rtype);
 
     [Atomic] String getName();
 
@@ -1076,30 +1078,30 @@ implements DeploymentComponentForCloudProvider {
     // Transfer resources between deployment components.
     // FIXME: load calculation will be invalid if resource totals have
     // been changed in the specified interval.
-    Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype) {
-        this.decrementResources(amount, rtype);
+    [Atomic] Rat transfer(DeploymentComponent target, Rat amount, Resourcetype rtype) {
+        amount = this.decrementResources(amount, rtype);
         target!incrementResources(amount, rtype);
+        return amount;
     }
 
-    Unit decrementResources(Rat amount, Resourcetype rtype) {
+    [Atomic] Rat decrementResources(Rat amount, Resourcetype rtype) {
         case (rtype) {
-            Speed => {
-                if (cpunext != InfRat) {
-                    assert (finvalue(cpunext) >= amount);
-                    cpunext = Fin(finvalue(cpunext) - amount);
-                }
+            Speed => if (cpunext != InfRat) {
+                amount = min(amount, finvalue(cpunext));
+                cpunext = Fin(finvalue(cpunext) - amount);
             }
             Bandwidth => if (bwnext != InfRat) {
-                assert (finvalue(bwnext) >= amount);
+                amount = min(amount, finvalue(bwnext));
                 bwnext = Fin(finvalue(bwnext) - amount);
             }
             Memory => if (memorynext != InfRat) {
-                assert (finvalue(memorynext) >= amount);
+                amount = min(amount, finvalue(memorynext));
                 memorynext = Fin(finvalue(memorynext) - amount);
             }
         }
+        return amount;
     }
-    Unit incrementResources(Rat amount, Resourcetype rtype) {
+    [Atomic] Rat incrementResources(Rat amount, Resourcetype rtype) {
         case (rtype) {
             Speed => {
                 if (cpunext != InfRat) {
@@ -1113,6 +1115,7 @@ implements DeploymentComponentForCloudProvider {
                 memorynext = Fin(finvalue(memorynext) + amount);
             }
         }
+        return amount;
     }
     [Atomic] Unit setProvider(CloudProviderForDeploymentComponent provider) {
         this.cloudprovider = provider;
