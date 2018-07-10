@@ -163,24 +163,27 @@ class Sample {
 
 === Constant Fields
 
-Similar to variable declarations, field declarations can carry a `Final`
-annotation.  the effect of such an annotation is to forbid re-assignment to
-such a field.
+Similar to variable declarations, field declarations and class parameters can
+carry a `Final` annotation.  the effect of such an annotation is to forbid
+re-assignment to such a field.
 
-The following example will lead to a compile-time error since we are trying to
-assign a new value to `constant_i`:
+The following example will lead to compile-time errors since we are trying to
+assign new values to two fields declared as `Final`:
 
 [source]
 .Example
 ----
-class Sample {
-    [Final] Int constant_i = 24;
+class Sample ([Final] Int constant_i) {
+    [Final] Int constant_j = 24;
     Unit m() {
-        constant_i = 25;
+        constant_i = 25; // error
+        constant_j = 24; // error
     }
 }
 ----
 
+In addition to fields, method parameters and variables can also be declared
+`Final`.
 
 === Active Classes
 
