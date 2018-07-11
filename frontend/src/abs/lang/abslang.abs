@@ -570,8 +570,8 @@ def Bool durationLessThan(Duration d1, Duration d2) =
   case d1 {
       Duration(v1) => case d2 {
           Duration(v2) => v1 < v2; 
-          InfDuration => False; };
-      // If d1 and d2 are infinite, < is not antisymmetric ...
+          InfDuration => True; };
+      // If d1 and d2 are infinite, this function is not antisymmetric
       InfDuration => False;
   };
 

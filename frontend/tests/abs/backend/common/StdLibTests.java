@@ -280,4 +280,9 @@ public class StdLibTests extends SemanticTests {
     public void foldr1() {
 	assertEvalTrue("{ Bool testresult = foldr((Int elem, Int acc) => elem + acc)(list[1, 2, 3], 0) == 6; }");
     }
+
+    @Test
+    public void durationLessThan() {
+        assertEvalTrue("{ Bool testresult = durationLessThan(Duration(5), InfDuration); }");
+    }
 }
