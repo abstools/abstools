@@ -21,8 +21,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.jar.JarEntry;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import choco.kernel.model.constraints.Constraint;
 import abs.frontend.mtvl.ChocoSolver;
 import abs.backend.common.InternalBackendException;
@@ -195,7 +193,7 @@ public class Main {
         return remainingArgs;
     }
 
-    public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException, ParserConfigurationException, InternalBackendException {
+    public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException, InternalBackendException {
         Model m = parseFiles(parseArgs(args).toArray(new String[0]));
         analyzeFlattenAndRewriteModel(m);
         return m;
@@ -249,9 +247,8 @@ public class Main {
      * @throws WrongProgramArgumentException
      * @throws DeltaModellingException
      * @throws FileNotFoundException
-     * @throws ParserConfigurationException
      */
-    public void analyzeFlattenAndRewriteModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException, ParserConfigurationException {
+    public void analyzeFlattenAndRewriteModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException {
         m.verbose = verbose;
         m.debug = debug;
 
