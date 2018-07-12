@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
--export([start/0,start/1,start/2,add_and_notify/6,add_sync/7]).
+-export([start/0,start/1,start/2,add_main_task/3,add_task/7]).
 -export([process_is_runnable/2,
          process_is_blocked/2, process_is_blocked_for_gc/2,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
@@ -30,20 +30,32 @@
          process_running/3,
          process_blocked/3]).
 
--record(data,{
-          running_task=idle, % Currently running / blocked task or `idle'
-          runnable_tasks=gb_sets:empty(), % Tasks ready to run, including `running_task'
-          polling_tasks=gb_sets:empty(),  % Tasks maybe ready to run (ask them)
-          waiting_tasks=gb_sets:empty(),  % Tasks not ready to run (will signal when ready)
-          new_tasks=gb_sets:empty(),      % Fresh tasks, before they announce themselves ready
-          next_state_after_gc=no_task_schedulable,
-                                          % State to return to after gc
-          referencers=1,       % Number of objects on cog
-          references=#{},      % Accumulator for reference collection during gc
-          dc=null,             % Deployment component of cog
-          scheduler=undefined, % user-defined scheduler
-          process_infos=#{}    % process infos; updated when token passed
-         }).
+-record(data,
+        {
+         %% Currently running / blocked task or `idle'
+         running_task=idle,
+         %% Tasks ready to run, including `running_task'
+         runnable_tasks=gb_sets:empty(),
+         %% Tasks maybe ready to run (ask them)
+         polling_tasks=gb_sets:empty(),
+         %% Tasks not ready to run (will signal when ready)
+         waiting_tasks=gb_sets:empty(),
+         %% Fresh tasks, before they announce themselves ready
+         new_tasks=gb_sets:empty(),
+         %% State to return to after gc
+         next_state_after_gc=no_task_schedulable,
+         %% Number of objects on cog
+         referencers=1,
+         %% Accumulator for reference collection during gc
+         references=#{},
+         %% Deployment component of cog
+         dc=null,
+         %% user-defined scheduler
+         scheduler=undefined,
+         %% Map from pid to process_info structure (see
+         %% ../include/abs_types.hrl); updated when token passed.
+         process_infos=#{}
+        }).
 
 
 %%The COG manages all its tasks in a tree task.
@@ -72,14 +84,14 @@ start(DC, Scheduler)->
     gc:register_cog(Cog),
     Cog.
 
-add_sync(#cog{ref=Cog},TaskType,Future,CalleeObj,Args,Info,Stack) ->
+add_task(#cog{ref=Cog},TaskType,Future,CalleeObj,Args,Info,Stack) ->
     gen_statem:cast(Cog, {new_task,TaskType,Future,CalleeObj,Args,Info,self(),false,{started, TaskType}}),
     TaskRef=await_start(Cog, TaskType, [Args | Stack]),
     TaskRef.
 
-add_and_notify(#cog{ref=Cog},TaskType,Future,CalleeObj,Args,Info)->
-    gen_statem:cast(Cog, {new_task,TaskType,Future,CalleeObj,Args,Info,self(),true,{started, TaskType}}),
-    TaskRef=await_start(Cog, TaskType, Args),
+add_main_task(#cog{ref=Cog},Args,Info)->
+    gen_statem:cast(Cog, {new_task,main_task,none,null,Args,Info,self(),true,{started, main_task}}),
+    TaskRef=await_start(Cog, main_task, Args),
     TaskRef.
 
 process_is_runnable(#cog{ref=Cog},TaskRef) ->
