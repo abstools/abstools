@@ -45,6 +45,8 @@ behaviour_info(_) ->
 new(Cog,Class,Args)->
     cog:inc_ref_count(Cog),
     O=start(Cog,Class),
+    State=get_whole_state(O),
+    cog:new_object(Cog, O, State),
     object:activate(O),
     case cog_monitor:are_objects_of_class_protected(Class) of
         true -> protect_object_from_gc(O);
@@ -61,6 +63,8 @@ new(Cog,Class,Args)->
     O.
 new(Cog,Class,Args,CreatorCog,Stack)->
     O=start(Cog,Class),
+    State=get_whole_state(O),
+    cog:new_object(Cog, O, State),
     case cog_monitor:are_objects_of_class_protected(Class) of
         true -> protect_object_from_gc(O);
         false -> ok
