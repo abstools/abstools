@@ -1,17 +1,26 @@
-#!/bin/bash
+#!/bin/sh
 
 PROGNAME="$(readlink $0)"
-if [[ -z $PROGNAME ]] ; then
+if [ -z $PROGNAME ] ; then
     PROGNAME="$0"
 fi
-BASEDIR="$(dirname $PROGNAME)/../.."
 
-if [[ $1 == "-haskell" ]]; then
+if [ -f "$(dirname $PROGNAME)/../../dist/absfrontend.jar" ]; then
+    ABSFRONTENDJAR="$(dirname $PROGNAME)/../../dist/absfrontend.jar"
+elif [ -f "$(dirname $PROGNAME)/../lib/absfrontend.jar" ]; then
+    ABSFRONTENDJAR="$(dirname $PROGNAME)/../lib/absfrontend.jar"
+else
+    echo "Error: could not find absfrontend.jar"
+    echo "(expected in $(dirname $PROGNAME)/../../dist/ or $(dirname $PROGNAME)/../lib/)"
+    exit 1
+fi
+
+if [ $1 == "-haskell" ]; then
     if command -v a2h > /dev/null; then # is in the PATH
        args=${@#-haskell} # remove -haskell from the rest of params
        absfiles=""
        for i in $args; do
-          if [[ $i == *.abs ]]; then
+          if [ $i == *.abs ]; then
             absfiles="$absfiles $i"
           fi
        done
@@ -25,5 +34,5 @@ if [[ $1 == "-haskell" ]]; then
        exit 1
     fi
 else
-    java -Xmx512m -jar $BASEDIR/dist/absfrontend.jar "$@"
+    java -Xmx512m -jar $ABSFRONTENDJAR "$@"
 fi
