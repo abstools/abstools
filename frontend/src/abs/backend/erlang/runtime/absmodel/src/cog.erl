@@ -358,7 +358,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo, ObjectState}
     NewObjectStates = case This of
                           null -> ObjectStates;
                           _ -> object:set_whole_state(This, ObjectState),
-                               maps:put(This, ObjectState, ObjectStates)
+                               maps:put(This#object.ref, ObjectState, ObjectStates)
                       end,
     NewRunnable = case ProcessState of runnable -> Run;
                       _ -> gb_sets:del_element(R, Run) end,
@@ -421,7 +421,7 @@ process_running(cast, {process_blocked, TaskRef, ObjectState},
     NewObjectStates=case This of
                         null -> ObjectStates;
                         _ -> object:set_whole_state(This, ObjectState),
-                               maps:put(This, ObjectState, ObjectStates)
+                               maps:put(This#object.ref, ObjectState, ObjectStates)
                     end,
     {next_state, process_blocked, Data#data{object_states=NewObjectStates}};
 process_running(cast, {process_blocked_for_gc, TaskRef, ObjectState}, Data=#data{process_infos=ProcessInfos, object_states=ObjectStates}) ->
@@ -433,7 +433,7 @@ process_running(cast, {process_blocked_for_gc, TaskRef, ObjectState}, Data=#data
     NewObjectStates=case This of
                         null -> ok;
                         _ -> object:set_whole_state(This, ObjectState),
-                             maps:put(This, ObjectState, ObjectStates)
+                             maps:put(This#object.ref, ObjectState, ObjectStates)
                     end,
     {next_state, process_blocked, Data#data{object_states=NewObjectStates}};
 process_running(cast, stop_world, Data=#data{running_task=R}) ->
@@ -580,7 +580,7 @@ waiting_for_gc_stop(cast, {process_blocked, R, ObjectState}, Data=#data{running_
     NewObjectStates=case This of
                         null -> ObjectStates;
                         _ -> object:set_whole_state(This, ObjectState),
-                             maps:put(This, ObjectState, ObjectStates)
+                             maps:put(This#object.ref, ObjectState, ObjectStates)
                     end,
     {next_state, in_gc, Data#data{next_state_after_gc=process_blocked,object_states=NewObjectStates}};
 waiting_for_gc_stop(cast, {process_blocked_for_gc, R, ObjectState},
@@ -592,7 +592,7 @@ waiting_for_gc_stop(cast, {process_blocked_for_gc, R, ObjectState},
     NewObjectStates=case This of
                         null -> ObjectStates;
                         _ -> object:set_whole_state(This, ObjectState),
-                             maps:put(This, ObjectState, ObjectStates)
+                             maps:put(This#object.ref, ObjectState, ObjectStates)
                     end,
     {next_state, in_gc, Data#data{next_state_after_gc=process_blocked,object_states=NewObjectStates}};
 waiting_for_gc_stop(cast, Event, Data) ->
