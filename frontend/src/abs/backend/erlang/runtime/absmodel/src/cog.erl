@@ -215,6 +215,13 @@ await_start(Cog, TaskType, Args) ->
 
 callback_mode() -> state_functions.
 
+update_object_state_map(Obj, State, OldObjectStates) ->
+    case Obj of
+        null -> OldObjectStates;
+        #object{ref=ObjRef} -> object:set_whole_state(Obj, State),
+                               maps:put(ObjRef, State, OldObjectStates)
+    end.
+
 object_state_from_pid(Pid, ProcessInfos, ObjectStates) ->
     ProcessInfo=maps:get(Pid, ProcessInfos),
     case ProcessInfo#process_info.this of
@@ -355,11 +362,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo, ObjectState}
     gen_statem:reply(From, ok),
     NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
     This=ProcessInfo#process_info.this,
-    NewObjectStates = case This of
-                          null -> ObjectStates;
-                          _ -> object:set_whole_state(This, ObjectState),
-                               maps:put(This#object.ref, ObjectState, ObjectStates)
-                      end,
+    NewObjectStates = update_object_state_map(This, ObjectState, ObjectStates),
     NewRunnable = case ProcessState of runnable -> Run;
                       _ -> gb_sets:del_element(R, Run) end,
     NewWaiting = case ProcessState of waiting -> gb_sets:add_element(R, Wai);
@@ -368,7 +371,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo, ObjectState}
                      _ -> Pol end,
     %% for `ProcessState' = `done', we just drop the task from Run (it can't
     %% be in Wai or Pol)
-    T=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos, ObjectStates),
+    T=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos, NewObjectStates),
     case T of
         none->
             case gb_sets:is_empty(New) of
@@ -418,11 +421,7 @@ process_running(cast, {process_blocked, TaskRef, ObjectState},
     cog_monitor:cog_blocked(self()),
     ProcessInfo=maps:get(TaskRef, ProcessInfos),
     This=ProcessInfo#process_info.this,
-    NewObjectStates=case This of
-                        null -> ObjectStates;
-                        _ -> object:set_whole_state(This, ObjectState),
-                               maps:put(This#object.ref, ObjectState, ObjectStates)
-                    end,
+    NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
     {next_state, process_blocked, Data#data{object_states=NewObjectStates}};
 process_running(cast, {process_blocked_for_gc, TaskRef, ObjectState}, Data=#data{process_infos=ProcessInfos, object_states=ObjectStates}) ->
     %% difference between blocked and blocked_for_gc is that in this instance
@@ -430,11 +429,7 @@ process_running(cast, {process_blocked_for_gc, TaskRef, ObjectState}, Data=#data
     %% advance
     ProcessInfo=maps:get(TaskRef, ProcessInfos),
     This=ProcessInfo#process_info.this,
-    NewObjectStates=case This of
-                        null -> ok;
-                        _ -> object:set_whole_state(This, ObjectState),
-                             maps:put(This#object.ref, ObjectState, ObjectStates)
-                    end,
+    NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
     {next_state, process_blocked, Data#data{object_states=NewObjectStates}};
 process_running(cast, stop_world, Data=#data{running_task=R}) ->
     task:send_stop_for_gc(R),
@@ -448,6 +443,7 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                        process_infos=ProcessInfos,
                        object_states=ObjectStates}) ->
     NewProcessInfos=maps:remove(TaskRef, ProcessInfos),
+    %% TODO check if we need to update ObjectStates somehow
     NewRunnable=gb_sets:del_element(TaskRef, Run),
     NewPolling=gb_sets:del_element(TaskRef, Pol),
     NewWaiting=gb_sets:del_element(TaskRef, Wai),
@@ -577,11 +573,7 @@ waiting_for_gc_stop(cast, {process_blocked, R, ObjectState}, Data=#data{running_
     gc:cog_stopped(self()),
     ProcessInfo=maps:get(R, ProcessInfos),
     This=ProcessInfo#process_info.this,
-    NewObjectStates=case This of
-                        null -> ObjectStates;
-                        _ -> object:set_whole_state(This, ObjectState),
-                             maps:put(This#object.ref, ObjectState, ObjectStates)
-                    end,
+    NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
     {next_state, in_gc, Data#data{next_state_after_gc=process_blocked,object_states=NewObjectStates}};
 waiting_for_gc_stop(cast, {process_blocked_for_gc, R, ObjectState},
                     Data=#data{running_task=R,process_infos=ProcessInfos,
@@ -589,11 +581,7 @@ waiting_for_gc_stop(cast, {process_blocked_for_gc, R, ObjectState},
     gc:cog_stopped(self()),
     ProcessInfo=maps:get(R, ProcessInfos),
     This=ProcessInfo#process_info.this,
-    NewObjectStates=case This of
-                        null -> ObjectStates;
-                        _ -> object:set_whole_state(This, ObjectState),
-                             maps:put(This#object.ref, ObjectState, ObjectStates)
-                    end,
+    NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
     {next_state, in_gc, Data#data{next_state_after_gc=process_blocked,object_states=NewObjectStates}};
 waiting_for_gc_stop(cast, Event, Data) ->
     handle_cast(Event, waiting_for_gc_stop, Data);
