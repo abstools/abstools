@@ -55,7 +55,6 @@ new(Cog,Class,Args)->
     OldState=get(this),
     put(this, Class:init_internal()),
     Class:init(O,Args),
-    set_whole_state(O, get(this)),
     cog:new_object(Cog, O, get(this)),
     %% FIXME: can we construct a pathological case involving
     %% synchronous atomic callbacks that invalidates `OldState'?
@@ -63,7 +62,7 @@ new(Cog,Class,Args)->
     O.
 new(Cog,Class,Args,CreatorCog,Stack)->
     O=start(Cog,Class),
-    State=get_whole_state(O),
+    State=Class:init_internal(),
     cog:new_object(Cog, O, State),
     case cog_monitor:are_objects_of_class_protected(Class) of
         true -> protect_object_from_gc(O);
@@ -120,29 +119,20 @@ get_object_state_for_json(#object{ref=O}) ->
     gen_statem:call(O, get_state_for_modelapi).
 
 get_field_value(O=#object{ref=Ref,class=C}, Field) ->
-    Value=C:get_val_internal(get(this), Field),
-    %% Value2=gen_statem:call(Ref, {O,get,Field}),
-    %% case Value==Value2 of
-    %%     true -> ok;
-    %%     false -> io:format("Object attribute mismatch: object ~p vs local ~p~n", [Value, Value2]),
-    %%              exit("Internal error")
-    %% end,
-    Value.
+    C:get_val_internal(get(this), Field).
 
 set_field_value(O=#object{ref=Ref,class=C}, Field, Value) ->
-    %% gen_statem:call(Ref,{O,set,Field,Value}),
     put(this, C:set_val_internal(get(this), Field, Value)).
 
-get_whole_state(O=#object{ref=Ref}) ->
-    gen_statem:call(Ref, get_whole_state);
+get_whole_state(O=#object{ref=Ref,cog=Cog}) ->
+    cog:get_object_state(Cog, O);
 get_whole_state(void) ->
     %% fixup main block: O (i.e., 'this') is bound to the symbol 'void' there.
     {state}.
 
 
 set_whole_state(O=#object{ref=Ref,cog=Cog}, State) ->
-    cog:object_state_changed(Cog,Ref,State),
-    gen_statem:call(Ref,{O, set_whole_state, State}).
+    cog:object_state_changed(Cog,Ref,State).
 
 get_all_method_info(_O=#object{class=C,ref=_Ref}) ->
     C:exported().
@@ -161,14 +151,13 @@ await_activation(Params) ->
               await=[], % keeps track of all tasks while object is initializing
               tasks=gb_sets:empty(),     % all task running on this object
               class,                     % The class of the object (a symbol)
-              fields,                    % the state of the object fields
               alive=true,     % false if object is garbage collected / crashed
               protect_from_gc=false, % true if unreferenced object needs to  be kept alive
               termination_reason     % communicate to terminate() function
              }).
 
 start(Cog,Class)->
-    {ok,O}=gen_statem:start_link(object,[Cog,Class,Class:init_internal()],[]),
+    {ok,O}=gen_statem:start_link(object,[Cog,Class],[]),
     Object=#object{class=Class,ref=O,cog=Cog},
     gc:register_object(Object),
     Object.
@@ -177,8 +166,8 @@ start(Cog,Class)->
 callback_mode() -> state_functions.
 
 
-init([Cog,Class,Status])->
-    {ok,uninitialized,#data{cog=Cog,await=[],tasks=gb_sets:empty(),class=Class,fields=Status,alive=true,protect_from_gc=false}}.
+init([Cog,Class])->
+    {ok,uninitialized,#data{cog=Cog,await=[],tasks=gb_sets:empty(),class=Class,alive=true,protect_from_gc=false}}.
 
 uninitialized(cast, activate, Data=#data{await=A})->
     lists:foreach(fun(X)-> X ! active end,A),
@@ -192,9 +181,6 @@ uninitialized(info, Msg, Data) ->
     handle_info(Msg, uninitialized, Data).
 
 
-active({call, From}, {#object{class=Class},get,Field}, Data=#data{class=Class,fields=OState})->
-    Reply= Class:get_val_internal(OState,Field),
-    {keep_state_and_data, {reply, From, Reply}};
 active({call, From}, {new_task,TaskRef}, Data=#data{tasks=Tasks})->
     monitor(process,TaskRef),
     {keep_state,Data#data{tasks=gb_sets:add_element(TaskRef, Tasks)}, {reply, From, active}};
@@ -204,7 +190,8 @@ active({call, From}, ping, S)->
 %%
 %% Deployment components are objects, so we handle their events using
 %% the general object FSM machinery for now.
-active({call, From}, {consume_resource, {CurrentVar, MaxVar}, Count}, OData=#data{class=class_ABS_DC_DeploymentComponent=C,fields=OState}) ->
+active({call, From}, {consume_resource, {CurrentVar, MaxVar}, Count}, OData=#data{class=class_ABS_DC_DeploymentComponent=C,cog=Cog}) ->
+    OState=cog:get_object_state(Cog, self()),
     Initialized=C:get_val_internal(s, 'initialized'),
     case Initialized of
         false ->
@@ -227,15 +214,19 @@ active({call, From}, {consume_resource, {CurrentVar, MaxVar}, Count}, OData=#dat
                          %% did not fulfill the whole request, so we are ready
                          %% for small-step consumption schemes where multiple
                          %% consumers race for resources.
-                         {keep_state, OData#data{fields=OState1}, {reply, From, {ok, ToConsume}}}
+                         cog:object_state_changed(Cog, self(), OState1),
+                         {keep_state_and_data, {reply, From, {ok, ToConsume}}}
             end
     end;
 active({call, From}, {clock_advance_for_dc, Amount},
-       OData=#data{class=class_ABS_DC_DeploymentComponent,fields=OState}) ->
+       OData=#data{class=class_ABS_DC_DeploymentComponent,cog=Cog}) ->
+    OState=cog:get_object_state(Cog, self()),
     OState1=dc:update_state_and_history(OState, Amount),
-    {keep_state, OData#data{fields=OState1}, {reply, From, ok}};
+    cog:object_state_changed(Cog, self(), OState1),
+    {keep_state_and_data, {reply, From, ok}};
 active({call, From}, {get_resource_history, Curvar, Maxvar},
-       OData=#data{class=class_ABS_DC_DeploymentComponent=C,fields=OState}) ->
+       OData=#data{class=class_ABS_DC_DeploymentComponent=C,cog=Cog}) ->
+    OState=cog:get_object_state(Cog, self()),
     Result = {dc_info,
               C:get_val_internal(OState,description),
               C:get_val_internal(OState,creationTime),
@@ -243,29 +234,21 @@ active({call, From}, {get_resource_history, Curvar, Maxvar},
               C:get_val_internal(OState,Maxvar)},
     {keep_state_and_data, {reply, From, {ok, Result}}} ;
 active({call, From}, get_dc_info_string,
-       OData=#data{class=class_ABS_DC_DeploymentComponent=C,fields=OState}) ->
-    Result=io_lib:format("Name: ~s~nCreation time: ~s~nCPU history (reversed): ~s~n~n", 
+       OData=#data{class=class_ABS_DC_DeploymentComponent=C,cog=Cog}) ->
+    OState=cog:get_object_state(Cog, self()),
+    Result=io_lib:format("Name: ~s~nCreation time: ~s~nCPU history (reversed): ~s~n~n",
                          [C:get_val_internal(OState,description),
                           builtin:toString(undefined, C:get_val_internal(OState,creationTime)),
                           builtin:toString(undefined, C:get_val_internal(OState,cpuhistory))]),
     {keep_state_and_data, {reply, From, {ok, Result}}};
 active({call, From}, get_resource_json,
-      OData=#data{class=class_ABS_DC_DeploymentComponent=C,fields=OState}) ->
+      OData=#data{class=class_ABS_DC_DeploymentComponent=C,cog=Cog}) ->
+    OState=cog:get_object_state(Cog, self()),
     Name=C:get_val_internal(OState,description),
     History=C:get_val_internal(OState,cpuhistory),
     Result=[{<<"name">>, Name},
             {<<"values">>, History}],
     {keep_state_and_data, {reply, From, {ok, Result}}};
-active({call, From}, {#object{class=Class},set,Field,Val},Data=#data{class=Class,fields=OState}) ->
-    OState1=Class:set_val_internal(OState,Field,Val),
-    {keep_state, Data#data{fields=OState1}, {reply, From, ok}};
-active({call, From}, {#object{class=Class},set_whole_state,Val},Data=#data{class=Class,fields=OState}) ->
-    %% case Val==OState of
-    %%     true -> ok;
-    %%     false -> io:format("Object states do not agree: old ~p vs incoming ~p~n", [OState, Val]),
-    %%              exit("Internal error")
-    %% end,
-    {keep_state, Data#data{fields=Val}, {reply, From, ok}};
 active({call, From}, Msg, Data) ->
     handle_call(From, Msg, Data);
 active(cast, Msg, Data) ->
@@ -290,13 +273,12 @@ handle_call(From, {die,Reason,By}, Data=#data{cog=Cog, tasks=Tasks, protect_from
     end;
 handle_call(From, protect_from_gc, Data) ->
     {keep_state, Data#data{protect_from_gc=true}, {reply, From, ok}};
-handle_call(From, get_references,
-                  Data=#data{fields=OState, cog=#cog{dc=DC}}) ->
+handle_call(From, get_references, Data=#data{cog=Cog=#cog{dc=DC}}) ->
+    OState=cog:get_object_state(Cog, self()),
     {keep_state_and_data, {reply, From, ordsets:union(gc:extract_references(DC),
                                                       gc:extract_references(OState))}};
-handle_call(From, get_whole_state, Data=#data{class=Class,fields=OState})->
-    {keep_state_and_data, {reply, From, OState}};
-handle_call(From, get_state_for_modelapi, Data=#data{class=C,fields=OState}) ->
+handle_call(From, get_state_for_modelapi, Data=#data{class=C,cog=Cog}) ->
+    OState=cog:get_object_state(Cog, self()),
     {keep_state_and_data, {reply, From, C:get_state_for_modelapi(OState)}}.
 
 
