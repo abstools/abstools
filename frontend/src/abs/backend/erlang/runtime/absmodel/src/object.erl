@@ -45,8 +45,6 @@ behaviour_info(_) ->
 new(Cog,Class,Args)->
     cog:inc_ref_count(Cog),
     O=start(Cog,Class),
-    State=get_whole_state(O),
-    cog:new_object(Cog, O, State),
     object:activate(O),
     case cog_monitor:are_objects_of_class_protected(Class) of
         true -> protect_object_from_gc(O);
@@ -54,12 +52,14 @@ new(Cog,Class,Args)->
     end,
     %% Run the init block in the scope of the new object.  This is safe since
     %% scheduling is not allowed in init blocks.
-    OldThis=get(this),
-    put(this, object:get_whole_state(O)),
+    OldState=get(this),
+    put(this, Class:init_internal()),
     Class:init(O,Args),
-    %% FIXME: can we construct a pathological case involving synchronous
-    %% atomic callbacks?
-    put(this, OldThis),
+    set_whole_state(O, get(this)),
+    cog:new_object(Cog, O, get(this)),
+    %% FIXME: can we construct a pathological case involving
+    %% synchronous atomic callbacks that invalidates `OldState'?
+    put(this, OldState),
     O.
 new(Cog,Class,Args,CreatorCog,Stack)->
     O=start(Cog,Class),
@@ -140,7 +140,8 @@ get_whole_state(void) ->
     {state}.
 
 
-set_whole_state(O=#object{ref=Ref}, State) ->
+set_whole_state(O=#object{ref=Ref,cog=Cog}, State) ->
+    cog:object_state_changed(Cog,Ref,State),
     gen_statem:call(Ref,{O, set_whole_state, State}).
 
 get_all_method_info(_O=#object{class=C,ref=_Ref}) ->

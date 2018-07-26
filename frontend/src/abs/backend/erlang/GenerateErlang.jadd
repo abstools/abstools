@@ -162,7 +162,9 @@ aspect GenerateErlang {
        ecs.println();
        ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef}");
        ecs.println("put(vars, #{}),");
+       ecs.println("C = none,");
        ecs.println("O = void,");
+       ecs.println("put(this, {}),");
        // Create a default deployment component.
        ecs.println("%% FIXME: thisDC() won't work in main block (DC should be in Cog state)");
        ecs.println("DC = object:new(cog:start(),class_ABS_DC_DeploymentComponent, [<<\"Initial DC\">>,dataEmptyMap,[]],Cog,[O]),");

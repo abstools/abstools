@@ -1,6 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
--export([start/0,start/1,start/2,add_main_task/3,add_task/7,new_object/3]).
+-export([start/0,start/1,start/2,add_main_task/3,add_task/7]).
+-export([new_object/3,object_state_changed/3]).
 -export([process_is_runnable/2,
          process_is_blocked/3, process_is_blocked_for_gc/3,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
@@ -97,9 +98,15 @@ add_main_task(#cog{ref=Cog},Args,Info)->
     TaskRef.
 
 new_object(#cog{ref=Cog}, #object{ref=Oid}, ObjectState) ->
-    gen_statem:cast(Cog, {new_object, Oid, ObjectState});
+    gen_statem:cast(Cog, {update_object_state, Oid, ObjectState});
 new_object(#cog{ref=Cog}, Oid, ObjectState) ->
-    gen_statem:cast(Cog, {new_object, Oid, ObjectState}).
+    gen_statem:cast(Cog, {update_object_state, Oid, ObjectState}).
+
+object_state_changed(#cog{ref=Cog}, #object{ref=Oid}, ObjectState) ->
+    gen_statem:cast(Cog, {update_object_state, Oid, ObjectState});
+object_state_changed(#cog{ref=Cog}, Oid, ObjectState) ->
+    gen_statem:cast(Cog, {update_object_state, Oid, ObjectState}).
+
 
 process_is_runnable(#cog{ref=Cog},TaskRef) ->
     gen_statem:call(Cog, {process_runnable, TaskRef}).
@@ -175,7 +182,7 @@ handle_cast(inc_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
     {keep_state, Data#data{referencers=Referencers + 1}};
 handle_cast(dec_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
     {keep_state, Data#data{referencers=Referencers - 1}};
-handle_cast({new_object, Oid, ObjectState}, _StateName, Data=#data{object_states=ObjectStates}) ->
+handle_cast({update_object_state, Oid, ObjectState}, _StateName, Data=#data{object_states=ObjectStates}) ->
     {keep_state, Data#data{object_states=maps:put(Oid, ObjectState, ObjectStates)}};
 handle_cast(_Event, _StateName, Data) ->
     {stop, not_supported, Data}.
