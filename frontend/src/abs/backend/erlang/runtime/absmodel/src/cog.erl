@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
 -export([start/0,start/1,start/2,add_main_task/3,add_task/7]).
--export([new_object/3,object_state_changed/3]).
+-export([new_object/3,object_state_changed/3,get_object_state/2]).
 -export([process_is_runnable/2,
          process_is_blocked/3, process_is_blocked_for_gc/3,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
@@ -107,6 +107,10 @@ object_state_changed(#cog{ref=Cog}, #object{ref=Oid}, ObjectState) ->
 object_state_changed(#cog{ref=Cog}, Oid, ObjectState) ->
     gen_statem:cast(Cog, {update_object_state, Oid, ObjectState}).
 
+get_object_state(#cog{ref=Cog}, #object{ref=Oid}) ->
+    gen_statem:call(Cog, {get_object_state, Oid});
+get_object_state(#cog{ref=Cog}, Oid) ->
+    gen_statem:call(Cog, {get_object_state, Oid}).
 
 process_is_runnable(#cog{ref=Cog},TaskRef) ->
     gen_statem:call(Cog, {process_runnable, TaskRef}).
@@ -187,7 +191,10 @@ handle_cast({update_object_state, Oid, ObjectState}, _StateName, Data=#data{obje
 handle_cast(_Event, _StateName, Data) ->
     {stop, not_supported, Data}.
 
-
+handle_call(From, {get_object_state, Oid}, _StateName, Data=#data{object_states=ObjectStates}) ->
+    {keep_state_and_data, {reply, From, maps:get(Oid, ObjectStates)}};
+handle_call(From, Event, StateName, Data) ->
+    {stop, not_supported, data}.
 
 %% Default handling for the following states: `cog_starting',
 %% `no_task_schedulable', `process_blocked'
@@ -300,6 +307,8 @@ cog_starting(cast, acknowledged_by_gc, Data)->
     {next_state, no_task_schedulable, Data};
 cog_starting(cast, Event, Data) ->
     handle_cast(Event, cog_starting, Data);
+cog_starting({call, From}, Event, Data) ->
+    handle_call(From, Event, cog_starting, Data);
 cog_starting(info, Event, Data) ->
     handle_info(Event, cog_starting, Data).
 
@@ -340,6 +349,8 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
                        new_tasks=NewNewTasks},
              {reply, From, ok}}
     end;
+no_task_schedulable({call, From}, Event, Data) ->
+    handle_call(From, Event, no_task_schedulable, Data);
 no_task_schedulable(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                     Data=#data{new_tasks=Tasks,dc=DC,
                                  process_infos=ProcessInfos}) ->
@@ -416,6 +427,8 @@ process_running({call, From}, {process_runnable, TaskRef},
                  waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                  new_tasks=gb_sets:del_element(TaskRef, New)},
      {reply, From, ok}};
+process_running({call, From}, Event, Data) ->
+    handle_call(From, Event, process_running, Data);
 process_running(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                 Data=#data{new_tasks=Tasks,dc=DC,
                            process_infos=ProcessInfos}) ->
@@ -509,6 +522,8 @@ process_blocked({call, From}, {process_runnable, TaskRef},
                runnable_tasks=gb_sets:add_element(TaskRef, Run),
                new_tasks=gb_sets:del_element(TaskRef, New)},
      {reply, From, ok}};
+process_blocked({call, From}, Event, Data) ->
+    handle_call(From, Event, process_blocked, Data);
 process_blocked(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                 Data=#data{new_tasks=Tasks,dc=DC,
                            process_infos=ProcessInfos}) ->
@@ -568,6 +583,8 @@ waiting_for_gc_stop({call, From}, {process_runnable, T},
                runnable_tasks=gb_sets:add_element(T, Run),
                new_tasks=gb_sets:del_element(T, New)},
      {reply, From, ok}};
+waiting_for_gc_stop({call, From}, Event, Data) ->
+    handle_call(From, Event, waiting_for_gc_stop, Data);
 waiting_for_gc_stop(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                     Data=#data{new_tasks=Tasks,dc=DC,
                                process_infos=ProcessInfos}) ->
@@ -637,6 +654,8 @@ in_gc({call, From}, {process_runnable, TaskRef},
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                new_tasks=gb_sets:del_element(TaskRef, New)},
      {reply, From, ok}};
+in_gc({call, From}, Event, Data) ->
+    handle_call(From, Event, in_gc, Data);
 in_gc(cast, {get_references, Sender},
       Data=#data{runnable_tasks=Run, waiting_tasks=Wai, polling_tasks=Pol}) ->
     AllTasks = gb_sets:union([Run, Wai, Pol]),
@@ -747,6 +766,8 @@ waiting_for_references({call, From}, {process_runnable, TaskRef},
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                new_tasks=gb_sets:del_element(TaskRef, New)},
      {reply, From, ok}};
+waiting_for_references({call, From}, Event, Data) ->
+    handle_call(From, Event, waiting_for_references, Data);
 waiting_for_references(cast, {references, Task, References},
                        Data=#data{references=ReferenceRecord=#{
                                                sender := Sender,
