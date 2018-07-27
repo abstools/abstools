@@ -108,15 +108,15 @@ public class ClassGenerator {
         ecs.println("put(vars, #{}),");
         Vars vars = Vars.n();
         for (ParamDecl p : classDecl.getParamList()) {
-            ecs.pf("set(O,'%s',%s),", p.getName(), "P_" + p.getName());
+            ecs.pf("put(this, C:set_val_internal(get(this),'%s',%s)),", p.getName(), "P_" + p.getName());
         }
         for (FieldDecl p : classDecl.getFields()) {
             ErlUtil.emitLocationInformation(ecs, p.getModel(), p.getFileName(),
                                             p.getStartLine(), p.getEndLine());
             if (p.hasInitExp()) {
-                ecs.format("set(O,'%s',", p.getName());
+                ecs.format("put(this, C:set_val_internal(get(this),'%s',", p.getName());
                 p.getInitExp().generateErlangCode(ecs, vars);
-                ecs.println("),");
+                ecs.println(")),");
             }
         }
         if (classDecl.getInitBlock() != null) {
@@ -189,17 +189,6 @@ public class ClassGenerator {
     }
 
     private void generateDataAccess() {
-        // FIXME: we should eliminate 'set', 'get' and directly use
-        // object:set_field_value / object:get_field_value instead
-        ErlUtil.functionHeader(ecs, "set", Mask.none,
-                String.format("O=#object{class=%s=C,ref=Ref,cog=Cog}", modName), "Var", "Val");
-        ecs.println("object:set_field_value(O, Var, Val).");
-        ecs.decIndent();
-        ecs.println();
-        ErlUtil.functionHeader(ecs, "get", Mask.none, generatorClassMatcher(), "Var");
-        ecs.println("object:get_field_value(O,Var).");
-        ecs.decIndent();
-        ecs.println();
         ecs.print("-record(state,{");
         boolean first = true;
         for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {

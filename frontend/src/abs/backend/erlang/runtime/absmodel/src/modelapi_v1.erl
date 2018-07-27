@@ -38,11 +38,14 @@ handle_object_query([Objectname, Fieldname]) ->
     case State of
         notfound -> {404, <<"text/plain">>, <<"Object not found">>};
         deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
-        _ -> case Value=object:get_field_value(Object, binary_to_atom(Fieldname, utf8)) of
-                 none -> {404, <<"text/plain">>, <<"Field not found">>};
-                 _ -> Result=[{Fieldname, abs_to_json(Value)}],
-                      {200, <<"application/json">>, jsx:encode(Result)}
-             end
+        _ ->
+            Class=Object#object.class,
+            Fields=cog:get_object_state(Object#object.cog, Object),
+            case Value=Class:get_val_internal(Fields, binary_to_atom(Fieldname, utf8)) of
+                none -> {404, <<"text/plain">>, <<"Field not found">>};
+                _ -> Result=[{Fieldname, abs_to_json(Value)}],
+                     {200, <<"application/json">>, jsx:encode(Result)}
+            end
     end;
 handle_object_query([Objectname]) ->
     {Result, Object}=cog_monitor:lookup_object_from_http_name(Objectname),

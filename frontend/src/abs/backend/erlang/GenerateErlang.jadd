@@ -293,6 +293,7 @@ aspect GenerateErlang {
     getValue().generateErlangCode(buffer,vars);
     buffer.close();
     if(getVar() instanceof VarUse) {
+        varExp = "maps:get('" + getVar().getName() + "', get(vars))";
         VarUse v = (VarUse)getVar();
         if (v.isVarUseContextImperative()) {
             // created by VarDecl or method parameter
@@ -303,14 +304,14 @@ aspect GenerateErlang {
             ecs.format("%s = %s", varName, sw.toString().substring(ecs.getIndent().length()));
         }
     } else if(getVar() instanceof FieldUse) {
-      varExp = "get(O,'"+ getVar().getName() +"')";
-      ecs.format("set(O,'%s',%s)", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
+      varExp = "C:get_val_internal(get(this), '"+ getVar().getName() +"')";
+      ecs.format("put(this, C:set_val_internal(get(this), '%s',%s))", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
     } else {
       throw new NotImplementedYetException(this);
     }
     if (isNewDC) {
         ecs.println(",");
-        ecs.format("cog_monitor:new_dc(get(O,'%s'))", getVar().getName());
+        ecs.format("cog_monitor:new_dc(%s))", varExp);
     }
     if (getValue() instanceof NewExp) {
         PureExp restname = CompilerUtils.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.HTTPName");
@@ -812,7 +813,7 @@ aspect GenerateErlang {
 
   @Override
   public void FieldUse.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.format("get(O,'%s')",getName());
+    ecs.format("C:get_val_internal(get(this), '%s')",getName());
   }
 
   @Override
@@ -948,7 +949,7 @@ aspect GenerateErlang {
       VarOrFieldDecl decl = this.getDecl();
       if (decl instanceof FieldDecl || decl instanceof ClassParamDecl) {
           String tmp=vars.getTemp();
-          prePattern.pf("%s=get(O,'%s'),",tmp,getName());
+          prePattern.pf("%s=C:get_val_internal(get(this), '%s'),",tmp,getName());
           ecs.print(tmp);
       } else if (decl instanceof VarDecl
           || (decl instanceof ParamDecl && ((ParamDecl)decl).isParamDeclImperative())) {

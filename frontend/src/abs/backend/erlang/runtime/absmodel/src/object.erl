@@ -20,7 +20,7 @@
 
 %% KLUDGE: dc.erl directly sends events as well.  This is not good; we should
 %% export those as functions.
--export([new/3,new/5,activate/1,new_object_task/3,die/2,alive/1,get_field_value/2,set_field_value/3,get_whole_state/1,set_whole_state/2]).
+-export([new/3,new/5,activate/1,new_object_task/3,die/2,alive/1,get_whole_state/1,set_whole_state/2]).
 
 %% Garbage collection callback
 -behaviour(gc).
@@ -117,12 +117,6 @@ unprotect_object_from_gc(#object{ref=O}) ->
 
 get_object_state_for_json(#object{ref=O}) ->
     gen_statem:call(O, get_state_for_modelapi).
-
-get_field_value(O=#object{ref=Ref,class=C}, Field) ->
-    C:get_val_internal(get(this), Field).
-
-set_field_value(O=#object{ref=Ref,class=C}, Field, Value) ->
-    put(this, C:set_val_internal(get(this), Field, Value)).
 
 get_whole_state(O=#object{ref=Ref,cog=Cog}) ->
     cog:get_object_state(Cog, O);
