@@ -232,8 +232,8 @@ callback_mode() -> state_functions.
 update_object_state_map(Obj, State, OldObjectStates) ->
     case Obj of
         null -> OldObjectStates;
-        #object{ref=ObjRef} -> object:set_whole_state(Obj, State),
-                               maps:put(ObjRef, State, OldObjectStates)
+        #object{ref=ObjRef} ->
+            maps:put(ObjRef, State, OldObjectStates)
     end.
 
 object_state_from_pid(Pid, ProcessInfos, ObjectStates) ->

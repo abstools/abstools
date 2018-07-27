@@ -232,6 +232,8 @@ sweep(Data=#data{cogs=Cogs,objects=Objects,futures=Futures,
     Data#data{objects=BlackObjects, futures=BlackFutures, previous=erlang:monotonic_time(milli_seconds),
                      limit=NewLim, proc_factor=PFactor}.
 
+get_references({Module, null}) ->
+    [];
 get_references({Module, Ref}) ->
     case is_process_alive(Ref) of
         true -> Module:get_references(Ref);
