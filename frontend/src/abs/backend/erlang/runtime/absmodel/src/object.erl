@@ -28,7 +28,7 @@
 
 %% HTTP api: inhibit dying from gc while we're registered.
 -export([protect_object_from_gc/1, unprotect_object_from_gc/1]).
--export([get_object_state_for_json/1,get_all_method_info/1]).
+-export([get_all_method_info/1]).
 
 %% gen_statem callbacks
 -export([init/1, callback_mode/0, terminate/3, code_change/4]).
@@ -114,9 +114,6 @@ protect_object_from_gc(#object{ref=O}) ->
 
 unprotect_object_from_gc(#object{ref=O}) ->
     gen_statem:cast(O, unprotect_from_gc).
-
-get_object_state_for_json(#object{ref=O}) ->
-    gen_statem:call(O, get_state_for_modelapi).
 
 get_all_method_info(_O=#object{class=C,ref=_Ref}) ->
     C:exported().
@@ -260,10 +257,7 @@ handle_call(From, protect_from_gc, Data) ->
 handle_call(From, get_references, Data=#data{cog=Cog=#cog{dc=DC}}) ->
     OState=cog:get_object_state(Cog, self()),
     {keep_state_and_data, {reply, From, ordsets:union(gc:extract_references(DC),
-                                                      gc:extract_references(OState))}};
-handle_call(From, get_state_for_modelapi, Data=#data{class=C,cog=Cog}) ->
-    OState=cog:get_object_state(Cog, self()),
-    {keep_state_and_data, {reply, From, C:get_state_for_modelapi(OState)}}.
+                                                      gc:extract_references(OState))}}.
 
 
 handle_cast(unprotect_from_gc, Data=#data{tasks=Tasks,cog=Cog,alive=Alive}) ->

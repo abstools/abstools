@@ -90,12 +90,15 @@ handle_object_query([Objectname]) ->
     case Result of
         notfound -> {404, <<"text/plain">>, <<"Object not found">>};
         deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
-        ok -> State=lists:map(fun ({Key, Value}) -> {Key, abs_to_json(Value)} end,
-                              object:get_object_state_for_json(Object)),
-              %% Special-case empty object for jsx:encode ([] is an empty JSON
-              %% array, [{}] an empty JSON object)
-              State2 = case State of [] -> [{}]; _ -> State end,
-              { 200, <<"application/json">>, jsx:encode(State2, [{space, 1}, {indent, 2}])}
+        ok ->
+            #object{cog=Cog,class=Class}=Object,
+            OState=cog:get_object_state(Cog, Object),
+            State=lists:map(fun ({Key, Value}) -> {Key, abs_to_json(Value)} end,
+                            Class:get_state_for_modelapi(OState)),
+            %% Special-case empty object for jsx:encode ([] is an empty JSON
+            %% array, [{}] an empty JSON object)
+            State2 = case State of [] -> [{}]; _ -> State end,
+            { 200, <<"application/json">>, jsx:encode(State2, [{space, 1}, {indent, 2}])}
     end;
 handle_object_query([]) ->
     Names=cog_monitor:list_registered_http_names(),
