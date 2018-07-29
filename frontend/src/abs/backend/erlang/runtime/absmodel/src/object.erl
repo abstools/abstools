@@ -101,9 +101,12 @@ alive(#object{ref=O})->
             exit({deadObject, O})
     end.
 
-die(#object{ref=O},Reason)->
-    gen_statem:call(O,{die,Reason,self()},infinity);
+die(O=#object{ref=Ref,cog=Cog},Reason)->
+    cog:object_dead(Cog, O),
+    gen_statem:call(Ref,{die,Reason,self()},infinity);
 die(O,Reason) when is_pid(O) ->
+    Cog=gen_statem:call(O, get_cog, infinity),
+    cog:object_dead(Cog, O),
     gen_statem:call(O,{die,Reason,self()},infinity).
 
 get_references(Ref) ->
@@ -257,7 +260,9 @@ handle_call(From, protect_from_gc, Data) ->
 handle_call(From, get_references, Data=#data{cog=Cog=#cog{dc=DC}}) ->
     OState=cog:get_object_state(Cog, self()),
     {keep_state_and_data, {reply, From, ordsets:union(gc:extract_references(DC),
-                                                      gc:extract_references(OState))}}.
+                                                      gc:extract_references(OState))}};
+handle_call(From, get_cog, Data=#data{cog=Cog}) ->
+    {keep_state_and_data, {reply, From, Cog}}.
 
 
 handle_cast(unprotect_from_gc, Data=#data{tasks=Tasks,cog=Cog,alive=Alive}) ->
