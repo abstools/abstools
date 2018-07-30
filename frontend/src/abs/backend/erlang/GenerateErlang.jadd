@@ -266,10 +266,6 @@ aspect GenerateErlang {
       buffer.close();
       ecs.format("put(vars, (get(vars))#{'%s' => %s})",  this.getName(), sw.toString().substring(ecs.getIndent().length()));
       if (getInitExp() instanceof NewExp) {
-          if (getType().isDeploymentComponentType()) {
-              ecs.println(",");
-              ecs.format("cog_monitor:new_dc(maps:get('%s', get(vars)))", this.getName());
-          }
           PureExp restname = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.StdLib.HTTPName");
           if (restname != null) {
               ecs.println(",");
@@ -287,8 +283,6 @@ aspect GenerateErlang {
   public void AssignStmt.generateErlangCode(CodeStream ecs,Vars vars) {
     StringWriter sw = new StringWriter();
     CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
-    boolean isNewDC = getVar().getType().isDeploymentComponentType()
-        && getValue() instanceof NewExp;
     String varExp = "";
     getValue().generateErlangCode(buffer,vars);
     buffer.close();
@@ -308,10 +302,6 @@ aspect GenerateErlang {
       ecs.format("put(this, C:set_val_internal(get(this), '%s',%s))", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
     } else {
       throw new NotImplementedYetException(this);
-    }
-    if (isNewDC) {
-        ecs.println(",");
-        ecs.format("cog_monitor:new_dc(%s))", varExp);
     }
     if (getValue() instanceof NewExp) {
         PureExp restname = CompilerUtils.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.HTTPName");
@@ -374,8 +364,6 @@ aspect GenerateErlang {
 
   @Override
   public void ExpressionStmt.generateErlangCode(CodeStream ecs,Vars vars) {
-      boolean isNewDC = getExp().getType().isDeploymentComponentType()
-          && getExp() instanceof NewExp;
       PureExp restname = CompilerUtils.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.HTTPName");
       // Need to generate code for right-hand side before creating new
       // variable
@@ -386,11 +374,7 @@ aspect GenerateErlang {
       String exp = sw.toString().substring(ecs.getIndent().length());
       String varName = vars.getTemp();
       ecs.print(varName + " = " + exp);
-      if (isNewDC) {
-          ecs.println(",");
-          ecs.format("cog_monitor:new_dc(%s)", varName);
-      }
-      if (restname != null) {
+      if (getExp() instanceof NewExp && restname != null) {
           ecs.println(",");
           ecs.print("cog_monitor:register_object_with_http_name(" + varName + ",");
           restname.generateErlangCode(ecs, vars);
@@ -402,25 +386,7 @@ aspect GenerateErlang {
 
   @Override
   public void ReturnStmt.generateErlangCode(CodeStream ecs,Vars vars) {
-    MethodImpl m = getContextMethod();
-    Type lht = getModel().getUnitType();
-    if (m != null) { lht = m.getMethodSig().getReturnType().getType(); }
-    boolean isNewDC = lht.isDeploymentComponentType()
-        && getRetExp() instanceof NewExp;
-    if (isNewDC) {
-      StringWriter sw = new StringWriter();
-      CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
-      getRetExp().generateErlangCode(buffer,vars);
-      buffer.close();
-      String varName = vars.getTemp();
-      ecs.format("%s = %s", varName,sw.toString().substring(ecs.getIndent().length()));
-      ecs.println(",");
-      ecs.format("cog_monitor:new_dc(%s)", varName);
-      ecs.println(",");
-      ecs.print(varName);
-    } else {
-      getRetExp().generateErlangCode(ecs, vars);
-    }
+    getRetExp().generateErlangCode(ecs, vars);
   }
 
   @Override
