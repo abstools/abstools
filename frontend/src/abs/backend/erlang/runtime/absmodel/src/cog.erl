@@ -1,7 +1,8 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
 -export([start/0,start/1,start/2,add_main_task/3,add_task/7]).
--export([new_object/3,object_dead/2,object_state_changed/3,get_object_state/2]).
+-export([new_object/4,object_dead/2,object_state_changed/3,get_object_state/2]).
+-export([get_dc/2]).
 -export([process_is_runnable/2,
          process_is_blocked/3, process_is_blocked_for_gc/3,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
@@ -57,7 +58,9 @@
          %% ../include/abs_types.hrl); updated when token passed.
          process_infos=#{},
          %% Map with all object states
-         object_states=#{ null => {} }
+         object_states=#{ null => {} },
+         %% Map with Oid -> DC state machine mappings
+         dcs=#{}
         }).
 
 
@@ -97,25 +100,45 @@ add_main_task(#cog{ref=Cog},Args,Info)->
     TaskRef=await_start(Cog, main_task, Args),
     TaskRef.
 
-new_object(#cog{ref=Cog}, #object{ref=Oid}, ObjectState) ->
-    gen_statem:cast(Cog, {update_object_state, Oid, ObjectState});
-new_object(#cog{ref=Cog}, Oid, ObjectState) ->
+new_object(Cog, #object{ref=Oid}, Class, ObjectState) ->
+    new_object(Cog, Oid, Class, ObjectState);
+new_object(#cog{ref=Cog}, Oid, Class, ObjectState) ->
+    case Class of
+        class_ABS_DC_DeploymentComponent ->
+            gen_statem:cast(Cog, {new_dc, Oid});
+        _ -> ok
+    end,
     gen_statem:cast(Cog, {update_object_state, Oid, ObjectState}).
 
 object_dead(#cog{ref=Cog}, #object{ref=Oid}) ->
     gen_statem:cast(Cog, {object_dead, Oid});
 object_dead(#cog{ref=Cog}, Oid) ->
+    gen_statem:cast(Cog, {object_dead, Oid});
+object_dead(Cog, Oid) ->
     gen_statem:cast(Cog, {object_dead, Oid}).
+
 
 object_state_changed(#cog{ref=Cog}, #object{ref=Oid}, ObjectState) ->
     gen_statem:cast(Cog, {update_object_state, Oid, ObjectState});
 object_state_changed(#cog{ref=Cog}, Oid, ObjectState) ->
+    gen_statem:cast(Cog, {update_object_state, Oid, ObjectState});
+object_state_changed(Cog, Oid, ObjectState) ->
     gen_statem:cast(Cog, {update_object_state, Oid, ObjectState}).
 
 get_object_state(#cog{ref=Cog}, #object{ref=Oid}) ->
     gen_statem:call(Cog, {get_object_state, Oid});
 get_object_state(#cog{ref=Cog}, Oid) ->
+    gen_statem:call(Cog, {get_object_state, Oid});
+get_object_state(Cog, Oid) ->
     gen_statem:call(Cog, {get_object_state, Oid}).
+
+get_dc(#cog{ref=Cog}, #object{ref=Oid}) ->
+    gen_statem:call(Cog, {get_dc, Oid});
+get_dc(#cog{ref=Cog}, Oid) ->
+    gen_statem:call(Cog, {get_dc, Oid});
+get_dc(Cog, Oid) ->
+    gen_statem:call(Cog, {get_dc, Oid}).
+
 
 process_is_runnable(#cog{ref=Cog},TaskRef) ->
     gen_statem:call(Cog, {process_runnable, TaskRef}).
@@ -191,6 +214,9 @@ handle_cast(inc_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
     {keep_state, Data#data{referencers=Referencers + 1}};
 handle_cast(dec_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
     {keep_state, Data#data{referencers=Referencers - 1}};
+handle_cast({new_dc, Oid}, _StateName, Data=#data{dcs=DCs}) ->
+    DC=dc:new(self(), Oid),
+    {keep_state, Data#data{dcs=maps:put(Oid, DC, DCs)}};
 handle_cast({update_object_state, Oid, ObjectState}, _StateName, Data=#data{object_states=ObjectStates}) ->
     {keep_state, Data#data{object_states=maps:put(Oid, ObjectState, ObjectStates)}};
 handle_cast({object_dead, Oid}, _StateName, Data=#data{object_states=ObjectStates}) ->
@@ -200,6 +226,8 @@ handle_cast(_Event, _StateName, Data) ->
 
 handle_call(From, {get_object_state, Oid}, _StateName, Data=#data{object_states=ObjectStates}) ->
     {keep_state_and_data, {reply, From, maps:get(Oid, ObjectStates)}};
+handle_call(From, {get_dc, Oid}, _StateName, Data=#data{dcs=DCs}) ->
+    {keep_state_and_data, {reply, From, maps:get(Oid, DCs)}};
 handle_call(From, Event, StateName, Data) ->
     {stop, not_supported, data}.
 

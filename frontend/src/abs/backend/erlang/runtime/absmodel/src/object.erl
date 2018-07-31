@@ -55,7 +55,7 @@ new(Cog,Class,Args)->
     OldState=get(this),
     put(this, Class:init_internal()),
     Class:init(O,Args),
-    cog:new_object(Cog, O, get(this)),
+    cog:new_object(Cog, O, Class, get(this)),
     %% FIXME: can we construct a pathological case involving
     %% synchronous atomic callbacks that invalidates `OldState'?
     put(this, OldState),
@@ -63,7 +63,7 @@ new(Cog,Class,Args)->
 new(Cog,Class,Args,CreatorCog,Stack)->
     O=start(Cog,Class),
     State=Class:init_internal(),
-    cog:new_object(Cog, O, State),
+    cog:new_object(Cog, O, Class, State),
     case cog_monitor:are_objects_of_class_protected(Class) of
         true -> protect_object_from_gc(O);
         false -> ok
@@ -74,10 +74,6 @@ new(Cog,Class,Args,CreatorCog,Stack)->
                  [O, Args | Stack]),
     cog:process_is_runnable(CreatorCog, self()),
     task:wait_for_token(CreatorCog,[O, Args|Stack]),
-    case Class of
-        class_ABS_DC_DeploymentComponent -> cog_monitor:new_dc(O);
-        _ -> ok
-    end,
     O.
 
 
@@ -174,69 +170,6 @@ active({call, From}, {new_task,TaskRef}, Data=#data{tasks=Tasks})->
     {keep_state,Data#data{tasks=gb_sets:add_element(TaskRef, Tasks)}, {reply, From, active}};
 active({call, From}, ping, S)->
     {keep_state_and_data, {reply, From, ok}};
-%% Deployment component behavior
-%%
-%% Deployment components are objects, so we handle their events using
-%% the general object FSM machinery for now.
-active({call, From}, {consume_resource, {CurrentVar, MaxVar}, Count}, OData=#data{class=class_ABS_DC_DeploymentComponent=C,cog=Cog}) ->
-    OState=cog:get_object_state(Cog, self()),
-    Initialized=C:get_val_internal(s, 'initialized'),
-    case Initialized of
-        false ->
-            %% the init block has not run yet -- should not happen
-            {keep_state_and_data, {reply, From, {wait, 0}}};
-        _ ->
-            Total=C:get_val_internal(OState,MaxVar),
-            Consumed=rationals:to_r(C:get_val_internal(OState,CurrentVar)),
-            Requested=rationals:to_r(Count),
-            ToConsume=case Total of
-                          dataInfRat -> Requested;
-                          {dataFin, Total1} ->
-                              rationals:min(Requested,
-                                            rationals:sub(Total1, Consumed))
-                      end,
-            case rationals:is_zero(ToConsume) of
-                true -> {keep_state_and_data, {reply, From, {wait, ToConsume}}};
-                false -> OState1=C:set_val_internal(OState,CurrentVar, rationals:add(Consumed, ToConsume)),
-                         %% We reply with "ok" not "wait" here, even when we
-                         %% did not fulfill the whole request, so we are ready
-                         %% for small-step consumption schemes where multiple
-                         %% consumers race for resources.
-                         cog:object_state_changed(Cog, self(), OState1),
-                         {keep_state_and_data, {reply, From, {ok, ToConsume}}}
-            end
-    end;
-active({call, From}, {clock_advance_for_dc, Amount},
-       OData=#data{class=class_ABS_DC_DeploymentComponent,cog=Cog}) ->
-    OState=cog:get_object_state(Cog, self()),
-    OState1=dc:update_state_and_history(OState, Amount),
-    cog:object_state_changed(Cog, self(), OState1),
-    {keep_state_and_data, {reply, From, ok}};
-active({call, From}, {get_resource_history, Curvar, Maxvar},
-       OData=#data{class=class_ABS_DC_DeploymentComponent=C,cog=Cog}) ->
-    OState=cog:get_object_state(Cog, self()),
-    Result = {dc_info,
-              C:get_val_internal(OState,description),
-              C:get_val_internal(OState,creationTime),
-              C:get_val_internal(OState,Curvar),
-              C:get_val_internal(OState,Maxvar)},
-    {keep_state_and_data, {reply, From, {ok, Result}}} ;
-active({call, From}, get_dc_info_string,
-       OData=#data{class=class_ABS_DC_DeploymentComponent=C,cog=Cog}) ->
-    OState=cog:get_object_state(Cog, self()),
-    Result=io_lib:format("Name: ~s~nCreation time: ~s~nCPU history (reversed): ~s~n~n",
-                         [C:get_val_internal(OState,description),
-                          builtin:toString(undefined, C:get_val_internal(OState,creationTime)),
-                          builtin:toString(undefined, C:get_val_internal(OState,cpuhistory))]),
-    {keep_state_and_data, {reply, From, {ok, Result}}};
-active({call, From}, get_resource_json,
-      OData=#data{class=class_ABS_DC_DeploymentComponent=C,cog=Cog}) ->
-    OState=cog:get_object_state(Cog, self()),
-    Name=C:get_val_internal(OState,description),
-    History=C:get_val_internal(OState,cpuhistory),
-    Result=[{<<"name">>, Name},
-            {<<"values">>, History}],
-    {keep_state_and_data, {reply, From, {ok, Result}}};
 active({call, From}, Msg, Data) ->
     handle_call(From, Msg, Data);
 active(cast, Msg, Data) ->
@@ -287,18 +220,8 @@ handle_info({'DOWN', _MonRef, process, TaskRef, _Reason}, StateName, Data=#data{
 
 
 terminate(normal, _StateName, _Data=#data{class=C,termination_reason=gc}) ->
-    case C of
-        class_ABS_DC_DeploymentComponent ->
-            cog_monitor:dc_died(self());
-        _ -> ok
-    end,
     ok;
 terminate(_Reason,_StateName, _Data=#data{class=C})->
-    case C of
-        class_ABS_DC_DeploymentComponent ->
-            cog_monitor:dc_died(self());
-        _ -> ok
-    end,
     gc:unregister_object(self()),
     ok.
 code_change(_OldVsn,_StateName,_Data,_Extra)->

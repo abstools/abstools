@@ -227,8 +227,7 @@ handle_call({cog,Task,Cog,clock_waiting,Min,Max}, _From,
     %% {cog, blocked} event comes separately
     C1=add_to_clock_waiting(C,Min,Max,Task,Cog),
     {reply, ok, State#state{clock_waiting=C1}};
-handle_call({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent}},
-            _From, State=#state{dcs=DCs}) ->
+handle_call({newdc, DC}, _From, State=#state{dcs=DCs}) ->
     {reply, ok, State#state{dcs=[DC | DCs]}};
 handle_call(get_dcs, _From, State=#state{dcs=DCs}) ->
     {reply, DCs, State};
