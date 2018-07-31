@@ -19,7 +19,7 @@
 -export([task_waiting_for_clock/4, task_confirm_clock_wakeup/1]).
 
 %% communication about dcs
--export([new_dc/1, dc_died/1, get_dcs/0]).
+-export([new_dc/1, dc_died/1, get_dcs/0, get_schedules/0]).
 
 %% the HTTP api
 -export([register_object_with_http_name/2,lookup_object_from_http_name/1,list_registered_http_names/0,list_registered_http_objects/0,increase_clock_limit/1]).
@@ -111,6 +111,9 @@ dc_died(DC) ->
 
 get_dcs() ->
     gen_server:call({global, cog_monitor}, get_dcs, infinity).
+
+get_schedules() ->
+    gen_server:call({global, cog_monitor}, get_schedules, infinity).
 
 register_object_with_http_name(Object, Name) ->
     gen_server:call({global, cog_monitor}, {register_object, Object, Name}, infinity).
@@ -247,6 +250,8 @@ handle_call({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent}},
     {reply, ok, State#state{dcs=[DC | DCs]}};
 handle_call(get_dcs, _From, State=#state{dcs=DCs}) ->
     {reply, DCs, State};
+handle_call(get_schedules, _From, State=#state{idle=Idle, cog_names=Names, trace_map=Traces}) ->
+    {reply, gather_scheduling_traces(Idle, Names, Traces), State};
 handle_call(all_registered_names, _From, State=#state{registered_objects=Objects}) ->
     {reply, maps:keys(Objects), State};
 handle_call(all_registered_objects, _From, State=#state{registered_objects=Objects}) ->
@@ -292,15 +297,18 @@ handle_info(_Info, State)->
     {noreply, State}.
 
 
+gather_scheduling_traces(Idle, Names, TraceMap) ->
+    gb_sets:fold(fun (Cog, AccT) ->
+                         Trace = lists:reverse(cog:get_scheduling_trace(Cog)),
+                         {Id, _} = maps:get(Cog, Names),
+                         ShownId = lists:reverse(Id),
+                         maps:put(ShownId, Trace, AccT)
+                 end, TraceMap, Idle).
+
+
 terminate(_Reason, State=#state{idle=I, cog_names=M, trace_map=T})->
-    NewM = gb_sets:fold(
-             fun (Cog, AccT) ->
-                     Trace = lists:reverse(cog:get_scheduling_trace(Cog)),
-                     {Id, _} = maps:get(Cog, M),
-                     ShownId = lists:reverse(Id),
-                     maps:put(ShownId, Trace, AccT)
-             end, T, I),
-    io:format("Scheduling traces:~n~w~n", [NewM]),
+    NewM = gather_scheduling_traces(I, M, T),
+    io:format("Scheduling traces:~n~p~n", [NewM]),
     ok.
 
 

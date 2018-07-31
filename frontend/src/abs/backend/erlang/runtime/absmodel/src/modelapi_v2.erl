@@ -18,6 +18,7 @@ init(Req, _Opts) ->
             <<"clock">> -> handle_clock(cowboy_req:path_info(Req),
                                         cowboy_req:parse_qs(Req));
             <<"dcs">> -> handle_dcs();
+            <<"schedules">> -> handle_schedules();
             <<"o">> -> handle_object_query(cowboy_req:path_info(Req));
             <<"static_dcs">> -> handle_static_dcs(cowboy_req:path_info(Req));
             <<"call">> -> handle_object_call(cowboy_req:path_info(Req),
@@ -70,6 +71,9 @@ handle_clock([<<"advance">>], _) ->
 
 handle_dcs() ->
     {200, <<"application/json">>, get_statistics_json()}.
+
+handle_schedules() ->
+    {200, <<"application/json">>, get_schedules_json()}.
 
 handle_object_query([Objectname, Fieldname]) ->
     {State, Object}=cog_monitor:lookup_object_from_http_name(Objectname),
@@ -290,6 +294,24 @@ get_statistics_json() ->
     io_lib:format("Deployment components:~n~w~n",
                   [jsx:encode(DC_info_json, [{space, 1}, {indent, 2}])]),
     jsx:encode(DC_info_json, [{space, 1}, {indent, 2}]).
+
+
+schedule_to_json(Schedule) ->
+    lists:map(fun ({CallerId, TaskId}) ->
+                      #{caller_id => CallerId,
+                        task_id   => TaskId};
+                  (X) -> X
+              end, Schedule).
+
+
+get_schedules_json() ->
+    Schedules = cog_monitor:get_schedules(),
+    SchedulesJson = maps:fold(fun (CogId, Schedule, Acc) ->
+                                      [#{cog_id => CogId,
+                                         cog_schedule => schedule_to_json(Schedule)}
+                                       | Acc]
+                              end, [], Schedules),
+    jsx:encode(SchedulesJson, [{space, 1}, {indent, 2}]).
 
 
 handle_static_dcs([]) ->
