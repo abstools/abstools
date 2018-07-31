@@ -113,7 +113,7 @@ data IntList = NoInt | ConsInt(Int head, IntList tail); <1>
 data Bool = True | False; <2>
 data NotInstantiable; <3>
 ----
-<1> The data type `IntList` has two constructors: `NoInt` and `ConsInt`.  Both define an accessor function.
+<1> The data type `IntList` has two constructors: `NoInt` and `ConsInt`.  The second constructor defines two accessor functions.
 <2> This is the definition of the built-in data type `Bool`.
 <3> This type does not have constructors and therefore cannot be instantiated.
 
