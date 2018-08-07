@@ -4,7 +4,7 @@
 -export([process_is_runnable/2,
          process_is_blocked/2, process_is_blocked_for_gc/2,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
-         submit_references/2, new_future_id/1, get_scheduling_trace/1]).
+         submit_references/2, register_invocation/1, get_scheduling_trace/1]).
 -export([return_token/4]).
 -export([inc_ref_count/1,dec_ref_count/1]).
 -include_lib("abs_types.hrl").
@@ -128,8 +128,8 @@ submit_references(#cog{ref=CogRef}, Refs) ->
 submit_references(CogRef, Refs) ->
     gen_statem:cast(CogRef, {references, self(), Refs}).
 
-new_future_id(#cog{ref=Cog}) ->
-    gen_statem:call(Cog, new_future_id).
+register_invocation(#cog{ref=Cog}) ->
+    gen_statem:call(Cog, register_invocation).
 
 get_scheduling_trace(CogRef) ->
     gen_statem:call(CogRef, get_scheduling_trace).
@@ -188,12 +188,21 @@ handle_event(cast, dec_ref_count, _StateName, Data=#data{referencers=Referencers
 handle_event(cast, _Event, _StateName, Data) ->
     {stop, not_supported, Data};
 
-handle_event({call, From}, new_future_id, _StateName,
-             Data=#data{next_fut_id=N, id=Id}) ->
-    {keep_state, Data#data{next_fut_id=N+1}, {reply, From, {Id, N}}};
+%% Record/replay a method invocation, and return a stable identifier for the
+%% invocation.
+handle_event({call, From}, register_invocation, _StateName,
+             Data=#data{next_fut_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
+    NewData = Data#data{next_fut_id=N+1, recorded=[{invocation, N} | Recorded]},
+    {keep_state, NewData, {reply, From, {Id, N}}};
+handle_event({call, From}, register_invocation, _StateName,
+             Data=#data{next_fut_id=N, id=Id, recorded=Recorded,
+                        replaying=[{invocation, N} | Rest]}) ->
+    NewRecorded = [{invocation, N} | Recorded],
+    NewData = Data#data{next_fut_id=N+1, recorded=NewRecorded, replaying=Rest},
+    {keep_state, NewData, {reply, From, {Id, N}}};
 handle_event({call, From}, get_scheduling_trace, _StateName,
-             Data=#data{recorded=T}) ->
-    {keep_state_and_data, {reply, From, T}};
+             Data=#data{recorded=Recorded}) ->
+    {keep_state_and_data, {reply, From, Recorded}};
 
 %% Default handling for the following states: `cog_starting',
 %% `no_task_schedulable', `process_blocked'
@@ -246,7 +255,7 @@ start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie)->
     end,
     ArrivalInfo#process_info{pid=Ref}.
 
-choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, [Id | _]) ->
+choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, [{schedule, Id} | _]) ->
     Candidate = [Proc || {Proc, Info} <- maps:to_list(ProcessInfos), Info#process_info.id == Id],
     case Candidate of
         [Proc] -> B = gb_sets:is_member(Proc, RunnableTasks) orelse
@@ -326,7 +335,7 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
              {reply, From, ok}};
         T ->       % Execute T -- might or might not be TaskRef
             TaskInfo = maps:get(T, ProcessInfos),
-            NewRecorded = [TaskInfo#process_info.id | Recorded],
+            NewRecorded = [{schedule, TaskInfo#process_info.id} | Recorded],
             NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
 
             cog_monitor:cog_active(self()),
@@ -389,7 +398,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
             %% no need for `cog_monitor:active' since we were already running
             %% something
             TaskInfo = maps:get(T, NewProcessInfos),
-            NewRecorded = [TaskInfo#process_info.id | Recorded],
+            NewRecorded = [{schedule, TaskInfo#process_info.id} | Recorded],
             NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
 
             T ! token,
@@ -464,7 +473,7 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                     %% no need for `cog_monitor:active' since we were already
                     %% running something
                     TaskInfo = maps:get(T, NewProcessInfos),
-                    NewRecorded = [TaskInfo#process_info.id | Recorded],
+                    NewRecorded = [{schedule, TaskInfo#process_info.id} | Recorded],
                     NewReplaying = case Replaying of [] -> []; [X | Rest] ->
                 Rest end,
 
@@ -667,7 +676,7 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                             {next_state, no_task_schedulable, Data};
                         T ->                    % Execute T
                             TaskInfo = maps:get(T, ProcessInfos),
-                            NewRecorded = [TaskInfo#process_info.id | Recorded],
+                            NewRecorded = [{schedule, TaskInfo#process_info.id} | Recorded],
                             NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
 
                             cog_monitor:cog_active(self()),
