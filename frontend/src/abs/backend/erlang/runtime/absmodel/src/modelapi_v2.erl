@@ -297,9 +297,10 @@ get_statistics_json() ->
 
 
 schedule_to_json(Schedule) ->
-    lists:map(fun ({CallerId, TaskId}) ->
+    lists:map(fun ({CallerId, TaskId, Method}) ->
                       #{caller_id => CallerId,
-                        task_id   => TaskId};
+                        task_id   => TaskId,
+                        method    => Method};
                   (X) -> X
               end, Schedule).
 
