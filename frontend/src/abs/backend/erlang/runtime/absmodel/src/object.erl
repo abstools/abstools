@@ -20,7 +20,7 @@
 
 %% KLUDGE: dc.erl directly sends events as well.  This is not good; we should
 %% export those as functions.
--export([new/3,new/5,activate/1,new_object_task/3,die/2,alive/1]).
+-export([new/3,new/5,activate/1,new_object_task/3,die/2]).
 
 %% Garbage collection callback
 -behaviour(gc).
@@ -93,14 +93,6 @@ new_object_task(#object{ref=O},TaskRef,Params)->
             exit({deadObject, O})
     end.
 
-alive(#object{ref=O})->
-    try
-        gen_statem:call(O, ping)
-    catch
-        _:{noproc,_} ->
-            exit({deadObject, O})
-    end.
-
 die(O=#object{ref=Ref,cog=Cog},Reason)->
     cog:object_dead(Cog, O),
     gen_statem:call(Ref,{die,Reason,self()},infinity);
@@ -168,8 +160,6 @@ uninitialized(info, Msg, Data) ->
 active({call, From}, {new_task,TaskRef}, Data=#data{tasks=Tasks})->
     monitor(process,TaskRef),
     {keep_state,Data#data{tasks=gb_sets:add_element(TaskRef, Tasks)}, {reply, From, active}};
-active({call, From}, ping, S)->
-    {keep_state_and_data, {reply, From, ok}};
 active({call, From}, Msg, Data) ->
     handle_call(From, Msg, Data);
 active(cast, Msg, Data) ->
