@@ -381,9 +381,21 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
                      _ -> Wai end,
     NewPolling = case ProcessState of waiting_poll -> gb_sets:add_element(R, Pol);
                      _ -> Pol end,
+
+    {NewRecorded, NewReplaying} =
+        case {ProcessState, ProcessInfo#process_info.id} of
+            {done, Id} when (Id /= init) and (Id /= main) ->
+                {[{completed, Id} | Recorded],
+                 case Replaying of
+                     [] -> [];
+                     [{completed, Id} | Tail] -> Tail
+                 end};
+            _ -> {Recorded, Replaying}
+        end,
+
     %% for `ProcessState' = `done', we just drop the task from Run (it can't
     %% be in Wai or Pol)
-    T=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos, Replaying),
+    T=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos, NewReplaying),
     case T of
         none->
             case gb_sets:is_empty(New) of
@@ -392,14 +404,15 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
             end,
             {next_state, no_task_schedulable,
              Data#data{running_task=idle, runnable_tasks=NewRunnable,
-                         waiting_tasks=NewWaiting, polling_tasks=NewPolling,
-                         process_infos=NewProcessInfos}};
+                       waiting_tasks=NewWaiting, polling_tasks=NewPolling,
+                       process_infos=NewProcessInfos,
+                       recorded=NewRecorded, replaying=NewReplaying}};
         _ ->
             %% no need for `cog_monitor:active' since we were already running
             %% something
             TaskInfo = maps:get(T, NewProcessInfos),
-            NewRecorded = [{schedule, TaskInfo#process_info.id} | Recorded],
-            NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
+            NewRecorded2 = [{schedule, TaskInfo#process_info.id} | NewRecorded],
+            NewReplaying2 = case NewReplaying of [] -> []; [X | Rest] -> Rest end,
 
             T ! token,
             {keep_state,
@@ -408,7 +421,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
                        waiting_tasks=NewWaiting,
                        polling_tasks=gb_sets:del_element(T, NewPolling),
                        process_infos=NewProcessInfos,
-                       recorded=NewRecorded, replaying=NewReplaying}}
+                       recorded=NewRecorded2, replaying=NewReplaying2}}
     end;
 process_running({call, From}, {process_runnable, TaskRef}, Data=#data{running_task=TaskRef}) ->
     %% This can happen when a process suspends itself ({token, Id, runnable})
