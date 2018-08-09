@@ -297,11 +297,17 @@ get_statistics_json() ->
 
 
 schedule_to_json(Schedule) ->
-    lists:map(fun ({CallerId, TaskId, Method}) ->
-                      #{caller_id => CallerId,
+    lists:map(fun ({Type, {CallerId, TaskId, Method}}) ->
+                      #{event_type => Type,
+                        caller_id => CallerId,
                         task_id   => TaskId,
                         method    => Method};
-                  (X) -> X
+                  ({Type, InitOrMain}) ->
+                      #{event_type => Type,
+                        task_id   => InitOrMain};
+                  ({invocation, TaskId}) ->
+                      #{event_type => invocation,
+                        task_id => TaskId}
               end, Schedule).
 
 
