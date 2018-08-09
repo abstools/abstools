@@ -90,7 +90,7 @@ toString(_Cog,A) when is_atom(A) -> constructorname_to_string(A);
 toString(Cog,P) when is_pid(P) ->
     Status=future:poll(P),
     case Status of
-        true -> Value=future:get_after_await(P),
+        true -> Value=future:get_after_await(P, Cog),
                 iolist_to_binary([pid_to_list(P), ":", toString(Cog, Value)]);
         false -> iolist_to_binary([pid_to_list(P), ":empty"])
     end;

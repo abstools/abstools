@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
 -export([start/6,start_for_rest/4]).
--export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,value_available/6]).
+-export([get_after_await/2,get_blocking/3,await/3,poll/1,die/2,value_available/6]).
 -export([task_started/3]).
 -export([get_for_rest/1]).
 -include_lib("abs_types.hrl").
@@ -26,7 +26,8 @@
                waiting_tasks=[],
                cookie=none,
                register_in_gc=true,
-               caller=none
+               caller=none,
+               id=none
               }).
 
 %% Interacting with a future caller-side
@@ -59,10 +60,10 @@ start_for_rest(Callee, Method, Params, Info) ->
     {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,Info,false,none], []),
     Ref.
 
-get_after_await(null) ->
+get_after_await(null, _Cog) ->
     throw(dataNullPointerException);
-get_after_await(Future)->
-    case gen_statem:call(Future, get) of
+get_after_await(Future, Cog)->
+    case gen_statem:call(Future, {get, Cog}) of
         {ok,Value}->
             Value;
         {error,Reason}->
@@ -84,7 +85,7 @@ get_blocking(null, _Cog, _Stack) ->
 get_blocking(Future, Cog, Stack) ->
     case poll(Future) of
         true ->
-            get_after_await(Future);
+            get_after_await(Future, Cog);
         false ->
             %% Tell future not to advance time until we picked up ourselves
             register_waiting_task(Future, self()),
@@ -105,7 +106,7 @@ get_blocking(Future, Cog, Stack) ->
             cog:process_is_runnable(Cog, self()),
             confirm_wait_unblocked(Future, self()),
             task:wait_for_token(Cog, Stack),
-            get_after_await(Future)
+            get_after_await(Future, Cog)
     end.
 
 await(null, _Cog, _Stack) ->
@@ -200,12 +201,14 @@ init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,Reg
                                 value=none,
                                 waiting_tasks=[],
                                 register_in_gc=RegisterInGC,
-                                caller=Caller}};
+                                caller=Caller,
+                                id=Info#process_info.id}};
         false ->
             {ok, completed, #data{calleetask=none,
                                   value={error, dataObjectDeadException},
                                   calleecog=Cog,
-                                  register_in_gc=RegisterInGC}}
+                                  register_in_gc=RegisterInGC,
+                                  id=Info#process_info.id}}
     end;
 init([_Callee=null,_Method,_Params,RegisterInGC,Caller]) ->
     %% This is dead code, left in for reference; a `null' callee is caught in
@@ -307,7 +310,8 @@ completing({call, From}, {poll_or_add_waiting, _Task}, Data) ->
     {keep_state_and_data, {reply, From, true}};
 completing({call, From}, get_references, Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
-completing({call, From}, get, Data=#data{value=Value}) ->
+completing({call, From}, {get, Cog}, Data=#data{value=Value,id=Id}) ->
+    cog:register_future_read(Cog, Id),
     {keep_state_and_data, {reply, From, Value}};
 completing(cast, {okthx, Task}, Data) ->
     {NextState, Data1} = next_state_on_okthx(Data, Task),
@@ -325,7 +329,8 @@ completed({call, From}, {poll_or_add_waiting, _Task}, Data) ->
     {keep_state_and_data, {reply, From, true}};
 completed({call, From}, get_references, Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
-completed({call, From}, get, Data=#data{value=Value}) ->
+completed({call, From}, {get, Cog}, Data=#data{value=Value,id=Id}) ->
+    cog:register_future_read(Cog, Id),
     {keep_state_and_data, {reply, From, Value}};
 completed(cast, {die, _Reason}, Data) ->
     {stop, normal, Data};

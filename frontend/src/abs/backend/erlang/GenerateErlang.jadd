@@ -1159,10 +1159,9 @@ aspect GenerateErlang {
     }
 
     future.generateErlangCode(ecs,vars);
-
+    ecs.print(", Cog");
     if (!(future instanceof VarUse) || vars.canBlock(((VarUse) future).getName())) {
-        ecs.print(", Cog, ");
-        ecs.print(vars.toStack());
+        ecs.print(", " + vars.toStack());
     }
     ecs.print(")");
   }
