@@ -20,7 +20,7 @@
 
 %% KLUDGE: dc.erl directly sends events as well.  This is not good; we should
 %% export those as functions.
--export([new/3,new/5,activate/1,new_object_task/3,die/2]).
+-export([new_local/3,new/5,activate/1,new_object_task/3,die/2]).
 
 %% Garbage collection callback
 -behaviour(gc).
@@ -42,7 +42,7 @@ behaviour_info(_) ->
 
 %% Creates new object.  Local creation takes three parameters, on new cogs
 %% takes five
-new(Cog,Class,Args)->
+new_local(Cog,Class,Args)->
     cog:inc_ref_count(Cog),
     O=start(Cog,Class),
     object:activate(O),
@@ -60,6 +60,7 @@ new(Cog,Class,Args)->
     %% synchronous atomic callbacks that invalidates `OldState'?
     put(this, OldState),
     O.
+
 new(Cog,Class,Args,CreatorCog,Stack)->
     O=start(Cog,Class),
     State=Class:init_internal(),

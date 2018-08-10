@@ -355,7 +355,7 @@ aspect GenerateErlang {
       ecs.print(vars.toStack());
       ecs.print(")");
     } else {
-      ecs.format("object:new(Cog,%s,",className);
+      ecs.format("object:new_local(Cog,%s,",className);
       ErlUtil.buildParams(ecs,getParams(),vars,false);
       ecs.print(")");
     }
