@@ -95,19 +95,11 @@ new_object_task(#object{ref=O},TaskRef,Params)->
 
 die(O=#object{ref=Ref,cog=Cog},Reason)->
     cog:object_dead(Cog, O),
-    gen_statem:call(Ref,{die,Reason,self()},infinity);
-die(O,Reason) when is_pid(O) ->
-    Cog=gen_statem:call(O, get_cog, infinity),
-    cog:object_dead(Cog, O),
-    gen_statem:call(O,{die,Reason,self()},infinity).
+    gen_statem:call(Ref,{die,Reason,self()},infinity).
 
 get_references(#object{ref=Ref,cog=Cog=#cog{dc=DC}}) ->
     OState=cog:get_object_state(Cog, Ref),
-    ordsets:union(gc:extract_references(DC), gc:extract_references(OState));
-get_references(Ref) ->
-    Cog=gen_statem:call(Ref, get_cog, infinity),
-    OState=cog:get_object_state(Cog, Ref),
-    ordsets:union(gc:extract_references(Cog#cog.dc), gc:extract_references(OState)).
+    ordsets:union(gc:extract_references(DC), gc:extract_references(OState)).
 
 protect_object_from_gc(#object{ref=O}) ->
     gen_statem:call(O, protect_from_gc).
@@ -115,7 +107,7 @@ protect_object_from_gc(#object{ref=O}) ->
 unprotect_object_from_gc(#object{ref=O}) ->
     gen_statem:cast(O, unprotect_from_gc).
 
-get_all_method_info(_O=#object{class=C,ref=_Ref}) ->
+get_all_method_info(#object{class=C}) ->
     C:exported().
 
 %%Internal
@@ -188,10 +180,7 @@ handle_call(From, {die,Reason,By}, Data=#data{cog=Cog, tasks=Tasks, protect_from
             {stop_and_reply, normal, {reply, From, ok}, Data#data{alive=false,termination_reason=Reason}}
     end;
 handle_call(From, protect_from_gc, Data) ->
-    {keep_state, Data#data{protect_from_gc=true}, {reply, From, ok}};
-handle_call(From, get_cog, Data=#data{cog=Cog}) ->
-    {keep_state_and_data, {reply, From, Cog}}.
-
+    {keep_state, Data#data{protect_from_gc=true}, {reply, From, ok}}.
 
 handle_cast(unprotect_from_gc, Data=#data{tasks=Tasks,cog=Cog,alive=Alive}) ->
     case Alive of
@@ -212,8 +201,8 @@ handle_info({'DOWN', _MonRef, process, TaskRef, _Reason}, StateName, Data=#data{
 
 terminate(normal, _StateName, _Data=#data{class=C,termination_reason=gc}) ->
     ok;
-terminate(_Reason,_StateName, _Data=#data{class=C})->
-    gc:unregister_object(self()),
+terminate(_Reason,_StateName, _Data=#data{class=C,cog=Cog})->
+    gc:unregister_object(#object{class=C, ref=self(), cog=Cog}),
     ok.
 code_change(_OldVsn,_StateName,_Data,_Extra)->
     not_implemented.

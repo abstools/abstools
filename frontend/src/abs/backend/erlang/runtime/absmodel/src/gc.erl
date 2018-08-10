@@ -69,24 +69,19 @@ unroot_future(Fut) ->
     gen_statem:cast({global, gc}, {unroot, Fut}).
 
 register_cog(Cog) ->
-    %% Cog is a #cog record
     gen_statem:call({global, gc}, Cog).
 
 unregister_cog(Cog) ->
-    %% Cog is the plain pid of the Cog process
     gen_statem:cast({global, gc}, {die, Cog}).
 
 cog_stopped(Cog) ->
     gen_statem:cast({global, gc}, {stopped, Cog}).
 
 register_object(Obj) ->
-    %% Obj is an #object record
     gen_statem:cast({global, gc}, Obj).
 
-unregister_object(#object{ref=Obj}) ->
-    gen_statem:cast({global, gc}, {stopped_object, Obj});
-unregister_object(Obj) when is_pid(Obj) ->
-    gen_statem:cast({global, gc}, {stopped_object, Obj}).
+unregister_object(O=#object{ref=_Ref}) ->
+    gen_statem:cast({global, gc}, {stopped_object, O}).
 
 prepare_shutdown() ->
     gen_statem:call({global, gc}, prepare_shutdown).
@@ -122,11 +117,11 @@ idle_state_next(Data=#data{log=Log, cogs=Cogs}) ->
 idle(cast, {register_future, Ref, Sender}, Data=#data{root_futures=RootFutures}) ->
     {NextState, NewData} = idle_state_next(Data#data{root_futures=gb_sets:insert({future, Ref}, RootFutures)}),
     {next_state, NextState, NewData};
-idle(cast, #object{ref=Ref}, Data=#data{objects=Objects}) ->
-    {NextState, NewData} = idle_state_next(Data#data{objects=gb_sets:insert({object, Ref}, Objects)}),
+idle(cast, O=#object{ref=_Ref}, Data=#data{objects=Objects}) ->
+    {NextState, NewData} = idle_state_next(Data#data{objects=gb_sets:insert({object, O}, Objects)}),
     {next_state, NextState, NewData};
-idle(cast, {stopped_object, Ref}, Data=#data{objects=Objects}) ->
-    {NextState, NewData} = idle_state_next(Data#data{objects=gb_sets:del_element({object, Ref}, Objects)}),
+idle(cast, {stopped_object, O}, Data=#data{objects=Objects}) ->
+    {NextState, NewData} = idle_state_next(Data#data{objects=gb_sets:del_element({object, O}, Objects)}),
     {next_state, NextState, NewData};
 idle(cast, {unroot, Sender}, Data=#data{root_futures=RootFutures, futures=Futures}) ->
     {NextState, NewData} = idle_state_next(Data#data{futures=gb_sets:insert({future, Sender}, Futures),
@@ -136,7 +131,7 @@ idle(cast, {die, Cog}, Data=#data{cogs=Cogs}) ->
     {NextState, NewData} = idle_state_next(Data#data{cogs=gb_sets:delete({cog, Cog}, Cogs)}),
     {next_state, NextState, NewData};
 idle({call, From}, Cog=#cog{ref=Ref}, Data=#data{cogs=Cogs}) ->
-    {NextState, NewData} = idle_state_next(Data#data{cogs=gb_sets:insert({cog, Ref}, Cogs)}),
+    {NextState, NewData} = idle_state_next(Data#data{cogs=gb_sets:insert({cog, Cog}, Cogs)}),
     case NextState of
         idle -> cog:acknowledged_by_gc(Cog);
         %% If we switched to collecting, we already sent stop_world -- no need
@@ -155,7 +150,7 @@ collecting_state_next(Data=#data{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, ro
         true ->
             gcstats(Log, mark),
             Exported=gb_sets:from_list(
-                       lists:map(fun(#object{ref=Ref}) -> {object, Ref} end,
+                       lists:map(fun(O=#object{ref=_Ref}) -> {object, O} end,
                                  cog_monitor:list_registered_http_objects())),
             Black=mark([], ordsets:from_list(gb_sets:to_list(gb_sets:union([Cogs, RootFutures, Exported])))),
             gcstats(Log, sweep),
@@ -167,10 +162,10 @@ collecting_state_next(Data=#data{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, ro
 
 collecting(cast, {register_future, Ref, _Sender}, Data=#data{root_futures=RootFutures}) ->
     {keep_state, Data#data{root_futures=gb_sets:insert({future, Ref}, RootFutures)}};
-collecting(cast, #object{ref=Ref}, Data=#data{objects=Objects}) ->
-    {keep_state, Data#data{objects=gb_sets:insert({object, Ref}, Objects)}};
-collecting(cast, {stopped_object, Ref}, Data=#data{objects=Objects}) ->
-    {keep_state, Data#data{objects=gb_sets:del_element({object, Ref}, Objects)}};
+collecting(cast, O=#object{ref=_Ref}, Data=#data{objects=Objects}) ->
+    {keep_state, Data#data{objects=gb_sets:insert({object, O}, Objects)}};
+collecting(cast, {stopped_object, O}, Data=#data{objects=Objects}) ->
+    {keep_state, Data#data{objects=gb_sets:del_element({object, O}, Objects)}};
 collecting(cast, {unroot, Sender}, Data=#data{root_futures=RootFutures, futures=Futures}) ->
     {keep_state,
      Data#data{futures=gb_sets:insert({future, Sender}, Futures),
@@ -182,11 +177,11 @@ collecting(cast, {die, Cog}, Data=#data{cogs=Cogs, cogs_waiting_to_stop=RunningC
 collecting(cast, {stopped, Ref}, Data=#data{cogs_waiting_to_stop=RunningCogs}) ->
     {NextState, NewData} = collecting_state_next(Data#data{cogs_waiting_to_stop=gb_sets:delete({cog, Ref}, RunningCogs)}),
     {next_state, NextState, NewData};
-collecting({call, From}, #cog{ref=Ref}, Data=#data{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
-    cog:stop_world(Ref),
+collecting({call, From}, Cog=#cog{ref=Ref}, Data=#data{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
+    cog:stop_world(Cog),
     {keep_state,
-     Data#data{cogs=gb_sets:insert({cog, Ref}, Cogs),
-                 cogs_waiting_to_stop=gb_sets:insert({cog, Ref}, RunningCogs)},
+     Data#data{cogs=gb_sets:insert({cog, Cog}, Cogs),
+                 cogs_waiting_to_stop=gb_sets:insert({cog, Cog}, RunningCogs)},
     {reply, From, ok}};
 collecting({call, From}, prepare_shutdown, Data) ->
     {next_state, in_shutdown, Data, {reply, From, ok}};
@@ -215,7 +210,7 @@ sweep(Data=#data{cogs=Cogs,objects=Objects,futures=Futures,
     BlackFutures = gb_sets:intersection(Futures, Black),
     gcstats(Log,{sweep, {objects, gb_sets:size(WhiteObjects), gb_sets:size(BlackObjects)},
              {futures, gb_sets:size(WhiteFutures), gb_sets:size(BlackFutures)}}),
-    gb_sets:fold(fun ({object, Ref}, ok) -> object:die(Ref, gc), ok end, ok, WhiteObjects),
+    gb_sets:fold(fun ({object, O}, ok) -> object:die(O, gc), ok end, ok, WhiteObjects),
     gb_sets:fold(fun ({future, Ref}, ok) -> future:die(Ref, gc), ok end, ok, WhiteFutures),
     gcstats(Log,resume_world),
     gb_sets:fold(fun ({cog, Ref}, ok) -> cog:resume_world(Ref) end, ok, Cogs),
@@ -232,11 +227,18 @@ sweep(Data=#data{cogs=Cogs,objects=Objects,futures=Futures,
     Data#data{objects=BlackObjects, futures=BlackFutures, previous=erlang:monotonic_time(milli_seconds),
                      limit=NewLim, proc_factor=PFactor}.
 
-get_references({Module, null}) ->
+get_references({_Module, null}) ->
     [];
-get_references({Module, Ref}) ->
+get_references({object, O}) ->
+    object:get_references(O);
+get_references({future, Ref}) ->
     case is_process_alive(Ref) of
-        true -> Module:get_references(Ref);
+        true -> future:get_references(Ref);
+        false -> []
+    end;
+get_references({cog, #cog{ref=Ref}}) ->
+    case is_process_alive(Ref) of
+        true -> cog:get_references(Ref);
         false -> []
     end.
 
@@ -255,10 +257,10 @@ extract_references(DataStructure) ->
 				     %% `undefined' otherwise.
 				     to_deep_list(get(vars))])).
 
-to_deep_list(#object{ref=Ref}) ->
-    {object, Ref};
-to_deep_list(#cog{dc=#object{ref=Ref}}) ->
-    {object, Ref};
+to_deep_list(O=#object{ref=_Ref}) ->
+    {object, O};
+to_deep_list(#cog{dc=DC=#object{ref=_Ref}}) ->
+    {object, DC};
 to_deep_list(Ref) when is_pid(Ref) ->
     {future, Ref};
 to_deep_list(DataStructure) when is_tuple(DataStructure) ->

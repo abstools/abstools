@@ -174,21 +174,26 @@ inc_ref_count(#cog{ref=Cog})->
 dec_ref_count(#cog{ref=Cog})->
     gen_statem:cast(Cog, dec_ref_count).
 
+get_references(#cog{ref=Ref}) ->
+    get_references(Ref);
 get_references(Cog) ->
     gen_statem:cast(Cog, {get_references, self()}),
     receive {references_from_cog, References} -> References end.
 
+stop_world(#cog{ref=Ref}) ->
+    gen_statem:cast(Ref, stop_world);
 stop_world(Cog) ->
-    gen_statem:cast(Cog, stop_world),
-    ok.
+    gen_statem:cast(Cog, stop_world).
 
+resume_world(#cog{ref=Ref}) ->
+    gen_statem:cast(Ref, resume_world);
 resume_world(Cog) ->
-    gen_statem:cast(Cog, resume_world),
-    ok.
+    gen_statem:cast(Cog, resume_world).
 
+kill_recklessly(#cog{ref=Ref}) ->
+    gen_statem:cast(Ref, kill_recklessly);
 kill_recklessly(Cog) ->
-    gen_statem:cast(Cog, kill_recklessly),
-    ok.
+    gen_statem:cast(Cog, kill_recklessly).
 
 %%Internal
 
@@ -335,8 +340,8 @@ send_token(Token, Process, ObjectState) ->
     Process ! {Token, ObjectState}.
 
 %% Wait until we get the nod from the garbage collector
-cog_starting(cast, stop_world, Data)->
-    gc:cog_stopped(self()),
+cog_starting(cast, stop_world, Data=#data{dc=DC})->
+    gc:cog_stopped(#cog{ref=self(), dc=DC}),
     {next_state, in_gc, Data#data{next_state_after_gc=no_task_schedulable}};
 cog_starting(cast, acknowledged_by_gc, Data)->
     {next_state, no_task_schedulable, Data};
@@ -396,8 +401,8 @@ no_task_schedulable(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,N
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                  process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
-no_task_schedulable(cast, stop_world, Data) ->
-    gc:cog_stopped(self()),
+no_task_schedulable(cast, stop_world, Data=#data{dc=DC}) ->
+    gc:cog_stopped(#cog{ref=self(), dc=DC}),
     {next_state, in_gc, Data#data{next_state_after_gc=no_task_schedulable}};
 no_task_schedulable(cast, Event, Data) ->
     handle_cast(Event, no_task_schedulable, Data);
@@ -566,8 +571,8 @@ process_blocked(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notif
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
-process_blocked(cast, stop_world, Data) ->
-    gc:cog_stopped(self()),
+process_blocked(cast, stop_world, Data=#data{dc=DC}) ->
+    gc:cog_stopped(#cog{ref=self(), dc=DC}),
     {next_state, in_gc, Data#data{next_state_after_gc=process_blocked}};
 process_blocked(cast, Event, Data) ->
     handle_cast(Event, process_blocked, Data);
@@ -579,9 +584,9 @@ process_blocked(info, Event, Data) ->
 waiting_for_gc_stop({call, From}, {token,R,ProcessState, ProcessInfo, ObjectState},
                     Data=#data{running_task=R, runnable_tasks=Run,
                                waiting_tasks=Wai, polling_tasks=Pol,
-                               new_tasks=New,process_infos=ProcessInfos}) ->
+                               new_tasks=New,process_infos=ProcessInfos,dc=DC}) ->
     gen_statem:reply(From, ok),
-    gc:cog_stopped(self()),
+    gc:cog_stopped(#cog{ref=self(), dc=DC}),
     NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
     NewRunnable = case ProcessState of
                       runnable -> Run;
@@ -627,17 +632,17 @@ waiting_for_gc_stop(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,N
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
-waiting_for_gc_stop(cast, {process_blocked, R, ObjectState}, Data=#data{running_task=R,process_infos=ProcessInfos, object_states=ObjectStates}) ->
+waiting_for_gc_stop(cast, {process_blocked, R, ObjectState}, Data=#data{running_task=R,process_infos=ProcessInfos, object_states=ObjectStates,dc=DC}) ->
     cog_monitor:cog_blocked(self()),
-    gc:cog_stopped(self()),
+    gc:cog_stopped(#cog{ref=self(), dc=DC}),
     ProcessInfo=maps:get(R, ProcessInfos),
     This=ProcessInfo#process_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
     {next_state, in_gc, Data#data{next_state_after_gc=process_blocked,object_states=NewObjectStates}};
 waiting_for_gc_stop(cast, {process_blocked_for_gc, R, ObjectState},
                     Data=#data{running_task=R,process_infos=ProcessInfos,
-                               object_states=ObjectStates}) ->
-    gc:cog_stopped(self()),
+                               object_states=ObjectStates,dc=DC}) ->
+    gc:cog_stopped(#cog{ref=self(), dc=DC}),
     ProcessInfo=maps:get(R, ProcessInfos),
     This=ProcessInfo#process_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
@@ -648,10 +653,10 @@ waiting_for_gc_stop(info, {'EXIT',TaskRef,_Reason},
             Data=#data{next_state_after_gc=StateAfterGC,
                        running_task=R, runnable_tasks=Run,
                        waiting_tasks=Wai, polling_tasks=Pol,
-                       new_tasks=New, process_infos=ProcessInfos}) ->
+                       new_tasks=New, process_infos=ProcessInfos,dc=DC}) ->
     RunningTaskFinished=TaskRef==R,
     case RunningTaskFinished of
-        true -> gc:cog_stopped(self());
+        true -> gc:cog_stopped(#cog{ref=self(), dc=DC});
         false -> ok
     end,
     {next_state,
@@ -720,10 +725,10 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                                      next_state_after_gc=NextState,
                                      scheduler=Scheduler,
                                      process_infos=ProcessInfos,
-                                     object_states=ObjectStates}) ->
+                                     object_states=ObjectStates, dc=DC}) ->
     case Referencers > 0 of
         false -> cog_monitor:cog_died(self()),
-                 gc:unregister_cog(self()),
+                 gc:unregister_cog(#cog{ref=self(), dc=DC}),
                  {stop, normal, Data};
         true ->
             case NextState of
