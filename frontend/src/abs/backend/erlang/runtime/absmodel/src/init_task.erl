@@ -11,8 +11,8 @@ init(Cog,_Future,CalleeObj,Args)->
     {CalleeObj,Args}.
 
 
-start({Obj=#object{class=C},Args})->
-    object:activate(Obj),
+start({Obj=#object{cog=Cog,class=C},Args})->
+    cog:activate_object(Cog, Obj),
     C:init(Obj,Args).
 
 

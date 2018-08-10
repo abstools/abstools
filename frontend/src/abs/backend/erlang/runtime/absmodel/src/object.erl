@@ -1,8 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(object).
-%% An object is implemented as an state machine with the states uninitialized
-%% and active.  It starts in the uninitialized state and will handle most
-%% request only after it is initialized.
+%% An object is implemented as an state machine.
 %%
 %% The object stores and retrieves its values by calling the behaviour
 %% callbacks of the given class module.
@@ -18,9 +16,7 @@
 
 %% API
 
-%% KLUDGE: dc.erl directly sends events as well.  This is not good; we should
-%% export those as functions.
--export([new_local/3,new/5,activate/1,new_object_task/3,die/2]).
+-export([new_local/3,new/5,new_object_task/3,die/2]).
 
 %% Garbage collection callback
 -behaviour(gc).
@@ -32,7 +28,7 @@
 
 %% gen_statem callbacks
 -export([init/1, callback_mode/0, terminate/3, code_change/4]).
--export([active/3,uninitialized/3]).
+-export([active/3]).
 
 behaviour_info(callbacks) ->
     [{get_val_internal, 2},{set_val_internal,3},{init_internal,0}];
@@ -45,7 +41,6 @@ behaviour_info(_) ->
 new_local(Cog,Class,Args)->
     cog:inc_ref_count(Cog),
     O=start(Cog,Class),
-    object:activate(O),
     case cog_monitor:are_objects_of_class_protected(Class) of
         true -> protect_object_from_gc(O);
         false -> ok
@@ -56,6 +51,7 @@ new_local(Cog,Class,Args)->
     put(this, Class:init_internal()),
     Class:init(O,Args),
     cog:new_object(Cog, O, Class, get(this)),
+    cog:activate_object(Cog, O),
     %% FIXME: can we construct a pathological case involving
     %% synchronous atomic callbacks that invalidates `OldState'?
     put(this, OldState),
@@ -65,6 +61,7 @@ new(Cog,Class,Args,CreatorCog,Stack)->
     O=start(Cog,Class),
     State=Class:init_internal(),
     cog:new_object(Cog, O, Class, State),
+    %% activate_object is called in init_task:start/2
     case cog_monitor:are_objects_of_class_protected(Class) of
         true -> protect_object_from_gc(O);
         false -> ok
@@ -78,18 +75,16 @@ new(Cog,Class,Args,CreatorCog,Stack)->
     O.
 
 
-activate(#object{ref=O})->
-    gen_statem:cast(O,activate).
-
-
-new_object_task(#object{ref=O},TaskRef,Params)->
+new_object_task(O=#object{cog=Cog},TaskRef,Params)->
+    %% FIXME: move this directly into cog / task module?
     try
-        Res = gen_statem:call(O, {new_task,TaskRef}),
+        Res = cog:sync_task_with_object(Cog, O, TaskRef),
         case Res of
             uninitialized -> await_activation(Params);
             active -> Res
         end
     catch
+        %% FIXME: catch error for "no object found"
         _:{noproc,_} ->
             exit({deadObject, O})
     end.
@@ -122,7 +117,6 @@ await_activation(Params) ->
 
 
 -record(data,{cog,      % a reference to the COG the object belongs to
-              await=[], % keeps track of all tasks while object is initializing
               tasks=gb_sets:empty(),     % all task running on this object
               class,                     % The class of the object (a symbol)
               alive=true,     % false if object is garbage collected / crashed
@@ -141,19 +135,7 @@ callback_mode() -> state_functions.
 
 
 init([Cog,Class])->
-    {ok,uninitialized,#data{cog=Cog,await=[],tasks=gb_sets:empty(),class=Class,alive=true,protect_from_gc=false}}.
-
-uninitialized(cast, activate, Data=#data{await=A})->
-    lists:foreach(fun(X)-> X ! active end,A),
-    {next_state,active,Data#data{await=[]}};
-uninitialized({call, From}, {new_task,TaskRef}, Data=#data{await=A,tasks=Tasks})->
-    monitor(process,TaskRef),
-    {keep_state, Data#data{await=[TaskRef|A],tasks=gb_sets:add_element(TaskRef, Tasks)}, {reply, From, uninitialized}};
-uninitialized({call, From}, Msg, Data) ->
-    handle_call(From, Msg, Data);
-uninitialized(info, Msg, Data) ->
-    handle_info(Msg, uninitialized, Data).
-
+    {ok,active,#data{cog=Cog,tasks=gb_sets:empty(),class=Class,alive=true,protect_from_gc=false}}.
 
 active({call, From}, {new_task,TaskRef}, Data=#data{tasks=Tasks})->
     monitor(process,TaskRef),

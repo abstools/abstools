@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
 -export([start/0,start/1,start/2,add_main_task/3,add_task/7]).
--export([new_object/4,object_dead/2,object_state_changed/3,get_object_state/2]).
+-export([new_object/4,activate_object/2,object_dead/2,object_state_changed/3,get_object_state/2,sync_task_with_object/3]).
 -export([get_dc/2]).
 -export([process_is_runnable/2,
          process_is_blocked/3, process_is_blocked_for_gc/3,
@@ -59,6 +59,8 @@
          process_infos=#{},
          %% Map with all object states
          object_states=#{ null => {} },
+         %% Uninitialized objects and the tasks trying to run on them
+         fresh_objects=#{},
          %% Map with Oid -> DC state machine mappings
          dcs=#{}
         }).
@@ -108,7 +110,10 @@ new_object(#cog{ref=Cog}, Oid, Class, ObjectState) ->
             gen_statem:cast(Cog, {new_dc, Oid});
         _ -> ok
     end,
-    gen_statem:cast(Cog, {update_object_state, Oid, ObjectState}).
+    gen_statem:cast(Cog, {new_object_state, Oid, ObjectState}).
+
+activate_object(#cog{ref=Cog}, #object{ref=Oid}) ->
+    gen_statem:cast(Cog, {activate_object, Oid}).
 
 object_dead(#cog{ref=Cog}, #object{ref=Oid}) ->
     gen_statem:cast(Cog, {object_dead, Oid});
@@ -131,6 +136,11 @@ get_object_state(#cog{ref=Cog}, Oid) ->
     gen_statem:call(Cog, {get_object_state, Oid});
 get_object_state(Cog, Oid) ->
     gen_statem:call(Cog, {get_object_state, Oid}).
+
+sync_task_with_object(#cog{ref=Cog}, #object{ref=Oid}, TaskRef) ->
+    %% either uninitialized or active; if uninitialized, signal
+    %% TaskRef when we switch to active
+    gen_statem:call(Cog, {sync_task_with_object, Oid, TaskRef}).
 
 get_dc(#cog{ref=Cog}, #object{ref=Oid}) ->
     gen_statem:call(Cog, {get_dc, Oid});
@@ -222,8 +232,13 @@ handle_cast(dec_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
 handle_cast({new_dc, Oid}, _StateName, Data=#data{dcs=DCs}) ->
     DC=dc:new(self(), Oid),
     {keep_state, Data#data{dcs=maps:put(Oid, DC, DCs)}};
+handle_cast({new_object_state, Oid, ObjectState}, _StateName, Data=#data{object_states=ObjectStates, fresh_objects=FreshObjects}) ->
+    {keep_state, Data#data{object_states=maps:put(Oid, ObjectState, ObjectStates), fresh_objects=maps:put(Oid, [], FreshObjects)}};
 handle_cast({update_object_state, Oid, ObjectState}, _StateName, Data=#data{object_states=ObjectStates}) ->
     {keep_state, Data#data{object_states=maps:put(Oid, ObjectState, ObjectStates)}};
+handle_cast({activate_object, Oid}, _StateName, Data=#data{fresh_objects=FreshObjects}) ->
+    lists:foreach(fun(X)-> X ! active end,maps:get(Oid, FreshObjects, [])),
+    {keep_state, Data#data{fresh_objects=maps:remove(Oid, FreshObjects)}};
 handle_cast({object_dead, Oid}, _StateName, Data=#data{object_states=ObjectStates}) ->
     {keep_state, Data#data{object_states=maps:remove(Oid, ObjectStates)}};
 handle_cast(_Event, _StateName, Data) ->
@@ -231,6 +246,15 @@ handle_cast(_Event, _StateName, Data) ->
 
 handle_call(From, {get_object_state, Oid}, _StateName, Data=#data{object_states=ObjectStates}) ->
     {keep_state_and_data, {reply, From, maps:get(Oid, ObjectStates)}};
+handle_call(From, {sync_task_with_object, Oid, TaskRef}, _StateName,
+           Data=#data{fresh_objects=FreshObjects}) ->
+    case maps:is_key(Oid, FreshObjects) of
+        false -> {keep_state_and_data, {reply, From, active}};
+        true -> Tasks=maps:get(Oid, FreshObjects),
+            {keep_state,
+             Data#data{fresh_objects=maps:put(Oid, [TaskRef | Tasks], FreshObjects)},
+             {reply, From, uninitialized}}
+    end;
 handle_call(From, {get_dc, Oid}, _StateName, Data=#data{dcs=DCs}) ->
     {keep_state_and_data, {reply, From, maps:get(Oid, DCs)}};
 handle_call(From, Event, StateName, Data) ->
