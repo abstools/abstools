@@ -57,6 +57,8 @@
          %% Map from pid to process_info structure (see
          %% ../include/abs_types.hrl); updated when token passed.
          process_infos=#{},
+         %% increasing count of objects; also generator of unique id
+         object_counter=0,
          %% Map with all object states
          object_states=#{ null => {} },
          %% Uninitialized objects and the tasks trying to run on them
@@ -110,7 +112,7 @@ new_object(#cog{ref=Cog}, Oid, Class, ObjectState) ->
             gen_statem:cast(Cog, {new_dc, Oid});
         _ -> ok
     end,
-    gen_statem:cast(Cog, {new_object_state, Oid, ObjectState}).
+    gen_statem:call(Cog, {new_object_state, Oid, ObjectState}).
 
 activate_object(#cog{ref=Cog}, #object{ref=Oid}) ->
     gen_statem:cast(Cog, {activate_object, Oid}).
@@ -232,8 +234,6 @@ handle_cast(dec_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
 handle_cast({new_dc, Oid}, _StateName, Data=#data{dcs=DCs}) ->
     DC=dc:new(self(), Oid),
     {keep_state, Data#data{dcs=maps:put(Oid, DC, DCs)}};
-handle_cast({new_object_state, Oid, ObjectState}, _StateName, Data=#data{object_states=ObjectStates, fresh_objects=FreshObjects}) ->
-    {keep_state, Data#data{object_states=maps:put(Oid, ObjectState, ObjectStates), fresh_objects=maps:put(Oid, [], FreshObjects)}};
 handle_cast({update_object_state, Oid, ObjectState}, _StateName, Data=#data{object_states=ObjectStates}) ->
     {keep_state, Data#data{object_states=maps:put(Oid, ObjectState, ObjectStates)}};
 handle_cast({activate_object, Oid}, _StateName, Data=#data{fresh_objects=FreshObjects}) ->
@@ -257,6 +257,13 @@ handle_call(From, {sync_task_with_object, Oid, TaskRef}, _StateName,
     end;
 handle_call(From, {get_dc, Oid}, _StateName, Data=#data{dcs=DCs}) ->
     {keep_state_and_data, {reply, From, maps:get(Oid, DCs)}};
+handle_call(From, {new_object_state, Oid, ObjectState}, _StateName,
+            Data=#data{object_states=ObjectStates, fresh_objects=FreshObjects,
+                       object_counter=ObjCounter}) ->
+    {keep_state, Data#data{object_states=maps:put(Oid, ObjectState, ObjectStates),
+                           fresh_objects=maps:put(Oid, [], FreshObjects),
+                           object_counter=ObjCounter + 1},
+    {reply, From, ObjCounter}};
 handle_call(From, Event, StateName, Data) ->
     {stop, not_supported, data}.
 
