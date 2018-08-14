@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
 -export([start/0,start/1,start/2,add_main_task/3,add_task/7]).
--export([new_object/4,activate_object/2,object_dead/2,object_state_changed/3,get_object_state/2,sync_task_with_object/3]).
+-export([new_object/3,activate_object/2,object_dead/2,object_state_changed/3,get_object_state/2,sync_task_with_object/3]).
 -export([get_dc/2]).
 -export([process_is_runnable/2,
          process_is_blocked/3, process_is_blocked_for_gc/3,
@@ -104,17 +104,18 @@ add_main_task(#cog{ref=Cog},Args,Info)->
     TaskRef=await_start(Cog, main_task, Args),
     TaskRef.
 
-new_object(Cog, #object{ref=Oid}, Class, ObjectState) ->
-    new_object(Cog, Oid, Class, ObjectState);
-new_object(#cog{ref=Cog}, Oid, Class, ObjectState) ->
+new_object(Cog=#cog{ref=CogRef}, Class, ObjectState) ->
+    Oid=gen_statem:call(CogRef, {new_object_state, ObjectState}),
     case Class of
         class_ABS_DC_DeploymentComponent ->
-            gen_statem:cast(Cog, {new_dc, Oid});
+            gen_statem:cast(CogRef, {new_dc, Oid});
         _ -> ok
     end,
-    gen_statem:call(Cog, {new_object_state, Oid, ObjectState}).
+    #object{class=Class,ref=Oid,cog=Cog}.
 
 activate_object(#cog{ref=Cog}, #object{ref=Oid}) ->
+    gen_statem:cast(Cog, {activate_object, Oid});
+activate_object(Cog, #object{ref=Oid}) ->
     gen_statem:cast(Cog, {activate_object, Oid}).
 
 object_dead(#cog{ref=Cog}, #object{ref=Oid}) ->
@@ -132,12 +133,15 @@ object_state_changed(#cog{ref=Cog}, Oid, ObjectState) ->
 object_state_changed(Cog, Oid, ObjectState) ->
     gen_statem:cast(Cog, {update_object_state, Oid, ObjectState}).
 
+%% DCs call with "raw" pids, everyone else with a cog structure
 get_object_state(#cog{ref=Cog}, #object{ref=Oid}) ->
-    gen_statem:call(Cog, {get_object_state, Oid});
-get_object_state(#cog{ref=Cog}, Oid) ->
-    gen_statem:call(Cog, {get_object_state, Oid});
+    get_object_state(Cog, Oid);
 get_object_state(Cog, Oid) ->
-    gen_statem:call(Cog, {get_object_state, Oid}).
+    case gen_statem:call(Cog, {get_object_state, Oid}) of
+        dead -> throw(dataObjectDeadException);
+        X -> X
+    end.
+
 
 sync_task_with_object(#cog{ref=Cog}, #object{ref=Oid}, TaskRef) ->
     %% either uninitialized or active; if uninitialized, signal
@@ -245,7 +249,7 @@ handle_cast(_Event, _StateName, Data) ->
     {stop, not_supported, Data}.
 
 handle_call(From, {get_object_state, Oid}, _StateName, Data=#data{object_states=ObjectStates}) ->
-    {keep_state_and_data, {reply, From, maps:get(Oid, ObjectStates)}};
+    {keep_state_and_data, {reply, From, maps:get(Oid, ObjectStates, dead)}};
 handle_call(From, {sync_task_with_object, Oid, TaskRef}, _StateName,
            Data=#data{fresh_objects=FreshObjects}) ->
     case maps:is_key(Oid, FreshObjects) of
@@ -257,13 +261,14 @@ handle_call(From, {sync_task_with_object, Oid, TaskRef}, _StateName,
     end;
 handle_call(From, {get_dc, Oid}, _StateName, Data=#data{dcs=DCs}) ->
     {keep_state_and_data, {reply, From, maps:get(Oid, DCs)}};
-handle_call(From, {new_object_state, Oid, ObjectState}, _StateName,
+handle_call(From, {new_object_state, ObjectState}, _StateName,
             Data=#data{object_states=ObjectStates, fresh_objects=FreshObjects,
                        object_counter=ObjCounter}) ->
+    Oid=ObjCounter + 1,
     {keep_state, Data#data{object_states=maps:put(Oid, ObjectState, ObjectStates),
                            fresh_objects=maps:put(Oid, [], FreshObjects),
-                           object_counter=ObjCounter + 1},
-    {reply, From, ObjCounter}};
+                           object_counter=Oid},
+    {reply, From, Oid}};
 handle_call(From, Event, StateName, Data) ->
     {stop, not_supported, data}.
 

@@ -406,10 +406,6 @@ aspect GenerateErlang {
     ecs.decIndent();
     ecs.println("Callee=#object{ref=ObjRef,class=T,cog=Cog} ->");
     ecs.incIndent();
-    ecs.println("case is_process_alive(ObjRef) of");
-    ecs.incIndent();
-    ecs.println("true ->");
-    ecs.incIndent();
     ecs.println("Vars=get(vars),");
     ecs.println("put(this,cog:get_object_state(Callee#object.cog, Callee)),");
     ecs.format("Result=T:'m_%s'", getMethod());
@@ -421,10 +417,6 @@ aspect GenerateErlang {
     ecs.println("put(this, cog:get_object_state(O#object.cog, O)),");
     ecs.println("put(vars, Vars),");
     ecs.println("Result;");
-    ecs.decIndent();
-    ecs.format("false -> throw(dataObjectDeadException)");
-    ecs.println();
-    ecs.decIndent().println("end;");
     ecs.decIndent().println("_ ->");
     ecs.incIndent().print("TempFuture = future:start(");
     getCallee().generateErlangCode(ecs,vars);
