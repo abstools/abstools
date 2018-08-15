@@ -190,4 +190,8 @@ public class ObjectTests extends SemanticTests {
         assertEvalTrue(new File("tests/abssamples/backend/ObjectTests/recover1.abs"));
      }
 
+    @Test
+    public void syncCallAwaitField() throws Exception {
+        assertEvalTrue(new File("tests/abssamples/backend/ObjectTests/synccall1.abs"));
+     }
 }
