@@ -3,9 +3,13 @@
 
 
 Interfaces in ABS are similar to interfaces in Java.  They have a name, which
-defines a nominal type, and they can extend zero or more other
-interfaces.  The interface body consists of a list of method signature
-declarations.  Method names start with a lowercase letter.
+defines a nominal type, and they can extend one or more interfaces.  If no
+explicit `extends` clause is given, the interface will extend the standard
+library interface `ABS.StdLib.Object` (see <<type-object>>).  The
+`ABS.StdLib.Object` interface does not specify any methods.
+
+The interface body consists of a list of method signature declarations.
+Method names start with a lowercase letter.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
@@ -19,6 +23,10 @@ If a method declarations in an interface has an `[Atomic]` annotation, the
 compiler will statically check that any definitions for this method contain no
 suspension points (`suspend` and `await` statements), i.e., that running that
 method will complete without scheduling.
+
+NOTE: For ease of reasoning and analysis, ABS methods differ only by name.  It
+is an error for an interface to declare two methods with the same name, either
+explicitly or via extending another interface.
 
 The interfaces in the example below represent a database system, providing
 functionality to store and retrieve files, and a node of a peer-to-peer file
@@ -55,14 +63,17 @@ interface Peer extends Client, Server {
 Classes in ABS describe stateful behavior.  All objects in ABS have exactly
 one class; objects are created via the `new` expression.
 
-Classes implement zero or more interfaces.  If a class implements more than
+Classes implement one or more interfaces.  If a class implements more than
 one interface, <<typecheck-expression>> and <<typecast-expression>> are used
-to obtain a reference to the same object typed with a different interface.
+to obtain a reference to the same object typed with a different interface.  If
+no explicit `implements` clause is given, the class will extend the standard
+library interface `ABS.StdLib.Object` (see <<type-object>>).  The
+`ABS.StdLib.Object` interface does not specify any methods.
 
-NOTE: Classes typically implement one or more interfaces so that methods can
-be called on them, but the `run` method makes it meaningful to have objects
-with active behavior only and without interfaces; such objects will never
-accept method calls but can send method calls to other objects.
+NOTE: Classes typically explicitly implement one or more interfaces so that
+methods can be called on them, but the `run` method makes it meaningful to
+have objects without public methods; such objects cannot accept method calls
+but can send method calls to other objects.
 
 NOTE: For ease of reasoning and analysis, ABS methods differ only by name.  It
 is an error for a class to implement two interfaces that both contain a method

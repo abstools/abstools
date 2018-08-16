@@ -1,13 +1,13 @@
 module BackendTest;
 
-interface I { }
-interface J { }
+interface I extends Object { }
+interface J extends Object { }
 
 interface K extends I, J {
     [Atomic] Unit m(Int i, Rat j);
 }
 
-class C { }
+class C implements Object { }
 
 class D (Int y) implements J, K {
     Fut<Unit> f;
