@@ -198,7 +198,7 @@ decode_parameter(Value, Type, TypeArgs) ->
         <<"ABS.StdLib.String">> ->
             Value;
         <<"ABS.StdLib.Float">> ->
-            case is_float(Value) of
+            (case is_float(Value) of
                 %% JSON
                 true -> Value;
                 false ->
@@ -212,7 +212,8 @@ decode_parameter(Value, Type, TypeArgs) ->
                                     binary_to_integer(Value)
                             end
                     end
-            end;
+                     %% Convert int to float by adding 0.0
+            end) + 0.0;
         <<"ABS.StdLib.Int">> ->
             case is_integer(Value) of
                 %% JSON
