@@ -19,6 +19,8 @@ public interface BackendTestDriver {
     public abstract boolean supportsCustomSchedulers();
     
     public abstract boolean supportsExceptions();
+    
+    public abstract boolean supportsDowncasting();
 
     public abstract void assertEvalEquals(String absCode, boolean value) throws Exception;
 

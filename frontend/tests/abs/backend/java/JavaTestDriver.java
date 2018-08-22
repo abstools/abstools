@@ -64,4 +64,7 @@ public class JavaTestDriver implements BackendTestDriver {
 
     @Override
     public boolean supportsExceptions() { return false; }
+
+    @Override
+    public boolean supportsDowncasting() { return false; }
 }

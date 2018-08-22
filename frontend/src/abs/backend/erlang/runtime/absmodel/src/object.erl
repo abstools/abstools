@@ -28,7 +28,7 @@
 
 %% HTTP api: inhibit dying from gc while we're registered.
 -export([protect_object_from_gc/1, unprotect_object_from_gc/1]).
--export([get_object_state_for_json/1,get_all_method_info/1]).
+-export([get_object_state_for_json/1,get_all_method_info/1,has_interface/2]).
 
 %% gen_statem callbacks
 -export([init/1, callback_mode/0, terminate/3, code_change/4]).
@@ -115,6 +115,9 @@ set_field_value(O=#object{ref=Ref}, Field, Value) ->
 
 get_all_method_info(_O=#object{class=C,ref=_Ref}) ->
     C:exported().
+
+has_interface(_O=#object{class=C}, I) ->
+    lists:member(I, C:implemented_interfaces()).
 
 %%Internal
 

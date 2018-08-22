@@ -370,6 +370,26 @@ aspect GenerateErlang {
   }
 
   @Override
+  public void IsExp.generateErlangCode(CodeStream ecs, Vars vars) {
+      ecs.print("object:has_interface((");
+      getExp().generateErlangCode(ecs, vars);
+      ecs.print("), <<\"");
+      ecs.print(getInterfaceTypeUse().getName());
+      ecs.print("\">>)");
+  }
+
+  @Override
+  public void AsExp.generateErlangCode(CodeStream ecs, Vars vars) {
+      String temp = vars.getTemp();
+      ecs.print("begin " + temp + " = ");
+      getExp().generateErlangCode(ecs, vars);
+      ecs.print(", case object:has_interface(" + temp + ", <<\""
+                + getInterfaceTypeUse().getName()
+                + "\">>) of true -> {dataJust, " + temp + "} ; false -> dataNothing end end");
+  }
+
+
+  @Override
   public void ExpressionStmt.generateErlangCode(CodeStream ecs,Vars vars) {
       boolean isNewDC = getExp().getType().isDeploymentComponentType()
           && getExp() instanceof NewExp;

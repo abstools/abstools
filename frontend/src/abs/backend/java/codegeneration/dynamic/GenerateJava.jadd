@@ -620,6 +620,13 @@ aspect GenerateJavaDynamic_Core {
         }
     }
 
+    public void IsExp.generateJavaDynamic(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+    public void AsExp.generateJavaDynamic(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
     public void DataTypeUse.generateJavaDynamic(PrintStream stream) {
         stream.print(JavaBackend.getJavaType(this));
     }

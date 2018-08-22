@@ -770,9 +770,9 @@ class TesterImpl(ServerNode expected, Node actual) implements Tester {
 			Pair<Set<FileId>,FileId> nd = next(fids);
 			FileId id = snd(nd);
 			FileContent es = fromJust(getFromEntryIn(e,id));
-			FileContent as = fromJust(getFromEntryIn(a,id));
-			result = insertElement(result, Triple(id,es,as));
-			assert(es == as);
+			FileContent afs = fromJust(getFromEntryIn(a,id));
+			result = insertElement(result, Triple(id,es,afs));
+			assert(es == afs);
 			fids = fst(nd); 
 		}
 	}
@@ -780,9 +780,9 @@ class TesterImpl(ServerNode expected, Node actual) implements Tester {
 	Unit compareFile(File e, File a) {
 		FileId id = getFileId(Left(e));
 		FileContent es = getFileContent(Left(e));
-		FileContent as = getFileContent(Left(a));
-		result = insertElement(result, Triple(id,es,as));
-		assert(es == as);
+		FileContent afs = getFileContent(Left(a));
+		result = insertElement(result, Triple(id,es,afs));
+		assert(es == afs);
 	}
 	
 }

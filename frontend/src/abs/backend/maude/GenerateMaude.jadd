@@ -296,6 +296,20 @@ aspect GenerateMaude {
         return result;
     }
 
+    public void IsExp.generateMaude(PrintStream stream) {
+        throw new NotImplementedYetException(this); // TODO
+    }
+    public int IsExp.numberOfRandom(Set<String> visitedFunctions) {
+        return getExp().numberOfRandom(visitedFunctions);
+    }
+
+    public void AsExp.generateMaude(PrintStream stream) {
+        throw new NotImplementedYetException(this); // TODO
+    }
+    public int AsExp.numberOfRandom(Set<String> visitedFunctions) {
+        return getExp().numberOfRandom(visitedFunctions);
+    }
+
     abstract public void LiteralExp.generateMaude(PrintStream stream);
     public int LiteralExp.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
