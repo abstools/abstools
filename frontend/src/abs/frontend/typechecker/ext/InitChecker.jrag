@@ -7,7 +7,7 @@ aspect InitChecker {
             n.checkLegalInit(l, msg);
         }
     }
-	
+
     @Override
     void SuspendStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
        l.add(new TypeError(this, msg, "Suspend statements"));
@@ -34,16 +34,22 @@ aspect InitChecker {
     }
 
     @Override
-    void SyncCall.checkLegalInit(SemanticConditionList l, ErrorMessage msg) { 
-        if (!getMethodSig().isAtomic()) {
-            l.add(new TypeError(this, msg, "Synchronous calls of non-atomic methods"));
+    void SyncCall.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        SemanticConditionList tmp = new SemanticConditionList();
+        getCallee().typeCheck(tmp);
+        // Do not attempt to find the method signature if the callee type
+        // cannot be found (https://github.com/abstools/abstools/issues/198)
+        if (l.getErrorCount() == 0) {
+            if (!getMethodSig().isAtomic()) {
+                l.add(new TypeError(this, msg, "Synchronous calls of non-atomic methods"));
+            }
         }
     }
     @Override
-    void GetExp.checkLegalInit(SemanticConditionList l, ErrorMessage msg) { 
+    void GetExp.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
        l.add(new TypeError(this, msg, "Get expressions"));
     }
-    
+
     @Override
     void FieldDecl.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
         if (hasInitExp()) {

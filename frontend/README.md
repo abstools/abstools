@@ -4,7 +4,7 @@
 
 Compiling ABS needs [ant](https://ant.apache.org), the [Java
 JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
-version 8 or later, and [Erlang](http://www.erlang.org/downloads) version 20
+version 8 or later, and [Erlang](http://www.erlang.org/downloads) version 21
 or later.  If using the Maude backend, also install
 [Maude](http://maude.cs.uiuc.edu/download/).
 

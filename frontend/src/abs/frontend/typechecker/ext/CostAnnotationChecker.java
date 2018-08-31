@@ -24,6 +24,7 @@ public class CostAnnotationChecker extends DefaultTypeSystemExtension {
     public void checkStmt(Stmt s) {
         PureExp cost = CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.DC.Cost");
         if (cost == null) return;
+        cost.typeCheck(errors);
         if (!cost.getType().isNumericType()) {
             errors.add(new TypeError(s, ErrorMessage.WRONG_COST_ANNOTATION_TYPE,
                                      cost.getType().getQualifiedName()));

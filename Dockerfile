@@ -6,7 +6,8 @@ RUN curl https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb -\# 
  && rm erlang-solutions_1.0_all.deb \
  && echo "deb http://ftp.debian.org/debian jessie-backports main\n" > /etc/apt/sources.list.d/jessie-backports.list \
  && apt-get -y update \
- && apt-get -y install --no-install-recommends unzip git openssl-blacklist libmcrypt-dev erlang default-jre gawk graphviz netcat-openbsd\
+ && apt-get -y install --no-install-recommends unzip git openssl-blacklist libmcrypt-dev erlang gawk graphviz netcat-openbsd \
+ && apt-get -y install -t jessie-backports openjdk-8-jre-headless ca-certificates-java \
  && docker-php-ext-install mcrypt \
  && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/abstools/absexamples.git /var/www/absexamples \

@@ -676,6 +676,9 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     @Override public void exitIntExp(ABSParser.IntExpContext ctx) {
         setV(ctx, new IntLiteral(ctx.INTLITERAL().getText()));
     }
+    @Override public void exitFloatExp(ABSParser.FloatExpContext ctx) {
+        setV(ctx, new FloatLiteral(ctx.FLOATLITERAL().getText()));
+    }
     @Override public void exitStringExp(ABSParser.StringExpContext ctx) {
         setV(ctx, makeStringLiteral(ctx.STRINGLITERAL().getText()));
     }
@@ -702,7 +705,13 @@ public class CreateJastAddASTListener extends ABSBaseListener {
             v(ctx.type_use()),
             new List<>());
         setASTNodePosition(ctx.IDENTIFIER().getSymbol(), pd);
-        setV(ctx, new LetExp(pd, v(ctx.i), v(ctx.b)));
+        setV(ctx, new LetExp(pd, v(ctx.e), v(ctx.b)));
+    }
+    @Override public void exitIsExp(ABSParser.IsExpContext ctx) {
+        setV(ctx, new IsExp(v(ctx.e), v(ctx.i)));
+    }
+    @Override public void exitAsExp(ABSParser.AsExpContext ctx) {
+        setV(ctx, new AsExp(v(ctx.e), v(ctx.i)));
     }
     @Override public void exitParenExp(ABSParser.ParenExpContext ctx) {
         setV(ctx, v(ctx.pure_exp()));

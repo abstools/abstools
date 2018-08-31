@@ -1,2 +1,0 @@
-instructions.install=chmod(targetDir:@artifact,targetFile:costabs_exe,permissions:755);
-instructions.install.import=org.eclipse.equinox.p2.touchpoint.eclipse.chmod

@@ -19,8 +19,8 @@ start(_StartType, _StartArgs) ->
     %% https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy.start_clear/
     case cowboy:start_clear(http, [{port, Port}],
                             #{env => #{dispatch => Dispatch}}) of
-        {ok, _} -> io:format(standard_error, "Starting server on port ~w, abort with Ctrl-C~n", [Port]);
-        _ -> io:format("Failed to start model API on port ~w (is another model already running?)~nAborting~n", [Port]),
+        {ok, _} -> io:format(standard_error, "Starting server on port ~w, abort with Ctrl-C~n", [ranch:get_port(http)]);
+        _ -> io:format(standard_error, "Failed to start model API on port ~w (is another model already running?)~nAborting~n", [Port]),
              halt(1)
     end,
     runtime:start_link([?ABSMAINMODULE, Clocklimit, true]).

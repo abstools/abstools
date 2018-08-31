@@ -5,6 +5,8 @@
 package abs.backend.prettyprint;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -87,15 +89,17 @@ public class PrettyPrinterBackEnd extends Main {
             model.doForEachRewrite = false;
         }
         analyzeFlattenAndRewriteModel(model);
-        if (! force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
+        if (!force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
             printErrorMessage();
             return 1;
         }
 
+        // Set the line separator to LF so the file output prints UNIX line endings on println() calls.
+        System.setProperty("line.separator", "\n");
         final PrintStream stream;
         final String loc;
         if (outputfile != null) {
-            stream = new PrintStream(outputfile);
+            stream = new PrintStream(new FileOutputStream(outputfile), false, "utf-8");
             loc = outputfile.getAbsolutePath();
         } else {
             stream = System.out;
@@ -103,10 +107,12 @@ public class PrettyPrinterBackEnd extends Main {
         }
 
         if (verbose) {
-            System.out.println("Output ABS model source code to "+loc+"...");
+            System.out.println("Output ABS model source code to " + loc + "...");
         }
 
-        PrintWriter writer = new PrintWriter(stream,true);
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(stream), true);
+        // Set line separator back to default value
+        System.setProperty("line.separator", System.lineSeparator());
         ABSFormatter formatter = new DefaultABSFormatter(writer);
         model.doPrettyPrint(writer, formatter);
         return 0;

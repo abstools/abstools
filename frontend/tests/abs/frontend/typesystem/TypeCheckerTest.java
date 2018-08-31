@@ -44,7 +44,7 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void subtypingTicket101() throws Exception {
         // https://github.com/abstools/abstools/issues/101
-        assertTypeOK("interface I {} class A implements I {} { I a = new A(); List<I> as = list[null, a]; }");
+        assertTypeOK("interface I {} class A implements I {} { I a = new A(); List<I> afs = list[null, a]; }");
     }
 
     @Test
@@ -135,6 +135,8 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void plusOk() {
         assertTypeOK("{ Int i = 4 + 5; }");
+        assertTypeOK("{ Float i = 4.0 + 5.0; }");
+        assertTypeOK("{ Float i = 4.0e+08 + 5.0E-12; }");
     }
 
     @Test

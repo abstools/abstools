@@ -9,7 +9,7 @@ aspect ProgramAbstractionBuilder {
     public void Model.buildCoreAbstraction(ProgramAbstraction ta) {
         for (Decl decl : getDecls()) {
             if (decl.isClass()) {
-                String className = decl.qualifiedName();
+                String className = decl.getQualifiedName();
                 ta.classAdd(className);
                 for (ParamDecl field : ((ClassDecl) decl).getParams())
                     ta.classFieldAdd(className, field.getName(), ProgramAbstraction.getVarType(field));
@@ -20,7 +20,7 @@ aspect ProgramAbstractionBuilder {
                     ta.classMethodAdd(className, method.getMethodSig().getName(), types);
                 }
             } else if (decl.isInterface()) {
-                String ifName = decl.qualifiedName();
+                String ifName = decl.getQualifiedName();
                 ta.interfaceAdd(ifName);
                 for (MethodSig sig : ((InterfaceDecl) decl).getBodys()) {
                     java.util.List<String> types = ProgramAbstraction.getMethodParameterTypes(sig);
@@ -49,7 +49,7 @@ aspect ProgramAbstractionBuilder {
     public void ModifyClassModifier.applyToProgramAbstraction(ProgramAbstraction ta) {
         if (getModel().debug)
             System.out.println("___ applyToProgramAbstraction " + getClass().getName());
-        String className = qualifiedName();
+        String className = getQualifiedName();
         if (ta.existsClass(this)) {
             for (InterfaceTypeUse iface : getAddedInterfaces())
                 ta.classInterfaceAdd(className, iface);

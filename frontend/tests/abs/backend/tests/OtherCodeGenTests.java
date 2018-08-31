@@ -47,7 +47,7 @@ public class OtherCodeGenTests extends CaseStudyTypeChecking {
         File tmp = new File(tmpD,"tmp_erl");
         tmp.mkdir();
         tmp.deleteOnExit();
-        ErlApp ea = new ErlApp(tmp);
+        ErlApp ea = new ErlApp(tmp, null, null);
         m.generateErlangCode(ea, EnumSet.noneOf(ErlangBackend.CompileOptions.class));
         ea.close();
     }

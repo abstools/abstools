@@ -17,12 +17,14 @@ WhiteSpace : [ \t\f\r\n]+ -> skip ;
 
 fragment LETTER : [A-Za-z] ;
 fragment DIGIT : [0-9] ;
+fragment EXPONENT : ('e' | 'E' | 'e+' | 'E+' | 'e-' | 'E-') DIGIT+;
 IDENTIFIER : [a-z] (LETTER | DIGIT | '_')* ;
 TYPE_IDENTIFIER : [A-Z] (LETTER | DIGIT | '_')* ;
 INTLITERAL : '0' | [1-9] DIGIT* ;
 STRINGLITERAL
   :  '"' (STR_ESC | ~('\\' | '"' | '\r' | '\n'))* '"'
   ;
+FLOATLITERAL : INTLITERAL? '.' DIGIT+ EXPONENT? ;
 fragment STR_ESC
   :  '\\' ('\\' | '"' | 't' | 'n' | 'r')
   ;
@@ -98,13 +100,16 @@ pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
     | l=pure_exp op='&&' r=pure_exp                        # AndExp
     | l=pure_exp op='||' r=pure_exp                        # OrExp
     | var_or_field_ref                                     # VarOrFieldExp
+    | FLOATLITERAL                                         # FloatExp
     | INTLITERAL                                           # IntExp
     | STRINGLITERAL                                        # StringExp
     | 'this'                                               # ThisExp
     | 'null'                                               # NullExp
+    | e=pure_exp 'is' i=interface_name                     # IsExp
+    | e=pure_exp 'as' i=interface_name                     # AsExp
     | 'if' c=pure_exp 'then' l=pure_exp 'else' r=pure_exp  # IfExp
     | 'case' c=pure_exp '{' casebranch* '}'                # CaseExp
-    | 'let' '(' type_use IDENTIFIER ')' '=' i=pure_exp
+    | 'let' '(' type_use IDENTIFIER ')' '=' e=pure_exp
         'in' b=pure_exp                                    # LetExp
     | '(' pure_exp ')'                                     # ParenExp
     ;
@@ -151,7 +156,6 @@ stmt : annotations type_exp IDENTIFIER ('=' exp)? ';'              # VardeclStmt
     | annotations 'throw' pure_exp ';'                             # ThrowStmt
     | annotations 'die' pure_exp ';'                               # DieStmt
     | annotations 'movecogto' pure_exp ';'                         # MoveCogToStmt
-        // TODO: rebind, subloc
     | annotations exp ';'                                          # ExpStmt
         // Prefer case expression to case statement, so case statement comes later
     | annotations 'case' c=pure_exp '{' casestmtbranch* '}'        # CaseStmt

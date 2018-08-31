@@ -1,4 +1,3 @@
 1. Support testing using Java backend
 2. Maven site for abs-maven-plugin
-3. Integrate Maven dependencies management features with the Eclipse ABS plugin
-4. Integrate other ABS tools with Maven
+3. Integrate other ABS tools with Maven

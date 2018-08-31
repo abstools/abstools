@@ -4,8 +4,10 @@
  */
 package abs.backend.java.codegeneration;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
@@ -15,18 +17,33 @@ import com.google.common.base.Strings;
 import abs.backend.java.JavaBackend;
 
 public class JavaCodeStream extends PrintStream {
+
+    private static final String LINE_SEPARATOR_PROPERTY = "line.separator";
     private static final int INDENT_LENGTH = 4;
     private static final String INDENT1 = Strings.repeat(" ", INDENT_LENGTH);
 
     private Boolean startNewLine = true;
     private String indent = "";
 
-    public JavaCodeStream(OutputStream out) throws UnsupportedEncodingException {
-        super(out, false, JavaBackend.CHARSET);
+    private JavaCodeStream(OutputStream out) throws UnsupportedEncodingException {
+        super(out, false, JavaBackend.CHARSET.name());
     }
 
-    public JavaCodeStream(File file) throws FileNotFoundException, UnsupportedEncodingException {
-        super(file, JavaBackend.CHARSET);
+    public static JavaCodeStream from(OutputStream out) {
+        // Set the line separator to LF while the PrintStream is created so it will print LF on println() calls.
+        System.setProperty(LINE_SEPARATOR_PROPERTY, "\n");
+        try {
+            return new JavaCodeStream(out);
+        } catch (UnsupportedEncodingException e) {
+            // the used charset must be supported by all Java runtime implementations
+            throw new IllegalStateException(e);
+        } finally {
+            System.setProperty(LINE_SEPARATOR_PROPERTY, System.lineSeparator());
+        }
+    }
+
+    public static JavaCodeStream from(File file) throws FileNotFoundException {
+        return from(new BufferedOutputStream(new FileOutputStream(file)));
     }
 
     public void incIndent() {

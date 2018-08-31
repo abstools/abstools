@@ -96,7 +96,7 @@ public class ProgramAbstraction {
      * Classes
      */
     public void classAdd(AddClassModifier node) {
-        String className = node.qualifiedName();
+        String className = node.getQualifiedName();
         if (classes.containsKey(className))
             errors.add(new SPLTypeError(node, ErrorMessage.DUPLICATE_CLASS_NAME, deltas, product, className,
                     // TODO add " at file:line" with location of original definition
@@ -120,7 +120,7 @@ public class ProgramAbstraction {
         classes.get(className).put("interfaces", new HashMap<>());
     }
     public void classRemove(RemoveClassModifier node) {
-        String className = node.qualifiedName();
+        String className = node.getQualifiedName();
         if (classes.containsKey(className))
             classes.remove(className);
         else
@@ -214,7 +214,7 @@ public class ProgramAbstraction {
      * - modify
      */
     public void interfaceAdd(AddInterfaceModifier node) {
-        String name = node.qualifiedName();
+        String name = node.getQualifiedName();
         if (interfaces.containsKey(name))
             errors.add(new SPLTypeError(node, ErrorMessage.DUPLICATE_INTERFACE_NAME, deltas, product, name,
                     // TODO add " at file:line" with location of original definition
@@ -249,7 +249,7 @@ public class ProgramAbstraction {
      * Helper method
      */
     public boolean existsClass(ModifyClassModifier node) {
-        String className = node.qualifiedName();
+        String className = node.getQualifiedName();
         if (classes.containsKey(className)) {
             return true;
         } else {

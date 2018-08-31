@@ -121,7 +121,7 @@ public class ReachabilityInformation {
     }
 
     private String getClassId(ClassDecl clazz) {
-        return clazz.qualifiedName();
+        return clazz.getQualifiedName();
     }
 
     private String getMethodId(ClassDecl clazz, MethodSig method) {
@@ -307,7 +307,7 @@ public class ReachabilityInformation {
     public boolean setProcessed(MethodImpl method) {
         ClassDecl clazz = obtainOwnerClass(method);
         if (clazz != null)
-            return processedMethods.add(clazz.qualifiedName() + method.getMethodSig().toString());
+            return processedMethods.add(clazz.getQualifiedName() + method.getMethodSig().toString());
         else
             return false;
     }
@@ -319,7 +319,7 @@ public class ReachabilityInformation {
     public boolean setProcessed(InitBlock block) {
         ClassDecl clazz = obtainOwnerClass(block);
         if (clazz != null)
-            return processedMethods.add(clazz.qualifiedName() + "init");
+            return processedMethods.add(clazz.getQualifiedName() + "init");
         else
             return false;
     }

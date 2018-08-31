@@ -47,7 +47,7 @@ public class CompilerUtils {
         for (Annotation a : annotations) {
             if (a instanceof TypedAnnotation) {
                 TypedAnnotation ta = (TypedAnnotation)a;
-                if (((TypeUse)ta.getAccess()).getDecl().qualifiedName().equals(qualifiedAnnotationName))
+                if (((TypeUse)ta.getAccess()).getDecl().getQualifiedName().equals(qualifiedAnnotationName))
                     return ta.getValue();
             }
         }

@@ -4,6 +4,9 @@
  */
 package abs.backend.common;
 
+import java.io.File;
+
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -173,5 +176,29 @@ public class ObjectTests extends SemanticTests {
         // Erlang objected to "fun" as field / class parameter name.
         // throw in a "static" as well to try and trip up Java.
         assertEvalTrue("class A(Bool static) { Bool fun = False; } { Bool testresult = True; }");
+    }
+
+    @Test
+    public void scheduler_priority() {
+        Assume.assumeTrue("Only meaningful with custom scheduler support", driver.supportsCustomSchedulers());
+        assertEvalTrue(new File("tests/abssamples/backend/TimeTests/scheduler_priority.abs"));
+    }
+
+    @Test
+    public void classRecover1() throws Exception {
+        Assume.assumeTrue("Only meaningful with exception support", driver.supportsExceptions());
+        assertEvalTrue(new File("tests/abssamples/backend/ObjectTests/recover1.abs"));
+     }
+
+    @Test
+    public void downcast_false() throws Exception {
+        Assume.assumeTrue("Only meaningful with downcast support", driver.supportsDowncasting());
+        assertEvalTrue(new File("tests/abssamples/backend/ObjectTests/downcast-false.abs"));
+    }
+
+    @Test
+    public void downcast_true() throws Exception {
+        Assume.assumeTrue("Only meaningful with downcast support", driver.supportsDowncasting());
+        assertEvalTrue(new File("tests/abssamples/backend/ObjectTests/downcast-true.abs"));
     }
 }

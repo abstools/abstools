@@ -156,9 +156,9 @@ public class JavaGeneratorHelper {
 
     public static void generateBuiltInFnApp(PrintStream stream, FnApp app) {
         FunctionDecl d = (FunctionDecl) app.getDecl();
-        String name = d.getName();
-        if (!builtInFunctionExists(name)) {
-            throw new NotImplementedYetException(app, "The built in function '" + name + "' is not implemented in the Java backend.");
+        String name = builtInFunctionJavaName(d.getName());
+        if (name == null) {
+            throw new NotImplementedYetException(app, "The built in function '" + d.getName() + "' is not implemented in the Java backend.");
         }
 
         // if builtin function returns a non-builtin type, cast the returned value to that type
@@ -181,13 +181,16 @@ public class JavaGeneratorHelper {
                 .append("\", ").append(app.getStartLine()).toString();
     }
 
-    private static boolean builtInFunctionExists(String name) {
+    private static String builtInFunctionJavaName(String name) {
         for (Method m : ABSBuiltInFunctions.class.getMethods()) {
             if (m.getName().equals(name)) {
-                return true;
+                return name;
+            }
+            if (m.getName().equals(name + "__")) {
+                return name + "__";
             }
         }
-        return false;
+        return null;
     }
 
     public static String getDebugString(ASTNode<?> node) {
@@ -552,12 +555,18 @@ public class JavaGeneratorHelper {
 
     public static String generateUserSchedulingStrategy(NewExp exp, PureExp scheduler) {
         String className = "UserSchedulingStrategy_" + JavaBackend.getRandomName();
-        PrintStream stream = null;
+        JavaCode.Package pkg;
+        File file;
         try {
-            JavaCode.Package pkg = exp.getModuleDecl().getJavaPackage();
-            File file = pkg.createJavaFile(className);
-            stream = new JavaCodeStream(file);
+            pkg = exp.getModuleDecl().getJavaPackage();
+            file = pkg.createJavaFile(className);
+        } catch (JavaCodeGenerationException | IOException e) {
+            // TODO properly handle exceptions
+            e.printStackTrace();
+            return null;
+        }
 
+        try (PrintStream stream = JavaCodeStream.from(file)){
             stream.println("package " + pkg.packageName + ";");
             stream.print("public final class " + className);
             stream.println(" extends " + UserSchedulingStrategy.class.getName() + " {");
@@ -577,16 +586,9 @@ public class JavaGeneratorHelper {
 
             // connect generated TaskSchedulingStrategy to the cog's TaskScheduler
             return pkg.packageName + "." + className;
-
-        } catch (JavaCodeGenerationException e) {
-            // TODO properly handle exception
-            e.printStackTrace();
         } catch (IOException e) {
             // TODO properly handle exception
             e.printStackTrace();
-        } finally {
-            if (stream != null)
-                stream.close();
         }
         return null;
     }

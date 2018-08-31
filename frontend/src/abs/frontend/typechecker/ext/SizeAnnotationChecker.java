@@ -23,26 +23,27 @@ public class SizeAnnotationChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkExpressionStmt(ExpressionStmt e) {
-        checkSizeAnnotationCorrect(e, CompilerUtils.getAnnotationValueFromName(e.getAnnotations(), "ABS.DC.Size"));
+        checkSizeAnnotationCorrect(e, CompilerUtils.getAnnotationValueFromName(e.getAnnotations(), "ABS.DC.DataSize"));
     }
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
-        checkSizeAnnotationCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.DC.Size"));
+        checkSizeAnnotationCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.DC.DataSize"));
     }
 
     @Override
     public void checkVarDeclStmt(VarDeclStmt v) {
-        checkSizeAnnotationCorrect(v, CompilerUtils.getAnnotationValueFromName(v.getAnnotations(), "ABS.DC.Size"));
+        checkSizeAnnotationCorrect(v, CompilerUtils.getAnnotationValueFromName(v.getAnnotations(), "ABS.DC.DataSize"));
     }
 
     @Override
     public void checkReturnStmt(ReturnStmt s) {
-        checkSizeAnnotationCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.DC.Size"));
+        checkSizeAnnotationCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.DC.DataSize"));
     }
 
     private void checkSizeAnnotationCorrect(ASTNode<?> n, PureExp size) {
         if (size == null) return;
+        size.typeCheck(errors);
         if (!size.getType().isNumericType()) {
             errors.add(new TypeError(n, ErrorMessage.WRONG_SIZE_ANNOTATION_TYPE,
                                      size.getType().getQualifiedName()));

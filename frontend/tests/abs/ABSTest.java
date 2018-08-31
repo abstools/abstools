@@ -16,6 +16,7 @@ import abs.frontend.analyser.SemanticConditionList;
 import abs.backend.common.InternalBackendException;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
+import abs.frontend.delta.DeltaModellingException;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import static abs.ABSTest.Config.*;
@@ -96,6 +97,10 @@ public class ABSTest {
                     // make ProductDecl.getProduct() not return null
                     p.evaluateAllProductDeclarations();
                     if (isSet(TYPE_CHECK, config)) {
+                        // copy other choice parts of Main.analyzeFlattenAndRewriteModel
+                        p.flattenTraitOnly();
+                        p.collapseTraitModifiers();
+                        p.expandPartialFunctions();
                         if (isSet(WITH_LOC_INF, config)) {
                             LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(p);
                             p.registerTypeSystemExtension(ltie);
@@ -125,11 +130,13 @@ public class ABSTest {
 
     /**
      * Note: does not handle EXPECT_*.
+     * @throws DeltaModellingException 
      */
-    static public Model assertParseFileOk(String fileName, Config... config) throws IOException, WrongProgramArgumentException, InternalBackendException {
+    static public Model assertParseFileOk(String fileName, Config... config) throws IOException, WrongProgramArgumentException, InternalBackendException, DeltaModellingException {
         Main main = new Main();
         main.setWithStdLib(isSet(WITH_STD_LIB,config));
         Model m = main.parseFiles(resolveFileName(fileName));
+        main.analyzeFlattenAndRewriteModel(m);
         m.evaluateAllProductDeclarations();
         return assertParseModelOk(m, config);
     }

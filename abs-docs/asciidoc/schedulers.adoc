@@ -31,24 +31,21 @@ It is possible to formulate an Earliest Deadline First (EDF) scheduler in ABS:
 [source]
 .Example
 ----
-def Process find_shortest_deadline(Process candidate, List<Process> l) =
-  if l == Nil then candidate
-  else if durationLessThan(proc_deadline(head(l)), proc_deadline(candidate))
-    then find_shortest_deadline(head(l), tail(l))
-    else find_shortest_deadline(candidate, tail(l));
-
 def Process earliest_deadline_scheduler(List<Process> queue) =
-find_shortest_deadline(head(queue), tail(queue));
+  foldl((Process a, Process b) =>
+      if durationLessThan(proc_deadline(a), proc_deadline(b)) // a < b
+      then a else b)
+    (queue, head(queue));
 ----
 
 
 All schedulers must have a result type `Process` and must take an argument of
-type `List<Process>` as their first argument.
+type `List<Process>`.
 
-NOTE: Schedulers can have more than one argument; arguments after the first
-one will be filled with the value of object fields at scheduling time.  This
-feature is available in the Maude backend only but will be implemented in the
-Erlang backend as well.
+NOTE: Schedulers can have more than one argument; arguments after the
+first one will be filled with the value of object fields of the same
+name at scheduling time.  This feature is currently available in the
+Maude backend only.
 
 === Processes and Process Attributes
 

@@ -106,6 +106,7 @@ In case of problems, check the following:
 - `absfrontend.jar` should be in the environment variable `CLASSPATH`.
 
 
+[[sec:erlang-backend]]
 === Erlang Backend
 
 The Erlang backend runs ABS models on the Erlang virtual machine by

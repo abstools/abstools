@@ -509,9 +509,9 @@ uses RS;
                 Pair<Set<FileId>,FileId> nd = next(fids);
                 FileId id = snd(nd);
                 FileContent es = fromJust(getFromEntryIn(e,id));
-                FileContent as = fromJust(getFromEntryIn(a,id));
-                result = Insert(Triple(id,es,as),result);
-                assert(es == as);
+                FileContent afs = fromJust(getFromEntryIn(a,id));
+                result = Insert(Triple(id,es,afs),result);
+                assert(es == afs);
                 fids = fst(nd);
             }
         }
@@ -519,9 +519,9 @@ uses RS;
         Unit compareFile(File e, File a) {
             FileId id = getFileId(Left(e));
             FileContent es = getFileContent(Left(e));
-            FileContent as = getFileContent(Left(a));
-            result = Insert(Triple(id,es,as),result);
-            assert(es == as);
+            FileContent afs = getFileContent(Left(a));
+            result = Insert(Triple(id,es,afs),result);
+            assert(es == afs);
         }
 
     }

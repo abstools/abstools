@@ -45,6 +45,8 @@ multiple times without influencing the execution semantics.
  {vbar} _IfExp_ +
  {vbar} _CaseExp_ +
  {vbar} _OperatorExp_ +
+ {vbar} _TypeCheckExp_ +
+ {vbar} _TypeCastExp_ +
  {vbar} `(` _PureExp_ `)`
 |====
 
@@ -88,8 +90,8 @@ to high precedence.
 | `e1 + e2`    | addition                 |left          | number     | number
 | `e1 - e2`    | subtraction              |left          | number     | number
 | `e1 * e2`    | multiplication           |left          | number     | number
-| `e1 / e2`    | division                 |left          | number     | `Rat`
-| `e1 % e2`    | modulo                   |left          | number     | `Int`
+| `e1 / e2`    | division                 |left          | number     | `Rat` or `Float`
+| `e1 % e2`    | modulo                   |left          | number     | number
 | `!e`         | logical negation         |right         | `Bool`     | `Bool`
 | `-e`         | integer negation         |right         | number     | number
 |=======================
@@ -227,7 +229,7 @@ function call expressions, but have an additional prepended set of arguments.
 |  _ParFnAppParam_ ::= | _Identifier_ +
                   {vbar} _AnonymousFunction_
 
-|  _AnonymousFunction_ ::= | `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_  } ]  `)` `+++=>+++` _PureExp_ `;`
+|  _AnonymousFunction_ ::= | `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_  } ]  `)` `+++=>+++` _PureExp_
 |====
 
 [source]
@@ -289,6 +291,7 @@ There are four different kinds of patterns available in ABS:
                  {vbar} __ConstrPattern__
 | _ConstrPattern_ ::= | _TypeIdentifier_ [ `(` [ _Pattern_ { `,` _Pattern_ }  ] `)` ]
 |====
+
 
 ===== The Variable Pattern
 
@@ -407,6 +410,66 @@ expression.  A branch (a pattern and its expression) is type-correct if its
 pattern and its right-hand side expression are type-correct.  A pattern is
 type-correct if it can match the corresponding case expression.
 
+
+
+[[typecheck-expression]]
+==== The Type-Check Expression
+
+Variables pointing to objects are typed by interface, which means that the
+concrete class of the referenced object might support more methods than can be
+called through the reference.  The type-check expression checks if an object
+implements the given interface.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _TypeCheckExp_ ::= | _PureExp_ `is` _TypeIdentifier_
+|====
+
+[source]
+.Example
+----
+interface I {}
+interface J {}
+class C implements I, J {}
+{
+  I o = new C();
+  o is J;  // evaluates to True
+}
+----
+
+
+
+
+[[typecast-expression]]
+==== The Type-Cast Expression
+
+Variables pointing to objects are typed by interface, which means that the
+concrete class of the referenced object might support more methods than can be
+called through the reference.  The type-cast expression returns an
+<<type-optionals,Optional>> of type `Maybe<I>` that wraps the object if it
+implements the given interface `I`, or `Nothing` otherwise.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _TypeCastExp_ ::= | _PureExp_ `as` _TypeIdentifier_
+|====
+
+[source]
+.Example
+----
+interface I {}
+interface J {}
+class C implements I, J {}
+{
+  I o = new C();
+  Maybe<J> mj = o as J;  // fromJust(mj) is of type J
+}
+----
+
+
+
 [[sec:side-effect-expressions]]
 === Expressions with Side Effects
 
@@ -423,7 +486,8 @@ language.
 | _EffExp_ ::= | _NewExp_ +
                  {vbar} _SyncCall_ +
                  {vbar} _AsyncCall_ +
-                 {vbar} _GetExp_
+                 {vbar} _GetExp_ +
+                 {vbar} _AwaitExp_
 |====
 
 ==== New Expression
@@ -463,7 +527,7 @@ type, a method name declared in that interface, and a list of argument expressio
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _SyncCall_ ::= | _PureExp_ `.` _SimpleIdentifier_ `(` _PureExp_ { `,` _PureExp_ } `)`
+| _SyncCall_ ::= | _PureExp_ `.` _SimpleIdentifier_ `(` [ _PureExp_ { `,` _PureExp_ } ] `)`
 |====
 
 [source]
@@ -496,7 +560,7 @@ argument expressions.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _AsyncCall_ ::= | _PureExp_ `!` _SimpleIdentifier_ `(` _PureExp_ { `,` _PureExp_ }  `)`
+| _AsyncCall_ ::= | _PureExp_ `!` _SimpleIdentifier_ `(` [ _PureExp_ { `,` _PureExp_ } ] `)`
 |====
 
 An asynchronous method call creates a new task in the COG that contains the
@@ -746,7 +810,7 @@ calls to partially defined functions.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _AnonymousFunction_  ::= | `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_  } ]  `)` `=>` _PureExp_ `;`
+| _AnonymousFunction_  ::= | `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_  } ]  `)` `=>` _PureExp_
 |====
 
 An anonymous function specifies a number of parameters and an expression that

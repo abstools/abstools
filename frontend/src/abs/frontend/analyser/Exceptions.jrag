@@ -1,0 +1,12 @@
+aspect Exceptions {
+
+    coll java.util.Set<ExceptionDecl> Model.getExceptionDeclarations()
+	[new java.util.HashSet<ExceptionDecl>()]
+	root Model;
+
+    ExceptionDecl contributes this to Model.getExceptionDeclarations();
+}
+
+// Local Variables:
+// mode: java
+// End:

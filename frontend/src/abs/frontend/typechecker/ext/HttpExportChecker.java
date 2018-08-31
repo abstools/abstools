@@ -26,9 +26,10 @@ public class HttpExportChecker extends DefaultTypeSystemExtension {
         if (paramtype.isBoolType()) return true;
         if (paramtype.isStringType()) return true;
         if (paramtype.isIntType()) return true;
+        if (paramtype.isFloatType()) return true;
         if (paramtype.isDataType()) {
             DataTypeType ptype = (DataTypeType) paramtype;
-            if (ptype.getDecl().qualifiedName().equals("ABS.StdLib.List")) {
+            if (ptype.getDecl().getQualifiedName().equals("ABS.StdLib.List")) {
                 return isTypeUsableFromHTTP(ptype.getTypeArg(0));
             }
             return false;

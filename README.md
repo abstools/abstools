@@ -18,33 +18,21 @@ Folders
 
 * `frontend` - the ABS compiler and runtime support.  See frontend/README for
   installation instructions.  (short version: install jdk8, ant and erlang
-  v20, then run `make frontend` in this directory.)
+  version 21, then run `make frontend` in this directory.)
 
 
 * `abs-docs` - the ABS language manual, available online at
   http://docs.abs-models.org.  To generate the manual locally, install maven,
   then run `make manual`.
 
-  * `abs-docs/ReferenceManual` - an older LaTeX ABS reference manual, slowly
-    being phased out
+  * `abs-docs/ReferenceManual` - an older LaTeX ABS reference manual,
+    now mostly of historical interest
 
-  * `abs-docs/Ott` - a formal grammar for ABS, written in Ott
+  * `abs-docs/Ott` - a formal grammar for a large subset of ABS,
+    written in [Ott](https://www.cl.cam.ac.uk/~pes20/ott/)
 
 
-* `eclipse`, `emacs`, `bbedit` - Editor support for ABS.  Note that the
-  eclipse plugin is currently unmaintained and suffers from some bit-rot.
-
-    * `eclipse/eclipse-plugin`: ABS IDE and compiler support plugin
-
-    * `eclipse/costabs-plugin` - The COSTA plugin for ABS
-
-    * `eclipse/apet-plugin` - The aPET plugin for ABS
-
-    * `eclipse/sda-plugin` - Bologna Deadlock-checker plugin for ABS
-
-    * `eclipse/sdedit-for-abs` - a modified version of sdedit
-      (http://sdedit.sourceforge.net) for the visualization of UML sequence
-      charts
+* `emacs` - Editor support for ABS.
 
 * `org.abs-models.releng` - Files used by Jenkins and Buckminster for
   continuous integration at https://envisage.ifi.uio.no:8080/jenkins/.

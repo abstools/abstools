@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typesystem;
@@ -20,27 +20,27 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void testNull() {
         assertTypeErrors("{ Unit u = null; } ");
     }
-    
+
     @Test
     public void varDeclAssign() {
         assertTypeErrors("{ Unit u = True; } ");
     }
-    
+
     @Test
     public void duplicateVarDecls() {
-        assertTypeErrors("{ Unit u = Unit; Unit u = Unit; }"); 
+        assertTypeErrors("{ Unit u = Unit; Unit u = Unit; }");
     }
 
     @Test
     public void duplicateVarDeclsParams() {
-        assertTypeErrors("class C { Unit m(Unit u) { Unit u = Unit; } }"); 
+        assertTypeErrors("class C { Unit m(Unit u) { Unit u = Unit; } }");
     }
-    
+
     @Test
     public void varDelcaredLater() {
-        assertTypeErrors("{ Unit u = f; Unit f = Unit; }"); 
+        assertTypeErrors("{ Unit u = f; Unit f = Unit; }");
     }
-    
+
     @Test
     public void testUnresolvableType() {
         assertTypeErrors("{ I i; }");
@@ -70,8 +70,8 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void parametricDataTypeNoTypeArgs() {
         assertTypeErrors("data Foo<A> = Bar(A) | Nul; { Foo f = Nul; }");
     }
-    
-    
+
+
     @Test
     public void parametricDataTypeNoTypeArgs2() {
         assertTypeErrors("class Test { { Pair p = Pair(5,Pair(4,5)); } }");
@@ -82,7 +82,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         assertTypeOK("type Euro = Int; type Cent = Int; type Money = Pair<Euro,Cent>;"
                 + "def Money createMoney(Euro e, Cent c) = Pair(e,c); ");
     }
-    
+
     @Test
     public void parametricDataTypeNoTypeArgs4() {
         assertTypeErrors("data Foo<A> = Bar(A) | Nul; type Foo2 = Foo; { Foo2 f = Nul; }");
@@ -164,7 +164,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void dataTypeSelectorNameLikeFunctionName() {
         assertTypeErrors("data Foo = Bar(X x); def Bool x() = True; ");
     }
-    
+
     @Test
     public void interfaceDuplicateMethods() {
         assertTypeErrors("interface I { Unit m(); Unit m(); }");
@@ -240,10 +240,16 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void classFieldAccess() {
         assertTypeErrors("class C { Bool f = True; Unit m(Int f) { this.f = 5; } }");
     }
-    
+
     @Test
     public void classInitializerBlockError() {
         assertTypeErrors("class C { { X f; } }");
+    }
+
+    // https://github.com/abstools/abstools/issues/198
+    @Test
+    public void classInitializerInvalidMethodCall() {
+        assertTypeErrors("class C { { i.m(); } }");
     }
 
     @Test
@@ -266,7 +272,13 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void plusError2() {
         assertTypeErrors("{ Int i = 4 + \"a\"; }");
     }
-    
+
+    @Test
+    public void plusError3() {
+        // https://github.com/abstools/abstools/issues/202
+        assertTypeErrors("{ Int i = 4 + (1/2) + 4; }");
+    }
+
     @Test
     public void getError() {
         assertTypeErrors("{ Bool f = True; f.get; }");
@@ -341,7 +353,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void caseErrorDuplicateDatatypeTypeParameter() {
         assertTypeErrors("data X<A, A>;");
     }
-    
+
     @Test
     public void ticket188() {
         assertTypeErrors(
@@ -350,7 +362,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
            +"       Insert(xyz,_) => xyz;" // Insert is not a List constructor
            +"   };");
     }
-    
+
     @Test
     public void caseErrorConstructorWrongArgNum() {
         assertTypeErrors("{ Bool x = True; Bool b = case x { True(5) => False; }; }");
@@ -516,7 +528,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         assertTypeErrors("class C { { return Nil; } }");
         assertTypeErrors("class C { { return Unit; return Unit; } }");
     }
-    
+
     @Test
     public void initCodeBlock() {
         assertTypeErrors("class C { { await True; } }");
@@ -536,84 +548,84 @@ public class NegativeTypeCheckerTests extends FrontendTest {
           + "def String f (String name) = name;"
           + "{ List<String> s = Cons(f(\"foo\", Nil)); }", ErrorMessage.WRONG_NUMBER_OF_ARGS);
     }
-    
+
     @Test
     public void overloadingOfImplementedInterfacesInClass() {
         assertTypeErrors("module Test; interface A { Unit m(); } interface B { Unit m(Int x); } class C implements A, B { Unit m() { skip; }}");
     }
-    
+
     @Test
     public void overloadingOfImplementedInterfacesInInterface() {
         assertTypeErrors("module Test; interface A { Unit m(); } interface B { Unit m(Int x); } interface I extends A, B { }");
     }
-    
-    @Test 
+
+    @Test
     public void uninitializedVariable() {
         assertTypeErrors(" { Int x = x; }");
     }
-    
-    @Test 
+
+    @Test
     public void wrongInitOrder() {
         assertTypeErrors(" class C { Int x = y + 1; Int y = 1; }");
     }
 
-    @Test 
+    @Test
     public void wrongInitOrder1() {
         assertTypeErrors(" class C { Int x = this.y + 1; Int y = 1; }");
     }
 
-    @Test 
+    @Test
     public void wrongInitOrder2() {
         assertTypeErrors(" class C { Int x = x + 1; }");
     }
-    
-    @Test 
+
+    @Test
     public void rightInitOrder() {
         assertTypeOK(" class C { Int y = 1; Int x = y + 1; }");
     }
-    
 
-    @Test 
+
+    @Test
     public void localVariableHiding() {
         assertTypeErrors(" class C { Unit foo() { Int x = 1; if (True) { Int x = 2; }} }");
     }
-    
-    @Test 
+
+    @Test
     public void localVariableHiding2() {
         assertTypeErrors(" class C { Unit foo(Int x) { if (True) { Int x = 2; } } }");
     }
-    
-    
-    @Test 
+
+
+    @Test
     public void localVariableHiding3() {
         assertTypeErrors(" class C {{ Int x = 1; if (True) { Int x = 2; }}}");
     }
-    
-    @Test 
+
+    @Test
     public void localVariableHidingOk() {
         assertTypeOK(" class C { Unit foo() { if (True) { Int x = 1; } if (True) { Int x = 2; }} }");
     }
-    
-    @Test 
+
+    @Test
     public void localVariableHidingOk2() {
         assertTypeOK(" class C { Unit foo() { if (True) { Int x = 2; } Int x = 1; } }");
     }
-    
-    @Test 
+
+    @Test
     public void localVariableHidingOk3() {
         assertTypeOK(" class C {  Int x = 1; Unit foo() { if (True) { Int x = 2; } } }");
     }
-    
-    @Test 
+
+    @Test
     public void localVariableHidingOk4() {
         assertTypeOK(" class C {  Int x = 1; { Int x = 2; } }");
     }
-    
+
     @Test
     public void typeRecursive1() throws Exception {
        assertTypeErrors("type Foo = Foo;", ErrorMessage.CIRCULAR_TYPESYN);
     }
-    
+
     @Test
     public void typeRecursive2() throws Exception {
         assertTypeErrors("type Foo = Bar; type Bar = Foo;", ErrorMessage.CIRCULAR_TYPESYN);
@@ -623,7 +635,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void constNull1() throws Exception {
         assertTypeErrors("{ null!m(); }", ErrorMessage.NULL_NOT_HERE);
     }
-    
+
     @Test
     public void constNull2() throws Exception {
         assertTypeErrors("{ null.m(); }", ErrorMessage.NULL_NOT_HERE);
@@ -631,9 +643,9 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void constructorPatternBorked1() {
-        assertTypeErrors("interface I {} { List<I> is = Nil;   Unit u = case is { Cons(I(x), Nil) => Unit; }; }", ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE);
+        assertTypeErrors("interface I {} { List<I> ifs = Nil;   Unit u = case ifs { Cons(I(x), Nil) => Unit; }; }", ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE);
     }
-    
+
     @Test
     public void schedulerInvalid1() {
         assertTypeErrors("module M; import * from ABS.Scheduler; [Scheduler: xx] class C { }");
@@ -643,17 +655,17 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void schedulerInvalid2() {
         assertTypeErrors("module M; import * from ABS.Scheduler; [Scheduler: foo(queue)] class C { }");
     }
-    
+
     @Test
     public void schedulerInvalid3() {
         assertTypeErrors("module M; import * from ABS.Scheduler; def Process f(List<Process> queue) = head(queue); [Scheduler: f(x)] class C { }");
     }
-    
+
     @Test
     public void schedulerInvalid4() {
         assertTypeErrors("module M; import * from ABS.Scheduler; def Process f(List<Process> queue) = head(queue); [Scheduler: f(queue, b)] class C { }");
     }
-    
+
     @Test
     public void schedulerInvalid5() {
         assertTypeErrors("module M; import * from ABS.Scheduler; def Process f(List<Process> queue, String x) = head(queue); [Scheduler: f(queue, b)] class C { }");
@@ -662,5 +674,22 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     @Test
     public void schedulerInvalid6() {
         assertTypeErrors("module M; import * from ABS.Scheduler; def Process f(List<Process> queue, String x) = head(queue); [Scheduler: f(queue, b)] class C { Int b = 0; }");
+    }
+
+    @Test
+    public void annotationCostInvalid() {
+        assertTypeErrors("module M; import * from ABS.DC; def Rat error(Rat x) = x; { [Cost: error(False)] skip; } ");
+    }
+    @Test
+    public void annotationDCInvalid() {
+        assertTypeErrors("module M; import * from ABS.DC; def DC error(Rat x) = null; class C {} { [DC: error(False)] new C(); } ");
+    }
+    @Test
+    public void annotationDeadlineInvalid() {
+        assertTypeErrors("module M; import * from ABS.DC; def Duration error(Rat x) = Duration(x); interface I { Unit m(); } class C implements I { Unit m() { skip; } } { I i = new C(); [Deadline: error(False)] i!m(); } ");
+    }
+    @Test
+    public void annotationDataSizeInvalid() {
+        assertTypeErrors("module M; import * from ABS.DC; def Rat error(Rat x) = x; interface I { Unit m(); } class C implements I { Unit m() { skip; } } { I i = new C(); [DataSize: error(False)] i!m(); } ");
     }
 }

@@ -184,7 +184,7 @@ public class ErlUtil {
         ecs.println("cog:process_is_runnable(Cog,self()),");
         ecs.print("task:wait_for_token(Cog,");
         if (functional) {
-            ecs.print("lists:map(fun({_, X}) -> X end, maps:to_list(get(vars))) ++ Stack");
+            ecs.print("Stack");
         } else {
             ecs.print(vars.toStack());
         }

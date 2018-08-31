@@ -82,7 +82,7 @@ public class ClassGenerator {
             ecs.println("_:Exception ->");
             if (classDecl.hasRecoverBranch()) {
                 ecs.incIndent();
-                ecs.println("Recovered = try 'recover'(O, Exception) catch _:RecoverError -> io:format(standard_error, \"Recovery block for ~s in class " + classDecl.qualifiedName() + " failed with exception ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, RecoverError)]), false end,");
+                ecs.println("Recovered = try 'recover'(O, Exception) catch _:RecoverError -> io:format(standard_error, \"Recovery block for ~s in class " + classDecl.getQualifiedName() + " failed with exception ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, RecoverError)]), false end,");
                 ecs.println("case Recovered of");
                 ecs.incIndent().println("true -> exit(Exception);");
                 ecs.println("false ->");
@@ -125,7 +125,7 @@ public class ClassGenerator {
         }
         if (classDecl.isActiveClass()) {
             ecs.println("cog:process_is_blocked_for_gc(Cog, self()),");
-            ecs.print("cog:add_sync(Cog,active_object_task,O,#process_info{method= <<\"run\"/utf8>>},");
+            ecs.print("cog:add_task(Cog,active_object_task,none,O,[],#process_info{method= <<\"run\"/utf8>>},");
             ecs.print(vars.toStack());
             ecs.println("),");
             ecs.println("cog:process_is_runnable(Cog,self()),");
@@ -162,6 +162,7 @@ public class ClassGenerator {
                 vars.updateTemp(v);
             }
             ErlUtil.functionHeader(ecs, "recover", ErlUtil.Mask.none, generatorClassMatcher(), "Exception");
+            ecs.println("Stack = [],");
             ecs.println("Result=case Exception of ");
             ecs.incIndent();
             // Now print statments and mergelines for each branch.
@@ -246,7 +247,7 @@ public class ClassGenerator {
             ecs.println("throw(badarg).");
             ecs.decIndent();
         }
-        ErlUtil.functionHeader(ecs, "get_all_state", Mask.none, "S");
+        ErlUtil.functionHeader(ecs, "get_state_for_modelapi", Mask.none, "S");
         ecs.println("[");
         ecs.incIndent();
         first = true;
@@ -278,7 +279,7 @@ public class ClassGenerator {
     }
 
     private void generateExports() {
-        ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0,get_all_state/1]).");
+        ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0,get_state_for_modelapi/1,implemented_interfaces/0,exported/0]).");
         ecs.println("-compile(export_all).");
         ecs.println();
 
@@ -300,6 +301,15 @@ public class ClassGenerator {
                 visited.add((InterfaceDecl)i.getDecl());
             }
         }
+
+        ecs.print("implemented_interfaces() -> [ ");
+        String separator = "";
+        for (InterfaceDecl i : classDecl.getSuperTypes()) {
+            ecs.format("%s<<\"%s\">>", separator, i.getName());
+            separator = ", ";
+        }
+        ecs.println(" ].");
+        ecs.println();
 
 
         ecs.print("exported() -> #{ ");

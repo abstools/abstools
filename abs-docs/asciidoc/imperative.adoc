@@ -213,6 +213,11 @@ The suspend statement causes the current task to be suspended.
 NOTE: There is no guarantee that the cog will choose another task to run; the
 current task might be resumed immediately after suspending itself.
 
+WARNING: It is tempting to misuse the `suspend` statement for
+busy-waiting (`while (!condition) suspend; doTheThing();`).  In all
+cases, it is better to await on the condition: `await condition; doTheThing();`.
+
+
 [source]
 .Example
 ----
@@ -394,6 +399,7 @@ while (x < 5) {
 }
 ----
 
+[[foreach-loop]]
 === The Foreach Loop
 
 The foreach loop repeatedly executes its body with the loop variable bound to
@@ -401,6 +407,9 @@ each element of the given list, in sequence.  The rules for the loop variable
 follow the rules of local variable declarations in blocks: the loop variable
 cannot shadow an existing variable, but can use the same name as an object
 field.
+
+NOTE: Also see the second-order functions like `map` and `filter` in
+Section <<type-list>> for common list processing idioms.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax

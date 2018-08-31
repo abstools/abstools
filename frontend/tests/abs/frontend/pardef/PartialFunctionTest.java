@@ -24,36 +24,7 @@ import java.util.ArrayList;
 import java.util.regex.Pattern;
 import org.junit.Test;
 
-public class PartialFunctionTest extends PardefTest {
-
-    private FunctionDecl assertHasFunction(Model model, String regex) {
-        FunctionDecl result = getFunction(model, Pattern.compile(regex));
-        String errorMessage = "No expanded function with name " + regex + " created"
-            + " (functions: " + getFunctions(model) + ")";
-        assertNotNull(errorMessage, result);
-        Decl decl = model.lookup(new KindedName(Kind.FUN, result.getName()));
-        assertFalse("Could not lookup function " + result.getName(), decl.isUnknown());
-        return result;
-    }
-
-    private Model testExpand(Model model, String... expectedNames) {
-        model = expand(model);
-        for (String expectedName : expectedNames) {
-            assertHasFunction(model, expandedName(expectedName));
-        }
-        return model;
-    }
-
-    private PartialFunctionDecl getPartialFunction(Model model, String regex) {
-        Pattern pattern = Pattern.compile(regex);
-        for (PartialFunctionDecl func : model.findChildren(PartialFunctionDecl.class)) {
-            if (pattern.matcher(func.getName()).matches()) {
-                return func;
-            }
-        }
-        return null;
-    }
-
+public class PartialFunctionTest extends AbstractPartialFunctionTest {
     @Test
     public void unusedFunctionNotRemoved() {
         Model model = expand(parse(
@@ -69,22 +40,22 @@ public class PartialFunctionTest extends PardefTest {
         testExpand(parse(
             "f()();",
             "def Int f()() = 1;"
-        ), "F_%s");
+        ), "f_%s__");
         testExpand(parse(
             "f()(0);",
             "def Int f()(Int i) = i;"),
-            "F_%s");
+            "f_%s__");
         testExpand(parse(
             "Int result = f(inc)(10);",
             incFunction(),
             "def Int f(f_1)(Int i) = f_1(i);"
-        ), "F_%s_inc");
+        ), "f_%s_inc__");
         testExpand(parse(
             "multi_param(inc, dec)();",
             incFunction(),
             decFunction(),
             "def Int multi_param(f1, f2)() = f1(f2(0));"
-        ), "Multi_param_%s_inc_dec");
+        ), "multi_param_%s_inc_dec__");
     }
 
     @Test
@@ -93,7 +64,7 @@ public class PartialFunctionTest extends PardefTest {
             "Int i = outer()(0);",
             "def Int outer()(Int i) = inner()(i);",
             "def Int inner()(Int i) = i * 2;"
-        ), "Outer_%s", "Inner_%s");
+        ), "outer_%s__", "inner_%s__");
     }
 
     @Test
@@ -103,27 +74,7 @@ public class PartialFunctionTest extends PardefTest {
             incFunction(),
             applyFunction(),
             "def Int test(f)(Int i) = apply(f)(i);"
-        ), "Test_%s_inc", "Apply_%s_inc");
-    }
-
-    @Test
-    public void callInnerParametricWithTypeParams() {
-        testExpand(parse(
-            "test()(1);",
-            applyFunction(),
-            incFunction(),
-            "def B test<A, B>()(A a) = apply(inc)(a);"
-        ), "Test_%s", "Apply_%s_inc");
-    }
-
-    @Test(expected = PardefModellingException.class)
-    public void multipleFunctionsDifferentTypeParam() {
-        testExpand(parse(
-            "addResults(expectsString, expectsInt)(1);",
-            "def Int addResults<T>(f, g)(T t) = f(t) + g(t);",
-            "def Int expectsString(String s) = 1;",
-            "def Int expectsInt(Int i) = 2;"
-        ));
+        ), "test_%s_inc__", "apply_%s_inc__");
     }
 
     @Test
@@ -174,7 +125,7 @@ public class PartialFunctionTest extends PardefTest {
             "apply(inc)(0);",
             applyFunction(),
             incFunction()
-        ), "Apply_%s_inc");
+        ), "apply_%s_inc__");
         PartialFunctionDecl func = getPartialFunction(model, "apply");
         assertNotNull(func);
 
@@ -208,10 +159,13 @@ public class PartialFunctionTest extends PardefTest {
         PartialFunctionDecl func = getPartialFunction(model, "apply");
         assertNotNull(func);
 
+        String printed;
         try (StringWriter writer = new StringWriter();
             PrintWriter pw = new PrintWriter(writer)) {
-            func.prettyPrint(pw, new DefaultABSFormatter(pw));
-            assertFalse(writer.toString().isEmpty());
+            func.doPrettyPrint(pw, new DefaultABSFormatter(pw));
+            printed = writer.toString();
         }
+
+        assertFalse(printed.isEmpty());
     }
 }

@@ -22,7 +22,10 @@ Algebraic data types can be _parametric_, which is useful for defining
 “container-like” data types.  Currently only algebraic data types can be
 parameterized, i.e., ABS does not currently offer class templates.
 
-Note that classes are not types in ABS.
+Note that classes are not types in ABS; object references are typed by an
+interface that the object’s class implements.  (Classes that do not implement
+any interfaces can be instantiated, and can interact with the rest of the
+system via their `run` method and constructor arguments.)
 
 .Example
 [source]
@@ -49,6 +52,7 @@ ABS offers the following built-in datatypes:
  | `Bool`    | Boolean values             | `True`, `False`   | <<type-bool>>
  | `Int`     | Integers of arbitrary size | `0`, `-15`        | <<type-numbers>>
  | `Rat`     | Rational numbers           | `1/5`, `22/58775` | <<type-numbers>>
+ | `Float`  | Floating-point numbers     | `0.5`, `1.0e-15`  | <<type-numbers>>
  | `String`  | Strings                    | `"Hello world\n"` | <<type-string>>
  | `Fut<A>`  | Futures                    | --                | <<type-future>>
  | `Exception` | Exceptions                | `DivisionByZeroException` | <<exception-type>>
@@ -62,7 +66,11 @@ ABS offers the following built-in datatypes:
 
 `Int` type is a subtype of `Rat`; this means that `Int` values are assignable
 to places of type `Rat`.  Rational values can be converted to integers via the
-`truncate` function.
+`truncate` function.  `Float` is a distinct numeric type.
+
+CAUTION: Support for floating-point calculations is under development;
+calculations resulting in `Inf` or `NaN` currently have unspecified runtime
+behavior.
 
 The future type `Fut<A>` is a special built-in type that denotes that an ABS
 value of type `A` will become available in the future.  The value that a
@@ -105,7 +113,7 @@ data IntList = NoInt | ConsInt(Int head, IntList tail); <1>
 data Bool = True | False; <2>
 data NotInstantiable; <3>
 ----
-<1> The data type `IntList` has two constructors: `NoInt` and `ConsInt`.  Both define an accessor function.
+<1> The data type `IntList` has two constructors: `NoInt` and `ConsInt`.  The second constructor defines two accessor functions.
 <2> This is the definition of the built-in data type `Bool`.
 <3> This type does not have constructors and therefore cannot be instantiated.
 
@@ -200,10 +208,13 @@ and its functions, without exporting the constructors.
 === Interface Types
 
 Interfaces in ABS describe the functionality of objects.  Thus, Interfaces in
-ABS are similar to interfaces in Java.  Unlike Java, objects are only typed by
-interfaces and not by their class.
+ABS are similar to interfaces in Java.  Unlike Java, object references are
+typed by interfaces and not by their class.  See <<typecheck-expression>> and
+<<typecast-expression>> for how to obtain a reference to the same object via a
+different interface.
 
 The syntax of interfaces is given in <<sec:interfaces>>.
+
 
 [[sec:exception-types]]
 === Exceptions

@@ -92,8 +92,8 @@ aspect GenerateErlang {
   @Override
   public void FunctionDecl.generateErlangCode(ErlApp ea) throws IOException{
       CodeStream ecs= ea.getFunStream(moduleName());
-      if (ERLANG_OVERRIDES.containsKey(qualifiedName())) {
-          ecs.println(ERLANG_OVERRIDES.get(qualifiedName()));
+      if (ERLANG_OVERRIDES.containsKey(getQualifiedName())) {
+          ecs.println(ERLANG_OVERRIDES.get(getQualifiedName()));
       } else {
           ErlUtil.functionHeader(ecs,"f_"+getName(),"Cog=#cog{ref=CogRef}",getParams());
           Vars vars = Vars.n(getParams());
@@ -123,13 +123,16 @@ aspect GenerateErlang {
       "ABS.StdLib.random", "ABS.StdLib.strlen", "ABS.StdLib.substr",
       "ABS.DC.thisDC", "ABS.StdLib.toString",
       "ABS.StdLib.truncate", "ABS.StdLib.numerator", "ABS.StdLib.denominator",
+      "ABS.StdLib.float", "ABS.StdLib.rat",
+      "ABS.StdLib.floor", "ABS.StdLib.ceil",
+      "ABS.StdLib.sqrt", "ABS.StdLib.log", "ABS.StdLib.exp",
       "ABS.Scheduler.method", "ABS.Scheduler.arrival", "ABS.Scheduler.proc_deadline");
   public  void FnApp.generateErlangCode(CodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
     boolean builtin = decl.getFunctionDef() instanceof BuiltinFunctionDef;
     if(builtin){
-      if(!ERLANG_BUILTINS.contains(decl.qualifiedName()))
-          throw new NotImplementedYetException(this, "The builtin function "+decl.qualifiedName() + " is not implemented in the Erlang backend yet");
+      if(!ERLANG_BUILTINS.contains(decl.getQualifiedName()))
+          throw new NotImplementedYetException(this, "The builtin function "+decl.getQualifiedName() + " is not implemented in the Erlang backend yet");
       ecs.print("builtin:");
       ecs.print(decl.getName());
     }
@@ -367,6 +370,26 @@ aspect GenerateErlang {
   }
 
   @Override
+  public void IsExp.generateErlangCode(CodeStream ecs, Vars vars) {
+      ecs.print("object:has_interface((");
+      getExp().generateErlangCode(ecs, vars);
+      ecs.print("), <<\"");
+      ecs.print(getInterfaceTypeUse().getName());
+      ecs.print("\">>)");
+  }
+
+  @Override
+  public void AsExp.generateErlangCode(CodeStream ecs, Vars vars) {
+      String temp = vars.getTemp();
+      ecs.print("begin " + temp + " = ");
+      getExp().generateErlangCode(ecs, vars);
+      ecs.print(", case object:has_interface(" + temp + ", <<\""
+                + getInterfaceTypeUse().getName()
+                + "\">>) of true -> {dataJust, " + temp + "} ; false -> dataNothing end end");
+  }
+
+
+  @Override
   public void ExpressionStmt.generateErlangCode(CodeStream ecs,Vars vars) {
       boolean isNewDC = getExp().getType().isDeploymentComponentType()
           && getExp() instanceof NewExp;
@@ -499,6 +522,11 @@ aspect GenerateErlang {
 
   @Override
   public void IntLiteral.generateErlangCode(CodeStream ecs,Vars vars) {
+    ecs.print( getContent());
+  }
+
+  @Override
+  public void FloatLiteral.generateErlangCode(CodeStream ecs,Vars vars) {
     ecs.print( getContent());
   }
 
@@ -659,12 +687,13 @@ aspect GenerateErlang {
 
   @Override
   public void MinusExp.generateErlangCode(CodeStream ecs,Vars vars){
-    if (getOperand().getType().isIntType())
-      ecs.print("( - ");
-    else
-      ecs.print("rationals:neg( ");
-    getOperand().generateErlangCode(ecs,vars);
-    ecs.print(")");
+      if (getOperand().getType().isIntType() || getOperand().getType().isFloatType()) {
+          ecs.print("( - ");
+      } else {
+          ecs.print("rationals:neg( ");
+      }
+      getOperand().generateErlangCode(ecs,vars);
+      ecs.print(")");
   }
 
   @Override
@@ -678,17 +707,17 @@ aspect GenerateErlang {
     }
     else {
       ecs.print("(");
-      if (getLeft().getType().isIntType() && getRight().getType().isIntType() ){
-        getLeft().generateErlangCode(ecs, vars);
-        ecs.print(" + ");
-        getRight().generateErlangCode(ecs, vars);
-      }
-      else {
-        ecs.print(" rationals:add(");
-        getLeft().generateErlangCode(ecs,vars);
-        ecs.print(",");
-        getRight().generateErlangCode(ecs,vars);
-        ecs.print(")");
+      if (getLeft().getType().isIntType() && getRight().getType().isIntType()
+          || getLeft().getType().isFloatType() && getRight().getType().isFloatType()) {
+          getLeft().generateErlangCode(ecs, vars);
+          ecs.print(" + ");
+          getRight().generateErlangCode(ecs, vars);
+      } else {
+          ecs.print(" rationals:add(");
+          getLeft().generateErlangCode(ecs,vars);
+          ecs.print(",");
+          getRight().generateErlangCode(ecs,vars);
+          ecs.print(")");
       }
       ecs.print(") ");
     }
@@ -697,16 +726,17 @@ aspect GenerateErlang {
   @Override
   public void SubAddExp.generateErlangCode(CodeStream ecs,Vars vars){
     ecs.print("(");
-    if (getLeft().getType().isIntType() && getRight().getType().isIntType() ){
+    if (getLeft().getType().isIntType() && getRight().getType().isIntType()
+        || getLeft().getType().isFloatType() && getRight().getType().isFloatType()) {
         getLeft().generateErlangCode(ecs,vars);
         ecs.print(" - ");
-        getRight().generateErlangCode(ecs,vars);}
-    else{
-      ecs.print(" rationals:sub(");
-      getLeft().generateErlangCode(ecs,vars);
-      ecs.print(",");
-      getRight().generateErlangCode(ecs,vars);
-      ecs.print(")");
+        getRight().generateErlangCode(ecs,vars);
+    } else {
+        ecs.print(" rationals:sub(");
+        getLeft().generateErlangCode(ecs,vars);
+        ecs.print(",");
+        getRight().generateErlangCode(ecs,vars);
+        ecs.print(")");
     }
     ecs.print(") ");
   }
@@ -714,7 +744,8 @@ aspect GenerateErlang {
   @Override
   public void MultMultExp.generateErlangCode(CodeStream ecs,Vars vars){
     ecs.print("(");
-    if (getLeft().getType().isIntType() && getRight().getType().isIntType() ) {
+    if (getLeft().getType().isIntType() && getRight().getType().isIntType()
+        || getLeft().getType().isFloatType() && getRight().getType().isFloatType()) {
       getLeft().generateErlangCode(ecs,vars);
       ecs.print(" * ");
       getRight().generateErlangCode(ecs,vars);
@@ -731,19 +762,31 @@ aspect GenerateErlang {
 
   @Override
   public void DivMultExp.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.print(" rationals:rdiv(");
-    getLeft().generateErlangCode(ecs,vars);
-    ecs.print(",");
-    getRight().generateErlangCode(ecs,vars);
-    ecs.print(") ");
+      if (getLeft().getType().isFloatType() && getRight().getType().isFloatType()) {
+          getLeft().generateErlangCode(ecs,vars);
+          ecs.print(" / ");
+          getRight().generateErlangCode(ecs,vars);
+      } else {
+          ecs.print(" rationals:rdiv(");
+          getLeft().generateErlangCode(ecs,vars);
+          ecs.print(",");
+          getRight().generateErlangCode(ecs,vars);
+          ecs.print(") ");
+      }
   }
 
   @Override
   public void ModMultExp.generateErlangCode(CodeStream ecs,Vars vars){
-    if (getLeft().getType().isIntType() && getRight().getType().isIntType() ) {
+    if (getLeft().getType().isIntType() && getRight().getType().isIntType()) {
         ecs.print("(");
         getLeft().generateErlangCode(ecs,vars);
         ecs.print(" rem ");
+        getRight().generateErlangCode(ecs,vars);
+        ecs.print(") ");
+    } else if (getLeft().getType().isFloatType() && getRight().getType().isFloatType()) {
+        ecs.print("math:fmod(");
+        getLeft().generateErlangCode(ecs,vars);
+        ecs.print(", ");
         getRight().generateErlangCode(ecs,vars);
         ecs.print(") ");
     } else {
@@ -908,7 +951,7 @@ aspect GenerateErlang {
   @Override
   public void PatternVarUse.generateErlangCode(CodeStream prePattern,CodeStream ecs,Vars vars){
       VarOrFieldDecl decl = this.getDecl();
-      if (decl instanceof FieldDecl) {
+      if (decl instanceof FieldDecl || decl instanceof ClassParamDecl) {
           String tmp=vars.getTemp();
           prePattern.pf("%s=get(O,'%s'),",tmp,getName());
           ecs.print(tmp);
@@ -932,7 +975,7 @@ aspect GenerateErlang {
   public void ConstructorPattern.generateErlangCode(CodeStream prePattern,CodeStream ecs,Vars vars){
       //Handling for bool
       final String c = getDataConstructor().getName();
-      final String qualifiedName = getDataConstructor().qualifiedName();
+      final String qualifiedName = getDataConstructor().getQualifiedName();
       if("True".equals(c) || "False".equals(c)) {
           ecs.print(c.toLowerCase());
       } else if (qualifiedName.equals("ABS.StdLib.Nil")) {
@@ -963,7 +1006,7 @@ aspect GenerateErlang {
 
   public void DataConstructorExp.generateErlangCode(CodeStream ecs,Vars vars){
     final String simpleName = getDataConstructor().getName();
-    final String qualifiedName = getDataConstructor().qualifiedName();
+    final String qualifiedName = getDataConstructor().getQualifiedName();
     if (qualifiedName.equals("ABS.StdLib.False")) {
         ecs.print("false");
     } else if (qualifiedName.equals("ABS.StdLib.True")) {
@@ -975,7 +1018,7 @@ aspect GenerateErlang {
         ecs.print("[");
         PureExp c = this;
         while (c instanceof DataConstructorExp
-               && ((DataConstructorExp)c).getDataConstructor().qualifiedName()
+               && ((DataConstructorExp)c).getDataConstructor().getQualifiedName()
                .equals("ABS.StdLib.Cons")) {
             DataConstructorExp cp = (DataConstructorExp)c;
             ecs.print(interp);
@@ -984,7 +1027,7 @@ aspect GenerateErlang {
             c = cp.getParam(1);
         }
         if (c instanceof DataConstructorExp
-            && ((DataConstructorExp)c).getDataConstructor().qualifiedName()
+            && ((DataConstructorExp)c).getDataConstructor().getQualifiedName()
             .equals("ABS.StdLib.Nil")) {
             // do nothing
         } else {

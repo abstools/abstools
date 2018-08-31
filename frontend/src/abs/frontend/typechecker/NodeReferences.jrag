@@ -71,9 +71,6 @@ aspect AsyncCallAnnotations {
     eq AssignStmt.getValue().getAnnotations() = getAnnotations();
     eq ReturnStmt.getRetExp().getAnnotations() = getAnnotations();
     eq ExpressionStmt.getExp().getAnnotations() = getAnnotations();
-    eq RebindStmt.getVal().getAnnotations() = getAnnotations();
-    eq RebindStmt.getObj().getAnnotations() = getAnnotations();
-    eq ObjectGuard.getExp().getAnnotations() = new List<Annotation>();
 
     syn boolean AsyncCall.hasAnnotations() = getAnnotations().getNumChild() > 0;
     syn boolean AwaitAsyncCall.hasAnnotations() = getAnnotations().getNumChild() > 0;

@@ -602,7 +602,6 @@ aspect TypeChecker {
         return false;
     }
 
-
     // STMTS
 
     public void Stmt.typeCheck(SemanticConditionList e) {
@@ -707,11 +706,11 @@ aspect TypeChecker {
         // assertHasType() is too specific -- we need to check that ListExp is
         // a list, not its specific type (List<Int>)
         if (!getListExp().getType().isUnknownType()
-            && !getListExp().getType().getDecl().qualifiedName()
-                .equals(getModel().getListType().getDecl().qualifiedName())) {
+            && !getListExp().getType().getDecl().getQualifiedName()
+                .equals(getModel().getListType().getDecl().getQualifiedName())) {
             e.add(new TypeError(getListExp(), ErrorMessage.EXPECTED_TYPE,
-                                getModel().getListType().getDecl().qualifiedName(),
-                                getListExp().getType().getDecl().qualifiedName()));
+                                getModel().getListType().getDecl().getQualifiedName(),
+                                getListExp().getType().getDecl().getQualifiedName()));
         }
         getBody().typeCheck(e);
     }
@@ -817,6 +816,22 @@ aspect TypeChecker {
         TypeCheckerHelper.checkDataTypeUse(e, this);
     }
 
+    public void InterfaceTypeUse.typeCheck(SemanticConditionList e) {
+        Decl d = getDecl();
+        if (! d.checkDecl(this, e, ErrorMessage.TYPE_NOT_RESOLVABLE, getName())) {
+            return;
+        }
+        if (d instanceof TypeSynDecl) {
+            int nerrors = e.getErrorCount();
+            d.typeCheck(e);
+            if (e.getErrorCount() != nerrors) return; // detect circularity
+            while (d instanceof TypeSynDecl) d = ((TypeSynDecl)d).getValue().getDecl();
+        }
+        if (!(d instanceof InterfaceDecl)) {
+            e.add(new SemanticError(this,ErrorMessage.UNKOWN_INTERFACE,getName()));
+        }
+    }
+
     public void UnresolvedTypeUse.typeCheck(SemanticConditionList e) {
         e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
     }
@@ -847,6 +862,24 @@ aspect TypeChecker {
             ClassDecl cd = (ClassDecl) decl;
             typeCheckEqualParams(e,cd);
         }
+    }
+
+    public void IsExp.typeCheck(SemanticConditionList e) {
+        getInterfaceTypeUse().typeCheck(e);
+        // TODO: check that getExp() is a reference type
+        getExp().typeCheck(e);
+        // if (!getExp().getType().isReferenceType()) {
+        //     e.add(new TypeError(this, ErrorMessage.UNKOWN_INTERFACE, getInterfaceName()));
+        // }
+    }
+
+    public void AsExp.typeCheck(SemanticConditionList e) {
+        getInterfaceTypeUse().typeCheck(e);
+        // TODO: check that getExp() is a reference type
+        getExp().typeCheck(e);
+        // if (!getExp().getType().isReferenceType()) {
+        //     e.add(new TypeError(this, ErrorMessage.UNKOWN_INTERFACE, getInterfaceName()));
+        // }
     }
 
 
@@ -881,7 +914,23 @@ aspect TypeChecker {
         }
     }
     public void ArithmeticExp.typeCheck(SemanticConditionList e) {
-        TypeCheckerHelper.typeCheckBinary(e,this,getModel().getRatType());
+        int nerrors = e.getErrorCount();
+        getLeft().typeCheck(e);
+        getRight().typeCheck(e);
+        if (nerrors == e.getErrorCount()) {
+            Type lt = getLeft().getType();
+            Type rt = getRight().getType();
+
+            if (! (lt.isNumericType())) {
+                e.add(new TypeError(this, ErrorMessage.EXPECTED_NUMERIC_TYPE, lt));
+            }
+            if (! (rt.isNumericType())) {
+                e.add(new TypeError(this, ErrorMessage.EXPECTED_NUMERIC_TYPE, rt));
+            }
+            if (!lt.isAssignableTo(rt) && !rt.isAssignableTo(lt)) {
+                e.add(new TypeError(this, ErrorMessage.ARITHMETIC_INCOMPATIBLE_TYPE, lt, rt));
+            }
+        }
     }
 
     public void BoolExp.typeCheck(SemanticConditionList e) {
@@ -982,12 +1031,12 @@ aspect TypeChecker {
             e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
         } else {
             DataConstructor c = (DataConstructor) decl;
-            String cname = c.qualifiedName();
+            String cname = c.getQualifiedName();
             // Warn about using constructors that should not have been
             // exported from their module
             if (TypeCheckerHelper.deprecatedConstructors.contains(cname)
                 && !(cname.startsWith(getModuleDecl().getName()))) {
-                e.add(new SemanticWarning(this, ErrorMessage.DEPRECATED_CONSTRUCTOR, c.qualifiedName()));
+                e.add(new SemanticWarning(this, ErrorMessage.DEPRECATED_CONSTRUCTOR, c.getQualifiedName()));
             }
 
             if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
@@ -1011,9 +1060,12 @@ aspect TypeChecker {
     public void MinusExp.typeCheck(SemanticConditionList e) {
          int size = e.getErrorCount();
          getOperand().typeCheck(e);
-         if (e.getErrorCount() == size)
-             // KLUDGE: we'd like to say "any numeric type please" here
-             getOperand().assertHasType(e,getModel().getRatType());
+         if (e.getErrorCount() == size) {
+             if (!getOperand().getType().isNumericType()) {
+                 e.add(new TypeError(getOperand(), ErrorMessage.EXPECTED_NUMERIC_TYPE,
+                                     getOperand().getType()));
+             }
+         }
     }
 
     public void NegExp.typeCheck(SemanticConditionList e) {
@@ -1286,14 +1338,6 @@ aspect TypeCheckProductline {
 	eq AppCondNot.refersTo(Feature f) = getAppCond().refersTo(f);
 }
 
-/* Components */
-aspect TypeCheckComponents {
-    public void MoveStmt.typeCheck(SemanticConditionList e) {}
-    public void RebindStmt.typeCheck(SemanticConditionList e) {}
-
-    public void ObjectGuard.typeCheck(SemanticConditionList e) { }
-
-}
 // Local Variables:
 // mode: java
 // End:

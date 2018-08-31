@@ -122,6 +122,7 @@ abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ;
 VarDecl: TypedVarOrFieldDecl ::= [InitExp:Exp];
 FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation* <Port:boolean>; // (For Component Model) //
 ParamDecl: TypedVarOrFieldDecl ::= Annotation*;
+ClassParamDecl: ParamDecl;
 PatternVarDecl: VarOrFieldDecl;
 LoopVarDecl: VarOrFieldDecl;    // for ForeachStmt
 
@@ -216,6 +217,7 @@ abstract LiteralExp: PureExp;
 // For now the literal just contain a variable Content of type String.
 StringLiteral: LiteralExp ::= <Content> ;
 IntLiteral: LiteralExp ::= <Content>;
+FloatLiteral: LiteralExp ::= <Content>;
 // We have to treat lists specially since various parts of the toolchain crash
 // when recursing through 10000-deep DataConstructorExps
 ListLiteral: LiteralExp ::= PureExp*;
@@ -224,6 +226,10 @@ DataConstructorExp : PureExp ::= <Constructor> Param:PureExp* ;
 ExceptionConstructorExp : DataConstructorExp ;
 LetExp : PureExp ::= Var:ParamDecl Val:PureExp Exp:PureExp ;
 FnApp : PureExp ::= <Name> Param:PureExp* ;
+
+// Object run-type type checking and casting
+IsExp : PureExp ::= Exp:PureExp InterfaceTypeUse ;
+AsExp : PureExp ::= Exp:PureExp InterfaceTypeUse ;
 
 abstract ParFnAppParam ;
 NamedParFnAppParam : ParFnAppParam ::= <Name> ;
@@ -287,6 +293,7 @@ abstract BoolExp : Binary ;
 AndBoolExp : BoolExp ;
 OrBoolExp : BoolExp ;
 
+
 //Relations
 abstract RelationalExpr : Binary;
 LTExp : RelationalExpr ;
@@ -297,19 +304,6 @@ GTEQExp : RelationalExpr ;
 abstract EqualityExpr : RelationalExpr;
 EqExp : EqualityExpr ;
 NotEqExp : EqualityExpr ;
-
-// (For Component Model) //
-  // Component: statements
-RebindStmt: Stmt        ::= Obj:Exp <Field> Val:Exp;
-MoveStmt: Stmt          ::= Loc:PureExp To:PureExp;
-  // Component: Guards of object
-ObjectGuard: Guard      ::= Exp;
-  // Component expressions to get a location
-NewLocExp: EffExp;
-GetLocExp: PureExp       ::= PureExp;
-GetFatherExp: PureExp    ::= PureExp;
-
-
 
 // Feature Configuration and Product Selection Language (CL/PSL)
 ProductLine ::= <Name> Feature* DeltaClause* ;

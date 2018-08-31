@@ -131,7 +131,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
                         new FnApp("ABS.StdLib.toString",
                             new List<>(new VarUse("testresult"))))))));
         }
-        ErlangBackend.compile(model, targetDir,
+        new ErlangBackend().compile(model, targetDir,
 // use the following argument for silent compiler:
                               EnumSet.noneOf(ErlangBackend.CompileOptions.class)
 // use the following argument for verbose compiler output:
@@ -152,7 +152,8 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      */
     private String run(File workDir, String mainModule) throws Exception {
         String val = null;
-        File runFile = new File(workDir, "run");
+        String runFileName = ErlangBackend.isWindows() ? "run.bat" : "run";
+        File runFile = new File(workDir, runFileName);
         ProcessBuilder pb = new ProcessBuilder(runFile.getAbsolutePath(), mainModule);
         pb.directory(workDir);
         pb.redirectErrorStream(true);
@@ -198,6 +199,18 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     public BackendName getBackendName() {
         return BackendName.ERLANG;
     }
+
+    @Override
+    public boolean supportsCustomSchedulers() { return true; }
+
+    @Override
+    public boolean supportsTimedAbs() { return true; }
+
+    @Override
+    public boolean supportsExceptions() { return true; }
+
+    @Override
+    public boolean supportsDowncasting() { return true; }
 }
 
 class TimeoutThread implements Runnable {

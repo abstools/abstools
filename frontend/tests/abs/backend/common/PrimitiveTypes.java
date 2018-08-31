@@ -34,13 +34,28 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
+    public void intMinus() {
+        assertEvalTrue("{ Int x = -1; x = -x; Bool testresult = x == 1; }");
+    }
+
+    @Test
     public void intAdd() {
         assertEvalTrue("{ Bool testresult = 5 + 5 == 10;  }");
     }
 
     @Test
+    public void intAddLong() {
+        assertEvalTrue("{ Bool testresult = 92233720368547758070 + 9223372036854775807 == 101457092405402533877;  }");
+    }
+
+    @Test
     public void intSub() {
         assertEvalTrue("{ Bool testresult = 10 - 5 == 5;  }");
+    }
+
+    @Test
+    public void intSubLong() {
+        assertEvalTrue("{ Bool testresult = 92233720368547758070 - 9223372036854775807 == 83010348331692982263;  }");
     }
 
     @Test
@@ -51,6 +66,11 @@ public class PrimitiveTypes extends SemanticTests {
     @Test
     public void intMult() {
         assertEvalTrue("{ Bool testresult = 2 * 5 == 10;  }");
+    }
+
+    @Test
+    public void intMultLong() {
+        assertEvalTrue("{ Bool testresult = 92233720368547758070 * 9223372036854775807 == 850705917302346158473969077842325012490;  }");
     }
 
     @Test
@@ -92,6 +112,11 @@ public class PrimitiveTypes extends SemanticTests {
     @Test
     public void intGtEq2() {
         assertEvalTrue("{ Bool testresult = 5 >= 5;  }");
+    }
+
+    @Test
+    public void ratMinus() {
+        assertEvalTrue("{ Rat x = -1/2; x = -x; Bool testresult = x == 1/2; }");
     }
 
     @Test
@@ -155,6 +180,66 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
+    public void floatMinus() {
+        assertEvalTrue("{ Float x = -1.0; x = -x; Bool testresult = x == 1.0; }");
+    }
+
+    @Test
+    public void floatAdd() {
+        assertEvalTrue("{ Bool testresult = 5.0 + 5.0 == 10.0;  }");
+    }
+
+    @Test
+    public void floatSub() {
+        assertEvalTrue("{ Bool testresult = 10.0 - 5.0 == 5.0;  }");
+    }
+
+    @Test
+    public void floatDiv() {
+        assertEvalTrue("{ Float result = 10.0/4.0; Bool testresult = result == 2.5;  }");
+    }
+
+    @Test
+    public void floatMult() {
+        assertEvalTrue("{ Bool testresult = 2.0 * 5.0 == 10.0;  }");
+    }
+
+    @Test
+    public void floatMod() {
+        assertEvalTrue("{ Bool testresult = 10.0 % 3.0 == 1.0;  }");
+    }
+
+    @Test
+    public void floatGt() {
+        assertEvalTrue("{ Bool testresult = 10.0 > 5.0;  }");
+    }
+
+    @Test
+    public void floatLt() {
+        assertEvalTrue("{ Bool testresult = 5.0 < 10.0;  }");
+    }
+
+    @Test
+    public void floatLtEq() {
+        assertEvalTrue("{ Bool testresult = 5.0 <= 10.0;  }");
+    }
+
+    @Test
+    public void floatLtEq2() {
+        assertEvalTrue("{ Bool testresult = 5.0 <= 5.0;  }");
+    }
+
+    @Test
+    public void floatGtEq() {
+        assertEvalTrue("{ Bool testresult = 10.0 >= 5.0;  }");
+    }
+
+    @Test
+    public void floatGtEq2() {
+        assertEvalTrue("{ Bool testresult = 5.0 >= 5.0;  }");
+    }
+
+    @Test
     public void stringEq() {
         assertEvalTrue("{ Bool testresult = \"xx\" == \"xx\";  }");
     }
@@ -203,5 +288,25 @@ public class PrimitiveTypes extends SemanticTests {
     @Test
     public void wrappedIntRatCmp() {
         assertEvalTrue("{ Bool testresult = Time(2) == Time(2/1); }");
+    }
+
+    @Test
+    public void intToString() {
+	assertEvalTrue("{ Bool testresult = toString(5) == \"5\"; }");
+    }
+
+    @Test
+    public void ratToString() {
+	assertEvalTrue("{ Bool testresult = toString(5/2) == \"5/2\"; }");
+    }
+
+    @Test
+    public void floatToString() {
+        assertEvalTrue("{ Bool testresult = toString(2.5) == \"2.5\"; }");
+    }
+
+    @Test
+    public void stringToString() {
+	assertEvalTrue("{ Bool testresult = toString(\"Hello\") == \"\\\"Hello\\\"\"; }");
     }
 }

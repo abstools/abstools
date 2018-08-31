@@ -4,7 +4,7 @@
 
 
 %% External API
--export([start/4,init/4,join/1,notifyEnd/1,notifyEnd/2]).
+-export([start/6,init/6,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
 -export([wait_for_token/2,release_token/2]).
 -export([await_duration/4,block_for_duration/4]).
@@ -22,23 +22,23 @@
 
 
 %%Task behaviours have to implemented:
-%%init(Cog,Args): Can block an will init the task.
-%%                Return Value will then by passed to start
+%% init(Cog,Future,Object,Args): Can block and will init the task.  Return
+%% value will be passed to start/1
 %%
-%%start(InitValue):Executes the task
+%% start(InitValue): Executes the task
 
 
 behaviour_info(callbacks) ->
-    [{init, 2},{start,1}];
+    [{init, 4},{start,1}];
 behaviour_info(_) ->
     undefined.
 
-start(Cog,TaskType,Args,Info)->
-    spawn_link(task,init,[TaskType,Cog,Args,Info]).
+start(Cog,TaskType,Future,CalleeObj,Args,Info)->
+    spawn_link(task,init,[TaskType,Cog,Future,CalleeObj,Args,Info]).
 
-init(TaskType,Cog,Args,Info)->
-    put(process_info, Info#process_info{pid=self()}),
-    InnerState=TaskType:init(Cog,Args),
+init(TaskType,Cog,Future,CalleeObj,Args,Info)->
+    put(process_info, Info#process_info{pid=self(),this=CalleeObj,destiny=Future}),
+    InnerState=TaskType:init(Cog,Future,CalleeObj,Args),
     %% init RNG, recipe recommended by the Erlang documentation.
     %% TODO: if we want reproducible runs, make seed a command-line parameter
     random:seed(erlang:phash2([node()]), erlang:monotonic_time(), erlang:unique_integer()),

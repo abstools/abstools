@@ -53,4 +53,17 @@ public class MaudeTestDriver implements BackendTestDriver {
     public BackendName getBackendName() {
         return BackendName.MAUDE;
     }
+
+    @Override
+    public boolean supportsCustomSchedulers() { return true; }
+
+    @Override
+    public boolean supportsTimedAbs() { return maude.mode == MaudeCompiler.SIMULATOR.EQ_TIMED; }
+
+    @Override
+    // MISSING: recovery block, throwing exceptions from expressions
+    public boolean supportsExceptions() { return false; }
+
+    @Override
+    public boolean supportsDowncasting() { return false; }
 }

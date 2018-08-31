@@ -82,6 +82,10 @@ supported.
 | a string of digits, e.g., `?p=42`
 | JSON integer
 
+| `Float`
+| a floating-point number, e.g., `?p=3.14`
+| JSON float
+
 | `String`
 | URLEncoded text, e.g., `?p=Hello%20World!`
 | JSON string
@@ -111,6 +115,8 @@ the following table.
 
 | `Rat` | JSON float, via integer division.  The behavior is unspecified if
   the `Rat` value is outside of floating point range.
+
+| `Float` | JSON float
 
 | `List<A>` | JSON list, with elements converted one-by-one per this table.
 
@@ -229,6 +235,18 @@ $ curl http://localhost:8080/call/C1/method?param1=value\&param2=50
 $ curl -d "{ 'param1': 'value', 'param2': 50 }" http://localhost:8080/call/C1/method
 ----
 
+The following example shows how to call a method that takes a `List<Int>` called `mylist` from Javascript using the JQuery library:
+
+[source, javascript]
+----
+$.ajax({
+    url: "call/Model/testConfig",
+    type: "POST",
+    data: JSON.stringify({ "mylist": [1,2,3] }),
+}).done(function(result) {
+    console.log("Result: " + JSON.stringify(result));
+});
+----
 
 Care must be taken to disable timeouts on the HTTP client when querying for
 long-running methods in this way.
@@ -241,4 +259,57 @@ When querying with invalid method parameters, the HTTP request will produce a
 
 When the invoked method throws an exception, the HTTP request will produce a
 500 response code.
+
+=== The Model API and Timed ABS
+
+The simulated clock of Timed ABS (<<sec:timed-abs>>) is accessible via
+the Model API.
+
+The current value of the clock can be obtained with the following request:
+
+----
+GET http://localhost:8080/clock/now
+----
+
+The result is a JSON object with a key `'value'` mapping to the
+current value of the clock.
+
+When the model was started with a clock limit (see
+<<timed-abs-and-model-api>>), the limit can be increased via a request
+like the following:
+
+----
+GET http://localhost:8080/clock/advance?by=50
+----
+
+This call will always increase the clock limit by the given amount,
+even if the clock had not yet reached the previous limit.  I.e., when
+`now()` = 10 and the limit is 20, after the call the limit will be 70,
+the same as when the clock was already stopped at the limit of 20 when
+the call was received by the Model API.
+
+
+=== Customizing the Browser-Based Visualization
+
+Since the Model API is implemented via HTTP, it can be accessed from a
+web browser.  The `-http-index-file` command-line switch is used
+to supply an `index.html` file at compile-time:
+
+  $ absc -erlang -http-index-file ./index.html *.abs
+
+When running a model on port 8080 and accessing
+`http://localhost:8080/` from a browser, the contents of that file
+will be displayed.
+
+Sometimes it is necessary to add additional files for visualization,
+e.g., CSS files, images or JavaScript libraries.  The contents of one
+directory can be added to the model via the `-http-static-dir`
+command-line switch:
+
+  $ absc -erlang -http-index-file ./index.html -http-static-dir ./support-files/ *.abs
+
+The contents of the given directory are copied at compile-time.  The
+files within that directory are available within the Model API below
+the `static/` path.  For example, a file `./support-files/js/d3.js`
+will be accessible as `http://localhost:8080/static/js/d3.js`.
 

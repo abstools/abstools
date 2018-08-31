@@ -55,9 +55,11 @@ aspect Typing {
     /* TODO: Those will lead to utter confusion when running without stdlib, as e.g. RelExps depend on Bool. */
     syn Type Model.getUnitType() = getStdDataType("Unit");
     syn Type Model.getIntType() = getStdDataType("Int");
+    syn Type Model.getFloatType() = getStdDataType("Float");
     syn Type Model.getRatType() = getStdDataType("Rat");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
+    syn DataTypeType Model.getMaybeType(Type typeArg) = ((DataTypeType)getStdDataType("Maybe")).withTypeArgs(typeArg);
     syn Type Model.getListType() = (DataTypeType)getStdDataType("List");
     syn Type Model.getListType(Type typeArg) = ((DataTypeType)getStdDataType("List")).withTypeArgs(typeArg);
     syn Type Model.getExceptionType() = getStdDataType("Exception");
@@ -193,6 +195,14 @@ aspect Typing {
         return d.getType();
     }
 
+    eq IsExp.getType() {
+        return getModel().getBoolType();
+    }
+
+    eq AsExp.getType() {
+        return getModel().getMaybeType(getInterfaceTypeUse().getDecl().getType());
+    }
+
     protected List<Annotation> TypeUse.calcAnnotations() {
         ASTNode<?> p = getParent();
         if (p instanceof MethodSig) {
@@ -220,14 +230,21 @@ aspect Typing {
         return new DataTypeType((ParametricDataTypeDecl)d,this).withAnnotations(getAnnotations());
     }
     eq Unary.getType() = getOperand().getType();
-    eq AddAddExp.getType() = getLeft().getType();  // number or string
     eq ArithmeticExp.getType() {
         // Int or Rat, depending on operands
         Type mostGeneralType = getLeft().getType();
         if (mostGeneralType.isIntType()) return getRight().getType();
         return mostGeneralType;
     }
-    eq DivMultExp.getType() = getModel().getRatType(); // Rat in all cases
+    eq DivMultExp.getType() {
+        if (getLeft().getType().isFloatType()
+            && getRight().getType().isFloatType()) {
+            return getModel().getFloatType();
+        } else {
+            // Int / Int becomes Rat
+            return getModel().getRatType();
+        }
+    }
     eq BoolExp.getType() = getModel().getBoolType();
     eq RelationalExpr.getType() = getModel().getBoolType();
     eq IfExp.getType() {
@@ -309,10 +326,11 @@ aspect Typing {
     }
     eq LetExp.getType() = getExp().getType();
     eq IntLiteral.getType() = getModel().getIntType();
+    eq FloatLiteral.getType() =  getModel().getFloatType();
     eq StringLiteral.getType() =  getModel().getStringType();
     eq NullExp.getType() = NullType.INSTANCE;
     eq ThisExp.getType() = getContextDecl().getType();
-    eq MinusExp.getType() = getModel().getIntType();
+    eq MinusExp.getType() = getOperand().getType();
     eq NegExp.getType() = getModel().getBoolType();
     
     syn lazy Type CaseBranch.getType() = getRight().getType();
@@ -463,12 +481,6 @@ aspect Typing {
         TypeCheckerHelper.addTypeParamBinding(node, binding, getTypes(), args);
         return binding;
     }
-
-    /* Component */
-    eq NewLocExp.getType() { return getModel().getStdDataType("Location"); }
-    eq GetLocExp.getType() { return getModel().getStdDataType("Location"); }
-    eq GetFatherExp.getType() { return getModel().getStdDataType("Location"); }
-
 
 }
 

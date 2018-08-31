@@ -31,11 +31,10 @@ The following operators apply to Boolean values:
 |e1 == e2   |equality                      |left  |compatible |Bool
 |e1 != e2   |inequality                    |left  |compatible |Bool
 |e1 < e2    |less than                     |left  |compatible |Bool
-|e1 < = e2  |less than or equal to         |left  |compatible |Bool
+|e1 +++<=+++ e2  |less than or equal to         |left  |compatible |Bool
 |e1 > e2    |greater than                  |left  |compatible |Bool
 |e1 >= e2   |greater than or equal to      |left  |compatible |Bool
 |! e        |logical negation              |right |Bool |Bool
-|~ e        |logical negation (deprecated) |right |Bool |Bool
 |=======================
 
 [[type-numbers]]
@@ -43,25 +42,30 @@ The following operators apply to Boolean values:
 
 ==== Datatypes and constructors
 
-The two numeric datatypes are `Int` and `Rat`.  See <<sec:builtin-types>> for
-their syntax.
+The numeric datatypes of ABS are `Int` (arbitrary-length integers), `Rat`
+(arbitrary-precision rational numbers) and `Float` (64-bit floating point).
+See <<sec:builtin-types>> for their syntax.
+
+CAUTION: Support for floating-point calculations is under development;
+calculations resulting in `Inf` or `NaN` currently have unspecified runtime
+behavior.
 
 ==== Operators
 
 [options="header"]
 |=======================
 |Expression|Meaning      |Associativity |Argument types |Result type
-|e1 == e2 |equality |left |compatible |Bool
-|e1 != e2 |inequality |left |compatible |Bool
-|e1 < e2 |less than |left |compatible |Bool
-|e1 < = e2 |less than or equal to |left |compatible |Bool
-|e1 > e2 |greater than |left |compatible |Bool
-|e1 >= e2 |greater than or equal to |left |compatible |Bool
-|e1 + e2 |addition |left |number, number |number
-|e1 - e2 |subtraction |left |number, number |number
-|e1 * e2 |multiplication |left |number, number |number
-|e1 / e2 |division |left |number, number |Rat
-|e1 % e2 |modulo |left |number, number |Int
+|`e1 == e2` |equality |left |compatible |`Bool`
+|`e1 != e2` |inequality |left |compatible |`Bool`
+|`e1 < e2` |less than |left |compatible |`Bool`
+|`e1 +++<=+++ e2` |less than or equal to |left |compatible |`Bool`
+|`e1 > e2` |greater than |left |compatible |`Bool`
+|`e1 >= e2` |greater than or equal to |left |compatible |`Bool`
+|`e1 + e2` |addition |left |number, number |number
+|`e1 - e2` |subtraction |left |number, number |number
+|`e1 * e2` |multiplication |left |number, number |number
+|`e1 / e2` |division |left |number, number |`Rat` or `Float`
+|`e1 % e2` |modulo |left |number, number |number
 |=======================
 
 
@@ -95,6 +99,43 @@ Converts a rational number to an integer by truncating towards zero.
 [source]
 ----
 Int truncate(Rat a)
+----
+
+.float
+
+Converts an integer or rational number into a floating-point number.
+
+[source]
+----
+Float float(Rat a)
+----
+
+.rat
+
+Converts  a floating-point number into a rational number.
+
+[source]
+----
+Rat rat(Float f)
+----
+
+.floor
+
+Returns the largest integer smaller or equal to the argument.
+
+[source]
+----
+Int floor(Float f)
+----
+
+
+.ceil
+
+Returns the smallest integer larger or equal to the argument.
+
+[source]
+----
+Int ceil(Float f)
 ----
 
 .numerator
@@ -146,6 +187,34 @@ estimates (as per Newton's algorithm) differ by less than `epsilon`.
 Rat exp_newton(Rat x, Rat epsilon)
 ----
 
+.sqrt
+
+This function returns the square root of `x`.  It is an error if `x` is
+negative.
+
+[source]
+----
+Float sqrt(Float x)
+----
+
+.log
+
+This function returns the natural logarithm of its argument.
+
+[source]
+----
+Float log(Float x)
+----
+
+.exp
+
+This function returns Euler’s number _e_ raised to the power of `x`.
+
+[source]
+----
+Float exp(Float x)
+----
+
 .random
 
 Returns an integer between 0 (inclusive) and its argument (exclusive).
@@ -173,7 +242,7 @@ literal is written as `\n`, carriage return as `\r`.
 |e1 == e2 |equality |left |compatible |Bool
 |e1 != e2 |inequality |left |compatible |Bool
 |e1 < e2 |less than |left |compatible |Bool
-|e1 < = e2 |less than or equal to |left |compatible |Bool
+|e1 +++<=+++ e2 |less than or equal to |left |compatible |Bool
 |e1 > e2 |greater than |left |compatible |Bool
 |e1 >= e2 |greater than or equal to |left |compatible |Bool
 |e1 + e2 |concatenation |left |String, String |String
@@ -312,6 +381,12 @@ integers.  An empty list is created via `list[]` or `Nil`.
 The time to access a value via `nth` is proportional to the length of the
 list.  The first value of a list can be accessed in constant time, using the
 `head` function.
+
+The `map`, `fold` and `filter` second-order functions described in
+this section implement common functional programming patterns.  To
+execute some statements for each element in a list, use a `foreach`
+loop (see <<foreach-loop>>).
+
 
 ==== Datatypes and Constructors
 

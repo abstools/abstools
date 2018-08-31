@@ -34,10 +34,10 @@ public class TypeCheckerHelper {
             e.add(new SemanticError(p, ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, p.getConstructor()));
             return;
         }
-        String cname = c.qualifiedName();
+        String cname = c.getQualifiedName();
         if (deprecatedConstructors.contains(cname)
             && !(cname.startsWith(p.getModuleDecl().getName()))) {
-            e.add(new SemanticWarning(p, ErrorMessage.DEPRECATED_CONSTRUCTOR, c.qualifiedName()));
+            e.add(new SemanticWarning(p, ErrorMessage.DEPRECATED_CONSTRUCTOR, cname));
         }
 
         if (c.getNumConstructorArg() != p.getNumParam()) {
@@ -536,7 +536,12 @@ public class TypeCheckerHelper {
         String varName = v.getVarDecl().getName();
         VarOrFieldDecl otherVar = v.lookupVarOrFieldName(varName , false);
         if (otherVar != null && v.inSameMethodOrBlock(otherVar)) {
-            e.add(new TypeError(v,ErrorMessage.VARIABLE_ALREADY_DECLARED, varName));
+            String location = "";
+            if (!otherVar.getFileName().equals(abs.frontend.parser.Main.UNKNOWN_FILENAME)) {
+                location = " at " + otherVar.getFileName()
+                    + ":" + otherVar.getStartLine() + ":" + otherVar.getStartColumn();
+            }
+            e.add(new TypeError(v,ErrorMessage.VARIABLE_ALREADY_DECLARED, varName, location));
         }
     }
 
@@ -544,11 +549,19 @@ public class TypeCheckerHelper {
      * check a list of compilation units for duplicate module names, product names, delta names
      */
     public static void checkForDuplicateModules(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
-        Set<String> seenModules = new HashSet<>();
+        Map<String, ModuleDecl> seenModules = new HashMap<>();
         for (CompilationUnit u : compilationUnits) {
             for (ModuleDecl module : u.getModuleDecls()) {
-                if (!seenModules.add(module.getName())) {
-                    errors.add(new TypeError(module, ErrorMessage.DUPLICATE_MODULE_NAME,module.getName()));
+                if (seenModules.containsKey(module.getName())) {
+                    ModuleDecl prev = seenModules.get(module.getName());
+                    String location = "";
+                    if (!prev.getFileName().equals(abs.frontend.parser.Main.UNKNOWN_FILENAME)) {
+                        location = " at " + prev.getFileName()
+                            + ":" + prev.getStartLine() + ":" + prev.getStartColumn();
+                    }
+                    errors.add(new TypeError(module, ErrorMessage.DUPLICATE_MODULE_NAME,module.getName(), location));
+                } else {
+                    seenModules.put(module.getName(), module);
                 }
             }
         }
@@ -590,7 +603,7 @@ public class TypeCheckerHelper {
     public static String getAlternativesAsString(AmbiguousDecl a) {
         String result = "";
         for (Decl alternative : a.getAlternative()) {
-            result += "\n * " + alternative.qualifiedName() +  " (defined in " +
+            result += "\n * " + alternative.getQualifiedName() +  " (defined in " +
                     alternative.getFileName() + ", line " + alternative.getStartLine() + ")";
         }
         return result;

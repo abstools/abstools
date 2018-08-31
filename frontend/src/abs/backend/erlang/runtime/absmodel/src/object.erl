@@ -28,7 +28,7 @@
 
 %% HTTP api: inhibit dying from gc while we're registered.
 -export([protect_object_from_gc/1, unprotect_object_from_gc/1]).
--export([get_whole_object_state/1,get_all_method_info/1]).
+-export([get_object_state_for_json/1,get_all_method_info/1,has_interface/2]).
 
 %% gen_statem callbacks
 -export([init/1, callback_mode/0, terminate/3, code_change/4]).
@@ -59,7 +59,7 @@ new(Cog,Class,Args,CreatorCog,Stack)->
         false -> ok
     end,
     cog:process_is_blocked_for_gc(CreatorCog, self()),
-    cog:add_sync(Cog,init_task,{O,Args},
+    cog:add_task(Cog,init_task,none,O,Args,
                  #process_info{method= <<".init"/utf8>>}, [O, Args | Stack]),
     cog:process_is_runnable(CreatorCog, self()),
     task:wait_for_token(CreatorCog,[O, Args|Stack]),
@@ -104,8 +104,8 @@ protect_object_from_gc(#object{ref=O}) ->
 unprotect_object_from_gc(#object{ref=O}) ->
     gen_statem:cast(O, unprotect_from_gc).
 
-get_whole_object_state(#object{ref=O}) ->
-    gen_statem:call(O, get_whole_state).
+get_object_state_for_json(#object{ref=O}) ->
+    gen_statem:call(O, get_state_for_modelapi).
 
 get_field_value(O=#object{ref=Ref}, Field) ->
     gen_statem:call(Ref, {O,get,Field}).
@@ -115,6 +115,9 @@ set_field_value(O=#object{ref=Ref}, Field, Value) ->
 
 get_all_method_info(_O=#object{class=C,ref=_Ref}) ->
     C:exported().
+
+has_interface(_O=#object{class=C}, I) ->
+    lists:member(I, C:implemented_interfaces()).
 
 %%Internal
 
@@ -256,8 +259,8 @@ handle_call(From, get_references,
                   Data=#data{fields=OState, cog=#cog{dc=DC}}) ->
     {keep_state_and_data, {reply, From, ordsets:union(gc:extract_references(DC),
                                                       gc:extract_references(OState))}};
-handle_call(From, get_whole_state, Data=#data{class=C,fields=OState}) ->
-    {keep_state_and_data, {reply, From, C:get_all_state(OState)}}.
+handle_call(From, get_state_for_modelapi, Data=#data{class=C,fields=OState}) ->
+    {keep_state_and_data, {reply, From, C:get_state_for_modelapi(OState)}}.
 
 
 handle_cast(unprotect_from_gc, Data=#data{tasks=Tasks,cog=Cog,alive=Alive}) ->

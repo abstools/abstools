@@ -9,8 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import abs.backend.common.InternalBackendException;
 import abs.common.NotImplementedYetException;
 import abs.common.WrongProgramArgumentException;
@@ -40,7 +38,7 @@ public class Tester extends Main {
         }
     }
 
-    private int compile(String[] args) throws DeltaModellingException, IOException, WrongProgramArgumentException, ParserConfigurationException, InternalBackendException {
+    private int compile(String[] args) throws DeltaModellingException, IOException, WrongProgramArgumentException, InternalBackendException {
         final Model model = this.parse(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
 	    return 127;

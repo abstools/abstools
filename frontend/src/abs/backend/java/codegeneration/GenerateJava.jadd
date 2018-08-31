@@ -53,7 +53,7 @@ aspect GenerateJava {
             File file = generatedJavaPackage.createJavaFile(mainName);
             PrintStream stream = null;
             try {
-                stream = new JavaCodeStream(file);
+                stream = JavaCodeStream.from(file);
                 stream.println("package " + generatedJavaPackage.packageName + ";");
                 //stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
 
@@ -87,7 +87,7 @@ aspect GenerateJava {
         try {
             String name = JavaBackend.getJavaName(this);
             File file = pkg.createJavaFile(name);
-            s = new JavaCodeStream(file);
+            s = JavaCodeStream.from(file);
             s.println("package " + pkg.packageName + ";");
             //s.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
             generateJava(s);
@@ -599,7 +599,8 @@ aspect GenerateJava {
                 // KLUDGE: leave this in until we can generate ABS `throw'
                 // statements
                 stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
-                stream.println(getPositionString() + " value \" + " + varName + " + \" did not match any pattern.\");");
+                JavaGeneratorHelper.printEscapedString(stream, getPositionString());
+                stream.println(" value \" + " + varName + " + \" did not match any pattern.\");");
             } else {
                 // Found a match => exit the statement
                 stream.println("continue;");
@@ -615,7 +616,8 @@ aspect GenerateJava {
         stream.print("if (!");
         getCondition().generateJava(stream);
         stream.print(".toBoolean()) throw new " + ABSAssertException.class.getName() + "(\"");
-        stream.println(getPositionString() + " Assertion failed\");");
+        JavaGeneratorHelper.printEscapedString(stream, getPositionString());
+        stream.println(" Assertion failed\");");
 
     }
 
@@ -755,6 +757,13 @@ aspect GenerateJava {
         }
     }
 
+    public void IsExp.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+    public void AsExp.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
     public void DataTypeUse.generateJava(PrintStream stream) {
         stream.print(JavaBackend.getJavaType(this));
     }
@@ -843,7 +852,8 @@ aspect GenerateJava {
             i++;
         }
         stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
-        stream.println(getPositionString() + " value \" + __ABS_value + \" did not match any pattern.\");");
+        JavaGeneratorHelper.printEscapedString(stream, getPositionString());
+        stream.println(" value \" + __ABS_value + \" did not match any pattern.\");");
         stream.println("}");
         stream.print("}.of(");
         for (String freeVarName : getFreeVars()) {
@@ -1016,6 +1026,13 @@ aspect GenerateJava {
         }
     }
 
+    public void FloatLiteral.generateJava(PrintStream stream) {
+        stream.print(ABSFloat.class.getName());
+        stream.print(".fromDouble(");
+        stream.print(getContent() + "d");
+        stream.print(")");
+    }
+
     public void StringLiteral.generateJava(PrintStream stream) {
         stream.print(ABSString.class.getName());
         stream.print(".fromString(\"");
@@ -1150,19 +1167,6 @@ aspect GenerateJava {
         stream.print(")");
     }
 
-    /* Components */
-    public void RebindStmt.generateJava(String indent, PrintStream stream) { }
-    public void MoveStmt.generateJava(String indent, PrintStream stream) { }
-
-    public void NewLocExp.generateJava(PrintStream stream) { }
-    public void GetLocExp.generateJava(PrintStream stream) { }
-    public void GetFatherExp.generateJava(PrintStream stream) { }
-    public void ObjectGuard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream) {}
-
-    public void NewLocExp.generateJavaDynamic(PrintStream stream) { }
-    public void GetLocExp.generateJavaDynamic(PrintStream stream) { }
-    public void GetFatherExp.generateJavaDynamic(PrintStream stream) { }
-    public void ObjectGuard.generateJavaGuardDynamic(PrintStream beforeAwaitStream, PrintStream stream) {}
     /*****/
     public void TraitUse.generateJava(PrintStream stream) { }
     public void TraitUse.generateJavaDynamic(PrintStream stream) { }

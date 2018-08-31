@@ -4,6 +4,7 @@
  */
 package abs.backend.common;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -160,4 +161,128 @@ public class StdLibTests extends SemanticTests {
         assertEvalTrue("{ Bool testresult = denominator(-5) == 1; }");
     }
 
+    @Test
+    public void float1() {
+        assertEvalTrue("{ Bool testresult = float(5/2) == 2.5; }");
+    }
+
+    @Test
+    public void float2() {
+        assertEvalTrue("{ Bool testresult = float(-5/2) == -2.5; }");
+    }
+
+    @Test
+    public void float3() {
+        assertEvalTrue("{ Bool testresult = float(0) == 0.0; }");
+    }
+
+    @Test
+    public void float4() {
+        assertEvalTrue("{ Bool testresult = float(1) == 1.0; }");
+    }
+
+    @Test
+    public void rat1() {
+        assertEvalTrue("{ Bool testresult = rat(2.5) == 5/2; }");
+    }
+
+    @Test
+    public void rat2() {
+        assertEvalTrue("{ Bool testresult = rat(-2.5) == -5/2; }");
+    }
+
+    @Test
+    public void rat3() {
+        assertEvalTrue("{ Bool testresult = rat(0.0) == 0; }");
+    }
+
+    @Test
+    public void rat4() {
+        assertEvalTrue("{ Bool testresult = rat(1.0) == 1; }");
+    }
+
+    @Test
+    public void floor1() {
+        assertEvalTrue("{ Bool testresult = floor(2.5) == 2;}");
+    }
+
+    @Test
+    public void floor2() {
+        assertEvalTrue("{ Bool testresult = floor(-2.5) == -3;}");
+    }
+
+    @Test
+    public void ceil1() {
+        assertEvalTrue("{ Bool testresult = ceil(2.5) == 3;}");
+    }
+
+    @Test
+    public void ceil2() {
+        assertEvalTrue("{ Bool testresult = ceil(-2.5) == -2;}");
+    }
+
+    @Test
+    public void maxInt() {
+        assertEvalTrue("{Bool testresult = max(-2, 3) == 3;}");
+    }
+
+    @Test
+    public void minInt() {
+        assertEvalTrue("{Bool testresult = min(-2, 3) == -2;}");
+    }
+
+    @Test
+    public void maxRat() {
+        assertEvalTrue("{Bool testresult = max(-2/5, 3/5) == 3/5;}");
+    }
+
+    @Test
+    public void minRat() {
+        assertEvalTrue("{Bool testresult = min(-2/5, 3/5) == -2/5;}");
+    }
+
+    @Test
+    public void maxFloat() {
+        assertEvalTrue("{Bool testresult = max(-2.0, 3.0) == 3.0;}");
+    }
+
+    @Test
+    public void minFloat() {
+        assertEvalTrue("{Bool testresult = min(-2.0, 3.0) == -2.0;}");
+    }
+
+    @Test
+    public void sqrt1() {
+        assertEvalTrue("{Bool testresult = sqrt(4.0) == 2.0;}");
+    }
+
+    @Test
+    public void logexp1() {
+        assertEvalTrue("{Bool testresult = log(exp(1.0)) == 1.0;}");
+    }
+
+    @Test
+    public void map1() {
+	assertEvalTrue("{ Bool testresult = map((Int x) => x + 1)(list[1, 2, 3]) == list[2, 3, 4]; }");
+    }
+
+    @Test
+    public void filter1() {
+	assertEvalTrue("{ Bool testresult = filter((Int x) => x % 2 == 0)(list[1, 2, 3]) == list[2]; }");
+    }
+
+    @Test
+    public void foldl1() {
+	assertEvalTrue("{ Bool testresult = foldl((Int elem, Int acc) => elem + acc)(list[1, 2, 3], 0) == 6; }");
+    }
+
+    @Test
+    public void foldr1() {
+	assertEvalTrue("{ Bool testresult = foldr((Int elem, Int acc) => elem + acc)(list[1, 2, 3], 0) == 6; }");
+    }
+
+    @Test
+    public void durationLessThan() {
+        assertEvalTrue("{ Bool testresult = durationLessThan(Duration(5), InfDuration); }");
+    }
 }

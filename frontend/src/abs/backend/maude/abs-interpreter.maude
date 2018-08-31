@@ -129,8 +129,6 @@ fmod ABS-EXPRESSION is
   op ?(_)  : Expr -> Expr [ctor format (! o d d d)] .
   *** duration guard expression
   op ?duration(_;_) : Expr Expr -> Expr [ctor format (! o d d d d d) ] .
-  *** Component Model Extension: consistency guard
-  op cr(_) : Expr -> Expr  [ctor format (! o d d d)] .
   *** Error terms
   op $error : String -> Expr [ctor format (r o)] .
 
@@ -192,19 +190,22 @@ fmod ABS-DATA-FLOAT is
   op _asFloat : Data -> Float .
   eq "float"[F] asFloat = F .
 
-  eq "-" ("float"[F]) = "float"[-(F)] .
-  eq "+" ("float"[F] :: "float"[F']) = "float"[F + F'] .
-  eq "-" ("float"[F] :: "float"[F']) = "float"[ _-_(F, F')] .
-  eq "*" ("float"[F] :: "float"[F']) = "float"[F * F'] .
-  eq "/" ("float"[F] :: "float"[F']) = "float"[F / F'] .
-  eq "%" ("float"[F] :: "float"[F']) = "float"[F rem F'] .
-  eq "**" ("float"[F] :: "float"[F']) = "float"[F ^ F'] .
+  eq fparams("ABS.StdLib.float") = 'I .
+  eq fdefn("ABS.StdLib.float") = $builtin("float") .
+  eq fparams("ABS.StdLib.rat") = 'I .
+  eq fdefn("ABS.StdLib.rat") = $builtin("rat") .
+  eq fparams("ABS.StdLib.floor") = 'I .
+  eq fdefn("ABS.StdLib.floor") = $builtin("floor") .
+  eq fparams("ABS.StdLib.ceil") = 'I .
+  eq fdefn("ABS.StdLib.ceil") = $builtin("ceil") .
+  eq fparams("ABS.StdLib.sqrt") = 'I .
+  eq fdefn("ABS.StdLib.sqrt") = $builtin("sqrt") .
+  eq fparams("ABS.StdLib.log") = 'I .
+  eq fdefn("ABS.StdLib.log") = $builtin("log") .
+  eq fparams("ABS.StdLib.exp") = 'I .
+  eq fdefn("ABS.StdLib.exp") = $builtin("exp") .
 
-  eq "<"  ("float"[F] :: "float"[F']) = (F < F') asAbsBool .
-  eq "<=" ("float"[F] :: "float"[F']) = (F <= F') asAbsBool .
-  eq ">"  ("float"[F] :: "float"[F']) = (F > F') asAbsBool .
-  eq ">=" ("float"[F] :: "float"[F']) = (F >= F') asAbsBool .
-
+  *** definition of arithmetic operators is in ABS-DATA-INT
 endfm
 
 
@@ -451,7 +452,9 @@ mod ABS-DATATYPES is
 
   op toAbsString : Data -> String .
   eq toAbsString("num"[N:Rat]) = string(N:Rat, 10) .
-  eq toAbsString("str"[S:String]) = S:String .
+  eq toAbsString("float"[N:Float]) = string(N:Float) .
+  *** FIXME this does not handle strings with embedded backslashes
+  eq toAbsString("str"[S:String]) = "\"" + S:String + "\"" .
   eq toAbsString(null) = "null" .
   eq toAbsString(ob(C:Cid, N:Int))
   = "< REF " + string(C:Cid) + " " + string(N:Int, 10) + " >" .
@@ -596,13 +599,6 @@ mod ABS-STATEMENT is
 
   op $pushrandom : -> AbortableStmt [ctor format (r o)] .
   op $poprandom : -> AbortableStmt [ctor format (r o)] .
-
-  *** Component Model Extension: rebind et subloc
-  op rebind(_;_;_) : Expr Vid Expr -> AbortableStmt [ctor format (b d o b o b o b o)] .
-  op newloc(_) : Vid -> AbortableStmt [ctor format (r d o r o)] .
-  op getloc(_;_) : Vid Expr -> AbortableStmt [ctor format (b d o b o b o)] .
-  op getfather(_;_) : Vid Expr -> AbortableStmt [ctor format (b d o b o b o)] .
-  op subloc(_;_) : Expr Expr -> AbortableStmt [ctor format (b d o b o b o)] .
 
   --- Assertion Failure.
   --- This `statement' represents an assertion failure.  It
@@ -841,20 +837,6 @@ mod ABS-CONFIGURATION is
   op <_: Cog | Objects:_, DC:_, Sched:_, Pr:_, PrQ:_ > : Cogid Configuration Oid Expr Process MProc -> Cog
     [ctor format (nc d d c d n o! d n o! d n o! d n o! d n o!++ c-- on ) ] .
 
-  *** Component Model Extension: Location
-  sort Location .
-  subsort Location  < Data .
-  sort LocInfo .
-  subsort LocInfo  < Configuration .
-  
-  op loc-top     : -> Location [ctor] .
-  op loc-cog(_)  : Cogid -> Location [ctor format (b o b o o)] .
-  op loc-comp(_) : Nat -> Location [ctor format (b o b o o)] .
-
-  op < LocId | _ > : Nat -> LocInfo [ctor] .
-  op < locRel | _ ; _ > : Data Data -> LocInfo [ctor] .
-
-
   *** Useful for real-time maude, and in general for accessing the whole
   *** configuration.  FIXME: We should use another name, since State is used
   *** in LOOP-MODE.
@@ -945,6 +927,7 @@ mod ABS-EVAL is
   vars Q1 Q2 : String .
   vars R1 R2 : Rat .
   vars I1 I2 : Rat .
+  vars F1 F2 : Float .
   var QID : Qid .
   var M : Mid .
   vars S S' : Subst .
@@ -1119,6 +1102,8 @@ mod ABS-EVAL is
   eq dataLessThan(emp, emp) = false .
   eq dataLessThan("num"[R1] :: DL1, "num"[R2] :: DL2) =
   R1 < R2 or-else (R1 == R2 and dataLessThan(DL1, DL2)) .
+  eq dataLessThan("float"[F1] :: DL1, "float"[F2] :: DL2) =
+  F1 < F2 or-else (F1 == F2 and dataLessThan(DL1, DL2)) .
   eq dataLessThan("str"[Q1] :: DL1, "str"[Q2] :: DL2) = Q1 < Q2 or-else (Q1 == Q2 and dataLessThan(DL1, DL2)) .
   eq dataLessThan(Q1[CDL1] :: DL1, Q2[CDL2] :: DL2) =
   Q1 < Q2 or-else ((Q1 == Q2 and dataLessThan(CDL1, CDL2)) or-else dataLessThan(DL1, DL2)) .
@@ -1139,17 +1124,35 @@ mod ABS-EVAL is
   eq eval($builtin(">"), S, CN, MAC) = dataLessThan(S['I2], S['I1]) asAbsBool .
   eq eval($builtin(">="), S, CN, MAC) = ((S['I1] == S['I2]) or-else dataLessThan(S['I2], S['I1])) asAbsBool .
 
+  *** ABS-DATA-FLOAT
+  ceq eval($builtin("--"), S, CN, MAC) = "float"[ - I:Float ]
+    if "float"[I:Float] := S['I] .
+  ceq eval($builtin("+"), S, CN, MAC) = "float"[I1:Float + I2:Float]
+    if "float"[I1:Float] := S['I1] /\ "float"[I2:Float] := S['I2] .
+  ceq eval($builtin("-"), S, CN, MAC) = "float"[I1:Float - I2:Float]
+    if "float"[I1:Float] := S['I1] /\ "float"[I2:Float] := S['I2] .
+  ceq eval($builtin("*"), S, CN, MAC) = "float"[I1:Float * I2:Float]
+    if "float"[I1:Float] := S['I1] /\ "float"[I2:Float] := S['I2] .
+  ceq eval($builtin("/"), S, CN, MAC) = "float"[I1:Float / I2:Float]
+    if "float"[I1:Float] := S['I1] /\ "float"[I2:Float] := S['I2] .
+  ceq eval($builtin("%"), S, CN, MAC) = "float"[I1:Float rem I2:Float]
+    if "float"[I1:Float] := S['I1] /\ "float"[I2:Float] := S['I2] .
 
   *** ABS-DATA-RAT
-  eq eval($builtin("--"), S, CN, MAC) = "num"[-(S['I]) asRat] .
+  ceq eval($builtin("--"), S, CN, MAC) = "num"[ - I:Rat ]
+    if "num"[I:Rat] := S['I] .
   ceq eval($builtin("+"), S, CN, MAC) = "num"[I1:Rat + I2:Rat]
-  if "num"[I1:Rat] := S['I1] /\ "num"[I2:Rat] := S['I2] .
-  eq eval($builtin("-"), S, CN, MAC) = "num"[(S['I1]) asRat - (S['I2]) asRat] .
-  eq eval($builtin("*"), S, CN, MAC) = "num"[(S['I1]) asRat * (S['I2]) asRat] .
+    if "num"[I1:Rat] := S['I1] /\ "num"[I2:Rat] := S['I2] .
+  ceq eval($builtin("-"), S, CN, MAC) = "num"[I1:Rat - I2:Rat]
+    if "num"[I1:Rat] := S['I1] /\ "num"[I2:Rat] := S['I2] .
+  ceq eval($builtin("*"), S, CN, MAC) = "num"[I1:Rat * I2:Rat]
+    if "num"[I1:Rat] := S['I1] /\ "num"[I2:Rat] := S['I2] .
   *** ceq eval($builtin("/"), S, CN, N) = "num"[I1:Int quo I2:Int] .
   *** if "num"[I1:Int] := S['I1] /\ "num"[I2:Int] := S['I2] .
-  eq eval($builtin("/"), S, CN, MAC) = "num"[(S['I1]) asRat / (S['I2]) asRat] .
-  eq eval($builtin("%"), S, CN, MAC) = "num"[(S['I1]) asRat rem (S['I2]) asRat] .
+  ceq eval($builtin("/"), S, CN, MAC) = "num"[I1:Rat / I2:Rat]
+    if "num"[I1:Rat] := S['I1] /\ "num"[I2:Rat] := S['I2] .
+  ceq eval($builtin("%"), S, CN, MAC) = "num"[I1:Rat rem I2:Rat]
+    if "num"[I1:Rat] := S['I1] /\ "num"[I2:Rat] := S['I2] .
   --- 4294967296 == 2^32
   ceq eval($builtin("random"), S, CN, MAC) = "num"[ trunc(((S['Range]) asRat) * (N:Rat / 4294967296)) ]
   if N:Rat := eval("ABS.StdLib.nth"(MAC['.random] :: 'Position), S, CN, MAC) asRat .
@@ -1162,6 +1165,15 @@ mod ABS-EVAL is
   ceq eval($builtin("denominator"), S, CN, MAC) = "num"[ I2:Int ]
     if (I1:Int / I2:Int ) := (S['I]) asRat .
   eq eval($builtin("denominator"), S, CN, MAC) = "num"[1] [owise] .
+
+  *** ABS-DATA-FLOAT
+  eq eval($builtin("float"), S, CN, MAC) = "float"[float((S['I]) asRat)] .
+  eq eval($builtin("rat"), S, CN, MAC) = "num"[rat((S['I]) asFloat)] .
+  eq eval($builtin("floor"), S, CN, MAC) = "num"[rat(floor((S['I]) asFloat))] .
+  eq eval($builtin("ceil"), S, CN, MAC) = "num"[rat(ceiling((S['I]) asFloat))] .
+  eq eval($builtin("sqrt"), S, CN, MAC) = "float"[sqrt((S['I]) asFloat)] .
+  eq eval($builtin("log"), S, CN, MAC) = "float"[log((S['I]) asFloat)] .
+  eq eval($builtin("exp"), S, CN, MAC) = "float"[exp((S['I]) asFloat)] .
 
   *** ABS-DATA-STRING
   ceq eval($builtin("+"), S, CN, MAC) = "str"[I1:String + I2:String]
@@ -1483,8 +1495,7 @@ mod ABS-MACHINE-BASICS-COMMON is
       DC: ob('ABS.DC.DeploymentComponent, -1),
       Sched: "ABS.Scheduler.defaultscheduler"('queue),
       Pr: idle,
-      PrQ: noProc >
-    < LocId | 0 > . *** Component Model Extension
+      PrQ: noProc > .
 
   *** evaluate cost expression only once.
   ceq < T : Clock | Limit: LIM, Random: RAND >
@@ -2902,127 +2913,6 @@ mod ABS-RECEIVE-RESULT is
 
 endm
 
-
-**********************************************
-*** Component Model Extension: Rebind, Newloc, GetLoc, GetFather and Subloc
-mod ABS-REBIND-RL is
-  protecting ABS-EVAL .
-
-  vars O O' : Oid .    vars C C' : Cid .    vars S L S' : Subst .
-  var SL : StmtList .  vars W : MProc .  vars F F' : Nat .
-  vars E E' : Expr .   vars D D' : Data .       var CG : Cogid .
-  var Q : Qid .
-  var OBJS : Configuration .
-  vars LIVE LIVE' : Bool .
-
-  crl
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | rebind(E ; Q ; E') ; SL }, PrQ: W >
-  =>   
-    < CG : Cog | Objects: object(O, C, insert(Q, D, S), F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
-  if O := L['this]
-      /\ O = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ D := eval(E', (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ D' := (S :: L)[Q]
-      /\ S['.nbcr] == "num"[0]
-      [label rebind-local] .
-
-  crl
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) object(O', C', S', F', LIVE') OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | rebind(E ; Q ; E') ; SL }, PrQ: W >
-  =>   
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) object(O', C', insert(Q, D, S'), F', LIVE') OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
-  if O := L['this]
-      /\ O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ D := eval(E', (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-      /\ D' := (S :: L)[Q]
-      /\ S'['.nbcr] == "num"[0]
-    [label rebind-distant] .
-
-endm
-mod ABS-NEWLOC-RL is
-  protecting ABS-EVAL .
-
-  var O : Oid .        vars C : Cid .  vars S L : Subst .
-  var SL : StmtList .  var W : MProc .   vars G : Nat .
-  var A : Vid .     var EL : ExprList .
-  var CG : Cogid .
-  var OBJS : Configuration .
-
-  rl
-    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newloc( A ); SL }, PrQ: W >
-    < LocId | G >
-  =>
-    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; loc-comp( G )); SL }, PrQ: W  >
-    < locRel | loc-top ; loc-comp( G ) >
-    < LocId | s G >
-    [label new-location] .
-endm
-mod ABS-GETLOC-RL is
-  protecting ABS-EVAL .
-
-  vars O O' : Oid .        vars C C' : Cid .  vars S L S' : Subst .
-  var SL : StmtList .  var P : Process . vars W W' : MProc .   vars F F' : Nat .
-  var A : Vid .     var E : Expr .
-  vars CG CG' : Cogid .
-  vars OBJS OBJS' : Configuration .
-  var LIVE : Bool .
-
-  crl
-    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | getloc( A ; E ); SL }, PrQ: W >
-    < CG' : Cog | Objects: object(O', C, S, F, LIVE) OBJS', DC: DC':Data, Sched: SCH':Expr, Pr: P, PrQ: W' >
-  =>
-    < CG : Cog | Objects: OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; loc-cog( CG' )); SL }, PrQ: W >
-    < CG' : Cog | Objects: object(O', C, S, F, LIVE) OBJS', DC: DC':Data, Sched: SCH':Expr, Pr: P, PrQ: W' >
-  if O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
-    [label get-location] .
-
-  crl
-    < CG : Cog | Objects: object(O', C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | getloc( A ; E ); SL }, PrQ: W >
-  =>
-    < CG : Cog | Objects: object(O', C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; loc-cog( CG )); SL }, PrQ: W >
-  if O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
-    [label get-location-local] .
-endm
-mod ABS-GETFATHERLOC-RL is
-  protecting ABS-EVAL .
-
-  var O : Oid .        vars B C : Cid .  vars S L : Subst .
-  var SL : StmtList .  var W : MProc .   vars F G : Nat .
-  var A : Vid .     var E : Expr .
-  var CG : Cogid . vars L1 L2 : Location .
-  var OBJS : Configuration .
-  var LIVE : Bool .
-
-  crl
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | getfather( A ; E ); SL }, PrQ: W >
-    < locRel | L1 ; L2 >
-  =>
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; L1 ); SL }, PrQ: W >
-    < locRel | L1 ; L2 >
-  if O := L['this]
-      /\ L2 := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
-    [label get-father-location] .
-endm
-mod ABS-SUBLOC-RL is
-  protecting ABS-EVAL .
-
-  var O : Oid .        vars B C : Cid .  vars S L : Subst .
-  var SL : StmtList .  var W : MProc .   vars F G : Nat .
-  var E1 E2 : Expr .     var EL : ExprList .
-  var CG : Cogid . vars Loc Lp Ln : Location .
-  var OBJS : Configuration .
-  var LIVE : Bool .
-
-  crl
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | subloc( E1 ; E2 ); SL }, PrQ: W >
-    < locRel | Lp ; Loc >
-  =>
-    < CG : Cog | Objects: object(O, C, S, F, LIVE) OBJS, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
-    < locRel | Ln ; Loc >
-  if O := L['this]
-      /\ Loc = eval(E1, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
-      /\ Ln := eval(E2, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
-    [label get-move-location] .
-endm
 **********************************************
 
 mod ABS-SIMULATOR-RL is
@@ -3042,12 +2932,6 @@ mod ABS-SIMULATOR-RL is
   protecting ABS-STMT-RETURN-RL .
   protecting ABS-STMT-THROW-DIE-TRY-CATCH-FINALLY-RL .
   protecting ABS-RECEIVE-RESULT .
-  --- Component Model Extension
-  protecting ABS-REBIND-RL .
-  protecting ABS-NEWLOC-RL .
-  protecting ABS-GETLOC-RL .
-  protecting ABS-GETFATHERLOC-RL .
-  protecting ABS-SUBLOC-RL .
 
   --- System initialisation with arbitrary class.  In Abs, the compiler will
   --- generate an operator "start" in the generated module that reduces to
@@ -3080,12 +2964,6 @@ mod ABS-SIMULATOR-EQ-TIMED is
   protecting ABS-STMT-RETURN-EQ-TIMED .
   protecting ABS-STMT-THROW-DIE-TRY-CATCH-FINALLY-EQ-TIMED .
   protecting ABS-RECEIVE-RESULT .
-  --- Component Model Extension
-  protecting ABS-REBIND-RL .
-  protecting ABS-NEWLOC-RL .
-  protecting ABS-GETLOC-RL .
-  protecting ABS-GETFATHERLOC-RL .
-  protecting ABS-SUBLOC-RL .
 
 
   --- System initialisation with arbitrary class.  In Abs, the compiler will

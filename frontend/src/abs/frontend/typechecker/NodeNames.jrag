@@ -81,12 +81,12 @@ aspect TargetClassName {
 //inform modifier node about the qualified name of the class to which it applies
 aspect TargetQualifiedClassName {
     abstract public String ClassModifier.targetQualifiedClassName();
-    syn String ModifyClassModifier.targetQualifiedClassName() = this.qualifiedName();
-    syn String AddClassModifier.targetQualifiedClassName() = this.qualifiedName();
-    syn String RemoveClassModifier.targetQualifiedClassName() = this.qualifiedName();
+    syn String ModifyClassModifier.targetQualifiedClassName() = this.getQualifiedName();
+    syn String AddClassModifier.targetQualifiedClassName() = this.getQualifiedName();
+    syn String RemoveClassModifier.targetQualifiedClassName() = this.getQualifiedName();
 
     inh String Modifier.targetQualifiedClassName();
-    eq ModifyClassModifier.getModifier().targetQualifiedClassName() = this.qualifiedName();
+    eq ModifyClassModifier.getModifier().targetQualifiedClassName() = this.getQualifiedName();
 }
 
 // strip off any module name prefix
@@ -99,11 +99,11 @@ aspect SimpleName {
 
 // qualify node names with the name of the module where they were defined
 aspect QualifiedName {
-    public String Decl.qualifiedName() {
+    public String Decl.getQualifiedName() {
         return StringUtils.joinNames(moduleName(), getName());
     }
     
-    public String ModuleModifier.qualifiedName() {
+    public String ModuleModifier.getQualifiedName() {
         return StringUtils.joinNames(getModuleName(), getSimpleName());
     }
 }

@@ -182,7 +182,7 @@ init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,Reg
             %%Start task
             process_flag(trap_exit, true),
             MonRef=monitor(process,CogRef),
-            TaskRef=cog:add_sync(Cog,async_call_task,[self(),Callee,Method|Params], Info, Params),
+            TaskRef=cog:add_task(Cog,async_call_task,self(),Callee,[Method|Params], Info, Params),
             demonitor(MonRef),
             case RegisterInGC of
                 true -> gc:register_future(self());

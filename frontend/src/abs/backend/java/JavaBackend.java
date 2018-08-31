@@ -7,6 +7,9 @@ package abs.backend.java;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.*;
 import java.util.List;
 
@@ -23,7 +26,11 @@ import abs.frontend.typechecker.*;
 
 public class JavaBackend extends Main {
 
-    public final static String CHARSET = "UTF-8";
+    /**
+     * The charset to use for generated files. This will also be one of the {@link StandardCharsets}, so using it
+     * is guaranteed not to throw an {@link UnsupportedCharsetException}.
+     */
+    public final static Charset CHARSET = StandardCharsets.UTF_8;
 
     public static void main(final String... args) {
         doMain(args);
@@ -134,6 +141,7 @@ public class JavaBackend extends Main {
         final Map<String, String> res = new HashMap<>();
         res.put("Int", ABSInteger.class.getName());
         res.put("Rat", ABSRational.class.getName());
+        res.put("Float", ABSFloat.class.getName());
         res.put("Bool", ABSBool.class.getName());
         res.put("String", ABSString.class.getName());
         res.put("Fut", ABSFut.class.getName());

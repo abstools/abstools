@@ -170,3 +170,25 @@ respectively.  Assuming that no other process is ready to run, the clock will
 advance the maximum amount that still hits the earliest interval, in this
 case 5.  Since the clock is now within both intervals, both processes are
 unblocked and ready to run.
+
+[[timed-abs-and-model-api]]
+=== Timed ABS and the Model API
+
+By default, the clock will advance when all processes within the model
+are waiting for the clock.  However, it is sometimes desirable to
+synchronize the internal clock with some external event or system, and
+therefore to temporarily block it from advancing beyond a certain
+value.
+
+When starting a model, the erlang backend (<<sec:erlang-backend>>) supports
+a parameter `-l x` or `--clock-limit x` which stops the clock at the
+given value `x`.  This makes it possible to model infinite systems up
+to a certain clock value.  When the clock limit is reached, the model
+will terminate even if there are processes which would be enabled by
+further clock advancement.
+
+When starting a model with both the `-l` and `-p` parameters (i.e.,
+with both the model api and a clock limit), a request to the model api
+of the form `/clock/advance?by=x` will increase the clock limit by
+`x`, thereby causing waiting processes to run until the new limit is
+reached.

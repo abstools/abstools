@@ -21,8 +21,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.jar.JarEntry;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import choco.kernel.model.constraints.Constraint;
 import abs.frontend.mtvl.ChocoSolver;
 import abs.backend.common.InternalBackendException;
@@ -195,7 +193,7 @@ public class Main {
         return remainingArgs;
     }
 
-    public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException, ParserConfigurationException, InternalBackendException {
+    public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException, InternalBackendException {
         Model m = parseFiles(parseArgs(args).toArray(new String[0]));
         analyzeFlattenAndRewriteModel(m);
         return m;
@@ -249,9 +247,8 @@ public class Main {
      * @throws WrongProgramArgumentException
      * @throws DeltaModellingException
      * @throws FileNotFoundException
-     * @throws ParserConfigurationException
      */
-    public void analyzeFlattenAndRewriteModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException, ParserConfigurationException {
+    public void analyzeFlattenAndRewriteModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException {
         m.verbose = verbose;
         m.debug = debug;
 
@@ -666,9 +663,9 @@ public class Main {
     public static void printUsage() {
         printHeader();
         System.out.println(""
-                + "Usage: java abs.frontend.parser.Main [backend] [options] <absfiles>\n\n"
-                + "  <absfiles>     ABS files/directories/packages to parse\n\n"
-                + "Available backends:\n"
+                + "Usage: java abs.frontend.parser.Main [backend] [options] <absfiles>\n"
+                + "\n  <absfiles>     ABS files/directories/packages to parse\n"
+                + "\nAvailable backends:\n"
                 + "  -maude         generate Maude code\n"
                 + "  -java          generate Java code\n"
                 + "  -erlang        generate Erlang code\n"
@@ -677,8 +674,6 @@ public class Main {
                 + "  -prettyprint   pretty-print ABS code\n\n"
                 + "Common options:\n"
                 + "  -version       print version\n"
-                + "  -v             verbose output\n"
-                + "  -debug         print stacktrace on exception\n"
                 + "  -product=<PID> build given product by applying deltas (PID is the product ID)\n"
                 + "  -checkspl      Check the SPL for errors\n"
                 + "  -notypecheck   disable typechecking\n"
@@ -690,7 +685,6 @@ public class Main {
                 + "  -locscope=<scope> \n"
                 + "                 sets the location aliasing scope to <scope>\n"
                 + "                 where <scope> in " + Arrays.toString(LocationTypingPrecision.values()) + "\n"
-                + "  -dump          dump AST to standard output \n"
                 + "  -solve         solve constraint satisfaction problem (CSP) for the feature\n"
                 + "                 model and print a solution\n"
                 + "  -solveall      print ALL solutions for the CSP\n"
@@ -707,7 +701,11 @@ public class Main {
                 + "  -nsol          count the number of solutions\n"
                 + "  -noattr        ignore the attributes\n"
                 + "  -check=<PID>   check satisfiability of a product with name PID\n"
-                + "  -h             print this message\n");
+                + "  -h             print this message\n"
+                + "\nDiagnostic options:\n"
+                + "  -v             verbose output\n"
+                + "  -debug         print stacktrace for crashes during compilation\n"
+                + "  -dump          dump AST to standard output\n");
         abs.backend.maude.MaudeCompiler.printUsage();
         abs.backend.java.JavaBackend.printUsage();
         abs.backend.erlang.ErlangBackend.printUsage();

@@ -147,7 +147,7 @@ public class FreeVarTest extends FrontendTest {
 
     @Test
     public void parFnAppAnonymousFunction() {
-        Exp e = getSecondExp("def Bool f(g)() = g(); { Bool b = True; Bool b2 = f(() => b)(); }");
+        Exp e = getSecondExp("def Bool f(g)() = g(); def Bool g() = True; { Bool b = True; Bool b2 = f(() => b)(); }");
         assertEquals(e.getFreeVars(), "b");
     }
 

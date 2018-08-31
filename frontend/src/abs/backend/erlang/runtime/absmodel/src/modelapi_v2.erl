@@ -15,7 +15,8 @@ init(Req, _Opts) ->
         %% routing for static files is handled elsewhere; see main_app.erl
         case cowboy_req:binding(request, Req, <<"default">>) of
             <<"default">> -> {200, <<"text/plain">>, <<"Hello Erlang!\n">>};
-            <<"clock">> -> handle_clock();
+            <<"clock">> -> handle_clock(cowboy_req:path_info(Req),
+                                        cowboy_req:parse_qs(Req));
             <<"dcs">> -> handle_dcs();
             <<"o">> -> handle_object_query(cowboy_req:path_info(Req));
             <<"static_dcs">> -> handle_static_dcs(cowboy_req:path_info(Req));
@@ -29,8 +30,43 @@ init(Req, _Opts) ->
                             Body, Req),
     {ok, Req2, #state{}}.
 
-handle_clock() ->
-    {200, <<"text/plain">> , iolist_to_binary(["Now: ", builtin:toString(null, clock:now()), "\n"]) }.
+handle_clock([], _Params) ->
+    {200, <<"text/plain">>,
+     iolist_to_binary(["Now: ", builtin:toString(null, clock:now()), "\n"]) };
+handle_clock([<<"now">>], _Parameters) ->
+    {200, <<"application/json">>,
+     jsx:encode([{'result', abs_to_json(clock:now())}],
+                [{space, 1}, {indent, 2}])};
+handle_clock([<<"advance">>], [{<<"by">>, Advance}]) ->
+    Amount = try decode_parameter(Advance, <<"ABS.StdLib.Int">>, none)
+             catch error:badarg -> none
+             end,
+    case Amount of
+        none ->
+            {400, <<"application/json">>,
+             jsx:encode([{'error', <<"Need parameter \"by\" with positive integer">>}],
+                        [{space, 1}, {indent, 2}])};
+        I when I < 0 ->
+            {400, <<"application/json">>,
+             jsx:encode([{'error', <<"Need parameter \"by\" with positive integer">>}],
+                        [{space, 1}, {indent, 2}])};
+        _ ->
+            Result = cog_monitor:increase_clock_limit(Amount),
+            case Result of
+                {ok, Limit} ->
+                    {200, <<"application/json">>,
+                     jsx:encode([{'result', abs_to_json(Limit)}],
+                                [{space, 1}, {indent, 2}])};
+                {error, Msg} ->
+                    {400, <<"application/json">>,
+                     jsx:encode([{'error', abs_to_json(Msg)}],
+                                [{space, 1}, {indent, 2}])}
+            end
+    end;
+handle_clock([<<"advance">>], _) ->
+    { 400, <<"application/json">>,
+      jsx:encode([{'error', <<"Need parameter \"by\" with positive integer">> }],
+                 [{space, 1}, {indent, 2}]) }.
 
 handle_dcs() ->
     {200, <<"application/json">>, get_statistics_json()}.
@@ -52,7 +88,7 @@ handle_object_query([Objectname]) ->
         notfound -> {404, <<"text/plain">>, <<"Object not found">>};
         deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
         ok -> State=lists:map(fun ({Key, Value}) -> {Key, abs_to_json(Value)} end,
-                              object:get_whole_object_state(Object)),
+                              object:get_object_state_for_json(Object)),
               %% Special-case empty object for jsx:encode ([] is an empty JSON
               %% array, [{}] an empty JSON object)
               State2 = case State of [] -> [{}]; _ -> State end,
@@ -161,6 +197,23 @@ decode_parameter(Value, Type, TypeArgs) ->
             end;
         <<"ABS.StdLib.String">> ->
             Value;
+        <<"ABS.StdLib.Float">> ->
+            (case is_float(Value) of
+                %% JSON
+                true -> Value;
+                false ->
+                    case is_integer(Value) of
+                        true -> Value;
+                        %% URLencoded
+                        false ->
+                            try binary_to_float(Value)
+                            catch error:badarg ->
+                                    %% Fails if Value is neither Int nor Float
+                                    binary_to_integer(Value)
+                            end
+                    end
+                     %% Convert int to float by adding 0.0
+            end) + 0.0;
         <<"ABS.StdLib.Int">> ->
             case is_integer(Value) of
                 %% JSON

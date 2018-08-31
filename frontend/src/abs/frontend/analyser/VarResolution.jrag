@@ -10,12 +10,22 @@ aspect VarResolution {
     syn lazy VarOrFieldDecl PatternVarUse.getDecl();
     eq PatternVarUse.getDecl() = lookupVarOrFieldName(getName(), false);
 
+    rewrite ParamDecl {
+        when (getParent().getParent() instanceof ClassDecl
+              && !(this instanceof ClassParamDecl))
+        to ClassParamDecl {
+            ClassParamDecl p = new ClassParamDecl(getName(), getAccessNoTransform(), getAnnotationListNoTransform());
+            p.setPositionFromNode(this);
+            return p;
+        }
+    }
+
     /**
      * Replace VarUse nodes with field accesses, since in the grammar this.x and x are different.
      * Since we can do the 2nd part by AST-inspection, we might as well do it in the parser.  
      */
     rewrite VarUse {
-       when (getDecl() instanceof FieldDecl || (getDecl() instanceof ParamDecl && getDecl().getParent().getParent() instanceof ClassDecl))
+        when (getDecl() instanceof FieldDecl || (getDecl() instanceof ClassParamDecl))
        to FieldUse {
         FieldUse fu=new FieldUse(getName());
         /* Patch position to cover original range.

@@ -1,34 +1,45 @@
+import java.math.BigInteger;
 aspect ConstantFolding {
 
     rewrite MinusExp {
         when (getOperand().isConstant()
-              && getOperand().getType().isNumericType())
+              && getOperand().getType().isIntType())
         to IntLiteral new IntLiteral("-" + ((IntLiteral)getOperand()).getContent());
+        when (getOperand().isConstant()
+              && getOperand().getType().isFloatType())
+        to FloatLiteral new FloatLiteral("-" + ((FloatLiteral)getOperand()).getContent());
     }
     
     rewrite MultMultExp {
         when (getLeft().isConstant() && getRight().isConstant()
-              && getLeft().getType().isNumericType()
-              && getRight().getType().isNumericType())
-        to IntLiteral new IntLiteral(String.valueOf(Integer.parseInt(((IntLiteral)getLeft()).getContent()) * Integer.parseInt(((IntLiteral)getRight()).getContent())));
+              && getLeft().getType().isIntType()
+              && getRight().getType().isIntType())
+        to IntLiteral new IntLiteral(new BigInteger(((IntLiteral)getLeft()).getContent())
+                                     .multiply(new BigInteger(((IntLiteral)getRight()).getContent()))
+                                     .toString());
     }
 
     rewrite AddAddExp {
         when (getLeft().isConstant() && getRight().isConstant()
-              && getLeft().getType().isNumericType()
-              && getRight().getType().isNumericType())
-        to IntLiteral new IntLiteral(String.valueOf(Integer.parseInt(((IntLiteral)getLeft()).getContent()) + Integer.parseInt(((IntLiteral)getRight()).getContent())));
+              && getLeft().getType().isIntType()
+              && getRight().getType().isIntType())
+        to IntLiteral new IntLiteral(new BigInteger(((IntLiteral)getLeft()).getContent())
+                                     .add(new BigInteger(((IntLiteral)getRight()).getContent()))
+                                     .toString());
         when (getLeft().isConstant() && getRight().isConstant()
               && getLeft().getType().isStringType()
               && getRight().getType().isStringType())
-            to StringLiteral new StringLiteral((((StringLiteral)getLeft()).getContent()) + ((StringLiteral)getRight()).getContent());
+        to StringLiteral new StringLiteral((((StringLiteral)getLeft()).getContent())
+                                           + ((StringLiteral)getRight()).getContent());
     }
 
     rewrite SubAddExp {
         when (getLeft().isConstant() && getRight().isConstant()
-              && getLeft().getType().isNumericType()
-              && getRight().getType().isNumericType())
-        to IntLiteral new IntLiteral(String.valueOf(Integer.parseInt(((IntLiteral)getLeft()).getContent()) - Integer.parseInt(((IntLiteral)getRight()).getContent())));
+              && getLeft().getType().isIntType()
+              && getRight().getType().isIntType())
+        to IntLiteral new IntLiteral(new BigInteger(((IntLiteral)getLeft()).getContent())
+                                     .subtract(new BigInteger(((IntLiteral)getRight()).getContent()))
+                                     .toString());
     }
 
 }

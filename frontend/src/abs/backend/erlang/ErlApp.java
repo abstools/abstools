@@ -22,6 +22,7 @@ import java.util.jar.JarFile;
 import org.apache.commons.io.FileUtils;
 
 import abs.backend.common.CodeStream;
+import abs.backend.common.InternalBackendException;
 import abs.common.CompilerUtils;
 import abs.frontend.ast.*;
 
@@ -43,10 +44,14 @@ public class ErlApp {
     public File destDir;
     public File destCodeDir;
     public File destIncludeDir;
+    public File index_file;
+    public File static_dir;
 
     public Map<String, CodeStream> funMod = new HashMap<>();
 
-    public ErlApp(File destDir) throws IOException {
+    public ErlApp(File destDir, File http_index_file, File http_static_dir) throws IOException, InternalBackendException {
+        // FIXME this should probably be a method; strange to have a
+        // class which does all its work in the constructor
         super();
         this.destDir = destDir;
         this.destCodeDir = new File(destDir, "absmodel/src/");
@@ -55,6 +60,11 @@ public class ErlApp {
         FileUtils.cleanDirectory(destDir);
         destDir.mkdirs();
         new File(destDir, "absmodel/ebin").mkdir();
+        index_file = http_index_file;
+        static_dir = http_static_dir;
+        if (static_dir != null && !static_dir.isDirectory()) {
+            throw new InternalBackendException("Please provide a directory with static files");
+        }
         copyRuntime();
     }
 
@@ -101,6 +111,7 @@ public class ErlApp {
             // do not copy this since absmodulename.hrl is generated later --
             // runtime.erl and main_app.erl use the wrong constant
             // "absmodel/ebin/*",
+            "absmodel/ebin/absmodel.app",
             "absmodel/Emakefile",
             "Dockerfile",
             "start_console",
@@ -127,6 +138,7 @@ public class ErlApp {
         // how to handle the other case.
         URLConnection resource = getClass().getResource("").openConnection();
         try {
+            new File(destDir + "/absmodel/ebin").mkdirs();
             for (String f : RUNTIME_FILES) {
                 if (f.endsWith("/*")) {
                     String dirname = f.substring(0, f.length() - 2);
@@ -153,6 +165,16 @@ public class ErlApp {
                     file.getParentFile().mkdirs();
                     Files.asByteSink(file).writeFrom(is);
                 }
+            }
+            if (index_file != null) {
+                File http_out_file = new File(destDir + "/absmodel/priv/index.html");
+                http_out_file.getParentFile().mkdirs();
+                FileUtils.copyFile(index_file, http_out_file);
+            }
+            if (static_dir != null) {
+                File static_out_dir = new File(destDir + "/absmodel/priv/static");
+                static_out_dir.mkdirs();
+                FileUtils.copyDirectory(static_dir, static_out_dir);
             }
         } finally {
             if (is != null)

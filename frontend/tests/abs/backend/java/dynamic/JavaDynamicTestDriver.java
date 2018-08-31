@@ -48,4 +48,16 @@ public class JavaDynamicTestDriver implements BackendTestDriver {
     public BackendName getBackendName() {
         return BackendName.JAVA;
     }
+
+    @Override
+    public boolean supportsCustomSchedulers() { return false; }
+
+    @Override
+    public boolean supportsTimedAbs() { return false; }
+
+    @Override
+    public boolean supportsExceptions() { return false; }
+
+    @Override
+    public boolean supportsDowncasting() { return false; }
 }
