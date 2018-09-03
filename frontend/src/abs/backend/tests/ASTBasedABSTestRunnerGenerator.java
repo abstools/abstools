@@ -22,6 +22,7 @@ import abs.frontend.ast.Access;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.FromImport;
@@ -60,7 +61,12 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
 
     @Override
     public void generateTestRunner(PrintStream stream) {
+        // In order to safely call module.doPrettyPrint() we need a complete AST
+        Model model = new Model();
+        CompilationUnit compilationunit = new CompilationUnit();
         ModuleDecl module = new ModuleDecl();
+        model.addCompilationUnitNoTransform(compilationunit);
+        compilationunit.addModuleDeclNoTransform(module);
         module.setName(RUNNER_MAIN);
         module.setImportList(generateImportsAST());
         module.setBlock(generateMainBlockAST(module.getImportList()));
