@@ -22,7 +22,7 @@
 
 %% HTTP api: inhibit dying from gc while we're registered.
 -export([protect_object_from_gc/1, unprotect_object_from_gc/1]).
--export([get_all_method_info/1]).
+-export([get_all_method_info/1,has_interface/2]).
 
 behaviour_info(callbacks) ->
     [{get_val_internal, 2},{set_val_internal,3},{init_internal,0}];

@@ -192,7 +192,7 @@ public class ObjectTests extends SemanticTests {
 
     @Test
     public void syncCallAwaitField() throws Exception {
-        assertEvalTrue(new File("tests/abssamples/backend/ObjectTests/synccall1.abs"));
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/synccall1.abs"));
     }
 
     public void downcast_false() throws Exception {
