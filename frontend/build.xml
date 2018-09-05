@@ -40,7 +40,7 @@
   <!-- TODO: about ast.gen.dir and JastAdd idiosyncrasies -->
   <property name="apidoc.dir" value="${gen.dir}/docs/api" />
   <property name="ast.gen.dir" value="${gen.dir}/abs/frontend" />
-  <property name="parser.antlr.src.dir" value="${src.java.dir}/abs/frontend/antlr" />
+  <property name="src.antlr.dir" value="${src.dir}/main/antlr" />
   <property name="antlr.jar" value="antlr-4.6-complete.jar"/>
   <property name="apfloat.jar" value="apfloat-1.8.2.jar"/>
   <property name="commons-io.jar" value="commons-io-2.5.jar"/>
@@ -290,7 +290,7 @@
   <target name="genantlr" depends="genast">
     <echo message="Running antlr" />
     <java fork="true" failonerror="yes"
-          dir="${parser.antlr.src.dir}"
+          dir="${src.antlr.dir}"
           classpath="${ext.dir}/${antlr.jar}"
           classname="org.antlr.v4.Tool">
       <arg line="ABS.g4 -package abs.frontend.antlr.parser -o '${gen.dir}/abs/frontend/antlr/parser'" />
