@@ -1,6 +1,7 @@
 ---
-title: "Local Install"
+title: "Installing Command-Line Tools"
 date: 2018-08-15T09:22:58+02:00
+weight: 1
 ---
 
 Many of the tools can be run from the command line.  This chapter describes

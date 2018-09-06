@@ -16,4 +16,4 @@ theme = "hugo-theme-learn"
   # in Markdown:
   # [File.abs]({{% siteparam "eifilelink" %}}/collaboratory/path/to/File.abs)
   eifilelink = "http://ei.abs-models.org:8082/clients/web/index.html?file="
-  
+  ordersectionsby = "weight"
