@@ -260,7 +260,36 @@ When querying with invalid method parameters, the HTTP request will produce a
 When the invoked method throws an exception, the HTTP request will produce a
 500 response code.
 
-=== Customizing Browser-Based Display
+=== The Model API and Timed ABS
+
+The simulated clock of Timed ABS (<<sec:timed-abs>>) is accessible via
+the Model API.
+
+The current value of the clock can be obtained with the following request:
+
+----
+GET http://localhost:8080/clock/now
+----
+
+The result is a JSON object with a key `'value'` mapping to the
+current value of the clock.
+
+When the model was started with a clock limit (see
+<<timed-abs-and-model-api>>), the limit can be increased via a request
+like the following:
+
+----
+GET http://localhost:8080/clock/advance?by=50
+----
+
+This call will always increase the clock limit by the given amount,
+even if the clock had not yet reached the previous limit.  I.e., when
+`now()` = 10 and the limit is 20, after the call the limit will be 70,
+the same as when the clock was already stopped at the limit of 20 when
+the call was received by the Model API.
+
+
+=== Customizing the Browser-Based Visualization
 
 Since the Model API is implemented via HTTP, it can be accessed from a
 web browser.  The `-http-index-file` command-line switch is used

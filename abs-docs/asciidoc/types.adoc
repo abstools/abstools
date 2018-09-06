@@ -113,7 +113,7 @@ data IntList = NoInt | ConsInt(Int head, IntList tail); <1>
 data Bool = True | False; <2>
 data NotInstantiable; <3>
 ----
-<1> The data type `IntList` has two constructors: `NoInt` and `ConsInt`.  Both define an accessor function.
+<1> The data type `IntList` has two constructors: `NoInt` and `ConsInt`.  The second constructor defines two accessor functions.
 <2> This is the definition of the built-in data type `Bool`.
 <3> This type does not have constructors and therefore cannot be instantiated.
 
@@ -208,10 +208,13 @@ and its functions, without exporting the constructors.
 === Interface Types
 
 Interfaces in ABS describe the functionality of objects.  Thus, Interfaces in
-ABS are similar to interfaces in Java.  Unlike Java, objects are only typed by
-interfaces and not by their class.
+ABS are similar to interfaces in Java.  Unlike Java, object references are
+typed by interfaces and not by their class.  See <<typecheck-expression>> and
+<<typecast-expression>> for how to obtain a reference to the same object via a
+different interface.
 
 The syntax of interfaces is given in <<sec:interfaces>>.
+
 
 [[sec:exception-types]]
 === Exceptions

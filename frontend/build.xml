@@ -14,9 +14,13 @@
   <property name="java.langlevel" value="1.8"/>
 
   <property name="src.dir" value="${basedir}/src" />
+  <property name="src.java.dir" value="${src.dir}/main/java" />
+  <property name="src.erlang.dir" value="${src.dir}/main/erlang" />
+  <property name="src.maude.dir" value="${src.dir}/main/maude" />
+  <property name="src.abs.dir" value="${src.dir}/main/abs" />
   <property name="bash.dir" value="${src.dir}/bash" />
   <property name="win.dir" value="${src.dir}/win" />
-  <property name="tests.dir" value="${basedir}/tests" />
+  <property name="tests.java.dir" value="${src.dir}/test/java" />
   <property name="build.dir" value="${basedir}/bin" />
   <property name="bash.build.dir" value="${basedir}/bin/bash" />
   <property name="win.build.dir" value="${basedir}/bin/win" />
@@ -32,11 +36,11 @@
   <!-- JUnit output goes here: -->
   <property name="test.data.dir" location="${gen.test.dir}/data"/>
   <property name="ext.dir" value="${basedir}/lib" />
-  <property name="ast.src.dir" value="${src.dir}/abs/frontend/ast" />
+  <property name="ast.src.dir" value="${src.java.dir}/abs/frontend/ast" />
   <!-- TODO: about ast.gen.dir and JastAdd idiosyncrasies -->
   <property name="apidoc.dir" value="${gen.dir}/docs/api" />
   <property name="ast.gen.dir" value="${gen.dir}/abs/frontend" />
-  <property name="parser.antlr.src.dir" value="${src.dir}/abs/frontend/antlr" />
+  <property name="parser.antlr.src.dir" value="${src.java.dir}/abs/frontend/antlr" />
   <property name="antlr.jar" value="antlr-4.6-complete.jar"/>
   <property name="apfloat.jar" value="apfloat-1.8.2.jar"/>
   <property name="commons-io.jar" value="commons-io-2.5.jar"/>
@@ -160,13 +164,13 @@
 
   <target name="compile" depends="prepare,gen,versionstamp"
           description="generate absfrontend.jar and `absc' invocation script">
-    <javac srcdir="${src.dir}:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off" encoding="utf-8" target="${java.langlevel}" source="${java.langlevel}">
+    <javac srcdir="${src.java.dir}:${gen.dir}:${tests.java.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off" encoding="utf-8" target="${java.langlevel}" source="${java.langlevel}">
       <classpath refid="compile.classpath" />
     </javac>
     <jar jarfile="${target.jar}">
-      <fileset dir="${build.dir}" includes="abs/**,deadlock/**,autodeploy/**" />
+      <fileset dir="${build.dir}" includes="abs/**,deadlock/**,autodeploy/**,main/**" />
       <!-- abslang has already been copied into build.dir -->
-      <fileset dir="${src.dir}" includes="abs/**,deadlock/**,autodeploy/**" excludes="abs/lang/abslang.abs" />
+      <fileset dir="${src.java.dir}" includes="abs/**,deadlock/**,autodeploy/**" excludes="abs/lang/abslang.abs" />
       <zipfileset src="${ext.dir}/${apfloat.jar}" />
       <zipfileset src="${ext.dir}/${ecj.jar}" />
       <zipfileset src="${ext.dir}/org.sat4j.core.jar" />
@@ -188,7 +192,7 @@
   </target>
 
   <target name="javadoc" depends="gen,compile">
-    <javadoc sourcepath="${src.dir}:${gen.dir}" destdir="${apidoc.dir}">
+    <javadoc sourcepath="${src.java.dir}:${gen.dir}" destdir="${apidoc.dir}">
       <classpath>
         <pathelement location="${ext.dir}/${jastadd2.jar}" />
       </classpath>
@@ -202,7 +206,7 @@
       <!--       <fileset dir = "${gen.dir}/docs"/> -->
       <fileset dir="${build.dir}" />
       <fileset dir="${dist.dir}" />
-      <fileset dir="${src.dir}">
+      <fileset dir="${src.erlang.dir}">
         <include name="**/ebin/*.beam" />
       </fileset>
     </delete>
@@ -225,17 +229,17 @@
          ASTNode.java instead of one of our own classes since this will always
          be present.  -->
     <uptodate property="genast.notRequired" targetfile="${ast.gen.dir}/ast/ASTNode.java">
-      <srcfiles dir="${src.dir}" includes="abs/**/*.ast" />
-      <srcfiles dir="${src.dir}" includes="abs/**/*.jrag" />
-      <srcfiles dir="${src.dir}" includes="abs/**/*.jadd" />
+      <srcfiles dir="${src.java.dir}" includes="abs/**/*.ast" />
+      <srcfiles dir="${src.java.dir}" includes="abs/**/*.jrag" />
+      <srcfiles dir="${src.java.dir}" includes="abs/**/*.jadd" />
     </uptodate>
     <echo if:set="genast.notRequired">No change in *.ast / *.jadd / *.jrag files, skipping.</echo>
     <jastadd package="${ast.package}" rewrite="" visitCheck="false" outdir="${gen.dir}" debug="true"
              unless:set="genast.notRequired" >
-      <fileset dir=".">
-        <include name="src/abs/**/*.ast" />
-        <include name="src/abs/**/*.jrag" />
-        <include name="src/abs/**/*.jadd" />
+      <fileset dir="${src.java.dir}">
+        <include name="**/*.ast" />
+        <include name="**/*.jrag" />
+        <include name="**/*.jadd" />
       </fileset>
     </jastadd>
   </target>
@@ -243,22 +247,22 @@
   <target name="genlang">
     <mkdir dir="${build.dir}/abs/lang" />
     <copy todir="${build.dir}/abs/lang" >
-      <fileset dir="${src.dir}/abs/lang" includes="**/*.abs" />
+      <fileset dir="${src.abs.dir}" includes="**/*.abs" />
     </copy>
   </target>
 
   <target name="genruntime">
     <echo message="Compiling erlang runtime libraries" />
     <exec executable="escript"
-          dir="${src.dir}/abs/backend/erlang/runtime/absmodel"
+          dir="${src.erlang.dir}/absmodel"
           failonerror="true">
       <arg value="../bin/rebar" />
       <arg value="compile" />
     </exec>
     <copy todir="${build.dir}/abs/backend/erlang" >
-      <fileset dir="${src.dir}/abs/backend/erlang/" includes="runtime/**/*" />
+      <fileset dir="${src.erlang.dir}" />
     </copy>
-    <copy file="${src.dir}/abs/backend/maude/abs-interpreter.maude" todir="${build.dir}/abs/backend/maude" />
+    <copy file="${src.maude.dir}/abs-interpreter.maude" todir="${build.dir}/main/maude/" />
   </target>
 
   <target name="genshell">

@@ -99,7 +99,7 @@ class InfrastructureServiceImpl implements InfrastructureService {
 				dc = d;
 				Int cpu = this.cpu(dc);
 				if (cpu < cpuamount) {
-					Fut<Unit> inf = dc!incrementResources(cpuamount - cpu, Speed); inf.get;
+					Fut<Rat> inf = dc!incrementResources(cpuamount - cpu, Speed); inf.get;
 					total = total + (cpuamount - cpu);
 				}
 			}

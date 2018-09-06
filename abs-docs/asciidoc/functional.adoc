@@ -45,6 +45,8 @@ multiple times without influencing the execution semantics.
  {vbar} _IfExp_ +
  {vbar} _CaseExp_ +
  {vbar} _OperatorExp_ +
+ {vbar} _TypeCheckExp_ +
+ {vbar} _TypeCastExp_ +
  {vbar} `(` _PureExp_ `)`
 |====
 
@@ -290,6 +292,7 @@ There are four different kinds of patterns available in ABS:
 | _ConstrPattern_ ::= | _TypeIdentifier_ [ `(` [ _Pattern_ { `,` _Pattern_ }  ] `)` ]
 |====
 
+
 ===== The Variable Pattern
 
 Variable patterns are written as identifiers starting with a lower-case
@@ -406,6 +409,66 @@ common super type.  This common super type is also the type of the overall case
 expression.  A branch (a pattern and its expression) is type-correct if its
 pattern and its right-hand side expression are type-correct.  A pattern is
 type-correct if it can match the corresponding case expression.
+
+
+
+[[typecheck-expression]]
+==== The Type-Check Expression
+
+Variables pointing to objects are typed by interface, which means that the
+concrete class of the referenced object might support more methods than can be
+called through the reference.  The type-check expression checks if an object
+implements the given interface.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _TypeCheckExp_ ::= | _PureExp_ `is` _TypeIdentifier_
+|====
+
+[source]
+.Example
+----
+interface I {}
+interface J {}
+class C implements I, J {}
+{
+  I o = new C();
+  o is J;  // evaluates to True
+}
+----
+
+
+
+
+[[typecast-expression]]
+==== The Type-Cast Expression
+
+Variables pointing to objects are typed by interface, which means that the
+concrete class of the referenced object might support more methods than can be
+called through the reference.  The type-cast expression returns an
+<<type-optionals,Optional>> of type `Maybe<I>` that wraps the object if it
+implements the given interface `I`, or `Nothing` otherwise.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _TypeCastExp_ ::= | _PureExp_ `as` _TypeIdentifier_
+|====
+
+[source]
+.Example
+----
+interface I {}
+interface J {}
+class C implements I, J {}
+{
+  I o = new C();
+  Maybe<J> mj = o as J;  // fromJust(mj) is of type J
+}
+----
+
+
 
 [[sec:side-effect-expressions]]
 === Expressions with Side Effects

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="**/*.jadd|**/*.jrag|bash/parseABS|bash/parseAll" kind="src" path="src"/>
+	<classpathentry excluding="**/*.ast|**/*.jadd|**/*.jrag" kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="src/test/java"/>
 	<classpathentry kind="lib" path="lib/sat4j-maxsat.jar"/>
 	<classpathentry kind="lib" path="lib/easymock-3.0.jar"/>
 	<classpathentry kind="lib" path="lib/jsr305.jar"/>
@@ -14,7 +15,6 @@
 	<classpathentry kind="lib" path="lib/semisolver.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry kind="src" path="tests"/>
 	<classpathentry kind="src" path="gen">
 		<attributes>
 			<attribute name="ignore_optional_problems" value="true"/>

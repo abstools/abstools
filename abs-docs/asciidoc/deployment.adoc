@@ -364,24 +364,29 @@ deployment component was created with infinite resources for the given
 resource type, `total` returns `InfRat`, otherwise `Fin(value)`.
 
 
-.Unit decrementResources(Rat amount, Resourcetype rtype)
+.[Atomic] Rat decrementResources(Rat amount, Resourcetype rtype)
 
-Decrease the total available amount for the given resourcetype by `amount` from
-the next time interval onwards.  Trying to decrement infinite resources has no
-effect.  It is an error to decrement resources by more than the available amount.
+Decrease the total available amount for the given resourcetype by
+`amount` from the next time interval onwards.  Trying to decrement
+infinite resources has no effect.  Trying to decrement by more than
+available will decrement the maximum amount possible.  Returns the
+amount by which the resource was decreased.
 
 
-.Unit incrementResources(Rat amount, Resourcetype rtype)
+.[Atomic] Rat incrementResources(Rat amount, Resourcetype rtype)
 
 Increase the total available amount for the given resourcetype by `amount` from
 the next time interval onwards.  Trying to increment infinite resources has no
-effect.
+effect.  Returns the amount by which the resource was increased.
 
 
-.Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype)
+.[Atomic] Rat transfer(DeploymentComponent target, Rat amount, Resourcetype rtype)
 
-Transfer `amount` resources of type `rtype` from the current deployment
-component to `target`.  Takes effect on the next time period.
+Transfer `amount` resources of type `rtype` from the current
+deployment component to `target`.  Takes effect on the next time
+period.  Returns the amount transferred, which will be lower than
+`amount` in case the deployment component has less resources
+available.
 
 (This method is implemented via `decrementResources` and
 `incrementResources`.)

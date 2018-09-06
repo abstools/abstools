@@ -1,0 +1,40 @@
+module BackendTest;
+import * from ABS.Scheduler;
+
+def Process earliest_deadline_scheduler(List<Process> queue) =
+  foldl((Process a, Process b) =>
+      if durationLessThan(proc_deadline(a), proc_deadline(b)) // a < b
+      then a else b)
+    (queue, head(queue));
+
+interface I {
+    Unit with_deadline(Int p);
+    Bool getState();
+}
+
+[Scheduler: earliest_deadline_scheduler(queue)]
+class C implements I {
+    Bool flag = False;
+    Bool testresult = True;
+    Unit with_deadline(Int p) {
+        await flag;
+        duration(1, 1); // we should start with deadline=2, fall to 1 here
+        // println("Deadline after duration for " + toString(p) + " at " + toString(now()) + ": " + toString(deadline()));
+        testresult = testresult && (durationValue(deadline()) > 0);
+        // println("Testresult after " + toString(p) + ": " + toString(testresult));
+    }
+    Bool getState() { flag = True; suspend; return testresult; }
+}
+
+{
+    I o = new C();
+    Int nProcesses = 100;
+    Int p = 0;
+    while (p < nProcesses) {
+        p = p + 1;
+        [Deadline: Duration(p + 1)] o!with_deadline(p);
+    }
+    Bool testresult = await o!getState();
+    // println("Result: " + toString(testresult));
+}
+
