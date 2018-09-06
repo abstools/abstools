@@ -45,6 +45,7 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.easymock:easymock:3.0'
+    testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
 
     jastadd2 'org.jastadd:jastadd:2.3.2'
     antlr 'org.antlr:antlr4:4.6'

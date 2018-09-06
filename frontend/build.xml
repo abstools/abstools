@@ -52,6 +52,7 @@
   <property name="easymock.jar" value="easymock-3.0.jar" />
   <property name="cglib.jar" value="cglib-nodep-2.2.2.jar" />
   <property name="objenesis.jar" value="objenesis-1.2.jar" />
+  <property name="minimal-json.jar" value="minimal-json-0.9.5.jar" />
   <property name="target.jar" value="${dist.dir}/absfrontend.jar" />
   <property name="plugin.name" value="org.abs-models.abs.compiler" />
   <property name="casestudies.dir" location="${base.dir}/../../examples/" />
@@ -132,6 +133,7 @@
     <pathelement location="${ext.dir}/${easymock.jar}" />
     <pathelement location="${ext.dir}/${cglib.jar}" />
     <pathelement location="${ext.dir}/${objenesis.jar}" />
+  	<pathelement location="${ext.dir}/${minimal-json.jar}" />
     <pathelement location="${ext.dir}/jsr305.jar" />
       <pathelement location="${ext.dir}/choco-solver-2.1.1.jar" />
         <path refid="common.classpath"/>
@@ -144,6 +146,7 @@
   <pathelement location="${ext.dir}/${easymock.jar}" />
   <pathelement location="${ext.dir}/${cglib.jar}" />
   <pathelement location="${ext.dir}/${objenesis.jar}" />
+  <pathelement location="${ext.dir}/${minimal-json.jar}" />
         <path refid="run.classpath"/>
     </path>
 
