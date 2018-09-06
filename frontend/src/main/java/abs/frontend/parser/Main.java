@@ -656,7 +656,7 @@ public class Main {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
         if (stream == null) {
             // we're running unit tests; try to find the file in the source tree
-            stream = Main.class.getClassLoader().getResourceAsStream("src/main/abs/abslang.abs");
+            stream = Main.class.getClassLoader().getResourceAsStream("abs/lang/abslang.abs");
         }
         if (stream == null) {
             throw new InternalBackendException("Could not find ABS Standard Library");

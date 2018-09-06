@@ -27,7 +27,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void abslang() throws Exception {
-        assertTypeCheckFileOk("src/main/abs/abslang.abs", false);
+        assertTypeCheckFileOk("src/main/resources/abs/lang/abslang.abs", false);
     }
 
     @Test

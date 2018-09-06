@@ -89,7 +89,6 @@ clean {
 processResources {
     // Copy support files into expected location of jar
     // https://docs.gradle.org/current/userguide/working_with_files.html#sec:creating_uber_jar_example
-    from ('src/main/abs') { into 'abs/lang' }
     from ('src/main/erlang') { into 'abs/backend/erlang' }
 }
 
