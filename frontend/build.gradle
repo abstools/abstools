@@ -76,21 +76,21 @@ sourceSets.main.java.srcDir 'src/gen/main/antlr'
 
 // erlang
 task compileErlangBackend(type: Exec) {
-    workingDir 'src/main/erlang/absmodel'
+    workingDir 'src/main/resources/erlang/absmodel'
     commandLine 'escript', '../bin/rebar', 'compile'
 }
 jar.dependsOn 'compileErlangBackend'
 clean {
-    delete fileTree('src/main/erlang/absmodel/').include('**/*.beam')
+    delete fileTree('src/main/resources/erlang/absmodel/').include('**/*.beam')
 }
 
 // jar
 
-processResources {
-    // Copy support files into expected location of jar
-    // https://docs.gradle.org/current/userguide/working_with_files.html#sec:creating_uber_jar_example
-    from ('src/main/erlang') { into 'abs/backend/erlang' }
-}
+// processResources {
+//     // Copy support files into expected location of jar
+//     // https://docs.gradle.org/current/userguide/working_with_files.html#sec:creating_uber_jar_example
+//     from ('src/main/erlang') { into 'abs/backend/erlang' }
+// }
 
 jar {
     baseName='absfrontend'

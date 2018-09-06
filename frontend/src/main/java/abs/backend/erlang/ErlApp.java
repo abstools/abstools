@@ -129,7 +129,7 @@ public class ErlApp {
             "link_sources"
             );
 
-    private static final String JAR_PATH = "abs/backend/erlang/";
+    private static final String JAR_PATH = "erlang/";
 
     private void copyRuntime() throws IOException {
         InputStream is = null;
