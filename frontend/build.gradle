@@ -116,7 +116,19 @@ task plainJar(type: Copy, dependsOn: jar) {
     into 'dist'
     rename 'absfrontend(.*).jar', 'absfrontend.jar'
 }
+// Note that 'ant clean' removed the dist/ directory; we choose to
+// leave it in place.
+
+task copyScripts(type: Copy) {
+    from('src/main/resources') {
+        include 'bash/**'
+        include 'win/**'
+    }
+    into 'bin/'
+}
+
 assemble.dependsOn plainJar
+assemble.dependsOn copyScripts
 
 // test
 test {

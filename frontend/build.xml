@@ -15,11 +15,11 @@
 
   <property name="src.dir" value="${basedir}/src" />
   <property name="src.java.dir" value="${src.dir}/main/java" />
-  <property name="src.erlang.dir" value="${src.dir}/main/erlang" />
+  <property name="src.erlang.dir" value="${src.dir}/main/resources/erlang" />
   <property name="src.maude.dir" value="${src.dir}/main/maude" />
-  <property name="src.abs.dir" value="${src.dir}/main/abs" />
-  <property name="bash.dir" value="${src.dir}/bash" />
-  <property name="win.dir" value="${src.dir}/win" />
+  <property name="src.abs.dir" value="${src.dir}/main/resources/abs" />
+  <property name="bash.dir" value="${src.dir}/main/resources/bash" />
+  <property name="win.dir" value="${src.dir}/main/resources/win" />
   <property name="tests.java.dir" value="${src.dir}/test/java" />
   <property name="build.dir" value="${basedir}/bin" />
   <property name="bash.build.dir" value="${basedir}/bin/bash" />
