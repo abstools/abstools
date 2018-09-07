@@ -81,6 +81,20 @@ clean {
 }
 
 // erlang
+
+// There's an erlang plugin at "id 'org.ccrusius.erlang' version
+// '2.0.8'" but it re-downloads and compiles rebar after each "gradle
+// clean", and we need to have an executable rebar in the source tree
+// anyway since it is needed in the compiler itself, so we use a
+// simple Exec task instead.
+
+// task compileErlangBackend(type: org.ccrusius.erlang.tasks.Rebar) {
+//     setRebarVersion '2.6.0'
+//     setRebarTarget 'compile'
+//     setDirectory 'src/main/resources/erlang/absmodel'
+//     outputs.file('src/main/resources/erlang/absmodel/ebin/cog.beam')
+// }
+
 task compileErlangBackend(type: Exec) {
     workingDir 'src/main/resources/erlang/absmodel'
     commandLine 'escript', '../bin/rebar', 'compile'
