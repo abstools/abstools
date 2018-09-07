@@ -103,6 +103,9 @@ jar {
 }
 
 test {
+    // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.testing.Test.html
+    useJUnit()
+    ignoreFailures=true
     scanForTestClasses=false
     include '/abs/AllTests.class'
 }
