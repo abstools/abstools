@@ -101,3 +101,8 @@ jar {
         .findAll { it.name.endsWith('jar') }
         .collect { zipTree(it) }
 }
+
+test {
+    scanForTestClasses=false
+    include '/abs/AllTests.class'
+}
