@@ -65,6 +65,9 @@ task generateJastAddAST(type: org.jastadd.JastAddTask) {
 }
 compileJava.dependsOn 'generateJastAddAST'
 sourceSets.main.java.srcDir 'src/gen/main/jastadd'
+clean {
+    delete fileTree('src/gen/main/jastadd')
+}
 
 // antlr
 generateGrammarSource {
@@ -73,6 +76,9 @@ generateGrammarSource {
 }
 compileJava.dependsOn 'generateGrammarSource'
 sourceSets.main.java.srcDir 'src/gen/main/antlr'
+clean {
+    delete fileTree('src/gen/main/antlr')
+}
 
 // erlang
 task compileErlangBackend(type: Exec) {
