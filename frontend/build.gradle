@@ -18,15 +18,18 @@ plugins {
     id 'antlr'
 }
 
-// application
-mainClassName = 'abs.frontend.parser.Main'
+application {
+    mainClassName = 'abs.frontend.parser.Main'
+}
+
 distributions {
     main { baseName = 'absc' }
 }
 
 def version_details = versionDetails() // https://github.com/palantir/gradle-git-version
 project.version = gitVersion().replaceAll(/^version_/, '')
-sourceCompatibility = targetCompatibility = 1.8
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
 
 dependencies {
     // https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
