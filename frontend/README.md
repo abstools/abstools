@@ -2,24 +2,20 @@
 
 ## Preliminaries ##
 
-Compiling ABS needs [ant](https://ant.apache.org), the [Java
+Compiling ABS needs the [Java
 JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
-version 8 or later, and [Erlang](http://www.erlang.org/downloads) version 21
+version 8 or later and [Erlang](http://www.erlang.org/downloads) version 21
 or later.  If using the Maude backend, also install
 [Maude](http://maude.cs.uiuc.edu/download/).
 
 ## Building the compiler ##
 
 To build the compiler, run `make frontend` in the project root directory, or
-`make` in this subdirectory.  You may need to set the following variable:
-
-    export ANT_OPTS=-Xmx1g
-
-A successful build generates the file `dist/absfrontend.jar` which contains
-the compiler and runtime support files.  A convenience script called `absc`
-that invokes the ABS compiler can be found in `bin/bash/` (for Unix-like
-systems) and `bin/win` (for Windows).  For a list of options to the compiler,
-see the output of `absc -help`.
+`make` in this subdirectory.  A successful build generates the file
+`dist/absfrontend.jar` which contains the compiler and runtime support files.
+A convenience script called `absc` that invokes the ABS compiler can be found
+in `bin/bash/` (for Unix-like systems) and `bin/win` (for Windows).  For a
+list of options to the compiler, see the output of `absc -help`.
 
 ## Checking ABS code ##
 

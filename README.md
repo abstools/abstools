@@ -17,7 +17,7 @@ Folders
 -------
 
 * `frontend` - the ABS compiler and runtime support.  See frontend/README for
-  installation instructions.  (short version: install jdk8, ant and erlang
+  installation instructions.  (short version: install jdk8 and erlang
   version 21, then run `make frontend` in this directory.)
 
 
@@ -32,7 +32,8 @@ Folders
     written in [Ott](https://www.cl.cam.ac.uk/~pes20/ott/)
 
 
-* `emacs` - Editor support for ABS.
+* `emacs` - Editor support for ABS -- moved to
+  https://github.com/abstools/abs-mode but left here for existing users.
 
 * `org.abs-models.releng` - Files used by Jenkins and Buckminster for
   continuous integration at https://envisage.ifi.uio.no:8080/jenkins/.
