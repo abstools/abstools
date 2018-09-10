@@ -6,7 +6,6 @@
 package abs.backend.erlang;
 
 import static org.junit.Assert.assertEquals;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -116,7 +115,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      * @throws InternalBackendException
      *
      */
-    private String genCode(Model model, File targetDir, boolean appendResultprinter) throws IOException, InterruptedException, InternalBackendException {
+    public String genCode(Model model, File targetDir, boolean appendResultprinter) throws IOException, InterruptedException, InternalBackendException {
         if (model.hasErrors()) {
             Assert.fail(model.getErrors().getFirstError().getHelpMessage());
         }

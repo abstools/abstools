@@ -15,11 +15,11 @@
 
   <property name="src.dir" value="${basedir}/src" />
   <property name="src.java.dir" value="${src.dir}/main/java" />
-  <property name="src.erlang.dir" value="${src.dir}/main/erlang" />
+  <property name="src.erlang.dir" value="${src.dir}/main/resources/erlang" />
   <property name="src.maude.dir" value="${src.dir}/main/maude" />
-  <property name="src.abs.dir" value="${src.dir}/main/abs" />
-  <property name="bash.dir" value="${src.dir}/bash" />
-  <property name="win.dir" value="${src.dir}/win" />
+  <property name="src.abs.dir" value="${src.dir}/main/resources/abs" />
+  <property name="bash.dir" value="${src.dir}/main/resources/bash" />
+  <property name="win.dir" value="${src.dir}/main/resources/win" />
   <property name="tests.java.dir" value="${src.dir}/test/java" />
   <property name="build.dir" value="${basedir}/bin" />
   <property name="bash.build.dir" value="${basedir}/bin/bash" />
@@ -40,7 +40,7 @@
   <!-- TODO: about ast.gen.dir and JastAdd idiosyncrasies -->
   <property name="apidoc.dir" value="${gen.dir}/docs/api" />
   <property name="ast.gen.dir" value="${gen.dir}/abs/frontend" />
-  <property name="parser.antlr.src.dir" value="${src.java.dir}/abs/frontend/antlr" />
+  <property name="src.antlr.dir" value="${src.dir}/main/antlr/abs/frontend/antlr/parser" />
   <property name="antlr.jar" value="antlr-4.6-complete.jar"/>
   <property name="apfloat.jar" value="apfloat-1.8.2.jar"/>
   <property name="commons-io.jar" value="commons-io-2.5.jar"/>
@@ -52,6 +52,7 @@
   <property name="easymock.jar" value="easymock-3.0.jar" />
   <property name="cglib.jar" value="cglib-nodep-2.2.2.jar" />
   <property name="objenesis.jar" value="objenesis-1.2.jar" />
+  <property name="minimal-json.jar" value="minimal-json-0.9.5.jar" />
   <property name="target.jar" value="${dist.dir}/absfrontend.jar" />
   <property name="plugin.name" value="org.abs-models.abs.compiler" />
   <property name="casestudies.dir" location="${base.dir}/../../examples/" />
@@ -132,6 +133,7 @@
     <pathelement location="${ext.dir}/${easymock.jar}" />
     <pathelement location="${ext.dir}/${cglib.jar}" />
     <pathelement location="${ext.dir}/${objenesis.jar}" />
+  	<pathelement location="${ext.dir}/${minimal-json.jar}" />
     <pathelement location="${ext.dir}/jsr305.jar" />
       <pathelement location="${ext.dir}/choco-solver-2.1.1.jar" />
         <path refid="common.classpath"/>
@@ -144,6 +146,7 @@
   <pathelement location="${ext.dir}/${easymock.jar}" />
   <pathelement location="${ext.dir}/${cglib.jar}" />
   <pathelement location="${ext.dir}/${objenesis.jar}" />
+  <pathelement location="${ext.dir}/${minimal-json.jar}" />
         <path refid="run.classpath"/>
     </path>
 
@@ -157,7 +160,6 @@
     <mkdir dir="${dist.dir}/features" />
     <mkdir dir="${ast.gen.dir}" />
     <mkdir dir="${build.dir}" />
-    <mkdir dir="${parser.antlr.src.dir}" />
     <!-- <mkdir dir = "${dist.dir}"/> -->
     <mkdir dir="${apidoc.dir}" />
   </target>
@@ -290,10 +292,10 @@
   <target name="genantlr" depends="genast">
     <echo message="Running antlr" />
     <java fork="true" failonerror="yes"
-          dir="${parser.antlr.src.dir}"
+          dir="${src.antlr.dir}"
           classpath="${ext.dir}/${antlr.jar}"
           classname="org.antlr.v4.Tool">
-      <arg line="ABS.g4 -package abs.frontend.antlr.parser -o '${gen.dir}/abs/frontend/antlr/parser'" />
+      <arg line="ABS.g4 -o '${gen.dir}/abs/frontend/antlr/parser'" />
     </java>
   </target>
 

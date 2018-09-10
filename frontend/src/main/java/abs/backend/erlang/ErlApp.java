@@ -129,7 +129,7 @@ public class ErlApp {
             "link_sources"
             );
 
-    private static final String JAR_PATH = "abs/backend/erlang/";
+    private static final String JAR_PATH = "erlang/";
 
     private void copyRuntime() throws IOException {
         InputStream is = null;
@@ -161,7 +161,7 @@ public class ErlApp {
             }
             else if (resource.getURL().getProtocol().equals("file")) {
                 /* stolz: This at least works for the unit tests from within Eclipse */
-                File file = new File("src/main/erlang/");
+                File file = new File("src/main/resources/erlang/");
                 assert file.exists();
                 FileUtils.copyDirectory(file, destDir);
             } else {
