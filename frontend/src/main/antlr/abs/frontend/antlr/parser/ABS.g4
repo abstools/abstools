@@ -9,6 +9,10 @@
 
 grammar ABS;
 
+@header{
+package abs.frontend.antlr.parser;
+}
+
 TraditionalComment : '/*' .*? '*/' -> skip ;
 EndOfLineComment : '//' .*? ('\n' | EOF) -> skip ;
 WhiteSpace : [ \t\f\r\n]+ -> skip ;

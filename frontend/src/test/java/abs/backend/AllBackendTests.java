@@ -18,8 +18,19 @@ import abs.backend.tests.ASTBasedABSTestRunnerGeneratorTest;
 import abs.backend.tests.OtherCodeGenTests;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ AllJavaTests.class, AllSemanticTests.class, MaudeTests.MaudeEqTests.class,
-            MaudeTests.MaudeRlTests.class, AnnotationsTests.class, ASTBasedABSTestRunnerGeneratorTest.class,
-            PrettyPrinterTests.class, OtherCodeGenTests.class, AllErlangTests.class})
+@Suite.SuiteClasses({
+        // rudi Temporarily disabled due to gradle crash, and the Java backend
+        // being mostly unsupported in general
+
+        // AllJavaTests.class,
+        AllSemanticTests.class,
+        MaudeTests.MaudeEqTests.class,
+        MaudeTests.MaudeRlTests.class,
+        AnnotationsTests.class,
+        ASTBasedABSTestRunnerGeneratorTest.class,
+        PrettyPrinterTests.class,
+        OtherCodeGenTests.class,
+        AllErlangTests.class
+})
 public class AllBackendTests {
 }

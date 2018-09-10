@@ -2,6 +2,7 @@
 /.vagrant
 /.recommenders
 .rebar/
+/frontend/.gradle
 bin/
 build/
 /**/gen/
@@ -34,3 +35,4 @@ eclipsehome.properties
 **/*.iml
 **/*.eml
 **/.idea/
+
