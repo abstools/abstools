@@ -115,10 +115,7 @@ lookup_object_from_http_name(Name) ->
     Object=gen_server:call({global, cog_monitor}, {lookup_object, Name}, infinity),
     case Object of
         none -> {notfound, Object};
-        #object{ref=Ref} -> case is_process_alive(Ref) of
-                 true -> {ok, Object};
-                 false -> {deadobject, Object}
-             end
+        _ -> {ok, Object}
     end.
 
 list_registered_http_names() ->
