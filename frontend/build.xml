@@ -16,7 +16,7 @@
   <property name="src.dir" value="${basedir}/src" />
   <property name="src.java.dir" value="${src.dir}/main/java" />
   <property name="src.erlang.dir" value="${src.dir}/main/resources/erlang" />
-  <property name="src.maude.dir" value="${src.dir}/main/maude" />
+  <property name="src.maude.dir" value="${src.dir}/main/resources/maude" />
   <property name="src.abs.dir" value="${src.dir}/main/resources/abs" />
   <property name="bash.dir" value="${src.dir}/main/resources/bash" />
   <property name="win.dir" value="${src.dir}/main/resources/win" />
@@ -170,7 +170,7 @@
       <classpath refid="compile.classpath" />
     </javac>
     <jar jarfile="${target.jar}">
-      <fileset dir="${build.dir}" includes="abs/**,deadlock/**,autodeploy/**,main/**" />
+      <fileset dir="${build.dir}" includes="abs/**,deadlock/**,autodeploy/**,maude/**" />
       <!-- abslang has already been copied into build.dir -->
       <fileset dir="${src.java.dir}" includes="abs/**,deadlock/**,autodeploy/**" excludes="abs/lang/abslang.abs" />
       <zipfileset src="${ext.dir}/${apfloat.jar}" />
@@ -264,7 +264,7 @@
     <copy todir="${build.dir}/abs/backend/erlang" >
       <fileset dir="${src.erlang.dir}" />
     </copy>
-    <copy file="${src.maude.dir}/abs-interpreter.maude" todir="${build.dir}/main/maude/" />
+    <copy file="${src.maude.dir}/abs-interpreter.maude" todir="${build.dir}/maude/abs-interpreter.maude" />
   </target>
 
   <target name="genshell">

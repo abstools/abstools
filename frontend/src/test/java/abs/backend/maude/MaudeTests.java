@@ -100,7 +100,7 @@ public class MaudeTests extends ABSTest {
 
         ProcessBuilder pb = new ProcessBuilder();
         final String s = File.separator;
-        File interpreterDir = new File("src"+s+"main"+s+"maude");
+        File interpreterDir = new File("src"+s+"main"+s+"resources"+s+"maude");
         //File interpreterDir = new File(new File(System.getProperty("user.dir")).getParentFile(), "interpreter");
         
         File interpreter = new File(interpreterDir, "abs-interpreter.maude");
