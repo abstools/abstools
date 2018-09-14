@@ -191,6 +191,10 @@ public class ObjectTests extends SemanticTests {
      }
 
     @Test
+    public void syncCallAwaitField() throws Exception {
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/synccall1.abs"));
+    }
+
     public void downcast_false() throws Exception {
         Assume.assumeTrue("Only meaningful with downcast support", driver.supportsDowncasting());
         assertEvalTrue(new File("abssamples/backend/ObjectTests/downcast-false.abs"));
