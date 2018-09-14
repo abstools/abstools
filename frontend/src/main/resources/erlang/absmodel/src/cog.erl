@@ -111,7 +111,7 @@ new_object(Cog=#cog{ref=CogRef}, Class, ObjectState) ->
             gen_statem:cast(CogRef, {new_dc, Oid});
         _ -> ok
     end,
-    #object{class=Class,ref=Oid,cog=Cog}.
+    #object{ref=Oid,cog=Cog}.
 
 activate_object(#cog{ref=Cog}, #object{ref=Oid}) ->
     gen_statem:cast(Cog, {activate_object, Oid});

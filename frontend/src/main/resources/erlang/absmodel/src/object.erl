@@ -23,6 +23,7 @@
 %% HTTP api: inhibit dying from gc while we're registered.
 -export([protect_object_from_gc/1, unprotect_object_from_gc/1]).
 -export([get_all_method_info/1,has_interface/2]).
+-export([get_class_from_state/1,get_class_from_ref/1]).
 
 behaviour_info(callbacks) ->
     [{get_val_internal, 2},{set_val_internal,3},{init_internal,0}];
@@ -97,11 +98,20 @@ protect_object_from_gc(O) ->
 unprotect_object_from_gc(O) ->
     io:format("TODO implement unprotect_object_from_gc in object.erl~n").
 
-get_all_method_info(#object{class=C}) ->
+get_all_method_info(O) ->
+    C=get_class_from_ref(O),
     C:exported().
 
-has_interface(_O=#object{class=C}, I) ->
+has_interface(O, I) ->
+    C=get_class_from_ref(O),
     lists:member(I, C:implemented_interfaces()).
+
+get_class_from_ref(O=#object{cog=Cog}) ->
+    OState=cog:get_object_state(Cog, O),
+    get_class_from_state(OState).
+
+get_class_from_state(OState) ->
+    element(2, OState).
 
 %%Internal
 

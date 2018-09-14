@@ -17,7 +17,10 @@ init(_Cog,Future,CalleeObj,[Method|Params])->
     #state{fut=Future,obj=CalleeObj,meth=Method,params=Params}.
 
 
-start(#state{fut=Future,obj=O=#object{class=C,cog=Cog=#cog{ref=CogRef,dc=DC}},meth=M,params=P})->
+start(#state{fut=Future,obj=O=#object{cog=Cog=#cog{ref=CogRef,dc=DC}},meth=M,params=P})->
+    %% Don't put this inside try-catch -- if we can't get the class
+    %% things are properly wrong
+    C=object:get_class_from_ref(O),
     try
         receive
             {stop_world, CogRef} ->

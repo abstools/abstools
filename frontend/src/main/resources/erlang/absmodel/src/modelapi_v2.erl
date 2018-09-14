@@ -77,8 +77,8 @@ handle_object_query([Objectname, Fieldname]) ->
         notfound -> {404, <<"text/plain">>, <<"Object not found">>};
         deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
         _ ->
-            Class=Object#object.class,
             Fields=cog:get_object_state(Object#object.cog, Object),
+            Class=object:get_class_from_state(Fields),
             case Value=Class:get_val_internal(Fields, binary_to_atom(Fieldname, utf8)) of
                 none -> {404, <<"text/plain">>, <<"Field not found">>};
                 _ -> Result=[{Fieldname, abs_to_json(Value)}],
@@ -91,8 +91,9 @@ handle_object_query([Objectname]) ->
         notfound -> {404, <<"text/plain">>, <<"Object not found">>};
         deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
         ok ->
-            #object{cog=Cog,class=Class}=Object,
+            #object{cog=Cog}=Object,
             OState=cog:get_object_state(Cog, Object),
+            Class=object:get_class_from_state(OState),
             State=lists:map(fun ({Key, Value}) -> {Key, abs_to_json(Value)} end,
                             Class:get_state_for_modelapi(OState)),
             %% Special-case empty object for jsx:encode ([] is an empty JSON

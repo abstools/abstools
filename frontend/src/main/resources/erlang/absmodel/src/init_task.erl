@@ -11,8 +11,9 @@ init(Cog,_Future,CalleeObj,Args)->
     {CalleeObj,Args}.
 
 
-start({Obj=#object{cog=Cog,class=C},Args})->
-    cog:activate_object(Cog, Obj),
-    C:init(Obj,Args).
+start({O=#object{cog=Cog},Args})->
+    C=object:get_class_from_ref(O),
+    cog:activate_object(Cog, O),
+    C:init(O,Args).
 
 

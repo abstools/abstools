@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 
--record(object,{class,ref,cog}).
+-record(object,{ref,cog}).
 -record(cog,{ref,dc}).
 -record(process_info,
        {pid=undefined,                % filled in at creation time with self()

@@ -27,7 +27,7 @@ new(Cog, Oid) ->
     cog_monitor:new_dc(DC),
     DC.
 
-consume(O=#object{class=class_ABS_DC_DeploymentComponent,ref=Ref,cog=Cog}, Resourcetype, Amount) ->
+consume(O=#object{ref=Ref,cog=Cog}, Resourcetype, Amount) ->
     DC=cog:get_dc(Cog, Ref),
     gen_statem:call(DC, {consume_resource,
                          {var_current_for_resourcetype(Resourcetype),
