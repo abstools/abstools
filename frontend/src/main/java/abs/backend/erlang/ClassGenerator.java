@@ -42,10 +42,10 @@ public class ClassGenerator {
         try {
             generateHeader();
             generateExports();
+            generateDataAccess();
             generateConstructor();
             generateRecoverHandler();
             generateMethods();
-            generateDataAccess();
         } finally {
             ecs.close();
         }
@@ -60,11 +60,13 @@ public class ClassGenerator {
     }
 
     private void generateMethods() {
+        ecs.println("%% --- Methods\n");
         for (MethodImpl m : classDecl.getMethodList()) {
             ecs.pf(" %%%% %s:%s", m.getFileName(), m.getStartLine());
             MethodSig ms = m.getMethodSig();
             ecs.pf(" %%%% %s:%s", m.getFileName(), m.getStartLine());
             ErlUtil.functionHeader(ecs, "m_" + ms.getName(), generatorClassMatcher(), ms.getParamList());
+            ecs.println("C=(get(this))#state.class,");
             ecs.print("put(vars, #{ 'this' => O");
             for (ParamDecl p : ms.getParamList()) {
                 // Same name construction as
@@ -104,7 +106,9 @@ public class ClassGenerator {
     }
 
     private void generateConstructor() {
+        ecs.println("%% --- Constructor: field initializers and init block\n");
         ErlUtil.functionHeaderParamsAsList(ecs, "init", generatorClassMatcher(), classDecl.getParamList(), Mask.none);
+        ecs.println("C=(get(this))#state.class,");
         ecs.println("put(vars, #{}),");
         Vars vars = Vars.n();
         for (ParamDecl p : classDecl.getParamList()) {
@@ -139,6 +143,7 @@ public class ClassGenerator {
 
     private void generateRecoverHandler() {
         if (classDecl.hasRecoverBranch()) {
+            ecs.println("%% --- Recovery block\n");
             Vars vars = new Vars();
             Vars safe = vars.pass();
             // Build var scopes and statmemnts for each branch
@@ -162,6 +167,7 @@ public class ClassGenerator {
                 vars.updateTemp(v);
             }
             ErlUtil.functionHeader(ecs, "recover", ErlUtil.Mask.none, generatorClassMatcher(), "Exception");
+            ecs.println("C=(get(this))#state.class,");
             ecs.println("Stack = [],");
             ecs.println("Result=case Exception of ");
             ecs.incIndent();
@@ -181,20 +187,20 @@ public class ClassGenerator {
             ecs.print("end");
             ecs.println(".");
             ecs.decIndent();
+        } else {
+            ecs.println("%% --- Class has no recovery block\n");
         }
     }
 
     private String generatorClassMatcher() {
-        return String.format("O=#object{class=%s=C,ref=Ref,cog=Cog=#cog{ref=CogRef,dc=DC}}", modName);
+        return String.format("O=#object{ref=Ref,cog=Cog=#cog{ref=CogRef,dc=DC}}", modName);
     }
 
     private void generateDataAccess() {
-        ecs.print("-record(state,{");
-        boolean first = true;
+        ecs.println("%% --- Internal state and low-level accessors\n");
+        ecs.format("-record(state,{'class'=%s", modName);
         for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
-            if (!first)
-                ecs.print(",");
-            first = false;
+            ecs.print(",");
             ecs.format("'%s'=null", f.getName());
         }
         ecs.println("}).");
@@ -216,7 +222,7 @@ public class ClassGenerator {
         ecs.decIndent();
         ecs.println();
         if (hasFields) {
-            first = true;
+            boolean first = true;
             for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
                 if (!first) {
                     ecs.println(";");
@@ -239,7 +245,7 @@ public class ClassGenerator {
         ErlUtil.functionHeader(ecs, "get_state_for_modelapi", Mask.none, "S");
         ecs.println("[");
         ecs.incIndent();
-        first = true;
+        boolean first = true;
         for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
             if (!first) ecs.print(", ");
             first = false;
@@ -248,6 +254,7 @@ public class ClassGenerator {
         }
         ecs.decIndent();
         ecs.println("].");
+        ecs.decIndent();
     }
 
     private void generateParameterDescription(Type paramtype) {

@@ -8,7 +8,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ ErlangExamplesTests.class
-    , ErlangModelApiTests.class
+    //, ErlangModelApiTests.class
     //, ErlangTests.class // currently empty
     })
 public class AllErlangTests {
