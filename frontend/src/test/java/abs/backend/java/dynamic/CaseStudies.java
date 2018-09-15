@@ -7,8 +7,10 @@ package abs.backend.java.dynamic;
 import static abs.backend.java.dynamic.JavaBackendDynamicTest.*;
 
 import org.junit.Test;
+import org.junit.Ignore;
 import abs.frontend.typesystem.CaseStudyTypeChecking;
 
+@Ignore
 public class CaseStudies extends CaseStudyTypeChecking {
 
     public CaseStudies(String input) {

@@ -11,6 +11,7 @@ plugins {
 
     id 'org.jastadd' version '1.13.1'
     id 'antlr'
+    id 'findbugs'
 }
 
 application {
@@ -44,6 +45,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.easymock:easymock:3.0'
     testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
+    testImplementation 'org.hamcrest:hamcrest-core:1.3'
 
     jastadd2 'org.jastadd:jastadd:2.3.2'
     antlr 'org.antlr:antlr4:4.6'
@@ -57,6 +59,7 @@ repositories {
 
 // JastAdd
 task generateJastAddAST(type: JastAddTask) {
+    description 'Processes the JastAdd AST.'
     outputDir = file("$buildDir/generated-src/jastadd/main")
     sources = fileTree(dir: 'src/main/java',
                        includes: ['**/*.ast', '**/*.jrag', '**/*.jadd'])
@@ -85,6 +88,7 @@ compileJava.dependsOn 'generateGrammarSource'
 // }
 
 task compileErlangBackend(type: Exec) {
+    description 'Compiles Erlang backend support files.'
     workingDir 'src/main/resources/erlang/absmodel'
     commandLine 'escript', '../bin/rebar', 'compile'
 }
@@ -115,6 +119,7 @@ jar {
 }
 
 task plainJar(type: Copy, dependsOn: jar) {
+    description 'Copies absfrontend.jar into its documented location.'
     from jar
     into 'dist'
     rename 'absfrontend(.*).jar', 'absfrontend.jar'
@@ -123,6 +128,7 @@ task plainJar(type: Copy, dependsOn: jar) {
 // leave it in place.
 
 task copyScripts(type: Copy) {
+    description 'Copies absc scripts into their documented locations.'
     from('src/main/resources') {
         include 'bash/**'
         include 'win/**'
@@ -138,6 +144,20 @@ test {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.testing.Test.html
     useJUnit()
     ignoreFailures=true
-    scanForTestClasses=false
-    include '/abs/AllTests.class'
+}
+
+findbugs {
+    // https://docs.gradle.org/current/dsl/org.gradle.api.plugins.quality.FindBugsExtension.html
+    ignoreFailures = true
+    showProgress = true
+    excludeFilter = file('findbugs-jastadd-filter.xml')
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        // can only have one report type :(
+        xml.enabled = false
+        html.enabled = true
+        emacs.enabled = false
+    }
 }
