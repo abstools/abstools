@@ -184,7 +184,7 @@
       <zipfileset src="${ext.dir}/${commons-io.jar}" />
       <zipfileset src="${ext.dir}/${antlr.jar}" />
       <manifest>
-        <attribute name="Main-Class" value="abs.frontend.parser.Main"/>
+        <attribute name="Main-Class" value="Main"/>
         <attribute name="Implementation-Version" value="${revision.prefix}"/>
         <attribute name="Bundle-Version" value="${frontend.version}"/>
         <!-- Pretty sure that's not the meaning of that attribute, but we'll take it -->
@@ -377,7 +377,7 @@
 
   <target name="abs-typecheck" depends="compile">
     <echo message="Typechecking ABS models in ${absmodeldir} ..." />
-        <java fork="true" classname="abs.frontend.parser.Main">
+        <java fork="true" classname="Main">
             <assertions><enable package="abs"/></assertions>
             <classpath refid="run.classpath"/>
             <arg line="${absmodeldir}"/>

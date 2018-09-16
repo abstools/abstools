@@ -76,7 +76,7 @@ Compile to Java with
 
 OR
 
-    java -cp dist/absfrontend.jar abs.backend.java.JavaBackend [-d <dir>] <absfiles>
+    java -cp dist/absfrontend.jar JavaBackend [-d <dir>] <absfiles>
 
 This will generate Java source files and corresponding `.class` files into
 `dir`, where additional subdirectories are created for each module.

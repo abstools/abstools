@@ -15,7 +15,7 @@ plugins {
 }
 
 application {
-    mainClassName = 'abs.frontend.parser.Main'
+    mainClassName = 'org.abs_models.frontend.parser.Main'
 }
 
 distributions {
@@ -64,12 +64,15 @@ task generateJastAddAST(type: JastAddTask) {
     sources = fileTree(dir: 'src/main/java',
                        includes: ['**/*.ast', '**/*.jrag', '**/*.jadd'])
     options = [ '--rewrite=regular', '--visitCheck=false', '--debug',
-               '--package=abs.frontend.ast']
+               '--package=org.abs_models.frontend.ast']
 }
 sourceSets.main.java.srcDir "$buildDir/generated-src/jastadd/main"
 compileJava.dependsOn 'generateJastAddAST'
 
 // antlr
+generateGrammarSource {
+    arguments += [ '-package', 'org.abs_models.frontend.antlr.parser' ]
+}
 compileJava.dependsOn 'generateGrammarSource'
 
 // erlang
@@ -102,7 +105,7 @@ jar {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Jar.html
     baseName='absfrontend'
     manifest {
-        attributes 'Main-Class': 'abs.frontend.parser.Main',
+        attributes 'Main-Class': 'org.abs_models.frontend.parser.Main',
             'Implementation-Title': 'ABS Frontend',
             'Implementation-Version': version_details.lastTag.replaceAll(/^version_/, ''),
             'Bundle-Version': project.version,

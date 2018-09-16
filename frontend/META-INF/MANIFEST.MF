@@ -4,7 +4,7 @@ Bundle-Name: ABS Compiler
 Bundle-SymbolicName: org.abs-models.abs.compiler;singleton:=true
 Bundle-Version: 0.0.0.qualifier
 Bundle-Vendor: ABS-Models
-Main-Class: abs.frontend.parser.Main
+Main-Class: Main
 Bundle-ClassPath: .,
  bin,
  lib/apfloat-1.8.2.jar,

@@ -1,0 +1,534 @@
+import java.util.HashMap;
+import java.util.HashSet;
+
+import org.abs_models.frontend.typechecker.KindedName;
+import org.abs_models.frontend.typechecker.ResolvedName;
+
+import javax.annotation.CheckForNull;
+
+aspect TypeResolution {
+
+    // Find the type declaration for a type use.
+
+    syn boolean Decl.isFunction() = false;
+    syn boolean Decl.isClass() = false;
+    syn boolean Decl.isDataType() = false;
+    syn boolean Decl.isDataConstructor() = false;
+    syn boolean Decl.isInterface() = false;
+    syn boolean Decl.isTypeSyn() = false;
+    syn boolean Decl.isTypeParameter() = false;
+    syn boolean Decl.isFuture() = false;
+    syn boolean Decl.isException() = false;
+    syn boolean Decl.isPartialFunction() = false;
+    syn boolean Decl.isTrait() = false;
+
+    eq ClassDecl.isClass() = true;
+    eq FunctionDecl.isFunction() = true;
+    eq InterfaceDecl.isInterface() = true;
+    eq DataTypeDecl.isDataType() = true;
+    eq DataConstructor.isDataConstructor() = true;
+    eq TypeSynDecl.isTypeSyn() = true;
+    eq TypeParameterDecl.isTypeParameter() = true;
+    eq DataTypeDecl.isFuture() = getType().isFutureType();
+    eq TypeSynDecl.isFuture() = getType().isFutureType();
+    eq ExceptionDecl.isException() = true;
+    eq PartialFunctionDecl.isPartialFunction() = true;
+    eq TraitDecl.isTrait() = true;
+
+    syn Boolean Name.isSimple() = getName().indexOf('.') == -1;
+
+    syn String Name.getString() = getName();
+    syn String Name.getSimpleName() {
+        if (isSimple())
+            return getName();
+
+        return getName().substring(getName().lastIndexOf('.')+1);
+    }
+    syn String Name.getModuleName() {
+        if (isSimple())
+            return null;
+
+        return getName().substring(0,getName().lastIndexOf('.'));
+    }
+
+    syn ResolvedMap ModuleDecl.getVisibleNames() circular [new ResolvedMap()];
+    eq ModuleDecl.getVisibleNames() {
+        return TypeCheckerHelper.getVisibleNames(this, new HashMap<KindedName, ResolvedName>());
+    }
+
+    syn ResolvedMap ModuleDecl.getExportedNames() circular [new ResolvedMap()];
+    eq ModuleDecl.getExportedNames() {
+        return TypeCheckerHelper.getExportedNames(this);
+    }
+
+    syn ResolvedMap ModuleDecl.getImportedNames() circular [new ResolvedMap()];
+    eq ModuleDecl.getImportedNames() {
+        return TypeCheckerHelper.getImportedNames(this);
+    }
+
+    syn ResolvedMap ModuleDecl.getDefinedNames() circular [new ResolvedMap()];
+    eq ModuleDecl.getDefinedNames() {
+        return TypeCheckerHelper.getDefinedNames(this, new HashMap<KindedName, ResolvedName>());
+    }
+
+    syn lazy boolean ModuleDecl.exportsName(String name) {
+        return ! getExportedNames().getAllNames(name).isEmpty();
+    }
+
+    syn lazy boolean ModuleDecl.isVisible(String name) {
+        return ! getVisibleNames().getAllNames(name).isEmpty();
+    }
+
+    syn lazy Collection<ModuleDecl> Model.getModuleDecls() {
+        ArrayList<ModuleDecl> res = new ArrayList<ModuleDecl>();
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (ModuleDecl mdecl : u.getModuleDecls()) {
+                res.add(mdecl);
+            }
+        }
+        return res;
+    }
+
+    syn lazy Collection<Decl> Model.getDecls() {
+        ArrayList<Decl> res = new ArrayList<Decl>();
+        for (ModuleDecl mdecl : getModuleDecls()) {
+            for (Decl d : mdecl.getDecls()) {
+                res.add(d);
+            }
+        }
+        return res;
+    }
+
+    syn lazy Collection<DeltaDecl> Model.getDeltaDecls() {
+        ArrayList<DeltaDecl> res = new ArrayList<DeltaDecl>();
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (DeltaDecl d : u.getDeltaDecls()) {
+                res.add(d);
+            }
+        }
+        return res;
+    }
+
+    syn lazy Map<String,DeltaDecl> Model.getDeltaDeclsMap() {
+        Map<String,DeltaDecl> res = new HashMap<String,DeltaDecl>();
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (DeltaDecl d : u.getDeltaDecls()) {
+                Object dupe = res.put(d.getName(),d);
+                assert dupe == null : "dupe " + d.getName();
+            }
+        }
+        return res;
+    }
+
+    syn DeltaDecl Model.findDelta(String name) {
+        return getDeltaDeclsMap().get(name);
+    }
+
+    syn lazy Collection<UpdateDecl> Model.getUpdateDecls() {
+        ArrayList<UpdateDecl> res = new ArrayList<UpdateDecl>();
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (UpdateDecl d : u.getUpdateDecls()) {
+                res.add(d);
+            }
+        }
+        return res;
+    }
+
+    syn lazy Collection<ProductDecl> Model.getProductDecls() {
+        ArrayList<ProductDecl> res = new ArrayList<ProductDecl>();
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (ProductDecl p : u.getProductDecls()) {
+                res.add(p);
+            }
+        }
+        return res;
+    }
+
+    syn lazy ProductLine Model.getProductLine() {
+        for (CompilationUnit u : getCompilationUnits()) {
+            if (u.hasProductLine())
+                return u.getProductLine();
+        }
+        return null;
+    }
+
+    syn lazy MainBlock Model.getMainBlock() {
+        for (CompilationUnit u : getCompilationUnits()) {
+            if (u.hasMainBlock())
+                return u.getMainBlock();
+        }
+        return null;
+    }
+
+    syn lazy MainBlock Model.getMainBlock(String moduleName) {
+        for (CompilationUnit u : getCompilationUnits()) {
+            if (u.hasMainBlock(moduleName)) {
+                return u.getMainBlock(moduleName);
+            }
+        }
+        return null;
+    }
+
+    syn lazy MainBlock CompilationUnit.getMainBlock() {
+        for (ModuleDecl m: getModuleDecls()) {
+            if (m.hasBlock())
+                return m.getBlock();
+        }
+        return null;
+    }
+
+    syn lazy MainBlock CompilationUnit.getMainBlock(String moduleName) {
+        for (ModuleDecl m : getModuleDecls()) {
+            if (m.getName().equals(moduleName) && m.hasBlock())
+                return m.getBlock();
+        }
+        return null;
+    }
+
+    syn boolean Model.hasProductLine() = getProductLine() != null;
+    syn boolean Model.hasMainBlock() = getMainBlock() != null;
+    syn lazy boolean Model.hasMainBlock(String mainBlock) = getMainBlock(mainBlock) != null;
+    syn boolean CompilationUnit.hasMainBlock() = getMainBlock() != null;
+    syn lazy boolean CompilationUnit.hasMainBlock(String mainBlock) = getMainBlock(mainBlock) != null;
+
+    // *decl* refers to the appropriate declaration of the TypeUse or to
+    // UnknownDecl if the declaration is missing
+    syn lazy Decl TypeUse.getDecl() = lookup(new KindedName(Kind.TYPE_DECL,getName()));
+
+
+    syn lazy ModuleDecl Model.lookupModule(String name) {
+        assert name != null;
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (ModuleDecl d : u.getModuleDecls()) {
+                if (d.getName().equals(name)) {
+                    return d;
+                }
+            }    			
+        }
+        return null;
+    }
+
+
+    inh ModuleDecl Decl.getModuleDecl();
+    eq ModuleDecl.getDecl().getModuleDecl() = this;
+    // TODO: Isn't that what "broadcast attributes" should solve?
+    eq AddClassModifier.getClassDecl().getModuleDecl() = findModule();
+    eq AddInterfaceModifier.getInterfaceDecl().getModuleDecl() = findModule();
+    eq AddFunctionModifier.getFunctionDecl().getModuleDecl() = findModule();
+    eq AddTypeSynModifier.getTypeSynDecl().getModuleDecl() = findModule();
+    eq ModifyTypeSynModifier.getTypeSynDecl().getModuleDecl() = findModule();
+    eq AddDataTypeModifier.getDataTypeDecl().getModuleDecl() = findModule();
+    eq ModifyDataTypeModifier.getDataTypeDecl().getModuleDecl() = findModule();
+
+    inh ModuleDecl Export.getModuleDecl();
+    eq ModuleDecl.getExport().getModuleDecl() = this;
+    eq AddExportModifier.getExport().getModuleDecl() = findModule();
+
+    inh ModuleDecl Import.lookupModule(String name);
+    inh ModuleDecl Export.lookupModule(String name);
+    inh ModuleDecl CompilationUnit.lookupModule(String name);
+    inh ModuleDecl ModuleDecl.lookupModule(String name);
+    inh ModuleDecl ModuleModifier.lookupModule(String name);
+    eq CompilationUnit.getModuleDecl().lookupModule(String name) = lookupModule(name);
+    eq Model.getCompilationUnit().lookupModule(String name) = lookupModule(name);
+
+
+    syn lazy Decl Model.lookup(KindedName name) {
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (ModuleDecl d : u.getModuleDecls()) {
+                Decl decl = d.lookup(name);
+                if (!decl.equals(unknownDecl))
+                    return decl;
+            }    			
+        }
+        return unknownDecl;
+    }
+
+    eq ParametricDataTypeDecl.getDataConstructor().lookup(KindedName name) = localLookup(name);
+    eq ParametricFunctionDecl.getFunctionDef().lookup(KindedName name) = localLookup(name);
+    eq ParametricPartialFunctionDecl.getPartialFunctionDef().lookup(KindedName name) = localLookup(name);
+    eq ParametricFunctionDecl.getTypeUse().lookup(KindedName name) = localLookup(name);
+    eq ParametricPartialFunctionDecl.getTypeUse().lookup(KindedName name) = localLookup(name);
+    eq ParametricFunctionDecl.getParam().lookup(KindedName name) = localLookup(name);
+    eq ParametricPartialFunctionDecl.getParam().lookup(KindedName name) = localLookup(name);
+    eq ExceptionDecl.getDataConstructor().lookup(KindedName name) = localLookup(name);
+
+    // Expose *lookup* at various places in the AST
+    inh Decl Exp.lookup(KindedName name);
+    inh Decl Pattern.lookup(KindedName name);
+    inh Decl Annotation.lookup(KindedName name);
+    inh Decl DataTypeUse.lookup(KindedName name);
+    inh Decl TypedVarOrFieldDecl.lookup(KindedName name);
+    eq ParametricDataTypeUse.getParam().lookup(KindedName name) = lookup(name);
+    eq TypedVarOrFieldDecl.getAccess().lookup(KindedName name) = lookup(name);
+
+    inh Decl ParametricDataTypeDecl.lookup(KindedName name);
+    inh Decl ParametricFunctionDecl.lookup(KindedName name);
+    inh Decl PartialFunctionDecl.lookup(KindedName name);
+    inh Decl ClassDecl.lookup(KindedName name);
+    inh Decl InterfaceDecl.lookup(KindedName name);
+    inh Decl ExceptionDecl.lookup(KindedName name);
+
+    eq ModuleDecl.getDecl(int i).lookup(KindedName name) = lookup(name);
+    eq Model.getCompilationUnit(int i).lookup(KindedName name) = lookup(name);
+    eq ModuleDecl.getBlock().lookup(KindedName name) = lookup(name);
+    //    eq ModuleDecl.getProduct(int i).lookup(KindedName name) = lookup(name);
+    //    eq ModuleDecl.getDeltaDecl(int i).getInterfaceModifier().lookup(KindedName name) = lookup(name);
+
+    /* DANGER WILL ROBINSON!
+     * Here we deliberately interfere with JastAdd and high-jack a call generated by
+     * the inherited attribute mechanism! DeltaDecls are an additional entry point
+     * into the parser since r.15258, and thus may not have a parent.
+     * Instead of tripping up JastAdd, we pretend that nothing happened. [stolz]
+     *
+     * We seem to have the same issue with CompilationUnits now, which may not be
+     * attached to a model. Maybe there's a better way to do this through the
+     * inh eq-s in JastAdd. The DeltaDecl would be redundant, if we now always have
+     * a CompilationUnit on top.
+     */
+    @Override
+    public Decl DeltaDecl.Define_lookup(ASTNode a, ASTNode b, KindedName n) {
+        if (getParent() == null)
+            return Model.unknownDecl;
+        else
+            return super.Define_lookup(a,b,n);
+    }
+    @Override
+    public Decl CompilationUnit.Define_lookup(ASTNode a, ASTNode b, KindedName n) {
+        if (getParent() == null)
+            return Model.unknownDecl;
+        else
+            return super.Define_lookup(a,b,n);
+    }
+
+
+    /**
+     * @throws TypeCheckerException
+     */
+    syn lazy Decl ModuleDecl.lookup(KindedName name) {
+        ResolvedName r = resolveName(name);
+        if (r != null) {			
+            return r.getDecl();
+        } else {	
+            return Model.unknownDecl;
+        } 			
+    }	    
+
+
+    // look through local declarations in parametric datatype, or defer
+    // to model
+    syn lazy Decl ParametricDataTypeDecl.localLookup(KindedName name) {
+        for (TypeParameterDecl d : getTypeParameters())
+            if (d.getName().equals(name.getName()))
+                return d;
+        return lookup(name);
+    }
+    // look through local declarations in parametric function, or defer
+    // to model. Make sure we only pick up TYPES, and not prematurely abort
+    // when data constructors and types overlap (Redmine #109)
+    syn lazy Decl ParametricFunctionDecl.localLookup(KindedName name) {
+        if (name.getKind() == Kind.TYPE_DECL)
+            for (TypeParameterDecl d : getTypeParameters())
+                if (d.getName().equals(name.getName()))
+                    return d;
+        return lookup(name);
+    }
+    syn lazy Decl ParametricPartialFunctionDecl.localLookup(KindedName name) {
+        if (name.getKind() == Kind.TYPE_DECL)
+            for (TypeParameterDecl d : getTypeParameters())
+                if (d.getName().equals(name.getName()))
+                    return d;
+        return lookup(name);
+    }
+
+    syn lazy Decl ExceptionDecl.localLookup(KindedName name) {
+        if (name.getKind() == Kind.TYPE_DECL) {
+            if (name.getName().equals(getName())) {
+                return this;
+            }
+        }
+        // XXX we'd expect Kind.DATA_CONSTRUCTOR but it's TYPE_DECL
+        for (DataConstructor d : getDataConstructors()) {
+            // should be only one
+            if (d.getName().equals(name.getName())) {
+                return d;
+            }
+        }
+        return lookup(name);
+    }
+
+    rewrite UnresolvedTypeUse {
+        when (getDecl().isException())
+        to ExceptionTypeUse {
+            ExceptionTypeUse eu = new ExceptionTypeUse(getName(), getAnnotations());
+            eu.setPositionFromNode(this);
+            eu.setAbsolutePosition(getAbsolutePosition());
+            return eu;
+        }
+        when (getDecl().isInterface())
+        to InterfaceTypeUse {
+            InterfaceTypeUse tu = new InterfaceTypeUse(getName(), getAnnotations());
+            tu.setPositionFromNode(this);
+            tu.setAbsolutePosition(getAbsolutePosition());
+            return tu;
+        } 
+        when (getDecl().isDataType()) 
+        to DataTypeUse {
+            DataTypeUse tu = new DataTypeUse(getName(), getAnnotations());
+            tu.setPositionFromNode(this);
+            tu.setAbsolutePosition(getAbsolutePosition());
+            return tu;
+        }
+        when (getDecl().isTypeSyn() && 
+                /* May point to something else Undefined, especially for partial models.
+                 If we would drop into the default case, we'd create new nodes in an
+                 infinite loop! (And returning "this" in the body won't save you.)
+                 */        
+                !(((TypeSynDecl)getDecl()).getValue() instanceof UnresolvedTypeUse) &&
+                // Avoid "type Foo = Foo":
+                closestParent(Decl.class) != ((TypeSynDecl)getDecl())
+                ) to TypeUse {
+            /* We don't know what we'll get, so we reuse the structure and just fill in our name.
+             Toss out ParametricDataTypeUses.
+             */
+            final TypeUse tu;
+            TypeUse decl = ((TypeSynDecl)getDecl()).getValue();
+            if (decl instanceof DataTypeUse) {
+                tu = new DataTypeUse(getName(), getAnnotations());
+            } else {
+                tu = (TypeUse) decl.copy();
+                tu.setName(getName());
+            }
+            tu.setPositionFromNode(this);
+            tu.setAbsolutePosition(getAbsolutePosition());
+            return tu;
+        }
+        when (getDecl().isTypeParameter())
+        to TypeParameterUse {
+            TypeParameterUse tu = new TypeParameterUse(getName(), getAnnotations());
+            tu.setPositionFromNode(this);
+            tu.setAbsolutePosition(getAbsolutePosition());
+            return tu;
+        }
+    }
+
+    syn lazy Decl FnApp.getDecl() = lookup(new KindedName(Kind.FUN,getName()));
+    syn lazy Decl ParFnApp.getDecl() = lookup(new KindedName(Kind.PARTIAL_FUN, getName()));
+
+    inh DataTypeDecl DataConstructor.getDataTypeDecl();
+    eq DataTypeDecl.getDataConstructor().getDataTypeDecl() = this;
+    eq ModuleDecl.getDecl().getDataTypeDecl() = null; // never called
+
+    syn Decl DataConstructorExp.getDecl() = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
+
+    @CheckForNull
+    syn DataConstructor DataConstructorExp.getDataConstructor() {
+        Decl decl = getDecl();
+        if (decl == null) return null;
+        if (decl.isUnknown()) {
+            return null;
+        }
+        return (DataConstructor) decl;
+    }
+
+    @CheckForNull
+    syn DataConstructor ConstructorPattern.getDataConstructor() {
+        Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
+        if (decl == null) return null;
+        if (decl.isUnknown()) {
+            return null;
+        }
+        return (DataConstructor) decl;
+    }
+
+    syn boolean Call.isAsync();
+    eq SyncCall.isAsync() = false;
+    eq Call.isAsync() = false;
+    eq AsyncCall.isAsync() = true;
+    eq AwaitAsyncCall.isAsync() = true;
+
+    syn lazy ModuleDecl ASTNode.getModuleDecl() = calcContextNode(ModuleDecl.class);
+    /**
+     * Return this objects surrounding declaration. Uses the Null Object Pattern,
+     * so don't cast the result, as it may be an UnknownDecl.
+     */
+    syn lazy Decl ASTNode.getContextDecl() {
+        Decl d = calcContextNode(Decl.class);
+        return (d == null ? Model.unknownDecl : d);
+    }
+    syn lazy MethodImpl ASTNode.getContextMethod() = calcContextNode(MethodImpl.class);
+    syn lazy Block ASTNode.getContextBlock() = calcContextNode(Block.class);
+
+    /** returns the parent compilation unit of this node **/
+    syn lazy CompilationUnit ASTNode.getCompilationUnit() = calcContextNode(CompilationUnit.class);
+
+    /**
+     * checks whether the two elements are defined in the same method or block
+     */
+    public boolean ASTNode.inSameMethodOrBlock(ASTNode<?> b) {
+        return getContextMethod() != null && b.getContextMethod() == getContextMethod()
+                || getContextBlock()  != null && b.getContextBlock() == getContextBlock();
+    }
+
+    /**
+     * This method (presumably) finds the outermost match conforming to `clazz`.
+     */
+    @CheckForNull
+    public <N extends ASTNode<?>> N ASTNode.calcContextNode(Class<N> clazz) {
+        ASTNode<?> n = this;
+        while (n != null) {
+            ASTNode<?> parent = n.getParent();
+
+            if (clazz.isInstance(n)) {
+                if (parent == null)
+                    return clazz.cast(n);
+
+                N pn = parent.calcContextNode(clazz);
+                if (pn != null)
+                    return pn;
+                else
+                    return clazz.cast(n);
+            }
+            n = parent;
+        }
+        return null;
+    }
+
+    syn lazy MethodImpl ClassDecl.lookupMethod(String name) {
+        for (MethodImpl m : getMethods()) {
+            if (m.getMethodSig().getName().equals(name))
+                return m;
+        }
+        return null;
+    }
+
+    syn lazy MethodSig InterfaceDecl.lookupMethod(String name) {
+        for (MethodSig d : getBodys()) {
+            if (d.getName().equals(name))
+                return d;
+        }
+
+        for (InterfaceTypeUse u : getExtendedInterfaceUses()) {
+            InterfaceDecl id = (InterfaceDecl) u.getDecl();
+            MethodSig s = id.lookupMethod(name);
+            if (s != null)
+                return s;
+        }
+
+        return null;
+    }
+
+
+    syn String CompilationUnit.getFileName() = getName();
+
+    /**
+     * @throws TypeCheckerException
+     */    
+    public ResolvedName ModuleDecl.resolveName(KindedName name) {
+        return getVisibleNames().get(name);
+    }
+}
+
+// Local Variables:
+// mode: java
+// End:

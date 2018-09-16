@@ -7,8 +7,8 @@ package deadlock;
 import org.junit.Assume;
 
 import deadlock.analyser.Analyser;
-import abs.frontend.ast.Model;
-import abs.frontend.typesystem.ExamplesTypeChecking;
+import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.typesystem.ExamplesTypeChecking;
 
 public class DeadlockCheckerTests extends ExamplesTypeChecking {
 

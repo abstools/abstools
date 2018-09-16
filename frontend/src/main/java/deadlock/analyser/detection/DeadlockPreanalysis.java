@@ -6,15 +6,14 @@ package deadlock.analyser.detection;
 
 import java.util.HashMap;
 
-import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.AwaitStmt;
-import abs.frontend.ast.CompilationUnit;
-import abs.frontend.ast.DataTypeUse;
-import abs.frontend.ast.FieldDecl;
-import abs.frontend.ast.GetExp;
-import abs.frontend.ast.InterfaceTypeUse;
-import abs.frontend.ast.Model;
-import abs.frontend.ast.VarUse;
+import org.abs_models.frontend.ast.ASTNode;
+import org.abs_models.frontend.ast.AwaitStmt;
+import org.abs_models.frontend.ast.CompilationUnit;
+import org.abs_models.frontend.ast.DataTypeUse;
+import org.abs_models.frontend.ast.FieldDecl;
+import org.abs_models.frontend.ast.GetExp;
+import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.VarUse;
 import deadlock.analyser.AnalyserLog;
 
 /**

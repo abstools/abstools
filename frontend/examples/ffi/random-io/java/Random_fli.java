@@ -1,6 +1,5 @@
 package Env;
 
-import abs.backend.java.lib.types.*;
 import java.util.Random;
 
 public class Random_fli extends Random_c {
