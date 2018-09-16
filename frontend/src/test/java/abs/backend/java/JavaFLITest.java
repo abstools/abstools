@@ -4,8 +4,10 @@
  */
 package abs.backend.java;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class JavaFLITest extends JavaBackendTest {
 
     private final static String EXAMPLE_CODE = "import * from ABS.FLI; interface I { Unit foo(String s); } " +
