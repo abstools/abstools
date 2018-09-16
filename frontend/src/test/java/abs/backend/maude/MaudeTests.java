@@ -9,9 +9,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import abs.ABSTest;
 import abs.frontend.ast.Model;
@@ -39,23 +36,6 @@ public class MaudeTests extends ABSTest {
         public MaudeRlTests() {
             super(MaudeCompiler.SIMULATOR.RL);
         }
-    }
-
-    @BeforeClass
-    public static void checkMaude() {
-        ProcessBuilder pb = new ProcessBuilder();
-        pb.command("maude");
-        try {
-            Process p = pb.start();
-            p.destroy();
-        } catch (IOException e) {
-            Assume.assumeNoException(e);
-        }
-    }
-
-    @Test
-    public void simpeBlock() throws Exception {
-        assertTrueMaude("module Test; { Bool testresult = True;}");
     }
 
     public void assertTrueMaude(String absCode) throws Exception {
