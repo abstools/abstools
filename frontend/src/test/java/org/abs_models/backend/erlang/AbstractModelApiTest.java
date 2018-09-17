@@ -13,10 +13,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.WrongProgramArgumentException;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 
 import com.eclipsesource.json.Json;
@@ -50,6 +54,7 @@ public abstract class AbstractModelApiTest extends ABSTest {
     
     protected static void startModelApiServer(File file) throws IOException, WrongProgramArgumentException, InternalBackendException, InterruptedException {
         File tmpdir = Files.createTempDir();
+        tmpdir.deleteOnExit();
         Model model = ABSTest.assertParseFileOk(file.getPath(), Config.WITH_STD_LIB, Config.TYPE_CHECK, Config.WITHOUT_MODULE_NAME);
         assertFalse(model.hasParserErrors());
         assertFalse(model.hasTypeErrors());
@@ -61,26 +66,24 @@ public abstract class AbstractModelApiTest extends ABSTest {
         pb.directory(tmpdir);
         pb.redirectErrorStream(true);
         serverProcess = pb.start();
-        
+
         extractPortNoFromProcess(serverProcess);
-        
-        // TODO: use thread pool?
-//        Thread t = new Thread(new TimeoutThread(p));
-//        t.start();
     }
 
     private static void extractPortNoFromProcess(Process process) throws IOException {
-        String firstLine = "";
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            // server provides port number in the first line in format "[text] port #####, [text]"
-            // only the first line - if we read too far, we get stuck because process is still running
-            firstLine = in.readLine();
+        final Pattern portnr_pattern = Pattern.compile("Starting server on port (\\d+), abort with Ctrl-C");
+        String line = "";
+        String port_nr_s = null;
+        BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        while (port_nr_s == null) {
+            line = in.readLine();
+            System.out.println(line);
+            Matcher matcher = portnr_pattern.matcher(line);
+            if (matcher.find()) {
+                port_nr_s = matcher.group(1);
+            }
         }
-        int portNoStart = firstLine.indexOf("port ", 0) + 5; // index + length of search key
-        int portNoEnd = firstLine.indexOf(",", 0);
-        
-        String portNoString = firstLine.substring(portNoStart, portNoEnd);
-        port_nr = Integer.parseInt(portNoString);
+        port_nr = Integer.parseInt(port_nr_s);
     }
     
     protected static void stopServer() {
@@ -94,19 +97,19 @@ public abstract class AbstractModelApiTest extends ABSTest {
         }
     }
     
-    protected String sendGetRequest(String request) throws IOException {
-        return sendRequest(request, RequestType.GET, null);
+    protected String sendGetRequest(String request, int expected_response) throws IOException {
+        return sendRequest(request, RequestType.GET, null, expected_response);
     }
     
-    protected String sendPostRequest(String request, JsonValue payload) throws IOException {
-        return sendRequest(request, RequestType.POST, payload.toString());
+    protected String sendPostRequest(String request, JsonValue payload, int expected_response) throws IOException {
+        return sendRequest(request, RequestType.POST, payload.toString(), expected_response);
     }
     
-    protected String sendPostRequest(String request, String payload) throws IOException {
-        return sendRequest(request, RequestType.POST, payload);
+    protected String sendPostRequest(String request, String payload, int expected_response) throws IOException {
+        return sendRequest(request, RequestType.POST, payload, expected_response);
     }
     
-    private String sendRequest(String request, RequestType requestType, String payload) throws IOException {
+    private String sendRequest(String request, RequestType requestType, String payload, int expected_response) throws IOException {
         URL obj = new URL("http://localhost:" + Integer.toString(port_nr) + request);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
         con.setRequestMethod(requestType.toString());
@@ -122,17 +125,14 @@ public abstract class AbstractModelApiTest extends ABSTest {
         }
         con.setConnectTimeout(10000);
         con.connect();
-        
-        int responseCode = con.getResponseCode();
-        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
 
-        while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
+        if (con.getResponseCode() != expected_response) {
+            Assert.fail("Expected response code " + expected_response + ", got " + con.getResponseCode());
         }
+        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String response = in.lines().collect(Collectors.joining());
         in.close();
-        return response.toString();
+        return response;
     }
     
     protected JsonValue getValueFromResponse(String response) {
