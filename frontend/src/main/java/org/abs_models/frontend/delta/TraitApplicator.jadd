@@ -1,0 +1,345 @@
+import java.util.Map;
+import java.util.HashMap;
+import org.abs_models.frontend.delta.*;
+import org.abs_models.common.*;
+import org.abs_models.frontend.parser.*;
+
+
+aspect TraitApplicator {
+
+    /*
+     * TraitUse is the trait application from within a class. Transform it into
+     * a AddMethodModifier and apply it.
+     */
+    public void TraitUse.applyTo(ClassDecl cd) throws DeltaModellingException {
+        TraitExpr traitExpr = getTraitExpr().treeCopyNoTransform();
+
+        //transform into AddMethodModifier
+        TraitSetExpr eSet = new TraitSetExpr();
+        eSet.setMethodImplList(new List<>());
+        eSet.setParent(cd);
+
+        AddMethodModifier tOp = new AddMethodModifier(traitExpr);
+        tOp.setParent(cd);
+
+        TraitSetExpr newSet = tOp.applyToSet(eSet, cd.getModuleDecl());
+        AddMethodModifier newOp = new AddMethodModifier(newSet);
+        newOp.setParent(cd);
+
+        //apply
+        newOp.applyTo(cd);
+
+        //remove from class
+        int pos = cd.getTraitUseList().getIndexOfChild(this);
+        if (pos > -1) {
+            cd.getTraitUseList().removeChild(pos);
+        }
+
+        //cache
+        cd.getModuleDecl().flushCache();
+    }
+
+
+
+    /*
+     * RemoveMethodModifier is the trait operation that removes a single method, given
+     * its signature. Throws an exception if no such method is found
+     */
+    public void RemoveMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException{
+         for (MethodSig mysig : getMethodSigList()){
+            // in given list: find MethodDecl that matches sig
+            int found = -1;
+            for (int i = 0; i < cd.getMethodList().getNumChild(); i++) {
+                MethodSig sig = cd.getMethodList().getChild(i).getMethodSig();
+                if (sig.matches(mysig)) {
+                    found = i;
+                    break;
+                }
+            }
+
+            if (found >= 0)
+                // remove MethodImpl from list
+                cd.getMethodList().removeChild(found);
+            else
+            throw new DeltaModellingException("Delta " + getDelta().getName() +
+                    " wants to remove method " + mysig + ", which was not found in class " + cd.getQualifiedName() + ".");
+        }
+        //applyToList(cd.getMethodList());
+    }
+
+    private void RemoveMethodModifier.applyToList(List<MethodImpl> list) throws DeltaModellingException{
+        for (MethodSig mysig : getMethodSigList()){
+            // in given list: find MethodDecl that matches sig
+            int found = -1;
+            for (int i = 0; i < list.getNumChild(); i++) {
+                MethodSig sig = list.getChild(i).getMethodSig();
+                if (sig.matches(mysig)) {
+                    found = i;
+                    break;
+                }
+            }
+
+            if (found >= 0)
+                // remove MethodImpl from list
+                list.removeChild(found);
+            else
+                throw new DeltaModellingException(
+                    "trait wants to remove method [" + mysig + "], which was not found");
+        }
+    }
+
+
+    /*
+     * AddMethodModifier is the trait operation that adds a set of methods. Throws NO
+     * exception if a method with the same name is already present in the class
+     */
+    public void AddMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException{
+        TraitExpr tt = getTraitExpr();
+        ArrayList<MethodModifier> operations = new ArrayList<>();
+        /*
+         *  The syntax is TraitExpression MethodModifieration.
+         *  We search for the TraitExpression that is used by this 'adds'
+         *  This may break the syntax, thus we collect all operation on the right
+         *  and apply them one by one.
+         */
+        TraitExpr target = helperLeftMost(tt, operations);
+
+
+        DeltaDecl d = null;
+        try{
+            d = getDelta();
+        } catch(RuntimeException e) {
+            //trait outside of delta
+        }
+        TraitSetExpr set = tt.resolve(cd.getModuleDecl());
+        for (MethodImpl met : set.getMethodImplList()) {
+		      MethodImpl newMet = met.treeCopyNoTransform();
+		      newMet.setParent(met.getParent());
+		      MethodSig newSig = met.getMethodSig().treeCopyNoTransform();
+		      newSig.setParent(newMet);
+		      newMet.setMethodSig(newSig);
+		      cd.addMethod(newMet);
+		      if(d != null){
+		          cd.addAddedIn(newSig.getName(), d.getName());
+		      }
+        }
+/*
+        //necessary because the helper collects them in the wrong order
+        Collections.reverse(operations);
+        for (MethodModifier oper : operations) {
+            oper.applyTo(cd);
+        }*/
+    }
+
+    // collects all MethodModifier in an AST and returns the left-most TraitExpr
+    public TraitExpr AddMethodModifier.helperLeftMost(TraitExpr tt, ArrayList<MethodModifier> operations){
+        if(tt instanceof TraitModifyExpr){
+            TraitModifyExpr app = (TraitModifyExpr) tt;
+            TraitExpr next = app.getTraitExpr();
+            MethodModifier opr = app.getMethodModifier();
+            operations.add(opr);
+            return helperLeftMost(next, operations);
+        } else return tt;
+    }
+
+
+    /*
+     * ModifyMethodModifier is the trait operation that modifies a set of methods.
+     * Throws an exception if a method with the same name is not present in the
+     * class
+     *
+     * This is also where we resolve original calls.
+     */
+    public void ModifyMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException{
+        TraitExpr tt = getTraitExpr();
+        ArrayList<MethodModifier> operations = new ArrayList<>();
+        TraitExpr target = helperLeftMost(tt, operations);
+
+            TraitSetExpr set = target.resolve(cd.getModuleDecl());
+            for (MethodImpl met : set.getMethodImplList()) {
+                apply(cd,met);
+            }
+
+        for (MethodModifier oper : operations) {
+            oper.applyTo(cd);
+        }
+    }
+
+    // collects all MethodModifier in an AST and returns the left-most TraitExpr
+    public TraitExpr ModifyMethodModifier.helperLeftMost(TraitExpr tt, ArrayList<MethodModifier> operations){
+        if(tt instanceof TraitModifyExpr){
+            TraitModifyExpr app = (TraitModifyExpr) tt;
+            TraitExpr next = app.getTraitExpr();
+            MethodModifier opr = app.getMethodModifier();
+            operations.add(opr);
+            return helperLeftMost(next, operations);
+        } else return tt;
+    }
+
+    // modifies a single method
+    private void ModifyMethodModifier.apply(ClassDecl cd, MethodImpl met) throws DeltaModellingException{
+        MethodSig mysig = met.getMethodSig();
+
+        // in given ClassDecl: find MethodDecl that matches sig
+        int found = -1;
+        for (int i = 0; i < cd.getNumMethod(); i++) {
+            MethodSig sig = cd.getMethod(i).getMethodSig();
+            if (sig.matches(mysig)) {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0) {
+            // replace MethodImpl
+            MethodImpl method = met.treeCopyNoTransform();
+            method.setFileName(met.getFileName());
+            method.setParent(met.getParent());
+            replaceOriginal(cd, cd.getMethod(found), method);
+            cd.getMethods().setChild(method, found);
+        } else
+            throw new DeltaModellingException("Delta " + getDelta().getName() +
+                    " wants to modify method " + mysig + ", which was not found in class " + cd.getQualifiedName() + ".");
+    }
+
+
+
+    // replaces all original calls
+    private void ModifyMethodModifier.replaceOriginal(ClassDecl cd, MethodImpl met, MethodImpl flattened) {
+
+        //find current delta
+        ASTNode<ASTNode> n = this;
+        while(n != null && !(n instanceof DeltaDecl)){
+            n = n.getParent();
+        }
+        DeltaDecl delta  = (DeltaDecl)n;
+        HashMap<String, Stack<String>> deltas = cd.getDeltas();
+        HashMap<String, HashMap<String, MethodImpl>> deltaMap = cd.getDeltaMap();
+        //init it this is the first delta
+            String mName = met.getMethodSig().getName();
+        if(delta != null){
+            HashMap<String, MethodImpl> map = deltaMap.get(mName);
+            Stack<String> stack = deltas.get(mName);
+            if(map == null){
+            	String addedIn = cd.getAddedIn(mName);
+                map = new HashMap<>();
+                map.put(addedIn, flattened);
+                stack = new Stack<>();
+                stack.push(addedIn);
+                deltaMap.put(mName, map);
+                deltas.put(mName, stack);
+            }
+        }
+        String origin = deltas.get(mName).peek();
+
+        //collect all original calls
+        ArrayList<OriginalCall> list = new ArrayList<>();
+        for (Stmt stmt : flattened.getBlockNoTransform().getStmtsNoTransform()) {
+            collectOrig(list, stmt);
+        }
+
+
+        if(list.size() > 0){
+            //rename
+            int i = cd.getNumMethod();
+            String name = met.getMethodSig().getName() + "$ORIGIN_"+origin+(delta == null? hashCode() : ""/*"_"+delta.getName()*/);
+            MethodImpl newMet = null;
+            for (MethodImpl oldMet : cd.getMethods()) {
+                if(oldMet.getMethodSig().getName().equals(name)){
+                    newMet = oldMet;
+                    break;
+                }
+            }
+            if(newMet == null){
+                MethodSig sig = met.getMethodSig().treeCopyNoTransform();
+                sig.setName(name);
+
+                //add
+                newMet = met.treeCopyNoTransform();
+                newMet.setParent(met.getParent());
+                newMet.setMethodSig(sig);
+
+                sig.setParent(newMet);
+                cd.getMethods().setChild(newMet, i);
+
+                //save delta
+                if(delta != null){
+                    HashMap<String, MethodImpl> map = deltaMap.get(mName);
+                    map.put(origin, newMet);
+                    map.put(delta.getName(), flattened);
+                    deltas.get(mName).push(delta.getName());
+                }
+            }
+
+            //replace
+            for (OriginalCall orig : list) {
+                orig.replaceByRealCall(newMet, deltaMap.get(met.getMethodSig().getName()));
+            }
+        }
+    }
+
+    // collect all original calls
+    private void ModifyMethodModifier.collectOrig(ArrayList<OriginalCall> list, ASTNode<ASTNode> node){
+        if(node instanceof OriginalCall){
+            list.add((OriginalCall)node);
+            return;
+        }
+        if(node != null && node.children != null){
+            for (ASTNode<ASTNode> child : node.children) {
+                collectOrig(list,child);
+            }
+        }
+    }
+
+
+
+
+
+    /***
+    backward compatibility
+    **/
+    public AddMethodModifier.AddMethodModifier(MethodImpl impl) {
+          List<MethodImpl> list = new List<>(impl);
+        TraitExpr expr = new TraitSetExpr(list);
+        setChild(expr, 0);
+        impl.setParent(list);
+        list.setParent(expr);
+    }
+
+    public MethodImpl AddMethodModifier.getMethodImpl(){
+        TraitExpr expr = getTraitExpr();
+        if(expr != null && expr instanceof TraitSetExpr && ((TraitSetExpr)expr).getMethodImpls().numChildren == 1){
+            return ((TraitSetExpr)expr).getMethodImpls().getChild(0);
+        }
+        return null;
+    }
+
+    public ModifyMethodModifier.ModifyMethodModifier(MethodImpl impl) {
+        List<MethodImpl> list = new List<>(impl);
+        TraitExpr expr = new TraitSetExpr(list);
+        setChild(expr, 0);
+        impl.setParent(list);
+        list.setParent(expr);
+    }
+
+    public MethodImpl ModifyMethodModifier.getMethodImpl(){
+        TraitExpr expr = getTraitExpr();
+        if(expr != null && expr instanceof TraitSetExpr && ((TraitSetExpr)expr).getMethodImpls().numChildren == 1){
+            return ((TraitSetExpr)expr).getMethodImpls().getChild(0);
+        }
+        return null;
+    }
+
+    public ClassDecl.ClassDecl(String p0, List<Annotation> p1, List<ParamDecl> p2, List<InterfaceTypeUse> p3, Opt<InitBlock> p5, List<CaseBranchStmt> p6, List<FieldDecl> p7, List<MethodImpl> p8) {
+        List<TraitUse> p4 = new List<>();
+        setName(p0);
+        setChild(p1, 0);
+        setChild(p2, 1);
+        setChild(p3, 2);
+        setChild(p4, 3);
+        setChild(p5, 4);
+        setChild(p6, 5);
+        setChild(p7, 6);
+        setChild(p8, 7);
+    }
+
+}

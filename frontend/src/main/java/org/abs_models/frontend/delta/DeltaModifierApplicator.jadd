@@ -1,0 +1,427 @@
+import java.util.Map;
+import java.util.HashMap;
+import org.abs_models.frontend.delta.*;
+import org.abs_models.common.*;
+import org.abs_models.frontend.parser.*;
+
+/*
+ * Collection of methods to be added to the various Modifiers inside a delta:
+ * - ModuleModifiers, which can be
+ *   OOModifiers, which in turn contain:
+ *     - AddClassModifier, RemoveClassModifier, ModifyClassModifier
+ *     - AddInterfaceModifier, ModifyInterfaceModifier
+ *   FunctionalModifiers, which in turn contain:
+ *     - AddFunctionModifier, AddDataTypeModifier, AddTypeSynModifier
+ */
+aspect DeltaModifierApplicator {
+
+	/*
+	 * These methods simplify nested trait operators in deltas and collapse them to operations on sets
+	 */
+    public void ModuleModifier.collapseTraitModifiers() { }
+    public void Modifier.collapseTraitModifiers(ModuleDecl module) { }
+    @Override
+    public void ModifyClassModifier.collapseTraitModifiers() {
+    	ArrayList<Modifier> cop = new ArrayList<Modifier>();
+    	for( Modifier mod :getModifierList() ) cop.add(mod);
+        for ( Modifier mod : cop ) {
+            mod.collapseTraitModifiers(findModule());
+        }
+    }
+
+    @Override
+    public void DeltaTraitModifier.collapseTraitModifiers(ModuleDecl module) {
+
+        ArrayList<MethodModifier> operations = new ArrayList<>();
+        rewriteToList(getMethodModifier(), operations);
+        if(operations.size() >= 2){
+            ASTNode parent = getParent();
+            parent.removeChild(parent.getIndexOfChild(this));
+            for (MethodModifier traitOper : operations) {
+
+				DeltaTraitModifier newDel = this.copy();
+				newDel.setParent(null);
+				traitOper.setParent(null);
+				newDel.setChild(traitOper, 0);
+				newDel.collapseTraitModifiers(module);
+				ModifyClassModifier mm = (ModifyClassModifier) parent.getParent();
+				mm.addModifier(newDel);
+            }
+        } else {
+    	    getMethodModifier().collapseTraitModifiers(module);
+    	}
+    }
+
+    @Override
+    public void ModifyMethodModifier.collapseTraitModifiers(ModuleDecl module) {
+        MethodModifier newMod = new ModifyMethodModifier(getTraitExprNoTransform().resolve(module));
+        ASTNode<?> parent = getParent();
+        parent.setChild(newMod, parent.getIndexOfChild(this));
+        this.setParent(null);
+        parent.flushCache();
+    }
+
+
+    @Override
+    public void AddMethodModifier.collapseTraitModifiers(ModuleDecl module) {
+        MethodModifier newMod = new AddMethodModifier(getTraitExprNoTransform().resolve(module));
+        ASTNode<?> parent = getParent();
+        parent.setChild(newMod, parent.getIndexOfChild(this));
+        this.setParent(null);
+        parent.flushCache();
+    }
+
+
+    @Override
+    public void RemoveMethodModifier.collapseTraitModifiers(ModuleDecl module) {
+        //System.out.println("collapsing rem!"+this);
+    }
+
+
+    abstract public void ModuleModifier.apply() throws DeltaModellingException;
+
+    /*
+    * DeltaTraitModifier references trait operations from a class.
+    */
+    public void DeltaTraitModifier.applyTo(ClassDecl cd) throws DeltaModellingException{
+        getMethodModifier().applyTo(cd);
+    }
+
+    /*
+    *  Fixes the parse tree and splits a big trait operation into a list of trait operations
+    *  This is needed so in
+      'modifies class M.C{
+          adds { Unit n(){skip;} }
+          removes Unit m();
+      }'
+      the removes is applied to the class, not the set
+    */
+    public void DeltaTraitModifier.rewriteToList(TraitExpr tt, ArrayList<MethodModifier> operations, MethodModifier par){
+        if(tt instanceof TraitModifyExpr){
+            TraitModifyExpr app = (TraitModifyExpr) tt;
+            TraitExpr next = app.getTraitExpr();
+            MethodModifier opr = app.getMethodModifier();
+            next.setParent(par);
+            //app.setTraitExpr(null);
+            par.setChild(next, 0);
+            if(next instanceof TraitModifyExpr)
+            	rewriteToList(next, operations, par);
+            rewriteToList(opr, operations);
+        }
+    }
+
+
+    public void DeltaTraitModifier.rewriteToList(MethodModifier tt, ArrayList<MethodModifier> operations){
+        operations.add(tt);
+        if(tt instanceof AddMethodModifier){
+            rewriteToList(((AddMethodModifier)tt).getTraitExpr(), operations, tt);
+        } else if(tt instanceof ModifyMethodModifier){
+            rewriteToList(((ModifyMethodModifier)tt).getTraitExpr(), operations, tt);
+        }
+    }
+
+    /**************************************************************************
+     * OOModifiers add/remove/modify classes or interfaces
+     * they are applied to Modules
+     */
+
+    public void AddClassModifier.apply() throws DeltaModellingException {
+        ModuleDecl module = findModule();
+        ClassDecl cls = getClassDecl().treeCopyNoTransform();
+        cls.setFileName(getClassDecl().getFileName());
+        cls.setName(getSimpleName());
+        module.getDecls().addChild(cls);
+    }
+
+    public void RemoveClassModifier.apply() throws DeltaModellingException {
+        ClassDecl cls = findClass();
+        ModuleDecl module = cls.getModuleDecl();
+        module.getDecls().removeChild(module.getDecls().getIndexOfChild(cls));
+    }
+
+    public void ModifyClassModifier.apply() throws DeltaModellingException {
+        ClassDecl cls = findClass();
+        if (cls == null)
+           throw new DeltaModellingException(getDelta(),
+                " wants to modify class [" + getName() + "], which was not found.");
+
+
+        // add any interfaces added by the ClassModifier
+        for (InterfaceTypeUse iface : this.getAddedInterfaces()) {
+            InterfaceTypeUse iface2 = iface.treeCopyNoTransform();
+            iface2.setFileName(iface.getFileName());
+            cls.addImplementedInterfaceUse(iface2);
+        }
+
+        // remove any interfaces removed by the ClassModifier
+        for (InterfaceTypeUse toRemove : this.getRemovedInterfaces()) {
+            boolean found = false;
+            for (InterfaceTypeUse iface : cls.getImplementedInterfaceUseList()) {
+                if (iface.getName().equals(toRemove.getName())) {
+                    cls.getImplementedInterfaceUseList().removeChild(cls.getImplementedInterfaceUseList().getIndexOfChild(iface));
+                    found = true;
+                    break;
+                }
+            }
+            if (! found)
+                throw new DeltaModellingException(getDelta(),
+                    " wants to remove interface [" + toRemove.getName() + "] from class [" + cls.getName()
+                    + "]. However, the class does not implement that interface.");
+        }
+
+        // apply all modifiers
+        for (Modifier mod : this.getModifiers()) {
+            mod.applyTo(cls);
+        }
+    }
+
+    public void AddInterfaceModifier.apply() throws DeltaModellingException {
+        ModuleDecl module = findModule();
+        assert module.lookup(new KindedName(Kind.TYPE_DECL, getSimpleName())).isUnknown();
+        InterfaceDecl decl = getInterfaceDecl().treeCopyNoTransform();
+        decl.setFileName(getInterfaceDecl().getFileName());
+        decl.setName(getSimpleName());
+        module.getDecls().addChild(decl);
+    }
+    public void ModifyInterfaceModifier.apply() throws DeltaModellingException {
+        InterfaceDecl iface = this.findInterface();
+        // apply all modifiers
+        for (MethodSigModifier mod : this.getMethodSigModifiers()) {
+            mod.applyTo(iface);
+        }
+    }
+    public void RemoveInterfaceModifier.apply() throws DeltaModellingException {
+        InterfaceDecl iface = this.findInterface();
+        ModuleDecl module = iface.getModuleDecl();
+        module.getDecls().removeChild(module.getDecls().getIndexOfChild(iface));
+    }
+
+    /**************************************************************************
+     * FunctionalModifiers add functions, data types and type synonyms
+     * they are applied to Modules
+     */
+
+    public String AddFunctionModifier.toString() {
+        return "adds function " + getFunctionDecl().getName();
+    }
+
+    public void AddFunctionModifier.apply() throws DeltaModellingException {
+        ModuleDecl module = findModule();
+        FunctionDecl func = getFunctionDecl().treeCopyNoTransform();
+        func.setFileName(getFunctionDecl().getFileName());
+        module.getDecls().addChild(func);
+    }
+
+    public String AddDataTypeModifier.toString() {
+        return "adds data type " + getDataTypeDecl().getName();
+    }
+
+    public void AddDataTypeModifier.apply() throws DeltaModellingException {
+        ModuleDecl module = findModule();
+
+        DataTypeDecl dtd = this.getDataTypeDecl().treeCopyNoTransform();
+        dtd.setFileName(getDataTypeDecl().getFileName());
+        module.getDecls().addChild(dtd);
+
+        for (FunctionDecl fd : new ASTPreProcessor().createSelectorFunctionsForDeltaApplication(dtd)) {
+            module.getDecls().addChild(fd);
+        }
+    }
+
+    public String AddTypeSynModifier.toString() {
+        return "adds type synonym " + getTypeSynDecl().getName();
+    }
+
+    public void AddTypeSynModifier.apply() throws DeltaModellingException {
+        ModuleDecl module = findModule();
+        TypeSynDecl type = getTypeSynDecl().treeCopyNoTransform();
+        type.setFileName(getTypeSynDecl().getFileName());
+        module.getDecls().addChild(type);
+    }
+
+    public void ModifyTypeSynModifier.apply() throws DeltaModellingException {
+        TypeSynDecl syndecl = null;
+        ModuleDecl module = findModule();
+        for (Decl decl : module.getDecls()) {
+            if (decl instanceof TypeSynDecl && decl.getName().equals(this.getSimpleName()))
+                syndecl = (TypeSynDecl)decl;
+        }
+        if (syndecl == null) {
+            throw new DeltaModellingException(getDelta(),
+                " wants to modify type synonym [" + this.getSimpleName() + "], which was not found in module [" + module.getName() + "].");
+        } else {
+            syndecl.setValue((TypeUse) getTypeSynDecl().getValue().treeCopyNoTransform());
+        }
+    }
+
+    public void ModifyDataTypeModifier.apply() throws DeltaModellingException {
+        DataTypeDecl datatypedecl = null;
+        ModuleDecl module = findModule();
+        for (Decl decl : module.getDecls()) {
+            if (decl instanceof DataTypeDecl && decl.getName().equals(this.getSimpleName()))
+                datatypedecl = (DataTypeDecl)decl;
+        }
+        if (datatypedecl == null) {
+            throw new DeltaModellingException(getDelta(),
+                " wants to modify datatype [" + this.getSimpleName() + "], which was not found in module [" + module.getName() + "].");
+        } else {
+            datatypedecl.setDataConstructorList(this.getDataTypeDecl().getDataConstructorList().treeCopyNoTransform());
+            if (datatypedecl instanceof ParametricDataTypeDecl
+                && this.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
+                ((ParametricDataTypeDecl)datatypedecl).setTypeParameterList(((ParametricDataTypeDecl)this.getDataTypeDecl()).getTypeParameterList().treeCopyNoTransform());
+            } else {
+                throw new DeltaModellingException(getDelta(),
+                    " wants to convert datatype [" + this.getSimpleName() + "] from or to a parametric datatype, which is not supported yet.");
+            }
+        }
+    }
+
+    /**************************************************************************
+     * NamespaceModifiers add imports and exports
+     * they are applied to Modules
+     */
+    public void AddImportModifier.apply() throws DeltaModellingException {
+        ModuleDecl module = findModule();
+        module.addImport((Import)getImport().treeCopyNoTransform());
+
+    }
+    public void AddExportModifier.apply() throws DeltaModellingException {
+        ModuleDecl module = findModule();
+        module.addExport((Export)getExport().treeCopyNoTransform());
+    }
+
+    /**************************************************************************
+     * helper method
+     * find the ModuleDecl to which this ModuleModifier applies
+     * if qualified => easy; if unqualified => look in delta's 'uses' list.
+     */
+    public ModuleDecl ModuleModifier.findModule() throws DeltaModellingException {
+        String moduleid;
+        Name name = new Name(getName());
+        if (name.isSimple()) {
+            // assume the module name was specified in a 'uses' statement
+            // For now we only check the first used module - does having multiple 'uses' statements ever make sense?
+            // If not, FIXME change the syntax accordingly.
+            try {
+                moduleid = getDelta().getDeltaAccess(0).getModuleName();
+            } catch(NullPointerException e) {
+                throw new DeltaModellingException(getDelta(),"Unqualified name of modified entity requires "
+                        + "a \'uses\' statement inside the delta, to determine the module to be modified.");
+            }
+        } else {
+            moduleid = name.getModuleName();
+        }
+
+        for (ModuleDecl module : getModel().getModuleDecls()) {
+            if (module.getName().equals(moduleid)) {
+                return module;
+            }
+        }
+        throw new DeltaModellingException(getDelta(),
+                " wants to modify module [" + moduleid + "], which was not found.");
+    }
+
+
+
+    /**************************************************************************
+     * helper methods
+     * find the (Class or Interface) Decl which should be modified by this OOModifier
+     */
+    public ClassDecl ClassModifier.findClass() {
+        //System.out.println("=== Delta " + getDelta().getName() + " looking for ClassDecl: " + this.getName());
+        ModuleDecl module = findModule();
+        for (Decl decl : module.getDecls()) {
+            if (decl instanceof ClassDecl && decl.getName().equals(this.getSimpleName())) {
+                return (ClassDecl) decl;
+            }
+        }
+
+        // not found
+        throw new DeltaModellingException(getDelta(), " wants to modify class [" + this.getSimpleName()
+                + "], which was not found in module [" + module.getName() + "].");
+    }
+
+    public InterfaceDecl InterfaceModifier.findInterface() throws DeltaModellingException {
+        //System.out.println("=== Delta " + getDelta().getName() + " looking for InterfaceDecl: " + this.getName());
+
+        ModuleDecl module = findModule();
+        for (Decl decl : module.getDecls()) {
+            if (decl instanceof InterfaceDecl && decl.getName().equals(this.getSimpleName()))
+                return (InterfaceDecl) decl;
+        }
+        // not found
+        throw new DeltaModellingException(getDelta(),
+                " wants to modify interface [" + this.getSimpleName() + "], which was not found in module [" + module.getName() + "].");
+    }
+
+
+    /**************************************************************************
+     * Modifiers are applied to Classes
+     * - add/remove/modify methods
+     * - add/remove fields
+     */
+    public abstract void Modifier.applyTo(ClassDecl cd) throws DeltaModellingException;
+
+
+
+    public void RemoveFieldModifier.applyTo(ClassDecl cd) throws DeltaModellingException {
+        FieldDecl myfield = getFieldDecl();
+
+        // in given ClassDecl: find FieldDecl that matches this
+        int found = -1;
+        for (int i = 0; i < cd.getNumField(); i++) {
+            FieldDecl field = cd.getField(i);
+            if (field.matches(myfield)) {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0)
+            cd.getFields().removeChild(found);
+        else
+            throw new DeltaModellingWithNodeException(getFieldDecl(), getDelta(),
+                    " wants to remove field [" + myfield + "], which was not found in class [" + cd.getQualifiedName() + "].");
+    }
+
+    public void AddFieldModifier.applyTo(ClassDecl cd) {
+        FieldDecl field = getFieldDecl().treeCopyNoTransform();
+        field.setFileName(getFieldDecl().getFileName());
+        cd.addField(field);
+    }
+
+    /**************************************************************************
+     * MethodSigModifiers are applied to Interfaces
+     * - add/remove method signatures
+     */
+    public abstract void MethodSigModifier.applyTo(InterfaceDecl iface) throws DeltaModellingException;
+
+    public void AddMethodSigModifier.applyTo(InterfaceDecl iface) throws DeltaModellingException {
+        MethodSig sig = getMethodSig().treeCopyNoTransform();
+        sig.setFileName(getMethodSig().getFileName());
+        iface.addBody(sig);
+    }
+    public void RemoveMethodSigModifier.applyTo(InterfaceDecl iface) throws DeltaModellingException {
+        MethodSig mysig = this.getMethodSig();
+
+        // in given InterfaceDecl: find MethodSig that matches mysig
+        int found = -1;
+        for (int i = 0; i < iface.getNumBody(); i++) {
+            MethodSig sig = iface.getBody(i);
+            if (sig.matches(mysig)) {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0)
+            // remove MethodSig
+            iface.getBodys().removeChild(found);
+        else
+            throw new DeltaModellingException(getDelta(),
+                    " wants to remove method signature [" + mysig + "], which was not found in interface [" + iface.getQualifiedName() + "].");
+    }
+
+
+
+
+
+}

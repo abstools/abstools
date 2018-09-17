@@ -1,5 +1,5 @@
 FROM frolvlad/alpine-oraclejdk8:slim
-MAINTAINER Rudi Schlatte <rudi@ifi.uio.no>
+MAINTAINER Rudolf Schlatte <rudi@ifi.uio.no>
 
 # A dockerfile for running the `absc' command-line compiler
 

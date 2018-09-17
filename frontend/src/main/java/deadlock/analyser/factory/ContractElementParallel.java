@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import abs.frontend.ast.ASTNode;
+import org.abs_models.frontend.ast.ASTNode;
 import com.gzoumix.semisolver.term.Term;
 
 public class ContractElementParallel extends ContractElement {

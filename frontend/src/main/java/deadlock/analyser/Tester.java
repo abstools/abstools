@@ -9,12 +9,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import abs.backend.common.InternalBackendException;
-import abs.common.NotImplementedYetException;
-import abs.common.WrongProgramArgumentException;
-import abs.frontend.ast.Model;
-import abs.frontend.delta.DeltaModellingException;
-import abs.frontend.parser.Main;
+import org.abs_models.backend.common.InternalBackendException;
+import org.abs_models.common.NotImplementedYetException;
+import org.abs_models.common.WrongProgramArgumentException;
+import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.delta.DeltaModellingException;
+import org.abs_models.frontend.parser.Main;
 
 public class Tester extends Main {
 

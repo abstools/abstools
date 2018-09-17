@@ -1,0 +1,555 @@
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
+import org.abs_models.frontend.pardef.*;
+
+aspect PartialFunctionExpander {
+
+    public void Model.expandPartialFunctions() {
+        for (ModuleDecl moduleDecl : getModuleDecls()) {
+            moduleDecl.expandPartialFunctions();
+        }
+    }
+
+    public PartialFunctionDecl ModuleDecl.getPartialFunction(String name) {
+        ResolvedName resolved = resolveName(new KindedName(Kind.PARTIAL_FUN, name));
+        return resolved == null ? null : (PartialFunctionDecl) resolved.getDecl();
+    }
+
+    syn int ModuleDecl.getExpansionCount() {
+        int result = 0;
+        for (FunctionDecl decl : getDeclsNoTransform().findChildren(FunctionDecl.class)) {
+            if (AnnotationUtil.getExpansionId(decl) > -1) {
+                ++result;
+            }
+        }
+        return result;
+    }
+
+    public void ModuleDecl.expandPartialFunctions() {
+        // check for cycles
+        for (PartialFunctionDecl function : getDecls().findChildren(PartialFunctionDecl.class, true)) {
+            function.checkCycles(this);
+        }
+
+        expandChildParFnApps(this);
+    }
+
+    /**
+     * Gets a pardef expansion in this module with the specified name.
+     * @return an expansion FunctionDecl, or null
+     */
+    public ExpandedWrapper ModuleDecl.getExpansion(String expansionName) {
+        ResolvedName resolved = resolveName(new KindedName(Kind.FUN, expansionName));
+        if (resolved != null) {
+            FunctionDecl decl = (FunctionDecl) resolved.getDecl();
+            int expansionId = AnnotationUtil.getExpansionId(decl);
+            if (expansionId > -1) {
+                return new ExpandedWrapper(decl, expansionId);
+            }
+        }
+        return null;
+    }
+
+    public boolean ParFnApp.canBeRewritten() {
+        return amInCoreAbs()
+            && closestParent(PartialFunctionDecl.class) == null
+            && closestParent(TraitDecl.class) == null;
+    }
+
+    public void ModuleDecl.expandChildParFnApps(ASTNode<?> node) {
+        for (ParFnApp fnApp : node.findChildren(ParFnApp.class, true)) {
+            if (!fnApp.canBeRewritten()) {
+                /*
+                 1) ignore ParFnApp within PartialFunctionDecl (not expanded yet)
+                 2) ignore ParFnApp within TraitDecl (pardef expansion happens after traits have been applied)
+                 */
+                continue;
+            }
+
+            if (fnApp.closestParent(ModuleDecl.class) == null) {
+                // This should never happen, because we have collected the child ParFnApp nodes lazily.
+                throw new RuntimeException("Encountered a detached ParFnApp node.");
+            }
+
+            fnApp.expand();
+        }
+    }
+
+    /**
+    * Checks for cycles in this PartialFunctionDecl.
+    * @param module the ModuleDecl containing this pardef
+    * @throws PardefCycleException if a cycle is detected
+    */
+    public void PartialFunctionDecl.checkCycles(ModuleDecl module) {
+        checkCycles(module, new HashSet<String>());
+    }
+
+    private void PartialFunctionDecl.checkCycles(ModuleDecl module, Set<String> visited) {
+        if (!visited.add(getName())) {
+            throw new PardefCycleException(this);
+        }
+        for (ParFnApp parFnApp : this.findChildren(ParFnApp.class)) {
+            PartialFunctionDecl called = module.getPartialFunction(parFnApp.getName());
+            if (called == null) {
+                // will be caught somewhere else
+                continue;
+            }
+            try {
+                called.checkCycles(module, new HashSet<>(visited));
+            } catch (PardefCycleException e) {
+                throw e.calledBy(this);
+            }
+        }
+    }
+
+    /**
+    * Checks whether a ParFnApp is a valid call to this function by comparing parameter counts.
+    * @param fnApp a ParFnApp calling this PartialFunctionDecl
+    * @throws PardefModellingException if the call is invalid
+    */
+    public void PartialFunctionDecl.checkValid(ParFnApp fnApp) {
+        if (getNumFuncParam() != fnApp.getNumFuncParam()) {
+            throw new PardefModellingException(
+                fnApp,
+                ErrorMessage.WRONG_NUMBER_OF_FUNC_ARGS,
+                getNumFuncParam(),
+                fnApp.getNumFuncParam()
+            );
+        }
+
+        if (getNumParam() != fnApp.getNumParam()) {
+            throw new PardefModellingException(
+                fnApp,
+                ErrorMessage.WRONG_NUMBER_OF_ARGS,
+                getNumParam(),
+                fnApp.getNumParam()
+            );
+        }
+    }
+
+    protected Map<String, ParFnAppParam> PartialFunctionDecl.getFuncParamBindings(ParFnApp fnApp) {
+        int funcParamCount = getNumFuncParam();
+        Map<String, ParFnAppParam> funcParamBindings = new HashMap<>(funcParamCount * 2);
+        for (int i = 0; i < funcParamCount; ++i) {
+            String paramName = getFuncParam(i).getName();
+            ParFnAppParam binding = fnApp.getFuncParam(i);
+            funcParamBindings.put(paramName, binding);
+        }
+        return funcParamBindings;
+    }
+
+    /**
+    * Creates an expanded version of this partially defined function based on the specified function call.
+    * Afterwards the expansion will be added to the parent module of the specified ParFnApp.
+    *
+    * <p>Any child ParFnApps of this function declaration will be expanded as well.</p>
+    * @param fnApp a call to this function
+    * @param expansionId the ID the created expansion should have
+    * @throws PardefModellingException if the given ParFnApp is not a valid call to this function
+    */
+    public FunctionDecl PartialFunctionDecl.expand(ParFnApp fnApp, int expansionId) {
+        checkValid(fnApp);
+        FunctionDecl expanded = new FunctionDecl();
+        String expandedName = expandedName(fnApp, expansionId);
+        expanded.setName(expandedName);
+        expanded.setAnnotationList(getAnnotationsNoTransform().treeCopyNoTransform());
+        expanded.setTypeUse(getTypeUseNoTransform().treeCopyNoTransform());
+        expanded.setParamList(getParamsNoTransform().treeCopyNoTransform());
+        AnnotationUtil.annotateExpansion(expanded, expansionId);
+        ModuleDecl module = fnApp.getModuleDecl();
+        module.addDecl(expanded);
+        module.flushAttrCache();
+
+        for (ASTNode<?> child : getPartialFunctionDefNoTransform().findChildren(ASTNode.class)) {
+            // all children should derive their position string from the FunctionDecl
+            child.isPositionSet = false;
+            child.setFileName(null);
+        }
+        // users should see their own code in the error message, not the generated code
+        expanded.setPositionFromNode(fnApp);
+
+        Map<String, ParFnAppParam> funcParamBindings = getFuncParamBindings(fnApp);
+
+        // enable recursion by replacing partial function name with expanded name
+        NamedParFnAppParam recursiveBinding = new NamedParFnAppParam(expanded.getName());
+        recursiveBinding.setPositionFromNode(expanded);
+        funcParamBindings.put(getName(), recursiveBinding);
+        expanded.setFunctionDef(getPartialFunctionDef().apply(funcParamBindings));
+
+        // must happen after recursive calls have been renamed to the expanded name
+        for (ParFnAppParam funcParam : fnApp.getFuncParams()) {
+            if (funcParam instanceof AnonymousFunctionDecl) {
+                AnonymousFunctionDecl anon = (AnonymousFunctionDecl) funcParam;
+                anon.addClosureParams(expanded);
+            }
+        }
+
+        for (ParFnApp childParFnApp : expanded.getFunctionDef().findChildren(ParFnApp.class, true)) {
+            childParFnApp.expand();
+        }
+
+        return expanded;
+    }
+
+    private void ParametricPartialFunctionDecl.applyBindings(Map<String, Type> bindings, ASTNode<?> node) {
+        for (TypeUse typeUse : node.findChildren(TypeUse.class, true)) {
+            Type type = typeUse.getType();
+            if (type.isTypeParameter()) {
+                Type binding = bindings.get(typeUse.getName());
+                if (binding != null) {
+                    TypeUse replacement = binding.toUse();
+                    typeUse.replaceWith(replacement);
+                    // type parameter can't have child type parameters
+                    continue;
+                }
+            } else if (type.isDataType() && typeUse instanceof ParametricDataTypeUse) {
+                ParametricDataTypeUse dataTypeUse = (ParametricDataTypeUse) typeUse;
+                for (TypeUse typeArg : dataTypeUse.getParams()) {
+                    applyBindings(bindings, typeArg);
+                }
+            }
+        }
+    }
+
+    @Override
+    public FunctionDecl ParametricPartialFunctionDecl.expand(ParFnApp fnApp, int expansionId) {
+        FunctionDecl superDecl = super.expand(fnApp, expansionId);
+        if (!(superDecl.getFunctionDefNoTransform() instanceof ExpFunctionDef)) {
+            // this could only happen if the AST and the ANTLR grammar are modified. There are no builtin pardefs.
+            throw new RuntimeException("Unsupported function definition");
+        }
+
+        ModuleDecl module = fnApp.getModuleDecl();
+        ParametricFunctionDecl decl = new ParametricFunctionDecl();
+        decl.getTypeParametersNoTransform().addAll(ListUtils.toJavaList(getTypeParameters().treeCopy()));
+        decl.setName(superDecl.getName());
+        decl.setAnnotationList(superDecl.getAnnotations().treeCopy());
+        decl.setTypeUse(superDecl.getTypeUse().treeCopy());
+        decl.setParamList(superDecl.getParams().treeCopy());
+        decl.setFunctionDef(superDecl.getFunctionDef().treeCopy());
+        decl.setPositionFromNode(superDecl);
+        superDecl.replaceWith(decl);
+        module.flushAttrCache();
+
+        ExpFunctionDef body = (ExpFunctionDef) decl.getFunctionDefNoTransform();
+
+        Map<String, ParFnAppParam> funcParams = getFuncParamBindings(fnApp);
+        Map<String, Type> typeBindings = new HashMap<>(getNumTypeParameter() * 2);
+
+        for (int typeParamIndex = 0; typeParamIndex < getNumTypeParameter(); ++typeParamIndex) {
+            Type paramType = getTypeParameter(typeParamIndex).getType();
+            String paramName = getTypeParameter(typeParamIndex).getName();
+            typeBindings.put(paramName, paramType);
+
+            // apply return type binding
+            resolveType(typeBindings, paramName, body.getRhsNoTransform().getType(), decl.getTypeUse().getType());
+
+            // look for usage as parameter of function param
+            for (FnApp childFnApp : getPartialFunctionDef().findChildren(FnApp.class)) {
+                HasParams expectingParams = funcParams.get(childFnApp.getName());
+                if (expectingParams != null) {
+                    resolveParams(typeBindings, paramName, childFnApp, expectingParams);
+                }
+            }
+
+            // look for usage as parameter of expanded ParFnApp
+            for (FnApp childFnApp : decl.getFunctionDef().findChildren(FnApp.class)) {
+                Decl functionDecl =  childFnApp.getDecl();
+
+                if (functionDecl.equals(decl)) {
+                    /*
+                     * for recursive calls, we're interested in it being used in a let expression,
+                     * because that's essentially a usage of the return type as a function parameter.
+                     */
+                    if (childFnApp.getParent() instanceof LetExp) {
+                        LetExp let = (LetExp) childFnApp.getParent();
+                        resolveType(typeBindings, paramName, let.getVarNoTransform().getType(), childFnApp.getType());
+                    }
+                    continue;
+                }
+
+                if (functionDecl.isUnknown()
+                    // only interested in expansion calls
+                    || AnnotationUtil.getExpansionId((FunctionDecl) functionDecl) == -1) {
+                    continue;
+                }
+                resolveParams(typeBindings, paramName, childFnApp, (FunctionDecl) functionDecl);
+            }
+        }
+
+        // apply type bindings to return type
+        applyBindings(typeBindings, decl.getTypeUseNoTransform());
+
+        // apply type bindings to parameters
+        for (ParamDecl param : decl.getParams()) {
+            applyBindings(typeBindings, param.getAccessNoTransform());
+        }
+
+        // apply type bindings to body
+        applyBindings(typeBindings, body.getRhsNoTransform());
+
+        // remove resolved type parameters
+        removeResolvedTypeParams(typeBindings, decl.getTypeParameters());
+
+        // we need to find VarOrField declarations that have a changed type now and flush their cache
+        for (TypedVarOrFieldDecl varDecl : decl.findChildren(TypedVarOrFieldDecl.class)) {
+            varDecl.getAccess().flushCache();
+        }
+
+        if (decl.getNumTypeParameter() == 0) {
+            FunctionDecl replacement = new FunctionDecl(
+                decl.getName(),
+                decl.getAnnotations().treeCopy(),
+                decl.getTypeUse().treeCopy(),
+                decl.getParams().treeCopy(),
+                decl.getFunctionDef().treeCopy()
+            );
+            replacement.setPositionFromNode(decl);
+            decl.replaceWith(replacement);
+            module.flushAttrCache();
+            return replacement;
+        }
+
+        return decl;
+    }
+
+    /**
+     * Removes resolved type parameters from the type parameter list of a function.
+     *
+     * <p>
+     * If the replacement also contains type parameters, they will be added to the list instead.
+     * </p>
+     *
+     * @param typeBindings the map of replacement types for type parameter names
+     * @param typeParams the list of type parameters of a function declaration
+     */
+    private void ParametricPartialFunctionDecl.removeResolvedTypeParams(Map<String, Type> typeBindings, List<TypeParameterDecl> typeParams) {
+        // We'll collect all remaining (or new) type parameters here
+        Set<String> newTypeParams = new LinkedHashSet<>(typeParams.getNumChild());
+        typeParams.forEach(it -> newTypeParams.add(it.getName()));
+
+        for (TypeParameterDecl typeParamDecl : typeParams) {
+            Type binding = typeBindings.get(typeParamDecl.getName());
+            if (binding != null && !binding.isUnknownType()) {
+                if (!binding.isTypeParameter()) {
+                    newTypeParams.remove(typeParamDecl.getName());
+                }
+
+                // If the bound type is something like List<T>, we have to add T for this method as well.
+                newTypeParams.addAll(collectTypeParameters(binding, new HashSet<>()));
+            }
+        }
+
+        while (typeParams.getNumChild() != 0) {
+            // List doesn't have a clear() method, so we have to clear the children this way.
+            typeParams.removeChild(0);
+        }
+
+        newTypeParams.stream().map(TypeParameterDecl::new).forEach(typeParams::addChild);
+    }
+
+    /**
+     * Collects all (nested) type parameters in DataTypeTypes.
+     *
+     * @param type a type
+     * @param result a set to collect the result in
+     * @return the result set
+     */
+    private Set<String> ParametricPartialFunctionDecl.collectTypeParameters(Type type, Set<String> result) {
+        if (type.isTypeParameter()) {
+            result.add(type.getSimpleName());
+        } else if (type.isDataType()) {
+            DataTypeType dataType = (DataTypeType) type;
+            for (Type child : dataType.getTypeArgs()) {
+                collectTypeParameters(child, result);
+            }
+        }
+        return result;
+    }
+
+    private void ParametricPartialFunctionDecl.resolveParams(Map<String, Type> typeBindings, String paramName,
+        FnApp childFnApp, HasParams expectingParams) {
+        for (int childParamIndex = 0; childParamIndex < childFnApp.getNumParam(); ++childParamIndex) {
+            if (childParamIndex >= expectingParams.getTypes().size()) {
+                // the type checker should handle this
+                return;
+            }
+            Type actualType = childFnApp.getParam(childParamIndex).getType();
+            Type expectedType = expectingParams.getTypes().get(childParamIndex);
+            if (!expectedType.isTypeParameter()) {
+                resolveType(typeBindings, paramName, expectedType, actualType);
+            }
+        }
+    }
+
+    private void ParametricPartialFunctionDecl.resolveType(Map<String, Type> bindings, String paramName,
+        Type expected, Type actual) {
+        if (expected.equals(actual)) {
+            return;
+        }
+        if (actual.isTypeParameter() && actual.getSimpleName().equals(paramName)) {
+            Type binding = bindings.get(paramName);
+            if (binding != null) {
+                // check if new type is subtype of binding
+                if (!binding.isTypeParameter() && !expected.isAssignableTo(binding)) {
+                    throw new PardefModellingException(
+                        this,
+                        ErrorMessage.TYPE_PARAM_NOT_RESOLVABLE,
+                        paramName,
+                        binding.getQualifiedName(),
+                        expected.getQualifiedName()
+                    );
+                }
+            }
+            bindings.put(paramName, expected);
+        } else if (!actual.isTypeParameter() && actual.isDataType()
+            && !expected.isTypeParameter() && expected.isDataType()) {
+            // look for child type parameters (for example: List<A>)
+            DataTypeType actualData = (DataTypeType) actual;
+            DataTypeType expectedData = (DataTypeType) expected;
+            for (int parameterIndex = 0;
+                parameterIndex < actualData.numTypeArgs() && parameterIndex < expectedData.numTypeArgs();
+                ++parameterIndex) {
+                Type actualArg = actualData.getTypeArg(parameterIndex);
+                Type expectedArg = expectedData.getTypeArg(parameterIndex);
+                resolveType(bindings, paramName, expectedArg, actualArg);
+            }
+        }
+    }
+
+    /**
+    * Sanitizes the given identifier name by replacing illegal characters.
+    * For example "m_StdLib.Int test" becomes "m_StdLib_Int_test".
+    *
+    * @param identifier the identifier name to sanitize
+    * @return a string without illegal characters
+    */
+    protected String PartialFunctionDecl.sanitizeIdentifierName(String identifier) {
+        // In theory, catching "." would suffice, but you never know...
+        return identifier.replaceAll("[^a-zA-Z\\d_]", "_");
+    }
+
+    /**
+     * Returns the name for the expanded version of this function based on the specified function call.<br>
+     *
+     * @return functionName_ModuleName_funcParam1_funcParam2[...]
+     */
+    public String PartialFunctionDecl.expandedName(ParFnApp fnApp, int nextExpansionId) {
+        StringBuilder builder = new StringBuilder()
+            .append(getName())
+            .append('_').append(getModuleDecl().getName());
+
+        boolean foundAnon = false;
+
+        for (ParFnAppParam funcParam : fnApp.getFuncParamsNoTransform()) {
+            if (funcParam instanceof NamedParFnAppParam) {
+                NamedParFnAppParam namedParam = (NamedParFnAppParam) funcParam;
+                builder.append('_').append(namedParam.getName());
+            } else if (funcParam instanceof AnonymousFunctionDecl) {
+                foundAnon = true;
+            }
+        }
+
+        // every call with at least one anonymous function parameter should generate a new expansion
+        if (foundAnon) builder.append("_Anon").append(nextExpansionId);
+        builder.append("__");
+
+        return sanitizeIdentifierName(builder.toString());
+    }
+
+    /**
+    * <p>Gets a FunctionDef instance based on this PartialFunctionDef.</p>
+    *
+    * In the resulting FunctionDef, all function calls to functions contained in the specified map are replaced by
+    * calls to the respective value in the map.
+    *
+    * @return a FunctionDef
+    */
+    public FunctionDef PartialFunctionDef.apply(Map<String, ParFnAppParam> bindingByName) {
+        PureExp expression = getPureExp().treeCopy();
+        // Wrap the expression BEFORE applying the bindings so it has a parent
+        FunctionDef result = new ExpFunctionDef(expression);
+        result.setPositionFromNode(this);
+
+        applyBindings(expression, bindingByName);
+
+        return result;
+    }
+
+    private void PartialFunctionDef.applyBindings(PureExp expression, Map<String, ParFnAppParam> bindingByName) {
+        for (FnApp innerCall : expression.findChildren(FnApp.class)) {
+            ParFnAppParam binding = bindingByName.get(innerCall.getName());
+            if (binding != null) {
+                PureExp replacement = binding.getExpression(innerCall);
+                innerCall.replaceWith(replacement);
+                applyBindings(replacement, bindingByName);
+            }
+        }
+
+        for (ParFnApp innerCall : expression.findChildren(ParFnApp.class)) {
+            for (ParFnAppParam funcParam : innerCall.getFuncParamsNoTransform()) {
+                if (funcParam instanceof NamedParFnAppParam) {
+                    NamedParFnAppParam namedFuncParam = (NamedParFnAppParam) funcParam;
+                    ParFnAppParam binding = bindingByName.get(namedFuncParam.getName());
+                    if (binding != null) {
+                        namedFuncParam.replaceWith(binding.treeCopyNoTransform());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Converts this ParFnApp to its expanded form.
+     * If the corresponding pardef expansion does not exist, it will also be created.
+     */
+    public void ParFnApp.expand() {
+        ModuleDecl module = getModuleDecl();
+        PartialFunctionDecl function = module.getPartialFunction(getName());
+        if (function == null) {
+            throw new PardefModellingException(this, ErrorMessage.FUNCTION_NOT_RESOLVABLE, getName());
+        }
+
+        int expansionId = module.getExpansionCount();
+        String expandedName = function.expandedName(this, expansionId);
+        ExpandedWrapper expandedWrapper;
+        // we can look up already expanded functions this way because the current ID will not be
+        // in the name of reusable expansions (see FunctionDecl.expandedName())
+        expandedWrapper = module.getExpansion(expandedName);
+
+        if (expandedWrapper == null) {
+            expandedWrapper = new ExpandedWrapper(function.expand(this, expansionId), expansionId);
+        } else {
+            function.checkValid(this);
+        }
+
+        FnApp expandedFunctionCall = apply(expandedWrapper.getExpanded());
+        this.replaceWith(expandedFunctionCall);
+        AnnotationUtil.annotateCall(expandedFunctionCall, expansionId);
+
+        module.expandChildParFnApps(expandedFunctionCall);
+    }
+
+    /**
+     * <p>Creates a function call to the specified expanded pardef with a copy of the this pardef call's params.</p>
+     *
+     * @return a FnApp
+     */
+    public FnApp ParFnApp.apply(FunctionDecl function) {
+        for (ParFnAppParam fnParam : getFuncParamsNoTransform()) {
+            if (fnParam instanceof AnonymousFunctionDecl) {
+                AnonymousFunctionDecl anon = (AnonymousFunctionDecl) fnParam;
+                anon.addClosureParams(this);
+            }
+        }
+
+        List<PureExp> params = getParamList();
+        return new FnApp(function.getName(), params.treeCopyNoTransform());
+    }
+}
+
+// Local Variables:
+// mode: java
+// End:

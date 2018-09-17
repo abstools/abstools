@@ -1,0 +1,27 @@
+<FindBugsFilter>
+  <Match>
+    <Package name="abs.frontend.ast" />
+    <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+  </Match>
+  <Match>
+    <Package name="abs.frontend.ast" />
+    <Bug pattern="NM_FIELD_NAMING_CONVENTION" />
+  </Match>
+  <Match>
+    <Package name="abs.frontend.ast" />
+    <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD" />
+  </Match>
+  <Match>
+    <Package name="abs.frontend.ast" />
+    <Bug pattern="MF_CLASS_MASKS_FIELD" />
+  </Match>
+  <Match>
+     <Class name="NewExp" />
+     <Method name="generateJavaDynamic" />
+     <Bug pattern="DB_DUPLICATE_BRANCHES" />
+  </Match>
+  <Match>
+    <Class name="OtherAnalysisTests" />
+    <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" />
+  </Match>  
+</FindBugsFilter>

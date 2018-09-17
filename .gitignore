@@ -3,6 +3,7 @@
 /.recommenders
 .rebar/
 /frontend/.gradle
+/frontend/out
 bin/
 build/
 /**/gen/
@@ -35,4 +36,3 @@ eclipsehome.properties
 **/*.iml
 **/*.eml
 **/.idea/
-

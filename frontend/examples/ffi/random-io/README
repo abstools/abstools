@@ -4,6 +4,6 @@ It uses java.util.Random to generate a random number and prints it to standard o
 Use "make gen" to generate code and "make run" to run it and see the output.
 
 The Makefile assumes that it can find Tools/ABS/trunk/frontend/dist/absfrontend.jar.
-You might need to build it first ("ant dist").
+You might need to build it first ("make frontend" in the project directory).
 
 Note that at some point in the future "fli" will be replaced with "ffi".

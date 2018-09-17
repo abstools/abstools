@@ -20,12 +20,10 @@
 
 package deadlock.analyser.generation;
 
-import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.ErrorMessage;
-import com.gzoumix.semisolver.constraint.Information;
+import org.abs_models.frontend.analyser.SemanticError;
+import org.abs_models.frontend.analyser.ErrorMessage;
 
-
-public class ErrorEdge extends SemanticError { 
+public class ErrorEdge extends SemanticError {
 
   public ErrorEdge(ASTNodeInformation info) {
     super(info.getNode(), ErrorMessage.DEADLOCK_GENERATION_ERROR, info.getEdge().toString()); }

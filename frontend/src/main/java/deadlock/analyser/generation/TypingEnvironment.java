@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
 
-import abs.frontend.ast.ASTNode;
+import org.abs_models.frontend.ast.ASTNode;
 import deadlock.analyser.factory.DataTypeInterface;
 import deadlock.analyser.factory.Contract;
 import deadlock.analyser.factory.ContractElementParallel;
