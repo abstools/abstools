@@ -11,7 +11,7 @@ plugins {
 
     id 'org.jastadd' version '1.13.1'
     id 'antlr'
-    id 'findbugs'
+    id "com.github.spotbugs" version "1.6.3"
 }
 
 application {
@@ -154,14 +154,14 @@ test {
     maxParallelForks=project.gradle.startParameter.maxWorkerCount
 }
 
-findbugs {
+spotbugs {
     // https://docs.gradle.org/current/dsl/org.gradle.api.plugins.quality.FindBugsExtension.html
     ignoreFailures = true
     showProgress = true
     excludeFilter = file('config/findbugs/findbugs-jastadd-filter.xml')
 }
 
-tasks.withType(FindBugs) {
+tasks.withType(com.github.spotbugs.SpotBugsTask) {
     reports {
         // can only have one report type :(
         xml.enabled = false
