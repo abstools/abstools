@@ -89,7 +89,7 @@ sudo wget -nv https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
 sudo dpkg -i erlang-solutions_1.0_all.deb && sudo rm erlang-solutions_1.0_all.deb
 sudo apt-get update -y -q       # otherwise we'll install old erlangs from ubuntu main
 sudo apt-get -y -q install software-properties-common htop
-sudo apt-get -y -q install default-jre default-jdk ant antlr junit git unzip erlang
+sudo apt-get -y -q install default-jre default-jdk git unzip erlang
 
 echo
 echo "### Installing tools for simulating ABS programs"
@@ -99,7 +99,7 @@ sudo apt-get install -y -q emacs maude graphviz
 echo
 echo "### Compiling the ABS compiler"
 echo
-(cd /vagrant/frontend ; ant dist)
+(cd /vagrant/frontend ; ./gradlew assemble)
 
 echo
 echo "### Moving ABS compiler into /usr/local/lib/absc"

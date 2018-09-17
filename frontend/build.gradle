@@ -40,7 +40,7 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
 
-    compileOnly files('lib/jsr305.jar')
+    compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.easymock:easymock:3.0'
@@ -158,7 +158,7 @@ findbugs {
     // https://docs.gradle.org/current/dsl/org.gradle.api.plugins.quality.FindBugsExtension.html
     ignoreFailures = true
     showProgress = true
-    excludeFilter = file('findbugs-jastadd-filter.xml')
+    excludeFilter = file('config/findbugs/findbugs-jastadd-filter.xml')
 }
 
 tasks.withType(FindBugs) {
