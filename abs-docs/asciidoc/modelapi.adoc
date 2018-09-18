@@ -9,6 +9,9 @@ they are returned from such methods.
 
 The model API is supported by the Erlang backend.
 
+NOTE: The Model API accepts connections only from local (loopback) addresses,
+i.e., from the same machine.
+
 NOTE: All queries in this section can be prepended with a `/v2/` prefix, i.e.,
 `http://localhost:8080/v2/call` instead of `http://localhost:8080/call`.  In
 case incompatible changes have to be introduced to the Model API in the
