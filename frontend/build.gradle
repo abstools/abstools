@@ -95,7 +95,7 @@ task compileErlangBackend(type: Exec) {
     workingDir 'src/main/resources/erlang/absmodel'
     commandLine 'escript', '../bin/rebar', 'compile'
 }
-jar.dependsOn 'compileErlangBackend'
+processResources.dependsOn 'compileErlangBackend'
 clean {
     delete fileTree('src/main/resources/erlang/absmodel/').include('**/*.beam')
 }
