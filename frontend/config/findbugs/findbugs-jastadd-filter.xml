@@ -1,8 +1,15 @@
 <FindBugsFilter>
   <Match>
+    <!-- We use System.exit to communicate success / failure to the shell -->
+    <Bug pattern="DM_EXIT" />
+  </Match>
+  <Match>
+    <!-- generated code; uses strings as tokens coming from the parser -->
     <Package name="org.abs_models.frontend.ast" />
+    <Method name="is$Equal" />
     <Bug pattern="ES_COMPARING_STRINGS_WITH_EQ" />
   </Match>
+  <!-- unaudited filters below this line -->
   <Match>
     <Package name="org.abs_models.frontend.ast" />
     <Bug pattern="DLS_DEAD_LOCAL_STORE" />
@@ -18,14 +25,5 @@
   <Match>
     <Package name="org.abs_models.frontend.ast" />
     <Bug pattern="MF_CLASS_MASKS_FIELD" />
-  </Match>
-  <Match>
-     <Class name="NewExp" />
-     <Method name="generateJavaDynamic" />
-     <Bug pattern="DB_DUPLICATE_BRANCHES" />
-  </Match>
-  <Match>
-    <Class name="OtherAnalysisTests" />
-    <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" />
   </Match>
 </FindBugsFilter>
