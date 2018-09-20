@@ -42,6 +42,11 @@ dependencies {
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
+    // Executes JUnit Jupiter (~JUnit 5) tests
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.3.1")
+    // Executes JUnit4 tests
+    testRuntime("org.junit.vintage:junit-vintage-engine:5.3.1")
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.easymock:easymock:3.0'
     testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
@@ -149,7 +154,7 @@ assemble.dependsOn copyScripts
 // test
 test {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.testing.Test.html
-    useJUnit()
+    useJUnitPlatform()
     ignoreFailures=true
     maxParallelForks=project.gradle.startParameter.maxWorkerCount
 }
