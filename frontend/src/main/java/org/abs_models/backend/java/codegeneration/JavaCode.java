@@ -139,8 +139,12 @@ public class JavaCode {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                reader.close();
             }
         } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

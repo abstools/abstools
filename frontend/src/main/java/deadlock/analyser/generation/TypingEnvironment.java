@@ -99,7 +99,7 @@ public class TypingEnvironment {
       res = map.get(name);
       if(res != null) return res;
     }
-    if((res == null) && (name != "this")) {
+    if((res == null) && (!(name.equals("this")))) {
       RecordPresent t = (RecordPresent)(getVariable("this"));
       assert t != null : name;
       res = t.getField(name); // possible nullPointerException

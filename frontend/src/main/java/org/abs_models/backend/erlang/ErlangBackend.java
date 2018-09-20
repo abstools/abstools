@@ -158,6 +158,7 @@ public class ErlangBackend extends Main {
         versionCheck.waitFor();
         BufferedReader ir = new BufferedReader(new InputStreamReader(versionCheck.getInputStream()));
         int version = Integer.parseInt(ir.readLine());
+        ir.close();
         return version;
     }
 
