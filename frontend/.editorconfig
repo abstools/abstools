@@ -9,21 +9,25 @@ indent_size=4
 indent_style=space
 indent_size=2
 
+[*.xml]
+indent_style=space
+indent_size=2
+
 [*.java]
 indent_style=space
 indent_size=4
 
 [*.erl]
 indent_style=space
-indent_size=2
+indent_size=4
 
 [*.hrl]
 indent_style=space
-indent_size=2
+indent_size=4
 
 [{*.app.src,*.app}]
 indent_style=space
-indent_size=2
+indent_size=4
 
 [{*.routes,*.rel,*.config}]
 indent_style=space
