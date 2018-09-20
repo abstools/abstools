@@ -39,6 +39,7 @@ public abstract class AbstractDebugger implements Debugger {
                         break;
                     lines.add(line);
                 }
+                reader.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {

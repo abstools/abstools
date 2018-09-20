@@ -387,9 +387,9 @@ class SchedulerChoosePnl extends JPanel implements ItemListener {
 
     @Override
     public void itemStateChanged(ItemEvent e) {
-        if (e.getItem() == RANDOM) {
+        if (e.getItem().equals(RANDOM)) {
             schedulerGUI.setRandomScheduler();
-        } else if (e.getItem() == REPLAY) {
+        } else if (e.getItem().equals(REPLAY)) {
             schedulerGUI.setReplayScheduler();
         } else {
             schedulerGUI.setInteractiveScheduler();
