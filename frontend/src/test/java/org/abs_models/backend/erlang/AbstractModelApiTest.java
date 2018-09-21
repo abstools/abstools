@@ -68,6 +68,9 @@ public abstract class AbstractModelApiTest extends ABSTest {
         serverProcess = pb.start();
 
         extractPortNoFromProcess(serverProcess);
+        // give the server time to get started; this hopefully eliminates
+        // spurious test failures
+        Thread.sleep(1000);
     }
 
     private static void extractPortNoFromProcess(Process process) throws IOException {
