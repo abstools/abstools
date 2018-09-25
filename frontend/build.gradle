@@ -29,9 +29,8 @@ targetCompatibility = '1.8'
 
 dependencies {
     // https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
-    implementation 'commons-io:commons-io:2.5'
-    implementation 'com.google.guava:guava:20.0'
-    implementation "org.antlr:antlr4:4.6"
+    implementation 'commons-io:commons-io:2.6'
+    implementation 'com.google.guava:guava:26.0-jre'
     implementation files('lib/choco-solver-2.1.1.jar')
     implementation 'org.eclipse.jdt.core.compiler:ecj:4.6.1'
     implementation 'org.apfloat:apfloat:1.8.3'
@@ -53,7 +52,7 @@ dependencies {
     testImplementation 'org.hamcrest:hamcrest-core:1.3'
 
     jastadd2 'org.jastadd:jastadd:2.3.2'
-    antlr 'org.antlr:antlr4:4.6'
+    antlr 'org.antlr:antlr4:4.7.1'
 }
 
 repositories {
