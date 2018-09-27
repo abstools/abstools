@@ -200,7 +200,7 @@ aspect Typing {
     }
 
     eq AsExp.getType() {
-        return getModel().getMaybeType(getInterfaceTypeUse().getDecl().getType());
+        return getInterfaceTypeUse().getDecl().getType();
     }
 
     protected List<Annotation> TypeUse.calcAnnotations() {

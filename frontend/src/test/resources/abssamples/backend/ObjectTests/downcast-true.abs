@@ -10,5 +10,5 @@ class C implements I2 {}
     Bool testresult = True;
     I o = new C();
     testresult = testresult && (o is I2);
-    testresult = testresult && isJust(o as I2);
+    testresult = testresult && (o as I2) != null;
 }
