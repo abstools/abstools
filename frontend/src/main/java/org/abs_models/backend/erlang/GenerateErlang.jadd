@@ -371,11 +371,11 @@ aspect GenerateErlang {
   @Override
   public void AsExp.generateErlangCode(CodeStream ecs, Vars vars) {
       String temp = vars.getTemp();
-      ecs.print("begin " + temp + " = ");
+      ecs.print("case object:has_interface(" + temp + " = ");
       getExp().generateErlangCode(ecs, vars);
-      ecs.print(", case object:has_interface(" + temp + ", <<\""
+      ecs.print(", <<\""
                 + getInterfaceTypeUse().getName()
-                + "\">>) of true -> {dataJust, " + temp + "} ; false -> dataNothing end end");
+                + "\">>) of true -> " + temp + " ; false -> null end");
   }
 
 

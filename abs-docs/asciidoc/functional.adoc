@@ -444,11 +444,11 @@ class C implements I, J {}
 [[typecast-expression]]
 ==== The Type-Cast Expression
 
-Variables pointing to objects are typed by interface, which means that the
-concrete class of the referenced object might support more methods than can be
-called through the reference.  The type-cast expression returns an
-<<type-optionals,Optional>> of type `Maybe<I>` that wraps the object if it
-implements the given interface `I`, or `Nothing` otherwise.
+Variables pointing to objects are typed by interface, which means that
+the concrete class of the referenced object might support more methods
+than can be called through the reference.  The type-cast expression
+returns a reference of type `I` to the same object if it implements
+the given interface `I`, or `null` otherwise.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
@@ -462,9 +462,12 @@ implements the given interface `I`, or `Nothing` otherwise.
 interface I {}
 interface J {}
 class C implements I, J {}
+class D implements I {}
 {
   I o = new C();
-  Maybe<J> mj = o as J;  // fromJust(mj) is of type J
+  J j = o as J;  // j is an alias of o, with type J
+  I o2 = new D();
+  J j2 = o2 as J; // j2 is null
 }
 ----
 
