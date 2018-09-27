@@ -360,7 +360,7 @@ aspect GenerateErlang {
   }
 
   @Override
-  public void IsExp.generateErlangCode(CodeStream ecs, Vars vars) {
+  public void ImplementsExp.generateErlangCode(CodeStream ecs, Vars vars) {
       ecs.print("object:has_interface((");
       getExp().generateErlangCode(ecs, vars);
       ecs.print("), <<\"");

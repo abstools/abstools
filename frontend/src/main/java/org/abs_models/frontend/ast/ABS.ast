@@ -228,7 +228,7 @@ LetExp : PureExp ::= Var:ParamDecl Val:PureExp Exp:PureExp ;
 FnApp : PureExp ::= <Name> Param:PureExp* ;
 
 // Object run-type type checking and casting
-IsExp : PureExp ::= Exp:PureExp InterfaceTypeUse ;
+ImplementsExp : PureExp ::= Exp:PureExp InterfaceTypeUse ;
 AsExp : PureExp ::= Exp:PureExp InterfaceTypeUse ;
 
 abstract ParFnAppParam ;

@@ -296,10 +296,10 @@ aspect GenerateMaude {
         return result;
     }
 
-    public void IsExp.generateMaude(PrintStream stream) {
+    public void ImplementsExp.generateMaude(PrintStream stream) {
         throw new NotImplementedYetException(this); // TODO
     }
-    public int IsExp.numberOfRandom(Set<String> visitedFunctions) {
+    public int ImplementsExp.numberOfRandom(Set<String> visitedFunctions) {
         return getExp().numberOfRandom(visitedFunctions);
     }
 

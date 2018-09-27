@@ -757,7 +757,7 @@ aspect GenerateJava {
         }
     }
 
-    public void IsExp.generateJava(PrintStream stream) {
+    public void ImplementsExp.generateJava(PrintStream stream) {
         throw new NotImplementedYetException(this);
     }
     public void AsExp.generateJava(PrintStream stream) {

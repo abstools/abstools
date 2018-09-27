@@ -864,7 +864,7 @@ aspect TypeChecker {
         }
     }
 
-    public void IsExp.typeCheck(SemanticConditionList e) {
+    public void ImplementsExp.typeCheck(SemanticConditionList e) {
         getInterfaceTypeUse().typeCheck(e);
         // TODO: check that getExp() is a reference type
         getExp().typeCheck(e);

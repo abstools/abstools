@@ -706,8 +706,8 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setASTNodePosition(ctx.IDENTIFIER().getSymbol(), pd);
         setV(ctx, new LetExp(pd, v(ctx.e), v(ctx.b)));
     }
-    @Override public void exitIsExp(ABSParser.IsExpContext ctx) {
-        setV(ctx, new IsExp(v(ctx.e), v(ctx.i)));
+    @Override public void exitImplementsExp(ABSParser.ImplementsExpContext ctx) {
+        setV(ctx, new ImplementsExp(v(ctx.e), v(ctx.i)));
     }
     @Override public void exitAsExp(ABSParser.AsExpContext ctx) {
         setV(ctx, new AsExp(v(ctx.e), v(ctx.i)));

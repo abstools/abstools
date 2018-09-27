@@ -423,7 +423,7 @@ implements the given interface.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _TypeCheckExp_ ::= | _PureExp_ `is` _TypeIdentifier_
+| _TypeCheckExp_ ::= | _PureExp_ `implements` _TypeIdentifier_
 |====
 
 [source]
@@ -434,7 +434,9 @@ interface J {}
 class C implements I, J {}
 {
   I o = new C();
-  o is J;  // evaluates to True
+  if (o implements J) {  // evaluates to True
+    println("o is a J");
+  }
 }
 ----
 

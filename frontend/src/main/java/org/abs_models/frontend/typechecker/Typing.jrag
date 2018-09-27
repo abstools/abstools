@@ -195,7 +195,7 @@ aspect Typing {
         return d.getType();
     }
 
-    eq IsExp.getType() {
+    eq ImplementsExp.getType() {
         return getModel().getBoolType();
     }
 
