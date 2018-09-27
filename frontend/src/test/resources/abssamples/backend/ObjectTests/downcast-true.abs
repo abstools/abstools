@@ -9,6 +9,6 @@ class C implements I2 {}
 {
     Bool testresult = True;
     I o = new C();
-    testresult = testresult && (o is I2);
+    testresult = testresult && (o implements I2);
     testresult = testresult && (o as I2) != null;
 }
