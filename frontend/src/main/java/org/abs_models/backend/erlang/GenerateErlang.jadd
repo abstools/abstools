@@ -136,7 +136,7 @@ aspect GenerateErlang {
     else {
       ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
     }
-    ErlUtil.argumentList(ecs,null, builtin, isFnAppContextImperative(), getParams(), vars);
+    ErlUtil.argumentList(ecs,null, builtin, isFnAppContextImperative(), getParams(), vars, false);
   }
 
   @Override
@@ -452,7 +452,7 @@ aspect GenerateErlang {
     ecs.incIndent();
     ecs.println("Vars=get(vars),");
     ecs.format("Result=T:'m_%s'", getMethod());
-    ErlUtil.argumentList(ecs,getCallee(),false,true,params,vars);
+    ErlUtil.argumentList(ecs,getCallee(),false,true,params,vars, true);
     ecs.println(",");
     ecs.println("put(vars, Vars),");
     ecs.println("Result;");

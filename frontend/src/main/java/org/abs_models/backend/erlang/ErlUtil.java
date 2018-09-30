@@ -144,7 +144,7 @@ public class ErlUtil {
         }
     }
 
-    public static void argumentList(CodeStream ecs, PureExp callee, boolean builtin, boolean imperativeContext, org.abs_models.frontend.ast.List<PureExp> params, Vars vars) {
+    public static void argumentList(CodeStream ecs, PureExp callee, boolean builtin, boolean imperativeContext, org.abs_models.frontend.ast.List<PureExp> params, Vars vars, boolean includeLocalVarsInStack) {
         ecs.print("(");
         if (callee != null) {
             callee.generateErlangCode(ecs, vars);
@@ -165,7 +165,7 @@ public class ErlUtil {
             ecs.print(',');
 
             if (imperativeContext) {
-                ecs.print(vars.toStack());
+                ecs.print(vars.toStack(includeLocalVarsInStack));
             } else {
                 ecs.print("Stack");
             }
