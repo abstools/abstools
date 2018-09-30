@@ -176,6 +176,9 @@ public class ErlangBackend extends Main {
         // We used to call "rebar compile" here but calling erlc directly
         // removes 1.5s from the compile time
         compile_command.add("erlc");
+        if (options.contains(CompileOptions.DEBUG)) {
+            compile_command.add("+debug_info");
+        }
         compile_command.add("-I");
         compile_command.add(destDir + "/absmodel/include");
         compile_command.add("-o");
