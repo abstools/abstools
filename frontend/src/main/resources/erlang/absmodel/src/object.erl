@@ -247,7 +247,6 @@ handle_call(From, {die,Reason,By}, Data=#data{cog=Cog, tasks=Tasks, protect_from
             [ exit(T,Reason) ||T<-gb_sets:to_list(Tasks), T/=By],
             cog:dec_ref_count(Cog),
             case gb_sets:is_element(By,Tasks) of
-                %% FIXME: send process killed_by_the_clock signal instead?
                 true -> exit(By,Reason);
                 false -> ok
             end,
