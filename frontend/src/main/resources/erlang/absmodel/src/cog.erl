@@ -55,7 +55,7 @@
          %% increasing count of objects; also generator of unique id
          object_counter=0,
          %% Map with all object states
-         object_states=#{ null => {} },
+         object_states=#{ null => {state, none} },
          %% Uninitialized objects and the tasks trying to run on them
          fresh_objects=#{},
          %% Map with Oid -> DC state machine mappings
@@ -297,7 +297,7 @@ update_object_state_map(Obj, State, OldObjectStates) ->
 object_state_from_pid(Pid, ProcessInfos, ObjectStates) ->
     ProcessInfo=maps:get(Pid, ProcessInfos),
     case ProcessInfo#process_info.this of
-        null -> {};
+        null -> {state, none};
         #object{ref=Ref} -> maps:get(Ref, ObjectStates)
     end.
 
