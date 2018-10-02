@@ -16,11 +16,6 @@
 -behaviour(gc).
 -export([acknowledged_by_gc/1, get_references/1, stop_world/1, resume_world/1]).
 
-%% Terminate recklessly.  Used to shutdown system when clock limit reached (if
-%% applicable).  Must be called when cog is stopped for GC.  (See
-%% `cog_monitor:advance_clock_or_terminate'.)
--export([kill_recklessly/1]).
-
 -behaviour(gen_statem).
 %%gen_statem callbacks
 -export([init/1, callback_mode/0, terminate/3, code_change/4]).
@@ -206,11 +201,6 @@ resume_world(#cog{ref=Ref}) ->
 resume_world(Cog) ->
     gen_statem:cast(Cog, resume_world).
 
-kill_recklessly(#cog{ref=Ref}) ->
-    gen_statem:cast(Ref, kill_recklessly);
-kill_recklessly(Cog) ->
-    gen_statem:cast(Cog, kill_recklessly).
-
 %%Internal
 
 terminate(normal, _StateName, _Data) ->
@@ -223,14 +213,6 @@ terminate(Reason, StateName, Data) ->
 code_change(_OldVsn, StateName, Data, _Extra) ->
     {ok, StateName, Data}.
 
-handle_cast(kill_recklessly, _StateName,
-                  Data=#data{runnable_tasks=Run,
-                             polling_tasks=Pol,
-                             waiting_tasks=Wai,
-                             new_tasks=New}) ->
-    lists:map(fun task:kill_recklessly/1,
-              gb_sets:to_list(gb_sets:union([Run, Pol, Wai, New]))),
-    {stop, normal, Data};
 handle_cast(inc_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
     {keep_state, Data#data{referencers=Referencers + 1}};
 handle_cast(dec_ref_count, _StateName, Data=#data{referencers=Referencers}) ->

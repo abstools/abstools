@@ -166,11 +166,21 @@ public class Vars extends LinkedHashMap<String, Var> {
         }
         return sb.append("]").toString();
     }
-
     public String toStack() {
+        return toStack(false);
+    }
+
+    public String toStack(boolean includeLocalVars) {
+        // for synchronous calls, we need to include our own local variables
+        // since the same process will be re-used in a different context.
+        // Note that gc:extract_references/1 fetches the current local
+        // variables already, so in most circumstances they are handled
+        // correctly.
         StringBuilder sb = new StringBuilder();
         sb.append("[O,DC");
-
+        if (includeLocalVars) {
+            sb.append(",get(vars)");
+        }
         for (Map.Entry<String, Var> a : this.entrySet()) {
             Var v = a.getValue();
             if (!v.isSet() || !v.hasReferences()) {

@@ -136,7 +136,7 @@ aspect GenerateErlang {
     else {
       ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
     }
-    ErlUtil.argumentList(ecs,null, builtin, isFnAppContextImperative(), getParams(), vars);
+    ErlUtil.argumentList(ecs,null, builtin, isFnAppContextImperative(), getParams(), vars, false);
   }
 
   @Override
@@ -423,7 +423,7 @@ aspect GenerateErlang {
         a.generateErlangCode(ecs, vars);
     }
     ecs.print(",");
-    ecs.print(vars.toStack());
+    ecs.print(vars.toStack(true));
     ecs.println("),");
     ecs.println("put(vars, Vars),");
     ecs.println("Result;");
@@ -1067,11 +1067,8 @@ aspect GenerateErlang {
       ecs.incIndent().pf("Poll(%s);", vars.toParamList());
       ecs.decIndent().println("{get_references, Sender} ->");
       ecs.incIndent().pf("cog:submit_references(Sender, gc:extract_references(%s)),", vars.toStack());
-      ecs.pf("Poll(%s);", vars.toParamList());
-      ecs.decIndent().println("die_prematurely ->");
-      ecs.incIndent().println("task:send_notifications(killed_by_the_clock),");
-      ecs.println("exit(killed_by_the_clock)");
-      ecs.decIndent().decIndent().println("end end)");
+      ecs.pf("Poll(%s)", vars.toParamList());
+      ecs.decIndent().println("end end)");
       ecs.decIndent().format("(%s)",vars.toParamList());
     }
     else {

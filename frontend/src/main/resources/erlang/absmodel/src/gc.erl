@@ -9,7 +9,6 @@
 -export([register_future/1, unroot_future/1]).
 -export([register_cog/1, unregister_cog/1, cog_stopped/1]).
 -export([register_object/1,unregister_object/1]).
--export([prepare_shutdown/0]).
 
 -export([behaviour_info/1]).
 
@@ -17,7 +16,7 @@
 
 %% gen_statem callbacks
 -export([init/1, callback_mode/0,terminate/3,code_change/4]).
--export([idle/3,collecting/3,in_shutdown/3]).
+-export([idle/3,collecting/3]).
 
 -undef(MIN_PROC_FACTOR).
 -undef(MAX_PROC_FACTOR).
@@ -83,9 +82,6 @@ register_object(Obj) ->
 unregister_object(O=#object{ref=_Ref}) ->
     gen_statem:cast({global, gc}, {stopped_object, O}).
 
-prepare_shutdown() ->
-    gen_statem:call({global, gc}, prepare_shutdown).
-
 %% gen_statem callback functions
 
 callback_mode() -> state_functions.
@@ -139,8 +135,6 @@ idle({call, From}, Cog=#cog{ref=Ref}, Data=#data{cogs=Cogs}) ->
         _ -> ok
     end,
     {next_state, NextState, NewData, {reply, From, ok}};
-idle({call, From}, prepare_shutdown, Data) ->
-    {next_state, in_shutdown, Data, {reply, From, ok}};
 idle(_Event, _From, Data) ->
     {stop, not_supported, Data}.
 
@@ -183,16 +177,8 @@ collecting({call, From}, Cog=#cog{ref=Ref}, Data=#data{cogs=Cogs, cogs_waiting_t
      Data#data{cogs=gb_sets:insert({cog, Cog}, Cogs),
                  cogs_waiting_to_stop=gb_sets:insert({cog, Cog}, RunningCogs)},
     {reply, From, ok}};
-collecting({call, From}, prepare_shutdown, Data) ->
-    {next_state, in_shutdown, Data, {reply, From, ok}};
 collecting(_Event, _From, Data) ->
     {stop, not_supported, Data}.
-
-
-%% The model is terminating, cogs will stop on their own, etc.  Do not react
-%% to further messages.
-in_shutdown(_Event, State, Data) ->
-    {next_state, in_shutdown, Data}.
 
 
 mark(Black, []) ->

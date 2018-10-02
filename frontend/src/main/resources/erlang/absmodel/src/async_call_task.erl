@@ -26,10 +26,7 @@ start(#state{fut=Future,obj=O=#object{cog=Cog=#cog{ref=CogRef,dc=DC}},meth=M,par
             {stop_world, CogRef} ->
                 cog:process_is_blocked_for_gc(Cog, self(), get(this)),
                 cog:process_is_runnable(Cog, self()),
-                task:wait_for_token(Cog, [O,DC|P]);
-            die_prematurely ->
-                task:send_notifications(killed_by_the_clock),
-                exit(killed_by_the_clock)
+                task:wait_for_token(Cog, [O,DC|P])
         after 0 -> ok end,
         Res=apply(C, M,[O|P]),
         complete_future(Future, value, Res, Cog, [O|P])

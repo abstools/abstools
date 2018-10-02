@@ -35,21 +35,21 @@ start(null,_Method,_Params, _Info, _Cog, _Stack) ->
     throw(dataNullPointerException);
 start(Callee,Method,Params, Info, Cog, Stack) ->
     {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,Info,true,self()], []),
-    wait_for_future_start(Cog, [Ref | Stack]),
+    wait_for_future_start(Ref, Cog, Stack),
     Ref.
 
-wait_for_future_start(Cog, Stack) ->
+wait_for_future_start(Ref, Cog, Stack) ->
     receive
         {started, _Ref} ->
             ok;
         {stop_world, _Sender} ->
             cog:process_is_blocked_for_gc(Cog, self(), get(this)),
             cog:process_is_runnable(Cog, self()),
-            task:wait_for_token(Cog, Stack),
-            wait_for_future_start(Cog, Stack);
+            task:wait_for_token(Cog, [Ref | Stack]),
+            wait_for_future_start(Ref, Cog, Stack);
         {get_references, Sender} ->
-            cog:submit_references(Sender, gc:extract_references(Stack)),
-            wait_for_future_start(Cog, Stack)
+            cog:submit_references(Sender, gc:extract_references([Ref | Stack])),
+            wait_for_future_start(Ref, Cog, Stack)
     end.
 
 
@@ -97,12 +97,12 @@ get_blocking(Future, Cog, Stack) ->
                              %% deadlock later.
                              Loop();
                          {get_references, Sender} ->
-                             cog:submit_references(Sender, gc:extract_references(Stack)),
+                             cog:submit_references(Sender, gc:extract_references([Future | Stack])),
                              Loop()
                      end end)(),
             cog:process_is_runnable(Cog, self()),
             confirm_wait_unblocked(Future, self()),
-            task:wait_for_token(Cog, Stack),
+            task:wait_for_token(Cog, [Future | Stack]),
             get_after_await(Future)
     end.
 
@@ -121,11 +121,11 @@ await(Future, Cog, Stack) ->
                              %% cog idle).
                              cog:process_is_runnable(Cog,self()),
                              confirm_wait_unblocked(Future, self()),
-                             task:wait_for_token(Cog, Stack);
+                             task:wait_for_token(Cog, [Future | Stack]);
                          {stop_world, _Sender} ->
                              Loop();
                          {get_references, Sender} ->
-                             cog:submit_references(Sender, gc:extract_references(Stack)),
+                             cog:submit_references(Sender, gc:extract_references([Future | Stack])),
                              Loop()
                      end end)()
     end.
