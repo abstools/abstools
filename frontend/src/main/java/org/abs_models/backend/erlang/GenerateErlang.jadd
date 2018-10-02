@@ -467,7 +467,7 @@ aspect GenerateErlang {
     ErlUtil.buildParams(ecs,getParams(),vars,true);
     ecs.format(",#process_info{method= <<\"%s\"/utf8>>},", getMethod());
     ecs.print("Cog,");
-    ecs.print(vars.toStack());
+    ecs.print(vars.toStack(true));
     ecs.println("),");
     ecs.print("future:get_blocking(TempFuture, Cog, ");
     ecs.print(vars.toStack());
