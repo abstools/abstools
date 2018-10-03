@@ -62,7 +62,7 @@ new(Cog,Class,Args,CreatorCog,Stack)->
         true -> protect_object_from_gc(O);
         false -> ok
     end,
-    cog:process_is_blocked_for_gc(CreatorCog, self(), get(this)),
+    cog:process_is_blocked_for_gc(CreatorCog, self(), get(process_info), get(this)),
     cog:add_task(Cog,init_task,none,O,Args,
                  #process_info{method= <<".init"/utf8>>, this=O, destiny=null},
                  [O, Args | Stack]),

@@ -43,7 +43,7 @@ wait_for_future_start(Ref, Cog, Stack) ->
         {started, _Ref} ->
             ok;
         {stop_world, _Sender} ->
-            cog:process_is_blocked_for_gc(Cog, self(), get(this)),
+            cog:process_is_blocked_for_gc(Cog, self(), get(process_info), get(this)),
             cog:process_is_runnable(Cog, self()),
             task:wait_for_token(Cog, [Ref | Stack]),
             wait_for_future_start(Ref, Cog, Stack);
@@ -86,7 +86,7 @@ get_blocking(Future, Cog, Stack) ->
         false ->
             %% Tell future not to advance time until we picked up ourselves
             register_waiting_task(Future, self()),
-            cog:process_is_blocked(Cog,self(), get(this)),
+            cog:process_is_blocked(Cog,self(), get(process_info), get(this)),
             (fun Loop() ->
                      receive
                          {value_present, Future, _CalleeCog} ->

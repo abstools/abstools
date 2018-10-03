@@ -4,7 +4,7 @@
 -export([new_object/3,activate_object/2,object_dead/2,object_state_changed/3,get_object_state/2,sync_task_with_object/3]).
 -export([get_dc/2]).
 -export([process_is_runnable/2,
-         process_is_blocked/3, process_is_blocked_for_gc/3,
+         process_is_blocked/4, process_is_blocked_for_gc/4,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
          submit_references/2]).
 -export([return_token/5]).
@@ -154,11 +154,11 @@ get_dc(Cog, Oid) ->
 process_is_runnable(#cog{ref=Cog},TaskRef) ->
     gen_statem:call(Cog, {process_runnable, TaskRef}).
 
-process_is_blocked(#cog{ref=Cog},TaskRef, ObjectState) ->
-    gen_statem:cast(Cog, {process_blocked, TaskRef, ObjectState}).
+process_is_blocked(#cog{ref=Cog},TaskRef, ProcessInfo, ObjectState) ->
+    gen_statem:cast(Cog, {process_blocked, TaskRef, ProcessInfo, ObjectState}).
 
-process_is_blocked_for_gc(#cog{ref=Cog},TaskRef, ObjectState) ->
-    gen_statem:cast(Cog, {process_blocked_for_gc, TaskRef, ObjectState}).
+process_is_blocked_for_gc(#cog{ref=Cog},TaskRef, ProcessInfo, ObjectState) ->
+    gen_statem:cast(Cog, {process_blocked_for_gc, TaskRef, ProcessInfo, ObjectState}).
 
 return_token(#cog{ref=Cog}, TaskRef, State, ProcessInfo, ObjectState) ->
     gen_statem:call(Cog, {token, TaskRef, State, ProcessInfo, ObjectState}).
@@ -494,21 +494,24 @@ process_running(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notif
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
-process_running(cast, {process_blocked, TaskRef, ObjectState},
+process_running(cast, {process_blocked, TaskRef, ProcessInfo, ObjectState},
                 Data=#data{process_infos=ProcessInfos,object_states=ObjectStates}) ->
     cog_monitor:cog_blocked(self()),
-    ProcessInfo=maps:get(TaskRef, ProcessInfos),
     This=ProcessInfo#process_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
-    {next_state, process_blocked, Data#data{object_states=NewObjectStates}};
-process_running(cast, {process_blocked_for_gc, TaskRef, ObjectState}, Data=#data{process_infos=ProcessInfos, object_states=ObjectStates}) ->
+    NewProcessInfos=maps:put(TaskRef, ProcessInfo, ProcessInfos),
+    {next_state, process_blocked,
+     Data#data{object_states=NewObjectStates, process_infos=NewProcessInfos}};
+process_running(cast, {process_blocked_for_gc, TaskRef, ProcessInfo, ObjectState},
+                Data=#data{process_infos=ProcessInfos, object_states=ObjectStates}) ->
     %% difference between blocked and blocked_for_gc is that in this instance
     %% we don't tell cog_monitor that we're blocked so that time doesn't
     %% advance
-    ProcessInfo=maps:get(TaskRef, ProcessInfos),
     This=ProcessInfo#process_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
-    {next_state, process_blocked, Data#data{object_states=NewObjectStates}};
+    NewProcessInfos=maps:put(TaskRef, ProcessInfo, ProcessInfos),
+    {next_state, process_blocked,
+     Data#data{object_states=NewObjectStates, process_infos=NewProcessInfos}};
 process_running(cast, stop_world, Data=#data{running_task=R}) ->
     task:send_stop_for_gc(R),
     {next_state, waiting_for_gc_stop,
@@ -650,21 +653,24 @@ waiting_for_gc_stop(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,N
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
-waiting_for_gc_stop(cast, {process_blocked, R, ObjectState}, Data=#data{running_task=R,process_infos=ProcessInfos, object_states=ObjectStates,dc=DC}) ->
+waiting_for_gc_stop(cast, {process_blocked, R, ProcessInfo, ObjectState},
+                    Data=#data{running_task=R,process_infos=ProcessInfos, object_states=ObjectStates,dc=DC}) ->
     cog_monitor:cog_blocked(self()),
     gc:cog_stopped(#cog{ref=self(), dc=DC}),
-    ProcessInfo=maps:get(R, ProcessInfos),
     This=ProcessInfo#process_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
-    {next_state, in_gc, Data#data{next_state_after_gc=process_blocked,object_states=NewObjectStates}};
-waiting_for_gc_stop(cast, {process_blocked_for_gc, R, ObjectState},
+    NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
+    {next_state, in_gc,
+     Data#data{next_state_after_gc=process_blocked,object_states=NewObjectStates, process_infos=NewProcessInfos}};
+waiting_for_gc_stop(cast, {process_blocked_for_gc, R, ProcessInfo, ObjectState},
                     Data=#data{running_task=R,process_infos=ProcessInfos,
                                object_states=ObjectStates,dc=DC}) ->
     gc:cog_stopped(#cog{ref=self(), dc=DC}),
-    ProcessInfo=maps:get(R, ProcessInfos),
     This=ProcessInfo#process_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
-    {next_state, in_gc, Data#data{next_state_after_gc=process_blocked,object_states=NewObjectStates}};
+    NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
+    {next_state, in_gc,
+     Data#data{next_state_after_gc=process_blocked,object_states=NewObjectStates, process_infos=NewProcessInfos}};
 waiting_for_gc_stop(cast, Event, Data) ->
     handle_cast(Event, waiting_for_gc_stop, Data);
 waiting_for_gc_stop(info, {'EXIT',TaskRef,_Reason},

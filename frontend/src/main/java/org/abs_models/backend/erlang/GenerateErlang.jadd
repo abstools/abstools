@@ -162,7 +162,7 @@ aspect GenerateErlang {
        ecs.println("C = none,");
        ecs.println("Ref = null, % avoid self-call branch in synccall code");
        ecs.println("O = #object{ref=null,cog=Cog},");
-       ecs.println("put(this, {}),");
+       ecs.println("put(this, {state, none}),");
        // Create a default deployment component.
        ecs.println("%% FIXME: thisDC() won't work in main block (DC should be in Cog state)");
        ecs.println("DC = object:new(cog:start(),class_ABS_DC_DeploymentComponent, [<<\"Initial DC\">>,dataEmptyMap,[]],Cog,[O]),");
@@ -443,7 +443,7 @@ aspect GenerateErlang {
         a.generateErlangCode(ecs, vars);
     }
     ecs.print(",");
-    ecs.print(vars.toStack());
+    ecs.print(vars.toStack(true));
     ecs.println("),");
     // store / restore local state, but get object state from object (there
     // could have been a synchronous callback)
