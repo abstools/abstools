@@ -14,7 +14,7 @@
 
 %% API
 
--export([new_local/3,new/5,new_object_task/3,die/2]).
+-export([new_local/4,new/5,new_object_task/3,die/2]).
 
 %% Garbage collection callback
 -behaviour(gc).
@@ -31,9 +31,7 @@ behaviour_info(_) ->
     undefined.
 
 
-%% Creates new object.  Local creation takes three parameters, on new cogs
-%% takes five
-new_local(Cog,Class,Args)->
+new_local(Creator, Cog,Class,Args)->
     cog:inc_ref_count(Cog),
     State=Class:init_internal(),
     O=cog:new_object(Cog, Class, State),
@@ -42,15 +40,24 @@ new_local(Cog,Class,Args)->
         false -> ok
     end,
     %% Run the init block in the scope of the new object.  This is safe since
-    %% scheduling is not allowed in init blocks.
-    OldState=get(this),
+    %% scheduling is not allowed in init blocks.  Note that this is
+    %% essentially a synccall and should be kept in sync with
+    %% SyncCall.generateErlangCode (file GenerateErlang.jadd)
+    OldVars=get(vars),
+    OldThis=(get(process_info))#process_info.this,
+    cog:object_state_changed(Cog, Creator, get(this)),
     put(this, State),
-    Class:init(O,Args),
+    put(process_info,(get(process_info))#process_info{this=O}),
+    %% We need to keep OldVars on Stack in case we gc; Stack is the last
+    %% element of the argument list Args.  It would be nice to pass Stack as
+    %% additional argument, but Args will almost never be long since it
+    %% containshte arguments to the constructor.
+    Stack=lists:last(Args),
+    Class:init(O,lists:droplast(Args) ++ [[OldVars | Stack]]),
     cog:object_state_changed(Cog, O, get(this)),
-    %% FIXME: can we construct a pathological case involving
-    %% synchronous atomic callbacks that invalidates `OldState'?  If
-    %% yes, call cog:get_object_state/2 instead of using `OldState'.
-    put(this, OldState),
+    put(vars, OldVars),
+    put(this, cog:get_object_state(Cog, Creator)),
+    put(process_info,(get(process_info))#process_info{this=OldThis}),
     cog:activate_object(Cog, O),
     O.
 

@@ -353,7 +353,7 @@ aspect GenerateErlang {
       ecs.print(vars.toStack());
       ecs.print(")");
     } else {
-      ecs.format("object:new_local(Cog,%s,",className);
+      ecs.format("object:new_local(O, Cog,%s,",className);
       ErlUtil.buildParams(ecs,getParams(),vars,false);
       ecs.print(")");
     }
@@ -429,6 +429,9 @@ aspect GenerateErlang {
     ecs.println("Result;");
     ecs.decIndent();
     ecs.println("Callee=#object{ref=ObjRef,cog=Cog} ->");
+    // Any fixes in this code branch should probably be transferred to
+    // object:new_local in file object.erl since that code calls Class:init()
+    // in the same way
     ecs.incIndent();
     ecs.println("%% cog-local call");
     ecs.println("Vars=get(vars),");
