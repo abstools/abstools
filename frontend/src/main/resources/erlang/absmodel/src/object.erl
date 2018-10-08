@@ -20,8 +20,7 @@
 -behaviour(gc).
 -export([get_references/1]).
 
-%% HTTP api: inhibit dying from gc while we're registered.
--export([protect_object_from_gc/1, unprotect_object_from_gc/1]).
+%% HTTP api
 -export([get_all_method_info/1,has_interface/2]).
 -export([get_class_from_state/1,get_class_from_ref/1]).
 
@@ -35,10 +34,6 @@ new_local(Creator, Cog,Class,Args)->
     cog:inc_ref_count(Cog),
     State=Class:init_internal(),
     O=cog:new_object(Cog, Class, State),
-    case cog_monitor:are_objects_of_class_protected(Class) of
-        true -> protect_object_from_gc(O);
-        false -> ok
-    end,
     %% Run the init block in the scope of the new object.  This is safe since
     %% scheduling is not allowed in init blocks.  Note that this is
     %% essentially a synccall and should be kept in sync with
@@ -65,10 +60,6 @@ new(Cog,Class,Args,CreatorCog,Stack)->
     State=Class:init_internal(),
     O=cog:new_object(Cog, Class, State),
     %% activate_object is called in init_task:start/2
-    case cog_monitor:are_objects_of_class_protected(Class) of
-        true -> protect_object_from_gc(O);
-        false -> ok
-    end,
     cog:process_is_blocked_for_gc(CreatorCog, self(), get(process_info), get(this)),
     cog:add_task(Cog,init_task,none,O,Args,
                  #process_info{method= <<".init"/utf8>>, this=O, destiny=null},
@@ -98,12 +89,6 @@ die(O=#object{cog=Cog},Reason)->
 get_references(O=#object{cog=Cog=#cog{dc=DC}}) ->
     OState=cog:get_object_state(Cog, O),
     ordsets:union(gc:extract_references(DC), gc:extract_references(OState)).
-
-protect_object_from_gc(O) ->
-    io:format("TODO implement protect_object_from_gc in object.erl~n").
-
-unprotect_object_from_gc(O) ->
-    io:format("TODO implement unprotect_object_from_gc in object.erl~n").
 
 get_all_method_info(O) ->
     C=get_class_from_ref(O),

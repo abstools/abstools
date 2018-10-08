@@ -226,7 +226,15 @@ handle_cast({activate_object, Oid}, _StateName, Data=#data{fresh_objects=FreshOb
     lists:foreach(fun(X)-> X ! active end,maps:get(Oid, FreshObjects, [])),
     {keep_state, Data#data{fresh_objects=maps:remove(Oid, FreshObjects)}};
 handle_cast({object_dead, Oid}, _StateName, Data=#data{object_states=ObjectStates}) ->
-    {keep_state, Data#data{object_states=maps:remove(Oid, ObjectStates)}};
+    OState=maps:lookup(Oid, ObjectStates, {state, none}),
+    Class=object:get_class_from_state(OState),
+    %% leave deployment component states; they're referenced fromm the dc
+    %% state machine
+    NewStates=case Class of
+        class_ABS_DC_DeploymentComponent -> ObjectStates;
+        _ -> maps:remove(Oid, ObjectStates)
+    end,
+    {keep_state, Data#data{object_states=maps:remove(Oid, NewStates)}};
 handle_cast(_Event, _StateName, Data) ->
     {stop, not_supported, Data}.
 
