@@ -435,6 +435,7 @@ aspect GenerateErlang {
     ecs.incIndent();
     ecs.println("%% cog-local call");
     ecs.println("Vars=get(vars),");
+    ecs.println("cog:object_state_changed(Cog, O, get(this)),");
     ecs.println("put(this,cog:get_object_state(Callee#object.cog, Callee)),");
     // Since #process_info.method identifies the process to the
     // scheduler, leave it unchanged
@@ -452,7 +453,7 @@ aspect GenerateErlang {
     // could have been a synchronous callback)
     ecs.println("cog:object_state_changed(Callee#object.cog, Callee, get(this)),");
     ecs.println("put(process_info,(get(process_info))#process_info{this=O}),");
-    ecs.println("put(this, cog:get_object_state(O#object.cog, O)),");
+    ecs.println("put(this, cog:get_object_state(Cog, O)),");
     ecs.println("put(vars, Vars),");
     ecs.println("Result;");
     ecs.decIndent().println("Callee ->");

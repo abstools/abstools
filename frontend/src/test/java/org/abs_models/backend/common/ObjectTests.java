@@ -213,6 +213,10 @@ public class ObjectTests extends SemanticTests {
     }
 
     @Test
+    public void local_object_init_block_synccall() {
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/local_object_init_block_synccall.abs"));
+    }
+    @Test
     public void local_object_init_block_callback() {
         assertEvalTrue(new File("abssamples/backend/ObjectTests/local_object_init_block_callback.abs"));
     }
