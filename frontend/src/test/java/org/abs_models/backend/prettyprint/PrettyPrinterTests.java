@@ -26,7 +26,7 @@ public class PrettyPrinterTests extends ABSTest {
     public void prettyPrinterAddDataTypeModifierTest() throws Exception{
         String deltaDecl = "delta Foo;adds data States=F|B|I|M;";
         DeltaDecl d = (DeltaDecl) Main
-            .parseUnit(null, null, new StringReader(deltaDecl), true, false).getDeltaDecl(0);
+            .parseUnit(null, new StringReader(deltaDecl), true, false).getDeltaDecl(0);
         assertEquals("deltaFoo;addsdataStates=F|B|I|M;", replaceWhitespaceChars(prettyPrint(d)));
     }
 

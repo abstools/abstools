@@ -358,7 +358,7 @@ public class ParserTest extends FrontendTest {
 
     @Test
     public void entry_deltadecl() throws Exception {
-        CompilationUnit u = Main.parseUnit(null, null, new StringReader("delta Mon;"), false, true);
+        CompilationUnit u = Main.parseUnit(null, new StringReader("delta Mon;"), false, true);
         DeltaDecl d = (DeltaDecl) u.getDeltaDecl(0);
         Assert.assertNotNull(d);
     }
@@ -366,13 +366,13 @@ public class ParserTest extends FrontendTest {
     @Test (expected = ParseException.class)
     public void deltaNameLowerCaseTest() throws Exception{
         String deltaDecl = "delta foo;";
-        Main.parseUnit(null, null, new StringReader(deltaDecl), true, false);
+        Main.parseUnit(null, new StringReader(deltaDecl), true, false);
     }
 
     @Test(expected = ParseException.class)
     public void testIllegalCharacter() throws Exception {
         String functionDecl = "module LexicalTest; def Bool æåëßfë() = True;";
-        Main.parseUnit(null, null, new StringReader(functionDecl), true, false);
+        Main.parseUnit(null, new StringReader(functionDecl), true, false);
     }
 
     @Test

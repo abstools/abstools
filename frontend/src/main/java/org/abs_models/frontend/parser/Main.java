@@ -131,10 +131,6 @@ public class Main {
         this.stdlib = withStdLib;
     }
 
-    public void setTypeChecking(boolean b) {
-        typecheck = b;
-    }
-
     public java.util.List<String> parseArgs(String[] args) throws InternalBackendException {
         ArrayList<String> remainingArgs = new ArrayList<>();
 
@@ -204,12 +200,12 @@ public class Main {
     }
 
     public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException, InternalBackendException {
-        Model m = parseFiles(parseArgs(args).toArray(new String[0]));
+        Model m = parseFiles(verbose, stdlib, parseArgs(args).toArray(new String[0]));
         analyzeFlattenAndRewriteModel(m);
         return m;
     }
 
-    public Model parseFiles(String... fileNames) throws IOException, InternalBackendException {
+    public static Model parseFiles(boolean verbose, boolean stdlib, String... fileNames) throws IOException, InternalBackendException {
         if (fileNames.length == 0) {
             throw new IllegalArgumentException("Please provide at least one input file");
         }
@@ -232,7 +228,7 @@ public class Main {
         }
 
         for (String fileName : fileNames) {
-            parseFileOrDirectory(units, new File(fileName));
+            parseFileOrDirectory(units, new File(fileName), verbose, stdlib);
         }
 
         if (stdlib)
@@ -564,28 +560,23 @@ public class Main {
         }
     }
 
-    private void parseFileOrDirectory(java.util.List<CompilationUnit> units, File file) throws IOException {
+    private static void parseFileOrDirectory(java.util.List<CompilationUnit> units, File file, boolean verbose, boolean stdlib
+    ) throws IOException {
         if (!file.canRead()) {
             System.err.println("WARNING: Could not read file "+file+", file skipped.");
         }
 
         if (file.isDirectory()) {
-            parseDirectory(units, file);
+            parseDirectory(units, file, verbose, stdlib);
         } else {
             if (isABSSourceFile(file))
-                parseABSSourceFile(units,file);
+                parseABSSourceFile(units,file, verbose, stdlib);
             else if (isABSPackageFile(file))
-                parseABSPackageFile(units,file);
+                parseABSPackageFile(units,file, verbose, stdlib);
         }
     }
 
-    public java.util.List<CompilationUnit> parseABSPackageFile(File file) throws IOException {
-        java.util.List<CompilationUnit> res = new ArrayList<>();
-        parseABSPackageFile(res, file);
-        return res;
-    }
-
-    private void parseABSPackageFile(java.util.List<CompilationUnit> units, File file) throws IOException {
+    private static void parseABSPackageFile(java.util.List<CompilationUnit> units, File file, boolean verbose, boolean stdlib) throws IOException {
         ABSPackageFile jarFile = new ABSPackageFile(file);
         try {
             if (!jarFile.isABSPackage())
@@ -595,7 +586,7 @@ public class Main {
                 JarEntry jarEntry = e.nextElement();
                 if (!jarEntry.isDirectory()) {
                     if (jarEntry.getName().endsWith(".abs")) {
-                        parseABSSourceFile(units, "jar:"+file.toURI()+"!/"+jarEntry.getName(), jarFile.getInputStream(jarEntry));
+                        parseABSSourceFile(units, "jar:"+file.toURI()+"!/"+jarEntry.getName(), jarFile.getInputStream(jarEntry), verbose, stdlib);
                     }
                 }
             }
@@ -604,12 +595,12 @@ public class Main {
         }
     }
 
-    private void parseDirectory(java.util.List<CompilationUnit> units, File file) throws IOException {
+    private static void parseDirectory(java.util.List<CompilationUnit> units, File file, boolean verbose, boolean stdlib) throws IOException {
         if (file.canRead() && !file.isHidden()) {
             for (File f : file.listFiles()) {
                 if (f.isFile() && !isABSSourceFile(f) && !isABSPackageFile(f))
                     continue;
-                parseFileOrDirectory(units, f);
+                parseFileOrDirectory(units, f, verbose, stdlib);
             }
         }
     }
@@ -631,18 +622,19 @@ public class Main {
         return f.getName().endsWith(".abs") || f.getName().endsWith(".mtvl");
     }
 
-    private void parseABSSourceFile(java.util.List<CompilationUnit> units, String name, InputStream inputStream) throws IOException {
-        parseABSSourceFile(units, new File(name), new InputStreamReader(inputStream, "UTF-8"));
+    private static void parseABSSourceFile(java.util.List<CompilationUnit> units, String name, InputStream inputStream, boolean verbose, boolean stdlib) throws IOException {
+        parseABSSourceFile(units, new File(name), new InputStreamReader(inputStream, "UTF-8"), verbose, stdlib);
     }
 
-    private void parseABSSourceFile(java.util.List<CompilationUnit> units, File file) throws IOException {
-        parseABSSourceFile(units, file, getUTF8FileReader(file));
+    private static void parseABSSourceFile(java.util.List<CompilationUnit> units, File file, boolean verbose, boolean stdlib) throws IOException {
+        parseABSSourceFile(units, file, getUTF8FileReader(file), verbose, stdlib);
     }
 
-    private void parseABSSourceFile(java.util.List<CompilationUnit> units, File file, Reader reader) throws IOException {
-        if (verbose)
-            System.out.println("Parsing file "+file.getPath());//getAbsolutePath());
-        units.add(parseUnit(file, null, reader, false, stdlib));
+    private static void parseABSSourceFile(java.util.List<CompilationUnit> units, File file, Reader reader, boolean verbose, boolean stdlib) throws IOException {
+        if (verbose) {
+            System.out.println("Parsing file " + file.getPath());//getAbsolutePath());
+        }
+        units.add(parseUnit(file, reader, false, stdlib));
     }
 
     protected static void printErrorMessage() {
@@ -662,7 +654,7 @@ public class Main {
     }
 
 
-    public CompilationUnit getStdLib() throws IOException, InternalBackendException {
+    public static CompilationUnit getStdLib() throws IOException, InternalBackendException {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
         if (stream == null) {
             // we're running unit tests; try to find the file in the source tree
@@ -671,7 +663,7 @@ public class Main {
         if (stream == null) {
             throw new InternalBackendException("Could not find ABS Standard Library");
         }
-        return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream), false, stdlib);
+        return parseUnit(new File(ABS_STD_LIB), new InputStreamReader(stream), false, true);
     }
 
     public static void printUsage() {
@@ -782,72 +774,43 @@ public class Main {
     }
 
 
-    public CompilationUnit parseUnit(File file) throws Exception {
-        Reader reader = getUTF8FileReader(file);
-        BufferedReader rd = null;
-        // Set to true to print source before parsing
-        boolean dumpinput = false;
-        if (dumpinput) {
-            try {
-                rd = getUTF8FileReader(file);
-                String line = null;
-                int i = 1;
-                while ((line = rd.readLine()) != null) {
-                    System.out.println(i++ + "\t" + line);
-                }
-            } catch (IOException x) {
-                System.out.flush();
-                System.err.println(x);
-                System.err.flush();
-            } finally {
-                if (rd != null)
-                    rd.close();
-            }
-        }
-
-        return parseUnit(file, null, reader, false, stdlib);
-    }
-
-    private BufferedReader getUTF8FileReader(File file) throws UnsupportedEncodingException, FileNotFoundException {
+    private static BufferedReader getUTF8FileReader(File file) throws UnsupportedEncodingException, FileNotFoundException {
         return new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
     }
 
-    public static Iterable<File> toFiles(Iterable<String> fileNames) {
-        ArrayList<File> files = new ArrayList<>();
-        for (String s : fileNames) {
-            files.add(new File(s));
-        }
-        return files;
+    public static Model parse(File file, InputStream stream, boolean stdlib) throws IOException, InternalBackendException {
+        return parse(file, new BufferedReader(new InputStreamReader(stream)), stdlib);
     }
 
-    public Model parse(File file, String sourceCode, InputStream stream) throws IOException, InternalBackendException {
-        return parse(file, sourceCode, new BufferedReader(new InputStreamReader(stream)));
-    }
-
-    public Model parse(File file, String sourceCode, Reader reader) throws IOException, InternalBackendException  {
+    public static Model parse(File file, Reader reader, boolean stdlib) throws IOException, InternalBackendException  {
         List<CompilationUnit> units = new List<>();
         if (stdlib)
             units.add(getStdLib());
-        units.add(parseUnit(file, sourceCode, reader, false, stdlib));
+        units.add(parseUnit(file, reader, false, stdlib));
         return new Model(units);
     }
 
-    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader, boolean raiseExceptions, boolean stdlib)
+    /**
+     * Parse the content of `reader` into a CompilationUnit.
+     *
+     * @param file The filename of the input stream, or null
+     * @param reader The stream to parse
+     * @param raiseExceptions Raise parse errors as exceptions if true
+     * @param stdlib Add "import * from StdLib;" in all modules
+     * @return The parsed content of `reader`, or an empty CompilationUnit with parse error information
+     * @throws IOException
+     */
+    public static CompilationUnit parseUnit(File file, Reader reader, boolean raiseExceptions, boolean stdlib)
             throws IOException
     {
         try {
-            String path = "<unknown path>";
-            if (file != null) path = file.getPath();
-            SyntaxErrorCollector errorlistener
-                = new SyntaxErrorCollector(file, raiseExceptions);
+            SyntaxErrorCollector errorlistener = new SyntaxErrorCollector(file, raiseExceptions);
             ANTLRInputStream input = new ANTLRInputStream(reader);
-            ABSLexer lexer
-                = new ABSLexer(input);
+            ABSLexer lexer = new ABSLexer(input);
             lexer.removeErrorListeners();
             lexer.addErrorListener(errorlistener);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
-            ABSParser aparser
-                = new ABSParser(tokens);
+            ABSParser aparser = new ABSParser(tokens);
             aparser.removeErrorListeners();
             aparser.addErrorListener(errorlistener);
             ParseTree tree = aparser.goal();
@@ -865,6 +828,8 @@ public class Main {
                 }
                 return u;
             } else {
+                String path = "<unknown path>";
+                if (file != null) path = file.getPath();
                 @SuppressWarnings("rawtypes")
                     CompilationUnit u = new CompilationUnit(path,new List(),new List(),new List(),new Opt(),new List(),new List(),new List());
                 u.setParserErrors(errorlistener.parserErrors);
@@ -876,9 +841,7 @@ public class Main {
     }
 
     public static Model parseString(String s, boolean withStdLib) throws Exception {
-        Main m = new Main();
-        m.setWithStdLib(withStdLib);
-        return m.parse(null, s, new StringReader(s));
+        return parse(null, new StringReader(s), withStdLib);
     }
 
 }
