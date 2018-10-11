@@ -642,7 +642,7 @@ public class Main {
     private void parseABSSourceFile(java.util.List<CompilationUnit> units, File file, Reader reader) throws IOException {
         if (verbose)
             System.out.println("Parsing file "+file.getPath());//getAbsolutePath());
-        units.add(parseUnit(file, null, reader));
+        units.add(parseUnit(file, null, reader, false, stdlib));
     }
 
     protected static void printErrorMessage() {
@@ -671,7 +671,7 @@ public class Main {
         if (stream == null) {
             throw new InternalBackendException("Could not find ABS Standard Library");
         }
-        return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream));
+        return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream), false, stdlib);
     }
 
     public static void printUsage() {
@@ -805,7 +805,7 @@ public class Main {
             }
         }
 
-        return parseUnit(file, null, reader);
+        return parseUnit(file, null, reader, false, stdlib);
     }
 
     private BufferedReader getUTF8FileReader(File file) throws UnsupportedEncodingException, FileNotFoundException {
@@ -828,18 +828,18 @@ public class Main {
         List<CompilationUnit> units = new List<>();
         if (stdlib)
             units.add(getStdLib());
-        units.add(parseUnit(file, sourceCode, reader));
+        units.add(parseUnit(file, sourceCode, reader, false, stdlib));
         return new Model(units);
     }
 
-    public CompilationUnit parseUnit(File file, String sourceCode, Reader reader)
+    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader, boolean raiseExceptions, boolean stdlib)
             throws IOException
     {
         try {
             String path = "<unknown path>";
             if (file != null) path = file.getPath();
             SyntaxErrorCollector errorlistener
-                = new SyntaxErrorCollector(file, false);
+                = new SyntaxErrorCollector(file, raiseExceptions);
             ANTLRInputStream input = new ANTLRInputStream(reader);
             ABSLexer lexer
                 = new ABSLexer(input);
