@@ -23,6 +23,7 @@ import java.util.jar.JarEntry;
 
 import choco.kernel.model.constraints.Constraint;
 import org.abs_models.backend.java.JavaBackend;
+import org.abs_models.frontend.antlr.parser.*;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.mtvl.ChocoSolver;
 import org.abs_models.backend.common.InternalBackendException;
@@ -36,12 +37,14 @@ import org.abs_models.backend.prolog.PrologBackend;
 import org.abs_models.frontend.analyser.SemanticCondition;
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.backend.prettyprint.PrettyPrinterBackEnd;
-import org.abs_models.frontend.antlr.parser.ABSParserWrapper;
-import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.delta.ProductLineAnalysisHelper;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 /**
  * @author rudi
@@ -833,7 +836,40 @@ public class Main {
             throws IOException
     {
         try {
-            return new ABSParserWrapper(file, false, stdlib).parse(reader);
+            String path = "<unknown path>";
+            if (file != null) path = file.getPath();
+            SyntaxErrorCollector errorlistener
+                = new SyntaxErrorCollector(file, false);
+            ANTLRInputStream input = new ANTLRInputStream(reader);
+            ABSLexer lexer
+                = new ABSLexer(input);
+            lexer.removeErrorListeners();
+            lexer.addErrorListener(errorlistener);
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            ABSParser aparser
+                = new ABSParser(tokens);
+            aparser.removeErrorListeners();
+            aparser.addErrorListener(errorlistener);
+            ParseTree tree = aparser.goal();
+            if (errorlistener.parserErrors.isEmpty()) {
+                ParseTreeWalker walker = new ParseTreeWalker();
+                CreateJastAddASTListener l = new CreateJastAddASTListener(file);
+                walker.walk(l, tree);
+                CompilationUnit u
+                    = new ASTPreProcessor().preprocess(l.getCompilationUnit());
+                if (stdlib) {
+                    for (ModuleDecl d : u.getModuleDecls()) {
+                        if (!Constants.STDLIB_NAME.equals(d.getName()))
+                            d.getImports().add(new StarImport(Constants.STDLIB_NAME));
+                    }
+                }
+                return u;
+            } else {
+                @SuppressWarnings("rawtypes")
+                    CompilationUnit u = new CompilationUnit(path,new List(),new List(),new List(),new Opt(),new List(),new List(),new List());
+                u.setParserErrors(errorlistener.parserErrors);
+                return u;
+            }
         } finally {
             reader.close();
         }
