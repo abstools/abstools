@@ -6,7 +6,6 @@ package org.abs_models.frontend.parser;
 
 import java.io.StringReader;
 
-import org.abs_models.frontend.antlr.parser.ABSParserWrapper;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -359,7 +358,7 @@ public class ParserTest extends FrontendTest {
 
     @Test
     public void entry_deltadecl() throws Exception {
-        CompilationUnit u = new ABSParserWrapper().parse(new StringReader("delta Mon;"));
+        CompilationUnit u = Main.parseUnit(null, new StringReader("delta Mon;"), false, true);
         DeltaDecl d = (DeltaDecl) u.getDeltaDecl(0);
         Assert.assertNotNull(d);
     }
@@ -367,13 +366,13 @@ public class ParserTest extends FrontendTest {
     @Test (expected = ParseException.class)
     public void deltaNameLowerCaseTest() throws Exception{
         String deltaDecl = "delta foo;";
-        new ABSParserWrapper(null, true, false).parse(new StringReader(deltaDecl));
+        Main.parseUnit(null, new StringReader(deltaDecl), true, false);
     }
 
     @Test(expected = ParseException.class)
     public void testIllegalCharacter() throws Exception {
         String functionDecl = "module LexicalTest; def Bool æåëßfë() = True;";
-        new ABSParserWrapper(null, true, false).parse(new StringReader(functionDecl));
+        Main.parseUnit(null, new StringReader(functionDecl), true, false);
     }
 
     @Test

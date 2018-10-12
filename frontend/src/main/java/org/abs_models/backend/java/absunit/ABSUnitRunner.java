@@ -29,7 +29,7 @@ public class ABSUnitRunner extends Main {
     private List<MethodSig> testMethods = new ArrayList<>(10);
 
     public void compile() throws Exception {
-        final Model model = parseFiles(modelDir);
+        final Model model = parseFiles(verbose, stdlib, modelDir);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             return;
         compile(model, new File(destDir));

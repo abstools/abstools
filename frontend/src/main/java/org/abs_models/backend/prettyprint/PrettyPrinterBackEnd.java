@@ -83,7 +83,7 @@ public class PrettyPrinterBackEnd extends Main {
      * @throws Exception
      */
     public int compile(String[] args) throws Exception {
-        final Model model = parseFiles(parseArgs(args).toArray(new String[0]));
+        final Model model = parseFiles(verbose, stdlib, parseArgs(args).toArray(new String[0]));
         if (keepsugar) {
             model.doAACrewrite = false;
             model.doForEachRewrite = false;

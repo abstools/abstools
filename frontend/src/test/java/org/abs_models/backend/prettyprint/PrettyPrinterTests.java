@@ -10,8 +10,8 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 
-import org.abs_models.frontend.antlr.parser.ABSParserWrapper;
 import org.abs_models.frontend.ast.ASTNode;
+import org.abs_models.frontend.parser.Main;
 import org.abs_models.frontend.tests.ABSFormatter;
 import org.abs_models.frontend.tests.EmptyFormatter;
 import org.junit.Test;
@@ -25,8 +25,8 @@ public class PrettyPrinterTests extends ABSTest {
     @Test
     public void prettyPrinterAddDataTypeModifierTest() throws Exception{
         String deltaDecl = "delta Foo;adds data States=F|B|I|M;";
-        DeltaDecl d = (DeltaDecl) new ABSParserWrapper(null, true, false)
-            .parse(new StringReader(deltaDecl)).getDeltaDecl(0); 
+        DeltaDecl d = (DeltaDecl) Main
+            .parseUnit(null, new StringReader(deltaDecl), true, false).getDeltaDecl(0);
         assertEquals("deltaFoo;addsdataStates=F|B|I|M;", replaceWhitespaceChars(prettyPrint(d)));
     }
 
