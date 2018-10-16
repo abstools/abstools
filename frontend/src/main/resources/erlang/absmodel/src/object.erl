@@ -111,7 +111,8 @@ get_class_from_state(OState) ->
 
 await_activation(Params) ->
     receive
-        {get_references, Sender} -> Sender ! {gc:extract_references(Params), self()},
-                                    await_activation(Params);
+        {get_references, Sender} ->
+            cog:submit_references(Sender, gc:extract_references(Params)),
+            await_activation(Params);
         active -> ok
     end.
