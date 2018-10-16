@@ -136,7 +136,7 @@ aspect GenerateErlang {
     else {
       ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
     }
-    ErlUtil.argumentList(ecs,null, builtin, isFnAppContextImperative(), getParams(), vars, false);
+    ErlUtil.argumentList(ecs,null, builtin, isFnAppContextImperative(), getParams(), vars);
   }
 
   @Override
@@ -423,7 +423,7 @@ aspect GenerateErlang {
         a.generateErlangCode(ecs, vars);
     }
     ecs.print(",");
-    ecs.print(vars.toStack(true));
+    ecs.print(vars.toStack(",Vars"));
     ecs.println("),");
     ecs.println("put(vars, Vars),");
     ecs.println("Result;");
@@ -434,8 +434,9 @@ aspect GenerateErlang {
     // in the same way
     ecs.incIndent();
     ecs.println("%% cog-local call");
+    ecs.println("State=get(this),");
     ecs.println("Vars=get(vars),");
-    ecs.println("cog:object_state_changed(Cog, O, get(this)),");
+    ecs.println("cog:object_state_changed(Cog, O, State),");
     ecs.println("put(this,cog:get_object_state(Callee#object.cog, Callee)),");
     // Since #process_info.method identifies the process to the
     // scheduler, leave it unchanged
@@ -447,10 +448,11 @@ aspect GenerateErlang {
         a.generateErlangCode(ecs, vars);
     }
     ecs.print(",");
-    ecs.print(vars.toStack(true));
+    ecs.print(vars.toStack(",Vars,State"));
     ecs.println("),");
-    // store / restore local state, but get object state from object (there
-    // could have been a synchronous callback)
+    // put back saved local variables, but restore caller object state
+    // from cog (there could have been a synchronous callback,
+    // invalidating State)
     ecs.println("cog:object_state_changed(Callee#object.cog, Callee, get(this)),");
     ecs.println("put(process_info,(get(process_info))#process_info{this=O}),");
     ecs.println("put(this, cog:get_object_state(Cog, O)),");
@@ -463,7 +465,7 @@ aspect GenerateErlang {
     ErlUtil.buildParams(ecs,getParams(),vars,true);
     ecs.format(",#process_info{method= <<\"%s\"/utf8>>},", getMethod());
     ecs.print("Cog,");
-    ecs.print(vars.toStack(true));
+    ecs.print(vars.toStack());
     ecs.println("),");
     ecs.print("future:get_blocking(TempFuture, Cog, ");
     ecs.print(vars.toStack());

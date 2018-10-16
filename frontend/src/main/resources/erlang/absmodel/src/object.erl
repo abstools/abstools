@@ -40,17 +40,25 @@ new_local(Creator, Cog,Class,Args)->
     %% SyncCall.generateErlangCode (file GenerateErlang.jadd)
     OldVars=get(vars),
     OldThis=(get(process_info))#process_info.this,
-    cog:object_state_changed(Cog, Creator, get(this)),
+    OldState=get(this),
+    cog:object_state_changed(Cog, Creator, OldState),
     put(this, State),
     put(process_info,(get(process_info))#process_info{this=O}),
-    %% We need to keep OldVars on Stack in case we gc; Stack is the last
-    %% element of the argument list Args.  It would be nice to pass Stack as
-    %% additional argument, but Args will almost never be long since it
-    %% containshte arguments to the constructor.
+    %% We need to keep OldVars and OldState (i.e., get(this) at this
+    %% point) on Stack in case we gc.
+
+    %% KLUDGE: Stack (which we need to augment) is the last element of
+    %% the argument list Args.  It would be cleaner to pass Stack as
+    %% additional argument to Class:init, but Args will almost never
+    %% be long since it contains the (human-written) arguments to the
+    %% constructor, so we make do with constructing a new list for
+    %% now.
     Stack=lists:last(Args),
-    Class:init(O,lists:droplast(Args) ++ [[OldVars | Stack]]),
+    Class:init(O,lists:droplast(Args) ++ [[OldVars, OldState | Stack]]),
     cog:object_state_changed(Cog, O, get(this)),
     put(vars, OldVars),
+    %% Do not use OldState here: the init block of O might have called
+    %% back into the creator object, invalidating OldState
     put(this, cog:get_object_state(Cog, Creator)),
     put(process_info,(get(process_info))#process_info{this=OldThis}),
     cog:activate_object(Cog, O),
