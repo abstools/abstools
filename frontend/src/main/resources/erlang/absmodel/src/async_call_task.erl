@@ -13,7 +13,6 @@
 
 init(_Cog,Future,CalleeObj,[Method|Params])->
     link(Future),
-    object:new_object_task(CalleeObj,self(), [Future|Params]),
     #state{fut=Future,obj=CalleeObj,meth=Method,params=Params}.
 
 

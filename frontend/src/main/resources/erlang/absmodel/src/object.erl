@@ -14,7 +14,7 @@
 
 %% API
 
--export([new_local/4,new/5,new_object_task/3,die/2]).
+-export([new_local/4,new/5,die/2]).
 
 %% Garbage collection callback
 -behaviour(gc).
@@ -67,29 +67,23 @@ new_local(Creator, Cog,Class,Args)->
 new(Cog,Class,Args,CreatorCog,Stack)->
     State=Class:init_internal(),
     O=cog:new_object(Cog, Class, State),
-    %% activate_object is called in init_task:start/2
+    %% this is basically a remote call + blocking get.  We block until
+    %% the init block has been run - this makes `new' slower but we
+    %% don't have to check for anything in `cog:get_object_state'
+
+    %% FIXME: disallow `duration()' in init block
     cog:process_is_blocked_for_gc(CreatorCog, self(), get(process_info), get(this)),
     cog:add_task(Cog,init_task,none,O,Args,
                  #process_info{method= <<".init"/utf8>>, this=O, destiny=null},
                  [O, Args | Stack]),
+    Res=cog:sync_task_with_object(Cog, O, self()),
+    case Res of
+        uninitialized -> await_activation([O | Stack]);
+        active -> ok
+    end,
     cog:process_is_runnable(CreatorCog, self()),
     task:wait_for_token(CreatorCog,[O, Args|Stack]),
     O.
-
-
-new_object_task(O=#object{cog=Cog},TaskRef,Params)->
-    %% FIXME: move this directly into cog / task module?
-    try
-        Res = cog:sync_task_with_object(Cog, O, TaskRef),
-        case Res of
-            uninitialized -> await_activation(Params);
-            active -> Res
-        end
-    catch
-        %% FIXME: catch error for "no object found"
-        _:{noproc,_} ->
-            exit({deadObject, O})
-    end.
 
 die(O=#object{cog=Cog},Reason)->
     cog:object_dead(Cog, O).

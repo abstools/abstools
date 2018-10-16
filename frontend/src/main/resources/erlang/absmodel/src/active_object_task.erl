@@ -7,7 +7,6 @@
 %% Active object task -> executes run method
 
 init(_Cog,_Future,Object,Params)->
-    object:new_object_task(Object,self(),Params),
     Object.
 
 start(O)->
