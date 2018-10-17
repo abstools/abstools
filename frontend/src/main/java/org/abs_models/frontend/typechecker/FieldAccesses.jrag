@@ -2,12 +2,11 @@
 import java.util.Set;
 
 aspect FieldUsage {
- 
+
      /**
      * Guard must observe something. "True" and "False" or implemented as a
      * hack for now for those people that like to use it.
      * @see PureExp#getFields(FieldUseInfo)
-     * @author stolz
      */
      public void ExpGuard.hasFieldAccess(SemanticConditionList e) {
         final PureExp pe = getPureExp();
@@ -19,8 +18,7 @@ aspect FieldUsage {
 
     /**
      * Helper-datastructure for {@link PureExp#getFields()}.
-     * @author stolz
-     */    
+     */
     public class FieldUseInfo {
        final public Collection<FieldUse> fields = new HashSet<FieldUse>();
        public Collection<FunctionDef> seenDefs = new HashSet<FunctionDef>();
@@ -58,13 +56,12 @@ aspect FieldUsage {
          return this; // fluent
        }
     }
- 
+
    /**
     * Collect all fields used in a pure expression and reference to builtins.
     * TODO: I guess we shouldn't be collecting USES but their DECLs instead,
              but you can easily get those later.
     * @see PureExp#getFields()
-    * @author stolz
     */
     syn lazy FieldUseInfo PureExp.getFields() = getFields(new FieldUseInfo());
    /**
@@ -73,9 +70,8 @@ aspect FieldUsage {
     *   looking for builtins.
     * TODO: I guess we shouldn't be collecting USES but their DECLs instead,
              but you can easily get those later.
-    * @author stolz
     * @see getFields()
-    */ 
+    */
 	syn lazy FieldUseInfo PureExp.getFields(FieldUseInfo fui);
 
 	eq PureExp.getFields(FieldUseInfo fui) = fui;
@@ -89,7 +85,7 @@ aspect FieldUsage {
 	eq Unary.getFields(FieldUseInfo fui) {
 	    return new FieldUseInfo(fui.merge(getOperand()));
 	}
-	
+
 	eq LetExp.getFields(FieldUseInfo fui) {
 		fui.merge(getExp());
 		return new FieldUseInfo(fui.merge(getVal()));
@@ -105,13 +101,12 @@ aspect FieldUsage {
     * Check for reference to builtins (transitively).
     * Uses an accumulator (defSeen) to avoid recursing into the same functiondef when
     *   looking for builtins.
-    * @author stolz
-    */ 
+    */
     public boolean FunctionDef.usesBuiltin() { return usesBuiltin(new HashSet<FunctionDef>()); }
     syn lazy boolean FunctionDef.usesBuiltin(Collection<FunctionDef> seen);
     eq BuiltinFunctionDef.usesBuiltin(Collection<FunctionDef> seen) = true;
     eq ExpFunctionDef.usesBuiltin(Collection<FunctionDef> seen) {
-      if (seen.add(this)) {      
+      if (seen.add(this)) {
         FieldUseInfo info = getRhs().getFields(new FieldUseInfo(seen));
         boolean a = seen.remove(this);
         assert a;
@@ -145,10 +140,10 @@ aspect FieldUsage {
 	    fui.merge(getLeft().getFields(fui));
 	    return new FieldUseInfo(fui.merge(getRight().getFields(fui)));
 	}
-	
+
 	syn lazy FieldUseInfo Pattern.getFields(FieldUseInfo fui);
-	
-	eq Pattern.getFields(FieldUseInfo fui)       = fui;	
+
+	eq Pattern.getFields(FieldUseInfo fui)       = fui;
 	eq PatternVarUse.getFields(FieldUseInfo fui) = fui;
 
 	eq ConstructorPattern.getFields(FieldUseInfo fui) {

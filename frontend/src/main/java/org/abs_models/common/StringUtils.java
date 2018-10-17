@@ -17,8 +17,6 @@ public class StringUtils {
      * returns a copy of the string with the first letter capitalized.
      *
      * @param s The string to capitalize.
-     *
-     * @author Andri Saar <andri@cs.ioc.ee>
      */
     public static final String capitalize(String s) {
         if (s == null || s.length() == 0)
