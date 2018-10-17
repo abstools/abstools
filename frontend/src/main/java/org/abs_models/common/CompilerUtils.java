@@ -39,6 +39,7 @@ public class CompilerUtils {
      * Get the value of an annotation.  Returns the value of the first
      * annotation with the given qualified (module-prefixed) name.
      *
+     * @param annotations The list of annotations
      * @param qualifiedAnnotationName The qualified name of the annotation
      * @return a <code>PureExp</code> value or null
      */

@@ -151,8 +151,7 @@ public class ReachabilityInformation {
         return (ClassDecl) ancestor;
     }
 /**
- * returns true if there has been any change since the last time it was executed
- * @return
+ * @return true if there has been any change since the last time it was executed
  */
     public boolean changed() {
         if (changed) {

@@ -129,7 +129,7 @@ public abstract class Type {
     /**
      * A type is an annotation type if and only if it is a data type declaration
      * and it has an annotation [TypeAnnotation]
-     * @return
+     * @return true if type is an annotation type
      */
     public boolean isAnnotationType() {
         return false;

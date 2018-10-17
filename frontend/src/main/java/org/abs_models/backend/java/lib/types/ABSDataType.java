@@ -87,7 +87,7 @@ public abstract class ABSDataType implements ABSValue {
     /**
      * Returns the iths constructor argument of this data value.
      * @param i the index of the constructor argument to return (starting from 0)
-     * @return
+     * @return the i'th constructor argument of this data value
      * @throws IllegalArgumentException if {@code i < 0 or i >= getNumArgs()}
      */
     public ABSValue getArg(int i) {

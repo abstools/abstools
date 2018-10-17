@@ -14,7 +14,7 @@ public interface TaskView {
      * The Task that did the asynchronous call leading to this task is null for
      * the main task, otherwise is never null
      * 
-     * @return
+     * @return the calling task
      */
     TaskView getSender();
 
