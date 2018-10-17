@@ -25,7 +25,7 @@ public interface TaskStackFrameView {
     
     /**
      * Returns all variable names of this stack frame
-     * @return
+     * @return the set of variables
      */
     public Set<String> getVariableNames();
     

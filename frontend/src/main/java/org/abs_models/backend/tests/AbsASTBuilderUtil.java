@@ -343,7 +343,7 @@ public final class AbsASTBuilderUtil {
      * Generates import statement {@code import DeclName from DeclModule;}
      *
      * @param decl
-     * @return
+     * @return the import statement
      */
     public static final Import generateImportAST(Decl decl) {
         return generateImportAST(decl.getName(), decl.getModuleDecl().getName());
@@ -377,7 +377,7 @@ public final class AbsASTBuilderUtil {
      *
      * @param name
      * @param module
-     * @return
+     * @return the import statement
      */
     public static final Import generateImportAST(String name, String module) {
         return new FromImport(new List<Name>().add(new Name(name)), module);

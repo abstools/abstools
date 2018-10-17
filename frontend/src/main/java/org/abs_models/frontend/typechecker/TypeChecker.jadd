@@ -502,7 +502,7 @@ aspect TypeChecker {
 
     /**
      * Proxy.
-     * @see {@link MethodImpl#getType()}
+     * @see MethodImpl#getType()
      */
     public Type MethodImpl.getType() { return getMethodSig().getType(); }
 
@@ -586,7 +586,7 @@ aspect TypeChecker {
      * @param e the semantic error list
      * @param errorMessage the error message for unknown declarations
      * @param name the name of the declaration (used in the error message)
-     * @return
+     * @return true if the declaration is unknown, false otherwise
      */
     protected boolean Decl.checkDecl(ASTNode<?> use, SemanticConditionList e, ErrorMessage errorMessage, String name) {
         return true;

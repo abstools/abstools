@@ -29,7 +29,7 @@ public interface ABSTestRunnerGenerator {
      * Checks if this generator contains a {@link Model} that defines ABSUnit
      * tests.
      * 
-     * @return
+     * @return true if the generator has a model with ABSUnit tests
      */
     boolean hasUnitTest();
     
