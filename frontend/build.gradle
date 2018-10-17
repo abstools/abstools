@@ -181,6 +181,7 @@ spotbugs {
 
 javadoc {
     failOnError = false
+    options.addStringOption('Xdoclint:none', '-quiet')
 }
 
 tasks.withType(com.github.spotbugs.SpotBugsTask) {
