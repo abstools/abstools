@@ -67,7 +67,9 @@ RUN curl http://costa.fdi.ucm.es/download/saco.colab.zip -\# -o saco.colab.zip \
  && rm sra.colab.zip \
  && curl http://costa.fdi.ucm.es/download/apet.colab.zip -\# -o apet.colab.zip \
  && unzip apet.colab.zip -d /usr/local/lib \
- && rm apet.colab.zip
+ && rm apet.colab.zip \
+ && sed -i 's/abs.backend.prolog.PrologBackend/org.abs_models.backend.prolog.PrologBackend/g' /usr/local/lib/saco/bin/generateProlog \
+ && sed -i 's/abs.backend.prolog.PrologBackend/org.abs_models.backend.prolog.PrologBackend/g' /usr/local/lib/apet/bin/generateProlog
 RUN mkdir -p /usr/local/lib/frontend
 COPY frontend/dist /usr/local/lib/frontend/dist
 COPY frontend/bin /usr/local/lib/frontend/bin
