@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/*
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package org.abs_models.backend.java.lib.types;
@@ -88,13 +88,13 @@ public abstract class ABSDataType implements ABSValue {
      * Returns the iths constructor argument of this data value.
      * @param i the index of the constructor argument to return (starting from 0)
      * @return
-     * @throws IllegalArgumentException if i < 0 or i >= getNumArgs() 
+     * @throws IllegalArgumentException if {@code i < 0 or i >= getNumArgs()}
      */
     public ABSValue getArg(int i) {
        if (i < 0 || i >= getNumArgs()) throw new IllegalArgumentException(i+ " is not a valid constructor argument index");
        return getArgs()[i];
     }
-    
+
     /**
      * Returns the number of constructor arguments of this data value.
      * @return the number of constructor arguments of this data value
@@ -102,7 +102,7 @@ public abstract class ABSDataType implements ABSValue {
     public int getNumArgs() {
        return getArgs().length;
     }
-    
+
     /**
      * Whether this data type is a built-in data type
      */

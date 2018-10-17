@@ -401,7 +401,7 @@ public class ABSRuntime {
 
     /**
      * Defines the properties to be used for the foreign class mapping
-     * @param the properties to be used
+     * @param p the properties to be used
      */
     public void setFLIProperties(Properties p) {
         fliProperties = p;

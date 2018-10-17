@@ -39,8 +39,7 @@ public class CompilerUtils {
      * Get the value of an annotation.  Returns the value of the first
      * annotation with the given qualified (module-prefixed) name.
      *
-     * @param annotationName The simple name (without module prefix) of the
-     * annotation
+     * @param qualifiedAnnotationName The qualified name of the annotation
      * @return a <code>PureExp</code> value or null
      */
     public static PureExp getAnnotationValueFromName(List<Annotation> annotations, String qualifiedAnnotationName) {

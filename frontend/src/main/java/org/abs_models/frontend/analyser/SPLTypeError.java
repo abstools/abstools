@@ -20,7 +20,7 @@ public class SPLTypeError extends TypeError {
      *
      * @param node      ASTNode where this error occurred
      * @param msg       Error message to display
-     * @param deltas    List of applied DeltaDecls that have led to this error (size of list must be > 0)
+     * @param deltas    List of applied DeltaDecls that have led to this error (size of list must be {@code > 0})
      * @param product   Product that we tried to build (non-null)
      * @param args      Strings to include in ErrorMessage
      */
