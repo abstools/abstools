@@ -72,7 +72,7 @@ new(Cog,Class,Args,CreatorCog,Stack)->
     %% don't have to check for anything in `cog:get_object_state'.
     %% Note that synccalls to `this' will deadlock, as per the manual
     %% (Section “New Expression”)
-    cog:process_is_blocked_for_gc(CreatorCog, self(), get(process_info), get(this)),
+    cog:process_is_blocked(CreatorCog, self(), get(process_info), get(this)),
     cog:add_task(Cog,init_task,none,O,Args,
                  #process_info{method= <<".init"/utf8>>, this=O, destiny=null},
                  [O, Args | Stack]),
