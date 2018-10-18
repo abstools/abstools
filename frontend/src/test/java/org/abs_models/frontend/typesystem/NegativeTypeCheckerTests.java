@@ -253,6 +253,16 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void classInitializerInvalidDurationStmt() {
+        assertTypeErrors("class C { { duration(1, 1); } }");
+    }
+
+    @Test
+    public void classInitializerInvalidGetExp() {
+        assertTypeErrors("class C { { Fut<Int> f; f.get; } }");
+    }
+
+    @Test
     public void classParamsError() {
         assertTypeErrors("class C(I i) { }");
     }

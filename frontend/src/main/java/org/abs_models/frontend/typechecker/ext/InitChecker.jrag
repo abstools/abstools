@@ -32,6 +32,10 @@ aspect InitChecker {
     void ReturnStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
        l.add(new TypeError(this, msg, "Return statements"));
     }
+    @Override
+    void DurationStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+       l.add(new TypeError(this, msg, "Duration statements"));
+    }
 
     @Override
     void SyncCall.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
