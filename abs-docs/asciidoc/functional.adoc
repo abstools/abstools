@@ -523,6 +523,12 @@ calls.  Classes can also declare a `run` method, which is asynchronously
 invoked after the init block and subject to the normal scheduling rules for
 processes.
 
+CAUTION: When the fresh object gets passed `this` as argument, it is
+possible to execute synchronous calls to the creating object in the
+init block while the creating task is executing the `new` or `new
+local` expression.  This works as expected when the fresh object is on
+the same cog (i.e., is created with `new local` but will deadlock when
+the fresh object is on its own cog).
 
 ==== Synchronous Call Expression
 

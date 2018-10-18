@@ -69,9 +69,9 @@ new(Cog,Class,Args,CreatorCog,Stack)->
     O=cog:new_object(Cog, Class, State),
     %% this is basically a remote call + blocking get.  We block until
     %% the init block has been run - this makes `new' slower but we
-    %% don't have to check for anything in `cog:get_object_state'
-
-    %% FIXME: disallow `duration()' in init block
+    %% don't have to check for anything in `cog:get_object_state'.
+    %% Note that synccalls to `this' will deadlock, as per the manual
+    %% (Section “New Expression”)
     cog:process_is_blocked_for_gc(CreatorCog, self(), get(process_info), get(this)),
     cog:add_task(Cog,init_task,none,O,Args,
                  #process_info{method= <<".init"/utf8>>, this=O, destiny=null},
