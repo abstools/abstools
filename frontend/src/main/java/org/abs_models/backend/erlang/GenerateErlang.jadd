@@ -409,6 +409,7 @@ aspect GenerateErlang {
   @Override
   public void SyncCall.generateErlangCode(CodeStream ecs,Vars vars){
     final List<PureExp> params = getParams();
+    MethodSig ms = getMethodSig();
     ecs.print("(fun() -> case ");
     getCallee().generateErlangCode(ecs,vars);
     ecs.println(" of");
@@ -434,6 +435,13 @@ aspect GenerateErlang {
     // in the same way
     ecs.incIndent();
     ecs.println("%% cog-local call");
+
+    for (int i = 0; i < ms.getNumParam(); i++) {
+        ecs.print("V_" + ms.getParam(i).getName() + " = ");
+        params.getChild(i).generateErlangCode(ecs, vars);
+        ecs.println(",");
+    }
+
     ecs.println("State=get(this),");
     ecs.println("Vars=get(vars),");
     ecs.println("cog:object_state_changed(Cog, O, State),");
@@ -443,9 +451,8 @@ aspect GenerateErlang {
     ecs.println("put(process_info,(get(process_info))#process_info{this=Callee}),");
     ecs.println("T=object:get_class_from_state(get(this)), % it's the callee state already");
     ecs.format("Result=T:'m_%s'(Callee", getMethod());
-    for (PureExp a : params) {
-        ecs.print(',');
-        a.generateErlangCode(ecs, vars);
+    for (ParamDecl p : ms.getParams()) {
+        ecs.print(", V_" + p.getName());
     }
     ecs.print(",");
     ecs.print(vars.toStack(",Vars,State"));

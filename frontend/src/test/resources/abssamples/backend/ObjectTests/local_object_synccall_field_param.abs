@@ -1,0 +1,32 @@
+module BackendTest;
+
+interface I {
+    Bool get_result();
+}
+
+interface I2 {
+    [Atomic] Bool flip_result(Bool arg);
+}
+
+class C (I2 o) implements I {
+    Bool result = False;
+
+    Bool get_result() {
+        result = o.flip_result(result);
+        return result;
+    }
+
+}
+
+class C2 implements I2 {
+    [Atomic] Bool flip_result(Bool arg) {
+        return !arg;
+    }
+}
+
+{
+    I2 o2 = new local C2();
+    I o = new local C(o2);
+    Bool testresult = o.get_result();
+    // println("Result: " + toString(testresult));
+}
