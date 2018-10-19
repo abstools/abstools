@@ -221,7 +221,7 @@ public class ObjectTests extends SemanticTests {
         assertEvalTrue(new File("abssamples/backend/ObjectTests/local_object_init_block_callback.abs"));
     }
     @Test
-    public void local_object_synccall_field_parameters() {
-        assertEvalTrue(new File("abssamples/backend/ObjectTests/local_object_synccall_field_parameters.abs"));
+    public void local_object_synccall_field_param() {
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/local_object_synccall_field_param.abs"));
     }
 }
