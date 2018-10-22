@@ -9,18 +9,8 @@ aspect InitChecker {
     }
 
     @Override
-    void Block.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
-        // Define for Block as well, otherwise Stmt (below) takes
-        // precedence.
-        super.checkLegalInit(l, msg); // Blocks can have annotations
-        for (Stmt s : getStmts()) {
-            s.checkLegalInit(l, msg);
-        }
-    }
-
-
-    @Override
     void Stmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        super.checkLegalInit(l, msg); // check expressions inside statements
         List<Annotation> al = getAnnotations();
         if (AnnotationHelper.getAnnotationValueFromName(al, "ABS.DC.Cost") != null) {
             l.add(new TypeError(this, msg, "Cost annotations"));
@@ -32,31 +22,38 @@ aspect InitChecker {
 
     @Override
     void SuspendStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
-       l.add(new TypeError(this, msg, "Suspend statements"));
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        l.add(new TypeError(this, msg, "Suspend statements"));
     }
     @Override
     void AwaitStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
-       l.add(new TypeError(this, msg, "Await statements"));
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        l.add(new TypeError(this, msg, "Await statements"));
     }
     @Override
     void AwaitAsyncCall.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        super.checkLegalInit(l, msg); // Blocks can have annotations
         l.add(new TypeError(this, msg, "Await expressions"));
     }
     @Override
     void ThrowStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
-       l.add(new TypeError(this, msg, "Throw statements"));
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        l.add(new TypeError(this, msg, "Throw statements"));
     }
     @Override
     void DieStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
-       l.add(new TypeError(this, msg, "Die statements"));
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        l.add(new TypeError(this, msg, "Die statements"));
     }
     @Override
     void ReturnStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
-       l.add(new TypeError(this, msg, "Return statements"));
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        l.add(new TypeError(this, msg, "Return statements"));
     }
     @Override
     void DurationStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
-       l.add(new TypeError(this, msg, "Duration statements"));
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        l.add(new TypeError(this, msg, "Duration statements"));
     }
 
     @Override
