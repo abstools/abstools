@@ -26,6 +26,7 @@ import org.apache.commons.io.FileUtils;
 import org.abs_models.backend.common.CodeStream;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.CompilerUtils;
+import org.abs_models.frontend.analyser.AnnotationHelper;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
@@ -231,7 +232,7 @@ public class ErlApp {
                         boolean useToString = true;
                         for (ConstructorArg ca : c.getConstructorArgs()) {
                             List<Annotation> ann = ca.getTypeUse().getAnnotations();
-                            PureExp key = CompilerUtils.getAnnotationValueFromName(ann, "ABS.StdLib.HTTPName");
+                            PureExp key = AnnotationHelper.getAnnotationValueFromName(ann, "ABS.StdLib.HTTPName");
                             if (ca.hasSelectorName() || key != null) {
                                 useToString = false;
                             }
@@ -247,7 +248,7 @@ public class ErlApp {
                                 ConstructorArg ca = c.getConstructorArg(elem);
                                 List<Annotation> ann = ca.getTypeUse().getAnnotations();
                                 String key = null;
-                                PureExp keyann = CompilerUtils.getAnnotationValueFromName(ann, "ABS.StdLib.HTTPName");
+                                PureExp keyann = AnnotationHelper.getAnnotationValueFromName(ann, "ABS.StdLib.HTTPName");
                                 if (keyann != null && keyann instanceof StringLiteral) {
                                     key = ((StringLiteral)keyann).getContent();
                                 } else if (ca.hasSelectorName()) {

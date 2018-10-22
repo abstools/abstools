@@ -4,8 +4,8 @@
  */
 package org.abs_models.frontend.typechecker.ext;
 
-import org.abs_models.common.CompilerUtils;
 import org.abs_models.frontend.analyser.ErrorMessage;
+import org.abs_models.frontend.analyser.AnnotationHelper;
 import org.abs_models.frontend.analyser.TypeError;
 import org.abs_models.frontend.ast.ASTNode;
 import org.abs_models.frontend.ast.AssignStmt;
@@ -22,17 +22,17 @@ public class DeadlineChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkExpressionStmt(ExpressionStmt e) {
-        checkDeadlineCorrect(e, CompilerUtils.getAnnotationValueFromName(e.getAnnotations(), "ABS.StdLib.Deadline"));
+        checkDeadlineCorrect(e, AnnotationHelper.getAnnotationValueFromName(e.getAnnotations(), "ABS.StdLib.Deadline"));
     }
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
-        checkDeadlineCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.StdLib.Deadline"));
+        checkDeadlineCorrect(s, AnnotationHelper.getAnnotationValueFromName(s.getAnnotations(), "ABS.StdLib.Deadline"));
     }
 
     @Override
     public void checkVarDeclStmt(VarDeclStmt v) {
-        checkDeadlineCorrect(v, CompilerUtils.getAnnotationValueFromName(v.getAnnotations(), "ABS.StdLib.Deadline"));
+        checkDeadlineCorrect(v, AnnotationHelper.getAnnotationValueFromName(v.getAnnotations(), "ABS.StdLib.Deadline"));
     }
 
     private void checkDeadlineCorrect(ASTNode<?> n, PureExp deadline) {

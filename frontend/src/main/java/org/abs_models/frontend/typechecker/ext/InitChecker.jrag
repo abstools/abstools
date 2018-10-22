@@ -22,10 +22,10 @@ aspect InitChecker {
     @Override
     void Stmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
         List<Annotation> al = getAnnotations();
-        if (CompilerUtils.getAnnotationValueFromName(al, "ABS.DC.Cost") != null) {
+        if (AnnotationHelper.getAnnotationValueFromName(al, "ABS.DC.Cost") != null) {
             l.add(new TypeError(this, msg, "Cost annotations"));
         }
-        if (CompilerUtils.getAnnotationValueFromName(al, "ABS.DC.DataSize") != null) {
+        if (AnnotationHelper.getAnnotationValueFromName(al, "ABS.DC.DataSize") != null) {
             l.add(new TypeError(this, msg, "Size annotations"));
         }
     }
