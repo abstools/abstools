@@ -9,6 +9,28 @@ aspect InitChecker {
     }
 
     @Override
+    void Block.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        // Define for Block as well, otherwise Stmt (below) takes
+        // precedence.
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        for (Stmt s : getStmts()) {
+            s.checkLegalInit(l, msg);
+        }
+    }
+
+
+    @Override
+    void Stmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        List<Annotation> al = getAnnotations();
+        if (CompilerUtils.getAnnotationValueFromName(al, "ABS.DC.Cost") != null) {
+            l.add(new TypeError(this, msg, "Cost annotations"));
+        }
+        if (CompilerUtils.getAnnotationValueFromName(al, "ABS.DC.DataSize") != null) {
+            l.add(new TypeError(this, msg, "Size annotations"));
+        }
+    }
+
+    @Override
     void SuspendStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
        l.add(new TypeError(this, msg, "Suspend statements"));
     }

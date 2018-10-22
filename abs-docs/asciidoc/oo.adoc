@@ -68,7 +68,7 @@ expression.
 Classes have an optional init block, which is executed before any
 other code.  The init block cannot contain processor release points
 (i.e., `await` or `suspend`), blocking expressions (i.e., `get`,
-`duration`), or explicitly throw an exception via the `throw`
+`duration`, using resources), or explicitly throw an exception via the `throw`
 statement.
 
 Classes have an optional recovery block.  In case an uncaught exception occurs
