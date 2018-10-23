@@ -1,4 +1,5 @@
 version: 2
+# Changing literally anything in this file could fix the rare CircleCI bug we're experiencing.
 jobs:
   build_frontend:
     docker:
