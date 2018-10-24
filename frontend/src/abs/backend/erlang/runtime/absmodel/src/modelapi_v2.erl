@@ -304,10 +304,7 @@ schedule_to_json(Schedule) ->
                         method    => Method};
                   ({Type, InitOrMain}) ->
                       #{event_type => Type,
-                        task_id   => InitOrMain};
-                  ({invocation, TaskId}) ->
-                      #{event_type => invocation,
-                        task_id => TaskId}
+                        task_id   => InitOrMain}
               end, Schedule).
 
 
@@ -318,7 +315,7 @@ get_schedules_json() ->
                                          cog_schedule => schedule_to_json(Schedule)}
                                        | Acc]
                               end, [], Schedules),
-    jsx:encode(SchedulesJson, [{space, 1}, {indent, 2}]).
+    jsx:encode(lists:reverse(SchedulesJson), [{space, 1}, {indent, 2}]).
 
 
 handle_static_dcs([]) ->

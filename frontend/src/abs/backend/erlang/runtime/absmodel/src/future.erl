@@ -35,7 +35,7 @@
 start(null,_Method,_Params, _Info, _Cog, _Stack) ->
     throw(dataNullPointerException);
 start(Callee,Method,Params, Info, Cog, Stack) ->
-    {CogId, TaskId} = cog:register_invocation(Cog),
+    {CogId, TaskId} = cog:register_invocation(Cog, Method),
     NewInfo = Info#process_info{id = {CogId, TaskId, Method}},
     {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,NewInfo,true,self()], []),
     wait_for_future_start(Cog, [Ref | Stack]),

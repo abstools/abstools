@@ -4,7 +4,7 @@
 -export([process_is_runnable/2,
          process_is_blocked/2, process_is_blocked_for_gc/2,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
-         submit_references/2, register_invocation/1, register_future_read/2, get_scheduling_trace/1]).
+         submit_references/2, register_invocation/2, register_future_read/2, get_scheduling_trace/1]).
 -export([return_token/4]).
 -export([inc_ref_count/1,dec_ref_count/1]).
 -include_lib("abs_types.hrl").
@@ -128,8 +128,8 @@ submit_references(#cog{ref=CogRef}, Refs) ->
 submit_references(CogRef, Refs) ->
     gen_statem:cast(CogRef, {references, self(), Refs}).
 
-register_invocation(#cog{ref=Cog}) ->
-    gen_statem:call(Cog, register_invocation).
+register_invocation(#cog{ref=Cog}, Method) ->
+    gen_statem:call(Cog, {register_invocation, Method}).
 
 register_future_read(#cog{ref=Cog}, Id) ->
     gen_statem:call(Cog, {register_future_read, Id}).
@@ -193,14 +193,14 @@ handle_event(cast, _Event, _StateName, Data) ->
 
 %% Record/replay a method invocation, and return a stable identifier for the
 %% invocation.
-handle_event({call, From}, register_invocation, _StateName,
+handle_event({call, From}, {register_invocation, Method}, _StateName,
              Data=#data{next_fut_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
-    NewData = Data#data{next_fut_id=N+1, recorded=[{invocation, N} | Recorded]},
+    NewData = Data#data{next_fut_id=N+1, recorded=[{invocation, {Id, N, Method}} | Recorded]},
     {keep_state, NewData, {reply, From, {Id, N}}};
-handle_event({call, From}, register_invocation, _StateName,
+handle_event({call, From}, {register_invocation, Method}, _StateName,
              Data=#data{next_fut_id=N, id=Id, recorded=Recorded,
-                        replaying=[{invocation, N} | Rest]}) ->
-    NewRecorded = [{invocation, N} | Recorded],
+                        replaying=[{invocation, {Id, N, Method}} | Rest]}) ->
+    NewRecorded = [{invocation, {Id, N, Method}} | Recorded],
     NewData = Data#data{next_fut_id=N+1, recorded=NewRecorded, replaying=Rest},
     {keep_state, NewData, {reply, From, {Id, N}}};
 handle_event({call, From}, {register_future_read, Id}, _StateName,
