@@ -4,6 +4,7 @@
 -export([process_is_runnable/2,
          process_is_blocked/2, process_is_blocked_for_gc/2,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
+         process_poll_has_crashed/3,
          submit_references/2]).
 -export([return_token/4]).
 -export([inc_ref_count/1,dec_ref_count/1]).
@@ -107,6 +108,9 @@ process_poll_is_ready(#cog{ref=Cog}, TaskRef, ProcessInfo) ->
 process_poll_is_not_ready(#cog{ref=Cog}, TaskRef, ProcessInfo) ->
     Cog ! {TaskRef, false, ProcessInfo}.
 
+process_poll_has_crashed(#cog{ref=Cog}, TaskRef, ProcessInfo) ->
+    Cog ! {TaskRef, crashed, ProcessInfo}.
+
 submit_references(#cog{ref=CogRef}, Refs) ->
     gen_statem:cast(CogRef, {references, self(), Refs});
 submit_references(CogRef, Refs) ->
@@ -146,6 +150,19 @@ terminate(Reason, StateName, Data) ->
 
 code_change(_OldVsn, StateName, Data, _Extra) ->
     {ok, StateName, Data}.
+
+handle_call(From, {token, R, done, ProcessInfo},
+            Data=#data{running_task=T, polling_tasks=Pol,
+                       process_infos=ProcessInfos})
+  when R =/= T ->
+    %% How do we end up in this case?  If a task crashes while
+    %% checking its guard condition (awaiting on a null future field,
+    %% dividing by zero, ...) it will still send back {token, done}
+    %% from `task:init' after filling the future with an exception
+    %% etc., but we have already scheduled some other process to run.
+    NewPolling=gb_sets:del_element(R, Pol),
+    NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
+    {keep_state, Data#data{process_infos=NewProcessInfos}, {reply, From, ok}}.
 
 handle_cast(inc_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
     {keep_state, Data#data{referencers=Referencers + 1}};
@@ -205,25 +222,27 @@ start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie)->
     ArrivalInfo#process_info{pid=Ref}.
 
 choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos) ->
-    Candidates=gb_sets:union(RunnableTasks, poll_waiting(PollingTasks)),
+    {PollReadySet, PollCrashedSet} = poll_waiting(PollingTasks),
+    Candidates=gb_sets:union(RunnableTasks, PollReadySet),
     case gb_sets:is_empty(Candidates) of
-        true -> none;
+        true -> {none, PollCrashedSet};
         false ->
             case Scheduler of
                 undefined ->
                     %% random:uniform is in the range of 1..N
                     Index=rand:uniform(gb_sets:size(Candidates)) - 1,
-                    (fun TakeNth (Iter, 0) ->
-                             {Elem, _} = gb_sets:next(Iter),
-                             Elem;
-                         TakeNth(Iter, N) ->
-                             {_, Next} = gb_sets:next(Iter),
-                             TakeNth(Next, N - 1)
-                     end) (gb_sets:iterator(Candidates), Index);
+                    Chosen = (fun TakeNth (Iter, 0) ->
+                                      {Elem, _} = gb_sets:next(Iter),
+                                      Elem;
+                                  TakeNth(Iter, N) ->
+                                      {_, Next} = gb_sets:next(Iter),
+                                      TakeNth(Next, N - 1)
+                              end) (gb_sets:iterator(Candidates), Index),
+                    {Chosen, PollCrashedSet};
                 _ ->
                     CandidateInfos = lists:map(fun(C) -> maps:get(C, ProcessInfos) end, gb_sets:to_list(Candidates)),
                     #process_info{pid=Chosen}=Scheduler(#cog{ref=self()}, CandidateInfos, []),
-                    Chosen
+                    {Chosen, PollCrashedSet}
             end
     end.
 
@@ -232,12 +251,17 @@ choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos) ->
 poll_waiting(P) ->
     PollingTasks = gb_sets:to_list(P),
     lists:foreach(fun(R)-> R ! check end, PollingTasks),
-    ReadyTasks=lists:flatten(lists:map(fun(R) ->
-                                               receive {R, true, ProcessInfo} -> R;
-                                                       {R, false, ProcessInfo} -> []
-                                               end
-                                       end, PollingTasks)),
-    gb_sets:from_list(ReadyTasks).
+    Answers=lists:flatten(
+              lists:map(fun(R) ->
+                                receive
+                                    {R, true, ProcessInfo} -> {ready, R};
+                                    {R, false, ProcessInfo} -> [];
+                                    {R, crashed, ProcessInfo} -> {crashed, R}
+                                end
+                        end, PollingTasks)),
+    ReadyTasks = lists:filtermap(fun({ready, R}) -> {true, R}; (_) -> false end, Answers),
+    CrashTasks = lists:filtermap(fun({crashed, R}) -> {true, R}; (_) -> false end, Answers),
+    { gb_sets:from_list(ReadyTasks), gb_sets:from_list(CrashTasks)}.
 
 
 %% Wait until we get the nod from the garbage collector
@@ -263,7 +287,7 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
     NewRunnableTasks = gb_sets:add_element(TaskRef, Run),
     NewWaitingTasks = gb_sets:del_element(TaskRef, Wai),
     NewNewTasks = gb_sets:del_element(TaskRef, New),
-    T=choose_runnable_process(Scheduler, NewRunnableTasks, Pol, ProcessInfos),
+    {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnableTasks, Pol, ProcessInfos),
     case T of
         none->     % None found -- should not happen
             case gb_sets:is_empty(NewNewTasks) of
@@ -272,8 +296,8 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
             end,
             {keep_state,
              Data#data{running_task=idle,waiting_tasks=NewWaitingTasks,
-                       polling_tasks=Pol, runnable_tasks=NewRunnableTasks,
-                       new_tasks=NewNewTasks},
+                       polling_tasks=gb_sets:difference(Pol, PollCrashedSet),
+                       runnable_tasks=NewRunnableTasks, new_tasks=NewNewTasks},
              {reply, From, ok}};
         T ->       % Execute T -- might or might not be TaskRef
             cog_monitor:cog_active(self()),
@@ -282,7 +306,9 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
              %% T can come from Pol or NewRunnableTasks - adjust cog state
              Data#data{running_task=T,
                        waiting_tasks=NewWaitingTasks,
-                       polling_tasks=gb_sets:del_element(T, Pol),
+                       polling_tasks=gb_sets:difference(
+                                       gb_sets:del_element(T, Pol),
+                                       PollCrashedSet),
                        runnable_tasks=gb_sets:add_element(T, NewRunnableTasks),
                        new_tasks=NewNewTasks},
              {reply, From, ok}}
@@ -297,6 +323,8 @@ no_task_schedulable(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,N
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                  process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
+no_task_schedulable({call, From}, Event, Data) ->
+    handle_call(From, Event, Data);
 no_task_schedulable(cast, stop_world, Data) ->
     gc:cog_stopped(self()),
     {next_state, in_gc, Data#data{next_state_after_gc=no_task_schedulable}};
@@ -322,7 +350,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
                      _ -> Pol end,
     %% for `ProcessState' = `done', we just drop the task from Run (it can't
     %% be in Wai or Pol)
-    T=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos),
+    {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos),
     case T of
         none->
             case gb_sets:is_empty(New) of
@@ -331,8 +359,9 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
             end,
             {next_state, no_task_schedulable,
              Data#data{running_task=idle, runnable_tasks=NewRunnable,
-                         waiting_tasks=NewWaiting, polling_tasks=NewPolling,
-                         process_infos=NewProcessInfos}};
+                       waiting_tasks=NewWaiting,
+                       polling_tasks=gb_sets:difference(NewPolling, PollCrashedSet),
+                       process_infos=NewProcessInfos}};
         _ ->
             %% no need for `cog_monitor:active' since we were already running
             %% something
@@ -341,7 +370,9 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
              Data#data{running_task=T,
                        runnable_tasks=gb_sets:add_element(T, NewRunnable),
                        waiting_tasks=NewWaiting,
-                       polling_tasks=gb_sets:del_element(T, NewPolling),
+                       polling_tasks=gb_sets:difference(
+                                       gb_sets:del_element(T, NewPolling),
+                                       PollCrashedSet),
                        process_infos=NewProcessInfos}}
     end;
 process_running({call, From}, {process_runnable, TaskRef}, Data=#data{running_task=TaskRef}) ->
@@ -358,6 +389,8 @@ process_running({call, From}, {process_runnable, TaskRef},
                  waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                  new_tasks=gb_sets:del_element(TaskRef, New)},
      {reply, From, ok}};
+process_running({call, From}, Event, Data) ->
+    handle_call(From, Event, Data);
 process_running(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                 Data=#data{new_tasks=Tasks,dc=DC,
                            process_infos=ProcessInfos}) ->
@@ -392,7 +425,7 @@ process_running(info, {'EXIT',TaskRef,_Reason},
         %% The running task crashed / finished -- schedule a new one;
         %% duplicated from `process_running'.
         R ->
-            T=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos),
+            {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos),
             case T of
                 none->
                     case gb_sets:is_empty(NewNew) of
@@ -402,7 +435,8 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                     {next_state, no_task_schedulable,
                      Data#data{running_task=idle, runnable_tasks=NewRunnable,
                                waiting_tasks=NewWaiting,
-                               polling_tasks=NewPolling, new_tasks=NewNew,
+                               polling_tasks=gb_sets:difference(NewPolling, PollCrashedSet),
+                               new_tasks=NewNew,
                                process_infos=NewProcessInfos}};
                 _ ->
                     %% no need for `cog_monitor:active' since we were already
@@ -412,7 +446,9 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                      Data#data{running_task=T,
                                runnable_tasks=gb_sets:add_element(T, NewRunnable),
                                waiting_tasks=NewWaiting,
-                               polling_tasks=gb_sets:del_element(T, NewPolling),
+                               polling_tasks=gb_sets:difference(
+                                               gb_sets:del_element(T, NewPolling),
+                                               PollCrashedSet),
                                new_tasks=NewNew,
                                process_infos=NewProcessInfos}}
             end;
@@ -442,6 +478,8 @@ process_blocked({call, From}, {process_runnable, TaskRef},
                runnable_tasks=gb_sets:add_element(TaskRef, Run),
                new_tasks=gb_sets:del_element(TaskRef, New)},
      {reply, From, ok}};
+process_blocked({call, From}, Event, Data) ->
+    handle_call(From, Event, Data);
 process_blocked(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                 Data=#data{new_tasks=Tasks,dc=DC,
                            process_infos=ProcessInfos}) ->
@@ -501,6 +539,8 @@ waiting_for_gc_stop({call, From}, {process_runnable, T},
                runnable_tasks=gb_sets:add_element(T, Run),
                new_tasks=gb_sets:del_element(T, New)},
      {reply, From, ok}};
+waiting_for_gc_stop({call, From}, Event, Data) ->
+    handle_call(From, Event, Data);
 waiting_for_gc_stop(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                     Data=#data{new_tasks=Tasks,dc=DC,
                                process_infos=ProcessInfos}) ->
@@ -563,6 +603,8 @@ in_gc({call, From}, {process_runnable, TaskRef},
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                new_tasks=gb_sets:del_element(TaskRef, New)},
      {reply, From, ok}};
+in_gc({call, From}, Event, Data) ->
+    handle_call(From, Event, Data);
 in_gc(cast, {get_references, Sender},
       Data=#data{runnable_tasks=Run, waiting_tasks=Wai, polling_tasks=Pol}) ->
     AllTasks = gb_sets:union([Run, Wai, Pol]),
@@ -599,20 +641,23 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
         true ->
             case NextState of
                 no_task_schedulable ->
-                    T=choose_runnable_process(Scheduler, Run, Pol, ProcessInfos),
+                    {T, PollCrashedSet}=choose_runnable_process(Scheduler, Run, Pol, ProcessInfos),
                     case T of
                         none->   % None found
                             %% Do not send `cog_idle()' here since a task
                             %% might have become unblocked due to clock
                             %% advance in the meantime
-                            {next_state, no_task_schedulable, Data};
+                            {next_state, no_task_schedulable,
+                             Data#data{polling_tasks=gb_sets:difference(Pol, PollCrashedSet)}};
                         T ->                    % Execute T
                             cog_monitor:cog_active(self()),
                             T ! token,
                             {next_state, process_running,
                              Data#data{running_task=T,
                                        runnable_tasks=gb_sets:add_element(T, Run),
-                                       polling_tasks=gb_sets:del_element(T, Pol)}}
+                                       polling_tasks=gb_sets:difference(
+                                                       gb_sets:del_element(T, Pol),
+                                                       PollCrashedSet)}}
                     end;
                 process_running ->
                     %% when switching to `in_gc' we're never in state
@@ -672,6 +717,8 @@ waiting_for_references({call, From}, {process_runnable, TaskRef},
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                new_tasks=gb_sets:del_element(TaskRef, New)},
      {reply, From, ok}};
+waiting_for_references({call, From}, Event, Data) ->
+    handle_call(From, Event, Data);
 waiting_for_references(cast, {references, Task, References},
                        Data=#data{references=ReferenceRecord=#{
                                                sender := Sender,

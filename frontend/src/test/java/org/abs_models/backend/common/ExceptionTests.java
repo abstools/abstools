@@ -62,4 +62,10 @@ public class ExceptionTests extends SemanticTests {
        Assume.assumeFalse("Not implemented on Java / Maude backend yet", driver.getBackendName() == BackendName.JAVA || driver.getBackendName() == BackendName.MAUDE);
        assertEvalTrue(new File("abssamples/backend/StmtTests/exception_nullfuture.abs"));
    }
+
+   @Test
+   public void testExceptionGuard() {
+       Assume.assumeFalse("Not implemented on Java / Maude backend yet", driver.getBackendName() == BackendName.JAVA || driver.getBackendName() == BackendName.MAUDE);
+       assertEvalTrue(new File("abssamples/backend/ObjectTests/exception_guard.abs"));
+   }
 }

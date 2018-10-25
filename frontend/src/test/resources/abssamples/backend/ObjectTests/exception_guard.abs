@@ -1,0 +1,28 @@
+module BackendTest;
+
+interface I {
+    Unit test();
+    Unit set(Int i);
+}
+
+class C implements I {
+    Int n = 0;
+    recover {
+        _ => skip;
+    }
+    Unit test() {
+        await 5 / n > 0;
+    }
+    Unit set(Int i) { this.n = i; }
+}
+
+{
+    Bool testresult = False;
+    I o = new C();
+    try Unit r = await o!test();
+    catch e => testresult = True;
+    await o!set(5);
+    try Unit r = await o!test();
+    catch e => testresult = False;
+    // println("Result: " + toString(testresult));
+}

@@ -1064,9 +1064,13 @@ aspect GenerateErlang {
       ecs.println("task:release_token(Cog,waiting_poll),");
       ecs.pf("(fun Poll (%s)->",vars.toParamList());
       ecs.incIndent().println("receive check -> ");
+      ecs.incIndent().println("try");
       ecs.incIndent().pf("case %s of",sw);
       ecs.incIndent().pf("true -> cog:process_poll_is_ready(Cog, self(), get(process_info)), Poll(%s);",vars.toParamList());
       ecs.pf("false -> cog:process_poll_is_not_ready(Cog, self(), get(process_info)),  Poll(%s)",vars.toParamList());
+      ecs.decIndent().println("end");
+      ecs.decIndent().println("catch");
+      ecs.incIndent().println("_:Exception -> cog:process_poll_has_crashed(Cog, self(), get(process_info)), throw(Exception)");
       ecs.decIndent().println("end;");
       ecs.decIndent().pf("wait -> Poll(%s);", vars.toParamList());
       ecs.println("token -> ok;");
