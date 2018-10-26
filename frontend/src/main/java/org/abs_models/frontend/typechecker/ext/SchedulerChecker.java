@@ -5,6 +5,7 @@
 package org.abs_models.frontend.typechecker.ext;
 
 import org.abs_models.common.CompilerUtils;
+import org.abs_models.frontend.analyser.AnnotationHelper;
 import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.TypeError;
 import org.abs_models.frontend.ast.ASTNode;
@@ -133,7 +134,7 @@ public class SchedulerChecker extends DefaultTypeSystemExtension {
     @Override
     public void checkNewExp(NewExp e) {
         Stmt stmt = CompilerUtils.findStmtForExpression(e);
-        PureExp sched = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotations(), "ABS.Scheduler.Scheduler");
+        PureExp sched = AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotations(), "ABS.Scheduler.Scheduler");
         if (sched != null) {
             ClassDecl decl = (ClassDecl)(e.lookup(new KindedName(KindedName.Kind.CLASS,e.getClassName())));
             checkScheduleExp(sched, decl, stmt);
@@ -142,7 +143,7 @@ public class SchedulerChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkClassDecl(ClassDecl decl) {
-        PureExp sched = CompilerUtils.getAnnotationValueFromName(decl.getAnnotations(), "ABS.Scheduler.Scheduler");
+        PureExp sched = AnnotationHelper.getAnnotationValueFromName(decl.getAnnotations(), "ABS.Scheduler.Scheduler");
         checkScheduleExp(sched, decl, decl);
     }
 

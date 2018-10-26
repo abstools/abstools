@@ -7,10 +7,9 @@ package org.abs_models.frontend.typechecker.ext;
 import java.util.Set;
 import java.util.HashSet;
 
-import org.abs_models.common.CompilerUtils;
-
 import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticWarning;
+import org.abs_models.frontend.analyser.AnnotationHelper;
 import org.abs_models.frontend.analyser.TypeError;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.typechecker.Type;
@@ -58,7 +57,7 @@ public class HttpExportChecker extends DefaultTypeSystemExtension {
                 ASTNode arg = null;
                 String key = null;
                 List<Annotation> ann = ca.getTypeUse().getAnnotations();
-                PureExp keyann = CompilerUtils.getAnnotationValueFromName(ann, "ABS.StdLib.HTTPName");
+                PureExp keyann = AnnotationHelper.getAnnotationValueFromName(ann, "ABS.StdLib.HTTPName");
                 if (keyann != null) {
                     if (!(keyann instanceof StringLiteral)) {
                         errors.add(new TypeError(keyann, ErrorMessage.WRONG_HTTPNAME, keyann.getType()));

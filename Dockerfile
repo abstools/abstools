@@ -12,7 +12,7 @@ RUN apt-get -y update \
  && apt-get -y update \
  && apt-get -y install erlang \
  && apt-get -y install default-jre \
- && apt-get install -y qt5-default python-dev wget python-pip \
+ && apt-get install -y libgl1 python-dev wget python-pip \
  && docker-php-ext-install mcrypt \
  && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/abstools/absexamples.git /var/www/absexamples \
@@ -80,54 +80,30 @@ RUN chmod -R a+rx /usr/local/lib/frontend
 ###############
 # SmartDeployer installation
 ###############
-# install needed packages
-RUN pip install antlr4-python2-runtime toposort psutil
-# download and install zephyurs2
-RUN cd / && \
-	mkdir solvers_exec && \
-  cd /solvers_exec && \
-  git clone --recursive https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git && \
-	cd zephyrus2 && \
-	#git checkout tags/v1.0 && \
-	git checkout 5df3baf && \
-	#check out tested version with smartdeployer
-  pip install -e /solvers_exec/zephyrus2
-# download MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz that comes with gecode
-RUN cd /solvers_exec && \
-	wget -nv https://github.com/MiniZinc/MiniZincIDE/releases/download/2.0.13/MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz && \
-	tar -zxf MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz && \
-	mv /solvers_exec/MiniZincIDE-2.0.13-bundle-linux-x86_64 /solvers_exec/MiniZincIDE && \
-	rm -rf MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz
-ENV PATH /solvers_exec/MiniZincIDE:$PATH
-# clone abs_deployer
-# RUN cd /solvers_exec && \
-# 	git clone --recursive https://github.com/jacopoMauro/abs_deployer.git && \
-# 	cd abs_deployer # && \
-# 	git checkout daa4625
-# 	# git checkout tags/v0.3
-# ENV PATH /solvers_exec/abs_deployer:$PATH
-# # download chuffed, add global-dir in minizinc
-# RUN cd /solvers_exec && \
-#   git clone --depth=1 https://github.com/geoffchu/chuffed.git && \
-#   ( [ -d /solvers_exec/MiniZincIDE ] && \
-# 	  ln -s /solvers_exec/chuffed/binary/linux/mznlib /solvers_exec/MiniZincIDE/share/minizinc/chuffed || \
-# 		echo MiniZincIde not installed ) && \
-#   ( [ -d /solvers_exec/minisearch ] && \
-# 	ln -s /solvers_exec/chuffed/binary/linux/mznlib /solvers_exec/minisearch/share/minizinc/chuffed || \
-# 		echo MiniSearch not installed )
-# RUN cp /solvers_exec/abs_deployer/docker/docker_scripts/fzn-chuffed /bin/fzn-chuffed && \
-# 	chmod 755 /bin/fzn-chuffed && \ 
-# 	chmod 755 /solvers_exec/chuffed/binary/linux/fzn_chuffed
-# # add the path to absfrontend.jar in classpath
-# ENV CLASSPATH=/usr/local/lib/frontend/dist/absfrontend.jar:$CLASSPATH
-# RUN echo "\
-# # set corresponding paths in easyinterface\n\
-# #\n\
-# # path to SmartDeployer\n\
-# EC_SMARTDEPLOYERHOME=\"/solvers_exec\"\n\
-# # path to minizinc\n\
-# #\n\
-# EC_PATH=\"\$EC_PATH::/solvers_exec/minizinc-1.6/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
+RUN pip install \
+        antlr4-python2-runtime \
+        toposort \
+        psutil \
+        click
+COPY --from=jacopomauro/abs_deployer:v0.4.1 /tool /tool	
+ENV PATH "$PATH:/tool/MiniZincIDE/bin"
+ENV LD_LIBRARY_PATH "$LD_LIBRARY_PATH:/tool/MiniZincIDE/lib"
+ENV PYTHONPATH "$PYTHONPATH:/tool/z3/install/lib/python-2/site-packages"
+ENV PATH "$PATH:/tool/z3/install/bin"
+ENV CLASSPATH "$CLASSPATH:/tool/fzn2smt:/tool/fzn2smt/antlr-runtime-3.2.jar"
+ENV PATH "$PATH:/tool/or-tools/bin"
+ENV PATH "/tool/abs_deployer:$PATH"
+ENV CLASSPATH "/usr/local/lib/frontend/dist/absfrontend.jar:$CLASSPATH"
+RUN pip install -e /tool/zephyrus2
+
+RUN echo "\
+# set corresponding paths in easyinterface\n\
+#\n\
+# path to SmartDeployer\n\
+EC_SMARTDEPLOYERHOME=\"/tool\"\n\
+# path to minizinc\n\
+#\n\
+EC_PATH=\"\$EC_PATH::/tool/MiniZincIDE/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
 
 
 

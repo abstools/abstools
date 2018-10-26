@@ -170,8 +170,8 @@ aspect GenerateMaude {
     {
         boolean inlist = false;
         String effvar = var;
-        PureExp deadline = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.StdLib.Deadline");
-        PureExp size = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.DC.Size");
+        PureExp deadline = AnnotationHelper.getAnnotationValueFromName(annotations, "ABS.StdLib.Deadline");
+        PureExp size = AnnotationHelper.getAnnotationValueFromName(annotations, "ABS.DC.Size");
         
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
         stream.print("asynccall('"
@@ -193,8 +193,8 @@ aspect GenerateMaude {
     public void AwaitAsyncCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
         boolean inlist = false;
-        PureExp deadline = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.StdLib.Deadline");
-        PureExp size = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.DC.Size");
+        PureExp deadline = AnnotationHelper.getAnnotationValueFromName(annotations, "ABS.StdLib.Deadline");
+        PureExp size = AnnotationHelper.getAnnotationValueFromName(annotations, "ABS.DC.Size");
 
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
         stream.print("asynccall('.staticfuture ; ");
@@ -217,7 +217,7 @@ aspect GenerateMaude {
     public void SyncCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
         boolean inlist = false;
-        PureExp deadline = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.StdLib.Deadline");
+        PureExp deadline = AnnotationHelper.getAnnotationValueFromName(annotations, "ABS.StdLib.Deadline");
 
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
         stream.print("synccall('.staticfuture ; ");
@@ -273,8 +273,8 @@ aspect GenerateMaude {
             stream.print(") ");
         }
         if (!hasLocal()) {
-            PureExp dc = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.DC.DC");
-            PureExp scheduler = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.Scheduler.Scheduler");
+            PureExp dc = AnnotationHelper.getAnnotationValueFromName(annotations, "ABS.DC.DC");
+            PureExp scheduler = AnnotationHelper.getAnnotationValueFromName(annotations, "ABS.Scheduler.Scheduler");
             stream.print("; ");
             if (dc != null) {
                 dc.generateMaude(stream);
@@ -573,7 +573,7 @@ aspect GenerateMaude {
 
     public void ClassDecl.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        PureExp scheduler = CompilerUtils.getAnnotationValueFromName(this.getAnnotationList(), "ABS.Scheduler.Scheduler");
+        PureExp scheduler = AnnotationHelper.getAnnotationValueFromName(this.getAnnotationList(), "ABS.Scheduler.Scheduler");
 		stream.println("\n\n< '" + getQualifiedName() + " : Class | Param: ");
         if (getNumParam() == 0) {
             stream.print("noVid");
@@ -616,7 +616,7 @@ aspect GenerateMaude {
     public void MethodImpl.generateMaude(PrintStream stream) {
         boolean inlist = false;
         MethodSig sig = getMethodSig();
-        PureExp cost = CompilerUtils.getAnnotationValueFromName(sig.getAnnotationList(), "ABS.DC.Cost");
+        PureExp cost = AnnotationHelper.getAnnotationValueFromName(sig.getAnnotationList(), "ABS.DC.Cost");
         stream.print("< '" + sig.getName() + " : Method | Param: ");
         if (sig.getNumParam() == 0) {
             stream.print("noVid");

@@ -7,6 +7,7 @@ package org.abs_models.frontend.typechecker.ext;
 import org.abs_models.common.CompilerUtils;
 import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticError;
+import org.abs_models.frontend.analyser.AnnotationHelper;
 import org.abs_models.frontend.analyser.TypeError;
 import org.abs_models.frontend.ast.ASTNode;
 import org.abs_models.frontend.ast.AssignStmt;
@@ -38,20 +39,20 @@ public class NewExpressionChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkExpressionStmt(ExpressionStmt expressionStmt) {
-        checkDCCorrect(expressionStmt, CompilerUtils.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.DC.DC"));
-        checkHTTPNameCorrect(expressionStmt, CompilerUtils.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.StdLib.HTTPName"));
+        checkDCCorrect(expressionStmt, AnnotationHelper.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.DC.DC"));
+        checkHTTPNameCorrect(expressionStmt, AnnotationHelper.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.StdLib.HTTPName"));
     }
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
-        checkDCCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.DC.DC"));
-        checkHTTPNameCorrect(s, CompilerUtils.getAnnotationValueFromName(s.getAnnotations(), "ABS.StdLib.HTTPName"));
+        checkDCCorrect(s, AnnotationHelper.getAnnotationValueFromName(s.getAnnotations(), "ABS.DC.DC"));
+        checkHTTPNameCorrect(s, AnnotationHelper.getAnnotationValueFromName(s.getAnnotations(), "ABS.StdLib.HTTPName"));
     }
 
     @Override
     public void checkVarDeclStmt(VarDeclStmt varDeclStmt) {
-        checkDCCorrect(varDeclStmt, CompilerUtils.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.DC.DC"));
-        checkHTTPNameCorrect(varDeclStmt, CompilerUtils.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.StdLib.HTTPName"));
+        checkDCCorrect(varDeclStmt, AnnotationHelper.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.DC.DC"));
+        checkHTTPNameCorrect(varDeclStmt, AnnotationHelper.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.StdLib.HTTPName"));
     }
 
     private void checkDCCorrect(ASTNode<?> n, PureExp dc) {
@@ -79,7 +80,7 @@ public class NewExpressionChecker extends DefaultTypeSystemExtension {
             }
             Stmt stmt = CompilerUtils.findStmtForExpression(e);
             if (stmt != null) { // should always be true
-                if (CompilerUtils.getAnnotationValueFromName(stmt.getAnnotations(), "ABS.DC.DC") != null) {
+                if (AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotations(), "ABS.DC.DC") != null) {
                     errors.add(new SemanticError(e, ErrorMessage.DEPLOYMENT_COMPONENT_IGNORED, "dummy string to keep constructor happy"));
                 }
             }

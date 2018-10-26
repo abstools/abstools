@@ -205,7 +205,7 @@ aspect GenerateErlang {
         ecs.println(",");
       first=false;
       stmt.generateErlangLocationInfo(ecs);
-      PureExp cost = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.DC.Cost");
+      PureExp cost = AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.DC.Cost");
       if (cost != null) {
           ecs.print("task:block_for_cpu(Cog,DC,");
           cost.generateErlangCode(ecs, vars);
@@ -213,7 +213,7 @@ aspect GenerateErlang {
           ecs.print(vars.toStack());
           ecs.println("),");
       }
-      PureExp size = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.DC.DataSize");
+      PureExp size = AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.DC.DataSize");
       if (size != null) {
           Call call_exp = stmt.getCallExpression();
           if (call_exp != null) {
@@ -263,7 +263,7 @@ aspect GenerateErlang {
       buffer.close();
       ecs.format("put(vars, (get(vars))#{'%s' => %s})",  this.getName(), sw.toString().substring(ecs.getIndent().length()));
       if (getInitExp() instanceof NewExp) {
-          PureExp restname = CompilerUtils.getAnnotationValueFromName(annotations, "ABS.StdLib.HTTPName");
+          PureExp restname = AnnotationHelper.getAnnotationValueFromName(annotations, "ABS.StdLib.HTTPName");
           if (restname != null) {
               ecs.println(",");
               ecs.format("cog_monitor:register_object_with_http_name(maps:get('%s', get(vars)),", this.getName());
@@ -301,7 +301,7 @@ aspect GenerateErlang {
       throw new NotImplementedYetException(this);
     }
     if (getValue() instanceof NewExp) {
-        PureExp restname = CompilerUtils.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.HTTPName");
+        PureExp restname = AnnotationHelper.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.HTTPName");
         if (restname != null) {
             ecs.println(",");
             ecs.print("cog_monitor:register_object_with_http_name(" + varExp + ",");
@@ -318,11 +318,11 @@ aspect GenerateErlang {
   @Override
   public void NewExp.generateErlangCode(CodeStream ecs,Vars vars) {
     Stmt stmt = CompilerUtils.findStmtForExpression(this);
-    PureExp dc = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotations(), "ABS.DC.DC");
+    PureExp dc = AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotations(), "ABS.DC.DC");
     ClassDecl classDecl = ((UnionType)getType()).getOriginatingClass();
-    PureExp scheduler = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotations(), "ABS.Scheduler.Scheduler");
+    PureExp scheduler = AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotations(), "ABS.Scheduler.Scheduler");
     if (scheduler == null) {
-        scheduler = CompilerUtils.getAnnotationValueFromName(classDecl.getAnnotations(), "ABS.Scheduler.Scheduler");
+        scheduler = AnnotationHelper.getAnnotationValueFromName(classDecl.getAnnotations(), "ABS.Scheduler.Scheduler");
     }
     String className = ErlUtil.getName(classDecl);
     boolean isNewDC = getType().isDeploymentComponentType();
@@ -381,7 +381,7 @@ aspect GenerateErlang {
 
   @Override
   public void ExpressionStmt.generateErlangCode(CodeStream ecs,Vars vars) {
-      PureExp restname = CompilerUtils.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.HTTPName");
+      PureExp restname = AnnotationHelper.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.HTTPName");
       // Need to generate code for right-hand side before creating new
       // variable
       StringWriter sw = new StringWriter();
@@ -483,7 +483,7 @@ aspect GenerateErlang {
   @Override
   public void AsyncCall.generateErlangCode(CodeStream ecs,Vars vars){
     Stmt stmt = CompilerUtils.findStmtForExpression(this);
-    PureExp deadline = CompilerUtils.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.StdLib.Deadline");
+    PureExp deadline = AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.StdLib.Deadline");
     ecs.print("future:start(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
@@ -1070,9 +1070,13 @@ aspect GenerateErlang {
       ecs.pf("(fun Poll (%s)->",vars.toParamList());
       ecs.incIndent().println("receive {check, OState} -> ");
       ecs.incIndent().println("put(this, OState),");
-      ecs.pf("case %s of",sw);
+      ecs.incIndent().println("try");
+      ecs.incIndent().pf("case %s of",sw);
       ecs.incIndent().pf("true -> cog:process_poll_is_ready(Cog, self(), get(process_info)), Poll(%s);",vars.toParamList());
       ecs.pf("false -> cog:process_poll_is_not_ready(Cog, self(), get(process_info)),  Poll(%s)",vars.toParamList());
+      ecs.decIndent().println("end");
+      ecs.decIndent().println("catch");
+      ecs.incIndent().println("_:Exception -> cog:process_poll_has_crashed(Cog, self(), get(process_info)), throw(Exception)");
       ecs.decIndent().println("end;");
       ecs.decIndent().pf("wait -> Poll(%s);", vars.toParamList());
       ecs.println("{token, OState} -> put(this, OState), ok;");
