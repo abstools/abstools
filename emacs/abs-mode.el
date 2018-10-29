@@ -123,6 +123,12 @@ Server will not be started if nil."
   :group 'abs)
 (put 'abs-influxdb-db 'safe-local-variable 'stringp)
 
+(defcustom abs-replay-trace nil
+  "A path to a JSON file, containing a trace to be replayed."
+  :type 'string
+  :group 'abs)
+(put 'abs-replay-trace 'safe-local-variable 'stringp)
+
 (defcustom abs-compile-with-coverage-info nil
   "Control whether to generate erlang code with coverage info."
   :type 'boolean
@@ -557,7 +563,8 @@ value.")
                    (port abs-local-port)
                    (influxdb-enable abs-influxdb-enable)
                    (influxdb-url abs-influxdb-url)
-                   (influxdb-db abs-influxdb-db))
+                   (influxdb-db abs-influxdb-db)
+                   (replay-trace abs-replay-trace))
                (with-current-buffer erlang-buffer
                  (comint-send-string erlang-buffer
                                      (concat "cd (\"" erlang-dir "\").\n"))
@@ -576,6 +583,8 @@ value.")
                                              (when influxdb-enable (format " -i " influxdb-enable))
                                              (when influxdb-url (format " -u %s " influxdb-url))
                                              (when influxdb-db (format " -d %s " influxdb-db))
+                                             (when (and replay-trace (file-exists-p replay-trace))
+                                               (format " -r %s " (expand-file-name replay-trace)))
                                              ;; FIXME: reinstate `module' arg
                                              ;; once abs--guess-module doesn't
                                              ;; pick a module w/o main block
