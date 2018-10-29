@@ -5,7 +5,7 @@
 -behaviour(gen_server).
 -include_lib("abs_types.hrl").
 
--export([start_link/2, stop/0, waitfor/0]).
+-export([start_link/3, stop/0, waitfor/0]).
 
 %% should objects of this class be garbage-collected?  (Used for keeping
 %% deployment components around for visualization; didn't find a better name
@@ -56,8 +56,8 @@
               }).
 %%External function
 
-start_link(Main, Keepalive) ->
-    gen_server:start_link({global, cog_monitor}, ?MODULE, [Main, Keepalive], []).
+start_link(Main, Keepalive, Trace) ->
+    gen_server:start_link({global, cog_monitor}, ?MODULE, [Main, Keepalive, Trace], []).
 
 stop() ->
     gen_server:stop({global, cog_monitor}).
@@ -140,7 +140,7 @@ increase_clock_limit(Amount) ->
 %% gen_server callbacks
 
 %%The callback gets as parameter the pid of the runtime process, which waits for all cogs to be idle
-init([Main,Keepalive])->
+init([Main,Keepalive,Trace])->
     {ok,#state{main=Main,
                active=gb_sets:empty(),
                blocked=gb_sets:empty(),
@@ -149,7 +149,7 @@ init([Main,Keepalive])->
                dcs=[],
                active_before_next_clock=ordsets:new(),
                cog_names=maps:new(),
-               trace_map=maps:new(),
+               trace_map=Trace,
                registered_objects=maps:new(),
                keepalive_after_clock_limit=Keepalive}}.
 
@@ -306,9 +306,7 @@ gather_scheduling_traces(Idle, Names, TraceMap) ->
                  end, TraceMap, Idle).
 
 
-terminate(_Reason, State=#state{idle=I, cog_names=M, trace_map=T})->
-    NewM = gather_scheduling_traces(I, M, T),
-    io:format("Scheduling traces:~n~p~n", [NewM]),
+terminate(_Reason, _State) ->
     ok.
 
 

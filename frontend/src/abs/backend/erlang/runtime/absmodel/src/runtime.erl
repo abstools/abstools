@@ -8,7 +8,7 @@
 
 -include_lib("absmodulename.hrl").
 
--export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/2]).
+-export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/3]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -20,6 +20,7 @@
          {influxdb_db,$d,"influxdb-db",{string,"absmodel"},"Name of the influx database log data is written to"},
          {clocklimit,$l,"clock-limit",{integer,none},"Do not advance simulation clock above given clock value"},
          {schedulers,$s,"schedulers",{integer,none},"Set number of online erlang schedulers"},
+         {replay_trace,$r,"replay-trace",{string, none},"Replay a trace, given as a JSON file"},
          {version,$v,"version",undefined,"Output version and exit"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
 
@@ -37,7 +38,7 @@ init([]) ->
 start()->
     case init:get_plain_arguments() of
         []->
-            run_mod(?ABSMAINMODULE, false, false, none, none, none, none, none);
+            run_mod(?ABSMAINMODULE, false, false, none, none, none, none, none, none);
         Args->
             start(Args)
    end.
@@ -51,10 +52,11 @@ run(Args) ->
 start_http() ->
     {ok, _} = application:ensure_all_started(absmodel).
 
-start_http(Port, Clocklimit) ->
+start_http(Port, Clocklimit, Trace) ->
     ok = application:load(absmodel),
     ok = application:set_env(absmodel, port, Port),
     ok = application:set_env(absmodel, clocklimit, Clocklimit),
+    ok = application:set_env(absmodel, replay_trace, Trace),
     start_http().
 
 
@@ -93,8 +95,15 @@ parse(Args,Exec)->
                      erlang:system_flag(schedulers_online,
                                         min(Schedulers, MaxSchedulers))
             end,
+            Trace = case proplists:get_value(replay_trace,Parsed,none) of
+                        none -> maps:new();
+                        FileName ->
+                            {ok, File} = file:read_file(FileName),
+                            modelapi_v2:json_to_trace(File)
+                    end,
+
             run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
-                    InfluxdbUrl, InfluxdbDB, InfluxdbEnable);
+                    InfluxdbUrl, InfluxdbDB, InfluxdbEnable, Trace);
         _ ->
             getopt:usage(?CMDLINE_SPEC,Exec)
     end.
@@ -105,16 +114,16 @@ parse(Args,Exec)->
 %% For now we just punt.
 start_link(Args) ->
     case Args of
-        [Module, Clocklimit, Keepalive] ->
-            {ok, _T} = start_mod(Module, false, false, Clocklimit, Keepalive),
+        [Module, Clocklimit, Keepalive, Trace] ->
+            {ok, _T} = start_mod(Module, false, false, Clocklimit, Keepalive, Trace),
             supervisor:start_link({local, ?MODULE}, ?MODULE, []);
         _ -> {error, false}
     end.
 
-start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
+start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive, Trace) ->
     io:format(standard_error, "Start ~w~n",[Module]),
     %%Init logging
-    {ok, _CogMonitor} = cog_monitor:start_link(self(), Keepalive),
+    {ok, _CogMonitor} = cog_monitor:start_link(self(), Keepalive, Trace),
     %% Init garbage collector
     {ok, _GC} = gc:start(GCStatistics, Debug),
     %% Init simulation clock
@@ -144,7 +153,7 @@ end_mod(TaskRef, InfluxdbEnabled) ->
 
 
 run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
-        InfluxdbUrl, InfluxdbDB, InfluxdbEnable)  ->
+        InfluxdbUrl, InfluxdbDB, InfluxdbEnable, Trace)  ->
 
     case InfluxdbEnable of
         true -> {ok, _Influxdb} = influxdb:start_link(InfluxdbUrl, InfluxdbDB, Clocklimit);
@@ -153,10 +162,10 @@ run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
 
     case Port of
         _ when is_integer(Port) ->
-            start_http(Port, Clocklimit),
+            start_http(Port, Clocklimit, Trace),
             receive ok -> ok end;
         _ ->
-            {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, false),
+            {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, false, Trace),
             end_mod(R, InfluxdbEnable)
     end.
 
