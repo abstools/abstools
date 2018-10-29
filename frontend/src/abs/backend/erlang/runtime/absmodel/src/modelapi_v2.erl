@@ -8,6 +8,7 @@
 
 -export([print_statistics/0]).
 -export([abs_to_json/1]).                % callback from data_constructor_info
+-export([json_to_trace/1]).
 
 
 init(Req, _Opts) ->
@@ -296,6 +297,25 @@ get_statistics_json() ->
     jsx:encode(DC_info_json, [{space, 1}, {indent, 2}]).
 
 
+construct_local_trace(LocalTrace) ->
+    lists:map(fun (#{caller_id := CallerId,
+                     event_type := Type,
+                     method := Method,
+                     task_id := TaskId}) ->
+                      {list_to_atom(binary_to_list(Type)),
+                       {CallerId, TaskId, list_to_atom(binary_to_list(Method))}};
+                  (#{event_type := Type,
+                     task_id := InitOrMain}) ->
+                      {list_to_atom(binary_to_list(Type)),
+                       list_to_atom(binary_to_list(InitOrMain))}
+              end, LocalTrace).
+
+json_to_trace(JSON) ->
+    RawTrace = jsx:decode(JSON, [{labels, atom}, return_maps]),
+    lists:foldl(fun (#{cog_id := Id, cog_schedule := LocalTrace}, Acc) ->
+                        maps:put(Id, construct_local_trace(LocalTrace), Acc)
+                end, #{}, RawTrace).
+
 schedule_to_json(Schedule) ->
     lists:map(fun ({Type, {CallerId, TaskId, Method}}) ->
                       #{event_type => Type,
@@ -306,7 +326,6 @@ schedule_to_json(Schedule) ->
                       #{event_type => Type,
                         task_id   => InitOrMain}
               end, Schedule).
-
 
 get_schedules_json() ->
     Schedules = cog_monitor:get_schedules(),
