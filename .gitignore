@@ -2,7 +2,10 @@
 /.vagrant
 /.recommenders
 .rebar/
-/frontend/.gradle
+/.gradle
+.settings/
+.project
+.classpath
 /frontend/out
 bin/
 build/

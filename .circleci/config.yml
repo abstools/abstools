@@ -1,12 +1,11 @@
 version: 2
-# Changing literally anything in this file could fix the rare CircleCI bug we're experiencing.
-# At least according to some forum post from early 2018.
 jobs:
   build_frontend:
     docker:
       - image: bjoernpetersen/erlang-openjdk:erl21-jdk8-slim
     working_directory: ~/repo/frontend
     environment:
+      # Disabling the Gradle daemon is recommended in CI environments
       GRADLE_OPTS: -Dorg.gradle.daemon=false
 
     steps:
@@ -18,7 +17,7 @@ jobs:
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "build.gradle" }}
-              # fallback to using the latest cache if no exact match is found
+              # Fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
       - run: ./gradlew dependencies
@@ -51,12 +50,13 @@ jobs:
           path: ~/repo
       - run: chmod +x gradlew
 
+        # Attach the workspace from the build_frontend job to speed up the Docker build
       - attach_workspace:
           at: .
 
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
 
-      # build and push the absc docker image
+        # Build and push the absc docker image
       - run: |
           VERSION=$(echo $CIRCLE_TAG | grep -oP "\d+\.\d+\.\d+")
           docker build -f Dockerfile -t abslang/absc:VERSION ..
@@ -70,12 +70,13 @@ jobs:
     steps:
       - checkout
 
+        # Attach the workspace from the build_frontend job containing the absfrontend.jar
       - attach_workspace:
           at: frontend
 
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
 
-      # build and push the collaboratory docker image
+        # Build and push the collaboratory docker image
       - run: |
           VERSION=$(echo $CIRCLE_TAG | grep -oP "\d+\.\d+\.\d+")
           docker build -t abslang/collaboratory:VERSION .
