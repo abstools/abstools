@@ -27,7 +27,7 @@ jobs:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
 
-      - run: ./gradlew build -x test -x check
+      - run: ./gradlew build -x check
 
       - store_artifacts:
           path: dist
