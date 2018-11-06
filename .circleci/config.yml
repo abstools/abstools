@@ -27,9 +27,10 @@ jobs:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
 
-      - run: ./gradlew build
+      - run: ./gradlew build -x test -x check
 
       # https://circleci.com/docs/2.0/collect-test-data/
+      - run: ./gradlew test
       - run:
           name: Save test results
           command: |
