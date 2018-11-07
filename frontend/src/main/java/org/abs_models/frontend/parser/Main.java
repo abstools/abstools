@@ -796,7 +796,7 @@ public class Main {
      * @param file The filename of the input stream, or null
      * @param reader The stream to parse
      * @param raiseExceptions Raise parse errors as exceptions if true
-     * @param stdlib Add "import * from StdLib;" in all modules
+     * @param stdlib If true, add "import * from ABS.StdLib;" in all modules that do not import anything from ABS.StdLib already
      * @return The parsed content of `reader`, or an empty CompilationUnit with parse error information
      * @throws IOException
      */
@@ -822,8 +822,20 @@ public class Main {
                     = new ASTPreProcessor().preprocess(l.getCompilationUnit());
                 if (stdlib) {
                     for (ModuleDecl d : u.getModuleDecls()) {
-                        if (!Constants.STDLIB_NAME.equals(d.getName()))
-                            d.getImports().add(new StarImport(Constants.STDLIB_NAME));
+                        if (!Constants.STDLIB_NAME.equals(d.getName())) {
+                            boolean needsImport = true;
+                            for (Import i : d.getImports()) {
+                                if (i instanceof StarImport
+                                    && ((StarImport)i).getModuleName().equals(Constants.STDLIB_NAME))
+                                    needsImport = false;
+                                else if (i instanceof FromImport
+                                         && ((FromImport)i).getModuleName().equals(Constants.STDLIB_NAME))
+                                    needsImport = false;
+                            }
+                            if (needsImport) {
+                                d.getImports().add(new StarImport(Constants.STDLIB_NAME));
+                            }
+                        }
                     }
                 }
                 return u;

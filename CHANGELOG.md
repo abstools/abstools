@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Switched to the [gradle](https://gradle.org) build system for the ABS compiler.  The directory structure inside `frontend/` was extensively reorganized to conform with maven / gradle directory layout conventions.
 
+- Modules that explicitly import something from the `ABS.StdLib` standard library will not implicitly import everything from `ABS.StdLib` anymore.  The behavior of modules not having such an import clause is unchanged, i.e., they still contain an impolicit `import * from ABS.StdLib` clause.
+
 - Avoid crash in `DC.decrementResources`: when trying to decrement by more than available, only decrement to the maximum possible.  `decrementResources` now returns the actual amount by which the resource was decreased.  This changes the signature of three methods in the `ABS.DC.DeploymentComponent` interface in a backwards-incompatible way.
 
 - When pretty-printing to a file, the resulting file will use Unix line endings.
