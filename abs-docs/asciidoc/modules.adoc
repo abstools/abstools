@@ -45,9 +45,10 @@ Every module starts with a declaration of the form
 This declaration starts a new module named `MyModule`.  All declarations after
 this line until the next module declaration belong to the module `MyModule`.
 
-NOTE: The module `ABS.StdLib` contains the standard library and is
-automatically imported by every module.  There is no need for an explicit
-`import * from ABS.StdLib;` clause.
+NOTE: The module `ABS.StdLib` contains the standard library and is imported by
+every module by default.  If a module contains an explicit `import x, y from
+ABS.StdLib;` import clause, only `x` and `y` will be imported, otherwise all
+names exported from the standard library will be imported in that module.
 
 
 === Exporting Identifiers

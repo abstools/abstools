@@ -251,6 +251,13 @@ public class ModuleSystemTests extends FrontendTest {
     public void circularDefinition() {
         assertTypeErrors("module A; export X; import X from B; module B; export X; import X from A; ");
     }
+
+    @Test
+    public void importPartialStdLib() {
+        assertTypeErrorsWithStdLib("module A; import Unit from ABS.StdLib;\n" +
+                 "{ println(\"println not imported and hence not accessible\"); } \n");
+
+    }
     
     protected void assertTypeOKWithStdLib(String absCode) {
         assertTypeErrors(absCode, NONE, WITH_STD_LIB);
