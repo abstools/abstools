@@ -31,7 +31,7 @@ The following operators apply to Boolean values:
 |e1 == e2   |equality                      |left  |compatible |Bool
 |e1 != e2   |inequality                    |left  |compatible |Bool
 |e1 < e2    |less than                     |left  |compatible |Bool
-|e1 +++<=+++ e2  |less than or equal to         |left  |compatible |Bool
+|e1 \<= e2  |less than or equal to         |left  |compatible |Bool
 |e1 > e2    |greater than                  |left  |compatible |Bool
 |e1 >= e2   |greater than or equal to      |left  |compatible |Bool
 |! e        |logical negation              |right |Bool |Bool
@@ -58,7 +58,7 @@ behavior.
 |`e1 == e2` |equality |left |compatible |`Bool`
 |`e1 != e2` |inequality |left |compatible |`Bool`
 |`e1 < e2` |less than |left |compatible |`Bool`
-|`e1 +++<=+++ e2` |less than or equal to |left |compatible |`Bool`
+|`e1 \<= e2` |less than or equal to |left |compatible |`Bool`
 |`e1 > e2` |greater than |left |compatible |`Bool`
 |`e1 >= e2` |greater than or equal to |left |compatible |`Bool`
 |`e1 + e2` |addition |left |number, number |number
@@ -242,7 +242,7 @@ literal is written as `\n`, carriage return as `\r`.
 |e1 == e2 |equality |left |compatible |Bool
 |e1 != e2 |inequality |left |compatible |Bool
 |e1 < e2 |less than |left |compatible |Bool
-|e1 +++<=+++ e2 |less than or equal to |left |compatible |Bool
+|e1 \<= e2 |less than or equal to |left |compatible |Bool
 |e1 > e2 |greater than |left |compatible |Bool
 |e1 >= e2 |greater than or equal to |left |compatible |Bool
 |e1 + e2 |concatenation |left |String, String |String
