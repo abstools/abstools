@@ -41,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - When pretty-printing to a file, the resulting file will use Unix line endings.
 
+- An empty case expression (`Unit x = case 5 {};`) is now a syntax error instead of a type error.
+
 ### Removed
 
 - BBEdit editor support moved to github.com/abstools/bbedit.

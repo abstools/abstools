@@ -263,7 +263,7 @@ if 5 == 4 then True else False
 ==== Case Expressions
 
 ABS supports pattern matching via the Case Expression.  A case expression
-consists of an input expression and a series of branches, each consisting of a
+consists of an input expression and one or more branches, each consisting of a
 pattern and a right hand side expression.
 
 The case expression evaluates its input expression and attempts to match the
@@ -283,7 +283,7 @@ There are four different kinds of patterns available in ABS:
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _CaseExp_ ::= | `case` _PureExp_ `{` { _CaseExpBranch_ } `}`
+| _CaseExp_ ::= | `case` _PureExp_ `{` _CaseExpBranch_ { _CaseExpBranch_ } `}`
 | _CaseExpBranch_ ::=  | _Pattern_ `\=>` _PureExp_ `;`
 | _Pattern_ ::= | `_` +
                  {vbar} __SimpleIdentifier__ +
