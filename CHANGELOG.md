@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The Model API now allows advancing the clock via external stimuli -- a model started with the model api (`-p 8080`) and with a clock limit (`-l x`) will stop and wait at t=`x`.  A call `/clock/advance?by=y` increases the limit by `y`, thereby waking up blocked processes.  `/clock/now` can be used to obtain the current clock value.
 
+- The Model API now supports input parameters of type `Map<String, X>` (where `X` is a supported input type).
+
 - Added expressions `x implements I` and `x as I` to check for and convert an object reference to another interface.  If the underlying class of `x` does not implement `I`, return `False` and `null`, respectively.
 
 - Add a `Dockerfile` to run `absc` inside a container.  To build the image, use `cd frontend ; docker build -t absc .`.  To use the container to compile an abs model `file.abs` in the current directory, use `docker run --rm -v "$PWD":/usr/src -w /usr/src absc -erlang file.abs`.  To get a command-line inside the container for the current directory (e.g., to run a model via `gen/erl/run` inside the container), use `docker run -it --rm -v "$PWD":/usr/src -w /usr/src --entrypoint /bin/sh absc`.
