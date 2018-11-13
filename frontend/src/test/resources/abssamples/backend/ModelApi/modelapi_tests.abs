@@ -12,6 +12,10 @@ interface I {
     [HTTPCallable] List<Bool> test_list_bool(List<Bool> p);
     [HTTPCallable] List<Float> test_list_float(List<Float> p);
     [HTTPCallable] List<String> test_list_string(List<String> p);
+    [HTTPCallable] Map<String, Int> test_map_int(Map<String, Int> p);
+    [HTTPCallable] Map<String, Bool> test_map_bool(Map<String, Bool> p);
+    [HTTPCallable] Map<String, Float> test_map_float(Map<String, Float> p);
+    [HTTPCallable] Map<String, String> test_map_string(Map<String, String> p);
 }
 
 class C implements I {
@@ -28,6 +32,12 @@ class C implements I {
     List<Bool> test_list_bool(List<Bool> p) { return p; }
     List<Float> test_list_float(List<Float> p) { return p; }
     List<String> test_list_string(List<String> p) { return p; }
+
+    // curl -d "{'p': {'a': 1, 'b': 2, 'c': 3} }" localhost:8080/call/test/test_map_int
+    Map<String, Int> test_map_int(Map<String, Int> p) { return p; }
+    Map<String, Bool> test_map_bool(Map<String, Bool> p) { return p; }
+    Map<String, Float> test_map_float(Map<String, Float> p) { return p; }
+    Map<String, String> test_map_string(Map<String, String> p) { return p; }
 }
 
 {

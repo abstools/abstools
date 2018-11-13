@@ -95,7 +95,11 @@ supported.
 
 | `List<A>` (where `A` can be decoded)
 | not supported
-| JSON list with elements of type `A`
+| JSON list with elements having type `A`
+
+| `Map<String, A>` (where `A` can be decoded; JSON map keys will be decoded as ABS strings)
+| not supported
+| JSON map with all values having type `A`
 
 | All others
 | not supported
