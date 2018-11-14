@@ -257,8 +257,7 @@ method : annotations type_use IDENTIFIER paramlist '{' stmt* '}' ;
 
 // Module declaration
 module_decl : 'module' qualified_type_identifier ';'
-        module_export*
-        module_import*
+        ( exports += module_export | imports += module_import )*
         decl*
         main_block? ;
 

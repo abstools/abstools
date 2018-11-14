@@ -88,6 +88,11 @@ public class ModuleSystemTests extends FrontendTest {
         assertTypeOK("module A; export *; data X; module E; export *; data Z; module B; export * from E; export * from A; import * from A; import * from E; module C; import * from B; type Y = X; ");
     }
 
+    @Test
+    public void exportImportSwapped() {
+        // test the relaxed order of import and export clauses
+        assertTypeOK("module A; export *; data Foo; data Bar; module B; export Baz; import Foo from A; export Glunk; import Bar from A; type Baz = Foo; type Glunk = Bar;");
+    }
     // NEGATIVE TESTS
 
     @Test
