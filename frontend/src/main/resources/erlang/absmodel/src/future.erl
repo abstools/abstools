@@ -181,9 +181,12 @@ init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,Reg
         true ->
             %%Start task
             process_flag(trap_exit, true),
-            MonRef=monitor(process,CogRef),
+            %% We used to wrap the following line in a
+            %% erlang:monitor(process, CogRef) / erlang:demonitor()
+            %% call, but if Object is alive, so is (presumably)
+            %% CogRef, and Object cannot have been garbage-collected
+            %% in the meantime.
             TaskRef=cog:add_task(Cog,async_call_task,self(),Callee,[Method|Params], Info, Params),
-            demonitor(MonRef),
             case RegisterInGC of
                 true -> gc:register_future(self());
                 false -> ok
@@ -223,13 +226,6 @@ init([_Callee=null,_Method,_Params,RegisterInGC,Caller]) ->
 
 
 
-handle_info({'DOWN', _ , process, _,Reason}, running, Data=#data{register_in_gc=RegisterInGC, waiting_tasks=WaitingTasks, calleecog=CalleeCog}) when Reason /= normal ->
-    lists:map(fun (Task) -> Task ! {value_present, self(), CalleeCog} end, WaitingTasks),
-    case RegisterInGC of
-        true -> gc:unroot_future(self());
-        false -> ok
-    end,
-    {next_state, completed, Data#data{value={error,error_transform:transform(Reason)}}};
 handle_info({'EXIT',_Pid,Reason}, running, Data=#data{register_in_gc=RegisterInGC, waiting_tasks=WaitingTasks, calleecog=CalleeCog}) ->
     lists:map(fun (Task) -> Task ! {value_present, self(), CalleeCog} end, WaitingTasks),
     case RegisterInGC of
