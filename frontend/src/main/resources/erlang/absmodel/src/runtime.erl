@@ -8,7 +8,7 @@
 
 -include_lib("absmodulename.hrl").
 
--export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/2]).
+-export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/5]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -52,9 +52,12 @@ run(Args) ->
 start_http() ->
     {ok, _} = application:ensure_all_started(absmodel).
 
-start_http(Port, Clocklimit) ->
+start_http(Port, Module, Debug, GCStatistics, Clocklimit) ->
     ok = application:load(absmodel),
     ok = application:set_env(absmodel, port, Port),
+    ok = application:set_env(absmodel, module, Module),
+    ok = application:set_env(absmodel, debug, Debug),
+    ok = application:set_env(absmodel, gcstatistics, GCStatistics),
     ok = application:set_env(absmodel, clocklimit, Clocklimit),
     start_http().
 
@@ -106,8 +109,8 @@ parse(Args,Exec)->
 %% For now we just punt.
 start_link(Args) ->
     case Args of
-        [Module, Clocklimit, Keepalive] ->
-            {ok, _T} = start_mod(Module, false, false, Clocklimit, Keepalive),
+        [Module, Debug, GCStatistics, Clocklimit, Keepalive] ->
+            {ok, _T} = start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive),
             supervisor:start_link({local, ?MODULE}, ?MODULE, []);
         _ -> {error, false}
     end.
@@ -154,7 +157,7 @@ run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
 
     case Port of
         _ when is_integer(Port) ->
-            start_http(Port, Clocklimit),
+            start_http(Port, Module, Debug, GCStatistics, Clocklimit),
             receive ok -> ok end;
         _ ->
             {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, false),
