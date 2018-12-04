@@ -54,9 +54,9 @@ public class DeltaAttributesIntegerTest extends DeltaTest {
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("myField"));
-//        System.out.println("******** expected: " + expected + " *** found: " + cls.getField(0).getInitExp().value.toString());
+//        System.out.println("******** expected: " + expected + " *** found: " + cls.getField(0).getInitExp().toString());
 
-        assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
+        assertTrue(cls.getField(0).getInitExp().toString().equals(expected));
     }
 
     public void passIntegerConstant() throws DeltaModellingException, WrongProgramArgumentException {
@@ -78,7 +78,7 @@ public class DeltaAttributesIntegerTest extends DeltaTest {
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("myField"));
 
-        assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
+        assertTrue(cls.getField(0).getInitExp().toString().equals(expected));
     }
 
 }

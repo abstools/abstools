@@ -86,8 +86,9 @@ aspect ErrorCheck {
   
   OriginalCall contributes (new TypeError(this,ErrorMessage.ORIGINAL_NOT_IN_DELTA,""))
    // when (calcContextNode(ModifyMethodModifier.class) == null)
-    when (calcContextNode(TraitDecl.class) == null && calcContextNode(DeltaDecl.class) == null)
-    to DeltaDecl.getErrsWithinDelta() for calcContextNode(DeltaDecl.class);
+    when (uppermostParentOfType(TraitDecl.class) == null
+          && uppermostParentOfType(DeltaDecl.class) == null)
+    to DeltaDecl.getErrsWithinDelta() for uppermostParentOfType(DeltaDecl.class);
 }
 
 // Local Variables:

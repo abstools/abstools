@@ -50,24 +50,24 @@ aspect Variables {
     // Checks type of variables and features.
 
     syn boolean Variable.isBool();
-    eq   FAVar.isBool() = calcContextNode(Model.class).bools().contains(getFullName());
-    eq  AttVar.isBool() = calcContextNode(Model.class).bools().contains(getFullName());
-    eq FeatVar.isBool() = calcContextNode(Model.class).features().contains(getFName());
+    eq   FAVar.isBool() = uppermostParentOfType(Model.class).bools().contains(getFullName());
+    eq  AttVar.isBool() = uppermostParentOfType(Model.class).bools().contains(getFullName());
+    eq FeatVar.isBool() = uppermostParentOfType(Model.class).features().contains(getFName());
 
     syn boolean Variable.isInt();
-    eq   FAVar.isInt() = calcContextNode(Model.class).ints().containsKey(getFullName());
-    eq  AttVar.isInt() = calcContextNode(Model.class).ints().containsKey(getFullName());
+    eq   FAVar.isInt() = uppermostParentOfType(Model.class).ints().containsKey(getFullName());
+    eq  AttVar.isInt() = uppermostParentOfType(Model.class).ints().containsKey(getFullName());
     eq FeatVar.isInt() = false;
 
     // get variables in an attribute declaration, and checks if it is repeated.
     public boolean Attribute.isRepeated = false;
-    Attribute contributes getIntFVarsHelp() to Model.ints() for calcContextNode(Model.class);
+    Attribute contributes getIntFVarsHelp() to Model.ints() for uppermostParentOfType(Model.class);
 
             Entry<String,BoundaryInt[]> Attribute.getIntFVarsHelp() {
                 if (getAType() instanceof IntMType) {
                     //       System.out.println("searching for att "+pname()+"."+getName()+" in "+ivars);
                     // check also for bools, but not check in bool for ints!
-                    if (calcContextNode(Model.class).bools().contains(pname()+"."+getName()))
+                    if (uppermostParentOfType(Model.class).bools().contains(pname()+"."+getName()))
                         isRepeated = true;
                     IntMType type = (IntMType) getAType();
                     final BoundaryInt[] boundaries = {type.getMin(),type.getMax()};
@@ -78,7 +78,7 @@ aspect Variables {
                     if (getAType() instanceof IntListMType) {
                         //      System.out.println("searching for att "+pname()+"."+getName()+" in "+ivars);
                         // check also for bools, but not check in bool for ints!
-                        if (calcContextNode(Model.class).bools().contains(pname()+"."+getName()))
+                        if (uppermostParentOfType(Model.class).bools().contains(pname()+"."+getName()))
                             isRepeated = true;
                         IntListMType type = (IntListMType) getAType();
                         // note that "type" is a list with at least a value, because of the parser
@@ -98,10 +98,10 @@ aspect Variables {
             public void setRepeated(boolean rep){isRepeated |= rep;}})
             when (getAType() instanceof BoolMType)
             to Model.bools()
-            for calcContextNode(Model.class);
+            for uppermostParentOfType(Model.class);
 
                     public boolean FeatureDecl.isRepeated = false;
                     FeatureDecl contributes (new RLEntry(){ public String getItem(){return getName();}
                     public void setRepeated(boolean rep){isRepeated |= rep;}})
-                    to Model.features() for calcContextNode(Model.class);
+                    to Model.features() for uppermostParentOfType(Model.class);
 }

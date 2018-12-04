@@ -1079,7 +1079,7 @@ aspect GenerateProlog {
 
     public void StarExport.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         //generates "starExport(moduleName)." if there is a module name
-        if(this.getModuleNameOpt().hasChildren()){
+        if(this.getModuleNameOpt().getNumChild() > 0){
             s.print("starExport(");
             this.getModuleName().generateProlog(s,reachInfo);
             s.println(").");

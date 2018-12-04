@@ -51,7 +51,7 @@ public class DeltaAttributesBooleanTest extends DeltaTest {
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("myField"));
-        assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
+        assertTrue(cls.getField(0).getInitExp().toString().equals(expected));
     }
 
     @Test
@@ -75,7 +75,7 @@ public class DeltaAttributesBooleanTest extends DeltaTest {
         assertTrue(cls.getField(0).getName().equals("featureA"));
 //        assertTrue(cls.getField(1).getName().equals("featureB"));
 //        assertTrue(cls.getField(2).getName().equals("featureC"));
-        assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
+        assertTrue(cls.getField(0).getInitExp().toString().equals(expected));
     }
 
     @Test
@@ -95,7 +95,7 @@ public class DeltaAttributesBooleanTest extends DeltaTest {
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("myField"));
-        assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
+        assertTrue(cls.getField(0).getInitExp().toString().equals(expected));
     }
 
     @Test
@@ -116,7 +116,7 @@ public class DeltaAttributesBooleanTest extends DeltaTest {
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("myField", cls.getField(0).getName());
-        assertEquals("Product " + product, expected, cls.getField(0).getInitExp().value.toString());
+        assertEquals("Product " + product, expected, cls.getField(0).getInitExp().toString());
     }
 
 }
