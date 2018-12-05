@@ -50,6 +50,7 @@ new(Cog,Class,Args)->
         true -> protect_object_from_gc(O);
         false -> ok
     end,
+    cog:register_new_local_object(Cog, Class),
     Class:init(O,Args),
     O.
 new(Cog,Class,Args,CreatorCog,Stack)->
@@ -59,8 +60,10 @@ new(Cog,Class,Args,CreatorCog,Stack)->
         false -> ok
     end,
     cog:process_is_blocked_for_gc(CreatorCog, self()),
+    {CogId, ObjId} = cog:register_new_object(CreatorCog, Class),
+    Id = {CogId, ObjId, init},
     cog:add_task(Cog,init_task,none,O,Args,
-                 #process_info{id=init, method= <<".init"/utf8>>}, [O, Args | Stack]),
+                 #process_info{id=Id, method= <<".init"/utf8>>}, [O, Args | Stack]),
     cog:process_is_runnable(CreatorCog, self()),
     task:wait_for_token(CreatorCog,[O, Args|Stack]),
     O.

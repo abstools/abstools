@@ -317,14 +317,14 @@ json_to_trace(JSON) ->
                 end, #{}, RawTrace).
 
 schedule_to_json(Schedule) ->
-    lists:map(fun ({Type, {CallerId, TaskId, Method}}) ->
+    lists:map(fun ({Type, {CallerId, LocalId, Name}}) ->
                       #{event_type => Type,
-                        caller_id => CallerId,
-                        task_id   => TaskId,
-                        method    => Method};
-                  ({Type, InitOrMain}) ->
+                        caller_id  => CallerId,
+                        local_id   => LocalId,
+                        name       => Name};
+                  ({Type, Main}) ->
                       #{event_type => Type,
-                        task_id   => InitOrMain}
+                        local_id   => Main}
               end, Schedule).
 
 get_schedules_json() ->

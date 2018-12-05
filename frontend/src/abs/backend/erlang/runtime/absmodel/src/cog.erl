@@ -4,7 +4,8 @@
 -export([process_is_runnable/2,
          process_is_blocked/2, process_is_blocked_for_gc/2,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
-         submit_references/2, register_invocation/2, register_future_read/2, get_scheduling_trace/1]).
+         submit_references/2, register_invocation/2, register_new_object/2,
+         register_new_local_object/2, register_future_read/2, get_scheduling_trace/1]).
 -export([return_token/4]).
 -export([inc_ref_count/1,dec_ref_count/1]).
 -include_lib("abs_types.hrl").
@@ -56,6 +57,8 @@
          id,
          %% Cog-unique (and stable) ids for futures
          next_fut_id=0,
+         %% Cog-unique (and stable) ids for object
+         next_obj_id=0,
          %% A list of the scheduling decisions made
          recorded=[],
          %% A list of scheduling decisions that is to be made
@@ -131,6 +134,12 @@ submit_references(CogRef, Refs) ->
 register_invocation(#cog{ref=Cog}, Method) ->
     gen_statem:call(Cog, {register_invocation, Method}).
 
+register_new_object(#cog{ref=Cog}, Class) ->
+    gen_statem:call(Cog, {register_new_object, Class}).
+
+register_new_local_object(#cog{ref=Cog}, Class) ->
+    gen_statem:call(Cog, {register_new_local_object, Class}).
+
 register_future_read(#cog{ref=Cog}, Id) ->
     gen_statem:call(Cog, {register_future_read, Id}).
 
@@ -202,6 +211,28 @@ handle_event({call, From}, {register_invocation, Method}, _StateName,
                         replaying=[{invocation, {Id, N, Method}} | Rest]}) ->
     NewRecorded = [{invocation, {Id, N, Method}} | Recorded],
     NewData = Data#data{next_fut_id=N+1, recorded=NewRecorded, replaying=Rest},
+    {keep_state, NewData, {reply, From, {Id, N}}};
+handle_event({call, From}, {register_new_object, Class}, _StateName,
+             Data=#data{next_obj_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
+    NewData = Data#data{next_obj_id=N+1, recorded=[{new_object, {Id, N, Class}} | Recorded]},
+    {keep_state, NewData, {reply, From, {Id, N}}};
+handle_event({call, From}, {register_new_object, Class}, _StateName,
+             Data=#data{next_obj_id=N, id=Id, recorded=Recorded,
+                        replaying=[{new_object, {Id, N, Class}} | Rest]}) ->
+    NewRecorded = [{new_object, {Id, N, Class}} | Recorded],
+    NewData = Data#data{next_obj_id=N+1, recorded=NewRecorded, replaying=Rest},
+    {keep_state, NewData, {reply, From, {Id, N}}};
+handle_event({call, From}, {register_new_local_object, Class}, _StateName,
+             Data=#data{next_obj_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
+    NewRecorded = [{schedule, {Id, N, init}}, {new_object, {Id, N, Class}} | Recorded],
+    NewData = Data#data{next_obj_id=N+1, recorded=NewRecorded},
+    {keep_state, NewData, {reply, From, {Id, N}}};
+handle_event({call, From}, {register_new_local_object, Class}, _StateName,
+             Data=#data{next_obj_id=N, id=Id, recorded=Recorded,
+                        replaying=[{new_object, {Id, N, Class}},
+                                   {schedule, {Id, N, init}} | Rest]}) ->
+    NewRecorded = [{schedule, {Id, N, init}}, {new_object, {Id, N, Class}} | Recorded],
+    NewData = Data#data{next_obj_id=N+1, recorded=NewRecorded, replaying=Rest},
     {keep_state, NewData, {reply, From, {Id, N}}};
 handle_event({call, From}, {register_future_read, Id}, _StateName,
              Data=#data{recorded=Recorded, replaying=[]}) ->
@@ -395,7 +426,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
 
     {NewRecorded, NewReplaying} =
         case {ProcessState, ProcessInfo#process_info.id} of
-            {done, Id} when (Id /= init) and (Id /= main) ->
+            {done, Id} ->
                 {[{completed, Id} | Recorded],
                  case Replaying of
                      [] -> [];
