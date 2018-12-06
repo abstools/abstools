@@ -1,0 +1,5 @@
+aspect NodeValue {
+    // Numberic symbol ID.  Taken from Beaver's Symbol class which we don't use anymore.
+    protected short ASTNode.id = 0;
+    public short ASTNode.getId() { return id; }
+}

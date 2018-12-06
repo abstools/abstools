@@ -1,8 +1,6 @@
 package Foreign;
 
-import abs.backend.java.lib.types.*;
-
-public class Printer_fli extends Printer_c {    
+public class Printer_fli extends Printer_c {
     
     public ABSUnit fli_printS(ABSString text) {
         System.out.println(text.getString());

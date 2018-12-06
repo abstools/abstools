@@ -1,0 +1,84 @@
+aspect NodePositions {
+
+    /* When flattening, nodes get copied from one CompilationUnit to another, therefore
+     * the information about the source file where they were originally declared is lost.
+     * We prevent this by setting sourceFileName whenever a node is copied using treeCopyNoTransform().
+     * When calling getFileName() on a node whose originalFileName is null, we delegate to the parent node.
+     * At the latest when reaching the CompilationUnit, we should get a meaningful value.
+     */
+    protected String ASTNode.sourceFileName = null;
+    private int ASTNode.startline = 0;
+    private int ASTNode.startcolumn = 0;
+    private int ASTNode.endline = 0;
+    private int ASTNode.endcolumn = 0;
+    protected boolean ASTNode.isPositionSet = false;
+
+    public boolean ASTNode.isPositionSet() { return isPositionSet; }
+
+    // FIXME: the method of asking the parent for its position is dubious
+    // and needs to be reconsidered.  For example, when we try to check in
+    // which of our children a given position occurs, the child going back
+    // and using _our_ position for the check will result in a false
+    // positive.  For the moment, CreateJastAddASTListener tries to set
+    // everyone's position.
+    public String Model.getFileName() {
+        if (sourceFileName == null) return "<invalid>";
+        else return sourceFileName;
+    }
+
+    public String ASTNode.getFileName() {
+        if (sourceFileName != null) return sourceFileName;
+        else if (getParent() != null) return getParent().getFileName();
+        else return null;
+    }
+
+    public int ASTNode.getStartLine() {
+        if (isPositionSet) return startline;
+        else if (getParent() != null) return getParent().getStartLine();
+        else return 0;
+    }
+
+    public int ASTNode.getStartColumn() {
+        if (isPositionSet) return startcolumn;
+        else if (getParent() != null) return getParent().getStartColumn();
+        else return 0;
+    }
+
+    public int ASTNode.getEndLine() {
+        if (isPositionSet) return endline;
+        else if (getParent() != null) return getParent().getEndLine();
+        else return 0;
+    }
+
+    public int ASTNode.getEndColumn() {
+        if (isPositionSet) return endcolumn;
+        else if (getParent() != null) return getParent().getEndColumn();
+        else return 0;
+    }
+
+    public void ASTNode.setFileName(String fileName) { this.sourceFileName = fileName; }
+
+    // set the position of an AstNode, this should only be used for generated code (-> ASTPreProcessor)
+    public void ASTNode.setPosition(int startline, int startcolumn, int endline, int endcolumn) {
+        this.startline = startline;
+        this.startcolumn = startcolumn;
+        this.endline = endline;
+        this.endcolumn = endcolumn;
+        this.isPositionSet = true;
+    }
+
+    public void ASTNode.setPositionFromNode(ASTNode node) {
+        this.startline = node.startline;
+        this.startcolumn = node.startcolumn;
+        this.endline = node.endline;
+        this.endcolumn = node.endcolumn;
+        this.setFileName(node.getFileName());
+        this.isPositionSet = true;
+    }
+
+    public String ASTNode.getPositionString() {
+        String filename = getFileName();
+        if (filename.equals("")) filename = "<unkown>";
+        return filename + ":" + getStartLine() + ":" + getStartColumn() + ": ";
+    }
+}

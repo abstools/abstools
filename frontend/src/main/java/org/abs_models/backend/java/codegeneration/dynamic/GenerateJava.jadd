@@ -1,0 +1,1233 @@
+// -*- mode: java; tab-width: 4; -*-
+
+import java.io.*;
+
+import org.abs_models.backend.java.*;
+import org.abs_models.backend.java.codegeneration.dynamic.*;
+import org.abs_models.backend.java.codegeneration.JavaCode;
+import org.abs_models.backend.java.codegeneration.JavaCodeGenerationException;
+import org.abs_models.backend.java.lib.runtime.*;
+import org.abs_models.backend.java.lib.expr.*;
+import org.abs_models.backend.java.lib.types.*;
+import org.abs_models.frontend.ast.*;
+
+aspect GenerateJavaDynamic_Core {
+
+    public void Model.generateJavaCodeDynamic(JavaCode code, boolean includeDebug) throws IOException, JavaCodeGenerationException {
+        this.includeDebug = includeDebug;
+        DynamicJavaGeneratorHelper.cleanGenFolder(code);
+        for (ModuleDecl decl : getModuleDecls()) {
+            try {
+                decl.generateJavaCodeDynamic(code);
+            } catch (NotImplementedYetException e) { 
+                throw new JavaCodeGenerationException("Module " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
+            } catch (RuntimeException e) { 
+                throw new JavaCodeGenerationException("Module " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
+            }
+        }
+        for (DeltaDecl decl : getDeltaDecls()) {
+            try {
+                decl.generateJavaCodeDynamic(code);
+            } catch (NotImplementedYetException e) { 
+                throw new JavaCodeGenerationException("Delta " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
+            } catch (RuntimeException e) { 
+                throw new JavaCodeGenerationException("Delta " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
+            }
+        }
+        {
+            JavaCode.Package pkg = code.createPackage(JavaBackendConstants.LIB_UPDATES_PACKAGE);
+            for (UpdateDecl decl : getUpdateDecls()) {
+                try {
+                    decl.generateJavaCodeDynamic(pkg);
+                } catch (NotImplementedYetException e) { 
+                    throw new JavaCodeGenerationException("Update " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
+                } catch (RuntimeException e) { 
+                    throw new JavaCodeGenerationException("Update " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
+                }
+            }
+        }
+        {   /* The Reconfiguration Decision Model (RDM) */
+            // first remember all products by name
+            HashMap<String, ProductDecl> allProducts = new HashMap<String, ProductDecl>();
+            for (ProductDecl prod : getProductDecls()) {
+                allProducts.put(prod.getName(), prod);
+            }
+            JavaCode.Package pkg = code.createPackage(JavaBackendConstants.LIB_RDM_PACKAGE);
+            for (ProductDecl prod : getProductDecls()) {
+                try {
+                    prod.generateJavaCodeDynamic(pkg, allProducts);
+                } catch (NotImplementedYetException e) { 
+                    throw new JavaCodeGenerationException("Product " + prod.getName() + ":" + e.getLocalizedMessage(),e); 
+                } catch (RuntimeException e) { 
+                    throw new JavaCodeGenerationException("Product " + prod.getName() + ":" + e.getLocalizedMessage(),e); 
+                }
+            }
+        }
+
+    }
+
+    public void ModuleDecl.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
+        String packageName = getName();
+        JavaCode.Package p = code.createPackage(packageName);
+        for (Decl decl : getDecls()) {
+            decl.generateJavaCodeDynamic(p);
+        }
+
+
+        if (hasBlock()) {
+            Block block = getBlock();
+
+            String mainName = JavaBackend.getJavaNameForMainBlock();
+            p.addMainClass(mainName);
+            File file = p.createJavaFile(mainName);
+            PrintStream stream = null;
+            try {
+                stream = JavaCodeStream.from(file);
+                stream.println("package " + p.packageName + ";");
+
+                stream.println("public class " + mainName + " extends " + ABSDynamicObject.class.getName() + " {");
+                
+                stream.println("public static void main(java.lang.String[] args) throws Exception {");
+                stream.println(StartUp.class.getName() + ".startup(args, " + mainName + ".class);");
+                stream.println("}");
+
+                stream.println("public " + mainName + "(" + COG.class.getName() 
+                        + " cog) { super(cog, " + ABSMainClass.class.getName() + ".singleton()); }");
+
+                // main block
+                stream.println("public " + ABSUnit.class.getName() + " run() {");
+                stream.println("final " + ABSDynamicObject.class.getName() + " thisP = this;");
+                if (getModel().getProductName().equals("core")) {
+                    stream.println("thisP.__ABS_getRuntime().initDSPL(new " + ABSDynamicProductCore.class.getName() + "());");
+                } else {
+                    stream.println("thisP.__ABS_getRuntime().initDSPL(" 
+                            + JavaBackendConstants.LIB_RDM_PACKAGE + "." 
+                            + JavaBackend.getProductName(getModel().getProductName()) + ".singleton());");
+                }
+                block.generateJavaDynamic(stream);
+                stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
+                stream.println("}");
+                stream.println("}");
+            } finally {
+                if (stream != null)
+                    stream.close();
+            }
+
+        }
+
+
+    }
+
+    public void Decl.generateJavaCodeDynamic(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
+        PrintStream s = null;
+        try {
+            String name = JavaBackend.getJavaName(this);
+            File file = pkg.createJavaFile(name);
+            s = JavaCodeStream.from(file);
+            s.println("package " + pkg.packageName + ";");
+            generateJavaDynamic(s);
+        } finally {
+            if (s != null)
+                s.close();
+        }
+
+    }
+
+    public void DataTypeDecl.generateJavaCodeDynamic(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
+        super.generateJavaCodeDynamic(pkg);
+        for (DataConstructor c : getDataConstructors()) {
+            c.generateJavaCodeDynamic(pkg);
+        }
+    }
+
+    abstract void Decl.generateJavaDynamic(PrintStream stream);
+
+    public void DataConstructor.generateJavaDynamic(PrintStream stream) {
+        String constructorClassName = JavaBackend.getConstructorName(this);
+        DataTypeDecl dataTypeDecl = ((DataTypeType)getType()).getDecl();
+        DynamicJavaGeneratorHelper.generateHelpLine(this,stream);
+
+        stream.print("public final class " + constructorClassName);
+        DynamicJavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl, true);
+        stream.print(" extends " + dataTypeDecl.getName());
+        DynamicJavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl, false);
+
+        stream.println(" {");
+
+        int i = 0;
+        for (ConstructorArg u : getConstructorArgs()) {
+            stream.print("public final ");
+            stream.println(JavaBackend.getJavaType(u) + " arg" + i + ";");
+            stream.println("public " + JavaBackend.getJavaType(u) + " getArg" + i + "() { return arg" + i + "; }");
+            i++;
+        }
+
+        stream.println("public " + constructorClassName + "(");
+        boolean first = true;
+        i = 0;
+        for (ConstructorArg u : getConstructorArgs()) {
+            if (first)
+                first = false;
+            else
+                stream.println(",");
+            stream.print("final ");
+            stream.print(JavaBackend.getJavaType(u) + " arg" + i);
+            i++;
+        }
+        stream.println(")");
+        stream.println("{");
+        i = 0;
+        for (ConstructorArg u : getConstructorArgs()) {
+            stream.println("this.arg" + i + " = arg" + i + ";");
+            i++;
+        }
+        stream.println("}");
+
+        stream.print("protected " + ABSValue.class.getName() + "[] getArgs() { return new " + ABSValue.class.getName() + "[] { ");
+        i = 0;
+        for (ConstructorArg u : getConstructorArgs()) {
+            if (i > 0)
+                stream.print(", ");
+            stream.print("this.arg" + i);
+            i++;
+        }
+        stream.println(" }; }");
+
+        stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\"; }");
+
+        // eq method
+        stream.println("public " + ABSBool.class.getName() + " eq(" + ABSValue.class.getName() + " o) {");
+        stream.println("if (! (o instanceof " + constructorClassName + ")) return " + ABSBool.class.getName() + ".FALSE;");
+        stream.println(constructorClassName + " other = (" + constructorClassName + ") o;");
+
+        i = 0;
+        for (ConstructorArg u : getConstructorArgs()) {
+            stream.println("if (!this.arg" + i + ".eq(other.arg" + i + ").toBoolean()) return " + ABSBool.class.getName() + ".FALSE;");
+            i++;
+        }
+
+        stream.println("return " + ABSBool.class.getName() + ".TRUE;");
+        stream.println("}");
+
+        // match method
+        stream.println("public boolean match(" + PatternConstructor.class.getName() + " c, " + PatternBinding.class.getName() + " b) {");
+        stream.println("if (!c.constructorClass.equals(this.getClass())) return false;");
+        i = 0;
+        for (ConstructorArg u : getConstructorArgs()) {
+            stream.println("if (!c.subpattern[" + i + "].match(this.arg" + i + ", b)) return false;");
+            i++;
+        }
+        stream.println("return true;");
+        stream.println("}");
+
+
+        stream.println("}");
+    }
+
+    public void InterfaceDecl.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateHelpLine(this,stream);
+        stream.print("public interface " + JavaBackend.getJavaName(this) + " extends " + ABSInterface.class.getName());
+        for (InterfaceTypeUse use : getExtendedInterfaceUses()) {
+            String iname = JavaBackend.getQualifiedString(((InterfaceType)use.getType()).getDecl());
+            stream.print(", " + iname);
+        }
+        stream.println(" {");
+
+        for (MethodSig s : getBodys()) {
+            // Async
+            s.generateJavaDynamic(stream, true);
+            stream.println(";");
+            // Sync
+            s.generateJavaDynamic(stream, false);
+            stream.println(";");
+        }
+
+        stream.println("}");
+    }
+
+    public void MethodSig.generateJavaDynamic(PrintStream stream) {
+        generateJavaDynamic(stream, false);
+    }
+
+    public void MethodSig.generateJavaDynamic(PrintStream stream, boolean async) {
+        DynamicJavaGeneratorHelper.generateMethodSig(stream,this,async);
+    }
+
+    public void ParamDecl.generateJavaDynamic(PrintStream stream) {
+        if (getAccess().getType().isReferenceType()) {
+            stream.print(ABSValue.class.getName());
+        } else {
+            getAccess().generateJavaDynamic(stream);
+        }
+        stream.print(" " + JavaBackend.getVariableName(getName()));
+    }
+
+    public void ClassDecl.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateClassDecl(stream,this);
+    }
+
+    
+    public void MethodImpl.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateMethodImpl(stream, this);
+    }
+
+    public void FieldDecl.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateField(stream, this);
+        
+//        if (getAccess().getType().isReferenceType()) {
+//            stream.print(ABSValue.class.getName());
+//        } else {
+//            getAccess().generateJavaDynamic(stream);
+//        }
+//        stream.print(" " + JavaBackend.getVariableName(getName()));
+//        stream.println(";");
+    }
+
+
+    public void DataTypeDecl.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateHelpLine(this, stream);
+
+        stream.print("public abstract class " + getName());
+        DynamicJavaGeneratorHelper.generateTypeParameters(stream, this, true);
+
+        stream.println(" extends " + ABSDataType.class.getName() + " {");
+
+        for (DataConstructor c : getDataConstructors()) {
+            stream.println("public final boolean is" + c.getName()
+                    + "() { return this instanceof " + JavaBackend.getConstructorName(c)
+                    + "; }");
+            stream.print("public final " + JavaBackend.getConstructorName(c));
+            DynamicJavaGeneratorHelper.generateTypeParameters(stream, this, false);
+            stream.println(" to" + c.getName()
+                    + "() { return (" + JavaBackend.getConstructorName(c) + ") this; }");
+
+        }
+        stream.println("}");
+    }
+
+    public void FunctionDecl.generateJavaDynamic(PrintStream stream) {
+        if (getFunctionDef() instanceof BuiltinFunctionDef)
+            return;
+
+        DynamicJavaGeneratorHelper.generateHelpLine(this, stream);
+
+        String className = JavaBackend.getFunctionName(getName());
+        stream.print("public final class " + className);
+        stream.println(" implements " + ABSFunction.class.getName() + " {");
+        stream.println("private " + className + "() { }");
+        stream.print("public static ");
+        DynamicJavaGeneratorHelper.generateTypeParameters(stream, this, true);
+
+        getTypeUse().generateJavaDynamic(stream);
+        stream.print(" apply");
+        DynamicJavaGeneratorHelper.generateParams(stream, getParams());
+        stream.println(" {");
+        stream.print("return ");
+        getFunctionDef().generateJavaDynamic(stream);
+        if (getType().isIntType() && getFunctionDef() instanceof ExpFunctionDef
+            && ((ExpFunctionDef) getFunctionDef()).getRhs().getType().isRatType()) {
+            stream.print(".truncate()");
+        }
+        stream.println(";");
+        stream.println("}");
+        stream.println("}");
+    }
+
+    public void PartialFunctionDecl.generateJavaCodeDynamic(JavaCode.Package pkg) {}
+
+    public void PartialFunctionDecl.generateJavaDynamic(PrintStream stream) {}
+
+    public void ParFnApp.generateJavaDynamic(PrintStream stream) {}
+
+    public void FunctionDef.generateJavaDynamic(PrintStream stream) { }
+
+    public void ExpFunctionDef.generateJavaDynamic(PrintStream stream) {
+        getRhs().generateJavaDynamic(stream);
+    }
+
+    public void BuiltinFunctionDef.generateJavaDynamic(PrintStream stream) {
+        stream.print("null");
+    }
+
+    public void TypeParameterDecl.generateJavaDynamic(PrintStream stream) {
+        // is never called
+    }
+
+    public void UnknownDecl.generateJavaDynamic(PrintStream stream) {
+        // is never called for type-correct programs
+    }
+
+    public void TypeSynDecl.generateJavaDynamic(PrintStream stream) {
+        // generate nothing as type synonyms do not appear in the Java outout
+    }
+
+    public void ExceptionDecl.generateJavaDynamic(PrintStream stream) {
+        // generate nothing as exceptions are rewritten to datatypes
+    }
+
+    public void Block.generateJavaDynamic(PrintStream stream) {
+        generateJavaDynamic(stream, false);
+    }
+
+    public void Block.generateJavaDynamic(PrintStream stream, boolean addReturn) {
+        stream.println("{");
+
+        super.generateJavaDynamic(stream);
+        if (this instanceof MainBlock || this instanceof InitBlock) {
+            stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
+            String name = "init block";
+            if (this instanceof MainBlock)
+                name = "main block";
+            stream.println("thisP.__ABS_getRuntime().getCurrentTask().newStackFrame(thisP,\"" + name + "\");");
+        }
+
+        for (Stmt stmt : getStmts()) {
+            stmt.generateJavaDynamic(stream);
+        }
+
+        if (this instanceof MainBlock) {
+            for (VarDecl v : getVars()) {
+                if (v.getName().equals("testresult")) {
+                    stream.println("System.out.println(\"__ABS_TESTRESULT=\" + testresult.toBoolean());");
+                }
+            }
+        }
+
+        if (addReturn) {
+            if (getModel().includeDebug) {
+                stream.println(DynamicJavaGeneratorHelper.getDebugString(this, this.getEndLine()));
+
+                stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
+                stream.println("thisP.__ABS_getRuntime().getCurrentTask().popStackFrame();");
+            }
+
+            stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
+        }
+        stream.println("}");
+    }
+
+    public void VarDecl.generateJavaDynamic(PrintStream stream) {
+        boolean castNeeded = !getAccess().getType().isReferenceType();
+        if (getAccess().getType().isReferenceType()) {
+            stream.print(ABSValue.class.getName());
+//            stream.print(JavaBackend.getQualifiedString(getAccess().getType()));
+        } else {
+            getAccess().generateJavaDynamic(stream);
+        }
+        String name = JavaBackend.getVariableName(getName());
+        stream.print(" " + name + " = ");
+
+        if (castNeeded) {
+            stream.print("(");
+            getAccess().generateJavaDynamic(stream);
+            stream.print(")(");
+        }
+        if (hasInitExp()) {
+            getInitExp().generateJavaDynamic(stream);
+            if (getType().isIntType() && getInitExp().getType().isRatType()) {
+                stream.print(".truncate()");
+            }
+        } else {
+            stream.print("null");
+        }
+        if (castNeeded) {
+            stream.print(")");
+        }
+        stream.println(";");
+
+        stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
+        stream.println("thisP.__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getName() + "\"," + name + ");");
+    }
+
+
+    /*
+     * STATEMENTS
+     */
+
+    public void Stmt.generateJavaDynamic(PrintStream stream) {
+        if (getModel().includeDebug) {
+            stream.println(DynamicJavaGeneratorHelper.getDebugString(this));
+        }
+    }
+
+    public void VarDeclStmt.generateJavaDynamic(PrintStream stream) {
+        if (getVarDecl().hasInitExp()) {
+            super.generateJavaDynamic(stream);
+        }
+        getVarDecl().generateJavaDynamic(stream);
+        stream.println();
+    }
+
+    public void AssignStmt.generateJavaDynamic(PrintStream stream) {
+        super.generateJavaDynamic(stream);
+        DynamicJavaGeneratorHelper.assign(stream, this);
+
+    }
+
+    public void AwaitStmt.generateJavaDynamic(PrintStream stream) {
+        super.generateJavaDynamic(stream);
+        DynamicJavaGeneratorHelper.generateAwaitStmt(this, stream);
+    }
+
+    public void ExpressionStmt.generateJavaDynamic(PrintStream stream) {
+        super.generateJavaDynamic(stream);
+        getExp().generateJavaDynamic(stream);
+        stream.println(";");
+    }
+
+    public void IfStmt.generateJavaDynamic(PrintStream stream) {
+        super.generateJavaDynamic(stream);
+        stream.print("if (");
+        getCondition().generateJavaDynamic(stream);
+        stream.println(".toBoolean()) {");
+        getThen().generateJavaDynamic(stream);
+        stream.println("}");
+        if (hasElse()) {
+            stream.println("else {");
+            getElse().generateJavaDynamic(stream);
+            stream.println("}");
+        }
+    }
+
+    public void ReturnStmt.generateJavaDynamic(PrintStream stream) {
+        super.generateJavaDynamic(stream);
+        stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");      
+        stream.println("thisP.__ABS_getRuntime().getCurrentTask().popStackFrame();");
+
+        stream.print("return ");
+        getRetExp().generateJavaDynamic(stream);
+        stream.println(";");
+    }
+
+    public void SkipStmt.generateJavaDynamic(PrintStream stream) {
+        super.generateJavaDynamic(stream);
+        stream.println(";");
+    }
+
+    public void DurationStmt.generateJavaDynamic(PrintStream stream) {
+        super.generateJavaDynamic(stream);
+        stream.println(";");
+    }
+
+    public void SuspendStmt.generateJavaDynamic(PrintStream stream) {
+        super.generateJavaDynamic(stream);
+        stream.println(JavaBackendConstants.ABSRUNTIME + ".suspend();");
+    }
+
+    public void WhileStmt.generateJavaDynamic(PrintStream stream) {
+        super.generateJavaDynamic(stream);
+        stream.print("while (");
+        getCondition().generateJavaDynamic(stream);
+        stream.print(".toBoolean())");
+        getBody().generateJavaDynamic(stream);
+    }
+
+    public void AssertStmt.generateJavaDynamic(PrintStream stream) {
+        super.generateJavaDynamic(stream);
+        stream.print("if (!");
+        getCondition().generateJavaDynamic(stream);
+        stream.print(".toBoolean()) throw new " + ABSAssertException.class.getName() + "(\"");
+        DynamicJavaGeneratorHelper.printEscapedString(stream, getPositionString());
+        stream.println(" Assertion failed\");");
+    }
+
+    /*
+     * GUARDS
+     */
+
+    public abstract void Guard.generateJavaGuardDynamic(PrintStream beforeAwaitStream, PrintStream stream);
+
+    public void AndGuard.generateJavaGuardDynamic(PrintStream beforeAwaitStream, PrintStream stream) {
+        stream.print("new " + JavaBackendConstants.ANDGUARD + "(");
+        getLeft().generateJavaGuardDynamic(beforeAwaitStream, stream);
+        stream.print(",");
+        getRight().generateJavaGuardDynamic(beforeAwaitStream, stream);
+        stream.print(")");
+    }
+
+    public void ClaimGuard.generateJavaGuardDynamic(PrintStream beforeAwaitStream, PrintStream stream) {
+        stream.print("new " + JavaBackendConstants.CLAIMGUARD + "(");
+        getVar().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void ExpGuard.generateJavaGuardDynamic(PrintStream beforeAwaitStream, PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateExprGuard(this, beforeAwaitStream, stream);
+    }
+
+    public void DurationGuard.generateJavaGuardDynamic(PrintStream beforeAwaitStream, PrintStream stream) {
+        stream.print("new " + JavaBackendConstants.EXPGUARD +
+                "() { public " + ABSBool.class.getName() +
+                " evaluateExp() { return " + ABSBool.class.getName() + ".TRUE; }}");
+    }
+
+    /*
+     * EXPRESSIONS
+     */
+
+    public abstract void Exp.generateJavaDynamic(PrintStream stream);
+
+    public void AsyncCall.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateAsyncCall(stream, this);
+    }
+
+    public void AwaitAsyncCall.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateAwaitAsyncCall(stream, this);
+    }
+
+    public void SyncCall.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateSyncCall(stream, this);
+    }
+
+    public void OriginalCall.generateJavaDynamic(PrintStream stream) {
+        // should not appear; by flattening, original calls are replaced with regular calls
+    }
+
+    public void GetExp.generateJavaDynamic(PrintStream stream) {
+        DataTypeType t = (DataTypeType) getPureExp().getType();
+        // assume to be of type Fut<V>
+        if (!t.isFutureType() || !t.hasTypeArgs())
+            return;
+
+        Type typeArg = t.getTypeArg(0);
+        if (!(getParent() instanceof ExpressionStmt)) {
+            stream.print("(" + JavaBackend.getQualifiedString(typeArg) + ")");
+        }
+        getPureExp().generateJavaDynamic(stream);
+        stream.print(".get()");
+    }
+
+    public void NewExp.generateJavaDynamic(PrintStream stream) {
+        ClassDecl decl = ((UnionType)getType()).getOriginatingClass();
+        String className = JavaBackend.getQualifiedString(decl);
+        if (!hasLocal()) {
+            // generate user-defined scheduler class if annotation is present
+            String strategy = null;
+            PureExp scheduler = this.getInheritedAnnotationValue("Scheduler");
+            if (scheduler != null) {
+                strategy = DynamicJavaGeneratorHelper.generateUserSchedulingStrategy(this, scheduler);
+            }
+            stream.print(className + ".__ABS_createNewCOG");
+            if (strategy != null)
+                // FIXME: include userScheduler
+                DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), decl.getTypes());
+            else
+                DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), decl.getTypes());
+
+        } else {
+            stream.print(className + ".__ABS_createNewObject");
+            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), decl.getTypes());
+        }
+    }
+
+    public void ImplementsExp.generateJavaDynamic(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+    public void AsExp.generateJavaDynamic(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
+    public void DataTypeUse.generateJavaDynamic(PrintStream stream) {
+        stream.print(JavaBackend.getJavaType(this));
+    }
+
+    public void InterfaceTypeUse.generateJavaDynamic(PrintStream stream) {
+        stream.print(JavaBackend.getJavaType(this));
+    }
+
+    public void TypeParameterUse.generateJavaDynamic(PrintStream stream) {
+        stream.print(getName());
+    }
+
+    public void UnresolvedTypeUse.generateJavaDynamic(PrintStream stream) {
+        throw new JavaBackendException(this,"Type " + getName() + " is unresolved!");
+    }
+
+    public abstract void VarOrFieldUse.generateJavaDynamic(PrintStream stream);
+    public void FieldUse.generateJavaDynamic(PrintStream stream) {
+        //ClassDecl d = (ClassDecl) getContextDecl();
+        //String className = JavaBackend.getClassName(d.getName());
+        //stream.print(className + ".this." + JavaBackend.getVariableName(getName()));
+        DynamicJavaGeneratorHelper.fieldUse(stream, this);
+    }
+
+    public void VarUse.generateJavaDynamic(PrintStream stream) {
+        stream.print(JavaBackend.getVariableName(getName()));
+    }
+
+    public void IfExp.generateJavaDynamic(PrintStream stream) {
+        getCondExp().generateJavaDynamic(stream);
+        stream.print(".toBoolean() ? ");
+        getThenExp().generateJavaDynamic(stream);
+        stream.print(" : ");
+        getElseExp().generateJavaDynamic(stream);
+    }
+
+    public void CaseExp.generateJavaDynamic(PrintStream stream) {
+        stream.print("new " + Case.class.getName());
+        String varType = JavaBackend.getQualifiedString(getExpr().getType());
+        String expType = JavaBackend.getQualifiedString(getType());
+        /*
+       stream.print(varType);
+       stream.print(',');
+       stream.println(expType + ">");
+         */
+        stream.println("() {");
+        stream.print("public " + expType + " of(");
+        for (String freeVarName : getFreeVars()) {
+            VarOrFieldDecl decl = lookupVarOrFieldName(freeVarName,false);
+            String freeVarType = JavaBackend.getQualifiedString(decl.getType());
+            stream.print("final " + freeVarType + " " + JavaBackend.getVariableName(freeVarName));
+            stream.print(", ");
+        }
+
+        stream.println("final " + varType + " __ABS_value) {");
+        int i = 0;
+        for (CaseBranch b : getBranchs()) {
+            String bindingName = "__ABS_binding" + i;
+            stream.print("final " + PatternBinding.class.getName() + " " + bindingName + " = ");
+            Pattern pattern = b.getLeft();
+            pattern.generateJavaDynamic(stream);
+            stream.println(".match(__ABS_value);");
+            stream.print("if (" + bindingName + " != null) ");
+            stream.println("return new Object() {");
+            stream.print("public " + expType + " execute(");
+            java.util.List<PatternVar> freeVars = pattern.getFreePatternVars();
+            boolean first = true;
+            for (PatternVar var : freeVars) {
+                if (first) 
+                    first = false;
+                else 
+                    stream.print(", ");
+                stream.print("final " + JavaBackend.getQualifiedString(var.getType()));
+                stream.print(" " + JavaBackend.getVariableName(var.getVar().getName()));
+            }
+            stream.print(") { return ");
+            b.getRight().generateJavaDynamic(stream);
+            stream.println("; }");
+            stream.print("}.execute(");
+            first = true;
+            for (int j = 0; j < freeVars.size(); j++) {
+                if (first) first = false;
+                else stream.print(", ");
+                stream.print("(");
+                stream.print(JavaBackend.getQualifiedString(freeVars.get(j).getType()));
+                stream.print(") ");
+                stream.print(bindingName + ".getBinding(" + j + ")");
+            }
+            stream.println(");");
+            i++;
+        }
+        stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
+        DynamicJavaGeneratorHelper.printEscapedString(stream, getPositionString());
+        stream.println(" value \" + __ABS_value + \" did not match any pattern.\");");
+        stream.println("}");
+        stream.print("}.of(");
+        for (String freeVarName : getFreeVars()) {
+            stream.print(JavaBackend.getVariableName(freeVarName));
+            stream.print(", ");
+        }
+
+        getExpr().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public abstract void Pattern.generateJavaDynamic(PrintStream stream);
+
+//    public void ConstructorPattern.generateJavaDynamic(PrintStream stream) {
+//        stream.print("new " + PatternConstructor.class.getName() + "(\"" + getConstructor() + "\"");
+//        for (Pattern p : getParams()) {
+//            stream.print(",");
+//            p.generateJavaDynamic(stream);
+//        }
+//        stream.print(")");
+//    }
+    public void ConstructorPattern.generateJavaDynamic(PrintStream stream) {
+        DataConstructor decl = getDataConstructor();
+        assert decl != null : "We typechecked it!";
+        stream.println("new " + PatternConstructor.class.getName() + "(");
+        stream.print(JavaBackend.getQualifiedString(decl) + ".class");
+        for (Pattern p : getParams()) {
+            stream.println(", ");
+            p.generateJavaDynamic(stream);
+        }
+        stream.println();
+        stream.print(")");
+    }
+
+    
+    
+    public void PatternVar.generateJavaDynamic(PrintStream stream) {
+        stream.print("new " + PatternVariable.class.getName() + "(\"" + JavaBackend.getVariableName(getVar().getName()) + "\")");
+    }
+
+    public void UnderscorePattern.generateJavaDynamic(PrintStream stream) {
+        stream.print("new " + AnyPattern.class.getName() + "()");
+    }
+
+    public void PatternVarUse.generateJavaDynamic(PrintStream stream) {
+        stream.print("new " + PatternValue.class.getName() + "(" + JavaBackend.getVariableName(getName()) + ")");
+    }
+
+    public void LiteralPattern.generateJavaDynamic(PrintStream stream) {
+        stream.print("new " + PatternValue.class.getName() + "(");
+        getLiteral().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void FnApp.generateJavaDynamic(PrintStream stream) {
+
+        // Have to explicitly type the call due to a bug in the JastAdd Java
+        // compiler that generates wrong code otherwise.
+        FunctionDecl d = (FunctionDecl)getDecl();
+
+        if (d.getFunctionDef() instanceof BuiltinFunctionDef) {
+            DynamicJavaGeneratorHelper.generateBuiltInFnApp(stream,this);
+            return;
+        }
+
+        stream.print(JavaBackend.getQualifiedString(d) + ".");
+        Type declaredResultType = d.getTypeUse().getType();
+        if (d instanceof ParametricFunctionDecl) {
+            ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
+            Map<TypeParameter, Type> typeBinding = getTypeParamBindingFromParamDecl(funDecl);
+
+            /*
+         StringBuffer buf = new StringBuffer();
+         buf.append("<");
+         boolean first = true;
+         for (TypeParameterDecl tp : funDecl.getTypeParameters()) {
+             Type t = typeBinding.get((TypeParameter)tp.getType());
+             if (first) first = false;
+             else buf.append(",");
+             if (t == null) {
+                 buf = null;
+                 break;
+             } else if (t.isBoundedType() && !((BoundedType)t).hasBoundType()) {
+                 buf = null;
+                 break;
+             } else {
+                 buf.append(JavaBackend.getQualifiedString(t));
+             }
+         }
+
+         if (buf != null) {
+             stream.print(buf.toString());
+             stream.print(">");
+         }*/
+        }
+
+        stream.print("apply");
+        DynamicJavaGeneratorHelper.generateArgs(stream,getParams(), d.getTypes());
+
+    }
+
+    public void DataConstructorExp.generateJavaDynamic(PrintStream stream) {
+        DataConstructor c = getDataConstructor();
+        assert c != null : "We typechecked it!";
+        DataTypeDecl decl = c.getDataTypeDecl();
+        Type t = decl.getType();
+        if (t.isBoolType()) {
+            stream.print(ABSBool.class.getName());
+            stream.print(".fromBoolean(");
+            stream.print(c.getName().toLowerCase());
+            stream.print(")");
+        } else if (t.isUnitType()) {
+            stream.print(JavaBackendConstants.UNITVALUE);
+        } else {
+            stream.print("new " + JavaBackend.getQualifiedString(c));
+            /*
+          if (decl instanceof ParametricDataTypeDecl) {
+            DataTypeType type = (DataTypeType) this.getType();
+            if (type.hasTypeArgs()) {
+              stream.print("<");
+              boolean first = true;
+              for (Type typeArg : type.getTypeArgs()) {
+                if (first) first = false;
+                else stream.print(",");
+                stream.print(JavaBackend.getQualifiedString(typeArg));
+              }
+              stream.print(">");
+            }
+          }
+             */
+            DynamicJavaGeneratorHelper.generateArgs(stream,getParams(), c.getTypes());
+        }
+    }
+
+    public void LetExp.generateJavaDynamic(PrintStream stream) {
+        stream.print("new " + Let.class.getName());
+        String varType = JavaBackend.getQualifiedString(getVar().getType());
+        String expType = JavaBackend.getQualifiedString(getExp().getType());
+        stream.print("() { public " + expType);
+        stream.print(" in(");
+        for (String freeVarName : getExp().getFreeVars()) {
+            if (freeVarName.equals(getVar().getName()))
+                continue;
+            // ignore renaming of variables to temp variables...
+            String freeVarName2 = freeVarName.replaceFirst("^temp\\$[0-9] + \\$", "");
+            VarOrFieldDecl decl = getExp().lookupVarOrFieldName(freeVarName2,false);
+            if (decl == null) {
+                throw new IllegalArgumentException("Variable " + freeVarName + " cannot be resolved");
+            }
+            String freeVarType = JavaBackend.getQualifiedString(decl.getType());
+            stream.print("final " + freeVarType + " " + JavaBackend.getVariableName(freeVarName));
+            stream.print(", ");
+        }
+
+        stream.print("final " + varType + " " + JavaBackend.getVariableName(getVar().getName()));
+        stream.print(") { ");
+        stream.print("return ");
+        getExp().generateJavaDynamic(stream);
+        stream.print("; }}.in(");
+        for (String freeVarName : getExp().getFreeVars()) {
+            if (freeVarName.equals(getVar().getName()))
+                continue;
+            stream.print(freeVarName);
+            stream.print(", ");
+        }
+        getVal().generateJavaDynamic(stream);
+        if (getVar().getType().isIntType() && getVal().getType().isRatType()) {
+            stream.print(".truncate()");
+        }
+        stream.print(")");
+
+    }
+
+    public void IntLiteral.generateJavaDynamic(PrintStream stream) {
+        stream.print(ABSInteger.class.getName());
+        stream.print(".fromString(\"");
+        stream.print(getContent());
+        stream.print("\")");
+    }
+
+    public void FloatLiteral.generateJavaDynamic(PrintStream stream) {
+        stream.print(getContent() + "d");
+    }
+
+    public void StringLiteral.generateJavaDynamic(PrintStream stream) {
+        stream.print(ABSString.class.getName());
+        stream.print(".fromString(\"");
+        DynamicJavaGeneratorHelper.printEscapedString(stream, getContent());
+        stream.print("\")");
+    }
+
+    public void ListLiteral.generateJavaDynamic(PrintStream stream) {
+        for (PureExp e : getPureExps()) {
+            stream.print("new ABS.StdLib.List_Cons(");
+            e.generateJavaDynamic(stream);
+            stream.print(", ");
+        }
+        stream.print("new ABS.StdLib.List_Nil()");
+        for (int i = 0; i < getNumPureExp(); i++) {
+            stream.print(")");
+        }
+    }
+
+    public void NullExp.generateJavaDynamic(PrintStream stream) {
+        stream.print("null");
+    }
+
+    public void ThisExp.generateJavaDynamic(PrintStream stream) {
+        stream.print("thisP");
+    }
+
+    public void MinusExp.generateJavaDynamic(PrintStream stream) {
+        getOperand().generateJavaDynamic(stream);
+        stream.print(".negate()");
+    }
+
+    public void NegExp.generateJavaDynamic(PrintStream stream) {
+        getOperand().generateJavaDynamic(stream);
+        stream.print(".negate()");
+    }
+
+    public void AddAddExp.generateJavaDynamic(PrintStream stream) {
+        getLeft().generateJavaDynamic(stream);
+        stream.print(".add(");
+        getRight().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void SubAddExp.generateJavaDynamic(PrintStream stream) {
+        getLeft().generateJavaDynamic(stream);
+        stream.print(".subtract(");
+        getRight().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void DivMultExp.generateJavaDynamic(PrintStream stream) {
+        getLeft().generateJavaDynamic(stream);
+        stream.print(".divide(");
+        getRight().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void ModMultExp.generateJavaDynamic(PrintStream stream) {
+        getLeft().generateJavaDynamic(stream);
+        stream.print(".mod(");
+        getRight().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void MultMultExp.generateJavaDynamic(PrintStream stream) {
+        getLeft().generateJavaDynamic(stream);
+        stream.print(".multiply(");
+        getRight().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void AndBoolExp.generateJavaDynamic(PrintStream stream) {
+        getLeft().generateJavaDynamic(stream);
+        stream.print(".and(");
+        getRight().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void OrBoolExp.generateJavaDynamic(PrintStream stream) {
+        getLeft().generateJavaDynamic(stream);
+        stream.print(".or(");
+        getRight().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void EqExp.generateJavaDynamic(PrintStream stream) {
+        stream.print(BinOp.class.getName() + ".eq(");
+        getLeft().generateJavaDynamic(stream);
+        stream.print(",");
+        getRight().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void NotEqExp.generateJavaDynamic(PrintStream stream) {
+        stream.print(BinOp.class.getName() + ".notEq(");
+        getLeft().generateJavaDynamic(stream);
+        stream.print(",");
+        getRight().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void GTEQExp.generateJavaDynamic(PrintStream stream) {
+        getLeft().generateJavaDynamic(stream);
+        stream.print(".gtEq(");
+        getRight().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void GTExp.generateJavaDynamic(PrintStream stream) {
+        getLeft().generateJavaDynamic(stream);
+        stream.print(".gt(");
+        getRight().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void LTEQExp.generateJavaDynamic(PrintStream stream) {
+        getLeft().generateJavaDynamic(stream);
+        stream.print(".ltEq(");
+        getRight().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+    public void LTExp.generateJavaDynamic(PrintStream stream) {
+        getLeft().generateJavaDynamic(stream);
+        stream.print(".lt(");
+        getRight().generateJavaDynamic(stream);
+        stream.print(")");
+    }
+
+
+}
+
+aspect GenerateJavaDynamic_DeltaModelling {
+    
+    /*
+     * Deltas
+     */
+    public void DeltaDecl.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
+        String deltaPackageName = JavaBackend.getDeltaPackageName(getName());
+        JavaCode.Package pkg = code.createPackage(deltaPackageName);
+        ArrayList<String> classes = new ArrayList<String>();
+        for (ModuleModifier mod : getModuleModifiers()) {
+            mod.generatedJavaPackageName = deltaPackageName + "." + mod.findModule().getName() + "." + mod.getSimpleName();
+            JavaCode.Package modPkg = code.createPackage(mod.generatedJavaPackageName);
+            mod.generateJavaCodeDynamic(modPkg);
+            classes.add(mod.generatedJavaPackageName + "." + mod.generatedJavaClassName);
+        }
+        DynamicJavaGeneratorHelper.generateDelta(this, pkg, classes);
+    }
+
+    protected String ModuleModifier.generatedJavaPackageName;
+    protected String ModuleModifier.generatedJavaClassName;
+
+    public void ModuleModifier.generateJavaCodeDynamic(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
+        PrintStream stream = null;
+        generatedJavaClassName = JavaBackend.getModifierName();
+        try {
+            File file = pkg.createJavaFile(generatedJavaClassName);
+            stream = JavaCodeStream.from(file);
+            stream.println("package " + pkg.packageName + ";");
+
+            // gen header
+            stream.println("public class " + generatedJavaClassName + " {");
+            generateJavaDynamic(stream);
+            stream.println("}");
+        } finally {
+            if (stream != null)
+                stream.close();
+        }
+    }
+
+    abstract void ModuleModifier.generateJavaDynamic(PrintStream stream);
+    
+    public void AddClassModifier.generateJavaDynamic(PrintStream stream) {
+        // FIXME generate _mod instead of _c class
+        // TODO delta application code
+        //DynamicJavaGeneratorHelper.generateClassDecl(stream, this.getClassDecl());
+        stream.println("// TODO " + this.getClass().getName());
+        stream.println("public static void apply() {}");
+  
+    }
+    public void RemoveClassModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+        stream.println("public static void apply() {}");
+    }
+    public void ModifyClassModifier.generateJavaDynamic(PrintStream stream) {
+        for (Modifier m : getModifiers()) {
+            m.generateJavaDynamic(stream);
+        }
+        // generate application method, which applies all modifications to a copy of a given class
+        stream.println();
+        stream.println("public static void apply() {");
+        stream.println(ABSDynamicClass.class.getName() + " cls = " + JavaBackend.getClassName(findModule().getName() + "." + getSimpleName()) + ".singleton();");
+        stream.println(ABSDynamicClass.class.getName() + " clsNew = cls.createNextVersion();");
+        for (Modifier m : getModifiers()) {
+            m.generateJavaDynamicApplication(stream, generatedJavaClassName);
+            // System.out.println("generated " + m.getClass());
+        }
+        stream.println(JavaBackend.getClassName(findModule().getName() + "." + getSimpleName()) + ".setInstance(clsNew);");
+        stream.println("}");
+        
+        // TODO handle interface additions & removals
+    }
+
+    public void InterfaceModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+        stream.println("public static void apply() {}");
+    }
+    public void FunctionalModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+        stream.println("public static void apply() {}");
+    }
+    public void NamespaceModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+    }
+
+    abstract void Modifier.generateJavaDynamic(PrintStream stream);
+    abstract void Modifier.generateJavaDynamicApplication(PrintStream stream, String className);
+    
+    public void AddFieldModifier.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateField(stream, getFieldDecl());
+    }
+    public void AddFieldModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
+        String name = JavaBackend.getVariableName(getFieldDecl().getName());
+        stream.println("clsNew.addField(\"" + name + "\", " + className + ".field$" + name + ".singleton());");
+    }
+    
+    public void RemoveFieldModifier.generateJavaDynamic(PrintStream stream) {
+        // nothing to generate
+    }
+    public void RemoveFieldModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
+        String name = JavaBackend.getVariableName(getFieldDecl().getName());
+        stream.println("clsNew.removeField(\"" + JavaBackend.getVariableName(name) + "\");");
+    }
+    
+
+    
+    public void ProductDecl.generateJavaCodeDynamic(JavaCode.Package pkg, HashMap<String, ProductDecl> allProducts) 
+            throws IOException, JavaCodeGenerationException {
+        PrintStream stream = null;
+        String generatedJavaClassName = JavaBackend.getProductName(getName());
+        
+        try {
+            File file = pkg.createJavaFile(generatedJavaClassName);
+            stream = JavaCodeStream.from(file);
+            // gen header
+            stream.println("package " + pkg.packageName + ";");
+            stream.println("public class " + generatedJavaClassName + " {");
+            DynamicJavaGeneratorHelper.generateProduct(stream, this, allProducts);
+            stream.println("}");
+            
+            for (Reconfiguration recf : getReconfigurations()) {
+                recf.generateJavaCodeDynamic(pkg, this, allProducts);
+            }
+        } finally {
+            if (stream != null)
+                stream.close();
+        }
+    }
+    
+    public void Reconfiguration.generateJavaCodeDynamic(JavaCode.Package pkg, ProductDecl currentP, HashMap<String, ProductDecl> allProducts)
+            throws IOException, JavaCodeGenerationException {
+        PrintStream stream = null;
+        String generatedJavaClassName = JavaBackend.getReconfigurationName(currentP.getName(), getTargetProductID());
+        
+        try {
+            File file = pkg.createJavaFile(generatedJavaClassName);
+            stream = JavaCodeStream.from(file);
+            // gen header
+            stream.println("package " + pkg.packageName + ";");
+            stream.println("public class " + generatedJavaClassName + " {");
+            DynamicJavaGeneratorHelper.generateReconfiguration(stream, this, currentP, allProducts);
+            stream.println("}");
+        } finally {
+            if (stream != null)
+                stream.close();
+        }
+    }
+    
+        
+    /*
+     * State Updates 
+     */
+    public void UpdateDecl.generateJavaCodeDynamic(JavaCode.Package pkg) 
+            throws IOException, JavaCodeGenerationException {
+        PrintStream stream = null;
+        String generatedJavaClassName = JavaBackend.getUpdateName(getName());
+        
+        try {
+            File file = pkg.createJavaFile(generatedJavaClassName);
+            stream = JavaCodeStream.from(file);
+            // gen header
+            stream.println("package " + pkg.packageName + ";");
+            stream.println("public class " + generatedJavaClassName + " {");
+            ArrayList<String> classes = new ArrayList<String>();
+            for (ObjectUpdate upd : getObjectUpdates()) {
+                // TODO implement
+                //upd.generateJavaCodeDynamic(pkg);
+                //classes.add(upd.getGeneratedJavaClassName());
+                classes.add(upd.getClassName());
+                
+                stream.println("// generate Update for instances of " + upd.getClassName());
+                
+            }
+            DynamicJavaGeneratorHelper.generateUpdate(stream, this, generatedJavaClassName, classes);
+            stream.println("}");
+        } finally {
+            if (stream != null)
+                stream.close();
+        }
+    }
+
+//traits
+
+    public void DeltaTraitModifier.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
+    public void DeltaTraitModifier.generateJavaDynamicApplication(PrintStream stream, String className) {}
+    public void AddMethodModifier.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
+    public void AddMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {}
+    public void ModifyMethodModifier.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
+    public void ModifyMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {}
+    public void RemoveMethodModifier.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
+    public void RemoveMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {}
+    public void TraitUse.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {}
+    public void TraitUse.generateJavaDynamicApplication(PrintStream stream, String className) {}
+}

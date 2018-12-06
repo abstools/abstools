@@ -1,0 +1,61 @@
+aspect Annotations {
+
+    public abstract List<Annotation> TypedVarOrFieldDecl.getAnnotations();
+    inh lazy List<Annotation> VarDecl.getAnnotations();
+    eq VarDeclStmt.getVarDecl().getAnnotations() = getAnnotations();
+
+    // Abstraction over annotation list (which is not available for all nodes)
+    syn List<Annotation> ASTNode.getNodeAnnotations() = new List<Annotation>();
+    eq ClassDecl.getNodeAnnotations() = getAnnotations();
+    eq MethodImpl.getNodeAnnotations() = getMethodSig().getNodeAnnotations();
+    eq Stmt.getNodeAnnotations() = getAnnotations();
+    eq MethodSig.getNodeAnnotations() = getAnnotations();
+
+    // Annotation inheritance
+    syn PureExp ASTNode.getInheritedAnnotationValue(String simpleName) {
+        final PureExp exp = AnnotationHelper.getAnnotationValueFromSimpleName(getNodeAnnotations(), simpleName);
+        if (exp != null)
+            return exp;
+        if (getParent() == null)
+            return null;
+        return getParent().getInheritedAnnotationValue(simpleName);
+    }
+
+    /*
+     * Returns a name which can be used for a new variable. Avoids all names in occupiedNames.
+     * Adds the new name to occupiedNames. pattern is a format string which is used for building
+     * the variable name. It must contain a String format argument (%s).
+     * FIXME Does not return an unused name if, later in the same method, the name is already occupied.
+     */
+    public String Exp.getUnusedVarName(final Set<? super String> occupiedNames, final String pattern) {
+        String name;
+        int i = 1;
+        do {
+            name = String.format(pattern, i == 1 ? "" : Integer.toString(i));
+            i++;
+        } while (lookupVarOrFieldName(name, false) != null || !occupiedNames.add(name));
+        return name;
+    }
+    
+    /*
+     * Returns a name which can be used for a new variable. Avoids all names in occupiedNames.
+     * Adds the new name to occupiedNames. pattern is a format string which is used for building
+     * the variable name. It must contain a String format argument (%s).
+     */
+    public String MethodImpl.getUnusedVarName(final Set<? super String> occupiedNames, final String pattern) {
+        String name;
+        final Block block = getBlock();
+        final int numStmt = block.getNumStmt();
+        final Stmt lastStmt = numStmt > 0 ? block.getStmt(numStmt - 1) : null;
+        int i = 1;
+        do {
+            name = String.format(pattern, i == 1 ? "" : Integer.toString(i));
+            i++;
+        } while ((lastStmt == null ?
+                    lookupVarOrFieldName(name, false) :
+                    lastStmt.lookupVarOrFieldName(name, false)) != null ||
+                !occupiedNames.add(name));
+        return name;
+    }
+    
+}

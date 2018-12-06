@@ -1,0 +1,154 @@
+/* $Id$ */
+import java.util.Set;
+
+aspect FieldUsage {
+
+     /**
+     * Guard must observe something. "True" and "False" or implemented as a
+     * hack for now for those people that like to use it.
+     * @see PureExp#getFields(FieldUseInfo)
+     */
+     public void ExpGuard.hasFieldAccess(SemanticConditionList e) {
+        final PureExp pe = getPureExp();
+        final FieldUseInfo info = getPureExp().getFields();
+        if ((!(pe instanceof DataConstructorExp && ("True".equals(((DataConstructorExp)pe).getConstructor()) || "False".equals(((DataConstructorExp)pe).getConstructor()))))
+                    && (info.fields.isEmpty() && !info.usesBuiltin))
+            e.add(new SemanticWarning(this,ErrorMessage.AWAIT_TOO_PURE, ""));
+    }
+
+    /**
+     * Helper-datastructure for {@link PureExp#getFields()}.
+     */
+    public class FieldUseInfo {
+       final public Collection<FieldUse> fields = new HashSet<FieldUse>();
+       public Collection<FunctionDef> seenDefs = new HashSet<FunctionDef>();
+       public boolean usesBuiltin = false;
+
+	   FieldUseInfo(){};
+
+	   FieldUseInfo(FieldUse fu) {
+	     fields.add(fu);
+	   }
+
+       FieldUseInfo(FieldUseInfo f) {
+         fields.addAll(f.fields);
+         usesBuiltin = f.usesBuiltin;
+       }
+
+       FieldUseInfo(Collection<FunctionDef> seen) {
+         seenDefs = seen;
+       }
+
+       FieldUseInfo merge(PureExp e) {
+         return merge(e.getFields(this));
+       }
+
+       FieldUseInfo merge(List<PureExp> es) {
+         for (PureExp e : es) {
+           merge(e);
+         }
+         return this; // fluent
+       }
+
+       FieldUseInfo merge(FieldUseInfo fui) {
+         fields.addAll(fui.fields);
+         usesBuiltin |= fui.usesBuiltin;
+         return this; // fluent
+       }
+    }
+
+   /**
+    * Collect all fields used in a pure expression and reference to builtins.
+    * TODO: I guess we shouldn't be collecting USES but their DECLs instead,
+             but you can easily get those later.
+    * @see PureExp#getFields()
+    */
+    syn lazy FieldUseInfo PureExp.getFields() = getFields(new FieldUseInfo());
+   /**
+    * Collect all fields used in a pure expression and reference to builtins.
+    * Uses an accumulator (defSeen) to avoid recursing into functiondefs when
+    *   looking for builtins.
+    * TODO: I guess we shouldn't be collecting USES but their DECLs instead,
+             but you can easily get those later.
+    * @see getFields()
+    */
+	syn lazy FieldUseInfo PureExp.getFields(FieldUseInfo fui);
+
+	eq PureExp.getFields(FieldUseInfo fui) = fui;
+	eq FieldUse.getFields(FieldUseInfo fui) = new FieldUseInfo(this);
+
+	eq Binary.getFields(FieldUseInfo fui) {
+		fui.merge(getLeft());
+		return new FieldUseInfo(fui.merge(getRight()));
+	}
+
+	eq Unary.getFields(FieldUseInfo fui) {
+	    return new FieldUseInfo(fui.merge(getOperand()));
+	}
+
+	eq LetExp.getFields(FieldUseInfo fui) {
+		fui.merge(getExp());
+		return new FieldUseInfo(fui.merge(getVal()));
+	}
+
+	eq IfExp.getFields(FieldUseInfo fui) {
+		fui.merge(getCondExp());
+		fui.merge(getThenExp());
+		return new FieldUseInfo(fui.merge(getElseExp()));
+	}
+
+   /**
+    * Check for reference to builtins (transitively).
+    * Uses an accumulator (defSeen) to avoid recursing into the same functiondef when
+    *   looking for builtins.
+    */
+    public boolean FunctionDef.usesBuiltin() { return usesBuiltin(new HashSet<FunctionDef>()); }
+    syn lazy boolean FunctionDef.usesBuiltin(Collection<FunctionDef> seen);
+    eq BuiltinFunctionDef.usesBuiltin(Collection<FunctionDef> seen) = true;
+    eq ExpFunctionDef.usesBuiltin(Collection<FunctionDef> seen) {
+      if (seen.add(this)) {
+        FieldUseInfo info = getRhs().getFields(new FieldUseInfo(seen));
+        boolean a = seen.remove(this);
+        assert a;
+        return info.usesBuiltin;
+      } else
+        return false; // OK since it gets ORed
+    }
+
+	eq FnApp.getFields(FieldUseInfo fui) {
+	    fui.merge(getParams());
+		/* Add a hack for builtins, which can do whatever...#345 */
+		if (getDecl() instanceof FunctionDecl) {
+		  FunctionDecl d = (FunctionDecl)getDecl();
+		  FunctionDef def = d.getFunctionDef();
+		  fui.usesBuiltin |= def.usesBuiltin(fui.seenDefs);
+		}
+		return new FieldUseInfo(fui);
+	}
+
+	eq DataConstructorExp.getFields(FieldUseInfo fui) {
+	    return new FieldUseInfo(fui.merge(getParams()));
+	}
+
+	eq CaseExp.getFields(FieldUseInfo fui) {
+		for (CaseBranch b : getBranchs())
+		  fui.merge(b.getRight());
+	   return new FieldUseInfo(fui.merge(getExpr()));
+	}
+
+	syn lazy FieldUseInfo CaseBranch.getFields(FieldUseInfo fui) {
+	    fui.merge(getLeft().getFields(fui));
+	    return new FieldUseInfo(fui.merge(getRight().getFields(fui)));
+	}
+
+	syn lazy FieldUseInfo Pattern.getFields(FieldUseInfo fui);
+
+	eq Pattern.getFields(FieldUseInfo fui)       = fui;
+	eq PatternVarUse.getFields(FieldUseInfo fui) = fui;
+
+	eq ConstructorPattern.getFields(FieldUseInfo fui) {
+	    for (Pattern p : getParams())
+	      fui.merge(p.getFields(fui));
+	    return new FieldUseInfo(fui);
+	}
+}

@@ -11,8 +11,9 @@ or later.  If using the Maude backend, also install
 ## Building the compiler ##
 
 To build the compiler, run `make frontend` in the project root directory, or
-`make` in this subdirectory.  A successful build generates the file
-`dist/absfrontend.jar` which contains the compiler and runtime support files.
+`./gradlew assemble` in this subdirectory (`.\gradlew.bat assemble` on windows).
+A successful build generates the file `dist/absfrontend.jar` which contains the
+compiler and runtime support files.
 A convenience script called `absc` that invokes the ABS compiler can be found
 in `bin/bash/` (for Unix-like systems) and `bin/win` (for Windows).  For a
 list of options to the compiler, see the output of `absc -help`.
@@ -73,10 +74,6 @@ will compile or run.
 Compile to Java with
 
     bin/bash/absc -java [options] [-d <dir>] <absfiles>
-
-OR
-
-    java -cp dist/absfrontend.jar abs.backend.java.JavaBackend [-d <dir>] <absfiles>
 
 This will generate Java source files and corresponding `.class` files into
 `dir`, where additional subdirectories are created for each module.

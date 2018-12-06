@@ -8,7 +8,7 @@
 
 -include_lib("absmodulename.hrl").
 
--export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/2]).
+-export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/5]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -20,6 +20,7 @@
          {influxdb_db,$d,"influxdb-db",{string,"absmodel"},"Name of the influx database log data is written to"},
          {clocklimit,$l,"clock-limit",{integer,none},"Do not advance simulation clock above given clock value"},
          {schedulers,$s,"schedulers",{integer,none},"Set number of online erlang schedulers"},
+         {debug,undefined,"debug",{integer,0},"Turn on debug mode when > 0 (model will run much slower; diagnostic output when > 1)"},
          {version,$v,"version",undefined,"Output version and exit"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
 
@@ -51,9 +52,12 @@ run(Args) ->
 start_http() ->
     {ok, _} = application:ensure_all_started(absmodel).
 
-start_http(Port, Clocklimit) ->
+start_http(Port, Module, Debug, GCStatistics, Clocklimit) ->
     ok = application:load(absmodel),
     ok = application:set_env(absmodel, port, Port),
+    ok = application:set_env(absmodel, module, Module),
+    ok = application:set_env(absmodel, debug, Debug),
+    ok = application:set_env(absmodel, gcstatistics, GCStatistics),
     ok = application:set_env(absmodel, clocklimit, Clocklimit),
     start_http().
 
@@ -73,8 +77,8 @@ parse(Args,Exec)->
                          M when is_list(M) -> list_to_atom("m_" ++ re:replace(M,"[.]","_",[{return,list},global]));
                          _ -> ?ABSMAINMODULE
                      end,
-            Debug=proplists:get_value(debug,Parsed, false),
-            GCStatistics=proplists:get_value(gcstats,Parsed, false),
+            Debug=proplists:get_value(debug,Parsed, 0) > 0,
+            GCStatistics=proplists:get_value(debug,Parsed, 0) > 1,
             Port=proplists:get_value(port,Parsed,none),
             Clocklimit=proplists:get_value(clocklimit,Parsed,none),
 
@@ -105,8 +109,8 @@ parse(Args,Exec)->
 %% For now we just punt.
 start_link(Args) ->
     case Args of
-        [Module, Clocklimit, Keepalive] ->
-            {ok, _T} = start_mod(Module, false, false, Clocklimit, Keepalive),
+        [Module, Debug, GCStatistics, Clocklimit, Keepalive] ->
+            {ok, _T} = start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive),
             supervisor:start_link({local, ?MODULE}, ?MODULE, []);
         _ -> {error, false}
     end.
@@ -153,7 +157,7 @@ run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
 
     case Port of
         _ when is_integer(Port) ->
-            start_http(Port, Clocklimit),
+            start_http(Port, Module, Debug, GCStatistics, Clocklimit),
             receive ok -> ok end;
         _ ->
             {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, false),

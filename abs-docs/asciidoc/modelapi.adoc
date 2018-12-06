@@ -9,6 +9,9 @@ they are returned from such methods.
 
 The model API is supported by the Erlang backend.
 
+NOTE: The Model API accepts connections only from local (loopback) addresses,
+i.e., from the same machine.
+
 NOTE: All queries in this section can be prepended with a `/v2/` prefix, i.e.,
 `http://localhost:8080/v2/call` instead of `http://localhost:8080/call`.  In
 case incompatible changes have to be introduced to the Model API in the
@@ -92,7 +95,11 @@ supported.
 
 | `List<A>` (where `A` can be decoded)
 | not supported
-| JSON list with elements of type `A`
+| JSON list with elements having type `A`
+
+| `Map<String, A>` (where `A` can be decoded; JSON map keys will be decoded as ABS strings)
+| not supported
+| JSON map with all values having type `A`
 
 | All others
 | not supported
@@ -271,7 +278,7 @@ The current value of the clock can be obtained with the following request:
 GET http://localhost:8080/clock/now
 ----
 
-The result is a JSON object with a key `'value'` mapping to the
+The result is a JSON object with a key `'result'` mapping to the
 current value of the clock.
 
 When the model was started with a clock limit (see
@@ -281,6 +288,9 @@ like the following:
 ----
 GET http://localhost:8080/clock/advance?by=50
 ----
+
+The result is a JSON object with a key `'result'` mapping to the
+new clock limit.
 
 This call will always increase the clock limit by the given amount,
 even if the clock had not yet reached the previous limit.  I.e., when
@@ -312,4 +322,3 @@ The contents of the given directory are copied at compile-time.  The
 files within that directory are available within the Model API below
 the `static/` path.  For example, a file `./support-files/js/d3.js`
 will be accessible as `http://localhost:8080/static/js/d3.js`.
-

@@ -1,0 +1,94 @@
+
+
+aspect InitChecker {
+
+    void ASTNode.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        for (ASTNode<?> n : astChildren()) {
+            n.checkLegalInit(l, msg);
+        }
+    }
+
+    @Override
+    void Stmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        super.checkLegalInit(l, msg); // check expressions inside statements
+        List<Annotation> al = getAnnotations();
+        if (AnnotationHelper.getAnnotationValueFromName(al, "ABS.DC.Cost") != null) {
+            l.add(new TypeError(this, msg, "Cost annotations"));
+        }
+        if (AnnotationHelper.getAnnotationValueFromName(al, "ABS.DC.DataSize") != null) {
+            l.add(new TypeError(this, msg, "Size annotations"));
+        }
+    }
+
+    @Override
+    void SuspendStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        l.add(new TypeError(this, msg, "Suspend statements"));
+    }
+    @Override
+    void AwaitStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        l.add(new TypeError(this, msg, "Await statements"));
+    }
+    @Override
+    void AwaitAsyncCall.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        l.add(new TypeError(this, msg, "Await expressions"));
+    }
+    @Override
+    void ThrowStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        l.add(new TypeError(this, msg, "Throw statements"));
+    }
+    @Override
+    void DieStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        l.add(new TypeError(this, msg, "Die statements"));
+    }
+    @Override
+    void ReturnStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        l.add(new TypeError(this, msg, "Return statements"));
+    }
+    @Override
+    void DurationStmt.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        super.checkLegalInit(l, msg); // Blocks can have annotations
+        l.add(new TypeError(this, msg, "Duration statements"));
+    }
+
+    @Override
+    void SyncCall.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        SemanticConditionList tmp = new SemanticConditionList();
+        getCallee().typeCheck(tmp);
+        // Do not attempt to find the method signature if the callee type
+        // cannot be found (https://github.com/abstools/abstools/issues/198)
+        if (l.getErrorCount() == 0) {
+            if (!getMethodSig().isAtomic()) {
+                l.add(new TypeError(this, msg, "Synchronous calls of non-atomic methods"));
+            }
+        }
+    }
+    @Override
+    void GetExp.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+       l.add(new TypeError(this, msg, "Get expressions"));
+    }
+
+    @Override
+    void FieldDecl.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        if (hasInitExp()) {
+            getInitExp().checkLegalInit(l, msg);
+         }
+    }
+    @Override
+    void VarDecl.checkLegalInit(SemanticConditionList l, ErrorMessage msg) {
+        if (hasInitExp()) {
+            getInitExp().checkLegalInit(l, msg);
+        }
+    }
+
+
+}
+
+// Local Variables:
+// mode: java
+// End:

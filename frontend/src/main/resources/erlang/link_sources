@@ -13,7 +13,7 @@ Run with source dir argument, e.g., \"./link_sources ~/Source/abstools"
     exit 1
 fi
 
-SOURCE_DIR="$1/frontend/src/main/erlang"
+SOURCE_DIR="$1/frontend/src/main/resources/erlang"
 
 for i in absmodel/src/*.erl
 do

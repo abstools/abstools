@@ -1,0 +1,410 @@
+import java.util.Map;
+import org.abs_models.frontend.delta.*;
+import org.abs_models.common.*;
+
+aspect ProductFlattener {
+
+    /**************************************************************************
+     * Configure a product
+     * This is the top level method, which does the following:
+     * - find the features of a given product,
+     * - find a valid sequence of associated deltas,
+     * - resolve original() calls,
+     * - apply deltas in sequence.
+     */
+    public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,DeltaModellingException {
+        ProductDecl decl = this.findProduct(id);
+        flattenForProduct(decl);
+        flushTreeCache();
+    }
+    /**************************************************************************
+     * Apply delta to model without checking if the product is valid wrt the feature model
+     * i.e. apply each ModuleModifier to its corresponding class or interface
+     */
+    public void Model.flattenForProductUnsafe(String id) throws WrongProgramArgumentException,DeltaModellingException {
+        ProductDecl prod = this.findProduct(id);
+        flattenForProduct(prod, false);
+    }
+    public void Model.flattenForProduct(ProductDecl decl) throws WrongProgramArgumentException,DeltaModellingException {
+        flattenForProduct(decl, true);
+    }
+    public void Model.flattenForProduct(String id, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
+        ProductDecl prod = this.findProduct(id);
+        flattenForProduct(prod, check);
+    }
+
+    /**
+     * Refined with MTVL-check in CSP.jadd.
+     */
+    public void Model.flattenForProduct(ProductDecl decl, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
+	assert decl != null;
+        if (verbose)
+            System.out.println("--- configuring product: " + decl.getName());
+        flattenForProduct(decl.getProduct());
+        // remember which product was generated
+        productName = decl.getName();
+    }
+
+    public void Model.flattenForProduct(Product product) throws DeltaModellingException {
+        // find product line
+        ProductLine pl = getProductLine();
+        if (pl == null)
+            throw new DeltaModellingException("Model is missing a 'productline' definition");
+
+        // find/sort applicable delta IDs
+        Set<String> deltaids = pl.findApplicableDeltas(product);
+        java.util.List<String> sorted_deltaids = pl.sortDeltas(deltaids);
+
+        // find corresponding DeltaDecls
+        ArrayList<DeltaDecl> deltas = new ArrayList<DeltaDecl>();
+        for (String deltaid : sorted_deltaids)
+            deltas.add(getDeltaDeclsMap().get(deltaid));
+
+        // substitute delta parameters
+        pl.substituteDeltaParams(deltas, product);
+
+        if (verbose) {
+            System.out.print("--- applying deltas to core");
+            for (DeltaDecl delta : deltas) {
+                print(" << " + delta.getName());
+            }
+            println(" .");
+        }
+        // apply the applicable traits
+        applyTraits();
+
+        // apply the applicable deltas in the given order
+        applyDeltas(deltas);
+    }
+
+
+    /**************************************************************************
+     * Simplifications before product line type checking
+     */
+    public void Model.collapseTraitModifiers() {
+        for (DeltaDecl delta : getDeltaDecls()) {
+            delta.collapseTraitModifiers();
+        }
+        flushTreeCache();
+    }
+
+    public void DeltaDecl.collapseTraitModifiers() {
+        for (ModuleModifier mod : getModuleModifierList()) {
+            mod.collapseTraitModifiers();
+        }
+    }
+
+    /**************************************************************************
+     * Apply deltas to model
+     */
+    public void Model.applyDeltas(java.util.List<DeltaDecl> deltas) throws DeltaModellingException {
+        // TODO/FIXME: The following code is sort of hack-ish and slow. Find a better way
+        //             to flush the correct cache at the same time (or avoid flushing at all?)
+        for (DeltaDecl delta : deltas) {
+            this.applyDelta(delta);
+            for (CompilationUnit unit: this.getCompilationUnits())
+                for (ModuleDecl module: unit.getModuleDecls())
+                    module.flushCache();
+        }
+        for (CompilationUnit unit: this.getCompilationUnits()){
+            for (ModuleDecl module: unit.getModuleDecls()){
+                for (Decl decl : module.getDecls()) {
+                    if(decl instanceof ClassDecl){
+                        ((ClassDecl)decl).computeDelete();
+                    }
+                }
+            }
+        }
+    }
+
+    /**************************************************************************
+     * apply each FunctionalModifier and ModuleModifier
+     * to its corresponding class or interface
+     *
+     * These "apply" methods are defined in "DeltaModifierApplicator.jadd"
+     */
+    public void Model.applyDelta(DeltaDecl delta) throws DeltaModellingException {
+        for (ModuleModifier mod : delta.getModuleModifiers()) {
+            //System.out.println("*** applying ModuleModifier " + mod);
+            mod.apply();
+        }
+    }
+
+    /**************************************************************************
+     * find a particular product given by its name
+     */
+    public ProductDecl Model.findProduct(String id) throws WrongProgramArgumentException {
+        for (ProductDecl p : getProductDecls()) {
+            if (id.equals(p.getName()))
+                return p;
+        }
+        throw new WrongProgramArgumentException("Product [" + id + "] is not declared");
+    }
+
+    /**************************************************************************
+     * Evaluate each delta clause to find the applicable delta names
+     * i.e. test each application condition in the context of the features which are ON in the given product
+     */
+    public Set<String> ProductLine.findApplicableDeltas(Product prod) {
+
+	assert prod != null;
+	assert prod.getFeatures() != null;
+
+        HashSet<String> deltaids = new HashSet<String>();
+
+        for (DeltaClause clause : getDeltaClauses()) {
+            if (clause.evaluateApplicationCondition(prod.getFeatures()))
+                deltaids.add(clause.getDeltaspec().getDeltaID());
+        }
+        return deltaids;
+    }
+
+    /**************************************************************************
+     * Evaluate both FROM and TO(WHEN) delta clauses to find the applicable delta names
+     * relevant for dynamic product reconfiguration
+     */
+    public Set<String> ProductLine.findApplicableDeltas(ProductDecl fromProd, ProductDecl toProd) {
+
+        HashSet<String> deltaids = new HashSet<String>();
+
+        for (DeltaClause clause : getDeltaClauses()) {
+            if (clause.evaluateFromApplicationCondition(fromProd.getProduct().getFeatures()))
+                if (clause.evaluateApplicationCondition(toProd.getProduct().getFeatures()))
+                    deltaids.add(clause.getDeltaspec().getDeltaID());
+        }
+        return deltaids;
+    }
+
+    /**************************************************************************
+     * Evaluate the application condition assciated with this DeltaClause
+     * in the context of the given list of features and attribute values
+     *
+     * TODO Support feature attributes
+     */
+    public boolean DeltaClause.evaluateApplicationCondition(List<Feature> onFeatures) {
+        // first, log the names of all onFeatures in a set, for easy lookup
+        HashSet<String> onFeatureIDs = new HashSet<String>();
+        for (Feature f : onFeatures)
+            onFeatureIDs.add(f.getName());
+
+        if (hasAppCond())
+            return getAppCond().evaluate(onFeatureIDs);
+        else
+            return true;
+    }
+
+    /**************************************************************************
+     * Evaluate the "from" application condition assciated with this DeltaClause
+     * in the context of the given list of features and attribute values
+     *
+     * "from" app conditions are only for dynamic product reconfiguration,
+     * where a running product is re-configured into another product.
+     *
+     * TODO Support feature attributes
+     */
+    public boolean DeltaClause.evaluateFromApplicationCondition(List<Feature> onFeatures) {
+        // first, log the names of all onFeatures in a set, for easy lookup
+        HashSet<String> onFeatureIDs = new HashSet<String>();
+        for (Feature f : onFeatures)
+            onFeatureIDs.add(f.getName());
+
+        if (hasFromAppCond())
+            return getFromAppCond().evaluate(onFeatureIDs);
+        else
+            return false;
+    }
+
+    /**************************************************************************
+     * Evaluate if the application condition holds for a given set of
+     * selected feature names.
+     */
+    public abstract boolean AppCond.evaluate(Set<String> features);
+
+    public boolean AppCondAnd.evaluate(Set<String> features) {
+        return getLeft().evaluate(features) && getRight().evaluate(features);
+    }
+    public boolean AppCondOr.evaluate(Set<String> features) {
+        return getLeft().evaluate(features) || getRight().evaluate(features);
+    }
+    public boolean AppCondNot.evaluate(Set<String> features) {
+        return !getAppCond().evaluate(features);
+    }
+    public boolean AppCondFeature.evaluate(Set<String> features) {
+        return (features.contains(getName()));
+    }
+
+
+    /**************************************************************************
+     * Return sorted List of applicable Delta names
+     * (according to a valid order of application defined by the product line)
+     */
+    public java.util.List<String> ProductLine.sortDeltas(Set<String> applicableDeltaIDs) {
+        LinkedList<String> list = new LinkedList<String>(getValidOrderOfAllDeltas());
+        list.retainAll(applicableDeltaIDs);
+        return list;
+    }
+
+    /**************************************************************************
+     * Obtain a valid delta application order that contains ALL deltas
+     * (disregarding application conditions). This order is used to determine an
+     * application order for individual products by removing the non-applicable deltas
+     */
+    syn lazy java.util.List<String> ProductLine.getValidOrderOfAllDeltas() {
+        sortDeltas();
+        return deltaSorter.getPreferredOrder();
+    }
+
+    /**************************************************************************
+     * The Delta partition contains all possible orders in which the deltas can be applied
+     */
+    syn lazy java.util.List<Set<String>> ProductLine.getDeltaPartition() {
+
+        sortDeltas();
+        return deltaSorter.getPartition();
+    }
+
+    /**************************************************************************
+     * The sorter object that computes a valid delta order
+     * It is instantiated by sortDeltas().
+     */
+    private TopologicalSorting<String> ProductLine.deltaSorter = null;
+
+    /**************************************************************************
+     * Sort ALL deltas of the product line. This only has to be done once.
+     * The result is used in multiple places:
+     * - Type checking the product line
+     * - Flattening for a certain product
+     */
+    private void ProductLine.sortDeltas() throws DeltaModellingException {
+        if (deltaSorter == null)
+            deltaSorter = new TopologicalSorting<String>(getAllDeltaIDs());
+        else
+            return; // assume already sorted
+
+        // sort
+        for (DeltaClause clause : getDeltaClauses()) {
+            String deltaID = clause.getDeltaspec().getDeltaID();
+            for (DeltaID id : clause.getAfterDeltaIDs()) {
+                String afterID = id.getName();
+                /* To prevent DeltaModellingException, before calling addEdge() we ensure:
+                 *   1. deltaSorter is instantiated above with all available deltaIDs
+                 *   2. PL is well formed by running wellFormedProductLine()
+                 */
+                deltaSorter.addEdge(afterID, deltaID);
+            }
+        }
+        deltaSorter.sort();
+    }
+
+    public void Model.flattenTraitOnly(){
+        applyTraits();
+    }
+
+
+    /**************************************************************************
+     * Apply the traits
+     */
+    public void Model.applyTraits() throws DeltaModellingException {
+        //Collect all traits
+        LinkedList<TraitDecl> allTraitDecls = new LinkedList<>();
+        for (Decl decl : getDecls()) {
+            if (decl instanceof TraitDecl) {
+                allTraitDecls.add((TraitDecl) decl);
+            }
+        }
+
+        //init
+        LinkedList<LinkedList<TraitDecl>> lists = new LinkedList<>();
+        for (TraitDecl traitDecl : allTraitDecls) {
+            LinkedList<TraitDecl> l = new LinkedList<>();
+            l.add(traitDecl);
+            collectInTrait(traitDecl.getTraitExpr(), l);
+            lists.add(l);
+        }
+
+        //check for cyclic references
+        sortBySize(lists);
+        while (lists.size() > 0) {
+            LinkedList<TraitDecl> l = lists.pop();
+            if (l.size() > 1) {
+                throw new DeltaModellingException("Cyclic Traits");
+            }
+            TraitDecl n = l.pop();
+            for (LinkedList<TraitDecl> listOther : lists) {
+                while (listOther.remove(n));
+            }
+            sortBySize(lists);
+        }
+
+        //apply
+        boolean changed = false;
+        do{
+        changed = false;
+            for (Decl decl : getDecls()) {
+                if(decl instanceof ClassDecl){
+                    ClassDecl cd = (ClassDecl)decl;
+
+
+                    List<TraitUse> usesAST = cd.getTraitUses();
+                    //this is necessary as the builtint list collects the TraitUses in the wrong order
+                    LinkedList<TraitUse> uses = new LinkedList<>();
+                    for (TraitUse traitUse : usesAST) {
+                        uses.add(traitUse);
+                    }
+                    sortUses(uses);
+                    for (TraitUse use : uses) {
+                        use.applyTo(cd);
+                        changed = true;
+                    }
+                }
+            }
+        } while(changed);
+        flushTreeCache();
+    }
+
+
+
+    /**************************************************************************
+     * Helper methods for trait application
+     */
+    private void Model.sortBySize(java.util.List<? extends java.util.List<?>> lists) {
+        // TODO can be replaced by "lists.sort(Comparator.comparingInt(java.util.List::size));" with Java 8 syntax support
+        lists.sort(new Comparator<java.util.List<?>>() {
+            @Override
+            public int compare(java.util.List<?> o1, java.util.List<?> o2) {
+                return Integer.compare(o1.size(), o2.size());
+            }
+        });
+    }
+
+    private void Model.sortUses(LinkedList<TraitUse> list) {
+
+      Collections.sort(list, new Comparator<TraitUse>() {
+      @Override
+      public int compare(TraitUse o1, TraitUse o2) {
+          int line1 = o1.getStartLine();
+          int row1 = o1.getStartColumn();
+          int line2 = o2.getStartLine();
+          int row2 = o2.getStartColumn();
+          if((line1 < line2) || (line1 == line2 && row1 < row2))
+              return -1;
+          if((line2 < line1) || (line2 == line1 && row2 < row1))
+              return 1;
+          return 0;
+       }
+       });
+  }
+
+
+    private void Model.collectInTrait(ASTNode<?> traitExpr, java.util.List<TraitDecl> list) {
+        if (traitExpr instanceof TraitNameExpr){
+            TraitNameExpr nameExpr = (TraitNameExpr) traitExpr;
+            list.add(nameExpr.getDecl(traitExpr.getModuleDecl()));
+        } else if(traitExpr != null){
+            for (ASTNode<ASTNode> child : traitExpr.astChildrenNoTransform()) {
+                collectInTrait(child, list);
+            }
+        }
+    }
+
+}

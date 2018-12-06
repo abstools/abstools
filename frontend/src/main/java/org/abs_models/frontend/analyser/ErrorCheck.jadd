@@ -1,0 +1,96 @@
+import java.util.Collection;
+import java.util.ArrayList;
+import org.abs_models.frontend.analyser.*;
+import org.abs_models.frontend.typechecker.*;
+
+aspect ErrorCheck {
+
+    /**
+     * TODO: doesn't cache intermediate results, use with care.
+     */
+    public boolean Model.hasErrors() {
+        return getErrors().containsErrors();
+    }
+    
+  public SemanticConditionList Model.getErrors() {
+    SemanticConditionList s = new SemanticConditionList();
+    collectErrors(s);
+    return s;
+  }
+
+  // generic traversal that collects errors in AST
+  void ASTNode.collectErrors(SemanticConditionList c) {
+      // "NoTransform": don't attempt to rewrite anything yet since we don't
+      // know that things are type-correct, and rewriting usually uses type
+      // information
+      for(int i = 0; i < getNumChildNoTransform(); i++) {
+          getChildNoTransform(i).collectErrors(c);
+      }
+  }
+  
+  // ignore errors in trait declarations, all relevant ones are caught after applying
+  void TraitDecl.collectErrors(SemanticConditionList c) {
+
+  }
+
+  // add error for cyclic interface inheritance hierarchy
+  public void InterfaceDecl.collectErrors(SemanticConditionList c) {
+    super.collectErrors(c);
+    if(hasCycleOnExtendedInterfacesChain())
+        c.add(new SemanticError(this,ErrorMessage.CYCLIC_INHERITANCE,getName()));
+  }
+
+  // add error for undeclared interfaces
+  public void InterfaceTypeUse.collectErrors(SemanticConditionList c) {
+    super.collectErrors(c);
+    if(getDecl().isUnknown())
+      c.add(new SemanticError(this,ErrorMessage.UNKOWN_INTERFACE,getName()));
+  }
+
+  // add error for undeclared identifiers (interfaces, datatypes/type synonyms)
+  public void UnresolvedTypeUse.collectErrors(SemanticConditionList c) {
+    super.collectErrors(c);
+    if(getDecl().isUnknown())
+        c.add(new SemanticError(this,ErrorMessage.UNKOWN_INTERFACE_OR_DATATYPE,getName()));
+  }
+
+  // add error for undeclared interfaces
+  // TODO: generalise to check other IdUse's too.
+  public void DataTypeUse.collectErrors(SemanticConditionList c) {
+    super.collectErrors(c);
+    if(getDecl().isUnknown())
+        c.add(new SemanticError(this,ErrorMessage.UNKOWN_DATATYPE,getName()));
+  }
+
+  public void DataConstructorExp.collectErrors(SemanticConditionList c) {
+    try {
+      super.collectErrors(c);
+      if (getDecl() == null) {
+          c.add(new SemanticError(this,ErrorMessage.UNKOWN_DATACONSTRUCTOR,getConstructor()));
+      }
+    } catch (TypeCheckerException e) {
+      c.add(e);
+    }
+  }
+
+  public void ParametricPartialFunctionDecl.collectErrors(SemanticConditionList c) { }
+
+  public void DeltaDecl.collectErrors(SemanticConditionList c) {
+    /* FIXME: Don't collect in here, the name resolution mechanism doesn't seem to know about all the details,
+     * e.g. how to resolve datatypes just added.
+     */
+     c.addAll(getErrsWithinDelta());
+  }
+
+  coll SemanticConditionList DeltaDecl.getErrsWithinDelta() [new SemanticConditionList()] with add root Model;
+  
+  OriginalCall contributes (new TypeError(this,ErrorMessage.ORIGINAL_NOT_IN_DELTA,""))
+   // when (calcContextNode(ModifyMethodModifier.class) == null)
+    when (uppermostParentOfType(TraitDecl.class) == null
+          && uppermostParentOfType(DeltaDecl.class) == null)
+    to DeltaDecl.getErrsWithinDelta() for uppermostParentOfType(DeltaDecl.class);
+}
+
+// Local Variables:
+// mode: java
+// End:

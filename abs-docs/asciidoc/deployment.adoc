@@ -463,6 +463,8 @@ Some resources stay constant throughout the life of a deployment component
 (e.g., the number of cores), some others are influenced by program execution
 (e.g., the available bandwidth in the current time slot).
 
+NOTE: Resource usage is not allowed in init blocks.
+
 The resource types currently supported by the ABS language are defined in the
 `ABS.DC` module as follows:
 

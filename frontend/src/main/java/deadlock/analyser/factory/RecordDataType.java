@@ -7,12 +7,9 @@ package deadlock.analyser.factory;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
-import abs.frontend.typechecker.DataTypeType;
+import org.abs_models.frontend.typechecker.DataTypeType;
 import com.gzoumix.semisolver.term.Term;
-import com.gzoumix.semisolver.term.TermVariable;
-import com.gzoumix.semisolver.term.Variable;
 
 public class RecordDataType extends GenericStructuredTerm implements IRecord{
 

@@ -1,0 +1,49 @@
+import java.util.Collection;
+import org.abs_models.frontend.ast.InterfaceDecl;
+
+aspect TypeHierarchy {
+
+	// True if there is a cycle somewhere on the superinterface chain
+	syn boolean InterfaceDecl.hasCycleOnExtendedInterfacesChain() = getSuperTypes().contains(this);
+
+	public interface HasTypeHierarchy {
+		Collection<InterfaceDecl> getDirectSuperTypes();
+		// Collection<InterfaceDecl> getSuperTypes();
+	}
+
+	InterfaceDecl implements HasTypeHierarchy;
+	ClassDecl implements HasTypeHierarchy;
+
+    /**
+     * returns all direct subtypes of this interfaces:
+     *  - all interfaces extending this interface
+     *  - all classes implementing this interface
+     */
+	coll Collection<HasTypeHierarchy> InterfaceDecl.getDirectSubTypes() [new HashSet<HasTypeHierarchy>()] with add root Model;
+	InterfaceDecl contributes this to InterfaceDecl.getDirectSubTypes() for each getDirectSuperTypes();
+	ClassDecl     contributes this to InterfaceDecl.getDirectSubTypes() for each getDirectSuperTypes();
+	
+	/**
+	 * returns all direct subtypes of this interfaces:
+	 *  - all interfaces extending this interface
+	 *  - all classes implementing this interface
+	 */
+	coll Collection<HasTypeHierarchy> InterfaceDecl.getSubTypes() [new HashSet<HasTypeHierarchy>()] with add root Model;
+	InterfaceDecl contributes this to InterfaceDecl.getSubTypes() for each getSuperTypes();
+	ClassDecl     contributes this to InterfaceDecl.getSubTypes() for each getSuperTypes();
+
+    /**
+     * returns all direct supertypes
+     * results are not cached
+     */
+    syn Collection<InterfaceDecl> InterfaceDecl.getDirectSuperTypes() = TypeHierarchyHelper.getTypeDecls(getExtendedInterfaceUseList());
+    syn Collection<InterfaceDecl> ClassDecl.getDirectSuperTypes()     = TypeHierarchyHelper.getTypeDecls(getImplementedInterfaceUseList());
+    
+    /**
+     * returns all supertypes
+     * results are not cached
+     */
+    public Collection<InterfaceDecl> HasTypeHierarchy.getSuperTypes() {
+        return TypeHierarchyHelper.addSuperTypes(new HashSet<InterfaceDecl>(), this);
+    }
+}

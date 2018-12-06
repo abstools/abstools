@@ -1,0 +1,173 @@
+import org.abs_models.common.TreeUtilsHelper;
+
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+aspect TreeUtils {
+
+    /**
+     * This method finds the closest parent conforming to `type`, starting from this
+     * object's parent. May return null.
+     */
+    @CheckForNull
+    public <N extends ASTNode<?>> N ASTNode.closestParent(Class<N> type) {
+        ASTNode<?> n = getParent();
+        while (n != null) {
+            if (type.isInstance(n))
+                return type.cast(n);
+            else
+                n = n.getParent();
+        }
+        return null;
+    }
+
+    /**
+     * This method finds the uppermost parent conforming to `type`, starting from this
+     * object's parent. May return null.
+     */
+    @CheckForNull
+    public <N extends ASTNode<?>> N ASTNode.uppermostParentOfType(Class<N> type) {
+        ASTNode<?> result = null;
+        ASTNode<?> n = getParent();
+        while (n != null) {
+            if (type.isInstance(n)) {
+                result = n;
+            }
+            n = n.getParent();
+        }
+        return type.cast(result);
+    }
+
+    /**
+     * Finds all children of this node with the specified <code>type</code>. If this node has the
+     * specified type, it will be included in the result.
+     *
+     * @param type the type to search for
+     * @return an unmodifiable list of nodes, never null
+     * @throws NullPointerException if <code>type</code> is null
+     */
+    public <N> java.util.List<N> ASTNode.findChildren(Class<N> type) {
+        return TreeUtilsHelper.findChildren(this, type);
+    }
+
+    /**
+     * Finds all children of this node with the specified <code>type</code>. If this node has the
+     * specified type, it will be included in the result.
+     *
+     * @param type the type to search for
+     * @param lazy if true, children of found N nodes will not be included
+     * @return an unmodifiable list of nodes, never null
+     * @throws NullPointerException if <code>type</code> is null
+     */
+    public <N> java.util.List<N> ASTNode.findChildren(Class<N> type, boolean lazy) {
+        return TreeUtilsHelper.findChildren(this, type, lazy);
+    }
+
+    /**
+     * Lazily finds children of this node which can be casted by the cast function.
+     * This node will also be included if applicable.
+     *
+     * <p>The cast function receives an ASTNode and tries to cast it to the desired return type.
+     * If the node can't be casted, it returns null.
+     * See the convenience functions {@link TreeUtilsHelper#cast(Class)} and {@link TreeUtilsHelper#recurse(java.util.List)}.
+     * </p>
+     *
+     * <p>The recurse predicate receives a node casted by the cast function and decides
+     * whether to recurse over the nodes children.
+     * See the convenience function {@link TreeUtilsHelper#recurse(java.util.List)}.
+     * </p>
+     *
+     * @param cast a function receiving an ASTNode and casts to N, or returns null
+     * @param recurse if the cast function could cast a node, this predicate decides whether to recurse over the casted node's children
+     * @param <N> the type of nodes in the returned stream
+     * @return a stream of nodes
+     */
+    public <N> Stream<N> ASTNode.findChildren(
+            Function<? super ASTNode<?>, N> cast,
+            Predicate<? super N> recurse) {
+        return TreeUtilsHelper.findChildren(this, cast, recurse);
+    }
+
+    /**
+     * Replaces this node with the <code>newNode</code> in this node's parent node.
+     *
+     * <p>The (former) parent of this node will be set to non-final and its cache will be flushed.
+     * However, this method will not attempt to invoke any rewrites.<p>
+     *
+     * @param newNode a node to insert instead
+     * @throws NullPointerException if newNode is null
+     * @throws IllegalArgumentException if <code>newNode</code> is not detached or this node is detached
+     */
+    public void ASTNode.replaceWith(ASTNode<?> newNode) {
+        Objects.requireNonNull(newNode);
+        ASTNode<?> parent = this.getParent();
+        if (parent == null || newNode.getParent() != null) {
+            String message = parent == null
+                ? "this is detached"
+                : "newNode is not detached";
+            throw new IllegalArgumentException(message);
+        }
+        int index = parent.getIndexOfChild(this);
+        parent.setChild(newNode, index);
+        this.setParent(null);
+
+        parent.is$Final(false);
+        parent.flushCache();
+        this.flushTreeCache();
+        newNode.flushTreeCache();
+    }
+
+    /**
+     * Removes the specified node from this list.
+     *
+     * <p>If the specified node is not a child of this list, this method will return false.</p>
+     *
+     * @param child a child node of this list
+     * @return true, if the specified child was a child of this list
+     * @throws NullPointerException if child is null
+     */
+    public boolean List.removeChild(ASTNode<?> child) {
+        Objects.requireNonNull(child);
+        int index = getIndexOfChild(child);
+        if (index == -1) {
+            return false;
+        }
+        removeChild(index);
+        return true;
+    }
+
+    public Iterator<T> ASTNode.astChildIteratorNoTransform() {
+        return new java.util.Iterator<T>() {
+            private int index = 0;
+
+            @Override
+            public boolean hasNext() {
+                return index < getNumChildNoTransform();
+            }
+
+            @Override
+            public T next() {
+                if (hasNext()) {
+                    return getChildNoTransform(index++);
+                } else {
+                    throw new NoSuchElementException();
+                }
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    public Iterable<T> ASTNode.astChildrenNoTransform() {
+        return new Iterable<T>() {
+            @Override
+            public Iterator<T> iterator() {
+                return astChildIteratorNoTransform();
+            }
+        };
+    }
+}

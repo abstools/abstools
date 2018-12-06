@@ -1,0 +1,121 @@
+// -*- mode: java; tab-width: 4; -*-
+
+import java.io.*;
+import org.abs_models.backend.prolog.*;
+import org.abs_models.frontend.ast.*;
+import java.util.Iterator;
+import java.util.HashSet;
+
+aspect collectReachableCode {
+
+    public void ASTNode.collectReachableCode(ReachabilityInformation reachInfo){
+        if (children != null)
+            for (ASTNode<?> child : children) 
+                if (child != null) child.collectReachableCode(reachInfo);
+    }
+
+    public void FunctionDecl.collectReachableCode(ReachabilityInformation reachInfo){
+        if(reachInfo.isReachable(this)){
+            if(reachInfo.setProcessed(this)){
+                super.collectReachableCode(reachInfo);
+            }
+        }
+    }
+
+    public void ParametricFunctionDecl.collectReachableCode(ReachabilityInformation reachInfo){
+        if(reachInfo.isReachable(this)){
+            if(reachInfo.setProcessed(this)){
+                //Standard behavior
+                if (children != null)
+                    for (ASTNode<?> child : children) 
+                        if (child != null) child.collectReachableCode(reachInfo);
+            }
+        }
+    }
+    
+    public void MainBlock.collectReachableCode(ReachabilityInformation reachInfo){
+        if(reachInfo.isReachable(this)){
+            if(reachInfo.setProcessed(this)){
+                super.collectReachableCode(reachInfo);
+            }
+        }
+    }
+
+    public void ClassDecl.collectReachableCode(ReachabilityInformation reachInfo){
+        if(reachInfo.isReachable(this))
+            super.collectReachableCode(reachInfo);
+
+    }
+
+    public void MethodImpl.collectReachableCode(ReachabilityInformation reachInfo){
+        if(reachInfo.isReachable(this)){
+            if(reachInfo.setProcessed(this))
+                super.collectReachableCode(reachInfo);
+        }
+    }
+    
+    public void InitBlock.collectReachableCode(ReachabilityInformation reachInfo){
+        if(reachInfo.isReachable(this)){
+            if(reachInfo.setProcessed(this))
+                super.collectReachableCode(reachInfo);
+        }
+    }
+
+    public void FnApp.collectReachableCode(ReachabilityInformation reachInfo){
+        if(this.getDecl() instanceof FunctionDecl)
+            reachInfo.addReachability((FunctionDecl)this.getDecl());
+
+        super.collectReachableCode(reachInfo);
+    }
+
+    private void Call.generateInterfacesList(Type type,ArrayList<InterfaceType> interfaces) {
+        if(type.isUnionType()){
+            UnionType unionType=(UnionType)type;
+            Iterator<InterfaceType> it=unionType.getTypes().iterator();
+            while(it.hasNext()){
+                generateInterfacesList(it.next(),interfaces);
+
+            }
+        }else
+            if(type.isInterfaceType()){
+                interfaces.add((InterfaceType)type);
+            }   
+    }
+
+    public void Call.collectReachableCode(ReachabilityInformation reachInfo){
+
+        if(this.getCallee() instanceof ThisExp){
+            reachInfo.addReachability((ClassDecl)this.getContextDecl(),this.getMethodSig());
+        }else{
+            ArrayList<InterfaceType> interfaces=new ArrayList<InterfaceType>();
+            generateInterfacesList(this.getCallee().getType(),interfaces);
+            for(InterfaceType inter: interfaces){
+                reachInfo.addReachability(inter,this.getMethodSig());
+                reachInfo.addReachability(inter);
+            }
+        }
+        super.collectReachableCode(reachInfo);
+    }
+    private void NewExp.generateInterfacesList(Type type,ArrayList<InterfaceType> interfaces) {
+        if(type.isUnionType()){
+            UnionType unionType=(UnionType)type;
+            Iterator<InterfaceType> it=unionType.getTypes().iterator();
+            while(it.hasNext()){
+                generateInterfacesList(it.next(),interfaces);
+
+            }
+        }else
+            if(type.isInterfaceType()){
+                interfaces.add((InterfaceType)type);
+            }   
+    } 
+
+    public void NewExp.collectReachableCode(ReachabilityInformation reachInfo){
+        ClassDecl clazz=((UnionType)this.getType()).getOriginatingClass();
+        reachInfo.addReachability(clazz,this);
+        reachInfo.addReachability(clazz);
+
+        super.collectReachableCode(reachInfo);
+    }
+
+}
