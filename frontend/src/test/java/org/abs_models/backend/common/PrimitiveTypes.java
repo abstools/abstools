@@ -250,6 +250,26 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
+    public void templatestringEq() {
+        assertEvalTrue("{ Bool testresult = `xx` == `xx`; }");
+    }
+
+    @Test
+    public void templatestringNeq() {
+        assertEvalTrue("{ Bool testresult = `xx` != `yx`; }");
+    }
+
+    @Test
+    public void stringTemplatestringEq() {
+        assertEvalTrue("{ Bool testresult = `xx` == \"xx\"; }");
+    }
+
+    @Test
+    public void stringTemplatestringNeq() {
+        assertEvalTrue("{ Bool testresult = `xx` != \"yx\"; }");
+    }
+
+    @Test
     public void stringConcat() {
         assertEvalTrue("{ Bool testresult = \"x\" + \"x\" == \"xx\";  }");
     }
