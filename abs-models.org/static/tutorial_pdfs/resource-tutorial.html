@@ -1,0 +1,91 @@
+<h3>Core ABS</h3>
+ABS is a modeling language which combines functional and imperative programming styles to develop high-level executable models. Concurrent object groups execute in parallel and communicate through asynchronous method calls. To intuitively capture internal computation inside a method, we use a simple functional language based on user-defined algebraic data types and functions. Thus, the modeler may abstract from the details of low-level imperative implementations of data structures, and still maintain an overall object-oriented design which is close to the target system.  At a high level of abstraction, concurrent object groups typically consist of a single concurrent object; other objects may be introduced into a group as required to give some of the algebraic data structures an explicit imperative representation in the model.  In this paper, we aim at  high-level models and the groups will consist of single concurrent objects.
+
+The <em>functional sublanguage</em> of ABS consists of a library of algebraic data types such as the empty type Unit, booleans Bool, integers Int, parametric data types such as sets <code>Set&lt;A&gt;</code> and maps <code>Map&lt;A&gt;</code> (given a value for the type variable <code>A</code>), and  (parametric) functions over values of these data types. For example, we can define polymorphic sets using a type variable <code>A</code> and two constructors <code>EmptySet</code> and <code>Insert</code>, and a function <code>contains</code> which checks whether an element <code>el</code> is in a set <code>ss</code> recursively by pattern matching over <code>ss</code>:
+<pre>
+data Set&lt;A&gt; = EmptySet | Insert(A, Set&lt;A&gt;);
+def Bool contains&lt;A&gt;(Set&lt;A&gt; ss, A el) =
+  case ss {
+    EmptySet      =&gt; False ;
+    Insert(el, _) =&gt; True;
+    Insert(_, xs) =&gt; contains(xs, el);
+  };</pre>
+Here, the cases <code>p=&gt;exp</code> are evaluated in the listed order, underscore works as a wild card in the pattern <code>p</code>, and variables in <code>p</code> are bound in the expression <code>exp</code>.
+
+The <em>imperative sublanguage</em> of ABS addresses concurrency, communication, and synchronization at the concurrent object level in the system design, and defines interfaces and methods with a Java-like syntax. ABS objects are <em>active</em>; i.e., their <code>run</code> method, if defined, gets called upon creation. <em>Statements</em> are standard for sequential composition <code>s1;s2</code>, assignments <code>x=rhs</code>, and for the <code>skip</code>, <code>if</code>, <code>while</code>, and <code>return</code> constructs.  The statement <code>suspend</code> unconditionally suspends the  execution of the active process of an object by adding this process to the queue, from which an enabled process is then selected for execution.  In <code>await g</code>, the guard <code>g</code> controls the suspension of the active process and consists of Boolean conditions <code>b</code> and return tests <code>x?</code> (see below). Just like functional expressions <code>e</code>, guards <code>g</code> are side-effect free. If <code>g</code> evaluates to <code>false</code>, the active process is suspended, i.e., added to the queue, and some other process from the queue may execute.  <em>Expressions</em> <code>rhs</code> include the creation of an object group <code>new cog C(e)</code>, object creation in the group of the creator <code>new C(e)</code>, method calls <code>o!m(e)</code> and <code>o.m(e)</code>, future dereferencing <code>x.get</code>, and pure expressions <code>e</code> apply functions from the functional sublanguage to state variables.
+
+<em>Communication</em> and <em>synchronization</em> are decoupled in ABS. Communication is based on asynchronous method calls, denoted by assignments <code>f=o!m(e)</code> to future variables <code>f</code>. Here, <code>o</code> is an object expression and <code>e</code> are (data value or object) expressions providing actual parameter values for the method invocation.  (Local calls are written <code>this!m(e)</code>.) After calling <code>f=o!m(e)</code>, the future variable <code>f</code> refers to the return value of the call and the caller may proceed with its execution  <em>without blocking</em> on the method reply.  There are two operations on future variables, which control synchronization in ABS.  First, the guard await <code>f?</code> <em>suspends the active</em> <em>process</em> unless a return to the call associated with <code>f</code> has arrived, allowing other processes in the object group to execute. Second, the return value is retrieved by the expression <code>f.get</code>, which <em>blocks all execution in the object</em> until the return value is available.  The statement sequence <code>x=o!m(e);v=x.get</code> encodes commonly used <em>blocking calls</em>, abbreviated <code>v=o.m(e)</code> (often referred to as synchronous calls).  If the return value of a call is without interest, the call may occur directly as a statement <code>o!m(e)</code> with no associated future variable. This corresponds to message passing in the sense that there is no synchronization associated with the call.
+
+<h3>Real-Time ABS</h3>
+Real-Time ABS  is an extension of ABS which captures the timed behavior of ABS models.  An ABS model is a model in Real-Time ABS in which execution takes zero time; thus, standard statements in ABS are assumed to execute in zero time. Timing aspects may be added incrementally to an untimed behavioral model.  Our approach extends the distributed concurrent object groups in ABS with an integration of both <em>explicit</em> and <em>implicit</em> time.
+
+<h4>Deadlines</h4>
+The object-oriented perspective on timed behavior is captured by <em>deadlines</em> to method calls.  Every method activation in Real-Time ABS has an associated deadline, which decrements with the passage of time. This deadline can be accessed inside the method body with the expression deadline(). Deadlines are <em>soft</em>; i.e., deadline() may become negative but this does not in itself block the execution of the method.  By default the deadline associated with a method activation is infinite, so in an untimed model deadlines will never be missed.  Other deadlines may be introduced by means of call-site <em>annotations</em>.
+
+Real-Time ABS introduces two new data types into the functional sublanguage of ABS: <code>Time</code>, which has the constructor <code>Time(r)</code>, and <code>Duration</code>, which has the constructors <code>InfDuration</code> and <code>Duration(r)</code>, where <code>r</code> is a value of the type <code>Rat</code> of rational numbers.  The accessor functions <code>timeVal</code> and <code>durationValue</code> return <code>r</code> for time and duration values <code>Time(r)</code> and <code>Duration(r)</code>, respectively. Let <code>o</code> be an object which implements a method <code>m</code>.  Below, we define a method <code>n</code> which calls <code>m</code> on <code>o</code> and specifies a deadline for this call, given as an annotation and expressed in terms of its own deadline. Remark that if its own deadline is <code>InfDuration</code>, then the deadline to <code>m</code> will also be unlimited.  The function <code>scale(d,r)</code> multiplies a duration <code>d</code> by a rational number <code>r</code> (the definition of <code>scale</code> is straightforward).
+<pre>Int n (T x){ [Deadline: scale(deadline(),0.9)] return o.m(x); }</pre>
+
+<h4>Explicit time</h4>
+In the explicit time model of Real-Time ABS, the execution time of computations is modeled using <em>duration statements</em> <code>duration(e1,e2)</code> with best- and worst-case execution times <code>e1</code> and <code>e2</code>.  These statements are inserted into the model, and capture execution time which does not depend on the system's deployment architecture.  Let <code>f</code> be a function defined in the functional sublanguage of ABS, which recurses through some data structure <code>x</code> of type <code>T</code>, and let <code>size(x)</code> be a measure of the size of this data structure <code>x</code>. Consider a method <code>m</code> which takes as input such a value <code>x</code> and returns the result of applying <code>f</code> to <code>x</code>. Let us assume that the time needed for this computation depends on the size of <code>x</code>; e.g., the computation time is between a duration <code>0.5*size(x)</code> and a duration <code>4*size(x)</code>.  An interface <code>I</code> which provides the method <code>m</code> and a class <code>C</code> which implements <code>I</code>, including the execution time for <code>m</code> using the explicit time model, are specified as follows:
+<pre>
+interface I { 
+  Int m(T x) 
+}
+class C implements I {
+  Int m (T x){ 
+    duration(0.5*size(x), 4*size(x)); return f(x);
+  }
+}</pre>
+
+<h4>Implicit time.</h4>
+In the implicit time model of Real-Time ABS, the execution time is not specified explicitly in terms of durations, but rather <em>observed</em> on the executing model.  This is done by comparing clock values from a global clock, which can be read by an expression <code>now()</code> of type <code>Time</code>.  We specify an interface <code>J</code> with a method <code>p</code> which, given a value of type <code>T</code>, returns a value of type <code>Duration</code>, and implement <code>p</code> in a class <code>D</code> such that <code>p</code> measures the time needed to call the method <code>m</code> above, as follows:
+<pre>
+interface J { 
+  Duration p (T x) 
+}
+class D implements J (I o) {
+  Duration p (T x){ 
+    Time start; Int y;
+    start = now();  y=o.m(x); 
+    return timeDifference(now(),start);
+  }
+}</pre>
+Observe that by using the implicit time model, no assumptions about execution times are specified in the model above. The execution time depends on how quickly the method call is effectuated by the called object. The execution time is simply measured during execution by comparing the time before and after making the call. As a consequence, the time needed to execute a statement with the implicit time model depends on the <em>capacity</em> of the chosen deployment architecture and on <em>synchronization</em> with (slower) objects.
+
+<h3><strong>Modeling Deployment Architectures in ABS</strong></h3>
+
+<h4><strong></strong>Deployment Components</h4>
+
+A <em>deployment component</em> in Real-Time ABS captures the execution capacity associated with a number of concurrent object groups. Deployment components are first-class citizens in Real-Time ABS, and provide a given amount of resources which are shared by their allocated objects. Deployment components may be dynamically created depending on the control flow of the ABS model or statically created in the main block of the model. We assume a deployment component <em>environment</em> with unlimited resources, to which the root object of a model is allocated. When objects are created, they are by default allocated to the same deployment component as their creator, but they may also be allocated to a different component. Thus, a model without explicit deployment components runs in <code>environment</code>, which does not impose any restrictions on the execution capacity of the model. A model may be extended with other deployment components with different processing capacities.
+
+Given the interfaces <code>I</code> and <code>J</code> and classes <code>C</code> and <code>D</code> defined in above, we can for example specify a deployment architecture in which two <code>C</code> objects are deployed on different deployment components <code>server1</code> and <code>server2</code>, and interact with the <code>D</code> objects deployed on a deployment component <code>clientServer</code>. Deployment components in Real-Time ABS have the type <code>DC</code> and are instances of the class <code>DeploymentComponent</code>. This class takes as parameters a name, given as a string, and a set of restrictions on resources. The name is mainly used for monitoring purposes. Here we focus on resources reflecting the components' processing capacity, which are specified by the constructor <code>CPUCapacity(r)</code>, where <code>r</code> represents the amount of abstract processing resources available between observable points in time. Below, we create three deployment components <code>Server1</code>, <code>Server2</code>, and <code>ClientServer</code>, with the processing capacities <code>6</code>, <code>3</code>, and <code>unlimited</code> (i.e., <code>ClientServer</code> has no resource restrictions). The local variables <code>server1</code>, <code>server2</code>, and <code>clientServer</code> refer to these three deployment components, respectively. Objects are explicitly allocated to the servers by annotations; below, <code>object1</code> is allocated to <code>Server1</code>, etc.
+
+<pre>
+{ // This main block initializes a static deployment architecture:
+  DC server1 = new DeploymentComponent("Server1",set[CPUCapacity(6)]);
+  DC server2 = new DeploymentComponent("Server2",set[CPUCapacity(3)]);
+  DC clientServer = new DeploymentComponent("ClientServer", EmptySet);
+  [DC: server1] I object1 = new cog C;
+  [DC: server2] I object2 = new cog C;
+  [DC: clientServer] J client1monitor = new cog D(object1);
+  [DC: clientServer] J client2monitor = new cog D(object2);
+}</pre>
+
+<a href="/images/DC_arqu.jpg"><img class="aligncenter size-full wp-image-554" alt="DC_arqu" src="/images/DC_arqu.jpg" width="457" height="213" /></a>
+
+The figure depicts this deployment architecture and the artefacts introduced into the modeling language. Since all objects are allocated to a deployment component (which is <code>environment</code> unless overridden by an annotation), we let the expression <code>thisDC()</code> evaluate to the deployment component of an object.  For convenience, a call to the method <code>total("CPU")</code> of a deployment component returns its total amount of allocated CPU resources.
+
+<h4>Resource Costs.</h4>
+The available resource capacity of a deployment component determines how much computation may occur in the objects allocated to that component. Objects allocated to the component compete for the shared resources in order to execute, and they may execute until the component runs out of resources or they are otherwise blocked. For the case of CPU resources, the resources of the component define its processing capacity between observable (discrete) points in time, after which the resources are renewed.
+
+<h4>Cost models.</h4>
+The cost of executing statements in the ABS model is determined by a default value which is set as a compiler option (e.g., <code>defaultcost=10</code>). However, the default cost does not discriminate between statements and we may want to introduce a more refined cost model. For example, if <code>e</code> is a complex expression, then the statement <code>x=e</code> should have a significantly higher cost than <code>skip</code> in a realistic model. For this reason, more fine-grained costs can be inserted into Real-Time ABS models by means of annotations. For example, let us assume that the cost of computing the function <code>f(x)</code> defined in Section~\ref{sec:real-time-abs} may be given as a function <code>g</code> which depends on the size of the input value <code>x</code>. In the context of deployment components, we may redefine the implementation of interface <code>I</code> above to be resource-sensitive instead of having a predefined duration as in the explicit time model. The resulting class <code>C2</code> can be defined as follows:
+<pre>class C2 implements I {
+  Int m (T x){ [Cost: g(size(x))] return f(x);
+  }
+}</pre>
+It is the responsibility of the modeler to specify an appropriate cost model. A behavioral model with default costs may be gradually refined to provide more realistic resource-sensitive behavior. For the computation of the cost functions such as <code>g</code> in our example above, the modeler may be assisted by the COSTABS tool, which computes a worst-case approximation of the cost for <code>f</code> in terms of the input value <code>x</code> based on static analysis techniques, when given the \ABS definition of the expression <code>f</code>. However, the modeler may also want to capture resource consumption at a more abstract level during the early stages of system design, for example to make resource limitations explicit before a further refinement of a behavioral model. Therefore, cost annotations may be used by the modeler to abstractly represent the cost of some computation which remains to be fully specified. For example, the class <code>C3</code> below represents a draft version of our method <code>m</code> in which the worst-case cost of the computation is specified although the function <code>f</code> has yet to be introduced:
+<pre>class C3 implements I {
+  Int m (T x){ [Cost: size(x)*size(x)] return 0;
+  }
+}</pre>

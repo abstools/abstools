@@ -1,0 +1,149 @@
+<h3>5 The OO-Imperative Layer</h3>
+<h4>5.1 The Object Model</h4>
+ABS follows a strict <em>programming to interfaces</em> discipline <a href="http://st-www.cs.illinois.edu/patterns/dpbook/dpbook.html">[17]</a>. This means that
+the <em>only</em> declaration types of objects are interface types. Consequentially, ABS
+classes do <em>not</em> give rise to type names.
+Apart from that, interface declarations are pretty standard and follow a
+Java-like syntax. They simply consist of a number of method signatures. Static
+fields are not permitted,(Foot: And neither are static classes and objects. Instead of static elements the ABS modeler
+should consider to use ADTs and functions.) but subinterfaces, even multiple subinterfaces, are per-
+mitted. Let us give an example that models the Customer type from previous
+sections in an object-oriented fashion:
+<pre>module CustomerIF;
+export Customer;
+import Level, createLevel from CustomerData;
+interface Customer { Int getId(); }
+interface IndvCustomer extends Customer {}
+interface CorpCustomer extends Customer { Level getLevel(); }</pre>
+As can be seen, interfaces (and also classes) can be exported. In fact, this is
+necessary, if anyone outside their modules is to use them.
+It is possible to mix object and data types: data types may occur anywhere
+within classes and interfaces as long as they are well-typed. Less obviously, ref-
+erence types may also occur inside algebraic data types. As seen earlier, it is
+perfectly possible to declare the following type:
+<pre>type CustomerList = List&lt;Customer&gt;;</pre>
+Keep in mind, though, that it is not allowed to call methods in function
+definitions. The reason is that method calls might have side effects.
+It was mentioned already that classes do not provide type names. They are
+only used for object construction. As a consequence, in ABS it is always possible
+to decide when a class and when an interface name is expected. Therefore, inter-
+faces and classes may have the same name. We do not recommend this, however,
+because it dilutes the programming to interfaces discipline. It is suggested to use
+a base name for the interface and derive class names by appending “Impl” or
+similar.
+
+A class may implement multiple interfaces. Class constructors are not de-
+clared explicitly, instead, class declarations are equipped with parameter dec-
+larations that implicitly define corresponding fields and a constructor. Class
+definitions then consist of field declarations, followed by an initialization block
+and method implementations. Any of these elements may be missing. Hence, we
+can continue the example as follows:
+<pre>class CorpIndvCustomerImpl(Int id)
+implements IndvCustomer, CorpCustomer{
+   Level lv = createLevel();
+   // no initialization block
+   Level getLevel() { return lv; }
+   Int getId() { return id; }
+}</pre>
+Here, the <strong>id</strong> field is modeled as a class parameter, because it is not possible to
+give a reasonable default value, which is otherwise required, because fields that
+have no reference type must be initialized. Reference type fields are initialized
+with <strong>null</strong>.
+In contrast to functions, method names need not (and cannot) be exported
+by modules. It is sufficient to get hold of an object in order to obtain access to
+the methods that are defined in its type.
+The most striking difference between ABS and mainstream OO languages is
+that in ABS there is <em>no class inheritance</em> and, therefore, also <em>no code inheritance</em>.
+So, how do we achieve code reuse? In ABS we decided to disentangle data design
+and functionality from the modeling of code variability. For the former, we use
+functions and objects (without code inheritance), whereas for the latter we use
+a layer on top of the core ABS language that permits to connect directly with
+feature models. This layer is discussed in Sect. 8.
+In a concurrent setting (see Sect. 6) one typically wants some objects to
+start their activity immediately after initialization. To achieve this in ABS, one
+can define a <strong>Unit run()</strong> method, which implicitly declares a class as <em>active</em> and
+lets objects execute the code in the body of the run method after initialization.
+Classes without a <strong>run()</strong> method are called <em>passive</em> and their objects react only
+to incoming calls.
+<h4>5.2 The Imperative Layer</h4>
+ABS has standard statements for sequential composition, assignment, while-
+loops, conditionals, synchronous method calls, and method return. To illus-
+trate all of these, one can look at the implementation of method <strong>findCustomer(
+CustomerList)</strong> in class <strong>CorpIndvCustomerImpl</strong> (don’t forget to add it to the im-
+plemented interfaces as well to render it visible!).
+<pre>Customer findCustomer(CustomerList cl) {
+   Customer result;
+   Int i = 0;
+   while (i&lt;length(cl)) {
+      Customer curCust = nth(cl,i);
+      Int curId = curCust.getId();
+      if (id==curId) {result = curCust;}
+   }
+return result;
+}</pre>
+In addition to the various constructs, we can illustrate several ABS-specific
+restrictions: it is necessary that the final statement in the method body is a
+return statement with the correct type. A typical ABS idiom is, therefore, to
+declare a local <strong>result</strong> variable. Neither for-loops nor breaks from loops are sup-
+ported at the moment. To avoid going through the remaining list after the ele-
+ment has been found, one would need to add and test for a <strong>Bool found</strong> variable.
+Complex expressions are not allowed at the moment in tests of conditionals or
+loops. The workaround, as shown here, is to declare a local variable that holds
+an intermediate result. While these restrictions can be slightly annoying they
+hardly matter very much. It is likely that some of them will be lifted in the
+future, once it is better known what modelers wish.
+A more fundamental restriction concerns the usage of fields in assignment
+statements: assignments to fields and field lookups are only possible for the
+current object. Given a field <strong>f</strong>, an assignment of the form <strong>x = f;</strong> is always
+implicitly qualified as <strong>x = this.f;</strong> and an assignment of the form <strong>f = exp;</strong> is
+always implicitly qualified as <strong>this.f = exp;</strong>. This implies that fields in ABS are
+<em>object private</em>. They cannot be directly seen or be modified by other objects,
+not even by objects from the same class (as is possible even for private fields in
+Java). In other words, ABS enforces <em>strong encapsulation</em> of objects: it is only
+possible to view or change the state of another object via getter- and setter-
+methods. For example, it is not possible to change the second line in the body
+of the while-loop of <strong>findCustomer(CustomerList)</strong> as follows:
+<pre>Int curId = curCust.id;</pre>
+The designers of ABS consider object encapsulation not as a restriction, but
+as a virtue: it makes all cross references between objects syntactically explicit.
+This avoids errors that can be hard to find. In addition it makes static analysis
+much more efficient, because any cross reference and possible side effect to a
+different object can be associated with a unique method contract.
+For the practicing ABS modeler object encapsulation is greatly alleviated by
+the method completion feature of the Eclipse editor: if one types the beginning
+of the example above “<strong>Int curId = curCust</strong>.”, then a pop-up menu will offer a
+selection of all methods that are known for objects of type <strong>Customer</strong>, the required
+getter-method <strong>getId()</strong> among them. If a suitable method is not found, then the
+modeler can take this as a hint that it needs to be implemented or added to the
+interface.
+ABS is a <em>block-structured</em> language. Blocks are delimited by curly braces (no
+semicolon afterward) and may appear at four different places in a program:
+<ol>
+	<li>as a way to group several statements and provide a scope for local variables—
+blocks are necessary for bodies of loops and conditionals that have more than
+one statement;</li>
+	<li>as method bodies;</li>
+	<li>as the (optional) class initialization block, between field and method decla-
+rations;</li>
+	<li>as an (optional) implicit “main” method at end of a module.</li>
+</ol>
+The last usage serves as an entry point for execution of ABS programs. At
+least one main block in one module is necessary for executing an ABS project,
+otherwise it is not clear which objects are to be created and executed. Any
+module that has a main block is selectable as an execution target via the Eclipse
+<strong>Run Configurations ...</strong> dialog or simply by right clicking on the desired module
+in the explorer and selection of <strong>Run As</strong>. We might complete the example by
+specifying the following main block for module <strong>CustomerIF</strong>:
+<pre>{
+   Customer c = new CorpIndvCustomerImpl(17); // create some customers
+   Customer d = new CorpIndvCustomerImpl(16);
+   CustomerList l = Cons(c,Cons(d,Nil)); // create list of customers
+   Customer e = c.findCustomer(l); // we should find c in l
+}</pre>
+This code illustrates at the same time the usage of the <strong>new</strong> statement, which
+works as in Java. As usual in Eclipse, pressing the F4 key displays the type
+hierarchy pertaining to a class or interface name at the cursor position.
+
+&nbsp;
+
+<center><a href="http://www.abs-models.org/?page_id=660">Prev</a> | <a href="http://www.abs-models.org/?page_id=664">Next</a></center>
