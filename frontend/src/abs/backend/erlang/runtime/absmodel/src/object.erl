@@ -60,10 +60,9 @@ new(Cog,Class,Args,CreatorCog,Stack)->
         false -> ok
     end,
     cog:process_is_blocked_for_gc(CreatorCog, self()),
-    {CogId, ObjId} = cog:register_new_object(CreatorCog, Class),
-    Id = {CogId, ObjId, init},
+    Event = cog:register_new_object(CreatorCog, Class),
     cog:add_task(Cog,init_task,none,O,Args,
-                 #process_info{id=Id, method= <<".init"/utf8>>}, [O, Args | Stack]),
+                 #process_info{event=Event, method= <<".init"/utf8>>}, [O, Args | Stack]),
     cog:process_is_runnable(CreatorCog, self()),
     task:wait_for_token(CreatorCog,[O, Args|Stack]),
     O.
