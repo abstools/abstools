@@ -10,15 +10,15 @@ how to run various tools on a local machine.
 ## Installing the ABS Compiler
 
 To install the ABS compiler, install the [Java 8
-JDK](https://java.com/en/download/ "Java 8 download site"), the [ant build
-tool](https://ant.apache.org/ "apache ant homepage"), and
-[Erlang](https://www.erlang-solutions.com/resources/download.html "Erlang binary distribution download") (version 20 or higher).  Then, clone the git
-repository and build the compiler:
+JDK](https://java.com/en/download/ "Java 8 download site") and
+[Erlang](https://www.erlang-solutions.com/resources/download.html
+"Erlang binary distribution download") (version 21 or higher).  Then,
+clone the git repository and build the compiler:
 
 ```bash
 git clone https://github.com/abstools/abstools.git
-cd abstools
-make frontend
+cd abstools/frontend
+./gradlew assemble
 ```
 
 After a successful build, there is an absc shell script in the
