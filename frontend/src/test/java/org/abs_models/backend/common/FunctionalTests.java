@@ -5,6 +5,7 @@
 package org.abs_models.backend.common;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 
 import java.io.File;
 
@@ -346,5 +347,12 @@ public class FunctionalTests extends SemanticTests {
     @Test
     public void patternVarRewOK() throws Exception {
         assertEvalTrue(new File("abssamples/PVTest2.abs"));
+    }
+
+    @Test
+    public void wrappedSupertype() throws Exception {
+        // https://github.com/abstools/abstools/issues/241
+        assumeFalse(driver.getBackendName() == BackendTestDriver.BackendName.JAVA);
+        assertEvalTrue(new File("abssamples/backend/FunctionalTests/wrappedSupertype.abs"));
     }
 }

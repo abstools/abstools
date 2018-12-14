@@ -6,8 +6,9 @@ package org.abs_models.frontend.typesystem;
 
 import static org.abs_models.ABSTest.Config.TYPE_CHECK;
 import static org.abs_models.ABSTest.Config.WITH_STD_LIB;
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,17 +18,16 @@ import java.util.List;
 
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.WrongProgramArgumentException;
+import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.analyser.SemanticCondition;
 import org.abs_models.frontend.analyser.SemanticConditionList;
+import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import org.abs_models.frontend.FrontendTest;
-import org.abs_models.frontend.ast.Model;
 
 @RunWith(Parameterized.class)
 public class CaseStudyTypeChecking extends FrontendTest {
@@ -40,19 +40,21 @@ public class CaseStudyTypeChecking extends FrontendTest {
 
     @Parameters(name="{0}")
     public static Collection<?> data() {
-        final Object[][] data = new Object[][] { { EXAMPLES_DIR + "T4.3/D4.3.1/FredhopperCloudServices.abs" }
-                                               , { EXAMPLES_DIR + "T4.2/D4.2.1/Indexing.abs" }
-                                               , { EXAMPLES_DIR + "T4.2/D4.2.1/Crawling.abs" }
-                                               , { EXAMPLES_DIR + "T4.2/D4.2.1/MapReduce.abs" }
-                                               , { EXAMPLES_DIR + "T4.2/D4.2.1/Downloading.abs" }
-                                               , { EXAMPLES_DIR + "T4.4/D4.4.1/ETICS.abs" }
-                                               , { ENVISAGE_DIR + "WP4/T4.2/integrated/Atbrox.abs" }
-                                               , { ENVISAGE_DIR + "WP4/T4.2/integrated/AtbroxMultiHandset.abs" }
-                                               , { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas.abs" }
-                                               , { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas_v2.abs" }
-                                               , { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas_v2_CloudProvider.abs" }
-                                               };
-        return Arrays.asList(data);
+	final Object[][] data = new Object[][] {
+	    // https://github.com/abstools/abstools/issues/241
+	    // { EXAMPLES_DIR + "T4.3/D4.3.1/FredhopperCloudServices.abs" },
+	    { EXAMPLES_DIR + "T4.2/D4.2.1/Indexing.abs" },
+	    { EXAMPLES_DIR + "T4.2/D4.2.1/Crawling.abs" },
+	    { EXAMPLES_DIR + "T4.2/D4.2.1/MapReduce.abs" },
+	    { EXAMPLES_DIR + "T4.2/D4.2.1/Downloading.abs" },
+	    { EXAMPLES_DIR + "T4.4/D4.4.1/ETICS.abs" },
+	    { ENVISAGE_DIR + "WP4/T4.2/integrated/Atbrox.abs" },
+	    { ENVISAGE_DIR + "WP4/T4.2/integrated/AtbroxMultiHandset.abs" },
+	    { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas.abs" },
+	    { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas_v2.abs" },
+	    { ENVISAGE_DIR + "WP4/T4.3/model/FredhopperCloudServices_NoDeltas_v2_CloudProvider.abs" }
+	};
+	return Arrays.asList(data);
     }
 
     final private String input;
