@@ -42,6 +42,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - In a module definition, `import` and `export` clauses can now be written in any order.
 
+- The parentheses (`()`) around the variable type and name in `let` expressions are now optional.  I.e., instead of `let (Int x) = 4 in ...` write  `let Int x = 4 in ...`.  The old syntax is undocumented but kept for backward compatilibity.
+
 - Avoid crash in `DC.decrementResources`: when trying to decrement by more than available, only decrement to the maximum possible.  `decrementResources` now returns the actual amount by which the resource was decreased.  This changes the signature of three methods in the `ABS.DC.DeploymentComponent` interface in a backwards-incompatible way.
 
 - When pretty-printing to a file, the resulting file will use Unix line endings.

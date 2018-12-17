@@ -136,7 +136,7 @@ Cons(1, _) < Cons(2, _)
 
 ==== The Let Expression
 
-The expression `let (T v) = p in b` evaluates `b`, with `v` bound to the value
+The expression `let T v = p in b` evaluates `b`, with `v` bound to the value
 of evaluating the expression `p`.  The newly-introduced binding of `v` can
 shadow a binding of `v` outside of the `let` expression.
 
@@ -147,15 +147,15 @@ earlier variables in their value expression.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-|_LetExp_ ::= | `let` `(` _Type_ _SimpleIdentifier_ `)` `=` _PureExp_ +
-{ `,` `(` _Type_ _SimpleIdentifier_ `)` `=` _PureExp_ } +
+|_LetExp_ ::= | `let` _Type_ _SimpleIdentifier_ `=` _PureExp_ +
+{ `,` _Type_ _SimpleIdentifier_ `=` _PureExp_ } +
 `in` _PureExp_
 |====
 
 [source]
 .Example
 ----
-let (Int x) = 2 + 2, (Int y) = x + 1 in y * 2 <1>
+let Int x = 2 + 2, Int y = x + 1 in y * 2 <1>
 ----
 <1> The value of this expression is 10 (`((2 + 2) + 1) * 2`)
 

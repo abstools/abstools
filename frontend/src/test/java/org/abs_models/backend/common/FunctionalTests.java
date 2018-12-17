@@ -4,19 +4,18 @@
  */
 package org.abs_models.backend.common;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assume.assumeFalse;
 
 import java.io.File;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import org.abs_models.ABSTest;
 import org.abs_models.ABSTest.Config;
 import org.abs_models.backend.BackendTestDriver;
 import org.abs_models.frontend.ast.Model;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class FunctionalTests extends SemanticTests {
@@ -225,16 +224,31 @@ public class FunctionalTests extends SemanticTests {
 
     @Test
     public void letExpMultiple() {
-        assertEvalTrue("def Bool f() = let (Bool x) = True, (Bool y) = x in y;" + CALL_F);
+        assertEvalTrue("def Bool f() = let Bool x = True, Bool y = x in y;" + CALL_F);
     }
 
     @Test
     public void letExpMultiple2() {
-        assertEvalTrue("def Bool f() = let (Bool x) = True, (Bool y) = False in x;" + CALL_F);
+        assertEvalTrue("def Bool f() = let Bool x = True, Bool y = False in x;" + CALL_F);
     }
 
     @Test
     public void letExpMultiple3() {
+        assertEvalTrue("def Bool f() = let Bool x = False, Bool x = True in x;" + CALL_F);
+    }
+
+    @Test
+    public void letExpMultipleOld() {
+        assertEvalTrue("def Bool f() = let (Bool x) = True, (Bool y) = x in y;" + CALL_F);
+    }
+
+    @Test
+    public void letExpMultipleOld2() {
+        assertEvalTrue("def Bool f() = let (Bool x) = True, (Bool y) = False in x;" + CALL_F);
+    }
+
+    @Test
+    public void letExpMultipleOld3() {
         assertEvalTrue("def Bool f() = let (Bool x) = False, (Bool x) = True in x;" + CALL_F);
     }
 
@@ -242,6 +256,8 @@ public class FunctionalTests extends SemanticTests {
     public void ifExp1() {
         assertEvalTrue("def Bool f(Bool x) = if x then True else False ; " + CALL_F_TRUE);
     }
+
+    @Test
     public void ifExp2() {
         assertEvalTrue("def Bool f(Bool x) = if !x then False else True ; " + CALL_F_TRUE);
     }
