@@ -605,7 +605,6 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     @Override public void exitUnaryExp(ABSParser.UnaryExpContext ctx) {
         switch (ctx.op.getType()) {
         case ABSParser.NEGATION :
-        case ABSParser.NEGATION_CREOL :
             setV(ctx, new NegExp(v(ctx.pure_exp())));
             break;
         case ABSParser.MINUS :

@@ -52,6 +52,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - BBEdit editor support moved to github.com/abstools/bbedit.
 
+- Removed the old Creol-style negation operator (`~`) which was kept in the parser for backward compatibility.
+
 ### Fixed
 
 - The unit tests now execute in parallel, speeding up testing on multi-processor machines.

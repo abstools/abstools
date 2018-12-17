@@ -280,7 +280,7 @@ def Directory dir(FileId i, FileEntry e) = Pair(i,Entries(e));
 def String fileSep() = "/";
 def FileId rootId() = "root";
 def Bool isFile(FileContent c) = case c { Content(_) => True; _ => False; };
-def Bool isDirectory(FileContent c) = ~isFile(c);
+def Bool isDirectory(FileContent c) = !isFile(c);
 
 // partial
 def FileSize content(FileContent c) = case c { Content(s) => s; };

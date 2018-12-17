@@ -30,7 +30,6 @@ fragment STR_ESC
   ;
 // STRINGLITERAL : '"' ('\\"' | '\\\\'|.)*? '"' ;
 
-NEGATION_CREOL : '~' ;
 NEGATION : '!' ;
 MINUS : '-' ;
 MULT : '*' ;
@@ -92,7 +91,7 @@ pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
         '(' pure_exp_list ')'                              # PartialFunctionExp
     | qualified_identifier '[' pure_exp_list ']'           # VariadicFunctionExp
     | qualified_type_identifier ('(' pure_exp_list ')')?   # ConstructorExp
-    | op=(NEGATION | NEGATION_CREOL | MINUS) pure_exp      # UnaryExp
+    | op=(NEGATION | MINUS) pure_exp                       # UnaryExp
     | l=pure_exp op=(MULT | DIV | MOD) r=pure_exp          # MultExp
     | l=pure_exp op=(PLUS | MINUS) r=pure_exp              # AddExp
     | l=pure_exp op=(LT | GT | LTEQ | GTEQ) r=pure_exp     # GreaterExp
@@ -413,7 +412,7 @@ from_condition : 'from' application_condition ;
 when_condition : ('when' | 'to') application_condition ;
 
 application_condition
-    : (NEGATION | NEGATION_CREOL) application_condition       # NotApplicationCondition
+    : NEGATION application_condition                          # NotApplicationCondition
     | l=application_condition ANDAND r=application_condition  # AndApplicationCondition
     | l=application_condition OROR r=application_condition    # OrApplicationCondition
     | '(' application_condition ')'                           # ParenApplicationCondition

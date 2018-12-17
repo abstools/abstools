@@ -541,7 +541,7 @@ uses RS;
 
             // Shutdown flag
             Bool shutdown = this.server.isShutdownRequested();
-            if (~ shutdown) {
+            if (! shutdown) {
                 await accept;
                 thread = new ConnectionThreadImpl(job,server,threads);
                 threads = threads + 1; // for debugging
@@ -746,7 +746,7 @@ uses RS;
             this.acceptor = fs.get;
 
             Bool shutdown = this.isServerShutdownRequested();
-            while (~shutdown) {
+            while (!shutdown) {
                 //try polling on the return boolean value
                 Fut<Bool> fd = acceptor!isAcceptingConnection(); await fd?;
                 Bool accept = fd.get;
@@ -756,7 +756,7 @@ uses RS;
                 // This is abstracted in this model and
                 // so we use a flag to model this.
                 if (accept) {
-                    if (~ emptySet(threads) && internal) {
+                    if (! emptySet(threads) && internal) {
                         unit = this.acceptor!suspendConnection(); await unit?;
                         this.internal = False;
                     } else {
@@ -817,7 +817,7 @@ uses RS;
             // check point to see if an update has happened
             Fut<Bool> rf = this.snapshot!hasUpdated();
             Bool up = rf.get;
-            this.shutDown = ~up;
+            this.shutDown = !up;
 
             //reset the current client lists
             //if refresh is successful and is not waiting
@@ -831,7 +831,7 @@ uses RS;
                     this.traces = appendright(this.traces,Nil);
                 }
 
-                if (~this.shutDown) {
+                if (!this.shutDown) {
                     this.currentClients = this.clients;
                 } else {
                     unit = this.server!requestShutDown(); unit.get;
@@ -852,7 +852,7 @@ uses RS;
 
         Unit addClient(ConnectionThread thread) {
             ClientId id = this.getClientId(thread);
-            assert ~contains(this.currentClients,id);
+            assert !contains(this.currentClients,id);
             this.currentClients= Insert(id,this.currentClients);
         }
 
@@ -1094,7 +1094,7 @@ uses RS;
         // ClientDataBase
         [Atomic] Bool prepareReplicationItem(CheckPoint p) {
             Bool result = False;
-            if (~ contains(checkPoints,p)) {
+            if (! contains(checkPoints,p)) {
                 checkPoints = Insert(p,checkPoints);
                 ccp = p;
                 result = True;
@@ -1126,12 +1126,12 @@ uses RS;
             // if update is not required
             // then update the filestore of the current checkpoint
             // else update the filestore of the next checkpoint
-            if (~update || more) {
+            if (!update || more) {
                 Map<FileId,FileContent> updates = lookup(db,ccp);
                 this.rloc = updateDirWithContents(this.rloc,updates);
             }
 
-            return (~update || more);
+            return (!update || more);
         }
 
         // Returns 0 if file not found.
