@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Added expressions `x implements I` and `x as I` to check for and convert an object reference to another interface.  If the underlying class of `x` does not implement `I`, return `False` and `null`, respectively.
 
+- The `let` expression can now implement multiple bindings.  `let (T1 x1) = v1, (T2 x2) = v2 in b` is a shorthand for `let (T1 x1) = v1 in let (T2 x2) = v2 in b`.  No changes to any backends and analysis tools needed since the AST was not changed -- the parser generates the same AST for the two expressions above.
+
 - Add a `Dockerfile` to run `absc` inside a container.  To build the image, use `cd frontend ; docker build -t absc .`.  To use the container to compile an abs model `file.abs` in the current directory, use `docker run --rm -v "$PWD":/usr/src -w /usr/src absc -erlang file.abs`.  To get a command-line inside the container for the current directory (e.g., to run a model via `gen/erl/run` inside the container), use `docker run -it --rm -v "$PWD":/usr/src -w /usr/src --entrypoint /bin/sh absc`.
 
 - ABS snippets embedded in org-mode documents via org-babel now accept lists as input.

@@ -224,6 +224,21 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void letExpMultiple() {
+        assertEvalTrue("def Bool f() = let (Bool x) = True, (Bool y) = x in y;" + CALL_F);
+    }
+
+    @Test
+    public void letExpMultiple2() {
+        assertEvalTrue("def Bool f() = let (Bool x) = True, (Bool y) = False in x;" + CALL_F);
+    }
+
+    @Test
+    public void letExpMultiple3() {
+        assertEvalTrue("def Bool f() = let (Bool x) = False, (Bool x) = True in x;" + CALL_F);
+    }
+
+    @Test
     public void ifExp1() {
         assertEvalTrue("def Bool f(Bool x) = if x then True else False ; " + CALL_F_TRUE);
     }

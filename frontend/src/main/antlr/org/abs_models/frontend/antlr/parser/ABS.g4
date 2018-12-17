@@ -109,8 +109,9 @@ pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
     | e=pure_exp 'as' i=interface_name                     # AsExp
     | 'if' c=pure_exp 'then' l=pure_exp 'else' r=pure_exp  # IfExp
     | 'case' c=pure_exp '{' casebranch+ '}'                # CaseExp
-    | 'let' '(' type_use IDENTIFIER ')' '=' e=pure_exp
-        'in' b=pure_exp                                    # LetExp
+    | 'let' '(' t+=type_use id+=IDENTIFIER ')' '=' e+=pure_exp
+        (',' '(' t+=type_use id+=IDENTIFIER ')' '=' e+=pure_exp)*
+        'in' body=pure_exp                                 # LetExp
     | '(' pure_exp ')'                                     # ParenExp
     ;
 
