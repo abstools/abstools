@@ -24,15 +24,13 @@ import org.abs_models.frontend.ast.ReturnStmt;
 public class OriginalCallTest extends DeltaTest {
     @Test
     public void originalCall() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "interface I {}"
-                + "class C implements I { Unit m() {} }"
-                + "delta D; uses M;"
-                + "modifies class C { modifies Unit m() { original(); } }"
-                + "delta D2; uses M;"
-                + "modifies class C { modifies Unit m() { original(); } }"
-        );
+        Model model = assertParse("module M;"
+            + "interface I {}"
+            + "class C implements I { Unit m() {} }"
+            + "delta D; uses M;"
+            + "modifies class C { modifies Unit m() { original(); } }"
+            + "delta D2; uses M;"
+            + "modifies class C { modifies Unit m() { original(); } }");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getMethods().getNumChild() == 1);
 
@@ -59,15 +57,13 @@ public class OriginalCallTest extends DeltaTest {
 
     @Test
     public void originalCall2() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "interface I {}"
-                + "class C implements I { Unit m() {} }"
-                + "delta D; uses M;"
-                + "modifies class C { modifies Unit m() { original(); } }"
-                + "delta D2; uses M;"
-                + "modifies class C { modifies Unit m() { original(); } }"
-        );
+        Model model = assertParse("module M;"
+            + "interface I {}"
+            + "class C implements I { Unit m() {} }"
+            + "delta D; uses M;"
+            + "modifies class C { modifies Unit m() { original(); } }"
+            + "delta D2; uses M;"
+            + "modifies class C { modifies Unit m() { original(); } }");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getMethods().getNumChild() == 1);
 
@@ -94,13 +90,11 @@ public class OriginalCallTest extends DeltaTest {
 
     @Test
     public void originalCall3() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "interface I {}"
-                + "class C implements I { Int one() { return 1; } }"
-                + "delta D; uses M;"
-                + "modifies class C { modifies Int one() { Int x = original(); return x + 1; } }"
-        );
+        Model model = assertParse("module M;"
+            + "interface I {}"
+            + "class C implements I { Int one() { return 1; } }"
+            + "delta D; uses M;"
+            + "modifies class C { modifies Int one() { Int x = original(); return x + 1; } }");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals(1, cls.getMethods().getNumChild());
@@ -121,17 +115,15 @@ public class OriginalCallTest extends DeltaTest {
 
     @Test
     public void oneDeltaMultipleCalls() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "interface I {}"
-                + "class C implements I { Unit m() {} Unit n() {} Unit p() {} }"
-                + "delta D;uses M;"
-                + "modifies class C {"
-                    + "modifies Unit m() { original(); }"
-                    + "modifies Unit n() { original(); }"
-                    + "modifies Unit p() { original(); }"
-                + "}"
-        );
+        Model model = assertParse("module M;"
+            + "interface I {}"
+            + "class C implements I { Unit m() {} Unit n() {} Unit p() {} }"
+            + "delta D;uses M;"
+            + "modifies class C {"
+            + "modifies Unit m() { original(); }"
+            + "modifies Unit n() { original(); }"
+            + "modifies Unit p() { original(); }"
+            + "}");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         DeltaDecl delta = findDelta(model, "D");
@@ -145,15 +137,13 @@ public class OriginalCallTest extends DeltaTest {
 
     @Test
     public void multipleCallsToSameMethod() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "interface I {}"
-                + "class C implements I { Unit m() {} }"
-                + "delta D;"
-                + "modifies class M.C {"
-                    + "modifies Unit m() { original(); original(); }"
-                + "}"
-        );
+        Model model = assertParse("module M;"
+            + "interface I {}"
+            + "class C implements I { Unit m() {} }"
+            + "delta D;"
+            + "modifies class M.C {"
+            + "modifies Unit m() { original(); original(); }"
+            + "}");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         DeltaDecl delta = findDelta(model, "D");
@@ -169,22 +159,20 @@ public class OriginalCallTest extends DeltaTest {
 
     @Test
     public void targetedAndUntargetedOriginalCall() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C { Unit m() {} }"
+        Model model = assertParse("module M;"
+            + "class C { Unit m() {} }"
 
-                + "delta D1; "
-                + "uses M;"
-                + "modifies class C { adds Unit n() {} }"
+            + "delta D1; "
+            + "uses M;"
+            + "modifies class C { adds Unit n() {} }"
 
-                + "delta D2; "
-                + "uses M;"
-                + "modifies class C { modifies Unit m() { original(); core.original(); } }"
+            + "delta D2; "
+            + "uses M;"
+            + "modifies class C { modifies Unit m() { original(); core.original(); } }"
 
-                + "delta D3; "
-                + "uses M;"
-                + "modifies class C { modifies Unit n() { original(); D1.original(); } }"
-        );
+            + "delta D3; "
+            + "uses M;"
+            + "modifies class C { modifies Unit n() { original(); D1.original(); } }");
 
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");
@@ -202,16 +190,14 @@ public class OriginalCallTest extends DeltaTest {
 
     @Test
     public void targetedOriginalCall() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C { Unit m() {} }"
-                + "delta D1;"
-                + "uses M;"
-                + "modifies class C { modifies Unit m() { core.original(); } }"
-                + "adds class C2 { }"
-                + "delta D2;"
-                + "modifies class M.C { modifies Unit m() { D1.original(); } }"
-        );
+        Model model = assertParse("module M;"
+            + "class C { Unit m() {} }"
+            + "delta D1;"
+            + "uses M;"
+            + "modifies class C { modifies Unit m() { core.original(); } }"
+            + "adds class C2 { }"
+            + "delta D2;"
+            + "modifies class M.C { modifies Unit m() { D1.original(); } }");
 
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");
@@ -229,17 +215,15 @@ public class OriginalCallTest extends DeltaTest {
 
     @Test
     public void multipleTargetedOriginalCalls() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C { }"
-                + "delta D1;"
-                + "uses M;"
-                + "modifies class C { adds Unit m() {} }"
-                + "delta D2;uses M;"
-                + "modifies class C { modifies Unit m() { D1.original(); } }"
-                + "delta D3;uses M;"
-                + "modifies class C { modifies Unit m() { D1.original(); } }"
-        );
+        Model model = assertParse("module M;"
+            + "class C { }"
+            + "delta D1;"
+            + "uses M;"
+            + "modifies class C { adds Unit m() {} }"
+            + "delta D2;uses M;"
+            + "modifies class C { modifies Unit m() { D1.original(); } }"
+            + "delta D3;uses M;"
+            + "modifies class C { modifies Unit m() { D1.original(); } }");
 
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");
@@ -256,19 +240,17 @@ public class OriginalCallTest extends DeltaTest {
 
     @Test
     public void multipleTargetedOriginalCalls2() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C { }"
-                + "delta D1;"
-                + "uses M;"
-                + "modifies class C { adds Unit m() {} }"
-                + "delta D2;uses M;"
-                + "modifies class C { modifies Unit m() { D1.original(); } }"
-                + "delta D3;uses M;"
-                + "modifies class C { modifies Unit m() { D1.original(); } }"
-                + "delta D4;uses M;"
-                + "modifies class C { modifies Unit m() { D2.original(); } }"
-        );
+        Model model = assertParse("module M;"
+            + "class C { }"
+            + "delta D1;"
+            + "uses M;"
+            + "modifies class C { adds Unit m() {} }"
+            + "delta D2;uses M;"
+            + "modifies class C { modifies Unit m() { D1.original(); } }"
+            + "delta D3;uses M;"
+            + "modifies class C { modifies Unit m() { D1.original(); } }"
+            + "delta D4;uses M;"
+            + "modifies class C { modifies Unit m() { D2.original(); } }");
 
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");
@@ -286,13 +268,11 @@ public class OriginalCallTest extends DeltaTest {
 
     @Test(expected=DeltaModellingException.class)
     public void originalNotFound() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C { }"
-                + "delta D1;"
+        Model model = assertParse("module M;"
+            + "class C { }"
+            + "delta D1;"
 
-                + "modifies class C { modifies Unit m() { original(); } }"
-        );
+            + "modifies class C { modifies Unit m() { original(); } }");
 
         DeltaDecl d1 = findDelta(model, "D1");
 
@@ -302,13 +282,11 @@ public class OriginalCallTest extends DeltaTest {
 
     @Test(expected=DeltaModellingException.class)
     public void targetedOriginalNotFound() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C { }"
-                + "delta D1;"
-                + "uses M;"
-                + "modifies class C { modifies Unit m() { core.original(); } }"
-        );
+        Model model = assertParse("module M;"
+            + "class C { }"
+            + "delta D1;"
+            + "uses M;"
+            + "modifies class C { modifies Unit m() { core.original(); } }");
 
         DeltaDecl d1 = findDelta(model, "D1");
 
@@ -318,16 +296,14 @@ public class OriginalCallTest extends DeltaTest {
 
     @Test
     public void targetedDeltaNotYetApplied() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C { Unit m() {} }"
-                + "delta D1;"
-                + "uses M;"
-                + "modifies class C { modifies Unit m() { core.original(); } }"
-                + "delta D2;"
-                + "uses M;"
-                + "modifies class C { modifies Unit m() { D1.original(); } }"
-        );
+        Model model = assertParse("module M;"
+            + "class C { Unit m() {} }"
+            + "delta D1;"
+            + "uses M;"
+            + "modifies class C { modifies Unit m() { core.original(); } }"
+            + "delta D2;"
+            + "uses M;"
+            + "modifies class C { modifies Unit m() { D1.original(); } }");
 
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");

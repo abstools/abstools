@@ -97,6 +97,6 @@ public abstract class PardefTest extends FrontendTest {
             .append(" }");
 
         String code = builder.toString();
-        return assertParseOk(code);
+        return assertParse(code);
     }
 }

@@ -18,14 +18,12 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
     @Test
     public void wellFormedProductLine1() {
-        Model model = assertParseOk(
-                "module M;"
-                        + "delta D1;"
-                        + "delta D2;"
-                        + "productline PL;"
-                        + "features A;"
-                        + "delta D1 after D2;"
-                );
+        Model model = assertParse("module M;"
+            + "delta D1;"
+            + "delta D2;"
+            + "productline PL;"
+            + "features A;"
+            + "delta D1 after D2;");
         ProductLine pl = model.getProductLine();
         SemanticConditionList errors = new SemanticConditionList();
 
@@ -38,15 +36,13 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
     @Test
     public void wellFormedProductLine2() {
-        Model model = assertParseOk(
-                "module M;"
-                        + "delta D1;"
-                        + "delta D2;"
-                        + "productline PL;"
-                        + "features A;"
-                        + "delta D1 after D2;"
-                        + "delta D2;"
-                );
+        Model model = assertParse("module M;"
+            + "delta D1;"
+            + "delta D2;"
+            + "productline PL;"
+            + "features A;"
+            + "delta D1 after D2;"
+            + "delta D2;");
         ProductLine pl = model.getProductLine();
         SemanticConditionList errors = new SemanticConditionList();
 
@@ -59,15 +55,13 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
     @Test
     public void stronglyUnambiguousProductLine1() {
-        Model model = assertParseOk(
-                "module M;"
-                        + "delta D1; uses M; modifies class C { adds Unit foo() {} }"
-                        + "delta D2; modifies class M.C { adds Unit foo() {} }"
-                        + "productline PL;"
-                        + "features A;"
-                        + "delta D1;"
-                        + "delta D2 after D1;"
-                );
+        Model model = assertParse("module M;"
+            + "delta D1; uses M; modifies class C { adds Unit foo() {} }"
+            + "delta D2; modifies class M.C { adds Unit foo() {} }"
+            + "productline PL;"
+            + "features A;"
+            + "delta D1;"
+            + "delta D2 after D1;");
         ProductLine pl = model.getProductLine();
         SemanticConditionList errors = new SemanticConditionList();
 
@@ -77,15 +71,13 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
     @Test
     public void stronglyUnambiguousProductLine2() {
-        Model model = assertParseOk(
-                "module M;"
-                        + "delta D1; uses M; modifies class C { adds Unit foo() {} }"
-                        + "delta D2; uses M; modifies class C { adds Unit bar() {} }"
-                        + "productline PL;"
-                        + "features A;"
-                        + "delta D1;"
-                        + "delta D2;"
-                );
+        Model model = assertParse("module M;"
+            + "delta D1; uses M; modifies class C { adds Unit foo() {} }"
+            + "delta D2; uses M; modifies class C { adds Unit bar() {} }"
+            + "productline PL;"
+            + "features A;"
+            + "delta D1;"
+            + "delta D2;");
         ProductLine pl = model.getProductLine();
         SemanticConditionList errors = new SemanticConditionList();
 
@@ -99,11 +91,9 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
     @Test
     public void stronglyUnambiguousProductLine3() {
-        Model model = assertParseOk(
-                "module M;"
-                        + "productline PL;"
-                        + "features A;"
-                );
+        Model model = assertParse("module M;"
+            + "productline PL;"
+            + "features A;");
         ProductLine pl = model.getProductLine();
         SemanticConditionList errors = new SemanticConditionList();
 
@@ -119,15 +109,13 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
     @Test
     public void stronglyUnambiguousProductLine4() {
-        Model model = assertParseOk(
-                "module M;"
-                        + "delta D1; uses M; modifies class C { adds Unit foo() {} }"
-                        + "delta D2; uses M; modifies class C { adds Unit foo() {} }"
-                        + "productline PL;"
-                        + "features A;"
-                        + "delta D1;"
-                        + "delta D2;"
-                );
+        Model model = assertParse("module M;"
+            + "delta D1; uses M; modifies class C { adds Unit foo() {} }"
+            + "delta D2; uses M; modifies class C { adds Unit foo() {} }"
+            + "productline PL;"
+            + "features A;"
+            + "delta D1;"
+            + "delta D2;");
         ProductLine pl = model.getProductLine();
         SemanticConditionList errors = new SemanticConditionList();
 
@@ -140,15 +128,13 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
     @Test
     public void stronglyUnambiguousProductLine5() {
-        Model model = assertParseOk(
-                "module M;"
-                        + "delta D1; uses M; adds class C {}"
-                        + "delta D2; uses M; removes class C;"
-                        + "productline PL;"
-                        + "features A;"
-                        + "delta D1;"
-                        + "delta D2;"
-                );
+        Model model = assertParse("module M;"
+            + "delta D1; uses M; adds class C {}"
+            + "delta D2; uses M; removes class C;"
+            + "productline PL;"
+            + "features A;"
+            + "delta D1;"
+            + "delta D2;");
         ProductLine pl = model.getProductLine();
         SemanticConditionList errors = new SemanticConditionList();
 
@@ -161,17 +147,15 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
     @Test
     public void stronglyUnambiguousProductLine6() {
-        Model model = assertParseOk(
-                "module M;"
-                        + "delta D1; uses M; modifies class C { adds Unit foo() {} }"
-                        + "delta D2; uses M; removes class C;"
-                        + "delta D3; uses M; adds class C {}"
-                        + "productline PL;"
-                        + "features A;"
-                        + "delta D1;"
-                        + "delta D2;"
-                        + "delta D3;"
-                );
+        Model model = assertParse("module M;"
+            + "delta D1; uses M; modifies class C { adds Unit foo() {} }"
+            + "delta D2; uses M; removes class C;"
+            + "delta D3; uses M; adds class C {}"
+            + "productline PL;"
+            + "features A;"
+            + "delta D1;"
+            + "delta D2;"
+            + "delta D3;");
         ProductLine pl = model.getProductLine();
         SemanticConditionList errors = new SemanticConditionList();
 
@@ -184,7 +168,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
     @Test
     public void stronglyUnambiguousProductLinePerformance() {
-        Model model = assertParseOk("module M; class C {}");
+        Model model = assertParse("module M; class C {}");
         CompilationUnit cu = new CompilationUnit();
         model.addCompilationUnit(cu);
 

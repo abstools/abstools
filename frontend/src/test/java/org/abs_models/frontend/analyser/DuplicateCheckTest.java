@@ -16,43 +16,43 @@ public class DuplicateCheckTest extends FrontendTest {
 
     @Test
     public void interfaceDuplicates() {
-        Model p = assertParseOk("interface I {} interface I {}");
+        Model p = assertParse("interface I {} interface I {}");
         assertEndsWith(p.typeCheck().getFirstError(), ErrorMessage.DUPLICATE_TYPE_DECL.withArgs("I", ""));
     }
 
     @Test
     public void datatypeDuplicates() {
-        Model p = assertParseOk("data D; data D;");
+        Model p = assertParse("data D; data D;");
         assertEndsWith(p.typeCheck().getFirstError(), ErrorMessage.DUPLICATE_TYPE_DECL.withArgs("D", ""));
     }
 
     @Test
     public void typeDuplicates() {
-        Model p = assertParseOk("data D; interface D { }");
+        Model p = assertParse("data D; interface D { }");
         assertEndsWith(p.typeCheck().getFirstError(), ErrorMessage.DUPLICATE_TYPE_DECL.withArgs("D", ""));
     }
 
     @Test
     public void typeDuplicates2() {
-        Model p = assertParseOk("data D; data X; type D = X;");
+        Model p = assertParse("data D; data X; type D = X;");
         assertEndsWith(p.typeCheck().getFirstError(), ErrorMessage.DUPLICATE_TYPE_DECL.withArgs("D", ""));
     }
 
     @Test
     public void duplicateClasses() {
-        Model p = assertParseOk("class C {} class C {}");
+        Model p = assertParse("class C {} class C {}");
         assertEndsWith(p.typeCheck().getFirstError(), ErrorMessage.DUPLICATE_CLASS_NAME.withArgs("C", ""));
     }
 
     @Test
     public void duplicateFunctions() {
-        Model p = assertParseOk("data Test = Test; def Test zero() = Test; def Test zero() = Test;");
+        Model p = assertParse("data Test = Test; def Test zero() = Test; def Test zero() = Test;");
         assertEndsWith(p.typeCheck().getFirstError(), ErrorMessage.DUPLICATE_FUN_NAME.withArgs("zero", ""));
     }
 
     @Test
     public void duplicatePartialFunctions() {
-        Model m = assertParseOk("data Test = Test; def Test zero()() = Test; def Test zero()() = Test;");
+        Model m = assertParse("data Test = Test; def Test zero()() = Test; def Test zero()() = Test;");
         assertEndsWith(m.typeCheck().getFirstError(), ErrorMessage.DUPLICATE_PARTIAL_FUN_NAME.withArgs("zero", ""));
     }
 

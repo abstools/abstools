@@ -15,48 +15,38 @@ public class FeatureModel extends FrontendTest {
 
     @Test
     public void minimalFM() {
-        Model model = assertParseOk(
-                "root FM"
-        );
+        Model model = assertParse("root FM");
     }
 
     @Test
     public void minimalFMwithProduct() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "productline PL; features FM;"
-                + "product P(FM);"
-                + "root FM"
-        );
+        Model model = assertParse("productline PL; features FM;"
+            + "product P(FM);"
+            + "root FM");
         model.flattenForProduct("P");
     }
 
     @Test
     public void attributeUnbounded() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "productline PL; features FM;"
-                + "product P();"
-                + "root FM { Int attr; }"
-        );
+        Model model = assertParse("productline PL; features FM;"
+            + "product P();"
+            + "root FM { Int attr; }");
         model.flattenForProduct("P");
     }
 
     @Test
     public void attributeUnbounded2() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "productline PL; features FM;"
-                + "product P();"
-                + "root FM { Int attr in [*..*]; }"
-        );
+        Model model = assertParse("productline PL; features FM;"
+            + "product P();"
+            + "root FM { Int attr in [*..*]; }");
         model.flattenForProduct("P");
     }
 
     @Test
     public void attributeBounded() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "productline PL; features FM;"
-                + "product P();"
-                + "root FM { Int attr in [0..99]; }"
-        );
+        Model model = assertParse("productline PL; features FM;"
+            + "product P();"
+            + "root FM { Int attr in [0..99]; }");
         model.flattenForProduct("P");
     }
 

@@ -56,34 +56,41 @@ public class ParserTest extends FrontendTest {
 
     @Test
     public void testNothing() {
-        assertParseOk(" "); // NO decls no block
+        // NO decls no block
+        assertParse(" ");
     }
 
     @Test
     public void testEmptyBlock() {
-        assertParseOk("{ }"); // No decls.
+        // No decls.
+        assertParse("{ }");
     }
 
     @Test
     public void ifExp() {
-        assertParseOk("{ (if True then x else x).get; }" );
-        assertParseOk("{ Int x = 5; if(if 4 == 5 then True else False) { x = 4; } else { x = 3; } }" );
-        assertParseOk("{ if True then x else x.get; }" );
+        assertParse("{ (if True then x else x).get; }");
+        assertParse("{ Int x = 5; if(if 4 == 5 then True else False) { x = 4; } else { x = 3; } }");
+        assertParse("{ if True then x else x.get; }");
     }
 
 
     @Test
     public void testStmts() {
-        assertParseOk("{ return x; }");
-        assertParseOk("{   return x.get ;   }"); // one statement
-        assertParseOk("{   skip ; return x.get ;    }"); // n statements
-        assertParseOk("{ Int x ; Int y ;  skip ; return x.get ;   }"); // Variable
-                                                                       // decls
-        assertParseOk("{   skip  ; return x.get ;  }");
-        assertParseOk("{ Fut<I> x ; J z ; }"); // need trailing semicolon here.
-        assertParseOk(" { Fut<I> x ; Fut<Fut<I>> y ;  J z ; K w  ; }");
-        assertParseOk("{ Int x = 5; Int y; Foo ref = null; List<Int> list = Cons(5, Nil); skip; }"); // Variable
-                                                                                                     // decls
+        assertParse("{ return x; }");
+        // one statement
+        assertParse("{   return x.get ;   }");
+        // n statements
+        assertParse("{   skip ; return x.get ;    }");
+        // Variable
+        assertParse("{ Int x ; Int y ;  skip ; return x.get ;   }");
+        // decls
+        assertParse("{   skip  ; return x.get ;  }");
+        // need trailing semicolon here.
+        assertParse("{ Fut<I> x ; J z ; }");
+        assertParse(" { Fut<I> x ; Fut<Fut<I>> y ;  J z ; K w  ; }");
+        // Variable
+        assertParse("{ Int x = 5; Int y; Foo ref = null; List<Int> list = Cons(5, Nil); skip; }");
+        // decls
                                                                                                      // with/without
                                                                                                      // initializers
         //
@@ -92,8 +99,8 @@ public class ParserTest extends FrontendTest {
     // Interface declarations
     @Test
     public void testIfDecl() {
-        assertParseOk(" interface Foo {} {}");
-        assertParseOk(" interface Bar extends Bar1, Bar2 {} {}");
+        assertParse(" interface Foo {} {}");
+        assertParse(" interface Bar extends Bar1, Bar2 {} {}");
         assertParseError("interface Foo extends {} {}");
         assertParseError("interface extends {} {}");
     }
@@ -101,32 +108,31 @@ public class ParserTest extends FrontendTest {
     // Class declarations
     @Test
     public void testClassDecl() {
-        assertParseOk("class FooClass  {} {}");
-        assertParseOk("class FooClass  implements Foo {} {}");
-        assertParseOk("class FooClass  implements Foo {}"); // optional main
-                                                            // body
-        assertParseOk("class FooClass  implements Foo.Bar {}"); // qualified
-                                                                // Name
-        assertParseOk("class FooClass(T x , T y)  implements Foo {}"); // class
-                                                                       // params
-        assertParseOk("class FooClass(T x)  implements Foo {}"); // class params
-        assertParseOk("class FooClass(Foo.T x)  implements Foo {}"); // class
-                                                                     // params
-                                                                     // qualified
-                                                                     // name
-        assertParseOk("class FooClass()  implements Foo {}"); // class params
-        assertParseOk("class FooClass  implements Foo { T x ; }"); // field
-        assertParseOk("class FooClass  implements Foo { Foo.T x ; }"); // field
-                                                                       // qualified
-        assertParseOk("class FooClass  implements Foo { T x ; { x = a ; }  }"); // init
-                                                                                // block
-        assertParseOk("class FooClass  implements Foo { T x = a ; }"); // field
-                                                                       // with
-                                                                       // initializer
-        assertParseOk("class FooClass  implements Foo { {} } {} "); // empty
-                                                                    // init
-                                                                    // block
-        assertParseOk(bbclass);
+        assertParse("class FooClass  {} {}");
+        // optional main body
+        assertParse("class FooClass  implements Foo {} {}");
+        assertParse("class FooClass  implements Foo {}");
+        // qualified Name
+        assertParse("class FooClass  implements Foo.Bar {}");
+        // class params
+        assertParse("class FooClass(T x , T y)  implements Foo {}");
+        // class params
+        assertParse("class FooClass(T x)  implements Foo {}");
+        // class params qualified name
+        assertParse("class FooClass(Foo.T x)  implements Foo {}");
+        // class params
+        assertParse("class FooClass()  implements Foo {}");
+        // field
+        assertParse("class FooClass  implements Foo { T x ; }");
+        // field qualified
+        assertParse("class FooClass  implements Foo { Foo.T x ; }");
+        // init block
+        assertParse("class FooClass  implements Foo { T x ; { x = a ; }  }");
+        // field with initializer
+        assertParse("class FooClass  implements Foo { T x = a ; }");
+        // empty init block
+        assertParse("class FooClass  implements Foo { {} } {} ");
+        assertParse(bbclass);
         assertParseError("class FooClass implements {}" + "{}");
 
     }
@@ -134,98 +140,99 @@ public class ParserTest extends FrontendTest {
     // datatype declarations
     @Test
     public void testDatatypeDecl() {
-        assertParseOk("data Foo = XCons | YCons ; ");
-        assertParseOk("data IntList = IntNil | Cons(Int, IntList) ; ");
-        assertParseOk("data IntList = IntNil | Cons(Prelude.Int, IntList) ; ");
+        assertParse("data Foo = XCons | YCons ; ");
+        assertParse("data IntList = IntNil | Cons(Int, IntList) ; ");
+        assertParse("data IntList = IntNil | Cons(Prelude.Int, IntList) ; ");
     }
 
     @Test
     public void dataTypeSelectors() {
-        assertParseOk("data Foo = Bla(Int i);");
-        assertParseOk("data Foo = X | Bla(Int i);");
+        assertParse("data Foo = Bla(Int i);");
+        assertParse("data Foo = X | Bla(Int i);");
     }
 
     @Test
     public void testParametricDatatypeDecl() {
-        assertParseOk("data List<A> = Nil | Cons(A, List<A>); ");
-        assertParseOk("data Pair<A, B> = Pair(A, B); ");
+        assertParse("data List<A> = Nil | Cons(A, List<A>); ");
+        assertParse("data Pair<A, B> = Pair(A, B); ");
     }
 
     @Test
     public void testFunctionDecl() {
-        assertParseOk("def Int inc(Int x) = x;"); // fun_exp = IDENTIFIER
-        assertParseOk("def Int inc(Int x) = plus(x,one());"); // fun_exp =
-                                                              // Term(co,l)
-        assertParseOk("def Datatype fn(Int x , Int y) = x;");
-        assertParseOk("def TPair revPair(TPair p) = pair(snd(p),fst(p));");
-        assertParseOk("def TPair revPair(TPair p) = Prelude.pair(Prelude.snd(p),fst(p));");
+        // fun_exp = IDENTIFIER
+        assertParse("def Int inc(Int x) = x;");
+        // fun_exp = Term(co,l)
+        assertParse("def Int inc(Int x) = plus(x,one());");
+        assertParse("def Datatype fn(Int x , Int y) = x;");
+        assertParse("def TPair revPair(TPair p) = pair(snd(p),fst(p));");
+        assertParse("def TPair revPair(TPair p) = Prelude.pair(Prelude.snd(p),fst(p));");
         // using let
-        assertParseOk("def TPair revPair(TPair p) = let(T x) = fst(p) in pair(snd(p),x);");
+        assertParse("def TPair revPair(TPair p) = let(T x) = fst(p) in pair(snd(p),x);");
         // using nested let
-        assertParseOk("def TPair revPair(TPair p) = let(T x) = fst(p) in let(T y) = snd(p) in pair(y,x);");
+        assertParse("def TPair revPair(TPair p) = let(T x) = fst(p) in let(T y) = snd(p) in pair(y,x);");
     }
 
     @Test
     public void testParametricFunctionDecl() {
-        assertParseOk("def Int length<A>(List<A> list) = case list { Nil => 0; Cons(_, rest) => 1 + length(rest); };");
-        assertParseOk("def A nth<A>(List<A> list) = case n { 0 => head(list) ; _ => nth(tail(list), n-1) ; };");
+        assertParse("def Int length<A>(List<A> list) = case list { Nil => 0; Cons(_, rest) => 1 + length(rest); };");
+        assertParse("def A nth<A>(List<A> list) = case n { 0 => head(list) ; _ => nth(tail(list), n-1) ; };");
     }
 
     @Test
     public void testAnnotations() {
-        assertParseOk("[Test : \"value\"] class FooClass {} {}");
-        assertParseOk("[Test : \"value\"] [Test: Nil] class FooClass {} {}");
-        assertParseOk("[Test : \"value\", Test: Nil] class FooClass {} {}");
-        assertParseOk("[Test: 5] data Foo;");
-        assertParseOk("[Test2 : Pair(5, \"value\")] data Pair<A, B> = Pair(A, B);");
-        assertParseOk("[Test : 5] def Int constant() = 5;");
-        assertParseOk("[Test: Nil] def A constant<A>(A a) = a;");
-        assertParseOk("interface A { [Pre : x > 5] [Post : x > 0] Int method(Int x); }");
-        assertParseOk("interface A { [Pre : x > 5, Post : x > 0] Int method(Int x); }");
-        assertParseOk("class A { [Method : Testable] Int method(Int x) { return x; } }");
-        assertParseOk("class A { Int method(Int x) { [Value: Good] return x; } }");
-        assertParseOk("[Block: Init]{ Int x = 1; [Stmt: \"conditional\"] if (x == 1) [Branch: Then] x = 5; else [Branch: Else] x = -1; }");
-        assertParseOk("[Test] class FooClass {} {}");
-        assertParseOk("[\"value\"] class FooClass {} {}");
-        assertParseOk("class FooClass([Test] T t) {}");
-        assertParseOk("class FooClass { [Test] T t; }");
-        assertParseOk("class FooClass { Unit m([Test] T t) { }}");
-        assertParseOk("class FooClass { Unit m() { [Test] T t; }}");
-        assertParseOk("class FooClass { [Test] Unit m() { }}");
+        assertParse("[Test : \"value\"] class FooClass {} {}");
+        assertParse("[Test : \"value\"] [Test: Nil] class FooClass {} {}");
+        assertParse("[Test : \"value\", Test: Nil] class FooClass {} {}");
+        assertParse("[Test: 5] data Foo;");
+        assertParse("[Test2 : Pair(5, \"value\")] data Pair<A, B> = Pair(A, B);");
+        assertParse("[Test : 5] def Int constant() = 5;");
+        assertParse("[Test: Nil] def A constant<A>(A a) = a;");
+        assertParse("interface A { [Pre : x > 5] [Post : x > 0] Int method(Int x); }");
+        assertParse("interface A { [Pre : x > 5, Post : x > 0] Int method(Int x); }");
+        assertParse("class A { [Method : Testable] Int method(Int x) { return x; } }");
+        assertParse("class A { Int method(Int x) { [Value: Good] return x; } }");
+        assertParse("[Block: Init]{ Int x = 1; [Stmt: \"conditional\"] if (x == 1) [Branch: Then] x = 5; else [Branch: Else] x = -1; }");
+        assertParse("[Test] class FooClass {} {}");
+        assertParse("[\"value\"] class FooClass {} {}");
+        assertParse("class FooClass([Test] T t) {}");
+        assertParse("class FooClass { [Test] T t; }");
+        assertParse("class FooClass { Unit m([Test] T t) { }}");
+        assertParse("class FooClass { Unit m() { [Test] T t; }}");
+        assertParse("class FooClass { [Test] Unit m() { }}");
     }
 
     @Test
     public void testNAryConstructors() {
-        assertParseOk("{ List<Int> l = list[]; }");
-        assertParseOk("{ Set<String> s = set[\"one\", \"Two\", \"three\"]; }");
+        assertParse("{ List<Int> l = list[]; }");
+        assertParse("{ Set<String> s = set[\"one\", \"Two\", \"three\"]; }");
     }
 
     // comments
     @Test
     public void testComment() {
-        assertParseOk("// one line\n");
-        assertParseOk("/* Multi \n line \n comment */");
+        assertParse("// one line\n");
+        assertParse("/* Multi \n line \n comment */");
     }
 
     @Test
     public void testProg() {
-        assertParseOk("interface Foo {} \n interface Bar extends Bar1, Bar2 {} \n class FooClass implements Foo {} {}");
+        assertParse("interface Foo {} \n interface Bar extends Bar1, Bar2 {} \n class FooClass implements Foo {} {}");
     }
 
     @Test
     public void testAssignStmts() {
 
         for (String e : pureExp) {
-            assertParseOk("{ v = " + e + ";}");
-            assertParseOk("{ this.f = " + e + ";}");
+            assertParse("{ v = " + e + ";}");
+            assertParse("{ this.f = " + e + ";}");
         }
         for (String e : effExp) {
-            assertParseOk("{ v = " + e + ";}");
-            assertParseOk("{ this.f = " + e + ";}");
+            assertParse("{ v = " + e + ";}");
+            assertParse("{ this.f = " + e + ";}");
         }
         for (String e : eqExp) {
-            assertParseOk("{ v = " + e + ";}");
-            assertParseOk("{ this.f = " + e + ";}");
+            assertParse("{ v = " + e + ";}");
+            assertParse("{ this.f = " + e + ";}");
         }
 
         assertParseError("class A { A m() { this = null; return null;} }");
@@ -238,96 +245,96 @@ public class ParserTest extends FrontendTest {
         // any functional expression
         };
         for (String g : guards)
-            assertParseOk("{ await " + g + " ; }");
+            assertParse("{ await " + g + " ; }");
     }
 
     @Test
     public void testOtherStmts() {
         String[] otherStmt = { "skip ; ", "suspend ; ", "return e ; " };
         for (String s : otherStmt)
-            assertParseOk("{" + s + "}");
+            assertParse("{" + s + "}");
     }
 
     @Test
     public void testControlStmts() {
 
-        assertParseOk("{ if (x) y = True  ; }");
-        assertParseOk("{ if (x) y = True ; else y = False  ; }");
-        assertParseOk("{ if (x) { y = True ; z = False; }  else y = False  ; }");
-        assertParseOk("{ if (x) { if (y) skip ; else skip ; } else skip ; }");
-        assertParseOk("{ if (x) if (y) skip ; else skip ; else skip ; }");
-        assertParseOk("{ while (x) skip ;  }");
-        assertParseOk("{ while (x) { x = y ; skip ; } }");
-        assertParseOk("{ if (x) y = True ; else y = False  ; }");
-        assertParseOk("{ if (x) { y = True ; z = False; }  else y = False  ; }");
+        assertParse("{ if (x) y = True  ; }");
+        assertParse("{ if (x) y = True ; else y = False  ; }");
+        assertParse("{ if (x) { y = True ; z = False; }  else y = False  ; }");
+        assertParse("{ if (x) { if (y) skip ; else skip ; } else skip ; }");
+        assertParse("{ if (x) if (y) skip ; else skip ; else skip ; }");
+        assertParse("{ while (x) skip ;  }");
+        assertParse("{ while (x) { x = y ; skip ; } }");
+        assertParse("{ if (x) y = True ; else y = False  ; }");
+        assertParse("{ if (x) { y = True ; z = False; }  else y = False  ; }");
 
     }
 
     @Test
     public void testStmtBlock() {
-        assertParseOk("{ skip ; }");
+        assertParse("{ skip ; }");
         assertParseError(" { skip  }");
 
-        assertParseOk("{ x = y ; skip ; }");
+        assertParse("{ x = y ; skip ; }");
         assertParseError("{ x = y  skip  ; }");
 
-        assertParseOk("{ x = y ; y = z ; skip  ; }");
+        assertParse("{ x = y ; y = z ; skip  ; }");
 
-        assertParseOk("{ { x = y ; skip ; await x? ; } skip ; }");
-        assertParseOk("{ { x = y ; } skip ; }");
-        assertParseOk(" { { } { } { } }  ");
+        assertParse("{ { x = y ; skip ; await x? ; } skip ; }");
+        assertParse("{ { x = y ; } skip ; }");
+        assertParse(" { { } { } { } }  ");
 
     }
 
     @Test
     public void testStmtList() {
-        assertParseOk("{ x = null; x = y.get ; x = y ; } ");
+        assertParse("{ x = null; x = y.get ; x = y ; } ");
 
     }
 
     @Test
     public void moduleDeclQualName() {
-        assertParseOk("module ABS.Lang;");
+        assertParse("module ABS.Lang;");
     }
 
     @Test
     public void importQual() {
-        assertParseOk("import ABS.Test;");
+        assertParse("import ABS.Test;");
     }
 
     @Test
     public void importFrom() {
-        assertParseOk("import Test from ABS;");
+        assertParse("import Test from ABS;");
     }
 
     @Test
     public void importFromList() {
-        assertParseOk("import Test, Test2, fun from ABS;");
+        assertParse("import Test, Test2, fun from ABS;");
     }
 
     @Test
     public void importStarFrom() {
-        assertParseOk("import * from ABS;");
+        assertParse("import * from ABS;");
     }
 
     @Test
     public void exportQual() {
-        assertParseOk("export ABS.Test;");
+        assertParse("export ABS.Test;");
     }
 
     @Test
     public void exportSimple() {
-        assertParseOk("export Test;");
+        assertParse("export Test;");
     }
 
     @Test
     public void exportList() {
-        assertParseOk("export Test, fun;");
+        assertParse("export Test, fun;");
     }
 
     @Test
     public void exportStar() {
-        assertParseOk("export *;");
+        assertParse("export *;");
     }
 
     @Test
@@ -351,7 +358,7 @@ public class ParserTest extends FrontendTest {
 
     @Test
     public void ticket238() throws Exception{
-        assertParseOk("module T238; delta D; productline P; features F,G; delta D when F && (! G);");
+        assertParse("module T238; delta D; productline P; features F,G; delta D when F && (! G);");
         // fails because logical connectives apart from && are not implemented yet...
     }
 
@@ -377,36 +384,36 @@ public class ParserTest extends FrontendTest {
     @Test
     public void partialFunctionDecl() {
         // fun_exp = IDENTIFIER
-        assertParseOk("def Int inc()(Int x) = x;");
-        assertParseOk("def Int inc(f_1)(Int x) = x;");
-        assertParseOk("def Int inc(f_1, f_2)(Int x) = x;");
-        assertParseOk("def Datatype fn()(Int x , Int y) = x;");
+        assertParse("def Int inc()(Int x) = x;");
+        assertParse("def Int inc(f_1)(Int x) = x;");
+        assertParse("def Int inc(f_1, f_2)(Int x) = x;");
+        assertParse("def Datatype fn()(Int x , Int y) = x;");
 
         // fun_exp = Term(co,l)
-        assertParseOk("def Int inc()(Int x) = plus(x,one());");
+        assertParse("def Int inc()(Int x) = plus(x,one());");
 
         // fun_exp = f_1(x)
-        assertParseOk("def Int apply(f_1)(Int x) = f_1(x);");
+        assertParse("def Int apply(f_1)(Int x) = f_1(x);");
 
         // fun_exp = Term(f_1(x))
-        assertParseOk("def Int applyAndInc(f_1)(Int x) = plus(f_1(x), one());");
+        assertParse("def Int applyAndInc(f_1)(Int x) = plus(f_1(x), one());");
 
-        assertParseOk("def TPair revPair(f_1)(TPair p) = pair(snd(f_1(p)),fst(p));");
+        assertParse("def TPair revPair(f_1)(TPair p) = pair(snd(f_1(p)),fst(p));");
         // using let
-        assertParseOk("def TPair revPair()(TPair p) = let(T x) = fst(p) in pair(snd(p),x);");
-        assertParseOk("def TPair revPair(f_1)(TPair p) = let(T x) = f_1(fst(p)) in pair(snd(p),x);");
-        assertParseOk("def TPair revPair(f_1)(TPair p) = let(T x) = fst(p) in pair(f_1(snd(p)),x);");
+        assertParse("def TPair revPair()(TPair p) = let(T x) = fst(p) in pair(snd(p),x);");
+        assertParse("def TPair revPair(f_1)(TPair p) = let(T x) = f_1(fst(p)) in pair(snd(p),x);");
+        assertParse("def TPair revPair(f_1)(TPair p) = let(T x) = fst(p) in pair(f_1(snd(p)),x);");
         // using nested let
-        assertParseOk("def TPair revPair()(TPair p) = let(T x) = fst(p) in let(T y) = snd(p) in pair(y,x);");
-        assertParseOk("def TPair revPair(f_1)(TPair p) = let(T x) = fst(p) in let(T y) = f_1(snd(p)) in pair(y,x);");
-        assertParseOk("def TPair revPair(f_1)(TPair p) = let(T x) = fst(p) in let(T y) = snd(p) in pair(f_1(y),x);");
+        assertParse("def TPair revPair()(TPair p) = let(T x) = fst(p) in let(T y) = snd(p) in pair(y,x);");
+        assertParse("def TPair revPair(f_1)(TPair p) = let(T x) = fst(p) in let(T y) = f_1(snd(p)) in pair(y,x);");
+        assertParse("def TPair revPair(f_1)(TPair p) = let(T x) = fst(p) in let(T y) = snd(p) in pair(f_1(y),x);");
     }
 
     @Test
     public void parametricPartialFunctionDecl() {
-        assertParseOk("def Int length<A>(f_1)(List<A> list) = case list { Nil => 0; Cons(_, rest) => 1 + length(rest); };");
-        assertParseOk("def Int length<A>(inc, dec)(List<A> list) = case list { Nil => 0; Cons(_, rest) => inc(dec(1)) + length(rest); };");
-        assertParseOk("def A nth<A>(f_1)(List<A> list) = case n { 0 => head(list) ; _ => nth(tail(list), n-1) ; };");
+        assertParse("def Int length<A>(f_1)(List<A> list) = case list { Nil => 0; Cons(_, rest) => 1 + length(rest); };");
+        assertParse("def Int length<A>(inc, dec)(List<A> list) = case list { Nil => 0; Cons(_, rest) => inc(dec(1)) + length(rest); };");
+        assertParse("def A nth<A>(f_1)(List<A> list) = case n { 0 => head(list) ; _ => nth(tail(list), n-1) ; };");
     }
 
     @Test
@@ -425,14 +432,14 @@ public class ParserTest extends FrontendTest {
 
     @Test
     public void callPartialFunction() {
-        assertParseOk("{ f()(); }");
-        assertParseOk("{ f_1()(); }");
-        assertParseOk("{ f()(x); }");
-        assertParseOk("{ f()(g(x)); }");
-        assertParseOk("{ f()(x, y); }");
-        assertParseOk("{ f(g)(); }");
-        assertParseOk("{ f(g, h)(); }");
-        assertParseOk("{ f(some_func, other_func)(); }");
+        assertParse("{ f()(); }");
+        assertParse("{ f_1()(); }");
+        assertParse("{ f()(x); }");
+        assertParse("{ f()(g(x)); }");
+        assertParse("{ f()(x, y); }");
+        assertParse("{ f(g)(); }");
+        assertParse("{ f(g, h)(); }");
+        assertParse("{ f(some_func, other_func)(); }");
     }
 
     @Test
@@ -446,19 +453,19 @@ public class ParserTest extends FrontendTest {
 
     @Test
     public void anonymousFunction() {
-        assertParseOk("{ f((Int i) => i)(); }");
-        assertParseOk("{ f((Int i) => i + 1)(); }");
-        assertParseOk("{ f((Int i) => inc(i))(); }");
-        assertParseOk("{ f((Int i) => 0)(); }");
-        assertParseOk("{ f(() => 0)(); }");
-        assertParseOk("{ f((Int i) => i)(); }");
-        assertParseOk("{ f((Int i, Int j) => i + j)(); }");
+        assertParse("{ f((Int i) => i)(); }");
+        assertParse("{ f((Int i) => i + 1)(); }");
+        assertParse("{ f((Int i) => inc(i))(); }");
+        assertParse("{ f((Int i) => 0)(); }");
+        assertParse("{ f(() => 0)(); }");
+        assertParse("{ f((Int i) => i)(); }");
+        assertParse("{ f((Int i, Int j) => i + j)(); }");
     }
 
     @Test
     public void multipleAnonymousFunctions() {
-        assertParseOk("{ f((Int i) => i, (Int j) => j)(); }");
-        assertParseOk("{ f((Int i) => i, inc)(); }");
+        assertParse("{ f((Int i) => i, (Int j) => j)(); }");
+        assertParse("{ f((Int i) => i, inc)(); }");
     }
 
     @Test

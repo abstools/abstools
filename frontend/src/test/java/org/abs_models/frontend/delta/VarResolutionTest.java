@@ -18,16 +18,14 @@ public class VarResolutionTest extends DeltaTest {
 
     @Test
     public void fromAddFieldModifierToCoreTest() {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C {"
-                + "Int x = 0;"
-                + "}"
-                + "delta D; uses M;"
-                + "modifies class C {"
-                + "adds Int y = x;"
-                + "}"
-        );
+        Model model = assertParse("module M;"
+            + "class C {"
+            + "Int x = 0;"
+            + "}"
+            + "delta D; uses M;"
+            + "modifies class C {"
+            + "adds Int y = x;"
+            + "}");
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(0);
         AddFieldModifier mod = (AddFieldModifier) mmod.getModifier(0);
@@ -38,16 +36,14 @@ public class VarResolutionTest extends DeltaTest {
 
     @Test
     public void fromAddFieldModifierToCoreTest2() {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C {"
-                + "Int x = 0;"
-                + "}"
-                + "delta D;uses M;"
-                + "modifies class C {"
-                + "adds Int y = x;"
-                + "}"
-        );
+        Model model = assertParse("module M;"
+            + "class C {"
+            + "Int x = 0;"
+            + "}"
+            + "delta D;uses M;"
+            + "modifies class C {"
+            + "adds Int y = x;"
+            + "}");
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(0);
         mmod.apply();
@@ -58,16 +54,14 @@ public class VarResolutionTest extends DeltaTest {
     }
     @Test
     public void fromAddMethodModifierToCoreTest() {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C {"
-                + "Int x = 0;"
-                + "}"
-                + "delta D;uses M;"
-                + "modifies class C {"
-                + "adds Int getX() { return x; }"
-                + "}"
-        );
+        Model model = assertParse("module M;"
+            + "class C {"
+            + "Int x = 0;"
+            + "}"
+            + "delta D;uses M;"
+            + "modifies class C {"
+            + "adds Int getX() { return x; }"
+            + "}");
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(0);
         DeltaTraitModifier mod = (DeltaTraitModifier) mmod.getModifier(0);
@@ -79,17 +73,15 @@ public class VarResolutionTest extends DeltaTest {
 
     @Test
     public void fromModifyMethodModifierToCoreTest() {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C {"
-                + "Int x = 0;"
-                + "Int getX() { }"
-                + "}"
-                + "delta D;uses M;"
-                + "modifies class C {"
-                + "modifies Int getX() { return x; }"
-                + "}"
-                );
+        Model model = assertParse("module M;"
+            + "class C {"
+            + "Int x = 0;"
+            + "Int getX() { }"
+            + "}"
+            + "delta D;uses M;"
+            + "modifies class C {"
+            + "modifies Int getX() { return x; }"
+            + "}");
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(0);
         DeltaTraitModifier mod = (DeltaTraitModifier) mmod.getModifier(0);
@@ -101,15 +93,13 @@ public class VarResolutionTest extends DeltaTest {
     
     @Test
     public void fromModifierToSameClassModifierTest() {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C { }"
-                + "delta D;uses M;"
-                + "modifies class C {"
-                + "adds Int x = 0;"
-                + "adds Int getX() { return x; }"
-                + "}"
-                );
+        Model model = assertParse("module M;"
+            + "class C { }"
+            + "delta D;uses M;"
+            + "modifies class C {"
+            + "adds Int x = 0;"
+            + "adds Int getX() { return x; }"
+            + "}");
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(0);
         DeltaTraitModifier mod = (DeltaTraitModifier) mmod.getModifier(1);
@@ -121,18 +111,16 @@ public class VarResolutionTest extends DeltaTest {
 
     @Test
     public void fromModifierToOtherModifyClassModifierTest() {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C { }"
-                + "delta D;"
-                + "uses M;"
-                + "modifies class C {"
-                + "adds Int x = 0;"
-                + "}"
-                + " modifies class C {"
-                + "adds Int getX() { return x; }"
-                + "}"
-                );
+        Model model = assertParse("module M;"
+            + "class C { }"
+            + "delta D;"
+            + "uses M;"
+            + "modifies class C {"
+            + "adds Int x = 0;"
+            + "}"
+            + " modifies class C {"
+            + "adds Int getX() { return x; }"
+            + "}");
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(1);
         DeltaTraitModifier mod = (DeltaTraitModifier) mmod.getModifier(0);
@@ -144,18 +132,16 @@ public class VarResolutionTest extends DeltaTest {
 
     @Test
     public void fromModifierToOtherAddClassModifierTest() {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D;"
-                + "uses M;"
-                + "adds class C {"
-                + "Int x = 0;"
-                + "}"
-                
-                + "modifies class C {"
-                + "adds Int getX() { return x; }"
-                + "}"
-                );
+        Model model = assertParse("module M;"
+            + "delta D;"
+            + "uses M;"
+            + "adds class C {"
+            + "Int x = 0;"
+            + "}"
+
+            + "modifies class C {"
+            + "adds Int getX() { return x; }"
+            + "}");
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(1);
         DeltaTraitModifier mod = (DeltaTraitModifier) mmod.getModifier(0);
@@ -167,17 +153,15 @@ public class VarResolutionTest extends DeltaTest {
 
     @Test
     public void nonFieldTest() {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C {"
-                + "Int x = 0;"
-                + "}"
-                + "delta D;"
-                + "uses M;"
-                + "modifies class C {"
-                + "adds Int getX() { Int x = 17; return x; }"
-                + "}"
-        );
+        Model model = assertParse("module M;"
+            + "class C {"
+            + "Int x = 0;"
+            + "}"
+            + "delta D;"
+            + "uses M;"
+            + "modifies class C {"
+            + "adds Int getX() { Int x = 17; return x; }"
+            + "}");
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(0);
         DeltaTraitModifier mod = (DeltaTraitModifier) mmod.getModifier(0);

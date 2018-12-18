@@ -17,12 +17,10 @@ import static org.junit.Assert.*;
 public class AddRemoveModifyClassesTest extends DeltaTest {
     @Test
     public void addClass() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D; uses M;"
-                + "adds class C1(String s) {}"
-                + "adds class C2(String s) {}"
-        );
+        Model model = assertParse("module M;"
+            + "delta D; uses M;"
+            + "adds class C1(String s) {}"
+            + "adds class C2(String s) {}");
 
         DeltaDecl delta = findDelta(model, "D");
         assertNotNull(delta);
@@ -41,12 +39,10 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
 
     @Test
     public void removeClass() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C {}"
-                + "delta D;"
-                + "removes class M.C;"
-        );
+        Model model = assertParse("module M;"
+            + "class C {}"
+            + "delta D;"
+            + "removes class M.C;");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertNotNull(cls);
@@ -60,14 +56,12 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
 
     @Test
     public void addField() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C {}"
-                + "delta D;"
-                + "modifies class M.C {"
-                + "    adds String myField = \"hello\";"
-                + "}"
-        );
+        Model model = assertParse("module M;"
+            + "class C {}"
+            + "delta D;"
+            + "modifies class M.C {"
+            + "    adds String myField = \"hello\";"
+            + "}");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertNotNull(cls);
@@ -82,12 +76,10 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
 
     @Test
     public void removeField() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C { String myField = \"hello\"; } "
-                + "delta D;"
-                + "modifies class M.C { removes String myField; }"
-        );
+        Model model = assertParse("module M;"
+            + "class C { String myField = \"hello\"; } "
+            + "delta D;"
+            + "modifies class M.C { removes String myField; }");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertNotNull(cls);
@@ -103,14 +95,12 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
     @Test
     public void modifyField() throws DeltaModellingException {
         // remove and re-add field with different type
-        Model model = assertParseOk(
-                "module M; "
-                + "class C { String f; Unit m() { f = \"Hello\"; } } "
-                + "delta D1; "
-                + "modifies class M.C { removes String f; }"
-                + "delta D2; "
-                + "modifies class M.C { adds Int f; modifies Unit m() { f = 99; } }"
-        );
+        Model model = assertParse("module M; "
+            + "class C { String f; Unit m() { f = \"Hello\"; } } "
+            + "delta D1; "
+            + "modifies class M.C { removes String f; }"
+            + "delta D2; "
+            + "modifies class M.C { adds Int f; modifies Unit m() { f = 99; } }");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         DeltaDecl d1 = findDelta(model, "D1");
@@ -124,12 +114,10 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
 
     @Test
     public void addMethod() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C {}"
-                + "delta D;"
-                + "modifies class M.C { adds Unit myMethod() {} }"
-        );
+        Model model = assertParse("module M;"
+            + "class C {}"
+            + "delta D;"
+            + "modifies class M.C { adds Unit myMethod() {} }");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertNotNull(cls);
@@ -144,12 +132,10 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
 
     @Test
     public void removeMethod() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C { Unit myMethod() {} }"
-                + "delta D;"
-                + "modifies class M.C { removes Unit myMethod(); }"
-        );
+        Model model = assertParse("module M;"
+            + "class C { Unit myMethod() {} }"
+            + "delta D;"
+            + "modifies class M.C { removes Unit myMethod(); }");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertNotNull(cls);
@@ -164,14 +150,12 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
 
     @Test
     public void modifyMethod() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C { Int myField = 0; Unit myMethod() {} } "
-                + "delta D;"
-                + "modifies class M.C {"
-                + "    modifies Unit myMethod() { myField = 1; }"
-                + "}"
-        );
+        Model model = assertParse("module M;"
+            + "class C { Int myField = 0; Unit myMethod() {} } "
+            + "delta D;"
+            + "modifies class M.C {"
+            + "    modifies Unit myMethod() { myField = 1; }"
+            + "}");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertNotNull(cls);

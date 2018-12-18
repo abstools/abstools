@@ -32,21 +32,21 @@ public class PrettyPrinterTests extends ABSTest {
     @Test
     public void prettyPrinterModifyInterfaceModifierTest() throws Exception{
         String deltaDecl = "delta Foo;modifies interface X{removes Int fooMethod();adds Int fooMethod();}";
-        Model m = assertParseOk(deltaDecl, Config.WITHOUT_MODULE_NAME);
+        Model m = assertParse(deltaDecl, Config.WITHOUT_MODULE_NAME);
         assertEquals("deltaFoo;modifiesinterfaceX{removesIntfooMethod();addsIntfooMethod();}", replaceWhitespaceChars(prettyPrint(m)));
     }
     
     @Test
     public void prettyPrinterListLiteralTest() throws Exception {
         String ms = "module Test; { List<Int> x = list[1, 2, 3]; }";
-        Model m = assertParseOk(ms, Config.WITHOUT_MODULE_NAME);
+        Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME);
         assertEquals("moduleTest;{List<Int>x=list[1,2,3];}", replaceWhitespaceChars(prettyPrint(m)));
     }
 
     @Test
     public void prettyPrinterFloatLiteralTest() throws Exception {
         String ms = "module Test; { Float x = 3.1415927; }";
-        Model m = assertParseOk(ms, Config.WITHOUT_MODULE_NAME);
+        Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME);
         assertEquals("moduleTest;{Floatx=3.1415927;}", replaceWhitespaceChars(prettyPrint(m)));
     }
 

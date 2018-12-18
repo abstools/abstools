@@ -158,7 +158,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void ticket414_futNeedsDataType1() {
-        Model m = assertParseOk("module M; interface I {} { Fut<I> fi; }");
+        Model m = assertParse("module M; interface I {} { Fut<I> fi; }");
         assertFalse(m.hasErrors());
         Block b = m.getMainBlock();
         assertNotNull(b);
@@ -174,7 +174,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void ticket414_futNeedsDataType2() {
-        Model m = assertParseOk("module M; data I = I; { Fut<I> fi; }");
+        Model m = assertParse("module M; data I = I; { Fut<I> fi; }");
         assertFalse(m.hasErrors());
         Block b = m.getMainBlock();
         assertNotNull(b);
@@ -467,7 +467,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void methodSigs() {
-        Model m = assertParseOk("interface I { Unit m(); } interface J { Unit n(); } interface K extends I, J { Unit foo(); } { K k; } ");
+        Model m = assertParse("interface I { Unit m(); } interface J { Unit n(); } interface K extends I, J { Unit foo(); } { K k; } ");
         ModuleDecl module = m.lookupModule("UnitTest");
         InterfaceDecl d = (InterfaceDecl) module.getDecl(2);
         ArrayList<MethodSig> list = new ArrayList<>(d.getAllMethodSigs());
@@ -494,7 +494,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void test_Movecogto1() {
-        Model m = assertParseOk("class C { Unit do() { movecogto 1; }}");
+        Model m = assertParse("class C { Unit do() { movecogto 1; }}");
         SemanticConditionList errs = m.typeCheck();
         assertTrue(m.hasTypeErrors());
         Assert.assertEquals(ErrorMessage.EXPECTED_DC, errs.getFirstError().msg);
