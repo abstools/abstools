@@ -4,7 +4,8 @@
  */
 package org.abs_models.frontend.delta;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.analyser.ErrorMessage;
@@ -78,7 +79,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "    features F;"
                 + "    delta D(F.a, F.b) when F;"
                 + "product P1( F{a=True, b=3} );"
-                , Config.WITH_STD_LIB, Config.TYPE_CHECK
+                , Config.TYPE_CHECK
         );
 
         model.evaluateAllProductDeclarations();
@@ -153,7 +154,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "productline PL;"
                 + "    features F; delta D(F.a) when F;"
                 + "product P1( F{a=3} );"
-                , Config.WITH_STD_LIB, Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR
+                , Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR
         );
         assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirstError().msg);
     }
@@ -168,7 +169,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "productline PL;"
                 + "    features F; delta D(3) when F;"
                 + "product P1( F );"
-                , Config.WITH_STD_LIB, Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR
+                , Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR
         );
         assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirstError().msg);
     }
@@ -183,7 +184,6 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "productline PL;"
                 + "    features F; delta D(F.a) when F;"
                 + "product P1( F{a=3} );"
-                , Config.WITH_STD_LIB
         );
         
         model.evaluateAllProductDeclarations();

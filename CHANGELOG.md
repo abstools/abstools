@@ -52,6 +52,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
+- The command-line option `-nostdlib` was removed.  This never produced models that were runnable, and tools which don't handle the standard library  can ignore any modules starting with `ABS.`.  To make sure that a given module does not inadvertently use the standard library, import an identifier (e.g., `import Unit from ABS.StdLib`) and do not use that imported identifier inside the module.
+
 - BBEdit editor support moved to github.com/abstools/bbedit.
 
 - Removed the old Creol-style negation operator (`~`) which was kept in the parser for backward compatibility.

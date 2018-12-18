@@ -4,12 +4,20 @@
  */
 package org.abs_models.backend.java;
 
-import java.io.*;
-import java.util.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static org.junit.Assert.*;
 
 import org.abs_models.ABSTest;
 import org.abs_models.backend.java.codegeneration.JavaCode;
@@ -52,10 +60,6 @@ public class JavaBackendTest extends ABSTest {
         return new ABSRuntime();
     }
 
-    void assertValidStdLib(String absCode) throws Exception {
-        assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, Config.WITH_STD_LIB, Config.WITHOUT_MODULE_NAME));
-    }
-
     void assertValid(String absCode) throws Exception {
         assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, Config.WITHOUT_MODULE_NAME));
     }
@@ -75,7 +79,7 @@ public class JavaBackendTest extends ABSTest {
      * compiles and executes the given code
      * ABS assertions can be used to check the result
      */
-    protected void assertValidJavaExecution(String absFile, boolean useStdLib) throws Exception {
+    protected void assertValidJavaExecution(String absFile) throws Exception {
         FileReader fileReader = new FileReader(absFile);
         BufferedReader bufferedReader = new BufferedReader(fileReader);
         List<String> lines = new ArrayList<>();
@@ -84,16 +88,16 @@ public class JavaBackendTest extends ABSTest {
             lines.add(line);
         }
         bufferedReader.close();
-        assertValidJavaExecution(useStdLib, lines.toArray(new String[lines.size()]));
+        assertValidJavaExecution(lines.toArray(new String[lines.size()]));
     }
 
-    void assertValidJavaExecution(boolean withStdLib, String ... codeLines) throws Exception {
+    void assertValidJavaExecution(String ... codeLines) throws Exception {
         StringBuilder absCode = new StringBuilder();
         for (String line : codeLines) {
             absCode.append(line);
             absCode.append("\n");
         }
-        JavaCode javaCode = getJavaCode(absCode.toString(), withStdLib ? Config.WITH_STD_LIB : null);
+        JavaCode javaCode = getJavaCode(absCode.toString());
         try {
             String genDir = javaCode.getSrcDir().getAbsolutePath()+"/gen/test";
             javaCode.compile("-classpath", LIB_CLASSPATH, "-d", genDir);
@@ -215,10 +219,6 @@ public class JavaBackendTest extends ABSTest {
         Model model = null;
         String code = null;
         code = absCode;
-        // if (withStdLib)
-        // code =
-        // "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; "
-        // + code;
         final int len = config.length;
         Config[] c2 = new Config[len+2];
         for (int i =0; i<len; i++) {
@@ -254,7 +254,7 @@ public class JavaBackendTest extends ABSTest {
     }
 
     public void assertEvalEquals(String absCode, boolean value) throws Exception {
-        JavaCode javaCode = getJavaCode(absCode, Config.WITH_STD_LIB);
+        JavaCode javaCode = getJavaCode(absCode);
         if (DEBUG)
             System.err.println(javaCode);
         boolean res = runJavaAndTestResult(javaCode, false);
@@ -265,7 +265,7 @@ public class JavaBackendTest extends ABSTest {
     }
 
     public void assertEvalFails(String absCode) throws Exception {
-        JavaCode javaCode = getJavaCode(absCode, Config.WITH_STD_LIB);
+        JavaCode javaCode = getJavaCode(absCode);
         try {
             runJavaAndTestResult(javaCode, true);
             System.err.println(javaCode);

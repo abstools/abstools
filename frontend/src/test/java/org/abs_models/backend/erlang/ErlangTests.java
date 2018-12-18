@@ -19,7 +19,7 @@ public class ErlangTests extends ABSTest {
     public void assertEvalTrue(File f) {
         Model m;
         try {
-            m = ABSTest.assertParseFileOk(f.getPath(), Config.WITH_STD_LIB);
+            m = ABSTest.assertParseFileOk(f.getPath());
             assertNotNull(m.lookupModule("BackendTest"));
             assertFalse(m.hasParserErrors());
             assertFalse(m.hasTypeErrors());

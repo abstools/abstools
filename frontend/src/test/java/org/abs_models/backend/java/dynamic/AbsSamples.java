@@ -46,7 +46,7 @@ public class AbsSamples extends JavaBackendDynamicTest {
 
     @Test
     public void test() throws Exception {
-        assertValidJavaExecution(fileName, true);
+        assertValidJavaExecution(fileName);
         // JavaCode code = getJavaCode(readAbsFile(dir + s + file), true);
         // assertEvalTrue(readAbsFile(dir + s + file));
     }

@@ -51,10 +51,6 @@ public class ParseSamplesTest extends FrontendTest {
 
     @Test
     public void test() throws Exception {
-        m = parse(input);
-    }
-
-    protected Model parse(String input) throws Exception {
-        return assertParseFileOk(input, true);
+        m = assertParseFileOk(input);
     }
 }

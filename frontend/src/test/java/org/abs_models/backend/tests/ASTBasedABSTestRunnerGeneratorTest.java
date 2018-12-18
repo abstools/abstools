@@ -6,7 +6,10 @@ package org.abs_models.backend.tests;
 
 import static org.abs_models.backend.tests.ReflectionUtils.getField;
 import static org.abs_models.backend.tests.ReflectionUtils.setField;
+import static org.hamcrest.CoreMatchers.both;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.everyItem;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertEquals;
@@ -15,9 +18,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.hamcrest.CoreMatchers.both;
-import static org.hamcrest.CoreMatchers.everyItem;
-import static org.hamcrest.CoreMatchers.hasItem;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -30,7 +30,9 @@ import java.util.Set;
 
 import org.abs_models.frontend.analyser.SemanticCondition;
 import org.abs_models.frontend.analyser.SemanticConditionList;
+import org.abs_models.frontend.ast.ClassDecl;
 import org.abs_models.frontend.ast.InterfaceDecl;
+import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.ast.ModuleDecl;
 import org.abs_models.frontend.parser.Main;
 import org.abs_models.frontend.parser.ParserError;
@@ -38,9 +40,6 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.Test;
-
-import org.abs_models.frontend.ast.ClassDecl;
-import org.abs_models.frontend.ast.Model;
 
 /**
  * Unit tests for {@link ASTBasedABSTestRunnerGenerator}
@@ -208,7 +207,7 @@ public class ASTBasedABSTestRunnerGeneratorTest {
                 generator);
         
         try {
-            model = Main.parseString(ABS_UNIT, true);
+            model = Main.parseString(ABS_UNIT);
             generator = new ASTBasedABSTestRunnerGenerator(model);
             
             assertMatches(model, 
@@ -216,7 +215,7 @@ public class ASTBasedABSTestRunnerGeneratorTest {
                     equalTo(EMPTY_MAP), Boolean.TRUE,
                     generator);
             
-            model = Main.parseString(ABS_UNIT + TEST_CODE, true);
+            model = Main.parseString(ABS_UNIT + TEST_CODE);
             generator = new ASTBasedABSTestRunnerGenerator(model);
             
             assertMatches(model, 
@@ -246,7 +245,7 @@ public class ASTBasedABSTestRunnerGeneratorTest {
     public final void testGenerateTestRunner() {
         final Model model;
         try {
-            model = Main.parseString(ABS_UNIT + TEST_CODE, true);
+            model = Main.parseString(ABS_UNIT + TEST_CODE);
         } catch (Exception e) {
             throw new IllegalStateException("Cannot parse test code",e);
         }
@@ -258,7 +257,7 @@ public class ASTBasedABSTestRunnerGeneratorTest {
         String runner = stream.toString();
         
         try {
-            Model result = Main.parseString(ABS_UNIT + TEST_CODE + runner, true);
+            Model result = Main.parseString(ABS_UNIT + TEST_CODE + runner);
             
             StringBuilder parseErrors = new StringBuilder();
             if (result.hasParserErrors()) {

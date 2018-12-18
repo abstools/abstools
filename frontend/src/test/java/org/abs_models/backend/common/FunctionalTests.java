@@ -10,7 +10,6 @@ import static org.junit.Assume.assumeFalse;
 import java.io.File;
 
 import org.abs_models.ABSTest;
-import org.abs_models.ABSTest.Config;
 import org.abs_models.backend.BackendTestDriver;
 import org.abs_models.frontend.ast.Model;
 import org.junit.Test;
@@ -367,7 +366,7 @@ public class FunctionalTests extends SemanticTests {
     @Test
     public void patternVarRew() throws Exception {
         String fileName = "abssamples/PVTest.abs";
-        Model m = ABSTest.assertParseFileOk(fileName, Config.WITH_STD_LIB);
+        Model m = ABSTest.assertParseFileOk(fileName);
         // TODO: Pull up
         // XXX WTF?! assertFalse(m.hasParserErrors());
         m.flattenForProduct("Foo");

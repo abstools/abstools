@@ -189,7 +189,7 @@ public class VarResolutionTest extends DeltaTest {
     
     @Test
     public void defUseMultipleFiles() throws Exception {
-    Model m = this.assertParseFilesOk(new HashSet<String>() {{ add("abssamples/deltas/defuse/def.abs"); add("abssamples/deltas/defuse/use.abs");}}, true);
+    Model m = this.assertParseFilesOk(new HashSet<String>() {{ add("abssamples/deltas/defuse/def.abs"); add("abssamples/deltas/defuse/use.abs");}});
     m.collapseTraitModifiers();
     m.evaluateAllProductDeclarations();  
     m.flushCache();

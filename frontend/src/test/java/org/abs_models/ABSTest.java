@@ -4,6 +4,11 @@
  */
 package org.abs_models;
 
+import static org.abs_models.ABSTest.Config.EXPECT_PARSE_ERROR;
+import static org.abs_models.ABSTest.Config.EXPECT_TYPE_ERROR;
+import static org.abs_models.ABSTest.Config.TYPE_CHECK;
+import static org.abs_models.ABSTest.Config.WITHOUT_MODULE_NAME;
+import static org.abs_models.ABSTest.Config.WITH_LOC_INF;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -11,21 +16,18 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Set;
 
-import org.abs_models.frontend.analyser.SemanticCondition;
-import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.WrongProgramArgumentException;
+import org.abs_models.frontend.analyser.SemanticCondition;
+import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.parser.Main;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 
-import static org.abs_models.ABSTest.Config.*;
-
 public class ABSTest {
     public static enum Config {
         NONE,
-        WITH_STD_LIB,
         WITHOUT_MODULE_NAME,
         WITH_LOC_INF,
         EXPECT_PARSE_ERROR,
@@ -85,12 +87,11 @@ public class ABSTest {
     protected Model assertParse(String s, Config... config) {
 
         String preamble = "module UnitTest; export *; ";
-        if (isSet(WITH_STD_LIB, config))
-            preamble = preamble + " import * from ABS.StdLib;";
+        preamble = preamble + " import * from ABS.StdLib;";
         if (!isSet(WITHOUT_MODULE_NAME, config))
             s = preamble + s;
         try {
-            Model p = Main.parseString(s, isSet(WITH_STD_LIB, config));
+            Model p = Main.parseString(s);
 
             if (isSet(EXPECT_PARSE_ERROR,config)) {
                 if (!p.hasParserErrors())
@@ -140,8 +141,7 @@ public class ABSTest {
     static public Model assertParseFileOk(String fileName, Config... config) throws IOException,
         WrongProgramArgumentException, InternalBackendException, DeltaModellingException {
         Main main = new Main();
-        main.setWithStdLib(isSet(WITH_STD_LIB,config));
-        Model m = main.parseFiles(false, isSet(WITH_STD_LIB,config), resolveFileName(fileName));
+        Model m = main.parseFiles(false, resolveFileName(fileName));
         main.analyzeFlattenAndRewriteModel(m);
         m.evaluateAllProductDeclarations();
         return assertParseModelOk(m, config);
@@ -149,9 +149,8 @@ public class ABSTest {
 
     protected Model assertParseFilesOk(Set<String> fileNames, Config... config) throws IOException, InternalBackendException {
         Main main = new Main();
-        main.setWithStdLib(isSet(WITH_STD_LIB,config));
         String[] filenameArray = fileNames.stream().map(f -> resolveFileName(f)).toArray(String[]::new);
-        Model m = main.parseFiles(false, isSet(WITH_STD_LIB,config), filenameArray);
+        Model m = main.parseFiles(false, filenameArray);
         return assertParseModelOk(m, config);
     }
 

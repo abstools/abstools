@@ -4,79 +4,84 @@
  */
 package org.abs_models.frontend.analyser;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.ASTNode;
+import org.abs_models.frontend.ast.AwaitAsyncCall;
+import org.abs_models.frontend.ast.ClassDecl;
+import org.abs_models.frontend.ast.DeltaDecl;
+import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.ReturnStmt;
 import org.abs_models.frontend.ast.Stmt;
+import org.abs_models.frontend.ast.VarDeclStmt;
 import org.abs_models.frontend.tests.ABSFormatter;
 import org.abs_models.frontend.tests.EmptyFormatter;
 import org.abs_models.frontend.typechecker.DataTypeType;
 import org.abs_models.frontend.typechecker.Type;
 import org.junit.Test;
 
-import org.abs_models.frontend.FrontendTest;
-import org.abs_models.frontend.ast.AwaitAsyncCall;
-import org.abs_models.frontend.ast.ClassDecl;
-import org.abs_models.frontend.ast.DeltaDecl;
-import org.abs_models.frontend.ast.Model;
-import org.abs_models.frontend.ast.ReturnStmt;
-import org.abs_models.frontend.ast.VarDeclStmt;
-
 public class OtherAnalysisTests extends FrontendTest {
 
     @Test
     public void countCOG() {
         Model m = assertParseOk("interface I { } class C { { I i = new C(); } Unit m() { I i = new C(); } } { I i; i = new C(); i = new local C(); while (true) { i = new C(); }}");
-        assertEquals(4, m.getNumberOfNewCogExpr());
+        // 4 from the sample code, 1 from the standard library
+        assertEquals(5, m.getNumberOfNewCogExpr());
     }
 
     @Test
     public void finalTest() {
-        assertParse("interface I { } { [Final] I i; i = null; }", Config.TYPE_CHECK, Config.WITH_STD_LIB, Config.EXPECT_TYPE_ERROR);
+        assertParse("interface I { } { [Final] I i; i = null; }", Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR);
     }
 
     @Test
     public void atomicTestFail1() {
         // await / get in atomic method
         assertParse("interface I {[Atomic] Unit n();} class C implements I {[Atomic] Unit n() {await this!n();}}",
-                    Config.TYPE_CHECK, Config.WITH_STD_LIB, Config.EXPECT_TYPE_ERROR);
+                    Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR);
     }
 
     @Test
     public void atomicTestFail2() {
         // suspend in atomic method
         assertParse("interface I {[Atomic] Unit n();} class C implements I {[Atomic] Unit n() {suspend;}}",
-                    Config.TYPE_CHECK, Config.WITH_STD_LIB, Config.EXPECT_TYPE_ERROR);
+                    Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR);
     }
 
     @Test
     public void atomicTestFail3() {
         // synccall to non-atomic method
         assertParse("interface I {Unit m(); [Atomic] Unit n();} class C implements I {Unit m() { skip; } [Atomic] Unit n() {this.m();}}",
-                    Config.TYPE_CHECK, Config.WITH_STD_LIB, Config.EXPECT_TYPE_ERROR);
+                    Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR);
     }
 
     @Test
     public void atomicTestOk1() {
         // synccall to atomic method
         assertParse("interface I { [Atomic] Unit n();} class C implements I { [Atomic] Unit n() {this.n();}}",
-                    Config.TYPE_CHECK, Config.WITH_STD_LIB);
+                    Config.TYPE_CHECK);
     }
 
     @Test
     public void atomicTestOk2() {
         // non-synccall to non-atomic method
         assertParse("interface I {Unit m(); [Atomic] Unit n();} class C implements I {Unit m() { skip; } [Atomic] Unit n() {this!m();}}",
-                    Config.TYPE_CHECK, Config.WITH_STD_LIB);
+                    Config.TYPE_CHECK);
     }
 
     @Test
     public void fullcopyTest() {
-        Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
+        Model m = assertParseOk("module M; class C {}");
         Model m2 = m.treeCopyNoTransform();
         assertFalse(m.hasErrors());
         assertFalse(m2.hasErrors());
@@ -84,7 +89,7 @@ public class OtherAnalysisTests extends FrontendTest {
 
     @Test
     public void fullcopyTest1() {
-        Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
+        Model m = assertParseOk("module M; class C {}");
         Model m2 = m.treeCopyNoTransform();
         assertFalse(m.hasErrors());
         assertFalse(m2.hasErrors());
@@ -95,7 +100,7 @@ public class OtherAnalysisTests extends FrontendTest {
 
     @Test
     public void fullcopyTest2() {
-        Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
+        Model m = assertParseOk("module M; class C {}");
         assertFalse(m.hasErrors());
         assertTrue(m.typeCheck().toString(),!m.typeCheck().containsErrors());
         Model m2 = m.treeCopyNoTransform();
@@ -185,7 +190,7 @@ public class OtherAnalysisTests extends FrontendTest {
         assertThat(ret.getRetExp().getType(), instanceOf(DataTypeType.class));
         assertEquals("A.X",ret.getRetExp().getType().getQualifiedName());
         Model.doAACrewrite = true;
-        m = assertParseOk("module A; export *; data X; module B; export *; data X; module C; import * from A; import B.X; class C { X m() { return await this!m();}}", Config.WITH_STD_LIB);
+        m = assertParseOk("module A; export *; data X; module B; export *; data X; module C; import * from A; import B.X; class C { X m() { return await this!m();}}");
         c = (ClassDecl) m.lookupModule("C").getDecl(0);
         Stmt s = c.getMethod(0).getBlock().getStmt(0);
         VarDeclStmt b = (VarDeclStmt) s;
@@ -200,7 +205,7 @@ public class OtherAnalysisTests extends FrontendTest {
 
     @Test
     public void awaitRewriteDecl1() {
-        Model m = assertParseOk("module A; class C { } delta D; modifies class C { adds Unit m() { return await this!m();}}", Config.WITH_STD_LIB);
+        Model m = assertParseOk("module A; class C { } delta D; modifies class C { adds Unit m() { return await this!m();}}");
         DeltaDecl c = m.getDeltaDecls().iterator().next();
         AwaitAsyncCall a = (AwaitAsyncCall) down(c);
         assertNotNull(a); // pity, would like this to work.

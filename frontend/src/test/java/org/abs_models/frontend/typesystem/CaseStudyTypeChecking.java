@@ -5,7 +5,6 @@
 package org.abs_models.frontend.typesystem;
 
 import static org.abs_models.ABSTest.Config.TYPE_CHECK;
-import static org.abs_models.ABSTest.Config.WITH_STD_LIB;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -68,7 +67,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
     public void test() throws Exception {
         File srcFolderF = new File(input);
         assumeTrue(srcFolderF.exists());
-        m = assertParseFilesOk(input, TYPE_CHECK, WITH_STD_LIB);
+        m = assertParseFilesOk(input, TYPE_CHECK);
     }
 
     protected Model assertParseFilesOk(String srcFolder, Config... config) throws IOException,
@@ -76,8 +75,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
         File srcFolderF = new File(srcFolder);
         assertTrue(srcFolder,srcFolderF.exists());
         Main main = new Main();
-        main.setWithStdLib(isSet(WITH_STD_LIB,config));
-        Model m = main.parseFiles(false, isSet(WITH_STD_LIB,config), findAbsFiles(srcFolderF).toArray(new String[0]));
+        Model m = main.parseFiles(false, findAbsFiles(srcFolderF).toArray(new String[0]));
 
         if (m != null) {
             m.evaluateAllProductDeclarations();

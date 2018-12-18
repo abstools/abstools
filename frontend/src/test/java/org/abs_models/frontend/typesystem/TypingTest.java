@@ -4,17 +4,15 @@
  */
 package org.abs_models.frontend.typesystem;
 
-import static org.junit.Assert.*;
-
-import org.abs_models.frontend.analyser.ErrorMessage;
-import org.abs_models.frontend.ast.ParametricFunctionDecl;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import org.abs_models.frontend.FrontendTest;
+import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.ast.ClassDecl;
 import org.abs_models.frontend.ast.ExpFunctionDef;
 import org.abs_models.frontend.ast.FieldDecl;
 import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.ParametricFunctionDecl;
 import org.abs_models.frontend.ast.ReturnStmt;
 import org.abs_models.frontend.ast.TypeParameterDecl;
 import org.abs_models.frontend.typechecker.DataTypeType;
@@ -22,13 +20,14 @@ import org.abs_models.frontend.typechecker.KindedName;
 import org.abs_models.frontend.typechecker.Type;
 import org.abs_models.frontend.typechecker.TypeParameter;
 import org.abs_models.frontend.typechecker.UnionType;
+import org.junit.Test;
 
 public class TypingTest extends FrontendTest {
 
     @Test
     public void testContextDecl() {
         Model m = assertParseOk("class C implements I { I m() { return this; } } interface I { }");
-        ClassDecl d = (ClassDecl) m.getDecls().iterator().next();
+        ClassDecl d = (ClassDecl)m.lookup(new KindedName(KindedName.Kind.CLASS, "C"));
         ReturnStmt s = (ReturnStmt) d.getMethod(0).getBlock().getStmt(0);
         assertEquals(d, s.getRetExp().getContextDecl());
     }
@@ -50,43 +49,43 @@ public class TypingTest extends FrontendTest {
 
     @Test
     public void testDataTypeBoolLit() {
-        Model m = assertParseOkStdLib("{ Bool i = True; }");
+        Model m = assertParse("{ Bool i = True; }");
         assertEquals(m.getBoolType(), getTypeOfFirstAssignment(m));
     }
 
     @Test
     public void testDataTypeIntLit() {
-        Model m = assertParseOkStdLib("{ Int i = 5; }");
+        Model m = assertParse("{ Int i = 5; }");
         assertEquals(m.getIntType(), getTypeOfFirstAssignment(m));
     }
 
     @Test
     public void testDataTypeStringLit() {
-        Model m = assertParseOkStdLib("{ String i = \"5\"; }");
+        Model m = assertParse("{ String i = \"5\"; }");
         assertEquals(m.getStringType(), getTypeOfFirstAssignment(m));
     }
 
     @Test
     public void testLetExp() {
-        Model m = assertParseOkStdLib("def Bool f() = let (Bool b) = True in b;");
+        Model m = assertParse("def Bool f() = let (Bool b) = True in b;");
         assertEquals(m.getBoolType(), getFirstFunctionExpr(m).getType());
     }
 
     @Test
     public void testCase() {
-        Model m = assertParseOkStdLib("def Bool f(Bool x) = case x { True => False; False => True; };");
+        Model m = assertParse("def Bool f(Bool x) = case x { True => False; False => True; };");
         assertEquals(m.getBoolType(), getFirstFunctionExpr(m).getType());
     }
 
     @Test
     public void testCase2() {
-        Model m = assertParseOkStdLib("def Bool f(Bool x) = case x { True => x; False => x; };");
+        Model m = assertParse("def Bool f(Bool x) = case x { True => x; False => x; };");
         assertEquals(m.getBoolType(), getFirstFunctionExpr(m).getType());
     }
 
     @Test
     public void testFnApp() {
-        Model m = assertParseOkStdLib("def Bool f() = f();");
+        Model m = assertParse("def Bool f() = f();");
         assertEquals(m.getBoolType(), getFirstFunctionExpr(m).getType());
     }
 
@@ -99,7 +98,7 @@ public class TypingTest extends FrontendTest {
 
     @Test
     public void testFieldUse() {
-        Model m = assertParseOkStdLib(" class C { Bool f; Bool m() { return this.f; } }");
+        Model m = assertParse(" class C { Bool f; Bool m() { return this.f; } }");
         ClassDecl d = (ClassDecl) m.lookup(new KindedName(KindedName.Kind.CLASS, "UnitTest.C"));
         FieldDecl f = d.getField(0);
         ReturnStmt s = (ReturnStmt) d.getMethod(0).getBlock().getStmt(0);
@@ -108,19 +107,19 @@ public class TypingTest extends FrontendTest {
 
     @Test
     public void testSyncCall() {
-        Model m = assertParseOkStdLib(" interface I { Bool m(); } { I i; i.m(); }");
+        Model m = assertParse(" interface I { Bool m(); } { I i; i.m(); }");
         assertEquals(m.getBoolType(), getSecondExp(m).getType());
     }
 
     @Test
     public void testAsyncCall() {
-        Model m = assertParseOkStdLib(" interface I { Bool m(); } { I i; i!m(); }");
+        Model m = assertParse(" interface I { Bool m(); } { I i; i!m(); }");
         assertEquals(m.getFutType(m.getBoolType()), getSecondExp(m).getType());
     }
 
     @Test
     public void functionTypeParams() {
-        Model m = assertParseOkStdLib(" def A f<A>(A a) = a ;");
+        Model m = assertParse(" def A f<A>(A a) = a ;");
         ParametricFunctionDecl d = getLastParametricFunctionDecl(m);
         assertEquals(d.getTypeParameter(0),
                 ((TypeParameter) ((ExpFunctionDef) d.getFunctionDef()).getRhs().getType()).getDecl());
@@ -128,7 +127,7 @@ public class TypingTest extends FrontendTest {
 
     @Test
     public void functionTypeArgs() {
-        Model m = assertParseOkStdLib(" def Maybe<A> f<A>() = None ;");
+        Model m = assertParse(" def Maybe<A> f<A>() = None ;");
         ParametricFunctionDecl d = getLastParametricFunctionDecl(m);
         DataTypeType t = (DataTypeType) d.getTypeUse().getType();
         TypeParameter typeArg = (TypeParameter) t.getTypeArg(0);
@@ -137,14 +136,14 @@ public class TypingTest extends FrontendTest {
 
     @Test
     public void functionTypeArgs2() {
-        Model m = assertParseOkStdLib(" def Maybe<A> f<A>(Maybe<A> o) = o ;");
+        Model m = assertParse(" def Maybe<A> f<A>(Maybe<A> o) = o ;");
         ParametricFunctionDecl d = getLastParametricFunctionDecl(m);
         assertEquals(d.getTypeUse().getType(), ((ExpFunctionDef) d.getFunctionDef()).getRhs().getType());
     }
 
     @Test
     public void functionTypeArgs3() {
-        Model m = assertParseOkStdLib(" def A f<A>(Maybe<A> o) = case o { Just(a) => a; } ;");
+        Model m = assertParse(" def A f<A>(Maybe<A> o) = case o { Just(a) => a; } ;");
         ParametricFunctionDecl d = getLastParametricFunctionDecl(m);
         TypeParameterDecl typeParameter = d.getTypeParameter(0);
         TypeParameter type = (TypeParameter) ((ExpFunctionDef) d.getFunctionDef()).getRhs().getType();
@@ -154,8 +153,8 @@ public class TypingTest extends FrontendTest {
 
     @Test
     public void functionTypeArgs4() {
-        Model m = assertParseOkStdLib(" data Foo<A> = Bar(A,Bool); "
-                + "def Bool f<A>(Foo<A> o) = case o { Bar(a,b) => b; } ;");
+        Model m = assertParse(" data Foo<A> = Bar(A,Bool); "
+            + "def Bool f<A>(Foo<A> o) = case o { Bar(a,b) => b; } ;");
 
         ParametricFunctionDecl d = getLastParametricFunctionDecl(m);
         Type type = ((ExpFunctionDef) d.getFunctionDef()).getRhs().getType();
@@ -164,7 +163,7 @@ public class TypingTest extends FrontendTest {
 
     @Test
     public void functionTypeArgs5() {
-        Model m = assertParseOkStdLib("def B nth<B>(List<B> list, Int n) = nth(tail(list), n-1) ; ");
+        Model m = assertParse("def B nth<B>(List<B> list, Int n) = nth(tail(list), n-1) ; ");
         ParametricFunctionDecl d = getLastParametricFunctionDecl(m);
         TypeParameterDecl typeParameter = d.getTypeParameter(0);
         TypeParameter type = (TypeParameter) ((ExpFunctionDef) d.getFunctionDef()).getRhs().getType();
