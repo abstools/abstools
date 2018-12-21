@@ -20,5 +20,7 @@
         {type,
          local_id,
          caller_id=undefined,
-         name=undefined
+         name=undefined,
+         reads=ordsets:new(),
+         writes=ordsets:new()
         }).

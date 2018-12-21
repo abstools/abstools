@@ -197,4 +197,7 @@ release_token(Cog,State)->
         {stop_world, _Sender} -> ok
     after 0 -> ok
     end,
-    cog:return_token(Cog, self(), State, get(process_info)).
+    ProcessInfo = #process_info{event=Event} = get(process_info),
+    cog:return_token(Cog, self(), State, ProcessInfo),
+    Event2 = Event#event{reads = ordsets:new(), writes = ordsets:new()},
+    put(process_info, ProcessInfo#process_info{event=Event2}).

@@ -61,8 +61,9 @@ new(Cog,Class,Args,CreatorCog,Stack)->
     end,
     cog:process_is_blocked_for_gc(CreatorCog, self()),
     Event = cog:register_new_object(CreatorCog, Class),
+    Event2 = Event#event{type=schedule, name=init},
     cog:add_task(Cog,init_task,none,O,Args,
-                 #process_info{event=Event, method= <<".init"/utf8>>}, [O, Args | Stack]),
+                 #process_info{event=Event2, method= <<".init"/utf8>>}, [O, Args | Stack]),
     cog:process_is_runnable(CreatorCog, self()),
     task:wait_for_token(CreatorCog,[O, Args|Stack]),
     O.
@@ -110,9 +111,15 @@ get_object_state_for_json(#object{ref=O}) ->
     gen_statem:call(O, get_state_for_modelapi).
 
 get_field_value(O=#object{ref=Ref}, Field) ->
+    ProcessInfo = #process_info{event=E=#event{reads=R}} = get(process_info),
+    R2 = ordsets:add_element(Field, R),
+    put(process_info, ProcessInfo#process_info{event=E#event{reads=R2}}),
     gen_statem:call(Ref, {O,get,Field}).
 
 set_field_value(O=#object{ref=Ref}, Field, Value) ->
+    ProcessInfo = #process_info{event=E=#event{writes=W}} = get(process_info),
+    W2 = ordsets:add_element(Field, W),
+    put(process_info, ProcessInfo#process_info{event=E#event{writes=W2}}),
     gen_statem:call(Ref,{O,set,Field,Value}).
 
 get_all_method_info(_O=#object{class=C,ref=_Ref}) ->

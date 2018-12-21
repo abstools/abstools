@@ -27,7 +27,7 @@
                cookie=none,
                register_in_gc=true,
                caller=none,
-               id=none
+               event=undefined
               }).
 
 %% Interacting with a future caller-side
@@ -36,7 +36,7 @@ start(null,_Method,_Params, _Info, _Cog, _Stack) ->
     throw(dataNullPointerException);
 start(Callee,Method,Params, Info, Cog, Stack) ->
     Event = cog:register_invocation(Cog, Method),
-    NewInfo = Info#process_info{event=Event},
+    NewInfo = Info#process_info{event=Event#event{type=schedule}},
     {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,NewInfo,true,self()], []),
     wait_for_future_start(Cog, [Ref | Stack]),
     Ref.
@@ -202,13 +202,13 @@ init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,Reg
                                 waiting_tasks=[],
                                 register_in_gc=RegisterInGC,
                                 caller=Caller,
-                                id=Info#process_info.event#event.local_id}};
+                                event=Info#process_info.event}};
         false ->
             {ok, completed, #data{calleetask=none,
                                   value={error, dataObjectDeadException},
                                   calleecog=Cog,
                                   register_in_gc=RegisterInGC,
-                                  id=Info#process_info.event#event.local_id}}
+                                  event=Info#process_info.event}}
     end;
 init([_Callee=null,_Method,_Params,RegisterInGC,Caller]) ->
     %% This is dead code, left in for reference; a `null' callee is caught in
@@ -310,8 +310,8 @@ completing({call, From}, {poll_or_add_waiting, _Task}, Data) ->
     {keep_state_and_data, {reply, From, true}};
 completing({call, From}, get_references, Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
-completing({call, From}, {get, Cog}, Data=#data{value=Value,id=Id}) ->
-    cog:register_future_read(Cog, Id),
+completing({call, From}, {get, Cog}, Data=#data{value=Value,event=Event}) ->
+    cog:register_future_read(Cog, Event#event{type=future_read}),
     {keep_state_and_data, {reply, From, Value}};
 completing(cast, {okthx, Task}, Data) ->
     {NextState, Data1} = next_state_on_okthx(Data, Task),
@@ -329,8 +329,8 @@ completed({call, From}, {poll_or_add_waiting, _Task}, Data) ->
     {keep_state_and_data, {reply, From, true}};
 completed({call, From}, get_references, Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
-completed({call, From}, {get, Cog}, Data=#data{value=Value,id=Id}) ->
-    cog:register_future_read(Cog, Id),
+completed({call, From}, {get, Cog}, Data=#data{value=Value,event=Event}) ->
+    cog:register_future_read(Cog, Event#event{type=future_read}),
     {keep_state_and_data, {reply, From, Value}};
 completed(cast, {die, _Reason}, Data) ->
     {stop, normal, Data};

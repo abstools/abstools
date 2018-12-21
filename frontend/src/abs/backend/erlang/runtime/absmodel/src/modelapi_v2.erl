@@ -298,16 +298,23 @@ get_statistics_json() ->
 
 
 construct_local_trace(LocalTrace) ->
-    lists:map(fun (#{caller_id := CallerId,
-                     event_type := Type,
-                     method := Method,
-                     task_id := TaskId}) ->
-                      {list_to_atom(binary_to_list(Type)),
-                       {CallerId, TaskId, list_to_atom(binary_to_list(Method))}};
-                  (#{event_type := Type,
-                     task_id := InitOrMain}) ->
-                      {list_to_atom(binary_to_list(Type)),
-                       list_to_atom(binary_to_list(InitOrMain))}
+    Atomize = fun (L) -> case is_binary(L) of
+                             true -> list_to_atom(binary_to_list(L));
+                             false -> L
+                         end
+              end,
+    lists:map(fun (#{type := Type,
+                     caller_id := CallerId,
+                     local_id := LocalId,
+                     name := Name,
+                     reads := Reads,
+                     writes := Writes}) ->
+                      #event{type=Atomize(Type),
+                             caller_id=Atomize(CallerId),
+                             local_id=Atomize(LocalId),
+                             name=Atomize(Name),
+                             reads=lists:map(Atomize, Reads),
+                             writes=lists:map(Atomize, Writes)}
               end, LocalTrace).
 
 json_to_trace(JSON) ->
@@ -321,7 +328,9 @@ schedule_to_json(Schedule) ->
                       #{type => Event#event.type,
                         caller_id => Event#event.caller_id,
                         local_id => Event#event.local_id,
-                        name => Event#event.name}
+                        name => Event#event.name,
+                        reads => Event#event.reads,
+                        writes => Event#event.writes}
               end, Schedule).
 
 get_schedules_json() ->
