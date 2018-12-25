@@ -38,6 +38,7 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.pb:2.3.0'
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
+    implementation 'org.antlr:ST4:4.1'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
