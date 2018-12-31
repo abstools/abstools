@@ -15,12 +15,10 @@ public class ProgramAbstractionTest extends DeltaTest {
 
     @Test
     public void core() {
-        Model model = assertParseOk(
-                "module M;"
-                        + "class C(Rat myParam) { Int myField = 99; Int myMethod(String a, Bool b) { return 88; } }"
-                        + "productline PL;"
-                        + "features F;"
-                );
+        Model model = assertParse("module M;"
+            + "class C(Rat myParam) { Int myField = 99; Int myMethod(String a, Bool b) { return 88; } }"
+            + "productline PL;"
+            + "features F;");
         SemanticConditionList errors = new SemanticConditionList();
         ProductLine pl = model.getProductLine();
         DeltaTrie trie = ProductLineAnalysisHelper.buildPFGT(pl, errors);
@@ -44,16 +42,14 @@ public class ProgramAbstractionTest extends DeltaTest {
 
     @Test
     public void addClass() {
-        Model model = assertParseOk(
-                "module M;"
-                        + "delta D;"
-                        + "uses M;"
-                        + "adds class C(Rat myParam) { Int myField = 99; Int myMethod(String a, Bool b) { return 88; } }"
-                        + "productline PL;"
-                        + "features F;"
-                        + "delta D when F;"
-                        + "root FM { group allof { opt F } }"
-                );
+        Model model = assertParse("module M;"
+            + "delta D;"
+            + "uses M;"
+            + "adds class C(Rat myParam) { Int myField = 99; Int myMethod(String a, Bool b) { return 88; } }"
+            + "productline PL;"
+            + "features F;"
+            + "delta D when F;"
+            + "root FM { group allof { opt F } }");
         SemanticConditionList errors = new SemanticConditionList();
         ProductLine pl = model.getProductLine();
         DeltaTrie trie = ProductLineAnalysisHelper.buildPFGT(pl, errors);
@@ -76,17 +72,15 @@ public class ProgramAbstractionTest extends DeltaTest {
 
     @Test
     public void removeClass() {
-        Model model = assertParseOk(
-                "module M;"
-                        + "class C(Rat myParam) { Int myField = 99; Int myMethod(String a, Bool b) { return 88; } }"
-                        + "delta D;"
-                        + "uses M;"
-                        + "removes class C;"
-                        + "productline PL;"
-                        + "features F;"
-                        + "delta D when F;"
-                        + "root FM { group allof { opt F } }"
-                );
+        Model model = assertParse("module M;"
+            + "class C(Rat myParam) { Int myField = 99; Int myMethod(String a, Bool b) { return 88; } }"
+            + "delta D;"
+            + "uses M;"
+            + "removes class C;"
+            + "productline PL;"
+            + "features F;"
+            + "delta D when F;"
+            + "root FM { group allof { opt F } }");
         SemanticConditionList errors = new SemanticConditionList();
         ProductLine pl = model.getProductLine();
         DeltaTrie trie = ProductLineAnalysisHelper.buildPFGT(pl, errors);
@@ -97,35 +91,33 @@ public class ProgramAbstractionTest extends DeltaTest {
 
     @Test
     public void modifyClass() {
-        Model model = assertParseOk(
-                "module M;"
-                        + "class C {}"
-                        + "delta D1; uses M;"
-                        + "modifies class C { adds Int myField = 99; }"
-                        + "delta D2; uses M;"
-                        + "modifies class C { removes Int myField; }"
-                        + "delta D3; uses M;"
-                        + "modifies class C { adds Int myMethod(String a, Bool b) { return 88; } }"
-                        + "delta D4; uses M;"
-                        + "modifies class C { modifies Int myMethod(String a, Bool b) { return 99; } }"
-                        + "delta D5; uses M;"
-                        + "modifies class C { removes Int myMethod(String a, Bool b); }"
-                        + "delta D6; uses M;"
-                        + "modifies class C adds I { }"
-                        + "delta D7; uses M;"
-                        + "modifies class C removes I { }"
+        Model model = assertParse("module M;"
+            + "class C {}"
+            + "delta D1; uses M;"
+            + "modifies class C { adds Int myField = 99; }"
+            + "delta D2; uses M;"
+            + "modifies class C { removes Int myField; }"
+            + "delta D3; uses M;"
+            + "modifies class C { adds Int myMethod(String a, Bool b) { return 88; } }"
+            + "delta D4; uses M;"
+            + "modifies class C { modifies Int myMethod(String a, Bool b) { return 99; } }"
+            + "delta D5; uses M;"
+            + "modifies class C { removes Int myMethod(String a, Bool b); }"
+            + "delta D6; uses M;"
+            + "modifies class C adds I { }"
+            + "delta D7; uses M;"
+            + "modifies class C removes I { }"
 
-                        + "productline PL;"
-                        + "features F;"
-                        + "delta D1 when F;"
-                        + "delta D2 after D1 when F;"
-                        + "delta D3 after D2 when F;"
-                        + "delta D4 after D3 when F;"
-                        + "delta D5 after D4 when F;"
-                        + "delta D6 after D5 when F;"
-                        + "delta D7 after D6 when F;"
-                        + "root FM { group allof { opt F } }"
-                );
+            + "productline PL;"
+            + "features F;"
+            + "delta D1 when F;"
+            + "delta D2 after D1 when F;"
+            + "delta D3 after D2 when F;"
+            + "delta D4 after D3 when F;"
+            + "delta D5 after D4 when F;"
+            + "delta D6 after D5 when F;"
+            + "delta D7 after D6 when F;"
+            + "root FM { group allof { opt F } }");
         SemanticConditionList errors = new SemanticConditionList();
         ProductLine pl = model.getProductLine();
         DeltaTrie trie = ProductLineAnalysisHelper.buildPFGT(pl, errors);

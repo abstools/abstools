@@ -362,21 +362,18 @@ aspect TypeResolution {
         to ExceptionTypeUse {
             ExceptionTypeUse eu = new ExceptionTypeUse(getName(), getAnnotations());
             eu.setPositionFromNode(this);
-            eu.setAbsolutePosition(getAbsolutePosition());
             return eu;
         }
         when (getDecl().isInterface())
         to InterfaceTypeUse {
             InterfaceTypeUse tu = new InterfaceTypeUse(getName(), getAnnotations());
             tu.setPositionFromNode(this);
-            tu.setAbsolutePosition(getAbsolutePosition());
             return tu;
         } 
         when (getDecl().isDataType()) 
         to DataTypeUse {
             DataTypeUse tu = new DataTypeUse(getName(), getAnnotations());
             tu.setPositionFromNode(this);
-            tu.setAbsolutePosition(getAbsolutePosition());
             return tu;
         }
         when (getDecl().isTypeSyn() && 
@@ -400,14 +397,12 @@ aspect TypeResolution {
                 tu.setName(getName());
             }
             tu.setPositionFromNode(this);
-            tu.setAbsolutePosition(getAbsolutePosition());
             return tu;
         }
         when (getDecl().isTypeParameter())
         to TypeParameterUse {
             TypeParameterUse tu = new TypeParameterUse(getName(), getAnnotations());
             tu.setPositionFromNode(this);
-            tu.setAbsolutePosition(getAbsolutePosition());
             return tu;
         }
     }
@@ -447,20 +442,20 @@ aspect TypeResolution {
     eq AsyncCall.isAsync() = true;
     eq AwaitAsyncCall.isAsync() = true;
 
-    syn lazy ModuleDecl ASTNode.getModuleDecl() = calcContextNode(ModuleDecl.class);
+    syn lazy ModuleDecl ASTNode.getModuleDecl() = uppermostParentOfType(ModuleDecl.class);
     /**
      * Return this objects surrounding declaration. Uses the Null Object Pattern,
      * so don't cast the result, as it may be an UnknownDecl.
      */
     syn lazy Decl ASTNode.getContextDecl() {
-        Decl d = calcContextNode(Decl.class);
+        Decl d = uppermostParentOfType(Decl.class);
         return (d == null ? Model.unknownDecl : d);
     }
-    syn lazy MethodImpl ASTNode.getContextMethod() = calcContextNode(MethodImpl.class);
-    syn lazy Block ASTNode.getContextBlock() = calcContextNode(Block.class);
+    syn lazy MethodImpl ASTNode.getContextMethod() = uppermostParentOfType(MethodImpl.class);
+    syn lazy Block ASTNode.getContextBlock() = uppermostParentOfType(Block.class);
 
     /** returns the parent compilation unit of this node **/
-    syn lazy CompilationUnit ASTNode.getCompilationUnit() = calcContextNode(CompilationUnit.class);
+    syn lazy CompilationUnit ASTNode.getCompilationUnit() = uppermostParentOfType(CompilationUnit.class);
 
     /**
      * checks whether the two elements are defined in the same method or block
@@ -468,30 +463,6 @@ aspect TypeResolution {
     public boolean ASTNode.inSameMethodOrBlock(ASTNode<?> b) {
         return getContextMethod() != null && b.getContextMethod() == getContextMethod()
                 || getContextBlock()  != null && b.getContextBlock() == getContextBlock();
-    }
-
-    /**
-     * This method (presumably) finds the outermost match conforming to `clazz`.
-     */
-    @CheckForNull
-    public <N extends ASTNode<?>> N ASTNode.calcContextNode(Class<N> clazz) {
-        ASTNode<?> n = this;
-        while (n != null) {
-            ASTNode<?> parent = n.getParent();
-
-            if (clazz.isInstance(n)) {
-                if (parent == null)
-                    return clazz.cast(n);
-
-                N pn = parent.calcContextNode(clazz);
-                if (pn != null)
-                    return pn;
-                else
-                    return clazz.cast(n);
-            }
-            n = parent;
-        }
-        return null;
     }
 
     syn lazy MethodImpl ClassDecl.lookupMethod(String name) {

@@ -4,14 +4,19 @@
  */
 package org.abs_models.backend.maude;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.junit.Assert;
-
 import org.abs_models.ABSTest;
 import org.abs_models.frontend.ast.Model;
+import org.junit.Assert;
 
 /**
  * Note that this class doesn't have a nullary constructor and can't be run
@@ -66,7 +71,7 @@ public class MaudeTests extends ABSTest {
     }
 
     protected String getMaudeCode(String absCode, MaudeCompiler.SIMULATOR module) throws Exception {
-        Model model = assertParseOk(absCode, Config.WITH_STD_LIB, Config.WITHOUT_MODULE_NAME, Config.TYPE_CHECK /* XXX:CI, Config.WITH_LOC_INF */);
+        Model model = assertParse(absCode, Config.WITHOUT_MODULE_NAME, Config.TYPE_CHECK/* XXX:CI, Config.WITH_LOC_INF */);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         // TODO: handle delta generation / testing / flattening
         model.generateMaude(new PrintStream(out), module, 100, 0);

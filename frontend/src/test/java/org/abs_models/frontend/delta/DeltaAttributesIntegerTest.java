@@ -36,49 +36,45 @@ public class DeltaAttributesIntegerTest extends DeltaTest {
     
     @Test
     public void passIntegerFeatureAttribute() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D(Int attr);"
-                +"uses M;"
-                + "    adds class C { Int myField = attr; }"
-                + "productline PL;"
-                + "    features F;"
-                + "    delta D(F.a) when F;"
-                + "product P1(F{a=0});"
-                + "product P2(F{a=99});"
-                // TODO: test what happens if attribute is not passed
-                // + "product P3(F);"
-        );
+        // TODO: test what happens if attribute is not passed
+        // + "product P3(F);"
+        Model model = assertParse("module M;"
+            + "delta D(Int attr);"
+            + "uses M;"
+            + "    adds class C { Int myField = attr; }"
+            + "productline PL;"
+            + "    features F;"
+            + "    delta D(F.a) when F;"
+            + "product P1(F{a=0});"
+            + "product P2(F{a=99});");
         
         model.evaluateAllProductDeclarations();
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("myField"));
-//        System.out.println("******** expected: " + expected + " *** found: " + cls.getField(0).getInitExp().value.toString());
+//        System.out.println("******** expected: " + expected + " *** found: " + cls.getField(0).getInitExp().toString());
 
-        assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
+        assertTrue(cls.getField(0).getInitExp().toString().equals(expected));
     }
 
     public void passIntegerConstant() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D(Int attr);"
-                +" uses M;"
-                + "    adds class C { Int myField = attr; }"
-                + "productline PL;"
-                + "    features A,B;"
-                + "    delta D(0) when A;"
-                + "    delta D(99) when B;"
-                + "product P1(A);"
-                + "product P2(B);"
-        );
+        Model model = assertParse("module M;"
+            + "delta D(Int attr);"
+            + " uses M;"
+            + "    adds class C { Int myField = attr; }"
+            + "productline PL;"
+            + "    features A,B;"
+            + "    delta D(0) when A;"
+            + "    delta D(99) when B;"
+            + "product P1(A);"
+            + "product P2(B);");
        
         model.flattenForProduct(product);
         model.evaluateAllProductDeclarations();
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("myField"));
 
-        assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
+        assertTrue(cls.getField(0).getInitExp().toString().equals(expected));
     }
 
 }

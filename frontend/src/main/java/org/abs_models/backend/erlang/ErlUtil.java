@@ -40,7 +40,7 @@ public class ErlUtil {
             b.append("P_" + p.getName());
         }
 
-        if (args.hasChildren()) {
+        if (args.getNumChild() > 0) {
             b.append(',');
         }
 
@@ -120,7 +120,7 @@ public class ErlUtil {
         ecs.print("[");
         buildParamsWithOutBrackets(ecs, params, vars);
 
-        if (params.hasChildren()) {
+        if (params.getNumChild() > 0) {
             ecs.print(',');
         }
 
@@ -148,13 +148,13 @@ public class ErlUtil {
         ecs.print("(");
         if (callee != null) {
             callee.generateErlangCode(ecs, vars);
-            if (params.hasChildren()) {
+            if (params.getNumChild() > 0) {
                 ecs.print(",");
             }
 
         } else {
             ecs.print("Cog");
-            if (params.hasChildren()) {
+            if (params.getNumChild() > 0) {
                 ecs.print(",");
             }
         }

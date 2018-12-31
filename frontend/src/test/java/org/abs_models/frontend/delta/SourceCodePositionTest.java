@@ -64,7 +64,7 @@ public class SourceCodePositionTest extends DeltaTest {
         fileNames.add(fd1.getCanonicalPath());
         fileNames.add(fd2.getCanonicalPath());
 
-        Model model = assertParseFilesOk(fileNames, true);
+        Model model = assertParseFilesOk(fileNames);
 
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");

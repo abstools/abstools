@@ -12,18 +12,16 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 
+import org.abs_models.ABSTest;
+import org.abs_models.backend.BackendTestDriver;
 import org.abs_models.backend.erlang.ErlangTestDriver;
 import org.abs_models.backend.maude.MaudeCompiler;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-
-import org.abs_models.ABSTest;
-import org.abs_models.ABSTest.Config;
-import org.abs_models.backend.BackendTestDriver;
 // import JavaDynamicTestDriver;
 import org.abs_models.backend.maude.MaudeTestDriver;
 import org.abs_models.frontend.ast.Model;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public abstract class SemanticTests {
@@ -110,7 +108,7 @@ public abstract class SemanticTests {
     public void assertEvalTrue(File f) {
         Model m;
         try {
-            m = ABSTest.assertParseFileOk(f.getPath(), Config.WITH_STD_LIB);
+            m = ABSTest.assertParseFileOk(f.getPath());
             assertNotNull(m.lookupModule("BackendTest"));
             assertFalse(m.hasParserErrors());
             assertFalse(m.hasTypeErrors());

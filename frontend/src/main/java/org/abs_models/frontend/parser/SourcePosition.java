@@ -49,7 +49,7 @@ public class SourcePosition {
     private static boolean inNode(ASTNode<?> node, int line, int column) {
         if (node instanceof Opt<?>) {
             Opt<?> opt = (Opt<?>) node;
-            if (opt.hasChildren()) {
+            if (opt.getNumChild() > 0) {
                 return inNode(opt.getChildNoTransform(0), line, column);
             } else {
                 return false;

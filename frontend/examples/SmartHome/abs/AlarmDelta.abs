@@ -46,7 +46,7 @@ modifies class Alarm adds FireAlarm {
 	
 	adds Unit notify(String message) {
 		Printer printer = new local Printer();
-		if (this.armed && message == "fire" && ~this.active) {
+		if (this.armed && message == "fire" && !this.active) {
 			this.active = True;
 			this.alert();
 		}

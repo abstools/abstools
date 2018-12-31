@@ -12,6 +12,6 @@ public class TestABSPackages extends FrontendTest {
 
     @Test
     public void leaderElectionPackage() throws Exception {
-       assertParseFileOk("abssamples/leaderelection.jar", true);
+       assertParseFileOk("abssamples/leaderelection.jar");
     }
 }

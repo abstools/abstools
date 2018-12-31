@@ -66,13 +66,13 @@ adds class Heating(House house) implements Heating {
         // Starts warming if the goal is higher than the last recieved temperature
 		// or cooling if it is lower or nothing if they are equal
         if (this.goalTemperature > this.lastRcvdTemperature) {
-        	if (~warming) {
+        	if (!warming) {
         		this.warming = True;
         		this.cooling = False;
         		this.warming();
         	}
         } else if (this.goalTemperature < this.lastRcvdTemperature) {
-        	if (~cooling) {
+        	if (!cooling) {
         		this.warming = False;
         		this.cooling = True;
         		this.cooling();
@@ -92,7 +92,7 @@ adds class Heating(House house) implements Heating {
         this.warming = False;
         // Start cooling to the base temperature
         if (this.goalTemperature < this.lastRcvdTemperature) {
-        	if (~cooling) {
+        	if (!cooling) {
         		this.cooling = True;
         		this.cooling();
         	}
@@ -110,7 +110,7 @@ adds class Heating(House house) implements Heating {
             this.warming = False;
             // Start cooling because heating is turned off
             if (this.lastRcvdTemperature > this.baseTemperature) {
-            	if (~cooling) {
+            	if (!cooling) {
             		this.cooling = True;
             		this.cooling();
             	}
@@ -119,7 +119,7 @@ adds class Heating(House house) implements Heating {
             }
         } else {
         	// Start heating if temperature is below goal and not already heating
-        	if (~warming) {
+        	if (!warming) {
             	this.warming = True;
             	this.cooling = False;
             	this.warming();

@@ -139,7 +139,7 @@ public class TypeCheckerHelper {
                 if (nerrors == l.getErrorCount()) {
                     Type expType = exp.getType();
                     if (!expType.isAssignableTo(argType)) {
-                        l.add(new TypeError(n, ErrorMessage.TYPE_MISMATCH, exp.getType(), argType));
+                        l.add(new TypeError(exp, ErrorMessage.TYPE_MISMATCH, exp.getType(), argType));
                     }
                 }
             }

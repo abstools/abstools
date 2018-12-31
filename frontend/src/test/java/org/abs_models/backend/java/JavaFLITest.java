@@ -15,7 +15,7 @@ public class JavaFLITest extends JavaBackendTest {
     
     @Test
     public void foreignClass() throws Exception {
-        assertValidStdLib(EXAMPLE_CODE);
+        assertValid(EXAMPLE_CODE);
     }
     
     @Test

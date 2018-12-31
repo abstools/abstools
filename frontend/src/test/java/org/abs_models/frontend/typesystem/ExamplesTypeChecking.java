@@ -24,9 +24,8 @@ public class ExamplesTypeChecking extends ParseSamplesTest {
         Assert.fail(err);
     }
 
-    @Override
     protected Model parse(String input) throws Exception {
-        Model m = assertTypeCheckFileOk(input, true);
+        Model m = assertTypeCheckFileOk(input);
         if (product != null) {
             m.collapseTraitModifiers();
             m.flattenForProduct(product);

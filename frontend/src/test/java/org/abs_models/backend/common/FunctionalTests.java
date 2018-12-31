@@ -4,18 +4,17 @@
  */
 package org.abs_models.backend.common;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assume.assumeFalse;
 
 import java.io.File;
 
+import org.abs_models.ABSTest;
+import org.abs_models.backend.BackendTestDriver;
+import org.abs_models.frontend.ast.Model;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import org.abs_models.ABSTest;
-import org.abs_models.ABSTest.Config;
-import org.abs_models.backend.BackendTestDriver;
-import org.abs_models.frontend.ast.Model;
 
 @RunWith(Parameterized.class)
 public class FunctionalTests extends SemanticTests {
@@ -223,9 +222,41 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void letExpMultiple() {
+        assertEvalTrue("def Bool f() = let Bool x = True, Bool y = x in y;" + CALL_F);
+    }
+
+    @Test
+    public void letExpMultiple2() {
+        assertEvalTrue("def Bool f() = let Bool x = True, Bool y = False in x;" + CALL_F);
+    }
+
+    @Test
+    public void letExpMultiple3() {
+        assertEvalTrue("def Bool f() = let Bool x = False, Bool x = True in x;" + CALL_F);
+    }
+
+    @Test
+    public void letExpMultipleOld() {
+        assertEvalTrue("def Bool f() = let (Bool x) = True, (Bool y) = x in y;" + CALL_F);
+    }
+
+    @Test
+    public void letExpMultipleOld2() {
+        assertEvalTrue("def Bool f() = let (Bool x) = True, (Bool y) = False in x;" + CALL_F);
+    }
+
+    @Test
+    public void letExpMultipleOld3() {
+        assertEvalTrue("def Bool f() = let (Bool x) = False, (Bool x) = True in x;" + CALL_F);
+    }
+
+    @Test
     public void ifExp1() {
         assertEvalTrue("def Bool f(Bool x) = if x then True else False ; " + CALL_F_TRUE);
     }
+
+    @Test
     public void ifExp2() {
         assertEvalTrue("def Bool f(Bool x) = if !x then False else True ; " + CALL_F_TRUE);
     }
@@ -335,7 +366,7 @@ public class FunctionalTests extends SemanticTests {
     @Test
     public void patternVarRew() throws Exception {
         String fileName = "abssamples/PVTest.abs";
-        Model m = ABSTest.assertParseFileOk(fileName, Config.WITH_STD_LIB);
+        Model m = ABSTest.assertParseFileOk(fileName);
         // TODO: Pull up
         // XXX WTF?! assertFalse(m.hasParserErrors());
         m.flattenForProduct("Foo");
@@ -346,5 +377,12 @@ public class FunctionalTests extends SemanticTests {
     @Test
     public void patternVarRewOK() throws Exception {
         assertEvalTrue(new File("abssamples/PVTest2.abs"));
+    }
+
+    @Test
+    public void wrappedSupertype() throws Exception {
+        // https://github.com/abstools/abstools/issues/241
+        assumeFalse(driver.getBackendName() == BackendTestDriver.BackendName.JAVA);
+        assertEvalTrue(new File("abssamples/backend/FunctionalTests/wrappedSupertype.abs"));
     }
 }

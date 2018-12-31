@@ -645,10 +645,13 @@ process_blocked(info, Event, Data) ->
 waiting_for_gc_stop({call, From}, {token,R,ProcessState, ProcessInfo, ObjectState},
                     Data=#data{running_task=R, runnable_tasks=Run,
                                waiting_tasks=Wai, polling_tasks=Pol,
-                               new_tasks=New,process_infos=ProcessInfos,dc=DC}) ->
+                               new_tasks=New,process_infos=ProcessInfos,
+                               object_states=ObjectStates,dc=DC}) ->
     gen_statem:reply(From, ok),
     gc:cog_stopped(#cog{ref=self(), dc=DC}),
     NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
+    NewObjectStates=update_object_state_map(ProcessInfo#process_info.this,
+                                            ObjectState, ObjectStates),
     NewRunnable = case ProcessState of
                       runnable -> Run;
                       _ -> gb_sets:del_element(R, Run) end,
@@ -659,22 +662,34 @@ waiting_for_gc_stop({call, From}, {token,R,ProcessState, ProcessInfo, ObjectStat
                      waiting_poll -> gb_sets:add_element(R, Pol);
                      _ -> Pol end,
     case gb_sets:is_empty(NewRunnable) and gb_sets:is_empty(New) of
-        %% Note that in contrast to `cog_active()', `cog_idle()' cannot be
-        %% called multiple times "just in case" since the cog_monitor places a
-        %% cog on its busy list when the clock advances.  The waiting task(s)
-        %% will send `process_runnable' to the cog next, but there's a window
-        %% where an ill-timed `cog_idle()' might cause the clock to advance.
-        %% Hence, we take care to not send `cog_idle()' when leaving `in_gc'
-        %% since spurious clock advances have been observed in the field when
-        %% doing so.
-        true -> cog_monitor:cog_idle(self());
-        false -> ok
-    end,
-    {next_state, in_gc,
-     Data#data{next_state_after_gc=no_task_schedulable,
-               running_task=idle, runnable_tasks=NewRunnable,
-               waiting_tasks=NewWaiting, polling_tasks=NewPolling,
-               process_infos=NewProcessInfos}};
+        %% Note that in contrast to `cog_active()', `cog_idle()'
+        %% cannot be called multiple times "just in case" since the
+        %% cog_monitor places a cog on its busy list when the clock
+        %% advances and will not advance until it saw at least one
+        %% clock_idle().  The waiting task(s) will send
+        %% `process_runnable' to the cog next, but there's a window
+        %% where an ill-timed `cog_idle()' might cause the clock to
+        %% advance.  Hence, we take care to not send `cog_idle()' when
+        %% leaving `in_gc', and instead send it here if necessary.
+        true -> {PollReadySet, PollCrashedSet} = poll_waiting(NewPolling, NewProcessInfos, NewObjectStates),
+                case gb_sets:is_empty(PollReadySet) of
+                    true -> cog_monitor:cog_idle(self());
+                    false -> ok
+                end,
+                {next_state, in_gc,
+                 Data#data{next_state_after_gc=no_task_schedulable,
+                           running_task=idle, runnable_tasks=NewRunnable,
+                           waiting_tasks=NewWaiting,
+                           polling_tasks=gb_sets:difference(NewPolling, PollCrashedSet),
+                           process_infos=NewProcessInfos,
+                           object_states=NewObjectStates}};
+        false -> {next_state, in_gc,
+                  Data#data{next_state_after_gc=no_task_schedulable,
+                            running_task=idle, runnable_tasks=NewRunnable,
+                            waiting_tasks=NewWaiting, polling_tasks=NewPolling,
+                            process_infos=NewProcessInfos,
+                            object_states=NewObjectStates}}
+    end;
 waiting_for_gc_stop({call, From}, {process_runnable, T},
                     Data=#data{waiting_tasks=Wai, runnable_tasks=Run,
                                new_tasks=New}) ->

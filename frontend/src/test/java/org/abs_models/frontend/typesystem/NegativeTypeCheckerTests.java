@@ -6,11 +6,10 @@ package org.abs_models.frontend.typesystem;
 
 import static org.junit.Assert.assertEquals;
 
-import org.abs_models.frontend.analyser.ErrorMessage;
-import org.junit.Test;
-
 import org.abs_models.frontend.FrontendTest;
+import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.ast.Model;
+import org.junit.Test;
 
 public class NegativeTypeCheckerTests extends FrontendTest {
 
@@ -269,7 +268,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void negTestError() {
-        Model m = assertParseOkStdLib(" { Bool b = !5; }");
+        Model m = assertParse(" { Bool b = !5; }");
         assertEquals(ErrorMessage.EXPECTED_TYPE, m.typeCheck().getFirstError().msg);
     }
 

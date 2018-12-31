@@ -4,14 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.regex.Pattern;
+
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.Decl;
 import org.abs_models.frontend.ast.FnApp;
 import org.abs_models.frontend.ast.FunctionDecl;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.ast.ModuleDecl;
-import java.util.regex.Pattern;
-
 import org.junit.Test;
 
 public class ParFnAppTest extends PardefTest {
@@ -200,40 +200,34 @@ public class ParFnAppTest extends PardefTest {
 
     @Test
     public void fieldUseInAnon() {
-        testExpand(assertParseOkStdLib(
-            "def Int produce(fn)() = fn();\n"
-                + "class C {\n"
-                + "Int i = 1;\n"
-                + "Unit m() {\n"
-                + "Int j = produce(() => i)();"
-                + "}\n"
-                + "}\n"
-        ));
+        testExpand(assertParse("def Int produce(fn)() = fn();\n"
+            + "class C {\n"
+            + "Int i = 1;\n"
+            + "Unit m() {\n"
+            + "Int j = produce(() => i)();"
+            + "}\n"
+            + "}\n"));
     }
 
     @Test
     public void deepFieldUseInAnon() {
-        testExpand(assertParseOkStdLib(
-            "def Int produce(fn)() = fn();\n"
-                + "class C {\n"
-                + "Int i = 1;\n"
-                + "Unit m() {\n"
-                + "Int j = produce(() => 1 + i)();"
-                + "}\n"
-                + "}\n"
-        ));
+        testExpand(assertParse("def Int produce(fn)() = fn();\n"
+            + "class C {\n"
+            + "Int i = 1;\n"
+            + "Unit m() {\n"
+            + "Int j = produce(() => 1 + i)();"
+            + "}\n"
+            + "}\n"));
     }
 
     @Test
     public void fieldUseInParametric() {
-        testExpand(assertParseOkStdLib(
-            "class Test() {\n"
-                + "  Int i = 0;\n"
-                + "  Unit init() {\n"
-                + "    List<Int> test = map((String s) => i)(list[\"foo\"]);\n"
-                + "  }\n"
-                + "}"
-        ));
+        testExpand(assertParse("class Test() {\n"
+            + "  Int i = 0;\n"
+            + "  Unit init() {\n"
+            + "    List<Int> test = map((String s) => i)(list[\"foo\"]);\n"
+            + "  }\n"
+            + "}"));
     }
 
     @Test
@@ -363,56 +357,49 @@ public class ParFnAppTest extends PardefTest {
     @Test
     public void importExpansion() {
         // name import
-        testExpand(assertParseOkStdLib(
-            "import test from Pardef;"
-                + incFunction()
-                + "{ test(inc)(); }"
-                + "module Pardef; export *;"
-                + "def Int test(f)() = f(0);"
-        ), "test_Pardef_inc__");
+        testExpand(assertParse("import test from Pardef;"
+            + incFunction()
+            + "{ test(inc)(); }"
+            + "module Pardef; export *;"
+            + "def Int test(f)() = f(0);"), "test_Pardef_inc__");
 
         // star import
-        testExpand(assertParseOkStdLib(
-            "import * from Pardef;"
-                + incFunction()
-                + "{ test(inc)(); }"
-                + "module Pardef; export *;"
-                + "def Int test(f)() = f(0);"
-        ), "test_Pardef_inc__");
+        testExpand(assertParse("import * from Pardef;"
+            + incFunction()
+            + "{ test(inc)(); }"
+            + "module Pardef; export *;"
+            + "def Int test(f)() = f(0);"), "test_Pardef_inc__");
 
         // import function and pardef
-        testExpand(assertParseOkStdLib(
-            "import test from Pardef;"
-                + "import inc from IncMod;"
-                + "{ test(inc)(); }"
-                + "module Pardef; export *; def Int test(f)() = f(0);"
-                + "module IncMod; export *; " + incFunction()
-        ), "test_Pardef_inc__");
+        testExpand(assertParse("import test from Pardef;"
+            + "import inc from IncMod;"
+            + "{ test(inc)(); }"
+            + "module Pardef; export *; def Int test(f)() = f(0);"
+            + "module IncMod; export *; " + incFunction()), "test_Pardef_inc__");
     }
 
     @Test
     public void usageInTrait() {
-        testExpand(assertParseOkStdLib(
-            "module ParFnAppInTrait;\n"
-                + "\n"
-                + "trait T = {\n"
-                + "    Int m(){\n"
-                + "        List<Int> l = list[1, 2, 3];\n"
-                + "        return foldl((Int i, Int j) => i + j)(l, 0);\n"
-                + "   }\n"
-                + "}\n"
-                + "\n"
-                + "interface C {\n"
-                + "\tInt m();\n"
-                + "}\n"
-                + "\n"
-                + "class C implements C {\n"
-                + "    uses T;\n"
-                + "}\n"
-                + "\n"
-                + "{\n"
-                + "\tC c = new C();\n"
-                + "\tInt i = c.m();\n"
-                + "}\n"), "foldl_ABS_StdLib_Anon\\d+__");
+        testExpand(assertParse("module ParFnAppInTrait;\n"
+            + "\n"
+            + "trait T = {\n"
+            + "    Int m(){\n"
+            + "        List<Int> l = list[1, 2, 3];\n"
+            + "        return foldl((Int i, Int j) => i + j)(l, 0);\n"
+            + "   }\n"
+            + "}\n"
+            + "\n"
+            + "interface C {\n"
+            + "\tInt m();\n"
+            + "}\n"
+            + "\n"
+            + "class C implements C {\n"
+            + "    uses T;\n"
+            + "}\n"
+            + "\n"
+            + "{\n"
+            + "\tC c = new C();\n"
+            + "\tInt i = c.m();\n"
+            + "}\n"), "foldl_ABS_StdLib_Anon\\d+__");
     }
 }

@@ -48,7 +48,7 @@ interface ABSAssert {
 class ABSAssertImpl implements ABSAssert {
 	
 	Unit assertTrue(Bool value) {
-		if (~value) {
+		if (!value) {
 			// collect result
 			assert False;
 		} 
@@ -79,7 +79,7 @@ class ABSAssertImpl implements ABSAssert {
 	
 	Unit assertThat(Matcher matcher) {
 		Bool result = matcher.matches();
-		if (~result) {
+		if (!result) {
 			// collect result
 			assert False;
 		}

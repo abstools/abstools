@@ -28,7 +28,7 @@ class Server(Set<Chunk> chunks) implements Server {
     
     Unit notifyBandwidth(Handset handset, Int bandwidth) {
         bandwidths = put(bandwidths, handset, bandwidth);
-        if (~(contains(keys(tosend), handset))) {
+        if (!(contains(keys(tosend), handset))) {
             tosend = put(tosend, handset, chunks);
             this!handle(handset);
         }

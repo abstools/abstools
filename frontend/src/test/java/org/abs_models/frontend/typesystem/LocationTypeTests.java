@@ -4,31 +4,26 @@
  */
 package org.abs_models.frontend.typesystem;
 
-import static org.junit.Assert.*;
-
-import java.io.*;
-
-import org.abs_models.common.FileUtils;
-import org.abs_models.frontend.analyser.SemanticConditionList;
-import org.abs_models.frontend.typechecker.locationtypes.LocationType;
-import org.abs_models.frontend.typechecker.locationtypes.LocationTypeCheckerException;
-import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
-import org.abs_models.frontend.typechecker.locationtypes.infer.InferMain;
-import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.abs_models.frontend.FrontendTest;
+import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.ClassDecl;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.ast.VarDeclStmt;
-
-import static org.abs_models.ABSTest.Config.*;
+import org.abs_models.frontend.typechecker.locationtypes.LocationType;
+import org.abs_models.frontend.typechecker.locationtypes.LocationTypeCheckerException;
+import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
+import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
+import org.junit.Test;
 
 public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void fieldDecl() {
-        Model m = assertParse("interface I { } class C { [Far] I i; }",WITH_STD_LIB);
+        Model m = assertParse("interface I { } class C { [Far] I i; }");
         ClassDecl decl = getFirstClassDecl(m);
         LocationType ft = LocationTypeExtension.getLocationTypeFromAnnotations(decl.getField(0).getType());
         assertEquals(LocationType.FAR,ft);
@@ -36,7 +31,7 @@ public class LocationTypeTests extends FrontendTest {
 
     @Test
     public void varDecl() {
-        Model m = assertParse("interface I { } { [Somewhere] I i; [Near] I jloc; i = jloc; }",WITH_STD_LIB);
+        Model m = assertParse("interface I { } { [Somewhere] I i; [Near] I jloc; i = jloc; }");
         m.typeCheck();
         assertEquals(LocationType.NEAR,LocationTypeExtension.getLocationTypeFromAnnotations(getTypeOfFirstAssignment(m)));
     }
@@ -253,16 +248,7 @@ public class LocationTypeTests extends FrontendTest {
         	"    I i1; I i2; " +
         	"    Unit m([Far] I i) { i1 = new C(); i2 = new C(); i1!m(i2); } } { }");
     }
-    
-    @Test
-    public void writeBackTest() throws Exception {
-        String s = writeBackSolutions("module M; interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { I i1; I i2; i1 = new C(); i2 = new C(); i1!m(i2); }");
-        //System.out.println(s);
-        // TODO: Do something later (2010+)
-        assertTypeOK(s);
-        assertEquals("module M; interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { [Far] I i1; [Far] I i2; i1 = new C(); i2 = new C(); i1!m(i2); }",s);
-    }
-    
+
     // negative tests:
 
     @Test
@@ -308,7 +294,7 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test(expected= LocationTypeCheckerException.class)
     public void multipleError() {
-        Model m = assertParse("interface I { } class C { [Far] [Near] I i; }",WITH_STD_LIB);
+        Model m = assertParse("interface I { } class C { [Far] [Near] I i; }");
         ClassDecl decl = getFirstClassDecl(m);
         LocationTypeExtension.getLocationTypeFromAnnotations(decl.getField(0).getType());
     }
@@ -326,7 +312,7 @@ public class LocationTypeTests extends FrontendTest {
     @Test
     public void testInferenceRetypeChecking() {
         String code = "interface I { Unit m(); } { [Far] I i; I j; i = j; j.m(); }";
-        Model m = assertParseOkStdLib(code);
+        Model m = assertParse(code);
         LocationTypeExtension te = new LocationTypeExtension(m);
         m.registerTypeSystemExtension(te);
         SemanticConditionList e = m.typeCheck();
@@ -336,7 +322,7 @@ public class LocationTypeTests extends FrontendTest {
     @Test
     public void testAwaitFail() {
         LocationType lt = LocationType.INFER;
-        Model m = assertParseOkStdLib("interface T { Unit foo(); } class C { T t = null; Unit bar() { await t!foo(); }}");
+        Model m = assertParse("interface T { Unit foo(); } class C { T t = null; Unit bar() { await t!foo(); }}");
         assertFalse(m.hasErrors()); // This line is essential to trigger the NPE!
         LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
         ltie.setDefaultType(lt);
@@ -350,7 +336,7 @@ public class LocationTypeTests extends FrontendTest {
     public void testAwaitFailRewriteOff() {
         LocationType lt = LocationType.INFER;
         Model.doAACrewrite = false;
-        Model m = assertParseOkStdLib("interface T { Unit foo(); } class C { T t = null; Unit bar() { await t!foo(); }}");
+        Model m = assertParse("interface T { Unit foo(); } class C { T t = null; Unit bar() { await t!foo(); }}");
         assertFalse(m.hasErrors()); // This line is essential to trigger the NPE!
         LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
         ltie.setDefaultType(lt);
@@ -366,7 +352,7 @@ public class LocationTypeTests extends FrontendTest {
     }
     
     private void assertLocationTypeErrorOnly(String code) {
-        Model m = assertParse(code,WITH_STD_LIB);
+        Model m = assertParse(code);
         LocationTypeExtension te = new LocationTypeExtension(m);
         m.registerTypeSystemExtension(te);
         SemanticConditionList e = m.typeCheck();
@@ -379,7 +365,7 @@ public class LocationTypeTests extends FrontendTest {
     }
 
     private void assertTypeOkOnly(String code) {
-        Model m = assertParse(code,WITH_STD_LIB);
+        Model m = assertParse(code);
         LocationTypeExtension te = new LocationTypeExtension(m);
         m.registerTypeSystemExtension(te);
         m.getErrors();
@@ -389,7 +375,7 @@ public class LocationTypeTests extends FrontendTest {
     }
     
     private Model assertInfer(String code, LocationType expected, boolean fails) {
-        Model m = assertParse(code,WITH_STD_LIB);
+        Model m = assertParse(code);
         //m.setLocationTypingEnabled(true);
         LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
         m.registerTypeSystemExtension(ltie);
@@ -405,23 +391,6 @@ public class LocationTypeTests extends FrontendTest {
             assertTrue(t.toString(), expected == LocationType.FAR ? t == LocationType.FAR || t.isParametricFar() : expected == t);
         }
         return m;
-    }
-    
-    private String writeBackSolutions(String code) throws Exception {
-        File f = File.createTempFile("test", ".abs");
-        f.deleteOnExit();
-        FileWriter fw = new FileWriter(f);
-        fw.write(code);
-        fw.close();
-        Model m = assertParseFileOk(f.getAbsolutePath(), Config.WITH_STD_LIB);
-        LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
-        m.registerTypeSystemExtension(ltie);
-        SemanticConditionList e = m.typeCheck();
-        assertEquals(!e.containsErrors() ? "" : "Found error: "+e.getFirstError().getMessage(), false, e.containsErrors());
-        new InferMain().writeInferenceResultsBack(ltie.getResults());
-        String res = FileUtils.fileToStringBuilder(f).toString();
-        f.delete();
-        return res;
     }
     
     private Model assertInferOk(String string, LocationType expected) {

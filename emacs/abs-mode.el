@@ -438,8 +438,6 @@ value.")
       (list
        abs-compiler-program
        (remove nil (cl-list*
-                    (when (string= filename "abslang.abs")
-                      "-nostdlib")
                     (flymake-init-create-temp-buffer-copy
                      'flymake-create-temp-inplace)
                     other-files))))))
@@ -565,7 +563,7 @@ value.")
                   erlang-buffer (concat "cd (\"" erlang-dir "\").\n"))
                  (comint-send-string
                   erlang-buffer (concat "code:add_paths([\""
-                                        (reduce
+                                        (cl-reduce
                                          (lambda (p1 p2) (concat p1 "\", \"" p2))
                                          erlang-code-path)
                                         "\"]).\n"))

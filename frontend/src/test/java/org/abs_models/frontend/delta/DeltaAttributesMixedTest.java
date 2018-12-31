@@ -4,7 +4,8 @@
  */
 package org.abs_models.frontend.delta;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.analyser.ErrorMessage;
@@ -16,112 +17,101 @@ public class DeltaAttributesMixedTest extends DeltaTest {
 
     @Test
     public void passFeaturesAsBooleans() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D(Bool a, Bool b, Bool c, Int c_a1);"
-                + "uses M;"
-                + "    adds class C { "
-                + "        Bool fA = a; "
-                + "        Bool fB = b; "
-                + "        Bool fC = c; "
-                + "        Int fC_a1 = c_a1; "
-                + "    }"
-                + "productline PL;"
-                + "    features A,B,C;"
-                + "    delta D(A, B, C, C.a1) when C;"
-                + "product P1( C{a1=99} );"
-        );
+        Model model = assertParse("module M;"
+            + "delta D(Bool a, Bool b, Bool c, Int c_a1);"
+            + "uses M;"
+            + "    adds class C { "
+            + "        Bool fA = a; "
+            + "        Bool fB = b; "
+            + "        Bool fC = c; "
+            + "        Int fC_a1 = c_a1; "
+            + "    }"
+            + "productline PL;"
+            + "    features A,B,C;"
+            + "    delta D(A, B, C, C.a1) when C;"
+            + "product P1( C{a1=99} );");
 
         model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("fA", cls.getField(0).getName());
-        assertEquals("False()", cls.getField(0).getInitExp().value.toString());
+        assertEquals("False()", cls.getField(0).getInitExp().toString());
         assertEquals("fB", cls.getField(1).getName());
-        assertEquals("False()", cls.getField(1).getInitExp().value.toString());
+        assertEquals("False()", cls.getField(1).getInitExp().toString());
         assertEquals("fC", cls.getField(2).getName());
-        assertEquals("True()", cls.getField(2).getInitExp().value.toString());
+        assertEquals("True()", cls.getField(2).getInitExp().toString());
         assertEquals("fC_a1", cls.getField(3).getName());
-        assertEquals("IntLiteral(99)", cls.getField(3).getInitExp().value.toString());
+        assertEquals("IntLiteral(99)", cls.getField(3).getInitExp().toString());
     }
 
     @Test
     public void passBooleanFeatureAttributes1() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D(Bool a1, Bool a2);"
-                + "uses M;"
-                + "    adds class C { Bool first = a1; Bool second = a2; }"
-                + "productline PL;"
-                + "    features F;"
-                + "    delta D(F.a, F.b) when F;"
-                + "product P1( F{a=True, b=False} );"
-        );
+        Model model = assertParse("module M;"
+            + "delta D(Bool a1, Bool a2);"
+            + "uses M;"
+            + "    adds class C { Bool first = a1; Bool second = a2; }"
+            + "productline PL;"
+            + "    features F;"
+            + "    delta D(F.a, F.b) when F;"
+            + "product P1( F{a=True, b=False} );");
         
         model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("first", cls.getField(0).getName());
-        assertEquals("True()", cls.getField(0).getInitExp().value.toString());
+        assertEquals("True()", cls.getField(0).getInitExp().toString());
         assertEquals("second", cls.getField(1).getName());
-        assertEquals("False()", cls.getField(1).getInitExp().value.toString());
+        assertEquals("False()", cls.getField(1).getInitExp().toString());
     }
 
     @Test
     public void passBooleanFeatureAttributes1b() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D(Bool a1, Int a2);"
-                + "uses M;"
-                + "    adds class C { Bool first = a1; Int second = a2; }"
-                + "productline PL;"
-                + "    features F;"
-                + "    delta D(F.a, F.b) when F;"
-                + "product P1( F{a=True, b=3} );"
-                , Config.WITH_STD_LIB, Config.TYPE_CHECK
-        );
+        Model model = assertParse("module M;"
+            + "delta D(Bool a1, Int a2);"
+            + "uses M;"
+            + "    adds class C { Bool first = a1; Int second = a2; }"
+            + "productline PL;"
+            + "    features F;"
+            + "    delta D(F.a, F.b) when F;"
+            + "product P1( F{a=True, b=3} );", Config.TYPE_CHECK);
 
         model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("first", cls.getField(0).getName());
-        assertEquals("True()", cls.getField(0).getInitExp().value.toString());
+        assertEquals("True()", cls.getField(0).getInitExp().toString());
         assertEquals("second", cls.getField(1).getName());
-        assertEquals("IntLiteral(3)", cls.getField(1).getInitExp().value.toString());
+        assertEquals("IntLiteral(3)", cls.getField(1).getInitExp().toString());
     }
 
     @Test
     public void passBooleanFeatureAttributes2() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D(Bool attr);"
-                + "uses M;"
-                + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
-                + "productline PL;"
-                + "    features F; delta D(F.a) when F;"
-                + "product P1( F{a=True} );"
-        );
+        Model model = assertParse("module M;"
+            + "delta D(Bool attr);"
+            + "uses M;"
+            + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+            + "productline PL;"
+            + "    features F; delta D(F.a) when F;"
+            + "product P1( F{a=True} );");
 
         model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("attr", cls.getField(0).getName());
-        assertEquals("True()", cls.getField(0).getInitExp().value.toString());
+        assertEquals("True()", cls.getField(0).getInitExp().toString());
 
         //TODO test the value of x
     }
 
     @Test(expected=DeltaModellingException.class)
     public void passBooleanFeatureAttributes2b() throws Exception {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D(Bool attr);"
-                + "uses M;"
-                + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
-                + "productline PL;"
-                + "    features F; delta D(F.b) when F;"
-                + "product P1( F{a=True} );"
-        );
+        Model model = assertParse("module M;"
+            + "delta D(Bool attr);"
+            + "uses M;"
+            + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+            + "productline PL;"
+            + "    features F; delta D(F.b) when F;"
+            + "product P1( F{a=True} );");
 
         model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
@@ -153,7 +143,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "productline PL;"
                 + "    features F; delta D(F.a) when F;"
                 + "product P1( F{a=3} );"
-                , Config.WITH_STD_LIB, Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR
+                , Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR
         );
         assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirstError().msg);
     }
@@ -168,23 +158,20 @@ public class DeltaAttributesMixedTest extends DeltaTest {
                 + "productline PL;"
                 + "    features F; delta D(3) when F;"
                 + "product P1( F );"
-                , Config.WITH_STD_LIB, Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR
+                , Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR
         );
         assertEquals(ErrorMessage.CANNOT_ASSIGN,model.getTypeErrors().getFirstError().msg);
     }
 
     @Test
     public void passBooleanFeatureAttributes4Flat() throws Exception {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D(Bool attr);"
-                + "uses M;"
-                + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
-                + "productline PL;"
-                + "    features F; delta D(F.a) when F;"
-                + "product P1( F{a=3} );"
-                , Config.WITH_STD_LIB
-        );
+        Model model = assertParse("module M;"
+            + "delta D(Bool attr);"
+            + "uses M;"
+            + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+            + "productline PL;"
+            + "    features F; delta D(F.a) when F;"
+            + "product P1( F{a=3} );");
         
         model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
@@ -207,15 +194,13 @@ public class DeltaAttributesMixedTest extends DeltaTest {
 
     @Test
     public void deltaParserIlltyped() throws Exception {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D(Bool attr);"
-                + "uses M;"
-                + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
-                + "productline PL;"
-                + "    features F; delta D(F.a) when F;"
-                + "product P1( F{a=Blue} );"
-        );
+        Model model = assertParse("module M;"
+            + "delta D(Bool attr);"
+            + "uses M;"
+            + "    adds class C { Bool attr = attr; Unit m() {Bool x = attr;} }"
+            + "productline PL;"
+            + "    features F; delta D(F.a) when F;"
+            + "product P1( F{a=Blue} );");
         model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
         assertTrue(model.hasTypeErrors());

@@ -15,110 +15,110 @@ public class JavaPrimitiveTests extends JavaBackendTest {
 
     @Test
     public void testBoolLit() throws Exception {
-        assertValidStdLib(" { Bool b = True; b = False; }");
+        assertValid(" { Bool b = True; b = False; }");
     }
 
     @Test
     public void testBoolNeg() throws Exception {
-        assertValidStdLib(" { Bool b = !True; }");
+        assertValid(" { Bool b = !True; }");
     }
 
     @Test
     public void testBoolAnd() throws Exception {
-        assertValidStdLib(" { Bool b = True && False; }");
+        assertValid(" { Bool b = True && False; }");
     }
 
     @Test
     public void testBoolOr() throws Exception {
-        assertValidStdLib(" { Bool b = True || False; }");
+        assertValid(" { Bool b = True || False; }");
     }
 
     @Test
     public void testBoolEq() throws Exception {
-        assertValidStdLib(" { Bool b = True == False; }");
+        assertValid(" { Bool b = True == False; }");
     }
 
     @Test
     public void testBoolNotEq() throws Exception {
-        assertValidStdLib(" { Bool b = True != False; }");
+        assertValid(" { Bool b = True != False; }");
     }
 
     @Test
     public void testIntLit() throws Exception {
-        assertValidStdLib(" { Int i = 5; }");
+        assertValid(" { Int i = 5; }");
     }
 
     @Test
     public void testNegativeIntLit() throws Exception {
-        assertValidStdLib(" { Int i = -7; }");
+        assertValid(" { Int i = -7; }");
     }
 
     @Test
     public void testLongIntLit() throws Exception {
-        assertValidStdLib(" { Int i = 534023840238420394820394823094; }");
+        assertValid(" { Int i = 534023840238420394820394823094; }");
     }
 
     @Test
     public void testIntAddOps() throws Exception {
-        assertValidStdLib(" { Int i = 5 + -7; }");
+        assertValid(" { Int i = 5 + -7; }");
     }
 
     @Test
     public void testIntSubtractOps() throws Exception {
-        assertValidStdLib(" { Int i = 7 - 5; }");
+        assertValid(" { Int i = 7 - 5; }");
     }
 
     @Test
     public void testIntMultiplyOps() throws Exception {
-        assertValidStdLib(" { Int i = 7 * 5; }");
+        assertValid(" { Int i = 7 * 5; }");
     }
 
     @Test
     public void testIntDivideOps() throws Exception {
-        assertValidStdLib(" { Int i = truncate(7 / 5); }");
+        assertValid(" { Int i = truncate(7 / 5); }");
     }
 
     @Test
     public void testIntModOps() throws Exception {
-        assertValidStdLib(" { Int i = 7 % 5; }");
+        assertValid(" { Int i = 7 % 5; }");
     }
 
     @Test
     public void testIntCompareOps() throws Exception {
-        assertValidStdLib("{ Bool b = 7 == 5; }");
-        assertValidStdLib("{ Bool b = 7 != 5; }");
-        assertValidStdLib("{ Bool b = 7 > 5; }");
-        assertValidStdLib("{ Bool b = 7 < 5; }");
-        assertValidStdLib("{ Bool b = 7 >= 5; }");
-        assertValidStdLib("{ Bool b = 7 <= 5; }");
+        assertValid("{ Bool b = 7 == 5; }");
+        assertValid("{ Bool b = 7 != 5; }");
+        assertValid("{ Bool b = 7 > 5; }");
+        assertValid("{ Bool b = 7 < 5; }");
+        assertValid("{ Bool b = 7 >= 5; }");
+        assertValid("{ Bool b = 7 <= 5; }");
     }
 
     @Test
     public void testStringLit() throws Exception {
-        assertValidStdLib("{ String s = \"Test\"; }");
+        assertValid("{ String s = \"Test\"; }");
     }
     
     @Test
     public void testStringLitEscaped() throws Exception {
-        assertValidStdLib("{ String s = \"Teee\\\"est\"; }");
+        assertValid("{ String s = \"Teee\\\"est\"; }");
     }
 
 
     @Test
     public void testStringLitEscaped2() throws Exception {
-        assertValidStdLib("{ String s = \"line1\\nline2\\t\\n\\r\\\"\\\\\"; }");
+        assertValid("{ String s = \"line1\\nline2\\t\\n\\r\\\"\\\\\"; }");
     }
     
     @Test
     public void testStringCompareOps() throws Exception {
-        assertValidStdLib("{ Bool b = \"Test\" == \"Test\"; }");
-        assertValidStdLib("{ Bool b = \"Test\" != \"Test\"; }");
+        assertValid("{ Bool b = \"Test\" == \"Test\"; }");
+        assertValid("{ Bool b = \"Test\" != \"Test\"; }");
     }
     
     @Test(expected= JavaCodeGenerationException.class)
     public void testModuleNamedMain() throws Exception {
         // see bug #272
-        assertValidStdLib("module Main; interface I { Unit m(); } class C implements I { Unit m() { }  } { }");
+        assertValid("module Main; interface I { Unit m(); } class C implements I { Unit m() { }  } { }");
     }
 
 }

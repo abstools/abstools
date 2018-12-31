@@ -17,19 +17,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.abs_models.backend.common.InternalBackendException;
-import org.abs_models.common.WrongProgramArgumentException;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import com.google.common.io.Files;
 
 import org.abs_models.ABSTest;
+import org.abs_models.backend.common.InternalBackendException;
+import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.ast.Model;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
 
 public abstract class AbstractModelApiTest extends ABSTest {
     
@@ -55,7 +54,7 @@ public abstract class AbstractModelApiTest extends ABSTest {
     protected static void startModelApiServer(File file) throws IOException, WrongProgramArgumentException, InternalBackendException, InterruptedException {
         File tmpdir = Files.createTempDir();
         tmpdir.deleteOnExit();
-        Model model = ABSTest.assertParseFileOk(file.getPath(), Config.WITH_STD_LIB, Config.TYPE_CHECK, Config.WITHOUT_MODULE_NAME);
+        Model model = ABSTest.assertParseFileOk(file.getPath(), Config.TYPE_CHECK, Config.WITHOUT_MODULE_NAME);
         assertFalse(model.hasParserErrors());
         assertFalse(model.hasTypeErrors());
         String mainModule = driver.genCode(model, tmpdir, false);

@@ -23,6 +23,23 @@ aspect TreeUtils {
     }
 
     /**
+     * This method finds the uppermost parent conforming to `type`, starting from this
+     * object's parent. May return null.
+     */
+    @CheckForNull
+    public <N extends ASTNode<?>> N ASTNode.uppermostParentOfType(Class<N> type) {
+        ASTNode<?> result = null;
+        ASTNode<?> n = getParent();
+        while (n != null) {
+            if (type.isInstance(n)) {
+                result = n;
+            }
+            n = n.getParent();
+        }
+        return type.cast(result);
+    }
+
+    /**
      * Finds all children of this node with the specified <code>type</code>. If this node has the
      * specified type, it will be included in the result.
      *

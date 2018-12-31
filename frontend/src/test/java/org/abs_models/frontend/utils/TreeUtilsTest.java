@@ -8,6 +8,15 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.google.common.collect.ImmutableList;
+
+import org.abs_models.common.TreeUtilsHelper;
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.ASTNode;
 import org.abs_models.frontend.ast.AddExp;
@@ -20,21 +29,13 @@ import org.abs_models.frontend.ast.IntLiteral;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.ast.PureExp;
 import org.abs_models.frontend.ast.Stmt;
-import com.google.common.collect.ImmutableList;
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.abs_models.common.TreeUtilsHelper;
 import org.junit.Test;
 
 public class TreeUtilsTest extends FrontendTest {
 
     @Test
     public void closestParent() {
-        Model model = assertParseOkStdLib("def Int test() = 1;");
+        Model model = assertParse("def Int test() = 1;");
         FunctionDecl functionDecl = getLastFunctionDecl(model);
         assertEquals("test", functionDecl.getName());
         PureExp exp = ((ExpFunctionDef) functionDecl.getFunctionDef()).getRhs();
@@ -45,7 +46,7 @@ public class TreeUtilsTest extends FrontendTest {
 
     @Test
     public void closestParentIgnoresSelf() {
-        Model model = assertParseOkStdLib("def Int test() = 1;");
+        Model model = assertParse("def Int test() = 1;");
         FunctionDecl functionDecl = getLastFunctionDecl(model);
         assertEquals("test", functionDecl.getName());
         FunctionDef functionDef = functionDecl.getFunctionDef();
@@ -54,14 +55,14 @@ public class TreeUtilsTest extends FrontendTest {
 
     @Test
     public void closestParentNotFound() {
-        Model model = assertParseOkStdLib("def Int test() = 1;");
+        Model model = assertParse("def Int test() = 1;");
         FunctionDecl functionDecl = getLastFunctionDecl(model);
         assertNull(functionDecl.closestParent(FunctionDecl.class));
     }
 
     @Test
     public void findChildrenList() {
-        Model model = assertParseOkStdLib("def Int test(Int i) = test(1);");
+        Model model = assertParse("def Int test(Int i) = test(1);");
         FunctionDecl functionDecl = getLastFunctionDecl(model);
         assertEquals("test", functionDecl.getName());
 
@@ -71,7 +72,7 @@ public class TreeUtilsTest extends FrontendTest {
 
     @Test
     public void findChildrenListLazy() {
-        Model model = assertParseOkStdLib("def Int test(Int i) = test(1);");
+        Model model = assertParse("def Int test(Int i) = test(1);");
         FunctionDecl functionDecl = getLastFunctionDecl(model);
         assertEquals("test", functionDecl.getName());
 
@@ -82,7 +83,7 @@ public class TreeUtilsTest extends FrontendTest {
 
     @Test
     public void findChildrenListNotNull() {
-        Model model = assertParseOkStdLib("def Int test(Int i) = test(1);");
+        Model model = assertParse("def Int test(Int i) = test(1);");
         FunctionDecl functionDecl = getLastFunctionDecl(model);
         assertEquals("test", functionDecl.getName());
 
@@ -125,7 +126,7 @@ public class TreeUtilsTest extends FrontendTest {
 
     @Test
     public void findChildrenMultipleTypes() {
-        Model model = assertParseOkStdLib("def Int test(Int i) = test(1);");
+        Model model = assertParse("def Int test(Int i) = test(1);");
         FunctionDecl functionDecl = getLastFunctionDecl(model);
         assertEquals("test", functionDecl.getName());
         FunctionDef def = functionDecl.getFunctionDef();
@@ -141,7 +142,7 @@ public class TreeUtilsTest extends FrontendTest {
 
     @Test
     public void recurseForSome() {
-        Model model = assertParseOkStdLib("def Int test(Int i) = 1 + test(2);");
+        Model model = assertParse("def Int test(Int i) = 1 + test(2);");
         FunctionDecl functionDecl = getLastFunctionDecl(model);
         assertEquals("test", functionDecl.getName());
         FunctionDef def = functionDecl.getFunctionDef();
@@ -159,7 +160,7 @@ public class TreeUtilsTest extends FrontendTest {
 
     @Test
     public void findChildrenIncludeSelf() {
-        Model model = assertParseOkStdLib("def Int test(Int i) = test(1);");
+        Model model = assertParse("def Int test(Int i) = test(1);");
         FunctionDecl functionDecl = getLastFunctionDecl(model);
         assertEquals("test", functionDecl.getName());
         ExpFunctionDef def = (ExpFunctionDef) functionDecl.getFunctionDef();
@@ -174,7 +175,7 @@ public class TreeUtilsTest extends FrontendTest {
 
     @Test
     public void findChildrenIncludeOnlySelf() {
-        Model model = assertParseOkStdLib("def Int test(Int i) = test(1);");
+        Model model = assertParse("def Int test(Int i) = test(1);");
         FunctionDecl functionDecl = getLastFunctionDecl(model);
         assertEquals("test", functionDecl.getName());
         ExpFunctionDef def = (ExpFunctionDef) functionDecl.getFunctionDef();
