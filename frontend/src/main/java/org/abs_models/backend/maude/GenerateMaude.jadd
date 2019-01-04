@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import org.abs_models.backend.maude.MaudeCompiler;
 import org.abs_models.backend.maude.MaudeCompilerHelper;
+import org.stringtemplate.v4.ST;
 
 aspect GenerateMaude {
 
@@ -11,6 +12,10 @@ aspect GenerateMaude {
     // up, but has to leave whitespace at the end if needed.
 
     int Model.defaultResources = 0;
+
+    public String ASTNode.getTemplateName() {
+        return this.getClass().getSimpleName();
+    }
 
     public void Model.generateMaude(PrintStream stream, MaudeCompiler.SIMULATOR module, int clocklimit, int defaultResources) {
     	generateMaude(stream,module,null, clocklimit, defaultResources);
@@ -113,8 +118,7 @@ aspect GenerateMaude {
 
   public void PartialFunctionDecl.generateMaude(PrintStream stream) {}
 
-  public void ParFnApp.generateMaude(PrintStream stream) {}
-  public int ParFnApp.numberOfRandom(Set<String> visitedFunctions) {
+  int ParFnApp.numberOfRandom(Set<String> visitedFunctions) {
     return 0;
   }
 
@@ -127,14 +131,18 @@ aspect GenerateMaude {
         throw new NotImplementedYetException(this); // TODO
     }
 
-    abstract public void Exp.generateMaude(PrintStream stream);
-    abstract public int Exp.numberOfRandom(Set<String> visitedFunctions);
-
-    public void Access.generateMaude(PrintStream stream) {
-        stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
-        throw new NotImplementedYetException(this); // TODO
+    public void Exp.generateMaude(PrintStream stream) {
+        ST t = MaudeCompiler.templates.getInstanceOf(getTemplateName());
+        t.add("node", this);
+        stream.print(t.render());
     }
-    public int Access.numberOfRandom(Set<String> visitedFunctions) {
+
+    public int Exp.getNumberOfRandom() {
+        return numberOfRandom(new TreeSet<String>());
+    }
+    abstract int Exp.numberOfRandom(Set<String> visitedFunctions);
+
+    int Access.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
 
@@ -142,7 +150,7 @@ aspect GenerateMaude {
     
     public void PureExp.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
-        int randomcount = this.numberOfRandom(new TreeSet<String>());
+        int randomcount = this.getNumberOfRandom();
         MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations,
                                                getModel().defaultResources);
@@ -158,7 +166,7 @@ aspect GenerateMaude {
     }
 
     // handle AsyncCall, SyncCall, AwaitAsyncCall
-    public int Call.numberOfRandom(Set<String> visitedFunctions) {
+    int Call.numberOfRandom(Set<String> visitedFunctions) {
         int result = 0;
         for (PureExp param : getParams()) {
             result += param.numberOfRandom(visitedFunctions);
@@ -237,7 +245,7 @@ aspect GenerateMaude {
         stream.println("--- Hey, you forgot to flatten your model!");
         throw new NotImplementedYetException(this); // TODO
     }
-    public int OriginalCall.numberOfRandom(Set<String> visitedFunctions) {
+    int OriginalCall.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
 
@@ -248,7 +256,7 @@ aspect GenerateMaude {
         getPureExp().generateMaude(stream);
         stream.print(" ; '" + var + ") ");
     }
-    public int GetExp.numberOfRandom(Set<String> visitedFunctions) {
+    int GetExp.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
 
@@ -288,7 +296,7 @@ aspect GenerateMaude {
         }
         stream.print(") ");
     }
-    public int NewExp.numberOfRandom(Set<String> visitedFunctions) {
+    int NewExp.numberOfRandom(Set<String> visitedFunctions) {
         int result = 0;
         for (PureExp param : getParams()) {
             result += param.numberOfRandom(visitedFunctions);
@@ -299,23 +307,22 @@ aspect GenerateMaude {
     public void ImplementsExp.generateMaude(PrintStream stream) {
         throw new NotImplementedYetException(this); // TODO
     }
-    public int ImplementsExp.numberOfRandom(Set<String> visitedFunctions) {
+    int ImplementsExp.numberOfRandom(Set<String> visitedFunctions) {
         return getExp().numberOfRandom(visitedFunctions);
     }
 
     public void AsExp.generateMaude(PrintStream stream) {
         throw new NotImplementedYetException(this); // TODO
     }
-    public int AsExp.numberOfRandom(Set<String> visitedFunctions) {
+    int AsExp.numberOfRandom(Set<String> visitedFunctions) {
         return getExp().numberOfRandom(visitedFunctions);
     }
 
-    abstract public void LiteralExp.generateMaude(PrintStream stream);
-    public int LiteralExp.numberOfRandom(Set<String> visitedFunctions) {
-        return 0;
+    int LiteralExp.numberOfRandom(Set<String> visitedFunctions) {
+        return 0;               // TODO ListLiteral
     }
 
-    public void StringLiteral.generateMaude(PrintStream stream) {
+    public String StringLiteral.getMaudeEscapedString() {
         String content = getContent();
         StringBuilder result = new StringBuilder();
         for (char c : content.toCharArray()) {
@@ -328,78 +335,22 @@ aspect GenerateMaude {
             default: result.append(c);
             }
         }
-        stream.print("\"str\"[\"" + result.toString() + "\"] ");
+        return result.toString();
     }
 
-    public void IntLiteral.generateMaude(PrintStream stream) {
-        stream.print("\"num\"[" + getContent() + "] ");
-    }
-
-    public void FloatLiteral.generateMaude(PrintStream stream) {
-        stream.print("\"float\"[" + getContent() + "] ");
-    }
-
-    public void ListLiteral.generateMaude(PrintStream stream) {
-        for (PureExp e : getPureExps()) {
-            stream.print("\"ABS.StdLib.Cons\"[");
-            e.generateMaude(stream);
-            stream.print(" :: ");
-        }
-        stream.print("\"ABS.StdLib.Nil\"[ emp ]");
-        for (int i = 0; i < getNumPureExp(); i++) {
-            stream.print("]");
-        }
-        stream.print(" ");
-    }
-
-    syn String Unary.maudePrefixOperator();
-    eq MinusExp.maudePrefixOperator() = "--";
-    eq NegExp.maudePrefixOperator() = "~";
-    public void Unary.generateMaude(PrintStream stream) {
-        stream.print("\"" + maudePrefixOperator() + "\"( ");
-        getOperand().generateMaude(stream);
-        stream.print(") ");
-    }
-    public int Unary.numberOfRandom(Set<String> visitedFunctions) {
+    int Unary.numberOfRandom(Set<String> visitedFunctions) {
         return getOperand().numberOfRandom(visitedFunctions);
     }
 
-    syn String Binary.maudeInfixOperator();
-    eq EqExp.maudeInfixOperator() = "==";
-    eq NotEqExp.maudeInfixOperator() = "/=";
-    eq AndBoolExp.maudeInfixOperator() = "&&";
-    eq OrBoolExp.maudeInfixOperator() = "||";
-    eq LTExp.maudeInfixOperator() = "<";
-    eq GTExp.maudeInfixOperator() = ">";
-    eq LTEQExp.maudeInfixOperator() = "<=";
-    eq GTEQExp.maudeInfixOperator() = ">=";
-    eq AddAddExp.maudeInfixOperator() = "+";
-    eq SubAddExp.maudeInfixOperator() = "-";
-    eq MultMultExp.maudeInfixOperator() = "*";
-    eq DivMultExp.maudeInfixOperator() = "/";
-    eq ModMultExp.maudeInfixOperator() = "%";
-    public void Binary.generateMaude(PrintStream stream) {
-        stream.print("\"" + maudeInfixOperator() + "\"( ");
-        getLeft().generateMaude(stream);
-        stream.print(":: ");
-        getRight().generateMaude(stream);
-        stream.print(") ");
-    }
-    public int Binary.numberOfRandom(Set<String> visitedFunctions) {
+    int Binary.numberOfRandom(Set<String> visitedFunctions) {
         return getLeft().numberOfRandom(visitedFunctions) + getRight().numberOfRandom(visitedFunctions);
     }
 
-    public void ThisExp.generateMaude(PrintStream stream) {
-        stream.print("'this ");
-    }
-    public int ThisExp.numberOfRandom(Set<String> visitedFunctions) {
+    int ThisExp.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
 
-    public void NullExp.generateMaude(PrintStream stream) {
-        stream.print("null ");
-    }
-    public int NullExp.numberOfRandom(Set<String> visitedFunctions) {
+    int NullExp.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
 
@@ -413,7 +364,7 @@ aspect GenerateMaude {
                                                   dc.getTypes());
        stream.print("] ");
     }
-    public int DataConstructorExp.numberOfRandom(Set<String> visitedFunctions) {
+    int DataConstructorExp.numberOfRandom(Set<String> visitedFunctions) {
         int result = 0;
         for (PureExp param : getParams()) {
             result += param.numberOfRandom(visitedFunctions);
@@ -421,36 +372,24 @@ aspect GenerateMaude {
         return result;
     }
 
-	public abstract void VarOrFieldUse.generateMaude(PrintStream stream);
-
-	@Override
-	public void VarUse.generateMaude(PrintStream stream) {
-        stream.print("'" + getName() + " ");
-	}
-
-	@Override
-	public void FieldUse.generateMaude(PrintStream stream) {
-        stream.print("@ '" + getName() + " ");
-	}
-
-    public void FnApp.generateMaude(PrintStream stream) {
-        boolean inlist = false;
-        FunctionDecl decl = (FunctionDecl)getDecl();
-        String fnName = decl.getModuleDecl().getName() + "." + decl.getName();
-        if (Constants.isFunctionalBreakPointFunctionName(fnName)) {
-            getParam(0).generateMaude(stream);
-            return;
-        }
-        stream.print("\"" + fnName + "\"( ");
-        MaudeCompilerHelper.emitParameterValueList(stream, getParams(),
-                                                   decl.getTypes());
-        if (getNumParam() > 0 && fnName.equals("ABS.StdLib.random")) {
-            // magic extra parameter for random()
-            stream.print(" :: \"num\"[0] ");
-        }
-        stream.print(") ");
-    }
-    public int FnApp.numberOfRandom(Set<String> visitedFunctions) {
+    // public void FnApp.generateMaude(PrintStream stream) {
+    //     boolean inlist = false;
+    //     FunctionDecl decl = (FunctionDecl)getDecl();
+    //     String fnName = decl.getModuleDecl().getName() + "." + decl.getName();
+    //     if (Constants.isFunctionalBreakPointFunctionName(fnName)) {
+    //         getParam(0).generateMaude(stream);
+    //         return;
+    //     }
+    //     stream.print("\"" + fnName + "\"( ");
+    //     MaudeCompilerHelper.emitParameterValueList(stream, getParams(),
+    //                                                decl.getTypes());
+    //     if (getNumParam() > 0 && fnName.equals("ABS.StdLib.random")) {
+    //         // magic extra parameter for random()
+    //         stream.print(" :: \"num\"[0] ");
+    //     }
+    //     stream.print(") ");
+    // }
+    int FnApp.numberOfRandom(Set<String> visitedFunctions) {
         int result = 0;
         String fnName = getDecl().getModuleDecl().getName() + "." + getName();
         if (fnName.equals("ABS.StdLib.random")) {
@@ -472,46 +411,18 @@ aspect GenerateMaude {
         return result;
     }
 
-    public void LetExp.generateMaude(PrintStream stream) {
-        boolean inlist = false;
-        stream.print("( let '" + getVar().getName() + " = ");
-        getVal().generateMaude(stream);
-        stream.print("in ");
-        getExp().generateMaude(stream);
-        stream.print(" )");
-    }
-    public int LetExp.numberOfRandom(Set<String> visitedFunctions) {
+    int LetExp.numberOfRandom(Set<String> visitedFunctions) {
         return getVal().numberOfRandom(visitedFunctions)
             + getExp().numberOfRandom(visitedFunctions);
     }
 
-    public void IfExp.generateMaude(PrintStream stream) {
-        stream.print("if ");
-        getCondExp().generateMaude(stream);
-        stream.print("th ");
-        getThenExp().generateMaude(stream);
-        stream.print("el ");
-        getElseExp().generateMaude(stream);
-        stream.print("fi ");
-    }
-    public int IfExp.numberOfRandom(Set<String> visitedFunctions) {
+    int IfExp.numberOfRandom(Set<String> visitedFunctions) {
         return getCondExp().numberOfRandom(visitedFunctions)
             + java.lang.Math.max(getThenExp().numberOfRandom(visitedFunctions),
                                  getElseExp().numberOfRandom(visitedFunctions));
     }
 
-	public void CaseExp.generateMaude(PrintStream stream) {
-        boolean inlist = false;
-		stream.print("case " );
-		getExpr().generateMaude(stream);
-		stream.print("of { ");
-		for (CaseBranch branch : getBranchs()) {
-            if (inlist) stream.print("; "); else inlist = true;
-			branch.generateMaude(stream);
-		}
-		stream.print("} ");
-	}
-    public int CaseExp.numberOfRandom(Set<String> visitedFunctions) {
+    int CaseExp.numberOfRandom(Set<String> visitedFunctions) {
         int acc = 0;
         for (CaseBranch branch : getBranchs()) {
             acc = java.lang.Math.max(acc, branch.numberOfRandom(visitedFunctions));
@@ -519,13 +430,7 @@ aspect GenerateMaude {
         return acc + getExpr().numberOfRandom(visitedFunctions);
     }
 	
-	public void CaseBranch.generateMaude(PrintStream stream) {
-		getLeft().generateMaude(stream);
-        stream.print("=> ( ");
-        getRight().generateMaude(stream);
-        stream.print(") ");
-	}
-    public int CaseBranch.numberOfRandom(Set<String> visitedFunctions) {
+    int CaseBranch.numberOfRandom(Set<String> visitedFunctions) {
         return getRight().numberOfRandom(visitedFunctions);
     }
 	
@@ -675,7 +580,7 @@ aspect GenerateMaude {
         VarDecl var = getVarDecl();
         if (inMainBlock) {
             if (var.hasInitExp()) {
-                int randomcount = var.getInitExp().numberOfRandom(new TreeSet<String>());
+                int randomcount = var.getInitExp().getNumberOfRandom();
                 MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
                 if (var.getInitExp() instanceof PureExp) {
                     MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
@@ -693,7 +598,7 @@ aspect GenerateMaude {
             }
         } else {
             if (var.hasInitExp()) {
-                int randomcount = var.getInitExp().numberOfRandom(new TreeSet<String>());
+                int randomcount = var.getInitExp().getNumberOfRandom();
                 MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
                 if (var.getInitExp() instanceof PureExp) {
                     MaudeCompilerHelper.emitCostAnnotation(stream, getAnnotations(), getModel().defaultResources);
@@ -728,7 +633,7 @@ aspect GenerateMaude {
     }
 
     public void AssignStmt.generateMaude(PrintStream stream) {
-        int randomcount = getValue().numberOfRandom(new TreeSet<String>());
+        int randomcount = getValue().getNumberOfRandom();
         MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
         if (getValue() instanceof PureExp) {
             MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
@@ -972,11 +877,10 @@ aspect GenerateMaude {
         stream.print("> ");
     }
 
-    public int TypeUse.numberOfRandom(Set<String> visitedFunctions) {
+    int TypeUse.numberOfRandom(Set<String> visitedFunctions) {
         return 0; // bogus
     }
 
     public void TraitDecl.generateMaude(PrintStream stream) {}
-  
 
 }

@@ -9,8 +9,8 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.google.common.io.ByteStreams;
@@ -19,8 +19,15 @@ import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
+import org.stringtemplate.v4.STGroup;
+import org.stringtemplate.v4.STGroupFile;
 
 public class MaudeCompiler extends Main {
+
+    public static STGroup templates;
+    static {
+        templates = new STGroupFile(MaudeCompiler.class.getResource("/codegen/maude.stg"));
+    }
 
     public enum SIMULATOR {
         RL(SIMULATOR_RL), EQ_TIMED(SIMULATOR_EQ_TIMED);
