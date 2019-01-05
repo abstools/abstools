@@ -74,6 +74,48 @@ ConstructorPattern(node) ::= <<
 "<node.dataConstructor.qualifiedName>"[<if(node.param)>(<node.params:{a | <(a.templateName)(a)>}; separator=") :: (">) <else>emp <endif>]
 >>
 
+// * Statement Helpers
+costannotation(node) ::= <<
+<if(node.costAnnotation)>$cost(<(node.costAnnotation.templateName)(node.costAnnotation)>) ;
+<endif>
+>>
+
+// * Statements
+
+SkipStmt(node) ::= <<
+<costannotation(node)>
+skip 
+>>
+
+SuspendStmt(node) ::= <<
+<costannotation(node)>
+suspend 
+>>
+
+DurationStmt(node) ::= <<
+<costannotation(node)>
+duration(<(node.min.templateName)(node.min)> ; <(node.max.templateName)(node.max)>) 
+>>
+
+MoveCogToStmt(node) ::= <<
+<costannotation(node)>
+movecogto(<(node.target.templateName)(node.target)>)
+>>
+
+AssertStmt(node) ::= <<
+<costannotation(node)>
+assert <(node.condition.templateName)(node.condition)>
+>>
+
+ThrowStmt(node) ::= <<
+<costannotation(node)>
+throw (<(node.reason.templateName)(node.reason)>)
+>>
+
+DieStmt(node) ::= <<
+<costannotation(node)>
+die (<(node.reason.templateName)(node.reason)>)
+>>
 
 // Local Variables:
 // comment-start: "// "

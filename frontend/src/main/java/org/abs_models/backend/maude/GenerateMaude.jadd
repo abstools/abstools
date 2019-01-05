@@ -361,16 +361,6 @@ aspect GenerateMaude {
         return 0;
     }
 
-    public void DataConstructorExp.generateMaude(PrintStream stream) {
-       boolean inlist = false;
-       DataConstructor dc = getDataConstructor(); 
-       assert dc != null;
-       stream.print("\"" + dc.getModuleDecl().getName() + "." + dc.getName() + "\"[ ");
-
-       MaudeCompilerHelper.emitParameterValueList(stream, getParams(),
-                                                  dc.getTypes());
-       stream.print("] ");
-    }
     int DataConstructorExp.numberOfRandom(Set<String> visitedFunctions) {
         int result = 0;
         for (PureExp param : getParams()) {
@@ -436,47 +426,15 @@ aspect GenerateMaude {
         }
         return acc + getExpr().numberOfRandom(visitedFunctions);
     }
-	
+
     int CaseBranch.numberOfRandom(Set<String> visitedFunctions) {
         return getRight().numberOfRandom(visitedFunctions);
     }
 	
-	abstract public void Pattern.generateMaude(PrintStream stream);
-
-    public void UnderscorePattern.generateMaude(PrintStream stream) {
-        stream.print("'_ ");
-    }
-
-    public void PatternVar.generateMaude(PrintStream stream) {
-        getVar().generateMaude(stream);
-    }
-
-    public void PatternVarUse.generateMaude(PrintStream stream) {
-        stream.print("'" + getName() + " ");
-    }
-    
-    public void PatternVarDecl.generateMaude(PrintStream stream) {
-        stream.print("'" + getName() + " ");
-    }
-
-    public void LiteralPattern.generateMaude(PrintStream stream) {
-        getLiteral().generateMaude(stream);
-    }
-
-    public void ConstructorPattern.generateMaude(PrintStream stream) {
-        boolean inlist = false;
-        final DataConstructor c = getDataConstructor();
-        assert c != null : "We typechecked it!";
-        stream.print("\"" + c.getModuleDecl().getName() + "." + getConstructor() + "\"[");
-        if (getNumParam() == 0) {
-            stream.print("emp ");
-        } else {
-            for (Pattern pattern : getParamList()) {
-                if (inlist) stream.print(":: "); else inlist = true;
-                pattern.generateMaude(stream);
-            }
-        }
-        stream.print("] ");
+    public void Pattern.generateMaude(PrintStream stream) {
+        ST t = MaudeCompiler.templates.getInstanceOf(getTemplateName());
+        t.add("node", this);
+        stream.print(t.render());
     }
 
 	public void UnknownDecl.generateMaude(PrintStream stream) {
@@ -575,8 +533,9 @@ aspect GenerateMaude {
     }
 
     public void Stmt.generateMaude(PrintStream stream) {
-        stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
-        throw new NotImplementedYetException(this);
+        ST t = MaudeCompiler.templates.getInstanceOf(getTemplateName());
+        t.add("node", this);
+        stream.print(t.render());
     }
 
     public void VarDeclStmt.generateMaude(PrintStream stream) {
@@ -627,18 +586,6 @@ aspect GenerateMaude {
         }
     }
     
-    public void SkipStmt.generateMaude(PrintStream stream) {
-        MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
-        stream.print("skip ");
-    }
-
-    public void MoveCogToStmt.generateMaude(PrintStream stream) {
-        MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
-        stream.print("movecogto(");
-        this.getTarget().generateMaude(stream);
-        stream.print(") ");
-    }
-
     public void AssignStmt.generateMaude(PrintStream stream) {
         int randomcount = getValue().getNumberOfRandom();
         MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
@@ -709,20 +656,6 @@ aspect GenerateMaude {
         stream.print(") ");
     }
 
-    public void SuspendStmt.generateMaude(PrintStream stream) {
-        MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
-        stream.print("suspend ");
-    }
-
-    public void DurationStmt.generateMaude(PrintStream stream) {
-        MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
-        stream.print("duration(");
-        getMin().generateMaude(stream);
-        stream.print("; ");
-        getMax().generateMaude(stream);
-        stream.print(") ");
-    }
-
     public void AwaitStmt.generateMaude(PrintStream stream) {
         stream.print("await ");
         getGuard().generateMaude(stream);
@@ -777,18 +710,6 @@ aspect GenerateMaude {
         }
     }
 
-    public void ThrowStmt.generateMaude(PrintStream stream) {
-        stream.print("throw (");
-        getReason().generateMaude(stream);
-        stream.print(") ");
-    }
-
-    public void DieStmt.generateMaude(PrintStream stream) {
-        stream.print("die (");
-        getReason().generateMaude(stream);
-        stream.print(") ");
-    }
-    
     public void ExpressionStmt.generateMaude(PrintStream stream) {
         MaudeCompilerHelper.emitCostAnnotation(stream, getAnnotations(),
                                                getModel().defaultResources);
@@ -801,11 +722,6 @@ aspect GenerateMaude {
         stream.print("do ");
         getBody().generateMaude(stream);
         stream.print("od ");
-    }
-
-    public void AssertStmt.generateMaude(PrintStream stream) {
-        stream.print("assert ");
-        getCondition().generateMaude(stream);
     }
 
     public void MainBlock.generateMaude(PrintStream stream) {
