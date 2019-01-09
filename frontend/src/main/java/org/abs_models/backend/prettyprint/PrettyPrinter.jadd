@@ -1,6 +1,7 @@
 // -*- mode: java; tab-width: 4; -*-
 import java.io.PrintWriter;
 import org.abs_models.backend.prettyprint.*;
+import org.abs_models.frontend.tests.*;
 
 aspect doPrettyPrinter {
 
