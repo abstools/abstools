@@ -317,7 +317,7 @@ public class Main {
 
         if (dump) {
             m.dumpMVars();
-            m.dump();
+            m.dump(System.out);
         }
 
         final SemanticConditionList semErrs = m.getErrors();
