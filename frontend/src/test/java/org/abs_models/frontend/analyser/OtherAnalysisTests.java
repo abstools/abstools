@@ -15,6 +15,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.abs_models.backend.prettyprint.DefaultABSFormatter;
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.ASTNode;
 import org.abs_models.frontend.ast.AwaitAsyncCall;
@@ -25,7 +26,6 @@ import org.abs_models.frontend.ast.ReturnStmt;
 import org.abs_models.frontend.ast.Stmt;
 import org.abs_models.frontend.ast.VarDeclStmt;
 import org.abs_models.frontend.tests.ABSFormatter;
-import org.abs_models.frontend.tests.EmptyFormatter;
 import org.abs_models.frontend.typechecker.DataTypeType;
 import org.abs_models.frontend.typechecker.Type;
 import org.junit.Test;
@@ -112,7 +112,7 @@ public class OtherAnalysisTests extends FrontendTest {
     public static String prettyPrint(Model m2) {
         StringWriter writer = new StringWriter();
         PrintWriter w = new PrintWriter(writer);
-        ABSFormatter f = new EmptyFormatter();
+        ABSFormatter f = new DefaultABSFormatter(w);
         m2.doPrettyPrint(w,f);
         return writer.toString();
     }

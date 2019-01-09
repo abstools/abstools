@@ -16,7 +16,6 @@ import org.abs_models.frontend.ast.DeltaDecl;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
 import org.abs_models.frontend.tests.ABSFormatter;
-import org.abs_models.frontend.tests.EmptyFormatter;
 import org.junit.Test;
 
 public class PrettyPrinterTests extends ABSTest {
@@ -53,7 +52,7 @@ public class PrettyPrinterTests extends ABSTest {
     private String prettyPrint(ASTNode<?> d) {
         StringWriter writer = new StringWriter();
         PrintWriter w = new PrintWriter(writer);
-        ABSFormatter f = new EmptyFormatter();
+        ABSFormatter f = new DefaultABSFormatter(w);
         d.doPrettyPrint(w,f);
         return writer.toString();
     }
