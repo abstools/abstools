@@ -237,7 +237,7 @@ handle_event({call, From}, {register_new_local_object, Class}, _StateName,
              Data=#data{next_obj_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
     Event1 = #event{type=new_object, caller_id=Id, local_id=N, name=Class},
     Event2 = #event{type=schedule, caller_id=Id, local_id=N, name=init},
-    NewRecorded = [Event1, Event2 | Recorded],
+    NewRecorded = [Event2, Event1 | Recorded],
     NewData = Data#data{next_obj_id=N+1, recorded=NewRecorded},
     {keep_state, NewData, {reply, From, Event1}};
 handle_event({call, From}, {register_new_local_object, Class}, _StateName,
