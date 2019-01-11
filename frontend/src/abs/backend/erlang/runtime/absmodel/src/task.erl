@@ -85,7 +85,10 @@ send_notifications(Val)->
 
 loop_for_clock_advance(Cog, Stack) ->
     receive
-        {clock_finished, _Sender} -> ok;
+        {clock_finished, _Sender, NewTime} ->
+            Event = #event{type=time, caller_id=clock,
+                           local_id=modelapi_v2:abs_to_json(NewTime)},
+            cog:register_time_advancement(Cog, Event);
         {stop_world, _Sender} ->
             loop_for_clock_advance(Cog, Stack);
         {get_references, Sender} ->

@@ -5,7 +5,8 @@
          process_is_blocked/2, process_is_blocked_for_gc/2,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
          submit_references/2, register_invocation/2, register_new_object/2,
-         register_new_local_object/2, register_future_read/2, get_scheduling_trace/1]).
+         register_new_local_object/2, register_future_read/2,
+         register_time_advancement/2, get_scheduling_trace/1]).
 -export([return_token/4]).
 -export([inc_ref_count/1,dec_ref_count/1]).
 -include_lib("abs_types.hrl").
@@ -143,6 +144,9 @@ register_new_local_object(#cog{ref=Cog}, Class) ->
 register_future_read(#cog{ref=Cog}, Event) ->
     gen_statem:call(Cog, {register_future_read, Event}).
 
+register_time_advancement(#cog{ref=Cog}, Event) ->
+    gen_statem:call(Cog, {register_time_advancement, Event}).
+
 get_scheduling_trace(CogRef) ->
     gen_statem:call(CogRef, get_scheduling_trace).
 
@@ -262,6 +266,16 @@ handle_event({call, From}, {register_future_read, Event}, _StateName,
              Data=#data{recorded=Recorded,
                         replaying=[Event | Rest]}) ->
     {keep_state, Data#data{recorded=[Event | Recorded], replaying=Rest},
+     {reply, From, ok}};
+
+handle_event({call, From}, {register_time_advancement, Event}, _StateName,
+             Data=#data{recorded=Recorded, replaying=Replaying}) ->
+    NewReplaying = case Replaying of
+                       [Event | Rest] -> Rest;
+                       Replaying -> Replaying
+                   end,
+    {keep_state, Data#data{recorded=[Event | Recorded],
+                           replaying=NewReplaying},
      {reply, From, ok}};
 
 handle_event({call, From}, get_scheduling_trace, _StateName,
