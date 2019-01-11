@@ -1,0 +1,8 @@
+module BackendTest;
+
+{
+    Int i = 1234567890;
+    Float f = 3.1415927;
+    String s = "\"\t\r\nHello";
+    List<String> l = list["1", "2", "3"];
+}
