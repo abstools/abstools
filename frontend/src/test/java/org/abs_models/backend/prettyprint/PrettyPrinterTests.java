@@ -61,10 +61,9 @@ public class PrettyPrinterTests extends ABSTest {
 
     @Test
     public void prettyPrinterExpressions() throws Exception {
-        // TODO: run with -keepsugar
-        // Untested:
+        // TODO: inhibit more rewriting
+        // Untested until then:
         // - ParFnApp
-        // - AwaitAsyncCall
         // - OriginalCall
         String ms = readFile("abssamples/backend/PrettyPrinterTests/PureExpressions.abs");
         Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);

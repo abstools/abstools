@@ -1,0 +1,31 @@
+module BackendTest;
+
+{
+    Int i = 1;
+    -5;
+    !False;
+    (i + 5);
+    (i - 3);
+    (i / 1);
+    (i % 3);
+    (i * 3);
+    (True && True);
+    (True || False);
+    (i == 2);
+    (i != 3);
+    (i >= 3);
+    (i > 3);
+    (i <= 3);
+    (i < 3);
+    True;
+    Cons(2, Nil);
+    if True then 5 else 3;
+    let (Int x) = 5 in (x + 1);
+    let (Pair<Int, String> x) = Pair(5, "a") in x;
+    max(5, 3);
+    list[1, 2, 3];
+    case list[1, 2, 3] {
+        Cons(1, _) => 1;
+        _ => 2;
+    };
+}

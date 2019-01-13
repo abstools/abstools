@@ -589,6 +589,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setV(ctx, new ParFnApp(ctx.qualified_identifier().getText(), params, functionParams));
     }
     @Override public void exitVariadicFunctionExp(ABSParser.VariadicFunctionExpContext ctx) {
+        // see FnApp.isVariadicFnApp()
         List<PureExp> l = v(ctx.pure_exp_list());
         PureExp arglist = null;
         if (l.getNumChildNoTransform() == 0) {

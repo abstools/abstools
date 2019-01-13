@@ -1,0 +1,109 @@
+
+// https://github.com/antlr/stringtemplate4/blob/master/doc/cheatsheet.md
+// https://github.com/antlr/stringtemplate4/blob/master/doc/groups.md
+
+// * Helpers
+
+annotations(node) ::= "<node.annotations:{a | <(a.templateName)(a)> }>"
+
+// * Pure Expressions
+
+IntLiteral(node) ::= "<node.content>"
+FloatLiteral(node) ::= "<node.content>"
+StringLiteral(node) ::= "\"<node.maudeEscapedString>\""
+ListLiteral(node) ::= "[<node.pureExps:{e | <(e.templateName)(e)>}; separator=\", \">]"
+
+NullExp(node) ::= "null"
+ThisExp(node) ::= "this"
+
+Annotation(node) ::= "[<(node.value.templateName)(node.value)>]"
+TypedAnnotation(node) ::= "[<(node.access.templateName)(node.access)> : <(node.value.templateName)(node.value)>]"
+
+VarUse(node) ::= "<node.name>"
+FieldUse(node) ::= "this.<node.name>"
+DataTypeUse(node) ::= "<annotations(node)><node.name>"
+ParametricDataTypeUse(node) ::= "<annotations(node)><node.name><if (node.param)>\<<node.params:{p | <(p.templateName)(p)>};separator=\", \">><endif>"
+ParamDecl(node) ::= "<annotations(node)><(node.access.templateName)(node.access)> <node.name>"
+
+MinusExp(node) ::= "- <(node.operand.templateName)(node.operand)>"
+NegExp(node) ::= "! <(node.operand.templateName)(node.operand)>"
+
+EqExp(node) ::= "(<(node.left.templateName)(node.left)> == <(node.right.templateName)(node.right)>)"
+NotEqExp(node) ::= "(<(node.left.templateName)(node.left)> != <(node.right.templateName)(node.right)>)"
+AndBoolExp(node) ::= "(<(node.left.templateName)(node.left)> && <(node.right.templateName)(node.right)>)"
+OrBoolExp(node) ::= "(<(node.left.templateName)(node.left)> || <(node.right.templateName)(node.right)>)"
+LTExp(node) ::= "(<(node.left.templateName)(node.left)> \< <(node.right.templateName)(node.right)>)"
+GTExp(node) ::= "(<(node.left.templateName)(node.left)> > <(node.right.templateName)(node.right)>)"
+LTEQExp(node) ::= "(<(node.left.templateName)(node.left)> \<= <(node.right.templateName)(node.right)>)"
+GTEQExp(node) ::= "(<(node.left.templateName)(node.left)> >= <(node.right.templateName)(node.right)>)"
+AddAddExp(node) ::= "(<(node.left.templateName)(node.left)> + <(node.right.templateName)(node.right)>)"
+SubAddExp(node) ::= "(<(node.left.templateName)(node.left)> - <(node.right.templateName)(node.right)>)"
+MultMultExp(node) ::= "(<(node.left.templateName)(node.left)> * <(node.right.templateName)(node.right)>)"
+DivMultExp(node) ::= "(<(node.left.templateName)(node.left)> / <(node.right.templateName)(node.right)>)"
+ModMultExp(node) ::= "(<(node.left.templateName)(node.left)> % <(node.right.templateName)(node.right)>)"
+
+DataConstructorExp(node) ::= <<
+<node.constructor><if(node.param)>(<node.params:{a | <(a.templateName)(a)>}; separator=", ">)<endif>
+>>
+
+FnApp(node) ::= <<
+<node.name><if (!node.variadicFnApp)>(<endif><\\>
+<node.paramList:{p | <(p.templateName)(p)>}; separator=", "><\\>
+<if (!node.variadicFnApp)>)<endif>
+>>
+
+// Unused except if -keepsugar is true
+ParFnApp(node) ::= <<
+<node.name><\\>
+(<node.funcParamList:{p | <(p.templateName)(p)>}; separator=", ">)<\\>
+(<node.paramList:{p | <(p.templateName)(p)>}; separator=", ">)
+>>
+
+LetExp(node) ::= <<
+let (<(node.var.templateName)(node.var)>) <\\>
+= <(node.val.templateName)(node.val)> <\\>
+in <(node.exp.templateName)(node.exp)>
+>>
+
+IfExp(node) ::= <<
+if <(node.condExp.templateName)(node.condExp)> <\\>
+then <(node.thenExp.templateName)(node.thenExp)> <\\>
+else <(node.elseExp.templateName)(node.elseExp)>
+>>
+
+CaseExp(node) ::= <<
+case <(node.expr.templateName)(node.expr)> {
+    <node.branchs:{b | <(b.left.templateName)(b.left)> => <(b.right.templateName)(b.right)>;
+}>}
+>>
+
+UnderscorePattern(node) ::= "_"
+PatternVar(node) ::= "<(node.var.templateName)(node.var)>"
+PatternVarUse(node) ::= "<node.name>"
+PatternVarDecl(node) ::= "<node.name>"
+LiteralPattern(node) ::= "<(node.literal.templateName)(node.literal)>"
+ConstructorPattern(node) ::= <<
+<node.constructor><if(node.param)>(<node.params:{a | <(a.templateName)(a)>}; separator=", ">)<endif>
+>>
+
+// * Side-effect Expressions
+
+GetExp(node) ::= "<(node.pureExp.templateName)(node.pureExp)>.get"
+
+NewExp(node) ::= "new <if (node.local)>local <endif><node.className>(<node.params:{p | <(p.templateName)(p)>};separator=\", \">)"
+
+SyncCall(node) ::= <<
+<(node.callee.templateName)(node.callee)>.<node.method>(<node.params:{p | <(p.templateName)(p)>};separator=", ">)
+>>
+
+AsyncCall(node) ::= <<
+<(node.callee.templateName)(node.callee)>!<node.method>(<node.params:{p | <(p.templateName)(p)>};separator=", ">)
+>>
+
+AwaitAsyncCall(node) ::= <<
+await <(node.callee.templateName)(node.callee)>!<node.method>(<node.params:{p | <(p.templateName)(p)>};separator=", ">)
+>>
+
+OriginalCall(node) ::= <<
+original(<node.params:{p | <(p.templateName)(p)>};separator=", ">)
+>>
