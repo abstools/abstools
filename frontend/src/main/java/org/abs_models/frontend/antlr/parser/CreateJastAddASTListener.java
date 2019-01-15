@@ -467,16 +467,23 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
     @Override public void exitCaseStmt(ABSParser.CaseStmtContext ctx) {
         List<CaseBranchStmt> branches = l(ctx.casestmtbranch());
-        // Add default branch that throws PatternMatchFailException.  See
-        // "Behavior of non-exhaustive case statement: no branch match = skip
-        // or error?" on abs-dev on Jan 25-26, 2017
-        Block block = new Block(new List<>(), new List<>());
-        block.addStmt(new ThrowStmt(new List<>(),
-                                    new DataConstructorExp("PatternMatchFailException",
-                                                           new List<>())));
-        CaseBranchStmt defaultBranch = new CaseBranchStmt(new UnderscorePattern(), block);
-        setASTNodePosition(ctx, defaultBranch);
-        branches.add(defaultBranch);
+        CaseBranchStmt lastbranch = null;
+        if (branches.getNumChildNoTransform() > 0) {
+            lastbranch = branches.getChildNoTransform(branches.getNumChildNoTransform() - 1);
+        }
+        if (lastbranch == null || !(lastbranch.getLeftNoTransform() instanceof UnderscorePattern)) {
+            // Add default branch that throws
+            // PatternMatchFailException.  See "Behavior of
+            // non-exhaustive case statement: no branch match = skip
+            // or error?" on abs-dev on Jan 25-26, 2017
+            Block block = new Block(new List<>(), new List<>());
+            block.addStmt(new ThrowStmt(new List<>(),
+                                        new DataConstructorExp("PatternMatchFailException",
+                                                               new List<>())));
+            CaseBranchStmt defaultBranch = new CaseBranchStmt(new UnderscorePattern(), block);
+            setASTNodePosition(ctx, defaultBranch);
+            branches.add(defaultBranch);
+        }
         setV(ctx, new CaseStmt(v(ctx.annotations()), v(ctx.c), branches));
     }
     @Override public void exitCasestmtbranch(ABSParser.CasestmtbranchContext ctx) {
