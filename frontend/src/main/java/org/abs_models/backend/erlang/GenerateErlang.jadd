@@ -581,9 +581,9 @@ aspect GenerateErlang {
     ecs.println(" of");
     ecs.incIndent();
     ecs.print("true -> ");
-    getThen().generateErlangCode(ecs,left);
-    if(hasElse())
-      getElse().generateErlangCode(buffer,right);
+    getThenCase().generateErlangCode(ecs,left);
+    if(hasElseCase())
+      getElseCase().generateErlangCode(buffer,right);
     else
       buffer.print("ok");
     java.util.List<String> mergeLines = vars.merge(Lists.newArrayList(left,right));

@@ -665,10 +665,10 @@ aspect GenerateMaude {
         stream.print("if ");
         getCondition().generateMaude(stream);
         stream.print("th ");
-        getThen().generateMaude(stream);
+        getThenCase().generateMaude(stream);
         stream.print("el ");
-        if (hasElse()) {
-            getElse().generateMaude(stream);
+        if (hasElseCase()) {
+            getElseCase().generateMaude(stream);
         } else {
             stream.print("noStmt ");
         }

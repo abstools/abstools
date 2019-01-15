@@ -3,28 +3,114 @@
  */
 package deadlock.analyser.inference;
 
-import org.abs_models.frontend.ast.*;
-import org.abs_models.frontend.typechecker.InterfaceType;
-import org.abs_models.frontend.typechecker.KindedName;
-import org.abs_models.frontend.typechecker.KindedName.Kind;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.gzoumix.semisolver.constraint.Constraint;
-import com.gzoumix.semisolver.term.*;
+import com.gzoumix.semisolver.term.Term;
+
+import org.abs_models.frontend.ast.ASTNode;
+import org.abs_models.frontend.ast.Access;
+import org.abs_models.frontend.ast.Annotation;
+import org.abs_models.frontend.ast.ArithmeticExp;
+import org.abs_models.frontend.ast.AssertStmt;
+import org.abs_models.frontend.ast.AssignStmt;
+import org.abs_models.frontend.ast.AsyncCall;
+import org.abs_models.frontend.ast.AwaitAsyncCall;
+import org.abs_models.frontend.ast.AwaitStmt;
+import org.abs_models.frontend.ast.Block;
+import org.abs_models.frontend.ast.BoolExp;
+import org.abs_models.frontend.ast.Call;
+import org.abs_models.frontend.ast.ClaimGuard;
+import org.abs_models.frontend.ast.ClassDecl;
+import org.abs_models.frontend.ast.CompilationUnit;
+import org.abs_models.frontend.ast.DataConstructorExp;
+import org.abs_models.frontend.ast.DataTypeDecl;
+import org.abs_models.frontend.ast.DataTypeUse;
+import org.abs_models.frontend.ast.Decl;
+import org.abs_models.frontend.ast.DurationStmt;
+import org.abs_models.frontend.ast.EffExp;
+import org.abs_models.frontend.ast.Exp;
+import org.abs_models.frontend.ast.ExpressionStmt;
+import org.abs_models.frontend.ast.FieldDecl;
+import org.abs_models.frontend.ast.FnApp;
+import org.abs_models.frontend.ast.FromImport;
+import org.abs_models.frontend.ast.FunctionDecl;
+import org.abs_models.frontend.ast.GetExp;
+import org.abs_models.frontend.ast.Guard;
+import org.abs_models.frontend.ast.IfExp;
+import org.abs_models.frontend.ast.IfStmt;
+import org.abs_models.frontend.ast.Import;
+import org.abs_models.frontend.ast.IntLiteral;
+import org.abs_models.frontend.ast.InterfaceDecl;
+import org.abs_models.frontend.ast.InterfaceTypeUse;
+import org.abs_models.frontend.ast.LetExp;
+import org.abs_models.frontend.ast.MethodImpl;
+import org.abs_models.frontend.ast.MethodSig;
+import org.abs_models.frontend.ast.MinusExp;
+import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.ModuleDecl;
+import org.abs_models.frontend.ast.Name;
+import org.abs_models.frontend.ast.NamedImport;
+import org.abs_models.frontend.ast.NegExp;
+import org.abs_models.frontend.ast.NewExp;
+import org.abs_models.frontend.ast.NullExp;
+import org.abs_models.frontend.ast.ParamDecl;
+import org.abs_models.frontend.ast.ParametricDataTypeUse;
+import org.abs_models.frontend.ast.ParametricFunctionDecl;
+import org.abs_models.frontend.ast.PureExp;
+import org.abs_models.frontend.ast.RelationalExpr;
+import org.abs_models.frontend.ast.ReturnStmt;
+import org.abs_models.frontend.ast.SkipStmt;
+import org.abs_models.frontend.ast.StarImport;
+import org.abs_models.frontend.ast.Stmt;
+import org.abs_models.frontend.ast.StringLiteral;
+import org.abs_models.frontend.ast.SuspendStmt;
+import org.abs_models.frontend.ast.SyncCall;
+import org.abs_models.frontend.ast.ThisExp;
+import org.abs_models.frontend.ast.TypeParameterDecl;
+import org.abs_models.frontend.ast.TypeParameterUse;
+import org.abs_models.frontend.ast.TypeUse;
+import org.abs_models.frontend.ast.VarDecl;
+import org.abs_models.frontend.ast.VarDeclStmt;
+import org.abs_models.frontend.ast.VarOrFieldUse;
+import org.abs_models.frontend.ast.WhileStmt;
+import org.abs_models.frontend.typechecker.InterfaceType;
+import org.abs_models.frontend.typechecker.KindedName;
+import org.abs_models.frontend.typechecker.KindedName.Kind;
+import org.abs_models.frontend.typechecker.Type;
 
 import deadlock.analyser.AnalyserLog;
-import deadlock.analyser.factory.*;
-import deadlock.analyser.generation.*;
-import org.abs_models.frontend.typechecker.Type;
+import deadlock.analyser.factory.Contract;
+import deadlock.analyser.factory.ContractElementAwait;
+import deadlock.analyser.factory.ContractElementGet;
+import deadlock.analyser.factory.ContractElementInvk;
+import deadlock.analyser.factory.Factory;
+import deadlock.analyser.factory.FunctionInterface;
+import deadlock.analyser.factory.GroupName;
+import deadlock.analyser.factory.IRecord;
+import deadlock.analyser.factory.ITypingEnvironmentFutureType;
+import deadlock.analyser.factory.ITypingEnvironmentVariableType;
+import deadlock.analyser.factory.MethodInterface;
+import deadlock.analyser.factory.RecordField;
+import deadlock.analyser.factory.RecordPresent;
+import deadlock.analyser.factory.RecordVariable;
+import deadlock.analyser.factory.TypingEnvironmentFutureTypeTick;
+import deadlock.analyser.factory.TypingEnvironmentFutureTypeUntick;
+import deadlock.analyser.factory.TypingEnvironmentVariableTypeFuture;
+import deadlock.analyser.generation.ASTNodeInformation;
+import deadlock.analyser.generation.ResultInference;
+import deadlock.analyser.generation.ResultInferenceEffExp;
+import deadlock.analyser.generation.ResultInferencePureExp;
+import deadlock.analyser.generation.ResultInferenceStmt;
+import deadlock.analyser.generation.TypingEnvironment;
 
 /**
  * @author Abel, Michael
@@ -834,16 +920,16 @@ public class ContractInference {
         _log.logDebug("Contract inference of a Conditional Statement");
         _log.beginIndent();
         TypingEnvironment tmp = _env.copy();
-        ResultInferenceStmt resThen = typeInference(ifstmt.getThen());
+        ResultInferenceStmt resThen = typeInference(ifstmt.getThenCase());
         List<TypingEnvironment> resultEnvs = new LinkedList<>();
         resultEnvs.addAll(resThen.getEnvironment());
 
         Contract contract;
         Constraint c = resThen.getConstraint();
 
-        if (ifstmt.hasElse()) {
+        if (ifstmt.hasElseCase()) {
             this._env = tmp;
-            ResultInferenceStmt resElse = typeInference(ifstmt.getElse());
+            ResultInferenceStmt resElse = typeInference(ifstmt.getElseCase());
             c.add(resElse.getConstraint());
             resultEnvs.addAll(resElse.getEnvironment());
             contract = _df.newContractUnion(ifstmt, resThen.getContract(), resElse.getContract());

@@ -871,9 +871,9 @@ aspect GenerateProlog {
         s.print("ifStmt(");
         this.getCondition().generateProlog(s,reachInfo);
         s.print(",");
-        this.getThen().generateProlog(s,reachInfo);
+        this.getThenCase().generateProlog(s,reachInfo);
         s.print(",");
-        this.getElseOpt().generateProlog(s,reachInfo);
+        this.getElseCaseOpt().generateProlog(s,reachInfo);
         s.print(",");
         this.printContextInformation(s);
         s.print(")");
