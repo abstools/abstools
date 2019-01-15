@@ -17,13 +17,15 @@ NullExp(node) ::= "null"
 ThisExp(node) ::= "this"
 
 Annotation(node) ::= "[<(node.value.templateName)(node.value)>]"
-TypedAnnotation(node) ::= "[<(node.access.templateName)(node.access)> : <(node.value.templateName)(node.value)>]"
+TypedAnnotation(node) ::= "[<(node.access.templateName)(node.access)>: <(node.value.templateName)(node.value)>]"
 
 VarUse(node) ::= "<node.name>"
 FieldUse(node) ::= "this.<node.name>"
 DataTypeUse(node) ::= "<annotations(node)><node.name>"
+InterfaceTypeUse(node) ::= "<annotations(node)><node.name>"
 ParametricDataTypeUse(node) ::= "<annotations(node)><node.name><if (node.param)>\<<node.params:{p | <(p.templateName)(p)>};separator=\", \">><endif>"
 ParamDecl(node) ::= "<annotations(node)><(node.access.templateName)(node.access)> <node.name>"
+VarDecl(node) ::= "<(node.access.templateName)(node.access)> <node.name><if (node.initExp)> = <(node.initExp.templateName)(node.initExp)><endif>"
 
 MinusExp(node) ::= "- <(node.operand.templateName)(node.operand)>"
 NegExp(node) ::= "! <(node.operand.templateName)(node.operand)>"
@@ -106,4 +108,64 @@ await <(node.callee.templateName)(node.callee)>!<node.method>(<node.params:{p | 
 
 OriginalCall(node) ::= <<
 original(<node.params:{p | <(p.templateName)(p)>};separator=", ">)
+>>
+
+// * Statements
+
+SkipStmt(node) ::= "<annotations(node)>skip;"
+
+SuspendStmt(node) ::= "<annotations(node)>suspend;"
+
+AssertStmt(node) ::= "<annotations(node)>assert <(node.condition.templateName)(node.condition)>;"
+
+ThrowStmt(node) ::= "<annotations(node)>throw <(node.reason.templateName)(node.reason)>;"
+
+DieStmt(node) ::= "<annotations(node)>die <(node.reason.templateName)(node.reason)>;"
+
+ExpressionStmt(node) ::= "<annotations(node)><(node.exp.templateName)(node.exp)>;"
+
+VarDeclStmt(node) ::= "<annotations(node)><(node.varDecl.templateName)(node.varDecl)>;"
+
+AssignStmt(node) ::= "<annotations(node)><(node.var.templateName)(node.var)> = <(node.value.templateName)(node.value)>;"
+
+ReturnStmt(node) ::= "<annotations(node)>return <(node.retExp.templateName)(node.retExp)>;"
+
+DurationStmt(node) ::= "<annotations(node)>duration(<(node.min.templateName)(node.min)>, <(node.max.templateName)(node.max)>);"
+
+AndGuard(node) ::= "<(node.left.templateName)(node.left)> & <(node.right.templateName)(node.right)>"
+
+ClaimGuard(node) ::= "<(node.var.templateName)(node.var)>?"
+
+DurationGuard(node) ::= "duration(<(node.min.templateName)(node.min)>, <(node.max.templateName)(node.max)>)"
+
+ExpGuard(node) ::= "<(node.pureExp.templateName)(node.pureExp)>"
+
+AwaitStmt(node) ::= "<annotations(node)>await <(node.guard.templateName)(node.guard)>;"
+
+Block(node) ::= <<
+<if (node.annotation)><annotations(node)>
+<endif>{
+    <node.stmtList:{s | <(s.templateName)(s)>};separator="\n">
+}
+>>
+
+MainBlock ::= Block
+
+IfStmt(node) ::= "<annotations(node)>if (<(node.condition.templateName)(node.condition)>) <(node.thenCase.templateName)(node.thenCase)><if (node.elseCase)> else <(node.elseCase.templateName)(node.elseCase)><endif>"
+
+WhileStmt(node) ::= "<annotations(node)>while (<(node.condition.templateName)(node.condition)>) <(node.body.templateName)(node.body)>"
+
+ForeachStmt(node) ::= "<annotations(node)>foreach (<node.loopVarDecl.name> in <(node.listExp.templateName)(node.listExp)>) <(node.body.templateName)(node.body)>"
+
+CaseStmt(node) ::= <<
+<annotations(node)>case <(node.expr.templateName)(node.expr)> {
+    <node.branchList:{b | <(b.left.templateName)(b.left)> => <(b.right.templateName)(b.right)>
+}>
+}
+>>
+
+TryCatchFinallyStmt(node) ::= <<
+<annotations(node)>try <(node.body.templateName)(node.body)> catch {
+    <node.catchs:{b | <(b.left.templateName)(b.left)> => <(b.right.templateName)(b.right)>
+}>}<if (node.finally)> finally <(node.finally.templateName)(node.finally)><endif>
 >>

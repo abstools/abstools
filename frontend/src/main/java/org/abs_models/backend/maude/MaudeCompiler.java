@@ -57,8 +57,6 @@ public class MaudeCompiler extends Main {
 
 
     public static int doMain(final String... args) {
-        /* Maude has build-in AwaitAsyncCall support */
-        Model.doAACrewrite = false;
         MaudeCompiler compiler = new MaudeCompiler();
         try {
             return compiler.compile(args);
@@ -117,6 +115,8 @@ public class MaudeCompiler extends Main {
     public int compile(String[] args) throws Exception {
         if (verbose) System.out.println("Generating Maude code...");
         final Model model = parse(args);
+        // Maude has build-in AwaitAsyncCall support
+        model.doAACrewrite = false;
         if (model.hasParserErrors()
             || model.hasErrors()
             || model.hasTypeErrors())

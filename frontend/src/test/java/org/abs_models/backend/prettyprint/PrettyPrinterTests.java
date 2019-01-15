@@ -73,6 +73,13 @@ public class PrettyPrinterTests extends ABSTest {
         assertEqualsNoWS(ms, m);
     }
 
+    @Test
+    public void prettyPrinterStatements() throws Exception {
+        String ms = readFile("abssamples/backend/PrettyPrinterTests/Statements.abs");
+        Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
+        assertEqualsNoWS(ms, m);
+    }
+
     private static void assertEqualsNoWS(String s, ASTNode<?> m) {
         assertEquals(replaceWhitespaceChars(s), replaceWhitespaceChars(prettyPrint(m)));
     }
@@ -86,7 +93,7 @@ public class PrettyPrinterTests extends ABSTest {
     private static String prettyPrint(ASTNode<?> d) {
         StringWriter writer = new StringWriter();
         PrintWriter w = new PrintWriter(writer);
-        org.abs_models.frontend.tests.ABSFormatter f = new DefaultABSFormatter(w);
+        ABSFormatter f = new DefaultABSFormatter(w);
         d.doPrettyPrint(w,f);
         return writer.toString();
     }

@@ -15,6 +15,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.abs_models.backend.prettyprint.ABSFormatter;
 import org.abs_models.backend.prettyprint.DefaultABSFormatter;
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.ASTNode;
@@ -25,7 +26,6 @@ import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.ast.ReturnStmt;
 import org.abs_models.frontend.ast.Stmt;
 import org.abs_models.frontend.ast.VarDeclStmt;
-import org.abs_models.frontend.tests.ABSFormatter;
 import org.abs_models.frontend.typechecker.DataTypeType;
 import org.abs_models.frontend.typechecker.Type;
 import org.junit.Test;
@@ -119,29 +119,27 @@ public class OtherAnalysisTests extends FrontendTest {
 
     //@Test
     public void awaitTest2() {
-        Model.doAACrewrite = true;
         // FIXME: the code in this example is incorrect (no await statement in init block allowed)
         Model m = assertParse("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!m(Unit());}}");
         assertFalse(m.hasErrors());
         final String p1 = prettyPrint(m);
-        Model.doAACrewrite = false;
         // Model m2 = assertParseOk("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
         // FIXME: the code in this example is incorrect (no await statement in init block allowed)
         Model m2 = assertParse("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!m(Unit());}}");
+        m2.doAACrewrite = false;
         assertFalse(m2.hasErrors());
         assertEquals(p1, prettyPrint(m2));
     }
 
     //@Test
     public void awaitTest3() {
-        Model.doAACrewrite = true;
         // FIXME: the code in this example is incorrect (no await statement in init block allowed)
         Model m = assertParse("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!n(Unit());}}");
         assertFalse(m.hasErrors());
         final String p1 = prettyPrint(m);
-        Model.doAACrewrite = false;
         // FIXME: the code in this example is incorrect (no await statement in init block allowed)
         Model m2 = assertParse("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!n(Unit());}}");
+        m2.doAACrewrite = false;
         assertFalse(m2.hasErrors());
         assertEquals(p1, prettyPrint(m2));
     }
@@ -183,13 +181,12 @@ public class OtherAnalysisTests extends FrontendTest {
 
     @Test
     public void awaitRewriteModule1() {
-        Model.doAACrewrite = false;
         Model m = assertParse("module A; export *; data X; module B; export *; data X; module C; import * from A; import B.X; class C { X m() { return await this!m();}}");
+        m.doAACrewrite = false;
         ClassDecl c = (ClassDecl) m.lookupModule("C").getDecl(0);
         ReturnStmt ret = (ReturnStmt) c.getMethod(0).getBlock().getStmt(0);
         assertThat(ret.getRetExp().getType(), instanceOf(DataTypeType.class));
         assertEquals("A.X",ret.getRetExp().getType().getQualifiedName());
-        Model.doAACrewrite = true;
         m = assertParse("module A; export *; data X; module B; export *; data X; module C; import * from A; import B.X; class C { X m() { return await this!m();}}");
         c = (ClassDecl) m.lookupModule("C").getDecl(0);
         Stmt s = c.getMethod(0).getBlock().getStmt(0);
