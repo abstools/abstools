@@ -1334,7 +1334,7 @@ interface Feature {
 
 module ABS.Productline;
 export *;
-import List, Nil, String from ABS.StdLib;
+import * from ABS.StdLib;
 
 data Feature;
 

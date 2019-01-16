@@ -40,7 +40,7 @@ public class ParseSamplesTest extends FrontendTest {
         return Arrays.asList(data);
     }
 
-    final private String input;
+    final protected String input;
     final protected String product;
     protected Model m;
 

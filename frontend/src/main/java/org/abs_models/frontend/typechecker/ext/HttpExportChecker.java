@@ -31,6 +31,10 @@ public class HttpExportChecker extends DefaultTypeSystemExtension {
             if (ptype.getDecl().getQualifiedName().equals("ABS.StdLib.List")) {
                 return isTypeUsableFromHTTP(ptype.getTypeArg(0));
             }
+            if (ptype.getDecl().getQualifiedName().equals("ABS.StdLib.Map")) {
+                return ptype.getTypeArg(0).isStringType()
+                    && isTypeUsableFromHTTP(ptype.getTypeArg(1));
+            }
             return false;
         }
         return false;

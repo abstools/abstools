@@ -1,14 +1,14 @@
 ;;; abs-mode.el --- ABS major mode for Emacs
 
-;; Copyright (C) 2010  Rudolf Schlatte
+;; Copyright (C) 2010-2018  Rudolf Schlatte
 
-;; Author: Rudi Schlatte <rudi@constantly.at>
+;; Author: Rudolf Schlatte <rudi@constantly.at>
 ;; Keywords: languages
 ;; Version: 0.1.1
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation, version 2.
+;; the Free Software Foundation, version 3.
 
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,10 +22,10 @@
 
 ;;; This file contains a mode for the modeling language Abs.
 ;;;
-;;; To simulate models using the Maude backend, you also need maude-mode,
-;;; available from http://sourceforge.net/projects/maude-mode/ -- or now
-;;; included in this directory as well.  To simulate models using the Erlang
-;;; backend, erlang-mode needs to be installed.
+;;; To simulate models using the Maude backend within emacs, you also
+;;; need maude-mode, available from
+;;; https://github.com/rudi/maude-mode.  To simulate models using the
+;;; Erlang backend within emacs, erlang-mode needs to be installed.
 
 (require 'compile)
 (require 'custom)
@@ -548,49 +548,50 @@ value.")
               (goto-char (point-max))
               (insert "frew start .")
               (comint-send-input)))
-    (`erlang (let ((erlang-buffer (progn
-                                    (when (get-buffer "*erlang*")
-                                      (kill-buffer (get-buffer "*erlang*")))
-                                    (save-excursion
-                                      ;; don't propagate
-                                      ;; interactive args, if any
-                                      (inferior-erlang nil))
-                                    (get-buffer "*erlang*")))
-                   (erlang-dir (concat (file-name-directory (buffer-file-name))
-                                       "gen/erl/absmodel"))
-                   (module (abs--guess-module))
-                   (clock-limit abs-clock-limit)
-                   (port abs-local-port)
-                   (influxdb-enable abs-influxdb-enable)
-                   (influxdb-url abs-influxdb-url)
-                   (influxdb-db abs-influxdb-db)
-                   (replay-trace abs-replay-trace))
+    (`erlang (let* ((erlang-buffer (progn
+                                     (when (get-buffer "*erlang*")
+                                       (kill-buffer (get-buffer "*erlang*")))
+                                     (save-excursion
+                                       ;; don't propagate
+                                       ;; interactive args, if any
+                                       (inferior-erlang nil))
+                                     (get-buffer "*erlang*")))
+                    (erlang-dir (concat (file-name-directory (buffer-file-name))
+                                        "gen/erl/absmodel"))
+                    (erlang-code-path
+                     (directory-files-recursively erlang-dir "^ebin$" t))
+                    (module (abs--guess-module))
+                    (clock-limit abs-clock-limit)
+                    (port abs-local-port)
+                    (influxdb-enable abs-influxdb-enable)
+                    (influxdb-url abs-influxdb-url)
+                    (influxdb-db abs-influxdb-db)
+                    (replay-trace abs-replay-trace))
                (with-current-buffer erlang-buffer
-                 (comint-send-string erlang-buffer
-                                     (concat "cd (\"" erlang-dir "\").\n"))
-                 (comint-send-string erlang-buffer
-                                     (concat "code:add_paths([\""
-                                             erlang-dir "/ebin\", \""
-                                             erlang-dir "/deps/cowboy/ebin\", \""
-                                             erlang-dir "/deps/cowlib/ebin\", \""
-                                             erlang-dir "/deps/jsx/ebin\", \""
-                                             erlang-dir "/deps/ranch/ebin\"]).\n"))
+                 (comint-send-string
+                  erlang-buffer (concat "cd (\"" erlang-dir "\").\n"))
+                 (comint-send-string
+                  erlang-buffer (concat "code:add_paths([\""
+                                        (reduce
+                                         (lambda (p1 p2) (concat p1 "\", \"" p2))
+                                         erlang-code-path)
+                                        "\"]).\n"))
                  (comint-send-string erlang-buffer "make:all([load]).\n")
-                 (comint-send-string erlang-buffer
-                                     (concat "runtime:start(\""
-                                             (when clock-limit (format " -l %d " clock-limit))
-                                             (when port (format " -p %d " port))
-                                             (when influxdb-enable (format " -i " influxdb-enable))
-                                             (when influxdb-url (format " -u %s " influxdb-url))
-                                             (when influxdb-db (format " -d %s " influxdb-db))
-                                             (when (and replay-trace (file-exists-p replay-trace))
-                                               (format " -r %s " (expand-file-name replay-trace)))
-                                             ;; FIXME: reinstate `module' arg
-                                             ;; once abs--guess-module doesn't
-                                             ;; pick a module w/o main block
+                 (comint-send-string
+                  erlang-buffer (concat "runtime:start(\""
+                                        (when clock-limit (format " -l %d " clock-limit))
+                                        (when port (format " -p %d " port))
+                                        (when influxdb-enable (format " -i " influxdb-enable))
+                                        (when influxdb-url (format " -u %s " influxdb-url))
+                                        (when influxdb-db (format " -d %s " influxdb-db))
+                                        (when (and replay-trace (file-exists-p replay-trace))
+                                          (format " -r %s " (expand-file-name replay-trace)))
+                                        ;; FIXME: reinstate `module' arg
+                                        ;; once abs--guess-module doesn't
+                                        ;; pick a module w/o main block
 
-                                             ;; module
-                                             "\").\n")))
+                                        ;; module
+                                        "\").\n")))
                (pop-to-buffer erlang-buffer)))
     (`java (let* ((module (abs--guess-module))
                   (java-buffer (get-buffer-create (concat "*abs java " module "*")))

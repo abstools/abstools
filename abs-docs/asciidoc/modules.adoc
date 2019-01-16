@@ -18,7 +18,8 @@ is contained in the `export` clause.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _ModuleDecl_  ::= | `module` _TypeIdentifier_ `;` { _Export_ } { _Import_ } { _Decl_ } [ _Block_ ]
+| _ModuleDecl_  ::= | `module` _TypeIdentifier_ `;` { _ExportImport_ } { _Decl_ } [ _Block_ ]
+| _ExportImport_ ::= | _Export_ {vbar} _Import_
 | _Export_      ::= | `export` _IdentifierList_ [ `from` _TypeIdentifier_ ] `;` +
                  {vbar} `export` `*` [ `from` _TypeIdentifier_ ] `;`
 | _Import_      ::= | `import` _IdentifierList_ [ `from` _TypeIdentifier_ ] `;` +
@@ -45,9 +46,10 @@ Every module starts with a declaration of the form
 This declaration starts a new module named `MyModule`.  All declarations after
 this line until the next module declaration belong to the module `MyModule`.
 
-NOTE: The module `ABS.StdLib` contains the standard library and is
-automatically imported by every module.  There is no need for an explicit
-`import * from ABS.StdLib;` clause.
+NOTE: The module `ABS.StdLib` contains the standard library and is imported by
+every module by default.  If a module contains an explicit `import x, y from
+ABS.StdLib;` import clause, only `x` and `y` will be imported, otherwise all
+names exported from the standard library will be imported in that module.
 
 
 === Exporting Identifiers
@@ -82,8 +84,8 @@ can be re-exported via `export * from OtherModule;` clauses).
 ----
 module Test;
 export *;
-export * from OtherModule;
 import * from OtherModule;
+export * from OtherModule;
 ----
 
 === Importing Identifiers
@@ -131,8 +133,8 @@ It is possible to re-export names that are imported from another module. For exa
 .Example
 ----
 module Bar;
-export * from Drinks;
 import * from Drinks;
+export * from Drinks;
 ----
 
 re-exports from `Bar` all names that are exported by module `Drinks`.  Another
@@ -145,8 +147,8 @@ To re-export only selected names, include only these names in the export list:
 .Example
 ----
 module Bar;
-export Drink; <1>
 import * from Drinks;
+export Drink; <1>
 ----
 Only `Drink` is exported from `Bar`.
 
@@ -157,8 +159,8 @@ Note that only names that have been imported can be re-exported.  For example:
 [source]
 ----
 module Bar;
-export * from Drinks;
 import Drink from Drinks;
+export * from Drinks;
 ----
 
 only re-exports `Drink`, as this is the only name imported from module

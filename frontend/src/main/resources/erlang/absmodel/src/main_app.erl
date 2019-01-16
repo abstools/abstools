@@ -14,6 +14,9 @@ start(_StartType, _StartArgs) ->
                                         {"/v2/:request/[...]", modelapi_v2, []},
                                         {"/:request/[...]", modelapi_v2, []}]}]),
     {ok, Port} = application:get_env(absmodel, port),
+    {ok, Module} = application:get_env(absmodel, module),
+    {ok, Debug} = application:get_env(absmodel, debug),
+    {ok, GCStatistics} = application:get_env(absmodel, gcstatistics),
     {ok, Clocklimit} = application:get_env(absmodel, clocklimit),
     {ok, Trace} = application:get_env(absmodel, replay_trace),
     %% In case we need a random port, see example at bottom of
@@ -24,7 +27,7 @@ start(_StartType, _StartArgs) ->
         _ -> io:format(standard_error, "Failed to start model API on port ~w (is another model already running?)~nAborting~n", [Port]),
              halt(1)
     end,
-    runtime:start_link([?ABSMAINMODULE, Clocklimit, true, Trace]).
+    runtime:start_link([Module, Debug, GCStatistics, Clocklimit, true, Trace]).
 
 stop(_State) ->
     ok.

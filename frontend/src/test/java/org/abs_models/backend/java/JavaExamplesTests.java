@@ -23,6 +23,11 @@ public class JavaExamplesTests extends ExamplesTypeChecking {
 
     @Test @Override
     public void test() throws Exception {
+        // 10wikipediadocstokenized.abs leads to a stack overflow
+        // involving
+        // org.eclipse.jdt.internal.compiler.ast.AllocationExpression.resolveType,
+        // not much we can test here
+        Assume.assumeFalse(input.equals("abssamples/10wikipediadocstokenized.abs"));
         super.test();
         assertValidJava(getJavaCode(m));
     }

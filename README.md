@@ -20,7 +20,8 @@ Folders
 
 * `frontend` - the ABS compiler and runtime support.  See frontend/README for
   installation instructions.  (short version: install jdk8 and erlang
-  version 21, then run `./gradlew assemble` in the `frontend` directory, or `.\gradlew assemble` on windows.)
+  version 21, then run `./gradlew assemble` in the `frontend` directory,
+  or `.\gradlew.bat assemble` on windows.)
 
 
 * `abs-docs` - the ABS language manual, available online at

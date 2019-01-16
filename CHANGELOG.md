@@ -1,8 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).  This project does not quite adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) since it does not declare a public API, as mandated in the linked specification.  The patch version number increases when existing models continue running with the new version; the minor version number increases when existing models can be adapted in a straightforward way; the major version number increases when existing models need to be partially or totally rewritten.
 
 ## [Unreleased]
 
@@ -12,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   -http-static-dir ./my_js_libs *.abs` to add a custom `index.html` file and static resources (Javascript files, images, ...) to a model; connect a browser to the running model on the Model API port to see it rendered. Static files are available from the Model API (and from index.html) via `/static/filename`.
 
 - The Model API now allows advancing the clock via external stimuli -- a model started with the model api (`-p 8080`) and with a clock limit (`-l x`) will stop and wait at t=`x`.  A call `/clock/advance?by=y` increases the limit by `y`, thereby waking up blocked processes.  `/clock/now` can be used to obtain the current clock value.
+
+- The Model API now supports input parameters of type `Map<String, X>` (where `X` is a supported input type).
 
 - Added expressions `x implements I` and `x as I` to check for and convert an object reference to another interface.  If the underlying class of `x` does not implement `I`, return `False` and `null`, respectively.
 
@@ -35,9 +36,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Switched to the [gradle](https://gradle.org) build system for the ABS compiler.  The directory structure inside `frontend/` was extensively reorganized to conform with maven / gradle directory layout conventions.
 
+- Modules that explicitly import something from the `ABS.StdLib` standard library will not implicitly import everything from `ABS.StdLib` anymore.  The behavior of modules not having such an import clause is unchanged, i.e., they still contain an impolicit `import * from ABS.StdLib` clause.
+
+- In a module definition, `import` and `export` clauses can now be written in any order.
+
 - Avoid crash in `DC.decrementResources`: when trying to decrement by more than available, only decrement to the maximum possible.  `decrementResources` now returns the actual amount by which the resource was decreased.  This changes the signature of three methods in the `ABS.DC.DeploymentComponent` interface in a backwards-incompatible way.
 
 - When pretty-printing to a file, the resulting file will use Unix line endings.
+
+- An empty case expression (`Unit x = case 5 {};`) is now a syntax error instead of a type error.
 
 ### Removed
 

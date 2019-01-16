@@ -137,5 +137,67 @@ public class ErlangModelApiTests extends AbstractModelApiTest {
         Assert.assertEquals("lalala", array.get(0).asString());
         Assert.assertEquals("lololo", array.get(1).asString());
     }
+
+    @Test
+    public void test_intMap() throws IOException {
+        JsonObject parameter = Json.object().add("p",
+                                                 Json.object().add("a", 1)
+                                                 .add("b", 2)
+                                                 .add("c", 3));
+        String response = sendPostRequest("/call/test/test_map_int", parameter.toString(), 200);
+        JsonValue result = getValueFromResponse(response);
+
+        JsonObject object = result.asObject();
+        Assert.assertEquals(1, object.get("a").asInt());
+        Assert.assertEquals(2, object.get("b").asInt());
+        Assert.assertEquals(3, object.get("c").asInt());
+    }
     
+    @Test
+    public void test_boolMap() throws IOException {
+        JsonObject parameter = Json.object().add("p",
+                                                 Json.object().add("a", true)
+                                                 .add("b", false)
+                                                 .add("c", true));
+        String response = sendPostRequest("/call/test/test_map_bool", parameter.toString(), 200);
+        JsonValue result = getValueFromResponse(response);
+
+        JsonObject object = result.asObject();
+        Assert.assertTrue(object.get("a").asBoolean());
+        Assert.assertFalse(object.get("b").asBoolean());
+        Assert.assertTrue(object.get("c").asBoolean());
+    }
+    
+    @Test
+    public void test_floatMap() throws IOException {
+        JsonObject parameter = Json.object().add("p",
+                                                 Json.object().add("a", 1.1)
+                                                 .add("b", 2.2)
+                                                 .add("c", 3.3));
+        String response = sendPostRequest("/call/test/test_map_float", parameter.toString(), 200);
+        JsonValue result = getValueFromResponse(response);
+
+        JsonObject object = result.asObject();
+        Assert.assertEquals(1.1, object.get("a").asFloat(), 0.001);
+        Assert.assertEquals(2.2, object.get("b").asFloat(), 0.001);
+        Assert.assertEquals(3.3, object.get("c").asFloat(), 0.001);
+    }
+    
+    @Test
+    public void test_stringMap() throws IOException {
+        JsonObject parameter = Json.object().add("p",
+                                                 Json.object().add("a", "lalala")
+                                                 .add("b", "lololo")
+                                                 .add("c", "lululu"));
+        String response = sendPostRequest("/call/test/test_map_string", parameter.toString(), 200);
+        JsonValue result = getValueFromResponse(response);
+
+        JsonObject object = result.asObject();
+        Assert.assertEquals("lalala", object.get("a").asString());
+        Assert.assertEquals("lololo", object.get("b").asString());
+        Assert.assertEquals("lululu", object.get("c").asString());
+    }
+
+
+
 }

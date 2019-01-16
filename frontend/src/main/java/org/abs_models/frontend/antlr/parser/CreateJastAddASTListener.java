@@ -196,7 +196,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
 
     @Override public void exitModule_decl(ABSParser.Module_declContext ctx) {
-        setV(ctx, new ModuleDecl(ctx.qualified_type_identifier().getText(), l(ctx.module_export()), l(ctx.module_import()), l(ctx.decl()), o(ctx.main_block())));
+        setV(ctx, new ModuleDecl(ctx.qualified_type_identifier().getText(), l(ctx.exports), l(ctx.imports), l(ctx.decl()), o(ctx.main_block())));
     }
 
     @Override public void exitModule_export(ABSParser.Module_exportContext ctx) {
