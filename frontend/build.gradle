@@ -9,9 +9,9 @@ plugins {
     id 'application'
     id 'com.palantir.git-version' version '0.11.0'
 
-    id 'org.jastadd' version '1.13.1'
+    id 'org.jastadd' version '1.13.3'
     id 'antlr'
-    id "com.github.spotbugs" version "1.6.3"
+    id "com.github.spotbugs" version "1.6.5"
 }
 
 application {

@@ -31,7 +31,7 @@ aspect ErrorCheck {
     }
     public void FExt.collectErrors(SemanticConditionList c) {
         super.collectErrors(c);
-        if (!((Model)calcContextNode(Model.class)).features().contains(getName()))
+        if (!((Model)uppermostParentOfType(Model.class)).features().contains(getName()))
             c.add(new SemanticError(this,ErrorMessage.UNDECLARED_VARIABLE,getName()));
         AttrConstraints acl = getAttrConstraints();
         for(int i = 0; i < acl.getNumConstr(); i++)

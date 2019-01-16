@@ -6,7 +6,7 @@ aspect NodePositions {
      * When calling getFileName() on a node whose originalFileName is null, we delegate to the parent node.
      * At the latest when reaching the CompilationUnit, we should get a meaningful value.
      */
-    private String ASTNode.sourceFileName = null;
+    protected String ASTNode.sourceFileName = null;
     private int ASTNode.startline = 0;
     private int ASTNode.startcolumn = 0;
     private int ASTNode.endline = 0;
@@ -21,32 +21,36 @@ aspect NodePositions {
     // and using _our_ position for the check will result in a false
     // positive.  For the moment, CreateJastAddASTListener tries to set
     // everyone's position.
-    syn String Model.getFileName() = "<invalid>";
-    syn String ASTNode.getFileName() {
+    public String Model.getFileName() {
+        if (sourceFileName == null) return "<invalid>";
+        else return sourceFileName;
+    }
+
+    public String ASTNode.getFileName() {
         if (sourceFileName != null) return sourceFileName;
         else if (getParent() != null) return getParent().getFileName();
         else return null;
     }
 
-    syn int ASTNode.getStartLine() {
+    public int ASTNode.getStartLine() {
         if (isPositionSet) return startline;
         else if (getParent() != null) return getParent().getStartLine();
         else return 0;
     }
 
-    syn int ASTNode.getStartColumn() {
+    public int ASTNode.getStartColumn() {
         if (isPositionSet) return startcolumn;
         else if (getParent() != null) return getParent().getStartColumn();
         else return 0;
     }
 
-    syn int ASTNode.getEndLine() {
+    public int ASTNode.getEndLine() {
         if (isPositionSet) return endline;
         else if (getParent() != null) return getParent().getEndLine();
         else return 0;
     }
 
-    syn int ASTNode.getEndColumn() {
+    public int ASTNode.getEndColumn() {
         if (isPositionSet) return endcolumn;
         else if (getParent() != null) return getParent().getEndColumn();
         else return 0;
@@ -73,8 +77,8 @@ aspect NodePositions {
     }
 
     public String ASTNode.getPositionString() {
-        String res = getFileName();
-        if ("".equals(res)) res = "<unkown>";
-        return res + ":" + getStartLine() + ":" + getStartColumn() + ": ";
+        String filename = getFileName();
+        if (filename.equals("")) filename = "<unkown>";
+        return filename + ":" + getStartLine() + ":" + getStartColumn() + ": ";
     }
 }

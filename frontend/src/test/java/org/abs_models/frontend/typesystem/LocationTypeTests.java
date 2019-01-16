@@ -13,7 +13,6 @@ import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeCheckerException;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
-import org.abs_models.frontend.typechecker.locationtypes.infer.InferMain;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import org.junit.Test;
 
@@ -253,16 +252,7 @@ public class LocationTypeTests extends FrontendTest {
         	"    I i1; I i2; " +
         	"    Unit m([Far] I i) { i1 = new C(); i2 = new C(); i1!m(i2); } } { }");
     }
-    
-    @Test
-    public void writeBackTest() throws Exception {
-        String s = writeBackSolutions("module M; interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { I i1; I i2; i1 = new C(); i2 = new C(); i1!m(i2); }");
-        //System.out.println(s);
-        // TODO: Do something later (2010+)
-        assertTypeOK(s);
-        assertEquals("module M; interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { [Far] I i1; [Far] I i2; i1 = new C(); i2 = new C(); i1!m(i2); }",s);
-    }
-    
+
     // negative tests:
 
     @Test
@@ -405,23 +395,6 @@ public class LocationTypeTests extends FrontendTest {
             assertTrue(t.toString(), expected == LocationType.FAR ? t == LocationType.FAR || t.isParametricFar() : expected == t);
         }
         return m;
-    }
-    
-    private String writeBackSolutions(String code) throws Exception {
-        File f = File.createTempFile("test", ".abs");
-        f.deleteOnExit();
-        FileWriter fw = new FileWriter(f);
-        fw.write(code);
-        fw.close();
-        Model m = assertParseFileOk(f.getAbsolutePath(), Config.WITH_STD_LIB);
-        LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
-        m.registerTypeSystemExtension(ltie);
-        SemanticConditionList e = m.typeCheck();
-        assertEquals(!e.containsErrors() ? "" : "Found error: "+e.getFirstError().getMessage(), false, e.containsErrors());
-        new InferMain().writeInferenceResultsBack(ltie.getResults());
-        String res = FileUtils.fileToStringBuilder(f).toString();
-        f.delete();
-        return res;
     }
     
     private Model assertInferOk(String string, LocationType expected) {

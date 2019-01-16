@@ -35,7 +35,7 @@ public class ClassGenerator {
         this.classDecl = classDecl;
         modName = ErlUtil.getName(classDecl);
         ecs = ea.createSourceFile(modName);
-        hasFields = classDecl.getParams().hasChildren() || classDecl.getFields().hasChildren();
+        hasFields = classDecl.getParams().getNumChild() > 0 || classDecl.getFields().getNumChild() > 0;
         try {
             generateHeader();
             generateExports();

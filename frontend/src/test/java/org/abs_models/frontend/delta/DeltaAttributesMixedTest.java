@@ -36,13 +36,13 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("fA", cls.getField(0).getName());
-        assertEquals("False()", cls.getField(0).getInitExp().value.toString());
+        assertEquals("False()", cls.getField(0).getInitExp().toString());
         assertEquals("fB", cls.getField(1).getName());
-        assertEquals("False()", cls.getField(1).getInitExp().value.toString());
+        assertEquals("False()", cls.getField(1).getInitExp().toString());
         assertEquals("fC", cls.getField(2).getName());
-        assertEquals("True()", cls.getField(2).getInitExp().value.toString());
+        assertEquals("True()", cls.getField(2).getInitExp().toString());
         assertEquals("fC_a1", cls.getField(3).getName());
-        assertEquals("IntLiteral(99)", cls.getField(3).getInitExp().value.toString());
+        assertEquals("IntLiteral(99)", cls.getField(3).getInitExp().toString());
     }
 
     @Test
@@ -62,9 +62,9 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("first", cls.getField(0).getName());
-        assertEquals("True()", cls.getField(0).getInitExp().value.toString());
+        assertEquals("True()", cls.getField(0).getInitExp().toString());
         assertEquals("second", cls.getField(1).getName());
-        assertEquals("False()", cls.getField(1).getInitExp().value.toString());
+        assertEquals("False()", cls.getField(1).getInitExp().toString());
     }
 
     @Test
@@ -85,9 +85,9 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("first", cls.getField(0).getName());
-        assertEquals("True()", cls.getField(0).getInitExp().value.toString());
+        assertEquals("True()", cls.getField(0).getInitExp().toString());
         assertEquals("second", cls.getField(1).getName());
-        assertEquals("IntLiteral(3)", cls.getField(1).getInitExp().value.toString());
+        assertEquals("IntLiteral(3)", cls.getField(1).getInitExp().toString());
     }
 
     @Test
@@ -106,7 +106,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals("attr", cls.getField(0).getName());
-        assertEquals("True()", cls.getField(0).getInitExp().value.toString());
+        assertEquals("True()", cls.getField(0).getInitExp().toString());
 
         //TODO test the value of x
     }

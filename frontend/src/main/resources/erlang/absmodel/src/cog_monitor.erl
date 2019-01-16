@@ -30,29 +30,30 @@
 %% Simulation ends when no cog is active or waiting for the clock / some
 %% resources.  Note that a cog is in either "active" or "idle" but can be in
 %% "active" and "blocked" at the same time.
--record(state,{main,            % this
-               active,          % non-idle cogs
-               idle,            % idle cogs
-               blocked,         % cogs with process blocked on future/resource
-               clock_waiting,   % [{Min,Max,Task,Cog}]: processes with their
-                                % cog waiting for simulated time to advance,
-                                % with minimum and maximum waiting time.
-                                % Ordered by ascending maximum waiting time
-                                % such that the Max element of the head of the
-                                % list is always MTE [Maximum Time Elapse]).
-               active_before_next_clock,
-                                % ordset of {Task, Cog} of tasks that need to
-                                % acknowledge waking up before next clock
-                                % advance
-               cog_names,       % A mapping from cogs to a unique identifier
-                                % for the cog (represented as a list of
-                                % numbers).
-               trace_map,       % A mapping from cog names to abstract
-                                % scheduling traces
-               dcs,             % list of deployment components
-               registered_objects, % Objects registered in HTTP API. binary |-> #object{}
-               keepalive_after_clock_limit % Flag whether we kill all objects after clock limit has been reached
-                                           % (false when HTTP API is active)
+-record(data,{main,            % this
+              active,          % non-idle cogs
+              idle,            % idle cogs
+              blocked,         % cogs with process blocked on future/resource
+              clock_waiting,   % [{Min,Max,Task,Cog}]: processes with their
+                               % cog waiting for simulated time to advance,
+                               % with minimum and maximum waiting time.
+                               % Ordered by ascending maximum waiting time
+                               % such that the Max element of the head of the
+                               % list is always MTE [Maximum Time Elapse]).
+              active_before_next_clock,
+                               % ordset of {Task, Cog} of tasks that need to
+                               % acknowledge waking up before next clock
+                               % advance
+              cog_names,       % A mapping from cogs to a unique identifier
+                               % for the cog (represented as a list of
+                               % numbers).
+              trace_map,       % A mapping from cog names to abstract
+                               % scheduling traces
+
+              dcs,             % list of deployment components
+              registered_objects, % Objects registered in HTTP API. binary |-> #object{}
+              keepalive_after_clock_limit % Flag whether we kill all objects after clock limit has been reached
+                                          % (false when HTTP API is active)
               }).
 %%External function
 
@@ -141,19 +142,19 @@ increase_clock_limit(Amount) ->
 
 %%The callback gets as parameter the pid of the runtime process, which waits for all cogs to be idle
 init([Main,Keepalive,Trace])->
-    {ok,#state{main=Main,
-               active=gb_sets:empty(),
-               blocked=gb_sets:empty(),
-               idle=gb_sets:empty(),
-               clock_waiting=[],
-               dcs=[],
-               active_before_next_clock=ordsets:new(),
-               cog_names=maps:new(),
-               trace_map=Trace,
-               registered_objects=maps:new(),
-               keepalive_after_clock_limit=Keepalive}}.
+    {ok,#data{main=Main,
+              active=gb_sets:empty(),
+              blocked=gb_sets:empty(),
+              idle=gb_sets:empty(),
+              clock_waiting=[],
+              dcs=[],
+              active_before_next_clock=ordsets:new(),
+              cog_names=maps:new(),
+              trace_map=Trace,
+              registered_objects=maps:new(),
+              keepalive_after_clock_limit=Keepalive}}.
 
-handle_call({keep_alive, Class}, _From, State=#state{keepalive_after_clock_limit=KeepAlive}) ->
+handle_call({keep_alive, Class}, _From, Data=#data{keepalive_after_clock_limit=KeepAlive}) ->
     %% Do not garbage-collect DeploymentComponent objects when we do
     %% visualization (KeepAlive=true)
     Result=case KeepAlive of
@@ -163,42 +164,43 @@ handle_call({keep_alive, Class}, _From, State=#state{keepalive_after_clock_limit
                            _ -> false
                        end
            end,
-    {reply, Result, State};
-handle_call({cog,ParentCog,Cog,new}, _From, State=#state{idle=I,cog_names=M,trace_map=T})->
+    {reply, Result, Data};
+handle_call({cog,ParentCog,Cog,new}, _From, Data=#data{idle=I,cog_names=M,trace_map=T})->
     {C, N} = maps:get(ParentCog, M, {[], 0}),
     Id = [N | C],
     M2 = maps:put(ParentCog, {C, N+1}, M),
     NewM = maps:put(Cog, {Id, 0}, M2),
     I1=gb_sets:add_element(Cog,I),
     ShownId = lists:reverse(Id),
-    {reply, {ShownId, maps:get(ShownId, T, [])}, State#state{idle=I1, cog_names=NewM}};
-handle_call({cog,Cog,active}, _From, State=#state{active=A,idle=I})->
+    I1=gb_sets:add_element(Cog,I),
+    {reply, {ShownId, maps:get(ShownId, T, [])}, Data#data{idle=I1, cog_names=NewM}};
+handle_call({cog,Cog,active}, _From, Data=#data{active=A,idle=I})->
     A1=gb_sets:add_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
-    {reply, ok, State#state{active=A1,idle=I1}};
-handle_call({cog,Cog,idle}, From, State=#state{active=A,idle=I})->
+    {reply, ok, Data#data{active=A1,idle=I1}};
+handle_call({cog,Cog,idle}, From, Data=#data{active=A,idle=I})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:add_element(Cog,I),
-    S1=State#state{active=A1,idle=I1},
+    S1=Data#data{active=A1,idle=I1},
     gen_server:reply(From, ok),
-    case can_clock_advance(State, S1) of
+    case can_clock_advance(Data, S1) of
         true->
             {noreply, advance_clock_or_terminate(S1)};
         false->
             {noreply, S1}
     end;
-handle_call({cog,Cog,blocked}, From, State=#state{active=A,blocked=B})->
+handle_call({cog,Cog,blocked}, From, Data=#data{active=A,blocked=B})->
     A1=gb_sets:del_element(Cog,A),
     B1=gb_sets:add_element(Cog,B),
-    S1=State#state{active=A1,blocked=B1},
+    S1=Data#data{active=A1,blocked=B1},
     gen_server:reply(From, ok),
-    case can_clock_advance(State, S1) of
+    case can_clock_advance(Data, S1) of
         true->
             {noreply, advance_clock_or_terminate(S1)};
         false->
             {noreply, S1}
     end;
-handle_call({clock_limit_increased, Amount}, From, State) ->
+handle_call({clock_limit_increased, Amount}, From, Data) ->
     %% KLUDGE: Ideally we'd like to only be told that the limit has
     %% increased, without having to do it ourselves.  Consider
     %% converting cog_monitor to gen_fsm and switching between
@@ -209,54 +211,54 @@ handle_call({clock_limit_increased, Amount}, From, State) ->
              true ->
                  %% If clock didn't advance (Success == error), this
                  %% does advance clock since limit stayed the same
-                 advance_clock_or_terminate(State);
+                 advance_clock_or_terminate(Data);
              false ->
-                 State
+                 Data
          end,
     {reply, {Success, Newlimit}, S1};
-handle_call({cog,Cog,unblocked}, _From, State=#state{active=A,blocked=B})->
+handle_call({cog,Cog,unblocked}, _From, Data=#data{active=A,blocked=B})->
     A1=gb_sets:add_element(Cog,A),
     B1=gb_sets:del_element(Cog,B),
-    {reply, ok, State#state{active=A1,blocked=B1}};
+    {reply, ok, Data#data{active=A1,blocked=B1}};
 handle_call({cog,Cog,RecordedTrace,die},
-            From,State=#state{active=A,idle=I,blocked=B,clock_waiting=W,
-                              active_before_next_clock=ABNC,
-                              cog_names=M, trace_map=T})->
+            From,Data=#data{active=A,idle=I,blocked=B,clock_waiting=W,
+                            active_before_next_clock=ABNC,
+                            cog_names=M, trace_map=T})->
     ABNC1=ordsets:filter(fun ({_, Cog1}) -> Cog1 =/= Cog end, ABNC),
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
     B1=gb_sets:del_element(Cog,B),
     W1=lists:filter(fun ({_Min, _Max, _Task, Cog1}) ->  Cog1 =/= Cog end, W),
     T1=maps:put(maps:get(Cog, M), RecordedTrace, T),
-    S1=State#state{active=A1,idle=I1,blocked=B1,clock_waiting=W1, active_before_next_clock=ABNC1,trace_map=T1},
+    S1=Data#data{active=A1,idle=I1,blocked=B1,clock_waiting=W1, active_before_next_clock=ABNC1,trace_map=T1},
     gen_server:reply(From, ok),
-    case can_clock_advance(State, S1) of
+    case can_clock_advance(Data, S1) of
         true->
             {noreply, advance_clock_or_terminate(S1)};
         false->
             {noreply, S1}
     end;
 handle_call({task,Task,Cog,clock_waiting,Min,Max}, _From,
-             State=#state{clock_waiting=C}) ->
+             Data=#data{clock_waiting=C}) ->
     C1=add_to_clock_waiting(C,Min,Max,Task,Cog),
-    {reply, ok,State#state{clock_waiting=C1}};
+    {reply, ok,Data#data{clock_waiting=C1}};
 handle_call({cog,Task,Cog,clock_waiting,Min,Max}, _From,
-             State=#state{clock_waiting=C}) ->
+             Data=#data{clock_waiting=C}) ->
     %% {cog, blocked} event comes separately
     C1=add_to_clock_waiting(C,Min,Max,Task,Cog),
-    {reply, ok, State#state{clock_waiting=C1}};
+    {reply, ok, Data#data{clock_waiting=C1}};
 handle_call({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent}},
-            _From, State=#state{dcs=DCs}) ->
-    {reply, ok, State#state{dcs=[DC | DCs]}};
-handle_call(get_dcs, _From, State=#state{dcs=DCs}) ->
-    {reply, DCs, State};
-handle_call(get_schedules, _From, State=#state{idle=Idle, cog_names=Names, trace_map=Traces}) ->
-    {reply, gather_scheduling_traces(Idle, Names, Traces), State};
-handle_call(all_registered_names, _From, State=#state{registered_objects=Objects}) ->
-    {reply, maps:keys(Objects), State};
-handle_call(all_registered_objects, _From, State=#state{registered_objects=Objects}) ->
-    {reply, maps:values(Objects), State};
-handle_call({register_object, Object, Key}, _From, State=#state{registered_objects=Objects}) ->
+            _From, Data=#data{dcs=DCs}) ->
+    {reply, ok, Data#data{dcs=[DC | DCs]}};
+handle_call(get_dcs, _From, Data=#data{dcs=DCs}) ->
+    {reply, DCs, Data};
+handle_call(get_schedules, _From, Data=#data{idle=Idle, cog_names=Names, trace_map=Traces}) ->
+    {reply, gather_scheduling_traces(Idle, Names, Traces), Data};
+handle_call(all_registered_names, _From, Data=#data{registered_objects=Objects}) ->
+    {reply, maps:keys(Objects), Data};
+handle_call(all_registered_objects, _From, Data=#data{registered_objects=Objects}) ->
+    {reply, maps:values(Objects), Data};
+handle_call({register_object, Object, Key}, _From, Data=#data{registered_objects=Objects}) ->
     object:protect_object_from_gc(Object),
     NewObjects=case maps:get(Key, Objects,none) of
                    none -> maps:put(Key, Object, Objects);
@@ -264,37 +266,37 @@ handle_call({register_object, Object, Key}, _From, State=#state{registered_objec
                        object:unprotect_object_from_gc(OldObject),
                        maps:update(Key, Object, Objects)
                end,
-    {reply, ok, State#state{registered_objects=NewObjects}};
-handle_call({lookup_object, Name}, _From, State=#state{registered_objects=Objects}) ->
+    {reply, ok, Data#data{registered_objects=NewObjects}};
+handle_call({lookup_object, Name}, _From, Data=#data{registered_objects=Objects}) ->
     Result=case maps:get(Name, Objects, none) of
                none -> none;
                Object -> Object
            end,
-    {reply, Result, State};
-handle_call(Request, _From, State)->
+    {reply, Result, Data};
+handle_call(Request, _From, Data)->
     io:format(standard_error, "Unknown request: ~w~n", [Request]),
-    {reply, error, State}.
+    {reply, error, Data}.
 
 
-handle_cast({dc_died, O}, State=#state{dcs=DCs}) ->
-    {noreply, State#state{dcs=lists:filter(fun (#object{ref=DC}) -> DC =/= O end, DCs)}};
-handle_cast({task_confirm_clock_wakeup, Task}, State=#state{active_before_next_clock=ABNC}) ->
+handle_cast({dc_died, O}, Data=#data{dcs=DCs}) ->
+    {noreply, Data#data{dcs=lists:filter(fun (#object{ref=DC}) -> DC =/= O end, DCs)}};
+handle_cast({task_confirm_clock_wakeup, Task}, Data=#data{active_before_next_clock=ABNC}) ->
     ABNC1=ordsets:filter(fun ({Task1, _}) -> Task1 =/= Task end, ABNC),
-    S1=State#state{active_before_next_clock=ABNC1},
-    case can_clock_advance(State, S1) of
+    S1=Data#data{active_before_next_clock=ABNC1},
+    case can_clock_advance(Data, S1) of
         true->
             {noreply, advance_clock_or_terminate(S1)};
         false->
             {noreply, S1}
     end;
-handle_cast(_Request, State) ->
+handle_cast(_Request, Data) ->
     %% unused
-    {noreply, State}.
+    {noreply, Data}.
 
 
-handle_info(_Info, State)->
+handle_info(_Info, Data)->
     %% unused
-    {noreply, State}.
+    {noreply, Data}.
 
 
 gather_scheduling_traces(Idle, Names, TraceMap) ->
@@ -310,12 +312,12 @@ terminate(_Reason, _State) ->
     ok.
 
 
-code_change(_OldVsn, State, _Extra)->
+code_change(_OldVsn, Data, _Extra)->
     %% not supported
-    {error, State}.
+    {error, Data}.
 
-can_clock_advance(_OldState=#state{active=A, blocked=B, active_before_next_clock=ABNC},
-                  _NewState=#state{active=A1, blocked=B1, active_before_next_clock=ABNC1}) ->
+can_clock_advance(_OldData=#data{active=A, blocked=B, active_before_next_clock=ABNC},
+                  _NewData=#data{active=A1, blocked=B1, active_before_next_clock=ABNC1}) ->
     %% This function detects a state change between old and new state.  The
     %% clock can advance under the following circumstances:
     %%
@@ -335,7 +337,7 @@ can_clock_advance(_OldState=#state{active=A, blocked=B, active_before_next_clock
     (ordsets:size(ABNC1) == 0) andalso ((not Old_idle and All_idle)
                                         orelse (Old_idle and All_idle and (ordsets:size(ABNC) > 0))) .
 
-advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,keepalive_after_clock_limit=Keepalive}) ->
+advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,keepalive_after_clock_limit=Keepalive}) ->
     case C of
         [] ->
             case Keepalive of
@@ -349,7 +351,7 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
                     %% We are probably serving via http; don't advance time
                     ok
             end,
-            State;
+            Data;
         [{_Min, MTE, _Task, _Cog} | _] ->
             OldTime=clock:now(),
             Delta=rationals:sub(MTE, OldTime),
@@ -362,7 +364,7 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
                               lists:map(
                                 fun(I) -> decrease_or_wakeup(MTE, I, NewTime) end,
                                 C)),
-                    State#state{clock_waiting=lists:flatten(C1),
+                    Data#data{clock_waiting=lists:flatten(C1),
                                 active_before_next_clock=ordsets:from_list(lists:flatten(A1))};
                 {limit_reached, _} ->
                     influxdb:flush(),
@@ -370,12 +372,12 @@ advance_clock_or_terminate(State=#state{main=M,active=A,clock_waiting=C,dcs=DCs,
                         false ->
                             io:format(standard_error, "Simulation time limit reached; terminating~n", []),
                             halt(0),
-                            Cogs=gb_sets:union([State#state.active, State#state.blocked, State#state.idle]),
+                            Cogs=gb_sets:union([Data#data.active, Data#data.blocked, Data#data.idle]),
                             M ! wait_done,
-                            State;
+                            Data;
                         true ->
                             io:format(standard_error, "Simulation time limit reached; terminate with Ctrl-C or increase via model api~n", []),
-                            State
+                            Data
                     end
             end
     end .
