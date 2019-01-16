@@ -1,14 +1,18 @@
-# TODO: switch to php:5.6-apache-stretch
-FROM php:5.6-apache-jessie
+FROM php:5.6-apache-stretch
 # docker build -t easyinterface .
 # docker run -d -p 8080:80 --name easyinterface easyinterface
-RUN curl https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb -\# -o erlang-solutions_1.0_all.deb \
+
+# The mkdir below due to https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199
+RUN apt-get -y update \
+ && mkdir -p /usr/share/man/man1 \
+ && apt-get -y install unzip git gnupg libmcrypt-dev gawk graphviz netcat-openbsd apt-utils \
+ && curl https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb -\# -o erlang-solutions_1.0_all.deb \
  && dpkg -i erlang-solutions_1.0_all.deb \
  && rm erlang-solutions_1.0_all.deb \
- && echo "deb http://ftp.debian.org/debian jessie-backports main\n" > /etc/apt/sources.list.d/jessie-backports.list \
  && apt-get -y update \
- && apt-get -y install --no-install-recommends unzip git openssl-blacklist libmcrypt-dev erlang gawk graphviz netcat-openbsd \
- && apt-get -y install -t jessie-backports openjdk-8-jre-headless ca-certificates-java \
+ && apt-get -y install erlang \
+ && apt-get -y install default-jre \
+ && apt-get install -y libgl1 python-dev wget python-pip \
  && docker-php-ext-install mcrypt \
  && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/abstools/absexamples.git /var/www/absexamples \
@@ -63,7 +67,9 @@ RUN curl http://costa.fdi.ucm.es/download/saco.colab.zip -\# -o saco.colab.zip \
  && rm sra.colab.zip \
  && curl http://costa.fdi.ucm.es/download/apet.colab.zip -\# -o apet.colab.zip \
  && unzip apet.colab.zip -d /usr/local/lib \
- && rm apet.colab.zip
+ && rm apet.colab.zip \
+ && sed -i 's/abs.backend.prolog.PrologBackend/org.abs_models.backend.prolog.PrologBackend/g' /usr/local/lib/saco/bin/generateProlog \
+ && sed -i 's/abs.backend.prolog.PrologBackend/org.abs_models.backend.prolog.PrologBackend/g' /usr/local/lib/apet/bin/generateProlog
 RUN mkdir -p /usr/local/lib/frontend
 COPY frontend/dist /usr/local/lib/frontend/dist
 COPY frontend/bin /usr/local/lib/frontend/bin
@@ -74,62 +80,30 @@ RUN chmod -R a+rx /usr/local/lib/frontend
 ###############
 # SmartDeployer installation
 ###############
-# install needed packages
-RUN apt-get update && \
-	apt-get install -y \
-		qt5-default \
-		python-dev \
-		wget \
-		git \
-		python-pip && \
-	rm -rf /var/lib/apt/lists/* && \
-	pip install antlr4-python2-runtime toposort psutil
-# download and install zephyurs2
-RUN cd / && \
-	mkdir solvers_exec && \
-  cd /solvers_exec && \
-  git clone --recursive https://jacopomauro@bitbucket.org/jacopomauro/zephyrus2.git && \
-	cd zephyrus2 && \
-	#git checkout tags/v1.0 && \
-	git checkout 5df3baf && \
-	#check out tested version with smartdeployer
-  pip install -e /solvers_exec/zephyrus2
-# download MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz that comes with gecode
-RUN cd /solvers_exec && \
-	wget https://github.com/MiniZinc/MiniZincIDE/releases/download/2.0.13/MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz && \
-	tar -zxvf MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz && \
-	mv /solvers_exec/MiniZincIDE-2.0.13-bundle-linux-x86_64 /solvers_exec/MiniZincIDE && \
-	rm -rf MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz
-ENV PATH /solvers_exec/MiniZincIDE:$PATH
-# clone abs_deployer
-# RUN cd /solvers_exec && \
-# 	git clone --recursive https://github.com/jacopoMauro/abs_deployer.git && \
-# 	cd abs_deployer # && \
-# 	git checkout daa4625
-# 	# git checkout tags/v0.3
-# ENV PATH /solvers_exec/abs_deployer:$PATH
-# # download chuffed, add global-dir in minizinc
-# RUN cd /solvers_exec && \
-#   git clone --depth=1 https://github.com/geoffchu/chuffed.git && \
-#   ( [ -d /solvers_exec/MiniZincIDE ] && \
-# 	  ln -s /solvers_exec/chuffed/binary/linux/mznlib /solvers_exec/MiniZincIDE/share/minizinc/chuffed || \
-# 		echo MiniZincIde not installed ) && \
-#   ( [ -d /solvers_exec/minisearch ] && \
-# 	ln -s /solvers_exec/chuffed/binary/linux/mznlib /solvers_exec/minisearch/share/minizinc/chuffed || \
-# 		echo MiniSearch not installed )
-# RUN cp /solvers_exec/abs_deployer/docker/docker_scripts/fzn-chuffed /bin/fzn-chuffed && \
-# 	chmod 755 /bin/fzn-chuffed && \ 
-# 	chmod 755 /solvers_exec/chuffed/binary/linux/fzn_chuffed
-# # add the path to absfrontend.jar in classpath
-# ENV CLASSPATH=/usr/local/lib/frontend/dist/absfrontend.jar:$CLASSPATH
-# RUN echo "\
-# # set corresponding paths in easyinterface\n\
-# #\n\
-# # path to SmartDeployer\n\
-# EC_SMARTDEPLOYERHOME=\"/solvers_exec\"\n\
-# # path to minizinc\n\
-# #\n\
-# EC_PATH=\"\$EC_PATH::/solvers_exec/minizinc-1.6/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
+RUN pip install \
+        antlr4-python2-runtime \
+        toposort \
+        psutil \
+        click
+COPY --from=jacopomauro/abs_deployer:v0.4.1 /tool /tool	
+ENV PATH "$PATH:/tool/MiniZincIDE/bin"
+ENV LD_LIBRARY_PATH "$LD_LIBRARY_PATH:/tool/MiniZincIDE/lib"
+ENV PYTHONPATH "$PYTHONPATH:/tool/z3/install/lib/python-2/site-packages"
+ENV PATH "$PATH:/tool/z3/install/bin"
+ENV CLASSPATH "$CLASSPATH:/tool/fzn2smt:/tool/fzn2smt/antlr-runtime-3.2.jar"
+ENV PATH "$PATH:/tool/or-tools/bin"
+ENV PATH "/tool/abs_deployer:$PATH"
+ENV CLASSPATH "/usr/local/lib/frontend/dist/absfrontend.jar:$CLASSPATH"
+RUN pip install -e /tool/zephyrus2
+
+RUN echo "\
+# set corresponding paths in easyinterface\n\
+#\n\
+# path to SmartDeployer\n\
+EC_SMARTDEPLOYERHOME=\"/tool\"\n\
+# path to minizinc\n\
+#\n\
+EC_PATH=\"\$EC_PATH::/tool/MiniZincIDE/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
 
 
 

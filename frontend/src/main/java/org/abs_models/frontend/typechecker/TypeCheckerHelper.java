@@ -598,7 +598,7 @@ public class TypeCheckerHelper {
      * get all the alternative declarations of an ambiguous declaration formated as a list
      * which can be used in error messages
      * @param a
-     * @return
+     * @return alternatives as string
      */
     public static String getAlternativesAsString(AmbiguousDecl a) {
         String result = "";

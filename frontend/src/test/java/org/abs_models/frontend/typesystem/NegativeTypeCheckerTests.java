@@ -253,6 +253,16 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void classInitializerInvalidDurationStmt() {
+        assertTypeErrors("class C { { duration(1, 1); } }");
+    }
+
+    @Test
+    public void classInitializerInvalidGetExp() {
+        assertTypeErrors("class C { { Fut<Int> f; f.get; } }");
+    }
+
+    @Test
     public void classParamsError() {
         assertTypeErrors("class C(I i) { }");
     }
@@ -534,6 +544,8 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         assertTypeErrors("class C { { await True; } }");
         assertTypeErrors("class C { { Fut<Unit> f; f.get; } }");
         assertTypeErrors("class C { { this.m(); } Unit m() { }}");
+        assertTypeErrors("import * from ABS.DC; class C { { [Cost: 5] skip; } }");
+        assertTypeErrors("import * from ABS.DC; class C { { [DataSize: 5] skip; } }");
         assertTypeOK("class C { { this.m(); } [Atomic] Unit m() { }}");
     }
 

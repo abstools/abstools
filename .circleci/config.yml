@@ -1,0 +1,110 @@
+version: 2
+# Changing literally anything in this file could fix the rare CircleCI bug we're experiencing.
+# At least according to some forum post from early 2018.
+jobs:
+  build_frontend:
+    docker:
+      - image: bjoernpetersen/erlang-openjdk:erl21-jdk8-slim
+    working_directory: ~/repo/frontend
+    environment:
+      GRADLE_OPTS: -Dorg.gradle.daemon=false
+
+    steps:
+      - checkout:
+          path: ~/repo
+      - run: chmod +x gradlew
+
+        # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "build.gradle" }}
+              # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: ./gradlew dependencies
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle" }}
+
+      - run: ./gradlew build -x test -x check
+
+      - store_artifacts:
+          path: dist
+          destination: dist
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin
+            - dist
+            - build
+
+
+  deploy_frontend:
+    machine: true
+    working_directory: ~/repo/frontend
+
+    steps:
+      - checkout:
+          path: ~/repo
+      - run: chmod +x gradlew
+
+      - attach_workspace:
+          at: .
+
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+      # build and push the absc docker image
+      - run: |
+          VERSION=$(echo $CIRCLE_TAG | grep -oP "\d+\.\d+\.\d+")
+          docker build -f Dockerfile -t abslang/absc:VERSION ..
+          docker push abslang/absc:$VERSION
+
+
+  deploy_collaboratory:
+    machine: true
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: frontend
+
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+      # build and push the collaboratory docker image
+      - run: |
+          VERSION=$(echo $CIRCLE_TAG | grep -oP "\d+\.\d+\.\d+")
+          docker build -t abslang/collaboratory:VERSION .
+          docker push abslang/collaboratory:$VERSION
+
+
+workflows:
+  version: 2
+  full_workflow:
+    jobs:
+      - build_frontend:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
+      - deploy_frontend:
+          requires:
+            - build_frontend
+          filters:
+            tags:
+              only: /^version_\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
+      - deploy_collaboratory:
+          requires:
+            - build_frontend
+          filters:
+            tags:
+              only: /^version_\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/

@@ -18,9 +18,9 @@ import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSProcess;
 import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.scheduling.UserSchedulingStrategy;
-import org.abs_models.common.CompilerUtils;
 import org.abs_models.common.Constants;
 import org.abs_models.common.NotImplementedYetException;
+import org.abs_models.frontend.analyser.AnnotationHelper;
 import org.abs_models.frontend.ast.ASTNode;
 import org.abs_models.frontend.ast.Annotation;
 import org.abs_models.frontend.ast.AsyncCall;
@@ -265,13 +265,13 @@ public class JavaGeneratorHelper {
         }
         stream.println(",");
         PureExp rtAttr;
-        rtAttr = CompilerUtils.getAnnotationValueFromSimpleName(annotations, "Deadline");
+        rtAttr = AnnotationHelper.getAnnotationValueFromSimpleName(annotations, "Deadline");
         if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream);
         stream.println(",");
-        rtAttr = CompilerUtils.getAnnotationValueFromSimpleName(annotations, "Cost");
+        rtAttr = AnnotationHelper.getAnnotationValueFromSimpleName(annotations, "Cost");
         if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream);
         stream.println(",");
-        rtAttr = CompilerUtils.getAnnotationValueFromSimpleName(annotations, "Critical");
+        rtAttr = AnnotationHelper.getAnnotationValueFromSimpleName(annotations, "Critical");
         if (rtAttr == null) stream.print(ABSBool.class.getName() + ".FALSE"); else rtAttr.generateJava(stream);
 
         stream.println(") {");

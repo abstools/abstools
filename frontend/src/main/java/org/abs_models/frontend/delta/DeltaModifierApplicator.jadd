@@ -293,7 +293,7 @@ aspect DeltaModifierApplicator {
     /**************************************************************************
      * helper method
      * find the ModuleDecl to which this ModuleModifier applies
-     * if qualified => easy; if unqualified => look in delta's 'uses' list.
+     * if qualified {@code =>} easy; if unqualified {@code =>} look in delta's 'uses' list.
      */
     public ModuleDecl ModuleModifier.findModule() throws DeltaModellingException {
         String moduleid;

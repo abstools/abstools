@@ -128,7 +128,7 @@ abstract class AbstractABSTestRunnerGenerator implements ABSTestRunnerGenerator 
      * Checks if this generator contains a {@link Model} that defines ABSUnit
      * tests.
      *
-     * @return
+     * @return true if the generator contains a Model that defines ABSUnit tests
      */
     @Override
     public boolean hasUnitTest() {

@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added unit tests for the Model API.
 
+- Added Continuous Integration builds via CircleCI
+
 ### Changed
 
 - The Model API now only accepts connections from localhost.

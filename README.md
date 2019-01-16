@@ -1,5 +1,7 @@
-ABS Tools [![Build Status](https://envisage.ifi.uio.no:8080/jenkins/buildStatus/icon?job=ABS-All-Bucky)](https://envisage.ifi.uio.no:8080/jenkins/job/ABS-All-Bucky)
+ABS Tools
 =========
+
+[![CircleCI](https://circleci.com/gh/abstools/abstools/tree/master.svg?style=svg)](https://circleci.com/gh/abstools/abstools/tree/master)
 
 Inside this repository we develop the core tools of the ABS modelling
 language.  The current language manual is at http://docs.abs-models.org.
