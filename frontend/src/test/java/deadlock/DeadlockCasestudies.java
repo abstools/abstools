@@ -8,7 +8,7 @@ import org.junit.Assume;
 import org.junit.Test;
 
 import deadlock.analyser.Analyser;
-import abs.frontend.typesystem.CaseStudyTypeChecking;
+import org.abs_models.frontend.typesystem.CaseStudyTypeChecking;
 
 public class DeadlockCasestudies extends CaseStudyTypeChecking {
 

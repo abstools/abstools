@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.io.PrintStream;
 
-import abs.frontend.ast.Model;
+import org.abs_models.frontend.ast.Model;
 import deadlock.analyser.factory.*;
 import com.gzoumix.semisolver.term.*;
 import deadlock.analyser.generation.*;

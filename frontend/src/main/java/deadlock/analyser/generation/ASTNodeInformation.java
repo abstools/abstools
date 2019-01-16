@@ -20,7 +20,7 @@
 
 package deadlock.analyser.generation;
 
-import abs.frontend.ast.ASTNode;
+import org.abs_models.frontend.ast.ASTNode;
 
 import com.gzoumix.semisolver.constraint.Information;
 

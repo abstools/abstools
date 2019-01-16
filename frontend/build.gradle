@@ -11,11 +11,11 @@ plugins {
 
     id 'org.jastadd' version '1.13.1'
     id 'antlr'
-    id 'findbugs'
+    id "com.github.spotbugs" version "1.6.3"
 }
 
 application {
-    mainClassName = 'abs.frontend.parser.Main'
+    mainClassName = 'org.abs_models.frontend.parser.Main'
 }
 
 distributions {
@@ -29,9 +29,8 @@ targetCompatibility = '1.8'
 
 dependencies {
     // https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
-    implementation 'commons-io:commons-io:2.5'
-    implementation 'com.google.guava:guava:20.0'
-    implementation "org.antlr:antlr4:4.6"
+    implementation 'commons-io:commons-io:2.6'
+    implementation 'com.google.guava:guava:26.0-jre'
     implementation files('lib/choco-solver-2.1.1.jar')
     implementation 'org.eclipse.jdt.core.compiler:ecj:4.6.1'
     implementation 'org.apfloat:apfloat:1.8.3'
@@ -40,15 +39,20 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
 
-    compileOnly files('lib/jsr305.jar')
+    compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
+    // Executes JUnit Jupiter (~JUnit 5) tests
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.3.1")
+    // Executes JUnit4 tests
+    testRuntime("org.junit.vintage:junit-vintage-engine:5.3.1")
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.easymock:easymock:3.0'
     testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
     testImplementation 'org.hamcrest:hamcrest-core:1.3'
 
     jastadd2 'org.jastadd:jastadd:2.3.2'
-    antlr 'org.antlr:antlr4:4.6'
+    antlr 'org.antlr:antlr4:4.7.1'
 }
 
 repositories {
@@ -64,12 +68,15 @@ task generateJastAddAST(type: JastAddTask) {
     sources = fileTree(dir: 'src/main/java',
                        includes: ['**/*.ast', '**/*.jrag', '**/*.jadd'])
     options = [ '--rewrite=regular', '--visitCheck=false', '--debug',
-               '--package=abs.frontend.ast']
+               '--package=org.abs_models.frontend.ast']
 }
 sourceSets.main.java.srcDir "$buildDir/generated-src/jastadd/main"
 compileJava.dependsOn 'generateJastAddAST'
 
 // antlr
+generateGrammarSource {
+    arguments += [ '-package', 'org.abs_models.frontend.antlr.parser' ]
+}
 compileJava.dependsOn 'generateGrammarSource'
 
 // erlang
@@ -92,7 +99,7 @@ task compileErlangBackend(type: Exec) {
     workingDir 'src/main/resources/erlang/absmodel'
     commandLine 'escript', '../bin/rebar', 'compile'
 }
-jar.dependsOn 'compileErlangBackend'
+processResources.dependsOn 'compileErlangBackend'
 clean {
     delete fileTree('src/main/resources/erlang/absmodel/').include('**/*.beam')
 }
@@ -102,7 +109,7 @@ jar {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Jar.html
     baseName='absfrontend'
     manifest {
-        attributes 'Main-Class': 'abs.frontend.parser.Main',
+        attributes 'Main-Class': 'org.abs_models.frontend.parser.Main',
             'Implementation-Title': 'ABS Frontend',
             'Implementation-Version': version_details.lastTag.replaceAll(/^version_/, ''),
             'Bundle-Version': project.version,
@@ -124,8 +131,9 @@ task plainJar(type: Copy, dependsOn: jar) {
     into 'dist'
     rename 'absfrontend(.*).jar', 'absfrontend.jar'
 }
-// Note that 'ant clean' removed the dist/ directory; we choose to
-// leave it in place.
+clean {
+    delete 'dist/'
+}
 
 task copyScripts(type: Copy) {
     description 'Copies absc scripts into their documented locations.'
@@ -135,6 +143,9 @@ task copyScripts(type: Copy) {
     }
     into 'bin/'
 }
+clean {
+    delete 'bin/'
+}
 
 assemble.dependsOn plainJar
 assemble.dependsOn copyScripts
@@ -142,18 +153,19 @@ assemble.dependsOn copyScripts
 // test
 test {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.testing.Test.html
-    useJUnit()
+    useJUnitPlatform()
     ignoreFailures=true
+    maxParallelForks=project.gradle.startParameter.maxWorkerCount
 }
 
-findbugs {
+spotbugs {
     // https://docs.gradle.org/current/dsl/org.gradle.api.plugins.quality.FindBugsExtension.html
     ignoreFailures = true
     showProgress = true
-    excludeFilter = file('findbugs-jastadd-filter.xml')
+    excludeFilter = file('config/findbugs/findbugs-jastadd-filter.xml')
 }
 
-tasks.withType(FindBugs) {
+tasks.withType(com.github.spotbugs.SpotBugsTask) {
     reports {
         // can only have one report type :(
         xml.enabled = false

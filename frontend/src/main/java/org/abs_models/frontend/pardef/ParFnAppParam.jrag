@@ -1,0 +1,167 @@
+import org.abs_models.frontend.pardef.*;
+
+/**
+* This aspect handles parameters for ParFnApps (function references and anonymous functions).
+*/
+aspect ParFnAppParam {
+    /**
+    * Gets an expression with which occurrences of this ParFnApp parameter should be replaced in the function expansion.
+    *
+    @param toReplace a FnApp calling the function represented by this ParFnAppParam
+    @return a pure expression to replace the given FnApp with
+    */
+    syn PureExp ParFnAppParam.getExpression(FnApp toReplace);
+
+    eq NamedParFnAppParam.getExpression(FnApp toReplace) {
+        FnApp result = new FnApp(getName(), toReplace.getParams().treeCopyNoTransform());
+        result.setPositionFromNode(this);
+        return result;
+    }
+
+    eq AnonymousFunctionDecl.getExpression(FnApp toReplace) {
+        PureExp result = getPureExp().treeCopy();
+        if (result instanceof FieldUse) {
+            FieldUse fieldUse = (FieldUse) result;
+            result = new VarUse(fieldUse.getName());
+        }
+        for (FieldUse fieldUse : result.findChildren(FieldUse.class, true)) {
+            // FieldUse can't have children, so this is OK to do without recursion
+            VarUse replacement = new VarUse(fieldUse.getName());
+            fieldUse.replaceWith(replacement);
+        }
+
+        int numParam = getNumParam();
+        if (numParam != toReplace.getNumParam()) {
+            throw new PardefModellingException(toReplace, ErrorMessage.WRONG_NUMBER_OF_ARGS, numParam, toReplace.getNumParam());
+        }
+
+        // Create a let expression for each closure so no VarUse in the expression has to be renamed.
+        for (Map.Entry<String, ParamDecl> entry : getFreeVars().entrySet()) {
+            ParamDecl closureParam = entry.getValue();
+            Access closureType = closureParam.getAccess();
+            ParamDecl letParam = new ParamDecl(entry.getKey(), closureType, new List<Annotation>());
+            VarUse closureUse = new VarUse(closureParam.getName());
+            result = new LetExp(
+                letParam,
+                closureUse,
+                result
+            );
+        }
+
+        /*
+        Wrap the expression by let expressions for each parameter.
+        Alternatives would be:
+        a) rename all occurrences of each parameter in the expression
+        b) create a new named function for each anonymous function (clutters namespace)
+        */
+        for (int i = 0; i < numParam; ++i) {
+            result = new LetExp(
+                getParam(i).treeCopy(),
+                toReplace.getParamNoTransform(i).treeCopyNoTransform(),
+                result
+            );
+        }
+
+        result.setPositionFromNode(getPureExp());
+        return result;
+    }
+
+    syn lazy Set<String> AnonymousFunctionDecl.getFreeVarNames() {
+        Set<String> res = new HashSet<>(getPureExp().getFreeVars());
+        for (ParamDecl param : getParams()) {
+            res.remove(param.getName());
+        }
+        return res;
+    }
+
+    /**
+    * Determines the free vars in this anonymous function's expression.
+    * The resulting map maps from the name of the free var to a ParamDecl with a different (qualified) name.
+    * @return an immutable map (free var name - closure param) with predictable iteration order
+    */
+    syn lazy Map<String, ParamDecl> AnonymousFunctionDecl.getFreeVars() {
+        // Find the type of each free var and create a ParamDecl with it
+        Map<String, ParamDecl> result = new LinkedHashMap<>();
+        PureExp pureExp = getPureExp();
+        for (String freeVar : getFreeVarNames()) {
+            ParamDecl param = result.get(freeVar);
+            if (param == null) {
+                VarOrFieldDecl decl = pureExp.lookupVarOrFieldName(freeVar, false);
+                if (decl == null) {
+                    throw new PardefModellingException(pureExp, ErrorMessage.UNDECLARED_VARIABLE, freeVar);
+                }
+                String qualifiedName = qualifyParamName(freeVar);
+                param = new ParamDecl(qualifiedName, decl.getType().toUse(), new List<Annotation>());
+                result.put(freeVar, param);
+            }
+        }
+
+        return Collections.unmodifiableMap(result);
+    }
+
+    public String AnonymousFunctionDecl.qualifyParamName(String name) {
+        // KLUDGE: We want to use a syntactically valid name so pretty-printed
+        // code can be further processed; try to use something not easily
+        // written by accident
+        return name + "__" + getAnonId() + "__";
+    }
+
+    /**
+    * Adds the closure params for this anonymous function to the given FunctionDecl.
+    *
+    * <p>If the function contains any recursive calls, the closure params will be added to the calls.</p>
+    *
+    * @param func a function to add the closure params to
+    */
+    public void AnonymousFunctionDecl.addClosureParams(FunctionDecl func) {
+        java.util.List<FnApp> recursiveCalls = new LinkedList<>();
+        for (FnApp call : func.findChildren(FnApp.class)) {
+            if (call.getName().equals(func.getName())) {
+                recursiveCalls.add(call);
+            }
+        }
+
+        List<ParamDecl> params = func.getParams();
+        for (ParamDecl freeVar : getFreeVars().values()) {
+            params.add(freeVar.treeCopyNoTransform());
+            for (FnApp recursiveCall : recursiveCalls) {
+                recursiveCall.addParam(new VarUse(freeVar.getName()));
+            }
+        }
+    }
+
+    /**
+    * Adds the closure params for this anonymous function to the given ParFnApp.
+    * @param fnApp a function call to add the closure params to
+    */
+    public void AnonymousFunctionDecl.addClosureParams(ParFnApp fnApp) {
+        for (String freeVarName : getFreeVars().keySet()) {
+            fnApp.addParam(new VarUse(freeVarName));
+        }
+    }
+
+    /**
+    * Gets the ID of this AnonymousFunctionDecl.
+    *
+    * The IDs of AnonymousFunctionDecls are only unique for every ParFnApp instance.
+    * @return an ID
+    * @throws IllegalStateException if this node does not have a List parent
+    */
+    syn lazy int AnonymousFunctionDecl.getAnonId() {
+        ASTNode<?> parent = getParent();
+        if (!(parent instanceof List)) {
+            throw new IllegalStateException("AnonymousFunctionDecl is detached, can't find ID");
+        }
+
+        List list = (List) parent;
+        int id = list.getIndexOfChild(this);
+        if (id == -1) {
+            throw new IllegalStateException("Anon decl is not a child of parent list (???)");
+        }
+        return id;
+    }
+}
+
+// Local Variables:
+// mode: java
+// End:

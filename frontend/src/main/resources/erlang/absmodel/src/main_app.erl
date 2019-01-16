@@ -18,7 +18,7 @@ start(_StartType, _StartArgs) ->
     {ok, Trace} = application:get_env(absmodel, replay_trace),
     %% In case we need a random port, see example at bottom of
     %% https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy.start_clear/
-    case cowboy:start_clear(http, [{port, Port}],
+    case cowboy:start_clear(http, [{port, Port}, {ip, loopback}],
                             #{env => #{dispatch => Dispatch}}) of
         {ok, _} -> io:format(standard_error, "Starting server on port ~w, abort with Ctrl-C~n", [ranch:get_port(http)]);
         _ -> io:format(standard_error, "Failed to start model API on port ~w (is another model already running?)~nAborting~n", [Port]),

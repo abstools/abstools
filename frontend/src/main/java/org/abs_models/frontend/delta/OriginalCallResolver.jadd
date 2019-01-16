@@ -1,0 +1,93 @@
+import java.util.Collection;
+import java.util.Map;
+import java.util.HashMap;
+import org.abs_models.frontend.delta.*;
+
+aspect OriginalCallResolver {
+
+
+    /*
+     * These fields are needed to resolve targeted original calls by mapping delta names to MethodImpl.
+     * Also keeps track which ones are used. 
+     */
+    private HashMap<String, Stack<String>> ClassDecl.deltas=new HashMap<>();
+    public HashMap<String, Stack<String>> ClassDecl.getDeltas(){
+        return deltas;
+    }
+    private HashMap<String, HashMap<String, MethodImpl>> ClassDecl.deltaMap=new HashMap<>();
+    public HashMap<String, HashMap<String, MethodImpl>> ClassDecl.getDeltaMap(){
+        return deltaMap;
+    }
+    private HashMap<String, String> ClassDecl.addedInDelta = new HashMap<>();
+    public String ClassDecl.getAddedIn(String name){
+        String s = addedInDelta.get(name);
+        if( s == null) return "core";
+        return s;
+    }    
+    public void ClassDecl.addAddedIn(String name, String nameDelta){
+        addedInDelta.put(name, nameDelta);
+    }
+    private HashSet<String> ClassDecl.usedMethods = new HashSet<>();
+    public void ClassDecl.usesMethod(String mName){
+        usedMethods.add(mName);
+    }
+    
+    /*
+     *   Whenever a modifies is applied, a new copy of the current method is added
+     *   This methods removes those, which are never called
+     */
+    public void ClassDecl.computeDelete(){
+        HashSet<String> all = new HashSet<>();
+        for (String key : deltaMap.keySet()) {
+            Collection<MethodImpl> mets = deltaMap.get(key).values();
+            for (MethodImpl mImpl : mets) {
+                if(mImpl.getMethodSig().getName().contains("$")) all.add(mImpl.getMethodSig().getName());    
+            }
+        }
+        all.removeAll(usedMethods);        
+        for (String string : all) {
+            // in given ClassDecl: find MethodDecl that matches sig
+            int found = -1;
+            for (int i = 0; i < getMethods().getNumChild(); i++) {
+                MethodSig sig = getMethods().getChild(i).getMethodSig();
+                if (sig.getName().equals(string)) {
+                    found = i;
+                    break;
+                }
+            }
+           
+            if (found >= 0)
+                getMethods().removeChild(found);
+        }
+    }
+    
+  public void OriginalCall.replaceByRealCall(MethodImpl originalMethodCopy, HashMap<String, MethodImpl> deltaMap){
+      EffExp call = new SyncCall(new ThisExp(), originalMethodCopy.getMethodSig().getName(), this.getParams().treeCopyNoTransform());
+      String n = originalMethodCopy.getMethodSig().getName();
+      if(n.contains("$"))
+          ((ClassDecl)originalMethodCopy.getParent().getParent()).usesMethod(n);
+      // set line and column from OriginalCall node
+      call.setPosition(getStartLine(), getStartColumn(), getEndLine(), getEndColumn());
+      ASTNode parent = getParent();
+      int i = parent.getIndexOfChild(this);
+      parent.setChild(call, i);
+      call.setParent(parent);
+  }
+  
+  public void TargetedOriginalCall.replaceByRealCall(MethodImpl originalMethodCopy, HashMap<String, MethodImpl> deltaMap){
+      MethodImpl methodCopy = deltaMap.get(this.getTarget().getName());
+      if(methodCopy == null) throw new DeltaModellingException("Can't find delta to resolve targeted original call, delta has not yet been applied");
+      String n = methodCopy.getMethodSig().getName();
+      if(n.contains("$"))
+          ((ClassDecl)originalMethodCopy.getParent().getParent()).usesMethod(n);
+      EffExp call = new SyncCall(new ThisExp(), methodCopy.getMethodSig().getName(), this.getParams().treeCopyNoTransform());
+      // set line and column from OriginalCall node
+      call.setPosition(getStartLine(), getStartColumn(), getEndLine(), getEndColumn());
+      ASTNode parent = getParent();
+      int i = parent.getIndexOfChild(this);
+      parent.setChild(call, i);
+      call.setParent(parent);
+  }
+
+    
+}

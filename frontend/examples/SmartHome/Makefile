@@ -1,7 +1,7 @@
 DIST=../../dist
 
 gen: clean
-	java -cp $(DIST)/absfrontend.jar abs.backend.java.JavaBackend -d gen/java abs/*.abs -product=Test  $@
+	java -cp $(DIST)/absfrontend.jar JavaBackend -d gen/java abs/*.abs -product=Test  $@
 	javac -cp $(DIST)/absfrontend.jar:gen/java java/*.java -d java
 
 run:
@@ -12,7 +12,7 @@ rund:
 
 unit:
 	rm -f abs/TestRunner.abs
-	java -cp $(DIST)/absfrontend.jar abs.backend.tests.ABSTestRunnerCompiler abs/*.abs -product=Test -o abs/TestRunner.abs	
+	java -cp $(DIST)/absfrontend.jar ABSTestRunnerCompiler abs/*.abs -product=Test -o abs/TestRunner.abs
 	
 runt:
 	java -cp $(DIST)/absfrontend.jar:gen/java:java AbsUnit.TestRunner.Main $@

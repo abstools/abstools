@@ -1,17 +1,12 @@
 package deadlock.analyser.factory;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.AwaitStmt;
-import abs.frontend.ast.Stmt;
-import abs.frontend.typechecker.DataTypeType;
-import com.gzoumix.semisolver.substitution.Substitution;
+import org.abs_models.frontend.ast.ASTNode;
+import org.abs_models.frontend.typechecker.DataTypeType;
 import com.gzoumix.semisolver.term.Variable;
 import com.gzoumix.semisolver.term.Term;
 import com.gzoumix.semisolver.term.TermStructured;

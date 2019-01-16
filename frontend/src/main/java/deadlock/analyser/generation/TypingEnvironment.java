@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
 
-import abs.frontend.ast.ASTNode;
+import org.abs_models.frontend.ast.ASTNode;
 import deadlock.analyser.factory.DataTypeInterface;
 import deadlock.analyser.factory.Contract;
 import deadlock.analyser.factory.ContractElementParallel;
@@ -99,7 +99,7 @@ public class TypingEnvironment {
       res = map.get(name);
       if(res != null) return res;
     }
-    if((res == null) && (name != "this")) {
+    if((res == null) && (!(name.equals("this")))) {
       RecordPresent t = (RecordPresent)(getVariable("this"));
       assert t != null : name;
       res = t.getField(name); // possible nullPointerException

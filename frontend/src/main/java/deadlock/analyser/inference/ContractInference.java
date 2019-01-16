@@ -3,9 +3,10 @@
  */
 package deadlock.analyser.inference;
 
-import abs.frontend.ast.*;
-import abs.frontend.typechecker.*;
-import abs.frontend.typechecker.KindedName.Kind;
+import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.typechecker.InterfaceType;
+import org.abs_models.frontend.typechecker.KindedName;
+import org.abs_models.frontend.typechecker.KindedName.Kind;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -17,14 +18,13 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import choco.kernel.common.util.tools.ArrayUtils;
-
 import com.gzoumix.semisolver.constraint.Constraint;
 import com.gzoumix.semisolver.term.*;
 
 import deadlock.analyser.AnalyserLog;
 import deadlock.analyser.factory.*;
 import deadlock.analyser.generation.*;
+import org.abs_models.frontend.typechecker.Type;
 
 /**
  * @author Abel, Michael
@@ -62,8 +62,8 @@ public class ContractInference {
 
         _emptyDecl = new ClassDecl();
         _emptyDecl.setName(_dummyClass);
-        MethodSig methodSig = new MethodSig(_dummyMethod, new abs.frontend.ast.List<>(), new DataTypeUse(),
-            new abs.frontend.ast.List<>());
+        MethodSig methodSig = new MethodSig(_dummyMethod, new org.abs_models.frontend.ast.List<>(), new DataTypeUse(),
+            new org.abs_models.frontend.ast.List<>());
         MethodImpl node = new MethodImpl(methodSig, new Block(), false);
 
         _emptyDecl.addMethod(node);

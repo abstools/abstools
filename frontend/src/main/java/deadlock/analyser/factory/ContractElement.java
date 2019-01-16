@@ -22,7 +22,7 @@ package deadlock.analyser.factory;
 
 import java.util.List;
 
-import abs.frontend.ast.ASTNode;
+import org.abs_models.frontend.ast.ASTNode;
 
 import com.gzoumix.semisolver.term.Term;
 

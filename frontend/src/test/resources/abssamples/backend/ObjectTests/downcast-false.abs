@@ -9,6 +9,6 @@ class C implements I {}
 {
     Bool testresult = True;
     I o = new C();
-    if (o is I2) testresult = False;
-    if (isJust(o as I2)) testresult = False;
+    if (o implements I2) testresult = False;
+    if ((o as I2) != null) testresult = False;
 }

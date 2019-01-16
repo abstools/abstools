@@ -1,7 +1,7 @@
 package autodeploy;
 
-import abs.frontend.ast.*;
-import abs.frontend.typechecker.DataTypeType;
+import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.typechecker.DataTypeType;
 
 import java.io.PrintWriter;
 import java.util.*;
@@ -15,7 +15,7 @@ public class DeployInformationClass {
   private List<String> _paramList;        // parameter list, in order
   private Map<String, String> _paramType; // type of every parameter
 
-  public DeployInformationClass(abs.frontend.ast.List<ParamDecl> l) {
+  public DeployInformationClass(org.abs_models.frontend.ast.List<ParamDecl> l) {
     _cost = new HashMap<>();
     _spec = new LinkedList<>();
 

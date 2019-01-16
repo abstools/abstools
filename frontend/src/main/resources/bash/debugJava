@@ -6,6 +6,6 @@ if [[ -z $PROGNAME ]] ; then
 fi
 BASEDIR="$(dirname $PROGNAME)/../.."
 
-java -cp $BASEDIR/bin:$1 -Dabs.debug=true -Dabs.loglevel=finest -Dabs.systemobserver=abs.backend.java.debugging.GraphicalDebugger -Dabs.totalscheduler=abs.backend.java.scheduling.InteractiveScheduler $2.Main
+java -cp $BASEDIR/bin:$1 -Dabs.debug=true -Dabs.loglevel=finest -Dabs.systemobserver=GraphicalDebugger -Dabs.totalscheduler=InteractiveScheduler $2.Main
 
 

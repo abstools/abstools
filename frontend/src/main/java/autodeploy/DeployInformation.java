@@ -1,6 +1,7 @@
 package autodeploy;
 
-import abs.frontend.ast.*;
+import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.ast.List;
 
 import java.io.PrintWriter;
 import java.util.*;
@@ -24,7 +25,7 @@ public class DeployInformation {
 
   private void extractHierarchy(Model model) {
     for (Decl decl : model.getDecls()) {
-      abs.frontend.ast.List<InterfaceTypeUse> list = null;
+      List<InterfaceTypeUse> list = null;
       if (decl instanceof InterfaceDecl) {
         list = ((InterfaceDecl) decl).getExtendedInterfaceUseList();
         if(list != null) {
