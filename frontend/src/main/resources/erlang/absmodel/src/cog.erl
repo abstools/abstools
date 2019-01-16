@@ -16,11 +16,6 @@
 -behaviour(gc).
 -export([acknowledged_by_gc/1, get_references/1, stop_world/1, resume_world/1]).
 
-%% Terminate recklessly.  Used to shutdown system when clock limit reached (if
-%% applicable).  Must be called when cog is stopped for GC.  (See
-%% `cog_monitor:advance_clock_or_terminate'.)
--export([kill_recklessly/1]).
-
 -behaviour(gen_statem).
 %%gen_statem callbacks
 -export([init/1, callback_mode/0, terminate/3, code_change/4]).
@@ -171,10 +166,6 @@ stop_world(Cog) ->
 
 resume_world(Cog) ->
     gen_statem:cast(Cog, resume_world),
-    ok.
-
-kill_recklessly(Cog) ->
-    gen_statem:cast(Cog, kill_recklessly),
     ok.
 
 %%Internal

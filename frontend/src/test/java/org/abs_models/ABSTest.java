@@ -141,7 +141,7 @@ public class ABSTest {
         WrongProgramArgumentException, InternalBackendException, DeltaModellingException {
         Main main = new Main();
         main.setWithStdLib(isSet(WITH_STD_LIB,config));
-        Model m = main.parseFiles(resolveFileName(fileName));
+        Model m = main.parseFiles(false, isSet(WITH_STD_LIB,config), resolveFileName(fileName));
         main.analyzeFlattenAndRewriteModel(m);
         m.evaluateAllProductDeclarations();
         return assertParseModelOk(m, config);
@@ -151,7 +151,7 @@ public class ABSTest {
         Main main = new Main();
         main.setWithStdLib(isSet(WITH_STD_LIB,config));
         String[] filenameArray = fileNames.stream().map(f -> resolveFileName(f)).toArray(String[]::new);
-        Model m = main.parseFiles(filenameArray);
+        Model m = main.parseFiles(false, isSet(WITH_STD_LIB,config), filenameArray);
         return assertParseModelOk(m, config);
     }
 

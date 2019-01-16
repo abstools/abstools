@@ -85,12 +85,14 @@ public class ClassGenerator {
                 ecs.println("false ->");
                 ecs.incIndent();
                 ecs.println("io:format(standard_error, \"Uncaught ~s in method " + ms.getName() + " not handled successfully by recovery block, killing object ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, O)]),");
+                ecs.println("io:format(standard_error, \"stacktrace: ~tp~n\", [erlang:get_stacktrace()]),");
                 ecs.println("object:die(O, Exception), exit(Exception)");
                 ecs.decIndent().println("end");
                 ecs.decIndent();
             } else {
                 ecs.incIndent();
                 ecs.println("io:format(standard_error, \"Uncaught ~s in method " + ms.getName() + " and no recovery block in class definition, killing object ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, O)]),");
+                ecs.println("io:format(standard_error, \"stacktrace: ~tp~n\", [erlang:get_stacktrace()]),");
                 ecs.println("object:die(O, Exception), exit(Exception)");
                 ecs.decIndent();
             }

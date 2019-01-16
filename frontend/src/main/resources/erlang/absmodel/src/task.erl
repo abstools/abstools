@@ -15,12 +15,6 @@
 -behaviour(gc).
 -export([send_stop_for_gc/1, get_references_for_cog/1]).
 
-%% Terminate recklessly.  Used to shutdown system when clock limit reached (if
-%% applicable).  Must be called when cog is stopped for GC.  (See
-%% `cog_monitor:advance_clock_or_terminate'.)
--export([kill_recklessly/1]).
-
-
 %%Task behaviours have to implemented:
 %% init(Cog,Future,Object,Args): Can block and will init the task.  Return
 %% value will be passed to start/1
@@ -53,10 +47,6 @@ send_stop_for_gc(Task) ->
 
 get_references_for_cog(Task) ->
     Task ! {get_references, self()}.
-
-kill_recklessly(Task) ->
-    Task ! die_prematurely,
-    ok.
 
 %%Register for termination notifcation
 notifyEnd(TaskRef)->
@@ -93,10 +83,7 @@ loop_for_clock_advance(Cog, Stack) ->
             loop_for_clock_advance(Cog, Stack);
         {get_references, Sender} ->
             cog:submit_references(Sender, gc:extract_references(Stack)),
-            loop_for_clock_advance(Cog, Stack);
-        die_prematurely ->
-            send_notifications(killed_by_the_clock),
-            exit(killed_by_the_clock)
+            loop_for_clock_advance(Cog, Stack)
     end.
 
 wait_for_token(Cog, Stack) ->
@@ -109,10 +96,7 @@ wait_for_token(Cog, Stack) ->
             wait_for_token(Cog, Stack);
         {get_references, Sender} ->
             cog:submit_references(Sender, gc:extract_references(Stack)),
-            wait_for_token(Cog, Stack);
-        die_prematurely ->
-            send_notifications(killed_by_the_clock),
-            exit(killed_by_the_clock)
+            wait_for_token(Cog, Stack)
     end.
 
 %% Check for legal amounts of min, max; if Max < Min, use Max only

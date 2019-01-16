@@ -25,7 +25,9 @@ init(Req, _Opts) ->
             <<"call">> -> handle_object_call(cowboy_req:path_info(Req),
                                              cowboy_req:parse_qs(Req),
                                              Req);
-            <<"quit">> -> halt(0);              %sorry
+            %% KLUDGE: it would be nice to send a response to the
+            %% client instead of just closing the stream
+            <<"quit">> -> halt(0);
             _ -> {404, <<"text/plain">>, <<"Not found">>}
         end,
     Req2 = cowboy_req:reply(Status, #{<<"content-type">> => ContentType},

@@ -21,6 +21,7 @@
          {clocklimit,$l,"clock-limit",{integer,none},"Do not advance simulation clock above given clock value"},
          {schedulers,$s,"schedulers",{integer,none},"Set number of online erlang schedulers"},
          {replay_trace,$r,"replay-trace",{string, none},"Replay a trace, given as a JSON file"},
+         {debug,undefined,"debug",{integer,0},"Turn on debug mode when > 0 (model will run much slower; diagnostic output when > 1)"},
          {version,$v,"version",undefined,"Output version and exit"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
 
@@ -75,8 +76,8 @@ parse(Args,Exec)->
                          M when is_list(M) -> list_to_atom("m_" ++ re:replace(M,"[.]","_",[{return,list},global]));
                          _ -> ?ABSMAINMODULE
                      end,
-            Debug=proplists:get_value(debug,Parsed, false),
-            GCStatistics=proplists:get_value(gcstats,Parsed, false),
+            Debug=proplists:get_value(debug,Parsed, 0) > 0,
+            GCStatistics=proplists:get_value(debug,Parsed, 0) > 1,
             Port=proplists:get_value(port,Parsed,none),
             Clocklimit=proplists:get_value(clocklimit,Parsed,none),
 

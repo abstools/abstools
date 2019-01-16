@@ -1,4 +1,5 @@
-FROM php:5.6-apache
+# TODO: switch to php:5.6-apache-stretch
+FROM php:5.6-apache-jessie
 # docker build -t easyinterface .
 # docker run -d -p 8080:80 --name easyinterface easyinterface
 RUN curl https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb -\# -o erlang-solutions_1.0_all.deb \
@@ -101,34 +102,34 @@ RUN cd /solvers_exec && \
 	rm -rf MiniZincIDE-2.0.13-bundle-linux-x86_64.tgz
 ENV PATH /solvers_exec/MiniZincIDE:$PATH
 # clone abs_deployer
-RUN cd /solvers_exec && \
-	git clone --recursive https://github.com/jacopoMauro/abs_deployer.git && \
-	cd abs_deployer # && \
-	git checkout daa4625
-	# git checkout tags/v0.3
-ENV PATH /solvers_exec/abs_deployer:$PATH
-# download chuffed, add global-dir in minizinc
-RUN cd /solvers_exec && \
-  git clone --depth=1 https://github.com/geoffchu/chuffed.git && \
-  ( [ -d /solvers_exec/MiniZincIDE ] && \
-	  ln -s /solvers_exec/chuffed/binary/linux/mznlib /solvers_exec/MiniZincIDE/share/minizinc/chuffed || \
-		echo MiniZincIde not installed ) && \
-  ( [ -d /solvers_exec/minisearch ] && \
-	ln -s /solvers_exec/chuffed/binary/linux/mznlib /solvers_exec/minisearch/share/minizinc/chuffed || \
-		echo MiniSearch not installed )
-RUN cp /solvers_exec/abs_deployer/docker/docker_scripts/fzn-chuffed /bin/fzn-chuffed && \
-	chmod 755 /bin/fzn-chuffed && \ 
-	chmod 755 /solvers_exec/chuffed/binary/linux/fzn_chuffed
-# add the path to absfrontend.jar in classpath
-ENV CLASSPATH=/usr/local/lib/frontend/dist/absfrontend.jar:$CLASSPATH
-RUN echo "\
-# set corresponding paths in easyinterface\n\
-#\n\
-# path to SmartDeployer\n\
-EC_SMARTDEPLOYERHOME=\"/solvers_exec\"\n\
-# path to minizinc\n\
-#\n\
-EC_PATH=\"\$EC_PATH::/solvers_exec/minizinc-1.6/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
+# RUN cd /solvers_exec && \
+# 	git clone --recursive https://github.com/jacopoMauro/abs_deployer.git && \
+# 	cd abs_deployer # && \
+# 	git checkout daa4625
+# 	# git checkout tags/v0.3
+# ENV PATH /solvers_exec/abs_deployer:$PATH
+# # download chuffed, add global-dir in minizinc
+# RUN cd /solvers_exec && \
+#   git clone --depth=1 https://github.com/geoffchu/chuffed.git && \
+#   ( [ -d /solvers_exec/MiniZincIDE ] && \
+# 	  ln -s /solvers_exec/chuffed/binary/linux/mznlib /solvers_exec/MiniZincIDE/share/minizinc/chuffed || \
+# 		echo MiniZincIde not installed ) && \
+#   ( [ -d /solvers_exec/minisearch ] && \
+# 	ln -s /solvers_exec/chuffed/binary/linux/mznlib /solvers_exec/minisearch/share/minizinc/chuffed || \
+# 		echo MiniSearch not installed )
+# RUN cp /solvers_exec/abs_deployer/docker/docker_scripts/fzn-chuffed /bin/fzn-chuffed && \
+# 	chmod 755 /bin/fzn-chuffed && \ 
+# 	chmod 755 /solvers_exec/chuffed/binary/linux/fzn_chuffed
+# # add the path to absfrontend.jar in classpath
+# ENV CLASSPATH=/usr/local/lib/frontend/dist/absfrontend.jar:$CLASSPATH
+# RUN echo "\
+# # set corresponding paths in easyinterface\n\
+# #\n\
+# # path to SmartDeployer\n\
+# EC_SMARTDEPLOYERHOME=\"/solvers_exec\"\n\
+# # path to minizinc\n\
+# #\n\
+# EC_PATH=\"\$EC_PATH::/solvers_exec/minizinc-1.6/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
 
 
 
