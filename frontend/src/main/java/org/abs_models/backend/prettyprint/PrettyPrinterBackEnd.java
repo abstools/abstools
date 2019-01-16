@@ -23,6 +23,7 @@ public class PrettyPrinterBackEnd extends Main {
     private File outputfile;
     private boolean force = false;
     private boolean keepsugar = false;
+    private boolean keepstdlib = false;
 
     public static STGroup templates;
     static {
@@ -74,6 +75,8 @@ public class PrettyPrinterBackEnd extends Main {
                 force = true;
             } else if (arg.equals("-keepsugar"))  {
                 keepsugar = true;
+            } else if (arg.equals("-keepstdlib"))  {
+                keepstdlib = true;
             } else if (arg.equals("-prettyprint")) {
                 // nothing to do
             } else {
@@ -93,6 +96,9 @@ public class PrettyPrinterBackEnd extends Main {
         if (keepsugar) {
             model.doAACrewrite = false;
             model.doForEachRewrite = false;
+        }
+        if (keepstdlib) {
+            model.doPrettyPrintStdLib = true;
         }
         analyzeFlattenAndRewriteModel(model);
         if (!force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
@@ -128,6 +134,7 @@ public class PrettyPrinterBackEnd extends Main {
         System.out.println("ABS Pretty Printer (-prettyprint):\n"
                 + "  -f             force pretty printing even if there are type errors\n"
                 + "  -keepsugar     do not transform statements into basic core abs\n"
+                + "  -keepstdlib    include the standard library in output\n"
                 + "  -o <file>      write output to <file> instead of standard output\n"
         );
     }

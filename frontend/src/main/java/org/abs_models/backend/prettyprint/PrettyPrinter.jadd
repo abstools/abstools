@@ -4,6 +4,10 @@ import org.abs_models.backend.prettyprint.*;
 
 aspect doPrettyPrinter {
 
+    /** Controls whether to include the standard library in pretty-printing
+     */
+    public boolean Model.doPrettyPrintStdLib = false;
+
     public void List.doPrettyPrint(PrintWriter stream, ABSFormatter formatter, String separator) {
         if (getNumChild() > 0) {
             getChild(0).doPrettyPrint(stream, formatter);
@@ -37,7 +41,7 @@ aspect doPrettyPrinter {
 
     public void Model.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         for (ModuleDecl d : getModuleDecls()) {
-            if (! Constants.BUILT_IN_LIBS.contains(d.getName())) {
+            if (doPrettyPrintStdLib || (! Constants.BUILT_IN_LIBS.contains(d.getName()))) {
                 d.doPrettyPrint(stream, formatter);
             }
         }
