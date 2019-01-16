@@ -23,7 +23,7 @@ public class JavaDebuggingTest extends JavaBackendTest {
     }
 
     private void assertOutputContains(String absCode, String expectedOutput) throws Exception {
-        JavaCode code = getJavaCode("module JavaTest;" + absCode, Config.WITH_STD_LIB);
+        JavaCode code = getJavaCode("module JavaTest;" + absCode);
         // System.out.println(java);
         String output = runJava(code, "-Dabs.debugger=" + TestDebugger.class.getName()).toString().trim();
         Assert.assertTrue("Expected to find " + expectedOutput + ", but output was:\n" + output, output.contains(expectedOutput));

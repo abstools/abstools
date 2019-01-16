@@ -4,17 +4,16 @@
  */
 package org.abs_models.frontend.antlr.parser;
 
+import org.abs_models.frontend.antlr.parser.ABSParser.MethodsigContext;
+import org.abs_models.frontend.antlr.parser.ABSParser.TraitApplyFragmentContext;
+import org.abs_models.frontend.antlr.parser.ABSParser.TraitNameFragmentContext;
+import org.abs_models.frontend.antlr.parser.ABSParser.TraitSetFragmentContext;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.parser.Main;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
-
-import org.abs_models.frontend.antlr.parser.ABSParser.MethodsigContext;
-import org.abs_models.frontend.antlr.parser.ABSParser.TraitApplyFragmentContext;
-import org.abs_models.frontend.antlr.parser.ABSParser.TraitNameFragmentContext;
-import org.abs_models.frontend.antlr.parser.ABSParser.TraitSetFragmentContext;
 
 /**
  * This class creates the JastAdd AST from an Antlr parse tree.
@@ -468,16 +467,23 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
     @Override public void exitCaseStmt(ABSParser.CaseStmtContext ctx) {
         List<CaseBranchStmt> branches = l(ctx.casestmtbranch());
-        // Add default branch that throws PatternMatchFailException.  See
-        // "Behavior of non-exhaustive case statement: no branch match = skip
-        // or error?" on abs-dev on Jan 25-26, 2017
-        Block block = new Block(new List<>(), new List<>());
-        block.addStmt(new ThrowStmt(new List<>(),
-                                    new DataConstructorExp("PatternMatchFailException",
-                                                           new List<>())));
-        CaseBranchStmt defaultBranch = new CaseBranchStmt(new UnderscorePattern(), block);
-        setASTNodePosition(ctx, defaultBranch);
-        branches.add(defaultBranch);
+        CaseBranchStmt lastbranch = null;
+        if (branches.getNumChildNoTransform() > 0) {
+            lastbranch = branches.getChildNoTransform(branches.getNumChildNoTransform() - 1);
+        }
+        if (lastbranch == null || !(lastbranch.getLeftNoTransform() instanceof UnderscorePattern)) {
+            // Add default branch that throws
+            // PatternMatchFailException.  See "Behavior of
+            // non-exhaustive case statement: no branch match = skip
+            // or error?" on abs-dev on Jan 25-26, 2017
+            Block block = new Block(new List<>(), new List<>());
+            block.addStmt(new ThrowStmt(new List<>(),
+                                        new DataConstructorExp("PatternMatchFailException",
+                                                               new List<>())));
+            CaseBranchStmt defaultBranch = new CaseBranchStmt(new UnderscorePattern(), block);
+            setASTNodePosition(ctx, defaultBranch);
+            branches.add(defaultBranch);
+        }
         setV(ctx, new CaseStmt(v(ctx.annotations()), v(ctx.c), branches));
     }
     @Override public void exitCasestmtbranch(ABSParser.CasestmtbranchContext ctx) {
@@ -583,6 +589,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setV(ctx, new ParFnApp(ctx.qualified_identifier().getText(), params, functionParams));
     }
     @Override public void exitVariadicFunctionExp(ABSParser.VariadicFunctionExpContext ctx) {
+        // see FnApp.isVariadicFnApp()
         List<PureExp> l = v(ctx.pure_exp_list());
         PureExp arglist = null;
         if (l.getNumChildNoTransform() == 0) {
@@ -606,7 +613,6 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     @Override public void exitUnaryExp(ABSParser.UnaryExpContext ctx) {
         switch (ctx.op.getType()) {
         case ABSParser.NEGATION :
-        case ABSParser.NEGATION_CREOL :
             setV(ctx, new NegExp(v(ctx.pure_exp())));
             break;
         case ABSParser.MINUS :
@@ -700,11 +706,21 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setV(ctx, new CaseExp(v(ctx.c), l));
     }
     @Override public void exitLetExp(ABSParser.LetExpContext ctx) {
-        ParamDecl pd = new ParamDecl(ctx.IDENTIFIER().getText(),
-            v(ctx.type_use()),
-            new List<>());
-        setASTNodePosition(ctx.IDENTIFIER().getSymbol(), pd);
-        setV(ctx, new LetExp(pd, v(ctx.e), v(ctx.b)));
+	// For a source-level let expression with multiple bindings,
+	// create nested let expressions with one binding each.
+
+	// TODO: consider changing AST to support multiple bindings in
+	// LetExp - backends might be able to do something useful with
+	// the additional information
+	int nbindings = ctx.e.size(); // ctx.t, ctx.id have the same length
+	PureExp body = v(ctx.body);
+	for (int i = nbindings - 1; i >= 0; i--) {
+	    ParamDecl pd = new ParamDecl(ctx.id.get(i).getText(),
+					 v(ctx.t.get(i)), new List<>());
+	    setASTNodePosition(ctx.id.get(i), pd);
+	    body = new LetExp(pd, v(ctx.e.get(i)), body);
+	}
+	setV(ctx, body);
     }
     @Override public void exitImplementsExp(ABSParser.ImplementsExpContext ctx) {
         setV(ctx, new ImplementsExp(v(ctx.e), v(ctx.i)));

@@ -168,7 +168,7 @@ class LoadBalancerEndPointImpl(List<Service> services) implements LoadBalancerEn
 
 	Bool add(Service service) {
 		Bool result = False;
-		if (~inList(services, service)) {
+		if (!inList(services, service)) {
 			services = Cons(service, services);
 			current = Cons(service, services);
 			result = True;
@@ -941,7 +941,7 @@ class MonitoringServiceImpl implements MonitoringService {
 		Set<Int> keys = keys(thisInterval);
 
 		Bool done = False;
-		while (keys != set[] && ~done) {
+		while (keys != set[] && !done) {
 			Pair<Set<Int>, Int> nt = next(keys);
 			List<Monitor> monitors = lookupDefault(thisInterval, snd(nt), Nil);
 			if (inList(monitors, monitor)) {
@@ -1267,7 +1267,7 @@ modifies class RepeatUserImpl {
 	adds Int errors = 0;
 	modifies Bool invoke(EndPoint point, Int min, Int max) {
 		Bool result = original(point, min, max);
-		if (~result) {
+		if (!result) {
 			errors = errors + 1;
 		}
 		return result;
@@ -1291,7 +1291,7 @@ modifies class LoadBalancerEndPointImpl {
 	adds Int errors = 0;
 	modifies Bool invoke(Int size) {
 		Bool result = original(size);
-		if (~result) {
+		if (!result) {
 			errors = errors + 1;
 		}
 		return result;

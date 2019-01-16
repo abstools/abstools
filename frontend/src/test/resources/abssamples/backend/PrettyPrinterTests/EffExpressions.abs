@@ -1,0 +1,11 @@
+module BackendTest;
+import * from ABS.DC;
+
+{
+    CloudProvider cp1 = new CloudProvider("cog");
+    CloudProvider cp2 = new local CloudProvider("local");
+    await cp1!setInstanceDescriptions(map[Pair("m", map[Pair(Cores, 1)])]);
+    Fut<Rat> fc1 = cp1!getAccumulatedCost();
+    fc1.get;
+    Rat c2 = cp2.getAccumulatedCost();
+}

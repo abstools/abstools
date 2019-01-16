@@ -17,39 +17,39 @@ public class InterfaceDeclarationTest extends FrontendTest {
 
     @Test
     public void trivial() {
-        Model p = assertParseOk("interface I {} {}");
+        Model p = assertParse("interface I {} {}");
         assertTrue(!p.getErrors().containsErrors());
     }
 
     @Test
     public void extending() {
-        Model p = assertParseOk("interface I {} interface J extends I {} {}");
+        Model p = assertParse("interface I {} interface J extends I {} {}");
         assertTrue(!p.getErrors().containsErrors());
     }
 
     @Test
     public void extendingReversed() {
-        Model p = assertParseOk("interface J extends I {} interface I {} {}");
+        Model p = assertParse("interface J extends I {} interface I {} {}");
         assertTrue(!p.getErrors().containsErrors());
     }
 
     @Test
     public void extendingUndefined() {
-        Model p = assertParseOk("interface J extends I {} {}");
+        Model p = assertParse("interface J extends I {} {}");
         assertEquals(1,p.getErrors().getErrorCount());
         assertEndsWith(p.getErrors().getFirstError(), ErrorMessage.UNKOWN_INTERFACE.withArgs("I"));
     }
 
     @Test
     public void circular() {
-        Model p = assertParseOk("interface I extends I {} {}");
+        Model p = assertParse("interface I extends I {} {}");
         assertEquals(1,p.getErrors().getErrorCount());
         assertEndsWith(p.getErrors().getFirstError(), ErrorMessage.CYCLIC_INHERITANCE.withArgs("I"));
     }
 
     @Test
     public void mutuallyCircular() {
-        Model p = assertParseOk("interface I extends J {} interface J extends I {} {}");
+        Model p = assertParse("interface I extends J {} interface J extends I {} {}");
         assertEquals(2,p.getErrors().getErrorCount());
         Iterator<SemanticCondition> i = p.getErrors().iterator();
         assertEndsWith(i.next(), ErrorMessage.CYCLIC_INHERITANCE.withArgs("I"));
@@ -58,7 +58,7 @@ public class InterfaceDeclarationTest extends FrontendTest {
 
     @Test
     public void mutuallyCircularIndirect() {
-        Model p = assertParseOk("interface I extends J {}  interface J extends K {}  interface K extends I {}");
+        Model p = assertParse("interface I extends J {}  interface J extends K {}  interface K extends I {}");
         assertEquals(3,p.getErrors().getErrorCount());
         Iterator<SemanticCondition> i = p.getErrors().iterator();
         assertEndsWith(i.next(), ErrorMessage.CYCLIC_INHERITANCE.withArgs("I"));

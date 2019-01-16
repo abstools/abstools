@@ -1,38 +1,20 @@
-import java.io.*;
-import java.util.*;
-import java.util.regex.*;
 
 // Added by Lei Mou:
 // Using the same output format as the linux command "tree" to dump the ABS AST.
 
-aspect MyDumpTree 
+aspect DumpTree 
 {
-	// ClassName without qualification @ Address
-	protected static java.util.regex.Pattern ASTNode.p =
-        java.util.regex.Pattern.compile("([A-Z][a-zA-Z]*)@([\\da-f]+)");
-
 	protected void ASTNode.printInfo(PrintStream stream) {}
 
-	public void ASTNode.dump() {
-		dump(System.out, 0, 0, false);
+	public void ASTNode.dump(PrintStream stream) {
+		dump(stream, 0, 0, false);
 	}
 	
 	protected void ASTNode.dump(PrintStream stream, int pattern, int level, boolean last)
 	{
-		java.util.regex.Matcher m = p.matcher(super.toString());
-		String clsName = null;
-		String address = null;
-		
 		int flag = pattern;
 		int bit = 0;
-		
-		while (m.find()) {
-			clsName = m.group(1);
-			address = m.group(2);
-		}
-		
-		// the above code doesn't work because toString() is frequently overridden
-		clsName = getClass().getName();
+		String clsName = getClass().getName();
 		
 		// General idea:
 		// In the printed version of the AST, each line is composed of level(number) prefixes.

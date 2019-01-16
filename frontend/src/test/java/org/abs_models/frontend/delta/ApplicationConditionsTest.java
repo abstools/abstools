@@ -18,22 +18,18 @@ public class ApplicationConditionsTest extends DeltaTest {
 
     @Test
     public void singleAppCondFeature() {
-        Model model = assertParseOk(
-                "productline PL;"
-                        + "features A,B,C,D;"
-                        + "delta D when A;"
-                );
+        Model model = assertParse("productline PL;"
+            + "features A,B,C,D;"
+            + "delta D when A;");
         AppCond a = model.getProductLine().getDeltaClause(0).getAppCond();
         assertEquals(((AppCondFeature)a).getName(), "A");
     }
 
     @Test
     public void conjunction() {
-        Model model = assertParseOk(
-                "productline PL;"
-                        + "features A,B,C,D;"
-                        + "delta D when A && B;"
-                );
+        Model model = assertParse("productline PL;"
+            + "features A,B,C,D;"
+            + "delta D when A && B;");
         AppCond a = model.getProductLine().getDeltaClause(0).getAppCond();
         assertEquals(((AppCondFeature)((AppCondAnd)a).getLeft()).getName(), "A");
         assertEquals(((AppCondFeature)((AppCondAnd)a).getRight()).getName(), "B");
@@ -41,11 +37,9 @@ public class ApplicationConditionsTest extends DeltaTest {
 
     @Test
     public void disjunction() {
-        Model model = assertParseOk(
-                "productline PL;"
-                        + "features A,B,C,D;"
-                        + "delta D when A || B;"
-                );
+        Model model = assertParse("productline PL;"
+            + "features A,B,C,D;"
+            + "delta D when A || B;");
         AppCond a = model.getProductLine().getDeltaClause(0).getAppCond();
         assertEquals(((AppCondFeature)((AppCondOr)a).getLeft()).getName(), "A");
         assertEquals(((AppCondFeature)((AppCondOr)a).getRight()).getName(), "B");
@@ -53,33 +47,27 @@ public class ApplicationConditionsTest extends DeltaTest {
 
     @Test
     public void negation() {
-        Model model = assertParseOk(
-                "productline PL;"
-                        + "features A,B,C,D;"
-                        + "delta D when !A;"
-                );
+        Model model = assertParse("productline PL;"
+            + "features A,B,C,D;"
+            + "delta D when !A;");
         AppCond a = model.getProductLine().getDeltaClause(0).getAppCond();
         assertEquals(((AppCondFeature)((AppCondNot)a).getAppCond()).getName(), "A");
     }
 
     @Test
     public void parenthesis() {
-        Model model = assertParseOk(
-                "productline PL;"
-                        + "features A,B,C,D;"
-                        + "delta D when (A);"
-                );
+        Model model = assertParse("productline PL;"
+            + "features A,B,C,D;"
+            + "delta D when (A);");
         AppCond a = model.getProductLine().getDeltaClause(0).getAppCond();
         assertEquals(((AppCondFeature)a).getName(), "A");
     }
 
     @Test
     public void complexExpression1() {
-        Model model = assertParseOk(
-                "productline PL;"
-                        + "features A,B,C,D;"
-                        + "delta D when (A || B) && !(C || D);"
-                );
+        Model model = assertParse("productline PL;"
+            + "features A,B,C,D;"
+            + "delta D when (A || B) && !(C || D);");
         AppCond a = model.getProductLine().getDeltaClause(0).getAppCond();
         assertEquals(((AppCondFeature)((AppCondOr)(((AppCondAnd)a).getLeft())).getLeft()).getName(), "A");
     }
@@ -88,11 +76,9 @@ public class ApplicationConditionsTest extends DeltaTest {
     @Test
     public void withAttributes() {
         // TODO: implement
-        Model model = assertParseOk(
-                "productline PL;"
-                        + "features A,B,C,D;"
-                        + "delta D when (0 < A.x < 10) && B.y;"
-                );
+        Model model = assertParse("productline PL;"
+            + "features A,B,C,D;"
+            + "delta D when (0 < A.x < 10) && B.y;");
         AppCond a = model.getProductLine().getDeltaClause(0).getAppCond();
     }
 
@@ -111,16 +97,14 @@ public class ApplicationConditionsTest extends DeltaTest {
         ));
 
         for (String ac : acs) {
-            Model model = assertParseOk(
-                    "module M;"
-                            + "delta D;"
-                            +"uses M;"
-                            + "adds class C {}"
-                            + "productline PL;"
-                            + "features A,B,C;"
-                            + "delta D when " + ac + ";"
-                            + "product P(A);"
-                    );
+            Model model = assertParse("module M;"
+                + "delta D;"
+                + "uses M;"
+                + "adds class C {}"
+                + "productline PL;"
+                + "features A,B,C;"
+                + "delta D when " + ac + ";"
+                + "product P(A);");
 
             model.evaluateAllProductDeclarations();
             model.flattenForProduct("P");
@@ -143,16 +127,14 @@ public class ApplicationConditionsTest extends DeltaTest {
         ));
 
         for (String ac : acs) {
-            Model model = assertParseOk(
-                    "module M;"
-                            + "delta D;"
-                            +"uses M;"
-                            + "adds class C {}"
-                            + "productline PL;"
-                            + "features A,B,C;"
-                            + "delta D when " + ac + ";"
-                            + "product P(A);"
-                    );
+            Model model = assertParse("module M;"
+                + "delta D;"
+                + "uses M;"
+                + "adds class C {}"
+                + "productline PL;"
+                + "features A,B,C;"
+                + "delta D when " + ac + ";"
+                + "product P(A);");
 
             model.evaluateAllProductDeclarations();
             model.flattenForProduct("P");

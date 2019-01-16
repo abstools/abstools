@@ -4,30 +4,28 @@
  */
 package org.abs_models.frontend.delta;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.abs_models.frontend.analyser.SemanticConditionList;
+import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.ast.ProductLine;
 import org.junit.Test;
-
-import org.abs_models.frontend.ast.Model;
 
 public class DeltaTrieTest extends DeltaTest {
 
     @Test
     public void trieStructure1() {
-        Model model = assertParseOk(
-                "module Test;"
-                        + "delta D1;"
-                        + "delta D2;"
-                        + "productline PL;"
-                        + "features A,B;"
-                        + "delta D1 after D2 when A;"
-                        + "delta D2 when B;"
-                        + "root FM {"
-                        + " group [0..*] { A, B }"
-                        + "}"
-                );
+        Model model = assertParse("module Test;"
+            + "delta D1;"
+            + "delta D2;"
+            + "productline PL;"
+            + "features A,B;"
+            + "delta D1 after D2 when A;"
+            + "delta D2 when B;"
+            + "root FM {"
+            + " group [0..*] { A, B }"
+            + "}");
         ProductLine pl = model.getProductLine();
         DeltaTrie pfgt = ProductLineAnalysisHelper.buildPFGT(pl, new SemanticConditionList());
 
@@ -44,20 +42,18 @@ public class DeltaTrieTest extends DeltaTest {
 
     @Test
     public void trieStructure2() {
-        Model model = assertParseOk(
-                "module Test;"
-                        + "delta D1;"
-                        + "delta D2;"
-                        + "delta D3;"
-                        + "productline PL;"
-                        + "features A,B,C;"
-                        + "delta D1 when A;"
-                        + "delta D2 after D1 when B;"
-                        + "delta D3 after D2 when C;"
-                        + "root FM {"
-                        + " group [0..*] { A, B, C }"
-                        + "}"
-                );
+        Model model = assertParse("module Test;"
+            + "delta D1;"
+            + "delta D2;"
+            + "delta D3;"
+            + "productline PL;"
+            + "features A,B,C;"
+            + "delta D1 when A;"
+            + "delta D2 after D1 when B;"
+            + "delta D3 after D2 when C;"
+            + "root FM {"
+            + " group [0..*] { A, B, C }"
+            + "}");
         ProductLine pl = model.getProductLine();
         DeltaTrie pfgt = ProductLineAnalysisHelper.buildPFGT(pl, new SemanticConditionList());
 
@@ -78,27 +74,25 @@ public class DeltaTrieTest extends DeltaTest {
     @Test
     public void trieContent() {
         // TODO
-        Model model = assertParseOk(
-                "module Test;"
-                        + "class Ccore{}"
-                        + "delta D1; uses Test; adds class C1 {Int f1 = 0; Unit m1() {}}"
-                        + "delta D2; uses Test; adds class C2 {Int f2 = 0; Unit m2() {}}"
-                        + "delta D3;"
-                        // + " modifies class Test.C1 { removes Int f1; removes Unit m1(); }"
-                        // + " modifies class Test.C2 { adds Int f2a = 1; modifies Unit m2() {} adds Unit m2a() {} }"
-                        + ""
-                        + ""
-                        + ""
-                        + ""
-                        + "productline PL;"
-                        + "features A,B;"
-                        + "delta D1 when A;"
-                        + "delta D2 after D1 when B;"
-                        + "delta D3 after D1,D2 when A && B;"
-                        + "root FM {"
-                        + " group [1..*] { A, B }"
-                        + "}"
-                );
+        Model model = assertParse("module Test;"
+            + "class Ccore{}"
+            + "delta D1; uses Test; adds class C1 {Int f1 = 0; Unit m1() {}}"
+            + "delta D2; uses Test; adds class C2 {Int f2 = 0; Unit m2() {}}"
+            + "delta D3;"
+            // + " modifies class Test.C1 { removes Int f1; removes Unit m1(); }"
+            // + " modifies class Test.C2 { adds Int f2a = 1; modifies Unit m2() {} adds Unit m2a() {} }"
+            + ""
+            + ""
+            + ""
+            + ""
+            + "productline PL;"
+            + "features A,B;"
+            + "delta D1 when A;"
+            + "delta D2 after D1 when B;"
+            + "delta D3 after D1,D2 when A && B;"
+            + "root FM {"
+            + " group [1..*] { A, B }"
+            + "}");
 
         ProductLine pl = model.getProductLine();
         DeltaTrie pfgt = ProductLineAnalysisHelper.buildPFGT(pl, new SemanticConditionList());

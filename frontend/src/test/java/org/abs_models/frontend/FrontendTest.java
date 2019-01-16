@@ -4,10 +4,12 @@
  */
 package org.abs_models.frontend;
 
+import static org.abs_models.ABSTest.Config.EXPECT_TYPE_ERROR;
+import static org.abs_models.ABSTest.Config.EXPECT_WARNING;
+import static org.abs_models.ABSTest.Config.TYPE_CHECK;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.Set;
 
 import org.abs_models.ABSTest;
 import org.abs_models.backend.common.InternalBackendException;
@@ -31,37 +33,10 @@ import org.abs_models.frontend.ast.Stmt;
 import org.abs_models.frontend.ast.VarDeclStmt;
 import org.abs_models.frontend.typechecker.Type;
 
-import static org.abs_models.ABSTest.Config.*;
-
 public class FrontendTest extends ABSTest {
 
-    protected Model assertParseOkStdLib(String s) {
-        return assertParse(s, WITH_STD_LIB);
-    }
-
-    protected Model assertParseFileOk(String fileName, boolean withStdLib) throws IOException,
-        WrongProgramArgumentException, InternalBackendException {
-        if (withStdLib) {
-            return assertParseFileOk(fileName, WITH_STD_LIB);
-        } else {
-            return assertParseFileOk(fileName);
-        }
-    }
-
-    protected Model assertParseFilesOk(Set<String> fileNames, boolean withStdLib) throws IOException, InternalBackendException {
-        if (withStdLib) {
-            return assertParseFilesOk(fileNames, WITH_STD_LIB);
-        } else {
-            return assertParseFilesOk(fileNames);
-        }
-    }
-
-    protected Model assertTypeCheckFileOk(String fileName, boolean withStdLib) throws IOException, WrongProgramArgumentException, InternalBackendException {
-        if (withStdLib) { 
-            return assertParseFileOk(fileName, TYPE_CHECK, WITH_STD_LIB);
-        } else {
-            return assertParseFileOk(fileName, TYPE_CHECK);
-        }
+    protected Model assertTypeCheckFileOk(String fileName) throws IOException, WrongProgramArgumentException, InternalBackendException {
+	return assertParseFileOk(fileName, TYPE_CHECK);
     }
 
     protected Exp getFirstExp(String absCode) {
@@ -174,32 +149,28 @@ public class FrontendTest extends ABSTest {
         return null;
     }
     
-    protected void assertNoTypeErrorsNoLib(String absCode) {
+    protected void assertTypeOK(String absCode) {
         assertTypeErrors(absCode, new Config[0]);
     }
 
-    protected void assertTypeOK(String absCode) {
-        assertTypeErrors(absCode, WITH_STD_LIB);
-    }
-
     protected SemanticCondition assertTypeErrors(String absCode) {
-        return assertTypeErrors(absCode, EXPECT_TYPE_ERROR, WITH_STD_LIB);
+        return assertTypeErrors(absCode, EXPECT_TYPE_ERROR);
     }
 
     protected void assertTypeErrors(String absCode, ErrorMessage expected) {
-        SemanticCondition e = assertTypeErrors(absCode, EXPECT_TYPE_ERROR, WITH_STD_LIB);
+        SemanticCondition e = assertTypeErrors(absCode, EXPECT_TYPE_ERROR);
         assertEquals(expected,e.msg);
     }
 
     /**
-     * Check for and return the first error occurring in 'absCode', or null if
-     * none found.  If EXPECT_WARNING is set, and EXPECT_TYPE_ERROR is not
-     * set, return the first warning instead.  Produces a test failure if
-     * 'config' contains EXPECT_TYPE_ERROR but no error found.  Produces a
-     * test failure if 'config' contains EXPECT_WARNING but no warning found.
+     * Check for and return the first error occurring in 'absCode', or
+     * null if none found.  Produces a test failure if 'config'
+     * contains EXPECT_TYPE_ERROR but no error found.  Produces a test
+     * failure if 'config' contains EXPECT_WARNING but no warning
+     * found.
      * @param absCode - the test case source code
      * @param config - flags
-     * @return
+     * @return The first error or null
      */
     protected SemanticCondition assertTypeErrors(String absCode, Config... config) {
         Model m = assertParse(absCode, config);
@@ -219,11 +190,6 @@ public class FrontendTest extends ABSTest {
     }
 
     protected SemanticCondition assertWarnings(String absCode) {
-        return assertTypeErrors(absCode, EXPECT_WARNING, WITH_STD_LIB);
-    }
-
-    protected void assertWarnings(String absCode, ErrorMessage expected) {
-        SemanticCondition e = assertTypeErrors(absCode, EXPECT_WARNING, WITH_STD_LIB);
-        assertEquals(expected,e.msg);
+        return assertTypeErrors(absCode, EXPECT_WARNING);
     }
 }

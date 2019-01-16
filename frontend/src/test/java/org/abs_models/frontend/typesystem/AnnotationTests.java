@@ -8,17 +8,14 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import org.abs_models.frontend.typechecker.Type;
-import org.abs_models.frontend.typechecker.TypeAnnotation;
-import org.junit.Test;
-
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.ClassDecl;
 import org.abs_models.frontend.ast.DataConstructorExp;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.ast.VarDeclStmt;
-
-import static org.abs_models.ABSTest.Config.*;
+import org.abs_models.frontend.typechecker.Type;
+import org.abs_models.frontend.typechecker.TypeAnnotation;
+import org.junit.Test;
 
 public class AnnotationTests extends FrontendTest {
 
@@ -53,7 +50,7 @@ public class AnnotationTests extends FrontendTest {
     }
     
     private Model assertParseOkAnn(String exampleCode) {
-        return assertParse(TEST_ANN+exampleCode,WITH_STD_LIB);
+        return assertParse(TEST_ANN+exampleCode);
     }
 
     private void assertHasLocAnnotation(Type t, String s) {

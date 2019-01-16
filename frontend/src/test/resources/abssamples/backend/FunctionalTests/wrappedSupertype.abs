@@ -1,0 +1,15 @@
+module BackendTest;
+
+interface I { }
+
+interface I2 extends I { }
+
+class C implements I2 { }
+
+{
+    // Test that we can wrap subtypes in a container typed with the supertype
+    I2 i2 = new C();
+    Map<Int, I2> m = map[Pair(2, i2)];
+    Maybe<I> result = lookup(m, 2);
+    Bool testresult = fromJust(result) == i2;
+}

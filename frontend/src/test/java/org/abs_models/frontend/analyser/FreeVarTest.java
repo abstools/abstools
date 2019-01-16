@@ -4,21 +4,21 @@
  */
 package org.abs_models.frontend.analyser;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import org.abs_models.frontend.ast.Stmt;
-import org.junit.Assert;
-import org.junit.Test;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.ClassDecl;
 import org.abs_models.frontend.ast.Exp;
 import org.abs_models.frontend.ast.MethodImpl;
 import org.abs_models.frontend.ast.ReturnStmt;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import org.abs_models.frontend.ast.Stmt;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class FreeVarTest extends FrontendTest {
 
@@ -150,14 +150,12 @@ public class FreeVarTest extends FrontendTest {
 
     @Test
     public void fieldUse() {
-        ClassDecl clazz = getFirstClassDecl(assertParseOkStdLib(
-            "class C {"
-                + "Int i = 0;"
-                + "Int m() {"
-                + "return i + 1;"
-                + "}"
-                + "}"
-        ));
+        ClassDecl clazz = getFirstClassDecl(assertParse("class C {"
+            + "Int i = 0;"
+            + "Int m() {"
+            + "return i + 1;"
+            + "}"
+            + "}"));
         MethodImpl method = clazz.lookupMethod("m");
         assertNotNull(method);
         Stmt stmt = method.getBlock().getStmt(0);

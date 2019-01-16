@@ -2,7 +2,7 @@
 
 
 -module(cog_monitor).
--behaviour(gen_server).
+-behaviour(gen_statem).
 -include_lib("abs_types.hrl").
 
 -export([start_link/3, stop/0, waitfor/0]).
@@ -24,8 +24,9 @@
 %% the HTTP api
 -export([register_object_with_http_name/2,lookup_object_from_http_name/1,list_registered_http_names/0,list_registered_http_objects/0,increase_clock_limit/1]).
 
-%% gen_server interface
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
+%%gen_statem callbacks
+-export([init/1, callback_mode/0, terminate/3, code_change/4]).
+-export([running/3]).
 
 %% Simulation ends when no cog is active or waiting for the clock / some
 %% resources.  Note that a cog is in either "active" or "idle" but can be in
@@ -55,13 +56,16 @@
               keepalive_after_clock_limit % Flag whether we kill all objects after clock limit has been reached
                                           % (false when HTTP API is active)
               }).
+
+callback_mode() -> state_functions.
+
 %%External function
 
 start_link(Main, Keepalive, Trace) ->
-    gen_server:start_link({global, cog_monitor}, ?MODULE, [Main, Keepalive, Trace], []).
+    gen_statem:start_link({global, cog_monitor}, ?MODULE, [Main, Keepalive, Trace], []).
 
 stop() ->
-    gen_server:stop({global, cog_monitor}).
+    gen_statem:stop({global, cog_monitor}).
 
 %% Waits until all cogs are idle
 waitfor()->
@@ -71,56 +75,56 @@ waitfor()->
     end.
 
 are_objects_of_class_protected(Class) ->
-    gen_server:call({global, cog_monitor}, {keep_alive, Class}, infinity).
+    gen_statem:call({global, cog_monitor}, {keep_alive, Class}, infinity).
 
 %% Cogs interface
 new_cog(ParentCog, Cog) ->
-    gen_server:call({global, cog_monitor}, {cog,ParentCog, Cog,new}, infinity).
+    gen_statem:call({global, cog_monitor}, {cog,ParentCog, Cog,new}, infinity).
 
 cog_active(Cog) ->
-    gen_server:call({global, cog_monitor}, {cog,Cog,active}, infinity).
+    gen_statem:call({global, cog_monitor}, {cog,Cog,active}, infinity).
 
 cog_blocked(Cog) ->
-    gen_server:call({global, cog_monitor}, {cog, Cog, blocked}, infinity).
+    gen_statem:call({global, cog_monitor}, {cog, Cog, blocked}, infinity).
 
 cog_unblocked(Cog) ->
-    gen_server:call({global, cog_monitor}, {cog, Cog, unblocked}, infinity).
+    gen_statem:call({global, cog_monitor}, {cog, Cog, unblocked}, infinity).
 
 cog_idle(Cog) ->
-    gen_server:call({global, cog_monitor}, {cog,Cog,idle}, infinity).
+    gen_statem:call({global, cog_monitor}, {cog,Cog,idle}, infinity).
 
 cog_died(Cog, RecordedTrace) ->
-    gen_server:call({global, cog_monitor}, {cog,Cog,RecordedTrace,die}, infinity).
+    gen_statem:call({global, cog_monitor}, {cog,Cog,RecordedTrace,die}, infinity).
 
 cog_blocked_for_clock(Task, Cog, Min, Max) ->
-    gen_server:call({global, cog_monitor}, {cog,Task,Cog,clock_waiting,Min,Max}, infinity).
+    gen_statem:call({global, cog_monitor}, {cog,Task,Cog,clock_waiting,Min,Max}, infinity).
 
 %% Tasks interface
 task_waiting_for_clock(Task, Cog, Min, Max) ->
-    gen_server:call({global, cog_monitor}, {task,Task,Cog,clock_waiting,Min,Max}, infinity).
+    gen_statem:call({global, cog_monitor}, {task,Task,Cog,clock_waiting,Min,Max}, infinity).
 
 task_confirm_clock_wakeup(Task) ->
-    gen_server:cast({global, cog_monitor}, {task_confirm_clock_wakeup, Task}).
+    gen_statem:cast({global, cog_monitor}, {task_confirm_clock_wakeup, Task}).
 
 %% Deployment Components interface
 new_dc(DC) ->
-    gen_server:call({global, cog_monitor}, {newdc, DC}, infinity).
+    gen_statem:call({global, cog_monitor}, {newdc, DC}, infinity).
 
 dc_died(DC) ->
-    gen_server:cast({global, cog_monitor}, {dc_died, DC}),
+    gen_statem:cast({global, cog_monitor}, {dc_died, DC}),
     ok.
 
 get_dcs() ->
-    gen_server:call({global, cog_monitor}, get_dcs, infinity).
+    gen_statem:call({global, cog_monitor}, get_dcs, infinity).
 
 get_schedules() ->
     gen_server:call({global, cog_monitor}, get_schedules, infinity).
 
 register_object_with_http_name(Object, Name) ->
-    gen_server:call({global, cog_monitor}, {register_object, Object, Name}, infinity).
+    gen_statem:call({global, cog_monitor}, {register_object, Object, Name}, infinity).
 
 lookup_object_from_http_name(Name) ->
-    Object=gen_server:call({global, cog_monitor}, {lookup_object, Name}, infinity),
+    Object=gen_statem:call({global, cog_monitor}, {lookup_object, Name}, infinity),
     case Object of
         none -> {notfound, Object};
         #object{ref=Ref} -> case is_process_alive(Ref) of
@@ -130,31 +134,32 @@ lookup_object_from_http_name(Name) ->
     end.
 
 list_registered_http_names() ->
-    gen_server:call({global, cog_monitor}, all_registered_names, infinity).
+    gen_statem:call({global, cog_monitor}, all_registered_names, infinity).
 
 list_registered_http_objects() ->
-    gen_server:call({global, cog_monitor}, all_registered_objects, infinity).
+    gen_statem:call({global, cog_monitor}, all_registered_objects, infinity).
 
 increase_clock_limit(Amount) ->
-    gen_server:call({global, cog_monitor}, {clock_limit_increased, Amount}, infinity).
+    gen_statem:call({global, cog_monitor}, {clock_limit_increased, Amount}, infinity).
 
-%% gen_server callbacks
+%% gen_statem callbacks
 
 %%The callback gets as parameter the pid of the runtime process, which waits for all cogs to be idle
 init([Main,Keepalive,Trace])->
-    {ok,#data{main=Main,
-              active=gb_sets:empty(),
-              blocked=gb_sets:empty(),
-              idle=gb_sets:empty(),
-              clock_waiting=[],
-              dcs=[],
-              active_before_next_clock=ordsets:new(),
-              cog_names=maps:new(),
-              trace_map=Trace,
-              registered_objects=maps:new(),
-              keepalive_after_clock_limit=Keepalive}}.
+    {ok,running,
+     #data{main=Main,
+           active=gb_sets:empty(),
+           blocked=gb_sets:empty(),
+           idle=gb_sets:empty(),
+           clock_waiting=[],
+           dcs=[],
+           active_before_next_clock=ordsets:new(),
+           cog_names=maps:new(),
+           trace_map=Trace,
+           registered_objects=maps:new(),
+           keepalive_after_clock_limit=Keepalive}}.
 
-handle_call({keep_alive, Class}, _From, Data=#data{keepalive_after_clock_limit=KeepAlive}) ->
+handle_call(From, {keep_alive, Class}, _State, Data=#data{keepalive_after_clock_limit=KeepAlive}) ->
     %% Do not garbage-collect DeploymentComponent objects when we do
     %% visualization (KeepAlive=true)
     Result=case KeepAlive of
@@ -164,8 +169,8 @@ handle_call({keep_alive, Class}, _From, Data=#data{keepalive_after_clock_limit=K
                            _ -> false
                        end
            end,
-    {reply, Result, Data};
-handle_call({cog,ParentCog,Cog,new}, _From, Data=#data{idle=I,cog_names=M,trace_map=T})->
+    {keep_state_and_data, {reply, From, Result}};
+handle_call(From, {cog,ParentCog,Cog,new}, _State, Data=#data{idle=I,cog_names=M,trace_map=T})->
     {C, N} = maps:get(ParentCog, M, {[], 0}),
     Id = [N | C],
     M2 = maps:put(ParentCog, {C, N+1}, M),
@@ -173,38 +178,38 @@ handle_call({cog,ParentCog,Cog,new}, _From, Data=#data{idle=I,cog_names=M,trace_
     I1=gb_sets:add_element(Cog,I),
     ShownId = lists:reverse(Id),
     I1=gb_sets:add_element(Cog,I),
-    {reply, {ShownId, maps:get(ShownId, T, [])}, Data#data{idle=I1, cog_names=NewM}};
-handle_call({cog,Cog,active}, _From, Data=#data{active=A,idle=I})->
+    {keep_state, Data#data{idle=I1, cog_names=NewM},
+     {reply, From, {ShownId, maps:get(ShownId, T, [])}}};
+handle_call(From, {cog,Cog,active}, _State, Data=#data{active=A,idle=I})->
     A1=gb_sets:add_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
-    {reply, ok, Data#data{active=A1,idle=I1}};
-handle_call({cog,Cog,idle}, From, Data=#data{active=A,idle=I})->
+    {keep_state, Data#data{active=A1,idle=I1}, {reply, From, ok}};
+handle_call(From, {cog,Cog,idle}, _State, Data=#data{active=A,idle=I})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:add_element(Cog,I),
     S1=Data#data{active=A1,idle=I1},
-    gen_server:reply(From, ok),
+    gen_statem:reply(From, ok),
     case can_clock_advance(Data, S1) of
         true->
-            {noreply, advance_clock_or_terminate(S1)};
+            {keep_state, advance_clock_or_terminate(S1)};
         false->
-            {noreply, S1}
+            {keep_state, S1}
     end;
-handle_call({cog,Cog,blocked}, From, Data=#data{active=A,blocked=B})->
+handle_call(From, {cog,Cog,blocked}, _State, Data=#data{active=A,blocked=B})->
     A1=gb_sets:del_element(Cog,A),
     B1=gb_sets:add_element(Cog,B),
     S1=Data#data{active=A1,blocked=B1},
-    gen_server:reply(From, ok),
+    gen_statem:reply(From, ok),
     case can_clock_advance(Data, S1) of
         true->
-            {noreply, advance_clock_or_terminate(S1)};
+            {keep_state, advance_clock_or_terminate(S1)};
         false->
-            {noreply, S1}
+            {keep_state, S1}
     end;
-handle_call({clock_limit_increased, Amount}, From, Data) ->
+handle_call(From, {clock_limit_increased, Amount}, _State, Data) ->
     %% KLUDGE: Ideally we'd like to only be told that the limit has
     %% increased, without having to do it ourselves.  Consider
-    %% converting cog_monitor to gen_fsm and switching between
-    %% at_limit and running states.
+    %% introducing an `at_limit' state in addition to `running'.
     Was_blocked = clock:is_at_limit(),
     {Success, Newlimit} = clock:advance_limit(Amount),
     S1 = case Was_blocked of
@@ -215,13 +220,13 @@ handle_call({clock_limit_increased, Amount}, From, Data) ->
              false ->
                  Data
          end,
-    {reply, {Success, Newlimit}, S1};
-handle_call({cog,Cog,unblocked}, _From, Data=#data{active=A,blocked=B})->
+    {keep_state, S1, {reply, From, {Success, Newlimit}}};
+handle_call(From, {cog,Cog,unblocked}, _State, Data=#data{active=A,blocked=B})->
     A1=gb_sets:add_element(Cog,A),
     B1=gb_sets:del_element(Cog,B),
-    {reply, ok, Data#data{active=A1,blocked=B1}};
-handle_call({cog,Cog,RecordedTrace,die},
-            From,Data=#data{active=A,idle=I,blocked=B,clock_waiting=W,
+    {keep_state, Data#data{active=A1,blocked=B1}, {reply, From, ok}};
+handle_call(From, {cog,Cog,RecordedTrace,die}, _State,
+            Data=#data{active=A,idle=I,blocked=B,clock_waiting=W,
                             active_before_next_clock=ABNC,
                             cog_names=M, trace_map=T})->
     ABNC1=ordsets:filter(fun ({_, Cog1}) -> Cog1 =/= Cog end, ABNC),
@@ -231,34 +236,37 @@ handle_call({cog,Cog,RecordedTrace,die},
     W1=lists:filter(fun ({_Min, _Max, _Task, Cog1}) ->  Cog1 =/= Cog end, W),
     T1=maps:put(maps:get(Cog, M), RecordedTrace, T),
     S1=Data#data{active=A1,idle=I1,blocked=B1,clock_waiting=W1, active_before_next_clock=ABNC1,trace_map=T1},
-    gen_server:reply(From, ok),
+    gen_statem:reply(From, ok),
     case can_clock_advance(Data, S1) of
         true->
-            {noreply, advance_clock_or_terminate(S1)};
+            {keep_state, advance_clock_or_terminate(S1)};
         false->
-            {noreply, S1}
+            {keep_state, S1}
     end;
-handle_call({task,Task,Cog,clock_waiting,Min,Max}, _From,
+handle_call(From, {task,Task,Cog,clock_waiting,Min,Max}, _State,
              Data=#data{clock_waiting=C}) ->
     C1=add_to_clock_waiting(C,Min,Max,Task,Cog),
-    {reply, ok,Data#data{clock_waiting=C1}};
-handle_call({cog,Task,Cog,clock_waiting,Min,Max}, _From,
+    {keep_state, Data#data{clock_waiting=C1}, {reply, From, ok}};
+handle_call(From, {cog,Task,Cog,clock_waiting,Min,Max}, _State,
              Data=#data{clock_waiting=C}) ->
     %% {cog, blocked} event comes separately
     C1=add_to_clock_waiting(C,Min,Max,Task,Cog),
-    {reply, ok, Data#data{clock_waiting=C1}};
-handle_call({newdc, DC=#object{class=class_ABS_DC_DeploymentComponent}},
-            _From, Data=#data{dcs=DCs}) ->
-    {reply, ok, Data#data{dcs=[DC | DCs]}};
-handle_call(get_dcs, _From, Data=#data{dcs=DCs}) ->
-    {reply, DCs, Data};
-handle_call(get_schedules, _From, Data=#data{idle=Idle, cog_names=Names, trace_map=Traces}) ->
-    {reply, gather_scheduling_traces(Idle, Names, Traces), Data};
-handle_call(all_registered_names, _From, Data=#data{registered_objects=Objects}) ->
-    {reply, maps:keys(Objects), Data};
-handle_call(all_registered_objects, _From, Data=#data{registered_objects=Objects}) ->
-    {reply, maps:values(Objects), Data};
-handle_call({register_object, Object, Key}, _From, Data=#data{registered_objects=Objects}) ->
+    {keep_state, Data#data{clock_waiting=C1}, {reply, From, ok}};
+handle_call(From, {newdc, DC=#object{class=class_ABS_DC_DeploymentComponent}},
+            _State, Data=#data{dcs=DCs}) ->
+    {keep_state, Data#data{dcs=[DC | DCs]}, {reply, From, ok}};
+handle_call(From, get_dcs, _State, Data=#data{dcs=DCs}) ->
+    {keep_state_and_data, {reply, From, DCs}};
+handle_call(From, get_schedules, _State, Data=#data{idle=Idle, cog_names=Names, trace_map=Traces}) ->
+    {keep_state_and_data, {reply, From, gather_scheduling_traces(Idle, Names, Traces)}};
+handle_call(From, all_registered_names, _State,
+            Data=#data{registered_objects=Objects}) ->
+    {keep_state_and_data, {reply, From, maps:keys(Objects)}};
+handle_call(From, all_registered_objects, _State,
+            Data=#data{registered_objects=Objects}) ->
+    {keep_state_and_data, {reply, From, maps:values(Objects)}};
+handle_call(From, {register_object, Object, Key}, _State,
+            Data=#data{registered_objects=Objects}) ->
     object:protect_object_from_gc(Object),
     NewObjects=case maps:get(Key, Objects,none) of
                    none -> maps:put(Key, Object, Objects);
@@ -266,37 +274,48 @@ handle_call({register_object, Object, Key}, _From, Data=#data{registered_objects
                        object:unprotect_object_from_gc(OldObject),
                        maps:update(Key, Object, Objects)
                end,
-    {reply, ok, Data#data{registered_objects=NewObjects}};
-handle_call({lookup_object, Name}, _From, Data=#data{registered_objects=Objects}) ->
+    {keep_state, Data#data{registered_objects=NewObjects}, {reply, From, ok}};
+handle_call(From, {lookup_object, Name}, _State,
+            Data=#data{registered_objects=Objects}) ->
     Result=case maps:get(Name, Objects, none) of
                none -> none;
                Object -> Object
            end,
-    {reply, Result, Data};
-handle_call(Request, _From, Data)->
-    io:format(standard_error, "Unknown request: ~w~n", [Request]),
-    {reply, error, Data}.
+    {keep_state_and_data, {reply, From, Result}};
+handle_call(From, Request, _State, _Data)->
+    io:format(standard_error, "Unknown call: ~w~n", [Request]),
+    {keep_state_and_data, {reply, From, error}}.
 
 
-handle_cast({dc_died, O}, Data=#data{dcs=DCs}) ->
-    {noreply, Data#data{dcs=lists:filter(fun (#object{ref=DC}) -> DC =/= O end, DCs)}};
-handle_cast({task_confirm_clock_wakeup, Task}, Data=#data{active_before_next_clock=ABNC}) ->
+handle_cast({dc_died, O}, _State, Data=#data{dcs=DCs}) ->
+    {keep_state, Data#data{dcs=lists:filter(fun (#object{ref=DC}) -> DC =/= O end, DCs)}};
+handle_cast({task_confirm_clock_wakeup, Task}, _State, Data=#data{active_before_next_clock=ABNC}) ->
     ABNC1=ordsets:filter(fun ({Task1, _}) -> Task1 =/= Task end, ABNC),
     S1=Data#data{active_before_next_clock=ABNC1},
     case can_clock_advance(Data, S1) of
         true->
-            {noreply, advance_clock_or_terminate(S1)};
+            {keep_state, advance_clock_or_terminate(S1)};
         false->
-            {noreply, S1}
+            {keep_state, S1}
     end;
-handle_cast(_Request, Data) ->
+handle_cast(Request, _State, _Data) ->
     %% unused
-    {noreply, Data}.
+    io:format(standard_error, "Unknown cast: ~w~n", [Request]),
+    {keep_state_and_data}.
 
 
-handle_info(_Info, Data)->
+handle_info(Event, _State, _Data)->
     %% unused
-    {noreply, Data}.
+    io:format(standard_error, "Unknown info: ~w~n", [Event]),
+    {keep_state_and_data}.
+
+%% Event functions
+running({call, From}, Event, Data) ->
+    handle_call(From, Event, running, Data);
+running(cast, Event, Data) ->
+    handle_cast(Event, running, Data);
+running(info, Event, Data) ->
+    handle_info(Event, running, Data).
 
 
 gather_scheduling_traces(Idle, Names, TraceMap) ->
@@ -308,13 +327,13 @@ gather_scheduling_traces(Idle, Names, TraceMap) ->
                  end, TraceMap, Idle).
 
 
-terminate(_Reason, _State) ->
+terminate(_Reason, _State, _Data) ->
     ok.
 
 
-code_change(_OldVsn, Data, _Extra)->
+code_change(_OldVsn, _OldState, Data, _Extra)->
     %% not supported
-    {error, Data}.
+    not_supported.
 
 can_clock_advance(_OldData=#data{active=A, blocked=B, active_before_next_clock=ABNC},
                   _NewData=#data{active=A1, blocked=B1, active_before_next_clock=ABNC1}) ->
