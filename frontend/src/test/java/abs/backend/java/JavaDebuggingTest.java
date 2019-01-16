@@ -5,10 +5,12 @@
 package abs.backend.java;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import abs.backend.java.codegeneration.JavaCode;
 
+@Ignore
 public class JavaDebuggingTest extends JavaBackendTest {
 
     @Test

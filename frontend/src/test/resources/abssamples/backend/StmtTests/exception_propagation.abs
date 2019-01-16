@@ -7,6 +7,7 @@ interface I {
 }
 
 class C implements I {
+    recover { MyE => skip; }
     Bool m() { throw MyE; return False; }
 }
 

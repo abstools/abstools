@@ -36,7 +36,7 @@ public class MaudeCompiler extends Main {
     private static final String SIMULATOR_RL = "ABS-SIMULATOR-RL";
     private static final String SIMULATOR_EQ_TIMED = "ABS-SIMULATOR-EQ-TIMED";
     private static final String RUNTIME_INTERPRETER_PATH
-        = "main/maude/abs-interpreter.maude";
+        = "main/resources/maude/abs-interpreter.maude";
 
     SIMULATOR module = SIMULATOR.RL;
     private File outputfile;
@@ -122,7 +122,12 @@ public class MaudeCompiler extends Main {
         if (outputfile != null) {
             stream = new PrintStream(outputfile);
         }
+        // Are we running in the source directory?
         InputStream is = ClassLoader.getSystemResourceAsStream(RUNTIME_INTERPRETER_PATH);
+        if (is == null) {
+            // Are we running within absfrontend.jar?
+            is = ClassLoader.getSystemResourceAsStream("maude/abs-interpreter.maude");
+        }
         if (is == null) {
             throw new InternalBackendException("Could not locate abs-interpreter.maude");
         }

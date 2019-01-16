@@ -26,6 +26,7 @@ import abs.frontend.ast.Model;
 public class JavaBackendTest extends ABSTest {
 
     private static final boolean DEBUG = false;
+    private static final String LIB_CLASSPATH = "build/classes/java/main";
 
     @SuppressWarnings("serial")
     final protected List<String> jvmArgs = new ArrayList<String>() {{ add("-Dabs.terminateOnException=true"); }};
@@ -61,7 +62,7 @@ public class JavaBackendTest extends ABSTest {
 
     public static void assertValidJava(JavaCode javaCode) throws Exception {
         try {
-            javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
+            javaCode.compile("-classpath", LIB_CLASSPATH, "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
         } catch (Exception e) {
             System.out.println(javaCode);
             throw e;
@@ -95,7 +96,7 @@ public class JavaBackendTest extends ABSTest {
         JavaCode javaCode = getJavaCode(absCode.toString(), withStdLib ? Config.WITH_STD_LIB : null);
         try {
             String genDir = javaCode.getSrcDir().getAbsolutePath()+"/gen/test";
-            javaCode.compile("-classpath", "bin", "-d", genDir);
+            javaCode.compile("-classpath", LIB_CLASSPATH, "-d", genDir);
             final ABSRuntime r = makeAbsRuntime();
             r.enableDebugging(true);
             final boolean[] finished = new boolean[] {false};
@@ -153,7 +154,7 @@ public class JavaBackendTest extends ABSTest {
 
     protected StringBuffer runJava(JavaCode javaCode, String... jvmargs) throws Exception {
         StringBuffer output = new StringBuffer();
-        javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
+        javaCode.compile("-classpath", LIB_CLASSPATH, "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
 
         ArrayList<String> args = new ArrayList<>();
         args.add("java");

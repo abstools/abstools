@@ -16,7 +16,7 @@
   <property name="src.dir" value="${basedir}/src" />
   <property name="src.java.dir" value="${src.dir}/main/java" />
   <property name="src.erlang.dir" value="${src.dir}/main/resources/erlang" />
-  <property name="src.maude.dir" value="${src.dir}/main/maude" />
+  <property name="src.maude.dir" value="${src.dir}/main/resources/maude" />
   <property name="src.abs.dir" value="${src.dir}/main/resources/abs" />
   <property name="bash.dir" value="${src.dir}/main/resources/bash" />
   <property name="win.dir" value="${src.dir}/main/resources/win" />
@@ -40,7 +40,7 @@
   <!-- TODO: about ast.gen.dir and JastAdd idiosyncrasies -->
   <property name="apidoc.dir" value="${gen.dir}/docs/api" />
   <property name="ast.gen.dir" value="${gen.dir}/abs/frontend" />
-  <property name="src.antlr.dir" value="${src.dir}/main/antlr" />
+  <property name="src.antlr.dir" value="${src.dir}/main/antlr/abs/frontend/antlr/parser" />
   <property name="antlr.jar" value="antlr-4.6-complete.jar"/>
   <property name="apfloat.jar" value="apfloat-1.8.2.jar"/>
   <property name="commons-io.jar" value="commons-io-2.5.jar"/>
@@ -160,7 +160,6 @@
     <mkdir dir="${dist.dir}/features" />
     <mkdir dir="${ast.gen.dir}" />
     <mkdir dir="${build.dir}" />
-    <mkdir dir="${parser.antlr.src.dir}" />
     <!-- <mkdir dir = "${dist.dir}"/> -->
     <mkdir dir="${apidoc.dir}" />
   </target>
@@ -171,7 +170,7 @@
       <classpath refid="compile.classpath" />
     </javac>
     <jar jarfile="${target.jar}">
-      <fileset dir="${build.dir}" includes="abs/**,deadlock/**,autodeploy/**,main/**" />
+      <fileset dir="${build.dir}" includes="abs/**,deadlock/**,autodeploy/**,maude/**" />
       <!-- abslang has already been copied into build.dir -->
       <fileset dir="${src.java.dir}" includes="abs/**,deadlock/**,autodeploy/**" excludes="abs/lang/abslang.abs" />
       <zipfileset src="${ext.dir}/${apfloat.jar}" />
@@ -265,7 +264,7 @@
     <copy todir="${build.dir}/abs/backend/erlang" >
       <fileset dir="${src.erlang.dir}" />
     </copy>
-    <copy file="${src.maude.dir}/abs-interpreter.maude" todir="${build.dir}/main/maude/" />
+    <copy file="${src.maude.dir}/abs-interpreter.maude" todir="${build.dir}/maude/abs-interpreter.maude" />
   </target>
 
   <target name="genshell">
@@ -296,7 +295,7 @@
           dir="${src.antlr.dir}"
           classpath="${ext.dir}/${antlr.jar}"
           classname="org.antlr.v4.Tool">
-      <arg line="ABS.g4 -package abs.frontend.antlr.parser -o '${gen.dir}/abs/frontend/antlr/parser'" />
+      <arg line="ABS.g4 -o '${gen.dir}/abs/frontend/antlr/parser'" />
     </java>
   </target>
 

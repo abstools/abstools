@@ -8,11 +8,13 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+@Ignore
 @RunWith(Parameterized.class)
 public class AbsSamples extends JavaBackendDynamicTest {
 
