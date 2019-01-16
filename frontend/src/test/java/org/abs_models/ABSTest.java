@@ -82,7 +82,7 @@ public class ABSTest {
         throw new IllegalArgumentException("File "+fileName+" cannot be read");
     }
 
-    protected Model assertParse(String s, Config... config) {
+    protected static Model assertParse(String s, Config... config) {
 
         String preamble = "module UnitTest; export *; ";
         preamble = preamble + " import * from ABS.StdLib;";

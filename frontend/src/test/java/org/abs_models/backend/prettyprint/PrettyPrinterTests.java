@@ -28,35 +28,35 @@ public class PrettyPrinterTests extends ABSTest {
         String deltaDecl = "delta Foo;adds data States=F|B|I|M;";
         DeltaDecl d = (DeltaDecl) Main
             .parseUnit(null, new StringReader(deltaDecl), true).getDeltaDecl(0);
-        assertEqualsNoWS(deltaDecl, d);
+        assertEqualsAndParses(deltaDecl, d);
     }
 
     @Test
     public void prettyPrinterModifyInterfaceModifierTest() throws Exception{
         String deltaDecl = "delta Foo;modifies interface X{removes Int fooMethod();adds Int fooMethod();}";
         Model m = assertParse(deltaDecl, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
-        assertEqualsNoWS(deltaDecl, m);
+        assertEqualsAndParses(deltaDecl, m);
     }
     
     @Test
     public void prettyPrinterListLiteralTest() throws Exception {
         String ms = "module Test; { List<Int> x = list[1, 2, 3]; }";
         Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
-        assertEqualsNoWS(ms, m);
+        assertEqualsAndParses(ms, m);
     }
 
     @Test
     public void prettyPrinterFloatLiteralTest() throws Exception {
         String ms = "module Test; { Float x = 3.1415927; }";
         Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
-        assertEqualsNoWS(ms, m);
+        assertEqualsAndParses(ms, m);
     }
 
     @Test
     public void prettyPrinterLiterals() throws Exception {
         String ms = readFile("abssamples/backend/PrettyPrinterTests/Literals.abs");
         Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
-        assertEqualsNoWS(ms, m);
+        assertEqualsAndParses(ms, m);
     }
 
     @Test
@@ -67,21 +67,22 @@ public class PrettyPrinterTests extends ABSTest {
         // - OriginalCall
         String ms = readFile("abssamples/backend/PrettyPrinterTests/PureExpressions.abs");
         Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
-        assertEqualsNoWS(ms, m);
+        assertEqualsAndParses(ms, m);
         ms = readFile("abssamples/backend/PrettyPrinterTests/EffExpressions.abs");
         m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
-        assertEqualsNoWS(ms, m);
+        assertEqualsAndParses(ms, m);
     }
 
     @Test
     public void prettyPrinterStatements() throws Exception {
         String ms = readFile("abssamples/backend/PrettyPrinterTests/Statements.abs");
         Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
-        assertEqualsNoWS(ms, m);
+        assertEqualsAndParses(ms, m);
     }
 
-    private static void assertEqualsNoWS(String s, ASTNode<?> m) {
+    private static void assertEqualsAndParses(String s, ASTNode<?> m) {
         assertEquals(replaceWhitespaceChars(s), replaceWhitespaceChars(prettyPrint(m)));
+        assertParse(prettyPrint(m), Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
     }
 
     private static String readFile(String filename) throws IOException
