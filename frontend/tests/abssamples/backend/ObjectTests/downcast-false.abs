@@ -1,0 +1,14 @@
+module BackendTest;
+
+interface I {}
+
+interface I2 {}
+
+class C implements I {}
+
+{
+    Bool testresult = True;
+    I o = new C();
+    if (o is I2) testresult = False;
+    if (isJust(o as I2)) testresult = False;
+}

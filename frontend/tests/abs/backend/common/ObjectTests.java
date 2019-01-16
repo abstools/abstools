@@ -190,4 +190,15 @@ public class ObjectTests extends SemanticTests {
         assertEvalTrue(new File("tests/abssamples/backend/ObjectTests/recover1.abs"));
      }
 
+    @Test
+    public void downcast_false() throws Exception {
+        Assume.assumeTrue("Only meaningful with downcast support", driver.supportsDowncasting());
+        assertEvalTrue(new File("tests/abssamples/backend/ObjectTests/downcast-false.abs"));
+    }
+
+    @Test
+    public void downcast_true() throws Exception {
+        Assume.assumeTrue("Only meaningful with downcast support", driver.supportsDowncasting());
+        assertEvalTrue(new File("tests/abssamples/backend/ObjectTests/downcast-true.abs"));
+    }
 }

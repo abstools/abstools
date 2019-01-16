@@ -602,7 +602,6 @@ aspect TypeChecker {
         return false;
     }
 
-
     // STMTS
 
     public void Stmt.typeCheck(SemanticConditionList e) {
@@ -817,6 +816,22 @@ aspect TypeChecker {
         TypeCheckerHelper.checkDataTypeUse(e, this);
     }
 
+    public void InterfaceTypeUse.typeCheck(SemanticConditionList e) {
+        Decl d = getDecl();
+        if (! d.checkDecl(this, e, ErrorMessage.TYPE_NOT_RESOLVABLE, getName())) {
+            return;
+        }
+        if (d instanceof TypeSynDecl) {
+            int nerrors = e.getErrorCount();
+            d.typeCheck(e);
+            if (e.getErrorCount() != nerrors) return; // detect circularity
+            while (d instanceof TypeSynDecl) d = ((TypeSynDecl)d).getValue().getDecl();
+        }
+        if (!(d instanceof InterfaceDecl)) {
+            e.add(new SemanticError(this,ErrorMessage.UNKOWN_INTERFACE,getName()));
+        }
+    }
+
     public void UnresolvedTypeUse.typeCheck(SemanticConditionList e) {
         e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
     }
@@ -847,6 +862,24 @@ aspect TypeChecker {
             ClassDecl cd = (ClassDecl) decl;
             typeCheckEqualParams(e,cd);
         }
+    }
+
+    public void IsExp.typeCheck(SemanticConditionList e) {
+        getInterfaceTypeUse().typeCheck(e);
+        // TODO: check that getExp() is a reference type
+        getExp().typeCheck(e);
+        // if (!getExp().getType().isReferenceType()) {
+        //     e.add(new TypeError(this, ErrorMessage.UNKOWN_INTERFACE, getInterfaceName()));
+        // }
+    }
+
+    public void AsExp.typeCheck(SemanticConditionList e) {
+        getInterfaceTypeUse().typeCheck(e);
+        // TODO: check that getExp() is a reference type
+        getExp().typeCheck(e);
+        // if (!getExp().getType().isReferenceType()) {
+        //     e.add(new TypeError(this, ErrorMessage.UNKOWN_INTERFACE, getInterfaceName()));
+        // }
     }
 
 

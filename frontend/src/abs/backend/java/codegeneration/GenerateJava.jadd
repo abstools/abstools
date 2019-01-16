@@ -757,6 +757,13 @@ aspect GenerateJava {
         }
     }
 
+    public void IsExp.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+    public void AsExp.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
     public void DataTypeUse.generateJava(PrintStream stream) {
         stream.print(JavaBackend.getJavaType(this));
     }

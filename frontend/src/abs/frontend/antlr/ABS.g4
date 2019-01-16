@@ -105,9 +105,11 @@ pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
     | STRINGLITERAL                                        # StringExp
     | 'this'                                               # ThisExp
     | 'null'                                               # NullExp
+    | e=pure_exp 'is' i=interface_name                     # IsExp
+    | e=pure_exp 'as' i=interface_name                     # AsExp
     | 'if' c=pure_exp 'then' l=pure_exp 'else' r=pure_exp  # IfExp
     | 'case' c=pure_exp '{' casebranch* '}'                # CaseExp
-    | 'let' '(' type_use IDENTIFIER ')' '=' i=pure_exp
+    | 'let' '(' type_use IDENTIFIER ')' '=' e=pure_exp
         'in' b=pure_exp                                    # LetExp
     | '(' pure_exp ')'                                     # ParenExp
     ;

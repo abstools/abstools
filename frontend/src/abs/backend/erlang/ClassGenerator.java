@@ -279,7 +279,7 @@ public class ClassGenerator {
     }
 
     private void generateExports() {
-        ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0,get_state_for_modelapi/1]).");
+        ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0,get_state_for_modelapi/1,implemented_interfaces/0,exported/0]).");
         ecs.println("-compile(export_all).");
         ecs.println();
 
@@ -301,6 +301,15 @@ public class ClassGenerator {
                 visited.add((InterfaceDecl)i.getDecl());
             }
         }
+
+        ecs.print("implemented_interfaces() -> [ ");
+        String separator = "";
+        for (InterfaceDecl i : classDecl.getSuperTypes()) {
+            ecs.format("%s<<\"%s\">>", separator, i.getName());
+            separator = ", ";
+        }
+        ecs.println(" ].");
+        ecs.println();
 
 
         ecs.print("exported() -> #{ ");

@@ -846,6 +846,18 @@ waiting_for_references(cast, {references, Task, References},
              Data#data{references=ReferenceRecord#{waiting := NewTasks,
                                                    received := ordsets:union(CollectedReferences, References)}}}
     end;
+waiting_for_references(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
+      Data=#data{new_tasks=Tasks,dc=DC,process_infos=ProcessInfos,
+                references=ReferenceRecord=#{waiting := Tasks}}) ->
+    %% Tell cog_monitor now that we're busy; after gc it might be too late --
+    %% but don't put new task into runnable_tasks yet
+    cog_monitor:cog_active(self()),
+    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
+    task:get_references_for_cog(NewTask),
+    {keep_state,
+     Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
+               process_infos=maps:put(NewTask, NewInfo, ProcessInfos),
+               references=ReferenceRecord#{waiting := [NewTask | Tasks]}}};
 waiting_for_references(info, {'EXIT',TaskRef,_Reason},
             Data=#data{next_state_after_gc=StateAfterGC,
                        running_task=R, runnable_tasks=Run,

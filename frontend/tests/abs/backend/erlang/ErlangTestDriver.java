@@ -208,6 +208,9 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
 
     @Override
     public boolean supportsExceptions() { return true; }
+
+    @Override
+    public boolean supportsDowncasting() { return true; }
 }
 
 class TimeoutThread implements Runnable {

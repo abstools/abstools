@@ -643,7 +643,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void constructorPatternBorked1() {
-        assertTypeErrors("interface I {} { List<I> is = Nil;   Unit u = case is { Cons(I(x), Nil) => Unit; }; }", ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE);
+        assertTypeErrors("interface I {} { List<I> ifs = Nil;   Unit u = case ifs { Cons(I(x), Nil) => Unit; }; }", ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE);
     }
 
     @Test

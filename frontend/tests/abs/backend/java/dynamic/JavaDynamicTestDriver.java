@@ -57,4 +57,7 @@ public class JavaDynamicTestDriver implements BackendTestDriver {
 
     @Override
     public boolean supportsExceptions() { return false; }
+
+    @Override
+    public boolean supportsDowncasting() { return false; }
 }

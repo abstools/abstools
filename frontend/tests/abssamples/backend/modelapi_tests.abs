@@ -19,6 +19,7 @@ class C implements I {
     // curl -d "{'p': 5}" localhost:8080/call/test/test_int => ditto
     Int test_int(Int p) { return p; }
     Bool test_bool(Bool p) { return p; }
+    // Also test with Int argument (bug #225)
     Float test_float(Float p) { return p; }
     String test_string(String p) { return p; }
 

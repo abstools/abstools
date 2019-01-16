@@ -63,4 +63,7 @@ public class MaudeTestDriver implements BackendTestDriver {
     @Override
     // MISSING: recovery block, throwing exceptions from expressions
     public boolean supportsExceptions() { return false; }
+
+    @Override
+    public boolean supportsDowncasting() { return false; }
 }

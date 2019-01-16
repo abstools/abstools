@@ -59,6 +59,7 @@ aspect Typing {
     syn Type Model.getRatType() = getStdDataType("Rat");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
+    syn DataTypeType Model.getMaybeType(Type typeArg) = ((DataTypeType)getStdDataType("Maybe")).withTypeArgs(typeArg);
     syn Type Model.getListType() = (DataTypeType)getStdDataType("List");
     syn Type Model.getListType(Type typeArg) = ((DataTypeType)getStdDataType("List")).withTypeArgs(typeArg);
     syn Type Model.getExceptionType() = getStdDataType("Exception");
@@ -192,6 +193,14 @@ aspect Typing {
     eq NewExp.getType() {
         Decl d = lookup(new KindedName(Kind.CLASS,getClassName()));
         return d.getType();
+    }
+
+    eq IsExp.getType() {
+        return getModel().getBoolType();
+    }
+
+    eq AsExp.getType() {
+        return getModel().getMaybeType(getInterfaceTypeUse().getDecl().getType());
     }
 
     protected List<Annotation> TypeUse.calcAnnotations() {
