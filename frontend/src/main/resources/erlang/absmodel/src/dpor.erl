@@ -70,8 +70,8 @@ enabled_by_schedule(ScheduleEventKey, Trace) ->
 
 trim_trace(Trace, Fat) ->
     lists:foldl(fun({Cog, I}, T) ->
-                    TRIM = fun(Schedule) -> lists:sublist(Schedule, I) end,
-                    maps:update_with(Cog, TRIM, T)
+                    Trim = fun(Schedule) -> lists:sublist(Schedule, I) end,
+                    maps:update_with(Cog, Trim, T)
                 end,
                 Trace,
                 Fat).
