@@ -4,15 +4,19 @@ date: 2018-03-22T12:21:52+01:00
 weight: 3
 ---
 
-## Envisage Tutorials
+## Converted Tutorials
 
-These tutorials were written during the Envisage project.  These pdfs are provided as-is and might contain outdated information.
+Conversion from old tutorials is on-going and help is most welcome.
+
+{{% children description="true" %}}
+
+## Envisage / HATS Tutorials
+
+These tutorials were written during the Envisage and HaTS projects.  The pdfs are provided as-is and might contain outdated information.
 
 [Installation Tutorial](/tutorial_pdfs/Installation.pdf)
 
 [EasyInterface Tutorial](/tutorial_pdfs/easyinterface.pdf)
-
-Basic Tutorial
 
 [Resource Tutorial](/tutorial_pdfs/resource-tutorial.html)
 
@@ -32,8 +36,3 @@ Basic Tutorial
 
 [Modelling Auto-scalable Services Tutorial](/tutorial_pdfs/scaling.pdf)
 
-## Converted Tutorials
-
-These tutorials have been checked.  Conversion is on-going and help is most welcome.
-
-{{% children description="true" %}}
