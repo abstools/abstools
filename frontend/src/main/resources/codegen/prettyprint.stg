@@ -221,3 +221,20 @@ ClassDecl(node) ::= <<
     <node.methods:{m | <(m.templateName)(m)>};separator="\n\n">
 }
 >>
+
+// * Modules
+
+Name(node) ::= "<node.name>"
+
+NamedExport(node) ::= "export <node.names:{ex | <(ex.templateName)(ex)>};separator=\", \">;"
+
+StarExport(node) ::= "export *<if (node.moduleName)> from <node.moduleName><endif>;"
+
+FromExport(node) ::= "export <node.names:{ex | <(ex.templateName)(ex)>};separator=\", \"> from <node.moduleName>;"
+
+NamedImport(node) ::= "import <node.names:{im | <(im.templateName)(im)>};separator=\", \">;"
+
+StarImport(node) ::= "import * from <node.moduleName>;"
+
+FromImport(node) ::= "import <node.names:{im | <(im.templateName)(im)>};separator=\", \"> from <node.moduleName>;"
+

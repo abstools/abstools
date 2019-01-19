@@ -87,6 +87,13 @@ public class PrettyPrinterTests extends ABSTest {
         assertEqualsAndParses(ms, m);
     }
 
+    @Test
+    public void prettyPrinterModules() throws Exception {
+        String ms = readFile("abssamples/backend/PrettyPrinterTests/Modules.abs");
+        Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
+        assertEqualsAndParses(ms, m);
+    }
+
     private static void assertEqualsAndParses(String s, ASTNode<?> m) {
         assertEquals(replaceWhitespaceChars(s), replaceWhitespaceChars(prettyPrint(m)));
         assertParse(prettyPrint(m), Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);

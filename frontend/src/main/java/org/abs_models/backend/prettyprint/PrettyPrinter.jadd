@@ -210,56 +210,6 @@ aspect doPrettyPrinter {
         stream.print(getName());
     }
 
-    abstract public void Export.doPrettyPrint(PrintWriter stream, ABSFormatter formatter);
-
-    public void NamedExport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("export ");
-        getNames().doPrettyPrint(stream, formatter, ",");
-        stream.print(";");
-    }
-
-    public void Name.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print(getName());
-    }
-
-    public void StarExport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("export *");
-        if (hasModuleName()) {
-            stream.print(" from ");
-            stream.print(getModuleName());
-        }
-        stream.print(";");
-    }
-
-    public void FromExport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("export ");
-        getNames().doPrettyPrint(stream, formatter, ",");
-        stream.print(" from ");
-        stream.print(getModuleName());
-        stream.print(";");
-    }
-
-    public void NamedImport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("import ");
-        getNames().doPrettyPrint(stream, formatter, ",");
-        stream.print(";");
-
-    }
-
-    public void StarImport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("import * from ");
-        stream.print(getModuleName());
-        stream.print(";");
-    }
-
-    public void FromImport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("import ");
-        getNames().doPrettyPrint(stream, formatter, ",");
-        stream.print(" from ");
-        stream.print(getModuleName());
-        stream.print(";");
-    }
-    
     protected boolean FunctionDecl.isSelector() {
     	for (Annotation a : getAnnotationList()) {
             if (! (a.getValue() instanceof StringLiteral)) {
