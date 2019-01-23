@@ -544,8 +544,11 @@ public class Main {
             if (verbose)
                 System.out.println("Registering Location Type Checking...");
             LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
-            if (locationTypeStats) {
+            if (locationTypeStats || verbose) {
                 ltie.enableStatistics();
+            }
+            if (debug) {
+                ltie.enableDebugOutput();
             }
             if (defaultLocationType != null) {
                 ltie.setDefaultType(defaultLocationType);
