@@ -8,7 +8,7 @@
 
 -include_lib("absmodulename.hrl").
 
--export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/6]).
+-export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/6,run_dpor_slave/3]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -21,6 +21,7 @@
          {clocklimit,$l,"clock-limit",{integer,none},"Do not advance simulation clock above given clock value"},
          {schedulers,$s,"schedulers",{integer,none},"Set number of online erlang schedulers"},
          {replay_trace,$r,"replay-trace",{string, none},"Replay a trace, given as a JSON file"},
+         {explore,undefined,"explore",undefined,"Explore different execution paths"},
          {debug,undefined,"debug",{integer,0},"Turn on debug mode when > 0 (model will run much slower; diagnostic output when > 1)"},
          {version,$v,"version",undefined,"Output version and exit"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
@@ -39,7 +40,7 @@ init([]) ->
 start()->
     case init:get_plain_arguments() of
         []->
-            run_mod(?ABSMAINMODULE, false, false, none, none, none, none, none, none);
+            run_mod(?ABSMAINMODULE, false, false, none, none, none, none, none, maps:new());
         Args->
             start(Args)
    end.
@@ -88,6 +89,8 @@ parse(Args,Exec)->
             InfluxdbDB=proplists:get_value(influxdb_db,Parsed),
             InfluxdbEnable=proplists:get_value(influxdb_enable,Parsed, false),
             Schedulers=proplists:get_value(schedulers,Parsed,none),
+            ReplayMode=proplists:get_value(replay_trace,Parsed,none),
+            ExploreMode=proplists:get_value(explore,Parsed,false),
             case Schedulers of
                 none -> none;
                 _ -> MaxSchedulers=erlang:system_info(schedulers),
@@ -99,15 +102,17 @@ parse(Args,Exec)->
                      erlang:system_flag(schedulers_online,
                                         min(Schedulers, MaxSchedulers))
             end,
-            Trace = case proplists:get_value(replay_trace,Parsed,none) of
+            Trace = case ReplayMode of
                         none -> maps:new();
                         FileName ->
                             {ok, File} = file:read_file(FileName),
                             modelapi_v2:json_to_trace(File)
                     end,
-
-            run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
-                    InfluxdbUrl, InfluxdbDB, InfluxdbEnable, Trace);
+            case ExploreMode of
+                true -> dpor:start_link(Module, Clocklimit);
+                false -> run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
+                                 InfluxdbUrl, InfluxdbDB, InfluxdbEnable, Trace)
+            end;
         _ ->
             getopt:usage(?CMDLINE_SPEC,Exec)
     end.
@@ -173,3 +178,13 @@ run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
             end_mod(R, InfluxdbEnable)
     end.
 
+run_dpor_slave(Module, Clocklimit, Trace) ->
+    {ok, TaskRef} = start_mod(Module, false, none, Clocklimit, false, Trace),
+    RetVal=task:join(TaskRef),
+    cog_monitor:waitfor(),
+    NewTrace = cog_monitor:get_schedules(),
+    gc:stop(),
+    clock:stop(),
+    coverage:stop(),
+    cog_monitor:stop(),
+    {NewTrace, dpor:new_traces(NewTrace)}.

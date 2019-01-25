@@ -24,3 +24,5 @@
          reads=ordsets:new(),
          writes=ordsets:new()
         }).
+
+-record(db_trace, {trace, status=unexplored}).
