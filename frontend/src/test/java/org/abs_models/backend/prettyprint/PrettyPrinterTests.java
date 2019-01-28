@@ -74,8 +74,22 @@ public class PrettyPrinterTests extends ABSTest {
     }
 
     @Test
+    public void prettyPrinterOO() throws Exception {
+        String ms = readFile("abssamples/backend/PrettyPrinterTests/OO.abs");
+        Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
+        assertEqualsAndParses(ms, m);
+    }
+
+    @Test
     public void prettyPrinterStatements() throws Exception {
         String ms = readFile("abssamples/backend/PrettyPrinterTests/Statements.abs");
+        Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
+        assertEqualsAndParses(ms, m);
+    }
+
+    @Test
+    public void prettyPrinterModules() throws Exception {
+        String ms = readFile("abssamples/backend/PrettyPrinterTests/Modules.abs");
         Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
         assertEqualsAndParses(ms, m);
     }

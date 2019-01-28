@@ -6,6 +6,12 @@
 
 annotations(node) ::= "<node.annotations:{a | <(a.templateName)(a)> }>"
 
+// Annotation list followed by a newline
+annotationsNL(node) ::= <<
+<if (node.annotation)><annotations(node)>
+<endif>
+>>
+
 // * Pure Expressions
 
 IntLiteral(node) ::= "<node.content>"
@@ -24,6 +30,7 @@ FieldUse(node) ::= "this.<node.name>"
 DataTypeUse(node) ::= "<annotations(node)><node.name>"
 InterfaceTypeUse(node) ::= "<annotations(node)><node.name>"
 ParametricDataTypeUse(node) ::= "<annotations(node)><node.name><if (node.param)>\<<node.params:{p | <(p.templateName)(p)>};separator=\", \">><endif>"
+TypeParameterUse(node) ::= "<annotations(node)><node.name>"
 ParamDecl(node) ::= "<annotations(node)><(node.access.templateName)(node.access)> <node.name>"
 VarDecl(node) ::= "<(node.access.templateName)(node.access)> <node.name><if (node.initExp)> = <(node.initExp.templateName)(node.initExp)><endif>"
 
@@ -143,8 +150,7 @@ ExpGuard(node) ::= "<(node.pureExp.templateName)(node.pureExp)>"
 AwaitStmt(node) ::= "<annotations(node)>await <(node.guard.templateName)(node.guard)>;"
 
 Block(node) ::= <<
-<if (node.annotation)><annotations(node)>
-<endif>{
+<annotationsNL(node)>{
     <node.stmtList:{s | <(s.templateName)(s)>};separator="\n">
 }
 >>
@@ -169,3 +175,66 @@ TryCatchFinallyStmt(node) ::= <<
     <node.catchs:{b | <(b.left.templateName)(b.left)> => <(b.right.templateName)(b.right)>
 }>}<if (node.finally)> finally <(node.finally.templateName)(node.finally)><endif>
 >>
+
+// * Interfaces, Classes
+
+ClassParamDecl ::= ParamDecl
+InitBlock ::= Block
+
+FieldDecl(node) ::= <<
+<annotations(node)><(node.access.templateName)(node.access)> <node.name><if (node.initExp)> = <(node.initExp.templateName)(node.initExp)><endif>;
+>>
+
+MethodSig(node) ::= <<
+<annotations(node)><(node.returnType.templateName)(node.returnType)> <node.name>(<node.params:{p | <(p.templateName)(p)>};separator=", ">)
+>>
+
+MethodImpl(node) ::= <<
+<(node.methodSig.templateName)(node.methodSig)> <(node.block.templateName)(node.block)>
+>>
+
+InterfaceDecl(node) ::= <<
+<annotationsNL(node)>interface <node.name> <\\>
+<if (node.extendedInterfaceUse)>extends <node.extendedInterfaceUses:{e | <(e.templateName)(e)>};separator=", "> <endif><\\>
+{
+    <node.Bodys:{ms | <(ms.templateName)(ms)>;
+}>}
+>>
+
+ClassDecl(node) ::= <<
+<annotationsNL(node)>class <node.name> <\\>
+<if (node.param)>(<node.params:{p | <(p.templateName)(p)>};separator=", ">) <endif><\\>
+<if (node.implementedInterfaceUse)>implements <node.implementedInterfaceUses:{e | <(e.templateName)(e)>};separator=", "> <endif><\\>
+{
+    <node.fields:{f | <(f.templateName)(f)>
+    }>
+    <if (node.initBlock)>
+    <(node.initBlock.templateName)(node.initBlock)>
+
+    <endif>
+    <if (node.recoverBranch)>
+    recover {
+        <node.recoverBranchs:{r | <(r.left.templateName)(r.left)> => <(r.right.templateName)(r.right)>};separator="\n">
+    }
+
+    <endif>
+    <node.methods:{m | <(m.templateName)(m)>};separator="\n\n">
+}
+>>
+
+// * Modules
+
+Name(node) ::= "<node.name>"
+
+NamedExport(node) ::= "export <node.names:{ex | <(ex.templateName)(ex)>};separator=\", \">;"
+
+StarExport(node) ::= "export *<if (node.moduleName)> from <node.moduleName><endif>;"
+
+FromExport(node) ::= "export <node.names:{ex | <(ex.templateName)(ex)>};separator=\", \"> from <node.moduleName>;"
+
+NamedImport(node) ::= "import <node.names:{im | <(im.templateName)(im)>};separator=\", \">;"
+
+StarImport(node) ::= "import * from <node.moduleName>;"
+
+FromImport(node) ::= "import <node.names:{im | <(im.templateName)(im)>};separator=\", \"> from <node.moduleName>;"
+

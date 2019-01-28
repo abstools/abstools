@@ -1,0 +1,18 @@
+module Module1;
+export *;
+
+data Foo = Bar;
+
+
+module Module2;
+export Foo, Bar from Module1;
+export Baz;
+import Foo, Bar from Module1;
+
+data Baz;
+
+
+module Module3;
+export * from Module1;
+export Foo from Module2;
+import * from Module2;

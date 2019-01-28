@@ -4,7 +4,14 @@
  */
 package org.abs_models.frontend.typechecker.locationtypes.infer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.abs_models.frontend.analyser.HasCogs;
 import org.abs_models.frontend.analyser.SemanticConditionList;
@@ -20,8 +27,8 @@ import org.abs_models.frontend.ast.NewExp;
 import org.abs_models.frontend.ast.SyncCall;
 import org.abs_models.frontend.ast.ThisExp;
 import org.abs_models.frontend.typechecker.Type;
-import org.abs_models.frontend.typechecker.ext.DefaultTypeSystemExtension;
 import org.abs_models.frontend.typechecker.ext.AdaptDirection;
+import org.abs_models.frontend.typechecker.ext.DefaultTypeSystemExtension;
 import org.abs_models.frontend.typechecker.ext.TypeSystemExtension;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
@@ -60,7 +67,8 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
 
     private Set<Constraint> constraints = new HashSet<>();
     //private List<LocationType> globalFarTypes = new ArrayList<LocationType>();
-    boolean enablesStats;;
+    boolean enablesStats = false;
+    boolean enableDebugOutput = false;
 
     public Set<Constraint> getConstraints() {
         return constraints;
@@ -264,6 +272,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
 
         SatGenerator satGen = new SatGenerator(constraints);
         satGen.enableStats = enablesStats;
+        satGen.enableDebug = enableDebugOutput;
         results = satGen.generate(errors);
         if (!errors.containsErrors()) {
             SemanticConditionList sel = new SemanticConditionList();
@@ -279,6 +288,10 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
 
     public void enableStatistics() {
         enablesStats = true;
+    }
+
+    public void enableDebugOutput() {
+        enableDebugOutput = true;
     }
 
     public LocationType getDefaultType() {
