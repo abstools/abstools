@@ -11,6 +11,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
+- Removed the Emacs mode from the repository.  Emacs editing support should be installed via its package manager -- see https://github.com/abstools/abs-mode for instructions.
+
 ### Fixed
 
 ## [1.6.0] - 2019-01-29
