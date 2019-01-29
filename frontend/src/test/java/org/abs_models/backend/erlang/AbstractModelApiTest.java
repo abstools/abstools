@@ -69,7 +69,7 @@ public abstract class AbstractModelApiTest extends ABSTest {
         extractPortNoFromProcess(serverProcess);
         // give the server time to get started; this hopefully eliminates
         // spurious test failures
-        Thread.sleep(1000);
+        Thread.sleep(2000);
     }
 
     private static void extractPortNoFromProcess(Process process) throws IOException {
@@ -115,11 +115,11 @@ public abstract class AbstractModelApiTest extends ABSTest {
         URL obj = new URL("http://localhost:" + Integer.toString(port_nr) + request);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
         con.setRequestMethod(requestType.toString());
+        con.setRequestProperty("Accept", "application/json");
         if(RequestType.POST == requestType) {
             con.setDoOutput(true);
             con.setDoInput(true);
             con.setRequestProperty("Content-Type", "application/json");
-            con.setRequestProperty("Accept", "application/json");
             try (OutputStreamWriter wr = new OutputStreamWriter(con.getOutputStream())) {
                 wr.write(payload);
                 wr.flush();
@@ -129,7 +129,10 @@ public abstract class AbstractModelApiTest extends ABSTest {
         con.connect();
 
         if (con.getResponseCode() != expected_response) {
-            Assert.fail("Expected response code " + expected_response + ", got " + con.getResponseCode());
+            Assert.fail("Expected response code " + expected_response + ", "
+                        + "got " + con.getResponseCode() + " "
+                        + "for " + requestType.toString() + " "
+                        + "to " + con.getURL().toString());
         }
         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
         String response = in.lines().collect(Collectors.joining());
