@@ -16,12 +16,19 @@ import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
-import org.abs_models.frontend.tests.ABSFormatter;
+import org.stringtemplate.v4.STGroup;
+import org.stringtemplate.v4.STGroupFile;
 
 public class PrettyPrinterBackEnd extends Main {
     private File outputfile;
     private boolean force = false;
     private boolean keepsugar = false;
+    private boolean keepstdlib = false;
+
+    public static STGroup templates;
+    static {
+        templates = new STGroupFile(PrettyPrinterBackEnd.class.getResource("/codegen/prettyprint.stg"));
+    }
 
     public static void main(final String... args) {
         doMain(args);
@@ -68,6 +75,8 @@ public class PrettyPrinterBackEnd extends Main {
                 force = true;
             } else if (arg.equals("-keepsugar"))  {
                 keepsugar = true;
+            } else if (arg.equals("-keepstdlib"))  {
+                keepstdlib = true;
             } else if (arg.equals("-prettyprint")) {
                 // nothing to do
             } else {
@@ -87,6 +96,9 @@ public class PrettyPrinterBackEnd extends Main {
         if (keepsugar) {
             model.doAACrewrite = false;
             model.doForEachRewrite = false;
+        }
+        if (keepstdlib) {
+            model.doPrettyPrintStdLib = true;
         }
         analyzeFlattenAndRewriteModel(model);
         if (!force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
@@ -122,6 +134,7 @@ public class PrettyPrinterBackEnd extends Main {
         System.out.println("ABS Pretty Printer (-prettyprint):\n"
                 + "  -f             force pretty printing even if there are type errors\n"
                 + "  -keepsugar     do not transform statements into basic core abs\n"
+                + "  -keepstdlib    include the standard library in output\n"
                 + "  -o <file>      write output to <file> instead of standard output\n"
         );
     }

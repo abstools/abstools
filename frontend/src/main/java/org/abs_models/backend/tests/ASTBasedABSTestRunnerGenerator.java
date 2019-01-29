@@ -17,6 +17,7 @@ import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.abs_models.backend.prettyprint.ABSFormatter;
 import org.abs_models.backend.prettyprint.DefaultABSFormatter;
 import org.abs_models.frontend.ast.Access;
 import org.abs_models.frontend.ast.AsyncCall;
@@ -44,7 +45,6 @@ import org.abs_models.frontend.ast.TypeUse;
 import org.abs_models.frontend.ast.VarDeclStmt;
 import org.abs_models.frontend.ast.VarUse;
 import org.abs_models.frontend.ast.WhileStmt;
-import org.abs_models.frontend.tests.ABSFormatter;
 
 /**
  * The ABSUnit test runner generator

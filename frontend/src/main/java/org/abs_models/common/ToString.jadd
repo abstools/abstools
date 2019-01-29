@@ -1,0 +1,178 @@
+import java.io.PrintWriter;
+
+/**
+ * A pretty printer to generate representative output of an AST.
+ *
+ * @author Jan Schäfer
+ * @author Rudi Schlatte
+ */
+aspect ToString {
+
+    public String ASTNode.toString() {
+        StringWriter writer = new StringWriter();
+        PrintWriter w = new PrintWriter(writer);
+        doToString(w);
+        return writer.toString();
+    }
+
+    public void ASTNode.doToString(PrintWriter w) {
+        w.print(this.getClass().getSimpleName()+"(");
+        doToStringChildren(w);
+        w.print(")");
+    }
+
+    public void ASTNode.doToStringChildren(PrintWriter w) {
+        for(int i = 0; i < getNumChild(); i++) {
+            if (i > 0) w.print(",");
+            ASTNode child = getChild(i);
+            if (child != null) {
+                child.doToString(w);
+            } else {
+                w.print("null");
+            }
+        }
+    }
+
+    public void List.doToString(PrintWriter w) {
+        doToStringChildren(w);
+    }
+
+    public void TypeUse.doToString(PrintWriter w) {
+        w.print(getName());
+    }
+
+    public void VarOrFieldUse.doToString(PrintWriter w) {
+        w.print(getName());
+    }
+
+    public void ParametricDataTypeUse.doToString(PrintWriter w) {
+        w.print(getName());
+        w.print('<');
+        getParamList().doToString(w);
+        w.print('>');
+    }
+
+    public void DataConstructorExp.doToString(PrintWriter w) {
+        w.print(getConstructor());
+        w.print('(');
+        getParams().doToString(w);
+        w.print(')');
+    }
+
+    public void MethodSig.doToString(PrintWriter w) {
+        getReturnType().doToString(w);
+        w.print(' ');
+        w.print(getName());
+        w.print('(');
+        getParams().doToString(w);
+        w.print(')');
+    }
+
+    public void FieldDecl.doToString(PrintWriter w) {
+        w.print(getAccess());
+        w.print(' ');
+        w.print(getName());
+        if (hasInitExp()) w.print(" = "+getInitExp());
+    }
+    public void VarDecl.doToString(PrintWriter w) {
+        w.print(getAccess());
+        w.print(' ');
+        w.print(getName());
+        if (hasInitExp()) w.print(" = "+getInitExp());
+    }
+    public void ParamDecl.doToString(PrintWriter w) {
+        w.print(getAccess());
+        w.print(' ');
+        w.print(getName());
+    }
+
+
+    public void ClassDecl.doToStringChildren(PrintWriter w) {
+        w.print(getName());
+        w.print(' ');
+        super.doToStringChildren(w);
+    }
+
+    public void OOModifier.doToString(PrintWriter w) {
+        w.print(this.getClass().getSimpleName() + "(" + this.getQualifiedName() + ")");
+
+    }
+
+    public void Modifier.doToString(PrintWriter w) {
+        w.print(this.getClass().getSimpleName());
+    }
+
+    public void AddFieldModifier.doToString(PrintWriter w) {
+        super.doToString(w);
+        w.print("(" + this.getFieldDecl() + ")");
+    }
+
+    public void RemoveFieldModifier.doToString(PrintWriter w) {
+        super.doToString(w);
+        w.print("(" + this.getFieldDecl() + ")");
+    }
+
+    public void AddClassModifier.doToStringChildren(PrintWriter w) {
+        w.print(getClassDecl().getName());
+        w.print(' ');
+        super.doToStringChildren(w);
+    }
+
+    public void RemoveClassModifier.doToStringChildren(PrintWriter w) {
+        w.print(getName());
+    }
+
+    public void ModifyClassModifier.doToStringChildren(PrintWriter w) {
+        w.print(getName());
+        w.print(' ');
+        super.doToStringChildren(w);
+    }
+
+    public void AddInterfaceModifier.doToStringChildren(PrintWriter w) {
+        w.print(getInterfaceDecl().getName());
+        w.print(' ');
+        super.doToStringChildren(w);
+    }
+
+    public abstract void Value.doToStringChildren(PrintWriter w);
+    public void UnknownVal.doToStringChildren(PrintWriter w) {
+        w.print("Const(" + getValue() + ")");
+    }
+    public void BoolVal.doToStringChildren(PrintWriter w) {
+        w.print("Const(" + getValue() + ")");
+    }
+    public void StringVal.doToStringChildren(PrintWriter w) {
+        w.print("Const(\"" + getValue() + "\")");
+    }
+    public void IntVal.doToStringChildren(PrintWriter w) {
+        w.print("Const(" + getIntValue() + ")");
+    }
+
+    public void StringLiteral.doToString(PrintWriter w) {
+        w.print("StringLiteral(" + this.getContent() + ")");
+    }
+    public void IntLiteral.doToString(PrintWriter w) {
+        w.print("IntLiteral(" + this.getContent() + ")");
+    }
+
+    public void Name.doToString(PrintWriter w) {
+        w.print(this.getName());
+    }
+    public void FromImport.doToString(PrintWriter w) {
+        w.print("FromImport(" + this.getNames() + " from " + this.getModuleName() + ")");
+    }
+
+    public void DeltaID.doToString(PrintWriter w) {
+    	w.print("DeltaID(\"" + this.getName() + "\")");
+    }
+
+    public void Feature.doToString(PrintWriter w) {
+        w.print(getName()+"{");
+        super.doToStringChildren(w);
+        w.print("}");
+    }
+    public void AttrAssignment.doToString(PrintWriter w) {
+        w.print(getName() + "=" + getValue());
+    }
+
+}

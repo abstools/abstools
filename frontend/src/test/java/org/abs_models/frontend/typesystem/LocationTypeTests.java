@@ -335,8 +335,8 @@ public class LocationTypeTests extends FrontendTest {
     @Test
     public void testAwaitFailRewriteOff() {
         LocationType lt = LocationType.INFER;
-        Model.doAACrewrite = false;
         Model m = assertParse("interface T { Unit foo(); } class C { T t = null; Unit bar() { await t!foo(); }}");
+        m.doAACrewrite = false;
         assertFalse(m.hasErrors()); // This line is essential to trigger the NPE!
         LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
         ltie.setDefaultType(lt);
@@ -344,7 +344,6 @@ public class LocationTypeTests extends FrontendTest {
         m.registerTypeSystemExtension(ltie);
         m.getErrors();
         SemanticConditionList e = m.typeCheck();
-        Model.doAACrewrite = true;
     }
 
     private void assertLocationTypeError(String code) {

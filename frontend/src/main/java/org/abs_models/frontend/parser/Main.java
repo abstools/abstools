@@ -317,7 +317,7 @@ public class Main {
 
         if (dump) {
             m.dumpMVars();
-            m.dump();
+            m.dump(System.out);
         }
 
         final SemanticConditionList semErrs = m.getErrors();
@@ -544,8 +544,11 @@ public class Main {
             if (verbose)
                 System.out.println("Registering Location Type Checking...");
             LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
-            if (locationTypeStats) {
+            if (locationTypeStats || verbose) {
                 ltie.enableStatistics();
+            }
+            if (debug) {
+                ltie.enableDebugOutput();
             }
             if (defaultLocationType != null) {
                 ltie.setDefaultType(defaultLocationType);

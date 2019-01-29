@@ -34,11 +34,11 @@ aspect GenerateCoreABS {
         stream.println("// " + getClass().getSimpleName() + " Declared in " + getFileName() + " line " + getStartLine());
     }
 
-    /** Global switch whether this rewriting is enabled.  If you ever have to
-     *  turn this off, make sure all the missing operations in the
-     *  AwaitAsyncCall-class have been filled in.
+    /** Per-model switch whether this rewriting is enabled.
      */
-    public static boolean Model.doAACrewrite = true;
+    // TODO: make this a constructor parameter?  Otherwise we have a
+    // race condition here
+    public boolean Model.doAACrewrite = true;
 
     // Since rewriting happens during type-checking, make sure we don't
     // attempt a rewrite without type-checking information
@@ -70,7 +70,7 @@ aspect GenerateCoreABS {
 
 
     rewrite Block {
-        when (Model.doAACrewrite // don't attempt if told not to
+        when (getModel().doAACrewrite // don't attempt if told not to
               && blockHasRewritableAwaitAsyncCalls() // do we have an AwaitAsyncExpr?
               && amInCoreAbs()  // don't attempt in deltas, traits (type information unavailable)
               && closestParent(Model.class) != null // don't attempt in detached subtree
@@ -139,11 +139,11 @@ aspect GenerateCoreABS {
     }
 
 
-    /** Global switch whether this rewriting is enabled.  If you ever have to
-     *  turn this off, make sure all the missing operations in the
-     *  AwaitAsyncCall-class have been filled in.
+    /** Switch whether this rewriting is enabled.
      */
-    public static boolean Model.doForEachRewrite = true;
+    // TODO: make this a constructor parameter?  Otherwise we have a
+    // race condition here
+    public boolean Model.doForEachRewrite = true;
 
     // Since rewriting happens during type-checking, make sure we don't
     // attempt a rewrite without type-checking information
@@ -155,7 +155,7 @@ aspect GenerateCoreABS {
     }
 
     rewrite ForeachStmt {
-        when (Model.doForEachRewrite // don't attempt if told not to
+        when (getModel().doForEachRewrite // don't attempt if told not to
               && canBeRewritten()
               && closestParent(Model.class) != null // don't attempt in detached subtree
               )

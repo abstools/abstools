@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+### Changed
+
+### Removed
+
+- Removed the Emacs mode from the repository.  Emacs editing support should be installed via its package manager -- see https://github.com/abstools/abs-mode for instructions.
+
+### Fixed
+
+## [1.6.0] - 2019-01-29
+
+### Added
+
 - The Erlang backend now supports model-specific visualization based on the Model API.  Use `absc -erlang -http-index-file ./index.html
   -http-static-dir ./my_js_libs *.abs` to add a custom `index.html` file and static resources (Javascript files, images, ...) to a model; connect a browser to the running model on the Model API port to see it rendered. Static files are available from the Model API (and from index.html) via `/static/filename`.
 

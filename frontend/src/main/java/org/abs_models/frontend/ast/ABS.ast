@@ -175,7 +175,7 @@ ExpressionStmt: Stmt ::= Exp:Exp;
 AssertStmt: Stmt ::= Condition:PureExp;
 VarDeclStmt: Stmt ::= VarDecl:VarDecl;
 
-IfStmt: Stmt ::= Condition:PureExp Then:Block [Else:Block];
+IfStmt: Stmt ::= Condition:PureExp ThenCase:Block [ElseCase:Block];
 WhileStmt: Stmt ::= Condition:PureExp Body:Block;
 ForeachStmt: Stmt ::= LoopVarDecl ListExp:PureExp Body:Block;
 CaseStmt : Stmt ::= Expr:PureExp Branch:CaseBranchStmt* ;

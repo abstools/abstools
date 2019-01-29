@@ -4,13 +4,13 @@
  */
 package org.abs_models.backend.maude;
 
+import java.io.PrintStream;
+
+import org.abs_models.frontend.analyser.AnnotationHelper;
 import org.abs_models.frontend.ast.Annotation;
 import org.abs_models.frontend.ast.List;
 import org.abs_models.frontend.ast.PureExp;
-import org.abs_models.frontend.analyser.AnnotationHelper;
 import org.abs_models.frontend.typechecker.Type;
-
-import java.io.PrintStream;
 
 public class MaudeCompilerHelper {
     public static void emitParameterValueList(PrintStream stream,

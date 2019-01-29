@@ -7,6 +7,7 @@ package org.abs_models;
 import static org.abs_models.ABSTest.Config.EXPECT_PARSE_ERROR;
 import static org.abs_models.ABSTest.Config.EXPECT_TYPE_ERROR;
 import static org.abs_models.ABSTest.Config.TYPE_CHECK;
+import static org.abs_models.ABSTest.Config.WITHOUT_DESUGARING;
 import static org.abs_models.ABSTest.Config.WITHOUT_MODULE_NAME;
 import static org.abs_models.ABSTest.Config.WITH_LOC_INF;
 import static org.junit.Assert.fail;
@@ -33,7 +34,8 @@ public class ABSTest {
         EXPECT_PARSE_ERROR,
         EXPECT_TYPE_ERROR,
         EXPECT_WARNING,
-        TYPE_CHECK
+        TYPE_CHECK,
+        WITHOUT_DESUGARING
     }
 
     public static class ABSFileNameFilter implements FilenameFilter {
@@ -80,7 +82,7 @@ public class ABSTest {
         throw new IllegalArgumentException("File "+fileName+" cannot be read");
     }
 
-    protected Model assertParse(String s, Config... config) {
+    protected static Model assertParse(String s, Config... config) {
 
         String preamble = "module UnitTest; export *; ";
         preamble = preamble + " import * from ABS.StdLib;";
@@ -88,6 +90,11 @@ public class ABSTest {
             s = preamble + s;
         try {
             Model p = Main.parseString(s);
+
+            if (isSet(WITHOUT_DESUGARING, config)) {
+                p.doAACrewrite = false;
+                p.doForEachRewrite = false;
+            }
 
             if (isSet(EXPECT_PARSE_ERROR,config)) {
                 if (!p.hasParserErrors())
