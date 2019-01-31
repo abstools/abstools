@@ -18,10 +18,11 @@ clone the repository or compile the toolchain to run the ABS collaboratory in th
 Folders
 -------
 
-* `frontend` - the ABS compiler and runtime support.  See frontend/README for
-  installation instructions.  (short version: install jdk8 and erlang
-  version 21, then run `./gradlew assemble` in the `frontend` directory,
-  or `.\gradlew.bat assemble` on windows.)
+* `frontend` - the ABS compiler and runtime support.  See
+  frontend/README.md for installation instructions.  (short version:
+  install jdk8 and erlang version 21, then run `make frontend` or
+  `./gradlew assemble` in this directory, or `.\gradlew.bat assemble`
+  on windows.)
 
 
 * `abs-docs` - the ABS language manual, available online at
