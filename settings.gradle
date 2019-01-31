@@ -9,3 +9,4 @@
 
 rootProject.name = 'abstools'
 include 'frontend'
+include 'abs-docs'

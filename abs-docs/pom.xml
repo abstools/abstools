@@ -3,6 +3,10 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <!-- We keep this file around until we switch the CI build that
+       automatically uploads the manual on docs.abs-models.org to
+       gradle -->
+
   <groupId>org.abs-models</groupId>
   <name>ABS: Documentation</name>
   <artifactId>abs-docs</artifactId>
@@ -11,7 +15,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.docs.source>${basedir}/asciidoc</project.docs.source>
+    <project.docs.source>${basedir}/src/docs/asciidoc</project.docs.source>
     <project.build.directory>${basedir}/manual/</project.build.directory>
     <project.docs.source.mainfile>index.adoc</project.docs.source.mainfile>
     <project.docs.target.root>${project.build.directory}</project.docs.target.root>
