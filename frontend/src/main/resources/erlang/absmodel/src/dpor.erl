@@ -189,7 +189,14 @@ add_new_traces_to_DB(Trace, Explored, NewTraces) ->
                 mnesia:delete({db_trace, Trace}),
                 mnesia:write(#db_trace{trace=Explored, status=explored})
         end,
-    mnesia:activity(transaction, F).
+    mnesia:activity(transaction, F),
+    G = fun () ->
+                U = length(qlc:e(qlc:q([X || X <- mnesia:table(db_trace), X#db_trace.status =:= unexplored]))),
+                A = length(qlc:e(qlc:q([X || X <- mnesia:table(db_trace), X#db_trace.status =:= active]))),
+                E = length(qlc:e(qlc:q([X || X <- mnesia:table(db_trace), X#db_trace.status =:= explored]))),
+                io:format("Unexplored: ~p, Active: ~p, Explored: ~p~n", [U, A, E])
+        end,
+    mnesia:activity(transaction, G).
 
 %% Simulation
 
@@ -236,7 +243,6 @@ ready(enter, _OldState,
                end,
     NewActiveJobs = lists:map(SpawnSim, lists:zip(Unexplored, lists:seq(I, I+N-1))),
     NewA = gb_sets:union(A, gb_sets:from_list(NewActiveJobs)),
-    io:format("Active jobs: ~b~n", [gb_sets:size(NewA)]),
     State = case gb_sets:size(NewA) of
                 L -> saturated;
                 _ -> ready
@@ -244,13 +250,11 @@ ready(enter, _OldState,
     {next_state, State, Data#data{active_jobs=NewA, next_worker_id=I+N}};
 ready(cast, {complete, Id, Trace, ExploredTrace, NewTraces},
       Data=#data{active_jobs=A}) ->
-    io:format("~p new traces!~n", [length(NewTraces)]),
     add_new_traces_to_DB(Trace, ExploredTrace, NewTraces),
     {repeat_state, Data#data{active_jobs=gb_sets:delete(Id, A)}}.
 
 saturated(cast, {complete, Id, Trace, ExploredTrace, NewTraces},
           Data=#data{active_jobs=A}) ->
-    io:format("~p new traces!~n", [length(NewTraces)]),
     add_new_traces_to_DB(Trace, ExploredTrace, NewTraces),
     {next_state, ready, Data#data{active_jobs=gb_sets:delete(Id, A)}}.
 
