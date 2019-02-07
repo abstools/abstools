@@ -10,19 +10,47 @@ import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
+import org.abs_models.Absc;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.backend.java.codegeneration.JavaCode;
 import org.abs_models.backend.java.codegeneration.JavaCodeGenerationException;
 import org.abs_models.backend.java.lib.runtime.ABSFut;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
-import org.abs_models.backend.java.lib.types.*;
+import org.abs_models.backend.java.lib.types.ABSBool;
+import org.abs_models.backend.java.lib.types.ABSFloat;
+import org.abs_models.backend.java.lib.types.ABSInteger;
+import org.abs_models.backend.java.lib.types.ABSProcess;
+import org.abs_models.backend.java.lib.types.ABSRational;
+import org.abs_models.backend.java.lib.types.ABSString;
+import org.abs_models.backend.java.lib.types.ABSUnit;
 import org.abs_models.common.NotImplementedYetException;
-import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.ast.ClassDecl;
+import org.abs_models.frontend.ast.ClassModifier;
+import org.abs_models.frontend.ast.ConstructorArg;
+import org.abs_models.frontend.ast.DataConstructor;
+import org.abs_models.frontend.ast.DataTypeDecl;
+import org.abs_models.frontend.ast.Decl;
+import org.abs_models.frontend.ast.FunctionDecl;
+import org.abs_models.frontend.ast.InterfaceDecl;
+import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.ModuleDecl;
+import org.abs_models.frontend.ast.ModuleModifier;
+import org.abs_models.frontend.ast.Name;
+import org.abs_models.frontend.ast.TypeUse;
 import org.abs_models.frontend.parser.Main;
-import org.abs_models.frontend.typechecker.*;
+import org.abs_models.frontend.typechecker.BoundedType;
+import org.abs_models.frontend.typechecker.DataTypeType;
+import org.abs_models.frontend.typechecker.InterfaceType;
+import org.abs_models.frontend.typechecker.Type;
+import org.abs_models.frontend.typechecker.TypeParameter;
+import org.abs_models.frontend.typechecker.UnionType;
 
 public class JavaBackend extends Main {
 
@@ -32,105 +60,66 @@ public class JavaBackend extends Main {
      */
     public final static Charset CHARSET = StandardCharsets.UTF_8;
 
-    public static void main(final String... args) {
-        doMain(args);
-    }
-
-    public static int doMain(final String... args) {
+    public static int doMain(Absc args) {
         int result = 0;
         JavaBackend backEnd = new JavaBackend();
+        backEnd.arguments = args;
         try {
-            result = backEnd.compile(args);
+            result = backEnd.compile();
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
             result = 1;
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
-            if (backEnd.debug) {
+            if (backEnd.arguments.debug) {
                 e.printStackTrace();
             }
-
             result = 1;
         }
         return result;
     }
 
-    private File destDir = new File("gen/");
-    private boolean sourceOnly = false;
+    // unused -- does not work
     private boolean untypedJavaGen = false;
-    private boolean includeDebug = false;
-
-    @Override
-    public List<String> parseArgs(String[] args) throws InternalBackendException {
-        List<String> restArgs = super.parseArgs(args);
-        List<String> remainingArgs = new ArrayList<>();
-
-        for (int i = 0; i < restArgs.size(); i++) {
-            String arg = restArgs.get(i);
-            if (arg.equals("-d")) {
-                i++;
-                if (i == restArgs.size()) {
-                    throw new InternalBackendException("Destination directory name not given after '-d'");
-                } else {
-                    destDir = new File(args[i]);
-                }
-            } else if (arg.equals("-sourceonly")) {
-                this.sourceOnly = true;
-            } else if (arg.equals("-dynamic")) {
-                this.untypedJavaGen = true;
-            } else if (arg.equals("-no-debuginfo")) {
-                this.includeDebug = false;
-            } else if (arg.equals("-debuginfo")) {
-                this.includeDebug = true;
-            } else if(arg.equals("-java")) {
-                // nothing to do
-            } else {
-                remainingArgs.add(arg);
-            }
-        }
-        return remainingArgs;
-    }
 
     public static void printUsage() {
         System.out.println("Java Backend (-java):\n"
                 + "  -d <dir>       generate files to <dir>\n"
                 + "  -sourceonly    do not generate class files\n"
-                + "  -no-debuginfo  generate code without listener / debugger support (default)\n"
-                + "  -debuginfo     generate code with listener / debugger support\n"
                 + "  -dynamic       generate dynamically updateable code\n");
     }
 
-    private int compile(String[] args) throws Exception {
-                final Model model = parse(args);
+    private int compile() throws Exception {
+        final Model model = parse(arguments.files);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
             printErrorMessage();
             return 1;
         }
-        destDir.mkdirs();
-        if (!destDir.exists()) {
-            throw new InternalBackendException("Destination directory " + destDir.getAbsolutePath() + " does not exist!");
+        arguments.destDir.mkdirs();
+        if (!arguments.destDir.exists()) {
+            throw new InternalBackendException("Destination directory " + arguments.destDir.getAbsolutePath() + " does not exist!");
         }
 
-        if (!destDir.canWrite()) {
-            throw new InternalBackendException("Destination directory " + destDir.getAbsolutePath() + " cannot be written to!");
+        if (!arguments.destDir.canWrite()) {
+            throw new InternalBackendException("Destination directory " + arguments.destDir.getAbsolutePath() + " cannot be written to!");
         }
 
-        compile(model, destDir);
+        compile(model, arguments.destDir);
         return 0;
     }
 
     private void compile(Model m, File destDir) throws IOException, JavaCodeGenerationException {
         JavaCode javaCode = new JavaCode(destDir);
         if (this.untypedJavaGen) {
-            if (verbose) System.out.println("Generating dynamic Java code...");
-            m.generateJavaCodeDynamic(javaCode, this.includeDebug);
+            if (arguments.verbose) System.out.println("Generating dynamic Java code...");
+            m.generateJavaCodeDynamic(javaCode, arguments.java_includeDebug);
         } else {
-            if (verbose) System.out.println("Generating Java code...");
-            m.generateJavaCode(javaCode, this.includeDebug);
+            if (arguments.verbose) System.out.println("Generating Java code...");
+            m.generateJavaCode(javaCode, arguments.java_includeDebug);
         }
-        if (!sourceOnly) {
-            if (verbose) System.out.println("Compiling generated Java code...");
+        if (!arguments.java_sourceOnly) {
+            if (arguments.verbose) System.out.println("Compiling generated Java code...");
             javaCode.compile();
         }
     }

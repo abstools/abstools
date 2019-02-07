@@ -33,6 +33,8 @@ dependencies {
     implementation files('lib/semisolver.jar')
     implementation 'org.antlr:ST4:4.1'
 
+    compile 'info.picocli:picocli:3.9.3'
+
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
@@ -98,7 +100,7 @@ jar {
     baseName='absfrontend'
     appendix=versionDetails().branchName
     manifest {
-        attributes 'Main-Class': 'org.abs_models.frontend.parser.Main',
+        attributes 'Main-Class': 'org.abs_models.Absc',
             'Implementation-Title': 'ABS Frontend',
             'Implementation-Version': versionDetails().lastTag.replaceAll(/^version_/, ''),
             'Bundle-Version': project.version,

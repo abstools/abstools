@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Incompatible change: The function `toString`, when passed a string, returns the string unchanged instead of surrounding it with quotes (`"`) and escaping embedded quotes (`"` → `\"`).
   - Note that escaping quotes inside strings was only implemented in the erlang backend; the other backends returned the string unchanged but surrounded by quotes.
+- We now follow the [POSIX](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html) and [GNU](https://www.gnu.org/prep/standards/html_node/Command_002dLine-Interfaces.html) recommendations for command line interfaces.  Additionally, all command line parsing and help output generation is moved to a single place in the code.  Regrettably, existing scripts have to be adapted for the new syntax.
 
 ### Removed
 

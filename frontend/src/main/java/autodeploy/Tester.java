@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.abs_models.Absc;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.common.WrongProgramArgumentException;
@@ -38,20 +39,27 @@ public class Tester extends Main {
 
   private void compile(String[] args)
       throws DeltaModellingException, IOException, WrongProgramArgumentException, FileNotFoundException, InternalBackendException {
-    final Model model = this.parse(args);
-    // the extraction of the cost annotations can proceed even if the code
-    // is not type safe.
-    // This is exploited in the SmartDeploy code generator since this tool takes
-    // in input a program using some classes that are not defined (they will be
-    // added later with a delta).
-		if (model.hasParserErrors() || model.hasErrors() ) return;
-    if (verbose) { System.out.println("Starting Dependency information extraction..."); }
-    DeployInformation di = new DeployInformation();
-    di.extractInformation(model);
-    if (verbose) { System.out.println("Starting JSON generation..."); }
-    PrintWriter f = new PrintWriter(new File(_JSONName));
-    di.generateJSON(f);
-    f.close();
+      // Handle "-JSON=..." argument; should switch to "-o"
+      List<String> remaining_args = this.parseArgs(args);
+      Absc arguments = Absc.parseArgs(remaining_args.toArray(new String[0]));
+      final Model model = this.parse(arguments.files);
+      // the extraction of the cost annotations can proceed even if
+      // the code is not type safe.  This is exploited in the
+      // SmartDeploy code generator since this tool takes in input a
+      // program using some classes that are not defined (they will be
+      // added later with a delta).
+      if (model.hasParserErrors() || model.hasErrors() ) return;
+      if (arguments.verbose) {
+          System.out.println("Starting Dependency information extraction...");
+      }
+      DeployInformation di = new DeployInformation();
+      di.extractInformation(model);
+      if (arguments.verbose) {
+          System.out.println("Starting JSON generation...");
+      }
+      PrintWriter f = new PrintWriter(new File(_JSONName));
+      di.generateJSON(f);
+      f.close();
   }
 
 
