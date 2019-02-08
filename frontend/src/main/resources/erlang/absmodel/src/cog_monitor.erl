@@ -257,8 +257,10 @@ handle_call(From, {newdc, DC=#object{class=class_ABS_DC_DeploymentComponent}},
     {keep_state, Data#data{dcs=[DC | DCs]}, {reply, From, ok}};
 handle_call(From, get_dcs, _State, Data=#data{dcs=DCs}) ->
     {keep_state_and_data, {reply, From, DCs}};
-handle_call(From, get_schedules, _State, Data=#data{idle=Idle, cog_names=Names, trace_map=Traces}) ->
-    {keep_state_and_data, {reply, From, gather_scheduling_traces(Idle, Names, Traces)}};
+handle_call(From, get_schedules, _State,
+            Data=#data{active=A, blocked=B, idle=I, cog_names=Names, trace_map=T}) ->
+    S = gb_sets:union(gb_sets:union(A, B), I),
+    {keep_state_and_data, {reply, From, gather_scheduling_traces(S, Names, T)}};
 handle_call(From, all_registered_names, _State,
             Data=#data{registered_objects=Objects}) ->
     {keep_state_and_data, {reply, From, maps:keys(Objects)}};
