@@ -44,9 +44,11 @@
 - Send mail to `abs-announce@abs-models.org`, `abs-dev@abs-models.org`
 
 - Check that CircleCI built and uploaded the docker images; otherwise
-  build and upload via
-  - `docker build -t abslang/collaboratory:<version> .`
-  - `docker push abslang/collaboratory:<version>`
+  build and upload (in the main `abstools` directory):
+  - `docker build -t abslang/collaboratory:x.y.z .`
+  - `docker push abslang/collaboratory:x.y.z`
+  - `docker build -t abslang/collaboratory:latest .`
+  - `docker push abslang/collaboratory:latest`
 
 # Version numbering
 
