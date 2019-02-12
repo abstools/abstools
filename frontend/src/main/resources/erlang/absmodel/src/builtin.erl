@@ -81,10 +81,7 @@ toString(_Cog,{N,D}) when is_integer(N),is_integer(D)->
         1 -> integer_to_binary(N1);
         _ -> iolist_to_binary([integer_to_binary(N1), <<"/"/utf8>>, integer_to_binary(D1)])
     end;
-toString(_Cog,S) when is_binary(S) ->
-    iolist_to_binary(["\"",
-                      binary:replace(S, [<<"\\">>, <<"\"">>], <<"\\">>, [global, {insert_replaced, 1}]),
-                      "\""]);
+toString(_Cog,S) when is_binary(S) -> S;
 toString(_Cog, null) -> <<"null"/utf8>>;
 toString(_Cog,A) when is_atom(A) -> constructorname_to_string(A);
 toString(Cog,P) when is_pid(P) ->
