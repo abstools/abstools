@@ -1,9 +1,11 @@
 #!/bin/bash
 
 script=`realpath "$0"`
-codepaths=$(find "`dirname "$script"`" -name "ebin" -type d -print0 \
+dir=`dirname "$script"`
+codepaths=$(find "$dir" -name "ebin" -type d -print0 \
                  | xargs -0 printf '%s","' | sed 's/","$//g')
 (
+    echo "cd(\"$dir/absmodel\")."
     echo "code:add_paths([\"$codepaths\"])."
     echo "make:all([load])."
     echo "runtime:start(\"$@\")."
