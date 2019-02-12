@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+# docker will not update downloaded images; after resolving a bug
+# report from an expert user by asking him to upgrade his "latest"
+# image, we now decide to do this automatically here.  Please file a
+# bug report if this is not a good idea!
+docker pull abslang/absc:latest
+docker run --rm -v "$PWD":/usr/src -w /usr/src abslang/absc:latest "$@"

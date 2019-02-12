@@ -14,6 +14,9 @@ Docker, execute the following command:
 Then connect your browser to http://localhost:8080/.  It is not necessary to
 clone the repository or compile the toolchain to run the ABS collaboratory in this way.
 
+To run the absc compiler locally using docker, create a script such as
+https://github.com/abstools/abstools/blob/master/frontend/src/main/resources/bash/absc-docker
+and put it in your path.
 
 Folders
 -------
