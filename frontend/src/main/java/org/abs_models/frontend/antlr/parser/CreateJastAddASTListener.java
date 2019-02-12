@@ -136,10 +136,13 @@ public class CreateJastAddASTListener extends ABSBaseListener {
             char c = tokenText.charAt(i);
             if (c == '\\') {
                 i++;
-                c = tokenText.charAt(i);
-                switch (c) {
-                    // only handling ` and \ here
-                default : s.append(c); break;
+                char c1 = tokenText.charAt(i);
+                switch (c1) {
+                // case '\\' : s.append('\\'); break; // escaped backslash (\\)
+                case '`' : s.append('`'); break;   // escaped end (\`)
+                case '«' : s.append('«'); break;   // escaped interpolation start (\«)
+                // do not drop backslash if it doesn't escape any of the above:
+                default : s.append('\\'); s.append(c1); break;
                 }
             } else {
                 s.append(c);
@@ -708,6 +711,23 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
     @Override public void exitTemplateStringExp(ABSParser.TemplateStringExpContext ctx) {
         setV(ctx, makeTemplateStringLiteral(ctx.TEMPLATESTRINGLITERAL().getText()));
+    }
+    @Override public void exitTemplateStringCompoundExp(ABSParser.TemplateStringCompoundExpContext ctx) {
+        PureExp result = new AddAddExp(makeTemplateStringLiteral(ctx.TEMPLATESTRINGSTART().getText()),
+                                       new FnApp("toString",
+                                                 new List().add(v(ctx.e1))));
+        for (int i = 0; i < ctx.e.size(); i++) {
+            PureExp e = v(ctx.e.get(i));
+            // List<PureExp> arglist = new List<PureExp>();
+            // arglist.
+            PureExp s = makeTemplateStringLiteral(ctx.b.get(i).getText());
+            PureExp part = new AddAddExp(s,
+                                         new FnApp("toString",
+                                                   new List().add(e)));
+            result = new AddAddExp(result, part);
+        }
+        result = new AddAddExp(result, makeTemplateStringLiteral(ctx.TEMPLATESTRINGEND().getText()));
+        setV(ctx, result);
     }
     @Override public void exitThisExp(ABSParser.ThisExpContext ctx) {
         setV(ctx, new ThisExp());

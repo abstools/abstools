@@ -35,8 +35,8 @@ multiple times without influencing the execution semantics.
 |_PureExp_ ::= | _SimpleIdentifier_ +
  {vbar} `this` `.` _SimpleIdentifier_ +
  {vbar} `this` +
- {vbar} `null` +
  {vbar} _Literal_ +
+ {vbar} _TemplateString_ +
  {vbar} _LetExp_ +
  {vbar} _DataConstrExp_ +
  {vbar} _FnAppExp_ +
@@ -53,6 +53,40 @@ multiple times without influencing the execution semantics.
 ==== Literal Expressions
 
 Literals, as defined in <<sec:literals>>, are expressions.
+
+==== Template Strings
+
+Template strings are strings allowing embedded expressions.  In
+contrast to normal string literals, template strings can contain
+linebreaks and other special characters.
+
+A template string starts and ends with a backtick (```) character.  A
+template string can contain zero or more pure expressions enclosed by
+left-and right-pointing guillemet characters (`«`, `»`).  These
+expressions will be replaced by their string representation (as with
+the function `toString`) every time the template string is evaluated.
+
+The only characters that need to be escaped by a backslash (`\`) in a
+template string are the backtick (```) and the left-pointing guillemet
+(`«`).  All other characters, including line breaks and the backslash
+itself, do not need to be specially treated when writing a template string.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _TemplateString_ ::= | ``` { ? _Valid String Character_ ? } ``` +
+|                           | ```  { ? _Valid String Character_ ? } `«` _PureExp_
+                              { `»` { ? _Valid String Character_ ? } `«` }
+                              `»` { ? _Valid String Character_ ? } ```
+|====
+
+[source]
+.Example
+----
+`Hello «name»!
+I see your age is «age».`
+----
+The result of this expression will be a string with two lines, and with the values of the local variables `name` and `age` in place.
 
 ==== Operator Expressions
 

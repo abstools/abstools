@@ -28,12 +28,25 @@ STRINGLITERAL
 fragment STR_ESC
   :  '\\' ('\\' | '"' | 't' | 'n' | 'r')
   ;
-TEMPLATESTRINGLITERAL
-    : '`' (TEMPLATESTR_ESC | ~('\\' | '`'))* '`'
+
+TEMPLATESTRINGSTART
+    : '`' TEMPLATESTRING_INNER* '«'
     ;
-fragment TEMPLATESTR_ESC
-  :  '\\' ('\\' | '`')
-  ;
+
+TEMPLATESTRINGINBETWEEN
+    : '»' TEMPLATESTRING_INNER* '«'
+    ;
+TEMPLATESTRINGEND
+    : '»' TEMPLATESTRING_INNER* '`'
+    ;
+TEMPLATESTRINGLITERAL
+    : '`' TEMPLATESTRING_INNER* '`'
+    ;
+
+fragment TEMPLATESTRING_INNER
+    : '\\' ('\\' | '`' | '«')
+    | ~('`' | '«')
+    ;
 
 
 NEGATION : '!' ;
@@ -109,6 +122,9 @@ pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
     | INTLITERAL                                           # IntExp
     | STRINGLITERAL                                        # StringExp
     | TEMPLATESTRINGLITERAL                                # TemplateStringExp
+    | TEMPLATESTRINGSTART e1=pure_exp
+        (b+=TEMPLATESTRINGINBETWEEN e+=pure_exp)
+        TEMPLATESTRINGEND                                  # TemplateStringCompoundExp
     | 'this'                                               # ThisExp
     | 'null'                                               # NullExp
     | e=pure_exp 'implements' i=interface_name             # ImplementsExp
