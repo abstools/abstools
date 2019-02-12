@@ -38,14 +38,14 @@ event_key_type(Trace, EventKey) ->
     
 
 schedule_runs(_Trace, []) -> [];
-schedule_runs(Trace, EventKeyS) ->
-    [X | Xs] = EventKeyS,
+schedule_runs(Trace, EventKeys) ->
+    [X | Xs] = EventKeys,
     {Run, Ys} = lists:splitwith(fun(E) -> event_key_type(Trace, E) /= schedule end, Xs),
     [[X | Run] | schedule_runs(Trace, Ys)].
 
 enables(Pred, Trace) ->
-    EventKeyS = trace_to_event_keys(Trace),
-    lists:filter(fun(EventKey) -> Pred(event_key_to_event(Trace, EventKey)) end, EventKeyS).
+    EventKeys = trace_to_event_keys(Trace),
+    lists:filter(fun(EventKey) -> Pred(event_key_to_event(Trace, EventKey)) end, EventKeys).
 
 enabled_by_invocation(InvocationEvent, Trace) ->
     CorrespondingScheduleEvent = InvocationEvent#event{type=schedule},
@@ -102,7 +102,7 @@ update_after_move(Trace, Cog, I, J) ->
                             lists:append(EnabledByE1, EnabledByE2))
     end.
 
-move_backwards(Trace, {Cog, I}) ->
+move_backwards_old(Trace, {Cog, I}) ->
     _E1 = event_key_to_event(Trace, {Cog, I}),
     {ok, Schedule} = maps:find(Cog, Trace),
     ScheduleBeforeE1 = lists:sublist(Schedule, I),
@@ -112,17 +112,64 @@ move_backwards(Trace, {Cog, I}) ->
     J = I - (length(EventsAfterE2ScheduleAndBeforeE1Schedule) + 1),
     update_after_move(Trace, Cog, I, J).
 
+move_backwards(Trace, {Cog, I}) ->
+    E1 = event_key_to_event(Trace, {Cog, I}),
+    {ok, Schedule} = maps:find(Cog, Trace),
+    EventKeysBeforeE1 = lists:sublist(cog_local_trace_to_event_keys(Cog, Schedule), I),
+    CogScheduleRunsBeforeE1 = schedule_runs(Trace, EventKeysBeforeE1),
+    MaybeE2ScheduleRun = lists:search(fun(Run) -> not event_is_independent_with_schedule_run(Trace, E1, Run) end,
+                                      lists:reverse(CogScheduleRunsBeforeE1)),
+    case MaybeE2ScheduleRun of
+        {value, E2ScheduleRun} ->
+            [ScheduleEvent | _] = E2ScheduleRun,
+            {Cog, J} = ScheduleEvent,
+            update_after_move(Trace, Cog, I, J);
+        false -> Trace
+    end.
+
+schedule_run_writes(Trace, ScheduleRun) ->
+    lists:foldl(fun ordsets:union/2,
+                ordsets:new(),
+                lists:map(fun(E) -> Event = event_key_to_event(Trace, E),
+                                    Event#event.writes end, ScheduleRun)).
+
+schedule_run_reads(Trace, ScheduleRun) ->
+    lists:foldl(fun ordsets:union/2,
+                ordsets:new(),
+                lists:map(fun(E) -> Event = event_key_to_event(Trace, E),
+                                    Event#event.reads end, ScheduleRun)).
+
+event_is_independent_with_schedule_run(Trace, Event, ScheduleRun) ->
+    Reads1 = Event#event.reads,
+    Writes1 = Event#event.writes,
+    Reads2 = schedule_run_reads(Trace, ScheduleRun),
+    Writes2 = schedule_run_writes(Trace, ScheduleRun),
+    ordsets:is_disjoint(Reads1, Writes2) andalso
+    ordsets:is_disjoint(Writes1, Reads2) andalso
+    ordsets:is_disjoint(Writes1, Writes2).
+
 generate_trace(Trace, E2) ->
     % TODO e1 enables + e2 enables?
     move_backwards(Trace, E2).
 
+add_read_write_sets_to_schedule_event(ScheduleRun, Trace) ->
+    [{Cog, I} | _] = ScheduleRun,
+    ScheduleEvent = event_key_to_event(Trace, {Cog, I}),
+    LastEvent = event_key_to_event(Trace, lists:last(ScheduleRun)),
+    UpdatedScheduleEvent = ScheduleEvent#event{reads=LastEvent#event.reads, writes=LastEvent#event.writes},
+    Local = maps:get(Cog, Trace),
+    NewLocal = lists:sublist(Local, I) ++ [UpdatedScheduleEvent] ++ lists:nthtail(I + 1, Local),
+    maps:put(Cog, NewLocal, Trace).
+
 new_traces(Trace) ->
-    schedule_runs_to_dpor_traces(Trace, schedule_runs(Trace, trace_to_event_keys(Trace))).
+    ScheduleRuns = schedule_runs(Trace, trace_to_event_keys(Trace)),
+    AugmentedTrace = lists:foldl(fun add_read_write_sets_to_schedule_event/2, Trace, ScheduleRuns),
+    schedule_runs_to_dpor_traces(AugmentedTrace, ScheduleRuns).
 
 schedule_runs_to_dpor_traces(_Trace, []) -> [];
 schedule_runs_to_dpor_traces(Trace, [R | Rs]) ->
-    Enabled = sets:from_list(lists:append(lists:map(fun(E) -> enabled_by(E, Trace) end, R))),
-    NewTraces = lists:map(fun(E) -> generate_trace(Trace, E) end, sets:to_list(Enabled)),
+    Enabled = ordsets:from_list(lists:append(lists:map(fun(E) -> enabled_by(E, Trace) end, R))),
+    NewTraces = lists:map(fun(E) -> generate_trace(Trace, E) end, ordsets:to_list(Enabled)),
     lists:append(NewTraces, schedule_runs_to_dpor_traces(Trace, Rs)).
 
 %% Trace prefixes
