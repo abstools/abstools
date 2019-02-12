@@ -52,10 +52,13 @@ manual:				## Build the ABS manual
 vagrant:			## Build and start Vagrant virtual machine
 	vagrant up
 
-docker: frontend		## Build and start collaboratory docker image
+docker: frontend		## Build collaboratory and absc docker images
 	$(DOCKER) build -t abslang/collaboratory $(ROOT_DIR)
-	$(DOCKER) run -d -p 8080:80 --name collaboratory abslang/collaboratory
+	$(DOCKER) build -t abslang/absc -f frontend/Dockerfile $(ROOT_DIR)
 	@echo "Finished."
+
+run-collaboratory:		## Run the collaboratory on port 8080
+	$(DOCKER) run -d -p 8080:80 --name collaboratory abslang/collaboratory
 	@echo "Collaboratory running on http://localhost:8080/"
 
 server:				## Deploy development environment on Debian-based server

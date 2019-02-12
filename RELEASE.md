@@ -3,12 +3,14 @@
 - Run unit tests, check for fresh failing tests (compared to last
   version)
 
-- Create docker (`make docker`)
-  - check if all tools are installed (selection box non-empty)
-  - check that "Hello World" ABS program can start with Erlang simulator
-  - check that "Hello World" ABS program doesn't crash SACO / CostABS
+- Create docker (`make docker ; make run-collaboratory`)
+  - check that absc container works / was created:
+    `docker run -it --rm -v "$PWD":/usr/src -w /usr/src --entrypoint /bin/sh abslang/absc`
+  - check if all tools are installed in collaboratory (selection box non-empty)
+  - check that collaboratory can start "Hello World" ABS program with Erlang simulator
+  - check that "Hello World" ABS program doesn't crash SACO / CostABS in collaboratory
 
-- Create vagrant (`vagrant up`)
+- Create vagrant (`vagrant up`) (NOTE: currently broken and probably unused)
   - check if all tools in collaboratory are installed
   - check that "Hello World" ABS program can start with Erlang simulator
   - check that "Hello World" ABS program doesn't crash SACO / CostABS
@@ -49,6 +51,10 @@
   - `docker push abslang/collaboratory:x.y.z`
   - `docker build -t abslang/collaboratory:latest .`
   - `docker push abslang/collaboratory:latest`
+  - `docker build -t abslang/absc:x.y.z -f frontend/Dockerfile .`
+  - `docker push abslang/absc:x.y.z`
+  - `docker build -t abslang/absc:latest -f frontend/Dockerfile .`
+  - `docker push abslang/absc:latest`
 
 # Version numbering
 
