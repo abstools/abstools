@@ -5,41 +5,52 @@
 package org.abs_models.frontend.typesystem;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.abs_models.ABSTest;
+import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticConditionList;
-import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.ast.Block;
+import org.abs_models.frontend.ast.ClassDecl;
+import org.abs_models.frontend.ast.DataTypeUse;
+import org.abs_models.frontend.ast.FieldUse;
+import org.abs_models.frontend.ast.InterfaceDecl;
+import org.abs_models.frontend.ast.InterfaceTypeUse;
+import org.abs_models.frontend.ast.MethodImpl;
+import org.abs_models.frontend.ast.MethodSig;
+import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.ModuleDecl;
+import org.abs_models.frontend.ast.ParamDecl;
+import org.abs_models.frontend.ast.ParametricDataTypeUse;
+import org.abs_models.frontend.ast.ReturnStmt;
+import org.abs_models.frontend.ast.TypeUse;
+import org.abs_models.frontend.ast.VarDeclStmt;
+import org.abs_models.frontend.ast.VarOrFieldUse;
+import org.abs_models.frontend.ast.VarUse;
 import org.abs_models.frontend.typechecker.InterfaceType;
 import org.abs_models.frontend.typechecker.KindedName;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import org.abs_models.ABSTest;
-import org.abs_models.frontend.FrontendTest;
-
 public class TypeCheckerTest extends FrontendTest {
 
     // POSITIVE TESTS
 
     @Test
-    public void abslang() throws Exception {
-        assertTypeCheckFileOk("src/main/resources/abs/lang/abslang.abs", false);
-    }
-
-    @Test
-    public void lizeth() throws Exception {
-        assertTypeCheckFileOk("abssamples/lizeth.abs", false);
-    }
-
-    @Test
     @Ignore("https://github.com/abstools/abstools/issues/100")
     public void rosetreeTicket187() throws Exception {
-        assertTypeCheckFileOk("abssamples/RoseTree.abs", true);
+        assertTypeCheckFileOk("abssamples/RoseTree.abs");
     }
 
     @Test
@@ -55,52 +66,52 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void testVarDecl() {
-        assertNoTypeErrorsNoLib("data Bool = True | False; { Bool b = True; }");
+        assertTypeOK("data Bool1 = True1 | False1; { Bool1 b = True1; }");
     }
 
     @Test
     public void testVarDeclInit() {
-        assertNoTypeErrorsNoLib("interface I {} interface J extends I {} { J j; I i = j; }");
+        assertTypeOK("interface I {} interface J extends I {} { J j; I i = j; }");
     }
 
     @Test
     public void fieldInit() {
-        assertNoTypeErrorsNoLib("interface I {} class C implements I { I i = this; }");
+        assertTypeOK("interface I {} class C implements I { I i = this; }");
     }
 
     @Test
     public void testClass() {
-        assertNoTypeErrorsNoLib("interface I {} class C implements I {} { I i; i = new local C(); }");
+        assertTypeOK("interface I {} class C implements I {} { I i; i = new local C(); }");
     }
 
     @Test
     public void testClass2() {
-        assertNoTypeErrorsNoLib("interface I {} interface J {} class C implements I,J {} { J j; j = new local C(); }");
+        assertTypeOK("interface I {} interface J {} class C implements I,J {} { J j; j = new local C(); }");
     }
 
     @Test
     public void dataTypeTest() {
-        assertNoTypeErrorsNoLib("data Foo = Bar; { Foo f = Bar; }");
+        assertTypeOK("data Foo = Bar; { Foo f = Bar; }");
     }
 
     @Test
     public void dataTypeParamTest() {
-        assertNoTypeErrorsNoLib("data Nop = Nop; data Foo<X> = Bar(X); { Foo<Nop> f = Bar(Nop); }");
+        assertTypeOK("data Nop = Nop; data Foo<X> = Bar(X); { Foo<Nop> f = Bar(Nop); }");
     }
 
     @Test
     public void test_dataTypeParam2base() {
-        assertNoTypeErrorsNoLib("data AorB<A,B> = A(A) | B(B);");
+        assertTypeOK("data AorB<A,B> = A(A) | B(B);");
     }
 
     @Test
     public void test_dataTypeParam2() {
-        assertNoTypeErrorsNoLib("data AorB<A,B> = A(A getA) | B(B getB);");
+        assertTypeOK("data AorB<A,B> = A(A getA) | B(B getB);");
     }
 
     @Test
     public void dataTypeSelectors() {
-        assertNoTypeErrorsNoLib("data Foo = Bar(Foo foo) | Baz; { Foo b = foo(Bar(Baz)); }");
+        assertTypeOK("data Foo = Bar(Foo foo) | Baz; { Foo b = foo(Bar(Baz)); }");
     }
 
     @Test
@@ -147,7 +158,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void ticket414_futNeedsDataType1() {
-        Model m = assertParseOk("module M; interface I {} { Fut<I> fi; }", Config.WITH_STD_LIB);
+        Model m = assertParse("module M; interface I {} { Fut<I> fi; }");
         assertFalse(m.hasErrors());
         Block b = m.getMainBlock();
         assertNotNull(b);
@@ -163,7 +174,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void ticket414_futNeedsDataType2() {
-        Model m = assertParseOk("module M; data I = I; { Fut<I> fi; }", Config.WITH_STD_LIB);
+        Model m = assertParse("module M; data I = I; { Fut<I> fi; }");
         assertFalse(m.hasErrors());
         Block b = m.getMainBlock();
         assertNotNull(b);
@@ -400,9 +411,9 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void patternMatching() {
-        assertNoTypeErrorsNoLib("data List<A> = Nil | Cons(A, List<A>); "
-                + "data Pair<A,B> = Pair(A,B); data Server = SomeServer; def Server findServer(Server name, List<Pair<Server, Server>> list) ="
-                + "case list { " + "Nil => SomeServer;" + "Cons(Pair(server, set), rest) => server; };");
+        assertTypeOK("data List1<A> = Nil1 | Cons1(A, List1<A>); "
+                + "data Pair1<A,B> = Pair1(A,B); data Server = SomeServer; def Server findServer(Server name, List1<Pair1<Server, Server>> list) ="
+                + "case list { " + "Nil1 => SomeServer;" + "Cons1(Pair1(server, set), rest) => server; };");
     }
 
     @Test
@@ -412,7 +423,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void classParamsMethodShadowsField() {
-        Model m = assertParseOkStdLib("class C(Bool b) { Bool m(Bool b) { return b; } }");
+        Model m = assertParse("class C(Bool b) { Bool m(Bool b) { return b; } }");
         ModuleDecl u = m.lookupModule("UnitTest");
         ClassDecl c = (ClassDecl) u.lookup(new KindedName(KindedName.Kind.CLASS, "C"));
         MethodImpl me = c.lookupMethod("m");
@@ -425,7 +436,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void classParamsRewrite() {
-        Model m = assertParseOkStdLib("class C(Bool b) { Bool m() { return b; } }");
+        Model m = assertParse("class C(Bool b) { Bool m() { return b; } }");
         ModuleDecl u = m.lookupModule("UnitTest");
         ClassDecl c = (ClassDecl) u.lookup(new KindedName(KindedName.Kind.CLASS, "C"));
         MethodImpl me = c.lookupMethod("m");
@@ -438,7 +449,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void classParamsRewrite2() {
-        Model m = assertParseOkStdLib("class C(Bool b) { Bool m(Bool x) { return x; } }");
+        Model m = assertParse("class C(Bool b) { Bool m(Bool x) { return x; } }");
         ModuleDecl u = m.lookupModule("UnitTest");
         ClassDecl c = (ClassDecl) u.lookup(new KindedName(KindedName.Kind.CLASS, "C"));
         MethodImpl me = c.lookupMethod("m");
@@ -456,7 +467,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void methodSigs() {
-        Model m = assertParseOk("interface I { Unit m(); } interface J { Unit n(); } interface K extends I, J { Unit foo(); } { K k; } ", Config.WITH_STD_LIB);
+        Model m = assertParse("interface I { Unit m(); } interface J { Unit n(); } interface K extends I, J { Unit foo(); } { K k; } ");
         ModuleDecl module = m.lookupModule("UnitTest");
         InterfaceDecl d = (InterfaceDecl) module.getDecl(2);
         ArrayList<MethodSig> list = new ArrayList<>(d.getAllMethodSigs());
@@ -483,7 +494,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void test_Movecogto1() {
-        Model m = assertParseOk("class C { Unit do() { movecogto 1; }}", Config.WITH_STD_LIB);
+        Model m = assertParse("class C { Unit do() { movecogto 1; }}");
         SemanticConditionList errs = m.typeCheck();
         assertTrue(m.hasTypeErrors());
         Assert.assertEquals(ErrorMessage.EXPECTED_DC, errs.getFirstError().msg);
@@ -492,7 +503,7 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void deltaParseBS() throws Exception {
         String fileName = "abssamples/PVTest.abs";
-        Model m = ABSTest.assertParseFileOk(fileName, Config.WITH_STD_LIB);
+        Model m = ABSTest.assertParseFileOk(fileName);
         if (m.hasParserErrors())
             fail(m.getParserErrors().get(0).toString());
     }

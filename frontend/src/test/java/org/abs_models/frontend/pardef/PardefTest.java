@@ -87,10 +87,6 @@ public abstract class PardefTest extends FrontendTest {
     }
 
     protected final Model parse(String functionCall, String... functions) {
-        return parse(true, functionCall, functions);
-    }
-
-    protected final Model parse(boolean withStbLib, String functionCall, String... functions) {
         StringBuilder builder = new StringBuilder(functions.length * 30);
         for (String function : functions) {
             builder.append(function);
@@ -101,6 +97,6 @@ public abstract class PardefTest extends FrontendTest {
             .append(" }");
 
         String code = builder.toString();
-        return withStbLib ? assertParseOkStdLib(code) : assertParseOk(code);
+        return assertParse(code);
     }
 }

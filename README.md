@@ -14,14 +14,18 @@ Docker, execute the following command:
 Then connect your browser to http://localhost:8080/.  It is not necessary to
 clone the repository or compile the toolchain to run the ABS collaboratory in this way.
 
+To run the absc compiler locally using docker, create a script such as
+https://github.com/abstools/abstools/blob/master/frontend/src/main/resources/bash/absc-docker
+and put it in your path.
 
 Folders
 -------
 
-* `frontend` - the ABS compiler and runtime support.  See frontend/README for
-  installation instructions.  (short version: install jdk8 and erlang
-  version 21, then run `./gradlew assemble` in the `frontend` directory,
-  or `.\gradlew.bat assemble` on windows.)
+* `frontend` - the ABS compiler and runtime support.  See
+  frontend/README.md for installation instructions.  (short version:
+  install jdk8 and erlang version 21, then run `make frontend` or
+  `./gradlew assemble` in this directory, or `.\gradlew.bat assemble`
+  on windows.)
 
 
 * `abs-docs` - the ABS language manual, available online at

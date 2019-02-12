@@ -1,0 +1,40 @@
+module BackendTest;
+
+{
+    [Cost: 5][Atomic] skip;
+    [Atomic] suspend;
+    [Atomic] Fut<Unit> f;
+    [Atomic] Int x = 5;
+    [Atomic] assert True;
+    [Atomic] throw DivisionByZeroException;
+    [Atomic] die DivisionByZeroException;
+    [Atomic] max(3, 5);
+    [Atomic]
+    {
+        Int y = 5;
+    }
+    [Atomic] x = 7;
+    [Atomic] duration(x, 8);
+    [Atomic] await f? & duration(x, 8) & (x == 3);
+    [Atomic] if (True) { skip; }
+    [Atomic] if (True) { skip; } else { skip; }
+    [Atomic] while ((x > 5)) { skip; }
+    [Atomic] foreach (i in list[1, 2, 3]) { skip; }
+    foreach (i in list[1, 2, 3]) {
+        println(toString(i));
+    }
+    [Atomic] case x {
+        5 => { skip; }
+        7 => { x = (x + 1); }
+        _ => {
+            println("Hello");
+        }
+    }
+    [Atomic] try {
+        skip;
+    } catch {
+        DivisionByZeroException => { skip; }
+    } finally {
+        skip;
+    }
+}

@@ -67,7 +67,7 @@ class Worker(MapReduce master) implements Worker {
   Unit reduce(OutKeyType key, List<OutValueType> value) {
     // Remove duplicates in occurrence list: convert into set.
     Set<OutValueType> resultset = set(value);
-    while (~(resultset == EmptySet)) {
+    while (!(resultset == EmptySet)) {
       OutValueType file = take(resultset);
       resultset = remove(resultset, file);
       this.emitReduceResult(file);
@@ -166,7 +166,7 @@ class MapReduce implements MapReduce {
     Set<Pair<OutKeyType, Fut<List<OutValueType>>>> fReduceResults = EmptySet;
     List<Pair<OutKeyType, List<OutValueType>>> result = Nil;
 
-    while (~isEmpty(items)) {
+    while (!isEmpty(items)) {
       Pair<InKeyType, InValueType> item = head(items);
       items = tail(items);
       Worker w = this.getWorker();
@@ -177,14 +177,14 @@ class MapReduce implements MapReduce {
       Fut<List<Pair<OutKeyType, OutValueType>>> fMap = w!invokeMap(key, value);
       fMapResults = insertElement(fMapResults, fMap);
     }
-    while (~emptySet(fMapResults)) {
+    while (!emptySet(fMapResults)) {
       // "The MapReduce library groups together all intermediate values
       // associated with the same intermediate key I ..." [ditto]
       Fut<List<Pair<OutKeyType, OutValueType>>> fMapResult = take(fMapResults);
       fMapResults = remove(fMapResults, fMapResult);
       await fMapResult?;
       List<Pair<OutKeyType, OutValueType>> mapResult = fMapResult.get;
-      while (~isEmpty(mapResult)) {
+      while (!isEmpty(mapResult)) {
         Pair<OutKeyType, OutValueType> keyValuePair = head(mapResult);
         mapResult = tail(mapResult);
         List<OutValueType> inter = lookupDefault(intermediates, fst(keyValuePair), Nil);
@@ -198,7 +198,7 @@ class MapReduce implements MapReduce {
     // to form a possibly smaller set of values.  Typically just zero or
     // one outpout value is produced per Reduce invocation." [ditto]
     Set<OutKeyType> keys = keys(intermediates);
-    while(~emptySet(keys)) {
+    while(!emptySet(keys)) {
       OutKeyType key = take(keys);
       keys = remove(keys, key);
       List<OutValueType> values = lookupUnsafe(intermediates, key);
@@ -206,7 +206,7 @@ class MapReduce implements MapReduce {
       Fut<List<OutValueType>> fReduce = w!invokeReduce(key, values);
       fReduceResults = insertElement(fReduceResults, Pair(key, fReduce));
     }
-    while (~emptySet(fReduceResults)) {
+    while (!emptySet(fReduceResults)) {
       Pair<OutKeyType, Fut<List<OutValueType>>> reduceResult = take(fReduceResults);
       fReduceResults = remove(fReduceResults, reduceResult);
       OutKeyType key = fst(reduceResult);
@@ -286,7 +286,7 @@ modifies class MapReduce {
       workers = insertElement(workers, w);
       nWorkers = nWorkers + 1;
     }
-    await ~(emptySet(workers));
+    await !(emptySet(workers));
     Worker w = take(workers);
     workers = remove(workers, w);
     return w;

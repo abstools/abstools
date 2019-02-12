@@ -3,32 +3,58 @@
 - Run unit tests, check for fresh failing tests (compared to last
   version)
 
-- Create docker (`make docker`)
-  - check if all tools are installed (selection box non-empty)
-  - check that "Hello World" ABS program can start with Erlang simulator
-  - check that "Hello World" ABS program doesn't crash SACO / CostABS
+- Create docker (`make docker ; make run-collaboratory`)
+  - check that absc container works / was created:
+    `docker run -it --rm -v "$PWD":/usr/src -w /usr/src --entrypoint /bin/sh abslang/absc`
+  - check if all tools are installed in collaboratory (selection box non-empty)
+  - check that collaboratory can start "Hello World" ABS program with Erlang simulator
+  - check that "Hello World" ABS program doesn't crash SACO / CostABS in collaboratory
 
-- Create vagrant (`vagrant up`)
+- Create vagrant (`vagrant up`) (NOTE: currently broken and probably unused)
   - check if all tools in collaboratory are installed
   - check that "Hello World" ABS program can start with Erlang simulator
   - check that "Hello World" ABS program doesn't crash SACO / CostABS
 
-- Release commit should include only an updated `CHANGELOG.md`, with a
-  fresh `## [Unreleased]` section containing the four subsections `###
-  Added`, `### Changed`, `### Removed`, `### Fixed`.  The first line
-  of the commit message should be `Release version x.y.z`, followed by
-  the changelog.
+- Update `CHANGELOG.md`
+  - Rename section `[Unreleased]` to `[x.y.z] - yyyy-mm-dd`
+  - Add fresh section as follows:
 
-- Add release tag `version_x.y.z` with the same message.
+```md
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+```
+
+- Prepare release commit
+
+  - The release commit should include only the updated `CHANGELOG.md`
+
+  - The first line of the commit message should be `Release version
+   x.y.z`, followed by the contents of the change log for the current version
+
+- Add release tag `version_x.y.z` with the same message as the commit message.
 
 - push release commit (`git push`) and tag (`git push --tags`)
 
-- Check that CircleCI built and uploaded the docker images; otherwise
-  build and upload via
-  - `docker build -t abslang/collaboratory:<version> .`
-  - `docker push abslang/collaboratory:<version>`
-
 - Send mail to `abs-announce@abs-models.org`, `abs-dev@abs-models.org`
+
+- Check that CircleCI built and uploaded the docker images; otherwise
+  build and upload (in the main `abstools` directory):
+  - `docker build -t abslang/collaboratory:x.y.z .`
+  - `docker push abslang/collaboratory:x.y.z`
+  - `docker build -t abslang/collaboratory:latest .`
+  - `docker push abslang/collaboratory:latest`
+  - `docker build -t abslang/absc:x.y.z -f frontend/Dockerfile .`
+  - `docker push abslang/absc:x.y.z`
+  - `docker build -t abslang/absc:latest -f frontend/Dockerfile .`
+  - `docker push abslang/absc:latest`
 
 # Version numbering
 

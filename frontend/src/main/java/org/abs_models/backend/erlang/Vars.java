@@ -167,20 +167,20 @@ public class Vars extends LinkedHashMap<String, Var> {
         return sb.append("]").toString();
     }
     public String toStack() {
-        return toStack(false);
+        return toStack("");
     }
 
-    public String toStack(boolean includeLocalVars) {
-        // for synchronous calls, we need to include our own local variables
-        // since the same process will be re-used in a different context.
-        // Note that gc:extract_references/1 fetches the current local
-        // variables already, so in most circumstances they are handled
+    public String toStack(String additionalStackElements) {
+        // for synchronous calls, we need to store the caller's local
+        // variables and the caller object's state since the same
+        // process will be re-used in a different context and there
+        // might be things referenced only there.  Note that
+        // gc:extract_references/1 fetches the current local variables
+        // already, so in most circumstances they are handled
         // correctly.
         StringBuilder sb = new StringBuilder();
         sb.append("[O,DC");
-        if (includeLocalVars) {
-            sb.append(",get(vars)");
-        }
+        sb.append(additionalStackElements);
         for (Map.Entry<String, Var> a : this.entrySet()) {
             Var v = a.getValue();
             if (!v.isSet() || !v.hasReferences()) {

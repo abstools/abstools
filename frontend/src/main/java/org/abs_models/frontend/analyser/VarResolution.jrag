@@ -153,7 +153,9 @@ aspect VarResolution {
     }
 
     eq ForeachStmt.getBody().lookupVarOrFieldName(String name, boolean fieldOnly) {
-        return locallookupVarOrFieldName(name, fieldOnly);
+        VarOrFieldDecl d = locallookupVarOrFieldName(name, fieldOnly);
+        if (d != null) return d;
+        else return lookupVarOrFieldName(name, fieldOnly);
     }
 
     syn lazy VarOrFieldDecl VarDeclStmt.locallookupVarOrFieldName(String name, boolean fieldOnly) {

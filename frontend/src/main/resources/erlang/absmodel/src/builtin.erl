@@ -94,10 +94,14 @@ toString(Cog,P) when is_pid(P) ->
                 iolist_to_binary([pid_to_list(P), ":", toString(Cog, Value)]);
         false -> iolist_to_binary([pid_to_list(P), ":empty"])
     end;
-toString(_Cog,#object{class=Cid,ref=Oid}) ->
-    %% TODO: use binary:replace?
-    iolist_to_binary([re:replace(string:substr(atom_to_list(Cid), 7), "_", ".", [{return, list}]),
-                      ":", pid_to_list(Oid)]);
+toString(_Cog,O=#object{cog=Cog,ref=Oid}) ->
+    C=object:get_class_from_ref(O),
+    ClassName=case C of
+                  none -> <<"<no class - main module>">>;
+                  _ -> re:replace(string:substr(atom_to_list(C), 7), "_", ".", [{return, list}])
+              end,
+    iolist_to_binary([ClassName,
+                      ":", pid_to_list(Cog#cog.ref), "-", integer_to_binary(Oid)]);
 toString(_Cog, L) when is_list(L) ->
     iolist_to_binary(["list[",
                       lists:join(", ", lists:map(fun(I) -> toString(_Cog, I) end, L)),

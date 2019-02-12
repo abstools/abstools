@@ -6,8 +6,6 @@ package org.abs_models.backend.prettyprint;
 
 import java.io.PrintWriter;
 
-import org.abs_models.frontend.tests.ABSFormatter;
-
 public class DefaultABSFormatter implements ABSFormatter {
 
     private final PrintWriter w;

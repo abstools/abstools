@@ -22,24 +22,22 @@ public class AddImportsTest extends DeltaTest {
 
     @Test
     public void addImport() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module Exporter; export *;"
-                + "interface I {}"
-                + "interface J {}"
-                + "module Exporter2; export *;"
-                + "interface K {}"
+        Model model = assertParse("module Exporter; export *;"
+            + "interface I {}"
+            + "interface J {}"
+            + "module Exporter2; export *;"
+            + "interface K {}"
 
-                + "module M;"
-                + "class C {}"
+            + "module M;"
+            + "class C {}"
 
-                + "delta D; uses M;"
-                + "adds import Exporter.I;"
-                + "adds import J from Exporter;"
-                + "adds import * from Exporter2;"
-                + "modifies class C { adds Exporter.I field1; } "
-                + "modifies class C { adds          J field2; } "
-                + "modifies class C { adds          K field3; } "
-        );
+            + "delta D; uses M;"
+            + "adds import Exporter.I;"
+            + "adds import J from Exporter;"
+            + "adds import * from Exporter2;"
+            + "modifies class C { adds Exporter.I field1; } "
+            + "modifies class C { adds          J field2; } "
+            + "modifies class C { adds          K field3; } ");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         DeltaDecl delta = findDelta(model, "D");
         model.applyDeltas(new ArrayList<>(Arrays.asList(delta)));
@@ -56,20 +54,18 @@ public class AddImportsTest extends DeltaTest {
 
     @Test
     public void addExport() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module Exporter;"
-                + "interface I {}"
+        Model model = assertParse("module Exporter;"
+            + "interface I {}"
 
-                + "module M;"
-                + "class C {}"
+            + "module M;"
+            + "class C {}"
 
-                + "delta D1; uses Exporter;"
-                + "adds export I;"
+            + "delta D1; uses Exporter;"
+            + "adds export I;"
 
-                + "delta D2; uses M;"
-                + "adds import Exporter.I;"
-                + "modifies class C { adds Exporter.I field1; } "
-        );
+            + "delta D2; uses M;"
+            + "adds import Exporter.I;"
+            + "modifies class C { adds Exporter.I field1; } ");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");

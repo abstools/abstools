@@ -1,0 +1,32 @@
+module BackendTest;
+
+interface I { }
+interface J { }
+
+interface K extends I, J {
+    [Atomic] Unit m(Int i, Rat j);
+}
+
+class C { }
+
+class D (Int y) implements J, K {
+    Fut<Unit> f;
+    Int x = 5;
+
+    {
+        this.x = 6;
+    }
+
+    recover {
+        DivisionByZeroException => { skip; }
+        NullPointerException => { skip; }
+    }
+
+    [Atomic] Unit m(Int i, Rat j) {
+        this.x = 7;
+    }
+
+    Unit n() {
+        skip;
+    }
+}

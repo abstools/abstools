@@ -38,25 +38,27 @@ ifeq (,$(DOCKER))
 	endif
 endif
 
-default: help frontend
+default: help frontend manual
 
 frontend:			## Build ABS compiler (default)
 	$(MAKE) -C $(ROOT_DIR)/frontend
 
 manual:				## Build the ABS manual
-	mvn -B -f $(ROOT_DIR)/abs-docs/pom.xml clean install
+	./gradlew asciidoc
 	@echo "Finished."
-	@echo "HTML: abs-docs/target/html/index.html"
-	@echo "PDF: abs-docs/target/pdf/index.pdf"
-	@echo "Epub3: abs-docs/target/epub3/index.epub"
+	@echo "HTML: abs-docs/build/asciidoc/html5/index.html"
+	@echo "PDF: abs-docs/build/asciidoc/pdf/index.pdf"
 
 vagrant:			## Build and start Vagrant virtual machine
 	vagrant up
 
-docker: frontend		## Build and start collaboratory docker image
+docker: frontend		## Build collaboratory and absc docker images
 	$(DOCKER) build -t abslang/collaboratory $(ROOT_DIR)
-	$(DOCKER) run -d -p 8080:80 --name collaboratory abslang/collaboratory
+	$(DOCKER) build -t abslang/absc -f frontend/Dockerfile $(ROOT_DIR)
 	@echo "Finished."
+
+run-collaboratory:		## Run the collaboratory on port 8080
+	$(DOCKER) run -d -p 8080:80 --name collaboratory abslang/collaboratory
 	@echo "Collaboratory running on http://localhost:8080/"
 
 server:				## Deploy development environment on Debian-based server
@@ -66,6 +68,9 @@ server:				## Deploy development environment on Debian-based server
 	ssh $(SERVER) git clone https://github.com/abstools/abstools
 	ssh $(SERVER) make -f "~/abstools/Makefile" frontend
 	ssh $(SERVER) 'echo "PATH=\$$HOME/abstools/frontend/bin/bash:\$$PATH" >> ~/.bashrc'
+
+clean:				## Remove all build artifacts
+	./gradlew clean
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

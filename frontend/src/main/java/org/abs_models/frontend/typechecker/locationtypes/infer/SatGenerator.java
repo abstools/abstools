@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.abs_models.frontend.analyser.SemanticConditionList;
+import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.sat4j.maxsat.WeightedMaxSatDecorator;
 import org.sat4j.maxsat.reader.WDimacsReader;
 import org.sat4j.pb.IPBSolver;
@@ -25,14 +27,11 @@ import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.IProblem;
 import org.sat4j.specs.TimeoutException;
 
-import org.abs_models.frontend.analyser.SemanticConditionList;
-import org.abs_models.frontend.typechecker.locationtypes.LocationType;
-
 public class SatGenerator {
     final Set<Constraint> constraints;
     final Set<LocationTypeVariable> vars;
     boolean enableStats = false;
-    private boolean enableDebug = false;
+    boolean enableDebug = false;
 
     final List<List<Integer>> output;
 

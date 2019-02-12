@@ -136,7 +136,7 @@ aspect GenerateErlang {
     else {
       ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
     }
-    ErlUtil.argumentList(ecs,null, builtin, isFnAppContextImperative(), getParams(), vars, false);
+    ErlUtil.argumentList(ecs,null, builtin, isFnAppContextImperative(), getParams(), vars);
   }
 
   @Override
@@ -159,11 +159,13 @@ aspect GenerateErlang {
        ecs.println();
        ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef}");
        ecs.println("put(vars, #{}),");
-       ecs.println("O = void,");
+       ecs.println("C = none,");
+       ecs.println("Ref = null, % avoid self-call branch in synccall code");
+       ecs.println("O = #object{ref=null,cog=Cog},");
+       ecs.println("put(this, {state, none}),");
        // Create a default deployment component.
        ecs.println("%% FIXME: thisDC() won't work in main block (DC should be in Cog state)");
        ecs.println("DC = object:new(cog:start(),class_ABS_DC_DeploymentComponent, [<<\"Initial DC\">>,dataEmptyMap,[]],Cog,[O]),");
-       ecs.println("cog_monitor:new_dc(DC),");
        ecs.println("Stack = [DC],");
        getBlock().generateErlangCode(ecs, Vars.n());
        ecs.println('.');
@@ -261,10 +263,6 @@ aspect GenerateErlang {
       buffer.close();
       ecs.format("put(vars, (get(vars))#{'%s' => %s})",  this.getName(), sw.toString().substring(ecs.getIndent().length()));
       if (getInitExp() instanceof NewExp) {
-          if (getType().isDeploymentComponentType()) {
-              ecs.println(",");
-              ecs.format("cog_monitor:new_dc(maps:get('%s', get(vars)))", this.getName());
-          }
           PureExp restname = AnnotationHelper.getAnnotationValueFromName(annotations, "ABS.StdLib.HTTPName");
           if (restname != null) {
               ecs.println(",");
@@ -282,12 +280,11 @@ aspect GenerateErlang {
   public void AssignStmt.generateErlangCode(CodeStream ecs,Vars vars) {
     StringWriter sw = new StringWriter();
     CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
-    boolean isNewDC = getVar().getType().isDeploymentComponentType()
-        && getValue() instanceof NewExp;
     String varExp = "";
     getValue().generateErlangCode(buffer,vars);
     buffer.close();
     if(getVar() instanceof VarUse) {
+        varExp = "maps:get('" + getVar().getName() + "', get(vars))";
         VarUse v = (VarUse)getVar();
         if (v.isVarUseContextImperative()) {
             // created by VarDecl or method parameter
@@ -298,14 +295,10 @@ aspect GenerateErlang {
             ecs.format("%s = %s", varName, sw.toString().substring(ecs.getIndent().length()));
         }
     } else if(getVar() instanceof FieldUse) {
-      varExp = "get(O,'"+ getVar().getName() +"')";
-      ecs.format("set(O,'%s',%s)", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
+      varExp = "C:get_val_internal(get(this), '"+ getVar().getName() +"')";
+      ecs.format("put(this, C:set_val_internal(get(this), '%s',%s))", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
     } else {
       throw new NotImplementedYetException(this);
-    }
-    if (isNewDC) {
-        ecs.println(",");
-        ecs.format("cog_monitor:new_dc(get(O,'%s'))", getVar().getName());
     }
     if (getValue() instanceof NewExp) {
         PureExp restname = AnnotationHelper.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.HTTPName");
@@ -360,7 +353,7 @@ aspect GenerateErlang {
       ecs.print(vars.toStack());
       ecs.print(")");
     } else {
-      ecs.format("object:new(Cog,%s,",className);
+      ecs.format("object:new_local(O, Cog,%s,",className);
       ErlUtil.buildParams(ecs,getParams(),vars,false);
       ecs.print(")");
     }
@@ -388,8 +381,6 @@ aspect GenerateErlang {
 
   @Override
   public void ExpressionStmt.generateErlangCode(CodeStream ecs,Vars vars) {
-      boolean isNewDC = getExp().getType().isDeploymentComponentType()
-          && getExp() instanceof NewExp;
       PureExp restname = AnnotationHelper.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.HTTPName");
       // Need to generate code for right-hand side before creating new
       // variable
@@ -400,11 +391,7 @@ aspect GenerateErlang {
       String exp = sw.toString().substring(ecs.getIndent().length());
       String varName = vars.getTemp();
       ecs.print(varName + " = " + exp);
-      if (isNewDC) {
-          ecs.println(",");
-          ecs.format("cog_monitor:new_dc(%s)", varName);
-      }
-      if (restname != null) {
+      if (getExp() instanceof NewExp && restname != null) {
           ecs.println(",");
           ecs.print("cog_monitor:register_object_with_http_name(" + varName + ",");
           restname.generateErlangCode(ecs, vars);
@@ -416,58 +403,76 @@ aspect GenerateErlang {
 
   @Override
   public void ReturnStmt.generateErlangCode(CodeStream ecs,Vars vars) {
-    MethodImpl m = getContextMethod();
-    Type lht = getModel().getUnitType();
-    if (m != null) { lht = m.getMethodSig().getReturnType().getType(); }
-    boolean isNewDC = lht.isDeploymentComponentType()
-        && getRetExp() instanceof NewExp;
-    if (isNewDC) {
-      StringWriter sw = new StringWriter();
-      CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
-      getRetExp().generateErlangCode(buffer,vars);
-      buffer.close();
-      String varName = vars.getTemp();
-      ecs.format("%s = %s", varName,sw.toString().substring(ecs.getIndent().length()));
-      ecs.println(",");
-      ecs.format("cog_monitor:new_dc(%s)", varName);
-      ecs.println(",");
-      ecs.print(varName);
-    } else {
-      getRetExp().generateErlangCode(ecs, vars);
-    }
+    getRetExp().generateErlangCode(ecs, vars);
   }
 
   @Override
   public void SyncCall.generateErlangCode(CodeStream ecs,Vars vars){
     final List<PureExp> params = getParams();
+    MethodSig ms = getMethodSig();
     ecs.print("(fun() -> case ");
     getCallee().generateErlangCode(ecs,vars);
     ecs.println(" of");
     ecs.incIndent().println("null -> throw(dataNullPointerException);");
-    ecs.println("#object{ref=ObjRef,class=T,cog=Cog} ->");
+    ecs.println("Callee=#object{ref=Ref,cog=Cog} ->");
     ecs.incIndent();
-    ecs.println("case is_process_alive(ObjRef) of");
-    ecs.incIndent();
-    ecs.println("true ->");
-    ecs.incIndent();
+    ecs.println("%% self-call");
     ecs.println("Vars=get(vars),");
-    ecs.format("Result=T:'m_%s'", getMethod());
-    ErlUtil.argumentList(ecs,getCallee(),false,true,params,vars, true);
-    ecs.println(",");
+    ecs.format("Result=C:'m_%s'(Callee", getMethod());
+    for (PureExp a : params) {
+        ecs.print(',');
+        a.generateErlangCode(ecs, vars);
+    }
+    ecs.print(",");
+    ecs.print(vars.toStack(",Vars"));
+    ecs.println("),");
     ecs.println("put(vars, Vars),");
     ecs.println("Result;");
     ecs.decIndent();
-    ecs.format("false -> throw(dataObjectDeadException)");
-    ecs.println();
-    ecs.decIndent().println("end;");
-    ecs.decIndent().println("_ ->");
-    ecs.incIndent().print("TempFuture = future:start(");
-    getCallee().generateErlangCode(ecs,vars);
-    ecs.format(",'m_%s',",getMethod());
+    ecs.println("Callee=#object{ref=ObjRef,cog=Cog} ->");
+    // Any fixes in this code branch should probably be transferred to
+    // object:new_local in file object.erl since that code calls Class:init()
+    // in the same way
+    ecs.incIndent();
+    ecs.println("%% cog-local call");
+
+    for (int i = 0; i < ms.getNumParam(); i++) {
+        ecs.print("V_" + ms.getParam(i).getName() + " = ");
+        params.getChild(i).generateErlangCode(ecs, vars);
+        ecs.println(",");
+    }
+
+    ecs.println("State=get(this),");
+    ecs.println("Vars=get(vars),");
+    ecs.println("cog:object_state_changed(Cog, O, State),");
+    ecs.println("put(this,cog:get_object_state(Callee#object.cog, Callee)),");
+    // Since #process_info.method identifies the process to the
+    // scheduler, leave it unchanged
+    ecs.println("put(process_info,(get(process_info))#process_info{this=Callee}),");
+    ecs.println("T=object:get_class_from_state(get(this)), % it's the callee state already");
+    ecs.format("Result=T:'m_%s'(Callee", getMethod());
+    for (ParamDecl p : ms.getParams()) {
+        ecs.print(", V_" + p.getName());
+    }
+    ecs.print(",");
+    ecs.print(vars.toStack(",Vars,State"));
+    ecs.println("),");
+    // put back saved local variables, but restore caller object state
+    // from cog (there could have been a synchronous callback,
+    // invalidating State)
+    ecs.println("cog:object_state_changed(Callee#object.cog, Callee, get(this)),");
+    ecs.println("put(process_info,(get(process_info))#process_info{this=O}),");
+    ecs.println("put(this, cog:get_object_state(Cog, O)),");
+    ecs.println("put(vars, Vars),");
+    ecs.println("Result;");
+    ecs.decIndent().println("Callee ->");
+    ecs.incIndent();
+    ecs.println("%% remote call");
+    ecs.format("TempFuture = future:start(Callee,'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
     ecs.format(",#process_info{method= <<\"%s\"/utf8>>},", getMethod());
     ecs.print("Cog,");
-    ecs.print(vars.toStack(true));
+    ecs.print(vars.toStack());
     ecs.println("),");
     ecs.print("future:get_blocking(TempFuture, Cog, ");
     ecs.print(vars.toStack());
@@ -581,9 +586,9 @@ aspect GenerateErlang {
     ecs.println(" of");
     ecs.incIndent();
     ecs.print("true -> ");
-    getThen().generateErlangCode(ecs,left);
-    if(hasElse())
-      getElse().generateErlangCode(buffer,right);
+    getThenCase().generateErlangCode(ecs,left);
+    if(hasElseCase())
+      getElseCase().generateErlangCode(buffer,right);
     else
       buffer.print("ok");
     java.util.List<String> mergeLines = vars.merge(Lists.newArrayList(left,right));
@@ -814,7 +819,7 @@ aspect GenerateErlang {
 
   @Override
   public void FieldUse.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.format("get(O,'%s')",getName());
+    ecs.format("C:get_val_internal(get(this), '%s')",getName());
   }
 
   @Override
@@ -950,7 +955,7 @@ aspect GenerateErlang {
       VarOrFieldDecl decl = this.getDecl();
       if (decl instanceof FieldDecl || decl instanceof ClassParamDecl) {
           String tmp=vars.getTemp();
-          prePattern.pf("%s=get(O,'%s'),",tmp,getName());
+          prePattern.pf("%s=C:get_val_internal(get(this), '%s'),",tmp,getName());
           ecs.print(tmp);
       } else if (decl instanceof VarDecl
           || (decl instanceof ParamDecl && ((ParamDecl)decl).isParamDeclImperative())) {
@@ -1063,7 +1068,8 @@ aspect GenerateErlang {
       after.close();
       ecs.println("task:release_token(Cog,waiting_poll),");
       ecs.pf("(fun Poll (%s)->",vars.toParamList());
-      ecs.incIndent().println("receive check -> ");
+      ecs.incIndent().println("receive {check, OState} -> ");
+      ecs.incIndent().println("put(this, OState),");
       ecs.incIndent().println("try");
       ecs.incIndent().pf("case %s of",sw);
       ecs.incIndent().pf("true -> cog:process_poll_is_ready(Cog, self(), get(process_info)), Poll(%s);",vars.toParamList());
@@ -1073,7 +1079,7 @@ aspect GenerateErlang {
       ecs.incIndent().println("_:Exception -> cog:process_poll_has_crashed(Cog, self(), get(process_info)), throw(Exception)");
       ecs.decIndent().println("end;");
       ecs.decIndent().pf("wait -> Poll(%s);", vars.toParamList());
-      ecs.println("token -> ok;");
+      ecs.println("{token, OState} -> put(this, OState), ok;");
       ecs.println("{stop_world, _Sender} -> % only happens when stop_world and release_token cross");
       ecs.incIndent().pf("Poll(%s);", vars.toParamList());
       ecs.decIndent().println("{get_references, Sender} ->");

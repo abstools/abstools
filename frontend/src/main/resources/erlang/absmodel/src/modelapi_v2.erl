@@ -78,23 +78,30 @@ handle_object_query([Objectname, Fieldname]) ->
     case State of
         notfound -> {404, <<"text/plain">>, <<"Object not found">>};
         deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
-        _ -> case Value=object:get_field_value(Object, binary_to_atom(Fieldname, utf8)) of
-                 none -> {404, <<"text/plain">>, <<"Field not found">>};
-                 _ -> Result=[{Fieldname, abs_to_json(Value)}],
-                      {200, <<"application/json">>, jsx:encode(Result, [{space, 1}, {indent, 2}])}
-             end
+        _ ->
+            Fields=cog:get_object_state(Object#object.cog, Object),
+            Class=object:get_class_from_state(Fields),
+            case Value=Class:get_val_internal(Fields, binary_to_atom(Fieldname, utf8)) of
+                none -> {404, <<"text/plain">>, <<"Field not found">>};
+                _ -> Result=[{Fieldname, abs_to_json(Value)}],
+                     {200, <<"application/json">>, jsx:encode(Result, [{space, 1}, {indent, 2}])}
+            end
     end;
 handle_object_query([Objectname]) ->
     {Result, Object}=cog_monitor:lookup_object_from_http_name(Objectname),
     case Result of
         notfound -> {404, <<"text/plain">>, <<"Object not found">>};
         deadobject -> {500, <<"text/plain">>, <<"Object dead">> };
-        ok -> State=lists:map(fun ({Key, Value}) -> {Key, abs_to_json(Value)} end,
-                              object:get_object_state_for_json(Object)),
-              %% Special-case empty object for jsx:encode ([] is an empty JSON
-              %% array, [{}] an empty JSON object)
-              State2 = case State of [] -> [{}]; _ -> State end,
-              { 200, <<"application/json">>, jsx:encode(State2, [{space, 1}, {indent, 2}])}
+        ok ->
+            #object{cog=Cog}=Object,
+            OState=cog:get_object_state(Cog, Object),
+            Class=object:get_class_from_state(OState),
+            State=lists:map(fun ({Key, Value}) -> {Key, abs_to_json(Value)} end,
+                            Class:get_state_for_modelapi(OState)),
+            %% Special-case empty object for jsx:encode ([] is an empty JSON
+            %% array, [{}] an empty JSON object)
+            State2 = case State of [] -> [{}]; _ -> State end,
+            { 200, <<"application/json">>, jsx:encode(State2, [{space, 1}, {indent, 2}])}
     end;
 handle_object_query([]) ->
     Names=cog_monitor:list_registered_http_names(),

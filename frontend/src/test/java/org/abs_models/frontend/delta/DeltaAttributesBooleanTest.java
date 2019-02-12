@@ -36,17 +36,15 @@ public class DeltaAttributesBooleanTest extends DeltaTest {
     
     @Test
     public void passFeatureAsBoolean() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D(Bool f);"
-                + "uses M;"
-                + "    adds class C { Bool myField = f; }" 
-                + "productline PL;"
-                + "    features F, G;"
-                + "    delta D(F) when G;"
-                + "product P1(F, G);"
-                + "product P2(G);"
-        );
+        Model model = assertParse("module M;"
+            + "delta D(Bool f);"
+            + "uses M;"
+            + "    adds class C { Bool myField = f; }"
+            + "productline PL;"
+            + "    features F, G;"
+            + "    delta D(F) when G;"
+            + "product P1(F, G);"
+            + "product P2(G);");
         model.evaluateAllProductDeclarations();
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
@@ -56,18 +54,16 @@ public class DeltaAttributesBooleanTest extends DeltaTest {
 
     @Test
     public void passFeatureAsBoolean2() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "module M;"
-                        + "delta D(Bool a, Bool b, Bool c);"
-                        + "uses M;"
-                        + "    adds class C { Bool featureA = a; Bool featureB = b; Bool featureC = c; }"
-                        + "productline PL;"
-                        + "    features A,B,C,F;"
-                        + "    delta D(A,B,C) when F;"
-                        + "product P1(F,A);"
-                        + "product P2(F,B);"
-                        + "root F { group [0..*] { A, B, C } }"
-                );
+        Model model = assertParse("module M;"
+            + "delta D(Bool a, Bool b, Bool c);"
+            + "uses M;"
+            + "    adds class C { Bool featureA = a; Bool featureB = b; Bool featureC = c; }"
+            + "productline PL;"
+            + "    features A,B,C,F;"
+            + "    delta D(A,B,C) when F;"
+            + "product P1(F,A);"
+            + "product P2(F,B);"
+            + "root F { group [0..*] { A, B, C } }");
         
         model.evaluateAllProductDeclarations();
         model.flattenForProduct(product);
@@ -80,17 +76,15 @@ public class DeltaAttributesBooleanTest extends DeltaTest {
 
     @Test
     public void passBooleanFeatureAttribute() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D(Bool attr);"
-                + "uses M;"
-                + "adds class C { Bool myField = attr; }"
-                + "productline PL;"
-                + "    features F;"
-                + "    delta D(F.a) when F;"
-                + "product P1(F{a=True});"
-                + "product P2(F{a=False});"
-        );
+        Model model = assertParse("module M;"
+            + "delta D(Bool attr);"
+            + "uses M;"
+            + "adds class C { Bool myField = attr; }"
+            + "productline PL;"
+            + "    features F;"
+            + "    delta D(F.a) when F;"
+            + "product P1(F{a=True});"
+            + "product P2(F{a=False});");
         model.evaluateAllProductDeclarations();
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
@@ -100,18 +94,16 @@ public class DeltaAttributesBooleanTest extends DeltaTest {
 
     @Test
     public void passBooleanConstant() throws DeltaModellingException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D(Bool attr);"
-                + "uses M;"
-                + "    adds class C { Bool myField = attr; }"
-                + "productline PL;"
-                + "    features A,B;"
-                + "    delta D(True) when A;"
-                + "    delta D(False) when B;"
-                + "product P1(A);"
-                + "product P2(B);"
-        );
+        Model model = assertParse("module M;"
+            + "delta D(Bool attr);"
+            + "uses M;"
+            + "    adds class C { Bool myField = attr; }"
+            + "productline PL;"
+            + "    features A,B;"
+            + "    delta D(True) when A;"
+            + "    delta D(False) when B;"
+            + "product P1(A);"
+            + "product P2(B);");
         model.evaluateAllProductDeclarations();
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");

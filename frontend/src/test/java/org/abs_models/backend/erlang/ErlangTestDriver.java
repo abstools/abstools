@@ -6,23 +6,30 @@
 package org.abs_models.backend.erlang;
 
 import static org.junit.Assert.assertEquals;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.EnumSet;
 
-import org.abs_models.backend.common.InternalBackendException;
-import org.abs_models.frontend.ast.*;
-import org.apache.commons.io.FileUtils;
-import org.junit.Assert;
-import org.junit.Assume;
+import com.google.common.io.Files;
 
 import org.abs_models.ABSTest;
 import org.abs_models.backend.BackendTestDriver;
+import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.backend.common.SemanticTests;
-
-import com.google.common.io.Files;
+import org.abs_models.frontend.ast.AddAddExp;
+import org.abs_models.frontend.ast.ExpressionStmt;
+import org.abs_models.frontend.ast.FnApp;
+import org.abs_models.frontend.ast.List;
+import org.abs_models.frontend.ast.MainBlock;
+import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.StringLiteral;
+import org.abs_models.frontend.ast.VarUse;
+import org.apache.commons.io.FileUtils;
+import org.junit.Assert;
+import org.junit.Assume;
 
 public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
 
@@ -70,16 +77,18 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      * Parses, complies, runs given code and returns value of testresult.
      *
      * @param absCode
-     * @return either the Result, or if an execution error occurred null
+     * @return either the Result, or null if an execution error occurred
      */
-    private String runAndCheck(String absCode) throws Exception {
+    private String runAndCheck(String absCode) {
         File f = null;
         try {
             f = Files.createTempDir();
             f.deleteOnExit();
-            Model model = assertParseOk(absCode, Config.WITH_STD_LIB, Config.TYPE_CHECK, /* XXX:CI Config.WITH_LOC_INF, */ Config.WITHOUT_MODULE_NAME);
+            Model model = assertParse(absCode, Config.TYPE_CHECK, /* XXX:CI Config.WITH_LOC_INF, */ Config.WITHOUT_MODULE_NAME);
             String mainModule = genCode(model, f, true);
             return run(f, mainModule);
+        } catch (Exception e) {
+            return null;
         } finally {
             try {
                 FileUtils.deleteDirectory(f);

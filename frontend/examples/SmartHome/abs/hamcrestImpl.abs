@@ -63,7 +63,7 @@ class CoreMatcher(Formula formula) implements Matcher {
 	Bool or(Formula formula) {
 		Pair<Formula,Formula> pair = binary(formula);
 		Bool result = this.eval(fst(pair));
-		if (~result) {
+		if (!result) {
 			result = this.eval(snd(pair));
 		}
 		return result;
@@ -72,7 +72,7 @@ class CoreMatcher(Formula formula) implements Matcher {
 	Bool not(Formula formula) {
 		Formula f = unary(formula);
 		Bool result = this.eval(f);
-		return ~result;
+		return !result;
 	}
 	
 	/**
@@ -99,7 +99,7 @@ class CoreMatcher(Formula formula) implements Matcher {
 	Bool anyOf(Formula formula) {
 		Set<Formula> fs = nary(formula);
 		Bool result = True;
-		while (hasNext(fs) && ~result) {
+		while (hasNext(fs) && !result) {
 			Pair<Set<Formula>,Formula> nt = next(fs);
 			fs = fst(nt);
 			result = this.eval(snd(nt));

@@ -1,0 +1,39 @@
+buildscript {
+    dependencies {
+        // classpath 'org.asciidoctor:asciidoctorj-epub3:1.5.0-alpha.8.1'
+        classpath 'org.asciidoctor:asciidoctorj-pdf:1.5.0-alpha.16'
+    }
+}
+
+
+plugins {
+    id "org.asciidoctor.convert" version "1.5.9.2"
+}
+
+asciidoctor {
+    // TODO: investigate why build crashes when building more than two
+    // backends (?)
+    backends 'html5', 'pdf'//, 'docbook', 'epub3'
+    sources {
+        include 'index.adoc'
+    }
+    resources {
+        from(sourceDir) {
+            include 'images/**'
+            include 'asciidoctor.css'
+        }
+    }
+    options doctype: 'book'
+    attributes 'doc-version': rootProject.version,
+        'toc-position': "right",
+        toc2: "true",
+        numbered: "true",
+        linkattrs: "true",
+        idprefix: "-",
+        idseparator: "-",
+        setanchors: "true",
+        stylesheet: "asciidoctor.css",
+        icons: "font"
+}
+
+assemble.dependsOn asciidoctor

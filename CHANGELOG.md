@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+### Changed
+
+### Removed
+
+- Removed the Emacs mode from the repository.  Emacs editing support should be installed via its package manager -- see https://github.com/abstools/abs-mode for instructions.
+
+### Fixed
+
+## [1.6.0] - 2019-01-29
+
+### Added
+
 - The Erlang backend now supports model-specific visualization based on the Model API.  Use `absc -erlang -http-index-file ./index.html
   -http-static-dir ./my_js_libs *.abs` to add a custom `index.html` file and static resources (Javascript files, images, ...) to a model; connect a browser to the running model on the Model API port to see it rendered. Static files are available from the Model API (and from index.html) via `/static/filename`.
 
@@ -15,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The Model API now supports input parameters of type `Map<String, X>` (where `X` is a supported input type).
 
 - Added expressions `x implements I` and `x as I` to check for and convert an object reference to another interface.  If the underlying class of `x` does not implement `I`, return `False` and `null`, respectively.
+
+- The `let` expression can now implement multiple bindings.  `let (T1 x1) = v1, (T2 x2) = v2 in b` is a shorthand for `let (T1 x1) = v1 in let (T2 x2) = v2 in b`.  No changes to any backends and analysis tools needed since the AST was not changed -- the parser generates the same AST for the two expressions above.
 
 - Add a `Dockerfile` to run `absc` inside a container.  To build the image, use `cd frontend ; docker build -t absc .`.  To use the container to compile an abs model `file.abs` in the current directory, use `docker run --rm -v "$PWD":/usr/src -w /usr/src absc -erlang file.abs`.  To get a command-line inside the container for the current directory (e.g., to run a model via `gen/erl/run` inside the container), use `docker run -it --rm -v "$PWD":/usr/src -w /usr/src --entrypoint /bin/sh absc`.
 
@@ -40,6 +54,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - In a module definition, `import` and `export` clauses can now be written in any order.
 
+- The parentheses (`()`) around the variable type and name in `let` expressions are now optional.  I.e., instead of `let (Int x) = 4 in ...` write  `let Int x = 4 in ...`.  The old syntax is undocumented but kept for backward compatilibity.
+
 - Avoid crash in `DC.decrementResources`: when trying to decrement by more than available, only decrement to the maximum possible.  `decrementResources` now returns the actual amount by which the resource was decreased.  This changes the signature of three methods in the `ABS.DC.DeploymentComponent` interface in a backwards-incompatible way.
 
 - When pretty-printing to a file, the resulting file will use Unix line endings.
@@ -48,7 +64,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
+- The command-line option `-nostdlib` was removed.  This never produced models that were runnable, and tools which don't handle the standard library  can ignore any modules starting with `ABS.`.  To make sure that a given module does not inadvertently use the standard library, import an identifier (e.g., `import Unit from ABS.StdLib`) and do not use that imported identifier inside the module.
+
 - BBEdit editor support moved to github.com/abstools/bbedit.
+
+- Removed the old Creol-style negation operator (`~`) which was kept in the parser for backward compatibility.
 
 ### Fixed
 

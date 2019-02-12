@@ -43,7 +43,7 @@ wait_for_future_start(Ref, Cog, Stack) ->
         {started, _Ref} ->
             ok;
         {stop_world, _Sender} ->
-            cog:process_is_blocked_for_gc(Cog, self()),
+            cog:process_is_blocked_for_gc(Cog, self(), get(process_info), get(this)),
             cog:process_is_runnable(Cog, self()),
             task:wait_for_token(Cog, [Ref | Stack]),
             wait_for_future_start(Ref, Cog, Stack);
@@ -86,7 +86,7 @@ get_blocking(Future, Cog, Stack) ->
         false ->
             %% Tell future not to advance time until we picked up ourselves
             register_waiting_task(Future, self()),
-            cog:process_is_blocked(Cog,self()),
+            cog:process_is_blocked(Cog,self(), get(process_info), get(this)),
             (fun Loop() ->
                      receive
                          {value_present, Future, _CalleeCog} ->
@@ -177,41 +177,29 @@ die(Future, Reason) ->
 callback_mode() -> state_functions.
 
 init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,RegisterInGC,Caller]) ->
-    case is_process_alive(Object) of
-        true ->
-            %%Start task
-            process_flag(trap_exit, true),
-            %% We used to wrap the following line in a
-            %% erlang:monitor(process, CogRef) / erlang:demonitor()
-            %% call, but if Object is alive, so is (presumably)
-            %% CogRef, and Object cannot have been garbage-collected
-            %% in the meantime.
-            TaskRef=cog:add_task(Cog,async_call_task,self(),Callee,[Method|Params], Info, Params),
-            case RegisterInGC of
-                true -> gc:register_future(self());
-                false -> ok
-            end,
-            case Caller of
-                none -> ok;
-                _ -> Caller ! {started, self()} % in cooperation with start/3
-            end,
-            {ok, running, #data{calleetask=TaskRef,
-                                calleecog=Cog,
-                                references=gc:extract_references(Params),
-                                value=none,
-                                waiting_tasks=[],
-                                register_in_gc=RegisterInGC,
-                                caller=Caller}};
-        false ->
-            case Caller of
-                none -> ok;
-                _ -> Caller ! {started, self()} % in cooperation with start/3
-            end,
-            {ok, completed, #data{calleetask=none,
-                                  value={error, dataObjectDeadException},
-                                  calleecog=Cog,
-                                  register_in_gc=RegisterInGC}}
-    end;
+    %%Start task
+    process_flag(trap_exit, true),
+    %% We used to wrap the following line in a
+    %% erlang:monitor(process, CogRef) / erlang:demonitor()
+    %% call, but if Object is alive, so is (presumably)
+    %% CogRef, and Object cannot have been garbage-collected
+    %% in the meantime.
+    TaskRef=cog:add_task(Cog,async_call_task,self(),Callee,[Method|Params], Info#process_info{this=Callee,destiny=self()}, Params),
+    case RegisterInGC of
+        true -> gc:register_future(self());
+        false -> ok
+    end,
+    case Caller of
+        none -> ok;
+        _ -> Caller ! {started, self()} % in cooperation with start/3
+    end,
+    {ok, running, #data{calleetask=TaskRef,
+                        calleecog=Cog,
+                        references=gc:extract_references(Params),
+                        value=none,
+                        waiting_tasks=[],
+                        register_in_gc=RegisterInGC,
+                        caller=Caller}};
 init([_Callee=null,_Method,_Params,RegisterInGC,Caller]) ->
     %% This is dead code, left in for reference; a `null' callee is caught in
     %% future:start above.

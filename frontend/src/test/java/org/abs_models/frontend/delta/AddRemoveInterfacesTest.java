@@ -52,7 +52,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
 
         // both qualified and unqualified interface names should yield the same result
         for (String code : codeVariants) {
-            Model model = assertParseOk(code);
+            Model model = assertParse(code);
 
             InterfaceDecl ifaceI = (InterfaceDecl) findDecl(model, "M", "I");
             assertNotNull(ifaceI);
@@ -83,7 +83,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
 
         // both qualified and unqualified interface names should yield the same result
         for (String code : codeVariants) {
-            Model model = assertParseOk(code);
+            Model model = assertParse(code);
 
             InterfaceDecl iface = (InterfaceDecl) findDecl(model, "M", "I");
             assertNotNull(iface);
@@ -113,7 +113,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
         ));
 
         for (String code : codeVariants) {
-            Model model = assertParseOk(code);
+            Model model = assertParse(code);
 
             InterfaceDecl iface = (InterfaceDecl) findDecl(model, "M", "I");
             assertEquals(1, iface.getBodys().getNumChild());
@@ -143,7 +143,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
         ));
 
         for (String code : codeVariants) {
-            Model model = assertParseOk(code);
+            Model model = assertParse(code);
 
             InterfaceDecl iface = (InterfaceDecl) findDecl(model, "M", "I");
             assertEquals(2, iface.getBodys().getNumChild());
@@ -160,15 +160,13 @@ public class AddRemoveInterfacesTest extends DeltaTest {
 
     @Test
     public void addImplements() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "interface I {}"
-                + "class C implements I {}"
-                + "delta D;"
-                +"uses M;"
-                + "adds interface J { Int foo(); }"
-                + "modifies class C adds J { adds Int foo() { return 99; } }"
-        );
+        Model model = assertParse("module M;"
+            + "interface I {}"
+            + "class C implements I {}"
+            + "delta D;"
+            + "uses M;"
+            + "adds interface J { Int foo(); }"
+            + "modifies class C adds J { adds Int foo() { return 99; } }");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         DeltaDecl delta = findDelta(model, "D");
@@ -184,13 +182,11 @@ public class AddRemoveInterfacesTest extends DeltaTest {
 
     @Test
     public void removeImplements() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "interface I {}"
-                + "class C implements I {}"
-                + "delta D;"
-                + "modifies class M.C removes I {}"
-        );
+        Model model = assertParse("module M;"
+            + "interface I {}"
+            + "class C implements I {}"
+            + "delta D;"
+            + "modifies class M.C removes I {}");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         DeltaDecl delta = findDelta(model, "D");
@@ -203,13 +199,11 @@ public class AddRemoveInterfacesTest extends DeltaTest {
 
     @Test
     public void removeImplementsNotFound() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "interface I {}"
-                + "class C implements I {}"
-                + "delta D;"
-                + "modifies class M.C removes K {}"
-        );
+        Model model = assertParse("module M;"
+            + "interface I {}"
+            + "class C implements I {}"
+            + "delta D;"
+            + "modifies class M.C removes K {}");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         DeltaDecl delta = findDelta(model, "D");
@@ -226,15 +220,13 @@ public class AddRemoveInterfacesTest extends DeltaTest {
 
     @Test
     public void addRemoveImplements() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "interface I {}"
-                + "class C implements I {}"
-                + "delta D;"
-                +"uses M;"
-                + "adds interface J {}"
-                + "modifies class C adds J removes I {}"
-        );
+        Model model = assertParse("module M;"
+            + "interface I {}"
+            + "class C implements I {}"
+            + "delta D;"
+            + "uses M;"
+            + "adds interface J {}"
+            + "modifies class C adds J removes I {}");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         DeltaDecl delta = findDelta(model, "D");
@@ -248,17 +240,15 @@ public class AddRemoveInterfacesTest extends DeltaTest {
 
     @Test
     public void addRemove2Implements() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M;"
-                + "interface H {}"
-                + "interface I {}"
-                + "class C implements H,I {}"
-                + "delta D;"
-                +"uses M;"
-                + "adds interface J {}"
-                + "adds interface K {}"
-                + "modifies class C adds J,K removes H,I {}"
-        );
+        Model model = assertParse("module M;"
+            + "interface H {}"
+            + "interface I {}"
+            + "class C implements H,I {}"
+            + "delta D;"
+            + "uses M;"
+            + "adds interface J {}"
+            + "adds interface K {}"
+            + "modifies class C adds J,K removes H,I {}");
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         DeltaDecl delta = findDelta(model, "D");

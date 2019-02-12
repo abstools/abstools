@@ -1,3 +1,11 @@
 #!/bin/bash
-erl -pa absmodel/ebin -pa absmodel/deps/cowboy/ebin -pa absmodel/deps/cowlib/ebin -pa absmodel/deps/ranch/ebin -pa absmodel/deps/jsx/ebin -pa gen/erl/absmodel/ebin -pa gen/erl/absmodel/deps/cowboy/ebin -pa gen/erl/absmodel/deps/cowlib/ebin -pa gen/erl/absmodel/deps/ranch/ebin -pa gen/erl/absmodel/deps/jsx/ebin \
-    -s runtime start -extra "$@"
+
+script=`realpath "$0"`
+codepaths=$(find "`dirname "$script"`" -name "ebin" -type d -print0 \
+                 | xargs -0 printf '%s","' | sed 's/","$//g')
+(
+    echo "code:add_paths([\"$codepaths\"])."
+    echo "make:all([load])."
+    echo "runtime:start(\"$@\")."
+    cat
+) | erl
