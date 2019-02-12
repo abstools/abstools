@@ -4,11 +4,9 @@
  */
 package org.abs_models.backend.common;
 
+import org.abs_models.backend.BackendTestDriver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import org.abs_models.backend.BackendTestDriver;
-
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
@@ -307,6 +305,6 @@ public class PrimitiveTypes extends SemanticTests {
 
     @Test
     public void stringToString() {
-	assertEvalTrue("{ Bool testresult = toString(\"Hello\") == \"\\\"Hello\\\"\"; }");
+	assertEvalTrue("{ Bool testresult = toString(\"Hello\") == \"Hello\"; }");
     }
 }

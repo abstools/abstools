@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Incompatible change: The function `toString`, when passed a string, returns the string unchanged instead of surrounding it with quotes (`"`) and escaping embedded quotes (`"` → `\"`).
+  - Note that escaping quotes inside strings was only implemented in the erlang backend; the other backends returned the string unchanged but surrounded by quotes.
+
 ### Removed
 
 - Removed the Emacs mode from the repository.  Emacs editing support should be installed via its package manager -- see https://github.com/abstools/abs-mode for instructions.
