@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Added template strings to the language.  Template strings are multi-line strings delimited by backtick (`\``) characters.  Pure expressions embedded in template strings (delimited by `«...»`) are evaluated and their values spliced into the template string.
+- Added template strings to the language.  Template strings are multi-line strings delimited by backtick (```) characters.  Pure expressions embedded in template strings (delimited by `«...»`) are evaluated and their values spliced into the template string.
   - To keep the lexer stateless, it was decided not to use Javascript notation (`${...}`) for embedded expressions.  This also keeps us open for a transition to other, less powerful parsing frameworks, like Xtext.
 
 ### Changed
