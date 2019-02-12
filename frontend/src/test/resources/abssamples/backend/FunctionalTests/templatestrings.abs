@@ -1,0 +1,11 @@
+module BackendTest;
+
+{
+    String name = "Abs";
+    Int age = 5;
+    String s = `Hello \««name»»!
+	\I\\s your age \`«age»\`?`;
+    String s2 = "Hello «Abs»!\n\t\\I\\\\s your age `5`?";
+    Bool testresult = s == s2;
+    // println(toString(testresult));
+}
