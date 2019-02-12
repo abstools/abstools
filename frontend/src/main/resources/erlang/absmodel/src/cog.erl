@@ -52,10 +52,8 @@
          scheduler=undefined,
          %% A unique identifier that is stable across runs
          id,
-         %% Cog-unique (and stable) ids for futures
-         next_fut_id=0,
-         %% Cog-unique (and stable) ids for object
-         next_obj_id=0,
+         %% Cog-unique (and stable) ids for futures and objects
+         next_stable_id=0,
          %% A list of the scheduling decisions made
          recorded=[],
          %% A list of scheduling decisions that is to be made
@@ -214,45 +212,45 @@ handle_event(cast, _Event, _StateName, Data) ->
 %% Record/replay a method invocation, and return a stable identifier for the
 %% invocation.
 handle_event({call, From}, {register_invocation, Method}, _StateName,
-             Data=#data{next_fut_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
+             Data=#data{next_stable_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
     Event = #event{type=invocation, caller_id=Id, local_id=N, name=Method},
-    NewData = Data#data{next_fut_id=N+1, recorded=[Event | Recorded]},
+    NewData = Data#data{next_stable_id=N+1, recorded=[Event | Recorded]},
     {keep_state, NewData, {reply, From, Event}};
 handle_event({call, From}, {register_invocation, Method}, _StateName,
-             Data=#data{next_fut_id=N, id=Id, recorded=Recorded,
+             Data=#data{next_stable_id=N, id=Id, recorded=Recorded,
                         replaying=[Event=#event{type=invocation,
                                                 caller_id=Id,
                                                 local_id=N,
                                                 name=Method} | Rest]}) ->
-    NewData = Data#data{next_fut_id=N+1, recorded=[Event | Recorded], replaying=Rest},
+    NewData = Data#data{next_stable_id=N+1, recorded=[Event | Recorded], replaying=Rest},
     {keep_state, NewData, {reply, From, Event}};
 
 handle_event({call, From}, {register_new_object, Class}, _StateName,
-             Data=#data{next_obj_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
-    NewData = Data#data{next_obj_id=N+1,
+             Data=#data{next_stable_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
+    NewData = Data#data{next_stable_id=N+1,
                         recorded=[Event=#event{type=new_object,
                                                caller_id=Id,
                                                local_id=N,
                                                name=Class} | Recorded]},
     {keep_state, NewData, {reply, From, Event}};
 handle_event({call, From}, {register_new_object, Class}, _StateName,
-             Data=#data{next_obj_id=N, id=Id, recorded=Recorded,
+             Data=#data{next_stable_id=N, id=Id, recorded=Recorded,
                         replaying=[Event=#event{type=new_object,
                                                 caller_id=Id,
                                                 local_id=N,
                                                 name=Class} | Rest]}) ->
-    NewData = Data#data{next_obj_id=N+1, recorded=[Event | Recorded], replaying=Rest},
+    NewData = Data#data{next_stable_id=N+1, recorded=[Event | Recorded], replaying=Rest},
     {keep_state, NewData, {reply, From, Event}};
 
 handle_event({call, From}, {register_new_local_object, Class}, _StateName,
-             Data=#data{next_obj_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
+             Data=#data{next_stable_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
     Event1 = #event{type=new_object, caller_id=Id, local_id=N, name=Class},
     Event2 = #event{type=schedule, caller_id=Id, local_id=N, name=init},
     NewRecorded = [Event2, Event1 | Recorded],
-    NewData = Data#data{next_obj_id=N+1, recorded=NewRecorded},
+    NewData = Data#data{next_stable_id=N+1, recorded=NewRecorded},
     {keep_state, NewData, {reply, From, Event1}};
 handle_event({call, From}, {register_new_local_object, Class}, _StateName,
-             Data=#data{next_obj_id=N, id=Id, recorded=Recorded,
+             Data=#data{next_stable_id=N, id=Id, recorded=Recorded,
                         replaying=[Event1=#event{type=new_object,
                                                  caller_id=Id,
                                                  local_id=N,
@@ -262,7 +260,7 @@ handle_event({call, From}, {register_new_local_object, Class}, _StateName,
                                                  local_id=N,
                                                  name=init} | Rest]}) ->
     NewRecorded = [Event2, Event1 | Recorded],
-    NewData = Data#data{next_obj_id=N+1, recorded=NewRecorded, replaying=Rest},
+    NewData = Data#data{next_stable_id=N+1, recorded=NewRecorded, replaying=Rest},
     {keep_state, NewData, {reply, From, Event1}};
 
 handle_event({call, From}, {register_future_read, Event}, _StateName,
