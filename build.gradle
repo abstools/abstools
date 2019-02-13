@@ -17,3 +17,9 @@ subprojects {
     group = 'org.abs_models'
     version = gitVersion().replaceAll(/^version_/, '')
 }
+
+configure(subprojects.findAll { it.getPluginManager().hasPlugin('java') }) {
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
+
