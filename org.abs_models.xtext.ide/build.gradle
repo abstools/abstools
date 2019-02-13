@@ -1,0 +1,51 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'org.xtext:xtext-gradle-plugin:2.0.2'
+        classpath 'io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE'
+    }
+}
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '4.0.1'
+}
+
+apply plugin: 'java'
+apply plugin: 'io.spring.dependency-management'
+dependencyManagement {
+    imports {
+        mavenBom "org.eclipse.xtext:xtext-dev-bom:${xtextVersion}"
+    }
+}
+apply plugin: 'org.xtext.xtend'
+apply from: "${rootDir}/gradle/xtext-source-layout.gradle"
+apply from: "${rootDir}/gradle/xtext-maven-deployment.gradle"
+apply plugin: 'eclipse'
+
+group = 'org.abs_models.xtext'
+
+configurations.all {
+    exclude group: 'asm'
+}
+
+dependencies {
+    compile project(':org.abs_models.xtext')
+    compile "org.eclipse.xtext:org.eclipse.xtext.ide:${xtextVersion}"
+    compile "org.eclipse.xtext:org.eclipse.xtext.xbase.ide:${xtextVersion}"
+}
+
+apply plugin: 'application'
+apply plugin: 'com.github.johnrengelman.shadow'
+mainClassName = "org.eclipse.xtext.ide.server.ServerLauncher"
+
+shadowJar {
+    from(project.convention.getPlugin(JavaPluginConvention).sourceSets.main.output)
+    configurations = [project.configurations.runtime]
+    exclude('META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA','schema/*',
+            '.options', '.api_description', '*.profile', '*.html', 'about.*', 'about_files/*',
+            'plugin.xml', 'modeling32.png', 'systembundle.properties', 'profile.list')
+    classifier = 'ls'
+    append('plugin.properties')
+}

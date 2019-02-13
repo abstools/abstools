@@ -1,0 +1,110 @@
+grammar org.abs_models.xtext.Abs hidden(WS,ML_COMMENT,SL_COMMENT) 
+
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+
+generate abs "http://www.abs_models.org/xtext/Abs"
+
+ModuleDecl: {ModuleDecl} 'module' QualifiedTypeIdentifier ';' Block? ;
+
+// Statements
+
+Block: {Block} '{' stmt+=Statement* '}';
+
+Statement:
+	{Statement} SkipStmt ';'
+	| VarDeclStmt ';'
+	| Block
+;
+
+SkipStmt: 'skip';
+
+VarDeclStmt: type=Type name=IDENTIFIER ( '=' init=Exp );
+
+// Expressions
+
+Exp: PureExp /* | EffExp */ ;
+
+PureExp: LetExp
+	| OperatorExp
+;
+
+LetExp: 'let' '(' type=Type var=IDENTIFIER ')' '=' body=PureExp ;
+
+OperatorExp returns PureExp: OrExp;
+
+// See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
+OrExp returns PureExp:
+	AndExp ({OrExp.left=current} '||' right=AndExp)*
+; // left-assoc
+
+AndExp returns PureExp:
+	EqExp ({AndExp.left=current} '&&' right=EqExp)*
+; // left-assoc
+
+EqExp returns PureExp:
+	CompareExp ({EqExp.left=current} op=('==' | '!=') right=CompareExp)?
+; // non-assoc
+
+CompareExp returns PureExp:
+	PlusMinusExp ({CompareExp.left=current} op=('<' | '>' | '<=' | '>=') right=PlusMinusExp)?
+; // non-assoc
+
+PlusMinusExp returns PureExp:
+	MulDivExp ({PlusMinusExp.left=current} op=('+' | '-') right=MulDivExp)*
+; // left-assoc
+
+MulDivExp returns PureExp:
+	UnaryExp ({MulDivExp.left=current} op=('*' | '/' | '%') right=UnaryExp)*
+; // left-assoc
+
+// missing: prefixes +/!
+UnaryExp returns PureExp: '(' OperatorExp ')'
+	| {PureExp} AtomicExp
+;
+
+AtomicExp: IDENTIFIER 
+	| 'this' '.' IDENTIFIER
+	| 'this'
+	| 'null'
+	| Literal;
+
+
+Literal:
+	INTLITERAL
+	| FLOATLITERAL
+	| STRINGLITERAL
+;
+
+// Types
+
+Type: TYPE_IDENTIFIER ;
+
+// Terminals
+
+terminal ML_COMMENT  : '/*' -> '*/';
+terminal SL_COMMENT  : '//' !('\n'|'\r')* ('\r'? '\n')?;
+
+terminal WS: (' '|'\t'|'\r'|'\n')+;
+
+terminal SMALLLETTER : 'a'..'z' ;
+terminal CAPITALLETTER : 'A'..'Z' ;
+
+terminal DIGIT : '0'..'9' ;
+terminal INTLITERAL returns ecore::EInt : DIGIT+ ;
+
+terminal FLOATLITERAL returns ecore::EFloat:
+	INTLITERAL? '.' DIGIT+ (('e' | 'E' | 'e+' | 'E+' | 'e-' | 'E-') DIGIT+)
+;
+
+terminal STRINGLITERAL:
+	'"' ( '\\' ('"' | '\\' | 't' | 'n' | 'r') | !('"' | '\\'))* '"'
+;
+
+terminal IDENTIFIER : SMALLLETTER (CAPITALLETTER|SMALLLETTER|'_'|DIGIT)* ;
+
+terminal TYPE_IDENTIFIER : CAPITALLETTER (CAPITALLETTER|SMALLLETTER|'_'|DIGIT)* ;
+
+QualifiedIdentifier returns ecore::EString : (TYPE_IDENTIFIER '.')* IDENTIFIER ;
+QualifiedTypeIdentifier returns ecore::EString : (TYPE_IDENTIFIER '.')* TYPE_IDENTIFIER ;
+
+AnyIdentifier : QualifiedIdentifier | QualifiedTypeIdentifier ;

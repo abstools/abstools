@@ -8,7 +8,9 @@
 .classpath
 target/
 build/
-/frontend/bin/
+xtext-gen/
+xtend-gen/
+bin/
 /frontend/dist/
 /frontend/**/gen/
 /frontend/**/*.beam
@@ -30,3 +32,4 @@ build/
 /abs-docs/Ott/core-abs_included.tex
 /abs-docs/ReferenceManual/absrefmanual.pdf
 /abs-docs/ReferenceManual/gitRevision.tex
+/org.abs_models.xtext/model/generated/

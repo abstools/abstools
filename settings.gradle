@@ -10,3 +10,5 @@
 rootProject.name = 'abstools'
 include 'frontend'
 include 'abs-docs'
+include 'org.abs_models.xtext'
+include 'org.abs_models.xtext.ide'
