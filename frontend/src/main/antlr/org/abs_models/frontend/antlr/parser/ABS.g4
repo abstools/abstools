@@ -30,22 +30,22 @@ fragment STR_ESC
   ;
 
 TEMPLATESTRINGSTART
-    : '`' TEMPLATESTRING_INNER* '«'
+    : '`' TEMPLATESTRING_INNER* '$'
     ;
 
 TEMPLATESTRINGINBETWEEN
-    : '»' TEMPLATESTRING_INNER* '«'
+    : '$' TEMPLATESTRING_INNER* '$'
     ;
 TEMPLATESTRINGEND
-    : '»' TEMPLATESTRING_INNER* '`'
+    : '$' TEMPLATESTRING_INNER* '`'
     ;
 TEMPLATESTRINGLITERAL
     : '`' TEMPLATESTRING_INNER* '`'
     ;
 
 fragment TEMPLATESTRING_INNER
-    : '\\' ('\\' | '`' | '«')
-    | ~('`' | '«')
+    : '\\' ('`' | '$')
+    | ~('`' | '$')
     ;
 
 
@@ -123,7 +123,7 @@ pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
     | STRINGLITERAL                                        # StringExp
     | TEMPLATESTRINGLITERAL                                # TemplateStringExp
     | TEMPLATESTRINGSTART e1=pure_exp
-        (b+=TEMPLATESTRINGINBETWEEN e+=pure_exp)
+        (b+=TEMPLATESTRINGINBETWEEN e+=pure_exp)*
         TEMPLATESTRINGEND                                  # TemplateStringCompoundExp
     | 'this'                                               # ThisExp
     | 'null'                                               # NullExp

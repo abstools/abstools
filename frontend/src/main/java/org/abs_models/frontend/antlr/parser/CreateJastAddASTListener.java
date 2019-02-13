@@ -138,9 +138,8 @@ public class CreateJastAddASTListener extends ABSBaseListener {
                 i++;
                 char c1 = tokenText.charAt(i);
                 switch (c1) {
-                // case '\\' : s.append('\\'); break; // escaped backslash (\\)
                 case '`' : s.append('`'); break;   // escaped end (\`)
-                case '«' : s.append('«'); break;   // escaped interpolation start (\«)
+                case '$' : s.append('$'); break;   // escaped interpolation delimiter (\$)
                 // do not drop backslash if it doesn't escape any of the above:
                 default : s.append('\\'); s.append(c1); break;
                 }
