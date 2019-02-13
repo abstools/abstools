@@ -150,7 +150,15 @@ event_is_independent_with_schedule_run(Trace, Event, ScheduleRun) ->
 
 generate_trace(Trace, E2) ->
     % TODO e1 enables + e2 enables?
-    move_backwards(Trace, E2).
+    remove_read_write_sets_from_trace(move_backwards(Trace, E2)).
+
+remove_read_write_sets_from_trace(Trace) ->
+    maps:map(fun (_Cog, LocalTrace) ->
+                     lists:map(fun (E=#event{type=schedule}) ->
+                                       E#event{reads=ordsets:new(), writes=ordsets:new()};
+                                   (E) -> E
+                               end, LocalTrace)
+             end, Trace).
 
 add_read_write_sets_to_schedule_event(ScheduleRun, Trace) ->
     [{Cog, I} | _] = ScheduleRun,
