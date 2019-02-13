@@ -7,7 +7,6 @@ plugins {
     id 'java'
     // Apply the application plugin to add support for building an application
     id 'application'
-    id 'com.palantir.git-version' version '0.11.0'
 
     id 'org.jastadd' version '1.13.3'
     id 'antlr'
@@ -22,8 +21,6 @@ distributions {
     main { baseName = 'absc' }
 }
 
-def version_details = versionDetails() // https://github.com/palantir/gradle-git-version
-project.version = gitVersion().replaceAll(/^version_/, '')
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
@@ -55,12 +52,6 @@ dependencies {
     jastadd2 'org.jastadd:jastadd:2.3.2'
     antlr 'org.antlr:antlr4:4.7.2'
 }
-
-repositories {
-    jcenter()
-}
-
-
 
 // JastAdd
 task generateJastAddAST(type: JastAddTask) {
@@ -109,11 +100,11 @@ clean {
 jar {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Jar.html
     baseName='absfrontend'
-    appendix=version_details.branchName
+    appendix=versionDetails().branchName
     manifest {
         attributes 'Main-Class': 'org.abs_models.frontend.parser.Main',
             'Implementation-Title': 'ABS Frontend',
-            'Implementation-Version': version_details.lastTag.replaceAll(/^version_/, ''),
+            'Implementation-Version': versionDetails().lastTag.replaceAll(/^version_/, ''),
             'Bundle-Version': project.version,
             // This is wrong, but we use it anyway for the detailed
             // version string (java.lang.Package only has methods
@@ -138,13 +129,13 @@ clean {
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
-    appendix = version_details.branchName
+    appendix = versionDetails().branchName
     from sourceSets.main.allSource
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
-    appendix = version_details.branchName
+    appendix = versionDetails().branchName
     from javadoc.destinationDir
 }
 
