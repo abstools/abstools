@@ -5,13 +5,13 @@ default: help all
 
 SOURCES=$(wildcard asciidoc/*.adoc)
 
-all: target/html/index.html	## Build documentation (default)
+all: build/asciidoc/html5/index.html ## Build documentation (default)
 
-target/html/index.html: $(SOURCES)
-	mvn install
+build/asciidoc/html5/index.html: $(SOURCES)
+	../gradlew :abs-docs:assemble
 
 clean:				## Remove build artifacts
-	mvn clean
+	../gradlew :abs-docs:clean
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
