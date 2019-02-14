@@ -1,13 +1,12 @@
 import org.jastadd.JastAddTask
 
-// JastAdd plugin documentation at https://github.com/jastadd/jastaddgradle
-
 plugins {
     // Apply the java plugin to add support for Java
     id 'java'
     // Apply the application plugin to add support for building an application
     id 'application'
 
+    // JastAdd plugin documentation at https://github.com/jastadd/jastaddgradle
     id 'org.jastadd' version '1.13.3'
     id 'antlr'
     id "com.github.spotbugs" version "1.6.9"
@@ -126,6 +125,7 @@ distTar {
     }
 }
 
+// this is necessary for the `absc` scripts
 task plainJar(type: Copy, dependsOn: jar) {
     description 'Copies absfrontend.jar into its documented location.'
     from jar
@@ -153,6 +153,9 @@ artifacts {
     archives javadocJar
 }
 
+// `absc` script et al. -- copy to well-known location and instruct
+// users to set their $PATH (see e.g. `frontend/README.md`,
+// https://abstools.github.io/getting_started/local-install/)
 task copyScripts(type: Copy) {
     description 'Copies absc scripts into their documented locations.'
     from('src/main/resources') {
@@ -182,14 +185,6 @@ spotbugs {
     showProgress = true
     excludeFilter = file('config/findbugs/findbugs-jastadd-filter.xml')
 }
-
-javadoc {
-    failOnError = false
-    options.addStringOption('Xdoclint:none', '-quiet')
-    options.tags = [ 'apilevel', 'declaredat', 'aspect', 'ast', 'attribute',
-                    'astdecl', 'production' ]
-}
-
 tasks.withType(com.github.spotbugs.SpotBugsTask) {
     reports {
         // can only have one report type :(
@@ -197,4 +192,11 @@ tasks.withType(com.github.spotbugs.SpotBugsTask) {
         html.enabled = true
         emacs.enabled = false
     }
+}
+
+javadoc {
+    failOnError = false
+    options.addStringOption('Xdoclint:none', '-quiet')
+    options.tags = [ 'apilevel', 'declaredat', 'aspect', 'ast', 'attribute',
+                    'astdecl', 'production' ]
 }
