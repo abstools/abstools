@@ -47,13 +47,18 @@ enables(Pred, Trace) ->
     EventKeys = trace_to_event_keys(Trace),
     lists:filter(fun(EventKey) -> Pred(event_key_to_event(Trace, EventKey)) end, EventKeys).
 
+make_predicate_event_equal_without_read_write(Event) ->
+    EventWithoutReadWriteSets = Event#event{reads=ordsets:new(), writes=ordsets:new()},
+    fun(OtherEvent) -> OtherEventWithoutReadWriteSets = OtherEvent#event{reads=ordsets:new(), writes=ordsets:new()},
+                       EventWithoutReadWriteSets =:= OtherEventWithoutReadWriteSets end.
+
 enabled_by_invocation(InvocationEvent, Trace) ->
     CorrespondingScheduleEvent = InvocationEvent#event{type=schedule},
-    enables(fun(E) -> E =:= CorrespondingScheduleEvent end, Trace).
+    enables(make_predicate_event_equal_without_read_write(CorrespondingScheduleEvent), Trace).
 
 enabled_by_completion(CompletionEvent, Trace) ->
     CorrespondingFutureReadEvent = CompletionEvent#event{type=future_read},
-    enables(fun(E) -> E =:= CorrespondingFutureReadEvent end, Trace).
+    enables(make_predicate_event_equal_without_read_write(CorrespondingFutureReadEvent), Trace).
 
 enabled_by(EventKey, Trace) ->
     E = event_key_to_event(Trace, EventKey),
