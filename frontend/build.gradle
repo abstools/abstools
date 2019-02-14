@@ -114,6 +114,18 @@ jar {
     reproducibleFileOrder=true
 }
 
+// include manual in source archives
+distZip {
+    from project(':abs-docs').asciidoctor, {
+        into "abs-docs-${version}"
+    }
+}
+distTar {
+    from project(':abs-docs').asciidoctor, {
+        into "abs-docs-${version}"
+    }
+}
+
 task plainJar(type: Copy, dependsOn: jar) {
     description 'Copies absfrontend.jar into its documented location.'
     from jar
