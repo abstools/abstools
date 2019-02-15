@@ -121,37 +121,22 @@ move_backwards(Trace, {Cog, I}) ->
     E1 = event_key_to_event(Trace, {Cog, I}),
     {ok, Schedule} = maps:find(Cog, Trace),
     EventKeysBeforeE1 = lists:sublist(cog_local_trace_to_event_keys(Cog, Schedule), I),
-    CogScheduleRunsBeforeE1 = schedule_runs(Trace, EventKeysBeforeE1),
-    MaybeE2ScheduleRun = lists:search(fun(Run) -> not event_is_independent_with_schedule_run(Trace, E1, Run) end,
-                                      lists:reverse(CogScheduleRunsBeforeE1)),
-    case MaybeE2ScheduleRun of
-        {value, E2ScheduleRun} ->
-            [ScheduleEvent | _] = E2ScheduleRun,
-            {Cog, J} = ScheduleEvent,
-            update_after_move(Trace, Cog, I, J);
+    ScheduleEventKeysBeforeE1 = lists:filter(fun(EK) -> event_key_type(Trace, EK) =:= schedule end, EventKeysBeforeE1),
+    MaybeE2 = lists:search(fun({Cog, J}) -> is_dependent(Trace, E1, event_key_to_event(Trace, {Cog, J})) end,
+                           lists:reverse(ScheduleEventKeysBeforeE1)),
+    case MaybeE2 of
+        {value, {Cog, J}} -> update_after_move(Trace, Cog, I, J);
         false -> Trace
     end.
 
-schedule_run_writes(Trace, ScheduleRun) ->
-    lists:foldl(fun ordsets:union/2,
-                ordsets:new(),
-                lists:map(fun(E) -> Event = event_key_to_event(Trace, E),
-                                    Event#event.writes end, ScheduleRun)).
-
-schedule_run_reads(Trace, ScheduleRun) ->
-    lists:foldl(fun ordsets:union/2,
-                ordsets:new(),
-                lists:map(fun(E) -> Event = event_key_to_event(Trace, E),
-                                    Event#event.reads end, ScheduleRun)).
-
-event_is_independent_with_schedule_run(Trace, Event, ScheduleRun) ->
-    Reads1 = Event#event.reads,
-    Writes1 = Event#event.writes,
-    Reads2 = schedule_run_reads(Trace, ScheduleRun),
-    Writes2 = schedule_run_writes(Trace, ScheduleRun),
-    ordsets:is_disjoint(Reads1, Writes2) andalso
-    ordsets:is_disjoint(Writes1, Reads2) andalso
-    ordsets:is_disjoint(Writes1, Writes2).
+is_dependent(Trace, E1, E2) ->
+    Reads1 = E1#event.reads,
+    Writes1 = E1#event.writes,
+    Reads2 = E2#event.reads,
+    Writes2 = E2#event.writes,
+    not (ordsets:is_disjoint(Reads1, Writes2) andalso
+         ordsets:is_disjoint(Writes1, Reads2) andalso
+         ordsets:is_disjoint(Writes1, Writes2)).
 
 generate_trace(Trace, E2) ->
     % TODO e1 enables + e2 enables?
