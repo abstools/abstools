@@ -3,12 +3,13 @@
 - Run unit tests, check for fresh failing tests (compared to last
   version)
 
+- Manually compile and run a small model on macOS, Linux, Windows
+
 - Create docker (`make docker ; make run-collaboratory`)
-  - check that absc container works / was created:
-    `docker run -it --rm -v "$PWD":/usr/src -w /usr/src --entrypoint /bin/sh abslang/absc`
   - check if all tools are installed in collaboratory (selection box non-empty)
   - check that collaboratory can start "Hello World" ABS program with Erlang simulator
   - check that "Hello World" ABS program doesn't crash SACO / CostABS in collaboratory
+  - check that absc container works / was created: `docker run --rm abslang/absc:latest -h` should produce the same output as `absc -h` on the local machine
 
 - Create vagrant (`vagrant up`) (NOTE: currently broken and probably unused)
   - check if all tools in collaboratory are installed
