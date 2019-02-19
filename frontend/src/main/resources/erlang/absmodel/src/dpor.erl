@@ -8,6 +8,8 @@
 -export([terminate/3, code_change/4, init/1, callback_mode/0]).
 -export([ready/3, saturated/3]).
 
+-export([get_traces_from_db/0]).
+
 -include_lib("abs_types.hrl").
 -include_lib("stdlib/include/qlc.hrl").
 
@@ -192,16 +194,16 @@ init_tables() ->
                       {disc_copies, [node()]}]),
     mnesia:transaction(fun () -> mnesia:write(#db_trace{trace=#{}}) end).
 
-initDB() ->
+init_db() ->
     ok = application:set_env(mnesia, dir, "Mnesia.dpor"),
     case mnesia:create_schema([node()]) of
         ok -> init_tables();
         {error, {_, {already_exists, _}}} -> mnesia:start()
     end,
     mnesia:wait_for_tables([db_trace], 1000),
-    deactivate_aborted_traces_in_DB().
+    deactivate_aborted_traces_in_db().
 
-deactivate_aborted_traces_in_DB() ->
+deactivate_aborted_traces_in_db() ->
     Q = qlc:q([X || X <- mnesia:table(db_trace), X#db_trace.status =:= active]),
     F = fun () ->
                 G = fun (U) -> mnesia:write(U#db_trace{status=unexplored}) end,
@@ -209,7 +211,15 @@ deactivate_aborted_traces_in_DB() ->
         end,
     mnesia:activity(transaction, F).
 
-get_unexplored_from_DB(N) ->
+get_traces_from_db() ->
+    init_db(),
+    F = fun () ->
+                Traces = qlc:e(qlc:q([X || X <- mnesia:table(db_trace), X#db_trace.status =:= explored])),
+                lists:map(fun (U) -> U#db_trace.trace end, Traces)
+        end,
+    mnesia:activity(transaction, F).
+
+get_unexplored_from_db(N) ->
     Q = qlc:q([X || X <- mnesia:table(db_trace), X#db_trace.status =:= unexplored]),
     F = fun () ->
                 C = qlc:cursor(Q),
@@ -221,7 +231,7 @@ get_unexplored_from_DB(N) ->
         end,
     mnesia:activity(transaction, F).
 
-add_new_traces_to_DB(Trace, Explored, NewTraces) ->
+add_new_traces_to_db(Trace, Explored, NewTraces) ->
     F = fun () ->
                 Traces = qlc:e(qlc:q([X#db_trace.trace || X <- mnesia:table(db_trace)])),
                 G = fun (X) ->
@@ -267,7 +277,7 @@ completed_simulation(Trace, ExploredTrace, NewTraces) ->
 
 %% Callbacks
 init([Module, Clocklimit]) ->
-    case initDB() of
+    case init_db() of
         ok -> ok;
         {timeout, _} -> io:format("Unable to initialize DB.~n")
     end,
@@ -280,7 +290,7 @@ ready(enter, _OldState,
       Data=#data{active_jobs=A, next_worker_id=I,
                  worker_limit=L, module=Module,
                  clocklimit=Clocklimit}) ->
-    Unexplored = get_unexplored_from_DB(L - gb_sets:size(A)),
+    Unexplored = get_unexplored_from_db(L - gb_sets:size(A)),
     N = length(Unexplored),
     SpawnSim = fun ({Trace, WorkerN}) ->
                        Id = "w" ++ integer_to_list(WorkerN),
@@ -295,12 +305,12 @@ ready(enter, _OldState,
     {next_state, State, Data#data{active_jobs=NewA, next_worker_id=I+N}};
 ready(cast, {complete, Id, Trace, ExploredTrace, NewTraces},
       Data=#data{active_jobs=A}) ->
-    add_new_traces_to_DB(Trace, ExploredTrace, NewTraces),
+    add_new_traces_to_db(Trace, ExploredTrace, NewTraces),
     {repeat_state, Data#data{active_jobs=gb_sets:delete(Id, A)}}.
 
 saturated(cast, {complete, Id, Trace, ExploredTrace, NewTraces},
           Data=#data{active_jobs=A}) ->
-    add_new_traces_to_DB(Trace, ExploredTrace, NewTraces),
+    add_new_traces_to_db(Trace, ExploredTrace, NewTraces),
     {next_state, ready, Data#data{active_jobs=gb_sets:delete(Id, A)}}.
 
 code_change(_Vsn, State, Data, _Extra) ->

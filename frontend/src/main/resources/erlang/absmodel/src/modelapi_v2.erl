@@ -20,6 +20,7 @@ init(Req, _Opts) ->
                                         cowboy_req:parse_qs(Req));
             <<"dcs">> -> handle_dcs();
             <<"schedules">> -> handle_schedules();
+            <<"db_traces">> -> handle_db_traces();
             <<"o">> -> handle_object_query(cowboy_req:path_info(Req));
             <<"static_dcs">> -> handle_static_dcs(cowboy_req:path_info(Req));
             <<"call">> -> handle_object_call(cowboy_req:path_info(Req),
@@ -76,7 +77,10 @@ handle_dcs() ->
     {200, <<"application/json">>, get_statistics_json()}.
 
 handle_schedules() ->
-    {200, <<"application/json">>, get_schedules_json()}.
+    {200, <<"application/json">>, get_trace_json()}.
+
+handle_db_traces() ->
+    {200, <<"application/json">>, get_db_traces_json()}.
 
 handle_object_query([Objectname, Fieldname]) ->
     {State, Object}=cog_monitor:lookup_object_from_http_name(Objectname),
@@ -348,7 +352,7 @@ json_to_trace(JSON) ->
                         maps:put(Id, construct_local_trace(LocalTrace), Acc)
                 end, #{}, RawTrace).
 
-schedule_to_json(Schedule) ->
+local_trace_to_json_friendly(LocalTrace) ->
     lists:map(fun (Event) ->
                       #{type => Event#event.type,
                         caller_id => Event#event.caller_id,
@@ -357,16 +361,24 @@ schedule_to_json(Schedule) ->
                         reads => Event#event.reads,
                         writes => Event#event.writes,
                         time => Event#event.time}
-              end, Schedule).
+              end, LocalTrace).
 
-get_schedules_json() ->
-    Schedules = cog_monitor:get_schedules(),
-    SchedulesJson = maps:fold(fun (CogId, Schedule, Acc) ->
-                                      [#{cog_id => CogId,
-                                         cog_schedule => schedule_to_json(Schedule)}
-                                       | Acc]
-                              end, [], Schedules),
-    jsx:encode(lists:reverse(SchedulesJson), [{space, 1}, {indent, 2}]).
+trace_to_json_friendly(Trace) ->
+    T = maps:fold(fun (CogId, LocalTrace, Acc) ->
+                          [#{cog_id => CogId,
+                             cog_schedule => local_trace_to_json_friendly(LocalTrace)}
+                           | Acc]
+                  end, [], Trace),
+    lists:reverse(T).
+
+get_trace_json() ->
+    Trace = cog_monitor:get_schedules(),
+    jsx:encode(trace_to_json_friendly(Trace), [{space, 1}, {indent, 2}]).
+
+get_db_traces_json() ->
+    Traces = dpor:get_traces_from_db(),
+    JSONTraces = lists:map(fun trace_to_json_friendly/1, Traces),
+    jsx:encode(JSONTraces, [{space, 1}, {indent, 2}]).
 
 
 handle_static_dcs([]) ->
