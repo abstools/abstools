@@ -7,7 +7,7 @@
          submit_references/2, process_poll_has_crashed/3,
          register_invocation/2, register_new_object/2,
          register_new_local_object/2, register_future_read/2,
-         register_time_advancement/2, get_scheduling_trace/1]).
+         get_scheduling_trace/1]).
 -export([return_token/4]).
 -export([inc_ref_count/1,dec_ref_count/1]).
 -include_lib("abs_types.hrl").
@@ -141,9 +141,6 @@ register_new_local_object(#cog{ref=Cog}, Class) ->
 register_future_read(#cog{ref=Cog}, Event) ->
     gen_statem:call(Cog, {register_future_read, Event}).
 
-register_time_advancement(#cog{ref=Cog}, Event) ->
-    gen_statem:call(Cog, {register_time_advancement, Event}).
-
 get_scheduling_trace(CogRef) ->
     gen_statem:call(CogRef, get_scheduling_trace).
 
@@ -273,16 +270,6 @@ handle_event({call, From}, {register_future_read, Event}, _StateName,
     {keep_state, Data#data{recorded=[Event | Recorded], replaying=Rest},
      {reply, From, ok}};
 
-handle_event({call, From}, {register_time_advancement, Event}, _StateName,
-             Data=#data{recorded=Recorded, replaying=Replaying}) ->
-    NewReplaying = case Replaying of
-                       [Event | Rest] -> Rest;
-                       Replaying -> Replaying
-                   end,
-    {keep_state, Data#data{recorded=[Event | Recorded],
-                           replaying=NewReplaying},
-     {reply, From, ok}};
-
 handle_event({call, From}, get_scheduling_trace, _StateName,
              Data=#data{recorded=Recorded}) ->
     {keep_state_and_data, {reply, From, Recorded}};
@@ -338,8 +325,12 @@ start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie)->
     end,
     ArrivalInfo#process_info{pid=Ref}.
 
-choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, [Event | _]) ->
-    Candidate = [Proc || {Proc, Info} <- maps:to_list(ProcessInfos), Info#process_info.event == Event],
+choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, [Event1 | _]) ->
+    %% Assume Event1 and Event2 are both of type schedule. Compare only their
+    %% caller- and local ids.
+    Candidate = [Proc || {Proc, Info=#process_info{event=Event2}} <- maps:to_list(ProcessInfos),
+                         Event2#event.caller_id == Event1#event.caller_id,
+                         Event2#event.local_id == Event1#event.local_id],
     {PollReadySet, PollCrashedSet} = poll_waiting(PollingTasks),
     Candidates=gb_sets:union(RunnableTasks, PollReadySet),
     case Candidate of
@@ -429,7 +420,8 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
              {reply, From, ok}};
         T ->       % Execute T -- might or might not be TaskRef
             #process_info{event=Event} = maps:get(T, ProcessInfos),
-            NewRecorded = [Event | Recorded],
+            #event{caller_id=Cid, local_id=Lid, name=Name} = Event,
+            NewRecorded = [#event{type=schedule, caller_id=Cid, local_id=Lid, name=Name} | Recorded],
             NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
 
             cog_monitor:cog_active(self()),
@@ -479,9 +471,13 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
                      _ -> Pol end,
 
     %% Record/replay termination or suspension
+    #event{caller_id=Cid, local_id=Lid,
+           name=Name, reads=Reads, writes=Writes} = ProcessInfo#process_info.event,
     Event = case ProcessState of
-                done -> ProcessInfo#process_info.event#event{type=future_write};
-                _    -> ProcessInfo#process_info.event#event{type=suspend}
+                done -> #event{type=future_write, caller_id=Cid, local_id=Lid,
+                               name=Name, reads=Reads, writes=Writes};
+                _    -> #event{type=suspend, caller_id=Cid, local_id=Lid,
+                               name=Name, reads=Reads, writes=Writes}
             end,
     NewRecorded = [Event | Recorded],
     NewReplaying = case Replaying of [] -> []; [Event | Tail] -> Tail end,
@@ -505,7 +501,8 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo},
             %% no need for `cog_monitor:active' since we were already running
             %% something
             #process_info{event=Event2} = maps:get(T, NewProcessInfos),
-            NewRecorded2 = [Event2#event{type=schedule} | NewRecorded],
+            #event{caller_id=Cid2, local_id=Lid2, name=Name2} = Event2,
+            NewRecorded2 = [#event{type=schedule, caller_id=Cid2, local_id=Lid2, name=Name2} | NewRecorded],
             NewReplaying2 = case NewReplaying of [] -> []; [X | Rest] -> Rest end,
 
             T ! token,
@@ -583,7 +580,8 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                     %% no need for `cog_monitor:active' since we were already
                     %% running something
                     #process_info{event=Event} = maps:get(T, NewProcessInfos),
-                    NewRecorded = [Event#event{type=schedule} | Recorded],
+                    #event{caller_id=Cid, local_id=Lid, name=Name} = Event,
+                    NewRecorded = [#event{type=schedule, caller_id=Cid, local_id=Lid, name=Name} | Recorded],
                     NewReplaying = case Replaying of [] -> []; [X | Rest] ->
                 Rest end,
 
@@ -799,7 +797,8 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                              Data#data{polling_tasks=gb_sets:difference(Pol, PollCrashedSet)}};
                         T ->                    % Execute T
                             #process_info{event=Event} = maps:get(T, ProcessInfos),
-                            NewRecorded = [Event#event{type=schedule} | Recorded],
+                            #event{caller_id=Cid, local_id=Lid, name=Name} = Event,
+                            NewRecorded = [#event{type=schedule, caller_id=Cid, local_id=Lid, name=Name} | Recorded],
                             NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
 
                             cog_monitor:cog_active(self()),

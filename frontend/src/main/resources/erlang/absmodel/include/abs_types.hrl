@@ -17,12 +17,13 @@
        }).
 
 -record(event,
-        {type,
-         local_id,
-         caller_id=undefined,
-         name=undefined,
-         reads=ordsets:new(),
-         writes=ordsets:new()
+        {type,                 % schedule | invocation | new_object | suspend | future_read | future_write
+         local_id,             % A local identifier, provided by the cog
+         caller_id=undefined,  % An identifier for the calling object's cog
+         name=undefined,       % The method or class name, depending on the type
+         reads=ordsets:new(),  % A set of object fields that are read from
+         writes=ordsets:new(), % A set of object fields that are written to
+         time=builtin:float(ok, clock:now()) % The time of the event creation
         }).
 
 -record(db_trace, {trace, status=unexplored}).

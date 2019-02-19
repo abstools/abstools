@@ -35,8 +35,11 @@
 start(null,_Method,_Params, _Info, _Cog, _Stack) ->
     throw(dataNullPointerException);
 start(Callee,Method,Params, Info, Cog, Stack) ->
-    Event = cog:register_invocation(Cog, Method),
-    NewInfo = Info#process_info{event=Event#event{type=schedule}},
+    %% Create the schedule event based on the invocation event; this is because
+    %% we don't have access to the caller id from the callee.
+    #event{caller_id=Cid, local_id=Lid, name=Name} = cog:register_invocation(Cog, Method),
+    ScheduleEvent = #event{type=schedule, caller_id=Cid, local_id=Lid, name=Name},
+    NewInfo = Info#process_info{event=ScheduleEvent},
     {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,NewInfo,true,self()], []),
     wait_for_future_start(Ref, Cog, Stack),
     Ref.
@@ -311,7 +314,10 @@ completing({call, From}, {poll_or_add_waiting, _Task}, Data) ->
 completing({call, From}, get_references, Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
 completing({call, From}, {get, Cog}, Data=#data{value=Value,event=Event}) ->
-    cog:register_future_read(Cog, Event#event{type=future_read}),
+    #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
+    CompletionEvent=#event{type=future_read, caller_id=Cid,
+                           local_id=Lid, name=Name, reads=R, writes=W},
+    cog:register_future_read(Cog, CompletionEvent),
     {keep_state_and_data, {reply, From, Value}};
 completing(cast, {okthx, Task}, Data) ->
     {NextState, Data1} = next_state_on_okthx(Data, Task),
@@ -330,7 +336,10 @@ completed({call, From}, {poll_or_add_waiting, _Task}, Data) ->
 completed({call, From}, get_references, Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
 completed({call, From}, {get, Cog}, Data=#data{value=Value,event=Event}) ->
-    cog:register_future_read(Cog, Event#event{type=future_read}),
+    #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
+    CompletionEvent=#event{type=future_read, caller_id=Cid,
+                           local_id=Lid, name=Name, reads=R, writes=W},
+    cog:register_future_read(Cog, CompletionEvent),
     {keep_state_and_data, {reply, From, Value}};
 completed(cast, {die, _Reason}, Data) ->
     {stop, normal, Data};

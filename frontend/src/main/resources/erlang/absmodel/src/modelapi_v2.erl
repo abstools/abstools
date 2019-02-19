@@ -331,13 +331,15 @@ construct_local_trace(LocalTrace) ->
                      local_id := LocalId,
                      name := Name,
                      reads := Reads,
-                     writes := Writes}) ->
+                     writes := Writes,
+                     time := Time}) ->
                       #event{type=Atomize(Type),
                              caller_id=Atomize(CallerId),
                              local_id=Atomize(LocalId),
                              name=Atomize(Name),
                              reads=lists:map(Atomize, Reads),
-                             writes=lists:map(Atomize, Writes)}
+                             writes=lists:map(Atomize, Writes),
+                             time=Time}
               end, LocalTrace).
 
 json_to_trace(JSON) ->
@@ -353,7 +355,8 @@ schedule_to_json(Schedule) ->
                         local_id => Event#event.local_id,
                         name => Event#event.name,
                         reads => Event#event.reads,
-                        writes => Event#event.writes}
+                        writes => Event#event.writes,
+                        time => Event#event.time}
               end, Schedule).
 
 get_schedules_json() ->

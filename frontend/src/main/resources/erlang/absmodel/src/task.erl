@@ -75,10 +75,7 @@ send_notifications(Val)->
 
 loop_for_clock_advance(Cog, Stack) ->
     receive
-        {clock_finished, _Sender, NewTime} ->
-            Event = #event{type=time, caller_id=clock,
-                           local_id=modelapi_v2:abs_to_json(NewTime)},
-            cog:register_time_advancement(Cog, Event);
+        {clock_finished, _Sender} -> ok;
         {stop_world, _Sender} ->
             loop_for_clock_advance(Cog, Stack);
         {get_references, Sender} ->
@@ -186,5 +183,6 @@ release_token(Cog,State)->
     end,
     ProcessInfo = #process_info{event=Event} = get(process_info),
     cog:return_token(Cog, self(), State, ProcessInfo),
+    %% Flush the read/write sets when task suspends or terminates
     Event2 = Event#event{reads = ordsets:new(), writes = ordsets:new()},
     put(process_info, ProcessInfo#process_info{event=Event2}).
