@@ -109,16 +109,6 @@ update_after_move(Trace, Cog, I, J) ->
                             lists:append(EnabledByE1, EnabledByE2))
     end.
 
-move_backwards_old(Trace, {Cog, I}) ->
-    _E1 = event_key_to_event(Trace, {Cog, I}),
-    {ok, Schedule} = maps:find(Cog, Trace),
-    ScheduleBeforeE1 = lists:sublist(Schedule, I),
-    EventsAfterE2ScheduleAndBeforeE1Schedule =
-        lists:takewhile(fun(E) -> E#event.type /= schedule end,
-                        lists:reverse(ScheduleBeforeE1)),
-    J = I - (length(EventsAfterE2ScheduleAndBeforeE1Schedule) + 1),
-    update_after_move(Trace, Cog, I, J).
-
 move_backwards(Trace, {Cog, I}) ->
     E1 = event_key_to_event(Trace, {Cog, I}),
     {ok, Schedule} = maps:find(Cog, Trace),
