@@ -116,7 +116,7 @@ move_backwards(Trace, {Cog, I}) ->
     ScheduleEventKeysBeforeE1 = lists:filter(fun(EK) -> event_key_type(Trace, EK) =:= schedule end, EventKeysBeforeE1),
     MaybeE2 = lists:search(fun({Cog, J}) ->
                                    E2 = event_key_to_event(Trace, {Cog, J}),
-                                   not happens_after(E1, E2) andalso is_dependent(E1, E2) end,
+                                   not happens_after(E1, E2) andalso conflicts_with(E1, E2) end,
                            lists:reverse(ScheduleEventKeysBeforeE1)),
     case MaybeE2 of
         {value, {Cog, J}} -> update_after_move(Trace, Cog, I, J);
@@ -126,7 +126,7 @@ move_backwards(Trace, {Cog, I}) ->
 happens_after(E1, E2) ->
     E1#event.time > E2#event.time.
 
-is_dependent(E1, E2) ->
+conflicts_with(E1, E2) ->
     Reads1 = E1#event.reads,
     Writes1 = E1#event.writes,
     Reads2 = E2#event.reads,
