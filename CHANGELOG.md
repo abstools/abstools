@@ -273,7 +273,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/version_1.5.6...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/version_1.6.0...HEAD
+[1.6.0]: https://github.com/abstools/abstools/compare/version_1.5.6...version_1.6.0
 [1.5.6]: https://github.com/abstools/abstools/compare/version_1.5.5...version_1.5.6
 [1.5.5]: https://github.com/abstools/abstools/compare/version_1.5.4...version_1.5.5
 [1.5.4]: https://github.com/abstools/abstools/compare/version_1.5.3...version_1.5.4

@@ -18,6 +18,9 @@
 
 - Update `CHANGELOG.md`
   - Rename section `[Unreleased]` to `[x.y.z] - yyyy-mm-dd`
+  - Add and update hyperlinks at the end of the file: update link
+    definition for `[Unreleased]`to compare with the latest version,
+    add line `[x.y.z]` comparing latest and previous versions
   - Add fresh section as follows:
 
 ```md
