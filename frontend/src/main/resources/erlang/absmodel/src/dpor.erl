@@ -114,12 +114,17 @@ move_backwards(Trace, {Cog, I}) ->
     {ok, Schedule} = maps:find(Cog, Trace),
     EventKeysBeforeE1 = lists:sublist(cog_local_trace_to_event_keys(Cog, Schedule), I),
     ScheduleEventKeysBeforeE1 = lists:filter(fun(EK) -> event_key_type(Trace, EK) =:= schedule end, EventKeysBeforeE1),
-    MaybeE2 = lists:search(fun({Cog, J}) -> is_dependent(E1, event_key_to_event(Trace, {Cog, J})) end,
+    MaybeE2 = lists:search(fun({Cog, J}) ->
+                                   E2 = event_key_to_event(Trace, {Cog, J}),
+                                   not happens_after(E1, E2) andalso is_dependent(E1, E2) end,
                            lists:reverse(ScheduleEventKeysBeforeE1)),
     case MaybeE2 of
         {value, {Cog, J}} -> update_after_move(Trace, Cog, I, J);
         false -> Trace
     end.
+
+happens_after(E1, E2) ->
+    E1#event.time > E2#event.time.
 
 is_dependent(E1, E2) ->
     Reads1 = E1#event.reads,
