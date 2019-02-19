@@ -666,7 +666,7 @@ public class Main {
     }
 
     protected static void printVersion() {
-        System.out.println("ABS Tool Suite v"+getVersion());
+        System.out.println("ABS Tool Suite "+getVersion());
         System.out.println("Built from git tree " + getGitVersion());
     }
 

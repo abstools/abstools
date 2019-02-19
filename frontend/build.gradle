@@ -100,12 +100,12 @@ jar {
     manifest {
         attributes 'Main-Class': 'org.abs_models.frontend.parser.Main',
             'Implementation-Title': 'ABS Frontend',
-            'Implementation-Version': versionDetails().lastTag.replaceAll(/^version_/, ''),
+            'Implementation-Version': versionDetails().lastTag,
             'Bundle-Version': project.version,
             // This is wrong, but we use it anyway for the detailed
             // version string (java.lang.Package only has methods
             // getVersion and getSpecificationVersion)
-            'Specification-Version': project.version
+            'Specification-Version': versionDetails().lastTag + "-" + versionDetails().commitDistance + "-" + versionDetails().gitHash
     }
     from configurations.runtimeClasspath
         .findAll { it.name.endsWith('jar') }

@@ -7,19 +7,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+### Changed
+
+### Removed
+
+### Fixed
+
+## [1.7.0]
+
+### Added
+
 - Added template strings to the language.  Template strings are multi-line strings delimited by single backtick (<tt>\`</tt>) characters.  Pure expressions embedded in template strings (delimited by `$...$`) are evaluated and their values spliced into the template string.
-  - It was decided not to use Javascript notation (`${...}`) for embedded expressions -- otherwise the lexer would need to be stateful in order to interpret a closing brace `}`.  This also keeps us open for a transition to other, less powerful parsing frameworks like Xtext.
+  - It was decided not to use Javascript notation (`${...}`) for embedded expressions -- otherwise the lexer would need to be stateful in order to distinguish a closing brace `}` inside and outside a template string.  This also keeps us open for a transition to other, less powerful parsing frameworks like Xtext.
 
 ### Changed
 
 - Incompatible change: The function `toString`, when passed a string, returns the string unchanged instead of surrounding it with quotes (`"`) and escaping embedded quotes (`"` → `\"`).
   - Note that escaping quotes inside strings was only implemented in the erlang backend; the other backends returned the string unchanged but surrounded by quotes.
 
+- Release tags are now in the format `vx.y.z` instead of `version_x.y.z` to improve compatibility with inflexible tools.
+
 ### Removed
 
 - Removed the Emacs mode from the repository.  Emacs editing support should be installed via its package manager -- see https://github.com/abstools/abs-mode for instructions.
 
 ### Fixed
+
+- Starting models on windows via `gen\erl\run.bat` works again.
+
+- Models on windows now accept command-line parameters -- see the output of `gen\erl\run.bat -h`.
 
 ## [1.6.0] - 2019-01-29
 
@@ -273,7 +289,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/version_1.6.0...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/abstools/abstools/compare/version_1.6.0...v1.7.0
 [1.6.0]: https://github.com/abstools/abstools/compare/version_1.5.6...version_1.6.0
 [1.5.6]: https://github.com/abstools/abstools/compare/version_1.5.5...version_1.5.6
 [1.5.5]: https://github.com/abstools/abstools/compare/version_1.5.4...version_1.5.5

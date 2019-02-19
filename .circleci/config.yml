@@ -98,7 +98,7 @@ workflows:
             - build_frontend
           filters:
             tags:
-              only: /^version_\d+\.\d+\.\d+$/
+              only: /^v\d+\.\d+\.\d+$/
             branches:
               ignore: /.*/
       - deploy_collaboratory:
@@ -106,6 +106,6 @@ workflows:
             - build_frontend
           filters:
             tags:
-              only: /^version_\d+\.\d+\.\d+$/
+              only: /^v\d+\.\d+\.\d+$/
             branches:
               ignore: /.*/

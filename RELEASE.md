@@ -43,7 +43,7 @@
   - The first line of the commit message should be `Release version
    x.y.z`, followed by the contents of the change log for the current version
 
-- Add release tag `version_x.y.z` with the same message as the commit message.
+- Add release tag `vx.y.z` with the same message as the commit message.
 
 - push release commit (`git push`) and tag (`git push --tags`)
 
@@ -75,5 +75,5 @@ models need to be re-implemented).
 
 The release commit contains only an updated `CHANGELOG.md`, with the commit message the same as the contents of `CHANGELOG.md` for the current release.
 
-This commit is tagged with `version_x.y.z`, with the tag message
+This commit is tagged with `vx.y.z`, with the tag message
 identical to the commit message.
