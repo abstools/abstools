@@ -119,6 +119,7 @@ public class ErlApp {
             "start_console",
             "run",
             "run.bat",
+            "run.escript",
             "absmodel/rebar.config",
             "bin/*",
             "link_sources",
