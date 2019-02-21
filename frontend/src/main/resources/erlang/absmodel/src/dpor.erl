@@ -6,7 +6,7 @@
 -export([start_link/2, stop/0]).
 -export([start_simulation/4]).
 -export([terminate/3, code_change/4, init/1, callback_mode/0]).
--export([ready/3, saturated/3]).
+-export([ready/3]).
 
 -export([get_traces_from_db/0]).
 
@@ -293,20 +293,11 @@ ready(enter, _OldState,
                end,
     NewActiveJobs = lists:map(SpawnSim, lists:zip(Unexplored, lists:seq(I, I+N-1))),
     NewA = gb_sets:union(A, gb_sets:from_list(NewActiveJobs)),
-    State = case gb_sets:size(NewA) of
-                L -> saturated;
-                _ -> ready
-            end,
-    {next_state, State, Data#data{active_jobs=NewA, next_worker_id=I+N}};
+    {keep_state, Data#data{active_jobs=NewA, next_worker_id=I+N}};
 ready(cast, {complete, Id, Trace, ExploredTrace, NewTraces},
       Data=#data{active_jobs=A}) ->
     add_new_traces_to_db(Trace, ExploredTrace, NewTraces),
     {repeat_state, Data#data{active_jobs=gb_sets:delete(Id, A)}}.
-
-saturated(cast, {complete, Id, Trace, ExploredTrace, NewTraces},
-          Data=#data{active_jobs=A}) ->
-    add_new_traces_to_db(Trace, ExploredTrace, NewTraces),
-    {next_state, ready, Data#data{active_jobs=gb_sets:delete(Id, A)}}.
 
 code_change(_Vsn, State, Data, _Extra) ->
     {ok, State, Data}.
