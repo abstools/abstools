@@ -17,6 +17,7 @@ public enum ErrorMessage {
     CANNOT_ASSIGN("Cannot assign %s to type %s."),
     VAR_INIT_REQUIRED("A variable must be initialized if it is not of a reference type."),
     FIELD_INIT_REQUIRED("A field must be initialized if it is not of a reference type."),
+    EXPECTED_REFERENCE_TYPE("Expected an object reference, but found type %s instead."),
     EXPECTED_FUT_TYPE("Expected a future type, but found type %s instead."),
     EXPECTED_NUMERIC_TYPE("Expected numeric type, but found type %s instead."),
     EXPECTED_ADDABLE_TYPE("Expected numeric or string type for operator '+', but found type %s instead."),
