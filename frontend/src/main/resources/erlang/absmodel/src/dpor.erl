@@ -102,11 +102,12 @@ update_after_move(Trace, Cog, I, J) ->
     EnabledByE1 = enabled_by_schedule({Cog, I}, Trace),
     EnabledByE2 = enabled_by_schedule({Cog, J}, Trace),
     case ((J == 0) or lists:member({Cog, I}, EnabledByE2)) of
-        true -> Trace;
+        true -> false;
         false -> {ok, Local} = maps:find(Cog, Trace),
                  NewLocal = lists:sublist(Local, J) ++ [E1],
-                 trim_trace(maps:put(Cog, NewLocal, Trace),
-                            lists:append(EnabledByE1, EnabledByE2))
+                 NewTrace = trim_trace(maps:put(Cog, NewLocal, Trace),
+                                       lists:append(EnabledByE1, EnabledByE2)),
+                 {true, NewTrace}
     end.
 
 move_backwards(Trace, {Cog, I}) ->
@@ -120,7 +121,7 @@ move_backwards(Trace, {Cog, I}) ->
                            lists:reverse(ScheduleEventKeysBeforeE1)),
     case MaybeE2 of
         {value, {Cog, J}} -> update_after_move(Trace, Cog, I, J);
-        false -> Trace
+        false -> false
     end.
 
 happens_after(E1, E2) ->
@@ -137,7 +138,10 @@ conflicts_with(E1, E2) ->
 
 generate_trace(Trace, E2) ->
     % TODO e1 enables + e2 enables?
-    remove_read_write_sets_from_trace(move_backwards(Trace, E2)).
+    case move_backwards(Trace, E2) of
+        {true, NewTrace} -> {true, remove_read_write_sets_from_trace(NewTrace)};
+        false -> false
+    end.
 
 remove_read_write_sets_from_trace(Trace) ->
     maps:map(fun (_Cog, LocalTrace) ->
@@ -164,7 +168,10 @@ new_traces(Trace) ->
 schedule_runs_to_dpor_traces(_Trace, []) -> [];
 schedule_runs_to_dpor_traces(Trace, [R | Rs]) ->
     Enabled = ordsets:from_list(lists:append(lists:map(fun(E) -> enabled_by(E, Trace) end, R))),
-    NewTraces = lists:map(fun(E) -> generate_trace(Trace, E) end, ordsets:to_list(Enabled)),
+    IdentityFunc = fun(X) -> X end,
+    NewTraces = lists:filtermap(IdentityFunc,
+                                lists:map(fun(E) -> generate_trace(Trace, E) end,
+                                          ordsets:to_list(Enabled))),
     lists:append(NewTraces, schedule_runs_to_dpor_traces(Trace, Rs)).
 
 %% Trace prefixes
