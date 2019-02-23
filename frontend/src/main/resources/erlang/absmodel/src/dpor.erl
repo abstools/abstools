@@ -38,12 +38,12 @@ event_key_to_event(Trace, {Cog, I}) ->
 event_key_type(Trace, EventKey) ->
     (event_key_to_event(Trace, EventKey))#event.type.
 
-schedule_runs(Trace, EventKeys) -> schedule_runs(Trace, EventKeys, []).
-schedule_runs(_Trace, [], Acc) -> Acc;
-schedule_runs(Trace, EventKeys, Acc) ->
+atomic_blocks(Trace, EventKeys) -> atomic_blocks(Trace, EventKeys, []).
+atomic_blocks(_Trace, [], Acc) -> Acc;
+atomic_blocks(Trace, EventKeys, Acc) ->
     [X | Xs] = EventKeys,
-    {Run, Ys} = lists:splitwith(fun(E) -> event_key_type(Trace, E) /= schedule end, Xs),
-    schedule_runs(Trace, Ys, [[X | Run] | Acc]).
+    {Block, Ys} = lists:splitwith(fun(E) -> event_key_type(Trace, E) /= schedule end, Xs),
+    atomic_blocks(Trace, Ys, [[X | Block] | Acc]).
 
 enables(Pred, Trace) ->
     EventKeys = trace_to_event_keys(Trace),
@@ -70,18 +70,18 @@ enabled_by(EventKey, Trace) ->
         _ -> []
     end.
 
-schedule_run({Cog, I}, Trace) ->
+atomic_block({Cog, I}, Trace) ->
     {ok, Schedule} = maps:find(Cog, Trace),
     Rest = lists:nthtail(I+1, Schedule),
-    Run = lists:takewhile(fun(E) -> E#event.type /= schedule end, Rest),
+    Block = lists:takewhile(fun(E) -> E#event.type /= schedule end, Rest),
     lists:map(fun(J) -> {Cog, J} end,
-              lists:seq(I, I + length(Run))).
+              lists:seq(I, I + length(Block))).
 
 % TODO remove tail recursion if possible
 enabled_by_schedule(ScheduleEventKey, Trace) ->
     Events = lists:append(lists:map(fun(EventKey) -> enabled_by(EventKey, Trace) end,
-                              schedule_run(ScheduleEventKey, Trace))),
-    EnabledEvents = lists:append(lists:map(fun(EventKey) -> tl(schedule_run(EventKey, Trace)) end, Events)),
+                              atomic_block(ScheduleEventKey, Trace))),
+    EnabledEvents = lists:append(lists:map(fun(EventKey) -> tl(atomic_block(EventKey, Trace)) end, Events)),
     case EnabledEvents of
         [] -> [];
         _ -> lists:foldl(fun lists:append/2,
@@ -152,29 +152,29 @@ remove_read_write_sets_from_trace(Trace) ->
                                end, LocalTrace)
              end, Trace).
 
-add_read_write_sets_to_schedule_event(ScheduleRun, Trace) ->
-    [{Cog, I} | _] = ScheduleRun,
+add_read_write_sets_to_schedule_event(AtomicBlock, Trace) ->
+    [{Cog, I} | _] = AtomicBlock,
     ScheduleEvent = event_key_to_event(Trace, {Cog, I}),
-    LastEvent = event_key_to_event(Trace, lists:last(ScheduleRun)),
+    LastEvent = event_key_to_event(Trace, lists:last(AtomicBlock)),
     UpdatedScheduleEvent = ScheduleEvent#event{reads=LastEvent#event.reads, writes=LastEvent#event.writes},
     Local = maps:get(Cog, Trace),
     NewLocal = lists:sublist(Local, I) ++ [UpdatedScheduleEvent] ++ lists:nthtail(I + 1, Local),
     maps:put(Cog, NewLocal, Trace).
 
 new_traces(Trace) ->
-    ScheduleRuns = schedule_runs(Trace, trace_to_event_keys(Trace)),
-    AugmentedTrace = lists:foldl(fun add_read_write_sets_to_schedule_event/2, Trace, ScheduleRuns),
-    schedule_runs_to_dpor_traces(AugmentedTrace, ScheduleRuns).
+    AtomicBlocks = atomic_blocks(Trace, trace_to_event_keys(Trace)),
+    AugmentedTrace = lists:foldl(fun add_read_write_sets_to_schedule_event/2, Trace, AtomicBlocks),
+    atomic_blocks_to_dpor_traces(AugmentedTrace, AtomicBlocks).
 
-schedule_runs_to_dpor_traces(Trace, ScheduleRuns) -> schedule_runs_to_dpor_traces(Trace, ScheduleRuns, []).
-schedule_runs_to_dpor_traces(_Trace, [], Acc) -> Acc;
-schedule_runs_to_dpor_traces(Trace, [R | Rs], Acc) ->
-    Enabled = ordsets:from_list(lists:append(lists:map(fun(E) -> enabled_by(E, Trace) end, R))),
+atomic_blocks_to_dpor_traces(Trace, AtomicBlocks) -> atomic_blocks_to_dpor_traces(Trace, AtomicBlocks, []).
+atomic_blocks_to_dpor_traces(_Trace, [], Acc) -> Acc;
+atomic_blocks_to_dpor_traces(Trace, [B | Bs], Acc) ->
+    Enabled = ordsets:from_list(lists:append(lists:map(fun(E) -> enabled_by(E, Trace) end, B))),
     IdentityFunc = fun(X) -> X end,
     NewTraces = lists:filtermap(IdentityFunc,
                                 lists:map(fun(E) -> generate_trace(Trace, E) end,
                                           ordsets:to_list(Enabled))),
-    schedule_runs_to_dpor_traces(Trace, Rs, lists:append(NewTraces, Acc)).
+    atomic_blocks_to_dpor_traces(Trace, Bs, lists:append(NewTraces, Acc)).
 
 %% Trace prefixes
 
