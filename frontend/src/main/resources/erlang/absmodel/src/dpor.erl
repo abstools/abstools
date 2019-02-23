@@ -37,13 +37,13 @@ event_key_to_event(Trace, {Cog, I}) ->
 
 event_key_type(Trace, EventKey) ->
     (event_key_to_event(Trace, EventKey))#event.type.
-    
 
-schedule_runs(_Trace, []) -> [];
-schedule_runs(Trace, EventKeys) ->
+schedule_runs(Trace, EventKeys) -> schedule_runs(Trace, EventKeys, []).
+schedule_runs(_Trace, [], Acc) -> Acc;
+schedule_runs(Trace, EventKeys, Acc) ->
     [X | Xs] = EventKeys,
     {Run, Ys} = lists:splitwith(fun(E) -> event_key_type(Trace, E) /= schedule end, Xs),
-    [[X | Run] | schedule_runs(Trace, Ys)].
+    schedule_runs(Trace, Ys, [[X | Run] | Acc]).
 
 enables(Pred, Trace) ->
     EventKeys = trace_to_event_keys(Trace),
@@ -77,6 +77,7 @@ schedule_run({Cog, I}, Trace) ->
     lists:map(fun(J) -> {Cog, J} end,
               lists:seq(I, I + length(Run))).
 
+% TODO remove tail recursion if possible
 enabled_by_schedule(ScheduleEventKey, Trace) ->
     Events = lists:append(lists:map(fun(EventKey) -> enabled_by(EventKey, Trace) end,
                               schedule_run(ScheduleEventKey, Trace))),
@@ -165,14 +166,15 @@ new_traces(Trace) ->
     AugmentedTrace = lists:foldl(fun add_read_write_sets_to_schedule_event/2, Trace, ScheduleRuns),
     schedule_runs_to_dpor_traces(AugmentedTrace, ScheduleRuns).
 
-schedule_runs_to_dpor_traces(_Trace, []) -> [];
-schedule_runs_to_dpor_traces(Trace, [R | Rs]) ->
+schedule_runs_to_dpor_traces(Trace, ScheduleRuns) -> schedule_runs_to_dpor_traces(Trace, ScheduleRuns, []).
+schedule_runs_to_dpor_traces(_Trace, [], Acc) -> Acc;
+schedule_runs_to_dpor_traces(Trace, [R | Rs], Acc) ->
     Enabled = ordsets:from_list(lists:append(lists:map(fun(E) -> enabled_by(E, Trace) end, R))),
     IdentityFunc = fun(X) -> X end,
     NewTraces = lists:filtermap(IdentityFunc,
                                 lists:map(fun(E) -> generate_trace(Trace, E) end,
                                           ordsets:to_list(Enabled))),
-    lists:append(NewTraces, schedule_runs_to_dpor_traces(Trace, Rs)).
+    schedule_runs_to_dpor_traces(Trace, Rs, lists:append(NewTraces, Acc)).
 
 %% Trace prefixes
 
