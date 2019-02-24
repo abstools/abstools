@@ -21,7 +21,7 @@ distributions {
 }
 
 dependencies {
-    compile project(':org.abs_models.xtext')
+    implementation project(':org.abs_models.xtext')
 
     // https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
     implementation 'commons-io:commons-io:2.6'
@@ -112,6 +112,9 @@ jar {
     from configurations.runtimeClasspath
         .findAll { it.name.endsWith('jar') }
         .collect { zipTree(it) }
+    // don't repack signatures of jars we include (see
+    // https://stackoverflow.com/a/14441628)
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
     reproducibleFileOrder=true
 }
 
