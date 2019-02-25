@@ -2,13 +2,15 @@
 /.vagrant
 /.gradle
 /.idea/
+/.vscode/
 .rebar/
 .settings/
 .project
 .classpath
 target/
 build/
-/frontend/bin/
+bin/
+out/
 /frontend/dist/
 /frontend/**/gen/
 /frontend/**/*.beam
