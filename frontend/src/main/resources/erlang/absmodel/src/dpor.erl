@@ -99,30 +99,47 @@ trim_trace(Trace, Fat) ->
                 Fat).
 
 update_after_move(Trace, Cog, I, J) ->
-    E1 = event_key_to_event(Trace, {Cog, I}),
-    EnabledByE1 = enabled_by_schedule({Cog, I}, Trace),
-    EnabledByE2 = enabled_by_schedule({Cog, J}, Trace),
-    case ((J == 0) or lists:member({Cog, I}, EnabledByE2)) of
+    E2IsMainOrInit = J == 0,
+    case E2IsMainOrInit of
         true -> false;
         false -> {ok, Local} = maps:find(Cog, Trace),
+                 E1 = event_key_to_event(Trace, {Cog, I}),
                  NewLocal = lists:sublist(Local, J) ++ [E1],
+                 EnabledByE1 = enabled_by_schedule({Cog, I}, Trace),
+                 EnabledByE2 = enabled_by_schedule({Cog, J}, Trace),
                  NewTrace = trim_trace(maps:put(Cog, NewLocal, Trace),
                                        lists:append(EnabledByE1, EnabledByE2)),
+                 E2 = event_key_to_event(Trace, {Cog, J}),
+                 io:format("flipping the following~n  ~p~n  ~p~n", [E1, E2]),
+                 io:format("gave us~n  ~p~n", [NewTrace]),
                  {true, NewTrace}
     end.
+
+can_be_moved_before(Trace, {Cog, I}, {Cog, J}) ->
+    not lists:member({Cog, I}, enabled_by_schedule({Cog, J}, Trace)).
+
+swappable(E1, E2) ->
+    not happens_after(E1, E2) andalso conflicts_with(E1, E2).
 
 move_backwards(Trace, {Cog, I}) ->
     E1 = event_key_to_event(Trace, {Cog, I}),
     {ok, Schedule} = maps:find(Cog, Trace),
     EventKeysBeforeE1 = lists:sublist(cog_local_trace_to_event_keys(Cog, Schedule), I),
     ScheduleEventKeysBeforeE1 = lists:filter(fun(EK) -> event_key_type(Trace, EK) =:= schedule end, EventKeysBeforeE1),
-    MaybeE2 = lists:search(fun({Cog, J}) ->
-                                   E2 = event_key_to_event(Trace, {Cog, J}),
-                                   not happens_after(E1, E2) andalso conflicts_with(E1, E2) end,
-                           lists:reverse(ScheduleEventKeysBeforeE1)),
+    MaybeE2 = lists:dropwhile(fun({Cog, J}) ->
+                                      E2 = event_key_to_event(Trace, {Cog, J}),
+                                      can_be_moved_before(Trace, {Cog, I}, {Cog, J}) andalso
+                                      not swappable(E1, E2)
+                              end,
+                              lists:reverse(ScheduleEventKeysBeforeE1)),
     case MaybeE2 of
-        {value, {Cog, J}} -> update_after_move(Trace, Cog, I, J);
-        false -> false
+        [{Cog, J} | _] ->
+            E2 = event_key_to_event(Trace, {Cog, J}),
+            case swappable(E1, E2) and can_be_moved_before(Trace, {Cog, I}, {Cog, J}) of
+                true -> update_after_move(Trace, Cog, I, J);
+                false -> false
+            end;
+        [] -> false
     end.
 
 happens_after(E1, E2) ->
