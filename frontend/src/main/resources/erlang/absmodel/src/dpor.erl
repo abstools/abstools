@@ -90,6 +90,7 @@ enabled_by_schedule(ScheduleEventKey, Trace) ->
                                    EnabledEvents))
     end.
 
+% TODO only update_with() lowest I?
 trim_trace(Trace, Fat) ->
     lists:foldl(fun({Cog, I}, T) ->
                     Trim = fun(Schedule) -> lists:sublist(Schedule, I) end,
@@ -104,14 +105,15 @@ update_after_move(Trace, Cog, I, J) ->
         true -> false;
         false -> {ok, Local} = maps:find(Cog, Trace),
                  E1 = event_key_to_event(Trace, {Cog, I}),
-                 NewLocal = lists:sublist(Local, J) ++ [E1],
-                 EnabledByE1 = enabled_by_schedule({Cog, I}, Trace),
-                 EnabledByE2 = enabled_by_schedule({Cog, J}, Trace),
-                 NewTrace = trim_trace(maps:put(Cog, NewLocal, Trace),
-                                       lists:append(EnabledByE1, EnabledByE2)),
-                 E2 = event_key_to_event(Trace, {Cog, J}),
-                 io:format("flipping the following~n  ~p~n  ~p~n", [E1, E2]),
-                 io:format("gave us~n  ~p~n", [NewTrace]),
+                 BeforeE2 = lists:sublist(Local, J),
+                 RestLen = I - J + 1, % Rest includes E2 and E1
+                 RestEventKeys = lists:zip(lists:duplicate(RestLen, Cog), lists:seq(J, I)),
+                 RestScheduleEventKeys = lists:filter(fun(EK) -> event_key_type(Trace, EK) =:= schedule end,
+                                                      RestEventKeys),
+                 EnabledByRest = lists:append(lists:map(fun(EK) -> enabled_by_schedule(EK, Trace) end,
+                                                        RestScheduleEventKeys)),
+                 NewLocal = BeforeE2 ++ [E1],
+                 NewTrace = trim_trace(maps:put(Cog, NewLocal, Trace), EnabledByRest),
                  {true, NewTrace}
     end.
 
