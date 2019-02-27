@@ -17,9 +17,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.jar.JarEntry;
 
 import org.abs_models.Absc;
@@ -58,16 +56,12 @@ import org.abs_models.frontend.ast.ProductLine;
 import org.abs_models.frontend.ast.StarImport;
 import org.abs_models.frontend.ast.StringLiteral;
 import org.abs_models.frontend.delta.DeltaModellingException;
-import org.abs_models.frontend.delta.ProductLineAnalysisHelper;
-import org.abs_models.frontend.mtvl.ChocoSolver;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
-
-import choco.kernel.model.constraints.Constraint;
 
 /**
  * @author rudi
@@ -221,14 +215,6 @@ public class Main {
         m.verbose = arguments.verbose;
         m.debug = arguments.debug;
 
-        // drop attributes before calculating any attribute
-        if (arguments.ignoreattr)
-            m.dropAttributes();
-
-        if (arguments.verbose) {
-            System.out.println("Analyzing Model...");
-        }
-
         if (m.hasParserErrors()) {
             System.err.println("Syntactic errors: " + m.getParserErrors().size());
             for (ParserError e : m.getParserErrors()) {
@@ -244,18 +230,6 @@ public class Main {
         m.collapseTraitModifiers();
 
         m.expandPartialFunctions();
-
-        // check PL before flattening
-        if (arguments.checkspl)
-            typeCheckProductLine(m);
-
-        // flatten before checking error, to avoid calculating *wrong* attributes
-        if (arguments.solveall) {
-            // Build all SPL configurations (valid feature selections, ignoring attributes), one by one (for performance measuring)
-            if (arguments.verbose)
-                System.out.println("Building ALL " + m.getProductList().getNumChild() + " feature model configurations...");
-            ProductLineAnalysisHelper.buildAndPrintAllConfigurations(m);
-        }
 
         if (arguments.product != null) {
             // apply deltas that correspond to arguments.productproduct
@@ -283,7 +257,6 @@ public class Main {
         }
         if (!semErrs.containsErrors()) {
             typeCheckModel(m);
-            analyzeMTVL(m);
         }
     }
 
@@ -364,133 +337,6 @@ public class Main {
         m.flushTreeCache();
     }
 
-    /**
-     * TODO: Should probably be introduced in Model through JastAdd by MTVL package.
-     * However, the command-line argument handling will have to stay in Main. Pity.
-     */
-    private void analyzeMTVL(Model m) {
-        ProductDecl productDecl = null;
-        try {
-            productDecl = arguments.product == null ? null : m.findProduct(arguments.product);
-        } catch (WrongProgramArgumentException e) {
-            // ignore in case we're just solving.
-        }
-        if (m.hasMTVL()) {
-            if (arguments.solve) {
-                if (arguments.verbose)
-                    System.out.println("Searching for solutions for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
-                System.out.print(s.getSolutionsAsString());
-            }
-            if (arguments.minimise != null) {
-                if (arguments.verbose)
-                    System.out.println("Searching for minimum solutions of "+arguments.minimise+" for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
-                System.out.print(s.minimiseToString(arguments.minimise));
-            }
-            if (arguments.maximise != null) {
-                if (arguments.verbose)
-                    System.out.println("Searching for maximum solutions of "+arguments.maximise+" for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
-                //System.out.print(s.maximiseToInt(product));
-                s.addConstraint(ChocoSolver.eqeq(s.vars.get(arguments.maximise), s.maximiseToInt(arguments.maximise)));
-                ChocoSolver s1 = m.instantiateCSModel();
-                int i=1;
-                while(s1.solveAgain()) {
-                    System.out.println("------ "+(i++)+"------");
-                    System.out.print(s1.getSolutionsAsString());
-                }
-            }
-            if (arguments.solveall) {
-                if (arguments.verbose)
-                    System.out.println("Searching for all solutions for the feature model...");
-                ChocoSolver solver = m.instantiateCSModel();
-                System.out.print(solver.getSolutionsAsString());
-            }
-            if (arguments.solveWithProduct != null) {
-                ProductDecl solveWithDecl = null;
-                try {
-                    solveWithDecl = m.findProduct(arguments.solveWithProduct);
-                } catch (WrongProgramArgumentException e) {
-                    // nothing to do
-                }
-                if (solveWithDecl != null) {
-                    if (arguments.verbose)
-                        System.out.println("Searching for solution that includes " + arguments.solveWithProduct + "...");
-                    ChocoSolver s = m.instantiateCSModel();
-                    HashSet<Constraint> newcs = new HashSet<>();
-                    solveWithDecl.getProduct().getProdConstraints(s.vars, newcs);
-                    for (Constraint c: newcs)
-                        s.addConstraint(c);
-                    System.out.println("checking solution:\n" + s.getSolutionsAsString());
-                } else {
-                    System.out.println("Product '" + arguments.solveWithProduct + "' not found.");
-                }
-            }
-            if (arguments.minWith != null) {
-                ProductDecl minWithDecl;
-                try {
-                    minWithDecl = m.findProduct(arguments.minWith);
-                } catch (WrongProgramArgumentException e) {
-                    // nothing to do
-                }
-                if (productDecl != null) {
-                    if (arguments.verbose)
-                        System.out.println("Searching for solution that includes " + arguments.minWith + "...");
-                    ChocoSolver s = m.instantiateCSModel();
-                    HashSet<Constraint> newcs = new HashSet<>();
-                    s.addIntVar("difference", 0, 50);
-                    m.getDiffConstraints(productDecl.getProduct(), s.vars, newcs, "difference");
-                    for (Constraint c: newcs) s.addConstraint(c);
-                    System.out.println("checking solution: " + s.minimiseToString("difference"));
-                } else {
-                    System.out.println("Product '" + arguments.minWith + "' not found.");
-                }
-
-            }
-            if (arguments.maxProduct) {
-                if (arguments.verbose)
-                    System.out.println("Searching for solution with maximum number of features ...");
-                ChocoSolver s = m.instantiateCSModel();
-                HashSet<Constraint> newcs = new HashSet<>();
-                s.addIntVar("noOfFeatures", 0, 50);
-                if (m.getMaxConstraints(s.vars,newcs, "noOfFeatures")) {
-                    for (Constraint c: newcs) s.addConstraint(c);
-                    System.out.println("checking solution: "+s.maximiseToString("noOfFeatures"));
-                }
-                else {
-                    System.out.println("---No solution-------------");
-                }
-
-            }
-            if (arguments.checkProduct != null) {
-
-                ProductDecl checkProductDecl = null;
-                try {
-                    checkProductDecl = m.findProduct(arguments.checkProduct);
-                } catch (WrongProgramArgumentException e) {
-                    // nothing to do
-                }
-                if (checkProductDecl == null ){
-                    System.out.println("Product '" + arguments.checkProduct + "' not found, cannot check.");
-                } else {
-                    ChocoSolver s = m.instantiateCSModel();
-                    Map<String,Integer> guess = checkProductDecl.getProduct().getSolution();
-                    System.out.println("checking solution: "+s.checkSolution(guess,m));
-                }
-            }
-            if (arguments.numbersol) {
-                ChocoSolver s = m.instantiateCSModel();
-                // did we call m.dropAttributes() previously?
-                if (arguments.ignoreattr) {
-                    System.out.println("Number of solutions found (without attributes): "+s.countSolutions());
-                } else {
-                    System.out.println("Number of solutions found: "+s.countSolutions());
-                }
-            }
-        }
-    }
-
     private void typeCheckModel(Model m) {
         if (!arguments.notypecheck) {
             if (arguments.verbose)
@@ -522,22 +368,6 @@ public class Main {
                 ltie.setLocationTypingPrecision(arguments.locationTypeScope);
             }
             m.registerTypeSystemExtension(ltie);
-        }
-    }
-
-    private void typeCheckProductLine(Model m) {
-
-        //int n = m.getFeatureModelConfigurations().size();
-        int n = m.getProductList().getNumChild();
-        if (n == 0)
-            return;
-
-        if (arguments.verbose) {
-            System.out.println("Typechecking Software Product Line (" + n + " products)...");
-        }
-        SemanticConditionList errors = m.typeCheckPL();
-        for (SemanticCondition err : errors) {
-            System.err.println(err.getHelpMessage());
         }
     }
 

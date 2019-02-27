@@ -8,6 +8,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import org.abs_models.frontend.parser.Main;
+import org.abs_models.frontend.typechecker.CheckSPLCommand;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -18,6 +19,7 @@ import picocli.CommandLine.ITypeConverter;
 import picocli.CommandLine.IVersionProvider;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
+import picocli.CommandLine.RunLast;
 
 /**
  * The main entry point for absc, the abs compiler.
@@ -34,9 +36,16 @@ import picocli.CommandLine.Parameters;
              "    http://www.abs-models.org/" },
          mixinStandardHelpOptions = true, // handles -h, -V
          //abbreviateSynopsis = true,
-         customSynopsis = "@|bold absc|@ [BACKEND] [OPTIONS] [<files>...]",
+         synopsisHeading = "",
+         customSynopsis =  {"Usage: @|bold absc|@ [BACKEND] [OPTIONS] [<files>...]",
+                            "   or: @|bold absc|@ checkspl [OPTIONS] [<files>...]"
+         },
          sortOptions = false,
-         separator = " ",       // -product=XXX vs. -o file
+         separator = " ",       // "-o=file" vs. "-o file"
+         subcommands = {
+             // HelpCommand.class, // no need; we have the standard -h / --help options
+             CheckSPLCommand.class
+         },
          versionProvider = Absc.AbscVersionProvider.class
          )
 public class Absc implements Callable<Void> {
@@ -45,26 +54,26 @@ public class Absc implements Callable<Void> {
                 arity = "1..*")
     public List<File> files;
 
-    @Option(names = { "--erlang", "-erlang" },
+    @Option(names = { "--erlang" },
             description = "@|bold Erlang backend:|@ generate Erlang code")
     public boolean erlang = false;
-    @Option(names = { "--maude", "-maude" },
+    @Option(names = { "--maude" },
             description = "@|bold Maude backend:|@ generate Maude code")
     public boolean maude = false;
-    @Option(names = { "--java", "-java" },
+    @Option(names = { "--java" },
             description = "@|bold Java backend:|@ generate Java code")
     public boolean java = false;
-    @Option(names = { "--prolog", "-prolog" },
+    @Option(names = { "--prolog" },
             description = "@|bold Prolog backend:|@ generate Prolog data file")
     public boolean prolog = false;
 
-    @Option(names = { "--prettyprint", "-prettyprint" },
+    @Option(names = { "--prettyprint" },
             description = "@|bold Pretty-printer:|@ pretty print model and exit")
     public boolean prettyprint = false;
-    @Option(names = { "--coreabs", "-coreabs" },
+    @Option(names = { "--coreabs" },
             description = "generate Coreabs data file (XXX undocumented in previous version)")
     public boolean coreabs = false;
-    @Option(names = { "--outline", "-outline" },
+    @Option(names = { "--outline" },
             description = "generate code structure outline")
     public boolean outline = false;
 
@@ -76,86 +85,82 @@ public class Absc implements Callable<Void> {
     @Option(names = { "-v", "--verbose" },
             description = "verbose output")
     public boolean verbose = false;
-    @Option(names = { "-debug"},
+    @Option(names = { "--debug"},
             description = "print diagnostic information (e.g., stacktraces) for internal compiler problems")
     public boolean debug = false;
-    @Option(names = { "-dump"},
+    @Option(names = { "--dump"},
             description = "dump AST to standard output")
     public boolean dump = false;
 
     // Code generation options
-    @Option(names = { "-o"},
+    @Option(names = { "-o", "--output-file"},
             description = "for single-file backends: compile to @|italic file|@ (default: standard output)",
             paramLabel = "file")
     public File outputfile;
-    @Option(names = { "-d"},
+    @Option(names = { "-d", "--directory"},
             description = "compile to @|italic directory|@ (default: @|bold gen/|@ for multi-file backends, ignored for single-file backends)",
             paramLabel = "directory")
     public File destDir = new File("gen/");
 
     // Erlang options
-    @Option(names = { "-cover" },
+    @Option(names = { "--cover" },
             description = "@|bold Erlang backend:|@ compile with run-time statement execution count recording")
     public boolean erlang_cover = false;
-    @Option(names = { "-http-index-file" },
+    @Option(names = { "--modelapi-index-file" },
             description = "@|bold Erlang backend:|@ display @|italic file|@ when accessing the Model API with a web browser",
             paramLabel = "file")
     public File http_index_file;
-    @Option(names = { "-http-static-dir" },
+    @Option(names = { "--modelapi-static-dir" },
             description = "@|bold Erlang backend:|@ make contents of @|italic dir|@ accessible below @|bold /static/|@ in Model API",
             paramLabel = "dir")
     public File http_static_dir;
 
     // Maude options
-    @Option(names = { "-main" },
+    @Option(names = { "--main" },
             description = "@|bold Maude backend:|@ select the main block to execute",
             paramLabel = "module name")
             public String maude_mainBlock;
-    @Option(names = { "-timed"},
+    @Option(names = { "--timed"},
             description = "@|bold Maude backend:|@ generate code for timed interpreter")
     public boolean maude_timed = false;
-    @Option(names = { "-limit"},
+    @Option(names = { "--limit"},
             description = "@|bold Maude backend:|@ set clock limit for timed interpreter to @|italic n|@ (default: ${DEFAULT-VALUE})",
             paramLabel = "n")
     public int maude_clocklimit = 100;
-    @Option(names = { "-defaultcost"},
+    @Option(names = { "--defaultcost"},
             description = "@|bold Maude backend:|@ set default statement execution cost to @|italic n|@ (default: ${DEFAULT-VALUE})",
             paramLabel = "n")
     public int maude_defaultResources = 0;
 
     // Java options
     // -sourceonly omitted, -dynamic does not work
-    @Option(names = { "-sourceonly" },
-            description = "@|bold Java backend:|@ only generate Java source files")
+    @Option(names = { "--sourceonly" },
+            description = "@|bold Java backend:|@ do not generate Java .class files")
     public boolean java_sourceOnly = false;
-    @Option(names = { "-debuginfo" },
+    @Option(names = { "--debuginfo" },
             description = "@|bold Java backend:|@ generate code with listener / debugger support (increases code size)")
     public boolean java_includeDebug = false;
 
     // Pretty-printer
-    @Option(names = { "-f" },
+    @Option(names = { "-f", "--force" },
             description = "@|bold Pretty-printer, Outline:|@ ignore errors in model")
     public boolean prettyprint_force = false;
-    @Option(names = { "-keepsugar" },
+    @Option(names = { "--keepsugar" },
             description = "@|bold Pretty-printer: |@ do not transform statements into basic core abs")
     public boolean prettyprint_keepsugar = false;
-    @Option(names = { "-keepstdlib" },
+    @Option(names = { "--keepstdlib" },
             description = "@|bold Pretty-printer: |@ include ABS standard library")
     public boolean prettyprint_keepstdlib = false;
     // SPL
-    @Option(names = { "-product" },
+    @Option(names = { "-p", "--product" },
             description = "apply the deltas specified by @|italic product|@")
     public String product = null;
 
-    @Option(names = { "-checkspl" },
-            description = "check the SPL for errors")
-    public boolean checkspl = false;
-
-    @Option(names = { "-notypecheck" },
+    @Option(names = { "--notypecheck" },
             description = "disable typechecking")
     public boolean notypecheck = false;
 
-    @Option(names = { "-loctypes" },
+    @Option(names = { "--loctypes" },
             description = "enable location type checking")
     public boolean locationTypeInferenceEnabled = false;
 
@@ -171,7 +176,7 @@ public class Absc implements Callable<Void> {
             return LocationType.createFromName(value);
         }
     }
-    @Option(names = { "-locdefault" },
+    @Option(names = { "--locdefault" },
             description = "sets the default location type (allowed values: ${COMPLETION-CANDIDATES}) (default: ${DEFAULT-VALUE})",
             completionCandidates = LocationTypeUserTypes.class,
             converter = LocationTypeConverter.class,
@@ -181,49 +186,12 @@ public class Absc implements Callable<Void> {
     public LocationType defaultLocationType = LocationType.INFER;
 
 
-    @Option(names = { "-locscope" },
+    @Option(names = { "--locscope" },
             description = "sets the location aliasing scope (allowed values: ${COMPLETION-CANDIDATES}) (default: ${DEFAULT-VALUE})",
             paramLabel = "scope")
     // default value taken from declaration of
     // LocationTypeInferrerExtension.precision
     public LocationTypeInferrerExtension.LocationTypingPrecision locationTypeScope = LocationTypingPrecision.CLASS_LOCAL_FAR;
-
-    // mTVL options
-    @Option(names = { "-solve" },
-            description = "solve constraint satisfaction problem (CSP) for the feature model and print a solution")
-    public boolean solve = false ;
-    @Option(names = { "-solveall" },
-            description = "solve all solutions for the CSP and print timing information")
-    public boolean solveall = false ;
-    @Option(names = { "-solveWith" },
-            description = "solve CSP by finding a product that includes @|italic PID|@",
-            paramLabel = "PID")
-    public String solveWithProduct ;
-    @Option(names = { "-min" },
-            description = "minimise variable @|italic var|@ when solving the CSP for the feature model",
-            paramLabel = "var")
-    public String minimise;
-    @Option(names = { "-max" },
-            description = "maximise variable @|italic var|@ when solving the CSP for the feature model",
-            paramLabel = "var")
-    public String maximise;
-    @Option(names = { "-maxProduct" },
-            description = "print the solution that has the most number of features")
-    public boolean maxProduct = false ;
-    @Option(names = { "-minWith" },
-            description = "solve CSP by finding a solution that tries to include @|italic product|@ with minimum number of changes",
-            paramLabel = "product")
-    public String minWith;
-    @Option(names = { "-nsol" },
-            description = "count the number of solutions")
-    public boolean numbersol = false ;
-    @Option(names = { "-noattr" },
-            description = "ignore attributes when generating product")
-    public boolean ignoreattr = false ;
-    @Option(names = { "-check" },
-            description = "check satisfiability of @|italic product|@",
-            paramLabel = "product")
-    public String checkProduct;
 
     static class AbscVersionProvider implements IVersionProvider {
         public String[] getVersion() throws Exception {
@@ -258,7 +226,9 @@ public class Absc implements Callable<Void> {
      * @param args
      */
     public static void main(String[] args) {
-        CommandLine.call(new Absc(), args);
+        // https://picocli.info/#_parsing_subcommands
+        CommandLine commandline = new CommandLine(new Absc());
+        commandline.parseWithHandler(new RunLast(), args);
     }
 
     @Override
