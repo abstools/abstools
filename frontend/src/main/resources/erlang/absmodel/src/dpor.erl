@@ -79,15 +79,21 @@ atomic_block({Cog, I}, Trace) ->
 
 % TODO remove tail recursion if possible
 enabled_by_schedule(ScheduleEventKey, Trace) ->
-    Events = lists:append(lists:map(fun(EventKey) -> enabled_by(EventKey, Trace) end,
-                              atomic_block(ScheduleEventKey, Trace))),
-    EnabledEvents = lists:append(lists:map(fun(EventKey) -> tl(atomic_block(EventKey, Trace)) end, Events)),
-    case EnabledEvents of
-        [] -> [];
-        _ -> lists:foldl(fun lists:append/2,
-                         Events,
-                         lists:map(fun(EventKey) -> enabled_by_schedule(EventKey, Trace) end,
-                                   EnabledEvents))
+    case event_key_type(Trace, ScheduleEventKey) of
+        schedule ->
+            AtomicBlock = atomic_block(ScheduleEventKey, Trace),
+            EnabledEvents = lists:append(lists:map(fun(EventKey) -> enabled_by(EventKey, Trace) end,
+                                                   tl(AtomicBlock))),
+            EnabledAtomicBlocks = lists:append(lists:map(fun(EventKey) -> tl(atomic_block(EventKey, Trace)) end,
+                                                         EnabledEvents)),
+            case EnabledAtomicBlocks of
+                [] -> [];
+                _ -> lists:foldl(fun lists:append/2,
+                                 EnabledEvents,
+                                 lists:map(fun(EventKey) -> enabled_by_schedule(EventKey, Trace) end,
+                                           EnabledAtomicBlocks))
+            end;
+        _ -> []
     end.
 
 % TODO only update_with() lowest I?
