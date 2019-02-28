@@ -1,2 +1,2 @@
 #!/bin/bash
-absc -erlang "$@"
+absc --erlang "$@"

@@ -113,10 +113,10 @@ public class JavaBackend extends Main {
         JavaCode javaCode = new JavaCode(destDir);
         if (this.untypedJavaGen) {
             if (arguments.verbose) System.out.println("Generating dynamic Java code...");
-            m.generateJavaCodeDynamic(javaCode, arguments.java_includeDebug);
+            m.generateJavaCodeDynamic(javaCode, arguments.debug_generated_code);
         } else {
             if (arguments.verbose) System.out.println("Generating Java code...");
-            m.generateJavaCode(javaCode, arguments.java_includeDebug);
+            m.generateJavaCode(javaCode, arguments.debug_generated_code);
         }
         if (!arguments.java_sourceOnly) {
             if (arguments.verbose) System.out.println("Compiling generated Java code...");

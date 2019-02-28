@@ -54,13 +54,13 @@ public class Absc implements Callable<Void> {
                 arity = "1..*")
     public List<File> files;
 
-    @Option(names = { "--erlang" },
+    @Option(names = { "--erlang", "-e" },
             description = "@|bold Erlang backend:|@ generate Erlang code")
     public boolean erlang = false;
-    @Option(names = { "--maude" },
+    @Option(names = { "--maude", "-m" },
             description = "@|bold Maude backend:|@ generate Maude code")
     public boolean maude = false;
-    @Option(names = { "--java" },
+    @Option(names = { "--java", "-j" },
             description = "@|bold Java backend:|@ generate Java code")
     public boolean java = false;
     @Option(names = { "--prolog" },
@@ -101,11 +101,12 @@ public class Absc implements Callable<Void> {
             description = "compile to @|italic directory|@ (default: @|bold gen/|@ for multi-file backends, ignored for single-file backends)",
             paramLabel = "directory")
     public File destDir = new File("gen/");
+    @Option(names = { "--debuginfo" },
+            description = {"@|bold Java backend:|@ generate code with listener / debugger support (increases code size)",
+                           "@|bold Erlang backend:|@ generate code with execution coverage recording"})
+    public boolean debug_generated_code = false;
 
     // Erlang options
-    @Option(names = { "--cover" },
-            description = "@|bold Erlang backend:|@ compile with run-time statement execution count recording")
-    public boolean erlang_cover = false;
     @Option(names = { "--modelapi-index-file" },
             description = "@|bold Erlang backend:|@ display @|italic file|@ when accessing the Model API with a web browser",
             paramLabel = "file")
@@ -137,9 +138,6 @@ public class Absc implements Callable<Void> {
     @Option(names = { "--sourceonly" },
             description = "@|bold Java backend:|@ do not generate Java .class files")
     public boolean java_sourceOnly = false;
-    @Option(names = { "--debuginfo" },
-            description = "@|bold Java backend:|@ generate code with listener / debugger support (increases code size)")
-    public boolean java_includeDebug = false;
 
     // Pretty-printer
     @Option(names = { "-f", "--force" },

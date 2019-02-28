@@ -88,7 +88,7 @@ the resulting file as input.
 
 Compiling all files in the current directory into Maude is done with the following command:
 
-  $ absc -maude *.abs -o model.maude
+  $ absc --maude *.abs -o model.maude
 
 The model is started with the following commands:
 
@@ -128,7 +128,7 @@ running the resulting Erlang code.
 Compiling all files in the current directory into Erlang and starting the
 resulting model is done with the following commands:
 
-  $ absc -erlang *.abs
+  $ absc --erlang *.abs
   $ gen/erl/run
 
 This sequence of commands starts Erlang, then compiles the generated Erlang
@@ -144,9 +144,10 @@ information contains line numbers and execution count, but not the source code
 itself.  This is sufficient for some tools to visualize code coverage, e.g.,
 `cov-mode` for Emacs (https://github.com/AdamNiederer/cov).
 
-To generate code coverage information, compile an abs model with the `-cover` switch, then run it as normal, i.e.,
+To generate code coverage information, compile an abs model with the
+`--debuginfo` switch, then run it as normal, i.e.,
 
-  $ absc -erlang -cover *.abs
+  $ absc --erlang --debuginfo *.abs
   $ gen/erl/run
 
 For each `.abs` file, running the model will generate a `.abs.gcov` file in

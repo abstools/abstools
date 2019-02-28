@@ -75,7 +75,7 @@ public class ErlangBackend extends Main {
         EnumSet<CompileOptions> compileOptions = EnumSet.noneOf(CompileOptions.class);
         if (arguments.verbose) compileOptions.add(CompileOptions.VERBOSE);
         if (arguments.debug) compileOptions.add(CompileOptions.DEBUG);
-        if (arguments.erlang_cover) compileOptions.add(CompileOptions.COVERAGE);
+        if (arguments.debug_generated_code) compileOptions.add(CompileOptions.COVERAGE);
         compile(model, outdir, compileOptions);
         return 0;
     }
