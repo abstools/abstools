@@ -107,6 +107,10 @@ public class Main {
                 result = Math.max(result, CoreAbsBackend.doMain(arguments));
                 done = true;
             }
+            if (arguments.json) {
+                result = Math.max(result, autodeploy.Tester.doMain(arguments));
+                done = true;
+            }
             if (arguments.prettyprint) {
                 result = Math.max(result, PrettyPrinterBackEnd.doMain(arguments));
                 done = true;

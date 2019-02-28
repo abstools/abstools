@@ -4,6 +4,14 @@ PROGNAME="$(readlink $0)"
 if [[ -z $PROGNAME ]] ; then
     PROGNAME="$0"
 fi
-BASEDIR="$(dirname $PROGNAME)/../.."
+if [ -f "$(dirname $PROGNAME)/../../dist/absfrontend.jar" ]; then
+    ABSFRONTENDJAR="$(dirname $PROGNAME)/../../dist/absfrontend.jar"
+elif [ -f "$(dirname $PROGNAME)/../lib/absfrontend.jar" ]; then
+    ABSFRONTENDJAR="$(dirname $PROGNAME)/../lib/absfrontend.jar"
+else
+    echo "Error: could not find absfrontend.jar"
+    echo "(expected in $(dirname $PROGNAME)/../../dist/ or $(dirname $PROGNAME)/../lib/)"
+    exit 1
+fi
 
-java -Xmx512m -cp $BASEDIR/bin:$BASEDIR/lib/org.sat4j.core.jar:$BASEDIR/lib/org.sat4j.pb.jar:$BASEDIR/lib/sat4j-pb.jar:$BASEDIR/lib/org.sat4j.maxsat.jar:$BASEDIR/lib/sat4j-maxsat.jar:$BASEDIR/lib/choco-solver-2.1.1.jar:$BASEDIR/lib/commons-io-2.4.jar:$BASEDIR/lib/guava-15.0.jar autodeploy.Tester "$@"
+java -Xmx512m -jar $ABSFRONTENDJAR --json "$@"

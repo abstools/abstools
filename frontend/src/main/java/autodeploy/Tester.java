@@ -4,12 +4,11 @@
  */
 package autodeploy;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.abs_models.Absc;
@@ -20,28 +19,28 @@ import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.parser.Main;
 
+
 public class Tester extends Main {
 
-  private String _JSONName = "toto.json";
-
-  public static void main(final String... args) {
-    try {
-        new Tester().compile(args);
-    } catch (NotImplementedYetException e) {
+  public static int doMain(Absc args) {
+      Tester tester = new Tester();
+      tester.arguments = args;
+      try {
+          tester.compile();
+      } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
-            System.exit(1);
-    } catch (Exception e) {
-      System.err.println("An error occurred during compilation:\n" + e.getMessage());
-      if (Arrays.asList(args).contains("-debug")) { e.printStackTrace(); }
-      System.exit(1);
-    }
+            return 1;
+      } catch (Exception e) {
+          System.err.println("An error occurred during compilation:\n" + e.getMessage());
+          if (args.debug) { e.printStackTrace(); }
+          return 1;
+      }
+      return 0;
   }
 
-  private void compile(String[] args)
+  private void compile()
       throws DeltaModellingException, IOException, WrongProgramArgumentException, FileNotFoundException, InternalBackendException {
-      // Handle "-JSON=..." argument; should switch to "-o"
-      List<String> remaining_args = this.parseArgs(args);
-      Absc arguments = Absc.parseArgs(remaining_args.toArray(new String[0]));
+      // FIXME: we don't handle "-JSON=..." argument; should switch to "-o"
       final Model model = this.parse(arguments.files);
       // the extraction of the cost annotations can proceed even if
       // the code is not type safe.  This is exploited in the
@@ -57,9 +56,13 @@ public class Tester extends Main {
       if (arguments.verbose) {
           System.out.println("Starting JSON generation...");
       }
-      PrintWriter f = new PrintWriter(new File(_JSONName));
-      di.generateJSON(f);
-      f.close();
+      PrintStream stream = System.out;
+      if (arguments.outputfile != null) {
+          stream = new PrintStream(arguments.outputfile);
+      }
+      // PrintWriter f = new PrintWriter(new File(_JSONName));
+      di.generateJSON(new PrintWriter(stream));
+      stream.close();
   }
 
 
@@ -71,11 +74,11 @@ public class Tester extends Main {
     for (int i = 0; i < restArgs.size(); i++) {
       String arg = restArgs.get(i);
       if (arg.startsWith("-JSON=")){
-        try{ _JSONName = arg.split("=")[1]; }
-        catch (Exception e) {
-          System.err.println("The number of iterations (-it) should be an integer");
-          System.exit(1);
-        }
+        // try{ _JSONName = arg.split("=")[1]; }
+        // catch (Exception e) {
+        //   System.err.println("The number of iterations (-it) should be an integer");
+        //   System.exit(1);
+        // }
       } else { remainingArgs.add(arg); }
     }
     return remainingArgs;

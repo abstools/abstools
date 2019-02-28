@@ -73,6 +73,9 @@ public class Absc implements Callable<Void> {
     @Option(names = { "--coreabs" },
             description = "generate Coreabs data file (XXX undocumented in previous version)")
     public boolean coreabs = false;
+    @Option(names = { "--json" },
+            description = "generate JSON data file for autodeployer")
+    public boolean json = false;
     @Option(names = { "--outline" },
             description = "generate code structure outline")
     public boolean outline = false;
