@@ -480,11 +480,11 @@ aspect GenerateJavaDynamic_Core {
         stream.print("if (");
         getCondition().generateJavaDynamic(stream);
         stream.println(".toBoolean()) {");
-        getThenCase().generateJavaDynamic(stream);
+        getThen().generateJavaDynamic(stream);
         stream.println("}");
-        if (hasElseCase()) {
+        if (hasElse()) {
             stream.println("else {");
-            getElseCase().generateJavaDynamic(stream);
+            getElse().generateJavaDynamic(stream);
             stream.println("}");
         }
     }

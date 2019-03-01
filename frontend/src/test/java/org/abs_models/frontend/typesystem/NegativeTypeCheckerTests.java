@@ -359,6 +359,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         assertTypeErrors("def A f<A,Int>(A a) = a;");
     }
 
+    @Test
     public void caseErrorDuplicateDatatypeTypeParameter() {
         assertTypeErrors("data X<A, A>;");
     }

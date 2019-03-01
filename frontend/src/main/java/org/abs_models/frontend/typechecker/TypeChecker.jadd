@@ -686,9 +686,9 @@ aspect TypeChecker {
         super.typeCheck(e);
         getCondition().typeCheck(e);
         getCondition().assertHasType(e,getModel().getBoolType());
-        getThenCase().typeCheck(e);
-        if (hasElseCase())
-            getElseCase().typeCheck(e);
+        getThen().typeCheck(e);
+        if (hasElse())
+            getElse().typeCheck(e);
 
     }
 
