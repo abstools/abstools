@@ -38,7 +38,9 @@
 
 - Prepare release commit
 
-  - The release commit should include only the updated `CHANGELOG.md`
+  - The release commit should include only the updated `CHANGELOG.md`,
+    with the headline markers `#` replaced by stars `*` (since the
+    # symbol denotes comments in a github commit message).
 
   - The first line of the commit message should be `Release version
    x.y.z`, followed by the contents of the change log for the current version
@@ -46,6 +48,16 @@
 - Add release tag `vx.y.z` with the same message as the commit message.
 
 - push release commit (`git push`) and tag (`git push --tags`)
+
+- upload `absfrontend.jar`
+
+  - github will have created a release at
+    [https://github.com/abstools/abstools/releases] with the source
+    tree archives.  Click "Edit" on the release and drag
+    `frontend/dist/absfrontend.jar` into the area that says "Attach
+    binaries by dropping them here or selecting them.".  (Automating
+    this step would involve handling github API keys, so we keep it
+    manual.)
 
 - Send mail to `abs-announce@abs-models.org`, `abs-dev@abs-models.org`
 
