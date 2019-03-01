@@ -19,15 +19,8 @@ import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
-import org.stringtemplate.v4.STGroup;
-import org.stringtemplate.v4.STGroupFile;
 
 public class MaudeCompiler extends Main {
-
-    public static STGroup templates;
-    static {
-        templates = new STGroupFile(MaudeCompiler.class.getResource("/codegen/maude.stg"));
-    }
 
     public enum SIMULATOR {
         RL(SIMULATOR_RL), EQ_TIMED(SIMULATOR_EQ_TIMED);
@@ -115,7 +108,7 @@ public class MaudeCompiler extends Main {
     public int compile(String[] args) throws Exception {
         if (verbose) System.out.println("Generating Maude code...");
         final Model model = parse(args);
-        // Maude has build-in AwaitAsyncCall support
+        /* Maude has build-in AwaitAsyncCall support */
         model.doAACrewrite = false;
         if (model.hasParserErrors()
             || model.hasErrors()

@@ -16,19 +16,12 @@ import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
-import org.stringtemplate.v4.STGroup;
-import org.stringtemplate.v4.STGroupFile;
 
 public class PrettyPrinterBackEnd extends Main {
     private File outputfile;
     private boolean force = false;
     private boolean keepsugar = false;
     private boolean keepstdlib = false;
-
-    public static STGroup templates;
-    static {
-        templates = new STGroupFile(PrettyPrinterBackEnd.class.getResource("/codegen/prettyprint.stg"));
-    }
 
     public static void main(final String... args) {
         doMain(args);
