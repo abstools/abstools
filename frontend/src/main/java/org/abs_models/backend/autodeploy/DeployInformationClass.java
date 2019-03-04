@@ -1,11 +1,19 @@
-package autodeploy;
-
-import org.abs_models.frontend.ast.*;
-import org.abs_models.frontend.typechecker.DataTypeType;
+package org.abs_models.backend.autodeploy;
 
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
+import org.abs_models.frontend.ast.DataConstructorExp;
+import org.abs_models.frontend.ast.FnApp;
+import org.abs_models.frontend.ast.IntLiteral;
+import org.abs_models.frontend.ast.ParamDecl;
+import org.abs_models.frontend.ast.PureExp;
+import org.abs_models.frontend.ast.StringLiteral;
+import org.abs_models.frontend.typechecker.DataTypeType;
 
 public class DeployInformationClass {
 
@@ -32,8 +40,6 @@ public class DeployInformationClass {
         port = ((DataTypeType) (decl.getType())).getTypeArgs().get(0).getQualifiedName();
       _paramType.put(param, port);
     }
-
-    System.out.println("Scenario Specification found");
   }
 
 

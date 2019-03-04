@@ -34,6 +34,8 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
 
+    compile 'info.picocli:picocli:3.9.3'
+
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
@@ -99,14 +101,14 @@ jar {
     baseName='absfrontend'
     appendix=versionDetails().branchName
     manifest {
-        attributes 'Main-Class': 'org.abs_models.frontend.parser.Main',
+        attributes 'Main-Class': 'org.abs_models.Absc',
             'Implementation-Title': 'ABS Frontend',
-            'Implementation-Version': versionDetails().lastTag.replaceAll(/^version_/, ''),
+            'Implementation-Version': versionDetails().lastTag,
             'Bundle-Version': project.version,
             // This is wrong, but we use it anyway for the detailed
             // version string (java.lang.Package only has methods
             // getVersion and getSpecificationVersion)
-            'Specification-Version': project.version
+            'Specification-Version': versionDetails().lastTag + "-" + versionDetails().commitDistance + "-" + versionDetails().gitHash
     }
     from configurations.runtimeClasspath
         .findAll { it.name.endsWith('jar') }

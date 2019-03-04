@@ -1,4 +1,4 @@
-package autodeploy;
+package org.abs_models.backend.autodeploy;
 
 import java.io.PrintWriter;
 import java.util.*;

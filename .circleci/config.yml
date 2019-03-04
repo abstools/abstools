@@ -59,7 +59,7 @@ jobs:
         # Build and push the absc docker image
       - run: |
           VERSION=$(echo $CIRCLE_TAG | grep -oP "\d+\.\d+\.\d+")
-          docker build -f Dockerfile -t abslang/absc:VERSION ..
+          docker build -f Dockerfile -t abslang/absc:$VERSION ..
           docker push abslang/absc:$VERSION
 
 
@@ -79,7 +79,7 @@ jobs:
         # Build and push the collaboratory docker image
       - run: |
           VERSION=$(echo $CIRCLE_TAG | grep -oP "\d+\.\d+\.\d+")
-          docker build -t abslang/collaboratory:VERSION .
+          docker build -t abslang/collaboratory:$VERSION .
           docker push abslang/collaboratory:$VERSION
 
 
@@ -98,7 +98,7 @@ workflows:
             - build_frontend
           filters:
             tags:
-              only: /^version_\d+\.\d+\.\d+$/
+              only: /^v\d+\.\d+\.\d+$/
             branches:
               ignore: /.*/
       - deploy_collaboratory:
@@ -106,6 +106,6 @@ workflows:
             - build_frontend
           filters:
             tags:
-              only: /^version_\d+\.\d+\.\d+$/
+              only: /^v\d+\.\d+\.\d+$/
             branches:
               ignore: /.*/

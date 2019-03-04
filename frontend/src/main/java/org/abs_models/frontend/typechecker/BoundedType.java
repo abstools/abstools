@@ -20,7 +20,7 @@ public class BoundedType extends Type {
         }
         while (t.isBoundedType()) {
             BoundedType bt = (BoundedType)t;
-            if (!bt.hasBoundType()) {
+            if (bt.hasBoundType()) {
                 t = bt.getBoundType();
             } else {
                 assert false : "Trying to bind to a BoundedType that is itself unbound";
@@ -50,13 +50,26 @@ public class BoundedType extends Type {
             super.addMetaData(key, value);
         }
     }
-    
+
     @Override
     public boolean isAssignableTo(Type t) {
         if (hasBoundType())
             return boundType.isAssignableTo(t);
-        // minimally invasive change wrt original code: arguably we should not
-        // have side effects in this method.
+
+        while (t.isBoundedType()) {
+            BoundedType bt = (BoundedType)t;
+            if (bt.hasBoundType()) {
+                t = bt.getBoundType();
+            } else {
+                // We're comparing two unbound types -- do the minimally
+                // correct thing
+                // (https://github.com/abstools/abstools/issues/247)
+                return false;
+            }
+        }
+        // minimally invasive change wrt original code: arguably we
+        // should not have side effects in this method.
+        // TODO: figure out how to treat this case instead
         if (t != this) bindTo(t);
         return true;
     }

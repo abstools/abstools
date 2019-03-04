@@ -2,6 +2,7 @@
 /.vagrant
 /.gradle
 /.idea/
+/.vscode/
 .rebar/
 .settings/
 .project
@@ -11,6 +12,7 @@ build/
 xtext-gen/
 xtend-gen/
 bin/
+out/
 /frontend/dist/
 /frontend/**/gen/
 /frontend/**/*.beam

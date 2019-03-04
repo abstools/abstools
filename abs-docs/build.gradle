@@ -1,23 +1,11 @@
-buildscript {
-    dependencies {
-        // classpath 'org.asciidoctor:asciidoctorj-epub3:1.5.0-alpha.8.1'
-        classpath 'org.asciidoctor:asciidoctorj-pdf:1.5.0-alpha.16'
-    }
-}
-
-
 plugins {
     id "org.asciidoctor.convert" version "1.5.10"
 }
 
 asciidoctor {
-    // TODO: investigate why build crashes when building more than two
-    // backends (?)
-    backends 'html5', 'pdf'//, 'docbook', 'epub3'
     sources {
         include 'index.adoc'
     }
-    // TODO: do not include this for pdf, epub3
     resources {
         from(sourceDir) {
             include 'images/**'
