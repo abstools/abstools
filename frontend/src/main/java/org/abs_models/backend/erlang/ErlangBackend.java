@@ -3,23 +3,24 @@
  */
 package org.abs_models.backend.erlang;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.EnumSet;
+import java.util.List;
 
-import org.abs_models.frontend.parser.Main;
-import org.apache.commons.io.IOUtils;
+import com.google.common.annotations.VisibleForTesting;
 
+import org.abs_models.Absc;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.parser.Main;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 
 /**
@@ -37,22 +38,14 @@ public class ErlangBackend extends Main {
         COVERAGE
     }
 
-    private File destDir = new File("gen/erl/");
-    private File http_index_file = null;
-    private File http_static_dir = null;
-    private EnumSet<CompileOptions> compileOptions = EnumSet.noneOf(CompileOptions.class);
+    public static int minErlangVersion = 21;
 
-    public static int minErlangVersion = 19;
-
-    public static void main(final String... args) {
-        doMain(args);
-    }
-
-    public static int doMain(final String... args) {
+    public static int doMain(Absc args) {
         int result = 0;
         ErlangBackend backEnd = new ErlangBackend();
+        backEnd.arguments = args;
         try {
-            result = backEnd.compile(args);
+            result = backEnd.compile();
         } catch (InternalBackendException e) {
             System.err.println(e.getMessage());
             return 1;
@@ -61,7 +54,7 @@ public class ErlangBackend extends Main {
             return 1;
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
-            if (backEnd.debug) {
+            if (backEnd.arguments.debug) {
                 e.printStackTrace();
             }
             return 1;
@@ -69,66 +62,21 @@ public class ErlangBackend extends Main {
         return result;
     }
 
-    @Override
-    public List<String> parseArgs(String[] args) throws InternalBackendException {
-        List<String> restArgs = super.parseArgs(args);
-        List<String> remainingArgs = new ArrayList<>();
-
-        for (int i = 0; i < restArgs.size(); i++) {
-            String arg = restArgs.get(i);
-            if (arg.equals("-erlang")) {
-                // nothing to do
-            } else if (arg.equals("-d")) {
-                i++;
-                if (i == restArgs.size()) {
-                    throw new InternalBackendException("Please provide an output directory");
-                } else {
-                    destDir = new File(restArgs.get(i));
-                }
-            } else if(arg.equals("-http-index-file")) {
-                i++;
-                if (i == restArgs.size()) {
-                    throw new InternalBackendException("Please provide an index.html file");
-                } else {
-                    http_index_file = new File(restArgs.get(i));
-                }
-            } else if(arg.equals("-http-static-dir")) {
-                i++;
-                if (i == restArgs.size()) {
-                    throw new InternalBackendException("Please provide a directory with static files");
-                } else {
-                    http_static_dir = new File(restArgs.get(i));
-                }
-            } else if (arg.equals("-cover")) {
-                compileOptions.add(CompileOptions.COVERAGE);
-            } else {
-                remainingArgs.add(arg);
-            }
-        }
-        if (verbose) compileOptions.add(CompileOptions.VERBOSE); // KLUDGE
-        if (debug) compileOptions.add(CompileOptions.DEBUG); // KLUDGE
-        return remainingArgs;
-    }
-
-    public static void printUsage() {
-        System.out.println("Erlang Backend (-erlang):\n"
-                           + "  -d <dir>       Create code below <dir> (default gen/erl/)\n"
-                           + "  -cover         Compile with run-time statement execution count recording.\n"
-                           + "                 Results in <dir>/absmodel/*.gcov after model finishes)\n"
-                           + "  -http-index-file <file>\n"
-                           + "                 Display <file> when accessing the Model API via browser\n"
-                           + "  -http-static-dir <dir>\n"
-                           + "                 Make contents of <dir> accessible below /static/ in Model API\n\n"
-                           + "  For help on Erlang runtime options, start model with -h\n");
-    }
-
-    private int compile(String[] args) throws Exception {
-        final Model model = parse(args);
+    private int compile() throws Exception {
+        final Model model = parse(arguments.files);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
             printErrorMessage();
             return 1;
         }
-        compile(model, destDir, compileOptions);
+        File outdir = arguments.destDir;
+        if (outdir.getPath().equals("gen/")) {
+            outdir = new File("gen/erl/");
+        }
+        EnumSet<CompileOptions> compileOptions = EnumSet.noneOf(CompileOptions.class);
+        if (arguments.verbose) compileOptions.add(CompileOptions.VERBOSE);
+        if (arguments.debug) compileOptions.add(CompileOptions.DEBUG);
+        if (arguments.debug_generated_code) compileOptions.add(CompileOptions.COVERAGE);
+        compile(model, outdir, compileOptions);
         return 0;
     }
 
@@ -168,7 +116,7 @@ public class ErlangBackend extends Main {
             String message = "ABS requires at least erlang version " + Integer.toString(minErlangVersion) + ", installed version is " + Integer.toString(version);
             throw new InternalBackendException(message);
         }
-        ErlApp erlApp = new ErlApp(destDir, http_index_file, http_static_dir);
+        ErlApp erlApp = new ErlApp(destDir, arguments.http_index_file, arguments.http_static_dir);
         m.generateErlangCode(erlApp, options);
         erlApp.close();
 

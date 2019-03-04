@@ -27,7 +27,7 @@ for requests.  In the following example, we compile a model `my-model.abs` and
 start the model API on port 8080:
 
 ----
-$ absc -erlang my-model.abs
+$ absc --erlang my-model.abs
 $ gen/erl/run -p 8080
 ----
 
@@ -302,10 +302,10 @@ the call was received by the Model API.
 === Customizing the Browser-Based Visualization
 
 Since the Model API is implemented via HTTP, it can be accessed from a
-web browser.  The `-http-index-file` command-line switch is used
+web browser.  The `--modelapi-index-file` command-line switch is used
 to supply an `index.html` file at compile-time:
 
-  $ absc -erlang -http-index-file ./index.html *.abs
+  $ absc --erlang --modelapi-index-file ./index.html *.abs
 
 When running a model on port 8080 and accessing
 `http://localhost:8080/` from a browser, the contents of that file
@@ -313,10 +313,10 @@ will be displayed.
 
 Sometimes it is necessary to add additional files for visualization,
 e.g., CSS files, images or JavaScript libraries.  The contents of one
-directory can be added to the model via the `-http-static-dir`
+directory can be added to the model via the `--modelapi-static-dir`
 command-line switch:
 
-  $ absc -erlang -http-index-file ./index.html -http-static-dir ./support-files/ *.abs
+  $ absc --erlang --modelapi-index-file ./index.html --modelapi-static-dir ./support-files/ *.abs
 
 The contents of the given directory are copied at compile-time.  The
 files within that directory are available within the Model API below

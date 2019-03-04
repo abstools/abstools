@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Incompatible change: we now follow the [POSIX](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html) and [GNU](https://www.gnu.org/prep/standards/html_node/Command_002dLine-Interfaces.html) recommendations for command line interfaces.  This breaks existing scripts until they are adapted for the new syntax.  (This change comes with extensive refactoring and simplifying of our frontend code, making future extensions of the `absc` command much more straightforward.  We hope the one-time pain is worth it.)
+
+- Incompatible change: all options related to software product line checking have been moved to their own subcommand, see the output for `absc checkspl -h`.  The new syntax clarifies that these calculations are not meant to be done at the same time as compiling a model.
+
+
+
 ### Removed
 
 ### Fixed
@@ -41,8 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- The Erlang backend now supports model-specific visualization based on the Model API.  Use `absc -erlang -http-index-file ./index.html
-  -http-static-dir ./my_js_libs *.abs` to add a custom `index.html` file and static resources (Javascript files, images, ...) to a model; connect a browser to the running model on the Model API port to see it rendered. Static files are available from the Model API (and from index.html) via `/static/filename`.
+- The Erlang backend now supports model-specific visualization based on the Model API.  Use `absc -erlang -http-index-file ./index.html -http-static-dir ./my_js_libs *.abs` to add a custom `index.html` file and static resources (Javascript files, images, ...) to a model; connect a browser to the running model on the Model API port to see it rendered. Static files are available from the Model API (and from index.html) via `/static/filename`.
 
 - The Model API now allows advancing the clock via external stimuli -- a model started with the model api (`-p 8080`) and with a clock limit (`-l x`) will stop and wait at t=`x`.  A call `/clock/advance?by=y` increases the limit by `y`, thereby waking up blocked processes.  `/clock/now` can be used to obtain the current clock value.
 

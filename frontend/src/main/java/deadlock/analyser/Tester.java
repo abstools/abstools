@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.abs_models.Absc;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.common.WrongProgramArgumentException;
@@ -39,27 +40,33 @@ public class Tester extends Main {
     }
 
     private int compile(String[] args) throws DeltaModellingException, IOException, WrongProgramArgumentException, InternalBackendException {
-        final Model model = this.parse(args);
+        // initialize numberOfIterations, fixpointVersion
+        List<String> upstreamArgs = this.parseArgs(args);
+        Absc absc = Absc.parseArgs(upstreamArgs.toArray(new String[0]));
+        this.arguments = absc;
+        final Model model = this.parse(arguments.files);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
 	    return 127;
         }
 
-        if (verbose) {
+        if (arguments.verbose) {
             System.out.println("Starting deadlock analysis...");
         }
         /*Instantiate the analyzer and perform deadlock analysis*/
         Analyser a = new Analyser();
-        return a.deadlockAnalysis(model, verbose, numberOfIterations, fixpointVersion, System.out);
+        return a.deadlockAnalysis(model, arguments.verbose, numberOfIterations, fixpointVersion, System.out);
     }
 
     @Override
     public List<String> parseArgs(String[] args) throws InternalBackendException {
-        List<String> restArgs = super.parseArgs(args);
         List<String> remainingArgs = new ArrayList<>();
 
-        for (int i = 0; i < restArgs.size(); i++) {
-            String arg = restArgs.get(i);
-            if (arg.startsWith("-it=")){
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            if (arg.equals("-h")) {
+                printUsage();
+            }
+            else if (arg.startsWith("-it=")){
                 try{
                        numberOfIterations = Integer.parseInt(arg.split("=")[1]);
                    } catch (Exception e) {
@@ -72,7 +79,7 @@ public class Tester extends Main {
                     fixpointVersion = Integer.parseInt(arg.split("=")[1]);
 
                 } catch (Exception e) {
-                    System.err.println(restArgs.toString());
+                    System.err.println(args.toString());
                     System.err.println(e.toString());
                     System.err.println("The fix point version (-fixPointVersion) should be an integer. Default value 1 for original version, value 2 for the newest version");
                     System.exit(1);
@@ -84,7 +91,6 @@ public class Tester extends Main {
         }
         return remainingArgs;
     }
-
 
     public static void printUsage() {
         Main.printUsage();

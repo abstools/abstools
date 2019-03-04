@@ -15,7 +15,7 @@ else
     exit 1
 fi
 
-if [ $1 == "-haskell" ]; then
+if [ "$1" == "-haskell" ]; then
     if command -v a2h > /dev/null; then # is in the PATH
        args=${@#-haskell} # remove -haskell from the rest of params
        absfiles=""
