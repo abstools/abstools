@@ -39,14 +39,17 @@ public class Tester extends Main {
 
   private void compile()
       throws DeltaModellingException, IOException, WrongProgramArgumentException, FileNotFoundException, InternalBackendException {
-      // FIXME: we don't handle "-JSON=..." argument; should switch to "-o"
+      // NOTE: we don't handle "-JSON=..." argument any more; all
+      // callers of the shell script must switch to "-o"
       final Model model = this.parse(arguments.files);
       // the extraction of the cost annotations can proceed even if
       // the code is not type safe.  This is exploited in the
       // SmartDeploy code generator since this tool takes in input a
       // program using some classes that are not defined (they will be
       // added later with a delta).
-      if (model.hasParserErrors() || model.hasErrors() ) return;
+      if (model.hasParserErrors()
+          // || model.hasErrors()
+          ) return;
       if (arguments.verbose) {
           System.out.println("Starting Dependency information extraction...");
       }
