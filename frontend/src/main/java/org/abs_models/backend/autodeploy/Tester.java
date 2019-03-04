@@ -7,8 +7,6 @@ package org.abs_models.backend.autodeploy;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.abs_models.Absc;
 import org.abs_models.backend.common.InternalBackendException;
@@ -68,32 +66,6 @@ public class Tester extends Main {
       }
       return 0;
   }
-
-
-
-  @Override
-  public List<String> parseArgs(String[] args) throws InternalBackendException {
-    List<String> restArgs = super.parseArgs(args);
-    List<String> remainingArgs = new ArrayList<>();
-    for (int i = 0; i < restArgs.size(); i++) {
-      String arg = restArgs.get(i);
-      if (arg.startsWith("-JSON=")){
-        // try{ _JSONName = arg.split("=")[1]; }
-        // catch (Exception e) {
-        //   System.err.println("The number of iterations (-it) should be an integer");
-        //   System.exit(1);
-        // }
-      } else { remainingArgs.add(arg); }
-    }
-    return remainingArgs;
-  }
-
-
-  public static void printUsage() {
-    Main.printUsage();
-    System.out.println("Deadlock analyzer:\n  -JSON=<var>     name of the generated JSON file\n");
-  }
-
 }
 
 
