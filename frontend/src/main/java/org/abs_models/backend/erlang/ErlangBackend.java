@@ -69,7 +69,12 @@ public class ErlangBackend extends Main {
             return 1;
         }
         File outdir = arguments.destDir;
-        if (outdir.getPath().equals("gen/")) {
+        if (outdir.getPath().equals("gen")) {
+            // KLUDGE: "gen/" is the default path for java and erlang;
+            // keep old erlang behavior of defaulting to "gen/erl/".
+            // Note that we can't generate directly into "gen/" since
+            // we don't know if the user explicitly specified "gen/"
+            // or didn't say anything about the output directory
             outdir = new File("gen/erl/");
         }
         EnumSet<CompileOptions> compileOptions = EnumSet.noneOf(CompileOptions.class);
