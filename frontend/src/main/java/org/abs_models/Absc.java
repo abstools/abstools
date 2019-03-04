@@ -35,13 +35,12 @@ import picocli.CommandLine.RunLast;
              "    Copyright (c) 2016-2019, SIRIUS Center",
              "    http://www.abs-models.org/" },
          mixinStandardHelpOptions = true, // handles -h, -V
-         //abbreviateSynopsis = true,
          synopsisHeading = "",
          customSynopsis =  {"Usage: @|bold absc|@ [BACKEND] [OPTIONS] [<files>...]",
                             "   or: @|bold absc|@ checkspl [OPTIONS] [<files>...]"
          },
          sortOptions = false,
-         separator = " ",       // "-o=file" vs. "-o file"
+         // separator = " ", // no need; " " and "=" are separators by default
          subcommands = {
              // HelpCommand.class, // no need; we have the standard -h / --help options
              CheckSPLCommand.class
