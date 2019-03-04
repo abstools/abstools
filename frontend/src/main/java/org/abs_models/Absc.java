@@ -71,13 +71,18 @@ public class Absc implements Callable<Void> {
             description = "@|bold Pretty-printer:|@ pretty print model and exit")
     public boolean prettyprint = false;
     @Option(names = { "--coreabs" },
-            description = "generate Coreabs data file (XXX undocumented in previous version)")
+            hidden = true,
+            description = {"generate Coreabs data file",
+                           "undocumented and doesn't do much -- kept around for backward compatibility only"})
     public boolean coreabs = false;
     @Option(names = { "--json" },
-            description = "generate JSON data file for autodeployer")
+            description = {"generate JSON data file for autodeployer",
+                           "See https://github.com/jacopoMauro/abs_deployer"})
     public boolean json = false;
     @Option(names = { "--outline" },
-            description = "generate code structure outline")
+            hidden = true,
+            description = {"generate code structure outline for collaboratory",
+                           "(not generally useful so we don't advertise it in help output)"})
     public boolean outline = false;
 
     @Option(names = { "--dump-products" },
@@ -137,7 +142,7 @@ public class Absc implements Callable<Void> {
     public int maude_defaultResources = 0;
 
     // Java options
-    // -sourceonly omitted, -dynamic does not work
+    // -dynamic does not work, so drop option to try to generate it
     @Option(names = { "--sourceonly" },
             description = "@|bold Java backend:|@ do not generate Java .class files")
     public boolean java_sourceOnly = false;
