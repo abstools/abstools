@@ -6,7 +6,6 @@ package autodeploy;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,13 +55,13 @@ public class Tester extends Main {
       if (arguments.verbose) {
           System.out.println("Starting JSON generation...");
       }
-      PrintStream stream = System.out;
       if (arguments.outputfile != null) {
-          stream = new PrintStream(arguments.outputfile);
+          PrintWriter f = new PrintWriter(arguments.outputfile);
+          di.generateJSON(f);
+          f.close();
+      } else {
+          di.generateJSON(new PrintWriter(System.out));
       }
-      // PrintWriter f = new PrintWriter(new File(_JSONName));
-      di.generateJSON(new PrintWriter(stream));
-      stream.close();
   }
 
 
