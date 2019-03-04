@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# NOTE: compile with `absc java --debuginfo ...` for this to work
+
 PROGNAME="$(readlink $0)"
 if [[ -z $PROGNAME ]] ; then
     PROGNAME="$0"
