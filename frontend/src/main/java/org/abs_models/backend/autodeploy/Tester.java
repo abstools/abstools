@@ -22,22 +22,23 @@ import org.abs_models.frontend.parser.Main;
 public class Tester extends Main {
 
   public static int doMain(Absc args) {
+      int result = 0;
       Tester tester = new Tester();
       tester.arguments = args;
       try {
-          tester.compile();
+          result = tester.compile();
       } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
-            return 1;
+            result = 1;
       } catch (Exception e) {
           System.err.println("An error occurred during compilation:\n" + e.getMessage());
           if (args.debug) { e.printStackTrace(); }
-          return 1;
+          result = 1;
       }
-      return 0;
+      return result;
   }
 
-  private void compile()
+  private int compile()
       throws DeltaModellingException, IOException, WrongProgramArgumentException, FileNotFoundException, InternalBackendException {
       // NOTE: we don't handle "-JSON=..." argument any more; all
       // callers of the shell script must switch to "-o"
@@ -49,7 +50,7 @@ public class Tester extends Main {
       // added later with a delta).
       if (model.hasParserErrors()
           // || model.hasErrors()
-          ) return;
+          ) return 1;
       if (arguments.verbose) {
           System.out.println("Starting Dependency information extraction...");
       }
@@ -65,6 +66,7 @@ public class Tester extends Main {
       } else {
           di.generateJSON(new PrintWriter(System.out));
       }
+      return 0;
   }
 
 
