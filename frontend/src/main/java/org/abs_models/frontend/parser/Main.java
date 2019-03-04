@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.jar.JarEntry;
 
 import org.abs_models.Absc;
+import org.abs_models.backend.autodeploy.Tester;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.backend.coreabs.CoreAbsBackend;
 import org.abs_models.backend.erlang.ErlangBackend;
@@ -108,7 +109,7 @@ public class Main {
                 done = true;
             }
             if (arguments.json) {
-                result = Math.max(result, autodeploy.Tester.doMain(arguments));
+                result = Math.max(result, Tester.doMain(arguments));
                 done = true;
             }
             if (arguments.prettyprint) {
