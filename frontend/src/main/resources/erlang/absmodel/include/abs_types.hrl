@@ -17,7 +17,7 @@
        }).
 
 -record(event,
-        {type,                 % schedule | invocation | new_object | suspend | future_read | future_write
+        {type,                 % schedule | invocation | new_object | suspend | await_future | future_read | future_write
          local_id,             % A local identifier, provided by the cog
          caller_id=undefined,  % An identifier for the calling object's cog
          name=undefined,       % The method or class name, depending on the type

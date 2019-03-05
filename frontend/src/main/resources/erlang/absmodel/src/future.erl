@@ -134,7 +134,9 @@ await(Future, Cog, Stack) ->
                              cog:submit_references(Sender, gc:extract_references([Future | Stack])),
                              Loop()
                      end end)()
-    end.
+    end,
+    %% Register await future event for the trace
+    gen_statem:call(Future, {done_waiting, Cog}).
 
 
 get_for_rest(Future) ->
@@ -313,6 +315,12 @@ completing({call, From}, {poll_or_add_waiting, _Task}, Data) ->
     {keep_state_and_data, {reply, From, true}};
 completing({call, From}, get_references, Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
+completing({call, From}, {done_waiting, Cog}, Data=#data{value=Value,event=Event}) ->
+    #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
+    CompletionEvent=#event{type=await_future, caller_id=Cid,
+                           local_id=Lid, name=Name, reads=R, writes=W},
+    cog:register_await_future_complete(Cog, CompletionEvent),
+    {keep_state_and_data, {reply, From, Value}};
 completing({call, From}, {get, Cog}, Data=#data{value=Value,event=Event}) ->
     #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
     CompletionEvent=#event{type=future_read, caller_id=Cid,
@@ -335,6 +343,12 @@ completed({call, From}, {poll_or_add_waiting, _Task}, Data) ->
     {keep_state_and_data, {reply, From, true}};
 completed({call, From}, get_references, Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
+completed({call, From}, {done_waiting, Cog}, Data=#data{value=Value,event=Event}) ->
+    #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
+    CompletionEvent=#event{type=await_future, caller_id=Cid,
+                           local_id=Lid, name=Name, reads=R, writes=W},
+    cog:register_await_future_complete(Cog, CompletionEvent),
+    {keep_state_and_data, {reply, From, Value}};
 completed({call, From}, {get, Cog}, Data=#data{value=Value,event=Event}) ->
     #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
     CompletionEvent=#event{type=future_read, caller_id=Cid,
