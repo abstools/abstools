@@ -24,7 +24,6 @@ import picocli.CommandLine.ParentCommand;
 
 @Command(name = "checkspl",
          description = "Perform software product line checking for abs models",
-         separator = " ",       // "-o=file" vs. "-o file"
          abbreviateSynopsis = true,
          sortOptions = false,   // print options in the same order as they are defined
          helpCommand = true,
