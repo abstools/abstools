@@ -1,104 +1,238 @@
-grammar org.abs_models.xtext.Abs hidden(WS,ML_COMMENT,SL_COMMENT) 
+grammar org.abs_models.xtext.Abs hidden(WS,ML_COMMENT,SL_COMMENT)
 
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 generate abs "http://www.abs_models.org/xtext/Abs"
 
-ModuleDecl: {ModuleDecl} 'module' QualifiedTypeIdentifier ';' Block? ;
+CompilationUnit
+    : {CompilationUnit} (module+=ModuleDecl)*
+    ;
+
+ModuleDecl
+    : 'module' name=QualifiedTypeIdentifier ';'
+        (modeExportImport+=ModuleExportImport)*
+        // (decl+=Decl)*
+        (mainBlock=Block)?
+    ;
+
+ModuleExportImport
+    : ModuleExport
+    | ModuleImport
+    ;
+
+ModuleExport
+    : 'export' (star='*' 'from' module=QualifiedTypeIdentifier
+        | name+=AnyIdentifier (',' name+=AnyIdentifier)*)
+        ('from' module=QualifiedTypeIdentifier)?
+        ';'
+    ;
+
+ModuleImport
+    : 'import' (star='*' 'from' module=QualifiedTypeIdentifier
+        | name+=AnyIdentifier (',' name+=AnyIdentifier)* 'from' module=QualifiedTypeIdentifier
+        | name+=AnyIdentifier (',' name+=AnyIdentifier)*)
+        ';'
+    ;
+
+
+// Declarations
+
+ParamDecl
+    :
+        // TODO annotations
+        type=Type name=IDENTIFIER
+    ;
 
 // Statements
 
-Block: {Block} '{' stmt+=Statement* '}';
+Block
+    : {Block} '{' (stmt+=Statement)* '}'
+    ;
 
-Statement:
-	{Statement} SkipStmt ';'
-	| VarDeclStmt ';'
-	| Block
-;
+Statement
+    : {Statement} SkipStmt
+    | VarDeclStmt
+    | Block
+    ;
 
-SkipStmt: 'skip';
+SkipStmt
+    : 'skip' ';'
+    ;
 
-VarDeclStmt: type=Type name=IDENTIFIER ( '=' init=Exp );
+VarDeclStmt
+    : type=Type name=IDENTIFIER ( '=' init=Exp )? ';'
+    ;
 
 // Expressions
 
-Exp: PureExp /* | EffExp */ ;
+Exp
+    : PureExp
+    // | EffExp
+    ;
 
-PureExp: LetExp
-	| OperatorExp
-;
+PureExp
+    : FunctionAppExp
+    | VariadicFunctionAppExp
+    | PartialFunctionAppExp
+    | ConstructorAppExp
+    | TemplateStringExp
+    | LetExp
+    | IfExp
+    | CaseExp
+    | OperatorExp
+    ;
 
-LetExp: 'let' '(' type=Type var=IDENTIFIER ')' '=' body=PureExp ;
+FunctionAppExp
+    : QualifiedIdentifier '(' args+=PureExp ( ',' args+=PureExp)* ')'
+    ;
 
-OperatorExp returns PureExp: OrExp;
+VariadicFunctionAppExp
+    : QualifiedIdentifier '[' args+=PureExp ( ',' args+=PureExp)* ']'
+    ;
+
+PartialFunctionAppExp
+    : QualifiedIdentifier
+        '(' fnargs+=PartialFunctionParam (',' fnargs+=PartialFunctionParam )* ')'
+        '(' args+=PureExp ( ',' args+=PureExp)* ')'
+    ;
+
+PartialFunctionParam
+    : QualifiedIdentifier
+    | '(' params+=ParamDecl (',' params+=ParamDecl)* ')' "=>" body=PureExp
+    ;
+
+ConstructorAppExp
+    : QualifiedTypeIdentifier ( '(' args+=PureExp ( ',' args+=PureExp)* ')' )?
+    ;
+
+TemplateStringExp
+    : {TemplateStringExp} TEMPLATESTRINGLITERAL
+    | TEMPLATESTRINGSTART e1=PureExp
+        (b+=TEMPLATESTRINGINBETWEEN e+=PureExp)*
+        TEMPLATESTRINGEND
+    ;
+
+
+LetExp
+    : 'let' '(' param+=ParamDecl ')' '=' e+=PureExp
+        (',' '(' param+=ParamDecl ')' '=' e+=PureExp)*
+        'in' body=PureExp
+    ;
+
+IfExp
+    : 'if' condition=PureExp 'then' consequence=PureExp 'else' alternate=PureExp
+    ;
+
+CaseExp
+    : 'case' c=PureExp '{' (casebranch+=CaseExpBranch)* '}'
+    ;
+
+CaseExpBranch
+    : p=Pattern '=>' e=PureExp ';'
+    ;
+
+Pattern
+    : {Pattern} '_'
+    | INTLITERAL
+    | STRINGLITERAL
+    | FLOATLITERAL
+    | IDENTIFIER
+    | QualifiedTypeIdentifier ( '(' pattern+=Pattern (',' pattern+=Pattern)* ')' )?
+    ;
+
 
 // See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
-OrExp returns PureExp:
-	AndExp ({OrExp.left=current} '||' right=AndExp)*
-; // left-assoc
 
-AndExp returns PureExp:
-	EqExp ({AndExp.left=current} '&&' right=EqExp)*
-; // left-assoc
+OperatorExp returns PureExp
+    : body=OrExp (op=('implements' | 'as') i=QualifiedTypeIdentifier )?
+    ;
 
-EqExp returns PureExp:
-	CompareExp ({EqExp.left=current} op=('==' | '!=') right=CompareExp)?
-; // non-assoc
+OrExp returns PureExp
+    : AndExp ({OrExp.left=current} '||' right=AndExp)*
+    ; // left-assoc
 
-CompareExp returns PureExp:
-	PlusMinusExp ({CompareExp.left=current} op=('<' | '>' | '<=' | '>=') right=PlusMinusExp)?
-; // non-assoc
+AndExp returns PureExp
+    : EqExp ({AndExp.left=current} '&&' right=EqExp)*
+    ; // left-assoc
 
-PlusMinusExp returns PureExp:
-	MulDivExp ({PlusMinusExp.left=current} op=('+' | '-') right=MulDivExp)*
-; // left-assoc
+EqExp returns PureExp
+    : CompareExp ({EqExp.left=current} op=('==' | '!=') right=CompareExp)?
+    ; // non-assoc
 
-MulDivExp returns PureExp:
-	UnaryExp ({MulDivExp.left=current} op=('*' | '/' | '%') right=UnaryExp)*
-; // left-assoc
+CompareExp returns PureExp
+    : PlusMinusExp ({CompareExp.left=current} op=('<' | '>' | '<=' | '>=') right=PlusMinusExp)?
+    ; // non-assoc
 
-// missing: prefixes +/!
-UnaryExp returns PureExp: '(' OperatorExp ')'
-	| {PureExp} AtomicExp
-;
+PlusMinusExp returns PureExp
+    : MulDivModExp ({PlusMinusExp.left=current} op=('+' | '-') right=MulDivModExp)*
+    ; // left-assoc
 
-AtomicExp: IDENTIFIER 
-	| 'this' '.' IDENTIFIER
-	| 'this'
-	| 'null'
-	| Literal;
+MulDivModExp returns PureExp
+    : UnaryExp ({MulDivExp.left=current} op=('*' | '/' | '%') right=UnaryExp)*
+    ; // left-assoc
 
+UnaryExp returns PureExp
+    : '(' PureExp ')'
+    | op=('!' | '-' | '+') body=UnaryExp
+    | AtomicExp
+    ;
 
-Literal:
-	INTLITERAL
-	| FLOATLITERAL
-	| STRINGLITERAL
-;
+AtomicExp returns PureExp
+    : INTLITERAL
+    | FLOATLITERAL
+    | STRINGLITERAL
+    | IDENTIFIER
+    | 'this' '.' IDENTIFIER
+    | 'this'
+    | 'null'
+    ;
 
 // Types
 
-Type: TYPE_IDENTIFIER ;
+Type
+    // TODO
+    : TYPE_IDENTIFIER
+    ;
 
 // Terminals
 
-terminal ML_COMMENT  : '/*' -> '*/';
-terminal SL_COMMENT  : '//' !('\n'|'\r')* ('\r'? '\n')?;
+terminal ML_COMMENT : '/*' -> '*/';
+terminal SL_COMMENT : '//' !('\n'|'\r')* ('\r'? '\n')?;
 
 terminal WS: (' '|'\t'|'\r'|'\n')+;
 
-terminal SMALLLETTER : 'a'..'z' ;
-terminal CAPITALLETTER : 'A'..'Z' ;
+terminal fragment SMALLLETTER : 'a'..'z' ;
+terminal fragment CAPITALLETTER : 'A'..'Z' ;
 
-terminal DIGIT : '0'..'9' ;
+terminal fragment DIGIT : '0'..'9' ;
 terminal INTLITERAL returns ecore::EInt : DIGIT+ ;
 
-terminal FLOATLITERAL returns ecore::EFloat:
-	INTLITERAL? '.' DIGIT+ (('e' | 'E' | 'e+' | 'E+' | 'e-' | 'E-') DIGIT+)
-;
+terminal FLOATLITERAL returns ecore::EFloat
+    : INTLITERAL? '.' DIGIT+ (('e' | 'E' | 'e+' | 'E+' | 'e-' | 'E-') DIGIT+)?
+    ;
 
-terminal STRINGLITERAL:
-	'"' ( '\\' ('"' | '\\' | 't' | 'n' | 'r') | !('"' | '\\'))* '"'
-;
+terminal STRINGLITERAL
+    : '"' ( '\\' ('"' | '\\' | 't' | 'n' | 'r') | !('"' | '\\'))* '"'
+    ;
+
+terminal fragment TEMPLATESTRING_INNER
+    : '\\' ('`' | '$')
+    | !('`' | '$')
+    ;
+
+terminal TEMPLATESTRINGLITERAL : '`' TEMPLATESTRING_INNER* '`' ;
+
+terminal TEMPLATESTRINGSTART
+    : '`' TEMPLATESTRING_INNER* '$'
+    ;
+
+terminal TEMPLATESTRINGINBETWEEN
+    : '$' TEMPLATESTRING_INNER* '$'
+    ;
+terminal TEMPLATESTRINGEND
+    : '$' TEMPLATESTRING_INNER* '`'
+    ;
+
 
 terminal IDENTIFIER : SMALLLETTER (CAPITALLETTER|SMALLLETTER|'_'|DIGIT)* ;
 
@@ -107,4 +241,7 @@ terminal TYPE_IDENTIFIER : CAPITALLETTER (CAPITALLETTER|SMALLLETTER|'_'|DIGIT)* 
 QualifiedIdentifier returns ecore::EString : (TYPE_IDENTIFIER '.')* IDENTIFIER ;
 QualifiedTypeIdentifier returns ecore::EString : (TYPE_IDENTIFIER '.')* TYPE_IDENTIFIER ;
 
-AnyIdentifier : QualifiedIdentifier | QualifiedTypeIdentifier ;
+AnyIdentifier returns ecore::EString
+    : QualifiedIdentifier
+    | QualifiedTypeIdentifier
+    ;
