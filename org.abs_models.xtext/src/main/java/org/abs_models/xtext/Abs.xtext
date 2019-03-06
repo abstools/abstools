@@ -45,23 +45,82 @@ ParamDecl
 
 // Statements
 
-Block
-    : {Block} '{' (stmt+=Statement)* '}'
-    ;
-
-Statement
-    : {Statement} SkipStmt
-    | VarDeclStmt
+Stmt
+    : VarDeclStmt
+    | AssignStmt
+    | SkipStmt
+    | ReturnStmt
+    | AssertStmt
     | Block
+    | IfStmt
+    | WhileStmt
+    | ForeachStmt
+    | TryCatchFinallyStmt
+    | AwaitStmt
+    | SuspendStmt
+    | DurationStmt
+    | ThrowStmt
+    | DieStmt
+    | MoveCogToStmt
+    | ExpStmt
+    | CaseStmt
     ;
 
-SkipStmt
-    : 'skip' ';'
+VarDeclStmt : type=Type name=IDENTIFIER ( hasInit?='=' init=Exp )? ';' ;
+
+AssignStmt : var=VarOrFieldExp '=' exp=Exp ';' ;
+
+SkipStmt : {SkipStmt} 'skip' ';' ;
+
+ReturnStmt : 'return' exp=Exp ';' ;
+
+AssertStmt : 'assert' exp=Exp ';' ;
+
+Block : '{' (stmt+=Stmt)* '}' ;
+
+IfStmt : 'if' '(' condition=PureExp ')' consequence=Stmt (=>'else' alternate=Stmt) ;
+
+WhileStmt : 'while' '(' condition=PureExp ')' body=Stmt ;
+
+ForeachStmt : 'foreach' '(' var=IDENTIFIER 'in' list=PureExp ')' body=Stmt ;
+
+TryCatchFinallyStmt
+    : 'try' body=Stmt
+        'catch' (( '{' (branches+=CaseStmtBranch)* '}') | branches+=CaseStmtBranch)
+        ('finally' finally=Stmt)?
     ;
 
-VarDeclStmt
-    : type=Type name=IDENTIFIER ( hasInit?='=' init=Exp )? ';'
+AwaitStmt : 'await' guard=Guard ';' ;
+
+Guard : SingleGuard ({Guard.left=current} '&' right=SingleGuard)* ;
+
+SingleGuard returns Guard
+    : ClaimGuard
+    | DurationGuard
+    | ExpGuard
     ;
+
+ClaimGuard returns Guard : exp=VarOrFieldExp '?' ;
+
+DurationGuard returns Guard :  'duration' '(' min=PureExp ',' max=PureExp ')' ;
+
+ExpGuard returns Guard : exp=PureExp ;
+
+SuspendStmt : {SuspendStmt} 'suspend' ';' ;
+
+DurationStmt : 'duration' '(' min=PureExp ',' max=PureExp ')' ;
+
+ThrowStmt : 'throw' exception=PureExp ';' ;
+
+DieStmt : 'die' exception=PureExp ';' ;
+
+MoveCogToStmt : 'movecogto' target=PureExp ';' ;
+
+ExpStmt : exp=Exp ';' ;
+
+CaseStmt : 'case' condition=PureExp '{' (branches+=CaseStmtBranch)* '}' ;
+
+CaseStmtBranch : p=Pattern '=>' body=PureExp ';' ;
 
 // Expressions
 
