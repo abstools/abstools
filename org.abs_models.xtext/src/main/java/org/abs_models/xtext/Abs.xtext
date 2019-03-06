@@ -135,7 +135,7 @@ Pattern
     : {Pattern} '_'
     | INTLITERAL
     | STRINGLITERAL
-    | FLOATLITERAL
+    | FloatLiteral
     | IDENTIFIER
     | QualifiedTypeIdentifier ( '(' pattern+=Pattern (',' pattern+=Pattern)* ')' )?
     ;
@@ -179,7 +179,7 @@ UnaryExp returns PureExp
 
 AtomicExp returns PureExp
     : INTLITERAL
-    | FLOATLITERAL
+    | FloatLiteral
     | STRINGLITERAL
     | IDENTIFIER
     | 'this' '.' IDENTIFIER
@@ -204,10 +204,15 @@ terminal WS: (' '|'\t'|'\r'|'\n')+;
 terminal fragment SMALLLETTER : 'a'..'z' ;
 terminal fragment CAPITALLETTER : 'A'..'Z' ;
 
-terminal fragment DIGIT : '0'..'9' ;
-terminal INTLITERAL returns ecore::EInt : DIGIT+ ;
+terminal DIGIT : '0'..'9' ;
 
-terminal FLOATLITERAL returns ecore::EFloat
+INTLITERAL returns ecore::EInt : DIGIT+ ;
+
+// "Note: It is generally not a good idea to implement floating point literals
+// with terminal rules. You should use data type rules instead due to possible
+// shadowing problems explained above."
+// https://www.eclipse.org/Xtext/documentation/301_grammarlanguage.html
+FloatLiteral returns ecore::EFloat
     : INTLITERAL? '.' DIGIT+ (('e' | 'E' | 'e+' | 'E+' | 'e-' | 'E-') DIGIT+)?
     ;
 
