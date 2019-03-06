@@ -202,13 +202,16 @@ UnaryExp returns PureExp
     ;
 
 AtomicExp returns PureExp
-    : INTLITERAL
+    : {IntLiteral} INTLITERAL
     | FloatLiteral
-    | STRINGLITERAL
-    | IDENTIFIER
-    | 'this' '.' IDENTIFIER
-    | 'this'
-    | 'null'
+    | {StringLiteral} STRINGLITERAL
+    | VarOrFieldExp
+    | {ThisExp} 'this'
+    | {NullLiteral} 'null'
+    ;
+
+VarOrFieldExp returns PureExp
+    : (hasThis?='this' '.')? name=IDENTIFIER
     ;
 
 // Types
