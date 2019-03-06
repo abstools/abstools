@@ -65,10 +65,34 @@ VarDeclStmt
 
 // Expressions
 
+// KLUDGE: the expression grammar fragment is not LL(2) (although
+// PureExp by itself is) -- we turned on backtracking in
+// `GenerateAbs.mwe2' for now.
 Exp
     : PureExp
-    // | EffExp
+    | EffExp
     ;
+
+EffExp
+    : GetExp
+    | NewExp
+    | SyncCallExp
+    | AsyncCallExp
+    | AwaitAsyncCallExp
+    | OriginalCallExp
+    ;
+
+GetExp : future=PureExp '.get' ;
+
+NewExp : 'new' hasLocal?='local' c=QualifiedTypeIdentifier '('  args+=PureExp ( ',' args+=PureExp)* ')' ;
+
+SyncCallExp : o=PureExp '.' m=IDENTIFIER '('  args+=PureExp ( ',' args+=PureExp)* ')' ;
+
+AsyncCallExp : o=PureExp '!' m=IDENTIFIER '('  args+=PureExp ( ',' args+=PureExp)* ')' ;
+
+AwaitAsyncCallExp : 'await' o=PureExp '!' m=IDENTIFIER '('  args+=PureExp ( ',' args+=PureExp)* ')' ;
+
+OriginalCallExp : (( d=TYPE_IDENTIFIER | c?='core' ) '.')? 'original' '(' args+=PureExp ( ',' args+=PureExp)* ')' ;
 
 PureExp
     : FunctionAppExp
