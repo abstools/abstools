@@ -35,6 +35,12 @@ ModuleImport
     ;
 
 
+// Annotations
+
+AnnotationFragment: (l=TYPE_IDENTIFIER ':')? r=PureExp ;
+
+Annotations: ( '[' a+=AnnotationFragment (',' a+=AnnotationFragment) ']')* ;
+
 // Declarations
 
 ParamDecl
@@ -66,31 +72,32 @@ Stmt
     | CaseStmt
     ;
 
-VarDeclStmt : type=Type name=IDENTIFIER ( hasInit?='=' init=Exp )? ';' ;
+VarDeclStmt : ann=Annotations type=Type name=IDENTIFIER ( hasInit?='=' init=Exp )? ';' ;
 
-AssignStmt : var=VarOrFieldExp '=' exp=Exp ';' ;
+AssignStmt : ann=Annotations lhs=VarOrFieldExp '=' exp=Exp ';' ;
 
-SkipStmt : {SkipStmt} 'skip' ';' ;
+SkipStmt : ann=Annotations 'skip' ';' ;
 
-ReturnStmt : 'return' exp=Exp ';' ;
+ReturnStmt : ann=Annotations 'return' exp=Exp ';' ;
 
-AssertStmt : 'assert' exp=Exp ';' ;
+AssertStmt : ann=Annotations 'assert' exp=Exp ';' ;
 
-Block : '{' (stmt+=Stmt)* '}' ;
+Block : ann=Annotations '{' (stmt+=Stmt)* '}' ;
 
-IfStmt : 'if' '(' condition=PureExp ')' consequence=Stmt (=>'else' alternate=Stmt) ;
+IfStmt : ann=Annotations 'if' '(' condition=PureExp ')' consequence=Stmt (=>'else' alternate=Stmt) ;
 
-WhileStmt : 'while' '(' condition=PureExp ')' body=Stmt ;
+WhileStmt : ann=Annotations 'while' '(' condition=PureExp ')' body=Stmt ;
 
-ForeachStmt : 'foreach' '(' var=IDENTIFIER 'in' list=PureExp ')' body=Stmt ;
+ForeachStmt : ann=Annotations 'foreach' '(' var=IDENTIFIER 'in' list=PureExp ')' body=Stmt ;
 
 TryCatchFinallyStmt
-    : 'try' body=Stmt
+    : ann=Annotations
+        'try' body=Stmt
         'catch' (( '{' (branches+=CaseStmtBranch)* '}') | branches+=CaseStmtBranch)
         ('finally' finally=Stmt)?
     ;
 
-AwaitStmt : 'await' guard=Guard ';' ;
+AwaitStmt : ann=Annotations 'await' guard=Guard ';' ;
 
 Guard : SingleGuard ({Guard.left=current} '&' right=SingleGuard)* ;
 
@@ -106,19 +113,19 @@ DurationGuard returns Guard :  'duration' '(' min=PureExp ',' max=PureExp ')' ;
 
 ExpGuard returns Guard : exp=PureExp ;
 
-SuspendStmt : {SuspendStmt} 'suspend' ';' ;
+SuspendStmt : ann=Annotations 'suspend' ';' ;
 
-DurationStmt : 'duration' '(' min=PureExp ',' max=PureExp ')' ;
+DurationStmt : ann=Annotations 'duration' '(' min=PureExp ',' max=PureExp ')' ;
 
-ThrowStmt : 'throw' exception=PureExp ';' ;
+ThrowStmt : ann=Annotations 'throw' exception=PureExp ';' ;
 
-DieStmt : 'die' exception=PureExp ';' ;
+DieStmt : ann=Annotations 'die' exception=PureExp ';' ;
 
-MoveCogToStmt : 'movecogto' target=PureExp ';' ;
+MoveCogToStmt : ann=Annotations 'movecogto' target=PureExp ';' ;
 
-ExpStmt : exp=Exp ';' ;
+ExpStmt : ann=Annotations exp=Exp ';' ;
 
-CaseStmt : 'case' condition=PureExp '{' (branches+=CaseStmtBranch)* '}' ;
+CaseStmt : ann=Annotations 'case' condition=PureExp '{' (branches+=CaseStmtBranch)* '}' ;
 
 CaseStmtBranch : p=Pattern '=>' body=PureExp ';' ;
 
