@@ -21,14 +21,14 @@ ModuleExportImport
     ;
 
 ModuleExport
-    : 'export' (star='*' 'from' module=QualifiedTypeIdentifier
+    : 'export' (hasStar?='*' 'from' module=QualifiedTypeIdentifier
         | name+=AnyIdentifier (',' name+=AnyIdentifier)*)
         ('from' module=QualifiedTypeIdentifier)?
         ';'
     ;
 
 ModuleImport
-    : 'import' (star='*' 'from' module=QualifiedTypeIdentifier
+    : 'import' (hasStar?='*' 'from' module=QualifiedTypeIdentifier
         | name+=AnyIdentifier (',' name+=AnyIdentifier)* 'from' module=QualifiedTypeIdentifier
         | name+=AnyIdentifier (',' name+=AnyIdentifier)*)
         ';'
@@ -60,7 +60,7 @@ SkipStmt
     ;
 
 VarDeclStmt
-    : type=Type name=IDENTIFIER ( '=' init=Exp )? ';'
+    : type=Type name=IDENTIFIER ( hasInit?='=' init=Exp )? ';'
     ;
 
 // Expressions
@@ -83,26 +83,26 @@ PureExp
     ;
 
 FunctionAppExp
-    : QualifiedIdentifier '(' args+=PureExp ( ',' args+=PureExp)* ')'
+    : name=QualifiedIdentifier '(' args+=PureExp ( ',' args+=PureExp)* ')'
     ;
 
 VariadicFunctionAppExp
-    : QualifiedIdentifier '[' args+=PureExp ( ',' args+=PureExp)* ']'
+    : name=QualifiedIdentifier '[' args+=PureExp ( ',' args+=PureExp)* ']'
     ;
 
 PartialFunctionAppExp
-    : QualifiedIdentifier
+    : name=QualifiedIdentifier
         '(' fnargs+=PartialFunctionParam (',' fnargs+=PartialFunctionParam )* ')'
         '(' args+=PureExp ( ',' args+=PureExp)* ')'
     ;
 
 PartialFunctionParam
-    : QualifiedIdentifier
+    : name=QualifiedIdentifier
     | '(' params+=ParamDecl (',' params+=ParamDecl)* ')' "=>" body=PureExp
     ;
 
 ConstructorAppExp
-    : QualifiedTypeIdentifier ( '(' args+=PureExp ( ',' args+=PureExp)* ')' )?
+    : name=QualifiedTypeIdentifier ( '(' args+=PureExp ( ',' args+=PureExp)* ')' )?
     ;
 
 TemplateStringExp
@@ -132,12 +132,12 @@ CaseExpBranch
     ;
 
 Pattern
-    : {Pattern} '_'
-    | INTLITERAL
-    | STRINGLITERAL
-    | FloatLiteral
-    | IDENTIFIER
-    | QualifiedTypeIdentifier ( '(' pattern+=Pattern (',' pattern+=Pattern)* ')' )?
+    : {WildcardPattern} '_'
+    | {IntLiteralPattern} value=INTLITERAL
+    | {StringLiteralPatern} value=STRINGLITERAL
+    | {FloatLiteralPattern} value=FloatLiteral
+    | {VariablePattern} value=IDENTIFIER
+    | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' args+=Pattern (',' args+=Pattern)* ')' )?
     ;
 
 
