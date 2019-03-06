@@ -10,8 +10,8 @@ CompilationUnit
 
 ModuleDecl
     : 'module' name=QualifiedTypeIdentifier ';'
-        (modeExportImport+=ModuleExportImport)*
-        // (decl+=Decl)*
+        (modeExportImports+=ModuleExportImport)*
+        (decls+=Decl)*
         (mainBlock=Block)?
     ;
 
@@ -22,15 +22,15 @@ ModuleExportImport
 
 ModuleExport
     : 'export' (hasStar?='*' 'from' module=QualifiedTypeIdentifier
-        | name+=AnyIdentifier (',' name+=AnyIdentifier)*)
+        | names+=AnyIdentifier (',' names+=AnyIdentifier)*)
         ('from' module=QualifiedTypeIdentifier)?
         ';'
     ;
 
 ModuleImport
     : 'import' (hasStar?='*' 'from' module=QualifiedTypeIdentifier
-        | name+=AnyIdentifier (',' name+=AnyIdentifier)* 'from' module=QualifiedTypeIdentifier
-        | name+=AnyIdentifier (',' name+=AnyIdentifier)*)
+        | names+=AnyIdentifier (',' names+=AnyIdentifier)* 'from' module=QualifiedTypeIdentifier
+        | names+=AnyIdentifier (',' names+=AnyIdentifier)*)
         ';'
     ;
 
@@ -43,11 +43,88 @@ Annotations: ( '[' a+=AnnotationFragment (',' a+=AnnotationFragment) ']')* ;
 
 // Declarations
 
-ParamDecl
-    :
-        // TODO annotations
-        type=Type name=IDENTIFIER
+Decl
+    : DataTypeDecl
+    | TypeSynonymDecl
+    | ExceptionDecl
+    | FunctionDecl
+    | PartialFunctionDecl
+    | InterfaceDecl
+    | ClassDecl
+    // | TraitDecl
     ;
+
+DataTypeDecl
+    : ann=Annotations 'data' name=TYPE_IDENTIFIER
+        ('<' typeparam+=TYPE_IDENTIFIER (',' typeparam+=TYPE_IDENTIFIER) '>')?
+        ('=' constructors+=DataConstructorDecl ('|' constructors+=DataConstructorDecl))?
+        ';'
+    ;
+
+DataConstructorDecl : name=TYPE_IDENTIFIER ('(' args+=DataConstructorParamDecl (',' args+=DataConstructorParamDecl)* ')')? ;
+
+DataConstructorParamDecl : type=TypeUse (name=IDENTIFIER)? ;
+
+TypeSynonymDecl : ann=Annotations 'type' name=TYPE_IDENTIFIER '=' type=TypeUse ';' ;
+
+ExceptionDecl
+    : ann=Annotations 'exception' name=TYPE_IDENTIFIER
+        ('(' args+=DataConstructorParamDecl (',' args+=DataConstructorParamDecl)* ')')? ';'
+    ;
+
+FunctionDecl
+    : ann=Annotations 'def' type=TypeUse name=IDENTIFIER
+        ('<' typeparam+=TYPE_IDENTIFIER (',' typeparam+=TYPE_IDENTIFIER) '>')?
+        '(' args+=ParamDecl (',' args+=ParamDecl)* ')'
+        '=' (isBuiltin?='builtin' | body=PureExp)
+        ';'
+    ;
+
+PartialFunctionDecl
+    : ann=Annotations 'def' type=TypeUse name=IDENTIFIER
+        ('<' typeparam+=TYPE_IDENTIFIER (',' typeparam+=TYPE_IDENTIFIER) '>')?
+        '(' function_args+=IDENTIFIER (',' function_args+=IDENTIFIER)* ')'
+        '(' args+=ParamDecl (',' args+=ParamDecl)* ')'
+        '=' body=PureExp
+        ';'
+    ;
+
+InterfaceDecl
+    : ann=Annotations 'interface' name=TYPE_IDENTIFIER
+        ('extends' extends+=QualifiedTypeIdentifier (',' extends+=QualifiedTypeIdentifier))?
+        '{' (methods+=MethodSignature)* '}'
+    ;
+
+MethodSignature
+    : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
+        '(' args+=ParamDecl (',' args+=ParamDecl)* ')'
+        ';'
+    ;
+
+ClassDecl
+    : ann=Annotations 'class' name=TYPE_IDENTIFIER
+        ( '(' args+=ParamDecl (',' args+=ParamDecl)* ')' )?
+        ( 'implements' implements+=QualifiedTypeIdentifier (',' implements+=QualifiedTypeIdentifier)* )?
+        '{'
+        (fields+=FieldDecl)*
+        ( hasRecoverBlock?='recover' '{' (recoverbranches+=CaseStmtBranch)* '}' )?
+        // (traits+=TraitUsage)*
+        (methods+=MethodDecl)*
+        '}'
+    ;
+
+FieldDecl
+    : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
+        (hasInit?='=' init=Exp)? ';'
+    ;
+
+MethodDecl
+    : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
+        '(' args+=ParamDecl (',' args+=ParamDecl)* ')'
+        '{' (statements+=Stmt)* '}'
+    ;
+
+ParamDecl : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ;
 
 // Statements
 
@@ -72,7 +149,7 @@ Stmt
     | CaseStmt
     ;
 
-VarDeclStmt : ann=Annotations type=Type name=IDENTIFIER ( hasInit?='=' init=Exp )? ';' ;
+VarDeclStmt : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ( hasInit?='=' init=Exp )? ';' ;
 
 AssignStmt : ann=Annotations lhs=VarOrFieldExp '=' exp=Exp ';' ;
 
@@ -282,9 +359,13 @@ VarOrFieldExp returns PureExp
 
 // Types
 
-Type
-    // TODO
-    : TYPE_IDENTIFIER
+TypeUse : ann=Annotations type=TypeUseNoAnnotations ;
+
+// We use TypeUseNoAnnotations for parameters and methods so
+// annotations are parsed as part of the method / parameter, not its
+// type.
+TypeUseNoAnnotations
+    : name=QualifiedTypeIdentifier ('<' param+=TypeUse (param+=TypeUse)* '>')?
     ;
 
 // Terminals
