@@ -58,15 +58,15 @@ enabled_by_invocation(InvocationEvent, Trace) ->
     CorrespondingScheduleEvent = InvocationEvent#event{type=schedule},
     enables(make_predicate_event_equal_without_read_write(CorrespondingScheduleEvent), Trace).
 
-enabled_by_completion(CompletionEvent, Trace) ->
-    CorrespondingFutureReadEvent = CompletionEvent#event{type=future_read},
+enabled_by_future_write(FutureWriteEvent, Trace) ->
+    CorrespondingFutureReadEvent = FutureWriteEvent#event{type=future_read},
     enables(make_predicate_event_equal_without_read_write(CorrespondingFutureReadEvent), Trace).
 
 enabled_by(EventKey, Trace) ->
     E = event_key_to_event(Trace, EventKey),
     case E#event.type of
         invocation -> enabled_by_invocation(E, Trace);
-        completion -> enabled_by_completion(E, Trace);
+        future_write -> enabled_by_future_write(E, Trace);
         _ -> []
     end.
 
