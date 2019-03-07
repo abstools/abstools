@@ -424,3 +424,7 @@ AnyIdentifier returns ecore::EString
     : QualifiedIdentifier
     | QualifiedTypeIdentifier
     ;
+
+// Local Variables:
+// mode: antlr
+// End:
