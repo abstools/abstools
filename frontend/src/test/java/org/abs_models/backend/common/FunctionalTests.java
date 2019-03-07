@@ -385,4 +385,9 @@ public class FunctionalTests extends SemanticTests {
         assumeFalse(driver.getBackendName() == BackendTestDriver.BackendName.JAVA);
         assertEvalTrue(new File("abssamples/backend/FunctionalTests/wrappedSupertype.abs"));
     }
+
+    @Test
+    public void templatestrings() throws Exception {
+        assertEvalTrue(new File("abssamples/backend/FunctionalTests/templatestrings.abs"));
+    }
 }

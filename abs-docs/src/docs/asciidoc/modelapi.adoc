@@ -1,0 +1,324 @@
+== The Model API
+
+The Erlang backend supports querying a running model.  When creating objects,
+an annotation `HTTPName` makes them available via HTTP requests from outside
+the model under the name given by the annotation.  Methods that are annotated
+`HTTPCallable` can be invoked from the outside on such objects.  Additionally,
+datatypes can be annotated to influence how they are converted to JSON when
+they are returned from such methods.
+
+The model API is supported by the Erlang backend.
+
+NOTE: The Model API accepts connections only from local (loopback) addresses,
+i.e., from the same machine.
+
+NOTE: All queries in this section can be prepended with a `/v2/` prefix, i.e.,
+`http://localhost:8080/v2/call` instead of `http://localhost:8080/call`.  In
+case incompatible changes have to be introduced to the Model API in the
+future, the semantics of invocations of queries with prefix `/v2/` will be
+preserved.
+
+
+=== Starting the Model API
+
+When an ABS model compiled with the Erlang backend is started with the `-p`
+parameter naming a port number, the model will listen on the specified port
+for requests.  In the following example, we compile a model `my-model.abs` and
+start the model API on port 8080:
+
+----
+$ absc --erlang my-model.abs
+$ gen/erl/run -p 8080
+----
+
+=== Shutting down the Model API
+
+When running a model with the model API activated, it will not return to the
+command line after the simulation has finished.  Instead, the model will keep
+listening for requests and method calls.
+
+A running model can be terminated manually from the console (for example, via
+pressing `Ctrl-C`), or by requesting the URL `/quit`.  The following command
+will terminate a model running on port 8080:
+
+----
+$ curl localhost:8080/quit
+curl: (52) Empty reply from server
+----
+
+
+=== Exposing objects
+
+Objects are exposed via a `HTTPName` annotation.  In the following example,
+two objects of class `C` are exposed with the names `C1` and `C2`
+respectively.  The `HTTPName` annotation can be used on assignment statements,
+variable declarations and `new` expression statements.
+
+----
+[HTTPName: "C1"] new C();
+[HTTPName: "C2"] I x = new C();
+----
+
+=== Exposing methods
+
+In an interface declaration, a `HTTPCallable` annotation exposes the annotated
+method such that it is callable from outside, given an exposed object that implements that interface.
+
+----
+interface I {
+  [HTTPCallable] String method(String param1, Int param2);
+}
+----
+
+It is a compile-time error if the method takes parameters whose types are not
+supported.
+
+[caption="Decoding of parameter values", cols="33,33,34"]
+|===
+| ABS type | URLencoded format | JSON format
+
+| `Bool`
+| literal upper- or lowercase `true` / `false`: `?p=True`, `?p=true`, `?p=False`, `?p=false`
+| JSON boolean
+
+| `Int`
+| a string of digits, e.g., `?p=42`
+| JSON integer
+
+| `Float`
+| a floating-point number, e.g., `?p=3.14`
+| JSON float
+
+| `String`
+| URLEncoded text, e.g., `?p=Hello%20World!`
+| JSON string
+
+| `List<A>` (where `A` can be decoded)
+| not supported
+| JSON list with elements having type `A`
+
+| `Map<String, A>` (where `A` can be decoded; JSON map keys will be decoded as ABS strings)
+| not supported
+| JSON map with all values having type `A`
+
+| All others
+| not supported
+| not supported
+|===
+
+The method can have any return type.  Method call results will be returned as
+a string via the ABS `toString()` function, except for the types enumerated in
+the following table.
+
+[caption="Encoding of return values", cols="33,67"]
+|===
+| ABS type | JSON format
+
+| `Bool` | JSON boolean value
+
+| `String` | JSON string value
+
+| `Int` | JSON integer
+
+| `Rat` | JSON float, via integer division.  The behavior is unspecified if
+  the `Rat` value is outside of floating point range.
+
+| `Float` | JSON float
+
+| `List<A>` | JSON list, with elements converted one-by-one per this table.
+
+| `Set<A>` | JSON list; guaranteed to contain no duplicate elements, with
+  elements converted one-by-one per this table.
+
+| `Map<A, B>` | JSON object, with keys generated from their ABS counterpart
+  via `toString()`, values converted per this table.
+
+| Datatype, with at least one named or annotated constructor argument | JSON
+  object (see below)
+
+| Others | Converted via ABS `toString()`
+|===
+
+User-defined datatypes are encoded depending on the presence of accessor
+functions and `HTTPName` annotations.  If the datatype definition contains
+neither, values will be encoded as strings via `toString()`.  If at least one
+accessor function or `HTTPName` annotation is present, values will be encoded
+as objects, with the `HTTPName` annotation value (or accessor function name,
+if no annotation is present) as key.  Unnamed constructor argument values will
+not be contained in the JSON object.
+
+.Example of encoding of user-defined data types
+|===
+| ABS definition | Sample JSON encoding
+
+| `data D1 = D1(String, Int);`
+| `'D1("x", 1)'`, as per `toString()`
+
+| `data D2 = D2(String key, Int);`
+| `{ 'key': 'x' }`
+
+| `data D3 = D3([HTTPName: "effective key"] String key, Int);`
+| `{ 'effective key': 'x' }`
+|===
+
+=== Querying object state
+
+The following query returns the names of all exposed objects.
+
+----
+GET http://localhost:8080/o
+----
+
+Inspecting an object state directly can be useful for debugging.  The
+following query returns a JSON map of the state of the object exposed as `C1`,
+with object fields as keys.
+
+----
+GET http://localhost:8080/o/C1
+----
+
+The following query returns a JSON map containing the value of `C1`'s `field`,
+with `"field"` as key.
+
+----
+GET http://localhost:8080/o/C1/field
+----
+
+When querying for an unknown object or an unknown field, the HTTP request will
+produce a 404 response code.
+
+NOTE: All queries in this section can be prepended with a `/v2/` prefix, i.e.,
+`http://localhost:8080/v2/o`.  In case incompatible changes are introduced
+to the Model API in the future, for example by introducing new return value
+encodings, reasonable effort will be made to keep the semantics of invocations
+of queries with prefix `/v2/` unchanged.
+
+
+
+=== Querying exported methods of an object
+
+The following query returns, for an object exposed as `C1`, a JSON array of
+objects with metadata about callable functions.
+
+----
+GET http://localhost:8080/call/C1
+----
+
+Each entry in the resulting list will be a JSON object with the following
+keys:
+
+- `name`: the name of the exposed method
+- `parameters`: an array with one object per parameter, each with the
+  following entries:
+  - `name`: name of the parameter
+  - `type`: type of the parameter
+- `return`: return type of the method
+
+
+=== Invoking methods
+
+Exposed methods are called by querying a URL of the form
+
+----
+http://.../call/<objectname>/<methodname>
+----
+
+Parameters are passed to methods either as query parameters in the URL or in a
+JSON map passed in as the body of a POST request.  For duplicate arguments,
+parameter values in the URL override values given in the JSON body.
+
+The following query produces the return value of the method call
+`method("value", 50)` by invoking it on the object exposed as `C1`.
+
+----
+GET http://localhost:8080/call/C1/method?param1=value&param2=50
+----
+
+This query can be invoked from the shell in two ways, using the `curl`
+command, either using query parameters or a JSON body:
+
+----
+$ curl http://localhost:8080/call/C1/method?param1=value\&param2=50
+$ curl -d "{ 'param1': 'value', 'param2': 50 }" http://localhost:8080/call/C1/method
+----
+
+The following example shows how to call a method that takes a `List<Int>` called `mylist` from Javascript using the JQuery library:
+
+[source, javascript]
+----
+$.ajax({
+    url: "call/Model/testConfig",
+    type: "POST",
+    data: JSON.stringify({ "mylist": [1,2,3] }),
+}).done(function(result) {
+    console.log("Result: " + JSON.stringify(result));
+});
+----
+
+Care must be taken to disable timeouts on the HTTP client when querying for
+long-running methods in this way.
+
+When querying for unknown objects or methods, the HTTP request will produce a
+404 response code.
+
+When querying with invalid method parameters, the HTTP request will produce a
+400 response code.
+
+When the invoked method throws an exception, the HTTP request will produce a
+500 response code.
+
+=== The Model API and Timed ABS
+
+The simulated clock of Timed ABS (<<sec:timed-abs>>) is accessible via
+the Model API.
+
+The current value of the clock can be obtained with the following request:
+
+----
+GET http://localhost:8080/clock/now
+----
+
+The result is a JSON object with a key `'result'` mapping to the
+current value of the clock.
+
+When the model was started with a clock limit (see
+<<timed-abs-and-model-api>>), the limit can be increased via a request
+like the following:
+
+----
+GET http://localhost:8080/clock/advance?by=50
+----
+
+The result is a JSON object with a key `'result'` mapping to the
+new clock limit.
+
+This call will always increase the clock limit by the given amount,
+even if the clock had not yet reached the previous limit.  I.e., when
+`now()` = 10 and the limit is 20, after the call the limit will be 70,
+the same as when the clock was already stopped at the limit of 20 when
+the call was received by the Model API.
+
+
+=== Customizing the Browser-Based Visualization
+
+Since the Model API is implemented via HTTP, it can be accessed from a
+web browser.  The `--modelapi-index-file` command-line switch is used
+to supply an `index.html` file at compile-time:
+
+  $ absc --erlang --modelapi-index-file ./index.html *.abs
+
+When running a model on port 8080 and accessing
+`http://localhost:8080/` from a browser, the contents of that file
+will be displayed.
+
+Sometimes it is necessary to add additional files for visualization,
+e.g., CSS files, images or JavaScript libraries.  The contents of one
+directory can be added to the model via the `--modelapi-static-dir`
+command-line switch:
+
+  $ absc --erlang --modelapi-index-file ./index.html --modelapi-static-dir ./support-files/ *.abs
+
+The contents of the given directory are copied at compile-time.  The
+files within that directory are available within the Model API below
+the `static/` path.  For example, a file `./support-files/js/d3.js`
+will be accessible as `http://localhost:8080/static/js/d3.js`.

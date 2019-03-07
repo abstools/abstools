@@ -4,7 +4,6 @@
  */
 package org.abs_models.backend.maude;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.text.DateFormat;
@@ -15,19 +14,13 @@ import java.util.List;
 
 import com.google.common.io.ByteStreams;
 
+import org.abs_models.Absc;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
-import org.stringtemplate.v4.STGroup;
-import org.stringtemplate.v4.STGroupFile;
 
 public class MaudeCompiler extends Main {
-
-    public static STGroup templates;
-    static {
-        templates = new STGroupFile(MaudeCompiler.class.getResource("/codegen/maude.stg"));
-    }
 
     public enum SIMULATOR {
         RL(SIMULATOR_RL), EQ_TIMED(SIMULATOR_EQ_TIMED);
@@ -46,27 +39,22 @@ public class MaudeCompiler extends Main {
         = "main/resources/maude/abs-interpreter.maude";
 
     SIMULATOR module = SIMULATOR.RL;
-    private File outputfile;
     private String mainBlock;
     private int clocklimit = 100;
     private int defaultResources = 0;
 
-    public static void main(final String... args) {
-        doMain(args);
-    }
-
-
-    public static int doMain(final String... args) {
+    public static int doMain(Absc args) {
         MaudeCompiler compiler = new MaudeCompiler();
+        compiler.arguments = args;
         try {
-            return compiler.compile(args);
+            return compiler.compile();
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
             return 1;
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
 
-            if (compiler.debug) {
+            if (compiler.arguments.debug) {
                 e.printStackTrace();
             }
             return 1;
@@ -82,13 +70,6 @@ public class MaudeCompiler extends Main {
             String arg = restArgs.get(i);
             if (arg.equals("-timed")) {
                 module = SIMULATOR.EQ_TIMED;
-            } else if (arg.equals("-o")) {
-                i++;
-                if (i == restArgs.size()) {
-                    throw new InternalBackendException("Missing output file name after '-o'");
-                } else {
-                    outputfile = new File(restArgs.get(i));
-                }
             } else if (arg.startsWith("-main=")) {
                 mainBlock = arg.split("=")[1];
             } else if (arg.startsWith("-limit=")) {
@@ -109,12 +90,12 @@ public class MaudeCompiler extends Main {
 
 
     /**
-     * @param args
      * @throws Exception
      */
-    public int compile(String[] args) throws Exception {
-        if (verbose) System.out.println("Generating Maude code...");
-        final Model model = parse(args);
+    public int compile() throws Exception {
+        if (arguments.verbose) System.out.println("Generating Maude code...");
+        module = arguments.maude_timed ? SIMULATOR.EQ_TIMED : SIMULATOR.RL;
+        final Model model = parse(arguments.files);
         // Maude has build-in AwaitAsyncCall support
         model.doAACrewrite = false;
         if (model.hasParserErrors()
@@ -126,8 +107,8 @@ public class MaudeCompiler extends Main {
         }
 
         PrintStream stream = System.out;
-        if (outputfile != null) {
-            stream = new PrintStream(outputfile);
+        if (arguments.outputfile != null) {
+            stream = new PrintStream(arguments.outputfile);
         }
         // Are we running in the source directory?
         InputStream is = ClassLoader.getSystemResourceAsStream(RUNTIME_INTERPRETER_PATH);
@@ -142,23 +123,12 @@ public class MaudeCompiler extends Main {
 
         stream.println("*** Generated " + dateFormat.format(new Date()));
         ByteStreams.copy(is, stream);
-        model.generateMaude(stream, module, mainBlock, clocklimit, defaultResources);
-        if (verbose) System.out.println("Finished.  Start `maude " + outputfile.toString() + "' to run the model.");
+        model.generateMaude(stream, module, arguments.maude_mainBlock, arguments.maude_clocklimit, arguments.maude_defaultResources);
+        if (arguments.verbose && arguments.outputfile != null) {
+            System.out.println("Finished.  Start `maude " + arguments.outputfile.toString() + "' to run the model.");
+        }
         return 0;
     }
-
-    public static void printUsage() {
-        System.out.println("Maude Backend (-maude):\n"
-                + "  -main=<ModuleName> \n"
-                + "                 sets the main block to execute\n"
-                + "  -o <file>      write output to <file> instead of standard output\n"
-                + "  -timed         generate code for timed interpreter\n"
-                + "  -limit=n       set clock limit for timed interpreter to n (default 100)\n"
-                + "                 (implies -timed)\n"
-                + "  -defaultcost=n set default statement execution cost (default 0)\n"
-        );
-    }
-
 }
 
 // Local Variables:

@@ -127,10 +127,7 @@ lookup_object_from_http_name(Name) ->
     Object=gen_statem:call({global, cog_monitor}, {lookup_object, Name}, infinity),
     case Object of
         none -> {notfound, Object};
-        #object{ref=Ref} -> case is_process_alive(Ref) of
-                 true -> {ok, Object};
-                 false -> {deadobject, Object}
-             end
+        _ -> {ok, Object}
     end.
 
 list_registered_http_names() ->
@@ -252,8 +249,7 @@ handle_call(From, {cog,Task,Cog,clock_waiting,Min,Max}, _State,
     %% {cog, blocked} event comes separately
     C1=add_to_clock_waiting(C,Min,Max,Task,Cog),
     {keep_state, Data#data{clock_waiting=C1}, {reply, From, ok}};
-handle_call(From, {newdc, DC=#object{class=class_ABS_DC_DeploymentComponent}},
-            _State, Data=#data{dcs=DCs}) ->
+handle_call(From, {newdc, DC}, _State, Data=#data{dcs=DCs}) ->
     {keep_state, Data#data{dcs=[DC | DCs]}, {reply, From, ok}};
 handle_call(From, get_dcs, _State, Data=#data{dcs=DCs}) ->
     {keep_state_and_data, {reply, From, DCs}};
@@ -269,21 +265,11 @@ handle_call(From, all_registered_objects, _State,
     {keep_state_and_data, {reply, From, maps:values(Objects)}};
 handle_call(From, {register_object, Object, Key}, _State,
             Data=#data{registered_objects=Objects}) ->
-    object:protect_object_from_gc(Object),
-    NewObjects=case maps:get(Key, Objects,none) of
-                   none -> maps:put(Key, Object, Objects);
-                   OldObject ->
-                       object:unprotect_object_from_gc(OldObject),
-                       maps:update(Key, Object, Objects)
-               end,
-    {keep_state, Data#data{registered_objects=NewObjects}, {reply, From, ok}};
+    {keep_state, Data#data{registered_objects=maps:put(Key, Object, Objects)},
+     {reply, From, ok}};
 handle_call(From, {lookup_object, Name}, _State,
             Data=#data{registered_objects=Objects}) ->
-    Result=case maps:get(Name, Objects, none) of
-               none -> none;
-               Object -> Object
-           end,
-    {keep_state_and_data, {reply, From, Result}};
+    {keep_state_and_data, {reply, From, maps:get(Name, Objects, none)}};
 handle_call(From, Request, _State, _Data)->
     io:format(standard_error, "Unknown call: ~w~n", [Request]),
     {keep_state_and_data, {reply, From, error}}.

@@ -453,8 +453,7 @@ mod ABS-DATATYPES is
   op toAbsString : Data -> String .
   eq toAbsString("num"[N:Rat]) = string(N:Rat, 10) .
   eq toAbsString("float"[N:Float]) = string(N:Float) .
-  *** FIXME this does not handle strings with embedded backslashes
-  eq toAbsString("str"[S:String]) = "\"" + S:String + "\"" .
+  eq toAbsString("str"[S:String]) = S:String .
   eq toAbsString(null) = "null" .
   eq toAbsString(ob(C:Cid, N:Int))
   = "< REF " + string(C:Cid) + " " + string(N:Int, 10) + " >" .

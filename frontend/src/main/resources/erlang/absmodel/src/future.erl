@@ -49,7 +49,7 @@ wait_for_future_start(Ref, Cog, Stack) ->
         {started, _Ref} ->
             ok;
         {stop_world, _Sender} ->
-            cog:process_is_blocked_for_gc(Cog, self()),
+            cog:process_is_blocked_for_gc(Cog, self(), get(process_info), get(this)),
             cog:process_is_runnable(Cog, self()),
             task:wait_for_token(Cog, [Ref | Stack]),
             wait_for_future_start(Ref, Cog, Stack);
@@ -92,7 +92,7 @@ get_blocking(Future, Cog, Stack) ->
         false ->
             %% Tell future not to advance time until we picked up ourselves
             register_waiting_task(Future, self()),
-            cog:process_is_blocked(Cog,self()),
+            cog:process_is_blocked(Cog,self(), get(process_info), get(this)),
             (fun Loop() ->
                      receive
                          {value_present, Future, _CalleeCog} ->
@@ -115,26 +115,23 @@ get_blocking(Future, Cog, Stack) ->
 await(null, _Cog, _Stack) ->
     throw(dataNullPointerException);
 await(Future, Cog, Stack) ->
-    case gen_statem:call(Future, {poll_or_add_waiting, self()}) of
-        true -> ok;
-        false ->
-            task:release_token(Cog, waiting),
-            (fun Loop() ->
-                     receive
-                         {value_present, Future, _CalleeCog} ->
-                             %% Unblock this task before allowing the other
-                             %% task to terminate (and potentially letting its
-                             %% cog idle).
-                             cog:process_is_runnable(Cog,self()),
-                             confirm_wait_unblocked(Future, self()),
-                             task:wait_for_token(Cog, [Future | Stack]);
-                         {stop_world, _Sender} ->
-                             Loop();
-                         {get_references, Sender} ->
-                             cog:submit_references(Sender, gc:extract_references([Future | Stack])),
-                             Loop()
-                     end end)()
-    end,
+    register_waiting_task(Future, self()),
+    task:release_token(Cog, waiting),
+    (fun Loop() ->
+             receive
+                 {value_present, Future, _CalleeCog} ->
+                     %% Unblock this task before allowing the other
+                     %% task to terminate (and potentially letting its
+                     %% cog idle).
+                     cog:process_is_runnable(Cog,self()),
+                     confirm_wait_unblocked(Future, self()),
+                     task:wait_for_token(Cog, [Future | Stack]);
+                 {stop_world, _Sender} ->
+                     Loop();
+                 {get_references, Sender} ->
+                     cog:submit_references(Sender, gc:extract_references([Future | Stack])),
+                     Loop()
+             end end)(),
     %% Register await future event for the trace
     gen_statem:call(Future, {done_waiting, Cog}).
 
@@ -185,43 +182,30 @@ die(Future, Reason) ->
 callback_mode() -> state_functions.
 
 init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,RegisterInGC,Caller]) ->
-    case is_process_alive(Object) of
-        true ->
-            %%Start task
-            process_flag(trap_exit, true),
-            %% We used to wrap the following line in a
-            %% erlang:monitor(process, CogRef) / erlang:demonitor()
-            %% call, but if Object is alive, so is (presumably)
-            %% CogRef, and Object cannot have been garbage-collected
-            %% in the meantime.
-            TaskRef=cog:add_task(Cog,async_call_task,self(),Callee,[Method|Params], Info, Params),
-            case RegisterInGC of
-                true -> gc:register_future(self());
-                false -> ok
-            end,
-            case Caller of
-                none -> ok;
-                _ -> Caller ! {started, self()} % in cooperation with start/3
-            end,
-            {ok, running, #data{calleetask=TaskRef,
-                                calleecog=Cog,
-                                references=gc:extract_references(Params),
-                                value=none,
-                                waiting_tasks=[],
-                                register_in_gc=RegisterInGC,
-                                caller=Caller,
-                                event=Info#process_info.event}};
-        false ->
-            case Caller of
-                none -> ok;
-                _ -> Caller ! {started, self()} % in cooperation with start/3
-            end,
-            {ok, completed, #data{calleetask=none,
-                                  value={error, dataObjectDeadException},
-                                  calleecog=Cog,
-                                  register_in_gc=RegisterInGC,
-                                  event=Info#process_info.event}}
-    end;
+    %%Start task
+    process_flag(trap_exit, true),
+    %% We used to wrap the following line in a
+    %% erlang:monitor(process, CogRef) / erlang:demonitor()
+    %% call, but if Object is alive, so is (presumably)
+    %% CogRef, and Object cannot have been garbage-collected
+    %% in the meantime.
+    TaskRef=cog:add_task(Cog,async_call_task,self(),Callee,[Method|Params], Info#process_info{this=Callee,destiny=self()}, Params),
+    case RegisterInGC of
+        true -> gc:register_future(self());
+        false -> ok
+    end,
+    case Caller of
+        none -> ok;
+        _ -> Caller ! {started, self()} % in cooperation with start/3
+    end,
+    {ok, running, #data{calleetask=TaskRef,
+                        calleecog=Cog,
+                        references=gc:extract_references(Params),
+                        value=none,
+                        waiting_tasks=[],
+                        register_in_gc=RegisterInGC,
+                        caller=Caller,
+                        event=Info#process_info.event}};
 init([_Callee=null,_Method,_Params,RegisterInGC,Caller]) ->
     %% This is dead code, left in for reference; a `null' callee is caught in
     %% future:start above.
@@ -279,8 +263,6 @@ next_state_on_completion(Data=#data{waiting_tasks=WaitingTasks, calleecog=Callee
     {completing, Data}.
 
 
-running({call, From}, {poll_or_add_waiting, Task}, Data=#data{waiting_tasks=WaitingTasks}) ->
-    {keep_state, Data#data{waiting_tasks=[Task | WaitingTasks]}, {reply, From, false}};
 running({call, From}, get_references, Data=#data{references=References}) ->
     {keep_state, Data, {reply, From, References}};
 running(cast, {waiting, Task}, Data=#data{waiting_tasks=WaitingTasks}) ->
@@ -311,8 +293,6 @@ next_state_on_okthx(Data=#data{calleetask=CalleeTask,waiting_tasks=WaitingTasks,
             {completing, Data#data{waiting_tasks=NewWaitingTasks}}
     end.
 
-completing({call, From}, {poll_or_add_waiting, _Task}, Data) ->
-    {keep_state_and_data, {reply, From, true}};
 completing({call, From}, get_references, Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
 completing({call, From}, {done_waiting, Cog}, Data=#data{value=Value,event=Event}) ->
@@ -339,8 +319,6 @@ completing(info, Msg, Data) ->
     handle_info(Msg, completing, Data).
 
 
-completed({call, From}, {poll_or_add_waiting, _Task}, Data) ->
-    {keep_state_and_data, {reply, From, true}};
 completed({call, From}, get_references, Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
 completed({call, From}, {done_waiting, Cog}, Data=#data{value=Value,event=Event}) ->

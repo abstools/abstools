@@ -1,14 +1,12 @@
 import org.jastadd.JastAddTask
 
-// JastAdd plugin documentation at https://github.com/jastadd/jastaddgradle
-
 plugins {
     // Apply the java plugin to add support for Java
     id 'java'
     // Apply the application plugin to add support for building an application
     id 'application'
-    id 'com.palantir.git-version' version '0.11.0'
 
+    // JastAdd plugin documentation at https://github.com/jastadd/jastaddgradle
     id 'org.jastadd' version '1.13.3'
     id 'antlr'
     id "com.github.spotbugs" version "1.6.9"
@@ -22,11 +20,6 @@ distributions {
     main { baseName = 'absc' }
 }
 
-def version_details = versionDetails() // https://github.com/palantir/gradle-git-version
-project.version = gitVersion().replaceAll(/^version_/, '')
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
-
 dependencies {
     // https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
     implementation 'commons-io:commons-io:2.6'
@@ -38,7 +31,8 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.pb:2.3.0'
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
-    implementation 'org.antlr:ST4:4.1'
+
+    compile 'info.picocli:picocli:3.9.3'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
@@ -55,12 +49,6 @@ dependencies {
     jastadd2 'org.jastadd:jastadd:2.3.2'
     antlr 'org.antlr:antlr4:4.7.2'
 }
-
-repositories {
-    jcenter()
-}
-
-
 
 // JastAdd
 task generateJastAddAST(type: JastAddTask) {
@@ -109,16 +97,16 @@ clean {
 jar {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Jar.html
     baseName='absfrontend'
-    appendix=version_details.branchName
+    appendix=versionDetails().branchName
     manifest {
-        attributes 'Main-Class': 'org.abs_models.frontend.parser.Main',
+        attributes 'Main-Class': 'org.abs_models.Absc',
             'Implementation-Title': 'ABS Frontend',
-            'Implementation-Version': version_details.lastTag.replaceAll(/^version_/, ''),
+            'Implementation-Version': versionDetails().lastTag,
             'Bundle-Version': project.version,
             // This is wrong, but we use it anyway for the detailed
             // version string (java.lang.Package only has methods
             // getVersion and getSpecificationVersion)
-            'Specification-Version': project.version
+            'Specification-Version': versionDetails().lastTag + "-" + versionDetails().commitDistance + "-" + versionDetails().gitHash
     }
     from configurations.runtimeClasspath
         .findAll { it.name.endsWith('jar') }
@@ -126,6 +114,19 @@ jar {
     reproducibleFileOrder=true
 }
 
+// include manual in source archives
+distZip {
+    from project(':abs-docs').asciidoctor, {
+        into "abs-docs-${version}"
+    }
+}
+distTar {
+    from project(':abs-docs').asciidoctor, {
+        into "abs-docs-${version}"
+    }
+}
+
+// this is necessary for the `absc` scripts
 task plainJar(type: Copy, dependsOn: jar) {
     description 'Copies absfrontend.jar into its documented location.'
     from jar
@@ -138,13 +139,13 @@ clean {
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
-    appendix = version_details.branchName
+    appendix = versionDetails().branchName
     from sourceSets.main.allSource
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
-    appendix = version_details.branchName
+    appendix = versionDetails().branchName
     from javadoc.destinationDir
 }
 
@@ -153,6 +154,9 @@ artifacts {
     archives javadocJar
 }
 
+// `absc` script et al. -- copy to well-known location and instruct
+// users to set their $PATH (see e.g. `frontend/README.md`,
+// https://abstools.github.io/getting_started/local-install/)
 task copyScripts(type: Copy) {
     description 'Copies absc scripts into their documented locations.'
     from('src/main/resources') {
@@ -182,14 +186,6 @@ spotbugs {
     showProgress = true
     excludeFilter = file('config/findbugs/findbugs-jastadd-filter.xml')
 }
-
-javadoc {
-    failOnError = false
-    options.addStringOption('Xdoclint:none', '-quiet')
-    options.tags = [ 'apilevel', 'declaredat', 'aspect', 'ast', 'attribute',
-                    'astdecl', 'production' ]
-}
-
 tasks.withType(com.github.spotbugs.SpotBugsTask) {
     reports {
         // can only have one report type :(
@@ -197,4 +193,11 @@ tasks.withType(com.github.spotbugs.SpotBugsTask) {
         html.enabled = true
         emacs.enabled = false
     }
+}
+
+javadoc {
+    failOnError = false
+    options.addStringOption('Xdoclint:none', '-quiet')
+    options.tags = [ 'apilevel', 'declaredat', 'aspect', 'ast', 'attribute',
+                    'astdecl', 'production' ]
 }

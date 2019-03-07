@@ -5,12 +5,12 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 default: frontend
 
 frontend:			## Build ABS compiler (default)
-	./gradlew clean assemble
+	../gradlew clean assemble
 	@echo "Finished."
 	@echo "absc command installed in frontend/bin/bash/, absc.bat in frontend/bin/win"
 
 test:				## Build ABS compiler and run all tests
-	./gradlew clean build
+	../gradlew clean build
 	@echo "Finished."
 	@echo "absc command installed in frontend/bin/bash/, absc.bat in frontend/bin/win"
 

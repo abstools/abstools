@@ -3,32 +3,74 @@
 - Run unit tests, check for fresh failing tests (compared to last
   version)
 
-- Create docker (`make docker`)
-  - check if all tools are installed (selection box non-empty)
-  - check that "Hello World" ABS program can start with Erlang simulator
-  - check that "Hello World" ABS program doesn't crash SACO / CostABS
+- Manually compile and run a small model on macOS, Linux, Windows
 
-- Create vagrant (`vagrant up`)
+- Create docker (`make docker ; make run-collaboratory`)
+  - check if all tools are installed in collaboratory (selection box non-empty)
+  - check that collaboratory can start "Hello World" ABS program with Erlang simulator
+  - check that "Hello World" ABS program doesn't crash SACO / CostABS in collaboratory
+  - check that absc container works / was created: `docker run --rm abslang/absc:latest -h` should produce the same output as `absc -h` on the local machine
+
+- Create vagrant (`vagrant up`) (NOTE: currently broken and probably unused)
   - check if all tools in collaboratory are installed
   - check that "Hello World" ABS program can start with Erlang simulator
   - check that "Hello World" ABS program doesn't crash SACO / CostABS
 
-- Release commit should include only an updated `CHANGELOG.md`, with a
-  fresh `## [Unreleased]` section containing the four subsections `###
-  Added`, `### Changed`, `### Removed`, `### Fixed`.  The first line
-  of the commit message should be `Release version x.y.z`, followed by
-  the changelog.
+- Update `CHANGELOG.md`
+  - Rename section `[Unreleased]` to `[x.y.z] - yyyy-mm-dd`
+  - Add and update hyperlinks at the end of the file: update link
+    definition for `[Unreleased]`to compare with the latest version,
+    add line `[x.y.z]` comparing latest and previous versions
+  - Add fresh section as follows:
 
-- Add release tag `version_x.y.z` with the same message.
+```md
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+```
+
+- Prepare release commit
+
+  - The release commit should include only the updated `CHANGELOG.md`,
+    with the headline markers `#` replaced by stars `*` (since the
+    # symbol denotes comments in a github commit message).
+
+  - The first line of the commit message should be `Release version
+   x.y.z`, followed by the contents of the change log for the current version
+
+- Add release tag `vx.y.z` with the same message as the commit message.
 
 - push release commit (`git push`) and tag (`git push --tags`)
 
-- Check that CircleCI built and uploaded the docker images; otherwise
-  build and upload via
-  - `docker build -t abslang/collaboratory:<version> .`
-  - `docker push abslang/collaboratory:<version>`
+- upload `absfrontend.jar`
+
+  - github will have created a release at
+    [https://github.com/abstools/abstools/releases] with the source
+    tree archives.  Click "Edit" on the release and drag
+    `frontend/dist/absfrontend.jar` into the area that says "Attach
+    binaries by dropping them here or selecting them.".  (Automating
+    this step would involve handling github API keys, so we keep it
+    manual.)
 
 - Send mail to `abs-announce@abs-models.org`, `abs-dev@abs-models.org`
+
+- Check that CircleCI built and uploaded the docker images; otherwise
+  build and upload (in the main `abstools` directory):
+  - `docker build -t abslang/collaboratory:x.y.z .`
+  - `docker push abslang/collaboratory:x.y.z`
+  - `docker build -t abslang/collaboratory:latest .`
+  - `docker push abslang/collaboratory:latest`
+  - `docker build -t abslang/absc:x.y.z -f frontend/Dockerfile .`
+  - `docker push abslang/absc:x.y.z`
+  - `docker build -t abslang/absc:latest -f frontend/Dockerfile .`
+  - `docker push abslang/absc:latest`
 
 # Version numbering
 
@@ -45,5 +87,5 @@ models need to be re-implemented).
 
 The release commit contains only an updated `CHANGELOG.md`, with the commit message the same as the contents of `CHANGELOG.md` for the current release.
 
-This commit is tagged with `version_x.y.z`, with the tag message
+This commit is tagged with `vx.y.z`, with the tag message
 identical to the commit message.

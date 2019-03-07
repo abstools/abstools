@@ -18,7 +18,7 @@ import choco.kernel.model.variables.integer.IntegerVariable;
 public class ChocoSolverExperiment {
 
   @SuppressWarnings("unused")
-public static void main(final String[] args) throws Exception {
+  public static void main(final String[] args) throws Exception {
 
     CPModel m = new CPModel();
     boolean verbose = false;

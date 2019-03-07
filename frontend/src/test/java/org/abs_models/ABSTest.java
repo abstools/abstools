@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.WrongProgramArgumentException;
@@ -144,7 +145,7 @@ public class ABSTest {
     static public Model assertParseFileOk(String fileName, Config... config) throws IOException,
         WrongProgramArgumentException, InternalBackendException, DeltaModellingException {
         Main main = new Main();
-        Model m = main.parseFiles(false, resolveFileName(fileName));
+        Model m = main.parseFile(false, new File(resolveFileName(fileName)));
         main.analyzeFlattenAndRewriteModel(m);
         m.evaluateAllProductDeclarations();
         return assertParseModelOk(m, config);
@@ -152,8 +153,8 @@ public class ABSTest {
 
     protected Model assertParseFilesOk(Set<String> fileNames, Config... config) throws IOException, InternalBackendException {
         Main main = new Main();
-        String[] filenameArray = fileNames.stream().map(f -> resolveFileName(f)).toArray(String[]::new);
-        Model m = main.parseFiles(false, filenameArray);
+        java.util.List<File> files = fileNames.stream().map(f -> new File(resolveFileName(f))).collect(Collectors.toList());
+        Model m = main.parseFiles(false, files);
         return assertParseModelOk(m, config);
     }
 

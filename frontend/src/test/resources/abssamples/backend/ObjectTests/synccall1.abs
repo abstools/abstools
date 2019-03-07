@@ -1,0 +1,29 @@
+module BackendTest;
+
+interface I { Bool m(); }
+
+// Test that synchronous calls properly set object state, `this' pointer etc.
+
+class Cinner implements I {
+    Bool f = True;
+    Bool m() {
+        await f;
+        return f;
+    }
+}
+
+class Couter implements I {
+    I inner = null;
+    Bool f = False;
+    {
+        inner = new local Cinner();
+    }
+    Bool m() {
+        return inner.m();
+    }
+}
+
+{
+    I i = new local Couter();
+    Bool testresult = i.m();
+}

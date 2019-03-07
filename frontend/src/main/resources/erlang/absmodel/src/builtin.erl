@@ -81,10 +81,7 @@ toString(_Cog,{N,D}) when is_integer(N),is_integer(D)->
         1 -> integer_to_binary(N1);
         _ -> iolist_to_binary([integer_to_binary(N1), <<"/"/utf8>>, integer_to_binary(D1)])
     end;
-toString(_Cog,S) when is_binary(S) ->
-    iolist_to_binary(["\"",
-                      binary:replace(S, [<<"\\">>, <<"\"">>], <<"\\">>, [global, {insert_replaced, 1}]),
-                      "\""]);
+toString(_Cog,S) when is_binary(S) -> S;
 toString(_Cog, null) -> <<"null"/utf8>>;
 toString(_Cog,A) when is_atom(A) -> constructorname_to_string(A);
 toString(Cog,P) when is_pid(P) ->
@@ -94,10 +91,14 @@ toString(Cog,P) when is_pid(P) ->
                 iolist_to_binary([pid_to_list(P), ":", toString(Cog, Value)]);
         false -> iolist_to_binary([pid_to_list(P), ":empty"])
     end;
-toString(_Cog,#object{class=Cid,ref=Oid}) ->
-    %% TODO: use binary:replace?
-    iolist_to_binary([re:replace(string:substr(atom_to_list(Cid), 7), "_", ".", [{return, list}]),
-                      ":", pid_to_list(Oid)]);
+toString(_Cog,O=#object{cog=Cog,ref=Oid}) ->
+    C=object:get_class_from_ref(O),
+    ClassName=case C of
+                  none -> <<"<no class - main module>">>;
+                  _ -> re:replace(string:substr(atom_to_list(C), 7), "_", ".", [{return, list}])
+              end,
+    iolist_to_binary([ClassName,
+                      ":", pid_to_list(Cog#cog.ref), "-", integer_to_binary(Oid)]);
 toString(_Cog, L) when is_list(L) ->
     iolist_to_binary(["list[",
                       lists:join(", ", lists:map(fun(I) -> toString(_Cog, I) end, L)),

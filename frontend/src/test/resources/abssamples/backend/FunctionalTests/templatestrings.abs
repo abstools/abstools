@@ -1,0 +1,11 @@
+module BackendTest;
+
+{
+    String name = "Abs";
+    Int price = 5;
+    String s = `Hello \$$name$\$!
+	\T\\he price is \`\$$price$\`.`;
+    String s2 = "Hello $Abs$!\n\t\\T\\\\he price is `$5`.";
+    Bool testresult = s == s2;
+    // println(`testresult: $testresult$`);
+}

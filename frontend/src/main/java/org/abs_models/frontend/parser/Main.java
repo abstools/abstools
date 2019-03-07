@@ -17,10 +17,11 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.jar.JarEntry;
 
+import org.abs_models.Absc;
+import org.abs_models.backend.autodeploy.Tester;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.backend.coreabs.CoreAbsBackend;
 import org.abs_models.backend.erlang.ErlangBackend;
@@ -56,16 +57,12 @@ import org.abs_models.frontend.ast.ProductLine;
 import org.abs_models.frontend.ast.StarImport;
 import org.abs_models.frontend.ast.StringLiteral;
 import org.abs_models.frontend.delta.DeltaModellingException;
-import org.abs_models.frontend.delta.ProductLineAnalysisHelper;
-import org.abs_models.frontend.mtvl.ChocoSolver;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
-
-import choco.kernel.model.constraints.Constraint;
 
 /**
  * @author rudi
@@ -75,60 +72,71 @@ public class Main {
 
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
     public static final String UNKNOWN_FILENAME = "<unknown file>";
-    protected boolean verbose = false;
-    protected boolean typecheck = true;
-    protected boolean checkspl = false;
-    protected boolean dump = false;
-    protected boolean debug = false;
-    protected LocationType defaultLocationType = null;
-    protected boolean locationTypeInferenceEnabled = false;
-    // Must be public for AspectJ instrumentation
-    public boolean fullabs = false;
-    public String product;
-    protected boolean locationTypeStats = false;
-    protected LocationTypeInferrerExtension.LocationTypingPrecision locationTypeScope = null;
-    // mTVL options
-    protected boolean solve = false ;
-    protected boolean solveall = false ;
-    protected boolean solveWith = false ;
-    protected boolean minWith = false ;
-    protected boolean maxProduct = false ;
-    protected boolean check = false ;
-    protected boolean numbersol = false ;
-    protected boolean ignoreattr = false ;
-    protected boolean minimise = false ;
-    protected boolean maximise = false ;
+    public Absc arguments = new Absc(); // tests often create a random Main object, need to initialize this
 
 
+    /**
+     * Legacy entry point for old scripts -- use org.abs_models.Absc
+     * main method instead.
+     */
     public static void main(final String... args)  {
-        int result = new Main().mainMethod(args);
-        if (result != 0) System.exit(result);
+        Absc.main(args);
     }
 
-    public int mainMethod(final String... args) {
+    public int mainMethod(Absc arguments) {
         int result = 0;
+        boolean done = false;
+        this.arguments = arguments;
         try {
-            java.util.List<String> argslist = Arrays.asList(args);
-            if (argslist.contains("-help") || argslist.contains("-h") || argslist.contains("--help")) {
-                printUsage();
-            } else if (argslist.contains("-version") || argslist.contains("--version")) {
-                printVersion();
-            } else if (argslist.contains("-maude")) {
-                result = MaudeCompiler.doMain(args);
-            } else if(argslist.contains("-java")) {
-                result = JavaBackend.doMain(args);
-            } else if (argslist.contains("-erlang")) {
-                result = ErlangBackend.doMain(args);
-            } else if (argslist.contains("-prolog")) {
-                result = PrologBackend.doMain(args);
-            } else if (argslist.contains("-coreabs")) {
-                result = CoreAbsBackend.doMain(args);
-            } else if (argslist.contains("-prettyprint")) {
-                result = PrettyPrinterBackEnd.doMain(args);
-            } else if (argslist.contains("-outline")) {
-                result = OutlinePrinterBackEnd.doMain(args);
-            } else {
-                Model m = parse(args);
+            if (arguments.maude) {
+                result = Math.max(result, MaudeCompiler.doMain(arguments));
+                done = true;
+            }
+            if(arguments.java) {
+                result = Math.max(result, JavaBackend.doMain(arguments));
+                done = true;
+            }
+            if (arguments.erlang) {
+                result = Math.max(result, ErlangBackend.doMain(arguments));
+                done = true;
+            }
+            if (arguments.prolog) {
+                result = Math.max(result, PrologBackend.doMain(arguments));
+                done = true;
+            }
+            if (arguments.coreabs) {
+                result = Math.max(result, CoreAbsBackend.doMain(arguments));
+                done = true;
+            }
+            if (arguments.json) {
+                result = Math.max(result, Tester.doMain(arguments));
+                done = true;
+            }
+            if (arguments.prettyprint) {
+                result = Math.max(result, PrettyPrinterBackEnd.doMain(arguments));
+                done = true;
+            }
+            if (arguments.outline) {
+                result = Math.max(result, OutlinePrinterBackEnd.doMain(arguments));
+                done = true;
+            }
+            if (arguments.dumpProducts) {
+                Model m = parse(arguments.files);
+                if (m.hasParserErrors()) {
+                    // parse should have already printed errors
+                    result = Math.max(result, 1);
+                } else {
+                    Iterator<ProductDecl> pi = m.getProductDecls().iterator();
+                    while (pi.hasNext()) {
+                        System.out.print(pi.next().getName());
+                        if (pi.hasNext()) System.out.print(' ');
+                    }
+                }
+                done = true;
+            }
+            if (!done) {
+                // no backend selected, just do type-checking
+                Model m = parse(arguments.files);
                 if (m.hasParserErrors() || m.hasErrors() || m.hasTypeErrors()) {
                     printErrorMessage();
                     result = 1;
@@ -151,98 +159,39 @@ public class Main {
         ArrayList<String> remainingArgs = new ArrayList<>();
 
         for (String arg : args) {
-            if (arg.equals("-dump"))
-                dump = true;
-            else if (arg.equals("-debug"))
-                debug = true;
-            else if (arg.equals("-v"))
-                verbose = true;
-            else if (arg.startsWith("-product=")) {
-                fullabs = true;
-                product = arg.split("=")[1];
-            } else if (arg.startsWith("-allproducts")) {
-                fullabs = true;
-                product = null;
-            } else if (arg.equals("-checkspl"))
-                checkspl = true;
-            else if (arg.equals("-notypecheck"))
-                typecheck = false;
-            else if (arg.equals("-loctypestats"))
-                locationTypeStats = true;
-            else if (arg.equals("-loctypes")) {
-                locationTypeInferenceEnabled = true;
-            } else if (arg.startsWith("-locdefault=")) {
-                String def = arg.split("=")[1];
-                defaultLocationType = LocationType.createFromName(def);
-            } else if (arg.startsWith("-locscope=")) {
-                String def = arg.split("=")[1];
-                locationTypeScope = LocationTypeInferrerExtension.LocationTypingPrecision.valueOf(def);
-            } else if (arg.equals("-solve")) {
-                solve = true;
-            } else if (arg.equals("-solveall")) {
-                solveall = true;
-            } else if (arg.startsWith("-solveWith=")) {
-                solveWith = true;
-                product = arg.split("=")[1];
-            } else if (arg.startsWith("-minWith=")) {
-                minWith = true;
-                product = arg.split("=")[1];
-            } else if (arg.startsWith("-maxProduct")) {
-                maxProduct = true;
-            } else if (arg.startsWith("-min=")) {
-                minimise = true;
-                product = arg.split("=")[1];
-            } else if (arg.startsWith("-max=")) {
-                maximise = true;
-                product = arg.split("=")[1];
-            } else if (arg.equals("-sat")) {
-                check = true;
-            } else if (arg.startsWith("-check=")) {
-                check = true;
-                product = arg.split("=")[1];
-            } else if (arg.equals("-nsol")) {
-                numbersol = true;
-            } else if (arg.equals("-noattr")) {
-                ignoreattr = true;
-            } else if (arg.equals("-h") || arg.equals("-help")
-                    || arg.equals("--help")) {
-                printUsage();
-            } else
-                remainingArgs.add(arg);
         }
         return remainingArgs;
     }
 
-    public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException, InternalBackendException {
-        Model m = parseFiles(verbose, parseArgs(args).toArray(new String[0]));
+    public Model parse(final java.util.List<File> args) throws IOException, DeltaModellingException, WrongProgramArgumentException, InternalBackendException {
+        Model m = parseFiles(this.arguments.verbose, args);
         analyzeFlattenAndRewriteModel(m);
         return m;
     }
 
-    public static Model parseFiles(boolean verbose, String... fileNames) throws IOException, InternalBackendException {
-        if (fileNames.length == 0) {
+    public static Model parseFile(boolean verbose, File filename) throws IOException, InternalBackendException {
+        return parseFiles(verbose, Arrays.asList(filename));
+    }
+
+    public static Model parseFiles(boolean verbose, final java.util.List<File> fileNames) throws IOException, InternalBackendException {
+        if (fileNames.isEmpty()) {
             throw new IllegalArgumentException("Please provide at least one input file");
         }
 
         java.util.List<CompilationUnit> units = new ArrayList<>();
 
-        for (String fileName : fileNames) {
-            if (fileName.startsWith("-")) {
-                throw new IllegalArgumentException("Illegal option " + fileName);
-            }
-
-            File f = new File(fileName);
+        for (File f : fileNames) {
             if (!f.canRead()) {
-                throw new IllegalArgumentException("File "+fileName+" cannot be read");
+                throw new IllegalArgumentException("File "+f+" cannot be read");
             }
 
             if (!f.isDirectory() && !isABSSourceFile(f) && !isABSPackageFile(f)) {
-                throw new IllegalArgumentException("File "+fileName+" is not a legal ABS file");
+                throw new IllegalArgumentException("File "+f+" is not a legal ABS file");
             }
         }
 
-        for (String fileName : fileNames) {
-            parseFileOrDirectory(units, new File(fileName), verbose);
+        for (File f : fileNames) {
+            parseFileOrDirectory(units, f, verbose);
         }
 
 	units.add(getStdLib());
@@ -268,16 +217,8 @@ public class Main {
      * @throws FileNotFoundException
      */
     public void analyzeFlattenAndRewriteModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException {
-        m.verbose = verbose;
-        m.debug = debug;
-
-        // drop attributes before calculating any attribute
-        if (ignoreattr)
-            m.dropAttributes();
-
-        if (verbose) {
-            System.out.println("Analyzing Model...");
-        }
+        m.verbose = arguments.verbose;
+        m.debug = arguments.debug;
 
         if (m.hasParserErrors()) {
             System.err.println("Syntactic errors: " + m.getParserErrors().size());
@@ -289,33 +230,22 @@ public class Main {
         }
 
         m.evaluateAllProductDeclarations(); // resolve ProductExpressions to simple sets of features
-        rewriteModel(m, product);
+        rewriteModel(m, arguments.product);
         m.flattenTraitOnly();
         m.collapseTraitModifiers();
 
         m.expandPartialFunctions();
 
-        // check PL before flattening
-        if (checkspl)
-            typeCheckProductLine(m);
-
-        // flatten before checking error, to avoid calculating *wrong* attributes
-        if (fullabs) {
-            if (product == null) {
-                // Build all SPL configurations (valid feature selections, ignoring attributes), one by one (for performance measuring)
-                if (verbose)
-                    System.out.println("Building ALL " + m.getProductList().getNumChild() + " feature model configurations...");
-                ProductLineAnalysisHelper.buildAllConfigurations(m);
-                return;
+        if (arguments.product != null) {
+            // apply deltas that correspond to arguments.productproduct
+            if (arguments.notypecheck) {
+                m.flattenForProductUnsafe(arguments.product);
+            } else {
+                m.flattenForProduct(arguments.product);
             }
-            if (typecheck)
-                // apply deltas that correspond to given product
-                m.flattenForProduct(product);
-            else
-                m.flattenForProductUnsafe(product);
         }
 
-        if (dump) {
+        if (arguments.dump) {
             m.dumpMVars();
             m.dump(System.out);
         }
@@ -332,7 +262,6 @@ public class Main {
         }
         if (!semErrs.containsErrors()) {
             typeCheckModel(m);
-            analyzeMTVL(m);
         }
     }
 
@@ -350,7 +279,7 @@ public class Main {
      * information in ABS.Productline.
      *
      * @param m the model.
-     * @param productname The name of the product.
+     * @param productname The name of the product or null.
      * @throws WrongProgramArgumentException
      */
     private static void rewriteModel(Model m, String productname)
@@ -413,122 +342,9 @@ public class Main {
         m.flushTreeCache();
     }
 
-    /**
-     * TODO: Should probably be introduced in Model through JastAdd by MTVL package.
-     * However, the command-line argument handling will have to stay in Main. Pity.
-     */
-    private void analyzeMTVL(Model m) {
-        ProductDecl productDecl = null;
-        try {
-            productDecl = product == null ? null : m.findProduct(product);
-        } catch (WrongProgramArgumentException e) {
-            // ignore in case we're just solving.
-        }
-        if (m.hasMTVL()) {
-            if (solve) {
-                if (verbose)
-                    System.out.println("Searching for solutions for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
-                System.out.print(s.getSolutionsAsString());
-            }
-            if (minimise) {
-                assert product != null;
-                if (verbose)
-                    System.out.println("Searching for minimum solutions of "+product+" for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
-                System.out.print(s.minimiseToString(product));
-            }
-            if (maximise) {
-                assert product != null;
-                if (verbose)
-                    System.out.println("Searching for maximum solutions of "+product+" for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
-                //System.out.print(s.maximiseToInt(product));
-                s.addConstraint(ChocoSolver.eqeq(s.vars.get(product), s.maximiseToInt(product)));
-                ChocoSolver s1 = m.instantiateCSModel();
-                int i=1;
-                while(s1.solveAgain()) {
-                    System.out.println("------ "+(i++)+"------");
-                    System.out.print(s1.getSolutionsAsString());
-                }
-            }
-            if (solveall) {
-                if (verbose)
-                    System.out.println("Searching for all solutions for the feature model...");
-                ChocoSolver solver = m.instantiateCSModel();
-                System.out.print(solver.getSolutionsAsString());
-            }
-            if (solveWith) {
-                assert product != null;
-                if (verbose)
-                    System.out.println("Searching for solution that includes " + product + "...");
-                if (productDecl != null) {
-                    ChocoSolver s = m.instantiateCSModel();
-                    HashSet<Constraint> newcs = new HashSet<>();
-                    productDecl.getProduct().getProdConstraints(s.vars, newcs);
-                    for (Constraint c: newcs)
-                        s.addConstraint(c);
-                    System.out.println("checking solution:\n" + s.getSolutionsAsString());
-                } else {
-                    System.out.println("Product '" + product + "' not found.");
-                }
-            }
-            if (minWith) {
-                assert product != null;
-                if (verbose)
-                    System.out.println("Searching for solution that includes " + product + "...");
-                ChocoSolver s = m.instantiateCSModel();
-                HashSet<Constraint> newcs = new HashSet<>();
-                s.addIntVar("difference", 0, 50);
-                if (productDecl != null) {
-                    m.getDiffConstraints(productDecl.getProduct(), s.vars, newcs, "difference");
-                    for (Constraint c: newcs) s.addConstraint(c);
-                    System.out.println("checking solution: " + s.minimiseToString("difference"));
-                } else {
-                    System.out.println("Product '" + product + "' not found.");
-                }
-
-            }
-            if (maxProduct) {
-                assert product != null;
-                if (verbose)
-                    System.out.println("Searching for solution that includes "+product+"...");
-                ChocoSolver s = m.instantiateCSModel();
-                HashSet<Constraint> newcs = new HashSet<>();
-                s.addIntVar("noOfFeatures", 0, 50);
-                if (m.getMaxConstraints(s.vars,newcs, "noOfFeatures")) {
-                    for (Constraint c: newcs) s.addConstraint(c);
-                    System.out.println("checking solution: "+s.maximiseToString("noOfFeatures"));
-                }
-                else {
-                    System.out.println("---No solution-------------");
-                }
-
-            }
-            if (check) {
-                assert product != null;
-                ChocoSolver s = m.instantiateCSModel();
-                if (productDecl == null ){
-                    System.out.println("Product '" + product + "' not found.");
-                } else {
-                    Map<String,Integer> guess = productDecl.getProduct().getSolution();
-                    System.out.println("checking solution: "+s.checkSolution(guess,m));
-                }
-            }
-            if (numbersol && !ignoreattr) {
-                ChocoSolver s = m.instantiateCSModel();
-                System.out.println("Number of solutions found: "+s.countSolutions());
-            }
-            else if (numbersol && ignoreattr) {
-                ChocoSolver s = m.instantiateCSModel();
-                System.out.println("Number of solutions found (without attributes): "+s.countSolutions());
-            }
-        }
-    }
-
     private void typeCheckModel(Model m) {
-        if (typecheck) {
-            if (verbose)
+        if (!arguments.notypecheck) {
+            if (arguments.verbose)
                 System.out.println("Typechecking Model...");
 
             registerLocationTypeChecking(m);
@@ -540,39 +356,23 @@ public class Main {
     }
 
     private void registerLocationTypeChecking(Model m) {
-        if (locationTypeInferenceEnabled) {
-            if (verbose)
+        if (arguments.locationTypeInferenceEnabled) {
+            if (arguments.verbose)
                 System.out.println("Registering Location Type Checking...");
             LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
-            if (locationTypeStats || verbose) {
+            if (arguments.verbose) {
                 ltie.enableStatistics();
             }
-            if (debug) {
+            if (arguments.debug) {
                 ltie.enableDebugOutput();
             }
-            if (defaultLocationType != null) {
-                ltie.setDefaultType(defaultLocationType);
+            if (arguments.defaultLocationType != null) {
+                ltie.setDefaultType(arguments.defaultLocationType);
             }
-            if (locationTypeScope != null) {
-                ltie.setLocationTypingPrecision(locationTypeScope);
+            if (arguments.locationTypeScope != null) {
+                ltie.setLocationTypingPrecision(arguments.locationTypeScope);
             }
             m.registerTypeSystemExtension(ltie);
-        }
-    }
-
-    private void typeCheckProductLine(Model m) {
-
-        //int n = m.getFeatureModelConfigurations().size();
-        int n = m.getProductList().getNumChild();
-        if (n == 0)
-            return;
-
-        if (verbose) {
-            System.out.println("Typechecking Software Product Line (" + n + " products)...");
-        }
-        SemanticConditionList errors = m.typeCheckPL();
-        for (SemanticCondition err : errors) {
-            System.err.println(err.getHelpMessage());
         }
     }
 
@@ -666,7 +466,7 @@ public class Main {
     }
 
     protected static void printVersion() {
-        System.out.println("ABS Tool Suite v"+getVersion());
+        System.out.println("ABS Tool Suite "+getVersion());
         System.out.println("Built from git tree " + getGitVersion());
     }
 
@@ -698,7 +498,6 @@ public class Main {
                 + "Common options:\n"
                 + "  -version       print version\n"
                 + "  -product=<PID> build given product by applying deltas (PID is the product ID)\n"
-                + "  -checkspl      Check the SPL for errors\n"
                 + "  -notypecheck   disable typechecking\n"
                 + "  -loctypes      enable location type checking\n"
                 + "  -locdefault=<loctype> \n"
@@ -726,9 +525,7 @@ public class Main {
                 + "  -check=<PID>   check satisfiability of a product with name PID\n"
                 + "  -h             print this message\n"
                 + "\nDiagnostic options:\n"
-                + "  -v             verbose output\n"
-                + "  -debug         print stacktrace for crashes during compilation\n"
-                + "  -dump          dump AST to standard output\n");
+);
         MaudeCompiler.printUsage();
         JavaBackend.printUsage();
         ErlangBackend.printUsage();
