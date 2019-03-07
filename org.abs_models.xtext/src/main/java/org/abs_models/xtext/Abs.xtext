@@ -345,9 +345,9 @@ UnaryExp returns PureExp
     ;
 
 AtomicExp returns PureExp
-    : {IntLiteral} INTLITERAL
-    | FloatLiteral
-    | {StringLiteral} STRINGLITERAL
+    : {IntLiteral} value=INTLITERAL
+    | {FloatLiteral} value=FloatLiteral
+    | {StringLiteral} value=STRINGLITERAL
     | VarOrFieldExp
     | {ThisExp} 'this'
     | {NullLiteral} 'null'
