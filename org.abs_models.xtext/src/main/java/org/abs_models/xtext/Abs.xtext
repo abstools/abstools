@@ -21,16 +21,16 @@ ModuleExportImport
     ;
 
 ModuleExport
-    : 'export' (hasStar?='*' 'from' module=QualifiedTypeIdentifier
-        | names+=AnyIdentifier (',' names+=AnyIdentifier)*)
-        ('from' module=QualifiedTypeIdentifier)?
+    : 'export'
+        ( star?='*' | names+=AnyIdentifier (',' names+=AnyIdentifier)*)
+        ( 'from' module=QualifiedTypeIdentifier )?
         ';'
     ;
 
 ModuleImport
-    : 'import' (hasStar?='*' 'from' module=QualifiedTypeIdentifier
-        | names+=AnyIdentifier (',' names+=AnyIdentifier)* 'from' module=QualifiedTypeIdentifier
-        | names+=AnyIdentifier (',' names+=AnyIdentifier)*)
+    : 'import'
+        ( star?='*' | names+=AnyIdentifier (',' names+=AnyIdentifier)*)
+        ( 'from' module=QualifiedTypeIdentifier )?
         ';'
     ;
 
@@ -39,7 +39,7 @@ ModuleImport
 
 AnnotationFragment: (l=TYPE_IDENTIFIER ':')? r=PureExp ;
 
-Annotations: ( '[' a+=AnnotationFragment (',' a+=AnnotationFragment) ']')* ;
+Annotations: ( '[' a+=AnnotationFragment (',' a+=AnnotationFragment)* ']')* ;
 
 // Declarations
 
@@ -56,8 +56,8 @@ Decl
 
 DataTypeDecl
     : ann=Annotations 'data' name=TYPE_IDENTIFIER
-        ('<' typeparam+=TYPE_IDENTIFIER (',' typeparam+=TYPE_IDENTIFIER) '>')?
-        ('=' constructors+=DataConstructorDecl ('|' constructors+=DataConstructorDecl))?
+        ('<' typeparam+=TYPE_IDENTIFIER (',' typeparam+=TYPE_IDENTIFIER)* '>')?
+        ('=' constructors+=DataConstructorDecl ('|' constructors+=DataConstructorDecl)* )?
         ';'
     ;
 
@@ -74,15 +74,15 @@ ExceptionDecl
 
 FunctionDecl
     : ann=Annotations 'def' type=TypeUse name=IDENTIFIER
-        ('<' typeparam+=TYPE_IDENTIFIER (',' typeparam+=TYPE_IDENTIFIER) '>')?
-        '(' args+=ParamDecl (',' args+=ParamDecl)* ')'
-        '=' (isBuiltin?='builtin' | body=PureExp)
+        ('<' typeparam+=TYPE_IDENTIFIER (',' typeparam+=TYPE_IDENTIFIER)* '>')?
+        '(' (args+=ParamDecl (',' args+=ParamDecl)* )? ')'
+        '=' (builtin?='builtin' | body=PureExp)
         ';'
     ;
 
 PartialFunctionDecl
     : ann=Annotations 'def' type=TypeUse name=IDENTIFIER
-        ('<' typeparam+=TYPE_IDENTIFIER (',' typeparam+=TYPE_IDENTIFIER) '>')?
+        ('<' typeparam+=TYPE_IDENTIFIER (',' typeparam+=TYPE_IDENTIFIER)* '>')?
         '(' function_args+=IDENTIFIER (',' function_args+=IDENTIFIER)* ')'
         '(' args+=ParamDecl (',' args+=ParamDecl)* ')'
         '=' body=PureExp
@@ -91,13 +91,13 @@ PartialFunctionDecl
 
 InterfaceDecl
     : ann=Annotations 'interface' name=TYPE_IDENTIFIER
-        ('extends' extends+=QualifiedTypeIdentifier (',' extends+=QualifiedTypeIdentifier))?
+        ('extends' extends+=QualifiedTypeIdentifier (',' extends+=QualifiedTypeIdentifier)* )?
         '{' (methods+=MethodSignature)* '}'
     ;
 
 MethodSignature
     : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
-        '(' args+=ParamDecl (',' args+=ParamDecl)* ')'
+        '(' ( args+=ParamDecl (',' args+=ParamDecl)* )? ')'
         ';'
     ;
 
@@ -107,7 +107,7 @@ ClassDecl
         ( 'implements' implements+=QualifiedTypeIdentifier (',' implements+=QualifiedTypeIdentifier)* )?
         '{'
         (fields+=FieldDecl)*
-        ( hasRecoverBlock?='recover' '{' (recoverbranches+=CaseStmtBranch)* '}' )?
+        ( 'recover' '{' (recoverbranches+=CaseStmtBranch)* '}' )?
         // (traits+=TraitUsage)*
         (methods+=MethodDecl)*
         '}'
@@ -120,7 +120,7 @@ FieldDecl
 
 MethodDecl
     : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
-        '(' args+=ParamDecl (',' args+=ParamDecl)* ')'
+        '(' (args+=ParamDecl (',' args+=ParamDecl)* )? ')'
         '{' (statements+=Stmt)* '}'
     ;
 
@@ -149,7 +149,7 @@ Stmt
     | CaseStmt
     ;
 
-VarDeclStmt : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ( hasInit?='=' init=Exp )? ';' ;
+VarDeclStmt : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ( '=' init=Exp )? ';' ;
 
 AssignStmt : ann=Annotations lhs=VarOrFieldExp '=' exp=Exp ';' ;
 
@@ -227,15 +227,15 @@ EffExp
 
 GetExp : future=PureExp '.get' ;
 
-NewExp : 'new' hasLocal?='local' c=QualifiedTypeIdentifier '('  args+=PureExp ( ',' args+=PureExp)* ')' ;
+NewExp : 'new' (hasLocal?='local')? c=QualifiedTypeIdentifier '('  (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
 
-SyncCallExp : o=PureExp '.' m=IDENTIFIER '('  args+=PureExp ( ',' args+=PureExp)* ')' ;
+SyncCallExp : o=PureExp '.' m=IDENTIFIER '(' (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
 
-AsyncCallExp : o=PureExp '!' m=IDENTIFIER '('  args+=PureExp ( ',' args+=PureExp)* ')' ;
+AsyncCallExp : o=PureExp '!' m=IDENTIFIER '(' (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
 
-AwaitAsyncCallExp : 'await' o=PureExp '!' m=IDENTIFIER '('  args+=PureExp ( ',' args+=PureExp)* ')' ;
+AwaitAsyncCallExp : 'await' o=PureExp '!' m=IDENTIFIER '(' (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
 
-OriginalCallExp : (( d=TYPE_IDENTIFIER | c?='core' ) '.')? 'original' '(' args+=PureExp ( ',' args+=PureExp)* ')' ;
+OriginalCallExp : (( d=TYPE_IDENTIFIER | c?='core' ) '.')? 'original' '(' (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
 
 PureExp
     : FunctionAppExp
@@ -250,17 +250,17 @@ PureExp
     ;
 
 FunctionAppExp
-    : name=QualifiedIdentifier '(' args+=PureExp ( ',' args+=PureExp)* ')'
+    : name=QualifiedIdentifier '(' (args+=PureExp ( ',' args+=PureExp)* )? ')'
     ;
 
 VariadicFunctionAppExp
-    : name=QualifiedIdentifier '[' args+=PureExp ( ',' args+=PureExp)* ']'
+    : name=QualifiedIdentifier '[' (args+=PureExp ( ',' args+=PureExp)* )? ']'
     ;
 
 PartialFunctionAppExp
     : name=QualifiedIdentifier
         '(' fnargs+=PartialFunctionParam (',' fnargs+=PartialFunctionParam )* ')'
-        '(' args+=PureExp ( ',' args+=PureExp)* ')'
+        '(' (args+=PureExp ( ',' args+=PureExp)* )? ')'
     ;
 
 PartialFunctionParam
@@ -281,8 +281,8 @@ TemplateStringExp
 
 
 LetExp
-    : 'let' '(' param+=ParamDecl ')' '=' e+=PureExp
-        (',' '(' param+=ParamDecl ')' '=' e+=PureExp)*
+    : 'let' '('? param+=ParamDecl ')'? '=' e+=PureExp
+        (',' '('? param+=ParamDecl ')'? '=' e+=PureExp)*
         'in' body=PureExp
     ;
 
@@ -365,7 +365,7 @@ TypeUse : ann=Annotations type=TypeUseNoAnnotations ;
 // annotations are parsed as part of the method / parameter, not its
 // type.
 TypeUseNoAnnotations
-    : name=QualifiedTypeIdentifier ('<' param+=TypeUse (param+=TypeUse)* '>')?
+    : name=QualifiedTypeIdentifier ('<' param+=TypeUse (',' param+=TypeUse)* '>')?
     ;
 
 // Terminals
