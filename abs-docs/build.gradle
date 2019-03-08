@@ -1,0 +1,28 @@
+plugins {
+    id "org.asciidoctor.convert" version "1.5.10"
+}
+
+asciidoctor {
+    sources {
+        include 'index.adoc'
+    }
+    resources {
+        from(sourceDir) {
+            include 'images/**'
+            include 'asciidoctor.css'
+        }
+    }
+    options doctype: 'book'
+    attributes 'doc-version': version,
+        'toc-position': "right",
+        toc2: "true",
+        numbered: "true",
+        linkattrs: "true",
+        idprefix: "-",
+        idseparator: "-",
+        setanchors: "true",
+        stylesheet: "asciidoctor.css",
+        icons: "font"
+}
+
+assemble.dependsOn asciidoctor

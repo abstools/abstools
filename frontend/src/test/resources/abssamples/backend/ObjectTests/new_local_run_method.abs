@@ -1,0 +1,22 @@
+module BackendTest;
+
+interface I {
+    Bool get_result();
+}
+
+class C implements I {
+    Bool result = False;
+
+    Unit run() {
+        this.result = True;
+    }
+    Bool get_result() {
+        await this.result == True;
+        return this.result;
+    }
+}
+
+{
+    I o = new local C();
+    Bool testresult = o.get_result();
+}

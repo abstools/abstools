@@ -359,6 +359,13 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         assertTypeErrors("def A f<A,Int>(A a) = a;");
     }
 
+    @Test
+    public void parametricFunctionUnboundType() {
+        // https://github.com/abstools/abstools/issues/247
+        assertTypeErrors("data Err = Err(Int) | NotUsed; def A bottom<A>(Err err) = case err {NotUsed => bottom(Err(5));};");
+    }
+
+    @Test
     public void caseErrorDuplicateDatatypeTypeParameter() {
         assertTypeErrors("data X<A, A>;");
     }

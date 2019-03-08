@@ -10,12 +10,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.abs_models.frontend.analyser.SemanticError;
 import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticConditionList;
+import org.abs_models.frontend.analyser.SemanticError;
 import org.abs_models.frontend.analyser.TypeError;
-import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.ast.AddClassModifier;
+import org.abs_models.frontend.ast.AttrAssignment;
+import org.abs_models.frontend.ast.ClassModifier;
+import org.abs_models.frontend.ast.DeltaClause;
+import org.abs_models.frontend.ast.DeltaDecl;
+import org.abs_models.frontend.ast.DeltaID;
+import org.abs_models.frontend.ast.DeltaTraitModifier;
+import org.abs_models.frontend.ast.Feature;
+import org.abs_models.frontend.ast.IntVal;
+import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.Modifier;
+import org.abs_models.frontend.ast.ModifyClassModifier;
+import org.abs_models.frontend.ast.ModuleModifier;
+import org.abs_models.frontend.ast.Product;
+import org.abs_models.frontend.ast.ProductLine;
+import org.abs_models.frontend.ast.RemoveClassModifier;
 import org.abs_models.frontend.mtvl.ChocoSolver;
+
 import choco.kernel.model.constraints.Constraint;
 
 public class ProductLineAnalysisHelper {
@@ -212,14 +228,13 @@ public class ProductLineAnalysisHelper {
      * The purpose is to measure how long this takes, so we can compare it with the performance of type checking the SPL.
      *
      */
-    public static void buildAllConfigurations(Model m) {
+    public static void buildAndPrintAllConfigurations(Model m) {
 
         long timeSum = 0;
         for (Product product : m.getProductList()) {
 
             long time0 = System.currentTimeMillis();
-            if (m.debug)
-                System.out.println("\u23F1 Flattening product: " + product.getFeatureSetAsString());
+            System.out.println("\u23F1 Flattening product: " + product.getFeatureSetAsString());
 
             // Find a solution to the feature model that satisfies the product feature selection
             ChocoSolver s = m.instantiateCSModel();
@@ -229,8 +244,7 @@ public class ProductLineAnalysisHelper {
                 s.addConstraint(c);
 
             Map<String, Integer> solution = s.getSolution();
-            if (m.debug)
-                System.out.println("\u23F1 Full product configuration: " + solution);
+            System.out.println("\u23F1 Full product configuration: " + solution);
             long time1 = System.currentTimeMillis();
 
             // map the solution to the product,
@@ -261,12 +275,9 @@ public class ProductLineAnalysisHelper {
 
             long time4 = System.currentTimeMillis();
             timeSum += (time4 - time3);
-            if (m.debug) {
-                System.out.println("\u23F1 Time: " + (time1 - time0) + " | " + (time2 - time1) + " | " + (time3 - time2) + " | " + (time4 - time3) + " | " + "Total(s): " + ((time4 - time0)/1000.0));
-            }
+            System.out.println("\u23F1 Time: " + (time1 - time0) + " | " + (time2 - time1) + " | " + (time3 - time2) + " | " + (time4 - time3) + " | " + "Total(s): " + ((time4 - time0)/1000.0));
         }
-        if (m.debug)
-            System.out.println("\u23F1 Flattening total time (s): " + timeSum/1000.0);
+        System.out.println("\u23F1 Flattening total time (s): " + timeSum/1000.0);
     }
 
 }

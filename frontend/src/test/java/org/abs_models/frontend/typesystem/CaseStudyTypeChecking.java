@@ -75,7 +75,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
         File srcFolderF = new File(srcFolder);
         assertTrue(srcFolder,srcFolderF.exists());
         Main main = new Main();
-        Model m = main.parseFiles(false, findAbsFiles(srcFolderF).toArray(new String[0]));
+        Model m = main.parseFiles(false, findAbsFiles(srcFolderF));
 
         if (m != null) {
             m.evaluateAllProductDeclarations();
@@ -99,17 +99,17 @@ public class CaseStudyTypeChecking extends FrontendTest {
         return m;
     }
 
-    private List<String> findAbsFiles(File srcFolder) {
-        List<String> result = new java.util.LinkedList<>();
+    private List<File> findAbsFiles(File srcFolder) {
+        List<File> result = new java.util.LinkedList<>();
         if (srcFolder.exists() && !srcFolder.isDirectory()) {
             assertTrue(srcFolder.getName().endsWith(".abs"));
-            result.add(srcFolder.getAbsolutePath());
+            result.add(srcFolder.getAbsoluteFile());
         } else {
             for (File f : srcFolder.listFiles()) {
                 if (f.isDirectory()) {
                     result.addAll(findAbsFiles(f));
                 } else if (f.getName().endsWith(".abs")) {
-                    result.add(f.getAbsolutePath());
+                    result.add(f.getAbsoluteFile());
                 }
             }
         }

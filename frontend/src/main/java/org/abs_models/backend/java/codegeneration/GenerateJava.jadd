@@ -515,11 +515,11 @@ aspect GenerateJava {
         stream.print("if (");
         getCondition().generateJava(stream);
         stream.println(".toBoolean()) {");
-        getThenCase().generateJava(stream);
+        getThen().generateJava(stream);
         stream.println("}");
-        if (hasElseCase()) {
+        if (hasElse()) {
             stream.println("else {");
-            getElseCase().generateJava(stream);
+            getElse().generateJava(stream);
             stream.println("}");
         }
     }

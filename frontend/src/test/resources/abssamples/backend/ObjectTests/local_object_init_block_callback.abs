@@ -1,0 +1,39 @@
+module BackendTest;
+
+interface I {
+    Unit do_test();
+    Bool get_result();
+    [Atomic] Unit set_result(Bool arg);  // called from C2
+}
+
+class C implements I {
+    Bool result = False;
+
+    Unit do_test() {
+        // println("State before init callback: " + toString(this.result));
+        new local C2(this);
+        // println("State after init callback: " + toString(this.result) + " (should be True)");
+    }
+
+    Bool get_result() {
+        return this.result;
+    }
+    [Atomic] Unit set_result(Bool arg) {
+        this.result = arg;
+    }
+}
+
+class C2(I arg) {
+    Bool result = False;
+
+    {
+        arg.set_result(True);
+    }
+}
+
+{
+    I o = new local C();
+    o.do_test();
+    Bool testresult = o.get_result();
+    // println("Result: " + toString(testresult));
+}

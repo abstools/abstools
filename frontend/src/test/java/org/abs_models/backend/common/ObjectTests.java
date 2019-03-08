@@ -191,6 +191,11 @@ public class ObjectTests extends SemanticTests {
      }
 
     @Test
+    public void syncCallAwaitField() throws Exception {
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/synccall1.abs"));
+    }
+
+    @Test
     public void downcast_false() throws Exception {
         Assume.assumeTrue("Only meaningful with downcast support", driver.supportsDowncasting());
         assertEvalTrue(new File("abssamples/backend/ObjectTests/downcast-false.abs"));
@@ -200,5 +205,23 @@ public class ObjectTests extends SemanticTests {
     public void downcast_true() throws Exception {
         Assume.assumeTrue("Only meaningful with downcast support", driver.supportsDowncasting());
         assertEvalTrue(new File("abssamples/backend/ObjectTests/downcast-true.abs"));
+    }
+
+    @Test
+    public void new_local_run_method() {
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/new_local_run_method.abs"));
+    }
+
+    @Test
+    public void local_object_init_block_synccall() {
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/local_object_init_block_synccall.abs"));
+    }
+    @Test
+    public void local_object_init_block_callback() {
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/local_object_init_block_callback.abs"));
+    }
+    @Test
+    public void local_object_synccall_field_param() {
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/local_object_synccall_field_param.abs"));
     }
 }

@@ -129,6 +129,27 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         return new StringLiteral(s.toString());
     }
 
+    private PureExp makeTemplateStringLiteral(String tokenText) {
+        StringBuffer s = new StringBuffer(tokenText.length() - 2);
+        // i = 1..len-1 to skip beginning and ending \` of the stringliteral
+        for (int i = 1; i < tokenText.length() - 1; i++) {
+            char c = tokenText.charAt(i);
+            if (c == '\\') {
+                i++;
+                char c1 = tokenText.charAt(i);
+                switch (c1) {
+                case '`' : s.append('`'); break;   // escaped end (\`)
+                case '$' : s.append('$'); break;   // escaped interpolation delimiter (\$)
+                // do not drop backslash if it doesn't escape any of the above:
+                default : s.append('\\'); s.append(c1); break;
+                }
+            } else {
+                s.append(c);
+            }
+        }
+        return new StringLiteral(s.toString());
+    }
+
     @Override public void enterCompilation_unit(ABSParser.Compilation_unitContext ctx) {
         this.result = setV(ctx, new CompilationUnit(this.filename,
             new List<>(),
@@ -589,7 +610,6 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setV(ctx, new ParFnApp(ctx.qualified_identifier().getText(), params, functionParams));
     }
     @Override public void exitVariadicFunctionExp(ABSParser.VariadicFunctionExpContext ctx) {
-        // see FnApp.isVariadicFnApp()
         List<PureExp> l = v(ctx.pure_exp_list());
         PureExp arglist = null;
         if (l.getNumChildNoTransform() == 0) {
@@ -686,6 +706,26 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
     @Override public void exitStringExp(ABSParser.StringExpContext ctx) {
         setV(ctx, makeStringLiteral(ctx.STRINGLITERAL().getText()));
+    }
+    @Override public void exitTemplateStringExp(ABSParser.TemplateStringExpContext ctx) {
+        setV(ctx, makeTemplateStringLiteral(ctx.TEMPLATESTRINGLITERAL().getText()));
+    }
+    @Override public void exitTemplateStringCompoundExp(ABSParser.TemplateStringCompoundExpContext ctx) {
+        PureExp result = new AddAddExp(makeTemplateStringLiteral(ctx.TEMPLATESTRINGSTART().getText()),
+                                       new FnApp("toString",
+                                                 new List().add(v(ctx.e1))));
+        for (int i = 0; i < ctx.e.size(); i++) {
+            PureExp e = v(ctx.e.get(i));
+            // List<PureExp> arglist = new List<PureExp>();
+            // arglist.
+            PureExp s = makeTemplateStringLiteral(ctx.b.get(i).getText());
+            PureExp part = new AddAddExp(s,
+                                         new FnApp("toString",
+                                                   new List().add(e)));
+            result = new AddAddExp(result, part);
+        }
+        result = new AddAddExp(result, makeTemplateStringLiteral(ctx.TEMPLATESTRINGEND().getText()));
+        setV(ctx, result);
     }
     @Override public void exitThisExp(ABSParser.ThisExpContext ctx) {
         setV(ctx, new ThisExp());

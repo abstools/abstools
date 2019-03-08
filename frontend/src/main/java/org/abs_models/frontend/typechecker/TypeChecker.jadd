@@ -686,9 +686,9 @@ aspect TypeChecker {
         super.typeCheck(e);
         getCondition().typeCheck(e);
         getCondition().assertHasType(e,getModel().getBoolType());
-        getThenCase().typeCheck(e);
-        if (hasElseCase())
-            getElseCase().typeCheck(e);
+        getThen().typeCheck(e);
+        if (hasElse())
+            getElse().typeCheck(e);
 
     }
 
@@ -842,6 +842,10 @@ aspect TypeChecker {
 
     public void Call.typeCheck(SemanticConditionList e) {
         getCallee().typeCheck(e);
+        if (!getCallee().getType().isReferenceType()) {
+            e.add(new TypeError(this, ErrorMessage.EXPECTED_REFERENCE_TYPE, getCallee().getType()));
+            return;
+        }
         if (getCallee().getType().isNullType()) {
             e.add(new TypeError(this, ErrorMessage.NULL_NOT_HERE, ""));
             return;

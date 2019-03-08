@@ -4,104 +4,45 @@
  */
 package org.abs_models.backend.prettyprint;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.abs_models.backend.common.InternalBackendException;
-import org.abs_models.common.NotImplementedYetException;
+import org.abs_models.Absc;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
-import org.stringtemplate.v4.STGroup;
-import org.stringtemplate.v4.STGroupFile;
 
 public class PrettyPrinterBackEnd extends Main {
-    private File outputfile;
-    private boolean force = false;
-    private boolean keepsugar = false;
-    private boolean keepstdlib = false;
 
-    public static STGroup templates;
-    static {
-        templates = new STGroupFile(PrettyPrinterBackEnd.class.getResource("/codegen/prettyprint.stg"));
-    }
-
-    public static void main(final String... args) {
-        doMain(args);
-    }
-
-    public static int doMain(final String... args) {
+    public static int doMain(Absc args)  {
+        PrettyPrinterBackEnd backend = new PrettyPrinterBackEnd();
+        backend.arguments = args;
         int result = 0;
-        PrettyPrinterBackEnd backEnd = new PrettyPrinterBackEnd();
         try {
-            result = backEnd.compile(args);
-        } catch (NotImplementedYetException e) {
-            System.err.println(e.getMessage());
-            result = 1;
+            result = backend.compile(args);
         } catch (Exception e) {
             System.err.println("An error occurred during compilation:\n" + e.getMessage());
-
-            if (backEnd.debug) {
+            if (backend.arguments.debug) {
                 e.printStackTrace();
             }
-
             result = 1;
         }
         return result;
     }
 
-    @Override
-    public List<String> parseArgs(String[] args) throws InternalBackendException {
-        List<String> restArgs = super.parseArgs(args);
-        List<String> remainingArgs = new ArrayList<>();
-
-        for (int i = 0; i < restArgs.size(); i++) {
-            String arg = restArgs.get(i);
-            if (arg.equals("-o")) {
-                i++;
-                if (i == restArgs.size()) {
-                    throw new InternalBackendException("Missing output file name after '-o'");
-                } else {
-                    outputfile = new File(restArgs.get(i));
-                    if (outputfile.exists()) {
-                        outputfile.delete();
-                    }
-                }
-            } else if (arg.equals("-f"))  {
-                force = true;
-            } else if (arg.equals("-keepsugar"))  {
-                keepsugar = true;
-            } else if (arg.equals("-keepstdlib"))  {
-                keepstdlib = true;
-            } else if (arg.equals("-prettyprint")) {
-                // nothing to do
-            } else {
-                remainingArgs.add(arg);
-            }
-        }
-
-        return remainingArgs;
-    }
-
-    /**
-     * @param args
-     * @throws Exception
-     */
-    public int compile(String[] args) throws Exception {
-        final Model model = parseFiles(verbose, parseArgs(args).toArray(new String[0]));
-        if (keepsugar) {
+    public int compile(Absc args) throws Exception {
+        this.arguments = args;
+        final Model model = parse(arguments.files);
+        if (arguments.prettyprint_keepsugar) {
             model.doAACrewrite = false;
             model.doForEachRewrite = false;
         }
-        if (keepstdlib) {
+        if (arguments.prettyprint_keepstdlib) {
             model.doPrettyPrintStdLib = true;
         }
         analyzeFlattenAndRewriteModel(model);
-        if (!force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
+        if (!arguments.prettyprint_force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
             printErrorMessage();
             return 1;
         }
@@ -110,15 +51,15 @@ public class PrettyPrinterBackEnd extends Main {
         System.setProperty("line.separator", "\n");
         final PrintStream stream;
         final String loc;
-        if (outputfile != null) {
-            stream = new PrintStream(new FileOutputStream(outputfile), false, "utf-8");
-            loc = outputfile.getAbsolutePath();
+        if (arguments.outputfile != null) {
+            stream = new PrintStream(new FileOutputStream(arguments.outputfile), false, "utf-8");
+            loc = arguments.outputfile.getAbsolutePath();
         } else {
             stream = System.out;
             loc = "Standard Output Stream";
         }
 
-        if (verbose) {
+        if (arguments.verbose) {
             System.out.println("Output ABS model source code to " + loc + "...");
         }
 
@@ -129,14 +70,4 @@ public class PrettyPrinterBackEnd extends Main {
         model.doPrettyPrint(writer, formatter);
         return 0;
     }
-
-    public static void printUsage() {
-        System.out.println("ABS Pretty Printer (-prettyprint):\n"
-                + "  -f             force pretty printing even if there are type errors\n"
-                + "  -keepsugar     do not transform statements into basic core abs\n"
-                + "  -keepstdlib    include the standard library in output\n"
-                + "  -o <file>      write output to <file> instead of standard output\n"
-        );
-    }
-
 }

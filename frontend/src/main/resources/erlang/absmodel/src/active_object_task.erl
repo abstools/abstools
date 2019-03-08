@@ -7,16 +7,16 @@
 %% Active object task -> executes run method
 
 init(_Cog,_Future,Object,Params)->
-    object:new_object_task(Object,self(),Params),
     Object.
 
-start(O=#object{class=C})->
-     try
-         apply(C, m_run,[O,[]])
-     catch
-      _:Reason ->
-         object:die(O,Reason)
-     end.
+start(O)->
+    C=object:get_class_from_ref(O),
+    try
+        apply(C, m_run,[O,[]])
+    catch
+        _:Reason ->
+            object:die(O,Reason)
+    end.
 
 
 

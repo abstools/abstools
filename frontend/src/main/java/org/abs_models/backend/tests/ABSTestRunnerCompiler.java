@@ -6,11 +6,9 @@ package org.abs_models.backend.tests;
 
 import java.io.File;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
-import org.abs_models.backend.common.InternalBackendException;
+import org.abs_models.Absc;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
@@ -25,7 +23,8 @@ public class ABSTestRunnerCompiler extends Main {
 
     public static void main(final String... args) {
         try {
-            new ABSTestRunnerCompiler().compile(args);
+            Absc arguments = Absc.parseArgs(args);
+            new ABSTestRunnerCompiler().compile(arguments);
         } catch (NotImplementedYetException e) {
             System.err.println(e.getMessage());
             System.exit(1);
@@ -41,53 +40,27 @@ public class ABSTestRunnerCompiler extends Main {
         }
     }
 
-    @Override
-    public List<String> parseArgs(String[] args) throws InternalBackendException {
-        List<String> restArgs = super.parseArgs(args);
-        List<String> remainingArgs = new ArrayList<>();
-
-        for (int i = 0; i < restArgs.size(); i++) {
-            String arg = restArgs.get(i);
-            if (arg.equals("-o")) {
-                i++;
-                if (i == restArgs.size()) {
-                    System.err.println("Please provide an output file");
-                    System.exit(1);
-                } else {
-                    outputfile = new File(restArgs.get(i));
-                    if (outputfile.exists()) {
-                        outputfile.delete();
-                    }
-                }
-
-            } else {
-                remainingArgs.add(arg);
-            }
-        }
-
-        return remainingArgs;
-    }
-
     /**
      * @param args
      * @throws Exception
      */
-    public void compile(String[] args) throws Exception {
-        final Model model = parse(args);
+    public void compile(Absc args) throws Exception {
+        this.arguments = args;
+        final Model model = parse(arguments.files);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             return;
 
         final PrintStream stream;
         final String loc;
-        if (outputfile != null) {
-            stream = new PrintStream(outputfile);
-            loc = outputfile.getAbsolutePath();
+        if (arguments.outputfile != null) {
+            stream = new PrintStream(arguments.outputfile);
+            loc = arguments.outputfile.getAbsolutePath();
         } else {
             stream = System.out;
             loc = "Standard Output Stream";
         }
 
-        if (verbose) {
+        if (arguments.verbose) {
             System.out.println("Generating Test Runner to "+loc+"...");
         }
 
@@ -97,13 +70,6 @@ public class ABSTestRunnerCompiler extends Main {
         } else {
             throw new IllegalStateException("Cannot generate test runner");
         }
-    }
-
-    public static void printUsage() {
-        Main.printUsage();
-        System.out.println("ABSUnit Test Runner Generator:\n"
-                + "  -o <file>      write output to <file> instead of standard output\n"
-        );
     }
 
 }
