@@ -98,8 +98,8 @@ clean {
 // jar
 jar {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Jar.html
-    baseName='absfrontend'
-    appendix=versionDetails().branchName
+    archiveBaseName='absfrontend'
+    archiveAppendix=versionDetails().branchName
     manifest {
         attributes 'Main-Class': 'org.abs_models.Absc',
             'Implementation-Title': 'ABS Frontend',
@@ -134,9 +134,9 @@ distTar {
 // this is necessary for the `absc` scripts
 task plainJar(type: Copy, dependsOn: jar) {
     description 'Copies absfrontend.jar into its documented location.'
-    from jar
+    from jar.archiveFile
     into 'dist'
-    rename 'absfrontend(.*).jar', 'absfrontend.jar'
+    rename '(.*).jar', 'absfrontend.jar'
 }
 clean {
     delete 'dist/'
