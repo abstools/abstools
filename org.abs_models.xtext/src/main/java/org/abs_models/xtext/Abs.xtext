@@ -311,7 +311,7 @@ Pattern
 // See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
 
 OperatorExp returns PureExp
-    : body=OrExp (op=('implements' | 'as') i=QualifiedTypeIdentifier )?
+    : OrExp ({OperatorExp.body=current} op=('implements' | 'as') i=QualifiedTypeIdentifier )?
     ;
 
 OrExp returns PureExp
@@ -354,7 +354,7 @@ AtomicExp returns PureExp
     ;
 
 VarOrFieldExp returns PureExp
-    : (hasThis?='this' '.')? name=IDENTIFIER
+    : {VarOrFieldExp} (hasThis?='this' '.')? name=IDENTIFIER
     ;
 
 // Types
