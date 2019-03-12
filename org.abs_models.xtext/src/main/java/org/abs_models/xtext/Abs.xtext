@@ -237,16 +237,74 @@ AwaitAsyncCallExp : 'await' o=PureExp '!' m=IDENTIFIER '(' (args+=PureExp ( ',' 
 
 OriginalCallExp : (( d=TYPE_IDENTIFIER | c?='core' ) '.')? 'original' '(' (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
 
+// See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
+
 PureExp
-    : FunctionAppExp
+    : OrExp ({PureExp.body=current} op=('implements' | 'as') i=QualifiedTypeIdentifier )?
+    ;
+
+OrExp returns PureExp
+    : AndExp ({OrExp.left=current} '||' right=AndExp)*
+    ; // left-assoc
+
+AndExp returns PureExp
+    : EqExp ({AndExp.left=current} '&&' right=EqExp)*
+    ; // left-assoc
+
+EqExp returns PureExp
+    : CompareExp ({EqExp.left=current} op=('==' | '!=') right=CompareExp)?
+    ; // non-assoc
+
+CompareExp returns PureExp
+    : PlusMinusExp ({CompareExp.left=current} op=('<' | '>' | '<=' | '>=') right=PlusMinusExp)?
+    ; // non-assoc
+
+PlusMinusExp returns PureExp
+    : MulDivModExp ({PlusMinusExp.left=current} op=('+' | '-') right=MulDivModExp)*
+    ; // left-assoc
+
+MulDivModExp returns PureExp
+    : UnaryExp ({MulDivExp.left=current} op=('*' | '/' | '%') right=UnaryExp)*
+    ; // left-assoc
+
+UnaryExp returns PureExp
+    : op=('!' | '-' | '+') body=UnaryExp
+    | AtomicExp
+    ;
+
+AtomicExp returns PureExp
+    : '(' PureExp ')'
+    | CaseExp
+    | FunctionAppExp
     | VariadicFunctionAppExp
     | PartialFunctionAppExp
     | ConstructorAppExp
     | TemplateStringExp
     | LetExp
     | IfExp
-    | CaseExp
-    | OperatorExp
+    | {IntLiteral} value=INTLITERAL
+    | {FloatLiteral} value=FLOATLITERAL
+    | {StringLiteral} value=STRINGLITERAL
+    | VarOrFieldExp
+    | {ThisExp} 'this'
+    | {NullLiteral} 'null'
+    ;
+
+CaseExp
+    : 'case' c=PureExp '{' (casebranch+=CaseExpBranch)* '}'
+    ;
+
+CaseExpBranch
+    : p=Pattern '=>' e=PureExp ';'
+    ;
+
+Pattern
+    : {WildcardPattern} '_'
+    | {IntLiteralPattern} value=INTLITERAL
+    | {StringLiteralPatern} value=STRINGLITERAL
+    | {FloatLiteralPattern} value=FLOATLITERAL
+    | {VariablePattern} value=IDENTIFIER
+    | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' args+=Pattern (',' args+=Pattern)* ')' )?
     ;
 
 FunctionAppExp
@@ -290,69 +348,6 @@ IfExp
     : 'if' condition=PureExp 'then' consequence=PureExp 'else' alternate=PureExp
     ;
 
-CaseExp
-    : 'case' c=PureExp '{' (casebranch+=CaseExpBranch)* '}'
-    ;
-
-CaseExpBranch
-    : p=Pattern '=>' e=PureExp ';'
-    ;
-
-Pattern
-    : {WildcardPattern} '_'
-    | {IntLiteralPattern} value=INTLITERAL
-    | {StringLiteralPatern} value=STRINGLITERAL
-    | {FloatLiteralPattern} value=FloatLiteral
-    | {VariablePattern} value=IDENTIFIER
-    | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' args+=Pattern (',' args+=Pattern)* ')' )?
-    ;
-
-
-// See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
-
-OperatorExp returns PureExp
-    : OrExp ({OperatorExp.body=current} op=('implements' | 'as') i=QualifiedTypeIdentifier )?
-    ;
-
-OrExp returns PureExp
-    : AndExp ({OrExp.left=current} '||' right=AndExp)*
-    ; // left-assoc
-
-AndExp returns PureExp
-    : EqExp ({AndExp.left=current} '&&' right=EqExp)*
-    ; // left-assoc
-
-EqExp returns PureExp
-    : CompareExp ({EqExp.left=current} op=('==' | '!=') right=CompareExp)?
-    ; // non-assoc
-
-CompareExp returns PureExp
-    : PlusMinusExp ({CompareExp.left=current} op=('<' | '>' | '<=' | '>=') right=PlusMinusExp)?
-    ; // non-assoc
-
-PlusMinusExp returns PureExp
-    : MulDivModExp ({PlusMinusExp.left=current} op=('+' | '-') right=MulDivModExp)*
-    ; // left-assoc
-
-MulDivModExp returns PureExp
-    : UnaryExp ({MulDivExp.left=current} op=('*' | '/' | '%') right=UnaryExp)*
-    ; // left-assoc
-
-UnaryExp returns PureExp
-    : '(' PureExp ')'
-    | op=('!' | '-' | '+') body=UnaryExp
-    | AtomicExp
-    ;
-
-AtomicExp returns PureExp
-    : {IntLiteral} value=INTLITERAL
-    | {FloatLiteral} value=FloatLiteral
-    | {StringLiteral} value=STRINGLITERAL
-    | VarOrFieldExp
-    | {ThisExp} 'this'
-    | {NullLiteral} 'null'
-    ;
-
 VarOrFieldExp returns PureExp
     : {VarOrFieldExp} (hasThis?='this' '.')? name=IDENTIFIER
     ;
@@ -365,7 +360,8 @@ TypeUse : ann=Annotations type=TypeUseNoAnnotations ;
 // annotations are parsed as part of the method / parameter, not its
 // type.
 TypeUseNoAnnotations
-    : name=QualifiedTypeIdentifier ('<' param+=TypeUse (',' param+=TypeUse)* '>')?
+    : name=QualifiedTypeIdentifier
+        ('<' param+=TypeUse (',' param+=TypeUse)* '>')?
     ;
 
 // Terminals
@@ -380,15 +376,19 @@ terminal fragment CAPITALLETTER : 'A'..'Z' ;
 
 terminal DIGIT : '0'..'9' ;
 
-INTLITERAL returns ecore::EInt : DIGIT+ ;
-
 // "Note: It is generally not a good idea to implement floating point literals
 // with terminal rules. You should use data type rules instead due to possible
 // shadowing problems explained above."
 // https://www.eclipse.org/Xtext/documentation/301_grammarlanguage.html
-FloatLiteral returns ecore::EFloat
-    : INTLITERAL? '.' DIGIT+ (('e' | 'E' | 'e+' | 'E+' | 'e-' | 'E-') DIGIT+)?
+
+// But if we use a datatype rule, 'e' and 'E' become reserved words and,
+// hence, unavailable as variable names.  Just be careful to define floats
+// before ints so they don't get shadowed by the greedy lexer.
+terminal FLOATLITERAL returns ecore::EFloat
+    : DIGIT* '.' DIGIT+ (("e" | "E" | "e+" | "E+" | "e-" | "E-") DIGIT+)?
     ;
+
+terminal INTLITERAL returns ecore::EInt : DIGIT+ ;
 
 terminal STRINGLITERAL
     : '"' ( '\\' ('"' | '\\' | 't' | 'n' | 'r') | !('"' | '\\'))* '"'
