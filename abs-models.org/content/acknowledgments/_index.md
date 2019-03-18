@@ -8,11 +8,11 @@ weight: 6
 
 The development of the ABS language and tools has been supported by a number of European FP7 and H2020 research projects.
 
-- HATS: Highly Adaptive and Trustworthy Software using Formal Methods
+- [HATS](https://web.archive.org/web/20181127101833/http://www.hats-project.eu/): Highly Adaptive and Trustworthy Software using Formal Methods
 
-- Envisage: Engineering Virtualized Services 
+- [Envisage](http://envisage-project.eu): Engineering Virtualized Services
 
-- HyVar: Scalable Hybrid Variability
+- [HyVar](http://hyvar-project.eu/hyvar/): Scalable Hybrid Variability
 
 ![HATS](/images/hats-logo.jpg?width=5pc) ![Envisage](/images/envisage-logo.jpg?width=5pc) ![HyVar](/images/hyvar-logo.png?width=5pc)
 
