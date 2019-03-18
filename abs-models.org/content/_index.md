@@ -32,3 +32,4 @@ data-types.
 
 [Contact]({{%relref "contact/_index.md" %}})
 
+[Acknowledgments]({{%relref "acknowledgments/_index.md" %}})
