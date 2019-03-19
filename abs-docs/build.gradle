@@ -10,7 +10,6 @@ asciidoctor {
         from(sourceDir) {
             include 'images/**'
             include 'asciidoctor.css'
-            include 'CNAME'
         }
     }
     options doctype: 'book'
