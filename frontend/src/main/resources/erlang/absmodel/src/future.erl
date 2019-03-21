@@ -109,26 +109,23 @@ get_blocking(Future, Cog, Stack) ->
 await(null, _Cog, _Stack) ->
     throw(dataNullPointerException);
 await(Future, Cog, Stack) ->
-    case gen_statem:call(Future, {poll_or_add_waiting, self()}) of
-        true -> ok;
-        false ->
-            task:release_token(Cog, waiting),
-            (fun Loop() ->
-                     receive
-                         {value_present, Future, _CalleeCog} ->
-                             %% Unblock this task before allowing the other
-                             %% task to terminate (and potentially letting its
-                             %% cog idle).
-                             cog:process_is_runnable(Cog,self()),
-                             confirm_wait_unblocked(Future, self()),
-                             task:wait_for_token(Cog, [Future | Stack]);
-                         {stop_world, _Sender} ->
-                             Loop();
-                         {get_references, Sender} ->
-                             cog:submit_references(Sender, gc:extract_references([Future | Stack])),
-                             Loop()
-                     end end)()
-    end.
+    register_waiting_task(Future, self()),
+    task:release_token(Cog, waiting),
+    (fun Loop() ->
+             receive
+                 {value_present, Future, _CalleeCog} ->
+                     %% Unblock this task before allowing the other
+                     %% task to terminate (and potentially letting its
+                     %% cog idle).
+                     cog:process_is_runnable(Cog,self()),
+                     confirm_wait_unblocked(Future, self()),
+                     task:wait_for_token(Cog, [Future | Stack]);
+                 {stop_world, _Sender} ->
+                     Loop();
+                 {get_references, Sender} ->
+                     cog:submit_references(Sender, gc:extract_references([Future | Stack])),
+                     Loop()
+             end end)().
 
 
 get_for_rest(Future) ->
@@ -257,8 +254,6 @@ next_state_on_completion(Data=#data{waiting_tasks=WaitingTasks, calleecog=Callee
     {completing, Data}.
 
 
-running({call, From}, {poll_or_add_waiting, Task}, Data=#data{waiting_tasks=WaitingTasks}) ->
-    {keep_state, Data#data{waiting_tasks=[Task | WaitingTasks]}, {reply, From, false}};
 running({call, From}, get_references, Data=#data{references=References}) ->
     {keep_state, Data, {reply, From, References}};
 running(cast, {waiting, Task}, Data=#data{waiting_tasks=WaitingTasks}) ->
@@ -289,8 +284,6 @@ next_state_on_okthx(Data=#data{calleetask=CalleeTask,waiting_tasks=WaitingTasks,
             {completing, Data#data{waiting_tasks=NewWaitingTasks}}
     end.
 
-completing({call, From}, {poll_or_add_waiting, _Task}, Data) ->
-    {keep_state_and_data, {reply, From, true}};
 completing({call, From}, get_references, Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
 completing({call, From}, get, Data=#data{value=Value}) ->
@@ -307,8 +300,6 @@ completing(info, Msg, Data) ->
     handle_info(Msg, completing, Data).
 
 
-completed({call, From}, {poll_or_add_waiting, _Task}, Data) ->
-    {keep_state_and_data, {reply, From, true}};
 completed({call, From}, get_references, Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
 completed({call, From}, get, Data=#data{value=Value}) ->

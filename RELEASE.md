@@ -1,5 +1,7 @@
 # Release Checklist
 
+## Pre-release checks
+
 - Run unit tests, check for fresh failing tests (compared to last
   version)
 
@@ -15,6 +17,12 @@
   - check if all tools in collaboratory are installed
   - check that "Hello World" ABS program can start with Erlang simulator
   - check that "Hello World" ABS program doesn't crash SACO / CostABS
+
+- Check that the manual looks ok
+
+  - `open abs-docs/build/asciidoc/html5/index.html`
+
+## Release steps
 
 - Update `CHANGELOG.md`
   - Rename section `[Unreleased]` to `[x.y.z] - yyyy-mm-dd`
@@ -47,6 +55,13 @@
 
 - Add release tag `vx.y.z` with the same message as the commit message.
 
+- run `./gradlew clean assemble` to update version information for compiler,
+  manual
+  
+  - check the output of `absc -V`; it should output the new version number
+  - check the header of `abs-docs/build/asciidoc/html5/index.html`, it should
+    contain the new version number
+
 - push release commit (`git push`) and tag (`git push --tags`)
 
 - upload `absfrontend.jar`
@@ -58,6 +73,12 @@
     binaries by dropping them here or selecting them.".  (Automating
     this step would involve handling github API keys, so we keep it
     manual.)
+
+- update manual site
+
+  - run `deploy.sh` inside the `abs-docs/` subdirectory
+
+## Post-release steps
 
 - Send mail to `abs-announce@abs-models.org`, `abs-dev@abs-models.org`
 

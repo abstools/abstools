@@ -1,0 +1,4 @@
+[submodule "abs-docs/site-deploy"]
+	path = abs-docs/site-deploy
+	url = git@github.com:abstools/docs.abs-models.org.git
+	branch = master
