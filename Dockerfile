@@ -1,6 +1,7 @@
 FROM php:5.6-apache-stretch
 # docker build -t easyinterface .
 # docker run -d -p 8080:80 --name easyinterface easyinterface
+# docker exec -it easyinterface bash
 
 # The mkdir below due to https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199
 RUN apt-get -y update \
@@ -67,14 +68,17 @@ RUN curl http://costa.fdi.ucm.es/download/saco.colab.zip -\# -o saco.colab.zip \
  && rm sra.colab.zip \
  && curl http://costa.fdi.ucm.es/download/apet.colab.zip -\# -o apet.colab.zip \
  && unzip apet.colab.zip -d /usr/local/lib \
- && rm apet.colab.zip \
- && sed -i 's/abs.backend.prolog.PrologBackend/org.abs_models.backend.prolog.PrologBackend/g' /usr/local/lib/saco/bin/generateProlog \
- && sed -i 's/abs.backend.prolog.PrologBackend/org.abs_models.backend.prolog.PrologBackend/g' /usr/local/lib/apet/bin/generateProlog
+ && rm apet.colab.zip
+# patch scripts until fixed upstream
+RUN sed -i 's/ -outline / --outline /g' /var/www/easyinterface/server/bin/envisage/outline/absoutline.sh
+RUN sed -i 's/ -erlang / --erlang /g' /var/www/easyinterface/server/bin/envisage/simulator/erlangbackend.sh
+RUN sed -i 's/java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend/java -jar $ABSFRONTEND --prolog/g' /usr/local/lib/saco/bin/generateProlog
+RUN sed -i 's/java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend/java -jar $ABSFRONTEND --prolog/g' /usr/local/lib/apet/bin/generateProlog
 RUN mkdir -p /usr/local/lib/frontend
 COPY frontend/dist /usr/local/lib/frontend/dist
 COPY frontend/bin /usr/local/lib/frontend/bin
-COPY frontend/lib /usr/local/lib/frontend/lib
-RUN chmod -R a+rx /usr/local/lib/frontend
+RUN chmod -R a+r /usr/local/lib/frontend
+RUN chmod -R a+x /usr/local/lib/frontend/bin
 
 
 ###############
