@@ -9,17 +9,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- Incompatible change: we now follow the [POSIX](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html) and [GNU](https://www.gnu.org/prep/standards/html_node/Command_002dLine-Interfaces.html) recommendations for command line interfaces.  This breaks existing scripts until they are adapted for the new syntax.  (This change comes with extensive refactoring and simplifying of our frontend code, making future extensions of the `absc` command much more straightforward.  We hope the one-time pain is worth it.)
-
-- Incompatible change: all options related to software product line checking have been moved to their own subcommand, see the output for `absc checkspl -h`.  The new syntax clarifies that these calculations are not meant to be done at the same time as compiling a model.
-
-
-
 ### Removed
 
 ### Fixed
 
-## [1.7.0]
+
+## [1.8.0] - 2019-03-26
+
+### Changed
+
+- Incompatible change: we now follow the [POSIX](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html) and [GNU](https://www.gnu.org/prep/standards/html_node/Command_002dLine-Interfaces.html) recommendations for command line interfaces.  This breaks existing scripts until they are adapted for the new syntax.  (This change comes with extensive refactoring and simplifying of our frontend code, making future extensions of the `absc` command much more straightforward.  We hope the one-time pain is worth it.)
+
+- Incompatible change: all options related to software product line checking have been moved to their own subcommand, see the output for `absc checkspl -h`.  The new syntax clarifies that these calculations are not meant to be done at the same time as compiling a model.
+
+- On the erlang backend, `await f?;` now unconditionally suspends the process instead of continuing when the future `f` is ready.  This change makes the semantics more uniform; specifically, the number and location of suspension points of a given process does not depend on whether another process has finished.  (In other words, whether a process would suspend or not was a race condition with another process before this change.)
+
+## [1.7.0] - 2019-02-19
 
 ### Added
 
@@ -294,7 +299,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/abstools/abstools/compare/v_1.7.0...v1.8.0
 [1.7.0]: https://github.com/abstools/abstools/compare/version_1.6.0...v1.7.0
 [1.6.0]: https://github.com/abstools/abstools/compare/version_1.5.6...version_1.6.0
 [1.5.6]: https://github.com/abstools/abstools/compare/version_1.5.5...version_1.5.6
