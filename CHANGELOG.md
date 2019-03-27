@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Upgraded the collaboratory container from php 5.6 (unsupported) to php 7.3
+
+- Fixed the SACO and MHP tools in the collaboratory by introducing a backward-compatibility shim class `abs.backend.prolog.PrologBackend`.
 
 ## [1.8.0] - 2019-03-26
 
