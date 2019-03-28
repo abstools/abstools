@@ -24,16 +24,26 @@ FROM php:7.3-apache-stretch
 
 # The mkdir below due to https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199
 RUN apt-get -y update \
- && mkdir -p /usr/share/man/man1 \
- && apt-get -y install unzip git gnupg gawk graphviz netcat-openbsd apt-utils \
+ && apt-get -y install gnupg \
+ && rm -rf /var/lib/apt/lists/* \
  && curl https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb -\# -o erlang-solutions_1.0_all.deb \
  && dpkg -i erlang-solutions_1.0_all.deb \
  && rm erlang-solutions_1.0_all.deb \
  && apt-get -y update \
- && apt-get -y install erlang-base \
- && apt-get -y install erlang-nox \
- && apt-get -y install default-jre-headless \
- && apt-get install -y libgl1 python-dev wget python-pip \
+ && mkdir -p /usr/share/man/man1 \
+ && apt-get -y install \
+        apt-utils \
+        erlang-base \
+        erlang-nox \
+        gawk \
+        git \
+        graphviz \
+        libgl1 \
+        netcat-openbsd \
+        python-dev \
+        python-pip \
+        unzip \
+        wget \
  && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/abstools/absexamples.git /var/www/absexamples \
  && chmod -R 755 /var/www/absexamples \
