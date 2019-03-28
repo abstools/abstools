@@ -4,6 +4,19 @@ RUN git clone https://github.com/abstools/abs-models.org.git /abs-models.org
 WORKDIR /abs-models.org
 RUN hugo -e collaboratory
 
+FROM erlang:21-alpine AS jdk-erlang
+RUN apk --update add \
+        bash \
+        nss \
+        openjdk8 \
+        && rm -rf /var/cache/apk/*
+
+FROM jdk-erlang AS builder
+COPY ./ /appSrc/
+WORKDIR /appSrc
+RUN chmod +x gradlew \
+    && ./gradlew --no-daemon frontend:plainJar
+
 FROM php:7.3-apache-stretch
 # docker build -t easyinterface .
 # docker run -d -p 8080:80 --name easyinterface easyinterface
@@ -77,8 +90,8 @@ RUN sed -i 's/ -erlang / --erlang /g' /var/www/easyinterface/server/bin/envisage
 RUN sed -i 's/java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend/java -jar $ABSFRONTEND --prolog/g' /usr/local/lib/saco/bin/generateProlog
 RUN sed -i 's/java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend/java -jar $ABSFRONTEND --prolog/g' /usr/local/lib/apet/bin/generateProlog
 RUN mkdir -p /usr/local/lib/frontend
-COPY frontend/dist /usr/local/lib/frontend/dist
-COPY frontend/bin /usr/local/lib/frontend/bin
+COPY --from=builder /appSrc/frontend/bin/ /usr/local/lib/frontend/bin
+COPY --from=builder /appSrc/frontend/dist/absfrontend.jar /usr/local/lib/frontend/dist/absfrontend.jar
 RUN chmod -R a+r /usr/local/lib/frontend
 RUN chmod -R a+x /usr/local/lib/frontend/bin
 
