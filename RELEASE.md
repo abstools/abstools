@@ -62,22 +62,25 @@
   - check the header of `abs-docs/build/asciidoc/html5/index.html`, it should
     contain the new version number
 
-- push release commit (`git push`) and tag (`git push --tags`)
-
-- upload `absfrontend.jar`
-
-  - github will have created a release at
-    [https://github.com/abstools/abstools/releases] with the source
-    tree archives.  Click "Edit" on the release and drag
-    `frontend/dist/absfrontend.jar` into the area that says "Attach
-    binaries by dropping them here or selecting them.".  (Automating
-    this step would involve handling github API keys, so we keep it
-    manual.)
+- push release commit (`git push`)
 
 - update [https://abs-models.org/manual/]: copy the content of
     `abs-docs/build/asciidoc/html5/` into the `static/manual/` subdirectory of
     the repository at [https://github.com/abstools/abs-models.org], then
     redeploy the website
+
+- finalize release on github (automating these steps would involve handling
+  github API keys, so we keep it manual.)
+
+  - push release tag (`git push --tags`) -- this will start the CircleCI
+    docker build, which will download the new version of the website created
+    in the previous step
+
+  - upload `absfrontend.jar`: go to
+    [https://github.com/abstools/abstools/releases/tag/vx.y.z].  Click "Edit
+    Tag", drag `frontend/dist/absfrontend.jar` into the area that says "Attach
+    binaries by dropping them here or selecting them." and wait until the
+    upload is complete.  Click the green "Finalize Release" button.
 
 ## Post-release steps
 
