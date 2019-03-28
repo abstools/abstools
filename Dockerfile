@@ -33,6 +33,7 @@ RUN apt-get -y update \
  && mkdir -p /usr/share/man/man1 \
  && apt-get -y install \
         apt-utils \
+        default-jre-headless \
         erlang-base \
         erlang-nox \
         gawk \
