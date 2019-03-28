@@ -5,13 +5,14 @@ set -e
 
 echo -e "\033[0;32mDeploying updates to GitHub...\033[0m"
 
+# Pull from upstream, just in case we’re behind
+(cd public ; git checkout . ; git pull)
+
 # Build the project.
-hugo # if using a theme, replace with `hugo -t <YOURTHEME>`
+hugo --cleanDestinationDir
 
 # Go To Public folder
 cd public
-# Pull, just in case we’re behind
-git pull
 # Add changes to git.
 git add .
 
