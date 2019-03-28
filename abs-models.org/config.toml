@@ -1,4 +1,4 @@
-baseURL = "http://abs-models.org/"
+baseURL = "https://abs-models.org/"
 languageCode = "en-us"
 title = "The ABS Modeling Language"
 
