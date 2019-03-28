@@ -94,6 +94,13 @@ public class PrettyPrinterTests extends ABSTest {
         assertEqualsAndParses(ms, m);
     }
 
+    @Test
+    public void bug249() throws Exception {
+        String ms = "module UnitTest; export *; { ((if True then 0 else 0) == 0); }";
+        Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
+        assertEqualsAndParses(ms, m);
+    }
+
     private static void assertEqualsAndParses(String s, ASTNode<?> m) {
         assertEquals(replaceWhitespaceChars(s), replaceWhitespaceChars(prettyPrint(m)));
         assertParse(prettyPrint(m), Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
