@@ -1,0 +1,12 @@
+{{ if .IsNamedParams }}
+{{ $urltitle := "title" }}
+{{ if .Get "title" }}
+{{ $urltitle = .Get "title" }}
+{{ else }}
+{{ $url := urls.Parse (.Get "path") }}
+{{ $urltitle = path.Base $url.Path }}
+{{ end }}
+<a href="{{ $.Page.Site.Params.eifilelink }}{{ .Get "path" }}{{ with .Get "app" }}&app={{ . }}{{ end }}" target="_blank">{{ $urltitle}}</a>
+{{ else }}
+<a href="{{ $.Page.Site.Params.eifilelink }}{{.Get 0}}" target="_blank">{{ .Get 1 }}</a>
+{{ end }}

@@ -41,8 +41,9 @@ following, we describe the use of CostABS by analyzing several examples.
 ** Basic Resource Analysis
 
 Let us start by performing the basic resource analysis computed by CostABS and
-described in [[http://link.springer.com/chapter/10.1007%2F978-3-642-54862-8_46][this paper]]. To do it, open the file [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost][VendingMachine_init.abs]],
-which contains the following code:
+described in [[http://link.springer.com/chapter/10.1007%2F978-3-642-54862-8_46][this paper]]. To do it, open the file {{< eifilelink
+"/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost"
+"VendingMachine_init.abs" >}}, which contains the following code:
 
 #+BEGIN_SRC abs
    module VendingMachine_init;
@@ -135,11 +136,13 @@ for the analysis.  The following parameters are available:
 
 - Timed Cost Analysis :: computes the cost analysis in time (see [[https://www.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_SE/Page_Content/Group_Members/Antonio_Flores-Montoya/ResourceAnalysisTime_TechReport.pdf][this technical report]]).
 
-Let us analyze the program [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost][VendingMachine_init.abs]] with the default values, except for the ~Asymptotic bounds~ parameter that
-must be set to ~yes~.  Click on ~Refresh Outline~ and select the entry method
-(method ~main~ of class ~IMain~) in the Outline (the region on the right of
-the page).  Then click on ~Run~ to perform the analysis.  The result should be
-shown in the console as follows:
+Let us analyze the program {{< eifilelink
+"/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost"
+"VendingMachine_init.abs" >}} with the default values, except for the
+~Asymptotic bounds~ parameter that must be set to ~yes~.  Click on ~Refresh
+Outline~ and select the entry method (method ~main~ of class ~IMain~) in the
+Outline (the region on the right of the page).  Then click on ~Run~ to perform
+the analysis.  The result should be shown in the console as follows:
 
 #+BEGIN_EXAMPLE
 Method IMain.main terminates?: YES
@@ -154,7 +157,7 @@ avoid negative costs.  The upper bound is shown in the console view and also
 at the method’s header when the mouse passes over the marker in line 48 in the
 program.
 
-Now, let us analyze the main method of the file [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/VendingMachine.abs&app=cost][VendingMachine.abs]], which contains the following code:
+Now, let us analyze the main method of the file {{< eifilelink "/collaboratory/deliverables/D3.3.2/VendingMachine.abs&app=cost" "VendingMachine.abs" >}}, which contains the following code:
 
 #+BEGIN_SRC abs
   module VendingMachine;
@@ -228,8 +231,11 @@ The analyzer shows, by using a warning marker (see line 41), that the resource a
 NOTE: this analysis is not currently available.
 {{% /notice %}}
 
-Let us now perform the rely-guarantee resource analysis, described in [[http://dx.doi.org/10.1007/978-3-319-02444-8_25][this paper]], on the main method of the [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/VendingMachine.abs&app=cost][VendingMachine.abs]] file. To do so, we set the
-option ~Rely Guarantee~ to ~yes~ and the ~Cost Model~ to ~termination~.
+Let us now perform the rely-guarantee resource analysis, described in [[http://dx.doi.org/10.1007/978-3-319-02444-8_25][this
+paper]], on the main method of the {{< eifilelink
+"/collaboratory/deliverables/D3.3.2/VendingMachine.abs&app=cost"
+"VendingMachine.abs" >}} file. To do so, we set the option ~Rely Guarantee~ to
+~yes~ and the ~Cost Model~ to ~termination~.
 
 After applying the analysis, it can be seen on the default console that
 CostABS proves that all methods of the program terminate.  Let us now slightly
@@ -257,7 +263,9 @@ method header to display their corresponding upper bounds.
 ** Load Balance
 
 At this point, let us use the resource analysis to study the load balance of
-the program [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/Performance.abs&app=cost][Performance.abs]], which contains the following code:
+the program {{< eifilelink
+"/collaboratory/deliverables/D3.3.2/Performance.abs&app=cost"
+"Performance.abs" >}}, which contains the following code:
 
 #+BEGIN_SRC abs
    module Parallel;
@@ -395,10 +403,11 @@ Now, let us perform the transmission data size analysis to the following code:
   }
 #+END_SRC
 
-Open the file [[{{% siteparam "eifilelink" %}}/collaboratory/path/to/DataTransmitted.abs][DataTransmitted.abs]].  To analyze this file with the transmission
-data size analysis, select the analysis ~Resource Analysis (SACO)~ and set the
+Open the file {{< eifilelink "/collaboratory/path/to/DataTransmitted.abs"
+"DataTransmitted.abs" >}}.  To analyze this file with the transmission data
+size analysis, select the analysis ~Resource Analysis (SACO)~ and set the
 option ~Cost Model~ to ~Traffic~.  Then refresh the outline and apply the
-analysis to the method ~IMain.main~. 
+analysis to the method ~IMain.main~.
 
 When the analysis is applied, the console will show the upper bound
 expressions for all possible pairs of objects identified by the analysis:
@@ -441,7 +450,9 @@ expression ~c(i)~ represents the cost of establishing the communication.
 ** Non-Cumulative Cost
 
 We can illustrate the analysis for computing the non-cumulative cost with the
-file [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/Noncumulative.abs&app=cost][Noncumulative.abs]], which contains the following code:
+file {{< eifilelink
+"/collaboratory/deliverables/D3.3.2/Noncumulative.abs&app=cost"
+"Noncumulative.abs" >}}, which contains the following code:
 
 #+BEGIN_SRC abs
   module Noncumulative;
@@ -468,8 +479,14 @@ In ~Settings~, restore the default values and set the option ~noncumulative_cost
 
 ** Peak Cost Analysis
 
-Let us continue by performing the peak cost analysis to the program [[{{% siteparam "eifilelink"
-  %}}/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost][VendingMachine_init.abs]].  Similarly to other analyses, we first select the entry method (method ~main~ in class ~IMain~) in the outline view and start the Resource Analysis (SACO) with default options, with the exception of the option ~Peak Cost~, which must be set to ~yes~.  After clicking ~Run~, the peak cost analysis outputs in the console.
+Let us continue by performing the peak cost analysis to the program {{<
+eifilelink
+"/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost"
+"VendingMachine_init.abs" >}}.  Similarly to other analyses, we first select
+the entry method (method ~main~ in class ~IMain~) in the outline view and
+start the Resource Analysis (SACO) with default options, with the exception of
+the option ~Peak Cost~, which must be set to ~yes~.  After clicking ~Run~, the
+peak cost analysis outputs in the console.
 
 #+BEGIN_EXAMPLE
 Closure time 2 ms.
@@ -496,7 +513,10 @@ As before, the output tab ~Console Graph~ also shows a graph where the labels of
 
 ** Parallel Cost
 
-Let us perform the parallel cost analysis described in [[http://dx.doi.org/10.1007/978-3-662-48288-9_16][this paper]].  To do so, we open the file [[{{% siteparam "eifilelink" %}}/collaboratory/deliverables/D3.3.2/Parallel.abs&app=cost][Parallel.abs]], which contains the following code:
+Let us perform the parallel cost analysis described in [[http://dx.doi.org/10.1007/978-3-662-48288-9_16][this paper]].  To do so,
+we open the file {{< eifilelink
+"/collaboratory/deliverables/D3.3.2/Parallel.abs&app=cost" "Parallel.abs" >}},
+which contains the following code:
 
 #+BEGIN_SRC abs
   module Parallel;
