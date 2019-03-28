@@ -6,10 +6,10 @@ set -e
 echo -e "\033[0;32mDeploying updates to GitHub...\033[0m"
 
 # Pull from upstream, just in case we’re behind
-(cd public ; git checkout . ; git pull)
+(cd public ; rm -rf * ; git checkout . ; git pull)
 
 # Build the project.
-hugo --cleanDestinationDir
+hugo
 
 # Go To Public folder
 cd public
@@ -23,7 +23,7 @@ if [ $# -eq 1 ]
 fi
 git commit -m "$msg"
 
-# Push source and build repos.
+# Push into deploy repository
 git push origin master
 
 # Come Back up to the Project Root
