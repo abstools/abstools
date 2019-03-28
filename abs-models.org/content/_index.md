@@ -26,6 +26,8 @@ data-types.
 
 [Getting Started]({{%relref "getting_started/_index.md" %}})
 
+[The Language Manual](manual/)
+
 [Tutorials]({{%relref "tutorials/_index.md" %}})
 
 [Publications]({{%relref "publications/_index.md" %}})
