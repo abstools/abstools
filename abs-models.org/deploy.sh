@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 # Build and deploy the site to github -- see
 # https://gohugo.io/hosting-and-deployment/hosting-on-github/
 
@@ -10,6 +10,8 @@ hugo # if using a theme, replace with `hugo -t <YOURTHEME>`
 
 # Go To Public folder
 cd public
+# Pull, just in case we’re behind
+git pull
 # Add changes to git.
 git add .
 
