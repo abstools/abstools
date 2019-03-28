@@ -22,6 +22,8 @@ data-types.
 * ABS supports a range of techniques for model exploration and analysis, based
   on formal semantics
 
+{{< collaboratorylink >}}
+
 [Overview]({{%relref "overview/_index.md" %}})
 
 [Getting Started]({{%relref "getting_started/_index.md" %}})

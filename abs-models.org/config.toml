@@ -15,9 +15,16 @@ theme = "hugo-theme-learn"
 
 [params]
   themeVariant = "abs"
-  # Location of the collaboratory.  Use in org-mode:
+  ordersectionsby = "weight"
+  # Are we building the site for deployment in the collaboratory container?
+  collaboratory = false
+  # Linking of files contained in the collaboratory.  This either points to a
+  # public instance, or to localhost.  See config/collaboratory/config.toml.
+  # Build with "hugo" for public website or "hugo -e collaboratory" for the
+  # container.
+  #
+  # Links in org-mode:
   # [[{{% siteparam "eifilelink" %}}/collaboratory/path/to/File.abs][File.abs]]
-  # in Markdown:
+  # Links in Markdown:
   # [File.abs]({{% siteparam "eifilelink" %}}/collaboratory/path/to/File.abs)
   eifilelink = "http://ei.abs-models.org:8082/clients/web/index.html?file="
-  ordersectionsby = "weight"
