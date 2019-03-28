@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).  This project does not quite adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) since it does not declare a public API, as mandated in the linked specification.  The patch version number increases when existing models continue running with the new version; the minor version number increases when existing models can be adapted in a straightforward way; the major version number increases when existing models need to be partially or totally rewritten.
 
+
 ## [Unreleased]
 
 ### Added
@@ -10,6 +11,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 ### Removed
+
+### Fixed
+
+
+## [1.8.1] - 2019-03-28
+
+### Added
+
+- The collaboratory (available as a container via the docker hub) now includes the abs website, including the language manual and the tutorials.
 
 ### Fixed
 
@@ -302,7 +312,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.8.1...HEAD
+[1.8.1]: https://github.com/abstools/abstools/compare/v_1.8.0...v1.8.1
 [1.8.0]: https://github.com/abstools/abstools/compare/v_1.7.0...v1.8.0
 [1.7.0]: https://github.com/abstools/abstools/compare/version_1.6.0...v1.7.0
 [1.6.0]: https://github.com/abstools/abstools/compare/version_1.5.6...version_1.6.0
