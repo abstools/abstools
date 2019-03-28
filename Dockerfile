@@ -1,3 +1,9 @@
+FROM jojomi/hugo AS abs-models-site
+RUN apk --update add git
+RUN git clone https://github.com/abstools/abs-models.org.git /abs-models.org
+WORKDIR /abs-models.org
+RUN hugo -e collaboratory
+
 FROM php:7.3-apache-stretch
 # docker build -t easyinterface .
 # docker run -d -p 8080:80 --name easyinterface easyinterface
@@ -50,13 +56,9 @@ Alias /absexamples \"/var/www/absexamples\"\n\
    AllowOverride All\n\
    Require all granted\n\
 </Directory>\n" > /etc/apache2/sites-available/easyinterface-site.conf \
- && echo "<html><head>\n\
-<META HTTP-EQUIV=\"Refresh\" Content=\"0; URL=/ei/clients/web\">\n\
-</head><body>\n\
-EasyInterface is at http://localhost:8888/ei/clients/web.\n\
-</body></html>\n" > /var/www/html/index.html \
  && a2ensite easyinterface-site \
- && a2enmod headers 
+ && a2enmod headers
+COPY --from=abs-models-site /abs-models.org/collaboratory/ /var/www/html/
 RUN curl http://costa.fdi.ucm.es/download/saco.colab.zip -\# -o saco.colab.zip \
  && unzip saco.colab.zip -d /usr/local/lib \
  && rm saco.colab.zip \

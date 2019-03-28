@@ -74,9 +74,10 @@
     this step would involve handling github API keys, so we keep it
     manual.)
 
-- update manual site
-
-  - run `deploy.sh` inside the `abs-docs/` subdirectory
+- update [https://abs-models.org/manual/]: copy the content of
+    `abs-docs/build/asciidoc/html5/` into the `static/manual/` subdirectory of
+    the repository at [https://github.com/abstools/abs-models.org], then
+    redeploy the website
 
 ## Post-release steps
 
