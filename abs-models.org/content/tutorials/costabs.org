@@ -731,7 +731,7 @@ Since the MHP analysis is a sound overapproximation, instructions that cannot ex
 
 In addition to the Amount of considered points to compute all the pairs of instructions that can execute in parallel or only a the most important, the MHP analysis supports other important settings, as shown in the next figure:
 
-{{< figure class="image main" src="/images/mhp_settings.png" >}}
+{{< figure class="image main" src="/images/tutorials/costabs/mhp_settings.png" >}}
 
 Using these parameters we can adapt the behavior of the analysis:
 - ~Debug information~ (~0~, ~1~, or ~2~): level of information that is printed in the console, where ~0~ is the lowest level.

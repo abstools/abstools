@@ -220,11 +220,11 @@ Objects are explicitly allocated to the servers by annotations; below,
 }
 #+END_SRC
 
-{{< figure class="image main" src="/images/DC_arqu.jpg" >}}
+{{< figure class="image main" src="/images/tutorials/resources/DC_arqu.jpg" >}}
 
 # #+CAPTION: Deployment Architecture and Artefacts
 # #+ATTR_HTML: :class "image main" :alt "Deployment Architecture and Artefacts" :title "Deployment Architecture and Artefacts"
-# [[file:/images/DC_arqu.jpg]]
+# [[file:/images/tutorials/resources/DC_arqu.jpg]]
 
 The figure depicts this deployment architecture and the artefacts introduced
 into the modeling language.  Since all objects are allocated to a deployment

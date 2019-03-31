@@ -10,7 +10,7 @@ weight: 2
 ## 1 Installation of the ABS Eclipse Plugin
 
 
-![The gap in the landscape of software modeling languages](/images/fig1.png "The gap in the landscape of software modeling languages")
+![The gap in the landscape of software modeling languages](/images/tutorials/language-tutorial/fig1.png "The gap in the landscape of software modeling languages")
 
 ABS fills a *gap* in the landscape of software modeling languages.  It
 is situated between architectural, design-oriented, foundational, and
@@ -31,7 +31,7 @@ create a new *ABS Project* and import the directory file contents into
 Eclipse workspace in the usual way. After opening a few files in the
 editor you should see a screen similar to the one here:
 
-![Screenshot of ABS Modeling Perspective in Eclipse plugin](/images/ABSModelingPerspective.jpg "Screenshot of ABS Modeling Perspective in Eclipse plugin")
+![Screenshot of ABS Modeling Perspective in Eclipse plugin](/images/tutorials/language-tutorial/ABSModelingPerspective.jpg "Screenshot of ABS Modeling Perspective in Eclipse plugin")
 
 ## 2 Design Principles of ABS
 
@@ -65,7 +65,7 @@ terfaces from and to ABS as shown in below. These are
 realized by various import, export, and code generation tools, several
 of which are discussed below.
 
-![Interfaces between ABS and other languages](/images/fig3.png "Interfaces between ABS and other languages")
+![Interfaces between ABS and other languages](/images/tutorials/language-tutorial/fig3.png "Interfaces between ABS and other languages")
 
 Arguably the most important criterion for tools,
 however, is usability. This tutorial is not the place to embark on a
@@ -101,7 +101,7 @@ Regarding *integration*, the tool set around the ABS language is
 realized as a set of plugins for the popular Eclipse IDE. These plugins
 realize the ABS
 
-![Architecture of the ABS language](/images/fig4.png "Architecture of the ABS language")
+![Architecture of the ABS language](/images/tutorials/language-tutorial/fig4.png "Architecture of the ABS language")
 
 *Modeling Perspective* (see [Fig.
 2](ABSModelingPerspective.jpg)) and the *ABS Debug Perspective* (see
@@ -300,7 +300,7 @@ def Set<A> set<A>(List<A> l) =
     } ;
 ```
 
-![Parser error in the ABS Eclipse editor](/images/ABSProblemReporting.jpg "Parser error in the ABS Eclipse editor")
+![Parser error in the ABS Eclipse editor](/images/tutorials/language-tutorial/ABSProblemReporting.jpg "Parser error in the ABS Eclipse editor")
 
 Errors are highlighted on the editor line where they
 occur as well as in the **Problems** tab of the messages subwindow
@@ -600,7 +600,7 @@ global behavior from the composition of local behavior. In a setting,
 where concurrent objects can arbitrarily cross-reference each other,
 this is hardly possible.
 
-![Illustration of an ABS Component Group](/images/fig6.png "Illustration of an ABS Component Group")
+![Illustration of an ABS Component Group](/images/tutorials/language-tutorial/fig6.png "Illustration of an ABS Component Group")
 
 Arbitrarily complex, global invariants, might be needed to describe
 behavior. One approach to tackle the problem is to impose structure on
@@ -706,7 +706,7 @@ retrieving their results is common in ABS:
 Fut<T> v = o!m(e); ... ; await v?; r = v.get;
 ```
 
-![Illustration of object and COG creation (gray boundaries represent COGs)](/images/fig7.png "Illustration of object and COG creation; gray boundaries represent COGs")
+![Illustration of object and COG creation (gray boundaries represent COGs)](/images/tutorials/language-tutorial/fig7.png "Illustration of object and COG creation; gray boundaries represent COGs")
 
 ABS does not attempt to check that each **get** expression is guarded
 by an **await** statement. So what happens when the result of an
@@ -763,7 +763,7 @@ implements Account { ... }
 }
 ```
 
-![Screenshot of ABS Debug Perspective in Eclipse plugin](/images/ABSDebugPerspective.jpg "Screenshot of ABS Debug Perspective in Eclipse plugin")
+![Screenshot of ABS Debug Perspective in Eclipse plugin](/images/tutorials/language-tutorial/ABSDebugPerspective.jpg "Screenshot of ABS Debug Perspective in Eclipse plugin")
 
 
 We create an account objects in a different COG from the current one.
@@ -779,7 +779,7 @@ click on the file with the **Account** module in the explorer and select
 the ABS Debug Perspective (see [Fig. 8](ABSDebugPerspective.jpg)) and
 start the Eclipse debugger.
 
-![Sequence diagram generated from an ABS simulation](/images/ABSSequenceDiagram.jpg "Sequence diagram generated from an ABS simulation")
+![Sequence diagram generated from an ABS simulation](/images/tutorials/language-tutorial/ABSSequenceDiagram.jpg "Sequence diagram generated from an ABS simulation")
 
 All the usual
 features of a graphical debugger are available: navigation, breakpoints,
@@ -848,7 +848,7 @@ main ideas. The central issue is to give an appropriate structure to the
 terms that represent ABS *runtime configurations*. They are collections
 over the following items:
 
-![Cogs](/images/6.5.cogs_.png "Cogs")
+![Cogs](/images/tutorials/language-tutorial/6.5.cogs_.png "Cogs")
 
 **COGs** are identified simply by a name *b* for their *lock* whose
 value can be either ⊤ or ⊥. **Objects** have a name *o*, need to have
@@ -864,7 +864,7 @@ ABS is given by rewrite rules that match the next executable statement
 of a task (and thereby also the current COG and object). A typical
 example is the rewrite rule that realizes *creation of a new COG*:
 
-![formula](/images/6.5.formula.png)
+![formula](/images/tutorials/language-tutorial/6.5.formula.png)
 
 where:
 
@@ -974,7 +974,7 @@ ABS" to be printed on the system console.
 
 ### 8.1 Product Line Engineering
 
-![Product line engineering](/images/fig11.png "Product line engineering")
+![Product line engineering](/images/tutorials/language-tutorial/fig11.png "Product line engineering")
 
 One of the aims of ABS is to provide a uniform and formal framework for
 product line engineering (PLE)
@@ -1011,7 +1011,7 @@ well-structured and represent a suitable match for the analysis methods
 used in ABS
 [\[14\]](http://www.hats-project.eu/sites/default/files/Deliverable27.pdf).
 
-![Graphical representation of the Account feature model](/images/fig12.png "Graphical representation of the Account feature model")
+![Graphical representation of the Account feature model](/images/tutorials/language-tutorial/fig12.png "Graphical representation of the Account feature model")
 
 Such a mechanism is delta-oriented programming (DOP)
 [\[36,](http://dx.doi.org/10.1007/978-3-642-15579-6_6)
@@ -1104,7 +1104,7 @@ Sect. 8.5).
 
 ### 8.3 Delta Modeling
 
-![Application of delta modules to a core product](/images/fig13.png "Application of delta modules to a core product")
+![Application of delta modules to a core product](/images/tutorials/language-tutorial/fig13.png "Application of delta modules to a core product")
 
 As mentioned above, the realization of features in ABS is done with
 delta modules (or deltas, for short), a variant of delta-oriented
@@ -1199,7 +1199,7 @@ with DSave in [Fig. 14](fig14.png). Syntax and parse error highlighting
 for delta modules works as usual. Automatic completion works as well,
 but it is only done relative to the base product.
 
-![Application of delta DSave](/images/fig14.png "Application of delta DSave")
+![Application of delta DSave](/images/tutorials/language-tutorial/fig14.png "Application of delta DSave")
 
 The reason is that before product
 build time, the compiler cannot know which deltas have been applied
@@ -1210,7 +1210,7 @@ done. Research to lift type checking to the family level is under way
 
 ### 8.4 Product Line Configuration
 
-![Schema of product line configuration in ABS](/images/fig15.png "Schema of product line configuration in ABS")
+![Schema of product line configuration in ABS](/images/tutorials/language-tutorial/fig15.png "Schema of product line configuration in ABS")
 
 So far, we have two models relating to product lines: the feature model
 and the delta model, that is, the feature implementation. Unlike any
@@ -1272,7 +1272,7 @@ of family engineering, the selection process is always part of
 application engineering.
 
 ![The role of product line configuration in product selection and
-compilation](/images/fig16.png "The role of product line configuration in product selection and
+compilation](/images/tutorials/language-tutorial/fig16.png "The role of product line configuration in product selection and
 compilation")
 
 To create a product it is sufficient to list the features
@@ -1311,7 +1311,7 @@ configuration files will be displayed at this stage. For example,
 selection of the SavingWithOverdraft product above results in an error,
 because the constraints in the feature model are not satisfied.
 
-![Choice of different layers when modeling with ABS](/images/fig17.png "Choice of different layers when modeling with ABS")
+![Choice of different layers when modeling with ABS](/images/tutorials/language-tutorial/fig17.png "Choice of different layers when modeling with ABS")
 
 After
 selection of a valid product one can run and debug the
