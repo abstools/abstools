@@ -1,5 +1,5 @@
 ---
-title: "CostABS"
+title: "Resource Analysis with CostABS"
 description: "CostABS is a a static analyzer for automatically inferring upper/lower bounds on the worst/best-case Resource usage (a.k.a. cost) of ABS programs.  In this tutorial, we overview the different features of CostABS by example."
 date: 2018-06-07
 showDate: false
