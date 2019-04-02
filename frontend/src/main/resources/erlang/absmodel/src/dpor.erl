@@ -47,26 +47,53 @@ atomic_blocks(Trace, EventKeys, Acc) ->
 
 enables(Pred, Trace) ->
     EventKeys = trace_to_event_keys(Trace),
-    lists:filter(fun(EventKey) -> Pred(event_key_to_event(Trace, EventKey)) end, EventKeys).
+    lists:filter(Pred, EventKeys).
 
-make_predicate_event_equal_without_read_write(Event) ->
-    EventWithoutReadWriteSets = Event#event{reads=ordsets:new(), writes=ordsets:new()},
-    fun(OtherEvent) -> OtherEventWithoutReadWriteSets = OtherEvent#event{reads=ordsets:new(), writes=ordsets:new()},
-                       EventWithoutReadWriteSets =:= OtherEventWithoutReadWriteSets end.
+remove_reads_and_writes(Event) ->
+    Event#event{reads=ordsets:new(), writes=ordsets:new()}.
+
+make_predicate_event_equal_without_read_write(Event, Trace) ->
+    EventWithoutReadWriteSets = remove_reads_and_writes(Event),
+    fun(OtherEventKey) ->
+            OtherEvent = event_key_to_event(Trace, OtherEventKey),
+            OtherEventWithoutReadWriteSets = remove_reads_and_writes(OtherEvent),
+            EventWithoutReadWriteSets =:= OtherEventWithoutReadWriteSets end.
 
 enabled_by_invocation(InvocationEvent, Trace) ->
     CorrespondingScheduleEvent = InvocationEvent#event{type=schedule},
-    enables(make_predicate_event_equal_without_read_write(CorrespondingScheduleEvent), Trace).
+    enables(make_predicate_event_equal_without_read_write(CorrespondingScheduleEvent, Trace), Trace).
+
+await_future_chain(AtomicBlock, Trace) ->
+    [_ScheduleEventKey | Rest] = AtomicBlock,
+    lists:takewhile(fun(EventKey) -> event_key_type(Trace, EventKey) =:= await_future end, Rest).
+
+make_predicate_atomic_block_is_enabled_by_future_write(FutureWriteEvent, Trace) ->
+    CorrespondingAwaitFutureEvent = remove_reads_and_writes(FutureWriteEvent#event{type=await_future}),
+    fun(OtherEventKey) ->
+            case event_key_type(Trace, OtherEventKey) of
+                schedule ->
+                    AtomicBlock = atomic_block(OtherEventKey, Trace),
+                    AwaitFutureChainEvents = lists:map(fun(EventKey) -> event_key_to_event(Trace, EventKey) end,
+                                                       await_future_chain(AtomicBlock, Trace)),
+                    lists:member(CorrespondingAwaitFutureEvent,
+                                 lists:map(fun remove_reads_and_writes/1, AwaitFutureChainEvents));
+                _ -> false
+            end
+    end.
 
 enabled_by_future_write(FutureWriteEvent, Trace) ->
     CorrespondingFutureReadEvent = FutureWriteEvent#event{type=future_read},
-    enables(make_predicate_event_equal_without_read_write(CorrespondingFutureReadEvent), Trace).
+    enables(fun(Event) ->
+                    (make_predicate_event_equal_without_read_write(CorrespondingFutureReadEvent, Trace))(Event) orelse
+                    (make_predicate_atomic_block_is_enabled_by_future_write(FutureWriteEvent, Trace))(Event)
+            end,
+            Trace).
 
 enabled_by(EventKey, Trace) ->
-    E = event_key_to_event(Trace, EventKey),
-    case E#event.type of
-        invocation -> enabled_by_invocation(E, Trace);
-        future_write -> enabled_by_future_write(E, Trace);
+    Event = event_key_to_event(Trace, EventKey),
+    case Event#event.type of
+        invocation -> enabled_by_invocation(Event, Trace);
+        future_write -> enabled_by_future_write(Event, Trace);
         _ -> []
     end.
 
