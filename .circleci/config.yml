@@ -5,6 +5,10 @@
 # documentation on how to do such a thing (although they were never observed
 # working correctly) -- rudi 2019-04-01
 
+# to test configuration changes before committing, see
+# https://circleci.com/docs/2.0/local-cli/ and
+# https://circleci.com/docs/2.0/examples/
+
 version: 2
 jobs:
   build_frontend:
