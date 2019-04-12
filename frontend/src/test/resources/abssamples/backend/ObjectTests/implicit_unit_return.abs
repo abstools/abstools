@@ -1,0 +1,19 @@
+module BackendTest;
+
+// Do we return the value `Unit` without an explicit return statement?
+// https://github.com/abstools/abstools/issues/251
+
+interface I {
+    Unit m();
+}
+
+class C implements I {
+    Unit m() {
+    }
+}
+
+{
+    I o = new C();
+    Unit u = await o!m();
+    Bool testresult = u == Unit;
+}
