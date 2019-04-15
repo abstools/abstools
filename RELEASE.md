@@ -86,11 +86,11 @@
 
 - Send mail to `abs-announce@abs-models.org`, `abs-dev@abs-models.org`
 
-- Build and upload the docker images (in the main `abstools` directory):
-  - `docker build -t abslang/collaboratory:x.y.z .`
-  - `docker build -t abslang/collaboratory:latest .`
-  - `docker build -t abslang/absc:x.y.z -f frontend/Dockerfile .`
-  - `docker build -t abslang/absc:latest -f frontend/Dockerfile .`
+- Build and upload the docker images:
+  - `docker build -t abslang/collaboratory:x.y.z -f docker/collaboratory.Dockerfile .`
+  - `docker build -t abslang/collaboratory:latest -f docker/collaboratory.Dockerfile .`
+  - `docker build -t abslang/absc:x.y.z -f docker/absc.Dockerfile .`
+  - `docker build -t abslang/absc:latest -f docker/absc.Dockerfile .`
   - `docker push abslang/collaboratory:x.y.z`
   - `docker push abslang/collaboratory:latest`
   - `docker push abslang/absc:x.y.z`
