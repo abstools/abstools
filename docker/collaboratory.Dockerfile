@@ -18,9 +18,8 @@ RUN chmod +x gradlew \
     && ./gradlew --no-daemon frontend:plainJar
 
 FROM php:7.3-apache-stretch
-# docker build -t easyinterface .
-# docker run -d -p 8080:80 --name easyinterface easyinterface
-# docker exec -it easyinterface bash
+# docker build -t abslang/collaboratory -f docker/collaboratory.Dockerfile ..
+# docker run -d -p 8080:80 --name easyinterface abslang/collaboratory
 
 # The mkdir below due to https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199
 RUN apt-get -y update \
