@@ -15,9 +15,10 @@ declarations.  Method names start with a lowercase letter.
 | _MethSig_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` `;`
 |====
 
-Method declarations can carry an `[Atomic]` annotation.  The compiler will
-statically check that any definitions for such methods do not contain
-suspension points (`suspend` and `await` statements).
+If a method declarations in an interface has an `[Atomic]` annotation, the
+compiler will statically check that any definitions for this method contain no
+suspension points (`suspend` and `await` statements), i.e., that running that
+method will complete without scheduling.
 
 The interfaces in the example below represent a database system, providing
 functionality to store and retrieve files, and a node of a peer-to-peer file
@@ -51,32 +52,47 @@ interface Peer extends Client, Server {
 [[sec:classes]]
 == Classes
 
-Classes in ABS are used to create objects via the `new` expression.  Classes
-can implement an arbitrary number of interfaces.  Since classes are not types
-in ABS, classes typically implement one or more interfaces, although the `run`
-method makes it meaningful to have objects with active behavior only and
-without interfaces; such objects will never accept method calls.  See
-<<typecheck-expression>> and <<typecast-expression>> for how to obtain a
-reference to the same object via a different interface.
+Classes in ABS describe stateful behavior.  All objects in ABS have exactly
+one class; objects are created via the `new` expression.
 
+Classes implement zero or more interfaces.  If a class implements more than
+one interface, <<typecheck-expression>> and <<typecast-expression>> are used
+to obtain a reference to the same object typed with a different interface.
 
-Classes in ABS have zero or more _class parameters_.  Each class parameter
-defines a field of the class which is assigned a value via arguments the `new`
-expression.
+NOTE: Classes typically implement one or more interfaces so that methods can
+be called on them, but the `run` method makes it meaningful to have objects
+with active behavior only and without interfaces; such objects will never
+accept method calls but can send method calls to other objects.
 
+NOTE: For ease of reasoning and analysis, ABS methods differ only by name.  It
+is an error for a class to implement two interfaces that both contain a method
+with the same name.
 
-Classes have an optional init block, which is executed before any
-other code.  The init block cannot contain processor release points
-(i.e., `await` or `suspend`), blocking expressions (i.e., `get`,
-`duration`, using resources), or explicitly throw an exception via the `throw`
-statement.
+Classes have _fields_ that define the state of objects of that class.  All
+fields are private and can only be accessed from methods defined in the class.
+Fields are defined in two ways:
 
-Classes have an optional recovery block.  In case an uncaught exception occurs
-in a method, the exception is matched against the patterns given in the
+- _Field declarations_ in the body of the class define fields that get their
+  initial value from their init expression.
+- _Class parameters_ define fields that get their initial value from the `new`
+  expression.
+
+Classes have an optional _init block_, which is executed for each new object
+before any other code.  The init block cannot contain processor release points
+(i.e., `await` or `suspend`), blocking expressions (i.e., `get`, `duration`,
+using resources), or explicitly throw an exception via the `throw` statement.
+It is mainly used for complicated field initializations and is frequently
+omitted.
+
+Classes have an optional _run method_ (see <<sec:active-classes>>).
+
+Classes have an optional _recovery block_.  In case an uncaught exception
+occurs in a method, the exception is matched against the patterns given in the
 recovery block, and the associated statement(s) are executed.  If the
 exception does not match any pattern in the recovery block, or if the recovery
 block itself raises an exception, the object is killed.  Code in the recovery
-block has the same restrictions as in the init block.
+block has the same restrictions as in the init block (i.e., no processor
+release points, blocking expressions and `throw` statements).
 
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
@@ -190,6 +206,7 @@ class Sample ([Final] Int constant_i) {
 In addition to fields, method parameters and variables can also be declared
 `Final`.
 
+[[sec:active-classes]]
 === Active Classes
 
 A class can be active or passive. Active classes start an activity on their own upon creation. Passive classes only react to incoming method calls. A class is active if and only if it has a run method:
