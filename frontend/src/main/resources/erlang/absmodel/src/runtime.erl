@@ -20,6 +20,7 @@
          {influxdb_db,$d,"influxdb-db",{string,"absmodel"},"Name of the influx database log data is written to"},
          {clocklimit,$l,"clock-limit",{integer,none},"Do not advance simulation clock above given clock value"},
          {schedulers,$s,"schedulers",{integer,none},"Set number of online erlang schedulers"},
+         {dump_trace,$t,"dump-trace",undefined,"Dump the trace as a JSON"},
          {replay_trace,$r,"replay-trace",{string, none},"Replay a trace, given as a JSON file"},
          {explore,undefined,"explore",undefined,"Explore different execution paths"},
          {debug,undefined,"debug",{integer,0},"Turn on debug mode when > 0 (model will run much slower; diagnostic output when > 1)"},
@@ -40,7 +41,7 @@ init([]) ->
 start()->
     case init:get_plain_arguments() of
         []->
-            run_mod(?ABSMAINMODULE, false, false, none, none, none, none, none, maps:new());
+            run_mod(?ABSMAINMODULE, false, false, none, none, none, none, none, maps:new(), false);
         Args->
             start(Args)
    end.
@@ -89,6 +90,7 @@ parse(Args,Exec)->
             InfluxdbDB=proplists:get_value(influxdb_db,Parsed),
             InfluxdbEnable=proplists:get_value(influxdb_enable,Parsed, false),
             Schedulers=proplists:get_value(schedulers,Parsed,none),
+            DumpTrace=proplists:get_value(dump_trace,Parsed,false),
             ReplayMode=proplists:get_value(replay_trace,Parsed,none),
             ExploreMode=proplists:get_value(explore,Parsed,false),
             case Schedulers of
@@ -102,16 +104,16 @@ parse(Args,Exec)->
                      erlang:system_flag(schedulers_online,
                                         min(Schedulers, MaxSchedulers))
             end,
-            Trace = case ReplayMode of
-                        none -> maps:new();
-                        FileName ->
-                            {ok, File} = file:read_file(FileName),
-                            modelapi_v2:json_to_trace(File)
-                    end,
+            ReplayTrace = case ReplayMode of
+                              none -> maps:new();
+                              FileName ->
+                                  {ok, File} = file:read_file(FileName),
+                                  modelapi_v2:json_to_trace(File)
+                          end,
             case ExploreMode of
                 true -> dpor:start_link(Module, Clocklimit);
                 false -> run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
-                                 InfluxdbUrl, InfluxdbDB, InfluxdbEnable, Trace)
+                                 InfluxdbUrl, InfluxdbDB, InfluxdbEnable, ReplayTrace, DumpTrace)
             end;
         _ ->
             getopt:usage(?CMDLINE_SPEC,Exec)
@@ -147,7 +149,7 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive, Trace) ->
                                 this=null, destiny=null},
     {ok, cog:add_main_task(Cog,[Module,self()], ProcessInfo)}.
 
-end_mod(TaskRef, InfluxdbEnabled) ->
+end_mod(TaskRef, InfluxdbEnabled, DumpTrace) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
     %% modelapi_v2:print_statistics(),
@@ -160,12 +162,17 @@ end_mod(TaskRef, InfluxdbEnabled) ->
         true -> influxdb:stop();
         _ -> ok
     end,
+    case DumpTrace of
+        true -> JsonTrace = modelapi_v2:get_trace_json(),
+                file:write_file("trace.json", JsonTrace);
+        _ -> ok
+    end,
     cog_monitor:stop(),
     RetVal.
 
 
 run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
-        InfluxdbUrl, InfluxdbDB, InfluxdbEnable, Trace)  ->
+        InfluxdbUrl, InfluxdbDB, InfluxdbEnable, Trace, DumpTrace)  ->
 
     case InfluxdbEnable of
         true -> {ok, _Influxdb} = influxdb:start_link(InfluxdbUrl, InfluxdbDB, Clocklimit);
@@ -178,7 +185,7 @@ run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
             receive ok -> ok end;
         _ ->
             {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, false, Trace),
-            end_mod(R, InfluxdbEnable)
+            end_mod(R, InfluxdbEnable, DumpTrace)
     end.
 
 run_dpor_slave(Module, Clocklimit, Trace) ->

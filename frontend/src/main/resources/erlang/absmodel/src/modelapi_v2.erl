@@ -8,7 +8,7 @@
 
 -export([print_statistics/0]).
 -export([abs_to_json/1]).                % callback from data_constructor_info
--export([json_to_trace/1]).
+-export([json_to_trace/1,get_trace_json/0]).
 
 
 init(Req, _Opts) ->
