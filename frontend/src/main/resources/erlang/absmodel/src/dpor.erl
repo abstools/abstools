@@ -59,7 +59,7 @@ make_predicate_event_equal_without_read_write(Event, Trace) ->
             OtherEventWithoutReadWriteSets = remove_reads_and_writes(OtherEvent),
             EventWithoutReadWriteSets =:= OtherEventWithoutReadWriteSets end.
 
-enabled_by_invocation(InvocationEvent, Trace) ->
+dependent_on_invocation(InvocationEvent, Trace) ->
     CorrespondingScheduleEvent = InvocationEvent#event{type=schedule},
     enables(make_predicate_event_equal_without_read_write(CorrespondingScheduleEvent, Trace), Trace).
 
@@ -67,7 +67,7 @@ await_future_chain(AtomicBlock, Trace) ->
     [_ScheduleEventKey | Rest] = AtomicBlock,
     lists:takewhile(fun(EventKey) -> event_key_type(Trace, EventKey) =:= await_future end, Rest).
 
-make_predicate_atomic_block_is_enabled_by_future_write(FutureWriteEvent, Trace) ->
+make_predicate_atomic_block_is_dependent_on_future_write(FutureWriteEvent, Trace) ->
     CorrespondingAwaitFutureEvent = remove_reads_and_writes(FutureWriteEvent#event{type=await_future}),
     fun(OtherEventKey) ->
             case event_key_type(Trace, OtherEventKey) of
@@ -81,19 +81,19 @@ make_predicate_atomic_block_is_enabled_by_future_write(FutureWriteEvent, Trace) 
             end
     end.
 
-enabled_by_future_write(FutureWriteEvent, Trace) ->
+dependent_on_future_write(FutureWriteEvent, Trace) ->
     CorrespondingFutureReadEvent = FutureWriteEvent#event{type=future_read},
     enables(fun(Event) ->
                     (make_predicate_event_equal_without_read_write(CorrespondingFutureReadEvent, Trace))(Event) orelse
-                    (make_predicate_atomic_block_is_enabled_by_future_write(FutureWriteEvent, Trace))(Event)
+                    (make_predicate_atomic_block_is_dependent_on_future_write(FutureWriteEvent, Trace))(Event)
             end,
             Trace).
 
-enabled_by(EventKey, Trace) ->
+dependent_on(EventKey, Trace) ->
     Event = event_key_to_event(Trace, EventKey),
     case Event#event.type of
-        invocation -> enabled_by_invocation(Event, Trace);
-        future_write -> enabled_by_future_write(Event, Trace);
+        invocation -> dependent_on_invocation(Event, Trace);
+        future_write -> dependent_on_future_write(Event, Trace);
         _ -> []
     end.
 
@@ -104,21 +104,21 @@ atomic_block({Cog, I}, Trace) ->
     lists:map(fun(J) -> {Cog, J} end,
               lists:seq(I, I + length(Block))).
 
-% TODO remove tail recursion if possible
-enabled_by_schedule(ScheduleEventKey, Trace) ->
+dependent_on_schedule(ScheduleEventKey, Trace) ->
     case event_key_type(Trace, ScheduleEventKey) of
         schedule ->
             AtomicBlock = atomic_block(ScheduleEventKey, Trace),
-            EnabledEvents = lists:append(lists:map(fun(EventKey) -> enabled_by(EventKey, Trace) end,
+            DependentEvents = lists:append(lists:map(fun(EventKey) -> dependent_on(EventKey, Trace) end,
                                                    tl(AtomicBlock))),
-            EnabledAtomicBlocks = lists:append(lists:map(fun(EventKey) -> tl(atomic_block(EventKey, Trace)) end,
-                                                         EnabledEvents)),
-            case EnabledAtomicBlocks of
-                [] -> [];
+            % TODO hva om DependentEvents inneholder en future_read?
+            DependentAtomicBlocks = lists:append(lists:map(fun(EventKey) -> tl(atomic_block(EventKey, Trace)) end,
+                                                         DependentEvents)),
+            case DependentAtomicBlocks of
+                [] -> []; % TODO skal denne egentlig returnere tomt resultat?
                 _ -> lists:foldl(fun lists:append/2,
-                                 EnabledEvents,
-                                 lists:map(fun(EventKey) -> enabled_by_schedule(EventKey, Trace) end,
-                                           EnabledAtomicBlocks))
+                                 DependentEvents,
+                                 lists:map(fun(EventKey) -> dependent_on_schedule(EventKey, Trace) end,
+                                           DependentAtomicBlocks))
             end;
         _ -> []
     end.
@@ -143,15 +143,15 @@ update_after_move(Trace, Cog, I, J) ->
                  RestEventKeys = lists:zip(lists:duplicate(RestLen, Cog), lists:seq(J, I)),
                  RestScheduleEventKeys = lists:filter(fun(EK) -> event_key_type(Trace, EK) =:= schedule end,
                                                       RestEventKeys),
-                 EnabledByRest = lists:append(lists:map(fun(EK) -> enabled_by_schedule(EK, Trace) end,
+                 DependentOnRest = lists:append(lists:map(fun(EK) -> dependent_on_schedule(EK, Trace) end,
                                                         RestScheduleEventKeys)),
                  NewLocal = BeforeE2 ++ [E1],
-                 NewTrace = trim_trace(maps:put(Cog, NewLocal, Trace), EnabledByRest),
+                 NewTrace = trim_trace(maps:put(Cog, NewLocal, Trace), DependentOnRest),
                  {true, NewTrace}
     end.
 
 can_be_moved_before(Trace, {Cog, I}, {Cog, J}) ->
-    not lists:member({Cog, I}, enabled_by_schedule({Cog, J}, Trace)).
+    not lists:member({Cog, I}, dependent_on_schedule({Cog, J}, Trace)).
 
 swappable(E1, E2) ->
     not happens_after(E1, E2) andalso conflicts_with(E1, E2).
@@ -221,11 +221,11 @@ new_traces(Trace) ->
 atomic_blocks_to_dpor_traces(Trace, AtomicBlocks) -> atomic_blocks_to_dpor_traces(Trace, AtomicBlocks, []).
 atomic_blocks_to_dpor_traces(_Trace, [], Acc) -> Acc;
 atomic_blocks_to_dpor_traces(Trace, [B | Bs], Acc) ->
-    Enabled = ordsets:from_list(lists:append(lists:map(fun(E) -> enabled_by(E, Trace) end, B))),
+    Dependent = ordsets:from_list(lists:append(lists:map(fun(E) -> dependent_on(E, Trace) end, B))),
     IdentityFunc = fun(X) -> X end,
     NewTraces = lists:filtermap(IdentityFunc,
                                 lists:map(fun(E) -> generate_trace(Trace, E) end,
-                                          ordsets:to_list(Enabled))),
+                                          ordsets:to_list(Dependent))),
     atomic_blocks_to_dpor_traces(Trace, Bs, lists:append(NewTraces, Acc)).
 
 %% Trace prefixes
