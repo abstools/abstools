@@ -151,7 +151,10 @@ update_after_move(Trace, Cog, I, J) ->
     end.
 
 can_be_moved_before(Trace, {Cog, I}, {Cog, J}) ->
-    not lists:member({Cog, I}, dependent_on_schedule({Cog, J}, Trace)).
+    E1 = remove_reads_and_writes(event_key_to_event(Trace, {Cog, I})),
+    E2 = remove_reads_and_writes(event_key_to_event(Trace, {Cog, J})),
+    IsScheduleEventsForSameTask = E1 =:= E2,
+    not lists:member({Cog, I}, dependent_on_schedule({Cog, J}, Trace)) andalso not IsScheduleEventsForSameTask.
 
 swappable(E1, E2) ->
     not happens_after(E1, E2) andalso conflicts_with(E1, E2).
