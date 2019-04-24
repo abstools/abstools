@@ -45,30 +45,30 @@ atomic_blocks(Trace, EventKeys, Acc) ->
     {Block, Ys} = lists:splitwith(fun(E) -> event_key_type(Trace, E) /= schedule end, Xs),
     atomic_blocks(Trace, Ys, [[X | Block] | Acc]).
 
-enables(Pred, Trace) ->
+find_matching_event_keys(Pred, Trace) ->
     EventKeys = trace_to_event_keys(Trace),
     lists:filter(Pred, EventKeys).
 
-remove_reads_and_writes(Event) ->
-    Event#event{reads=ordsets:new(), writes=ordsets:new()}.
+simplify_event(Event) ->
+    Event#event{reads=ordsets:new(), writes=ordsets:new(), time=0.0}.
 
-make_predicate_event_equal_without_read_write(Event, Trace) ->
-    EventWithoutReadWriteSets = remove_reads_and_writes(Event),
+make_predicate_event_equal_simple(Event, Trace) ->
+    SimpleEvent = simplify_event(Event),
     fun(OtherEventKey) ->
             OtherEvent = event_key_to_event(Trace, OtherEventKey),
-            OtherEventWithoutReadWriteSets = remove_reads_and_writes(OtherEvent),
-            EventWithoutReadWriteSets =:= OtherEventWithoutReadWriteSets end.
+            OtherSimpleEvent = simplify_event(OtherEvent),
+            SimpleEvent =:= OtherSimpleEvent end.
 
 dependent_on_invocation(InvocationEvent, Trace) ->
     CorrespondingScheduleEvent = InvocationEvent#event{type=schedule},
-    enables(make_predicate_event_equal_without_read_write(CorrespondingScheduleEvent, Trace), Trace).
+    find_matching_event_keys(make_predicate_event_equal_simple(CorrespondingScheduleEvent, Trace), Trace).
 
 await_future_chain(AtomicBlock, Trace) ->
     [_ScheduleEventKey | Rest] = AtomicBlock,
     lists:takewhile(fun(EventKey) -> event_key_type(Trace, EventKey) =:= await_future end, Rest).
 
 make_predicate_atomic_block_is_dependent_on_future_write(FutureWriteEvent, Trace) ->
-    CorrespondingAwaitFutureEvent = remove_reads_and_writes(FutureWriteEvent#event{type=await_future}),
+    CorrespondingAwaitFutureEvent = simplify_event(FutureWriteEvent#event{type=await_future}),
     fun(OtherEventKey) ->
             case event_key_type(Trace, OtherEventKey) of
                 schedule ->
@@ -76,15 +76,15 @@ make_predicate_atomic_block_is_dependent_on_future_write(FutureWriteEvent, Trace
                     AwaitFutureChainEvents = lists:map(fun(EventKey) -> event_key_to_event(Trace, EventKey) end,
                                                        await_future_chain(AtomicBlock, Trace)),
                     lists:member(CorrespondingAwaitFutureEvent,
-                                 lists:map(fun remove_reads_and_writes/1, AwaitFutureChainEvents));
+                                 lists:map(fun simplify_event/1, AwaitFutureChainEvents));
                 _ -> false
             end
     end.
 
 dependent_on_future_write(FutureWriteEvent, Trace) ->
     CorrespondingFutureReadEvent = FutureWriteEvent#event{type=future_read},
-    enables(fun(Event) ->
-                    (make_predicate_event_equal_without_read_write(CorrespondingFutureReadEvent, Trace))(Event) orelse
+    find_matching_event_keys(fun(Event) ->
+                    (make_predicate_event_equal_simple(CorrespondingFutureReadEvent, Trace))(Event) orelse
                     (make_predicate_atomic_block_is_dependent_on_future_write(FutureWriteEvent, Trace))(Event)
             end,
             Trace).
@@ -151,8 +151,8 @@ update_after_move(Trace, Cog, I, J) ->
     end.
 
 can_be_moved_before(Trace, {Cog, I}, {Cog, J}) ->
-    E1 = remove_reads_and_writes(event_key_to_event(Trace, {Cog, I})),
-    E2 = remove_reads_and_writes(event_key_to_event(Trace, {Cog, J})),
+    E1 = simplify_event(event_key_to_event(Trace, {Cog, I})),
+    E2 = simplify_event(event_key_to_event(Trace, {Cog, J})),
     IsScheduleEventsForSameTask = E1 =:= E2,
     not lists:member({Cog, I}, dependent_on_schedule({Cog, J}, Trace)) andalso not IsScheduleEventsForSameTask.
 
