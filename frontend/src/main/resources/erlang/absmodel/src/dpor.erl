@@ -49,8 +49,11 @@ find_matching_event_keys(Pred, Trace) ->
     EventKeys = trace_to_event_keys(Trace),
     lists:filter(Pred, EventKeys).
 
+remove_reads_and_writes(Event) ->
+    Event#event{reads=ordsets:new(), writes=ordsets:new()}.
+
 simplify_event(Event) ->
-    Event#event{reads=ordsets:new(), writes=ordsets:new(), time=0.0}.
+    (remove_reads_and_writes(Event))#event{time=0.0}.
 
 make_predicate_event_equal_simple(Event, Trace) ->
     SimpleEvent = simplify_event(Event),
@@ -151,13 +154,11 @@ update_after_move(Trace, Cog, I, J) ->
     end.
 
 can_be_moved_before(Trace, {Cog, I}, {Cog, J}) ->
-    E1 = simplify_event(event_key_to_event(Trace, {Cog, I})),
-    E2 = simplify_event(event_key_to_event(Trace, {Cog, J})),
-    IsScheduleEventsForSameTask = E1 =:= E2,
-    not lists:member({Cog, I}, dependent_on_schedule({Cog, J}, Trace)) andalso not IsScheduleEventsForSameTask.
-
-swappable(E1, E2) ->
-    not happens_after(E1, E2) andalso conflicts_with(E1, E2).
+    E1 = remove_reads_and_writes(event_key_to_event(Trace, {Cog, I})),
+    E2 = remove_reads_and_writes(event_key_to_event(Trace, {Cog, J})),
+    SameTask = E1 =:= E2,
+    IsDependent = lists:member({Cog, I}, dependent_on_schedule({Cog, J}, Trace)),
+    not (SameTask orelse IsDependent orelse happens_before(E2, E1)).
 
 move_backwards(Trace, {Cog, I}) ->
     E1 = event_key_to_event(Trace, {Cog, I}),
@@ -167,21 +168,21 @@ move_backwards(Trace, {Cog, I}) ->
     MaybeE2 = lists:dropwhile(fun({Cog, J}) ->
                                       E2 = event_key_to_event(Trace, {Cog, J}),
                                       can_be_moved_before(Trace, {Cog, I}, {Cog, J}) andalso
-                                      not swappable(E1, E2)
+                                      not conflicts_with(E1, E2)
                               end,
                               lists:reverse(ScheduleEventKeysBeforeE1)),
     case MaybeE2 of
         [{Cog, J} | _] ->
             E2 = event_key_to_event(Trace, {Cog, J}),
-            case swappable(E1, E2) and can_be_moved_before(Trace, {Cog, I}, {Cog, J}) of
+            case conflicts_with(E1, E2) andalso can_be_moved_before(Trace, {Cog, I}, {Cog, J}) of
                 true -> update_after_move(Trace, Cog, I, J);
                 false -> false
             end;
         [] -> false
     end.
 
-happens_after(E1, E2) ->
-    E1#event.time > E2#event.time.
+happens_before(E2, E1) ->
+    E2#event.time < E1#event.time.
 
 conflicts_with(E1, E2) ->
     Reads1 = E1#event.reads,
