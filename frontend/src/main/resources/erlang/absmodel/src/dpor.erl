@@ -168,13 +168,13 @@ move_backwards(Trace, {Cog, I}) ->
     MaybeE2 = lists:dropwhile(fun({Cog, J}) ->
                                       E2 = event_key_to_event(Trace, {Cog, J}),
                                       can_be_moved_before(Trace, {Cog, I}, {Cog, J}) andalso
-                                      not conflicts_with(E1, E2)
+                                      not conflicts(E1, E2)
                               end,
                               lists:reverse(ScheduleEventKeysBeforeE1)),
     case MaybeE2 of
         [{Cog, J} | _] ->
             E2 = event_key_to_event(Trace, {Cog, J}),
-            case conflicts_with(E1, E2) andalso can_be_moved_before(Trace, {Cog, I}, {Cog, J}) of
+            case conflicts(E1, E2) andalso can_be_moved_before(Trace, {Cog, I}, {Cog, J}) of
                 true -> update_after_move(Trace, Cog, I, J);
                 false -> false
             end;
@@ -184,7 +184,7 @@ move_backwards(Trace, {Cog, I}) ->
 happens_before(E2, E1) ->
     E2#event.time < E1#event.time.
 
-conflicts_with(E1, E2) ->
+conflicts(E1, E2) ->
     Reads1 = E1#event.reads,
     Writes1 = E1#event.writes,
     Reads2 = E2#event.reads,
