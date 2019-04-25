@@ -153,7 +153,7 @@ update_after_move(Trace, Cog, I, J) ->
                  {true, NewTrace}
     end.
 
-can_be_moved_before(Trace, {Cog, I}, {Cog, J}) ->
+is_legal_move(Trace, {Cog, I}, {Cog, J}) ->
     E1 = remove_reads_and_writes(event_key_to_event(Trace, {Cog, I})),
     E2 = remove_reads_and_writes(event_key_to_event(Trace, {Cog, J})),
     SameTask = E1 =:= E2,
@@ -167,14 +167,14 @@ move_backwards(Trace, {Cog, I}) ->
     ScheduleEventKeysBeforeE1 = lists:filter(fun(EK) -> event_key_type(Trace, EK) =:= schedule end, EventKeysBeforeE1),
     MaybeE2 = lists:dropwhile(fun({Cog, J}) ->
                                       E2 = event_key_to_event(Trace, {Cog, J}),
-                                      can_be_moved_before(Trace, {Cog, I}, {Cog, J}) andalso
+                                      is_legal_move(Trace, {Cog, I}, {Cog, J}) andalso
                                       not conflicts(E1, E2)
                               end,
                               lists:reverse(ScheduleEventKeysBeforeE1)),
     case MaybeE2 of
         [{Cog, J} | _] ->
             E2 = event_key_to_event(Trace, {Cog, J}),
-            case conflicts(E1, E2) andalso can_be_moved_before(Trace, {Cog, I}, {Cog, J}) of
+            case conflicts(E1, E2) andalso is_legal_move(Trace, {Cog, I}, {Cog, J}) of
                 true -> update_after_move(Trace, Cog, I, J);
                 false -> false
             end;
