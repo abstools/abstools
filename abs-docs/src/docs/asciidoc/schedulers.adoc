@@ -40,12 +40,7 @@ def Process earliest_deadline_scheduler(List<Process> queue) =
 
 
 All schedulers must have a result type `Process` and must take an argument of
-type `List<Process>`.
-
-NOTE: Schedulers can have more than one argument; arguments after the
-first one will be filled with the value of object fields of the same
-name at scheduling time.  This feature is currently available in the
-Maude backend only.
+type `List<Process>` as their first argument.
 
 === Processes and Process Attributes
 
@@ -104,4 +99,31 @@ The following example shows how to create a cog with a different scheduler.
 ----
    [Scheduler: randomscheduler(queue)] I instance = new C();
 ----
+
+For schedulers with more than one argument, values for subsequent arguments
+are filled with the value of object fields of the same name current at
+scheduling time.  The object whose fields are used is the first object in a
+cog, i.e., the object created via the `new` expression that created the cog.
+Subseqent objects created in that cog via `new local` cannot influence the
+scheduler.
+
+[source]
+.Example
+----
+module Test;
+import * from ABS.StdLib.Scheduler;
+
+class C {
+  Bool flag = False; <1>
+}
+
+def Process some_scheduler(List<Process> queue, Bool value) = head(queue); <2>
+
+{
+  [Scheduler: some_scheduler(queue, flag)] new C(); <3>
+}
+----
+<1> Here, class `C` defines a field called `flag`
+<2> The scheduler `some_scheduler` has a second argument of type `Bool`
+<3> The current value of field `flag` will used as the second argument to `some_scheduler`
 

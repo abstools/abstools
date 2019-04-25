@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - All classes without `implements` clause now implement the interface `ABS.StdLib.Object`.  This means that for all object references `x`, `x implements Object` will evaluate to true and `x as Object` will not evaluate to `null`.
 
+- Field values can now be passed to custom scheduling functions in the erlang backend.
+
 - The `abslang/absc` docker image now includes the analysis tools `apet`, `cofloco`, `costabs`, `maypar`, `pubs` and `syco`, which only run on the linux platform.
 
 ### Changed
