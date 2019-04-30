@@ -127,13 +127,13 @@ dependent_on_schedule(ScheduleEventKey, Trace) ->
     end.
 
 % TODO only update_with() lowest I?
-trim_trace(Trace, Fat) ->
+trim_trace(Trace, Dependents) ->
     lists:foldl(fun({Cog, I}, T) ->
                     Trim = fun(Schedule) -> lists:sublist(Schedule, I) end,
                     maps:update_with(Cog, Trim, T)
                 end,
                 Trace,
-                Fat).
+                Dependents).
 
 update_after_move(Trace, Cog, I, J) ->
     E2IsMainOrInit = J == 0,
@@ -143,6 +143,7 @@ update_after_move(Trace, Cog, I, J) ->
                  E1 = event_key_to_event(Trace, {Cog, I}),
                  BeforeE2 = lists:sublist(Local, J),
                  RestLen = I - J + 1, % Rest includes E2 and E1
+                 % TODO What about the events that come after E1?
                  RestEventKeys = lists:zip(lists:duplicate(RestLen, Cog), lists:seq(J, I)),
                  RestScheduleEventKeys = lists:filter(fun(EK) -> event_key_type(Trace, EK) =:= schedule end,
                                                       RestEventKeys),
