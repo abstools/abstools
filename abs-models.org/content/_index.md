@@ -30,7 +30,7 @@ data-types.
 
 [The Language Manual](manual/)
 
-[Tutorials]({{%relref "tutorials/_index.md" %}})
+[Tutorials]({{%relref "documentation/tutorials/_index.md" %}})
 
 [Publications]({{%relref "publications/_index.md" %}})
 

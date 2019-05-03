@@ -1,8 +1,11 @@
 ---
 title: "Tutorials"
 date: 2018-03-22T12:21:52+01:00
-weight: 3
+weight: 4
 ---
+
+This page features a list of tutorials for most tools that work with the ABS
+language.
 
 ## Converted Tutorials
 

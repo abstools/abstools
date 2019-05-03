@@ -2,7 +2,7 @@
 title: "Language Tutorial"
 description: "This tutorial gives an overview of the ABS language."
 date: 2018-03-22T12:22:10+01:00
-weight: 2
+weight: 1
 ---
 
 *This tutorial is partially adapted but needs updating to the newest language and tool features*

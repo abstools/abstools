@@ -1,8 +1,9 @@
 ---
-title: "Resources"
+title: "Resource Modeling Tutorial"
 description: "An introduction to time and resource modeling in ABS."
 date: 2017-07-04T09:31:38+02:00
 showDate: false
+weight: 2
 type: post
 draft: false
 ---

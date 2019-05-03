@@ -3,6 +3,7 @@ title: "Resource Analysis with SRA"
 description: "We prototype a static analysis technique that computes upper bounds of virtual machine usages in a dialect of ABS called vml."
 date: 2019-03-31
 showDate: false
+weight: 5
 type: post
 ---
 
