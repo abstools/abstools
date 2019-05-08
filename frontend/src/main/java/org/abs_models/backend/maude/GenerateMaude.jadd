@@ -637,25 +637,15 @@ aspect GenerateMaude {
         stream.print(",\n      Code: ");
         if (getCritical()) stream.print("assign( '.nbcr ; \"+\"( '.nbcr :: \"num\"[1] ) ) ; "); // (Component Model) //
         if (getBlock().getNumStmt() == 0) {
-            stream.print("return( null ) ");
+            stream.print("return( \"ABS.StdLib.Unit\"[ emp ] ) ");
         } else {
             inlist = false;    // value valid for statement emission as well
             for (Stmt stmt : getBlock().getStmts()) {
                 if (inlist) stream.print("; "); else inlist = true;
                 stmt.generateMaude(stream);
             }
-            // KLUDGE (rs 2010-06-15): Emit this for "Unit" methods for
-            // now, since we don't have an empty `return' statement
-            // currently.  Ideally we should flow-analyze where to
-            // insert a dummy return statement for Void methods, and
-            // give warnings about control paths not returning values
-            // otherwise.
-            Access returnType = sig.getReturnType();
-            if (returnType instanceof IdUse
-                && ((IdUse)returnType).getName().equals("Unit"))
-            {
-                stream.print("; ");
-                stream.print("return( null ) ");
+            if (!hasReturnStmt()) {
+                stream.print("; return( \"ABS.StdLib.Unit\"[ emp ] ) ");
             }
         }
         if (getCritical()) stream.print(" ; assign( '.nbcr ; \"-\"( '.nbcr :: \"num\"[1] ) ) "); // (Component Model) //

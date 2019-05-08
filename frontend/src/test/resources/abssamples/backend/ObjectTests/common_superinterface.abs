@@ -1,0 +1,19 @@
+module BackendTest;
+
+interface I { }
+
+interface J { }
+
+class C { }
+
+class D implements I, J { }
+
+{
+    Object o1 = new C();
+    Object o2 = new D();
+    Bool testresult = True;
+    testresult = testresult && (o2 implements Object);
+    testresult = testresult && (o2 as I) != null;
+    testresult = testresult && (o2 as J) != null;
+    println(`testresult: $testresult$`);
+}

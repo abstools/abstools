@@ -6,12 +6,11 @@ package org.abs_models.backend.common;
 
 import java.io.File;
 
+import org.abs_models.backend.BackendTestDriver;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import org.abs_models.backend.BackendTestDriver;
 
 @RunWith(Parameterized.class)
 public class ObjectTests extends SemanticTests {
@@ -223,5 +222,15 @@ public class ObjectTests extends SemanticTests {
     @Test
     public void local_object_synccall_field_param() {
         assertEvalTrue(new File("abssamples/backend/ObjectTests/local_object_synccall_field_param.abs"));
+    }
+    // https://github.com/abstools/abstools/issues/251
+    @Test
+    public void implicit_unit_return() {
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/implicit_unit_return.abs"));
+    }
+    @Test
+    public void common_superinterface() {
+        Assume.assumeTrue("This test only works with downcast support", driver.supportsDowncasting());
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/common_superinterface.abs"));
     }
 }

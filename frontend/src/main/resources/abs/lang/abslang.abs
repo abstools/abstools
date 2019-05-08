@@ -3,6 +3,9 @@ module ABS.StdLib;
 // Scalar datatypes
 export Unit, String, Int, Rat, Float, Bool, Fut, Exception;
 
+// The top interface
+export Object;
+
 // Booleans
 export True, False, and, not;
 
@@ -81,6 +84,8 @@ data Float;                     // builtin
 data Bool = True | False;       // builtin
 data Fut<A>;                    // builtin
 data Exception;                 // builtin
+
+interface Object { }
 
 def Bool and(Bool a, Bool b) = a && b;
 def Bool not(Bool a) = !a;
@@ -1241,8 +1246,6 @@ class Runtime implements Runtime {
     // No generic methods in ABS:
     //ObjectMirror reflect(Any object) { return reflect(object); }
 }
-
-interface Object {}
 
 interface ObjectMirror {
     String getClassName();

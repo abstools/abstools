@@ -1215,12 +1215,13 @@ aspect doPrettyPrinter {
     }
 
     public void IfExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("if ");
+        stream.print("(if ");
         getCondExp().doPrettyPrint(stream, formatter);
         stream.print(" then ");
         getThenExp().doPrettyPrint(stream, formatter);
         stream.print(" else ");
         getElseExp().doPrettyPrint(stream, formatter);
+        stream.print(")");
     }
 
     public void LetExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {

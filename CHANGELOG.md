@@ -3,9 +3,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).  This project does not quite adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) since it does not declare a public API, as mandated in the linked specification.  The patch version number increases when existing models continue running with the new version; the minor version number increases when existing models can be adapted in a straightforward way; the major version number increases when existing models need to be partially or totally rewritten.
 
+
 ## [Unreleased]
 
 ### Added
+
+- All interfaces without `extends` clause now extend the interface `ABS.StdLib.Object`.  This means that it is always possible to write `Object o = x;` with  `x` being a reference to an object of any class.
+
+- All classes without `implements` clause now implement the interface `ABS.StdLib.Object`.  This means that for all object references `x`, `x implements Object` will evaluate to true and `x as Object` will not evaluate to `null`.
+
+- Field values can now be passed to custom scheduling functions in the erlang backend.
+
+- The `abslang/absc` docker image now includes the analysis tools `apet`, `cofloco`, `costabs`, `maypar`, `pubs` and `syco`, which only run on the linux platform.
+
+### Changed
+
+### Removed
+
+### Fixed
+
+
+## [1.8.1] - 2019-03-28
+
+### Added
+
+- The collaboratory (available as a container via the docker hub) now includes the abs website, including the language manual and the tutorials.
+
+### Fixed
+
+- Upgraded the collaboratory container from php 5.6 (unsupported) to php 7.3
+
+- Fixed the SACO and MHP tools in the collaboratory by introducing a backward-compatibility shim class `abs.backend.prolog.PrologBackend`.
+
+## [1.8.0] - 2019-03-26
 
 ### Changed
 
@@ -13,13 +43,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Incompatible change: all options related to software product line checking have been moved to their own subcommand, see the output for `absc checkspl -h`.  The new syntax clarifies that these calculations are not meant to be done at the same time as compiling a model.
 
+- On the erlang backend, `await f?;` now unconditionally suspends the process instead of continuing when the future `f` is ready.  This change makes the semantics more uniform; specifically, the number and location of suspension points of a given process does not depend on whether another process has finished.  (In other words, whether a process would suspend or not was a race condition with another process before this change.)
 
-
-### Removed
-
-### Fixed
-
-## [1.7.0]
+## [1.7.0] - 2019-02-19
 
 ### Added
 
@@ -294,7 +320,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.8.1...HEAD
+[1.8.1]: https://github.com/abstools/abstools/compare/v_1.8.0...v1.8.1
+[1.8.0]: https://github.com/abstools/abstools/compare/v_1.7.0...v1.8.0
 [1.7.0]: https://github.com/abstools/abstools/compare/version_1.6.0...v1.7.0
 [1.6.0]: https://github.com/abstools/abstools/compare/version_1.5.6...version_1.6.0
 [1.5.6]: https://github.com/abstools/abstools/compare/version_1.5.5...version_1.5.6

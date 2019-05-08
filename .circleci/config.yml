@@ -1,3 +1,14 @@
+# The commented-out sections tried to build the docker containers
+# automatically upon release, but we need to upload a new manual to the site
+# repository before generating the collaboratory container anyway, so we’ll do
+# this manually.  I’m leaving in these sections for now as partial
+# documentation on how to do such a thing (although they were never observed
+# working correctly) -- rudi 2019-04-01
+
+# to test configuration changes before committing, see
+# https://circleci.com/docs/2.0/local-cli/ and
+# https://circleci.com/docs/2.0/examples/
+
 version: 2
 jobs:
   build_frontend:
@@ -41,46 +52,46 @@ jobs:
             - build
 
 
-  deploy_frontend:
-    machine: true
-    working_directory: ~/repo/frontend
+  # deploy_frontend:
+  #   machine: true
+  #   working_directory: ~/repo/frontend
 
-    steps:
-      - checkout:
-          path: ~/repo
-      - run: chmod +x ../gradlew
+  #   steps:
+  #     - checkout:
+  #         path: ~/repo
+  #     - run: chmod +x ../gradlew
 
-        # Attach the workspace from the build_frontend job to speed up the Docker build
-      - attach_workspace:
-          at: .
+  #       # Attach the workspace from the build_frontend job to speed up the Docker build
+  #     - attach_workspace:
+  #         at: .
 
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+  #     - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
 
-        # Build and push the absc docker image
-      - run: |
-          VERSION=$(echo $CIRCLE_TAG | grep -oP "\d+\.\d+\.\d+")
-          docker build -f Dockerfile -t abslang/absc:$VERSION ..
-          docker push abslang/absc:$VERSION
+  #       # Build and push the absc docker image
+  #     - run: |
+  #         VERSION=$(echo $CIRCLE_TAG | grep -oP "\d+\.\d+\.\d+")
+  #         docker build -f Dockerfile -t abslang/absc:$VERSION ..
+  #         docker push abslang/absc:$VERSION
 
 
-  deploy_collaboratory:
-    machine: true
-    working_directory: ~/repo
+  # deploy_collaboratory:
+  #   machine: true
+  #   working_directory: ~/repo
 
-    steps:
-      - checkout
+  #   steps:
+  #     - checkout
 
-        # Attach the workspace from the build_frontend job containing the absfrontend.jar
-      - attach_workspace:
-          at: frontend
+  #       # Attach the workspace from the build_frontend job containing the absfrontend.jar
+  #     - attach_workspace:
+  #         at: frontend
 
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+  #     - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
 
-        # Build and push the collaboratory docker image
-      - run: |
-          VERSION=$(echo $CIRCLE_TAG | grep -oP "\d+\.\d+\.\d+")
-          docker build -t abslang/collaboratory:$VERSION .
-          docker push abslang/collaboratory:$VERSION
+  #       # Build and push the collaboratory docker image
+  #     - run: |
+  #         VERSION=$(echo $CIRCLE_TAG | grep -oP "\d+\.\d+\.\d+")
+  #         docker build -t abslang/collaboratory:$VERSION .
+  #         docker push abslang/collaboratory:$VERSION
 
 
 workflows:
@@ -93,19 +104,19 @@ workflows:
               only: /.*/
             branches:
               only: /.*/
-      - deploy_frontend:
-          requires:
-            - build_frontend
-          filters:
-            tags:
-              only: /^v\d+\.\d+\.\d+$/
-            branches:
-              ignore: /.*/
-      - deploy_collaboratory:
-          requires:
-            - build_frontend
-          filters:
-            tags:
-              only: /^v\d+\.\d+\.\d+$/
-            branches:
-              ignore: /.*/
+      # - deploy_frontend:
+      #     requires:
+      #       - build_frontend
+      #     filters:
+      #       tags:
+      #         only: /^v\d+\.\d+\.\d+$/
+      #       branches:
+      #         ignore: /.*/
+      # - deploy_collaboratory:
+      #     requires:
+      #       - build_frontend
+      #     filters:
+      #       tags:
+      #         only: /^v\d+\.\d+\.\d+$/
+      #       branches:
+      #         ignore: /.*/

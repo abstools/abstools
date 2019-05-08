@@ -52,9 +52,9 @@ manual:				## Build the ABS manual
 vagrant:			## Build and start Vagrant virtual machine
 	vagrant up
 
-docker: frontend		## Build collaboratory and absc docker images
-	$(DOCKER) build -t abslang/collaboratory $(ROOT_DIR)
-	$(DOCKER) build -t abslang/absc -f frontend/Dockerfile $(ROOT_DIR)
+docker:				## Build collaboratory and absc docker images
+	$(DOCKER) build -t abslang/collaboratory -f docker/collaboratory.Dockerfile $(ROOT_DIR)
+	$(DOCKER) build -t abslang/absc -f docker/absc.Dockerfile $(ROOT_DIR)
 	@echo "Finished."
 
 run-collaboratory:		## Run the collaboratory on port 8080

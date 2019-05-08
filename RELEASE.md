@@ -62,35 +62,38 @@
   - check the header of `abs-docs/build/asciidoc/html5/index.html`, it should
     contain the new version number
 
-- push release commit (`git push`) and tag (`git push --tags`)
+- push release commit (`git push`)
 
-- upload `absfrontend.jar`
+- update [https://abs-models.org/manual/]: copy the content of
+    `abs-docs/build/asciidoc/html5/` into the `static/manual/` subdirectory of
+    the repository at [https://github.com/abstools/abs-models.org], then
+    redeploy the website
 
-  - github will have created a release at
-    [https://github.com/abstools/abstools/releases] with the source
-    tree archives.  Click "Edit" on the release and drag
-    `frontend/dist/absfrontend.jar` into the area that says "Attach
-    binaries by dropping them here or selecting them.".  (Automating
-    this step would involve handling github API keys, so we keep it
-    manual.)
+- finalize release on github (automating these steps would involve handling
+  github API keys, so we keep it manual.)
 
-- update manual site
+  - push release tag (`git push --tags`) -- this will start the CircleCI
+    docker build, which will download the new version of the website created
+    in the previous step
 
-  - run `deploy.sh` inside the `abs-docs/` subdirectory
+  - upload `absfrontend.jar`: go to
+    [https://github.com/abstools/abstools/releases/tag/vx.y.z].  Click "Edit
+    Tag", drag `frontend/dist/absfrontend.jar` into the area that says "Attach
+    binaries by dropping them here or selecting them." and wait until the
+    upload is complete.  Click the green "Finalize Release" button.
 
 ## Post-release steps
 
 - Send mail to `abs-announce@abs-models.org`, `abs-dev@abs-models.org`
 
-- Check that CircleCI built and uploaded the docker images; otherwise
-  build and upload (in the main `abstools` directory):
-  - `docker build -t abslang/collaboratory:x.y.z .`
+- Build and upload the docker images:
+  - `docker build -t abslang/collaboratory:x.y.z -f docker/collaboratory.Dockerfile .`
+  - `docker build -t abslang/collaboratory:latest -f docker/collaboratory.Dockerfile .`
+  - `docker build -t abslang/absc:x.y.z -f docker/absc.Dockerfile .`
+  - `docker build -t abslang/absc:latest -f docker/absc.Dockerfile .`
   - `docker push abslang/collaboratory:x.y.z`
-  - `docker build -t abslang/collaboratory:latest .`
   - `docker push abslang/collaboratory:latest`
-  - `docker build -t abslang/absc:x.y.z -f frontend/Dockerfile .`
   - `docker push abslang/absc:x.y.z`
-  - `docker build -t abslang/absc:latest -f frontend/Dockerfile .`
   - `docker push abslang/absc:latest`
 
 # Version numbering

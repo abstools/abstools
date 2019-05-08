@@ -1,0 +1,58 @@
+module BackendTest;
+import * from ABS.Scheduler;
+
+def Maybe<Process> find_process_named(String name, List<Process> l) =
+if l == Nil then Nothing
+else if method(head(l)) == name then Just(head(l))
+else find_process_named(name, tail(l));
+
+def Process my_scheduler(List<Process> queue, String name) =
+    let Maybe<Process> p = find_process_named(name, queue) in
+    if isJust(p) then fromJust(p) else head(queue);
+
+interface I {
+    Unit methodToRunFirst();
+    Unit setSuccessTrue();
+    Bool getState();
+}
+
+[Scheduler: my_scheduler(queue, methodToRunFirst)]
+class C implements I {
+    Bool flag = False;
+    String methodToRunFirst = "methodToRunFirst";
+    Bool testresult = False;
+
+    Unit methodToRunFirst() {
+        await flag;
+        testresult = False;
+    }
+    Unit setSuccessTrue() {
+        await flag;
+        testresult = True;
+    }
+    Bool getState() {
+        flag = True;
+        await duration(1, 1);   // guarantees that everything else runs first
+        return testresult;
+    }
+}
+
+{
+    I o = new C();
+    o!methodToRunFirst();
+    o!methodToRunFirst();
+    o!methodToRunFirst();
+    o!methodToRunFirst();
+    o!methodToRunFirst();
+    o!methodToRunFirst();
+    o!methodToRunFirst();
+    o!methodToRunFirst();
+    o!methodToRunFirst();
+    o!methodToRunFirst();
+    o!methodToRunFirst();
+    o!setSuccessTrue();
+    o!methodToRunFirst();
+    o!methodToRunFirst();
+    Bool testresult = await o!getState();
+    println("Result: " + toString(testresult));
+}

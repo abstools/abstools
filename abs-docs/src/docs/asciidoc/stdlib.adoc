@@ -302,11 +302,20 @@ def Unit print(String s)
 [[type-unit]]
 === Unit
 
-Unit is the empty (void) datatype.
+`Unit` is the empty (void) datatype.
 
 ==== Datatypes and Constructors
 
 Both the datatype and the single constructor are named `Unit`.
+
+
+[[type-object]]
+=== Object
+
+`Object` is the standard super-interface.  All interfaces extend this type.
+All object references can be assigned to variables of this type.
+
+The `Object` interface does not specify any methods.
 
 
 [[type-future]]

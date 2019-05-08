@@ -1,6 +1,6 @@
 = ABS Documentation
 ABS Development Team
-{doc-version}, {docDate}
+built on {docDate}
 :doctype: book
 :creator: ABS Development Team
 :lang: en

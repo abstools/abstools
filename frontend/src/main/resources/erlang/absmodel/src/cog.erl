@@ -48,7 +48,9 @@
          references=#{},
          %% Deployment component of cog
          dc=null,
-         %% user-defined scheduler
+         %% User-defined scheduler.  `undefined' or a tuple `{function,
+         %% arglist}', with `arglist' a list of length >= 1 containing 0 or
+         %% more field names and the symbol `queue' (exactly once).
          scheduler=undefined,
          %% Map from pid to process_info structure (see
          %% ../include/abs_types.hrl); updated when token passed.
@@ -63,6 +65,13 @@
          dcs=#{}
         }).
 
+%% The state of the "primary" (i.e., first) object created for a fresh cog,
+%% used for passing field values to a user-defined scheduler.  Currently the
+%% first object’s Oid is always 1 -- see the definition of
+%% `data#object_counter' above and `handle_call/4' branch `new_object_state'
+%% below (called from `object:new/5' via `new_object/3').
+primary_object_state(ObjectStates) ->
+    maps:get(1, ObjectStates).
 
 %%The COG manages all its tasks in a tree task.
 %%
@@ -230,7 +239,7 @@ handle_call(From, {token, R, done, ProcessInfo, _ObjectState}, _StateName,
     NewPolling=gb_sets:del_element(R, Pol),
     NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
     {keep_state, Data#data{process_infos=NewProcessInfos}, {reply, From, ok}};
-handle_call(From, {get_object_state, Oid}, _StateName, Data=#data{object_states=ObjectStates}) ->
+handle_call(From, {get_object_state, Oid}, _StateName, #data{object_states=ObjectStates}) ->
     {keep_state_and_data, {reply, From, maps:get(Oid, ObjectStates, dead)}};
 handle_call(From, {sync_task_with_object, Oid, TaskRef}, _StateName,
            Data=#data{fresh_objects=FreshObjects}) ->
@@ -359,9 +368,24 @@ choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, Ob
                                       TakeNth(Next, N - 1)
                               end) (gb_sets:iterator(Candidates), Index),
                     {Chosen, PollCrashedSet};
-                _ ->
-                    CandidateInfos = lists:map(fun(C) -> maps:get(C, ProcessInfos) end, gb_sets:to_list(Candidates)),
-                    #process_info{pid=Chosen}=Scheduler(#cog{ref=self()}, CandidateInfos, []),
+                {SchedulerFunction, Arglist} ->
+                    MainObjectState=primary_object_state(ObjectStates),
+                    MainObjectClass=object:get_class_from_state(MainObjectState),
+                    %% `CandidateInfos' will be bound to the `queue'
+                    %% parameter.  Note that this code does not assume that
+                    %% `queue' is the first parameter of the scheduler, so
+                    %% we’re ready in case the argument order of schedulers is
+                    %% relaxed.
+                    CandidateInfos = lists:map(fun(C) -> maps:get(C, ProcessInfos) end,
+                                               gb_sets:to_list(Candidates)),
+                    Args = lists:map(fun(Arg) ->
+                                             case Arg of
+                                                 queue -> CandidateInfos;
+                                                 _ -> MainObjectClass:get_val_internal(MainObjectState, Arg)
+                                             end
+                                     end,
+                                     Arglist) ++ [[]],
+                    #process_info{pid=Chosen}=apply(SchedulerFunction, [#cog{ref=self()} | Args]),
                     {Chosen, PollCrashedSet}
             end
     end.
