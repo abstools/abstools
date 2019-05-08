@@ -179,6 +179,15 @@ transitive_conflicts_or_dependent(Trace, Remaining, Added, Acc) ->
     {NewAdded, NewRemaining} = lists:partition(ConflictsWithOrDependentOnAdded, Remaining),
     transitive_conflicts_or_dependent(Trace, NewRemaining, NewAdded, ordsets:union(Acc, ordsets:to_list(NewAdded))).
 
+% Calculate the events in the local trace of Cog between event J and I which {Cog, I} depends on (J < I)
+precursors_between(Trace, Cog, I, J) ->
+    {ok, LocalTrace} = maps:find(Cog, Trace),
+    N = J - I - 1,
+    BetweenKeys = lists:zip(lists:duplicate(N, Cog), lists:seq(J + 1, I - 1)),
+    IsSchedule = fun(K) -> event_key_type(Trace, K) =:= schedule end,
+    IsPrecursor = fun(K) -> IsSchedule(K) andalso lists:member({Cog, I}, dependent_on_schedule(Trace, K)) end,
+    lists:filter(IsPrecursor, BetweenKeys).
+
 maximal_move(Trace, Movable, {Cog, J}) ->
     {ok, LocalTrace} = maps:find(Cog, Trace),
     EventKeysBeforeE2 = lists:reverse(lists:sublist(cog_local_trace_to_event_keys(Cog, LocalTrace), J)),
@@ -197,6 +206,97 @@ maximal_move(Trace, Movable, {Cog, J}) ->
                     [] -> {Cog, J};
                     MovableBeforeE2 -> lists:last(MovableBeforeE2)
                 end
+    end.
+
+event_keys_between(Cog, Start, Stop) ->
+    N = Stop - Start - 1,
+    lists:zip(lists:duplicate(N, Cog), lists:seq(Start + 1, Stop - 1)).
+
+precursors_can_be_moved(Trace, Cog, I, J) ->
+    Between = lists:filter(fun(K) -> event_key_type(Trace, K) =:= schedule end, event_keys_between(Cog, J, I)),
+    F = fun(K, Acc) ->
+                case Acc of
+                    false -> false;
+                    Precursors -> a
+                end
+        end,
+    lists:foldr(F, [], Between),
+    a.
+
+schedule_event_keys_in_range(Trace, Cog, Start, Stop) ->
+    N = Stop - Start + 1,
+    Keys = lists:zip(lists:duplicate(N, Cog), lists:seq(Start, Stop)),
+    IsSchedule = fun(K) -> event_key_type(Trace, K) =:= schedule end,
+    lists:filter(IsSchedule, Keys).
+
+move(Trace, {Cog, I}, {Cog, J}) ->
+    a.
+
+move_backwards4(Trace, {Cog, I}) ->
+    E1 = event_key_to_event(Trace, {Cog, I}),
+    {ok, LocalTrace} = maps:find(Cog, Trace),
+    SchedulesBeforeE1 = schedule_event_keys_in_range(Trace, Cog, 0, I),
+    WithoutInit = lists:droplast(SchedulesBeforeE1),
+    SameTimeSlot = lists:takewhile(fun(K) -> not happens_before(event_key_to_event(Trace, K), E1) end, WithoutInit),
+    find_moves(Trace, {Cog, I}, SameTimeSlot).
+
+find_moves(_, _, []) -> [];
+find_moves(Trace, {Cog, I}, [{Cog, J} | RestSchedules]) ->
+    E1 = event_key_to_event(Trace, {Cog, I}),
+    E2 = event_key_to_event(Trace, {Cog, J}),
+    case conflicts(E1, E2) andalso is_legal_move(Trace, {Cog, I}, {Cog, J}) of
+        false -> find_moves(Trace, {Cog, I}, RestSchedules);
+        true ->
+            Between = schedule_event_keys_in_range(Trace, Cog, J + 1, I - 1),
+            case lists:any(, Between)
+            [move(Trace, {Cog, I}, {Cog, J}) | find_moves(Trace, {Cog, I}, RestSchedules)]
+    end.
+
+move_backwards3(Trace, {Cog, I}) ->
+    E1 = event_key_to_event(Trace, {Cog, I}),
+    {ok, LocalTrace} = maps:find(Cog, Trace),
+    EventKeysBeforeE1 = lists:reverse(lists:sublist(cog_local_trace_to_event_keys(Cog, LocalTrace), I)),
+    ScheduleEventKeysBeforeE1 = lists:filter(fun(EventKey) -> event_key_type(Trace, EventKey) =:= schedule end,
+                                             EventKeysBeforeE1),
+    WithoutInit = lists:droplast(ScheduleEventKeysBeforeE1),
+    SameTimeSlot = lists:takewhile(fun(K) -> not happens_before(event_key_to_event(Trace, K), E1) end,
+                                   WithoutInit),
+    IsInConflictWithE1 = fun(K) -> conflicts(E1, event_key_to_event(Trace, K)) end,
+    case lists:search(IsInConflictWithE1, SameTimeSlot) of
+        false -> false;
+        {value, {Cog, J}} ->
+            IsSchedule = fun(K) -> event_key_type(Trace, K) =:= schedule end,
+            IsPrecursor = fun(K) -> IsSchedule(K) andalso lists:member({Cog, I}, dependent_on_schedule(Trace, K)) end,
+            {Precursors, Rest} = lists:partition(IsPrecursor, event_keys_between(Cog, J, I)),
+
+
+            CantBeMovedBeforeE2 = fun(K) -> not is_legal_move(Trace, K, {Cog, J}) end,
+            case lists:any(CantBeMovedBeforeE2, Precursors) of
+                true -> false;
+                false ->
+                    MovableBlocks = lists:map(fun(K1) ->
+                                                  lists:map(fun(K2) -> event_key_to_event(Trace, K2) end,
+                                                            atomic_block(K1, Trace))
+                                              end,
+                                              Precursors),
+                    AfterE1Len = length(LocalTrace) - I,
+                    AfterE1EventKeys = lists:zip(lists:duplicate(AfterE1Len, Cog), lists:seq(I, I + AfterE1Len - 1)),
+                    AfterE1ScheduleEventKeys = lists:filter(fun(EK) -> event_key_type(Trace, EK) =:= schedule end,
+                                                            AfterE1EventKeys),
+                    Movable = [],
+                    Unmovable = [],
+                    {Cog, K} = maximal_move(Trace, [{Cog, I} | Movable], {Cog, J}),
+                    BeforeE2Len = J - K,
+                    BeforeE2EventKeys = lists:zip(lists:duplicate(BeforeE2Len, Cog), lists:seq(K, K + BeforeE2Len - 1)),
+
+                    Removed = BeforeE2EventKeys ++ [{Cog, J}] ++ Unmovable ++ AfterE1ScheduleEventKeys,
+                    DependentOnRemoved = lists:append(lists:map(fun(K) -> dependent_on_schedule(K, Trace) end,
+                                                      Removed)),
+                    NewLocalTrace = lists:sublist(LocalTrace, K) ++ lists:flatten(MovableBlocks) ++ [E1],
+                    NewTrace = trim_trace(maps:put(Cog, NewLocalTrace, Trace), DependentOnRemoved),
+                    {true, NewTrace}
+
+            end
     end.
 
 move_backwards2(Trace, {Cog, I}) ->
