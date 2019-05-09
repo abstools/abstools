@@ -5,7 +5,7 @@ import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 generate abs "http://www.abs_models.org/xtext/Abs"
 
 CompilationUnit
-    : {CompilationUnit} (module+=ModuleDecl)*
+    : {CompilationUnit} (modules+=ModuleDecl)*
     ;
 
 ModuleDecl
@@ -39,7 +39,7 @@ ModuleImport
 
 AnnotationFragment: (l=TYPE_IDENTIFIER ':')? r=PureExp ;
 
-Annotations: ( '[' a+=AnnotationFragment (',' a+=AnnotationFragment)* ']')* ;
+Annotations: {Annotations} ( '[' a+=AnnotationFragment (',' a+=AnnotationFragment)* ']')* ;
 
 // Declarations
 
@@ -56,7 +56,7 @@ Decl
 
 DataTypeDecl
     : ann=Annotations 'data' name=TYPE_IDENTIFIER
-        ('<' typeparam+=TYPE_IDENTIFIER (',' typeparam+=TYPE_IDENTIFIER)* '>')?
+        ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
         ('=' constructors+=DataConstructorDecl ('|' constructors+=DataConstructorDecl)* )?
         ';'
     ;
@@ -74,7 +74,7 @@ ExceptionDecl
 
 FunctionDecl
     : ann=Annotations 'def' type=TypeUse name=IDENTIFIER
-        ('<' typeparam+=TYPE_IDENTIFIER (',' typeparam+=TYPE_IDENTIFIER)* '>')?
+        ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
         '(' (args+=ParamDecl (',' args+=ParamDecl)* )? ')'
         '=' (builtin?='builtin' | body=PureExp)
         ';'
@@ -82,7 +82,7 @@ FunctionDecl
 
 PartialFunctionDecl
     : ann=Annotations 'def' type=TypeUse name=IDENTIFIER
-        ('<' typeparam+=TYPE_IDENTIFIER (',' typeparam+=TYPE_IDENTIFIER)* '>')?
+        ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
         '(' function_args+=IDENTIFIER (',' function_args+=IDENTIFIER)* ')'
         '(' args+=ParamDecl (',' args+=ParamDecl)* ')'
         '=' body=PureExp
@@ -91,7 +91,7 @@ PartialFunctionDecl
 
 InterfaceDecl
     : ann=Annotations 'interface' name=TYPE_IDENTIFIER
-        ('extends' extends+=QualifiedTypeIdentifier (',' extends+=QualifiedTypeIdentifier)* )?
+        ('extends' superinterfaces+=QualifiedTypeIdentifier (',' superinterfaces+=QualifiedTypeIdentifier)* )?
         '{' (methods+=MethodSignature)* '}'
     ;
 
@@ -104,7 +104,7 @@ MethodSignature
 ClassDecl
     : ann=Annotations 'class' name=TYPE_IDENTIFIER
         ( '(' args+=ParamDecl (',' args+=ParamDecl)* ')' )?
-        ( 'implements' implements+=QualifiedTypeIdentifier (',' implements+=QualifiedTypeIdentifier)* )?
+        ( 'implements' interfaces+=QualifiedTypeIdentifier (',' interfaces+=QualifiedTypeIdentifier)* )?
         '{'
         (fields+=FieldDecl)*
         ( 'recover' '{' (recoverbranches+=CaseStmtBranch)* '}' )?
@@ -159,7 +159,7 @@ ReturnStmt : ann=Annotations 'return' exp=Exp ';' ;
 
 AssertStmt : ann=Annotations 'assert' exp=Exp ';' ;
 
-Block : ann=Annotations '{' (stmt+=Stmt)* '}' ;
+Block : ann=Annotations '{' (stmts+=Stmt)* '}' ;
 
 IfStmt : ann=Annotations 'if' '(' condition=PureExp ')' consequence=Stmt (=>'else' alternate=Stmt) ;
 
@@ -235,7 +235,7 @@ AsyncCallExp : o=PureExp '!' m=IDENTIFIER '(' (args+=PureExp ( ',' args+=PureExp
 
 AwaitAsyncCallExp : 'await' o=PureExp '!' m=IDENTIFIER '(' (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
 
-OriginalCallExp : (( d=TYPE_IDENTIFIER | c?='core' ) '.')? 'original' '(' (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
+OriginalCallExp : {OriginalCallExp} (( d=TYPE_IDENTIFIER | c?='core' ) '.')? 'original' '(' (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
 
 // See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
 
@@ -291,7 +291,7 @@ AtomicExp returns PureExp
     ;
 
 CaseExp
-    : 'case' c=PureExp '{' (casebranch+=CaseExpBranch)* '}'
+    : 'case' c=PureExp '{' (casebranches+=CaseExpBranch)* '}'
     ;
 
 CaseExpBranch
@@ -317,7 +317,7 @@ VariadicFunctionAppExp
 
 PartialFunctionAppExp
     : name=QualifiedIdentifier
-        '(' fnargs+=PartialFunctionParam (',' fnargs+=PartialFunctionParam )* ')'
+        '(' function_args+=PartialFunctionParam (',' function_args+=PartialFunctionParam )* ')'
         '(' (args+=PureExp ( ',' args+=PureExp)* )? ')'
     ;
 
@@ -339,8 +339,8 @@ TemplateStringExp
 
 
 LetExp
-    : 'let' '('? param+=ParamDecl ')'? '=' e+=PureExp
-        (',' '('? param+=ParamDecl ')'? '=' e+=PureExp)*
+    : 'let' '('? variables+=ParamDecl ')'? '=' exps+=PureExp
+        (',' '('? variables+=ParamDecl ')'? '=' exps+=PureExp)*
         'in' body=PureExp
     ;
 
@@ -361,7 +361,7 @@ TypeUse : ann=Annotations type=TypeUseNoAnnotations ;
 // type.
 TypeUseNoAnnotations
     : name=QualifiedTypeIdentifier
-        ('<' param+=TypeUse (',' param+=TypeUse)* '>')?
+        ('<' params+=TypeUse (',' params+=TypeUse)* '>')?
     ;
 
 // Terminals
