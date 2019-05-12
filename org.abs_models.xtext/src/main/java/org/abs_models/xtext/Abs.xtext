@@ -240,7 +240,72 @@ OriginalCallExp : {OriginalCallExp} (( d=TYPE_IDENTIFIER | c?='core' ) '.')? 'or
 // See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
 
 PureExp
-    : OrExp ({PureExp.body=current} op=('implements' | 'as') i=QualifiedTypeIdentifier )?
+    : CaseExp
+    | LetExp
+    | IfExp
+    | FunctionAppExp
+    | VariadicFunctionAppExp
+    | PartialFunctionAppExp
+    | ConstructorAppExp
+    | TemplateStringExp
+    | OrExp ({PureExp.body=current} op=('implements' | 'as') i=QualifiedTypeIdentifier )?
+    ;
+
+CaseExp
+    : 'case' c=PureExp '{' (casebranches+=CaseExpBranch)* '}'
+    ;
+
+CaseExpBranch
+    : p=Pattern '=>' e=PureExp ';'
+    ;
+
+Pattern
+    : {WildcardPattern} '_'
+    | {IntLiteralPattern} value=INTLITERAL
+    | {StringLiteralPatern} value=STRINGLITERAL
+    | {FloatLiteralPattern} value=FLOATLITERAL
+    | {VariablePattern} value=IDENTIFIER
+    | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' args+=Pattern (',' args+=Pattern)* ')' )?
+    ;
+
+LetExp
+    : 'let' '('? variables+=ParamDecl ')'? '=' exps+=PureExp
+        (',' '('? variables+=ParamDecl ')'? '=' exps+=PureExp)*
+        'in' body=PureExp
+    ;
+
+IfExp
+    : 'if' condition=PureExp 'then' consequence=PureExp 'else' alternate=PureExp
+    ;
+
+FunctionAppExp
+    : name=QualifiedIdentifier '(' (args+=PureExp ( ',' args+=PureExp)* )? ')'
+    ;
+
+VariadicFunctionAppExp
+    : name=QualifiedIdentifier '[' (args+=PureExp ( ',' args+=PureExp)* )? ']'
+    ;
+
+PartialFunctionAppExp
+    : name=QualifiedIdentifier
+        '(' function_args+=PartialFunctionParam (',' function_args+=PartialFunctionParam )* ')'
+        '(' (args+=PureExp ( ',' args+=PureExp)* )? ')'
+    ;
+
+PartialFunctionParam
+    : name=QualifiedIdentifier
+    | '(' params+=ParamDecl (',' params+=ParamDecl)* ')' "=>" body=PureExp
+    ;
+
+ConstructorAppExp
+    : name=QualifiedTypeIdentifier ( '(' args+=PureExp ( ',' args+=PureExp)* ')' )?
+    ;
+
+TemplateStringExp
+    : {TemplateStringExp} TEMPLATESTRINGLITERAL
+    | TEMPLATESTRINGSTART e1=PureExp
+        (b+=TEMPLATESTRINGINBETWEEN e+=PureExp)*
+        TEMPLATESTRINGEND
     ;
 
 OrExp returns PureExp
@@ -274,78 +339,12 @@ UnaryExp returns PureExp
 
 AtomicExp returns PureExp
     : '(' PureExp ')'
-    | CaseExp
-    | FunctionAppExp
-    | VariadicFunctionAppExp
-    | PartialFunctionAppExp
-    | ConstructorAppExp
-    | TemplateStringExp
-    | LetExp
-    | IfExp
     | {IntLiteral} value=INTLITERAL
     | {FloatLiteral} value=FLOATLITERAL
     | {StringLiteral} value=STRINGLITERAL
     | VarOrFieldExp
     | {ThisExp} 'this'
     | {NullLiteral} 'null'
-    ;
-
-CaseExp
-    : 'case' c=PureExp '{' (casebranches+=CaseExpBranch)* '}'
-    ;
-
-CaseExpBranch
-    : p=Pattern '=>' e=PureExp ';'
-    ;
-
-Pattern
-    : {WildcardPattern} '_'
-    | {IntLiteralPattern} value=INTLITERAL
-    | {StringLiteralPatern} value=STRINGLITERAL
-    | {FloatLiteralPattern} value=FLOATLITERAL
-    | {VariablePattern} value=IDENTIFIER
-    | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' args+=Pattern (',' args+=Pattern)* ')' )?
-    ;
-
-FunctionAppExp
-    : name=QualifiedIdentifier '(' (args+=PureExp ( ',' args+=PureExp)* )? ')'
-    ;
-
-VariadicFunctionAppExp
-    : name=QualifiedIdentifier '[' (args+=PureExp ( ',' args+=PureExp)* )? ']'
-    ;
-
-PartialFunctionAppExp
-    : name=QualifiedIdentifier
-        '(' function_args+=PartialFunctionParam (',' function_args+=PartialFunctionParam )* ')'
-        '(' (args+=PureExp ( ',' args+=PureExp)* )? ')'
-    ;
-
-PartialFunctionParam
-    : name=QualifiedIdentifier
-    | '(' params+=ParamDecl (',' params+=ParamDecl)* ')' "=>" body=PureExp
-    ;
-
-ConstructorAppExp
-    : name=QualifiedTypeIdentifier ( '(' args+=PureExp ( ',' args+=PureExp)* ')' )?
-    ;
-
-TemplateStringExp
-    : {TemplateStringExp} TEMPLATESTRINGLITERAL
-    | TEMPLATESTRINGSTART e1=PureExp
-        (b+=TEMPLATESTRINGINBETWEEN e+=PureExp)*
-        TEMPLATESTRINGEND
-    ;
-
-
-LetExp
-    : 'let' '('? variables+=ParamDecl ')'? '=' exps+=PureExp
-        (',' '('? variables+=ParamDecl ')'? '=' exps+=PureExp)*
-        'in' body=PureExp
-    ;
-
-IfExp
-    : 'if' condition=PureExp 'then' consequence=PureExp 'else' alternate=PureExp
     ;
 
 VarOrFieldExp returns PureExp
