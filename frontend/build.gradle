@@ -179,10 +179,12 @@ test {
     ignoreFailures=true
     maxParallelForks=project.gradle.startParameter.maxWorkerCount
 
-    // Allow dynamic exclusion of tests (https://blog.jdriven.com/2017/10/run-one-or-exclude-one-test-with-gradle/)
-    // Usage: gradle test -PexcludeTests='**/ErlangModelApiTests*'
+    // Allow dynamic exclusion of tests (based on https://blog.jdriven.com/2017/10/run-one-or-exclude-one-test-with-gradle/)
+    // Usage: gradle test -PexcludeTests='**/ErlangModelApiTests*,**/ErlangExamplesTests*'
     if (project.hasProperty('excludeTests')) {
-        exclude project.property('excludeTests')
+        project.property('excludeTests').split(',').each { 
+            exclude it
+        }
     }
 }
 
