@@ -11,8 +11,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.io.Closeable;
 import java.util.EnumSet;
-
+import java.util.concurrent.TimeUnit;
 import com.google.common.io.Files;
 
 import org.abs_models.ABSTest;
@@ -166,23 +168,35 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         pb.redirectErrorStream(true);
         Process p = pb.start();
 
-        Thread t = new Thread(new TimeoutThread(p));
+        final InputStream is = p.getInputStream();
+        final InputStreamReader isr = new InputStreamReader(is);
+        final BufferedReader br = new BufferedReader(isr);
+
+        Thread t = new Thread(new TimeoutThread(p, new Closeable[]{is, isr, br}));
         t.start();
         // Search for result
-        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        while (true) {
-            String line = br.readLine();
-            if (line == null)
-                break;
-            if (line.startsWith("RES=")) // see `genCode' above
-                val = line.split("=")[1];
+        while (p.isAlive()) { // Abort, if the process died
+            // Only try to read input, if there is something to read. This
+            // ensures that this loop can react to the input being closed by
+            // a timeout.
+            // Since this basically amounts to busy waiting (although there is
+            // a sleep instruction) I am not sure, whether it is the best way
+            // to do it. However, for now it seems to work.
+            if (br.ready()) { 
+                String line = br.readLine();
+                if (line == null)
+                    break;
+                if (line.startsWith("RES=")) // see `genCode' above
+                    val = line.split("=")[1];
+            }
+
+            Thread.sleep(1000); // Wait 1 second before trying again
         }
         int res = p.waitFor();
         t.interrupt();
         if (res != 0)
             return null;
         return val;
-
     }
 
     @Override
@@ -223,18 +237,26 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
 class TimeoutThread implements Runnable {
 
     private final Process p;
+    private final Closeable[] closables;
 
-    public TimeoutThread(Process p) {
+    public TimeoutThread(Process p, Closeable[] closables) {
         super();
         this.p = p;
+        this.closables = closables;
     }
 
     @Override
     public void run() {
         try {
             Thread.sleep(10000);
-            p.destroyForcibly(); // Java >= 1.8
+            p.destroy();
+
+            // close all streams of the process the main thread is reading from
+            for (Closeable c : closables) {
+                c.close();
+            }
         } catch (InterruptedException e) {
-        }
+        } catch (IOException e) {
+        } 
     }
 }
