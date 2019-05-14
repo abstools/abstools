@@ -233,7 +233,7 @@ class TimeoutThread implements Runnable {
     public void run() {
         try {
             Thread.sleep(10000);
-            p.destroy();
+            p.destroyForcibly(); // Java >= 1.8
         } catch (InterruptedException e) {
         }
     }
