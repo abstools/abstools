@@ -784,7 +784,14 @@ public class CreateJastAddASTListener extends ABSBaseListener {
          */
         if (ctx.p.isEmpty()) {
             // normal type use
-            setV(ctx, new UnresolvedTypeUse(ctx.n.getText(), v(ctx.annotations())));
+            // TODO: Replace this hack by a tidy implementation
+            if (ctx.n.getText().equals("Super")) {
+                setV(ctx, new SuperTypeUse(ctx.n.getText(), v(ctx.annotations())));
+            }
+
+            else {
+                setV(ctx, new UnresolvedTypeUse(ctx.n.getText(), v(ctx.annotations())));
+            }
         } else {
             // parametric type use
             ParametricDataTypeUse p
@@ -807,7 +814,14 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     @Override public void exitType_exp(ABSParser.Type_expContext ctx) {
         if (ctx.p.isEmpty()) {
             // normal type use
-            setV(ctx, new UnresolvedTypeUse(ctx.n.getText(), new List<>()));
+            // TODO: Replace this hack by a tidy implementation
+            if (ctx.n.getText().equals("Super")) {
+                setV(ctx, new SuperTypeUse(ctx.n.getText(), new List<>()));
+            }
+
+            else {
+                setV(ctx, new UnresolvedTypeUse(ctx.n.getText(), new List<>()));
+            }
         } else {
             // parametric type use
             ParametricDataTypeUse p

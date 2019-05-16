@@ -397,6 +397,10 @@ aspect GenerateJava {
         // is never called for type-correct programs
     }
 
+    public void SuperTypeDecl.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
     public void TypeSynDecl.generateJava(PrintStream stream) {
         // generate nothing as type synonyms do not appear in the Java outout
     }
@@ -766,6 +770,10 @@ aspect GenerateJava {
 
     public void DataTypeUse.generateJava(PrintStream stream) {
         stream.print(JavaBackend.getJavaType(this));
+    }
+
+    public void SuperTypeUse.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
     }
 
     public void InterfaceTypeUse.generateJava(PrintStream stream) {

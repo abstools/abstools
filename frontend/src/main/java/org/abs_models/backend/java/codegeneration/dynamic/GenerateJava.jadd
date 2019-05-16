@@ -348,6 +348,10 @@ aspect GenerateJavaDynamic_Core {
         // is never called for type-correct programs
     }
 
+    public void SuperTypeDecl.generateJavaDynamic(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
     public void TypeSynDecl.generateJavaDynamic(PrintStream stream) {
         // generate nothing as type synonyms do not appear in the Java outout
     }
@@ -624,6 +628,10 @@ aspect GenerateJavaDynamic_Core {
 
     public void InterfaceTypeUse.generateJavaDynamic(PrintStream stream) {
         stream.print(JavaBackend.getJavaType(this));
+    }
+
+    public void SuperTypeUse.generateJavaDynamic(PrintStream stream) {
+        throw new NotImplementedYetException(this);
     }
 
     public void TypeParameterUse.generateJavaDynamic(PrintStream stream) {

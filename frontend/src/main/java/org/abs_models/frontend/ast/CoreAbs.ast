@@ -49,6 +49,7 @@ PartialFunctionDecl : Decl ::= Annotation* TypeUse Param:ParamDecl* FuncParam:Fu
 ParametricPartialFunctionDecl : PartialFunctionDecl ::= Annotation* TypeParameter:TypeParameterDecl* TypeUse Param:ParamDecl* FuncParam:FunctionParamDecl* PartialFunctionDef ;
 
 UnknownDecl: Decl; // Unknown declarations
+SuperTypeDecl: Decl;
 AmbiguousDecl: UnknownDecl ::= <Alternative:java.util.List<Decl>>;
 ClassDecl: BehaviorDecl ::= Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* TraitUse* [InitBlock] RecoverBranch:CaseBranchStmt* Field:FieldDecl* Method:MethodImpl*;
 FunctionDecl: BehaviorDecl ::= Annotation* TypeUse Param:ParamDecl* FunctionDef ;
@@ -99,6 +100,7 @@ abstract Access: PureExp;
 abstract IdUse: Access ::= <Name>;
 abstract TypeUse: IdUse ::= Annotation*;
 InterfaceTypeUse: TypeUse; // TODO: reconsider hierarchy of expressions?
+SuperTypeUse: TypeUse; // TODO: SuperType does not have any annotations (does it?)
 DataTypeUse: TypeUse;
 ParametricDataTypeUse: DataTypeUse ::= Param:TypeUse* ;
 ExceptionTypeUse: DataTypeUse;
