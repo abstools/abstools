@@ -15,6 +15,7 @@ aspect TypeResolution {
     syn boolean Decl.isDataType() = false;
     syn boolean Decl.isDataConstructor() = false;
     syn boolean Decl.isInterface() = false;
+    syn boolean Decl.isSuperType() = false;
     syn boolean Decl.isTypeSyn() = false;
     syn boolean Decl.isTypeParameter() = false;
     syn boolean Decl.isFuture() = false;
@@ -25,6 +26,7 @@ aspect TypeResolution {
     eq ClassDecl.isClass() = true;
     eq FunctionDecl.isFunction() = true;
     eq InterfaceDecl.isInterface() = true;
+    eq SuperTypeDecl.isSuperType() = true;
     eq DataTypeDecl.isDataType() = true;
     eq DataConstructor.isDataConstructor() = true;
     eq TypeSynDecl.isTypeSyn() = true;
@@ -232,8 +234,14 @@ aspect TypeResolution {
     eq CompilationUnit.getModuleDecl().lookupModule(String name) = lookupModule(name);
     eq Model.getCompilationUnit().lookupModule(String name) = lookupModule(name);
 
-
+    public final static SuperTypeDecl Model.superDecl = new SuperTypeDecl();
     syn lazy Decl Model.lookup(KindedName name) {
+        System.out.println("LOOKING UP " + name.getName()); // TODO: Remove
+        System.out.println(name.toString());
+        if (name.getName().equals("Super")) {
+            return superDecl;
+        }
+
         for (CompilationUnit u : getCompilationUnits()) {
             for (ModuleDecl d : u.getModuleDecls()) {
                 Decl decl = d.lookup(name);
@@ -402,6 +410,17 @@ aspect TypeResolution {
         when (getDecl().isTypeParameter())
         to TypeParameterUse {
             TypeParameterUse tu = new TypeParameterUse(getName(), getAnnotations());
+            tu.setPositionFromNode(this);
+            return tu;
+        }
+        //System.out.println("CHECKING FOR SUPER");
+        //System.out.println(getName());
+        //System.out.println(this.toString());
+        when(getDecl().isSuperType())
+        to SuperTypeUse {
+            // The super-type does not have any annotations.
+            // TODO: Modify ABS.ast to drop annotations for super type
+            SuperTypeUse tu = new SuperTypeUse(getName(), getAnnotations());
             tu.setPositionFromNode(this);
             return tu;
         }
