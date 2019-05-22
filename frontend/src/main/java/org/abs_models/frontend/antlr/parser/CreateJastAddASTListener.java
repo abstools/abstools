@@ -785,8 +785,8 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         if (ctx.p.isEmpty()) {
             // normal type use
             // TODO: Replace this hack by a tidy implementation
-            if (ctx.n.getText().equals("Super")) {
-                setV(ctx, new SuperTypeUse(ctx.n.getText(), v(ctx.annotations())));
+            if (ctx.n.getText().equals("Any")) {
+                setV(ctx, new AnyTypeUse(ctx.n.getText(), v(ctx.annotations())));
             }
 
             else {
@@ -815,8 +815,8 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         if (ctx.p.isEmpty()) {
             // normal type use
             // TODO: Replace this hack by a tidy implementation
-            if (ctx.n.getText().equals("Super")) {
-                setV(ctx, new SuperTypeUse(ctx.n.getText(), new List<>()));
+            if (ctx.n.getText().equals("Any")) {
+                setV(ctx, new AnyTypeUse(ctx.n.getText(), new List<>()));
             }
 
             else {

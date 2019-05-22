@@ -397,7 +397,7 @@ aspect GenerateJava {
         // is never called for type-correct programs
     }
 
-    public void SuperTypeDecl.generateJava(PrintStream stream) {
+    public void AnyTypeDecl.generateJava(PrintStream stream) {
         throw new NotImplementedYetException(this);
     }
 
@@ -772,7 +772,7 @@ aspect GenerateJava {
         stream.print(JavaBackend.getJavaType(this));
     }
 
-    public void SuperTypeUse.generateJava(PrintStream stream) {
+    public void AnyTypeUse.generateJava(PrintStream stream) {
         throw new NotImplementedYetException(this);
     }
 

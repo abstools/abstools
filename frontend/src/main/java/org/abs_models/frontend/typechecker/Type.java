@@ -199,10 +199,6 @@ public abstract class Type {
         return false;
     }
 
-    public boolean isSuperType() {
-        return false;
-    }
-
     public boolean isDeploymentComponentType() {
         return false;
     }
@@ -235,9 +231,6 @@ public abstract class Type {
             throw new IllegalArgumentException("t is null");
 
         if (t.isAnyType())
-            return true;
-
-        if (t.isSuperType())
             return true;
 
         if (this.equals(t))

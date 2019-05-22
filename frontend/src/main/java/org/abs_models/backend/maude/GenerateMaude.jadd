@@ -571,7 +571,7 @@ aspect GenerateMaude {
 		stream.println("--- Unknown declaration " + getName());
 	}
 
-	public void SuperTypeDecl.generateMaude(PrintStream stream) {
+	public void AnyTypeDecl.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getName());
         throw new NotImplementedYetException(this);
 	}

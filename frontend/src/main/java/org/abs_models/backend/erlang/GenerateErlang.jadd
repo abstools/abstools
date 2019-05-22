@@ -250,7 +250,7 @@ aspect GenerateErlang {
   }
 
   public void VarDecl.generateErlangCode(CodeStream ecs,Vars vars, List<Annotation> annotations) {
-    if(getAccess() instanceof TypeParameterUse || getAccess() instanceof InterfaceTypeUse|| getAccess() instanceof DataTypeUse || getAccess() instanceof SuperTypeUse){
+    if(getAccess() instanceof TypeParameterUse || getAccess() instanceof InterfaceTypeUse|| getAccess() instanceof DataTypeUse || getAccess() instanceof AnyTypeUse){
       StringWriter sw = new StringWriter();
       CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
       if(hasInitExp()){

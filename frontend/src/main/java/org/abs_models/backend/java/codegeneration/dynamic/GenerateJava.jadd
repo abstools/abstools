@@ -348,7 +348,7 @@ aspect GenerateJavaDynamic_Core {
         // is never called for type-correct programs
     }
 
-    public void SuperTypeDecl.generateJavaDynamic(PrintStream stream) {
+    public void AnyTypeDecl.generateJavaDynamic(PrintStream stream) {
         throw new NotImplementedYetException(this);
     }
 
@@ -630,7 +630,7 @@ aspect GenerateJavaDynamic_Core {
         stream.print(JavaBackend.getJavaType(this));
     }
 
-    public void SuperTypeUse.generateJavaDynamic(PrintStream stream) {
+    public void AnyTypeUse.generateJavaDynamic(PrintStream stream) {
         throw new NotImplementedYetException(this);
     }
 

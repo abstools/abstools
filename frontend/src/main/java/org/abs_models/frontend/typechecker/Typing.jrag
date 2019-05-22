@@ -110,7 +110,7 @@ aspect Typing {
 
     eq ExceptionDecl.getType() = getModel().getExceptionType();
     eq UnknownDecl.getType() = UnknownType.INSTANCE;
-    eq SuperTypeDecl.getType() = SuperType.INSTANCE;
+    eq AnyTypeDecl.getType() = AnyType.INSTANCE;
     eq AmbiguousDecl.getType() = UnknownType.INSTANCE;
     
     syn Type ConstructorArg.getType();
@@ -223,7 +223,7 @@ aspect Typing {
         return d.getType();
     }
     eq TypeUse.getType() = getDecl().getType().withAnnotations(findAnnotations());
-    eq SuperTypeUse.getType() = SuperType.INSTANCE;
+    eq AnyTypeUse.getType() = AnyType.INSTANCE;
     eq ParametricDataTypeUse.getType() {
         Decl d = getDecl();
         if (d == null || !(d instanceof ParametricDataTypeDecl))
