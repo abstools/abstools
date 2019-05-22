@@ -19,7 +19,7 @@ fragment LETTER : [A-Za-z] ;
 fragment DIGIT : [0-9] ;
 fragment EXPONENT : ('e' | 'E' | 'e+' | 'E+' | 'e-' | 'E-') DIGIT+;
 IDENTIFIER : [a-z] (LETTER | DIGIT | '_')* ;
-TYPE_IDENTIFIER : 'Super' | ([A-Z] (LETTER | DIGIT | '_')*) ;
+TYPE_IDENTIFIER : 'Any' | ([A-Z] (LETTER | DIGIT | '_')*) ;
 INTLITERAL : '0' | [1-9] DIGIT* ;
 FLOATLITERAL : INTLITERAL? '.' DIGIT+ EXPONENT? ;
 STRINGLITERAL
