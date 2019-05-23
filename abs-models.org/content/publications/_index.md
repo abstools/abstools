@@ -30,6 +30,18 @@ This page contains selected research papers on the development and usage of the 
   Journal of Logical and Algebraic Methods in Programming 84(1): 67-91, 2015.  
   DOI: [10.1016/j.jlamp.2014.07.001](http://dx.doi.org/10.1016/j.jlamp.2014.07.001). Download a [preprint](http://einarj.at.ifi.uio.no/Papers/johnsen15jlamp.pdf).
 
+- F. Damiani, R. Hähnle, E. Kamburjan, M. Lienhardt.  
+  *A Unified and Formal Programming Model for Deltas and Traits.*  
+  Proc. 20th International Conference on Fundamental Approaches to Software Engineering (FASE 2017), LNCS 10202. Springer, 2017.  
+  DOI: [10.1007/978-3-662-54494-5_25](https://doi.org/10.1007/978-3-662-54494-5_25).
+
+## Software Product Lines
+
+- F. Damiani, M. Lienhardt, R. Muschevici, I. Schaefer.  
+  *An Extension of the ABS Toolchain with a Mechanism for Type Checking SPLs.*
+  Proc. 13th International Conference on Integrated Formal Methods (IFM 2017), LNCS 10510. Springer, 2017.  
+  DOI: [10.1007/978-3-319-66845-1_8](https://doi.org/10.1007/978-3-319-66845-1_8).
+
 ## Deductive Verification
 
 - C. C. Din, R. Bubel and R. Hähnle.  
