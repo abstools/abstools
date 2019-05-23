@@ -4,6 +4,8 @@
  */
 package org.abs_models.frontend.typechecker;
 
+import org.abs_models.frontend.ast.AnyTypeUse;
+
 public final class AnyType extends Type {
     public static final AnyType INSTANCE = new AnyType();
 
@@ -38,4 +40,7 @@ public final class AnyType extends Type {
         return "Any";
     }
     
+    public AnyTypeUse toUse() {
+        return new AnyTypeUse(getSimpleName(), new org.abs_models.frontend.ast.List<>());
+    }
 }
