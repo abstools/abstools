@@ -107,6 +107,7 @@ ClassDecl
         ( 'implements' interfaces+=QualifiedTypeIdentifier (',' interfaces+=QualifiedTypeIdentifier)* )?
         '{'
         (fields+=FieldDecl)*
+        (initblock=Block)?
         ( 'recover' '{' (recoverbranches+=CaseStmtBranch)* '}' )?
         // (traits+=TraitUsage)*
         (methods+=MethodDecl)*
@@ -161,7 +162,7 @@ AssertStmt : ann=Annotations 'assert' exp=Exp ';' ;
 
 Block : ann=Annotations '{' (stmts+=Stmt)* '}' ;
 
-IfStmt : ann=Annotations 'if' '(' condition=Exp ')' consequence=Stmt (=>'else' alternate=Stmt) ;
+IfStmt : ann=Annotations 'if' '(' condition=Exp ')' consequence=Stmt (=>'else' alternate=Stmt)? ;
 
 WhileStmt : ann=Annotations 'while' '(' condition=Exp ')' body=Stmt ;
 
@@ -204,7 +205,7 @@ ExpStmt : ann=Annotations exp=Exp ';' ;
 
 CaseStmt : ann=Annotations 'switch' condition=Exp '{' (branches+=CaseStmtBranch)* '}' ;
 
-CaseStmtBranch : p=Pattern '=>' body=Exp ';' ;
+CaseStmtBranch : p=Pattern '=>' body=Stmt ;
 
 // Expressions
 
