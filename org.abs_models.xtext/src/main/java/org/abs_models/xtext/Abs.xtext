@@ -203,7 +203,7 @@ MoveCogToStmt : ann=Annotations 'movecogto' target=Exp ';' ;
 
 ExpStmt : ann=Annotations exp=Exp ';' ;
 
-CaseStmt : ann=Annotations 'switch' condition=Exp '{' (branches+=CaseStmtBranch)* '}' ;
+CaseStmt : ann=Annotations 'switch' '(' condition=Exp ')' '{' (branches+=CaseStmtBranch)* '}' ;
 
 CaseStmtBranch : p=Pattern '=>' body=Stmt ;
 
@@ -253,7 +253,7 @@ LetExp returns Exp
     ;
 
 IfExp returns Exp
-    : {IfExp} 'if' condition=Exp 'then' consequence=Exp 'else' alternate=Exp
+    : {IfExp} 'when' condition=Exp 'then' consequence=Exp 'else' alternate=Exp
     ;
 
 FunctionAppExp returns Exp
