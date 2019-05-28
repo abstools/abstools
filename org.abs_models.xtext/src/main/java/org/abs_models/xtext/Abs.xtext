@@ -37,7 +37,7 @@ ModuleImport
 
 // Annotations
 
-AnnotationFragment: (l=TYPE_IDENTIFIER ':')? r=PureExp ;
+AnnotationFragment: (l=TYPE_IDENTIFIER ':')? r=Exp ;
 
 Annotations: {Annotations} ( '[' a+=AnnotationFragment (',' a+=AnnotationFragment)* ']')* ;
 
@@ -76,7 +76,7 @@ FunctionDecl
     : ann=Annotations 'def' type=TypeUse name=IDENTIFIER
         ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
         '(' (args+=ParamDecl (',' args+=ParamDecl)* )? ')'
-        '=' (builtin?='builtin' | body=PureExp)
+        '=' (builtin?='builtin' | body=Exp)
         ';'
     ;
 
@@ -85,7 +85,7 @@ PartialFunctionDecl
         ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
         '(' function_args+=IDENTIFIER (',' function_args+=IDENTIFIER)* ')'
         '(' args+=ParamDecl (',' args+=ParamDecl)* ')'
-        '=' body=PureExp
+        '=' body=Exp
         ';'
     ;
 
@@ -161,11 +161,11 @@ AssertStmt : ann=Annotations 'assert' exp=Exp ';' ;
 
 Block : ann=Annotations '{' (stmts+=Stmt)* '}' ;
 
-IfStmt : ann=Annotations 'if' '(' condition=PureExp ')' consequence=Stmt (=>'else' alternate=Stmt) ;
+IfStmt : ann=Annotations 'if' '(' condition=Exp ')' consequence=Stmt (=>'else' alternate=Stmt) ;
 
-WhileStmt : ann=Annotations 'while' '(' condition=PureExp ')' body=Stmt ;
+WhileStmt : ann=Annotations 'while' '(' condition=Exp ')' body=Stmt ;
 
-ForeachStmt : ann=Annotations 'foreach' '(' var=IDENTIFIER 'in' list=PureExp ')' body=Stmt ;
+ForeachStmt : ann=Annotations 'foreach' '(' var=IDENTIFIER 'in' list=Exp ')' body=Stmt ;
 
 TryCatchFinallyStmt
     : ann=Annotations
@@ -186,77 +186,54 @@ SingleGuard returns Guard
 
 ClaimGuard returns Guard : exp=VarOrFieldExp '?' ;
 
-DurationGuard returns Guard :  'duration' '(' min=PureExp ',' max=PureExp ')' ;
+DurationGuard returns Guard :  'duration' '(' min=Exp ',' max=Exp ')' ;
 
-ExpGuard returns Guard : exp=PureExp ;
+ExpGuard returns Guard : exp=Exp ;
 
 SuspendStmt : ann=Annotations 'suspend' ';' ;
 
-DurationStmt : ann=Annotations 'duration' '(' min=PureExp ',' max=PureExp ')' ;
+DurationStmt : ann=Annotations 'duration' '(' min=Exp ',' max=Exp ')' ;
 
-ThrowStmt : ann=Annotations 'throw' exception=PureExp ';' ;
+ThrowStmt : ann=Annotations 'throw' exception=Exp ';' ;
 
-DieStmt : ann=Annotations 'die' exception=PureExp ';' ;
+DieStmt : ann=Annotations 'die' exception=Exp ';' ;
 
-MoveCogToStmt : ann=Annotations 'movecogto' target=PureExp ';' ;
+MoveCogToStmt : ann=Annotations 'movecogto' target=Exp ';' ;
 
 ExpStmt : ann=Annotations exp=Exp ';' ;
 
-CaseStmt : ann=Annotations 'case' condition=PureExp '{' (branches+=CaseStmtBranch)* '}' ;
+CaseStmt : ann=Annotations 'switch' condition=Exp '{' (branches+=CaseStmtBranch)* '}' ;
 
-CaseStmtBranch : p=Pattern '=>' body=PureExp ';' ;
+CaseStmtBranch : p=Pattern '=>' body=Exp ';' ;
 
 // Expressions
 
+// KLUDGE: I did not manage to express the separation of side-effect and pure
+// expressions in the Xtext parser in the way that antlr4 did it -- having
+// PureExp as prefixes in GetExp, AsyncCallExp and SyncCallExp did not lead to
+// compile-time warnings for these expressions but mis-parsed them
+// nevertheless.
+
 // KLUDGE: the expression grammar fragment is not LL(2) (although
-// PureExp by itself is) -- we turned on backtracking in
+// Exp by itself is) -- we turned on backtracking in
 // `GenerateAbs.mwe2' for now.
+// TODO: check if this is still necessary now that we merged EffExp and PureExp
 Exp
-    : PureExp
-    | EffExp
+    : OrExp
     ;
 
-EffExp
-    : GetExp
-    | NewExp
-    | SyncCallExp
-    | AsyncCallExp
-    | AwaitAsyncCallExp
-    | OriginalCallExp
-    ;
+NewExp : {NewExp} 'new' (hasLocal?='local')? c=QualifiedTypeIdentifier '('  (args+=Exp ( ',' args+=Exp)* )? ')' ;
 
-GetExp : future=PureExp '.get' ;
-
-NewExp : 'new' (hasLocal?='local')? c=QualifiedTypeIdentifier '('  (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
-
-SyncCallExp : o=PureExp '.' m=IDENTIFIER '(' (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
-
-AsyncCallExp : o=PureExp '!' m=IDENTIFIER '(' (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
-
-AwaitAsyncCallExp : 'await' o=PureExp '!' m=IDENTIFIER '(' (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
-
-OriginalCallExp : {OriginalCallExp} (( d=TYPE_IDENTIFIER | c?='core' ) '.')? 'original' '(' (args+=PureExp ( ',' args+=PureExp)* )? ')' ;
+OriginalCallExp : {OriginalCallExp} (( d=TYPE_IDENTIFIER | c?='core' ) '.')? 'original' '(' (args+=Exp ( ',' args+=Exp)* )? ')' ;
 
 // See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
 
-PureExp
-    : CaseExp
-    | LetExp
-    | IfExp
-    | FunctionAppExp
-    | VariadicFunctionAppExp
-    | PartialFunctionAppExp
-    | ConstructorAppExp
-    | TemplateStringExp
-    | OrExp ({PureExp.body=current} op=('implements' | 'as') i=QualifiedTypeIdentifier )?
-    ;
-
-CaseExp
-    : 'case' c=PureExp '{' (casebranches+=CaseExpBranch)* '}'
+CaseExp returns Exp
+    : {CaseExp} 'case' c=Exp '{' (casebranches+=CaseExpBranch)* '}'
     ;
 
 CaseExpBranch
-    : p=Pattern '=>' e=PureExp ';'
+    : p=Pattern '=>' e=Exp ';'
     ;
 
 Pattern
@@ -268,78 +245,106 @@ Pattern
     | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' args+=Pattern (',' args+=Pattern)* ')' )?
     ;
 
-LetExp
-    : 'let' '('? variables+=ParamDecl ')'? '=' exps+=PureExp
-        (',' '('? variables+=ParamDecl ')'? '=' exps+=PureExp)*
-        'in' body=PureExp
+LetExp returns Exp
+    : {LetExp} 'let' '('? variables+=ParamDecl ')'? '=' exps+=Exp
+        (',' '('? variables+=ParamDecl ')'? '=' exps+=Exp)*
+        'in' body=Exp
     ;
 
-IfExp
-    : 'if' condition=PureExp 'then' consequence=PureExp 'else' alternate=PureExp
+IfExp returns Exp
+    : {IfExp} 'if' condition=Exp 'then' consequence=Exp 'else' alternate=Exp
     ;
 
-FunctionAppExp
-    : name=QualifiedIdentifier '(' (args+=PureExp ( ',' args+=PureExp)* )? ')'
+FunctionAppExp returns Exp
+    : {FunctionAppExp} name=QualifiedIdentifier '(' (args+=Exp ( ',' args+=Exp)* )? ')'
     ;
 
-VariadicFunctionAppExp
-    : name=QualifiedIdentifier '[' (args+=PureExp ( ',' args+=PureExp)* )? ']'
+VariadicFunctionAppExp returns Exp
+    : {VariadicFunctionAppExp} name=QualifiedIdentifier '[' (args+=Exp ( ',' args+=Exp)* )? ']'
     ;
 
-PartialFunctionAppExp
-    : name=QualifiedIdentifier
+PartialFunctionAppExp returns Exp
+    : {PartialFunctionAppExp} name=QualifiedIdentifier
         '(' function_args+=PartialFunctionParam (',' function_args+=PartialFunctionParam )* ')'
-        '(' (args+=PureExp ( ',' args+=PureExp)* )? ')'
+        '(' (args+=Exp ( ',' args+=Exp)* )? ')'
     ;
 
 PartialFunctionParam
     : name=QualifiedIdentifier
-    | '(' params+=ParamDecl (',' params+=ParamDecl)* ')' "=>" body=PureExp
+    | '(' params+=ParamDecl (',' params+=ParamDecl)* ')' "=>" body=Exp
     ;
 
-ConstructorAppExp
-    : name=QualifiedTypeIdentifier ( '(' args+=PureExp ( ',' args+=PureExp)* ')' )?
+ConstructorAppExp returns Exp
+    : {ConstructorAppExp} name=QualifiedTypeIdentifier ( '(' args+=Exp ( ',' args+=Exp)* ')' )?
     ;
 
-TemplateStringExp
+TemplateStringExp returns Exp
     : {TemplateStringExp} TEMPLATESTRINGLITERAL
-    | TEMPLATESTRINGSTART e1=PureExp
-        (b+=TEMPLATESTRINGINBETWEEN e+=PureExp)*
+    | TEMPLATESTRINGSTART e1=Exp
+        (b+=TEMPLATESTRINGINBETWEEN e+=Exp)*
         TEMPLATESTRINGEND
     ;
 
-OrExp returns PureExp
+OrExp returns Exp
     : AndExp ({OrExp.left=current} '||' right=AndExp)*
     ; // left-assoc
 
-AndExp returns PureExp
+AndExp returns Exp
     : EqExp ({AndExp.left=current} '&&' right=EqExp)*
     ; // left-assoc
 
-EqExp returns PureExp
+EqExp returns Exp
     : CompareExp ({EqExp.left=current} op=('==' | '!=') right=CompareExp)?
     ; // non-assoc
 
-CompareExp returns PureExp
+CompareExp returns Exp
     : PlusMinusExp ({CompareExp.left=current} op=('<' | '>' | '<=' | '>=') right=PlusMinusExp)?
     ; // non-assoc
 
-PlusMinusExp returns PureExp
+PlusMinusExp returns Exp
     : MulDivModExp ({PlusMinusExp.left=current} op=('+' | '-') right=MulDivModExp)*
     ; // left-assoc
 
-MulDivModExp returns PureExp
+MulDivModExp returns Exp
     : UnaryExp ({MulDivExp.left=current} op=('*' | '/' | '%') right=UnaryExp)*
     ; // left-assoc
 
-UnaryExp returns PureExp
+UnaryExp returns Exp
     : op=('!' | '-' | '+') body=UnaryExp
+    | MethodCallExp
+    ;
+
+MethodCallExp returns Exp
+    : {MethodCallExp} await='await'? o=ConversionExp op=('!' | '.') m=IDENTIFIER '(' (args+=Exp ( ',' args+=Exp)* )? ')'
+    | GetExp
+    ;
+
+GetExp returns Exp
+    : {GetExp} future=PrimaryExp '.get'
+    | ConversionExp
+    ;
+
+ConversionExp returns Exp
+    : PrimaryExp ({ConversionExp.body=current} op=('implements' | 'as') i=QualifiedTypeIdentifier )?
+    ;
+
+PrimaryExp returns Exp
+    :  '(' Exp ')'
+    | NewExp
+    | OriginalCallExp
+    | CaseExp
+    | LetExp
+    | IfExp
+    | FunctionAppExp
+    | VariadicFunctionAppExp
+    | PartialFunctionAppExp
+    | ConstructorAppExp
+    | TemplateStringExp
     | AtomicExp
     ;
 
-AtomicExp returns PureExp
-    : '(' PureExp ')'
-    | {IntLiteral} value=INTLITERAL
+AtomicExp returns Exp
+    : {IntLiteral} value=INTLITERAL
     | {FloatLiteral} value=FLOATLITERAL
     | {StringLiteral} value=STRINGLITERAL
     | VarOrFieldExp
@@ -347,7 +352,7 @@ AtomicExp returns PureExp
     | {NullLiteral} 'null'
     ;
 
-VarOrFieldExp returns PureExp
+VarOrFieldExp returns Exp
     : {VarOrFieldExp} (hasThis?='this' '.')? name=IDENTIFIER
     ;
 
