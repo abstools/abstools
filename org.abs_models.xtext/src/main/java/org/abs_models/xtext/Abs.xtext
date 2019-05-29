@@ -172,7 +172,7 @@ TryCatchFinallyStmt
     : ann=Annotations
         'try' body=Stmt
         'catch' (( '{' (branches+=CaseStmtBranch)* '}') | branches+=CaseStmtBranch)
-        ('finally' finally=Stmt)?
+        (=> 'finally' finally=Stmt)?
     ;
 
 AwaitStmt : ann=Annotations 'await' guard=Guard ';' ;
