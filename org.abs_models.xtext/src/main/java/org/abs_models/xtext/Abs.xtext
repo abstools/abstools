@@ -223,9 +223,9 @@ Exp
     : OrExp
     ;
 
-NewExp : {NewExp} 'new' (hasLocal?='local')? c=QualifiedTypeIdentifier '('  (args+=Exp ( ',' args+=Exp)* )? ')' ;
+NewExp returns Exp : {NewExp} 'new' (hasLocal?='local')? c=QualifiedTypeIdentifier '('  (args+=Exp ( ',' args+=Exp)* )? ')' ;
 
-OriginalCallExp : {OriginalCallExp} (( d=TYPE_IDENTIFIER | c?='core' ) '.')? 'original' '(' (args+=Exp ( ',' args+=Exp)* )? ')' ;
+OriginalCallExp returns Exp : {OriginalCallExp} (( d=TYPE_IDENTIFIER | c?='core' ) '.')? 'original' '(' (args+=Exp ( ',' args+=Exp)* )? ')' ;
 
 // See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
 
@@ -281,7 +281,7 @@ ConstructorAppExp returns Exp
 
 TemplateStringExp returns Exp
     : {TemplateStringExp} TEMPLATESTRINGLITERAL
-    | TEMPLATESTRINGSTART e1=Exp
+    | {TemplateStringExp} TEMPLATESTRINGSTART e1=Exp
         (b+=TEMPLATESTRINGINBETWEEN e+=Exp)*
         TEMPLATESTRINGEND
     ;
@@ -311,7 +311,7 @@ MulDivModExp returns Exp
     ; // left-assoc
 
 UnaryExp returns Exp
-    : op=('!' | '-' | '+') body=UnaryExp
+    : {UnaryExp} op=('!' | '-' | '+') body=UnaryExp
     | MethodCallExp
     ;
 
