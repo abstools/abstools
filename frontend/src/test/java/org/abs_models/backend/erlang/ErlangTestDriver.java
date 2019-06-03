@@ -168,30 +168,35 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         pb.redirectErrorStream(true);
         Process p = pb.start();
 
-        final InputStream is = p.getInputStream();
-        final InputStreamReader isr = new InputStreamReader(is);
-        final BufferedReader br = new BufferedReader(isr);
+        try ( // try-with-resources statement, which will ensure, that the declared resources are closed
+            InputStream is = p.getInputStream();
+            InputStreamReader isr = new InputStreamReader(is);
+            BufferedReader br = new BufferedReader(isr)
+        ) {
+            final TimeoutThread tt = new TimeoutThread(p);
+            final Thread t = new Thread(tt);
+            t.start();
+            // Search for result
+            while (!tt.hasBeenAborted()) {
+                // Only try to read input, if there is something to read. This
+                // ensures that this loop can react to the test being aborted by
+                // a timeout.
+                // Since this basically amounts to busy waiting (although there is
+                // a sleep instruction) I am not sure, whether it is the best way
+                // to do it. However, for now it seems to work.
+                if (br.ready()) { 
+                    final String line = br.readLine();
+                    if (line == null)
+                        break;
+                    if (line.startsWith("RES=")) // see `genCode' above
+                        val = line.split("=")[1];
+                        break; // there is no point to continue the loop, if the result has been retrieved.
+                }
 
-        Thread t = new Thread(new TimeoutThread(p, new Closeable[]{is, isr, br}));
-        t.start();
-        // Search for result
-        while (p.isAlive()) { // Abort, if the process died
-            // Only try to read input, if there is something to read. This
-            // ensures that this loop can react to the input being closed by
-            // a timeout.
-            // Since this basically amounts to busy waiting (although there is
-            // a sleep instruction) I am not sure, whether it is the best way
-            // to do it. However, for now it seems to work.
-            if (br.ready()) { 
-                String line = br.readLine();
-                if (line == null)
-                    break;
-                if (line.startsWith("RES=")) // see `genCode' above
-                    val = line.split("=")[1];
+                Thread.sleep(1000); // Wait 1 second before trying again
             }
-
-            Thread.sleep(1000); // Wait 1 second before trying again
         }
+
         int res = p.waitFor();
         t.interrupt();
         if (res != 0)
@@ -237,26 +242,28 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
 class TimeoutThread implements Runnable {
 
     private final Process p;
-    private final Closeable[] closables;
+    private boolean aborted = false;
 
-    public TimeoutThread(Process p, Closeable[] closables) {
+    public TimeoutThread(Process p) {
         super();
         this.p = p;
-        this.closables = closables;
     }
 
     @Override
     public void run() {
         try {
-            Thread.sleep(10000);
-            p.destroy();
+            Thread.sleep(10000); // 10 second timeout before aborting the test (which for example can happen in the case of a deadlock test)
 
-            // close all streams of the process the main thread is reading from
-            for (Closeable c : closables) {
-                c.close();
+            if (p.isAlive()) { // If the test is still running by now, terminate it
+                p.destroyForcibly();
+                hasBeenAborted = true; // record, that the test has not stopped by itself.
             }
         } catch (InterruptedException e) {
         } catch (IOException e) {
         } 
+    }
+
+    public boolean hasBeenBorted() {
+        return this.aborted;
     }
 }
