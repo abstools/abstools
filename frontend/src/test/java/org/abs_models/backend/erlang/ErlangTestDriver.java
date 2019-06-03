@@ -168,13 +168,14 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         pb.redirectErrorStream(true);
         Process p = pb.start();
 
+        final TimeoutThread tt = new TimeoutThread(p);
+        final Thread t = new Thread(tt);
+
         try ( // try-with-resources statement, which will ensure, that the declared resources are closed
             InputStream is = p.getInputStream();
             InputStreamReader isr = new InputStreamReader(is);
             BufferedReader br = new BufferedReader(isr)
         ) {
-            final TimeoutThread tt = new TimeoutThread(p);
-            final Thread t = new Thread(tt);
             t.start();
             // Search for result
             while (!tt.hasBeenAborted()) {
@@ -256,14 +257,13 @@ class TimeoutThread implements Runnable {
 
             if (p.isAlive()) { // If the test is still running by now, terminate it
                 p.destroyForcibly();
-                hasBeenAborted = true; // record, that the test has not stopped by itself.
+                this.aborted = true; // record, that the test has not stopped by itself.
             }
         } catch (InterruptedException e) {
-        } catch (IOException e) {
         } 
     }
 
-    public boolean hasBeenBorted() {
+    public boolean hasBeenAborted() {
         return this.aborted;
     }
 }
