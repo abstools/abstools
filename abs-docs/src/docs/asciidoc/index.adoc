@@ -10,30 +10,30 @@ built on {docDate}
 :imagesdir: images
 :front-cover-image: image:Title_logo.png[width=1050,height=1600]
 
-include::introduction.adoc[]
+include::{includedir}/introduction.adoc[]
 
-include::lexical.adoc[]
+include::{includedir}/lexical.adoc[]
 
-include::types.adoc[]
+include::{includedir}/types.adoc[]
 
-include::functional.adoc[]
+include::{includedir}/functional.adoc[]
 
-include::imperative.adoc[]
+include::{includedir}/imperative.adoc[]
 
-include::oo.adoc[]
+include::{includedir}/oo.adoc[]
 
-include::modules.adoc[]
+include::{includedir}/modules.adoc[]
 
-include::stdlib.adoc[]
+include::{includedir}/stdlib.adoc[]
 
-include::modelapi.adoc[]
+include::{includedir}/modelapi.adoc[]
 
-include::timed.adoc[]
+include::{includedir}/timed.adoc[]
 
-include::schedulers.adoc[]
+include::{includedir}/schedulers.adoc[]
 
-include::deployment.adoc[]
+include::{includedir}/deployment.adoc[]
 
-include::feature-modeling.adoc[]
+include::{includedir}/feature-modeling.adoc[]
 
-include::backends.adoc[]
+include::{includedir}/backends.adoc[]
