@@ -138,6 +138,7 @@ task plainJar(type: Copy, dependsOn: jar) {
 clean {
     delete 'dist/'
 }
+assemble.dependsOn plainJar
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
@@ -170,9 +171,14 @@ task copyScripts(type: Copy) {
 clean {
     delete 'bin/'
 }
-
-assemble.dependsOn plainJar
 assemble.dependsOn copyScripts
+
+task generateAutocomplete(type: JavaExec) {
+    main = 'picocli.AutoComplete'
+    classpath = sourceSets.main.runtimeClasspath
+    args = [ '--force', '--completionScript', 'bin/bash/absc_completion.sh', 'org.abs_models.Absc' ]
+}
+assemble.dependsOn generateAutocomplete
 
 // test
 test {
