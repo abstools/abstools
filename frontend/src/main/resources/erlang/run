@@ -1,10 +1,10 @@
 #!/bin/bash
 
-script=`realpath "$0"`
-codepaths=$(find "`dirname "$script"`" -name "ebin" -type d -print0 \
+scriptpath="$( cd "$(dirname "$0")" ; pwd -P )"
+codepaths=$(find "$scriptpath" -name "ebin" -type d -print0 \
                  | xargs -0 printf '%s","' | sed 's/","$//g')
 
-tmpfile=`mktemp`
+tmpfile=$(mktemp)
 
 (
     echo "#!/usr/bin/env escript"
