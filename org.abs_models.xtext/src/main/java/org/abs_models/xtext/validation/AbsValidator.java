@@ -3,6 +3,13 @@
  */
 package org.abs_models.xtext.validation;
 
+import org.abs_models.xtext.abs.Exp;
+import org.abs_models.xtext.abs.GetExp;
+import org.abs_models.xtext.abs.MethodCallExp;
+import org.abs_models.xtext.abs.NewExp;
+import org.abs_models.xtext.abs.OriginalCallExp;
+import org.abs_models.xtext.abs.Stmt;
+import org.eclipse.xtext.validation.Check;
 
 /**
  * This class contains custom validation rules. 
@@ -10,16 +17,30 @@ package org.abs_models.xtext.validation;
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 public class AbsValidator extends AbstractAbsValidator {
-	
-//	public static final INVALID_NAME = 'invalidName'
-//
-//	@Check
-//	public void checkGreetingStartsWithCapital(Greeting greeting) {
-//		if (!Character.isUpperCase(greeting.getName().charAt(0))) {
-//			warning("Name should start with a capital",
-//					AbsPackage.Literals.GREETING__NAME,
-//					INVALID_NAME);
-//		}
-//	}
-	
+
+    @Check
+    public void checkNoSideEffectSubExpression(Exp e) {
+        if (e instanceof GetExp
+            || e instanceof OriginalCallExp
+            || e instanceof MethodCallExp
+            || e instanceof NewExp) {
+
+            boolean container_is_stmt = e.eContainer() instanceof Stmt;
+            if(!container_is_stmt) {
+                error("A side-effect expression cannot be a sub-expression",
+                      e.eContainer(), e.eContainingFeature());
+            }
+        }
+    }
+
+    // public static final INVALID_NAME = 'invalidName';
+
+    // @Check
+    // public void checkGreetingStartsWithCapital(Greeting greeting) {
+    //     if (!Character.isUpperCase(greeting.getName().charAt(0))) {
+    //         warning("Name should start with a capital",
+    //                 AbsPackage.Literals.GREETING__NAME,
+    //                 INVALID_NAME);
+    //     }
+    // }
 }
