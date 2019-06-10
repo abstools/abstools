@@ -187,11 +187,14 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
                 // to do it. However, for now it seems to work.
                 if (br.ready()) { 
                     final String line = br.readLine();
-                    if (line == null)
+                    if (line == null) {
                         break;
-                    if (line.startsWith("RES=")) // see `genCode' above
+                    }
+
+                    else if (line.startsWith("RES=")) { // see `genCode' above
                         val = line.split("=")[1];
                         break; // there is no point to continue the loop, if the result has been retrieved.
+                    }
                 }
 
                 Thread.sleep(1000); // Wait 1 second before trying again
