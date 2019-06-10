@@ -78,6 +78,15 @@ aspect VarUsage {
 		return res;
 	}
 
+    // List literals may contain for example VarUses
+    eq ListLiteral.getFreeVars() {
+		final HashSet<String> res = new HashSet<String>();
+        for (PureExp e : getPureExps()) {
+            res.addAll(e.getFreeVars());
+        }
+        return res;
+    }
+
 	eq Call.getFreeVars() {
 		HashSet<String> res = new HashSet<String>();
 		res.addAll(getCallee().getFreeVars());
