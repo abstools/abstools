@@ -389,11 +389,11 @@ terminal DIGIT : '0'..'9' ;
 // But if we use a datatype rule, 'e' and 'E' become reserved words and,
 // hence, unavailable as variable names.  Just be careful to define floats
 // before ints so they don't get shadowed by the greedy lexer.
-terminal FLOATLITERAL returns ecore::EFloat
+terminal FLOATLITERAL returns ecore::EDouble
     : DIGIT* '.' DIGIT+ (("e" | "E" | "e+" | "E+" | "e-" | "E-") DIGIT+)?
     ;
 
-terminal INTLITERAL returns ecore::EInt : DIGIT+ ;
+terminal INTLITERAL returns ecore::EBigInteger : DIGIT+ ;
 
 terminal STRINGLITERAL
     : '"' ( '\\' ('"' | '\\' | 't' | 'n' | 'r') | !('"' | '\\'))* '"'
