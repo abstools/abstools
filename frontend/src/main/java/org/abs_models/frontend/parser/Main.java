@@ -54,7 +54,9 @@ import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import org.abs_models.xtext.AbsStandaloneSetup;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.xtext.diagnostics.Severity;
 import org.eclipse.xtext.resource.XtextResource;
 import org.eclipse.xtext.resource.XtextResourceSet;
 import org.eclipse.xtext.util.CancelIndicator;
@@ -84,12 +86,6 @@ public class Main {
     }
 
     public int mainMethod(Absc arguments) {
-        try {
-            parseXtext(arguments.files);
-        } catch (IOException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
         int result = 0;
         boolean done = false;
         this.arguments = arguments;
@@ -184,31 +180,79 @@ public class Main {
             throw new IllegalArgumentException("Please provide at least one input file");
         }
 
-        java.util.List<CompilationUnit> units = new ArrayList<>();
+        // TODO parse not only files but also directories and package files
 
-        for (File f : fileNames) {
-            if (!f.canRead()) {
-                throw new IllegalArgumentException("File "+f+" cannot be read");
+        // TODO document abs package files (this involves finding out what they do)
+
+                // https://typefox.io/how-and-why-use-xtext-without-the-ide
+        // (outdated) and
+        // https://stackoverflow.com/questions/47110291/xtext-standalone-and-validation
+        // and
+        // https://www.eclipse.org/Xtext/documentation/302_configuration.html#dependency-injection
+
+        // obtain a resourceset from the injector
+        XtextResourceSet resourceSet = absinjector.getInstance(XtextResourceSet.class);
+
+        // load the standard library
+        resourceSet.createResource(org.eclipse.emf.common.util.URI.createURI(Main.class.getClassLoader().getResource(ABS_STD_LIB).toString()))
+            .load(null);
+        for (File file : fileNames) {
+            resourceSet.createResource(org.eclipse.emf.common.util.URI.createFileURI(file.toString()))
+                .load(null);
+        }
+        boolean hasErrors = false;
+        for (Resource r : resourceSet.getResources()) {
+            IResourceValidator validator = ((XtextResource)r).getResourceServiceProvider().getResourceValidator();
+            java.util.List<Issue> issues = validator.validate(r, org.eclipse.xtext.validation.CheckMode.ALL, CancelIndicator.NullImpl);
+            for (Issue issue : issues) {
+                if (issue.getSeverity() == Severity.ERROR) hasErrors = true;
+                String filename = issue.getUriToProblem().toFileString();
+                if (filename == null) filename = UNKNOWN_FILENAME;
+                System.out.println(filename
+                                   + ":" + issue.getLineNumber()
+                                   + ":" + issue.getColumn()
+                                   + ":" + issue.getMessage()
+                                   );
             }
-
-            if (!f.isDirectory() && !isABSSourceFile(f) && !isABSPackageFile(f)) {
-                throw new IllegalArgumentException("File "+f+" is not a legal ABS file");
+        }
+        Model result = null;
+        if (!hasErrors) {
+            result = new Model();
+            for (Resource r : resourceSet.getResources()) {
+                for (EObject unit : r.getContents()) {
+                    result.addCompilationUnitNoTransform((CompilationUnit)XtextToJastAdd.fromXtext((org.abs_models.xtext.abs.CompilationUnit)unit));
+                }
             }
         }
+        return result;
 
-        for (File f : fileNames) {
-            parseFileOrDirectory(units, f, verbose);
-        }
+        // ------------------------- old code follows -------------------------
 
-	units.add(getStdLib());
+        // java.util.List<CompilationUnit> units = new ArrayList<>();
 
-        List<CompilationUnit> unitList = new List<>();
-        for (CompilationUnit u : units) {
-            unitList.add(u);
-        }
+        // for (File f : fileNames) {
+        //     if (!f.canRead()) {
+        //         throw new IllegalArgumentException("File "+f+" cannot be read");
+        //     }
 
-        Model m = new Model(unitList);
-        return m;
+        //     if (!f.isDirectory() && !isABSSourceFile(f) && !isABSPackageFile(f)) {
+        //         throw new IllegalArgumentException("File "+f+" is not a legal ABS file");
+        //     }
+        // }
+
+        // for (File f : fileNames) {
+        //     parseFileOrDirectory(units, f, verbose);
+        // }
+
+	// units.add(getStdLib());
+
+        // List<CompilationUnit> unitList = new List<>();
+        // for (CompilationUnit u : units) {
+        //     unitList.add(u);
+        // }
+
+        // Model m = new Model(unitList);
+        // return m;
     }
 
     /**
@@ -612,40 +656,6 @@ public class Main {
 	units.add(getStdLib());
 	units.add(parseUnit(file, reader, false));
 	return new Model(units);
-    }
-
-    public static Model parseXtext(java.util.List<File> files) throws IOException {
-        // https://typefox.io/how-and-why-use-xtext-without-the-ide
-        // (outdated) and
-        // https://stackoverflow.com/questions/47110291/xtext-standalone-and-validation
-        // and
-        // https://www.eclipse.org/Xtext/documentation/302_configuration.html#dependency-injection
-
-        // obtain a resourceset from the injector
-        XtextResourceSet resourceSet = absinjector.getInstance(XtextResourceSet.class);
-
-        // load the standard library
-        resourceSet.createResource(org.eclipse.emf.common.util.URI.createURI(Main.class.getClassLoader().getResource(ABS_STD_LIB).toString()))
-            .load(null);
-        for (File file : files) {
-            resourceSet.createResource(org.eclipse.emf.common.util.URI.createFileURI(file.toString()))
-                .load(null);
-        }
-
-        for (Resource r : resourceSet.getResources()) {
-            IResourceValidator validator = ((XtextResource)r).getResourceServiceProvider().getResourceValidator();
-            java.util.List<Issue> issues = validator.validate(r, org.eclipse.xtext.validation.CheckMode.ALL, CancelIndicator.NullImpl);
-            for (Issue issue : issues) {
-                String filename = issue.getUriToProblem().toFileString();
-                if (filename == null) filename = UNKNOWN_FILENAME;
-                System.out.println(filename
-                                   + ":" + issue.getLineNumber()
-                                   + ":" + issue.getColumn()
-                                   + ":" + issue.getMessage()
-                                   );
-            }
-        }
-        return null;
     }
 
     /**
