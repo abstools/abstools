@@ -186,6 +186,14 @@ test {
     useJUnitPlatform()
     ignoreFailures=true
     maxParallelForks=project.gradle.startParameter.maxWorkerCount
+
+    // Allow dynamic exclusion of tests (based on https://blog.jdriven.com/2017/10/run-one-or-exclude-one-test-with-gradle/)
+    // Usage: gradle test -PexcludeTests='**/ErlangModelApiTests*,**/ErlangExamplesTests*'
+    if (project.hasProperty('excludeTests')) {
+        project.property('excludeTests').split(',').each { 
+            exclude it
+        }
+    }
 }
 
 spotbugs {

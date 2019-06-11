@@ -11,8 +11,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.io.Closeable;
 import java.util.EnumSet;
-
+import java.util.concurrent.TimeUnit;
 import com.google.common.io.Files;
 
 import org.abs_models.ABSTest;
@@ -166,23 +168,50 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         pb.redirectErrorStream(true);
         Process p = pb.start();
 
-        Thread t = new Thread(new TimeoutThread(p));
-        t.start();
-        // Search for result
-        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        while (true) {
-            String line = br.readLine();
-            if (line == null)
-                break;
-            if (line.startsWith("RES=")) // see `genCode' above
-                val = line.split("=")[1];
+        final TimeoutThread tt = new TimeoutThread(p);
+        final Thread t = new Thread(tt);
+
+        try ( // try-with-resources statement, which will ensure, that the declared resources are closed
+            InputStream is = p.getInputStream();
+            InputStreamReader isr = new InputStreamReader(is);
+            BufferedReader br = new BufferedReader(isr)
+        ) {
+            t.start();
+            // Search for result
+            while (!tt.hasBeenAborted()) {
+                // Only try to read input...
+                //
+                // (1) ...if there is something to read. This
+                // ensures that the loop can react to the test being aborted by
+                // a timeout, since reading from the input stream is not canceled
+                // on some systems and can block forever.
+                //
+                // (2) ...or if the process is already dead, in which case we
+                // read from the input stream until it ends.
+                if (br.ready() || !p.isAlive()) { 
+                    final String line = br.readLine();
+                    if (line == null) {
+                        break;
+                    }
+
+                    else if (line.startsWith("RES=")) { // see `genCode' above
+                        val = line.split("=")[1];
+                    }
+                }
+
+                // Wait 1 second before trying again, if the process is still
+                // alive and may produce further output.
+                if (p.isAlive()) {
+                    Thread.sleep(1000);
+                }
+            }
         }
+
         int res = p.waitFor();
         t.interrupt();
         if (res != 0)
             return null;
         return val;
-
     }
 
     @Override
@@ -223,6 +252,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
 class TimeoutThread implements Runnable {
 
     private final Process p;
+    private boolean aborted = false;
 
     public TimeoutThread(Process p) {
         super();
@@ -232,9 +262,17 @@ class TimeoutThread implements Runnable {
     @Override
     public void run() {
         try {
-            Thread.sleep(10000);
-            p.destroy();
+            Thread.sleep(10000); // 10 second timeout before aborting the test (which for example can happen in the case of a deadlock test)
+
+            if (p.isAlive()) { // If the test is still running by now, terminate it
+                p.destroyForcibly();
+                this.aborted = true; // record, that the test has not stopped by itself.
+            }
         } catch (InterruptedException e) {
-        }
+        } 
+    }
+
+    public boolean hasBeenAborted() {
+        return this.aborted;
     }
 }
