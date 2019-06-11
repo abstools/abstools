@@ -11,21 +11,23 @@ CompilationUnit
 ModuleDecl
     : 'module' name=QualifiedTypeIdentifier ';'
         (exports+=ModuleExport | imports+=ModuleImport)*
-        (decls+=Decl)*
+        (declarations+=Declaration)*
         (mainBlock=Block)?
     ;
 
 ModuleExport
     : 'export'
-        ( star?='*' | names+=AnyIdentifier (',' names+=AnyIdentifier)*)
-        ( 'from' module=QualifiedTypeIdentifier )?
+        ( star?='*' | identifiers+=AnyIdentifier (',' identifiers+=AnyIdentifier)*)
+        ( 'from' modulename=QualifiedTypeIdentifier )?
         ';'
     ;
 
 ModuleImport
     : 'import'
-        ( star?='*' | names+=AnyIdentifier (',' names+=AnyIdentifier)*)
-        ( 'from' module=QualifiedTypeIdentifier )?
+        (( star?='*' 'from' modulename=QualifiedTypeIdentifier )
+        | (identifiers+=AnyIdentifier (',' identifiers+=AnyIdentifier)*
+                ( 'from' modulename=QualifiedTypeIdentifier )?
+            ))
         ';'
     ;
 
@@ -38,7 +40,7 @@ Annotations: {Annotations} ( '[' a+=AnnotationFragment (',' a+=AnnotationFragmen
 
 // Declarations
 
-Decl
+Declaration
     : DataTypeDecl
     | TypeSynonymDecl
     | ExceptionDecl
