@@ -179,13 +179,16 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             t.start();
             // Search for result
             while (!tt.hasBeenAborted()) {
-                // Only try to read input, if there is something to read. This
-                // ensures that this loop can react to the test being aborted by
-                // a timeout.
-                // Since this basically amounts to busy waiting (although there is
-                // a sleep instruction) I am not sure, whether it is the best way
-                // to do it. However, for now it seems to work.
-                if (br.ready()) { 
+                // Only try to read input...
+                //
+                // (1) ...if there is something to read. This
+                // ensures that the loop can react to the test being aborted by
+                // a timeout, since reading from the input stream is not canceled
+                // on some systems and can block forever.
+                //
+                // (2) ...or if the process is already dead, in which case we
+                // read from the input stream until it ends.
+                if (br.ready() || !p.isAlive()) { 
                     final String line = br.readLine();
                     if (line == null) {
                         break;
@@ -193,11 +196,14 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
 
                     else if (line.startsWith("RES=")) { // see `genCode' above
                         val = line.split("=")[1];
-                        break; // there is no point to continue the loop, if the result has been retrieved.
                     }
                 }
 
-                Thread.sleep(1000); // Wait 1 second before trying again
+                // Wait 1 second before trying again, if the process is still
+                // alive and may produce further output.
+                if (p.isAlive()) {
+                    Thread.sleep(1000);
+                }
             }
         }
 
