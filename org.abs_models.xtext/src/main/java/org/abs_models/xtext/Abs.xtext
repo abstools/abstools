@@ -10,14 +10,9 @@ CompilationUnit
 
 ModuleDecl
     : 'module' name=QualifiedTypeIdentifier ';'
-        (modeExportImports+=ModuleExportImport)*
+        (exports+=ModuleExport | imports+=ModuleImport)*
         (decls+=Decl)*
         (mainBlock=Block)?
-    ;
-
-ModuleExportImport
-    : ModuleExport
-    | ModuleImport
     ;
 
 ModuleExport
