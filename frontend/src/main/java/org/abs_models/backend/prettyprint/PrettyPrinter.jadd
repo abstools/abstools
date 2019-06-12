@@ -1024,6 +1024,11 @@ aspect doPrettyPrinter {
         stream.print(getName());    
     }
 
+    public void AnyTypeUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        getAnnotationList().doPrettyPrint(stream, formatter, "");
+        stream.print(getName());
+    }
+
     public void DataTypeUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
         stream.print(getName());
