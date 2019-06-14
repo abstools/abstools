@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.InputStream;
 import java.io.Closeable;
+import java.util.Optional;
 import java.util.EnumSet;
 import java.util.concurrent.TimeUnit;
 import com.google.common.io.Files;
@@ -154,6 +155,100 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     }
 
     /**
+     * Input should be read from a Process object using a BufferedReader:
+     * "Implementation note: It is a good idea for the returned input stream to be buffered."
+     * (https://docs.oracle.com/javase/8/docs/api/java/lang/Process.html#getInputStream--)
+     *
+     * However, using readLine() on the Reader may block forever if the process
+     * does not terminate or terminates while reading from its output.
+     *
+     * Only read() guarantees, that it does not block, if ready() returns true.
+     *
+     * This class implements readLine() in a non blocking way using read() and
+     * ready().
+     **/
+    class ProcessReader implements AutoCloseable {
+        private final InputStream is;
+        private final InputStreamReader isr;
+        private final BufferedReader br;
+
+        private final StringBuilder lineAcc = new StringBuilder();
+
+        private boolean streamEnded = false;
+
+        private boolean encounteredCarriageReturn = false;
+
+        public ProcessReader(final Process p) {
+            this.is = p.getInputStream();
+            this.isr = new InputStreamReader(is);
+            this.br = new BufferedReader(isr);
+        }
+
+        /**
+         * Returns a line read from the output of the process if a full line
+         * is available yet, otherwise collects more output and returns
+         * Optional.empty().
+         * 
+         * It follows the line definition of BufferedReader.readLine()
+         * (ends with '\n', '\r' or "\r\n"). A line end is also reached,
+         * if the end of the stream has been reached.
+         */
+        public Optional<String> readLineNonBlocking() throws IOException {
+            final Optional<String> result;
+
+            if (br.ready()) { // guarantees that next read will not block
+                final int nextChar = br.read();
+
+                if (nextChar == '\r') {
+                    encounteredCarriageReturn = true;
+                }
+
+                else if (nextChar == -1) {
+                    streamEnded = true;
+                }
+
+                // Return a line, if current character ends a line or the stream ended
+                if (
+                       nextChar == -1
+                    || (nextChar == '\n' && !encounteredCarriageReturn) // line end has already been handled, if \r has been encountered before
+                    || nextChar == '\r'
+                ) { // End of stream
+                    final String line = lineAcc.toString();
+                    lineAcc.delete(0, lineAcc.length()); // reuse string builder for next line
+
+                    result = Optional.of(line);
+                }
+
+                else {
+                    lineAcc.append(nextChar);
+                    result = Optional.empty(); // no full line encountered yet
+                }
+
+                if (nextChar != '\r') {
+                    encounteredCarriageReturn = false;
+                }
+            }
+
+            else { // next read would block, returning nothing.
+                result = Optional.empty();
+            }
+
+            return result;
+        }
+
+        public boolean hasStreamEnded() {
+            return streamEnded;
+        }
+
+        @Override
+        public void close() throws IOException {
+            this.br.close();
+            this.isr.close();
+            this.is.close();
+        }
+    }
+
+    /**
      * Executes mainModule
      *
      * To detect faults, we have a Timeout process which will kill the
@@ -172,25 +267,17 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         final Thread t = new Thread(tt);
 
         try ( // try-with-resources statement, which will ensure, that the declared resources are closed
-            InputStream is = p.getInputStream();
-            InputStreamReader isr = new InputStreamReader(is);
-            BufferedReader br = new BufferedReader(isr)
+            ProcessReader r = new ProcessReader(p);
         ) {
             t.start();
             // Search for result
             while (!tt.hasBeenAborted()) {
-                // Only try to read input...
-                //
-                // (1) ...if there is something to read. This
-                // ensures that the loop can react to the test being aborted by
-                // a timeout, since reading from the input stream is not canceled
-                // on some systems and can block forever.
-                //
-                // (2) ...or if the process is already dead, in which case we
-                // read from the input stream until it ends.
-                if (br.ready() || !p.isAlive()) { 
-                    final String line = br.readLine();
-                    if (line == null) {
+                final Optional<String> maybeLine = r.readLineNonBlocking();
+                
+                if (maybeLine.isPresent()) {
+                    final String line = maybeLine.get();
+
+                    if (r.hasStreamEnded()) {
                         break;
                     }
 
