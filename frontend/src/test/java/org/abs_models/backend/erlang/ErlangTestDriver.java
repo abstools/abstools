@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.io.InputStream;
 import java.io.Closeable;
 import java.util.Optional;
+import java.util.LinkedList;
 import java.util.EnumSet;
 import java.util.concurrent.TimeUnit;
 import com.google.common.io.Files;
@@ -162,26 +163,99 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      * However, using readLine() on the Reader may block forever if the process
      * does not terminate or terminates while reading from its output.
      *
-     * Only read() guarantees, that it does not block, if ready() returns true.
+     * read() guarantees, that it does not block, when only attempting to read
+     * as many bytes as available() returns.
+     * (https://docs.oracle.com/javase/8/docs/api/java/io/InputStream.html#available--)
+     * "read or skip of this many bytes will not block, but may read or skip fewer bytes"
      *
      * This class implements readLine() in a non blocking way using read() and
-     * ready().
+     * available().
+     *
+     * NOTE: Since InputStream.available() counts bytes, but BufferedReader
+     * reads chars (16bit), this solution may not be compatible with unicode
+     * output.
      **/
     class ProcessReader implements AutoCloseable {
+        private final Process p;
         private final InputStream is;
         private final InputStreamReader isr;
         private final BufferedReader br;
 
         private final StringBuilder lineAcc = new StringBuilder();
+        private final LinkedList<String> lineBuffer = new LinkedList<>();
 
         private boolean streamEnded = false;
 
         private boolean encounteredCarriageReturn = false;
 
         public ProcessReader(final Process p) {
+            this.p = p;
             this.is = p.getInputStream();
             this.isr = new InputStreamReader(is);
             this.br = new BufferedReader(isr);
+        }
+
+        /**
+         * Internal helper function which saves characters read so far as one
+         * line in the internal line buffer.
+         *
+         * It also clears the string builder for reuse.
+         */
+        private void saveLineToBuffer() {
+            final String line = lineAcc.toString();
+            lineAcc.delete(0, lineAcc.length()); // reuse string builder for next line
+
+            lineBuffer.add(line);
+        }
+
+        /**
+         * Attempts to read as many bytes as possible from the BufferedReader
+         * without risking to block
+         */
+        private void read() throws IOException {
+            int estimatedAvailableBytes = is.available();
+
+            if (estimatedAvailableBytes >= 0) {
+                // only attempt to read EOF if process is dead, otherwise read()
+                // may block
+                if (estimatedAvailableBytes == 0 && !p.isAlive()) {
+                    ++estimatedAvailableBytes;
+                }
+
+                final char[] buffer = new char[estimatedAvailableBytes];
+                final int readBytes = br.read(buffer, 0, estimatedAvailableBytes);
+
+                if (readBytes == -1) { //EOF reached
+                    streamEnded = true;
+                    if (lineAcc.length() > 0) {
+                        saveLineToBuffer();
+                    }
+                }
+
+                for (int i = 0; i < readBytes; ++i) {
+                    final char nextChar = buffer[i];
+
+                    if (nextChar == '\r') {
+                        encounteredCarriageReturn = true;
+                    }
+
+                    // Return a line, if current character ends a line
+                    if (
+                           (nextChar == '\n' && !encounteredCarriageReturn) // line end has already been handled, if \r has been encountered before
+                        || nextChar == '\r'
+                    ) {
+                        saveLineToBuffer();
+                    }
+
+                    else {
+                        lineAcc.append(nextChar); // no full line encountered yet
+                    }
+
+                    if (nextChar != '\r') {
+                        encounteredCarriageReturn = false;
+                    }
+                }
+            }
         }
 
         /**
@@ -196,48 +270,21 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         public Optional<String> readLineNonBlocking() throws IOException {
             final Optional<String> result;
 
-            if (br.ready()) { // guarantees that next read will not block
-                final int nextChar = br.read();
-
-                if (nextChar == '\r') {
-                    encounteredCarriageReturn = true;
-                }
-
-                else if (nextChar == -1) {
-                    streamEnded = true;
-                }
-
-                // Return a line, if current character ends a line or the stream ended
-                if (
-                       nextChar == -1
-                    || (nextChar == '\n' && !encounteredCarriageReturn) // line end has already been handled, if \r has been encountered before
-                    || nextChar == '\r'
-                ) { // End of stream
-                    final String line = lineAcc.toString();
-                    lineAcc.delete(0, lineAcc.length()); // reuse string builder for next line
-
-                    result = Optional.of(line);
-                }
-
-                else {
-                    lineAcc.append(nextChar);
-                    result = Optional.empty(); // no full line encountered yet
-                }
-
-                if (nextChar != '\r') {
-                    encounteredCarriageReturn = false;
-                }
+            if (!streamEnded) {
+                read();
             }
 
-            else { // next read would block, returning nothing.
-                result = Optional.empty();
+            if (lineBuffer.isEmpty()) {
+                return Optional.empty();
             }
 
-            return result;
+            else {
+                return Optional.of(lineBuffer.remove());
+            }
         }
 
         public boolean hasStreamEnded() {
-            return streamEnded;
+            return streamEnded && lineBuffer.isEmpty();
         }
 
         @Override
@@ -277,18 +324,18 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
                 if (maybeLine.isPresent()) {
                     final String line = maybeLine.get();
 
-                    if (r.hasStreamEnded()) {
-                        break;
-                    }
-
-                    else if (line.startsWith("RES=")) { // see `genCode' above
+                    if (line.startsWith("RES=")) { // see `genCode' above
                         val = line.split("=")[1];
                     }
                 }
 
+                if (r.hasStreamEnded()) {
+                    break;
+                }
+
                 // Wait 0.1 second before trying again, if the process is still
                 // alive and may produce further output.
-                if (p.isAlive()) {
+                else if (p.isAlive()) {
                     Thread.sleep(100);
                 }
             }
