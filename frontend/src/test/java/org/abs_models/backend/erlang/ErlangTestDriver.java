@@ -199,10 +199,10 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
                     }
                 }
 
-                // Wait 1 second before trying again, if the process is still
+                // Wait 0.1 second before trying again, if the process is still
                 // alive and may produce further output.
                 if (p.isAlive()) {
-                    Thread.sleep(1000);
+                    Thread.sleep(100);
                 }
             }
         }

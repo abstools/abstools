@@ -645,22 +645,22 @@ type ExpansionCall = List<Int>;
 // Basic higher-order functions (map, filter, foldl and foldr)
 def List<B> map<A, B>(f)(List<A> list) = case list {
     Nil => Nil;
-    Cons(x, xs) => Cons(f(x), map(xs));
+    Cons(x1111111111, xs1111111111) => Cons(f(x1111111111), map(xs1111111111));
 };
 
 def List<T> filter<T>(predicate)(List<T> list) = case list {
 	Nil => Nil;
-	Cons(x, xs) => let (List<T> filtered) = filter(xs) in if (predicate(x)) then Cons(x, filtered) else filtered;
+	Cons(x1111111111, xs1111111111) => let (List<T> filtered) = filter(xs1111111111) in if (predicate(x1111111111)) then Cons(x1111111111, filtered) else filtered;
 };
 
 def B foldl<A, B>(f)(List<A> list, B val) = case list {
     Nil => val;
-    Cons(x, xs) => foldl(xs, f(x, val));
+    Cons(x1111111111, xs1111111111) => foldl(xs1111111111, f(x1111111111, val));
 };
 
 def B foldr<A, B>(f)(List<A> list, B val) = case list {
     Nil => val;
-    Cons(x, xs) => f(x, foldr(xs, val));
+    Cons(x1111111111, xs1111111111) => f(x1111111111, foldr(xs1111111111, val));
 };
 
 // functional break point

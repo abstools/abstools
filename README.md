@@ -3,6 +3,7 @@ ABS Tools
 
 [![CircleCI](https://img.shields.io/circleci/project/abstools/abstools.svg)](https://circleci.com/gh/abstools/abstools)
 [![GitHub release](https://img.shields.io/github/release/abstools/abstools.svg)](https://github.com/abstools/abstools/releases/latest)
+[![Gitter](https://badges.gitter.im/abstools/general.svg)](https://gitter.im/abstools/general?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Inside this repository we develop the core tools of the ABS modelling
 language.  The current language manual is at http://docs.abs-models.org.
