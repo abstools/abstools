@@ -9,9 +9,11 @@ import java.io.StringReader;
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.CompilationUnit;
 import org.abs_models.frontend.ast.DeltaDecl;
+import org.abs_models.frontend.ast.Model;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.fail;
 
 public class ParserTest extends FrontendTest {
 
@@ -471,5 +473,19 @@ public class ParserTest extends FrontendTest {
     @Test
     public void anonymousFunctionNoParamBraces() {
         assertParseError("{ f(Int i => i)();}");
+    }
+
+    /**
+     * Before commit b79ac958b150bda90acb3c095bba0c30d97df5e4 this caused an
+     * error, since list literals were not considered when determining the
+     * free variables within an anonymous function (closure).
+     */
+    @Test
+    public void anonymousFunctionFreeVarsInList() throws Exception {
+        final String fileName = "abssamples/ClosureWithListLiterals.abs";
+        final Model m = assertParseFileOk(fileName);
+
+        if (m.hasParserErrors())
+            fail(m.getParserErrors().get(0).toString());
     }
 }
