@@ -34,9 +34,9 @@ ModuleImport
 
 // Annotations
 
-AnnotationFragment: (l=TYPE_IDENTIFIER ':')? r=Exp ;
+Annotation: (id=TYPE_IDENTIFIER ':')? value=Exp ;
 
-Annotations: {Annotations} ( '[' a+=AnnotationFragment (',' a+=AnnotationFragment)* ']')* ;
+Annotations: {Annotations} ( '[' annotations+=Annotation (',' annotations+=Annotation)* ']')* ;
 
 // Declarations
 
@@ -52,7 +52,7 @@ Declaration
     ;
 
 DataTypeDecl
-    : ann=Annotations 'data' name=TYPE_IDENTIFIER
+    : annotations=Annotations 'data' name=TYPE_IDENTIFIER
         ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
         ('=' constructors+=DataConstructorDecl ('|' constructors+=DataConstructorDecl)* )?
         ';'
@@ -62,15 +62,15 @@ DataConstructorDecl : name=TYPE_IDENTIFIER ('(' args+=DataConstructorParamDecl (
 
 DataConstructorParamDecl : type=TypeUse (name=IDENTIFIER)? ;
 
-TypeSynonymDecl : ann=Annotations 'type' name=TYPE_IDENTIFIER '=' type=TypeUse ';' ;
+TypeSynonymDecl : annotations=Annotations 'type' name=TYPE_IDENTIFIER '=' type=TypeUse ';' ;
 
 ExceptionDecl
-    : ann=Annotations 'exception' name=TYPE_IDENTIFIER
+    : annotations=Annotations 'exception' name=TYPE_IDENTIFIER
         ('(' args+=DataConstructorParamDecl (',' args+=DataConstructorParamDecl)* ')')? ';'
     ;
 
 FunctionDecl
-    : ann=Annotations 'def' type=TypeUse name=IDENTIFIER
+    : annotations=Annotations 'def' type=TypeUse name=IDENTIFIER
         ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
         '(' (args+=ParamDecl (',' args+=ParamDecl)* )? ')'
         '=' (builtin?='builtin' | body=Exp)
@@ -78,7 +78,7 @@ FunctionDecl
     ;
 
 PartialFunctionDecl
-    : ann=Annotations 'def' type=TypeUse name=IDENTIFIER
+    : annotations=Annotations 'def' type=TypeUse name=IDENTIFIER
         ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
         '(' function_args+=IDENTIFIER (',' function_args+=IDENTIFIER)* ')'
         '(' args+=ParamDecl (',' args+=ParamDecl)* ')'
@@ -87,19 +87,19 @@ PartialFunctionDecl
     ;
 
 InterfaceDecl
-    : ann=Annotations 'interface' name=TYPE_IDENTIFIER
+    : annotations=Annotations 'interface' name=TYPE_IDENTIFIER
         ('extends' superinterfaces+=QualifiedTypeIdentifier (',' superinterfaces+=QualifiedTypeIdentifier)* )?
         '{' (methods+=MethodSignature)* '}'
     ;
 
 MethodSignature
-    : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
+    : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
         '(' ( args+=ParamDecl (',' args+=ParamDecl)* )? ')'
         ';'
     ;
 
 ClassDecl
-    : ann=Annotations 'class' name=TYPE_IDENTIFIER
+    : annotations=Annotations 'class' name=TYPE_IDENTIFIER
         ( '(' args+=ParamDecl (',' args+=ParamDecl)* ')' )?
         ( 'implements' interfaces+=QualifiedTypeIdentifier (',' interfaces+=QualifiedTypeIdentifier)* )?
         '{'
@@ -112,17 +112,17 @@ ClassDecl
     ;
 
 FieldDecl
-    : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
+    : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
         (hasInit?='=' init=Exp)? ';'
     ;
 
 MethodDecl
-    : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
+    : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
         '(' (args+=ParamDecl (',' args+=ParamDecl)* )? ')'
         '{' (statements+=Stmt)* '}'
     ;
 
-ParamDecl : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ;
+ParamDecl : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ;
 
 // Statements
 
@@ -147,32 +147,32 @@ Stmt
     | CaseStmt
     ;
 
-VarDeclStmt : ann=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ( '=' init=Exp )? ';' ;
+VarDeclStmt : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ( '=' init=Exp )? ';' ;
 
-AssignStmt : ann=Annotations lhs=VarOrFieldExp '=' exp=Exp ';' ;
+AssignStmt : annotations=Annotations lhs=VarOrFieldExp '=' exp=Exp ';' ;
 
-SkipStmt : ann=Annotations 'skip' ';' ;
+SkipStmt : annotations=Annotations 'skip' ';' ;
 
-ReturnStmt : ann=Annotations 'return' exp=Exp ';' ;
+ReturnStmt : annotations=Annotations 'return' exp=Exp ';' ;
 
-AssertStmt : ann=Annotations 'assert' exp=Exp ';' ;
+AssertStmt : annotations=Annotations 'assert' exp=Exp ';' ;
 
-Block : ann=Annotations '{' (stmts+=Stmt)* '}' ;
+Block : annotations=Annotations '{' (stmts+=Stmt)* '}' ;
 
-IfStmt : ann=Annotations 'if' '(' condition=Exp ')' consequence=Stmt (=>'else' alternate=Stmt)? ;
+IfStmt : annotations=Annotations 'if' '(' condition=Exp ')' consequence=Stmt (=>'else' alternate=Stmt)? ;
 
-WhileStmt : ann=Annotations 'while' '(' condition=Exp ')' body=Stmt ;
+WhileStmt : annotations=Annotations 'while' '(' condition=Exp ')' body=Stmt ;
 
-ForeachStmt : ann=Annotations 'foreach' '(' var=IDENTIFIER 'in' list=Exp ')' body=Stmt ;
+ForeachStmt : annotations=Annotations 'foreach' '(' var=IDENTIFIER 'in' list=Exp ')' body=Stmt ;
 
 TryCatchFinallyStmt
-    : ann=Annotations
+    : annotations=Annotations
         'try' body=Stmt
         'catch' (( '{' (branches+=CaseStmtBranch)* '}') | branches+=CaseStmtBranch)
         (=> 'finally' finally=Stmt)?
     ;
 
-AwaitStmt : ann=Annotations 'await' guard=Guard ';' ;
+AwaitStmt : annotations=Annotations 'await' guard=Guard ';' ;
 
 Guard : SingleGuard ({Guard.left=current} '&' right=SingleGuard)* ;
 
@@ -188,19 +188,19 @@ DurationGuard returns Guard :  'duration' '(' min=Exp ',' max=Exp ')' ;
 
 ExpGuard returns Guard : exp=Exp ;
 
-SuspendStmt : ann=Annotations 'suspend' ';' ;
+SuspendStmt : annotations=Annotations 'suspend' ';' ;
 
-DurationStmt : ann=Annotations 'duration' '(' min=Exp ',' max=Exp ')' ;
+DurationStmt : annotations=Annotations 'duration' '(' min=Exp ',' max=Exp ')' ;
 
-ThrowStmt : ann=Annotations 'throw' exception=Exp ';' ;
+ThrowStmt : annotations=Annotations 'throw' exception=Exp ';' ;
 
-DieStmt : ann=Annotations 'die' exception=Exp ';' ;
+DieStmt : annotations=Annotations 'die' exception=Exp ';' ;
 
-MoveCogToStmt : ann=Annotations 'movecogto' target=Exp ';' ;
+MoveCogToStmt : annotations=Annotations 'movecogto' target=Exp ';' ;
 
-ExpStmt : ann=Annotations exp=Exp ';' ;
+ExpStmt : annotations=Annotations exp=Exp ';' ;
 
-CaseStmt : ann=Annotations 'switch' '(' condition=Exp ')' '{' (branches+=CaseStmtBranch)* '}' ;
+CaseStmt : annotations=Annotations 'switch' '(' condition=Exp ')' '{' (branches+=CaseStmtBranch)* '}' ;
 
 CaseStmtBranch : p=Pattern '=>' body=Stmt ;
 
@@ -356,7 +356,7 @@ VarOrFieldExp returns Exp
 
 // Types
 
-TypeUse : ann=Annotations type=TypeUseNoAnnotations ;
+TypeUse : annotations=Annotations type=TypeUseNoAnnotations ;
 
 // We use TypeUseNoAnnotations for parameters and methods so
 // annotations are parsed as part of the method / parameter, not its
