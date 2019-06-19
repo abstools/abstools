@@ -217,12 +217,7 @@ public class Main {
         }
         Model result = null;
         if (!hasErrors) {
-            result = new Model();
-            for (Resource r : resourceSet.getResources()) {
-                for (EObject unit : r.getContents()) {
-                    result.addCompilationUnitNoTransform((CompilationUnit)XtextToJastAdd.fromXtext((org.abs_models.xtext.abs.CompilationUnit)unit));
-                }
-            }
+            result = XtextToJastAdd.fromResourceSet(resourceSet);
         }
         return result;
 
