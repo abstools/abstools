@@ -210,7 +210,8 @@ public class Main {
                 if (filename == null) filename = UNKNOWN_FILENAME;
                 System.out.println(filename
                                    + ":" + issue.getLineNumber()
-                                   + ":" + issue.getColumn()
+                                   // we need zero-based column numbers
+                                   + ":" + (issue.getColumn() - 1)
                                    + ":" + issue.getMessage()
                                    );
             }

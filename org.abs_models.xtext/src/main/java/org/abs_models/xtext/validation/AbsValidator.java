@@ -3,6 +3,7 @@
  */
 package org.abs_models.xtext.validation;
 
+import org.abs_models.xtext.abs.AbsPackage;
 import org.abs_models.xtext.abs.Exp;
 import org.abs_models.xtext.abs.GetExp;
 import org.abs_models.xtext.abs.MethodCallExp;
@@ -30,6 +31,14 @@ public class AbsValidator extends AbstractAbsValidator {
                 error("A side-effect expression cannot be a sub-expression",
                       e.eContainer(), e.eContainingFeature());
             }
+        }
+    }
+
+    @Check
+    public void checkMethodCallSyntax(MethodCallExp e) {
+        if (e.isAwait() && e.getOperator().equals(".")) {
+            error("await is not possible for synchronous method calls",
+                AbsPackage.eINSTANCE.getMethodCallExp_Await());
         }
     }
 
