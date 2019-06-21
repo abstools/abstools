@@ -1,41 +1,29 @@
 package org.abs_models.frontend.parser;
 
 import org.abs_models.common.NotImplementedYetException;
-import org.abs_models.frontend.ast.ASTNode;
-import org.abs_models.frontend.ast.ClassDecl;
-import org.abs_models.frontend.ast.CompilationUnit;
-import org.abs_models.frontend.ast.DataTypeDecl;
-import org.abs_models.frontend.ast.Decl;
-import org.abs_models.frontend.ast.ExceptionDecl;
-import org.abs_models.frontend.ast.Export;
-import org.abs_models.frontend.ast.FromExport;
-import org.abs_models.frontend.ast.FromImport;
-import org.abs_models.frontend.ast.FunctionDecl;
-import org.abs_models.frontend.ast.Import;
-import org.abs_models.frontend.ast.InterfaceDecl;
-import org.abs_models.frontend.ast.Model;
-import org.abs_models.frontend.ast.ModuleDecl;
-import org.abs_models.frontend.ast.Name;
-import org.abs_models.frontend.ast.NamedExport;
-import org.abs_models.frontend.ast.NamedImport;
-import org.abs_models.frontend.ast.Opt;
-import org.abs_models.frontend.ast.ParametricDataTypeDecl;
-import org.abs_models.frontend.ast.PartialFunctionDecl;
-import org.abs_models.frontend.ast.StarExport;
-import org.abs_models.frontend.ast.StarImport;
-import org.abs_models.frontend.ast.TypeParameterDecl;
-import org.abs_models.frontend.ast.TypeSynDecl;
-import org.abs_models.xtext.abs.AbsPackage;
+import org.abs_models.frontend.ast.*;
+import org.abs_models.xtext.abs.AndExp;
+import org.abs_models.xtext.abs.CompareExp;
+import org.abs_models.xtext.abs.ConstructorAppExp;
+import org.abs_models.xtext.abs.ConversionExp;
+import org.abs_models.xtext.abs.DataConstructorParamDecl;
+import org.abs_models.xtext.abs.FunctionAppExp;
+import org.abs_models.xtext.abs.MethodCallExp;
+import org.abs_models.xtext.abs.OrExp;
+import org.abs_models.xtext.abs.OriginalCallExp;
+import org.abs_models.xtext.abs.PartialFunctionAppExp;
+import org.abs_models.xtext.abs.PlusMinusExp;
+import org.abs_models.xtext.abs.TemplateStringExp;
+import org.abs_models.xtext.abs.UnaryExp;
+import org.abs_models.xtext.abs.VarOrFieldExp;
+import org.abs_models.xtext.abs.VariadicFunctionAppExp;
+import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.xtext.EcoreUtil2;
-import org.eclipse.xtext.generator.trace.ILocationData;
 import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
 import org.eclipse.xtext.resource.ILocationInFileProvider;
 import org.eclipse.xtext.resource.XtextResourceSet;
-import org.eclipse.xtext.util.ITextRegion;
 import org.eclipse.xtext.util.ITextRegionWithLineInformation;
 import org.eclipse.xtext.util.LineAndColumn;
 
@@ -190,46 +178,222 @@ public class XtextToJastAdd {
             }
         }
         result.setName(xtext_decl.getName());
-        // result.setAnnotationList(fromXtext(xtext_decl.getAnnotations()));
+
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+
         for (org.abs_models.xtext.abs.DataConstructorDecl xtext_d : xtext_decl.getConstructors()) {
-            // result.addDataConstructor(DataConstructor.fromXtext(xtext_d));
+             result.addDataConstructor(fromXtext(xtext_d));
         }
         return result;
+    }
+
+    private static List<Annotation> annotationsfromXtext(org.abs_models.xtext.abs.Annotations annotations) {
+        List<Annotation> annotationList = new List<>();
+        for(org.abs_models.xtext.abs.Annotation annotation : annotations.getAnnotations()) {
+            Annotation astAnnotation = new Annotation();
+
+            PureExp exp = pureExpFromXtext(annotation.getValue());
+            astAnnotation.setValue(exp);
+        }
+
+        return annotationList;
+    }
+
+    private static Exp fromXtext(org.abs_models.xtext.abs.Exp value) {
+        if(value instanceof GetExp || value instanceof OriginalCallExp || value instanceof MethodCallExp || value instanceof NewExp) {
+            return effExpFromXtext(value);
+        }
+        else {
+            return pureExpFromXtext(value);
+        }
+    }
+
+    private static EffExp effExpFromXtext(org.abs_models.xtext.abs.Exp value) {
+        EffExp result = null;
+        if(value instanceof org.abs_models.xtext.abs.GetExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.OriginalCallExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.MethodCallExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.NewExp) {
+
+        }
+        else {
+            throw new NotImplementedYetException(new ASTNode(),
+                "No conversion to JastAdd implemented for Xtext node "
+                    + value.getClass().toString());
+        }
+        return result;
+    }
+
+    private static PureExp pureExpFromXtext(org.abs_models.xtext.abs.Exp value) {
+        PureExp result = null;
+        // TODO may be 1:n relation defined by contents of xtext Exp
+        if(value instanceof org.abs_models.xtext.abs.CaseExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.LetExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.IfExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.FunctionAppExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.VariadicFunctionAppExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.PartialFunctionAppExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.ConstructorAppExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.TemplateStringExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.OrExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.AndExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.EqExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.CompareExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.PlusMinusExp) {
+
+        }
+        // FIXME class MulDivModExp unknown
+//        else if(value instanceof MulDivModE) {
+//
+//        }
+        else if(value instanceof org.abs_models.xtext.abs.UnaryExp) {
+
+        }
+        else if(value instanceof org.abs_models.xtext.abs.ConversionExp) {
+
+        }
+        // FIXME class PrimaryExp unknown
+//        else if(value instanceof PrimaryE) {
+//
+//        }
+        // FIXME class AtomicExp unknown
+//        else if(value instanceof AtomicE) {
+//
+//        }
+        else if(value instanceof org.abs_models.xtext.abs.VarOrFieldExp) {
+
+        }
+        else {
+            throw new NotImplementedYetException(new ASTNode(),
+                "No conversion to JastAdd implemented for Xtext node "
+                    + value.getClass().toString());
+        }
+        return result;
+    }
+
+    // TODO for every new object: nodeWithLocation()
+
+    private static DataConstructor fromXtext(org.abs_models.xtext.abs.DataConstructorDecl xtext_d) {
+        DataConstructor constructor = new DataConstructor();
+        constructor.setName(xtext_d.getName());
+
+        final EList<DataConstructorParamDecl> args = xtext_d.getArgs();
+        if(!args.isEmpty()) {
+            List<ConstructorArg> constructorArgs = constructorArgsFromXtext(args);
+            constructor.setConstructorArgList(constructorArgs);
+        }
+
+        return nodeWithLocation(constructor, xtext_d);
+    }
+
+    private static List<ConstructorArg> constructorArgsFromXtext(EList<DataConstructorParamDecl> args) {
+        List<ConstructorArg> constructorArgs = new List<>();
+        for(DataConstructorParamDecl arg : args) {
+            ConstructorArg constructorArg = new ConstructorArg();
+            if(arg.getName() != null) {
+                constructorArg.setSelectorName(new Name(arg.getName()));
+            }
+            nodeWithLocation(constructorArg, arg);
+
+            TypeUse typeUse = new DataTypeUse();
+            nodeWithLocation(typeUse, arg.getType());
+            constructorArg.setTypeUse(typeUse);
+
+            constructorArgs.add(constructorArg);
+        }
+        return constructorArgs;
     }
 
     static TypeSynDecl fromXtext(org.abs_models.xtext.abs.TypeSynonymDecl xtext_decl) {
         TypeSynDecl result = new TypeSynDecl();
         result.setName(xtext_decl.getName());
-        return result;
+
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+
+        TypeUse typeUse = new DataTypeUse();
+        nodeWithLocation(typeUse, xtext_decl.getType());
+        result.setValue(typeUse);
+
+        return nodeWithLocation(result, xtext_decl);
     }
 
     static ExceptionDecl fromXtext(org.abs_models.xtext.abs.ExceptionDecl xtext_decl) {
         ExceptionDecl result = new  ExceptionDecl();
         result.setName(xtext_decl.getName());
-        return result;
+
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+
+        DataConstructor constructor = new DataConstructor();
+        constructor.setName(xtext_decl.getName());
+
+        List<ConstructorArg> constructorArgs = constructorArgsFromXtext(xtext_decl.getArgs());
+        constructor.setConstructorArgList(constructorArgs);
+
+        result.setDataConstructorList(new List<>(constructor));
+
+        return nodeWithLocation(result, xtext_decl);
     }
 
     static FunctionDecl fromXtext(org.abs_models.xtext.abs.FunctionDecl xtext_decl) {
         FunctionDecl result = new  FunctionDecl();
         result.setName(xtext_decl.getName());
+        // TODO type, typeparams, args, body, annotations
+        // TODO result: annotations, params, functionDef, typeUse
+
         return result;
     }
 
     static PartialFunctionDecl fromXtext(org.abs_models.xtext.abs.PartialFunctionDecl xtext_decl) {
         PartialFunctionDecl result = new  PartialFunctionDecl();
         result.setName(xtext_decl.getName());
+        // TODO type, typeparams, args, body, annotations, function_args
+        // TODO result: annotations, functionParams, params, partialFunctionDef, typeUse
         return result;
     }
 
     static InterfaceDecl fromXtext(org.abs_models.xtext.abs.InterfaceDecl xtext_decl) {
         InterfaceDecl result = new  InterfaceDecl();
         result.setName(xtext_decl.getName());
+        // TODO annotations
+        // TODO result: annotations, body, extendedInterfaces
         return result;
     }
 
     static ClassDecl fromXtext(org.abs_models.xtext.abs.ClassDecl xtext_decl) {
         ClassDecl result = new  ClassDecl();
         result.setName(xtext_decl.getName());
+        // TODO args, interfaces, fields, init_block, recover_branches, methods, annotations
+        // TODO result: annotations, fields, implementedInterfaces, initBlock, methods, params, recoverBranches, traitUses
         return result;
     }
 
