@@ -222,7 +222,7 @@ Exp
 
 NewExp returns Exp : {NewExp} 'new' (hasLocal?='local')? c=QualifiedTypeIdentifier '('  (args+=Exp ( ',' args+=Exp)* )? ')' ;
 
-OriginalCallExp returns Exp : {OriginalCallExp} (( d=TYPE_IDENTIFIER | c?='core' ) '.')? 'original' '(' (args+=Exp ( ',' args+=Exp)* )? ')' ;
+OriginalCallExp returns Exp : {OriginalCallExp} (( delta=TYPE_IDENTIFIER | core?='core' ) '.')? 'original' '(' (args+=Exp ( ',' args+=Exp)* )? ')' ;
 
 // See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
 
@@ -231,7 +231,7 @@ CaseExp returns Exp
     ;
 
 CaseExpBranch
-    : p=Pattern '=>' e=Exp ';'
+    : pattern=Pattern '=>' expression=Exp ';'
     ;
 
 Pattern
@@ -292,28 +292,28 @@ AndExp returns Exp
     ; // left-assoc
 
 EqExp returns Exp
-    : CompareExp ({EqExp.left=current} op=('==' | '!=') right=CompareExp)?
+    : CompareExp ({EqExp.left=current} operator=('==' | '!=') right=CompareExp)?
     ; // non-assoc
 
 CompareExp returns Exp
-    : PlusMinusExp ({CompareExp.left=current} op=('<' | '>' | '<=' | '>=') right=PlusMinusExp)?
+    : PlusMinusExp ({CompareExp.left=current} operator=('<' | '>' | '<=' | '>=') right=PlusMinusExp)?
     ; // non-assoc
 
 PlusMinusExp returns Exp
-    : MulDivModExp ({PlusMinusExp.left=current} op=('+' | '-') right=MulDivModExp)*
+    : MulDivModExp ({PlusMinusExp.left=current} operator=('+' | '-') right=MulDivModExp)*
     ; // left-assoc
 
 MulDivModExp returns Exp
-    : UnaryExp ({MulDivExp.left=current} op=('*' | '/' | '%') right=UnaryExp)*
+    : UnaryExp ({MulDivExp.left=current} operator=('*' | '/' | '%') right=UnaryExp)*
     ; // left-assoc
 
 UnaryExp returns Exp
-    : {UnaryExp} op=('!' | '-' | '+') body=UnaryExp
+    : {UnaryExp} operator=('!' | '-' | '+') body=UnaryExp
     | MethodCallExp
     ;
 
 MethodCallExp returns Exp
-    : {MethodCallExp} await='await'? o=ConversionExp op=('!' | '.') m=IDENTIFIER '(' (args+=Exp ( ',' args+=Exp)* )? ')'
+    : {MethodCallExp} await?='await'? target=GetExp operator=('!' | '.') methodname=IDENTIFIER '(' (args+=Exp ( ',' args+=Exp)* )? ')'
     | GetExp
     ;
 
@@ -323,7 +323,7 @@ GetExp returns Exp
     ;
 
 ConversionExp returns Exp
-    : PrimaryExp ({ConversionExp.body=current} op=('implements' | 'as') i=QualifiedTypeIdentifier )?
+    : PrimaryExp ({ConversionExp.body=current} operator=('implements' | 'as') i=QualifiedTypeIdentifier )?
     ;
 
 PrimaryExp returns Exp
