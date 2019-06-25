@@ -154,7 +154,7 @@ end_mod(TaskRef, InfluxdbEnabled, DumpTrace) ->
     RetVal=task:join(TaskRef),
     %% modelapi_v2:print_statistics(),
     coverage:write_files(),
-    cog_monitor:waitfor(),
+    Status = cog_monitor:waitfor(),
     gc:stop(),
     clock:stop(),
     coverage:stop(),
@@ -167,8 +167,12 @@ end_mod(TaskRef, InfluxdbEnabled, DumpTrace) ->
                 file:write_file("trace.json", JsonTrace);
         _ -> ok
     end,
+    Ret = case Status of
+              success -> RetVal;
+              _ -> {exit_with, Status, cog_monitor:get_alternative_schedule()}
+          end,
     cog_monitor:stop(),
-    RetVal.
+    Ret.
 
 
 run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
@@ -191,10 +195,14 @@ run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
 run_dpor_slave(Module, Clocklimit, Trace) ->
     {ok, TaskRef} = start_mod(Module, false, none, Clocklimit, false, Trace),
     RetVal=task:join(TaskRef),
-    cog_monitor:waitfor(),
+    Status = cog_monitor:waitfor(),
     NewTrace = cog_monitor:get_schedules(),
     gc:stop(),
     clock:stop(),
     coverage:stop(),
+    NewTraces = case Status of
+                    success -> dpor:new_traces(NewTrace);
+                    deadlock -> cog_monitor:get_alternative_schedule()
+                end,
     cog_monitor:stop(),
-    {NewTrace, dpor:new_traces(NewTrace)}.
+    {NewTrace, NewTraces}.

@@ -19,7 +19,7 @@
 -export([task_waiting_for_clock/4, task_confirm_clock_wakeup/1]).
 
 %% communication about dcs
--export([new_dc/1, dc_died/1, get_dcs/0, get_schedules/0]).
+-export([new_dc/1, dc_died/1, get_dcs/0, get_schedules/0, get_alternative_schedule/0]).
 
 %% the HTTP api
 -export([register_object_with_http_name/2,lookup_object_from_http_name/1,list_registered_http_names/0,list_registered_http_objects/0,increase_clock_limit/1]).
@@ -70,8 +70,8 @@ stop() ->
 %% Waits until all cogs are idle
 waitfor()->
     receive
-        wait_done ->
-            ok
+        {wait_done, Status} ->
+            Status
     end.
 
 are_objects_of_class_protected(Class) ->
@@ -119,6 +119,9 @@ get_dcs() ->
 
 get_schedules() ->
     gen_server:call({global, cog_monitor}, get_schedules, infinity).
+
+get_alternative_schedule() ->
+    gen_server:call({global, cog_monitor}, get_alternative_schedule, infinity).
 
 register_object_with_http_name(Object, Name) ->
     gen_statem:call({global, cog_monitor}, {register_object, Object, Name}, infinity).
@@ -257,6 +260,9 @@ handle_call(From, get_schedules, _State,
             Data=#data{active=A, blocked=B, idle=I, cog_names=Names, trace_map=T}) ->
     S = gb_sets:union(gb_sets:union(A, B), I),
     {keep_state_and_data, {reply, From, gather_scheduling_traces(S, Names, T)}};
+handle_call(From, get_alternative_schedule, _State,
+            Data=#data{active=A, blocked=B, idle=I, cog_names=Names, trace_map=T}) ->
+    {keep_state_and_data, {reply, From, gb_sets:to_list(A)}};
 handle_call(From, all_registered_names, _State,
             Data=#data{registered_objects=Objects}) ->
     {keep_state_and_data, {reply, From, maps:keys(Objects)}};
@@ -353,7 +359,10 @@ advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,ke
                     MTE=clock:distance_to_next_boundary(),
                     clock:advance(MTE),
                     lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
-                    M ! wait_done;
+                    M ! case gb_sets:is_empty(Data#data.blocked) of
+                            true -> {wait_done, success};
+                            false -> {wait_done, deadlock}
+                        end;
                 true ->
                     %% We are probably serving via http; don't advance time
                     ok
@@ -378,9 +387,8 @@ advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,ke
                     case Keepalive of
                         false ->
                             io:format(standard_error, "Simulation time limit reached; terminating~n", []),
-                            halt(0),
                             Cogs=gb_sets:union([Data#data.active, Data#data.blocked, Data#data.idle]),
-                            M ! wait_done,
+                            M ! {wait_done, success},
                             Data;
                         true ->
                             io:format(standard_error, "Simulation time limit reached; terminate with Ctrl-C or increase via model api~n", []),
