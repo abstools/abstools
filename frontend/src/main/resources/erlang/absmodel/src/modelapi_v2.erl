@@ -8,7 +8,7 @@
 
 -export([print_statistics/0]).
 -export([abs_to_json/1]).                % callback from data_constructor_info
--export([json_to_trace/1,get_trace_json/0]).
+-export([json_to_trace/1,json_to_scheduling_trace/1,get_trace_json/0]).
 
 
 init(Req, _Opts) ->
@@ -358,6 +358,14 @@ json_to_trace(JSON) ->
     lists:foldl(fun (#{cog_id := Id, cog_schedule := LocalTrace}, Acc) ->
                         maps:put(Id, construct_local_trace(LocalTrace), Acc)
                 end, #{}, RawTrace).
+
+json_to_scheduling_trace(JSON) ->
+    Trace = json_to_trace(JSON),
+    maps:map(fun(Cog, LocalTrace) ->
+                     lists:filter(fun (E=#event{type=schedule}) -> true;
+                                      (E) -> false
+                                  end, LocalTrace)
+             end, Trace).
 
 local_trace_to_json_friendly(LocalTrace) ->
     lists:map(fun (Event) ->

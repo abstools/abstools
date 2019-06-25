@@ -108,7 +108,7 @@ parse(Args,Exec)->
                               none -> maps:new();
                               FileName ->
                                   {ok, File} = file:read_file(FileName),
-                                  modelapi_v2:json_to_trace(File)
+                                  modelapi_v2:json_to_scheduling_trace(File)
                           end,
             case ExploreMode of
                 true -> dpor:start_link(Module, Clocklimit);

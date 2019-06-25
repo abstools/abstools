@@ -292,76 +292,37 @@ handle_event(cast, dec_ref_count, _StateName, Data=#data{referencers=Referencers
 %% Record/replay a method invocation, and return a stable identifier for the
 %% invocation.
 handle_event({call, From}, {register_invocation, Method}, _StateName,
-             Data=#data{next_stable_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
+             Data=#data{next_stable_id=N, id=Id, recorded=Recorded}) ->
     Event = #event{type=invocation, caller_id=Id, local_id=N, name=Method},
     NewData = Data#data{next_stable_id=N+1, recorded=[Event | Recorded]},
     {keep_state, NewData, {reply, From, Event}};
-handle_event({call, From}, {register_invocation, Method}, _StateName,
-             Data=#data{next_stable_id=N, id=Id, recorded=Recorded,
-                        replaying=[Event=#event{type=invocation,
-                                                caller_id=Id,
-                                                local_id=N,
-                                                name=Method} | Rest]}) ->
-    NewData = Data#data{next_stable_id=N+1, recorded=[Event | Recorded], replaying=Rest},
-    {keep_state, NewData, {reply, From, Event}};
 
 handle_event({call, From}, {register_new_object, Class}, _StateName,
-             Data=#data{next_stable_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
+             Data=#data{next_stable_id=N, id=Id, recorded=Recorded}) ->
     NewData = Data#data{next_stable_id=N+1,
                         recorded=[Event=#event{type=new_object,
                                                caller_id=Id,
                                                local_id=N,
                                                name=Class} | Recorded]},
     {keep_state, NewData, {reply, From, Event}};
-handle_event({call, From}, {register_new_object, Class}, _StateName,
-             Data=#data{next_stable_id=N, id=Id, recorded=Recorded,
-                        replaying=[Event=#event{type=new_object,
-                                                caller_id=Id,
-                                                local_id=N,
-                                                name=Class} | Rest]}) ->
-    NewData = Data#data{next_stable_id=N+1, recorded=[Event | Recorded], replaying=Rest},
-    {keep_state, NewData, {reply, From, Event}};
 
 handle_event({call, From}, {register_new_local_object, Class}, _StateName,
-             Data=#data{next_stable_id=N, id=Id, recorded=Recorded, replaying=[]}) ->
+             Data=#data{next_stable_id=N, id=Id, recorded=Recorded}) ->
     Event1 = #event{type=new_object, caller_id=Id, local_id=N, name=Class},
     Event2 = #event{type=schedule, caller_id=Id, local_id=N, name=init},
     NewRecorded = [Event2, Event1 | Recorded],
     NewData = Data#data{next_stable_id=N+1, recorded=NewRecorded},
     {keep_state, NewData, {reply, From, Event1}};
-handle_event({call, From}, {register_new_local_object, Class}, _StateName,
-             Data=#data{next_stable_id=N, id=Id, recorded=Recorded,
-                        replaying=[Event1=#event{type=new_object,
-                                                 caller_id=Id,
-                                                 local_id=N,
-                                                 name=Class},
-                                   Event2=#event{type=schedule,
-                                                 caller_id=Id,
-                                                 local_id=N,
-                                                 name=init} | Rest]}) ->
-    NewRecorded = [Event2, Event1 | Recorded],
-    NewData = Data#data{next_stable_id=N+1, recorded=NewRecorded, replaying=Rest},
-    {keep_state, NewData, {reply, From, Event1}};
 
 handle_event({call, From}, {register_future_read, Event}, _StateName,
-             Data=#data{recorded=Recorded, replaying=[]}) ->
+             Data=#data{recorded=Recorded}) ->
     NewRecorded = [Event#event{type=future_read} | Recorded],
     {keep_state, Data#data{recorded=NewRecorded}, {reply, From, ok}};
-handle_event({call, From}, {register_future_read, Event}, _StateName,
-             Data=#data{recorded=Recorded,
-                        replaying=[Event | Rest]}) ->
-    {keep_state, Data#data{recorded=[Event | Recorded], replaying=Rest},
-     {reply, From, ok}};
 
 handle_event({call, From}, {register_await_future_complete, Event}, _StateName,
-             Data=#data{recorded=Recorded, replaying=[]}) ->
+             Data=#data{recorded=Recorded}) ->
     NewRecorded = [Event#event{type=await_future} | Recorded],
     {keep_state, Data#data{recorded=NewRecorded}, {reply, From, ok}};
-handle_event({call, From}, {register_await_future_complete, Event}, _StateName,
-             Data=#data{recorded=Recorded,
-                        replaying=[Event | Rest]}) ->
-    {keep_state, Data#data{recorded=[Event | Recorded], replaying=Rest},
-     {reply, From, ok}};
 
 handle_event({call, From}, get_scheduling_trace, _StateName,
              Data=#data{recorded=Recorded}) ->
@@ -458,7 +419,8 @@ choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, Ob
     %% caller- and local ids.
     Candidate = [Proc || {Proc, Info=#process_info{event=Event2}} <- maps:to_list(ProcessInfos),
                          Event2#event.caller_id == Event1#event.caller_id,
-                         Event2#event.local_id == Event1#event.local_id],
+                         Event2#event.local_id == Event1#event.local_id,
+                         Event2#event.time == Event1#event.time],
     {PollReadySet, PollCrashedSet} = poll_waiting(PollingTasks, ProcessInfos, ObjectStates),
     Candidates=gb_sets:union(RunnableTasks, PollReadySet),
     case Candidate of
@@ -622,11 +584,10 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo, ObjectState}
                                name=Name, reads=Reads, writes=Writes}
             end,
     NewRecorded = [Event | Recorded],
-    NewReplaying = case Replaying of [] -> []; [Event | Tail] -> Tail end,
 
     %% for `ProcessState' = `done', we just drop the task from Run (it can't
     %% be in Wai or Pol)
-    {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos, NewObjectStates, NewReplaying),
+    {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos, NewObjectStates, Replaying),
     case T of
         none->
             case gb_sets:is_empty(New) of
@@ -639,14 +600,14 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo, ObjectState}
                        polling_tasks=gb_sets:difference(NewPolling, PollCrashedSet),
                        process_infos=NewProcessInfos,
                        object_states=NewObjectStates,
-                       recorded=NewRecorded, replaying=NewReplaying}};
+                       recorded=NewRecorded, replaying=Replaying}};
         _ ->
             %% no need for `cog_monitor:active' since we were already running
             %% something
             #process_info{event=Event2} = maps:get(T, NewProcessInfos),
             #event{caller_id=Cid2, local_id=Lid2, name=Name2} = Event2,
             NewRecorded2 = [#event{type=schedule, caller_id=Cid2, local_id=Lid2, name=Name2} | NewRecorded],
-            NewReplaying2 = case NewReplaying of [] -> []; [X | Rest] -> Rest end,
+            NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
 
             send_token(token, T, object_state_from_pid(T, NewProcessInfos, NewObjectStates)),
             {keep_state,
@@ -658,7 +619,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo, ObjectState}
                                        PollCrashedSet),
                        process_infos=NewProcessInfos,
                        object_states=NewObjectStates,
-                       recorded=NewRecorded2, replaying=NewReplaying2}}
+                       recorded=NewRecorded2, replaying=NewReplaying}}
     end;
 process_running({call, From}, {process_runnable, TaskRef}, Data=#data{running_task=TaskRef}) ->
     %% This can happen when a process suspends itself ({token, Id, runnable})
