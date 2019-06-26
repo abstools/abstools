@@ -220,7 +220,7 @@ Exp
     : OrExp
     ;
 
-NewExp returns Exp : {NewExp} 'new' (hasLocal?='local')? c=QualifiedTypeIdentifier '('  (args+=Exp ( ',' args+=Exp)* )? ')' ;
+NewExp returns Exp : {NewExp} 'new' (hasLocal?='local')? classname=QualifiedTypeIdentifier '('  (args+=Exp ( ',' args+=Exp)* )? ')' ;
 
 OriginalCallExp returns Exp : {OriginalCallExp} (( delta=TYPE_IDENTIFIER | core?='core' ) '.')? 'original' '(' (args+=Exp ( ',' args+=Exp)* )? ')' ;
 

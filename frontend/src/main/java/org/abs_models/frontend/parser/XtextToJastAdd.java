@@ -9,6 +9,7 @@ import org.abs_models.xtext.abs.ConversionExp;
 import org.abs_models.xtext.abs.DataConstructorParamDecl;
 import org.abs_models.xtext.abs.FunctionAppExp;
 import org.abs_models.xtext.abs.MethodCallExp;
+import org.abs_models.xtext.abs.MethodSignature;
 import org.abs_models.xtext.abs.OrExp;
 import org.abs_models.xtext.abs.OriginalCallExp;
 import org.abs_models.xtext.abs.PartialFunctionAppExp;
@@ -211,76 +212,237 @@ public class XtextToJastAdd {
     private static EffExp effExpFromXtext(org.abs_models.xtext.abs.Exp value) {
         EffExp result = null;
         if(value instanceof org.abs_models.xtext.abs.GetExp) {
+            org.abs_models.xtext.abs.GetExp xtextExp = (org.abs_models.xtext.abs.GetExp) value;
+            GetExp exp = new GetExp();
 
+            // FIXME implementation missing
+
+            result = exp;
         }
         else if(value instanceof org.abs_models.xtext.abs.OriginalCallExp) {
+            org.abs_models.xtext.abs.OriginalCallExp xtextExp = (OriginalCallExp) value;
+            OriginalCall exp = new OriginalCall();
 
+            // FIXME implementation missing
+
+            result = exp;
         }
         else if(value instanceof org.abs_models.xtext.abs.MethodCallExp) {
+            org.abs_models.xtext.abs.MethodCallExp xtextExp = (MethodCallExp) value;
 
+            if("!".equals(xtextExp.getOperator())) {
+                // FIXME implementation missing --> target class?
+            }
+            else if(".".equals(xtextExp.getOperator())) {
+                // FIXME implementation missing --> target class?
+            }
+            else {
+                throw new NotImplementedYetException(new ASTNode(),
+                    "Unknown operator " + xtextExp.getOperator() + " in expression" + value.getClass().toString());
+            }
         }
         else if(value instanceof org.abs_models.xtext.abs.NewExp) {
+            org.abs_models.xtext.abs.NewExp xtextExp = (org.abs_models.xtext.abs.NewExp) value;
+            NewExp exp = new NewExp();
+            exp.setClassName(xtextExp.getClassname());
 
+            // FIXME implementation missing
+
+            result = exp;
         }
         else {
             throw new NotImplementedYetException(new ASTNode(),
                 "No conversion to JastAdd implemented for Xtext node "
                     + value.getClass().toString());
         }
-        return result;
+
+        return nodeWithLocation(result, value);
     }
 
     private static PureExp pureExpFromXtext(org.abs_models.xtext.abs.Exp value) {
         PureExp result = null;
-        // TODO may be 1:n relation defined by contents of xtext Exp
         if(value instanceof org.abs_models.xtext.abs.CaseExp) {
+            org.abs_models.xtext.abs.CaseExp xtextExp = (org.abs_models.xtext.abs.CaseExp) value;
+            CaseExp exp = new CaseExp();
 
+            // FIXME implementation missing
+
+            result = exp;
         }
         else if(value instanceof org.abs_models.xtext.abs.LetExp) {
+            org.abs_models.xtext.abs.LetExp xtextExp = (org.abs_models.xtext.abs.LetExp) value;
+            LetExp exp = new LetExp();
 
+            // FIXME implementation missing
+
+            result = exp;
         }
         else if(value instanceof org.abs_models.xtext.abs.IfExp) {
+            org.abs_models.xtext.abs.IfExp xtextExp = (org.abs_models.xtext.abs.IfExp) value;
+            IfExp exp = new IfExp();
+            exp.setCondExp(pureExpFromXtext(xtextExp.getCondition()));
+            exp.setThenExp(pureExpFromXtext(xtextExp.getConsequence()));
+            exp.setElseExp(pureExpFromXtext(xtextExp.getAlternate()));
 
+            result = exp;
         }
         else if(value instanceof org.abs_models.xtext.abs.FunctionAppExp) {
-
+            org.abs_models.xtext.abs.FunctionAppExp xtextExp = (FunctionAppExp) value;
+            // FIXME implementation missing --> target class? FnApp??
         }
         else if(value instanceof org.abs_models.xtext.abs.VariadicFunctionAppExp) {
-
+            org.abs_models.xtext.abs.VariadicFunctionAppExp xtextExp = (VariadicFunctionAppExp) value;
+            // FIXME implementation missing --> target class?
         }
         else if(value instanceof org.abs_models.xtext.abs.PartialFunctionAppExp) {
-
+            org.abs_models.xtext.abs.PartialFunctionAppExp xtextExp = (PartialFunctionAppExp) value;
+            // FIXME implementation missing --> target class? ParFnApp??
         }
         else if(value instanceof org.abs_models.xtext.abs.ConstructorAppExp) {
+            org.abs_models.xtext.abs.ConstructorAppExp xtextExp = (ConstructorAppExp) value;
+            DataConstructorExp exp = new DataConstructorExp();
+            exp.setConstructor(xtextExp.getName());
 
+            for(org.abs_models.xtext.abs.Exp param : xtextExp.getArgs()) {
+                // FIXME implementation missing
+            }
+
+            result = exp;
         }
         else if(value instanceof org.abs_models.xtext.abs.TemplateStringExp) {
-
+            org.abs_models.xtext.abs.TemplateStringExp xtextExp = (TemplateStringExp) value;
+            // FIXME implementation missing --> target class?
         }
         else if(value instanceof org.abs_models.xtext.abs.OrExp) {
+            org.abs_models.xtext.abs.OrExp xtextExp = (OrExp) value;
+            OrBoolExp exp = new OrBoolExp();
+            exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
+            exp.setRight(pureExpFromXtext(xtextExp.getRight()));
 
+            result = exp;
         }
         else if(value instanceof org.abs_models.xtext.abs.AndExp) {
+            org.abs_models.xtext.abs.AndExp xtextExp = (AndExp) value;
+            AndBoolExp exp = new AndBoolExp();
+            exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
+            exp.setRight(pureExpFromXtext(xtextExp.getRight()));
 
+            result = exp;
         }
         else if(value instanceof org.abs_models.xtext.abs.EqExp) {
+            org.abs_models.xtext.abs.EqExp xtextExp = (org.abs_models.xtext.abs.EqExp) value;
 
+            if("==".equals(xtextExp.getOperator())) {
+                EqExp exp = new EqExp();
+                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
+                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
+
+                result = exp;
+            }
+            else if("!=".equals(xtextExp.getOperator())) {
+                NotEqExp exp = new NotEqExp();
+                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
+                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
+
+                result = exp;
+            }
+            else {
+                throw new NotImplementedYetException(new ASTNode(),
+                    "Unknown operator " + xtextExp.getOperator() + " in expression" + value.getClass().toString());
+            }
         }
         else if(value instanceof org.abs_models.xtext.abs.CompareExp) {
+            org.abs_models.xtext.abs.CompareExp xtextExp = (CompareExp) value;
 
+            if("<".equals(xtextExp.getOperator())) {
+                LTExp exp = new LTExp();
+                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
+                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
+
+                result = exp;
+            }
+            else if(">".equals(xtextExp.getOperator())) {
+                GTExp exp = new GTExp();
+                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
+                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
+
+                result = exp;
+            }
+            else if("<=".equals(xtextExp.getOperator())) {
+                LTEQExp exp = new LTEQExp();
+                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
+                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
+
+                result = exp;
+            }
+            else if(">=".equals(xtextExp.getOperator())) {
+                GTEQExp exp = new GTEQExp();
+                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
+                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
+
+                result = exp;
+            }
+            else {
+                throw new NotImplementedYetException(new ASTNode(),
+                    "Unknown operator " + xtextExp.getOperator() + " in expression" + value.getClass().toString());
+            }
         }
         else if(value instanceof org.abs_models.xtext.abs.PlusMinusExp) {
+            org.abs_models.xtext.abs.PlusMinusExp xtextExp = (PlusMinusExp) value;
 
+            if("+".equals(xtextExp.getOperator())) {
+                AddAddExp exp = new AddAddExp();
+                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
+                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
+
+                result = exp;
+            }
+            else if("-".equals(xtextExp.getOperator())) {
+                SubAddExp exp = new SubAddExp();
+                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
+                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
+
+                result = exp;
+            }
+            else {
+                throw new NotImplementedYetException(new ASTNode(),
+                    "Unknown operator " + xtextExp.getOperator() + " in expression" + value.getClass().toString());
+            }
         }
         // FIXME class MulDivModExp unknown
 //        else if(value instanceof MulDivModE) {
 //
 //        }
         else if(value instanceof org.abs_models.xtext.abs.UnaryExp) {
+            org.abs_models.xtext.abs.UnaryExp xtextExp = (UnaryExp) value;
 
+            if("!".equals(xtextExp.getOperator())) {
+                // FIXME implementation missing --> target class?
+            }
+            else if("-".equals(xtextExp.getOperator())) {
+                // FIXME implementation missing --> target class?
+            }
+            else if("+".equals(xtextExp.getOperator())) {
+                // FIXME implementation missing --> target class?
+            }
+            else {
+                throw new NotImplementedYetException(new ASTNode(),
+                    "Unknown operator " + xtextExp.getOperator() + " in expression" + value.getClass().toString());
+            }
         }
         else if(value instanceof org.abs_models.xtext.abs.ConversionExp) {
+            org.abs_models.xtext.abs.ConversionExp xtextExp = (ConversionExp) value;
 
+            if("implements".equals(xtextExp.getOperator())) {
+                // FIXME implementation missing --> target class?
+            }
+            else if("as".equals(xtextExp.getOperator())) {
+                // FIXME implementation missing --> target class?
+            }
+            else {
+                throw new NotImplementedYetException(new ASTNode(),
+                    "Unknown operator " + xtextExp.getOperator() + " in expression" + value.getClass().toString());
+            }
         }
         // FIXME class PrimaryExp unknown
 //        else if(value instanceof PrimaryE) {
@@ -291,17 +453,17 @@ public class XtextToJastAdd {
 //
 //        }
         else if(value instanceof org.abs_models.xtext.abs.VarOrFieldExp) {
-
+            org.abs_models.xtext.abs.VarOrFieldExp xtextExp = (VarOrFieldExp) value;
+            // FIXME implementation missing --> target class?
         }
         else {
             throw new NotImplementedYetException(new ASTNode(),
                 "No conversion to JastAdd implemented for Xtext node "
                     + value.getClass().toString());
         }
-        return result;
-    }
 
-    // TODO for every new object: nodeWithLocation()
+        return nodeWithLocation(result, value);
+    }
 
     private static DataConstructor fromXtext(org.abs_models.xtext.abs.DataConstructorDecl xtext_d) {
         DataConstructor constructor = new DataConstructor();
@@ -367,34 +529,111 @@ public class XtextToJastAdd {
     static FunctionDecl fromXtext(org.abs_models.xtext.abs.FunctionDecl xtext_decl) {
         FunctionDecl result = new  FunctionDecl();
         result.setName(xtext_decl.getName());
-        // TODO type, typeparams, args, body, annotations
-        // TODO result: annotations, params, functionDef, typeUse
 
-        return result;
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+
+        TypeUse typeUse = new DataTypeUse();
+        nodeWithLocation(typeUse, xtext_decl.getType());
+        result.setTypeUse(typeUse);
+
+        List<ParamDecl> params = paramDeclsFromXtext(xtext_decl.getArgs());
+        result.setParamList(params);
+
+        // TODO typeparams, body
+        // TODO result: functionDef
+
+        return nodeWithLocation(result, xtext_decl);
+    }
+
+    private static List<ParamDecl> paramDeclsFromXtext(EList<org.abs_models.xtext.abs.ParamDecl> xtext_decl) {
+        List<ParamDecl> params = new List<>();
+        for(org.abs_models.xtext.abs.ParamDecl decl : xtext_decl) {
+            ParamDecl paramDecl = new ParamDecl();
+            paramDecl.setName(decl.getName());
+            paramDecl.setAnnotationList(annotationsfromXtext(decl.getAnnotations()));
+
+            // FIXME decl.getType() ?
+            // FIXME paramDecl.setAccess() ?
+
+            nodeWithLocation(paramDecl, decl);
+            params.add(paramDecl);
+        }
+        return params;
     }
 
     static PartialFunctionDecl fromXtext(org.abs_models.xtext.abs.PartialFunctionDecl xtext_decl) {
         PartialFunctionDecl result = new  PartialFunctionDecl();
         result.setName(xtext_decl.getName());
-        // TODO type, typeparams, args, body, annotations, function_args
-        // TODO result: annotations, functionParams, params, partialFunctionDef, typeUse
-        return result;
+
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+
+        TypeUse typeUse = new DataTypeUse();
+        nodeWithLocation(typeUse, xtext_decl.getType());
+        result.setTypeUse(typeUse);
+
+        List<ParamDecl> params = paramDeclsFromXtext(xtext_decl.getArgs());
+        result.setParamList(params);
+
+        // TODO typeparams, body, function_args
+        // TODO result: functionParams, partialFunctionDef
+
+        return nodeWithLocation(result, xtext_decl);
     }
 
     static InterfaceDecl fromXtext(org.abs_models.xtext.abs.InterfaceDecl xtext_decl) {
         InterfaceDecl result = new  InterfaceDecl();
         result.setName(xtext_decl.getName());
-        // TODO annotations
-        // TODO result: annotations, body, extendedInterfaces
-        return result;
+
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+
+        List<InterfaceTypeUse> interfaces = interfaceTypeUsesFromXtext(xtext_decl.getSuperinterfaces());
+        result.setExtendedInterfaceUseList(interfaces);
+
+        List<MethodSig> bodyList = new List<>();
+        for(MethodSignature signature : xtext_decl.getMethods()) {
+            MethodSig sig = new MethodSig();
+            sig.setName(sig.getName());
+            sig.setAnnotationList(annotationsfromXtext(signature.getAnnotations()));
+            sig.setParamList(paramDeclsFromXtext(signature.getArgs()));
+
+            TypeUse typeUse = new DataTypeUse();
+            nodeWithLocation(typeUse, signature.getType());
+            sig.setReturnType(typeUse);
+
+            nodeWithLocation(sig, signature);
+            bodyList.add(sig);
+        }
+        result.setBodyList(bodyList);
+
+        return nodeWithLocation(result, xtext_decl);
+    }
+
+    private static List<InterfaceTypeUse> interfaceTypeUsesFromXtext(EList<String> xtext_decl) {
+        List<InterfaceTypeUse> interfaces = new List<>();
+        for(String name : xtext_decl) {
+            InterfaceTypeUse typeUse = new InterfaceTypeUse();
+            typeUse.setName(name);
+            interfaces.add(typeUse);
+        }
+        return interfaces;
     }
 
     static ClassDecl fromXtext(org.abs_models.xtext.abs.ClassDecl xtext_decl) {
         ClassDecl result = new  ClassDecl();
         result.setName(xtext_decl.getName());
-        // TODO args, interfaces, fields, init_block, recover_branches, methods, annotations
-        // TODO result: annotations, fields, implementedInterfaces, initBlock, methods, params, recoverBranches, traitUses
-        return result;
+
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+
+        List<ParamDecl> params = paramDeclsFromXtext(xtext_decl.getArgs());
+        result.setParamList(params);
+
+        List<InterfaceTypeUse> interfaces = interfaceTypeUsesFromXtext(xtext_decl.getInterfaces());
+        result.setImplementedInterfaceUseList(interfaces);
+
+        // TODO fields, init_block, recover_branches, methods
+        // TODO result: fields, initBlock, methods, recoverBranches, traitUses
+
+        return nodeWithLocation(result, xtext_decl);
     }
 
 }
