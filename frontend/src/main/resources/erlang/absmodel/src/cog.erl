@@ -417,17 +417,17 @@ start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie)->
 choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, ObjectStates, [Event1 | _]) ->
     %% Assume Event1 and Event2 are both of type schedule. Compare only their
     %% caller- and local ids.
+    Now = builtin:float(ok, clock:now()),
     Candidate = [Proc || {Proc, Info=#process_info{event=Event2}} <- maps:to_list(ProcessInfos),
                          Event2#event.caller_id == Event1#event.caller_id,
-                         Event2#event.local_id == Event1#event.local_id,
-                         Event2#event.time == Event1#event.time],
+                         Event2#event.local_id == Event1#event.local_id],
     {PollReadySet, PollCrashedSet} = poll_waiting(PollingTasks, ProcessInfos, ObjectStates),
     Candidates=gb_sets:union(RunnableTasks, PollReadySet),
     case Candidate of
-        [Proc] -> case gb_sets:is_member(Proc, Candidates) of
-                       true -> {Proc, PollCrashedSet};
-                       false -> {none, PollCrashedSet}
-                   end;
+        [Proc] -> case gb_sets:is_member(Proc, Candidates) andalso Event1#event.time >= Now of
+                      true -> {Proc, PollCrashedSet};
+                      false -> {none, PollCrashedSet}
+                  end;
         [] -> {none, PollCrashedSet}
     end;
 choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, ObjectStates, []) ->
@@ -455,6 +455,11 @@ choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, Ob
                     {Chosen, PollCrashedSet}
             end
     end.
+
+time_slot_replayed([]) ->
+    true;
+time_slot_replayed([Event=#event{time=T} | Rest]) ->
+    builtin:float(ok, clock:now()) < T.
 
 %% Polls all tasks in the polling list.  Return a set of all polling tasks
 %% ready to run
@@ -508,7 +513,7 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
     {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnableTasks, Pol, ProcessInfos, ObjectStates, Replaying),
     case T of
         none->     % None found -- should not happen
-            case gb_sets:is_empty(NewNewTasks) of
+            case gb_sets:is_empty(NewNewTasks) andalso time_slot_replayed(Replaying) of
                 true -> cog_monitor:cog_idle(self());
                 false -> ok
             end,
@@ -590,7 +595,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo, ObjectState}
     {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos, NewObjectStates, Replaying),
     case T of
         none->
-            case gb_sets:is_empty(New) of
+            case gb_sets:is_empty(New) andalso time_slot_replayed(Replaying) of
                 true -> cog_monitor:cog_idle(self());
                 false -> ok
             end,
@@ -645,8 +650,12 @@ process_running(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notif
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
 process_running(cast, {process_blocked, TaskRef, ProcessInfo, ObjectState},
-                Data=#data{process_infos=ProcessInfos,object_states=ObjectStates}) ->
-    cog_monitor:cog_blocked(self()),
+                Data=#data{process_infos=ProcessInfos,object_states=ObjectStates,
+                           replaying=Replaying}) ->
+    case time_slot_replayed(Replaying) of
+        true -> cog_monitor:cog_blocked(self());
+        false -> ok
+    end,
     This=ProcessInfo#process_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
     NewProcessInfos=maps:put(TaskRef, ProcessInfo, ProcessInfos),
@@ -685,7 +694,7 @@ process_running(info, {'EXIT',TaskRef,_Reason},
             {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos, ObjectStates, Replaying),
             case T of
                 none->
-                    case gb_sets:is_empty(NewNew) of
+                    case gb_sets:is_empty(NewNew) andalso time_slot_replayed(Replaying) of
                         true -> cog_monitor:cog_idle(self());
                         false -> ok
                     end,
@@ -762,7 +771,8 @@ waiting_for_gc_stop({call, From}, {token,R,ProcessState, ProcessInfo, ObjectStat
                     Data=#data{running_task=R, runnable_tasks=Run,
                                waiting_tasks=Wai, polling_tasks=Pol,
                                new_tasks=New,process_infos=ProcessInfos,
-                               object_states=ObjectStates,dc=DC}) ->
+                               object_states=ObjectStates,dc=DC,
+                               replaying=Replaying}) ->
     gen_statem:reply(From, ok),
     gc:cog_stopped(#cog{ref=self(), dc=DC}),
     NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
@@ -788,7 +798,7 @@ waiting_for_gc_stop({call, From}, {token,R,ProcessState, ProcessInfo, ObjectStat
         %% advance.  Hence, we take care to not send `cog_idle()' when
         %% leaving `in_gc', and instead send it here if necessary.
         true -> {PollReadySet, PollCrashedSet} = poll_waiting(NewPolling, NewProcessInfos, NewObjectStates),
-                case gb_sets:is_empty(PollReadySet) of
+                case gb_sets:is_empty(PollReadySet) andalso time_slot_replayed(Replaying) of
                     true -> cog_monitor:cog_idle(self());
                     false -> ok
                 end,
