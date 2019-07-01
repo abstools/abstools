@@ -689,14 +689,12 @@ public class XtextToJastAdd {
         result.setFieldList(astFieldDelcDeclList);
 
 
-        org.abs_models.xtext.abs.Block initBlock = xtext_decl.getInitblock();
         InitBlock astInitBlock = new InitBlock();
 
-        for(org.abs_models.xtext.abs.Stmt statement : initBlock.getStmts()) {
+        for(org.abs_models.xtext.abs.Stmt statement : xtext_decl.getInitblockstmts()) {
             astInitBlock.addStmt(statementFromXtext(statement));
         }
 
-        nodeWithLocation(astInitBlock, initBlock);
         result.setInitBlock(astInitBlock);
 
 
