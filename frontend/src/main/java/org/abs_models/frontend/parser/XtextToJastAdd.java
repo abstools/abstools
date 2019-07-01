@@ -30,6 +30,7 @@ import org.abs_models.xtext.abs.AssignStmt;
 import org.abs_models.xtext.abs.ReturnStmt;
 import org.abs_models.xtext.abs.SkipStmt;
 import org.abs_models.xtext.abs.VarDeclStmt;
+import org.abs_models.xtext.abs.AbsPackage;
 import org.abs_models.xtext.abs.impl.VarDeclStmtImpl;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
@@ -232,12 +233,16 @@ public class XtextToJastAdd {
     private static List<Annotation> annotationsfromXtext(org.abs_models.xtext.abs.Annotations annotations) {
         List<Annotation> annotationList = new List<>();
         for(org.abs_models.xtext.abs.Annotation annotation : annotations.getAnnotations()) {
-            Annotation astAnnotation = new Annotation();
-
+            Annotation astAnnotation;
             PureExp exp = pureExpFromXtext(annotation.getValue());
-            astAnnotation.setValue(exp);
+            if (annotation.getId() != null) {
+                // FIXME: check that DataTypeUse is the right Access subclass to use
+                astAnnotation = new TypedAnnotation(exp, nodeWithLocation(new DataTypeUse(annotation.getId(), new List<>()), annotation, AbsPackage.eINSTANCE.getAnnotation_Id()));
+            } else {
+                astAnnotation = new Annotation(exp);
+            }
+            annotationList.add(nodeWithLocation(astAnnotation, annotation));
         }
-
         return annotationList;
     }
 
