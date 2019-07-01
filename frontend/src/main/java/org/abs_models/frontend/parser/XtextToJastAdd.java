@@ -744,10 +744,10 @@ public class XtextToJastAdd {
 
     private static Stmt statementFromXtext(org.abs_models.xtext.abs.Stmt stmt) {
         Stmt result = null;
-        List<Annotation> annotations = annotationsfromXtext(stmt.getAnnotations());
 
         if(stmt instanceof org.abs_models.xtext.abs.VarDeclStmt) {
             org.abs_models.xtext.abs.VarDeclStmt value = (VarDeclStmt) stmt;
+            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
 
             VarDecl varDecl = new VarDecl();
             varDecl.setName(value.getName());
@@ -759,23 +759,28 @@ public class XtextToJastAdd {
         // TODO implement
 //        else if(stmt instanceof org.abs_models.xtext.abs.AssignStmt) {
 //            org.abs_models.xtext.abs.AssignStmt value = (AssignStmt) stmt;
+//            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
 //
 //            result = new org.abs_models.frontend.ast.AssignStmt();
 //        }
 //        else if(stmt instanceof org.abs_models.xtext.abs.SkipStmt) {
 //            org.abs_models.xtext.abs.SkipStmt value = (SkipStmt) stmt;
+//            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
 //            result = new org.abs_models.frontend.ast.SkipStmt();
 //        }
 //        else if(stmt instanceof org.abs_models.xtext.abs.ReturnStmt) {
 //            org.abs_models.xtext.abs.ReturnStmt value = (ReturnStmt) stmt;
+//            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
 //            result = new org.abs_models.frontend.ast.ReturnStmt();
 //        }
 //        else if(stmt instanceof ) {
 //            value = stmt;
+//            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
 //            result =
 //        }
 //        else if(stmt instanceof ) {
 //            value = stmt;
+//            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
 //            result =
 //        }
         else {

@@ -126,53 +126,47 @@ ParamDecl : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ;
 
 // Statements
 
-Stmt
-    : VarDeclStmt
-    | AssignStmt
-    | SkipStmt
-    | ReturnStmt
-    | AssertStmt
-    | Block
-    | IfStmt
-    | WhileStmt
-    | ForeachStmt
-    | TryCatchFinallyStmt
-    | AwaitStmt
-    | SuspendStmt
-    | DurationStmt
-    | ThrowStmt
-    | DieStmt
-    | MoveCogToStmt
-    | ExpStmt
-    | CaseStmt
+Stmt : Annotations
+        ( {VarDeclStmt.annotations=current}
+            type=TypeUseNoAnnotations name=IDENTIFIER ( '=' init=Exp )? ';'
+        | {AssignStmt.annotations=current}
+            lhs=VarOrFieldExp '=' exp=Exp ';'
+        | {SkipStmt.annotations=current}
+             'skip' ';'
+        | {ReturnStmt.annotations=current}
+            'return' exp=Exp ';'
+        | {AssertStmt.annotations=current}
+            'assert' exp=Exp ';'
+        | {Block.annotations=current}
+            '{' (stmts+=Stmt)* '}'
+        | {IfStmt.annotations=current}
+            'if' '(' condition=Exp ')' consequence=Stmt (=>'else' alternate=Stmt)?
+        | {WhileStmt.annotations=current}
+            'while' '(' condition=Exp ')' body=Stmt
+        | {ForeachStmt.annotations=current}
+            'foreach' '(' var=IDENTIFIER 'in' list=Exp ')' body=Stmt
+        | {TryCatchFinallyStmt.annotations=current}
+            'try' body=Stmt
+            'catch' (( '{' (branches+=CaseStmtBranch)* '}') | branches+=CaseStmtBranch)
+            (=> 'finally' finally=Stmt)?
+        | {AwaitStmt.annotations=current}
+            'await' guard=Guard ';'
+        | {SuspendStmt.annotations=current}
+            'suspend' ';'
+        | {DurationStmt.annotations=current}
+            'duration' '(' min=Exp ',' max=Exp ')' ';'
+        | {ThrowStmt.annotations=current}
+            'throw' exception=Exp ';'
+        | {DieStmt.annotations=current}
+            'die' exception=Exp ';'
+        | {MoveCogToStmt.annotations=current}
+            'movecogto' target=Exp ';'
+        | {ExpStmt.annotations=current}
+            exp=Exp ';'
+        | {CaseStmt.annotations=current}
+            'switch' '(' condition=Exp ')' '{' (branches+=CaseStmtBranch)* '}'
+        )
     ;
-
-VarDeclStmt : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ( '=' init=Exp )? ';' ;
-
-AssignStmt : annotations=Annotations lhs=VarOrFieldExp '=' exp=Exp ';' ;
-
-SkipStmt : annotations=Annotations 'skip' ';' ;
-
-ReturnStmt : annotations=Annotations 'return' exp=Exp ';' ;
-
-AssertStmt : annotations=Annotations 'assert' exp=Exp ';' ;
-
-Block : annotations=Annotations '{' (stmts+=Stmt)* '}' ;
-
-IfStmt : annotations=Annotations 'if' '(' condition=Exp ')' consequence=Stmt (=>'else' alternate=Stmt)? ;
-
-WhileStmt : annotations=Annotations 'while' '(' condition=Exp ')' body=Stmt ;
-
-ForeachStmt : annotations=Annotations 'foreach' '(' var=IDENTIFIER 'in' list=Exp ')' body=Stmt ;
-
-TryCatchFinallyStmt
-    : annotations=Annotations
-        'try' body=Stmt
-        'catch' (( '{' (branches+=CaseStmtBranch)* '}') | branches+=CaseStmtBranch)
-        (=> 'finally' finally=Stmt)?
-    ;
-
-AwaitStmt : annotations=Annotations 'await' guard=Guard ';' ;
 
 Guard : SingleGuard ({Guard.left=current} '&' right=SingleGuard)* ;
 
@@ -187,20 +181,6 @@ ClaimGuard returns Guard : exp=VarOrFieldExp '?' ;
 DurationGuard returns Guard :  'duration' '(' min=Exp ',' max=Exp ')' ;
 
 ExpGuard returns Guard : exp=Exp ;
-
-SuspendStmt : annotations=Annotations 'suspend' ';' ;
-
-DurationStmt : annotations=Annotations 'duration' '(' min=Exp ',' max=Exp ')' ;
-
-ThrowStmt : annotations=Annotations 'throw' exception=Exp ';' ;
-
-DieStmt : annotations=Annotations 'die' exception=Exp ';' ;
-
-MoveCogToStmt : annotations=Annotations 'movecogto' target=Exp ';' ;
-
-ExpStmt : annotations=Annotations exp=Exp ';' ;
-
-CaseStmt : annotations=Annotations 'switch' '(' condition=Exp ')' '{' (branches+=CaseStmtBranch)* '}' ;
 
 CaseStmtBranch : p=Pattern '=>' body=Stmt ;
 
