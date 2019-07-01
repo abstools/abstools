@@ -12,7 +12,7 @@ ModuleDecl
     : 'module' name=QualifiedTypeIdentifier ';'
         (exports+=ModuleExport | imports+=ModuleImport)*
         (declarations+=Declaration)*
-        (mainBlock=Block)?
+        ( '{' (mainblockstmts+=Stmt)* '}')?
     ;
 
 ModuleExport
@@ -104,7 +104,7 @@ ClassDecl
         ( 'implements' interfaces+=QualifiedTypeIdentifier (',' interfaces+=QualifiedTypeIdentifier)* )?
         '{'
         (fields+=FieldDecl)*
-        (initblock=Block)?
+        ( '{' initblockstmts+=Stmt* '}' )?
         ( 'recover' '{' (recoverbranches+=CaseStmtBranch)* '}' )?
         // (traits+=TraitUsage)*
         (methods+=MethodDecl)*
