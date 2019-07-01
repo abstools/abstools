@@ -33,6 +33,7 @@ import org.abs_models.xtext.abs.VarDeclStmt;
 import org.abs_models.xtext.abs.impl.VarDeclStmtImpl;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
@@ -57,9 +58,34 @@ public class XtextToJastAdd {
             // Xtext column values are 1-based, we want 0-based
             node.setPosition(beg.getLine(), beg.getColumn() - 1,
                              end.getLine(), end.getColumn() - 1);
-            // FIXME: handle non-file URLs here (abslang.abs is a resource so
-            // doesn’t have a filename)
-            node.setFileName(obj.eResource().getURI().toFileString());
+            String filename = obj.eResource().getURI().toFileString();
+            if (filename == null) filename = "(standard library)";
+            node.setFileName(filename);
+        }
+        return node;
+    }
+
+    private static <T extends ASTNode<?>> T nodeWithLocation(T node, EObject obj, EStructuralFeature feature) {
+        // FIXME: there’s a constant defined somewhere deep in xtext for this
+        // magic 0 value -- INSIGNIFICANT_INDEX or similar name
+        return nodeWithLocation(node, obj, feature, 0);
+    }
+
+
+    private static <T extends ASTNode<?>> T nodeWithLocation(T node, EObject obj, EStructuralFeature feature, int indexInList) {
+        INode n = NodeModelUtils.findActualNodeFor(obj); // do we want .getNode() instead?
+        if (n != null) {
+            ITextRegionWithLineInformation location = (ITextRegionWithLineInformation)location_provider.getSignificantTextRegion(obj, feature, indexInList);
+            // End location is untested since we only print beginning
+            // locations in error output
+            LineAndColumn beg = NodeModelUtils.getLineAndColumn(n, location.getOffset());
+            LineAndColumn end = NodeModelUtils.getLineAndColumn(n, location.getOffset() + location.getLength());
+            // Xtext column values are 1-based, we want 0-based
+            node.setPosition(beg.getLine(), beg.getColumn() - 1,
+                             end.getLine(), end.getColumn() - 1);
+            String filename = obj.eResource().getURI().toFileString();
+            if (filename == null) filename = "(standard library)";
+            node.setFileName(filename);
         }
         return node;
     }
