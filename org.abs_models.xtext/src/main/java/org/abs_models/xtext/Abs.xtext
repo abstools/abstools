@@ -237,7 +237,7 @@ CaseExpBranch
 Pattern
     : {WildcardPattern} '_'
     | {IntLiteralPattern} value=INTLITERAL
-    | {StringLiteralPatern} value=STRINGLITERAL
+    | {StringLiteralPattern} value=STRINGLITERAL
     | {FloatLiteralPattern} value=FLOATLITERAL
     | {VariablePattern} value=IDENTIFIER
     | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' args+=Pattern (',' args+=Pattern)* ')' )?
