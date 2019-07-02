@@ -182,7 +182,7 @@ DurationGuard returns Guard :  'duration' '(' min=Exp ',' max=Exp ')' ;
 
 ExpGuard returns Guard : exp=Exp ;
 
-CaseStmtBranch : p=Pattern '=>' body=Stmt ;
+CaseStmtBranch : pattern=Pattern '=>' body=Stmt ;
 
 // Expressions
 
@@ -207,7 +207,7 @@ OriginalCallExp returns Exp : {OriginalCallExp} (( delta=TYPE_IDENTIFIER | core?
 // See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
 
 CaseExp returns Exp
-    : {CaseExp} 'case' c=Exp '{' (casebranches+=CaseExpBranch)* '}'
+    : {CaseExp} 'case' condition=Exp '{' (casebranches+=CaseExpBranch)* '}'
     ;
 
 CaseExpBranch
