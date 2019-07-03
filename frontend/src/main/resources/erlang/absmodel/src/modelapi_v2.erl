@@ -19,7 +19,7 @@ init(Req, _Opts) ->
             <<"clock">> -> handle_clock(cowboy_req:path_info(Req),
                                         cowboy_req:parse_qs(Req));
             <<"dcs">> -> handle_dcs();
-            <<"schedules">> -> handle_schedules();
+            <<"trace">> -> handle_trace();
             <<"db_traces">> -> handle_db_traces();
             <<"o">> -> handle_object_query(cowboy_req:path_info(Req));
             <<"static_dcs">> -> handle_static_dcs(cowboy_req:path_info(Req));
@@ -76,7 +76,7 @@ handle_clock([<<"advance">>], _) ->
 handle_dcs() ->
     {200, <<"application/json">>, get_statistics_json()}.
 
-handle_schedules() ->
+handle_trace() ->
     {200, <<"application/json">>, get_trace_json()}.
 
 handle_db_traces() ->
