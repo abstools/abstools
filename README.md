@@ -1,22 +1,56 @@
-ABS Tools
+ABS Tools – Trace fork
 =========
 
-[![CircleCI](https://circleci.com/gh/abstools/abstools/tree/master.svg?style=svg)](https://circleci.com/gh/abstools/abstools/tree/master)
+Inside this repository we develop the experimental extensions for the ABS
+modeling language. The current language manual is at http://docs.abs-models.org.
 
-Inside this repository we develop the core tools of the ABS modelling
-language.  The current language manual is at http://docs.abs-models.org.
+After installing the frontend (see instructions below), you can try out
+recording and replying. First compile an ABS model to Erlang with
 
-To run the ABS collaboratory (a browser-based IDE for ABS) locally using
-Docker, execute the following command:
+    $ bin/bash/absc --erlang [options] <absfiles>
 
-    docker run -p 8080:80 --rm abslang/collaboratory:latest
+The output will be put in `gen/erl`.
 
-Then connect your browser to http://localhost:8080/.  It is not necessary to
-clone the repository or compile the toolchain to run the ABS collaboratory in this way.
+A model can be started with two different commands, both of which are
+generated inside `gen/erl`:
 
-To run the absc compiler locally using docker, create a script such as
-https://github.com/abstools/abstools/blob/master/frontend/src/main/resources/bash/absc-docker
-and put it in your path.
+    $ gen/erl/run
+    $ gen/erl/start_console
+
+The command `run` launches an Erlang script that terminates after the
+model terminates; `start_console` launches an Erlang shell and
+executes the given main module, offering an Erlang prompt afterwards.
+For windows, start the model with `run.bat`.
+
+To record a trace to a file `trace.json`, then one of the following:
+
+    $ gen/erl/run --dump-trace trace.json
+    $ gen/erl/run -t trace.json
+
+To replay an existing trace, run one of the following
+
+    $ gen/erl/run --replay-trace trace.json
+    $ gen/erl/run -r trace.json
+
+Both work with `gen/erl/start_console` as well, but then files should be given
+as full paths.
+
+To extract a trace from a running model, run a model with the model API
+enabled with one of the following:
+
+    $ gen/erl/run -p 8080
+    $ gen/erl/run --port 8080
+
+Then the trace is available in JSON at http://localhost:8080/trace. One can for
+instance save it to file using curl, like so:
+
+    $ curl localhost:8080/trace > trace.json
+
+With the model API enabled, it can be used along with:
+https://github.com/larstvei/ABS-traces.
+
+Running `gen/erl/run -h` gives a list of command-line options.
+
 
 Folders
 -------
@@ -57,23 +91,6 @@ Folders
 
     * `maven-support` - Maven plugin for generating Java/Maude from ABS,
       testing and packaging ABS codes
-
-Using Vagrant
--------------
-
-To develop the ABS tools without installing additional software, you
-can use [Vagrant](https://www.vagrantup.com).  Vagrant will start a
-Linux virtual machine and install the needed dependencies.
-
-First, install Vagrant from https://www.vagrantup.com/downloads.html and
-VirtualBox from https://www.virtualbox.org
-
-To create the ABS virtual machine, run the command `vagrant up` in this
-directory.  Run `vagrant ssh` to login to that machine (login vagrant/vagrant), or open
-http://localhost:8888/ to connect to a local version of the collaboratory.
-Currently supported browsers include Firefox, Chrome, recent IE (no Safari).
-
-Within the VM, this directory is accessible as `/vagrant`.
 
 Note for Windows Users
 ----------------------
