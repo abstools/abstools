@@ -20,7 +20,7 @@
          {influxdb_db,$d,"influxdb-db",{string,"absmodel"},"Name of the influx database log data is written to"},
          {clocklimit,$l,"clock-limit",{integer,none},"Do not advance simulation clock above given clock value"},
          {schedulers,$s,"schedulers",{integer,none},"Set number of online erlang schedulers"},
-         {dump_trace,$t,"dump-trace",undefined,"Dump the trace as a JSON"},
+         {dump_trace,$t,"dump-trace",{string, none},"Dump the trace as a JSON file"},
          {replay_trace,$r,"replay-trace",{string, none},"Replay a trace, given as a JSON file"},
          {explore,undefined,"explore",undefined,"Explore different execution paths"},
          {debug,undefined,"debug",{integer,0},"Turn on debug mode when > 0 (model will run much slower; diagnostic output when > 1)"},
@@ -90,7 +90,7 @@ parse(Args,Exec)->
             InfluxdbDB=proplists:get_value(influxdb_db,Parsed),
             InfluxdbEnable=proplists:get_value(influxdb_enable,Parsed, false),
             Schedulers=proplists:get_value(schedulers,Parsed,none),
-            DumpTrace=proplists:get_value(dump_trace,Parsed,false),
+            DumpTrace=proplists:get_value(dump_trace,Parsed,none),
             ReplayMode=proplists:get_value(replay_trace,Parsed,none),
             ExploreMode=proplists:get_value(explore,Parsed,false),
             case Schedulers of
@@ -163,9 +163,9 @@ end_mod(TaskRef, InfluxdbEnabled, DumpTrace) ->
         _ -> ok
     end,
     case DumpTrace of
-        true -> JsonTrace = modelapi_v2:get_trace_json(),
-                file:write_file("trace.json", JsonTrace);
-        _ -> ok
+        none -> ok;
+        _ -> JsonTrace = modelapi_v2:get_trace_json(),
+             file:write_file(DumpTrace, JsonTrace)
     end,
     Ret = case Status of
               success -> RetVal;
