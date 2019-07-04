@@ -70,7 +70,7 @@ public class XtextToJastAdd {
             node.setPosition(beg.getLine(), beg.getColumn() - 1,
                              end.getLine(), end.getColumn() - 1);
             String filename = obj.eResource().getURI().toFileString();
-            if (filename == null) filename = "(standard library)";
+            if (filename == null) filename = obj.eResource().getURI().toPlatformString(false);
             node.setFileName(filename);
         }
         return node;
