@@ -113,7 +113,7 @@ public class XtextToJastAdd {
         Model result = new Model();
         for (Resource r : resourceSet.getResources()) {
             for (EObject unit : r.getContents()) {
-                result.addCompilationUnitNoTransform((CompilationUnit) fromXtext((org.abs_models.xtext.abs.CompilationUnit) unit));
+                result.addCompilationUnitNoTransform(fromXtext((org.abs_models.xtext.abs.CompilationUnit) unit));
             }
         }
         return result;
@@ -140,48 +140,52 @@ public class XtextToJastAdd {
                 StarExport se = new StarExport();
                 e = se;
                 if (export.getModulename() != null)
-                    se.setModuleName(new Name(export.getModulename()));
+                    se.setModuleName(nodeWithLocation(new Name(export.getModulename()), export, AbsPackage.eINSTANCE.getModuleExport_Modulename()));
             } else if (export.getModulename() != null) {
                 // "export a, b from OtherModule;"
                 FromExport fe = new FromExport();
                 e = fe;
                 fe.setModuleName(export.getModulename());
-                for (String id : export.getIdentifiers()) {
-                    fe.addNameNoTransform(new Name(id));
+                for (int i = 0; i < export.getIdentifiers().size(); i++) {
+                    String id = export.getIdentifiers().get(i);
+                    fe.addNameNoTransform(nodeWithLocation(new Name(id), export, AbsPackage.eINSTANCE.getModuleExport_Identifiers(), i));
                 }
             } else {
                 // "export a, b;"
                 NamedExport ne = new NamedExport();
                 e = ne;
-                for (String id : export.getIdentifiers()) {
-                    ne.addNameNoTransform(new Name(id));
+                for (int i = 0; i < export.getIdentifiers().size(); i++) {
+                    String id = export.getIdentifiers().get(i);
+                    ne.addNameNoTransform(nodeWithLocation(new Name(id), export, AbsPackage.eINSTANCE.getModuleExport_Identifiers(), i));
                 }
             }
             result.addExportNoTransform(nodeWithLocation(e, export));
         }
         for (org.abs_models.xtext.abs.ModuleImport imp : xtext_module.getImports()) {
-            Import i;
+            Import ji;
             if (imp.isStar()) {
                 // "import * from OtherModule;"
                 StarImport si = new StarImport(imp.getModulename());
-                i = si;
+                ji = si;
             } else if (imp.getModulename() != null) {
                 // "import a, b from OtherModule;"
                 FromImport fi = new FromImport();
-                i = fi;
+                ji = fi;
                 fi.setModuleName(imp.getModulename());
-                for (String id : imp.getIdentifiers()) {
-                    fi.addNameNoTransform(new Name(id));
+                for (int i = 0; i < imp.getIdentifiers().size(); i++) {
+                    String id = imp.getIdentifiers().get(i);
+                    fi.addNameNoTransform(nodeWithLocation(new Name(id), imp, AbsPackage.eINSTANCE.getModuleImport_Identifiers(), i));
                 }
             } else {
                 // "import OtherModule.a, OtherModule.b;"
                 NamedImport ni = new NamedImport();
-                i = ni;
-                for (String id : imp.getIdentifiers()) {
-                    ni.addNameNoTransform(new Name(id));
+                ji = ni;
+                for (int i = 0; i < imp.getIdentifiers().size(); i++) {
+                    String id = imp.getIdentifiers().get(i);
+                    ni.addNameNoTransform(nodeWithLocation(new Name(id), imp, AbsPackage.eINSTANCE.getModuleImport_Identifiers(), i));
                 }
             }
-            result.addImportNoTransform(nodeWithLocation(i, imp));
+            result.addImportNoTransform(nodeWithLocation(ji, imp));
         }
         for (org.abs_models.xtext.abs.Declaration decl : xtext_module.getDeclarations()) {
             result.addDeclNoTransform(fromXtext(decl));
@@ -195,9 +199,24 @@ public class XtextToJastAdd {
 
             final MainBlock mainBlock = new MainBlock();
             mainBlock.setStmtList(statements);
-            result.setBlock(nodeWithLocation(mainBlock, xtext_module));
+            result.setBlock(mainBlock);
         }
         return nodeWithLocation(result, xtext_module);
+    }
+
+    private static List<Annotation> annotationsfromXtext(org.abs_models.xtext.abs.Annotations annotations) {
+        List<Annotation> annotationList = new List<>();
+        for(org.abs_models.xtext.abs.Annotation annotation : annotations.getAnnotations()) {
+            Annotation astAnnotation;
+            PureExp exp = pureExpFromXtext(annotation.getValue());
+            if (annotation.getId() != null) {
+                astAnnotation = new TypedAnnotation(exp, nodeWithLocation(new UnresolvedTypeUse(annotation.getId(), new List<>()), annotation, AbsPackage.eINSTANCE.getAnnotation_Id()));
+            } else {
+                astAnnotation = new Annotation(exp);
+            }
+            annotationList.add(nodeWithLocation(astAnnotation, annotation));
+        }
+        return annotationList;
     }
 
     static Decl fromXtext(org.abs_models.xtext.abs.Declaration xtext_decl) {
@@ -233,8 +252,9 @@ public class XtextToJastAdd {
             result = new DataTypeDecl();
         } else {
             result = new ParametricDataTypeDecl();
-            for (String tp : xtext_decl.getTypeparams()) {
-                ((ParametricDataTypeDecl)result).addTypeParameter(new TypeParameterDecl(tp));
+            for (int i = 0; i < xtext_decl.getTypeparams().size(); i++) {
+                String tp = xtext_decl.getTypeparams().get(i);
+                ((ParametricDataTypeDecl)result).addTypeParameter(nodeWithLocation(new TypeParameterDecl(tp), xtext_decl, AbsPackage.eINSTANCE.getDataTypeDecl_Typeparams(), i));
             }
         }
         result.setName(xtext_decl.getName());
@@ -244,23 +264,27 @@ public class XtextToJastAdd {
         for (org.abs_models.xtext.abs.DataConstructorDecl xtext_d : xtext_decl.getConstructors()) {
              result.addDataConstructor(fromXtext(xtext_d));
         }
-        return result;
+        return nodeWithLocation(result, xtext_decl);
     }
 
-    private static List<Annotation> annotationsfromXtext(org.abs_models.xtext.abs.Annotations annotations) {
-        List<Annotation> annotationList = new List<>();
-        for(org.abs_models.xtext.abs.Annotation annotation : annotations.getAnnotations()) {
-            Annotation astAnnotation;
-            PureExp exp = pureExpFromXtext(annotation.getValue());
-            if (annotation.getId() != null) {
-                // FIXME: check that DataTypeUse is the right Access subclass to use
-                astAnnotation = new TypedAnnotation(exp, nodeWithLocation(new DataTypeUse(annotation.getId(), new List<>()), annotation, AbsPackage.eINSTANCE.getAnnotation_Id()));
-            } else {
-                astAnnotation = new Annotation(exp);
-            }
-            annotationList.add(nodeWithLocation(astAnnotation, annotation));
+    private static DataConstructor fromXtext(org.abs_models.xtext.abs.DataConstructorDecl xtext_d) {
+        DataConstructor constructor = new DataConstructor();
+        constructor.setName(xtext_d.getName());
+
+        for (DataConstructorParamDecl arg : xtext_d.getArgs()) {
+            constructor.addConstructorArgNoTransform(fromXtext(arg));
         }
-        return annotationList;
+
+        return nodeWithLocation(constructor, xtext_d);
+    }
+
+    private static ConstructorArg fromXtext(DataConstructorParamDecl xtext_arg) {
+        ConstructorArg constructorArg = new ConstructorArg();
+        if(xtext_arg.getName() != null) {
+            constructorArg.setSelectorName(nodeWithLocation(new Name(xtext_arg.getName()), xtext_arg, AbsPackage.eINSTANCE.getDataConstructorParamDecl_Name()));
+        }
+        constructorArg.setTypeUse(fromXtext(xtext_arg.getType()));
+        return nodeWithLocation(constructorArg, xtext_arg);
     }
 
     private static Exp expFromXtext(org.abs_models.xtext.abs.Exp value) {
@@ -547,37 +571,6 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, value);
     }
 
-    private static DataConstructor fromXtext(org.abs_models.xtext.abs.DataConstructorDecl xtext_d) {
-        DataConstructor constructor = new DataConstructor();
-        constructor.setName(xtext_d.getName());
-
-        final EList<DataConstructorParamDecl> args = xtext_d.getArgs();
-        if(!args.isEmpty()) {
-            List<ConstructorArg> constructorArgs = constructorArgsFromXtext(args);
-            constructor.setConstructorArgList(constructorArgs);
-        }
-
-        return nodeWithLocation(constructor, xtext_d);
-    }
-
-    private static List<ConstructorArg> constructorArgsFromXtext(EList<DataConstructorParamDecl> args) {
-        List<ConstructorArg> constructorArgs = new List<>();
-        for(DataConstructorParamDecl arg : args) {
-            ConstructorArg constructorArg = new ConstructorArg();
-            if(arg.getName() != null) {
-                constructorArg.setSelectorName(new Name(arg.getName()));
-            }
-            nodeWithLocation(constructorArg, arg);
-
-            TypeUse typeUse = new DataTypeUse();
-            nodeWithLocation(typeUse, arg.getType());
-            constructorArg.setTypeUse(typeUse);
-
-            constructorArgs.add(constructorArg);
-        }
-        return constructorArgs;
-    }
-
     static TypeSynDecl fromXtext(org.abs_models.xtext.abs.TypeSynonymDecl xtext_decl) {
         TypeSynDecl result = new TypeSynDecl();
         result.setName(xtext_decl.getName());
@@ -600,8 +593,9 @@ public class XtextToJastAdd {
         DataConstructor constructor = new DataConstructor();
         constructor.setName(xtext_decl.getName());
 
-        List<ConstructorArg> constructorArgs = constructorArgsFromXtext(xtext_decl.getArgs());
-        constructor.setConstructorArgList(constructorArgs);
+        for (DataConstructorParamDecl arg : xtext_decl.getArgs()) {
+            constructor.addConstructorArgNoTransform(fromXtext(arg));
+        }
 
         result.setDataConstructorList(new List<>(constructor));
 
@@ -1077,6 +1071,28 @@ public class XtextToJastAdd {
 
         nodeWithLocation(sig, methodDecl);
         method.setMethodSig(sig);
+    }
+
+    private static TypeUse fromXtext(org.abs_models.xtext.abs.TypeUse type) {
+        TypeUse result = fromXtext(type.getType());
+        result.setAnnotationList(annotationsfromXtext(type.getAnnotations()));
+        return result;
+    }
+
+    private static TypeUse fromXtext(org.abs_models.xtext.abs.TypeUseNoAnnotations type) {
+        TypeUse result;
+        if (!type.getParams().isEmpty()) {
+            ParametricDataTypeUse presult = new ParametricDataTypeUse();
+            result = (ParametricDataTypeUse) presult;
+            for (org.abs_models.xtext.abs.TypeUse param : type.getParams()) {
+                presult.addParamNoTransform(fromXtext(param));
+            }
+        } else {
+            // will be rewritten by JastAdd
+            result = new DataTypeUse();
+        }
+        result.setName(type.getName());
+        return nodeWithLocation(result, type);
     }
 
 }
