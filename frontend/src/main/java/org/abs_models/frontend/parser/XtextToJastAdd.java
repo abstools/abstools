@@ -287,6 +287,53 @@ public class XtextToJastAdd {
         return nodeWithLocation(constructorArg, xtext_arg);
     }
 
+    static TypeSynDecl fromXtext(org.abs_models.xtext.abs.TypeSynonymDecl xtext_decl) {
+        TypeSynDecl result = new TypeSynDecl();
+        result.setName(xtext_decl.getName());
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+        result.setValue(fromXtext(xtext_decl.getType()));
+        return nodeWithLocation(result, xtext_decl);
+    }
+
+    static ExceptionDecl fromXtext(org.abs_models.xtext.abs.ExceptionDecl xtext_decl) {
+        ExceptionDecl result = new  ExceptionDecl();
+        result.setName(xtext_decl.getName());
+
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+
+        DataConstructor constructor = new DataConstructor();
+        constructor.setName(xtext_decl.getName());
+
+        for (DataConstructorParamDecl arg : xtext_decl.getArgs()) {
+            constructor.addConstructorArgNoTransform(fromXtext(arg));
+        }
+
+        result.setDataConstructorList(new List<>(constructor));
+
+        return nodeWithLocation(result, xtext_decl);
+    }
+
+    static FunctionDecl fromXtext(org.abs_models.xtext.abs.FunctionDecl xtext_decl) {
+        FunctionDecl result = new  FunctionDecl();
+        result.setName(xtext_decl.getName());
+
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+
+        TypeUse typeUse = new DataTypeUse();
+        nodeWithLocation(typeUse, xtext_decl.getType());
+        result.setTypeUse(typeUse);
+
+        List<ParamDecl> params = paramDeclsFromXtext(xtext_decl.getArgs());
+        result.setParamList(params);
+
+        // FIXME how to handle xtext_decl.getTypeparams() here?
+        // FIXME xtext_decl.getBody() ?
+        // FIXME how to fill result.setFunctionDef()? The 2 concrete subclasses don't seem to offer things todo?
+        // FIXME My guess would be that xtext_decl.getBody() is matched to result.setFunctionDef() via expressions, but I don't see how... (also see PartialFunctionDecl below)
+
+        return nodeWithLocation(result, xtext_decl);
+    }
+
     private static Exp expFromXtext(org.abs_models.xtext.abs.Exp value) {
         if(value instanceof GetExp || value instanceof OriginalCallExp || value instanceof MethodCallExp || value instanceof NewExp) {
             return effExpFromXtext(value);
@@ -569,58 +616,6 @@ public class XtextToJastAdd {
         }
 
         return nodeWithLocation(result, value);
-    }
-
-    static TypeSynDecl fromXtext(org.abs_models.xtext.abs.TypeSynonymDecl xtext_decl) {
-        TypeSynDecl result = new TypeSynDecl();
-        result.setName(xtext_decl.getName());
-
-        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-
-        TypeUse typeUse = new DataTypeUse();
-        nodeWithLocation(typeUse, xtext_decl.getType());
-        result.setValue(typeUse);
-
-        return nodeWithLocation(result, xtext_decl);
-    }
-
-    static ExceptionDecl fromXtext(org.abs_models.xtext.abs.ExceptionDecl xtext_decl) {
-        ExceptionDecl result = new  ExceptionDecl();
-        result.setName(xtext_decl.getName());
-
-        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-
-        DataConstructor constructor = new DataConstructor();
-        constructor.setName(xtext_decl.getName());
-
-        for (DataConstructorParamDecl arg : xtext_decl.getArgs()) {
-            constructor.addConstructorArgNoTransform(fromXtext(arg));
-        }
-
-        result.setDataConstructorList(new List<>(constructor));
-
-        return nodeWithLocation(result, xtext_decl);
-    }
-
-    static FunctionDecl fromXtext(org.abs_models.xtext.abs.FunctionDecl xtext_decl) {
-        FunctionDecl result = new  FunctionDecl();
-        result.setName(xtext_decl.getName());
-
-        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-
-        TypeUse typeUse = new DataTypeUse();
-        nodeWithLocation(typeUse, xtext_decl.getType());
-        result.setTypeUse(typeUse);
-
-        List<ParamDecl> params = paramDeclsFromXtext(xtext_decl.getArgs());
-        result.setParamList(params);
-
-        // FIXME how to handle xtext_decl.getTypeparams() here?
-        // FIXME xtext_decl.getBody() ?
-        // FIXME how to fill result.setFunctionDef()? The 2 concrete subclasses don't seem to offer things todo?
-        // FIXME My guess would be that xtext_decl.getBody() is matched to result.setFunctionDef() via expressions, but I don't see how... (also see PartialFunctionDecl below)
-
-        return nodeWithLocation(result, xtext_decl);
     }
 
     private static List<ParamDecl> paramDeclsFromXtext(EList<org.abs_models.xtext.abs.ParamDecl> xtext_decl) {
