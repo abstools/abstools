@@ -405,6 +405,72 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_decl);
     }
 
+    static ClassDecl fromXtext(org.abs_models.xtext.abs.ClassDecl xtext_decl) {
+        ClassDecl result = new  ClassDecl();
+        result.setName(xtext_decl.getName());
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+        for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
+            result.addParamNoTransform(fromXtext(arg));
+        }
+
+        for (int i = 0; i < xtext_decl.getInterfaces().size(); i++) {
+            String iname = xtext_decl.getInterfaces().get(i);
+            result.addImplementedInterfaceUseNoTransform(nodeWithLocation(new InterfaceTypeUse(iname, new List<>()), xtext_decl, AbsPackage.eINSTANCE.getInterfaceDecl_Superinterfaces(), i));
+        }
+
+        for(org.abs_models.xtext.abs.FieldDecl fieldDecl : xtext_decl.getFields()) {
+            result.addFieldNoTransform(fromXtext(fieldDecl));
+        }
+
+        InitBlock astInitBlock = new InitBlock();
+        for(org.abs_models.xtext.abs.Stmt statement : xtext_decl.getInitblockstmts()) {
+            astInitBlock.addStmt(statementFromXtext(statement));
+        }
+        result.setInitBlock(astInitBlock);
+
+        for(MethodDecl methodDecl : xtext_decl.getMethods()) {
+            result.addMethodNoTransform(fromXtext(methodDecl));
+        }
+
+        for (CaseStmtBranch recover_branch : xtext_decl.getRecoverbranches()) {
+            result.addRecoverBranchNoTransform(fromXtext(recover_branch));
+        }
+
+        return nodeWithLocation(result, xtext_decl);
+    }
+
+    private static FieldDecl fromXtext(org.abs_models.xtext.abs.FieldDecl xtext_decl) {
+        FieldDecl result = new FieldDecl();
+        result.setName(xtext_decl.getName());
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+        if (xtext_decl.getInit() != null) {
+            result.setInitExp(pureExpFromXtext(xtext_decl.getInit()));
+        }
+        result.setAccess(fromXtext(xtext_decl.getType()));
+        return nodeWithLocation(result, xtext_decl);
+    }
+
+    private static MethodImpl fromXtext(org.abs_models.xtext.abs.MethodDecl xtext_decl) {
+        MethodImpl result = new MethodImpl();
+
+        MethodSig sig = new MethodSig();
+        sig.setName(xtext_decl.getName());
+        sig.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+        for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
+            sig.addParamNoTransform(fromXtext(arg));
+        }
+        sig.setReturnType(fromXtext(xtext_decl.getResulttype()));
+        result.setMethodSig(sig);
+
+        Block block = new Block();
+        for(org.abs_models.xtext.abs.Stmt stmt : xtext_decl.getStatements()) {
+            block.addStmtNoTransform(statementFromXtext(stmt));
+        }
+        result.setBlock(block);
+
+        return nodeWithLocation(result, xtext_decl);
+    }
+
     private static Exp expFromXtext(org.abs_models.xtext.abs.Exp value) {
         if(value instanceof GetExp || value instanceof OriginalCallExp || value instanceof MethodCallExp || value instanceof NewExp) {
             return effExpFromXtext(value);
@@ -689,80 +755,6 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, value);
     }
 
-    static ClassDecl fromXtext(org.abs_models.xtext.abs.ClassDecl xtext_decl) {
-        ClassDecl result = new  ClassDecl();
-        result.setName(xtext_decl.getName());
-
-        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-        for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
-            result.addParamNoTransform(fromXtext(arg));
-        }
-
-        for (int i = 0; i < xtext_decl.getInterfaces().size(); i++) {
-            String iname = xtext_decl.getInterfaces().get(i);
-            result.addImplementedInterfaceUseNoTransform(nodeWithLocation(new InterfaceTypeUse(iname, new List<>()), xtext_decl, AbsPackage.eINSTANCE.getInterfaceDecl_Superinterfaces(), i));
-        }
-
-        List<FieldDecl> astFieldDelcDeclList = new List<>();
-        for(org.abs_models.xtext.abs.FieldDecl fieldDecl : xtext_decl.getFields()) {
-            FieldDecl astFieldDecl = new FieldDecl();
-            astFieldDecl.setName(fieldDecl.getName());
-
-            astFieldDecl.setAnnotationList(annotationsfromXtext(fieldDecl.getAnnotations()));
-
-            astFieldDecl.setInitExp(pureExpFromXtext(fieldDecl.getInit()));
-
-            // FIXME fieldDecl.getType() ?
-            // FIXME astFieldDecl.setAccess() ?
-            // FIXME astFieldDecl.setPort() ?
-
-            nodeWithLocation(astFieldDecl, fieldDecl);
-            astFieldDelcDeclList.add(astFieldDecl);
-        }
-        result.setFieldList(astFieldDelcDeclList);
-
-
-        InitBlock astInitBlock = new InitBlock();
-
-        for(org.abs_models.xtext.abs.Stmt statement : xtext_decl.getInitblockstmts()) {
-            astInitBlock.addStmt(statementFromXtext(statement));
-        }
-
-        result.setInitBlock(astInitBlock);
-
-
-        List<MethodImpl> methodList = new List<>();
-        for(MethodDecl methodDecl : xtext_decl.getMethods()) {
-            MethodImpl method = new MethodImpl();
-
-            createMethodSigFromMethodDecl(methodDecl, method);
-
-            Block block = new Block();
-            block.setAnnotationList(annotationsfromXtext(methodDecl.getAnnotations()));
-
-            List<Stmt> astStatements = new List<>();
-            for(org.abs_models.xtext.abs.Stmt stmt : methodDecl.getStatements()) {
-                astStatements.add(statementFromXtext(stmt));
-            }
-
-            block.setStmtList(astStatements);
-
-            method.setBlock(block);
-
-            nodeWithLocation(method, methodDecl);
-            methodList.add(method);
-        }
-        result.setMethodList(methodList);
-
-
-        List<CaseBranchStmt> branchStmts = caseBranchStmtsFromXtext(xtext_decl.getRecoverbranches());
-        result.setRecoverBranchList(branchStmts);
-
-        // FIXME result.setTraitUseList() ?
-
-        return nodeWithLocation(result, xtext_decl);
-    }
-
     private static ParamDecl fromXtext(org.abs_models.xtext.abs.ParamDecl xtext_decl) {
         ParamDecl result = new ParamDecl();
         result.setName(xtext_decl.getName());
@@ -774,18 +766,23 @@ public class XtextToJastAdd {
     private static List<CaseBranchStmt> caseBranchStmtsFromXtext(EList<CaseStmtBranch> statements) {
         List<CaseBranchStmt> branchStmts = new List<>();
         for(CaseStmtBranch branch : statements) {
-            CaseBranchStmt astBranch = new CaseBranchStmt();
-            astBranch.setLeft(patternFromXtext(branch.getPattern()));
-
-            Stmt stmt = statementFromXtext(branch.getBody());
-            Block block = new Block();
-            block.setStmtList(new List<>(stmt));
-            astBranch.setRight(block);
-
-            nodeWithLocation(astBranch, branch);
-            branchStmts.add(astBranch);
+            branchStmts.add(fromXtext(branch));
         }
         return branchStmts;
+    }
+
+    private static CaseBranchStmt fromXtext(CaseStmtBranch xtext_branch) {
+        CaseBranchStmt result = new CaseBranchStmt();
+        result.setLeft(patternFromXtext(xtext_branch.getPattern()));
+
+        Stmt stmt = statementFromXtext(xtext_branch.getBody());
+        // FIXME: only create block if we get a non-block stmt
+        // TODO: create Xtext grammar rule that parses a singleton statement as a block
+        Block block = new Block();
+        block.setStmtList(new List<>(stmt));
+        result.setRight(block);
+
+        return nodeWithLocation(result, xtext_branch);
     }
 
     private static Stmt statementFromXtext(org.abs_models.xtext.abs.Stmt stmt) {
@@ -1037,22 +1034,6 @@ public class XtextToJastAdd {
                     + pattern.getClass().toString());
         }
         return nodeWithLocation(result, pattern);
-    }
-
-    private static void createMethodSigFromMethodDecl(MethodDecl methodDecl, MethodImpl method) {
-        MethodSig sig = new MethodSig();
-        sig.setName(methodDecl.getName());
-        sig.setAnnotationList(annotationsfromXtext(methodDecl.getAnnotations()));
-        for(org.abs_models.xtext.abs.ParamDecl arg : methodDecl.getArgs()) {
-            sig.addParamNoTransform(fromXtext(arg));
-        }
-
-        TypeUse typeUse = new DataTypeUse();
-        nodeWithLocation(typeUse, methodDecl.getResulttype());
-        sig.setReturnType(typeUse);
-
-        nodeWithLocation(sig, methodDecl);
-        method.setMethodSig(sig);
     }
 
     private static TypeUse fromXtext(org.abs_models.xtext.abs.TypeUse type) {
