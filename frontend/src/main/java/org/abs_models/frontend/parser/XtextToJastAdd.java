@@ -345,6 +345,37 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_decl);
     }
 
+    static PartialFunctionDecl fromXtext(org.abs_models.xtext.abs.PartialFunctionDecl xtext_decl) {
+        PartialFunctionDecl result;
+        if (!xtext_decl.getTypeparams().isEmpty()) {
+            ParametricPartialFunctionDecl presult = new ParametricPartialFunctionDecl();
+            result = presult;
+            for (int i = 0; i < xtext_decl.getTypeparams().size(); i++) {
+                String tp = xtext_decl.getTypeparams().get(i);
+                presult.addTypeParameterNoTransform(nodeWithLocation(new TypeParameterDecl(tp), xtext_decl, AbsPackage.eINSTANCE.getPartialFunctionDecl_Typeparams(), i));
+            }
+        } else {
+            result = new  PartialFunctionDecl();
+        }
+        result.setName(xtext_decl.getName());
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+        result.setTypeUse(fromXtext(xtext_decl.getResulttype()));
+
+        for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
+            result.addParamNoTransform(fromXtext(arg));
+        }
+
+        for (int i = 0; i < xtext_decl.getFunction_args().size(); i++) {
+            String fArg = xtext_decl.getFunction_args().get(i);
+            result.addFuncParamNoTransform(nodeWithLocation(new FunctionParamDecl(fArg), xtext_decl, AbsPackage.eINSTANCE.getPartialFunctionDecl_Function_args(), i));
+        }
+
+        PartialFunctionDef functionDef = new PartialFunctionDef(pureExpFromXtext(xtext_decl.getBody()));
+        result.setPartialFunctionDef(nodeWithLocation(functionDef, xtext_decl.getBody()));
+
+        return nodeWithLocation(result, xtext_decl);
+    }
+
     private static Exp expFromXtext(org.abs_models.xtext.abs.Exp value) {
         if(value instanceof GetExp || value instanceof OriginalCallExp || value instanceof MethodCallExp || value instanceof NewExp) {
             return effExpFromXtext(value);
@@ -627,39 +658,6 @@ public class XtextToJastAdd {
         }
 
         return nodeWithLocation(result, value);
-    }
-
-    static PartialFunctionDecl fromXtext(org.abs_models.xtext.abs.PartialFunctionDecl xtext_decl) {
-        PartialFunctionDecl result = new  PartialFunctionDecl();
-        result.setName(xtext_decl.getName());
-
-        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-
-        TypeUse typeUse = new DataTypeUse();
-        nodeWithLocation(typeUse, xtext_decl.getResulttype());
-        result.setTypeUse(typeUse);
-
-        for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
-            result.addParamNoTransform(fromXtext(arg));
-        }
-
-        // FIXME parse functional parameters
-        List<FunctionParamDecl> paramDeclList = new List<>();
-        for(String fArg : xtext_decl.getFunction_args()) {
-            FunctionParamDecl decl = new FunctionParamDecl();
-            decl.setName(fArg);
-            paramDeclList.add(decl);
-        }
-        result.setFuncParamList(paramDeclList);
-
-        // FIXME how to handle xtext_decl.getTypeparams() here?
-
-        // FIXME this seems too easy...
-        PartialFunctionDef functionDef = new PartialFunctionDef();
-        functionDef.setPureExp(pureExpFromXtext(xtext_decl.getBody()));
-        nodeWithLocation(functionDef, xtext_decl.getBody());
-
-        return nodeWithLocation(result, xtext_decl);
     }
 
     static InterfaceDecl fromXtext(org.abs_models.xtext.abs.InterfaceDecl xtext_decl) {
