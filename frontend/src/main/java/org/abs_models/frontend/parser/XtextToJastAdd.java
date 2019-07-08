@@ -376,6 +376,35 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_decl);
     }
 
+    static InterfaceDecl fromXtext(org.abs_models.xtext.abs.InterfaceDecl xtext_decl) {
+        InterfaceDecl result = new  InterfaceDecl();
+        result.setName(xtext_decl.getName());
+
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+
+        for (int i = 0; i < xtext_decl.getSuperinterfaces().size(); i++) {
+            String iname = xtext_decl.getSuperinterfaces().get(i);
+            result.addExtendedInterfaceUseNoTransform(nodeWithLocation(new InterfaceTypeUse(iname, new List<>()), xtext_decl, AbsPackage.eINSTANCE.getInterfaceDecl_Superinterfaces(), i));
+        }
+
+        for (MethodSignature ms : xtext_decl.getMethods()) {
+            result.addBodyNoTransform(fromXtext(ms));
+        }
+
+        return nodeWithLocation(result, xtext_decl);
+    }
+
+    private static MethodSig fromXtext(MethodSignature xtext_decl) {
+        MethodSig result = new MethodSig();
+        result.setName(result.getName());
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+        for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
+            result.addParamNoTransform(fromXtext(arg));
+        }
+        result.setReturnType(fromXtext(xtext_decl.getResulttype()));
+        return nodeWithLocation(result, xtext_decl);
+    }
+
     private static Exp expFromXtext(org.abs_models.xtext.abs.Exp value) {
         if(value instanceof GetExp || value instanceof OriginalCallExp || value instanceof MethodCallExp || value instanceof NewExp) {
             return effExpFromXtext(value);
@@ -660,56 +689,6 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, value);
     }
 
-    static InterfaceDecl fromXtext(org.abs_models.xtext.abs.InterfaceDecl xtext_decl) {
-        InterfaceDecl result = new  InterfaceDecl();
-        result.setName(xtext_decl.getName());
-
-        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-
-        List<InterfaceTypeUse> interfaces = interfaceTypeUsesFromXtext(xtext_decl.getSuperinterfaces());
-        result.setExtendedInterfaceUseList(interfaces);
-
-        List<MethodSig> methodSigList = methodSigsFromXtext(xtext_decl.getMethods());
-        result.setBodyList(methodSigList);
-
-        return nodeWithLocation(result, xtext_decl);
-    }
-
-    private static List<MethodSig> methodSigsFromXtext(EList<MethodSignature> sigs) {
-        List<MethodSig> methodSigList = new List<>();
-        for(MethodSignature signature : sigs) {
-            MethodSig sig = methodSigFromXtext(signature);
-            methodSigList.add(sig);
-        }
-        return methodSigList;
-    }
-
-    private static MethodSig methodSigFromXtext(MethodSignature signature) {
-        MethodSig sig = new MethodSig();
-        sig.setName(sig.getName());
-        sig.setAnnotationList(annotationsfromXtext(signature.getAnnotations()));
-        for(org.abs_models.xtext.abs.ParamDecl arg : signature.getArgs()) {
-            sig.addParamNoTransform(fromXtext(arg));
-        }
-
-        TypeUse typeUse = new DataTypeUse();
-        nodeWithLocation(typeUse, signature.getResulttype());
-        sig.setReturnType(typeUse);
-
-        nodeWithLocation(sig, signature);
-        return sig;
-    }
-
-    private static List<InterfaceTypeUse> interfaceTypeUsesFromXtext(EList<String> xtext_decl) {
-        List<InterfaceTypeUse> interfaces = new List<>();
-        for(String name : xtext_decl) {
-            InterfaceTypeUse typeUse = new InterfaceTypeUse();
-            typeUse.setName(name);
-            interfaces.add(typeUse);
-        }
-        return interfaces;
-    }
-
     static ClassDecl fromXtext(org.abs_models.xtext.abs.ClassDecl xtext_decl) {
         ClassDecl result = new  ClassDecl();
         result.setName(xtext_decl.getName());
@@ -719,9 +698,10 @@ public class XtextToJastAdd {
             result.addParamNoTransform(fromXtext(arg));
         }
 
-        List<InterfaceTypeUse> interfaces = interfaceTypeUsesFromXtext(xtext_decl.getInterfaces());
-        result.setImplementedInterfaceUseList(interfaces);
-
+        for (int i = 0; i < xtext_decl.getInterfaces().size(); i++) {
+            String iname = xtext_decl.getInterfaces().get(i);
+            result.addImplementedInterfaceUseNoTransform(nodeWithLocation(new InterfaceTypeUse(iname, new List<>()), xtext_decl, AbsPackage.eINSTANCE.getInterfaceDecl_Superinterfaces(), i));
+        }
 
         List<FieldDecl> astFieldDelcDeclList = new List<>();
         for(org.abs_models.xtext.abs.FieldDecl fieldDecl : xtext_decl.getFields()) {
