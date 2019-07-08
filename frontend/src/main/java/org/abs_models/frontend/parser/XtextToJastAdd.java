@@ -55,6 +55,8 @@ import org.eclipse.xtext.resource.XtextResourceSet;
 import org.eclipse.xtext.util.ITextRegionWithLineInformation;
 import org.eclipse.xtext.util.LineAndColumn;
 
+// The methods in this class are roughly in the same order as the grammar rule
+// / class definitions in Abs.xtext
 public class XtextToJastAdd {
 
     private static ILocationInFileProvider location_provider = Main.absinjector.getInstance(ILocationInFileProvider.class);
@@ -254,7 +256,7 @@ public class XtextToJastAdd {
             result = new ParametricDataTypeDecl();
             for (int i = 0; i < xtext_decl.getTypeparams().size(); i++) {
                 String tp = xtext_decl.getTypeparams().get(i);
-                ((ParametricDataTypeDecl)result).addTypeParameter(nodeWithLocation(new TypeParameterDecl(tp), xtext_decl, AbsPackage.eINSTANCE.getDataTypeDecl_Typeparams(), i));
+                ((ParametricDataTypeDecl)result).addTypeParameterNoTransform(nodeWithLocation(new TypeParameterDecl(tp), xtext_decl, AbsPackage.eINSTANCE.getDataTypeDecl_Typeparams(), i));
             }
         }
         result.setName(xtext_decl.getName());
@@ -314,23 +316,32 @@ public class XtextToJastAdd {
     }
 
     static FunctionDecl fromXtext(org.abs_models.xtext.abs.FunctionDecl xtext_decl) {
-        FunctionDecl result = new  FunctionDecl();
+        FunctionDecl result;
+        if (!xtext_decl.getTypeparams().isEmpty()) {
+            ParametricFunctionDecl presult = new ParametricFunctionDecl();
+            result = presult;
+            for (int i = 0; i < xtext_decl.getTypeparams().size(); i++) {
+                String tp = xtext_decl.getTypeparams().get(i);
+                presult.addTypeParameterNoTransform(nodeWithLocation(new TypeParameterDecl(tp), xtext_decl, AbsPackage.eINSTANCE.getFunctionDecl_Typeparams(), i));
+            }
+        } else {
+            result = new  FunctionDecl();
+        }
         result.setName(xtext_decl.getName());
-
         result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+        result.setTypeUse(fromXtext(xtext_decl.getResulttype()));
 
-        TypeUse typeUse = new DataTypeUse();
-        nodeWithLocation(typeUse, xtext_decl.getType());
-        result.setTypeUse(typeUse);
+        for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
+            result.addParamNoTransform(fromXtext(arg));
+        }
 
-        List<ParamDecl> params = paramDeclsFromXtext(xtext_decl.getArgs());
-        result.setParamList(params);
-
-        // FIXME how to handle xtext_decl.getTypeparams() here?
-        // FIXME xtext_decl.getBody() ?
-        // FIXME how to fill result.setFunctionDef()? The 2 concrete subclasses don't seem to offer things todo?
-        // FIXME My guess would be that xtext_decl.getBody() is matched to result.setFunctionDef() via expressions, but I don't see how... (also see PartialFunctionDecl below)
-
+        if (xtext_decl.isBuiltin()) {
+            result.setFunctionDef(nodeWithLocation(new BuiltinFunctionDef(), xtext_decl, AbsPackage.eINSTANCE.getFunctionDecl_Builtin()));
+            ;
+        } else {
+            PureExp exp = pureExpFromXtext(xtext_decl.getBody());
+            result.setFunctionDef(nodeWithLocation(new ExpFunctionDef(exp), xtext_decl.getBody()));
+        }
         return nodeWithLocation(result, xtext_decl);
     }
 
@@ -618,22 +629,6 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, value);
     }
 
-    private static List<ParamDecl> paramDeclsFromXtext(EList<org.abs_models.xtext.abs.ParamDecl> xtext_decl) {
-        List<ParamDecl> params = new List<>();
-        for(org.abs_models.xtext.abs.ParamDecl decl : xtext_decl) {
-            ParamDecl paramDecl = new ParamDecl();
-            paramDecl.setName(decl.getName());
-            paramDecl.setAnnotationList(annotationsfromXtext(decl.getAnnotations()));
-
-            // FIXME decl.getType() ?
-            // FIXME paramDecl.setAccess() ?
-
-            nodeWithLocation(paramDecl, decl);
-            params.add(paramDecl);
-        }
-        return params;
-    }
-
     static PartialFunctionDecl fromXtext(org.abs_models.xtext.abs.PartialFunctionDecl xtext_decl) {
         PartialFunctionDecl result = new  PartialFunctionDecl();
         result.setName(xtext_decl.getName());
@@ -641,12 +636,14 @@ public class XtextToJastAdd {
         result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
 
         TypeUse typeUse = new DataTypeUse();
-        nodeWithLocation(typeUse, xtext_decl.getType());
+        nodeWithLocation(typeUse, xtext_decl.getResulttype());
         result.setTypeUse(typeUse);
 
-        List<ParamDecl> params = paramDeclsFromXtext(xtext_decl.getArgs());
-        result.setParamList(params);
+        for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
+            result.addParamNoTransform(fromXtext(arg));
+        }
 
+        // FIXME parse functional parameters
         List<FunctionParamDecl> paramDeclList = new List<>();
         for(String fArg : xtext_decl.getFunction_args()) {
             FunctionParamDecl decl = new FunctionParamDecl();
@@ -693,10 +690,12 @@ public class XtextToJastAdd {
         MethodSig sig = new MethodSig();
         sig.setName(sig.getName());
         sig.setAnnotationList(annotationsfromXtext(signature.getAnnotations()));
-        sig.setParamList(paramDeclsFromXtext(signature.getArgs()));
+        for(org.abs_models.xtext.abs.ParamDecl arg : signature.getArgs()) {
+            sig.addParamNoTransform(fromXtext(arg));
+        }
 
         TypeUse typeUse = new DataTypeUse();
-        nodeWithLocation(typeUse, signature.getType());
+        nodeWithLocation(typeUse, signature.getResulttype());
         sig.setReturnType(typeUse);
 
         nodeWithLocation(sig, signature);
@@ -718,9 +717,9 @@ public class XtextToJastAdd {
         result.setName(xtext_decl.getName());
 
         result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-
-        List<ParamDecl> params = paramDeclsFromXtext(xtext_decl.getArgs());
-        result.setParamList(params);
+        for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
+            result.addParamNoTransform(fromXtext(arg));
+        }
 
         List<InterfaceTypeUse> interfaces = interfaceTypeUsesFromXtext(xtext_decl.getInterfaces());
         result.setImplementedInterfaceUseList(interfaces);
@@ -783,6 +782,14 @@ public class XtextToJastAdd {
 
         // FIXME result.setTraitUseList() ?
 
+        return nodeWithLocation(result, xtext_decl);
+    }
+
+    private static ParamDecl fromXtext(org.abs_models.xtext.abs.ParamDecl xtext_decl) {
+        ParamDecl result = new ParamDecl();
+        result.setName(xtext_decl.getName());
+        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+        result.setAccess(fromXtext(xtext_decl.getType()));
         return nodeWithLocation(result, xtext_decl);
     }
 
@@ -1058,10 +1065,12 @@ public class XtextToJastAdd {
         MethodSig sig = new MethodSig();
         sig.setName(methodDecl.getName());
         sig.setAnnotationList(annotationsfromXtext(methodDecl.getAnnotations()));
-        sig.setParamList(paramDeclsFromXtext(methodDecl.getArgs()));
+        for(org.abs_models.xtext.abs.ParamDecl arg : methodDecl.getArgs()) {
+            sig.addParamNoTransform(fromXtext(arg));
+        }
 
         TypeUse typeUse = new DataTypeUse();
-        nodeWithLocation(typeUse, methodDecl.getType());
+        nodeWithLocation(typeUse, methodDecl.getResulttype());
         sig.setReturnType(typeUse);
 
         nodeWithLocation(sig, methodDecl);
@@ -1083,8 +1092,9 @@ public class XtextToJastAdd {
                 presult.addParamNoTransform(fromXtext(param));
             }
         } else {
-            // will be rewritten by JastAdd
-            result = new DataTypeUse();
+            // will be rewritten by JastAdd -- also once we implement scoping
+            // and linking, we can use the exact class here
+            result = new UnresolvedTypeUse();
         }
         result.setName(type.getName());
         return nodeWithLocation(result, type);

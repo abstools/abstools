@@ -70,7 +70,7 @@ ExceptionDecl
     ;
 
 FunctionDecl
-    : annotations=Annotations 'def' type=TypeUse name=IDENTIFIER
+    : annotations=Annotations 'def' resulttype=TypeUse name=IDENTIFIER
         ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
         '(' (args+=ParamDecl (',' args+=ParamDecl)* )? ')'
         '=' (builtin?='builtin' | body=Exp)
@@ -78,7 +78,7 @@ FunctionDecl
     ;
 
 PartialFunctionDecl
-    : annotations=Annotations 'def' type=TypeUse name=IDENTIFIER
+    : annotations=Annotations 'def' resulttype=TypeUse name=IDENTIFIER
         ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
         '(' function_args+=IDENTIFIER (',' function_args+=IDENTIFIER)* ')'
         '(' args+=ParamDecl (',' args+=ParamDecl)* ')'
@@ -93,7 +93,7 @@ InterfaceDecl
     ;
 
 MethodSignature
-    : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
+    : annotations=Annotations resulttype=TypeUseNoAnnotations name=IDENTIFIER
         '(' ( args+=ParamDecl (',' args+=ParamDecl)* )? ')'
         ';'
     ;
@@ -117,7 +117,7 @@ FieldDecl
     ;
 
 MethodDecl
-    : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
+    : annotations=Annotations resulttype=TypeUseNoAnnotations name=IDENTIFIER
         '(' (args+=ParamDecl (',' args+=ParamDecl)* )? ')'
         '{' (statements+=Stmt)* '}'
     ;
