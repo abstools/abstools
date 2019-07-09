@@ -196,7 +196,7 @@ public class XtextToJastAdd {
         if(xtext_module.getMainblockstmts() != null) {
             List<Stmt> statements = new List<>();
             for(org.abs_models.xtext.abs.Stmt stmt : xtext_module.getMainblockstmts()) {
-                statements.add(statementFromXtext(stmt));
+                statements.add(fromXtext(stmt));
             }
 
             final MainBlock mainBlock = new MainBlock();
@@ -424,7 +424,7 @@ public class XtextToJastAdd {
 
         InitBlock astInitBlock = new InitBlock();
         for(org.abs_models.xtext.abs.Stmt statement : xtext_decl.getInitblockstmts()) {
-            astInitBlock.addStmt(statementFromXtext(statement));
+            astInitBlock.addStmt(fromXtext(statement));
         }
         result.setInitBlock(astInitBlock);
 
@@ -464,7 +464,7 @@ public class XtextToJastAdd {
 
         Block block = new Block();
         for(org.abs_models.xtext.abs.Stmt stmt : xtext_decl.getStatements()) {
-            block.addStmtNoTransform(statementFromXtext(stmt));
+            block.addStmtNoTransform(fromXtext(stmt));
         }
         result.setBlock(block);
 
@@ -775,17 +775,31 @@ public class XtextToJastAdd {
         CaseBranchStmt result = new CaseBranchStmt();
         result.setLeft(patternFromXtext(xtext_branch.getPattern()));
 
-        Stmt stmt = statementFromXtext(xtext_branch.getBody());
-        // FIXME: only create block if we get a non-block stmt
-        // TODO: create Xtext grammar rule that parses a singleton statement as a block
-        Block block = new Block();
-        block.setStmtList(new List<>(stmt));
+        Block block = blockFromXtext(xtext_branch.getBody());
         result.setRight(block);
 
         return nodeWithLocation(result, xtext_branch);
     }
 
-    private static Stmt statementFromXtext(org.abs_models.xtext.abs.Stmt stmt) {
+    /**
+     * Convert a statement from Xtext to JastAdd.  If the statement is not a
+     * block, wrap it in a JastAdd Block.
+     *
+     * @param stmt The statement to be converted
+     * @return a JastAdd Block containing the statement.
+     */
+    private static Block blockFromXtext(org.abs_models.xtext.abs.Stmt stmt) {
+        Stmt result = fromXtext(stmt);
+        if (result instanceof Block) {
+            return (Block)result;
+        } else {
+            Block block = new Block();
+            block.addStmtNoTransform(result);
+            return nodeWithLocation(block, stmt);
+        }
+    }
+
+    private static Stmt fromXtext(org.abs_models.xtext.abs.Stmt stmt) {
         Stmt result = null;
 
         if(stmt instanceof org.abs_models.xtext.abs.VarDeclStmt) {
@@ -841,7 +855,7 @@ public class XtextToJastAdd {
 
             List<Stmt> subStatements = new List<>();
             for(org.abs_models.xtext.abs.Stmt subStmt : value.getStmts()) {
-                subStatements.add(statementFromXtext(subStmt));
+                subStatements.add(fromXtext(subStmt));
             }
 
             result = new Block(annotations, subStatements);
@@ -852,9 +866,9 @@ public class XtextToJastAdd {
 
             PureExp condition = pureExpFromXtext(value.getCondition());
 
-            Block consequence = (Block) statementFromXtext(value.getConsequence());
+            Block consequence = blockFromXtext(value.getConsequence());
 
-            Block alternateBlock = (Block) statementFromXtext(value.getAlternate());
+            Block alternateBlock = blockFromXtext(value.getAlternate());
             Opt<Block> alternate = new Opt<>(alternateBlock);
 
             result = new IfStmt(annotations, condition, consequence, alternate);
@@ -865,7 +879,7 @@ public class XtextToJastAdd {
 
             PureExp condition = pureExpFromXtext(value.getCondition());
 
-            Block body = (Block) statementFromXtext(value.getBody());
+            Block body = blockFromXtext(value.getBody());
 
             result = new WhileStmt(annotations, condition, body);
         }
@@ -878,7 +892,7 @@ public class XtextToJastAdd {
 
             PureExp list = pureExpFromXtext(value.getList());
 
-            Block body = (Block) statementFromXtext(value.getBody());
+            Block body = blockFromXtext(value.getBody());
 
             result = new ForeachStmt(annotations, var, list, body);
         }
@@ -886,11 +900,11 @@ public class XtextToJastAdd {
             org.abs_models.xtext.abs.TryCatchFinallyStmt value = (org.abs_models.xtext.abs.TryCatchFinallyStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
 
-            Block body = (Block) statementFromXtext(value.getBody());
+            Block body = blockFromXtext(value.getBody());
 
             List<CaseBranchStmt> branches = caseBranchStmtsFromXtext(value.getBranches());
 
-            Block finallyBlock = (Block) statementFromXtext(value.getFinally());
+            Block finallyBlock = blockFromXtext(value.getFinally());
             Opt<Block> finallyOpt = new Opt<>(finallyBlock);
 
             result = new TryCatchFinallyStmt(annotations, body, branches, finallyOpt);
