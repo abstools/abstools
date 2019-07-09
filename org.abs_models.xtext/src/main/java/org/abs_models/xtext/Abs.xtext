@@ -168,7 +168,11 @@ Stmt : Annotations
         )
     ;
 
-Guard : SingleGuard ({Guard.left=current} '&' right=SingleGuard)* ;
+Guard : AndGuard ;
+
+AndGuard returns Guard
+    : SingleGuard ({AndGuard.left=current} '&' right=SingleGuard)*
+    ;
 
 SingleGuard returns Guard
     : ClaimGuard
@@ -176,11 +180,11 @@ SingleGuard returns Guard
     | ExpGuard
     ;
 
-ClaimGuard returns Guard : exp=VarOrFieldExp '?' ;
+ClaimGuard returns Guard : {ClaimGuard} future=Exp '?' ;
 
-DurationGuard returns Guard :  'duration' '(' min=Exp ',' max=Exp ')' ;
+DurationGuard returns Guard :  {DurationGuard} 'duration' '(' min=Exp ',' max=Exp ')' ;
 
-ExpGuard returns Guard : exp=Exp ;
+ExpGuard returns Guard : {ExpGuard} exp=Exp ;
 
 CaseStmtBranch : pattern=Pattern '=>' body=Stmt ;
 

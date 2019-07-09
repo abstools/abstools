@@ -903,7 +903,7 @@ public class XtextToJastAdd {
         else if(stmt instanceof org.abs_models.xtext.abs.AwaitStmt) {
             org.abs_models.xtext.abs.AwaitStmt value = (org.abs_models.xtext.abs.AwaitStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            Guard guard = guardFromXtext(value.getGuard());
+            Guard guard = fromXtext(value.getGuard());
             result = new AwaitStmt(annotations, guard);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.SuspendStmt) {
@@ -957,27 +957,25 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, stmt);
     }
 
-    private static Guard guardFromXtext(org.abs_models.xtext.abs.Guard guard) {
+    private static Guard fromXtext(org.abs_models.xtext.abs.Guard guard) {
         Guard result = null;
-
-        // FIXME xtext-Guard classes (SingleGuard, ClaimGuard, DurationGuard, ExpGuard) unknown?
-//        if(guard instanceof org.abs_models.xtext.abs.) {
-//
-//        }
-//        else if() {
-//
-//        }
-//        else if() {
-//
-//        }
-//        else if() {
-//
-//        }
-//        else {
-//            throw new NotImplementedYetException(new ASTNode(),
-//                "No conversion to JastAdd implemented for Xtext node "
-//                    + guard.getClass().toString());
-//        }
+        if (guard instanceof org.abs_models.xtext.abs.ClaimGuard) {
+            org.abs_models.xtext.abs.ClaimGuard cguard = (org.abs_models.xtext.abs.ClaimGuard)guard;
+            result = nodeWithLocation(new org.abs_models.frontend.ast.ClaimGuard(pureExpFromXtext(cguard.getFuture())), guard);
+        } else if (guard instanceof org.abs_models.xtext.abs.DurationGuard) {
+            org.abs_models.xtext.abs.DurationGuard dguard = (org.abs_models.xtext.abs.DurationGuard) guard;
+            result = nodeWithLocation(new org.abs_models.frontend.ast.DurationGuard(pureExpFromXtext(dguard.getMin()), pureExpFromXtext(dguard.getMax())), guard);
+        } else if (guard instanceof org.abs_models.xtext.abs.ExpGuard) {
+            org.abs_models.xtext.abs.ExpGuard eguard = (org.abs_models.xtext.abs.ExpGuard) guard;
+            result = nodeWithLocation(new org.abs_models.frontend.ast.ExpGuard(pureExpFromXtext(eguard.getExp())), guard);
+        } else if (guard instanceof org.abs_models.xtext.abs.AndGuard) {
+            org.abs_models.xtext.abs.AndGuard aguard = (org.abs_models.xtext.abs.AndGuard)guard;
+            result = nodeWithLocation(new org.abs_models.frontend.ast.AndGuard(fromXtext(aguard.getLeft()), fromXtext(aguard.getRight())), guard);
+        } else {
+            throw new NotImplementedYetException(new ASTNode(),
+               "No conversion to JastAdd implemented for Xtext node "
+                   + guard.getClass().toString());
+        }
         return result;
     }
 
