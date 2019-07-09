@@ -805,36 +805,39 @@ public class XtextToJastAdd {
         if(stmt instanceof org.abs_models.xtext.abs.VarDeclStmt) {
             org.abs_models.xtext.abs.VarDeclStmt value = (org.abs_models.xtext.abs.VarDeclStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
             VarDecl varDecl = new VarDecl();
             varDecl.setName(value.getName());
-            varDecl.setInitExp(pureExpFromXtext(value.getInit()));
-            // FIXME varDecl.setAccess() ?
-
+            varDecl.setAccess(fromXtext(value.getType()));
+            if (value.getInit() != null) {
+                varDecl.setInitExp(pureExpFromXtext(value.getInit()));
+            }
             result = new VarDeclStmt(annotations, varDecl);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.AssignStmt) {
             org.abs_models.xtext.abs.AssignStmt value = (org.abs_models.xtext.abs.AssignStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
             Exp lhsExp = expFromXtext(value.getLhs());
             VarOrFieldUse varOrFieldUse;
-            // FIXME how to get the data over? VarUse/FieldUse takes only 1 string?
-            if(lhsExp instanceof VarUse) {
-                varOrFieldUse = new VarUse();
+            if(lhsExp instanceof VarOrFieldExp) {
+                VarOrFieldExp lhs = (VarOrFieldExp) lhsExp;
+                if (lhs.isField()) {
+                    varOrFieldUse = new FieldUse(lhs.getName());
+                } else {
+                    // might still get rewritten to FieldUse by JastAdd
+                    // TODO: make this more precise once scoping / linking is
+                    // implemented
+                    varOrFieldUse = new VarUse(lhs.getName());
+                }
+            } else {
+                assert false : "Invalid left-hand side expression in Xtext AST reached XtextToJastAdd -- check validation rules";
+                varOrFieldUse = null;
             }
-            else {
-                varOrFieldUse = new FieldUse();
-            }
-
             Exp expresssion = expFromXtext(value.getExp());
-
             result = new AssignStmt(annotations, varOrFieldUse, expresssion);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.SkipStmt) {
             org.abs_models.xtext.abs.SkipStmt value = (org.abs_models.xtext.abs.SkipStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
             result = new SkipStmt(annotations);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.ReturnStmt) {
@@ -851,14 +854,14 @@ public class XtextToJastAdd {
         }
         else if(stmt instanceof org.abs_models.xtext.abs.Block) {
             org.abs_models.xtext.abs.Block value = (org.abs_models.xtext.abs.Block) stmt;
+            Block block = new Block();
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
 
-            List<Stmt> subStatements = new List<>();
             for(org.abs_models.xtext.abs.Stmt subStmt : value.getStmts()) {
-                subStatements.add(fromXtext(subStmt));
+                block.addStmtNoTransform(fromXtext(subStmt));
             }
-
-            result = new Block(annotations, subStatements);
+            block.setAnnotationList(annotations);
+            result = block;
         }
         else if(stmt instanceof org.abs_models.xtext.abs.IfStmt) {
             org.abs_models.xtext.abs.IfStmt value = (org.abs_models.xtext.abs.IfStmt) stmt;
@@ -876,102 +879,74 @@ public class XtextToJastAdd {
         else if(stmt instanceof org.abs_models.xtext.abs.WhileStmt) {
             org.abs_models.xtext.abs.WhileStmt value = (org.abs_models.xtext.abs.WhileStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
             PureExp condition = pureExpFromXtext(value.getCondition());
-
             Block body = blockFromXtext(value.getBody());
-
             result = new WhileStmt(annotations, condition, body);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.ForeachStmt) {
             org.abs_models.xtext.abs.ForeachStmt value = (org.abs_models.xtext.abs.ForeachStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
-            // FIXME the whole VarOrFieldUse tree is likely to be done differently to get the data over (also see VarDeclStmt & AssignStmt), just cannot see it right now
-            LoopVarDecl var = new LoopVarDecl(value.getVar());
-
+            LoopVarDecl var = new LoopVarDecl(value.getLoopvar());
             PureExp list = pureExpFromXtext(value.getList());
-
             Block body = blockFromXtext(value.getBody());
-
             result = new ForeachStmt(annotations, var, list, body);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.TryCatchFinallyStmt) {
             org.abs_models.xtext.abs.TryCatchFinallyStmt value = (org.abs_models.xtext.abs.TryCatchFinallyStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
             Block body = blockFromXtext(value.getBody());
-
             List<CaseBranchStmt> branches = caseBranchStmtsFromXtext(value.getBranches());
-
             Block finallyBlock = blockFromXtext(value.getFinally());
             Opt<Block> finallyOpt = new Opt<>(finallyBlock);
-
             result = new TryCatchFinallyStmt(annotations, body, branches, finallyOpt);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.AwaitStmt) {
             org.abs_models.xtext.abs.AwaitStmt value = (org.abs_models.xtext.abs.AwaitStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
             Guard guard = guardFromXtext(value.getGuard());
-
             result = new AwaitStmt(annotations, guard);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.SuspendStmt) {
             org.abs_models.xtext.abs.SuspendStmt value = (org.abs_models.xtext.abs.SuspendStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
             result = new SuspendStmt(annotations);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.DurationStmt) {
             org.abs_models.xtext.abs.DurationStmt value = (org.abs_models.xtext.abs.DurationStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
             PureExp min = pureExpFromXtext(value.getMin());
             PureExp max = pureExpFromXtext(value.getMax());
-
             result = new DurationStmt(annotations, min, max);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.ThrowStmt) {
             org.abs_models.xtext.abs.ThrowStmt value = (org.abs_models.xtext.abs.ThrowStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
             PureExp exception = pureExpFromXtext(value.getException());
-
             result = new ThrowStmt(annotations, exception);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.DieStmt) {
             org.abs_models.xtext.abs.DieStmt value = (org.abs_models.xtext.abs.DieStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
             PureExp exception = pureExpFromXtext(value.getException());
-
             result = new DieStmt(annotations, exception);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.MoveCogToStmt) {
             org.abs_models.xtext.abs.MoveCogToStmt value = (org.abs_models.xtext.abs.MoveCogToStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
             PureExp target = pureExpFromXtext(value.getTarget());
-
             result = new MoveCogToStmt(annotations, target);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.ExpStmt) {
             org.abs_models.xtext.abs.ExpStmt value = (org.abs_models.xtext.abs.ExpStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
             Exp exp = expFromXtext(value.getExp());
-
             result = new ExpressionStmt(annotations, exp);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.CaseStmt) {
             org.abs_models.xtext.abs.CaseStmt value = (org.abs_models.xtext.abs.CaseStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
             PureExp condition = pureExpFromXtext(value.getCondition());
-
             List<CaseBranchStmt> branches = caseBranchStmtsFromXtext(value.getBranches());
-
             result = new CaseStmt(annotations, condition, branches);
         }
         else {
@@ -979,7 +954,6 @@ public class XtextToJastAdd {
                 "No conversion to JastAdd implemented for Xtext node "
                     + stmt.getClass().toString());
         }
-
         return nodeWithLocation(result, stmt);
     }
 

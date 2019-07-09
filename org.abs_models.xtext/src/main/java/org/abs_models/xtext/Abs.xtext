@@ -144,7 +144,7 @@ Stmt : Annotations
         | {WhileStmt.annotations=current}
             'while' '(' condition=Exp ')' body=Stmt
         | {ForeachStmt.annotations=current}
-            'foreach' '(' var=IDENTIFIER 'in' list=Exp ')' body=Stmt
+            'foreach' '(' loopvar=IDENTIFIER 'in' list=Exp ')' body=Stmt
         | {TryCatchFinallyStmt.annotations=current}
             'try' body=Stmt
             'catch' (( '{' (branches+=CaseStmtBranch)* '}') | branches+=CaseStmtBranch)
@@ -331,7 +331,7 @@ AtomicExp returns Exp
     ;
 
 VarOrFieldExp returns Exp
-    : {VarOrFieldExp} (hasThis?='this' '.')? name=IDENTIFIER
+    : {VarOrFieldExp} (field?='this' '.')? name=IDENTIFIER
     ;
 
 // Types
