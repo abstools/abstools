@@ -175,16 +175,10 @@ AndGuard returns Guard
     ;
 
 SingleGuard returns Guard
-    : ClaimGuard
-    | DurationGuard
-    | ExpGuard
+    : {ClaimGuard} future=Exp '?'
+    | {DurationGuard} 'duration' '(' min=Exp ',' max=Exp ')'
+    | {ExpGuard} exp=Exp
     ;
-
-ClaimGuard returns Guard : {ClaimGuard} future=Exp '?' ;
-
-DurationGuard returns Guard :  {DurationGuard} 'duration' '(' min=Exp ',' max=Exp ')' ;
-
-ExpGuard returns Guard : {ExpGuard} exp=Exp ;
 
 CaseStmtBranch : pattern=Pattern '=>' body=Stmt ;
 
