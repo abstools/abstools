@@ -60,7 +60,7 @@ import org.eclipse.xtext.util.LineAndColumn;
 public class XtextToJastAdd {
 
     private static ILocationInFileProvider location_provider = Main.absinjector.getInstance(ILocationInFileProvider.class);
-    private static <T extends ASTNode<?>> T nodeWithLocation(T node, EObject obj) {
+    private static <T extends org.abs_models.frontend.ast.ASTNode<?>> T nodeWithLocation(T node, EObject obj) {
         INode n = NodeModelUtils.findActualNodeFor(obj); // do we want .getNode() instead?
         if (n != null) {
             ITextRegionWithLineInformation location = (ITextRegionWithLineInformation)location_provider.getSignificantTextRegion(obj);
@@ -135,7 +135,6 @@ public class XtextToJastAdd {
         result.setName(xtext_module.getName());
         for (org.abs_models.xtext.abs.ModuleExport export : xtext_module.getExports()) {
             Export e;
-            // TODO set locations for Name arguments
             if (export.isStar()) {
                 // "export *;"
                 // "export * from OtherModule;"
@@ -548,7 +547,7 @@ public class XtextToJastAdd {
 
             List<CaseBranch> branches = new List<>();
             for(CaseExpBranch cb : xtextExp.getCasebranches()) {
-                Pattern pattern = patternFromXtext(cb.getPattern());
+                Pattern pattern = fromXtext(cb.getPattern());
                 PureExp pureExp = pureExpFromXtext(cb.getExpression());
                 CaseBranch branch = new CaseBranch(pattern, pureExp);
                 branches.add(branch);
@@ -763,24 +762,6 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_decl);
     }
 
-    private static List<CaseBranchStmt> caseBranchStmtsFromXtext(EList<CaseStmtBranch> statements) {
-        List<CaseBranchStmt> branchStmts = new List<>();
-        for(CaseStmtBranch branch : statements) {
-            branchStmts.add(fromXtext(branch));
-        }
-        return branchStmts;
-    }
-
-    private static CaseBranchStmt fromXtext(CaseStmtBranch xtext_branch) {
-        CaseBranchStmt result = new CaseBranchStmt();
-        result.setLeft(patternFromXtext(xtext_branch.getPattern()));
-
-        Block block = blockFromXtext(xtext_branch.getBody());
-        result.setRight(block);
-
-        return nodeWithLocation(result, xtext_branch);
-    }
-
     /**
      * Convert a statement from Xtext to JastAdd.  If the statement is not a
      * block, wrap it in a JastAdd Block.
@@ -979,42 +960,55 @@ public class XtextToJastAdd {
         return result;
     }
 
-    private static Pattern patternFromXtext(org.abs_models.xtext.abs.Pattern pattern) {
+    private static List<CaseBranchStmt> caseBranchStmtsFromXtext(EList<CaseStmtBranch> statements) {
+        List<CaseBranchStmt> branchStmts = new List<>();
+        for(CaseStmtBranch branch : statements) {
+            branchStmts.add(fromXtext(branch));
+        }
+        return branchStmts;
+    }
+
+    private static CaseBranchStmt fromXtext(CaseStmtBranch xtext_branch) {
+        CaseBranchStmt result = new CaseBranchStmt();
+        result.setLeft(fromXtext(xtext_branch.getPattern()));
+
+        Block block = blockFromXtext(xtext_branch.getBody());
+        result.setRight(block);
+
+        return nodeWithLocation(result, xtext_branch);
+    }
+
+    private static Pattern fromXtext(org.abs_models.xtext.abs.Pattern pattern) {
         Pattern result;
-        if(pattern instanceof org.abs_models.xtext.abs.WildcardPattern) {
-            org.abs_models.xtext.abs.WildcardPattern value = (WildcardPattern) pattern;
-            result = new UnderscorePattern();
-            // FIXME really no data to transfer?
-        }
-        else if(pattern instanceof org.abs_models.xtext.abs.IntLiteralPattern) {
+        if (pattern instanceof org.abs_models.xtext.abs.WildcardPattern) {
+            result = nodeWithLocation(new UnderscorePattern(), pattern);
+        } else if (pattern instanceof org.abs_models.xtext.abs.IntLiteralPattern) {
             org.abs_models.xtext.abs.IntLiteralPattern value = (IntLiteralPattern) pattern;
-            result = null;
-            // FIXME target class & how to transfer information?
-        }
-        else if(pattern instanceof org.abs_models.xtext.abs.StringLiteralPattern) {
+            LiteralExp exp = nodeWithLocation(new org.abs_models.frontend.ast.IntLiteral(value.getValue().toString()), value, AbsPackage.eINSTANCE.getIntLiteralPattern_Value());
+            result = nodeWithLocation(new LiteralPattern(exp), pattern);
+        } else if (pattern instanceof org.abs_models.xtext.abs.StringLiteralPattern) {
             org.abs_models.xtext.abs.StringLiteralPattern value = (StringLiteralPattern) pattern;
-            result = null;
-            // FIXME target class & how to transfer information?
+            LiteralExp exp = nodeWithLocation(new org.abs_models.frontend.ast.StringLiteral(value.getValue()), value, AbsPackage.eINSTANCE.getStringLiteralPattern_Value());
+            result = nodeWithLocation(new LiteralPattern(exp), pattern);
         }
         else if(pattern instanceof org.abs_models.xtext.abs.FloatLiteralPattern) {
             org.abs_models.xtext.abs.FloatLiteralPattern value = (FloatLiteralPattern) pattern;
-            result = null;
-            // FIXME target class & how to transfer information?
-        }
-        else if(pattern instanceof org.abs_models.xtext.abs.VariablePattern) {
+            LiteralExp exp = nodeWithLocation(new org.abs_models.frontend.ast.FloatLiteral(Double.toString(value.getValue())), value, AbsPackage.eINSTANCE.getFloatLiteralPattern_Value());
+            result = nodeWithLocation(new LiteralPattern(exp), pattern);
+        } else if (pattern instanceof org.abs_models.xtext.abs.VariablePattern) {
             org.abs_models.xtext.abs.VariablePattern value = (VariablePattern) pattern;
-            result = null;
-            // FIXME target class & how to transfer information?
-        }
-        else if(pattern instanceof org.abs_models.xtext.abs.ConstructorPattern) {
+            result = nodeWithLocation(new PatternVarUse(value.getValue()), pattern);
+        } else if (pattern instanceof org.abs_models.xtext.abs.ConstructorPattern) {
+            // TODO: once Xtext linking is in place, create ExceptionPattern
+            // here?
             org.abs_models.xtext.abs.ConstructorPattern value = (org.abs_models.xtext.abs.ConstructorPattern) pattern;
-            List<Pattern> astPatterns = new List<>();
+            ConstructorPattern presult = new ConstructorPattern();
+            presult.setConstructor(value.getName());
             for(org.abs_models.xtext.abs.Pattern p : value.getArgs()) {
-                astPatterns.add(patternFromXtext(p));
+                presult.addParamNoTransform(fromXtext(p));
             }
-            result = new ConstructorPattern(value.getName(), astPatterns);
-        }
-        else {
+            result = nodeWithLocation(presult, pattern);
+        } else {
             throw new NotImplementedYetException(new ASTNode(),
                 "No conversion to JastAdd implemented for Xtext node "
                     + pattern.getClass().toString());

@@ -188,6 +188,15 @@ ExpGuard returns Guard : {ExpGuard} exp=Exp ;
 
 CaseStmtBranch : pattern=Pattern '=>' body=Stmt ;
 
+Pattern
+    : {WildcardPattern} '_'
+    | {IntLiteralPattern} value=INTLITERAL
+    | {StringLiteralPattern} value=STRINGLITERAL
+    | {FloatLiteralPattern} value=FLOATLITERAL
+    | {VariablePattern} value=IDENTIFIER
+    | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' args+=Pattern (',' args+=Pattern)* ')' )?
+    ;
+
 // Expressions
 
 // KLUDGE: I did not manage to express the separation of side-effect and pure
@@ -216,15 +225,6 @@ CaseExp returns Exp
 
 CaseExpBranch
     : pattern=Pattern '=>' expression=Exp ';'
-    ;
-
-Pattern
-    : {WildcardPattern} '_'
-    | {IntLiteralPattern} value=INTLITERAL
-    | {StringLiteralPattern} value=STRINGLITERAL
-    | {FloatLiteralPattern} value=FLOATLITERAL
-    | {VariablePattern} value=IDENTIFIER
-    | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' args+=Pattern (',' args+=Pattern)* ')' )?
     ;
 
 LetExp returns Exp
