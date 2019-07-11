@@ -207,7 +207,7 @@ Exp
     : OrExp
     ;
 
-NewExp returns Exp : {NewExp} 'new' (hasLocal?='local')? classname=QualifiedTypeIdentifier '('  (args+=Exp ( ',' args+=Exp)* )? ')' ;
+NewExp returns Exp : {NewExp} 'new' (local?='local')? classname=QualifiedTypeIdentifier '('  (args+=Exp ( ',' args+=Exp)* )? ')' ;
 
 OriginalCallExp returns Exp : {OriginalCallExp} (( delta=TYPE_IDENTIFIER | core?='core' ) '.')? 'original' '(' (args+=Exp ( ',' args+=Exp)* )? ')' ;
 
@@ -296,7 +296,7 @@ MethodCallExp returns Exp
     ;
 
 GetExp returns Exp
-    : {GetExp} future=PrimaryExp '.get'
+    : {GetExp} futureExp=PrimaryExp '.get'
     | ConversionExp
     ;
 
