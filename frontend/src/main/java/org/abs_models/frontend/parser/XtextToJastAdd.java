@@ -4,12 +4,14 @@ import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.xtext.abs.AbsPackage;
 import org.abs_models.xtext.abs.AndExp;
+import org.abs_models.xtext.abs.AwaitExp;
 import org.abs_models.xtext.abs.CaseExpBranch;
 import org.abs_models.xtext.abs.CaseStmtBranch;
 import org.abs_models.xtext.abs.CompareExp;
 import org.abs_models.xtext.abs.ConstructorAppExp;
 import org.abs_models.xtext.abs.ConversionExp;
 import org.abs_models.xtext.abs.DataConstructorParamDecl;
+import org.abs_models.xtext.abs.ExpGuard;
 import org.abs_models.xtext.abs.FloatLiteralPattern;
 import org.abs_models.xtext.abs.FunctionAppExp;
 import org.abs_models.xtext.abs.IntLiteralPattern;
@@ -579,12 +581,6 @@ public class XtextToJastAdd {
             Opt<Block> finallyOpt = new Opt<>(finallyBlock);
             result = new TryCatchFinallyStmt(annotations, body, branches, finallyOpt);
         }
-        else if(stmt instanceof org.abs_models.xtext.abs.AwaitStmt) {
-            org.abs_models.xtext.abs.AwaitStmt value = (org.abs_models.xtext.abs.AwaitStmt) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            Guard guard = fromXtext(value.getGuard());
-            result = new AwaitStmt(annotations, guard);
-        }
         else if(stmt instanceof org.abs_models.xtext.abs.SuspendStmt) {
             org.abs_models.xtext.abs.SuspendStmt value = (org.abs_models.xtext.abs.SuspendStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
@@ -617,9 +613,21 @@ public class XtextToJastAdd {
         }
         else if(stmt instanceof org.abs_models.xtext.abs.ExpStmt) {
             org.abs_models.xtext.abs.ExpStmt value = (org.abs_models.xtext.abs.ExpStmt) stmt;
+            org.abs_models.xtext.abs.Exp xtextExp = value.getExp();
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            Exp exp = fromXtext(value.getExp());
-            result = new ExpressionStmt(annotations, exp);
+            if (xtextExp instanceof AwaitExp
+                && (!(((AwaitExp)xtextExp).getGuard() instanceof ExpGuard)
+                    || !(((org.abs_models.xtext.abs.ExpGuard)(((AwaitExp)xtextExp).getGuard())).getExp() instanceof MethodCallExp))) {
+                // Are we an expression that is NOT await + single expression
+                // "guard" with an asynchronous method call expression?  Then
+                // generate a JastAdd AwaitStmt.  (The "await o!m()" case is
+                // handled as part of effExpFromXtext() below.)
+                Guard guard = fromXtext(((AwaitExp)xtextExp).getGuard());
+                result = new AwaitStmt(annotations, guard);
+            } else {
+                Exp exp = fromXtext(xtextExp);
+                result = new ExpressionStmt(annotations, exp);
+            }
         }
         else if(stmt instanceof org.abs_models.xtext.abs.CaseStmt) {
             org.abs_models.xtext.abs.CaseStmt value = (org.abs_models.xtext.abs.CaseStmt) stmt;
@@ -761,16 +769,11 @@ public class XtextToJastAdd {
             Call exp;
 
             if (xtextExp.getOperator().equals("!")) {
-                if (xtextExp.isAwait()) {
-                    // await o!m()
-                    exp = new AwaitAsyncCall();
-                } else {
-                    // o!m()
-                    exp = new AsyncCall();
-                }
+                // o!m()
+                exp = new AsyncCall();
+                // see below for AwaitAsyncCall
             } else if (".".equals(xtextExp.getOperator())) {
                 // o.m()
-                // await o.m() is disallowed by validator
                 exp = new SyncCall();
             } else {
                 throw new NotImplementedYetException(new ASTNode(),
@@ -784,6 +787,23 @@ public class XtextToJastAdd {
             }
             result = exp;
 
+        } else if (value instanceof org.abs_models.xtext.abs.AwaitExp) {
+
+            org.abs_models.xtext.abs.AwaitExp awaitExp = (org.abs_models.xtext.abs.AwaitExp) value;
+            // Are we an await + single expression "guard" with an
+            // asynchronous method call expression?  Then generate a JastAdd
+            // AwaitAsyncCallExp.  We rely on validation having blocked all
+            // invalid constructs; fix the validator if there’s a class cast
+            // exception in the code below.
+            ExpGuard guard = (ExpGuard)awaitExp.getGuard();
+            org.abs_models.xtext.abs.MethodCallExp xtextExp = (MethodCallExp) guard.getExp();
+            AwaitAsyncCall exp = new AwaitAsyncCall();
+            exp.setMethod(xtextExp.getMethodname());
+            exp.setCallee(pureExpFromXtext(xtextExp.getTarget()));
+            for (org.abs_models.xtext.abs.Exp e : xtextExp.getArgs()) {
+                exp.addParamNoTransform(pureExpFromXtext(e));
+            }
+            result = exp;
         } else if (value instanceof org.abs_models.xtext.abs.NewExp) {
 
             org.abs_models.xtext.abs.NewExp xtextExp = (org.abs_models.xtext.abs.NewExp)value;

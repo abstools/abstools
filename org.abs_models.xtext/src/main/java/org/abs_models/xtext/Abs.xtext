@@ -149,8 +149,9 @@ Stmt : Annotations
             'try' body=Stmt
             'catch' (( '{' (branches+=CaseStmtBranch)* '}') | branches+=CaseStmtBranch)
             (=> 'finally' finally=Stmt)?
-        | {AwaitStmt.annotations=current}
-            'await' guard=Guard ';'
+        // await is parsed as an expression; this way we catch both "await
+        // o!m()" and "await f?;" in one syntax rule.  We disallow certain
+        // combinations of guards in validation -- see AbsValidator.checkSideEffectExpressionAllowed, AbsValidator.checkNoMethodCallInSubguard.
         | {SuspendStmt.annotations=current}
             'suspend' ';'
         | {DurationStmt.annotations=current}
@@ -207,11 +208,82 @@ Exp
     : OrExp
     ;
 
-NewExp returns Exp : {NewExp} 'new' (local?='local')? classname=QualifiedTypeIdentifier '('  (args+=Exp ( ',' args+=Exp)* )? ')' ;
+// See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
+
+OrExp returns Exp
+    : AndExp ({OrExp.left=current} '||' right=AndExp)*
+    ; // left-assoc
+
+AndExp returns Exp
+    : EqExp ({AndExp.left=current} '&&' right=EqExp)*
+    ; // left-assoc
+
+EqExp returns Exp
+    : CompareExp ({EqExp.left=current} operator=('==' | '!=') right=CompareExp)?
+    ; // non-assoc
+
+CompareExp returns Exp
+    : PlusMinusExp ({CompareExp.left=current} operator=('<' | '>' | '<=' | '>=') right=PlusMinusExp)?
+    ; // non-assoc
+
+PlusMinusExp returns Exp
+    : MulDivModExp ({PlusMinusExp.left=current} operator=('+' | '-') right=MulDivModExp)*
+    ; // left-assoc
+
+MulDivModExp returns Exp
+    : MethodCallExp ({MulDivExp.left=current} operator=('*' | '/' | '%') right=MethodCallExp)*
+    ; // left-assoc
+
+MethodCallExp returns Exp
+// "await o!m()" is parsed as an AwaitExp with an ExpGuard containing a
+// MethodCallExp instead of a MethodCallExp with an "await" prefix -- see also
+// AbsValidator where we filter out invalid syntaxes, and XtextToJastAdd where
+// we disambiguate between AwaitStmt and AwaitAsyncCall; the code there is not
+// pretty.
+//
+// But: “In general, a good practice in Xtext DSL implementations is to keep
+// the grammar simple.  It is better to have a loose grammar and a strict
+// validation phase (loose grammar, strict validation, see the presentation
+// Zarnekow 2012).” (Bettini 2016, pg. 207)
+    : GetExp ({MethodCallExp.target=current} operator=('!' | '.') methodname=IDENTIFIER '(' (args+=Exp ( ',' args+=Exp)* )? ')' )?
+    ;
+
+GetExp returns Exp
+    : ConversionExp ({GetExp.futureExp=current} '.get' )?
+    ;
+
+ConversionExp returns Exp
+    : PrimaryExp ({ConversionExp.body=current} operator=('implements' | 'as') interface=QualifiedTypeIdentifier )?
+    ;
+
+PrimaryExp returns Exp
+    :  '(' Exp ')'
+    | UnaryExp
+    | AwaitExp
+    | NewExp
+    | OriginalCallExp
+    | CaseExp
+    | LetExp
+    | IfExp
+    | FunctionAppExp
+    | VariadicFunctionAppExp
+    | PartialFunctionAppExp
+    | ConstructorAppExp
+    | TemplateStringExp
+    | AtomicExp
+    ;
+
+UnaryExp returns Exp
+    : {UnaryExp} operator=('!' | '-' | '+') body=Exp
+    ;
+
+AwaitExp returns Exp : {AwaitExp} 'await' guard=Guard ;
+
+NewExp returns Exp :
+        {NewExp} 'new' (local?='local')? classname=QualifiedTypeIdentifier '('  (args+=Exp ( ',' args+=Exp)* )? ')'
+    ;
 
 OriginalCallExp returns Exp : {OriginalCallExp} (( delta=TYPE_IDENTIFIER | core?='core' ) '.')? 'original' '(' (args+=Exp ( ',' args+=Exp)* )? ')' ;
-
-// See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
 
 CaseExp returns Exp
     : {CaseExp} 'case' condition=Exp '{' (casebranches+=CaseExpBranch)* '}'
@@ -259,64 +331,6 @@ TemplateStringExp returns Exp
     | {TemplateStringExp} TEMPLATESTRINGSTART e1=Exp
         (b+=TEMPLATESTRINGINBETWEEN e+=Exp)*
         TEMPLATESTRINGEND
-    ;
-
-OrExp returns Exp
-    : AndExp ({OrExp.left=current} '||' right=AndExp)*
-    ; // left-assoc
-
-AndExp returns Exp
-    : EqExp ({AndExp.left=current} '&&' right=EqExp)*
-    ; // left-assoc
-
-EqExp returns Exp
-    : CompareExp ({EqExp.left=current} operator=('==' | '!=') right=CompareExp)?
-    ; // non-assoc
-
-CompareExp returns Exp
-    : PlusMinusExp ({CompareExp.left=current} operator=('<' | '>' | '<=' | '>=') right=PlusMinusExp)?
-    ; // non-assoc
-
-PlusMinusExp returns Exp
-    : MulDivModExp ({PlusMinusExp.left=current} operator=('+' | '-') right=MulDivModExp)*
-    ; // left-assoc
-
-MulDivModExp returns Exp
-    : UnaryExp ({MulDivExp.left=current} operator=('*' | '/' | '%') right=UnaryExp)*
-    ; // left-assoc
-
-UnaryExp returns Exp
-    : {UnaryExp} operator=('!' | '-' | '+') body=UnaryExp
-    | MethodCallExp
-    ;
-
-MethodCallExp returns Exp
-    : {MethodCallExp} await?='await'? target=GetExp operator=('!' | '.') methodname=IDENTIFIER '(' (args+=Exp ( ',' args+=Exp)* )? ')'
-    | GetExp
-    ;
-
-GetExp returns Exp
-    : {GetExp} futureExp=PrimaryExp '.get'
-    | ConversionExp
-    ;
-
-ConversionExp returns Exp
-    : PrimaryExp ({ConversionExp.body=current} operator=('implements' | 'as') i=QualifiedTypeIdentifier )?
-    ;
-
-PrimaryExp returns Exp
-    :  '(' Exp ')'
-    | NewExp
-    | OriginalCallExp
-    | CaseExp
-    | LetExp
-    | IfExp
-    | FunctionAppExp
-    | VariadicFunctionAppExp
-    | PartialFunctionAppExp
-    | ConstructorAppExp
-    | TemplateStringExp
-    | AtomicExp
     ;
 
 AtomicExp returns Exp

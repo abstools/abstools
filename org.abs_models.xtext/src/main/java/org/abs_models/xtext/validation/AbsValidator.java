@@ -3,13 +3,8 @@
  */
 package org.abs_models.xtext.validation;
 
-import org.abs_models.xtext.abs.AbsPackage;
-import org.abs_models.xtext.abs.Exp;
-import org.abs_models.xtext.abs.GetExp;
-import org.abs_models.xtext.abs.MethodCallExp;
-import org.abs_models.xtext.abs.NewExp;
-import org.abs_models.xtext.abs.OriginalCallExp;
-import org.abs_models.xtext.abs.Stmt;
+import org.abs_models.xtext.abs.*;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.validation.Check;
 
 /**
@@ -19,37 +14,82 @@ import org.eclipse.xtext.validation.Check;
  */
 public class AbsValidator extends AbstractAbsValidator {
 
-    @Check
-    public void checkNoSideEffectSubExpression(Exp e) {
-        if (e instanceof GetExp
-            || e instanceof OriginalCallExp
-            || e instanceof MethodCallExp
-            || e instanceof NewExp) {
+    private boolean isSideEffectExpContainer(EObject stmt) {
+        // We allow the following forms:
+        // - "f.get;" (ExpStmt)
+        // - "x = f.get;" (AssignStmt)
+        // - "T x = f.get" (VarDeclStmt)
+        // - "return f.get" (ReturnStmt)
+        return stmt instanceof ExpStmt
+            || stmt instanceof AssignStmt
+            || stmt instanceof VarDeclStmt
+            || stmt instanceof ReturnStmt;
+    }
+    private boolean isSingleMethodCallGuard(Guard g) {
+        return g instanceof ExpGuard
+            && ((ExpGuard)g).getExp() instanceof MethodCallExp;
+    }
 
-            boolean container_is_stmt = e.eContainer() instanceof Stmt;
-            if(!container_is_stmt) {
-                error("A side-effect expression cannot be a sub-expression",
+    @Check
+    public void checkGetExpPlacement(GetExp e) {
+        if(!isSideEffectExpContainer(e.eContainer())) {
+            error("A get expression cannot be a sub-expression",
+                  e.eContainer(), e.eContainingFeature());
+        }
+    }
+    @Check
+    public void checkOriginalCallExpPlacement(OriginalCallExp e) {
+        if(!isSideEffectExpContainer(e.eContainer())) {
+            error("An original call expression cannot be a sub-expression",
+                  e.eContainer(), e.eContainingFeature());
+        }
+    }
+    @Check
+    public void checkNewExpPlacement(NewExp e) {
+        if(!isSideEffectExpContainer(e.eContainer())) {
+            error("A new expression cannot be a sub-expression",
+                  e.eContainer(), e.eContainingFeature());
+        }
+    }
+    @Check
+    public void checkAwaitExpPlacement(AwaitExp e) {
+        if (isSingleMethodCallGuard(e.getGuard())) {
+            // "await o!m()", i.e., an await expression
+            if(!isSideEffectExpContainer(e.eContainer())) {
+                error("An await expression cannot be a sub-expression",
+                      e.eContainer(), e.eContainingFeature());
+            }
+        } else {
+            // any other await, i.e., an await statement
+            if (!(e.eContainer() instanceof ExpStmt)) {
+                error("Invalid placement of await statement",
                       e.eContainer(), e.eContainingFeature());
             }
         }
     }
-
     @Check
-    public void checkMethodCallSyntax(MethodCallExp e) {
-        if (e.isAwait() && e.getOperator().equals(".")) {
-            error("await is not possible for synchronous method calls",
-                AbsPackage.eINSTANCE.getMethodCallExp_Await());
+    public void checkValidAwaitCall(MethodCallExp e) {
+        if (e.eContainer() instanceof ExpGuard
+            && ((MethodCallExp)e).getOperator().equals(".")) {
+            // disallow "await o.m()"
+            error("Cannot await on synchronous method call",
+                  e.eContainer(), e.eContainingFeature());
         }
     }
 
-    // public static final INVALID_NAME = 'invalidName';
+    @Check
+    public void checkNoMethodCallInSubguard(AndGuard g) {
+        // Block "await o!m() & o!m();"
+        Guard l = g.getLeft();
+        Guard r = g.getRight();
+        if (l instanceof ExpGuard && ((ExpGuard)l).getExp() instanceof MethodCallExp) {
+            error("A side-effect expression cannot be a sub-expression",
+                  AbsPackage.eINSTANCE.getAndGuard_Left());
+        }
+        if (r instanceof ExpGuard && ((ExpGuard)r).getExp() instanceof MethodCallExp) {
+            error("A side-effect expression cannot be a sub-expression",
+                  AbsPackage.eINSTANCE.getAndGuard_Left());
+        }
+    }
 
-    // @Check
-    // public void checkGreetingStartsWithCapital(Greeting greeting) {
-    //     if (!Character.isUpperCase(greeting.getName().charAt(0))) {
-    //         warning("Name should start with a capital",
-    //                 AbsPackage.Literals.GREETING__NAME,
-    //                 INVALID_NAME);
-    //     }
-    // }
 }
