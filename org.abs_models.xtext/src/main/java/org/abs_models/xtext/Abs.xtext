@@ -219,19 +219,34 @@ AndExp returns Exp
     ; // left-assoc
 
 EqExp returns Exp
-    : CompareExp ({EqExp.left=current} operator=('==' | '!=') right=CompareExp)?
+    : CompareExp
+        (( {EqExp.left=current} '=='
+         | {NotEqExp.left=current} '!=')
+        right=CompareExp)?
     ; // non-assoc
 
 CompareExp returns Exp
-    : PlusMinusExp ({CompareExp.left=current} operator=('<' | '>' | '<=' | '>=') right=PlusMinusExp)?
+    : PlusMinusExp
+        (( {LTExp.left=current} '<'
+         | {GTExp.left=current} '>'
+         | {LTEQExp.left=current} '<='
+         | {GTEQExp.left=current} '>=')
+        right=PlusMinusExp)?
     ; // non-assoc
 
 PlusMinusExp returns Exp
-    : MulDivModExp ({PlusMinusExp.left=current} operator=('+' | '-') right=MulDivModExp)*
+    : MulDivModExp
+        (( {PlusExp.left=current} '+'
+         | {MinusExp.left=current} '-')
+        right=MulDivModExp)*
     ; // left-assoc
 
 MulDivModExp returns Exp
-    : MethodCallExp ({MulDivExp.left=current} operator=('*' | '/' | '%') right=MethodCallExp)*
+    : MethodCallExp
+        (( {MulExp.left=current} '*'
+         | {DivExp.left=current}'/'
+         | {ModExp.left=current} '%')
+        right=MethodCallExp)*
     ; // left-assoc
 
 MethodCallExp returns Exp
@@ -253,7 +268,10 @@ GetExp returns Exp
     ;
 
 ConversionExp returns Exp
-    : PrimaryExp ({ConversionExp.body=current} operator=('implements' | 'as') interface=QualifiedTypeIdentifier )?
+    : PrimaryExp
+        (( {ImplementsExp.body=current} 'implements'
+         | {AsExp.body=current} 'as' )
+        interface=QualifiedTypeIdentifier )?
     ;
 
 PrimaryExp returns Exp
@@ -274,7 +292,10 @@ PrimaryExp returns Exp
     ;
 
 UnaryExp returns Exp
-    : {UnaryExp} operator=('!' | '-' | '+') body=Exp
+    : ( '!' Exp {NotExp.body=current}
+      | '-' Exp {NegExp.body=current}
+      // | '+' Exp {PosExp.body=current}
+    )
     ;
 
 AwaitExp returns Exp : {AwaitExp} 'await' guard=Guard ;
@@ -313,7 +334,7 @@ VariadicFunctionAppExp returns Exp
 
 PartialFunctionAppExp returns Exp
     : {PartialFunctionAppExp} name=QualifiedIdentifier
-        '(' function_args+=PartialFunctionParam (',' function_args+=PartialFunctionParam )* ')'
+        '(' functionArgs+=PartialFunctionParam (',' functionArgs+=PartialFunctionParam )* ')'
         '(' (args+=Exp ( ',' args+=Exp)* )? ')'
     ;
 
@@ -327,10 +348,10 @@ ConstructorAppExp returns Exp
     ;
 
 TemplateStringExp returns Exp
-    : {TemplateStringExp} TEMPLATESTRINGLITERAL
-    | {TemplateStringExp} TEMPLATESTRINGSTART e1=Exp
-        (b+=TEMPLATESTRINGINBETWEEN e+=Exp)*
-        TEMPLATESTRINGEND
+    : {TemplateStringSimpleExp} string=TEMPLATESTRINGLITERAL
+    | {TemplateStringExp} startString=TEMPLATESTRINGSTART firstExp=Exp
+        (betweenStrings+=TEMPLATESTRINGINBETWEEN exps+=Exp)*
+        endString=TEMPLATESTRINGEND
     ;
 
 AtomicExp returns Exp

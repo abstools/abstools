@@ -7,9 +7,7 @@ import org.abs_models.xtext.abs.AndExp;
 import org.abs_models.xtext.abs.AwaitExp;
 import org.abs_models.xtext.abs.CaseExpBranch;
 import org.abs_models.xtext.abs.CaseStmtBranch;
-import org.abs_models.xtext.abs.CompareExp;
 import org.abs_models.xtext.abs.ConstructorAppExp;
-import org.abs_models.xtext.abs.ConversionExp;
 import org.abs_models.xtext.abs.DataConstructorParamDecl;
 import org.abs_models.xtext.abs.ExpGuard;
 import org.abs_models.xtext.abs.FloatLiteralPattern;
@@ -21,10 +19,8 @@ import org.abs_models.xtext.abs.MethodSignature;
 import org.abs_models.xtext.abs.OrExp;
 import org.abs_models.xtext.abs.OriginalCallExp;
 import org.abs_models.xtext.abs.PartialFunctionAppExp;
-import org.abs_models.xtext.abs.PlusMinusExp;
 import org.abs_models.xtext.abs.StringLiteralPattern;
 import org.abs_models.xtext.abs.TemplateStringExp;
-import org.abs_models.xtext.abs.UnaryExp;
 import org.abs_models.xtext.abs.VarOrFieldExp;
 import org.abs_models.xtext.abs.VariablePattern;
 import org.abs_models.xtext.abs.VariadicFunctionAppExp;
@@ -813,218 +809,199 @@ public class XtextToJastAdd {
 
     private static PureExp pureExpFromXtext(org.abs_models.xtext.abs.Exp value) {
         PureExp result = null;
-        if(value instanceof org.abs_models.xtext.abs.CaseExp) {
-            org.abs_models.xtext.abs.CaseExp xtextExp = (org.abs_models.xtext.abs.CaseExp) value;
-            CaseExp exp = new CaseExp();
-            exp.setExpr(pureExpFromXtext(xtextExp.getCondition()));
 
+        if(value instanceof org.abs_models.xtext.abs.OrExp) {
+            org.abs_models.xtext.abs.OrExp xtextExp = (OrExp) value;
+            result = new OrBoolExp(pureExpFromXtext(xtextExp.getLeft()),
+                                          pureExpFromXtext(xtextExp.getRight()));
+        } else if(value instanceof org.abs_models.xtext.abs.AndExp) {
+            org.abs_models.xtext.abs.AndExp xtextExp = (AndExp) value;
+            result = new AndBoolExp(pureExpFromXtext(xtextExp.getLeft()),
+                                    pureExpFromXtext(xtextExp.getRight()));
+        } else if(value instanceof org.abs_models.xtext.abs.EqExp) {
+            org.abs_models.xtext.abs.EqExp xtextExp = (org.abs_models.xtext.abs.EqExp) value;
+            result = new EqExp(pureExpFromXtext(xtextExp.getLeft()),
+                               pureExpFromXtext(xtextExp.getRight()));
+        } else if(value instanceof org.abs_models.xtext.abs.NotEqExp) {
+            org.abs_models.xtext.abs.NotEqExp xtextExp = (org.abs_models.xtext.abs.NotEqExp) value;
+            result = new NotEqExp(pureExpFromXtext(xtextExp.getLeft()),
+                                  pureExpFromXtext(xtextExp.getRight()));
+        } else if(value instanceof org.abs_models.xtext.abs.LTExp) {
+            org.abs_models.xtext.abs.LTExp xtextExp = (org.abs_models.xtext.abs.LTExp) value;
+            result = new LTExp(pureExpFromXtext(xtextExp.getLeft()),
+                               pureExpFromXtext(xtextExp.getRight()));
+        } else if(value instanceof org.abs_models.xtext.abs.GTExp) {
+            org.abs_models.xtext.abs.GTExp xtextExp = (org.abs_models.xtext.abs.GTExp) value;
+            result = new GTExp(pureExpFromXtext(xtextExp.getLeft()),
+                               pureExpFromXtext(xtextExp.getRight()));
+        } else if(value instanceof org.abs_models.xtext.abs.LTEQExp) {
+            org.abs_models.xtext.abs.LTEQExp xtextExp = (org.abs_models.xtext.abs.LTEQExp) value;
+            result = new LTEQExp(pureExpFromXtext(xtextExp.getLeft()),
+                                 pureExpFromXtext(xtextExp.getRight()));
+        } else if(value instanceof org.abs_models.xtext.abs.GTEQExp) {
+            org.abs_models.xtext.abs.GTEQExp xtextExp = (org.abs_models.xtext.abs.GTEQExp) value;
+            result = new GTEQExp(pureExpFromXtext(xtextExp.getLeft()),
+                                 pureExpFromXtext(xtextExp.getRight()));
+        } else if(value instanceof org.abs_models.xtext.abs.PlusExp) {
+            org.abs_models.xtext.abs.PlusExp xtextExp = (org.abs_models.xtext.abs.PlusExp) value;
+            result = new AddAddExp(pureExpFromXtext(xtextExp.getLeft()),
+                                   pureExpFromXtext(xtextExp.getRight()));
+        } else if(value instanceof org.abs_models.xtext.abs.MinusExp) {
+            org.abs_models.xtext.abs.MinusExp xtextExp = (org.abs_models.xtext.abs.MinusExp) value;
+            result = new SubAddExp(pureExpFromXtext(xtextExp.getLeft()),
+                                   pureExpFromXtext(xtextExp.getRight()));
+        } else if(value instanceof org.abs_models.xtext.abs.MulExp) {
+            org.abs_models.xtext.abs.MulExp xtextExp = (org.abs_models.xtext.abs.MulExp) value;
+            result = new MultMultExp(pureExpFromXtext(xtextExp.getLeft()),
+                                     pureExpFromXtext(xtextExp.getRight()));
+        } else if(value instanceof org.abs_models.xtext.abs.DivExp) {
+            org.abs_models.xtext.abs.DivExp xtextExp = (org.abs_models.xtext.abs.DivExp) value;
+            result = new DivMultExp(pureExpFromXtext(xtextExp.getLeft()),
+                                    pureExpFromXtext(xtextExp.getRight()));
+        } else if(value instanceof org.abs_models.xtext.abs.ModExp) {
+            org.abs_models.xtext.abs.ModExp xtextExp = (org.abs_models.xtext.abs.ModExp) value;
+            result = new ModMultExp(pureExpFromXtext(xtextExp.getLeft()),
+                                    pureExpFromXtext(xtextExp.getRight()));
+        }
+        // MethodCallExp, GetExp are handled in fromXtext(Exp)
+        else if(value instanceof org.abs_models.xtext.abs.ImplementsExp) {
+            org.abs_models.xtext.abs.ImplementsExp xtextExp = (org.abs_models.xtext.abs.ImplementsExp) value;
+            result = new ImplementsExp(pureExpFromXtext(xtextExp.getBody()),
+                                       new InterfaceTypeUse(xtextExp.getInterface(), new List<>()));
+        } else if(value instanceof org.abs_models.xtext.abs.AsExp) {
+            org.abs_models.xtext.abs.AsExp xtextExp = (org.abs_models.xtext.abs.AsExp) value;
+            result = new AsExp(pureExpFromXtext(xtextExp.getBody()),
+                               new InterfaceTypeUse(xtextExp.getInterface(), new List<>()));
+        } else if(value instanceof org.abs_models.xtext.abs.NotExp) {
+            org.abs_models.xtext.abs.NotExp xtextExp = (org.abs_models.xtext.abs.NotExp) value;
+            result = new NegExp(pureExpFromXtext(xtextExp.getBody()));
+        } else if(value instanceof org.abs_models.xtext.abs.NegExp) {
+            org.abs_models.xtext.abs.NegExp xtextExp = (org.abs_models.xtext.abs.NegExp) value;
+            result = new MinusExp(pureExpFromXtext(xtextExp.getBody()));
+        }
+        // AwaitExp is handled in fromXtext(ExpStmt), fromXtext(Exp)
+        // NewExp, OriginalCallExp are handled in fromXtext(Exp)
+        else  if(value instanceof org.abs_models.xtext.abs.CaseExp) {
+            org.abs_models.xtext.abs.CaseExp xtextExp = (org.abs_models.xtext.abs.CaseExp) value;
             List<CaseBranch> branches = new List<>();
             for(CaseExpBranch cb : xtextExp.getCasebranches()) {
-                Pattern pattern = fromXtext(cb.getPattern());
-                PureExp pureExp = pureExpFromXtext(cb.getExpression());
-                CaseBranch branch = new CaseBranch(pattern, pureExp);
+                CaseBranch branch = new CaseBranch(fromXtext(cb.getPattern()),
+                                                   pureExpFromXtext(cb.getExpression()));
                 branches.add(branch);
             }
-            exp.setBranchList(branches);
-
-            result = exp;
-        }
-        else if(value instanceof org.abs_models.xtext.abs.LetExp) {
+            result = new CaseExp(pureExpFromXtext(xtextExp.getCondition()),
+                                 branches);
+        } else if(value instanceof org.abs_models.xtext.abs.LetExp) {
             org.abs_models.xtext.abs.LetExp xtextExp = (org.abs_models.xtext.abs.LetExp) value;
-            LetExp exp = new LetExp();
-
-            // FIXME implementation missing --> matching fields and 1:n relations?
-
-            result = exp;
-        }
-        else if(value instanceof org.abs_models.xtext.abs.IfExp) {
+            result = pureExpFromXtext(xtextExp.getBody());
+            // Construct the wrapping LetExp’s from the inside out -- later
+            // expressions have access to the identifiers of earlier ones so
+            // are on the inside
+            for (int i = xtextExp.getVariables().size() - 1; i >= 0; i--) {
+                // getVariables(), getExps() have the same size
+                result = new LetExp(fromXtext(xtextExp.getVariables().get(i)),
+                                    pureExpFromXtext(xtextExp.getExps().get(i)),
+                                    result);
+            }
+        } else if(value instanceof org.abs_models.xtext.abs.IfExp) {
             org.abs_models.xtext.abs.IfExp xtextExp = (org.abs_models.xtext.abs.IfExp) value;
-            IfExp exp = new IfExp();
-            exp.setCondExp(pureExpFromXtext(xtextExp.getCondition()));
-            exp.setThenExp(pureExpFromXtext(xtextExp.getConsequence()));
-            exp.setElseExp(pureExpFromXtext(xtextExp.getAlternate()));
-
-            result = exp;
-        }
-        else if(value instanceof org.abs_models.xtext.abs.FunctionAppExp) {
+            result = new IfExp(pureExpFromXtext(xtextExp.getCondition()),
+                               pureExpFromXtext(xtextExp.getConsequence()),
+                               pureExpFromXtext(xtextExp.getAlternate()));
+        } else if(value instanceof org.abs_models.xtext.abs.FunctionAppExp) {
             org.abs_models.xtext.abs.FunctionAppExp xtextExp = (FunctionAppExp) value;
-            // FIXME implementation missing --> target class? FnApp??
-        }
-        else if(value instanceof org.abs_models.xtext.abs.VariadicFunctionAppExp) {
+            FnApp exp = new FnApp();
+            exp.setName(xtextExp.getName());
+            for (org.abs_models.xtext.abs.Exp arg : xtextExp.getArgs()) {
+                exp.addParamNoTransform(pureExpFromXtext(arg));
+            }
+            result = exp;
+        } else if(value instanceof org.abs_models.xtext.abs.VariadicFunctionAppExp) {
             org.abs_models.xtext.abs.VariadicFunctionAppExp xtextExp = (VariadicFunctionAppExp) value;
-            // FIXME implementation missing --> target class?
-        }
-        else if(value instanceof org.abs_models.xtext.abs.PartialFunctionAppExp) {
+            List<PureExp> arglist = new List<PureExp>();
+            for (org.abs_models.xtext.abs.Exp arg : xtextExp.getArgs()) {
+                arglist.add(pureExpFromXtext(arg));
+            }
+            PureExp args;
+            if (xtextExp.getArgs().isEmpty()) {
+                args = new DataConstructorExp("Nil", new List<>());
+            } else {
+                args = new ListLiteral(arglist);
+            }
+            result = new FnApp(xtextExp.getName(), new List<PureExp>(args));
+        } else if(value instanceof org.abs_models.xtext.abs.PartialFunctionAppExp) {
             org.abs_models.xtext.abs.PartialFunctionAppExp xtextExp = (PartialFunctionAppExp) value;
-            // FIXME implementation missing --> target class? ParFnApp??
-        }
-        else if(value instanceof org.abs_models.xtext.abs.ConstructorAppExp) {
+            List<PureExp> args = new List<PureExp>();
+            List<ParFnAppParam> fnargs = new List<ParFnAppParam>();
+            for (org.abs_models.xtext.abs.Exp arg : xtextExp.getArgs()) {
+                args.add(pureExpFromXtext(arg));
+            }
+            for (org.abs_models.xtext.abs.PartialFunctionParam p : xtextExp.getFunctionArgs()) {
+                fnargs.add(fromXtext(p));
+            }
+            result = new ParFnApp(xtextExp.getName(), args, fnargs);
+        } else if(value instanceof org.abs_models.xtext.abs.ConstructorAppExp) {
             org.abs_models.xtext.abs.ConstructorAppExp xtextExp = (ConstructorAppExp) value;
-            DataConstructorExp exp = new DataConstructorExp();
-            exp.setConstructor(xtextExp.getName());
-
             List<PureExp> params = new List<>();
             for(org.abs_models.xtext.abs.Exp param : xtextExp.getArgs()) {
                 params.add(pureExpFromXtext(param));
             }
-            exp.setParamList(params);
-
+            result = new DataConstructorExp(xtextExp.getName(), params);
+        } else if(value instanceof org.abs_models.xtext.abs.TemplateStringSimpleExp){
+            org.abs_models.xtext.abs.TemplateStringSimpleExp xtextExp = (org.abs_models.xtext.abs.TemplateStringSimpleExp) value;
+            result = new StringLiteral(xtextExp.getString());
+        } else if(value instanceof org.abs_models.xtext.abs.TemplateStringExp) {
+            org.abs_models.xtext.abs.TemplateStringExp xtextExp = (org.abs_models.xtext.abs.TemplateStringExp) value;
+            PureExp exp = new AddAddExp(new StringLiteral(xtextExp.getStartString()),
+                                        new FnApp("toString", new List<>(pureExpFromXtext(xtextExp.getFirstExp()))));
+            for (int i = 0; i < xtextExp.getExps().size(); i++) {
+                PureExp part = new AddAddExp(new StringLiteral(xtextExp.getBetweenStrings().get(i)),
+                                             new FnApp("toString", new List<>(pureExpFromXtext(xtextExp.getExps().get(i)))));
+                exp = new AddAddExp(exp, part);
+            }
+            exp = new AddAddExp(exp, new StringLiteral(xtextExp.getEndString()));
             result = exp;
-        }
-        else if(value instanceof org.abs_models.xtext.abs.TemplateStringExp) {
-            org.abs_models.xtext.abs.TemplateStringExp xtextExp = (TemplateStringExp) value;
-            // FIXME implementation missing --> target class?
-        }
-        else if(value instanceof org.abs_models.xtext.abs.OrExp) {
-            org.abs_models.xtext.abs.OrExp xtextExp = (OrExp) value;
-            OrBoolExp exp = new OrBoolExp();
-            exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
-            exp.setRight(pureExpFromXtext(xtextExp.getRight()));
-
-            result = exp;
-        }
-        else if(value instanceof org.abs_models.xtext.abs.AndExp) {
-            org.abs_models.xtext.abs.AndExp xtextExp = (AndExp) value;
-            AndBoolExp exp = new AndBoolExp();
-            exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
-            exp.setRight(pureExpFromXtext(xtextExp.getRight()));
-
-            result = exp;
-        }
-        else if(value instanceof org.abs_models.xtext.abs.EqExp) {
-            org.abs_models.xtext.abs.EqExp xtextExp = (org.abs_models.xtext.abs.EqExp) value;
-
-            if("==".equals(xtextExp.getOperator())) {
-                EqExp exp = new EqExp();
-                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
-                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
-
-                result = exp;
+        } else if (value instanceof org.abs_models.xtext.abs.IntLiteral) {
+            org.abs_models.xtext.abs.IntLiteral xtextExp = (org.abs_models.xtext.abs.IntLiteral) value;
+            result = new IntLiteral(xtextExp.getValue().toString());
+        } else if (value instanceof org.abs_models.xtext.abs.FloatLiteral) {
+            org.abs_models.xtext.abs.FloatLiteral xtextExp = (org.abs_models.xtext.abs.FloatLiteral) value;
+            result = new FloatLiteral(Double.toString(xtextExp.getValue()));
+        } else if (value instanceof org.abs_models.xtext.abs.StringLiteral) {
+            org.abs_models.xtext.abs.StringLiteral xtextExp = (org.abs_models.xtext.abs.StringLiteral) value;
+            result = new StringLiteral(xtextExp.getValue());
+        } else if(value instanceof org.abs_models.xtext.abs.VarOrFieldExp) {
+            org.abs_models.xtext.abs.VarOrFieldExp xtextExp = (org.abs_models.xtext.abs.VarOrFieldExp) value;
+            if (xtextExp.isField()) {
+                result = new FieldUse(xtextExp.getName());
+            } else {
+                result = new VarUse(xtextExp.getName());
             }
-            else if("!=".equals(xtextExp.getOperator())) {
-                NotEqExp exp = new NotEqExp();
-                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
-                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
-
-                result = exp;
-            }
-            else {
-                throw new NotImplementedYetException(new ASTNode(),
-                    "Unknown operator " + xtextExp.getOperator() + " in expression" + value.getClass().toString());
-            }
-        }
-        else if(value instanceof org.abs_models.xtext.abs.CompareExp) {
-            org.abs_models.xtext.abs.CompareExp xtextExp = (CompareExp) value;
-
-            if("<".equals(xtextExp.getOperator())) {
-                LTExp exp = new LTExp();
-                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
-                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
-
-                result = exp;
-            }
-            else if(">".equals(xtextExp.getOperator())) {
-                GTExp exp = new GTExp();
-                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
-                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
-
-                result = exp;
-            }
-            else if("<=".equals(xtextExp.getOperator())) {
-                LTEQExp exp = new LTEQExp();
-                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
-                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
-
-                result = exp;
-            }
-            else if(">=".equals(xtextExp.getOperator())) {
-                GTEQExp exp = new GTEQExp();
-                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
-                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
-
-                result = exp;
-            }
-            else {
-                throw new NotImplementedYetException(new ASTNode(),
-                    "Unknown operator " + xtextExp.getOperator() + " in expression" + value.getClass().toString());
-            }
-        }
-        else if(value instanceof org.abs_models.xtext.abs.PlusMinusExp) {
-            org.abs_models.xtext.abs.PlusMinusExp xtextExp = (PlusMinusExp) value;
-
-            if("+".equals(xtextExp.getOperator())) {
-                AddAddExp exp = new AddAddExp();
-                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
-                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
-
-                result = exp;
-            }
-            else if("-".equals(xtextExp.getOperator())) {
-                SubAddExp exp = new SubAddExp();
-                exp.setLeft(pureExpFromXtext(xtextExp.getLeft()));
-                exp.setRight(pureExpFromXtext(xtextExp.getRight()));
-
-                result = exp;
-            }
-            else {
-                throw new NotImplementedYetException(new ASTNode(),
-                    "Unknown operator " + xtextExp.getOperator() + " in expression" + value.getClass().toString());
-            }
-        }
-        // FIXME class MulDivModExp unknown
-//        else if(value instanceof MulDivModE) {
-//
-//        }
-        else if(value instanceof org.abs_models.xtext.abs.UnaryExp) {
-            org.abs_models.xtext.abs.UnaryExp xtextExp = (UnaryExp) value;
-
-            if("!".equals(xtextExp.getOperator())) {
-                // FIXME implementation missing --> target class?
-            }
-            else if("-".equals(xtextExp.getOperator())) {
-                // FIXME implementation missing --> target class?
-            }
-            else if("+".equals(xtextExp.getOperator())) {
-                // FIXME implementation missing --> target class?
-            }
-            else {
-                throw new NotImplementedYetException(new ASTNode(),
-                    "Unknown operator " + xtextExp.getOperator() + " in expression" + value.getClass().toString());
-            }
-        }
-        else if(value instanceof org.abs_models.xtext.abs.ConversionExp) {
-            org.abs_models.xtext.abs.ConversionExp xtextExp = (ConversionExp) value;
-
-            if("implements".equals(xtextExp.getOperator())) {
-                // FIXME implementation missing --> target class?
-            }
-            else if("as".equals(xtextExp.getOperator())) {
-                // FIXME implementation missing --> target class?
-            }
-            else {
-                throw new NotImplementedYetException(new ASTNode(),
-                    "Unknown operator " + xtextExp.getOperator() + " in expression" + value.getClass().toString());
-            }
-        }
-        // FIXME class PrimaryExp unknown
-//        else if(value instanceof PrimaryE) {
-//
-//        }
-        // FIXME class AtomicExp unknown
-//        else if(value instanceof AtomicE) {
-//
-//        }
-        else if(value instanceof org.abs_models.xtext.abs.VarOrFieldExp) {
-            org.abs_models.xtext.abs.VarOrFieldExp xtextExp = (VarOrFieldExp) value;
-            // FIXME implementation missing --> target class?
-        }
-        else {
+        } else if(value instanceof org.abs_models.xtext.abs.ThisExp) {
+            result = new ThisExp();
+        } else if(value instanceof org.abs_models.xtext.abs.NullLiteral) {
+            result = new NullExp();
+        } else {
             throw new NotImplementedYetException(new ASTNode(),
                 "No conversion to JastAdd implemented for Xtext node "
                     + value.getClass().toString());
         }
-
         return nodeWithLocation(result, value);
+    }
+
+    private static ParFnAppParam fromXtext(org.abs_models.xtext.abs.PartialFunctionParam p) {
+        if (p.getName() != null) {
+            return nodeWithLocation(new NamedParFnAppParam(p.getName()),
+                                    p, AbsPackage.eINSTANCE.getPartialFunctionParam_Name());
+        } else {
+            List<ParamDecl> params = new List<ParamDecl>();
+            for(org.abs_models.xtext.abs.ParamDecl arg : p.getParams()) {
+                params.add(fromXtext(arg));
+            }
+
+            return nodeWithLocation(new AnonymousFunctionDecl(params, pureExpFromXtext(p.getBody())),
+                                    p);
+        }
     }
 
     private static TypeUse fromXtext(org.abs_models.xtext.abs.TypeUse type) {
