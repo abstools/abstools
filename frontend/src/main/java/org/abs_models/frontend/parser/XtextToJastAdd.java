@@ -621,7 +621,7 @@ public class XtextToJastAdd {
                 // Are we an expression that is NOT await + single expression
                 // "guard" with an asynchronous method call expression?  Then
                 // generate a JastAdd AwaitStmt.  (The "await o!m()" case is
-                // handled as part of effExpFromXtext() below.)
+                // handled as part of fromXtext(Exp) below.)
                 Guard guard = fromXtext(((AwaitExp)xtextExp).getGuard());
                 result = new AwaitStmt(annotations, guard);
             } else {
@@ -723,19 +723,7 @@ public class XtextToJastAdd {
     }
 
     private static Exp fromXtext(org.abs_models.xtext.abs.Exp value) {
-        if (value instanceof GetExp
-            || value instanceof OriginalCallExp
-            || value instanceof MethodCallExp
-            || value instanceof NewExp)
-        {
-            return effExpFromXtext(value);
-        } else {
-            return pureExpFromXtext(value);
-        }
-    }
-
-    private static EffExp effExpFromXtext(org.abs_models.xtext.abs.Exp value) {
-        EffExp result = null;
+        Exp result;
 
         if (value instanceof org.abs_models.xtext.abs.GetExp) {
 
@@ -816,13 +804,10 @@ public class XtextToJastAdd {
                 exp.setLocal(nodeWithLocation(new Local(), xtextExp, AbsPackage.eINSTANCE.getNewExp_Local()));
             }
             result = nodeWithLocation(exp, xtextExp);
-        }
-        else {
-            throw new NotImplementedYetException(new ASTNode(),
-                "No conversion to JastAdd implemented for Xtext node "
-                    + value.getClass().toString());
-        }
 
+        } else {
+            result = pureExpFromXtext(value);
+        }
         return nodeWithLocation(result, value);
     }
 
