@@ -41,6 +41,12 @@ public class FreeVarTest extends FrontendTest {
     }
 
     @Test
+    public void listLiteral() {
+        final Exp e = getSecondExp("{ Bool b = True; List<Bool> l = list[b]; }");
+        assertEquals(e.getFreeVars(), "b");
+    }
+
+    @Test
     public void letExp2() {
         Exp e = getSecondExp("{ Bool b = True; Bool c = let (Bool d) = b in d; }");
         assertEquals(e.getFreeVars(), "b");
