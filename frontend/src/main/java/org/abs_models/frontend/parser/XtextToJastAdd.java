@@ -486,7 +486,7 @@ public class XtextToJastAdd {
             varDecl.setName(value.getName());
             varDecl.setAccess(fromXtext(value.getType()));
             if (value.getInit() != null) {
-                varDecl.setInitExp(pureExpFromXtext(value.getInit()));
+                varDecl.setInitExp(fromXtext(value.getInit()));
             }
             result = new VarDeclStmt(annotations, varDecl);
         }
