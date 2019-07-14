@@ -493,7 +493,7 @@ public class XtextToJastAdd {
         else if(stmt instanceof org.abs_models.xtext.abs.AssignStmt) {
             org.abs_models.xtext.abs.AssignStmt value = (org.abs_models.xtext.abs.AssignStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            Exp lhsExp = fromXtext(value.getLhs());
+            org.abs_models.xtext.abs.Exp lhsExp = value.getLhs();
             VarOrFieldUse varOrFieldUse;
             if(lhsExp instanceof VarOrFieldExp) {
                 VarOrFieldExp lhs = (VarOrFieldExp) lhsExp;
