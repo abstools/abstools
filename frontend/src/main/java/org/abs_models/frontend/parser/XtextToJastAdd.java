@@ -84,18 +84,24 @@ public class XtextToJastAdd {
     }
 
     /**
-     * The main entry point for Xtext-to-JastAdd conversion.  Takes a resource
-     * set containing ABS files, parsed and validated by Xtext.  Does not
-     * check for parse / validation errors.
+     * Convert a resource set produced by Xtext into a JastAdd AST.
+     *
+     * This is the main entry point for Xtext-to-JastAdd conversion.  Does not
+     * check for parse / validation errors, so  should only be
+     * called if the argument contains no Xtext-detected errors.
+     *
+     * The result will be pre-processed by the ASTPreProcessor class.
      *
      * @param resourceSet The parsed ABS files, including one resource for the standard library
-     * @return a fresh JastAdd Model object
+     * @return a fresh JastAdd Model object, processed by ASTPreProcessor
      */
     public static Model fromResourceSet(XtextResourceSet resourceSet) {
         Model result = new Model();
         for (Resource r : resourceSet.getResources()) {
             for (EObject unit : r.getContents()) {
-                result.addCompilationUnitNoTransform(fromXtext((org.abs_models.xtext.abs.CompilationUnit) unit));
+                CompilationUnit jastadd_unit = fromXtext((org.abs_models.xtext.abs.CompilationUnit) unit);
+                new ASTPreProcessor().preprocess(jastadd_unit);
+                result.addCompilationUnitNoTransform(jastadd_unit);
             }
         }
         return result;
