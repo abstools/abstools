@@ -4,6 +4,7 @@
  */
 package org.abs_models.frontend.parser;
 
+import org.abs_models.common.Constants;
 import org.abs_models.frontend.ast.*;
 
 import java.util.Map;
@@ -19,7 +20,8 @@ import java.util.LinkedList;
  *
  * Currently the following things are done:
  *
- *  - selector names of constructors are transformed to functions
+ * - Transform selector names of constructors to functions
+ * - Add import clauses for the standard library where necessary
  *
  * @author Jan Schäfer
  *
@@ -36,12 +38,30 @@ public class ASTPreProcessor {
     }
 
     private void preprocess(ModuleDecl moduleDecl) {
+        // Add selector functions, e.g., functions fst and snd for datatype
+        // data Pair<A, B> = Pair(A fst, B snd);
         for (Decl decl : moduleDecl.getDecls()) {
             if (decl.isDataType()) {
                 DataTypeDecl dtd = (DataTypeDecl) decl;
                 for (FunctionDecl fd : createSelectorFunctions(dtd, false)) {
                     moduleDecl.addDeclNoTransform(fd);
                 }
+            }
+        }
+        // Add import clauses if module does not import anything from standard
+        // library
+        if (!Constants.STDLIB_NAME.equals(moduleDecl.getName())) {
+            boolean needsImport = true;
+            for (Import i : moduleDecl.getImports()) {
+                if (i instanceof StarImport
+                    && ((StarImport)i).getModuleName().equals(Constants.STDLIB_NAME))
+                    needsImport = false;
+                else if (i instanceof FromImport
+                         && ((FromImport)i).getModuleName().equals(Constants.STDLIB_NAME))
+                    needsImport = false;
+            }
+            if (needsImport) {
+                moduleDecl.getImports().add(new StarImport(Constants.STDLIB_NAME));
             }
         }
     }
