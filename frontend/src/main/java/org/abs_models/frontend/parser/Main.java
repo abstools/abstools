@@ -684,22 +684,6 @@ public class Main {
     //     	walker.walk(l, tree);
     //     	CompilationUnit u
     //     	    = new ASTPreProcessor().preprocess(l.getCompilationUnit());
-    //     	for (ModuleDecl d : u.getModuleDecls()) {
-    //     	    if (!Constants.STDLIB_NAME.equals(d.getName())) {
-    //     		boolean needsImport = true;
-    //     		for (Import i : d.getImports()) {
-    //     		    if (i instanceof StarImport
-    //     			&& ((StarImport)i).getModuleName().equals(Constants.STDLIB_NAME))
-    //     			needsImport = false;
-    //     		    else if (i instanceof FromImport
-    //     			     && ((FromImport)i).getModuleName().equals(Constants.STDLIB_NAME))
-    //     			needsImport = false;
-    //     		}
-    //     		if (needsImport) {
-    //     		    d.getImports().add(new StarImport(Constants.STDLIB_NAME));
-    //     		}
-    //     	    }
-    //     	}
     //     	return u;
     //         } else {
     //     	String path = "<unknown path>";
