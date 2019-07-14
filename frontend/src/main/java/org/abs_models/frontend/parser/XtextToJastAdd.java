@@ -542,16 +542,14 @@ public class XtextToJastAdd {
         }
         else if(stmt instanceof org.abs_models.xtext.abs.IfStmt) {
             org.abs_models.xtext.abs.IfStmt value = (org.abs_models.xtext.abs.IfStmt) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-
-            PureExp condition = pureExpFromXtext(value.getCondition());
-
-            Block consequence = blockFromXtext(value.getConsequence());
-
-            Block alternateBlock = blockFromXtext(value.getAlternate());
-            Opt<Block> alternate = new Opt<>(alternateBlock);
-
-            result = new IfStmt(annotations, condition, consequence, alternate);
+            IfStmt ifstmt = new IfStmt();
+            ifstmt.setAnnotationList(annotationsfromXtext(value.getAnnotations()));
+            ifstmt.setCondition(pureExpFromXtext(value.getCondition()));
+            ifstmt.setThen(blockFromXtext(value.getConsequence()));
+            if (value.getAlternate() != null) {
+                ifstmt.setElse(blockFromXtext(value.getAlternate()));
+            }
+            result = ifstmt;
         }
         else if(stmt instanceof org.abs_models.xtext.abs.WhileStmt) {
             org.abs_models.xtext.abs.WhileStmt value = (org.abs_models.xtext.abs.WhileStmt) stmt;
