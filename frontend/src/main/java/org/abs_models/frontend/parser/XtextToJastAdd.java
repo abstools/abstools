@@ -172,7 +172,7 @@ public class XtextToJastAdd {
             result.addDeclNoTransform(fromXtext(decl));
         }
 
-        if(xtext_module.getMainblockstmts() != null) {
+        if(xtext_module.getMainblockstmts().size() > 0) {
             List<Stmt> statements = new List<>();
             for(org.abs_models.xtext.abs.Stmt stmt : xtext_module.getMainblockstmts()) {
                 statements.add(fromXtext(stmt));
