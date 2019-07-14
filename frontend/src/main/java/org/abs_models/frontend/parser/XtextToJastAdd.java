@@ -375,7 +375,7 @@ public class XtextToJastAdd {
 
     private static MethodSig fromXtext(MethodSignature xtext_decl) {
         MethodSig result = new MethodSig();
-        result.setName(result.getName());
+        result.setName(xtext_decl.getName());
         result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
         for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
             result.addParamNoTransform(fromXtext(arg));
