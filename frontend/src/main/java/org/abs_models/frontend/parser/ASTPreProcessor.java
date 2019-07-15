@@ -22,8 +22,11 @@ import java.util.LinkedList;
  *
  * - Transform selector names of constructors to functions
  * - Add import clauses for the standard library where necessary
+ * - Add "implements Object" for classes that don’t implement any interface
+ * - Add "extends Object" for interfaces that don’t extend any interface
  *
  * @author Jan Schäfer
+ * @author Rudi Schlatte
  *
  */
 public class ASTPreProcessor {
@@ -38,16 +41,6 @@ public class ASTPreProcessor {
     }
 
     private void preprocess(ModuleDecl moduleDecl) {
-        // Add selector functions, e.g., functions fst and snd for datatype
-        // data Pair<A, B> = Pair(A fst, B snd);
-        for (Decl decl : moduleDecl.getDecls()) {
-            if (decl.isDataType()) {
-                DataTypeDecl dtd = (DataTypeDecl) decl;
-                for (FunctionDecl fd : createSelectorFunctions(dtd, false)) {
-                    moduleDecl.addDeclNoTransform(fd);
-                }
-            }
-        }
         // Add import clauses if module does not import anything from standard
         // library
         if (!Constants.STDLIB_NAME.equals(moduleDecl.getName())) {
@@ -62,6 +55,38 @@ public class ASTPreProcessor {
             }
             if (needsImport) {
                 moduleDecl.getImports().add(new StarImport(Constants.STDLIB_NAME));
+            }
+        }
+        for (Decl decl : moduleDecl.getDecls()) {
+            if (decl.isDataType()) {
+                // Add selector functions, e.g., functions fst and snd for
+                // datatype data Pair<A, B> = Pair(A fst, B snd);
+                DataTypeDecl dtd = (DataTypeDecl) decl;
+                for (FunctionDecl fd : createSelectorFunctions(dtd, false)) {
+                    moduleDecl.addDeclNoTransform(fd);
+                }
+            } else if (decl.isClass()) {
+                // If decl implements no interface: implement Object
+                ClassDecl c = (ClassDecl)decl;
+                if (!c.hasImplementedInterfaceUse()) {
+                    InterfaceTypeUse s = new InterfaceTypeUse("ABS.StdLib.Object", new List<Annotation>());
+                    // set position such that SourcePosition.findPosition() does not
+                    // find this node
+                    s.setPosition(-1, 0, -1, 0);
+                    c.addImplementedInterfaceUseNoTransform(s);
+                }
+            } else if (decl.isInterface()) {
+                // If decl extends no interface: extend Object
+                InterfaceDecl i = (InterfaceDecl)decl;
+                if (!i.hasExtendedInterfaceUse() && !i.getName().equals("Object")) {
+                    // KLUDGE: this breaks if we manage to define an interface
+                    // called "Object" in some other package.
+                    InterfaceTypeUse s = new InterfaceTypeUse("ABS.StdLib.Object", new List<Annotation>());
+                    // set position such that SourcePosition.findPosition()
+                    // does not find this node
+                    s.setPosition(-1, 0, -1, 0);
+                    i.addExtendedInterfaceUseNoTransform(s);
+                }
             }
         }
     }
@@ -227,7 +252,7 @@ public class ASTPreProcessor {
     }
 
     /**
-     * recursively set the position of this ast node and its childs
+     * recursively set the position of this ast node and its children
      */
     private void setAllPositionsFromNode(ASTNode<?> node, ASTNode<?> fromNode) {
         node.setPositionFromNode(fromNode);
