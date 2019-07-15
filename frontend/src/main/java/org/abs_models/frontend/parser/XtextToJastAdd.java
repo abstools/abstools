@@ -249,20 +249,16 @@ public class XtextToJastAdd {
         result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
 
         for (org.abs_models.xtext.abs.DataConstructorDecl xtext_d : xtext_decl.getConstructors()) {
-             result.addDataConstructor(fromXtext(xtext_d));
+            DataConstructor constructor = new DataConstructor();
+            constructor.setName(xtext_d.getName());
+
+            for (DataConstructorParamDecl arg : xtext_d.getArgs()) {
+                constructor.addConstructorArgNoTransform(fromXtext(arg));
+            }
+
+            result.addDataConstructor(nodeWithLocation(constructor, xtext_d));
         }
         return nodeWithLocation(result, xtext_decl);
-    }
-
-    private static DataConstructor fromXtext(org.abs_models.xtext.abs.DataConstructorDecl xtext_d) {
-        DataConstructor constructor = new DataConstructor();
-        constructor.setName(xtext_d.getName());
-
-        for (DataConstructorParamDecl arg : xtext_d.getArgs()) {
-            constructor.addConstructorArgNoTransform(fromXtext(arg));
-        }
-
-        return nodeWithLocation(constructor, xtext_d);
     }
 
     private static ConstructorArg fromXtext(DataConstructorParamDecl xtext_arg) {
@@ -270,7 +266,27 @@ public class XtextToJastAdd {
         if(xtext_arg.getName() != null) {
             constructorArg.setSelectorName(nodeWithLocation(new Name(xtext_arg.getName()), xtext_arg, AbsPackage.eINSTANCE.getDataConstructorParamDecl_Name()));
         }
-        constructorArg.setTypeUse(fromXtext(xtext_arg.getType()));
+        // This code section transferred from the old
+        // CreateJast.exitData_constructor(), which had a comment saying "see
+        // below, we may be facing an UnresolvedTypeUse".  In
+        // CreateJastAdd.exitType_use, the commend said: "As we could be
+        // looking at an interface type, first keep symbol unresolved and have
+        // rewrite-rules patch it up.  However, this means that in the parser
+        // the DataConstructor could be seeing [sic]. But there we know what
+        // it must be and "rewrite" it ourselves."
+
+        // The upshot: this code is cargo-culted and can be changed /
+        // simplified if subsequent stages do not complain.
+        TypeUse tu = fromXtext(xtext_arg.getType());
+        DataTypeUse turesolved;
+        if (tu instanceof DataTypeUse) {
+            turesolved = (DataTypeUse)tu;
+        } else {
+            assert tu instanceof UnresolvedTypeUse : tu.getClass().getName();
+            turesolved = new DataTypeUse(tu.getName(), tu.getAnnotations());
+            nodeWithLocation(turesolved, xtext_arg.getType());
+        }
+        constructorArg.setTypeUse(turesolved);
         return nodeWithLocation(constructorArg, xtext_arg);
     }
 
