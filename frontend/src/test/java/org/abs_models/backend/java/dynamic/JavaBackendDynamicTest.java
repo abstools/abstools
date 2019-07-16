@@ -37,7 +37,7 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
         String code = null;
         code = absCode;
         /* TODO: why not parse the ABSTest way -- sooner or later a flag will fall over... [stolz]*/
-        model = Main.parseString(code);
+        model = parseString(code);
         if (model.hasErrors()) {
             fail(model.getErrors().getFirstError().getHelpMessage());
         } else {
