@@ -3,8 +3,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'org.xtext:xtext-gradle-plugin:2.0.3'
-        classpath 'io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE'
+        classpath 'org.xtext:xtext-gradle-plugin:2.0.7'
+        classpath 'io.spring.gradle:dependency-management-plugin:1.0.8.RELEASE'
     }
 }
 
@@ -27,8 +27,8 @@ configurations.all {
 }
 
 dependencies {
-    testCompile "org.junit.jupiter:junit-jupiter-api:5.3.1"
-    testRuntime "org.junit.jupiter:junit-jupiter-engine:5.3.1"
+    testCompile "org.junit.jupiter:junit-jupiter-api:5.5.0"
+    testRuntime "org.junit.jupiter:junit-jupiter-engine:5.5.0"
     testCompile "org.eclipse.xtext:org.eclipse.xtext.testing:${xtextVersion}"
     testCompile "org.eclipse.xtext:org.eclipse.xtext.xbase.testing:${xtextVersion}"
     compile "org.eclipse.xtext:org.eclipse.xtext:${xtextVersion}"
@@ -41,7 +41,7 @@ configurations {
 }
 
 dependencies {
-    mwe2 "org.eclipse.emf:org.eclipse.emf.mwe2.launch:2.9.1.201705291010"
+    mwe2 "org.eclipse.emf:org.eclipse.emf.mwe2.launch:2.11.0"
     mwe2 "org.eclipse.xtext:org.eclipse.xtext.common.types:${xtextVersion}"
     mwe2 "org.eclipse.xtext:org.eclipse.xtext.xtext.generator:${xtextVersion}"
     mwe2 "org.eclipse.xtext:xtext-antlr-generator:[2.1.1, 3)"
