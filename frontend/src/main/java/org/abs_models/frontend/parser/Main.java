@@ -266,7 +266,7 @@ public class Main {
     }
 
     /**
-     * Perform various rewrites that cannot be done in JastAdd
+     * Perform various rewrites that cannot be done in JastAdd.
      *
      * JastAdd rewrite rules can only rewrite the current node using
      * node-local information.  ("The code in the body of the rewrite may
@@ -312,11 +312,12 @@ public class Main {
                 }
             }
             // Adjust Feature datatype
+            featureDecl.setDataConstructorList(new List<>());
             for (Feature f : pl.getFeatures()) {
                 // TODO: when/if we incorporate feature parameters into the
                 // productline feature declarations (as we should), we need to
                 // adjust the DataConstructor arguments here.
-                featureDecl.addDataConstructor(new DataConstructor(f.getName(), new List<>()));
+                featureDecl.addDataConstructorNoTransform(new DataConstructor(f.getName(), new List<>()));
             }
             // Adjust product_name() function
             productNameFun.setFunctionDef(new ExpFunctionDef(new StringLiteral(productname)));
