@@ -12,18 +12,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 /**
- * Preprocesses the AST directly after it has been parsed, before any name and
- * type analysis.  Typically, syntactic sugar is eliminated in this phase.
+ * This class contains code to preprocess the AST directly after it has been
+ * parsed, before any name and type analysis.  Typically, syntactic sugar is
+ * eliminated in this phase.
  *
  * Note that we might not have a full model yet - consider using NoTransform()
  * for accessors.
- *
- * Currently the following things are done:
- *
- * - Transform selector names of constructors to functions
- * - Add import clauses for the standard library where necessary
- * - Add "implements Object" for classes that don’t implement any interface
- * - Add "extends Object" for interfaces that don’t extend any interface
  *
  * @author Jan Schäfer
  * @author Rudi Schlatte
@@ -33,6 +27,79 @@ public class ASTPreProcessor {
 
     public final static String FUNCTIONSELECTOR = "selector";
 
+    /**
+     * Preprocess string literals coming from the parser.
+     *
+     * Remove leading and trailing " and replace character escape sequences
+     * with the designated character.
+     *
+     * @argument tokenText The string token produced by the parser
+     * @return a fresh string suitable as the content of a StringLiteral
+     */
+    public final static String preprocessStringLiteral(String tokenText) {
+        StringBuffer s = new StringBuffer(tokenText.length() - 2);
+        // i = 1..len-1 to skip beginning and ending \" of the stringliteral
+        for (int i = 1; i < tokenText.length() - 1; i++) {
+            char c = tokenText.charAt(i);
+            if (c == '\\') {
+                i++;
+                c = tokenText.charAt(i);
+                switch (c) {
+                case 'n' : s.append('\n'); break;
+                case 'r' : s.append('\r'); break;
+                case 't' : s.append('\t'); break;
+                default : s.append(c); break;
+                }
+            } else {
+                s.append(c);
+            }
+        }
+        return s.toString();
+    }
+
+    /**
+     * Preprocess template string literals coming from the parser.
+     *
+     * Remove leading and trailing ` / $ characters and replace \` and \$
+     * sequences with single ` / $.  All other literal \ characters are kept.
+     *
+     * @argument tokenText The string token produced by the parser
+     * @return a fresh string suitable as the content of a StringLiteral
+     */
+    public final static String preprocessTemplateStringLiteral(String tokenText) {
+        StringBuffer s = new StringBuffer(tokenText.length() - 2);
+        // i = 1..len-1 to skip beginning and ending ` or $ of the stringliteral
+        for (int i = 1; i < tokenText.length() - 1; i++) {
+            char c = tokenText.charAt(i);
+            if (c == '\\') {
+                i++;
+                char c1 = tokenText.charAt(i); // safe since we only iterate to len-1
+                switch (c1) {
+                case '`' : s.append('`'); break;   // escaped end (\`)
+                case '$' : s.append('$'); break;   // escaped interpolation delimiter (\$)
+                // do not drop backslash if it doesn't escape any of the above:
+                default : s.append('\\'); s.append(c1); break;
+                }
+            } else {
+                s.append(c);
+            }
+        }
+        return s.toString();
+    }
+
+    /**
+     * Perform various preprocessing steps after creating an AST.  This
+     * routine is typically called after parsing but before type-checking.
+     * Currently the following things are done:
+     *
+     * - Transform selector names of constructors to functions
+     * - Add import clauses for the standard library where necessary
+     * - Add "implements Object" for classes that don’t implement any interface
+     * - Add "extends Object" for interfaces that don’t extend any interface
+     *
+     * @argument unit - the CompilationUnit to preprocess
+     * @return the same object as passed in the argument unit
+     */
     public CompilationUnit preprocess(CompilationUnit unit) {
         for (ModuleDecl d : unit.getModuleDecls()) {
             preprocess(d);
