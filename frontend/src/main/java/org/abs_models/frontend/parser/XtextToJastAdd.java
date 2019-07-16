@@ -969,17 +969,17 @@ public class XtextToJastAdd {
             result = new DataConstructorExp(xtextExp.getName(), params);
         } else if(value instanceof org.abs_models.xtext.abs.TemplateStringSimpleExp){
             org.abs_models.xtext.abs.TemplateStringSimpleExp xtextExp = (org.abs_models.xtext.abs.TemplateStringSimpleExp) value;
-            result = new StringLiteral(xtextExp.getString());
+            result = new StringLiteral(ASTPreProcessor.preprocessTemplateStringLiteral(xtextExp.getString()));
         } else if(value instanceof org.abs_models.xtext.abs.TemplateStringExp) {
             org.abs_models.xtext.abs.TemplateStringExp xtextExp = (org.abs_models.xtext.abs.TemplateStringExp) value;
-            PureExp exp = new AddAddExp(new StringLiteral(xtextExp.getStartString()),
+            PureExp exp = new AddAddExp(new StringLiteral(ASTPreProcessor.preprocessTemplateStringLiteral(xtextExp.getStartString())),
                                         new FnApp("toString", new List<>(pureExpFromXtext(xtextExp.getFirstExp()))));
             for (int i = 0; i < xtextExp.getExps().size(); i++) {
-                PureExp part = new AddAddExp(new StringLiteral(xtextExp.getBetweenStrings().get(i)),
+                PureExp part = new AddAddExp(new StringLiteral(ASTPreProcessor.preprocessTemplateStringLiteral(xtextExp.getBetweenStrings().get(i))),
                                              new FnApp("toString", new List<>(pureExpFromXtext(xtextExp.getExps().get(i)))));
                 exp = new AddAddExp(exp, part);
             }
-            exp = new AddAddExp(exp, new StringLiteral(xtextExp.getEndString()));
+            exp = new AddAddExp(exp, new StringLiteral(ASTPreProcessor.preprocessTemplateStringLiteral(xtextExp.getEndString())));
             result = exp;
         } else if (value instanceof org.abs_models.xtext.abs.IntLiteral) {
             org.abs_models.xtext.abs.IntLiteral xtextExp = (org.abs_models.xtext.abs.IntLiteral) value;
@@ -989,7 +989,7 @@ public class XtextToJastAdd {
             result = new FloatLiteral(Double.toString(xtextExp.getValue()));
         } else if (value instanceof org.abs_models.xtext.abs.StringLiteral) {
             org.abs_models.xtext.abs.StringLiteral xtextExp = (org.abs_models.xtext.abs.StringLiteral) value;
-            result = new StringLiteral(xtextExp.getValue());
+            result = new StringLiteral(ASTPreProcessor.preprocessStringLiteral(xtextExp.getValue()));
         } else if(value instanceof org.abs_models.xtext.abs.VarOrFieldExp) {
             org.abs_models.xtext.abs.VarOrFieldExp xtextExp = (org.abs_models.xtext.abs.VarOrFieldExp) value;
             if (xtextExp.isField()) {
