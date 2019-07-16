@@ -462,16 +462,23 @@ time_slot_replayed([]) ->
 time_slot_replayed([Event=#event{time=T} | Rest]) ->
     builtin:float(ok, clock:now()) < T.
 
-record_termination_or_suspension(ProcessInfo, ProcessState, Recorded) ->
-    #event{caller_id=Cid, local_id=Lid,
-           name=Name, reads=Reads, writes=Writes} = ProcessInfo#process_info.event,
+record_termination_or_suspension(R, ProcessInfos, PollingStates, NewPollingStates, ProcessState, Recorded) ->
+    Changed = [P || {P, V} <- maps:to_list(NewPollingStates),
+                    not(maps:is_key(P, PollingStates)) orelse V /= maps:get(P, PollingStates)],
+    AwaitEvents = lists:filtermap(fun (P) -> #process_info{event=E} = maps:get(P, ProcessInfos),
+                                             case maps:get(P, NewPollingStates) of
+                                                 true -> {true, E#event{type=await_enable}};
+                                                 false -> {true, E#event{type=await_disable}};
+                                                 _ -> false
+                                             end
+                                  end, Changed),
+    ProcessInfo = maps:get(R, ProcessInfos),
+    LastEvent = ProcessInfo#process_info.event,
     Event = case ProcessState of
-                done -> #event{type=future_write, caller_id=Cid, local_id=Lid,
-                               name=Name, reads=Reads, writes=Writes};
-                _    -> #event{type=suspend, caller_id=Cid, local_id=Lid,
-                               name=Name, reads=Reads, writes=Writes}
+                done -> LastEvent#event{type=future_write};
+                _    -> LastEvent#event{type=suspend}
             end,
-    [Event | Recorded].
+    [Event | AwaitEvents] ++ Recorded.
 
 
 %% Polls all tasks in the polling list.  Return a set of all polling tasks
@@ -592,7 +599,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo, ObjectState}
     PollCrashedSet = gb_sets:filter(fun (X) -> maps:get(X, NewPollingStates) == crashed end, NewPolling),
 
     %% Record/replay termination or suspension
-    NewRecorded = record_termination_or_suspension(ProcessInfo, ProcessState, Recorded),
+    NewRecorded = record_termination_or_suspension(R, NewProcessInfos, PollingStates, NewPollingStates, ProcessState, Recorded),
 
     %% for `ProcessState' = `done', we just drop the task from Run (it can't
     %% be in Wai or Pol)
@@ -800,7 +807,7 @@ waiting_for_gc_stop({call, From}, {token,R,ProcessState, ProcessInfo, ObjectStat
     PollReadySet = gb_sets:filter(fun (X) -> maps:get(X, NewPollingStates) == true end, NewPolling),
     PollCrashedSet = gb_sets:filter(fun (X) -> maps:get(X, NewPollingStates) == crashed end, NewPolling),
 
-    NewRecorded = record_termination_or_suspension(ProcessInfo, ProcessState, Recorded),
+    NewRecorded = record_termination_or_suspension(R, NewProcessInfos, PollingStates, NewPollingStates, ProcessState, Recorded),
 
     case gb_sets:is_empty(NewRunnable) and gb_sets:is_empty(New) of
         %% Note that in contrast to `cog_active()', `cog_idle()'
