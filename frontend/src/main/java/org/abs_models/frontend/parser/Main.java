@@ -91,51 +91,53 @@ public class Main {
         boolean done = false;
         this.arguments = arguments;
         try {
-            if (arguments.maude) {
-                result = Math.max(result, MaudeCompiler.doMain(arguments));
-                done = true;
-            }
-            if(arguments.java) {
-                result = Math.max(result, JavaBackend.doMain(arguments));
-                done = true;
-            }
-            if (arguments.erlang) {
-                result = Math.max(result, ErlangBackend.doMain(arguments));
-                done = true;
-            }
-            if (arguments.prolog) {
-                result = Math.max(result, PrologBackend.doMain(arguments));
-                done = true;
-            }
-            if (arguments.coreabs) {
-                result = Math.max(result, CoreAbsBackend.doMain(arguments));
-                done = true;
-            }
-            if (arguments.json) {
-                result = Math.max(result, Tester.doMain(arguments));
-                done = true;
-            }
-            if (arguments.prettyprint) {
-                result = Math.max(result, PrettyPrinterBackEnd.doMain(arguments));
-                done = true;
-            }
-            if (arguments.outline) {
-                result = Math.max(result, OutlinePrinterBackEnd.doMain(arguments));
-                done = true;
-            }
-            if (arguments.dumpProducts) {
-                Model m = parse(arguments.files);
-                if (m.hasParserErrors()) {
-                    // parse should have already printed errors
-                    result = Math.max(result, 1);
-                } else {
-                    Iterator<ProductDecl> pi = m.getProductDecls().iterator();
-                    while (pi.hasNext()) {
-                        System.out.print(pi.next().getName());
-                        if (pi.hasNext()) System.out.print(' ');
-                    }
+            if (arguments.backend != null) {
+                if (arguments.backend.maude) {
+                    result = Math.max(result, MaudeCompiler.doMain(arguments));
+                    done = true;
                 }
-                done = true;
+                if(arguments.backend.java) {
+                    result = Math.max(result, JavaBackend.doMain(arguments));
+                    done = true;
+                }
+                if (arguments.backend.erlang) {
+                    result = Math.max(result, ErlangBackend.doMain(arguments));
+                    done = true;
+                }
+                if (arguments.backend.prolog) {
+                    result = Math.max(result, PrologBackend.doMain(arguments));
+                    done = true;
+                }
+                if (arguments.backend.coreabs) {
+                    result = Math.max(result, CoreAbsBackend.doMain(arguments));
+                    done = true;
+                }
+                if (arguments.backend.json) {
+                    result = Math.max(result, Tester.doMain(arguments));
+                    done = true;
+                }
+                if (arguments.backend.prettyprint) {
+                    result = Math.max(result, PrettyPrinterBackEnd.doMain(arguments));
+                    done = true;
+                }
+                if (arguments.backend.outline) {
+                    result = Math.max(result, OutlinePrinterBackEnd.doMain(arguments));
+                    done = true;
+                }
+                if (arguments.backend.dumpProducts) {
+                    Model m = parse(arguments.files);
+                    if (m.hasParserErrors()) {
+                        // parse should have already printed errors
+                        result = Math.max(result, 1);
+                    } else {
+                        Iterator<ProductDecl> pi = m.getProductDecls().iterator();
+                        while (pi.hasNext()) {
+                            System.out.print(pi.next().getName());
+                            if (pi.hasNext()) System.out.print(' ');
+                        }
+                    }
+                    done = true;
+                }
             }
             if (!done) {
                 // no backend selected, just do type-checking

@@ -633,17 +633,46 @@ public class TypeCheckerHelper {
     public static void checkDefBeforeUse(SemanticConditionList e, VarOrFieldUse use) {
         if (use.getType().isUnknownType()) {
             e.add(new TypeError(use,ErrorMessage.NAME_NOT_RESOLVABLE, use.getName()));
-        } else {
-            /* Check that fields are not used before they are defined,
-             * when we are NOT inside a method, e.g. when initialising a field upon declaration.
+        } else if (use instanceof FieldUse) {
+            /* Check that fields are not used before they are defined, This
+             * can happen when we are NOT inside a method, i.e., when
+             * initialising a field with the value of another field.  We check
+             * that the FieldDecl that contains our FieldUse is defined later
+             * than the FieldDecl that defines our FieldUse.
              */
-            // FIXME: this could break down wrt deltas
-            boolean isUsedInFieldDecl = use instanceof FieldUse;
-            if (isUsedInFieldDecl && use.getContextMethod() == null
-                && SourcePosition.larger(use.getDecl().getEndLine(), use.getDecl().getEndColumn(), use.getStartLine(), use.getStartColumn())) {
-                e.add(new TypeError(use,
-                                    isUsedInFieldDecl ? ErrorMessage.FIELD_USE_BEFORE_DEFINITION : ErrorMessage.VAR_USE_BEFORE_DEFINITION,
-                                    use.getName()));
+            // NOTE: the equivalent check for VarUse is done before, in the
+            // "first" of two type-checking passes, and results in an "unknown
+            // identifier" error message, therefore we only check fields here.
+            if (use.getContextMethod() != null
+                || use.uppermostParentOfType(InitBlock.class) != null) {
+                // the field is used inside a method or the init block;
+                // we’re safe
+                return;
+            }
+            VarOrFieldDecl field_decl_where_defined = use.getDecl();
+            if (field_decl_where_defined instanceof ParamDecl) {
+                // it’s a class parameter not a field declaration: impossible
+                // to use this before its definition
+                return;
+            }
+            FieldDecl field_decl_where_used = use.uppermostParentOfType(FieldDecl.class);
+            ClassDecl container = use.uppermostParentOfType(ClassDecl.class);
+            if (container == null) {
+                // we’re probably in a delta -- if there’s a problem the base
+                // class will catch it after delta application
+                return;
+            }
+            for (FieldDecl d : container.getFields()) {
+                if (d.equals(field_decl_where_used)) {
+                    // check this first, to catch the case "Bool x = x;"
+                    e.add(new TypeError(use,
+                                        ErrorMessage.FIELD_USE_BEFORE_DEFINITION,
+                                        use.getName()));
+                    return;
+                } else if (d.equals(field_decl_where_defined)) {
+                    // definition before use; ok
+                    return;
+                }
             }
         }
     }
