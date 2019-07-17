@@ -366,21 +366,19 @@ public class ParserTest extends FrontendTest {
 
     @Test
     public void entry_deltadecl() throws Exception {
-        CompilationUnit u = Main.parseUnit(null, new StringReader("delta Mon;"), false);
+        CompilationUnit u = parseString("delta Mon;").getCompilationUnit(1);
         DeltaDecl d = (DeltaDecl) u.getDeltaDecl(0);
         Assert.assertNotNull(d);
     }
 
-    @Test (expected = ParseException.class)
     public void deltaNameLowerCaseTest() throws Exception{
         String deltaDecl = "delta foo;";
-        Main.parseUnit(null, new StringReader(deltaDecl), true);
+        assertParseError(deltaDecl);
     }
 
-    @Test(expected = ParseException.class)
     public void testIllegalCharacter() throws Exception {
         String functionDecl = "module LexicalTest; def Bool æåëßfë() = True;";
-        Main.parseUnit(null, new StringReader(functionDecl), true);
+        assertParseError(functionDecl);
     }
 
     @Test

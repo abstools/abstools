@@ -165,17 +165,14 @@ public class Main {
         return remainingArgs;
     }
 
+    // entry point for unit tests who just want to parse one or more files
     public Model parse(final java.util.List<File> args) throws IOException, DeltaModellingException, WrongProgramArgumentException, InternalBackendException {
         Model m = parseFiles(this.arguments.verbose, args);
         analyzeFlattenAndRewriteModel(m);
         return m;
     }
 
-    public static Model parseFile(boolean verbose, File filename) throws IOException, InternalBackendException {
-        return parseFiles(verbose, Arrays.asList(filename));
-    }
-
-    public static Model parseFiles(boolean verbose, final java.util.List<File> fileNames) throws IOException, InternalBackendException {
+    private static Model parseFiles(boolean verbose, final java.util.List<File> fileNames) throws IOException, InternalBackendException {
         if (fileNames.isEmpty()) {
             throw new IllegalArgumentException("Please provide at least one input file");
         }
@@ -262,7 +259,7 @@ public class Main {
      * @throws DeltaModellingException
      * @throws FileNotFoundException
      */
-    public void analyzeFlattenAndRewriteModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException {
+    private void analyzeFlattenAndRewriteModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException {
         m.verbose = arguments.verbose;
         m.debug = arguments.debug;
 
@@ -312,7 +309,7 @@ public class Main {
     }
 
     /**
-     * Perform various rewrites that cannot be done in JastAdd
+     * Perform various rewrites that cannot be done in JastAdd.
      *
      * JastAdd rewrite rules can only rewrite the current node using
      * node-local information.  ("The code in the body of the rewrite may
@@ -358,11 +355,12 @@ public class Main {
                 }
             }
             // Adjust Feature datatype
+            featureDecl.setDataConstructorList(new List<>());
             for (Feature f : pl.getFeatures()) {
                 // TODO: when/if we incorporate feature parameters into the
                 // productline feature declarations (as we should), we need to
                 // adjust the DataConstructor arguments here.
-                featureDecl.addDataConstructor(new DataConstructor(f.getName(), new List<>()));
+                featureDecl.addDataConstructorNoTransform(new DataConstructor(f.getName(), new List<>()));
             }
             // Adjust product_name() function
             productNameFun.setFunctionDef(new ExpFunctionDef(new StringLiteral(productname)));
@@ -490,14 +488,15 @@ public class Main {
     }
 
     private static void parseABSSourceFile(java.util.List<CompilationUnit> units, File file, boolean verbose) throws IOException {
-        parseABSSourceFile(units, file, getUTF8FileReader(file), verbose);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+        parseABSSourceFile(units, file, reader, verbose);
     }
 
     private static void parseABSSourceFile(java.util.List<CompilationUnit> units, File file, Reader reader, boolean verbose) throws IOException {
         if (verbose) {
             System.out.println("Parsing file " + file.getPath());//getAbsolutePath());
         }
-        units.add(parseUnit(file, reader, false));
+        units.add(parseUnit(file, reader));
     }
 
     protected static void printErrorMessage() {
@@ -517,7 +516,7 @@ public class Main {
     }
 
 
-    public static CompilationUnit getStdLib() throws IOException, InternalBackendException {
+    private static CompilationUnit getStdLib() throws IOException, InternalBackendException {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
         if (stream == null) {
             // we're running unit tests; try to find the file in the source tree
@@ -526,7 +525,7 @@ public class Main {
         if (stream == null) {
             throw new InternalBackendException("Could not find ABS Standard Library");
         }
-        return parseUnit(new File(ABS_STD_LIB), new InputStreamReader(stream), false);
+        return parseUnit(new File(ABS_STD_LIB), new InputStreamReader(stream));
     }
 
     public static void printUsage() {
@@ -632,15 +631,8 @@ public class Main {
             return version;
     }
 
-
-    private static BufferedReader getUTF8FileReader(File file) throws UnsupportedEncodingException, FileNotFoundException {
-        return new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
-    }
-
-    public static Model parse(File file, InputStream stream) throws IOException, InternalBackendException {
-        return parse(file, new BufferedReader(new InputStreamReader(stream)));
-    }
-
+    // Low-level entry point kept around for the benefit of the unit tests,
+    // who often need to parse from a string
     public static Model parse(File file, Reader reader) throws IOException, InternalBackendException  {
 	List<CompilationUnit> units = new List<>();
 	// Note that the unit tests are sensitive to the order in
@@ -650,7 +642,7 @@ public class Main {
 	// freshly-broken unit tests to use `Model.lookup()' instead
 	// of positional tree-walking
 	units.add(getStdLib());
-	units.add(parseUnit(file, reader, false));
+	units.add(parseUnit(file, reader));
 	return new Model(units);
     }
 
@@ -663,12 +655,12 @@ public class Main {
      * @return The parsed content of `reader`, or an empty CompilationUnit with parse error information
      * @throws IOException
      */
-    public static CompilationUnit parseUnit(File file, Reader reader, boolean raiseExceptions)
+    private static CompilationUnit parseUnit(File file, Reader reader)
 	throws IOException
     { return null; }
     // {
     //     try {
-    //         SyntaxErrorCollector errorlistener = new SyntaxErrorCollector(file, raiseExceptions);
+    //         SyntaxErrorCollector errorlistener = new SyntaxErrorCollector(file);
     //         ANTLRInputStream input = new ANTLRInputStream(reader);
     //         ABSLexer lexer = new ABSLexer(input);
     //         lexer.removeErrorListeners();
@@ -697,9 +689,5 @@ public class Main {
     //         reader.close();
     //     }
     // }
-
-    public static Model parseString(String s) throws Exception {
-        return parse(null, new StringReader(s));
-    }
 
 }
