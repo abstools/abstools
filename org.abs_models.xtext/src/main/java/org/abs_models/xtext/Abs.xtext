@@ -264,7 +264,7 @@ MethodCallExp returns Exp
     ;
 
 GetExp returns Exp
-    : ConversionExp ({GetExp.futureExp=current} '.get' )?
+    : ConversionExp ({GetExp.futureExp=current} '.' 'get' )?
     ;
 
 ConversionExp returns Exp
