@@ -14,6 +14,7 @@ import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInfer
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
 
 import picocli.CommandLine;
+import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.ITypeConverter;
 import picocli.CommandLine.IVersionProvider;
@@ -53,40 +54,44 @@ public class Absc implements Callable<Void> {
                 arity = "1..*")
     public List<File> files;
 
-    @Option(names = { "--erlang", "-e" },
-            description = "@|bold Erlang backend:|@ generate Erlang code")
-    public boolean erlang = false;
-    @Option(names = { "--maude", "-m" },
-            description = "@|bold Maude backend:|@ generate Maude code")
-    public boolean maude = false;
-    @Option(names = { "--java", "-j" },
-            description = "@|bold Java backend:|@ generate Java code")
-    public boolean java = false;
-    @Option(names = { "--prolog" },
-            description = "@|bold Prolog backend:|@ generate Prolog data file")
-    public boolean prolog = false;
+    @ArgGroup(exclusive = true)
+    public Backend backend;
 
-    @Option(names = { "--prettyprint" },
-            description = "@|bold Pretty-printer:|@ pretty print model and exit")
-    public boolean prettyprint = false;
-    @Option(names = { "--coreabs" },
-            hidden = true,
-            description = {"generate Coreabs data file",
-                           "undocumented and doesn't do much -- kept around for backward compatibility only"})
-    public boolean coreabs = false;
-    @Option(names = { "--json" },
-            description = {"generate JSON data file for autodeployer",
-                           "See https://github.com/jacopoMauro/abs_deployer"})
-    public boolean json = false;
-    @Option(names = { "--outline" },
-            hidden = true,
-            description = {"generate code structure outline for collaboratory",
-                           "(not generally useful so we don't advertise it in help output)"})
-    public boolean outline = false;
+    public static class Backend {
+        @Option(names = { "--erlang", "-e" }, required = true,
+                description = "@|bold Erlang backend:|@ generate Erlang code")
+        public boolean erlang = false;
+        @Option(names = { "--maude", "-m" }, required = true,
+                description = "@|bold Maude backend:|@ generate Maude code")
+        public boolean maude = false;
+        @Option(names = { "--java", "-j" }, required = true,
+                description = "@|bold Java backend:|@ generate Java code")
+        public boolean java = false;
+        @Option(names = { "--prolog" }, required = true,
+                description = "@|bold Prolog backend:|@ generate Prolog data file")
+        public boolean prolog = false;
 
-    @Option(names = { "--dump-products" },
-            description = "print all defined products in one line")
-    public boolean dumpProducts = false;
+        @Option(names = { "--prettyprint" }, required = true,
+                description = "@|bold Pretty-printer:|@ pretty print model and exit")
+        public boolean prettyprint = false;
+        @Option(names = { "--coreabs" }, required = true,
+                hidden = true,
+                description = {"generate Coreabs data file",
+                               "undocumented and doesn't do much -- kept around for backward compatibility only"})
+        public boolean coreabs = false;
+        @Option(names = { "--json" }, required = true,
+                description = {"generate JSON data file for autodeployer",
+                               "See https://github.com/jacopoMauro/abs_deployer"})
+        public boolean json = false;
+        @Option(names = { "--outline" }, required = true,
+                hidden = true,
+                description = {"generate code structure outline for collaboratory",
+                               "(not generally useful so we don't advertise it in help output)"})
+        public boolean outline = false;
+        @Option(names = { "--dump-products" }, required = true,
+                description = "print all defined products in one line")
+        public boolean dumpProducts = false;
+    }
 
 
     @Option(names = { "-v", "--verbose" },
@@ -233,6 +238,7 @@ public class Absc implements Callable<Void> {
     public static void main(String[] args) {
         // https://picocli.info/#_parsing_subcommands
         CommandLine commandline = new CommandLine(new Absc());
+        // TODO: switch to new picocli API
         commandline.parseWithHandler(new RunLast(), args);
     }
 
