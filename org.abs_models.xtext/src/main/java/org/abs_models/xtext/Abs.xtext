@@ -340,7 +340,7 @@ PartialFunctionAppExp returns Exp
 
 PartialFunctionParam
     : name=QualifiedIdentifier
-    | '(' params+=ParamDecl (',' params+=ParamDecl)* ')' "=>" body=Exp
+    | '(' ( params+=ParamDecl (',' params+=ParamDecl)* )? ')' "=>" body=Exp
     ;
 
 ConstructorAppExp returns Exp
