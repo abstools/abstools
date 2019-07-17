@@ -40,14 +40,17 @@ dependencies {
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.4.2")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.5.0")
     // Executes JUnit4 tests
-    testRuntime("org.junit.vintage:junit-vintage-engine:5.4.2")
+    testRuntime("org.junit.vintage:junit-vintage-engine:5.5.0")
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.4.2'
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.easymock:easymock:4.0.2'
     testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
     testImplementation 'org.hamcrest:hamcrest-core:2.1'
+    testCompile "org.junit.jupiter:junit-jupiter-api:5.5.0"
+    testCompile "org.eclipse.xtext:org.eclipse.xtext.testing:${xtextVersion}"
+    testCompile "org.eclipse.xtext:org.eclipse.xtext.xbase.testing:${xtextVersion}"
 
     jastadd2 'org.jastadd:jastadd:2.3.3'
 }

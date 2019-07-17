@@ -69,8 +69,9 @@ import org.eclipse.xtext.validation.Issue;
  */
 public class Main {
 
-    // do this only once per application
-    static final Injector absinjector = new AbsStandaloneSetup().createInjectorAndDoEMFRegistration();
+    // Do this only once per application.  Public because the tests need
+    // access
+    public static final Injector absinjector = new AbsStandaloneSetup().createInjectorAndDoEMFRegistration();
 
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
     public static final String UNKNOWN_FILENAME = "<unknown file>";

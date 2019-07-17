@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.inject.Injector;
+
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.analyser.SemanticCondition;
@@ -27,7 +29,11 @@ import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.parser.Main;
+import org.abs_models.frontend.parser.XtextToJastAdd;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
+import org.abs_models.xtext.AbsStandaloneSetup;
+import org.eclipse.xtext.resource.XtextResourceSet;
+import org.eclipse.xtext.testing.util.ParseHelper;
 
 public class ABSTest {
     public static enum Config {
@@ -86,7 +92,13 @@ public class ABSTest {
     }
 
     public static Model parseString(String s) throws Exception {
-        return Main.parse(null, new StringReader(s));
+        XtextResourceSet resourceSet = Main.absinjector.getInstance(XtextResourceSet.class);
+        // This is a bit gross but seems to work
+        ParseHelper<org.abs_models.xtext.abs.CompilationUnit> ph = (ParseHelper<org.abs_models.xtext.abs.CompilationUnit>)(absinjector.getInstance(ParseHelper.class));
+        ph.parse(s, resourceSet);
+        resourceSet.createResource(org.eclipse.emf.common.util.URI.createURI(Main.class.getClassLoader().getResource(Main.ABS_STD_LIB).toString()))
+            .load(null);
+        return XtextToJastAdd.fromResourceSet(resourceSet);
     }
 
     protected static Model assertParse(String s, Config... config) {
