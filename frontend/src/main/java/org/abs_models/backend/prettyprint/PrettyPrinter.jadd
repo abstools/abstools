@@ -453,8 +453,9 @@ aspect doPrettyPrinter {
 
     public void CaseStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-        stream.print("case ");
+        stream.print("switch (");
         getExpr().doPrettyPrint(stream, formatter);
+        stream.print(")");
         formatter.beforeOpenBrace();
         stream.println(" {");
         formatter.afterOpenBrace();
@@ -1215,7 +1216,7 @@ aspect doPrettyPrinter {
     }
 
     public void IfExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("(if ");
+        stream.print("(when ");
         getCondExp().doPrettyPrint(stream, formatter);
         stream.print(" then ");
         getThenExp().doPrettyPrint(stream, formatter);

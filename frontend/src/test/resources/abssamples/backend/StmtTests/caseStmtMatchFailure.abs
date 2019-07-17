@@ -7,7 +7,7 @@ interface I {
 class C implements I {
     Bool test() {
         Bool testresult = False;
-        try case 0 {1 => skip;}
+        try switch (0) {1 => skip;}
         catch PatternMatchFailException => testresult = True;
         return testresult;
     }

@@ -2,15 +2,15 @@ module BackendTest;
 import * from ABS.Scheduler;
 
 def Maybe<Process> find_process_named(String name, List<Process> l) =
-if l == Nil then Nothing
-else if method(head(l)) == name then Just(head(l))
+when l == Nil then Nothing
+else when method(head(l)) == name then Just(head(l))
 else find_process_named(name, tail(l));
 
 def Process my_scheduler(List<Process> queue) =
 let (Maybe<Process> first) = find_process_named("first", queue) in
-if isJust(first) then fromJust(first)
+when isJust(first) then fromJust(first)
 else let (Maybe<Process> second) = find_process_named("second", queue) in
-if isJust(second) then fromJust(second)
+when isJust(second) then fromJust(second)
 else head(queue);
 
 interface I {

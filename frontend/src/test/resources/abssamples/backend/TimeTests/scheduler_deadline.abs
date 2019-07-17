@@ -3,7 +3,7 @@ import * from ABS.Scheduler;
 
 def Process earliest_deadline_scheduler(List<Process> queue) =
   foldl((Process a, Process b) =>
-      if durationLessThan(proc_deadline(a), proc_deadline(b)) // a < b
+      when durationLessThan(proc_deadline(a), proc_deadline(b)) // a < b
       then a else b)
     (queue, head(queue));
 

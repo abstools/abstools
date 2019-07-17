@@ -58,7 +58,7 @@ public class ObjectTests extends SemanticTests {
     public void futLt() {
         assertEvalTrue("interface I {Int m(Int i); Unit doit();}"
                 + "class C implements I {Bool flag = False; Int m (Int i) {await flag; return i;} Unit doit() {flag = True;}}"
-                + "{I i1 = new C(); I i2 = new C(); Bool reforder = i1 < i2; Int inti1 = if reforder then 1 else 2; Int inti2 = if reforder then 2 else 1; Fut<Int> fi1 = i1!m(inti1); Fut<Int> fi2 = i2!m(inti2); Bool futorder = fi1 < fi2; i1!doit(); i2!doit(); fi1.get; fi2.get; Bool testresult = if futorder then fi1 < fi2 else fi2 < fi1;}");
+                + "{I i1 = new C(); I i2 = new C(); Bool reforder = i1 < i2; Int inti1 = when reforder then 1 else 2; Int inti2 = when reforder then 2 else 1; Fut<Int> fi1 = i1!m(inti1); Fut<Int> fi2 = i2!m(inti2); Bool futorder = fi1 < fi2; i1!doit(); i2!doit(); fi1.get; fi2.get; Bool testresult = when futorder then fi1 < fi2 else fi2 < fi1;}");
     }
 
     @Test
@@ -153,7 +153,7 @@ public class ObjectTests extends SemanticTests {
     @Test
     public void fieldPatternMatchNestedCaseStmt() {
         assertEvalTrue(INTERFACE_I
-                + "class C(Bool f) implements I { Int a=2; Int b=4; Bool m() { Bool result= False; case 2 {a => {Int u=7; case 2 { a=> result=True;}}  b => {Int u=3; result=False;}} return result;  } }"
+                + "class C(Bool f) implements I { Int a=2; Int b=4; Bool m() { Bool result= False; switch (2) {a => {Int u=7; switch (2) { a=> result=True;}}  b => {Int u=3; result=False;}} return result;  } }"
                 + CALL_M);
     }
 
@@ -166,7 +166,7 @@ public class ObjectTests extends SemanticTests {
 
     @Test
     public void testFutST1() {
-        assertEvalTrue("interface A {} interface B extends A {} interface I { A mA(); B mB(); } { case False { True => { I o = null; Fut<A> f = o!mB();} False => {skip;}} Bool testresult = True; }");
+        assertEvalTrue("interface A {} interface B extends A {} interface I { A mA(); B mB(); } { switch (False) { True => { I o = null; Fut<A> f = o!mB();} False => {skip;}} Bool testresult = True; }");
     }
     
     @Test

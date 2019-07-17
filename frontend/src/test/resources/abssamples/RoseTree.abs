@@ -4,7 +4,7 @@ data RoseTree<A> = RoseTree(A,List<RoseTree<A>>);
 
 def Bool dfs_fun(RoseTree<Int> t, Int v) = case t {
     RoseTree(v_,Nil) => v == v_;
-    RoseTree(v_, ts) => if v == v_ 
+    RoseTree(v_, ts) => when v == v_ 
                         then True
                         else dfs_fun_(ts, v);
 };
