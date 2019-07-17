@@ -94,7 +94,7 @@ public class ABSTest {
     public static Model parseString(String s) throws Exception {
         XtextResourceSet resourceSet = Main.absinjector.getInstance(XtextResourceSet.class);
         // This is a bit gross but seems to work
-        ParseHelper<org.abs_models.xtext.abs.CompilationUnit> ph = (ParseHelper<org.abs_models.xtext.abs.CompilationUnit>)(absinjector.getInstance(ParseHelper.class));
+        ParseHelper<org.abs_models.xtext.abs.CompilationUnit> ph = (ParseHelper<org.abs_models.xtext.abs.CompilationUnit>)(Main.absinjector.getInstance(ParseHelper.class));
         ph.parse(s, resourceSet);
         resourceSet.createResource(org.eclipse.emf.common.util.URI.createURI(Main.class.getClassLoader().getResource(Main.ABS_STD_LIB).toString()))
             .load(null);
