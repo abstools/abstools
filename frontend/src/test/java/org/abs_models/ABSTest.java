@@ -95,9 +95,13 @@ public class ABSTest {
         XtextResourceSet resourceSet = Main.absinjector.getInstance(XtextResourceSet.class);
         // This is a bit gross but seems to work
         ParseHelper<org.abs_models.xtext.abs.CompilationUnit> ph = (ParseHelper<org.abs_models.xtext.abs.CompilationUnit>)(Main.absinjector.getInstance(ParseHelper.class));
-        ph.parse(s, resourceSet);
+        // NOTE: some tests depend on the standard library being first, see
+        // e.g. FrontendTest.getLastDecl et al.  Using AST walking methods
+        // (Model.lookup() etc.) would be nicer, but rewriting a whole lot of
+        // unit tests is a bit time consuming as well.
         resourceSet.createResource(org.eclipse.emf.common.util.URI.createURI(Main.class.getClassLoader().getResource(Main.ABS_STD_LIB).toString()))
             .load(null);
+        ph.parse(s, resourceSet);
         return XtextToJastAdd.fromResourceSet(resourceSet);
     }
 
