@@ -423,11 +423,13 @@ public class XtextToJastAdd {
             result.addFieldNoTransform(fromXtext(fieldDecl));
         }
 
-        InitBlock astInitBlock = new InitBlock();
-        for(org.abs_models.xtext.abs.Stmt statement : xtext_decl.getInitblockstmts()) {
-            astInitBlock.addStmt(fromXtext(statement));
+        if (xtext_decl.getInitblockstmts().size() > 0) {
+            InitBlock astInitBlock = new InitBlock();
+            for(org.abs_models.xtext.abs.Stmt statement : xtext_decl.getInitblockstmts()) {
+                astInitBlock.addStmt(fromXtext(statement));
+            }
+            result.setInitBlock(astInitBlock);
         }
-        result.setInitBlock(astInitBlock);
 
         for(MethodDecl methodDecl : xtext_decl.getMethods()) {
             result.addMethodNoTransform(fromXtext(methodDecl));
