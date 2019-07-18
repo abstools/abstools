@@ -593,8 +593,11 @@ public class XtextToJastAdd {
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
             Block body = blockFromXtext(value.getBody());
             List<CaseBranchStmt> branches = caseBranchStmtsFromXtext(value.getBranches());
-            Block finallyBlock = blockFromXtext(value.getFinally());
-            Opt<Block> finallyOpt = new Opt<>(finallyBlock);
+            Opt<Block> finallyOpt = new Opt<>();
+            if (value.getFinally() != null) {
+                Block finallyBlock = blockFromXtext(value.getFinally());
+                finallyOpt.setChild(finallyBlock, 0);
+            }
             result = new TryCatchFinallyStmt(annotations, body, branches, finallyOpt);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.SuspendStmt) {
