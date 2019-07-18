@@ -4,7 +4,7 @@
 package org.abs_models.xtext.tests
 
 import com.google.inject.Inject
-import org.abs_models.xtext.abs.ModuleDecl
+import org.abs_models.xtext.abs.CompilationUnit
 import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.extensions.InjectionExtension
 import org.eclipse.xtext.testing.util.ParseHelper
@@ -16,7 +16,7 @@ import org.junit.jupiter.api.^extension.ExtendWith
 @InjectWith(AbsInjectorProvider)
 class AbsParsingTest {
 	@Inject
-	ParseHelper<ModuleDecl> parseHelper
+	ParseHelper<CompilationUnit> parseHelper
 	
 	@Test
 	def void loadModel() {
