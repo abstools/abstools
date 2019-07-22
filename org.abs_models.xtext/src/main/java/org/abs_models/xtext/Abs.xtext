@@ -100,7 +100,7 @@ MethodSignature
 
 ClassDecl
     : annotations=Annotations 'class' name=TYPE_IDENTIFIER
-        ( '(' args+=ParamDecl (',' args+=ParamDecl)* ')' )?
+        ( '(' ( args+=ParamDecl (',' args+=ParamDecl)* )? ')' )?
         ( 'implements' interfaces+=QualifiedTypeIdentifier (',' interfaces+=QualifiedTypeIdentifier)* )?
         '{'
         (fields+=FieldDecl)*
