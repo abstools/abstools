@@ -81,7 +81,7 @@ PartialFunctionDecl
     : annotations=Annotations 'def' resulttype=TypeUse name=IDENTIFIER
         ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
         '(' function_args+=IDENTIFIER (',' function_args+=IDENTIFIER)* ')'
-        '(' args+=ParamDecl (',' args+=ParamDecl)* ')'
+        '(' (args+=ParamDecl (',' args+=ParamDecl)*)? ')'
         '=' body=Exp
         ';'
     ;
