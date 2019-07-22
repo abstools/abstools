@@ -714,7 +714,7 @@ public class XtextToJastAdd {
             result = nodeWithLocation(new LiteralPattern(exp), pattern);
         } else if (pattern instanceof org.abs_models.xtext.abs.StringLiteralPattern) {
             org.abs_models.xtext.abs.StringLiteralPattern value = (StringLiteralPattern) pattern;
-            LiteralExp exp = nodeWithLocation(new org.abs_models.frontend.ast.StringLiteral(value.getValue()), value, AbsPackage.eINSTANCE.getStringLiteralPattern_Value());
+            LiteralExp exp = nodeWithLocation(new org.abs_models.frontend.ast.StringLiteral(ASTPreProcessor.preprocessStringLiteral(value.getValue())), value, AbsPackage.eINSTANCE.getStringLiteralPattern_Value());
             result = nodeWithLocation(new LiteralPattern(exp), pattern);
         }
         else if(pattern instanceof org.abs_models.xtext.abs.FloatLiteralPattern) {
