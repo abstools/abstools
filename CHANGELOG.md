@@ -14,9 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Field values can now be passed to custom scheduling functions in the erlang backend.
 
-- The `abslang/absc` docker image now includes the analysis tools `apet`, `cofloco`, `costabs`, `maypar`, `pubs` and `syco`, which only run on the linux platform.
+- The `abslang/absc` docker image now includes the analysis tools `apet`, `cofloco`, `costabs`, `maypar`, `pubs` and `syco`, which only support the linux platform but can now be run inside the container on other platforms.
 
 ### Changed
+
+- Incompatible change: A partial function cannot have an empty list of function parameters.  This change comes with no loss of functionality since a partial function without functional parameters is strictly the same function as when written without the empty function argument list, i.e., as a non-partial function.
 
 ### Removed
 

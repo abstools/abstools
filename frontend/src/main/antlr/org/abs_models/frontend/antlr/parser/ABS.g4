@@ -246,7 +246,7 @@ par_function_decl : annotation*
 // used by PartialFunctionExp
 function_name_param_decl: IDENTIFIER ;
 function_param: function_name_param_decl | anon_function_decl ;
-function_list: (function_param (',' function_param)*)? ;
+function_list: function_param (',' function_param)* ;
 
 // Anonymous functions
 

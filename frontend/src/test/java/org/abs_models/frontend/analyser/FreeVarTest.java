@@ -144,7 +144,7 @@ public class FreeVarTest extends FrontendTest {
 
     @Test
     public void parFnApp() {
-        Exp e = getSecondExp("def Unit f()(Bool b) = Unit; { Bool b = True; Unit u = f()(b); }");
+        Exp e = getSecondExp("def Unit f(m)(Bool b) = Unit; { Bool b = True; Unit u = f(println)(b); }");
         assertEquals(e.getFreeVars(), "b");
     }
 
