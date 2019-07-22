@@ -339,7 +339,7 @@ VariadicFunctionAppExp returns Exp
     ;
 
 ConstructorAppExp returns Exp
-    : {ConstructorAppExp} name=QualifiedTypeIdentifier ( '(' args+=Exp ( ',' args+=Exp)* ')' )?
+    : {ConstructorAppExp} name=QualifiedTypeIdentifier ( '(' ( args+=Exp ( ',' args+=Exp)* )? ')' )?
     ;
 
 TemplateStringExp returns Exp
