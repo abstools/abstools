@@ -18,7 +18,6 @@ import org.abs_models.xtext.abs.MethodDecl;
 import org.abs_models.xtext.abs.MethodSignature;
 import org.abs_models.xtext.abs.OrExp;
 import org.abs_models.xtext.abs.OriginalCallExp;
-import org.abs_models.xtext.abs.PartialFunctionAppExp;
 import org.abs_models.xtext.abs.StringLiteralPattern;
 import org.abs_models.xtext.abs.TemplateStringExp;
 import org.abs_models.xtext.abs.VarOrFieldExp;
@@ -935,12 +934,24 @@ public class XtextToJastAdd {
                                pureExpFromXtext(xtextExp.getAlternate()));
         } else if(value instanceof org.abs_models.xtext.abs.FunctionAppExp) {
             org.abs_models.xtext.abs.FunctionAppExp xtextExp = (FunctionAppExp) value;
-            FnApp exp = new FnApp();
-            exp.setName(xtextExp.getName());
-            for (org.abs_models.xtext.abs.Exp arg : xtextExp.getArgs()) {
-                exp.addParamNoTransform(pureExpFromXtext(arg));
+            if (xtextExp.getFunctionArgs().size() > 0) {
+                ParFnApp exp = new ParFnApp();
+                exp.setName(xtextExp.getName());
+                for (org.abs_models.xtext.abs.Exp arg : xtextExp.getArgs()) {
+                    exp.addParamNoTransform(pureExpFromXtext(arg));
+                }
+                for (org.abs_models.xtext.abs.PartialFunctionParam p : xtextExp.getFunctionArgs()) {
+                    exp.addFuncParamNoTransform(fromXtext(p));
+                }
+                result = exp;
+            } else {
+                FnApp exp = new FnApp();
+                exp.setName(xtextExp.getName());
+                for (org.abs_models.xtext.abs.Exp arg : xtextExp.getArgs()) {
+                    exp.addParamNoTransform(pureExpFromXtext(arg));
+                }
+                result = exp;
             }
-            result = exp;
         } else if(value instanceof org.abs_models.xtext.abs.VariadicFunctionAppExp) {
             org.abs_models.xtext.abs.VariadicFunctionAppExp xtextExp = (VariadicFunctionAppExp) value;
             List<PureExp> arglist = new List<PureExp>();
@@ -954,17 +965,6 @@ public class XtextToJastAdd {
                 args = new ListLiteral(arglist);
             }
             result = new FnApp(xtextExp.getName(), new List<PureExp>(args));
-        } else if(value instanceof org.abs_models.xtext.abs.PartialFunctionAppExp) {
-            org.abs_models.xtext.abs.PartialFunctionAppExp xtextExp = (PartialFunctionAppExp) value;
-            List<PureExp> args = new List<PureExp>();
-            List<ParFnAppParam> fnargs = new List<ParFnAppParam>();
-            for (org.abs_models.xtext.abs.Exp arg : xtextExp.getArgs()) {
-                args.add(pureExpFromXtext(arg));
-            }
-            for (org.abs_models.xtext.abs.PartialFunctionParam p : xtextExp.getFunctionArgs()) {
-                fnargs.add(fromXtext(p));
-            }
-            result = new ParFnApp(xtextExp.getName(), args, fnargs);
         } else if(value instanceof org.abs_models.xtext.abs.ConstructorAppExp) {
             org.abs_models.xtext.abs.ConstructorAppExp xtextExp = (ConstructorAppExp) value;
             List<PureExp> params = new List<>();

@@ -285,7 +285,6 @@ PrimaryExp returns Exp
     | IfExp
     | FunctionAppExp
     | VariadicFunctionAppExp
-    | PartialFunctionAppExp
     | ConstructorAppExp
     | TemplateStringExp
     | AtomicExp
@@ -325,22 +324,18 @@ IfExp returns Exp
     ;
 
 FunctionAppExp returns Exp
-    : {FunctionAppExp} name=QualifiedIdentifier '(' (args+=Exp ( ',' args+=Exp)* )? ')'
-    ;
-
-VariadicFunctionAppExp returns Exp
-    : {VariadicFunctionAppExp} name=QualifiedIdentifier '[' (args+=Exp ( ',' args+=Exp)* )? ']'
-    ;
-
-PartialFunctionAppExp returns Exp
-    : {PartialFunctionAppExp} name=QualifiedIdentifier
-        '(' functionArgs+=PartialFunctionParam (',' functionArgs+=PartialFunctionParam )* ')'
+    : {FunctionAppExp} name=QualifiedIdentifier
+        ( '(' functionArgs+=PartialFunctionParam (',' functionArgs+=PartialFunctionParam )* ')' )?
         '(' (args+=Exp ( ',' args+=Exp)* )? ')'
     ;
 
 PartialFunctionParam
     : name=QualifiedIdentifier
     | '(' ( params+=ParamDecl (',' params+=ParamDecl)* )? ')' "=>" body=Exp
+    ;
+
+VariadicFunctionAppExp returns Exp
+    : {VariadicFunctionAppExp} name=QualifiedIdentifier '[' (args+=Exp ( ',' args+=Exp)* )? ']'
     ;
 
 ConstructorAppExp returns Exp
