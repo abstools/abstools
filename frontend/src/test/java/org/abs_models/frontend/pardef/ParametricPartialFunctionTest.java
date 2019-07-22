@@ -15,16 +15,6 @@ public class ParametricPartialFunctionTest extends AbstractPartialFunctionTest {
     public final ExpectedException exception = ExpectedException.none();
 
     @Test
-    public void callInnerParametricWithTypeParams() {
-        testExpand(parse(
-            "test()(1);",
-            applyFunction(),
-            incFunction(),
-            "def B test<A, B>()(A a) = apply(inc)(a);"
-        ), "test_%s__", "apply_%s_inc__");
-    }
-
-    @Test
     public void multipleFunctionsExpectingDifferentTypeParam() {
         Model model = parse(
             "addResults(expectsString, expectsInt)(1);",

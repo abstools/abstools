@@ -45,8 +45,9 @@ public class ParFnAppTest extends PardefTest {
     @Test(expected = PardefModellingException.class)
     public void tooFewFuncArgs() {
         expand(parse(
-            "apply()(0);",
-            applyFunction()
+            "apply(inc)(0);",
+            "def B apply2<A, B>(f, g)(A a) = g(f(a));",
+            incFunction()
         ));
     }
 
@@ -104,9 +105,9 @@ public class ParFnAppTest extends PardefTest {
     public void simpleCycle() {
         // test -> test2 -> test
         expand(parse(
-            "test()();",
-            "def Int test()() = test2()();",
-            "def Int test2()() = test()();"
+            "test(println)();",
+            "def Int test(x)() = test2(x)();",
+            "def Int test2(x)() = test(x)();"
         ));
     }
 
@@ -114,10 +115,10 @@ public class ParFnAppTest extends PardefTest {
     public void bigCycle() {
         // test -> test2 -> test3 -> test
         expand(parse(
-            "test()();",
-            "def Int test()() = test2()();",
-            "def Int test2()() = test3()();",
-            "def Int test3()() = test()();"
+            "test(println)();",
+            "def Int test(x)() = test2(x)();",
+            "def Int test2(x)() = test3(x)();",
+            "def Int test3(x)() = test(x)();"
         ));
     }
 
@@ -125,10 +126,10 @@ public class ParFnAppTest extends PardefTest {
     public void indirectCycle() {
         // test -> test2 -> test3 -> test2
         expand(parse(
-            "test()();",
-            "def Int test()() = test2()();",
-            "def Int test2()() = test3()();",
-            "def Int test3()() = test2()();"
+            "test(println)();",
+            "def Int test(x)() = test2(x)();",
+            "def Int test2(x)() = test3(x)();",
+            "def Int test3(x)() = test2(x)();"
         ));
     }
 

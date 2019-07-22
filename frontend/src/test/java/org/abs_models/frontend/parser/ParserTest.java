@@ -432,11 +432,6 @@ public class ParserTest extends FrontendTest {
 
     @Test
     public void callPartialFunction() {
-        assertParse("{ f()(); }");
-        assertParse("{ f_1()(); }");
-        assertParse("{ f()(x); }");
-        assertParse("{ f()(g(x)); }");
-        assertParse("{ f()(x, y); }");
         assertParse("{ f(g)(); }");
         assertParse("{ f(g, h)(); }");
         assertParse("{ f(some_func, other_func)(); }");
