@@ -296,19 +296,15 @@ public class XtextToJastAdd {
     }
 
     static ExceptionDecl fromXtext(org.abs_models.xtext.abs.ExceptionDecl xtext_decl) {
-        ExceptionDecl result = new  ExceptionDecl();
-        result.setName(xtext_decl.getName());
-
-        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-
-        DataConstructor constructor = new DataConstructor();
+        ExceptionConstructor constructor = new ExceptionConstructor();
         constructor.setName(xtext_decl.getName());
-
         for (DataConstructorParamDecl arg : xtext_decl.getArgs()) {
             constructor.addConstructorArgNoTransform(fromXtext(arg));
         }
 
-        result.setDataConstructorList(new List<>(constructor));
+        ExceptionDecl result = new ExceptionDecl(xtext_decl.getName(),
+                                                 annotationsfromXtext(xtext_decl.getAnnotations()),
+                                                 new List<DataConstructor>(constructor));
 
         return nodeWithLocation(result, xtext_decl);
     }
