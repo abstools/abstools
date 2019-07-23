@@ -218,8 +218,6 @@ public class XtextToJastAdd {
             result = fromXtext((org.abs_models.xtext.abs.ExceptionDecl) xtext_decl);
         } else if (xtext_decl instanceof org.abs_models.xtext.abs.FunctionDecl) {
             result = fromXtext((org.abs_models.xtext.abs.FunctionDecl) xtext_decl);
-        } else if (xtext_decl instanceof org.abs_models.xtext.abs.PartialFunctionDecl) {
-            result = fromXtext((org.abs_models.xtext.abs.PartialFunctionDecl) xtext_decl);
         } else if (xtext_decl instanceof org.abs_models.xtext.abs.InterfaceDecl) {
             result = fromXtext((org.abs_models.xtext.abs.InterfaceDecl) xtext_decl);
         } else if (xtext_decl instanceof org.abs_models.xtext.abs.ClassDecl) {
@@ -315,65 +313,67 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_decl);
     }
 
-    static FunctionDecl fromXtext(org.abs_models.xtext.abs.FunctionDecl xtext_decl) {
-        FunctionDecl result;
-        if (!xtext_decl.getTypeparams().isEmpty()) {
-            ParametricFunctionDecl presult = new ParametricFunctionDecl();
-            result = presult;
-            for (int i = 0; i < xtext_decl.getTypeparams().size(); i++) {
-                String tp = xtext_decl.getTypeparams().get(i);
-                presult.addTypeParameterNoTransform(nodeWithLocation(new TypeParameterDecl(tp), xtext_decl, AbsPackage.eINSTANCE.getFunctionDecl_Typeparams(), i));
+    static Decl fromXtext(org.abs_models.xtext.abs.FunctionDecl xtext_decl) {
+        // This parses FunctionDecl and PartialFunctionDecl; these are
+        // unfortunately distinct classes in JastAdd, so we return type Decl
+        // instead.
+        if (xtext_decl.getFunction_args().size() > 0) {
+            PartialFunctionDecl result;
+            if (!xtext_decl.getTypeparams().isEmpty()) {
+                ParametricPartialFunctionDecl presult = new ParametricPartialFunctionDecl();
+                result = presult;
+                for (int i = 0; i < xtext_decl.getTypeparams().size(); i++) {
+                    String tp = xtext_decl.getTypeparams().get(i);
+                    presult.addTypeParameterNoTransform(nodeWithLocation(new TypeParameterDecl(tp), xtext_decl, AbsPackage.eINSTANCE.getFunctionDecl_Typeparams(), i));
+                }
+            } else {
+                result = new  PartialFunctionDecl();
             }
-        } else {
-            result = new  FunctionDecl();
-        }
-        result.setName(xtext_decl.getName());
-        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-        result.setTypeUse(fromXtext(xtext_decl.getResulttype()));
+            result.setName(xtext_decl.getName());
+            result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+            result.setTypeUse(fromXtext(xtext_decl.getResulttype()));
 
-        for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
-            result.addParamNoTransform(fromXtext(arg));
-        }
-
-        if (xtext_decl.isBuiltin()) {
-            result.setFunctionDef(nodeWithLocation(new BuiltinFunctionDef(), xtext_decl, AbsPackage.eINSTANCE.getFunctionDecl_Builtin()));
-            ;
-        } else {
-            PureExp exp = pureExpFromXtext(xtext_decl.getBody());
-            result.setFunctionDef(nodeWithLocation(new ExpFunctionDef(exp), xtext_decl.getBody()));
-        }
-        return nodeWithLocation(result, xtext_decl);
-    }
-
-    static PartialFunctionDecl fromXtext(org.abs_models.xtext.abs.PartialFunctionDecl xtext_decl) {
-        PartialFunctionDecl result;
-        if (!xtext_decl.getTypeparams().isEmpty()) {
-            ParametricPartialFunctionDecl presult = new ParametricPartialFunctionDecl();
-            result = presult;
-            for (int i = 0; i < xtext_decl.getTypeparams().size(); i++) {
-                String tp = xtext_decl.getTypeparams().get(i);
-                presult.addTypeParameterNoTransform(nodeWithLocation(new TypeParameterDecl(tp), xtext_decl, AbsPackage.eINSTANCE.getPartialFunctionDecl_Typeparams(), i));
+            for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
+                result.addParamNoTransform(fromXtext(arg));
             }
+
+            for (int i = 0; i < xtext_decl.getFunction_args().size(); i++) {
+                String fArg = xtext_decl.getFunction_args().get(i);
+                result.addFuncParamNoTransform(nodeWithLocation(new FunctionParamDecl(fArg), xtext_decl, AbsPackage.eINSTANCE.getFunctionDecl_Function_args(), i));
+            }
+
+            PartialFunctionDef functionDef = new PartialFunctionDef(pureExpFromXtext(xtext_decl.getBody()));
+            result.setPartialFunctionDef(nodeWithLocation(functionDef, xtext_decl.getBody()));
+
+            return nodeWithLocation(result, xtext_decl);
         } else {
-            result = new  PartialFunctionDecl();
+            FunctionDecl result;
+            if (!xtext_decl.getTypeparams().isEmpty()) {
+                ParametricFunctionDecl presult = new ParametricFunctionDecl();
+                result = presult;
+                for (int i = 0; i < xtext_decl.getTypeparams().size(); i++) {
+                    String tp = xtext_decl.getTypeparams().get(i);
+                    presult.addTypeParameterNoTransform(nodeWithLocation(new TypeParameterDecl(tp), xtext_decl, AbsPackage.eINSTANCE.getFunctionDecl_Typeparams(), i));
+                }
+            } else {
+                result = new  FunctionDecl();
+            }
+            result.setName(xtext_decl.getName());
+            result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+            result.setTypeUse(fromXtext(xtext_decl.getResulttype()));
+
+            for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
+                result.addParamNoTransform(fromXtext(arg));
+            }
+
+            if (xtext_decl.isBuiltin()) {
+                result.setFunctionDef(nodeWithLocation(new BuiltinFunctionDef(), xtext_decl, AbsPackage.eINSTANCE.getFunctionDecl_Builtin()));
+            } else {
+                PureExp exp = pureExpFromXtext(xtext_decl.getBody());
+                result.setFunctionDef(nodeWithLocation(new ExpFunctionDef(exp), xtext_decl.getBody()));
+            }
+            return nodeWithLocation(result, xtext_decl);
         }
-        result.setName(xtext_decl.getName());
-        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-        result.setTypeUse(fromXtext(xtext_decl.getResulttype()));
-
-        for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
-            result.addParamNoTransform(fromXtext(arg));
-        }
-
-        for (int i = 0; i < xtext_decl.getFunction_args().size(); i++) {
-            String fArg = xtext_decl.getFunction_args().get(i);
-            result.addFuncParamNoTransform(nodeWithLocation(new FunctionParamDecl(fArg), xtext_decl, AbsPackage.eINSTANCE.getPartialFunctionDecl_Function_args(), i));
-        }
-
-        PartialFunctionDef functionDef = new PartialFunctionDef(pureExpFromXtext(xtext_decl.getBody()));
-        result.setPartialFunctionDef(nodeWithLocation(functionDef, xtext_decl.getBody()));
-
-        return nodeWithLocation(result, xtext_decl);
     }
 
     static InterfaceDecl fromXtext(org.abs_models.xtext.abs.InterfaceDecl xtext_decl) {

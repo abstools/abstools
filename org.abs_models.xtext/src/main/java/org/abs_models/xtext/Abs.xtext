@@ -45,7 +45,6 @@ Declaration
     | TypeSynonymDecl
     | ExceptionDecl
     | FunctionDecl
-    | PartialFunctionDecl
     | InterfaceDecl
     | ClassDecl
     // | TraitDecl
@@ -72,17 +71,9 @@ ExceptionDecl
 FunctionDecl
     : annotations=Annotations 'def' resulttype=TypeUse name=IDENTIFIER
         ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
+        ( '(' (function_args+=IDENTIFIER (',' function_args+=IDENTIFIER)*)? ')')?
         '(' (args+=ParamDecl (',' args+=ParamDecl)* )? ')'
         '=' (builtin?='builtin' | body=Exp)
-        ';'
-    ;
-
-PartialFunctionDecl
-    : annotations=Annotations 'def' resulttype=TypeUse name=IDENTIFIER
-        ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
-        '(' function_args+=IDENTIFIER (',' function_args+=IDENTIFIER)* ')'
-        '(' (args+=ParamDecl (',' args+=ParamDecl)*)? ')'
-        '=' body=Exp
         ';'
     ;
 
