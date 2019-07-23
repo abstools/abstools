@@ -93,9 +93,11 @@ public class ASTPreProcessor {
      * Currently the following things are done:
      *
      * - Transform selector names of constructors to functions
-     * - Add import clauses for the standard library where necessary
+     * - Import the standard library in modules that don’t mention it
      * - Add "implements Object" for classes that don’t implement any interface
      * - Add "extends Object" for interfaces that don’t extend any interface
+     * - Add default "throw PatternMatchFailException" behavior to case
+     *   statements
      *
      * @argument unit - the CompilationUnit to preprocess
      * @return the same object as passed in the argument unit
@@ -124,6 +126,9 @@ public class ASTPreProcessor {
                 moduleDecl.getImports().add(new StarImport(Constants.STDLIB_NAME));
             }
         }
+        if (moduleDecl.hasBlock()) {
+            createCaseStmtDefaultBranchesForChildren(moduleDecl.getBlockOptNoTransform());
+        }
         for (Decl decl : moduleDecl.getDecls()) {
             if (decl.isDataType()) {
                 // Add selector functions, e.g., functions fst and snd for
@@ -133,12 +138,13 @@ public class ASTPreProcessor {
                     moduleDecl.addDeclNoTransform(fd);
                 }
             } else if (decl.isClass()) {
+                createCaseStmtDefaultBranchesForChildren(decl);
                 // If decl implements no interface: implement Object
                 ClassDecl c = (ClassDecl)decl;
                 if (!c.hasImplementedInterfaceUse()) {
                     InterfaceTypeUse s = new InterfaceTypeUse("ABS.StdLib.Object", new List<Annotation>());
-                    // set position such that SourcePosition.findPosition() does not
-                    // find this node
+                    // set position such that SourcePosition.findPosition()
+                    // does not find this node
                     s.setPosition(-1, 0, -1, 0);
                     c.addImplementedInterfaceUseNoTransform(s);
                 }
@@ -154,6 +160,26 @@ public class ASTPreProcessor {
                     s.setPosition(-1, 0, -1, 0);
                     i.addExtendedInterfaceUseNoTransform(s);
                 }
+            }
+        }
+    }
+
+    private void createCaseStmtDefaultBranchesForChildren(ASTNode<?> n) {
+        for (CaseStmt cs : n.findChildren(CaseStmt.class)) {
+            List<CaseBranchStmt> branches = cs.getBranchListNoTransform();
+            CaseBranchStmt lastbranch = null;
+            if (branches.getNumChildNoTransform() > 0) {
+                lastbranch = branches.getChildNoTransform(branches.getNumChildNoTransform() - 1);
+            }
+            if (lastbranch == null || !(lastbranch.getLeftNoTransform() instanceof UnderscorePattern)) {
+                // Add default branch that throws PatternMatchFailException.
+                // See "Behavior of non-exhaustive case statement: no branch
+                // match = skip or error?" on abs-dev on Jan 25-26, 2017
+                Block block = new Block(new List<>(), new List<>());
+                block.addStmt(new ThrowStmt(new List<>(),
+                                            new DataConstructorExp("PatternMatchFailException",
+                                                                   new List<>())));
+                cs.addBranchNoTransform(new CaseBranchStmt(new UnderscorePattern(), block));
             }
         }
     }
