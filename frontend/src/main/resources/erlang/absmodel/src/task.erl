@@ -111,12 +111,10 @@ check_duration_amount(Min, Max) ->
 await_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
     case check_duration_amount(MMin, MMax) of
         {Min, Max} ->
-            cog_monitor:task_waiting_for_clock(self(), CogRef, Min, Max),
-            release_token(Cog,waiting),
+            release_token(Cog, waiting, Min, Max),
             loop_for_clock_advance(Cog, Stack),
             cog:process_is_runnable(Cog, self()),
-            wait_for_token(Cog, Stack),
-            cog_monitor:task_confirm_clock_wakeup(self());
+            wait_for_token(Cog, Stack);
         _ ->
             ok
     end.
@@ -124,12 +122,10 @@ await_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
 block_for_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
     case check_duration_amount(MMin, MMax) of
         {Min, Max} ->
-            cog_monitor:cog_blocked_for_clock(self(), CogRef, Min, Max),
-            cog:process_is_blocked(Cog,self(), get(process_info), get(this)),
+            cog:process_is_blocked_for_clock(Cog,self(), get(process_info), get(this), Min, Max),
             loop_for_clock_advance(Cog, Stack),
             cog:process_is_runnable(Cog, self()),
-            wait_for_token(Cog, Stack),
-            cog_monitor:task_confirm_clock_wakeup(self());
+            wait_for_token(Cog, Stack);
         _ ->
             ok
     end.
@@ -143,12 +139,10 @@ block_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
             case Result of
                 wait ->
                     Time=clock:distance_to_next_boundary(),
-                    cog_monitor:task_waiting_for_clock(self(), CogRef, Time, Time),
-                    cog:process_is_blocked(Cog,self(), get(process_info), get(this)), % cause clock advance
+                    cog:process_is_blocked_for_clock(Cog,self(), get(process_info), get(this), Time, Time),
                     loop_for_clock_advance(Cog, Stack),
                     cog:process_is_runnable(Cog, self()),
                     wait_for_token(Cog,Stack),
-                    cog_monitor:task_confirm_clock_wakeup(self()),
                     block_for_resource(Cog, DC, Resourcetype, Remaining, Stack);
                 ok ->
                     case rationals:is_positive(Remaining) of
@@ -182,3 +176,10 @@ release_token(Cog,State)->
     after 0 -> ok
     end,
     cog:return_token(Cog, self(), State, get(process_info), get(this)).
+
+release_token(Cog=#cog{ref=CogRef}, State, Min, Max) ->
+    receive
+        {stop_world, _Sender} -> ok
+    after 0 -> ok
+    end,
+    cog:return_token_suspended_for_clock(Cog, self(), State, get(process_info), get(this), Min, Max).

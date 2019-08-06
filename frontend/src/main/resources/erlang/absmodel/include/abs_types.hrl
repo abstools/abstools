@@ -12,5 +12,6 @@
         cost=dataInfDuration,         % filled in via annotation
         proc_deadline=dataInfDuration, % deadline relative to time at call, filled in via annotation cat point of async call (file GenerateErlang.jadd)
         start={dataTime, -1},         % filled in upon first scheduling
-        crit=false                    % filled in via annotation
+        crit=false,                   % filled in via annotation
+        waiting_on_clock=false        % KLUDGE: flag to tell cog that it needs to confirm wakeup to cog_monitor
        }).
