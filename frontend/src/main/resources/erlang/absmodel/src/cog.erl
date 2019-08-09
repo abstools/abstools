@@ -3,11 +3,11 @@
 -export([start/0,start/1,start/2,add_main_task/3,add_task/7]).
 -export([new_object/3,activate_object/2,object_dead/2,object_state_changed/3,get_object_state/2,sync_task_with_object/3]).
 -export([get_dc/2]).
--export([process_is_runnable/2,
-         process_is_blocked/4, process_is_blocked_for_gc/4,
-         process_is_blocked_for_clock/6,
-         process_poll_is_ready/3, process_poll_is_not_ready/3,
-         process_poll_has_crashed/3,
+-export([task_is_runnable/2,
+         task_is_blocked/4, task_is_blocked_for_gc/4,
+         task_is_blocked_for_clock/6,
+         task_poll_is_ready/3, task_poll_is_not_ready/3,
+         task_poll_has_crashed/3,
          submit_references/2]).
 -export([return_token/5,return_token_suspended_for_clock/7]).
 -export([inc_ref_count/1,dec_ref_count/1]).
@@ -26,8 +26,8 @@
          waiting_for_gc_stop/3,
          in_gc/3,
          waiting_for_references/3,
-         process_running/3,
-         process_blocked/3]).
+         task_running/3,
+         task_blocked/3]).
 
 -record(data,
         {
@@ -53,9 +53,9 @@
          %% arglist}', with `arglist' a list of length >= 1 containing 0 or
          %% more field names and the symbol `queue' (exactly once).
          scheduler=undefined,
-         %% Map from pid to process_info structure (see
+         %% Map from pid to task_info structure (see
          %% ../include/abs_types.hrl); updated when token passed.
-         process_infos=#{},
+         task_infos=#{},
          %% increasing count of objects; also generator of unique id
          object_counter=0,
          %% Map with all object states
@@ -161,37 +161,36 @@ get_dc(#cog{ref=Cog}, Oid) ->
 get_dc(Cog, Oid) ->
     gen_statem:call(Cog, {get_dc, Oid}).
 
+task_is_runnable(#cog{ref=Cog},TaskRef) ->
+    gen_statem:call(Cog, {task_runnable, TaskRef}).
 
-process_is_runnable(#cog{ref=Cog},TaskRef) ->
-    gen_statem:call(Cog, {process_runnable, TaskRef}).
+task_is_blocked(#cog{ref=Cog},TaskRef, TaskInfo, ObjectState) ->
+    gen_statem:cast(Cog, {task_blocked, TaskRef, TaskInfo, ObjectState}).
 
-process_is_blocked(#cog{ref=Cog},TaskRef, ProcessInfo, ObjectState) ->
-    gen_statem:cast(Cog, {process_blocked, TaskRef, ProcessInfo, ObjectState}).
+task_is_blocked_for_gc(#cog{ref=Cog},TaskRef, TaskInfo, ObjectState) ->
+    gen_statem:cast(Cog, {task_blocked_for_gc, TaskRef, TaskInfo, ObjectState}).
 
-process_is_blocked_for_gc(#cog{ref=Cog},TaskRef, ProcessInfo, ObjectState) ->
-    gen_statem:cast(Cog, {process_blocked_for_gc, TaskRef, ProcessInfo, ObjectState}).
-
-process_is_blocked_for_clock(#cog{ref=Cog},TaskRef, ProcessInfo, ObjectState, Min, Max) ->
+task_is_blocked_for_clock(#cog{ref=Cog},TaskRef, TaskInfo, ObjectState, Min, Max) ->
     cog_monitor:task_waiting_for_clock(TaskRef, Cog, Min, Max),
-    %% We never pass ProcessInfo back to the process, so we can mutate it here.
-    gen_statem:cast(Cog, {process_blocked, TaskRef, ProcessInfo#process_info{waiting_on_clock=true}, ObjectState}).
+    %% We never pass TaskInfo back to the process, so we can mutate it here.
+    gen_statem:cast(Cog, {task_blocked, TaskRef, TaskInfo#task_info{waiting_on_clock=true}, ObjectState}).
 
-return_token(#cog{ref=Cog}, TaskRef, State, ProcessInfo, ObjectState) ->
-    gen_statem:call(Cog, {token, TaskRef, State, ProcessInfo, ObjectState}).
+return_token(#cog{ref=Cog}, TaskRef, State, TaskInfo, ObjectState) ->
+    gen_statem:call(Cog, {token, TaskRef, State, TaskInfo, ObjectState}).
 
-return_token_suspended_for_clock(#cog{ref=Cog}, TaskRef, State, ProcessInfo, ObjectState, Min, Max) ->
+return_token_suspended_for_clock(#cog{ref=Cog}, TaskRef, State, TaskInfo, ObjectState, Min, Max) ->
     cog_monitor:task_waiting_for_clock(TaskRef, Cog, Min, Max),
-    %% We never pass ProcessInfo back to the process, so we can mutate it here.
-    gen_statem:call(Cog, {token, TaskRef, State, ProcessInfo#process_info{waiting_on_clock=true}, ObjectState}).
+    %% We never pass TaskInfo back to the process, so we can mutate it here.
+    gen_statem:call(Cog, {token, TaskRef, State, TaskInfo#task_info{waiting_on_clock=true}, ObjectState}).
 
-process_poll_is_ready(#cog{ref=Cog}, TaskRef, ProcessInfo) ->
-    Cog ! {TaskRef, true, ProcessInfo}.
+task_poll_is_ready(#cog{ref=Cog}, TaskRef, TaskInfo) ->
+    Cog ! {TaskRef, true, TaskInfo}.
 
-process_poll_is_not_ready(#cog{ref=Cog}, TaskRef, ProcessInfo) ->
-    Cog ! {TaskRef, false, ProcessInfo}.
+task_poll_is_not_ready(#cog{ref=Cog}, TaskRef, TaskInfo) ->
+    Cog ! {TaskRef, false, TaskInfo}.
 
-process_poll_has_crashed(#cog{ref=Cog}, TaskRef, ProcessInfo) ->
-    Cog ! {TaskRef, crashed, ProcessInfo}.
+task_poll_has_crashed(#cog{ref=Cog}, TaskRef, TaskInfo) ->
+    Cog ! {TaskRef, crashed, TaskInfo}.
 
 submit_references(#cog{ref=CogRef}, Refs) ->
     gen_statem:cast(CogRef, {references, self(), Refs});
@@ -237,9 +236,9 @@ terminate(Reason, StateName, Data) ->
 code_change(_OldVsn, StateName, Data, _Extra) ->
     {ok, StateName, Data}.
 
-handle_call(From, {token, R, done, ProcessInfo, _ObjectState}, _StateName,
+handle_call(From, {token, R, done, TaskInfo, _ObjectState}, _StateName,
             Data=#data{running_task=T, polling_tasks=Pol,
-                       process_infos=ProcessInfos})
+                       task_infos=TaskInfos})
   when R =/= T ->
     %% How do we end up in this case?  If a task crashes while checking its
     %% guard condition (awaiting on a null future field, dividing by zero,
@@ -248,8 +247,8 @@ handle_call(From, {token, R, done, ProcessInfo, _ObjectState}, _StateName,
     %% scheduled some other process to run.  Ignore the object state, it's
     %% outdated from the last suspension point.
     NewPolling=gb_sets:del_element(R, Pol),
-    NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
-    {keep_state, Data#data{process_infos=NewProcessInfos}, {reply, From, ok}};
+    NewTaskInfos=maps:put(R, TaskInfo, TaskInfos),
+    {keep_state, Data#data{task_infos=NewTaskInfos}, {reply, From, ok}};
 handle_call(From, {get_object_state, Oid}, _StateName, #data{object_states=ObjectStates}) ->
     {keep_state_and_data, {reply, From, maps:get(Oid, ObjectStates, dead)}};
 handle_call(From, {sync_task_with_object, Oid, TaskRef}, _StateName,
@@ -300,22 +299,22 @@ handle_cast(_Event, _StateName, Data) ->
     {stop, not_supported, Data}.
 
 %% Default handling for the following states: `cog_starting',
-%% `no_task_schedulable', `process_blocked'
+%% `no_task_schedulable', `task_blocked'
 
-%% TODO: in `process_blocked', consider handling crash by rescheduling.  This
+%% TODO: in `task_blocked', consider handling crash by rescheduling.  This
 %% should not happen since a blocked process does not execute user-defined ABS
 %% code and should not be able to crash.
 handle_info({'EXIT',TaskRef,_Reason}, StateName,
             Data=#data{running_task=R,runnable_tasks=Run, polling_tasks=Pol,
                        waiting_tasks=Wai, new_tasks=New,
-                       process_infos=ProcessInfos}) ->
+                       task_infos=TaskInfos}) ->
     {keep_state,
      Data#data{running_task=R,
                runnable_tasks=gb_sets:del_element(TaskRef, Run),
                polling_tasks=gb_sets:del_element(TaskRef, Pol),
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                new_tasks=gb_sets:del_element(TaskRef, New),
-               process_infos=maps:remove(TaskRef, ProcessInfos)}};
+               task_infos=maps:remove(TaskRef, TaskInfos)}};
 handle_info(_Info, _StateName, Data) ->
     {stop, not_supported, Data}.
 
@@ -339,11 +338,11 @@ update_object_state_map(Obj, State, OldObjectStates) ->
             maps:put(ObjRef, State, OldObjectStates)
     end.
 
-object_state_from_pid(Pid, ProcessInfos, ObjectStates) ->
-    object_state_from_process_info(maps:get(Pid, ProcessInfos), ObjectStates).
+object_state_from_pid(Pid, TaskInfos, ObjectStates) ->
+    object_state_from_task_info(maps:get(Pid, TaskInfos), ObjectStates).
 
-object_state_from_process_info(ProcessInfo, ObjectStates) ->
-    case ProcessInfo#process_info.this of
+object_state_from_task_info(TaskInfo, ObjectStates) ->
+    case TaskInfo#task_info.this of
         null -> {state, none};
         #object{ref=Ref} -> maps:get(Ref, ObjectStates)
     end.
@@ -354,17 +353,17 @@ init([DC, Scheduler]) ->
     {ok, cog_starting, #data{dc=DC, scheduler=Scheduler}}.
 
 start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie)->
-    ArrivalInfo=Info#process_info{arrival={dataTime, clock:now()}},
+    ArrivalInfo=Info#task_info{arrival={dataTime, clock:now()}},
     Ref=task:start(#cog{ref=self(),dc=DC},TaskType,Future,CalleeObj,Args,ArrivalInfo),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     case Cookie of
         undef -> ok;
         _ -> Sender ! {Cookie, Ref}
     end,
-    ArrivalInfo#process_info{pid=Ref}.
+    ArrivalInfo#task_info{pid=Ref}.
 
-choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, ObjectStates) ->
-    {PollReadySet, PollCrashedSet} = poll_waiting(PollingTasks, ProcessInfos, ObjectStates),
+choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, TaskInfos, ObjectStates) ->
+    {PollReadySet, PollCrashedSet} = poll_waiting(PollingTasks, TaskInfos, ObjectStates),
     Candidates=gb_sets:union(RunnableTasks, PollReadySet),
     case gb_sets:is_empty(Candidates) of
         true -> {none, PollCrashedSet};
@@ -389,7 +388,7 @@ choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, Ob
                     %% `queue' is the first parameter of the scheduler, so
                     %% we’re ready in case the argument order of schedulers is
                     %% relaxed.
-                    CandidateInfos = lists:map(fun(C) -> maps:get(C, ProcessInfos) end,
+                    CandidateInfos = lists:map(fun(C) -> maps:get(C, TaskInfos) end,
                                                gb_sets:to_list(Candidates)),
                     Args = lists:map(fun(Arg) ->
                                              case Arg of
@@ -398,45 +397,48 @@ choose_runnable_process(Scheduler, RunnableTasks, PollingTasks, ProcessInfos, Ob
                                              end
                                      end,
                                      Arglist) ++ [[]],
-                    #process_info{pid=Chosen}=apply(SchedulerFunction, [#cog{ref=self()} | Args]),
+                    #task_info{pid=Chosen}=apply(SchedulerFunction, [#cog{ref=self()} | Args]),
                     {Chosen, PollCrashedSet}
             end
     end.
 
 %% Polls all tasks in the polling list.  Return a set of all polling tasks
 %% ready to run
-poll_waiting(Processes, ProcessInfos, ObjectStates) ->
-    PollingTasks = gb_sets:to_list(Processes),
+poll_waiting(Tasks, TaskInfos, ObjectStates) ->
+    PollingTasks = gb_sets:to_list(Tasks),
     lists:foreach(fun(R) ->
-                          send_token(check, R, object_state_from_pid(R, ProcessInfos, ObjectStates))
+                          send_token(check, R, object_state_from_pid(R, TaskInfos, ObjectStates))
                   end,
                   PollingTasks),
     Answers=lists:flatten(
               lists:map(fun(R) ->
                                 receive
-                                    {R, true, ProcessInfo} -> {ready, R};
-                                    {R, false, ProcessInfo} -> [];
-                                    {R, crashed, ProcessInfo} -> {crashed, R}
+                                    {R, true, TaskInfo} -> {ready, R};
+                                    {R, false, TaskInfo} -> [];
+                                    {R, crashed, TaskInfo} -> {crashed, R}
                                 end
                         end, PollingTasks)),
     ReadyTasks = lists:filtermap(fun({ready, R}) -> {true, R}; (_) -> false end, Answers),
     CrashTasks = lists:filtermap(fun({crashed, R}) -> {true, R}; (_) -> false end, Answers),
     { gb_sets:from_list(ReadyTasks), gb_sets:from_list(CrashTasks)}.
 
-send_token(Token, Process, ObjectState) ->
-    Process ! {Token, ObjectState}.
+send_token(Token, Task, ObjectState) ->
+    Task ! {Token, ObjectState}.
 
-send_token_maybe_confirm_wakeup(token, Process, ProcessInfos, ObjectStates) ->
+send_token_maybe_confirm_wakeup(token, Task, TaskInfos, ObjectStates) ->
     %% This confirms process wakeup to the cog monitor if the process (when
     %% calling return_token*) told us it waits for the clock.
-    ProcessInfo=maps:get(Process, ProcessInfos),
-    ObjectState=object_state_from_process_info(ProcessInfo, ObjectStates),
-    send_token(token, Process, ObjectState),
-    case ProcessInfo#process_info.waiting_on_clock of
+    TaskInfo=maps:get(Task, TaskInfos),
+    ObjectState=object_state_from_task_info(TaskInfo, ObjectStates),
+    send_token(token, Task, ObjectState),
+    case TaskInfo#task_info.waiting_on_clock of
         true ->
-            cog_monitor:task_confirm_clock_wakeup(Process);
+            cog_monitor:task_confirm_clock_wakeup(Task);
         _ -> ok
     end.
+
+%% --%<-- STATE FUNCTIONS BELOW THE CUT --%<--
+
 
 %% Wait until we get the nod from the garbage collector
 cog_starting(cast, stop_world, Data=#data{dc=DC})->
@@ -452,11 +454,11 @@ cog_starting(info, Event, Data) ->
     handle_info(Event, cog_starting, Data).
 
 
-no_task_schedulable({call, From}, {process_runnable, TaskRef},
+no_task_schedulable({call, From}, {task_runnable, TaskRef},
                     Data=#data{waiting_tasks=Wai,polling_tasks=Pol,
                                runnable_tasks=Run, new_tasks=New,
                                scheduler=Scheduler,
-                               process_infos=ProcessInfos,
+                               task_infos=TaskInfos,
                                object_states=ObjectStates}) ->
     %% we go through the complete scheduling algorithm even though we already
     %% have a runnable candidate since some polling tasks might have become
@@ -464,7 +466,7 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
     NewRunnableTasks = gb_sets:add_element(TaskRef, Run),
     NewWaitingTasks = gb_sets:del_element(TaskRef, Wai),
     NewNewTasks = gb_sets:del_element(TaskRef, New),
-    {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnableTasks, Pol, ProcessInfos, ObjectStates),
+    {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnableTasks, Pol, TaskInfos, ObjectStates),
     case T of
         none->     % None found -- should not happen
             case gb_sets:is_empty(NewNewTasks) of
@@ -478,8 +480,8 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
              {reply, From, ok}};
         T ->       % Execute T -- might or might not be TaskRef
             cog_monitor:cog_active(self()),
-            send_token_maybe_confirm_wakeup(token, T, ProcessInfos, ObjectStates),
-            {next_state, process_running,
+            send_token_maybe_confirm_wakeup(token, T, TaskInfos, ObjectStates),
+            {next_state, task_running,
              %% T can come from Pol or NewRunnableTasks - adjust cog state
              Data#data{running_task=T,
                        waiting_tasks=NewWaitingTasks,
@@ -494,14 +496,14 @@ no_task_schedulable({call, From}, Event, Data) ->
     handle_call(From, Event, no_task_schedulable, Data);
 no_task_schedulable(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                     Data=#data{new_tasks=Tasks,dc=DC,
-                                 process_infos=ProcessInfos}) ->
-    %% The new task will send `process_runnable' soon; preemptively block time
+                                 task_infos=TaskInfos}) ->
+    %% The new task will send `task_runnable' soon; preemptively block time
     %% advance.
     cog_monitor:cog_active(self()),
-    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
+    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-                 process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
+                 task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
 no_task_schedulable(cast, stop_world, Data=#data{dc=DC}) ->
     gc:cog_stopped(#cog{ref=self(), dc=DC}),
     {next_state, in_gc, Data#data{next_state_after_gc=no_task_schedulable}};
@@ -512,25 +514,25 @@ no_task_schedulable(info, Event, Data) ->
 
 
 
-process_running({call, From}, {token, R, ProcessState, ProcessInfo, ObjectState},
+task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
                 Data=#data{running_task=R, runnable_tasks=Run,
                            waiting_tasks=Wai, polling_tasks=Pol,
                            new_tasks=New, scheduler=Scheduler,
-                           process_infos=ProcessInfos,
+                           task_infos=TaskInfos,
                            object_states=ObjectStates}) ->
     gen_statem:reply(From, ok),
-    NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
-    This=ProcessInfo#process_info.this,
+    NewTaskInfos=maps:put(R, TaskInfo, TaskInfos),
+    This=TaskInfo#task_info.this,
     NewObjectStates = update_object_state_map(This, ObjectState, ObjectStates),
-    NewRunnable = case ProcessState of runnable -> Run;
+    NewRunnable = case TaskState of runnable -> Run;
                       _ -> gb_sets:del_element(R, Run) end,
-    NewWaiting = case ProcessState of waiting -> gb_sets:add_element(R, Wai);
+    NewWaiting = case TaskState of waiting -> gb_sets:add_element(R, Wai);
                      _ -> Wai end,
-    NewPolling = case ProcessState of waiting_poll -> gb_sets:add_element(R, Pol);
+    NewPolling = case TaskState of waiting_poll -> gb_sets:add_element(R, Pol);
                      _ -> Pol end,
-    %% for `ProcessState' = `done', we just drop the task from Run (it can't
+    %% for `TaskState' = `done', we just drop the task from Run (it can't
     %% be in Wai or Pol)
-    {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos, NewObjectStates),
+    {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewTaskInfos, NewObjectStates),
     case T of
         none->
             case gb_sets:is_empty(New) of
@@ -541,12 +543,12 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo, ObjectState}
              Data#data{running_task=idle, runnable_tasks=NewRunnable,
                        waiting_tasks=NewWaiting,
                        polling_tasks=gb_sets:difference(NewPolling, PollCrashedSet),
-                       process_infos=NewProcessInfos,
+                       task_infos=NewTaskInfos,
                        object_states=NewObjectStates}};
         _ ->
             %% no need for `cog_monitor:active' since we were already running
             %% something
-            send_token_maybe_confirm_wakeup(token, T, NewProcessInfos, NewObjectStates),
+            send_token_maybe_confirm_wakeup(token, T, NewTaskInfos, NewObjectStates),
             {keep_state,
              Data#data{running_task=T,
                        runnable_tasks=gb_sets:add_element(T, NewRunnable),
@@ -554,15 +556,15 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo, ObjectState}
                        polling_tasks=gb_sets:difference(
                                        gb_sets:del_element(T, NewPolling),
                                        PollCrashedSet),
-                       process_infos=NewProcessInfos,
+                       task_infos=NewTaskInfos,
                        object_states=NewObjectStates}}
     end;
-process_running({call, From}, {process_runnable, TaskRef}, Data=#data{running_task=TaskRef}) ->
+task_running({call, From}, {task_runnable, TaskRef}, Data=#data{running_task=TaskRef}) ->
     %% This can happen when a process suspends itself ({token, Id, runnable})
     %% or when we schedule a newly-created process.  In both cases we might
     %% have sent the token already before the process asked for it.
     {keep_state_and_data, {reply, From, ok}};
-process_running({call, From}, {process_runnable, TaskRef},
+task_running({call, From}, {task_runnable, TaskRef},
                 Data=#data{running_task=T,runnable_tasks=Run,
                              waiting_tasks=Wai,new_tasks=New})
   when TaskRef /= T ->
@@ -571,45 +573,45 @@ process_running({call, From}, {process_runnable, TaskRef},
                  waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                  new_tasks=gb_sets:del_element(TaskRef, New)},
      {reply, From, ok}};
-process_running({call, From}, Event, Data) ->
-    handle_call(From, Event, process_running, Data);
-process_running(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
+task_running({call, From}, Event, Data) ->
+    handle_call(From, Event, task_running, Data);
+task_running(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                 Data=#data{new_tasks=Tasks,dc=DC,
-                           process_infos=ProcessInfos}) ->
-    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
+                           task_infos=TaskInfos}) ->
+    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-               process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
-process_running(cast, {process_blocked, TaskRef, ProcessInfo, ObjectState},
-                Data=#data{process_infos=ProcessInfos,object_states=ObjectStates}) ->
+               task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
+task_running(cast, {task_blocked, TaskRef, TaskInfo, ObjectState},
+                Data=#data{task_infos=TaskInfos,object_states=ObjectStates}) ->
     cog_monitor:cog_blocked(self()),
-    This=ProcessInfo#process_info.this,
+    This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
-    NewProcessInfos=maps:put(TaskRef, ProcessInfo, ProcessInfos),
-    {next_state, process_blocked,
-     Data#data{object_states=NewObjectStates, process_infos=NewProcessInfos}};
-process_running(cast, {process_blocked_for_gc, TaskRef, ProcessInfo, ObjectState},
-                Data=#data{process_infos=ProcessInfos, object_states=ObjectStates}) ->
+    NewTaskInfos=maps:put(TaskRef, TaskInfo, TaskInfos),
+    {next_state, task_blocked,
+     Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}};
+task_running(cast, {task_blocked_for_gc, TaskRef, TaskInfo, ObjectState},
+                Data=#data{task_infos=TaskInfos, object_states=ObjectStates}) ->
     %% difference between blocked and blocked_for_gc is that in this instance
     %% we don't tell cog_monitor that we're blocked so that time doesn't
     %% advance
-    This=ProcessInfo#process_info.this,
+    This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
-    NewProcessInfos=maps:put(TaskRef, ProcessInfo, ProcessInfos),
-    {next_state, process_blocked,
-     Data#data{object_states=NewObjectStates, process_infos=NewProcessInfos}};
-process_running(cast, stop_world, Data=#data{running_task=R}) ->
+    NewTaskInfos=maps:put(TaskRef, TaskInfo, TaskInfos),
+    {next_state, task_blocked,
+     Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}};
+task_running(cast, stop_world, Data=#data{running_task=R}) ->
     task:send_stop_for_gc(R),
     {next_state, waiting_for_gc_stop,
-     Data#data{next_state_after_gc=process_running}};
-process_running(cast, Event, Data) ->
-    handle_cast(Event, process_running, Data);
-process_running(info, {'EXIT',TaskRef,_Reason},
+     Data#data{next_state_after_gc=task_running}};
+task_running(cast, Event, Data) ->
+    handle_cast(Event, task_running, Data);
+task_running(info, {'EXIT',TaskRef,_Reason},
             Data=#data{running_task=R,runnable_tasks=Run,polling_tasks=Pol,
                        waiting_tasks=Wai,new_tasks=New,scheduler=Scheduler,
-                       process_infos=ProcessInfos,
+                       task_infos=TaskInfos,
                        object_states=ObjectStates}) ->
-    NewProcessInfos=maps:remove(TaskRef, ProcessInfos),
+    NewTaskInfos=maps:remove(TaskRef, TaskInfos),
     %% TODO check if we need to update ObjectStates somehow
     NewRunnable=gb_sets:del_element(TaskRef, Run),
     NewPolling=gb_sets:del_element(TaskRef, Pol),
@@ -617,9 +619,9 @@ process_running(info, {'EXIT',TaskRef,_Reason},
     NewNew=gb_sets:del_element(TaskRef, New),
     case TaskRef of
         %% The running task crashed / finished -- schedule a new one;
-        %% duplicated from `process_running'.
+        %% duplicated from `task_running'.
         R ->
-            {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewProcessInfos, ObjectStates),
+            {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewTaskInfos, ObjectStates),
             case T of
                 none->
                     case gb_sets:is_empty(NewNew) of
@@ -631,11 +633,11 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                                waiting_tasks=NewWaiting,
                                polling_tasks=gb_sets:difference(NewPolling, PollCrashedSet),
                                new_tasks=NewNew,
-                               process_infos=NewProcessInfos}};
+                               task_infos=NewTaskInfos}};
                 _ ->
                     %% no need for `cog_monitor:active' since we were already
                     %% running something
-                    send_token_maybe_confirm_wakeup(token, T, NewProcessInfos, ObjectStates),
+                    send_token_maybe_confirm_wakeup(token, T, NewTaskInfos, ObjectStates),
                     {keep_state,
                      Data#data{running_task=T,
                                runnable_tasks=gb_sets:add_element(T, NewRunnable),
@@ -644,7 +646,7 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                                                gb_sets:del_element(T, NewPolling),
                                                PollCrashedSet),
                                new_tasks=NewNew,
-                               process_infos=NewProcessInfos}}
+                               task_infos=NewTaskInfos}}
             end;
         %% Some other task crashed / finished -- keep calm and carry on
         _ -> {keep_state,
@@ -652,62 +654,62 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                         polling_tasks=NewPolling,
                         waiting_tasks=NewWaiting,
                         new_tasks=NewNew,
-                        process_infos=NewProcessInfos}}
+                        task_infos=NewTaskInfos}}
     end;
-process_running(info, Event, Data) ->
-    handle_info(Event, process_running, Data).
+task_running(info, Event, Data) ->
+    handle_info(Event, task_running, Data).
 
 
 
-process_blocked({call, From}, {process_runnable, TaskRef}, Data=#data{running_task=TaskRef, process_infos=ProcessInfos, object_states=ObjectStates}) ->
+task_blocked({call, From}, {task_runnable, TaskRef}, Data=#data{running_task=TaskRef, task_infos=TaskInfos, object_states=ObjectStates}) ->
     cog_monitor:cog_unblocked(self()),
-    send_token_maybe_confirm_wakeup(token, TaskRef, ProcessInfos, ObjectStates),
-    {next_state, process_running, Data, {reply, From, ok}};
-process_blocked({call, From}, {process_runnable, TaskRef},
+    send_token_maybe_confirm_wakeup(token, TaskRef, TaskInfos, ObjectStates),
+    {next_state, task_running, Data, {reply, From, ok}};
+task_blocked({call, From}, {task_runnable, TaskRef},
                 Data=#data{running_task=T, waiting_tasks=Wai,
                            runnable_tasks=Run, new_tasks=New})
   when TaskRef /= T ->
-    {next_state, process_blocked,
+    {next_state, task_blocked,
      Data#data{waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                runnable_tasks=gb_sets:add_element(TaskRef, Run),
                new_tasks=gb_sets:del_element(TaskRef, New)},
      {reply, From, ok}};
-process_blocked({call, From}, Event, Data) ->
-    handle_call(From, Event, process_blocked, Data);
-process_blocked(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
+task_blocked({call, From}, Event, Data) ->
+    handle_call(From, Event, task_blocked, Data);
+task_blocked(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                 Data=#data{new_tasks=Tasks,dc=DC,
-                           process_infos=ProcessInfos}) ->
-    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
+                           task_infos=TaskInfos}) ->
+    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-               process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
-process_blocked(cast, stop_world, Data=#data{dc=DC}) ->
+               task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
+task_blocked(cast, stop_world, Data=#data{dc=DC}) ->
     gc:cog_stopped(#cog{ref=self(), dc=DC}),
-    {next_state, in_gc, Data#data{next_state_after_gc=process_blocked}};
-process_blocked(cast, Event, Data) ->
-    handle_cast(Event, process_blocked, Data);
-process_blocked(info, Event, Data) ->
-    handle_info(Event, process_blocked, Data).
+    {next_state, in_gc, Data#data{next_state_after_gc=task_blocked}};
+task_blocked(cast, Event, Data) ->
+    handle_cast(Event, task_blocked, Data);
+task_blocked(info, Event, Data) ->
+    handle_info(Event, task_blocked, Data).
 
 
 
-waiting_for_gc_stop({call, From}, {token,R,ProcessState, ProcessInfo, ObjectState},
+waiting_for_gc_stop({call, From}, {token,R,TaskState, TaskInfo, ObjectState},
                     Data=#data{running_task=R, runnable_tasks=Run,
                                waiting_tasks=Wai, polling_tasks=Pol,
-                               new_tasks=New,process_infos=ProcessInfos,
+                               new_tasks=New,task_infos=TaskInfos,
                                object_states=ObjectStates,dc=DC}) ->
     gen_statem:reply(From, ok),
     gc:cog_stopped(#cog{ref=self(), dc=DC}),
-    NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
-    NewObjectStates=update_object_state_map(ProcessInfo#process_info.this,
+    NewTaskInfos=maps:put(R, TaskInfo, TaskInfos),
+    NewObjectStates=update_object_state_map(TaskInfo#task_info.this,
                                             ObjectState, ObjectStates),
-    NewRunnable = case ProcessState of
+    NewRunnable = case TaskState of
                       runnable -> Run;
                       _ -> gb_sets:del_element(R, Run) end,
-    NewWaiting = case ProcessState of
+    NewWaiting = case TaskState of
                      waiting -> gb_sets:add_element(R, Wai);
                      _ -> Wai end,
-    NewPolling = case ProcessState of
+    NewPolling = case TaskState of
                      waiting_poll -> gb_sets:add_element(R, Pol);
                      _ -> Pol end,
     case gb_sets:is_empty(NewRunnable) and gb_sets:is_empty(New) of
@@ -716,11 +718,11 @@ waiting_for_gc_stop({call, From}, {token,R,ProcessState, ProcessInfo, ObjectStat
         %% cog_monitor places a cog on its busy list when the clock
         %% advances and will not advance until it saw at least one
         %% clock_idle().  The waiting task(s) will send
-        %% `process_runnable' to the cog next, but there's a window
+        %% `task_runnable' to the cog next, but there's a window
         %% where an ill-timed `cog_idle()' might cause the clock to
         %% advance.  Hence, we take care to not send `cog_idle()' when
         %% leaving `in_gc', and instead send it here if necessary.
-        true -> {PollReadySet, PollCrashedSet} = poll_waiting(NewPolling, NewProcessInfos, NewObjectStates),
+        true -> {PollReadySet, PollCrashedSet} = poll_waiting(NewPolling, NewTaskInfos, NewObjectStates),
                 case gb_sets:is_empty(PollReadySet) of
                     true -> cog_monitor:cog_idle(self());
                     false -> ok
@@ -730,16 +732,16 @@ waiting_for_gc_stop({call, From}, {token,R,ProcessState, ProcessInfo, ObjectStat
                            running_task=idle, runnable_tasks=NewRunnable,
                            waiting_tasks=NewWaiting,
                            polling_tasks=gb_sets:difference(NewPolling, PollCrashedSet),
-                           process_infos=NewProcessInfos,
+                           task_infos=NewTaskInfos,
                            object_states=NewObjectStates}};
         false -> {next_state, in_gc,
                   Data#data{next_state_after_gc=no_task_schedulable,
                             running_task=idle, runnable_tasks=NewRunnable,
                             waiting_tasks=NewWaiting, polling_tasks=NewPolling,
-                            process_infos=NewProcessInfos,
+                            task_infos=NewTaskInfos,
                             object_states=NewObjectStates}}
     end;
-waiting_for_gc_stop({call, From}, {process_runnable, T},
+waiting_for_gc_stop({call, From}, {task_runnable, T},
                     Data=#data{waiting_tasks=Wai, runnable_tasks=Run,
                                new_tasks=New}) ->
     cog_monitor:cog_active(self()),
@@ -752,36 +754,36 @@ waiting_for_gc_stop({call, From}, Event, Data) ->
     handle_call(From, Event, waiting_for_gc_stop, Data);
 waiting_for_gc_stop(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                     Data=#data{new_tasks=Tasks,dc=DC,
-                               process_infos=ProcessInfos}) ->
-    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
+                               task_infos=TaskInfos}) ->
+    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-               process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
-waiting_for_gc_stop(cast, {process_blocked, R, ProcessInfo, ObjectState},
-                    Data=#data{running_task=R,process_infos=ProcessInfos, object_states=ObjectStates,dc=DC}) ->
+               task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
+waiting_for_gc_stop(cast, {task_blocked, R, TaskInfo, ObjectState},
+                    Data=#data{running_task=R,task_infos=TaskInfos, object_states=ObjectStates,dc=DC}) ->
     cog_monitor:cog_blocked(self()),
     gc:cog_stopped(#cog{ref=self(), dc=DC}),
-    This=ProcessInfo#process_info.this,
+    This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
-    NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
+    NewTaskInfos=maps:put(R, TaskInfo, TaskInfos),
     {next_state, in_gc,
-     Data#data{next_state_after_gc=process_blocked,object_states=NewObjectStates, process_infos=NewProcessInfos}};
-waiting_for_gc_stop(cast, {process_blocked_for_gc, R, ProcessInfo, ObjectState},
-                    Data=#data{running_task=R,process_infos=ProcessInfos,
+     Data#data{next_state_after_gc=task_blocked,object_states=NewObjectStates, task_infos=NewTaskInfos}};
+waiting_for_gc_stop(cast, {task_blocked_for_gc, R, TaskInfo, ObjectState},
+                    Data=#data{running_task=R,task_infos=TaskInfos,
                                object_states=ObjectStates,dc=DC}) ->
     gc:cog_stopped(#cog{ref=self(), dc=DC}),
-    This=ProcessInfo#process_info.this,
+    This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
-    NewProcessInfos=maps:put(R, ProcessInfo, ProcessInfos),
+    NewTaskInfos=maps:put(R, TaskInfo, TaskInfos),
     {next_state, in_gc,
-     Data#data{next_state_after_gc=process_blocked,object_states=NewObjectStates, process_infos=NewProcessInfos}};
+     Data#data{next_state_after_gc=task_blocked,object_states=NewObjectStates, task_infos=NewTaskInfos}};
 waiting_for_gc_stop(cast, Event, Data) ->
     handle_cast(Event, waiting_for_gc_stop, Data);
 waiting_for_gc_stop(info, {'EXIT',TaskRef,_Reason},
             Data=#data{next_state_after_gc=StateAfterGC,
                        running_task=R, runnable_tasks=Run,
                        waiting_tasks=Wai, polling_tasks=Pol,
-                       new_tasks=New, process_infos=ProcessInfos,dc=DC}) ->
+                       new_tasks=New, task_infos=TaskInfos,dc=DC}) ->
     RunningTaskFinished=TaskRef==R,
     case RunningTaskFinished of
         true -> gc:cog_stopped(#cog{ref=self(), dc=DC});
@@ -800,20 +802,20 @@ waiting_for_gc_stop(info, {'EXIT',TaskRef,_Reason},
                runnable_tasks=gb_sets:del_element(TaskRef, Run),
                polling_tasks=gb_sets:del_element(TaskRef, Pol),
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
-               process_infos=maps:remove(TaskRef, ProcessInfos),
+               task_infos=maps:remove(TaskRef, TaskInfos),
                new_tasks=gb_sets:del_element(TaskRef, New)}};
 waiting_for_gc_stop(info, Event, Data) ->
     handle_info(Event, waiting_for_gc_stop, Data).
 
 
 
-in_gc({call, From}, {process_runnable, TaskRef},
+in_gc({call, From}, {task_runnable, TaskRef},
       Data=#data{running_task=RunningTask,next_state_after_gc=NextState,
                  runnable_tasks=Run,waiting_tasks=Wai, new_tasks=New}) ->
     cog_monitor:cog_active(self()),
     NextState2=case TaskRef == RunningTask of
                    %% We will send token when receiving `resume_world'
-                   true -> process_running;
+                   true -> task_running;
                    false -> NextState
                end,
     {keep_state,
@@ -839,20 +841,20 @@ in_gc(cast, {get_references, Sender},
                                     received => []}}}
     end;
 in_gc(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
-      Data=#data{new_tasks=Tasks,dc=DC,process_infos=ProcessInfos}) ->
+      Data=#data{new_tasks=Tasks,dc=DC,task_infos=TaskInfos}) ->
     %% Tell cog_monitor now that we're busy; after gc it might be too late --
     %% but don't put new task into runnable_tasks yet
     cog_monitor:cog_active(self()),
-    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
+    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-               process_infos=maps:put(NewTask, NewInfo, ProcessInfos)}};
+               task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
 in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                                      running_task=RunningTask,
                                      runnable_tasks=Run, polling_tasks=Pol,
                                      next_state_after_gc=NextState,
                                      scheduler=Scheduler,
-                                     process_infos=ProcessInfos,
+                                     task_infos=TaskInfos,
                                      object_states=ObjectStates, dc=DC}) ->
     case Referencers > 0 of
         false -> cog_monitor:cog_died(self()),
@@ -861,7 +863,7 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
         true ->
             case NextState of
                 no_task_schedulable ->
-                    {T, PollCrashedSet}=choose_runnable_process(Scheduler, Run, Pol, ProcessInfos, ObjectStates),
+                    {T, PollCrashedSet}=choose_runnable_process(Scheduler, Run, Pol, TaskInfos, ObjectStates),
                     case T of
                         none->   % None found
                             %% Do not send `cog_idle()' here since a task
@@ -871,23 +873,23 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                              Data#data{polling_tasks=gb_sets:difference(Pol, PollCrashedSet)}};
                         T ->                    % Execute T
                             cog_monitor:cog_active(self()),
-                            send_token_maybe_confirm_wakeup(token, T, ProcessInfos, ObjectStates),
-                            {next_state, process_running,
+                            send_token_maybe_confirm_wakeup(token, T, TaskInfos, ObjectStates),
+                            {next_state, task_running,
                              Data#data{running_task=T,
                                        runnable_tasks=gb_sets:add_element(T, Run),
                                        polling_tasks=gb_sets:difference(
                                                        gb_sets:del_element(T, Pol),
                                                        PollCrashedSet)}}
                     end;
-                process_running ->
+                task_running ->
                     %% when switching to `in_gc' we're never in state
-                    %% `process_running' hence we must have gotten
-                    %% `process_runnable' while gc'ing => send token to
+                    %% `task_running' hence we must have gotten
+                    %% `task_runnable' while gc'ing => send token to
                     %% process
                     cog_monitor:cog_active(self()), % might not be necessary but just in case
                     cog_monitor:cog_unblocked(self()),
-                    send_token_maybe_confirm_wakeup(token, RunningTask, ProcessInfos, ObjectStates),
-                    {next_state, process_running, Data};
+                    send_token_maybe_confirm_wakeup(token, RunningTask, TaskInfos, ObjectStates),
+                    {next_state, task_running, Data};
                 _ -> {next_state, NextState, Data}
             end
         end;
@@ -896,8 +898,8 @@ in_gc(cast, Event, Data) ->
 in_gc(info, {'EXIT',TaskRef,_Reason},
             Data=#data{running_task=R,runnable_tasks=Run, polling_tasks=Pol,
                        waiting_tasks=Wai, new_tasks=New,
-                       process_infos=ProcessInfos}) ->
-    NewProcessInfos=maps:remove(TaskRef, ProcessInfos),
+                       task_infos=TaskInfos}) ->
+    NewTaskInfos=maps:remove(TaskRef, TaskInfos),
     NewRunnable=gb_sets:del_element(TaskRef, Run),
     NewPolling=gb_sets:del_element(TaskRef, Pol),
     NewWaiting=gb_sets:del_element(TaskRef, Wai),
@@ -909,26 +911,26 @@ in_gc(info, {'EXIT',TaskRef,_Reason},
                         polling_tasks=NewPolling,
                         waiting_tasks=NewWaiting,
                         new_tasks=NewNew,
-                        process_infos=NewProcessInfos}};
+                        task_infos=NewTaskInfos}};
         _ -> {keep_state,
               Data#data{runnable_tasks=NewRunnable,
                         polling_tasks=NewPolling,
                         waiting_tasks=NewWaiting,
                         new_tasks=NewNew,
-                        process_infos=NewProcessInfos}}
+                        task_infos=NewTaskInfos}}
     end;
 in_gc(info, Event, Data) ->
     handle_info(Event, in_gc, Data).
 
 
 
-waiting_for_references({call, From}, {process_runnable, TaskRef},
+waiting_for_references({call, From}, {task_runnable, TaskRef},
       Data=#data{running_task=RunningTask,next_state_after_gc=NextState,
                  runnable_tasks=Run,waiting_tasks=Wai, new_tasks=New}) ->
     cog_monitor:cog_active(self()),
     NextState2=case TaskRef == RunningTask of
                    %% We will send token when receiving `resume_world'
-                   true -> process_running;
+                   true -> task_running;
                    false -> NextState
                end,
     {keep_state,
@@ -955,16 +957,16 @@ waiting_for_references(cast, {references, Task, References},
                                                    received := ordsets:union(CollectedReferences, References)}}}
     end;
 waiting_for_references(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
-      Data=#data{new_tasks=Tasks,dc=DC,process_infos=ProcessInfos,
+      Data=#data{new_tasks=Tasks,dc=DC,task_infos=TaskInfos,
                 references=ReferenceRecord=#{waiting := Tasks}}) ->
     %% Tell cog_monitor now that we're busy; after gc it might be too late --
     %% but don't put new task into runnable_tasks yet
     cog_monitor:cog_active(self()),
-    NewInfo=#process_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
+    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     task:get_references_for_cog(NewTask),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-               process_infos=maps:put(NewTask, NewInfo, ProcessInfos),
+               task_infos=maps:put(NewTask, NewInfo, TaskInfos),
                references=ReferenceRecord#{waiting := [NewTask | Tasks]}}};
 waiting_for_references(cast, Event, Data) ->
     handle_cast(Event, waiting_for_references, Data);
@@ -972,7 +974,7 @@ waiting_for_references(info, {'EXIT',TaskRef,_Reason},
             Data=#data{next_state_after_gc=StateAfterGC,
                        running_task=R, runnable_tasks=Run,
                        waiting_tasks=Wai, polling_tasks=Pol,
-                       new_tasks=New, process_infos=ProcessInfos,
+                       new_tasks=New, task_infos=TaskInfos,
                        references=ReferenceRecord=#{
                                     sender := Sender,
                                     waiting := Tasks,
@@ -992,7 +994,7 @@ waiting_for_references(info, {'EXIT',TaskRef,_Reason},
                polling_tasks=gb_sets:del_element(TaskRef, Pol),
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                new_tasks=gb_sets:del_element(TaskRef, New),
-               process_infos=maps:remove(TaskRef, ProcessInfos),
+               task_infos=maps:remove(TaskRef, TaskInfos),
                references=#{}}};
         _ ->
             {keep_state,
@@ -1002,7 +1004,7 @@ waiting_for_references(info, {'EXIT',TaskRef,_Reason},
                polling_tasks=gb_sets:del_element(TaskRef, Pol),
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                new_tasks=gb_sets:del_element(TaskRef, New),
-               process_infos=maps:remove(TaskRef, ProcessInfos),
+               task_infos=maps:remove(TaskRef, TaskInfos),
                references=ReferenceRecord#{waiting := NewTasks,
                                            received := CollectedReferences}}}
     end;

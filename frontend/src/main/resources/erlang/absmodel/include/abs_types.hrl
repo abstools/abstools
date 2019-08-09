@@ -2,7 +2,7 @@
 
 -record(object,{ref,cog}).
 -record(cog,{ref,dc}).
--record(process_info, % use get(process_info) in a task to get this structure
+-record(task_info, % use get(task_info) in a task to get this structure
        {pid=undefined,                % filled in at creation time with self()
         this=null,                    % pid of the task's object (`null` for main task)
         destiny=null,                 % pid of the task's future (`null` for main task and init task)
