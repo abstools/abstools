@@ -203,7 +203,7 @@ loop_for_clock_advance(Cog, Stack) ->
 suspend_current_task_for_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
     case check_duration_amount(MMin, MMax) of
         {Min, Max} ->
-            task:release_token(Cog, waiting, Min, Max),
+            task:release_token_with_time_info(Cog, self(), waiting, get(task_info), get(this), Min, Max),
             loop_for_clock_advance(Cog, Stack),
             task_is_runnable(Cog, self()),
             task:wait_for_token(Cog, Stack);

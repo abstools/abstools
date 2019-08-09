@@ -1062,7 +1062,7 @@ aspect GenerateErlang {
   }
 
   public void SuspendStmt.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.println("task:release_token(Cog,runnable),");
+    ecs.println("task:release_token(Cog,self(),runnable,get(task_info),get(this)),");
     ecs.println("cog:task_is_runnable(Cog,self()),");
     ecs.print("task:wait_for_token(Cog,");
     ecs.print(vars.toStack());
@@ -1074,7 +1074,7 @@ aspect GenerateErlang {
     if(getGuard().hasPoll()){
       getGuard().generateErlangCode(ecs,after,vars);
       after.close();
-      ecs.println("task:release_token(Cog,waiting_poll),");
+      ecs.println("task:release_token(Cog,self(),waiting_poll,get(task_info),get(this)),");
       ecs.pf("(fun Poll (%s)->",vars.toParamList());
       ecs.incIndent().println("receive {check, OState} -> ");
       ecs.incIndent().println("put(this, OState),");
