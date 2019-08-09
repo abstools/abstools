@@ -3,12 +3,16 @@
 -export([start/0,start/1,start/2,add_main_task/3,add_task/7]).
 -export([new_object/3,activate_object/2,object_dead/2,object_state_changed/3,get_object_state/2,sync_task_with_object/3]).
 -export([get_dc/2]).
+%% functions informing cog about task state change
 -export([task_is_runnable/2,
          task_is_blocked/4, task_is_blocked_for_gc/4,
          task_is_blocked_for_clock/6,
          task_poll_is_ready/3, task_poll_is_not_ready/3,
          task_poll_has_crashed/3,
          submit_references/2]).
+%% functions wrapping task changes; might block for messages
+-export([suspend_current_task_for_duration/4,block_cog_for_duration/4]).
+-export([block_cog_for_cpu/4,block_cog_for_bandwidth/5]).
 -export([return_token/5,return_token_suspended_for_clock/7]).
 -export([inc_ref_count/1,dec_ref_count/1]).
 -include_lib("abs_types.hrl").
@@ -174,6 +178,88 @@ task_is_blocked_for_clock(#cog{ref=Cog},TaskRef, TaskInfo, ObjectState, Min, Max
     cog_monitor:task_waiting_for_clock(TaskRef, Cog, Min, Max),
     %% We never pass TaskInfo back to the process, so we can mutate it here.
     gen_statem:cast(Cog, {task_blocked, TaskRef, TaskInfo#task_info{waiting_on_clock=true}, ObjectState}).
+
+%% Internal: check for legal amounts of min, max; if Max < Min, use Max only
+check_duration_amount(Min, Max) ->
+    case rationals:is_negative(Min) or rationals:is_negative(Max) of
+        true -> ok;
+        false -> case rationals:is_lesser(Min, Max) of
+                     true -> {Min, Max};
+                     false -> {Max, Max}        % take the lesser amount
+                 end
+    end.
+
+%% Internal: wait for signal `clock_finished' from cog_monitor
+loop_for_clock_advance(Cog, Stack) ->
+    receive
+        {clock_finished, _Sender} -> ok;
+        {stop_world, _Sender} ->
+            loop_for_clock_advance(Cog, Stack);
+        {get_references, Sender} ->
+            cog:submit_references(Sender, gc:extract_references(Stack)),
+            loop_for_clock_advance(Cog, Stack)
+    end.
+
+suspend_current_task_for_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
+    case check_duration_amount(MMin, MMax) of
+        {Min, Max} ->
+            task:release_token(Cog, waiting, Min, Max),
+            loop_for_clock_advance(Cog, Stack),
+            task_is_runnable(Cog, self()),
+            task:wait_for_token(Cog, Stack);
+        _ ->
+            ok
+    end.
+
+block_cog_for_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
+    case check_duration_amount(MMin, MMax) of
+        {Min, Max} ->
+            task_is_blocked_for_clock(Cog,self(), get(task_info), get(this), Min, Max),
+            loop_for_clock_advance(Cog, Stack),
+            task_is_runnable(Cog, self()),
+            task:wait_for_token(Cog, Stack);
+        _ ->
+            ok
+    end.
+
+block_cog_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
+    Amount_r = rationals:to_r(Amount),
+    case rationals:is_positive(Amount_r) of
+        true ->
+            {Result, Consumed}= dc:consume(DC,Resourcetype,Amount_r),
+            Remaining=rationals:sub(Amount_r, Consumed),
+            case Result of
+                wait ->
+                    Time=clock:distance_to_next_boundary(),
+                    task_is_blocked_for_clock(Cog,self(), get(task_info), get(this), Time, Time),
+                    loop_for_clock_advance(Cog, Stack),
+                    task_is_runnable(Cog, self()),
+                    task:wait_for_token(Cog,Stack),
+                    block_cog_for_resource(Cog, DC, Resourcetype, Remaining, Stack);
+                ok ->
+                    case rationals:is_positive(Remaining) of
+                        %% We loop since the DC might decide to hand out less
+                        %% than we ask for and less than it has available.
+                        true -> block_cog_for_resource(Cog, DC, Resourcetype, Remaining, Stack);
+                        false -> ok
+                    end
+            end;
+        false ->
+            ok
+    end.
+
+block_cog_for_cpu(Cog, DC, Amount, Stack) ->
+    block_cog_for_resource(Cog, DC, cpu, Amount, Stack).
+block_cog_for_bandwidth(Cog, DC, _Callee=#object{cog=#cog{dc=TargetDC}}, Amount, Stack) ->
+    case DC == TargetDC of
+        true -> ok;
+        false -> block_cog_for_resource(Cog, DC, bw, Amount, Stack)
+    end;
+block_cog_for_bandwidth(Cog, DC, null, Amount, Stack) ->
+    %% KLUDGE: on return statements, we don't know where the result is sent.
+    %% Consume bandwidth now -- fix this once the semantics are resolved
+    block_cog_for_resource(Cog, DC, bw, Amount, Stack).
+
 
 return_token(#cog{ref=Cog}, TaskRef, State, TaskInfo, ObjectState) ->
     gen_statem:call(Cog, {token, TaskRef, State, TaskInfo, ObjectState}).
