@@ -177,9 +177,7 @@ task_is_blocked_for_gc(#cog{ref=Cog},TaskRef, TaskInfo, ObjectState) ->
     gen_statem:cast(Cog, {task_blocked_for_gc, TaskRef, TaskInfo, ObjectState}).
 
 task_is_blocked_for_clock(#cog{ref=Cog},TaskRef, TaskInfo, ObjectState, Min, Max) ->
-    cog_monitor:task_waiting_for_clock(TaskRef, Cog, Min, Max),
-    %% We never pass TaskInfo back to the process, so we can mutate it here.
-    gen_statem:cast(Cog, {task_blocked, TaskRef, TaskInfo#task_info{waiting_on_clock=true}, ObjectState}).
+    gen_statem:cast(Cog, {task_blocked_for_clock, TaskRef, TaskInfo, ObjectState, Min, Max}).
 
 %% Internal: check for legal amounts of min, max; if Max < Min, use Max only
 check_duration_amount(Min, Max) ->
@@ -206,6 +204,8 @@ suspend_current_task_for_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
     case check_duration_amount(MMin, MMax) of
         {Min, Max} ->
             task:release_token_with_time_info(Cog, self(), waiting, get(task_info), get(this), Min, Max),
+            %% TODO move this into the cog state machine (cog receives the
+            %% time-advance signal from cog_monitor now)
             loop_for_clock_advance(Cog, Stack),
             task_is_runnable(Cog, self()),
             task:wait_for_token(Cog, Stack);
@@ -217,6 +217,8 @@ block_cog_for_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
     case check_duration_amount(MMin, MMax) of
         {Min, Max} ->
             task_is_blocked_for_clock(Cog,self(), get(task_info), get(this), Min, Max),
+            %% TODO move this into the cog state machine (cog receives the
+            %% time-advance signal from cog_monitor now)
             loop_for_clock_advance(Cog, Stack),
             task_is_runnable(Cog, self()),
             task:wait_for_token(Cog, Stack);
@@ -682,6 +684,19 @@ task_running(cast, {task_blocked, TaskRef, TaskInfo, ObjectState},
     NewTaskInfos=maps:put(TaskRef, TaskInfo, TaskInfos),
     {next_state, task_blocked,
      Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}};
+task_running(cast, {task_blocked_for_clock, TaskRef, TaskInfo, ObjectState,
+                   Min, Max},
+                Data=#data{task_infos=TaskInfos,object_states=ObjectStates}) ->
+    %% TODO unify the next two lines
+    cog_monitor:task_waiting_for_clock(TaskRef, self(), Min, Max),
+    cog_monitor:cog_blocked(self()),
+    This=TaskInfo#task_info.this,
+    NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
+    %% We never pass TaskInfo back to the process, so we can mutate it here.
+    NewTaskInfos=maps:put(TaskRef, TaskInfo#task_info{waiting_on_clock=true},
+                          TaskInfos),
+    {next_state, task_blocked,
+     Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}};
 task_running(cast, {task_blocked_for_gc, TaskRef, TaskInfo, ObjectState},
                 Data=#data{task_infos=TaskInfos, object_states=ObjectStates}) ->
     %% difference between blocked and blocked_for_gc is that in this instance
@@ -858,6 +873,20 @@ waiting_for_gc_stop(cast, {task_blocked, R, TaskInfo, ObjectState},
     This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
     NewTaskInfos=maps:put(R, TaskInfo, TaskInfos),
+    {next_state, in_gc,
+     Data#data{next_state_after_gc=task_blocked,object_states=NewObjectStates, task_infos=NewTaskInfos}};
+waiting_for_gc_stop(cast, {task_blocked_for_clock, R, TaskInfo, ObjectState,
+                          Min, Max},
+                    Data=#data{running_task=R,task_infos=TaskInfos, object_states=ObjectStates,dc=DC}) ->
+    %% TODO unify the next two lines
+    cog_monitor:task_waiting_for_clock(R, self(), Min, Max),
+    cog_monitor:cog_blocked(self()),
+    gc:cog_stopped(#cog{ref=self(), dc=DC}),
+    This=TaskInfo#task_info.this,
+    NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
+    %% We never pass TaskInfo back to the process, so we can mutate it here.
+    NewTaskInfos=maps:put(R, TaskInfo#task_info{waiting_on_clock=true},
+                          TaskInfos),
     {next_state, in_gc,
      Data#data{next_state_after_gc=task_blocked,object_states=NewObjectStates, task_infos=NewTaskInfos}};
 waiting_for_gc_stop(cast, {task_blocked_for_gc, R, TaskInfo, ObjectState},
