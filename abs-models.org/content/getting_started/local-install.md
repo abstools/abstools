@@ -17,7 +17,7 @@ clone the git repository and build the compiler:
 
 ```bash
 git clone https://github.com/abstools/abstools.git
-cd abstools/frontend
+cd abstools
 ./gradlew assemble
 ```
 
