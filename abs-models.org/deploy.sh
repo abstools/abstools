@@ -44,7 +44,7 @@ echo -e "\033[0;32mDeploying updates to GitHub...\033[0m"
 # https://git-scm.com/book/en/v2/Git-Tools-Submodules
 
 # Pull from upstream, just in case we’re behind
-git submodule update --remote --rebase public
+git submodule update --rebase --remote public
 
 # Build the project.
 hugo
