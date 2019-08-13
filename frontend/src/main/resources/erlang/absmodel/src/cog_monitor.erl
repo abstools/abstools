@@ -333,11 +333,11 @@ advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,ke
             %% advance clock before waking up tasks waiting for it
             Clockresult=clock:advance(Delta),
             case Clockresult of
-                {ok, _} ->
+                {ok, NewTime} ->
                     lists:foreach(fun(DC) -> dc:update(DC, Delta) end, DCs),
                     {A1,C1}=lists:unzip(
                               lists:map(
-                                fun(I) -> decrease_or_wakeup(MTE, I) end,
+                                fun(I) -> decrease_or_wakeup(MTE, I, NewTime) end,
                                 C)),
                     Data#data{clock_waiting=lists:flatten(C1),
                                 active_before_next_clock=ordsets:from_list(lists:flatten(A1))};
@@ -357,7 +357,7 @@ advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,ke
             end
     end .
 
-decrease_or_wakeup(MTE, E={Min, _Max, Task, Cog}) ->
+decrease_or_wakeup(MTE, E={Min, _Max, Task, Cog}, CurrentTime) ->
     %% Wake up a task if its minimum waiting time has passed.  We keep a list
     %% of all {Task, Cog} tuples we have signaled; can_clock_advance/2 makes
     %% sure all these tasks have switched to active before we advance the
@@ -366,7 +366,7 @@ decrease_or_wakeup(MTE, E={Min, _Max, Task, Cog}) ->
         true ->
             {[], E};
         false ->
-            Task ! {clock_finished, self()},
+            cog:wakeup_task_after_clock_elapse(Cog, Task, CurrentTime),
             {{Task, Cog}, []}
     end.
 add_to_clock_waiting(C, Min, Max, Task, Cog) ->

@@ -14,6 +14,8 @@
 -export([suspend_current_task_for_duration/4,block_cog_for_duration/4]).
 -export([block_cog_for_cpu/4,block_cog_for_bandwidth/5]).
 -export([return_token/5,return_token_suspended_for_clock/7]).
+%% Called by cog_monitor
+-export([wakeup_task_after_clock_elapse/3]).
 -export([inc_ref_count/1,dec_ref_count/1]).
 -include_lib("abs_types.hrl").
 
@@ -192,7 +194,7 @@ check_duration_amount(Min, Max) ->
 %% Internal: wait for signal `clock_finished' from cog_monitor
 loop_for_clock_advance(Cog, Stack) ->
     receive
-        {clock_finished, _Sender} -> ok;
+        {clock_finished, _CurrentTime} -> ok;
         {stop_world, _Sender} ->
             loop_for_clock_advance(Cog, Stack);
         {get_references, Sender} ->
@@ -268,6 +270,10 @@ return_token_suspended_for_clock(#cog{ref=Cog}, TaskRef, State, TaskInfo, Object
     cog_monitor:task_waiting_for_clock(TaskRef, Cog, Min, Max),
     %% We never pass TaskInfo back to the process, so we can mutate it here.
     gen_statem:call(Cog, {token, TaskRef, State, TaskInfo#task_info{waiting_on_clock=true}, ObjectState}).
+
+wakeup_task_after_clock_elapse(Cog, Task, CurrentTime) ->
+    %% TODO make this a cog-internal function, switch cog to busy
+    Task ! {clock_finished, CurrentTime}.
 
 task_poll_is_ready(#cog{ref=Cog}, TaskRef, TaskInfo) ->
     Cog ! {TaskRef, true, TaskInfo}.
