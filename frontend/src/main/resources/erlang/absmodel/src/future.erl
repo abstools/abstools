@@ -110,7 +110,7 @@ await(null, _Cog, _Stack) ->
     throw(dataNullPointerException);
 await(Future, Cog, Stack) ->
     register_waiting_task(Future, self()),
-    task:release_token(Cog, self(), waiting, get(task_info), get(this)),
+    cog:return_token(Cog, self(), waiting, get(task_info), get(this)),
     (fun Loop() ->
              receive
                  {value_present, Future, _CalleeCog} ->
@@ -118,6 +118,10 @@ await(Future, Cog, Stack) ->
                      %% task to terminate (and potentially letting its
                      %% cog idle).
                      cog:task_is_runnable(Cog,self()),
+                     %% TODO swap these two lines to avoid a rare race
+                     %% condition -- in brief, just because we asked the cog
+                     %% for the token doesn’t mean we got it, and during a gc
+                     %% cycle this can lead to spurious clock advances
                      confirm_wait_unblocked(Future, self()),
                      task:wait_for_token(Cog, [Future | Stack]);
                  {stop_world, _Sender} ->
