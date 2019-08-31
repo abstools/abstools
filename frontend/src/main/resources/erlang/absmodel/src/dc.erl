@@ -16,9 +16,14 @@
 -export([init/1, callback_mode/0, terminate/3, code_change/4]).
 -export([active/3]).
 
--export([new/2,consume/3,update/2,get_description/1]).
+-export([new/2,update/2,get_description/1]).
 -export([get_resource_history/2]).
 -include_lib("abs_types.hrl").
+
+-export([new_cog/2, cog_died/2]).
+-export([cog_active/2, cog_idle/2, cog_blocked/2, cog_unblocked/2]).
+-export([task_waiting_for_clock/5, task_confirm_clock_wakeup/2]).
+-export([block_cog_for_resource/4]).
 
 %% External API
 
@@ -26,13 +31,6 @@ new(Cog, Oid) ->
     {ok,DC}=gen_statem:start_link(?MODULE,[Cog, Oid],[]),
     cog_monitor:new_dc(DC),
     DC.
-
-consume(O=#object{ref=Ref,cog=Cog}, Resourcetype, Amount) ->
-    DC=cog:get_dc(Cog, Ref),
-    gen_statem:call(DC, {consume_resource,
-                         {var_current_for_resourcetype(Resourcetype),
-                          var_max_for_resourcetype(Resourcetype)},
-                         Amount}).
 
 update(DC, Interval) ->
     gen_statem:call(DC, {clock_advance_for_dc, Interval}).
@@ -43,6 +41,68 @@ get_description(DC) ->
 get_resource_history(DC, Type) ->
     %% [Description, CreationTime, History, Totalhistory]
     gen_statem:call(DC, {get_resource_history, Type}).
+
+%% cog->dc time and resource negotiation API
+%%
+%% This is a pass-through to cog_monitor for the moment.
+new_cog(_DC, Cog) ->
+    cog_monitor:new_cog(Cog).
+
+cog_died(_DC, Cog) ->
+    cog_monitor:cog_died(Cog).
+
+cog_active(_DC, Cog) ->
+    cog_monitor:cog_active(Cog).
+
+cog_blocked(_DC, Cog) ->
+    cog_monitor:cog_blocked(Cog).
+
+cog_unblocked(_DC, Cog) ->
+    cog_monitor:cog_unblocked(Cog).
+
+cog_idle(_DC, Cog) ->
+    cog_monitor:cog_idle(Cog).
+
+task_waiting_for_clock(_DC, Task, Cog, Min, Max) ->
+    cog_monitor:task_waiting_for_clock(Task, Cog, Min, Max).
+
+task_confirm_clock_wakeup(_DC, TaskRef) ->
+    cog_monitor:task_confirm_clock_wakeup(TaskRef).
+
+consume(O=#object{ref=Ref,cog=Cog}, Resourcetype, Amount) ->
+    DC=cog:get_dc(Cog, Ref),
+    gen_statem:call(DC, {consume_resource,
+                         {var_current_for_resourcetype(Resourcetype),
+                          var_max_for_resourcetype(Resourcetype)},
+                         Amount}).
+
+
+
+block_cog_for_resource(Cog=#cog{ref=CogRef,dc=DC}, Resourcetype, Amount, Stack) ->
+    Amount_r = rationals:to_r(Amount),
+    case rationals:is_positive(Amount_r) of
+        true ->
+            {Result, Consumed}= consume(DC,Resourcetype,Amount_r),
+            Remaining=rationals:sub(Amount_r, Consumed),
+            case Result of
+                wait ->
+                    Time=clock:distance_to_next_boundary(),
+                    %% XXX once we keep time ourselves this backwards call will be gone
+                    cog:block_cog_for_duration(Cog, Time, Time, Stack),
+                    task:wait_for_token(Cog,Stack),
+                    block_cog_for_resource(Cog, Resourcetype, Remaining, Stack);
+                ok ->
+                    case rationals:is_positive(Remaining) of
+                        %% We loop since the DC might decide to hand out less
+                        %% than we ask for and less than it has available.
+                        true -> block_cog_for_resource(Cog, Resourcetype, Remaining, Stack);
+                        false -> ok
+                    end
+            end;
+        false ->
+            ok
+    end.
+
 
 
 %% gen_statem API

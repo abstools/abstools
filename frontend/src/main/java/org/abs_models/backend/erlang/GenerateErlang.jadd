@@ -207,7 +207,7 @@ aspect GenerateErlang {
       stmt.generateErlangLocationInfo(ecs);
       PureExp cost = AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.DC.Cost");
       if (cost != null) {
-          ecs.print("cog:block_cog_for_cpu(Cog,DC,");
+          ecs.print("cog:block_cog_for_cpu(Cog,");
           cost.generateErlangCode(ecs, vars);
           ecs.print(",");
           ecs.print(vars.toStack());
@@ -220,7 +220,7 @@ aspect GenerateErlang {
               // FIXME: only consumes bandwidth from source cog
               // FIXME: should not consume bandwidth if call goes to same DC
 
-              ecs.print("cog:block_cog_for_bandwidth(Cog,DC,");
+              ecs.print("cog:block_cog_for_bandwidth(Cog,");
               call_exp.getCallee().generateErlangCode(ecs, vars);
               ecs.print(",");
               size.generateErlangCode(ecs, vars);
@@ -228,7 +228,7 @@ aspect GenerateErlang {
               ecs.print(vars.toStack());
               ecs.println("),");
           } else if (stmt instanceof ReturnStmt) {
-              ecs.print("cog:block_cog_for_bandwidth(Cog,DC,null,");
+              ecs.print("cog:block_cog_for_bandwidth(Cog,null,");
               size.generateErlangCode(ecs, vars);
               ecs.print(",");
               ecs.print(vars.toStack());
