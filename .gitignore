@@ -11,6 +11,7 @@ target/
 build/
 bin/
 out/
+/log/
 /frontend/dist/
 /frontend/**/gen/
 /frontend/**/*.beam
