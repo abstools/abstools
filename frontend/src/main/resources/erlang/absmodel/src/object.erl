@@ -88,7 +88,7 @@ new(Cog,Class,Args,CreatorCog,Stack)->
 die(O=#object{cog=Cog},Reason)->
     cog:object_dead(Cog, O).
 
-get_references(O=#object{cog=Cog=#cog{dc=DC}}) ->
+get_references(O=#object{cog=Cog=#cog{dcobj=DC}}) ->
     OState=cog:get_object_state(Cog, O),
     ordsets:union(gc:extract_references(DC), gc:extract_references(OState)).
 

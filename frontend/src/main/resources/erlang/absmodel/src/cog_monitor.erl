@@ -245,7 +245,9 @@ handle_call(From, Request, _State, _Data)->
 
 
 handle_cast({dc_died, O}, _State, Data=#data{dcs=DCs}) ->
-    {keep_state, Data#data{dcs=lists:filter(fun (#object{ref=DC}) -> DC =/= O end, DCs)}};
+    %% FIXME check if DCs keeps list of pids of dc statems or object
+    %% structures -- we might never remove anything from DCs
+    {keep_state, Data#data{dcs=lists:filter(fun (#object{oid=DC}) -> DC =/= O end, DCs)}};
 handle_cast({task_confirm_clock_wakeup, Task}, _State, Data=#data{active_before_next_clock=ABNC}) ->
     ABNC1=ordsets:filter(fun ({Task1, _}) -> Task1 =/= Task end, ABNC),
     S1=Data#data{active_before_next_clock=ABNC1},

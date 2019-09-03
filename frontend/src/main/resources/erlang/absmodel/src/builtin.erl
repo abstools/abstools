@@ -91,7 +91,7 @@ toString(Cog,P) when is_pid(P) ->
                 iolist_to_binary([pid_to_list(P), ":", toString(Cog, Value)]);
         false -> iolist_to_binary([pid_to_list(P), ":empty"])
     end;
-toString(_Cog,O=#object{cog=Cog,ref=Oid}) ->
+toString(_Cog,O=#object{cog=Cog,oid=Oid}) ->
     C=object:get_class_from_ref(O),
     ClassName=case C of
                   none -> <<"<no class - main module>">>;
@@ -172,7 +172,7 @@ print(_Cog,S)->
 getProductLine(_Cog)->
     exit("Not Implemented").
 
-thisDC(#cog{dc=DC}) ->
+thisDC(#cog{dcobj=DC}) ->
     DC.
 
 %% ABS.Scheduler functions
