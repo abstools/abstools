@@ -2,7 +2,7 @@
 -module(cog).
 -export([start/0,start/1,start/2,add_main_task/3,add_task/7]).
 -export([new_object/3,activate_object/2,object_dead/2,object_state_changed/3,get_object_state/2,sync_task_with_object/3]).
--export([get_dc_ref/2]).
+-export([set_dc/2,get_dc_ref/2]).
 %% functions informing cog about task state change
 -export([task_is_runnable/2,
          task_is_blocked_for_gc/4,
@@ -53,8 +53,11 @@
          referencers=1,
          %% Accumulator for reference collection during gc
          references=#{},
-         %% Deployment component of cog
+         %% Deployment component object of cog
          dc=null,
+         %% Deployment component state machine of cog (cached; could be
+         %% obtained via `get_dc_ref')
+         dcref=none,
          %% User-defined scheduler.  `undefined' or a tuple `{function,
          %% arglist}', with `arglist' a list of length >= 1 containing 0 or
          %% more field names and the symbol `queue' (exactly once).
@@ -93,19 +96,26 @@ start(DC) ->
     start(DC, undefined).
 
 start(DC, Scheduler)->
-    %% There are two references to the cog’s DC: the one in the
-    %% statem-internal `data' record is to handle GC and to create a copy of
-    %% the current cog (see start_new_task), the one in the outer cog
-    %% structure is for evaluating thisDC().  The main block cog and DCs
-    %% themselves currently do not have a DC associated.  In the case of the
-    %% main block this is arguably a bug because we cannot use cost
-    %% annotations in the main block; the implementation of deployment
-    %% components is contained in the standard library, so we can be sure they
-    %% do not use `thisDC()'.
-    {ok, CogRef} = gen_statem:start(?MODULE, [DC, Scheduler], []),
-    Cog=#cog{ref=CogRef,dcobj=DC},
-    gc:register_cog(Cog),
-    Cog.
+    %% There are two places where we store the object of the new cog’s DC: the
+    %% statem-internal `#data.dc' record (to handle GC and to create a copy of
+    %% the current cog, see start_new_task), and the outer cog structure (for
+    %% evaluating `thisDC()').  (Note that this second reference could be
+    %% eliminated by implementing a function `get_cog_dc/1'.)
+    %%
+    %% Additionally we cache the ref to the new cog’s DC in `#data.dcref',
+    %% since it is used frequently.
+    %%
+    %% Deployment components themselves do not have an associated DC, which
+    %% means we cannot use cost annotations in the methods of the class
+    %% `ABS.DC.DeploymentComponent' itself.
+    DCRef=case DC of
+              #object{oid=Oid,cog=Cog} -> cog:get_dc_ref(Cog, Oid);
+              null -> none
+          end,
+    {ok, NewCogRef} = gen_statem:start(?MODULE, [DC, DCRef, Scheduler], []),
+    NewCog=#cog{ref=NewCogRef,dcobj=DC},
+    gc:register_cog(NewCog),
+    NewCog.
 
 add_task(#cog{ref=Cog},TaskType,Future,CalleeObj,Args,Info,Stack) ->
     gen_statem:cast(Cog, {new_task,TaskType,Future,CalleeObj,Args,Info,self(),false,{started, TaskType}}),
@@ -160,6 +170,12 @@ sync_task_with_object(#cog{ref=Cog}, #object{oid=Oid}, TaskRef) ->
     %% either uninitialized or active; if uninitialized, signal
     %% TaskRef when we switch to active
     gen_statem:call(Cog, {sync_task_with_object, Oid, TaskRef}).
+
+set_dc(#cog{ref=CogRef}, DC) ->
+    set_dc(CogRef, DC);
+set_dc(CogRef, DC=#object{cog=DCCog, oid=DCOid}) ->
+    DCRef=cog:get_dc_ref(DCCog, DCOid),
+    gen_statem:call(CogRef, {set_dc, DC, DCRef}).
 
 get_dc_ref(#cog{ref=Cog}, #object{oid=Oid}) ->
     gen_statem:call(Cog, {get_dc_ref, Oid});
@@ -231,18 +247,18 @@ block_cog_for_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
             ok
     end.
 
-block_cog_for_cpu(Cog=#cog{dcobj=DC}, Amount, Stack) ->
-    dc:block_cog_for_resource(DC, Cog, cpu, Amount, Stack).
+block_cog_for_cpu(Cog, Amount, Stack) ->
+    dc:block_cog_for_resource(Cog, cpu, Amount, Stack).
 
 block_cog_for_bandwidth(Cog=#cog{dcobj=DC}, _Callee=#object{cog=#cog{dcobj=TargetDC}}, Amount, Stack) ->
     case DC == TargetDC of
         true -> ok;
-        false -> dc:block_cog_for_resource(Cog, DC, bw, Amount, Stack)
+        false -> dc:block_cog_for_resource(Cog, bw, Amount, Stack)
     end;
 block_cog_for_bandwidth(Cog=#cog{dcobj=DC}, null, Amount, Stack) ->
     %% KLUDGE: on return statements, we don't know where the result is sent.
     %% Consume bandwidth now -- fix this once the semantics are resolved
-    dc:block_cog_for_resource(Cog, DC, bw, Amount, Stack).
+    dc:block_cog_for_resource(Cog, bw, Amount, Stack).
 
 block_cog_for_future(#cog{ref=CogRef}, Future, Stack) ->
     gen_statem:cast(CogRef, {task_blocked,
@@ -339,6 +355,9 @@ handle_call(From, {sync_task_with_object, Oid, TaskRef}, _StateName,
     end;
 handle_call(From, {get_dc_ref, Oid}, _StateName, Data=#data{dcs=DCs}) ->
     {keep_state_and_data, {reply, From, maps:get(Oid, DCs)}};
+handle_call(From, {set_dc, DC, DCRef}, _StateName,
+            Data=#data{dc=null, dcref=none}) ->
+    {keep_state, Data#data{dc=DC, dcref=DCRef}, {reply, From, ok}};
 handle_call(From, {new_object_state, ObjectState}, _StateName,
             Data=#data{object_states=ObjectStates, fresh_objects=FreshObjects,
                        object_counter=ObjCounter}) ->
@@ -346,7 +365,7 @@ handle_call(From, {new_object_state, ObjectState}, _StateName,
     {keep_state, Data#data{object_states=maps:put(Oid, ObjectState, ObjectStates),
                            fresh_objects=maps:put(Oid, [], FreshObjects),
                            object_counter=Oid},
-    {reply, From, Oid}};
+     {reply, From, Oid}};
 handle_call(From, Event, StateName, Data) ->
     {stop, not_supported, Data}.
 
@@ -422,10 +441,10 @@ object_state_from_pid(Pid, TaskInfos, ObjectStates) ->
         #object{oid=Oid} -> maps:get(Oid, ObjectStates)
     end.
 
-init([DC, Scheduler]) ->
+init([DC, DCRef, Scheduler]) ->
     process_flag(trap_exit, true),
     dc:new_cog(DC, self()),
-    {ok, cog_starting, #data{dc=DC, scheduler=Scheduler}}.
+    {ok, cog_starting, #data{dc=DC, dcref=DCRef, scheduler=Scheduler}}.
 
 start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie)->
     ArrivalInfo=Info#task_info{arrival={dataTime, clock:now()}},

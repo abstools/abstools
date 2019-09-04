@@ -157,15 +157,16 @@ aspect GenerateErlang {
        ecs.println("%% Application callbacks");
        ecs.println("-export([start/2, stop/1]).");
        ecs.println();
-       ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef}");
+       ErlUtil.functionHeader(ecs, "main", Mask.none, "RawCog=#cog{ref=CogRef}");
        ecs.println("put(vars, #{}),");
        ecs.println("C = none,");
        ecs.println("Oid = null, % avoid self-call branch in synccall code");
+       // Create a default deployment component.
+       ecs.println("DC = object:new(cog:start(),class_ABS_DC_DeploymentComponent, [<<\"Initial DC\">>,dataEmptyMap,[]],RawCog,[]),");
+       ecs.println("cog:set_dc(RawCog, DC),");
+       ecs.println("Cog=#cog{ref=CogRef, dcobj=DC},");
        ecs.println("O = #object{oid=null,cog=Cog},");
        ecs.println("put(this, {state, none}),");
-       // Create a default deployment component.
-       ecs.println("%% FIXME: thisDC() won't work in main block (DC should be in Cog state)");
-       ecs.println("DC = object:new(cog:start(),class_ABS_DC_DeploymentComponent, [<<\"Initial DC\">>,dataEmptyMap,[]],Cog,[O]),");
        ecs.println("Stack = [DC],");
        getBlock().generateErlangCode(ecs, Vars.n());
        ecs.println('.');
